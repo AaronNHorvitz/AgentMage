@@ -1,15 +1,17 @@
 {
   "schema_version": 1,
   "record_type": "sprint_55_local_evidence",
-  "source_revision": "c21c399ba586a808dd1ec3f34dbfe049b03224c0",
+  "source_revision": "e57eb9df9917914be6382496fbcf7774845172c2",
   "source_sha256": {
     "kernel/contracts/src/meeting.rs": "19190ab0366d87ee07b5a452168a5dfd211d2e1d2570c37a1f8320056be889c2",
-    "kernel/contracts/src/lib.rs": "0b0d27a314e825b4106ee62ede5b3bb592e3b1d2cb01e3fe7f5efae939b71413",
+    "kernel/contracts/src/lib.rs": "bbd5268f75d9f88d4056da62bbd8f33fe4e5f87ae50aefaba9432bd06f656da1",
     "kernel/engine/src/meeting_continuity.rs": "b33fc4bd629a9f622afaf125c453ae651e5be45efcace1c1aebf64a3f2fdf127",
-    "kernel/engine/src/lib.rs": "80f34f158db0c0c427aef160b9909a4d1572cdce11f7ebe9d4bfea9ff2d52a90",
+    "kernel/engine/src/lib.rs": "74e16b7d5134da7214e979519b12116fa002034a5c7bf4b8a1e83646b93d8d26",
     "capabilities/knowledge/src/meeting_skills.rs": "fa3ad0fce72a0d96bc274342f59958abd70ea0915e68f5154342ffbce47f7076",
-    "capabilities/knowledge/src/lib.rs": "dfd12352c927c488ea8fa5247a944b46e20bcaf435401eda912435b38a8044e4",
+    "capabilities/knowledge/src/lib.rs": "37ac6fd09c4ad677c3fd4f4513400c0e319656fea257c341d8a6174280205b62",
     "capabilities/knowledge/examples/meeting_skill_pack.rs": "d69a7dc7c86fcbec61a04fb8e2e5447f8429d656608734136eece42334d2e49b",
+    "shells/host/src/meeting_coordinator.rs": "fc100c4b48696c758faa323315ea833fbc92a629ec35cd7cab7e6d71d9b8ca26",
+    "shells/host/src/lib.rs": "1e1df4671359c74bcfd1e5e4041e60f58379e61eed20fe29d046b7c08c73566c",
     "schemas/runtime/meeting-plan-draft.schema.json": "fdae426f780480755ef83edb92f54535b7a45d717f17f8852bc06712d9094165",
     "schemas/runtime/examples/meeting-plan-draft.valid.json": "6a3d42bd6ed86d0867e6fc999acc29909373080c3e930ea016b1785c264e1892",
     "schemas/runtime/meeting-transcript-cleanup.schema.json": "3f111c7e92b1d60180811ab0e1b3c76e022e8042675d00f82c2081cf4c45da53",
@@ -18,25 +20,25 @@
     "schemas/runtime/examples/meeting-minutes.valid.json": "c73a540d63e5f429aef8b9898102d3d187ccb70b3b63ae9bfd7ecb2d2a3bb9ad",
     "schemas/runtime/meeting-continuity-record.schema.json": "6588fd6dd43f3d7cda92147274fe6d16809394ee2ae224f5042dbc3c90647946",
     "schemas/runtime/examples/meeting-continuity-record.valid.json": "5116e20aa0bb911b81c7673df5b710fef107099e0abc27b0d8fe41b8b3423780",
-    "scripts/validate_planning_schemas.mjs": "e3c75f848e3661f5c12ac09f61f67ff5adbd838b2afc1475396f4e315ae4405a",
-    "tests/test_planning_schemas.mjs": "b0a173b040bbc160f9c30bf02e7f0906733d5516ffe82fea56d94addf69d87da",
+    "scripts/validate_planning_schemas.mjs": "9eb1e5277bc2ffe6953e2d2ecc6504f832825285beefecfb35c27aac4997ac20",
+    "tests/test_planning_schemas.mjs": "7e91d19b6eed4e802db3f1577a514a9298c70d6becb1706ce9b2861d0565f42b",
     "docs/verification/sprint-55-meeting-corpus.json": "f69e7daffd8f376b98acfa2c83cda8c18a963e43581df568b98bba3969c332a4",
     "scripts/meeting_continuity_contract.py": "1053ac42248718c52a0db02def8322e3592c00a725c873ac1f00fc7cc0b16095",
     "tests/test_meeting_continuity_contract.py": "76c4bdc05fe57cc99514a7341110264299f8b7d6672699651f49fcd813ac1c87",
     "scripts/meeting_skill_contract.py": "c2af798b94048676abbce8c87ad6e3576b7beadb7b275f5092f806d5b88e34d1",
     "tests/test_meeting_skill_contract.py": "99ba7f62d95a21bef1359b99735135499d62d4666fd17a4e3b87b44a46f746c5",
     "artifacts/sprints/sprint-55/meeting-skill-pack.json": "726d1eafb4cddb83b5218cb5945e5d7e8ed5c1d88d4135411d48a11f38cb88a4",
-    "docs/architecture/meeting-records-and-continuity.md": "9d75dde07923f2d79f476b8cfddfef4e174cd02dac1061ec0f6e207771ef0f82",
+    "docs/architecture/meeting-records-and-continuity.md": "f604dc610a088a620b835c669231987328184d65eef6302fca8d56a380541284",
     "docs/guides/meeting-records-local-workflows.md": "27acd0030d3dc84115e4acb8ef886abde1589f347ed32b2f08643875e680afaf",
-    "docs/verification/sprint-55-local-results.md": "f50872a15e3478c0b21e7751dc7088bcc938366c1d8ef7832c32157a3038f16c",
-    "scripts/sprint_55_evidence.py": "2413abaed19e8f27400c4736f52d841dad60456c9125b3cc3f209195aad92802",
-    "tests/test_sprint_55_evidence.py": "384f3aa7cf469939601794adbcf02e17d9e1e81215a405f8bf0c8466c0308ebb"
+    "docs/verification/sprint-55-local-results.md": "3ef4d26b19db36cd5e868c7f4a185b4fa5d71d4d3fe6fd09c4c1cc88f030b488",
+    "scripts/sprint_55_evidence.py": "c4681803c9f7ea539915ca53f2884c2d490c9bdb2c4d8f31822cdc398a3967f8",
+    "tests/test_sprint_55_evidence.py": "a0499b604b66045229605a9a5d8d08c2c2196ae30ac2b87176970e41ed73e71d"
   },
   "environment": {
     "system": "Linux",
-    "release": "7.1.6-201.fc44.x86_64",
+    "release": "7.1.10-200.fc44.x86_64",
     "machine": "x86_64",
-    "python": "3.14.6",
+    "python": "3.14.7",
     "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
     "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
     "node": "v24.15.0",
@@ -55,7 +57,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "a516d36f80fb0184612939f65f4dab9294dad86a86ecb9759e8968bdd92d3dd1",
+      "output_sha256": "1d022cab5171ea243d45e5928dbe1f4c7a29fb0af23095ecbaa072d5174ec2cd",
       "blocking_skip_count": 0
     },
     {
@@ -70,7 +72,22 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "0364e7bc664f3acd8da0a8e733c4ded5119b0988e96e3c6b51a43e9cae4ce12d",
+      "output_sha256": "72f6325fed239dc1cf8eb2aa8c0c853e9ce9967575eeb1b1197ea8226d376e87",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "meeting-host-coordinator",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "meeting_coordinator",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "51eb618a9c04ce577263cd46c985546a4ab8dda5cbe3f67158e5672f16977c38",
       "blocking_skip_count": 0
     },
     {
@@ -81,7 +98,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "4c263a12fe2e3442cc449f87f79652a9665a4ce40d8af63158414fe78009b88b",
+      "output_sha256": "2395c58934c0e73a5bce038155adce20af2c065e9fc29949eca3475e3d16292d",
       "blocking_skip_count": 0
     },
     {
@@ -124,7 +141,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "7b345729c77b788e81cce8c47df1c023b8e55869950cfa9c9664beea5d122d41",
+      "output_sha256": "68a998eb3b3b6f27b5827205d3bbc6643759d42165a74fd0990ef203faba36b5",
       "blocking_skip_count": null
     },
     {
@@ -135,7 +152,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "0c9593d2ec3f1c72f561987f08e0ba617c2918ddf58440c7720a94e46b7fa030",
+      "output_sha256": "891fda858ef91b44ab6da5fbd7269e40e5caae2a74f9315d29ce01d9ae539e7a",
       "blocking_skip_count": null
     },
     {
@@ -168,7 +185,7 @@
         "tests.test_sprint_55_evidence"
       ],
       "exit_code": 0,
-      "output_sha256": "5d8a174d448d59185fd227bcbab9c964e39b10a9c2e28965972cfb0c833dd854",
+      "output_sha256": "4a160235c0add54f7a5997815d0e01a072210439de4899c702c94dd3cd814662",
       "blocking_skip_count": null
     }
   ],
@@ -212,7 +229,7 @@
     "network_access_capability": false,
     "calendar_mutation_capability": false,
     "source_mutation_capability": false,
-    "product_coordinator": false,
+    "product_coordinator": true,
     "native_interface_integration": false,
     "accessibility_acceptance": false,
     "installed_cross_platform_acceptance": false,
@@ -229,7 +246,7 @@
     "inferred_attendee_state_count": 0,
     "invented_owner_or_date_count": 0,
     "verbatim_source_mutation_count": 0,
-    "product_coordinator": false,
+    "product_coordinator": true,
     "native_interface_integration": false,
     "accessibility_acceptance": false,
     "installed_cross_platform_acceptance": false,
@@ -243,10 +260,6 @@
     {
       "code": "UPSTREAM-SPRINT-54-BLOCKED",
       "owner": "55.1"
-    },
-    {
-      "code": "MEETING-PRODUCT-COORDINATOR-ABSENT",
-      "owner": "55.1.3.2"
     },
     {
       "code": "NATIVE-INTERFACE-INTEGRATION-ABSENT",
@@ -281,7 +294,7 @@
     "local_sprint_55_contract_passed": true,
     "sprint_status": "BLOCKED",
     "upstream_sprint_54_closed": false,
-    "meeting_workflow_integrated": false,
+    "meeting_workflow_integrated": true,
     "external_effects_enabled": false,
     "cross_platform_acceptance_passed": false,
     "trusted_package_execution_complete": false,
