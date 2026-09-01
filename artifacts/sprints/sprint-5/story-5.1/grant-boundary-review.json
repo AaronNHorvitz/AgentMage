@@ -27,7 +27,7 @@
     "macOS implementation and execution evidence"
   ],
   "product_requirement_completion_claim": "none",
-  "reference_revision": "0eef34fadb0e14ccfc8c23b1ef6b95dd3b85e716",
+  "reference_revision": "c4127cf18b2441f75693cbf9e950ddb6653552d8",
   "release_claim": "none",
   "review_type": "independent-automated-boundary-review",
   "reviewer_identity": "agentmage-grant-boundary-review-v1",
@@ -75,7 +75,7 @@
     },
     {
       "path": "kernel/engine/src/authority.rs",
-      "sha256": "027d95c04e9cc073ead8ca996631951c55d208ab1f0d7ee06534831cf14b66f8"
+      "sha256": "c8d75e190006004d76da34a0835a99e3b9074265bea9eba5d5cc388ff22ceb09"
     },
     {
       "path": "kernel/engine/src/grants.rs",
@@ -107,7 +107,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/authority-escalation-report.json",
-      "sha256": "81df656a49e90be382159dada0922e50a15c1b017097136d5dd9f4b3b7e9e6e7"
+      "sha256": "c45ad97c3ca000a77fdcd3e0a8778469c54516495eb0e04459d90f3853baca97"
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/grant-stale-dispatch-report.json",
@@ -179,8 +179,8 @@
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/authority-escalation-report.json",
-      "reference_revision": "21d2a33b594fa67ec981de8ff300eaf2b01acdfc",
-      "sha256": "81df656a49e90be382159dada0922e50a15c1b017097136d5dd9f4b3b7e9e6e7"
+      "reference_revision": "f4a038ab3fdf9c9ff205b8317d0c6c94956e83b4",
+      "sha256": "c45ad97c3ca000a77fdcd3e0a8778469c54516495eb0e04459d90f3853baca97"
     },
     {
       "path": "artifacts/sprints/sprint-5/story-5.1/grant-stale-dispatch-report.json",
