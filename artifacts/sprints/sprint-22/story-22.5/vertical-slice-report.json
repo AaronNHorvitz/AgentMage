@@ -1,0 +1,125 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 10931,
+      "path": "kernel/engine/src/source_runtime_context.rs",
+      "sha256": "9ef651c5747aa5e0d1805e17afadaa671e19e609451e3f4af3a26c3c59c280ae"
+    },
+    {
+      "byte_length": 111393,
+      "path": "kernel/engine/src/source_preparation.rs",
+      "sha256": "9facf973fb5a8e10e8c8c09c3edc1f900ad5a86fc90a55229d987d97aa5ce5c1"
+    },
+    {
+      "byte_length": 142221,
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "sha256": "91ec216eaa831293a6330134f33b7e9c5590408adfda0275392bd0ce8c78b227"
+    },
+    {
+      "byte_length": 130132,
+      "path": "kernel/engine/src/runtime_loop_tests.rs",
+      "sha256": "4672e0d2d7b8b91dc4fda165b064b1c0610678881a24397b546b2a46df076024"
+    },
+    {
+      "byte_length": 17703,
+      "path": "shells/host/src/source_artifact_runtime.rs",
+      "sha256": "4b327e66e82d4a3c01a3e92c086d6168023ff0623fa77c4d9efd799d248099fc"
+    },
+    {
+      "byte_length": 47262,
+      "path": "shells/host/src/runtime_read_tests.rs",
+      "sha256": "c46a0c2c277fb422a902537fc2aa0bc612b8757b77fd960e69a004fe8623e645"
+    },
+    {
+      "byte_length": 7481,
+      "path": "shells/host/src/coding_client.rs",
+      "sha256": "5794af19e7fb3d7cc8ef7c7bf446621ab01f0683a628b165383232ceb03761b3"
+    },
+    {
+      "byte_length": 22624,
+      "path": "shells/host/src/runtime_parity_tests.rs",
+      "sha256": "e695944f11b5aea0f814637835700821674256309d152443f8fc711891e1b657"
+    },
+    {
+      "byte_length": 5341,
+      "path": "docs/architecture/engineering-runtime-vertical-slice.md",
+      "sha256": "678f5fec881cda5764c73f3c6ee9ffca5f62c81f2a5572dce34303691e5cb834"
+    },
+    {
+      "byte_length": 10961,
+      "path": "scripts/story_22_5_vertical_slice_evidence.py",
+      "sha256": "0a1e4b9936fbf1e327be922cd3bfcbcc80d3bda382e35b2e9f098441cc0588b2"
+    },
+    {
+      "byte_length": 836,
+      "path": "tests/test_story_22_5_vertical_slice_evidence.py",
+      "sha256": "633e9a1901d8c472e4392e1b610092553af1c4f4df16fbac545ec6e6d783a7e5"
+    },
+    {
+      "byte_length": 38754,
+      "path": "artifacts/sprints/sprint-22/story-22.5/vertical-slice-results.log",
+      "sha256": "ceadc9c2192d84172cfb34c8243dc185782a04d2a9cdf129043b7940f7a9cfa4"
+    },
+    {
+      "byte_length": 32177,
+      "path": "artifacts/sprints/sprint-22/story-22.5/vertical-slice-golden.json",
+      "sha256": "068c1060f01125eac8ec3f20124127425f1be892544fd8fcc63c0ec63a39c48f"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-host story_22_5_prepared_source_flows_through_model_tool_verifier_and_terminal_lineage --locked -- --nocapture",
+    "cargo test -p agentmage-host story_22_5_ --locked",
+    "cargo test -p agentmage-kernel-engine story_22_5_durable_prepared_source_checkpoint_resumes_without_replaying_effect --locked",
+    "cargo test -p agentmage-kernel-engine runtime_loop::tests::story_23_4_ --locked",
+    "cargo test -p agentmage-host story_50_2_read_only_and_coding_packets_are_equal_across_all_three_callers --locked",
+    "python3 scripts/story_22_4_attempt_recovery_evidence.py",
+    "cargo clippy -p agentmage-kernel-engine -p agentmage-host --all-targets --all-features --locked -- -D warnings"
+  ],
+  "generated_on": "2026-08-31",
+  "product_truth": {
+    "duplicate_effects": 0,
+    "durable_resume_worker_executions": 1,
+    "independent_review_complete": false,
+    "installed_package_campaign_complete": false,
+    "model_calls": 2,
+    "native_cross_platform_campaign_complete": false,
+    "prepared_source_turns": 2,
+    "production_artifact_tool_calls": 1,
+    "qualified_production_model": false,
+    "release_claim": "none",
+    "replayed_effects": 0,
+    "stale_source_model_calls": 0,
+    "terminal_receipts": 1,
+    "three_client_event_outcome_parity": true,
+    "verified_success": true
+  },
+  "protocols": [
+    "RV-50",
+    "RV-51",
+    "RV-52",
+    "RV-53",
+    "RV-54",
+    "RV-55",
+    "RV-56"
+  ],
+  "record_type": "agentmage-story-22-5-vertical-slice-evidence",
+  "remaining_external_work": [
+    "repeat the slice with the first independently qualified production model profile",
+    "run installed-package native Chat, CLI, and headless campaigns on supported platforms",
+    "obtain independent human review and release qualification"
+  ],
+  "required_markers": [
+    "story_22_5_prepared_source_flows_through_model_tool_verifier_and_terminal_lineage ... ok",
+    "story_22_5_stale_required_source_and_tokenizer_drift_stop_before_model ... ok",
+    "story_22_5_durable_prepared_source_checkpoint_resumes_without_replaying_effect ... ok",
+    "story_23_4_malformed_model_result_fails_closed_with_terminal_evidence ... ok",
+    "story_23_4_cancellation_wins_over_a_pending_allow_response ... ok",
+    "story_23_4_deny_closes_without_launching_the_tool ... ok",
+    "story_50_2_read_only_and_coding_packets_are_equal_across_all_three_callers ... ok",
+    "Story 22.4 local durable attempt recovery evidence validated",
+    "Finished `dev` profile"
+  ],
+  "schema_version": 1,
+  "status": "PASS_LOCAL_DETERMINISTIC_VERTICAL_SLICE",
+  "story_id": "22.5"
+}

@@ -873,6 +873,14 @@ where
         &self.artifact_references
     }
 
+    /// Returns the caller-neutral context adapter for read-only accounting and diagnostics.
+    ///
+    /// This immutable projection cannot build a new packet or change runtime state.
+    #[must_use]
+    pub const fn context_port(&self) -> &X {
+        &self.context
+    }
+
     /// Returns content-free request-bound resource accounting for diagnostics and verification.
     #[must_use]
     pub const fn resource_snapshot(&self) -> &RuntimeResourceSnapshot {

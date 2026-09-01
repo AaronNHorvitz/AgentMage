@@ -41,6 +41,10 @@ use crate::evidence_reconciliation::{
     CitationFileIdentity, CitationSelector, SourceCitation, resolve_citation,
 };
 use crate::model_codec::{proposal_digest, tests_support::profile};
+use crate::model_orchestration_profile::{
+    AllocatedContextPartition, ContextPartitionDisposition, ExactTokenCounterBinding,
+    ModelContextWindowPlan,
+};
 use crate::operational_store::{
     OperationalStore, OperationalStoreKeyError, OperationalStoreKeyProvider,
 };
@@ -57,11 +61,31 @@ use crate::runtime_hardening::{
     RuntimeHardeningLimits, RuntimeResourceLedger,
 };
 use crate::runtime_journal::{RuntimeJournalError, RuntimeJournalWorker};
+use crate::source_preparation::{
+    ExactSourceTokenCounter, PreparedSourceRetention, SourceAdmissionRequest, SourceEncoding,
+    SourceMediaFamily, SourcePreparationError, SourcePreparationLimits, SourcePreparationService,
+};
+use crate::source_runtime_context::PreparedSourceRuntimeContext;
 use crate::tooling::{Tool, ToolRegistry};
 
 const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const SNAPSHOT: &str = "snapshot-0001";
 static PRESSURE_TEMP_ID: AtomicU64 = AtomicU64::new(1);
+
+struct PreparedFixtureCounter {
+    binding: ExactTokenCounterBinding,
+}
+
+impl ExactSourceTokenCounter for PreparedFixtureCounter {
+    fn binding(&self) -> ExactTokenCounterBinding {
+        self.binding.clone()
+    }
+
+    fn count_tokens(&mut self, content: &str) -> Result<u32, SourcePreparationError> {
+        u32::try_from(content.split_whitespace().count())
+            .map_err(|_| SourcePreparationError::ResourceLimit)
+    }
+}
 
 #[test]
 fn story_48_2_runtime_action_ids_are_precomputable_stable_and_sequence_bound() {
@@ -1159,6 +1183,76 @@ fn request(profile: ExactModelProfile, registry: &ToolRegistry) -> RuntimeRunReq
     seal_runtime_run_request(request).expect("request seals")
 }
 
+fn prepared_fixture_context(
+    profile: &ExactModelProfile,
+) -> PreparedSourceRuntimeContext<PreparedFixtureCounter> {
+    let binding = ExactTokenCounterBinding {
+        token_counter_id: profile.context.token_counter.clone(),
+        token_counter_sha256: profile.context.token_counter_sha256.clone(),
+        tokenizer_sha256: profile.codec.tokenizer_sha256.clone(),
+    };
+    let mut sources = SourcePreparationService::new();
+    let manifest = sources
+        .admit(
+            SourceAdmissionRequest {
+                source_id: "durable-prepared-source".to_owned(),
+                request_id: "durable-prepared-request".to_owned(),
+                source_kind: "repository_snapshot".to_owned(),
+                protected_origin_sha256: sha256(b"protected durable source"),
+                media_type: "text/plain".to_owned(),
+                media_family: SourceMediaFamily::PlainText,
+                encoding: SourceEncoding::Utf8,
+                sensitivity: agentmage_kernel_contracts::ContextSensitivity::Internal,
+                retention: PreparedSourceRetention::Ephemeral,
+                collected_at_epoch_ms: 1_788_134_400_000,
+                limits: SourcePreparationLimits::default(),
+                bytes: b"durable prepared source fixture\n".to_vec(),
+            },
+            &mut PreparedFixtureCounter {
+                binding: binding.clone(),
+            },
+            &mut || false,
+        )
+        .expect("durable prepared source admits");
+    let source_tokens = profile.context.max_context_tokens.saturating_sub(5);
+    let included = |tokens: u32| AllocatedContextPartition {
+        requested_tokens: tokens,
+        minimum_tokens: u32::from(tokens > 0),
+        allocated_tokens: tokens,
+        disposition: ContextPartitionDisposition::Included,
+        reason_code: None,
+    };
+    let mut plan = ModelContextWindowPlan {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        model_profile_id: profile.profile_id.as_str().to_owned(),
+        model_manifest_sha256: profile.manifest_sha256.clone(),
+        model_runtime_sha256: sha256(
+            &serde_json::to_vec(&profile.runtime).expect("runtime identity serializes"),
+        ),
+        tokenizer_sha256: profile.codec.tokenizer_sha256.clone(),
+        token_counter_sha256: binding.token_counter_sha256.clone(),
+        total_window_tokens: profile.context.max_context_tokens,
+        system_and_tool_tokens: 1,
+        user_input_tokens: 1,
+        source_artifacts: included(source_tokens),
+        retrieved_context: included(0),
+        workflow_recovery_reserve_tokens: 1,
+        output_reserve_tokens: 1,
+        safety_margin_tokens: 1,
+        unallocated_tokens: 0,
+        plan_sha256: "0".repeat(64),
+    };
+    plan.plan_sha256 = sha256(&serde_json::to_vec(&plan).expect("window plan serializes"));
+    PreparedSourceRuntimeContext::new(
+        Arc::new(sources),
+        plan,
+        PreparedFixtureCounter { binding },
+        [manifest.source_id],
+        false,
+    )
+    .expect("durable prepared context composes")
+}
+
 fn packet() -> WorkPacket {
     WorkPacket {
         schema_version: CONTRACT_SCHEMA_VERSION,
@@ -1299,7 +1393,15 @@ fn sha256(bytes: &[u8]) -> String {
         .collect()
 }
 
-fn assert_valid_terminal_stream(coordinator: &FixtureCoordinator) {
+fn assert_valid_terminal_stream<M, X, T, V, C>(
+    coordinator: &ReusableRuntimeCoordinator<M, X, T, V, C>,
+) where
+    M: RuntimeModelPort,
+    X: RuntimeContextPort,
+    T: RuntimeToolBoundary,
+    V: RuntimeVerifierPort,
+    C: RuntimeClock,
+{
     let mut sequence = RuntimeEventSequence::new();
     for event in coordinator.events() {
         sequence.push(event).expect("event sequence remains valid");
@@ -2166,7 +2268,7 @@ fn tool_output_kind_must_match_payload_and_cannot_claim_model_output() {
 }
 
 #[test]
-fn durable_checkpoint_resumes_without_replaying_the_completed_effect() {
+fn story_22_5_durable_prepared_source_checkpoint_resumes_without_replaying_effect() {
     let profile = profile("runtime-loop-resume");
     let registry = registry_for_operation(GrantOperation::WorkspaceRead);
     let mut request = request(profile.clone(), &registry);
@@ -2180,7 +2282,7 @@ fn durable_checkpoint_resumes_without_replaying_the_completed_effect() {
     let mut first = ReusableRuntimeCoordinator::new_with_durable_state(
         request.clone(),
         FakeModel::new(profile.clone(), [ModelScript::Tool]),
-        FakeContext,
+        prepared_fixture_context(&profile),
         registry_for_operation(GrantOperation::WorkspaceRead),
         FakeToolBoundary {
             script: PermissionScript::Allow,
@@ -2237,8 +2339,8 @@ fn durable_checkpoint_resumes_without_replaying_the_completed_effect() {
     let resumed_request = seal_runtime_run_request(resumed_request).expect("resume request seals");
     let mut resumed = ReusableRuntimeCoordinator::new_with_durable_state(
         resumed_request,
-        FakeModel::new(profile, [ModelScript::Completion]),
-        FakeContext,
+        FakeModel::new(profile.clone(), [ModelScript::Completion]),
+        prepared_fixture_context(&profile),
         registry_for_operation(GrantOperation::WorkspaceRead),
         FakeToolBoundary {
             script: PermissionScript::Allow,
@@ -2267,7 +2369,11 @@ fn durable_checkpoint_resumes_without_replaying_the_completed_effect() {
     else {
         panic!("completion cannot pause");
     };
-    assert_eq!(outcome.state, AgentStateKind::Success);
+    assert_eq!(
+        outcome.state,
+        AgentStateKind::Success,
+        "unexpected prepared-source resume outcome: {outcome:?}"
+    );
     assert_eq!(outcome.turn_count, 2);
     assert_eq!(outcome.model_call_count, 2);
     assert_eq!(outcome.tool_call_count, 1);

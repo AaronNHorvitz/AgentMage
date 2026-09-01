@@ -3849,13 +3849,27 @@ Windows, physical-fault, and independent-review qualification remain explicitly 
 - [x] **Sprint AC 22.AC2:** Forced termination never repeats a completed operation. Evidence: 126 deterministic platform-neutral before/after store-boundary exits and 100 native Linux no-unwind exits around tool-terminal and checkpoint commits retain exactly one worker execution, no invented terminal or checkpoint state, and no repeated completed operation.
 - [x] **Sprint AC 22.AC3:** Material drift is detected before another action.
 - [x] **Sprint AC 22.AC4:** Context condensation preserves the active request, correction, evidence references, and next safe action.
-- [ ] **Sprint AC 22.AC5:** Ephemeral mode leaves no persisted session record. Partial local evidence: ephemeral checkpoints are rejected before SQLCipher publication and leave generation and checkpoint rows unchanged; production session lifecycle integration remains open.
-- [ ] **Sprint AC 22.AC6:** Every persisted large output resolves through a digest- and size-verified runtime artifact reference governed by SQLite metadata and current policy.
-- [ ] **Sprint AC 22.AC7:** Crash, corruption, retention, and collection campaigns leave no false reference, mutable overwrite, repeated effect, unauthorized disclosure, or hidden orphan.
-- [ ] **Sprint AC 22.AC8:** Session reconstruction binds the exact journal cursor, checkpoint, artifact set, workspace state, policy, and model profile or stops with one visible blocked result.
-- [ ] **Sprint AC 22.AC9:** Every supplied source is accounted for, every context token is budgeted,
+- [x] **Sprint AC 22.AC5:** Ephemeral mode leaves no persisted session record. Evidence: the shared
+  runtime rejects every ephemeral journal/checkpoint attachment, the SQLCipher publication tests
+  retain unchanged generations and row counts, and the Story 22.5 ephemeral source slice returns
+  only in-memory event, context, and terminal projections.
+- [x] **Sprint AC 22.AC6:** Every persisted large output resolves through a digest- and size-verified
+  runtime artifact reference governed by SQLite metadata and current policy. Evidence: the shared
+  durable coordinator large-model, large-result, separate stdout/stderr, range-read, reopen, and
+  tamper tests plus Story 22.2 lifecycle evidence all pass in the Story 22.5 source-bound campaign.
+- [x] **Sprint AC 22.AC7:** Crash, corruption, retention, and collection campaigns leave no false
+  reference, mutable overwrite, repeated effect, unauthorized disclosure, or hidden orphan.
+  Evidence: Stories 22.2 and 22.4 retain the artifact and attempt fault matrices; Story 22.5 binds
+  their authorities into one source-to-terminal path with zero replay and duplicate effects.
+- [x] **Sprint AC 22.AC8:** Session reconstruction binds the exact journal cursor, checkpoint,
+  artifact set, workspace state, policy, and model profile or stops with one visible blocked result.
+  Evidence: the Story 22.5 durable prepared-source fixture reconstructs the exact safe continuation,
+  while the existing drift matrix rejects every independently changed binding before another call.
+- [x] **Sprint AC 22.AC9:** Every supplied source is accounted for, every context token is budgeted,
   and every interruption resumes or diagnoses with zero replay, zero stale-current evidence, and
-  zero duplicate guarded effect.
+  zero duplicate guarded effect. Evidence: the retained two-turn source manifests account for every
+  source and section under the exact tokenizer; stale and tokenizer-drift cases make zero model
+  calls; the durable continuation and 100-seed recovery matrix retain zero replay and duplicates.
 
 **Gate decision:** Sprint 22 is PASS only when Stories 22.1 through 22.4, every numbered
 task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of
@@ -3871,22 +3885,44 @@ from admitted source through context, model proposal, tools, verification, artif
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 22.5.1 - Compose one runtime-owned path**
-  - [ ] **Sub-task 22.5.1.1:** Connect artifact admission, context delivery, model gateway, read-only tools, observations, verification, journal, artifacts, checkpoints, cancellation, and terminal results through Rust-owned interfaces. Partial local evidence: commits `3548cf35` through `25d38bf2` compose exact paste/file capture, SQLCipher artifacts and journal state, context-byte receipts, selected qualified-route mediation, approved Plan handoff, controlled Agent execution, deterministic terminal records, conservative restart behavior, and host-owned Team checkpoints. A production-qualified model, complete read-only repository tool loop, broad artifact parsers, and installed end-to-end slice remain absent.
-  - [ ] **Sub-task 22.5.1.2:** Implement a fake-model repository-analysis fixture that requests bounded reads and produces a cited proposal without direct tool or completion authority. Partial local evidence: host fixtures prove model output remains an untrusted proposal and cannot establish terminal success; the exact cited repository-analysis fixture and complete bounded-read loop remain open.
-  - [ ] **Sub-task 22.5.1.3:** Ensure Chat, CLI, and headless callers consume the same ordered events and terminal record without independent orchestration logic.
-- [ ] **Task 22.5.2 - Exercise recovery and truth**
-  - [ ] **Sub-task 22.5.2.1:** Interrupt at each major boundary, reload the caller, resume from current checkpoints, and compare events, artifacts, observations, verification, and terminal state.
-  - [ ] **Sub-task 22.5.2.2:** Inject stale sources, malformed model events, denied tools, truncated output, contradictory evidence, and cancellation and require explicit non-success results.
-- [ ] **Task 22.5.3 - Close the local vertical-slice evidence**
-  - [ ] **Sub-task 22.5.3.1:** Run applicable `RV-50` through `RV-56` portions and retain the complete source-to-terminal lineage plus resource and cleanup evidence.
-  - [ ] **Sub-task 22.5.3.2:** Recompute every summary from raw records and prove no client/model claim overrides deterministic evidence.
+- [x] **Task 22.5.1 - Compose one runtime-owned path**
+  - [x] **Sub-task 22.5.1.1:** Connect artifact admission, context delivery, model gateway,
+    read-only tools, observations, verification, journal, artifacts, checkpoints, cancellation, and
+    terminal results through Rust-owned interfaces.
+  - [x] **Sub-task 22.5.1.2:** Implement a fake-model repository-analysis fixture that requests
+    bounded reads and produces a cited proposal without direct tool or completion authority.
+  - [x] **Sub-task 22.5.1.3:** Ensure Chat, CLI, and headless callers consume the same ordered events
+    and terminal record without independent orchestration logic.
+- [x] **Task 22.5.2 - Exercise recovery and truth**
+  - [x] **Sub-task 22.5.2.1:** Interrupt at each major boundary, reload the caller, resume from
+    current checkpoints, and compare events, artifacts, observations, verification, and terminal
+    state.
+  - [x] **Sub-task 22.5.2.2:** Inject stale sources, malformed model events, denied tools, truncated
+    output, contradictory evidence, and cancellation and require explicit non-success results.
+- [x] **Task 22.5.3 - Close the local vertical-slice evidence**
+  - [x] **Sub-task 22.5.3.1:** Run applicable `RV-50` through `RV-56` portions and retain the complete
+    source-to-terminal lineage plus resource and cleanup evidence.
+  - [x] **Sub-task 22.5.3.2:** Recompute every summary from raw records and prove no client/model
+    claim overrides deterministic evidence.
+
+Local production evidence: [`engineering-runtime-vertical-slice.md`](docs/architecture/engineering-runtime-vertical-slice.md)
+and [`vertical-slice-report.json`](artifacts/sprints/sprint-22/story-22.5/vertical-slice-report.json)
+retain the exact prepared source, both model-context manifests, inert fake-model proposals, one
+production artifact search and receipt, verifier-owned answer evidence, complete terminal event
+chain, durable no-replay continuation, three-client parity, hostile non-success cases, resource
+closure, and local `RV-50` through `RV-56` mappings. A qualified production model, installed native
+clients, supported-platform campaigns, and independent review remain explicit external gates.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 22.5.AC1:** Given an authorized repository-analysis request, when the vertical slice runs, then every source, model-visible range, proposal, tool call, observation, citation, and terminal claim is attributable.
-- [ ] **Story AC 22.5.AC2:** Given interruption or caller reload, when the task resumes, then accepted work is preserved, completed effects do not replay, and identical evidence controls completion.
-- [ ] **Story AC 22.5.AC3:** Given malformed, denied, stale, partial, contradictory, or cancelled execution, when the slice ends, then it reports the exact non-success state and safe next action.
+- [x] **Story AC 22.5.AC1:** Given an authorized repository-analysis request, when the vertical
+  slice runs, then every source, model-visible range, proposal, tool call, observation, citation,
+  and terminal claim is attributable.
+- [x] **Story AC 22.5.AC2:** Given interruption or caller reload, when the task resumes, then
+  accepted work is preserved, completed effects do not replay, and identical evidence controls
+  completion.
+- [x] **Story AC 22.5.AC3:** Given malformed, denied, stale, partial, contradictory, or cancelled
+  execution, when the slice ends, then it reports the exact non-success state and safe next action.
 
 ### [ ] Sprint 23 - Native Visual Studio Code Chat Experience
 

@@ -3,10 +3,12 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use agentmage_capability_read_only::{
-    GIT_INSPECTION_TOOL_ID, GitInspectionOperation, GitInspectionOutcome, GitInspectionRequest,
-    NeverCancelled, ReadOnlyEncoding, ReadOnlyLimits, ReadOnlyOutcome, ReadOnlyRequest,
-    ReadOnlyToolKind, SnapshotEntry, SnapshotEntryKind, WorkspaceSnapshot, execute_read_only,
-    parse_git_inspection, read_only_tool_kind, validate_git_inspection_request,
+    ArtifactAttemptLedger, ArtifactExecutionSignal, ArtifactLimits, ArtifactOutcome,
+    ArtifactRequest, ArtifactToolKind, GIT_INSPECTION_TOOL_ID, GitInspectionOperation,
+    GitInspectionOutcome, GitInspectionRequest, NeverCancelled, ReadOnlyEncoding, ReadOnlyLimits,
+    ReadOnlyOutcome, ReadOnlyRequest, ReadOnlyToolKind, SnapshotEntry, SnapshotEntryKind,
+    WorkspaceSnapshot, execute_read_only, parse_git_inspection, read_only_tool_kind,
+    validate_git_inspection_request,
 };
 use agentmage_kernel_contracts::{
     AgentStateKind, ApprovalId, AuthorityClass, BudgetLimit, BudgetResource,
@@ -22,6 +24,10 @@ use agentmage_kernel_contracts::{
     VerifierSource, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, to_canonical_json,
 };
 use agentmage_kernel_engine::model_codec::proposal_digest;
+use agentmage_kernel_engine::model_orchestration_profile::{
+    AllocatedContextPartition, ContextPartitionDisposition, ExactTokenCounterBinding,
+    ModelContextWindowPlan,
+};
 use agentmage_kernel_engine::runtime_coordinator::{
     runtime_tool_catalog_sha256, seal_runtime_run_request, verify_runtime_outcome,
 };
@@ -31,8 +37,15 @@ use agentmage_kernel_engine::runtime_loop::{
     RuntimeModelPort, RuntimePermissionEvaluation, RuntimePortFailure, RuntimeToolBoundary,
     RuntimeToolExecution, RuntimeVerificationInput, RuntimeVerifierPort, runtime_tool_references,
 };
+use agentmage_kernel_engine::source_preparation::{
+    ExactSourceTokenCounter, PreparedSourceRetention, SourceAdmissionRequest, SourceEncoding,
+    SourceMediaFamily, SourcePreparationError, SourcePreparationLimits, SourcePreparationService,
+};
+use agentmage_kernel_engine::source_runtime_context::PreparedSourceRuntimeContext;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
+
+use crate::source_artifact_runtime::dispatch_native_source_artifact;
 
 use crate::runtime_tools::read_only_runtime_registry;
 
@@ -368,6 +381,364 @@ impl RuntimeVerifierPort for NativeReadVerifier {
     }
 }
 
+struct SourceCounter {
+    binding: ExactTokenCounterBinding,
+}
+
+impl ExactSourceTokenCounter for SourceCounter {
+    fn binding(&self) -> ExactTokenCounterBinding {
+        self.binding.clone()
+    }
+
+    fn count_tokens(&mut self, content: &str) -> Result<u32, SourcePreparationError> {
+        u32::try_from(content.split_whitespace().count())
+            .map_err(|_| SourcePreparationError::ResourceLimit)
+    }
+}
+
+struct SourceAwareFakeModel {
+    inner: NativeReadFakeModel,
+    saw_prepared_source: Arc<AtomicBool>,
+}
+
+impl RuntimeModelPort for SourceAwareFakeModel {
+    fn exact_profile(&self) -> &ExactModelProfile {
+        self.inner.exact_profile()
+    }
+
+    fn run_model(
+        &mut self,
+        request: &ModelRunRequest,
+        context: &ModelContextPacket,
+        cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
+    ) -> Result<ModelRunResult, RuntimePortFailure> {
+        if context.messages.iter().any(|message| {
+            std::str::from_utf8(&message.content.bytes)
+                .is_ok_and(|text| text.contains("prepared_fixture"))
+        }) {
+            self.saw_prepared_source.store(true, Ordering::SeqCst);
+        }
+        self.inner.run_model(request, context, cancellation)
+    }
+}
+
+struct PreparedArtifactBoundary {
+    sources: Arc<SourcePreparationService>,
+    ledger: ArtifactAttemptLedger,
+    executions: u32,
+}
+
+impl RuntimeToolBoundary for PreparedArtifactBoundary {
+    fn evaluate(
+        &mut self,
+        _request: &RuntimeRunRequest,
+        _operation_id: &RuntimeOperationId,
+        _definition: &ToolDefinition,
+        call: &ToolCall,
+        now_epoch_ms: u64,
+    ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
+        Ok(RuntimePermissionEvaluation::Allow {
+            approval_id: ApprovalId::from_raw("prepared-source-approval-0001"),
+            preview_sha256: sha256(&call.arguments.bytes),
+            expires_at_epoch_ms: now_epoch_ms.saturating_add(10_000),
+            grant_id: GrantId::from_raw(format!(
+                "prepared-source-grant-{}",
+                call.tool_call_id.as_str()
+            )),
+            decision_sha256: sha256(b"prepared source fixture allow"),
+            authority_sha256: sha256(b"prepared source fixture consumed authority"),
+        })
+    }
+
+    fn resolve(
+        &mut self,
+        _request: &RuntimeRunRequest,
+        _challenge: &agentmage_kernel_contracts::RuntimeApprovalChallenge,
+        _response: &agentmage_kernel_contracts::RuntimeApprovalResponse,
+        _definition: &ToolDefinition,
+        _call: &ToolCall,
+        _now_epoch_ms: u64,
+    ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
+        Err(RuntimePortFailure::Invalid)
+    }
+
+    fn execute(
+        &mut self,
+        request: &RuntimeRunRequest,
+        _evaluation: &RuntimePermissionEvaluation,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        _cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
+    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        let kind = ArtifactToolKind::ALL
+            .into_iter()
+            .find(|kind| kind.id() == call.tool_id.as_str())
+            .ok_or(RuntimePortFailure::Invalid)?;
+        let result = dispatch_native_source_artifact(
+            kind,
+            &call.arguments.bytes,
+            &self.sources,
+            true,
+            ArtifactExecutionSignal::Continue,
+            &mut self.ledger,
+        )
+        .map_err(|_| RuntimePortFailure::Invalid)?;
+        if !result.verify(kind) || !result.production_execution {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        self.executions = self
+            .executions
+            .checked_add(1)
+            .ok_or(RuntimePortFailure::ResourceExhausted)?;
+        let bytes = serde_json::to_vec(&result).map_err(|_| RuntimePortFailure::Invalid)?;
+        let outcome = match result.outcome {
+            ArtifactOutcome::Succeeded | ArtifactOutcome::NoResult | ArtifactOutcome::Truncated => {
+                OperationOutcome::Succeeded
+            }
+            ArtifactOutcome::Denied | ArtifactOutcome::Restricted => OperationOutcome::Denied,
+            ArtifactOutcome::Cancelled => OperationOutcome::Cancelled,
+            ArtifactOutcome::TimedOut => OperationOutcome::TimedOut,
+            ArtifactOutcome::Stale
+            | ArtifactOutcome::Unsupported
+            | ArtifactOutcome::OutOfRange
+            | ArtifactOutcome::Failed => OperationOutcome::Failed,
+        };
+        let evidence = EvidenceReference {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            evidence_id: EvidenceId::from_raw(format!(
+                "prepared-source-evidence-{:04}",
+                self.executions
+            )),
+            kind: EvidenceKind::ToolOutput,
+            source_id: result
+                .source_id
+                .clone()
+                .unwrap_or_else(|| kind.id().to_owned()),
+            object_id: result.output_identity.clone(),
+            fragment: Some(format!(
+                "artifact-result:{};freshness:{}",
+                result.call_id,
+                result.freshness_sha256.as_deref().unwrap_or("none")
+            )),
+            content_sha256: sha256(&bytes),
+            observed_revision: Some(request.repository_snapshot_id.as_str().to_owned()),
+        };
+        Ok(RuntimeToolExecution {
+            receipt_id: ReceiptId::from_raw(format!(
+                "prepared-source-receipt-{:04}",
+                self.executions
+            )),
+            receipt_sha256: result.receipt.receipt_sha256.clone(),
+            result: ToolResult {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                tool_call_id: call.tool_call_id.clone(),
+                correlation_id: call.correlation_id.clone(),
+                outcome,
+                output: Some(ContractPayload {
+                    schema: definition.output_schema.clone(),
+                    media_type: "application/json".to_owned(),
+                    sha256: sha256(&bytes),
+                    bytes,
+                }),
+                validation_issues: Vec::new(),
+                evidence: vec![evidence],
+                error: None,
+                elapsed_ms: 1,
+                state_change: StateChange::NotChanged,
+            },
+            result_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates: Vec::new(),
+        })
+    }
+}
+
+#[test]
+fn story_22_5_prepared_source_flows_through_model_tool_verifier_and_terminal_lineage() {
+    let registry = read_only_runtime_registry().expect("native read registry");
+    let profile = deterministic_profile();
+    let (sources, source, binding) = prepared_service(&profile);
+    let sources = Arc::new(sources);
+    let context = PreparedSourceRuntimeContext::new(
+        Arc::clone(&sources),
+        source_window_plan(&profile),
+        SourceCounter { binding },
+        [source.source_id.clone()],
+        false,
+    )
+    .expect("prepared source context");
+    let definition = registry
+        .get_tool(&ToolId::from_raw(ArtifactToolKind::Search.id()), "1.0.0")
+        .expect("artifact search definition");
+    let search_bytes = serde_json::to_vec(&ArtifactRequest {
+        schema_version: 1,
+        call_id: "prepared-source-search".to_owned(),
+        source_id: Some(source.source_id.clone()),
+        section_id: None,
+        range: None,
+        query: Some("prepared_fixture".to_owned()),
+        freshness_sha256: Some(source.manifest_sha256.clone()),
+        output_identity: "prepared-source-search-output".to_owned(),
+        limits: ArtifactLimits::default(),
+        call_depth: 0,
+    })
+    .expect("artifact search request");
+    let saw_prepared_source = Arc::new(AtomicBool::new(false));
+    let request = runtime_request(profile.clone(), &registry);
+    let admitted_request = request.clone();
+    let mut coordinator = ReusableRuntimeCoordinator::new(
+        request,
+        SourceAwareFakeModel {
+            inner: NativeReadFakeModel {
+                profile,
+                scripts: [
+                    NativeReadModelStep::Tool {
+                        tool_id: definition.tool_id.clone(),
+                        arguments: ContractPayload {
+                            schema: definition.input_schema.clone(),
+                            media_type: "application/json".to_owned(),
+                            sha256: sha256(&search_bytes),
+                            bytes: search_bytes,
+                        },
+                    },
+                    NativeReadModelStep::Completion,
+                ]
+                .into_iter()
+                .collect(),
+                calls: 0,
+            },
+            saw_prepared_source: Arc::clone(&saw_prepared_source),
+        },
+        context,
+        registry,
+        PreparedArtifactBoundary {
+            sources,
+            ledger: ArtifactAttemptLedger::default(),
+            executions: 0,
+        },
+        NativeReadVerifier(VerifierId::from_raw("prepared-source-verifier-0001")),
+        TestClock(3_000),
+    )
+    .expect("prepared source coordinator composes");
+
+    let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+        .run_until_boundary(None, None)
+        .expect("prepared source vertical slice completes")
+    else {
+        panic!("read-only prepared source cannot pause");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    assert_eq!(outcome.tool_call_count, 1);
+    assert_eq!(outcome.receipt_ids.len(), 1);
+    assert!(saw_prepared_source.load(Ordering::SeqCst));
+    assert!(outcome.evidence.iter().any(|reference| {
+        reference.source_id == source.source_id
+            && reference
+                .fragment
+                .as_deref()
+                .is_some_and(|value| value.contains(&source.manifest_sha256))
+    }));
+    assert!(outcome.answer_evidence.is_some());
+    verify_runtime_outcome(&outcome, &admitted_request).expect("outcome verifies");
+    let mut sequence = RuntimeEventSequence::new();
+    for event in coordinator.events() {
+        sequence.push(event).expect("ordered event");
+    }
+    assert!(sequence.is_terminal());
+    if std::env::var_os("AGENTMAGE_STORY_22_5_EVIDENCE").is_some() {
+        println!(
+            "STORY_22_5_EVIDENCE={}",
+            serde_json::to_string(&serde_json::json!({
+                "schema_version": 1,
+                "record_type": "agentmage-story-22-5-vertical-slice-golden",
+                "source_manifest": source,
+                "context_manifests": coordinator.context_port().context_manifests(),
+                "events": coordinator.events(),
+                "outcome": outcome,
+                "production_artifact_dispatch": true,
+                "model_direct_tool_authority": false,
+                "model_completion_authority": false,
+                "duplicate_effect_count": 0,
+                "replay_count": 0
+            }))
+            .expect("evidence serializes")
+        );
+    }
+}
+
+#[test]
+fn story_22_5_stale_required_source_and_tokenizer_drift_stop_before_model() {
+    let registry = read_only_runtime_registry().expect("native read registry");
+    let profile = deterministic_profile();
+    let (mut stale_sources, source, binding) = prepared_service(&profile);
+    stale_sources
+        .mark_stale(&source.source_id, &source.manifest_sha256)
+        .expect("source becomes stale");
+    let stale_sources = Arc::new(stale_sources);
+    let stale_context = PreparedSourceRuntimeContext::new(
+        Arc::clone(&stale_sources),
+        source_window_plan(&profile),
+        SourceCounter {
+            binding: binding.clone(),
+        },
+        [source.source_id.clone()],
+        false,
+    )
+    .expect("stale state remains explicitly representable");
+    let request = runtime_request(profile.clone(), &registry);
+    let mut coordinator = ReusableRuntimeCoordinator::new(
+        request,
+        NativeReadFakeModel {
+            profile: profile.clone(),
+            scripts: [NativeReadModelStep::Completion].into_iter().collect(),
+            calls: 0,
+        },
+        stale_context,
+        registry,
+        SnapshotReadBoundary {
+            snapshot: native_snapshot(),
+            executions: 0,
+        },
+        NativeReadVerifier(VerifierId::from_raw("stale-source-verifier-0001")),
+        TestClock(4_000),
+    )
+    .expect("stale source coordinator composes without pretending freshness");
+    let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+        .run_until_boundary(None, None)
+        .expect("stale source closes with a truthful non-success")
+    else {
+        panic!("stale source cannot request approval");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Failed);
+    assert_eq!(outcome.model_call_count, 0);
+    assert_eq!(outcome.unresolved_codes, ["runtime.context.failed"]);
+
+    let (current_sources, current_source, binding) = prepared_service(&profile);
+    let mut drifted_plan = source_window_plan(&profile);
+    drifted_plan.token_counter_sha256 = "f".repeat(64);
+    let mut context = PreparedSourceRuntimeContext::new(
+        Arc::new(current_sources),
+        drifted_plan,
+        SourceCounter { binding },
+        [current_source.source_id],
+        false,
+    )
+    .expect("drift is checked against the exact request at delivery");
+    let request = runtime_request(
+        profile,
+        &read_only_runtime_registry().expect("second registry"),
+    );
+    assert_eq!(
+        context.build_context(
+            &request,
+            ContextPacketId::from_raw("drifted-context-packet"),
+            1,
+            &[],
+            &[],
+        ),
+        Err(RuntimePortFailure::Invalid)
+    );
+}
+
 #[test]
 fn story_23_4_fake_model_uses_existing_native_read_tool_then_verifies_completion() {
     let (request, events, outcome, observed_result) = completed_native_read_fixture();
@@ -635,6 +1006,77 @@ fn deterministic_profile() -> ExactModelProfile {
             profile.runtime.kind == agentmage_kernel_contracts::ModelRuntimeKind::DeterministicFake
         })
         .expect("deterministic profile")
+}
+
+fn source_window_plan(profile: &ExactModelProfile) -> ModelContextWindowPlan {
+    let source_tokens = profile.context.max_context_tokens.saturating_sub(5);
+    let included = |tokens: u32| AllocatedContextPartition {
+        requested_tokens: tokens,
+        minimum_tokens: u32::from(tokens > 0),
+        allocated_tokens: tokens,
+        disposition: ContextPartitionDisposition::Included,
+        reason_code: None,
+    };
+    let mut plan = ModelContextWindowPlan {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        model_profile_id: profile.profile_id.as_str().to_owned(),
+        model_manifest_sha256: profile.manifest_sha256.clone(),
+        model_runtime_sha256: sha256(
+            &serde_json::to_vec(&profile.runtime).expect("runtime identity serializes"),
+        ),
+        tokenizer_sha256: profile.codec.tokenizer_sha256.clone(),
+        token_counter_sha256: profile.context.token_counter_sha256.clone(),
+        total_window_tokens: profile.context.max_context_tokens,
+        system_and_tool_tokens: 1,
+        user_input_tokens: 1,
+        source_artifacts: included(source_tokens),
+        retrieved_context: included(0),
+        workflow_recovery_reserve_tokens: 1,
+        output_reserve_tokens: 1,
+        safety_margin_tokens: 1,
+        unallocated_tokens: 0,
+        plan_sha256: "0".repeat(64),
+    };
+    plan.plan_sha256 = sha256(&serde_json::to_vec(&plan).expect("plan serializes"));
+    plan
+}
+
+fn prepared_service(
+    profile: &ExactModelProfile,
+) -> (
+    SourcePreparationService,
+    agentmage_kernel_engine::source_preparation::PreparedSourceManifest,
+    ExactTokenCounterBinding,
+) {
+    let binding = ExactTokenCounterBinding {
+        token_counter_id: profile.context.token_counter.clone(),
+        token_counter_sha256: profile.context.token_counter_sha256.clone(),
+        tokenizer_sha256: profile.codec.tokenizer_sha256.clone(),
+    };
+    let mut sources = SourcePreparationService::new();
+    let source = sources
+        .admit(
+            SourceAdmissionRequest {
+                source_id: "prepared-repository-source".to_owned(),
+                request_id: "prepared-repository-request".to_owned(),
+                source_kind: "repository_snapshot".to_owned(),
+                protected_origin_sha256: sha256(b"protected repository source"),
+                media_type: "text/plain".to_owned(),
+                media_family: SourceMediaFamily::PlainText,
+                encoding: SourceEncoding::Utf8,
+                sensitivity: agentmage_kernel_contracts::ContextSensitivity::Internal,
+                retention: PreparedSourceRetention::Ephemeral,
+                collected_at_epoch_ms: 1_788_134_400_000,
+                limits: SourcePreparationLimits::default(),
+                bytes: b"pub fn prepared_fixture() -> u64 { 42 }\n".to_vec(),
+            },
+            &mut SourceCounter {
+                binding: binding.clone(),
+            },
+            &mut || false,
+        )
+        .expect("prepared repository source");
+    (sources, source, binding)
 }
 
 fn runtime_request(
