@@ -252,44 +252,101 @@ pub fn dispatch_word_source_artifact(
 
 #[cfg(test)]
 mod tests {
-    use std::io::{Cursor, Write};
-
+    use super::*;
     use agentmage_capability_read_only::{ArtifactLimits, ArtifactOutcome, ArtifactRequest};
     use agentmage_kernel_contracts::{
         CONTRACT_SCHEMA_VERSION, DOCX_MEDIA_TYPE, WorkspaceId, WorkspacePath,
     };
-    use zip::write::SimpleFileOptions;
-    use zip::{CompressionMethod, ZipWriter};
 
-    use super::*;
+    fn push_u16(output: &mut Vec<u8>, value: u16) {
+        output.extend_from_slice(&value.to_le_bytes());
+    }
+
+    fn push_u32(output: &mut Vec<u8>, value: u32) {
+        output.extend_from_slice(&value.to_le_bytes());
+    }
+
+    fn crc32(bytes: &[u8]) -> u32 {
+        let mut crc = u32::MAX;
+        for byte in bytes {
+            crc ^= u32::from(*byte);
+            for _ in 0..8 {
+                crc = (crc >> 1) ^ (0xedb8_8320 & 0_u32.wrapping_sub(crc & 1));
+            }
+        }
+        !crc
+    }
+
+    fn stored_zip(entries: &[(String, String)]) -> Vec<u8> {
+        let mut output = Vec::new();
+        let mut central = Vec::new();
+        for (name, content) in entries {
+            let name = name.as_bytes();
+            let content = content.as_bytes();
+            let offset = output.len() as u32;
+            let checksum = crc32(content);
+            push_u32(&mut output, 0x0403_4b50);
+            push_u16(&mut output, 20);
+            push_u16(&mut output, 0);
+            push_u16(&mut output, 0);
+            push_u16(&mut output, 0);
+            push_u16(&mut output, 0);
+            push_u32(&mut output, checksum);
+            push_u32(&mut output, content.len() as u32);
+            push_u32(&mut output, content.len() as u32);
+            push_u16(&mut output, name.len() as u16);
+            push_u16(&mut output, 0);
+            output.extend_from_slice(name);
+            output.extend_from_slice(content);
+
+            push_u32(&mut central, 0x0201_4b50);
+            push_u16(&mut central, 20);
+            push_u16(&mut central, 20);
+            push_u16(&mut central, 0);
+            push_u16(&mut central, 0);
+            push_u16(&mut central, 0);
+            push_u16(&mut central, 0);
+            push_u32(&mut central, checksum);
+            push_u32(&mut central, content.len() as u32);
+            push_u32(&mut central, content.len() as u32);
+            push_u16(&mut central, name.len() as u16);
+            push_u16(&mut central, 0);
+            push_u16(&mut central, 0);
+            push_u16(&mut central, 0);
+            push_u16(&mut central, 0);
+            push_u32(&mut central, 0);
+            push_u32(&mut central, offset);
+            central.extend_from_slice(name);
+        }
+        let central_offset = output.len() as u32;
+        let central_size = central.len() as u32;
+        output.extend_from_slice(&central);
+        push_u32(&mut output, 0x0605_4b50);
+        push_u16(&mut output, 0);
+        push_u16(&mut output, 0);
+        push_u16(&mut output, entries.len() as u16);
+        push_u16(&mut output, entries.len() as u16);
+        push_u32(&mut output, central_size);
+        push_u32(&mut output, central_offset);
+        push_u16(&mut output, 0);
+        output
+    }
 
     fn package(text: &str, active: bool) -> Vec<u8> {
-        let mut cursor = Cursor::new(Vec::new());
-        {
-            let mut writer = ZipWriter::new(&mut cursor);
-            let options = SimpleFileOptions::default()
-                .compression_method(CompressionMethod::Stored)
-                .unix_permissions(0o644);
-            let mut entries = vec![
-                ("[Content_Types].xml", "<Types/>".to_owned()),
-                ("_rels/.rels", "<Relationships/>".to_owned()),
-                (
-                    "word/document.xml",
-                    format!(
-                        "<w:document xmlns:w=\"w\"><w:body><w:p><w:r><w:t>{text}</w:t></w:r></w:p></w:body></w:document>"
-                    ),
+        let mut entries = vec![
+            ("[Content_Types].xml".to_owned(), "<Types/>".to_owned()),
+            ("_rels/.rels".to_owned(), "<Relationships/>".to_owned()),
+            (
+                "word/document.xml".to_owned(),
+                format!(
+                    "<w:document xmlns:w=\"w\"><w:body><w:p><w:r><w:t>{text}</w:t></w:r></w:p></w:body></w:document>"
                 ),
-            ];
-            if active {
-                entries.push(("word/vbaProject.bin", "inert".to_owned()));
-            }
-            for (name, content) in entries {
-                writer.start_file(name, options).expect("start");
-                writer.write_all(content.as_bytes()).expect("write");
-            }
-            writer.finish().expect("finish");
+            ),
+        ];
+        if active {
+            entries.push(("word/vbaProject.bin".to_owned(), "inert".to_owned()));
         }
-        cursor.into_inner()
+        stored_zip(&entries)
     }
 
     fn extraction_request(source: &[u8]) -> StructuredSourceExtractionRequest {
