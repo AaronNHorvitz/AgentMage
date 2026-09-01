@@ -38,7 +38,7 @@
       },
       {
         "path": "kernel/engine/src/authority.rs",
-        "sha256": "027d95c04e9cc073ead8ca996631951c55d208ab1f0d7ee06534831cf14b66f8"
+        "sha256": "c8d75e190006004d76da34a0835a99e3b9074265bea9eba5d5cc388ff22ceb09"
       },
       {
         "path": "kernel/engine/src/propagation.rs",
@@ -167,8 +167,8 @@
     ],
     "external_human_review_claim": "none",
     "finding_count": 0,
-    "reviewed_commit": "838df0dfcfb38902755142c47f3542c75d0f0e2a",
-    "reviewed_tree": "a982c3da9626813f60d15b0389a6c297a19669d6",
+    "reviewed_commit": "ec5d9ad8f60e2f0b46b5c28593adab0010966c8c",
+    "reviewed_tree": "8ebf118ec7f773db40d4174450ee9ca6bde0fbb7",
     "reviewer_id": "agentmage-story-4.1-independent-gate-v1"
   },
   "macos_evidence_substituted": false,
@@ -178,8 +178,8 @@
   "positive_authority_path_claim": "none",
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "838df0dfcfb38902755142c47f3542c75d0f0e2a",
-  "reviewed_tree": "a982c3da9626813f60d15b0389a6c297a19669d6",
+  "reviewed_commit": "ec5d9ad8f60e2f0b46b5c28593adab0010966c8c",
+  "reviewed_tree": "8ebf118ec7f773db40d4174450ee9ca6bde0fbb7",
   "schema_version": 1,
   "security_mapping": {
     "mapped_requirement_count": 7,
