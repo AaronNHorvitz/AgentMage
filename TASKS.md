@@ -6977,7 +6977,7 @@ every story criterion, every sprint criterion, and the Universal Story Definitio
 complete with current evidence. Otherwise it is BLOCKED.
 
 **Local evidence note:** The retained report at `artifacts/sprints/sprint-58/local-evidence-report.json`
-binds 11 passing commands, 6 focused commands with zero blocking skips, and the 73-case acceptance
+binds 12 passing commands, 7 focused commands with zero blocking skips, and the 73-case acceptance
 corpus to source revision `9df332f2d647912075f285039a9cfa9bd03678ae` (report SHA-256
 `29f392fe08fb99016beb37281755bd63050c95e1213f5b4ecce19870143eb733`). Exact dependency
 admission, bounded package inspection, raw duplicate-name detection, deterministic sidecar and cache
@@ -6989,8 +6989,9 @@ context accounting, hostile lifecycle coverage, golden projection/client parity,
 checks are complete. The authority-free Word product coordinator binds inspection, sidecar/cache,
 canonical source preparation, and optional generation into one exact fail-closed request; verified
 binary output enters the existing controlled-filesystem approval pipeline only as an unapproved,
-digest-bound create draft. Story 58.1 and Sprint 58 remain **BLOCKED** by Sprint 57, the unadmitted
-Word renderer, missing native-interface integration,
+digest-bound create draft. Native Chat, interactive CLI, JSON, SDK, and ACP carry only identity-bound
+Word commands and route through the same host coordinator without owning document logic. Story 58.1
+and Sprint 58 remain **BLOCKED** by Sprint 57, the unadmitted Word renderer,
 accessibility and installed cross-platform evidence, trusted-package execution, independent
 native-boundary review, and deferred manual fuzzing.
 ### [ ] Sprint 59 - Word Generation and Visual Verification

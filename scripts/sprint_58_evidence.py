@@ -33,6 +33,8 @@ SOURCE_PATHS: Final = (
     "capabilities/knowledge/src/lib.rs",
     "kernel/engine/src/filesystem_control.rs",
     "shells/host/Cargo.toml",
+    "shells/host/src/headless.rs",
+    "shells/host/src/cli.rs",
     "shells/host/src/word_artifact_coordinator.rs",
     "shells/host/src/word_source_artifact.rs",
     "shells/host/src/lib.rs",
@@ -84,6 +86,13 @@ COMMANDS: Final = (
             "word_", "--lib", "--locked",
         ),
     ),
+    (
+        "word-native-interface-unit",
+        (
+            "cargo", "test", "-p", "agentmage-host",
+            "cli::tests", "--lib", "--locked",
+        ),
+    ),
     ("word-runtime-schemas", ("node", "--test", "tests/test_planning_schemas.mjs")),
     (
         "word-acceptance-corpus",
@@ -102,12 +111,13 @@ COMMANDS: Final = (
     ("supply-chain", ("python3", "scripts/supply_chain.py")),
     ("evidence-tests", ("python3", "-m", "unittest", "tests.test_sprint_58_evidence")),
 )
-FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:6])
+FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:7])
 RUST_FOCUSED_COMMANDS: Final = {
     "word-inspection-extraction-unit",
     "word-generation-unit",
     "word-structured-source-unit",
     "word-product-host-unit",
+    "word-native-interface-unit",
 }
 SECURITY_REQUIREMENTS: Final = [
     "SR-SUP-003", "SR-SUP-006", "SR-SUP-008", "SR-SUP-009",
@@ -146,7 +156,7 @@ IMPLEMENTED: Final = {
     "renderer_capability": False,
     "product_coordinator": True,
     "controlled_writer_integration": True,
-    "native_interface_integration": False,
+    "native_interface_integration": True,
     "accessibility_acceptance": False,
     "installed_cross_platform_acceptance": False,
     "trusted_package_execution": False,
@@ -156,7 +166,6 @@ IMPLEMENTED: Final = {
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-57-BLOCKED", "owner": "58.1"},
     {"code": "WORD-RENDERER-NOT-ADMITTED", "owner": "58.1.1.1"},
-    {"code": "NATIVE-INTERFACE-INTEGRATION-ABSENT", "owner": "58.1.3.4"},
     {"code": "ACCESSIBILITY-ACCEPTANCE-ABSENT", "owner": "58.1.3.4"},
     {"code": "INSTALLED-CROSS-PLATFORM-ACCEPTANCE-ABSENT", "owner": "58.1.3.4"},
     {"code": "TRUSTED-INSTALLED-PACKAGE-EXECUTION-ABSENT", "owner": "58.1.3.4"},
@@ -257,7 +266,7 @@ def expected_verification(local_pass: bool = True) -> dict[str, Any]:
         "golden_projection_client_parity": True,
         "product_coordinator": True,
         "controlled_writer_integration": True,
-        "native_interface_integration": False,
+        "native_interface_integration": True,
         "accessibility_acceptance": False,
         "installed_cross_platform_acceptance": False,
         "trusted_package_execution": False,

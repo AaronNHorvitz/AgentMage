@@ -15,7 +15,7 @@ use crate::headless::{
     ClientCommand, ClientContentChannel, ClientExitCode, ClientSurface, ConversationClientCommand,
     KnowledgeClientCommand, KnowledgeRetrievalClientMode, KnowledgeWorkflowClient,
     OperationalClientCommand, ThinClientError, ThinClientEvent, ThinClientEventKind,
-    VaultClientCommand,
+    VaultClientCommand, WordClientCommand,
 };
 
 const MAX_ARGUMENT_COUNT: usize = 128;
@@ -158,6 +158,7 @@ fn parse_command(arguments: &[String]) -> Result<ClientCommand, ThinClientError>
         "resume" => parse_exact_branch(&arguments[1..]),
         "vault" => parse_vault(&arguments[1..]),
         "knowledge" => parse_knowledge(&arguments[1..]),
+        "word" => parse_word(&arguments[1..]),
         "checkpoint" if arguments.len() == 1 => operation(OperationalClientCommand::Checkpoint),
         "handoff" if arguments.len() == 1 => operation(OperationalClientCommand::Handoff),
         "audit" if arguments.len() == 1 => operation(OperationalClientCommand::Audit),
@@ -173,6 +174,39 @@ fn parse_command(arguments: &[String]) -> Result<ClientCommand, ThinClientError>
         }
         _ => Err(ThinClientError::InvalidValue),
     }
+}
+
+fn parse_word(arguments: &[String]) -> Result<ClientCommand, ThinClientError> {
+    let action = match arguments {
+        [inspect, source_id, source_sha256, profile_id] if inspect == "inspect" => {
+            WordClientCommand::Inspect {
+                source_id: source_id.clone(),
+                source_sha256: source_sha256.clone(),
+                profile_id: profile_id.clone(),
+            }
+        }
+        [
+            generate,
+            source_id,
+            source_sha256,
+            profile_id,
+            artifact_id,
+            markdown_sha256,
+            output,
+        ] if generate == "generate" => {
+            let output_path = output.split('/').map(str::to_owned).collect();
+            WordClientCommand::Generate {
+                source_id: source_id.clone(),
+                source_sha256: source_sha256.clone(),
+                profile_id: profile_id.clone(),
+                artifact_id: artifact_id.clone(),
+                markdown_source_sha256: markdown_sha256.clone(),
+                output_path,
+            }
+        }
+        _ => return Err(ThinClientError::InvalidValue),
+    };
+    Ok(ClientCommand::Word { action })
 }
 
 fn parse_conversations(arguments: &[String]) -> Result<ClientCommand, ThinClientError> {
@@ -547,6 +581,8 @@ Commands:\n\
   vault links|backlinks ID\n\
   vault tasks\n\
   knowledge run WORKFLOW [--semantic]\n\
+  word inspect SOURCE_ID SOURCE_SHA256 PROFILE_ID\n\
+  word generate SOURCE_ID SOURCE_SHA256 PROFILE_ID ARTIFACT_ID MARKDOWN_SHA256 OUTPUT_PATH\n\
   checkpoint | handoff | audit | doctor | diagnostics\n\
   memory inspect [ID]\n\
   memory correct ID REPLACEMENT\n\
@@ -562,13 +598,13 @@ Headless surfaces require an exact predeclared, bounded, unexpired grant.\n"
 pub const fn shell_completion(shell: CompletionShell) -> &'static str {
     match shell {
         CompletionShell::Bash => {
-            "complete -W 'code chat conversations resume vault knowledge checkpoint handoff audit memory export import doctor diagnostics completion' agentmage\n"
+            "complete -W 'code chat conversations resume vault knowledge word checkpoint handoff audit memory export import doctor diagnostics completion' agentmage\n"
         }
         CompletionShell::Zsh => {
-            "compdef '_arguments 1:command:(code chat conversations resume vault knowledge checkpoint handoff audit memory export import doctor diagnostics completion)' agentmage\n"
+            "compdef '_arguments 1:command:(code chat conversations resume vault knowledge word checkpoint handoff audit memory export import doctor diagnostics completion)' agentmage\n"
         }
         CompletionShell::Fish => {
-            "complete -c agentmage -f -a 'code chat conversations resume vault knowledge checkpoint handoff audit memory export import doctor diagnostics completion'\n"
+            "complete -c agentmage -f -a 'code chat conversations resume vault knowledge word checkpoint handoff audit memory export import doctor diagnostics completion'\n"
         }
     }
 }
@@ -627,6 +663,23 @@ mod tests {
             strings(&["vault", "tasks"]),
             strings(&["knowledge", "run", "daily-setup"]),
             strings(&["knowledge", "run", "obsidian-vault-steward", "--semantic"]),
+            strings(&[
+                "word",
+                "inspect",
+                "word-01",
+                &"a".repeat(64),
+                "word-profile-01",
+            ]),
+            strings(&[
+                "word",
+                "generate",
+                "word-01",
+                &"a".repeat(64),
+                "word-profile-01",
+                "artifact-01",
+                &"b".repeat(64),
+                "documents/report.docx",
+            ]),
             strings(&["checkpoint"]),
             strings(&["handoff"]),
             strings(&["audit"]),
@@ -718,6 +771,17 @@ mod tests {
             strings(&["vault", "note", "note-01"]),
             strings(&["knowledge", "run", "unknown"]),
             strings(&["knowledge", "run", "daily-setup", "--unknown"]),
+            strings(&["word", "inspect", "word-01", "not-a-digest", "profile-01"]),
+            strings(&[
+                "word",
+                "generate",
+                "word-01",
+                &"a".repeat(64),
+                "profile-01",
+                "artifact-01",
+                &"b".repeat(64),
+                "../report.docx",
+            ]),
             strings(&["memory", "correct", "memory-01"]),
             strings(&["--surface", "acp", "vault", "tasks"]),
             strings(&["completion", "powershell"]),

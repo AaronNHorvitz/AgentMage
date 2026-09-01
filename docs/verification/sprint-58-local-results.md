@@ -44,6 +44,10 @@ review corpus.
   create draft. The approval preview binds the digest, destination, mode, generated classification,
   verification, and rollback narrative without displaying lossy binary content; no approval, grant,
   native write, or persistence result is fabricated by this local draft evidence.
+- Native Chat, interactive CLI, JSON, SDK, and ACP carry only closed Word identities and route
+  through the same host coordinator. Exact client, workspace, authority, source, profile, Markdown,
+  artifact, and output bindings are verified; cross-command substitution and write-draft smuggling
+  fail before content evaluation.
 
 ## Security Mapping
 
@@ -59,8 +63,8 @@ No product-wide requirement is marked complete by this local contribution.
 
 A green local report proves only the committed source and named commands on the recorded Fedora
 environment. Sprint 57 is blocked. The Word renderer, rich edit and visual comparison path,
-native-interface integration, accessibility evidence,
+accessibility evidence,
 installed Fedora/Ubuntu/macOS acceptance, trusted-package execution, independent review, and manual
 fuzz campaign are absent. Sprint 58 therefore remains **BLOCKED** despite passing local extraction,
 restart/retention, structured-adapter, common-dispatch, inspection, generation, schema, dependency,
-product-coordination, controlled-writer draft, and review-corpus contracts.
+product-coordination, controlled-writer draft, native-interface parity, and review-corpus contracts.

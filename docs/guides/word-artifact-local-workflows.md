@@ -13,6 +13,10 @@ The product coordinator performs inspection, sidecar extraction/cache reuse, and
 preparation over the same exact request. A successful coordinator outcome still grants no write or
 renderer authority.
 
+Native Chat, interactive CLI, JSON, SDK, and ACP submit only identity-bound Word commands. The host
+must obtain source bytes through existing authority, verify the client envelope, and match every
+identity before invoking the same coordinator. Do not place document bytes in a client command.
+
 ## Generate From Markdown
 
 1. Parse the approved Markdown bytes through the byte-preserving Markdown boundary.
@@ -32,5 +36,5 @@ macros and active content, external relationships, malformed relationship XML, r
 violations, source overwrite requests, and any request to execute or resolve document content.
 
 Do not claim visual fidelity, accessibility acceptance, an approved or executed persistence effect,
-native-interface integration, installed product acceptance, or supported-platform execution from
-the local Sprint 58 evidence. Those remain later verification work.
+installed product acceptance, or supported-platform execution from the local Sprint 58 evidence.
+Those remain later verification work.

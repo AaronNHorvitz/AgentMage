@@ -13,6 +13,7 @@ use agentmage_kernel_engine::filesystem_control::{
 };
 use sha2::{Digest, Sha256};
 
+use crate::headless::{ClientCommand, ThinClientRequest, WordClientCommand};
 use crate::word_source_artifact::{WordSourceAdmissionOutcome, WordSourceArtifactService};
 
 /// Optional caller-owned request for one unpersisted generated DOCX proposal.
@@ -65,6 +66,8 @@ pub struct WordArtifactCoordinatorRequest {
 /// Stable content-free failure from Word artifact product composition.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WordArtifactCoordinatorError {
+    /// The thin-client request was stale, malformed, mismatched, or authority-incompatible.
+    NativeRequestDenied,
     /// The caller cancelled before publication.
     Cancelled,
     /// A required already-approved local dependency is unavailable.
@@ -80,6 +83,7 @@ impl WordArtifactCoordinatorError {
     #[must_use]
     pub const fn code(self) -> &'static str {
         match self {
+            Self::NativeRequestDenied => "word-artifact.coordinator.native-request-denied",
             Self::Cancelled => "word-artifact.coordinator.cancelled",
             Self::DependencyUnavailable => "word-artifact.coordinator.dependency-unavailable",
             Self::InvalidInput => "word-artifact.coordinator.input-invalid",
@@ -219,6 +223,79 @@ impl WordArtifactCoordinator {
             external_effect_allowed: false,
         })
     }
+
+    /// Verifies an identity-only thin-client request and routes it through this same coordinator.
+    ///
+    /// Document bytes and parsed Markdown remain trusted host inputs and never cross the client
+    /// protocol. Native Chat, terminal, JSON, SDK, and ACP therefore share one request binding and
+    /// one product implementation without owning parser or filesystem authority.
+    pub fn coordinate_native(
+        &mut self,
+        client: &ThinClientRequest,
+        request: WordArtifactCoordinatorRequest,
+        now_epoch_ms: u64,
+    ) -> Result<WordArtifactCoordinatorOutcome, WordArtifactCoordinatorError> {
+        client
+            .verify(now_epoch_ms)
+            .map_err(|_| WordArtifactCoordinatorError::NativeRequestDenied)?;
+        if client.status.workspace_id
+            != request
+                .structured_source
+                .source_path
+                .workspace_id()
+                .as_str()
+            || !native_command_matches(&client.command, &request)
+        {
+            return Err(WordArtifactCoordinatorError::NativeRequestDenied);
+        }
+        self.coordinate(request)
+    }
+}
+
+fn native_command_matches(
+    command: &ClientCommand,
+    request: &WordArtifactCoordinatorRequest,
+) -> bool {
+    let common_matches = |source_id: &str, source_sha256: &str, profile_id: &str| {
+        source_id == request.structured_source.source_id
+            && source_sha256 == request.structured_source.source_sha256
+            && profile_id == request.profile.profile_id
+            && request.controlled_write.is_none()
+    };
+    match command {
+        ClientCommand::Word {
+            action:
+                WordClientCommand::Inspect {
+                    source_id,
+                    source_sha256,
+                    profile_id,
+                },
+        } => common_matches(source_id, source_sha256, profile_id) && request.generation.is_none(),
+        ClientCommand::Word {
+            action:
+                WordClientCommand::Generate {
+                    source_id,
+                    source_sha256,
+                    profile_id,
+                    artifact_id,
+                    markdown_source_sha256,
+                    output_path,
+                },
+        } => {
+            common_matches(source_id, source_sha256, profile_id)
+                && request.generation.as_ref().is_some_and(|generation| {
+                    artifact_id == &generation.artifact_id
+                        && markdown_source_sha256 == generation.document.source_sha256()
+                        && generation
+                            .output_path
+                            .components()
+                            .iter()
+                            .map(|component| component.as_str())
+                            .eq(output_path.iter().map(String::as_str))
+                })
+        }
+        _ => false,
+    }
 }
 
 /// Converts one exact verified DOCX proposal into the existing controlled-filesystem draft type.
@@ -287,13 +364,19 @@ const fn map_source_error(error: StructuredSourceExtractionError) -> WordArtifac
 #[cfg(test)]
 mod tests {
     use agentmage_kernel_contracts::{
-        AdapterInstanceId, CONTRACT_SCHEMA_VERSION, FilePreimage, GrantTarget, HeldWorkspaceObject,
-        PathPlatform, PathResolutionIntent, WorkspaceAuthorizationId, WorkspaceId,
-        WorkspaceObjectIdentity, WorkspaceObjectKind,
+        AdapterInstanceId, CONTRACT_SCHEMA_VERSION, FilePreimage, GrantOperation, GrantTarget,
+        HeldWorkspaceObject, PathPlatform, PathResolutionIntent, WorkspaceAuthorizationId,
+        WorkspaceId, WorkspaceObjectIdentity, WorkspaceObjectKind,
     };
     use sha2::{Digest, Sha256};
 
     use super::*;
+    use crate::headless::{
+        ClientAuthority, ClientStatusSnapshot, ClientSurface, PredeclaredClientGrant,
+        kernel_operation_sha256,
+    };
+
+    const NOW: u64 = 50_000;
 
     #[derive(Debug)]
     struct HeldDirectory {
@@ -409,6 +492,59 @@ mod tests {
         }
     }
 
+    fn native_client(surface: ClientSurface, command: ClientCommand) -> ThinClientRequest {
+        let operation = command.required_operation();
+        let arguments_sha256 =
+            kernel_operation_sha256("workspace-word-coordinator", &command, &"d".repeat(64))
+                .expect("kernel operation");
+        let authority = if surface.has_interactive_approval() {
+            ClientAuthority::Interactive {
+                approval_channel_sha256: "c".repeat(64),
+            }
+        } else {
+            ClientAuthority::Predeclared {
+                grant: PredeclaredClientGrant {
+                    grant_id: format!("grant-{surface:?}").to_lowercase(),
+                    operation,
+                    policy_sha256: "d".repeat(64),
+                    arguments_sha256,
+                    nonce_sha256: "f".repeat(64),
+                    issued_at_epoch_ms: NOW - 1,
+                    expires_at_epoch_ms: NOW + 10_000,
+                    single_use: true,
+                },
+            }
+        };
+        ThinClientRequest {
+            schema_version: 0,
+            request_id: format!("request-{surface:?}").to_lowercase(),
+            surface,
+            status: ClientStatusSnapshot {
+                workspace_id: "workspace-word-coordinator".to_owned(),
+                model_profile_id: None,
+                permission_profile_id: "permission-word".to_owned(),
+                conversation_id: None,
+                plan_step_id: None,
+                writable_roots: vec!["documents".to_owned()],
+                offline: true,
+                status_sha256: "0".repeat(64),
+            }
+            .seal()
+            .expect("status"),
+            command,
+            authority,
+            policy_sha256: "d".repeat(64),
+            cancellation_id: format!("cancel-{surface:?}").to_lowercase(),
+            max_event_bytes: 64 * 1024,
+            max_output_bytes: 1024 * 1024,
+            resume: None,
+            kernel_request_sha256: "0".repeat(64),
+            request_sha256: "0".repeat(64),
+        }
+        .seal(NOW)
+        .expect("native client request")
+    }
+
     #[test]
     fn product_coordinator_binds_inspection_sidecar_source_projection_and_generation() {
         let mut coordinator = WordArtifactCoordinator::new(4).expect("coordinator");
@@ -512,5 +648,89 @@ mod tests {
             _ => panic!("unexpected controlled writer draft"),
         }
         assert!(!outcome.external_effect_allowed);
+    }
+
+    #[test]
+    fn every_native_surface_routes_identity_only_generation_through_one_coordinator() {
+        let detailed = request();
+        let generation = detailed.generation.as_ref().expect("generation");
+        let command = ClientCommand::Word {
+            action: WordClientCommand::Generate {
+                source_id: detailed.structured_source.source_id.clone(),
+                source_sha256: detailed.structured_source.source_sha256.clone(),
+                profile_id: detailed.profile.profile_id.clone(),
+                artifact_id: generation.artifact_id.clone(),
+                markdown_source_sha256: generation.document.source_sha256().to_owned(),
+                output_path: generation
+                    .output_path
+                    .components()
+                    .iter()
+                    .map(|component| component.as_str().to_owned())
+                    .collect(),
+            },
+        };
+        let mut expected = None;
+        for surface in [
+            ClientSurface::NativeChat,
+            ClientSurface::InteractiveCli,
+            ClientSurface::Json,
+            ClientSurface::Sdk,
+            ClientSurface::Acp,
+        ] {
+            let mut coordinator = WordArtifactCoordinator::new(4).expect("coordinator");
+            let outcome = coordinator
+                .coordinate_native(
+                    &native_client(surface, command.clone()),
+                    detailed.clone(),
+                    NOW,
+                )
+                .unwrap_or_else(|error| panic!("{surface:?}: {error:?}"));
+            let snapshot = (
+                outcome.inspection,
+                outcome.extraction,
+                outcome.source_admission.manifest,
+                outcome.generated,
+                outcome.external_effect_allowed,
+            );
+            if let Some(expected) = &expected {
+                assert_eq!(&snapshot, expected, "{surface:?}");
+            } else {
+                expected = Some(snapshot);
+            }
+        }
+    }
+
+    #[test]
+    fn native_word_binding_rejects_command_mismatch_and_write_authority_smuggling() {
+        let mut detailed = request();
+        let client = native_client(
+            ClientSurface::Json,
+            ClientCommand::Word {
+                action: WordClientCommand::Inspect {
+                    source_id: detailed.structured_source.source_id.clone(),
+                    source_sha256: detailed.structured_source.source_sha256.clone(),
+                    profile_id: detailed.profile.profile_id.clone(),
+                },
+            },
+        );
+        let mut coordinator = WordArtifactCoordinator::new(4).expect("coordinator");
+        assert_eq!(
+            coordinator.coordinate_native(&client, detailed.clone(), NOW),
+            Err(WordArtifactCoordinatorError::NativeRequestDenied)
+        );
+        detailed.generation = None;
+        detailed.controlled_write = Some(WordControlledWriteRequest {
+            operation_id: "smuggled-write".to_owned(),
+            destination: generated_destination(),
+            mode: 0o600,
+        });
+        assert_eq!(
+            coordinator.coordinate_native(&client, detailed, NOW),
+            Err(WordArtifactCoordinatorError::NativeRequestDenied)
+        );
+        assert_eq!(
+            client.command.required_operation(),
+            GrantOperation::WorkspaceRead
+        );
     }
 }

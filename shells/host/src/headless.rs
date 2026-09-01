@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use agentmage_kernel_contracts::GrantOperation;
+use agentmage_kernel_contracts::{GrantOperation, WorkspaceId, WorkspacePath};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -256,6 +256,36 @@ pub enum KnowledgeClientCommand {
     },
 }
 
+/// Closed Word artifact command family carrying identities only, never document bytes or paths.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "action", rename_all = "snake_case", deny_unknown_fields)]
+pub enum WordClientCommand {
+    /// Inspect and prepare one already-authorized captured DOCX source.
+    Inspect {
+        /// Stable caller-owned source identity.
+        source_id: String,
+        /// Exact captured DOCX digest.
+        source_sha256: String,
+        /// Exact bounded conversion-profile identity.
+        profile_id: String,
+    },
+    /// Produce one unpersisted DOCX proposal from an already-authorized Markdown source.
+    Generate {
+        /// Stable caller-owned DOCX source identity prepared in the same operation.
+        source_id: String,
+        /// Exact captured DOCX digest.
+        source_sha256: String,
+        /// Exact bounded conversion-profile identity.
+        profile_id: String,
+        /// Stable generated-artifact identity.
+        artifact_id: String,
+        /// Exact already-parsed Markdown source digest.
+        markdown_source_sha256: String,
+        /// Canonical workspace-relative output components; no absolute path authority.
+        output_path: Vec<String>,
+    },
+}
+
 /// Closed operational command family exposed by terminal and headless clients.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "action", rename_all = "snake_case", deny_unknown_fields)]
@@ -316,6 +346,11 @@ pub enum ClientCommand {
         /// Exact read-only workflow action.
         action: KnowledgeClientCommand,
     },
+    /// Inspect or generate Word artifacts through the common host-owned coordinator.
+    Word {
+        /// Exact identity-only Word operation.
+        action: WordClientCommand,
+    },
     /// Access checkpoint, handoff, audit, memory, transfer, or diagnostic operations.
     Operations {
         /// Exact operational action.
@@ -339,6 +374,10 @@ impl ClientCommand {
             },
             Self::Vault { .. } => GrantOperation::WorkspaceRead,
             Self::Knowledge { .. } => GrantOperation::WorkspaceRead,
+            Self::Word { action } => match action {
+                WordClientCommand::Inspect { .. } => GrantOperation::WorkspaceRead,
+                WordClientCommand::Generate { .. } => GrantOperation::DraftCreate,
+            },
             Self::Operations { action } => match action {
                 OperationalClientCommand::MemoryCorrect { .. }
                 | OperationalClientCommand::Export { .. }
@@ -394,6 +433,36 @@ impl ClientCommand {
             Self::Knowledge {
                 action: KnowledgeClientCommand::Run { .. },
             } => true,
+            Self::Word { action } => match action {
+                WordClientCommand::Inspect {
+                    source_id,
+                    source_sha256,
+                    profile_id,
+                } => {
+                    valid_identifier(source_id)
+                        && valid_sha256(source_sha256)
+                        && valid_identifier(profile_id)
+                }
+                WordClientCommand::Generate {
+                    source_id,
+                    source_sha256,
+                    profile_id,
+                    artifact_id,
+                    markdown_source_sha256,
+                    output_path,
+                } => {
+                    valid_identifier(source_id)
+                        && valid_sha256(source_sha256)
+                        && valid_identifier(profile_id)
+                        && valid_identifier(artifact_id)
+                        && valid_sha256(markdown_source_sha256)
+                        && WorkspacePath::new(
+                            WorkspaceId::from_raw("word-client-validation"),
+                            output_path.iter().cloned(),
+                        )
+                        .is_ok()
+                }
+            },
             Self::Operations { action } => match action {
                 OperationalClientCommand::MemoryInspect { memory_id } => {
                     memory_id.as_deref().is_none_or(valid_identifier)
@@ -1452,6 +1521,16 @@ mod tests {
                     retrieval_mode: KnowledgeRetrievalClientMode::Lexical,
                 },
             },
+            ClientCommand::Word {
+                action: WordClientCommand::Generate {
+                    source_id: "source-0001".to_owned(),
+                    source_sha256: "a".repeat(64),
+                    profile_id: "word-profile-0001".to_owned(),
+                    artifact_id: "artifact-0001".to_owned(),
+                    markdown_source_sha256: "b".repeat(64),
+                    output_path: vec!["documents".to_owned(), "report.docx".to_owned()],
+                },
+            },
             ClientCommand::Operations {
                 action: OperationalClientCommand::MemoryCorrect {
                     memory_id: "memory-0001".to_owned(),
@@ -1465,6 +1544,7 @@ mod tests {
             BTreeSet::from([
                 GrantOperation::WorkspaceRead,
                 GrantOperation::WorkspaceWrite,
+                GrantOperation::DraftCreate,
                 GrantOperation::ModelInference,
             ])
         );

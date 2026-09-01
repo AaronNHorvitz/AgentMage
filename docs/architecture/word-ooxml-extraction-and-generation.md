@@ -98,7 +98,14 @@ verified binary package into the existing controlled-filesystem create draft. Bi
 the exact output digest, destination, mode, classification, and review narrative without a lossy
 content rendering. A current parent grant, exact plan and preview, explicit decision, single-use
 write grant, native driver, and post-write verification remain mandatory before persistence.
-Native-interface invocation remains a separate boundary.
+
+Native Chat, interactive CLI, JSON, SDK, and ACP use the same closed thin-client `word` command
+family. Clients carry only source, profile, proposal, Markdown-digest, and canonical output-path
+identities; captured DOCX bytes and parsed Markdown remain host-owned inputs. The host verifies the
+complete client envelope, workspace and command binding, authority class, and exact detailed request
+before invoking the common coordinator. Inspection requires workspace-read authority, generation
+requires draft-create authority, and neither command can smuggle a controlled-write draft. The CLI
+parser and all five surfaces therefore share product behavior without owning document logic.
 
 ## Generation
 
