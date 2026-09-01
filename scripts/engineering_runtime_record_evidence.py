@@ -31,7 +31,7 @@ MARKERS: Final = [
     "Validated 57 deterministic Engineering Runtime fixture files.",
     "test result: ok. 3 passed; 0 failed",
     "test result: ok. 4 passed; 0 failed",
-    "test result: ok. 8 passed; 0 failed",
+    "test result: ok. 9 passed; 0 failed",
     "Protected 294 requirement and 1407 checklist baseline entries.",
     "dependency rule validation passed",
 ]

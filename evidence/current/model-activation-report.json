@@ -39,7 +39,7 @@
     },
     {
       "path": "shells/vscode/package.json",
-      "sha256": "c2d7612804f9bcb2e0a3c5f4615a2d7d3ef2181f93e32b5e83fa854ec1bc1ecb"
+      "sha256": "62533387ddcdd384963564af25c7675dc2991fd47e1b7c0a068252e67251112e"
     },
     {
       "path": "shells/vscode/src/provider.ts",

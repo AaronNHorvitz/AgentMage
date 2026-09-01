@@ -1,117 +1,124 @@
 $ cargo test -p agentmage-kernel-engine engineering_records::tests --locked
    Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.53s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.17s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
-running 8 tests
+running 9 tests
 test engineering_records::tests::capture_metadata_is_present_if_and_only_if_bytes_were_captured ... ok
-test engineering_records::tests::canonical_digest_is_stable_and_requires_current_schema ... ok
-test engineering_records::tests::every_canonical_record_family_has_one_existing_authority_route ... ok
+test engineering_records::tests::tool_failure_may_report_incomplete_cleanup_but_success_may_not ... ok
 test engineering_records::tests::success_and_delivery_records_fail_closed_on_missing_proof ... ok
-test engineering_records::tests::runtime_record_set_binds_request_task_session_source_workflow_and_proof ... ok
+test engineering_records::tests::every_canonical_record_family_has_one_existing_authority_route ... ok
 test engineering_records::tests::identity_content_and_graph_mutations_fail_closed ... ok
+test engineering_records::tests::canonical_digest_is_stable_and_requires_current_schema ... ok
+test engineering_records::tests::runtime_record_set_binds_request_task_session_source_workflow_and_proof ... ok
 test engineering_records::tests::every_canonical_record_validates_before_artifact_serialization ... ok
 test engineering_records::tests::workflow_transition_table_is_closed_and_terminal_states_are_absorbing ... ok
 
-test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 698 filtered out; finished in 0.00s
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 776 filtered out; finished in 0.00s
 
-     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-16ba4ae1b6e86b97)
+     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-75929cc4c43529ef)
+     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-1d35cecc8eac4a50)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-80c0e8afb922bd47)
+     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-0763e8462d798883)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
+     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-96fb8646b8e88c01)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-544729f4e1294d0c)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
-
-     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c9f8c18d6667567d)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-b45b2cee9ff8e56e)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-db55c8cb6b746f85)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-e4252934d8b1c603)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
-
-     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-65c90518a1bcd1e0)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
-
-     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s
-
-     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
-
-     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-574427c2826e010a)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
-
-     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-f23e29536c391fc5)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
-
-     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-0b41c11af9f7bcef)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
-     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-774f1a5d8f717985)
+     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-3183945eaf6ee601)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-e1a8fee3763d0eff)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c2bf19d0e955e0a1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-f39a9d9ea513dfc1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-6655190128ba9428)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-dfbfdc9850767ddd)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-977b1de1fa35ee44)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/retry_admission.rs (target/debug/deps/retry_admission-62d14a6aec0f9677)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-e051a35e39b8b099)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-9289ebbbd5c8954a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-304ed0f5ab07c9f8)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-204c979953d9da6b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-890f5a0284eee806)
 
 running 0 tests
 
@@ -119,7 +126,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; fini
 
 $ cargo test -p agentmage-kernel-engine --test engineering_runtime_record_corpus --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-544729f4e1294d0c)
+     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-e1a8fee3763d0eff)
 
 running 4 tests
 test cyclic_and_stale_records_fail_at_their_exact_trusted_boundaries ... ok
@@ -130,28 +137,29 @@ test every_declared_schema_failure_fails_before_canonical_publication ... ok
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
 $ cargo test -p agentmage-host runtime_parity_tests --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
+   Compiling agentmage-host v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/shells/host)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.43s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-f0a5c135596f652b)
 
 running 2 tests
 test runtime_parity_tests::story_50_2_narrow_workflow_authority_rejects_every_broadening_without_execution ... ok
 test runtime_parity_tests::story_50_2_read_only_and_coding_packets_are_equal_across_all_three_callers ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 157 filtered out; finished in 0.27s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 177 filtered out; finished in 0.29s
 
-     Running unittests src/bin/agent.rs (target/debug/deps/agent-f0593d546fb7a4f5)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-
-     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-a7389517de3bb1b6)
+     Running unittests src/bin/agent.rs (target/debug/deps/agent-96577979ca877677)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/main.rs (target/debug/deps/agentmage_host-982222c4b5d14c70)
+     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-ac39fe6d405c29b2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/agentmage_host-8394ab74e8370b41)
 
 running 0 tests
 
@@ -159,26 +167,26 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; fin
 
 $ cargo test -p agentmage-host headless::tests::replay_resume_cancellation_and_transport_failure_do_not_duplicate_launch --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-f0a5c135596f652b)
 
 running 1 test
 test headless::tests::replay_resume_cancellation_and_transport_failure_do_not_duplicate_launch ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 158 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 178 filtered out; finished in 0.00s
 
-     Running unittests src/bin/agent.rs (target/debug/deps/agent-f0593d546fb7a4f5)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-
-     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-a7389517de3bb1b6)
+     Running unittests src/bin/agent.rs (target/debug/deps/agent-96577979ca877677)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/main.rs (target/debug/deps/agentmage_host-982222c4b5d14c70)
+     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-ac39fe6d405c29b2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/agentmage_host-8394ab74e8370b41)
 
 running 0 tests
 
@@ -186,26 +194,26 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; fin
 
 $ cargo test -p agentmage-host runtime_read_tests::story_23_4_fake_model_uses_existing_native_read_tool_then_verifies_completion --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-f0a5c135596f652b)
 
 running 1 test
 test runtime_read_tests::story_23_4_fake_model_uses_existing_native_read_tool_then_verifies_completion ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 158 filtered out; finished in 0.01s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 178 filtered out; finished in 0.01s
 
-     Running unittests src/bin/agent.rs (target/debug/deps/agent-f0593d546fb7a4f5)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-
-     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-a7389517de3bb1b6)
+     Running unittests src/bin/agent.rs (target/debug/deps/agent-96577979ca877677)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/main.rs (target/debug/deps/agentmage_host-982222c4b5d14c70)
+     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-ac39fe6d405c29b2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/agentmage_host-8394ab74e8370b41)
 
 running 0 tests
 

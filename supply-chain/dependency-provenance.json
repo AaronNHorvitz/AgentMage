@@ -87,7 +87,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "1193dc929baa7a370c1269190db1d02c1b0b438b044478bb2b7528bd1f41962d"
+          "content": "41d60602a565ccaeb4fb9358ded868229963bcd67c6460ed15d887e3ec461635"
         }
       ],
       "integrity": null,
@@ -127,7 +127,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "1efc72fd9feb3406059497aac827e84debc88d77de3b009b8ce3069a1f2dba46"
+          "content": "8ad6c10ce5bbc8e257cc368202ec91f2773ee39cf91dd220851da55348839d2d"
         }
       ],
       "integrity": null,
@@ -147,7 +147,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "663532d0f8489a0f0b3d7e485effbb149496d42a6d2e781e6c7407f528b37c8e"
+          "content": "f02d408c7f2a36a260c61bb9a8ef64f20536cd899d93a6a687bf3efe703da59a"
         }
       ],
       "integrity": null,
@@ -167,7 +167,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "1f380e8f2b8d0c9c327f00559aede7a6c922a7943df0007468cb7198be47d218"
+          "content": "2933d34efa654e62cd5e9345942248a1d0b94e9a61519115291ca7d5223d9b03"
         }
       ],
       "integrity": null,
@@ -207,7 +207,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "efaba57d4a77f3716f31e2efbb5d298f58b963305aebd93433620e1dee6c36ef"
+          "content": "7e84b51eb0f369f383a8e0488e354edc89d461889b81562c401ed7d7a0ccb144"
         }
       ],
       "integrity": null,
@@ -2507,7 +2507,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "ba725175640e00b0c5274a48c63651c6240d48e9f703a60cbe3989d03061e8e2"
+          "content": "736817a8a78469fa2f806615695940b4350cbdb6da29908b3a67703bc198d86e"
         }
       ],
       "integrity": null,
@@ -2527,7 +2527,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "96a85d5bb0e12056721ecce22493903c56bcf15579bc7c12ddf6d137ab4e85ec"
+          "content": "e3a960224490115823caeac157c8f346ab79a39baf14385789be4ef2deae2d30"
         }
       ],
       "integrity": null,
@@ -13113,13 +13113,13 @@
   "document_id": "agentmage-dependency-provenance",
   "generated_from": {
     "Cargo.lock": "60eca43376919ca47740e494d7e44a2812aa77e06a0c188013e285a7dea1a19e",
-    "Cargo.toml": "0104b55b6a0c57eb869812ad7a6c4ea648f3d256258bf261ebcf0d39e980ba4b",
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
     "package-lock.json": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
-    "package.json": "96a85d5bb0e12056721ecce22493903c56bcf15579bc7c12ddf6d137ab4e85ec",
+    "package.json": "e3a960224490115823caeac157c8f346ab79a39baf14385789be4ef2deae2d30",
     "platforms/macos/Package.resolved": "5b5e7b222df13b8f50caf4f16a31cddc336aaffca1859dae1513e29eeeb0b71d",
     "platforms/macos/Package.swift": "180ad855bcc16e5c395ed3490b8f1d7be5fa552e20ecaac551220cdfe1d72948",
     "rust-toolchain.toml": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310",
-    "shells/vscode/package.json": "c2d7612804f9bcb2e0a3c5f4615a2d7d3ef2181f93e32b5e83fa854ec1bc1ecb",
+    "shells/vscode/package.json": "62533387ddcdd384963564af25c7675dc2991fd47e1b7c0a068252e67251112e",
     "supply-chain/cargo-external-catalog.json": "73339375071827cc539fc7a6753faae9b920a7e313da52131b0f597cdf9d8adc"
   },
   "platform_status": {

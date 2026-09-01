@@ -44,9 +44,9 @@
       "sha256": "017cfad65cb0b96178dd8627e7b904039f0048934cb2e7204bc91fc9a64ce2f5"
     },
     {
-      "byte_length": 2799,
+      "byte_length": 2912,
       "path": "artifacts/sprints/sprint-1/story-1.3/story-ac3-predispatch-rejection-results.log",
-      "sha256": "54f103849f1d2bcc7a63ea17241206445cc2f565789c0e97434885c373a2f552"
+      "sha256": "275e154edce59981cb8343774f57ceaab029fb94c96770f241bebeca4a392b6d"
     }
   ],
   "commands": [
@@ -76,19 +76,19 @@
   ],
   "retained_evidence": [
     {
-      "byte_length": 13146,
+      "byte_length": 13185,
       "path": "kernel/contracts/src/serialization.rs",
-      "sha256": "e014eb02997caf6a0cb1a40d48d4bc7180b7b6ed443d010bd3f93877dff52197"
+      "sha256": "0172e822ffd4297d769d752f75a6e06e27dbf36ca239ecc80167cd4358c9b4be"
     },
     {
-      "byte_length": 128088,
+      "byte_length": 132612,
       "path": "kernel/contracts/src/engineering_records.rs",
-      "sha256": "3b58c72cf098dcd67978dc7402ec70df4873f8bca9c57d747a6d6b430f082200"
+      "sha256": "ac16659bab43ca0b0981d9f123d67d2d79abfdb43962a5602ef88bac286cf913"
     },
     {
-      "byte_length": 73730,
+      "byte_length": 77208,
       "path": "kernel/engine/src/engineering_records.rs",
-      "sha256": "51338875c4b81e0f04a402c3236b6718e8d273b0e2d5e8745fe07a88a8215c57"
+      "sha256": "0edd44976cdc3fc7f65de9e65f5b5d5ae4f845e4f598bf4411bf8acd75a1f398"
     },
     {
       "byte_length": 9960,
@@ -103,7 +103,7 @@
     {
       "byte_length": 17110,
       "path": "artifacts/sprints/sprint-1/story-1.3/canonical-record-evidence-index.json",
-      "sha256": "73be00ba2aea79e50b0df38e5e14df248d86439232381a7f48c1438b88f8ecd1"
+      "sha256": "834a422ab383527037c5d74c3648484fbf28c0bc973b64784abc9a6911be4f15"
     }
   ],
   "schema_version": 1,

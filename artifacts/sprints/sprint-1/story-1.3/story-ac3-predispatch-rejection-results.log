@@ -1,6 +1,6 @@
 $ cargo test -p agentmage-kernel-engine --test engineering_runtime_record_corpus every_declared_schema_failure_fails_before_canonical_publication -- --exact
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
-     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-544729f4e1294d0c)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-e1a8fee3763d0eff)
 
 running 1 test
 test every_declared_schema_failure_fails_before_canonical_publication ... ok
@@ -8,14 +8,15 @@ test every_declared_schema_failure_fails_before_canonical_publication ... ok
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
 $ cargo test -p agentmage-kernel-engine --test engineering_runtime_record_corpus cyclic_and_stale_records_fail_at_their_exact_trusted_boundaries -- --exact
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-544729f4e1294d0c)
+     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-e1a8fee3763d0eff)
 
 running 1 test
 test cyclic_and_stale_records_fail_at_their_exact_trusted_boundaries ... ok
 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
 $ cargo test -p agentmage-kernel-contracts --lib serialization::tests::malformed_missing_extra_duplicate_and_trailing_inputs_fail_closed -- --exact
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
+   Compiling agentmage-kernel-contracts v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/contracts)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_contracts-6eb6c44b4ce1fddc)
 
 running 1 test
