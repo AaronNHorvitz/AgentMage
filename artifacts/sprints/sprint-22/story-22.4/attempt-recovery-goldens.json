@@ -84,7 +84,7 @@
   "concurrent_client_count": 32,
   "crash_traces": [
     {
-      "boundary": "preflight",
+      "boundary": "source",
       "position": "before",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -92,7 +92,7 @@
       "seed": 0
     },
     {
-      "boundary": "preflight",
+      "boundary": "source",
       "position": "after",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -100,7 +100,7 @@
       "seed": 1
     },
     {
-      "boundary": "approval",
+      "boundary": "context",
       "position": "before",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -108,7 +108,7 @@
       "seed": 2
     },
     {
-      "boundary": "approval",
+      "boundary": "context",
       "position": "after",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -116,7 +116,7 @@
       "seed": 3
     },
     {
-      "boundary": "dispatch",
+      "boundary": "proposal",
       "position": "before",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -124,7 +124,7 @@
       "seed": 4
     },
     {
-      "boundary": "dispatch",
+      "boundary": "proposal",
       "position": "after",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -132,7 +132,7 @@
       "seed": 5
     },
     {
-      "boundary": "effect",
+      "boundary": "preflight",
       "position": "before",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -140,63 +140,63 @@
       "seed": 6
     },
     {
-      "boundary": "effect",
+      "boundary": "preflight",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 7
+    },
+    {
+      "boundary": "approval",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 8
+    },
+    {
+      "boundary": "approval",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 9
+    },
+    {
+      "boundary": "grant",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 10
+    },
+    {
+      "boundary": "grant",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 11
+    },
+    {
+      "boundary": "worker",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 12
+    },
+    {
+      "boundary": "worker",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
       "retained_effect": "uncertain",
-      "seed": 7
-    },
-    {
-      "boundary": "receipt",
-      "position": "before",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
-      "seed": 8
-    },
-    {
-      "boundary": "receipt",
-      "position": "after",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
-      "seed": 9
-    },
-    {
-      "boundary": "artifact",
-      "position": "before",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
-      "seed": 10
-    },
-    {
-      "boundary": "artifact",
-      "position": "after",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
-      "seed": 11
-    },
-    {
-      "boundary": "verification",
-      "position": "before",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
-      "seed": 12
-    },
-    {
-      "boundary": "verification",
-      "position": "after",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
       "seed": 13
     },
     {
-      "boundary": "retry_decision",
+      "boundary": "receipt",
       "position": "before",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -204,7 +204,7 @@
       "seed": 14
     },
     {
-      "boundary": "retry_decision",
+      "boundary": "receipt",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -212,7 +212,7 @@
       "seed": 15
     },
     {
-      "boundary": "recovery_decision",
+      "boundary": "artifact",
       "position": "before",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -220,7 +220,7 @@
       "seed": 16
     },
     {
-      "boundary": "recovery_decision",
+      "boundary": "artifact",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -228,7 +228,7 @@
       "seed": 17
     },
     {
-      "boundary": "checkpoint",
+      "boundary": "verification",
       "position": "before",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -236,7 +236,7 @@
       "seed": 18
     },
     {
-      "boundary": "checkpoint",
+      "boundary": "verification",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -244,7 +244,7 @@
       "seed": 19
     },
     {
-      "boundary": "terminal",
+      "boundary": "retry",
       "position": "before",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -252,7 +252,7 @@
       "seed": 20
     },
     {
-      "boundary": "terminal",
+      "boundary": "retry",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -260,55 +260,55 @@
       "seed": 21
     },
     {
-      "boundary": "preflight",
+      "boundary": "recovery",
       "position": "before",
-      "recovery_action": "continue",
+      "recovery_action": "reconcile_effect",
       "replay_count": 0,
-      "retained_effect": "no_effect",
+      "retained_effect": "verified_applied",
       "seed": 22
     },
     {
-      "boundary": "preflight",
+      "boundary": "recovery",
       "position": "after",
-      "recovery_action": "continue",
+      "recovery_action": "reconcile_effect",
       "replay_count": 0,
-      "retained_effect": "no_effect",
+      "retained_effect": "verified_applied",
       "seed": 23
     },
     {
-      "boundary": "approval",
+      "boundary": "checkpoint",
       "position": "before",
-      "recovery_action": "continue",
+      "recovery_action": "reconcile_effect",
       "replay_count": 0,
-      "retained_effect": "no_effect",
+      "retained_effect": "verified_applied",
       "seed": 24
     },
     {
-      "boundary": "approval",
+      "boundary": "checkpoint",
       "position": "after",
-      "recovery_action": "continue",
+      "recovery_action": "reconcile_effect",
       "replay_count": 0,
-      "retained_effect": "no_effect",
+      "retained_effect": "verified_applied",
       "seed": 25
     },
     {
-      "boundary": "dispatch",
+      "boundary": "terminal",
       "position": "before",
-      "recovery_action": "continue",
+      "recovery_action": "reconcile_effect",
       "replay_count": 0,
-      "retained_effect": "no_effect",
+      "retained_effect": "verified_applied",
       "seed": 26
     },
     {
-      "boundary": "dispatch",
+      "boundary": "terminal",
       "position": "after",
-      "recovery_action": "continue",
+      "recovery_action": "reconcile_effect",
       "replay_count": 0,
-      "retained_effect": "no_effect",
+      "retained_effect": "verified_applied",
       "seed": 27
     },
     {
-      "boundary": "effect",
+      "boundary": "source",
       "position": "before",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -316,111 +316,111 @@
       "seed": 28
     },
     {
-      "boundary": "effect",
+      "boundary": "source",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 29
+    },
+    {
+      "boundary": "context",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 30
+    },
+    {
+      "boundary": "context",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 31
+    },
+    {
+      "boundary": "proposal",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 32
+    },
+    {
+      "boundary": "proposal",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 33
+    },
+    {
+      "boundary": "preflight",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 34
+    },
+    {
+      "boundary": "preflight",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 35
+    },
+    {
+      "boundary": "approval",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 36
+    },
+    {
+      "boundary": "approval",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 37
+    },
+    {
+      "boundary": "grant",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 38
+    },
+    {
+      "boundary": "grant",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 39
+    },
+    {
+      "boundary": "worker",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 40
+    },
+    {
+      "boundary": "worker",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
       "retained_effect": "uncertain",
-      "seed": 29
-    },
-    {
-      "boundary": "receipt",
-      "position": "before",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
-      "seed": 30
-    },
-    {
-      "boundary": "receipt",
-      "position": "after",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
-      "seed": 31
-    },
-    {
-      "boundary": "artifact",
-      "position": "before",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
-      "seed": 32
-    },
-    {
-      "boundary": "artifact",
-      "position": "after",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
-      "seed": 33
-    },
-    {
-      "boundary": "verification",
-      "position": "before",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
-      "seed": 34
-    },
-    {
-      "boundary": "verification",
-      "position": "after",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
-      "seed": 35
-    },
-    {
-      "boundary": "retry_decision",
-      "position": "before",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
-      "seed": 36
-    },
-    {
-      "boundary": "retry_decision",
-      "position": "after",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
-      "seed": 37
-    },
-    {
-      "boundary": "recovery_decision",
-      "position": "before",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
-      "seed": 38
-    },
-    {
-      "boundary": "recovery_decision",
-      "position": "after",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
-      "seed": 39
-    },
-    {
-      "boundary": "checkpoint",
-      "position": "before",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
-      "seed": 40
-    },
-    {
-      "boundary": "checkpoint",
-      "position": "after",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
       "seed": 41
     },
     {
-      "boundary": "terminal",
+      "boundary": "receipt",
       "position": "before",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -428,7 +428,7 @@
       "seed": 42
     },
     {
-      "boundary": "terminal",
+      "boundary": "receipt",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -436,71 +436,71 @@
       "seed": 43
     },
     {
-      "boundary": "preflight",
+      "boundary": "artifact",
       "position": "before",
-      "recovery_action": "continue",
+      "recovery_action": "reconcile_effect",
       "replay_count": 0,
-      "retained_effect": "no_effect",
+      "retained_effect": "verified_applied",
       "seed": 44
     },
     {
-      "boundary": "preflight",
-      "position": "after",
-      "recovery_action": "continue",
-      "replay_count": 0,
-      "retained_effect": "no_effect",
-      "seed": 45
-    },
-    {
-      "boundary": "approval",
-      "position": "before",
-      "recovery_action": "continue",
-      "replay_count": 0,
-      "retained_effect": "no_effect",
-      "seed": 46
-    },
-    {
-      "boundary": "approval",
-      "position": "after",
-      "recovery_action": "continue",
-      "replay_count": 0,
-      "retained_effect": "no_effect",
-      "seed": 47
-    },
-    {
-      "boundary": "dispatch",
-      "position": "before",
-      "recovery_action": "continue",
-      "replay_count": 0,
-      "retained_effect": "no_effect",
-      "seed": 48
-    },
-    {
-      "boundary": "dispatch",
-      "position": "after",
-      "recovery_action": "continue",
-      "replay_count": 0,
-      "retained_effect": "no_effect",
-      "seed": 49
-    },
-    {
-      "boundary": "effect",
-      "position": "before",
-      "recovery_action": "continue",
-      "replay_count": 0,
-      "retained_effect": "no_effect",
-      "seed": 50
-    },
-    {
-      "boundary": "effect",
+      "boundary": "artifact",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
-      "retained_effect": "uncertain",
+      "retained_effect": "verified_applied",
+      "seed": 45
+    },
+    {
+      "boundary": "verification",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 46
+    },
+    {
+      "boundary": "verification",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 47
+    },
+    {
+      "boundary": "retry",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 48
+    },
+    {
+      "boundary": "retry",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 49
+    },
+    {
+      "boundary": "recovery",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 50
+    },
+    {
+      "boundary": "recovery",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
       "seed": 51
     },
     {
-      "boundary": "receipt",
+      "boundary": "checkpoint",
       "position": "before",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -508,7 +508,7 @@
       "seed": 52
     },
     {
-      "boundary": "receipt",
+      "boundary": "checkpoint",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -516,7 +516,7 @@
       "seed": 53
     },
     {
-      "boundary": "artifact",
+      "boundary": "terminal",
       "position": "before",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -524,7 +524,7 @@
       "seed": 54
     },
     {
-      "boundary": "artifact",
+      "boundary": "terminal",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -532,87 +532,87 @@
       "seed": 55
     },
     {
-      "boundary": "verification",
+      "boundary": "source",
       "position": "before",
-      "recovery_action": "reconcile_effect",
+      "recovery_action": "continue",
       "replay_count": 0,
-      "retained_effect": "verified_applied",
+      "retained_effect": "no_effect",
       "seed": 56
     },
     {
-      "boundary": "verification",
+      "boundary": "source",
       "position": "after",
-      "recovery_action": "reconcile_effect",
+      "recovery_action": "continue",
       "replay_count": 0,
-      "retained_effect": "verified_applied",
+      "retained_effect": "no_effect",
       "seed": 57
     },
     {
-      "boundary": "retry_decision",
+      "boundary": "context",
       "position": "before",
-      "recovery_action": "reconcile_effect",
+      "recovery_action": "continue",
       "replay_count": 0,
-      "retained_effect": "verified_applied",
+      "retained_effect": "no_effect",
       "seed": 58
     },
     {
-      "boundary": "retry_decision",
+      "boundary": "context",
       "position": "after",
-      "recovery_action": "reconcile_effect",
+      "recovery_action": "continue",
       "replay_count": 0,
-      "retained_effect": "verified_applied",
+      "retained_effect": "no_effect",
       "seed": 59
     },
     {
-      "boundary": "recovery_decision",
+      "boundary": "proposal",
       "position": "before",
-      "recovery_action": "reconcile_effect",
+      "recovery_action": "continue",
       "replay_count": 0,
-      "retained_effect": "verified_applied",
+      "retained_effect": "no_effect",
       "seed": 60
     },
     {
-      "boundary": "recovery_decision",
+      "boundary": "proposal",
       "position": "after",
-      "recovery_action": "reconcile_effect",
+      "recovery_action": "continue",
       "replay_count": 0,
-      "retained_effect": "verified_applied",
+      "retained_effect": "no_effect",
       "seed": 61
     },
     {
-      "boundary": "checkpoint",
+      "boundary": "preflight",
       "position": "before",
-      "recovery_action": "reconcile_effect",
+      "recovery_action": "continue",
       "replay_count": 0,
-      "retained_effect": "verified_applied",
+      "retained_effect": "no_effect",
       "seed": 62
     },
     {
-      "boundary": "checkpoint",
+      "boundary": "preflight",
       "position": "after",
-      "recovery_action": "reconcile_effect",
+      "recovery_action": "continue",
       "replay_count": 0,
-      "retained_effect": "verified_applied",
+      "retained_effect": "no_effect",
       "seed": 63
     },
     {
-      "boundary": "terminal",
+      "boundary": "approval",
       "position": "before",
-      "recovery_action": "reconcile_effect",
+      "recovery_action": "continue",
       "replay_count": 0,
-      "retained_effect": "verified_applied",
+      "retained_effect": "no_effect",
       "seed": 64
     },
     {
-      "boundary": "terminal",
+      "boundary": "approval",
       "position": "after",
-      "recovery_action": "reconcile_effect",
+      "recovery_action": "continue",
       "replay_count": 0,
-      "retained_effect": "verified_applied",
+      "retained_effect": "no_effect",
       "seed": 65
     },
     {
-      "boundary": "preflight",
+      "boundary": "grant",
       "position": "before",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -620,7 +620,7 @@
       "seed": 66
     },
     {
-      "boundary": "preflight",
+      "boundary": "grant",
       "position": "after",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -628,7 +628,7 @@
       "seed": 67
     },
     {
-      "boundary": "approval",
+      "boundary": "worker",
       "position": "before",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -636,47 +636,47 @@
       "seed": 68
     },
     {
-      "boundary": "approval",
-      "position": "after",
-      "recovery_action": "continue",
-      "replay_count": 0,
-      "retained_effect": "no_effect",
-      "seed": 69
-    },
-    {
-      "boundary": "dispatch",
-      "position": "before",
-      "recovery_action": "continue",
-      "replay_count": 0,
-      "retained_effect": "no_effect",
-      "seed": 70
-    },
-    {
-      "boundary": "dispatch",
-      "position": "after",
-      "recovery_action": "continue",
-      "replay_count": 0,
-      "retained_effect": "no_effect",
-      "seed": 71
-    },
-    {
-      "boundary": "effect",
-      "position": "before",
-      "recovery_action": "continue",
-      "replay_count": 0,
-      "retained_effect": "no_effect",
-      "seed": 72
-    },
-    {
-      "boundary": "effect",
+      "boundary": "worker",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
       "retained_effect": "uncertain",
-      "seed": 73
+      "seed": 69
     },
     {
       "boundary": "receipt",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 70
+    },
+    {
+      "boundary": "receipt",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 71
+    },
+    {
+      "boundary": "artifact",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 72
+    },
+    {
+      "boundary": "artifact",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 73
+    },
+    {
+      "boundary": "verification",
       "position": "before",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -684,7 +684,7 @@
       "seed": 74
     },
     {
-      "boundary": "receipt",
+      "boundary": "verification",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -692,7 +692,7 @@
       "seed": 75
     },
     {
-      "boundary": "artifact",
+      "boundary": "retry",
       "position": "before",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -700,7 +700,7 @@
       "seed": 76
     },
     {
-      "boundary": "artifact",
+      "boundary": "retry",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -708,7 +708,7 @@
       "seed": 77
     },
     {
-      "boundary": "verification",
+      "boundary": "recovery",
       "position": "before",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -716,7 +716,7 @@
       "seed": 78
     },
     {
-      "boundary": "verification",
+      "boundary": "recovery",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -724,7 +724,7 @@
       "seed": 79
     },
     {
-      "boundary": "retry_decision",
+      "boundary": "checkpoint",
       "position": "before",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -732,7 +732,7 @@
       "seed": 80
     },
     {
-      "boundary": "retry_decision",
+      "boundary": "checkpoint",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -740,7 +740,7 @@
       "seed": 81
     },
     {
-      "boundary": "recovery_decision",
+      "boundary": "terminal",
       "position": "before",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -748,7 +748,7 @@
       "seed": 82
     },
     {
-      "boundary": "recovery_decision",
+      "boundary": "terminal",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -756,39 +756,39 @@
       "seed": 83
     },
     {
-      "boundary": "checkpoint",
+      "boundary": "source",
       "position": "before",
-      "recovery_action": "reconcile_effect",
+      "recovery_action": "continue",
       "replay_count": 0,
-      "retained_effect": "verified_applied",
+      "retained_effect": "no_effect",
       "seed": 84
     },
     {
-      "boundary": "checkpoint",
+      "boundary": "source",
       "position": "after",
-      "recovery_action": "reconcile_effect",
+      "recovery_action": "continue",
       "replay_count": 0,
-      "retained_effect": "verified_applied",
+      "retained_effect": "no_effect",
       "seed": 85
     },
     {
-      "boundary": "terminal",
+      "boundary": "context",
       "position": "before",
-      "recovery_action": "reconcile_effect",
+      "recovery_action": "continue",
       "replay_count": 0,
-      "retained_effect": "verified_applied",
+      "retained_effect": "no_effect",
       "seed": 86
     },
     {
-      "boundary": "terminal",
+      "boundary": "context",
       "position": "after",
-      "recovery_action": "reconcile_effect",
+      "recovery_action": "continue",
       "replay_count": 0,
-      "retained_effect": "verified_applied",
+      "retained_effect": "no_effect",
       "seed": 87
     },
     {
-      "boundary": "preflight",
+      "boundary": "proposal",
       "position": "before",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -796,7 +796,7 @@
       "seed": 88
     },
     {
-      "boundary": "preflight",
+      "boundary": "proposal",
       "position": "after",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -804,7 +804,7 @@
       "seed": 89
     },
     {
-      "boundary": "approval",
+      "boundary": "preflight",
       "position": "before",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -812,7 +812,7 @@
       "seed": 90
     },
     {
-      "boundary": "approval",
+      "boundary": "preflight",
       "position": "after",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -820,7 +820,7 @@
       "seed": 91
     },
     {
-      "boundary": "dispatch",
+      "boundary": "approval",
       "position": "before",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -828,7 +828,7 @@
       "seed": 92
     },
     {
-      "boundary": "dispatch",
+      "boundary": "approval",
       "position": "after",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -836,7 +836,7 @@
       "seed": 93
     },
     {
-      "boundary": "effect",
+      "boundary": "grant",
       "position": "before",
       "recovery_action": "continue",
       "replay_count": 0,
@@ -844,31 +844,31 @@
       "seed": 94
     },
     {
-      "boundary": "effect",
+      "boundary": "grant",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 95
+    },
+    {
+      "boundary": "worker",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 96
+    },
+    {
+      "boundary": "worker",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
       "retained_effect": "uncertain",
-      "seed": 95
-    },
-    {
-      "boundary": "receipt",
-      "position": "before",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
-      "seed": 96
-    },
-    {
-      "boundary": "receipt",
-      "position": "after",
-      "recovery_action": "reconcile_effect",
-      "replay_count": 0,
-      "retained_effect": "verified_applied",
       "seed": 97
     },
     {
-      "boundary": "artifact",
+      "boundary": "receipt",
       "position": "before",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -876,7 +876,7 @@
       "seed": 98
     },
     {
-      "boundary": "artifact",
+      "boundary": "receipt",
       "position": "after",
       "recovery_action": "reconcile_effect",
       "replay_count": 0,
@@ -953,7 +953,7 @@
   "duplicate_effect_count": 0,
   "durable_owner_count": 1,
   "external_values_retained": 0,
-  "interruption_boundary_count": 11,
+  "interruption_boundary_count": 14,
   "invalidation_dimensions": [
     "source",
     "plan",

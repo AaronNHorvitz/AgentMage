@@ -1,6 +1,6 @@
 $ cargo run -p agentmage-kernel-engine --example story_22_4_evidence --locked
    Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.24s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.28s
      Running `target/debug/examples/story_22_4_evidence`
 
 $ cargo test -p agentmage-kernel-engine durable_attempt_recovery --locked
@@ -215,7 +215,7 @@ running 1 test
 running 1 test
 test durable_attempt_recovery::tests::story_22_4_one_hundred_seed_no_unwind_boundary_campaign_has_zero_replay ... ok
 
-test result: ok. 5 passed; 0 failed; 1 ignored; 0 measured; 771 filtered out; finished in 0.25s
+test result: ok. 5 passed; 0 failed; 1 ignored; 0 measured; 778 filtered out; finished in 0.26s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -240,6 +240,12 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
      Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
 
@@ -327,7 +333,7 @@ $ cargo test -p agentmage-kernel-engine attempt_checkpoint_and_single_resume_own
 running 1 test
 test operational_store::tests::attempt_checkpoint_and_single_resume_owner_survive_verified_restart ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 776 filtered out; finished in 0.12s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 783 filtered out; finished in 0.11s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -352,6 +358,12 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
      Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
 
@@ -438,7 +450,7 @@ $ cargo test -p agentmage-kernel-engine story_22_4_recovery_fresh_attempt_compos
 
 running 0 tests
 
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 777 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 784 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -463,6 +475,12 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
      Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
 
@@ -545,8 +563,8 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; fini
 
 
 $ node --test tests/test_attempt_recovery_schemas.mjs
-✔ attempt recovery schemas accept closed content-free records (1.757441ms)
-✔ attempt recovery schemas reject replay, hidden content, missing budgets, and widening (0.229225ms)
+✔ attempt recovery schemas accept closed content-free records (1.791704ms)
+✔ attempt recovery schemas reject replay, hidden content, missing budgets, and widening (0.234633ms)
 ℹ tests 2
 ℹ suites 0
 ℹ pass 2
@@ -554,8 +572,8 @@ $ node --test tests/test_attempt_recovery_schemas.mjs
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 94.240162
+ℹ duration_ms 76.502166
 
 $ cargo clippy -p agentmage-kernel-contracts -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
     Checking agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 7.03s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 7.30s

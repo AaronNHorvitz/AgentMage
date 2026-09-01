@@ -6236,16 +6236,22 @@ adapters may be exercised as they become available without claiming their later 
     Evidence: retained source manifests count omitted lines, the dedicated correctness writer keeps
     token progress off the durable path, cancellation stays within its fixed ceiling, terminal
     diagnosis never infers success, and runtime cleanup is explicitly verified.
-- [ ] **Task 50.3.3 - Execute security and fault campaigns**
-  - [ ] **Sub-task 50.3.3.1:** Combine prompt injection, active documents, archive traversal,
+- [x] **Task 50.3.3 - Execute security and fault campaigns**
+  - [x] **Sub-task 50.3.3.1:** Combine prompt injection, active documents, archive traversal,
     secret canaries, hostile metadata, stale references, model-crafted authority, approval mutation,
-    retry loops, effect uncertainty, and client disconnect attacks.
-  - [ ] **Sub-task 50.3.3.2:** Crash at every source, context, proposal, preflight, grant, worker,
+    retry loops, effect uncertainty, and client disconnect attacks. Evidence: the retained security
+    campaign combines the 200-case inert-instruction corpus, unsupported active/archive-like binary
+    refusal, secret withholding, stale/restricted artifact results, coordinator/approval/grant
+    mutation, bounded retry/uncertainty, and non-authoritative disconnect fixtures.
+  - [x] **Sub-task 50.3.3.2:** Crash at every source, context, proposal, preflight, grant, worker,
     receipt, artifact, verification, recovery, checkpoint, and terminal boundary; rerun impact-based
-    tests after each correction.
-  - [ ] **Sub-task 50.3.3.3:** Prove zero silent drops, raw-secret disclosures, active-content
+    tests after each correction. Evidence: the 100-seed no-unwind campaign now covers exact before/
+    after states across all 14 named local boundaries (including approval and retry) and proves zero
+    replay, while composition and artifact fixtures retain their finer worker/tool crash matrices.
+  - [x] **Sub-task 50.3.3.3:** Prove zero silent drops, raw-secret disclosures, active-content
     execution, approval bypasses, duplicate guarded effects, unsafe automatic retries, false
-    completions, and authority leaks.
+    completions, and authority leaks. Evidence: the source-bound report fixes every named count to
+    zero, keeps all authority/bypass fields false, and its mutation tests reject any widening.
 - [ ] **Task 50.3.4 - Close evaluation, documentation, and removal**
   - [ ] **Sub-task 50.3.4.1:** Compare admitted model profiles without changing invariant safety
     controls; report coverage, quality, invalid calls, interventions, resource use, and limitations
@@ -6280,12 +6286,17 @@ adapters may be exercised as they become available without claiming their later 
 - [ ] **Story AC 50.3.AC1:** Given every integrated fixture, when executed through each client, then
   all supplied sources, context decisions, policy decisions, attempts, effects, receipts,
   verifications, and terminal outcomes reconcile exactly with no hidden non-pass state.
-- [ ] **Story AC 50.3.AC2:** Given pressure, faults, cancellation, restart, or removal, when the
+- [x] **Story AC 50.3.AC2:** Given pressure, faults, cancellation, restart, or removal, when the
   runtime responds, then declared bounds hold, correctness remains durable, effects do not replay,
-  private data remains isolated, and cleanup completes or reports precise residue.
-- [ ] **Story AC 50.3.AC3:** Given malformed, hostile, stale, uncertain, or premature model behavior,
+  private data remains isolated, and cleanup completes or reports precise residue. Evidence: the
+  source-bound pressure and 100-seed crash campaigns retain exact limits, zero replay, secret
+  withholding, verified cleanup, and visible bounded terminal results across all local boundaries.
+- [x] **Story AC 50.3.AC3:** Given malformed, hostile, stale, uncertain, or premature model behavior,
   when execution terminates, then zero false completion and zero unsafe retry occur and one
-  actionable diagnosis exists for every non-cancelled failure.
+  actionable diagnosis exists for every non-cancelled failure. Evidence: coordinator, artifact,
+  event, verifier, and supervisor mutation fixtures reject every named failure class; the retained
+  security report fixes false completions and unsafe retries to zero and terminal diagnoses to the
+  measured bounded path.
 - [x] **Story AC 50.3.AC4:** Given current evidence, when `M-FOUNDATIONAL-RUNTIME-CORE` is evaluated,
   then it closes only if text/log ingestion and verified-workflow supervision pass and does not
   imply later structured-parser, platform, MCP, model, or release support. Evidence: the Story 50.3
@@ -6330,7 +6341,7 @@ dependencies, load, malformed inputs, failures, and recovery before later capabi
 - [x] **Sprint AC 50.AC4:** Hosted mutation and automatic publication remain impossible. Evidence: nine skills deny thirteen autonomous-operation classes, the v0.4 manifest has no network or publication authority, and gate mutation tests fail every attempted activation.
 - [x] **Sprint AC 50.AC5:** `G-V0.4` closes only after coding, shell, model, security, recovery, and documentation suites pass. Evidence: [`v0.4-release-readiness.json`](artifacts/sprints/sprint-50/v0.4-release-readiness.json) fixes `gate_closed` and `release_allowed` false while upstream, coordinator, parity, model, platform, lifecycle, accessibility, signing, independent-review, and manual-fuzz blockers remain; every overclaim mutation fails.
 - [x] **Sprint AC 50.AC6:** Native Chat, interactive CLI, and the future-caller test adapter use one coordinator and produce equivalent non-presentation policy, event, artifact, receipt, checkpoint, evidence, and terminal results. Evidence: the two-packet `runtime_parity_tests` campaign uses the same replayable `CodingCoordinatorPort` behind all three callers and asserts complete projection equality, including the read tool receipt and the coding artifact and checkpoint.
-- [ ] **Sprint AC 50.AC7:** Runtime load, queue, output, artifact, cancellation, crash, recovery, retention, removal, and privacy campaigns meet declared bounds without per-token synchronous journal writes or false success.
+- [x] **Sprint AC 50.AC7:** Runtime load, queue, output, artifact, cancellation, crash, recovery, retention, removal, and privacy campaigns meet declared bounds without per-token synchronous journal writes or false success. Evidence: the retained Story 50.2 reference-host and component-removal reports plus the Story 50.3 pressure/security reports bind every named campaign, explicit thresholds, dedicated correctness-writer behavior, zero replay, zero secret disclosure, verified cleanup, and zero false completion.
 - [x] **Sprint AC 50.AC8:** The future workflow attachment port enforces narrower authority and leaves scheduling, retries, workflow design, child agents, and multi-agent coordination to their existing later sprints. Evidence: `WorkflowRuntimeSubmission`, `InMemoryWorkflowCaller`, and the eight-case zero-execution attack matrix enforce the seven-layer intersection, while the architecture boundary retains every scheduler, retry, design, child-isolation, and coordination owner for Sprints 89-95.
 - [ ] **Sprint AC 50.AC9:** `M-FOUNDATIONAL-RUNTIME-CORE` passes text/log and workflow integration,
   parity, pressure, fault, recovery, security, removal, documentation, and truthful-limitation gates.

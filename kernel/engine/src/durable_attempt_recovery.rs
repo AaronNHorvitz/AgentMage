@@ -827,6 +827,22 @@ mod tests {
 
     const CRASH_ENV: &str = "AGENTMAGE_ATTEMPT_RECOVERY_CRASH_CHILD";
     const CRASH_PATH_ENV: &str = "AGENTMAGE_ATTEMPT_RECOVERY_CRASH_PATH";
+    const STORY_50_3_CRASH_BOUNDARIES: [&str; 14] = [
+        "source",
+        "context",
+        "proposal",
+        "preflight",
+        "approval",
+        "grant",
+        "worker",
+        "receipt",
+        "artifact",
+        "verification",
+        "retry",
+        "recovery",
+        "checkpoint",
+        "terminal",
+    ];
 
     fn hash(byte: char) -> String {
         byte.to_string().repeat(64)
@@ -1101,11 +1117,15 @@ mod tests {
             .expect("seed")
             .parse()
             .expect("numeric seed");
-        let boundary = (seed / 2) % 11;
+        let boundary = (seed / 2) % STORY_50_3_CRASH_BOUNDARIES.len() as u64;
         let after = seed % 2 == 1;
-        let effect = if boundary < 3 || (boundary == 3 && !after) {
+        let worker_boundary = STORY_50_3_CRASH_BOUNDARIES
+            .iter()
+            .position(|candidate| *candidate == "worker")
+            .expect("worker boundary exists") as u64;
+        let effect = if boundary < worker_boundary || (boundary == worker_boundary && !after) {
             CanonicalCheckpointEffectState::NoEffect
-        } else if boundary == 3 {
+        } else if boundary == worker_boundary {
             CanonicalCheckpointEffectState::Uncertain
         } else {
             CanonicalCheckpointEffectState::VerifiedApplied
@@ -1122,19 +1142,6 @@ mod tests {
         let root =
             std::env::temp_dir().join(format!("agentmage-attempt-recovery-{}", std::process::id()));
         fs::create_dir_all(&root).expect("temporary campaign directory");
-        let boundaries = [
-            "preflight",
-            "approval",
-            "dispatch",
-            "effect",
-            "receipt",
-            "artifact",
-            "verification",
-            "retry",
-            "recovery",
-            "checkpoint",
-            "terminal",
-        ];
         let mut replay_count = 0_u64;
         let mut traces = Vec::new();
         for seed in 0_u64..100 {
@@ -1161,13 +1168,26 @@ mod tests {
             }
             traces.push((
                 seed,
-                boundaries[(seed as usize / 2) % boundaries.len()],
+                STORY_50_3_CRASH_BOUNDARIES
+                    [(seed as usize / 2) % STORY_50_3_CRASH_BOUNDARIES.len()],
                 seed % 2,
                 decision.action,
             ));
         }
         assert_eq!(traces.len(), 100);
         assert_eq!(replay_count, 0);
+        assert_eq!(
+            traces
+                .iter()
+                .map(|trace| trace.1)
+                .collect::<std::collections::BTreeSet<_>>()
+                .len(),
+            STORY_50_3_CRASH_BOUNDARIES.len()
+        );
+        eprintln!(
+            "STORY_50_3_CRASH_BOUNDARY_COUNT={};SEEDS=100;REPLAY_COUNT={replay_count}",
+            STORY_50_3_CRASH_BOUNDARIES.len()
+        );
         fs::remove_dir_all(root).expect("campaign cleanup");
     }
 }

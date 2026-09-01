@@ -44,6 +44,7 @@ COMMANDS: Final = (
     ("cargo", "test", "-p", "agentmage-host", "story_50_3_disabled_artifact_and_retrieval_features_register_no_tools", "--all-features", "--locked"),
     ("npm", "--prefix", "shells/vscode", "test"),
     ("python3", "scripts/runtime_feature_activation.py"),
+    ("python3", "scripts/story_50_3_security_fault_evidence.py"),
 )
 SOURCES: Final = (
     "shells/host/src/runtime_read_tests.rs",
@@ -67,6 +68,9 @@ SOURCES: Final = (
     "shells/vscode/test/feature_activation.test.ts",
     "scripts/runtime_feature_activation.py",
     "tests/test_runtime_feature_activation.py",
+    "artifacts/sprints/sprint-50/story-50.3-security-fault/report.json",
+    "scripts/story_50_3_security_fault_evidence.py",
+    "tests/test_story_50_3_security_fault_evidence.py",
 )
 
 
@@ -158,6 +162,7 @@ def expected_report() -> dict[str, Any]:
             "bounded_pressure_campaign_retained": True,
             "local_pressure_performance_campaign_complete": True,
             "fault_restart_and_no_replay_campaign_retained": True,
+            "local_security_fault_campaign_complete": True,
             "component_removal_campaign_retained": True,
             "independent_feature_activation_complete": True,
             "false_completion_or_unsafe_retry": False,
@@ -196,6 +201,7 @@ def validate_report(value: Any) -> list[str]:
         "bounded_pressure_campaign_retained",
         "local_pressure_performance_campaign_complete",
         "fault_restart_and_no_replay_campaign_retained",
+        "local_security_fault_campaign_complete",
         "component_removal_campaign_retained",
         "independent_feature_activation_complete",
     )
@@ -267,6 +273,7 @@ def validate() -> list[str]:
         "story_50_3_disabled_artifact_and_retrieval_features_register_no_tools ... ok",
         "compatibility registrations require independent exact true flags",
         "Validated 13 independent runtime feature activations",
+        "Story 50.3 local security/fault evidence validated",
     ):
         if marker not in raw:
             failures.append(f"raw evidence lacks fixture marker: {marker}")

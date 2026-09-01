@@ -224,15 +224,18 @@ fn main() {
     });
 
     let boundaries = [
+        "source",
+        "context",
+        "proposal",
         "preflight",
         "approval",
-        "dispatch",
-        "effect",
+        "grant",
+        "worker",
         "receipt",
         "artifact",
         "verification",
-        "retry_decision",
-        "recovery_decision",
+        "retry",
+        "recovery",
         "checkpoint",
         "terminal",
     ];
@@ -240,9 +243,15 @@ fn main() {
         .map(|seed| {
             let boundary_index = (seed as usize / 2) % boundaries.len();
             let after = seed % 2 == 1;
-            let effect = if boundary_index < 3 || (boundary_index == 3 && !after) {
+            let worker_boundary = boundaries
+                .iter()
+                .position(|candidate| *candidate == "worker")
+                .expect("worker boundary exists");
+            let effect = if boundary_index < worker_boundary
+                || (boundary_index == worker_boundary && !after)
+            {
                 CanonicalCheckpointEffectState::NoEffect
-            } else if boundary_index == 3 {
+            } else if boundary_index == worker_boundary {
                 CanonicalCheckpointEffectState::Uncertain
             } else {
                 CanonicalCheckpointEffectState::VerifiedApplied
@@ -305,7 +314,7 @@ fn main() {
             unbound_checkpoint_count: 0,
         },
         deterministic_seed_count: 100,
-        interruption_boundary_count: 11,
+        interruption_boundary_count: boundaries.len(),
         concurrent_client_count: 32,
         durable_owner_count: 1,
         duplicate_effect_count: 0,

@@ -11,9 +11,9 @@
       "sha256": "0172e822ffd4297d769d752f75a6e06e27dbf36ca239ecc80167cd4358c9b4be"
     },
     {
-      "byte_length": 43816,
+      "byte_length": 44580,
       "path": "kernel/engine/src/durable_attempt_recovery.rs",
-      "sha256": "192f61b23f43ced10ae128387fbb65bf66093046a588ce1b4e198239dd2557e9"
+      "sha256": "792c373d7422eb52e69a7b69a00b871b81d0d30f74651f2ea05e4c29ac1d6f3e"
     },
     {
       "byte_length": 461249,
@@ -26,9 +26,9 @@
       "sha256": "563d3643a23b63bee80a40aee12c8cf5fb7f017b52d4f9f95d6ac65bacf26630"
     },
     {
-      "byte_length": 12090,
+      "byte_length": 12392,
       "path": "kernel/engine/examples/story_22_4_evidence.rs",
-      "sha256": "86d805918eab5a34b9e35f1110628dc3b0033f8adde4c76f1c02bedbc46e7f39"
+      "sha256": "309099412c6c20f7311bbf82efd243cc66b6735fd10ee3cc406a8ff2a9410f5d"
     },
     {
       "byte_length": 3798,
@@ -51,9 +51,9 @@
       "sha256": "20340aed7bd3f60a2c191b71a7a57d8c49b318982c227fab483b899090a4c87a"
     },
     {
-      "byte_length": 10126,
+      "byte_length": 10138,
       "path": "scripts/story_22_4_attempt_recovery_evidence.py",
-      "sha256": "0ed1b45238a40b0580b8faedc39aadfbb379e3bc96857e9d8f0d3416409166db"
+      "sha256": "fe42d28e23d33bfc840044685af7fe21fdd6841a39ddf2dc55cedc105333c4cd"
     },
     {
       "byte_length": 849,
@@ -61,14 +61,14 @@
       "sha256": "87e7e6246eae5a90146293f20362d2ef6d31b22daa5940d065c0be14cf14929c"
     },
     {
-      "byte_length": 15768,
+      "byte_length": 16422,
       "path": "artifacts/sprints/sprint-22/story-22.4/attempt-recovery-results.log",
-      "sha256": "a64fae721846cc2b7c9c49292a65f5bf48f71c27dd933ae9fb814b9dc12764c1"
+      "sha256": "58eba3bfed1cdc2e75b2098c52c7862c0743061fd832277e44d26d2131ddeb55"
     },
     {
-      "byte_length": 26380,
+      "byte_length": 25938,
       "path": "artifacts/sprints/sprint-22/story-22.4/attempt-recovery-goldens.json",
-      "sha256": "e1939b085e4619b4dbd99fa5827e0e29bb76005e6e01891b249057ae8d27b175"
+      "sha256": "eb3bf45572b21c7561f39de9ab38427b05d1853b0c48d97e4358e2951f29aa51"
     }
   ],
   "commands": [
@@ -92,7 +92,7 @@
     "encrypted_store_restart_complete": true,
     "independent_review_complete": false,
     "installed_package_campaign_complete": false,
-    "interruption_boundaries": 11,
+    "interruption_boundaries": 14,
     "physical_fault_campaign_complete": false,
     "release_claim": "none",
     "replayed_effects": 0,

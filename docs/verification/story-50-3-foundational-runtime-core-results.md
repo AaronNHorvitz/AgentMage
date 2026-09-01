@@ -55,6 +55,14 @@ fixtures also retain exact artifact-count/byte, event, output, memory, disk, pro
 attempt, timeout, and cancellation boundary behavior. This remains local source/reference-host
 evidence rather than installed-client or additional-platform qualification.
 
+The companion security/fault report runs the inert prompt-injection corpus, active/archive-like
+binary refusal, secret withholding, hostile/stale artifact results, approval and grant drift,
+event-chain tampering, disconnect, uncertainty, false-completion, and retry defenses together. Its
+100-seed no-unwind matrix covers source, context, proposal, preflight, approval, grant, worker,
+receipt, artifact, verification, retry, recovery, checkpoint, and terminal boundaries with zero
+effect replay. Structured active-document parsing is still unavailable; this result proves safe
+refusal, not parser qualification.
+
 Independent activation is recorded by
 [`runtime-feature-activation.json`](../../architecture/runtime-feature-activation.json). Disabled
 artifact ingress and retrieval register no native tool definitions, native participant and provider

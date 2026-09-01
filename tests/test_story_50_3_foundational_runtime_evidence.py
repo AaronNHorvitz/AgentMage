@@ -14,6 +14,7 @@ class Story503FoundationalRuntimeEvidenceTests(unittest.TestCase):
         self.assertFalse(report["product_truth"]["complete_foundational_runtime_claim"])
         self.assertTrue(report["product_truth"]["independent_feature_activation_complete"])
         self.assertTrue(report["product_truth"]["local_pressure_performance_campaign_complete"])
+        self.assertTrue(report["product_truth"]["local_security_fault_campaign_complete"])
         self.assertTrue(report["pressure_metrics"]["runtime_cleanup_verified"])
 
     def test_external_later_or_release_overclaim_fails_closed(self) -> None:

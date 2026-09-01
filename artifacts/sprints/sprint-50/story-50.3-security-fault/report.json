@@ -1,0 +1,123 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 51712,
+      "path": "kernel/engine/src/instruction_provenance.rs",
+      "sha256": "0e88d2dd4d200450f777fc8d8b24b3ba6091ae89cadc6c919af6689205ae9c94"
+    },
+    {
+      "byte_length": 111393,
+      "path": "kernel/engine/src/source_preparation.rs",
+      "sha256": "9facf973fb5a8e10e8c8c09c3edc1f900ad5a86fc90a55229d987d97aa5ce5c1"
+    },
+    {
+      "byte_length": 70590,
+      "path": "capabilities/read-only/src/artifact.rs",
+      "sha256": "fb2f0212db74a6d795a3b82a1f5a78c81533fadd03c12b198a1aa0e1a02810ad"
+    },
+    {
+      "byte_length": 58103,
+      "path": "kernel/engine/src/tool_composition.rs",
+      "sha256": "94d2dd8c8cd9f8d3571232d117d69da8b731e365f2633f3df87ce91d8970ba20"
+    },
+    {
+      "byte_length": 44580,
+      "path": "kernel/engine/src/durable_attempt_recovery.rs",
+      "sha256": "792c373d7422eb52e69a7b69a00b871b81d0d30f74651f2ea05e4c29ac1d6f3e"
+    },
+    {
+      "byte_length": 38712,
+      "path": "kernel/engine/src/runtime_coordinator.rs",
+      "sha256": "f295e43900f91d48fc2ba29ba7a2c44fd4759915970571ea2a8164d7f954db62"
+    },
+    {
+      "byte_length": 148475,
+      "path": "kernel/engine/src/runtime_event.rs",
+      "sha256": "9918d6194634c793162c09c4ea39bcdedb5df0f2e20e879c2f856c7d6468ca26"
+    },
+    {
+      "byte_length": 72012,
+      "path": "kernel/engine/src/verified_workflow_supervisor.rs",
+      "sha256": "b2f2ebe42410c722fa16393f1dc77903cc2524d99a00cf5e6d03a6c4a3a0a208"
+    },
+    {
+      "byte_length": 316474,
+      "path": "shells/host/src/linux_coding_runtime.rs",
+      "sha256": "468fa56f53a87fa6f390605d82ce6d03304dcd6946f1eea578f814185fdec4af"
+    },
+    {
+      "byte_length": 10045,
+      "path": "scripts/story_50_3_security_fault_evidence.py",
+      "sha256": "964fa4aa6b479588cd33785ef50855d11006fcd625f44a60276388631d09e96e"
+    },
+    {
+      "byte_length": 1274,
+      "path": "tests/test_story_50_3_security_fault_evidence.py",
+      "sha256": "042cb571068c352467120c50c5380b65fd4b1f613d1ae091c66a8a13038880c2"
+    },
+    {
+      "byte_length": 40738,
+      "path": "artifacts/sprints/sprint-50/story-50.3-security-fault/local-results.log",
+      "sha256": "59994d32c028cd4890aea00005614a6831c973c355c07caec2f85f586f98cd5b"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine two_hundred_injections_never_create_guidance_or_authority_without_user_decision --all-features --locked",
+    "cargo test -p agentmage-kernel-engine story_22_3_declared_encodings_are_exact_and_binary_or_lossy_input_fails --all-features --locked",
+    "cargo test -p agentmage-capability-read-only stale_restricted_unsupported_redacted_missing_and_range_fail_closed --locked",
+    "cargo test -p agentmage-capability-read-only cancellation_timeout_and_crash_are_receipted_for_every_tool --locked",
+    "cargo test -p agentmage-kernel-engine story_16_3_post_approval_preflight_policy_and_grant_drift_start_no_worker --all-features --locked",
+    "cargo test -p agentmage-kernel-engine story_16_3_crash_boundaries_restore_one_uncertain_terminal_without_replay --all-features --locked",
+    "cargo test -p agentmage-kernel-engine story_22_4_one_hundred_seed_no_unwind_boundary_campaign_has_zero_replay --all-features --locked -- --nocapture",
+    "cargo test -p agentmage-kernel-engine story_23_4_request_and_outcome_tampering_fail_closed --all-features --locked",
+    "cargo test -p agentmage-kernel-engine story_21_3_missing_duplicate_reordered_cross_bound_and_tampered_events_fail_closed --all-features --locked",
+    "cargo test -p agentmage-kernel-engine verified_workflow_supervisor::tests --all-features --locked",
+    "cargo test -p agentmage-host read_output_secret_classes_are_withheld_before_model_projection --all-features --locked"
+  ],
+  "crash_boundary_matrix": [
+    "source",
+    "context",
+    "proposal",
+    "preflight",
+    "approval",
+    "grant",
+    "worker",
+    "receipt",
+    "artifact",
+    "verification",
+    "retry",
+    "recovery",
+    "checkpoint",
+    "terminal"
+  ],
+  "crash_seed_count": 100,
+  "generated_on": "2026-09-01",
+  "limitations": [
+    "active document and archive-like inputs are refused as unsupported bytes because structured parser adapters are not admitted",
+    "the model boundary is deterministic and cannot substitute for an independently admitted production tuple",
+    "installed-client, independent-review, final Windows, and deferred macOS evidence remains separate"
+  ],
+  "product_truth": {
+    "active_or_archive_bytes_executed": false,
+    "all_local_crash_boundaries_exercised": true,
+    "approval_or_grant_bypass": false,
+    "client_disconnect_authority": false,
+    "duplicate_guarded_effects": 0,
+    "false_completions": 0,
+    "hostile_metadata_or_stale_reference_bypass": false,
+    "independent_review_complete": false,
+    "installed_active_document_parser_campaign_complete": false,
+    "macos_validation_complete": false,
+    "model_output_authority": false,
+    "prompt_injection_records_inert": true,
+    "release_claim": "none",
+    "secret_canary_disclosures": 0,
+    "silent_event_drops": 0,
+    "unsafe_automatic_retries": 0,
+    "windows_validation_complete": false
+  },
+  "record_type": "agentmage-story-50-3-security-fault-evidence",
+  "schema_version": 1,
+  "status": "PASS_LOCAL_TEXT_LOG_SECURITY_FAULT",
+  "story_id": "50.3"
+}

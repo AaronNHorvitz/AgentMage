@@ -69,10 +69,10 @@ def validate_golden(value: Any) -> list[str]:
         failures.append("closed recovery action family is incomplete")
     if any(item.get("replay_allowed") for item in decisions):
         failures.append("a recovery decision permits replay")
-    if value.get("deterministic_seed_count") != 100 or value.get("interruption_boundary_count") != 11:
+    if value.get("deterministic_seed_count") != 100 or value.get("interruption_boundary_count") != 14:
         failures.append("100-seed interruption matrix is incomplete")
     traces = value.get("crash_traces", [])
-    expected_boundaries = {"preflight", "approval", "dispatch", "effect", "receipt", "artifact", "verification", "retry_decision", "recovery_decision", "checkpoint", "terminal"}
+    expected_boundaries = {"source", "context", "proposal", "preflight", "approval", "grant", "worker", "receipt", "artifact", "verification", "retry", "recovery", "checkpoint", "terminal"}
     if len(traces) != 100 or {item.get("seed") for item in traces} != set(range(100)):
         failures.append("crash trace seed coverage is incomplete")
     if {item.get("boundary") for item in traces} != expected_boundaries or {item.get("position") for item in traces} != {"before", "after"}:
@@ -114,7 +114,7 @@ def expected_report() -> dict[str, Any]:
             "attempt_checkpoint_identity_families": 18,
             "closed_recovery_actions": 9,
             "deterministic_interruption_seeds": 100,
-            "interruption_boundaries": 11,
+            "interruption_boundaries": 14,
             "concurrent_clients": 32,
             "durable_resume_owners": 1,
             "replayed_effects": 0,

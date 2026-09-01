@@ -51,14 +51,14 @@
       "sha256": "18d839f8199de094e136645aeac87773fb6cfb18e44b4f4a70f637e6efebac33"
     },
     {
-      "byte_length": 15199,
+      "byte_length": 15619,
       "path": "scripts/story_50_3_foundational_runtime_evidence.py",
-      "sha256": "5130c383a131807648f54af0e159c520340c35514f4d0ae581acc84736cf285f"
+      "sha256": "14c5736a53747fab3bcd98011887918aecb355fd11cc0a919341332003cc794c"
     },
     {
-      "byte_length": 3272,
+      "byte_length": 3363,
       "path": "tests/test_story_50_3_foundational_runtime_evidence.py",
-      "sha256": "4c0586c11e6e227e1629014e7288b830706bb7423cb8f07e9178b75a2303405e"
+      "sha256": "7247f8034811884b458dd3897912f8dfabcf7bdb797f6551b5bc70e18319feee"
     },
     {
       "byte_length": 2057,
@@ -106,9 +106,24 @@
       "sha256": "568f79499bc068a379afa6b094bd43e6c07d7f6eaea60132b74cff0f1d539844"
     },
     {
-      "byte_length": 22727,
+      "byte_length": 5329,
+      "path": "artifacts/sprints/sprint-50/story-50.3-security-fault/report.json",
+      "sha256": "59dbd5537c8681731b2916ed78bebc338a46a7ec6f6f58339feaf4c428c2dd0a"
+    },
+    {
+      "byte_length": 10045,
+      "path": "scripts/story_50_3_security_fault_evidence.py",
+      "sha256": "964fa4aa6b479588cd33785ef50855d11006fcd625f44a60276388631d09e96e"
+    },
+    {
+      "byte_length": 1274,
+      "path": "tests/test_story_50_3_security_fault_evidence.py",
+      "sha256": "042cb571068c352467120c50c5380b65fd4b1f613d1ae091c66a8a13038880c2"
+    },
+    {
+      "byte_length": 22862,
       "path": "artifacts/sprints/sprint-50/story-50.3-foundational-runtime/local-results.log",
-      "sha256": "4ac629bad654f211be9c6c54c27d96cc11e0b55ef8797698d745a1d1ca9b13e4"
+      "sha256": "f22865f7fca931a8fb6b02486186138cc0f097f0c20f55c7bb97bacabe731c85"
     }
   ],
   "commands": [
@@ -122,7 +137,8 @@
     "cargo test -p agentmage-host feature_activation --all-features --locked",
     "cargo test -p agentmage-host story_50_3_disabled_artifact_and_retrieval_features_register_no_tools --all-features --locked",
     "npm --prefix shells/vscode test",
-    "python3 scripts/runtime_feature_activation.py"
+    "python3 scripts/runtime_feature_activation.py",
+    "python3 scripts/story_50_3_security_fault_evidence.py"
   ],
   "generated_on": "2026-08-31",
   "pressure_metrics": {
@@ -149,7 +165,7 @@
     "source_input_bytes": 26214400,
     "source_used_tokens": 10,
     "terminal_diagnosis_latency_ceiling_us": 1000000,
-    "terminal_diagnosis_latency_us": 10985
+    "terminal_diagnosis_latency_us": 6876
   },
   "product_truth": {
     "bounded_pressure_campaign_retained": true,
@@ -164,6 +180,7 @@
     "independent_review_complete": false,
     "installed_client_campaign_complete": false,
     "local_pressure_performance_campaign_complete": true,
+    "local_security_fault_campaign_complete": true,
     "macos_validation_complete": false,
     "one_common_runtime_coordinator_per_attempt": true,
     "one_verified_workflow_supervisor": true,
