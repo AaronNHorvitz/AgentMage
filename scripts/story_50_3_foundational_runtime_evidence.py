@@ -44,6 +44,7 @@ COMMANDS: Final = (
     ("cargo", "test", "-p", "agentmage-host", "story_50_3_disabled_artifact_and_retrieval_features_register_no_tools", "--all-features", "--locked"),
     ("npm", "--prefix", "shells/vscode", "test"),
     ("python3", "scripts/runtime_feature_activation.py"),
+    ("cargo", "test", "-p", "agentmage-host", "foundational_rollout", "--all-features", "--locked"),
     ("python3", "scripts/story_50_3_security_fault_evidence.py"),
 )
 SOURCES: Final = (
@@ -68,6 +69,9 @@ SOURCES: Final = (
     "shells/vscode/test/feature_activation.test.ts",
     "scripts/runtime_feature_activation.py",
     "tests/test_runtime_feature_activation.py",
+    "shells/host/src/foundational_rollout.rs",
+    "docs/architecture/foundational-artifact-and-workflow-runtime.md",
+    "docs/release/operator-guide.md",
     "artifacts/sprints/sprint-50/story-50.3-security-fault/report.json",
     "scripts/story_50_3_security_fault_evidence.py",
     "tests/test_story_50_3_security_fault_evidence.py",
@@ -166,11 +170,13 @@ def expected_report() -> dict[str, Any]:
             "component_removal_campaign_retained": True,
             "complete_clean_target_removal_campaign": True,
             "independent_feature_activation_complete": True,
+            "local_rollout_contract_complete": True,
             "false_completion_or_unsafe_retry": False,
             "structured_document_parser_qualification": False,
             "qualified_production_model_evaluation": False,
             "installed_client_campaign_complete": False,
             "independent_review_complete": False,
+            "actual_post_release_diagnostic_review_complete": False,
             "windows_validation_complete": False,
             "macos_validation_complete": False,
             "complete_foundational_runtime_claim": False,
@@ -183,6 +189,7 @@ def expected_report() -> dict[str, Any]:
             "obtain independent runtime, security, and release review",
             "run final local Windows validation against the exact final candidate commit",
             "run deferred macOS validation against the exact final candidate commit",
+            "run the explicit local post-release diagnostic review after a release exists",
         ],
     }
 
@@ -206,6 +213,7 @@ def validate_report(value: Any) -> list[str]:
         "component_removal_campaign_retained",
         "complete_clean_target_removal_campaign",
         "independent_feature_activation_complete",
+        "local_rollout_contract_complete",
     )
     required_false = (
         "false_completion_or_unsafe_retry",
@@ -213,6 +221,7 @@ def validate_report(value: Any) -> list[str]:
         "qualified_production_model_evaluation",
         "installed_client_campaign_complete",
         "independent_review_complete",
+        "actual_post_release_diagnostic_review_complete",
         "windows_validation_complete",
         "macos_validation_complete",
         "complete_foundational_runtime_claim",
@@ -275,6 +284,7 @@ def validate() -> list[str]:
         "story_50_3_disabled_artifact_and_retrieval_features_register_no_tools ... ok",
         "compatibility registrations require independent exact true flags",
         "Validated 13 independent runtime feature activations",
+        "post_release_review_is_content_free_local_and_has_no_transport_authority ... ok",
         "Story 50.3 local security/fault evidence validated",
     ):
         if marker not in raw:

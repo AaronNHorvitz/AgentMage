@@ -73,6 +73,15 @@ artifact ingress and retrieval register no native tool definitions, native parti
 compatibility use separate exact-boolean VS Code registration guards, and unavailable structured
 extractors, OCR, model repair, and MCP are fixed off with no registration owner.
 
+The host rollout contract separately migrates an absent legacy setting to an explicit Disabled
+generation, requires affirmative beta opt-in and limitation acknowledgement, gives rollback and
+local emergency-disable state deterministic precedence, and keeps hidden retry, remote telemetry,
+and network authority fixed false. Four product tests cover legacy migration, incomplete opt-in,
+beta activation, complete monotonic rollback, verified and invalid emergency material, explicit
+reenrollment, and the closed local post-release diagnostic shape. The post-release phase in this
+campaign is a local contract rehearsal because AgentMage has not been released; an actual
+post-release operator review remains unavailable and is not claimed.
+
 ## Explicit non-claims
 
 This decision leaves all of the following open:

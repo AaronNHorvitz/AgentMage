@@ -51,14 +51,14 @@
       "sha256": "18d839f8199de094e136645aeac87773fb6cfb18e44b4f4a70f637e6efebac33"
     },
     {
-      "byte_length": 15729,
+      "byte_length": 16392,
       "path": "scripts/story_50_3_foundational_runtime_evidence.py",
-      "sha256": "c8aadf6a6034831b1f4f3cdbe12a27c0e718cedbccb36800c64f8e57b4940ac5"
+      "sha256": "b80e78abccf04cc9c1305086e7f971b149b3900dc4042adfa87e4836b24344c8"
     },
     {
-      "byte_length": 3363,
+      "byte_length": 3631,
       "path": "tests/test_story_50_3_foundational_runtime_evidence.py",
-      "sha256": "7247f8034811884b458dd3897912f8dfabcf7bdb797f6551b5bc70e18319feee"
+      "sha256": "71beee5779cf61e5a1e1e690a488d9f5bddb5e3e2fa579e0006751f3b9aabce5"
     },
     {
       "byte_length": 2057,
@@ -66,9 +66,9 @@
       "sha256": "fe42c43429d0accf10f55898928c7739ba850fb06f445a2ed850e572a76f1447"
     },
     {
-      "byte_length": 6766,
+      "byte_length": 7424,
       "path": "shells/host/src/feature_activation.rs",
-      "sha256": "6d43106f910de87dc95181e5e978c82c39fead87b87ec4d4f4e28a00e413b4e0"
+      "sha256": "d27cbbca4a860cb22a78b583d7dc3ba0dc300f26f9178bfd6be908cad2a6849e"
     },
     {
       "byte_length": 18626,
@@ -106,6 +106,21 @@
       "sha256": "568f79499bc068a379afa6b094bd43e6c07d7f6eaea60132b74cff0f1d539844"
     },
     {
+      "byte_length": 17403,
+      "path": "shells/host/src/foundational_rollout.rs",
+      "sha256": "29e6e503e4e43b28a3ccdf1537eed4993e175e8f3613f728a2623035816f67e4"
+    },
+    {
+      "byte_length": 42658,
+      "path": "docs/architecture/foundational-artifact-and-workflow-runtime.md",
+      "sha256": "69c79c8cbef8eba234bb8a1fb34eab1de88131d47acdbc5b02d5e6462c614d02"
+    },
+    {
+      "byte_length": 11920,
+      "path": "docs/release/operator-guide.md",
+      "sha256": "6640199eb56b59f2ed4eb325c12508bc8f97d51d229666b61046dde33312be2d"
+    },
+    {
       "byte_length": 5329,
       "path": "artifacts/sprints/sprint-50/story-50.3-security-fault/report.json",
       "sha256": "59dbd5537c8681731b2916ed78bebc338a46a7ec6f6f58339feaf4c428c2dd0a"
@@ -121,9 +136,9 @@
       "sha256": "042cb571068c352467120c50c5380b65fd4b1f613d1ae091c66a8a13038880c2"
     },
     {
-      "byte_length": 22860,
+      "byte_length": 24270,
       "path": "artifacts/sprints/sprint-50/story-50.3-foundational-runtime/local-results.log",
-      "sha256": "5a06876994b317e9f6be944910087de48fd5cb3e8faeb180941b0a702fa26908"
+      "sha256": "cd1c2292adbb266d32074daee14e18642747ac6b26fe03f1b2dd9588861304f5"
     }
   ],
   "commands": [
@@ -138,6 +153,7 @@
     "cargo test -p agentmage-host story_50_3_disabled_artifact_and_retrieval_features_register_no_tools --all-features --locked",
     "npm --prefix shells/vscode test",
     "python3 scripts/runtime_feature_activation.py",
+    "cargo test -p agentmage-host foundational_rollout --all-features --locked",
     "python3 scripts/story_50_3_security_fault_evidence.py"
   ],
   "generated_on": "2026-08-31",
@@ -165,9 +181,10 @@
     "source_input_bytes": 26214400,
     "source_used_tokens": 10,
     "terminal_diagnosis_latency_ceiling_us": 1000000,
-    "terminal_diagnosis_latency_us": 10589
+    "terminal_diagnosis_latency_us": 11535
   },
   "product_truth": {
+    "actual_post_release_diagnostic_review_complete": false,
     "bounded_pressure_campaign_retained": true,
     "complete_clean_target_removal_campaign": true,
     "complete_foundational_runtime_claim": false,
@@ -181,6 +198,7 @@
     "independent_review_complete": false,
     "installed_client_campaign_complete": false,
     "local_pressure_performance_campaign_complete": true,
+    "local_rollout_contract_complete": true,
     "local_security_fault_campaign_complete": true,
     "macos_validation_complete": false,
     "one_common_runtime_coordinator_per_attempt": true,
@@ -199,7 +217,8 @@
     "qualify later DOCX, PDF/OCR, and XLSX parser adapters in their owning sprints",
     "obtain independent runtime, security, and release review",
     "run final local Windows validation against the exact final candidate commit",
-    "run deferred macOS validation against the exact final candidate commit"
+    "run deferred macOS validation against the exact final candidate commit",
+    "run the explicit local post-release diagnostic review after a release exists"
   ],
   "schema_version": 1,
   "status": "PASS_LOCAL_TEXT_LOG_WORKFLOW_CORE",

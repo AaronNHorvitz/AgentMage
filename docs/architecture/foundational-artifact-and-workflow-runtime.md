@@ -750,6 +750,25 @@ compatibility, and MCP exposure. Disabled features leave no registration,
 process, socket, cache, schema authority, or support claim beyond retained
 migration compatibility.
 
+Runtime rollout is a separate local decision from compile-time availability. An absent legacy
+setting migrates to an explicit disabled generation and preserves the zero-hidden-retry baseline.
+The implemented text/log and verified-workflow surfaces activate only after an exact beta opt-in
+that acknowledges the published limitations. A missing acknowledgement blocks activation. Any
+rollback request is evaluated before ordinary activation and produces a new monotonic disabled
+configuration generation; reenrollment requires another explicit opt-in.
+
+Fresh local emergency-disable state has highest precedence. Verified active disable material turns
+off artifact ingress, text/log extraction, retrieval, and workflow supervision before registration
+or work acceptance. Present but invalid disable material also fails closed rather than falling
+through to beta. Neither rollout configuration nor its diagnostic projection grants tool, process,
+socket, model, retry, or network authority.
+
+The rollout diagnostic contains only schema version, phase, effective mode, stable reason family,
+configuration generation, and fixed safety booleans. It has no prompt, source, path, host identity,
+credential, endpoint, or arbitrary string field. Candidate rehearsal and later post-release review
+use the same local projection; no automatic telemetry transport exists, and any file export still
+uses the separately previewed, one-use local diagnostic export workflow.
+
 The implemented source-artifact and verified-supervisor owners also have independent Cargo feature
 boundaries. `source-artifacts` is the only host path that activates the engine's
 `source-preparation` modules, and `workflow-supervisor` is the only host path that activates the

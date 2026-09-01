@@ -42,6 +42,8 @@ pub mod engineering_runtime;
 pub mod engineering_team;
 /// Closed independent activation for implemented and unavailable runtime features.
 pub mod feature_activation;
+/// Fail-closed beta, rollback, and emergency-disable rollout for foundational features.
+pub mod foundational_rollout;
 
 /// Verified read-only knowledge workflows over the shared thin-client contract.
 pub mod knowledge_workflow_runtime;

@@ -6284,7 +6284,15 @@ adapters may be exercised as they become available without claiming their later 
     disabled-invariant drift.
   - [ ] **Sub-task 50.3.4.6:** Execute migration from zero-hidden-retry behavior, opt-in beta,
     rollback, emergency disablement, support/limitations publication, and post-release local
-    diagnostic review without automatic remote telemetry.
+    diagnostic review without automatic remote telemetry. Local implementation contribution: the
+    closed host rollout contract migrates absent legacy state to an explicit Disabled generation,
+    requires affirmative beta opt-in and limitation acknowledgement, gives rollback and verified
+    or invalid emergency material fail-closed precedence, fixes hidden retry/remote telemetry/
+    network authority false, and emits only a closed content-free local diagnostic. Architecture
+    and operator documentation publish the exact beta limitations and post-release procedure. Four
+    product tests execute migration, activation, rollback, emergency disablement, reenrollment, and
+    a post-release-phase diagnostic rehearsal. Because AgentMage is not released, the actual
+    post-release operator review remains open and the rehearsal is not substituted for it.
 
 ##### Story Acceptance Criteria
 

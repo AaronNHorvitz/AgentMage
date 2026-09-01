@@ -54,6 +54,26 @@ impl RuntimeFeatureActivation {
         }
     }
 
+    /// Implemented client baseline with foundational artifact and workflow surfaces disabled.
+    #[must_use]
+    pub const fn foundational_disabled() -> Self {
+        Self {
+            artifact_ingress: false,
+            plain_text_extractor: false,
+            log_extractor: false,
+            docx_extractor: false,
+            pdf_extractor: false,
+            xlsx_extractor: false,
+            ocr: false,
+            retrieval: false,
+            workflow_supervision: false,
+            model_assisted_repair: false,
+            native_participant: true,
+            native_provider_compatibility: true,
+            mcp: false,
+        }
+    }
+
     /// Validates dependency closure and refuses activation of unimplemented surfaces.
     pub const fn validate(self) -> Result<Self, FeatureActivationError> {
         if self.docx_extractor

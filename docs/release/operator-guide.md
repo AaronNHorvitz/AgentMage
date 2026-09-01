@@ -39,6 +39,14 @@ Current bounded commands are:
 - `read <workspace-relative-path>` for one approved bounded local read; and
 - `handoff` for review and local rendering of a packet that the user may transfer manually.
 
+The foundational text/log and verified-workflow runtime has a separate fail-closed rollout state.
+An absent legacy setting migrates to Disabled and changes no behavior. Beta use requires an exact
+local opt-in plus acknowledgement of the limitations below; configuration presence alone is not
+consent. Rollback writes a complete newer Disabled generation, and reenrollment requires another
+explicit opt-in. Verified emergency-disable material, or present material that cannot be verified,
+takes precedence before feature registration and work acceptance. This is a local control, not a
+remote kill switch.
+
 The Linux production bootstrap loads the exact profile catalog only after the catalog and host have
 both been verified as signed package payloads. It does not yet join current activation and runtime
 observations, route prompts to a model, or compose a current handoff draft. A first run is therefore
@@ -74,6 +82,17 @@ paths, contact external services, or turn missing evidence into Healthy.
 confirmation. Exports are content-free and redact credentials and prompts. Do not attach raw
 prompts, workspace files, credentials, private keys, broad environment dumps, unrelated paths, or
 unreviewed archives to a support request.
+
+Foundational-rollout review reports only the local review phase, effective mode, stable reason
+family, configuration generation, feature-enabled state, and fixed no-hidden-retry/no-telemetry/
+no-network-authority properties. It never uploads automatically. After a release, the operator
+must explicitly run the same local review and inspect any export before deciding whether to share
+it; candidate rehearsal does not count as post-release evidence.
+
+The current beta is limited to built-in UTF-8 plain text and bounded log preparation, native
+lexical retrieval, and verified workflow supervision. DOCX, PDF, OCR, XLSX, model-assisted repair,
+MCP exposure, production-model qualification, and unvalidated platforms are not implied by beta
+activation. Rollout never changes approval, grant, verification, effect, or retry authority.
 
 ## Permissions and Approvals
 
