@@ -6,7 +6,8 @@ The Sprint 58 local recorder covers exact dependency admission, bounded OOXML pa
 deterministic source-to-sidecar extraction and caching, explicit structural-fidelity warnings,
 structured Markdown-to-DOCX generation, reopened package inspection, three closed runtime schemas,
 the shared structured-source extractor, runtime-owned prepared Word projection, common native
-artifact-tool dispatch, and the frozen 73-case review corpus.
+artifact-tool dispatch, the interface-neutral Word product coordinator, and the frozen 73-case
+review corpus.
 
 ## Local Campaigns
 
@@ -35,6 +36,10 @@ artifact-tool dispatch, and the frozen 73-case review corpus.
 - The structured projection is fixed by a golden digest, and terminal, headless, and native-chat
   consumers receive identical shared-service manifests, sections, and context dispositions. The
   hostile package/parser/lifecycle set fails closed and leaves no residual source storage.
+- The Word product coordinator binds inspection, sidecar/cache, canonical source preparation, and
+  optional generation to one exact request, gives cancellation and dependency failure precedence,
+  rejects stale identities and overwrite targets, and exposes no write, network, render, or
+  execution authority.
 
 ## Security Mapping
 
@@ -49,9 +54,9 @@ No product-wide requirement is marked complete by this local contribution.
 ## Truthful Disposition
 
 A green local report proves only the committed source and named commands on the recorded Fedora
-environment. Sprint 57 is blocked. The Word renderer, rich edit and visual comparison path, product
-coordinator, controlled writer, installed-client integration, accessibility evidence,
+environment. Sprint 57 is blocked. The Word renderer, rich edit and visual comparison path,
+controlled writer, native-interface integration, accessibility evidence,
 installed Fedora/Ubuntu/macOS acceptance, trusted-package execution, independent review, and manual
 fuzz campaign are absent. Sprint 58 therefore remains **BLOCKED** despite passing local extraction,
 restart/retention, structured-adapter, common-dispatch, inspection, generation, schema, dependency,
-and review-corpus contracts.
+product-coordination, and review-corpus contracts.

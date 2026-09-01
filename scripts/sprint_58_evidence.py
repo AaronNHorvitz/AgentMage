@@ -32,6 +32,7 @@ SOURCE_PATHS: Final = (
     "capabilities/knowledge/src/word_generation.rs",
     "capabilities/knowledge/src/lib.rs",
     "shells/host/Cargo.toml",
+    "shells/host/src/word_artifact_coordinator.rs",
     "shells/host/src/word_source_artifact.rs",
     "shells/host/src/lib.rs",
     "schemas/runtime/word-inspection-report.schema.json",
@@ -76,10 +77,10 @@ COMMANDS: Final = (
         ),
     ),
     (
-        "word-structured-native-unit",
+        "word-product-host-unit",
         (
             "cargo", "test", "-p", "agentmage-host",
-            "word_source_artifact::tests", "--lib", "--locked",
+            "word_", "--lib", "--locked",
         ),
     ),
     ("word-runtime-schemas", ("node", "--test", "tests/test_planning_schemas.mjs")),
@@ -105,7 +106,7 @@ RUST_FOCUSED_COMMANDS: Final = {
     "word-inspection-extraction-unit",
     "word-generation-unit",
     "word-structured-source-unit",
-    "word-structured-native-unit",
+    "word-product-host-unit",
 }
 SECURITY_REQUIREMENTS: Final = [
     "SR-SUP-003", "SR-SUP-006", "SR-SUP-008", "SR-SUP-009",
@@ -142,7 +143,7 @@ IMPLEMENTED: Final = {
     "execution_capability": False,
     "filesystem_mutation_capability": False,
     "renderer_capability": False,
-    "product_coordinator": False,
+    "product_coordinator": True,
     "controlled_writer_integration": False,
     "native_interface_integration": False,
     "accessibility_acceptance": False,
@@ -154,7 +155,6 @@ IMPLEMENTED: Final = {
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-57-BLOCKED", "owner": "58.1"},
     {"code": "WORD-RENDERER-NOT-ADMITTED", "owner": "58.1.1.1"},
-    {"code": "WORD-PRODUCT-COORDINATOR-ABSENT", "owner": "58.1.3.4"},
     {"code": "CONTROLLED-WRITER-INTEGRATION-ABSENT", "owner": "58.1.3.4"},
     {"code": "NATIVE-INTERFACE-INTEGRATION-ABSENT", "owner": "58.1.3.4"},
     {"code": "ACCESSIBILITY-ACCEPTANCE-ABSENT", "owner": "58.1.3.4"},
@@ -255,7 +255,7 @@ def expected_verification(local_pass: bool = True) -> dict[str, Any]:
         "multi_profile_context_accounting": True,
         "hostile_lifecycle_campaign": True,
         "golden_projection_client_parity": True,
-        "product_coordinator": False,
+        "product_coordinator": True,
         "controlled_writer_integration": False,
         "native_interface_integration": False,
         "accessibility_acceptance": False,

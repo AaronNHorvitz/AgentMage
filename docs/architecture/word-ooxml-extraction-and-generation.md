@@ -81,6 +81,21 @@ unsafe, active, external, encrypted, unsupported-compression, expansion, cancell
 corrupt-restart, and cleanup cases fail closed. This does not substitute for installed-platform or
 independent review evidence.
 
+## Product Coordination
+
+The host `WordArtifactCoordinator` supplies one interface-neutral product boundary over source
+inspection, deterministic sidecar extraction and cache reuse, runtime-owned canonical source
+preparation, and optional Markdown-to-DOCX generation. Every operation binds the same immutable
+source bytes, source path, digest, profile, classification, and protected-origin identity before a
+projection can publish. Sticky cancellation and dependency failure precede content evaluation;
+stale digests, quarantined packages, invalid generation targets, and any derived effect claim fail
+closed.
+
+The coordinator retains only bounded in-memory sidecar and canonical projection caches. A generated
+package remains an unpersisted proposal, and the coordinator has no filesystem-write, network,
+renderer, or execution authority. Controlled persistence and native-interface invocation remain
+separate boundaries.
+
 ## Generation
 
 The initial generator maps headings, paragraphs, ordered and unordered list items, task items, code

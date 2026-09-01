@@ -9,6 +9,10 @@
 5. Treat the original DOCX as authoritative and the generated text sidecar as a search aid.
 6. Persist a sidecar only through a separate controlled-write preview and approval.
 
+The product coordinator performs inspection, sidecar extraction/cache reuse, and canonical source
+preparation over the same exact request. A successful coordinator outcome still grants no write or
+renderer authority.
+
 ## Generate From Markdown
 
 1. Parse the approved Markdown bytes through the byte-preserving Markdown boundary.
@@ -24,5 +28,6 @@ Reject or quarantine encrypted packages, duplicate or unsafe paths, unsupported 
 macros and active content, external relationships, malformed relationship XML, resource-limit
 violations, source overwrite requests, and any request to execute or resolve document content.
 
-Do not claim visual fidelity, accessibility acceptance, installed product integration, or macOS and
-Ubuntu execution from the Fedora-only Sprint 58 evidence. Those remain later verification work.
+Do not claim visual fidelity, accessibility acceptance, controlled persistence, native-interface
+integration, installed product acceptance, or supported-platform execution from the local Sprint 58
+evidence. Those remain later verification work.
