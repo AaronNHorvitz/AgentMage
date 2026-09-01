@@ -26,7 +26,7 @@ RAW_MARKERS: Final = [
     "runtime ownership validation passed",
     "Ran 15 tests",
     "vscode api surface validation passed",
-    "Ran 11 tests",
+    "Ran 13 tests",
     "status model validation passed",
     "Ran 27 tests",
     "Task 1.2.5.1 contract boundary gate passed locally",

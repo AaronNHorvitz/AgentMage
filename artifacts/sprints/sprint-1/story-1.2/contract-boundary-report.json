@@ -46,7 +46,7 @@
   "sources": [
     {
       "path": "TASKS.md",
-      "sha256": "ee0f9cde1c320a65b54b8fee3ea2830c74531d71efb216cbfae7d1988f61ad35"
+      "sha256": "25f8e7dfe848bcffc45ac8d58fe3155cdc69870d1b670d57d0045fc036f58d6b"
     },
     {
       "path": "architecture/dependency-rules.json",
@@ -62,7 +62,7 @@
     },
     {
       "path": "architecture/vscode-api-surfaces.json",
-      "sha256": "e8ead87ad4d071dc5e459881a435fcf0f7d321785da6bd812ade3d5c85ff94d2"
+      "sha256": "fd3942fe10b79b296da44029f6ece41e7bcbbd424ac744d90146d730af01bd11"
     },
     {
       "path": "architecture/status-model.json",
@@ -94,7 +94,7 @@
     },
     {
       "path": "scripts/vscode_api_surfaces.py",
-      "sha256": "4e8b963d9601d39f40ee7e569a7117e2b2643b0c00456ec3de69d8d6e3290475"
+      "sha256": "07f4f6b79a8537a1fd3cb8fa985577b58ea2544763d9af59b562e25b7785cbfd"
     },
     {
       "path": "scripts/status_model.py",
@@ -118,7 +118,7 @@
     },
     {
       "path": "tests/test_vscode_api_surfaces.py",
-      "sha256": "6069fc3529ea2b48d81b1b5e72ccc09ae5cd22642663069028e2023ff007045a"
+      "sha256": "cf5087d314a277c535608bb9c9ca3cc3a07d878e172bc3bd149abd932c3d564f"
     },
     {
       "path": "tests/test_status_model.py",

@@ -20,7 +20,7 @@
         },
         {
           "path": "architecture/vscode-api-surfaces.json",
-          "sha256": "e8ead87ad4d071dc5e459881a435fcf0f7d321785da6bd812ade3d5c85ff94d2"
+          "sha256": "fd3942fe10b79b296da44029f6ece41e7bcbbd424ac744d90146d730af01bd11"
         },
         {
           "path": "architecture/status-model.json",
@@ -28,7 +28,7 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "31009c2870833c4cec08079824641e0d2b915e49cdeef236a72319dacfd561b0"
+          "sha256": "f3a1570f999af5cd7669a5625fa871a2b8d480fe391305878ee8ad22ba0cd3a1"
         }
       ]
     },
@@ -41,11 +41,11 @@
         },
         {
           "path": "supply-chain/dependency-provenance.json",
-          "sha256": "0a5d2da5f5f0433b1e2589631a134965a054acaa8d919d1731d3051076c9e675"
+          "sha256": "29456d6b5e0edcffb67867e36172a4efb40c6a85cf62d535404fa96a357276e1"
         },
         {
           "path": "supply-chain/sbom.cdx.json",
-          "sha256": "498ae7354a6fda04e5a993e772f514a9f2678849d9ce7a1f88e4eaeddd52a071"
+          "sha256": "f562ebbe30bc725c0bee06a77662f1f4fab2be90fe87394ac17d0c62ef284f9a"
         }
       ]
     },
@@ -54,7 +54,7 @@
       "artifacts": [
         {
           "path": "docs/architecture/foundational-artifact-and-workflow-runtime.md",
-          "sha256": "d0fcebf4dabf213defc0962e677559560f87caeefba2e7c08be46dc33d89e1e4"
+          "sha256": "69c79c8cbef8eba234bb8a1fb34eab1de88131d47acdbc5b02d5e6462c614d02"
         },
         {
           "path": "docs/architecture/dependency-direction.md",
@@ -88,7 +88,7 @@
       "artifacts": [
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-          "sha256": "c6cd93bfab6d88a7e04320ad36c3967dcc314d43277c6dd0bbd597a419d4f9a6"
+          "sha256": "7dccb320f4112118cdb2b31dc454d5119d172ff520c997204e97421fda44a066"
         }
       ]
     },
@@ -101,7 +101,7 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/security-evidence-map.json",
-          "sha256": "c9977aceb92fbb249c0d1f286824c75c2bc0f312d5a07d970d017555b3d5259e"
+          "sha256": "6989f8376a732c6c5a924d4638cf0bc762154baa921841a12e3cf83927494bf0"
         }
       ]
     },
@@ -114,7 +114,7 @@
         },
         {
           "path": "scripts/contract_evidence_index.py",
-          "sha256": "541e0c21424b0084ebe362a067f49e0f94f0786c89fdd99c0107dabbc2bf7d25"
+          "sha256": "91a95ff34b2e31488ee950c7fe798415cd3f1beda3718fd1320da8994a8ded97"
         },
         {
           "path": "tests/test_contract_boundary_gate.py",
@@ -132,7 +132,7 @@
     "data_class": "synthetic-local-contract-tests-only",
     "artifact": {
       "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-      "sha256": "c6cd93bfab6d88a7e04320ad36c3967dcc314d43277c6dd0bbd597a419d4f9a6"
+      "sha256": "7dccb320f4112118cdb2b31dc454d5119d172ff520c997204e97421fda44a066"
     },
     "required_markers": [
       "Validated 37 Engineering Runtime schemas and 6 reused contracts.",
@@ -142,7 +142,7 @@
       "runtime ownership validation passed",
       "Ran 15 tests",
       "vscode api surface validation passed",
-      "Ran 11 tests",
+      "Ran 13 tests",
       "status model validation passed",
       "Ran 27 tests",
       "Task 1.2.5.1 contract boundary gate passed locally"
