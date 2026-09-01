@@ -6959,16 +6959,18 @@ every story criterion, every sprint criterion, and the Universal Story Definitio
 complete with current evidence. Otherwise it is BLOCKED.
 
 **Local evidence note:** The retained report at `artifacts/sprints/sprint-58/local-evidence-report.json`
-binds 9 passing commands and the 73-case acceptance corpus to source revision
-`2afc95d11f1d9c6a1e3e4d11e90e034098fb27a4` (report SHA-256
-`ef0ef428962a2efddc346c62b79df3cd2fab680c169979a58accd50e8686f61c`). Exact dependency
+binds 11 passing commands, 6 focused commands with zero blocking skips, and the 73-case acceptance
+corpus to source revision `ea776074224ff36bacb18c5e35c90c7ae93b3dcf` (report SHA-256
+`8e643dded3ed6ef7ea1c545d8ba97e9dc3835b1bdc0c440ca91ed4bf4c20fe2e`). Exact dependency
 admission, bounded package inspection, raw duplicate-name detection, deterministic sidecar and cache
 identity, part/range provenance, structural fidelity warnings, structured Markdown-to-DOCX
-generation, reopened inspection, runtime schemas, and zero-effect checks are complete. Story 58.1
-and Sprint 58 remain **BLOCKED** by Sprint 57, the unadmitted Word renderer, absent product
-coordinator and controlled writer, incomplete prepared-source restart/retention/context/client
-integration, missing accessibility and installed cross-platform evidence, trusted-package
-execution, independent native-boundary review, and deferred manual fuzzing.
+generation, reopened inspection, runtime schemas, the shared structured-source extractor, the DOCX
+source adapter, runtime-owned prepared projections, common native artifact-tool dispatch, and
+zero-effect checks are complete. Story 58.1 and Sprint 58 remain **BLOCKED** by Sprint 57, the
+unadmitted Word renderer, absent product coordinator and controlled writer, incomplete prepared-source
+restart/retention/context/client integration and hostile lifecycle/client-parity campaigns, missing
+accessibility and installed cross-platform evidence, trusted-package execution, independent
+native-boundary review, and deferred manual fuzzing.
 ### [ ] Sprint 59 - Word Generation and Visual Verification
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
