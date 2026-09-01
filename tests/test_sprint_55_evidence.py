@@ -37,6 +37,7 @@ class Sprint55EvidenceTests(unittest.TestCase):
         value = report()
         self.assertEqual(self.validate(value), [])
         self.assertTrue(value["summary"]["local_sprint_55_contract_passed"])
+        self.assertTrue(value["summary"]["meeting_workflow_integrated"])
         self.assertFalse(value["summary"]["external_effects_enabled"])
         self.assertFalse(value["verification_evidence"]["sprint_gate_closed"])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
@@ -44,7 +45,6 @@ class Sprint55EvidenceTests(unittest.TestCase):
     def test_every_product_platform_manual_and_release_overclaim_fails(self) -> None:
         for field in (
             "upstream_sprint_54_closed",
-            "meeting_workflow_integrated",
             "external_effects_enabled",
             "cross_platform_acceptance_passed",
             "trusted_package_execution_complete",

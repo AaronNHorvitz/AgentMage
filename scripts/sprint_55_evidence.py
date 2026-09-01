@@ -29,6 +29,8 @@ SOURCE_PATHS: Final = (
     "capabilities/knowledge/src/meeting_skills.rs",
     "capabilities/knowledge/src/lib.rs",
     "capabilities/knowledge/examples/meeting_skill_pack.rs",
+    "shells/host/src/meeting_coordinator.rs",
+    "shells/host/src/lib.rs",
     "schemas/runtime/meeting-plan-draft.schema.json",
     "schemas/runtime/examples/meeting-plan-draft.valid.json",
     "schemas/runtime/meeting-transcript-cleanup.schema.json",
@@ -67,6 +69,13 @@ COMMANDS: Final = (
         ),
     ),
     (
+        "meeting-host-coordinator",
+        (
+            "cargo", "test", "-p", "agentmage-host",
+            "meeting_coordinator", "--lib", "--locked",
+        ),
+    ),
+    (
         "meeting-runtime-schemas",
         ("node", "--test", "tests/test_planning_schemas.mjs"),
     ),
@@ -94,8 +103,12 @@ COMMANDS: Final = (
         ("python3", "-m", "unittest", "tests.test_sprint_55_evidence"),
     ),
 )
-FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:5])
-RUST_FOCUSED_COMMANDS: Final = {"meeting-kernel-unit", "meeting-skill-unit"}
+FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:6])
+RUST_FOCUSED_COMMANDS: Final = {
+    "meeting-kernel-unit",
+    "meeting-skill-unit",
+    "meeting-host-coordinator",
+}
 SECURITY_REQUIREMENTS: Final = [
     "SR-DAT-001",
     "SR-DAT-002",
@@ -136,7 +149,7 @@ IMPLEMENTED: Final = {
     "network_access_capability": False,
     "calendar_mutation_capability": False,
     "source_mutation_capability": False,
-    "product_coordinator": False,
+    "product_coordinator": True,
     "native_interface_integration": False,
     "accessibility_acceptance": False,
     "installed_cross_platform_acceptance": False,
@@ -147,7 +160,6 @@ IMPLEMENTED: Final = {
 }
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-54-BLOCKED", "owner": "55.1"},
-    {"code": "MEETING-PRODUCT-COORDINATOR-ABSENT", "owner": "55.1.3.2"},
     {"code": "NATIVE-INTERFACE-INTEGRATION-ABSENT", "owner": "55.1.3.2"},
     {"code": "ACCESSIBILITY-ACCEPTANCE-ABSENT", "owner": "55.1.3.4"},
     {"code": "SPRINT-56-FILING-CONTROL-PENDING", "owner": "55.1.3.4"},
@@ -234,7 +246,7 @@ def expected_verification(local_pass: bool = True) -> dict[str, Any]:
         "inferred_attendee_state_count": 0 if local_pass else None,
         "invented_owner_or_date_count": 0 if local_pass else None,
         "verbatim_source_mutation_count": 0 if local_pass else None,
-        "product_coordinator": False,
+        "product_coordinator": True,
         "native_interface_integration": False,
         "accessibility_acceptance": False,
         "installed_cross_platform_acceptance": False,
@@ -251,7 +263,7 @@ def expected_summary(local_pass: bool = True) -> dict[str, Any]:
         "local_sprint_55_contract_passed": local_pass,
         "sprint_status": "BLOCKED",
         "upstream_sprint_54_closed": False,
-        "meeting_workflow_integrated": False,
+        "meeting_workflow_integrated": True,
         "external_effects_enabled": False,
         "cross_platform_acceptance_passed": False,
         "trusted_package_execution_complete": False,

@@ -40,9 +40,12 @@ All sealed records bind their canonical serialized representation to SHA-256. Ve
 the digest field, recomputes the digest, and rejects stale records. Identifiers, lists, timestamps,
 dates, source references, and text are bounded before a digest is accepted.
 
-The owning coordinator must present an explicit projection precondition before invoking this pure
-source layer. Sticky cancellation rejects the projection before dependency evaluation; otherwise
-every declared local dependency must be ready. Neither rejection creates a partial output.
+The registered host coordinator presents an explicit projection precondition before invoking this
+pure source layer. Sticky cancellation rejects the projection before dependency evaluation;
+otherwise every declared local dependency must be ready. It admits all six hash-bound meeting
+skills, verifies the plan, cleanup, and minutes, requires one meeting identity, source set, and
+participant ledger, and then derives continuity and closeout. Neither rejection creates a partial
+output or an external effect.
 
 ## Truth Rules
 

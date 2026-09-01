@@ -59,6 +59,8 @@ pub mod frontier_release_coordinator;
 pub mod knowledge_workflow_runtime;
 /// Authority-free knowledge-preview composition into kernel filesystem drafts.
 pub mod knowledge_write;
+/// Authority-free product composition for source-preserving meeting workflows.
+pub mod meeting_coordinator;
 
 #[cfg(feature = "native-chat")]
 /// Native Chat registry and adapter over the caller-neutral runtime transport.
