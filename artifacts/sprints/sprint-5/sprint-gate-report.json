@@ -68,12 +68,12 @@
       {
         "byte_length": 10529,
         "path": "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json",
-        "sha256": "dbb20e4fa018d0b1b091c1cc332006aada1749a45f14c4850ca0183401883e30"
+        "sha256": "1eb5bdd4e9eb3ea24d88e761eb5832be233ea356450f01e4e12cb77671c69879"
       },
       {
         "byte_length": 16178,
         "path": "scripts/story_5_1_gate.py",
-        "sha256": "27f7fd3abc9c20cbe920aa7de587cf93eec70cc95cc9c2472dfb047f23fc3f21"
+        "sha256": "9e6ba95b9ac6e33873f997e339ed487af505cdd6ae98d085592983eeb2fd8a74"
       },
       {
         "byte_length": 4176,
@@ -83,12 +83,12 @@
       {
         "byte_length": 6732,
         "path": "artifacts/sprints/sprint-5/story-5.2/story-gate-report.json",
-        "sha256": "2f88e7cf7b9747fa6ffb8cc4da7735cec11904236a7e23d72ce4ce67da493538"
+        "sha256": "d12bf0b4ee5f3d03ddb778e5c4bef197de3de50367affb4538b34b5ce4db5b2c"
       },
       {
         "byte_length": 15004,
         "path": "scripts/story_5_2_gate.py",
-        "sha256": "c487050766499bead148ad9fd1345a12996953bb33d0955671c1df47899fe26e"
+        "sha256": "c18ddaafcd0aff4e7dffd5ee03c390395a1345502a2f33a70abf82d7bd1cd35e"
       },
       {
         "byte_length": 4307,
@@ -98,12 +98,12 @@
       {
         "byte_length": 9489,
         "path": "artifacts/sprints/sprint-5/story-5.3/story-gate-report.json",
-        "sha256": "90d0622b391eb98562677a8f638dd87bf751f38d4c8a9dc979d4f541d63cad2f"
+        "sha256": "59de73d9f0384317ef43790d7a6f2f6376558ef36a2ebefca93cceb8983599f6"
       },
       {
         "byte_length": 16256,
         "path": "scripts/story_5_3_gate.py",
-        "sha256": "084cba24b89db354427b33d3c5a84d6c83b59e588247501e91d8826a9b658b8f"
+        "sha256": "6cdaee10e891ae20876a7024d22ca995270783ab886ec700e20bda4c19a5639e"
       },
       {
         "byte_length": 4330,
@@ -113,16 +113,16 @@
       {
         "byte_length": 4542,
         "path": "artifacts/sprints/sprint-5/story-5.2/story-ac1-deterministic-disposition-report.json",
-        "sha256": "81e304ae380459b997f47c551b6957c6116d556492b2d1828486acccaf9d69bd"
+        "sha256": "1085c336e70887aa4787b26278a1a77f850823ad6408af33082d2ff03dd1fbbd"
       },
       {
         "byte_length": 4771,
         "path": "artifacts/sprints/sprint-5/story-5.2/story-ac2-no-replay-recovery-report.json",
-        "sha256": "a732dd2b833a845c6d8d5ed604477df35508d54a028d3da55561313b153704a9"
+        "sha256": "d64fbb07cf9c5d08cf5d19c3af7ffc7aee2bc36933c2220949b18dba31a24ead"
       }
     ],
-    "reviewed_commit": "1d5a9bb0274e048303d028fd88993085d9c386e2",
-    "reviewed_tree": "0751b6cac4c443d4624a4d138639d7ed93cedcab",
+    "reviewed_commit": "db61cbb45af90d79b97758488f62c9c690aeda0a",
+    "reviewed_tree": "2204fa6f64a13dd3b2c2248e1bc4867a420ce4c9",
     "reviewer_id": "agentmage-sprint-5-independent-gate-v2"
   },
   "installed_product_claim": "none",
@@ -135,8 +135,8 @@
   "product_acceptance_claim": "none",
   "product_requirement_completion_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "1d5a9bb0274e048303d028fd88993085d9c386e2",
-  "reviewed_tree": "0751b6cac4c443d4624a4d138639d7ed93cedcab",
+  "reviewed_commit": "db61cbb45af90d79b97758488f62c9c690aeda0a",
+  "reviewed_tree": "2204fa6f64a13dd3b2c2248e1bc4867a420ce4c9",
   "schema_version": 2,
   "sprint_id": 5,
   "status": "blocked-open-dependencies-and-platform",

@@ -123,7 +123,7 @@ def validate_upstream_reports() -> list[str]:
             EVIDENCE_DIR / "storage-new-family-lifecycle-report.json",
             "product_truth",
             {
-                "new_family_count": 31,
+                "new_family_count": 34,
                 "new_family_export_coverage_complete": True,
                 "encrypted_backup_restore_complete": True,
                 "source_retention_erasure_complete": True,

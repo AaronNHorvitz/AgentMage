@@ -52,49 +52,49 @@
   ],
   "retained_evidence": [
     {
-      "byte_length": 3771,
+      "byte_length": 3775,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-report.json",
-      "sha256": "61eab91b1ea8959ac3c83e38cdbc903a23938b677262062b79c10abb61139a68"
+      "sha256": "00d425e908ba9c0b79430c7ce77141c2a21998ce8e6ab42dc0dc4587d0c6d457"
     },
     {
-      "byte_length": 30118,
+      "byte_length": 29858,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-results.log",
-      "sha256": "7fb5a9eb51aed29a21703a077a68a6b33ddeb966a1a128878f3a7a7c20af1911"
+      "sha256": "2321df26bcf8f0e21453104486abd5ef152d99a848a02474493eaf2f34fb3977"
     },
     {
       "byte_length": 2952,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-report.json",
-      "sha256": "e8ba3092bf760a56612c6a74b0d1abe13dd91fa59a0ef67fb1880a8243b94188"
+      "sha256": "25b900489635f10c086d1dd27870178dbbaff9b30844af413b6dbf83893d1e96"
     },
     {
       "byte_length": 3953,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-report.json",
-      "sha256": "d5f35c2c1bf29cf78472a95ff7c7d7c25d0a121eaee5253477930b08cad6b501"
+      "sha256": "52afbcdc3fa5433d3c2491f74d8e4e0faaccab4e183792473a35f9c16a046f1a"
     },
     {
       "byte_length": 29701,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-results.log",
-      "sha256": "ba96a41dc219d5764184109fe2215556bb1e9ba9edfd1b634139e01ab133007e"
+      "sha256": "14945b22fccbec278798d397456c156c891d10fd7b7018dfdbe7d715b051753f"
     },
     {
       "byte_length": 2135,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-report.json",
-      "sha256": "e84c1090ac43634da7998c1deed70660267c2b879fc1d8a876e3d7983118b400"
+      "sha256": "66f132bd5833911e06335a1ad7e9843b33067d05eeaef7802bc9c2a1ac8336dd"
     },
     {
       "byte_length": 4394,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-results.log",
-      "sha256": "cccae9256653a9ae2b5cb378ec22ebe0b4823bcc2017e034d01b011b0a099142"
+      "sha256": "3cff1b866a4b7876ad9cde8953a439b494dd4d30b821f0d71ffdcc07d00e24a7"
     },
     {
       "byte_length": 2088,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-exact-state-report.json",
-      "sha256": "d0fa0b39f6f0a1eaa3b98e755caccbe7f2b78ab1bc7ace8780fa003e260285d0"
+      "sha256": "69f9257fe496ca8ae61021cab9ada6747a58d3a8648c6ea25b3df3c7ca5cc227"
     },
     {
-      "byte_length": 4501,
+      "byte_length": 4394,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-exact-state-results.log",
-      "sha256": "77dcb9162f08f7f841a334160e8469ccf38fb5c6d63078b1b1f313c050f24d1f"
+      "sha256": "3cff1b866a4b7876ad9cde8953a439b494dd4d30b821f0d71ffdcc07d00e24a7"
     },
     {
       "byte_length": 4286,

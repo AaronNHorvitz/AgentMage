@@ -24,8 +24,8 @@ from scripts.story_5_3_gate import validate_report as validate_story_5_3_gate
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-5/sprint-gate-report.json"
-REVIEWED_COMMIT = "1d5a9bb0274e048303d028fd88993085d9c386e2"
-REVIEWED_TREE = "0751b6cac4c443d4624a4d138639d7ed93cedcab"
+REVIEWED_COMMIT = "db61cbb45af90d79b97758488f62c9c690aeda0a"
+REVIEWED_TREE = "2204fa6f64a13dd3b2c2248e1bc4867a420ce4c9"
 REVIEWED_PATHS = (
     "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json",
     "scripts/story_5_1_gate.py",
