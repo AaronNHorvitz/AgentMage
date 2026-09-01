@@ -10,7 +10,9 @@
       "crate_root": "shells/host/src/lib.rs",
       "features": [
         "native-chat",
-        "workflow-caller"
+        "source-artifacts",
+        "workflow-caller",
+        "workflow-supervisor"
       ],
       "removed_sources": [
         "shells/host/src/cli.rs",
@@ -24,8 +26,8 @@
         "shells/host/src/runtime_transport.rs",
         "shells/host/src/workflow_caller.rs"
       ],
-      "minimum_passed_tests": 110,
-      "expected_ignored_tests": 3,
+      "minimum_passed_tests": 140,
+      "expected_ignored_tests": 8,
       "test_argv": [
         "cargo",
         "test",
@@ -36,7 +38,7 @@
         "--offline",
         "--no-default-features",
         "--features",
-        "native-chat,workflow-caller"
+        "native-chat,source-artifacts,workflow-caller,workflow-supervisor"
       ],
       "clippy_argv": [
         "cargo",
@@ -49,7 +51,7 @@
         "--offline",
         "--no-default-features",
         "--features",
-        "native-chat,workflow-caller",
+        "native-chat,source-artifacts,workflow-caller,workflow-supervisor",
         "--",
         "-D",
         "warnings"
@@ -62,7 +64,9 @@
       "crate_root": "shells/host/src/lib.rs",
       "features": [
         "interactive-cli",
-        "workflow-caller"
+        "source-artifacts",
+        "workflow-caller",
+        "workflow-supervisor"
       ],
       "removed_sources": [
         "shells/host/src/native_chat_runtime.rs"
@@ -75,8 +79,8 @@
         "shells/host/src/runtime_transport.rs",
         "shells/host/src/workflow_caller.rs"
       ],
-      "minimum_passed_tests": 116,
-      "expected_ignored_tests": 3,
+      "minimum_passed_tests": 140,
+      "expected_ignored_tests": 8,
       "test_argv": [
         "cargo",
         "test",
@@ -87,7 +91,7 @@
         "--offline",
         "--no-default-features",
         "--features",
-        "interactive-cli,workflow-caller"
+        "interactive-cli,source-artifacts,workflow-caller,workflow-supervisor"
       ],
       "clippy_argv": [
         "cargo",
@@ -100,7 +104,7 @@
         "--offline",
         "--no-default-features",
         "--features",
-        "interactive-cli,workflow-caller",
+        "interactive-cli,source-artifacts,workflow-caller,workflow-supervisor",
         "--",
         "-D",
         "warnings"
@@ -113,7 +117,9 @@
       "crate_root": "shells/host/src/lib.rs",
       "features": [
         "interactive-cli",
-        "native-chat"
+        "native-chat",
+        "source-artifacts",
+        "workflow-supervisor"
       ],
       "removed_sources": [
         "shells/host/src/workflow_assignment.rs",
@@ -127,8 +133,8 @@
         "shells/host/src/native_chat_runtime.rs",
         "shells/host/src/runtime_transport.rs"
       ],
-      "minimum_passed_tests": 113,
-      "expected_ignored_tests": 3,
+      "minimum_passed_tests": 140,
+      "expected_ignored_tests": 8,
       "test_argv": [
         "cargo",
         "test",
@@ -139,7 +145,7 @@
         "--offline",
         "--no-default-features",
         "--features",
-        "interactive-cli,native-chat"
+        "interactive-cli,native-chat,source-artifacts,workflow-supervisor"
       ],
       "clippy_argv": [
         "cargo",
@@ -152,7 +158,7 @@
         "--offline",
         "--no-default-features",
         "--features",
-        "interactive-cli,native-chat",
+        "interactive-cli,native-chat,source-artifacts,workflow-supervisor",
         "--",
         "-D",
         "warnings"
@@ -383,8 +389,8 @@
         "kernel/engine/src/runtime_loop.rs",
         "kernel/engine/src/runtime_recovery.rs"
       ],
-      "minimum_passed_tests": 584,
-      "expected_ignored_tests": 2,
+      "minimum_passed_tests": 750,
+      "expected_ignored_tests": 6,
       "test_argv": [
         "cargo",
         "test",
