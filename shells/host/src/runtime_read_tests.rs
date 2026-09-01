@@ -12,17 +12,22 @@ use agentmage_capability_read_only::{
 };
 use agentmage_kernel_contracts::{
     AgentStateKind, ApprovalId, AuthorityClass, BudgetLimit, BudgetResource,
-    CONTRACT_SCHEMA_VERSION, ContextPacketId, ContractPayload, DataSensitivity, EvidenceId,
-    EvidenceKind, EvidenceReference, ExactModelProfile, GrantId, ModelContextPacket, ModelMessage,
-    ModelMessageId, ModelMessageRole, ModelProposalKind, ModelResourceReport, ModelRunRequest,
-    ModelRunResult, ModelRunTerminalState, ModelStreamId, ModelToolCallCandidate, OperationOutcome,
-    PlanId, PolicyId, PostconditionResult, ReceiptId, RepositorySnapshotId, RollbackPlan,
-    RuntimeArtifactKind, RuntimeEvent, RuntimeOperationId, RuntimeOutcome, RuntimeRunId,
-    RuntimeRunLimits, RuntimeRunRequest, RuntimeSessionMode, SessionId, StateChange, StopCondition,
-    StopConditionKind, Task, TaskId, TaskStatus, ToolCall, ToolCatalogId, ToolDefinition, ToolId,
-    ToolResult, VerifierCandidate, VerifierDisposition, VerifierId, VerifierRecordId,
-    VerifierSource, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, to_canonical_json,
+    CONTRACT_SCHEMA_VERSION, CanonicalApprovalRequirement, CanonicalDiagnosticDisclosure,
+    CanonicalEffectClass, CanonicalExecutionBudgets, CanonicalIdempotencyRequirement,
+    CanonicalRetryClass, CanonicalSchemaBinding, CanonicalStepExecutionPolicy,
+    CanonicalVerificationRequirement, CanonicalWorkflowDefinition, CanonicalWorkflowStep,
+    ContextPacketId, ContractPayload, DataSensitivity, EvidenceId, EvidenceKind, EvidenceReference,
+    ExactModelProfile, GrantId, ModelContextPacket, ModelMessage, ModelMessageId, ModelMessageRole,
+    ModelProposalKind, ModelResourceReport, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
+    ModelStreamId, ModelToolCallCandidate, OperationOutcome, PlanId, PolicyId, PostconditionResult,
+    ReceiptId, RepositorySnapshotId, RollbackPlan, RuntimeArtifactKind, RuntimeEvent,
+    RuntimeOperationId, RuntimeOutcome, RuntimeRunId, RuntimeRunLimits, RuntimeRunRequest,
+    RuntimeSessionMode, SessionId, StateChange, StopCondition, StopConditionKind, Task, TaskId,
+    TaskStatus, ToolCall, ToolCatalogId, ToolDefinition, ToolId, ToolResult, VerifierCandidate,
+    VerifierDisposition, VerifierId, VerifierRecordId, VerifierSource, WorkPacket, WorkPacketId,
+    WorkPacketState, WorkspaceId, to_canonical_json,
 };
+use agentmage_kernel_engine::engineering_records::canonical_record_sha256;
 use agentmage_kernel_engine::model_codec::proposal_digest;
 use agentmage_kernel_engine::model_orchestration_profile::{
     AllocatedContextPartition, ContextPartitionDisposition, ExactTokenCounterBinding,
@@ -42,10 +47,19 @@ use agentmage_kernel_engine::source_preparation::{
     SourceMediaFamily, SourcePreparationError, SourcePreparationLimits, SourcePreparationService,
 };
 use agentmage_kernel_engine::source_runtime_context::PreparedSourceRuntimeContext;
+use agentmage_kernel_engine::verified_workflow_supervisor::{
+    WorkflowAttemptRequest, WorkflowAttemptResources, WorkflowSupervisorError,
+    WorkflowSupervisorState, supervise_verified_workflow,
+};
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 
+use crate::coding_client::DenyHeadlessApproval;
 use crate::source_artifact_runtime::dispatch_native_source_artifact;
+use crate::workflow_supervisor::{
+    ClassifiedWorkflowOutcome, CoordinatorWorkflowAttemptPort, PreparedWorkflowCoordinatorAttempt,
+    WorkflowCoordinatorAttemptFactory, WorkflowOutcomeClassifier,
+};
 
 use crate::runtime_tools::read_only_runtime_registry;
 
@@ -61,6 +75,7 @@ struct NativeReadFakeModel {
     profile: ExactModelProfile,
     scripts: VecDeque<NativeReadModelStep>,
     calls: u32,
+    identity_prefix: String,
 }
 
 enum NativeReadModelStep {
@@ -93,8 +108,8 @@ impl RuntimeModelPort for NativeReadFakeModel {
                 None,
                 Some(ModelToolCallCandidate {
                     tool_call_id: agentmage_kernel_contracts::ToolCallId::from_raw(format!(
-                        "native-read-call-{}",
-                        self.calls
+                        "{}-call-{}",
+                        self.identity_prefix, self.calls
                     )),
                     tool_id,
                     tool_version: "1.0.0".to_owned(),
@@ -113,8 +128,8 @@ impl RuntimeModelPort for NativeReadFakeModel {
         let mut proposal = agentmage_kernel_contracts::ClosedModelProposal {
             schema_version: CONTRACT_SCHEMA_VERSION,
             proposal_id: agentmage_kernel_contracts::ProposalId::from_raw(format!(
-                "native-read-proposal-{}",
-                self.calls
+                "{}-proposal-{}",
+                self.identity_prefix, self.calls
             )),
             model_run_id: request.model_run_id.clone(),
             context_packet_id: request.context_packet_id.clone(),
@@ -426,6 +441,7 @@ struct PreparedArtifactBoundary {
     sources: Arc<SourcePreparationService>,
     ledger: ArtifactAttemptLedger,
     executions: u32,
+    identity_prefix: String,
 }
 
 impl RuntimeToolBoundary for PreparedArtifactBoundary {
@@ -438,11 +454,12 @@ impl RuntimeToolBoundary for PreparedArtifactBoundary {
         now_epoch_ms: u64,
     ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
         Ok(RuntimePermissionEvaluation::Allow {
-            approval_id: ApprovalId::from_raw("prepared-source-approval-0001"),
+            approval_id: ApprovalId::from_raw(format!("{}-approval", self.identity_prefix)),
             preview_sha256: sha256(&call.arguments.bytes),
             expires_at_epoch_ms: now_epoch_ms.saturating_add(10_000),
             grant_id: GrantId::from_raw(format!(
-                "prepared-source-grant-{}",
+                "{}-grant-{}",
+                self.identity_prefix,
                 call.tool_call_id.as_str()
             )),
             decision_sha256: sha256(b"prepared source fixture allow"),
@@ -506,8 +523,8 @@ impl RuntimeToolBoundary for PreparedArtifactBoundary {
         let evidence = EvidenceReference {
             schema_version: CONTRACT_SCHEMA_VERSION,
             evidence_id: EvidenceId::from_raw(format!(
-                "prepared-source-evidence-{:04}",
-                self.executions
+                "{}-evidence-{:04}",
+                self.identity_prefix, self.executions
             )),
             kind: EvidenceKind::ToolOutput,
             source_id: result
@@ -525,8 +542,8 @@ impl RuntimeToolBoundary for PreparedArtifactBoundary {
         };
         Ok(RuntimeToolExecution {
             receipt_id: ReceiptId::from_raw(format!(
-                "prepared-source-receipt-{:04}",
-                self.executions
+                "{}-receipt-{:04}",
+                self.identity_prefix, self.executions
             )),
             receipt_sha256: result.receipt.receipt_sha256.clone(),
             result: ToolResult {
@@ -605,6 +622,7 @@ fn story_22_5_prepared_source_flows_through_model_tool_verifier_and_terminal_lin
                 .into_iter()
                 .collect(),
                 calls: 0,
+                identity_prefix: "prepared-source".to_owned(),
             },
             saw_prepared_source: Arc::clone(&saw_prepared_source),
         },
@@ -614,6 +632,7 @@ fn story_22_5_prepared_source_flows_through_model_tool_verifier_and_terminal_lin
             sources,
             ledger: ArtifactAttemptLedger::default(),
             executions: 0,
+            identity_prefix: "prepared-source".to_owned(),
         },
         NativeReadVerifier(VerifierId::from_raw("prepared-source-verifier-0001")),
         TestClock(3_000),
@@ -691,6 +710,7 @@ fn story_22_5_stale_required_source_and_tokenizer_drift_stop_before_model() {
             profile: profile.clone(),
             scripts: [NativeReadModelStep::Completion].into_iter().collect(),
             calls: 0,
+            identity_prefix: "stale-source".to_owned(),
         },
         stale_context,
         registry,
@@ -737,6 +757,295 @@ fn story_22_5_stale_required_source_and_tokenizer_drift_stop_before_model() {
         ),
         Err(RuntimePortFailure::Invalid)
     );
+}
+
+#[test]
+fn story_50_3_artifact_heavy_steps_use_one_supervisor_and_common_coordinator() {
+    let (definition, policies) = foundational_workflow();
+    let mut factory = FoundationalAttemptFactory::default();
+    let mut port = CoordinatorWorkflowAttemptPort::new(&mut factory, FoundationalClassifier);
+    let result = supervise_verified_workflow(
+        "foundational-runtime-execution",
+        &definition,
+        &policies,
+        None,
+        &mut port,
+    )
+    .expect("artifact-heavy workflow completes through the common coordinator");
+
+    assert_eq!(result.state, WorkflowSupervisorState::Succeeded);
+    assert_eq!(
+        result.completed_step_ids,
+        [
+            "repository-review",
+            "long-log-diagnosis",
+            "mixed-artifact-plan"
+        ]
+    );
+    assert_eq!(result.attempts.len(), 3);
+    assert_eq!(result.budgets.attempts, 3);
+    assert_eq!(result.budgets.tool_calls, 3);
+    assert!(
+        factory
+            .saw_prepared_source
+            .iter()
+            .all(|seen| seen.load(Ordering::SeqCst))
+    );
+    assert_eq!(
+        result
+            .attempts
+            .iter()
+            .flat_map(|attempt| attempt.receipt_ids.iter())
+            .collect::<std::collections::BTreeSet<_>>()
+            .len(),
+        3
+    );
+}
+
+#[derive(Default)]
+struct FoundationalAttemptFactory {
+    saw_prepared_source: Vec<Arc<AtomicBool>>,
+}
+
+impl WorkflowCoordinatorAttemptFactory for &mut FoundationalAttemptFactory {
+    type Coordinator = ReusableRuntimeCoordinator<
+        SourceAwareFakeModel,
+        PreparedSourceRuntimeContext<SourceCounter>,
+        PreparedArtifactBoundary,
+        NativeReadVerifier,
+        TestClock,
+    >;
+    type Approvals = DenyHeadlessApproval;
+
+    fn prepare(
+        &mut self,
+        attempt: WorkflowAttemptRequest<'_>,
+    ) -> Result<
+        PreparedWorkflowCoordinatorAttempt<Self::Coordinator, Self::Approvals>,
+        WorkflowSupervisorError,
+    > {
+        let ordinal = attempt.attempt_ordinal;
+        let prefix = format!("foundational-{}-{ordinal}", attempt.step_id);
+        let registry =
+            read_only_runtime_registry().map_err(|_| WorkflowSupervisorError::RuntimeFailed)?;
+        let profile = deterministic_profile();
+        let (sources, source, binding) = prepared_service(&profile);
+        let sources = Arc::new(sources);
+        let context = PreparedSourceRuntimeContext::new(
+            Arc::clone(&sources),
+            source_window_plan(&profile),
+            SourceCounter { binding },
+            [source.source_id.clone()],
+            false,
+        )
+        .map_err(|_| WorkflowSupervisorError::RuntimeFailed)?;
+        let definition = registry
+            .get_tool(&ToolId::from_raw(ArtifactToolKind::Search.id()), "1.0.0")
+            .ok_or(WorkflowSupervisorError::RuntimeFailed)?;
+        let search_bytes = serde_json::to_vec(&ArtifactRequest {
+            schema_version: 1,
+            call_id: format!("{prefix}-search"),
+            source_id: Some(source.source_id.clone()),
+            section_id: None,
+            range: None,
+            query: Some("prepared_fixture".to_owned()),
+            freshness_sha256: Some(source.manifest_sha256),
+            output_identity: format!("{prefix}-output"),
+            limits: ArtifactLimits::default(),
+            call_depth: 0,
+        })
+        .map_err(|_| WorkflowSupervisorError::RuntimeFailed)?;
+        let seen = Arc::new(AtomicBool::new(false));
+        self.saw_prepared_source.push(Arc::clone(&seen));
+        let request = foundational_runtime_request(profile.clone(), &registry, attempt.step_id);
+        let coordinator = ReusableRuntimeCoordinator::new(
+            request.clone(),
+            SourceAwareFakeModel {
+                inner: NativeReadFakeModel {
+                    profile,
+                    scripts: [
+                        NativeReadModelStep::Tool {
+                            tool_id: definition.tool_id.clone(),
+                            arguments: ContractPayload {
+                                schema: definition.input_schema.clone(),
+                                media_type: "application/json".to_owned(),
+                                sha256: sha256(&search_bytes),
+                                bytes: search_bytes,
+                            },
+                        },
+                        NativeReadModelStep::Completion,
+                    ]
+                    .into_iter()
+                    .collect(),
+                    calls: 0,
+                    identity_prefix: prefix.clone(),
+                },
+                saw_prepared_source: seen,
+            },
+            context,
+            registry,
+            PreparedArtifactBoundary {
+                sources,
+                ledger: ArtifactAttemptLedger::default(),
+                executions: 0,
+                identity_prefix: prefix.clone(),
+            },
+            NativeReadVerifier(VerifierId::from_raw(format!("{prefix}-verifier"))),
+            TestClock(10_000 * u64::from(ordinal)),
+        )
+        .map_err(|_| WorkflowSupervisorError::RuntimeFailed)?;
+        Ok(PreparedWorkflowCoordinatorAttempt {
+            attempt_id: format!("{prefix}-attempt"),
+            attempt_ordinal: ordinal,
+            preflight_policy_sha256: attempt.policy_sha256.to_owned(),
+            preflight_current: true,
+            request,
+            coordinator,
+            approvals: DenyHeadlessApproval,
+        })
+    }
+}
+
+struct FoundationalClassifier;
+
+impl WorkflowOutcomeClassifier for FoundationalClassifier {
+    fn classify(
+        &mut self,
+        _attempt: WorkflowAttemptRequest<'_>,
+        _request: &RuntimeRunRequest,
+        outcome: &RuntimeOutcome,
+    ) -> Result<ClassifiedWorkflowOutcome, WorkflowSupervisorError> {
+        if !outcome.state.is_success() {
+            return Err(WorkflowSupervisorError::EvidenceDenied);
+        }
+        Ok(ClassifiedWorkflowOutcome {
+            failure_class: None,
+            uncertain_effect: false,
+            resources: WorkflowAttemptResources {
+                context_tokens: 16,
+                memory_bytes: 32 * 1024,
+                cost_minor_units: 0,
+            },
+        })
+    }
+}
+
+fn foundational_runtime_request(
+    profile: ExactModelProfile,
+    registry: &agentmage_kernel_engine::tooling::ToolRegistry,
+    step_id: &str,
+) -> RuntimeRunRequest {
+    let mut request = runtime_request(profile, registry);
+    request.run_id = RuntimeRunId::from_raw(format!("foundational-{step_id}-run"));
+    request.session_id = SessionId::from_raw("foundational-runtime-session");
+    request.task.task_id = TaskId::from_raw(format!("foundational-{step_id}-task"));
+    request.task.session_id = request.session_id.clone();
+    request.task.objective = format!("Execute the {step_id} artifact workflow");
+    request.work_packet.work_packet_id =
+        WorkPacketId::from_raw(format!("foundational-{step_id}-packet"));
+    request.work_packet.task_id = request.task.task_id.clone();
+    request
+        .work_packet
+        .objective
+        .clone_from(&request.task.objective);
+    request.policy_id = PolicyId::from_raw(format!("foundational-{step_id}-policy"));
+    request.request_sha256 = "0".repeat(64);
+    seal_runtime_run_request(request).expect("step request seals")
+}
+
+fn foundational_workflow() -> (
+    CanonicalWorkflowDefinition,
+    Vec<CanonicalStepExecutionPolicy>,
+) {
+    let budgets = CanonicalExecutionBudgets {
+        turns: 5,
+        tokens: 1_024,
+        duration_ms: 60_000,
+        tool_calls: 4,
+        attempts: 2,
+        no_progress_events: 2,
+        output_bytes: 4_096,
+        memory_bytes: 1_000_000,
+        cost_minor_units: 0,
+    };
+    let step_ids = [
+        "repository-review",
+        "long-log-diagnosis",
+        "mixed-artifact-plan",
+    ];
+    let mut policies = step_ids
+        .iter()
+        .enumerate()
+        .map(|(index, step_id)| CanonicalStepExecutionPolicy {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            policy_id: format!("foundational-{step_id}-execution-policy"),
+            plan_id: PlanId::from_raw("foundational-runtime-plan"),
+            plan_step_id: agentmage_kernel_contracts::PlanStepId::from_raw(format!(
+                "foundational-runtime-plan:step:{:04}",
+                index + 1
+            )),
+            plan_revision: 1,
+            preflight_policy_id: format!("foundational-{step_id}-preflight"),
+            required_preflight_ids: vec!["workspace-current".to_owned()],
+            side_effect_policy_id: "foundational-read-only-effects".to_owned(),
+            effect_class: CanonicalEffectClass::ReadOnly,
+            approval_policy_id: "foundational-no-approval".to_owned(),
+            approval_requirement: CanonicalApprovalRequirement::NotRequired,
+            idempotency_policy_id: "foundational-read-idempotency".to_owned(),
+            idempotency_key_requirement: CanonicalIdempotencyRequirement::NotApplicable,
+            verifier_policy_id: format!("foundational-{step_id}-verifier-policy"),
+            verification_requirement: CanonicalVerificationRequirement::VerifierEvidenceRequired,
+            required_verifier_ids: vec![format!("foundational-{step_id}-verifier")],
+            deferral_reason_code: None,
+            retry_policy_id: "foundational-read-retry".to_owned(),
+            retry_class: CanonicalRetryClass::RecoverableRead,
+            budget_policy_id: "foundational-budgets".to_owned(),
+            budgets: budgets.clone(),
+            diagnostic_policy_id: "foundational-diagnostics".to_owned(),
+            diagnostic_disclosure: CanonicalDiagnosticDisclosure::ContentFreeCodes,
+            recorded_at: "2026-08-31T12:00:00Z".to_owned(),
+            policy_sha256: "0".repeat(64),
+        })
+        .collect::<Vec<_>>();
+    for policy in &mut policies {
+        policy.policy_sha256 = canonical_record_sha256(policy).expect("policy seals");
+    }
+    let mut definition = CanonicalWorkflowDefinition {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        workflow_id: "foundational-artifact-workflow".to_owned(),
+        workflow_version: 1,
+        input_schema: CanonicalSchemaBinding {
+            schema_id: "foundational-artifact-input".to_owned(),
+            schema_version: 1,
+            schema_sha256: SHA.to_owned(),
+        },
+        output_schema: CanonicalSchemaBinding {
+            schema_id: "foundational-artifact-output".to_owned(),
+            schema_version: 1,
+            schema_sha256: SHA.to_owned(),
+        },
+        steps: step_ids
+            .iter()
+            .enumerate()
+            .map(|(index, step_id)| CanonicalWorkflowStep {
+                step_id: (*step_id).to_owned(),
+                depends_on: index
+                    .checked_sub(1)
+                    .map(|prior| vec![step_ids[prior].to_owned()])
+                    .unwrap_or_default(),
+                model_role: Some("engineering-worker".to_owned()),
+                tool_id: Some(ArtifactToolKind::Search.id().to_owned()),
+                effect_class: CanonicalEffectClass::ReadOnly,
+                retry_class: CanonicalRetryClass::RecoverableRead,
+                verifier_ids: vec![format!("foundational-{step_id}-verifier")],
+                budgets: budgets.clone(),
+            })
+            .collect(),
+        entry_step_ids: vec![step_ids[0].to_owned()],
+        definition_sha256: "0".repeat(64),
+    };
+    definition.definition_sha256 = canonical_record_sha256(&definition).expect("definition seals");
+    (definition, policies)
 }
 
 #[test]
@@ -818,6 +1127,7 @@ fn story_23_4_fake_model_composes_multiple_reads_search_and_read_only_git() {
                 .into_iter()
                 .collect(),
             calls: 0,
+            identity_prefix: "native-read-multi".to_owned(),
         },
         NativeReadContext {
             observed_result: Arc::clone(&observed_result),
@@ -896,6 +1206,7 @@ pub(crate) fn completed_native_read_fixture()
                 .into_iter()
                 .collect(),
             calls: 0,
+            identity_prefix: "native-read-single".to_owned(),
         },
         NativeReadContext {
             observed_result: Arc::clone(&observed_result),

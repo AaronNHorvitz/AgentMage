@@ -6209,6 +6209,16 @@ adapters may be exercised as they become available without claiming their later 
     disconnect, restart, and removal workflows.
   - [ ] **Sub-task 50.3.1.3:** Compare Chat, interactive CLI, headless, and future-caller projections;
     permit presentation differences only.
+
+  Local integration contribution: `story_50_3_artifact_heavy_steps_use_one_supervisor_and_common_coordinator`
+  now composes three dependency-ready artifact workflows through one verified supervisor and a
+  fresh existing common coordinator per attempt. Current prepared-source context, native artifact
+  calls, grants, receipts, verifier evidence, terminal outcomes, and fresh attempt/run identities
+  reconcile exactly. The retained
+  [`report.json`](artifacts/sprints/sprint-50/story-50.3-foundational-runtime/report.json) binds this
+  seam to the current supervisor, text/log corpus, pressure, restart/no-replay, and component-removal
+  evidence. The numbered sub-tasks remain open for their complete four-workflow and installed-client
+  campaign rather than treating the deterministic fake-model composition as external evidence.
 - [ ] **Task 50.3.2 - Execute pressure and performance campaigns**
   - [ ] **Sub-task 50.3.2.1:** Exercise maximum artifact count/bytes, 25 MiB logs, combined token
     overflow, maximum sections, event queue saturation, large tool output, checkpoint depth,
@@ -6235,9 +6245,13 @@ adapters may be exercised as they become available without claiming their later 
   - [ ] **Sub-task 50.3.4.2:** Disable and remove source persistence, parser adapters, workflow
     supervision, and clients separately and together; require native baseline operation and no
     undeclared data, process, socket, cache, grant, or registration residue.
-  - [ ] **Sub-task 50.3.4.3:** Publish operator diagnostics, recovery guidance, architecture and
+  - [x] **Sub-task 50.3.4.3:** Publish operator diagnostics, recovery guidance, architecture and
     data-flow diagrams, capability/format/model/interface matrices, migration notes, raw evidence
-    index, and the `M-FOUNDATIONAL-RUNTIME-CORE` decision record.
+    index, and the `M-FOUNDATIONAL-RUNTIME-CORE` decision record. Evidence: the normative
+    architecture and existing operator/recovery/matrix documentation are indexed by
+    [`story-50-3-foundational-runtime-core-results.md`](docs/verification/story-50-3-foundational-runtime-core-results.md),
+    which links the retained raw report/log, records the local core decision, and lists every exact
+    non-claim and invalidation boundary.
   - [ ] **Sub-task 50.3.4.4:** Run applicable `RV-03`, `RV-04`, `RV-08`, `RV-11`, `RV-12`,
     `RV-15` through `RV-18`, and `RV-25` protocols and retain independent review where required.
   - [ ] **Sub-task 50.3.4.5:** Implement independent feature flags for artifact ingress, each
@@ -6258,9 +6272,12 @@ adapters may be exercised as they become available without claiming their later 
 - [ ] **Story AC 50.3.AC3:** Given malformed, hostile, stale, uncertain, or premature model behavior,
   when execution terminates, then zero false completion and zero unsafe retry occur and one
   actionable diagnosis exists for every non-cancelled failure.
-- [ ] **Story AC 50.3.AC4:** Given current evidence, when `M-FOUNDATIONAL-RUNTIME-CORE` is evaluated,
+- [x] **Story AC 50.3.AC4:** Given current evidence, when `M-FOUNDATIONAL-RUNTIME-CORE` is evaluated,
   then it closes only if text/log ingestion and verified-workflow supervision pass and does not
-  imply later structured-parser, platform, MCP, model, or release support.
+  imply later structured-parser, platform, MCP, model, or release support. Evidence: the Story 50.3
+  report closes only `PASS_LOCAL_TEXT_LOG_WORKFLOW_CORE`; its fail-closed truth schema and mutation
+  tests require structured parsers, production models, installed clients, Windows, macOS,
+  independent review, complete-foundational-runtime, and release claims all to remain false.
 
 #### [ ] Story 50.4 - Engineering Runtime Reliability and Degradation Hardening
 
