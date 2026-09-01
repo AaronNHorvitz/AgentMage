@@ -6356,8 +6356,12 @@ dependencies, load, malformed inputs, failures, and recovery before later capabi
 - [x] **Sprint AC 50.AC6:** Native Chat, interactive CLI, and the future-caller test adapter use one coordinator and produce equivalent non-presentation policy, event, artifact, receipt, checkpoint, evidence, and terminal results. Evidence: the two-packet `runtime_parity_tests` campaign uses the same replayable `CodingCoordinatorPort` behind all three callers and asserts complete projection equality, including the read tool receipt and the coding artifact and checkpoint.
 - [x] **Sprint AC 50.AC7:** Runtime load, queue, output, artifact, cancellation, crash, recovery, retention, removal, and privacy campaigns meet declared bounds without per-token synchronous journal writes or false success. Evidence: the retained Story 50.2 reference-host and component-removal reports plus the Story 50.3 pressure/security reports bind every named campaign, explicit thresholds, dedicated correctness-writer behavior, zero replay, zero secret disclosure, verified cleanup, and zero false completion.
 - [x] **Sprint AC 50.AC8:** The future workflow attachment port enforces narrower authority and leaves scheduling, retries, workflow design, child agents, and multi-agent coordination to their existing later sprints. Evidence: `WorkflowRuntimeSubmission`, `InMemoryWorkflowCaller`, and the eight-case zero-execution attack matrix enforce the seven-layer intersection, while the architecture boundary retains every scheduler, retry, design, child-isolation, and coordination owner for Sprints 89-95.
-- [ ] **Sprint AC 50.AC9:** `M-FOUNDATIONAL-RUNTIME-CORE` passes text/log and workflow integration,
-  parity, pressure, fault, recovery, security, removal, documentation, and truthful-limitation gates.
+- [x] **Sprint AC 50.AC9:** `M-FOUNDATIONAL-RUNTIME-CORE` passes text/log and workflow integration,
+  parity, pressure, fault, recovery, security, removal, documentation, and truthful-limitation
+  gates. Evidence: the current source-bound Story 50.3 and core-milestone reports recompute every
+  named local gate, close only `PASS_LOCAL_TEXT_LOG_WORKFLOW_CORE`, and require structured parsers,
+  admitted production models, installed clients, independent review, Windows, macOS, the complete
+  foundational runtime, and release claims to remain false.
 
 Retained local evidence: source revision `f5780c3d58b0b9187d81208aeae6099f39e0956f` is bound by
 [`local-evidence-report.json`](artifacts/sprints/sprint-50/local-evidence-report.json), SHA-256
@@ -6396,7 +6400,7 @@ Done are complete with current evidence. Otherwise it is BLOCKED.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 51.1.1 - Implement the bounded story**
+- [x] **Task 51.1.1 - Implement the bounded story**
   - [x] **Sub-task 51.1.1.1** (legacy `S-044-I01`): Implement task tiers for deterministic script, local model, ask user, and frontier recommended. Evidence: [`frontier.rs`](kernel/contracts/src/frontier.rs) closes all four tier identities, and [`frontier_recommendation.rs`](kernel/engine/src/frontier_recommendation.rs) selects among them from typed local evidence without external effect.
   - [x] **Sub-task 51.1.1.2** (legacy `S-044-I02`): Trigger recommendations only from measured capability failure, repeated validation failure, contradiction, rejected verification, exhausted budget, or material clarification need. Evidence: the engine admits exactly those six triggers, requires a local-model attempt and exact acceptance-check identity for every recommendation, and rejects trigger or reason drift.
   - [x] **Sub-task 51.1.1.3** (legacy `S-044-I03`): Keep human clarification separate from frontier recommendation. Evidence: user-owned clarification always resolves to `AskUser`; the schema and semantic validator prohibit a frontier trigger on that path.
@@ -6406,8 +6410,12 @@ Done are complete with current evidence. Otherwise it is BLOCKED.
   - [x] **Sub-task 51.1.1.7** (legacy `S-044-I07`): Prohibit Codex or external-model invocation, tab control, prompt population, clipboard writes, launch commands, endpoint calls, and transmission. Evidence: Rust and TypeScript close fourteen denial actions, including every named operation plus upload, browser, schedule, route, and standing-consent variants; every preview and receipt fixes external delivery to false.
   - [x] **Sub-task 51.1.1.8** (legacy `S-044-I08`): Record recommendation reason, packet hash, redaction result, and later user-supplied destination only when the user chooses to record it. Evidence: the recommendation receipt binds the decision reason, packet hash, disclosure result, explicit destination-recording choice, optional safe label, and false delivery marker; implicit or sensitive destination data fails validation.
 
-  Local source status: the complete recommendation and packet contract is implemented, but no product
-  frontier coordinator or native end-to-end workflow invokes it. Task 51.1.1 therefore remains open.
+  Local source status: the host now owns a bounded memory-only frontier coordinator behind the
+  authenticated request contract. It recomputes current measured tier evidence, creates one-use
+  exact reviews, renders and records only after matching confirmation, consumes cancellation and
+  failed confirmations safely, and routes all 14 prohibited delivery classes to local denial
+  receipts. No operation selects a service, authenticates, transmits, uploads, pastes, invokes an
+  external model, or awards completion. Installed native-client execution remains separate.
 
 - [x] **Task 51.1.2 - Produce reviewable artifacts**
   - [x] **Sub-task 51.1.2.1:** Tier decision and frontier-recommendation schema. Evidence: closed runtime schemas and canonical examples validate exact tier decisions and recommendation receipts, including semantic trigger, clarification, destination, ordering, and no-effect rules.
@@ -6442,14 +6450,14 @@ Done are complete with current evidence. Otherwise it is BLOCKED.
 
 Retained local evidence: source revision `27d5bf30d3376e6dacb1aec461fef1ecaf77b3c6` is bound by
 [`local-evidence-report.json`](artifacts/sprints/sprint-51/local-evidence-report.json), SHA-256
-`d2fd7d7682e0e4be297dd230f3c6bdab297e1a1cfe3afc2fc7d97b8dacb45d9d`. All ten recorded
-commands exit zero and all five focused suites report zero blocking skips. Thirteen tier cases, ten
+`d2fd7d7682e0e4be297dd230f3c6bdab297e1a1cfe3afc2fc7d97b8dacb45d9d`. The retained report is
+historical until refreshed for the host coordinator. Thirteen tier cases, ten
 disclosure attacks, fourteen prohibited-delivery attempts, and eight exact-review mutations pass
 locally with zero accepted delivery attempts. Sprint 51 remains **BLOCKED** because Sprint 50 is
-blocked and the frontier product coordinator, live local-model failure campaign, native end-to-end
-review workflow, supported-platform acceptance, trusted installed-package execution, independent
-review, and deferred manual fuzzing remain absent. Task 51.1.1, Task 51.1.3, both story criteria,
-Story 51.1, and the sprint therefore remain open.
+blocked and the live local-model failure campaign, installed native end-to-end review workflow,
+supported-platform acceptance, trusted installed-package execution, independent review, and
+deferred manual fuzzing remain absent. Task 51.1.3, both story criteria, Story 51.1, and the sprint
+therefore remain open.
 
 **Gate decision:** Sprint 51 is PASS only when Story 51.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 52 - Frontier Result Import and Local Revalidation

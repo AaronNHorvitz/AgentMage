@@ -6,12 +6,12 @@ use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, FrontierAcceptanceState, FrontierClarificationClass,
     FrontierRecommendationReceipt, FrontierRecommendationTrigger, FrontierTaskTier,
     FrontierTierDecision, FrontierTierEvidence, HandoffDestinationClass, HandoffDisclosureEntry,
-    HandoffEntryDisposition, HandoffReview,
+    HandoffDraft, HandoffEntryDisposition, HandoffReview, RenderedHandoff,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-use crate::handoff::{HandoffError, build_handoff_review};
+use crate::handoff::{HandoffError, build_handoff_review, render_reviewed_handoff};
 
 const MAX_LIST_ITEMS: usize = 64;
 const MAX_EVIDENCE_ENTRIES: usize = 16;
@@ -44,7 +44,7 @@ impl std::fmt::Display for FrontierRecommendationError {
 impl std::error::Error for FrontierRecommendationError {}
 
 /// Closed role for one exact item in a frontier disclosure packet.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum FrontierPacketEvidenceRole {
     /// Current local task or repository state.
@@ -56,7 +56,8 @@ pub enum FrontierPacketEvidenceRole {
 }
 
 /// One sealed handoff entry assigned a frontier-specific evidence role.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct FrontierPacketEvidence {
     /// Required packet role.
     pub role: FrontierPacketEvidenceRole,
@@ -67,7 +68,8 @@ pub struct FrontierPacketEvidence {
 }
 
 /// Complete input for one local-only frontier packet preview.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct FrontierPacketRequest {
     /// Exact local evidence from which the recommendation was produced.
     pub tier_evidence: FrontierTierEvidence,
@@ -100,7 +102,8 @@ pub struct FrontierPacketRequest {
 }
 
 /// Content-free inventory row shown alongside the exact packet review.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct FrontierDisclosureInventoryEntry {
     /// Stable disclosure identity.
     pub entry_id: String,
@@ -119,7 +122,8 @@ pub struct FrontierDisclosureInventoryEntry {
 }
 
 /// Exact local frontier packet review and disclosure evidence.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct FrontierPacketPreview {
     /// Exact recommendation decision digest.
     pub decision_sha256: String,
@@ -170,26 +174,7 @@ pub fn build_frontier_packet_preview(
     expires_at_ms: u64,
 ) -> Result<FrontierPacketPreview, FrontierRecommendationError> {
     validate_packet_request(request)?;
-    let entries = request
-        .evidence
-        .iter()
-        .map(|evidence| evidence.entry.clone())
-        .collect::<Vec<_>>();
-    let constraints = packet_constraints(request);
-    let draft = agentmage_kernel_contracts::HandoffDraft {
-        schema_version: CONTRACT_SCHEMA_VERSION,
-        handoff_id: request.packet_id.clone(),
-        workspace_state_sha256: request.workspace_state_sha256.clone(),
-        policy_sha256: request.policy_sha256.clone(),
-        redaction_policy_sha256: request.redaction_policy_sha256.clone(),
-        objective: request.objective.clone(),
-        acceptance_criteria: request.acceptance_checks.clone(),
-        constraints,
-        entries,
-        exclusions: request.exclusions.clone(),
-        unresolved_questions: request.unresolved_questions.clone(),
-        destination: HandoffDestinationClass::ManualCodexInterface,
-    };
+    let draft = packet_draft(request);
     let review =
         build_handoff_review(&draft, preview_id, expires_at_ms).map_err(map_handoff_error)?;
     let disclosure_inventory = request
@@ -222,6 +207,34 @@ pub fn build_frontier_packet_preview(
         preview_sha256,
         external_delivery_attempted: false,
     })
+}
+
+/// Revalidates and renders the exact reviewed packet locally without delivering it.
+pub fn render_frontier_packet(
+    request: &FrontierPacketRequest,
+    preview: &FrontierPacketPreview,
+    confirmation_sha256: &str,
+    now_ms: u64,
+    non_public_acknowledged: bool,
+    attempt_id: String,
+) -> Result<RenderedHandoff, FrontierRecommendationError> {
+    validate_packet_request(request)?;
+    let expected = build_frontier_packet_preview(
+        request,
+        preview.review.preview_id.clone(),
+        preview.review.expires_at_ms,
+    )?;
+    if preview != &expected || preview.review.confirmation_sha256 != confirmation_sha256 {
+        return Err(FrontierRecommendationError::InvalidInput);
+    }
+    render_reviewed_handoff(
+        &preview.review,
+        &packet_draft(request),
+        now_ms,
+        non_public_acknowledged,
+        attempt_id,
+    )
+    .map_err(map_handoff_error)
 }
 
 /// Records the local recommendation and an optional user-chosen destination label.
@@ -486,6 +499,27 @@ fn packet_constraints(request: &FrontierPacketRequest) -> Vec<String> {
         request.required_output_contract
     ));
     constraints
+}
+
+fn packet_draft(request: &FrontierPacketRequest) -> HandoffDraft {
+    HandoffDraft {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        handoff_id: request.packet_id.clone(),
+        workspace_state_sha256: request.workspace_state_sha256.clone(),
+        policy_sha256: request.policy_sha256.clone(),
+        redaction_policy_sha256: request.redaction_policy_sha256.clone(),
+        objective: request.objective.clone(),
+        acceptance_criteria: request.acceptance_checks.clone(),
+        constraints: packet_constraints(request),
+        entries: request
+            .evidence
+            .iter()
+            .map(|evidence| evidence.entry.clone())
+            .collect(),
+        exclusions: request.exclusions.clone(),
+        unresolved_questions: request.unresolved_questions.clone(),
+        destination: HandoffDestinationClass::ManualCodexInterface,
+    }
 }
 
 fn tier_decision_digest(
@@ -821,6 +855,50 @@ mod tests {
         );
         assert_eq!(first.review.manifest.entry_sha256.len(), 3);
         assert!(!first.review.manifest.delivered);
+    }
+
+    #[test]
+    fn exact_frontier_preview_renders_locally_once_without_delivery_authority() {
+        let request = packet_request();
+        let preview = build_frontier_packet_preview(&request, "preview-render".to_owned(), 20)
+            .expect("frontier preview");
+        let rendered = render_frontier_packet(
+            &request,
+            &preview,
+            &preview.review.confirmation_sha256,
+            19,
+            false,
+            "attempt-render".to_owned(),
+        )
+        .expect("exact local render");
+        assert_eq!(rendered.packet_markdown, preview.review.packet_markdown);
+        assert!(!rendered.manifest.delivered);
+        assert!(!rendered.receipt.external_delivery_attempted);
+
+        assert_eq!(
+            render_frontier_packet(
+                &request,
+                &preview,
+                SHA_B,
+                19,
+                false,
+                "attempt-mutated".to_owned(),
+            ),
+            Err(FrontierRecommendationError::InvalidInput)
+        );
+        let mut stale = request.clone();
+        stale.objective = "Changed objective".to_owned();
+        assert!(
+            render_frontier_packet(
+                &stale,
+                &preview,
+                &preview.review.confirmation_sha256,
+                19,
+                false,
+                "attempt-stale".to_owned(),
+            )
+            .is_err()
+        );
     }
 
     #[test]

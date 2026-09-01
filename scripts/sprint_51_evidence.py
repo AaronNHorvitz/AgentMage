@@ -28,6 +28,10 @@ SOURCE_PATHS: Final = (
     "kernel/engine/src/frontier_recommendation.rs",
     "kernel/engine/src/handoff.rs",
     "kernel/engine/src/lib.rs",
+    "shells/host/src/frontier_coordinator.rs",
+    "shells/host/src/protocol.rs",
+    "shells/host/src/linux_read.rs",
+    "shells/host/src/lib.rs",
     "shells/vscode/src/handoff.ts",
     "shells/vscode/test/handoff.test.ts",
     "schemas/runtime/frontier-tier-decision.schema.json",
@@ -57,6 +61,13 @@ COMMANDS: Final = (
         (
             "cargo", "test", "-p", "agentmage-kernel-engine",
             "handoff::tests", "--lib", "--locked",
+        ),
+    ),
+    (
+        "frontier-host-coordinator",
+        (
+            "cargo", "test", "-p", "agentmage-host",
+            "frontier", "--lib", "--locked",
         ),
     ),
     (
@@ -90,10 +101,11 @@ COMMANDS: Final = (
         ("python3", "-m", "unittest", "tests.test_sprint_51_evidence"),
     ),
 )
-FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:5])
+FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:6])
 RUST_FOCUSED_COMMANDS: Final = {
     "frontier-recommendation-unit",
     "local-handoff-unit",
+    "frontier-host-coordinator",
 }
 SECURITY_REQUIREMENTS: Final = [
     "SR-ACC-007",
@@ -117,7 +129,7 @@ IMPLEMENTED: Final = {
     "secret_scope_and_injection_rejection": True,
     "destination_recording_user_owned": True,
     "external_delivery_capability": False,
-    "product_frontier_coordinator": False,
+    "product_frontier_coordinator": True,
     "live_model_failure_campaign": False,
     "native_cross_platform_acceptance": False,
     "trusted_package_execution": False,
@@ -126,7 +138,6 @@ IMPLEMENTED: Final = {
 }
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-50-BLOCKED", "owner": "51.1"},
-    {"code": "FRONTIER-PRODUCT-COORDINATOR-ABSENT", "owner": "51.1.1.1"},
     {"code": "LIVE-LOCAL-MODEL-FAILURE-CAMPAIGN-ABSENT", "owner": "51.1.3.1"},
     {"code": "NATIVE-END-TO-END-REVIEW-WORKFLOW-ABSENT", "owner": "51.1.3.4"},
     {"code": "NATIVE-CROSS-PLATFORM-ACCEPTANCE-ABSENT", "owner": "51.1.3.5"},
@@ -212,7 +223,7 @@ def expected_verification(local_pass: bool = True) -> dict[str, Any]:
         "prohibited_delivery_attempt_count": 14 if local_pass else None,
         "review_mutation_count": 8 if local_pass else None,
         "accepted_delivery_attempt_count": 0 if local_pass else None,
-        "product_coordinator_integration": False,
+        "product_coordinator_integration": True,
         "live_model_failure_campaign": False,
         "native_cross_platform_acceptance": False,
         "trusted_package_execution": False,
@@ -227,7 +238,7 @@ def expected_summary(local_pass: bool = True) -> dict[str, Any]:
         "local_sprint_51_contract_passed": local_pass,
         "sprint_status": "BLOCKED",
         "upstream_sprint_50_closed": False,
-        "frontier_product_coordinator_integrated": False,
+        "frontier_product_coordinator_integrated": True,
         "automatic_frontier_delivery_enabled": False,
         "cross_platform_acceptance_passed": False,
         "trusted_package_execution_complete": False,

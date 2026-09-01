@@ -186,6 +186,26 @@ pub enum HandoffProhibitedAction {
     StandingConsentDelivery,
 }
 
+impl HandoffProhibitedAction {
+    /// Every closed prohibited delivery or interface-control action.
+    pub const ALL: [Self; 14] = [
+        Self::CodexInvocation,
+        Self::TabActivation,
+        Self::ChatPopulation,
+        Self::ClipboardWrite,
+        Self::UriLaunch,
+        Self::LocalRuntimeDelivery,
+        Self::RawRuntimeDelivery,
+        Self::NetworkCall,
+        Self::AutomaticSubmission,
+        Self::FileUpload,
+        Self::BrowserControl,
+        Self::ScheduledDelivery,
+        Self::RoutedDelivery,
+        Self::StandingConsentDelivery,
+    ];
+}
+
 /// Local-only terminal outcome for a review or prohibited action attempt.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]

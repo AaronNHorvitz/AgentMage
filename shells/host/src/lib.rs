@@ -44,6 +44,8 @@ pub mod engineering_team;
 pub mod feature_activation;
 /// Fail-closed beta, rollback, and emergency-disable rollout for foundational features.
 pub mod foundational_rollout;
+/// Bounded local-only coordination for measured frontier recommendation packets.
+pub mod frontier_coordinator;
 
 /// Verified read-only knowledge workflows over the shared thin-client contract.
 pub mod knowledge_workflow_runtime;

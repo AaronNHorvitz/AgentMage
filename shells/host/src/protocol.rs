@@ -5,10 +5,13 @@ use serde::{Deserialize, Deserializer, Serialize};
 use agentmage_capability_read_only::ReadOnlyResult;
 use agentmage_kernel_contracts::{
     CancellationId, DoctorReport, EngineeringRpcRequest, EngineeringRpcResponse,
-    HandoffProhibitedAction, HandoffReview, LocalHandoffReceipt, ModelPickerSnapshot,
-    ModelSelectionRevalidation, RenderedHandoff, RuntimeApprovalChallenge, RuntimeApprovalResponse,
-    RuntimeArtifactRef, RuntimeEvent, RuntimeEventCursor, RuntimeOutcome, RuntimeRunId,
-    RuntimeRunRequest,
+    FrontierRecommendationReceipt, FrontierTierEvidence, HandoffProhibitedAction, HandoffReview,
+    LocalHandoffReceipt, ModelPickerSnapshot, ModelSelectionRevalidation, RenderedHandoff,
+    RuntimeApprovalChallenge, RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEvent,
+    RuntimeEventCursor, RuntimeOutcome, RuntimeRunId, RuntimeRunRequest,
+};
+use agentmage_kernel_engine::frontier_recommendation::{
+    FrontierPacketPreview, FrontierPacketRequest,
 };
 use agentmage_kernel_engine::runtime_coordinator::verify_runtime_run_request;
 
@@ -131,6 +134,44 @@ pub enum HostRequest {
         handoff_id: Option<String>,
         /// Exact prohibited action attempted.
         action: HandoffProhibitedAction,
+    },
+    /// Recompute measured evidence and build one exact local-only frontier review.
+    PreviewFrontierRecommendation {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Exact current local tier evidence supplied by trusted host composition.
+        evidence: FrontierTierEvidence,
+        /// Complete bounded packet request bound to that evidence.
+        request: Box<FrontierPacketRequest>,
+    },
+    /// Render and record one exact confirmed frontier review locally.
+    RenderFrontierRecommendation {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Exact pending preview identity.
+        preview_id: String,
+        /// Digest of the exact review confirmed by the user.
+        confirmation_sha256: String,
+        /// Explicit acknowledgment for permitted non-public content.
+        non_public_acknowledged: bool,
+        /// Whether the user explicitly chose to retain a destination label.
+        destination_recording_requested: bool,
+        /// Optional user-entered bookkeeping label; never an address or route.
+        #[serde(deserialize_with = "deserialize_required_option")]
+        user_recorded_destination: Option<String>,
+    },
+    /// Cancel one pending frontier review without rendering content.
+    CancelFrontierRecommendation {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Exact pending preview identity.
+        preview_id: String,
     },
     /// Return the current content-free exact-profile picker projection.
     DiscoverModels {
@@ -380,6 +421,38 @@ impl HostRequest {
                     .as_deref()
                     .is_some_and(|value| !valid_identifier(value))
                 {
+                    return Err(HostProtocolError::InvalidValue);
+                }
+                (*schema_version, request_id)
+            }
+            Self::PreviewFrontierRecommendation {
+                schema_version,
+                request_id,
+                ..
+            } => (*schema_version, request_id),
+            Self::RenderFrontierRecommendation {
+                schema_version,
+                request_id,
+                preview_id,
+                confirmation_sha256,
+                destination_recording_requested,
+                user_recorded_destination,
+                ..
+            } => {
+                if !valid_identifier(preview_id)
+                    || !valid_sha256(confirmation_sha256)
+                    || *destination_recording_requested != user_recorded_destination.is_some()
+                {
+                    return Err(HostProtocolError::InvalidValue);
+                }
+                (*schema_version, request_id)
+            }
+            Self::CancelFrontierRecommendation {
+                schema_version,
+                request_id,
+                preview_id,
+            } => {
+                if !valid_identifier(preview_id) {
                     return Err(HostProtocolError::InvalidValue);
                 }
                 (*schema_version, request_id)
@@ -686,6 +759,26 @@ pub enum HostResponse {
         request_id: String,
         /// Content-free local-only receipt.
         receipt: LocalHandoffReceipt,
+    },
+    /// Exact local-only frontier review and disclosure inventory.
+    FrontierRecommendationPreview {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity from the request.
+        request_id: String,
+        /// Kernel-built exact frontier packet review.
+        preview: FrontierPacketPreview,
+    },
+    /// Exact local render and content-free recommendation record.
+    FrontierRecommendationRendered {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity from the request.
+        request_id: String,
+        /// Rendered packet, manifest, and no-delivery receipt.
+        rendered: RenderedHandoff,
+        /// Content-free recommendation bookkeeping receipt.
+        recommendation: FrontierRecommendationReceipt,
     },
     /// Current exact-profile discovery result from trusted host composition.
     ModelsDiscovered {

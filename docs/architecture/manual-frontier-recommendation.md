@@ -60,7 +60,14 @@ Only the user can manually move reviewed content into a separate interface.
 
 ## Current Integration Limit
 
-The tier, packet, schema, and denial contracts are source-level pre-alpha evidence. No product
-coordinator currently supplies live task evidence, registers a frontier workflow, or records a
-native end-to-end recommendation. Installed-platform, accessibility, zero-egress, canary,
-independent-review, and manual-fuzz evidence remain open.
+The Rust host now exposes a bounded coordinator through its closed authenticated request contract.
+It recomputes the tier from caller-supplied current local evidence, retains at most four memory-only
+one-use reviews, revalidates exact packet and confirmation bytes before local rendering, records
+only content-free recommendation bookkeeping, consumes failed or cancelled reviews, and produces
+local denial receipts for all fourteen prohibited delivery actions. It owns no model call,
+filesystem export, clipboard, browser, endpoint, authentication, network, or completion authority.
+
+This host composition is local source evidence, not an installed native-client campaign. No
+admitted live-model failure, installed VS Code presentation/accessibility run, supported-platform
+zero-egress observation, trusted package execution, independent review, or manual fuzz evidence is
+available. Those boundaries remain open and cannot inherit the host fixture result.

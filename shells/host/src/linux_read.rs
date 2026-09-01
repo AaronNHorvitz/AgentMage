@@ -46,6 +46,7 @@ use sha2::{Digest, Sha256};
 
 use crate::diagnostic_export::{DiagnosticExportError, DiagnosticExportWorkflow};
 use crate::engineering_runtime::{EngineeringRuntimePort, EngineeringRuntimeService};
+use crate::frontier_coordinator::{FrontierCoordinatorError, FrontierRecommendationCoordinator};
 use crate::protocol::{
     HOST_PROTOCOL_VERSION, HostProjectionKind, HostProjectionPath, HostRequest, HostResponse,
     MAX_HOST_REQUEST_BYTES, MAX_HOST_RESPONSE_BYTES, ReceiptSummary, encode_response,
@@ -95,6 +96,8 @@ pub enum LinuxReadError {
     HandoffUnavailable,
     /// Handoff construction, review, revalidation, or rendering failed closed.
     HandoffInvalid,
+    /// The bounded local frontier coordinator failed closed.
+    FrontierCoordinator(FrontierCoordinatorError),
     /// The optional shared-runtime transport dependency failed closed.
     RuntimeTransport(RuntimeTransportError),
     /// No durable Engineering Runtime service was installed by trusted composition.
@@ -140,6 +143,7 @@ impl LinuxReadError {
             Self::ModelDiscoveryInvalid => "host.model-discovery.invalid",
             Self::HandoffUnavailable => "host.handoff.unavailable",
             Self::HandoffInvalid => "host.handoff.invalid",
+            Self::FrontierCoordinator(error) => error.code(),
             Self::RuntimeTransport(error) => error.code(),
             Self::EngineeringRuntimeUnavailable => "host.engineering-runtime.unavailable",
             Self::EngineeringRuntimeFailed => "host.engineering-runtime.failed",
@@ -274,6 +278,7 @@ where
     model_picker: Option<ModelPickerSnapshot>,
     handoff_draft: Option<HandoffDraft>,
     pending_handoffs: BTreeMap<String, HandoffReview>,
+    frontier_coordinator: FrontierRecommendationCoordinator,
     runtime_transport: Option<Box<dyn RuntimeTransportPort>>,
     engineering_runtime: Option<Box<dyn EngineeringRuntimePort>>,
 }
@@ -318,6 +323,7 @@ where
             model_picker: None,
             handoff_draft: None,
             pending_handoffs: BTreeMap::new(),
+            frontier_coordinator: FrontierRecommendationCoordinator::new(),
             runtime_transport: None,
             engineering_runtime: Some(Box::new(engineering_runtime)),
         })
@@ -375,6 +381,7 @@ where
             model_picker: None,
             handoff_draft: None,
             pending_handoffs: BTreeMap::new(),
+            frontier_coordinator: FrontierRecommendationCoordinator::new(),
             runtime_transport: None,
             engineering_runtime: Some(Box::new(engineering_runtime)),
         })
@@ -472,6 +479,27 @@ where
             HostRequest::DenyHandoffAction {
                 handoff_id, action, ..
             } => self.deny_handoff_delivery(&request_id, handoff_id, action),
+            HostRequest::PreviewFrontierRecommendation {
+                evidence, request, ..
+            } => self.preview_frontier_recommendation(&request_id, &evidence, *request),
+            HostRequest::RenderFrontierRecommendation {
+                preview_id,
+                confirmation_sha256,
+                non_public_acknowledged,
+                destination_recording_requested,
+                user_recorded_destination,
+                ..
+            } => self.render_frontier_recommendation(
+                &request_id,
+                &preview_id,
+                &confirmation_sha256,
+                non_public_acknowledged,
+                destination_recording_requested,
+                user_recorded_destination,
+            ),
+            HostRequest::CancelFrontierRecommendation { preview_id, .. } => {
+                self.cancel_frontier_recommendation(&request_id, &preview_id)
+            }
             HostRequest::DiscoverModels { .. } => self.discover_models(&request_id),
             HostRequest::RevalidateModel {
                 profile_id,
@@ -792,6 +820,79 @@ where
         let attempt_id = self.identities.next("handoff-denial")?;
         let receipt = deny_handoff_action(attempt_id, handoff_id, action)
             .map_err(|_| LinuxReadError::HandoffInvalid)?;
+        Ok(HostResponse::HandoffReceipt {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: request_id.to_owned(),
+            receipt,
+        })
+    }
+
+    fn preview_frontier_recommendation(
+        &mut self,
+        request_id: &str,
+        evidence: &agentmage_kernel_contracts::FrontierTierEvidence,
+        request: agentmage_kernel_engine::frontier_recommendation::FrontierPacketRequest,
+    ) -> Result<HostResponse, LinuxReadError> {
+        let now = self.clock.now()?;
+        let preview_id = self.identities.next("frontier-preview")?;
+        let expires_at_ms = now
+            .epoch_ms
+            .checked_add(PREVIEW_LIFETIME_MS)
+            .ok_or(LinuxReadError::ClockUnavailable)?;
+        let preview = self
+            .frontier_coordinator
+            .preview(evidence, request, preview_id, now.epoch_ms, expires_at_ms)
+            .map_err(LinuxReadError::FrontierCoordinator)?;
+        Ok(HostResponse::FrontierRecommendationPreview {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: request_id.to_owned(),
+            preview,
+        })
+    }
+
+    fn render_frontier_recommendation(
+        &mut self,
+        request_id: &str,
+        preview_id: &str,
+        confirmation_sha256: &str,
+        non_public_acknowledged: bool,
+        destination_recording_requested: bool,
+        user_recorded_destination: Option<String>,
+    ) -> Result<HostResponse, LinuxReadError> {
+        let now = self.clock.now()?;
+        let attempt_id = self.identities.next("frontier-render")?;
+        let receipt_id = self.identities.next("frontier-receipt")?;
+        let outcome = self
+            .frontier_coordinator
+            .render_and_record(
+                preview_id,
+                confirmation_sha256,
+                now.epoch_ms,
+                non_public_acknowledged,
+                attempt_id,
+                receipt_id,
+                destination_recording_requested,
+                user_recorded_destination,
+            )
+            .map_err(LinuxReadError::FrontierCoordinator)?;
+        Ok(HostResponse::FrontierRecommendationRendered {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: request_id.to_owned(),
+            rendered: outcome.rendered,
+            recommendation: outcome.recommendation,
+        })
+    }
+
+    fn cancel_frontier_recommendation(
+        &mut self,
+        request_id: &str,
+        preview_id: &str,
+    ) -> Result<HostResponse, LinuxReadError> {
+        let attempt_id = self.identities.next("frontier-cancel")?;
+        let receipt = self
+            .frontier_coordinator
+            .cancel(preview_id, attempt_id)
+            .map_err(LinuxReadError::FrontierCoordinator)?;
         Ok(HostResponse::HandoffReceipt {
             schema_version: HOST_PROTOCOL_VERSION,
             request_id: request_id.to_owned(),
@@ -1932,6 +2033,9 @@ fn request_id(request: &HostRequest) -> &str {
         | HostRequest::RenderHandoff { request_id, .. }
         | HostRequest::CancelHandoff { request_id, .. }
         | HostRequest::DenyHandoffAction { request_id, .. }
+        | HostRequest::PreviewFrontierRecommendation { request_id, .. }
+        | HostRequest::RenderFrontierRecommendation { request_id, .. }
+        | HostRequest::CancelFrontierRecommendation { request_id, .. }
         | HostRequest::DiscoverModels { request_id, .. }
         | HostRequest::RevalidateModel { request_id, .. }
         | HostRequest::Doctor { request_id, .. }
@@ -2029,7 +2133,8 @@ mod tests {
     use agentmage_kernel_contracts::{
         ActorId, CONTRACT_SCHEMA_VERSION, CheckedContextSummary, CheckedSummaryState,
         ComposedContextPacket, ContextAdmission, ContextItemCandidate, ContextItemKind,
-        ContextPacketId, ContextSensitivity, ContextSummaryId, EvidenceId, HandoffDestinationClass,
+        ContextPacketId, ContextSensitivity, ContextSummaryId, EvidenceId, FrontierAcceptanceState,
+        FrontierClarificationClass, FrontierTierEvidence, HandoffDestinationClass,
         HandoffDisclosureEntry, HandoffDraft, HandoffEntryDisposition, HandoffEntryKind,
         HandoffProhibitedAction, HandoffSensitivity, LocalHandoffOutcome, ModelProfileId, PlanId,
         PlanStepId, PolicyId, RepositorySnapshotId, SessionCheckpoint, SessionCheckpointId,
@@ -2037,6 +2142,10 @@ mod tests {
     };
     use agentmage_kernel_engine::context_management::{
         ContextCompositionBudget, compose_context, finalize_checkpoint,
+    };
+    use agentmage_kernel_engine::frontier_recommendation::{
+        FrontierPacketEvidence, FrontierPacketEvidenceRole, FrontierPacketRequest,
+        decide_frontier_tier,
     };
     use agentmage_kernel_engine::handoff::{
         SessionHandoffInput, SessionHandoffSelection, build_handoff_review, seal_handoff_entry,
@@ -2335,6 +2444,71 @@ mod tests {
             unresolved_questions: vec!["Is native evidence retained?".to_owned()],
             destination: HandoffDestinationClass::ManualCodexInterface,
         }
+    }
+
+    fn frontier_request() -> (FrontierTierEvidence, FrontierPacketRequest) {
+        let tier = FrontierTierEvidence {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            decision_id: "frontier-host-decision".to_owned(),
+            deterministic_available: false,
+            deterministic_succeeded: false,
+            local_model_attempted: true,
+            local_acceptance_check_id: "check.host-local".to_owned(),
+            local_acceptance_state: FrontierAcceptanceState::Failed,
+            validation_failure_count: 0,
+            contradiction_count: 0,
+            verification_rejected: false,
+            budget_exhausted: false,
+            clarification: FrontierClarificationClass::None,
+            evidence_sha256: vec!["a".repeat(64), "b".repeat(64)],
+        };
+        let entries = [
+            (FrontierPacketEvidenceRole::CurrentState, "frontier-current"),
+            (FrontierPacketEvidenceRole::Citation, "frontier-citation"),
+            (FrontierPacketEvidenceRole::Receipt, "frontier-receipt"),
+        ]
+        .into_iter()
+        .map(|(role, id)| {
+            let entry = seal_handoff_entry(HandoffDisclosureEntry {
+                entry_id: id.to_owned(),
+                source_id: format!("source-{id}"),
+                display_source: "src/lib.rs".to_owned(),
+                fragment: "lines:1-3".to_owned(),
+                excerpt: "bounded current evidence".to_owned(),
+                content_sha256: "a".repeat(64),
+                kind: HandoffEntryKind::SourceExcerpt,
+                sensitivity: HandoffSensitivity::Public,
+                disposition: HandoffEntryDisposition::Include,
+                redactions: Vec::new(),
+                hidden: false,
+                related: true,
+                entry_sha256: String::new(),
+            })
+            .expect("sealed frontier entry");
+            FrontierPacketEvidence {
+                role,
+                entry,
+                authority_object: false,
+            }
+        })
+        .collect();
+        let request = FrontierPacketRequest {
+            tier_evidence: tier.clone(),
+            decision: decide_frontier_tier(&tier).expect("frontier tier"),
+            packet_id: "frontier-host-packet".to_owned(),
+            workspace_state_sha256: "a".repeat(64),
+            policy_sha256: "a".repeat(64),
+            redaction_policy_sha256: "a".repeat(64),
+            objective: "Review the measured local failure".to_owned(),
+            acceptance_checks: vec!["Return cited findings".to_owned()],
+            constraints: vec!["No external action".to_owned()],
+            authority_boundary: vec!["Manual user transfer only".to_owned()],
+            evidence: entries,
+            exclusions: vec!["Credentials and unrelated files".to_owned()],
+            unresolved_questions: vec!["Which assumption failed?".to_owned()],
+            required_output_contract: "JSON findings with citations".to_owned(),
+        };
+        (tier, request)
     }
 
     fn canonical_handoff_material() -> (
@@ -2909,6 +3083,64 @@ mod tests {
             HostResponse::Denied { ref code, .. } if code == "host.handoff.invalid"
         ));
         fs::remove_dir_all(state_root).expect("cleanup");
+    }
+
+    #[test]
+    fn authenticated_host_frontier_review_renders_once_and_never_delivers() {
+        let state_root = temp_root("frontier-host");
+        fs::set_permissions(&state_root, fs::Permissions::from_mode(0o700)).expect("private state");
+        let mut workflow = workflow(&state_root, &[10, 19, 19]);
+        let (evidence, request) = frontier_request();
+        let preview = workflow.handle(HostRequest::PreviewFrontierRecommendation {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: "frontier-preview-request".to_owned(),
+            evidence,
+            request: Box::new(request),
+        });
+        let (preview_id, confirmation_sha256) = match preview {
+            HostResponse::FrontierRecommendationPreview { preview, .. } => {
+                assert!(!preview.external_delivery_attempted);
+                assert!(!preview.review.manifest.delivered);
+                (
+                    preview.review.preview_id,
+                    preview.review.confirmation_sha256,
+                )
+            }
+            _ => panic!("expected local frontier preview"),
+        };
+        let rendered = workflow.handle(HostRequest::RenderFrontierRecommendation {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: "frontier-render-request".to_owned(),
+            preview_id: preview_id.clone(),
+            confirmation_sha256: confirmation_sha256.clone(),
+            non_public_acknowledged: false,
+            destination_recording_requested: false,
+            user_recorded_destination: None,
+        });
+        assert!(matches!(
+            rendered,
+            HostResponse::FrontierRecommendationRendered {
+                rendered,
+                recommendation,
+                ..
+            } if !rendered.manifest.delivered
+                && !rendered.receipt.external_delivery_attempted
+                && !recommendation.external_delivery_attempted
+        ));
+        assert!(matches!(
+            workflow.handle(HostRequest::RenderFrontierRecommendation {
+                schema_version: HOST_PROTOCOL_VERSION,
+                request_id: "frontier-replay-request".to_owned(),
+                preview_id,
+                confirmation_sha256,
+                non_public_acknowledged: false,
+                destination_recording_requested: false,
+                user_recorded_destination: None,
+            }),
+            HostResponse::Denied { ref code, .. }
+                if code == "frontier.coordinator.review-unavailable"
+        ));
+        fs::remove_dir_all(state_root).expect("remove frontier fixture");
     }
 
     #[test]
