@@ -389,7 +389,8 @@ def run_ubuntu_contract(revision: str, root: Path = ROOT) -> str:
                 " && cp -a /registry /tmp/cargo/registry"
                 " && cp -a /source/. /tmp/work/"
                 " && cd /tmp/work"
-                " && CARGO_HOME=/tmp/cargo CARGO_TARGET_DIR=/tmp/target"
+                " && CARGO_HOME=/tmp/cargo CARGO_TARGET_DIR=/tmp/target CARGO_BUILD_JOBS=1"
+                " CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=0"
                 " CARGO_NET_OFFLINE=true cargo test --locked --offline"
                 " -p agentmage-kernel-engine --test platform_adapter_conformance"
                 " -- --test-threads=1",
