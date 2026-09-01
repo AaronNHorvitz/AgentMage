@@ -17,6 +17,21 @@
     "onView:agentmage.sessions"
   ],
   "contributes": {
+    "configuration": {
+      "title": "AgentMage feature activation",
+      "properties": {
+        "agentmage.features.nativeParticipant": {
+          "type": "boolean",
+          "default": true,
+          "description": "Register the bounded native @agentmage compatibility participant. Reload the extension host after changing."
+        },
+        "agentmage.features.nativeProviderCompatibility": {
+          "type": "boolean",
+          "default": true,
+          "description": "Register the native Language Model Chat Provider compatibility surface. Reload the extension host after changing."
+        }
+      }
+    },
     "commands": [
       {
         "command": "agentmage.openVerifiedChat",

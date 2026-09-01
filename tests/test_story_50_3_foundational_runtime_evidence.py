@@ -12,6 +12,7 @@ class Story503FoundationalRuntimeEvidenceTests(unittest.TestCase):
         self.assertEqual(validate_report(report), [])
         self.assertEqual(report["status"], "PASS_LOCAL_TEXT_LOG_WORKFLOW_CORE")
         self.assertFalse(report["product_truth"]["complete_foundational_runtime_claim"])
+        self.assertTrue(report["product_truth"]["independent_feature_activation_complete"])
 
     def test_external_later_or_release_overclaim_fails_closed(self) -> None:
         fields = (

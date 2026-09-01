@@ -36,19 +36,64 @@
       "sha256": "9619fa82f894ff13c3914766c28ccb287fc8dc36ba00b6bc57c6f0b6d7409eb3"
     },
     {
-      "byte_length": 8861,
+      "byte_length": 10040,
       "path": "scripts/story_50_3_foundational_runtime_evidence.py",
-      "sha256": "c559466c1f99ac227d7a3fe72bfb1307fe9cb451f259b2ed94736218922c210a"
+      "sha256": "6b1f8f870c811ace3607f3dad336bd5342ddc717ed009bb8c1adcb89a7e5c4b9"
     },
     {
-      "byte_length": 2169,
+      "byte_length": 2261,
       "path": "tests/test_story_50_3_foundational_runtime_evidence.py",
-      "sha256": "60cce345df3c9bc37162a6846bf526b3380c698b79fbb48f119b614e0c58283b"
+      "sha256": "e491259c06d61d70dc25f435fc4994425216028458c5e0a4004663abe52c5854"
     },
     {
-      "byte_length": 12169,
+      "byte_length": 2057,
+      "path": "architecture/runtime-feature-activation.json",
+      "sha256": "fe42c43429d0accf10f55898928c7739ba850fb06f445a2ed850e572a76f1447"
+    },
+    {
+      "byte_length": 6766,
+      "path": "shells/host/src/feature_activation.rs",
+      "sha256": "6d43106f910de87dc95181e5e978c82c39fead87b87ec4d4f4e28a00e413b4e0"
+    },
+    {
+      "byte_length": 18626,
+      "path": "shells/host/src/runtime_tools.rs",
+      "sha256": "b5bb30125f3c132f71c568aaf22def298fa61f7d40065e72f6bc662e6a167153"
+    },
+    {
+      "byte_length": 547,
+      "path": "shells/vscode/src/feature_activation.ts",
+      "sha256": "371f8f676dcf41498f0dcea8f8f3059c500a22509b95deba98e1c255b2af2319"
+    },
+    {
+      "byte_length": 19879,
+      "path": "shells/vscode/src/extension.ts",
+      "sha256": "ed06694e3e2b2b2fb6a857bd604bfb676fc9e52d2d3cd6534bc0c273625dfe8c"
+    },
+    {
+      "byte_length": 3384,
+      "path": "shells/vscode/package.json",
+      "sha256": "62533387ddcdd384963564af25c7675dc2991fd47e1b7c0a068252e67251112e"
+    },
+    {
+      "byte_length": 865,
+      "path": "shells/vscode/test/feature_activation.test.ts",
+      "sha256": "5b9c35c3f617185187cd78601ad64ca23a449d48b7248665007288e86f0eb8c0"
+    },
+    {
+      "byte_length": 4637,
+      "path": "scripts/runtime_feature_activation.py",
+      "sha256": "a8eeeae72a3b5e6b62f9beaba15b9046b420879caf90eb61bf5e3665cce89ad1"
+    },
+    {
+      "byte_length": 1565,
+      "path": "tests/test_runtime_feature_activation.py",
+      "sha256": "568f79499bc068a379afa6b094bd43e6c07d7f6eaea60132b74cff0f1d539844"
+    },
+    {
+      "byte_length": 22659,
       "path": "artifacts/sprints/sprint-50/story-50.3-foundational-runtime/local-results.log",
-      "sha256": "36145f80f5ce338bec644c31fc2a0ae8a1b5e59f37f3970e35558b4ed5f220a0"
+      "sha256": "5f44afb94054e91607d308778e25e5140e28534ec60ac69879dc9bb9de591067"
     }
   ],
   "commands": [
@@ -58,7 +103,11 @@
     "python3 -c import json; from pathlib import Path; from scripts import runtime_hardening_load as c; a=c.ROOT/Path('artifacts/sprints/sprint-50/story-50.2-runtime-load-worker'); p=json.loads((c.ROOT/c.PROFILE).read_text()); r=json.loads((a/'report.json').read_text()); f=c.report_failures(r,p,a); assert not f,f; print('Retained runtime hardening load evidence validated')",
     "python3 scripts/runtime_component_removal.py --verify",
     "python3 scripts/story_23_6_workflow_supervisor_evidence.py",
-    "python3 scripts/artifact_evaluation_text_log_fixtures.py"
+    "python3 scripts/artifact_evaluation_text_log_fixtures.py",
+    "cargo test -p agentmage-host feature_activation --all-features --locked",
+    "cargo test -p agentmage-host story_50_3_disabled_artifact_and_retrieval_features_register_no_tools --all-features --locked",
+    "npm --prefix shells/vscode test",
+    "python3 scripts/runtime_feature_activation.py"
   ],
   "generated_on": "2026-08-31",
   "product_truth": {
@@ -69,6 +118,7 @@
     "false_completion_or_unsafe_retry": false,
     "fault_restart_and_no_replay_campaign_retained": true,
     "fresh_attempt_run_tool_grant_and_receipt_identities": true,
+    "independent_feature_activation_complete": true,
     "independent_review_complete": false,
     "installed_client_campaign_complete": false,
     "macos_validation_complete": false,

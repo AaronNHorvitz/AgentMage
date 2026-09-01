@@ -6254,9 +6254,15 @@ adapters may be exercised as they become available without claiming their later 
     non-claim and invalidation boundary.
   - [ ] **Sub-task 50.3.4.4:** Run applicable `RV-03`, `RV-04`, `RV-08`, `RV-11`, `RV-12`,
     `RV-15` through `RV-18`, and `RV-25` protocols and retain independent review where required.
-  - [ ] **Sub-task 50.3.4.5:** Implement independent feature flags for artifact ingress, each
+  - [x] **Sub-task 50.3.4.5:** Implement independent feature flags for artifact ingress, each
     extractor, OCR, retrieval, workflow supervision, model-assisted repair, participant, provider
-    compatibility, and MCP; disabled features leave no registration or authority.
+    compatibility, and MCP; disabled features leave no registration or authority. Evidence:
+    [`runtime-feature-activation.json`](architecture/runtime-feature-activation.json) closes all 13
+    independent surfaces; the Rust activation boundary fixes unavailable later extractors, OCR,
+    model repair, and MCP off, native registry tests prove disabled artifact ingress/retrieval add no
+    tool definitions, and exact VS Code booleans independently guard participant and provider API
+    registration. Manifest/source mutation checks reject activation, dependency, registration, or
+    disabled-invariant drift.
   - [ ] **Sub-task 50.3.4.6:** Execute migration from zero-hidden-retry behavior, opt-in beta,
     rollback, emergency disablement, support/limitations publication, and post-release local
     diagnostic review without automatic remote telemetry.

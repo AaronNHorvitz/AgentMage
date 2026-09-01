@@ -39,6 +39,10 @@ COMMANDS: Final = (
     ("python3", "scripts/runtime_component_removal.py", "--verify"),
     ("python3", "scripts/story_23_6_workflow_supervisor_evidence.py"),
     ("python3", "scripts/artifact_evaluation_text_log_fixtures.py"),
+    ("cargo", "test", "-p", "agentmage-host", "feature_activation", "--all-features", "--locked"),
+    ("cargo", "test", "-p", "agentmage-host", "story_50_3_disabled_artifact_and_retrieval_features_register_no_tools", "--all-features", "--locked"),
+    ("npm", "--prefix", "shells/vscode", "test"),
+    ("python3", "scripts/runtime_feature_activation.py"),
 )
 SOURCES: Final = (
     "shells/host/src/runtime_read_tests.rs",
@@ -50,6 +54,15 @@ SOURCES: Final = (
     "artifacts/sprints/sprint-50/story-50.2-component-removal/report.json",
     "scripts/story_50_3_foundational_runtime_evidence.py",
     "tests/test_story_50_3_foundational_runtime_evidence.py",
+    "architecture/runtime-feature-activation.json",
+    "shells/host/src/feature_activation.rs",
+    "shells/host/src/runtime_tools.rs",
+    "shells/vscode/src/feature_activation.ts",
+    "shells/vscode/src/extension.ts",
+    "shells/vscode/package.json",
+    "shells/vscode/test/feature_activation.test.ts",
+    "scripts/runtime_feature_activation.py",
+    "tests/test_runtime_feature_activation.py",
 )
 
 
@@ -83,6 +96,7 @@ def expected_report() -> dict[str, Any]:
             "bounded_pressure_campaign_retained": True,
             "fault_restart_and_no_replay_campaign_retained": True,
             "component_removal_campaign_retained": True,
+            "independent_feature_activation_complete": True,
             "false_completion_or_unsafe_retry": False,
             "structured_document_parser_qualification": False,
             "qualified_production_model_evaluation": False,
@@ -119,6 +133,7 @@ def validate_report(value: Any) -> list[str]:
         "bounded_pressure_campaign_retained",
         "fault_restart_and_no_replay_campaign_retained",
         "component_removal_campaign_retained",
+        "independent_feature_activation_complete",
     )
     required_false = (
         "false_completion_or_unsafe_retry",
@@ -157,6 +172,10 @@ def validate() -> list[str]:
         "Story 23.6 local verified-workflow-supervisor evidence validated",
         '"campaign_id": "story-50.2-component-removal-v1"',
         "Retained runtime hardening load evidence validated",
+        "current_activation_is_closed_and_unavailable_features_are_off ... ok",
+        "story_50_3_disabled_artifact_and_retrieval_features_register_no_tools ... ok",
+        "compatibility registrations require independent exact true flags",
+        "Validated 13 independent runtime feature activations",
     ):
         if marker not in raw:
             failures.append(f"raw evidence lacks fixture marker: {marker}")

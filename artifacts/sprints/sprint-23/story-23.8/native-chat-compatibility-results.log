@@ -7,98 +7,100 @@ $ npm --prefix shells/vscode test
 > @agentmage/vscode-shell@0.0.0 build
 > tsc --project tsconfig.json
 
-✔ exact review, packet, manifest, and local receipt round trip (1.041529ms)
-✔ every review and manifest mutation fails before display (0.454522ms)
-✔ receipt cannot claim delivery, wrong action, or unreviewed packet (0.225345ms)
-✔ verified binary bootstrap names this process and remains supervised (1.949394ms)
-✔ wrong process and trailing bytes fail closed and kill the child (0.766968ms)
-✔ malformed, oversized, silent, and throwing launchers remain unavailable (6.427809ms)
-✔ authenticated bridge sends the exact handshake and bounded request frame (5.569102ms)
-✔ unknown host response fields fail closed without exposing parser detail (0.939257ms)
-✔ authenticated bridge validates the closed diagnostic export preview (1.193337ms)
-✔ authenticated doctor transport rejects every prohibited source field (7.771167ms)
-✔ authenticated bridge verifies model snapshot digests before display (0.882501ms)
-✔ tampered authenticated model snapshot fails closed (0.526703ms)
-✔ authenticated bridge transports one exact local handoff review (0.923501ms)
-✔ delivery claim in authenticated handoff fails closed (0.61669ms)
-✔ authenticated bridge transports one exact host-framed runtime request (0.950928ms)
-✔ authenticated bridge validates runtime events and protected approval (1.018501ms)
-✔ hidden runtime event authority fails closed at authenticated transport (0.654227ms)
-✔ out-of-range launch identity fails before socket access (0.215298ms)
-✔ shell scaffold exposes only declared interface authority (0.682951ms)
-✔ provider registration replacement and deactivation are exact (0.108102ms)
-✔ zero-profile discovery is valid and yields no native picker entry (1.161903ms)
-✔ acquisition review separates preflight and license without effects (8.829332ms)
-✔ Muse, Gemma, and additional admitted families map without prerequisites (0.725994ms)
-✔ every unavailable lifecycle remains visible only in management output (1.561248ms)
-✔ identity mutation and digest tampering fail before picker display (1.088838ms)
-✔ self-consistent blocked entry cannot claim selectable disposition (0.148152ms)
-✔ provider preserves every supported role text part and message boundary (1.129743ms)
-✔ tools options unknown parts invalid roles and oversize route visibly to Verified Chat (0.170078ms)
-✔ route and usage disclose exact available facts and unavailable token accounting (0.183468ms)
-✔ 999 and 1001 character prompts plus supplied references are completely accounted (7.967327ms)
-✔ stale reference remains visible and stops before a model turn (0.542396ms)
-✔ unsupported supplied reference stops instead of weakening context (0.282417ms)
-✔ cancellation and duplicate identities stop without a model turn (0.175117ms)
-✔ stale model revalidation immediately before submission starts no turn (0.220658ms)
-✔ provider compatibility reports every non-text part instead of filtering (0.155037ms)
-✔ label-only proxy and MCP-without-resource fixtures cannot claim source bytes (0.065979ms)
-✔ closed read grammar rejects ambient and traversal paths (1.75463ms)
-✔ model management reports an exact empty snapshot without inventing a profile (1.278913ms)
-✔ exact model review refuses an absent profile without substitution (0.403965ms)
-✔ selected model is revalidated exactly and refusal names no fallback (0.36143ms)
-✔ doctor renders every typed state without workspace approval (0.642241ms)
-✔ doctor rejects prohibited-source fields without canary disclosure (0.714027ms)
-✔ diagnostic export requires destination preview and one approval (0.509739ms)
-✔ cancelled and malformed diagnostic previews never approve (0.367137ms)
-✔ reviewed handoff renders the exact local packet without delivery (1.314451ms)
-✔ handoff cancellation and missing acknowledgement never render (0.532835ms)
-✔ handoff byte mutation fails closed before unreviewed display (0.395059ms)
-✔ one approved read renders bounded content citation and receipt (0.630797ms)
-✔ unsafe display links never become clickable native Chat output (0.602247ms)
-✔ workspace and operation denials start no approved worker (0.233113ms)
-✔ cancellation after preview cancels the exact pending operation (0.190471ms)
-✔ mutated preview identity is denied before approval (0.24492ms)
-✔ mismatched terminal request identity is never rendered (0.11616ms)
-✔ deactivation cancels an unconsumed preview and closes the controller (0.18714ms)
-✔ native Chat renders one complete shared-runtime stream and outcome (10.108508ms)
-✔ native Chat accepts an exact host-framed controlled-write run (0.550561ms)
-✔ Verified Agent binds the exact approved Plan before controlled execution (0.655543ms)
-✔ Verified Agent never starts when approved Plan binding is unavailable (0.18567ms)
-✔ native Chat rejects a substituted profile workspace or prompt before start (0.125201ms)
-✔ native Chat rejects every selected session identity mutation before start (0.340257ms)
-✔ native Chat relays one exact protected denial before terminal output (0.417374ms)
-✔ native Chat cancellation uses the exact accepted cursor and starts no approval (0.305799ms)
-✔ deactivation cancels and releases an active native Chat run before IPC closes (0.332271ms)
-✔ closed runtime request and host response reject unknown fields (1.331969ms)
-✔ ordered terminal stream renders only digest-checked canonical output (1.676499ms)
-✔ stream substitution reordering and payload mutation fail closed (1.938615ms)
-✔ successful answer evidence is mandatory, closed, and output bound (0.613451ms)
-✔ artifact references remain complete and event-bound across runtime steps (1.031316ms)
-✔ approval is bound to the exact last permission event and grant (0.633257ms)
-✔ one disposable channel admits each exact command once in order (0.83838ms)
-✔ replay spoof reorder extra fields unknown modes and oversized text fail closed (0.290247ms)
-✔ invalid input does not consume the next sequence (0.092132ms)
-✔ active run gate admits only cancellation and closes the cancellation race (0.125175ms)
-✔ durable events project in exact order to accessible content-free cards (2.428307ms)
-✔ terminal, tool, verification, artifact, and lifecycle cards preserve closed truth (0.974051ms)
-✔ wrong session replay reorder duplication drift unknown fields and false terminal fail closed (0.433417ms)
-✔ replay pages apply atomically when a later event is invalid (0.240706ms)
-✔ durable approved Plan binding is reconstructed without execution authority (0.40511ms)
-✔ bounded delivery preserves order and rejects slow-consumer pressure (1.314326ms)
-✔ bounded delivery rejects oversized messages, sender refusal, and post-disposal use (0.37565ms)
-✔ reload snapshot restores only closed session and artifact projections (0.604247ms)
-✔ 50,000-character paste reaches the host in exact ordered chunks (4.836588ms)
-✔ selected binary attachment reaches the host without text conversion (0.36503ms)
-✔ unknown Engineering response fields fail closed (0.201673ms)
-ℹ tests 84
+✔ compatibility registrations require independent exact true flags (0.751753ms)
+✔ missing malformed or truthy values fail disabled (0.165418ms)
+✔ exact review, packet, manifest, and local receipt round trip (1.044929ms)
+✔ every review and manifest mutation fails before display (0.429146ms)
+✔ receipt cannot claim delivery, wrong action, or unreviewed packet (0.203726ms)
+✔ verified binary bootstrap names this process and remains supervised (1.193689ms)
+✔ wrong process and trailing bytes fail closed and kill the child (0.454925ms)
+✔ malformed, oversized, silent, and throwing launchers remain unavailable (5.841204ms)
+✔ authenticated bridge sends the exact handshake and bounded request frame (5.601597ms)
+✔ unknown host response fields fail closed without exposing parser detail (0.93284ms)
+✔ authenticated bridge validates the closed diagnostic export preview (0.891564ms)
+✔ authenticated doctor transport rejects every prohibited source field (5.335439ms)
+✔ authenticated bridge verifies model snapshot digests before display (1.023624ms)
+✔ tampered authenticated model snapshot fails closed (0.527246ms)
+✔ authenticated bridge transports one exact local handoff review (0.863868ms)
+✔ delivery claim in authenticated handoff fails closed (0.560768ms)
+✔ authenticated bridge transports one exact host-framed runtime request (0.884213ms)
+✔ authenticated bridge validates runtime events and protected approval (0.941581ms)
+✔ hidden runtime event authority fails closed at authenticated transport (0.599984ms)
+✔ out-of-range launch identity fails before socket access (0.194951ms)
+✔ shell scaffold exposes only declared interface authority (0.707084ms)
+✔ provider registration replacement and deactivation are exact (0.126634ms)
+✔ zero-profile discovery is valid and yields no native picker entry (1.826393ms)
+✔ acquisition review separates preflight and license without effects (12.350793ms)
+✔ Muse, Gemma, and additional admitted families map without prerequisites (3.828705ms)
+✔ every unavailable lifecycle remains visible only in management output (1.080258ms)
+✔ identity mutation and digest tampering fail before picker display (1.014985ms)
+✔ self-consistent blocked entry cannot claim selectable disposition (0.142016ms)
+✔ provider preserves every supported role text part and message boundary (1.097563ms)
+✔ tools options unknown parts invalid roles and oversize route visibly to Verified Chat (0.161045ms)
+✔ route and usage disclose exact available facts and unavailable token accounting (0.179551ms)
+✔ 999 and 1001 character prompts plus supplied references are completely accounted (7.739998ms)
+✔ stale reference remains visible and stops before a model turn (3.71274ms)
+✔ unsupported supplied reference stops instead of weakening context (0.271584ms)
+✔ cancellation and duplicate identities stop without a model turn (0.169178ms)
+✔ stale model revalidation immediately before submission starts no turn (0.205232ms)
+✔ provider compatibility reports every non-text part instead of filtering (0.113835ms)
+✔ label-only proxy and MCP-without-resource fixtures cannot claim source bytes (0.056608ms)
+✔ closed read grammar rejects ambient and traversal paths (1.617115ms)
+✔ model management reports an exact empty snapshot without inventing a profile (1.186928ms)
+✔ exact model review refuses an absent profile without substitution (0.245862ms)
+✔ selected model is revalidated exactly and refusal names no fallback (0.282086ms)
+✔ doctor renders every typed state without workspace approval (0.478425ms)
+✔ doctor rejects prohibited-source fields without canary disclosure (0.34693ms)
+✔ diagnostic export requires destination preview and one approval (0.2714ms)
+✔ cancelled and malformed diagnostic previews never approve (0.199976ms)
+✔ reviewed handoff renders the exact local packet without delivery (0.585653ms)
+✔ handoff cancellation and missing acknowledgement never render (0.286392ms)
+✔ handoff byte mutation fails closed before unreviewed display (0.205104ms)
+✔ one approved read renders bounded content citation and receipt (0.344282ms)
+✔ unsafe display links never become clickable native Chat output (0.30719ms)
+✔ workspace and operation denials start no approved worker (0.115371ms)
+✔ cancellation after preview cancels the exact pending operation (0.088723ms)
+✔ mutated preview identity is denied before approval (0.068345ms)
+✔ mismatched terminal request identity is never rendered (0.078185ms)
+✔ deactivation cancels an unconsumed preview and closes the controller (0.169048ms)
+✔ native Chat renders one complete shared-runtime stream and outcome (9.772956ms)
+✔ native Chat accepts an exact host-framed controlled-write run (0.504651ms)
+✔ Verified Agent binds the exact approved Plan before controlled execution (0.642677ms)
+✔ Verified Agent never starts when approved Plan binding is unavailable (0.578257ms)
+✔ native Chat rejects a substituted profile workspace or prompt before start (0.122777ms)
+✔ native Chat rejects every selected session identity mutation before start (0.316461ms)
+✔ native Chat relays one exact protected denial before terminal output (0.417492ms)
+✔ native Chat cancellation uses the exact accepted cursor and starts no approval (0.309163ms)
+✔ deactivation cancels and releases an active native Chat run before IPC closes (0.290866ms)
+✔ closed runtime request and host response reject unknown fields (0.994463ms)
+✔ ordered terminal stream renders only digest-checked canonical output (1.583757ms)
+✔ stream substitution reordering and payload mutation fail closed (1.092263ms)
+✔ successful answer evidence is mandatory, closed, and output bound (0.288765ms)
+✔ artifact references remain complete and event-bound across runtime steps (0.556126ms)
+✔ approval is bound to the exact last permission event and grant (0.622249ms)
+✔ one disposable channel admits each exact command once in order (0.814029ms)
+✔ replay spoof reorder extra fields unknown modes and oversized text fail closed (0.290489ms)
+✔ invalid input does not consume the next sequence (0.08977ms)
+✔ active run gate admits only cancellation and closes the cancellation race (0.125937ms)
+✔ durable events project in exact order to accessible content-free cards (1.387768ms)
+✔ terminal, tool, verification, artifact, and lifecycle cards preserve closed truth (0.533647ms)
+✔ wrong session replay reorder duplication drift unknown fields and false terminal fail closed (0.223301ms)
+✔ replay pages apply atomically when a later event is invalid (0.123084ms)
+✔ durable approved Plan binding is reconstructed without execution authority (0.195203ms)
+✔ bounded delivery preserves order and rejects slow-consumer pressure (0.853956ms)
+✔ bounded delivery rejects oversized messages, sender refusal, and post-disposal use (0.195693ms)
+✔ reload snapshot restores only closed session and artifact projections (0.345088ms)
+✔ 50,000-character paste reaches the host in exact ordered chunks (3.991501ms)
+✔ selected binary attachment reaches the host without text conversion (0.238034ms)
+✔ unknown Engineering response fields fail closed (0.174195ms)
+ℹ tests 86
 ℹ suites 0
-ℹ pass 84
+ℹ pass 86
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 92.767585
+ℹ duration_ms 87.140859
 
 COMMAND_0_EXIT=0
 
@@ -121,14 +123,14 @@ All matched files use Prettier code style!
 COMMAND_2_EXIT=0
 
 $ cargo test -p agentmage-host runtime_parity_tests --all-features --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.06s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
      Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
 
 running 2 tests
 test runtime_parity_tests::story_50_2_narrow_workflow_authority_rejects_every_broadening_without_execution ... ok
 test runtime_parity_tests::story_50_2_read_only_and_coding_packets_are_equal_across_all_three_callers ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 164 filtered out; finished in 0.28s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 169 filtered out; finished in 0.29s
 
      Running unittests src/bin/agent.rs (target/debug/deps/agent-f0593d546fb7a4f5)
 
@@ -157,18 +159,18 @@ $ cargo test -p agentmage-host protocol::tests --all-features --locked
 
 running 11 tests
 test protocol::tests::denial_response_has_no_unbounded_error_detail ... ok
-test protocol::tests::exact_preview_request_round_trips ... ok
 test protocol::tests::exact_doctor_request_round_trips_without_probe_fields ... ok
-test protocol::tests::malformed_values_and_digest_are_rejected ... ok
 test protocol::tests::generic_tool_request_preserves_exact_argument_bytes_and_projection_kind ... ok
+test protocol::tests::malformed_values_and_digest_are_rejected ... ok
+test protocol::tests::exact_preview_request_round_trips ... ok
 test protocol::tests::diagnostic_export_protocol_is_closed_and_confirmation_bound ... ok
-test protocol::tests::handoff_requests_are_local_closed_and_confirmation_bound ... ok
-test protocol::tests::unknown_version_field_and_oversize_fail_closed ... ok
 test protocol::tests::model_discovery_and_revalidation_requests_are_closed ... ok
+test protocol::tests::unknown_version_field_and_oversize_fail_closed ... ok
+test protocol::tests::handoff_requests_are_local_closed_and_confirmation_bound ... ok
 test protocol::tests::engineering_rpc_is_closed_and_chunk_remains_inside_frame ... ok
 test protocol::tests::native_chat_runtime_requests_are_closed_exact_and_host_framed ... ok
 
-test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 155 filtered out; finished in 0.26s
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 160 filtered out; finished in 0.26s
 
      Running unittests src/bin/agent.rs (target/debug/deps/agent-f0593d546fb7a4f5)
 
@@ -193,11 +195,11 @@ COMMAND_4_EXIT=0
 
 $ python3 -m pytest -q tests/test_vscode_api_surfaces.py tests/test_architecture_decision.py
 .............................                                            [100%]
-29 passed in 0.14s
+29 passed in 0.15s
 
 COMMAND_5_EXIT=0
 
 $ python3 scripts/validate_docs.py
-Validated 406 Markdown file(s) and all policy invariants.
+Validated 408 Markdown file(s) and all policy invariants.
 
 COMMAND_6_EXIT=0

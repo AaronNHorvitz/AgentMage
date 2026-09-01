@@ -44,6 +44,12 @@ The core decision reuses current raw evidence instead of copying or summarizing 
 These results are linked by the Story 50.3 evidence generator and are independently recomputed by
 `tests/test_story_50_3_foundational_runtime_evidence.py`.
 
+Independent activation is recorded by
+[`runtime-feature-activation.json`](../../architecture/runtime-feature-activation.json). Disabled
+artifact ingress and retrieval register no native tool definitions, native participant and provider
+compatibility use separate exact-boolean VS Code registration guards, and unavailable structured
+extractors, OCR, model repair, and MCP are fixed off with no registration owner.
+
 ## Explicit non-claims
 
 This decision leaves all of the following open:

@@ -93,6 +93,37 @@ impl Tool for RegisteredArtifactTool {
 pub fn register_read_only_runtime_tools(
     registry: &mut ToolRegistry,
 ) -> Result<(), NativeToolCatalogError> {
+    register_read_only_runtime_tools_with_features(registry, NativeRuntimeFeatures::all_enabled())
+}
+
+/// Explicit registration flags for independently removable native runtime capabilities.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct NativeRuntimeFeatures {
+    /// Register prepared-source artifact ingress and range/section/log tools.
+    pub artifact_ingress: bool,
+    /// Register lexical prepared-source retrieval (`artifact.search`).
+    pub retrieval: bool,
+}
+
+impl NativeRuntimeFeatures {
+    /// Current complete native read catalog used by the default product composition.
+    #[must_use]
+    pub const fn all_enabled() -> Self {
+        Self {
+            artifact_ingress: true,
+            retrieval: true,
+        }
+    }
+}
+
+/// Registers only explicitly enabled tools; disabled capabilities contribute no definition.
+pub fn register_read_only_runtime_tools_with_features(
+    registry: &mut ToolRegistry,
+    features: NativeRuntimeFeatures,
+) -> Result<(), NativeToolCatalogError> {
+    if features.retrieval && !features.artifact_ingress {
+        return Err(NativeToolCatalogError::RegistrationDenied);
+    }
     for kind in ReadOnlyToolKind::ALL {
         registry
             .register_tool(Box::new(RegisteredReadOnlyTool {
@@ -101,13 +132,18 @@ pub fn register_read_only_runtime_tools(
             }))
             .map_err(|_| NativeToolCatalogError::RegistrationDenied)?;
     }
-    for kind in ArtifactToolKind::ALL {
-        registry
-            .register_tool(Box::new(RegisteredArtifactTool {
-                definition: artifact_tool_definition(kind),
-                kind,
-            }))
-            .map_err(|_| NativeToolCatalogError::RegistrationDenied)?;
+    if features.artifact_ingress {
+        for kind in ArtifactToolKind::ALL {
+            if kind == ArtifactToolKind::Search && !features.retrieval {
+                continue;
+            }
+            registry
+                .register_tool(Box::new(RegisteredArtifactTool {
+                    definition: artifact_tool_definition(kind),
+                    kind,
+                }))
+                .map_err(|_| NativeToolCatalogError::RegistrationDenied)?;
+        }
     }
     registry
         .register_tool(Box::new(RegisteredGitInspectionTool {
@@ -166,8 +202,8 @@ mod tests {
     use sha2::{Digest, Sha256};
 
     use super::{
-        native_tool_composition_registry, read_only_runtime_registry,
-        register_read_only_runtime_tools,
+        NativeRuntimeFeatures, native_tool_composition_registry, read_only_runtime_registry,
+        register_read_only_runtime_tools, register_read_only_runtime_tools_with_features,
     };
 
     #[test]
@@ -370,6 +406,60 @@ mod tests {
         let before = runtime_tool_references(&registry).expect("before");
         assert!(register_read_only_runtime_tools(&mut registry).is_err());
         assert_eq!(runtime_tool_references(&registry).expect("after"), before);
+    }
+
+    #[test]
+    fn story_50_3_disabled_artifact_and_retrieval_features_register_no_tools() {
+        let mut registry = agentmage_kernel_engine::tooling::ToolRegistry::new();
+        register_read_only_runtime_tools_with_features(
+            &mut registry,
+            NativeRuntimeFeatures {
+                artifact_ingress: false,
+                retrieval: false,
+            },
+        )
+        .expect("baseline native reads remain available");
+        assert_eq!(registry.list_tools().len(), ReadOnlyToolKind::ALL.len() + 1);
+        assert!(ArtifactToolKind::ALL.into_iter().all(|kind| {
+            registry
+                .get_tool(&ToolId::from_raw(kind.id()), ARTIFACT_TOOL_VERSION)
+                .is_none()
+        }));
+
+        let mut without_retrieval = agentmage_kernel_engine::tooling::ToolRegistry::new();
+        register_read_only_runtime_tools_with_features(
+            &mut without_retrieval,
+            NativeRuntimeFeatures {
+                artifact_ingress: true,
+                retrieval: false,
+            },
+        )
+        .expect("artifact tools without retrieval compose");
+        assert!(
+            without_retrieval
+                .get_tool(
+                    &ToolId::from_raw(ArtifactToolKind::Search.id()),
+                    ARTIFACT_TOOL_VERSION
+                )
+                .is_none()
+        );
+        assert_eq!(
+            without_retrieval.list_tools().len(),
+            ReadOnlyToolKind::ALL.len() + ArtifactToolKind::ALL.len()
+        );
+
+        let mut invalid = agentmage_kernel_engine::tooling::ToolRegistry::new();
+        assert!(
+            register_read_only_runtime_tools_with_features(
+                &mut invalid,
+                NativeRuntimeFeatures {
+                    artifact_ingress: false,
+                    retrieval: true,
+                }
+            )
+            .is_err()
+        );
+        assert!(invalid.list_tools().is_empty());
     }
 
     fn sha256(bytes: &[u8]) -> String {

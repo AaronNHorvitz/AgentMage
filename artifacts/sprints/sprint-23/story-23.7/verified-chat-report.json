@@ -1,9 +1,9 @@
 {
   "artifacts": [
     {
-      "byte_length": 2758,
+      "byte_length": 3384,
       "path": "shells/vscode/package.json",
-      "sha256": "08c4ac252fc7321f049a821a5a2da64695cc14792270b33c04f06a332179bb68"
+      "sha256": "62533387ddcdd384963564af25c7675dc2991fd47e1b7c0a068252e67251112e"
     },
     {
       "byte_length": 45282,
@@ -86,9 +86,9 @@
       "sha256": "cdc150c2ea496da98b20cb65d813267cd8c2de5c93cfb0c0c7f3a3445aec4af6"
     },
     {
-      "byte_length": 11221,
+      "byte_length": 11363,
       "path": "artifacts/sprints/sprint-23/story-23.7/verified-chat-results.log",
-      "sha256": "bf9837e1c37609db5080953b6a31503be5646407cd410b0f1d29292d5e70ae64"
+      "sha256": "304e32a09a693a0ec5ea8411730042b17c644776954cc1a5450ab266137cb0e2"
     }
   ],
   "commands": [

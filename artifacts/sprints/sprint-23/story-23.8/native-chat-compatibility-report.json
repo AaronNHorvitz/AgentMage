@@ -1,14 +1,14 @@
 {
   "artifacts": [
     {
-      "byte_length": 2758,
+      "byte_length": 3384,
       "path": "shells/vscode/package.json",
-      "sha256": "08c4ac252fc7321f049a821a5a2da64695cc14792270b33c04f06a332179bb68"
+      "sha256": "62533387ddcdd384963564af25c7675dc2991fd47e1b7c0a068252e67251112e"
     },
     {
-      "byte_length": 18995,
+      "byte_length": 19879,
       "path": "shells/vscode/src/extension.ts",
-      "sha256": "c7cba1669e82f3c45256b688786371b92d63c60eb3c256a3b5aebcfcfb3839d1"
+      "sha256": "ed06694e3e2b2b2fb6a857bd604bfb676fc9e52d2d3cd6534bc0c273625dfe8c"
     },
     {
       "byte_length": 7688,
@@ -76,9 +76,9 @@
       "sha256": "667177246e1f44edc1f79c1132a45a3718dc32397510a35db3bb8584dfe60baf"
     },
     {
-      "byte_length": 11130,
+      "byte_length": 11282,
       "path": "artifacts/sprints/sprint-23/story-23.8/native-chat-compatibility-results.log",
-      "sha256": "b57000195c117df012a9e7bb5e7a1a9d557a84544a56b1c5c2cefef2788e433a"
+      "sha256": "890f902307460a9f9b0cae131cf61698dc5dc57fd347bd53f74c78827563a0b1"
     }
   ],
   "commands": [

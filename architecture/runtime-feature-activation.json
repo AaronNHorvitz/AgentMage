@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "record_type": "agentmage-runtime-feature-activation",
+  "features": [
+    {"id": "artifact_ingress", "available": true, "default_enabled": true, "owner": "rust_host", "registration": "native_tool_registry"},
+    {"id": "plain_text_extractor", "available": true, "default_enabled": true, "owner": "rust_host", "registration": "prepared_source_service"},
+    {"id": "log_extractor", "available": true, "default_enabled": true, "owner": "rust_host", "registration": "prepared_source_service"},
+    {"id": "docx_extractor", "available": false, "default_enabled": false, "owner": "later_story_58_2", "registration": "none"},
+    {"id": "pdf_extractor", "available": false, "default_enabled": false, "owner": "later_story_60_2", "registration": "none"},
+    {"id": "xlsx_extractor", "available": false, "default_enabled": false, "owner": "later_story_62_2", "registration": "none"},
+    {"id": "ocr", "available": false, "default_enabled": false, "owner": "later_story_60_2", "registration": "none"},
+    {"id": "retrieval", "available": true, "default_enabled": true, "owner": "rust_host", "registration": "artifact_search_tool"},
+    {"id": "workflow_supervision", "available": true, "default_enabled": true, "owner": "rust_host", "registration": "explicit_factory_only"},
+    {"id": "model_assisted_repair", "available": false, "default_enabled": false, "owner": "later_model_qualification", "registration": "none"},
+    {"id": "native_participant", "available": true, "default_enabled": true, "owner": "vscode_extension", "registration": "vscode_configuration_guard"},
+    {"id": "native_provider_compatibility", "available": true, "default_enabled": true, "owner": "vscode_extension", "registration": "vscode_configuration_guard"},
+    {"id": "mcp", "available": false, "default_enabled": false, "owner": "later_story_81_2", "registration": "none"}
+  ],
+  "disabled_invariants": [
+    "no_tool_definition",
+    "no_client_registration",
+    "no_process_or_socket",
+    "no_cache_or_schema_authority",
+    "no_support_claim"
+  ]
+}
