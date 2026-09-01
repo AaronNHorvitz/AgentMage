@@ -53,7 +53,7 @@
     {
       "bytes": 4142,
       "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
-      "sha256": "c898549573842c79fcffb964c97de49fb30bf28ad116f18f4caed70da10e89e7"
+      "sha256": "00b51ef71d51bf9402dd896656af1a45c592c400678e7e211ed1b68e8505f3ad"
     },
     {
       "bytes": 6520,
@@ -73,12 +73,12 @@
     {
       "bytes": 446026,
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "8d541667bc74ce097fc2b844a7e87a046d3af5054eeb094d0a512c8f9fe03699"
+      "sha256": "f7c5eac63c68e75cdb7fbd850d8e306de9bf653098c739f27e921fe8053f4b3d"
     },
     {
       "bytes": 465835,
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "9f02ab5fd0ce62cc83349035372069a0c69086f50ca31f53cce7547e88c3e2c8"
+      "sha256": "a291e6b1896c34bd6bea672c25ae2a1270115517d36abadb22110d258e3e6216"
     },
     {
       "bytes": 23467,
@@ -260,7 +260,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "f05c32540ab6a16da2705947a4f3ec96960a7c7a",
+  "source_revision": "4a760d4dba9c86f3e55c63e26f54ce3bb72fdfc1",
   "status": "pass-non-macos-security-mapping",
   "story_id": "7.1",
   "summary": {
