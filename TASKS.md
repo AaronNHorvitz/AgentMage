@@ -6967,13 +6967,14 @@ complete with current evidence. Otherwise it is BLOCKED.
 
 **Local evidence note:** The retained report at `artifacts/sprints/sprint-58/local-evidence-report.json`
 binds 11 passing commands, 6 focused commands with zero blocking skips, and the 73-case acceptance
-corpus to source revision `ea776074224ff36bacb18c5e35c90c7ae93b3dcf` (report SHA-256
-`8e643dded3ed6ef7ea1c545d8ba97e9dc3835b1bdc0c440ca91ed4bf4c20fe2e`). Exact dependency
+corpus to source revision `f067e42c606df63e569f018a2be356bd6b5e58f2` (report SHA-256
+`210278d09f60596c63608a85f38ca33fad7e8e86e87112b1a4c2b3a4d7d86bb2`). Exact dependency
 admission, bounded package inspection, raw duplicate-name detection, deterministic sidecar and cache
 identity, part/range provenance, structural fidelity warnings, structured Markdown-to-DOCX
 generation, reopened inspection, runtime schemas, the shared structured-source extractor, the DOCX
 source adapter, runtime-owned prepared projections, common native artifact-tool dispatch, and
-zero-effect checks are complete. Story 58.1 and Sprint 58 remain **BLOCKED** by Sprint 57, the
+digest-sealed restart/retention with existing content-addressed payload references, and zero-effect
+checks are complete. Story 58.1 and Sprint 58 remain **BLOCKED** by Sprint 57, the
 unadmitted Word renderer, absent product coordinator and controlled writer, incomplete prepared-source
 context/client integration and hostile lifecycle/client-parity campaigns, missing
 accessibility and installed cross-platform evidence, trusted-package execution, independent

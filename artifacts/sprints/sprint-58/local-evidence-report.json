@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "record_type": "sprint_58_local_evidence",
-  "source_revision": "ea776074224ff36bacb18c5e35c90c7ae93b3dcf",
+  "source_revision": "f067e42c606df63e569f018a2be356bd6b5e58f2",
   "source_sha256": {
     "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
     "Cargo.lock": "60eca43376919ca47740e494d7e44a2812aa77e06a0c188013e285a7dea1a19e",
@@ -13,7 +13,7 @@
     "capabilities/knowledge/src/word_generation.rs": "9e17a4c5b86e4e470e7f2de4cfc6e5f9c8e9defd437d0df5ca3a3a5f40d5d32b",
     "capabilities/knowledge/src/lib.rs": "4afeb6a99f04d026aed5c26241acb8402a5917e9c2e227bb7ff7a22f09703384",
     "shells/host/Cargo.toml": "bd0cbb419186130d3d3219ef015ae647b6e8cad1b8660dfc27330d81aa3ab68c",
-    "shells/host/src/word_source_artifact.rs": "cc01d605cd92a4cf860b36788d82da18a86b7be54aead4a15efb3a934406e072",
+    "shells/host/src/word_source_artifact.rs": "3fdc4af613ab249a3ca119716656281d2b566aa03b4c008e57bac775be849fee",
     "shells/host/src/lib.rs": "185739c3655af4fab4a7d28978a993f7caaee627a3167baecc1a0cfa4bc74200",
     "schemas/runtime/word-inspection-report.schema.json": "59bbdeec1a1af9ec3c9e7b5737d6bc7b767bd4f55ec972338f72ef79d6d33c99",
     "schemas/runtime/examples/word-inspection-report.valid.json": "164b890d2868d98305d99ac7891d1a0b577babaf62b72b70cb3e491553870958",
@@ -27,12 +27,12 @@
     "docs/verification/sprint-58-word-dependency-manifest.json": "c397c8980829fe882b6024c5ab64fde6f22ea80bf5d564ba9f6b91b545975ace",
     "scripts/word_artifact_contract.py": "63e8217eb106753205130d7cab89caf141c2ccf4e2d9c36ca2e33d6317e1e0ac",
     "tests/test_word_artifact_contract.py": "e4427e3b7de33f54fbeb218bd62e972a6186ca063b558823910ab7ee5d8be5d5",
-    "docs/architecture/word-ooxml-extraction-and-generation.md": "dbbaf91249606cb5838e208d544325a34186562258827c3aee17f868b3278025",
-    "docs/architecture/foundational-artifact-and-workflow-runtime.md": "041ec27c2998eafdacca4de4e72759c0a0cd763f084d58aaa768445629b3ed51",
+    "docs/architecture/word-ooxml-extraction-and-generation.md": "bd2b477356cd7dc2ce03364f9fd4e7369f054239298f997a7825a961435d250e",
+    "docs/architecture/foundational-artifact-and-workflow-runtime.md": "f6aaea2938550614282c3abf57b88b6005364387a8a32bd4f6ac6b62785a0da9",
     "docs/guides/word-artifact-local-workflows.md": "6f30ec012f774278e1eb6a7745ad212b8138dfca54295ccd55009d89cbf43aa0",
-    "docs/verification/sprint-58-local-results.md": "ec79f48b12137fd1f8aaf05e71c0c414fc5e4875e0a4dffa5ee5994a8fb4cbbe",
-    "scripts/sprint_58_evidence.py": "3a9fbc7afdebc17d694b9d47f22894728507408f57d4ac98d01fc2c58e91f53f",
-    "tests/test_sprint_58_evidence.py": "17293d3732661433ceea359e2cfb223eb95d20daad29c777676bf47bc409c918"
+    "docs/verification/sprint-58-local-results.md": "9cf6c1169efde07a9abdf92b97519b618537232b4666ec17432abda9201a0882",
+    "scripts/sprint_58_evidence.py": "8a2a2cf136119d4eb1741ebb85318bb64270ad1127c502ec2ef1befc29c20552",
+    "tests/test_sprint_58_evidence.py": "8a5bd1d3719c599c1b9fccbc9aeaf972ffb479f518be8b834bbd12add7b275e6"
   },
   "environment": {
     "system": "Linux",
@@ -57,7 +57,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "aad55fb1d2f05abe8ea2f0ac10e180995f22dac3e7b0be67bb8b44b95288a7bc",
+      "output_sha256": "6767fa85ef14517ae50d666b57aa6e1b92260c71dce9a097143f6fb9b21a7254",
       "blocking_skip_count": 0
     },
     {
@@ -87,7 +87,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "ac826a495d58c3fceb39174c64fd1db676f51e3fcca9c1146fe83063449fa843",
+      "output_sha256": "d601f07bffd6e4abc20499bfe23195fc2f1e952746a58e79c100b8a8fa6991e2",
       "blocking_skip_count": 0
     },
     {
@@ -102,7 +102,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "9728a0f56915289439dff930795148ec7ab24e404ba98962165074a46216d36a",
+      "output_sha256": "9fdcab14e889ab63c0e1c01c1af8490fe106169c83d44352720ad69feb8482a1",
       "blocking_skip_count": 0
     },
     {
@@ -113,7 +113,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "16781761a79119f23f749312089ab4de418258c0f7e358b7ef45b616a154cbcd",
+      "output_sha256": "dede408f614f26617c5ff8fa053653a43929cf7bb496d0b8789e772ff570c2ff",
       "blocking_skip_count": 0
     },
     {
@@ -157,7 +157,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "cc0eac5ae6d26bfe99a874c73c302ba7d2dadb50fae43f68a76709fe4d8611f8",
+      "output_sha256": "b983ea68828061d19d151c5d8a009011398b8051475ba0cfc72d495a6a9bec8f",
       "blocking_skip_count": null
     },
     {
@@ -228,7 +228,7 @@
     "docx_source_adapter": true,
     "common_native_artifact_dispatch": true,
     "prepared_source_cache_invalidation_delete_reattach": true,
-    "prepared_source_restart_retention": false,
+    "prepared_source_restart_retention": true,
     "multi_profile_context_accounting": false,
     "network_access_capability": false,
     "execution_capability": false,
@@ -254,7 +254,7 @@
     "shared_structured_extractor": true,
     "docx_source_adapter": true,
     "common_native_artifact_dispatch": true,
-    "prepared_source_restart_retention": false,
+    "prepared_source_restart_retention": true,
     "multi_profile_context_accounting": false,
     "product_coordinator": false,
     "controlled_writer_integration": false,
@@ -306,10 +306,6 @@
     {
       "code": "MANUAL-FUZZING-DEFERRED",
       "owner": "SR-TST-004"
-    },
-    {
-      "code": "DOCX-PREPARED-SOURCE-RESTART-RETENTION-ABSENT",
-      "owner": "58.2.2.2"
     },
     {
       "code": "DOCX-CONTEXT-ACCOUNTING-CLIENT-PARITY-ABSENT",
