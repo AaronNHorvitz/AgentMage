@@ -28,7 +28,7 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "445b859380e16d18aa57d979f331424b61d83857de32041a5689930f67608b9f"
+          "sha256": "cc28e70a533989aed8946e5f99b9d095d74e7593764f7fb4a8db80d5f46f4824"
         }
       ]
     },
@@ -41,11 +41,11 @@
         },
         {
           "path": "supply-chain/dependency-provenance.json",
-          "sha256": "9b3c8c44236aff189f2b9b293ab5428177e44ff8e841b0d553afce0375eee653"
+          "sha256": "8d541667bc74ce097fc2b844a7e87a046d3af5054eeb094d0a512c8f9fe03699"
         },
         {
           "path": "supply-chain/sbom.cdx.json",
-          "sha256": "7144b5e859c24c968aabe453ebcc4e5d27750077bb25bab2c40c6098c0677da4"
+          "sha256": "9f02ab5fd0ce62cc83349035372069a0c69086f50ca31f53cce7547e88c3e2c8"
         }
       ]
     },
@@ -54,7 +54,7 @@
       "artifacts": [
         {
           "path": "docs/architecture/foundational-artifact-and-workflow-runtime.md",
-          "sha256": "f6aaea2938550614282c3abf57b88b6005364387a8a32bd4f6ac6b62785a0da9"
+          "sha256": "086023fd3cf7b57ea6c238df6dece6811a18b1e6051685842086dd1190966b96"
         },
         {
           "path": "docs/architecture/dependency-direction.md",
@@ -88,7 +88,7 @@
       "artifacts": [
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-          "sha256": "222a3fec682fa2e6ec628153586940ac6cd78d15cca524e16bde8bc10cdfd2a5"
+          "sha256": "eefbf69198ccfee7aef36d9ca05b4f421778b008af88be32e3e3f72efe09da3b"
         }
       ]
     },
@@ -101,7 +101,7 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/security-evidence-map.json",
-          "sha256": "95cb575e743e3941d1bafaf9e9f9b850b080af75709ada44be63edfcfdd8d17a"
+          "sha256": "0afca6ddf8855435eff3c65905a18550f556428a9b24bed8fc52e0cffa449c58"
         }
       ]
     },
@@ -132,7 +132,7 @@
     "data_class": "synthetic-local-contract-tests-only",
     "artifact": {
       "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-      "sha256": "222a3fec682fa2e6ec628153586940ac6cd78d15cca524e16bde8bc10cdfd2a5"
+      "sha256": "eefbf69198ccfee7aef36d9ca05b4f421778b008af88be32e3e3f72efe09da3b"
     },
     "required_markers": [
       "Validated 37 Engineering Runtime schemas and 6 reused contracts.",
