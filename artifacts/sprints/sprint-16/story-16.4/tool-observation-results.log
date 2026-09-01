@@ -1,19 +1,19 @@
 $ cargo test -p agentmage-kernel-engine tool_observation::tests --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
 
 running 9 tests
 test tool_observation::tests::story_16_4_output_and_excerpt_boundaries_fail_before_publication ... ok
 test tool_observation::tests::story_16_4_every_measured_resource_ceiling_fails_closed_before_publication ... ok
 test tool_observation::tests::story_16_4_tampered_observation_cannot_claim_more_than_measured ... ok
-test tool_observation::tests::story_16_4_duplicate_mismatch_forgery_and_missing_artifacts_fail_closed ... ok
 test tool_observation::tests::story_16_4_complete_outputs_are_separate_content_addressed_and_excerpts_are_bounded_redacted ... ok
-test tool_observation::tests::story_16_4_restart_restore_rejects_duplicate_corruption_and_replay ... ok
+test tool_observation::tests::story_16_4_duplicate_mismatch_forgery_and_missing_artifacts_fail_closed ... ok
 test tool_observation::tests::story_16_4_live_local_process_output_closes_through_the_same_assembler ... ok
+test tool_observation::tests::story_16_4_restart_restore_rejects_duplicate_corruption_and_replay ... ok
 test tool_observation::tests::story_16_4_crash_race_pipe_and_uncertainty_never_infer_success ... ok
 test tool_observation::tests::story_16_4_all_ten_terminal_states_emit_one_closed_observation ... ok
 
-test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 775 filtered out; finished in 0.00s
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 775 filtered out; finished in 0.01s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -243,4 +243,5 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; fini
 
 
 $ cargo clippy -p agentmage-kernel-engine --all-targets --locked -- -D warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s
+    Checking agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 7.24s

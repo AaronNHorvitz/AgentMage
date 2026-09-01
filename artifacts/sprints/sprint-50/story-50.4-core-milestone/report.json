@@ -36,9 +36,9 @@
       "sha256": "308892cd00c60add332bca89bf71231292d8672a076444b44db77584348feaad"
     },
     {
-      "byte_length": 6538,
+      "byte_length": 8320,
       "path": "artifacts/sprints/sprint-50/story-50.3-foundational-runtime/report.json",
-      "sha256": "1e980d44c8358d2604365fcceb24d875526818261cb1b3b9081be404749a3da6"
+      "sha256": "8ecff1ea8dde549c8979fb95124d6a144a3cc2ffaad16d16a7b94dd8afa4ec02"
     },
     {
       "byte_length": 5641,
@@ -56,9 +56,9 @@
       "sha256": "7ee867cb3555fc11e82a104b801ba472adcfa28ceba56fe6b9720fea468deca1"
     },
     {
-      "byte_length": 16234,
+      "byte_length": 16241,
       "path": "artifacts/sprints/sprint-50/story-50.4-core-milestone/local-results.log",
-      "sha256": "8d0afe06a9611aa4249279918f05fadb0b6cb1cbc6625f883b5425966fbd6e66"
+      "sha256": "d8acb84c57d60212eb5999a59c70841f3a8eaa22ef467ef910acab4324924c1a"
     }
   ],
   "commands": [

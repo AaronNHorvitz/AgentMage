@@ -74,6 +74,19 @@ def validate_golden(value: Any) -> list[str]:
         failures.append("25 MiB source boundary was not retained")
     if not 0 <= performance.get("elapsed_ms", -1) < performance.get("elapsed_ceiling_ms", 0):
         failures.append("25 MiB performance ceiling failed")
+    if performance.get("ingest_bytes_per_second", 0) < performance.get(
+        "minimum_ingest_bytes_per_second", 1
+    ):
+        failures.append("25 MiB ingest throughput floor failed")
+    for measured, ceiling in (
+        ("initial_ingest_latency_us", "initial_ingest_latency_ceiling_us"),
+        ("time_to_first_useful_section_us", "first_useful_section_latency_ceiling_us"),
+        ("cleanup_latency_us", "cleanup_latency_ceiling_us"),
+    ):
+        if not 0 <= performance.get(measured, -1) < performance.get(ceiling, 0):
+            failures.append(f"performance ceiling failed: {measured}")
+    if not 0 < performance.get("used_tokens", 0) <= performance.get("allocated_tokens", 0):
+        failures.append("token allocation was not exact and bounded")
     results = value.get("native_tool_results", [])
     expected = {"artifact.list", "artifact.metadata", "artifact.sections", "artifact.search", "artifact.get_log_errors"}
     if {item.get("tool") for item in results} != expected:

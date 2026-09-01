@@ -21,9 +21,9 @@
       "sha256": "4b327e66e82d4a3c01a3e92c086d6168023ff0623fa77c4d9efd799d248099fc"
     },
     {
-      "byte_length": 8576,
+      "byte_length": 9620,
       "path": "shells/host/examples/story_22_3_evidence.rs",
-      "sha256": "988bdb2956d439d6f44a25a738c2037d3730220de5f6009c22a74b222481b9a3"
+      "sha256": "ca127651ad5438fa3410b929c5040be6d1982a4b3d683cf4907dcd2961a338d8"
     },
     {
       "byte_length": 4068,
@@ -46,24 +46,24 @@
       "sha256": "61e97a55e7f25b7c1d5a9c4397b7eb4ccba1aacdfe5bd8d40694e7ec57f26eab"
     },
     {
-      "byte_length": 8879,
+      "byte_length": 9646,
       "path": "scripts/story_22_3_source_preparation_evidence.py",
-      "sha256": "aa246e88ca8fca8a7470630f1e716fa604685d640f8dd94bf7be546cce5709b8"
+      "sha256": "ff8b6570aef842a69bf15366255566f9a7a5c51da7fe1a63f08f58bf3da4dfc5"
     },
     {
-      "byte_length": 853,
+      "byte_length": 1276,
       "path": "tests/test_story_22_3_source_preparation_evidence.py",
-      "sha256": "048104119aa04d0704552120632c79e1954bec177498b804b4c698467c85b1db"
+      "sha256": "e9aa5df737c22c323bede5476c37d511d8ac471ee8247a61c5dd195ab134efc8"
     },
     {
-      "byte_length": 4858,
+      "byte_length": 5267,
       "path": "artifacts/sprints/sprint-22/story-22.3/source-preparation-results.log",
-      "sha256": "504b893d769d1bee2cbfefb287d32b4924b09aaadfbfaece8aef1af4b1294198"
+      "sha256": "af47f6bef3527ce84047cdb846aa3913000f60850ba7c0ebf1963f38de8bc037"
     },
     {
-      "byte_length": 26891,
+      "byte_length": 27290,
       "path": "artifacts/sprints/sprint-22/story-22.3/source-preparation-goldens.json",
-      "sha256": "29136c57b442ccdd32bc628263244d83ebf45b5d35a72dc1e2f5b0eba6e127d3"
+      "sha256": "a078eda920f15a6502e92c1ac6162cf8e1e1c72c97e3744f5a6b2c800a5aa9b7"
     }
   ],
   "commands": [
@@ -76,12 +76,22 @@
   ],
   "generated_on": "2026-08-31",
   "performance": {
+    "allocated_tokens": 16,
+    "cleanup_latency_ceiling_us": 1000000,
+    "cleanup_latency_us": 76,
     "elapsed_ceiling_ms": 60000,
-    "elapsed_ms": 5154,
+    "elapsed_ms": 5255,
+    "first_useful_section_latency_ceiling_us": 1000000,
+    "ingest_bytes_per_second": 4988468,
+    "initial_ingest_latency_ceiling_us": 1000000,
+    "initial_ingest_latency_us": 350,
     "input_bytes": 26214400,
+    "minimum_ingest_bytes_per_second": 262144,
     "omitted_lines": 69632,
     "output_byte_ceiling": 8388608,
-    "retained_lines": 32768
+    "retained_lines": 32768,
+    "time_to_first_useful_section_us": 354,
+    "used_tokens": 10
   },
   "product_truth": {
     "bounded_text_log_admission_complete": true,

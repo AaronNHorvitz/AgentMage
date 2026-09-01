@@ -611,12 +611,22 @@
     }
   ],
   "performance": {
+    "allocated_tokens": 16,
+    "cleanup_latency_ceiling_us": 1000000,
+    "cleanup_latency_us": 76,
     "elapsed_ceiling_ms": 60000,
-    "elapsed_ms": 5154,
+    "elapsed_ms": 5255,
+    "first_useful_section_latency_ceiling_us": 1000000,
+    "ingest_bytes_per_second": 4988468,
+    "initial_ingest_latency_ceiling_us": 1000000,
+    "initial_ingest_latency_us": 350,
     "input_bytes": 26214400,
+    "minimum_ingest_bytes_per_second": 262144,
     "omitted_lines": 69632,
     "output_byte_ceiling": 8388608,
-    "retained_lines": 32768
+    "retained_lines": 32768,
+    "time_to_first_useful_section_us": 354,
+    "used_tokens": 10
   },
   "record_type": "agentmage-story-22-3-source-preparation-goldens",
   "schema_version": 1,

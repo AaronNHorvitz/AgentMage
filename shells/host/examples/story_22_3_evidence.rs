@@ -138,10 +138,13 @@ fn main() {
         },
         policy_sha256: "b".repeat(64),
     };
+    let initial_started = Instant::now();
     let manifest = service
         .admit(persisted, &mut Counter, &mut || false)
         .expect("source admission");
+    let initial_ingest_latency_us = initial_started.elapsed().as_micros() as u64;
     let view = service.source("evidence-log").expect("prepared view");
+    let time_to_first_useful_section_us = initial_started.elapsed().as_micros() as u64;
     let context = service
         .compile_context(
             "story-22-3-context-manifest".to_owned(),
@@ -187,12 +190,14 @@ fn main() {
         .source("evidence-log-2")
         .expect("successor")
         .manifest;
+    let cleanup_started = Instant::now();
     let released = service
         .release("evidence-log-2", &successor_manifest.manifest_sha256)
         .expect("release");
     let deleted = service
         .delete("evidence-log-2", &released.manifest_sha256)
         .expect("delete");
+    let cleanup_latency_us = cleanup_started.elapsed().as_micros() as u64;
 
     let mut maximum = Vec::with_capacity(25 * 1024 * 1024);
     let mut line = vec![b'x'; 255];
@@ -209,6 +214,8 @@ fn main() {
         )
         .expect("maximum log");
     let elapsed_ms = started.elapsed().as_millis() as u64;
+    let ingest_bytes_per_second =
+        maximum_manifest.source_bytes.saturating_mul(1_000) / elapsed_ms.max(1);
 
     let output = serde_json::json!({
         "schema_version": 1,
@@ -224,7 +231,17 @@ fn main() {
             "omitted_lines": maximum_manifest.omitted_lines,
             "elapsed_ms": elapsed_ms,
             "elapsed_ceiling_ms": 60000,
-            "output_byte_ceiling": maximum_manifest.limits.max_output_bytes
+            "output_byte_ceiling": maximum_manifest.limits.max_output_bytes,
+            "ingest_bytes_per_second": ingest_bytes_per_second,
+            "minimum_ingest_bytes_per_second": 262144,
+            "initial_ingest_latency_us": initial_ingest_latency_us,
+            "initial_ingest_latency_ceiling_us": 1000000,
+            "time_to_first_useful_section_us": time_to_first_useful_section_us,
+            "first_useful_section_latency_ceiling_us": 1000000,
+            "cleanup_latency_us": cleanup_latency_us,
+            "cleanup_latency_ceiling_us": 1000000,
+            "allocated_tokens": context.allocated_tokens,
+            "used_tokens": context.used_tokens
         },
         "admission_observations": service.admission_observations(),
         "canary_scan": { "raw_path_count": 0, "network_access_count": 0, "workspace_mutation_count": 0 }

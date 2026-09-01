@@ -1183,6 +1183,7 @@ mod tests {
     fn uncertainty_cancellation_and_resource_failure_never_false_complete() {
         let (definition, policies) = workflow();
         let mut diagnoses = Vec::new();
+        let started = std::time::Instant::now();
         for (script, expected) in [
             (Script::Uncertain, WorkflowSupervisorState::Uncertain),
             (Script::Cancelled, WorkflowSupervisorState::Cancelled),
@@ -1202,6 +1203,11 @@ mod tests {
             assert!(result.diagnosis.is_some());
             diagnoses.push(result);
         }
+        let terminal_diagnosis_latency_us = started.elapsed().as_micros();
+        assert!(terminal_diagnosis_latency_us < 1_000_000);
+        eprintln!(
+            "STORY_50_3_TERMINAL_DIAGNOSIS_LATENCY_US={terminal_diagnosis_latency_us};CEILING_US=1000000"
+        );
         emit_evidence("STORY_23_6_TERMINALS", &diagnoses);
     }
 

@@ -16,9 +16,9 @@
       "sha256": "9facf973fb5a8e10e8c8c09c3edc1f900ad5a86fc90a55229d987d97aa5ce5c1"
     },
     {
-      "byte_length": 71692,
+      "byte_length": 72012,
       "path": "kernel/engine/src/verified_workflow_supervisor.rs",
-      "sha256": "73e88b618c2c52e32e75a968c760c2ff5af521879de7c050f95b7c0132b1b74c"
+      "sha256": "b2f2ebe42410c722fa16393f1dc77903cc2524d99a00cf5e6d03a6c4a3a0a208"
     },
     {
       "byte_length": 5290,
@@ -36,14 +36,29 @@
       "sha256": "9619fa82f894ff13c3914766c28ccb287fc8dc36ba00b6bc57c6f0b6d7409eb3"
     },
     {
-      "byte_length": 10046,
-      "path": "scripts/story_50_3_foundational_runtime_evidence.py",
-      "sha256": "5358f8e4dd5cc7fad12daab9d913324a35c0b0e677ee76508a9fbe8622426c25"
+      "byte_length": 5614,
+      "path": "artifacts/sprints/sprint-22/story-22.3/source-preparation-report.json",
+      "sha256": "840eb439d6fdb80df99cc1db6d3b3a9ec3241a59c1c1e02419f800e76729a8f3"
     },
     {
-      "byte_length": 2261,
+      "byte_length": 27290,
+      "path": "artifacts/sprints/sprint-22/story-22.3/source-preparation-goldens.json",
+      "sha256": "a078eda920f15a6502e92c1ac6162cf8e1e1c72c97e3744f5a6b2c800a5aa9b7"
+    },
+    {
+      "byte_length": 3287,
+      "path": "artifacts/sprints/sprint-21/story-21.2/pressure-report.json",
+      "sha256": "18d839f8199de094e136645aeac87773fb6cfb18e44b4f4a70f637e6efebac33"
+    },
+    {
+      "byte_length": 15199,
+      "path": "scripts/story_50_3_foundational_runtime_evidence.py",
+      "sha256": "5130c383a131807648f54af0e159c520340c35514f4d0ae581acc84736cf285f"
+    },
+    {
+      "byte_length": 3272,
       "path": "tests/test_story_50_3_foundational_runtime_evidence.py",
-      "sha256": "e491259c06d61d70dc25f435fc4994425216028458c5e0a4004663abe52c5854"
+      "sha256": "4c0586c11e6e227e1629014e7288b830706bb7423cb8f07e9178b75a2303405e"
     },
     {
       "byte_length": 2057,
@@ -91,14 +106,14 @@
       "sha256": "568f79499bc068a379afa6b094bd43e6c07d7f6eaea60132b74cff0f1d539844"
     },
     {
-      "byte_length": 22659,
+      "byte_length": 22727,
       "path": "artifacts/sprints/sprint-50/story-50.3-foundational-runtime/local-results.log",
-      "sha256": "1c51a57f26444688cbe23644f446e66537f30d5211240e3fed854a16bcc60ac1"
+      "sha256": "4ac629bad654f211be9c6c54c27d96cc11e0b55ef8797698d745a1d1ca9b13e4"
     }
   ],
   "commands": [
     "cargo test -p agentmage-host story_50_3_artifact_heavy_steps_use_one_supervisor_and_common_coordinator --all-features --locked",
-    "cargo test -p agentmage-kernel-engine verified_workflow_supervisor::tests --all-features --locked",
+    "cargo test -p agentmage-kernel-engine verified_workflow_supervisor::tests --all-features --locked -- --nocapture",
     "cargo test -p agentmage-kernel-engine source_preparation::tests --all-features --locked",
     "python3 -c import json; from pathlib import Path; from scripts import runtime_hardening_load as c; a=c.ROOT/Path('artifacts/sprints/sprint-50/story-50.2-runtime-load-worker'); p=json.loads((c.ROOT/c.PROFILE).read_text()); r=json.loads((a/'report.json').read_text()); f=c.report_failures(r,p,a); assert not f,f; print('Retained runtime hardening load evidence validated')",
     "python3 scripts/runtime_component_removal.py --verify",
@@ -110,6 +125,32 @@
     "python3 scripts/runtime_feature_activation.py"
   ],
   "generated_on": "2026-08-31",
+  "pressure_metrics": {
+    "cancellation_latency_ceiling_us": 250000,
+    "cancellation_latency_us": 1054,
+    "first_useful_section_latency_ceiling_us": 1000000,
+    "first_useful_section_latency_us": 354,
+    "minimum_source_ingest_bytes_per_second": 262144,
+    "runtime_cleanup_verified": true,
+    "runtime_maximum_queue_depth": 1024,
+    "runtime_peak_memory_ceiling_kib": 1048576,
+    "runtime_peak_memory_kib": 53996,
+    "runtime_queue_depth_ceiling": 1024,
+    "runtime_recovery_latency_ceiling_ms": 60000,
+    "runtime_recovery_latency_ms": 13935,
+    "runtime_store_growth_bytes": 10813336,
+    "runtime_store_growth_ceiling_bytes": 134217728,
+    "source_allocated_tokens": 16,
+    "source_cleanup_latency_ceiling_us": 1000000,
+    "source_cleanup_latency_us": 76,
+    "source_extraction_latency_ceiling_ms": 60000,
+    "source_extraction_latency_ms": 5255,
+    "source_ingest_bytes_per_second": 4988468,
+    "source_input_bytes": 26214400,
+    "source_used_tokens": 10,
+    "terminal_diagnosis_latency_ceiling_us": 1000000,
+    "terminal_diagnosis_latency_us": 10985
+  },
   "product_truth": {
     "bounded_pressure_campaign_retained": true,
     "complete_foundational_runtime_claim": false,
@@ -122,6 +163,7 @@
     "independent_feature_activation_complete": true,
     "independent_review_complete": false,
     "installed_client_campaign_complete": false,
+    "local_pressure_performance_campaign_complete": true,
     "macos_validation_complete": false,
     "one_common_runtime_coordinator_per_attempt": true,
     "one_verified_workflow_supervisor": true,

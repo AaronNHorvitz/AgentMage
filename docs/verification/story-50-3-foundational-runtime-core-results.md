@@ -46,6 +46,15 @@ The core decision reuses current raw evidence instead of copying or summarizing 
 These results are linked by the Story 50.3 evidence generator and are independently recomputed by
 `tests/test_story_50_3_foundational_runtime_evidence.py`.
 
+The same report consolidates current measurements for the 25 MiB text/log preparation boundary,
+ingest throughput, extraction latency, first useful section, exact token allocation, peak resident
+memory, retained-store growth, maximum queue depth, sixteen-cycle recovery, source cleanup,
+delayed-store cancellation, and supervisor terminal diagnosis. Every measurement is paired with
+its declared floor or ceiling, and validation fails closed if a bound is crossed. The underlying
+fixtures also retain exact artifact-count/byte, event, output, memory, disk, process, checkpoint,
+attempt, timeout, and cancellation boundary behavior. This remains local source/reference-host
+evidence rather than installed-client or additional-platform qualification.
+
 Independent activation is recorded by
 [`runtime-feature-activation.json`](../../architecture/runtime-feature-activation.json). Disabled
 artifact ingress and retrieval register no native tool definitions, native participant and provider

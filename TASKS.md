@@ -6219,15 +6219,23 @@ adapters may be exercised as they become available without claiming their later 
   seam to the current supervisor, text/log corpus, pressure, restart/no-replay, parity, and
   component-removal evidence. Installed-client and qualified-model campaigns remain external and
   are not substituted by the deterministic integration result.
-- [ ] **Task 50.3.2 - Execute pressure and performance campaigns**
-  - [ ] **Sub-task 50.3.2.1:** Exercise maximum artifact count/bytes, 25 MiB logs, combined token
+- [x] **Task 50.3.2 - Execute pressure and performance campaigns**
+  - [x] **Sub-task 50.3.2.1:** Exercise maximum artifact count/bytes, 25 MiB logs, combined token
     overflow, maximum sections, event queue saturation, large tool output, checkpoint depth,
-    attempt budgets, low memory, low disk, timeout, and concurrent cancellation.
-  - [ ] **Sub-task 50.3.2.2:** Record ingest throughput, extraction latency, time to first useful
+    attempt budgets, low memory, low disk, timeout, and concurrent cancellation. Evidence: the
+    source-preparation, runtime-hardening, journal-pressure, artifact-output, supervisor-budget, and
+    cancellation fixtures exercise every named local bound with deterministic non-mutating refusal.
+  - [x] **Sub-task 50.3.2.2:** Record ingest throughput, extraction latency, time to first useful
     section, token allocation, peak memory, store growth, queue depth, recovery time, cleanup time,
-    and terminal-diagnosis latency against declared thresholds.
-  - [ ] **Sub-task 50.3.2.3:** Require bounded degradation, visible omissions, responsive
+    and terminal-diagnosis latency against declared thresholds. Evidence: the source-bound Story
+    50.3 report records all ten named metric families from the current 25 MiB preparation run,
+    reference-host runtime load, delayed-journal cancellation, and in-process terminal diagnosis,
+    and rejects any threshold regression.
+  - [x] **Sub-task 50.3.2.3:** Require bounded degradation, visible omissions, responsive
     cancellation, no per-token durable writes, no false success, and no undeclared residue.
+    Evidence: retained source manifests count omitted lines, the dedicated correctness writer keeps
+    token progress off the durable path, cancellation stays within its fixed ceiling, terminal
+    diagnosis never infers success, and runtime cleanup is explicitly verified.
 - [ ] **Task 50.3.3 - Execute security and fault campaigns**
   - [ ] **Sub-task 50.3.3.1:** Combine prompt injection, active documents, archive traversal,
     secret canaries, hostile metadata, stale references, model-crafted authority, approval mutation,

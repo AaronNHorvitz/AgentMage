@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -23,7 +24,7 @@ COMMANDS: Final = (
     ),
     (
         "cargo", "test", "-p", "agentmage-kernel-engine",
-        "verified_workflow_supervisor::tests", "--all-features", "--locked",
+        "verified_workflow_supervisor::tests", "--all-features", "--locked", "--", "--nocapture",
     ),
     (
         "cargo", "test", "-p", "agentmage-kernel-engine",
@@ -52,6 +53,9 @@ SOURCES: Final = (
     "fixtures/runtime-hardening/v1/linux-reference-load-profile.json",
     "artifacts/sprints/sprint-50/story-50.2-runtime-load-worker/report.json",
     "artifacts/sprints/sprint-50/story-50.2-component-removal/report.json",
+    "artifacts/sprints/sprint-22/story-22.3/source-preparation-report.json",
+    "artifacts/sprints/sprint-22/story-22.3/source-preparation-goldens.json",
+    "artifacts/sprints/sprint-21/story-21.2/pressure-report.json",
     "scripts/story_50_3_foundational_runtime_evidence.py",
     "tests/test_story_50_3_foundational_runtime_evidence.py",
     "architecture/runtime-feature-activation.json",
@@ -75,6 +79,63 @@ def artifact(relative: str) -> dict[str, Any]:
     return {"path": relative, "byte_length": path.stat().st_size, "sha256": digest(path)}
 
 
+def pressure_metrics() -> dict[str, Any]:
+    source = json.loads(
+        (ROOT / "artifacts/sprints/sprint-22/story-22.3/source-preparation-goldens.json")
+        .read_text(encoding="utf-8")
+    )["performance"]
+    load_report = json.loads(
+        (ROOT / "artifacts/sprints/sprint-50/story-50.2-runtime-load-worker/report.json")
+        .read_text(encoding="utf-8")
+    )
+    journal = json.loads(
+        (ROOT / "artifacts/sprints/sprint-21/story-21.2/pressure-report.json")
+        .read_text(encoding="utf-8")
+    )["metrics"]
+    raw = RAW_PATH.read_text(encoding="utf-8")
+    match = re.search(
+        r"STORY_50_3_TERMINAL_DIAGNOSIS_LATENCY_US=(\d+);CEILING_US=(\d+)", raw
+    )
+    if match is None:
+        raise ValueError("terminal diagnosis latency marker is absent")
+    return {
+        "source_input_bytes": source["input_bytes"],
+        "source_ingest_bytes_per_second": source["ingest_bytes_per_second"],
+        "minimum_source_ingest_bytes_per_second": source["minimum_ingest_bytes_per_second"],
+        "source_extraction_latency_ms": source["elapsed_ms"],
+        "source_extraction_latency_ceiling_ms": source["elapsed_ceiling_ms"],
+        "first_useful_section_latency_us": source["time_to_first_useful_section_us"],
+        "first_useful_section_latency_ceiling_us": source[
+            "first_useful_section_latency_ceiling_us"
+        ],
+        "source_cleanup_latency_us": source["cleanup_latency_us"],
+        "source_cleanup_latency_ceiling_us": source["cleanup_latency_ceiling_us"],
+        "source_allocated_tokens": source["allocated_tokens"],
+        "source_used_tokens": source["used_tokens"],
+        "runtime_peak_memory_kib": load_report["metrics"]["resident_memory_kib"],
+        "runtime_peak_memory_ceiling_kib": load_report["metric_thresholds"][
+            "maximum_resident_memory_kib"
+        ],
+        "runtime_store_growth_bytes": load_report["metrics"]["retained_disk_bytes"],
+        "runtime_store_growth_ceiling_bytes": load_report["metric_thresholds"][
+            "maximum_retained_disk_bytes"
+        ],
+        "runtime_maximum_queue_depth": load_report["metrics"]["maximum_queued_events"],
+        "runtime_queue_depth_ceiling": load_report["metric_thresholds"][
+            "maximum_queued_events"
+        ],
+        "runtime_recovery_latency_ms": load_report["metrics"]["restart_elapsed_ms"],
+        "runtime_recovery_latency_ceiling_ms": load_report["metric_thresholds"][
+            "maximum_restart_elapsed_ms"
+        ],
+        "cancellation_latency_us": journal["cancellation_latency_us"],
+        "cancellation_latency_ceiling_us": journal["cancellation_limit_ms"] * 1_000,
+        "terminal_diagnosis_latency_us": int(match.group(1)),
+        "terminal_diagnosis_latency_ceiling_us": int(match.group(2)),
+        "runtime_cleanup_verified": load_report["metrics"]["cleanup_verified"],
+    }
+
+
 def expected_report() -> dict[str, Any]:
     return {
         "schema_version": 1,
@@ -83,6 +144,7 @@ def expected_report() -> dict[str, Any]:
         "generated_on": "2026-08-31",
         "status": "PASS_LOCAL_TEXT_LOG_WORKFLOW_CORE",
         "commands": [" ".join(command) for command in COMMANDS],
+        "pressure_metrics": pressure_metrics(),
         "artifacts": [artifact(path) for path in SOURCES]
         + [artifact(RAW_PATH.relative_to(ROOT).as_posix())],
         "product_truth": {
@@ -94,6 +156,7 @@ def expected_report() -> dict[str, Any]:
             "verifier_owned_completion": True,
             "fresh_attempt_run_tool_grant_and_receipt_identities": True,
             "bounded_pressure_campaign_retained": True,
+            "local_pressure_performance_campaign_complete": True,
             "fault_restart_and_no_replay_campaign_retained": True,
             "component_removal_campaign_retained": True,
             "independent_feature_activation_complete": True,
@@ -131,6 +194,7 @@ def validate_report(value: Any) -> list[str]:
         "verifier_owned_completion",
         "fresh_attempt_run_tool_grant_and_receipt_identities",
         "bounded_pressure_campaign_retained",
+        "local_pressure_performance_campaign_complete",
         "fault_restart_and_no_replay_campaign_retained",
         "component_removal_campaign_retained",
         "independent_feature_activation_complete",
@@ -151,6 +215,32 @@ def validate_report(value: Any) -> list[str]:
     )
     if truth.get("release_claim") != "none":
         failures.append("Story 50.3 cannot claim a release")
+    metrics = value.get("pressure_metrics", {})
+    comparisons = (
+        ("source_ingest_bytes_per_second", "minimum_source_ingest_bytes_per_second", "minimum"),
+        ("source_extraction_latency_ms", "source_extraction_latency_ceiling_ms", "maximum"),
+        ("first_useful_section_latency_us", "first_useful_section_latency_ceiling_us", "maximum"),
+        ("source_cleanup_latency_us", "source_cleanup_latency_ceiling_us", "maximum"),
+        ("runtime_peak_memory_kib", "runtime_peak_memory_ceiling_kib", "maximum"),
+        ("runtime_store_growth_bytes", "runtime_store_growth_ceiling_bytes", "maximum"),
+        ("runtime_maximum_queue_depth", "runtime_queue_depth_ceiling", "maximum"),
+        ("runtime_recovery_latency_ms", "runtime_recovery_latency_ceiling_ms", "maximum"),
+        ("cancellation_latency_us", "cancellation_latency_ceiling_us", "maximum"),
+        ("terminal_diagnosis_latency_us", "terminal_diagnosis_latency_ceiling_us", "maximum"),
+    )
+    for measured, threshold, direction in comparisons:
+        actual = metrics.get(measured)
+        limit = metrics.get(threshold)
+        if not isinstance(actual, int) or not isinstance(limit, int):
+            failures.append(f"pressure metric is absent: {measured}")
+        elif direction == "minimum" and actual < limit:
+            failures.append(f"pressure metric missed its floor: {measured}")
+        elif direction == "maximum" and actual > limit:
+            failures.append(f"pressure metric exceeded its ceiling: {measured}")
+    if metrics.get("source_used_tokens", 1) > metrics.get("source_allocated_tokens", 0):
+        failures.append("source token allocation exceeded its exact partition")
+    if metrics.get("runtime_cleanup_verified") is not True:
+        failures.append("runtime cleanup was not verified")
     return failures
 
 
@@ -170,6 +260,7 @@ def validate() -> list[str]:
         "story_50_3_artifact_heavy_steps_use_one_supervisor_and_common_coordinator ... ok",
         "three_dependency_steps_complete_in_definition_order ... ok",
         "Story 23.6 local verified-workflow-supervisor evidence validated",
+        "STORY_50_3_TERMINAL_DIAGNOSIS_LATENCY_US=",
         '"campaign_id": "story-50.2-component-removal-v1"',
         "Retained runtime hardening load evidence validated",
         "current_activation_is_closed_and_unavailable_features_are_off ... ok",

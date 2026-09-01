@@ -20,6 +20,16 @@ def test_story_22_3_golden_rejects_widening_and_missing_native_results() -> None
     missing = copy.deepcopy(value)
     missing["native_tool_results"].pop()
     assert evidence.validate_golden(missing)
+    slow = copy.deepcopy(value)
+    slow["performance"]["time_to_first_useful_section_us"] = slow["performance"][
+        "first_useful_section_latency_ceiling_us"
+    ]
+    assert evidence.validate_golden(slow)
+    token_overrun = copy.deepcopy(value)
+    token_overrun["performance"]["used_tokens"] = (
+        token_overrun["performance"]["allocated_tokens"] + 1
+    )
+    assert evidence.validate_golden(token_overrun)
     path_leak = copy.deepcopy(value)
     path_leak["protected_path"] = "/home/private/source.log"
     assert evidence.validate_golden(path_leak)
