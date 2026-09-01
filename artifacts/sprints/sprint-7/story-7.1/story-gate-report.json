@@ -81,12 +81,12 @@
       {
         "byte_length": 4142,
         "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
-        "sha256": "a103fb4cbcd93025801051dfbcb84248f73710493bceb6c5875c640ab93f63b9"
+        "sha256": "7f5264d0a35c04e797dcf0e94790516c888ca16318d1417b1df2ca29509fdc37"
       },
       {
         "byte_length": 12364,
         "path": "artifacts/sprints/sprint-7/story-7.1/security-evidence-map.json",
-        "sha256": "49b179795efd61d3adaa88293b356efb9348bc7c795fd2ea4358c683cecebe8e"
+        "sha256": "7198df421b6d51dbf41b814af70335d0adfbb7bacd8ab7a83b31485058612cfd"
       },
       {
         "byte_length": 6520,
@@ -114,9 +114,9 @@
         "sha256": "a35b3557156673c2215e5441187e65e4b51ea237aaf2d0954cef5e2e8b96a7b3"
       },
       {
-        "byte_length": 23383,
+        "byte_length": 23467,
         "path": "scripts/platform_manifest_artifact.py",
-        "sha256": "0129e11b46cba745b2e093c9b7b5244129bde7c249bfac4ea82a130d1d6b00c3"
+        "sha256": "62084df764356c08bfe953905d84ab53d0047f9575a8204eeb05461f0b89a2b7"
       },
       {
         "byte_length": 17584,
@@ -148,16 +148,16 @@
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-aggregate-review-not-external-human-review",
-    "reviewed_commit": "54228b3cfd9f7f268815f106ce5a523352ebae6a",
-    "reviewed_tree": "2990063667e55d8f8aadae70d8ef6874b99b1f9b",
+    "reviewed_commit": "199186f5c494fb163a521e61af0e41e91830f2d1",
+    "reviewed_tree": "fc85e21b62be4569115e81122ef95c7b076beda1",
     "reviewer_id": "agentmage-story-7.1-automated-aggregate-v1"
   },
   "installed_product_claim": "none",
   "macos_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "54228b3cfd9f7f268815f106ce5a523352ebae6a",
-  "reviewed_tree": "2990063667e55d8f8aadae70d8ef6874b99b1f9b",
+  "reviewed_commit": "199186f5c494fb163a521e61af0e41e91830f2d1",
+  "reviewed_tree": "fc85e21b62be4569115e81122ef95c7b076beda1",
   "schema_version": 1,
   "sprint_completion_claim": false,
   "status": "blocked-native-platforms-and-external-review",
