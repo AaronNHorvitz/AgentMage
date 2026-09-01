@@ -1,14 +1,18 @@
 {
   "schema_version": 1,
   "record_type": "sprint_51_local_evidence",
-  "source_revision": "27d5bf30d3376e6dacb1aec461fef1ecaf77b3c6",
+  "source_revision": "1bdf549076196e65c582c582b0eb03c6d91d8ae6",
   "source_sha256": {
     "kernel/contracts/src/frontier.rs": "323fe72b93799e56ccb768e7d65022f7e72cb0a90b89dc1782023a1a0adbb060",
-    "kernel/contracts/src/handoff.rs": "ef1cb45bd60fd2a3ac42dc42386ef133d8b28e0ead6fb0ac285abcebd2c1a8a0",
-    "kernel/contracts/src/lib.rs": "324f7ca74c87e43e33eedd75b1d38bfd7c6ba9ab8aaf08dcf987c751f8b9584a",
-    "kernel/engine/src/frontier_recommendation.rs": "6aa93fe83d7039ae19f075314765674527d7d439dedd2a973a3c1f5c8047e65c",
-    "kernel/engine/src/handoff.rs": "db5981624591b04b7d5771031b3ec69b88d19ffc5f913d87915116e0903ed324",
-    "kernel/engine/src/lib.rs": "4007f88d8b2df1ca770fd93a52bd807e96ed6a501aaaeb6313820baff137b828",
+    "kernel/contracts/src/handoff.rs": "230eea68dfbe59158221b006f1483591999a464e529b0e25ecac8c6213759a00",
+    "kernel/contracts/src/lib.rs": "bbd5268f75d9f88d4056da62bbd8f33fe4e5f87ae50aefaba9432bd06f656da1",
+    "kernel/engine/src/frontier_recommendation.rs": "412921486226969d6f5ad7a190f4ba5c000615a209a8016c47fbc150e8eca9e6",
+    "kernel/engine/src/handoff.rs": "84b4ad4ae0381e0a0cf22735082c302deadca9df52c38cd78ebb926f097cf0f2",
+    "kernel/engine/src/lib.rs": "74e16b7d5134da7214e979519b12116fa002034a5c7bf4b8a1e83646b93d8d26",
+    "shells/host/src/frontier_coordinator.rs": "5064d2eed5ca01b4705dd73af2854bbfadea0ea6b72089ffa4321b8bea0e0943",
+    "shells/host/src/protocol.rs": "a875cc1c06fc5bd1601611f54c235f4bff8b6481da61a51b109b22eb527cceba",
+    "shells/host/src/linux_read.rs": "2761b074d459be37f73b1f5ca35b32df76aa3ca661e8b65fef94f2e88f9bae22",
+    "shells/host/src/lib.rs": "009859f1542b5062e6a811e2176f5d18879b7a5858fba7a9f0253e6dd4bb73de",
     "shells/vscode/src/handoff.ts": "f784df9ac32b6c3a67eed04a404b78503722edad9372aa4bba89547fdccd4da3",
     "shells/vscode/test/handoff.test.ts": "0e3c9a9ae9ce75d46618a89037c081ac608ae632b01620271dc752ff6b4728d8",
     "schemas/runtime/frontier-tier-decision.schema.json": "7ea0fd64b24448d505f7add9b7f4649983365eaf93327e5b36c99150170d0002",
@@ -18,18 +22,18 @@
     "docs/verification/sprint-51-frontier-corpus.json": "b031aea0204c44d2b777c4608eca3b97b3118da89847b7d2eae851db6bd1db8f",
     "scripts/frontier_recommendation_contract.py": "6f5ce8c09f32eb8e379cd25726b1c27755dc3270770f4fc4ff71cba253ff6bf8",
     "tests/test_frontier_recommendation_contract.py": "8271714f43561f05dcd52c1670a91fe51a1408d57c87cd1035ec128eb23b7899",
-    "docs/architecture/manual-frontier-recommendation.md": "56862570b2f4632a665f5b670dfdd06af95aaae29bc5d034024f04694942e7ae",
+    "docs/architecture/manual-frontier-recommendation.md": "f29608a096cd53e746dd83b26ec5b08fe8491bb60c7950a78bbbf482b7d517ba",
     "docs/guides/manual-frontier-consultation.md": "584361271946d4eabd1309fa73a590670e3adacb8c39bfb2011ba5c4e6cb9a90",
-    "docs/verification/sprint-51-local-results.md": "ac6c0270850ddfb05768fd5f050839d43c06b3c4c9323bbf4b15d6163766bb2e",
-    "README.md": "f75558e75370231c4e42f58be519ed3bd04a5e9541815996f7423711ea21641d",
-    "scripts/sprint_51_evidence.py": "3ab8c9b735f6d6844633d9e3a8bb55f9ea2e98eacce24d6f18ac498d36a5f500",
-    "tests/test_sprint_51_evidence.py": "6033a0a1b55b543b29539a76dc88d2b61c403e84b2b9d2b89c74963a75124539"
+    "docs/verification/sprint-51-local-results.md": "30adf2a6c6fb0088e7ff475b4564a9328e358e700970deecf935883d6f613145",
+    "README.md": "67cec127caf09c59810ffffcc3398930fe45f52c3244479802db273a054249ed",
+    "scripts/sprint_51_evidence.py": "0acd7a0444356a1d6eaca544116ddbf1e412b6bd63450d08cb2ccd2454e8d3c7",
+    "tests/test_sprint_51_evidence.py": "2ced90306443af751d750cc8ec72bbc0470b82ef137cfcc39bf53e4642c18b9e"
   },
   "environment": {
     "system": "Linux",
-    "release": "7.1.6-201.fc44.x86_64",
+    "release": "7.1.10-200.fc44.x86_64",
     "machine": "x86_64",
-    "python": "3.14.6",
+    "python": "3.14.7",
     "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
     "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
     "node": "v24.15.0",
@@ -48,7 +52,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "6d27e9f6559dbcf635272ca28f60430617c3a9d179c194a2132c7546da20857a",
+      "output_sha256": "5e933364fe3e72de7d833ee929a2e49dd705991861118ce09356692ea700b964",
       "blocking_skip_count": 0
     },
     {
@@ -63,7 +67,22 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "b4f8e0e4e9c155c9ceb0fa2c6dc010a3ad13a48b56f69862353f774024644404",
+      "output_sha256": "31bf9e26cb8cb26f0bf350144888c2a6639b18517c90bcfb37418e4724bf3ea7",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "frontier-host-coordinator",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "frontier",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "047ce0af51a7126702c53a0575478c807aae3d8d6d1029d6f6097e19bde71bac",
       "blocking_skip_count": 0
     },
     {
@@ -74,7 +93,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "7bc0cd5156b16bff2f7c6ad4524e8789c06a6e502166ffeeb39f54db7efaec26",
+      "output_sha256": "7ff7cfff77474ae9296668ef77985af2bc117ae6b99882efa652fc9dcdecf24d",
       "blocking_skip_count": 0
     },
     {
@@ -99,7 +118,7 @@
         "@agentmage/vscode-shell"
       ],
       "exit_code": 0,
-      "output_sha256": "46e1fc042796127b01c02409fe1afcaa4864121bc529ada7a50645df0f2e3051",
+      "output_sha256": "3e598a469a52be2574b3d1f8f18b04485fcf5636e0e6ad7d20f4dbeb7cad1138",
       "blocking_skip_count": 0
     },
     {
@@ -118,7 +137,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "e5d64d914a9a7afdbabc08470765af5f6f0844eb53da7059dff8ed1cc1fffb24",
+      "output_sha256": "b9290b11afbb74d65cca8bc97b3c403ba0a4443bb1cc321d67a610e0961f1c80",
       "blocking_skip_count": null
     },
     {
@@ -129,7 +148,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "b9a1f6b3c4d8e086b23225b07b8c088973c67832d818908d56b8ce85fabfa930",
+      "output_sha256": "8a4729e97d45db086a0f9edfaf74cb3bcd222b580b3521b9af6698ba9d818528",
       "blocking_skip_count": null
     },
     {
@@ -162,7 +181,7 @@
         "tests.test_sprint_51_evidence"
       ],
       "exit_code": 0,
-      "output_sha256": "80144f3bf12d071a1497821467ab02765712cb11da3f547a5e2b5cf79f938e9a",
+      "output_sha256": "464e0ee629edf74de09ef21e4232fbcedc26588ff7cc23c470f47fe2da88c255",
       "blocking_skip_count": null
     }
   ],
@@ -188,7 +207,7 @@
     "secret_scope_and_injection_rejection": true,
     "destination_recording_user_owned": true,
     "external_delivery_capability": false,
-    "product_frontier_coordinator": false,
+    "product_frontier_coordinator": true,
     "live_model_failure_campaign": false,
     "native_cross_platform_acceptance": false,
     "trusted_package_execution": false,
@@ -203,7 +222,7 @@
     "prohibited_delivery_attempt_count": 14,
     "review_mutation_count": 8,
     "accepted_delivery_attempt_count": 0,
-    "product_coordinator_integration": false,
+    "product_coordinator_integration": true,
     "live_model_failure_campaign": false,
     "native_cross_platform_acceptance": false,
     "trusted_package_execution": false,
@@ -215,10 +234,6 @@
     {
       "code": "UPSTREAM-SPRINT-50-BLOCKED",
       "owner": "51.1"
-    },
-    {
-      "code": "FRONTIER-PRODUCT-COORDINATOR-ABSENT",
-      "owner": "51.1.1.1"
     },
     {
       "code": "LIVE-LOCAL-MODEL-FAILURE-CAMPAIGN-ABSENT",
@@ -249,7 +264,7 @@
     "local_sprint_51_contract_passed": true,
     "sprint_status": "BLOCKED",
     "upstream_sprint_50_closed": false,
-    "frontier_product_coordinator_integrated": false,
+    "frontier_product_coordinator_integrated": true,
     "automatic_frontier_delivery_enabled": false,
     "cross_platform_acceptance_passed": false,
     "trusted_package_execution_complete": false,

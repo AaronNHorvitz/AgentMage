@@ -6406,7 +6406,7 @@ Done are complete with current evidence. Otherwise it is BLOCKED.
   - [x] **Sub-task 51.1.1.3** (legacy `S-044-I03`): Keep human clarification separate from frontier recommendation. Evidence: user-owned clarification always resolves to `AskUser`; the schema and semantic validator prohibit a frontier trigger on that path.
   - [x] **Sub-task 51.1.1.4** (legacy `S-044-I04`): Build packets deterministically from objective, current state, citations, receipts, constraints, authority boundary, acceptance checks, disclosure list, unresolved questions, and required output contract. Evidence: the frontier request and builder require every named field, all three evidence roles, canonical order, and exact content hashes before creating a local review.
   - [x] **Sub-task 51.1.1.5** (legacy `S-044-I05`): Minimize packet content, redact secrets, enforce workspace scope, and show exact included excerpts and metadata. Evidence: frontier-specific validation composes the existing sealed-handoff limits and denies secrets, private or unrelated files, hidden metadata, absolute paths, excessive excerpts, authority objects, prompt injection, missing evidence roles, and incomplete redaction before preview.
-  - [x] **Sub-task 51.1.1.6** (legacy `S-044-I06`): Render the packet locally with a stable hash and user review controls. Evidence: the builder emits exact packet, disclosure-result, and preview hashes into the existing local-only handoff review contract; native handoff parsing and rendering tests reject byte mutation and missing acknowledgment. Product frontier coordination remains absent.
+  - [x] **Sub-task 51.1.1.6** (legacy `S-044-I06`): Render the packet locally with a stable hash and user review controls. Evidence: the builder emits exact packet, disclosure-result, and preview hashes into the existing local-only handoff review contract; the authenticated host coordinator recomputes current tier evidence, creates a bounded one-use review, and renders only after exact confirmation and request revalidation. Native parsing and rendering tests reject byte mutation and missing acknowledgment; installed native-client execution remains absent.
   - [x] **Sub-task 51.1.1.7** (legacy `S-044-I07`): Prohibit Codex or external-model invocation, tab control, prompt population, clipboard writes, launch commands, endpoint calls, and transmission. Evidence: Rust and TypeScript close fourteen denial actions, including every named operation plus upload, browser, schedule, route, and standing-consent variants; every preview and receipt fixes external delivery to false.
   - [x] **Sub-task 51.1.1.8** (legacy `S-044-I08`): Record recommendation reason, packet hash, redaction result, and later user-supplied destination only when the user chooses to record it. Evidence: the recommendation receipt binds the decision reason, packet hash, disclosure result, explicit destination-recording choice, optional safe label, and false delivery marker; implicit or sensitive destination data fails validation.
 
@@ -6448,12 +6448,13 @@ Done are complete with current evidence. Otherwise it is BLOCKED.
 - [x] **Sprint AC 51.AC4:** Direct, injected, scheduled, routed, and standing-consent delivery attempts all fail. Evidence: the closed 14-action matrix exercises all five categories across Rust and TypeScript with local denial receipts and zero delivery.
 - [x] **Sprint AC 51.AC5:** Only the user can move the reviewed packet to another interface. Evidence: the implementation exposes no delivery API, every modeled transfer mechanism is denied, destination recording is optional user bookkeeping only, and all external-effect markers are false.
 
-Retained local evidence: source revision `27d5bf30d3376e6dacb1aec461fef1ecaf77b3c6` is bound by
+Retained local evidence: source revision `1bdf549076196e65c582c582b0eb03c6d91d8ae6` is bound by
 [`local-evidence-report.json`](artifacts/sprints/sprint-51/local-evidence-report.json), SHA-256
-`d2fd7d7682e0e4be297dd230f3c6bdab297e1a1cfe3afc2fc7d97b8dacb45d9d`. The retained report is
-historical until refreshed for the host coordinator. Thirteen tier cases, ten
-disclosure attacks, fourteen prohibited-delivery attempts, and eight exact-review mutations pass
-locally with zero accepted delivery attempts. Sprint 51 remains **BLOCKED** because Sprint 50 is
+`6d5625d50665688cb0306e565503f1d551d1e501e5620797eca90ea8a3876611`. Eleven source-bound
+commands pass, including six focused engine, host, schema, hostile-corpus, and VS Code suites with
+zero blocking skips, strict Clippy, the full documentation gate, product-CI, supply-chain, and
+evidence tests. Thirteen tier cases, ten disclosure attacks, fourteen prohibited-delivery attempts,
+and eight exact-review mutations pass locally with zero accepted delivery attempts. Sprint 51 remains **BLOCKED** because Sprint 50 is
 blocked and the live local-model failure campaign, installed native end-to-end review workflow,
 supported-platform acceptance, trusted installed-package execution, independent review, and
 deferred manual fuzzing remain absent. Task 51.1.3, both story criteria, Story 51.1, and the sprint
