@@ -53,6 +53,29 @@ exact-write-preview, trusted-validation, evidence-assignment, and user-approval 
 does not satisfy those requirements. It issues no grants, calls no tools, writes no files, changes no
 canonical state, and awards no completion credit.
 
+The native host coordinator accepts a second, independently constructed route for every and only
+proposal-eligible step. It invokes the current deterministic task classifier for the supplied work
+packet. Command, file, and tool proposals must also pass the current native registry and the
+non-executing dispatcher must terminate at `grant_required`; missing, extra, duplicated,
+unregistered, operation-mismatched, or invalid routes fail closed. The resulting content-free ticket
+selects the existing review, evidence, controlled-write, command, tool, or validation flow while
+leaving every required grant, exact preimage, trusted sandbox result, evidence assignment, and user
+approval pending. A ticket is not executable and fixes authority false and applied effects to zero.
+
+## Durable Transaction
+
+The host commits four monotonic phases: parsed, revalidated, routed, and completed. Each checkpoint
+binds the exact transaction, request, manifest, current-state report, ticket set, terminal receipt,
+and previous checkpoint hash. The append-only directory store writes each generation to a separate
+content-addressed file through create-new, file sync, atomic rename, and directory sync. Reopen
+refuses symlinks, malformed or oversized records, gaps, forks, phase/generation drift, digest
+tampering, and changed request, repository, model, policy, permission, route, or receipt state.
+
+Restart recomputes every prior pure result from caller-supplied current facts. An exact completed
+transaction returns the same receipt without another checkpoint or any effect. Interruption before
+or after any checkpoint can therefore neither establish partial trust nor duplicate application;
+actual application remains a later operation in the existing native flow with fresh authority.
+
 ## Round Trip and Recursion
 
 The content-free report binds current state, artifact outcomes, step outcomes, disagreements, and
@@ -66,7 +89,8 @@ at Sprint 51's measured recommendation and exact disclosure boundary.
 
 ## Current Integration Limit
 
-The manifest, quarantine, local-state, citation, step-requirement, disagreement, and receipt
-contracts are source-level pre-alpha evidence. No native importer UI or product coordinator invokes
-the complete flow, and proposal-eligible steps are not yet connected end to end to the normal local
-task, grant, tool, write, validation, and review coordinators.
+The native host coordinator and durable local transaction are repository-controlled product
+composition. They expose no UI, delivery, network, or imported-content persistence authority.
+Installed-client wiring, supported-platform execution, trusted-package acceptance, and independent
+security review remain separate release evidence; their absence does not change the coordinator's
+zero-authority semantics.

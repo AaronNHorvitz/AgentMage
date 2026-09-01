@@ -28,6 +28,8 @@ SOURCE_PATHS: Final = (
     "kernel/engine/src/frontier_import.rs",
     "kernel/engine/src/frontier_recommendation.rs",
     "kernel/engine/src/lib.rs",
+    "shells/host/src/frontier_import_coordinator.rs",
+    "shells/host/src/lib.rs",
     "schemas/runtime/frontier-return-manifest.schema.json",
     "schemas/runtime/examples/frontier-return-manifest.valid.json",
     "schemas/runtime/frontier-round-trip-receipt.schema.json",
@@ -53,6 +55,13 @@ COMMANDS: Final = (
         ),
     ),
     (
+        "frontier-import-host-coordinator",
+        (
+            "cargo", "test", "-p", "agentmage-host",
+            "frontier_import_coordinator", "--lib", "--locked",
+        ),
+    ),
+    (
         "frontier-recommendation-regression",
         (
             "cargo", "test", "-p", "agentmage-kernel-engine",
@@ -71,7 +80,8 @@ COMMANDS: Final = (
         "frontier-import-strict-clippy",
         (
             "cargo", "clippy", "-p", "agentmage-kernel-contracts", "-p",
-            "agentmage-kernel-engine", "--all-targets", "--locked", "--",
+            "agentmage-kernel-engine", "-p", "agentmage-host", "--all-targets",
+            "--locked", "--",
             "-D", "warnings",
         ),
     ),
@@ -83,9 +93,10 @@ COMMANDS: Final = (
         ("python3", "-m", "unittest", "tests.test_sprint_52_evidence"),
     ),
 )
-FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:4])
+FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:5])
 RUST_FOCUSED_COMMANDS: Final = {
     "frontier-import-unit",
+    "frontier-import-host-coordinator",
     "frontier-recommendation-regression",
 }
 SECURITY_REQUIREMENTS: Final = [
@@ -116,9 +127,9 @@ IMPLEMENTED: Final = {
     "normal_local_flow_requirements": True,
     "deterministic_zero_effect_receipt": True,
     "outbound_network_capability": False,
-    "native_import_product_coordinator": False,
-    "normal_local_flow_integration": False,
-    "durable_interruption_recovery": False,
+    "native_import_product_coordinator": True,
+    "normal_local_flow_integration": True,
+    "durable_interruption_recovery": True,
     "native_cross_platform_acceptance": False,
     "trusted_package_execution": False,
     "independent_review": False,
@@ -126,9 +137,6 @@ IMPLEMENTED: Final = {
 }
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-51-BLOCKED", "owner": "52.1"},
-    {"code": "NATIVE-IMPORT-PRODUCT-COORDINATOR-ABSENT", "owner": "52.1.1.2"},
-    {"code": "NORMAL-LOCAL-FLOW-INTEGRATION-ABSENT", "owner": "52.1.1.5"},
-    {"code": "DURABLE-INTERRUPTION-RECOVERY-ABSENT", "owner": "52.1.3.4"},
     {"code": "NATIVE-CROSS-PLATFORM-ACCEPTANCE-ABSENT", "owner": "52.1.3.5"},
     {"code": "TRUSTED-INSTALLED-PACKAGE-EXECUTION-ABSENT", "owner": "52.1.3.5"},
     {"code": "INDEPENDENT-FRONTIER-IMPORT-REVIEW-ABSENT", "owner": "52.1.3.5"},
@@ -211,9 +219,9 @@ def expected_verification(local_pass: bool = True) -> dict[str, Any]:
         "accepted_import_effect_count": 0 if local_pass else None,
         "imported_authority_count": 0 if local_pass else None,
         "outbound_network_attempt_count": 0 if local_pass else None,
-        "native_import_product_coordinator": False,
-        "normal_local_flow_integration": False,
-        "durable_interruption_recovery": False,
+        "native_import_product_coordinator": True,
+        "normal_local_flow_integration": True,
+        "durable_interruption_recovery": True,
         "native_cross_platform_acceptance": False,
         "trusted_package_execution": False,
         "independent_review": False,
@@ -227,7 +235,7 @@ def expected_summary(local_pass: bool = True) -> dict[str, Any]:
         "local_sprint_52_contract_passed": local_pass,
         "sprint_status": "BLOCKED",
         "upstream_sprint_51_closed": False,
-        "native_import_workflow_integrated": False,
+        "native_import_workflow_integrated": True,
         "import_authority_enabled": False,
         "cross_platform_acceptance_passed": False,
         "trusted_package_execution_complete": False,

@@ -12,6 +12,7 @@ ROOT: Final = Path(__file__).resolve().parents[1]
 CORPUS_PATH: Final = ROOT / "docs/verification/sprint-52-frontier-import-corpus.json"
 ENGINE_PATH: Final = ROOT / "kernel/engine/src/frontier_import.rs"
 CONTRACT_PATH: Final = ROOT / "kernel/contracts/src/frontier_import.rs"
+HOST_PATH: Final = ROOT / "shells/host/src/frontier_import_coordinator.rs"
 REQUIRED_MANIFEST_FAILURES: Final = {
     "missing-required-field",
     "unknown-field",
@@ -152,6 +153,7 @@ def validate(value: Any) -> list[str]:
         failures.append("unknown hostile-case disposition")
     engine = ENGINE_PATH.read_text(encoding="utf-8")
     contract = CONTRACT_PATH.read_text(encoding="utf-8")
+    host = HOST_PATH.read_text(encoding="utf-8")
     required_source = {
         "external_content_untrusted": contract,
         "authority_granted": contract,
@@ -163,6 +165,15 @@ def validate(value: Any) -> list[str]:
         "file_write_count: 0": engine,
         "completion_credit_count: 0": engine,
         "outbound_network_used: false": engine,
+        "classify_task(route.work_packet, route.intent)": host,
+        "ToolDispatcher::new(registry).dispatch": host,
+        "fresh_grant_pending": host,
+        "exact_preimage_pending": host,
+        "trusted_validation_pending": host,
+        "evidence_assignment_pending": host,
+        "user_approval_pending": host,
+        "DirectoryFrontierImportCheckpointStore": host,
+        "applied_effect_count: 0": host,
     }
     for marker, source in required_source.items():
         if marker not in source:

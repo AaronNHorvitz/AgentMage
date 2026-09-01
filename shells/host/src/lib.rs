@@ -47,6 +47,9 @@ pub mod foundational_rollout;
 /// Bounded local-only coordination for measured frontier recommendation packets.
 pub mod frontier_coordinator;
 
+/// Durable, authority-free routing of imported frontier proposals into native local flows.
+pub mod frontier_import_coordinator;
+
 /// Verified read-only knowledge workflows over the shared thin-client contract.
 pub mod knowledge_workflow_runtime;
 /// Authority-free knowledge-preview composition into kernel filesystem drafts.
