@@ -40,6 +40,8 @@ class Sprint50EvidenceTests(unittest.TestCase):
         self.assertEqual(self.validate(value), [])
         self.assertTrue(value["summary"]["local_sprint_50_contract_passed"])
         self.assertFalse(value["summary"]["automatic_publication_enabled"])
+        self.assertTrue(value["implemented_contracts"]["coding_product_coordinator_implemented"])
+        self.assertTrue(value["verification_evidence"]["source_level_three_client_parity"])
         self.assertFalse(value["verification_evidence"]["gate_v0_4_closed"])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
 

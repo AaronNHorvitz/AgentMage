@@ -19,13 +19,17 @@ currentness.
   instruction injection, exact-preimage invalidation, rollback conflict preservation, validation
   truth, complete review accounting, and unrelated-change exclusion.
 - Structured-edit tests retain exact supported-language or bounded fallback behavior. CLI tests
-  retain strict parsing and fail-closed transport behavior.
-- The v0.4 manifest and readiness record force coordinator, transport, parity, model, platform,
-  lifecycle, accessibility, review, fuzzing, signing, gate, and release claims to false.
+  retain strict parsing and fail-closed transport behavior. The common coding coordinator and the
+  source-level native Chat, interactive CLI, and bounded future-caller parity fixture execute the
+  same complete request, event, artifact, receipt, checkpoint, evidence, and outcome contracts.
+- The v0.4 manifest and readiness record distinguish implemented source contracts from integrated
+  product claims and force transport, model, platform, lifecycle, accessibility, review, fuzzing,
+  signing, gate, and release claims to false.
 
 The 56 fictional language/workflow combinations are declared but not represented as integrated
-executions. Native Chat and CLI product coordinators are absent, so those end-to-end tasks remain
-blocked.
+executions. A common coding coordinator and source-level three-client parity exist. The
+authenticated installed native Chat/CLI workflow, admitted live model, and product profile remain
+absent, so the end-to-end tasks remain blocked.
 
 ## Security Mapping
 
@@ -43,8 +47,9 @@ No product-wide requirement is marked complete by this local contribution.
 ## Truthful Disposition
 
 A green local report proves only the committed source contracts and commands at its immutable
-revision. It does not close Sprint 50 or `G-V0.4`. Sprints 41 through 49 remain blocked. No coding
-product coordinator, authenticated Chat/CLI workflow, native parity campaign, registered write,
-command, or commit profile, admitted live model, cross-platform acceptance, complete lifecycle or
-accessibility campaign, trusted installed-package execution, independent review, or manual fuzzing
-exists. Automatic publication remains disabled and no v0.4 release is approved.
+revision. It does not close Sprint 50 or `G-V0.4`. Sprints 41 through 49 remain blocked. The common
+coding coordinator and source-level three-client parity are implemented. No authenticated installed
+Chat/CLI workflow, registered write, command, or commit profile, admitted live model, cross-platform
+acceptance, complete lifecycle or accessibility campaign, trusted installed-package execution,
+independent review, or manual fuzzing exists. Automatic publication remains disabled and no v0.4
+release is approved.

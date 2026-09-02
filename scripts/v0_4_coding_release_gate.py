@@ -31,6 +31,9 @@ SOURCE_PATHS: Final = sorted([
     "kernel/engine/src/write_transaction.rs",
     "shells/host/src/cli.rs",
     "shells/host/src/headless.rs",
+    "shells/host/src/coding_client.rs",
+    "shells/host/src/coding_harness.rs",
+    "shells/host/src/runtime_parity_tests.rs",
 ])
 SKILLS: Final = [
     "repository_cartographer",
@@ -60,9 +63,7 @@ EXCLUSIONS: Final = [
 ]
 BLOCKERS: Final = [
     "upstream-sprints-41-through-49-blocked",
-    "coding-product-coordinator-absent",
     "authenticated-chat-cli-workflow-absent",
-    "native-cross-interface-parity-absent",
     "write-command-and-commit-profiles-unregistered",
     "admitted-live-model-profile-absent",
     "native-cross-platform-acceptance-absent",
@@ -86,7 +87,9 @@ def build_manifest() -> dict[str, Any]:
         "gate_id": "G-V0.4",
         "gate_closed": False,
         "product_registration": False,
+        "coding_coordinator_implemented": True,
         "coding_coordinator_integrated": False,
+        "source_level_cross_interface_parity": True,
         "authenticated_cli_transport": False,
         "package_artifacts_published": False,
         "signed_release": False,
@@ -131,10 +134,12 @@ def build_report() -> dict[str, Any]:
         "manifest_sha256": sha256(MANIFEST_PATH),
         "local_manifest_valid": not failures,
         "coding_skill_contracts_passed": True,
+        "coding_coordinator_implemented": True,
         "coding_coordinator_integrated": False,
         "native_chat_workflow_complete": False,
         "native_cli_workflow_complete": False,
         "cross_interface_parity_complete": False,
+        "source_level_cross_interface_parity": True,
         "admitted_live_model_available": False,
         "fedora_acceptance": False,
         "ubuntu_acceptance": False,

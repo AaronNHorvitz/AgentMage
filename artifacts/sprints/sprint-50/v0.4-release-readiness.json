@@ -2,9 +2,7 @@
   "admitted_live_model_available": false,
   "blockers": [
     "upstream-sprints-41-through-49-blocked",
-    "coding-product-coordinator-absent",
     "authenticated-chat-cli-workflow-absent",
-    "native-cross-interface-parity-absent",
     "write-command-and-commit-profiles-unregistered",
     "admitted-live-model-profile-absent",
     "native-cross-platform-acceptance-absent",
@@ -13,6 +11,7 @@
     "independent-release-decision-absent",
     "manual-fuzzing-deferred"
   ],
+  "coding_coordinator_implemented": true,
   "coding_coordinator_integrated": false,
   "coding_skill_contracts_passed": true,
   "cross_interface_parity_complete": false,
@@ -22,7 +21,7 @@
   "independent_review_complete": false,
   "lifecycle_accessibility_recovery_complete": false,
   "local_manifest_valid": true,
-  "manifest_sha256": "066a1d444d7f9bb00db504612b34ffa336bed01ae659a491d766c681079d0a85",
+  "manifest_sha256": "3b4b7c549e2f04e4a147e1d52849998c13492c87b7fc7065883a9a9e836d4f68",
   "manual_fuzzing_complete": false,
   "native_chat_workflow_complete": false,
   "native_cli_workflow_complete": false,
@@ -30,6 +29,7 @@
   "record_type": "agentmage-v0.4-coding-release-readiness",
   "release_allowed": false,
   "schema_version": 1,
+  "source_level_cross_interface_parity": true,
   "ubuntu_acceptance": false,
   "windows_acceptance": false
 }

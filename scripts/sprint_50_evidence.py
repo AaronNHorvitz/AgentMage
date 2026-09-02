@@ -41,6 +41,9 @@ SOURCE_PATHS: Final = (
     "docs/release/v0.4-capability-matrix.md",
     "docs/release/release-notes-v0.4.0-draft.md",
     "docs/verification/sprint-50-local-results.md",
+    "shells/host/src/coding_client.rs",
+    "shells/host/src/coding_harness.rs",
+    "shells/host/src/runtime_parity_tests.rs",
     "scripts/sprint_50_evidence.py",
     "tests/test_sprint_50_evidence.py",
 )
@@ -113,6 +116,14 @@ COMMANDS: Final = (
         ),
     ),
     (
+        "shared-runtime-parity",
+        (
+            "cargo", "test", "-p", "agentmage-host",
+            "story_50_2_read_only_and_coding_packets_are_equal_across_all_three_callers",
+            "--lib", "--locked",
+        ),
+    ),
+    (
         "v0.4-release-gate",
         ("python3", "-m", "unittest", "tests.test_v0_4_coding_release_gate"),
     ),
@@ -133,7 +144,7 @@ COMMANDS: Final = (
         ("python3", "-m", "unittest", "tests.test_sprint_50_evidence"),
     ),
 )
-FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:11])
+FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:12])
 RUST_FOCUSED_COMMANDS: Final = {
     "coding-skill-unit",
     "coding-skill-corpus",
@@ -144,6 +155,7 @@ RUST_FOCUSED_COMMANDS: Final = {
     "review-accounting",
     "structured-edits",
     "thin-cli",
+    "shared-runtime-parity",
 }
 SECURITY_REQUIREMENTS: Final = [
     "SR-ACC-002", "SR-ACC-003", "SR-ACC-004", "SR-ACC-005",
@@ -161,9 +173,9 @@ IMPLEMENTED: Final = {
     "fictional_workflow_combination_count": 56,
     "repository_failure_scenario_count": 6,
     "data_only_skill_authority": False,
-    "coding_product_coordinator": False,
+    "coding_product_coordinator_implemented": True,
     "authenticated_chat_cli_workflow": False,
-    "cross_interface_parity": False,
+    "source_level_cross_interface_parity": True,
     "automatic_publication": False,
     "admitted_live_model": False,
     "native_cross_platform_acceptance": False,
@@ -173,9 +185,7 @@ IMPLEMENTED: Final = {
 }
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINTS-41-THROUGH-49-BLOCKED", "owner": "50.1"},
-    {"code": "CODING-PRODUCT-COORDINATOR-ABSENT", "owner": "50.1.1.3"},
     {"code": "AUTHENTICATED-CHAT-CLI-WORKFLOW-ABSENT", "owner": "50.1.1.5"},
-    {"code": "NATIVE-CROSS-INTERFACE-PARITY-ABSENT", "owner": "50.1.2.2"},
     {"code": "WRITE-COMMAND-COMMIT-PROFILES-UNREGISTERED", "owner": "50.1.3.2"},
     {"code": "ADMITTED-LIVE-MODEL-PROFILE-ABSENT", "owner": "50.1.3.2"},
     {"code": "NATIVE-CROSS-PLATFORM-ACCEPTANCE-ABSENT", "owner": "50.1.3.4"},
@@ -261,6 +271,8 @@ def expected_verification(local_pass: bool = True) -> dict[str, Any]:
         "expanded_corpus_case_count": 233 if local_pass else None,
         "accepted_autonomous_operation_count": 0 if local_pass else None,
         "integrated_fictional_workflow_campaign": False,
+        "shared_coding_coordinator_contract": local_pass,
+        "source_level_three_client_parity": local_pass,
         "native_chat_cli_parity": False,
         "admitted_live_model": False,
         "native_cross_platform_acceptance": False,

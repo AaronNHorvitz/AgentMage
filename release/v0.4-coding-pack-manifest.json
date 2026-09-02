@@ -3,9 +3,7 @@
   "automatic_publication": false,
   "blockers": [
     "upstream-sprints-41-through-49-blocked",
-    "coding-product-coordinator-absent",
     "authenticated-chat-cli-workflow-absent",
-    "native-cross-interface-parity-absent",
     "write-command-and-commit-profiles-unregistered",
     "admitted-live-model-profile-absent",
     "native-cross-platform-acceptance-absent",
@@ -14,6 +12,7 @@
     "independent-release-decision-absent",
     "manual-fuzzing-deferred"
   ],
+  "coding_coordinator_implemented": true,
   "coding_coordinator_integrated": false,
   "coding_skills": [
     "repository_cartographer",
@@ -69,11 +68,11 @@
     },
     {
       "path": "docs/architecture/coding-skills-and-release-boundary.md",
-      "sha256": "d686634976669765beb407c7e5093200874d12c514c4826caffb765f7e2ae8a0"
+      "sha256": "48fc8ca00fcd0fa12281deafbcfb5e4734ce0bd35c524ccd60f5976f2d13bfde"
     },
     {
       "path": "docs/guides/bounded-coding-workflows.md",
-      "sha256": "d050f03024565992171f570a63d7f851f09182f33dbfe9ac6235f956b1fa7002"
+      "sha256": "842484a1555e28c5b882bba86c950e4846a2253b614831cef2008861f6170dec"
     },
     {
       "path": "docs/verification/sprint-45-coding-corpus.json",
@@ -85,11 +84,11 @@
     },
     {
       "path": "kernel/engine/src/filesystem_control.rs",
-      "sha256": "0c500c4e807f7d5a885f06bbd183f0315d5292fa05366b1fa7ce1c58043fcce2"
+      "sha256": "e1a862bf6994e777aefe5008d61fd8f18c1fd61c68ab07d8ba4178b6e3073673"
     },
     {
       "path": "kernel/engine/src/instruction_provenance.rs",
-      "sha256": "7117d1acf7a00e7187a81a1fa34af3df043b8f734c34692e123705b80f1de107"
+      "sha256": "0e88d2dd4d200450f777fc8d8b24b3ba6091ae89cadc6c919af6689205ae9c94"
     },
     {
       "path": "kernel/engine/src/local_commit.rs",
@@ -105,21 +104,34 @@
     },
     {
       "path": "kernel/engine/src/validation_result.rs",
-      "sha256": "cd70a18a2ca8d35f52c531206347047307ee79bf86c306324c84f5e248739f33"
+      "sha256": "0dc1941e818fa94064b1c7928763f3357f3e1b7052fbb9bb7cc58f4ea36d6ef9"
     },
     {
       "path": "kernel/engine/src/write_transaction.rs",
-      "sha256": "964aa6bac3019b3d2da75ad38a2709de3ec1764149222170904187750818fe48"
+      "sha256": "37bfa344dc49b9e79aa7921b0c3b12241a1166cef0216395a56e280841d3dd03"
     },
     {
       "path": "shells/host/src/cli.rs",
-      "sha256": "a84f38d66b83625eaa53fb347fa22e5b4ba464068598b4225a0db452245cd95a"
+      "sha256": "ff5bce423a9478a66941ffa4875ff6ef41dcd66efb33fb775b83ae6793135aa2"
+    },
+    {
+      "path": "shells/host/src/coding_client.rs",
+      "sha256": "5794af19e7fb3d7cc8ef7c7bf446621ab01f0683a628b165383232ceb03761b3"
+    },
+    {
+      "path": "shells/host/src/coding_harness.rs",
+      "sha256": "5091dec8b12c1152b707c5a604ae9b5ef9cb649809c59272139a11c0b4c891cb"
     },
     {
       "path": "shells/host/src/headless.rs",
-      "sha256": "f825d64c9ffe4d634899029ecf7891b1909bd5679559922770bb8129983c3e71"
+      "sha256": "ef4d55c79413b4e17e497e78ca1d379b2bf847fa05cb36d6d1d334f8e1081eb5"
+    },
+    {
+      "path": "shells/host/src/runtime_parity_tests.rs",
+      "sha256": "e695944f11b5aea0f814637835700821674256309d152443f8fc711891e1b657"
     }
   ],
+  "source_level_cross_interface_parity": true,
   "status": "blocked-local-candidate",
   "version": "0.4.0"
 }

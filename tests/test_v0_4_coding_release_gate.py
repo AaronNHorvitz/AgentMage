@@ -15,6 +15,8 @@ class V04CodingReleaseGateTests(unittest.TestCase):
         self.assertEqual(gate.validate_report(report), [])
         self.assertTrue(report["local_manifest_valid"])
         self.assertTrue(report["coding_skill_contracts_passed"])
+        self.assertTrue(report["coding_coordinator_implemented"])
+        self.assertTrue(report["source_level_cross_interface_parity"])
         self.assertFalse(report["gate_closed"])
         self.assertFalse(report["release_allowed"])
 
@@ -46,6 +48,8 @@ class V04CodingReleaseGateTests(unittest.TestCase):
             lambda value: value.update({"product_registration": True}),
             lambda value: value.update({"coding_coordinator_integrated": True}),
             lambda value: value.update({"authenticated_cli_transport": True}),
+            lambda value: value.update({"coding_coordinator_implemented": False}),
+            lambda value: value.update({"source_level_cross_interface_parity": False}),
             lambda value: value["coding_skills"].pop(),
             lambda value: value["excluded_capabilities"].pop(),
             lambda value: value["source_files"][0].update({"sha256": "0" * 64}),
