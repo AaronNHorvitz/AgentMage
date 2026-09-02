@@ -42,19 +42,19 @@
     "reviewed_artifacts": [
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/story-gate-report.json",
-        "sha256": "a04d73cd009e1787be097523843ab504ab04fbe8a15d08e3f758dfc48d3b43ee"
+        "sha256": "6b50793a9af85a04539c7c69f7bcb5edbd17df0f118492c56d235a4fe0743c30"
       },
       {
         "path": "scripts/story_7_1_gate.py",
-        "sha256": "420bdc2c184a4d8ede03d2f67df980e49846aac3688173a9ebbebcf519dc70fc"
+        "sha256": "ea00e3a5fa7bb7cb87bd821d8ba345c572570a633caed8bad105c75a4ff0a11e"
       },
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
-        "sha256": "6f7d15f67f1e945c7bda100ad6bb4ebeb97bec73333dfdbcfdcf9bbed2150104"
+        "sha256": "6b7cafcbe327e5e34459c4c302def55bc30ab2bbcc28d35a2ea5c2db53a6f7c3"
       },
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/security-evidence-map.json",
-        "sha256": "7782dc67013a73ffd8a044b6135e976af47c89eb26bac9df08b38f6a30ceb04c"
+        "sha256": "98819effc6fbc4a6f5d2663cee650d3d280a569a39d341482ab6d32c679e83a0"
       },
       {
         "path": "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
@@ -62,11 +62,11 @@
       },
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/macos-release-manifest-contract.json",
-        "sha256": "db315ebaf008402e3b6fdf7ac7dc13699ba67f38cd99b3ece844728d0bbcaeaa"
+        "sha256": "1ec253627f8aa8a21cc1a9f23430859a45b46932569ba1a93e69020ed563b2d4"
       }
     ],
-    "reviewed_commit": "1e8ca2777a7cce24bd462413cdac1d3d40770287",
-    "reviewed_tree": "298e03c5a5aec1329bd2a7b15a1f74f32ab36507",
+    "reviewed_commit": "4b68787e56ae3f8fc2ab73a5a7f4eae57c1ef35b",
+    "reviewed_tree": "27206686ec63007507fabec49615d52b707460b1",
     "reviewer_id": "agentmage-sprint-7-automated-aggregate-v1"
   },
   "installed_product_claim": "none",
@@ -74,8 +74,8 @@
   "native_mechanism_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "1e8ca2777a7cce24bd462413cdac1d3d40770287",
-  "reviewed_tree": "298e03c5a5aec1329bd2a7b15a1f74f32ab36507",
+  "reviewed_commit": "4b68787e56ae3f8fc2ab73a5a7f4eae57c1ef35b",
+  "reviewed_tree": "27206686ec63007507fabec49615d52b707460b1",
   "schema_version": 1,
   "sprint_id": 7,
   "status": "blocked-native-platforms-and-external-review",
