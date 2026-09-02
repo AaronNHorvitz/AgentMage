@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "record_type": "sprint_55_local_evidence",
-  "source_revision": "63a9a750d0b58798934abbf56da25c4992c9a5b4",
+  "source_revision": "baf2dbb7b0b22390a197da27a6de31a5e65a1539",
   "source_sha256": {
     "kernel/contracts/src/meeting.rs": "19190ab0366d87ee07b5a452168a5dfd211d2e1d2570c37a1f8320056be889c2",
     "kernel/contracts/src/lib.rs": "458420bd48a3b676fd9427c95170b9c22502732215fc5bd1e76a2a576b94db3a",
@@ -30,11 +30,12 @@
     "scripts/meeting_skill_contract.py": "c2af798b94048676abbce8c87ad6e3576b7beadb7b275f5092f806d5b88e34d1",
     "tests/test_meeting_skill_contract.py": "99ba7f62d95a21bef1359b99735135499d62d4666fd17a4e3b87b44a46f746c5",
     "artifacts/sprints/sprint-55/meeting-skill-pack.json": "726d1eafb4cddb83b5218cb5945e5d7e8ed5c1d88d4135411d48a11f38cb88a4",
+    "artifacts/sprints/sprint-56/local-evidence-report.json": "5e963ce0f33c212b7659e459c0998a8cca82df400321ea7cc7896ff46af4640e",
     "docs/architecture/meeting-records-and-continuity.md": "d82ca87789219795eaa4075f9683a10065a59edff74254e5776b97be27de59e0",
     "docs/guides/meeting-records-local-workflows.md": "27acd0030d3dc84115e4acb8ef886abde1589f347ed32b2f08643875e680afaf",
-    "docs/verification/sprint-55-local-results.md": "9300c7066510e8f09e2b3ae823f3609735c2f0bf67a324039df16131b818480d",
-    "scripts/sprint_55_evidence.py": "6040a58affeb9f42566b0a377753221c1ba9d71f809b501cc31a12fed0f7fc42",
-    "tests/test_sprint_55_evidence.py": "fc95fd664776e0b0d67fe4ba9c2d1a89afc35b2b8a9c5c6f5126f3f53146905c"
+    "docs/verification/sprint-55-local-results.md": "e57aac5223d32321bfcf38f3480734699c26901454ec3d17f1ab59ec96448790",
+    "scripts/sprint_55_evidence.py": "656e1427153e955c1066cc0ebb68eaa22ef6ef0863e439172873d1543212ef7f",
+    "tests/test_sprint_55_evidence.py": "746f6bee4ea0824c680c6b1c6f4a31fc6bab9a6e5668b407f39a1631852e4e60"
   },
   "environment": {
     "system": "Linux",
@@ -59,7 +60,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "0862e637bbf31c990e27c12b1acbc028faf4f9a8db2023e3aab56760ad85f82c",
+      "output_sha256": "c0f86e4e74581a6c47bcfb63799f53de64a954d30e3196daf739351908385e39",
       "blocking_skip_count": 0
     },
     {
@@ -89,7 +90,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "1f2223000d6552c88aa6a12ae9fe6e8bc3e74a713271afc49eca6ea84958a763",
+      "output_sha256": "a3a8abd5757ebd49c07e99b399940243da1724189011c56b69606fe8f2c033c9",
       "blocking_skip_count": 0
     },
     {
@@ -104,7 +105,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "70d917473de98bb4cecc66d28bf76523fb311a302cc083f812dfad714a663b34",
+      "output_sha256": "7a7c0e9da5f6b4ab4778a9759e6d8629e7dd4f4ced97cb1df275fd4711f0de8a",
       "blocking_skip_count": 0
     },
     {
@@ -119,7 +120,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "a22b351ffb321511618b4e620a7a563067ee7b03587e75229bfd3eda9fa3eef2",
+      "output_sha256": "6d3f2a035bf68d1d96deb6d390d096af8c5cd4b450856e8182a1a87d8fc478f4",
       "blocking_skip_count": 0
     },
     {
@@ -130,7 +131,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "29d00d575944e217a2756c536bb461f4e79bf56d9458a0b00bce6f6de8e1069a",
+      "output_sha256": "3ef198ca2af8dae98595ff135e75e0a21ee64cf340ac5be0f6c155a336172ede",
       "blocking_skip_count": 0
     },
     {
@@ -173,7 +174,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "8c233a54790c4800d3dd585436af679aa838da259bfdb129412e2d51cdb75cdc",
+      "output_sha256": "59639588a6f1826f129cbcd121edc07279dab94786f5fa5bde6b3439b2e845cc",
       "blocking_skip_count": null
     },
     {
@@ -184,7 +185,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "827df2cd35219f585c09352535a1099d17257a6366541512c9a5d0a2c6fb9843",
+      "output_sha256": "776dc31dc7fd4cfae416e992954e996caa0f763d814666694373df442fa129a7",
       "blocking_skip_count": null
     },
     {
@@ -267,7 +268,7 @@
     "installed_cross_platform_acceptance": false,
     "trusted_package_execution": false,
     "independent_records_review": false,
-    "filing_control_complete": false,
+    "filing_control_complete": true,
     "manual_fuzzing": false
   },
   "verification_evidence": {
@@ -284,7 +285,7 @@
     "installed_cross_platform_acceptance": false,
     "trusted_package_execution": false,
     "independent_records_review": false,
-    "filing_control_complete": false,
+    "filing_control_complete": true,
     "manual_fuzzing": false,
     "sprint_gate_closed": false
   },
@@ -295,10 +296,6 @@
     },
     {
       "code": "ACCESSIBILITY-ACCEPTANCE-ABSENT",
-      "owner": "55.1.3.4"
-    },
-    {
-      "code": "SPRINT-56-FILING-CONTROL-PENDING",
       "owner": "55.1.3.4"
     },
     {

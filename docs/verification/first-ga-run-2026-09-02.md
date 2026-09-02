@@ -39,3 +39,41 @@ Carry the Decision 0046 first-GA set to committed local completion or exact exte
 - Full-gate wall time: 1,305.87 seconds across two attempts.
 - External rows closed by substitution: 0.
 - Exact next action: commit and push this batch, then select the narrowest existing context-to-model-to-tool-to-verifier-to-resume path that can run entirely with local deterministic fixtures for Milestone 2.
+
+## Batch 3 — Sprint 55 immutable evidence renewal
+
+### Completed
+
+- Reassessed the first integrated-workflow target. The shared coordinator, native Chat transport,
+  and deterministic fake-model paths remain component evidence only: the installed Linux host stops
+  before platform activation, installs no production runtime factory, and has no admitted product
+  model. No integrated-workflow or product-lifecycle promotion was made.
+- Renewed Sprint 55's immutable local evidence against exact clean source revision
+  `baf2dbb7b0b22390a197da27a6de31a5e65a1539`.
+- The renewed report retains 13 passing commands, eight focused suites with zero blocking skips,
+  the 86-case acceptance corpus, local product-coordinator and native-interface integration, zero
+  accepted external effects, and exactly six truthful blockers.
+- Updated the Sprint 55 TASKS note to bind the renewed revision and report SHA-256
+  `ea15d0d5f1f9d3082879ee4c23e10118ef7a0234cf1a9ff490731961ebc93ae0`.
+
+### Validation and recovery
+
+- The first evidence invocation used the abbreviated commit identity and was rejected with
+  `source revision invalid`; it wrote no repository file. The required full 40-character revision
+  rerun passed and wrote only the expected report.
+- Post-report evidence tests passed: four tests, zero failures.
+- The first post-report `docs:check` correctly rejected a stale contract-boundary digest after the
+  TASKS/report/traceability change.
+- Regenerated planning scope, traceability, supply chain, contract boundary, contract evidence,
+  and model activation once as the shared source-bound evidence pass. The subsequent full
+  `npm run -s docs:check` passed.
+
+### Remaining blockers and next action
+
+- Sprint 55 remains blocked by upstream Sprint 54, accessibility acceptance, installed
+  cross-platform acceptance, trusted installed-package execution, independent records review, and
+  deferred manual fuzzing. No substitution is available for those evidence classes.
+- Items closed: one stale immutable evidence checkpoint; zero external rows and zero TASKS
+  checkboxes.
+- Exact next action: commit and push this evidence checkpoint, then reassess the earliest
+  dependency-ready repository-controlled gap within the Decision 0046 frozen set.

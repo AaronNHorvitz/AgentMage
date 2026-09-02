@@ -6724,9 +6724,9 @@ review, and deferred manual fuzzing.
 **Gate decision:** Sprint 55 is PASS only when Story 55.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
 **Local evidence note:** The retained report at `artifacts/sprints/sprint-55/local-evidence-report.json`
-binds 11 passing commands and the 86-case acceptance corpus to source revision
-`e57eb9df9917914be6382496fbcf7774845172c2` (report SHA-256
-`fb6e2eb8fd65189c394bac39074f5b0252cfa41951f6a5ca44a121912282ee80`). The bounded
+binds 13 passing commands, eight focused suites with zero blocking skips, and the 86-case acceptance
+corpus to source revision `baf2dbb7b0b22390a197da27a6de31a5e65a1539` (report SHA-256
+`ea15d0d5f1f9d3082879ee4c23e10118ef7a0234cf1a9ff490731961ebc93ae0`). The bounded
 implementation, artifacts, local positive/negative/boundary/cancellation checks, exact effect
 checks, raw-evidence recomputation, registered authority-free product coordinator, and identity-only
 native Chat/CLI/JSON/SDK/ACP routing are complete. Story 55.1 and Sprint 55 remain **BLOCKED** by
