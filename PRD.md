@@ -32,7 +32,7 @@ Current enabled models: none.
 
 Current supported platforms: none.
 
-Stabilization scope freeze: inactive.
+Stabilization scope freeze: active (Decision 0046) — Epics 0 through 8, 10, 11, and the Universal Story Definition of Done; Epics 9 and 12 through 16 preserved outside the freeze.
 
 This PRD specifies the accepted target product; it does not claim that the
 target is currently available. The current state is governed by
