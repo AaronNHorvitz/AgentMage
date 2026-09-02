@@ -1,35 +1,38 @@
 {
   "schema_version": 1,
   "record_type": "sprint_50_local_evidence",
-  "source_revision": "f5780c3d58b0b9187d81208aeae6099f39e0956f",
+  "source_revision": "f7833c158af84930514086402c86fa03c8073342",
   "source_sha256": {
     "capabilities/knowledge/src/coding_skills.rs": "c79f19862fd17b0a7a7a4ffbf384d3d616a165a9e98148f72bee6d05fab7e529",
-    "capabilities/knowledge/src/lib.rs": "2ffda47ea060e8a2ddc981f087d8d139c1c7db22bccac46a539c2048a9ec586e",
+    "capabilities/knowledge/src/lib.rs": "b8483de79ff876d31911b527d1de8438a581cb536b2220893f2d82d30e6e08d2",
     "capabilities/knowledge/examples/coding_skill_pack.rs": "62e2149d360965b17de364891a7ae150faa99521e99d061c8bec573bd74f7be4",
     "capabilities/knowledge/tests/sprint_50_coding_corpus.rs": "9231c4ec237d147fcc1273621b99581650646fe62c8d1f4701974ddff7410d8e",
     "artifacts/sprints/sprint-50/coding-skill-pack.json": "a955298c904b478c3f798b87dcc727f81ff4fa83135edf32f59fa27a73ccd96b",
     "docs/verification/sprint-50-coding-corpus.json": "baa15b135fffa252a5addaf52dddbb3a42853b6fb8bac38ba4feea6b81e669af",
     "scripts/coding_skill_contract.py": "c93abb21f4e0a3c36cee42941f1c7c42cf020e84768a28ec8efdc40d2f2c76b3",
     "tests/test_coding_skill_contract.py": "13e5bac9dfe5a9e0037e0441fe02797c920f674d2907222e26d3805efa251a68",
-    "docs/architecture/coding-skills-and-release-boundary.md": "d686634976669765beb407c7e5093200874d12c514c4826caffb765f7e2ae8a0",
-    "docs/guides/bounded-coding-workflows.md": "d050f03024565992171f570a63d7f851f09182f33dbfe9ac6235f956b1fa7002",
-    "docs/guides/skills.md": "b61969c8eacd608468df599f767f6f9d7e844ef850a31b9839c834ea6752077f",
-    "release/v0.4-coding-pack-manifest.json": "066a1d444d7f9bb00db504612b34ffa336bed01ae659a491d766c681079d0a85",
-    "scripts/v0_4_coding_release_gate.py": "da49c3dd87be8a66a56099e79de167739acc4eb2f999345515acdc451837b823",
-    "tests/test_v0_4_coding_release_gate.py": "7a0f0f931838e9de547c148deb0681980450ae461305c0e8e992d0d5e813069c",
-    "artifacts/sprints/sprint-50/v0.4-release-readiness.json": "26ca45d0347f30bf9fa904e393b6a77e5fef5dbe256757368d38311719bf9ff8",
+    "docs/architecture/coding-skills-and-release-boundary.md": "48fc8ca00fcd0fa12281deafbcfb5e4734ce0bd35c524ccd60f5976f2d13bfde",
+    "docs/guides/bounded-coding-workflows.md": "842484a1555e28c5b882bba86c950e4846a2253b614831cef2008861f6170dec",
+    "docs/guides/skills.md": "11e69a8c8081b2d00401168b00d067bcbd883c6822d19a3e16d51ffb060e1040",
+    "release/v0.4-coding-pack-manifest.json": "3b4b7c549e2f04e4a147e1d52849998c13492c87b7fc7065883a9a9e836d4f68",
+    "scripts/v0_4_coding_release_gate.py": "66b98977b9130a244924a14a15425c8ea17e750ed9f6a79a78fa5e69d7365986",
+    "tests/test_v0_4_coding_release_gate.py": "a5cc2145d9a88b110fe376d5008b35f8163476e8b4a7858ad99fae33e6205f29",
+    "artifacts/sprints/sprint-50/v0.4-release-readiness.json": "b7a87e7ff309d9406fcfdea2db051190190cbddf76587f56369f2a876bd1ab91",
     "docs/release/v0.4-coding-acceptance-and-recovery-bundle.md": "8b123b061d2edcc9be222d18720512c4788d859c71e478ca39f1752c87d8d12b",
     "docs/release/v0.4-capability-matrix.md": "ce4c293765b0311f56901a6b23b8bb5f4bb73fc70ec80c2770f3112067bef7f2",
     "docs/release/release-notes-v0.4.0-draft.md": "ec7bc3ac41cfdb0b1aa9af98de0aafcd81364e54b9072f23f354c8c866f00c6e",
-    "docs/verification/sprint-50-local-results.md": "ee78393955b42c58dd728ef70d758ab81f31875f1db296bb78fb9db384005b80",
-    "scripts/sprint_50_evidence.py": "10a5bb07423417d829333594109ea8ed2aca49739891a83c1d681b33a76fb792",
-    "tests/test_sprint_50_evidence.py": "f22c4298d9cc020671277b778dcbe549d4b02c484c4c700fa24617a4c703e310"
+    "docs/verification/sprint-50-local-results.md": "616ec49280fcc452a2c9a6f3ddbbd2e10a425a7679b2e355f6c38012103dc9fd",
+    "shells/host/src/coding_client.rs": "5794af19e7fb3d7cc8ef7c7bf446621ab01f0683a628b165383232ceb03761b3",
+    "shells/host/src/coding_harness.rs": "5091dec8b12c1152b707c5a604ae9b5ef9cb649809c59272139a11c0b4c891cb",
+    "shells/host/src/runtime_parity_tests.rs": "e695944f11b5aea0f814637835700821674256309d152443f8fc711891e1b657",
+    "scripts/sprint_50_evidence.py": "f231a8857e0e42053cfd22ddc7cda941157bad5a438b43a0245bda56e231c73c",
+    "tests/test_sprint_50_evidence.py": "d5e70878094cd14f85d1134664c1d662fbede22bda42082d49c98c9c6f2946f1"
   },
   "environment": {
     "system": "Linux",
-    "release": "7.1.6-201.fc44.x86_64",
+    "release": "7.1.10-200.fc44.x86_64",
     "machine": "x86_64",
-    "python": "3.14.6",
+    "python": "3.14.7",
     "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
     "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
     "node": "v24.15.0",
@@ -48,7 +51,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "07869b7b78f17edb693918bdfbc5707770c7b2b1d52b4c28a3f49c5b42379774",
+      "output_sha256": "d749c1ab4ac33ded4fc70bf1e5a650ba14765d7c08ceb95e8f9710910faf3680",
       "blocking_skip_count": 0
     },
     {
@@ -63,7 +66,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "6b58f7ce29ffad676dc2de4b7a8b33f25e1cb5078d3642a272d3e764e3b68d0a",
+      "output_sha256": "b2a83c8d4155284215c51402e80eb29cc10f5cb5215aba0574c37bb035dd21f9",
       "blocking_skip_count": 0
     },
     {
@@ -75,7 +78,7 @@
         "tests.test_coding_skill_contract"
       ],
       "exit_code": 0,
-      "output_sha256": "b64db9b0c10c2c0a9c56ac5b1d70090fc35e117c2f7a55a50772be27d7f9b7a9",
+      "output_sha256": "800346069b7c77896a63bf9caf4716560e8342f5599a74f58ff8b74006e44266",
       "blocking_skip_count": 0
     },
     {
@@ -90,7 +93,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "816e1704bf4b24f2e74ee6cdc35edadf8a296484534d1bad78bb44b4ac719786",
+      "output_sha256": "f640fcaea983bdf191975451793d4469d353ac3bf566c01f7fc4295c76df878e",
       "blocking_skip_count": 0
     },
     {
@@ -105,7 +108,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "ed3435c22d9c39ff07c031d28414f3022df8475618352d0ccb22fcfb245b856a",
+      "output_sha256": "5cbdaa11236e6a5ff8cd64024358e6eb857245382ee37a689b693225961d272d",
       "blocking_skip_count": 0
     },
     {
@@ -120,7 +123,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "848b380027f1b2dfc7f7282a37b457bb8749a8111e0e6a78492da2d0f532fac7",
+      "output_sha256": "5d33281fc83ae53510c49586a7aaf7a8ea737d8ae68c40b1e3dec79e356db1d7",
       "blocking_skip_count": 0
     },
     {
@@ -135,7 +138,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "6fd0b0296f2bcb3828735a683d3f3bc77e389cae46fd8230b99fbed78d86c212",
+      "output_sha256": "7493dbdfcb8a8aeabdcf3cba2c4438d4a6a8675c00ed304e93b257b71659b007",
       "blocking_skip_count": 0
     },
     {
@@ -150,7 +153,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "557e087fc7a620ed8a97c28a682f906126aa79456e5894ab588d5f5739129e2b",
+      "output_sha256": "3560c08c61f946840f33a2d3d8d94dc17f82a265bbd0f250f524c8161f584b9b",
       "blocking_skip_count": 0
     },
     {
@@ -165,7 +168,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "73a42a4eb684bde5ce78031dbebcc120c2cf86be465bc76f9c2960025639fd8f",
+      "output_sha256": "c95d2689a7d08b1c7a57a6e60d07f50d20cfd146a6868c57e3da2eaf89f7459f",
       "blocking_skip_count": 0
     },
     {
@@ -180,7 +183,22 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "d8a4c517be76195e03069cd89c061523ae2b9e8b6778efe4cbc5ac0c788f1635",
+      "output_sha256": "a22b351ffb321511618b4e620a7a563067ee7b03587e75229bfd3eda9fa3eef2",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "shared-runtime-parity",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "story_50_2_read_only_and_coding_packets_are_equal_across_all_three_callers",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "69cad1ed080deb71f6a011f7653a590ec3e897cbc445a7856d52e7f64b89621d",
       "blocking_skip_count": 0
     },
     {
@@ -192,7 +210,7 @@
         "tests.test_v0_4_coding_release_gate"
       ],
       "exit_code": 0,
-      "output_sha256": "79897d011a1aaa76145e639592b1207fa563cb1187e00ac85c3ee31c86a0b15f",
+      "output_sha256": "f97776321b6d5f1db3efd766ff27e384b1098780b3a47b31413c7c947e35e6e5",
       "blocking_skip_count": 0
     },
     {
@@ -215,7 +233,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126",
+      "output_sha256": "99f71393b9903dca098310bb446022a4bdee195ea9996f351a787195555210a6",
       "blocking_skip_count": null
     },
     {
@@ -226,7 +244,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "0d7992e68c70280ff958eee166e6926b56594ecd4c2ba352e944f225916928c8",
+      "output_sha256": "cc21e0df7e49917c1345485214ad23e74376a4435bae0eb75af65138f768ee66",
       "blocking_skip_count": null
     },
     {
@@ -259,7 +277,7 @@
         "tests.test_sprint_50_evidence"
       ],
       "exit_code": 0,
-      "output_sha256": "120fcf1e1b1ef6883b716f1b33b4fbea79c7089f1d1ff950e98c9608d82abb42",
+      "output_sha256": "5d8a174d448d59185fd227bcbab9c964e39b10a9c2e28965972cfb0c833dd854",
       "blocking_skip_count": null
     }
   ],
@@ -300,9 +318,9 @@
     "fictional_workflow_combination_count": 56,
     "repository_failure_scenario_count": 6,
     "data_only_skill_authority": false,
-    "coding_product_coordinator": false,
+    "coding_product_coordinator_implemented": true,
     "authenticated_chat_cli_workflow": false,
-    "cross_interface_parity": false,
+    "source_level_cross_interface_parity": true,
     "automatic_publication": false,
     "admitted_live_model": false,
     "native_cross_platform_acceptance": false,
@@ -317,6 +335,8 @@
     "expanded_corpus_case_count": 233,
     "accepted_autonomous_operation_count": 0,
     "integrated_fictional_workflow_campaign": false,
+    "shared_coding_coordinator_contract": true,
+    "source_level_three_client_parity": true,
     "native_chat_cli_parity": false,
     "admitted_live_model": false,
     "native_cross_platform_acceptance": false,
@@ -331,16 +351,8 @@
       "owner": "50.1"
     },
     {
-      "code": "CODING-PRODUCT-COORDINATOR-ABSENT",
-      "owner": "50.1.1.3"
-    },
-    {
       "code": "AUTHENTICATED-CHAT-CLI-WORKFLOW-ABSENT",
       "owner": "50.1.1.5"
-    },
-    {
-      "code": "NATIVE-CROSS-INTERFACE-PARITY-ABSENT",
-      "owner": "50.1.2.2"
     },
     {
       "code": "WRITE-COMMAND-COMMIT-PROFILES-UNREGISTERED",

@@ -119,3 +119,32 @@ Carry the Decision 0046 first-GA set to committed local completion or exact exte
 
 Exact next action: retain and push the Sprint 54 report/TASKS/log checkpoint, then reassess the
 next locally actionable frozen-set blocker without promoting the externally blocked Sprint 54 gate.
+
+## Batch 5 — Sprint 50 runtime-truth renewal
+
+### Completed
+
+- Reconciled the older Sprint 50 release evidence with the later shared coding runtime.
+- Bound the existing common coding coordinator and the exact source-level native Chat, interactive
+  CLI, and bounded future-caller parity fixture into the Sprint 50 evidence inventory.
+- Removed only the stale `CODING-PRODUCT-COORDINATOR-ABSENT` and
+  `NATIVE-CROSS-INTERFACE-PARITY-ABSENT` blockers. Installed authenticated execution, product
+  profile registration, admitted live-model, platform, accessibility, package, independent-review,
+  and fuzz claims remain false.
+- Immutable Sprint 50 evidence passed against exact revision
+  `f7833c158af84930514086402c86fa03c8073342`; report SHA-256
+  `ca650ea8cb2a3defec0f6afce08fddc14260d80faae1f3f14849d8aa7ac1fa64`.
+
+### Validation and recovery
+
+- The exact three-client parity test passed with zero skips; seven evidence/release mutation tests,
+  strict Clippy, product-CI, and supply-chain validation passed.
+- The first immutable campaign failed safely at a stale Story 1.2 contract-boundary report and did
+  not overwrite the prior Sprint 50 report. Regenerated the contract-boundary report and evidence
+  index, committed them at `f7833c15`, and reran the full documentation chain successfully.
+- The final campaign retained 17 passing commands, 12 focused suites, zero blocking skips, and nine
+  blockers. No hosted workflow, native macOS run, installed-client run, or platform substitution
+  occurred.
+
+Exact next action: retain and push the Sprint 50 report/TASKS/traceability checkpoint, then audit
+Sprint 51 against later frontier-coordinator implementation and remove only stale local blockers.
