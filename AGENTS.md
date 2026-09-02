@@ -43,26 +43,34 @@ Evidence artifacts are **hash-bound to their whole input files**. Each records t
 of every file it read, and `G-DOD-11` requires evidence indexes to be current. Changing one
 byte of an input provably invalidates every artifact referencing it.
 
-Measured input-reference counts across 373 evidence artifacts:
+**The carrier is the SBOM.** `scripts/supply_chain.py` computes a `tree_hash` over every file
+in each Cargo workspace member (`rglob("*")`, line 68; applied at line 162) and writes it as
+that crate's component `content` hash in `supply-chain/sbom.cdx.json` and
+`supply-chain/dependency-provenance.json`, which in turn changes
+`supply-chain/dependency-hashes.sha256`. Those three outputs are hashed inputs of evidence
+artifacts across many sprints — 11, 13, and 10 artifacts respectively as of `2026-09-01`.
+
+Therefore **any source edit inside any workspace member — regardless of which file — flips
+the SBOM the next time `supply-chain:build` runs and invalidates every artifact bound to it.**
+On `2026-09-01`, editing `shells/host/src/cli.rs` for Sprint 56 changed the `agentmage-host`
+tree hash, which invalidated `sprint-1/story-1.2` and `sprint-3/story-3.1` evidence.
+
+The tree hash is **correct provenance** and must not be weakened (§2). The cascade cost is
+controlled by **when** the SBOM is regenerated, not by what it hashes. Capabilities in the
+same work unit flip the same SBOM; regenerating per capability repeats identical work N times
+for no additional assurance. **The cascade cost is per batch, not per item.**
+
+Most-referenced evidence inputs overall, for awareness (373 artifacts scanned):
 
 | Input | Artifacts referencing it |
 |---|---|
+| `scripts/supply_chain.py` | 48 |
 | `kernel/engine/src/operational_store.rs` | 36 |
 | `kernel/engine/src/lib.rs` | 31 |
 | `SECURITY-REVIEW.md` | 29 |
 | `Cargo.lock` | 28 |
 | `Cargo.toml` | 25 |
 | `package.json` | 20 |
-| `scripts/revision_evidence.py` | 17 |
-| `shells/vscode/package.json` | 11 |
-
-Exposing a capability requires editing `kernel/engine/src/lib.rs` to register the module,
-which alone invalidates 31 artifacts. A dependency change adds 53 more via `Cargo.lock` and
-`Cargo.toml`. **A single capability addition invalidates on the order of 100 artifacts.**
-
-Capabilities in the same work unit invalidate **the same** inputs. Regenerating per
-capability repeats identical work N times for no additional assurance. **The cascade cost is
-per batch, not per item.**
 
 ### Measured impact
 
@@ -81,11 +89,13 @@ cascade cost. Batching is the sanctioned optimization. Any change to binding gra
 deliberate architectural decision requiring an accepted Decision record — not an agent
 optimization.
 
-## 3. Sequence work to share invalidation
+## 3. Do not regenerate supply-chain outputs mid-batch
 
-When choosing the next unit of work under Decision 0021, prefer grouping items that touch the
-**same** hotspot inputs listed in §1. Work that touches `kernel/engine/src/lib.rs` should be
-completed together before the evidence pass, not interleaved with unrelated work.
+The cascade is triggered by **regenerating** the SBOM, not by editing source. Complete
+**all** source edits for the work unit first. Run `supply-chain:build` and evidence
+regeneration **once**, after the last source edit in the batch. Never interleave source edits
+with evidence regeneration. Under Decision 0021, prefer grouping items whose source edits fall
+in the same work unit so they share a single regeneration.
 
 ## 4. Report honestly
 
@@ -93,6 +103,17 @@ State what is open. Do not claim platform, runtime, model, or integration suppor
 been demonstrated. `architecture/status-model.json` is the authority on current status; leave
 `lifecycle_status`, `verification_status`, and the "Current Implementation Truth" block in
 `TASKS.md` accurate at all times.
+
+## 5. Decision-gated option — not authorized for agents
+
+A structural reduction exists: emit a **third-party-only dependency manifest** alongside the
+full SBOM and re-point dependency-structure evidence (for example Story 1.2 and Story 3.1) at
+the stable manifest, so first-party source edits stop invalidating it. Estimated benefit is
+roughly two to three days over the remaining plan — batching already removes most cascade
+cost, and a code-generation floor of about 38 days bounds the rest. Estimated cost is a
+one-time invalidation of the **48 artifacts** that hash `scripts/supply_chain.py`, plus
+re-pointing roughly 20 artifacts' inputs. **This requires an accepted Decision record. Do not
+implement it on agent initiative.**
 
 ---
 
