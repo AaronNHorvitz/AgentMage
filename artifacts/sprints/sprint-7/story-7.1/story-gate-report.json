@@ -81,12 +81,12 @@
       {
         "byte_length": 4142,
         "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
-        "sha256": "6f7d15f67f1e945c7bda100ad6bb4ebeb97bec73333dfdbcfdcf9bbed2150104"
+        "sha256": "6b7cafcbe327e5e34459c4c302def55bc30ab2bbcc28d35a2ea5c2db53a6f7c3"
       },
       {
         "byte_length": 12364,
         "path": "artifacts/sprints/sprint-7/story-7.1/security-evidence-map.json",
-        "sha256": "7782dc67013a73ffd8a044b6135e976af47c89eb26bac9df08b38f6a30ceb04c"
+        "sha256": "98819effc6fbc4a6f5d2663cee650d3d280a569a39d341482ab6d32c679e83a0"
       },
       {
         "byte_length": 6520,
@@ -101,7 +101,7 @@
       {
         "byte_length": 2369,
         "path": "artifacts/sprints/sprint-7/story-7.1/macos-release-manifest-contract.json",
-        "sha256": "db315ebaf008402e3b6fdf7ac7dc13699ba67f38cd99b3ece844728d0bbcaeaa"
+        "sha256": "1ec253627f8aa8a21cc1a9f23430859a45b46932569ba1a93e69020ed563b2d4"
       },
       {
         "byte_length": 11740,
@@ -148,16 +148,16 @@
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-aggregate-review-not-external-human-review",
-    "reviewed_commit": "1a6c636e2fe3aef0c22978e8d3c871f8f464f03b",
-    "reviewed_tree": "c18852651068751e0eca9cd6883ac0e89f93a669",
+    "reviewed_commit": "c658f724d3580b714449e862382da980018c13c8",
+    "reviewed_tree": "acebedc779027ec308968a348f78b1c97765c8e1",
     "reviewer_id": "agentmage-story-7.1-automated-aggregate-v1"
   },
   "installed_product_claim": "none",
   "macos_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "1a6c636e2fe3aef0c22978e8d3c871f8f464f03b",
-  "reviewed_tree": "c18852651068751e0eca9cd6883ac0e89f93a669",
+  "reviewed_commit": "c658f724d3580b714449e862382da980018c13c8",
+  "reviewed_tree": "acebedc779027ec308968a348f78b1c97765c8e1",
   "schema_version": 1,
   "sprint_completion_claim": false,
   "status": "blocked-native-platforms-and-external-review",
