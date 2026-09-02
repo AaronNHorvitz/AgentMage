@@ -77,3 +77,45 @@ Carry the Decision 0046 first-GA set to committed local completion or exact exte
   checkboxes.
 - Exact next action: commit and push this evidence checkpoint, then reassess the earliest
   dependency-ready repository-controlled gap within the Decision 0046 frozen set.
+
+## Batch 4 — durable executive reminders and Sprint 54 renewal
+
+### Completed
+
+- Added a durable, authority-free reminder lifecycle bound to exact canonical executive-record and
+  source identities. Explicit create, snooze, reschedule, acknowledge, and complete transitions
+  are monotonic and hash-chained.
+- Added an injected canonical compare-and-swap persistence boundary with verified reconstruction.
+  Stale writers, replayed event identities, semantic transition tampering, time rollback, digest
+  mutation, and effect-bearing records fail closed.
+- Kept notification, calendar, scheduling, source mutation, network, and other external-effect
+  authority absent.
+- Renewed dependent configuration/component, Story 3, platform/security, Story 7, Sprint 7,
+  RV-50, Story 1.3, shared contract, and supply-chain evidence through the authorized exact-review
+  pin sequence. macOS checks remained source-contract-only and no native or release promotion was
+  made.
+- The immutable Sprint 54 campaign passed against
+  `c7dbe5d868e838de2b38eec7509063ed354a412b`; report SHA-256
+  `ea067280cdeac0ec60c7cbe14da96342b001136dd380524e61af6df473f35ed5`.
+
+### Validation and blocker change
+
+- Focused reminder validation passed: 15 Rust tests, seven Python contract/evidence tests, strict
+  Clippy, and documentation lint over 412 files.
+- Sprint 54 retained 13 passing commands, eight focused suites with zero blocking skips, and the
+  77-case acceptance corpus. `durable_reminder_lifecycle` is now true.
+- Removed only `DURABLE-REMINDER-LIFECYCLE-ABSENT`. Sprint 54 retains five blockers: upstream
+  Sprint 53, installed cross-platform acceptance, trusted installed-package execution, independent
+  executive-boundary review, and deferred manual fuzzing.
+- External rows closed by substitution: 0.
+
+### Checkpoints
+
+- `d9259603` — durable executive reminder source.
+- `c4fbf845`, `c658f724` — shared platform and Story 7 security dependencies.
+- `c0d502dc`, `a2af6fdd`, `22da8cfe`, `c63e924a` — exact review-pin renewals.
+- `4b68787e`, `026f21e1`, `b517ba8e`, `4775ba0b`, `95a23d3b`, `c7dbe5d8` — reviewed Story 7,
+  Sprint 7, RV-50, Story 1.3, and shared contract evidence.
+
+Exact next action: retain and push the Sprint 54 report/TASKS/log checkpoint, then reassess the
+next locally actionable frozen-set blocker without promoting the externally blocked Sprint 54 gate.

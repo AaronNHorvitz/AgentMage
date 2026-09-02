@@ -6662,15 +6662,17 @@ and the sprint therefore remain open.
 
 **Local evidence note:** The retained report at `artifacts/sprints/sprint-54/local-evidence-report.json`
 binds 13 passing commands, eight focused suites with zero blocking skips, and the 77-case acceptance
-corpus to source revision `63a9a750d0b58798934abbf56da25c4992c9a5b4` (report SHA-256
-`8438d21b07f8bcfcfe504e53c090dea140e7a0f1f04474dedde8aa9a3fee79ec`). The bounded
+corpus to source revision `c7dbe5d868e838de2b38eec7509063ed354a412b` (report SHA-256
+`ea067280cdeac0ec60c7cbe14da96342b001136dd380524e61af6df473f35ed5`). The bounded
 source contracts, artifacts, focused tests, privacy rules, source-store parity, and local sprint
 criteria are complete. The registered host coordinator binds every projection to one canonical
 snapshot and all eight authority-free skills with zero accepted effects or cross-privacy leaks.
 Identity-only native Chat/CLI/JSON/SDK/ACP routing now reaches that same coordinator without exposing
 records or owning effect authority. Story 54.1 and Sprint 54 remain **BLOCKED** by Sprint 53,
-durable reminder lifecycle, installed cross-platform and trusted-package evidence, independent
-review, and deferred manual fuzzing.
+installed cross-platform and trusted-package evidence, independent review, and deferred manual
+fuzzing. The durable local reminder lifecycle is complete with source-bound creation, explicit
+snooze/reschedule/acknowledge/complete transitions, hash-chain verification, and compare-and-swap
+restart reconstruction without notification or external-effect authority.
 ### [ ] Sprint 55 - Meeting Records and Continuity
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
