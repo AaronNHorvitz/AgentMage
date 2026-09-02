@@ -296,6 +296,27 @@ pub enum DocumentControlClientCommand {
     },
 }
 
+/// Closed meeting-workflow command carrying identities and an aggregate host-input binding.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "action", rename_all = "snake_case", deny_unknown_fields)]
+pub enum MeetingClientCommand {
+    /// Coordinate one host-owned plan, cleanup, minutes, continuity, and closeout workspace.
+    Coordinate {
+        /// Stable meeting identity shared by the sealed records.
+        meeting_id: String,
+        /// Exact sealed plan digest.
+        plan_sha256: String,
+        /// Exact sealed transcript-cleanup digest.
+        cleanup_sha256: String,
+        /// Exact sealed minutes digest.
+        minutes_sha256: String,
+        /// Stable next continuity-record identity.
+        continuity_record_id: String,
+        /// Domain-separated digest of every host-owned coordinator input.
+        input_sha256: String,
+    },
+}
+
 /// Closed Word artifact command family carrying identities only, never document bytes or paths.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "action", rename_all = "snake_case", deny_unknown_fields)]
@@ -396,6 +417,11 @@ pub enum ClientCommand {
         /// Exact identity-only document-control operation.
         action: DocumentControlClientCommand,
     },
+    /// Coordinate meeting records and continuity through the common host boundary.
+    Meeting {
+        /// Exact identity-only meeting operation.
+        action: MeetingClientCommand,
+    },
     /// Inspect or generate Word artifacts through the common host-owned coordinator.
     Word {
         /// Exact identity-only Word operation.
@@ -426,6 +452,7 @@ impl ClientCommand {
             Self::Knowledge { .. } => GrantOperation::WorkspaceRead,
             Self::Markdown { .. } => GrantOperation::DraftCreate,
             Self::DocumentControl { .. } => GrantOperation::DraftCreate,
+            Self::Meeting { .. } => GrantOperation::DraftCreate,
             Self::Word { action } => match action {
                 WordClientCommand::Inspect { .. } => GrantOperation::WorkspaceRead,
                 WordClientCommand::Generate { .. } => GrantOperation::DraftCreate,
@@ -523,6 +550,24 @@ impl ClientCommand {
                     && valid_sha256(register_sha256)
                     && valid_identifier(report_id)
                     && valid_document_workflow(workflow_kind)
+                    && valid_sha256(input_sha256)
+            }
+            Self::Meeting {
+                action:
+                    MeetingClientCommand::Coordinate {
+                        meeting_id,
+                        plan_sha256,
+                        cleanup_sha256,
+                        minutes_sha256,
+                        continuity_record_id,
+                        input_sha256,
+                    },
+            } => {
+                valid_identifier(meeting_id)
+                    && valid_sha256(plan_sha256)
+                    && valid_sha256(cleanup_sha256)
+                    && valid_sha256(minutes_sha256)
+                    && valid_identifier(continuity_record_id)
                     && valid_sha256(input_sha256)
             }
             Self::Word { action } => match action {
@@ -1646,6 +1691,16 @@ mod tests {
                     report_id: "report-0001".to_owned(),
                     workflow_kind: "quality".to_owned(),
                     input_sha256: "b".repeat(64),
+                },
+            },
+            ClientCommand::Meeting {
+                action: MeetingClientCommand::Coordinate {
+                    meeting_id: "meeting-0001".to_owned(),
+                    plan_sha256: "a".repeat(64),
+                    cleanup_sha256: "b".repeat(64),
+                    minutes_sha256: "c".repeat(64),
+                    continuity_record_id: "continuity-0001".to_owned(),
+                    input_sha256: "d".repeat(64),
                 },
             },
             ClientCommand::Word {

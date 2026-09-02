@@ -6727,10 +6727,10 @@ binds 11 passing commands and the 86-case acceptance corpus to source revision
 `e57eb9df9917914be6382496fbcf7774845172c2` (report SHA-256
 `fb6e2eb8fd65189c394bac39074f5b0252cfa41951f6a5ca44a121912282ee80`). The bounded
 implementation, artifacts, local positive/negative/boundary/cancellation checks, exact effect
-checks, raw-evidence recomputation, and registered authority-free product coordinator are complete.
-Story 55.1 and Sprint 55 remain **BLOCKED** by Sprint 54, the absent native interface, missing
-accessibility and installed cross-platform evidence, pending Sprint 56 filing control,
-trusted-package execution, independent records review, and deferred manual fuzzing.
+checks, raw-evidence recomputation, registered authority-free product coordinator, and identity-only
+native Chat/CLI/JSON/SDK/ACP routing are complete. Story 55.1 and Sprint 55 remain **BLOCKED** by
+Sprint 54, missing accessibility and installed cross-platform evidence, pending Sprint 56 filing
+control, trusted-package execution, independent records review, and deferred manual fuzzing.
 ### [ ] Sprint 56 - Document, Correspondence, and Filing Control
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.

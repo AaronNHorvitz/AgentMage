@@ -47,6 +47,14 @@ skills, verifies the plan, cleanup, and minutes, requires one meeting identity, 
 participant ledger, and then derives continuity and closeout. Neither rejection creates a partial
 output or an external effect.
 
+Native Chat, interactive CLI, JSON, SDK, and ACP surfaces use the same closed meeting command and
+host coordinator. The client command contains only the meeting identity, sealed-record digests,
+continuity-record identity, and a domain-separated digest over every host-owned coordinator input.
+Plans, cleanup text, minutes, prior continuity, updates, and follow-up draft content never cross the
+thin-client command boundary. The host rejects stale requests, workspace substitution, record
+substitution, or aggregate-input mismatch before composition, and successful routing still grants
+no invitation, assignment, notification, send, scheduling, calendar, or source-mutation effect.
+
 ## Truth Rules
 
 Invitation response and attendance are separate closed states. An observed invitation or
@@ -94,5 +102,5 @@ stateDiagram-v2
   assignment, communication, calendar, and source-mutation effects.
 
 This source layer does not prove native accessibility, installed-platform behavior, trusted package
-execution, durable reminders, independent records review, or manual fuzzing. Those claims remain
-blocked until their exact evidence exists.
+execution, durable reminders, independent records review, or manual fuzzing. Native routing is
+locally integrated, but those remaining claims stay blocked until their exact evidence exists.

@@ -10,10 +10,15 @@ use agentmage_kernel_engine::meeting_continuity::{
     build_meeting_continuity, verify_meeting_minutes, verify_meeting_plan_draft,
     verify_transcript_cleanup,
 };
+use sha2::{Digest, Sha256};
+
+use crate::headless::{ClientCommand, MeetingClientCommand, ThinClientRequest};
 
 /// Stable failure from the local meeting-workflow composition.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MeetingCoordinatorError {
+    /// The thin-client request was stale, malformed, mismatched, or authority-incompatible.
+    NativeRequestDenied,
     /// The caller cancelled before any projection began.
     Cancelled,
     /// A required already-approved local dependency is unavailable.
@@ -31,6 +36,7 @@ impl MeetingCoordinatorError {
     #[must_use]
     pub const fn code(self) -> &'static str {
         match self {
+            Self::NativeRequestDenied => "meeting.coordinator.native-request-denied",
             Self::Cancelled => "meeting.coordinator.cancelled",
             Self::DependencyUnavailable => "meeting.coordinator.dependency-unavailable",
             Self::InvalidInput => "meeting.coordinator.input-invalid",
@@ -63,6 +69,8 @@ impl From<MeetingContinuityError> for MeetingCoordinatorError {
 /// Caller-owned identities and explicit state for one local meeting composition.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MeetingCoordinatorRequest {
+    /// Stable workspace identity selected by the trusted host.
+    pub workspace_id: String,
     /// Explicit dependency and sticky-cancellation state.
     pub precondition: MeetingProjectionPrecondition,
     /// Stable identity for the next immutable continuity record.
@@ -102,6 +110,9 @@ pub fn coordinate_meeting_workspace(
     prior_continuity: Option<&MeetingContinuityRecord>,
     request: MeetingCoordinatorRequest,
 ) -> Result<MeetingCoordinatorOutcome, MeetingCoordinatorError> {
+    if !valid_identifier(&request.workspace_id) {
+        return Err(MeetingCoordinatorError::InvalidInput);
+    }
     admit_meeting_projection(request.precondition)?;
 
     let packages =
@@ -161,6 +172,80 @@ pub fn coordinate_meeting_workspace(
     })
 }
 
+/// Verifies an identity-only native request and routes it through the common coordinator.
+pub fn coordinate_meeting_native(
+    client: &ThinClientRequest,
+    plan: MeetingPlanDraft,
+    cleanup: MeetingTranscriptCleanup,
+    minutes: MeetingMinutes,
+    prior_continuity: Option<&MeetingContinuityRecord>,
+    request: MeetingCoordinatorRequest,
+    now_epoch_ms: u64,
+) -> Result<MeetingCoordinatorOutcome, MeetingCoordinatorError> {
+    client
+        .verify(now_epoch_ms)
+        .map_err(|_| MeetingCoordinatorError::NativeRequestDenied)?;
+    let input_sha256 = meeting_input_sha256(&plan, &cleanup, &minutes, prior_continuity, &request)?;
+    let matches = matches!(
+        &client.command,
+        ClientCommand::Meeting {
+            action: MeetingClientCommand::Coordinate {
+                meeting_id,
+                plan_sha256,
+                cleanup_sha256,
+                minutes_sha256,
+                continuity_record_id,
+                input_sha256: command_input,
+            },
+        } if meeting_id == &plan.meeting_id
+            && plan_sha256 == &plan.draft_sha256
+            && cleanup_sha256 == &cleanup.cleanup_sha256
+            && minutes_sha256 == &minutes.minutes_sha256
+            && continuity_record_id == &request.continuity_record_id
+            && command_input == &input_sha256
+    );
+    if client.status.workspace_id != request.workspace_id || !matches {
+        return Err(MeetingCoordinatorError::NativeRequestDenied);
+    }
+    coordinate_meeting_workspace(plan, cleanup, minutes, prior_continuity, request)
+}
+
+/// Returns the domain-separated identity of every host-owned meeting coordinator input.
+pub fn meeting_input_sha256(
+    plan: &MeetingPlanDraft,
+    cleanup: &MeetingTranscriptCleanup,
+    minutes: &MeetingMinutes,
+    prior_continuity: Option<&MeetingContinuityRecord>,
+    request: &MeetingCoordinatorRequest,
+) -> Result<String, MeetingCoordinatorError> {
+    let encoded = serde_json::to_vec(&(
+        "agentmage.meeting-native.v1",
+        &request.workspace_id,
+        request.precondition,
+        &request.continuity_record_id,
+        &request.series_id,
+        &request.continuity_updates,
+        &request.follow_up_draft,
+        plan,
+        cleanup,
+        minutes,
+        prior_continuity,
+    ))
+    .map_err(|_| MeetingCoordinatorError::InvalidInput)?;
+    Ok(Sha256::digest(encoded)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect())
+}
+
+fn valid_identifier(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 128
+        && value.bytes().enumerate().all(|(index, byte)| {
+            byte.is_ascii_alphanumeric() || (index > 0 && matches!(byte, b'.' | b'_' | b':' | b'-'))
+        })
+}
+
 #[cfg(test)]
 mod tests {
     use agentmage_kernel_contracts::{
@@ -171,6 +256,11 @@ mod tests {
     };
     use agentmage_kernel_engine::meeting_continuity::{
         seal_meeting_minutes, seal_meeting_plan_draft, seal_transcript_cleanup,
+    };
+
+    use crate::headless::{
+        ClientAuthority, ClientStatusSnapshot, ClientSurface, PredeclaredClientGrant,
+        kernel_operation_sha256,
     };
 
     use super::*;
@@ -280,6 +370,7 @@ mod tests {
 
     fn request() -> MeetingCoordinatorRequest {
         MeetingCoordinatorRequest {
+            workspace_id: "workspace-meeting".to_owned(),
             precondition: MeetingProjectionPrecondition {
                 dependencies_ready: true,
                 cancellation_requested: false,
@@ -289,6 +380,78 @@ mod tests {
             continuity_updates: Vec::new(),
             follow_up_draft: "Review this local follow-up draft.".to_owned(),
         }
+    }
+
+    fn native_command(
+        plan: &MeetingPlanDraft,
+        cleanup: &MeetingTranscriptCleanup,
+        minutes: &MeetingMinutes,
+        request: &MeetingCoordinatorRequest,
+    ) -> ClientCommand {
+        ClientCommand::Meeting {
+            action: MeetingClientCommand::Coordinate {
+                meeting_id: plan.meeting_id.clone(),
+                plan_sha256: plan.draft_sha256.clone(),
+                cleanup_sha256: cleanup.cleanup_sha256.clone(),
+                minutes_sha256: minutes.minutes_sha256.clone(),
+                continuity_record_id: request.continuity_record_id.clone(),
+                input_sha256: meeting_input_sha256(plan, cleanup, minutes, None, request)
+                    .expect("input binding"),
+            },
+        }
+    }
+
+    fn native_client(surface: ClientSurface, command: ClientCommand) -> ThinClientRequest {
+        const NOW: u64 = 50_000;
+        let arguments_sha256 =
+            kernel_operation_sha256("workspace-meeting", &command, &"d".repeat(64))
+                .expect("kernel operation");
+        let authority = if surface.has_interactive_approval() {
+            ClientAuthority::Interactive {
+                approval_channel_sha256: "c".repeat(64),
+            }
+        } else {
+            ClientAuthority::Predeclared {
+                grant: PredeclaredClientGrant {
+                    grant_id: format!("grant-{surface:?}").to_lowercase(),
+                    operation: command.required_operation(),
+                    policy_sha256: "d".repeat(64),
+                    arguments_sha256,
+                    nonce_sha256: "f".repeat(64),
+                    issued_at_epoch_ms: NOW - 1,
+                    expires_at_epoch_ms: NOW + 10_000,
+                    single_use: true,
+                },
+            }
+        };
+        ThinClientRequest {
+            schema_version: 0,
+            request_id: format!("request-{surface:?}").to_lowercase(),
+            surface,
+            status: ClientStatusSnapshot {
+                workspace_id: "workspace-meeting".to_owned(),
+                model_profile_id: None,
+                permission_profile_id: "permission-meeting".to_owned(),
+                conversation_id: None,
+                plan_step_id: None,
+                writable_roots: vec!["meetings".to_owned()],
+                offline: true,
+                status_sha256: "0".repeat(64),
+            }
+            .seal()
+            .expect("status"),
+            command,
+            authority,
+            policy_sha256: "d".repeat(64),
+            cancellation_id: format!("cancel-{surface:?}").to_lowercase(),
+            max_event_bytes: 64 * 1024,
+            max_output_bytes: 1024 * 1024,
+            resume: None,
+            kernel_request_sha256: "0".repeat(64),
+            request_sha256: "0".repeat(64),
+        }
+        .seal(NOW)
+        .expect("native client")
     }
 
     #[test]
@@ -340,6 +503,81 @@ mod tests {
         assert_eq!(
             coordinate_meeting_workspace(plan(), cleanup(), minutes(), None, unavailable),
             Err(MeetingCoordinatorError::DependencyUnavailable)
+        );
+    }
+
+    #[test]
+    fn every_native_surface_routes_identity_only_meeting_inputs_through_one_coordinator() {
+        const NOW: u64 = 50_000;
+        let plan = plan();
+        let cleanup = cleanup();
+        let minutes = minutes();
+        let request = request();
+        let command = native_command(&plan, &cleanup, &minutes, &request);
+        let mut expected = None;
+        for surface in [
+            ClientSurface::NativeChat,
+            ClientSurface::InteractiveCli,
+            ClientSurface::Json,
+            ClientSurface::Sdk,
+            ClientSurface::Acp,
+        ] {
+            let outcome = coordinate_meeting_native(
+                &native_client(surface, command.clone()),
+                plan.clone(),
+                cleanup.clone(),
+                minutes.clone(),
+                None,
+                request.clone(),
+                NOW,
+            )
+            .unwrap_or_else(|error| panic!("{surface:?}: {error:?}"));
+            let snapshot = (
+                outcome.plan,
+                outcome.cleanup,
+                outcome.minutes,
+                outcome.continuity,
+                outcome.closeout,
+                outcome.external_effect_allowed,
+            );
+            if let Some(expected) = &expected {
+                assert_eq!(&snapshot, expected, "{surface:?}");
+            } else {
+                expected = Some(snapshot);
+            }
+        }
+    }
+
+    #[test]
+    fn native_meeting_binding_rejects_workspace_and_minutes_substitution() {
+        const NOW: u64 = 50_000;
+        let plan = plan();
+        let cleanup = cleanup();
+        let minutes = minutes();
+        let request = request();
+        let client = native_client(
+            ClientSurface::Json,
+            native_command(&plan, &cleanup, &minutes, &request),
+        );
+        let mut changed_minutes = minutes.clone();
+        changed_minutes.minutes_sha256 = "e".repeat(64);
+        assert_eq!(
+            coordinate_meeting_native(
+                &client,
+                plan.clone(),
+                cleanup.clone(),
+                changed_minutes,
+                None,
+                request.clone(),
+                NOW,
+            ),
+            Err(MeetingCoordinatorError::NativeRequestDenied)
+        );
+        let mut wrong_workspace = request;
+        wrong_workspace.workspace_id = "workspace-other".to_owned();
+        assert_eq!(
+            coordinate_meeting_native(&client, plan, cleanup, minutes, None, wrong_workspace, NOW,),
+            Err(MeetingCoordinatorError::NativeRequestDenied)
         );
     }
 }

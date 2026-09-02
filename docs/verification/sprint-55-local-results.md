@@ -25,6 +25,9 @@ schemas, six authority-free skills, and the closed 86-case acceptance corpus.
   partial meeting record.
 - The registered host coordinator admits all six bounded skills and binds the sealed plan, cleanup,
   minutes, continuity, and closeout to one meeting, source set, and participant ledger.
+- Native Chat, interactive CLI, JSON, SDK, and ACP route the same identity-only command through that
+  coordinator. Exact record and workflow-input digests reject workspace or content substitution,
+  while meeting content remains host-owned and every external-effect capability remains absent.
 
 ## Security Mapping
 
@@ -41,6 +44,7 @@ No product-wide requirement is marked complete by this local contribution.
 
 A green local report proves only the committed source and named commands on the recorded Linux
 environment. Sprint 54 remains blocked. The local product coordinator is integrated, but no native
-interface, accessibility result, installed cross-platform acceptance, trusted package execution,
-independent records review, completed filing-control half, or manual fuzzing exists. Sprint 55
-therefore remains **BLOCKED** despite the passing local contracts and artifacts.
+accessibility result, installed cross-platform acceptance, trusted package execution, independent
+records review, completed filing-control half, or manual fuzzing exists. Native interface routing
+is locally integrated; Sprint 55 therefore remains **BLOCKED** despite the passing local contracts
+and artifacts.
