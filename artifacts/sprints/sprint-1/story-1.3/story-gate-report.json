@@ -119,12 +119,12 @@
       {
         "byte_length": 7982,
         "path": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
-        "sha256": "c74c5ae274482d83205689ba599dd68a245308368ed1a1bc90161d382a892571"
+        "sha256": "6e142046e8a95a7ced25d0489570760279c214ca0b0daba8a61b23880633d0ad"
       },
       {
-        "byte_length": 9518,
+        "byte_length": 9422,
         "path": "artifacts/sprints/sprint-1/story-1.3/rv50-applicable-results.log",
-        "sha256": "e79b9b4b18f97ca2ef3877221057cff716aad72dbea9e84b933320ebee4b9079"
+        "sha256": "50c76966974ef45a1145c228b903d3ae942e20fda1b04ef0d029a17bddf706f6"
       },
       {
         "byte_length": 4491,
@@ -206,8 +206,8 @@
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "f4a038ab3fdf9c9ff205b8317d0c6c94956e83b4",
-    "reviewed_tree": "6db47807e9556db120a77a741529a3cf0b2f1fb5",
+    "reviewed_commit": "7c3247c6449030f12323a3274ada3ea673fdf14f",
+    "reviewed_tree": "16cee274f7584de087a25d550ce8cecc002676a7",
     "reviewer_id": "agentmage-story-1.3-independent-gate-v1"
   },
   "installed_product_claim": "none",
@@ -232,15 +232,15 @@
   "platform_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "f4a038ab3fdf9c9ff205b8317d0c6c94956e83b4",
-  "reviewed_tree": "6db47807e9556db120a77a741529a3cf0b2f1fb5",
+  "reviewed_commit": "7c3247c6449030f12323a3274ada3ea673fdf14f",
+  "reviewed_tree": "16cee274f7584de087a25d550ce8cecc002676a7",
   "rv50": {
     "blocked_external_tuple_count": 5,
     "evidence_substitution_permitted": false,
     "later_runtime_scenario_count": 5,
     "protocol_complete": false,
     "protocol_id": "RV-50",
-    "report_sha256": "6ab0d0241307c335fcdf25e800651d24d1f826fb9478f47ea7179f0d5b06ffcc",
+    "report_sha256": "618d2577fbed390b7c3c8e92e514b0bff2ca8ac4f25686956f932d6c89db83d8",
     "status": "partial-local-contract-evidence"
   },
   "schema_version": 1,
