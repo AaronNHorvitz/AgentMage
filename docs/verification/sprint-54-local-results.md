@@ -27,6 +27,9 @@ projection parity, and eight authority-free declarative skills.
 - Three host coordinator tests bind a single immutable source snapshot to ranking, reminders,
   start-of-cycle view, privacy decisions, and all eight authority-free executive skills; duplicate
   or incomplete privacy scope and a changes-since view without its prior snapshot fail closed.
+- Native Chat, interactive CLI, JSON, SDK, and ACP route the same identity-only portfolio command
+  through that coordinator. An exact aggregate binding rejects workspace, record, history, privacy,
+  or projection substitution while raw records remain host-owned and external effects stay absent.
 
 ## Security Mapping
 
@@ -43,7 +46,7 @@ No product-wide requirement is marked complete by this local contribution.
 
 A green local report proves only the committed source and named commands on the recorded Linux
 environment. Sprint 53 remains blocked. The repository-controlled executive coordinator is
-integrated locally. Native interface integration, durable reminder lifecycle, installed
+integrated locally, including native interface routing. Durable reminder lifecycle, installed
 cross-platform acceptance, trusted package execution, independent review, and completed manual
 fuzzing do not exist. Sprint 54 therefore remains **BLOCKED** despite the passing local contracts
 and artifacts.

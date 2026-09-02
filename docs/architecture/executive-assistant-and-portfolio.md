@@ -46,6 +46,14 @@ view, privacy decisions, and all eight admitted authority-free skills. It reject
 cross-privacy composition and verifies that every output remains proposal-only, source-preserving,
 and unable to notify, send, schedule, write, or mutate.
 
-Native Chat and CLI presentation, durable reminder lifecycle, live calendar or message connectors,
-installed-platform acceptance, accessibility, lifecycle, independent review, signing, and manual
-fuzzing remain separate later evidence.
+Native Chat, interactive CLI, JSON, SDK, and ACP surfaces use one closed identity-only portfolio
+command and the same host coordinator. The command carries the snapshot, ranking, tracker, and view
+identities plus a domain-separated digest over all host-owned records, history, privacy scope, and
+projection choices. Raw executive records never cross the thin-client command boundary. The host
+rejects stale requests, workspace or record substitution, privacy-scope drift, and aggregate-input
+mismatch before composition; successful routing still grants no notification, send, schedule,
+write, or source-mutation effect.
+
+Durable reminder lifecycle, live calendar or message connectors, installed-platform acceptance,
+accessibility, lifecycle, independent review, signing, and manual fuzzing remain separate later
+evidence.

@@ -6667,7 +6667,8 @@ corpus to source revision `668f1d79b41215c67e95aea72c686d09aabb9688` (report SHA
 source contracts, artifacts, focused tests, privacy rules, source-store parity, and local sprint
 criteria are complete. The registered host coordinator binds every projection to one canonical
 snapshot and all eight authority-free skills with zero accepted effects or cross-privacy leaks.
-Story 54.1 and Sprint 54 remain **BLOCKED** by Sprint 53, absent native interface integration,
+Identity-only native Chat/CLI/JSON/SDK/ACP routing now reaches that same coordinator without exposing
+records or owning effect authority. Story 54.1 and Sprint 54 remain **BLOCKED** by Sprint 53,
 durable reminder lifecycle, installed cross-platform and trusted-package evidence, independent
 review, and deferred manual fuzzing.
 ### [ ] Sprint 55 - Meeting Records and Continuity

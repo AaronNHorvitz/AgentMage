@@ -317,6 +317,25 @@ pub enum MeetingClientCommand {
     },
 }
 
+/// Closed executive-workspace command carrying identities and one aggregate host-input binding.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "action", rename_all = "snake_case", deny_unknown_fields)]
+pub enum ExecutiveClientCommand {
+    /// Coordinate host-owned portfolio records into local rankings, trackers, and views.
+    Coordinate {
+        /// Stable immutable portfolio snapshot identity.
+        snapshot_id: String,
+        /// Stable deterministic ranking identity.
+        ranking_id: String,
+        /// Stable tracker identity.
+        tracker_id: String,
+        /// Stable executive-view identity.
+        view_id: String,
+        /// Domain-separated digest of every host-owned coordinator input.
+        input_sha256: String,
+    },
+}
+
 /// Closed Word artifact command family carrying identities only, never document bytes or paths.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "action", rename_all = "snake_case", deny_unknown_fields)]
@@ -422,6 +441,11 @@ pub enum ClientCommand {
         /// Exact identity-only meeting operation.
         action: MeetingClientCommand,
     },
+    /// Coordinate executive portfolio projections through the common host boundary.
+    Executive {
+        /// Exact identity-only executive operation.
+        action: ExecutiveClientCommand,
+    },
     /// Inspect or generate Word artifacts through the common host-owned coordinator.
     Word {
         /// Exact identity-only Word operation.
@@ -453,6 +477,7 @@ impl ClientCommand {
             Self::Markdown { .. } => GrantOperation::DraftCreate,
             Self::DocumentControl { .. } => GrantOperation::DraftCreate,
             Self::Meeting { .. } => GrantOperation::DraftCreate,
+            Self::Executive { .. } => GrantOperation::DraftCreate,
             Self::Word { action } => match action {
                 WordClientCommand::Inspect { .. } => GrantOperation::WorkspaceRead,
                 WordClientCommand::Generate { .. } => GrantOperation::DraftCreate,
@@ -568,6 +593,22 @@ impl ClientCommand {
                     && valid_sha256(cleanup_sha256)
                     && valid_sha256(minutes_sha256)
                     && valid_identifier(continuity_record_id)
+                    && valid_sha256(input_sha256)
+            }
+            Self::Executive {
+                action:
+                    ExecutiveClientCommand::Coordinate {
+                        snapshot_id,
+                        ranking_id,
+                        tracker_id,
+                        view_id,
+                        input_sha256,
+                    },
+            } => {
+                valid_identifier(snapshot_id)
+                    && valid_identifier(ranking_id)
+                    && valid_identifier(tracker_id)
+                    && valid_identifier(view_id)
                     && valid_sha256(input_sha256)
             }
             Self::Word { action } => match action {
@@ -1701,6 +1742,15 @@ mod tests {
                     minutes_sha256: "c".repeat(64),
                     continuity_record_id: "continuity-0001".to_owned(),
                     input_sha256: "d".repeat(64),
+                },
+            },
+            ClientCommand::Executive {
+                action: ExecutiveClientCommand::Coordinate {
+                    snapshot_id: "snapshot-0001".to_owned(),
+                    ranking_id: "ranking-0001".to_owned(),
+                    tracker_id: "tracker-0001".to_owned(),
+                    view_id: "view-0001".to_owned(),
+                    input_sha256: "e".repeat(64),
                 },
             },
             ClientCommand::Word {

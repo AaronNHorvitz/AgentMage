@@ -10,10 +10,15 @@ use agentmage_kernel_engine::executive_assistant::{
     ExecutiveViewRequest, build_executive_view, build_portfolio_snapshot, build_priority_ranking,
     build_tracker, evaluate_executive_privacy,
 };
+use sha2::{Digest, Sha256};
+
+use crate::headless::{ClientCommand, ExecutiveClientCommand, ThinClientRequest};
 
 /// Stable failure from the local executive-assistant product composition.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ExecutiveCoordinatorError {
+    /// The thin-client request was stale, malformed, mismatched, or authority-incompatible.
+    NativeRequestDenied,
     /// Canonical records, privacy scope, or projection input failed closed.
     InvalidInput,
     /// The admitted built-in skill pack was unavailable or no longer authority-free.
@@ -27,6 +32,7 @@ impl ExecutiveCoordinatorError {
     #[must_use]
     pub const fn code(self) -> &'static str {
         match self {
+            Self::NativeRequestDenied => "executive.coordinator.native-request-denied",
             Self::InvalidInput => "executive.coordinator.input-invalid",
             Self::SkillPackInvalid => "executive.coordinator.skill-pack-invalid",
             Self::AuthorityViolation => "executive.coordinator.authority-violation",
@@ -45,6 +51,8 @@ impl std::error::Error for ExecutiveCoordinatorError {}
 /// Exact caller-owned identifiers and privacy scope for one local executive projection.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ExecutiveCoordinatorRequest {
+    /// Stable workspace identity selected by the trusted host.
+    pub workspace_id: String,
     /// Stable immutable portfolio snapshot identity.
     pub snapshot_id: String,
     /// Stable deterministic ranking identity.
@@ -86,6 +94,9 @@ pub fn coordinate_executive_workspace(
     history: Vec<ExecutiveRecord>,
     request: ExecutiveCoordinatorRequest,
 ) -> Result<ExecutiveCoordinatorOutcome, ExecutiveCoordinatorError> {
+    if !valid_identifier(&request.workspace_id) {
+        return Err(ExecutiveCoordinatorError::InvalidInput);
+    }
     let packages =
         built_in_executive_skill_pack().map_err(|_| ExecutiveCoordinatorError::SkillPackInvalid)?;
     if packages.len() != 8 {
@@ -154,11 +165,84 @@ pub fn coordinate_executive_workspace(
     })
 }
 
+/// Verifies an identity-only native request and routes it through the common coordinator.
+pub fn coordinate_executive_native(
+    client: &ThinClientRequest,
+    current_records: Vec<ExecutiveRecord>,
+    history: Vec<ExecutiveRecord>,
+    request: ExecutiveCoordinatorRequest,
+    now_epoch_ms: u64,
+) -> Result<ExecutiveCoordinatorOutcome, ExecutiveCoordinatorError> {
+    client
+        .verify(now_epoch_ms)
+        .map_err(|_| ExecutiveCoordinatorError::NativeRequestDenied)?;
+    let input_sha256 = executive_input_sha256(&current_records, &history, &request)?;
+    let matches = matches!(
+        &client.command,
+        ClientCommand::Executive {
+            action: ExecutiveClientCommand::Coordinate {
+                snapshot_id,
+                ranking_id,
+                tracker_id,
+                view_id,
+                input_sha256: command_input,
+            },
+        } if snapshot_id == &request.snapshot_id
+            && ranking_id == &request.ranking_id
+            && tracker_id == &request.tracker_id
+            && view_id == &request.view_id
+            && command_input == &input_sha256
+    );
+    if client.status.workspace_id != request.workspace_id || !matches {
+        return Err(ExecutiveCoordinatorError::NativeRequestDenied);
+    }
+    coordinate_executive_workspace(current_records, history, request)
+}
+
+/// Returns the domain-separated identity of every host-owned executive coordinator input.
+pub fn executive_input_sha256(
+    current_records: &[ExecutiveRecord],
+    history: &[ExecutiveRecord],
+    request: &ExecutiveCoordinatorRequest,
+) -> Result<String, ExecutiveCoordinatorError> {
+    let encoded = serde_json::to_vec(&(
+        "agentmage.executive-native.v1",
+        current_records,
+        history,
+        &request.workspace_id,
+        &request.snapshot_id,
+        &request.ranking_id,
+        &request.tracker_id,
+        request.tracker_kind,
+        &request.view_id,
+        request.view_kind,
+        &request.admitted_privacy_classes,
+    ))
+    .map_err(|_| ExecutiveCoordinatorError::InvalidInput)?;
+    Ok(Sha256::digest(encoded)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect())
+}
+
+fn valid_identifier(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 128
+        && value.bytes().enumerate().all(|(index, byte)| {
+            byte.is_ascii_alphanumeric() || (index > 0 && matches!(byte, b'.' | b'_' | b':' | b'-'))
+        })
+}
+
 #[cfg(test)]
 mod tests {
     use agentmage_kernel_contracts::{
         CONTRACT_SCHEMA_VERSION, ExecutiveDueWindow, ExecutiveEvidenceState, ExecutiveRecordKind,
         ExecutiveRecordStatus, ExecutiveSourceReference, ExecutiveSourceStore,
+    };
+
+    use crate::headless::{
+        ClientAuthority, ClientStatusSnapshot, ClientSurface, PredeclaredClientGrant,
+        kernel_operation_sha256,
     };
 
     use super::*;
@@ -200,6 +284,7 @@ mod tests {
 
     fn request(classes: Vec<ExecutivePrivacyClass>) -> ExecutiveCoordinatorRequest {
         ExecutiveCoordinatorRequest {
+            workspace_id: "workspace-executive".to_owned(),
             snapshot_id: "executive-snapshot-native".to_owned(),
             ranking_id: "executive-ranking-native".to_owned(),
             tracker_id: "executive-reminders-native".to_owned(),
@@ -208,6 +293,76 @@ mod tests {
             view_kind: ExecutiveViewKind::StartOfCycle,
             admitted_privacy_classes: classes,
         }
+    }
+
+    fn native_command(
+        current: &[ExecutiveRecord],
+        history: &[ExecutiveRecord],
+        request: &ExecutiveCoordinatorRequest,
+    ) -> ClientCommand {
+        ClientCommand::Executive {
+            action: ExecutiveClientCommand::Coordinate {
+                snapshot_id: request.snapshot_id.clone(),
+                ranking_id: request.ranking_id.clone(),
+                tracker_id: request.tracker_id.clone(),
+                view_id: request.view_id.clone(),
+                input_sha256: executive_input_sha256(current, history, request)
+                    .expect("input binding"),
+            },
+        }
+    }
+
+    fn native_client(surface: ClientSurface, command: ClientCommand) -> ThinClientRequest {
+        const NOW: u64 = 50_000;
+        let arguments_sha256 =
+            kernel_operation_sha256("workspace-executive", &command, &"d".repeat(64))
+                .expect("kernel operation");
+        let authority = if surface.has_interactive_approval() {
+            ClientAuthority::Interactive {
+                approval_channel_sha256: "c".repeat(64),
+            }
+        } else {
+            ClientAuthority::Predeclared {
+                grant: PredeclaredClientGrant {
+                    grant_id: format!("grant-{surface:?}").to_lowercase(),
+                    operation: command.required_operation(),
+                    policy_sha256: "d".repeat(64),
+                    arguments_sha256,
+                    nonce_sha256: "f".repeat(64),
+                    issued_at_epoch_ms: NOW - 1,
+                    expires_at_epoch_ms: NOW + 10_000,
+                    single_use: true,
+                },
+            }
+        };
+        ThinClientRequest {
+            schema_version: 0,
+            request_id: format!("request-{surface:?}").to_lowercase(),
+            surface,
+            status: ClientStatusSnapshot {
+                workspace_id: "workspace-executive".to_owned(),
+                model_profile_id: None,
+                permission_profile_id: "permission-executive".to_owned(),
+                conversation_id: None,
+                plan_step_id: None,
+                writable_roots: vec!["executive".to_owned()],
+                offline: true,
+                status_sha256: "0".repeat(64),
+            }
+            .seal()
+            .expect("status"),
+            command,
+            authority,
+            policy_sha256: "d".repeat(64),
+            cancellation_id: format!("cancel-{surface:?}").to_lowercase(),
+            max_event_bytes: 64 * 1024,
+            max_output_bytes: 1024 * 1024,
+            resume: None,
+            kernel_request_sha256: "0".repeat(64),
+            request_sha256: "0".repeat(64),
+        }
+        .seal(NOW)
+        .expect("native client")
     }
 
     #[test]
@@ -273,6 +428,60 @@ mod tests {
                 changed,
             ),
             Err(ExecutiveCoordinatorError::InvalidInput)
+        );
+    }
+
+    #[test]
+    fn every_native_surface_routes_identity_only_executive_inputs_through_one_coordinator() {
+        const NOW: u64 = 50_000;
+        let current = vec![record("task-one", ExecutivePrivacyClass::Ordinary)];
+        let history = Vec::new();
+        let request = request(vec![ExecutivePrivacyClass::Ordinary]);
+        let command = native_command(&current, &history, &request);
+        let mut expected = None;
+        for surface in [
+            ClientSurface::NativeChat,
+            ClientSurface::InteractiveCli,
+            ClientSurface::Json,
+            ClientSurface::Sdk,
+            ClientSurface::Acp,
+        ] {
+            let outcome = coordinate_executive_native(
+                &native_client(surface, command.clone()),
+                current.clone(),
+                history.clone(),
+                request.clone(),
+                NOW,
+            )
+            .unwrap_or_else(|error| panic!("{surface:?}: {error:?}"));
+            if let Some(expected) = &expected {
+                assert_eq!(&outcome, expected, "{surface:?}");
+            } else {
+                expected = Some(outcome);
+            }
+        }
+    }
+
+    #[test]
+    fn native_executive_binding_rejects_workspace_and_record_substitution() {
+        const NOW: u64 = 50_000;
+        let current = vec![record("task-one", ExecutivePrivacyClass::Ordinary)];
+        let history = Vec::new();
+        let request = request(vec![ExecutivePrivacyClass::Ordinary]);
+        let client = native_client(
+            ClientSurface::Json,
+            native_command(&current, &history, &request),
+        );
+        let changed = vec![record("task-two", ExecutivePrivacyClass::Ordinary)];
+        assert_eq!(
+            coordinate_executive_native(&client, changed, history.clone(), request.clone(), NOW,),
+            Err(ExecutiveCoordinatorError::NativeRequestDenied)
+        );
+        let mut wrong_workspace = request;
+        wrong_workspace.workspace_id = "workspace-other".to_owned();
+        assert_eq!(
+            coordinate_executive_native(&client, current, history, wrong_workspace, NOW),
+            Err(ExecutiveCoordinatorError::NativeRequestDenied)
         );
     }
 }

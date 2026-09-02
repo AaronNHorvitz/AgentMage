@@ -30,6 +30,8 @@ SOURCE_PATHS: Final = (
     "capabilities/knowledge/src/lib.rs",
     "capabilities/knowledge/examples/executive_skill_pack.rs",
     "shells/host/src/executive_coordinator.rs",
+    "shells/host/src/headless.rs",
+    "shells/host/src/cli.rs",
     "shells/host/src/lib.rs",
     "schemas/runtime/executive-priority-ranking.schema.json",
     "schemas/runtime/examples/executive-priority-ranking.valid.json",
@@ -74,6 +76,20 @@ COMMANDS: Final = (
         ),
     ),
     (
+        "executive-native-protocol",
+        (
+            "cargo", "test", "-p", "agentmage-host",
+            "headless::tests", "--lib", "--locked",
+        ),
+    ),
+    (
+        "executive-native-cli",
+        (
+            "cargo", "test", "-p", "agentmage-host",
+            "cli::tests", "--lib", "--locked",
+        ),
+    ),
+    (
         "executive-runtime-schemas",
         ("node", "--test", "tests/test_planning_schemas.mjs"),
     ),
@@ -101,11 +117,13 @@ COMMANDS: Final = (
         ("python3", "-m", "unittest", "tests.test_sprint_54_evidence"),
     ),
 )
-FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:6])
+FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:8])
 RUST_FOCUSED_COMMANDS: Final = {
     "executive-kernel-unit",
     "executive-skill-unit",
     "executive-host-coordinator",
+    "executive-native-protocol",
+    "executive-native-cli",
 }
 SECURITY_REQUIREMENTS: Final = [
     "SR-AI-003",
@@ -148,7 +166,7 @@ IMPLEMENTED: Final = {
     "schedule_effect_capability": False,
     "source_mutation_capability": False,
     "product_coordinator": True,
-    "native_interface_integration": False,
+    "native_interface_integration": True,
     "durable_reminder_lifecycle": False,
     "installed_cross_platform_acceptance": False,
     "trusted_package_execution": False,
@@ -157,7 +175,6 @@ IMPLEMENTED: Final = {
 }
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-53-BLOCKED", "owner": "54.1"},
-    {"code": "NATIVE-INTERFACE-INTEGRATION-ABSENT", "owner": "54.1.3.2"},
     {"code": "DURABLE-REMINDER-LIFECYCLE-ABSENT", "owner": "54.1.1.2"},
     {"code": "INSTALLED-CROSS-PLATFORM-ACCEPTANCE-ABSENT", "owner": "54.1.3.5"},
     {"code": "TRUSTED-INSTALLED-PACKAGE-EXECUTION-ABSENT", "owner": "54.1.3.5"},
@@ -242,7 +259,7 @@ def expected_verification(local_pass: bool = True) -> dict[str, Any]:
         "invented_confirmed_fact_count": 0 if local_pass else None,
         "cross_privacy_leak_count": 0 if local_pass else None,
         "product_coordinator": True,
-        "native_interface_integration": False,
+        "native_interface_integration": True,
         "durable_reminder_lifecycle": False,
         "installed_cross_platform_acceptance": False,
         "trusted_package_execution": False,
@@ -258,6 +275,7 @@ def expected_summary(local_pass: bool = True) -> dict[str, Any]:
         "sprint_status": "BLOCKED",
         "upstream_sprint_53_closed": False,
         "executive_workflow_integrated": True,
+        "native_interface_integrated": True,
         "external_effects_enabled": False,
         "cross_platform_acceptance_passed": False,
         "trusted_package_execution_complete": False,

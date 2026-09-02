@@ -13,9 +13,10 @@ use agentmage_kernel_engine::{
 
 use crate::headless::{
     ClientCommand, ClientContentChannel, ClientExitCode, ClientSurface, ConversationClientCommand,
-    DocumentControlClientCommand, KnowledgeClientCommand, KnowledgeRetrievalClientMode,
-    KnowledgeWorkflowClient, MarkdownClientCommand, MeetingClientCommand, OperationalClientCommand,
-    ThinClientError, ThinClientEvent, ThinClientEventKind, VaultClientCommand, WordClientCommand,
+    DocumentControlClientCommand, ExecutiveClientCommand, KnowledgeClientCommand,
+    KnowledgeRetrievalClientMode, KnowledgeWorkflowClient, MarkdownClientCommand,
+    MeetingClientCommand, OperationalClientCommand, ThinClientError, ThinClientEvent,
+    ThinClientEventKind, VaultClientCommand, WordClientCommand,
 };
 
 const MAX_ARGUMENT_COUNT: usize = 128;
@@ -161,6 +162,7 @@ fn parse_command(arguments: &[String]) -> Result<ClientCommand, ThinClientError>
         "markdown" => parse_markdown(&arguments[1..]),
         "document" => parse_document_control(&arguments[1..]),
         "meeting" => parse_meeting(&arguments[1..]),
+        "portfolio" => parse_executive(&arguments[1..]),
         "word" => parse_word(&arguments[1..]),
         "checkpoint" if arguments.len() == 1 => operation(OperationalClientCommand::Checkpoint),
         "handoff" if arguments.len() == 1 => operation(OperationalClientCommand::Handoff),
@@ -177,6 +179,32 @@ fn parse_command(arguments: &[String]) -> Result<ClientCommand, ThinClientError>
         }
         _ => Err(ThinClientError::InvalidValue),
     }
+}
+
+fn parse_executive(arguments: &[String]) -> Result<ClientCommand, ThinClientError> {
+    let [
+        coordinate,
+        snapshot_id,
+        ranking_id,
+        tracker_id,
+        view_id,
+        input_sha256,
+    ] = arguments
+    else {
+        return Err(ThinClientError::InvalidValue);
+    };
+    if coordinate != "coordinate" {
+        return Err(ThinClientError::InvalidValue);
+    }
+    Ok(ClientCommand::Executive {
+        action: ExecutiveClientCommand::Coordinate {
+            snapshot_id: snapshot_id.clone(),
+            ranking_id: ranking_id.clone(),
+            tracker_id: tracker_id.clone(),
+            view_id: view_id.clone(),
+            input_sha256: input_sha256.clone(),
+        },
+    })
 }
 
 fn parse_meeting(arguments: &[String]) -> Result<ClientCommand, ThinClientError> {
@@ -672,6 +700,7 @@ Commands:\n\
   markdown coordinate SOURCE_SHA256 PROFILE_ID ARTIFACT_ID OUTPUT_PATH REOPENED_SHA256 [--update]\n\
   document coordinate REGISTER_ID REGISTER_SHA256 REPORT_ID WORKFLOW INPUT_SHA256\n\
   meeting coordinate MEETING_ID PLAN_SHA256 CLEANUP_SHA256 MINUTES_SHA256 CONTINUITY_ID INPUT_SHA256\n\
+  portfolio coordinate SNAPSHOT_ID RANKING_ID TRACKER_ID VIEW_ID INPUT_SHA256\n\
   word inspect SOURCE_ID SOURCE_SHA256 PROFILE_ID\n\
   word generate SOURCE_ID SOURCE_SHA256 PROFILE_ID ARTIFACT_ID MARKDOWN_SHA256 OUTPUT_PATH\n\
   checkpoint | handoff | audit | doctor | diagnostics\n\
@@ -689,13 +718,13 @@ Headless surfaces require an exact predeclared, bounded, unexpired grant.\n"
 pub const fn shell_completion(shell: CompletionShell) -> &'static str {
     match shell {
         CompletionShell::Bash => {
-            "complete -W 'code chat conversations resume vault knowledge markdown document meeting word checkpoint handoff audit memory export import doctor diagnostics completion' agentmage\n"
+            "complete -W 'code chat conversations resume vault knowledge markdown document meeting portfolio word checkpoint handoff audit memory export import doctor diagnostics completion' agentmage\n"
         }
         CompletionShell::Zsh => {
-            "compdef '_arguments 1:command:(code chat conversations resume vault knowledge markdown document meeting word checkpoint handoff audit memory export import doctor diagnostics completion)' agentmage\n"
+            "compdef '_arguments 1:command:(code chat conversations resume vault knowledge markdown document meeting portfolio word checkpoint handoff audit memory export import doctor diagnostics completion)' agentmage\n"
         }
         CompletionShell::Fish => {
-            "complete -c agentmage -f -a 'code chat conversations resume vault knowledge markdown document meeting word checkpoint handoff audit memory export import doctor diagnostics completion'\n"
+            "complete -c agentmage -f -a 'code chat conversations resume vault knowledge markdown document meeting portfolio word checkpoint handoff audit memory export import doctor diagnostics completion'\n"
         }
     }
 }
@@ -782,6 +811,15 @@ mod tests {
                 &"c".repeat(64),
                 "continuity-01",
                 &"d".repeat(64),
+            ]),
+            strings(&[
+                "portfolio",
+                "coordinate",
+                "snapshot-01",
+                "ranking-01",
+                "tracker-01",
+                "view-01",
+                &"e".repeat(64),
             ]),
             strings(&[
                 "word",
@@ -918,6 +956,15 @@ mod tests {
                 &"c".repeat(64),
                 "continuity-01",
                 &"d".repeat(64),
+            ]),
+            strings(&[
+                "portfolio",
+                "coordinate",
+                "snapshot-01",
+                "ranking-01",
+                "tracker-01",
+                "view-01",
+                "bad",
             ]),
             strings(&["word", "inspect", "word-01", "not-a-digest", "profile-01"]),
             strings(&[
