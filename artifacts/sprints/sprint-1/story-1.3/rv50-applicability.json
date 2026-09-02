@@ -182,7 +182,7 @@
     },
     {
       "path": "shells/host/src/headless.rs",
-      "sha256": "ffe3e3fd9a0cf12a2bba49205b019f9e9f10d1a162dc3291a9a5d8a25a8b9845"
+      "sha256": "7f80e14f63576e6b3b5949fc7827121c783648618cf8f65ea4bbf7258054de4a"
     },
     {
       "path": "shells/host/src/runtime_read_tests.rs",
@@ -194,7 +194,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.3/rv50-applicable-results.log",
-      "sha256": "e79b9b4b18f97ca2ef3877221057cff716aad72dbea9e84b933320ebee4b9079"
+      "sha256": "50c76966974ef45a1145c228b903d3ae942e20fda1b04ef0d029a17bddf706f6"
     }
   ],
   "limitations": [
