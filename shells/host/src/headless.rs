@@ -277,6 +277,25 @@ pub enum MarkdownClientCommand {
     },
 }
 
+/// Closed document-control command carrying only identities and one aggregate input binding.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "action", rename_all = "snake_case", deny_unknown_fields)]
+pub enum DocumentControlClientCommand {
+    /// Coordinate one host-owned register, preview, approval, and report workspace.
+    Coordinate {
+        /// Stable sealed register identity.
+        register_id: String,
+        /// Exact sealed register digest.
+        register_sha256: String,
+        /// Stable local workflow-report identity.
+        report_id: String,
+        /// Closed local workflow kind in snake-case form.
+        workflow_kind: String,
+        /// Domain-separated digest of every host-owned coordinator input.
+        input_sha256: String,
+    },
+}
+
 /// Closed Word artifact command family carrying identities only, never document bytes or paths.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "action", rename_all = "snake_case", deny_unknown_fields)]
@@ -372,6 +391,11 @@ pub enum ClientCommand {
         /// Exact identity-only Markdown operation.
         action: MarkdownClientCommand,
     },
+    /// Coordinate document, correspondence, and filing-control previews locally.
+    DocumentControl {
+        /// Exact identity-only document-control operation.
+        action: DocumentControlClientCommand,
+    },
     /// Inspect or generate Word artifacts through the common host-owned coordinator.
     Word {
         /// Exact identity-only Word operation.
@@ -401,6 +425,7 @@ impl ClientCommand {
             Self::Vault { .. } => GrantOperation::WorkspaceRead,
             Self::Knowledge { .. } => GrantOperation::WorkspaceRead,
             Self::Markdown { .. } => GrantOperation::DraftCreate,
+            Self::DocumentControl { .. } => GrantOperation::DraftCreate,
             Self::Word { action } => match action {
                 WordClientCommand::Inspect { .. } => GrantOperation::WorkspaceRead,
                 WordClientCommand::Generate { .. } => GrantOperation::DraftCreate,
@@ -484,6 +509,22 @@ impl ClientCommand {
                         .last()
                         .is_some_and(|component| component.ends_with(".md"))
             }
+            Self::DocumentControl {
+                action:
+                    DocumentControlClientCommand::Coordinate {
+                        register_id,
+                        register_sha256,
+                        report_id,
+                        workflow_kind,
+                        input_sha256,
+                    },
+            } => {
+                valid_identifier(register_id)
+                    && valid_sha256(register_sha256)
+                    && valid_identifier(report_id)
+                    && valid_document_workflow(workflow_kind)
+                    && valid_sha256(input_sha256)
+            }
             Self::Word { action } => match action {
                 WordClientCommand::Inspect {
                     source_id,
@@ -533,6 +574,22 @@ impl ClientCommand {
             },
         }
     }
+}
+
+fn valid_document_workflow(value: &str) -> bool {
+    matches!(
+        value,
+        "naming"
+            | "duplicate"
+            | "superseded"
+            | "final_copy"
+            | "quality"
+            | "deadline"
+            | "routing_slip"
+            | "mail_merge_preview"
+            | "calendar_file_draft"
+            | "filing_suggestion"
+    )
 }
 
 /// Exact visible status shared by every first-party client.
@@ -1580,6 +1637,15 @@ mod tests {
                     artifact_output_path: vec!["documents".to_owned(), "report.md".to_owned()],
                     reopened_sha256: "b".repeat(64),
                     update_requested: true,
+                },
+            },
+            ClientCommand::DocumentControl {
+                action: DocumentControlClientCommand::Coordinate {
+                    register_id: "register-0001".to_owned(),
+                    register_sha256: "a".repeat(64),
+                    report_id: "report-0001".to_owned(),
+                    workflow_kind: "quality".to_owned(),
+                    input_sha256: "b".repeat(64),
                 },
             },
             ClientCommand::Word {

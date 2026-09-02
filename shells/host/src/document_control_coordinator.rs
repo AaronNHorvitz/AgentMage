@@ -9,10 +9,15 @@ use agentmage_kernel_engine::document_control::{
     build_document_workflow_report, review_document_action, review_document_register,
     verify_document_action_preview, verify_document_register,
 };
+use sha2::{Digest, Sha256};
+
+use crate::headless::{ClientCommand, DocumentControlClientCommand, ThinClientRequest};
 
 /// Stable failure from the local document-control product composition.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DocumentControlCoordinatorError {
+    /// The thin-client request was stale, malformed, mismatched, or authority-incompatible.
+    NativeRequestDenied,
     /// The caller cancelled before any projection began.
     Cancelled,
     /// A required already-approved local dependency is unavailable.
@@ -30,6 +35,7 @@ impl DocumentControlCoordinatorError {
     #[must_use]
     pub const fn code(self) -> &'static str {
         match self {
+            Self::NativeRequestDenied => "document-control.coordinator.native-request-denied",
             Self::Cancelled => "document-control.coordinator.cancelled",
             Self::DependencyUnavailable => "document-control.coordinator.dependency-unavailable",
             Self::InvalidInput => "document-control.coordinator.input-invalid",
@@ -50,6 +56,8 @@ impl std::error::Error for DocumentControlCoordinatorError {}
 /// Caller-owned identity, workflow, and explicit local readiness state.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DocumentControlCoordinatorRequest {
+    /// Stable workspace identity already selected by the trusted host.
+    pub workspace_id: String,
     /// True only after every declared local input dependency is available.
     pub dependencies_ready: bool,
     /// Sticky cancellation checked before dependency or record evaluation.
@@ -93,6 +101,9 @@ pub fn coordinate_document_control_workspace(
     }
     if !request.dependencies_ready {
         return Err(DocumentControlCoordinatorError::DependencyUnavailable);
+    }
+    if !valid_identifier(&request.workspace_id) {
+        return Err(DocumentControlCoordinatorError::InvalidInput);
     }
     if previews.len() != approvals.len() {
         return Err(DocumentControlCoordinatorError::InvalidInput);
@@ -166,6 +177,95 @@ pub fn coordinate_document_control_workspace(
     })
 }
 
+/// Verifies an identity-only native request and routes it through the common coordinator.
+pub fn coordinate_document_control_native(
+    client: &ThinClientRequest,
+    register: DocumentRegister,
+    previews: Vec<DocumentActionPreview>,
+    approvals: Vec<Option<DocumentActionApproval>>,
+    request: DocumentControlCoordinatorRequest,
+    now_epoch_ms: u64,
+) -> Result<DocumentControlCoordinatorOutcome, DocumentControlCoordinatorError> {
+    client
+        .verify(now_epoch_ms)
+        .map_err(|_| DocumentControlCoordinatorError::NativeRequestDenied)?;
+    let input_sha256 = document_control_input_sha256(&register, &previews, &approvals, &request)?;
+    let workflow_kind = workflow_kind_name(request.workflow_kind);
+    let matches = matches!(
+        &client.command,
+        ClientCommand::DocumentControl {
+            action: DocumentControlClientCommand::Coordinate {
+                register_id,
+                register_sha256,
+                report_id,
+                workflow_kind: command_workflow,
+                input_sha256: command_input,
+            },
+        } if register_id == &register.register_id
+            && register_sha256 == &register.register_sha256
+            && report_id == &request.report_id
+            && command_workflow == workflow_kind
+            && command_input == &input_sha256
+    );
+    if client.status.workspace_id != request.workspace_id || !matches {
+        return Err(DocumentControlCoordinatorError::NativeRequestDenied);
+    }
+    coordinate_document_control_workspace(register, previews, approvals, request)
+}
+
+/// Returns the domain-separated identity of every host-owned document-control coordinator input.
+pub fn document_control_input_sha256(
+    register: &DocumentRegister,
+    previews: &[DocumentActionPreview],
+    approvals: &[Option<DocumentActionApproval>],
+    request: &DocumentControlCoordinatorRequest,
+) -> Result<String, DocumentControlCoordinatorError> {
+    let encoded = serde_json::to_vec(&(
+        "agentmage.document-control-native.v1",
+        &request.workspace_id,
+        request.dependencies_ready,
+        request.cancellation_requested,
+        &request.report_id,
+        request.workflow_kind,
+        &request.rendered_preview,
+        register,
+        previews,
+        approvals,
+    ))
+    .map_err(|_| DocumentControlCoordinatorError::InvalidInput)?;
+    Ok(hex_sha256(&encoded))
+}
+
+const fn workflow_kind_name(kind: DocumentWorkflowKind) -> &'static str {
+    match kind {
+        DocumentWorkflowKind::Naming => "naming",
+        DocumentWorkflowKind::Duplicate => "duplicate",
+        DocumentWorkflowKind::Superseded => "superseded",
+        DocumentWorkflowKind::FinalCopy => "final_copy",
+        DocumentWorkflowKind::Quality => "quality",
+        DocumentWorkflowKind::Deadline => "deadline",
+        DocumentWorkflowKind::RoutingSlip => "routing_slip",
+        DocumentWorkflowKind::MailMergePreview => "mail_merge_preview",
+        DocumentWorkflowKind::CalendarFileDraft => "calendar_file_draft",
+        DocumentWorkflowKind::FilingSuggestion => "filing_suggestion",
+    }
+}
+
+fn valid_identifier(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 128
+        && value.bytes().enumerate().all(|(index, byte)| {
+            byte.is_ascii_alphanumeric() || (index > 0 && matches!(byte, b'.' | b'_' | b':' | b'-'))
+        })
+}
+
+fn hex_sha256(value: &[u8]) -> String {
+    Sha256::digest(value)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use agentmage_kernel_contracts::{
@@ -175,6 +275,11 @@ mod tests {
     };
     use agentmage_kernel_engine::document_control::{
         seal_document_action_preview, seal_document_register,
+    };
+
+    use crate::headless::{
+        ClientAuthority, ClientStatusSnapshot, ClientSurface, PredeclaredClientGrant,
+        kernel_operation_sha256,
     };
 
     use super::*;
@@ -273,12 +378,85 @@ mod tests {
 
     fn request() -> DocumentControlCoordinatorRequest {
         DocumentControlCoordinatorRequest {
+            workspace_id: "workspace-document-control".to_owned(),
             dependencies_ready: true,
             cancellation_requested: false,
             report_id: "report-1".to_owned(),
             workflow_kind: DocumentWorkflowKind::Quality,
             rendered_preview: "Local records quality preview.".to_owned(),
         }
+    }
+
+    fn native_command(
+        register: &DocumentRegister,
+        previews: &[DocumentActionPreview],
+        approvals: &[Option<DocumentActionApproval>],
+        request: &DocumentControlCoordinatorRequest,
+    ) -> ClientCommand {
+        ClientCommand::DocumentControl {
+            action: DocumentControlClientCommand::Coordinate {
+                register_id: register.register_id.clone(),
+                register_sha256: register.register_sha256.clone(),
+                report_id: request.report_id.clone(),
+                workflow_kind: workflow_kind_name(request.workflow_kind).to_owned(),
+                input_sha256: document_control_input_sha256(register, previews, approvals, request)
+                    .expect("input binding"),
+            },
+        }
+    }
+
+    fn native_client(surface: ClientSurface, command: ClientCommand) -> ThinClientRequest {
+        const NOW: u64 = 50_000;
+        let operation = command.required_operation();
+        let arguments_sha256 =
+            kernel_operation_sha256("workspace-document-control", &command, &"d".repeat(64))
+                .expect("kernel operation");
+        let authority = if surface.has_interactive_approval() {
+            ClientAuthority::Interactive {
+                approval_channel_sha256: "c".repeat(64),
+            }
+        } else {
+            ClientAuthority::Predeclared {
+                grant: PredeclaredClientGrant {
+                    grant_id: format!("grant-{surface:?}").to_lowercase(),
+                    operation,
+                    policy_sha256: "d".repeat(64),
+                    arguments_sha256,
+                    nonce_sha256: "f".repeat(64),
+                    issued_at_epoch_ms: NOW - 1,
+                    expires_at_epoch_ms: NOW + 10_000,
+                    single_use: true,
+                },
+            }
+        };
+        ThinClientRequest {
+            schema_version: 0,
+            request_id: format!("request-{surface:?}").to_lowercase(),
+            surface,
+            status: ClientStatusSnapshot {
+                workspace_id: "workspace-document-control".to_owned(),
+                model_profile_id: None,
+                permission_profile_id: "permission-document-control".to_owned(),
+                conversation_id: None,
+                plan_step_id: None,
+                writable_roots: vec!["records".to_owned()],
+                offline: true,
+                status_sha256: "0".repeat(64),
+            }
+            .seal()
+            .expect("status"),
+            command,
+            authority,
+            policy_sha256: "d".repeat(64),
+            cancellation_id: format!("cancel-{surface:?}").to_lowercase(),
+            max_event_bytes: 64 * 1024,
+            max_output_bytes: 1024 * 1024,
+            resume: None,
+            kernel_request_sha256: "0".repeat(64),
+            request_sha256: "0".repeat(64),
+        }
+        .seal(NOW)
+        .expect("native client")
     }
 
     #[test]
@@ -356,6 +534,88 @@ mod tests {
                 unavailable,
             ),
             Err(DocumentControlCoordinatorError::DependencyUnavailable)
+        );
+    }
+
+    #[test]
+    fn every_native_surface_routes_identity_only_inputs_through_one_coordinator() {
+        const NOW: u64 = 50_000;
+        let register = register();
+        let preview = preview();
+        let previews = vec![preview.clone()];
+        let approvals = vec![Some(approval(&preview))];
+        let request = request();
+        let command = native_command(&register, &previews, &approvals, &request);
+        let mut expected = None;
+        for surface in [
+            ClientSurface::NativeChat,
+            ClientSurface::InteractiveCli,
+            ClientSurface::Json,
+            ClientSurface::Sdk,
+            ClientSurface::Acp,
+        ] {
+            let outcome = coordinate_document_control_native(
+                &native_client(surface, command.clone()),
+                register.clone(),
+                previews.clone(),
+                approvals.clone(),
+                request.clone(),
+                NOW,
+            )
+            .unwrap_or_else(|error| panic!("{surface:?}: {error:?}"));
+            let snapshot = (
+                outcome.register,
+                outcome.previews,
+                outcome.findings,
+                outcome.reviews,
+                outcome.report,
+                outcome.external_effect_allowed,
+            );
+            if let Some(expected) = &expected {
+                assert_eq!(&snapshot, expected, "{surface:?}");
+            } else {
+                expected = Some(snapshot);
+            }
+        }
+    }
+
+    #[test]
+    fn native_binding_rejects_workspace_input_and_approval_substitution() {
+        const NOW: u64 = 50_000;
+        let register = register();
+        let preview = preview();
+        let previews = vec![preview.clone()];
+        let approvals = vec![Some(approval(&preview))];
+        let request = request();
+        let command = native_command(&register, &previews, &approvals, &request);
+        let client = native_client(ClientSurface::Json, command);
+
+        let mut substituted = approvals.clone();
+        substituted[0].as_mut().expect("approval").approved = false;
+        assert_eq!(
+            coordinate_document_control_native(
+                &client,
+                register.clone(),
+                previews.clone(),
+                substituted,
+                request.clone(),
+                NOW,
+            ),
+            Err(DocumentControlCoordinatorError::NativeRequestDenied)
+        );
+
+        let mut wrong_workspace = request;
+        wrong_workspace.workspace_id = "workspace-other".to_owned();
+        assert_eq!(
+            coordinate_document_control_native(
+                &client,
+                register,
+                previews,
+                approvals,
+                wrong_workspace,
+                NOW,
+            ),
+            Err(DocumentControlCoordinatorError::NativeRequestDenied)
         );
     }
 }

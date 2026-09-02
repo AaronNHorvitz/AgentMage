@@ -23,6 +23,9 @@ skills, required templates, and the closed 68-case acceptance corpus.
   sensitive content, and disposition requests create no authority.
 - The registered host coordinator admits all eight bounded skills and binds the sealed register,
   exact previews, present or absent approvals, reviews, findings, and workflow report together.
+- Native Chat, interactive CLI, JSON, SDK, and ACP use one identity-only command and the same host
+  coordinator. A domain-separated digest binds all host-owned inputs without sending register,
+  source, preview, approval, or rendered content through the thin-client protocol.
 
 ## Security Mapping
 
@@ -30,7 +33,7 @@ skills, required templates, and the closed 68-case acceptance corpus.
 |---|---|---|
 | `SR-DAT-001` through `SR-DAT-003` | Exact paths, hashes, versions, sources, metadata, retention fields, immutable registers, and no disposition | Installed encrypted lifecycle, backup/removal evidence, and independent records-owner review |
 | `SR-AI-003`, `SR-AI-007`, `SR-AI-010` | Closed truth classes, explicit unknown/conflict states, exact attribution, and hostile-content refusal | Integrated model workflow, live quality evidence, and independent review |
-| `SR-CIV-003` through `SR-CIV-009` | Exact previews and approvals with zero communication, calendar, filesystem, or filing effects | Native accessible approval UI and installed end-to-end acceptance |
+| `SR-CIV-003` through `SR-CIV-009` | Common identity-only native request plus exact previews and approvals with zero communication, calendar, filesystem, or filing effects | Installed accessible approval UI and installed end-to-end acceptance |
 | `SR-TST-006` | Closed Rust, schema, Python mutation, corpus, and skill-package tests are retained | Deferred manual fuzzing |
 
 No product-wide requirement is marked complete by this local contribution.
@@ -38,7 +41,7 @@ No product-wide requirement is marked complete by this local contribution.
 ## Truthful Disposition
 
 A green local report proves only the committed source and named commands on the recorded Linux
-environment. Sprint 55 remains blocked. The local product coordinator is integrated, but no native
-interface, accessibility result, installed cross-platform acceptance, trusted package execution,
-independent records-owner review, or manual fuzzing exists. Sprint 56 therefore remains **BLOCKED**
-despite the passing local contracts and artifacts.
+environment. Sprint 55 remains blocked. The local product coordinator and common native interface
+are integrated, but no installed accessibility result, installed cross-platform acceptance,
+trusted package execution, independent records-owner review, or manual fuzzing exists. Sprint 56
+therefore remains **BLOCKED** despite the passing local contracts and artifacts.

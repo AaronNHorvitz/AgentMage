@@ -6789,9 +6789,11 @@ binds 11 passing commands and the 68-case acceptance corpus to source revision
 registers, ten local workflow reports, exact action previews and approval reviews, secretary skill
 pack, runtime schemas, attribution and unknown-field checks, accessibility tracking, hostile-content
 tests, version history, local sprint criteria, and registered authority-free product coordinator are
-complete. Story 56.1 and Sprint 56 remain **BLOCKED** by Sprint 55, the absent native interface,
-missing installed accessibility and cross-platform evidence, trusted-package execution, independent
-records-owner review, and deferred manual fuzzing.
+complete. Subsequent source progress adds one aggregate-bound identity-only document-control command
+shared by Native Chat, CLI, JSON, SDK, and ACP; current source-bound report identity is pending
+renewal. Story 56.1 and Sprint 56 remain **BLOCKED** by Sprint 55, missing installed accessibility
+and cross-platform evidence, trusted-package execution, independent records-owner review, and
+deferred manual fuzzing.
 ### [ ] Sprint 57 - Markdown and Plain-Text Artifacts
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.

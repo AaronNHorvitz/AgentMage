@@ -28,6 +28,13 @@ from this composition. A complete approval review proves only that the user conf
 preview fields; the kernel must still perform fresh policy, workspace, preimage, grant, transaction,
 and postcondition checks before any future write.
 
+Native Chat, interactive CLI, JSON, SDK, and ACP route through that same coordinator. Their closed
+command carries only register/report identities, the sealed register digest, the closed workflow
+kind, and one domain-separated SHA-256 binding the workspace, readiness/cancellation state, report
+request, register, ordered previews, and present-or-absent approvals. Registers, preview content,
+approval details, rendered output, sources, and attachments remain host-owned. The aggregate digest
+cannot grant a send, calendar, filesystem, filing, or disposition effect.
+
 ## Registers
 
 Each document or correspondence entry records its exact version, lifecycle state, approval,
@@ -100,5 +107,6 @@ stateDiagram-v2
 - `SR-CIV-003` through `SR-CIV-009`: exact preview and approval fields with zero communication,
   calendar, filesystem, and filing effects.
 
-The source candidate does not prove native accessibility output, installed platform acceptance,
-trusted package execution, independent records-owner review, or deferred manual fuzzing.
+The source candidate does not prove installed native accessibility output, installed platform
+acceptance, trusted package execution, independent records-owner review, or deferred manual
+fuzzing.

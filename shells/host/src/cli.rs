@@ -13,9 +13,9 @@ use agentmage_kernel_engine::{
 
 use crate::headless::{
     ClientCommand, ClientContentChannel, ClientExitCode, ClientSurface, ConversationClientCommand,
-    KnowledgeClientCommand, KnowledgeRetrievalClientMode, KnowledgeWorkflowClient,
-    MarkdownClientCommand, OperationalClientCommand, ThinClientError, ThinClientEvent,
-    ThinClientEventKind, VaultClientCommand, WordClientCommand,
+    DocumentControlClientCommand, KnowledgeClientCommand, KnowledgeRetrievalClientMode,
+    KnowledgeWorkflowClient, MarkdownClientCommand, OperationalClientCommand, ThinClientError,
+    ThinClientEvent, ThinClientEventKind, VaultClientCommand, WordClientCommand,
 };
 
 const MAX_ARGUMENT_COUNT: usize = 128;
@@ -159,6 +159,7 @@ fn parse_command(arguments: &[String]) -> Result<ClientCommand, ThinClientError>
         "vault" => parse_vault(&arguments[1..]),
         "knowledge" => parse_knowledge(&arguments[1..]),
         "markdown" => parse_markdown(&arguments[1..]),
+        "document" => parse_document_control(&arguments[1..]),
         "word" => parse_word(&arguments[1..]),
         "checkpoint" if arguments.len() == 1 => operation(OperationalClientCommand::Checkpoint),
         "handoff" if arguments.len() == 1 => operation(OperationalClientCommand::Handoff),
@@ -175,6 +176,32 @@ fn parse_command(arguments: &[String]) -> Result<ClientCommand, ThinClientError>
         }
         _ => Err(ThinClientError::InvalidValue),
     }
+}
+
+fn parse_document_control(arguments: &[String]) -> Result<ClientCommand, ThinClientError> {
+    let [
+        coordinate,
+        register_id,
+        register_sha256,
+        report_id,
+        workflow_kind,
+        input_sha256,
+    ] = arguments
+    else {
+        return Err(ThinClientError::InvalidValue);
+    };
+    if coordinate != "coordinate" {
+        return Err(ThinClientError::InvalidValue);
+    }
+    Ok(ClientCommand::DocumentControl {
+        action: DocumentControlClientCommand::Coordinate {
+            register_id: register_id.clone(),
+            register_sha256: register_sha256.clone(),
+            report_id: report_id.clone(),
+            workflow_kind: workflow_kind.clone(),
+            input_sha256: input_sha256.clone(),
+        },
+    })
 }
 
 fn parse_markdown(arguments: &[String]) -> Result<ClientCommand, ThinClientError> {
@@ -614,6 +641,7 @@ Commands:\n\
   vault tasks\n\
   knowledge run WORKFLOW [--semantic]\n\
   markdown coordinate SOURCE_SHA256 PROFILE_ID ARTIFACT_ID OUTPUT_PATH REOPENED_SHA256 [--update]\n\
+  document coordinate REGISTER_ID REGISTER_SHA256 REPORT_ID WORKFLOW INPUT_SHA256\n\
   word inspect SOURCE_ID SOURCE_SHA256 PROFILE_ID\n\
   word generate SOURCE_ID SOURCE_SHA256 PROFILE_ID ARTIFACT_ID MARKDOWN_SHA256 OUTPUT_PATH\n\
   checkpoint | handoff | audit | doctor | diagnostics\n\
@@ -631,13 +659,13 @@ Headless surfaces require an exact predeclared, bounded, unexpired grant.\n"
 pub const fn shell_completion(shell: CompletionShell) -> &'static str {
     match shell {
         CompletionShell::Bash => {
-            "complete -W 'code chat conversations resume vault knowledge markdown word checkpoint handoff audit memory export import doctor diagnostics completion' agentmage\n"
+            "complete -W 'code chat conversations resume vault knowledge markdown document word checkpoint handoff audit memory export import doctor diagnostics completion' agentmage\n"
         }
         CompletionShell::Zsh => {
-            "compdef '_arguments 1:command:(code chat conversations resume vault knowledge markdown word checkpoint handoff audit memory export import doctor diagnostics completion)' agentmage\n"
+            "compdef '_arguments 1:command:(code chat conversations resume vault knowledge markdown document word checkpoint handoff audit memory export import doctor diagnostics completion)' agentmage\n"
         }
         CompletionShell::Fish => {
-            "complete -c agentmage -f -a 'code chat conversations resume vault knowledge markdown word checkpoint handoff audit memory export import doctor diagnostics completion'\n"
+            "complete -c agentmage -f -a 'code chat conversations resume vault knowledge markdown document word checkpoint handoff audit memory export import doctor diagnostics completion'\n"
         }
     }
 }
@@ -705,6 +733,15 @@ mod tests {
                 "documents/report.md",
                 &"b".repeat(64),
                 "--update",
+            ]),
+            strings(&[
+                "document",
+                "coordinate",
+                "register-01",
+                &"a".repeat(64),
+                "report-01",
+                "quality",
+                &"b".repeat(64),
             ]),
             strings(&[
                 "word",
@@ -821,6 +858,15 @@ mod tests {
                 "quality-01",
                 "artifact-01",
                 "../report.md",
+                &"b".repeat(64),
+            ]),
+            strings(&[
+                "document",
+                "coordinate",
+                "register-01",
+                &"a".repeat(64),
+                "report-01",
+                "unknown-workflow",
                 &"b".repeat(64),
             ]),
             strings(&["word", "inspect", "word-01", "not-a-digest", "profile-01"]),

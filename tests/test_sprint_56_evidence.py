@@ -38,6 +38,8 @@ class Sprint56EvidenceTests(unittest.TestCase):
         self.assertEqual(self.validate(value), [])
         self.assertTrue(value["summary"]["local_sprint_56_contract_passed"])
         self.assertTrue(value["summary"]["document_control_workflow_integrated"])
+        self.assertTrue(value["summary"]["native_interface_integrated"])
+        self.assertTrue(value["verification_evidence"]["native_interface_integration"])
         self.assertFalse(value["summary"]["external_effects_enabled"])
         self.assertFalse(value["verification_evidence"]["sprint_gate_closed"])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
