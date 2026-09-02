@@ -30,14 +30,18 @@ projection parity, and eight authority-free declarative skills.
 - Native Chat, interactive CLI, JSON, SDK, and ACP route the same identity-only portfolio command
   through that coordinator. An exact aggregate binding rejects workspace, record, history, privacy,
   or projection substitution while raw records remain host-owned and external effects stay absent.
+- Durable reminders bind one exact canonical record digest and its source identities. Explicit
+  create, snooze, reschedule, acknowledge, and complete transitions form a monotonic hash chain;
+  injected compare-and-swap storage supports verified restart reconstruction while refusing stale
+  writers, duplicate events, tampering, notification authority, and external effects.
 
 ## Security Mapping
 
 | Requirements | Local Sprint 54 contribution | Remaining product evidence |
 |---|---|---|
 | `SR-AI-003`, `SR-AI-004`, `SR-AI-007`, `SR-AI-010` | Truth states, citations, fixed ranking method, visible limitations, and no sensitive-trait inference are enforced | Integrated model workflow, live quality campaign, and independent review |
-| `SR-DAT-002` | Source identities, privacy filtering, class-specific indexes, bounded retention, and export denial are deterministic | Encrypted installed storage, lifecycle, backup, removal, and privacy review |
-| `SR-CIV-001` through `SR-CIV-005` | No external action occurs; drafts, trackers, triage, and views carry no authority | Native interfaces, accessible approval path, durable reminders, and installed acceptance |
+| `SR-DAT-002` | Source identities, privacy filtering, class-specific indexes, bounded retention, reminder reconstruction, and export denial are deterministic | Encrypted installed storage, backup, removal, and privacy review |
+| `SR-CIV-001` through `SR-CIV-005` | No external action occurs; drafts, trackers, reminders, triage, and views carry no authority | Accessible approval path and installed acceptance |
 | `SR-TST-006` | Closed Rust, schema, Python mutation, and skill-package tests are retained | Deferred manual fuzzing |
 
 No product-wide requirement is marked complete by this local contribution.
@@ -46,7 +50,7 @@ No product-wide requirement is marked complete by this local contribution.
 
 A green local report proves only the committed source and named commands on the recorded Linux
 environment. Sprint 53 remains blocked. The repository-controlled executive coordinator is
-integrated locally, including native interface routing. Durable reminder lifecycle, installed
-cross-platform acceptance, trusted package execution, independent review, and completed manual
-fuzzing do not exist. Sprint 54 therefore remains **BLOCKED** despite the passing local contracts
-and artifacts.
+integrated locally, including native interface routing and the durable reminder lifecycle.
+Installed cross-platform acceptance, trusted package execution, independent review, and completed
+manual fuzzing do not exist. Sprint 54 therefore remains **BLOCKED** despite the passing local
+contracts and artifacts.

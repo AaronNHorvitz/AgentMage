@@ -67,3 +67,12 @@ For every briefing, ranking, tracker row, reminder, or draft, show the canonical
 privacy class, evidence state, deterministic method, exact source identities, conflicts, and
 limitations. Plain-folder and Obsidian records use the same projection contract; storage grammar
 does not change ranking or truth state.
+
+## Local Reminder Lifecycle
+
+Create a reminder only from an exact source-backed task, commitment, approval, meeting, deadline,
+or waiting item. Snooze and reschedule require a new future local instant; acknowledge and complete
+remove the active due instant without changing the source record. Every action must name the last
+observed reminder digest and a unique event identity. A stale digest, replayed identity, broken hash
+chain, or effect-bearing record is refused. Reminder persistence may restore this state after a
+restart, but it cannot notify anyone, change a calendar, or mutate the canonical source.

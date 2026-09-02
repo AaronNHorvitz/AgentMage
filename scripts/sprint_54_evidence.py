@@ -167,7 +167,7 @@ IMPLEMENTED: Final = {
     "source_mutation_capability": False,
     "product_coordinator": True,
     "native_interface_integration": True,
-    "durable_reminder_lifecycle": False,
+    "durable_reminder_lifecycle": True,
     "installed_cross_platform_acceptance": False,
     "trusted_package_execution": False,
     "independent_review": False,
@@ -175,7 +175,6 @@ IMPLEMENTED: Final = {
 }
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-53-BLOCKED", "owner": "54.1"},
-    {"code": "DURABLE-REMINDER-LIFECYCLE-ABSENT", "owner": "54.1.1.2"},
     {"code": "INSTALLED-CROSS-PLATFORM-ACCEPTANCE-ABSENT", "owner": "54.1.3.5"},
     {"code": "TRUSTED-INSTALLED-PACKAGE-EXECUTION-ABSENT", "owner": "54.1.3.5"},
     {"code": "INDEPENDENT-EXECUTIVE-BOUNDARY-REVIEW-ABSENT", "owner": "54.1.3.5"},
@@ -260,7 +259,7 @@ def expected_verification(local_pass: bool = True) -> dict[str, Any]:
         "cross_privacy_leak_count": 0 if local_pass else None,
         "product_coordinator": True,
         "native_interface_integration": True,
-        "durable_reminder_lifecycle": False,
+        "durable_reminder_lifecycle": True,
         "installed_cross_platform_acceptance": False,
         "trusted_package_execution": False,
         "independent_review": False,

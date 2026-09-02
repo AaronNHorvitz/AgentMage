@@ -54,6 +54,12 @@ rejects stale requests, workspace or record substitution, privacy-scope drift, a
 mismatch before composition; successful routing still grants no notification, send, schedule,
 write, or source-mutation effect.
 
-Durable reminder lifecycle, live calendar or message connectors, installed-platform acceptance,
-accessibility, lifecycle, independent review, signing, and manual fuzzing remain separate later
-evidence.
+The kernel now provides a durable, authority-free reminder lifecycle over the existing canonical
+record grammar. Creation binds the exact record digest and sorted source identities; snooze,
+reschedule, acknowledge, and complete are explicit user-originated, hash-chained transitions.
+Trusted host composition supplies the canonical compare-and-swap store, so restart reconstruction
+verifies the complete chain and stale writers or replayed event identities fail closed. Persistence
+never grants notification, calendar, source-mutation, or external-effect authority.
+
+Live calendar or message connectors, installed-platform acceptance, accessibility, independent
+review, signing, and manual fuzzing remain separate later evidence.

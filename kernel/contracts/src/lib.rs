@@ -126,7 +126,8 @@ pub use executive::{
     ExecutivePriorityComponent, ExecutivePriorityComponentKind, ExecutivePriorityEntry,
     ExecutivePriorityRanking, ExecutivePrivacyClass, ExecutivePrivacyDecision,
     ExecutivePrivacyOperation, ExecutivePrivacyRequest, ExecutiveRecord, ExecutiveRecordKind,
-    ExecutiveRecordStatus, ExecutiveSourceReference, ExecutiveSourceStore, ExecutiveTracker,
+    ExecutiveRecordStatus, ExecutiveReminder, ExecutiveReminderActionKind, ExecutiveReminderEvent,
+    ExecutiveReminderState, ExecutiveSourceReference, ExecutiveSourceStore, ExecutiveTracker,
     ExecutiveTrackerEntry, ExecutiveTrackerKind, ExecutiveView, ExecutiveViewItem,
     ExecutiveViewKind,
 };

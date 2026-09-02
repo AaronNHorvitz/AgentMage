@@ -348,6 +348,90 @@ pub struct ExecutiveTracker {
     pub tracker_sha256: String,
 }
 
+/// Closed local reminder lifecycle state. No state grants notification or scheduling authority.
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum ExecutiveReminderState {
+    /// Waiting for its exact local due instant.
+    Scheduled,
+    /// Explicitly deferred by the user to a later instant.
+    Snoozed,
+    /// Seen and acknowledged without completing the source record.
+    Acknowledged,
+    /// Explicitly completed by the user.
+    Completed,
+}
+
+/// User-originated transition admitted by the local reminder lifecycle.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ExecutiveReminderActionKind {
+    /// Create a reminder from one exact source-backed tracker row.
+    Create,
+    /// Defer the reminder while retaining its prior due instant in history.
+    Snooze,
+    /// Replace its due instant through an explicit user decision.
+    Reschedule,
+    /// Record that the reminder was seen without changing the source record.
+    Acknowledge,
+    /// Close the local reminder without changing the source record.
+    Complete,
+}
+
+/// One hash-chained transition in a durable, authority-free local reminder.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ExecutiveReminderEvent {
+    /// Stable unique event identity.
+    pub event_id: String,
+    /// Exact reminder identity.
+    pub reminder_id: String,
+    /// Monotonic lifecycle revision, beginning at one.
+    pub revision: u64,
+    /// User-originated transition.
+    pub action: ExecutiveReminderActionKind,
+    /// Resulting lifecycle state.
+    pub state: ExecutiveReminderState,
+    /// Resulting exact local due instant, absent after acknowledgement or completion.
+    pub scheduled_for_epoch_ms: Option<u64>,
+    /// Trusted local observation time.
+    pub occurred_at_epoch_ms: u64,
+    /// Digest of the preceding event, absent only for creation.
+    pub previous_event_sha256: Option<String>,
+    /// Always false; the event cannot notify or mutate another system.
+    pub external_effect_allowed: bool,
+    /// Digest of the complete event with this field empty.
+    pub event_sha256: String,
+}
+
+/// Durable local reminder bound to one canonical record and its exact supporting sources.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ExecutiveReminder {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable reminder identity.
+    pub reminder_id: String,
+    /// Exact canonical record identity.
+    pub record_id: String,
+    /// Digest of the canonical record at reminder creation.
+    pub record_sha256: String,
+    /// Sorted exact source identities supporting the reminder.
+    pub source_ids: Vec<String>,
+    /// Current lifecycle state.
+    pub state: ExecutiveReminderState,
+    /// Current exact local due instant, absent after acknowledgement or completion.
+    pub scheduled_for_epoch_ms: Option<u64>,
+    /// Complete append-only transition history.
+    pub events: Vec<ExecutiveReminderEvent>,
+    /// Always false; persistence and projection carry no notification authority.
+    pub notification_allowed: bool,
+    /// Digest of the complete reminder with this field empty.
+    pub reminder_sha256: String,
+}
+
 /// Closed executive view class.
 #[derive(
     Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,

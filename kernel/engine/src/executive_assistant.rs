@@ -10,6 +10,7 @@ use agentmage_kernel_contracts::{
     ExecutivePriorityComponentKind, ExecutivePriorityEntry, ExecutivePriorityRanking,
     ExecutivePrivacyClass, ExecutivePrivacyDecision, ExecutivePrivacyOperation,
     ExecutivePrivacyRequest, ExecutiveRecord, ExecutiveRecordKind, ExecutiveRecordStatus,
+    ExecutiveReminder, ExecutiveReminderActionKind, ExecutiveReminderEvent, ExecutiveReminderState,
     ExecutiveSourceReference, ExecutiveSourceStore, ExecutiveTracker, ExecutiveTrackerEntry,
     ExecutiveTrackerKind, ExecutiveView, ExecutiveViewItem, ExecutiveViewKind,
 };
@@ -715,6 +716,331 @@ pub fn build_tracker(
     Ok(tracker)
 }
 
+fn reminder_event_digest(
+    event: &ExecutiveReminderEvent,
+) -> Result<String, ExecutiveAssistantError> {
+    let mut candidate = event.clone();
+    candidate.event_sha256.clear();
+    digest_record(&candidate)
+}
+
+fn reminder_digest(reminder: &ExecutiveReminder) -> Result<String, ExecutiveAssistantError> {
+    let mut candidate = reminder.clone();
+    candidate.reminder_sha256.clear();
+    digest_record(&candidate)
+}
+
+/// Verifies a complete durable reminder chain and its authority-free current projection.
+pub fn verify_reminder(reminder: &ExecutiveReminder) -> Result<(), ExecutiveAssistantError> {
+    if reminder.schema_version != CONTRACT_SCHEMA_VERSION
+        || !valid_identifier(&reminder.reminder_id)
+        || !valid_identifier(&reminder.record_id)
+        || !valid_sha256(&reminder.record_sha256)
+        || reminder.source_ids.is_empty()
+        || !sorted_unique(&reminder.source_ids)
+        || reminder.notification_allowed
+        || reminder.events.is_empty()
+        || reminder.reminder_sha256 != reminder_digest(reminder)?
+    {
+        return Err(ExecutiveAssistantError::IntegrityFailure);
+    }
+    let mut prior = None;
+    let mut prior_state = None;
+    let mut prior_time = None;
+    for (index, event) in reminder.events.iter().enumerate() {
+        let revision =
+            u64::try_from(index + 1).map_err(|_| ExecutiveAssistantError::InvalidInput)?;
+        if !valid_identifier(&event.event_id)
+            || event.reminder_id != reminder.reminder_id
+            || event.revision != revision
+            || event.occurred_at_epoch_ms == 0
+            || event.external_effect_allowed
+            || event.previous_event_sha256 != prior
+            || event.event_sha256 != reminder_event_digest(event)?
+            || (index == 0 && event.action != ExecutiveReminderActionKind::Create)
+            || (index > 0 && event.action == ExecutiveReminderActionKind::Create)
+            || prior_time.is_some_and(|time| event.occurred_at_epoch_ms <= time)
+            || (matches!(
+                event.state,
+                ExecutiveReminderState::Scheduled | ExecutiveReminderState::Snoozed
+            ) != event.scheduled_for_epoch_ms.is_some())
+            || event
+                .scheduled_for_epoch_ms
+                .is_some_and(|due| due <= event.occurred_at_epoch_ms)
+            || !matches!(
+                (prior_state, event.action, event.state),
+                (
+                    None,
+                    ExecutiveReminderActionKind::Create,
+                    ExecutiveReminderState::Scheduled
+                ) | (
+                    Some(ExecutiveReminderState::Scheduled | ExecutiveReminderState::Snoozed),
+                    ExecutiveReminderActionKind::Snooze,
+                    ExecutiveReminderState::Snoozed
+                ) | (
+                    Some(
+                        ExecutiveReminderState::Scheduled
+                            | ExecutiveReminderState::Snoozed
+                            | ExecutiveReminderState::Acknowledged
+                    ),
+                    ExecutiveReminderActionKind::Reschedule,
+                    ExecutiveReminderState::Scheduled
+                ) | (
+                    Some(ExecutiveReminderState::Scheduled | ExecutiveReminderState::Snoozed),
+                    ExecutiveReminderActionKind::Acknowledge,
+                    ExecutiveReminderState::Acknowledged
+                ) | (
+                    Some(
+                        ExecutiveReminderState::Scheduled
+                            | ExecutiveReminderState::Snoozed
+                            | ExecutiveReminderState::Acknowledged
+                    ),
+                    ExecutiveReminderActionKind::Complete,
+                    ExecutiveReminderState::Completed
+                )
+            )
+        {
+            return Err(ExecutiveAssistantError::IntegrityFailure);
+        }
+        prior = Some(event.event_sha256.clone());
+        prior_state = Some(event.state);
+        prior_time = Some(event.occurred_at_epoch_ms);
+    }
+    let terminal = reminder
+        .events
+        .last()
+        .ok_or(ExecutiveAssistantError::IntegrityFailure)?;
+    if terminal.state != reminder.state
+        || terminal.scheduled_for_epoch_ms != reminder.scheduled_for_epoch_ms
+    {
+        return Err(ExecutiveAssistantError::IntegrityFailure);
+    }
+    Ok(())
+}
+
+/// Creates one durable local reminder from an exact source-backed canonical record.
+pub fn create_reminder(
+    reminder_id: String,
+    event_id: String,
+    record: &ExecutiveRecord,
+    scheduled_for_epoch_ms: u64,
+    occurred_at_epoch_ms: u64,
+) -> Result<ExecutiveReminder, ExecutiveAssistantError> {
+    validate_record(record)?;
+    if !valid_identifier(&reminder_id)
+        || !valid_identifier(&event_id)
+        || occurred_at_epoch_ms == 0
+        || scheduled_for_epoch_ms <= occurred_at_epoch_ms
+        || !tracker_accepts(ExecutiveTrackerKind::Reminders, record)
+    {
+        return Err(ExecutiveAssistantError::InvalidInput);
+    }
+    let mut event = ExecutiveReminderEvent {
+        event_id,
+        reminder_id: reminder_id.clone(),
+        revision: 1,
+        action: ExecutiveReminderActionKind::Create,
+        state: ExecutiveReminderState::Scheduled,
+        scheduled_for_epoch_ms: Some(scheduled_for_epoch_ms),
+        occurred_at_epoch_ms,
+        previous_event_sha256: None,
+        external_effect_allowed: false,
+        event_sha256: String::new(),
+    };
+    event.event_sha256 = reminder_event_digest(&event)?;
+    let mut reminder = ExecutiveReminder {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        reminder_id,
+        record_id: record.record_id.clone(),
+        record_sha256: digest_record(record)?,
+        source_ids: source_ids(record),
+        state: ExecutiveReminderState::Scheduled,
+        scheduled_for_epoch_ms: Some(scheduled_for_epoch_ms),
+        events: vec![event],
+        notification_allowed: false,
+        reminder_sha256: String::new(),
+    };
+    reminder.reminder_sha256 = reminder_digest(&reminder)?;
+    verify_reminder(&reminder)?;
+    Ok(reminder)
+}
+
+/// Applies one exact user action while retaining every prior reminder state in its hash chain.
+pub fn apply_reminder_action(
+    reminder: &ExecutiveReminder,
+    expected_reminder_sha256: &str,
+    event_id: String,
+    action: ExecutiveReminderActionKind,
+    scheduled_for_epoch_ms: Option<u64>,
+    occurred_at_epoch_ms: u64,
+) -> Result<ExecutiveReminder, ExecutiveAssistantError> {
+    verify_reminder(reminder)?;
+    let previous = reminder.events.last().expect("verified non-empty history");
+    if reminder.reminder_sha256 != expected_reminder_sha256
+        || !valid_identifier(&event_id)
+        || reminder
+            .events
+            .iter()
+            .any(|event| event.event_id == event_id)
+        || occurred_at_epoch_ms <= previous.occurred_at_epoch_ms
+        || action == ExecutiveReminderActionKind::Create
+        || reminder.state == ExecutiveReminderState::Completed
+    {
+        return Err(ExecutiveAssistantError::StaleSnapshot);
+    }
+    let (state, next_due) = match action {
+        ExecutiveReminderActionKind::Snooze => {
+            if !matches!(
+                reminder.state,
+                ExecutiveReminderState::Scheduled | ExecutiveReminderState::Snoozed
+            ) || scheduled_for_epoch_ms.is_none_or(|due| due <= occurred_at_epoch_ms)
+            {
+                return Err(ExecutiveAssistantError::InvalidInput);
+            }
+            (ExecutiveReminderState::Snoozed, scheduled_for_epoch_ms)
+        }
+        ExecutiveReminderActionKind::Reschedule => {
+            if scheduled_for_epoch_ms.is_none_or(|due| due <= occurred_at_epoch_ms) {
+                return Err(ExecutiveAssistantError::InvalidInput);
+            }
+            (ExecutiveReminderState::Scheduled, scheduled_for_epoch_ms)
+        }
+        ExecutiveReminderActionKind::Acknowledge => {
+            if !matches!(
+                reminder.state,
+                ExecutiveReminderState::Scheduled | ExecutiveReminderState::Snoozed
+            ) || scheduled_for_epoch_ms.is_some()
+            {
+                return Err(ExecutiveAssistantError::InvalidInput);
+            }
+            (ExecutiveReminderState::Acknowledged, None)
+        }
+        ExecutiveReminderActionKind::Complete => {
+            if scheduled_for_epoch_ms.is_some() {
+                return Err(ExecutiveAssistantError::InvalidInput);
+            }
+            (ExecutiveReminderState::Completed, None)
+        }
+        ExecutiveReminderActionKind::Create => unreachable!("rejected above"),
+    };
+    let mut event = ExecutiveReminderEvent {
+        event_id,
+        reminder_id: reminder.reminder_id.clone(),
+        revision: previous
+            .revision
+            .checked_add(1)
+            .ok_or(ExecutiveAssistantError::InvalidInput)?,
+        action,
+        state,
+        scheduled_for_epoch_ms: next_due,
+        occurred_at_epoch_ms,
+        previous_event_sha256: Some(previous.event_sha256.clone()),
+        external_effect_allowed: false,
+        event_sha256: String::new(),
+    };
+    event.event_sha256 = reminder_event_digest(&event)?;
+    let mut updated = reminder.clone();
+    updated.state = state;
+    updated.scheduled_for_epoch_ms = next_due;
+    updated.events.push(event);
+    updated.reminder_sha256.clear();
+    updated.reminder_sha256 = reminder_digest(&updated)?;
+    verify_reminder(&updated)?;
+    Ok(updated)
+}
+
+/// Canonical persistence boundary for durable local reminders.
+pub trait ExecutiveReminderStore {
+    /// Loads one exact reminder, or returns absence without inventing state.
+    fn load_reminder(
+        &self,
+        reminder_id: &str,
+    ) -> Result<Option<ExecutiveReminder>, ExecutiveAssistantError>;
+
+    /// Atomically creates or replaces one reminder against its exact prior digest.
+    fn compare_and_store_reminder(
+        &mut self,
+        expected_reminder_sha256: Option<&str>,
+        reminder: &ExecutiveReminder,
+    ) -> Result<(), ExecutiveAssistantError>;
+}
+
+/// Store-backed lifecycle that survives client or host reconstruction without scheduling effects.
+pub struct DurableExecutiveReminderLifecycle<S: ExecutiveReminderStore> {
+    store: S,
+}
+
+impl<S: ExecutiveReminderStore> DurableExecutiveReminderLifecycle<S> {
+    /// Binds the lifecycle to one caller-supplied canonical store.
+    #[must_use]
+    pub const fn new(store: S) -> Self {
+        Self { store }
+    }
+
+    /// Creates and atomically persists one exact source-backed reminder.
+    pub fn create(
+        &mut self,
+        reminder_id: String,
+        event_id: String,
+        record: &ExecutiveRecord,
+        scheduled_for_epoch_ms: u64,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<ExecutiveReminder, ExecutiveAssistantError> {
+        if self.store.load_reminder(&reminder_id)?.is_some() {
+            return Err(ExecutiveAssistantError::StaleSnapshot);
+        }
+        let reminder = create_reminder(
+            reminder_id,
+            event_id,
+            record,
+            scheduled_for_epoch_ms,
+            occurred_at_epoch_ms,
+        )?;
+        self.store.compare_and_store_reminder(None, &reminder)?;
+        Ok(reminder)
+    }
+
+    /// Loads and verifies one exact reminder after process or client reconstruction.
+    pub fn reopen(&self, reminder_id: &str) -> Result<ExecutiveReminder, ExecutiveAssistantError> {
+        let reminder = self
+            .store
+            .load_reminder(reminder_id)?
+            .ok_or(ExecutiveAssistantError::StaleSnapshot)?;
+        verify_reminder(&reminder)?;
+        Ok(reminder)
+    }
+
+    /// Applies and atomically persists one transition against the caller's observed digest.
+    pub fn apply(
+        &mut self,
+        reminder_id: &str,
+        expected_reminder_sha256: &str,
+        event_id: String,
+        action: ExecutiveReminderActionKind,
+        scheduled_for_epoch_ms: Option<u64>,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<ExecutiveReminder, ExecutiveAssistantError> {
+        let current = self.reopen(reminder_id)?;
+        let updated = apply_reminder_action(
+            &current,
+            expected_reminder_sha256,
+            event_id,
+            action,
+            scheduled_for_epoch_ms,
+            occurred_at_epoch_ms,
+        )?;
+        self.store
+            .compare_and_store_reminder(Some(expected_reminder_sha256), &updated)?;
+        Ok(updated)
+    }
+
+    /// Returns the persistence adapter for trusted host recomposition or testing.
+    #[must_use]
+    pub fn into_store(self) -> S {
+        self.store
+    }
+}
+
 fn view_accepts(kind: ExecutiveViewKind, record: &ExecutiveRecord) -> bool {
     match kind {
         ExecutiveViewKind::StartOfCycle => !matches!(
@@ -1364,16 +1690,50 @@ mod tests {
         ExecutiveDraftClaim, ExecutiveDueWindow, ExecutiveEvidenceState, ExecutiveField,
         ExecutiveLocalMessage, ExecutiveMessageTriageClass, ExecutivePrivacyClass,
         ExecutivePrivacyOperation, ExecutivePrivacyRequest, ExecutiveRecord, ExecutiveRecordKind,
-        ExecutiveRecordStatus, ExecutiveSourceReference, ExecutiveSourceStore,
-        ExecutiveTrackerKind, ExecutiveViewKind,
+        ExecutiveRecordStatus, ExecutiveReminderActionKind, ExecutiveReminderState,
+        ExecutiveSourceReference, ExecutiveSourceStore, ExecutiveTrackerKind, ExecutiveViewKind,
     };
 
     use super::{
-        CorrespondenceReviewContext, ExecutiveAssistantError, ExecutiveViewRequest,
-        build_executive_view, build_portfolio_snapshot, build_priority_ranking, build_tracker,
+        CorrespondenceReviewContext, DurableExecutiveReminderLifecycle, ExecutiveAssistantError,
+        ExecutiveReminderStore, ExecutiveViewRequest, apply_reminder_action, build_executive_view,
+        build_portfolio_snapshot, build_priority_ranking, build_tracker, create_reminder,
         evaluate_executive_privacy, rank_priorities, reconcile_portfolio, review_correspondence,
-        seal_correspondence_draft, triage_local_messages,
+        seal_correspondence_draft, triage_local_messages, verify_reminder,
     };
+
+    #[derive(Default)]
+    struct MemoryReminderStore(
+        std::collections::BTreeMap<String, agentmage_kernel_contracts::ExecutiveReminder>,
+    );
+
+    impl ExecutiveReminderStore for MemoryReminderStore {
+        fn load_reminder(
+            &self,
+            reminder_id: &str,
+        ) -> Result<Option<agentmage_kernel_contracts::ExecutiveReminder>, ExecutiveAssistantError>
+        {
+            Ok(self.0.get(reminder_id).cloned())
+        }
+
+        fn compare_and_store_reminder(
+            &mut self,
+            expected_reminder_sha256: Option<&str>,
+            reminder: &agentmage_kernel_contracts::ExecutiveReminder,
+        ) -> Result<(), ExecutiveAssistantError> {
+            let observed = self
+                .0
+                .get(&reminder.reminder_id)
+                .map(|current| current.reminder_sha256.as_str());
+            if observed != expected_reminder_sha256 {
+                return Err(ExecutiveAssistantError::StaleSnapshot);
+            }
+            verify_reminder(reminder)?;
+            self.0
+                .insert(reminder.reminder_id.clone(), reminder.clone());
+            Ok(())
+        }
+    }
 
     fn source(record_id: &str, store: ExecutiveSourceStore) -> ExecutiveSourceReference {
         ExecutiveSourceReference {
@@ -1553,6 +1913,169 @@ mod tests {
             assert!(view.proposal_only);
             assert!(!view.external_effect_allowed);
         }
+    }
+
+    #[test]
+    fn durable_reminder_supports_snooze_reschedule_acknowledge_and_complete() {
+        let source_record = record(
+            "reminder-task",
+            ExecutiveRecordKind::Task,
+            ExecutiveRecordStatus::Active,
+            ExecutiveEvidenceState::Confirmed,
+            ExecutiveSourceStore::PlainFolder,
+        );
+        let created = create_reminder(
+            "reminder-a".to_owned(),
+            "reminder-event-1".to_owned(),
+            &source_record,
+            2_000,
+            1_000,
+        )
+        .expect("create");
+        assert!(!created.notification_allowed);
+        let snoozed = apply_reminder_action(
+            &created,
+            &created.reminder_sha256,
+            "reminder-event-2".to_owned(),
+            ExecutiveReminderActionKind::Snooze,
+            Some(4_000),
+            2_500,
+        )
+        .expect("snooze");
+        let rescheduled = apply_reminder_action(
+            &snoozed,
+            &snoozed.reminder_sha256,
+            "reminder-event-3".to_owned(),
+            ExecutiveReminderActionKind::Reschedule,
+            Some(6_000),
+            3_000,
+        )
+        .expect("reschedule");
+        let acknowledged = apply_reminder_action(
+            &rescheduled,
+            &rescheduled.reminder_sha256,
+            "reminder-event-4".to_owned(),
+            ExecutiveReminderActionKind::Acknowledge,
+            None,
+            4_000,
+        )
+        .expect("acknowledge");
+        let completed = apply_reminder_action(
+            &acknowledged,
+            &acknowledged.reminder_sha256,
+            "reminder-event-5".to_owned(),
+            ExecutiveReminderActionKind::Complete,
+            None,
+            5_000,
+        )
+        .expect("complete");
+        assert_eq!(completed.state, ExecutiveReminderState::Completed);
+        assert_eq!(completed.events.len(), 5);
+        assert!(
+            completed
+                .events
+                .iter()
+                .all(|event| !event.external_effect_allowed)
+        );
+        verify_reminder(&completed).expect("restorable chain");
+    }
+
+    #[test]
+    fn durable_reminder_rejects_stale_replay_tamper_and_automatic_effects() {
+        let source_record = record(
+            "reminder-secure",
+            ExecutiveRecordKind::Commitment,
+            ExecutiveRecordStatus::Active,
+            ExecutiveEvidenceState::Confirmed,
+            ExecutiveSourceStore::Obsidian,
+        );
+        let created = create_reminder(
+            "reminder-secure".to_owned(),
+            "reminder-secure-event-1".to_owned(),
+            &source_record,
+            20_000,
+            10_000,
+        )
+        .expect("create");
+        assert_eq!(
+            apply_reminder_action(
+                &created,
+                &"0".repeat(64),
+                "reminder-secure-event-2".to_owned(),
+                ExecutiveReminderActionKind::Complete,
+                None,
+                11_000,
+            ),
+            Err(ExecutiveAssistantError::StaleSnapshot)
+        );
+        let mut tampered = created.clone();
+        tampered.events[0].external_effect_allowed = true;
+        assert_eq!(
+            verify_reminder(&tampered),
+            Err(ExecutiveAssistantError::IntegrityFailure)
+        );
+        assert_eq!(
+            apply_reminder_action(
+                &created,
+                &created.reminder_sha256,
+                "reminder-secure-event-1".to_owned(),
+                ExecutiveReminderActionKind::Snooze,
+                Some(30_000),
+                12_000,
+            ),
+            Err(ExecutiveAssistantError::StaleSnapshot)
+        );
+    }
+
+    #[test]
+    fn durable_reminder_reopens_and_compare_swaps_across_lifecycle_reconstruction() {
+        let source_record = record(
+            "reminder-restart",
+            ExecutiveRecordKind::Waiting,
+            ExecutiveRecordStatus::Waiting,
+            ExecutiveEvidenceState::Confirmed,
+            ExecutiveSourceStore::PlainFolder,
+        );
+        let mut first = DurableExecutiveReminderLifecycle::new(MemoryReminderStore::default());
+        let created = first
+            .create(
+                "reminder-restart".to_owned(),
+                "reminder-restart-event-1".to_owned(),
+                &source_record,
+                20_000,
+                10_000,
+            )
+            .expect("persist creation");
+        let store = first.into_store();
+        let mut reopened = DurableExecutiveReminderLifecycle::new(store);
+        assert_eq!(
+            reopened
+                .reopen("reminder-restart")
+                .expect("reopen after reconstruction"),
+            created
+        );
+        let completed = reopened
+            .apply(
+                "reminder-restart",
+                &created.reminder_sha256,
+                "reminder-restart-event-2".to_owned(),
+                ExecutiveReminderActionKind::Complete,
+                None,
+                11_000,
+            )
+            .expect("compare and store");
+        assert_eq!(completed.state, ExecutiveReminderState::Completed);
+        assert_eq!(
+            reopened.apply(
+                "reminder-restart",
+                &created.reminder_sha256,
+                "reminder-restart-event-3".to_owned(),
+                ExecutiveReminderActionKind::Reschedule,
+                Some(30_000),
+                12_000,
+            ),
+            Err(ExecutiveAssistantError::StaleSnapshot)
+        );
     }
 
     #[test]
