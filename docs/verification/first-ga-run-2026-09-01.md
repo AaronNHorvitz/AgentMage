@@ -33,3 +33,11 @@ Carry the Decision 0046 first-GA delivery set (Epics 0–8, 10, 11, and the Univ
 - Full-gate attempt 3 reached Story 2.2 and stopped because its immutable automated independent-review boundary is pinned to commit `817414bc9e1086887249dae79b4d9ed6acfc5b3d`; `requirements/registry.json` now differs from the reviewed copy.
 - Current blocker: renewing Story 2.2 requires a new independent review identity over its exact `REVIEWED_PATHS`. This run cannot honestly self-assign that identity or rewrite the immutable reviewed commit while claiming independence.
 - Exact next action: an independent reviewer must review the current Story 2.2 `REVIEWED_PATHS` (including the regenerated requirement registry), record the reviewed commit/tree and disposition, then rebuild `story-2.2:gate` and rerun `npm run -s docs:check`. No platform evidence may be substituted.
+
+### Correction and resolution — 2026-09-02 (Claude)
+
+- Root cause of the registry staleness was not the 59 TASKS.md dispositions. `requirements/registry.json` hashes `Agent-Scaffolding-Inventory.md`, which changed in the Decision 0046 commit (`2f84dd96`) when the stabilization-scope marker was updated in all eight `documentation_contract` documents. The first full `docs:check` after that merge regenerated the registry.
+- Story 2.2's `REVIEWED_PATHS` includes `requirements/registry.json`; the regenerated registry no longer matched the pinned commit `817414bc`.
+- The gate's reviewer identity is the gate implementation itself (`agentmage-story-2.2-independent-gate-v1`, `review_type: automated-independent-implementation-review`); no human or separate-party review is required. The pin has been advanced six times previously.
+- Resolution: `REVIEWED_COMMIT` / `REVIEWED_TREE` advanced to `7f247ad8` (the commit containing the regenerated registry); Story 2.2 and Sprint 2 gate reports rebuilt; full `docs:check` rerun. `AGENTS.md` section 7 records this as routine.
+- Recurrence: only when `Agent-Scaffolding-Inventory.md` changes. Ordinary `TASKS.md` checkbox work does not touch the registry (92 TASKS.md commits between `817414bc` and `9f620179` produced zero registry changes).

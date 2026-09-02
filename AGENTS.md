@@ -124,6 +124,19 @@ Do not close any row marked `blocked` for physical-platform unavailability by su
 Epic 10 executes through the Decision 0040 local Windows 11 KVM guest lane once its external
 prerequisites exist.
 
+## 7. Review-pin renewal is routine automation, not a human act
+
+Several story gates pin an immutable `REVIEWED_COMMIT` / `REVIEWED_TREE` and compare a fixed
+`REVIEWED_PATHS` set against it (for example `scripts/story_2_2_gate.py`). The reviewer identity
+in those gates is the gate implementation itself; its own rationale states that no external-human
+review claim is made. When a file inside `REVIEWED_PATHS` changes for a legitimate reason —
+a regenerated `requirements/registry.json` after `Agent-Scaffolding-Inventory.md` changed, for
+example — the sanctioned action is to **advance the pin to the commit containing the change,
+rebuild the gate report (`story-N.N:gate:build`, then any aggregating `sprint-N:gate:build`),
+rerun the gate check and its unit test, and record the reason in the run log.** The pin has been
+advanced this way six times in repository history. Do not stop and report for this; it is not a
+stop condition. Do stop if the change to a reviewed path is unexplained or unintended.
+
 ---
 
 **Diagnosis of record:** `~/dev/10_obsidian/09-LLM_Handoff_Records/2026-09-01 2230 - SESSION

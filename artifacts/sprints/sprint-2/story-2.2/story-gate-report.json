@@ -87,7 +87,7 @@
       },
       {
         "path": "requirements/registry.json",
-        "sha256": "dec57536330999a897a50a79992dcc1f5f0fcb2eb4a07f8aad34d2736397ba67"
+        "sha256": "32872950c9c87df06ec0021ce915e941a447d721aa1240c39c96e534ab8c8909"
       },
       {
         "path": "scripts/fuzz_target_registry.py",
@@ -150,8 +150,8 @@
         "sha256": "6a1789d2866f4559a2e9b40fbb74de4b0af9d1da622c06db9fc4619081126790"
       }
     ],
-    "reviewed_commit": "817414bc9e1086887249dae79b4d9ed6acfc5b3d",
-    "reviewed_tree": "791385820ce8c9cbde6258f4f4fb06cb30b5212e",
+    "reviewed_commit": "7f247ad83cee15f8571b27cfea3c241738704cae",
+    "reviewed_tree": "0a2e5d74ca3dbe810041c151241a69d5e7d3479b",
     "reviewer_id": "agentmage-story-2.2-independent-gate-v1"
   },
   "macos": {
@@ -163,8 +163,8 @@
   "product_acceptance_claim": "none",
   "product_boundary_execution_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "817414bc9e1086887249dae79b4d9ed6acfc5b3d",
-  "reviewed_tree": "791385820ce8c9cbde6258f4f4fb06cb30b5212e",
+  "reviewed_commit": "7f247ad83cee15f8571b27cfea3c241738704cae",
+  "reviewed_tree": "0a2e5d74ca3dbe810041c151241a69d5e7d3479b",
   "schema_version": 1,
   "status": "blocked-macos",
   "story_id": "2.2",
