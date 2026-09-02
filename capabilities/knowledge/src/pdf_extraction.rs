@@ -1,6 +1,11 @@
 //! Bounded PDF inspection, page text extraction, and exact-page citation contracts.
 
-use agentmage_kernel_contracts::{CONTRACT_SCHEMA_VERSION, WorkspacePath};
+use agentmage_kernel_contracts::{
+    CONTRACT_SCHEMA_VERSION, PDF_MEDIA_TYPE, StructuredSourceExtraction,
+    StructuredSourceExtractionError, StructuredSourceExtractionRequest, StructuredSourceExtractor,
+    StructuredSourceFormat, StructuredSourceProvenance, StructuredSourceSection,
+    StructuredSourceSectionKind, StructuredSourceWarning, WorkspacePath,
+};
 use lopdf::{Document, LoadOptions};
 use serde::{Deserialize, Serialize};
 
@@ -381,6 +386,131 @@ pub(crate) fn parser_error(error: &lopdf::Error) -> PdfExtractionError {
 #[must_use]
 pub fn pdf_extractor_identity_sha256() -> String {
     word_sha256(EXTRACTOR_ID.as_bytes())
+}
+
+/// Shared structured-source adapter over the bounded native PDF parser.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct PdfStructuredSourceExtractor;
+
+impl StructuredSourceExtractor for PdfStructuredSourceExtractor {
+    fn extractor_sha256(&self) -> String {
+        pdf_extractor_identity_sha256()
+    }
+
+    fn extract(
+        &self,
+        request: &StructuredSourceExtractionRequest,
+        source: &[u8],
+        cancelled: &mut dyn FnMut() -> bool,
+    ) -> Result<StructuredSourceExtraction, StructuredSourceExtractionError> {
+        if !request.supported_version()
+            || request.media_type != PDF_MEDIA_TYPE
+            || request.source_sha256 != word_sha256(source)
+            || request.maximum_sections < 2
+            || request.maximum_output_bytes == 0
+        {
+            return Err(StructuredSourceExtractionError::InvalidInput);
+        }
+        if cancelled() {
+            return Err(StructuredSourceExtractionError::Cancelled);
+        }
+        let mut profile = PdfExtractionProfile::strict_default();
+        profile.maximum_source_bytes = source.len().max(1);
+        profile.maximum_pages = usize::try_from(request.maximum_sections - 1)
+            .map_err(|_| StructuredSourceExtractionError::ResourceLimit)?;
+        profile.maximum_page_text_bytes = usize::try_from(request.maximum_output_bytes)
+            .unwrap_or(usize::MAX)
+            .min(profile.maximum_page_text_bytes);
+        profile.maximum_total_text_bytes = usize::try_from(request.maximum_output_bytes)
+            .unwrap_or(usize::MAX)
+            .min(profile.maximum_total_text_bytes);
+        let result = extract_pdf_to_pages(&request.source_path, source, &profile)
+            .map_err(map_structured_error)?;
+        if cancelled() {
+            return Err(StructuredSourceExtractionError::Cancelled);
+        }
+        let mut sections = Vec::with_capacity(result.pages.len() + 1);
+        sections.push(StructuredSourceSection {
+            section_id: format!("{}:document", request.source_id),
+            parent_section_id: None,
+            ordinal: 0,
+            kind: StructuredSourceSectionKind::Document,
+            content: String::new(),
+            provenance: pdf_provenance("catalog", "$", None),
+        });
+        for page in &result.pages {
+            sections.push(StructuredSourceSection {
+                section_id: page.identity.page_id.clone(),
+                parent_section_id: Some(format!("{}:document", request.source_id)),
+                ordinal: page.identity.page_number,
+                kind: StructuredSourceSectionKind::Page,
+                content: page.text.clone(),
+                provenance: pdf_provenance(
+                    &format!(
+                        "object-{}-{}",
+                        page.identity.object_number, page.identity.object_generation
+                    ),
+                    &format!("pages/{}", page.identity.page_number),
+                    Some(page.identity.page_number),
+                ),
+            });
+        }
+        let warnings = result
+            .limitations
+            .iter()
+            .map(|item| StructuredSourceWarning {
+                warning_id: item.limitation_id.clone(),
+                reason_code: item.reason_code.clone(),
+                source_part: item.page_id.clone(),
+                original_remains_authoritative: item.original_remains_authoritative,
+            })
+            .collect();
+        Ok(StructuredSourceExtraction {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            source_id: request.source_id.clone(),
+            format: StructuredSourceFormat::Pdf,
+            source_sha256: result.source_sha256,
+            extractor_sha256: result.extractor_identity_sha256,
+            sections,
+            warnings,
+            output_bytes: result.total_text_bytes,
+            extraction_complete: result.extraction_complete,
+            original_preserved: result.original_preserved,
+            filesystem_effect_performed: result.filesystem_effect_performed,
+            network_access_performed: result.network_access_performed,
+            execution_performed: result.execution_performed,
+        })
+    }
+}
+
+fn pdf_provenance(
+    source_part: &str,
+    structural_path: &str,
+    rendered_page: Option<u32>,
+) -> StructuredSourceProvenance {
+    StructuredSourceProvenance {
+        source_part: source_part.to_owned(),
+        structural_path: structural_path.to_owned(),
+        start_byte: None,
+        end_byte_exclusive: None,
+        paragraph: None,
+        run: None,
+        table: None,
+        row: None,
+        cell: None,
+        relationship_id: None,
+        rendered_page,
+    }
+}
+
+fn map_structured_error(error: PdfExtractionError) -> StructuredSourceExtractionError {
+    match error {
+        PdfExtractionError::InvalidInput => StructuredSourceExtractionError::InvalidInput,
+        PdfExtractionError::ResourceLimit => StructuredSourceExtractionError::ResourceLimit,
+        PdfExtractionError::EncryptedDocument => StructuredSourceExtractionError::Quarantined,
+        PdfExtractionError::MalformedDocument => StructuredSourceExtractionError::Malformed,
+        PdfExtractionError::OcrNotAdmitted => StructuredSourceExtractionError::Unsupported,
+    }
 }
 
 /// Extracts bounded page text and exact-page citations from in-memory PDF bytes.
@@ -786,6 +916,73 @@ mod tests {
         assert!(!first.filesystem_effect_performed);
         assert!(!first.network_access_performed);
         assert!(!first.execution_performed);
+    }
+
+    #[test]
+    fn structured_adapter_preserves_page_object_provenance_and_limits() {
+        let source = pdf(&[Some("Page one"), None], &[1]);
+        let request = StructuredSourceExtractionRequest {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            source_id: "pdf-source-0001".to_owned(),
+            media_type: PDF_MEDIA_TYPE.to_owned(),
+            source_sha256: word_sha256(&source),
+            source_path: path(),
+            maximum_sections: 3,
+            maximum_output_bytes: 1_024,
+        };
+        let extraction = PdfStructuredSourceExtractor
+            .extract(&request, &source, &mut || false)
+            .expect("structured extraction");
+        assert_eq!(extraction.format, StructuredSourceFormat::Pdf);
+        assert_eq!(extraction.sections.len(), 3);
+        assert_eq!(
+            extraction.sections[0].kind,
+            StructuredSourceSectionKind::Document
+        );
+        assert_eq!(
+            extraction.sections[1].kind,
+            StructuredSourceSectionKind::Page
+        );
+        assert_eq!(extraction.sections[1].provenance.rendered_page, Some(1));
+        assert!(
+            extraction.sections[1]
+                .provenance
+                .source_part
+                .starts_with("object-")
+        );
+        assert!(extraction.warnings.iter().any(|warning| {
+            warning.reason_code == "pdf.page.scanned-candidate-ocr-required"
+                && warning.original_remains_authoritative
+        }));
+        assert!(!extraction.extraction_complete);
+        assert!(extraction.original_preserved);
+        assert!(!extraction.filesystem_effect_performed);
+        assert!(!extraction.network_access_performed);
+        assert!(!extraction.execution_performed);
+    }
+
+    #[test]
+    fn structured_adapter_rejects_binding_drift_and_cancellation() {
+        let source = pdf(&[Some("bounded")], &[]);
+        let mut request = StructuredSourceExtractionRequest {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            source_id: "pdf-source-0001".to_owned(),
+            media_type: PDF_MEDIA_TYPE.to_owned(),
+            source_sha256: word_sha256(&source),
+            source_path: path(),
+            maximum_sections: 2,
+            maximum_output_bytes: 1_024,
+        };
+        request.source_sha256 = "a".repeat(64);
+        assert_eq!(
+            PdfStructuredSourceExtractor.extract(&request, &source, &mut || false),
+            Err(StructuredSourceExtractionError::InvalidInput)
+        );
+        request.source_sha256 = word_sha256(&source);
+        assert_eq!(
+            PdfStructuredSourceExtractor.extract(&request, &source, &mut || true),
+            Err(StructuredSourceExtractionError::Cancelled)
+        );
     }
 
     #[test]

@@ -244,7 +244,7 @@ pub use serialization::{
     ContractResult, MAX_CONTRACT_JSON_BYTES, VersionedContract, from_json, to_canonical_json,
 };
 pub use structured_source::{
-    DOCX_MEDIA_TYPE, StructuredSourceExtraction, StructuredSourceExtractionError,
+    DOCX_MEDIA_TYPE, PDF_MEDIA_TYPE, StructuredSourceExtraction, StructuredSourceExtractionError,
     StructuredSourceExtractionRequest, StructuredSourceExtractor, StructuredSourceFormat,
     StructuredSourceProvenance, StructuredSourceSection, StructuredSourceSectionKind,
     StructuredSourceWarning,

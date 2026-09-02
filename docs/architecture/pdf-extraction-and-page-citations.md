@@ -1,5 +1,19 @@
 # PDF Extraction and Exact-Page Citations
 
+## Shared source-artifact adapter
+
+`PdfStructuredSourceExtractor` adapts already captured PDF bytes to the common
+`StructuredSourceExtractor` boundary. It verifies the declared media type and complete source
+digest, applies the caller's section and output ceilings, and emits one document root followed by
+ordered page sections. Every page section retains the exact PDF object/generation identity and the
+one-based logical page in its provenance. Parser limitations become visible source warnings; an
+image-only page remains incomplete and requires a separately admitted OCR observation.
+
+The adapter acquires no path, network, process, decryption, or write authority. Cancellation before
+or after parsing publishes no extraction. This source milestone does not yet claim span geometry,
+reading-order certainty, active-content inspection, OCR execution, runtime lifecycle integration,
+or installed-client support.
+
 ## Scope
 
 Sprint 60 introduces a bounded in-memory PDF read boundary. It accepts bytes and a canonical

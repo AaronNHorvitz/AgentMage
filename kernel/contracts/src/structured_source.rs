@@ -8,6 +8,9 @@ use crate::{CONTRACT_SCHEMA_VERSION, WorkspacePath};
 pub const DOCX_MEDIA_TYPE: &str =
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
+/// Exact Portable Document Format media type admitted by the native PDF extractor.
+pub const PDF_MEDIA_TYPE: &str = "application/pdf";
+
 /// Closed structured source family.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -26,6 +29,8 @@ pub enum StructuredSourceFormat {
 pub enum StructuredSourceSectionKind {
     /// Complete document root.
     Document,
+    /// One logical PDF page with exact source-object provenance.
+    Page,
     /// Ordinary paragraph content.
     Paragraph,
     /// Styled heading content.

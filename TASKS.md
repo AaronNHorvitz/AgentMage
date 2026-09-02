@@ -7123,6 +7123,13 @@ with honest reading-order, table, OCR, confidence, and encryption limitations.
     than inventing layout certainty.
   - [ ] **Sub-task 60.2.1.3:** Refuse JavaScript, actions, launches, external resources, embedded
     executables, parser-selected network, and undeclared decryption attempts.
+
+  Local source progress: `PdfStructuredSourceExtractor` now verifies exact captured bytes and media
+  type, applies shared section/output ceilings and cancellation, and projects a document root plus
+  ordered page sections with PDF object/generation and one-based page provenance. Scan and parser
+  limitations remain visible warnings and every effect marker remains false. Span geometry,
+  reading-order/table certainty, active-content inspection, and the runtime lifecycle remain open,
+  so Sub-tasks 60.2.1.1 through 60.2.1.3 remain unchecked.
 - [ ] **Task 60.2.2 - Admit OCR as a separate optional path**
   - [ ] **Sub-task 60.2.2.1:** Define an OCR trait and evaluate pure-Rust and optional isolated
     native candidates for license, model files, quality, language, CPU/GPU, package size, platform,
