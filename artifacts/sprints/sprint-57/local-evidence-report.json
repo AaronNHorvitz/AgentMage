@@ -1,17 +1,21 @@
 {
   "schema_version": 1,
   "record_type": "sprint_57_local_evidence",
-  "source_revision": "c68f377562657d79e4fd5b6eefc348837a74b597",
+  "source_revision": "43318e08346e1d46117c2e4e39a82af9dc4a7c9d",
   "source_sha256": {
     "kernel/contracts/src/display_link.rs": "5a7ce651ad075d629ec95be3c0db3934f8ace321f666f6058546777faadb1d0b",
-    "kernel/contracts/src/lib.rs": "bbd5268f75d9f88d4056da62bbd8f33fe4e5f87ae50aefaba9432bd06f656da1",
+    "kernel/contracts/src/lib.rs": "458420bd48a3b676fd9427c95170b9c22502732215fc5bd1e76a2a576b94db3a",
     "capabilities/knowledge/src/markdown_write.rs": "8a4e0b81192cd4b2f830ea4a43d022f3880925949c02ec3168c7215f346093d0",
-    "capabilities/knowledge/src/markdown_artifacts.rs": "e97b3e4bbc45b8547a383a0c7335774e9cbc9c5b6c40afe08518cc99be2d9b63",
+    "capabilities/knowledge/src/markdown_artifacts.rs": "3c079539c03e6b18c2a77044c61b8b8bb2ca1fca080c59d47715ede83c444bcb",
     "capabilities/knowledge/src/markdown_artifact_skills.rs": "51c49a07536d828c2ac78f2f1ddd0e71b4d63df9e2d76c938bef60cc0ee7f83c",
-    "capabilities/knowledge/src/lib.rs": "37ac6fd09c4ad677c3fd4f4513400c0e319656fea257c341d8a6174280205b62",
+    "capabilities/knowledge/src/lib.rs": "b8483de79ff876d31911b527d1de8438a581cb536b2220893f2d82d30e6e08d2",
     "capabilities/knowledge/examples/markdown_artifact_skill_pack.rs": "33c25dfe91c7df4eef187f66775c9e1a065c84882461c0fbd9c30a2290b58fea",
-    "shells/host/src/markdown_artifact_coordinator.rs": "c69f5089d47562826540c8675a9da95652f55837344e7ca82549f6d83fd3e46d",
-    "shells/host/src/lib.rs": "1cf204f3f860f798ffb092b910e82975c76a2ea7ca7e8e934daa6fcac066fb6a",
+    "shells/host/src/markdown_artifact_coordinator.rs": "aec87a8e3a85c28d97b128c5e4e1e77c59a770700996e855bd58e8c940a63df9",
+    "shells/host/src/lib.rs": "b7d6698d8e08ec56f0df647216254c194fed7559083b27a37d61169bb6e0392b",
+    "shells/host/src/knowledge_write.rs": "3c2884e7136416d9c65c92a857819148514838dcf968cfa32ce10fc9075db3f4",
+    "shells/host/src/headless.rs": "7f80e14f63576e6b3b5949fc7827121c783648618cf8f65ea4bbf7258054de4a",
+    "shells/host/src/cli.rs": "93cf70e310055e995d0a6afd87816e7c22bc18fe6a23ac0a4138b4ba65cea419",
+    "kernel/engine/src/filesystem_control.rs": "e1a862bf6994e777aefe5008d61fd8f18c1fd61c68ab07d8ba4178b6e3073673",
     "schemas/runtime/markdown-quality-report.schema.json": "2f82631c9130d6098eac66608a89385c411d70b146a9f20c0390e93955c6708e",
     "schemas/runtime/examples/markdown-quality-report.valid.json": "b16e78423afc5d4818c8360da9d8363cf55dbf564a386eef36783ba421ec7968",
     "schemas/runtime/generated-markdown-artifact.schema.json": "53e1241c10144c15ca89b337cf73401e09c47babadde120b79fb667b01970906",
@@ -26,12 +30,12 @@
     "scripts/markdown_artifact_skill_contract.py": "2433a5e5c81561f9aff6e29d2503037b36974a1eda7c23d984e576f0930b0fb5",
     "tests/test_markdown_artifact_skill_contract.py": "3c67bf21b4149bf76129524a9facccac9d246a435ea0153a13f34e0adbb28b61",
     "artifacts/sprints/sprint-57/markdown-artifact-skill-pack.json": "4cfff8ba50365ae091557d77dd4c00f6782dca5853a95f629f32e0659630bd7b",
-    "docs/architecture/markdown-artifacts-and-round-trip.md": "290b1a7e37a070568f5e9d573607cce65286bb171d8c4828fd67e38e17d5b154",
+    "docs/architecture/markdown-artifacts-and-round-trip.md": "93573774f224b6755182cf15e69f4b50d310d789fdffbfe2a87a8a7a3abdf646",
     "docs/guides/markdown-artifact-local-workflows.md": "1c0aa85b66d9831c033ee46ab6811fd45e8b24e246f7e4a154e0cd41f3d1b4e7",
     "docs/guides/skills.md": "11e69a8c8081b2d00401168b00d067bcbd883c6822d19a3e16d51ffb060e1040",
-    "docs/verification/sprint-57-local-results.md": "7d5aa77480711e72547a3b5d231b621886fab084afb588a4cc051b9f4925cfa3",
-    "scripts/sprint_57_evidence.py": "6887a13999b28d526b29d26d0b30e9da8fde75807fbe1b38106904ed3edc237d",
-    "tests/test_sprint_57_evidence.py": "8b721d4cff011bfc81e3ed5db6666d7f78c02b028e4b213430fe4b8b2d507260"
+    "docs/verification/sprint-57-local-results.md": "9e5e41b69c7b827cee625e0f81c7ae9870634ff70c0d315b6600ec0eb0094902",
+    "scripts/sprint_57_evidence.py": "8a5794a538f9baf6f83b15397d9108695965273443a653084d28304ec92d899a",
+    "tests/test_sprint_57_evidence.py": "9ea46b871fd8ba7f9f8e1bc2a2dfbb55a679bcfb037e986cf81046caabf100ef"
   },
   "environment": {
     "system": "Linux",
@@ -56,7 +60,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "7e2cfde3738df7dd622794c683d3787812e7b5533348d34d2a0b034a2f1fb343",
+      "output_sha256": "bc3e27f7db30ebe9a5d98d9fabb6bf04438364cb8f7ccfd82e860488259d490a",
       "blocking_skip_count": 0
     },
     {
@@ -71,7 +75,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "164092e9b518ae10ed78b769a99e2f17490bee6ed3c43838ebead089902e33fd",
+      "output_sha256": "00d88f0189791febc88ebedc1a002052d4738f400e59937e083576b58c8ec952",
       "blocking_skip_count": 0
     },
     {
@@ -86,7 +90,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "9574bd84a234076f434eb06e96ef1ef037a40dab68177888e670c6c68ae32264",
+      "output_sha256": "505b866719262d7ba74223575d0095e95d5789c94279565462aabe77fd7f2153",
       "blocking_skip_count": 0
     },
     {
@@ -116,7 +120,37 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "72e97d2c6de70f14e8fe0406d74210c1d8e852f3320a3db16c04317a2c2e8ee2",
+      "output_sha256": "cf1d419175fa5417d678c8cb680ea9f98253b1c1f23a774b2745edd76215216c",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "markdown-native-protocol",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "headless::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "5610881ea44d79ac4fd86f84a39fba718c3a6c44a96fefcf8d0639af19d980a9",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "markdown-native-cli",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "cli::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "b779c35e1a6108dcca04679ade066966870fc7d8d17d96a6db2c062b17d97224",
       "blocking_skip_count": 0
     },
     {
@@ -127,7 +161,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "51ff1068987cf19a31c6210b2f14f7e9ce90cad91292678f4b385b23231c82ad",
+      "output_sha256": "9d9b624bec2899a0d95a30d21fcce1f53a2a8ee26111e89b204ae0f1801326d4",
       "blocking_skip_count": 0
     },
     {
@@ -168,7 +202,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "ee1d3fffa2022e962e63e0dbe4d35c9c198450a20c29fc09030f635dbb38bfcd",
+      "output_sha256": "0ba286f563bfd5fea1156f764d22ce26824e0724ae30847029a98c478d2cee53",
       "blocking_skip_count": null
     },
     {
@@ -179,7 +213,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "aee4f130f903cc2c9e5c510f5769df5504bd272768d4aa229566e65c62865c64",
+      "output_sha256": "f316da50e9c809a0d4027ffdceeebe4c80ab4f19c056222ec5241fe3c8fd6505",
       "blocking_skip_count": null
     },
     {
@@ -212,7 +246,7 @@
         "tests.test_sprint_57_evidence"
       ],
       "exit_code": 0,
-      "output_sha256": "4a160235c0add54f7a5997815d0e01a072210439de4899c702c94dd3cd814662",
+      "output_sha256": "3b0dbb90387b342ccecc50446a0fb5e4385d86a3f467e5b97d63f8924fc08aff",
       "blocking_skip_count": null
     }
   ],
@@ -248,11 +282,11 @@
     "network_access_capability": false,
     "execution_capability": false,
     "filesystem_mutation_capability": false,
-    "renderer_capability": false,
+    "renderer_capability": true,
     "citation_invention_capability": false,
     "product_coordinator": true,
-    "controlled_writer_integration": false,
-    "native_interface_integration": false,
+    "controlled_writer_integration": true,
+    "native_interface_integration": true,
     "accessibility_acceptance": false,
     "installed_cross_platform_acceptance": false,
     "trusted_package_execution": false,
@@ -269,8 +303,8 @@
     "invented_citation_count": 0,
     "invented_acronym_expansion_count": 0,
     "product_coordinator": true,
-    "controlled_writer_integration": false,
-    "native_interface_integration": false,
+    "controlled_writer_integration": true,
+    "native_interface_integration": true,
     "accessibility_acceptance": false,
     "installed_cross_platform_acceptance": false,
     "trusted_package_execution": false,
@@ -282,18 +316,6 @@
     {
       "code": "UPSTREAM-SPRINT-56-BLOCKED",
       "owner": "57.1"
-    },
-    {
-      "code": "CONTROLLED-WRITER-INTEGRATION-ABSENT",
-      "owner": "57.1.3.4"
-    },
-    {
-      "code": "LOCAL-RENDERER-INTEGRATION-ABSENT",
-      "owner": "57.1.3.4"
-    },
-    {
-      "code": "NATIVE-INTERFACE-INTEGRATION-ABSENT",
-      "owner": "57.1.3.4"
     },
     {
       "code": "ACCESSIBILITY-ACCEPTANCE-ABSENT",
@@ -321,6 +343,9 @@
     "sprint_status": "BLOCKED",
     "upstream_sprint_56_closed": false,
     "Markdown_workflow_integrated": true,
+    "controlled_writer_path_integrated": true,
+    "local_renderer_integrated": true,
+    "native_interface_integrated": true,
     "external_effects_enabled": false,
     "cross_platform_acceptance_passed": false,
     "trusted_package_execution_complete": false,

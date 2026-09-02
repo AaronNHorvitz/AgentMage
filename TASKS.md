@@ -6848,17 +6848,16 @@ records-owner review, and deferred manual fuzzing.
 **Gate decision:** Sprint 57 is PASS only when Story 57.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
 **Local evidence note:** The retained report at `artifacts/sprints/sprint-57/local-evidence-report.json`
-binds 13 passing commands, eight focused suites with zero blocking skips, and the 68-case acceptance
-corpus to source revision `c68f377562657d79e4fd5b6eefc348837a74b597` (report SHA-256
-`54c7a4e5613288f96bcb9cb5c579bcbbabd65cb717b54d9afb698fd53f87081c`). The byte-preserving
+binds 15 passing commands, ten focused suites with zero blocking skips, and the 68-case acceptance
+corpus to source revision `43318e08346e1d46117c2e4e39a82af9dc4a7c9d` (report SHA-256
+`525d7d498978a96d75eb8a69bbe3910c576432d57421a0927a60a6733dc9e139`). The byte-preserving
 parser and scoped previews, quality and acronym review, seven cited artifact and skill types,
-display-only links, runtime schemas, inert hostile-content checks, byte/semantic/rendered local
-round-trip receipts, and registered authority-free product coordinator are complete. Subsequent
-source progress adds host-computed content-free structure rendering, exact controlled create/patch
-drafts, and one identity-only Markdown command shared by Native Chat, CLI, JSON, SDK, and ACP;
-current source-bound report identity is pending renewal. Story 57.1 and Sprint 57 remain **BLOCKED**
-by Sprint 56, accessibility evidence, installed cross-platform acceptance, trusted-package
-execution, independent content review, and deferred manual fuzzing.
+display-only links, runtime schemas, inert hostile-content checks, host-computed content-free
+structure rendering, byte/semantic/rendered local round-trip receipts, exact controlled
+create/patch drafts, and the identity-only Markdown command shared by Native Chat, CLI, JSON, SDK,
+and ACP are complete without granting the coordinator approval or effect authority. Story 57.1 and
+Sprint 57 remain **BLOCKED** by Sprint 56, accessibility evidence, installed cross-platform
+acceptance, trusted-package execution, independent content review, and deferred manual fuzzing.
 ### [ ] Sprint 58 - Word Extraction and Structural Preservation
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
