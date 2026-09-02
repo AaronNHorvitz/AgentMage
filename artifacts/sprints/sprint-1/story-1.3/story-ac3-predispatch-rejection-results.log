@@ -16,7 +16,7 @@ test cyclic_and_stale_records_fail_at_their_exact_trusted_boundaries ... ok
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
 $ cargo test -p agentmage-kernel-contracts --lib serialization::tests::malformed_missing_extra_duplicate_and_trailing_inputs_fail_closed -- --exact
    Compiling agentmage-kernel-contracts v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/contracts)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.02s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 8.77s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_contracts-6eb6c44b4ce1fddc)
 
 running 1 test
@@ -24,7 +24,7 @@ test serialization::tests::malformed_missing_extra_duplicate_and_trailing_inputs
 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 68 filtered out; finished in 0.00s
 $ cargo test -p agentmage-kernel-contracts --lib serialization::tests::oversized_input_and_unsupported_versions_have_exact_error_paths -- --exact
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_contracts-6eb6c44b4ce1fddc)
 
 running 1 test

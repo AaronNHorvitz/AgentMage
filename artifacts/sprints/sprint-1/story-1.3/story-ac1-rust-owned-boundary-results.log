@@ -1,5 +1,6 @@
 $ cargo test -p agentmage-kernel-contracts --test engineering_runtime_record_types --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+   Compiling agentmage-kernel-contracts v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/contracts)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.43s
      Running tests/engineering_runtime_record_types.rs (target/debug/deps/engineering_runtime_record_types-111fa984dc6ae74e)
 
 running 3 tests
@@ -9,7 +10,7 @@ test all_nine_runtime_record_families_match_their_admitted_schema_shape ... ok
 
 test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 $ cargo test -p agentmage-kernel-engine --test engineering_runtime_record_corpus every_declared_schema_failure_fails_before_canonical_publication -- --exact
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
      Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-e1a8fee3763d0eff)
 
 running 1 test
