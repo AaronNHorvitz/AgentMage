@@ -1,0 +1,84 @@
+{
+  "artifact_set": [
+    "deb",
+    "manifest",
+    "rpm",
+    "vsix"
+  ],
+  "artifact_sha256": {
+    "deb": "29d28524caf020e9d4877fcb9c97bd76315c717ff92fe65ccfd5e73d673aabe3",
+    "manifest": "7a630541da423eeb2ca4e664c3e414d888edda0de1eca20846584a2af155dfd7",
+    "rpm": "34ae5049c4192a1ff3592d08b316e66ef57bda38e0dc8b402a0dc7aaa3de3f06",
+    "vsix": "4e733ac4de493b3fce014531fea9c7d2e83d638129188264c25423b8bbd1855d"
+  },
+  "checks": {
+    "bundle_outputs_byte_identical": "pass",
+    "candidate_release_confusion_refused": "pass",
+    "deb_and_rpm_manifest_identity": "pass",
+    "host_verified_deb_and_rpm": "pass",
+    "manifest_mutation_refused": "pass",
+    "orchestrator_built_two_release_bundles": "pass",
+    "orchestrator_signed_exact_manifest": "pass",
+    "wrong_trust_root_refused": "pass"
+  },
+  "component_id": "build-orchestrator",
+  "environment": {
+    "architecture": "x86_64",
+    "operating_system": "linux"
+  },
+  "lifecycle_evidence": "integration",
+  "neighbors_exercised": [
+    "vscode-extension-build",
+    "linux-release-package-builder",
+    "package-manifest-signer",
+    "deb-payload-extractor",
+    "rpm-payload-extractor",
+    "agentmage-host-package-verifier"
+  ],
+  "network_authority": "none",
+  "platform_support_claim": "none",
+  "product_integration_claim": "none",
+  "record_type": "build-orchestrator-integration-report",
+  "release_claim": "none",
+  "retained_private_key_material": false,
+  "schema_version": 1,
+  "source_bindings": [
+    {
+      "path": "release/xtask/src/main.rs",
+      "sha256": "902e77290441345a8a0abf9b6fc3ab803d874700a9abf38ed3728c0134f89b5a"
+    },
+    {
+      "path": "scripts/build_orchestrator_integration.py",
+      "sha256": "9bbb2fe786d089b48e012e6b7b4937e71a01a65d13bb61582878eb3387df8800"
+    },
+    {
+      "path": "scripts/package_candidate.py",
+      "sha256": "c68133f34c86a9ac91adb3319a793fee284fa2488bb7eaf79a0b1144e6bd2151"
+    },
+    {
+      "path": "scripts/package_release.py",
+      "sha256": "1a26af570320c83e08194a963d9d4506a3db660c63a73341b963a2913e9c8b97"
+    },
+    {
+      "path": "scripts/package_lifecycle.py",
+      "sha256": "0e55defb25dbe5af867b772c883e7f25f82240c8a40a6fddef1ebfae1745438f"
+    },
+    {
+      "path": "shells/host/src/cli.rs",
+      "sha256": "ff5bce423a9478a66941ffa4875ff6ef41dcd66efb33fb775b83ae6793135aa2"
+    },
+    {
+      "path": "packaging/linux/debian-release-control.in",
+      "sha256": "b0140d6191e404d57e34457383ea2f4b5541076204e88fed52f5009b0c39192a"
+    },
+    {
+      "path": "packaging/linux/agentmage-release.spec.in",
+      "sha256": "0774081f77929f875e001f5b2897e56e25c0f061ff55fec8b010eae641b9cb5d"
+    },
+    {
+      "path": "tests/test_build_orchestrator_integration.py",
+      "sha256": "1a85c3630b1a4b6a143e4fb3d74be714bcaf3b29ee740ff441847534261c94d2"
+    }
+  ],
+  "status": "pass-local-integration"
+}

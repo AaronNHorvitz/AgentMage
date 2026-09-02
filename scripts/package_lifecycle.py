@@ -256,23 +256,27 @@ def require_commands(names: tuple[str, ...]) -> None:
 
 
 def extract_rpm(package: Path, root: Path) -> None:
-    first = subprocess.Popen(
-        ["rpm2cpio", str(package)], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    assert first.stdout is not None
-    second = subprocess.run(
-        ["cpio", "-idm", "--quiet"],
-        cwd=root,
-        stdin=first.stdout,
+    first = subprocess.run(
+        ["rpm2cpio", str(package)],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         check=False,
     )
-    first.stdout.close()
-    _, first_error = first.communicate()
-    if first.returncode != 0 or second.returncode != 0:
+    if first.returncode != 0:
         raise PackageLifecycleError(
-            f"package.lifecycle.rpm_extract:{first_error.decode(errors='replace')}"
+            f"package.lifecycle.rpm_extract:{first.stderr.decode(errors='replace')}"
+        )
+    second = subprocess.run(
+        ["cpio", "-idm", "--quiet"],
+        cwd=root,
+        input=first.stdout,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if second.returncode != 0:
+        raise PackageLifecycleError(
+            f"package.lifecycle.rpm_extract:{second.stderr.decode(errors='replace')}"
         )
 
 

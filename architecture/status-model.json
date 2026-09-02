@@ -248,7 +248,7 @@
     },
     {
       "id": "build-orchestrator",
-      "lifecycle_status": "implemented",
+      "lifecycle_status": "integrated",
       "verification_status": "contract-tested",
       "disposition_status": "active",
       "support_status": "unsupported-pre-release",
@@ -256,6 +256,10 @@
         {
           "kind": "implementation",
           "path": "release/xtask/src/main.rs"
+        },
+        {
+          "kind": "integration",
+          "path": "artifacts/sprints/sprint-1/story-1.1/build-orchestrator-integration-report.json"
         },
         {
           "kind": "test",
