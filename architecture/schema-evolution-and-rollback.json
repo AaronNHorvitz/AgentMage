@@ -8,7 +8,7 @@
   "authorities": [
     {
       "path": "ENGINEERING-RUNTIME.md",
-      "sha256": "3dff78bc2a21f15a189c1c0c7f723c709d9db820a039aa1053eb3b5bfeb9e9fc"
+      "sha256": "ae17ac64ddefc6724ad66bb46914731ad5dd4cbcfd4d1669a3f403dc87a890c0"
     },
     {
       "path": "docs/decisions/0042-universal-artifact-ingestion-and-verified-workflow-execution.md",

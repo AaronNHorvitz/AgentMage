@@ -24,11 +24,11 @@
         },
         {
           "path": "architecture/status-model.json",
-          "sha256": "8249814efec43cd48c97eb7afed4091165ccc2a7a72942f630882646835bd444"
+          "sha256": "7425992790076e933b908cdec0b7a1681394024f4c2e43d52649b8e9dc13fdbc"
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "844d4da39c44019fc6dfeb65c348a79e116639ec2e284df9351e797ed31b5095"
+          "sha256": "6a012bdb5cfc736329cc88882a4a9a58617adca1922db17703618e8aaee42b27"
         }
       ]
     },
@@ -71,7 +71,7 @@
       "artifacts": [
         {
           "path": "architecture/schema-evolution-and-rollback.json",
-          "sha256": "d73e903d655c6e408c277a42104868bc3dcd94a265947bd25c6e4630fcb29d99"
+          "sha256": "e2da4839233fce9cebbbae8fe3c058fa94193ef513fc653fbe4151a4a527b8aa"
         },
         {
           "path": "architecture/rollback-design.json",
@@ -88,7 +88,7 @@
       "artifacts": [
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-          "sha256": "626cfbcf57bd120008e324edb97c3447e9c118866857aca858bc93fedce9ba0a"
+          "sha256": "cc74f2f9fbba13cf27b49faf538d3fd74ebd92a6acf2e920cc533f7a66e2a6ce"
         }
       ]
     },
@@ -101,7 +101,7 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/security-evidence-map.json",
-          "sha256": "16f0563fd00042f852ee8d8257beae56879bbf183b0725895333dd9357ee2977"
+          "sha256": "c2e97af8b4ee864f6143083a73c2279644c8d4872892ab3b2ba196d5a6b1a68a"
         }
       ]
     },
@@ -132,7 +132,7 @@
     "data_class": "synthetic-local-contract-tests-only",
     "artifact": {
       "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-      "sha256": "626cfbcf57bd120008e324edb97c3447e9c118866857aca858bc93fedce9ba0a"
+      "sha256": "cc74f2f9fbba13cf27b49faf538d3fd74ebd92a6acf2e920cc533f7a66e2a6ce"
     },
     "required_markers": [
       "Validated 37 Engineering Runtime schemas and 6 reused contracts.",
