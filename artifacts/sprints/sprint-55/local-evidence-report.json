@@ -1,17 +1,19 @@
 {
   "schema_version": 1,
   "record_type": "sprint_55_local_evidence",
-  "source_revision": "e57eb9df9917914be6382496fbcf7774845172c2",
+  "source_revision": "63a9a750d0b58798934abbf56da25c4992c9a5b4",
   "source_sha256": {
     "kernel/contracts/src/meeting.rs": "19190ab0366d87ee07b5a452168a5dfd211d2e1d2570c37a1f8320056be889c2",
-    "kernel/contracts/src/lib.rs": "bbd5268f75d9f88d4056da62bbd8f33fe4e5f87ae50aefaba9432bd06f656da1",
+    "kernel/contracts/src/lib.rs": "458420bd48a3b676fd9427c95170b9c22502732215fc5bd1e76a2a576b94db3a",
     "kernel/engine/src/meeting_continuity.rs": "b33fc4bd629a9f622afaf125c453ae651e5be45efcace1c1aebf64a3f2fdf127",
     "kernel/engine/src/lib.rs": "74e16b7d5134da7214e979519b12116fa002034a5c7bf4b8a1e83646b93d8d26",
     "capabilities/knowledge/src/meeting_skills.rs": "fa3ad0fce72a0d96bc274342f59958abd70ea0915e68f5154342ffbce47f7076",
-    "capabilities/knowledge/src/lib.rs": "37ac6fd09c4ad677c3fd4f4513400c0e319656fea257c341d8a6174280205b62",
+    "capabilities/knowledge/src/lib.rs": "b8483de79ff876d31911b527d1de8438a581cb536b2220893f2d82d30e6e08d2",
     "capabilities/knowledge/examples/meeting_skill_pack.rs": "d69a7dc7c86fcbec61a04fb8e2e5447f8429d656608734136eece42334d2e49b",
-    "shells/host/src/meeting_coordinator.rs": "fc100c4b48696c758faa323315ea833fbc92a629ec35cd7cab7e6d71d9b8ca26",
-    "shells/host/src/lib.rs": "1e1df4671359c74bcfd1e5e4041e60f58379e61eed20fe29d046b7c08c73566c",
+    "shells/host/src/meeting_coordinator.rs": "76bbff9ac81afac2576980fc180bfb165580c3d8cba19347ba6274627468fda8",
+    "shells/host/src/headless.rs": "ef4d55c79413b4e17e497e78ca1d379b2bf847fa05cb36d6d1d334f8e1081eb5",
+    "shells/host/src/cli.rs": "ff5bce423a9478a66941ffa4875ff6ef41dcd66efb33fb775b83ae6793135aa2",
+    "shells/host/src/lib.rs": "b7d6698d8e08ec56f0df647216254c194fed7559083b27a37d61169bb6e0392b",
     "schemas/runtime/meeting-plan-draft.schema.json": "fdae426f780480755ef83edb92f54535b7a45d717f17f8852bc06712d9094165",
     "schemas/runtime/examples/meeting-plan-draft.valid.json": "6a3d42bd6ed86d0867e6fc999acc29909373080c3e930ea016b1785c264e1892",
     "schemas/runtime/meeting-transcript-cleanup.schema.json": "3f111c7e92b1d60180811ab0e1b3c76e022e8042675d00f82c2081cf4c45da53",
@@ -28,11 +30,11 @@
     "scripts/meeting_skill_contract.py": "c2af798b94048676abbce8c87ad6e3576b7beadb7b275f5092f806d5b88e34d1",
     "tests/test_meeting_skill_contract.py": "99ba7f62d95a21bef1359b99735135499d62d4666fd17a4e3b87b44a46f746c5",
     "artifacts/sprints/sprint-55/meeting-skill-pack.json": "726d1eafb4cddb83b5218cb5945e5d7e8ed5c1d88d4135411d48a11f38cb88a4",
-    "docs/architecture/meeting-records-and-continuity.md": "f604dc610a088a620b835c669231987328184d65eef6302fca8d56a380541284",
+    "docs/architecture/meeting-records-and-continuity.md": "d82ca87789219795eaa4075f9683a10065a59edff74254e5776b97be27de59e0",
     "docs/guides/meeting-records-local-workflows.md": "27acd0030d3dc84115e4acb8ef886abde1589f347ed32b2f08643875e680afaf",
-    "docs/verification/sprint-55-local-results.md": "3ef4d26b19db36cd5e868c7f4a185b4fa5d71d4d3fe6fd09c4c1cc88f030b488",
-    "scripts/sprint_55_evidence.py": "c4681803c9f7ea539915ca53f2884c2d490c9bdb2c4d8f31822cdc398a3967f8",
-    "tests/test_sprint_55_evidence.py": "a0499b604b66045229605a9a5d8d08c2c2196ae30ac2b87176970e41ed73e71d"
+    "docs/verification/sprint-55-local-results.md": "9300c7066510e8f09e2b3ae823f3609735c2f0bf67a324039df16131b818480d",
+    "scripts/sprint_55_evidence.py": "6040a58affeb9f42566b0a377753221c1ba9d71f809b501cc31a12fed0f7fc42",
+    "tests/test_sprint_55_evidence.py": "fc95fd664776e0b0d67fe4ba9c2d1a89afc35b2b8a9c5c6f5126f3f53146905c"
   },
   "environment": {
     "system": "Linux",
@@ -57,7 +59,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "1d022cab5171ea243d45e5928dbe1f4c7a29fb0af23095ecbaa072d5174ec2cd",
+      "output_sha256": "0862e637bbf31c990e27c12b1acbc028faf4f9a8db2023e3aab56760ad85f82c",
       "blocking_skip_count": 0
     },
     {
@@ -72,7 +74,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "72f6325fed239dc1cf8eb2aa8c0c853e9ce9967575eeb1b1197ea8226d376e87",
+      "output_sha256": "161bf5b195c3732820936287d28c99b780532f570be4d54ee897ddb7b08e2d90",
       "blocking_skip_count": 0
     },
     {
@@ -87,7 +89,37 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "51eb618a9c04ce577263cd46c985546a4ab8dda5cbe3f67158e5672f16977c38",
+      "output_sha256": "1f2223000d6552c88aa6a12ae9fe6e8bc3e74a713271afc49eca6ea84958a763",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "meeting-native-protocol",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "headless::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "70d917473de98bb4cecc66d28bf76523fb311a302cc083f812dfad714a663b34",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "meeting-native-cli",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "cli::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a22b351ffb321511618b4e620a7a563067ee7b03587e75229bfd3eda9fa3eef2",
       "blocking_skip_count": 0
     },
     {
@@ -98,7 +130,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "2395c58934c0e73a5bce038155adce20af2c065e9fc29949eca3475e3d16292d",
+      "output_sha256": "29d00d575944e217a2756c536bb461f4e79bf56d9458a0b00bce6f6de8e1069a",
       "blocking_skip_count": 0
     },
     {
@@ -141,7 +173,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "68a998eb3b3b6f27b5827205d3bbc6643759d42165a74fd0990ef203faba36b5",
+      "output_sha256": "8c233a54790c4800d3dd585436af679aa838da259bfdb129412e2d51cdb75cdc",
       "blocking_skip_count": null
     },
     {
@@ -152,7 +184,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "891fda858ef91b44ab6da5fbd7269e40e5caae2a74f9315d29ce01d9ae539e7a",
+      "output_sha256": "827df2cd35219f585c09352535a1099d17257a6366541512c9a5d0a2c6fb9843",
       "blocking_skip_count": null
     },
     {
@@ -230,7 +262,7 @@
     "calendar_mutation_capability": false,
     "source_mutation_capability": false,
     "product_coordinator": true,
-    "native_interface_integration": false,
+    "native_interface_integration": true,
     "accessibility_acceptance": false,
     "installed_cross_platform_acceptance": false,
     "trusted_package_execution": false,
@@ -247,7 +279,7 @@
     "invented_owner_or_date_count": 0,
     "verbatim_source_mutation_count": 0,
     "product_coordinator": true,
-    "native_interface_integration": false,
+    "native_interface_integration": true,
     "accessibility_acceptance": false,
     "installed_cross_platform_acceptance": false,
     "trusted_package_execution": false,
@@ -260,10 +292,6 @@
     {
       "code": "UPSTREAM-SPRINT-54-BLOCKED",
       "owner": "55.1"
-    },
-    {
-      "code": "NATIVE-INTERFACE-INTEGRATION-ABSENT",
-      "owner": "55.1.3.2"
     },
     {
       "code": "ACCESSIBILITY-ACCEPTANCE-ABSENT",
@@ -295,6 +323,7 @@
     "sprint_status": "BLOCKED",
     "upstream_sprint_54_closed": false,
     "meeting_workflow_integrated": true,
+    "native_interface_integrated": true,
     "external_effects_enabled": false,
     "cross_platform_acceptance_passed": false,
     "trusted_package_execution_complete": false,
