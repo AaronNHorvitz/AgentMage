@@ -115,6 +115,15 @@ one-time invalidation of the **48 artifacts** that hash `scripts/supply_chain.py
 re-pointing roughly 20 artifacts' inputs. **This requires an accepted Decision record. Do not
 implement it on agent initiative.**
 
+## 6. Execute within the Decision 0046 scope freeze
+
+Decision 0046 activates the stabilization scope freeze over Epics 0 through 8, 10, 11, and
+the Universal Story Definition of Done. Select the next unit of work under Decision 0021
+**from that set only**. Do not execute Epics 9 or 12 through 16 while the freeze is active.
+Do not close any row marked `blocked` for physical-platform unavailability by substitution.
+Epic 10 executes through the Decision 0040 local Windows 11 KVM guest lane once its external
+prerequisites exist.
+
 ---
 
 **Diagnosis of record:** `~/dev/10_obsidian/09-LLM_Handoff_Records/2026-09-01 2230 - SESSION
