@@ -42,19 +42,19 @@
     "reviewed_artifacts": [
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/story-gate-report.json",
-        "sha256": "275e24472ed309e9208ebbe353f1fe6fbe91c7fd636efb61e5e1519837b2845c"
+        "sha256": "5e77fb94a91b2e7602ef73e06582193cf825d327da39004b3235fc35c72f5c54"
       },
       {
         "path": "scripts/story_7_1_gate.py",
-        "sha256": "71c7652f6710a5b58572072cf967f8aad0e8f4fc406317b3610059f4ad3e5f4e"
+        "sha256": "b0d0fbdb41abc6d92f1a18dcae3491efcc9c2c6b9021b315acab1d3b49a79a94"
       },
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
-        "sha256": "c8f8bb2fb024e3e1151cf55b71b369a1552b3d77146db590f6cb5ed794793b1a"
+        "sha256": "2d4c362640141a4ef754e39f51caa6d57d87b8659805be5ac1f12b90c368d861"
       },
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/security-evidence-map.json",
-        "sha256": "509de2a8528fc7bfce2a671814820451b8731f4a5d72bd134002904ae4539ede"
+        "sha256": "f766949487c6529a3e822abc9057a618f08dfbdfee4b0a875c8b0eb1bc7a6267"
       },
       {
         "path": "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
@@ -65,8 +65,8 @@
         "sha256": "db315ebaf008402e3b6fdf7ac7dc13699ba67f38cd99b3ece844728d0bbcaeaa"
       }
     ],
-    "reviewed_commit": "a27bd9bb5dba6bd5f7576b8813592a650a14a6f9",
-    "reviewed_tree": "bf316914a90476888ced77b676f907213ee22587",
+    "reviewed_commit": "ba46706b065813198cefea82e3c740e2234c27ff",
+    "reviewed_tree": "efc406a3ca59fdb66e065d7dae708d3ac85c167f",
     "reviewer_id": "agentmage-sprint-7-automated-aggregate-v1"
   },
   "installed_product_claim": "none",
@@ -74,8 +74,8 @@
   "native_mechanism_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "a27bd9bb5dba6bd5f7576b8813592a650a14a6f9",
-  "reviewed_tree": "bf316914a90476888ced77b676f907213ee22587",
+  "reviewed_commit": "ba46706b065813198cefea82e3c740e2234c27ff",
+  "reviewed_tree": "efc406a3ca59fdb66e065d7dae708d3ac85c167f",
   "schema_version": 1,
   "sprint_id": 7,
   "status": "blocked-native-platforms-and-external-review",
