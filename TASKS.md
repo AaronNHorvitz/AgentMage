@@ -6783,17 +6783,17 @@ trusted-package execution, independent records review, and deferred manual fuzzi
 **Gate decision:** Sprint 56 is PASS only when Story 56.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
 **Local evidence note:** The retained report at `artifacts/sprints/sprint-56/local-evidence-report.json`
-binds 11 passing commands and the 68-case acceptance corpus to source revision
-`8ae15bd66528bca8c0e2984d846891036ce48700` (report SHA-256
-`e1b5b483ca6435aaa9cbdf827a9f3db59f65497cc6d724c1ca4f0b91c99a8335`). The bounded
+binds 13 passing commands, eight focused suites with zero blocking skips, and the 68-case acceptance
+corpus to source revision `deb0f1395a8ceee76d638e7d53ec615b0d57f49e` (report SHA-256
+`5e963ce0f33c212b7659e459c0998a8cca82df400321ea7cc7896ff46af4640e`). The bounded
 registers, ten local workflow reports, exact action previews and approval reviews, secretary skill
 pack, runtime schemas, attribution and unknown-field checks, accessibility tracking, hostile-content
 tests, version history, local sprint criteria, and registered authority-free product coordinator are
-complete. Subsequent source progress adds one aggregate-bound identity-only document-control command
-shared by Native Chat, CLI, JSON, SDK, and ACP; current source-bound report identity is pending
-renewal. Story 56.1 and Sprint 56 remain **BLOCKED** by Sprint 55, missing installed accessibility
-and cross-platform evidence, trusted-package execution, independent records-owner review, and
-deferred manual fuzzing.
+complete. One aggregate-bound identity-only document-control command is shared by Native Chat, CLI,
+JSON, SDK, and ACP without carrying register, preview, approval, source, or rendered content. Story
+56.1 and Sprint 56 remain **BLOCKED** by Sprint 55, missing installed accessibility and
+cross-platform evidence, trusted-package execution, independent records-owner review, and deferred
+manual fuzzing.
 ### [ ] Sprint 57 - Markdown and Plain-Text Artifacts
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.

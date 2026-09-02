@@ -1,17 +1,19 @@
 {
   "schema_version": 1,
   "record_type": "sprint_56_local_evidence",
-  "source_revision": "8ae15bd66528bca8c0e2984d846891036ce48700",
+  "source_revision": "deb0f1395a8ceee76d638e7d53ec615b0d57f49e",
   "source_sha256": {
     "kernel/contracts/src/document_control.rs": "1ec04d45ddc6a22b1a9ad05bb89edd1409c24c321419eae49eda658c25402902",
-    "kernel/contracts/src/lib.rs": "bbd5268f75d9f88d4056da62bbd8f33fe4e5f87ae50aefaba9432bd06f656da1",
+    "kernel/contracts/src/lib.rs": "458420bd48a3b676fd9427c95170b9c22502732215fc5bd1e76a2a576b94db3a",
     "kernel/engine/src/document_control.rs": "ff353d5eadd549b5215f440c567c09eb137672127dd5611a3b49db24b1a6ef37",
     "kernel/engine/src/lib.rs": "74e16b7d5134da7214e979519b12116fa002034a5c7bf4b8a1e83646b93d8d26",
     "capabilities/knowledge/src/document_control_skills.rs": "b4d45f62dc07f1f89601802d2b26f45143f23e30ece4e09a5179f80b6a69b308",
-    "capabilities/knowledge/src/lib.rs": "37ac6fd09c4ad677c3fd4f4513400c0e319656fea257c341d8a6174280205b62",
+    "capabilities/knowledge/src/lib.rs": "b8483de79ff876d31911b527d1de8438a581cb536b2220893f2d82d30e6e08d2",
     "capabilities/knowledge/examples/document_control_skill_pack.rs": "edf6789310f6f7f879361ec519bf513a2645d344e9570a6486eb2902bbc2ece5",
-    "shells/host/src/document_control_coordinator.rs": "7ce962f5fa037df5ba6ff52c9cb9279c11dc037bc4cde84d37ec51c46122b6b3",
-    "shells/host/src/lib.rs": "fd810ec82539510109b90eec161063327c22afb9898eb91525eba8e49cef9d23",
+    "shells/host/src/document_control_coordinator.rs": "f7e0e347cfd1c98be44aab97560e6e0e7e29bd85f4a20b39b472e2d008f6b4e8",
+    "shells/host/src/lib.rs": "b7d6698d8e08ec56f0df647216254c194fed7559083b27a37d61169bb6e0392b",
+    "shells/host/src/headless.rs": "86515f7c25257b562b294f0d3454b129ef0842508d9f63701165546477a09fd1",
+    "shells/host/src/cli.rs": "bc4d009921f914e095b33d504e24ca982c49623e76c5d0d3e258625dd2a5dff4",
     "schemas/runtime/document-register.schema.json": "9eb18545031596c28befcef7a2ce54a8b40ab893872de2661a1b57ff3433dfe9",
     "schemas/runtime/examples/document-register.valid.json": "d32f9642b6cd47c41be774572539253857ad164ebb239e2bfe3f16505e6143c7",
     "schemas/runtime/document-action-preview.schema.json": "a8c5dd547a3a58227fe62c5eab5bae3973f1f8b4d4167bc7d1c918a899b8dc13",
@@ -26,11 +28,11 @@
     "scripts/document_control_skill_contract.py": "587a8efdbfe3d9ac5e8f037d0ae9d2498df5f9497f961c09644680d716495de3",
     "tests/test_document_control_skill_contract.py": "f915dd32932f786a91943674be646308e72102c723ab95e4558a5e0a430fa903",
     "artifacts/sprints/sprint-56/document-control-skill-pack.json": "6edb596dc59456dfa448d76a84356e2bb610e2522df96664f530dc7379e77532",
-    "docs/architecture/document-correspondence-and-filing-control.md": "c4ac717ffc156045dba02676efdaccf7c66fe69c7ea0c098edac7f2e047e91a9",
+    "docs/architecture/document-correspondence-and-filing-control.md": "b3ff404788ebc5091fdf268f13f5f53a7246732759ab1460dc777c88443fa2a4",
     "docs/guides/document-control-local-workflows.md": "6d1c1dec34c1445b2fdb185259ba96ab831d805ffc08b3c612e4cbf0c3858bee",
-    "docs/verification/sprint-56-local-results.md": "9c63555ca6c2e320549e9be7653c7ad8cae7148093e16e53eebaab184f6190aa",
-    "scripts/sprint_56_evidence.py": "28d0514bd6fe357cd1ba5904220a04d394dd89a392514e84e7f4aa26487f19bb",
-    "tests/test_sprint_56_evidence.py": "261ef1f6130b898a014190a737e06a68dcf75933fc743b88308177d09c9b6e0d"
+    "docs/verification/sprint-56-local-results.md": "013883e24ff4fbceb8cd09c872db23246f83b0598f4e94826389575daf1343e8",
+    "scripts/sprint_56_evidence.py": "6682ab962eed88cc2af6ed668bf0c3d9d469c376f2e031e9762f782723aafe6f",
+    "tests/test_sprint_56_evidence.py": "1cd4b4306be8064bdbfb29b21ed4900414718b85b77e35f27ac4b228e4c15db9"
   },
   "environment": {
     "system": "Linux",
@@ -55,7 +57,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "86d49d3dd203776241ccdab35fc1988b2b0497c298980ed45e4b88fe86b7f6b5",
+      "output_sha256": "59617267a75012c139fa05736d038d003f230f4d69e95326ae392dd10e4f5b1d",
       "blocking_skip_count": 0
     },
     {
@@ -70,7 +72,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "827004fff1c81d1cd3bfad67cc7af50002d836ad106fa9dc5c7b4d502d1cb76a",
+      "output_sha256": "6170089a286d1181c66e34fa2d07aa6c077a296bde3f19fe80922172eeb48a9d",
       "blocking_skip_count": 0
     },
     {
@@ -85,7 +87,37 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "5682070b9777161609cca79071599fd2a880edce8b1610d84b853d6b431e67d1",
+      "output_sha256": "316f0f0b801186fa1c4552fffdcaf4b6b553ae4dc68737169cc9b72de2388ea3",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "document-control-native-protocol",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "headless::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "7bb797c954e601d28513ca845887cc007fa11adf8da7929fce67f6b5b50aa21f",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "document-control-native-cli",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "cli::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "10edefe0831bc396c1ca99ad75f902734c0f388ad05c3f5f12a0394310ccc14e",
       "blocking_skip_count": 0
     },
     {
@@ -96,7 +128,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "09c0e9166c19a231a904f2e545ae131b9158aa9ae63006e3d211de34d433f4c8",
+      "output_sha256": "9db91aa76a44b04944e74ab7eb700bb177f8b3cc297843f4a9e0cef2be8daac6",
       "blocking_skip_count": 0
     },
     {
@@ -139,7 +171,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "81c08edd107bc9dc9d6e45f90bb187be6bc94d0e24a3b413b08c761661409d3a",
+      "output_sha256": "1664cac744ecf830a65bf771e49e6c16769f1cd892345b73f26950400ae5fcbb",
       "blocking_skip_count": null
     },
     {
@@ -150,7 +182,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "331dc7440042a10e1f2a308995970351cfcba8007a5f4c1a96c2b497f103e165",
+      "output_sha256": "f3e0476eb695c0e43070ab0e3f202eb54a46026bb492e77a4935f1531cad7fb1",
       "blocking_skip_count": null
     },
     {
@@ -227,7 +259,7 @@
     "records_disposition_capability": false,
     "network_access_capability": false,
     "product_coordinator": true,
-    "native_interface_integration": false,
+    "native_interface_integration": true,
     "accessibility_acceptance": false,
     "installed_cross_platform_acceptance": false,
     "trusted_package_execution": false,
@@ -243,7 +275,7 @@
     "unapproved_action_count": 0,
     "records_disposition_count": 0,
     "product_coordinator": true,
-    "native_interface_integration": false,
+    "native_interface_integration": true,
     "accessibility_acceptance": false,
     "installed_cross_platform_acceptance": false,
     "trusted_package_execution": false,
@@ -255,10 +287,6 @@
     {
       "code": "UPSTREAM-SPRINT-55-BLOCKED",
       "owner": "56.1"
-    },
-    {
-      "code": "NATIVE-INTERFACE-INTEGRATION-ABSENT",
-      "owner": "56.1.3.4"
     },
     {
       "code": "ACCESSIBILITY-ACCEPTANCE-ABSENT",
@@ -286,6 +314,7 @@
     "sprint_status": "BLOCKED",
     "upstream_sprint_55_closed": false,
     "document_control_workflow_integrated": true,
+    "native_interface_integrated": true,
     "external_effects_enabled": false,
     "cross_platform_acceptance_passed": false,
     "trusted_package_execution_complete": false,
