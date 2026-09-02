@@ -49,6 +49,7 @@ SOURCE_PATHS: Final = (
     "scripts/meeting_skill_contract.py",
     "tests/test_meeting_skill_contract.py",
     "artifacts/sprints/sprint-55/meeting-skill-pack.json",
+    "artifacts/sprints/sprint-56/local-evidence-report.json",
     "docs/architecture/meeting-records-and-continuity.md",
     "docs/guides/meeting-records-local-workflows.md",
     "docs/verification/sprint-55-local-results.md",
@@ -173,13 +174,12 @@ IMPLEMENTED: Final = {
     "installed_cross_platform_acceptance": False,
     "trusted_package_execution": False,
     "independent_records_review": False,
-    "filing_control_complete": False,
+    "filing_control_complete": True,
     "manual_fuzzing": False,
 }
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-54-BLOCKED", "owner": "55.1"},
     {"code": "ACCESSIBILITY-ACCEPTANCE-ABSENT", "owner": "55.1.3.4"},
-    {"code": "SPRINT-56-FILING-CONTROL-PENDING", "owner": "55.1.3.4"},
     {"code": "INSTALLED-CROSS-PLATFORM-ACCEPTANCE-ABSENT", "owner": "55.1.3.4"},
     {"code": "TRUSTED-INSTALLED-PACKAGE-EXECUTION-ABSENT", "owner": "55.1.3.4"},
     {"code": "INDEPENDENT-RECORDS-REVIEW-ABSENT", "owner": "55.1.3.4"},
@@ -269,7 +269,7 @@ def expected_verification(local_pass: bool = True) -> dict[str, Any]:
         "installed_cross_platform_acceptance": False,
         "trusted_package_execution": False,
         "independent_records_review": False,
-        "filing_control_complete": False,
+        "filing_control_complete": True,
         "manual_fuzzing": False,
         "sprint_gate_closed": False,
     }

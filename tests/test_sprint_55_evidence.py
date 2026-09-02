@@ -41,6 +41,8 @@ class Sprint55EvidenceTests(unittest.TestCase):
         self.assertTrue(value["summary"]["native_interface_integrated"])
         self.assertTrue(value["implemented_contracts"]["native_interface_integration"])
         self.assertTrue(value["verification_evidence"]["native_interface_integration"])
+        self.assertTrue(value["implemented_contracts"]["filing_control_complete"])
+        self.assertTrue(value["verification_evidence"]["filing_control_complete"])
         self.assertFalse(value["summary"]["external_effects_enabled"])
         self.assertFalse(value["verification_evidence"]["sprint_gate_closed"])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")

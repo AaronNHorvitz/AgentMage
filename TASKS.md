@@ -6661,9 +6661,9 @@ and the sprint therefore remain open.
 **Gate decision:** Sprint 54 is PASS only when Story 54.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
 **Local evidence note:** The retained report at `artifacts/sprints/sprint-54/local-evidence-report.json`
-binds 11 passing commands, six focused suites with zero blocking skips, and the 77-case acceptance
-corpus to source revision `668f1d79b41215c67e95aea72c686d09aabb9688` (report SHA-256
-`1d5075fcb0444acd6610baf73a3357b615eaac85bea8f32d217d62dc3582a9db`). The bounded
+binds 13 passing commands, eight focused suites with zero blocking skips, and the 77-case acceptance
+corpus to source revision `63a9a750d0b58798934abbf56da25c4992c9a5b4` (report SHA-256
+`8438d21b07f8bcfcfe504e53c090dea140e7a0f1f04474dedde8aa9a3fee79ec`). The bounded
 source contracts, artifacts, focused tests, privacy rules, source-store parity, and local sprint
 criteria are complete. The registered host coordinator binds every projection to one canonical
 snapshot and all eight authority-free skills with zero accepted effects or cross-privacy leaks.
@@ -6730,8 +6730,9 @@ binds 11 passing commands and the 86-case acceptance corpus to source revision
 implementation, artifacts, local positive/negative/boundary/cancellation checks, exact effect
 checks, raw-evidence recomputation, registered authority-free product coordinator, and identity-only
 native Chat/CLI/JSON/SDK/ACP routing are complete. Story 55.1 and Sprint 55 remain **BLOCKED** by
-Sprint 54, missing accessibility and installed cross-platform evidence, pending Sprint 56 filing
-control, trusted-package execution, independent records review, and deferred manual fuzzing.
+Sprint 54, missing accessibility and installed cross-platform evidence, trusted-package execution,
+independent records review, and deferred manual fuzzing. The committed Sprint 56 report supplies
+the complete local filing-control half without promoting either sprint.
 ### [ ] Sprint 56 - Document, Correspondence, and Filing Control
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
