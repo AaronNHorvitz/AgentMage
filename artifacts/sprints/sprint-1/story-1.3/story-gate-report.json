@@ -119,17 +119,17 @@
       {
         "byte_length": 7982,
         "path": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
-        "sha256": "0d8dbfdea41ae95d5913504d030f0a56f5bf08b73fb82e7d44fc578926778f76"
+        "sha256": "1f6af36cd6e43375822952c2da8f0fe1ecf50e68ef152072fbd818ece1245782"
       },
       {
-        "byte_length": 9518,
+        "byte_length": 9411,
         "path": "artifacts/sprints/sprint-1/story-1.3/rv50-applicable-results.log",
-        "sha256": "aae630a290491f54967a422e98480886c694f4f7e3502561dfcc9e76fe1edc7e"
+        "sha256": "bb3c394bed33b2b925791a3f11a63f5c3fe00a6fe685c435eb670c210191d350"
       },
       {
         "byte_length": 4491,
         "path": "artifacts/sprints/sprint-1/story-1.3/story-ac1-rust-owned-boundary-report.json",
-        "sha256": "900ade0789c23ab112ab60793fce6461f0f97a09c60fdead83c4513d17c8d930"
+        "sha256": "c52e0b56e9a8bed3ced6adec21c702a1921adeffb5049ae9a53f946fc2e1e1f5"
       },
       {
         "byte_length": 4363,
@@ -139,7 +139,7 @@
       {
         "byte_length": 5099,
         "path": "artifacts/sprints/sprint-1/story-1.3/story-ac3-predispatch-rejection-report.json",
-        "sha256": "8f195a31aa09b9b0f654b7660924c6de4601404e267e63fa443da8b30937fe30"
+        "sha256": "55e31df429449f0d72f7f0075bc1307a0312c9830a7a04679b8f953b57f854cd"
       },
       {
         "byte_length": 973,
@@ -206,8 +206,8 @@
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "a3fbf4ede1b39894566c3f4d17ec2ee00402abbe",
-    "reviewed_tree": "e8f6635c433f82e428170434d5df074cfef992fe",
+    "reviewed_commit": "4775ba0b8bcc28fb24e8763bd9a4ab653bc5106d",
+    "reviewed_tree": "32f1b865b45e3bac67ebf35ac22eaf6166ef6ea7",
     "reviewer_id": "agentmage-story-1.3-independent-gate-v1"
   },
   "installed_product_claim": "none",
@@ -232,15 +232,15 @@
   "platform_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "a3fbf4ede1b39894566c3f4d17ec2ee00402abbe",
-  "reviewed_tree": "e8f6635c433f82e428170434d5df074cfef992fe",
+  "reviewed_commit": "4775ba0b8bcc28fb24e8763bd9a4ab653bc5106d",
+  "reviewed_tree": "32f1b865b45e3bac67ebf35ac22eaf6166ef6ea7",
   "rv50": {
     "blocked_external_tuple_count": 5,
     "evidence_substitution_permitted": false,
     "later_runtime_scenario_count": 5,
     "protocol_complete": false,
     "protocol_id": "RV-50",
-    "report_sha256": "48591fb0c0cffed90ba49b4aee6190b400d61a1cf8944c6631a9b79fcc8113a5",
+    "report_sha256": "37f7804bf14887c2d67527a0b2a464fdf6c9d7b40c45cb4829bac2bbac864df1",
     "status": "partial-local-contract-evidence"
   },
   "schema_version": 1,
