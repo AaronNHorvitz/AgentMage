@@ -1764,3 +1764,57 @@ fuzz blockers.
 Exact next action: continue at Sprint 49's first locally executable or gate-owned verification row
 while retaining Sprint 48's exact upstream, transport/coordinator, model, disconnect, platform,
 launcher, and fuzz blockers.
+
+## Batch 55 — Sprint 49 measured-routing boundary review
+
+### Completed
+
+- Closed 3 TASKS rows: Sub-task 49.1.3.5 and Story AC 49.1.AC1/AC3. The gate-owned
+  automated review binds 11 security requirements, exact profile/role and deterministic-routing
+  authority boundaries, 2 historical candidates, 0 enabled profiles, 12 independent roles,
+  4 visible budgets, 16 routing rules, 48 adversarial cases, 0 unauthorized or remote selections,
+  and every false missing-product-proof marker. Promotions: 0. Substitutions: 0. Cumulative closed
+  items: 123.
+- Commits: `8da65dfe` (review and tests), `cbd59ddc` (review truth, closures, and normalized
+  blockers), and `c2a010b5` (review artifact, traceability, and contract evidence). Commits: 3.
+  Commits per closed item: 1.00. Review pins advanced: 0; complete 20-gate `REVIEWED_PATHS`
+  intersection: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 8/8 measured-router tests and 26/26 review, artifact-contract,
+  security-corpus, evidence, benchmark-contract, and zero-model-activation tests pass. Targeted
+  Markdown lint, requirements-current, traceability, contract-boundary, and contract-evidence
+  checks pass. Supply-chain builds: 1; outputs remained byte-identical. Evidence regeneration
+  passes: 1. Recovery iterations: 0. The full chain ran 674.565 seconds and stopped only at the
+  retained Story 6.1 rootless-Podman prerequisite after every preceding gate passed. Recorded gate
+  wall seconds: 675.
+- Sprint 49 exact approved-profile and live-benchmark blocker:
+  `BLOCKED_EXTERNAL(platform=pinned local inference host; artifact=approved exact later-profile
+  model, artifact, tokenizer, template, codec, runtime, context, decoding, resource, role,
+  platform, supplier, license, lineage, origin, benchmark, and quality admission bundle;
+  action=authorized model owner admits the exact profile, executes the repeated role campaigns,
+  and transfers untouched results; credential=model artifact source if restricted;
+  payment=model artifact or required hardware if applicable)`; `substitution_set=empty`.
+- Sprint 49 exact integration blocker: `blocked: awaiting authenticated product routing and native
+  routing audit-view composition`; `substitution_set=empty`. Native acceptance is
+  `BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and physical supported
+  MacBook; artifact=exact profile, role benchmark, routing, disagreement, performance, and parity
+  results; action=platform owners execute and transfer untouched evidence; credential=Windows
+  image source, physical Mac access, and exact model artifact source if restricted;
+  payment=Windows license, model artifact, or required hardware if applicable)`;
+  `substitution_set=empty`. Trusted launcher execution is `blocked: host change required — run the
+  Sprint 49 measured-routing suite from the trusted packaged launcher`; `substitution_set=empty`.
+  Deferred fuzzing is `BLOCKED_EXTERNAL(platform=every supported native model-routing surface;
+  artifact=manual fuzzing transcript and minimized corpus; action=authorized human executes the
+  manual S-042 fuzz campaign and transfers untouched results; credential=platform and model access;
+  payment=none)`; `substitution_set=empty`.
+- Exact upstream blocker: `blocked: awaiting Sprint 48 gate closure`, retaining Sprint 48's
+  transport/coordinator, model, disconnect, native-platform, trusted-launcher, and manual-fuzz
+  tuples; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue at Story 49.2's first locally executable adapter-evaluation row while
+retaining Story 49.1's exact upstream, model, integration, platform, launcher, and fuzz blockers.
