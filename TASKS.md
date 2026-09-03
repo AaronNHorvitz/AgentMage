@@ -3430,7 +3430,7 @@ campaigns remain separate gates.
 
 **Current gate result:** BLOCKED with deterministic coverage, rendering, source resolution, exact selective invalidation, native Fedora held-object projection and encrypted derivative-cache reconciliation, one-use pre-citation freshness, hostile-input isolation, cooperative parser cancellation, guarded Rust panic containment, golden identities, and read-only invariance passing. Remaining blockers are native Ubuntu, macOS, and Windows repository-map campaigns, the deliberately deferred manual parser fuzz campaign, and independent review. Rust panic containment does not claim native memory-fault or process-abort recovery and no release approval is inferred.
 
-### [ ] Sprint 20 - Evidence-State Assignment
+### [ ] Sprint 20 - Evidence-State Assignment. `blocked: host change required — run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local policy evidence set and scripts/sprint_20_evidence.py --write`; substitution set: empty.
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
@@ -3481,7 +3481,7 @@ campaigns remain separate gates.
 
 **Gate decision:** Sprint 20 is PASS only when Story 20.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
-**Current gate result:** BLOCKED with the exact four-state assignment contract, eight Unknown/Blocked reasons, deterministic Observed and Derived provenance, exact Inferred model/runtime provenance, successful-answer integration, confidence-injection rejection, authority absence, source-bound recomputation, and product-security mapping passing. Independent Sprint 20 review is absent. Citation freshness, per-statement ledgers, receipt chaining, keyed integrity, and clock sequencing are preserved as dependent Sprint 21 work rather than misreported Sprint 20 blockers or successes.
+**Current gate result:** BLOCKED with the exact four-state assignment contract, eight Unknown/Blocked reasons, deterministic Observed and Derived provenance, exact Inferred model/runtime provenance, successful-answer integration, confidence-injection rejection, authority absence, source-bound recomputation, and product-security mapping passing. The repository-owned review renewal is blocked by the exact host-change tuple on the Sprint heading: the restricted filesystem reports the admitted worker executables as `nfsnobody`, so the manifest test correctly fails before launch. Citation freshness, per-statement ledgers, receipt chaining, keyed integrity, and clock sequencing remain dependent Sprint 21 work; no platform or release substitution is made.
 
 ### [ ] Sprint 21 - Citation Freshness and Tamper-Evident Receipts
 

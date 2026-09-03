@@ -35,7 +35,7 @@
     },
     {
       "document": "TASKS.md",
-      "sha256": "dcbdd65fa3a4f70b5a9b755ea1b230aa900f74fdb69cc77a70d8abe9768dcefc"
+      "sha256": "58b2ee7327bce10974d52b2328c7322c413698d39f4a605aa2e47e72c20ebba7"
     },
     {
       "document": "evidence/catalog.json",
@@ -2668,12 +2668,12 @@
           {
             "source": {
               "document": "TASKS.md",
-              "heading": "Sprint 20 - Evidence-State Assignment",
+              "heading": "Sprint 20 - Evidence-State Assignment. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local policy evidence set and scripts/sprint_20_evidence.py --write`; substitution set: empty.",
               "line": 3441
             },
             "sprint": 20,
             "story_id": "20.1",
-            "story_title": "Evidence-State Assignment"
+            "story_title": "Evidence-State Assignment. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local policy evidence set and scripts/sprint_20_evidence.py --write`; substitution set: empty."
           },
           {
             "source": {
@@ -2745,12 +2745,12 @@
           {
             "source": {
               "document": "TASKS.md",
-              "heading": "Sprint 20 - Evidence-State Assignment",
+              "heading": "Sprint 20 - Evidence-State Assignment. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local policy evidence set and scripts/sprint_20_evidence.py --write`; substitution set: empty.",
               "line": 3441
             },
             "sprint": 20,
             "story_id": "20.1",
-            "story_title": "Evidence-State Assignment"
+            "story_title": "Evidence-State Assignment. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local policy evidence set and scripts/sprint_20_evidence.py --write`; substitution set: empty."
           },
           {
             "source": {
@@ -11525,12 +11525,12 @@
           {
             "source": {
               "document": "TASKS.md",
-              "heading": "Sprint 20 - Evidence-State Assignment",
+              "heading": "Sprint 20 - Evidence-State Assignment. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local policy evidence set and scripts/sprint_20_evidence.py --write`; substitution set: empty.",
               "line": 3441
             },
             "sprint": 20,
             "story_id": "20.1",
-            "story_title": "Evidence-State Assignment"
+            "story_title": "Evidence-State Assignment. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local policy evidence set and scripts/sprint_20_evidence.py --write`; substitution set: empty."
           },
           {
             "source": {
@@ -11587,12 +11587,12 @@
           {
             "source": {
               "document": "TASKS.md",
-              "heading": "Sprint 20 - Evidence-State Assignment",
+              "heading": "Sprint 20 - Evidence-State Assignment. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local policy evidence set and scripts/sprint_20_evidence.py --write`; substitution set: empty.",
               "line": 3441
             },
             "sprint": 20,
             "story_id": "20.1",
-            "story_title": "Evidence-State Assignment"
+            "story_title": "Evidence-State Assignment. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local policy evidence set and scripts/sprint_20_evidence.py --write`; substitution set: empty."
           },
           {
             "source": {
@@ -11649,12 +11649,12 @@
           {
             "source": {
               "document": "TASKS.md",
-              "heading": "Sprint 20 - Evidence-State Assignment",
+              "heading": "Sprint 20 - Evidence-State Assignment. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local policy evidence set and scripts/sprint_20_evidence.py --write`; substitution set: empty.",
               "line": 3441
             },
             "sprint": 20,
             "story_id": "20.1",
-            "story_title": "Evidence-State Assignment"
+            "story_title": "Evidence-State Assignment. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local policy evidence set and scripts/sprint_20_evidence.py --write`; substitution set: empty."
           },
           {
             "source": {
@@ -17489,12 +17489,12 @@
           {
             "source": {
               "document": "TASKS.md",
-              "heading": "Sprint 20 - Evidence-State Assignment",
+              "heading": "Sprint 20 - Evidence-State Assignment. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local policy evidence set and scripts/sprint_20_evidence.py --write`; substitution set: empty.",
               "line": 3441
             },
             "sprint": 20,
             "story_id": "20.1",
-            "story_title": "Evidence-State Assignment"
+            "story_title": "Evidence-State Assignment. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local policy evidence set and scripts/sprint_20_evidence.py --write`; substitution set: empty."
           },
           {
             "source": {
