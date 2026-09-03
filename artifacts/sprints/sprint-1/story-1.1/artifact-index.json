@@ -5,7 +5,7 @@
       "files": [
         {
           "path": "Cargo.toml",
-          "sha256": "0104b55b6a0c57eb869812ad7a6c4ea648f3d256258bf261ebcf0d39e980ba4b"
+          "sha256": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219"
         },
         {
           "path": "architecture/module-inventory.json",
@@ -21,11 +21,11 @@
         },
         {
           "path": "kernel/engine/Cargo.toml",
-          "sha256": "66bcf914dd0f4fbf0bbc6971916d98f1f6a8b9380453515ddca344fe179ea68e"
+          "sha256": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8"
         },
         {
           "path": "platforms/linux/Cargo.toml",
-          "sha256": "00426eed21bba2bd58421ef75b6d661b7bfe8dc91c0fa931e01fe58d502ccead"
+          "sha256": "a6ed075a2e40f2120402cb2db636e3029b4e2f2f4070b3e2d64be93c9c0c796a"
         },
         {
           "path": "platforms/macos/Package.swift",
@@ -37,11 +37,11 @@
         },
         {
           "path": "shells/host/Cargo.toml",
-          "sha256": "022c2254e404a7c54d790a894e98f6925a9f2b794f0ff37d7022bb4e19c9f923"
+          "sha256": "b6ad82e6be880f63c24d47a0341748261f2bd747d7a851264b81ab24beacf713"
         },
         {
           "path": "shells/vscode/package.json",
-          "sha256": "c2d7612804f9bcb2e0a3c5f4615a2d7d3ef2181f93e32b5e83fa854ec1bc1ecb"
+          "sha256": "62533387ddcdd384963564af25c7675dc2991fd47e1b7c0a068252e67251112e"
         }
       ],
       "task_id": "1.1.2.1"
@@ -73,7 +73,7 @@
       "files": [
         {
           "path": "Cargo.lock",
-          "sha256": "60eca43376919ca47740e494d7e44a2812aa77e06a0c188013e285a7dea1a19e"
+          "sha256": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9"
         },
         {
           "path": "package-lock.json",
@@ -85,15 +85,15 @@
         },
         {
           "path": "supply-chain/dependency-hashes.sha256",
-          "sha256": "4a45099d0fda5b8cf87eb1e8b701f0e8a62f92633d503ce29dcf442f86000772"
+          "sha256": "0b541dacca986587f456cc4f8a8831a5dab5cad662cb8addf942d7f7733195e3"
         },
         {
           "path": "supply-chain/dependency-provenance.json",
-          "sha256": "c0f0eaa686f3ebc21ed2c7ada5a40e346d34c1414d289f1413effb024bbb99df"
+          "sha256": "3067268c2a5c7704b4e1bb6433f2453d2e4182fcfe68ca87b0fbb02b4ad75518"
         },
         {
           "path": "supply-chain/sbom.cdx.json",
-          "sha256": "f6e3e160f7e26b31a256f74796508e6e386110958e2d8f7c56aa7c7c6c216eea"
+          "sha256": "d6f53b2398fd2e893cbeee9cd0b6f72e145a6fcfb8941b1b1e996f0d45f0697a"
         }
       ],
       "task_id": "1.1.2.3"
@@ -107,7 +107,7 @@
         },
         {
           "path": "package.json",
-          "sha256": "829a956c293ce406d218e39f4941f8332f694c24cca790c48ace7ec8d0dfd741"
+          "sha256": "e3a960224490115823caeac157c8f346ab79a39baf14385789be4ef2deae2d30"
         },
         {
           "path": "rust-toolchain.toml",

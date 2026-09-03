@@ -113,7 +113,7 @@
     },
     {
       "path": "Cargo.lock",
-      "sha256": "60eca43376919ca47740e494d7e44a2812aa77e06a0c188013e285a7dea1a19e"
+      "sha256": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9"
     },
     {
       "path": "kernel/engine/Cargo.toml",
