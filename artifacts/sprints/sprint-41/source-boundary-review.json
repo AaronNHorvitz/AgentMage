@@ -1,0 +1,45 @@
+{
+  "checks": {
+    "argv_environment_and_injection_are_bound": true,
+    "missing_proof_remains_false": true,
+    "process_cleanup_and_resources_are_bound": true,
+    "sandbox_scope_is_bound": true,
+    "security_requirements_are_mapped": true,
+    "template_grant_and_no_shell_are_bound": true,
+    "terminal_truth_is_bound": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "The root-owned helper, trusted launcher, production profile, and other native platforms remain blocked.",
+    "Manual fuzzing remains deferred and no release claim is made."
+  ],
+  "record_type": "agentmage-sprint-41-source-boundary-review",
+  "review_class": "gate-owned-automated-command-runner-review",
+  "reviewer_identity": "scripts/sprint_41_boundary_review.py",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-ACC-001",
+    "SR-ACC-002",
+    "SR-ACC-003",
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-PLT-003",
+    "SR-AI-005",
+    "SR-AI-009",
+    "SR-TST-004",
+    "SR-TST-006"
+  ],
+  "source_revision": "db2a1aa2ca66e8ba5d7580e8ac86e69d6274cd4a",
+  "source_sha256": {
+    "artifacts/sprints/sprint-41/local-evidence-report.json": "cf18d6fb76f88b0762a895ba9147baddfb65e399f7538213734e6163a1d55f64",
+    "docs/verification/sprint-41-command-injection-corpus.json": "78a5a8e9cc57d8967ad433c9395039b38340bdd85ed2ee0fdc049868f830792f",
+    "docs/verification/sprint-41-local-results.md": "5f366fa26003a72f608925933c1b5c1b8817eeac5596578b4b5ee0d9cf41b6da",
+    "kernel/engine/src/command_runner.rs": "e3c595700324b094d4c0df6634b277a7443c3a992680f9da613ce5873a82c8a6",
+    "platforms/linux/src/command_runner.rs": "210889e1b0420bce60871a8628a570845f7f4aea30486e7cf983443935b19e0d",
+    "scripts/sprint_41_evidence.py": "fee23de32a11a4de39f5f2d532fc37616bf40c157733863a32d99ba19aa4eaae"
+  },
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}

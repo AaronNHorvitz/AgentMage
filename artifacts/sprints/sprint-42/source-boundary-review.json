@@ -1,0 +1,47 @@
+{
+  "checks": {
+    "active_checkout_and_unrelated_state_are_preserved": true,
+    "hostile_repository_controls_are_bound": true,
+    "local_recovery_and_collision_results_are_bound": true,
+    "missing_proof_remains_false": true,
+    "owned_worktree_preservation_is_bound": true,
+    "remote_authority_remains_disabled": true,
+    "security_requirements_are_mapped": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated local review, not a human-review claim or complete RV-49.",
+    "Authenticated network Git, trusted launcher, containment resources, and other platforms remain blocked.",
+    "Manual fuzzing remains deferred and no release claim is made."
+  ],
+  "record_type": "agentmage-sprint-42-source-boundary-review",
+  "review_class": "gate-owned-automated-repository-safety-review",
+  "reviewer_identity": "scripts/sprint_42_boundary_review.py",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-NET-005",
+    "SR-NET-006",
+    "SR-NET-007",
+    "SR-OPS-001",
+    "SR-TST-004",
+    "SR-TST-005",
+    "SR-GIT-001",
+    "SR-GIT-002",
+    "SR-GIT-003",
+    "SR-GIT-004",
+    "SR-GIT-005",
+    "SR-GIT-006"
+  ],
+  "source_revision": "db2a1aa2ca66e8ba5d7580e8ac86e69d6274cd4a",
+  "source_sha256": {
+    "artifacts/sprints/sprint-42/local-evidence-report.json": "a5eaa19dc82551ee939be8b405411a0f71de0fcb45b0bb3f35fa40895fba9cc8",
+    "docs/verification/sprint-42-local-results.md": "628106940c1b131101fa1bb18ae6339d1e48239017e2a9138b0864a63e468575",
+    "kernel/engine/src/repository_safety.rs": "5271b163889aca167cc0aca5484aed8d1e4e6d933009a02bd68dce32c700bd8f",
+    "platforms/linux/src/repository_safety.rs": "b410d1667b0662f171f626cb33b7c0f072d65effb2e1cf81d21a3ac1c2109060",
+    "scripts/sprint_42_evidence.py": "66b136b0573c65cbe55e5fb89be2df702e9ace21b49028b2f4938ac9ade55402"
+  },
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}
