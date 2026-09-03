@@ -1,0 +1,554 @@
+{
+  "component_under_test": "AgentMage",
+  "content_scan": {
+    "canary_matches": 0,
+    "credential_matches": 0,
+    "host_identity_matches": 0,
+    "private_key_matches": 0,
+    "raw_prompt_matches": 0,
+    "searched_canary_count": 3,
+    "workspace_content_matches": 0
+  },
+  "environment": {
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "system": "Linux"
+  },
+  "exercise_kind": "gate-owned deterministic tabletop",
+  "human_participant_claim": false,
+  "participants": [
+    {
+      "component_independent": true,
+      "identity": "tabletop-reporter",
+      "role": "reporter-or-device-owner"
+    },
+    {
+      "component_independent": true,
+      "identity": "tabletop-incident-lead",
+      "role": "incident-lead"
+    },
+    {
+      "component_independent": true,
+      "identity": "tabletop-investigator",
+      "role": "technical-investigator"
+    },
+    {
+      "component_independent": true,
+      "identity": "tabletop-custodian",
+      "role": "evidence-custodian"
+    },
+    {
+      "component_independent": true,
+      "identity": "tabletop-remediation-owner",
+      "role": "remediation-owner"
+    },
+    {
+      "component_independent": true,
+      "identity": "tabletop-independent-verifier",
+      "role": "independent-verifier"
+    },
+    {
+      "component_independent": true,
+      "identity": "tabletop-communications-owner",
+      "role": "communications-owner"
+    }
+  ],
+  "record_type": "sprint_25_rv21_incident_tabletop",
+  "scenarios": [
+    {
+      "follow_up_owner": "release-owner",
+      "injected_signals": [
+        {
+          "class": "ambiguous",
+          "decision": "retain-visible-without-authority-change",
+          "side_effect": "none"
+        },
+        {
+          "class": "late",
+          "decision": "retain-visible-without-authority-change",
+          "side_effect": "none"
+        },
+        {
+          "class": "duplicate",
+          "decision": "retain-visible-without-authority-change",
+          "side_effect": "none"
+        },
+        {
+          "class": "false-positive",
+          "decision": "retain-visible-without-authority-change",
+          "side_effect": "none"
+        }
+      ],
+      "open_risk": "production execution remains required",
+      "outcome": "recovered-in-synthetic-tabletop",
+      "scenario": "suspected-egress",
+      "timeline": [
+        {
+          "authority_delta": "none",
+          "decision": "suspected-egress:detected",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 1,
+          "transition": "detected"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "suspected-egress:locally-suspended",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 2,
+          "transition": "locally-suspended"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "suspected-egress:contained",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 3,
+          "transition": "contained"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "suspected-egress:evidence-bounded",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 4,
+          "transition": "evidence-bounded"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "suspected-egress:severity-assigned",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 5,
+          "transition": "severity-assigned"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "suspected-egress:owner-assigned",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 6,
+          "transition": "owner-assigned"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "suspected-egress:communication-prepared",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 7,
+          "transition": "communication-prepared"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "suspected-egress:remediated",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 8,
+          "transition": "remediated"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "suspected-egress:verified",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 9,
+          "transition": "verified"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "suspected-egress:recovered",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 10,
+          "transition": "recovered"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "suspected-egress:lessons-recorded",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 11,
+          "transition": "lessons-recorded"
+        }
+      ]
+    },
+    {
+      "follow_up_owner": "release-owner",
+      "injected_signals": [
+        {
+          "class": "ambiguous",
+          "decision": "retain-visible-without-authority-change",
+          "side_effect": "none"
+        },
+        {
+          "class": "late",
+          "decision": "retain-visible-without-authority-change",
+          "side_effect": "none"
+        },
+        {
+          "class": "duplicate",
+          "decision": "retain-visible-without-authority-change",
+          "side_effect": "none"
+        },
+        {
+          "class": "false-positive",
+          "decision": "retain-visible-without-authority-change",
+          "side_effect": "none"
+        }
+      ],
+      "open_risk": "production execution remains required",
+      "outcome": "recovered-in-synthetic-tabletop",
+      "scenario": "compromised-dependency-package",
+      "timeline": [
+        {
+          "authority_delta": "none",
+          "decision": "compromised-dependency-package:detected",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 1,
+          "transition": "detected"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "compromised-dependency-package:locally-suspended",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 2,
+          "transition": "locally-suspended"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "compromised-dependency-package:contained",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 3,
+          "transition": "contained"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "compromised-dependency-package:evidence-bounded",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 4,
+          "transition": "evidence-bounded"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "compromised-dependency-package:severity-assigned",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 5,
+          "transition": "severity-assigned"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "compromised-dependency-package:owner-assigned",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 6,
+          "transition": "owner-assigned"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "compromised-dependency-package:communication-prepared",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 7,
+          "transition": "communication-prepared"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "compromised-dependency-package:remediated",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 8,
+          "transition": "remediated"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "compromised-dependency-package:verified",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 9,
+          "transition": "verified"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "compromised-dependency-package:recovered",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 10,
+          "transition": "recovered"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "compromised-dependency-package:lessons-recorded",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 11,
+          "transition": "lessons-recorded"
+        }
+      ]
+    },
+    {
+      "follow_up_owner": "release-owner",
+      "injected_signals": [
+        {
+          "class": "ambiguous",
+          "decision": "retain-visible-without-authority-change",
+          "side_effect": "none"
+        },
+        {
+          "class": "late",
+          "decision": "retain-visible-without-authority-change",
+          "side_effect": "none"
+        },
+        {
+          "class": "duplicate",
+          "decision": "retain-visible-without-authority-change",
+          "side_effect": "none"
+        },
+        {
+          "class": "false-positive",
+          "decision": "retain-visible-without-authority-change",
+          "side_effect": "none"
+        }
+      ],
+      "open_risk": "production execution remains required",
+      "outcome": "recovered-in-synthetic-tabletop",
+      "scenario": "prompt-injection-disclosure",
+      "timeline": [
+        {
+          "authority_delta": "none",
+          "decision": "prompt-injection-disclosure:detected",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 1,
+          "transition": "detected"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "prompt-injection-disclosure:locally-suspended",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 2,
+          "transition": "locally-suspended"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "prompt-injection-disclosure:contained",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 3,
+          "transition": "contained"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "prompt-injection-disclosure:evidence-bounded",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 4,
+          "transition": "evidence-bounded"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "prompt-injection-disclosure:severity-assigned",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 5,
+          "transition": "severity-assigned"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "prompt-injection-disclosure:owner-assigned",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 6,
+          "transition": "owner-assigned"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "prompt-injection-disclosure:communication-prepared",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 7,
+          "transition": "communication-prepared"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "prompt-injection-disclosure:remediated",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 8,
+          "transition": "remediated"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "prompt-injection-disclosure:verified",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 9,
+          "transition": "verified"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "prompt-injection-disclosure:recovered",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 10,
+          "transition": "recovered"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "prompt-injection-disclosure:lessons-recorded",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 11,
+          "transition": "lessons-recorded"
+        }
+      ]
+    },
+    {
+      "follow_up_owner": "release-owner",
+      "injected_signals": [
+        {
+          "class": "ambiguous",
+          "decision": "retain-visible-without-authority-change",
+          "side_effect": "none"
+        },
+        {
+          "class": "late",
+          "decision": "retain-visible-without-authority-change",
+          "side_effect": "none"
+        },
+        {
+          "class": "duplicate",
+          "decision": "retain-visible-without-authority-change",
+          "side_effect": "none"
+        },
+        {
+          "class": "false-positive",
+          "decision": "retain-visible-without-authority-change",
+          "side_effect": "none"
+        }
+      ],
+      "open_risk": "production execution remains required",
+      "outcome": "recovered-in-synthetic-tabletop",
+      "scenario": "cryptographic-key-store-failure",
+      "timeline": [
+        {
+          "authority_delta": "none",
+          "decision": "cryptographic-key-store-failure:detected",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 1,
+          "transition": "detected"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "cryptographic-key-store-failure:locally-suspended",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 2,
+          "transition": "locally-suspended"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "cryptographic-key-store-failure:contained",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 3,
+          "transition": "contained"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "cryptographic-key-store-failure:evidence-bounded",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 4,
+          "transition": "evidence-bounded"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "cryptographic-key-store-failure:severity-assigned",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 5,
+          "transition": "severity-assigned"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "cryptographic-key-store-failure:owner-assigned",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 6,
+          "transition": "owner-assigned"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "cryptographic-key-store-failure:communication-prepared",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 7,
+          "transition": "communication-prepared"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "cryptographic-key-store-failure:remediated",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 8,
+          "transition": "remediated"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "cryptographic-key-store-failure:verified",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 9,
+          "transition": "verified"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "cryptographic-key-store-failure:recovered",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 10,
+          "transition": "recovered"
+        },
+        {
+          "authority_delta": "none",
+          "decision": "cryptographic-key-store-failure:lessons-recorded",
+          "external_notification_sent": false,
+          "private_content_retained": false,
+          "sequence": 11,
+          "transition": "lessons-recorded"
+        }
+      ]
+    }
+  ],
+  "schema_version": 1,
+  "source_revision": "cbfc6e2ed8b6812ac7f5701d86dd69b369cbbb21",
+  "source_sha256": {
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "docs/support/incident-response-v0.1.md": "e1a664440db4c0820a10bd357c9bce8583449206b2529c7005aa89e11fe05e75",
+    "scripts/sprint_25_incident_tabletop.py": "2bcb1ea30db8a0074a35062f5a46a707b81300428d6d5c3ea496f88b3d851ac7",
+    "tests/test_sprint_25_incident_tabletop.py": "e07a546095fbfa4dea2ff3851f90b07672ed9fdc70392d6f585696457995f805"
+  },
+  "summary": {
+    "result": "PASS",
+    "scenario_count": 4
+  },
+  "verification": {
+    "all_required_transitions_complete": true,
+    "all_signal_classes_visible": true,
+    "external_communication_performed": false,
+    "independent_verifier_role_present": true,
+    "private_user_content_retained": false,
+    "production_incident_claim": false,
+    "production_rv22_claim": false,
+    "rv21_four_scenarios_complete": true,
+    "undeclared_authority_acquired": false
+  }
+}

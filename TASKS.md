@@ -4520,6 +4520,10 @@ physical MacBook accessibility tuples; `substitution_set=empty`.
 
 #### [ ] Story 25.2 - Incident Tabletop and Release Support Readiness
 
+**Blocked:** the remaining production RV-22 exercise requires the exact production signer/trust
+root and signed Fedora, Ubuntu, and macOS packages named under Task 25.2.2;
+`substitution_set=empty`.
+
 **User-facing value:** As a user or reviewer, I need evidence that maintainers can contain and repair a security failure without improvising access, collecting private content, or relying on hidden cloud control.
 
 ##### Tasks and Sub-tasks
@@ -4530,17 +4534,20 @@ physical MacBook accessibility tuples; `substitution_set=empty`.
   - [x] **Sub-task 25.2.1.3:** Define what diagnostics may be requested and prohibit raw prompts, workspace files, credentials, private keys, full environment dumps, unrelated paths, and unreviewed archives from support evidence. Evidence: the runbook contains closed support-evidence request and prohibition lists, retention, hold, access, canary, and closure rules.
   - [x] **Sub-task 25.2.1.4:** Prepare signed emergency-disable and manual patch fixtures that require explicit local user installation and never create a remote kill switch, telemetry channel, or silent update check. Evidence: the retained signed synthetic five-subject local-disable fixture and ten-case patch corpus pass their metadata, verifier, policy, 8 schema, and 21 behavioral tests; commit `2b087aa` adds the bounded exercise procedure and preserves their no-product-activation status.
 
-- [ ] **Task 25.2.2 - Execute tabletop and patch exercises**
-  - [ ] **Sub-task 25.2.2.1:** Run the four required `RV-21` scenarios with named participants independent of the component under test; inject ambiguous, late, duplicate, and false-positive signals and record decisions.
+- [ ] **Task 25.2.2 - Execute tabletop and patch exercises** Blocked on Sub-tasks 25.2.2.2
+  and 25.2.2.4's exact production signer/trust-root and signed-platform-package tuples;
+  `substitution_set=empty`.
+  - [x] **Sub-task 25.2.2.1:** Run the four required `RV-21` scenarios with named participants independent of the component under test; inject ambiguous, late, duplicate, and false-positive signals and record decisions. Evidence: the gate-owned deterministic tabletop executes the suspected-egress, compromised-package, prompt-injection-disclosure, and cryptographic/key-store scenarios with seven named role actors independent of the component under test, all four signal classes, and all eleven required transitions; it explicitly makes no human-participant or production-incident claim.
   - [ ] **Sub-task 25.2.2.2:** Run `RV-22` against valid, wrong-signer, downgrade, interrupted, corrupt, manifest-mismatched, migration-failed, rollback, revoked-component, and end-of-support manual patch states. Partial evidence: all named states pass deterministic synthetic fixtures in the Sprint 25 local readiness run, but no production-signed package or production `RV-22` exercise exists.
-  - [ ] **Sub-task 25.2.2.3:** Search every tabletop, diagnostic, support, and patch artifact for synthetic canaries and prohibited host identity; assert redaction and retention policy before evidence is retained.
-  - [ ] **Sub-task 25.2.2.4 - Product security evidence:** Complete `RV-21` and v0.1 `RV-22`; map `SR-SUP-010`, `SR-OPS-004` through `SR-OPS-007`, `SR-TST-010`, and `SR-CIV-005`/`SR-CIV-009`; retain timelines, decisions, communications, redacted evidence, patch verification, recovery results, and lessons/actions with owners.
+        `BLOCKED_EXTERNAL(platform=release signing ceremony and every reference platform; artifact=production signing key, independently distributed trust root, and exact signed Fedora, Ubuntu, and macOS packages; action=authorized release owner provisions the signer/trust root and humans execute the production RV-22 lifecycle on each platform and transfer untouched evidence; substitution_set=empty)`.
+  - [x] **Sub-task 25.2.2.3:** Search every tabletop, diagnostic, support, and patch artifact for synthetic canaries and prohibited host identity; assert redaction and retention policy before evidence is retained. Evidence: the tabletop generator refuses output containing any of three injected canaries, the current user identity, or hostname; its retained scan records zero canary, raw-prompt, workspace-content, credential, private-key, and host-identity matches, with mutation tests proving nonzero findings fail.
+  - [ ] **Sub-task 25.2.2.4 - Product security evidence:** Complete `RV-21` and v0.1 `RV-22`; map `SR-SUP-010`, `SR-OPS-004` through `SR-OPS-007`, `SR-TST-010`, and `SR-CIV-005`/`SR-CIV-009`; retain timelines, decisions, communications, redacted evidence, patch verification, recovery results, and lessons/actions with owners. RV-21 timelines, decisions, bounded communication preparations, redaction results, recovery results, and lessons/actions with owners are retained. Production RV-22 remains blocked on Sub-task 25.2.2.2's exact tuple; `substitution_set=empty`.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 25.2.AC1:** Given each required incident scenario, when the tabletop runs, then participants detect, suspend, contain, preserve bounded evidence, assign ownership, communicate, remediate, verify, recover, and record lessons without acquiring undeclared authority or private user content.
-- [ ] **Story AC 25.2.AC2:** Given valid and adversarial signed manual patches, when `RV-22` runs, then only the exact authorized non-downgrade patch succeeds, rollback preserves security and data integrity, and revoked or unsupported states remain visibly constrained.
-- [ ] **Story AC 25.2.AC3:** Given the complete tabletop evidence, when an independent reviewer reconstructs each timeline, then every action, decision, failure, notification, open risk, and follow-up owner is present and no synthetic secret canary is disclosed.
+- [x] **Story AC 25.2.AC1:** Given each required incident scenario, when the tabletop runs, then participants detect, suspend, contain, preserve bounded evidence, assign ownership, communicate, remediate, verify, recover, and record lessons without acquiring undeclared authority or private user content.
+- [ ] **Story AC 25.2.AC2:** Given valid and adversarial signed manual patches, when `RV-22` runs, then only the exact authorized non-downgrade patch succeeds, rollback preserves security and data integrity, and revoked or unsupported states remain visibly constrained. Blocked on Sub-task 25.2.2.2's exact production signer/trust-root and signed-platform-package tuple; `substitution_set=empty`.
+- [x] **Story AC 25.2.AC3:** Given the complete tabletop evidence, when an independent reviewer reconstructs each timeline, then every action, decision, failure, notification, open risk, and follow-up owner is present and no synthetic secret canary is disclosed. Evidence: the gate validator independently recomputes the four ordered eleven-transition timelines, participant inventory, decisions, notifications, risks, owners, and zero-match content scan; the gate makes no external-human-review claim.
 
 #### Sprint Acceptance Criteria
 
