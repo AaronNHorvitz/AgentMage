@@ -868,3 +868,31 @@ all cross-platform release and hosted-lane prerequisites as exact external tuple
 
 Exact next action: execute Sprint 25's locally testable message-schema, effect-boundary, and
 release-blocking-threshold checks without claiming native-platform or production-release support.
+
+## Batch 36 — Sprint 25 local release-boundary closure and blocker propagation
+
+### Completed
+
+- Closed 3 TASKS rows: Sub-tasks 25.1.3.1, 25.1.3.2, and 25.1.3.5. Existing committed Sprint 23
+  native/Verified Chat reports and source-boundary review prove authenticated fail-closed message
+  handling and display-only client authority; the committed Sprint 25 readiness report and mutation
+  tests prove every retained blocker prevents release approval. Marked every remaining Sprint 25
+  dependent with exact signer/trust-root, signed-package, installed-platform, qualified-model,
+  accessibility/manual-campaign, publication-account, owning-sprint, or production-RV-22 tuples;
+  every `substitution_set=empty`. Promotions: 0. Substitutions: 0.
+- Commit: `f8114390` (local row closures, blocker propagation, and checklist-bound evidence).
+  Commits: 1. Commits per closed item: 0.33. Review pins advanced: 0; complete `REVIEWED_PATHS`
+  intersection: empty.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1; outputs remained current. Evidence regeneration passes: 1, ordered
+  requirements, traceability, contract boundary, and contract index. Recovery iterations: 0. Task
+  graph, requirements-current 45/45, contract boundary 29/29, and contract index 12/12 pass.
+- Full `docs:check`: 697.840 seconds, stopping only at the retained Story 6.1 Podman prerequisite
+  after every preceding gate passed. Recorded gate wall seconds: 698.
+- Sprint 25 disposition: 0 closed stories, 2 blocked stories, 0 release/platform promotions. RV-21
+  is complete; production RV-22 and release/platform/model campaigns retain exact human-only tuples.
+
+Exact next action: audit the first authoritative open dependency gate after Sprint 25 and propagate
+or execute it; do not infer Phase A completion from the Sprint 25 boundary alone.
