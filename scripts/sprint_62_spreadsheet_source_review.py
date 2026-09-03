@@ -20,6 +20,9 @@ SOURCES: Final = (
     "capabilities/knowledge/src/json_data.rs",
     "capabilities/knowledge/src/spreadsheet_source.rs",
     "shells/host/src/spreadsheet_source_artifact.rs",
+    "shells/host/src/native_chat_runtime.rs",
+    "shells/host/src/cli_runtime.rs",
+    "shells/host/src/headless.rs",
 )
 
 
@@ -49,6 +52,9 @@ def expected(revision: str) -> dict[str, Any]:
     json_source = decoded["capabilities/knowledge/src/json_data.rs"]
     adapter = decoded["capabilities/knowledge/src/spreadsheet_source.rs"]
     service = decoded["shells/host/src/spreadsheet_source_artifact.rs"]
+    native_chat = decoded["shells/host/src/native_chat_runtime.rs"]
+    cli = decoded["shells/host/src/cli_runtime.rs"]
+    headless = decoded["shells/host/src/headless.rs"]
     checks = {
         "shared_trait_covers_xlsx_csv_json": has_all(
             contract,
@@ -276,6 +282,37 @@ def expected(revision: str) -> dict[str, Any]:
                 "stale_restricted_missing_and_bounded_sheet_requests_fail_closed",
             ),
         ),
+        "chat_cli_and_headless_use_one_byte_identical_dispatch_path": has_all(
+            native_chat,
+            (
+                "pub fn dispatch_native_chat_spreadsheet_artifact",
+                "dispatch_spreadsheet_source_artifact(",
+            ),
+        )
+        and has_all(
+            cli,
+            (
+                "pub fn dispatch_cli_spreadsheet_artifact",
+                "dispatch_spreadsheet_source_artifact(",
+            ),
+        )
+        and has_all(
+            headless,
+            (
+                "pub fn dispatch_headless_spreadsheet_artifact",
+                "dispatch_spreadsheet_source_artifact(",
+            ),
+        )
+        and has_all(
+            service,
+            (
+                "chat_cli_and_headless_adapters_return_identical_verified_ranges",
+                "assert_eq!(chat, cli)",
+                "assert_eq!(cli, headless)",
+                "chat.verify(ArtifactToolKind::Range)",
+                "chat.production_execution",
+            ),
+        ),
         "runtime_lifecycle_retention_restart_and_exact_token_accounting_are_closed": has_all(
             service,
             (
@@ -316,7 +353,7 @@ def expected(revision: str) -> dict[str, Any]:
         "limitations": [
             "This is gate-owned automated review, not a human-review claim.",
             "It proves authority-free parser projection and deterministic local tests only.",
-            "Installed-client parity, live models, and physical-platform campaigns remain absent.",
+            "Installed-binary campaigns, live models, and physical-platform campaigns remain absent.",
             "It grants no model, interface, platform, integration, milestone, or release support.",
         ],
     }

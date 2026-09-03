@@ -23,6 +23,28 @@ pub use crate::runtime_transport::{
 
 const MAX_NATIVE_CHAT_RUNS: usize = 4;
 
+/// Routes one spreadsheet artifact call through the same host-owned dispatcher as every client.
+pub fn dispatch_native_chat_spreadsheet_artifact(
+    kind: agentmage_capability_read_only::ArtifactToolKind,
+    request_bytes: &[u8],
+    service: &crate::spreadsheet_source_artifact::SpreadsheetSourceArtifactService,
+    workspace_read_authorized: bool,
+    signal: agentmage_capability_read_only::ArtifactExecutionSignal,
+    ledger: &mut agentmage_capability_read_only::ArtifactAttemptLedger,
+) -> Result<
+    agentmage_capability_read_only::ArtifactResult,
+    agentmage_capability_read_only::ArtifactDispatchError,
+> {
+    crate::spreadsheet_source_artifact::dispatch_spreadsheet_source_artifact(
+        kind,
+        request_bytes,
+        service,
+        workspace_read_authorized,
+        signal,
+        ledger,
+    )
+}
+
 /// Trusted composition boundary that frames requests and creates the shared coordinator.
 pub trait NativeChatRuntimeFactory {
     /// Exact coordinator implementation used by this host composition.

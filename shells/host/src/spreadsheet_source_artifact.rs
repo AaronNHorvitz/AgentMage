@@ -1370,4 +1370,59 @@ mod tests {
         );
         assert!(service.manifests().is_empty());
     }
+
+    #[cfg(all(feature = "native-chat", feature = "interactive-cli"))]
+    #[test]
+    fn chat_cli_and_headless_adapters_return_identical_verified_ranges() {
+        let mut service = SpreadsheetSourceArtifactService::default();
+        let admitted = admit(&mut service, ArtifactClassification::Internal);
+        let bytes = request(
+            "client-parity",
+            &admitted.prepared_manifest.manifest_sha256,
+            Some(ArtifactRange::Cell {
+                sheet: "Data".to_owned(),
+                start_row: 1,
+                start_column: 1,
+                end_row: 2,
+                end_column: 2,
+            }),
+            None,
+        );
+        let mut chat_ledger = ArtifactAttemptLedger::default();
+        let chat = crate::native_chat_runtime::dispatch_native_chat_spreadsheet_artifact(
+            ArtifactToolKind::Range,
+            &bytes,
+            &service,
+            true,
+            ArtifactExecutionSignal::Continue,
+            &mut chat_ledger,
+        )
+        .expect("Chat range");
+        let mut cli_ledger = ArtifactAttemptLedger::default();
+        let cli = crate::cli_runtime::dispatch_cli_spreadsheet_artifact(
+            ArtifactToolKind::Range,
+            &bytes,
+            &service,
+            true,
+            ArtifactExecutionSignal::Continue,
+            &mut cli_ledger,
+        )
+        .expect("CLI range");
+        let mut headless_ledger = ArtifactAttemptLedger::default();
+        let headless = crate::headless::dispatch_headless_spreadsheet_artifact(
+            ArtifactToolKind::Range,
+            &bytes,
+            &service,
+            true,
+            ArtifactExecutionSignal::Continue,
+            &mut headless_ledger,
+        )
+        .expect("headless range");
+        assert_eq!(chat, cli);
+        assert_eq!(cli, headless);
+        assert!(chat.verify(ArtifactToolKind::Range));
+        assert!(chat.production_execution);
+        assert_eq!(chat.outcome, ArtifactOutcome::Succeeded);
+        assert_eq!(chat.items.len(), 4);
+    }
 }

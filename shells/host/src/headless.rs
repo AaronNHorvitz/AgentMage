@@ -27,6 +27,28 @@ const MAX_STATUS_ITEMS: usize = 64;
 const MAX_EVENT_COUNT: usize = 4_096;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 
+/// Routes one headless spreadsheet artifact call through the shared host dispatcher.
+pub fn dispatch_headless_spreadsheet_artifact(
+    kind: agentmage_capability_read_only::ArtifactToolKind,
+    request_bytes: &[u8],
+    service: &crate::spreadsheet_source_artifact::SpreadsheetSourceArtifactService,
+    workspace_read_authorized: bool,
+    signal: agentmage_capability_read_only::ArtifactExecutionSignal,
+    ledger: &mut agentmage_capability_read_only::ArtifactAttemptLedger,
+) -> Result<
+    agentmage_capability_read_only::ArtifactResult,
+    agentmage_capability_read_only::ArtifactDispatchError,
+> {
+    crate::spreadsheet_source_artifact::dispatch_spreadsheet_source_artifact(
+        kind,
+        request_bytes,
+        service,
+        workspace_read_authorized,
+        signal,
+        ledger,
+    )
+}
+
 /// Stable failure class exposed as a documented process exit code.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

@@ -30,6 +30,28 @@ use crate::runtime_transport::{
 
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 
+/// Routes one spreadsheet artifact call through the shared host dispatcher without CLI semantics.
+pub fn dispatch_cli_spreadsheet_artifact(
+    kind: agentmage_capability_read_only::ArtifactToolKind,
+    request_bytes: &[u8],
+    service: &crate::spreadsheet_source_artifact::SpreadsheetSourceArtifactService,
+    workspace_read_authorized: bool,
+    signal: agentmage_capability_read_only::ArtifactExecutionSignal,
+    ledger: &mut agentmage_capability_read_only::ArtifactAttemptLedger,
+) -> Result<
+    agentmage_capability_read_only::ArtifactResult,
+    agentmage_capability_read_only::ArtifactDispatchError,
+> {
+    crate::spreadsheet_source_artifact::dispatch_spreadsheet_source_artifact(
+        kind,
+        request_bytes,
+        service,
+        workspace_read_authorized,
+        signal,
+        ledger,
+    )
+}
+
 /// Stable failure from the installed-interface measured-routing adapter.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum InteractiveCliRoutingError {
