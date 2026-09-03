@@ -30,7 +30,7 @@ class Story13GateTests(unittest.TestCase):
     def test_rv50_partial_evidence_cannot_be_substituted(self) -> None:
         rv50 = build_report()["rv50"]
         self.assertFalse(rv50["protocol_complete"])
-        self.assertEqual(rv50["later_runtime_scenario_count"], 5)
+        self.assertEqual(rv50["later_runtime_scenario_count"], 4)
         self.assertEqual(rv50["blocked_external_tuple_count"], 5)
         self.assertFalse(rv50["evidence_substitution_permitted"])
 

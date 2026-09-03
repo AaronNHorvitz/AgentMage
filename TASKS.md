@@ -968,7 +968,8 @@ current local canonical-record scope. The independent [`story_1_3_gate.py`](scri
 aggregate reviews immutable commit `752d2b02` and tree `edc15f5b`, verifies 33 exact contract,
 schema, fixture, test, documentation, and evidence artifacts, and reruns all three criterion
 validators plus the `RV-50` applicability gate. Story 1.3 remains `BLOCKED`: Stories 5.3, 11.3,
-16.4, and 22.5 retain later runtime acceptance work, `RV-50` remains partial, and `G-DOD-10`
+and 16.4 retain later runtime acceptance work; Story 22.5 has completed its source-level vertical
+slice without supplying installed-product evidence; `RV-50` remains partial; and `G-DOD-10`
 retains supported-platform, installed-product, and real-model execution. The gate prohibits later
 story or platform substitution, makes no installed-product, product-acceptance, Sprint, release,
 cross-platform, real-model, or external-human-review claim, and leaves the Story checkbox open.

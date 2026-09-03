@@ -34,7 +34,7 @@ class EngineeringRuntimeRv50EvidenceTests(unittest.TestCase):
 
     def test_every_unexecuted_tuple_and_later_scenario_stays_visible(self) -> None:
         report = expected_report()
-        self.assertEqual(len(report["later_runtime_scenarios"]), 5)
+        self.assertEqual(len(report["later_runtime_scenarios"]), 4)
         self.assertEqual(
             sum(item["status"] == "BLOCKED_EXTERNAL" for item in report["platform_runtime_evidence"]),
             5,

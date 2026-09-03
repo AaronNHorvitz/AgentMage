@@ -79,7 +79,6 @@ BLOCKERS: Final = (
     "story-5.3-acceptance-gate-open",
     "story-11.3-acceptance-gate-open",
     "story-16.4-acceptance-gate-open",
-    "story-22.5-acceptance-gate-open",
     "rv-50-supported-platform-installed-product-and-real-model-evidence-incomplete",
 )
 
@@ -153,10 +152,13 @@ def dependency_state(tasks_text: str) -> list[dict[str, str]]:
 
 def later_story_state(tasks_text: str) -> list[dict[str, str]]:
     states = []
-    for story_id in ("5.3", "11.3", "16.4", "22.5"):
+    for story_id in ("5.3", "11.3", "16.4"):
         if f"#### [ ] Story {story_id} -" not in tasks_text:
             raise ValueError(f"Story 1.3 later runtime owner state changed: {story_id}")
         states.append({"story_id": story_id, "status": "blocked-open-acceptance"})
+    if "#### [x] Story 22.5 -" not in tasks_text:
+        raise ValueError("Story 1.3 later runtime owner state changed: 22.5")
+    states.append({"story_id": "22.5", "status": "complete-source-level-vertical-slice"})
     return states
 
 
@@ -251,7 +253,7 @@ def rv50_state() -> dict[str, Any]:
         "protocol_id": "RV-50",
         "status": "partial-local-contract-evidence",
         "protocol_complete": False,
-        "later_runtime_scenario_count": 5,
+        "later_runtime_scenario_count": 4,
         "blocked_external_tuple_count": 5,
         "evidence_substitution_permitted": False,
         "report_sha256": sha256_bytes(canonical_json(report)),
@@ -343,8 +345,9 @@ def validate_report(value: Any, *, verify_current: bool = True) -> list[str]:
         failures.append("Story 1.3 dependency disposition is invalid")
     expected_later = [
         {"story_id": story_id, "status": "blocked-open-acceptance"}
-        for story_id in ("5.3", "11.3", "16.4", "22.5")
+        for story_id in ("5.3", "11.3", "16.4")
     ]
+    expected_later.append({"story_id": "22.5", "status": "complete-source-level-vertical-slice"})
     if value.get("later_story_dependencies") != expected_later:
         failures.append("Story 1.3 later-story blocker disposition is invalid")
     rv50 = value.get("rv50", {})
@@ -352,7 +355,7 @@ def validate_report(value: Any, *, verify_current: bool = True) -> list[str]:
         rv50.get("protocol_id") != "RV-50"
         or rv50.get("status") != "partial-local-contract-evidence"
         or rv50.get("protocol_complete") is not False
-        or rv50.get("later_runtime_scenario_count") != 5
+        or rv50.get("later_runtime_scenario_count") != 4
         or rv50.get("blocked_external_tuple_count") != 5
         or rv50.get("evidence_substitution_permitted") is not False
     ):

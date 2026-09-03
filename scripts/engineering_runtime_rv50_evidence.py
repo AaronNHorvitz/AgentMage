@@ -108,12 +108,6 @@ def expected_report() -> dict[str, Any]:
                 "owner": "16.4",
                 "reason": "complete live tool terminal-state and resource campaign remains open",
             },
-            {
-                "scenario": "complete-source-to-terminal-fake-model-vertical-slice",
-                "status": "BLOCKED_LATER_STORY",
-                "owner": "22.5",
-                "reason": "new canonical records are not yet composed through one installed source-to-terminal workflow",
-            },
         ],
         "acceptance_tests": [
             {"id": "AT-ERT-001", "status": "PARTIAL_LOCAL_CONTRACT", "owner": "1.3"},
@@ -175,7 +169,7 @@ def expected_report() -> dict[str, Any]:
         "limitations": [
             "The executed caller parity is an in-memory deterministic fixture, not installed native-client evidence.",
             "The executed fake-model read is supporting regression evidence and does not compose every new canonical Story 1.3 record.",
-            "No later-story acceptance test, platform tuple, live worker, real model, release gate, or external review is represented as passing.",
+            "No remaining later-story acceptance test, platform tuple, live worker, real model, release gate, or external review is represented as passing.",
         ],
     }
 
