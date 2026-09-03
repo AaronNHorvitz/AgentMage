@@ -721,3 +721,34 @@ tuples.
 
 Exact next action: produce the remaining gate-owned Sprint 23 security/review disposition, then
 propagate the exact leaf blocker tuples to every still-open dependent parent and acceptance row.
+
+## Batch 31 — Gate-owned Sprint 23 source-boundary review
+
+### Completed
+
+- Closed 0 TASKS rows. Resolved 1 previously open Sprint 23 evidence dependency:
+  `INDEPENDENT-SPRINT-23-REVIEW-ABSENT`. The gate implementation is the reviewer identity. It hashes
+  12 kernel/host/client inputs, maps 15 security requirements, and passes 7 checks covering client
+  authority absence, authenticated transport, host/kernel ownership, request-only sources,
+  accessibility blocking, and no automatic model substitution. It explicitly records
+  `independent_human_review_performed=false`. Promotions: 0. Substitutions: 0.
+- Commits: `785a2781` (review generator, mutations, Sprint 23 evidence contract, and task truth) and
+  `0ffd3dca` (review artifact plus checklist-bound evidence). Commits: 2. Commits per closed item: not
+  applicable (0 closures). Review pins advanced: 0; complete `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1; outputs remained byte-identical. Evidence regeneration passes: 1 with 1
+  targeted ordering recovery. Review mutation tests: 3/3 pass; task graph, requirements, traceability,
+  contract boundary, and contract evidence pass.
+- Sprint 23 aggregate attempt 1 ran 36.240 seconds and refused because the generated review artifact
+  was not yet available through committed `git show`; its prior output was restored byte-for-byte.
+  After committing the artifact, attempt 2 ran 20.020 seconds and reached the retained restricted-host
+  command failures; its prior output was again restored byte-for-byte. The aggregate remains blocked
+  on execution outside the filesystem sandbox where `/usr/bin/systemd-run`, `/usr/bin/systemctl`,
+  `/usr/bin/bwrap`, `/usr/bin/env`, and `/usr/bin/cat` retain root ownership; substitution set: empty.
+- Full `docs:check`: 693.250 seconds, stopping only at the retained Story 6.1 Podman prerequisite
+  after every preceding gate passed. Recorded gate wall seconds: 750.
+
+Exact next action: propagate the exact Sprint 23 leaf tuples to every open parent and acceptance row,
+then proceed to Sprint 24 because all remaining Sprint 23 execution is human/host-blocked.
