@@ -119,3 +119,36 @@ remaining Sprint 10 and 11 installed-product dependencies.
 
 Exact next action: continue at the next incomplete dependency gate in Sprint 13, preserving zero
 admitted profiles and the open native-platform/profile-parity blockers.
+
+## Batch 16 — Sprint 14 inventory evidence renewal audit
+
+### Completed
+
+- Closed 0 TASKS rows. Promotions: 0. External rows closed by substitution: 0.
+- Audited the 416-entry frozen source inventory and locally passing inventory/security boundary.
+  Four provisional closures were not retained because the mandatory Sprint 14 regeneration reruns
+  the stale Story 9.2 Docker prerequisite validator.
+- Commits: `12178066`, `1aa9fe9e`, and `c2c2453d`. The first two preserve the failed attempt and
+  its forward reversal; the third records the exact blocker. Commits per closed item: undefined
+  (0 items).
+
+### Validation and self-recovery
+
+- Supply-chain regeneration count: 1; output delta: 0. Sprint 14 evidence regeneration attempts:
+  1. The retained report was restored only by the forward revert, not by reset, checkout, manual
+  artifact editing, or history rewriting.
+- The failing command was the 37-test installer-package closure: 36 passed and
+  `tests.test_linux_docker_prerequisite_evidence.test_exact_report_is_valid` failed with
+  `Docker prerequisite component closure changed`. The isolated 4-test prerequisite suite
+  reproduced 3 passes and the same 1 failure. Known Podman checkpoint retries: 0.
+- After the forward reversal, the committed Sprint 14 local report again validates. Markdown:
+  413 files, 0 issues. Documentation invariants, task graph, requirement registry, planning scope,
+  and traceability pass. Review-path intersections: 0; review pins advanced: 0. Gate wall seconds:
+  75.
+- Exact blocker on Tasks 14.2.1 and 14.2.3 and their candidate closure rows:
+  `blocked: host change required — run npm run -s evidence:story9.2-docker-prerequisite:build and
+  then python3 scripts/sprint_14_evidence.py --write outside the restricted filesystem sandbox
+  with the current user's /run/user/1000/libpod writable`; substitution set: empty.
+
+Exact next action: continue with the next dependency-independent frozen-scope gate; do not retry
+the exhausted Story 9.2/Sprint 14 Podman checkpoint in this environment.
