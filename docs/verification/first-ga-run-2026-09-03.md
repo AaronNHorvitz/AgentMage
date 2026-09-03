@@ -1971,3 +1971,59 @@ routing service without enabling a model, then re-evaluate the remaining Sprint 
 Exact next action: close the remaining locally provable Story 49.1 manifest-denial row, mark its
 external model and benchmark dependencies with the exact tuples above, and continue at the first
 unblocked gate on the Decision 0047 first-release critical path.
+
+## Batch 59 — Sprint 50 shared-runtime contract closure
+
+### Completed
+
+- Closed 4 TASKS rows: Sub-tasks 50.2.1.2, 50.2.1.4, 50.2.1.5, and 50.2.1.6. The
+  gate-owned automated review binds 16 runtime ceilings, 10 restart boundaries, six independently
+  owned lifecycle domains, five lifecycle actions, one non-replay recovery invariant, and the
+  interface-neutral kernel contract surface. Focused execution passed 32 local tests; the sole
+  ignored test remains the explicit reference-hardware campaign and did not supply closure.
+  Promotions: 0. Substitutions: 0. Cumulative closed items: 145.
+- Commits: `62451e4f` (runtime contract review and mutation tests), `06f6f13a` (bound review
+  artifact and four TASKS closures), and `828b3dd5` (traceability and foundational contract
+  carriers recovered after the TASKS change). Commits: 3. Commits per closed item: 0.75. Review
+  pins advanced: 0; complete `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 1/1 review contract test, six review mutations, 32/32 executable
+  `story_50_2_` kernel tests, strict kernel Clippy, Python compilation, targeted Markdown lint,
+  traceability, contract-boundary, contract-evidence, Story 2.1, Story 2.2, and Sprint 2 checks
+  pass. Supply-chain builds: 1; no workspace-member source changed and the SBOM remained current.
+  Evidence regeneration passes: 1 planned review pass plus 1 focused recovery pass. Recovery
+  iterations: 1. The first full chain stopped after 139.510 seconds because the four honest TASKS
+  closures changed the derived traceability input after the planned review was generated. The
+  prescribed focused recovery regenerated traceability, the contract-boundary report, its raw
+  log, contract evidence index, and security map; both affected story reports and the Sprint 2
+  aggregate rebuilt byte-identically and their checks passed. The recovered full chain ran
+  678.470 seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite after
+  every preceding gate passed. Recorded gate wall seconds: 678.
+- Exact remaining runtime-load blocker:
+  `BLOCKED_EXTERNAL(platform=installed native Chat and authenticated CLI on recorded reference
+  hardware with injectable filesystem/device faults; artifact=sustained, burst, maximum-output,
+  slow-client, queue, artifact-pressure, cancellation, disk-stall, crash, restart, cleanup, and
+  recovery result bundle; action=platform owner executes the complete installed-client campaign
+  and transfers untouched results; credential=installed-client and platform access;
+  payment=required hardware if applicable)`; `substitution_set=empty`.
+- Exact Sprint 50 model and integration blocker:
+  `BLOCKED_EXTERNAL(platform=pinned local inference host and installed native Chat/CLI;
+  artifact=approved exact model plus fictional-workflow and cross-interface parity packets;
+  action=authorized model and platform owners admit the model, execute the complete campaigns,
+  and transfer untouched results; credential=model artifact and installed-client access;
+  payment=model artifact or required hardware if applicable)`; `substitution_set=empty`.
+- Exact native lifecycle/release blocker:
+  `BLOCKED_EXTERNAL(platform=clean supported native install, upgrade, offline, recovery, and
+  accessibility environments; artifact=platform lifecycle results and signed gate decision;
+  action=platform and release owners execute the campaigns, review the evidence, and transfer the
+  untouched decision; credential=Windows image source, physical Mac access, signing credential,
+  and installed-package access; payment=Windows license or required hardware if applicable)`;
+  `substitution_set=empty`. Independent review and manual fuzzing remain separate exact tuples.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: retain Sprint 50's external installed-client, model, fault-injection, platform,
+release, review, and fuzz blockers and continue at Sprint 51's first locally executable row.
