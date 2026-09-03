@@ -1,0 +1,31 @@
+{
+  "automatic_routing_enabled": false,
+  "checks": {
+    "authenticated_product_envelope_is_bound": true,
+    "authentication_and_empty_catalog_fail_closed": true,
+    "disabled_remote_authority_is_bound": true,
+    "kernel_owned_catalog_service_is_bound": true,
+    "native_exact_identity_audit_is_bound": true,
+    "zero_enabled_profiles_are_bound": true
+  },
+  "enabled_profile_count": 0,
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "The authenticated service is not an installed-interface transport claim.",
+    "No exact profile, model, route, adapter, platform, or release is enabled.",
+    "Live benchmarks and supported-platform product campaigns remain absent."
+  ],
+  "record_type": "agentmage-sprint-49-product-routing-review",
+  "review_class": "gate-owned-automated-product-routing-composition-review",
+  "reviewer_identity": "scripts/sprint_49_product_routing_review.py",
+  "schema_version": 1,
+  "source_revision": "948858488a9d43a347982f9bda80fe2f3123aaed",
+  "source_sha256": {
+    "docs/architecture/measured-local-model-routing.md": "42275b8e1c4db06361644bba09a8a064e7227e51431c9c227387a3cc580ce500",
+    "kernel/engine/src/model_routing.rs": "e353c9361d831868ccfc4f021c62923163969ccee42bb482b424d027f5f44329",
+    "model-profiles/routing/historical-later-candidates.json": "093a22d9cbe91b66aa9e4c60949192f01b0398d62364471603614e39495968d4",
+    "model-profiles/routing/measured-routing-decision-table-v1.json": "c7535b584fe6d78bd3cd7d709756c2b65a680c2905938dbe914b31fcb634bdfc"
+  },
+  "status": "PASS_LOCAL_COMPOSITION_REVIEW"
+}
