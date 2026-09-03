@@ -33,24 +33,23 @@ def report() -> dict[str, object]:
 
 
 class Sprint35EvidenceTests(unittest.TestCase):
-    def test_local_contract_passes_with_review_and_without_dependency_or_write_overclaim(self) -> None:
+    def test_local_contract_passes_without_dependency_review_or_write_overclaim(self) -> None:
         value = report()
         self.assertEqual(evidence.validate_report(value, verify_current=False), [])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertTrue(value["implemented_contracts"]["deterministic_shadow_validation"])
-        self.assertTrue(value["summary"]["independent_review_passed"])
         self.assertFalse(value["summary"]["target_write_enabled"])
 
     def test_dependency_review_write_network_shell_and_release_overclaims_fail(self) -> None:
         mutations = (
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
             lambda value: value["summary"].update({"upstream_dependency_passed": True}),
-            lambda value: value["summary"].update({"independent_review_passed": False}),
+            lambda value: value["summary"].update({"independent_review_passed": True}),
             lambda value: value["summary"].update({"target_write_enabled": True}),
             lambda value: value["summary"].update({"network_access_enabled": True}),
             lambda value: value["summary"].update({"release_approval": True}),
             lambda value: value["verification_evidence"].update({
-                "independent_transaction_review": False
+                "independent_transaction_review": True
             }),
             lambda value: value["implemented_contracts"].update({
                 "target_file_mutation": True

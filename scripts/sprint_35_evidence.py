@@ -27,9 +27,7 @@ SOURCE_PATHS: Final = (
     "kernel/engine/src/lib.rs",
     "docs/architecture/exact-preimage-write-approval.md",
     "docs/verification/sprint-35-local-results.md",
-    "scripts/sprint_35_transaction_review.py",
     "scripts/sprint_35_evidence.py",
-    "tests/test_sprint_35_transaction_review.py",
     "tests/test_sprint_35_evidence.py",
 )
 COMMANDS: Final = (
@@ -56,7 +54,6 @@ COMMANDS: Final = (
     ("build-contract", ("python3", "scripts/build_contract.py")),
     ("strict-local-source", ("python3", "scripts/strict_local_source_audit.py")),
     ("supply-chain", ("python3", "scripts/supply_chain.py")),
-    ("transaction-review", ("python3", "scripts/sprint_35_transaction_review.py")),
     ("evidence-tests", ("python3", "-m", "unittest", "tests.test_sprint_35_evidence")),
 )
 SECURITY_REQUIREMENTS: Final = [
@@ -66,6 +63,7 @@ SECURITY_REQUIREMENTS: Final = [
 ]
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-34-BLOCKED", "owner": "34.1"},
+    {"code": "INDEPENDENT-SPRINT-35-TRANSACTION-REVIEW-ABSENT", "owner": "35.1.3.4"},
 ]
 IMPLEMENTED: Final = {
     "current_parent_read_grant_observation": True,
@@ -168,14 +166,14 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "complete_local_product_and_docs_gates": local_pass,
             "issue_local_blocking_skip_count": 0 if local_pass else None,
             "upstream_sprint_34_gate": False,
-            "independent_transaction_review": True,
+            "independent_transaction_review": False,
         },
         "blockers": BLOCKERS,
         "summary": {
             "local_exact_preimage_approval_contract_passed": local_pass,
             "sprint_status": "BLOCKED",
             "upstream_dependency_passed": False,
-            "independent_review_passed": True,
+            "independent_review_passed": False,
             "target_write_enabled": False,
             "network_access_enabled": False,
             "release_approval": False,
@@ -218,7 +216,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "local_exact_preimage_approval_contract_passed": True,
         "sprint_status": "BLOCKED",
         "upstream_dependency_passed": False,
-        "independent_review_passed": True,
+        "independent_review_passed": False,
         "target_write_enabled": False,
         "network_access_enabled": False,
         "release_approval": False,
@@ -228,10 +226,9 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     verification = report.get("verification_evidence", {})
     if verification.get("issue_local_blocking_skip_count") != 0:
         failures.append("issue-local blocking skip summary invalid")
-    if verification.get("upstream_sprint_34_gate") is not False:
-        failures.append("verification overclaim: upstream_sprint_34_gate")
-    if verification.get("independent_transaction_review") is not True:
-        failures.append("transaction review missing or suppressed")
+    for field in ("upstream_sprint_34_gate", "independent_transaction_review"):
+        if verification.get(field) is not False:
+            failures.append(f"verification overclaim: {field}")
     for field in (
         "target_file_mutation", "atomic_application", "rollback",
         "post_write_command_execution", "generic_shell", "network_access", "external_delivery",
