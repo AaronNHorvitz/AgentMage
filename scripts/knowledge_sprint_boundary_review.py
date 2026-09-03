@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build gate-owned source reviews for knowledge Sprints 27 through 32."""
+"""Build gate-owned source reviews for knowledge Sprints 27 through 33."""
 
 from __future__ import annotations
 
@@ -40,6 +40,16 @@ SOURCES: Final = {
         "kernel/contracts/src/conversation.rs",
         "kernel/engine/src/conversation_library.rs",
         "shells/host/src/headless.rs",
+    ),
+    33: (
+        "kernel/engine/src/conversation_archive.rs",
+        "kernel/engine/src/evidence_bundle.rs",
+        "shells/host/src/conversation_runtime.rs",
+        "shells/host/src/headless.rs",
+        "shells/host/src/cli.rs",
+        "shells/host/src/native_chat_runtime.rs",
+        "shells/vscode/src/host_bridge.ts",
+        "shells/vscode/src/runtime_transport.ts",
     ),
 }
 
@@ -127,25 +137,58 @@ def checks(sprint: int, sources: dict[str, bytes]) -> dict[str, bool]:
                 for token in (b"compose_portable_memory_export", b"expected_sha256")
             ),
         }
+    if sprint == 32:
+        return common | {
+            "conversation_history_is_read_only": b"read_only: true" in combined,
+            "branching_preserves_exact_parent_turn": all(
+                token in combined
+                for token in (b"preview_conversation_branch", b"branch_from_turn_id")
+            ),
+            "resume_revalidates_recorded_context": all(
+                token in combined for token in (b"revalidate_resume", b"ResumeDriftDimension")
+            ),
+            "deletion_requires_bound_user_approval": all(
+                token in combined
+                for token in (b"ConversationDeletionApproval", b"approved_preview_sha256")
+            ),
+            "compaction_preserves_source_evidence": all(
+                token in combined for token in (b"source_hash_set_sha256", b"receipt_ids")
+            ),
+            "client_commands_remain_closed_and_bounded": all(
+                token in combined
+                for token in (b"ConversationClientCommand", b"GrantOperation::DatabaseRead")
+            ),
+        }
+    shell_sources = b"\n".join(
+        value for path, value in sources.items() if path.startswith("shells/")
+    )
     return common | {
-        "conversation_history_is_read_only": b"read_only: true" in combined,
-        "branching_preserves_exact_parent_turn": all(
+        "archives_use_separate_kernel_key_scope": all(
             token in combined
-            for token in (b"preview_conversation_branch", b"branch_from_turn_id")
+            for token in (b"separately keyed", b"OperationalStoreKeyProvider")
         ),
-        "resume_revalidates_recorded_context": all(
-            token in combined for token in (b"revalidate_resume", b"ResumeDriftDimension")
-        ),
-        "deletion_requires_bound_user_approval": all(
+        "bundle_requires_exact_disclosure_preview": all(
             token in combined
-            for token in (b"ConversationDeletionApproval", b"approved_preview_sha256")
+            for token in (b"EvidenceBundlePreview", b"approved_preview_sha256")
         ),
-        "compaction_preserves_source_evidence": all(
-            token in combined for token in (b"source_hash_set_sha256", b"receipt_ids")
-        ),
-        "client_commands_remain_closed_and_bounded": all(
+        "secret_and_external_delivery_fail_closed": all(
             token in combined
-            for token in (b"ConversationClientCommand", b"GrantOperation::DatabaseRead")
+            for token in (b"detect_secret_classes", b"external_delivery_attempted: false")
+        ),
+        "all_first_party_shells_share_closed_conversation_command": all(
+            token in shell_sources
+            for token in (b"ConversationClientCommand", b"execute_conversation_command")
+        ),
+        "shell_router_delegates_only_to_kernel_trait": all(
+            token in shell_sources
+            for token in (b"trait ConversationKernel", b"impl ConversationKernel for OperationalStore")
+        ),
+        "state_sensitive_shell_commands_require_exact_context": all(
+            token in shell_sources
+            for token in (b"ConversationCommandContext::Resume", b"ConversationCommandContext::Branch")
+        ),
+        "shells_do_not_own_conversation_database": all(
+            token not in shell_sources for token in (b"rusqlite", b"CREATE TABLE conversations")
         ),
     }
 
@@ -228,7 +271,7 @@ def main() -> int:
     if failures:
         print("\n".join(failures), file=sys.stderr)
         return 1
-    print("Sprint 27-32 gate-owned knowledge boundary reviews passed")
+    print("Sprint 27-33 gate-owned knowledge boundary reviews passed")
     return 0
 
 

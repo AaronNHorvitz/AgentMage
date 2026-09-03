@@ -22,7 +22,11 @@ class KnowledgeSprintBoundaryReviewTests(unittest.TestCase):
             b"expected_sha256 read_only: true preview_conversation_branch branch_from_turn_id "
             b"revalidate_resume ResumeDriftDimension ConversationDeletionApproval "
             b"approved_preview_sha256 source_hash_set_sha256 receipt_ids "
-            b"ConversationClientCommand GrantOperation::DatabaseRead"
+            b"ConversationClientCommand GrantOperation::DatabaseRead separately keyed "
+            b"OperationalStoreKeyProvider EvidenceBundlePreview detect_secret_classes "
+            b"external_delivery_attempted: false execute_conversation_command "
+            b"trait ConversationKernel impl ConversationKernel for OperationalStore "
+            b"ConversationCommandContext::Resume ConversationCommandContext::Branch"
         )
         with patch.object(review, "git_bytes", return_value=source):
             return review.expected(sprint, "a" * 40)

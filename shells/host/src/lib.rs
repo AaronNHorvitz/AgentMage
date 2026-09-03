@@ -31,6 +31,9 @@ pub mod coding_tools;
 /// Deterministic completion verification for bounded coding sessions.
 pub mod coding_verifier;
 
+/// Shared first-party shell routing into the canonical kernel conversation library.
+pub mod conversation_runtime;
+
 /// One-use reviewed local diagnostic export workflow.
 pub mod diagnostic_export;
 /// Authority-free product composition for local document-control workflows.
