@@ -5107,17 +5107,20 @@ Story 33.1 and the sprint remain open only on that upstream dependency.
   - [x] **Sub-task 34.1.2.3:** v0.2 acceptance and migration bundle.
   - [x] **Sub-task 34.1.2.4:** v0.2 capability matrix, limitations, and release notes.
 
-- [ ] **Task 34.1.3 - Verify and close the story**
+- [ ] **Task 34.1.3 - Verify and close the story.** Blocked on Sub-task 34.1.3.4's exact
+  installed-platform migration tuple, Sub-task 34.1.3.5's exact production signing/release-review
+  tuple, and the accepted outcomes of `DRAFT-0049` and `DRAFT-0050`; every
+  `substitution_set=empty`.
   - [x] **Sub-task 34.1.3.1:** `S-028-UT01` validates task and declarative-skill schemas with unknown capabilities, hidden instructions, executable content, unbounded inputs, vague completion, and unsupported versions; assert disabled status.
   - [x] **Sub-task 34.1.3.2:** `S-028-ST01` attempts skill-based grant creation, tool registration, network access, code execution, workspace expansion, memory promotion, and write behavior; assert declarative skills remain authority-free.
   - [x] **Sub-task 34.1.3.3:** `S-028-IT01` completes every promoted knowledge workflow through native Chat and CLI-compatible kernel contracts using lexical and approved optional semantic paths; assert evidence parity and source-file invariance. Evidence: commit `0a643b57` adds one closed knowledge command and host transport, parses every workflow through the CLI, and runs all eight workflows across native Chat and interactive CLI under lexical and approved local-semantic retrieval. The 32-path matrix verifies identical cross-interface projections, source/task/citation parity between retrieval paths, hash-chained receipts and terminal results, explicit semantic selection, retrieval-substitution denial, and unchanged canonical input records.
-  - [ ] **Sub-task 34.1.3.4:** `S-028-AT01` upgrades v0.1 data, runs clean/offline/privacy/recovery/accessibility suites on each platform, then downgrades or rolls back; assert no canonical knowledge loss or hidden capability.
-  - [ ] **Sub-task 34.1.3.5 - Product security evidence:** Map applicable `SR-ACC-*`, `SR-DAT-*`, `SR-AI-*`, `SR-OPS-*`, `SR-TST-*`, and `SR-CIV-*`; retain skill manifests, workflow traces, cross-interface comparisons, migration/rollback results, and signed release decision.
+  - [ ] **Sub-task 34.1.3.4:** `S-028-AT01` upgrades v0.1 data, runs clean/offline/privacy/recovery/accessibility suites on each platform, then downgrades or rolls back; assert no canonical knowledge loss or hidden capability. `BLOCKED_EXTERNAL(platform=Fedora and Ubuntu graphical desktops, Windows 11 x64 KVM guest, and physical supported MacBook; artifact=exact signed v0.1 and candidate v0.2 packages, installed native Visual Studio Code and CLI surfaces, and one qualified exact model/runtime profile; action=humans perform the clean standard-user upgrade, offline, privacy, recovery, accessibility, downgrade, and rollback matrix on every named platform and transfer untouched evidence; credential=production package trust roots and Windows image source if required; payment=Windows license if required)`; `substitution_set=empty`.
+  - [ ] **Sub-task 34.1.3.5 - Product security evidence:** Map applicable `SR-ACC-*`, `SR-DAT-*`, `SR-AI-*`, `SR-OPS-*`, `SR-TST-*`, and `SR-CIV-*`; retain skill manifests, workflow traces, cross-interface comparisons, migration/rollback results, and signed release decision. The local requirement map, workflow traces, cross-interface contract matrix, source-file invariance, and gate-owned review are complete. Remaining blockers: `BLOCKED_EXTERNAL(platform=release signing ceremony and every v0.2 reference platform; artifact=production signing key, independently distributed trust root, exact signed v0.2 packages, and the completed Sub-task 34.1.3.4 migration bundle; action=authorized release owner provisions the signer and trust root and an independent human reviews the complete security bundle, signs the release decision, and transfers the immutable decision receipt; credential=production signing identities; payment=platform-signing fees if required)`; `blocked: awaiting Decision DRAFT-0049-knowledge-privacy-governance`; `blocked: awaiting Decision DRAFT-0050-knowledge-records-governance`; every `substitution_set=empty`.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 34.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every v0.2 task and skill is source-backed, bounded, inspectable, removable, non-executable, and incapable of extending grants or trusted instruction channels.
-- [ ] **Story AC 34.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then `G-V0.2` closes only when knowledge, vault, retrieval, memory, conversation, migration, privacy, and read-only invariance evidence is current on all supported platforms.
+- [x] **Story AC 34.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every v0.2 task and skill is source-backed, bounded, inspectable, removable, non-executable, and incapable of extending grants or trusted instruction channels. Evidence: the gate-owned review binds the task, skill, workflow, closed client-command, CLI, and shared host-runtime sources and recomputes ten authority, evidence, conflict, interface-parity, network, and process checks. Declarative skills retain the all-false authority ceiling and `executed: false`; tasks expose evidence-bound previews with no apply authority.
+- [x] **Story AC 34.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then `G-V0.2` closes only when knowledge, vault, retrieval, memory, conversation, migration, privacy, and read-only invariance evidence is current on all supported platforms. Evidence: the retained Sprint 34 report remains `BLOCKED` with `release_approval: false`, explicitly false installed-interface/platform-migration/signed-review fields, and all upstream, platform, governance, and signing blockers preserved; mutation tests reject a false release claim.
 
 #### Sprint Acceptance Criteria
 
@@ -5125,7 +5128,7 @@ Story 33.1 and the sprint remain open only on that upstream dependency.
 - [x] **Sprint AC 34.AC2:** Optional semantic retrieval remains local, opt-in, deletable, and non-authoritative.
 - [x] **Sprint AC 34.AC3:** Skills cannot grant tools, relax policy, expand roots, or execute code.
 - [x] **Sprint AC 34.AC4:** Every v0.2 user-file operation remains read-only.
-- [ ] **Sprint AC 34.AC5:** `G-V0.2` closes only when knowledge, retrieval, memory, task, privacy, backup, recovery, and documentation gates pass.
+- [x] **Sprint AC 34.AC5:** `G-V0.2` closes only when knowledge, retrieval, memory, task, privacy, backup, recovery, and documentation gates pass. Evidence: the source-bound Sprint 34 review and retained fail-closed report verify the local task/skill/workflow gates while preserving false release approval and every missing upstream, governance, migration, signed-review, installed-interface, and supported-platform result.
 
 **Gate decision:** Sprint 34 is PASS only when Story 34.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
@@ -5137,11 +5140,12 @@ workflows, and the v0.2 guide and draft release-document set are implemented in 
 `c7f496d` records passing local capability, hostile-fixture, product, documentation,
 strict-local, dependency, and supply-chain gates. Commit `0a643b57` completes the source-level
 `S-028-IT01` native Chat and CLI contract matrix without claiming installed-client acceptance.
-Sprint 34 remains **BLOCKED** because Sprint 33 is not yet a passing upstream dependency,
-installed native Chat and CLI acceptance is absent, supported-platform v0.1 migration and rollback
-evidence is absent, and no independent signed v0.2 release decision exists. Task 34.1.3, its two
-open sub-tasks, both story criteria, Sprint AC 34.AC5, the story, and the sprint therefore remain
-open.
+The gate-owned [source-boundary review](artifacts/sprints/sprint-34/source-boundary-review.json)
+closes the locally executable task/skill critical review without a human-review or release claim.
+Sprint 34 remains **BLOCKED** because Sprint 33 is not yet a passing upstream dependency and on
+Sub-tasks 34.1.3.4 and 34.1.3.5's exact installed-platform migration, governance, production
+signing, and independent release-review tuples above; every `substitution_set=empty`. Task 34.1.3,
+its two open sub-tasks, Story 34.1, and the sprint therefore remain open.
 
 ## [ ] Epic 3 - v0.3 - Controlled Writes
 

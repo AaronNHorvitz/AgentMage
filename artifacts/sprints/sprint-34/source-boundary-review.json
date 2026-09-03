@@ -1,0 +1,35 @@
+{
+  "checks": {
+    "declarative_skills_have_zero_authority": true,
+    "human_review_not_required_by_gate": true,
+    "knowledge_workflows_propose_no_writes": true,
+    "native_chat_and_cli_use_the_same_host_transport": true,
+    "no_network_client": true,
+    "no_process_launch": true,
+    "plain_and_obsidian_workflows_share_one_contract": true,
+    "release_guards_remain_outside_skill_authority": true,
+    "skill_influence_and_conflicts_are_receipted": true,
+    "task_transitions_are_evidence_bound_previews": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "Upstream release and governance blockers remain unchanged.",
+    "No installed-platform or supported-release claim is made."
+  ],
+  "record_type": "agentmage-sprint-34-boundary-review",
+  "review_class": "gate-owned-automated-knowledge-boundary",
+  "reviewer_identity": "scripts/knowledge_sprint_boundary_review.py",
+  "schema_version": 1,
+  "source_revision": "09a74a80490c4fb9ec2e37ce38339186cb569d9c",
+  "source_sha256": {
+    "capabilities/knowledge/src/skills.rs": "c434f68ba7661ae3421519d359b1b10aecfd21b7c57f5b9e4b7e21802ecaa3e5",
+    "capabilities/knowledge/src/tasks.rs": "87940d62205826c2e5f6d859a607bd3a7644fdd680613e0b219e7e435fba6b68",
+    "capabilities/knowledge/src/workflows.rs": "3ba7e069979dafa5d213150bf8996a0d00773996794ca6d6ac2055c9d310e5c9",
+    "shells/host/src/cli.rs": "ff5bce423a9478a66941ffa4875ff6ef41dcd66efb33fb775b83ae6793135aa2",
+    "shells/host/src/headless.rs": "ef4d55c79413b4e17e497e78ca1d379b2bf847fa05cb36d6d1d334f8e1081eb5",
+    "shells/host/src/knowledge_workflow_runtime.rs": "2ee76b3efb28e3813a6cc1b005b058ec64f5ead8a8d6c23a04ce49ac3ce6a514"
+  },
+  "sprint": 34,
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}
