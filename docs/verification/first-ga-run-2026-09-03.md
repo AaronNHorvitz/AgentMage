@@ -1099,3 +1099,43 @@ blocker and continue at Sprint 32's first unblocked local or gate-owned review r
 
 Exact next action: continue at Sprint 33's first unblocked local or gate-owned review row while
 retaining Sprint 32's exact inherited upstream blocker.
+
+## Batch 43 — Sprint 33 kernel-only shell conversation routing
+
+### Completed
+
+- Closed 1 TASKS row: Sprint AC 33.AC5. A shared host adapter routes the closed list, search,
+  show, open, resume, and exact-turn branch command family through a narrow kernel trait implemented
+  by `OperationalStore`. Resume and branch fail without their exact current observation and proposed
+  branch record. The gate-owned review binds the archive, evidence-bundle, host, CLI, native Chat,
+  and VS Code bridge sources and passes 11 storage, key-scope, preview, redaction, delivery,
+  authority, network, and process checks without a human-review or release claim. Story 33.1 and
+  Sprint 33 remain open only on Sprint 32's exact upstream blocker. Promotions: 0.
+  Substitutions: 0.
+- Commits: `e3b50a83` (shared shell-to-kernel adapter and review definition), `b7c53c48`
+  (scope the process assertion to production shell paths), and `f12f24e5` (source-bound review,
+  checklist, supply-chain, traceability, contract, and Story 3 evidence). Commits: 3. Commits per
+  closed item: 3.00. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Focused host adapter tests: 2/2; shared review mutation groups: 2/2; strict host Clippy,
+  Sprint 27–33 boundary review, targeted Markdown lint, requirements-current 45/45, traceability,
+  contract-boundary, contract-evidence, configuration startup, component inventory, Story 3.1
+  security/gate, and Sprint 3 gate pass. Supply-chain builds: 1. Planned evidence regeneration
+  attempts: 2. Recovery iterations: 1. The first review treated the kernel's required crash-test
+  subprocess as a production shell process and failed; the assertion was scoped to the retained
+  shell sources while the kernel crash source remained hash-bound, and the regenerated 11-check
+  review passes. The full chain ran 703 seconds and stopped only at the retained Story 6.1
+  rootless-Podman prerequisite after every preceding gate passed. Recorded gate wall seconds: 703.
+- Exact Sprint 33 upstream blocker: `blocked: host change required — run the strict-local worker
+  and source-policy renewal outside the restricted filesystem sandbox where
+  /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain
+  root-owned identities, then run python3 scripts/sprint_31_evidence.py --write --source-revision
+  HEAD`; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue at Sprint 34's first unblocked local or gate-owned review row while
+retaining Sprint 33's exact inherited upstream blocker and all v0.2 platform/release tuples.
