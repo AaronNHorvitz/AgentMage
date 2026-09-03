@@ -13,7 +13,8 @@
 | Peak CPU, memory, and task-use measurements | Pass on current Fedora host |
 | Hostile multi-process timeout fixture | Partial pass on current Fedora host |
 | Native Ubuntu, macOS, and Windows execution | Absent |
-| Independent command-boundary review | Absent |
+| Gate-owned command-boundary review | Pass |
+| Independent human command-boundary review | Absent |
 | Sprint result | Blocked |
 
 ## Verified Locally
@@ -72,6 +73,10 @@
   exact owned units even when an assertion fails.
 - Preview and receipt schemas reject unknown fields, inherited environment, shell executables,
   false timeout success, nonzero success, and cancellation without descendant cleanup.
+- The gate-owned automated review independently rederives the 12-requirement map, template/grant
+  binding, no-shell execution, argv/environment confinement, process cleanup, resource results,
+  sandbox scope, terminal truth, and every false missing-proof marker from committed sources. It
+  makes no human-review, production-profile, trusted-launcher, or platform-completion claim.
 
 ## Open Evidence
 
@@ -89,5 +94,5 @@ remains unreachable rather than merely denied, because the guest mounts no secon
 proving termination of a purpose-built multi-level helper would require registering a root-owned
 helper binary, which local development cannot install without weakening executable provenance.
 Complete per-template boundary sweeps and canary campaigns remain absent. Ubuntu, macOS, and Windows native
-results cannot be inferred from Fedora. Independent review, installed trusted-launcher evidence,
+results cannot be inferred from Fedora. Independent human review, installed trusted-launcher evidence,
 manual fuzzing, the blocked Sprint 40 dependency, and `G-V0.3` remain open.

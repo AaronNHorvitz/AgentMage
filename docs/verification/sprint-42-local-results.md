@@ -31,8 +31,12 @@ remote URL, credential, config value, file content, or command output.
 ## Truthful Disposition
 
 A green local report proves only the current Fedora-local contracts named above. It
-does not close Sprint 42. Upstream Sprint 41 is blocked, remote execution is denied,
+also supports a gate-owned automated review that independently rederives the 15-requirement map,
+owned-worktree preservation, active-checkout invariance, 44 hostile cases, 10,000 protected-state
+mutations with zero unauthorized acceptance, local recovery/collision results, disabled remote
+authority, and every false missing-proof marker from committed sources. This is not a human review
+or a complete `RV-49`. Sprint 42 remains open: upstream Sprint 41 is blocked, remote execution is denied,
 clone success reconciliation is incomplete, complete descendant containment and
 resource accounting are absent, cross-platform results are absent, hostile and
 interruption coverage is incomplete, no product profile is active, no trusted package
-was exercised, no independent review exists, and manual fuzzing remains deferred.
+was exercised, no independent human review exists, and manual fuzzing remains deferred.
