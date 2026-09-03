@@ -2173,3 +2173,39 @@ the shared runtime and native interface adapters.
 
 Exact next action: implement the first jointly provable rows in Task 62.2.3, expanding the hostile
 and fidelity corpus around the prepared service without claiming installed-client parity.
+
+## Batch 64 — Sprint 62 hostile and golden spreadsheet corpus
+
+### Completed
+
+- Closed 4 TASKS rows: Task 62.2.2, Sub-task 62.2.3.1, and Story AC 62.2.AC1/AC2. The bound
+  corpus now covers malformed ZIP/XML, traversal, decompression/resource bombs, macros, formulas,
+  external links, hidden sheets, sparse dimensions, both date systems, error cells, Unicode,
+  protected content, oversized strings, cancellation, elapsed time, low accounted memory, crash,
+  and cleanup. Golden assertions bind formula/cache and date values to exact package, sheet, row,
+  column, address, type, formatting, and hidden/protection state, while bounded summaries, exact
+  counters, and content-addressed handles prevent blind truncation. Installed-client parity remains
+  open under Sub-task 62.2.3.2. Promotions: 0. Substitutions: 0. Cumulative closed items: 156.
+- Commits: `c9d3445c` (hostile, crash, cleanup, and golden fidelity corpus) and `39f6dbd6`
+  (renewed bound review, four TASKS closures, supply-chain outputs, and affected evidence carriers).
+  Commits: 2. Commits per closed item: 0.50. Review pins advanced: 0; complete `REVIEWED_PATHS`
+  intersection across 20 pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 11/11 spreadsheet parser/adapter tests, 6/6 prepared spreadsheet service
+  tests, strict knowledge/host Clippy, the spreadsheet review contract and five mutations,
+  supply-chain, Story 3.1, traceability, contract-boundary, contract-evidence, Story 2.1, Story 2.2,
+  and Sprint 2 checks pass. Supply-chain builds: 1. Evidence regeneration passes: 1. Recovery
+  iterations: 1. The first full-chain attempt ran 143.750 seconds and identified traceability stale
+  against the final TASKS closures; recovery rebuilt traceability and every downstream contract and
+  Sprint 2 carrier. The recovered full chain ran 684.130 seconds and stopped only at the retained
+  Story 6.1 rootless-Podman prerequisite after every preceding gate passed. Recorded final gate wall
+  seconds: 684.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: integrate the prepared spreadsheet service through Chat, CLI, and headless native
+client adapters so Sub-task 62.2.3.2 can prove client parity rather than substitute local parser
+results.
