@@ -896,3 +896,31 @@ release-blocking-threshold checks without claiming native-platform or production
 
 Exact next action: audit the first authoritative open dependency gate after Sprint 25 and propagate
 or execute it; do not infer Phase A completion from the Sprint 25 boundary alone.
+
+## Batch 37 — Sprint 26 governance drafts and parent closure
+
+### Completed
+
+- Closed 2 TASKS rows: Tasks 26.1.1 and 26.1.2, whose 8 implementation and 4 artifact children
+  were already closed with committed evidence. Promotions: 0. Substitutions: 0.
+- Drafted, but did not accept, `DRAFT-0049-knowledge-privacy-governance` and
+  `DRAFT-0050-knowledge-records-governance`; marked only Sprint 26 security dependents blocked
+  awaiting those human policy acts, upstream `G-V0.1`, supported-package integration, and the
+  still-agent-resolvable gate-owned review. Commit: `a5e8f5fa`. Commits: 1. Commits per closed item:
+  0.50. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1. Evidence regeneration passes: 1, ordered requirements, traceability,
+  contract boundary, and contract index. Recovery iterations: 0. Documentation validation covers
+  415 files; task graph, requirements-current 45/45, contract boundary 29/29, and contract index
+  12/12 pass.
+- Full `docs:check`: 698.680 seconds, stopping only at the retained Story 6.1 Podman prerequisite
+  after every preceding gate passed. Recorded gate wall seconds: 699.
+- Exact human blockers added: `blocked: awaiting Decision
+  DRAFT-0049-knowledge-privacy-governance` and `blocked: awaiting Decision
+  DRAFT-0050-knowledge-records-governance`; both have `substitution_set=empty`.
+
+Exact next action: implement and retain Sprint 26's gate-owned boundary review, then remove only the
+`INDEPENDENT-SPRINT-26-REVIEW-ABSENT` blocker while preserving both draft Decisions, upstream
+release, and supported-package tuples.
