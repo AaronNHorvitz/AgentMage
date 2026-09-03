@@ -5,8 +5,7 @@
 The Sprint 45 local recorder covers artifact classification, parser-backed edits,
 bounded exact-text fallback, unchanged-byte evidence, generated-output policy,
 confined language-service records, repository-style test plans, approved package
-scaffolds, authority-free atomic-root scaffold application manifests, host composition
-into kernel shadow changes, existing atomic transaction
+scaffolds, host composition into kernel shadow changes, existing atomic transaction
 and rollback contracts, the fictional multi-language corpus, documentation, strict
 linting, supply-chain metadata, and the FFI/unsafe inventory.
 
@@ -20,7 +19,8 @@ linting, supply-chain metadata, and the FFI/unsafe inventory.
   unsupported input.
 - Host composition tests bind mixed Python and Go plans to exact held targets and
   reject stale targets, mixed plan identities, and reordered operations.
-- Five scaffold application cases derive every required absent directory and exact file
+- A separate current scaffold-application recorder covers five cases that derive every
+  required absent directory and exact file
   from the approved plan, require one no-replace atomic package-root publication and a
   separate grant, carry no mutation authority, and reject seven manifest mutations.
 - Existing kernel and Linux transaction suites cover approval binding, fresh
@@ -32,7 +32,8 @@ These are deterministic tests, not manual or coverage-guided fuzzing.
 The gate-owned automated review independently rederives the thirteen-requirement map,
 structured-edit and fallback boundary, five language-service capability classes, seven
 forbidden service powers, transaction/recovery boundary, five scaffold applications,
-and the retained FFI/unsafe inventory from committed sources. It makes no human-review,
+the current scaffold artifact, and the retained FFI/unsafe inventory from committed
+sources. It makes no human-review,
 production-service, trusted-launch, or platform-completion claim.
 
 ## Product Security Mapping

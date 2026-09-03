@@ -6007,7 +6007,7 @@ access; payment=none)`; `substitution_set=empty`. The story and sprint remain op
   - [x] **Sub-task 45.1.3.2:** `S-038-UT02` changes source preimages, language-server version, edit list, file identity, or plan after preview; assert stale transaction and zero workspace mutation.
   - [ ] **Sub-task 45.1.3.3:** `S-038-ST01` attacks language services through config/plugins, network, workspace expansion, executable discovery, environment secrets, generated code, and hostile responses; assert confinement and untrusted-output validation.
   - [x] **Sub-task 45.1.3.4:** `S-038-RT01` crashes before/after each multi-file apply and rollback transition and introduces concurrent edits; assert all approved files commit together or prior state/conflicts are preserved.
-  - [x] **Sub-task 45.1.3.5 - Product security evidence:** Map `SR-ACC-002` through `SR-ACC-008`, `SR-SUP-003`/`SR-SUP-009`, `SR-AI-005`, `SR-TST-002`/`SR-TST-005`/`SR-TST-011`; retain AST/text goldens, service sandbox traces, transaction snapshots, FFI/unsafe inventory, and independent boundary review. The gate-owned automated [source-boundary review](artifacts/sprints/sprint-45/source-boundary-review.json) binds the thirteen-requirement map, exact structured-edit and safe-fallback results, authority-free service boundary, atomic transaction/recovery contracts, five controlled scaffold application manifests, FFI/unsafe inventory, and truthful missing-native-proof markers without claiming human review, production service confinement, trusted launch, or platform completion.
+  - [x] **Sub-task 45.1.3.5 - Product security evidence:** Map `SR-ACC-002` through `SR-ACC-008`, `SR-SUP-003`/`SR-SUP-009`, `SR-AI-005`, `SR-TST-002`/`SR-TST-005`/`SR-TST-011`; retain AST/text goldens, service sandbox traces, transaction snapshots, FFI/unsafe inventory, and independent boundary review. The gate-owned automated [source-boundary review](artifacts/sprints/sprint-45/source-boundary-review.json) binds the thirteen-requirement map, exact structured-edit and safe-fallback results, authority-free service boundary, atomic transaction/recovery contracts, the current [scaffold-application report](artifacts/sprints/sprint-45/scaffold-application-report.json), FFI/unsafe inventory, and truthful missing-native-proof markers without claiming human review, production service confinement, trusted launch, or platform completion.
 
   Contract-level hostile descriptor and response tests pass, but 45.1.3.3 remains open until a
   real confined service is attacked through configuration, plugins, generated code, workspace
@@ -6034,7 +6034,7 @@ Retained local evidence: source revision `4c3c07ea5a068440190381a59ce6194276188a
 `b51b375b928ef0c4df105da620ac6f53886acd62d28d1c0939ec91a330e2e049`. All sixteen recorded
 commands exit zero and all ten focused suites report zero blocking skips. Seven fictional language
 goldens, five language-service capability classes, seven forbidden service powers, five package
-conventions and controlled application manifests, six test concerns, and the existing atomic transaction/recovery matrix pass with zero
+conventions, six test concerns, and the existing atomic transaction/recovery matrix pass with zero
 accepted unauthorized mutation. Sprint 45 remains **BLOCKED** because Sprint 44 is blocked and the
 production coding coordinator, real language-service sandbox campaign, trusted installed-parent
 execution, native cross-platform acceptance, trusted-package execution, independent human review,

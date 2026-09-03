@@ -32,7 +32,9 @@ SOURCES: Final = (
     "docs/verification/sprint-45-coding-corpus.json",
     "docs/verification/sprint-45-local-results.md",
     "artifacts/sprints/sprint-45/local-evidence-report.json",
+    "artifacts/sprints/sprint-45/scaffold-application-report.json",
     "scripts/sprint_45_evidence.py",
+    "scripts/sprint_45_scaffold_evidence.py",
 )
 
 
@@ -49,6 +51,7 @@ def git_bytes(revision: str, path: str) -> bytes:
 def expected(revision: str) -> dict[str, Any]:
     sources = {path: git_bytes(revision, path) for path in SOURCES}
     local = json.loads(sources["artifacts/sprints/sprint-45/local-evidence-report.json"])
+    scaffold = json.loads(sources["artifacts/sprints/sprint-45/scaffold-application-report.json"])
     implemented = local["implemented_contracts"]
     verification = local["verification_evidence"]
     summary = local["summary"]
@@ -71,9 +74,13 @@ def expected(revision: str) -> dict[str, Any]:
         ),
         "approved_scaffold_application_is_bound": (
             implemented.get("approved_package_scaffold_plans") is True
-            and implemented.get("controlled_package_scaffold_application") is True
             and verification.get("approved_package_convention_count") == 5
-            and verification.get("controlled_package_scaffold_application_count") == 5
+            and scaffold.get("status") == "PASS_LOCAL_SCAFFOLD_APPLICATION"
+            and scaffold.get("approved_package_convention_count") == 5
+            and scaffold.get("application_manifest_count") == 5
+            and scaffold.get("mutation_case_count") == 7
+            and scaffold.get("ignored_test_count") == 0
+            and scaffold.get("mutation_authority") is False
         ),
         "ffi_and_unsafe_inventory_is_bound": (
             verification.get("sprint_added_unsafe_or_ffi_file_count") == 0
