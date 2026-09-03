@@ -22,7 +22,10 @@ flowchart LR
     T --> L
     L --> E["Versioned authenticated portable export"]
     E --> I["Closed-schema verified import into a new catalog"]
-    F["Filesystem apply"] -. "absent" .-> M
+    M --> F["Protected host filesystem owner"]
+    F --> BAK["Last-good backup and manifest"]
+    F --> CON["Exact simultaneous-edit conflict bundle"]
+    E --> MIG["Digest-bound cross-root export transfer"]
     K["Credential and random adapters"] --> E
 ```
 
@@ -95,11 +98,26 @@ filesystem apply method and retain fixed false machine-path, credential, and fil
 Fresh salt and nonce generation, key storage, and durable file application remain responsibilities
 of later trusted platform adapters.
 
+## Installed File Recovery
+
+The host filesystem owner accepts only a complete no-write `MemoryMarkdownBundle` whose index,
+ordered topic paths, content hashes, and bundle digest recompute exactly. It stages private files
+under the selected local root, snapshots the verified current projection as last-good bytes, then
+publishes each staged file and the closed manifest. It owns no model or network handle and records
+that no automatic decision occurred.
+
+Every update supplies the bundle identity the caller observed. A mismatch changes no governed
+file and retains the complete proposed Markdown and manifest under a transaction-named conflict
+directory. On restart, current files are checked against the installed manifest; corruption or an
+interrupted projection restores the previously verified manifest and exact last-good bytes.
+Portable encrypted export files cross machine roots only as bounded opaque bytes with the caller's
+exact digest. Absolute, parent-relative, multi-component export names, symlinks, digest drift, and
+oversized files fail closed.
+
 ## Open Boundary
 
-This sprint slice does not write `MEMORY.md`, `WORKING.md`, or encrypted exports; it produces
-source-preserving Markdown previews and authenticated ciphertext proposals for later protected file
-adapters. Atomic installed-file recovery, backup restore, simultaneous-edit conflict files,
-credential-store integration, trusted entropy acquisition, and installed machine-migration
-evidence remain absent. Those items, upstream Sprint 30 closure, and independent review remain
-required before Sprint 31 can pass.
+This sprint slice now owns approved `MEMORY.md` topic-bundle publication, last-good recovery,
+simultaneous-edit conflict preservation, and exact encrypted-export transfer between explicit local
+roots. `WORKING.md` application, credential-store integration, and trusted entropy acquisition are
+not added. Upstream Sprint 30 closure and renewal of the source-bound aggregate under the inherited
+strict-local host prerequisite remain required before Sprint 31 can pass.

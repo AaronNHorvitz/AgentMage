@@ -65,6 +65,8 @@ pub mod knowledge_write;
 pub mod markdown_artifact_coordinator;
 /// Authority-free product composition for source-preserving meeting workflows.
 pub mod meeting_coordinator;
+/// Protected installed-file ownership for approved memory bundles and portable exports.
+pub mod memory_file_runtime;
 /// Bounded operating-system polling adapter for admitted Obsidian vaults.
 pub mod obsidian_watcher;
 

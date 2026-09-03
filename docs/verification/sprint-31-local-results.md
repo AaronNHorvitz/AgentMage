@@ -4,8 +4,12 @@
 |---|---|
 | Gate | Sprint 31 |
 | Local candidate/lifecycle/preview/retrieval contracts | Pass |
-| Durable file writes | Absent |
+| Approved durable memory topic-bundle writes | Pass |
+| `WORKING.md` installed writes | Absent |
 | Encrypted portable export/import | Pass at pure capability boundary |
+| Installed bundle recovery and conflict preservation | Pass |
+| Digest-bound cross-root encrypted export transfer | Pass |
+| Gate-owned boundary review | Pass |
 | Sprint result | Blocked |
 
 ## Verified Locally
@@ -33,14 +37,22 @@
   imported catalog.
 - Keys are caller-owned and zeroized on drop, debug output is redacted, and ciphertext proposals
   and import receipts have fixed false filesystem-write markers.
-- The strict-local source audit finds no undeclared network path.
+- The host installed-file owner recomputes every bundle identity, stages private files, snapshots
+  exact last-good bytes, restores a corrupted projection, preserves simultaneous proposals as
+  complete conflict bundles, and transfers opaque encrypted exports between explicit local roots
+  only under an exact digest.
+- The gate-owned review hashes memory policy, lifecycle, portable encryption, and the installed
+  filesystem owner without making a human-review or release claim.
 
 ## Open Evidence
 
-Sprint 30 remains blocked. Protected file-adapter writes, trusted key-store and entropy adapters,
-interrupted-write recovery, backup restore, simultaneous-edit handling, installed migration
-evidence, and independent review are absent.
+Sprint 30 remains blocked. Trusted key-store and entropy adapters remain outside this installed
+file slice. Renewal of the legacy Sprint 31 aggregate is `blocked: host change required — run the
+strict-local worker and source-policy renewal outside the restricted filesystem sandbox where
+/usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain
+root-owned identities, then run python3 scripts/sprint_31_evidence.py --write --source-revision
+HEAD`; `substitution_set=empty`.
 
 Sprint 31 therefore remains blocked despite passing its locally executable policy, lifecycle,
-preview, working-memory, and selective-loading scope. Its report is generated at
+installed recovery, preview, working-memory, and selective-loading scope. Its legacy report is at
 `artifacts/sprints/sprint-31/local-evidence-report.json` from a committed revision.
