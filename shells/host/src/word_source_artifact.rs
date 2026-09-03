@@ -657,6 +657,7 @@ fn artifact_manifest(prepared: &PreparedWordSourceManifest) -> ArtifactManifest 
 fn section_title(kind: StructuredSourceSectionKind) -> &'static str {
     match kind {
         StructuredSourceSectionKind::Document => "Document",
+        StructuredSourceSectionKind::Page => "Page",
         StructuredSourceSectionKind::Paragraph => "Paragraph",
         StructuredSourceSectionKind::Heading => "Heading",
         StructuredSourceSectionKind::ListItem => "List item",

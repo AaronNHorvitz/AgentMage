@@ -17,7 +17,7 @@ or after parsing publishes no extraction. The existing inert artifact inspector 
 JavaScript, launch, submission, remote-document or external-URI actions, embedded files, encryption,
 and incomplete inspection quarantine the source without following or executing content. This source
 milestone does not claim region geometry, reading-order certainty, table or column semantics, OCR
-execution, runtime lifecycle integration, or installed-client support.
+execution, installed-client support, or product integration.
 
 Internal destinations, form identities, and page-image objects remain inert structured sections
 with exact source-object provenance. Forms retain no values, images retain no payload in the shared
@@ -109,6 +109,23 @@ proposal. Region provenance remains separate from parser-emitted text spans.
 No OCR package or model is currently admitted. The validation contract therefore demonstrates the
 authority and provenance boundary without claiming native OCR execution, cancellation, platform
 support, or product integration.
+
+## Runtime lifecycle and context
+
+`PdfSourceArtifactService` composes the shared extractor through the Rust host. It retains only the
+canonical projection and a digest-sealed content-free manifest; original bytes remain memory-only
+or bind to an already-existing `RuntimeArtifactRef` whose media type, byte count, and payload digest
+match exactly. Reattachment after restart re-extracts caller-supplied bytes and publishes nothing
+unless the extractor identity, complete projection digest, warnings, bounds, and sealed manifest
+reproduce exactly.
+
+The service projects page text and visible warnings through the canonical context manager and exact
+token-counter binding. A changed model context-window plan produces a distinct context manifest;
+source replacement advances the source revision and makes old artifact-tool freshness references
+stale. Search and retrieval use the existing native artifact dispatcher. Cancellation publishes no
+projection, and deletion removes projection, context, and tool-cache reachability without touching
+the original artifact authority. An image-only source remains partial with an explicit OCR-required
+warning when no OCR package is admitted.
 
 ## Platform Truth
 

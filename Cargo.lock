@@ -85,6 +85,7 @@ dependencies = [
  "agentmage-kernel-engine",
  "agentmage-platform-linux",
  "ed25519-dalek",
+ "lopdf",
  "rustix",
  "serde",
  "serde_json",

@@ -5,7 +5,8 @@
 The Sprint 60 recorder covers the pinned parser dependency, bounded strict in-memory extraction,
 deterministic page and object identities, exact-page embedded-text citations, scan-candidate and
 empty-page classification, encrypted and malformed refusal, resource-limit handling, OCR
-observation admission, two closed runtime schemas, and the frozen 82-case review corpus.
+observation admission, the Rust-host prepared-source lifecycle and common artifact-tool projection,
+two closed runtime schemas, and the frozen 82-case review corpus.
 
 ## Local Campaigns
 
@@ -18,6 +19,9 @@ observation admission, two closed runtime schemas, and the frozen 82-case review
   graph, provenance inventory, and software bill of materials.
 - The review corpus keeps unadmitted generation, rendering, and OCR components visible rather than
   allowing local parser success to imply their presence.
+- Host tests exercise exact admission/cache identity, content-addressed retention binding, restart
+  reconstruction, model-profile-bound context accounting, source refresh and stale-tool refusal,
+  cancellation, deletion, and visible no-OCR degradation.
 
 ## Security Mapping
 
@@ -38,6 +42,5 @@ approved OCR package and model, OCR dependency failure and cancellation tests, n
 Ubuntu, Windows 11, and retained macOS evidence, installed accessibility, independent review, and
 manual fuzzing are absent. Sprint 60 therefore remains **BLOCKED**.
 
-The retained report binds 9 passing commands and zero focused skips to source revision
-`07b171bc12abdfe7564327d13c18b49d30ce3a6c`. Its SHA-256 is
-`9e46a36e67c7208d5346294f352d5767a4836e4d8f497ed4923b67ad148aa2fd`.
+The retained immutable report remains bound to the prior committed source revision until the
+repository-wide documentation gate can execute with a writable rootless-Podman runtime directory.

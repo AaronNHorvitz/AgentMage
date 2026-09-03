@@ -7156,6 +7156,13 @@ with honest reading-order, table, OCR, confidence, and encryption limitations.
     runtime paths.
   - [ ] **Sub-task 60.2.3.2:** Implement cancellation, restart, cache and OCR-model invalidation,
     retention, deletion, reattachment, and multi-model context accounting.
+
+  Local source progress: the Rust host now owns exact PDF admission and projection caching, optional
+  binding to an existing content-addressed runtime artifact, digest-sealed restart reconstruction,
+  source refresh with stale native-tool refusal, cancellation, deletion, common artifact search and
+  retrieval, and canonical token-counter/model-plan-bound context accounting. A changed model plan
+  produces a distinct context manifest, and absent OCR remains a visible partial source. Admitted OCR
+  projection lifecycle and OCR-model cache invalidation remain absent, so both sub-tasks stay open.
 - [ ] **Task 60.2.4 - Verify fidelity, isolation, and resources**
   - [ ] **Sub-task 60.2.4.1:** Test digital, scanned, mixed, encrypted, malformed, recursive,
     oversized, action-bearing, image-heavy, low-text, multilingual, cancellation, timeout, crash,
@@ -7163,6 +7170,12 @@ with honest reading-order, table, OCR, confidence, and encryption limitations.
   - [ ] **Sub-task 60.2.4.2:** Require exact page provenance, visible confidence and limitations,
     no active content or network, bounded extraction/OCR, complete context accounting, and client
     parity.
+
+  Local source progress: two host fixtures cover native admission, cache hits, retained restart,
+  source replacement, stale tool calls, model-plan changes, context accounting, no-OCR degradation,
+  cancellation, and deletion with zero network, execution, or original-byte persistence. Native OCR
+  timeout/crash/cleanup, low-memory, installed-client parity, and native-platform campaigns remain
+  open, so neither verification sub-task is closed.
 
 ##### Story Acceptance Criteria
 

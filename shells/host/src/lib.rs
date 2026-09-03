@@ -91,6 +91,9 @@ pub mod workflow_caller;
 #[cfg(feature = "workflow-supervisor")]
 pub mod workflow_supervisor;
 
+/// Runtime-owned PDF preparation and common native artifact-tool projection.
+#[cfg(feature = "source-artifacts")]
+pub mod pdf_source_artifact;
 /// Authority-free product composition for bounded Word artifact workflows.
 #[cfg(feature = "source-artifacts")]
 pub mod word_artifact_coordinator;

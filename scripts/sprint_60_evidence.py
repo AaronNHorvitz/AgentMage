@@ -27,6 +27,9 @@ SOURCE_PATHS: Final = (
     "capabilities/knowledge/Cargo.toml",
     "capabilities/knowledge/src/pdf_extraction.rs",
     "capabilities/knowledge/src/lib.rs",
+    "shells/host/Cargo.toml",
+    "shells/host/src/lib.rs",
+    "shells/host/src/pdf_source_artifact.rs",
     "kernel/contracts/src/structured_source.rs",
     "schemas/runtime/pdf-extraction-result.schema.json",
     "schemas/runtime/examples/pdf-extraction-result.valid.json",
@@ -61,6 +64,18 @@ COMMANDS: Final = (
             "--locked",
         ),
     ),
+    (
+        "pdf-host-lifecycle-unit",
+        (
+            "cargo",
+            "test",
+            "-p",
+            "agentmage-host",
+            "pdf_source_artifact::tests",
+            "--lib",
+            "--locked",
+        ),
+    ),
     ("pdf-runtime-schemas", ("node", "--test", "tests/test_planning_schemas.mjs")),
     (
         "pdf-review-corpus",
@@ -89,8 +104,8 @@ COMMANDS: Final = (
         ("python3", "-m", "unittest", "tests.test_sprint_60_evidence"),
     ),
 )
-FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:3])
-RUST_FOCUSED_COMMANDS: Final = {"pdf-extraction-unit"}
+FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:4])
+RUST_FOCUSED_COMMANDS: Final = {"pdf-extraction-unit", "pdf-host-lifecycle-unit"}
 SECURITY_REQUIREMENTS: Final = [
     "SR-DAT-002",
     "SR-DAT-003",
@@ -108,6 +123,7 @@ IMPLEMENTED: Final = {
     "pdf_runtime_schema_count": 2,
     "executable_rust_fixture_count": 9,
     "review_corpus_case_count": 82,
+    "host_lifecycle_fixture_count": 2,
     "bounded_strict_in_memory_extraction": True,
     "deterministic_page_object_identity": True,
     "exact_page_citations": True,
@@ -123,6 +139,12 @@ IMPLEMENTED: Final = {
     "text_density_observation": True,
     "active_or_external_content_quarantined": True,
     "unsupported_structure_preservation": True,
+    "runtime_owned_prepared_pdf_service": True,
+    "restart_reconstruction": True,
+    "model_profile_bound_context_accounting": True,
+    "common_artifact_tool_projection": True,
+    "source_refresh_stale_refusal": True,
+    "projection_deletion": True,
     "network_access_capability": False,
     "execution_capability": False,
     "filesystem_mutation_capability": False,
