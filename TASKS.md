@@ -5986,13 +5986,15 @@ access; payment=none)`; `substitution_set=empty`. The story and sprint remain op
   - [x] **Sub-task 45.1.1.5** (legacy `S-038-I05`): Add interface, dependency, migration, security, performance, accessibility, and compatibility review hooks.
   - [x] **Sub-task 45.1.1.6** (legacy `S-038-I06`): Generate tests in repository style for boundaries, edge cases, failures, permissions, data changes, and rollback.
   - [x] **Sub-task 45.1.1.7** (legacy `S-038-I07`): Preserve unrelated user changes and refuse broad unreviewed refactors, dependency upgrades, or migrations.
-  - [ ] **Sub-task 45.1.1.8** (legacy `S-038-I08`): Scaffold new packages only from approved language conventions, license, tests, formatting, docs, and local commands.
+  - [x] **Sub-task 45.1.1.8** (legacy `S-038-I08`): Scaffold new packages only from approved language conventions, license, tests, formatting, docs, and local commands.
 
   Local source status: the language-service descriptor/request/observation contract and five
   read-only capability classes are implemented, but no production service launcher or native
   sandbox trace exists, so 45.1.1.3 remains open. Five authority-free package conventions emit
-  exact source, test, configuration, documentation, Apache-2.0, and local-command proposals, but
-  controlled absent-directory/file application is not composed, so 45.1.1.8 remains open.
+  exact source, test, configuration, documentation, Apache-2.0, and local-command proposals. Each
+  plan now composes into an exact authority-free application manifest containing every ordered
+  absent directory and file, a mandatory no-replace atomic package-root publication, and a
+  separate-grant requirement; filesystem execution remains outside this closed source contract.
 
 - [ ] **Task 45.1.2 - Produce reviewable artifacts**
   - [x] **Sub-task 45.1.2.1:** Language-aware change adapters.
@@ -6005,19 +6007,19 @@ access; payment=none)`; `substitution_set=empty`. The story and sprint remain op
   - [x] **Sub-task 45.1.3.2:** `S-038-UT02` changes source preimages, language-server version, edit list, file identity, or plan after preview; assert stale transaction and zero workspace mutation.
   - [ ] **Sub-task 45.1.3.3:** `S-038-ST01` attacks language services through config/plugins, network, workspace expansion, executable discovery, environment secrets, generated code, and hostile responses; assert confinement and untrusted-output validation.
   - [x] **Sub-task 45.1.3.4:** `S-038-RT01` crashes before/after each multi-file apply and rollback transition and introduces concurrent edits; assert all approved files commit together or prior state/conflicts are preserved.
-  - [ ] **Sub-task 45.1.3.5 - Product security evidence:** Map `SR-ACC-002` through `SR-ACC-008`, `SR-SUP-003`/`SR-SUP-009`, `SR-AI-005`, `SR-TST-002`/`SR-TST-005`/`SR-TST-011`; retain AST/text goldens, service sandbox traces, transaction snapshots, FFI/unsafe inventory, and independent boundary review.
+  - [x] **Sub-task 45.1.3.5 - Product security evidence:** Map `SR-ACC-002` through `SR-ACC-008`, `SR-SUP-003`/`SR-SUP-009`, `SR-AI-005`, `SR-TST-002`/`SR-TST-005`/`SR-TST-011`; retain AST/text goldens, service sandbox traces, transaction snapshots, FFI/unsafe inventory, and independent boundary review. The gate-owned automated [source-boundary review](artifacts/sprints/sprint-45/source-boundary-review.json) binds the thirteen-requirement map, exact structured-edit and safe-fallback results, authority-free service boundary, atomic transaction/recovery contracts, five controlled scaffold application manifests, FFI/unsafe inventory, and truthful missing-native-proof markers without claiming human review, production service confinement, trusted launch, or platform completion.
 
   Contract-level hostile descriptor and response tests pass, but 45.1.3.3 remains open until a
   real confined service is attacked through configuration, plugins, generated code, workspace
   expansion, network, executable discovery, environment, and response channels. The requirement
-  map, deterministic traces, and FFI/unsafe inventory are retained; native service-sandbox,
-  trusted-package, independent-review, cross-platform, and manual-fuzz evidence remain absent, so
-  45.1.3.5 remains open.
+  map, deterministic traces, FFI/unsafe inventory, and gate-owned review are retained;
+  native service-sandbox, trusted-package, independent-human-review, cross-platform, and
+  manual-fuzz evidence remain absent and continue to block only their dependent rows.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 45.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every code change is traceable to approved intent and exact preimages, remains inside the owned worktree, and produces a reviewable semantic/text diff with no undeclared file change.
-- [ ] **Story AC 45.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then unsupported language/construct/service states use bounded textual proposals or block explicitly; they never invent structure or weaken transaction controls.
+- [x] **Story AC 45.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every code change is traceable to approved intent and exact preimages, remains inside the owned worktree, and produces a reviewable semantic/text diff with no undeclared file change.
+- [x] **Story AC 45.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then unsupported language/construct/service states use bounded textual proposals or block explicitly; they never invent structure or weaken transaction controls.
 
 #### Sprint Acceptance Criteria
 
@@ -6032,13 +6034,25 @@ Retained local evidence: source revision `4c3c07ea5a068440190381a59ce6194276188a
 `b51b375b928ef0c4df105da620ac6f53886acd62d28d1c0939ec91a330e2e049`. All sixteen recorded
 commands exit zero and all ten focused suites report zero blocking skips. Seven fictional language
 goldens, five language-service capability classes, seven forbidden service powers, five package
-conventions, six test concerns, and the existing atomic transaction/recovery matrix pass with zero
+conventions and controlled application manifests, six test concerns, and the existing atomic transaction/recovery matrix pass with zero
 accepted unauthorized mutation. Sprint 45 remains **BLOCKED** because Sprint 44 is blocked and the
-production coding coordinator, real language-service sandbox campaign, controlled scaffold
-application, trusted installed-parent execution, native cross-platform acceptance, trusted-package
-execution, independent review, and deferred manual fuzzing remain absent. The implementation task,
-verification task, both story criteria, Story 45.1, Sprint AC 45.AC2, and the sprint therefore remain
-open.
+production coding coordinator, real language-service sandbox campaign, trusted installed-parent
+execution, native cross-platform acceptance, trusted-package execution, independent human review,
+and deferred manual fuzzing remain absent. The service blocker is `blocked: host change required —
+install and admit the pinned root-owned Sprint 45 language-server executable(s), then run the confined
+service configuration/plugin/network/workspace/environment/generated-code/hostile-response and
+crash/cancellation campaign from the trusted packaged launcher`; `substitution_set=empty`. The native
+platform blocker is `BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and physical
+supported MacBook; artifact=structured-code, language-service confinement, atomic multi-file
+transaction, scaffold-manifest, and hostile-service parity results; action=platform owners execute
+and transfer untouched evidence; credential=Windows image source and physical Mac access;
+payment=Windows license if required)`; `substitution_set=empty`. The launcher blocker is `blocked:
+host change required — run the Sprint 45 structured-coding suite from the trusted packaged launcher
+outside the development shell`; `substitution_set=empty`. The fuzz blocker is
+`BLOCKED_EXTERNAL(platform=every supported native structured-coding worker; artifact=manual fuzzing
+transcript and minimized corpus; action=authorized human executes the manual S-038 fuzz campaign and
+transfers untouched results; credential=platform access; payment=none)`; `substitution_set=empty`.
+The implementation and verification tasks, Story 45.1, Sprint AC 45.AC2, and the sprint remain open.
 
 **Gate decision:** Sprint 45 is PASS only when Story 45.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
