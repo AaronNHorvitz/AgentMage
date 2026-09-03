@@ -96,3 +96,26 @@ Sprint 9 package-evidence checkpoint remains blocked on the host change.
 
 Exact next action: continue with the next dependency-independent frozen-scope gate after the
 remaining Sprint 10 and 11 installed-product dependencies.
+
+## Batch 15 — Candidate-neutral gateway story closure
+
+### Completed
+
+- Closed 2 TASKS rows: Story 13.5 and Story 13.6.
+- Story 13.5 retains enabled candidate count 0, selected route count 0, live endpoint
+  qualification false, and `story_completion_claim: true`. Story 13.6 retains live remote
+  execution false, default fallback false, 0 silent transitions, and
+  `story_completion_claim: true`. Promotions beyond the bounded story contracts: 0.
+- Commit: `6021c8f2`. Commits: 1. Commits per closed item: 0.50. External rows closed by
+  substitution: 0.
+
+### Validation and self-recovery
+
+- Story 13.5 tests: 4/4 pass. Story 13.6 tests: 3/3 pass. Markdown: 413 files, 0 issues.
+  Traceability, task graph, planning scope, and both retained evidence checks pass.
+- Supply-chain regeneration count: 1; output delta: 0. Evidence regeneration count: 1.
+  Review-path intersections: 0; review pins advanced: 0. Gate wall seconds: 75. Known Podman
+  checkpoint retries: 0.
+
+Exact next action: continue at the next incomplete dependency gate in Sprint 13, preserving zero
+admitted profiles and the open native-platform/profile-parity blockers.
