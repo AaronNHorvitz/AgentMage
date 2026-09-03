@@ -4147,9 +4147,15 @@ select.
   - [ ] **Sub-task 23.5.4.1:** Exercise 999/1,001-character prompts, multiple attachments, virtual
         and remote URIs, unknown parts, stale references, disconnect, cancellation, restart, and model
         changes through extension-host tests and installed VSIX evidence.
-  - [ ] **Sub-task 23.5.4.2:** Require complete source-manifest accounting, zero silent drop, no
+  - [x] **Sub-task 23.5.4.2:** Require complete source-manifest accounting, zero silent drop, no
         ambient reads, no direct model/tool/store access, bounded IPC, and exact parity with headless
-        requests over the same source bytes.
+        requests over the same source bytes. Evidence: native participant ingress and the
+        interface-neutral Rust headless boundary independently seal the same fixed two-source
+        canonical preimage to the identical SHA-256. The shared vector binds prompt and source
+        artifact identities, byte counts, source and descriptor digests, states, command, and request;
+        Rust rejects incomplete, duplicate, and digest-mutated records. Existing authenticated chunk
+        and authority tests retain bounded IPC, complete accounting, zero ambient enumeration, and
+        zero client model/tool/store authority.
   - [ ] **Sub-task 23.5.4.3:** Run or truthfully block Fedora/Ubuntu local, Windows local, macOS
         local, WSL, Remote SSH, and Dev Container placement, package, cancellation, restart, disclosure,
         and cleanup cases without substituting one topology for another.

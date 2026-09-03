@@ -103,6 +103,8 @@ pub mod word_source_artifact;
 
 /// Versioned thin-client contracts shared by terminal and headless interfaces.
 pub mod headless;
+/// Interface-neutral source-manifest identity shared by native Chat and headless callers.
+pub mod participant_ingress;
 
 #[cfg(feature = "interactive-cli")]
 /// Strict terminal argument parsing and bounded human or JSON rendering.

@@ -7,6 +7,7 @@ import {
   MAX_PARTICIPANT_STATUS_CHARACTERS,
   PARTICIPANT_ACCESSIBILITY_CONTRACT,
   accountProviderParts,
+  participantSourceManifestSha256,
   renderParticipantError,
   renderParticipantSource,
   runParticipantIngress,
@@ -124,6 +125,46 @@ void test("999 and 1001 character prompts plus supplied references are completel
     assert.ok(statuses.includes("virtual-1:included"));
     assert.equal(fixture.operations.at(-1), "execute_verified_turn");
   }
+});
+
+void test("native Chat and headless callers bind the same exact source bytes", () => {
+  const digest = participantSourceManifestSha256(
+    {
+      requestId: "participant-parity",
+      prompt: "inspect",
+      command: undefined,
+      references: [],
+    },
+    {
+      artifactId: "artifact-prompt",
+      sourceSha256: "a".repeat(64),
+      byteLength: 7,
+    },
+    [
+      {
+        artifactId: "artifact-a",
+        byteLength: 5,
+        descriptorSha256: "b".repeat(64),
+        reasonCode: "participant.source.included",
+        referenceId: "ref-a",
+        sourceSha256: "c".repeat(64),
+        state: "included",
+      },
+      {
+        artifactId: "artifact-b",
+        byteLength: 4,
+        descriptorSha256: "d".repeat(64),
+        reasonCode: "participant.source.included",
+        referenceId: "ref-b",
+        sourceSha256: "e".repeat(64),
+        state: "included",
+      },
+    ],
+  );
+  assert.equal(
+    digest,
+    "81c4e8382c63a5894b75756ca09843640e71fd7156907e478f9b858c415e8cd3",
+  );
 });
 
 void test("stale reference remains visible and stops before a model turn", async () => {

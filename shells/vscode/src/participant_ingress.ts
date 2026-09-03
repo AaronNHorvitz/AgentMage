@@ -268,7 +268,11 @@ export async function runParticipantIngress(
       records,
     );
   }
-  const sourceManifestSha256 = manifestDigest(input, prompt, records);
+  const sourceManifestSha256 = participantSourceManifestSha256(
+    input,
+    prompt,
+    records,
+  );
   try {
     await beforeSubmit();
   } catch (error) {
@@ -428,7 +432,8 @@ function sourceRecord(
   };
 }
 
-function manifestDigest(
+/** Seals the interface-neutral source preimage also consumed by headless callers. */
+export function participantSourceManifestSha256(
   input: ParticipantRequestInput,
   prompt: CapturedSource,
   records: readonly ParticipantSourceRecord[],

@@ -21,6 +21,7 @@ COMMANDS: Final = (
     ("npm", "--prefix", "shells/vscode", "run", "format:check"),
     ("cargo", "test", "-p", "agentmage-host", "protocol::tests", "--all-features", "--locked"),
     ("cargo", "test", "-p", "agentmage-host", "engineering_runtime::tests", "--all-features", "--locked"),
+    ("cargo", "test", "-p", "agentmage-host", "participant_ingress::tests", "--all-features", "--locked"),
     ("python3", "-m", "pytest", "-q", "tests/test_architecture_decision.py", "tests/test_vscode_api_surfaces.py"),
     ("python3", "scripts/validate_docs.py"),
 )
@@ -34,6 +35,8 @@ SOURCES: Final = (
     "shells/vscode/test/verified_chat_protocol.test.ts",
     "shells/host/src/protocol.rs",
     "shells/host/src/engineering_runtime.rs",
+    "shells/host/src/lib.rs",
+    "shells/host/src/participant_ingress.rs",
     "docs/architecture/stable-chat-participant-ingress.md",
     "architecture/language-build-matrix.json",
     "architecture/vscode-api-surfaces.json",
@@ -74,6 +77,7 @@ def expected_report() -> dict[str, Any]:
             "typescript_parser_or_runtime_authority": False,
             "silent_provider_part_drop": False,
             "exact_model_revalidation_before_capture": True,
+            "headless_source_byte_parity": True,
             "accessibility_source_contract": True,
             "installed_vsix_campaign_complete": False,
             "supported_platform_matrix_complete": False,
@@ -102,6 +106,7 @@ def validate_report(value: Any) -> list[str]:
         "authenticated_rust_artifact_rpc",
         "complete_part_accounting",
         "exact_model_revalidation_before_capture",
+        "headless_source_byte_parity",
         "accessibility_source_contract",
     )
     required_false = (

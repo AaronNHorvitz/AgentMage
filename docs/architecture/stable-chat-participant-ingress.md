@@ -48,7 +48,11 @@ requests exact upload cancellation.
 
 The final content-free participant manifest binds request identity, command, prompt artifact,
 every supplied descriptor, terminal source state, exact included artifact identity, byte count, and
-digest. Because the stable API has no optional-reference marker, every supplied descriptor is
+digest. Its canonical preimage and SHA-256 are implemented independently by the TypeScript
+participant and the Rust host's interface-neutral headless boundary. Both implementations retain
+the same fixed two-source cross-client vector, while Rust additionally rejects incomplete,
+duplicate, and digest-mutated records before submission. Because the stable API has no
+optional-reference marker, every supplied descriptor is
 required. Any terminal state other than `included` cancels the session and stops before the model
 turn; AgentMage never executes on a silently weakened subset. Only when all records are included do
 their artifact identities enter the verified turn's context set.
@@ -83,7 +87,9 @@ with supported screen readers remains a verification task rather than an impleme
 
 The deterministic extension-host suite covers 999- and 1,001-character prompts, multiple text,
 file, virtual, unknown, and stale references, digest-bound chunk capture, duplicate identities,
-cancellation before model work, and provider non-text accounting. Existing Engineering RPC tests
+cancellation before model work, provider non-text accounting, and the exact cross-client source
+manifest digest. Rust host tests independently reproduce that digest and fail closed on incomplete,
+duplicate, or mutated headless source records. Existing Engineering RPC tests
 cover malformed, reordered, duplicate, oversized, interrupted, digest-mismatched, and replayed
 artifact frames at the Rust boundary.
 
