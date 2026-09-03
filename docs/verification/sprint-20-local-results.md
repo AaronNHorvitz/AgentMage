@@ -43,9 +43,7 @@ segment and reconcile every material statement independently. Live citation reso
 changed-source freshness checks, the durable per-statement answer-claim ledger,
 append-only receipt chaining, the external keyed integrity anchor, and clock-change sequencing are
 explicit Sprint 21 work and are not prerequisites or hidden successes of this state-assignment
-story. The repository-owned evidence gate independently recomputes all reviewed source bytes,
-command results, closed contracts, security mappings, and completion fields with zero findings;
-it makes no external-human-review claim.
+story. Independent Sprint 20 review remains absent.
 
 ## Security Mapping
 
@@ -53,6 +51,6 @@ it makes no external-human-review claim.
 maps the ten assigned controls to exact local state-assignment evidence and identifies
 the receipt, citation, audit, and clock controls owned by Sprint 21.
 
-Sprint 20 therefore passes its platform-neutral bounded gate. Downstream citation freshness and
-receipt integrity remain owned by Sprint 21, and no release claim is made. The source-bound record is
+Sprint 20 is therefore blocked even though every bounded state-assignment implementation item and
+its local adversarial suite pass. The source-bound machine-readable record will be retained at
 [`local-evidence-report.json`](../../artifacts/sprints/sprint-20/local-evidence-report.json).

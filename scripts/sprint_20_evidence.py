@@ -102,7 +102,9 @@ SECURITY_REQUIREMENTS: Final = [
     "SR-OPS-005",
     "SR-TST-010",
 ]
-BLOCKERS: Final = []
+BLOCKERS: Final = [
+    {"code": "INDEPENDENT-SPRINT-20-REVIEW-NOT-RETAINED", "owner": "20.1.3.3"},
+]
 IMPLEMENTED_CONTRACTS: Final = {
     "material_claim_state_count": 4,
     "unknown_blocked_reason_count": 8,
@@ -191,20 +193,12 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
             "production_answer_assignment_integration": local_pass,
             "sprint_21_citation_freshness_owned_downstream": True,
             "sprint_21_receipt_integrity_owned_downstream": True,
-            "automated_gate_review": {
-                "reviewer_identity": "scripts/sprint_20_evidence.py",
-                "review_type": "independent-automated-boundary-review",
-                "reviewed_path_count": len(SOURCE_PATHS),
-                "finding_count": 0,
-                "external_human_review_claim": False,
-            },
+            "independent_review": False,
         },
         "blockers": BLOCKERS,
         "summary": {
             "local_contract_passed": local_pass,
-            "story_completion_claim": local_pass,
-            "sprint_completion_claim": local_pass,
-            "sprint_status": "PASS" if local_pass else "BLOCKED",
+            "sprint_status": "BLOCKED",
             "release_approval": False,
         },
     }
@@ -232,22 +226,14 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         failures.append("command result invalid")
     expected_summary = {
         "local_contract_passed": True,
-        "story_completion_claim": True,
-        "sprint_completion_claim": True,
-        "sprint_status": "PASS",
+        "sprint_status": "BLOCKED",
         "release_approval": False,
     }
     if report.get("summary") != expected_summary:
         failures.append("summary overclaim or local failure")
     verification = report.get("verification_evidence", {})
-    if verification.get("automated_gate_review") != {
-        "reviewer_identity": "scripts/sprint_20_evidence.py",
-        "review_type": "independent-automated-boundary-review",
-        "reviewed_path_count": len(SOURCE_PATHS),
-        "finding_count": 0,
-        "external_human_review_claim": False,
-    }:
-        failures.append("automated gate-review provenance changed")
+    if verification.get("independent_review") is not False:
+        failures.append("verification overclaim: independent_review")
     for field in (
         "positive_state_matrix",
         "invalid_prohibited_boundary_matrix",
