@@ -752,3 +752,30 @@ propagate the exact leaf blocker tuples to every still-open dependent parent and
 
 Exact next action: propagate the exact Sprint 23 leaf tuples to every open parent and acceptance row,
 then proceed to Sprint 24 because all remaining Sprint 23 execution is human/host-blocked.
+
+## Batch 32 — Sprint 23 dependent-row blocker propagation
+
+### Completed
+
+- Closed 0 TASKS rows. Marked 28 open Sprint 23 story, task, and acceptance dependents with their
+  exact inherited leaf tuples and `substitution_set=empty`. Every remaining open Sprint 23 row now
+  names or points directly to the compiler/qualified-runtime, restricted-host aggregate, installed
+  VSIX, Fedora/MacBook accessibility, Windows/WSL image, Remote SSH target/account, or rootless
+  Podman prerequisite that prevents closure. Promotions: 0. Substitutions: 0.
+- Commit: `699b7594` (dependent blocker propagation and checklist-bound evidence). Commits: 1.
+  Commits per closed item: not applicable (0 closures). Review pins advanced: 0; complete
+  `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1; outputs remained byte-identical. Evidence regeneration passes: 1, ordered
+  requirements, traceability, contract boundary, and contract index. Recovery iterations: 0. Task
+  graph, requirements-current 45/45, contract boundary 29/29, and contract index 12/12 pass.
+- Full `docs:check`: 696.980 seconds, stopping only at the retained Story 6.1 Podman prerequisite
+  after every preceding gate passed. Recorded gate wall seconds: 697.
+- Sprint 23 disposition after propagation: 5 source-closed stories, 3 blocked stories, 0 release or
+  platform promotions. The sprint remains `BLOCKED`; no Linux source result substitutes for any
+  installed client, model, topology, or assistive-technology campaign.
+
+Exact next action: continue at Sprint 24's first unblocked partial rows, beginning with gate-owned
+handoff boundary review and live-process tests that can execute on this host.
