@@ -1,0 +1,80 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 4656,
+      "path": "artifacts/sprints/sprint-10/story-10.1/state-root-policy.json",
+      "sha256": "cf0c391e7f8b367804909f93588f282fb42628ff66e46bc06be189f4a404f478"
+    },
+    {
+      "byte_length": 4215,
+      "path": "artifacts/sprints/sprint-10/story-10.1/storage-detection-fixtures.json",
+      "sha256": "5fd7bc5a93e2d23b702ec080bdc30758d46c254c6d7afb8f7beaaae609fcbebc"
+    },
+    {
+      "byte_length": 5227,
+      "path": "artifacts/sprints/sprint-10/story-10.1/strict-local-classification.json",
+      "sha256": "1db018cad7c0baec143033184e3b5b1f46c1f26c2d492bf110f1b33a58cf1619"
+    },
+    {
+      "byte_length": 4356,
+      "path": "artifacts/sprints/sprint-11/story-11.1/crash-canary-results.json",
+      "sha256": "26286bc6d0d535d59b27d961a7aa96beba8aa74f0ab97f40d87961861becedb4"
+    },
+    {
+      "byte_length": 2876,
+      "path": "artifacts/sprints/sprint-11/story-11.1/derived-json-lines.json",
+      "sha256": "3ca10bd56dbbe6e404c904bede157f01c608b3460c1946ba0c8a3ffca3c39898"
+    },
+    {
+      "byte_length": 24662,
+      "path": "artifacts/sprints/sprint-11/story-11.1/security-evidence-map.json",
+      "sha256": "6191070b3a3908f3df86722c6c1601ca3ffb71eec17e25639e4dc736845c9377"
+    },
+    {
+      "byte_length": 6455,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "sha256": "d88e23ba27e3d5cb841906ea37bacf2641a2b03d22c2ab249df124b8f1503f14"
+    },
+    {
+      "byte_length": 5761,
+      "path": "artifacts/sprints/sprint-11/story-11.3/durable-resume-report.json",
+      "sha256": "303231293f04760157d4512ef3c29eafc49bd10fd19429a909c510de3bfd6b6a"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion_id": "10.AC4",
+      "status": "pass-linux-policy-and-fixture-scope"
+    },
+    {
+      "criterion_id": "11.AC2",
+      "status": "pass-local-transaction-and-resume-scope"
+    },
+    {
+      "criterion_id": "11.AC3",
+      "status": "pass-local-encrypted-store-scope"
+    },
+    {
+      "criterion_id": "11.AC4",
+      "status": "pass-current-retained-canary-surfaces"
+    },
+    {
+      "criterion_id": "11.AC5",
+      "status": "pass-one-way-derived-export-scope"
+    }
+  ],
+  "generated_on": "2026-09-03",
+  "product_truth": {
+    "external_evidence_substituted": false,
+    "installed_product_complete": false,
+    "native_cross_platform_complete": false,
+    "release_claim": "none",
+    "sprint_10_complete": false,
+    "sprint_11_complete": false,
+    "story_10_complete": false,
+    "story_11_1_complete": false
+  },
+  "record_type": "agentmage-frozen-scope-breadth-evidence",
+  "schema_version": 1,
+  "status": "PASS_LOCAL_INVARIANTS_WITH_PRODUCT_GATES_OPEN"
+}

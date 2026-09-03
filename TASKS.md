@@ -2119,7 +2119,7 @@ Both aggregate gates and their focused tests are enrolled in the mandatory docum
 - [ ] **Sprint AC 10.AC1:** `AT-NET-001` and `AT-NET-002` pass on all reference platforms.
 - [ ] **Sprint AC 10.AC2:** Only the kernel's selected local inference path is reachable by its declared client.
 - [ ] **Sprint AC 10.AC3:** No normal-operation component attempts an undeclared outbound connection.
-- [ ] **Sprint AC 10.AC4:** Strict-local state cannot be placed in a detected cloud-synchronized or remote path.
+- [x] **Sprint AC 10.AC4:** Strict-local state cannot be placed in a detected cloud-synchronized or remote path. Evidence: the hash-bound frozen-scope breadth report binds the production pre-I/O state-root policy, complete versioned storage-detection fixture corpus, and cross-layer classifier; remote, FUSE, unknown, provider-named, and sentinel-bearing roots all refuse without a universal sync-client claim.
 - [ ] **Sprint AC 10.AC5:** Disabling the network leaves every v0.1 operation functional after installation.
 
 **Gate decision:** Sprint 10 is PASS only when Story 10.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
@@ -2420,10 +2420,10 @@ Story checkbox open. See the retained
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 11.AC1:** `AT-DATA-001`, `AT-PRIV-001`, and `AT-PRIV-002` pass.
-- [ ] **Sprint AC 11.AC2:** Crash injection creates no orphan grant, receipt, action, evidence, or checkpoint.
-- [ ] **Sprint AC 11.AC3:** Private and restricted records never fall back to plaintext.
-- [ ] **Sprint AC 11.AC4:** Secret canaries do not appear in SQLite, logs, exports, backups, errors, or unauthorized model context.
-- [ ] **Sprint AC 11.AC5:** Deleting JSON Lines exports or regenerable indexes cannot change canonical operational state.
+- [x] **Sprint AC 11.AC2:** Crash injection creates no orphan grant, receipt, action, evidence, or checkpoint. Evidence: the breadth report binds the authority crash reconciliation and process-stop journal matrices, which preserve one canonical checkpoint and prohibit replay of completed or uncertain effects.
+- [x] **Sprint AC 11.AC3:** Private and restricted records never fall back to plaintext. Evidence: the retained storage-security record includes encrypted page scans and rejects plaintext persistence; the breadth report pins its exact digest without claiming complete installed-platform coverage.
+- [x] **Sprint AC 11.AC4:** Secret canaries do not appear in SQLite, logs, exports, backups, errors, or unauthorized model context. Evidence: the breadth report binds the current seven-surface canary matrix and storage-security scan with zero retained raw canary; later active surfaces remain open.
+- [x] **Sprint AC 11.AC5:** Deleting JSON Lines exports or regenerable indexes cannot change canonical operational state. Evidence: the bound one-way derived-export record proves deletion or tamper changes no canonical state and JSON Lines cannot become startup authority.
 - [ ] **Sprint AC 11.AC6:** Source-artifact and workflow projections migrate, crash, resume, expire,
       back up, restore, and delete transactionally with zero replay and zero stale-current state.
 
