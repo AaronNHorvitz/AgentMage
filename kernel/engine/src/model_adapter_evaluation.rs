@@ -10,14 +10,30 @@ const MAX_REASONS: usize = 32;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AlternateRuntimeKind {
+    /// One exact pinned native llama.cpp process protocol.
+    NativeLlamaCpp,
     /// One exact pinned Docker Model Runner topology.
     DockerModelRunner,
     /// One exact pinned Ollama topology, never an arbitrary daemon registration.
     Ollama,
+    /// One exact pinned LM Studio topology, never arbitrary OpenAI compatibility.
+    LmStudio,
     /// One exact pinned vLLM topology, never an arbitrary daemon registration.
     Vllm,
+    /// One exact pinned SGLang topology.
+    Sglang,
+    /// One exact pinned Hugging Face Text Generation Inference topology.
+    Tgi,
+    /// One exact pinned Ray Serve LLM topology.
+    RayServeLlm,
+    /// One exact pinned KServe inference topology.
+    Kserve,
     /// One exact pinned OpenAI-compatible implementation and endpoint contract.
     OpenAiCompatible,
+    /// One exact pinned OpenAI Responses-compatible implementation.
+    OpenAiResponsesCompatible,
+    /// One exact pinned Anthropic Messages-compatible implementation.
+    AnthropicMessagesCompatible,
 }
 
 /// Complete evidence tuple required before an alternate runtime can enter profile admission.
@@ -394,5 +410,32 @@ mod tests {
         verify_alternate_runtime_evaluation(&retained).expect("canonical retained evaluation");
         assert_eq!(retained.disposition, AlternateRuntimeDisposition::Rejected);
         assert!(!retained.activation_authority);
+    }
+
+    #[test]
+    fn every_planned_adapter_family_uses_the_same_non_activating_evaluator() {
+        let kinds = [
+            AlternateRuntimeKind::NativeLlamaCpp,
+            AlternateRuntimeKind::Ollama,
+            AlternateRuntimeKind::LmStudio,
+            AlternateRuntimeKind::Vllm,
+            AlternateRuntimeKind::Sglang,
+            AlternateRuntimeKind::Tgi,
+            AlternateRuntimeKind::RayServeLlm,
+            AlternateRuntimeKind::Kserve,
+            AlternateRuntimeKind::OpenAiCompatible,
+            AlternateRuntimeKind::OpenAiResponsesCompatible,
+            AlternateRuntimeKind::AnthropicMessagesCompatible,
+        ];
+        for (index, kind) in kinds.into_iter().enumerate() {
+            let mut candidate = evidence();
+            candidate.candidate_id = format!("planned-adapter-{index:02}");
+            candidate.kind = kind;
+            candidate.runtime_contract_parity_passed = false;
+            let evaluation = evaluate_alternate_runtime(&candidate).expect("evaluation");
+            assert_eq!(evaluation.disposition, AlternateRuntimeDisposition::Rejected);
+            assert_eq!(evaluation.reason_codes, ["model.adapter.runtime-parity-failed"]);
+            assert!(!evaluation.activation_authority);
+        }
     }
 }
