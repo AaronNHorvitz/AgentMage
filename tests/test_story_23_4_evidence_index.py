@@ -56,8 +56,8 @@ class Story234EvidenceIndexTests(unittest.TestCase):
     def test_current_index_is_exact_and_hash_bound(self) -> None:
         self.assertEqual(check_index(), [])
         index = json.loads(REPORT_PATH.read_text(encoding="utf-8"))
-        self.assertEqual(index["summary"]["complete_count"], 14)
-        self.assertEqual(index["summary"]["partial_count"], 3)
+        self.assertEqual(index["summary"]["complete_count"], 16)
+        self.assertEqual(index["summary"]["partial_count"], 1)
         self.assertFalse(index["summary"]["story_complete"])
         self.assertFalse(index["summary"]["sprint_complete"])
         self.assertFalse(index["summary"]["release_approved"])
