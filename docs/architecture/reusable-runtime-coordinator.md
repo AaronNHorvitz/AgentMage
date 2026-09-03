@@ -204,7 +204,7 @@ and admitted profile.
 
 ## Retained Local Evidence
 
-- `runtime-evidence.json` and its raw log retain 17 engine tests, six native-read
+- `runtime-evidence.json` and its raw log retain 18 engine tests, six native-read
   tests, native transport, three-client parity, client-confusion denial,
   workflow-authority denial, dependency direction, effect mediation, process
   RSS, and five bounded coordinator workload profiles.
@@ -244,7 +244,7 @@ registration refusal, three-client parity, and authority/confusion bypasses.
 Still open:
 
 - installed-host runtime-factory and admitted-model composition;
-- complete injection at every post-receipt, event-publication,
-  terminal-publication, and installed-process disconnect boundary;
+- physical-process crash and restart execution beyond the source-level transactional
+  publication and client-disconnect matrix;
 - installed platform evidence and independent review; and
 - deferred manual fuzzing.

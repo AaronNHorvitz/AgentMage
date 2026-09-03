@@ -98,7 +98,7 @@ class Story234RuntimeEvidenceTests(unittest.TestCase):
     def test_campaign_shape_is_closed_and_bounded(self) -> None:
         self.assertEqual(len(COMMANDS), 8)
         self.assertEqual(len({command_id for command_id, _, _ in COMMANDS}), 8)
-        self.assertEqual(len(COVERAGE), 21)
+        self.assertEqual(len(COVERAGE), 22)
         self.assertTrue(all(COVERAGE.values()))
         self.assertEqual(MAXIMUM_COMMAND_ELAPSED_MS, 120_000)
         self.assertEqual(MAXIMUM_COMMAND_RSS_KIB, 1_048_576)

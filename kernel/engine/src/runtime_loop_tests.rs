@@ -524,6 +524,11 @@ enum PermissionScript {
     Allow,
     Ask,
     Expired,
+    FailPermissionPublication,
+    FailToolStartPublication,
+    FailToolTerminalPublication,
+    FailRunTerminalPublication,
+    FailTerminalFlush,
 }
 
 type PublishedArtifacts = Arc<Mutex<Vec<(RuntimeArtifactManifest, Vec<u8>)>>>;
@@ -693,6 +698,25 @@ impl RuntimeToolBoundary for FakeToolBoundary {
 
 impl RuntimeJournalPort for FakeToolBoundary {
     fn append_runtime_event(&mut self, event: &RuntimeEvent) -> Result<(), RuntimePortFailure> {
+        let injected_failure = matches!(
+            (&self.script, &event.kind),
+            (
+                PermissionScript::FailPermissionPublication,
+                RuntimeEventKind::PermissionRequested { .. }
+            ) | (
+                PermissionScript::FailToolStartPublication,
+                RuntimeEventKind::ToolStarted { .. }
+            ) | (
+                PermissionScript::FailToolTerminalPublication,
+                RuntimeEventKind::ToolCompleted { .. } | RuntimeEventKind::ToolFailed { .. }
+            ) | (
+                PermissionScript::FailRunTerminalPublication,
+                RuntimeEventKind::RunTerminal { .. }
+            )
+        );
+        if injected_failure {
+            return Err(RuntimePortFailure::Uncertain);
+        }
         let mut events = self
             .journal
             .lock()
@@ -711,6 +735,9 @@ impl RuntimeJournalPort for FakeToolBoundary {
     }
 
     fn flush_runtime_events(&mut self) -> Result<(), RuntimePortFailure> {
+        if matches!(self.script, PermissionScript::FailTerminalFlush) {
+            return Err(RuntimePortFailure::Uncertain);
+        }
         self.journal_flushes.fetch_add(1, Ordering::SeqCst);
         Ok(())
     }
@@ -1121,6 +1148,46 @@ fn coordinator_with_request_mutation(
         FakeClock { now: 1_000 },
     )?;
     Ok((coordinator, executions))
+}
+
+fn durable_fault_coordinator(
+    scripts: impl IntoIterator<Item = ModelScript>,
+    fault: PermissionScript,
+) -> (FixtureCoordinator, Arc<AtomicUsize>) {
+    let profile = profile("runtime-loop-failure-matrix");
+    let registry = registry_for_operation(GrantOperation::WorkspaceRead);
+    let mut request = request(profile.clone(), &registry);
+    request.mode = RuntimeSessionMode::DurableReadOnly;
+    request.request_sha256 = "0".repeat(64);
+    let request = seal_runtime_run_request(request).expect("failure-matrix request seals");
+    let executions = Arc::new(AtomicUsize::new(0));
+    let coordinator = ReusableRuntimeCoordinator::new_with_journal(
+        request,
+        FakeModel::new(profile, scripts),
+        FakeContext,
+        registry,
+        FakeToolBoundary {
+            script: fault,
+            executions: Arc::clone(&executions),
+            emit_evidence: true,
+            outcome: OperationOutcome::Succeeded,
+            state_change: StateChange::NotChanged,
+            tool_output_bytes: 0,
+            tool_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates: Vec::new(),
+            journal: Arc::new(Mutex::new(Vec::new())),
+            journal_flushes: Arc::new(AtomicUsize::new(0)),
+            artifacts: Arc::new(Mutex::new(Vec::new())),
+            checkpoint: Arc::new(Mutex::new(None)),
+        },
+        FakeVerifier {
+            verifier_id: VerifierId::from_raw("verifier-failure-matrix-0001"),
+            source: VerifierSource::DeterministicPostcondition,
+        },
+        FakeClock { now: 9_000 },
+    )
+    .expect("failure-matrix coordinator builds");
+    (coordinator, executions)
 }
 
 fn request(profile: ExactModelProfile, registry: &ToolRegistry) -> RuntimeRunRequest {
@@ -2741,6 +2808,37 @@ fn story_23_4_terminal_tool_failures_have_one_receipt_and_no_hidden_retry() {
             1
         );
         assert_valid_terminal_stream(&coordinator);
+    }
+}
+
+#[test]
+fn story_23_4_publication_failure_matrix_stops_without_hidden_effect_or_retry() {
+    for (fault, expected_executions) in [
+        (PermissionScript::FailPermissionPublication, 0),
+        (PermissionScript::FailToolStartPublication, 0),
+        (PermissionScript::FailToolTerminalPublication, 1),
+    ] {
+        let (mut coordinator, executions) = durable_fault_coordinator([ModelScript::Tool], fault);
+        assert_eq!(
+            coordinator.run_until_boundary(None, None),
+            Err(RuntimeLoopError::Dependency(RuntimePortFailure::Uncertain))
+        );
+        assert_eq!(executions.load(Ordering::SeqCst), expected_executions);
+        assert!(coordinator.outcome().is_none());
+    }
+
+    for fault in [
+        PermissionScript::FailRunTerminalPublication,
+        PermissionScript::FailTerminalFlush,
+    ] {
+        let (mut coordinator, executions) =
+            durable_fault_coordinator([ModelScript::Completion], fault);
+        assert_eq!(
+            coordinator.run_until_boundary(None, None),
+            Err(RuntimeLoopError::Dependency(RuntimePortFailure::Uncertain))
+        );
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert!(coordinator.outcome().is_none());
     }
 }
 

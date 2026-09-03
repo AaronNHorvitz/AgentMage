@@ -219,7 +219,7 @@ MAPPINGS: Final = (
     ),
     entry(
         "23.4.3.3",
-        "partial",
+        "complete",
         [
             "kernel/engine/src/runtime_loop.rs",
             "kernel/engine/src/runtime_loop_tests.rs",
@@ -228,6 +228,7 @@ MAPPINGS: Final = (
         [
             "story_23_4_model_dependency_failures_close_without_effect_or_retry",
             "story_23_4_terminal_tool_failures_have_one_receipt_and_no_hidden_retry",
+            "story_23_4_publication_failure_matrix_stops_without_hidden_effect_or_retry",
             "protected_approval_and_cancellation_preserve_exact_runtime_identity",
         ],
         [
@@ -265,7 +266,7 @@ MAPPINGS: Final = (
     ),
     entry(
         "23.4.3.6",
-        "partial",
+        "complete",
         ["scripts/story_23_4_security_evidence.py"],
         [
             "test_mapping_is_closed_complete_for_declared_scope_and_path_bound",
@@ -281,8 +282,8 @@ MAPPINGS: Final = (
 
 LIMITATIONS: Final = (
     "The installed host still lacks a production runtime factory and admitted local model.",
-    "The complete boundary-by-boundary ephemeral failure injection matrix remains open.",
-    "Independent coordinator and installed accessibility review evidence remains open.",
+    "The source-level boundary-by-boundary failure matrix is complete; physical process faults remain outside this source campaign.",
+    "Gate-owned independent coordinator review is complete; installed accessibility evidence remains open.",
     "Persistent crash/restart and physical dependency faults remain owned by later durable campaigns.",
     "Manual fuzzing remains deliberately deferred and open.",
     "No supported-platform, release, or deployment approval follows from this index.",

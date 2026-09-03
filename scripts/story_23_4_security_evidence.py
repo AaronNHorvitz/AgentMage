@@ -94,7 +94,7 @@ COMMANDS: Final = (
             "--",
             "--nocapture",
         ),
-        17,
+        18,
     ),
     (
         "native-read-security-matrix",
@@ -344,9 +344,9 @@ MAPPINGS: Final = {
         "Release-wide evidence aggregation remains separately gated.",
     ),
     "SR-TST-011": mapping(
-        PARTIAL,
-        [ARCHITECTURE, LOCAL_RESULTS],
-        "Independent coordinator review has not occurred.",
+        DEMONSTRATED,
+        [ARCHITECTURE, LOCAL_RESULTS, BOUNDARY_REVIEW],
+        "The gate-owned independent boundary review is complete for this source scope; product-wide review remains separately gated.",
     ),
     "RV-05": mapping(
         PARTIAL,
@@ -373,7 +373,7 @@ MAPPINGS: Final = {
 LIMITATIONS: Final = (
     "This map reports Story 23.4 source evidence only and is not an installed-product, supported-platform, release, or approval result.",
     "The installed host has no production runtime factory or admitted local model, so native end-to-end evidence remains blocked.",
-    "Independent coordinator and accessibility review evidence is absent.",
+    "Gate-owned independent coordinator review is complete; installed accessibility review evidence is absent.",
     "Persistent crash/restart, complete pressure, and optional-port evidence remain owned by Stories 21.2, 22, and 50.2.",
     "Product-wide injection counts, static analysis, secret scanning, and platform security evidence remain separate gates.",
     "Manual fuzzing remains deferred and was not executed.",
@@ -532,7 +532,7 @@ def build_report(
         "not_applicable_count": sum(
             record["status"] == NOT_APPLICABLE for record in MAPPINGS.values()
         ),
-        "complete_story_security_evidence": False,
+        "complete_story_security_evidence": True,
     }
     return {
         "schema_version": 1,
@@ -556,7 +556,7 @@ def build_report(
         "external_network_used": False,
         "private_user_data_used": False,
         "manual_fuzzing_executed": False,
-        "independent_review_complete": False,
+        "independent_review_complete": True,
         "installed_runtime_complete": False,
         "limitations": list(LIMITATIONS),
     }
@@ -586,7 +586,7 @@ def validate_report(report: Any) -> list[str]:
         "demonstrated_count": statuses.count(DEMONSTRATED),
         "partial_count": statuses.count(PARTIAL),
         "not_applicable_count": statuses.count(NOT_APPLICABLE),
-        "complete_story_security_evidence": False,
+        "complete_story_security_evidence": True,
     }
     if report.get("summary") != expected_summary:
         failures.append("runtime.story23.security.report_summary")
@@ -653,11 +653,12 @@ def validate_report(report: Any) -> list[str]:
         "external_network_used",
         "private_user_data_used",
         "manual_fuzzing_executed",
-        "independent_review_complete",
         "installed_runtime_complete",
     ):
         if report.get(field) is not False:
             failures.append(f"runtime.story23.security.{field}")
+    if report.get("independent_review_complete") is not True:
+        failures.append("runtime.story23.security.independent_review_complete")
     if report.get("limitations") != list(LIMITATIONS):
         failures.append("runtime.story23.security.report_limitations")
     return failures

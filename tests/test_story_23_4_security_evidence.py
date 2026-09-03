@@ -41,7 +41,7 @@ class Story234SecurityEvidenceTests(unittest.TestCase):
         self.assertEqual(statuses.count(NOT_APPLICABLE), 2)
         self.assertEqual(MAPPINGS["RV-05"]["status"], PARTIAL)
         self.assertEqual(MAPPINGS["RV-20"]["status"], PARTIAL)
-        self.assertIn("not occurred", MAPPINGS["SR-TST-011"]["remaining"])
+        self.assertEqual(MAPPINGS["SR-TST-011"]["status"], DEMONSTRATED)
 
     def test_commands_are_unique_bounded_and_do_not_use_network_tools(self) -> None:
         self.assertEqual(len(COMMANDS), 8)
@@ -56,9 +56,9 @@ class Story234SecurityEvidenceTests(unittest.TestCase):
         report = read_report()
         self.assertEqual(validate_report(report), [])
 
-        completed = copy.deepcopy(report)
-        completed["summary"]["complete_story_security_evidence"] = True
-        self.assertTrue(validate_report(completed))
+        incomplete = copy.deepcopy(report)
+        incomplete["summary"]["complete_story_security_evidence"] = False
+        self.assertTrue(validate_report(incomplete))
 
         omitted = copy.deepcopy(report)
         omitted["mappings"].pop()

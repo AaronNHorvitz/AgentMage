@@ -49,7 +49,7 @@ COMMANDS: Final = (
             "--",
             "--nocapture",
         ),
-        16,
+        18,
     ),
     (
         "native-read-matrix",
@@ -177,6 +177,7 @@ COVERAGE: Final = {
     "repeated_call": True,
     "search": True,
     "terminal_tool_failure_no_retry": True,
+    "transactional_publication_failure_matrix": True,
     "three_client_parity": True,
     "verified_completion": True,
     "workflow_authority_broadening_denied": True,
@@ -186,7 +187,7 @@ LIMITATIONS: Final = (
     "The campaign uses deterministic fake-model fixtures and does not claim an installed admitted model or production native Chat runtime factory.",
     "The performance values describe current-host Linux source fixtures and are not supported-platform, release, or end-user latency guarantees.",
     "The optional durable journal, artifact, and checkpoint costs remain measured by their owning Story 21.2, Story 22, and Story 50.2 campaigns.",
-    "Persistent crash and restart reconstruction, physical dependency faults, and installed-client disconnects are not claimed by this ephemeral campaign.",
+    "Source-level transactional publication and client-disconnect safe stops are covered; persistent crash/restart reconstruction and physical dependency faults remain outside this campaign.",
     "Manual fuzzing remains deferred and was not executed by this campaign.",
     "The retained trace replaces the absolute checkout root with the literal <repository-root>; test results and metrics are unchanged.",
 )

@@ -21,8 +21,8 @@ class Story234EvidenceIndexTests(unittest.TestCase):
     def test_mapping_statuses_are_truthful_and_story_stays_blocked(self) -> None:
         statuses = [mapping["status"] for mapping in MAPPINGS]
         self.assertEqual(len(MAPPINGS), 17)
-        self.assertEqual(statuses.count("complete"), 14)
-        self.assertEqual(statuses.count("partial"), 3)
+        self.assertEqual(statuses.count("complete"), 16)
+        self.assertEqual(statuses.count("partial"), 1)
         self.assertEqual(statuses.count("open"), 0)
         self.assertEqual(MAPPINGS[6]["task_id"], "23.4.1.7")
         self.assertEqual(MAPPINGS[13]["task_id"], "23.4.3.3")

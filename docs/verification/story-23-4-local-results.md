@@ -52,7 +52,7 @@
 - Native Chat, interactive CLI, and workflow callers produce identical requests,
   events, artifacts, evidence, receipts, checkpoints, and outcomes for the same
   read-only and controlled-write packets.
-- The retained source campaign passes 17 engine tests, six native-read tests,
+- The retained source campaign passes 18 engine tests, six native-read tests,
   three native-transport tests, parity and bypass tests, dependency direction,
   and effect mediation. Peak command RSS remains below 47 MiB on the recorded
   host; all five in-memory coordinator scenarios remain below 250 ms.
@@ -85,8 +85,10 @@ npm run docs:check
   does not yet install a production `NativeChatRuntimeFactory`, admitted model
   profile, context composition, or platform-accepted runtime route. The actual
   packaged provider therefore still fails closed as unavailable.
-- Injection at every post-receipt, event-publication, terminal-publication, and
-  installed-process disconnect boundary remains incomplete.
+- The source campaign injects permission, pre-execution, post-receipt, terminal-publication,
+  and terminal-flush failures; existing native-client tests cover disconnect, cancellation,
+  presentation failure, and release without duplicate execution. Physical process faults remain
+  assigned to the durable campaigns.
 - Independent coordinator and installed assistive-technology review evidence is
   absent.
 - Persistent crash/restart and pressure completion remain owned jointly by
