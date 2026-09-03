@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "record_type": "sprint_60_local_evidence",
-  "source_revision": "ccd9580138d25aed89993119d9a6adef3a68ebb3",
+  "source_revision": "d3f97e6ba24bd11403011e6e57b25f01cb2d03d4",
   "source_sha256": {
     "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
     "Cargo.lock": "60eca43376919ca47740e494d7e44a2812aa77e06a0c188013e285a7dea1a19e",
     "capabilities/knowledge/Cargo.toml": "d1aaf75cd939ed948adce94dc56091873a6611fb8f5f8c6dc3a50acf6d0974de",
-    "capabilities/knowledge/src/pdf_extraction.rs": "6273e613478578294e632e043cd929d09c683e0dee9a1eaf4daab022aa6ac0bb",
-    "capabilities/knowledge/src/lib.rs": "af1710b267637bfb0c0ccf33bf653ab593752cd95f2e59b259d8e4e016214ed9",
+    "capabilities/knowledge/src/pdf_extraction.rs": "a52789e80773cbf1285c3dc5ea86d4174e1b76e28afac4c64aca3a047853c345",
+    "capabilities/knowledge/src/lib.rs": "ffffba2ef37373a7cfbe4e46a5c46c4a94f9146549e092d7a2d6b096f447c822",
     "kernel/contracts/src/structured_source.rs": "de7c6ce6129c5400479e6c6e53f2b2002a4dacb3219c8cf1d0097ff55e9b177b",
     "schemas/runtime/pdf-extraction-result.schema.json": "6d9c02a31d0b99de067a56b29295647ac2b2740436cfb6fd950d0120d29c6095",
     "schemas/runtime/examples/pdf-extraction-result.valid.json": "e8dc2bfb4c8eb435fec715319fe8563280a85662ce49a137bd37d46af57c486a",
@@ -16,17 +16,17 @@
     "scripts/validate_planning_schemas.mjs": "9eb1e5277bc2ffe6953e2d2ecc6504f832825285beefecfb35c27aac4997ac20",
     "tests/test_planning_schemas.mjs": "7e91d19b6eed4e802db3f1577a514a9298c70d6becb1706ce9b2861d0565f42b",
     "supply-chain/cargo-external-catalog.json": "73339375071827cc539fc7a6753faae9b920a7e313da52131b0f597cdf9d8adc",
-    "supply-chain/dependency-hashes.sha256": "94f886eb13c9a94aaa6a37d66b8a852194519883dc46a03d173d46f78eea3d63",
-    "supply-chain/dependency-provenance.json": "f33d6d8c3905933807e72680615896c517e67994dbf50472bff4044351371d4a",
-    "supply-chain/sbom.cdx.json": "f0f2ba2c204a023928f5a0841c42a41f11e2a7ae9544bfc689f3fb7ee93ff87e",
+    "supply-chain/dependency-hashes.sha256": "b23d2033c8becb650ad30fe49242f6d8caed052f2826a8092e424a2ae633bc4b",
+    "supply-chain/dependency-provenance.json": "ad54e4d839cae02e45fec9f2d525cd06b94eb04c81756f3c1beb986cef44b1a4",
+    "supply-chain/sbom.cdx.json": "ba75137e88c7a7cbd0d4baee6be1d82ea32915f62fa192b0ea6903d1eeeb64e5",
     "docs/verification/sprint-60-pdf-extraction-corpus.json": "a7a3a741ceabaaf1f8dbb6e42ceb73be04fd27ac61026b38afd90278bb7f635f",
     "docs/verification/sprint-60-pdf-dependency-manifest.json": "3bf1d3693ba8b709f43bfdf45d626765bc588b22c50d56509844c279d4f3fea0",
     "scripts/pdf_extraction_contract.py": "cb414fb06de51e136390402fac3a11635396e275de7610f7c5ecb774aa59aa03",
     "tests/test_pdf_extraction_contract.py": "3a2161af20a2a6f7fd2fc8624e23e402519110acb6ca4accca4339766b2a1f1e",
-    "docs/architecture/pdf-extraction-and-page-citations.md": "b20f83da75ce9c3ed856c3414a157e0a3eb8daef05939f829226430d95fd4477",
+    "docs/architecture/pdf-extraction-and-page-citations.md": "6ffd96f37e23d62a5376b5d932039b0be4ae32eaf76bf3500abf06d87ebce3ec",
     "docs/guides/pdf-extraction-review.md": "8c0558ef311ee54239d6e7646800e27ec4930a4cc4d8a660a83465e6b42dab4b",
     "docs/verification/sprint-60-local-results.md": "00bb82addff43674db6f2dee2aa4ce33a87a19eb14c920bfaf035e05b75b9c8b",
-    "scripts/sprint_60_evidence.py": "56a6ee60be9bec9493a4fed31ef27e2cef31c81834d411bf1bc47696bc80be36",
+    "scripts/sprint_60_evidence.py": "55fe17ce07402ccf6985fdf31882370d25f20bd7567d11b4df19dbe23fdac8bc",
     "tests/test_sprint_60_evidence.py": "b62a10a8731dd2a17fa9c949243ae133409c742f848879c0c1e1ec7e794c037e"
   },
   "environment": {
@@ -52,7 +52,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "8c0ccd8bf7d55d4dd21f761c5441964d21860abba3cc2be48d581bf337472116",
+      "output_sha256": "75a6d101adbd95057ce84d5b1bb4fe5590daf1cbe07dc9b10acdd88fca6a6487",
       "blocking_skip_count": 0
     },
     {
@@ -63,7 +63,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "18e38e51b340d1033df3e9577116891bc1ccea32ca5fd299dc148d8f549720a4",
+      "output_sha256": "b1ac4554fe6457fa51bd61f6186cd035aef6978679b5bc6b2f52875e32fe8d53",
       "blocking_skip_count": 0
     },
     {
@@ -126,7 +126,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "dbe228fe8227d16931aa73b55f7ccb42671d7e80e2bdca1b9c15d065c8e76b3b",
+      "output_sha256": "3e68ac3b980b911e115370ff3fe47e95ff1597b1e889ab7ecb073b36e360994c",
       "blocking_skip_count": null
     },
     {
@@ -168,7 +168,7 @@
   "implemented_contracts": {
     "admitted_pdf_parser_count": 1,
     "pdf_runtime_schema_count": 2,
-    "executable_rust_fixture_count": 8,
+    "executable_rust_fixture_count": 9,
     "review_corpus_case_count": 82,
     "bounded_strict_in_memory_extraction": true,
     "deterministic_page_object_identity": true,
@@ -177,6 +177,10 @@
     "ocr_observation_admission_boundary": true,
     "ocr_uncertainty_preserved": true,
     "shared_structured_source_adapter": true,
+    "structured_span_provenance": true,
+    "reading_order_uncertainty_visible": true,
+    "text_density_observation": true,
+    "active_or_external_content_quarantined": true,
     "network_access_capability": false,
     "execution_capability": false,
     "filesystem_mutation_capability": false,

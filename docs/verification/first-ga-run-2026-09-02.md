@@ -182,3 +182,32 @@ Sprint 51 against later frontier-coordinator implementation and remove only stal
 Exact next action: refresh traceability and source-bound evidence for the retained Sprint 60 report,
 commit and push the checkpoint, then continue the PDF batch with span/reading-order/text-density and
 active-content refusal without regenerating supply-chain evidence mid-source batch.
+
+## Batch 7 — PDF spans, density, and active-content quarantine
+
+### Completed
+
+- Added exact page-child UTF-8 spans with byte ranges and digests, decoded-content text-density
+  observations, and an explicit `parser_emission_order_unverified` reading-order state.
+- Gated shared structured publication through the existing inert PDF inspector. Active/external
+  actions, embedded files, encryption, and incomplete inspection quarantine without following,
+  executing, fetching, decrypting, or mutating anything.
+- Closed only Sub-tasks 60.2.1.1 and 60.2.1.3. Table/column/layout preservation, OCR admission,
+  runtime lifecycle, context/client parity, native-platform acceptance, accessibility, independent
+  review, and fuzz remain open.
+- Immutable Sprint 60 evidence passed against exact revision
+  `d3f97e6ba24bd11403011e6e57b25f01cb2d03d4`; report SHA-256
+  `1ac6ca6e671a425271f12d3d4a2d14fa29735c4e1b05e0f669dd6059d4d345fa`.
+
+### Validation and evidence renewal
+
+- Nine evidence commands passed with zero blocking skips; the direct PDF tests passed 24/24, the
+  focused extractor tests passed 9/9, strict Clippy and Markdown lint passed, and the report records
+  nine executable Rust fixtures plus the 82-case review corpus.
+- Renewed configuration/Story 3, Story 1.2 contract, Story 7.1 security/review, and Sprint 7 review
+  evidence through exact immutable pins. A full `docs:check` passed before the immutable campaign.
+- Retained all 13 upstream, component-admission, platform, accessibility, review, and fuzz blockers.
+  External rows closed by substitution: 0.
+
+Exact next action: seal the retained report through traceability and contract-boundary checks, commit
+and push it, then implement the remaining repository-controlled PDF structure-preservation work.
