@@ -4646,6 +4646,10 @@ supported-package blockers below; `substitution_set=empty`.
 
 ### [ ] Sprint 27 - Obsidian Note Parsing
 
+**Blocked:** the numbered Sprint 27 scope and gate-owned review are complete; the sprint inherits
+Sprint 26's exact draft-Decision, upstream-release, and supported-package tuples;
+`substitution_set=empty`.
+
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-023`, part 1 of 2.
@@ -4657,6 +4661,9 @@ supported-package blockers below; `substitution_set=empty`.
 **Dependencies:** Sprint 26; legacy dependency record: Sprint 26 (legacy S-022).
 
 #### [ ] Story 27.1 - Obsidian Note Parsing
+
+**Blocked:** the numbered story scope and gate-owned review are complete; closure inherits Sprint
+26's exact blockers; `substitution_set=empty`.
 
 **User-facing value:** As an AgentMage user, maintainer, or reviewer, I need obsidian note parsing so that AgentMage delivers the following bounded outcome: Read and index an approved local Obsidian vault directly without requiring or automating Obsidian.
 
@@ -4693,11 +4700,14 @@ supported-package blockers below; `substitution_set=empty`.
 - [x] **Sprint AC 27.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [x] **Sprint AC 27.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
-**Local evidence:** Commit `e5974e0`, evidence definition `bc71680`, retained Sprint 27 report [`artifacts/sprints/sprint-27/local-evidence-report.json`](artifacts/sprints/sprint-27/local-evidence-report.json), and Sprint 28 transaction/no-Obsidian report [`artifacts/sprints/sprint-28/local-evidence-report.json`](artifacts/sprints/sprint-28/local-evidence-report.json) complete the locally executable parser and combined legacy security-evidence scope. The parent story and this sprint remain open because Sprint 26 is blocked and independent Sprint 27 review is absent.
+**Local evidence:** Commit `e5974e0`, evidence definition `bc71680`, retained Sprint 27 report [`artifacts/sprints/sprint-27/local-evidence-report.json`](artifacts/sprints/sprint-27/local-evidence-report.json), Sprint 28 transaction/no-Obsidian report [`artifacts/sprints/sprint-28/local-evidence-report.json`](artifacts/sprints/sprint-28/local-evidence-report.json), and the newer gate-owned [`source-boundary-review.json`](artifacts/sprints/sprint-27/source-boundary-review.json) complete the locally executable parser, combined legacy security-evidence, and automated-review scope. The parent story and this sprint remain open only because Sprint 26 is blocked on its exact human tuples.
 
 **Gate decision:** Sprint 27 is PASS only when Story 27.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
 ### [ ] Sprint 28 - Vault Indexing, Links, and Recovery
+
+**Blocked:** the numbered Sprint 28 scope and gate-owned review are complete; the sprint inherits
+Sprint 27 and ultimately Sprint 26's exact human tuples; `substitution_set=empty`.
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
@@ -4711,15 +4721,18 @@ supported-package blockers below; `substitution_set=empty`.
 
 #### [ ] Story 28.1 - Vault Indexing, Links, and Recovery
 
+**Blocked:** all numbered rows are complete; story closure inherits Sprint 27 and ultimately Sprint
+26's exact human tuples; `substitution_set=empty`.
+
 **User-facing value:** As an AgentMage user, maintainer, or reviewer, I need vault indexing, links, and recovery so that AgentMage delivers the following bounded outcome: Read and index an approved local Obsidian vault directly without requiring or automating Obsidian.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 28.1.1 - Implement the bounded story**
+- [x] **Task 28.1.1 - Implement the bounded story**
   - [x] **Sub-task 28.1.1.1** (legacy `S-023-I06`): Keep index, memory, conversation state, temporary text, and hidden agent records outside the vault.
   - [x] **Sub-task 28.1.1.2** (legacy `S-023-I07`): Implement current-versus-historical classification, special current-note readers, bounded queries, relationship traversal, and stale-index detection.
   - [x] **Sub-task 28.1.1.3** (legacy `S-023-I08`): Preserve raw meeting-note sections and produce per-file previews for all later note changes.
-  - [ ] **Sub-task 28.1.1.4** (legacy `S-023-I09`): Implement a local watcher that updates only the disposable index and emits access receipts.
+  - [x] **Sub-task 28.1.1.4** (legacy `S-023-I09`): Implement a local watcher that updates only the disposable index and emits access receipts. Evidence: the trusted host `ObsidianPollingWatcher` uses bounded `symlink_metadata` traversal, holds exact bytes and SHA-256 identities, emits only the closed created/modified/deleted event family, and invokes the capability's atomic `apply_watch_batch`; focused tests prove unchanged polls are inert, create/modify events update only `derived_only` SQLite with a content-free receipt, and symlinks fail closed without traversal.
 
 - [x] **Task 28.1.2 - Produce reviewable artifacts**
   - [x] **Sub-task 28.1.2.1:** Obsidian adapter and index schema.
@@ -4727,12 +4740,12 @@ supported-package blockers below; `substitution_set=empty`.
   - [x] **Sub-task 28.1.2.3:** Vault access and no-Obsidian proof receipts.
   - [x] **Sub-task 28.1.2.4:** Index rebuild and stale-update results.
 
-- [ ] **Task 28.1.3 - Verify and close the story**
+- [x] **Task 28.1.3 - Verify and close the story**
   - [x] **Sub-task 28.1.3.1:** `S-023-UT01` parses frontmatter, headings, blocks, links, embeds, aliases, tags, tasks, properties, callouts, attachments, and malformed variants; assert exact source ranges and graceful unsupported syntax.
   - [x] **Sub-task 28.1.3.2:** `S-023-UT02` resolves valid, missing, ambiguous, renamed, aliased, case-colliding, Unicode-colliding, and cyclic links; assert deterministic graph state and visible conflicts.
   - [x] **Sub-task 28.1.3.3:** `S-023-ST01` seeds plugins/config/workspace files, scripts, URI schemes, remote embeds, prompt injections, secrets, and out-of-vault links; assert no execution, Obsidian automation, network use, or authority change.
   - [x] **Sub-task 28.1.3.4:** `S-023-RT01` interrupts full rebuild and incremental update, then changes/deletes notes during indexing; assert atomic index publication, stale detection, and source-file invariance.
-  - [ ] **Sub-task 28.1.3.5 - Product security evidence:** Map `SR-ACC-004` through `SR-ACC-008`, `SR-AI-005`, `SR-DAT-002`, `SR-TST-002`/`SR-TST-004`; retain parser corpus, link graph expectations, injection results, index transaction traces, and no-Obsidian proof.
+  - [x] **Sub-task 28.1.3.5 - Product security evidence:** Map `SR-ACC-004` through `SR-ACC-008`, `SR-AI-005`, `SR-DAT-002`, `SR-TST-002`/`SR-TST-004`; retain parser corpus, link graph expectations, injection results, index transaction traces, and no-Obsidian proof. Evidence: the retained local report binds all nine mappings and the parser/link/injection/transaction/no-Obsidian suites; the gate-owned review hashes the index and trusted host watcher, passes the derived-only, atomic-update, receipt, no-network, and no-process checks, and makes no human-review claim.
 
 ##### Story Acceptance Criteria
 
@@ -4747,7 +4760,7 @@ supported-package blockers below; `substitution_set=empty`.
 - [x] **Sprint AC 28.AC4:** Vault reads produce no user-file mutation and no external process or network access.
 - [x] **Sprint AC 28.AC5:** Plain-folder and Obsidian adapters pass the same knowledge-domain contract tests.
 
-**Local evidence:** Implementation commits `22fb9ad`, `7705f50`, and `58b4beb`, evidence definition `e97eedc`, and retained report [`artifacts/sprints/sprint-28/local-evidence-report.json`](artifacts/sprints/sprint-28/local-evidence-report.json) complete the locally executable parser, index, recovery, watcher-processing, preview, receipt, and adapter-conformance scope. Sub-tasks `28.1.1.4` and `28.1.3.5`, the parent task/story boxes, and this sprint remain open because no operating-system filesystem watcher adapter or independent Sprint 28 review exists and upstream Sprint 27 is blocked.
+**Local evidence:** Implementation commits `22fb9ad`, `7705f50`, and `58b4beb`, evidence definition `e97eedc`, retained report [`artifacts/sprints/sprint-28/local-evidence-report.json`](artifacts/sprints/sprint-28/local-evidence-report.json), bounded host watcher, and gate-owned [`source-boundary-review.json`](artifacts/sprints/sprint-28/source-boundary-review.json) complete the locally executable parser, index, recovery, watcher, preview, receipt, adapter-conformance, and automated-review scope. The parent story and sprint remain open only because upstream Sprint 27 is blocked on inherited exact human tuples.
 
 **Gate decision:** Sprint 28 is PASS only when Story 28.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
@@ -4784,12 +4797,12 @@ supported-package blockers below; `substitution_set=empty`.
   - [x] **Sub-task 29.1.2.3:** Labeled retrieval corpus and expected citation set.
   - [x] **Sub-task 29.1.2.4:** Retrieval coverage and blind-spot report.
 
-- [ ] **Task 29.1.3 - Verify and close the story**
+- [x] **Task 29.1.3 - Verify and close the story**
   - [x] **Sub-task 29.1.3.1:** `S-024-UT01` scores exact terms, fields, tags, links, dates, tasks, headings, and metadata using a fixed corpus; assert deterministic tie-breaking and expected ranked citations.
   - [x] **Sub-task 29.1.3.2:** `S-024-UT02` varies freshness, conflicting notes, supersession, missing targets, stale indexes, empty query, limits, and normalization; assert documented ranking and evidence states.
   - [x] **Sub-task 29.1.3.3:** `S-024-ST01` introduces query injection, regex/path abuse where applicable, oversized tokens, adversarial Unicode, hidden secrets, and unrelated-workspace canaries; assert bounded search and zero leakage.
   - [x] **Sub-task 29.1.3.4:** `S-024-IT01` answers labeled knowledge questions from raw sources and rebuilt indexes; assert material claims match expected citation sets and blind spots are reported. Evidence: commit `b5c971f0` adds a bounded parity evaluator that independently projects canonical parsed Markdown and integrity-checked rebuilt SQLite rows, runs the same labeled queries, renders exact cited extractive answers, compares expected/actual and raw/index citation sets, reports absent expected evidence, emits a content-free index-access receipt, and refuses stale indexes or malformed expected citations.
-  - [ ] **Sub-task 29.1.3.5 - Product security evidence:** Map `SR-AI-003`, `SR-AI-005`, `SR-AI-007` through `SR-AI-011`, `SR-TST-004`; retain corpus labels, ranking traces, metric calculation, expected/actual citation diffs, and coverage report. Partial local evidence: the source-bound Sprint 29 report retains all eight mappings, three labeled cases, exact ranking and citation behavior, raw/rebuilt parity and blind-spot tests, strict-local checks, and complete local gates; upstream closure and independent review remain absent.
+  - [x] **Sub-task 29.1.3.5 - Product security evidence:** Map `SR-AI-003`, `SR-AI-005`, `SR-AI-007` through `SR-AI-011`, `SR-TST-004`; retain corpus labels, ranking traces, metric calculation, expected/actual citation diffs, and coverage report. Evidence: the source-bound Sprint 29 report retains all eight mappings, three labeled cases, exact ranking and citation behavior, raw/rebuilt parity and blind-spot tests, strict-local checks, and complete local gates; the gate-owned review independently hashes retrieval sources and passes deterministic ranking, citation identity, raw/index parity, missing-evidence, no-network, and no-process checks without a human-review claim.
 
 ##### Story Acceptance Criteria
 

@@ -1,0 +1,28 @@
+{
+  "checks": {
+    "human_review_not_required_by_gate": true,
+    "index_remains_derived": true,
+    "no_network_client": true,
+    "no_process_launch": true,
+    "os_observer_uses_symlink_metadata": true,
+    "receipts_deny_source_network_process_effects": true,
+    "watch_batch_is_atomic": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "Upstream release and governance blockers remain unchanged.",
+    "No installed-platform or supported-release claim is made."
+  ],
+  "record_type": "agentmage-sprint-28-boundary-review",
+  "review_class": "gate-owned-automated-knowledge-boundary",
+  "reviewer_identity": "scripts/knowledge_sprint_boundary_review.py",
+  "schema_version": 1,
+  "source_revision": "7aecc42663f6f9ae4da65f6798f4d0df2b5b0da2",
+  "source_sha256": {
+    "capabilities/knowledge/src/obsidian_index.rs": "0cd1652365040263048d8bf96ea2e030394048c662d06b1ea0b5baab0b7919b5",
+    "shells/host/src/obsidian_watcher.rs": "e9883666bfe96a3af83430daa1e6edd234b004a59a2591be7c02101a0b7162cb"
+  },
+  "sprint": 28,
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}

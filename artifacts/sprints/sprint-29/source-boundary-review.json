@@ -1,0 +1,28 @@
+{
+  "checks": {
+    "citations_preserve_source_identity": true,
+    "human_review_not_required_by_gate": true,
+    "missing_evidence_is_visible": true,
+    "no_network_client": true,
+    "no_process_launch": true,
+    "ranking_is_deterministic": true,
+    "raw_and_index_parity_is_checked": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "Upstream release and governance blockers remain unchanged.",
+    "No installed-platform or supported-release claim is made."
+  ],
+  "record_type": "agentmage-sprint-29-boundary-review",
+  "review_class": "gate-owned-automated-knowledge-boundary",
+  "reviewer_identity": "scripts/knowledge_sprint_boundary_review.py",
+  "schema_version": 1,
+  "source_revision": "7aecc42663f6f9ae4da65f6798f4d0df2b5b0da2",
+  "source_sha256": {
+    "capabilities/knowledge/src/retrieval.rs": "0f6b759ab331e4961180931f75a9f2cb2eb44d349bcd8fabecb80dfab55a6edb",
+    "capabilities/knowledge/src/retrieval_integration.rs": "f459956c9a733a6fdddcd77d0afb4bd365686555fb827d38ad05e7f6d294f6d9"
+  },
+  "sprint": 29,
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}
