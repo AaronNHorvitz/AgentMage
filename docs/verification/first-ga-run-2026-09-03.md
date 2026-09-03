@@ -450,3 +450,44 @@ rows while retaining the production-model and installed-platform dependencies as
 
 Exact next action: continue the first unblocked Sprint 23 native token-streaming, runtime-health, or
 profile-lifecycle source rows while preserving installed-model and physical-platform tuples.
+
+## Batch 24 — Verified streaming and exact profile transition
+
+### Completed
+
+- Closed 2 TASKS rows: Sub-tasks 23.1.1.4 and 23.3.1.4. Native Chat emits the session boundary and
+  each content-free runtime event in order, validates terminal evidence and payload bytes before
+  splitting verified output from result facts, and never exposes raw model tokens as trusted output.
+  The explicit profile-change boundary retains exact task, plan, evidence, and checkpoint bindings,
+  admits only the requested revalidated profile, and returns the identical preserved state with a
+  visible stop on refusal. Runtime starts during profile-change tests: 0. Automatic substitutions: 0.
+  Promotions: 0. External rows closed by substitution: 0.
+- Commits: `de086f00` (capability, tests, documentation, and task truth) and `e79e6344` (supply-chain
+  and dependent evidence). Commits: 2. Commits per closed item: 1.00. Review pins advanced: 0; the
+  complete `REVIEWED_PATHS` intersection was empty.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1. Evidence regeneration passes: 1 with 1 targeted recovery iteration. The
+  Sprint 23 aggregate regeneration again failed only on the retained restricted-host sandbox and
+  product checks after 33.208 seconds; its failed output was restored byte-for-byte to the last
+  committed BLOCKED record, and all unaffected hash-bound consumers were regenerated once.
+- VS Code tests: 90/90 pass; lint and format pass. Sprint 23 evidence tests: 3/3 pass. Supply-chain,
+  Story 1.3, Story 11.2 AC2, task graph, requirements-current (45/45), contract, model-activation,
+  traceability, configuration, component-inventory, Story 1.1, and Story 3.1 checks pass. The full
+  `docs:check` ran 694.300 seconds and reached only the retained Story 6.1 Podman prerequisite after
+  every preceding documentation, schema, review, story, and sprint gate passed. Recorded gate wall
+  seconds: 740.
+- Exact Sprint 23 aggregate host blocker: `blocked: host change required — run the AgentMage test
+  chain outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl,
+  /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then run python3
+  scripts/sprint_23_evidence.py --write --source-revision HEAD`; substitution set: empty.
+- Retained carrier blockers: Story 7.1 remains `blocked: host change required — make
+  /run/user/1000/libpod writable to uid 1000 and start a usable rootless Podman service, then run
+  npm run -s evidence:story7.1-platform-contract:build && npm run -s
+  evidence:story7.1-security:build`; substitution set: empty. Story 9.1 remains `blocked: host change
+  required — sudo dnf install gcc-c++, then run npm run -s evidence:story9.1-linux-inference:build`;
+  substitution set: empty.
+
+Exact next action: continue Sprint 23 current-activation/runtime-health discovery or request-phase
+lifecycle coverage, then classify the installed-native and accessibility rows by exact external tuple.
