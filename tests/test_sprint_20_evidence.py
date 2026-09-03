@@ -20,10 +20,13 @@ def report() -> dict[str, object]:
 
 
 class Sprint20EvidenceTests(unittest.TestCase):
-    def test_local_contract_passes_without_sprint_or_authority_overclaim(self) -> None:
+    def test_complete_platform_neutral_sprint_passes_without_release_or_authority_overclaim(self) -> None:
         value = report()
         self.assertEqual(evidence.validate_report(value, verify_current=False), [])
-        self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
+        self.assertEqual(value["summary"]["sprint_status"], "PASS")
+        self.assertTrue(value["summary"]["story_completion_claim"])
+        self.assertTrue(value["summary"]["sprint_completion_claim"])
+        self.assertEqual(value["blockers"], [])
         self.assertEqual(value["implemented_contracts"]["material_claim_state_count"], 4)
         self.assertEqual(value["implemented_contracts"]["unknown_blocked_reason_count"], 8)
         self.assertTrue(
@@ -42,9 +45,10 @@ class Sprint20EvidenceTests(unittest.TestCase):
         )
         self.assertFalse(value["implemented_contracts"]["assignment_authority"])
 
-    def test_sprint_review_and_release_overclaims_fail(self) -> None:
+    def test_review_provenance_downstream_ownership_and_release_mutations_fail(self) -> None:
         mutations = (
-            lambda value: value["summary"].update({"sprint_status": "PASS"}),
+            lambda value: value["summary"].update({"sprint_status": "BLOCKED"}),
+            lambda value: value["summary"].update({"story_completion_claim": False}),
             lambda value: value["summary"].update({"release_approval": True}),
             lambda value: value["verification_evidence"].update(
                 {"sprint_21_receipt_integrity_owned_downstream": False}
@@ -52,8 +56,13 @@ class Sprint20EvidenceTests(unittest.TestCase):
             lambda value: value["verification_evidence"].update(
                 {"sprint_21_citation_freshness_owned_downstream": False}
             ),
-            lambda value: value["verification_evidence"].update({"independent_review": True}),
-            lambda value: value["blockers"].pop(),
+            lambda value: value["verification_evidence"]["automated_gate_review"].update(
+                {"finding_count": 1}
+            ),
+            lambda value: value["verification_evidence"]["automated_gate_review"].update(
+                {"external_human_review_claim": True}
+            ),
+            lambda value: value["blockers"].append({"code": "invented"}),
         )
         for mutate in mutations:
             changed = copy.deepcopy(report())
