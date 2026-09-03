@@ -1543,3 +1543,66 @@ at Sprint 43's first unblocked local or gate-owned verification row.
 
 Exact next action: continue at Sprint 45's first locally executable or gate-owned verification row
 while retaining Sprint 44's exact upstream, approval, platform, launcher, and fuzz blockers.
+
+## Batch 51 — Sprint 45 scaffold application and structured-coding review
+
+### Completed
+
+- Closed 4 TASKS rows: Sub-task 45.1.1.8, Sub-task 45.1.3.5, Story AC 45.1.AC1,
+  and Story AC 45.1.AC2. The current scaffold artifact binds 5 approved language
+  conventions, 5 authority-free application manifests, 7 mutation cases, 0 ignored tests,
+  mandatory no-replace atomic-root publication, separate grants, and 0 mutation authority.
+  The gate-owned boundary review binds the 13-requirement map, structured edits, safe fallback,
+  service boundary, transaction/recovery contracts, scaffold artifact, and FFI/unsafe inventory.
+  Promotions: 0. Substitutions: 0. Cumulative closed items: 108.
+- Commits: `d6d40f04` (scaffold application and boundary-review source), `9d5cc051`
+  (initial truth), `739c9bc4` (separate current scaffold-evidence recovery), `24a1477b`
+  (supply-chain evidence), `3eed9a54` (scaffold application report), `d3b40089`
+  (boundary review, traceability, and contract evidence), and `22d3d0b2` (Sprint 3
+  supply-chain cascade recovery). Commits: 7. Commits per closed item: 1.75. Review pins
+  advanced: 0; complete 20-gate `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 5/5 scaffold unit tests, 7 scaffold application mutation cases,
+  6/6 Python evidence/review tests, strict repository-map Clippy, targeted Markdown lint,
+  requirements-current 45/45, traceability, contract-boundary, and contract-evidence checks pass.
+  Supply-chain builds: 2. The second was required after targeted recovery added the separate
+  scaffold recorder. Evidence attempts: 1 legacy-recorder failure, 1 scaffold report pass,
+  1 boundary-review pass, and 1 dependency-cascade pass. Recovery iterations: 2.
+- Recovery 1: the legacy Sprint 45 recorder was first invoked with literal `HEAD`, which failed
+  its 40-byte revision check, and then exposed its retained trusted-host requirements: this
+  sandbox reports `/usr/bin/git` as UID 65534 and cannot run the nested Podman documentation
+  command. The strict recorder was not weakened. A separate source-bound recorder was added for
+  the platform-neutral scaffold contract only. Exact retained recorder blocker: `blocked: host
+  change required — run python3 scripts/sprint_45_evidence.py outside the restricted filesystem
+  sandbox where /usr/bin/git retains root-owned identity and /run/user/1000/libpod is writable`;
+  `substitution_set=empty`.
+- Recovery 2: the first full chain ran 340.07 seconds and found configuration-startup,
+  component-inventory, and Story 3.1 security evidence stale after the workspace tree hash changed.
+  Those three derived reports were rebuilt in dependency order; Story 3.1, Story 3.2, and Sprint 3
+  then passed, including 14 focused gate tests in 44.505 seconds. The repaired full chain ran
+  676.24 seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite after
+  every preceding gate passed. Recorded gate wall seconds: 676.
+- Sprint 45 exact blockers: service campaign `blocked: host change required — install and admit
+  the pinned root-owned Sprint 45 language-server executable(s), then run the confined service
+  configuration/plugin/network/workspace/environment/generated-code/hostile-response and
+  crash/cancellation campaign from the trusted packaged launcher`; native parity
+  `BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and physical supported
+  MacBook; artifact=structured-code, language-service confinement, atomic multi-file transaction,
+  scaffold-manifest, and hostile-service parity results; action=platform owners execute and
+  transfer untouched evidence; credential=Windows image source and physical Mac access;
+  payment=Windows license if required)`; launcher `blocked: host change required — run the Sprint
+  45 structured-coding suite from the trusted packaged launcher outside the development shell`;
+  and manual fuzz `BLOCKED_EXTERNAL(platform=every supported native structured-coding worker;
+  artifact=manual fuzzing transcript and minimized corpus; action=authorized human executes the
+  manual S-038 fuzz campaign and transfers untouched results; credential=platform access;
+  payment=none)`; every `substitution_set=empty`.
+- Exact upstream blocker: `blocked: awaiting Sprint 44 gate closure`, retaining Sprint 44's
+  approval, native parity, trusted-launcher, and manual-fuzz tuples; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue at Sprint 46's first locally executable or gate-owned verification row
+while retaining Sprint 45's exact upstream, service, platform, launcher, and fuzz blockers.
