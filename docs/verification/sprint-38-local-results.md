@@ -14,7 +14,8 @@
 | Full host binary under trusted package launcher | Environment blocked |
 | Ubuntu, macOS, and Windows native evidence | Absent |
 | Upstream Sprint 37 gate | Blocked |
-| Independent Sprint 38 review | Absent |
+| Gate-owned Sprint 38 boundary review | Pass |
+| Independent human Sprint 38 review | Absent |
 | Sprint result | Blocked |
 
 ## Verified Locally
@@ -43,6 +44,10 @@
 - Four real host-process stops cover before/after native source execution and before/after index
   publication. Every restart sees a parseable exact preimage or postimage, no write staging residue,
   and a new current index rebuilt only from canonical Markdown.
+- The gate-owned automated review independently rederives the 12-requirement mapping, parser/writer
+  round trips, scoped diffs, collision controls, canonical index hashes, recovery evidence, closed
+  authority, and every false missing-proof marker from committed sources. It makes no human-review
+  or platform-completion claim.
 
 ## Requirement Mapping
 
@@ -74,5 +79,5 @@ intentionally absent; that control is not weakened for test convenience.
 
 The current suite does not exhaustively race every external-edit timing or inject every durability
 fault across the native write and derived-index path. Native Ubuntu, macOS, and Windows execution,
-independent review, and manual fuzzing are absent. Sprint 38 therefore remains blocked even though
+independent human review, and manual fuzzing are absent. Sprint 38 therefore remains blocked even though
 all locally retained focused checks pass with zero blocking skips.

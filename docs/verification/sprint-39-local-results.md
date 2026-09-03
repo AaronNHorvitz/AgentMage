@@ -18,7 +18,8 @@
 | Full host binary under trusted package launcher | Environment blocked |
 | Ubuntu, macOS, and Windows native evidence | Absent |
 | Upstream Sprint 38 gate | Blocked |
-| Independent Sprint 39 review | Absent |
+| Gate-owned Sprint 39 boundary review | Pass |
+| Independent human Sprint 39 review | Absent |
 | Sprint result | Blocked |
 
 ## Verified Locally
@@ -73,6 +74,10 @@
   orphaned, cleaned, rollback, durable, quarantined, unknown, linked, mismatched, and over-limit
   reserved objects without returning paths or content. Both transition and adversarial suites pass
   with zero ignored tests.
+- The gate-owned automated review independently rederives the 14-requirement mapping, privacy
+  canary coverage, checkpoint/recovery matrix, cleanup inventory, retention/no-replay rules,
+  redacted audit chain, and every false missing-proof marker from committed sources. It makes no
+  human-review, physical-fault, or platform-completion claim.
 
 ## Requirement Mapping
 
@@ -103,6 +108,6 @@ native file transactions and separately committed derived-index publication thro
 retained native matrices cover all declared process-stop and race hooks, but do not claim physical
 filesystem exhaustion, host power loss, or torn-sector behavior.
 
-The trusted packaged-launcher environment, non-Fedora native runs, independent review, and
+The trusted packaged-launcher environment, non-Fedora native runs, independent human review, and
 manually deferred fuzzing are absent. Sprint 39
 therefore remains blocked even though all focused local contracts pass with zero blocking skips.

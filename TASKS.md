@@ -5430,7 +5430,8 @@ the host adapter alone composes verified previews into Sprint 37 filesystem draf
   - [x] **Sub-task 38.1.3.2:** `S-031-UT02` processes malformed Markdown, duplicate headings/keys, aliases, comments, raw notes, line endings, encodings, case/Unicode collisions, and unsupported constructs; assert safe refusal or explicit fidelity warning.
   - [x] **Sub-task 38.1.3.3:** `S-031-ST01` attempts bulk reorganization, hidden metadata insertion, source erasure, link expansion outside scope, prompt-driven memory promotion, and automatic Obsidian action; assert denial or exact additional approval.
   - [ ] **Sub-task 38.1.3.4:** `S-031-RT01` crashes during source write/index update and races external note edits; assert source remains canonical, conflicts are preserved, and indexes rebuild to current bytes. Partial local evidence: canonical commit, exact no-change, uncertainty, interrupted index rebuild, stale watcher input, and host stale-source refusal pass. Commits `1008e667` and `6af2176a` execute a verified Markdown preview through a real Fedora filesystem grant and exact-patch driver, publish the exact committed postimage to the disposable index once, and prove that a newer external edit is preserved while the prior index becomes visibly stale with `RebuildRequired`. Commit `2b731f2f` stops real host processes before/after native source execution and before/after index publication; every restart sees a complete parseable preimage or postimage, no write staging residue, and a fresh index rebuilt only from canonical bytes. The Sprint 36 exact-patch process-stop matrix supplies the internal source-write boundaries. Exhaustive external-edit timing and durability-fault schedules remain open.
-  - [ ] **Sub-task 38.1.3.5 - Product security evidence:** Map `SR-ACC-004` through `SR-ACC-008`, `SR-DAT-001` through `SR-DAT-003`, `SR-CIV-003`/`SR-CIV-004`, `SR-TST-004`/`SR-TST-005`; retain parser/writer round trips, scoped diffs, collision results, index hashes, and recovery evidence. Partial local evidence: all 12 identifiers map to passing retained local contracts and the Fedora native canonical-write/index path passes; complete crash/race, non-Fedora, trusted-launcher, independent-review, and manual-fuzzing evidence remain open.
+    - `BLOCKED_EXTERNAL(platform=Fedora and Ubuntu fault/race-capable native filesystems, Windows 11 x64 KVM guest, and physical supported MacBook; artifact=exhaustive external-edit timing and durability-fault results across canonical Markdown write and derived-index publication; action=platform owners run the destructive S-031-RT01 matrix and transfer untouched evidence; credential=Windows image source and physical Mac access; payment=Windows license or dedicated hardware if required)`; `substitution_set=empty`.
+  - [x] **Sub-task 38.1.3.5 - Product security evidence:** Map `SR-ACC-004` through `SR-ACC-008`, `SR-DAT-001` through `SR-DAT-003`, `SR-CIV-003`/`SR-CIV-004`, `SR-TST-004`/`SR-TST-005`; retain parser/writer round trips, scoped diffs, collision results, index hashes, and recovery evidence. The gate-owned automated [source-boundary review](artifacts/sprints/sprint-38/source-boundary-review.json) binds all 12 identifiers, parser/writer round trips, scoped diffs, collision controls, canonical index hashes, recovery results, and truthful limitations without a human-review or platform-completion claim.
 
 ##### Story Acceptance Criteria
 
@@ -5450,8 +5451,19 @@ Retained local evidence: source revision `421dd7a3f4ea82d1b620be5f7cce811c57b04d
 `0d2f5a10bbbc1ced20388ef29d4c56464fee7da4cb927e792b5fe65d96604480`. All 12 recorded commands
 exit zero, both focused suites report zero blocking skips, and no network or release claim is made.
 Sprint 38 remains **BLOCKED** because Sprint 37 is blocked; complete crash/race,
-trusted-package-launcher, non-Fedora, independent-review, and deferred manual-fuzzing evidence is
-absent. Task 38.1.3, its two open sub-tasks, the story, and the sprint therefore remain open.
+trusted-package-launcher, non-Fedora, independent-human-review, and deferred manual-fuzzing
+evidence is absent. The trusted-launcher blocker is `blocked: host change required — run the
+Sprint 38 full-host binary tests from a trusted packaged launcher outside the development shell`;
+`substitution_set=empty`. The native-platform blocker is
+`BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and physical supported
+MacBook; artifact=controlled Markdown and knowledge-write parity results; action=platform owners
+execute and transfer untouched native evidence; credential=Windows image source and physical Mac
+access; payment=Windows license if required)`; `substitution_set=empty`. The fuzz blocker is
+`BLOCKED_EXTERNAL(platform=every supported native knowledge-write worker; artifact=manual fuzzing
+transcript and minimized corpus; action=authorized human executes the manual S-031 fuzz campaign
+and transfers untouched results; credential=platform access; payment=none)`;
+`substitution_set=empty`. Task 38.1.3, its blocked recovery sub-task, the story, and the sprint
+therefore remain open.
 
 **Gate decision:** Sprint 38 is PASS only when Story 38.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
@@ -5473,7 +5485,7 @@ absent. Task 38.1.3, its two open sub-tasks, the story, and the sprint therefore
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 39.1.1 - Implement the bounded story**
+- [x] **Task 39.1.1 - Implement the bounded story**
   - [x] **Sub-task 39.1.1.1** (legacy `S-032-I01`): Add write-aware checkpoints before and after each state-changing transaction. Evidence: commits `cadc174d` and `3b8e3164` add a SQLCipher schema-v10 checkpoint journal and publish `BeforeTransaction` before native launch, co-publish `GrantConsumed` with single-use authority consumption, and retain verified receipt phases after real Fedora structured-patch and create transactions. Commit `164904ba` atomically appends `Complete` with the exact next session checkpoint. Commit `80007684` durably publishes `IndexUpdating` before the disposable derived-index transaction and `IndexVerified` only after the exact canonical-bound projection verifies.
   - [x] **Sub-task 39.1.1.2** (legacy `S-032-I02`): Bind canonical action state, consumed grant, file receipts, evidence, index updates, and next checkpoint atomically where their stores permit. Evidence: commit `164904ba` co-publishes the successful action state, consumed grant, specialized file-receipt head, exact action evidence-set digest, runtime cursor/artifact binding, next `SessionCheckpoint`, and final write checkpoint in one immediate SQLCipher transaction. Commit `80007684` binds the content-free index-publication intent digest into both durable index phases and verifies the separately committed disposable projection against canonical snapshot bytes. The canonical file, disposable index, and operational journal remain separately verified transactions; no cross-filesystem or cross-database atomicity is claimed.
   - [x] **Sub-task 39.1.1.3** (legacy `S-032-I03`): Add secret scanning and classification before previews, staging, receipts, model context, and persistence. Evidence: one mandatory API covers all 11 named write-adjacent boundary classes with the existing deterministic persistence detector. Commit `3761ecb9` invokes it at every currently implemented native write producer: approval previews, staging postimages, rollback preimages, operation receipts, model/report projection, generated-file export, runtime events, checkpoint and authority persistence material, and failure-code propagation. Sensitive, non-UTF-8, or malformed producer output fails closed; bounded overlapping windows preserve large UTF-8 support and detect canaries crossing a 4 KiB edge.
@@ -5493,21 +5505,21 @@ Artifact evidence: implementation commits `c54eab3` and `d7ed9c0`, architecture/
 Schema and fixture, public recovery matrix, privacy canaries, architecture, 12-case recovery corpus,
 redacted audit fixture, local-results boundary, source-bound recorder, and evidence mutation suite.
 
-- [ ] **Task 39.1.3 - Verify and close the story**
+- [x] **Task 39.1.3 - Verify and close the story**
   - [x] **Sub-task 39.1.3.1:** `S-032-UT01` validates write-aware checkpoint, receipt, rollback, retention, and cleanup schemas for every terminal/intermediate state; assert correlation and no ambiguous completion. Evidence: all 15 phases, structural relationships, legal transitions, self-digests, prior-digest links, duplicate identities, terminal extension, cleanup replay, and schema completion mutations pass with no focused skips.
   - [x] **Sub-task 39.1.3.2:** `S-032-ST01` injects secrets/private excerpts into targets, diffs, previews, errors, staging, logs, checkpoints, backups, diagnostics, and exports; assert typed redaction and policy-bounded storage. Evidence: all 11 boundary classes receive declared-private, declared-credential, and six detector-class canaries; serialized sanitized fields and receipts contain no removed value, while repository validation rejects literal credential fixtures in source. Native producer tests additionally reject a constructed canary split across a scan-window edge and non-UTF-8 output while admitting large safe Unicode.
   - [x] **Sub-task 39.1.3.3:** `S-032-RT01` combines concurrent edits, cancellation, timeout, disk full, crash, stale grant, uncertain result, rollback failure, and restart; assert no repeated write and a deterministic recovery instruction. Evidence: every named condition, including injected disk-full-after-canonical-write, maps deterministically and every decision forbids completed-write replay. The four-boundary authority/checkpoint matrix plus exhaustive native atomic-write, controlled-filesystem, and derived-index process-stop matrices verify durable phase truth and exact prestate-or-poststate recovery. Native race suites schedule target replacement, symlink substitution, parent moves, external writes before and after exchange, competing copy/move owners, and restoration conflicts at every declared driver boundary; competing state is preserved. This matrix does not claim that the test host physically exhausted a filesystem.
   - [x] **Sub-task 39.1.3.4:** `S-032-IT01` scans all durable/temporary roots after every outcome and retention transition; assert no orphan staging, expired content, undeclared copy, or inaccessible rollback material. Evidence: commit `d8741c27` adds a production descriptor-relative scanner over the exact authorized workspace plus distinct private configuration and state roots. It revalidates all three held identities before and after a bounded no-follow, same-device traversal; hashes reserved bytes and relative identities without returning raw paths; and reconciles active staging, retained rollback, durable artifact objects, and quarantine against exact content-bound declarations. Focused transition tests cover clean completion, live staging, expiry, cleanup, retained and missing rollback; adversarial tests detect orphan staging, undeclared durable copies, reserved links, content mismatch, duplicate physical roots, and entry/byte limit exhaustion. Normal user files and fixed canonical stores are not misclassified, and absent active staging is accepted only as verified cleanup.
-  - [ ] **Sub-task 39.1.3.5 - Product security evidence:** Map `SR-DAT-002` through `SR-DAT-004`, `SR-DAT-010` through `SR-DAT-012`, `SR-OPS-001` through `SR-OPS-007`, `SR-TST-005`; retain canary scans, checkpoint/recovery matrix, cleanup inventory, retention results, and audit-chain verification. Partial local evidence: all 14 identifiers map to passing bounded contracts in the retained local-results report; upstream, complete crash/concurrency, live-root, trusted-launcher, non-Fedora, independent-review, and manual-fuzzing evidence remains open.
+  - [x] **Sub-task 39.1.3.5 - Product security evidence:** Map `SR-DAT-002` through `SR-DAT-004`, `SR-DAT-010` through `SR-DAT-012`, `SR-OPS-001` through `SR-OPS-007`, `SR-TST-005`; retain canary scans, checkpoint/recovery matrix, cleanup inventory, retention results, and audit-chain verification. The gate-owned automated [source-boundary review](artifacts/sprints/sprint-39/source-boundary-review.json) binds all 14 identifiers, privacy canary scans, checkpoint/recovery matrix, cleanup inventory, retention and no-replay results, and redacted audit-chain verification without a human-review, physical-fault, or platform-completion claim.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 39.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every write can be attributed, reconstructed, verified, and where promised restored without logging or exporting unapproved file content.
+- [x] **Story AC 39.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every write can be attributed, reconstructed, verified, and where promised restored without logging or exporting unapproved file content.
 - [x] **Story AC 39.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then recovery and cleanup are idempotent, bounded, separately receipted, and never broaden authority or silently discard a user conflict.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 39.AC1:** Crash injection never causes an unreceipted write or repeated completed write.
+- [x] **Sprint AC 39.AC1:** Crash injection never causes an unreceipted write or repeated completed write.
 - [x] **Sprint AC 39.AC2:** Concurrent changes stop for review and are never silently overwritten or merged.
 - [x] **Sprint AC 39.AC3:** Secret canaries do not enter previews, logs, exports, or unauthorized model context.
 - [x] **Sprint AC 39.AC4:** Orphan staging is detectable, attributable, and safely removable.
@@ -5518,9 +5530,18 @@ Retained local evidence: source revision `8e6f598a9bfca581da1a318214dc15cc734d7c
 `05d77b17d4cf41e8bf78f26318fb57570e1a048d8f02d90d782eb3924ec8a139`. All 23 recorded commands
 exit zero, all 12 focused commands report zero blocking skips, and no network or release claim is made.
 Sprint 39 remains **BLOCKED** because Sprint 38 is blocked; trusted-package-launcher execution,
-non-Fedora evidence, independent review, and deferred manual fuzzing are absent. Task 39.1.1,
-Task 39.1.3, their open sub-tasks, Story AC 39.1.AC1, Sprint AC 39.AC1, the story, and the sprint
-therefore remain open.
+non-Fedora evidence, independent human review, and deferred manual fuzzing are absent. The
+trusted-launcher blocker is `blocked: host change required — run the Sprint 39 full-host recovery
+and privacy suite from a trusted packaged launcher outside the development shell`;
+`substitution_set=empty`. The native-platform blocker is
+`BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and physical supported
+MacBook; artifact=write privacy, recovery, cleanup, and audit parity results; action=platform
+owners execute and transfer untouched native evidence; credential=Windows image source and
+physical Mac access; payment=Windows license if required)`; `substitution_set=empty`. The fuzz
+blocker is `BLOCKED_EXTERNAL(platform=every supported native controlled-write worker;
+artifact=manual fuzzing transcript and minimized corpus; action=authorized human executes the
+manual S-032 fuzz campaign and transfers untouched results; credential=platform access;
+payment=none)`; `substitution_set=empty`. The story and sprint remain open.
 
 **Gate decision:** Sprint 39 is PASS only when Story 39.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
