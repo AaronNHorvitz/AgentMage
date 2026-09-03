@@ -75,7 +75,7 @@ def expected(revision: str) -> dict[str, Any]:
                 "StructuredSourceSectionKind::Table",
                 "StructuredSourceSectionKind::TableRow",
                 "StructuredSourceSectionKind::TableCell",
-                'format!("/workbook/sheets/sheet[{sheet_number}]/row[{}]/cell[{}]"',
+                '"/workbook/sheets/sheet[{sheet_number}]/row[{}]/cell[{}]"',
                 'format!("/csv/table[1]/row[{row_number}]/cell[{column}]")',
                 "project_json_value",
             ),

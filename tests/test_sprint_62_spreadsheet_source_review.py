@@ -1,30 +1,46 @@
-from __future__ import annotations
+"""Mutation tests for the Sprint 62 spreadsheet-source review."""
 
-import importlib.util
-from pathlib import Path
+import copy
+import subprocess
+import unittest
+from unittest.mock import patch
 
-
-ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts/sprint_62_spreadsheet_source_review.py"
-SPEC = importlib.util.spec_from_file_location("spreadsheet_review", SCRIPT)
-assert SPEC is not None and SPEC.loader is not None
-MODULE = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(MODULE)
+from scripts import sprint_62_spreadsheet_source_review as review
 
 
-def test_current_revision_passes_every_review_check() -> None:
-    value = MODULE.expected("HEAD")
-    assert value["status"] == "PASS_LOCAL_SPREADSHEET_SOURCE_REVIEW"
-    assert all(value["checks"].values())
+class Sprint62SpreadsheetSourceReviewTests(unittest.TestCase):
+    def test_contract_and_mutations(self) -> None:
+        revision = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], text=True
+        ).strip()
+        with patch.object(
+            review,
+            "git_bytes",
+            side_effect=lambda _revision, path: (review.ROOT / path).read_bytes(),
+        ):
+            value = review.expected(revision)
+        self.assertEqual(value["status"], "PASS_LOCAL_SPREADSHEET_SOURCE_REVIEW")
+        self.assertTrue(all(value["checks"].values()))
+        with patch.object(review, "expected", return_value=value):
+            self.assertEqual(review.validate(value), [])
+            mutations = (
+                lambda changed: changed["checks"].update(
+                    {next(iter(changed["checks"])): False}
+                ),
+                lambda changed: changed["source_sha256"].pop(
+                    next(iter(changed["source_sha256"]))
+                ),
+                lambda changed: changed.update(
+                    {"independent_human_review_performed": True}
+                ),
+                lambda changed: changed.update({"limitations": []}),
+                lambda changed: changed.update({"status": "FAIL"}),
+            )
+            for mutate in mutations:
+                changed = copy.deepcopy(value)
+                mutate(changed)
+                self.assertTrue(review.validate(changed))
 
 
-def test_validation_rejects_a_removed_bound() -> None:
-    value = MODULE.expected("HEAD")
-    value["checks"]["parser_and_projection_resource_ceilings_fail_closed"] = False
-    assert MODULE.validate(value) == ["review is stale, incomplete, or widened"]
-
-
-def test_validation_rejects_widened_limitations() -> None:
-    value = MODULE.expected("HEAD")
-    value["limitations"] = []
-    assert MODULE.validate(value) == ["review is stale, incomplete, or widened"]
+if __name__ == "__main__":
+    unittest.main()

@@ -7754,12 +7754,18 @@ provenance and honest formula, date, hidden-sheet, and size behavior.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 62.2.1 - Adapt the existing spreadsheet parser**
-  - [ ] **Sub-task 62.2.1.1:** Implement the shared extractor trait over existing XLSX, CSV, and
+  - [x] **Sub-task 62.2.1.1:** Implement the shared extractor trait over existing XLSX, CSV, and
         JSON parsing and map workbooks, sheets, tables, rows, columns, cells, names, and supported links
-        into canonical sections.
-  - [ ] **Sub-task 62.2.1.2:** Preserve workbook/sheet/cell/range provenance, cell type, displayed
+        into canonical sections. Evidence: the gate-owned
+        [spreadsheet source review](artifacts/sprints/sprint-62/spreadsheet-source-review.json)
+        binds the shared contract implementation to the existing direct XLSX, bounded CSV, and strict
+        JSON parsers and to their deterministic document/table/row/cell or JSON-pointer projections.
+  - [x] **Sub-task 62.2.1.2:** Preserve workbook/sheet/cell/range provenance, cell type, displayed
         and raw value, formula text, cached result, date-system interpretation, error values, and parser
-        warnings without calculating formulas.
+        warnings without calculating formulas. Evidence: the same bound review records exact A1 cell
+        paths and typed JSON cell observations for raw/cache, display, formula, style, number format,
+        derived date, errors, and inert links; the focused XLSX fixture proves formula/cache/date and
+        very-hidden state remain visible while execution stays false.
   - [ ] **Sub-task 62.2.1.3:** Define explicit hidden/very-hidden sheet policy, external links,
         macros, embedded objects, formulas, protected sheets, sparse ranges, and unsupported features.
 - [ ] **Task 62.2.2 - Implement bounded structural retrieval**
