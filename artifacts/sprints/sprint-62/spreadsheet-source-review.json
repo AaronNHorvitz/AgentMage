@@ -4,6 +4,7 @@
     "cell_formula_cache_date_error_and_link_semantics_are_visible": true,
     "focused_contract_tests_cover_formats_fidelity_and_failure": true,
     "hidden_and_active_content_policy_is_explicit_and_non_executing": true,
+    "malicious_and_unsupported_content_remains_bounded_and_inert": true,
     "parser_and_projection_resource_ceilings_fail_closed": true,
     "shared_trait_covers_xlsx_csv_json": true
   },
@@ -18,11 +19,11 @@
   "review_class": "gate-owned-automated-spreadsheet-source-contract-review",
   "reviewer_identity": "scripts/sprint_62_spreadsheet_source_review.py",
   "schema_version": 1,
-  "source_revision": "bddd733174da4d2690308caef1ffdcf944144f47",
+  "source_revision": "d5bd9681af388268977ec8be5beb8c7307fbfa8c",
   "source_sha256": {
     "capabilities/knowledge/src/json_data.rs": "ca417a4b54bc0e5f8a34a4566330b3c1f575c7c12c20f0b586e4c1037adf8afa",
-    "capabilities/knowledge/src/spreadsheet_ooxml.rs": "72504df24a94725c2a60699f54b8c5b85dd620bbf56ebc68410769d5b3124999",
-    "capabilities/knowledge/src/spreadsheet_source.rs": "9e1d4c9e76bdc2f35523e8e34d776b465fb3afbae0215ef9b7726603b7044a0b",
+    "capabilities/knowledge/src/spreadsheet_ooxml.rs": "3e5572d24170ea6555e592ae9228d4ed7a35cff92fae7582c647d9366e1e6de3",
+    "capabilities/knowledge/src/spreadsheet_source.rs": "a19945ad2653f78f944ac197d149026348f65d2ee07cb8a20709e7e7b27e4277",
     "capabilities/knowledge/src/tabular.rs": "7ec4a9df9e8a6ca4f00913c07b54dba32b715274e9c09160b08f632db1f45a50",
     "kernel/contracts/src/structured_source.rs": "77af2ee3ad318ca05b83db62ab722ed320d1a2a49d47edb752aafff8a1ae7370"
   },

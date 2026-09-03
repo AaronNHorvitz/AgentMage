@@ -7753,7 +7753,7 @@ provenance and honest formula, date, hidden-sheet, and size behavior.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 62.2.1 - Adapt the existing spreadsheet parser**
+- [x] **Task 62.2.1 - Adapt the existing spreadsheet parser**
   - [x] **Sub-task 62.2.1.1:** Implement the shared extractor trait over existing XLSX, CSV, and
         JSON parsing and map workbooks, sheets, tables, rows, columns, cells, names, and supported links
         into canonical sections. Evidence: the gate-owned
@@ -7766,8 +7766,15 @@ provenance and honest formula, date, hidden-sheet, and size behavior.
         paths and typed JSON cell observations for raw/cache, display, formula, style, number format,
         derived date, errors, and inert links; the focused XLSX fixture proves formula/cache/date and
         very-hidden state remain visible while execution stays false.
-  - [ ] **Sub-task 62.2.1.3:** Define explicit hidden/very-hidden sheet policy, external links,
+  - [x] **Sub-task 62.2.1.3:** Define explicit hidden/very-hidden sheet policy, external links,
         macros, embedded objects, formulas, protected sheets, sparse ranges, and unsupported features.
+        Evidence: the gate-owned
+        [spreadsheet source review](artifacts/sprints/sprint-62/spreadsheet-source-review.json)
+        binds first-class findings and visible adapter warnings for hidden/very-hidden sheets,
+        external workbook and hyperlink references, macros, DDE/formulas, embedded OLE/ActiveX/control
+        objects, protected sheets, sparse dimensions, unsupported pivot/slicer/query/connection parts,
+        and unsupported compression. No object is opened, formula evaluated, link followed, protected
+        content bypassed, or sparse dimension expanded.
 - [ ] **Task 62.2.2 - Implement bounded structural retrieval**
   - [ ] **Sub-task 62.2.2.1:** Enforce workbook, sheet, row, column, cell, string, relationship,
         compressed/decompressed byte, output, time, memory, and cancellation limits.
@@ -7802,9 +7809,12 @@ provenance and honest formula, date, hidden-sheet, and size behavior.
 - [ ] **Story AC 62.2.AC2:** Given a workbook larger than context, when context is prepared, then a
       bounded structural summary and retrieval handles are supplied without blind truncation or model
       limit violation.
-- [ ] **Story AC 62.2.AC3:** Given malicious or unsupported workbook content, when parsing runs,
+- [x] **Story AC 62.2.AC3:** Given malicious or unsupported workbook content, when parsing runs,
       then no macro, formula, external link, active content, or network executes and failure remains
-      bounded, attributable, and clean.
+      bounded, attributable, and clean. Evidence: the same bound review joins malformed, oversized,
+      macro, external-formula, DDE, embedded-object, protected, sparse, unsupported-part, cancellation,
+      digest, and unknown-media cases to stable findings or closed errors; all successful projections
+      assert filesystem, network, and execution effects false.
 - [ ] **Story AC 62.2.AC4:** Given the complete required format and workflow corpus, when
       `M-FOUNDATIONAL-RUNTIME` is evaluated, then every core and parser gate is current and passing or
       the milestone remains explicitly blocked without weakening any earlier evidence.
