@@ -312,3 +312,31 @@ current accepted Decision chain; retain Story 60.2 lifecycle and immutable evide
 
 Exact next action: continue at Sprint 1, the first dependency-independent unblocked gate after the
 blocked Sprint 0 physical lane.
+
+## Batch 11 — Sprint 1 dependency-class closure
+
+### Completed
+
+- Classified `lopdf` as the exact host PDF test-fixture dependency in both build-graph and
+  dependency-class authorities; it remains absent from the host production dependency section.
+- Added 1 dependency-class mutation test proving removal of that declared fixture dependency fails.
+- Closed 2 TASKS rows: Task 1.1.1 and Sprint AC 1.AC5. Added exact M5 tuples and empty
+  substitution sets to Sub-task 1.1.3.4, Story AC 1.1.AC1/AC2, and Sprint AC 1.AC1/AC4.
+- Commits: `3addf669`, `c4bf7583`, and `48fb6b5c`. Promotions: 0. Commits: 3. Commits per closed
+  item: 1.50. External rows closed by substitution: 0.
+
+### Validation and self-recovery
+
+- Dependency-class tests: 9/9 pass. No-install diagnostic tests: 9/9 pass. Build-contract tests:
+  10/10 pass. Story 1.1 security/artifact, component-inventory, Story 1.2 contract, traceability,
+  strict formatting, and diff checks pass.
+- Self-recovery aligned the separate dependency-class validator after it detected the new host
+  fixture edge. Review-path intersection: 0 gates; review pins advanced: 0.
+- Gate wall seconds: 10. The known Podman checkpoint was not retried after its 5 prior identical
+  failures.
+- Remaining exact Sprint 1 blocker tuple: `BLOCKED_EXTERNAL (platform=MacBook Pro M5 Apple
+  Silicon, action=run the clean standard-user build and packaged dependency campaigns and transfer
+  the untouched evidence bundles, credential=none, payment=none)`; substitution set: empty.
+
+Exact next action: continue at Sprint 2, the next dependency-independent gate after the blocked
+Sprint 1 physical lane.
