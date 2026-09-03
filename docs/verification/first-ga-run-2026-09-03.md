@@ -652,3 +652,38 @@ gate without retrying the recorded host or physical-platform prerequisites.
 
 Exact next action: implement source-byte parity for Sub-task 23.5.4.2 and the reusable production
 runtime-factory boundary that can be completed without claiming a qualified model or installed VSIX.
+
+## Batch 29 — Native/headless source-manifest parity
+
+### Completed
+
+- Closed 1 TASKS row: Sub-task 23.5.4.2. Native participant ingress and the interface-neutral Rust
+  headless boundary independently seal the same two-source canonical manifest vector to SHA-256
+  `81c4e8382c63a5894b75756ca09843640e71fd7156907e478f9b858c415e8cd3`. The binding includes
+  request/command, prompt artifact and bytes, ordered source identities, artifact identities, byte
+  counts, descriptor/source digests, reasons, and terminal states. Rust rejects incomplete,
+  duplicate, and digest-mutated records before submission. Promotions: 0. Substitutions: 0.
+- Commits: `2a78e208` (capability, cross-client tests, task truth, and architecture) and `bf4f1ff8`
+  (supply-chain and dependent evidence). Commits: 2. Commits per closed item: 2.00. Review pins
+  advanced: 0; complete `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1. Evidence regeneration passes: 1 with 1 targeted dependency-order recovery.
+  The initial consolidated pass rebuilt Story 23.5 and Story 1/3 supply-chain consumers, then the
+  contract index correctly refused a stale boundary report. Rebuilding the boundary first and index
+  second made the focused contract gates pass 29/29 and 12/12 tests without rerunning successful
+  generators.
+- Rust source-manifest tests: 2/2 pass; VS Code: 95/95 pass; Story 23.5 evidence mutations: 2/2
+  pass; strict Clippy, lint, format, task graph, supply-chain, traceability, configuration-startup,
+  component-inventory, Story 1.1, Story 3.1 security, and contract checks pass. Full `docs:check`:
+  694.720 seconds, stopping only at the retained Story 6.1 Podman prerequisite after every preceding
+  gate passed. Recorded gate wall seconds: 695.
+- Retained blockers: Story 7.1 requires a uid-1000-writable `/run/user/1000/libpod` and usable
+  rootless Podman service; Story 9.1 requires `sudo dnf install gcc-c++`; Sprint 23 aggregate evidence
+  requires execution outside the restricted filesystem sandbox where the five named system binaries
+  retain root ownership. Each substitution set remains empty.
+
+Exact next action: implement the production native-runtime factory boundary as far as a zero-enabled
+catalog permits, then mark only qualified-model and installed-client execution with exact external
+tuples.
