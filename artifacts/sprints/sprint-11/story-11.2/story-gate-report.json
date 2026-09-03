@@ -157,7 +157,7 @@
       {
         "byte_length": 6030,
         "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
-        "sha256": "04a2c807d699bdb0426d92f4f7c291c69ca4686083d62a12ce1d0e9336420f47"
+        "sha256": "d34a31f6374035784a709f6aa8d09211a17b128cdde37bd584ebef8722bcbe0d"
       },
       {
         "byte_length": 5225,
@@ -169,16 +169,16 @@
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "32dca452b6a82065bb8cafbecf17ead368626676",
-    "reviewed_tree": "8cc8f7bbfc4e6009f83d9d484fbcfbcf43735734",
+    "reviewed_commit": "cae200123296ca8071c2ed0527b4cd718e9e5971",
+    "reviewed_tree": "6b0f2441cc1fa8b3f31d65b4b3bba95132bc9494",
     "reviewer_id": "agentmage-story-11.2-independent-gate-v1"
   },
   "installed_product_claim": "none",
   "platform_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "32dca452b6a82065bb8cafbecf17ead368626676",
-  "reviewed_tree": "8cc8f7bbfc4e6009f83d9d484fbcfbcf43735734",
+  "reviewed_commit": "cae200123296ca8071c2ed0527b4cd718e9e5971",
+  "reviewed_tree": "6b0f2441cc1fa8b3f31d65b4b3bba95132bc9494",
   "schema_version": 1,
   "sprint_completion_claim": false,
   "status": "blocked-open-dependencies-and-platform-integration",
