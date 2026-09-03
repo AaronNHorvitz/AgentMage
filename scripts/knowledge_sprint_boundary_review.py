@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build gate-owned source reviews for knowledge Sprints 27 through 31."""
+"""Build gate-owned source reviews for knowledge Sprints 27 through 32."""
 
 from __future__ import annotations
 
@@ -35,6 +35,11 @@ SOURCES: Final = {
         "capabilities/knowledge/src/memory_lifecycle.rs",
         "capabilities/knowledge/src/memory_portable.rs",
         "shells/host/src/memory_file_runtime.rs",
+    ),
+    32: (
+        "kernel/contracts/src/conversation.rs",
+        "kernel/engine/src/conversation_library.rs",
+        "shells/host/src/headless.rs",
     ),
 }
 
@@ -103,21 +108,44 @@ def checks(sprint: int, sources: dict[str, bytes]) -> dict[str, bool]:
             ),
             "real_profile_and_hardware_claims_are_not_made": True,
         }
+    if sprint == 31:
+        return common | {
+            "durable_memory_requires_explicit_decision": all(
+                token in combined
+                for token in (b"decision_sha256", b"automatic_decision: false")
+            ),
+            "installed_bundle_identity_is_recomputed": b"bundle_digest" in combined,
+            "corruption_restores_last_good_projection": all(
+                token in combined
+                for token in (b"compose_memory_backup_plan", b"RestoreLastGood")
+            ),
+            "simultaneous_edits_preserve_conflict_bundle": all(
+                token in combined for token in (b"PreserveConflict", b"Conflicts")
+            ),
+            "portable_export_is_digest_bound": all(
+                token in combined
+                for token in (b"compose_portable_memory_export", b"expected_sha256")
+            ),
+        }
     return common | {
-        "durable_memory_requires_explicit_decision": all(
-            token in combined for token in (b"decision_sha256", b"automatic_decision: false")
-        ),
-        "installed_bundle_identity_is_recomputed": b"bundle_digest" in combined,
-        "corruption_restores_last_good_projection": all(
+        "conversation_history_is_read_only": b"read_only: true" in combined,
+        "branching_preserves_exact_parent_turn": all(
             token in combined
-            for token in (b"compose_memory_backup_plan", b"RestoreLastGood")
+            for token in (b"preview_conversation_branch", b"branch_from_turn_id")
         ),
-        "simultaneous_edits_preserve_conflict_bundle": all(
-            token in combined for token in (b"PreserveConflict", b"Conflicts")
+        "resume_revalidates_recorded_context": all(
+            token in combined for token in (b"revalidate_resume", b"ResumeDriftDimension")
         ),
-        "portable_export_is_digest_bound": all(
+        "deletion_requires_bound_user_approval": all(
             token in combined
-            for token in (b"compose_portable_memory_export", b"expected_sha256")
+            for token in (b"ConversationDeletionApproval", b"approved_preview_sha256")
+        ),
+        "compaction_preserves_source_evidence": all(
+            token in combined for token in (b"source_hash_set_sha256", b"receipt_ids")
+        ),
+        "client_commands_remain_closed_and_bounded": all(
+            token in combined
+            for token in (b"ConversationClientCommand", b"GrantOperation::DatabaseRead")
         ),
     }
 
@@ -200,7 +228,7 @@ def main() -> int:
     if failures:
         print("\n".join(failures), file=sys.stderr)
         return 1
-    print("Sprint 27-31 gate-owned knowledge boundary reviews passed")
+    print("Sprint 27-32 gate-owned knowledge boundary reviews passed")
     return 0
 
 

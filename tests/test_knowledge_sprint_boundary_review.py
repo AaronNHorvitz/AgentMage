@@ -9,10 +9,25 @@ from scripts import knowledge_sprint_boundary_review as review
 
 class KnowledgeSprintBoundaryReviewTests(unittest.TestCase):
     def fixture(self, sprint: int) -> dict[str, object]:
-        with patch.object(review, "git_bytes", return_value=b"deterministic citation parity missing instruction-like prose are untrusted data ObsidianVaultSelection ObsidianEntryKind::SymbolicLink symlink_metadata apply_watch_batch derived_only source_files_mutated external_process_started network_accessed SemanticAdmissionReceipt LocalSemanticIndex max_results lexical_fallback_available approved_local_semantic_workflow_evidence KnowledgeRetrievalMode::ApprovedLocalSemantic retrieval_result_sha256 remote_enabled: false source_mutated: false decision_sha256 automatic_decision: false bundle_digest compose_memory_backup_plan RestoreLastGood PreserveConflict Conflicts compose_portable_memory_export expected_sha256"):
+        source = (
+            b"deterministic citation parity missing instruction-like prose are untrusted data "
+            b"ObsidianVaultSelection ObsidianEntryKind::SymbolicLink symlink_metadata "
+            b"apply_watch_batch derived_only source_files_mutated external_process_started "
+            b"network_accessed SemanticAdmissionReceipt LocalSemanticIndex max_results "
+            b"lexical_fallback_available approved_local_semantic_workflow_evidence "
+            b"KnowledgeRetrievalMode::ApprovedLocalSemantic retrieval_result_sha256 "
+            b"remote_enabled: false source_mutated: false decision_sha256 "
+            b"automatic_decision: false bundle_digest compose_memory_backup_plan "
+            b"RestoreLastGood PreserveConflict Conflicts compose_portable_memory_export "
+            b"expected_sha256 read_only: true preview_conversation_branch branch_from_turn_id "
+            b"revalidate_resume ResumeDriftDimension ConversationDeletionApproval "
+            b"approved_preview_sha256 source_hash_set_sha256 receipt_ids "
+            b"ConversationClientCommand GrantOperation::DatabaseRead"
+        )
+        with patch.object(review, "git_bytes", return_value=source):
             return review.expected(sprint, "a" * 40)
 
-    def test_all_five_review_shapes_pass(self) -> None:
+    def test_all_review_shapes_pass(self) -> None:
         for sprint in review.SOURCES:
             value = self.fixture(sprint)
             with patch.object(review, "expected", return_value=value):
