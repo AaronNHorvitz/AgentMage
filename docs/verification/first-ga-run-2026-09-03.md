@@ -73,3 +73,26 @@ current user's /run/user/1000/libpod writable`; substitution sets: empty.
 
 Exact next action: continue with Sprint 10 repository-controlled strict-local work while the
 Sprint 9 package-evidence checkpoint remains blocked on the host change.
+
+## Batch 14 — Frozen-scope local breadth criteria
+
+### Completed
+
+- Closed 5 TASKS rows: Sprint AC 10.AC4 and Sprint AC 11.AC2 through AC5.
+- Added one hash-bound aggregate over 8 retained strict-local, crash, encryption, canary,
+  derived-export, storage-security, and durable-resume artifacts. Promotions: 0. External rows
+  closed by substitution: 0.
+- Commits: `00a7c851` and `76b4341b`. Commits: 2. Commits per closed item: 0.40.
+
+### Validation and self-recovery
+
+- Aggregate mutation tests: 3/3 pass. Bound criteria: 5/5. Markdown: 413 files, 0 issues.
+  Traceability, task graph, planning scope, and report checks pass.
+- Product truth remains false for installed-product completion, native cross-platform completion,
+  Story/Sprint 10 completion, Story 11.1/Sprint 11 completion, release, and external-evidence
+  substitution. Review-path intersections: 0; review pins advanced: 0.
+- Supply-chain regeneration count: 1; output delta: 0. Evidence regeneration count: 1. Gate wall
+  seconds: 75. Known Podman checkpoint retries: 0.
+
+Exact next action: continue with the next dependency-independent frozen-scope gate after the
+remaining Sprint 10 and 11 installed-product dependencies.
