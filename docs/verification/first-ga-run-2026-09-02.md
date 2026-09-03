@@ -280,3 +280,35 @@ context accounting, and hostile/resource fixtures without claiming the blocked i
 
 Exact next action: select the next repository-controlled dependency gate after reconciling the
 current accepted Decision chain; retain Story 60.2 lifecycle and immutable evidence rows open.
+
+## Batch 10 — Sprint 0 evidence reconciliation
+
+### Completed
+
+- Revalidated all 6 retained Story 0.3 Linux, DMR-compatibility, fallback, substitution,
+  reachability, and security bundles without enabling a model or substituting macOS evidence.
+- Closed 7 TASKS rows: Story 0.3 AC2 and AC3, plus Sprint 0 AC1 through AC5.
+- Replaced the generic physical-platform wording on Sub-task 0.3.2.2 and its dependent AC1 with
+  the exact MacBook Pro M5 execution-and-transfer tuple and an empty substitution set.
+- Corrected the accepted build graph to include `lopdf` solely as a host development dependency;
+  added 1 mutation test proving its removal is rejected.
+- Commits: `899af7a4`, `d884bfa0`, and `67c674df`. Promotions: 0. Commits: 3. Commits per closed
+  item: 0.43. External rows closed by substitution: 0.
+
+### Validation and self-recovery
+
+- Immutable Story 0.3 bundle checks: 6/6 pass. Build-contract tests: 10/10 pass. Story 2.2
+  regeneration tests: 34/34 pass. Markdown: 412 files, 0 issues. Mermaid: 136 blocks pass.
+- Planning scope, traceability, document policy, task graph, protected requirement/checklist,
+  architecture decision, schema, dependency, Story 1.2 contract, and model-activation checks pass.
+- Self-recovery fixed the host development-edge omission reported by `build_contract.py`, then
+  regenerated the hash-bound Story 2.2 fuzz chain and Story 1.2 contract chain invalidated by the
+  correction. Review-path intersection: 0 gates; review pins advanced: 0.
+- Gate wall seconds: 212. The known Podman checkpoint was not retried after its 5 prior identical
+  failures.
+- Remaining exact Sprint 0 blocker tuple: `BLOCKED_EXTERNAL (platform=MacBook Pro M5 Apple
+  Silicon, action=run the pinned llama.cpp/Metal corpus and transfer the untouched result bundle,
+  credential=none, payment=none)`; substitution set: empty.
+
+Exact next action: continue at Sprint 1, the first dependency-independent unblocked gate after the
+blocked Sprint 0 physical lane.
