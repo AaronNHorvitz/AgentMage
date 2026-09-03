@@ -3,7 +3,9 @@
     "canonical_structure_and_exact_provenance_are_emitted": true,
     "cell_formula_cache_date_error_and_link_semantics_are_visible": true,
     "focused_contract_tests_cover_formats_fidelity_and_failure": true,
+    "golden_projection_binds_exact_values_types_and_provenance": true,
     "hidden_and_active_content_policy_is_explicit_and_non_executing": true,
+    "hostile_and_fidelity_corpus_covers_required_local_families": true,
     "malicious_and_unsupported_content_remains_bounded_and_inert": true,
     "parser_and_projection_resource_ceilings_fail_closed": true,
     "runtime_lifecycle_retention_restart_and_exact_token_accounting_are_closed": true,
@@ -21,14 +23,14 @@
   "review_class": "gate-owned-automated-spreadsheet-source-contract-review",
   "reviewer_identity": "scripts/sprint_62_spreadsheet_source_review.py",
   "schema_version": 1,
-  "source_revision": "bd46574194734f00331f6aa019a53d4522669078",
+  "source_revision": "c9d3445ce98a79560300ddef206c3ce9bb7bd6bb",
   "source_sha256": {
     "capabilities/knowledge/src/json_data.rs": "ca417a4b54bc0e5f8a34a4566330b3c1f575c7c12c20f0b586e4c1037adf8afa",
-    "capabilities/knowledge/src/spreadsheet_ooxml.rs": "d064a6fa1ab16a3a0a7ef3594db8fe5a58fc83a1bb5f81a98f3b0dc0cba0b528",
-    "capabilities/knowledge/src/spreadsheet_source.rs": "f25c1572f99ca70c5d3d52e219744bc23f603814d3bb26c73641065b35ffdb64",
+    "capabilities/knowledge/src/spreadsheet_ooxml.rs": "fbd94c38c6471eaa84a42c23b563f686d1a9313f7a0ebbb775606f2484f74a2a",
+    "capabilities/knowledge/src/spreadsheet_source.rs": "3ed15561edbdf3c38967d82dd68c16411a7ba2f94de12f0403c13f1774f8f258",
     "capabilities/knowledge/src/tabular.rs": "7ec4a9df9e8a6ca4f00913c07b54dba32b715274e9c09160b08f632db1f45a50",
     "kernel/contracts/src/structured_source.rs": "77af2ee3ad318ca05b83db62ab722ed320d1a2a49d47edb752aafff8a1ae7370",
-    "shells/host/src/spreadsheet_source_artifact.rs": "b009e02fc96fd65a6d2217de26ae0683401bf69cd3aa64f29d19e43ec6bbaf62"
+    "shells/host/src/spreadsheet_source_artifact.rs": "8989545e4355983ca3bbc6c2b326bcfdc3ba067c28156b5747cae652789aaa5b"
   },
   "status": "PASS_LOCAL_SPREADSHEET_SOURCE_REVIEW"
 }

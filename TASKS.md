@@ -7775,7 +7775,7 @@ provenance and honest formula, date, hidden-sheet, and size behavior.
         objects, protected sheets, sparse dimensions, unsupported pivot/slicer/query/connection parts,
         and unsupported compression. No object is opened, formula evaluated, link followed, protected
         content bypassed, or sparse dimension expanded.
-- [ ] **Task 62.2.2 - Implement bounded structural retrieval**
+- [x] **Task 62.2.2 - Implement bounded structural retrieval**
   - [x] **Sub-task 62.2.2.1:** Enforce workbook, sheet, row, column, cell, string, relationship,
         compressed/decompressed byte, output, time, memory, and cancellation limits.
         Evidence: the gate-owned
@@ -7801,9 +7801,15 @@ provenance and honest formula, date, hidden-sheet, and size behavior.
         counter implementation and tokenizer identity. The runtime-owned service retains the canonical
         projection and content-free index only; it has no original-workbook byte field.
 - [ ] **Task 62.2.3 - Verify malicious and fidelity cases**
-  - [ ] **Sub-task 62.2.3.1:** Test malformed ZIP/XML, traversal, bombs, macros, formulas, external
+  - [x] **Sub-task 62.2.3.1:** Test malformed ZIP/XML, traversal, bombs, macros, formulas, external
         links, hidden sheets, sparse dimensions, date systems, errors, Unicode, protected content,
         oversized strings, cancellation, crash, low memory, and cleanup.
+        Evidence: the gate-owned
+        [spreadsheet source review](artifacts/sprints/sprint-62/spreadsheet-source-review.json)
+        binds focused parser and prepared-service cases for every named family. Unsafe paths,
+        malformed structures, package/string/coordinate/time/memory bounds, and cancellation fail
+        closed; active or external content remains inert; crash receipts claim no parser, network, or
+        workspace effect; release and deletion clear both projection content and lexical entries.
   - [ ] **Sub-task 62.2.3.2:** Compare exact sheet/cell/range values and provenance with golden
         fixtures; require visible cached-versus-formula distinctions, no formula execution, no external
         retrieval, bounded resources, and client parity.
@@ -7820,12 +7826,18 @@ provenance and honest formula, date, hidden-sheet, and size behavior.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 62.2.AC1:** Given an admitted workbook, when extraction runs, then every returned
+- [x] **Story AC 62.2.AC1:** Given an admitted workbook, when extraction runs, then every returned
       value resolves to exact workbook, sheet, cell or range provenance with type, formula/cache, date,
       error, and hidden-state semantics visible.
-- [ ] **Story AC 62.2.AC2:** Given a workbook larger than context, when context is prepared, then a
+      Evidence: the same review binds golden formula and date cells to exact package part, sheet, row,
+      column, A1 address, type, displayed/raw/cache value, formula, date, number format, and
+      very-hidden/protected/sparse sheet state without execution.
+- [x] **Story AC 62.2.AC2:** Given a workbook larger than context, when context is prepared, then a
       bounded structural summary and retrieval handles are supplied without blind truncation or model
       limit violation.
+      Evidence: the same review binds ordered content-free summaries and indexes, exact bounded range
+      retrieval, deterministic content-addressed references when inline output cannot fit, and
+      fail-closed combined-artifact accounting under the exact selected token counter and tokenizer.
 - [x] **Story AC 62.2.AC3:** Given malicious or unsupported workbook content, when parsing runs,
       then no macro, formula, external link, active content, or network executes and failure remains
       bounded, attributable, and clean. Evidence: the same bound review joins malformed, oversized,
