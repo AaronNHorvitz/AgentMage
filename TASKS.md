@@ -4581,7 +4581,7 @@ root and signed Fedora, Ubuntu, and macOS packages named under Task 25.2.2;
 **Blocked:** Story 26.1 awaits human acceptance of
 [`DRAFT-0049`](docs/decisions/DRAFT-0049-knowledge-privacy-governance.md) and
 [`DRAFT-0050`](docs/decisions/DRAFT-0050-knowledge-records-governance.md), upstream `G-V0.1`,
-supported-package integration, and gate-owned boundary review; `substitution_set=empty`.
+and supported-package integration; `substitution_set=empty`.
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
@@ -4596,7 +4596,7 @@ supported-package integration, and gate-owned boundary review; `substitution_set
 #### [ ] Story 26.1 - Canonical Human Knowledge Domain
 
 **Blocked:** Sub-task 26.1.3.5 retains the exact draft-Decision, upstream-release,
-supported-package, and gate-owned-review blockers below; `substitution_set=empty`.
+supported-package blockers below; `substitution_set=empty`.
 
 **User-facing value:** As an AgentMage user, maintainer, or reviewer, I need canonical human knowledge domain so that AgentMage delivers the following bounded outcome: Add user-owned Markdown as the sole authority for human knowledge while keeping operational state in encrypted SQLite.
 
@@ -4619,13 +4619,13 @@ supported-package, and gate-owned-review blockers below; `substitution_set=empty
   - [x] **Sub-task 26.1.2.4:** Knowledge backup, restore, and migration report.
 
 - [ ] **Task 26.1.3 - Verify and close the story** Blocked on Sub-task 26.1.3.5's exact
-  draft-Decision, upstream-release, supported-package, and gate-owned-review blockers;
+  draft-Decision, upstream-release, and supported-package blockers;
   `substitution_set=empty`.
   - [x] **Sub-task 26.1.3.1:** `S-022-UT01` classifies canonical Markdown, derived index, operational state, cache, export, and temporary data; assert exactly one owner, storage rule, retention rule, and rebuild path per field.
   - [x] **Sub-task 26.1.3.2:** `S-022-UT02` mutates or deletes derived indexes and operational records; assert canonical user files remain unchanged and every derived view rebuilds from approved sources.
   - [x] **Sub-task 26.1.3.3:** `S-022-ST01` introduces symlinks, cloud-synced roots, adjacent folders, hidden files, secrets, conflicting identities, and malicious note content; assert bounded scope, classification, and non-authority.
   - [x] **Sub-task 26.1.3.4:** `S-022-RT01` backs up, migrates, restores, and deletes synthetic knowledge across schema versions; assert canonical identity, links, provenance, retention, and index regeneration.
-  - [ ] **Sub-task 26.1.3.5 - Product security evidence:** Map `SR-GOV-006`, `SR-DAT-001` through `SR-DAT-004`, `SR-DAT-010` through `SR-DAT-012`, `SR-CIV-001` through `SR-CIV-005`; retain data dictionary, authority tests, rebuild hashes, lifecycle results, and privacy/records decision placeholders. The local report binds all 13 requirement identities and the completed dictionary, authority, rebuild, and lifecycle suites. Remaining blockers: `blocked: awaiting Decision DRAFT-0049-knowledge-privacy-governance`; `blocked: awaiting Decision DRAFT-0050-knowledge-records-governance`; upstream Story 25.1's exact release tuples; supported-package integration on those exact packages/platforms; and gate-owned Sprint 26 boundary review. Every `substitution_set=empty`.
+  - [ ] **Sub-task 26.1.3.5 - Product security evidence:** Map `SR-GOV-006`, `SR-DAT-001` through `SR-DAT-004`, `SR-DAT-010` through `SR-DAT-012`, `SR-CIV-001` through `SR-CIV-005`; retain data dictionary, authority tests, rebuild hashes, lifecycle results, and privacy/records decision placeholders. The local report binds all 13 requirement identities and the completed dictionary, authority, rebuild, and lifecycle suites. The gate-owned automated review hashes six authority/index/lifecycle/operation/store/architecture sources and passes seven boundary checks without claiming human review. Remaining blockers: `blocked: awaiting Decision DRAFT-0049-knowledge-privacy-governance`; `blocked: awaiting Decision DRAFT-0050-knowledge-records-governance`; upstream Story 25.1's exact release tuples; and supported-package integration on those exact packages/platforms. Every `substitution_set=empty`.
 
 ##### Story Acceptance Criteria
 
@@ -4640,7 +4640,7 @@ supported-package, and gate-owned-review blockers below; `substitution_set=empty
 - [x] **Sprint AC 26.AC4:** Duplicate, malformed, conflicting, private, and restricted records are detected before import.
 - [x] **Sprint AC 26.AC5:** The capability remains read-only against user files until `G-V0.3`.
 
-**Local evidence:** Commits `62a5661` through `8657c45`, `f823a0c`, `2cb70b6`, and retained report [`artifacts/sprints/sprint-26/local-evidence-report.json`](artifacts/sprints/sprint-26/local-evidence-report.json) complete the locally executable implementation and verification scope. Sub-task `26.1.3.5`, the parent task/story boxes, and this sprint remain open because `G-V0.1`, independent privacy and records decisions, independent Sprint 26 review, and supported-package integration are not complete.
+**Local evidence:** Commits `62a5661` through `8657c45`, `f823a0c`, `2cb70b6`, and retained report [`artifacts/sprints/sprint-26/local-evidence-report.json`](artifacts/sprints/sprint-26/local-evidence-report.json) complete the locally executable implementation and verification scope. The newer gate-owned [`source-boundary-review.json`](artifacts/sprints/sprint-26/source-boundary-review.json) closes automated review without a human-review claim. Sub-task `26.1.3.5`, the parent task/story boxes, and this sprint remain open because `G-V0.1`, the two human governance Decisions, and supported-package integration are not complete.
 
 **Gate decision:** Sprint 26 is PASS only when Story 26.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 

@@ -1,0 +1,31 @@
+{
+  "checks": {
+    "canonical_markdown_is_user_owned": true,
+    "field_policy_has_one_owner_and_lifecycle": true,
+    "index_is_derived_and_disposable": true,
+    "lifecycle_is_preview_only": true,
+    "operational_store_is_not_a_dependency": true,
+    "operations_expose_no_apply_authority": true,
+    "unsupported_platform_and_release_claims_absent": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "The privacy and records Decisions remain unaccepted human governance blockers.",
+    "Supported-package integration and upstream release closure remain separate blockers."
+  ],
+  "record_type": "agentmage-sprint-26-boundary-review",
+  "review_class": "gate-owned-automated-knowledge-authority-boundary",
+  "reviewer_identity": "scripts/sprint_26_boundary_review.py",
+  "schema_version": 1,
+  "source_revision": "5d2babb8dc9c2af00cc5a0b233e859d1fd2a1bfd",
+  "source_sha256": {
+    "capabilities/knowledge/src/authority.rs": "225a72198b8a867700645cc3c53e34b3cc6410ba7ec1c192527484df62f4d139",
+    "capabilities/knowledge/src/index.rs": "858fa352ee67226f01d1d10217d05c987d90d6c8424d08240cd8094ea05170e4",
+    "capabilities/knowledge/src/lifecycle.rs": "8724271a3fd6b87b62ed0c26bdfb434f299b166582eda98ff88187c40866ac46",
+    "capabilities/knowledge/src/operations.rs": "3a29668b8e47a319fd69568110cef1a70de5495f2d90336dc6f26ccdfa09f4ca",
+    "capabilities/knowledge/src/store.rs": "170bf86535172b578f2802e0b06a72d51b873576e095723b04c5efcb1c494e59",
+    "docs/architecture/knowledge-authority-boundary.md": "f8f2e77b1856b0ce743e3b985b33a6ac24cc642bdf26b16670a1768093698aab"
+  },
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}
