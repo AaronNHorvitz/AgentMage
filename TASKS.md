@@ -7118,7 +7118,7 @@ with honest reading-order, table, OCR, confidence, and encryption limitations.
   - [x] **Sub-task 60.2.1.1:** Implement the shared extractor trait over the existing PDF parser
     with page boundaries, spans, reading-order observations, text density, image-only detection,
     password/encryption state, warnings, and page-level provenance.
-  - [ ] **Sub-task 60.2.1.2:** Preserve object/page/span identity and label tables, columns,
+  - [x] **Sub-task 60.2.1.2:** Preserve object/page/span identity and label tables, columns,
     ligatures, forms, annotations, embedded files, damaged xrefs, and unsupported structures rather
     than inventing layout certainty.
   - [x] **Sub-task 60.2.1.3:** Refuse JavaScript, actions, launches, external resources, embedded
@@ -7130,8 +7130,10 @@ with honest reading-order, table, OCR, confidence, and encryption limitations.
   It records decoded-content text density and explicitly unverified parser-emission reading order;
   scan/parser limitations remain visible. The existing inert artifact inspector now gates publication
   and quarantines active or external actions, embedded content, encrypted input, and incomplete
-  inspection with every effect marker false. Table/column/layout semantics and the runtime lifecycle
-  remain open, so Sub-task 60.2.1.2 and Tasks 60.2.2 through 60.2.4 remain unchecked.
+  inspection with every effect marker false. Internal links, forms, and image objects remain inert
+  source-bound sections; table/column and ligature semantics carry explicit uncertainty warnings,
+  while damaged or unsupported structures quarantine rather than inventing fidelity. Task 60.2.1 is
+  complete; Tasks 60.2.2 through 60.2.4 and the runtime lifecycle remain unchecked.
 - [ ] **Task 60.2.2 - Admit OCR as a separate optional path**
   - [ ] **Sub-task 60.2.2.1:** Define an OCR trait and evaluate pure-Rust and optional isolated
     native candidates for license, model files, quality, language, CPU/GPU, package size, platform,

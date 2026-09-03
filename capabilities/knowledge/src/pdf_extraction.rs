@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use crate::pdf_inspection::inspect_pdf_artifact;
 use crate::word_ooxml::word_sha256;
 
-const EXTRACTOR_ID: &str = "agentmage-pdf-extractor-v2;lopdf=0.44.0;strict=true;spans=utf8-lines;reading-order=parser-emission-unverified;active-external=quarantine;password=denied;ocr=external-admitted-observation;renderer=none;network=denied;filesystem=denied";
+const EXTRACTOR_ID: &str = "agentmage-pdf-extractor-v3;lopdf=0.44.0;strict=true;spans=utf8-lines;reading-order=parser-emission-unverified;structure=inert-observations;layout-semantics=unverified;active-external=quarantine;password=denied;ocr=external-admitted-observation;renderer=none;network=denied;filesystem=denied";
 const MAX_PROFILE_BYTES: usize = 512 * 1_024 * 1_024;
 const MAX_PROFILE_OBJECTS: usize = 1_000_000;
 const MAX_PROFILE_PAGES: usize = 100_000;
@@ -480,6 +480,9 @@ impl StructuredSourceExtractor for PdfStructuredSourceExtractor {
                     count.checked_add(page.text_spans.len())
                 })
             })
+            .and_then(|value| value.checked_add(inspection.links.len()))
+            .and_then(|value| value.checked_add(inspection.forms.len()))
+            .and_then(|value| value.checked_add(inspection.images.len()))
             .ok_or(StructuredSourceExtractionError::ResourceLimit)?;
         if required_sections
             > usize::try_from(request.maximum_sections)
@@ -549,7 +552,71 @@ impl StructuredSourceExtractor for PdfStructuredSourceExtractor {
                 });
             }
         }
-        let warnings = result
+        let document_id = format!("{}:document", request.source_id);
+        for link in &inspection.links {
+            let rendered_page = link.page.as_ref().map(|page| page.page_number);
+            sections.push(StructuredSourceSection {
+                section_id: link.link_id.clone(),
+                parent_section_id: link.page.as_ref().map_or_else(
+                    || Some(document_id.clone()),
+                    |page| Some(page.page_id.clone()),
+                ),
+                ordinal: u32::try_from(sections.len())
+                    .map_err(|_| StructuredSourceExtractionError::ResourceLimit)?,
+                kind: StructuredSourceSectionKind::Link,
+                content: String::new(),
+                provenance: StructuredSourceProvenance {
+                    relationship_id: Some(link.link_id.clone()),
+                    ..pdf_provenance(
+                        &link.object_number.map_or_else(
+                            || "inline-action".to_owned(),
+                            |number| {
+                                format!(
+                                    "object-{number}-{}",
+                                    link.object_generation.unwrap_or_default()
+                                )
+                            },
+                        ),
+                        "links",
+                        rendered_page,
+                    )
+                },
+            });
+        }
+        for form in &inspection.forms {
+            sections.push(StructuredSourceSection {
+                section_id: form.field_id.clone(),
+                parent_section_id: Some(document_id.clone()),
+                ordinal: u32::try_from(sections.len())
+                    .map_err(|_| StructuredSourceExtractionError::ResourceLimit)?,
+                kind: StructuredSourceSectionKind::Unsupported,
+                content: String::new(),
+                provenance: pdf_provenance(
+                    &format!("object-{}-{}", form.object_number, form.object_generation),
+                    "forms",
+                    None,
+                ),
+            });
+        }
+        for image in &inspection.images {
+            sections.push(StructuredSourceSection {
+                section_id: format!(
+                    "{}:image:{}-{}",
+                    image.page.page_id, image.object_number, image.object_generation
+                ),
+                parent_section_id: Some(image.page.page_id.clone()),
+                ordinal: u32::try_from(sections.len())
+                    .map_err(|_| StructuredSourceExtractionError::ResourceLimit)?,
+                kind: StructuredSourceSectionKind::Image,
+                content: String::new(),
+                provenance: pdf_provenance(
+                    &format!("object-{}-{}", image.object_number, image.object_generation),
+                    &format!("pages/{}/images", image.page.page_number),
+                    Some(image.page.page_number),
+                ),
+            });
+        }
+        let mut warnings = result
             .limitations
             .iter()
             .map(|item| StructuredSourceWarning {
@@ -558,7 +625,26 @@ impl StructuredSourceExtractor for PdfStructuredSourceExtractor {
                 source_part: item.page_id.clone(),
                 original_remains_authoritative: item.original_remains_authoritative,
             })
-            .collect();
+            .collect::<Vec<_>>();
+        for page in &result.pages {
+            if page.state == PdfPageState::Text {
+                warnings.push(structured_warning(
+                    &page.identity.page_id,
+                    "pdf.layout.tables-columns-unverified",
+                ));
+                warnings.push(structured_warning(
+                    &page.identity.page_id,
+                    "pdf.text.ligature-mapping-parser-dependent",
+                ));
+            }
+        }
+        for form in &inspection.forms {
+            warnings.push(structured_warning(
+                &form.field_id,
+                "pdf.form.structure-preserved-semantics-unverified",
+            ));
+        }
+        warnings.sort_by(|left, right| left.warning_id.cmp(&right.warning_id));
         Ok(StructuredSourceExtraction {
             schema_version: CONTRACT_SCHEMA_VERSION,
             source_id: request.source_id.clone(),
@@ -574,6 +660,18 @@ impl StructuredSourceExtractor for PdfStructuredSourceExtractor {
             network_access_performed: result.network_access_performed,
             execution_performed: result.execution_performed,
         })
+    }
+}
+
+fn structured_warning(source_part: &str, reason_code: &str) -> StructuredSourceWarning {
+    StructuredSourceWarning {
+        warning_id: format!(
+            "pdf-warning:{}",
+            word_sha256(format!("{source_part}\n{reason_code}").as_bytes())
+        ),
+        reason_code: reason_code.to_owned(),
+        source_part: Some(source_part.to_owned()),
+        original_remains_authoritative: true,
     }
 }
 
@@ -1103,14 +1201,14 @@ mod tests {
             media_type: PDF_MEDIA_TYPE.to_owned(),
             source_sha256: word_sha256(&source),
             source_path: path(),
-            maximum_sections: 4,
+            maximum_sections: 5,
             maximum_output_bytes: 1_024,
         };
         let extraction = PdfStructuredSourceExtractor
             .extract(&request, &source, &mut || false)
             .expect("structured extraction");
         assert_eq!(extraction.format, StructuredSourceFormat::Pdf);
-        assert_eq!(extraction.sections.len(), 4);
+        assert_eq!(extraction.sections.len(), 5);
         assert_eq!(
             extraction.sections[0].kind,
             StructuredSourceSectionKind::Document
@@ -1136,6 +1234,23 @@ mod tests {
             extraction.sections[2].provenance.end_byte_exclusive,
             Some(9)
         );
+        assert_eq!(
+            extraction.sections[4].kind,
+            StructuredSourceSectionKind::Image
+        );
+        assert_eq!(
+            extraction.sections[4].parent_section_id.as_deref(),
+            Some(extraction.sections[3].section_id.as_str())
+        );
+        assert!(
+            extraction
+                .warnings
+                .iter()
+                .any(|warning| { warning.reason_code == "pdf.layout.tables-columns-unverified" })
+        );
+        assert!(extraction.warnings.iter().any(|warning| {
+            warning.reason_code == "pdf.text.ligature-mapping-parser-dependent"
+        }));
         assert!(extraction.warnings.iter().any(|warning| {
             warning.reason_code == "pdf.page.scanned-candidate-ocr-required"
                 && warning.original_remains_authoritative
@@ -1147,7 +1262,7 @@ mod tests {
         assert!(!extraction.execution_performed);
 
         let mut constrained = request;
-        constrained.maximum_sections = 3;
+        constrained.maximum_sections = 4;
         assert_eq!(
             PdfStructuredSourceExtractor.extract(&constrained, &source, &mut || false),
             Err(StructuredSourceExtractionError::ResourceLimit)

@@ -119,6 +119,7 @@ IMPLEMENTED: Final = {
     "reading_order_uncertainty_visible": True,
     "text_density_observation": True,
     "active_or_external_content_quarantined": True,
+    "unsupported_structure_preservation": True,
     "network_access_capability": False,
     "execution_capability": False,
     "filesystem_mutation_capability": False,

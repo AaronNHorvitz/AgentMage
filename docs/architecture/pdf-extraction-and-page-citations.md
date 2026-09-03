@@ -19,6 +19,12 @@ and incomplete inspection quarantine the source without following or executing c
 milestone does not claim region geometry, reading-order certainty, table or column semantics, OCR
 execution, runtime lifecycle integration, or installed-client support.
 
+Internal destinations, form identities, and page-image objects remain inert structured sections
+with exact source-object provenance. Forms retain no values, images retain no payload in the shared
+projection, and actions retain no executable authority. Table/column interpretation and ligature
+mapping are labeled unverified; damaged or unsupported structures quarantine instead of being
+silently flattened into invented fidelity.
+
 ## Scope
 
 Sprint 60 introduces a bounded in-memory PDF read boundary. It accepts bytes and a canonical
