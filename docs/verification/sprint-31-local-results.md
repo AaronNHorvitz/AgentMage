@@ -37,10 +37,10 @@
   imported catalog.
 - Keys are caller-owned and zeroized on drop, debug output is redacted, and ciphertext proposals
   and import receipts have fixed false filesystem-write markers.
-- The host installed-file owner recomputes every bundle identity, stages private files, snapshots
-  exact last-good bytes, restores a corrupted projection, preserves simultaneous proposals as
-  complete conflict bundles, and transfers opaque encrypted exports between explicit local roots
-  only under an exact digest.
+- The host planner recomputes every bundle identity and emits only controlled filesystem drafts for
+  private publication, exact last-good copies, complete restoration, simultaneous-edit conflict
+  bundles, and digest-bound opaque encrypted exports. The existing kernel/platform transaction
+  path retains approval, one-use authority, atomic execution, receipt, rollback, and crash recovery.
 - The gate-owned review hashes memory policy, lifecycle, portable encryption, and the installed
   filesystem owner without making a human-review or release claim.
 

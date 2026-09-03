@@ -109,7 +109,8 @@ def checks(sprint: int, sources: dict[str, bytes]) -> dict[str, bool]:
         ),
         "installed_bundle_identity_is_recomputed": b"bundle_digest" in combined,
         "corruption_restores_last_good_projection": all(
-            token in combined for token in (b"snapshot_last_good", b"CorruptState")
+            token in combined
+            for token in (b"compose_memory_backup_plan", b"RestoreLastGood")
         ),
         "simultaneous_edits_preserve_conflict_bundle": all(
             token in combined for token in (b"ConflictPreserved", b"Conflicts")

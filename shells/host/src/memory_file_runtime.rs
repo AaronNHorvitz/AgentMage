@@ -1,304 +1,301 @@
-//! Protected installed-file ownership for approved memory bundles and portable exports.
+//! Authority-free protected-memory planning over the controlled filesystem transaction boundary.
 
-use std::collections::BTreeSet;
-use std::fs::{self, OpenOptions};
-use std::io::Write as _;
-use std::path::{Component, Path, PathBuf};
+use std::collections::{BTreeMap, BTreeSet};
+use std::fmt::Write as _;
 
 use agentmage_capability_knowledge::{MemoryMarkdownBundle, MemoryMarkdownFile};
-use serde::{Deserialize, Serialize};
+use agentmage_kernel_contracts::{GrantTarget, WorkspaceObjectKind, WorkspacePath};
+use agentmage_kernel_engine::filesystem_control::{
+    ExistingSourceDraft, ExistingWorkDisposition, FileClassification, FilesystemOperationDraft,
+    NewDestinationDraft, StructuredPatch, StructuredPatchHunk,
+};
 use sha2::{Digest, Sha256};
 
-const STATE_FILE: &str = ".agentmage-memory-state.json";
-const BACKUP_DIR: &str = ".agentmage-memory-last-good";
 const MAX_FILES: usize = 100_001;
 const MAX_FILE_BYTES: usize = 1024 * 1024;
 const MAX_EXPORT_BYTES: usize = 256 * 1024 * 1024;
 
-type ProjectionFiles = Vec<(String, Vec<u8>)>;
-
-/// Closed installed-memory publication result.
+/// Closed installed-memory operation intent.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum MemoryFileDisposition {
-    /// The exact approved bundle replaced the governed installed projection.
-    Committed,
-    /// Concurrent state was preserved and the proposal was retained separately.
-    ConflictPreserved,
-    /// A corrupt or interrupted installed projection was restored from last-good bytes.
-    Restored,
+pub enum MemoryFileIntent {
+    /// Publish one newly approved current bundle.
+    Publish,
+    /// Restore one previously verified last-good bundle.
+    RestoreLastGood,
+    /// Preserve a complete proposal after a simultaneous-edit mismatch.
+    PreserveConflict,
 }
 
-/// Content-free receipt for an installed-memory operation.
+/// Exact held observation for one governed logical memory file.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct MemoryFileReceipt {
-    /// Closed operation outcome.
-    pub disposition: MemoryFileDisposition,
-    /// Digest of the exact installed or preserved bundle.
+pub enum MemoryFileObservation {
+    /// The destination is absent under one continuously held parent.
+    Absent {
+        /// Logical bundle-relative path, independent of its conflict/backup destination.
+        logical_relative_path: String,
+        /// Exact canonical absent destination.
+        path: WorkspacePath,
+        /// Held destination parent.
+        parent: GrantTarget,
+        /// Complete bounded sibling-name observation.
+        observed_sibling_names: Vec<String>,
+    },
+    /// The destination is an exactly observed existing regular file.
+    Existing {
+        /// Logical bundle-relative path.
+        logical_relative_path: String,
+        /// Held existing target.
+        target: GrantTarget,
+        /// Exact held bytes.
+        observed_bytes: Vec<u8>,
+        /// Exact observed POSIX-compatible mode.
+        mode: u32,
+        /// Current repository/work-packet ownership classification.
+        work_disposition: ExistingWorkDisposition,
+    },
+}
+
+/// Authority-free plan for one approved installed-memory operation.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MemoryFilePlan {
+    /// Closed requested intent.
+    pub intent: MemoryFileIntent,
+    /// Exact bundle identity installed or preserved by the plan.
     pub bundle_sha256: String,
-    /// Exact governed file count.
-    pub file_count: u64,
+    /// Ordered controlled filesystem drafts requiring ordinary kernel approval.
+    pub operations: Vec<FilesystemOperationDraft>,
     /// Fixed false network marker.
     pub network_used: bool,
     /// Fixed false automatic-decision marker.
     pub automatic_decision: bool,
 }
 
-/// Content-free protected-memory failure.
+/// Content-free protected-memory planning failure.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MemoryFileError {
-    /// Root, path, identifier, digest, bundle, or export input was invalid.
+    /// Bundle, identity, path, observation, or export input was invalid.
     InvalidInput,
-    /// A symbolic link or non-regular governed object was observed.
-    UnsafeFilesystem,
-    /// Installed bytes did not match their committed manifest or last-good copy.
-    CorruptState,
-    /// A bounded filesystem operation failed.
-    Filesystem,
+    /// Expected/current identity did not match the declared intent.
+    ConcurrentState,
+    /// A held object or exact preimage did not match the requested file.
+    ObservationMismatch,
+    /// Complete replacement could not be represented as a bounded structured patch.
+    PatchUnavailable,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-struct InstalledState {
-    schema_version: u16,
-    bundle_sha256: String,
-    files: Vec<InstalledFile>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-struct InstalledFile {
-    relative_path: String,
-    content_sha256: String,
-    byte_count: u64,
-}
-
-/// Filesystem owner rooted at one explicitly selected local memory directory.
-pub struct MemoryFileRuntime {
-    root: PathBuf,
-}
-
-impl MemoryFileRuntime {
-    /// Admits an existing, non-symbolic-link directory as the complete memory-file root.
-    pub fn open(root: PathBuf) -> Result<Self, MemoryFileError> {
-        let metadata = fs::symlink_metadata(&root).map_err(|_| MemoryFileError::Filesystem)?;
-        if !metadata.is_dir() || metadata.file_type().is_symlink() {
-            return Err(MemoryFileError::UnsafeFilesystem);
-        }
-        Ok(Self { root })
-    }
-
-    /// Publishes one exact approved bundle or preserves a concurrent proposal as a conflict.
-    pub fn apply_bundle(
-        &self,
-        bundle: &MemoryMarkdownBundle,
-        expected_bundle_sha256: Option<&str>,
-        transaction_id: &str,
-    ) -> Result<MemoryFileReceipt, MemoryFileError> {
-        validate_identifier(transaction_id)?;
-        let (state, files) = state_for_bundle(bundle)?;
-        let current = self.read_state_optional()?;
-        if expected_bundle_sha256 != current.as_ref().map(|value| value.bundle_sha256.as_str()) {
-            let conflict_root = self.root.join("Conflicts").join(transaction_id);
-            fs::create_dir_all(self.root.join("Conflicts"))
-                .map_err(|_| MemoryFileError::Filesystem)?;
-            self.write_new_projection(&conflict_root, &files, &state)?;
-            return Ok(receipt(MemoryFileDisposition::ConflictPreserved, &state));
-        }
-
-        let stage = self
-            .root
-            .join(format!(".agentmage-memory-stage-{transaction_id}"));
-        self.write_new_projection(&stage, &files, &state)?;
-        if let Some(current) = &current {
-            self.snapshot_last_good(current)?;
-        }
-        self.install_staged(&stage, current.as_ref(), &state)?;
-        fs::remove_dir_all(&stage).map_err(|_| MemoryFileError::Filesystem)?;
-        Ok(receipt(MemoryFileDisposition::Committed, &state))
-    }
-
-    /// Verifies installed bytes and restores the last complete projection after corruption.
-    pub fn recover(&self) -> Result<MemoryFileReceipt, MemoryFileError> {
-        let current = self.read_state().ok().flatten();
-        if let Some(state) = &current
-            && self.verify_projection(&self.root, state).is_ok()
-        {
-            return Ok(receipt(MemoryFileDisposition::Restored, state));
-        }
-        let backup = self.root.join(BACKUP_DIR);
-        let backup_state = read_state_at(&backup)?.ok_or(MemoryFileError::CorruptState)?;
-        self.verify_projection(&backup, &backup_state)?;
-        self.install_from_projection(&backup, current.as_ref(), &backup_state)?;
-        Ok(receipt(MemoryFileDisposition::Restored, &backup_state))
-    }
-
-    /// Writes exact authenticated portable-export bytes with private mode on Unix.
-    pub fn write_portable_export(
-        &self,
-        relative_name: &str,
-        bytes: &[u8],
-        expected_sha256: &str,
-    ) -> Result<MemoryFileReceipt, MemoryFileError> {
-        validate_single_name(relative_name)?;
-        if bytes.is_empty() || bytes.len() > MAX_EXPORT_BYTES || sha256(bytes) != expected_sha256 {
-            return Err(MemoryFileError::InvalidInput);
-        }
-        let target = self.root.join(relative_name);
-        write_new_file(&target, bytes)?;
-        Ok(MemoryFileReceipt {
-            disposition: MemoryFileDisposition::Committed,
-            bundle_sha256: expected_sha256.to_owned(),
-            file_count: 1,
-            network_used: false,
-            automatic_decision: false,
-        })
-    }
-
-    /// Reads exact portable-export bytes only when their expected digest matches.
-    pub fn read_portable_export(
-        &self,
-        relative_name: &str,
-        expected_sha256: &str,
-    ) -> Result<Vec<u8>, MemoryFileError> {
-        validate_single_name(relative_name)?;
-        if !valid_sha256(expected_sha256) {
-            return Err(MemoryFileError::InvalidInput);
-        }
-        let path = self.root.join(relative_name);
-        ensure_regular(&path)?;
-        let bytes = fs::read(path).map_err(|_| MemoryFileError::Filesystem)?;
-        if bytes.is_empty() || bytes.len() > MAX_EXPORT_BYTES || sha256(&bytes) != expected_sha256 {
-            return Err(MemoryFileError::CorruptState);
-        }
-        Ok(bytes)
-    }
-
-    fn read_state_optional(&self) -> Result<Option<InstalledState>, MemoryFileError> {
-        read_state_at(&self.root)
-    }
-
-    fn read_state(&self) -> Result<Option<InstalledState>, MemoryFileError> {
-        self.read_state_optional()
-    }
-
-    fn verify_projection(
-        &self,
-        root: &Path,
-        state: &InstalledState,
-    ) -> Result<(), MemoryFileError> {
-        validate_state(state)?;
-        for file in &state.files {
-            let path = joined_safe(root, &file.relative_path)?;
-            ensure_regular(&path)?;
-            let bytes = fs::read(path).map_err(|_| MemoryFileError::Filesystem)?;
-            if bytes.len() as u64 != file.byte_count || sha256(&bytes) != file.content_sha256 {
-                return Err(MemoryFileError::CorruptState);
-            }
-        }
-        Ok(())
-    }
-
-    fn write_new_projection(
-        &self,
-        root: &Path,
-        files: &[(String, Vec<u8>)],
-        state: &InstalledState,
-    ) -> Result<(), MemoryFileError> {
-        fs::create_dir(root).map_err(|_| MemoryFileError::Filesystem)?;
-        for (relative, bytes) in files {
-            let target = joined_safe(root, relative)?;
-            if let Some(parent) = target.parent() {
-                fs::create_dir_all(parent).map_err(|_| MemoryFileError::Filesystem)?;
-            }
-            write_new_file(&target, bytes)?;
-        }
-        let state_bytes = serde_json::to_vec(state).map_err(|_| MemoryFileError::InvalidInput)?;
-        write_new_file(&root.join(STATE_FILE), &state_bytes)
-    }
-
-    fn snapshot_last_good(&self, current: &InstalledState) -> Result<(), MemoryFileError> {
-        self.verify_projection(&self.root, current)?;
-        let backup = self.root.join(BACKUP_DIR);
-        if backup.exists() {
-            fs::remove_dir_all(&backup).map_err(|_| MemoryFileError::Filesystem)?;
-        }
-        fs::create_dir(&backup).map_err(|_| MemoryFileError::Filesystem)?;
-        for file in &current.files {
-            let source = joined_safe(&self.root, &file.relative_path)?;
-            let target = joined_safe(&backup, &file.relative_path)?;
-            if let Some(parent) = target.parent() {
-                fs::create_dir_all(parent).map_err(|_| MemoryFileError::Filesystem)?;
-            }
-            fs::copy(source, target).map_err(|_| MemoryFileError::Filesystem)?;
-        }
-        fs::copy(self.root.join(STATE_FILE), backup.join(STATE_FILE))
-            .map_err(|_| MemoryFileError::Filesystem)?;
-        Ok(())
-    }
-
-    fn install_staged(
-        &self,
-        stage: &Path,
-        current: Option<&InstalledState>,
-        next: &InstalledState,
-    ) -> Result<(), MemoryFileError> {
-        self.install_from_projection(stage, current, next)
-    }
-
-    fn install_from_projection(
-        &self,
-        source_root: &Path,
-        current: Option<&InstalledState>,
-        next: &InstalledState,
-    ) -> Result<(), MemoryFileError> {
-        let next_paths = next
-            .files
-            .iter()
-            .map(|file| file.relative_path.as_str())
-            .collect::<BTreeSet<_>>();
-        for file in &next.files {
-            let source = joined_safe(source_root, &file.relative_path)?;
-            ensure_regular(&source)?;
-            let target = joined_safe(&self.root, &file.relative_path)?;
-            if let Some(parent) = target.parent() {
-                fs::create_dir_all(parent).map_err(|_| MemoryFileError::Filesystem)?;
-            }
-            let temporary = target.with_extension("agentmage-new");
-            if temporary.exists() {
-                fs::remove_file(&temporary).map_err(|_| MemoryFileError::Filesystem)?;
-            }
-            fs::copy(source, &temporary).map_err(|_| MemoryFileError::Filesystem)?;
-            fs::rename(temporary, target).map_err(|_| MemoryFileError::Filesystem)?;
-        }
-        if let Some(current) = current {
-            for file in &current.files {
-                if !next_paths.contains(file.relative_path.as_str()) {
-                    let stale = joined_safe(&self.root, &file.relative_path)?;
-                    if stale.exists() {
-                        ensure_regular(&stale)?;
-                        fs::remove_file(stale).map_err(|_| MemoryFileError::Filesystem)?;
-                    }
-                }
-            }
-        }
-        let state_bytes = serde_json::to_vec(next).map_err(|_| MemoryFileError::InvalidInput)?;
-        let temporary_state = self.root.join(".agentmage-memory-state.new");
-        if temporary_state.exists() {
-            fs::remove_file(&temporary_state).map_err(|_| MemoryFileError::Filesystem)?;
-        }
-        write_new_file(&temporary_state, &state_bytes)?;
-        fs::rename(temporary_state, self.root.join(STATE_FILE))
-            .map_err(|_| MemoryFileError::Filesystem)?;
-        self.verify_projection(&self.root, next)
-    }
-}
-
-fn state_for_bundle(
+/// Builds a controlled publication, restoration, or conflict-preservation plan.
+///
+/// This function performs no I/O. Every returned operation remains subject to the kernel's normal
+/// plan rendering, explicit approval, one-use grant, atomic platform driver, receipt verification,
+/// and crash recovery. The caller supplies exact held observations for the current, last-good, or
+/// conflict destination projection.
+pub fn compose_memory_file_plan(
+    operation_prefix: &str,
     bundle: &MemoryMarkdownBundle,
-) -> Result<(InstalledState, ProjectionFiles), MemoryFileError> {
-    if !valid_sha256(&bundle.bundle_sha256)
-        || bundle.write_enabled
+    expected_current_bundle_sha256: Option<&str>,
+    observed_current_bundle_sha256: Option<&str>,
+    intent: MemoryFileIntent,
+    observations: Vec<MemoryFileObservation>,
+) -> Result<MemoryFilePlan, MemoryFileError> {
+    validate_identifier(operation_prefix)?;
+    let files = bundle_files(bundle)?;
+    match intent {
+        MemoryFileIntent::Publish | MemoryFileIntent::RestoreLastGood => {
+            if expected_current_bundle_sha256 != observed_current_bundle_sha256 {
+                return Err(MemoryFileError::ConcurrentState);
+            }
+        }
+        MemoryFileIntent::PreserveConflict => {
+            if expected_current_bundle_sha256 == observed_current_bundle_sha256 {
+                return Err(MemoryFileError::ConcurrentState);
+            }
+        }
+    }
+    for digest in [
+        expected_current_bundle_sha256,
+        observed_current_bundle_sha256,
+    ]
+    .into_iter()
+    .flatten()
+    {
+        if !valid_sha256(digest) {
+            return Err(MemoryFileError::InvalidInput);
+        }
+    }
+    let mut observed = observations
+        .into_iter()
+        .map(|observation| (logical_path(&observation).to_owned(), observation))
+        .collect::<BTreeMap<_, _>>();
+    if observed.len() != files.len() {
+        return Err(MemoryFileError::ObservationMismatch);
+    }
+    let mut operations = Vec::with_capacity(files.len());
+    for (ordinal, (relative_path, bytes)) in files.into_iter().enumerate() {
+        let observation = observed
+            .remove(&relative_path)
+            .ok_or(MemoryFileError::ObservationMismatch)?;
+        validate_destination(
+            intent,
+            &relative_path,
+            observation_path(&observation).ok_or(MemoryFileError::ObservationMismatch)?,
+        )?;
+        let operation_id = format!("{operation_prefix}-{ordinal}");
+        operations.push(operation_for(operation_id, bytes, observation)?);
+    }
+    if !observed.is_empty() {
+        return Err(MemoryFileError::ObservationMismatch);
+    }
+    Ok(MemoryFilePlan {
+        intent,
+        bundle_sha256: bundle.bundle_sha256.clone(),
+        operations,
+        network_used: false,
+        automatic_decision: false,
+    })
+}
+
+/// Builds one kernel-controlled copy plan for a verified current projection into last-good paths.
+pub fn compose_memory_backup_plan(
+    operation_prefix: &str,
+    bundle: &MemoryMarkdownBundle,
+    sources: Vec<ExistingSourceDraft>,
+    destinations: Vec<NewDestinationDraft>,
+) -> Result<MemoryFilePlan, MemoryFileError> {
+    validate_identifier(operation_prefix)?;
+    let files = bundle_files(bundle)?;
+    if files.len() != sources.len() || files.len() != destinations.len() {
+        return Err(MemoryFileError::ObservationMismatch);
+    }
+    let mut operations = Vec::with_capacity(files.len());
+    for (ordinal, (((relative, bytes), source), destination)) in
+        files.into_iter().zip(sources).zip(destinations).enumerate()
+    {
+        if source.target.workspace_path().is_none()
+            || source.target.object_kind() != Some(WorkspaceObjectKind::RegularFile)
+            || source.observed_bytes != bytes
+            || source.mode > 0o777
+            || !matches!(
+                source.work_disposition,
+                ExistingWorkDisposition::Clean | ExistingWorkDisposition::OwnedByCurrentTask
+            )
+            || !path_ends_with(&destination.path, &relative)
+            || destination.parent.object_kind() != Some(WorkspaceObjectKind::Directory)
+        {
+            return Err(MemoryFileError::ObservationMismatch);
+        }
+        operations.push(FilesystemOperationDraft::Copy {
+            operation_id: format!("{operation_prefix}-{ordinal}"),
+            source,
+            destination,
+            classification: FileClassification::Data,
+        });
+    }
+    Ok(MemoryFilePlan {
+        intent: MemoryFileIntent::RestoreLastGood,
+        bundle_sha256: bundle.bundle_sha256.clone(),
+        operations,
+        network_used: false,
+        automatic_decision: false,
+    })
+}
+
+/// Builds one controlled create for exact opaque encrypted export bytes.
+pub fn compose_portable_memory_export(
+    operation_id: String,
+    bytes: Vec<u8>,
+    expected_sha256: &str,
+    destination: NewDestinationDraft,
+) -> Result<FilesystemOperationDraft, MemoryFileError> {
+    validate_identifier(&operation_id)?;
+    if bytes.is_empty()
+        || bytes.len() > MAX_EXPORT_BYTES
+        || sha256(&bytes) != expected_sha256
+        || destination.parent.object_kind() != Some(WorkspaceObjectKind::Directory)
+    {
+        return Err(MemoryFileError::InvalidInput);
+    }
+    Ok(FilesystemOperationDraft::Create {
+        operation_id,
+        destination,
+        content: bytes,
+        mode: 0o600,
+        classification: FileClassification::Data,
+    })
+}
+
+fn operation_for(
+    operation_id: String,
+    bytes: Vec<u8>,
+    observation: MemoryFileObservation,
+) -> Result<FilesystemOperationDraft, MemoryFileError> {
+    match observation {
+        MemoryFileObservation::Absent {
+            path,
+            parent,
+            observed_sibling_names,
+            ..
+        } => {
+            if parent.object_kind() != Some(WorkspaceObjectKind::Directory)
+                || parent.workspace_id() != path.workspace_id()
+            {
+                return Err(MemoryFileError::ObservationMismatch);
+            }
+            Ok(FilesystemOperationDraft::Create {
+                operation_id,
+                destination: NewDestinationDraft {
+                    parent,
+                    path,
+                    observed_sibling_names,
+                },
+                content: bytes,
+                mode: 0o600,
+                classification: FileClassification::Data,
+            })
+        }
+        MemoryFileObservation::Existing {
+            target,
+            observed_bytes,
+            mode,
+            work_disposition,
+            ..
+        } => {
+            if target.object_kind() != Some(WorkspaceObjectKind::RegularFile)
+                || mode > 0o777
+                || !matches!(
+                    work_disposition,
+                    ExistingWorkDisposition::Clean | ExistingWorkDisposition::OwnedByCurrentTask
+                )
+            {
+                return Err(MemoryFileError::ObservationMismatch);
+            }
+            let patch = StructuredPatch {
+                schema_version: 1,
+                hunks: vec![StructuredPatchHunk {
+                    old_start_line: 1,
+                    old_lines: exact_lines(&observed_bytes)?,
+                    new_lines: exact_lines(&bytes)?,
+                }],
+            };
+            Ok(FilesystemOperationDraft::ExactPatch {
+                operation_id,
+                source: ExistingSourceDraft {
+                    target,
+                    observed_bytes,
+                    work_disposition,
+                    mode,
+                },
+                patch_json: serde_json::to_vec(&patch)
+                    .map_err(|_| MemoryFileError::PatchUnavailable)?,
+                expected_postimage_sha256: sha256(&bytes),
+            })
+        }
+    }
+}
+
+fn bundle_files(bundle: &MemoryMarkdownBundle) -> Result<Vec<(String, Vec<u8>)>, MemoryFileError> {
+    if bundle.write_enabled
         || bundle.topics.len().saturating_add(1) > MAX_FILES
+        || !valid_sha256(&bundle.bundle_sha256)
         || bundle_digest(&bundle.index, &bundle.topics) != bundle.bundle_sha256
     {
         return Err(MemoryFileError::InvalidInput);
@@ -308,30 +305,93 @@ fn state_for_bundle(
     inputs.extend(bundle.topics.iter());
     let mut seen = BTreeSet::new();
     let mut files = Vec::with_capacity(inputs.len());
-    let mut state_files = Vec::with_capacity(inputs.len());
     for file in inputs {
-        validate_markdown_file(file)?;
-        if !seen.insert(file.relative_path.clone()) {
+        if file.write_enabled
+            || file.markdown.is_empty()
+            || file.markdown.len() > MAX_FILE_BYTES
+            || sha256(file.markdown.as_bytes()) != file.content_sha256
+            || !valid_relative_path(&file.relative_path)
+            || !seen.insert(file.relative_path.clone())
+        {
             return Err(MemoryFileError::InvalidInput);
         }
-        let bytes = file.markdown.as_bytes().to_vec();
-        state_files.push(InstalledFile {
-            relative_path: file.relative_path.clone(),
-            content_sha256: file.content_sha256.clone(),
-            byte_count: bytes.len() as u64,
-        });
-        files.push((file.relative_path.clone(), bytes));
+        files.push((
+            file.relative_path.clone(),
+            file.markdown.as_bytes().to_vec(),
+        ));
     }
-    state_files.sort_by(|left, right| left.relative_path.cmp(&right.relative_path));
     files.sort_by(|left, right| left.0.cmp(&right.0));
-    Ok((
-        InstalledState {
-            schema_version: 1,
-            bundle_sha256: bundle.bundle_sha256.clone(),
-            files: state_files,
-        },
-        files,
-    ))
+    Ok(files)
+}
+
+fn validate_destination(
+    intent: MemoryFileIntent,
+    logical_path: &str,
+    destination: &WorkspacePath,
+) -> Result<(), MemoryFileError> {
+    if !path_ends_with(destination, logical_path) {
+        return Err(MemoryFileError::ObservationMismatch);
+    }
+    let has_conflict = destination
+        .components()
+        .iter()
+        .any(|component| component.as_str() == "Conflicts");
+    if has_conflict != (intent == MemoryFileIntent::PreserveConflict) {
+        return Err(MemoryFileError::ObservationMismatch);
+    }
+    Ok(())
+}
+
+fn observation_path(observation: &MemoryFileObservation) -> Option<&WorkspacePath> {
+    match observation {
+        MemoryFileObservation::Absent { path, .. } => Some(path),
+        MemoryFileObservation::Existing { target, .. } => target.workspace_path(),
+    }
+}
+
+fn logical_path(observation: &MemoryFileObservation) -> &str {
+    match observation {
+        MemoryFileObservation::Absent {
+            logical_relative_path,
+            ..
+        }
+        | MemoryFileObservation::Existing {
+            logical_relative_path,
+            ..
+        } => logical_relative_path,
+    }
+}
+
+fn path_ends_with(path: &WorkspacePath, relative: &str) -> bool {
+    let expected = relative.split('/').collect::<Vec<_>>();
+    path.components().len() >= expected.len()
+        && path.components()[path.components().len() - expected.len()..]
+            .iter()
+            .map(|component| component.as_str())
+            .eq(expected)
+}
+
+fn valid_relative_path(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 4096
+        && value.split('/').all(|component| {
+            !component.is_empty()
+                && component != "."
+                && component != ".."
+                && !component.chars().any(char::is_control)
+        })
+}
+
+fn exact_lines(bytes: &[u8]) -> Result<Vec<String>, MemoryFileError> {
+    let text = std::str::from_utf8(bytes).map_err(|_| MemoryFileError::PatchUnavailable)?;
+    let lines = text
+        .split_inclusive('\n')
+        .map(str::to_owned)
+        .collect::<Vec<_>>();
+    if lines.is_empty() {
+        return Err(MemoryFileError::PatchUnavailable);
+    }
+    Ok(lines)
 }
 
 fn bundle_digest(index: &MemoryMarkdownFile, topics: &[MemoryMarkdownFile]) -> String {
@@ -343,75 +403,6 @@ fn bundle_digest(index: &MemoryMarkdownFile, topics: &[MemoryMarkdownFile]) -> S
         material.extend_from_slice(topic.content_sha256.as_bytes());
     }
     sha256(&material)
-}
-
-fn validate_markdown_file(file: &MemoryMarkdownFile) -> Result<(), MemoryFileError> {
-    if file.write_enabled
-        || file.markdown.is_empty()
-        || file.markdown.len() > MAX_FILE_BYTES
-        || sha256(file.markdown.as_bytes()) != file.content_sha256
-    {
-        return Err(MemoryFileError::InvalidInput);
-    }
-    joined_safe(Path::new("."), &file.relative_path).map(|_| ())
-}
-
-fn validate_state(state: &InstalledState) -> Result<(), MemoryFileError> {
-    if state.schema_version != 1
-        || !valid_sha256(&state.bundle_sha256)
-        || state.files.is_empty()
-        || state.files.len() > MAX_FILES
-    {
-        return Err(MemoryFileError::CorruptState);
-    }
-    let mut seen = BTreeSet::new();
-    for file in &state.files {
-        if !seen.insert(&file.relative_path)
-            || !valid_sha256(&file.content_sha256)
-            || file.byte_count == 0
-            || file.byte_count > MAX_FILE_BYTES as u64
-            || joined_safe(Path::new("."), &file.relative_path).is_err()
-        {
-            return Err(MemoryFileError::CorruptState);
-        }
-    }
-    Ok(())
-}
-
-fn read_state_at(root: &Path) -> Result<Option<InstalledState>, MemoryFileError> {
-    let path = root.join(STATE_FILE);
-    if !path.exists() {
-        return Ok(None);
-    }
-    ensure_regular(&path)?;
-    let bytes = fs::read(path).map_err(|_| MemoryFileError::Filesystem)?;
-    let state = serde_json::from_slice(&bytes).map_err(|_| MemoryFileError::CorruptState)?;
-    validate_state(&state)?;
-    Ok(Some(state))
-}
-
-fn joined_safe(root: &Path, relative: &str) -> Result<PathBuf, MemoryFileError> {
-    let path = Path::new(relative);
-    if path.is_absolute()
-        || path
-            .components()
-            .any(|component| !matches!(component, Component::Normal(_)))
-    {
-        return Err(MemoryFileError::InvalidInput);
-    }
-    Ok(root.join(path))
-}
-
-fn validate_single_name(value: &str) -> Result<(), MemoryFileError> {
-    let path = Path::new(value);
-    if value.is_empty()
-        || value.len() > 255
-        || path.components().count() != 1
-        || !matches!(path.components().next(), Some(Component::Normal(_)))
-    {
-        return Err(MemoryFileError::InvalidInput);
-    }
-    Ok(())
 }
 
 fn validate_identifier(value: &str) -> Result<(), MemoryFileError> {
@@ -426,44 +417,9 @@ fn validate_identifier(value: &str) -> Result<(), MemoryFileError> {
     Ok(())
 }
 
-fn ensure_regular(path: &Path) -> Result<(), MemoryFileError> {
-    let metadata = fs::symlink_metadata(path).map_err(|_| MemoryFileError::Filesystem)?;
-    if !metadata.is_file() || metadata.file_type().is_symlink() {
-        return Err(MemoryFileError::UnsafeFilesystem);
-    }
-    Ok(())
-}
-
-fn write_new_file(path: &Path, bytes: &[u8]) -> Result<(), MemoryFileError> {
-    let mut options = OpenOptions::new();
-    options.write(true).create_new(true);
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::OpenOptionsExt as _;
-        options.mode(0o600);
-    }
-    let mut file = options
-        .open(path)
-        .map_err(|_| MemoryFileError::Filesystem)?;
-    file.write_all(bytes)
-        .map_err(|_| MemoryFileError::Filesystem)?;
-    file.sync_all().map_err(|_| MemoryFileError::Filesystem)
-}
-
-fn receipt(disposition: MemoryFileDisposition, state: &InstalledState) -> MemoryFileReceipt {
-    MemoryFileReceipt {
-        disposition,
-        bundle_sha256: state.bundle_sha256.clone(),
-        file_count: state.files.len() as u64,
-        network_used: false,
-        automatic_decision: false,
-    }
-}
-
 fn sha256(bytes: &[u8]) -> String {
     let mut value = String::with_capacity(64);
     for byte in Sha256::digest(bytes) {
-        use std::fmt::Write as _;
         write!(&mut value, "{byte:02x}").expect("writing to String cannot fail");
     }
     value
@@ -478,24 +434,85 @@ fn valid_sha256(value: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use agentmage_kernel_contracts::{
+        AdapterInstanceId, FilePreimage, HeldWorkspaceObject, PathPlatform, PathResolutionIntent,
+        WorkspaceAuthorizationId, WorkspaceId, WorkspaceObjectIdentity, WorkspaceObjectKind,
+    };
+
     use super::*;
 
-    fn temporary_root(name: &str) -> PathBuf {
-        let root = std::env::temp_dir().join(format!(
-            "agentmage-memory-{name}-{}-{}",
-            std::process::id(),
-            std::thread::current().name().unwrap_or("test")
-        ));
-        if root.exists() {
-            fs::remove_dir_all(&root).expect("old fixture removed");
-        }
-        fs::create_dir(&root).expect("fixture root");
-        root
+    fn path(parts: &[&str]) -> WorkspacePath {
+        WorkspacePath::new(
+            WorkspaceId::from_raw("workspace-memory-files"),
+            parts.iter().copied(),
+        )
+        .expect("workspace path")
     }
 
-    fn file(path: &str, markdown: &str) -> MemoryMarkdownFile {
+    #[derive(Debug)]
+    struct Held {
+        path: WorkspacePath,
+        kind: WorkspaceObjectKind,
+        preimage: Option<FilePreimage>,
+        authorization_id: WorkspaceAuthorizationId,
+        adapter_instance_id: AdapterInstanceId,
+        identity: WorkspaceObjectIdentity,
+    }
+
+    impl HeldWorkspaceObject for Held {
+        fn workspace_path(&self) -> &WorkspacePath {
+            &self.path
+        }
+
+        fn authorization_id(&self) -> &WorkspaceAuthorizationId {
+            &self.authorization_id
+        }
+
+        fn adapter_instance_id(&self) -> &AdapterInstanceId {
+            &self.adapter_instance_id
+        }
+
+        fn intent(&self) -> PathResolutionIntent {
+            if self.kind == WorkspaceObjectKind::RegularFile {
+                PathResolutionIntent::ReadFile
+            } else {
+                PathResolutionIntent::Metadata
+            }
+        }
+
+        fn object_kind(&self) -> WorkspaceObjectKind {
+            self.kind
+        }
+
+        fn object_identity(&self) -> &WorkspaceObjectIdentity {
+            &self.identity
+        }
+
+        fn preimage(&self) -> Option<&FilePreimage> {
+            self.preimage.as_ref()
+        }
+    }
+
+    fn target(parts: &[&str], kind: WorkspaceObjectKind) -> GrantTarget {
+        let held = Held {
+            path: path(parts),
+            kind,
+            preimage: (kind == WorkspaceObjectKind::RegularFile)
+                .then(|| FilePreimage::new(1, [8; 32])),
+            authorization_id: WorkspaceAuthorizationId::from_raw("authorization-memory-files"),
+            adapter_instance_id: AdapterInstanceId::from_raw("adapter-memory-files"),
+            identity: WorkspaceObjectIdentity::new(
+                PathPlatform::DeterministicFake,
+                [7; 32],
+                [6; 32],
+            ),
+        };
+        GrantTarget::held_object(&held).expect("target")
+    }
+
+    fn file(relative: &str, markdown: &str) -> MemoryMarkdownFile {
         MemoryMarkdownFile {
-            relative_path: path.to_owned(),
+            relative_path: relative.to_owned(),
             markdown: markdown.to_owned(),
             content_sha256: sha256(markdown.as_bytes()),
             write_enabled: false,
@@ -510,99 +527,192 @@ mod tests {
         );
         let bundle_sha256 = bundle_digest(&index, std::slice::from_ref(&topic));
         MemoryMarkdownBundle {
-            bundle_sha256,
             index,
             topics: vec![topic],
+            bundle_sha256,
             write_enabled: false,
         }
     }
 
+    fn absent(logical: &str, actual: &[&str]) -> MemoryFileObservation {
+        let mut parent_parts = actual.to_vec();
+        parent_parts.pop();
+        MemoryFileObservation::Absent {
+            logical_relative_path: logical.to_owned(),
+            path: path(actual),
+            parent: target(&parent_parts, WorkspaceObjectKind::Directory),
+            observed_sibling_names: Vec::new(),
+        }
+    }
+
+    fn existing(logical: &str, actual: &[&str], bytes: &[u8]) -> MemoryFileObservation {
+        MemoryFileObservation::Existing {
+            logical_relative_path: logical.to_owned(),
+            target: target(actual, WorkspaceObjectKind::RegularFile),
+            observed_bytes: bytes.to_vec(),
+            mode: 0o600,
+            work_disposition: ExistingWorkDisposition::OwnedByCurrentTask,
+        }
+    }
+
     #[test]
-    fn interrupted_or_corrupt_projection_restores_exact_last_good_bytes() {
-        let root = temporary_root("recover");
-        let runtime = MemoryFileRuntime::open(root.clone()).expect("runtime");
+    fn publish_and_last_good_restore_are_complete_controlled_transactions() {
         let first = bundle("one");
-        runtime
-            .apply_bundle(&first, None, "first")
-            .expect("first apply");
+        let publish = compose_memory_file_plan(
+            "memory-publish",
+            &first,
+            None,
+            None,
+            MemoryFileIntent::Publish,
+            vec![
+                absent("MEMORY.md", &["memory", "MEMORY.md"]),
+                absent(
+                    "Memory/memory-one.md",
+                    &["memory", "Memory", "memory-one.md"],
+                ),
+            ],
+        )
+        .expect("publish plan");
+        assert_eq!(publish.operations.len(), 2);
+        assert!(!publish.network_used);
+        assert!(!publish.automatic_decision);
+
         let second = bundle("two");
-        runtime
-            .apply_bundle(&second, Some(&first.bundle_sha256), "second")
-            .expect("second apply");
-        fs::write(root.join("MEMORY.md"), b"corrupt\n").expect("simulate interrupted write");
-        let receipt = runtime.recover().expect("restore last good");
-        assert_eq!(receipt.disposition, MemoryFileDisposition::Restored);
-        assert_eq!(receipt.bundle_sha256, first.bundle_sha256);
-        assert_eq!(
-            fs::read(root.join("MEMORY.md")).expect("restored"),
-            b"# Memory one\n"
+        let restore = compose_memory_file_plan(
+            "memory-restore",
+            &first,
+            Some(&second.bundle_sha256),
+            Some(&second.bundle_sha256),
+            MemoryFileIntent::RestoreLastGood,
+            vec![
+                existing("MEMORY.md", &["memory", "MEMORY.md"], b"# Memory two\n"),
+                existing(
+                    "Memory/memory-one.md",
+                    &["memory", "Memory", "memory-one.md"],
+                    b"---\nstatus: current\n---\n# Topic two\n",
+                ),
+            ],
+        )
+        .expect("restore plan");
+        assert!(
+            restore
+                .operations
+                .iter()
+                .all(|operation| matches!(operation, FilesystemOperationDraft::ExactPatch { .. }))
         );
-        fs::write(root.join(STATE_FILE), b"corrupt-state\n").expect("corrupt state");
-        assert_eq!(
-            runtime
-                .recover()
-                .expect("restore corrupt manifest")
-                .bundle_sha256,
-            first.bundle_sha256
-        );
-        fs::remove_dir_all(root).expect("cleanup");
     }
 
     #[test]
-    fn simultaneous_edit_preserves_current_and_complete_conflict_bundle() {
-        let root = temporary_root("conflict");
-        let runtime = MemoryFileRuntime::open(root.clone()).expect("runtime");
+    fn simultaneous_edit_preserves_complete_conflict_bundle_and_current_identity() {
         let current = bundle("current");
-        runtime
-            .apply_bundle(&current, None, "current")
-            .expect("current apply");
         let proposed = bundle("proposed");
-        let receipt = runtime
-            .apply_bundle(&proposed, Some(&"9".repeat(64)), "simultaneous")
-            .expect("conflict preserved");
+        let conflict = compose_memory_file_plan(
+            "memory-conflict",
+            &proposed,
+            Some(&"9".repeat(64)),
+            Some(&current.bundle_sha256),
+            MemoryFileIntent::PreserveConflict,
+            vec![
+                absent(
+                    "MEMORY.md",
+                    &["memory", "Conflicts", "transaction-one", "MEMORY.md"],
+                ),
+                absent(
+                    "Memory/memory-one.md",
+                    &[
+                        "memory",
+                        "Conflicts",
+                        "transaction-one",
+                        "Memory",
+                        "memory-one.md",
+                    ],
+                ),
+            ],
+        )
+        .expect("conflict plan");
+        assert_eq!(conflict.operations.len(), 2);
+        assert_eq!(conflict.intent, MemoryFileIntent::PreserveConflict);
         assert_eq!(
-            receipt.disposition,
-            MemoryFileDisposition::ConflictPreserved
+            compose_memory_file_plan(
+                "memory-wrong",
+                &proposed,
+                Some(&current.bundle_sha256),
+                Some(&current.bundle_sha256),
+                MemoryFileIntent::PreserveConflict,
+                Vec::new(),
+            ),
+            Err(MemoryFileError::ConcurrentState)
         );
-        assert_eq!(
-            fs::read(root.join("MEMORY.md")).expect("current"),
-            b"# Memory current\n"
-        );
-        assert_eq!(
-            fs::read(root.join("Conflicts/simultaneous/MEMORY.md")).expect("proposal"),
-            b"# Memory proposed\n"
-        );
-        fs::remove_dir_all(root).expect("cleanup");
     }
 
     #[test]
-    fn exact_encrypted_export_migrates_between_machine_roots_without_path_authority() {
-        let source_root = temporary_root("machine-a");
-        let target_root = temporary_root("machine-b");
-        let source = MemoryFileRuntime::open(source_root.clone()).expect("source");
-        let target = MemoryFileRuntime::open(target_root.clone()).expect("target");
-        let encrypted = b"synthetic-authenticated-memory-envelope";
-        let digest = sha256(encrypted);
-        source
-            .write_portable_export("memory.age", encrypted, &digest)
-            .expect("write export");
-        let transferred = source
-            .read_portable_export("memory.age", &digest)
-            .expect("read export");
-        target
-            .write_portable_export("memory.age", &transferred, &digest)
-            .expect("write migrated export");
+    fn backup_and_portable_export_are_exact_and_authority_bounded() {
+        let value = bundle("backup");
+        let files = bundle_files(&value).expect("files");
+        let sources = files
+            .iter()
+            .map(|(relative, bytes)| {
+                let mut parts = vec!["memory"];
+                parts.extend(relative.split('/'));
+                ExistingSourceDraft {
+                    target: target(&parts, WorkspaceObjectKind::RegularFile),
+                    observed_bytes: bytes.clone(),
+                    work_disposition: ExistingWorkDisposition::OwnedByCurrentTask,
+                    mode: 0o600,
+                }
+            })
+            .collect::<Vec<_>>();
+        let destinations = files
+            .iter()
+            .map(|(relative, _)| {
+                let mut parts = vec!["memory", "LastGood"];
+                parts.extend(relative.split('/'));
+                let destination_path = path(&parts);
+                parts.pop();
+                NewDestinationDraft {
+                    parent: target(&parts, WorkspaceObjectKind::Directory),
+                    path: destination_path,
+                    observed_sibling_names: Vec::new(),
+                }
+            })
+            .collect::<Vec<_>>();
         assert_eq!(
-            target
-                .read_portable_export("memory.age", &digest)
-                .expect("read migrated export"),
-            encrypted
+            compose_memory_backup_plan("memory-backup", &value, sources, destinations)
+                .expect("backup")
+                .operations
+                .len(),
+            2
         );
+
+        let encrypted = b"synthetic-authenticated-memory-envelope".to_vec();
+        let digest = sha256(&encrypted);
+        let export = compose_portable_memory_export(
+            "memory-export".to_owned(),
+            encrypted,
+            &digest,
+            NewDestinationDraft {
+                parent: target(&["exports"], WorkspaceObjectKind::Directory),
+                path: path(&["exports", "memory.age"]),
+                observed_sibling_names: Vec::new(),
+            },
+        )
+        .expect("export");
+        assert!(matches!(
+            export,
+            FilesystemOperationDraft::Create { mode: 0o600, .. }
+        ));
         assert_eq!(
-            target.read_portable_export("../memory.age", &digest),
+            compose_portable_memory_export(
+                "memory-export".to_owned(),
+                b"changed".to_vec(),
+                &digest,
+                NewDestinationDraft {
+                    parent: target(&["exports"], WorkspaceObjectKind::Directory),
+                    path: path(&["exports", "memory.age"]),
+                    observed_sibling_names: Vec::new(),
+                },
+            ),
             Err(MemoryFileError::InvalidInput)
         );
-        fs::remove_dir_all(source_root).expect("cleanup source");
-        fs::remove_dir_all(target_root).expect("cleanup target");
     }
 }

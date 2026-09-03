@@ -22,10 +22,11 @@ flowchart LR
     T --> L
     L --> E["Versioned authenticated portable export"]
     E --> I["Closed-schema verified import into a new catalog"]
-    M --> F["Protected host filesystem owner"]
-    F --> BAK["Last-good backup and manifest"]
-    F --> CON["Exact simultaneous-edit conflict bundle"]
-    E --> MIG["Digest-bound cross-root export transfer"]
+    M --> F["Authority-free host filesystem plan"]
+    F --> KER["Kernel preview, approval, one-use grant"]
+    KER --> BAK["Atomic platform backup and restore"]
+    KER --> CON["Exact simultaneous-edit conflict bundle"]
+    E --> MIG["Digest-bound controlled export plan"]
     K["Credential and random adapters"] --> E
 ```
 
@@ -100,24 +101,25 @@ of later trusted platform adapters.
 
 ## Installed File Recovery
 
-The host filesystem owner accepts only a complete no-write `MemoryMarkdownBundle` whose index,
-ordered topic paths, content hashes, and bundle digest recompute exactly. It stages private files
-under the selected local root, snapshots the verified current projection as last-good bytes, then
-publishes each staged file and the closed manifest. It owns no model or network handle and records
-that no automatic decision occurred.
+The host planner accepts only a complete no-write `MemoryMarkdownBundle` whose index, ordered topic
+paths, content hashes, and bundle digest recompute exactly. It returns only the existing controlled
+filesystem drafts for publication, exact last-good copies, complete-file restoration, conflict
+preservation, and opaque encrypted export. The plan owns no file, model, process, or network handle
+and records that no automatic decision occurred.
 
-Every update supplies the bundle identity the caller observed. A mismatch changes no governed
-file and retains the complete proposed Markdown and manifest under a transaction-named conflict
-directory. On restart, current files are checked against the installed manifest; corruption or an
-interrupted projection restores the previously verified manifest and exact last-good bytes.
-Portable encrypted export files cross machine roots only as bounded opaque bytes with the caller's
-exact digest. Absolute, parent-relative, multi-component export names, symlinks, digest drift, and
-oversized files fail closed.
+Every update supplies the bundle identity the caller observed. A mismatch can produce only a
+complete proposal under a held `Conflicts` destination; it cannot target the current projection.
+Last-good copies and restoration remain distinct controlled transactions over exact held preimages.
+The existing kernel renders and approves every operation, consumes a one-use grant, invokes the
+atomic platform driver, verifies receipts, and owns crash recovery. Portable encrypted exports are
+bounded opaque bytes under an exact digest. Path mismatch, wrong held-object kind, unrelated work,
+digest drift, and oversized files fail before authority exists.
 
 ## Open Boundary
 
-This sprint slice now owns approved `MEMORY.md` topic-bundle publication, last-good recovery,
-simultaneous-edit conflict preservation, and exact encrypted-export transfer between explicit local
-roots. `WORKING.md` application, credential-store integration, and trusted entropy acquisition are
-not added. Upstream Sprint 30 closure and renewal of the source-bound aggregate under the inherited
-strict-local host prerequisite remain required before Sprint 31 can pass.
+This sprint slice now composes approved `MEMORY.md` topic-bundle publication, last-good backup and
+recovery, simultaneous-edit conflict preservation, and exact encrypted-export transfer through the
+existing kernel/platform transaction boundary. `WORKING.md` application, credential-store
+integration, and trusted entropy acquisition are not added. Upstream Sprint 30 closure and renewal
+of the source-bound aggregate under the inherited strict-local host prerequisite remain required
+before Sprint 31 can pass.
