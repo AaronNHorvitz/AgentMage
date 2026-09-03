@@ -1324,4 +1324,50 @@ mod tests {
             Err(SourcePreparationError::ResourceLimit)
         );
     }
+
+    #[test]
+    fn crash_receipt_and_cleanup_leave_no_retrievable_projection_or_effect_claim() {
+        let mut service = SpreadsheetSourceArtifactService::default();
+        let admitted = admit(&mut service, ArtifactClassification::Internal);
+        let mut ledger = ArtifactAttemptLedger::default();
+        let result = dispatch_spreadsheet_source_artifact(
+            ArtifactToolKind::Range,
+            &request(
+                "crash-cleanup",
+                &admitted.prepared_manifest.manifest_sha256,
+                Some(ArtifactRange::Sheet {
+                    name: "Data".to_owned(),
+                }),
+                None,
+            ),
+            &service,
+            true,
+            ArtifactExecutionSignal::Crashed,
+            &mut ledger,
+        )
+        .expect("crash receipt");
+        assert_eq!(result.outcome, ArtifactOutcome::Failed);
+        assert!(result.items.is_empty());
+        assert!(!result.receipt.parser_launched);
+        assert!(!result.receipt.network_accessed);
+        assert!(!result.receipt.workspace_mutated);
+
+        let released = service
+            .release(
+                "spreadsheet-source",
+                &admitted.prepared_manifest.manifest_sha256,
+            )
+            .expect("release after crash");
+        let deleted = service
+            .delete("spreadsheet-source", &released.manifest_sha256)
+            .expect("delete after crash");
+        assert_eq!(deleted.lifecycle, PreparedSpreadsheetLifecycle::Deleted);
+        assert!(service.sources["spreadsheet-source"].extraction.is_none());
+        assert!(
+            service.sources["spreadsheet-source"]
+                .lexical_index
+                .is_empty()
+        );
+        assert!(service.manifests().is_empty());
+    }
 }

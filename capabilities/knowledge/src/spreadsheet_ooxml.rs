@@ -1235,7 +1235,10 @@ pub fn inspect_xlsx_with_control(
         &mut control,
     )?;
     let (date_system, definitions) = parse_workbook(workbook, profile, &mut control)?;
-    if definitions.is_empty() || definitions.len() > profile.maximum_sheets {
+    if definitions.is_empty() {
+        return Err(SpreadsheetError::MalformedPackage);
+    }
+    if definitions.len() > profile.maximum_sheets {
         return Err(SpreadsheetError::ResourceLimit);
     }
     let shared = parse_shared_strings(parts.get("xl/sharedStrings.xml"), profile, &mut control)?;
@@ -1640,5 +1643,69 @@ mod tests {
             }),
             Err(SpreadsheetError::TimeLimit)
         );
+    }
+
+    #[test]
+    fn hostile_zip_xml_traversal_bomb_unicode_error_and_protection_corpus_is_closed() {
+        let mut malformed_xml = fixture_parts("1+1");
+        malformed_xml.insert("xl/workbook.xml".to_owned(), b"<workbook><sheets>".to_vec());
+        assert_eq!(
+            inspect_xlsx(
+                path(),
+                &zip_parts(&malformed_xml).expect("malformed XML package"),
+                &SpreadsheetProfile::default(),
+            ),
+            Err(SpreadsheetError::MalformedPackage)
+        );
+
+        let mut traversal = fixture_parts("1+1");
+        traversal.insert("../escape.xml".to_owned(), b"inert".to_vec());
+        assert_eq!(
+            inspect_xlsx(
+                path(),
+                &zip_parts(&traversal).expect("traversal package"),
+                &SpreadsheetProfile::default(),
+            ),
+            Err(SpreadsheetError::UnsafePackage)
+        );
+
+        let source = fixture("1+1");
+        let bomb_bound = SpreadsheetProfile {
+            maximum_entry_bytes: 128,
+            maximum_total_uncompressed_bytes: 256,
+            ..SpreadsheetProfile::default()
+        };
+        assert_eq!(
+            inspect_xlsx(path(), &source, &bomb_bound),
+            Err(SpreadsheetError::ResourceLimit)
+        );
+
+        let mut fidelity = fixture_parts("1+1");
+        fidelity.insert(
+            "xl/worksheets/sheet1.xml".to_owned(),
+            b"<?xml version=\"1.0\"?><worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><dimension ref=\"A1:B1\"/><sheetProtection sheet=\"1\"/><sheetData><row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>\xE6\x9D\xB1\xE4\xBA\xAC \xF0\x9F\xA7\x99</t></is></c><c r=\"B1\" t=\"e\"><v>#DIV/0!</v></c></row></sheetData></worksheet>".to_vec(),
+        );
+        let report = inspect_xlsx(
+            path(),
+            &zip_parts(&fidelity).expect("fidelity package"),
+            &SpreadsheetProfile::default(),
+        )
+        .expect("Unicode/error workbook");
+        assert!(report.worksheets[0].protected);
+        assert_eq!(
+            report.worksheets[0].cells[0].displayed_value.as_deref(),
+            Some("東京 🧙")
+        );
+        assert_eq!(
+            report.worksheets[0].cells[1].kind,
+            SpreadsheetCellKind::Error
+        );
+        assert_eq!(
+            report.worksheets[0].cells[1].raw_value.as_deref(),
+            Some("#DIV/0!")
+        );
+        assert!(!report.filesystem_effect_performed);
+        assert!(!report.network_access_performed);
+        assert!(!report.execution_performed);
     }
 }

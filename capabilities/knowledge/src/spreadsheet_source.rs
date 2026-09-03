@@ -574,14 +574,45 @@ mod tests {
             .iter()
             .find(|section| section.provenance.structural_path.ends_with("/cell[B1]"))
             .expect("formula cell");
-        assert!(formula.content.contains("SUM(A1,1)"));
-        assert!(formula.content.contains("46001"));
+        assert_eq!(formula.provenance.source_part, "xl/worksheets/sheet1.xml");
+        assert_eq!(formula.provenance.table, Some(1));
+        assert_eq!(formula.provenance.row, Some(1));
+        assert_eq!(formula.provenance.cell, Some(2));
+        let formula_value: serde_json::Value =
+            serde_json::from_str(&formula.content).expect("formula JSON");
+        assert_eq!(formula_value["address"], "B1");
+        assert_eq!(formula_value["cell_type"], "formula");
+        assert_eq!(formula_value["formula"], "SUM(A1,1)");
+        assert_eq!(formula_value["cached_result"], "46001");
+        assert_eq!(formula_value["displayed_value"], "46001");
+        assert_eq!(formula_value["date_value"], serde_json::Value::Null);
         let date = result
             .sections
             .iter()
             .find(|section| section.provenance.structural_path.ends_with("/cell[A1]"))
             .expect("date cell");
-        assert!(date.content.contains("date_value"));
+        assert_eq!(date.provenance.source_part, "xl/worksheets/sheet1.xml");
+        assert_eq!(date.provenance.table, Some(1));
+        assert_eq!(date.provenance.row, Some(1));
+        assert_eq!(date.provenance.cell, Some(1));
+        let date_value: serde_json::Value = serde_json::from_str(&date.content).expect("date JSON");
+        assert_eq!(date_value["address"], "A1");
+        assert_eq!(date_value["cell_type"], "date");
+        assert_eq!(date_value["cached_result"], "46000");
+        assert_eq!(date_value["displayed_value"], "2025-12-09");
+        assert_eq!(date_value["date_value"], "2025-12-09");
+        assert_eq!(date_value["number_format_id"], 14);
+        let sheet = result
+            .sections
+            .iter()
+            .find(|section| section.kind == StructuredSourceSectionKind::Table)
+            .expect("sheet section");
+        let sheet_value: serde_json::Value =
+            serde_json::from_str(&sheet.content).expect("sheet JSON");
+        assert_eq!(sheet_value["name"], "Hidden Data");
+        assert_eq!(sheet_value["state"], "very_hidden");
+        assert_eq!(sheet_value["protected"], true);
+        assert_eq!(sheet_value["sparse_dimension"], true);
         assert!(
             result.warnings.iter().any(|warning| {
                 warning.reason_code == "spreadsheet.sheet.very-hidden-preserved"

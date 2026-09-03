@@ -183,6 +183,23 @@ def expected(revision: str) -> dict[str, Any]:
         )
         and "explicit_coordinate_memory_time_and_cancellation_ceilings_fail_closed"
         in xlsx,
+        "golden_projection_binds_exact_values_types_and_provenance": has_all(
+            adapter,
+            (
+                'assert_eq!(formula_value["address"], "B1")',
+                'assert_eq!(formula_value["cell_type"], "formula")',
+                'assert_eq!(formula_value["formula"], "SUM(A1,1)")',
+                'assert_eq!(formula_value["cached_result"], "46001")',
+                'assert_eq!(date_value["cell_type"], "date")',
+                'assert_eq!(date_value["displayed_value"], "2025-12-09")',
+                'assert_eq!(date_value["number_format_id"], 14)',
+                'assert_eq!(sheet_value["state"], "very_hidden")',
+                "assert_eq!(formula.provenance.table, Some(1))",
+                "assert_eq!(formula.provenance.row, Some(1))",
+                "assert_eq!(formula.provenance.cell, Some(2))",
+                "assert_eq!(date.provenance.cell, Some(1))",
+            ),
+        ),
         "malicious_and_unsupported_content_remains_bounded_and_inert": has_all(
             xlsx,
             (
@@ -205,6 +222,32 @@ def expected(revision: str) -> dict[str, Any]:
                 "spreadsheet.sparse-range-not-expanded",
                 "spreadsheet.feature-preserved-not-interpreted",
                 "cancellation_and_output_bounds_fail_closed",
+            ),
+        ),
+        "hostile_and_fidelity_corpus_covers_required_local_families": has_all(
+            xlsx,
+            (
+                "hostile_zip_xml_traversal_bomb_unicode_error_and_protection_corpus_is_closed",
+                "SpreadsheetError::MalformedPackage",
+                "SpreadsheetError::UnsafePackage",
+                "SpreadsheetError::ResourceLimit",
+                "SpreadsheetCellKind::Error",
+                "excel_serial_conversion_preserves_both_date_systems_and_leap_bug",
+                "external_formula_and_dde_are_inert_and_block_safe_analysis",
+                "malformed_missing_oversized_and_macro_packages_fail_or_quarantine",
+                "explicit_coordinate_memory_time_and_cancellation_ceilings_fail_closed",
+            ),
+        )
+        and has_all(
+            service,
+            (
+                "crash_receipt_and_cleanup_leave_no_retrievable_projection_or_effect_claim",
+                "ArtifactExecutionSignal::Crashed",
+                "result.receipt.parser_launched",
+                "result.receipt.network_accessed",
+                "result.receipt.workspace_mutated",
+                "lexical_index",
+                "is_empty()",
             ),
         ),
         "runtime_service_binds_manifests_sheets_ranges_search_context_and_native_tools": has_all(
