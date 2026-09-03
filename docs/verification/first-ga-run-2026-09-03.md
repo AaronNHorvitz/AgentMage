@@ -1706,3 +1706,61 @@ blockers.
 Exact next action: continue at Sprint 48's first locally executable or gate-owned verification row
 while retaining Sprint 47's exact upstream, signer/approval, process-tree, platform, launcher, and
 fuzz blockers.
+
+## Batch 54 — Sprint 48 thin-client boundary review
+
+### Completed
+
+- Closed 3 TASKS rows: Sub-task 48.1.3.5 and Story AC 48.1.AC1/AC2. The gate-owned
+  automated review binds 7 security requirements, the closed protocol and rendering boundary,
+  exact headless authority, 5 client surfaces, 4 command families, 9 exit codes, 23 runtime
+  records, 2 thin-client schemas, 40 adversarial cases, 0 unauthorized effects, and every false
+  missing-product-proof marker. Promotions: 0. Substitutions: 0. Cumulative closed items: 120.
+- Commits: `871b09a3` (review and tests), `7d26e5e0` (review truth, closures, and normalized
+  blockers), and `2cd294ac` (review artifact, traceability, and contract evidence). Commits: 3.
+  Commits per closed item: 1.00. Review pins advanced: 0; complete 20-gate `REVIEWED_PATHS`
+  intersection: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 5/5 headless tests, 4/4 CLI tests, 13/13 evidence/review/corpus tests,
+  targeted Markdown lint, requirements-current, traceability, contract-boundary, and
+  contract-evidence checks pass. Supply-chain builds: 1; outputs remained byte-identical.
+  Evidence regeneration passes: 1. Recovery iterations: 1 focused-command correction: the first
+  currentness command named nonexistent `scripts/requirements_registry.py`; it was corrected to
+  the repository's singular `scripts/requirement_registry.py`, after which the entire focused
+  chain passed without source, test, or evidence changes. The full chain ran 680.923 seconds and
+  stopped only at the retained Story 6.1 rootless-Podman prerequisite after every preceding gate
+  passed. Recorded gate wall seconds: 681.
+- Sprint 48 exact blockers: authenticated product transport and canonical coordinators
+  `blocked: awaiting authenticated product transport and canonical conversation, knowledge, and
+  operational coordinator composition`; native disconnect `blocked: host change required — admit
+  an owner-approved root-owned Sprint 48 multi-level client helper and run disconnect, reconnect,
+  every-event-phase cancellation, and descendant cleanup from the trusted packaged launcher`;
+  native platform `BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and physical
+  supported MacBook; artifact=thin-client protocol, CLI, transport, disconnect, cancellation, and
+  parity results; action=platform owners execute and transfer untouched evidence;
+  credential=Windows image source and physical Mac access; payment=Windows license if required)`;
+  launcher `blocked: host change required — run the Sprint 48 installed CLI/headless suite from
+  the trusted packaged launcher`; and manual fuzz
+  `BLOCKED_EXTERNAL(platform=every supported native thin-client surface; artifact=manual fuzzing
+  transcript and minimized corpus; action=authorized human executes the manual S-041 fuzz campaign
+  and transfers untouched results; credential=platform access; payment=none)`; every
+  `substitution_set=empty`.
+- Exact admitted-model blocker:
+  `BLOCKED_EXTERNAL(platform=pinned local inference host; artifact=approved exact local coding
+  model, artifact, codec, runtime, context, decoding, resource, isolation, and quality admission
+  bundle; action=authorized model owner admits the exact profile and transfers the untouched
+  workflow result; credential=model artifact source if restricted; payment=model artifact or
+  required hardware if applicable)`; `substitution_set=empty`. `M-HARNESS-MVP` remains
+  unpromoted.
+- Exact upstream blocker: `blocked: awaiting Sprint 47 gate closure`, retaining Sprint 47's
+  signer/approval, process-tree, native parity, trusted-launcher, and manual-fuzz tuples;
+  `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue at Sprint 49's first locally executable or gate-owned verification row
+while retaining Sprint 48's exact upstream, transport/coordinator, model, disconnect, platform,
+launcher, and fuzz blockers.
