@@ -687,3 +687,37 @@ runtime-factory boundary that can be completed without claiming a qualified mode
 Exact next action: implement the production native-runtime factory boundary as far as a zero-enabled
 catalog permits, then mark only qualified-model and installed-client execution with exact external
 tuples.
+
+## Batch 30 — Exact Sprint 23 external dependency classification
+
+### Completed
+
+- Closed 0 TASKS rows. Marked 13 previously partial leaf/dependent rows with exact blockers and empty
+  substitution sets: 23.1.1.3, 23.1.2.2, 23.1.3.1 through 23.1.3.3, 23.2.2.4, 23.3.2.5,
+  23.4.1.7, 23.5.4.1, 23.5.4.3, 23.7.3.1, and 23.8.3.1 through 23.8.3.2. Promotions: 0.
+  Substitutions: 0.
+- Exact dependency classes recorded: 1 host compiler command, 1 restricted-host aggregate command,
+  3 installed Linux VSIX campaign families, 1 physical MacBook campaign, 1 Windows/WSL image lane,
+  1 Remote SSH target/account lane, and 1 rootless-Podman Dev Container lane. Source-level Linux
+  results were not substituted for any installed, topology, model, or assistive-technology row.
+- Commit: `0b3fc053` (blocker truth plus checklist-bound evidence). Commits: 1. Commits per closed
+  item: not applicable (0 closures). Review pins advanced: 0; complete `REVIEWED_PATHS`
+  intersection: empty.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1; outputs remained byte-identical. Evidence regeneration passes: 1, ordered
+  as requirements, traceability, contract boundary, then contract index. Recovery iterations: 0.
+  Task graph, requirements-current 45/45, contract boundary 29/29, and contract index 12/12 pass.
+- Full `docs:check`: 697.930 seconds, stopping only at the retained Story 6.1 Podman prerequisite
+  after every preceding gate passed. Recorded gate wall seconds: 698.
+- Exact common model blocker: `blocked: host change required — sudo dnf install gcc-c++, then run
+  npm run -s evidence:story9.1-linux-inference:build and admit its passing exact local production
+  model/runtime tuple`; substitution set: empty. Exact common installed-client tuple:
+  `BLOCKED_EXTERNAL(platform=Fedora graphical desktop with installed native Visual Studio Code;
+  artifact=current packaged AgentMage VSIX plus the exact Story 9.1-qualified production
+  model/runtime tuple; action=human runs the named campaign and transfers untouched evidence;
+  substitution_set=empty)`.
+
+Exact next action: produce the remaining gate-owned Sprint 23 security/review disposition, then
+propagate the exact leaf blocker tuples to every still-open dependent parent and acceptance row.
