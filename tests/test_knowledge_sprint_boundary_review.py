@@ -9,10 +9,10 @@ from scripts import knowledge_sprint_boundary_review as review
 
 class KnowledgeSprintBoundaryReviewTests(unittest.TestCase):
     def fixture(self, sprint: int) -> dict[str, object]:
-        with patch.object(review, "git_bytes", return_value=b"deterministic citation parity missing instruction-like prose are untrusted data ObsidianVaultSelection ObsidianEntryKind::SymbolicLink symlink_metadata apply_watch_batch derived_only source_files_mutated external_process_started network_accessed"):
+        with patch.object(review, "git_bytes", return_value=b"deterministic citation parity missing instruction-like prose are untrusted data ObsidianVaultSelection ObsidianEntryKind::SymbolicLink symlink_metadata apply_watch_batch derived_only source_files_mutated external_process_started network_accessed SemanticAdmissionReceipt LocalSemanticIndex max_results lexical_fallback_available approved_local_semantic_workflow_evidence KnowledgeRetrievalMode::ApprovedLocalSemantic retrieval_result_sha256 remote_enabled: false source_mutated: false"):
             return review.expected(sprint, "a" * 40)
 
-    def test_all_three_review_shapes_pass(self) -> None:
+    def test_all_four_review_shapes_pass(self) -> None:
         for sprint in review.SOURCES:
             value = self.fixture(sprint)
             with patch.object(review, "expected", return_value=value):

@@ -21,6 +21,9 @@ flowchart LR
     V --> I["Atomic in-memory derived index"]
     I --> Q["Bounded semantic query"]
     I --> D["Inspect, delete, clear, rebuild"]
+    Q --> W["Host workflow evidence adapter"]
+    E["Deterministic lexical citations"] --> W
+    W --> P["Native Chat and CLI workflow transport"]
     Q --> G["Four-mode comparison gate"]
     G -->|"all thresholds pass"| H["Exact hybrid profile eligible"]
     G -->|"any failure"| F["Deterministic-only behavior"]
@@ -71,6 +74,15 @@ function carrying only an operation class and proposed-destination digest. Its c
 always records rejection, no network use, and no source upload. No endpoint text or client handle
 is accepted.
 
+The trusted host application adapter accepts only an already admitted `LocalSemanticIndex`, a
+bounded fixed-point query vector produced by the separately controlled local runtime, and exact
+lexical citation/result digests. It queries the index, retains the lexical citations as the
+complete fallback, adds only source-content identities from returned local hits, and binds the
+index revision, configuration, result identities, and scores into the workflow retrieval digest.
+Empty indexes, empty hits, malformed lexical evidence, dimension mismatch, or a remote-enabled
+summary fail before the existing Native Chat and CLI-compatible workflow transport is created.
+This proves application composition, not a real model, model quality, or release eligibility.
+
 ## Comparative Gate
 
 One versioned comparison accepts labeled code-symbol and concept/prose cases containing structural,
@@ -86,7 +98,8 @@ corpus, hardware evidence, scope, and policy identities; it is not automatic run
 
 ## Open Boundary
 
-The policy/lifecycle and synthetic comparison contracts are locally executable. Real approved
-embedding and reranking artifacts, runtime-generated vectors, a representative production corpus,
-real-hardware measurements, application integration, upstream Sprint 29 closure, and independent
-Sprint 30 review remain absent. Semantic retrieval therefore remains disabled for release.
+The policy/lifecycle, application-composition, gate-owned review, and synthetic comparison
+contracts are locally executable. Real approved embedding and reranking artifacts,
+runtime-generated vectors from those artifacts, a representative production corpus,
+real-hardware measurements, and upstream Sprint 29 closure remain absent. Semantic retrieval
+therefore remains disabled for release.

@@ -106,8 +106,8 @@ fn scan(
                 .map_err(|_| ObsidianWatcherError::InvalidPath)?;
             let mut components = relative.clone();
             components.push(name.clone());
-            let metadata = fs::symlink_metadata(entry.path())
-                .map_err(|_| ObsidianWatcherError::Filesystem)?;
+            let metadata =
+                fs::symlink_metadata(entry.path()).map_err(|_| ObsidianWatcherError::Filesystem)?;
             if metadata.file_type().is_dir() {
                 pending.push((entry.path(), components));
                 continue;
@@ -237,10 +237,7 @@ mod tests {
         assert!(watcher.poll(&mut index).expect("unchanged").is_none());
         fs::write(root.join("one.md"), "# Changed\n").expect("modify");
         fs::write(root.join("two.md"), "# Two\n").expect("create");
-        let (events, update) = watcher
-            .poll(&mut index)
-            .expect("poll")
-            .expect("changed");
+        let (events, update) = watcher.poll(&mut index).expect("poll").expect("changed");
         assert_eq!(events.len(), 2);
         assert_eq!(update.report.note_count, 2);
         assert!(!update.report.canonical);

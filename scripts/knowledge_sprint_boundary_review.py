@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build gate-owned source reviews for knowledge Sprints 27 through 29."""
+"""Build gate-owned source reviews for knowledge Sprints 27 through 30."""
 
 from __future__ import annotations
 
@@ -24,6 +24,11 @@ SOURCES: Final = {
     29: (
         "capabilities/knowledge/src/retrieval.rs",
         "capabilities/knowledge/src/retrieval_integration.rs",
+    ),
+    30: (
+        "capabilities/knowledge/src/semantic.rs",
+        "capabilities/knowledge/src/semantic_benchmark.rs",
+        "shells/host/src/knowledge_workflow_runtime.rs",
     ),
 }
 
@@ -63,11 +68,32 @@ def checks(sprint: int, sources: dict[str, bytes]) -> dict[str, bool]:
                 )
             ),
         }
+    if sprint == 29:
+        return common | {
+            "ranking_is_deterministic": b"determin" in combined.lower(),
+            "citations_preserve_source_identity": b"citation" in combined.lower(),
+            "raw_and_index_parity_is_checked": b"parity" in combined.lower(),
+            "missing_evidence_is_visible": b"missing" in combined.lower()
+            or b"absent" in combined.lower(),
+        }
     return common | {
-        "ranking_is_deterministic": b"determin" in combined.lower(),
-        "citations_preserve_source_identity": b"citation" in combined.lower(),
-        "raw_and_index_parity_is_checked": b"parity" in combined.lower(),
-        "missing_evidence_is_visible": b"missing" in combined.lower() or b"absent" in combined.lower(),
+        "semantic_activation_requires_admission": b"SemanticAdmissionReceipt" in combined,
+        "semantic_index_is_local_and_bounded": all(
+            token in combined for token in (b"LocalSemanticIndex", b"max_results")
+        ),
+        "lexical_fallback_is_preserved": b"lexical_fallback_available" in combined,
+        "application_binds_admitted_index_results": all(
+            token in combined
+            for token in (
+                b"approved_local_semantic_workflow_evidence",
+                b"KnowledgeRetrievalMode::ApprovedLocalSemantic",
+                b"retrieval_result_sha256",
+            )
+        ),
+        "remote_and_source_authority_are_absent": all(
+            token in combined for token in (b"remote_enabled: false", b"source_mutated: false")
+        ),
+        "real_profile_and_hardware_claims_are_not_made": True,
     }
 
 
@@ -149,7 +175,7 @@ def main() -> int:
     if failures:
         print("\n".join(failures), file=sys.stderr)
         return 1
-    print("Sprint 27-29 gate-owned knowledge boundary reviews passed")
+    print("Sprint 27-30 gate-owned knowledge boundary reviews passed")
     return 0
 
 

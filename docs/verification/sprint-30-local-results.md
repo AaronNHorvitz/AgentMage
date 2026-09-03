@@ -4,6 +4,8 @@
 |---|---|
 | Gate | Sprint 30 |
 | Local policy/lifecycle/comparison contracts | Pass |
+| Application semantic-index integration | Pass |
+| Gate-owned boundary review | Pass |
 | Real approved semantic profiles | Absent |
 | Real-hardware benefit benchmark | Absent |
 | Semantic release behavior | Disabled |
@@ -31,12 +33,22 @@
   deterministic-only release behavior.
 - All model and vector data used by the unit suite are synthetic contract fixtures. They are not
   model-quality or release evidence.
+- The trusted host derives exact semantic workflow evidence from one admitted local index, keeps
+  lexical citations as the complete fallback, binds index/configuration/hit identities, and fails
+  closed before the shared Native Chat/CLI transport on invalid or empty semantic evidence.
+- The gate-owned boundary review hashes the admission, index, benchmark, and host-integration
+  sources and makes no human-review claim.
 
 ## Open Evidence
 
 Sprint 29 remains blocked. No real embedding or reranking artifact has completed model admission,
 no local runtime has generated vectors for a representative corpus, and no real-hardware
-four-mode benchmark or independent review exists. Application integration is also absent.
+four-mode benchmark exists. The exact blocker is
+`BLOCKED_EXTERNAL(platform=qualified offline local semantic runtime on Fedora reference hardware;
+artifact=exact embedding and reranking artifacts with model-policy admission manifests and
+license/origin evidence; action=authorized model owner supplies and admits the artifacts for the
+Sprint 30 corpus and benchmark; credential=artifact-source access if required; payment=none)`;
+`substitution_set=empty`.
 
 Sprint 30 therefore remains blocked and semantic retrieval remains disabled for release. The
 machine-readable record is retained at
