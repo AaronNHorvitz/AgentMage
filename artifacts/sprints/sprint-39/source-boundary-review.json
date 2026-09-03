@@ -1,0 +1,48 @@
+{
+  "checks": {
+    "audit_chain_is_bound_and_redacted": true,
+    "checkpoint_and_recovery_matrix_is_bound": true,
+    "cleanup_inventory_is_bound": true,
+    "missing_proof_remains_false": true,
+    "privacy_canary_scans_are_bound": true,
+    "retention_and_no_replay_are_bound": true,
+    "security_requirements_are_mapped": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "Upstream, trusted-launcher, non-Fedora, and physical-fault proof remain blocked.",
+    "Manual fuzzing remains deferred and no release claim is made."
+  ],
+  "record_type": "agentmage-sprint-39-source-boundary-review",
+  "review_class": "gate-owned-automated-write-privacy-recovery-review",
+  "reviewer_identity": "scripts/sprint_39_boundary_review.py",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-DAT-004",
+    "SR-DAT-010",
+    "SR-DAT-011",
+    "SR-DAT-012",
+    "SR-OPS-001",
+    "SR-OPS-002",
+    "SR-OPS-003",
+    "SR-OPS-004",
+    "SR-OPS-005",
+    "SR-OPS-006",
+    "SR-OPS-007",
+    "SR-TST-005"
+  ],
+  "source_revision": "210b0f496180020af25198fc5bb314adef8c5608",
+  "source_sha256": {
+    "artifacts/sprints/sprint-39/local-evidence-report.json": "05d77b17d4cf41e8bf78f26318fb57570e1a048d8f02d90d782eb3924ec8a139",
+    "docs/verification/sprint-39-local-results.md": "55f689174097d05ec3182cbdb983c34d800b2a4abc12df95e2ab2b70f4eb11aa",
+    "docs/verification/sprint-39-recovery-corpus.json": "b2e16c1eff2b62113c6ec5061d7e9cd84c060e721dca76c9945b9d6f095b39fb",
+    "docs/verification/sprint-39-redacted-audit-fixture.json": "763067076838702c82457d531dcd3ddb6800396c0aa97536a1c1218311b2ecb3",
+    "kernel/engine/src/write_recovery.rs": "043810f5062cfeca75d69b5ea8ad9f22f22ea200e182c86ae0594f99e983d8bd",
+    "platforms/linux/src/write_root_inventory.rs": "007bcdfa440baf5f5895c803b63511ca33ea5abc10893ccadd0405dde92a6ff3",
+    "scripts/sprint_39_evidence.py": "630ffb3b495b1032ba20462c521ec60350a9577afe0f32a085f148fcbf54e27b"
+  },
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}

@@ -1,0 +1,46 @@
+{
+  "checks": {
+    "canonical_index_hashes_are_bound": true,
+    "host_authority_remains_closed": true,
+    "missing_proof_remains_false": true,
+    "parser_writer_round_trips_are_bound": true,
+    "recovery_evidence_is_retained": true,
+    "scoped_diffs_and_collision_controls_are_bound": true,
+    "security_requirements_are_mapped": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "Upstream, trusted-launcher, non-Fedora, and complete crash/race proof remain blocked.",
+    "Manual fuzzing remains deferred and no release claim is made."
+  ],
+  "record_type": "agentmage-sprint-38-source-boundary-review",
+  "review_class": "gate-owned-automated-markdown-knowledge-review",
+  "reviewer_identity": "scripts/sprint_38_boundary_review.py",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-DAT-001",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-CIV-003",
+    "SR-CIV-004",
+    "SR-TST-004",
+    "SR-TST-005"
+  ],
+  "source_revision": "210b0f496180020af25198fc5bb314adef8c5608",
+  "source_sha256": {
+    "artifacts/sprints/sprint-38/local-evidence-report.json": "5ea410fd19ed748426c363c7de26f9335d4873e01655a4a1f37a3becd23e760d",
+    "capabilities/knowledge/src/knowledge_write.rs": "03b1e1db9de279355b72a6530d06f2e136fb4cf6d6b803479eb70b9c1176a37d",
+    "capabilities/knowledge/src/markdown_write.rs": "8a4e0b81192cd4b2f830ea4a43d022f3880925949c02ec3168c7215f346093d0",
+    "docs/verification/sprint-38-local-results.md": "fcc5d9248bdb1da391aa71027caddaafe8029d3ce9e444527f7f8683832e5a98",
+    "docs/verification/sprint-38-markdown-knowledge-corpus.json": "4dae8b2cb8630a94d09093de703d61d5eea221f4dbddcaeb2264dd2fe2cbd373",
+    "scripts/sprint_38_evidence.py": "62bd463f3fa5da603f3b946bf93bf54842b949e8b28308a80da64a273fa8e04c",
+    "shells/host/src/knowledge_write.rs": "3c2884e7136416d9c65c92a857819148514838dcf968cfa32ce10fc9075db3f4"
+  },
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}
