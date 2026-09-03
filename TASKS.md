@@ -7143,6 +7143,13 @@ with honest reading-order, table, OCR, confidence, and encryption limitations.
     machine-derived status; never merge OCR with observed PDF text silently.
   - [ ] **Sub-task 60.2.2.3:** Package OCR behind an optional feature and isolated bounded worker;
     absence degrades to a visible scanned-page state and never blocks native PDF extraction.
+
+  Local source progress: the common crate now exposes an implementation-free `PdfOcrEngine` trait,
+  deterministic scan-page eligibility, and strict validation for exact package/model admission,
+  preprocessing profile, admitted language, page/image regions, UTF-8 text ranges, and aggregate and
+  per-region confidence thresholds. The trait itself has no process authority or implementation;
+  Tesseract remains deferred, cloud OCR rejected, and no pure-Rust candidate, model, package feature,
+  or isolated worker is admitted. Sub-tasks 60.2.2.1 through 60.2.2.3 therefore remain unchecked.
 - [ ] **Task 60.2.3 - Integrate lifecycle, context, and tools**
   - [ ] **Sub-task 60.2.3.1:** Emit source manifests, native and OCR sections, extraction metrics,
     warnings, page retrieval, context candidates, and content-addressed references through shared

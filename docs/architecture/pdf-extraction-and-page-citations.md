@@ -100,6 +100,12 @@ observation bound to an exact source and scan-candidate page plus a trusted-call
 admission containing exact package and model digests, version, license, and receipt digest. The
 projection preserves confidence in basis points and labels the text `pdf.ocr.probabilistic`.
 
+`PdfOcrEngine` is an implementation-free optional boundary: this crate cannot launch a process.
+Per-page eligibility admits only an image-bearing scan candidate without embedded text. Any future
+observation must bind the preprocessing profile, admitted language, contiguous UTF-8 ranges, exact
+page-image rectangles, and aggregate and per-region confidence thresholds before it can become a
+proposal. Region provenance remains separate from parser-emitted text spans.
+
 No OCR package or model is currently admitted. The validation contract therefore demonstrates the
 authority and provenance boundary without claiming native OCR execution, cancellation, platform
 support, or product integration.

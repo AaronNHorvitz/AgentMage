@@ -273,6 +273,32 @@ pub struct PdfOcrAdmission {
     pub admission_receipt_sha256: String,
     /// True only when the trusted caller verified the admission receipt.
     pub admission_verified_by_caller: bool,
+    /// Closed language tags admitted for the exact model artifact.
+    pub supported_languages: Vec<String>,
+    /// Minimum confidence accepted from this exact package/model pair.
+    pub minimum_confidence_basis_points: u16,
+}
+
+/// Exact image-space region associated with a bounded slice of OCR output.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PdfOcrRegion {
+    /// Stable observation-local region identity.
+    pub region_id: String,
+    /// Inclusive UTF-8 byte offset in the observation text.
+    pub start_byte: u64,
+    /// Exclusive UTF-8 byte offset in the observation text.
+    pub end_byte_exclusive: u64,
+    /// Pixel-space left coordinate in the supplied page image.
+    pub x: u32,
+    /// Pixel-space top coordinate in the supplied page image.
+    pub y: u32,
+    /// Positive pixel-space width.
+    pub width: u32,
+    /// Positive pixel-space height.
+    pub height: u32,
+    /// Region-specific OCR confidence in basis points.
+    pub confidence_basis_points: u16,
 }
 
 /// Untrusted output returned by one separately executed local OCR operation.
@@ -289,6 +315,12 @@ pub struct PdfOcrObservation {
     pub text: String,
     /// OCR engine confidence in basis points.
     pub confidence_basis_points: u16,
+    /// Exact preprocessing profile selected by the isolated caller.
+    pub preprocessing_profile_id: String,
+    /// BCP-47-like language tag selected from the admitted model languages.
+    pub language_tag: String,
+    /// Ordered image-space regions covering the retained OCR text.
+    pub regions: Vec<PdfOcrRegion>,
     /// Digest of the raw OCR result envelope retained by the caller.
     pub observation_sha256: String,
 }
@@ -305,10 +337,37 @@ pub struct PdfOcrProjection {
     pub observation_sha256: String,
     /// Replacement page retaining explicit OCR provenance and uncertainty.
     pub page: PdfPageExtraction,
+    /// Exact validated page-image regions retained separately from embedded-text spans.
+    pub regions: Vec<PdfOcrRegion>,
     /// Stable warning that OCR text is probabilistic.
     pub uncertainty_reason_code: String,
     /// False because validation does not launch the OCR package.
     pub execution_performed: bool,
+}
+
+/// Closed per-page decision made before an optional OCR worker can be invoked.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PdfOcrEligibility {
+    /// Exact page identity considered for OCR.
+    pub page: PdfPageIdentity,
+    /// True only for an image-bearing scan candidate with no embedded text.
+    pub eligible: bool,
+    /// Stable content-free decision code.
+    pub reason_code: String,
+}
+
+/// Optional OCR execution boundary. This crate provides no implementation or process authority.
+pub trait PdfOcrEngine {
+    /// Exact admitted package/model identity exposed by the implementation.
+    fn admission(&self) -> &PdfOcrAdmission;
+
+    /// Produces one untrusted observation; callers must still validate it below.
+    fn observe(
+        &mut self,
+        eligibility: &PdfOcrEligibility,
+        cancelled: &mut dyn FnMut() -> bool,
+    ) -> Result<PdfOcrObservation, PdfExtractionError>;
 }
 
 /// Stable fail-closed PDF extraction error.
@@ -983,6 +1042,54 @@ pub fn extract_pdf_to_pages(
     })
 }
 
+/// Returns the closed OCR eligibility decision for one extracted page.
+#[must_use]
+pub fn pdf_ocr_eligibility(page: &PdfPageExtraction) -> PdfOcrEligibility {
+    let eligible = page.state == PdfPageState::ScannedCandidate
+        && page.image_count > 0
+        && page.text.is_empty();
+    PdfOcrEligibility {
+        page: page.identity.clone(),
+        eligible,
+        reason_code: if eligible {
+            "pdf.ocr.eligible-image-only-page"
+        } else {
+            "pdf.ocr.ineligible-embedded-or-non-image-page"
+        }
+        .to_owned(),
+    }
+}
+
+fn valid_ocr_regions(observation: &PdfOcrObservation, minimum_confidence: u16) -> bool {
+    if observation.regions.is_empty() {
+        return false;
+    }
+    let mut expected_start = 0_u64;
+    for region in &observation.regions {
+        if !valid_identifier(&region.region_id)
+            || region.start_byte != expected_start
+            || region.end_byte_exclusive <= region.start_byte
+            || region.width == 0
+            || region.height == 0
+            || region.confidence_basis_points < minimum_confidence
+            || region.confidence_basis_points > 10_000
+        {
+            return false;
+        }
+        let Ok(start) = usize::try_from(region.start_byte) else {
+            return false;
+        };
+        let Ok(end) = usize::try_from(region.end_byte_exclusive) else {
+            return false;
+        };
+        if observation.text.get(start..end).is_none() {
+            return false;
+        }
+        expected_start = region.end_byte_exclusive;
+    }
+    usize::try_from(expected_start).ok() == Some(observation.text.len())
+}
+
 /// Validates an externally executed local OCR observation against an admitted identity.
 pub fn validate_pdf_ocr_observation(
     extraction: &PdfExtractionResult,
@@ -1000,13 +1107,30 @@ pub fn validate_pdf_ocr_observation(
         || !valid_sha256(&admission.package_sha256)
         || !valid_sha256(&admission.model_sha256)
         || !valid_sha256(&admission.admission_receipt_sha256)
+        || admission.supported_languages.is_empty()
+        || admission.supported_languages.len() > 64
+        || admission
+            .supported_languages
+            .iter()
+            .any(|language| !valid_identifier(language))
+        || !admission
+            .supported_languages
+            .windows(2)
+            .all(|pair| pair[0] < pair[1])
+        || admission.minimum_confidence_basis_points > 10_000
         || !valid_sha256(&observation.source_sha256)
         || !valid_sha256(&observation.page_id)
         || !valid_sha256(&observation.observation_sha256)
         || observation.source_sha256 != extraction.source_sha256
         || observation.confidence_basis_points > 10_000
+        || observation.confidence_basis_points < admission.minimum_confidence_basis_points
+        || !valid_identifier(&observation.preprocessing_profile_id)
+        || !admission
+            .supported_languages
+            .contains(&observation.language_tag)
         || observation.text.is_empty()
         || observation.text.len() > extraction.profile.maximum_page_text_bytes
+        || !valid_ocr_regions(observation, admission.minimum_confidence_basis_points)
     {
         return Err(PdfExtractionError::OcrNotAdmitted);
     }
@@ -1019,6 +1143,9 @@ pub fn validate_pdf_ocr_observation(
         })
         .ok_or(PdfExtractionError::OcrNotAdmitted)?;
     if source_page.state != PdfPageState::ScannedCandidate {
+        return Err(PdfExtractionError::OcrNotAdmitted);
+    }
+    if !pdf_ocr_eligibility(source_page).eligible {
         return Err(PdfExtractionError::OcrNotAdmitted);
     }
 
@@ -1064,6 +1191,7 @@ pub fn validate_pdf_ocr_observation(
         admission: admission.clone(),
         observation_sha256: observation.observation_sha256.clone(),
         page,
+        regions: observation.regions.clone(),
         uncertainty_reason_code: "pdf.ocr.probabilistic".to_owned(),
         execution_performed: false,
     })
@@ -1428,6 +1556,8 @@ mod tests {
             license_expression: "Apache-2.0".to_owned(),
             admission_receipt_sha256: "c".repeat(64),
             admission_verified_by_caller: true,
+            supported_languages: vec!["en-US".to_owned()],
+            minimum_confidence_basis_points: 8_000,
         };
         let observation = PdfOcrObservation {
             source_sha256: result.source_sha256.clone(),
@@ -1435,8 +1565,22 @@ mod tests {
             page_number: 1,
             text: "uncertain OCR text".to_owned(),
             confidence_basis_points: 8_250,
+            preprocessing_profile_id: "ocr-page-gray-v1".to_owned(),
+            language_tag: "en-US".to_owned(),
+            regions: vec![PdfOcrRegion {
+                region_id: "region-1".to_owned(),
+                start_byte: 0,
+                end_byte_exclusive: 18,
+                x: 10,
+                y: 20,
+                width: 300,
+                height: 40,
+                confidence_basis_points: 8_250,
+            }],
             observation_sha256: "d".repeat(64),
         };
+        let eligibility = pdf_ocr_eligibility(&result.pages[0]);
+        assert!(eligibility.eligible);
         let projection = validate_pdf_ocr_observation(&result, &admission, &observation)
             .expect("admitted observation");
         assert_eq!(
@@ -1445,12 +1589,21 @@ mod tests {
         );
         assert_eq!(projection.page.confidence_basis_points, Some(8_250));
         assert_eq!(projection.uncertainty_reason_code, "pdf.ocr.probabilistic");
+        assert_eq!(projection.regions, observation.regions);
         assert!(!projection.execution_performed);
 
-        let mut wrong = observation;
+        let mut wrong = observation.clone();
         wrong.page_number = 2;
         assert_eq!(
             validate_pdf_ocr_observation(&result, &admission, &wrong).expect_err("page binding"),
+            PdfExtractionError::OcrNotAdmitted
+        );
+
+        let mut low_confidence = observation;
+        low_confidence.regions[0].confidence_basis_points = 7_999;
+        assert_eq!(
+            validate_pdf_ocr_observation(&result, &admission, &low_confidence)
+                .expect_err("region threshold"),
             PdfExtractionError::OcrNotAdmitted
         );
     }
