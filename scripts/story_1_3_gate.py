@@ -18,8 +18,8 @@ ROOT: Final = Path(__file__).resolve().parents[1]
 EVIDENCE_DIR: Final = ROOT / "artifacts/sprints/sprint-1/story-1.3"
 REPORT_PATH: Final = EVIDENCE_DIR / "story-gate-report.json"
 RAW_PATH: Final = EVIDENCE_DIR / "story-gate-results.log"
-REVIEWED_COMMIT: Final = "4775ba0b8bcc28fb24e8763bd9a4ab653bc5106d"
-REVIEWED_TREE: Final = "32f1b865b45e3bac67ebf35ac22eaf6166ef6ea7"
+REVIEWED_COMMIT: Final = "0f65fac9656556398a6832a8626c47b3505f3012"
+REVIEWED_TREE: Final = "2854e10f6b4429cb74a279b2fe7a9818f8087083"
 VALIDATOR_COMMANDS: Final = (
     ("python3", "scripts/story_1_3_ac1_evidence.py"),
     ("python3", "scripts/story_1_3_ac2_evidence.py"),
@@ -242,7 +242,7 @@ def rv50_state() -> dict[str, Any]:
     if (
         report.get("status") != "PARTIAL_LOCAL_CONTRACT_EVIDENCE"
         or report.get("protocol_complete") is not False
-        or len(later) != 5
+        or len(later) != 4
         or any(item.get("status") != "BLOCKED_LATER_STORY" for item in later)
         or len(platforms) != 6
         or sum(item.get("status") == "BLOCKED_EXTERNAL" for item in platforms) != 5

@@ -177,7 +177,7 @@
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "495aeb404f4da31c5d0d9ed2c83327da1a9f63e59a8de6ac42de726dc67fcdfb",
+  "index_sha256": "f2b0b62fd656b8e9732cd95fc8981a1ac9542ad97ff71b13f1996f116d0008d6",
   "limitations": [
     "The installed host still lacks a production runtime factory and admitted local model.",
     "The source-level boundary-by-boundary failure matrix is complete; physical process faults remain outside this source campaign.",
@@ -481,7 +481,7 @@
   ],
   "record_type": "story_23_4_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "065d861d5684555a320b45f8437db40826bb45c8",
+  "source_revision": "0f65fac9656556398a6832a8626c47b3505f3012",
   "story_id": "23.4",
   "summary": {
     "complete_count": 16,

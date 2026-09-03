@@ -965,7 +965,7 @@ results cannot acquire different meanings in different interfaces.
 
 **Story gate evidence:** All three tasks, all seven sub-tasks, and all three criteria pass in the
 current local canonical-record scope. The independent [`story_1_3_gate.py`](scripts/story_1_3_gate.py)
-aggregate reviews immutable commit `752d2b02` and tree `edc15f5b`, verifies 33 exact contract,
+aggregate reviews immutable commit `0f65fac9` and tree `2854e10f`, verifies 33 exact contract,
 schema, fixture, test, documentation, and evidence artifacts, and reruns all three criterion
 validators plus the `RV-50` applicability gate. Story 1.3 remains `BLOCKED`: Stories 5.3, 11.3,
 and 16.4 retain later runtime acceptance work; Story 22.5 has completed its source-level vertical
