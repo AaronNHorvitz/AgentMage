@@ -1,0 +1,45 @@
+{
+  "checks": {
+    "closed_result_inventory_is_bound": true,
+    "local_contract_is_bound": true,
+    "missing_native_proof_remains_false": true,
+    "security_requirements_are_mapped": true,
+    "terminal_result_semantics_are_bound": true,
+    "trusted_template_and_scope_are_bound": true,
+    "unauthorized_and_sensitive_results_are_absent": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "Native worker/process-tree and protected raw-log integration remain blocked.",
+    "Trusted launch, native platform proof, and manual fuzzing remain blocked.",
+    "No production coordinator, platform support, or release claim is made."
+  ],
+  "record_type": "agentmage-sprint-46-source-boundary-review",
+  "review_class": "gate-owned-automated-validation-runner-boundary-review",
+  "reviewer_identity": "scripts/sprint_46_boundary_review.py",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-OPS-003",
+    "SR-SUP-003",
+    "SR-TST-001",
+    "SR-TST-002",
+    "SR-TST-003",
+    "SR-TST-004",
+    "SR-TST-005",
+    "SR-TST-006",
+    "SR-TST-010"
+  ],
+  "source_revision": "20224eed0980761a26528058999ae305818d7904",
+  "source_sha256": {
+    "artifacts/sprints/sprint-46/local-evidence-report.json": "84ac8bcaae654a9ffdb13b85e25e6a58f3dcb0255a3e1523b16d0e3a510f90f1",
+    "docs/verification/sprint-46-failure-corpus.json": "f9830c250207e0aad53d8ca1af507a48361f100c4ea7711d86dbf2e0d9dd6c8a",
+    "docs/verification/sprint-46-local-results.md": "f95fff556308bd7f5a6486bf9bf165c5bb4a31db65c7eff5057b7e0aefed55de",
+    "kernel/engine/src/command_runner.rs": "e3c595700324b094d4c0df6634b277a7443c3a992680f9da613ce5873a82c8a6",
+    "kernel/engine/src/validation_result.rs": "0dc1941e818fa94064b1c7928763f3357f3e1b7052fbb9bb7cc58f4ea36d6ef9",
+    "kernel/engine/src/validation_template.rs": "0a7c9fa96bf28e00738e753755abb1285a96ce1e0ce9dd65e7ce9f73fb62f513",
+    "schemas/runtime/validation-receipt.schema.json": "4adc1e0399e1d559e34979b115d346ac4fa2cab91770a80551e7d6ac954aebf6",
+    "scripts/sprint_46_evidence.py": "0fa6c8d4cb6b689f3fceb092bc0b2b86cba44c7bc2eb644d9564ba2cd4fb9ed6"
+  },
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}
