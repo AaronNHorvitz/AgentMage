@@ -47,6 +47,12 @@ receipt digest without retaining the protected assertion. Gate-owned review
 binds that source contribution separately; it is not an installed-interface,
 enabled-profile, live-model, or platform claim.
 
+The host `drive_interactive_cli_routing` adapter now forwards the authenticated
+envelope and presents only the kernel-appended native audit. Invalid
+authentication produces no view; the current empty catalog produces the same
+visible no-profile decision through the host path. This remains source-level
+composition, not trusted packaged execution or platform acceptance.
+
 ## Security Mapping
 
 | Requirements | Local Sprint 49 contribution | Remaining product evidence |
@@ -63,8 +69,7 @@ No product-wide requirement is marked complete by this local contribution.
 A green local report proves the source router, frozen artifacts, zero-model
 activation state, and deterministic tests at its immutable revision. It does not
 close Sprint 49. Sprint 48 and upstream gates remain blocked. No approved later
-profile manifest, live role-specific benchmark campaign, installed-interface
-transport to the product router, supported-platform acceptance,
+profile manifest, live role-specific benchmark campaign, supported-platform acceptance,
 trusted installed-package execution, independent review, or manual fuzzing
 exists. The independent review named here means independent human review; the
 gate-owned automated boundary review is retained separately. Product routing

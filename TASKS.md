@@ -6409,7 +6409,7 @@ Sprint AC 48.AC1, and the sprint remain open.
   - [x] **Sub-task 49.1.1.6** (legacy `S-042-I06`): Preserve manual selection and expose every routing choice and disagreement. Evidence: an eligible exact manual choice is preserved, an ineligible or missing choice blocks without fallback, deterministic equal-score selection is stable, and every tied profile remains in the receipt disagreement list.
   - [x] **Sub-task 49.1.1.7** (legacy `S-042-I07`): Add optional second-model verification only where it improves measured high-risk results. Evidence: a distinct eligible verifier is considered only for high/critical-risk `verify` work with at least 150 basis points of current measured verification benefit; all other states retain the required review without an ensemble.
   - [x] **Sub-task 49.1.1.8** (legacy `S-042-I08`): Keep invisible fallback, broad provider marketplace, automatic frontier routing, and unmeasured ensembles disabled. Evidence: these paths have no router API variant, every candidate must be local-only and fallback-disabled, and the decision table and 48-case corpus fail closed on every named attempt.
-  - [ ] **Sub-task 49.1.1.9:** Evaluate any proposed Ollama, vLLM, or OpenAI-compatible local adapter as an exact `LocalModelRuntime` profile with endpoint/process/network identity, codec, provenance, capabilities, context, streaming, cancellation, resources, zero-egress, parity, lifecycle, and removal evidence; retain no generic arbitrary-endpoint registration.
+  - [x] **Sub-task 49.1.1.9:** Evaluate any proposed Ollama, vLLM, or OpenAI-compatible local adapter as an exact `LocalModelRuntime` profile with endpoint/process/network identity, codec, provenance, capabilities, context, streaming, cancellation, resources, zero-egress, parity, lifecycle, and removal evidence; retain no generic arbitrary-endpoint registration. Evidence: the common `AlternateRuntimeEvidence` requires all 16 exact evidence digests and eight mandatory boundary results before a candidate can proceed to separate profile admission; the 10-family Story 49.2 matrix explicitly leaves Ollama, vLLM, and both compatibility families unavailable with null versions, zero support, zero routes, and no generic registration.
 
 - [ ] **Task 49.1.2 - Produce reviewable artifacts**
   - [ ] **Sub-task 49.1.2.1:** Approved later-profile manifests. Historical blocked/unresolved candidate records exist, but there is no approved later-profile manifest and zero profiles are enabled.
@@ -6438,7 +6438,7 @@ Sprint AC 48.AC1, and the sprint remain open.
 - [x] **Sprint AC 49.AC4:** User selection and visible stop behavior remain available. Evidence: exact manual choice is preserved, refused without fallback when ineligible, and every blocked decision has a stable visible result code and candidate rationale.
 - [x] **Sprint AC 49.AC5:** No local routing decision can invoke or transfer content to a frontier service. Evidence: only local platform identities exist, profiles must be local-only, the receipt fixes `frontier_transfer` to false, and remote paths are structurally absent and adversarially denied.
 - [x] **Sprint AC 49.AC6:** Routing decisions preserve Decision 0027's separation of sensitivity, risk, capability, policy, and completion and remain reproducible from typed facts without model self-confidence. Evidence: task class, action risk, role capability, policy, resource fit, benchmark generation, budget, selection, and downstream completion authority remain separate typed fields and boundaries.
-- [ ] **Sprint AC 49.AC7:** Every additional local runtime adapter passes its exact endpoint, process, network, codec, capability, provenance, parity, lifecycle, and removal gate independently before configuration or routing.
+- [x] **Sprint AC 49.AC7:** Every additional local runtime adapter passes its exact endpoint, process, network, codec, capability, provenance, parity, lifecycle, and removal gate independently before configuration or routing. Evidence: the common non-activating evaluator rejects any missing contract, caller, authority, egress, parity, lifecycle/removal, or quality gate; the retained matrix records zero supported adapters and zero enabled routes, so no unavailable or unqualified candidate reaches configuration.
 
 **Local evidence disposition:** commits `1aa127b` through `bc73047` implement and
 qualify the locally executable Sprint 49 routing contract. The immutable report at
@@ -6447,7 +6447,7 @@ SHA-256 `cc07352773e1e59847bdf16430a5117466eeb8efca8c0851b7db35f1e7f4e2d6`, is
 bound to source revision `925d7f1702b1c2cd300151d9891057fbc79485b4`. All 11 commands
 pass and all three focused suites report zero skipped tests. Sprint 49 remains
 **BLOCKED** because Sprint 48 is blocked and approved later-profile manifests, live
-role-specific benchmark campaigns, authenticated installed-interface router transport,
+role-specific benchmark campaigns,
 supported-platform acceptance, trusted installed-package execution, independent human review,
 and deferred manual fuzzing remain absent. Upstream is `blocked: awaiting Sprint 48 gate
 closure`; `substitution_set=empty`, retaining Sprint 48's transport/coordinator, model,
@@ -6458,9 +6458,7 @@ model, artifact, tokenizer, template, codec, runtime, context, decoding, resourc
 platform, supplier, license, lineage, origin, benchmark, and quality admission bundle;
 action=authorized model owner admits the exact profile, executes the repeated role campaigns,
 and transfers untouched results; credential=model artifact source if restricted;
-payment=model artifact or required hardware if applicable)`; `substitution_set=empty`.
-Installed-interface composition is `blocked: awaiting authenticated installed-interface
-transport to the kernel product-routing service`; `substitution_set=empty`. Native acceptance is
+payment=model artifact or required hardware if applicable)`; `substitution_set=empty`. Native acceptance is
 `BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and physical supported
 MacBook; artifact=exact profile, role benchmark, routing, disagreement, performance, and parity
 results; action=platform owners execute and transfer untouched evidence; credential=Windows
