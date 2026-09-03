@@ -1061,3 +1061,41 @@ semantic-artifact and strict-local host blockers.
 
 Exact next action: write the 75-item checkpoint handoff, then propagate Sprint 31's exact inherited
 blocker and continue at Sprint 32's first unblocked local or gate-owned review row.
+
+## Batch 42 — Sprint 32 gate-owned conversation boundary review
+
+### Completed
+
+- Closed 1 TASKS row: Sprint AC 32.AC5. The gate-owned review recomputes nine checks over the
+  canonical conversation contract, kernel library, and closed host client surface: read-only
+  history, exact-parent-turn branching, resume-context revalidation, approval-bound deletion,
+  compaction evidence preservation, bounded client authority, no network client, no process
+  launch, and no human-review claim. Story 32.1 and Sprint 32 remain open only on Sprint 31's
+  exact upstream blocker. Promotions: 0. Substitutions: 0.
+- Commits: `9433a7aa` (Sprint 32 review gate), `c6c41373` (source-bound review and checklist
+  evidence), `b4fa1b03` (traceability recovery), and `7f1ca7ec` (contract-evidence recovery).
+  Commits: 4. Commits per closed item: 4.00. Review pins advanced: 0; complete
+  `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Shared review mutation groups: 2/2; Sprint 27–32 source-boundary review, targeted Markdown
+  lint, requirements-current 45/45, traceability, contract-boundary, and contract-evidence gates
+  pass. Supply-chain builds: 1. Planned evidence regeneration passes: 1. Targeted recovery
+  regenerations: 2. The first full chain ran 136 seconds and found the TASKS-bound traceability
+  report stale; `traceability:build` restored it. The second ran 699 seconds and found the
+  contract-boundary report stale because the shared review gate changed; the owning
+  contract-boundary report and evidence index were rebuilt together. The final full chain ran
+  696 seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite after every
+  preceding gate passed. Recorded gate wall seconds: 1,531.
+- Exact Sprint 32 upstream blocker: `blocked: host change required — run the strict-local worker
+  and source-policy renewal outside the restricted filesystem sandbox where
+  /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain
+  root-owned identities, then run python3 scripts/sprint_31_evidence.py --write --source-revision
+  HEAD`; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue at Sprint 33's first unblocked local or gate-owned review row while
+retaining Sprint 32's exact inherited upstream blocker.
