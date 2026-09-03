@@ -1,0 +1,41 @@
+{
+  "checks": {
+    "authority_and_transport_boundary_are_bound": true,
+    "closed_protocol_and_rendering_are_bound": true,
+    "five_surface_and_adversarial_results_are_bound": true,
+    "local_contract_is_bound": true,
+    "missing_product_proof_remains_false": true,
+    "security_requirements_are_mapped": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "Authenticated product transport and production coordinators remain absent.",
+    "Native disconnect, descendant cleanup, and platform parity remain blocked.",
+    "No model, installed interface, platform support, or release is enabled."
+  ],
+  "record_type": "agentmage-sprint-48-source-boundary-review",
+  "review_class": "gate-owned-automated-thin-client-boundary-review",
+  "reviewer_identity": "scripts/sprint_48_boundary_review.py",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-PLT-005",
+    "SR-PLT-006",
+    "SR-ACC-001",
+    "SR-ACC-007",
+    "SR-OPS-001",
+    "SR-TST-001",
+    "SR-TST-004"
+  ],
+  "source_revision": "7d26e5e0dc16ce71afd7bd2074e2709f3eb385ae",
+  "source_sha256": {
+    "artifacts/sprints/sprint-48/local-evidence-report.json": "29070122f28d534df9f14adfa411b1653440e1c60d2c057ca86f500bf78f26ba",
+    "docs/verification/sprint-48-headless-corpus.json": "2df455d9144dc8073e66adb3e95ded91f8e28f9a8fb8ef40b741c029b796ad60",
+    "docs/verification/sprint-48-local-results.md": "95697fac487f513f6b5109c0835cc6991ea505f93336cf60fbf4874de6ca8fa0",
+    "scripts/sprint_48_evidence.py": "68b9543f0c4233ccaaabcabe924210975b8155fc1dc3d75d48d1e675740671d0",
+    "shells/host/src/bin/agent.rs": "37f972874dcb36d6f29f73d4aa8a6c6bdc98c85216070b8b71fa42b6baa1681d",
+    "shells/host/src/cli.rs": "ff5bce423a9478a66941ffa4875ff6ef41dcd66efb33fb775b83ae6793135aa2",
+    "shells/host/src/headless.rs": "ef4d55c79413b4e17e497e78ca1d379b2bf847fa05cb36d6d1d334f8e1081eb5"
+  },
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}
