@@ -223,3 +223,44 @@ otherwise complete platform-neutral story/sprint gate; continue without retrying
 
 Exact next action: continue with Sprint 21 dependency-independent evidence rows; do not retry the
 host-ownership or C++ compiler blockers in this environment.
+
+## Batch 19 — Sprint 21 dependency-independent aggregation and review audit
+
+### Completed
+
+- Closed 3 TASKS rows: Task 21.2.1, Task 21.2.2, and Sprint AC 21.AC8. Each aggregation is
+  supported by already committed Story 21.2 and Story 21.3 schema, journal, traceability,
+  projection, replay, security, and automated-boundary-review artifacts. Promotions retained: 0.
+  External rows closed by substitution: 0.
+- Provisional automated Story 21.1 review commit `7bc9534b` was reversed forward by `0a2fccc5`
+  after the required Sprint 21 regeneration exposed the inherited strict-local source-policy
+  failure. Retained closure and traceability commit: `05adb8bc`. Commits: 3. Commits per closed
+  item: 1.00.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1; output deltas: 0. Sprint 21 evidence regeneration passes: 1; it ran 9
+  registered commands, 8 passed and `strict-local-source` failed on the already-recorded Cargo,
+  VS Code contribution, and inert schema-URI baseline drift. The generated failed report was not
+  retained; the committed Sprint 21 BLOCKED report still validates.
+- The provisional reviewer used the gate implementation itself and made no human-review claim.
+  It was not retained because renewing the strict-local policy requires the live worker test that
+  Batch 18 proved cannot execute under the restricted host-identity mapping. No evidence input was
+  removed and no gate was weakened.
+- Corrected the session-only Git wrapper so subprocesses use the writable current branch rather
+  than the stale read-only checkout; repository files were unaffected. Review-path intersections
+  for `TASKS.md` and `requirements/traceability-report.json`: 0; review pins advanced: 0.
+- Sprint 21 evidence tests: 3/3 pass. Documentation invariants: 413 Markdown files pass;
+  requirement registry, planning scope, task graph, and regenerated traceability pass. Full
+  `docs:check` retries: 0 because its known Podman prerequisite was already exhausted. Gate wall
+  seconds: 92.
+- Exact blocker on Sprint 21, Task 21.1.3, and Sub-task 21.1.3.5: `blocked: host change required —
+  run cargo test -p agentmage-platform-linux
+  worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the
+  restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap,
+  /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source
+  policy and npm run -s evidence:sprint21:build`; substitution set: empty.
+
+Exact next action: write the 25-closure checkpoint handoff, then continue the first unblocked
+dependency-independent rows in Sprint 21 or the next in-scope gate without retrying the inherited
+host-ownership prerequisite.
