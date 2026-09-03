@@ -9,7 +9,7 @@ from scripts import knowledge_sprint_boundary_review as review
 
 class KnowledgeSprintBoundaryReviewTests(unittest.TestCase):
     def fixture(self, sprint: int) -> dict[str, object]:
-        with patch.object(review, "git_bytes", return_value=b"deterministic citation parity missing injection ObsidianVaultSelection ObsidianEntryKind::SymbolicLink symlink_metadata apply_watch_batch derived_only source_files_mutated external_process_started network_accessed"):
+        with patch.object(review, "git_bytes", return_value=b"deterministic citation parity missing instruction-like prose are untrusted data ObsidianVaultSelection ObsidianEntryKind::SymbolicLink symlink_metadata apply_watch_batch derived_only source_files_mutated external_process_started network_accessed"):
             return review.expected(sprint, "a" * 40)
 
     def test_all_three_review_shapes_pass(self) -> None:

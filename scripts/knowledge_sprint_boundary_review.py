@@ -49,7 +49,8 @@ def checks(sprint: int, sources: dict[str, bytes]) -> dict[str, bool]:
         return common | {
             "explicit_vault_selection": b"ObsidianVaultSelection" in combined,
             "symlinks_fail_closed": b"ObsidianEntryKind::SymbolicLink" in combined,
-            "instructions_remain_inert": b"injection" in combined.lower(),
+            "instructions_remain_inert": b"instruction-like prose are untrusted data"
+            in combined.lower(),
         }
     if sprint == 28:
         return common | {
