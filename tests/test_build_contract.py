@@ -64,6 +64,22 @@ class BuildContractTests(unittest.TestCase):
             any("kernel/contracts Cargo dependencies" in item for item in failures)
         )
 
+    def test_host_pdf_fixture_dependency_cannot_disappear(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.copy_build_inputs(root)
+            manifest = root / "shells/host/Cargo.toml"
+            manifest.write_text(
+                manifest.read_text(encoding="utf-8").replace(
+                    "lopdf.workspace = true\n", ""
+                ),
+                encoding="utf-8",
+            )
+            failures = validate_contract(self.contract, root)
+        self.assertTrue(
+            any("shells/host Cargo development dependencies" in item for item in failures)
+        )
+
     def test_floating_typescript_version_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

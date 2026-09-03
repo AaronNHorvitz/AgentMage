@@ -141,7 +141,7 @@ EXPECTED_CARGO_PACKAGES = {
 }
 EXPECTED_CARGO_DEVELOPMENT_PACKAGES = {
     "platforms/linux": {"serde", "serde_json"},
-    "shells/host": {"agentmage-platform-linux"},
+    "shells/host": {"agentmage-platform-linux", "lopdf"},
 }
 EXPECTED_TYPESCRIPT_DEPS = {
     "@eslint/js": "10.0.1",
