@@ -1,0 +1,40 @@
+{
+  "checks": {
+    "hostile_and_mutation_results_are_bound": true,
+    "intent_reproduction_and_scope_are_bound": true,
+    "local_planning_truth_is_bound": true,
+    "minimal_plan_and_review_controls_are_bound": true,
+    "missing_proof_remains_false": true,
+    "security_requirements_are_mapped": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "Production coordination/adapters, trusted launch, and native platform proof remain blocked.",
+    "Manual fuzzing remains deferred and no release claim is made."
+  ],
+  "record_type": "agentmage-sprint-44-source-boundary-review",
+  "review_class": "gate-owned-automated-change-planning-review",
+  "reviewer_identity": "scripts/sprint_43_44_boundary_review.py",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-GOV-005",
+    "SR-GOV-010",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-AI-003",
+    "SR-AI-007",
+    "SR-AI-011",
+    "SR-TST-001"
+  ],
+  "source_revision": "eaa4af3dfd34604be87e63f134650552d8e5335a",
+  "source_sha256": {
+    "artifacts/sprints/sprint-44/local-evidence-report.json": "4067e120b168ee8c01370b7c28b1f290f2996667c54d1083617eadbb3dc32272",
+    "capabilities/repository-map/src/change_intent.rs": "a445629ff82db0353ee20cc7b397ea5dbae51d69d188b8dc9a524c1b9d75db55",
+    "capabilities/repository-map/src/change_plan.rs": "78dea35d07b0429022ddcdf7829599b0674cf910749dbf64d099e00f891db7f6",
+    "docs/verification/sprint-44-local-results.md": "36b6e7e698cd313a47ccf3bae568bde2d99b30a891d3e5598fcd9656a6ae24ee",
+    "docs/verification/sprint-44-planning-corpus.json": "25fdc97c16d812cac84c9f3d95f7b050bec73f649c34a6dbd03ff8b5132f9958",
+    "scripts/sprint_44_evidence.py": "23694d4e43adf8933710dbd6081c745d77ee18427f7506e697561d17e8405dc2"
+  },
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}

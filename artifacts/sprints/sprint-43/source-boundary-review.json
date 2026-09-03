@@ -1,0 +1,40 @@
+{
+  "checks": {
+    "cited_maps_and_coverage_are_bound": true,
+    "history_slicing_and_exports_are_bound": true,
+    "hostile_and_mutation_results_are_bound": true,
+    "missing_proof_remains_false": true,
+    "security_requirements_are_mapped": true,
+    "unsupported_claims_remain_false": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "Production coordination/adapters, trusted launch, and native platform proof remain blocked.",
+    "Manual fuzzing remains deferred and no release claim is made."
+  ],
+  "record_type": "agentmage-sprint-43-source-boundary-review",
+  "review_class": "gate-owned-automated-repository-comprehension-review",
+  "reviewer_identity": "scripts/sprint_43_44_boundary_review.py",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-ACC-008",
+    "SR-AI-003",
+    "SR-AI-007",
+    "SR-AI-010",
+    "SR-AI-011",
+    "SR-DAT-003",
+    "SR-TST-004",
+    "SR-TST-006"
+  ],
+  "source_revision": "eaa4af3dfd34604be87e63f134650552d8e5335a",
+  "source_sha256": {
+    "artifacts/sprints/sprint-43/local-evidence-report.json": "42f0bd64660d8ec6d5e568370dfbf85df484499825d6fb7fe08ca8ee9a3514dc",
+    "capabilities/repository-map/src/deep_analysis.rs": "dd01c52b546ecd74ce20b829ecb5d82b1fe4ddd1f0e5ce997064d3445f88b3ca",
+    "capabilities/repository-map/src/deep_views.rs": "810f0445c473a55f35d571943600ecfee3f009cdee14c704700b56fe3cad6aed",
+    "docs/verification/sprint-43-hostile-repository-corpus.json": "ae1793eeffa284434594014a2710360f1ede1a0c31e2e747ce3b214a30946500",
+    "docs/verification/sprint-43-local-results.md": "84aded6355c59510f0953b429a0c182c3ef056b6fa1abfec38067927bae00973",
+    "scripts/sprint_43_evidence.py": "8ea32a2cead876d63eedb2a1fcd583552b52ee2866f1a4e3d8a21eed50334950"
+  },
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}
