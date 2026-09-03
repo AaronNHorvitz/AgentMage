@@ -2410,8 +2410,8 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
 
 **Story gate evidence:** All four tasks, all 12 sub-tasks, and all three criteria pass in the
 current Linux encrypted-store and durable-runtime scope. The independent
-[`story_11_2_gate.py`](scripts/story_11_2_gate.py) aggregate reviews immutable commit `cd46833f`
-and tree `c668f464`, verifies 24 exact implementation/evidence artifacts, and reruns all three
+[`story_11_2_gate.py`](scripts/story_11_2_gate.py) aggregate reviews immutable commit `32dca452`
+and tree `8cc8f7bb`, verifies 24 exact implementation/evidence artifacts, and reruns all three
 criterion validators. Story 11.2 remains `BLOCKED`: dependency Stories 5.2 and 11.1 retain open
 acceptance gates, `G-DOD-10` retains supported-platform and installed-product execution, and
 `G-DOD-22` retains later integrated client reconstruction, removal, accessibility, and runtime
