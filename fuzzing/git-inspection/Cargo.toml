@@ -1,0 +1,21 @@
+[package]
+name = "agentmage-git-inspection-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+agentmage-capability-read-only = { path = "../../capabilities/read-only" }
+libfuzzer-sys = "=0.4.10"
+
+[[bin]]
+name = "git_inspection"
+path = "fuzz_targets/git_inspection.rs"
+test = false
+doc = false
+
+[workspace]
+members = ["."]
