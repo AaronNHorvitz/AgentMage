@@ -1,0 +1,38 @@
+{
+  "checks": {
+    "all_first_party_shells_share_closed_conversation_command": true,
+    "archives_use_separate_kernel_key_scope": true,
+    "bundle_requires_exact_disclosure_preview": true,
+    "human_review_not_required_by_gate": true,
+    "no_network_client": true,
+    "no_process_launch": true,
+    "secret_and_external_delivery_fail_closed": true,
+    "shell_router_delegates_only_to_kernel_trait": true,
+    "shells_do_not_launch_conversation_processes": true,
+    "shells_do_not_own_conversation_database": true,
+    "state_sensitive_shell_commands_require_exact_context": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "Upstream release and governance blockers remain unchanged.",
+    "No installed-platform or supported-release claim is made."
+  ],
+  "record_type": "agentmage-sprint-33-boundary-review",
+  "review_class": "gate-owned-automated-knowledge-boundary",
+  "reviewer_identity": "scripts/knowledge_sprint_boundary_review.py",
+  "schema_version": 1,
+  "source_revision": "b7c53c48393ad1d5880cc0dcbb2ba24e37244c2a",
+  "source_sha256": {
+    "kernel/engine/src/conversation_archive.rs": "89bc61a06c8196c1a60ce9c1f97e8a9ad94903dc81a3b1ee5b85340cdba5c633",
+    "kernel/engine/src/evidence_bundle.rs": "95945112e0a009c827825f4be463a15257094579f0ff12012d65364657f34d55",
+    "shells/host/src/cli.rs": "ff5bce423a9478a66941ffa4875ff6ef41dcd66efb33fb775b83ae6793135aa2",
+    "shells/host/src/conversation_runtime.rs": "82548ff63da5befbd5bdc535bef5bed4b6889f28d75d5ec280a5a453ab080e70",
+    "shells/host/src/headless.rs": "ef4d55c79413b4e17e497e78ca1d379b2bf847fa05cb36d6d1d334f8e1081eb5",
+    "shells/host/src/native_chat_runtime.rs": "4d950b3123a820902d82776e69b9f0c529f0377c01452c81e8bc36945c7ec0e0",
+    "shells/vscode/src/host_bridge.ts": "b7ea16224f2cf178af2a1d98302ce315fe81b934a19ffbd59fceaba350d63707",
+    "shells/vscode/src/runtime_transport.ts": "b54c672fd6ffea2ccb90af9c74ca563065e99da426e254fe70fa2958b80bd9ac"
+  },
+  "sprint": 33,
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}

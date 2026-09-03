@@ -5050,21 +5050,28 @@ Story 32.1 and the sprint remain open only on that upstream dependency.
 - [x] **Sprint AC 33.AC2:** Every summary and branch can reopen its original citations and receipts.
 - [x] **Sprint AC 33.AC3:** Deletion removes eligible records and indexes without breaking retained evidence obligations.
 - [x] **Sprint AC 33.AC4:** Exports contain only previewed fields and no secrets or unrelated workspace content.
-- [ ] **Sprint AC 33.AC5:** Every shell reads and writes conversation state only through the kernel.
+- [x] **Sprint AC 33.AC5:** Every shell reads and writes conversation state only through the kernel. Evidence: the shared host conversation adapter accepts the closed client command family used by native Chat, CLI, headless, JSON, SDK, ACP, and the VS Code host bridge; list, search, show, open, resume, and exact-turn branch operations delegate only through the narrow kernel trait implemented by `OperationalStore`. State-sensitive commands fail without exact resume or branch context. Two host tests and the gate-owned ten-check shell/archive review prove no shell-owned conversation database, conversation process launch, network client, or external-delivery path.
 
 **Gate decision:** Sprint 33 is PASS only when Story 33.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
-**Local evidence status (2026-08-14):** Encrypted archive lifecycle and exact-preview
+**Local evidence status (2026-09-03):** Encrypted archive lifecycle and exact-preview
 evidence bundles are implemented in commits `b909a41`, `22c8c5a`, and `044c6fb`;
 their architecture, verification boundary, and retained evidence are recorded by
 `f836feb` and `d44238e`. The retained [Sprint 33 evidence report](artifacts/sprints/sprint-33/local-evidence-report.json)
 records passing local implementation and product gates with network access, bundle
 import authority, external delivery, and release approval disabled. Sprint 33 remains
-**BLOCKED** because Sprint 32 is not yet a passing upstream dependency, the complete
+**BLOCKED** because Sprint 32 is not yet a passing upstream dependency. The complete
 named `S-027-UT01`, `S-027-UT02`, `S-027-ST01`, and `S-027-RT01` corpora are complete
 in commit `7cf5a28b`, including ten real subprocess stop/reopen boundaries and a
-concurrent-writer denial. Independent Sprint 33 review is absent and no shell integration is yet
-proved. Sprint AC 33.AC5 and the sprint therefore remain open.
+concurrent-writer denial. The shared shell-to-kernel conversation adapter and gate-owned
+[source-boundary review](artifacts/sprints/sprint-33/source-boundary-review.json) close the
+locally executable shell-integration and critical-review gaps without making a human-review or
+release claim. Sprint 33 remains dependent on Sprint 32's exact inherited blocker:
+`blocked: host change required — run the strict-local worker and source-policy renewal outside
+the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl,
+/usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then run python3
+scripts/sprint_31_evidence.py --write --source-revision HEAD`; `substitution_set=empty`.
+Story 33.1 and the sprint remain open only on that upstream dependency.
 
 ### [ ] Sprint 34 - Knowledge Tasks, Declarative Skills, and v0.2 Release
 
