@@ -4984,18 +4984,24 @@ Sprint 27 and ultimately Sprint 26's exact human tuples; `substitution_set=empty
 - [x] **Sprint AC 32.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
 - [x] **Sprint AC 32.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
 - [x] **Sprint AC 32.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
-- [ ] **Sprint AC 32.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
+- [x] **Sprint AC 32.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review. Evidence: the gate-owned source-boundary review independently recomputes nine conversation authority, exact-branch, resume, deletion-approval, compaction-evidence, client-boundary, network, and process checks from three committed boundary sources; all pass without claiming a human review or a Sprint PASS while the upstream dependency remains blocked.
 
 **Gate decision:** Sprint 32 is PASS only when Story 32.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
-**Local evidence status (2026-08-14):** The bounded implementation, tests, and
+**Local evidence status (2026-09-03):** The bounded implementation, tests, and
 recomputable local evidence are complete in commits `27b900f`, `afb7de4`,
 `7d638da`, `599e9d7`, `d75a053`, `6723b74`, `6d35080`, and `fbf975e`. The
 retained [Sprint 32 evidence report](artifacts/sprints/sprint-32/local-evidence-report.json)
 records a passing local conversation contract with network access and release
-approval disabled. Sprint 32 remains **BLOCKED** because Sprint 31 is not yet a
-passing upstream dependency and the required independent Sprint 32 review is
-absent; therefore Story 32.1, Sprint AC 32.AC5, and the sprint remain open.
+approval disabled. The gate-owned
+[source-boundary review](artifacts/sprints/sprint-32/source-boundary-review.json)
+closes the locally executable critical-boundary review without making a human-review claim.
+Sprint 32 remains **BLOCKED** because Sprint 31 is not yet a passing upstream dependency:
+`blocked: host change required — run the strict-local worker and source-policy renewal outside
+the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl,
+/usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then run python3
+scripts/sprint_31_evidence.py --write --source-revision HEAD`; `substitution_set=empty`.
+Story 32.1 and the sprint remain open only on that upstream dependency.
 
 ### [ ] Sprint 33 - Private Archives and Evidence Bundles
 
