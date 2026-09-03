@@ -183,6 +183,10 @@ pub struct SpreadsheetWorksheet {
     pub part_sha256: String,
     /// Declared used-range dimension when present.
     pub dimension: Option<String>,
+    /// True when worksheet protection is declared; no password or bypass is attempted.
+    pub protected: bool,
+    /// True when the declared range is materially larger than retained populated cells.
+    pub sparse_dimension: bool,
     /// Canonically ordered retained cells.
     pub cells: Vec<SpreadsheetCell>,
     /// Hidden one-based rows.
@@ -209,6 +213,14 @@ pub enum SpreadsheetFindingKind {
     ExternalHyperlink,
     /// Unsupported package compression.
     UnsupportedCompression,
+    /// Embedded OLE, package, control, or other active object retained but never opened.
+    EmbeddedObject,
+    /// Worksheet protection preserved without attempting to bypass it.
+    ProtectedSheet,
+    /// Declared used range is sparse and is not expanded into empty cells.
+    SparseRange,
+    /// A non-core workbook structure remains authoritative in the original package.
+    UnsupportedFeature,
 }
 
 /// One content-minimized workbook finding.
@@ -697,6 +709,18 @@ fn cell_coordinates(address: &str) -> Option<(u32, u32)> {
     (row > 0 && column > 0).then_some((row, column))
 }
 
+fn dimension_area(dimension: &str) -> Option<u64> {
+    let (start, end) = dimension
+        .split_once(':')
+        .map_or((dimension, dimension), |(start, end)| (start, end));
+    let (start_row, start_column) = cell_coordinates(start)?;
+    let (end_row, end_column) = cell_coordinates(end)?;
+    if end_row < start_row || end_column < start_column {
+        return None;
+    }
+    u64::from(end_row - start_row + 1).checked_mul(u64::from(end_column - start_column + 1))
+}
+
 fn worksheet_relationship_path(part_name: &str) -> Option<String> {
     let (parent, file) = part_name.rsplit_once('/')?;
     Some(format!("{parent}/_rels/{file}.rels"))
@@ -783,6 +807,7 @@ fn parse_worksheet(
     let mut reader = Reader::from_reader(content);
     reader.config_mut().trim_text(false);
     let mut dimension = None;
+    let mut protected = false;
     let mut hidden_rows = BTreeSet::new();
     let mut hidden_columns = BTreeSet::new();
     let mut merged_ranges = Vec::new();
@@ -803,6 +828,11 @@ fn parse_worksheet(
                 if local_name(event.name().as_ref()) == b"dimension" =>
             {
                 dimension = attribute(&event, b"ref", &reader)?;
+            }
+            Event::Start(event) | Event::Empty(event)
+                if local_name(event.name().as_ref()) == b"sheetProtection" =>
+            {
+                protected = true;
             }
             Event::Start(event)
                 if local_name(event.name().as_ref()) == b"row"
@@ -963,6 +993,14 @@ fn parse_worksheet(
     cells.sort_by_key(|cell| (cell.row, cell.column));
     merged_ranges.sort();
     merged_ranges.dedup();
+    let sparse_dimension = dimension
+        .as_deref()
+        .and_then(dimension_area)
+        .is_some_and(|area| {
+            area > u64::try_from(cells.len())
+                .unwrap_or(u64::MAX)
+                .saturating_mul(1_024)
+        });
     Ok(SpreadsheetWorksheet {
         sheet_id: definition.sheet_id,
         name: definition.name.clone(),
@@ -970,6 +1008,8 @@ fn parse_worksheet(
         part_name: part_name.to_owned(),
         part_sha256: word_sha256(content),
         dimension,
+        protected,
+        sparse_dimension,
         cells,
         hidden_rows: hidden_rows.into_iter().collect(),
         hidden_columns: hidden_columns.into_iter().collect(),
@@ -1055,6 +1095,38 @@ pub fn inspect_xlsx(
             true,
         );
     }
+    for part_name in parts.keys().filter(|name| {
+        name.starts_with("xl/embeddings/")
+            || name.starts_with("xl/activeX/")
+            || name.starts_with("xl/ctrlProps/")
+    }) {
+        finding(
+            &mut findings,
+            SpreadsheetFindingKind::EmbeddedObject,
+            Some(part_name),
+            None,
+            None,
+            "spreadsheet.embedded-object-not-opened",
+            true,
+        );
+    }
+    for part_name in parts.keys().filter(|name| {
+        name.starts_with("xl/pivotCache/")
+            || name.starts_with("xl/pivotTables/")
+            || name.starts_with("xl/slicers/")
+            || name.starts_with("xl/queryTables/")
+            || name.as_str() == "xl/connections.xml"
+    }) {
+        finding(
+            &mut findings,
+            SpreadsheetFindingKind::UnsupportedFeature,
+            Some(part_name),
+            None,
+            None,
+            "spreadsheet.feature-preserved-not-interpreted",
+            false,
+        );
+    }
     for definition in &definitions {
         let relationship = workbook_relationships
             .get(&definition.relationship_id)
@@ -1087,6 +1159,28 @@ pub fn inspect_xlsx(
             &context,
             &mut remaining_cells,
         )?;
+        if sheet.protected {
+            finding(
+                &mut findings,
+                SpreadsheetFindingKind::ProtectedSheet,
+                Some(&part_name),
+                Some(&sheet.name),
+                None,
+                "spreadsheet.sheet-protection-preserved",
+                false,
+            );
+        }
+        if sheet.sparse_dimension {
+            finding(
+                &mut findings,
+                SpreadsheetFindingKind::SparseRange,
+                Some(&part_name),
+                Some(&sheet.name),
+                sheet.dimension.as_deref(),
+                "spreadsheet.sparse-range-not-expanded",
+                false,
+            );
+        }
         for link in &sheet.hyperlinks {
             if link.external {
                 finding(

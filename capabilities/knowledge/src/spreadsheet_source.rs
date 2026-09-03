@@ -242,7 +242,9 @@ fn project_xlsx<'a>(
                 "hidden_rows": sheet.hidden_rows,
                 "merged_ranges": sheet.merged_ranges,
                 "name": sheet.name,
+                "protected": sheet.protected,
                 "sheet_id": sheet.sheet_id,
+                "sparse_dimension": sheet.sparse_dimension,
                 "state": sheet.state,
             }))
             .map_err(|_| StructuredSourceExtractionError::Malformed)?,
@@ -323,6 +325,12 @@ fn project_xlsx<'a>(
             }
             SpreadsheetFindingKind::UnsupportedCompression => {
                 "spreadsheet.unsupported-compression-preserved"
+            }
+            SpreadsheetFindingKind::EmbeddedObject => "spreadsheet.embedded-object-not-opened",
+            SpreadsheetFindingKind::ProtectedSheet => "spreadsheet.sheet-protection-preserved",
+            SpreadsheetFindingKind::SparseRange => "spreadsheet.sparse-range-not-expanded",
+            SpreadsheetFindingKind::UnsupportedFeature => {
+                "spreadsheet.feature-preserved-not-interpreted"
             }
         };
         output.warn(code, finding.part_name.as_deref());
@@ -539,7 +547,11 @@ mod tests {
         parts.insert("xl/workbook.xml".to_owned(), b"<?xml version=\"1.0\"?><workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"><workbookPr date1904=\"0\"/><sheets><sheet name=\"Hidden Data\" sheetId=\"1\" state=\"veryHidden\" r:id=\"rId1\"/></sheets></workbook>".to_vec());
         parts.insert("xl/_rels/workbook.xml.rels".to_owned(), b"<?xml version=\"1.0\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet1.xml\"/></Relationships>".to_vec());
         parts.insert("xl/styles.xml".to_owned(), b"<?xml version=\"1.0\"?><styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><cellXfs count=\"2\"><xf numFmtId=\"0\"/><xf numFmtId=\"14\"/></cellXfs></styleSheet>".to_vec());
-        parts.insert("xl/worksheets/sheet1.xml".to_owned(), b"<?xml version=\"1.0\"?><worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><dimension ref=\"A1:B1\"/><sheetData><row r=\"1\"><c r=\"A1\" s=\"1\"><v>46000</v></c><c r=\"B1\"><f>SUM(A1,1)</f><v>46001</v></c></row></sheetData></worksheet>".to_vec());
+        parts.insert("xl/worksheets/sheet1.xml".to_owned(), b"<?xml version=\"1.0\"?><worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><dimension ref=\"A1:XFD1048576\"/><sheetProtection sheet=\"1\"/><sheetData><row r=\"1\"><c r=\"A1\" s=\"1\"><v>46000</v></c><c r=\"B1\"><f>SUM(A1,1)</f><v>46001</v></c></row></sheetData></worksheet>".to_vec());
+        parts.insert(
+            "xl/embeddings/oleObject1.bin".to_owned(),
+            b"inert embedded object".to_vec(),
+        );
         zip_parts(&parts).expect("zip")
     }
 
@@ -575,6 +587,18 @@ mod tests {
         assert!(result.warnings.iter().any(|warning| {
             warning.reason_code == "spreadsheet.formula-preserved-not-calculated"
         }));
+        for reason in [
+            "spreadsheet.embedded-object-not-opened",
+            "spreadsheet.sheet-protection-preserved",
+            "spreadsheet.sparse-range-not-expanded",
+        ] {
+            assert!(
+                result
+                    .warnings
+                    .iter()
+                    .any(|warning| warning.reason_code == reason)
+            );
+        }
         assert!(!result.execution_performed);
     }
 

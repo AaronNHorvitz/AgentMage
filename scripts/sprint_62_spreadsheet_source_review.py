@@ -110,6 +110,10 @@ def expected(revision: str) -> dict[str, Any]:
                 "spreadsheet.external-workbook-reference-not-resolved",
                 "spreadsheet.dde-formula-not-executed",
                 "spreadsheet.external-hyperlink-not-followed",
+                "spreadsheet.embedded-object-not-opened",
+                "spreadsheet.sheet-protection-preserved",
+                "spreadsheet.sparse-range-not-expanded",
+                "spreadsheet.feature-preserved-not-interpreted",
                 "execution_performed: false",
                 "network_access_performed: false",
                 "filesystem_effect_performed: false",
@@ -163,6 +167,30 @@ def expected(revision: str) -> dict[str, Any]:
                 "json_projection_preserves_pointer_provenance_and_scalar_types",
                 "cancellation_and_output_bounds_fail_closed",
                 "rejects_digest_mismatch_and_unknown_media_type",
+            ),
+        ),
+        "malicious_and_unsupported_content_remains_bounded_and_inert": has_all(
+            xlsx,
+            (
+                "malformed_missing_oversized_and_macro_packages_fail_or_quarantine",
+                "external_formula_and_dde_are_inert_and_block_safe_analysis",
+                "SpreadsheetFindingKind::EmbeddedObject",
+                "SpreadsheetFindingKind::ProtectedSheet",
+                "SpreadsheetFindingKind::SparseRange",
+                "SpreadsheetFindingKind::UnsupportedFeature",
+                "filesystem_effect_performed: false",
+                "network_access_performed: false",
+                "execution_performed: false",
+            ),
+        )
+        and has_all(
+            adapter,
+            (
+                "spreadsheet.embedded-object-not-opened",
+                "spreadsheet.sheet-protection-preserved",
+                "spreadsheet.sparse-range-not-expanded",
+                "spreadsheet.feature-preserved-not-interpreted",
+                "cancellation_and_output_bounds_fail_closed",
             ),
         ),
     }
