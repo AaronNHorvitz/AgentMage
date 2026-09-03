@@ -1,0 +1,50 @@
+{
+  "checks": {
+    "approval_signer_and_commit_boundary_are_bound": true,
+    "closed_inventory_and_adversarial_results_are_bound": true,
+    "local_contract_is_bound": true,
+    "missing_product_proof_remains_false": true,
+    "native_linux_commit_portion_of_rv49_is_bound": true,
+    "review_packet_and_commit_plan_are_bound": true,
+    "security_requirements_are_mapped": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "The signer fixture is disposable and is not a production signing identity.",
+    "No protected approval channel or product commit coordinator is active.",
+    "Native platform parity, trusted launch, and manual fuzzing remain blocked."
+  ],
+  "record_type": "agentmage-sprint-47-source-boundary-review",
+  "review_class": "gate-owned-automated-local-commit-boundary-review",
+  "reviewer_identity": "scripts/sprint_47_boundary_review.py",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-GOV-005",
+    "SR-GOV-010",
+    "SR-ACC-002",
+    "SR-ACC-007",
+    "SR-SUP-002",
+    "SR-SUP-005",
+    "SR-TST-010",
+    "SR-TST-011",
+    "SR-GIT-001",
+    "SR-GIT-002",
+    "SR-GIT-003",
+    "SR-GIT-004",
+    "SR-GIT-007"
+  ],
+  "source_revision": "33799d4414393261760567f1bc59590ec14343f2",
+  "source_sha256": {
+    "artifacts/sprints/sprint-47/local-evidence-report.json": "39ff3c747a3249f5b8fde1ff830b8ef81fb0bb1737ebea6eea4aedd2570a3912",
+    "docs/verification/sprint-47-local-results.md": "b0e8ba352a8a657a413b6a05ed310ff9d616c122fd2d9d9076ddd81f555db3f2",
+    "docs/verification/sprint-47-security-corpus.json": "2144053c0b8c9c8b37846d849765b01f39ca79fe580ec1b852882924f6c356c2",
+    "kernel/engine/src/local_commit.rs": "7d39cf16b543ead8e7bbd09e1219c01d15efd49fe3b7e34f7e90818bc1d5c1c6",
+    "kernel/engine/src/repository_safety.rs": "5271b163889aca167cc0aca5484aed8d1e4e6d933009a02bd68dce32c700bd8f",
+    "kernel/engine/src/review_packet.rs": "e6987a3ca3533150f4bb296ce9b91b8ad06a1842760f9fa05da9ea95587bce00",
+    "platforms/linux/src/local_commit.rs": "b6e8a5b0177f17dacaf52cc3f0a6d53530d0e77846b5ada8d014cfbb8ddb6a57",
+    "platforms/linux/src/repository_safety.rs": "b410d1667b0662f171f626cb33b7c0f072d65effb2e1cf81d21a3ac1c2109060",
+    "scripts/sprint_47_evidence.py": "24ee244dd4db9c87579e92f31708ffc75d8de4b501a28acb73a2f1a502316e1a"
+  },
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}
