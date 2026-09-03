@@ -236,10 +236,17 @@ class Bridge implements HostBridge {
     this.revalidationCalls += 1;
     return Promise.resolve(
       this.revalidationResponse ?? {
-        kind: "denied",
+        kind: "model_revalidated",
         schema_version: 1,
         request_id: request.request_id,
-        code: "host.model-discovery.unavailable",
+        revalidation: {
+          schema_version: 1,
+          profile_id: request.profile_id,
+          expected_entry_sha256: request.expected_entry_sha256,
+          current_snapshot_sha256: "a".repeat(64),
+          admitted: true,
+          result_code: "model.selection.revalidated",
+        },
       },
     );
   }
@@ -625,6 +632,40 @@ void test("selected model is revalidated exactly and refusal names no fallback",
   assert.equal(bridge.revalidationCalls, 1);
   assert.match(response?.text ?? "", /did not substitute another model/);
   assert.match(response?.text ?? "", /model\.selection\.profile-changed/);
+});
+
+void test("every pre-request profile lifecycle failure stops without fallback or runtime start", async () => {
+  for (const resultCode of [
+    "model.selection.profile-unavailable",
+    "model.selection.runtime-crashed",
+    "model.selection.profile-quarantined",
+    "model.selection.resource-exhausted",
+  ]) {
+    const { controller, bridge, signal } = fixture();
+    bridge.revalidationResponse = {
+      kind: "model_revalidated",
+      schema_version: 1,
+      request_id: "request-0001",
+      revalidation: {
+        schema_version: 1,
+        profile_id: "profile-0001",
+        expected_entry_sha256: "f".repeat(64),
+        current_snapshot_sha256: "a".repeat(64),
+        admitted: false,
+        result_code: resultCode,
+      },
+    };
+    const response = await controller.respond(
+      "Inspect the selected workspace",
+      signal,
+      runtimeProfile(),
+    );
+    assert.match(response.text, new RegExp(resultCode.replaceAll(".", "\\.")));
+    assert.match(response.text, /did not substitute another model/u);
+    assert.equal(bridge.runtimePrepareCalls, 0);
+    assert.equal(bridge.runtimeStartCalls, 0);
+    assert.equal(bridge.runtimeAdvanceCalls, 0);
+  }
 });
 
 void test("explicit profile change preserves exact runtime state and never substitutes", async () => {

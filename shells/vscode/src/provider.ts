@@ -903,6 +903,7 @@ export class SecureReadController {
     cancellation: CancellationSignal,
     onPart: ((part: string) => void) | undefined,
     engineeringSessionId?: string,
+    selectionAlreadyRevalidated = false,
   ): Promise<ControllerResult> {
     if (
       !validIdentifier(profile.profileId) ||
@@ -915,6 +916,14 @@ export class SecureReadController {
         "vscode.runtime.request_invalid",
         "The selected model or request did not match the closed runtime boundary.",
       );
+    }
+    if (!selectionAlreadyRevalidated) {
+      const stopped = await this.revalidateSelectedModel(
+        profile.profileId,
+        profile.expectedEntrySha256,
+        cancellation,
+      );
+      if (stopped !== undefined) return stopped;
     }
     const workspace = this.workspaces.selectedLocalWorkspace();
     if (workspace === undefined) {
@@ -1215,6 +1224,7 @@ export class SecureReadController {
       cancellation,
       onPart,
       engineeringSessionId,
+      true,
     );
   }
 

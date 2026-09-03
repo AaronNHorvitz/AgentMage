@@ -61,7 +61,6 @@ SECURITY_REQUIREMENTS: Final = [
     "SR-CIV-006", "SR-CIV-007", "SR-CIV-008", "SR-CIV-009", "SR-TST-008",
 ]
 BLOCKERS: Final = [
-    {"code": "CURRENT-ACTIVATION-AND-NATIVE-EXPOSURE-ABSENT", "owner": "23.3.1.1"},
     {"code": "PRODUCTION-MODEL-ROUTE-ABSENT", "owner": "23.1.1.3"},
     {"code": "REQUEST-PHASE-PRESERVATION-MATRIX-ABSENT", "owner": "23.3.2.3"},
     {"code": "INSTALLED-VSCODE-NATIVE-EVIDENCE-ABSENT", "owner": "23.1.3.1"},
@@ -75,6 +74,7 @@ IMPLEMENTED: Final = {
     "authenticated_discovery_transport": True,
     "exact_profile_projection": True,
     "exact_selection_revalidation": True,
+    "pre_request_lifecycle_revalidation": True,
     "profile_family_prerequisite": False,
     "automatic_model_substitution": False,
     "structured_final_chat_parts": True,
