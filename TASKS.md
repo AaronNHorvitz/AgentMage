@@ -7776,8 +7776,15 @@ provenance and honest formula, date, hidden-sheet, and size behavior.
         and unsupported compression. No object is opened, formula evaluated, link followed, protected
         content bypassed, or sparse dimension expanded.
 - [ ] **Task 62.2.2 - Implement bounded structural retrieval**
-  - [ ] **Sub-task 62.2.2.1:** Enforce workbook, sheet, row, column, cell, string, relationship,
+  - [x] **Sub-task 62.2.2.1:** Enforce workbook, sheet, row, column, cell, string, relationship,
         compressed/decompressed byte, output, time, memory, and cancellation limits.
+        Evidence: the gate-owned
+        [spreadsheet source review](artifacts/sprints/sprint-62/spreadsheet-source-review.json)
+        binds explicit source/package, ZIP-entry, decompressed-part/total, sheet, row-coordinate,
+        column-coordinate, cell, shared-string, per-string, relationship, projection-section/output,
+        accounted working-memory, elapsed-millisecond, and cooperative-cancellation ceilings. Focused
+        tests force coordinate, string, memory, elapsed-time, cancellation, and output exhaustion and
+        receive only closed resource, time, or cancellation errors.
   - [ ] **Sub-task 62.2.2.2:** Emit source manifests, sheet summaries, selected ranges, lexical
         indexes, exact `get_sheet`/range retrieval, context candidates, and content-addressed references
         through shared services and native tools.
