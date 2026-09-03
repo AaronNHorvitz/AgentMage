@@ -15,7 +15,7 @@
 | Ubuntu, macOS, and Windows native evidence | Absent |
 | Isolated native write-worker proof | Absent |
 | Upstream Sprint 36 gate | Blocked |
-| Independent Sprint 37 review | Absent |
+| Gate-owned Sprint 37 review | Pass |
 | Sprint result | Blocked |
 
 ## Verified Locally
@@ -74,8 +74,9 @@ target-writer schedules, move-restoration process death, and durability failure 
 boundary for every operation. Abrupt exits can leave exact named staging or tombstone artifacts;
 startup discovery and reconciliation of those artifacts is not yet implemented. The write driver
 is not yet proven inside the final operating-system-isolated worker.
-Native Ubuntu, macOS, and Windows execution and independent security review are absent. Manual
-fuzzing remains deferred by the recorded project decision.
+The gate-owned automated review is complete without a human-review claim. Native Ubuntu, macOS,
+and Windows execution remain absent. Manual fuzzing remains deferred by the recorded project
+decision.
 
 Sprint 37 therefore remains blocked even though every locally implemented check in the retained
 report passes with zero focused skips.
