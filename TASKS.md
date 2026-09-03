@@ -6415,7 +6415,7 @@ Sprint AC 48.AC1, and the sprint remain open.
   - [ ] **Sub-task 49.1.2.1:** Approved later-profile manifests. Historical blocked/unresolved candidate records exist, but there is no approved later-profile manifest and zero profiles are enabled.
   - [x] **Sub-task 49.1.2.2:** Role-specific capability matrix and benchmark corpus. Evidence: the retained Sprint 15 candidate-role matrix and [`role-benchmark-corpus-v1.json`](model-profiles/routing/role-benchmark-corpus-v1.json) enumerate all 12 roles, required suites, thresholds, baseline, and 19 exact tuple fields without borrowing results.
   - [x] **Sub-task 49.1.2.3:** Measured routing decision table. Evidence: [`measured-routing-decision-table-v1.json`](model-profiles/routing/measured-routing-decision-table-v1.json) freezes 16 visible rules and four budgets; four mutation-test groups reject hidden or remote authority.
-  - [ ] **Sub-task 49.1.2.4:** Routing and disagreement audit views. Local contribution: the content-minimized `MeasuredRoutingReceipt` and architecture report define exact candidate, rationale, selected profile, verifier, disagreement, policy, benchmark, and digest projections; no integrated native audit view exists.
+  - [x] **Sub-task 49.1.2.4:** Routing and disagreement audit views. Evidence: `MeasuredRoutingService` accepts only an authenticated actor/session/assertion envelope over its kernel-owned immutable catalog and appends a content-minimized `NativeRoutingAuditView` containing the deterministic method, exact selected artifact/tokenizer/template/codec/runtime/context/decoding/resource/platform identities, every candidate rationale and disagreement, policy/benchmark/catalog generations, and receipt digest. The gate-owned [product-routing review](artifacts/sprints/sprint-49/product-routing-review.json) binds the source contribution without claiming an installed interface or enabled profile.
 
 - [ ] **Task 49.1.3 - Verify and close the story**
   - [ ] **Sub-task 49.1.3.1:** `S-042-UT01` verifies each later profile's model/runtime/license/lineage/quantization/template/hash/resource/platform manifest; assert unapproved, Chinese, Chinese-derived, incompatible, or silently changed profiles cannot register. Local contribution: exact synthetic profile tests and historical-candidate mutation tests deny every named boundary, including Chinese and Chinese-derived origin; real approved later-profile manifests remain absent.
@@ -6427,7 +6427,7 @@ Sprint AC 48.AC1, and the sprint remain open.
 ##### Story Acceptance Criteria
 
 - [x] **Story AC 49.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every enabled profile satisfies security, license, provenance, platform, resource, and quality policy independently; routing evidence cannot waive a failed boundary. Evidence: the exact profile, source-origin, mutation, zero-activation, and routing gates independently reject every missing or failed boundary; enabled profile count remains zero.
-- [ ] **Story AC 49.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then users and reviewers can see which deterministic method and exact model/artifact/codec/runtime/context/decoding profile handled each step, why it was selected, what disagreed, and how evidence was validated.
+- [x] **Story AC 49.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then users and reviewers can see which deterministic method and exact model/artifact/codec/runtime/context/decoding profile handled each step, why it was selected, what disagreed, and how evidence was validated. Evidence: authenticated service tests expose the exact selected tuple, method, complete candidate audit, equal-score disagreement, policy, benchmark, catalog, receipt, and sealed audit identities; the zero-profile product state visibly returns `model.routing.no-eligible-profile`.
 - [x] **Story AC 49.1.AC3:** Given any classifier, model confidence, unavailable tier, or profile failure, when routing is computed, then no broader authority, prohibited role, hidden fallback, or unadmitted profile can be selected. Evidence: focused router tests and the 48-case security corpus deny classifier failure, model confidence, unavailable/degraded tiers, role borrowing, hidden fallback, remote transfer, and every unadmitted-profile path with zero unauthorized or remote selection.
 
 #### Sprint Acceptance Criteria
@@ -6447,7 +6447,7 @@ SHA-256 `cc07352773e1e59847bdf16430a5117466eeb8efca8c0851b7db35f1e7f4e2d6`, is
 bound to source revision `925d7f1702b1c2cd300151d9891057fbc79485b4`. All 11 commands
 pass and all three focused suites report zero skipped tests. Sprint 49 remains
 **BLOCKED** because Sprint 48 is blocked and approved later-profile manifests, live
-role-specific benchmark campaigns, product router integration, native audit views,
+role-specific benchmark campaigns, authenticated installed-interface router transport,
 supported-platform acceptance, trusted installed-package execution, independent human review,
 and deferred manual fuzzing remain absent. Upstream is `blocked: awaiting Sprint 48 gate
 closure`; `substitution_set=empty`, retaining Sprint 48's transport/coordinator, model,
@@ -6458,9 +6458,9 @@ model, artifact, tokenizer, template, codec, runtime, context, decoding, resourc
 platform, supplier, license, lineage, origin, benchmark, and quality admission bundle;
 action=authorized model owner admits the exact profile, executes the repeated role campaigns,
 and transfers untouched results; credential=model artifact source if restricted;
-payment=model artifact or required hardware if applicable)`; `substitution_set=empty`. Product
-router and native-audit integration are `blocked: awaiting authenticated product routing and
-native routing audit-view composition`; `substitution_set=empty`. Native acceptance is
+payment=model artifact or required hardware if applicable)`; `substitution_set=empty`.
+Installed-interface composition is `blocked: awaiting authenticated installed-interface
+transport to the kernel product-routing service`; `substitution_set=empty`. Native acceptance is
 `BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and physical supported
 MacBook; artifact=exact profile, role benchmark, routing, disagreement, performance, and parity
 results; action=platform owners execute and transfer untouched evidence; credential=Windows
@@ -6472,8 +6472,8 @@ Deferred fuzzing is `BLOCKED_EXTERNAL(platform=every supported native model-rout
 artifact=manual fuzzing transcript and minimized corpus; action=authorized human executes the
 manual S-042 fuzz campaign and transfers untouched results; credential=platform and model access;
 payment=none)`; `substitution_set=empty`. Product routing is disabled and enabled model count
-remains zero. Both implementation and artifact tasks, the verification task, Story 49.1, Story AC
-49.1.AC2, Sprint AC 49.AC2, and the sprint remain open.
+remains zero. Both implementation and artifact tasks, the verification task, Story 49.1, Sprint
+AC 49.AC2, and the sprint remain open.
 
 **Gate decision:** Sprint 49 is PASS only when Story 49.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
