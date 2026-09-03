@@ -211,3 +211,39 @@ active-content refusal without regenerating supply-chain evidence mid-source bat
 
 Exact next action: seal the retained report through traceability and contract-boundary checks, commit
 and push it, then implement the remaining repository-controlled PDF structure-preservation work.
+
+## Batch 8 — PDF structure and OCR observation boundary
+
+### Completed
+
+- Preserved inert PDF internal-link, form, image, table, column, ligature, damaged-xref, and
+  unsupported-structure observations without inventing layout fidelity or enabling an effect.
+- Added an implementation-free `PdfOcrEngine` observation contract, deterministic scan-page
+  eligibility, and strict package/model, preprocessing, language, page/region, UTF-8 range, and
+  aggregate/per-region confidence validation.
+- Retained Tesseract as deferred, cloud OCR as rejected, and pure-Rust OCR, package features,
+  workers, model artifacts, native platform behavior, product integration, and support as absent.
+- Source checkpoints: `900394ab` and `98a142b8`. Shared evidence and review-pin checkpoints:
+  `9a078d24`, `17986e59`, `b60096b4`, `aaef2ad8`, `359f1f3f`, and `533db399`.
+- Closed 1 TASKS row: Sub-task 60.2.1.2. Promotions: 0. Commits: 8. Commits per closed item:
+  8.00. External rows closed by substitution: 0.
+
+### Self-recovery and exact blocker
+
+- Nine focused PDF fixtures pass with zero ignored tests; the runtime-schema, 82-case corpus,
+  strict Clippy, format, supply-chain, product-CI, and Sprint 60 evidence mutation checks pass.
+- The immutable Sprint 60 writer and standalone `docs:check` both stop at
+  `tests.test_story_6_1_gate` because `path_platform_conformance.py` invokes Podman and Podman cannot
+  open `/run/user/1000/libpod/tmp/alive.lck`: the sandbox exposes `/run/user/1000/libpod` read-only.
+- Five recovery attempts used the immutable campaign, standalone documentation gate, focused Story
+  6.1 gate, a private mode-0700 `XDG_RUNTIME_DIR`, and explicit temporary Podman storage/engine
+  runtime configuration. All preserve the same image, revision, standard user, read-only source,
+  and network denial; all fail at the same persisted read-only Podman runtime.
+- Gate wall seconds: 1,276 across the failed immutable campaign and focused full gate.
+- Blocked checkpoint tuple: `blocked: host change required — run npm run -s docs:check and python3
+  scripts/sprint_60_evidence.py --write --source-revision
+  533db399909ffdbfa00d854901708117e42c6d5c outside the restricted filesystem sandbox with the
+  current user's /run/user/1000/libpod writable`; substitution set: empty.
+
+Exact next action: continue with repository-controlled Story 60.2 lifecycle, no-OCR degradation,
+context accounting, and hostile/resource fixtures without claiming the blocked immutable campaign.
