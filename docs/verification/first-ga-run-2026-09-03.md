@@ -2136,3 +2136,40 @@ cancellation limits are directly proved.
 Exact next action: implement Sub-task 62.2.2.2 source manifests, sheet summaries, exact bounded
 sheet/range retrieval, lexical indexes, context candidates, and content-addressed references through
 the shared runtime and native interface adapters.
+
+## Batch 63 — Sprint 62 prepared spreadsheet retrieval and lifecycle
+
+### Completed
+
+- Closed 2 TASKS rows: Sub-tasks 62.2.2.2 and 62.2.2.3. The host now admits exact XLSX
+  projections into digest-sealed manifests with ordered sheet summaries and a content-free lexical
+  index; exposes freshness-checked sheet and cell ranges, bounded context candidates, lexical search,
+  and content-addressed large-result references through the common production artifact dispatcher;
+  and implements policy-bound restart, cache/parser invalidation, release, deletion, reattachment,
+  and exact combined-workbook counter/tokenizer accounting. The service retains no original workbook
+  byte field. Promotions: 0. Substitutions: 0. Cumulative closed items: 152.
+- Commits: `a61d7abf` (prepared spreadsheet retrieval and lifecycle), `bd465741` (self-recovery
+  fixture dependency removal), and `e885c111` (renewed bound review, two TASKS closures,
+  supply-chain outputs, and affected evidence carriers). Commits: 3. Commits per closed item: 1.50.
+  Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across 20 pin-bearing gates:
+  empty.
+
+### Validation and self-recovery
+
+- Focused validation: 5/5 prepared spreadsheet service tests, 10/10 spreadsheet parser/adapter tests
+  retained by the reviewed source set, strict host Clippy, the spreadsheet review mutation test,
+  accepted build/dependency graph checks, supply-chain check, configuration and Story 3.1 security,
+  fuzz/RV-15, traceability, contract-boundary, contract-evidence, Story 2.1, Story 2.2, and Sprint 2
+  checks pass. Supply-chain builds: 2. Evidence regeneration passes: 2. Recovery iterations: 1.
+  The first full-chain attempt ran 142.710 seconds and found that the task-local ZIP fixture helper
+  had introduced an undeclared host development edge. Recovery replaced it with a deterministic
+  standard-library ZIP fixture builder, removed the Cargo/Cargo.lock edge, and regenerated the
+  reverted graph carriers. The recovered full chain ran 688.580 seconds and stopped only at the
+  retained Story 6.1 rootless-Podman prerequisite after every preceding gate passed. Recorded final
+  gate wall seconds: 689.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: implement the first jointly provable rows in Task 62.2.3, expanding the hostile
+and fidelity corpus around the prepared service without claiming installed-client parity.
