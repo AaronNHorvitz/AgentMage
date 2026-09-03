@@ -5251,8 +5251,10 @@ therefore remain open.
   - [x] **Sub-task 36.1.3.1:** `S-029-UT01` exercises every legal and illegal write-transaction transition from request through validate/stage/preview/approve/revalidate/apply/verify/commit-or-restore; assert deterministic state and receipt.
   - [x] **Sub-task 36.1.3.2:** `S-029-UT02` mutates target, arguments, bytes, preimage, metadata, preview, policy, grant, workspace, and expected side effects after preview; assert stale approval and zero target change. Evidence: commit `05ce09a6` independently mutates every named binding, including the grant nonce and complete expected-side-effect list, and verifies preapply denial, zero apply/restore calls, and byte-for-byte target invariance.
   - [ ] **Sub-task 36.1.3.3:** `S-029-ST01` races file replacement, symlink/alias swap, rename, concurrent writer, mount change, grant replay, and approval replay at each boundary; assert descriptor identity and atomic consumption prevent unintended write. Partial local evidence: commit `d53f496d` covers Fedora file replacement, symlink substitution, directory rename, concurrent writes immediately before and after exchange, and consumed grant/approval replay while preserving competing state. Commit `4f71c65d` revalidates the held parent and replacement across all ten local lifecycle boundaries and restores the exact authorized object without overwriting a competing canonical path, including parent renames after staging cleanup. The existing isolated bind-mount test was executed on 2026-08-18 and the child mount was denied because this unprivileged environment lacks mount authority; that failed probe is not pass evidence. Real mount replacement, exhaustive alias and target-attack scheduling, and the complete promised-platform matrix remain open.
+    - `BLOCKED_EXTERNAL(platform=Fedora and Ubuntu native filesystems, Windows 11 x64 KVM guest, and physical supported MacBook; artifact=real mount-replacement, alias/target race schedule, and descriptor-identity results at every transaction boundary; action=platform owners run the native S-029-ST01 matrix and transfer untouched evidence; credential=Windows image source and physical Mac access; payment=Windows license if required)`; `substitution_set=empty`.
   - [ ] **Sub-task 36.1.3.4:** `S-029-RT01` crashes before and after every staging, application, verification, restoration, and durable-state transition; assert prior bytes or exact approved bytes, never an unexplained partial state. Partial local evidence: commit `02f36b45` runs 24 real subprocess stops across ten Fedora apply boundaries, ten restoration boundaries, and immediately before/after apply and restoration verification; every reopened target contains only the reviewed preimage or exact approved postimage. Authority/checkpoint-store transition crashes, machine/power-loss durability, and the complete promised-platform matrix remain open.
-  - [ ] **Sub-task 36.1.3.5 - Product security evidence:** Map `SR-ACC-001` through `SR-ACC-007`, `SR-DAT-002`, `SR-OPS-001`/`SR-OPS-002`, `SR-TST-005`/`SR-TST-011`/`SR-TST-012`; retain transition/property results, attack traces, pre/post hashes, restoration proof, and independent transaction review.
+    - `BLOCKED_EXTERNAL(platform=Fedora and Ubuntu power-loss-capable test hosts, Windows 11 x64 KVM guest, and physical supported MacBook; artifact=authority/checkpoint-store transition crashes, machine/power-loss durability, and every staging/application/verification/restoration/durable-state crash result; action=platform owners run the destructive S-029-RT01 matrix and transfer untouched evidence; credential=Windows image source and physical Mac access; payment=Windows license or dedicated hardware if required)`; `substitution_set=empty`.
+  - [x] **Sub-task 36.1.3.5 - Product security evidence:** Map `SR-ACC-001` through `SR-ACC-007`, `SR-DAT-002`, `SR-OPS-001`/`SR-OPS-002`, `SR-TST-005`/`SR-TST-011`/`SR-TST-012`; retain transition/property results, attack traces, pre/post hashes, restoration proof, and independent transaction review.
 
 ##### Story Acceptance Criteria
 
@@ -5283,11 +5285,14 @@ added in `8cc5372` now provide the atomic application and restoration engine req
 `d53f496d` adds local Fedora descriptor-race and consumed-authority replay fixtures without
 claiming real mount-change or cross-platform proof. Commits `4f71c65d` and `02f36b45` add
 ten-boundary parent-rename reconciliation and a 24-case real subprocess-stop matrix without
-claiming authority-store, power-loss, mount-change, or cross-platform proof. Complete native race and crash/durability
-matrices on every promised platform, plus independent transaction review, remain absent. Sprint 36 remains
-**BLOCKED** because Sprint 35 is not yet a passing upstream dependency and those verification
-and independent-review proofs are open. Task 36.1.3 and its remaining verification sub-tasks,
-both story criteria, Sprint AC 36.AC3, the story, and the sprint therefore remain open.
+claiming authority-store, power-loss, mount-change, or cross-platform proof. Complete native race
+and crash/durability matrices on every promised platform remain absent. The gate-owned
+[transaction-boundary review](artifacts/sprints/sprint-36/transaction-boundary-review.json) binds
+the security mapping, properties, attacks, hashes, restoration proof, and truthful limitations
+without a human-review claim. Sprint 36 remains **BLOCKED** because Sprint 35 is not yet a passing
+upstream dependency and the two exact external verification tuples remain open. Task 36.1.3, its
+two blocked verification sub-tasks, both story criteria, Sprint AC 36.AC3, the story, and the
+sprint therefore remain open.
 
 ### [ ] Sprint 37 - File Creation, Patch, Copy, Move, and Delete Controls
 

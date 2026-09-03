@@ -1,0 +1,46 @@
+{
+  "checks": {
+    "known_partial_effects_restore_exact_preimages": true,
+    "missing_platform_and_durability_proof_remains_visible": true,
+    "native_race_and_process_stop_results_are_retained": true,
+    "post_preview_attack_matrix_is_inert": true,
+    "preimage_postimage_and_consumed_grant_hashes_are_bound": true,
+    "security_requirements_are_mapped": true,
+    "transition_and_receipt_properties_are_retained": true,
+    "uncertain_results_never_claim_commit_or_retry": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "Real mount replacement, power-loss durability, and complete platform matrices remain external blockers.",
+    "Sprint 35 and its inherited dependencies remain blocked without substitution."
+  ],
+  "record_type": "agentmage-sprint-36-transaction-boundary-review",
+  "review_class": "gate-owned-automated-atomic-write-transaction-review",
+  "reviewer_identity": "scripts/sprint_36_transaction_review.py",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-ACC-001",
+    "SR-ACC-002",
+    "SR-ACC-003",
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-DAT-002",
+    "SR-OPS-001",
+    "SR-OPS-002",
+    "SR-TST-005",
+    "SR-TST-011",
+    "SR-TST-012"
+  ],
+  "source_revision": "09a51fd99431ce812acace129231bc5dd0f1e7d9",
+  "source_sha256": {
+    "docs/architecture/atomic-write-transaction-and-rollback.md": "5f5fad3d6a4cb427353d764722a83065257445030e001e07295f011359a18185",
+    "docs/verification/sprint-36-local-results.md": "d8ee5fb48db53bca5d2708fa7473dea16c2c70ae9a7f0ca83043b1ddd2815d48",
+    "kernel/engine/src/write_transaction.rs": "37bfa344dc49b9e79aa7921b0c3b12241a1166cef0216395a56e280841d3dd03",
+    "platforms/linux/src/write_transaction.rs": "1b249db408fe8f77e469a746436fc0d6356d1978f0ca8cf685cb99d34255c132",
+    "scripts/sprint_36_evidence.py": "1800e6404746b5bd93528996e426233405a21c8801c6deb7a4b73551a54e5644"
+  },
+  "status": "PASS_LOCAL_TRANSACTION_REVIEW"
+}
