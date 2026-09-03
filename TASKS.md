@@ -4024,7 +4024,10 @@ clients, supported-platform campaigns, and independent review remain explicit ex
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 23.2.1 - Implement accessible interaction and output**
+- [x] **Task 23.2.1 - Implement accessible interaction and output** Evidence: all four child
+  sub-tasks are source-complete; the versioned conformance report separates automated passes from
+  the still-blocked installed keyboard, reflow, and assistive-technology campaigns without claiming
+  native support.
   - [x] **Sub-task 23.2.1.1:** Define accessible names, roles, states, descriptions, live-status behavior, error associations, focus order, focus restoration, and keyboard operation for model selection, workspace selection, chat, citations, diagnostics, cancellation, and handoff preview.
   - [x] **Sub-task 23.2.1.2:** Ensure status and evidence meaning never depends only on color, icon, animation, position, hover, pointer precision, or timing; preserve content at supported zoom and reflow settings. Evidence: all AgentMage-owned runtime content uses textual headings, ordered list records, explicit state names, limitations, receipts, errors, and offline/permission/resource indicators, with no style, icon, hover, pointer, animation, or timing channel in the renderer. Native zoom, reflow, focus, timing, and host-owned visuals remain honestly gated by Task 23.2.2.
   - [x] **Sub-task 23.2.1.3:** Make generated Markdown, citations, diagnostics, limitations, receipts, and error guidance structurally navigable and understandable by screen readers. Evidence: generated runtime output separates Session Boundary, Progress, and Result headings; emits ordered textual event list items; retains named safe citations; and renders diagnostics, limitations, receipts, evidence counts, and guidance as explicit text parts. Parser tests assert the complete structure. Native assistive-technology behavior remains honestly gated by Task 23.2.2.
@@ -4063,9 +4066,9 @@ clients, supported-platform campaigns, and independent review remain explicit ex
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 23.3.AC1:** Given the current exact catalog and activation state, when native Chat discovers models, then only currently admitted, compatible, activated profiles are ordinarily selectable and every displayed identity and limit resolves to current evidence.
-- [ ] **Story AC 23.3.AC2:** Given a candidate, stale, quarantined, rejected, retired, incompatible, blocked, or silently changed profile, when discovery or launch occurs, then it cannot run and the precise state remains visible without exposing sensitive data.
-- [ ] **Story AC 23.3.AC3:** Given selected-profile failure or explicit profile change, when the request continues, then AgentMage preserves task state, revalidates the new exact profile, and never substitutes automatically.
+- [x] **Story AC 23.3.AC1:** Given the current exact catalog and activation state, when native Chat discovers models, then only currently admitted, compatible, activated profiles are ordinarily selectable and every displayed identity and limit resolves to current evidence. Evidence: the exact signed-catalog/current-fact join truthfully projects zero ordinary entries for the current zero-enabled catalog and projects only fully admitted synthetic fixtures with hash-bound display facts.
+- [x] **Story AC 23.3.AC2:** Given a candidate, stale, quarantined, rejected, retired, incompatible, blocked, or silently changed profile, when discovery or launch occurs, then it cannot run and the precise state remains visible without exposing sensitive data. Evidence: the complete discovery and identity-mutation matrices keep every non-runnable state management-only or refuse the stale launch before request preparation, with content-free reason codes.
+- [x] **Story AC 23.3.AC3:** Given selected-profile failure or explicit profile change, when the request continues, then AgentMage preserves task state, revalidates the new exact profile, and never substitutes automatically. Evidence: explicit changes preserve the exact task, plan, evidence, and checkpoint tuple; 4 pre-request and 4 post-receipt failure dispositions retain the selected identity and produce one truthful stop with no fallback or replay.
 
 #### [ ] Story 23.4 - Reusable Runtime Coordinator and Read-Only Session Loop
 
@@ -4237,7 +4240,7 @@ package, and independent review evidence remain explicitly outside this local st
 - [x] **Sprint AC 23.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
 - [x] **Sprint AC 23.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 23.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
-- [ ] **Sprint AC 23.AC6:** `AT-VSC-003` proves zero hard-coded model prerequisite, zero stale/blocked profile launch, and zero automatic substitution across the complete lifecycle fixture matrix. Partial local evidence: pure kernel, host, and extension fixtures prove all three properties for discovery and immediate revalidation; native production launch and every request-phase lifecycle evidence remain open.
+- [ ] **Sprint AC 23.AC6:** `AT-VSC-003` proves zero hard-coded model prerequisite, zero stale/blocked profile launch, and zero automatic substitution across the complete lifecycle fixture matrix. Partial local evidence: pure kernel, host, and extension fixtures prove all three properties for discovery, immediate revalidation, explicit profile change, and the complete pre-request/post-receipt failure matrix; native production launch and installed accessibility evidence remain open.
 - [ ] **Sprint AC 23.AC7:** Native Chat completes the approved read-only vertical slice through one interface-independent runtime coordinator with no shell-to-model/tool/storage bypass. Partial local evidence: deterministic authenticated-host and VS Code fixtures traverse the common coordinator adapter and prove the thin-client boundary; installed-host runtime/model composition and native acceptance remain absent.
 - [x] **Sprint AC 23.AC8:** Runtime requests, events, receipts, cancellation, outcomes, and the optional journal/checkpoint/artifact ports are reusable by a non-Chat test client without changing kernel semantics.
 - [x] **Sprint AC 23.AC9:** `ALLOW`, `ASK`, and `DENY` preserve exact `CapabilityGrant` authority and produce no approval-dialog or coordinator-created authority.
