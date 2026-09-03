@@ -35,7 +35,7 @@
     },
     {
       "document": "TASKS.md",
-      "sha256": "58b2ee7327bce10974d52b2328c7322c413698d39f4a605aa2e47e72c20ebba7"
+      "sha256": "bbdb5f9a3dea162986228b3a50ee9200c8f8891a8f58bd6b7e058c8f45ca71ae"
     },
     {
       "document": "evidence/catalog.json",
@@ -2678,12 +2678,12 @@
           {
             "source": {
               "document": "TASKS.md",
-              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
+              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty.",
               "line": 3494
             },
             "sprint": 21,
             "story_id": "21.1",
-            "story_title": "Citation Freshness and Tamper-Evident Receipts"
+            "story_title": "Citation Freshness and Tamper-Evident Receipts. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty."
           }
         ]
       },
@@ -2755,12 +2755,12 @@
           {
             "source": {
               "document": "TASKS.md",
-              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
+              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty.",
               "line": 3494
             },
             "sprint": 21,
             "story_id": "21.1",
-            "story_title": "Citation Freshness and Tamper-Evident Receipts"
+            "story_title": "Citation Freshness and Tamper-Evident Receipts. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty."
           }
         ]
       },
@@ -5394,7 +5394,7 @@
           {
             "source": {
               "document": "TASKS.md",
-              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
+              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty.",
               "line": 3641
             },
             "sprint": 21,
@@ -5532,7 +5532,7 @@
           {
             "source": {
               "document": "TASKS.md",
-              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
+              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty.",
               "line": 3641
             },
             "sprint": 21,
@@ -11535,12 +11535,12 @@
           {
             "source": {
               "document": "TASKS.md",
-              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
+              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty.",
               "line": 3494
             },
             "sprint": 21,
             "story_id": "21.1",
-            "story_title": "Citation Freshness and Tamper-Evident Receipts"
+            "story_title": "Citation Freshness and Tamper-Evident Receipts. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty."
           }
         ]
       },
@@ -11597,12 +11597,12 @@
           {
             "source": {
               "document": "TASKS.md",
-              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
+              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty.",
               "line": 3494
             },
             "sprint": 21,
             "story_id": "21.1",
-            "story_title": "Citation Freshness and Tamper-Evident Receipts"
+            "story_title": "Citation Freshness and Tamper-Evident Receipts. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty."
           }
         ]
       },
@@ -11659,12 +11659,12 @@
           {
             "source": {
               "document": "TASKS.md",
-              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
+              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty.",
               "line": 3494
             },
             "sprint": 21,
             "story_id": "21.1",
-            "story_title": "Citation Freshness and Tamper-Evident Receipts"
+            "story_title": "Citation Freshness and Tamper-Evident Receipts. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty."
           }
         ]
       },
@@ -13896,7 +13896,7 @@
           {
             "source": {
               "document": "TASKS.md",
-              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
+              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty.",
               "line": 3641
             },
             "sprint": 21,
@@ -14138,7 +14138,7 @@
           {
             "source": {
               "document": "TASKS.md",
-              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
+              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty.",
               "line": 3641
             },
             "sprint": 21,
@@ -14209,7 +14209,7 @@
           {
             "source": {
               "document": "TASKS.md",
-              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
+              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty.",
               "line": 3641
             },
             "sprint": 21,
@@ -17499,12 +17499,12 @@
           {
             "source": {
               "document": "TASKS.md",
-              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts",
+              "heading": "Sprint 21 - Citation Freshness and Tamper-Evident Receipts. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty.",
               "line": 3494
             },
             "sprint": 21,
             "story_id": "21.1",
-            "story_title": "Citation Freshness and Tamper-Evident Receipts"
+            "story_title": "Citation Freshness and Tamper-Evident Receipts. `blocked: host change required \u2014 run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty."
           }
         ]
       },
