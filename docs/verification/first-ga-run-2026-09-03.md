@@ -1655,3 +1655,54 @@ while retaining Sprint 45's exact upstream, service, platform, launcher, and fuz
 Exact next action: continue at Sprint 47's first locally executable or gate-owned verification row
 while retaining Sprint 46's exact upstream, worker, protected-log, platform, launcher, and fuzz
 blockers.
+
+## Batch 53 — Sprint 47 local-commit boundary review
+
+### Completed
+
+- Closed 5 TASKS rows: Task 47.1.3, Sub-task 47.1.3.5, Story AC 47.1.AC1,
+  Story AC 47.1.AC2, and Sprint AC 47.AC5. The gate-owned review binds 13 security
+  requirements, the complete review packet and logical commit boundary, exact signer/approval/
+  temporary-index controls, the native Linux commit portion of `RV-49`, 28 fail-closed cases,
+  and 0 unauthorized effects. Promotions: 0. Substitutions: 0. Cumulative closed items: 117.
+- Commits: `261f62f6` (review and mutation tests), `33799d44` (review truth, closures,
+  and normalized blockers), and `c5f08570` (review artifact, traceability, and contract evidence).
+  Commits: 3. Commits per closed item: 0.60. Review pins advanced: 0; complete 20-gate
+  `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 7/7 evidence/review/corpus tests, 4/4 review-packet tests,
+  4/4 local-commit tests, targeted Markdown lint, requirements-current 45/45, traceability,
+  contract-boundary, and contract-evidence checks pass. Supply-chain builds: 1; outputs remained
+  byte-identical. Evidence regeneration passes: 1. Recovery iterations: 0. The full chain ran
+  675.64 seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite after
+  every preceding gate passed. Recorded gate wall seconds: 676.
+- Sprint 47 exact blockers: production signer/approval
+  `BLOCKED_EXTERNAL(platform=installed AgentMage local-commit interface;
+  artifact=production-approved signer inspection and protected exact manual-approval receipt;
+  action=authorized release owner provisions the signer and protected approval channel and
+  transfers immutable evidence; credential=production signing identity and approval authority;
+  payment=signing hardware if required)`; signer process tree `blocked: host change required —
+  admit an owner-approved root-owned Sprint 47 multi-level signer helper and run the interruption
+  and descendant cleanup campaign from the trusted packaged launcher`; native parity
+  `BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and physical supported
+  MacBook; artifact=review-packet, temporary-index, signed-commit, preservation, and commit-RV-49
+  parity results; action=platform owners execute and transfer untouched evidence;
+  credential=Windows image source, physical Mac access, and platform signing identity;
+  payment=Windows license or signing hardware if required)`; launcher `blocked: host change
+  required — run the Sprint 47 local-commit suite from the trusted packaged launcher outside the
+  development shell`; and manual fuzz `BLOCKED_EXTERNAL(platform=every supported native
+  local-commit worker; artifact=manual fuzzing transcript and minimized corpus; action=authorized
+  human executes the manual S-040 fuzz campaign and transfers untouched results;
+  credential=platform and signing access; payment=none)`; every `substitution_set=empty`.
+- Exact upstream blocker: `blocked: awaiting Sprint 46 gate closure`, retaining Sprint 46's
+  worker, protected-log, native parity, trusted-launcher, and manual-fuzz tuples;
+  `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue at Sprint 48's first locally executable or gate-owned verification row
+while retaining Sprint 47's exact upstream, signer/approval, process-tree, platform, launcher, and
+fuzz blockers.
