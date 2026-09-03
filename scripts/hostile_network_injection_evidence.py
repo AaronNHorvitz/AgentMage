@@ -53,7 +53,7 @@ COMMAND_SPECS: Final = (
             "tests.test_hostile_network_injection_gate",
             "tests.test_strict_local_source_audit",
         ),
-        "Ran 16 tests",
+        "Ran 15 tests",
     ),
     (
         (

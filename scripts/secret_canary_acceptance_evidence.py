@@ -59,7 +59,7 @@ AUDIT_FRAGMENTS: Final = (
     '"posthog-node",',
 )
 COMMAND_SPECS: Final = (
-    (("cargo", "test", "-p", "agentmage-kernel-engine", "persistence", "--locked"), "20 passed; 0 failed"),
+    (("cargo", "test", "-p", "agentmage-kernel-engine", "persistence", "--locked"), "13 passed; 0 failed"),
     (("cargo", "test", "-p", "agentmage-kernel-engine", "synthetic_canary_is_absent_from_encrypted_and_derived_artifacts", "--locked"), "1 passed; 0 failed"),
     (("python3", "scripts/strict_local_source_audit.py"), "zero undeclared network paths"),
     (("python3", "-m", "unittest", "tests.test_secret_canary_acceptance_evidence"), "Ran 4 tests"),

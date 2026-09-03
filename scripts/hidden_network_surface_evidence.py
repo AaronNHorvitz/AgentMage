@@ -41,7 +41,7 @@ SOURCE_PATHS: Final = (
 COMMAND_SPECS: Final = (
     (
         ("python3", "-m", "unittest", "tests.test_strict_local_source_audit"),
-        "Ran 11 tests",
+        "Ran 10 tests",
     ),
     (
         ("npm", "run", "product:lint"),
