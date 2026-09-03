@@ -16,9 +16,9 @@
       "sha256": "da0fe8510dbab2c14ac59e61cdadee1fab05f67c4e6e65651bfb05b7881882bd"
     },
     {
-      "byte_length": 16060,
+      "byte_length": 16204,
       "path": "shells/vscode/src/participant_ingress.ts",
-      "sha256": "c3fa54e7db0dacab8c3d2e49821ba83fb9d6c8170f841c1c224e7c076b908641"
+      "sha256": "ffaf688d7a5bb5f4655cfd9dbc04148bfb95f31f425b1a26807ed1fd90a1a91f"
     },
     {
       "byte_length": 7755,
@@ -26,9 +26,9 @@
       "sha256": "52096bbff82fdd4401a45942a13f9088f5132727f78e03cbdd277bb744abad6a"
     },
     {
-      "byte_length": 11941,
+      "byte_length": 12997,
       "path": "shells/vscode/test/participant_ingress.test.ts",
-      "sha256": "68ee24f94e38c2498d2b147332ea39aef39b8c863341c2b7632c502f964d8eb6"
+      "sha256": "a23226252b90add654f7e9cf24381234dba6904239591808e30ebc4dbd930beb"
     },
     {
       "byte_length": 4611,
@@ -46,9 +46,19 @@
       "sha256": "39dba04d6c953b0c3987a5c944260a4c4c6b2ebad703aa54f449dc0a40167e05"
     },
     {
-      "byte_length": 5729,
+      "byte_length": 5899,
+      "path": "shells/host/src/lib.rs",
+      "sha256": "d02021d710e29fbb8709660ca92f59bb2637afe7634076253611e3a4436e8d50"
+    },
+    {
+      "byte_length": 7031,
+      "path": "shells/host/src/participant_ingress.rs",
+      "sha256": "02e80cae146eba96492526627fed63ab5ea62f320f71824f52318303ea412214"
+    },
+    {
+      "byte_length": 6234,
       "path": "docs/architecture/stable-chat-participant-ingress.md",
-      "sha256": "833494001d61cfb866da498e21376db52593eb18a9b28790103596bb3764c7f2"
+      "sha256": "0e61dd4902fc703bd7672a693585d67549e2bb416caae7808947adbcf366e899"
     },
     {
       "byte_length": 6123,
@@ -61,9 +71,9 @@
       "sha256": "fd3942fe10b79b296da44029f6ece41e7bcbbd424ac744d90146d730af01bd11"
     },
     {
-      "byte_length": 7215,
+      "byte_length": 7486,
       "path": "scripts/story_23_5_participant_ingress_evidence.py",
-      "sha256": "ddc5f484fe22d7397259b1d433c2efeb541b100fe52657dbd3e8ad31f5724b46"
+      "sha256": "ca2794a4d7145867de7fb53e27ec4f397025bf3c5a6971aae855aa640c8a769c"
     },
     {
       "byte_length": 1054,
@@ -71,9 +81,9 @@
       "sha256": "26b45c68dc468700ac2b84774f1cbe0011e2a35ee260a988a056f9b278426102"
     },
     {
-      "byte_length": 11555,
+      "byte_length": 13302,
       "path": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-results.log",
-      "sha256": "b6e63566ee6d0f1217e477712b2dfc5f309d5f84c46c43bed0e4f9690b2f8e86"
+      "sha256": "b91521bde62f888b1f5da66c2f7515f84406e6fcae18adbd9946133c4c60e29b"
     }
   ],
   "commands": [
@@ -82,6 +92,7 @@
     "npm --prefix shells/vscode run format:check",
     "cargo test -p agentmage-host protocol::tests --all-features --locked",
     "cargo test -p agentmage-host engineering_runtime::tests --all-features --locked",
+    "cargo test -p agentmage-host participant_ingress::tests --all-features --locked",
     "python3 -m pytest -q tests/test_architecture_decision.py tests/test_vscode_api_surfaces.py",
     "python3 scripts/validate_docs.py"
   ],
@@ -94,6 +105,7 @@
     "complete_part_accounting": true,
     "current_request_reference_resolution_only": true,
     "exact_model_revalidation_before_capture": true,
+    "headless_source_byte_parity": true,
     "independent_review_complete": false,
     "installed_vsix_campaign_complete": false,
     "qualified_production_model_complete": false,
