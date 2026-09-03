@@ -852,33 +852,86 @@ pub fn dispatch_spreadsheet_source_artifact(
 
 #[cfg(test)]
 mod tests {
-    use std::io::{Cursor, Write};
-
+    use super::*;
     use agentmage_capability_read_only::{
         ArtifactItem, ArtifactLimits, ArtifactOutcome, ArtifactRange, ArtifactRequest,
         validate_artifact_request,
     };
     use agentmage_kernel_contracts::{RuntimeArtifactId, WorkspaceId, WorkspacePath};
     use agentmage_kernel_engine::model_orchestration_profile::ExactTokenCounterBinding;
-    use zip::write::SimpleFileOptions;
-    use zip::{CompressionMethod, ZipWriter};
 
-    use super::*;
+    fn crc32(bytes: &[u8]) -> u32 {
+        let mut crc = u32::MAX;
+        for byte in bytes {
+            crc ^= u32::from(*byte);
+            for _ in 0..8 {
+                crc = (crc >> 1) ^ (0xedb8_8320 & 0_u32.wrapping_sub(crc & 1));
+            }
+        }
+        !crc
+    }
+
+    fn u16_le(target: &mut Vec<u8>, value: u16) {
+        target.extend_from_slice(&value.to_le_bytes());
+    }
+
+    fn u32_le(target: &mut Vec<u8>, value: u32) {
+        target.extend_from_slice(&value.to_le_bytes());
+    }
 
     fn package(entries: &[(&str, &str)]) -> Vec<u8> {
-        let mut cursor = Cursor::new(Vec::new());
-        {
-            let mut writer = ZipWriter::new(&mut cursor);
-            let options = SimpleFileOptions::default()
-                .compression_method(CompressionMethod::Stored)
-                .unix_permissions(0o644);
-            for (name, content) in entries {
-                writer.start_file(*name, options).expect("start");
-                writer.write_all(content.as_bytes()).expect("write");
+        let mut archive = Vec::new();
+        let mut central = Vec::new();
+        for (name, content) in entries {
+            let name = name.as_bytes();
+            let content = content.as_bytes();
+            let offset = u32::try_from(archive.len()).expect("fixture offset");
+            let size = u32::try_from(content.len()).expect("fixture content");
+            let name_len = u16::try_from(name.len()).expect("fixture name");
+            let digest = crc32(content);
+
+            u32_le(&mut archive, 0x0403_4b50);
+            for value in [20, 0, 0, 0, 0] {
+                u16_le(&mut archive, value);
             }
-            writer.finish().expect("finish");
+            for value in [digest, size, size] {
+                u32_le(&mut archive, value);
+            }
+            u16_le(&mut archive, name_len);
+            u16_le(&mut archive, 0);
+            archive.extend_from_slice(name);
+            archive.extend_from_slice(content);
+
+            u32_le(&mut central, 0x0201_4b50);
+            for value in [20, 20, 0, 0, 0, 0] {
+                u16_le(&mut central, value);
+            }
+            for value in [digest, size, size] {
+                u32_le(&mut central, value);
+            }
+            for value in [name_len, 0, 0, 0, 0] {
+                u16_le(&mut central, value);
+            }
+            u32_le(&mut central, 0);
+            u32_le(&mut central, offset);
+            central.extend_from_slice(name);
         }
-        cursor.into_inner()
+        let central_offset = u32::try_from(archive.len()).expect("central offset");
+        let central_size = u32::try_from(central.len()).expect("central size");
+        archive.extend_from_slice(&central);
+        u32_le(&mut archive, 0x0605_4b50);
+        for value in [
+            0,
+            0,
+            u16::try_from(entries.len()).expect("entry count"),
+            u16::try_from(entries.len()).expect("entry count"),
+        ] {
+            u16_le(&mut archive, value);
+        }
+        u32_le(&mut archive, central_size);
+        u32_le(&mut archive, central_offset);
+        u16_le(&mut archive, 0);
+        archive
     }
 
     fn fixture() -> Vec<u8> {
