@@ -1912,3 +1912,62 @@ native routing audit view before advancing to Sprint 50; retain every exact exte
 
 Exact next action: compose the authenticated installed-interface adapter to the kernel product-
 routing service without enabling a model, then re-evaluate the remaining Sprint 49 rows.
+
+## Batch 58 — Sprint 49 host routing adapter
+
+### Completed
+
+- Closed 2 TASKS rows: Sub-task 49.1.1.9 and Sprint AC 49.AC7. The installed host
+  interface now verifies the authenticated routing envelope before invoking the kernel-owned
+  product service, presents only the content-minimized native audit view, and exposes the current
+  zero-profile decision without adding catalog or selection authority. The exact alternate-
+  runtime adapter contract remains non-activating. Promotions: 0. Substitutions: 0. Enabled
+  profiles: 0. Cumulative closed items: 141.
+- Commits: `12e5296a` (host adapter, installed-interface test, product-routing review, and
+  architecture), `6957c977` (truth and closures), and `afb10648` (product-routing review,
+  supply chain, traceability, contract evidence, and all 3 affected Sprint 3 carrier reports).
+  Commits: 3. Commits per closed item: 1.50. Review pins advanced: 0; complete 20-gate
+  `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 1/1 installed host-adapter test, 6/6 alternate-runtime evaluator tests,
+  4/4 product-review and matrix tests, strict host Clippy, targeted Markdown lint,
+  requirements-current, traceability, contract-boundary, contract-evidence, supply-chain,
+  configuration-startup, component-inventory, and Story 3.1 security checks pass. Supply-chain
+  builds: 1; the host workspace edit changed the expected SBOM carrier. Evidence regeneration
+  passes: 1, including all 3 affected Sprint 3 carrier reports. Recovery iterations: 1. The
+  tracked product-routing review is covered by an ignore pattern, so ordinary `git add` refused
+  it; `git add -u` staged the already-tracked regenerated artifact without altering ignore rules.
+  The full chain ran 677.355 seconds and stopped only at the retained Story 6.1 rootless-Podman
+  prerequisite after every preceding gate passed. Recorded gate wall seconds: 677.
+- Exact approved-profile and live-benchmark blocker:
+  `BLOCKED_EXTERNAL(platform=pinned local inference host; artifact=approved exact later-profile
+  model, artifact, tokenizer, template, codec, runtime, context, decoding, resource, role,
+  platform, supplier, license, lineage, origin, benchmark, and quality admission bundle;
+  action=authorized model owner admits the exact profile, executes the repeated role campaigns,
+  and transfers untouched results; credential=model artifact source if restricted; payment=model
+  artifact or required hardware if applicable)`; `substitution_set=empty`.
+- Exact native acceptance blocker:
+  `BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and physical supported
+  MacBook; artifact=exact profile, role benchmark, routing, disagreement, performance, and parity
+  results; action=platform owners execute and transfer untouched evidence; credential=Windows
+  image source, physical Mac access, and exact model artifact source if restricted;
+  payment=Windows license, model artifact, or required hardware if applicable)`;
+  `substitution_set=empty`.
+- Exact trusted-launcher blocker: `blocked: host change required — run the Sprint 49 measured-
+  routing suite from the trusted packaged launcher`; `substitution_set=empty`. Exact manual-fuzz
+  blocker: `BLOCKED_EXTERNAL(platform=every supported native model-routing surface;
+  artifact=manual fuzzing transcript and minimized corpus; action=authorized human executes the
+  manual S-042 fuzz campaign and transfers untouched results; credential=platform and model
+  access; payment=none)`; `substitution_set=empty`.
+- Exact upstream blocker remains `blocked: awaiting Sprint 48 gate closure`, retaining Sprint
+  48's transport/coordinator, model, disconnect, native-platform, trusted-launcher, and manual-
+  fuzz tuples; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: close the remaining locally provable Story 49.1 manifest-denial row, mark its
+external model and benchmark dependencies with the exact tuples above, and continue at the first
+unblocked gate on the Decision 0047 first-release critical path.
