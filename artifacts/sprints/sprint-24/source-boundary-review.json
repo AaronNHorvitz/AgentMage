@@ -1,0 +1,42 @@
+{
+  "checks": {
+    "client_has_no_handoff_delivery_method": true,
+    "closed_prohibited_action_family": true,
+    "host_exposes_denial_not_delivery": true,
+    "live_process_socket_set_unchanged": true,
+    "one_local_denial_receipt_per_action": true,
+    "strict_local_policy_retained": true
+  },
+  "command": [
+    "cargo",
+    "test",
+    "-p",
+    "agentmage-kernel-engine",
+    "every_delivery_and_interface_control_action_has_one_local_denial_receipt",
+    "--locked"
+  ],
+  "command_exit_code": 0,
+  "command_output_sha256": "a0ac6f7511708f4453fdccc903cf5c4d7e9bde464b1ad0ba5de7b3d4a33d5dda",
+  "independent_human_review_performed": false,
+  "limitations": [
+    "The live observation covers the Linux test process and proves the denial family opens no socket.",
+    "This is gate-owned automated review, not a human-review claim.",
+    "Installed VSIX and platform accessibility campaigns remain separate blockers."
+  ],
+  "live_handoff_zero_egress_observed": true,
+  "record_type": "agentmage-sprint-24-boundary-review",
+  "review_class": "independent-automated-source-and-live-process-boundary",
+  "reviewer_identity": "scripts/sprint_24_boundary_review.py",
+  "schema_version": 1,
+  "source_revision": "b9a3a615fd6ed7e431856262f59e908116496b54",
+  "source_sha256": {
+    "kernel/contracts/src/handoff.rs": "230eea68dfbe59158221b006f1483591999a464e529b0e25ecac8c6213759a00",
+    "kernel/engine/src/handoff.rs": "2aaee0dec1de622b995faff552886240618aaf8f5356220d7dd54d112dddbd0c",
+    "security/strict-local-source-policy.json": "8574bd444d2e7ebb3758c6725f02e6b94e59ae89c0ea29addae997195f425d87",
+    "shells/host/src/linux_read.rs": "2761b074d459be37f73b1f5ca35b32df76aa3ca661e8b65fef94f2e88f9bae22",
+    "shells/host/src/protocol.rs": "a875cc1c06fc5bd1601611f54c235f4bff8b6481da61a51b109b22eb527cceba",
+    "shells/vscode/src/handoff.ts": "f784df9ac32b6c3a67eed04a404b78503722edad9372aa4bba89547fdccd4da3",
+    "shells/vscode/src/provider.ts": "e50b2950c7ffce2bead54d0a9b43c3a33d99a7795adeaedc411e59182d7a0a17"
+  },
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}
