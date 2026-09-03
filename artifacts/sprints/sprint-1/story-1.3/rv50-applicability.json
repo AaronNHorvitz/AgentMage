@@ -76,12 +76,6 @@
       "status": "BLOCKED_LATER_STORY",
       "owner": "16.4",
       "reason": "complete live tool terminal-state and resource campaign remains open"
-    },
-    {
-      "scenario": "complete-source-to-terminal-fake-model-vertical-slice",
-      "status": "BLOCKED_LATER_STORY",
-      "owner": "22.5",
-      "reason": "new canonical records are not yet composed through one installed source-to-terminal workflow"
     }
   ],
   "acceptance_tests": [
@@ -194,12 +188,12 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.3/rv50-applicable-results.log",
-      "sha256": "bb3c394bed33b2b925791a3f11a63f5c3fe00a6fe685c435eb670c210191d350"
+      "sha256": "8c7b1072ddaf96b2e6c2daa752da4cbfff3ba913c6f8cd98f97718c5282ffee1"
     }
   ],
   "limitations": [
     "The executed caller parity is an in-memory deterministic fixture, not installed native-client evidence.",
     "The executed fake-model read is supporting regression evidence and does not compose every new canonical Story 1.3 record.",
-    "No later-story acceptance test, platform tuple, live worker, real model, release gate, or external review is represented as passing."
+    "No remaining later-story acceptance test, platform tuple, live worker, real model, release gate, or external review is represented as passing."
   ]
 }
