@@ -924,3 +924,31 @@ or execute it; do not infer Phase A completion from the Sprint 25 boundary alone
 Exact next action: implement and retain Sprint 26's gate-owned boundary review, then remove only the
 `INDEPENDENT-SPRINT-26-REVIEW-ABSENT` blocker while preserving both draft Decisions, upstream
 release, and supported-package tuples.
+
+## Batch 38 — Sprint 26 gate-owned boundary review
+
+### Completed
+
+- Closed 0 TASKS rows. Resolved `INDEPENDENT-SPRINT-26-REVIEW-ABSENT` with a gate-owned automated
+  review that hashes 6 authority/index/lifecycle/operation/store/architecture sources and passes 7
+  knowledge-authority checks. It records `independent_human_review_performed=false`. The two draft
+  Decisions, upstream release, and supported-package blockers remain. Promotions: 0. Substitutions:
+  0.
+- Commits: `ea782e9d` (reviewer and mutation tests), `5d2babb8` (source-symbol correction), and
+  `21dbdfdb` (review report and checklist-bound evidence). Commits: 3. Commits per closed item: not
+  applicable. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1. Authoritative evidence regeneration passes: 1, including the Sprint 26
+  review followed by requirements, traceability, contract boundary, and contract index. Focused
+  review build attempts: 2. Recovery iterations: 1; the first build exposed checks using generic
+  names instead of the actual `KnowledgeRestorePlan`/`KnowledgeMigrationPlan` symbols and treated a
+  prohibition comment as an operational-store dependency, so the reviewer was corrected to the
+  source truth. Mutation groups: 2/2; review checks: 7/7; task graph, requirements-current 45/45,
+  contract boundary 29/29, and contract index 12/12 pass.
+- Full `docs:check`: 697.650 seconds, stopping only at the retained Story 6.1 Podman prerequisite
+  after every preceding gate passed. Recorded gate wall seconds: 698.
+
+Exact next action: continue at Sprint 27's first unblocked local source/evidence or mechanical parent
+rows while retaining Sprint 26's draft-Decision and release/package blockers.
