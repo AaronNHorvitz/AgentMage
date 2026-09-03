@@ -1,0 +1,46 @@
+{
+  "checks": {
+    "corpus_and_zero_activation_results_are_bound": true,
+    "exact_profile_and_role_boundaries_are_bound": true,
+    "local_contract_is_bound": true,
+    "missing_product_proof_remains_false": true,
+    "routing_authority_boundaries_are_bound": true,
+    "security_requirements_are_mapped": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "No approved later-profile manifest or live role benchmark exists.",
+    "Product routing and native audit-view integration remain absent.",
+    "No model, adapter, platform support, or release is enabled."
+  ],
+  "record_type": "agentmage-sprint-49-source-boundary-review",
+  "review_class": "gate-owned-automated-measured-routing-boundary-review",
+  "reviewer_identity": "scripts/sprint_49_boundary_review.py",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-SUP-006",
+    "SR-SUP-007",
+    "SR-SUP-008",
+    "SR-AI-001",
+    "SR-AI-006",
+    "SR-AI-010",
+    "SR-AI-011",
+    "SR-AI-012",
+    "SR-AI-013",
+    "SR-AI-014",
+    "SR-TST-006"
+  ],
+  "source_revision": "cbd59ddc75ed8b17ae2effae068810fdcf7cdc8e",
+  "source_sha256": {
+    "artifacts/sprints/sprint-49/local-evidence-report.json": "cc07352773e1e59847bdf16430a5117466eeb8efca8c0851b7db35f1e7f4e2d6",
+    "docs/verification/sprint-49-local-results.md": "d1830879974358b0378cf86c64d986a1f165e0ed5277dfa82af56a1f9d22008b",
+    "docs/verification/sprint-49-routing-corpus.json": "40f0a247cfa3694fd32afd10142630ca0985e01648c07f04ee95bd34108b0715",
+    "kernel/engine/src/model_routing.rs": "9bc3564b574517cd7f57c26ec1dc961659a4aa58481869a3b2c3e4d79144856d",
+    "model-profiles/routing/historical-later-candidates.json": "093a22d9cbe91b66aa9e4c60949192f01b0398d62364471603614e39495968d4",
+    "model-profiles/routing/measured-routing-decision-table-v1.json": "c7535b584fe6d78bd3cd7d709756c2b65a680c2905938dbe914b31fcb634bdfc",
+    "model-profiles/routing/role-benchmark-corpus-v1.json": "5f8c86ab32446730a5fcb0cc009e5db261461750c02499e15e52e0f44da8755c",
+    "scripts/sprint_49_evidence.py": "4941e977e577d3ae85215c2b42634b545f006b65e1b38112f563ad681513dd7a"
+  },
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}
