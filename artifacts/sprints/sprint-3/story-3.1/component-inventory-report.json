@@ -364,7 +364,7 @@
     },
     {
       "path": "architecture/dependency-classes.json",
-      "sha256": "98b2a6deec62ec3f568f6d7715db81e54cff8db27d57dc7ac0f30aa17240a38c"
+      "sha256": "f1fb7d96a70274a3ae2baeacad8991686d379f0439885fff3c27598e46d0d0ba"
     },
     {
       "path": "architecture/optional-component-inventory.json",
