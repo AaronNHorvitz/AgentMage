@@ -360,3 +360,46 @@ work that can run without an installed production model or external platform.
 
 Exact next action: continue the first incomplete Sprint 23 coordinator failure-boundary rows that
 do not depend on either carrier blocker.
+
+## Batch 22 — Coordinator transactional failure closure
+
+### Completed
+
+- Closed 3 TASKS rows: Sub-task 23.4.3.3, Sub-task 23.4.3.6, and Task 23.4.3. The durable
+  coordinator fixture now injects permission-event publication, tool-start publication,
+  post-receipt tool-terminal publication, run-terminal publication, and terminal-flush failures.
+  It proves 0 executions before a committed start, exactly 1 execution after a receipt boundary,
+  0 uncommitted canonical outcomes, exact `Uncertain` dependency disposition, and 0 hidden retries.
+  Existing native-client fixtures retain disconnect, cancellation, presentation-failure, and
+  exact-release behavior.
+- The gate-owned coordinator boundary review now satisfies the independent source-review
+  requirement without making an external-human claim. The Story 23.4 security task is complete
+  while installed runtime, accessibility, physical crash/restart, supported-platform, and release
+  claims remain false. Promotions: 0. External rows closed by substitution: 0.
+- Commits: `5d2a0328` (failure matrix, security closure, and task truth), `8cf08411` (runtime,
+  security, supply-chain, and dependent evidence), `de45ced2` (exact evidence-count assertion), and
+  `4d557e33` (renewed evidence index). Commits: 4. Commits per closed item: 1.33. Review pins
+  advanced: 0; the complete `REVIEWED_PATHS` intersection was empty.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1. Evidence regeneration passes: 1 with 3 targeted recovery iterations.
+  The first runtime campaign exceeded its fixed 1,048,576 KiB process-RSS ceiling during test
+  recompilation and was rejected; the unchanged warm-cache rerun passed. Contract evidence then
+  detected a stale `TASKS.md` digest, so the contract-boundary report and its index were rebuilt in
+  dependency order. One hard-coded evidence-index assertion retained the prior 14/3 counts; it was
+  corrected to the generated 16/1 truth and the index alone was renewed.
+- Story 23.4 engine tests: 18/18 pass. Story 23.4 evidence tests: 18/18 pass. Strict engine Clippy
+  passes. Requirements-current tests: 45/45 pass. Documentation lint: 413 files, 0 issues;
+  documentation invariants: 413 files pass; task graph and traceability pass. Full `docs:check`
+  retries: 0 because the already-recorded Podman prerequisite remains exhausted. Recorded gate
+  wall seconds: 132.
+- Retained carrier blockers: 2. Story 7.1 remains `blocked: host change required — make
+  /run/user/1000/libpod writable to uid 1000 and start a usable rootless Podman service, then run
+  npm run -s evidence:story7.1-platform-contract:build && npm run -s
+  evidence:story7.1-security:build`; substitution set: empty. Story 9.1 remains `blocked: host
+  change required — sudo dnf install gcc-c++, then run npm run -s
+  evidence:story9.1-linux-inference:build`; substitution set: empty.
+
+Exact next action: continue the first unblocked Sprint 23 native-client or profile-lifecycle source
+rows while retaining the production-model and installed-platform dependencies as explicit blockers.
