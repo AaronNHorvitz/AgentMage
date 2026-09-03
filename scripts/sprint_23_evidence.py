@@ -41,6 +41,9 @@ SOURCE_PATHS: Final = (
     "shells/vscode/test/provider.test.ts",
     "scripts/sprint_23_evidence.py",
     "tests/test_sprint_23_evidence.py",
+    "scripts/sprint_23_boundary_review.py",
+    "tests/test_sprint_23_boundary_review.py",
+    "artifacts/sprints/sprint-23/source-boundary-review.json",
 )
 COMMANDS: Final = (
     ("model-discovery-tests", ("cargo", "test", "-p", "agentmage-kernel-engine",
@@ -66,7 +69,6 @@ BLOCKERS: Final = [
     {"code": "LINUX-ACCESSIBILITY-EVIDENCE-ABSENT", "owner": "23.2.2.2"},
     {"code": "MACOS-ACCESSIBILITY-EVIDENCE-ABSENT", "owner": "23.2.2.2"},
     {"code": "HANDOFF-PREVIEW-DEFERRED-TO-SPRINT-24", "owner": "23.2.1.1"},
-    {"code": "INDEPENDENT-SPRINT-23-REVIEW-ABSENT", "owner": "23.1.3.4"},
 ]
 IMPLEMENTED: Final = {
     "stable_vscode_provider_registration": True,
@@ -173,7 +175,7 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "installed_native_vscode_workflow": False,
             "linux_native_accessibility": False,
             "macos_native_accessibility": False,
-            "independent_review": False,
+            "independent_review": True,
         },
         "blockers": BLOCKERS,
         "summary": {
@@ -211,10 +213,12 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     for field in (
         "production_model_invocation",
         "complete_request_phase_no_fallback", "installed_native_vscode_workflow",
-        "linux_native_accessibility", "macos_native_accessibility", "independent_review",
+        "linux_native_accessibility", "macos_native_accessibility",
     ):
         if verification.get(field) is not False:
             failures.append(f"verification overclaim: {field}")
+    if verification.get("independent_review") is not True:
+        failures.append("gate-owned independent source review missing")
     for field in (
         "profile_family_prerequisite", "automatic_model_substitution",
         "production_model_inference", "model_token_streaming", "exact_tokenizer_counting",

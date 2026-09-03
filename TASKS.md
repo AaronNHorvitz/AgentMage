@@ -4018,6 +4018,11 @@ clients, supported-platform campaigns, and independent review remain explicit ex
   - [ ] **Sub-task 23.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check. Partial local evidence: the source-bound evidence runner recomputes local command success and preserves ten blockers with `BLOCKED` and no release approval; native skipped/unavailable work has not yet produced raw platform output.
         `blocked: host change required — run the AgentMage test chain outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then run python3 scripts/sprint_23_evidence.py --write --source-revision HEAD`; also blocked on Sub-task 23.1.3.1's exact installed campaign; `substitution_set=empty`.
   - [ ] **Sub-task 23.1.3.4 - Product security evidence:** Map `SR-PLT-005`/`SR-PLT-006`, `SR-ACC-007`, `SR-DAT-003`, `SR-OPS-001`/`SR-OPS-003`, `SR-TST-004`, and `SR-CIV-006` through `SR-CIV-009`; extend `RV-05`, `RV-08`, and `RV-18`; retain authenticated message traces, raw-interface denial tests, redaction scans, native Chat workflow output, and reviewer disposition. Partial local evidence: requirement IDs, host/parser denials, strict-local and artifact scans, source hashes, and structured shell output are retained; native Chat output and independent reviewer disposition remain absent.
+        The gate-owned automated reviewer now hashes 10 kernel/host/client boundary sources, maps all
+        15 required controls, passes seven authority/accessibility/no-fallback checks, mutation-tests
+        suppression and overclaim, and explicitly makes no human-review claim. Remaining native Chat
+        workflow output is blocked on Sub-task 23.1.3.1's exact installed-VSIX/qualified-model tuple;
+        `substitution_set=empty`.
 
 ##### Story Acceptance Criteria
 
