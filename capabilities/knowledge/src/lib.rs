@@ -39,6 +39,7 @@ mod semantic;
 mod semantic_benchmark;
 mod skills;
 mod spreadsheet_ooxml;
+mod spreadsheet_source;
 mod store;
 mod tabular;
 mod tasks;
@@ -238,6 +239,7 @@ pub use spreadsheet_ooxml::{
     SpreadsheetProfile, SpreadsheetSheetState, SpreadsheetWorksheet, excel_serial_date,
     inspect_xlsx,
 };
+pub use spreadsheet_source::SpreadsheetStructuredSourceExtractor;
 pub use store::{
     KnowledgeRecordSummary, KnowledgeStore, KnowledgeWriteKind, KnowledgeWritePreview,
 };

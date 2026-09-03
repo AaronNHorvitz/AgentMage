@@ -11,6 +11,16 @@ pub const DOCX_MEDIA_TYPE: &str =
 /// Exact Portable Document Format media type admitted by the native PDF extractor.
 pub const PDF_MEDIA_TYPE: &str = "application/pdf";
 
+/// Exact SpreadsheetML workbook media type admitted by the spreadsheet extractor.
+pub const XLSX_MEDIA_TYPE: &str =
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+/// Exact comma-separated-values media type admitted by the spreadsheet extractor.
+pub const CSV_MEDIA_TYPE: &str = "text/csv";
+
+/// Exact JSON media type admitted by the spreadsheet extractor.
+pub const JSON_MEDIA_TYPE: &str = "application/json";
+
 /// Closed structured source family.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -21,6 +31,10 @@ pub enum StructuredSourceFormat {
     Pdf,
     /// Office Open XML spreadsheet package, reserved for its owning story.
     Xlsx,
+    /// RFC 4180-style comma-separated values.
+    Csv,
+    /// Strict bounded JSON data.
+    Json,
 }
 
 /// Closed canonical section kind shared by structured-document adapters.
