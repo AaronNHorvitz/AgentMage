@@ -4578,6 +4578,11 @@ root and signed Fedora, Ubuntu, and macOS packages named under Task 25.2.2;
 
 ### [ ] Sprint 26 - Canonical Human Knowledge Domain
 
+**Blocked:** Story 26.1 awaits human acceptance of
+[`DRAFT-0049`](docs/decisions/DRAFT-0049-knowledge-privacy-governance.md) and
+[`DRAFT-0050`](docs/decisions/DRAFT-0050-knowledge-records-governance.md), upstream `G-V0.1`,
+supported-package integration, and gate-owned boundary review; `substitution_set=empty`.
+
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-022`.
@@ -4590,11 +4595,14 @@ root and signed Fedora, Ubuntu, and macOS packages named under Task 25.2.2;
 
 #### [ ] Story 26.1 - Canonical Human Knowledge Domain
 
+**Blocked:** Sub-task 26.1.3.5 retains the exact draft-Decision, upstream-release,
+supported-package, and gate-owned-review blockers below; `substitution_set=empty`.
+
 **User-facing value:** As an AgentMage user, maintainer, or reviewer, I need canonical human knowledge domain so that AgentMage delivers the following bounded outcome: Add user-owned Markdown as the sole authority for human knowledge while keeping operational state in encrypted SQLite.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 26.1.1 - Implement the bounded story**
+- [x] **Task 26.1.1 - Implement the bounded story**
   - [x] **Sub-task 26.1.1.1** (legacy `S-022-I01`): Define the `KnowledgeStore` interface and canonical schemas for people, organizations, projects, meetings, tasks, decisions, commitments, documents, correspondence, deadlines, approvals, risks, questions, and handoffs.
   - [x] **Sub-task 26.1.1.2** (legacy `S-022-I02`): Implement a plain-folder Markdown adapter with configurable folder, filename, frontmatter, tag, link, identifier, privacy, and retention templates.
   - [x] **Sub-task 26.1.1.3** (legacy `S-022-I03`): Preserve stable identifiers across note rename, move, index rebuild, export, restore, and conversation resume.
@@ -4604,18 +4612,20 @@ root and signed Fedora, Ubuntu, and macOS packages named under Task 25.2.2;
   - [x] **Sub-task 26.1.1.7** (legacy `S-022-I07`): Implement plain-folder backup, integrity, restore, and migration dry runs.
   - [x] **Sub-task 26.1.1.8** (legacy `S-022-I08`): Prove operational records never depend on Markdown and knowledge records never become co-authoritative in operational SQLite.
 
-- [ ] **Task 26.1.2 - Produce reviewable artifacts**
+- [x] **Task 26.1.2 - Produce reviewable artifacts**
   - [x] **Sub-task 26.1.2.1:** Versioned knowledge-domain schemas.
   - [x] **Sub-task 26.1.2.2:** Plain-folder adapter and regenerable index.
   - [x] **Sub-task 26.1.2.3:** Canonical-authority boundary tests.
   - [x] **Sub-task 26.1.2.4:** Knowledge backup, restore, and migration report.
 
-- [ ] **Task 26.1.3 - Verify and close the story**
+- [ ] **Task 26.1.3 - Verify and close the story** Blocked on Sub-task 26.1.3.5's exact
+  draft-Decision, upstream-release, supported-package, and gate-owned-review blockers;
+  `substitution_set=empty`.
   - [x] **Sub-task 26.1.3.1:** `S-022-UT01` classifies canonical Markdown, derived index, operational state, cache, export, and temporary data; assert exactly one owner, storage rule, retention rule, and rebuild path per field.
   - [x] **Sub-task 26.1.3.2:** `S-022-UT02` mutates or deletes derived indexes and operational records; assert canonical user files remain unchanged and every derived view rebuilds from approved sources.
   - [x] **Sub-task 26.1.3.3:** `S-022-ST01` introduces symlinks, cloud-synced roots, adjacent folders, hidden files, secrets, conflicting identities, and malicious note content; assert bounded scope, classification, and non-authority.
   - [x] **Sub-task 26.1.3.4:** `S-022-RT01` backs up, migrates, restores, and deletes synthetic knowledge across schema versions; assert canonical identity, links, provenance, retention, and index regeneration.
-  - [ ] **Sub-task 26.1.3.5 - Product security evidence:** Map `SR-GOV-006`, `SR-DAT-001` through `SR-DAT-004`, `SR-DAT-010` through `SR-DAT-012`, `SR-CIV-001` through `SR-CIV-005`; retain data dictionary, authority tests, rebuild hashes, lifecycle results, and privacy/records decision placeholders.
+  - [ ] **Sub-task 26.1.3.5 - Product security evidence:** Map `SR-GOV-006`, `SR-DAT-001` through `SR-DAT-004`, `SR-DAT-010` through `SR-DAT-012`, `SR-CIV-001` through `SR-CIV-005`; retain data dictionary, authority tests, rebuild hashes, lifecycle results, and privacy/records decision placeholders. The local report binds all 13 requirement identities and the completed dictionary, authority, rebuild, and lifecycle suites. Remaining blockers: `blocked: awaiting Decision DRAFT-0049-knowledge-privacy-governance`; `blocked: awaiting Decision DRAFT-0050-knowledge-records-governance`; upstream Story 25.1's exact release tuples; supported-package integration on those exact packages/platforms; and gate-owned Sprint 26 boundary review. Every `substitution_set=empty`.
 
 ##### Story Acceptance Criteria
 
