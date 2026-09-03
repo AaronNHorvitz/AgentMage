@@ -35,7 +35,7 @@
     },
     {
       "path": "architecture/status-model.json",
-      "sha256": "1abc5b06cbcec50deff18909187dbb65c5d38e4f291ae4c89b196ac4843da640"
+      "sha256": "16757dfcc1de91b303eedeb6207872e90ed85e6e12567162d63385fee0db361b"
     },
     {
       "path": "shells/vscode/package.json",
