@@ -95,7 +95,7 @@ class ContractBoundaryGateTests(unittest.TestCase):
         changed = copy.deepcopy(self.status)
         changed["current_product"]["enabled_models"] = ["candidate"]
         self.assertIn(
-            "current-versus-planned-truth: current product enabled_models was promoted",
+            "current-versus-planned-truth: current product enabled_models differs from bound truth",
             self.validate(status=changed),
         )
 
@@ -108,22 +108,30 @@ class ContractBoundaryGateTests(unittest.TestCase):
                 changed = copy.deepcopy(self.status)
                 changed["current_product"][key] = value
                 self.assertIn(
-                    f"current-versus-planned-truth: current product {key} was promoted",
+                    f"current-versus-planned-truth: current product {key} differs from bound truth",
                     self.validate(status=changed),
                 )
 
-    def test_current_product_workflow_or_gate_claim_is_rejected(self) -> None:
+    def test_current_product_workflow_regression_or_gate_claim_is_rejected(self) -> None:
         for key, value in (
-            ("integrated_user_workflow", True),
+            ("integrated_user_workflow", False),
             ("release_gate_status", "pass"),
         ):
             with self.subTest(key=key):
                 changed = copy.deepcopy(self.status)
                 changed["current_product"][key] = value
                 self.assertIn(
-                    f"current-versus-planned-truth: current product {key} was promoted",
+                    f"current-versus-planned-truth: current product {key} differs from bound truth",
                     self.validate(status=changed),
                 )
+
+    def test_current_product_workflow_must_retain_bound_evidence(self) -> None:
+        changed = copy.deepcopy(self.status)
+        changed["current_product"]["integrated_workflow"]["evidence_path"] = "unbound.json"
+        self.assertIn(
+            "current-versus-planned-truth: current product integrated_workflow differs from bound truth",
+            self.validate(status=changed),
+        )
 
     def test_gate_covers_the_exact_six_required_check_classes(self) -> None:
         self.assertEqual(

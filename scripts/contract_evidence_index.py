@@ -28,7 +28,7 @@ RAW_MARKERS: Final = [
     "vscode api surface validation passed",
     "Ran 13 tests",
     "status model validation passed",
-    "Ran 27 tests",
+    "Ran 29 tests",
     "Task 1.2.5.1 contract boundary gate passed locally",
 ]
 GROUPS: Final = {

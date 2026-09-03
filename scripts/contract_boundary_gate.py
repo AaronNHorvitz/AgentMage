@@ -140,16 +140,21 @@ def validate_capability_absence(
         if value is not False:
             failures.append(f"capability-absence: dependency product truth widened: {key}")
     current = status.get("current_product", {})
-    exact_absence = {
-        "integrated_user_workflow": False,
+    exact_product_truth = {
+        "integrated_user_workflow": True,
+        "integrated_workflow": {
+            "id": "story-22.5-deterministic-repository-analysis",
+            "scope": "source-level deterministic fake-model repository-analysis vertical slice",
+            "evidence_path": "artifacts/sprints/sprint-22/story-22.5/vertical-slice-report.json",
+        },
         "enabled_models": [],
         "supported_platforms": [],
         "released_packages": [],
         "release_gate_status": "blocked",
     }
-    for key, expected in exact_absence.items():
+    for key, expected in exact_product_truth.items():
         if current.get(key) != expected:
-            failures.append(f"current-versus-planned-truth: current product {key} was promoted")
+            failures.append(f"current-versus-planned-truth: current product {key} differs from bound truth")
     return failures
 
 
