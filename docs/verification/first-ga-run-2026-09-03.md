@@ -1606,3 +1606,52 @@ while retaining Sprint 44's exact upstream, approval, platform, launcher, and fu
 
 Exact next action: continue at Sprint 46's first locally executable or gate-owned verification row
 while retaining Sprint 45's exact upstream, service, platform, launcher, and fuzz blockers.
+
+## Batch 52 — Sprint 46 validation-runner boundary review
+
+### Completed
+
+- Closed 4 TASKS rows: Sub-task 46.1.3.5, Story AC 46.1.AC1, Story AC 46.1.AC2,
+  and Sprint AC 46.AC1. The gate-owned review binds 9 security requirements, 9 validation
+  kinds, 14 normalized result states, 8 failure classes, 0 unauthorized command acceptance,
+  0 process-stream value fields, trusted template/scope controls, terminal receipt semantics,
+  and truthful missing-proof markers. Promotions: 0. Substitutions: 0. Cumulative closed
+  items: 112.
+- Commits: `8a7eeb84` (review and mutation tests), `20224eed` (review truth, closures,
+  and normalized blockers), and `fa0f2bd1` (review artifact, traceability, and contract evidence).
+  Commits: 3. Commits per closed item: 0.75. Review pins advanced: 0; complete 20-gate
+  `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 8/8 evidence/review/corpus tests, 3/3 validation-template tests,
+  5/5 validation-result tests, strict kernel Clippy, targeted Markdown lint,
+  requirements-current 45/45, traceability, contract-boundary, and contract-evidence checks pass.
+  Supply-chain builds: 1; outputs remained byte-identical. Evidence regeneration passes: 1.
+  Recovery iterations: 0. The full chain ran 676.14 seconds and stopped only at the retained
+  Story 6.1 rootless-Podman prerequisite after every preceding gate passed. Recorded gate wall
+  seconds: 676.
+- Sprint 46 exact blockers: native worker/process-tree campaign `blocked: host change required —
+  admit an owner-approved root-owned Sprint 46 multi-level process helper and run the hostile
+  native validation-worker and descendant cleanup campaign from the trusted packaged launcher`;
+  protected logs `blocked: host change required — provision the protected Sprint 46 raw-log store
+  and run the retention, truncation, cancellation, crash, and recovery campaign from the trusted
+  packaged launcher`; native parity `BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM
+  guest, and physical supported MacBook; artifact=trusted validation-template, process/result,
+  resource-limit, raw-log, and cleanup parity results; action=platform owners execute and transfer
+  untouched evidence; credential=Windows image source and physical Mac access; payment=Windows
+  license if required)`; launcher `blocked: host change required — run the Sprint 46 validation
+  suite from the trusted packaged launcher outside the development shell`; and manual fuzz
+  `BLOCKED_EXTERNAL(platform=every supported native validation worker; artifact=manual fuzzing
+  transcript and minimized corpus; action=authorized human executes the manual S-039 fuzz campaign
+  and transfers untouched results; credential=platform access; payment=none)`; every
+  `substitution_set=empty`.
+- Exact upstream blocker: `blocked: awaiting Sprint 45 gate closure`, retaining Sprint 45's
+  service, native parity, trusted-launcher, and manual-fuzz tuples; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue at Sprint 47's first locally executable or gate-owned verification row
+while retaining Sprint 46's exact upstream, worker, protected-log, platform, launcher, and fuzz
+blockers.
