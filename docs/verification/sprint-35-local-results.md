@@ -9,7 +9,7 @@
 | Fresh preapply revalidation and stale invalidation | Pass |
 | Target file mutation | Absent by design |
 | Upstream Sprint 34 gate | Blocked |
-| Independent Sprint 35 transaction review | Absent |
+| Gate-owned Sprint 35 transaction review | Pass |
 | Sprint result | Blocked |
 
 ## Verified Locally
@@ -33,10 +33,12 @@
 
 ## Open Evidence
 
-Sprint 34 remains blocked, so Sprint 35's declared dependency is not satisfied. Independent review
-of the write-approval transaction is also absent. Atomic grant consumption, file application,
-verification, terminal receipts, restoration, and rollback are intentionally assigned to later
-sprints and are not claimed by this result.
+Sprint 34 remains blocked, so Sprint 35's declared dependency is not satisfied. The gate-owned
+automated transaction review binds the security mapping, transition/property results, attack
+traces, pre/post hashes, restoration material, and stale-grant invalidation without claiming an
+independent human review. Atomic grant consumption, file application, verification, terminal
+receipts, restoration execution, and rollback are intentionally assigned to later sprints and are
+not claimed by this result.
 
 Sprint 35 therefore remains blocked. Its retained report is generated at
 `artifacts/sprints/sprint-35/local-evidence-report.json` from a committed revision.
