@@ -20,7 +20,7 @@ import {
   parseRuntimeHostResponse,
   parseRuntimeRunRequest,
   renderRuntimeEvent,
-  renderRuntimeOutcome,
+  renderRuntimeOutcomeParts,
   runtimeApprovalResponse,
   RuntimeStreamVerifier,
   type RuntimeApprovalChallengeEnvelope,
@@ -382,6 +382,20 @@ export interface SelectedRuntimeProfile {
   readonly visionInput: boolean;
 }
 
+export interface PreservedRuntimeProfileState {
+  readonly taskId: string;
+  readonly planSha256: string;
+  readonly evidenceSha256: readonly string[];
+  readonly checkpointId: string | null;
+  readonly checkpointSha256: string | null;
+}
+
+export interface RuntimeProfileChangeResult {
+  readonly selectedProfile: SelectedRuntimeProfile | null;
+  readonly preservedState: PreservedRuntimeProfileState;
+  readonly presentation: ControllerResult;
+}
+
 interface PendingRuntimeRun {
   readonly requestSha256: string;
   readonly cancellationId: string;
@@ -673,6 +687,57 @@ export class SecureReadController {
       );
     }
     return undefined;
+  }
+
+  /** Changes one exact profile without mutating task, plan, evidence, or checkpoint state. */
+  async changeSelectedRuntimeProfile(
+    currentProfile: SelectedRuntimeProfile,
+    requestedProfile: SelectedRuntimeProfile,
+    preservedState: PreservedRuntimeProfileState,
+    cancellation: CancellationSignal,
+  ): Promise<RuntimeProfileChangeResult> {
+    const stateValid =
+      validIdentifier(preservedState.taskId) &&
+      validSha256(preservedState.planSha256) &&
+      preservedState.evidenceSha256.every(validSha256) &&
+      ((preservedState.checkpointId === null &&
+        preservedState.checkpointSha256 === null) ||
+        (preservedState.checkpointId !== null &&
+          validIdentifier(preservedState.checkpointId) &&
+          preservedState.checkpointSha256 !== null &&
+          validSha256(preservedState.checkpointSha256)));
+    if (
+      !stateValid ||
+      currentProfile.profileId === requestedProfile.profileId
+    ) {
+      return {
+        selectedProfile: null,
+        preservedState,
+        presentation: deniedResult(
+          "vscode.model.profile-change-invalid",
+          "The requested profile change or preserved runtime state was invalid. The current task was stopped without substitution.",
+        ),
+      };
+    }
+    const stopped = await this.revalidateSelectedModel(
+      requestedProfile.profileId,
+      requestedProfile.expectedEntrySha256,
+      cancellation,
+    );
+    if (stopped !== undefined) {
+      return {
+        selectedProfile: null,
+        preservedState,
+        presentation: stopped,
+      };
+    }
+    return {
+      selectedProfile: requestedProfile,
+      preservedState,
+      presentation: result(
+        `# Model Profile Changed\n\nThe exact requested profile was revalidated. Task, plan, evidence, and checkpoint state were preserved without automatic substitution.\n\n- Previous profile: \`${currentProfile.profileId}\`\n- Selected profile: \`${requestedProfile.profileId}\`\n- Task: \`${preservedState.taskId}\`\n- Status: ready`,
+      ),
+    };
   }
 
   async respond(
@@ -1103,7 +1168,9 @@ export class SecureReadController {
               );
       }
 
-      emit(renderRuntimeOutcome(step.outcome));
+      for (const part of renderRuntimeOutcomeParts(step.outcome)) {
+        emit(part);
+      }
       return result(...parts);
     } catch {
       const stopped = deniedResult(

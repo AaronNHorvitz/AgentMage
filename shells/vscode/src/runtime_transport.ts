@@ -711,6 +711,18 @@ export function renderRuntimeOutcome(outcome: RuntimeOutcomeEnvelope): string {
   return `${lines.join("\n")}\n`;
 }
 
+/** Splits one fully validated outcome into ordered native Chat updates. */
+export function renderRuntimeOutcomeParts(
+  outcome: RuntimeOutcomeEnvelope,
+): readonly string[] {
+  const rendered = renderRuntimeOutcome(outcome);
+  const boundary = rendered.indexOf("\n- Status:");
+  if (boundary <= 0) {
+    return [rendered];
+  }
+  return [rendered.slice(0, boundary), rendered.slice(boundary)];
+}
+
 function parseRuntimeTask(candidate: unknown): RuntimeTaskEnvelope {
   const record = requiredRecord(candidate);
   requireKeys(record, [

@@ -627,6 +627,88 @@ void test("selected model is revalidated exactly and refusal names no fallback",
   assert.match(response?.text ?? "", /model\.selection\.profile-changed/);
 });
 
+void test("explicit profile change preserves exact runtime state and never substitutes", async () => {
+  const { controller, bridge, signal } = fixture();
+  const current = runtimeProfile();
+  const requested = {
+    ...runtimeProfile(),
+    profileId: "profile-0002",
+    expectedEntrySha256: "a".repeat(64),
+  };
+  const preservedState = {
+    taskId: "task-0001",
+    planSha256: "b".repeat(64),
+    evidenceSha256: ["c".repeat(64), "d".repeat(64)],
+    checkpointId: "checkpoint-0001",
+    checkpointSha256: "e".repeat(64),
+  } as const;
+  bridge.revalidationResponse = {
+    kind: "model_revalidated",
+    schema_version: 1,
+    request_id: "request-0001",
+    revalidation: {
+      schema_version: 1,
+      profile_id: requested.profileId,
+      expected_entry_sha256: requested.expectedEntrySha256,
+      current_snapshot_sha256: "f".repeat(64),
+      admitted: true,
+      result_code: "model.selection.admitted",
+    },
+  };
+
+  const changed = await controller.changeSelectedRuntimeProfile(
+    current,
+    requested,
+    preservedState,
+    signal,
+  );
+
+  assert.equal(changed.selectedProfile, requested);
+  assert.equal(changed.preservedState, preservedState);
+  assert.match(changed.presentation.text, /state were preserved/u);
+  assert.match(changed.presentation.text, /without automatic substitution/u);
+  assert.equal(bridge.revalidationCalls, 1);
+  assert.equal(bridge.runtimeStartCalls, 0);
+});
+
+void test("failed profile change visibly stops with the unchanged checkpoint", async () => {
+  const { controller, bridge, signal } = fixture();
+  const requested = { ...runtimeProfile(), profileId: "profile-0002" };
+  const preservedState = {
+    taskId: "task-0001",
+    planSha256: "b".repeat(64),
+    evidenceSha256: ["c".repeat(64)],
+    checkpointId: "checkpoint-0001",
+    checkpointSha256: "e".repeat(64),
+  } as const;
+  bridge.revalidationResponse = {
+    kind: "model_revalidated",
+    schema_version: 1,
+    request_id: "request-0001",
+    revalidation: {
+      schema_version: 1,
+      profile_id: requested.profileId,
+      expected_entry_sha256: requested.expectedEntrySha256,
+      current_snapshot_sha256: "f".repeat(64),
+      admitted: false,
+      result_code: "model.selection.profile-quarantined",
+    },
+  };
+
+  const stopped = await controller.changeSelectedRuntimeProfile(
+    runtimeProfile(),
+    requested,
+    preservedState,
+    signal,
+  );
+
+  assert.equal(stopped.selectedProfile, null);
+  assert.equal(stopped.preservedState, preservedState);
+  assert.match(stopped.presentation.text, /did not substitute another model/u);
+  assert.match(stopped.presentation.text, /profile-quarantined/u);
+  assert.equal(bridge.runtimeStartCalls, 0);
+});
+
 void test("doctor renders every typed state without workspace approval", async () => {
   const { controller, bridge, approvals, signal } = fixture();
   approvals.workspaceApproved = false;
@@ -934,6 +1016,13 @@ void test("native Chat renders one complete shared-runtime stream and outcome", 
   );
 
   assert.deepEqual(streamed, response.parts);
+  assert.ok(streamed.length >= 7);
+  assert.ok(streamed.some((part) => part.includes("Verified local result")));
+  assert.ok(streamed.some((part) => part.startsWith("\n- Status:")));
+  assert.ok(
+    streamed.findIndex((part) => part.includes("Verified local result")) <
+      streamed.findIndex((part) => part.startsWith("\n- Status:")),
+  );
   assert.match(response.text, /## Session Boundary/u);
   assert.match(response.text, /Session: `session-0001`/u);
   assert.match(response.text, /Workspace: `workspace-0001` \(1{64}\)/u);

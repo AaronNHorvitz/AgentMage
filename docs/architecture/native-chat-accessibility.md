@@ -44,6 +44,20 @@ list, and the canonical outcome uses a separate `Result` heading with textual
 state, evidence, receipts, limitations, and output disposition. These structures
 preserve AgentMage-owned meaning independently of presentation styling.
 
+The provider emits the session boundary and every content-free runtime event as
+separate ordered updates. Once the kernel supplies a terminal outcome, the
+renderer first validates its evidence bindings, payload digest, media type, and
+safe Markdown subset, then emits the verified output and its result facts as
+separate ordered updates. Raw model tokens never cross this boundary and cannot
+be mistaken for verified user-visible output.
+
+An explicit profile change uses a separate exact revalidation operation. Its
+closed preserved-state input carries the task identity, plan digest, ordered
+evidence digests, and an optional paired checkpoint identity/digest. Admission
+returns the requested exact profile with the identical state object; refusal
+returns no selected profile, the identical state, and a visible no-substitution
+stop. Neither branch starts a runtime operation.
+
 ## Native Evidence Protocol
 
 For every supported operating system, retain the exact OS, Visual Studio Code,
