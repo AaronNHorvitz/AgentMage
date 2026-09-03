@@ -118,12 +118,12 @@
       {
         "byte_length": 7731,
         "path": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
-        "sha256": "ee137d32c2fb78ddd4d959d538ecbd8cec76e8af643bae27033bb2eda9c97768"
+        "sha256": "426e7db59e18fd5ffcd3d65ef13e459e61f9d43c32b83808fd581a7a49ea1515"
       },
       {
         "byte_length": 9315,
         "path": "artifacts/sprints/sprint-1/story-1.3/rv50-applicable-results.log",
-        "sha256": "8c7b1072ddaf96b2e6c2daa752da4cbfff3ba913c6f8cd98f97718c5282ffee1"
+        "sha256": "08a955c7c0d3d6c5183e93ec489ce99d29ee5837f65decb80588664d61ca89ef"
       },
       {
         "byte_length": 4491,
@@ -205,8 +205,8 @@
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "0f65fac9656556398a6832a8626c47b3505f3012",
-    "reviewed_tree": "2854e10f6b4429cb74a279b2fe7a9818f8087083",
+    "reviewed_commit": "e50f5cc4fa3caa4a43161b1df794ea0c6482edd6",
+    "reviewed_tree": "bc0496f78b90033d0e47f73b7a07ab94fafadd28",
     "reviewer_id": "agentmage-story-1.3-independent-gate-v1"
   },
   "installed_product_claim": "none",
@@ -231,15 +231,15 @@
   "platform_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "0f65fac9656556398a6832a8626c47b3505f3012",
-  "reviewed_tree": "2854e10f6b4429cb74a279b2fe7a9818f8087083",
+  "reviewed_commit": "e50f5cc4fa3caa4a43161b1df794ea0c6482edd6",
+  "reviewed_tree": "bc0496f78b90033d0e47f73b7a07ab94fafadd28",
   "rv50": {
     "blocked_external_tuple_count": 5,
     "evidence_substitution_permitted": false,
     "later_runtime_scenario_count": 4,
     "protocol_complete": false,
     "protocol_id": "RV-50",
-    "report_sha256": "b7dacfcf49a089cfd2a7ebadaf06e32514c22ac47f929c108245b36639c82c5e",
+    "report_sha256": "4842f2823483b705874606bd3e52345df8dc191593df26422072939484d9c707",
     "status": "partial-local-contract-evidence"
   },
   "schema_version": 1,
