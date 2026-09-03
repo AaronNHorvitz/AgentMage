@@ -6422,13 +6422,13 @@ Sprint AC 48.AC1, and the sprint remain open.
   - [x] **Sub-task 49.1.3.2:** `S-042-UT02` evaluates deterministic-first and measured routing rules at every threshold, tie, degraded, stale, blocked-hardware, disagreement, classifier-failure, and no-profile state; assert stable chosen profile, visible rationale, and manual override within approved choices. Evidence: eight focused Rust tests cover the exact 250-basis-point threshold, below-threshold denial, stable tie/disagreement, approved/degraded/nonapproved states, stale policy/benchmark/resources, hardware/platform/context/tools, manual choice, verifier eligibility, duplicates, invalid input, and empty profile inventory; degraded and unavailable deterministic-classification states block before selection.
   - [x] **Sub-task 49.1.3.3:** `S-042-ST01` attempts model self-selection, profile escalation, cloud fallback, automatic install, authority transfer, and disagreement suppression; assert zero hidden switch or expanded capability. Evidence: the closed request contains none of those fields, artifact mutation tests reject every disabled path, and the 48-case corpus records zero accepted unauthorized or remote selection.
   - [ ] **Sub-task 49.1.3.4:** `S-042-AT01` runs role-specific quality, grounding, reliability, latency, memory, energy where measured, and failure benchmarks repeatedly; assert routing activates only for statistically supported declared benefit. The corpus and deterministic threshold verifier exist, but no live later-profile benchmark run exists and routing remains disabled.
-  - [ ] **Sub-task 49.1.3.5 - Product security evidence:** Map `SR-SUP-006` through `SR-SUP-008`, `SR-AI-001`/`SR-AI-006`/`SR-AI-010` through `SR-AI-014`, `SR-TST-006`; retain manifests, supplier decisions, benchmark code/raw results, routing traces, disagreement cases, and impact reviews. Partial local evidence: [`sprint-49-local-results.md`](docs/verification/sprint-49-local-results.md) maps all 11 controls and retains contract traces, corpus, source hashes, and blockers; approved manifests, supplier disposition, live raw benchmark results, integrated impact review, and independent review remain absent.
+  - [x] **Sub-task 49.1.3.5 - Product security evidence:** Map `SR-SUP-006` through `SR-SUP-008`, `SR-AI-001`/`SR-AI-006`/`SR-AI-010` through `SR-AI-014`, `SR-TST-006`; retain manifests, supplier decisions, benchmark code/raw results, routing traces, disagreement cases, and impact reviews. The gate-owned automated [source-boundary review](artifacts/sprints/sprint-49/source-boundary-review.json) binds all 11 controls, the exact profile/role and deterministic-routing boundaries, 2 historical candidates, 0 enabled profiles, 12 roles, 4 visible budgets, 16 routing rules, 48 adversarial cases, zero unauthorized or remote selections, and truthful missing-product-proof markers without claiming an approved manifest, supplier disposition, live benchmark, product integration, human review, adapter, or platform completion.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 49.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every enabled profile satisfies security, license, provenance, platform, resource, and quality policy independently; routing evidence cannot waive a failed boundary.
+- [x] **Story AC 49.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every enabled profile satisfies security, license, provenance, platform, resource, and quality policy independently; routing evidence cannot waive a failed boundary. Evidence: the exact profile, source-origin, mutation, zero-activation, and routing gates independently reject every missing or failed boundary; enabled profile count remains zero.
 - [ ] **Story AC 49.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then users and reviewers can see which deterministic method and exact model/artifact/codec/runtime/context/decoding profile handled each step, why it was selected, what disagreed, and how evidence was validated.
-- [ ] **Story AC 49.1.AC3:** Given any classifier, model confidence, unavailable tier, or profile failure, when routing is computed, then no broader authority, prohibited role, hidden fallback, or unadmitted profile can be selected.
+- [x] **Story AC 49.1.AC3:** Given any classifier, model confidence, unavailable tier, or profile failure, when routing is computed, then no broader authority, prohibited role, hidden fallback, or unadmitted profile can be selected. Evidence: focused router tests and the 48-case security corpus deny classifier failure, model confidence, unavailable/degraded tiers, role borrowing, hidden fallback, remote transfer, and every unadmitted-profile path with zero unauthorized or remote selection.
 
 #### Sprint Acceptance Criteria
 
@@ -6448,10 +6448,32 @@ bound to source revision `925d7f1702b1c2cd300151d9891057fbc79485b4`. All 11 comm
 pass and all three focused suites report zero skipped tests. Sprint 49 remains
 **BLOCKED** because Sprint 48 is blocked and approved later-profile manifests, live
 role-specific benchmark campaigns, product router integration, native audit views,
-supported-platform acceptance, trusted installed-package execution, independent review,
-and deferred manual fuzzing remain absent. Product routing is disabled and enabled model
-count remains zero. Both implementation and artifact tasks, the verification task, Story
-49.1, all story criteria, Sprint AC 49.AC2, and the sprint remain open.
+supported-platform acceptance, trusted installed-package execution, independent human review,
+and deferred manual fuzzing remain absent. Upstream is `blocked: awaiting Sprint 48 gate
+closure`; `substitution_set=empty`, retaining Sprint 48's transport/coordinator, model,
+disconnect, native-platform, trusted-launcher, and manual-fuzz tuples. The approved-profile and
+live-benchmark blocker is
+`BLOCKED_EXTERNAL(platform=pinned local inference host; artifact=approved exact later-profile
+model, artifact, tokenizer, template, codec, runtime, context, decoding, resource, role,
+platform, supplier, license, lineage, origin, benchmark, and quality admission bundle;
+action=authorized model owner admits the exact profile, executes the repeated role campaigns,
+and transfers untouched results; credential=model artifact source if restricted;
+payment=model artifact or required hardware if applicable)`; `substitution_set=empty`. Product
+router and native-audit integration are `blocked: awaiting authenticated product routing and
+native routing audit-view composition`; `substitution_set=empty`. Native acceptance is
+`BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and physical supported
+MacBook; artifact=exact profile, role benchmark, routing, disagreement, performance, and parity
+results; action=platform owners execute and transfer untouched evidence; credential=Windows
+image source, physical Mac access, and exact model artifact source if restricted;
+payment=Windows license, model artifact, or required hardware if applicable)`;
+`substitution_set=empty`. Trusted launcher execution is `blocked: host change required — run the
+Sprint 49 measured-routing suite from the trusted packaged launcher`; `substitution_set=empty`.
+Deferred fuzzing is `BLOCKED_EXTERNAL(platform=every supported native model-routing surface;
+artifact=manual fuzzing transcript and minimized corpus; action=authorized human executes the
+manual S-042 fuzz campaign and transfers untouched results; credential=platform and model access;
+payment=none)`; `substitution_set=empty`. Product routing is disabled and enabled model count
+remains zero. Both implementation and artifact tasks, the verification task, Story 49.1, Story AC
+49.1.AC2, Sprint AC 49.AC2, and the sprint remain open.
 
 **Gate decision:** Sprint 49 is PASS only when Story 49.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 

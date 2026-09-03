@@ -27,6 +27,12 @@ routing security corpus.
 - The 48-case corpus records profile escalation, origin evasion, role borrowing,
   stale metrics, hidden choice, fallback, remote transfer, auto-install, and
   authority-transfer attempts without raw model results or prompts.
+- The gate-owned automated review independently rederives the 11-requirement
+  map, exact profile and role boundaries, deterministic routing authority,
+  2 historical candidates, 0 enabled profiles, 12 roles, 4 visible budgets,
+  16 routing rules, 48 adversarial cases, 0 unauthorized or remote selections,
+  and every false missing-proof marker. It makes no human-review, model,
+  adapter, benchmark, product-integration, installed-package, or platform claim.
 
 These are synthetic deterministic unit, contract, static, and adversarial
 tests. They are not live role benchmarks, profile admission, product routing,
@@ -51,4 +57,6 @@ close Sprint 49. Sprint 48 and upstream gates remain blocked. No approved later
 profile manifest, live role-specific benchmark campaign, product router
 integration, integrated routing audit view, supported-platform acceptance,
 trusted installed-package execution, independent review, or manual fuzzing
-exists. Product routing remains disabled and enabled model count remains zero.
+exists. The independent review named here means independent human review; the
+gate-owned automated boundary review is retained separately. Product routing
+remains disabled and enabled model count remains zero.
