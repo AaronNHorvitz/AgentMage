@@ -2759,6 +2759,46 @@ fn story_23_4_model_dependency_failures_close_without_effect_or_retry() {
 }
 
 #[test]
+fn story_23_3_profile_failure_after_tool_receipt_never_switches_or_replays() {
+    for (failure, state) in [
+        (RuntimePortFailure::Unavailable, AgentStateKind::Failed),
+        (RuntimePortFailure::Uncertain, AgentStateKind::Failed),
+        (RuntimePortFailure::Invalid, AgentStateKind::Failed),
+        (
+            RuntimePortFailure::ResourceExhausted,
+            AgentStateKind::Exhausted,
+        ),
+    ] {
+        let (mut coordinator, executions) = coordinator(
+            [ModelScript::Tool, ModelScript::Failure(failure)],
+            PermissionScript::Allow,
+            true,
+        );
+        let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+            .run_until_boundary(None, None)
+            .expect("post-receipt profile failure closes truthfully")
+        else {
+            panic!("profile failure cannot request another approval");
+        };
+        assert_eq!(outcome.state, state, "{failure:?}");
+        assert_eq!(outcome.unresolved_codes, [failure.code().to_owned()]);
+        assert_eq!(outcome.model_call_count, 2);
+        assert_eq!(outcome.tool_call_count, 1);
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+        assert_eq!(outcome.receipt_ids.len(), 1);
+        assert_eq!(
+            coordinator
+                .events()
+                .iter()
+                .filter(|event| matches!(event.kind, RuntimeEventKind::ModelFailed { .. }))
+                .count(),
+            1
+        );
+        assert_valid_terminal_stream(&coordinator);
+    }
+}
+
+#[test]
 fn story_23_4_terminal_tool_failures_have_one_receipt_and_no_hidden_retry() {
     for (tool_outcome, state, code) in [
         (

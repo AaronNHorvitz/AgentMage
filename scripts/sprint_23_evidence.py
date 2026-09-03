@@ -62,7 +62,6 @@ SECURITY_REQUIREMENTS: Final = [
 ]
 BLOCKERS: Final = [
     {"code": "PRODUCTION-MODEL-ROUTE-ABSENT", "owner": "23.1.1.3"},
-    {"code": "REQUEST-PHASE-PRESERVATION-MATRIX-ABSENT", "owner": "23.3.2.3"},
     {"code": "INSTALLED-VSCODE-NATIVE-EVIDENCE-ABSENT", "owner": "23.1.3.1"},
     {"code": "LINUX-ACCESSIBILITY-EVIDENCE-ABSENT", "owner": "23.2.2.2"},
     {"code": "MACOS-ACCESSIBILITY-EVIDENCE-ABSENT", "owner": "23.2.2.2"},
@@ -75,6 +74,7 @@ IMPLEMENTED: Final = {
     "exact_profile_projection": True,
     "exact_selection_revalidation": True,
     "pre_request_lifecycle_revalidation": True,
+    "request_phase_no_fallback_matrix": True,
     "profile_family_prerequisite": False,
     "automatic_model_substitution": False,
     "structured_final_chat_parts": True,
