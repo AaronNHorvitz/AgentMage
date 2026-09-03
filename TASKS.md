@@ -7800,7 +7800,7 @@ provenance and honest formula, date, hidden-sheet, and size behavior.
         transitions, projection clearing and reattachment, and multi-workbook accounting under one exact
         counter implementation and tokenizer identity. The runtime-owned service retains the canonical
         projection and content-free index only; it has no original-workbook byte field.
-- [ ] **Task 62.2.3 - Verify malicious and fidelity cases**
+- [x] **Task 62.2.3 - Verify malicious and fidelity cases**
   - [x] **Sub-task 62.2.3.1:** Test malformed ZIP/XML, traversal, bombs, macros, formulas, external
         links, hidden sheets, sparse dimensions, date systems, errors, Unicode, protected content,
         oversized strings, cancellation, crash, low memory, and cleanup.
@@ -7810,9 +7810,16 @@ provenance and honest formula, date, hidden-sheet, and size behavior.
         malformed structures, package/string/coordinate/time/memory bounds, and cancellation fail
         closed; active or external content remains inert; crash receipts claim no parser, network, or
         workspace effect; release and deletion clear both projection content and lexical entries.
-  - [ ] **Sub-task 62.2.3.2:** Compare exact sheet/cell/range values and provenance with golden
+  - [x] **Sub-task 62.2.3.2:** Compare exact sheet/cell/range values and provenance with golden
         fixtures; require visible cached-versus-formula distinctions, no formula execution, no external
         retrieval, bounded resources, and client parity.
+        Evidence: the gate-owned
+        [spreadsheet source review](artifacts/sprints/sprint-62/spreadsheet-source-review.json)
+        binds exact golden formula/cache/date values and source coordinates, inert external/formula
+        behavior, bounded range results, and three thin adapters in native Chat, interactive CLI, and
+        headless code to one host dispatcher. Their focused parity test requires byte-identical,
+        verified, production-marked cell-range results; installed-binary and live-model campaigns are
+        not inferred.
 - [ ] **Task 62.2.4 - Evaluate the complete foundational runtime milestone**
   - [ ] **Sub-task 62.2.4.1:** Run text/log, DOCX, searchable PDF, scanned-PDF/OCR where admitted,
         and XLSX acceptance workflows through Chat, CLI, and headless clients under at least two exact

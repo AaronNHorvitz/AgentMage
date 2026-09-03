@@ -2,6 +2,7 @@
   "checks": {
     "canonical_structure_and_exact_provenance_are_emitted": true,
     "cell_formula_cache_date_error_and_link_semantics_are_visible": true,
+    "chat_cli_and_headless_use_one_byte_identical_dispatch_path": true,
     "focused_contract_tests_cover_formats_fidelity_and_failure": true,
     "golden_projection_binds_exact_values_types_and_provenance": true,
     "hidden_and_active_content_policy_is_explicit_and_non_executing": true,
@@ -16,21 +17,24 @@
   "limitations": [
     "This is gate-owned automated review, not a human-review claim.",
     "It proves authority-free parser projection and deterministic local tests only.",
-    "Installed-client parity, live models, and physical-platform campaigns remain absent.",
+    "Installed-binary campaigns, live models, and physical-platform campaigns remain absent.",
     "It grants no model, interface, platform, integration, milestone, or release support."
   ],
   "record_type": "agentmage-sprint-62-spreadsheet-source-review",
   "review_class": "gate-owned-automated-spreadsheet-source-contract-review",
   "reviewer_identity": "scripts/sprint_62_spreadsheet_source_review.py",
   "schema_version": 1,
-  "source_revision": "c9d3445ce98a79560300ddef206c3ce9bb7bd6bb",
+  "source_revision": "653dc2c01dc28ae51a9c88c64d5907c5e45b40ec",
   "source_sha256": {
     "capabilities/knowledge/src/json_data.rs": "ca417a4b54bc0e5f8a34a4566330b3c1f575c7c12c20f0b586e4c1037adf8afa",
     "capabilities/knowledge/src/spreadsheet_ooxml.rs": "fbd94c38c6471eaa84a42c23b563f686d1a9313f7a0ebbb775606f2484f74a2a",
     "capabilities/knowledge/src/spreadsheet_source.rs": "3ed15561edbdf3c38967d82dd68c16411a7ba2f94de12f0403c13f1774f8f258",
     "capabilities/knowledge/src/tabular.rs": "7ec4a9df9e8a6ca4f00913c07b54dba32b715274e9c09160b08f632db1f45a50",
     "kernel/contracts/src/structured_source.rs": "77af2ee3ad318ca05b83db62ab722ed320d1a2a49d47edb752aafff8a1ae7370",
-    "shells/host/src/spreadsheet_source_artifact.rs": "8989545e4355983ca3bbc6c2b326bcfdc3ba067c28156b5747cae652789aaa5b"
+    "shells/host/src/cli_runtime.rs": "4b5d68f00b199a46dc35c124cb2dacd351e682c3975184e7c2243981d758ca37",
+    "shells/host/src/headless.rs": "f5f8f7c85ddc910e62c8050a91d146b47efb89786783a9974e62f44e421f60f6",
+    "shells/host/src/native_chat_runtime.rs": "43493d95c9ffed085069ef1230c5d6afe5d9d6f47d576a090197d3e224fbd649",
+    "shells/host/src/spreadsheet_source_artifact.rs": "3b4a7327961f7d3a97b7422536230e5508d06226d693cc55a9533963de41e0ed"
   },
   "status": "PASS_LOCAL_SPREADSHEET_SOURCE_REVIEW"
 }
