@@ -1478,3 +1478,68 @@ all exact upstream, release, platform, launcher, and fuzz blockers.
 
 Exact next action: preserve Sprint 40 and Sprint 42's remaining exact external tuples, then continue
 at Sprint 43's first unblocked local or gate-owned verification row.
+
+## Batch 50 — Sprint 43 and 44 comprehension/planning reviews
+
+### Completed
+
+- Closed 4 TASKS rows: Sub-task 43.1.3.5, Sub-task 44.1.3.5, Story AC 44.1.AC1,
+  and Story AC 44.1.AC2. Two gate-owned reviews bind the eight-requirement comprehension and
+  eight-requirement planning boundaries to cited maps, coverage, history/slicing, exports, intent,
+  reproduction, hypotheses, minimal plans, 17 hostile cases, 20,000 deterministic mutations with
+  0 unauthorized acceptance, 0 canary exports, and truthful missing-proof markers. Promotions: 0.
+  Substitutions: 0. Cumulative closed items: 104.
+- Commits: `31d36319` (combined reviews and mutation tests), `eaa4af3d` (review truth,
+  closures, and normalized Sprint 40/42/43/44 blockers), and `0d7555c9` (both review artifacts,
+  traceability, and contract evidence). Commits: 3. Commits per closed item: 0.75. Review pins
+  advanced: 0; complete 12-path `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Focused boundary/evidence tests: 9/9; combined review, targeted Markdown lint,
+  requirements-current 45/45, traceability, contract-boundary, and contract-evidence gates pass.
+  Supply-chain builds: 1. Evidence regeneration passes: 1. Recovery iterations: 0. The full chain
+  ran 682 seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite after
+  every preceding gate passed. Recorded gate wall seconds: 682.
+- Sprint 40 exact blockers: native v0.3 acceptance
+  `BLOCKED_EXTERNAL(platform=Fedora and Ubuntu installed native clients, Windows 11 x64 KVM guest,
+  and physical supported MacBook; artifact=full v0.3 write acceptance, prohibited-capability,
+  lifecycle, and threshold-injection bundle; action=platform owners execute and transfer untouched
+  native evidence; credential=Windows image source and physical Mac access; payment=Windows
+  license if required)`; release signing/decision `BLOCKED_EXTERNAL(platform=release signing
+  ceremony and every v0.3 reference platform; artifact=production signer, independently
+  distributed trust root, exact signed packages, independent release decision, and
+  installed-package results; action=authorized release owner provisions identities, reviews,
+  signs, and transfers immutable evidence; credential=production signing identities;
+  payment=platform-signing fees if required)`; launcher `blocked: host change required — run the
+  Sprint 40 installed-package campaign from trusted platform launchers`; and manual fuzz
+  `BLOCKED_EXTERNAL(platform=every supported native v0.3 write surface; artifact=manual fuzz
+  transcript and minimized corpus; action=authorized human executes the retained S-033 campaign
+  and transfers untouched results; credential=platform access; payment=none)`; every
+  `substitution_set=empty`.
+- Sprint 42 exact blockers: credentialed Git remote tuple from Batch 49; native repository parity
+  tuple from Batch 49; trusted-launcher host change from Batch 49; and S-035 manual fuzz tuple from
+  Batch 49; every `substitution_set=empty`.
+- Sprint 43 exact blockers: semantic adapter `blocked: host change required — install and admit the
+  pinned root-owned parser/language-server executables, then run the Sprint 43 confined adapter and
+  crash/cancellation campaign from the trusted packaged launcher`; native comprehension parity
+  `BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and physical supported
+  MacBook; artifact=repository comprehension, history, semantic-coverage, invalidation, and export
+  parity results; action=platform owners execute and transfer untouched evidence;
+  credential=Windows image source and physical Mac access; payment=Windows license if required)`;
+  and S-036 manual fuzz `BLOCKED_EXTERNAL(platform=every supported native
+  repository-comprehension worker; artifact=manual fuzzing transcript and minimized corpus;
+  action=authorized human executes the manual S-036 fuzz campaign and transfers untouched results;
+  credential=platform access; payment=none)`; every `substitution_set=empty`.
+- Sprint 44 exact blockers: installed-interface scope approval
+  `BLOCKED_EXTERNAL(platform=installed AgentMage planning interface; artifact=scope approval
+  receipt for exact intent, reproduction, impact, alternatives, validation, and rollback;
+  action=authorized product owner reviews and approves the retained plan; credential=authorized
+  product-owner identity; payment=none)`; native planning parity tuple; trusted-launcher host
+  change; and S-037 manual fuzz tuple as recorded in TASKS; every `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue at Sprint 45's first locally executable or gate-owned verification row
+while retaining Sprint 44's exact upstream, approval, platform, launcher, and fuzz blockers.
