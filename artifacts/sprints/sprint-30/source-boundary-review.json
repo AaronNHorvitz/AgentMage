@@ -1,0 +1,31 @@
+{
+  "checks": {
+    "application_binds_admitted_index_results": true,
+    "human_review_not_required_by_gate": true,
+    "lexical_fallback_is_preserved": true,
+    "no_network_client": true,
+    "no_process_launch": true,
+    "real_profile_and_hardware_claims_are_not_made": true,
+    "remote_and_source_authority_are_absent": true,
+    "semantic_activation_requires_admission": true,
+    "semantic_index_is_local_and_bounded": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "Upstream release and governance blockers remain unchanged.",
+    "No installed-platform or supported-release claim is made."
+  ],
+  "record_type": "agentmage-sprint-30-boundary-review",
+  "review_class": "gate-owned-automated-knowledge-boundary",
+  "reviewer_identity": "scripts/knowledge_sprint_boundary_review.py",
+  "schema_version": 1,
+  "source_revision": "2f7aa129547b906ba1a61ef4465787b61e7e2d33",
+  "source_sha256": {
+    "capabilities/knowledge/src/semantic.rs": "07bf1e0b0aa712f141166cc92e0e7620f689cf8f4a422b2f475b66eafc70d430",
+    "capabilities/knowledge/src/semantic_benchmark.rs": "3438db4f7b79158f839575f8502d21964c5b075bb74c0cac9544d32367e42ac2",
+    "shells/host/src/knowledge_workflow_runtime.rs": "2ee76b3efb28e3813a6cc1b005b058ec64f5ead8a8d6c23a04ce49ac3ce6a514"
+  },
+  "sprint": 30,
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}
