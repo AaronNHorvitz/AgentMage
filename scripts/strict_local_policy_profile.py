@@ -67,7 +67,7 @@ COMMAND_SPECS: Final = (
             "strict_local_",
             "--locked",
         ),
-        "16 passed; 0 failed; 2 ignored",
+        "18 passed; 0 failed; 2 ignored",
     ),
     (
         ("python3", "scripts/strict_local_source_audit.py"),

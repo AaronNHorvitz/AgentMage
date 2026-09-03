@@ -45,13 +45,13 @@ SOURCE_PATHS: Final = (
 COMMAND_SPECS: Final = (
     (
         ("python3", "-m", "unittest", "tests.test_strict_local_source_audit"),
-        "Ran 6 tests",
+        "Ran 11 tests",
     ),
     (
         ("python3", "scripts/strict_local_source_audit.py"),
         "Strict-local source audit passed with zero undeclared network paths.",
     ),
-    (("npm", "--prefix", "shells/vscode", "test"), "pass 15"),
+    (("npm", "--prefix", "shells/vscode", "test"), "pass 86"),
     (
         (
             "cargo",

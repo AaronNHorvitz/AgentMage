@@ -85,11 +85,11 @@ COMMAND_SPECS: Final = (
             "strict_local::tests",
             "--locked",
         ),
-        "test result: ok. 6 passed",
+        "test result: ok. 14 passed",
     ),
     (
         ("python3", "-m", "unittest", "tests.test_strict_local_source_audit"),
-        "Ran 6 tests",
+        "Ran 11 tests",
     ),
     (
         ("python3", "scripts/strict_local_source_audit.py"),
