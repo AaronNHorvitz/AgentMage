@@ -264,3 +264,52 @@ host-ownership or C++ compiler blockers in this environment.
 Exact next action: write the 25-closure checkpoint handoff, then continue the first unblocked
 dependency-independent rows in Sprint 21 or the next in-scope gate without retrying the inherited
 host-ownership prerequisite.
+
+## Batch 20 — First integrated workflow and Sprint 22/23 aggregate closure
+
+### Completed
+
+- Closed 7 TASKS rows: Task 22.2.3; Stories 22.3, 22.4, and 22.5; and Sprint AC 23.AC8 through
+  23.AC10. The retained Story 22.2 integrity/crash/resume/pressure evidence proves the task
+  aggregate; the Story 22.3, 22.4, and 22.5 reports prove their fully checked story rows; and the
+  Story 23.4 through 23.6 artifacts prove reusable non-Chat parity, exact `ALLOW`/`ASK`/`DENY`
+  authority, complete participant accounting, and verified workflow supervision.
+- Recorded the first integrated workflow in all 8 `documentation_contract` documents and
+  `architecture/status-model.json`: one source-level deterministic fake-model repository-analysis
+  vertical slice, bound to
+  `artifacts/sprints/sprint-22/story-22.5/vertical-slice-report.json`. Promoted
+  `engineering-runtime` through one legal lifecycle transition, `scaffolded` to `implemented`.
+  Product lifecycle remains `scaffolded`; enabled models: 0; supported platforms: 0; released
+  packages: 0; release gate: blocked.
+- Commits: `6038e9d3` (capability, documentation contract, 7 closures, lifecycle truth), `23292f60`
+  (registry, planning-scope, and traceability regeneration), and `517e23ad` (review-pin and aggregate
+  report renewal). Commits: 3. Commits per closed item: 0.43.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1; output deltas: 0. Derived-evidence passes: 1 with 2 targeted recovery
+  iterations. Refreshed the planning-scope manifest after the status model and registry hashes
+  changed, then rebuilt its report and traceability.
+- `requirements/registry.json` intersected only Story 2.2 review paths. Advanced its automated
+  review pin once to commit `23292f60fd278cea5a0fca824b415f8575a9f0f4`, tree
+  `77c439d650549ce6e0a9ad8ba9cc6e71f2760a13`, then rebuilt Story 2.2 and Sprint 2. Story 2.4's
+  aggregate rebuild exposed that its later-owner ledger treated legitimately completed Stories
+  22.3 and 22.5 as drift; the gate now preserves exact open/completed owner states and its mutation
+  tests cover both. Review pins advanced: 1.
+- Prettier aligned four documentation-contract tables. The identifier validator originally
+  accepted only one literal space before a table delimiter, so aligned stable definitions became
+  unresolved; its parser now accepts one or more whitespace characters without broadening the
+  identifier grammar. Documentation mutation/control tests: 17/17 pass.
+- One combined test invocation omitted the session Git wrapper and produced 13 errors and 2
+  failures because the read-only checkout cannot resolve the renewed commit. The same 39 tests
+  reran with the corrected wrapper and passed 39/39; Story 2.2, Story 2.4, and Sprint 2 checks all
+  pass separately. Status-model and Story 22.5 evidence tests: 16/16 pass. Documentation
+  invariants: 413 Markdown files pass; requirement registry, planning scope, traceability, and task
+  graph pass. Full `docs:check` retries: 0 because its known Podman prerequisite was already
+  exhausted. Gate wall seconds: 458.
+- New blocked tuples: 0. External rows closed by substitution: 0. No production model, installed
+  interface, supported platform, package, or release claim was made.
+
+Exact next action: continue the first incomplete, dependency-independent Sprint 23 implementation
+rows, starting with the reusable coordinator failure-boundary and stable participant accessibility
+work that can run without an installed production model or external platform.
