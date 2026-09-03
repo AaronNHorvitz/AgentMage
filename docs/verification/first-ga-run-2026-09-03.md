@@ -313,3 +313,50 @@ host-ownership prerequisite.
 Exact next action: continue the first incomplete, dependency-independent Sprint 23 implementation
 rows, starting with the reusable coordinator failure-boundary and stable participant accessibility
 work that can run without an installed production model or external platform.
+
+## Batch 21 — Stable participant accessibility and carrier-evidence recovery
+
+### Completed
+
+- Closed 5 TASKS rows: Story AC 23.4.AC3; Task 23.5.3; Sub-task 23.5.3.2; and Sprint AC
+  23.AC3 through 23.AC4. The VS Code participant now publishes one exact polite progress,
+  cancellation, focus-preservation, and bounded diagnostic contract; path-like or malformed
+  reference identities fail before rendering or capture. Promotions: 0. External rows closed by
+  substitution: 0.
+- Commits: `78614f68` (participant capability and closures), `0a906d01` (integrated-workflow
+  contract truth), `49b3b9b4` (participant and supply-chain evidence), `22d512b3` (aligned
+  requirement identifier audit), `ac5aea18` (normative location rebase), `21a44afa` (planning
+  scope and traceability provenance), and `206d7b62` (zero-model activation evidence). Commits: 7.
+  Commits per closed item: 1.40. Review pins advanced: 0; the complete `REVIEWED_PATHS`
+  intersection was empty.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 2. The required build ran once after the participant source batch; one
+  recovery build corrected the carrier after the capability commit exposed that the uncommitted
+  package tree had not been retained in the derived hashes. Evidence regeneration passes: 1, with
+  7 targeted stale-artifact recovery iterations. The current Story 1.1, Story 1.2, Story 3.1,
+  Story 23.5, planning-scope, traceability, and zero-model activation artifacts all validate.
+- The contract cascade exposed two inherited Batch 20 assumptions. The schema-evolution authority
+  digest still named the pre-promotion runtime document, and the contract gate required an absent
+  integrated workflow. The gate now admits exactly the single Story 22.5 artifact-bound fake-model
+  workflow while retaining 0 enabled models, 0 supported platforms, 0 packages, and a blocked
+  release gate. Contract-boundary tests: 29/29 pass.
+- Prettier's prior table alignment also exposed an exact-one-space requirement-coverage parser and
+  shifted 31 unchanged PRD statement locations. The parser now accepts one-or-more alignment
+  spaces without widening identifier syntax; requirement-coverage tests: 11/11 pass; records and
+  mappings: 294/31. Requirements-current tests: 45/45 pass.
+- Story 23.5 and contract evidence tests: 25/25 pass. VS Code tests: 88/88 pass; lint and format
+  pass. Documentation lint: 413 files, 0 issues; documentation invariants: 413 files pass; task
+  graph passes. Full `docs:check` retries: 0 because the same Podman prerequisite was already
+  exhausted. Recorded gate wall seconds: 340.
+- Exact carrier blocker for Story 7.1 security evidence: `blocked: host change required — make
+  /run/user/1000/libpod writable to uid 1000 and start a usable rootless Podman service, then run
+  npm run -s evidence:story7.1-platform-contract:build && npm run -s
+  evidence:story7.1-security:build`; substitution set: empty.
+- Exact carrier blocker for Story 9.1 Linux inference evidence: `blocked: host change required —
+  sudo dnf install gcc-c++, then run npm run -s evidence:story9.1-linux-inference:build`;
+  substitution set: empty.
+
+Exact next action: continue the first incomplete Sprint 23 coordinator failure-boundary rows that
+do not depend on either carrier blocker.
