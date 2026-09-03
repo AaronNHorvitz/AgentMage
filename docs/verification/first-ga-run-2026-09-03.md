@@ -2101,3 +2101,38 @@ Exact next action: implement explicit request-level elapsed-time and working-mem
 cooperative parser checkpoints, then close Sub-task 62.2.2.1 only when all named workbook, sheet,
 row, column, cell, string, relationship, compressed/decompressed, output, time, memory, and
 cancellation limits are directly proved.
+
+## Batch 62 — Sprint 62 complete parser resource ceilings
+
+### Completed
+
+- Closed 1 TASKS row: Sub-task 62.2.2.1. The strict workbook profile now carries explicit
+  source/package, ZIP-entry, decompressed-part/total, sheet, row-coordinate, column-coordinate,
+  cell, shared-string, per-string, relationship, accounted working-memory, and elapsed-millisecond
+  ceilings. Parser loops use cooperative cancellation/deadline checkpoints; decompressed bytes are
+  charged before allocation retention, and the shared projection retains independent section and
+  output-byte ceilings. Focused tests force coordinate, string, memory, elapsed, cancellation, and
+  projection-output exhaustion into closed errors. Promotions: 0. Substitutions: 0. Cumulative
+  closed items: 150.
+- Commits: `60e1b9ec` (parser time, memory, cardinality, and cancellation enforcement) and
+  `9ad3c1f3` (renewed bound review, TASKS closure, supply-chain outputs, and affected evidence
+  carriers). Commits: 2. Commits per closed item: 2.00. Review pins advanced: 0; complete
+  `REVIEWED_PATHS` intersection across 52 pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 10/10 spreadsheet Rust tests, strict knowledge-capability Clippy, the review
+  contract and five mutations, supply-chain check, traceability, contract-boundary,
+  contract-evidence, Story 2.1, Story 2.2, and Sprint 2 checks pass. Supply-chain builds: 1. Evidence
+  regeneration passes: 1, covering the renewed review and every changed supply-chain,
+  configuration-startup, component-inventory, Story 3.1 security, traceability, and foundational
+  contract carrier. Recovery iterations: 0. The full chain ran 683.560 seconds and stopped only at
+  the retained Story 6.1 rootless-Podman prerequisite after every preceding gate passed. Recorded
+  gate wall seconds: 684.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: implement Sub-task 62.2.2.2 source manifests, sheet summaries, exact bounded
+sheet/range retrieval, lexical indexes, context candidates, and content-addressed references through
+the shared runtime and native interface adapters.
