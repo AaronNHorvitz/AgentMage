@@ -72,7 +72,7 @@ class Story91SecurityEvidenceTests(unittest.TestCase):
 
     def test_story_product_or_platform_promotion_fails(self) -> None:
         mutations = (
-            ("gate_blocker", "review-open"),
+            ("external_independent_review_status", "passed"),
             ("product_requirement_completion_claim", "complete"),
             ("physical_host_certification_claim", "certified"),
             ("release_claim", "supported"),
@@ -90,7 +90,7 @@ class Story91SecurityEvidenceTests(unittest.TestCase):
                 )
 
         story_gate = self.valid_map()
-        story_gate["summary"]["story_gate_complete"] = False
+        story_gate["summary"]["story_gate_complete"] = True
         self.assertIn(
             "Story 9.1 security summary is invalid",
             evidence.validate_map(story_gate),
@@ -103,17 +103,17 @@ class Story91SecurityEvidenceTests(unittest.TestCase):
             evidence.validate_map(requirement),
         )
 
-    def test_automated_review_provenance_is_exact(self) -> None:
+    def test_independent_review_blocker_is_exact(self) -> None:
         value = self.valid_map()
         self.assertEqual(
-            value["review_provenance"]["reviewer"],
-            "agentmage-story-9.1-security-gate-v1",
+            value["external_independent_review_status"],
+            "required-not-performed",
         )
         self.assertEqual(
             value["gate_blocker"],
-            "none",
+            "G-DOD-12 independent critical-boundary review",
         )
-        value["review_provenance"]["finding_count"] = 1
+        value["gate_blocker"] = "none"
         self.assertIn(
             "Story 9.1 security evidence made an unsupported claim",
             evidence.validate_map(value),

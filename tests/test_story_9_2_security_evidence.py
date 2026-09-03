@@ -71,7 +71,7 @@ class Story92SecurityEvidenceTests(unittest.TestCase):
 
     def test_product_platform_inference_or_review_promotion_fails(self) -> None:
         mutations = (
-            ("gate_blocker", "none"),
+            ("external_independent_review_status", "passed"),
             ("inference_claim", "performed"),
             ("product_requirement_completion_claim", "complete"),
             ("physical_host_certification_claim", "certified"),
