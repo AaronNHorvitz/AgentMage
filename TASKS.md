@@ -2775,7 +2775,7 @@ evidence task but enables no profile. Otherwise the sprint is BLOCKED.
 
 **Current gate result:** BLOCKED with all currently executable local contract, negative Linux cross-adapter parity, and exact Muse evaluation work complete. The retained native and Docker Model Runner compatibility trials fail published quality thresholds and therefore cannot be merged or enabled. Remaining blockers are the native macOS adapter and execution evidence, successful matched cross-platform parity for an admitted profile, independent decoder review, and exact Muse packet-capture/product-security closure. Linux evidence is not substituted for those classes. The exact Muse quality profile is `REJECTED`, remains disabled, and triggers no fallback.
 
-#### [ ] Story 13.5 - Candidate-Neutral Model and Endpoint Identity
+#### [x] Story 13.5 - Candidate-Neutral Model and Endpoint Identity
 
 **User-facing value:** As a user, I need local and remote inference represented by exact separate
 identities so that a familiar model name or compatible API cannot silently substitute a route.
@@ -2803,7 +2803,11 @@ identities so that a familiar model name or compatible API cannot silently subst
 - [x] **Story AC 13.5.AC2:** Given no enabled profile, when a request is made, then the gateway returns a truthful blocked result and neither chooses a route nor enables fallback. Evidence: every successfully verified identity tuple returns `model-gateway.candidate.identity-verified-activation-required`, no selected route, and false activation/fallback.
 - [x] **Story AC 13.5.AC3:** Given a model proposal, when it returns to the runtime, then it remains untrusted data with no tool, policy, credential, or completion authority. Evidence: `ClosedModelProposal` is compile-time sealed as `NonAuthoritativeArtifact`; offering it at an authority boundary can produce only the content-free denial record.
 
-#### [ ] Story 13.6 - Gateway Codec, Routing, and Fallback Contracts
+**Story gate evidence:** All tasks, sub-tasks, and criteria pass in the bounded candidate-identity
+scope. The retained report claims Story completion while keeping enabled candidates, selected
+routes, live endpoint qualification, Sprint completion, and release support absent.
+
+#### [x] Story 13.6 - Gateway Codec, Routing, and Fallback Contracts
 
 **User-facing value:** As a user, I need protocol translation and route choice to preserve meaning
 and disclosure so that local privacy cannot become remote processing through convenience behavior.
@@ -2830,6 +2834,11 @@ and disclosure so that local privacy cannot become remote processing through con
 - [x] **Story AC 13.6.AC1:** Given a supported external protocol event, when translation occurs, then its canonical meaning and identity are preserved exactly or the operation fails visibly. Evidence: closed capability/event fixtures accept one exact ordered stream and visibly reject unknown, unsupported, malformed, and cancellation-incompatible streams.
 - [x] **Story AC 13.6.AC2:** Given multiple candidate routes, when routing runs, then only a current qualified policy-compatible tuple is selected with a complete receipt. Evidence: health, quota, resource, cost, role, capability, platform, context, concurrency, disclosure, activation, and identity gates exclude ineligible candidates before the deterministic selection and receipt seal.
 - [x] **Story AC 13.6.AC3:** Given local or remote route failure, when fallback is absent or unauthorized, then the task blocks without silent destination, disclosure, cost, or authority change. Evidence: default, unordered, undisclosed, unauthorized, missing-prior, ineligible, and control-drift fallback paths all return `FallbackDenied`; only the complete explicit equivalent-control fixture selects its named destination.
+
+**Story gate evidence:** All tasks, sub-tasks, and criteria pass in the bounded codec/routing
+contract scope. The retained report claims Story completion while keeping live remote execution,
+default fallback, silent route transitions, credential-value access, Sprint completion, and release
+support absent.
 
 ### [ ] Sprint 14 - Separate Model Installer and Importer
 
