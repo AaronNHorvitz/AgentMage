@@ -43,7 +43,7 @@
     },
     {
       "path": "shells/vscode/src/provider.ts",
-      "sha256": "14b4d1d08b945c023a07a9fd00cdf5a8edcc64efffa0fad571c05e5d6f5d8f0c"
+      "sha256": "08f97f31383cb26f33330d063b6438411485e483190600a3be4f9eac46eb72e8"
     }
   ],
   "remote_inference_optional": true,

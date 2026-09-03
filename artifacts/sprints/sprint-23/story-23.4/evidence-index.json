@@ -131,14 +131,14 @@
       "sha256": "b5bb30125f3c132f71c568aaf22def298fa61f7d40065e72f6bc662e6a167153"
     },
     {
-      "bytes": 60627,
+      "bytes": 63165,
       "path": "shells/vscode/src/provider.ts",
-      "sha256": "14b4d1d08b945c023a07a9fd00cdf5a8edcc64efffa0fad571c05e5d6f5d8f0c"
+      "sha256": "08f97f31383cb26f33330d063b6438411485e483190600a3be4f9eac46eb72e8"
     },
     {
-      "bytes": 44694,
+      "bytes": 45092,
       "path": "shells/vscode/src/runtime_transport.ts",
-      "sha256": "2e88de28536f4bda0202a780e64074e67f69dc38a08c1d984bd3083b5e640b4a"
+      "sha256": "b54c672fd6ffea2ccb90af9c74ca563065e99da426e254fe70fa2958b80bd9ac"
     },
     {
       "bytes": 21313,
@@ -146,9 +146,9 @@
       "sha256": "da9bd9c6f4161fac4823e576f5ad87bcea107368b09c0bb730d07f8196140664"
     },
     {
-      "bytes": 50313,
+      "bytes": 53345,
       "path": "shells/vscode/test/provider.test.ts",
-      "sha256": "d0349f623a74667161eb06716e6b5595ecaa3ee1c04d275059812318f9be26bd"
+      "sha256": "0ea4bc5b0d63b65cf97b106f1e61f3aa4c2ce9e6286dce2ac9995d15fcba03b0"
     },
     {
       "bytes": 17620,
@@ -177,7 +177,7 @@
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "f2b0b62fd656b8e9732cd95fc8981a1ac9542ad97ff71b13f1996f116d0008d6",
+  "index_sha256": "deed9257b32edf16d44b914516b31aa6568cfb77d722d9a0ac421387f6c14acf",
   "limitations": [
     "The installed host still lacks a production runtime factory and admitted local model.",
     "The source-level boundary-by-boundary failure matrix is complete; physical process faults remain outside this source campaign.",
@@ -481,7 +481,7 @@
   ],
   "record_type": "story_23_4_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "0f65fac9656556398a6832a8626c47b3505f3012",
+  "source_revision": "de086f00a49085bcf563a053af7608fd6999777c",
   "story_id": "23.4",
   "summary": {
     "complete_count": 16,
