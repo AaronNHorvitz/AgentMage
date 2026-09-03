@@ -614,3 +614,41 @@ classify the remaining installed native-client, assistive-technology, and produc
 Exact next action: classify every remaining Sprint 23 dependency row, close any source-verifiable
 parent whose children are complete, and continue to the next unblocked Decision 0047 critical-path
 gate without retrying the recorded host or physical-platform prerequisites.
+
+## Batch 28 — Native accessibility parent and profile acceptance truth
+
+### Completed
+
+- Closed 4 TASKS rows: Task 23.2.1 and Story AC 23.3.AC1 through 23.3.AC3. The accessible-output
+  implementation parent now reflects its four completed children while retaining installed native
+  verification as blocked. The three picker criteria bind the current zero-enabled signed catalog,
+  complete discovery/identity mutation matrices, exact pre-request refusal, state-preserving explicit
+  changes, and the 4/4 pre-request plus 4/4 post-receipt no-fallback dispositions. Promotions: 0.
+  Substitutions: 0.
+- Commit: `4525a4a6` (task truth plus traceability and contract evidence recovery). Commits: 1.
+  Commits per closed item: 0.25. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection:
+  empty before and after targeted recovery.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1; outputs remained byte-identical because this batch changed no Cargo
+  workspace source. Evidence regeneration passes: 1 with 1 targeted recovery iteration.
+  Requirements-current: 45/45 pass; task graph, traceability, product, and status checks pass.
+- The first full `docs:check` ran 695.340 seconds and found the Story 1.2 contract-boundary report
+  stale because it hashes `TASKS.md`. Self-recovery rebuilt the boundary report and its evidence
+  index/security map once; focused boundary/index checks passed 29/29 and 12/12 tests. The full chain
+  rerun took 693.150 seconds and stopped only at the retained Story 6.1 Podman prerequisite after
+  every preceding gate passed. Recorded gate wall seconds: 1,388.
+- Retained carrier blockers: Story 7.1 remains `blocked: host change required — make
+  /run/user/1000/libpod writable to uid 1000 and start a usable rootless Podman service, then run
+  npm run -s evidence:story7.1-platform-contract:build && npm run -s
+  evidence:story7.1-security:build`; substitution set: empty. Story 9.1 remains `blocked: host change
+  required — sudo dnf install gcc-c++, then run npm run -s evidence:story9.1-linux-inference:build`;
+  substitution set: empty. Sprint 23 aggregate evidence remains `blocked: host change required — run
+  the AgentMage test chain outside the restricted filesystem sandbox where /usr/bin/systemd-run,
+  /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities,
+  then run python3 scripts/sprint_23_evidence.py --write --source-revision HEAD`; substitution set:
+  empty.
+
+Exact next action: implement source-byte parity for Sub-task 23.5.4.2 and the reusable production
+runtime-factory boundary that can be completed without claiming a qualified model or installed VSIX.
