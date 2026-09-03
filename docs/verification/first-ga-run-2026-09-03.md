@@ -1023,3 +1023,41 @@ first unblocked local row; preserve Sprint 26's two draft-Decision and release/p
 Exact next action: continue at Sprint 31's locally executable installed-file recovery, backup,
 simultaneous-edit, migration, and gate-owned review scope while preserving Sprint 30's exact
 semantic-artifact and strict-local host blockers.
+
+## Batch 41 — Sprint 31 controlled memory-file recovery plans
+
+### Completed
+
+- Closed 6 TASKS rows: Task 31.1.1, Sub-task 31.1.1.8, Task 31.1.2, Sub-task 31.1.2.4,
+  Sub-task 31.1.3.4, and Sprint AC 31.AC5. The host recomputes complete memory-bundle identity
+  and composes publication, last-good copy, restoration, simultaneous-edit conflict, and encrypted
+  export only as existing controlled filesystem drafts. Kernel preview, approval, one-use grant,
+  atomic platform execution, rollback, crash recovery, and receipt verification remain mandatory.
+  The Sprint 31 gate-owned review makes no human-review or release claim. Promotions: 0.
+  Substitutions: 0.
+- Commits: `47de00f5` (initial protected-memory implementation), `165a9533` (route all effects
+  through the controlled transaction boundary), `efaa443c` (align review assertions), and
+  `73d57dce` (source-bound review, checklist, and dependency evidence). Commits: 4. Commits per
+  closed item: 0.67. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Focused memory planner tests: 3/3; shared review mutation groups: 2/2; strict host Clippy,
+  structural effect mediation, targeted Markdown lint, requirements-current 45/45, and Sprint
+  27–31 boundary review pass. Supply-chain builds: 3. Evidence regeneration passes: 3. Recovery
+  iterations: 2. The first implementation directly mutated files from the host; the first full
+  chain rejected it at the effect boundary after 135 seconds. It was replaced with an
+  authority-free planner over the existing mediated kernel/platform transaction. The first
+  corrected review named obsolete direct-I/O symbols; its focused build failed, the assertions
+  were aligned with the controlled plan, and the regenerated review passes. The recovery full
+  chain ran 697 seconds and stopped only at the retained Story 6.1 Podman prerequisite after every
+  preceding gate passed. Recorded gate wall seconds: 832.
+- Exact remaining Sprint 31 blocker: `blocked: host change required — run the strict-local worker
+  and source-policy renewal outside the restricted filesystem sandbox where
+  /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain
+  root-owned identities, then run python3 scripts/sprint_31_evidence.py --write --source-revision
+  HEAD`; upstream Sprint 30 retains its exact semantic-artifact and strict-local tuples; every
+  `substitution_set=empty`.
+
+Exact next action: write the 75-item checkpoint handoff, then propagate Sprint 31's exact inherited
+blocker and continue at Sprint 32's first unblocked local or gate-owned review row.
