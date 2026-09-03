@@ -68,12 +68,12 @@
       {
         "byte_length": 10529,
         "path": "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json",
-        "sha256": "1eb5bdd4e9eb3ea24d88e761eb5832be233ea356450f01e4e12cb77671c69879"
+        "sha256": "9e901689fa04b80ac66e1c9f9bf939bdd6086b06cb199238fae556d67a7857c3"
       },
       {
         "byte_length": 16178,
         "path": "scripts/story_5_1_gate.py",
-        "sha256": "9e6ba95b9ac6e33873f997e339ed487af505cdd6ae98d085592983eeb2fd8a74"
+        "sha256": "611659db59a1fb05699fd4bbbb2659a3b63dd123190585c36f01a3d4bd9f1a5a"
       },
       {
         "byte_length": 4176,
@@ -121,8 +121,8 @@
         "sha256": "d64fbb07cf9c5d08cf5d19c3af7ffc7aee2bc36933c2220949b18dba31a24ead"
       }
     ],
-    "reviewed_commit": "db61cbb45af90d79b97758488f62c9c690aeda0a",
-    "reviewed_tree": "2204fa6f64a13dd3b2c2248e1bc4867a420ce4c9",
+    "reviewed_commit": "3e96adb2fd40bac8d60a254b8a383c70a0dc7eae",
+    "reviewed_tree": "b743e44117aa220be4f57fb66473441cd375702c",
     "reviewer_id": "agentmage-sprint-5-independent-gate-v2"
   },
   "installed_product_claim": "none",
@@ -135,8 +135,8 @@
   "product_acceptance_claim": "none",
   "product_requirement_completion_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "db61cbb45af90d79b97758488f62c9c690aeda0a",
-  "reviewed_tree": "2204fa6f64a13dd3b2c2248e1bc4867a420ce4c9",
+  "reviewed_commit": "3e96adb2fd40bac8d60a254b8a383c70a0dc7eae",
+  "reviewed_tree": "b743e44117aa220be4f57fb66473441cd375702c",
   "schema_version": 2,
   "sprint_id": 5,
   "status": "blocked-open-dependencies-and-platform",
