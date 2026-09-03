@@ -529,3 +529,41 @@ lifecycle coverage, then classify the installed-native and accessibility rows by
 
 Exact next action: implement the Sprint 23 request-phase profile-failure matrix, then classify the
 remaining installed native-client, assistive-technology, and production-model dependencies.
+
+## Batch 26 — Exact pre-request model revalidation
+
+### Completed
+
+- Closed 2 TASKS rows: Sub-task 23.1.1.2 and Task 23.3.1. Every native runtime submission now
+  revalidates the exact selected entry before request preparation. Removed, crashed, quarantined,
+  and resource-exhausted profile fixtures each render the exact refusal code, state that no model was
+  substituted, and record 0 prepare, 0 start, and 0 advance calls. The already-complete signed-catalog
+  fact join, management-only lifecycle projection, and state-preserving explicit change form the
+  closed candidate-neutral discovery/display task. Promotions: 0. Substitutions: 0.
+- Commits: `a25b5805` (capability, tests, and task truth) and `a4b1c482` (supply-chain and dependent
+  evidence). Commits: 2. Commits per closed item: 1.00. Review pins advanced: 0; complete
+  `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1. Evidence regeneration passes: 1 with 1 targeted recovery iteration. The
+  Sprint 23 aggregate attempt reached the retained restricted-host failure after 33.378 seconds;
+  its output was restored byte-for-byte and unaffected consumers were regenerated once.
+- VS Code tests: 94/94 pass; lifecycle pre-request fixtures: 4/4 pass; lint and format pass. Sprint
+  23 evidence tests: 3/3 pass. Requirements-current: 45/45 pass. Supply-chain, task graph, contract,
+  traceability, configuration, component inventory, Story 1.1, Story 1.3, Story 3.1, and Story 11.2
+  checks pass. Full `docs:check`: 693.410 seconds, stopping only at the retained Story 6.1 Podman
+  prerequisite after every preceding gate passed. Recorded gate wall seconds: 738.
+- Exact Sprint 23 aggregate host blocker: `blocked: host change required — run the AgentMage test
+  chain outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl,
+  /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then run python3
+  scripts/sprint_23_evidence.py --write --source-revision HEAD`; substitution set: empty.
+- Retained carrier blockers: Story 7.1 remains `blocked: host change required — make
+  /run/user/1000/libpod writable to uid 1000 and start a usable rootless Podman service, then run
+  npm run -s evidence:story7.1-platform-contract:build && npm run -s
+  evidence:story7.1-security:build`; substitution set: empty. Story 9.1 remains `blocked: host change
+  required — sudo dnf install gcc-c++, then run npm run -s evidence:story9.1-linux-inference:build`;
+  substitution set: empty.
+
+Exact next action: extend the same no-fallback disposition through post-start request phases, then
+classify the remaining installed native-client, assistive-technology, and production-model rows.
