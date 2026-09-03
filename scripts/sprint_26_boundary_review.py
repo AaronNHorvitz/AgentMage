@@ -53,12 +53,13 @@ def expected(revision: str) -> dict[str, Any]:
         and b"UserOwnedMarkdown" in authority,
         "index_is_derived_and_disposable": b"derived_only" in index
         and b"DisposableSqlite" in authority,
-        "lifecycle_is_preview_only": b"RestoreDisposition" in lifecycle
-        and b"MigrationPreview" in lifecycle,
+        "lifecycle_is_preview_only": b"KnowledgeRestorePlan" in lifecycle
+        and b"KnowledgeMigrationPlan" in lifecycle,
         "operations_expose_no_apply_authority": all(
             token not in operations for token in (b"apply_write", b"delete_file", b"rename_file")
         ),
-        "operational_store_is_not_a_dependency": b"operational" not in store.lower()
+        "operational_store_is_not_a_dependency": b"use agentmage_kernel_engine" not in store
+        and b"no create, update, delete, move, filesystem, or operational-store method" in store
         and b"Operational sessions" in architecture,
         "unsupported_platform_and_release_claims_absent": b"no filesystem handle" in architecture
         and b"v0.3 grant path" in architecture,

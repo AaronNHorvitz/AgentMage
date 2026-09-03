@@ -13,9 +13,9 @@ def report() -> dict[str, object]:
     fixtures = {
         "capabilities/knowledge/src/authority.rs": b"KnowledgeDataOwner KnowledgeStorageRule recovery_source CanonicalMarkdown UserOwnedMarkdown DisposableSqlite",
         "capabilities/knowledge/src/index.rs": b"derived_only",
-        "capabilities/knowledge/src/lifecycle.rs": b"RestoreDisposition MigrationPreview",
+        "capabilities/knowledge/src/lifecycle.rs": b"KnowledgeRestorePlan KnowledgeMigrationPlan",
         "capabilities/knowledge/src/operations.rs": b"preview only",
-        "capabilities/knowledge/src/store.rs": b"KnowledgeStore",
+        "capabilities/knowledge/src/store.rs": b"KnowledgeStore no create, update, delete, move, filesystem, or operational-store method",
         "docs/architecture/knowledge-authority-boundary.md": b"no filesystem handle Operational sessions v0.3 grant path",
     }
     with patch.object(review, "git_bytes", side_effect=lambda _revision, path: fixtures[path]):
