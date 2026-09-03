@@ -169,9 +169,15 @@ def dependency_state(tasks_text: str) -> list[dict[str, str]]:
 def later_story_state(tasks_text: str) -> list[dict[str, str]]:
     states = []
     for story_id in LATER_STORY_IDS:
-        if f"#### [ ] Story {story_id} -" not in tasks_text:
+        open_marker = f"#### [ ] Story {story_id} -"
+        closed_marker = f"#### [x] Story {story_id} -"
+        if open_marker in tasks_text:
+            status = "blocked-open-acceptance"
+        elif closed_marker in tasks_text:
+            status = "completed-protocol-owner"
+        else:
             raise ValueError(f"Story 2.4 later protocol owner state changed: {story_id}")
-        states.append({"story_id": story_id, "status": "blocked-open-acceptance"})
+        states.append({"story_id": story_id, "status": status})
     return states
 
 
@@ -380,7 +386,7 @@ def validate_report(value: Any, *, verify_current: bool = True) -> list[str]:
     ]
     if value.get("dependencies") != expected_dependencies:
         failures.append("Story 2.4 dependency disposition is invalid")
-    expected_later = [{"story_id": story_id, "status": "blocked-open-acceptance"} for story_id in LATER_STORY_IDS]
+    expected_later = later_story_state((ROOT / "TASKS.md").read_text(encoding="utf-8"))
     if value.get("later_story_dependencies") != expected_later:
         failures.append("Story 2.4 later-story blocker disposition is invalid")
     rv51 = value.get("rv51", {})

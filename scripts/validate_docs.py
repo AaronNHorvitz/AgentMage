@@ -426,10 +426,10 @@ def check_identifiers(files: list[Path], failures: list[str]) -> None:
     inventory = read("Agent-Scaffolding-Inventory.md")
     security = read("SECURITY-REVIEW.md")
     definition_list = re.findall(
-        r"^\| `((?:AM|AT|CR)-[A-Z0-9.-]+)` \|", inventory, re.MULTILINE
+        r"^\| `((?:AM|AT|CR)-[A-Z0-9.-]+)`\s+\|", inventory, re.MULTILINE
     )
     definition_list.extend(
-        re.findall(r"^\| `(SR-[A-Z]+-\d{3})` \|", security, re.MULTILINE)
+        re.findall(r"^\| `(SR-[A-Z]+-\d{3})`\s+\|", security, re.MULTILINE)
     )
     definition_list.extend(
         re.findall(r"^### `(RV-(?:0[1-9]|[1-4]\d|5[0-7]))`", security, re.MULTILINE)

@@ -99,6 +99,10 @@ class Story24GateTests(unittest.TestCase):
             [item["story_id"] for item in report["later_story_dependencies"]],
             list(LATER_STORY_IDS),
         )
+        states = {item["story_id"]: item["status"] for item in report["later_story_dependencies"]}
+        self.assertEqual(states["22.3"], "completed-protocol-owner")
+        self.assertEqual(states["22.5"], "completed-protocol-owner")
+        self.assertEqual(states["23.5"], "blocked-open-acceptance")
         self.assertEqual(validate_raw("\n".join((
             "Validated 16 identity-bound artifact admission fixtures",
             "Validated 10 inert hostile artifact fixtures",
