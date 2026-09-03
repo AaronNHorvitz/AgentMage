@@ -403,3 +403,50 @@ do not depend on either carrier blocker.
 
 Exact next action: continue the first unblocked Sprint 23 native-client or profile-lifecycle source
 rows while retaining the production-model and installed-platform dependencies as explicit blockers.
+
+## Batch 23 — Native runtime status presentation
+
+### Completed
+
+- Closed 3 TASKS rows: Sub-tasks 23.1.1.5, 23.2.1.2, and 23.2.1.3. The VS Code native
+  surface now renders exact session, workspace/snapshot, model, policy, manifest, artifact,
+  runtime, context, tool, vision, resource, and offline/network states as textual structure; the
+  client explicitly states that it cannot mint authority. The accessibility contract records the
+  structural Session Boundary, Progress, and Result regions. VS Code tests remain 88/88. Promotions:
+  0. External rows closed by substitution: 0.
+- Commits: `065d861d` (capability and focused evidence), `91c1eb6d` (Story 1.3 dependency-truth
+  recovery), `0f65fac9` (batch and RV-50 evidence), `2c9ed52d` (Story 1.3 review renewal),
+  `32dca452` (Story 11.2 AC2 evidence), and `8f4df49a` (Story 11.2 review renewal). Commits: 6.
+  Commits per closed item: 2.00. Review pins advanced: 2, each to the commit containing every
+  changed reviewed path; no external-human review claim was made.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1. Evidence regeneration passes: 1 with 6 targeted recovery iterations.
+  The Sprint 23 aggregate regeneration was rejected because 36 host tests fail the restricted-host
+  Linux sandbox manifest identity check while 177 pass, and the strict-local/product checks share
+  that prerequisite. The failed generated report was restored byte-for-byte to its last committed
+  BLOCKED record; unaffected hash-bound consumers were regenerated. Story 3.1 was rebuilt after its
+  configuration-startup and component-inventory prerequisites. The full chain then exposed stale
+  Story 1.3 and Story 11.2 dependency reports; RV-50 now records Story 22.5 as a completed source-level
+  slice with 4 later runtime scenarios still open, and Story 11.2 AC2 plus both gate-owned reviews
+  were renewed in dependency order.
+- Targeted supply-chain, Sprint 23 unit, Story 23.4 index, Story 1.1, Story 3.1, configuration,
+  component inventory, contract, model-activation, traceability, task-graph, and current-requirement
+  checks pass. Story 1.3 and Story 11.2 aggregate tests pass 8/8 each. The final full `docs:check`
+  ran 693.549 seconds and reached only the retained Story 6.1 Podman prerequisite after every prior
+  documentation, schema, Story 1.3, Sprint 5, Story 11.2, Sprint 2, Sprint 3, and Sprint 4 gate passed.
+  Recorded gate wall seconds: 1,070.
+- Exact aggregate host blocker: `blocked: host change required — run the AgentMage test chain outside
+  the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap,
+  /usr/bin/env, and /usr/bin/cat retain root-owned identities, then run python3
+  scripts/sprint_23_evidence.py --write --source-revision HEAD`; substitution set: empty.
+- Retained carrier blockers: Story 7.1 remains `blocked: host change required — make
+  /run/user/1000/libpod writable to uid 1000 and start a usable rootless Podman service, then run
+  npm run -s evidence:story7.1-platform-contract:build && npm run -s
+  evidence:story7.1-security:build`; substitution set: empty. Story 9.1 remains `blocked: host change
+  required — sudo dnf install gcc-c++, then run npm run -s evidence:story9.1-linux-inference:build`;
+  substitution set: empty.
+
+Exact next action: continue the first unblocked Sprint 23 native token-streaming, runtime-health, or
+profile-lifecycle source rows while preserving installed-model and physical-platform tuples.
