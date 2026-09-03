@@ -1,0 +1,47 @@
+{
+  "checks": {
+    "attack_traces_fail_closed": true,
+    "grant_is_short_lived_single_use_and_stale_invalidating": true,
+    "network_process_and_external_delivery_are_absent": true,
+    "preimage_and_postimage_hashes_are_bound": true,
+    "restoration_material_and_plan_are_bound": true,
+    "review_does_not_enable_target_mutation": true,
+    "security_requirements_are_mapped": true,
+    "transition_and_property_results_are_retained": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "No target mutation, atomic application, rollback execution, or post-write command is enabled.",
+    "Sprint 34 and all inherited release and platform blockers remain unchanged."
+  ],
+  "record_type": "agentmage-sprint-35-transaction-boundary-review",
+  "review_class": "gate-owned-automated-exact-preimage-transaction-review",
+  "reviewer_identity": "scripts/sprint_35_transaction_review.py",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-ACC-001",
+    "SR-ACC-002",
+    "SR-ACC-003",
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-DAT-002",
+    "SR-OPS-001",
+    "SR-OPS-002",
+    "SR-TST-005",
+    "SR-TST-011",
+    "SR-TST-012"
+  ],
+  "source_revision": "0b80bd43c4a90ac2cd7776f4dd5dc9671caea339",
+  "source_sha256": {
+    "docs/architecture/exact-preimage-write-approval.md": "115bf060778ec0f03a1034986f79ac87164a104c27e8b4953aaf746302636bcb",
+    "docs/verification/sprint-35-local-results.md": "cc87b14f9ceffd4a37a257e3db89d1123ef16d584696fee600f0b9a3c30e0fd9",
+    "kernel/engine/src/approval.rs": "be34991fb3dff4e6fdd7a74489e2cec8158e63c88cfea71c17f1eff4c3ef66d1",
+    "kernel/engine/src/grants.rs": "dd09da4069425ae0bbd4db527a1b472cf936d71e5247eceee60c41d035286291",
+    "kernel/engine/src/write_approval.rs": "3aec5c24b53f5ab5e0476c03c13422a737a59d2932ba1649b15d2e50306e67e0",
+    "scripts/sprint_35_evidence.py": "04fe1be5afa91038b2bc85711229bb62edc5a020b4a1dbd0a8bc50c22569a566"
+  },
+  "status": "PASS_LOCAL_TRANSACTION_REVIEW"
+}

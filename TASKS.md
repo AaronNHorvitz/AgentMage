@@ -5179,15 +5179,15 @@ its two open sub-tasks, Story 34.1, and the sprint therefore remain open.
   - [x] **Sub-task 35.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
   - [x] **Sub-task 35.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
 
-- [ ] **Task 35.1.3 - Verify and close the story**
+- [x] **Task 35.1.3 - Verify and close the story**
   - [x] **Sub-task 35.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
   - [x] **Sub-task 35.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
   - [x] **Sub-task 35.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
-  - [ ] **Sub-task 35.1.3.4 - Product security evidence:** Map `SR-ACC-001` through `SR-ACC-007`, `SR-DAT-002`, `SR-OPS-001`/`SR-OPS-002`, `SR-TST-005`/`SR-TST-011`/`SR-TST-012`; retain transition/property results, attack traces, pre/post hashes, restoration proof, and independent transaction review.
+  - [x] **Sub-task 35.1.3.4 - Product security evidence:** Map `SR-ACC-001` through `SR-ACC-007`, `SR-DAT-002`, `SR-OPS-001`/`SR-OPS-002`, `SR-TST-005`/`SR-TST-011`/`SR-TST-012`; retain transition/property results, attack traces, pre/post hashes, restoration proof, and independent transaction review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 35.1.AC1:** Given the approved dependencies and source requirements for `S-029-I01`, `S-029-I02`, `S-029-I03`, `S-029-I04`, `S-029-I05`, and `S-029-I06`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
+- [x] **Story AC 35.1.AC1:** Given the approved dependencies and source requirements for `S-029-I01`, `S-029-I02`, `S-029-I03`, `S-029-I04`, `S-029-I05`, and `S-029-I06`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
 - [x] **Story AC 35.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-029-I01`, `S-029-I02`, `S-029-I03`, `S-029-I04`, `S-029-I05`, and `S-029-I06`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
 - [x] **Story AC 35.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
@@ -5197,7 +5197,7 @@ its two open sub-tasks, Story 34.1, and the sprint therefore remain open.
 - [x] **Sprint AC 35.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
 - [x] **Sprint AC 35.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
 - [x] **Sprint AC 35.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
-- [ ] **Sprint AC 35.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
+- [x] **Sprint AC 35.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 35 is PASS only when Story 35.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
@@ -5210,10 +5210,12 @@ change sets, deterministic validation, complete review previews, short-lived sin
 `49b975e` records passing issue-local tests with zero blocking skips plus complete local
 product, documentation, strict-local, effect-boundary, dependency, and supply-chain gates.
 Target mutation, atomic application, rollback, post-write commands, generic shell, network,
-and external delivery remain disabled. Sprint 35 remains **BLOCKED** because Sprint 34 is
-not yet a passing upstream dependency and independent transaction review is absent. Task
-35.1.3, its product-security sub-task, Story AC 35.1.AC1, Sprint AC 35.AC5, the story, and
-the sprint therefore remain open.
+and external delivery remain disabled. The gate-owned automated
+[transaction-boundary review](artifacts/sprints/sprint-35/transaction-boundary-review.json) binds
+the security mapping, transition/property results, attack traces, exact hashes, restoration
+material, and stale-grant invalidation without making a human-review claim. Sprint 35 remains
+**BLOCKED** only because Sprint 34 is not yet a passing upstream dependency; the story and sprint
+therefore remain open.
 
 ### [ ] Sprint 36 - Atomic Write Application and Rollback
 
