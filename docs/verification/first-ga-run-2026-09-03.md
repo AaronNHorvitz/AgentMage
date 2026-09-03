@@ -183,3 +183,43 @@ the exhausted Story 9.2/Sprint 14 Podman checkpoint in this environment.
 
 Exact next action: automate the repository-owned Sprint 20 review provenance and close its
 otherwise complete platform-neutral story/sprint gate; continue without retrying the C++ blocker.
+
+## Batch 18 — Sprint 20 review promotion and strict-local policy audit
+
+### Completed
+
+- Closed 0 TASKS rows. Promotions retained: 0. External rows closed by substitution: 0.
+- Implemented automated Sprint 20 gate-review provenance and refreshed the strict-local policy for
+  4 current Cargo manifests, 2 native Chat contribution classes, and 1 inert JSON Schema URI. The
+  promotion was not retained because the required strict-local live worker test correctly rejected
+  host executable ownership inside the restricted filesystem.
+- Attempt/recovery commits: `a6a57fed`, `c7968edc`, `0664fb5f`, `f49c72bf`, `e70fb46e`,
+  `a11b0c75`, `dd2c65cd`, `94e2f6d5`, `a91a052b`, `874c0a35`, `85c38e9f`, `0f2a017e`, and
+  `d0fb039d`. All abandoned source and derived outputs were reversed with forward commits. Commits
+  per closed item: undefined (0 items).
+
+### Validation and self-recovery
+
+- Strict-local policy mutation tests after refresh: 11/11 pass. Sprint 20 evidence tests: 3/3
+  pass. The provisional Sprint 20 report reached `sprint_status: PASS`, story completion true,
+  sprint completion true, release approval false, and zero blockers before the host-manifest chain
+  blocked its full retention.
+- The exact failing test was
+  `agentmage-platform-linux sandbox::tests::worker_receives_only_the_fixed_environment_and_no_network`.
+  The restricted filesystem reports `/usr/bin/systemd-run`, `/usr/bin/systemctl`, `/usr/bin/bwrap`,
+  and `/usr/bin/cat` as uid/gid `nfsnobody`; `LinuxSandboxManifest::verify` requires the admitted
+  executable paths to remain root-owned and fails closed with `InvalidManifest`. No ownership check
+  was weakened and no platform result was substituted.
+- Supply-chain builds across the initial attempt and two recovery units: 3; output deltas: 0.
+  Evidence passes attempted: 3. Known Podman retries: 0. Review pins advanced: 0. Documentation
+  invariants: 413 Markdown files pass; requirement registry, planning scope, traceability, and the
+  restored Sprint 20 BLOCKED report pass. Gate wall seconds: 75.
+- Exact blocker on Sprint 20: `blocked: host change required — run cargo test -p
+  agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked --
+  --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run,
+  /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities,
+  then renew the strict-local policy evidence set and scripts/sprint_20_evidence.py --write`;
+  substitution set: empty.
+
+Exact next action: continue with Sprint 21 dependency-independent evidence rows; do not retry the
+host-ownership or C++ compiler blockers in this environment.
