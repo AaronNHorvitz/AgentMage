@@ -1,0 +1,53 @@
+{
+  "checks": {
+    "accessibility_failures_are_gate_blocking": true,
+    "automatic_model_substitution_absent": true,
+    "client_has_no_direct_filesystem_network_or_process_import": true,
+    "client_uses_authenticated_runtime_transport": true,
+    "host_owns_runtime_transport": true,
+    "kernel_owns_policy_tool_and_verifier_completion": true,
+    "participant_sources_are_current_request_only": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated source review, not a human-review claim.",
+    "Installed VSIX, assistive-technology, production-model, and supported-platform campaigns remain separate blockers."
+  ],
+  "record_type": "agentmage-sprint-23-source-boundary-review",
+  "review_class": "independent-automated-source-boundary",
+  "reviewer_identity": "scripts/sprint_23_boundary_review.py",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-PLT-005",
+    "SR-PLT-006",
+    "SR-ACC-007",
+    "SR-DAT-003",
+    "SR-OPS-001",
+    "SR-OPS-003",
+    "SR-TST-004",
+    "SR-AI-013",
+    "SR-AI-015",
+    "SR-MGM-001",
+    "SR-CIV-006",
+    "SR-CIV-007",
+    "SR-CIV-008",
+    "SR-CIV-009",
+    "SR-TST-008"
+  ],
+  "source_revision": "HEAD",
+  "source_sha256": {
+    "kernel/engine/src/runtime_loop.rs": "91ec216eaa831293a6330134f33b7e9c5590408adfda0275392bd0ce8c78b227",
+    "shells/host/src/linux_read.rs": "2761b074d459be37f73b1f5ca35b32df76aa3ca661e8b65fef94f2e88f9bae22",
+    "shells/host/src/native_chat_runtime.rs": "4d950b3123a820902d82776e69b9f0c529f0377c01452c81e8bc36945c7ec0e0",
+    "shells/host/src/participant_ingress.rs": "02e80cae146eba96492526627fed63ab5ea62f320f71824f52318303ea412214",
+    "shells/host/src/runtime_transport.rs": "30e2e29f39f56f3d6a35f8a3af3a4b1b5d3e33eb8599f45909bd3d5662bf608c",
+    "shells/vscode/src/host_bridge.ts": "b7ea16224f2cf178af2a1d98302ce315fe81b934a19ffbd59fceaba350d63707",
+    "shells/vscode/src/model_discovery.ts": "560e9e4cf8d7f50494a6b8eda98b803fed65e8d57911dec7965dfde0359db540",
+    "shells/vscode/src/native_accessibility.ts": "fe90c4472ff6f3966d4c89bb6bb15ecd4df0d749ce1542b69b55eff576b931a7",
+    "shells/vscode/src/participant_ingress.ts": "ffaf688d7a5bb5f4655cfd9dbc04148bfb95f31f425b1a26807ed1fd90a1a91f",
+    "shells/vscode/src/provider.ts": "e50b2950c7ffce2bead54d0a9b43c3a33d99a7795adeaedc411e59182d7a0a17",
+    "shells/vscode/src/runtime_transport.ts": "b54c672fd6ffea2ccb90af9c74ca563065e99da426e254fe70fa2958b80bd9ac",
+    "shells/vscode/src/verified_chat.ts": "9adcf3e022b285f1898755c19fb2f4ca826696f436bebd2bbad5696304989167"
+  },
+  "status": "PASS_SOURCE_BOUNDARY_REVIEW"
+}
