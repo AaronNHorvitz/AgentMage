@@ -17,19 +17,24 @@
       "sha256": "14065ad8cd9627547d52f3bcc582f4c296f912e06cba64f1bb1eb1fa346531d7"
     },
     {
-      "byte_length": 2187,
+      "byte_length": 2905,
       "path": "docs/architecture/model-context-orchestration-profiles.md",
-      "sha256": "f7d6ea1cdd925ed3be6882ba4f6bf6987d78357b0486a931e589781e86fe4ae3"
+      "sha256": "9b1f2dd289a5c350b09214acc7cc16d9d556887152389d6fe8cb4229baf9c007"
     },
     {
-      "byte_length": 7322,
+      "byte_length": 8516,
       "path": "scripts/story_13_4_context_profile_evidence.py",
-      "sha256": "7aa2e72a584c158dc8b5fd69967df708bf629cfbc02f96ec215e9105590ffde6"
+      "sha256": "50ab943e1e8f8a111213fa74883229ef3fd17e697a2807ea0592c97d5fe377d7"
     },
     {
-      "byte_length": 2019,
+      "byte_length": 11470,
+      "path": "scripts/story_13_4_profile_campaign.py",
+      "sha256": "11ef923670136f158bddb69785ba1bd118def58d3ed86a1d875a6a6a2c914f27"
+    },
+    {
+      "byte_length": 3685,
       "path": "tests/test_story_13_4_context_profile_evidence.py",
-      "sha256": "d7e9c9a89cd33849089257cbb92ffd73e5c5ff668545b67fb729042e8ba63b36"
+      "sha256": "23936d7677dc3b474739a9bb76f42eede5f414af783dbe6a1f8fc2f86691ae7b"
     },
     {
       "byte_length": 3069,
@@ -42,9 +47,39 @@
       "sha256": "b6bd298963cd7d7245bfd6abfd7fb05a659a4540ae66cc97ae5747785584dc9d"
     },
     {
-      "byte_length": 5345,
+      "byte_length": 79539,
+      "path": "fixtures/artifact-admission/v1/context-accounting-manifests.json",
+      "sha256": "dd32688df89ce2e9334b99cb7934d23dbc85a3236807b80a091471a59b91e7ca"
+    },
+    {
+      "byte_length": 12755,
+      "path": "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json",
+      "sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c"
+    },
+    {
+      "byte_length": 6133,
+      "path": "artifacts/sprints/sprint-13/story-13.3/muse-profile-evaluation.json",
+      "sha256": "88f560db0a1486f39a1004a0cd88e699948d194bf9221ee6e1a6d037c2e5b670"
+    },
+    {
+      "byte_length": 17210,
+      "path": "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json",
+      "sha256": "1230b416221d7e28b3ff038a3b9bd8eca972220eb1549763b4b0d68b1416ed69"
+    },
+    {
+      "byte_length": 17393,
+      "path": "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json",
+      "sha256": "571913bbf14d520847118a6988edecef0950be0118ea8392dfca33718bf76a75"
+    },
+    {
+      "byte_length": 20197,
+      "path": "artifacts/sprints/sprint-13/story-13.4/profile-campaign-ledger.json",
+      "sha256": "590a3ee8ad35610666bb0b1af3fa64326fc33ff99846071516648bc1eeb49ee3"
+    },
+    {
+      "byte_length": 5669,
       "path": "artifacts/sprints/sprint-13/story-13.4/context-profile-results.log",
-      "sha256": "f70f093f3cc9aa04772ee16ad134d174339109799632ccdb0e6a8c44c3d0be9a"
+      "sha256": "32a05c64158a0772503466fa799733cf9fe49ec796af330b42277c6618f8fbe2"
     }
   ],
   "commands": [
@@ -70,6 +105,7 @@
     "currently_admitted_profile_count": 0,
     "deterministic_visible_degradation_complete": true,
     "exact_tokenizer_and_counter_required": true,
+    "exact_tuple_campaign_ledger_complete": true,
     "fake_profile_contract_campaign_complete": true,
     "gemma_profile_disposition": "REJECTED",
     "live_admitted_profile_corpus_complete": false,
@@ -83,7 +119,7 @@
   },
   "record_type": "agentmage-story-13-4-context-profile-evidence",
   "remaining_work": [
-    "run the artifact/workflow corpus and full metric ledger for the first independently admitted profile",
+    "run the retained corpus against the first independently admitted live profile",
     "retain matched native cross-platform profile evidence without borrowing rejected Muse or Gemma results",
     "complete applicable RV-13, RV-14, RV-16, and RV-41 installed-profile slices"
   ],
