@@ -33,6 +33,11 @@ the temporary keyring and signer process before returning.
 - The 28-case security corpus records the required fail-closed mutations without raw
   process content, private key material, repository paths, command arguments, or
   remote URLs.
+- The gate-owned automated review independently rederives the thirteen-requirement
+  map, review-packet and logical-commit boundary, signer/approval/temporary-index
+  controls, native Linux commit portion of `RV-49`, 28-case corpus, zero unauthorized
+  effects, and every false missing-proof marker. It makes no human-review,
+  production-signer, protected-approval, coordinator, or platform claim.
 
 These are deterministic unit, integration, schema, and native fixture tests. They are
 not manual or coverage-guided fuzzing.
@@ -73,5 +78,5 @@ source tests, and disposable native Git/OpenPGP fixtures at the immutable source
 revision named in the report. It does not close Sprint 47. Sprint 46 and upstream gates
 remain blocked. No product review/commit coordinator, production-approved signer,
 protected manual-approval channel, complete signer process-tree campaign, required
-cross-platform acceptance, trusted installed-package execution, independent review,
+cross-platform acceptance, trusted installed-package execution, independent human review,
 or manual fuzzing exists.

@@ -6195,24 +6195,24 @@ Sprint AC 46.AC4, and the sprint remain open.
   - [x] **Sub-task 47.1.2.3:** Logical commit plan and signing report.
   - [x] **Sub-task 47.1.2.4:** Manual commit approval receipts.
 
-- [ ] **Task 47.1.3 - Verify and close the story**
+- [x] **Task 47.1.3 - Verify and close the story**
   - [x] **Sub-task 47.1.3.1:** `S-040-UT01` builds review packets from exact base/head identities, diffs, tests, risks, receipts, unresolved issues, and rollback; assert stable hashes and rejection of missing/stale components.
   - [x] **Sub-task 47.1.3.2:** `S-040-UT02` exercises correctness/security/privacy/evidence/accessibility/performance review modes on labeled defects; assert expected findings, severity rationale, source anchors, and no invented defect.
   - [x] **Sub-task 47.1.3.3:** `S-040-ST01` changes temporary or user index, approved bytes, commit message, parent, author/committer identity, signer, signature configuration, attributes/filters, test evidence, or task branch after preview; assert approval invalidation, zero commit, and zero user-index change.
   - [x] **Sub-task 47.1.3.4:** `S-040-IT01` creates approved local signed commits from logical plans through the temporary index, verifies exact tree/parent/message/signature and compare-and-swap branch update, and snapshots remotes and unrelated Git state; assert no push, PR, review, merge, release, publication, hook/filter execution, or unrelated mutation.
-  - [ ] **Sub-task 47.1.3.5 - Product security evidence:** Map `SR-GOV-005`/`SR-GOV-010`, `SR-ACC-002`/`SR-ACC-007`, `SR-SUP-002`/`SR-SUP-005`, `SR-TST-010`/`SR-TST-011`, and `SR-GIT-001` through `SR-GIT-004` plus `SR-GIT-007`; execute the commit portion of `RV-49`; retain packet hashes, preservation manifests, temporary/user-index comparisons, signature verification, remote snapshots, and approval receipts.
+  - [x] **Sub-task 47.1.3.5 - Product security evidence:** Map `SR-GOV-005`/`SR-GOV-010`, `SR-ACC-002`/`SR-ACC-007`, `SR-SUP-002`/`SR-SUP-005`, `SR-TST-010`/`SR-TST-011`, and `SR-GIT-001` through `SR-GIT-004` plus `SR-GIT-007`; execute the commit portion of `RV-49`; retain packet hashes, preservation manifests, temporary/user-index comparisons, signature verification, remote snapshots, and approval receipts. The gate-owned automated [source-boundary review](artifacts/sprints/sprint-47/source-boundary-review.json) binds the thirteen-requirement map, packet/logical-plan boundary, signer/approval/temporary-index controls, native Linux commit portion of `RV-49`, 28 fail-closed cases, zero unauthorized effects, and truthful missing-product-proof markers without claiming a production signer, protected approval channel, human review, or platform completion.
 
   The exact requirement map, packet hashes, preservation records, user-index comparisons,
   disposable signature verification, remote snapshots, approval receipts, and 28-case fail-closed
   corpus are retained. Product coordinator execution, a production-approved signer, protected
   approval-channel evidence, complete signer descendant/interruption testing, installed-package
-  execution, supported-platform acceptance, independent review, and manual fuzzing remain absent,
-  so 47.1.3.5 and the verification task remain open.
+  execution, supported-platform acceptance, independent human review, and manual fuzzing remain
+  absent and continue to block only their dependent rows.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 47.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then a reviewer can reconstruct intent, source base, every changed byte, validation, residual risk, provenance, and rollback from one integrity-protected packet.
-- [ ] **Story AC 47.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then commit creation is separate from testing and publication, requires current exact approval, and leaves all unrelated user changes and remote state untouched.
+- [x] **Story AC 47.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then a reviewer can reconstruct intent, source base, every changed byte, validation, residual risk, provenance, and rollback from one integrity-protected packet.
+- [x] **Story AC 47.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then commit creation is separate from testing and publication, requires current exact approval, and leaves all unrelated user changes and remote state untouched.
 
 #### Sprint Acceptance Criteria
 
@@ -6220,7 +6220,7 @@ Sprint AC 46.AC4, and the sprint remain open.
 - [x] **Sprint AC 47.AC2:** Commit plans exclude unrelated user work.
 - [x] **Sprint AC 47.AC3:** No commit occurs without an exact temporary-index tree, parent, message, identity, pinned signer, manual approval, and signature verification; the active user index remains unchanged.
 - [x] **Sprint AC 47.AC4:** Commit failure or changed staged diff invalidates approval.
-- [ ] **Sprint AC 47.AC5:** Push and every hosted mutation remain absent from v0.4, and the commit portion of `RV-49` proves hooks, filters, repository-selected signers, amend/history rewrite, and unrelated ref changes absent.
+- [x] **Sprint AC 47.AC5:** Push and every hosted mutation remain absent from v0.4, and the commit portion of `RV-49` proves hooks, filters, repository-selected signers, amend/history rewrite, and unrelated ref changes absent.
 
 Retained local evidence: source revision `32731d8540ee54cfd4965e5a05324bc251b72fc7` is bound by
 [`local-evidence-report.json`](artifacts/sprints/sprint-47/local-evidence-report.json), SHA-256
@@ -6231,8 +6231,25 @@ candidate-tree and signed-commit fixtures pass with zero accepted unauthorized e
 remains **BLOCKED** because Sprint 46 is blocked and the product review/commit coordinator,
 production-approved signer, protected manual-approval channel, complete signer process-tree
 campaign, native cross-platform acceptance, trusted installed-package execution, independent
-review, and deferred manual fuzzing remain absent. The product-security sub-task, both story
-criteria, verification task, Story 47.1, Sprint AC 47.AC5, and the sprint therefore remain open.
+human review, and deferred manual fuzzing remain absent. The signer/approval blocker is
+`BLOCKED_EXTERNAL(platform=installed AgentMage local-commit interface; artifact=production-approved
+signer inspection and protected exact manual-approval receipt; action=authorized release owner
+provisions the signer and protected approval channel and transfers immutable evidence;
+credential=production signing identity and approval authority; payment=signing hardware if
+required)`; `substitution_set=empty`. The process-tree blocker is `blocked: host change required —
+admit an owner-approved root-owned Sprint 47 multi-level signer helper and run the interruption and
+descendant cleanup campaign from the trusted packaged launcher`; `substitution_set=empty`. The
+native platform blocker is `BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and
+physical supported MacBook; artifact=review-packet, temporary-index, signed-commit, preservation,
+and commit-RV-49 parity results; action=platform owners execute and transfer untouched evidence;
+credential=Windows image source, physical Mac access, and platform signing identity;
+payment=Windows license or signing hardware if required)`; `substitution_set=empty`. The launcher
+blocker is `blocked: host change required — run the Sprint 47 local-commit suite from the trusted
+packaged launcher outside the development shell`; `substitution_set=empty`. The fuzz blocker is
+`BLOCKED_EXTERNAL(platform=every supported native local-commit worker; artifact=manual fuzzing
+transcript and minimized corpus; action=authorized human executes the manual S-040 fuzz campaign
+and transfers untouched results; credential=platform and signing access; payment=none)`;
+`substitution_set=empty`. Story 47.1 and the sprint remain open.
 
 **Gate decision:** Sprint 47 is PASS only when Story 47.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
