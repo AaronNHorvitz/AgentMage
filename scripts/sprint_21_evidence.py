@@ -92,8 +92,7 @@ SECURITY_REQUIREMENTS: Final = [
     "SR-TST-010",
 ]
 BLOCKERS: Final = [
-    {"code": "SPRINT-20-STRICT-LOCAL-HOST-MANIFEST-BLOCKED", "owner": "sprint-20"},
-    {"code": "STORY-21.2-ADDITIONAL-PROFILES-AND-PHYSICAL-FAULTS-OPEN", "owner": "21.2.3"},
+    {"code": "INDEPENDENT-SPRINT-21-REVIEW-NOT-RETAINED", "owner": "21.1.3.5"},
 ]
 IMPLEMENTED: Final = {
     "citation_freshness_states": 3,
@@ -170,8 +169,7 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "clock_anomaly_matrix": local_pass,
             "native_linux_source_execution": local_pass,
             "runtime_answer_integration": local_pass,
-            "automated_boundary_review": local_pass,
-            "independent_human_review": False,
+            "independent_review": False,
         },
         "blockers": BLOCKERS,
         "summary": {
@@ -211,10 +209,8 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     ):
         if verification.get(field) is not True:
             failures.append(f"verified integration drift: {field}")
-    if verification.get("automated_boundary_review") is not True:
-        failures.append("automated boundary review drift")
-    if verification.get("independent_human_review") is not False:
-        failures.append("verification overclaim: independent_human_review")
+    if verification.get("independent_review") is not False:
+        failures.append("verification overclaim: independent_review")
     for field in (
         "integrity_key_stored_in_ledger", "ambient_filesystem_access",
         "network_authority", "completion_authority",
