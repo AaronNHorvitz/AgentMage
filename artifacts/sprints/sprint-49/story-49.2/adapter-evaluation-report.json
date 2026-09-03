@@ -1,0 +1,28 @@
+{
+  "candidate_family_count": 10,
+  "canonical_semantic_count": 10,
+  "enabled_route_count": 0,
+  "failures": [],
+  "fake_parity_case_count": 8,
+  "limitations": [
+    "Fake parity proves the canonical contract only, not any named runtime.",
+    "No unresolved candidate is assigned an implementation or version.",
+    "No adapter, model, endpoint, route, platform, or fallback is supported or enabled.",
+    "Live parity, performance, lifecycle, removal, and platform evidence remain absent."
+  ],
+  "live_candidate_count": 0,
+  "record_type": "agentmage-story-49-2-adapter-evaluation-report",
+  "schema_version": 1,
+  "silent_fallback": false,
+  "source_revision": "0ce9eeaf65dbb18beab93420f785798923dd23f4",
+  "source_sha256": {
+    "docs/verification/story-49-2-local-results.md": "598e09fe7faea31be8eb8b973717418882f74dde7b24b87fc9f698721a444905",
+    "kernel/engine/src/gateway_routing.rs": "59eb9648b940fad27a30b7c9a59033a4cda25911e8ce01bca33bb60e67b71e9b",
+    "kernel/engine/src/model_adapter_evaluation.rs": "1b304bdd2422260f2192f2b85d225bb73a33eb2bf6a879d0c991318a045af257",
+    "model-profiles/routing/alternate-runtime-matrix-v1.json": "eb367e650e8d542675824317299c8fe10dad6b1c83b68dfb6ac49651d24e0055",
+    "scripts/alternate_runtime_matrix.py": "73915f879de85a6c6840d824938937a61c1e9a2f3a410c751d86274725a5f3cc",
+    "tests/test_alternate_runtime_matrix.py": "8b56a48037301905c417d5f4facc44d21c3ded8e2abbe1bfb5840591a80d94bd"
+  },
+  "status": "PASS_NON_ACTIVATING_CONTRACT",
+  "supported_adapter_count": 0
+}
