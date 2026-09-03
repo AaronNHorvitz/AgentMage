@@ -6292,12 +6292,12 @@ and transfers untouched results; credential=platform and signing access; payment
   - [ ] **Sub-task 48.1.3.2:** `S-041-UT02` runs identical work packets through native Chat, interactive CLI, JSON, SDK, and ACP-compatible thin clients; assert equal policy decisions, grants, receipts, evidence, and final states. Local contribution: one deterministic fixture proves the same kernel-operation and final-state digests across all five surfaces; integrated native Chat, product policy, receipt, and evidence parity remain absent.
   - [x] **Sub-task 48.1.3.3:** `S-041-ST01` attempts client-side tool dispatch, filesystem/model/key access, grant minting, hidden approval, policy override, prompt injection, and raw-host connection; assert clients remain display/transport only. Evidence: closed schemas reject direct-access and authority-override fields, headless grants fail closed, the effect-boundary checker rejects shell process launch, and the adversarial corpus covers all named client-side bypass classes with zero accepted unauthorized effect.
   - [ ] **Sub-task 48.1.3.4:** `S-041-RT01` disconnects/reconnects clients and cancels during every event phase; assert one canonical kernel operation, no duplicate effect, resumable event position, and descendant cleanup. Local contribution: replay, forward-only resume, pre-dispatch cancellation, post-exchange cancellation, partial streams, and transport failure are bounded; native reconnect, every-phase cancellation, and descendant cleanup remain absent.
-  - [ ] **Sub-task 48.1.3.5 - Product security evidence:** Map `SR-PLT-005`/`SR-PLT-006`, `SR-ACC-001`/`SR-ACC-007`, `SR-OPS-001`, `SR-TST-001`/`SR-TST-004`; retain conformance vectors, cross-interface diff, adversarial traces, disconnect/cancellation results, and client boundary report. Partial local evidence: [`sprint-48-local-results.md`](docs/verification/sprint-48-local-results.md) maps all seven controls; the immutable report SHA-256 is `29070122f28d534df9f14adfa411b1653440e1c60d2c057ca86f500bf78f26ba`. Integrated disconnect/cancellation, supported-platform package, and independent-review evidence remain absent.
+  - [x] **Sub-task 48.1.3.5 - Product security evidence:** Map `SR-PLT-005`/`SR-PLT-006`, `SR-ACC-001`/`SR-ACC-007`, `SR-OPS-001`, `SR-TST-001`/`SR-TST-004`; retain conformance vectors, cross-interface diff, adversarial traces, disconnect/cancellation results, and client boundary report. The gate-owned automated [source-boundary review](artifacts/sprints/sprint-48/source-boundary-review.json) binds all seven controls, the closed protocol/rendering and exact headless-authority boundaries, 5 client surfaces, 4 command families, 9 exit codes, 23 runtime records, 2 thin-client schemas, 40 adversarial cases, zero unauthorized effects, and truthful missing-product-proof markers without claiming integrated disconnect/cancellation, an authenticated product transport, a supported package, human review, or platform completion.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 48.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then headless clients fail closed without an interactive approval channel and cannot obtain broader authority than native Chat for the same authenticated task.
-- [ ] **Story AC 48.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then published protocol fixtures are sufficient for an independent client to reproduce success/error/cancellation behavior without internal imports or hidden state.
+- [x] **Story AC 48.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then headless clients fail closed without an interactive approval channel and cannot obtain broader authority than native Chat for the same authenticated task.
+- [x] **Story AC 48.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then published protocol fixtures are sufficient for an independent client to reproduce success/error/cancellation behavior without internal imports or hidden state.
 
 #### [ ] Story 48.2 - Interactive Local Coding Harness MVP
 
@@ -6325,7 +6325,7 @@ and transfers untouched results; credential=platform and signing access; payment
   - [x] **Sub-task 48.2.2.6:** Publish a concise local guide for starting, approving, cancelling, inspecting, recovering, and exiting a coding session plus current MVP limitations. Evidence: [`bounded-coding-workflows.md`](docs/guides/bounded-coding-workflows.md) documents the review path, stop conditions, authority boundaries, recovery behavior, public command, and current transport/model limitations.
 
 - [ ] **Task 48.2.3 - Verify the end-to-end MVP and its exclusions**
-  - [ ] **Sub-task 48.2.3.1:** `S-048-MVP-E2E` runs fake-model and admitted-local-model fixtures for repository exploration, one-file patch, controlled new file, focused bug fix, targeted test, failed test and revision, denial, user cancellation, and verified no-op. Local contribution: every fake-model case passes; the sole blocked fixture is `admitted-local-model-workflow`, owned by Sprint 49 exact runtime admission.
+  - [ ] **Sub-task 48.2.3.1:** `S-048-MVP-E2E` runs fake-model and admitted-local-model fixtures for repository exploration, one-file patch, controlled new file, focused bug fix, targeted test, failed test and revision, denial, user cancellation, and verified no-op. Local contribution: every fake-model case passes; the sole blocked fixture is `admitted-local-model-workflow`, owned by Sprint 49 exact runtime admission. `BLOCKED_EXTERNAL(platform=pinned local inference host; artifact=approved exact local coding model, artifact, codec, runtime, context, decoding, resource, isolation, and quality admission bundle; action=authorized model owner admits the exact profile and transfers the untouched workflow result; credential=model artifact source if restricted; payment=model artifact or required hardware if applicable)`; `substitution_set=empty`.
   - [x] **Sub-task 48.2.3.2:** `S-048-MVP-STALE` mutates workspace, worktree, base commit, path, preimage, plan, tool schema, command arguments, model profile, policy, grant, and repository preservation manifest between preview and dispatch; assert stale refusal and zero unauthorized effect. Evidence: all 12 exact fixture cases name and pass real Rust tests.
   - [x] **Sub-task 48.2.3.3:** `S-048-MVP-ADVERSARIAL` attacks traversal, symlinks, hostile instructions, command metacharacters, environment leakage, hooks/filters, output forgery, repeated tool calls, malformed model proposals, oversized output, and false completion; assert exact denial or truthful non-success. Evidence: all 12 exact fixture cases name and pass real Rust tests; the ignored-by-default Linux environment/network isolation test also passes explicitly on the current Fedora host.
   - [x] **Sub-task 48.2.3.4:** `S-048-MVP-ABSENCE` proves persistent resume, complete journal/artifact lifecycle, remote Git, commit, push, automatic routing, MCP dependency, browser/network use, package installation, complete conversation-library behavior, workflow execution, child agents, and autonomous publication are absent from `M-HARNESS-MVP` manifests and dispatch tables. Evidence: all 14 exclusions are frozen in the exact profile digest or native catalog and mapped to passing tests; separately implemented durable and MCP capabilities do not enter the ephemeral MVP profile.
@@ -6362,8 +6362,23 @@ commands pass and both focused Rust suites report zero ignored tests. Sprint 48 
 **BLOCKED** because Sprint 47 is blocked and authenticated product transport, canonical
 conversation/knowledge/operational coordinators, complete native disconnect and descendant
 cleanup campaigns, supported-platform acceptance, trusted installed-package execution,
-independent review, and deferred manual fuzzing remain absent. The implementation task,
-verification task, Story 48.1, both story criteria, Sprint AC 48.AC1, and the sprint remain open.
+independent human review, and deferred manual fuzzing remain absent. The transport/coordinator
+dependency is `blocked: awaiting authenticated product transport and canonical conversation,
+knowledge, and operational coordinator composition`; `substitution_set=empty`. The native
+disconnect blocker is `blocked: host change required — admit an owner-approved root-owned Sprint
+48 multi-level client helper and run disconnect, reconnect, every-event-phase cancellation, and
+descendant cleanup from the trusted packaged launcher`; `substitution_set=empty`. The native
+platform blocker is `BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and
+physical supported MacBook; artifact=thin-client protocol, CLI, transport, disconnect,
+cancellation, and parity results; action=platform owners execute and transfer untouched evidence;
+credential=Windows image source and physical Mac access; payment=Windows license if required)`;
+`substitution_set=empty`. The launcher blocker is `blocked: host change required — run the Sprint
+48 installed CLI/headless suite from the trusted packaged launcher`; `substitution_set=empty`.
+The fuzz blocker is `BLOCKED_EXTERNAL(platform=every supported native thin-client surface;
+artifact=manual fuzzing transcript and minimized corpus; action=authorized human executes the
+manual S-041 fuzz campaign and transfers untouched results; credential=platform access;
+payment=none)`; `substitution_set=empty`. The implementation task, verification task, Story 48.1,
+Sprint AC 48.AC1, and the sprint remain open.
 
 **Gate decision:** Sprint 48 is PASS only when Stories 48.1 and 48.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. `M-HARNESS-MVP` may be recorded independently but cannot substitute for the remaining Sprint 48 gate. Otherwise it is BLOCKED.
 
