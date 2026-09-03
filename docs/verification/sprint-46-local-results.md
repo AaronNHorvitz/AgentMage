@@ -29,6 +29,11 @@ and supply-chain metadata.
 - The synthetic failure corpus covers change-caused, baseline, flaky, dependency,
   environment, permission, unrelated, and unclassified dispositions without raw
   process bytes or sensitive values.
+- The gate-owned automated review independently rederives the nine-requirement map,
+  trusted template and scope boundary, terminal result semantics, all 9 validation
+  kinds, 14 normalized states, 8 failure classes, zero unauthorized command
+  acceptance, zero process-stream value fields, and every false missing-proof marker.
+  It makes no human-review, native-worker, protected-log, or platform claim.
 
 These are deterministic local tests, not manual or coverage-guided fuzzing.
 
@@ -64,5 +69,5 @@ A green local report proves the current platform-neutral validation contracts an
 Fedora toolchain tests only. It does not close Sprint 46. Sprint 45 and upstream gates
 remain blocked. No production Chat-to-validation coordinator, trusted installed-parent
 execution, native worker/resource/process-tree campaign, protected raw-log storage,
-required cross-platform evidence, trusted-package execution, independent review, or
+required cross-platform evidence, trusted-package execution, independent human review, or
 manual fuzzing exists.

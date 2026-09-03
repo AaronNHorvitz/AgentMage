@@ -6100,7 +6100,7 @@ The implementation and verification tasks, Story 45.1, Sprint AC 45.AC2, and the
   - [x] **Sub-task 46.1.3.2:** `S-039-UT02` parses pass, assertion failure, compile failure, infrastructure failure, timeout, cancellation, crash, flaky, skipped, malformed, truncated, and zero-tests-run outputs; assert exact non-conflated states.
   - [ ] **Sub-task 46.1.3.3:** `S-039-ST01` uses forged green text, ANSI/control sequences, injected result files, test hooks/plugins, network fetches, secret output, and parser bombs; assert no false pass, execution escape, or leakage.
   - [ ] **Sub-task 46.1.3.4:** `S-039-RT01` kills process trees and runner/parser/storage at every stage; assert bounded cleanup, preserved raw output, uncertain state when warranted, and no automatic retry of non-idempotent setup.
-  - [ ] **Sub-task 46.1.3.5 - Product security evidence:** Map `SR-SUP-003`, `SR-TST-001` through `SR-TST-006`, `SR-TST-010`, `SR-OPS-003`; retain template manifests, parser corpus, raw/normalized comparisons, injection results, resource traces, and cleanup evidence.
+  - [x] **Sub-task 46.1.3.5 - Product security evidence:** Map `SR-SUP-003`, `SR-TST-001` through `SR-TST-006`, `SR-TST-010`, `SR-OPS-003`; retain template manifests, parser corpus, raw/normalized comparisons, injection results, resource traces, and cleanup evidence. The gate-owned automated [source-boundary review](artifacts/sprints/sprint-46/source-boundary-review.json) binds the nine-requirement map, trusted template/scope boundary, terminal result semantics, 9 validation kinds, 14 normalized states, 8 failure classes, zero unauthorized command acceptance, zero process-stream value fields, and truthful missing-native-proof markers without claiming human review, protected raw-log integration, native execution, or platform completion.
 
   Contract-level tests reject forged green text, ANSI/control sequences, injected artifacts,
   secret output, parser bombs, plugin/configuration argument widening, network-enabled templates,
@@ -6109,16 +6109,16 @@ The implementation and verification tasks, Story 45.1, Sprint AC 45.AC2, and the
   and timeout, but no native process-tree/storage interruption campaign exists, so 46.1.3.4 remains
   open. The exact security map and local content-free records are retained; protected raw-log,
   native resource/process, cross-platform, trusted-package, independent-review, and deferred
-  manual-fuzz evidence remain absent, so 46.1.3.5 remains open.
+  manual-fuzz evidence remain absent and continue to block only their dependent rows.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 46.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then only a manifest-declared command with verified identity runs, and its pass status is computed from trusted process/result semantics plus required test-count/postcondition checks.
-- [ ] **Story AC 46.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then raw and normalized results expose all failures, skips, retries, flakes, truncation, environment identity, duration, limits, and parser version; summaries are recomputable.
+- [x] **Story AC 46.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then only a manifest-declared command with verified identity runs, and its pass status is computed from trusted process/result semantics plus required test-count/postcondition checks.
+- [x] **Story AC 46.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then raw and normalized results expose all failures, skips, retries, flakes, truncation, environment identity, duration, limits, and parser version; summaries are recomputable.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 46.AC1:** No repository command runs from untrusted text or model narration.
+- [x] **Sprint AC 46.AC1:** No repository command runs from untrusted text or model narration.
 - [x] **Sprint AC 46.AC2:** A passed status requires matching process and artifact evidence.
 - [x] **Sprint AC 46.AC3:** Partial, cancelled, timed-out, malformed, and unrun checks are never reported as a full pass.
 - [ ] **Sprint AC 46.AC4:** Cancellation terminates descendants and leaves the worktree inspectable.
@@ -6133,9 +6133,24 @@ content-free adversarial corpus pass with zero accepted unauthorized command and
 value fields in receipts. Sprint 46 remains **BLOCKED** because Sprint 45 is blocked and the
 production validation coordinator, trusted installed-parent execution, native validation-worker
 and process-tree campaign, protected raw-log integration, native cross-platform acceptance,
-trusted-package execution, independent review, and deferred manual fuzzing remain absent. The
-implementation task, hostile native test, recovery test, product-security sub-task, both story
-criteria, Story 46.1, Sprint AC 46.AC1, Sprint AC 46.AC4, and the sprint therefore remain open.
+trusted-package execution, independent human review, and deferred manual fuzzing remain absent. The
+worker blocker is `blocked: host change required — admit an owner-approved root-owned Sprint 46
+multi-level process helper and run the hostile native validation-worker and descendant cleanup
+campaign from the trusted packaged launcher`; `substitution_set=empty`. The protected-log blocker
+is `blocked: host change required — provision the protected Sprint 46 raw-log store and run the
+retention, truncation, cancellation, crash, and recovery campaign from the trusted packaged
+launcher`; `substitution_set=empty`. The native platform blocker is
+`BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and physical supported MacBook;
+artifact=trusted validation-template, process/result, resource-limit, raw-log, and cleanup parity
+results; action=platform owners execute and transfer untouched evidence; credential=Windows image
+source and physical Mac access; payment=Windows license if required)`; `substitution_set=empty`.
+The launcher blocker is `blocked: host change required — run the Sprint 46 validation suite from
+the trusted packaged launcher outside the development shell`; `substitution_set=empty`. The fuzz
+blocker is `BLOCKED_EXTERNAL(platform=every supported native validation worker; artifact=manual
+fuzzing transcript and minimized corpus; action=authorized human executes the manual S-039 fuzz
+campaign and transfers untouched results; credential=platform access; payment=none)`;
+`substitution_set=empty`. The implementation task, hostile native test, recovery test, Story 46.1,
+Sprint AC 46.AC4, and the sprint remain open.
 
 **Gate decision:** Sprint 46 is PASS only when Story 46.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
