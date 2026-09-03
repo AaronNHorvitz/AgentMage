@@ -1248,3 +1248,47 @@ retaining Sprint 34's exact upstream blockers and all platform/release tuples.
 
 Exact next action: continue at Sprint 36's first unblocked local or gate-owned review row while
 retaining Sprint 35's exact upstream dependency blocker and all inherited tuples.
+
+## Batch 46 — Sprint 36 atomic-write transaction review
+
+### Completed
+
+- Closed 1 TASKS row: Sub-task 36.1.3.5. The gate-owned automated review binds all 13
+  security requirements, transition and receipt properties, post-preview and replay attacks,
+  exact preimage/postimage/consumed-grant hashes, known-partial restoration proof, native race and
+  24-case process-stop results, uncertain-outcome refusal, and truthful missing-proof markers.
+  Two remaining verification sub-tasks received exact external tuples; their parent task, both
+  story criteria, Sprint AC 36.AC3, story, and sprint remain open. Promotions: 0. Substitutions: 0.
+- Commits: `c8811924` (transaction review and mutation tests), `09a51fd9` (review-boundary truth),
+  and `0ed2ba72` (review artifact, checklist, traceability, and contract evidence). Commits: 3.
+  Commits per closed item: 3.00. Review pins advanced: 0; complete `REVIEWED_PATHS`
+  intersection: empty.
+
+### Validation and self-recovery
+
+- Focused transaction/evidence tests: 5/5; transaction review, targeted Markdown lint,
+  requirements-current 45/45, traceability, contract-boundary, and contract-evidence gates pass.
+  Supply-chain builds: 1. Evidence regeneration passes: 1. Recovery iterations: 0. The full chain
+  ran 683 seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite after
+  every preceding gate passed. Recorded gate wall seconds: 683.
+- Exact Sprint 36 race blocker: `BLOCKED_EXTERNAL(platform=Fedora and Ubuntu native filesystems,
+  Windows 11 x64 KVM guest, and physical supported MacBook; artifact=real mount-replacement,
+  alias/target race schedule, and descriptor-identity results at every transaction boundary;
+  action=platform owners run the native S-029-ST01 matrix and transfer untouched evidence;
+  credential=Windows image source and physical Mac access; payment=Windows license if required)`;
+  `substitution_set=empty`.
+- Exact Sprint 36 durability blocker: `BLOCKED_EXTERNAL(platform=Fedora and Ubuntu
+  power-loss-capable test hosts, Windows 11 x64 KVM guest, and physical supported MacBook;
+  artifact=authority/checkpoint-store transition crashes, machine/power-loss durability, and every
+  staging/application/verification/restoration/durable-state crash result; action=platform owners
+  run the destructive S-029-RT01 matrix and transfer untouched evidence; credential=Windows image
+  source and physical Mac access; payment=Windows license or dedicated hardware if required)`;
+  `substitution_set=empty`.
+- Exact upstream blocker: `blocked: awaiting Sprint 35 gate closure`; it retains every exact Sprint
+  34 dependency tuple; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue at Sprint 37's first unblocked local or gate-owned review row while
+retaining Sprint 36's exact external and upstream blockers.
