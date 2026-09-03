@@ -981,3 +981,45 @@ rows while retaining Sprint 26's draft-Decision and release/package blockers.
 
 Exact next action: propagate Sprint 29's inherited upstream blocker, then continue at Sprint 30's
 first unblocked local row; preserve Sprint 26's two draft-Decision and release/package tuples.
+
+## Batch 40 — Sprint 30 semantic application integration and boundary review
+
+### Completed
+
+- Closed 0 TASKS rows. Added the trusted-host adapter that derives
+  `ApprovedLocalSemantic` workflow evidence from one admitted local index, preserves lexical
+  citations as the complete fallback, binds index/configuration/hit identities into the retrieval
+  digest, and fails closed on malformed, empty, or dimension-incompatible evidence before the
+  shared Native Chat/CLI transport. Added and retained the Sprint 30 gate-owned boundary review;
+  the review makes no human-review, real-model, real-hardware, or release claim. Promotions: 0.
+  Substitutions: 0.
+- Commits: `2f7aa129` (semantic application adapter and review definition), `b15c89d8` (preserve
+  the legacy blocked aggregate contract after recovery), and `aaab679c` (source-bound review,
+  checklist blockers, and dependency cascade evidence). Commits: 3. Commits per closed item: not
+  applicable. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Focused host tests: 4/4; focused Python evidence/review tests: 5/5; strict host Clippy, targeted
+  Markdown lint, requirements-current 45/45, and Sprint 27–30 boundary review pass. Supply-chain
+  builds: 2; the second was required after the legacy generator correction and remained current.
+  Evidence regeneration passes: 1 plus 2 targeted recovery paths. The legacy Sprint 30 aggregate
+  attempt stopped on its inherited strict-local source-policy prerequisite, so its last valid
+  report was preserved rather than replaced by a false pass. The first full chain ran 353 seconds
+  and exposed the expected host-crate SBOM cascade at Story 3.1; startup, component inventory,
+  security map, Story 3.1, and Sprint 3 were rebuilt specifically and pass. The recovery full chain
+  ran 697 seconds and stopped only at the retained Story 6.1 Podman prerequisite after every
+  preceding gate passed. Recorded gate wall seconds: 1,050.
+- Exact blockers retained: `blocked: host change required — run the strict-local worker and
+  source-policy renewal outside the restricted filesystem sandbox where /usr/bin/systemd-run,
+  /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities,
+  then run python3 scripts/sprint_30_evidence.py --write --source-revision HEAD`;
+  `BLOCKED_EXTERNAL(platform=qualified offline local semantic runtime on Fedora reference
+  hardware; artifact=exact embedding and reranking artifacts with model-policy admission
+  manifests and license/origin evidence; action=authorized model owner supplies and admits the
+  artifacts for the Sprint 30 corpus and benchmark; credential=artifact-source access if required;
+  payment=none)`; every `substitution_set=empty`.
+
+Exact next action: continue at Sprint 31's locally executable installed-file recovery, backup,
+simultaneous-edit, migration, and gate-owned review scope while preserving Sprint 30's exact
+semantic-artifact and strict-local host blockers.
