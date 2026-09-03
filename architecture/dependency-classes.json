@@ -69,6 +69,7 @@
     ],
     "cargo_packages": [
       "agentmage-platform-linux[test-support]",
+      "lopdf",
       "serde",
       "serde_json"
     ]

@@ -73,6 +73,7 @@ EXPECTED_VSCODE_DEV = {
 }
 EXPECTED_CARGO_DEV = {
     "agentmage-platform-linux[test-support]",
+    "lopdf",
     "serde",
     "serde_json",
 }
@@ -206,7 +207,7 @@ def validate_classes(record: Any, root: Path = ROOT) -> list[str]:
         )
         cargo_production.update(production_dependencies)
         if relative == "shells/host/Cargo.toml":
-            if development_dependencies != {"agentmage-platform-linux"}:
+            if development_dependencies != {"agentmage-platform-linux", "lopdf"}:
                 failures.append(
                     f"{relative} development dependencies do not match the test harness"
                 )
@@ -221,6 +222,7 @@ def validate_classes(record: Any, root: Path = ROOT) -> list[str]:
                 )
             else:
                 cargo_development.add("agentmage-platform-linux[test-support]")
+                cargo_development.add("lopdf")
         elif relative == "platforms/linux/Cargo.toml":
             if development_dependencies != {"serde", "serde_json"}:
                 failures.append(

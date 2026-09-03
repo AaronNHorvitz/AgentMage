@@ -75,6 +75,20 @@ class DependencyClassTests(unittest.TestCase):
             failures = validate_classes(self.record, root)
         self.assertTrue(any("do not match the test fixtures" in item for item in failures))
 
+    def test_host_pdf_fixture_dependency_cannot_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.copy_inputs(root)
+            path = root / "shells/host/Cargo.toml"
+            path.write_text(
+                path.read_text(encoding="utf-8").replace(
+                    "lopdf.workspace = true\n", ""
+                ),
+                encoding="utf-8",
+            )
+            failures = validate_classes(self.record, root)
+        self.assertTrue(any("do not match the test harness" in item for item in failures))
+
     def test_swift_external_package_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
