@@ -6,48 +6,50 @@ Story 23.4 coordinator boundary review: pass
 
 === engine-security-matrix ===
 
-running 17 tests
+running 18 tests
 test runtime_coordinator::tests::story_23_4_approval_response_must_echo_the_challenged_grant_identity ... ok
 test runtime_coordinator::tests::story_23_4_request_rejects_binding_catalog_context_cursor_and_limit_drift ... ok
-test runtime_coordinator::tests::story_23_4_request_and_outcome_tampering_fail_closed ... ok
-test runtime_loop::tests::story_23_4_direct_answer_is_verifier_backed_and_streamed_in_exact_order ... ok
 test runtime_coordinator::tests::story_23_4_request_and_outcome_are_closed_hash_bound_contracts ... ok
+test runtime_coordinator::tests::story_23_4_request_and_outcome_tampering_fail_closed ... ok
 test runtime_loop::tests::story_23_4_read_only_mode_rejects_stateful_or_command_catalogs ... ok
 test runtime_loop::tests::story_23_4_model_or_classifier_claims_cannot_mint_success ... ok
 test runtime_loop::tests::story_23_4_expired_allow_is_rejected_before_worker_launch ... ok
-test runtime_loop::tests::story_23_4_deny_closes_without_launching_the_tool ... ok
+test runtime_loop::tests::story_23_4_direct_answer_is_verifier_backed_and_streamed_in_exact_order ... ok
 test runtime_loop::tests::story_23_4_malformed_model_result_fails_closed_with_terminal_evidence ... ok
 test runtime_loop::tests::story_23_4_cancellation_wins_over_a_pending_allow_response ... ok
+test runtime_loop::tests::story_23_4_deny_closes_without_launching_the_tool ... ok
 test runtime_loop::tests::story_23_4_ask_pauses_before_effect_and_exact_allow_resumes_once ... ok
 test runtime_loop::tests::story_23_4_runtime_events_exclude_raw_model_and_tool_canaries ... ok
-test runtime_loop::tests::story_23_4_terminal_tool_failures_have_one_receipt_and_no_hidden_retry ... ok
-test runtime_loop::tests::story_23_4_repeat_no_progress_and_turn_budgets_stop_truthfully ... ok
 test runtime_loop::tests::story_23_4_model_dependency_failures_close_without_effect_or_retry ... ok
-AGENTMAGE_STORY_23_4_PERFORMANCE={"cancellation":{"elapsed_us":618,"event_count":4,"model_calls":0,"output_bytes":0,"state":"cancelled","tool_calls":0,"turns":0},"direct":{"elapsed_us":1935,"event_count":6,"model_calls":1,"output_bytes":23,"state":"success","tool_calls":0,"turns":1},"maximum":{"elapsed_us":5294,"event_count":33,"model_calls":4,"output_bytes":23,"state":"success","tool_calls":3,"turns":4},"maximum_scenario_us":250000,"nominal":{"elapsed_us":3012,"event_count":15,"model_calls":2,"output_bytes":23,"state":"success","tool_calls":1,"turns":2},"over_limit":{"elapsed_us":5376,"event_count":33,"model_calls":4,"output_bytes":0,"state":"exhausted","tool_calls":3,"turns":4},"schema_version":1}
+test runtime_loop::tests::story_23_4_publication_failure_matrix_stops_without_hidden_effect_or_retry ... ok
+test runtime_loop::tests::story_23_4_repeat_no_progress_and_turn_budgets_stop_truthfully ... ok
+test runtime_loop::tests::story_23_4_terminal_tool_failures_have_one_receipt_and_no_hidden_retry ... ok
+AGENTMAGE_STORY_23_4_PERFORMANCE={"cancellation":{"elapsed_us":599,"event_count":4,"model_calls":0,"output_bytes":0,"state":"cancelled","tool_calls":0,"turns":0},"direct":{"elapsed_us":1460,"event_count":6,"model_calls":1,"output_bytes":23,"state":"success","tool_calls":0,"turns":1},"maximum":{"elapsed_us":5181,"event_count":33,"model_calls":4,"output_bytes":23,"state":"success","tool_calls":3,"turns":4},"maximum_scenario_us":250000,"nominal":{"elapsed_us":2661,"event_count":15,"model_calls":2,"output_bytes":23,"state":"success","tool_calls":1,"turns":2},"over_limit":{"elapsed_us":4734,"event_count":33,"model_calls":4,"output_bytes":0,"state":"exhausted","tool_calls":3,"turns":4},"schema_version":1}
 test runtime_loop::tests::story_23_4_ephemeral_runtime_profile_is_bounded ... ok
 
-test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 598 filtered out; finished in 0.03s
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 772 filtered out; finished in 0.03s
 
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.07s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 === native-read-security-matrix ===
 
 running 6 tests
-test runtime_tools::tests::story_23_4_all_existing_read_only_tools_share_the_common_registry ... ok
 test runtime_tools::tests::story_23_4_git_inspection_uses_its_existing_fixed_planner ... ok
 test runtime_tools::tests::story_23_4_registry_runs_the_existing_closed_argument_validator ... ok
+test runtime_tools::tests::story_23_4_all_existing_read_only_tools_share_the_common_registry ... ok
 test runtime_tools::tests::story_23_4_duplicate_pack_registration_fails_without_replacing_tools ... ok
 test runtime_read_tests::story_23_4_fake_model_uses_existing_native_read_tool_then_verifies_completion ... ok
 test runtime_read_tests::story_23_4_fake_model_composes_multiple_reads_search_and_read_only_git ... ok
 
-test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 119 filtered out; finished in 0.01s
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 215 filtered out; finished in 0.02s
 
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_host-423eb316feee59e2)
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-1b18b69b396ab8a2)
 
 === engine-strict-clippy ===
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s
+    Checking agentmage-kernel-engine v0.0.0 (<repository-root>/kernel/engine)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 7.10s
 
 === host-strict-clippy ===
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.03s

@@ -74,14 +74,14 @@
   ],
   "manual_fuzzing_executed": false,
   "release_approved": false,
-  "report_sha256": "ce00c3163330cdf2d9a21ca154553c2cf65a117a7a96eed44702c14078b7af1d",
+  "report_sha256": "511d4664723709bd65a20e1e3b24d0355f53000945a30d8a6af3e4521e52583c",
   "schema_version": 1,
-  "source_revision": "0805b98cae9a5883b781a48748072d3a1e88152a",
+  "source_revision": "5d2a03285dbe6d2b7c86482a6ec8c35815a175aa",
   "sources": [
     {
-      "bytes": 137104,
+      "bytes": 142221,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "3a3067d8d1f72fe7ff2ec0f783feec3f9d9f81401e4a863dbc11f8c99c1ec4c0"
+      "sha256": "91ec216eaa831293a6330134f33b7e9c5590408adfda0275392bd0ce8c78b227"
     },
     {
       "bytes": 7481,
@@ -89,59 +89,59 @@
       "sha256": "5794af19e7fb3d7cc8ef7c7bf446621ab01f0683a628b165383232ceb03761b3"
     },
     {
-      "bytes": 43101,
+      "bytes": 43765,
       "path": "shells/host/src/cli_runtime.rs",
-      "sha256": "fb78655d3ce8c8adf655966f86aa69d38a0e368c1bd01d7d2e966e2d93a0593e"
+      "sha256": "929131ddeda90e7a32a018f692199a8f0c2310a3f7e1dcd1a26882669c77cb8f"
     },
     {
-      "bytes": 38334,
+      "bytes": 39918,
       "path": "shells/host/src/native_chat_runtime.rs",
-      "sha256": "e59a54ea04d1482bff2392cbf8e310332ea42de4a2029889a55792d8ddcc5b43"
+      "sha256": "4d950b3123a820902d82776e69b9f0c529f0377c01452c81e8bc36945c7ec0e0"
     },
     {
-      "bytes": 22184,
+      "bytes": 22624,
       "path": "shells/host/src/runtime_parity_tests.rs",
-      "sha256": "c7e26f72647a853c5dc09c3d316903409b60e1f1e223fb41623e0715f2890592"
+      "sha256": "e695944f11b5aea0f814637835700821674256309d152443f8fc711891e1b657"
     },
     {
-      "bytes": 29664,
+      "bytes": 64018,
       "path": "shells/host/src/runtime_read_tests.rs",
-      "sha256": "d970a7147532e3d8e62b5d3b7ec41e5bb3b2e5103294d5cce7130eb8b6986202"
+      "sha256": "308892cd00c60add332bca89bf71231292d8672a076444b44db77584348feaad"
     },
     {
-      "bytes": 53979,
+      "bytes": 60309,
       "path": "shells/vscode/src/provider.ts",
-      "sha256": "481d3f0fa8ada22800381ceebad9cb72f668e960832fa5a4caafada8664533ec"
+      "sha256": "9c0824496c1e8e62e2fc7e98506c8568af927af75719331c5bdbe0b33f89a14e"
     },
     {
-      "bytes": 37746,
+      "bytes": 44694,
       "path": "shells/vscode/src/runtime_transport.ts",
-      "sha256": "1e11e9d7354512b76b68f97dc2151a4c31ace0175d36f6171b6404b444068fd1"
+      "sha256": "2e88de28536f4bda0202a780e64074e67f69dc38a08c1d984bd3083b5e640b4a"
     },
     {
-      "bytes": 569,
+      "bytes": 681,
       "path": "kernel/engine/Cargo.toml",
-      "sha256": "66bcf914dd0f4fbf0bbc6971916d98f1f6a8b9380453515ddca344fe179ea68e"
+      "sha256": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8"
     },
     {
-      "bytes": 427,
+      "bytes": 618,
       "path": "capabilities/read-only/Cargo.toml",
-      "sha256": "7c13504dd4c895e5f5ada4c2cc5bc2d639b1c61b91c14c246fe177c19785b906"
+      "sha256": "0779ae133a0b654cbd5686ffbde501f72ed333b271592467af87bba02379d25e"
     },
     {
-      "bytes": 4769,
+      "bytes": 4817,
       "path": "architecture/dependency-rules.json",
-      "sha256": "8c172b72aed797bb76fde19f3612c6c83e3877295a58dd18e11c421dfa07d6ad"
+      "sha256": "21235f069ba67f3eb1412a379197e336f7bd71490eb4789b96fb224bfb6b1040"
     },
     {
-      "bytes": 5476,
+      "bytes": 6487,
       "path": "architecture/module-inventory.json",
-      "sha256": "985e5b1c27d70dfc01e04f2f2ec02b7dbb3a5639a9f9cc9603b3d13add33fa43"
+      "sha256": "0fe5e51673cdcef3b99a993b4a93f65a2cd8019579efd3c15aacab565dd38bd0"
     },
     {
-      "bytes": 11584,
+      "bytes": 13195,
       "path": "docs/architecture/reusable-runtime-coordinator.md",
-      "sha256": "af37ec63a8ade0a7842794d793576e3b44459934b2efe878036fa1217ec39e36"
+      "sha256": "f3135d52082124ba32297095dd2f3f5776dd97f5d43b0fb1ed472eb68a47a46a"
     },
     {
       "bytes": 9026,
@@ -154,14 +154,14 @@
       "sha256": "4f600b8ad884fabbe858b51db7e1165d8c7d3a07ad0b7278905caeced4c8188b"
     },
     {
-      "bytes": 10704,
+      "bytes": 10787,
       "path": "scripts/dependency_rules.py",
-      "sha256": "27dee0562b2ae46a07f92be265c4c464b54a0ef799f236244738413c9afc812d"
+      "sha256": "bd2e2da00089b5ea3c550dd067090926b3795b037814ad7dfe341bf31e2eceba"
     },
     {
-      "bytes": 9446,
+      "bytes": 10906,
       "path": "scripts/effect_boundary.py",
-      "sha256": "d000f01a67aa42af5ecdf7d74926c99d9b01c9a0ea92ce5f59f901e5f32956bd"
+      "sha256": "004f62ae1f660e791e6032b766b7b7906d8933ca985010894ff478ebcefa7dc4"
     },
     {
       "bytes": 16105,

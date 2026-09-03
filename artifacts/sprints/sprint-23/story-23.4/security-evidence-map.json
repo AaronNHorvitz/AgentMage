@@ -4,7 +4,7 @@
     {
       "argv_sha256": "cc4a25de1ec491c408fa47a4f724d34dcac8cc52040cbae67f7a080b1c283b74",
       "command_id": "retained-runtime-evidence",
-      "elapsed_ms": 52,
+      "elapsed_ms": 87,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -12,7 +12,7 @@
     {
       "argv_sha256": "04097c4689903a4ef8fa630b7dd87fa756a1c0e0741d9556492342c372cb7306",
       "command_id": "coordinator-boundary-review",
-      "elapsed_ms": 133,
+      "elapsed_ms": 298,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -20,26 +20,26 @@
     {
       "argv_sha256": "b26bfb863a1251b307c473309b2fa69a8ddccbeb10b4b37bb83f2f2a1e19196f",
       "command_id": "engine-security-matrix",
-      "elapsed_ms": 117,
-      "exit_code": 0,
-      "maximum_elapsed_ms": 120000,
-      "test_result": {
-        "failed": 0,
-        "filtered_out": 598,
-        "ignored": 0,
-        "measured": 0,
-        "passed": 17
-      }
-    },
-    {
-      "argv_sha256": "d25c1a35db190c5821af496f6e3cc07b1ba96ddb12ec19c8b6a21d7bc7325ee1",
-      "command_id": "native-read-security-matrix",
       "elapsed_ms": 67,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": {
         "failed": 0,
-        "filtered_out": 119,
+        "filtered_out": 772,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 18
+      }
+    },
+    {
+      "argv_sha256": "d25c1a35db190c5821af496f6e3cc07b1ba96ddb12ec19c8b6a21d7bc7325ee1",
+      "command_id": "native-read-security-matrix",
+      "elapsed_ms": 79,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "test_result": {
+        "failed": 0,
+        "filtered_out": 215,
         "ignored": 0,
         "measured": 0,
         "passed": 6
@@ -48,7 +48,7 @@
     {
       "argv_sha256": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
       "command_id": "engine-strict-clippy",
-      "elapsed_ms": 82,
+      "elapsed_ms": 7146,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -56,7 +56,7 @@
     {
       "argv_sha256": "65e69937c136fc6ddff76a8bd81a066958fed2f9858f8642f8e36f08b08ee814",
       "command_id": "host-strict-clippy",
-      "elapsed_ms": 68,
+      "elapsed_ms": 69,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -64,7 +64,7 @@
     {
       "argv_sha256": "47cdc321aaa5c7c4ed9eed236a4c8f7fcf3cee3ea5f1542a8e3304e1832cac09",
       "command_id": "dependency-direction",
-      "elapsed_ms": 18,
+      "elapsed_ms": 23,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -72,19 +72,19 @@
     {
       "argv_sha256": "1ba5e4e0d2b5860ae9e4b0ed786fc45413e659b7c435186b2ad8dc781a2c4045",
       "command_id": "effect-mediation",
-      "elapsed_ms": 119,
+      "elapsed_ms": 143,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
     }
   ],
   "external_network_used": false,
-  "independent_review_complete": false,
+  "independent_review_complete": true,
   "installed_runtime_complete": false,
   "limitations": [
     "This map reports Story 23.4 source evidence only and is not an installed-product, supported-platform, release, or approval result.",
     "The installed host has no production runtime factory or admitted local model, so native end-to-end evidence remains blocked.",
-    "Independent coordinator and accessibility review evidence is absent.",
+    "Gate-owned independent coordinator review is complete; installed accessibility review evidence is absent.",
     "Persistent crash/restart, complete pressure, and optional-port evidence remain owned by Stories 21.2, 22, and 50.2.",
     "Product-wide injection counts, static analysis, secret scanning, and platform security evidence remain separate gates.",
     "Manual fuzzing remains deferred and was not executed."
@@ -412,11 +412,12 @@
     {
       "evidence": [
         "docs/architecture/reusable-runtime-coordinator.md",
-        "docs/verification/story-23-4-local-results.md"
+        "docs/verification/story-23-4-local-results.md",
+        "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json"
       ],
-      "remaining": "Independent coordinator review has not occurred.",
+      "remaining": "The gate-owned independent boundary review is complete for this source scope; product-wide review remains separately gated.",
       "requirement_id": "SR-TST-011",
-      "status": "partial-story-evidence"
+      "status": "demonstrated-story-scope"
     },
     {
       "evidence": [
@@ -458,30 +459,30 @@
   ],
   "private_user_data_used": false,
   "raw_trace": {
-    "bytes": 4094,
+    "bytes": 4280,
     "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence.log",
     "redactions": [
       "repository-root"
     ],
-    "sha256": "16cc4ad84e85eeaa4faa5d97f007379723c6004ac057f254f363f197c3af7c4d"
+    "sha256": "94521c44c50b7f8c33c4d875d254c87bf49af46638b48741589d018212b7bb41"
   },
   "schema_version": 1,
-  "source_revision": "7176b327197733ed4fd3a890bb8bfb5410b00c39",
+  "source_revision": "5d2a03285dbe6d2b7c86482a6ec8c35815a175aa",
   "sources": [
     {
-      "bytes": 136944,
+      "bytes": 160606,
       "path": "SECURITY-REVIEW.md",
-      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44"
+      "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
     },
     {
-      "bytes": 11584,
+      "bytes": 13195,
       "path": "docs/architecture/reusable-runtime-coordinator.md",
-      "sha256": "af37ec63a8ade0a7842794d793576e3b44459934b2efe878036fa1217ec39e36"
+      "sha256": "f3135d52082124ba32297095dd2f3f5776dd97f5d43b0fb1ed472eb68a47a46a"
     },
     {
-      "bytes": 3922,
+      "bytes": 5665,
       "path": "docs/verification/story-23-4-local-results.md",
-      "sha256": "7fc7cae1cca4488ae7cc906274341d8db9178ed6e5729d59587878a785ac45f5"
+      "sha256": "77d1bc194a7de23e47d186778a36210cd8838bfc2e7096805808496fa3a39c1a"
     },
     {
       "bytes": 9026,
@@ -499,34 +500,34 @@
       "sha256": "c5cb423c381257e59bcac8b6969509499b19f0084c6558be874d95c9675ab72e"
     },
     {
-      "bytes": 11161,
+      "bytes": 17534,
       "path": "kernel/contracts/src/runtime_event.rs",
-      "sha256": "63a01ee7674916b9710cff5a326a75a3b95746bf0e45b704ded02d5cd9b3fd1e"
+      "sha256": "51d66d7ca4be6aeda45a10e25ae1dd60c0c6a7ec54dc4cbca59c39091c919938"
     },
     {
-      "bytes": 9733,
+      "bytes": 11320,
       "path": "kernel/contracts/src/runtime_run.rs",
-      "sha256": "b1a13946d1d6f7968cfc7a3b03e2f2dd09457163ccc6cdc43da3083dc56b6935"
+      "sha256": "6265a34a5400e91741d926a96f6abb8de7ecc41766604215ca7e08bb2d2119c0"
     },
     {
-      "bytes": 33354,
+      "bytes": 38712,
       "path": "kernel/engine/src/runtime_coordinator.rs",
-      "sha256": "fb4a0cc5247911df5c86c6b555777ee5823623f442b408f2e48c7d5424803282"
+      "sha256": "f295e43900f91d48fc2ba29ba7a2c44fd4759915970571ea2a8164d7f954db62"
     },
     {
-      "bytes": 97875,
+      "bytes": 148475,
       "path": "kernel/engine/src/runtime_event.rs",
-      "sha256": "cc3095ea122644047a47c3fecd5c7a100676cf8eca0bd3a22d0445d533f0ed32"
+      "sha256": "9918d6194634c793162c09c4ea39bcdedb5df0f2e20e879c2f856c7d6468ca26"
     },
     {
-      "bytes": 137104,
+      "bytes": 142221,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "3a3067d8d1f72fe7ff2ec0f783feec3f9d9f81401e4a863dbc11f8c99c1ec4c0"
+      "sha256": "91ec216eaa831293a6330134f33b7e9c5590408adfda0275392bd0ce8c78b227"
     },
     {
-      "bytes": 105716,
+      "bytes": 134376,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "5acb210fc32c94def5802fbdcee74965ef5aeb8b55705affbf065a817dc3e2a3"
+      "sha256": "934d50038f38c323b1621bda22fe69afed19fb249676d440521d9c82d80eb92b"
     },
     {
       "bytes": 7481,
@@ -534,34 +535,34 @@
       "sha256": "5794af19e7fb3d7cc8ef7c7bf446621ab01f0683a628b165383232ceb03761b3"
     },
     {
-      "bytes": 43101,
+      "bytes": 43765,
       "path": "shells/host/src/cli_runtime.rs",
-      "sha256": "fb78655d3ce8c8adf655966f86aa69d38a0e368c1bd01d7d2e966e2d93a0593e"
+      "sha256": "929131ddeda90e7a32a018f692199a8f0c2310a3f7e1dcd1a26882669c77cb8f"
     },
     {
-      "bytes": 38334,
+      "bytes": 39918,
       "path": "shells/host/src/native_chat_runtime.rs",
-      "sha256": "e59a54ea04d1482bff2392cbf8e310332ea42de4a2029889a55792d8ddcc5b43"
+      "sha256": "4d950b3123a820902d82776e69b9f0c529f0377c01452c81e8bc36945c7ec0e0"
     },
     {
-      "bytes": 22184,
+      "bytes": 22624,
       "path": "shells/host/src/runtime_parity_tests.rs",
-      "sha256": "c7e26f72647a853c5dc09c3d316903409b60e1f1e223fb41623e0715f2890592"
+      "sha256": "e695944f11b5aea0f814637835700821674256309d152443f8fc711891e1b657"
     },
     {
-      "bytes": 29664,
+      "bytes": 64018,
       "path": "shells/host/src/runtime_read_tests.rs",
-      "sha256": "d970a7147532e3d8e62b5d3b7ec41e5bb3b2e5103294d5cce7130eb8b6986202"
+      "sha256": "308892cd00c60add332bca89bf71231292d8672a076444b44db77584348feaad"
     },
     {
-      "bytes": 10704,
+      "bytes": 10787,
       "path": "scripts/dependency_rules.py",
-      "sha256": "27dee0562b2ae46a07f92be265c4c464b54a0ef799f236244738413c9afc812d"
+      "sha256": "bd2e2da00089b5ea3c550dd067090926b3795b037814ad7dfe341bf31e2eceba"
     },
     {
-      "bytes": 9446,
+      "bytes": 10906,
       "path": "scripts/effect_boundary.py",
-      "sha256": "d000f01a67aa42af5ecdf7d74926c99d9b01c9a0ea92ce5f59f901e5f32956bd"
+      "sha256": "004f62ae1f660e791e6032b766b7b7906d8933ca985010894ff478ebcefa7dc4"
     },
     {
       "bytes": 16105,
@@ -569,14 +570,14 @@
       "sha256": "7f992c505977a40470824abf7fdad6bf4254d352f64c1469fd8c9305ddf96d64"
     },
     {
-      "bytes": 19413,
+      "bytes": 19503,
       "path": "scripts/story_23_4_runtime_evidence.py",
-      "sha256": "b0ff690ff53b4aee5051996bb703d19b45af3a6c9bc52f97cfd1212e2a8e4f16"
+      "sha256": "3d18d1f4a05c41fd54f5419ac95872dd36fdd05bb29b36a4cb75f0a99540ed9e"
     },
     {
-      "bytes": 25634,
+      "bytes": 25868,
       "path": "scripts/story_23_4_security_evidence.py",
-      "sha256": "ad0cd36434e3212b711a1da0c060e2cb51c9c305158fc94884939c5f99303480"
+      "sha256": "960738fbc8476359d1e3663c9a6c457ce4f9a1e3f7eec95b838bfdd83e48185e"
     },
     {
       "bytes": 3818,
@@ -586,20 +587,20 @@
     {
       "bytes": 4041,
       "path": "tests/test_story_23_4_runtime_evidence.py",
-      "sha256": "518a7f02a7d23c4e9741cefb02c2439206550610ea829e6848bd1c713cd67c48"
+      "sha256": "aee667fc0d1c80c4b317d199bedfabbd79070063566cdf5e3286102e2ddb3271"
     },
     {
-      "bytes": 2814,
+      "bytes": 2816,
       "path": "tests/test_story_23_4_security_evidence.py",
-      "sha256": "961f22c6f2add7b061651b9e8e730c060364e930ec075f755a7c6a2326386d9d"
+      "sha256": "020046eed376d925ee55a002a8811118a68eac805c763848b3606bf0920ae124"
     }
   ],
   "status": "pass-current-linux-source-security-map",
   "summary": {
-    "complete_story_security_evidence": false,
-    "demonstrated_count": 20,
+    "complete_story_security_evidence": true,
+    "demonstrated_count": 21,
     "not_applicable_count": 2,
-    "partial_count": 18
+    "partial_count": 17
   },
   "task_ids": [
     "23.4.3.2",
