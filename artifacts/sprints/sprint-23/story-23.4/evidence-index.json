@@ -13,22 +13,22 @@
     {
       "bytes": 9118,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "705178f23777869358ef6aff87731ab94c8266631c0306d81218ebb0c674d857"
+      "sha256": "f8f5d238b3e0baa3d9711fd312d61241982338e27fd88824e5cf41601e9262c1"
     },
     {
       "bytes": 5998,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "b63ee319abd0b14a888b70df3645a129fe166b64f98efad4b5c93ac96d54f36a"
+      "sha256": "58aa683ec4cd35a370e9c5b1294f58dab7b0b96bb7e503c8751fdf870b011501"
     },
     {
       "bytes": 21763,
       "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence-map.json",
-      "sha256": "4974b79af22fb0fc4ed6a2362a1d03024c53ecce260ecd8ba5401fa17a9f6611"
+      "sha256": "35fc07fb0f67d576d3d818a0f65570b804b18ab9f92d24c3ab1cca65f02860c9"
     },
     {
       "bytes": 4280,
       "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence.log",
-      "sha256": "94521c44c50b7f8c33c4d875d254c87bf49af46638b48741589d018212b7bb41"
+      "sha256": "47ab0d0a864c4f2e84b8fc08e23204b25e4940a7635bf47219c4fe3eccd486e1"
     },
     {
       "bytes": 9977,
@@ -66,9 +66,9 @@
       "sha256": "91ec216eaa831293a6330134f33b7e9c5590408adfda0275392bd0ce8c78b227"
     },
     {
-      "bytes": 134376,
+      "bytes": 135911,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "934d50038f38c323b1621bda22fe69afed19fb249676d440521d9c82d80eb92b"
+      "sha256": "72d327fc2e8cae5358ef2700c94c4bc9a60aecda7e22ce513a06268f300f83d9"
     },
     {
       "bytes": 10787,
@@ -177,7 +177,7 @@
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "2b59a001e9c50daf04b2ee5f8f68013103f397404ea567f673d29fef00fa8d74",
+  "index_sha256": "c7b502d2b39412a2253dd9fa405982ec52f4157faa060c09fb041b5969140049",
   "limitations": [
     "The installed host still lacks a production runtime factory and admitted local model.",
     "The source-level boundary-by-boundary failure matrix is complete; physical process faults remain outside this source campaign.",
@@ -481,7 +481,7 @@
   ],
   "record_type": "story_23_4_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "a25b5805cc3e01db7d0ecea1a3c992b37670b324",
+  "source_revision": "393644886f9a884b2ff2b1755aec2475f0d8732e",
   "story_id": "23.4",
   "summary": {
     "complete_count": 16,
