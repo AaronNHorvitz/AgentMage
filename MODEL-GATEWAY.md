@@ -1,15 +1,16 @@
 # AgentMage Model Gateway
 
-| Field | Value |
-|---|---|
-| Status | Normative implementation specification; contract-tested codecs and host ports, no enabled model or endpoint |
-| Decision | 0044 as mandatorily superseded by 0045 |
-| Model admission authority | `MODEL-PROVENANCE-POLICY.md` |
-| Runtime authority | `ENGINEERING-RUNTIME.md` |
-| Security authority | `SECURITY-REVIEW.md` and `TRUSTED-OPERATIONS.md` |
+| Field                     | Value                                                                                                       |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Status                    | Normative implementation specification; contract-tested codecs and host ports, no enabled model or endpoint |
+| Decision                  | 0044 as mandatorily superseded by 0045                                                                      |
+| Model admission authority | `MODEL-PROVENANCE-POLICY.md`                                                                                |
+| Runtime authority         | `ENGINEERING-RUNTIME.md`                                                                                    |
+| Security authority        | `SECURITY-REVIEW.md` and `TRUSTED-OPERATIONS.md`                                                            |
 
 Current product lifecycle: `scaffolded`.
-Current integrated workflow: none.
+Current integrated workflow: deterministic fake-model repository-analysis vertical slice (Story 22.5).
+The bound evidence is [`vertical-slice-report.json`](artifacts/sprints/sprint-22/story-22.5/vertical-slice-report.json); it uses a deterministic fake model and does not enable a gateway model or route.
 Current enabled models: none.
 Current supported platforms: none.
 Stabilization scope freeze: active (Decision 0046) — Epics 0 through 8, 10, 11, and the Universal Story Definition of Done; Epics 9 and 12 through 16 preserved outside the freeze.
@@ -44,13 +45,13 @@ planned. Codec and hostile-fixture success is not live qualification.
 
 The following identities are independent and hash-bound:
 
-| Identity | Meaning |
-|---|---|
-| Model profile | Artifact, publisher, lineage, license, tokenizer, template, codec, quantization, context, decoding, capabilities, and evaluation |
-| Runtime adapter | Executable or service implementation, build, platform, transport, and resource behavior |
-| Protocol codec | Translation between the canonical contract and one external protocol and version |
-| Endpoint profile | Operator, deployment, URI reference, TLS and network policy, authentication reference, region, retention, logging, and quotas |
-| Route profile | Exact model, runtime, codec, endpoint, policy, role, disclosure, limits, and qualification tuple |
+| Identity         | Meaning                                                                                                                          |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Model profile    | Artifact, publisher, lineage, license, tokenizer, template, codec, quantization, context, decoding, capabilities, and evaluation |
+| Runtime adapter  | Executable or service implementation, build, platform, transport, and resource behavior                                          |
+| Protocol codec   | Translation between the canonical contract and one external protocol and version                                                 |
+| Endpoint profile | Operator, deployment, URI reference, TLS and network policy, authentication reference, region, retention, logging, and quotas    |
+| Route profile    | Exact model, runtime, codec, endpoint, policy, role, disclosure, limits, and qualification tuple                                 |
 
 The endpoint operator may differ from the model publisher. Open weights do not
 establish an open-source license. A protocol-compatible server does not become

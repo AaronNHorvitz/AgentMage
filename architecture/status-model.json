@@ -40,19 +40,10 @@
       ]
     },
     "disposition": {
-      "values": [
-        "active",
-        "blocked",
-        "rejected",
-        "superseded"
-      ]
+      "values": ["active", "blocked", "rejected", "superseded"]
     },
     "support": {
-      "values": [
-        "unsupported-pre-release",
-        "supported",
-        "end-of-support"
-      ],
+      "values": ["unsupported-pre-release", "supported", "end-of-support"],
       "promotion_order": [
         "unsupported-pre-release",
         "supported",
@@ -120,7 +111,12 @@
     "verification_status": "not-run",
     "disposition_status": "active",
     "support_status": "unsupported-pre-release",
-    "integrated_user_workflow": false,
+    "integrated_user_workflow": true,
+    "integrated_workflow": {
+      "id": "story-22.5-deterministic-repository-analysis",
+      "scope": "source-level deterministic fake-model repository-analysis vertical slice",
+      "evidence_path": "artifacts/sprints/sprint-22/story-22.5/vertical-slice-report.json"
+    },
     "enabled_models": [],
     "supported_platforms": [],
     "released_packages": [],
@@ -133,6 +129,10 @@
       {
         "kind": "status-assessment",
         "path": "ENGINEERING-AUDIT-REMEDIATION.md"
+      },
+      {
+        "kind": "integration",
+        "path": "artifacts/sprints/sprint-22/story-22.5/vertical-slice-report.json"
       }
     ]
   },
@@ -273,7 +273,7 @@
     },
     {
       "id": "engineering-runtime",
-      "lifecycle_status": "scaffolded",
+      "lifecycle_status": "implemented",
       "verification_status": "contract-tested",
       "disposition_status": "active",
       "support_status": "unsupported-pre-release",
@@ -289,6 +289,10 @@
         {
           "kind": "test",
           "path": "shells/host/src/engineering_runtime.rs"
+        },
+        {
+          "kind": "implementation",
+          "path": "artifacts/sprints/sprint-22/story-22.5/vertical-slice-report.json"
         },
         {
           "kind": "status-assessment",
@@ -579,7 +583,7 @@
     ],
     "required_markers": [
       "Current product lifecycle: `scaffolded`.",
-      "Current integrated workflow: none.",
+      "Current integrated workflow: deterministic fake-model repository-analysis vertical slice (Story 22.5).",
       "Current enabled models: none.",
       "Current supported platforms: none.",
       "Stabilization scope freeze: active (Decision 0046)"

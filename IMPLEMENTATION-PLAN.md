@@ -2,7 +2,7 @@
 
 | Field | Planning baseline |
 |---|---|
-| Status | Pre-alpha scaffold; Decision 0045 mandates the Verified Chat, full Engineering Runtime, gateway, capability, and Team paths; component implementation is active but integrated and release gates remain open |
+| Status | Pre-alpha scaffold with one source-level deterministic fake-model repository-analysis workflow integrated under Story 22.5; broader integration and every release gate remain open |
 | Version | 1.9 |
 | Date | 2026-08-22 |
 | Product | AgentMage - a brand-new, from-scratch local-first assistant |
@@ -27,7 +27,9 @@ A developer or coding agent must use this document to understand the overall seq
 
 Current product lifecycle: `scaffolded`.
 
-Current integrated workflow: none.
+Current integrated workflow: deterministic fake-model repository-analysis vertical slice (Story 22.5).
+
+The proving artifact is [`vertical-slice-report.json`](artifacts/sprints/sprint-22/story-22.5/vertical-slice-report.json). Its scope is one deterministic fake-model source-to-terminal repository-analysis run; it does not qualify a production model, installed package, platform, or release.
 
 Current enabled models: none.
 

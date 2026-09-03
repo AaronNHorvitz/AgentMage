@@ -6,7 +6,7 @@
 | **Version** | Draft v0.7 |
 | **Author** | Aaron N. Horvitz |
 | **Date** | 2026-08-22 |
-| **Status** | Pre-alpha scaffold; mandatory Verified Chat and Engineering Runtime implementation is underway under Decision 0045; no integrated end-user workflow, enabled model, supported platform, or supported binary |
+| **Status** | Pre-alpha scaffold with one source-level deterministic fake-model repository-analysis workflow integrated under Story 22.5; no enabled model, supported platform, supported package, or release |
 | **Detailed requirements** | [Agent-Scaffolding-Inventory.md](./Agent-Scaffolding-Inventory.md) |
 | **Security-review baseline** | [SECURITY-REVIEW.md](./SECURITY-REVIEW.md) |
 | **High-level implementation plan** | [IMPLEMENTATION-PLAN.md](./IMPLEMENTATION-PLAN.md) |
@@ -26,7 +26,9 @@ If the documents conflict, the narrower safety boundary or release scope wins un
 
 Current product lifecycle: `scaffolded`.
 
-Current integrated workflow: none.
+Current integrated workflow: deterministic fake-model repository-analysis vertical slice (Story 22.5).
+
+The bound evidence is [`vertical-slice-report.json`](artifacts/sprints/sprint-22/story-22.5/vertical-slice-report.json). It proves one source-to-terminal deterministic fake-model path through the reusable runtime and a production native artifact tool, not a qualified production model, installed package, supported platform, or release.
 
 Current enabled models: none.
 

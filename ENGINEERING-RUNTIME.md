@@ -1,17 +1,19 @@
 # AgentMage Engineering Runtime
 
-| Field | Value |
-|---|---|
-| Status | Normative implementation specification; contract-tested scaffold, not integrated or supported |
-| Decisions | 0042, 0043, and mandatory supersession 0045 |
-| Product authority | `PRD.md` |
-| Detailed requirements | `Agent-Scaffolding-Inventory.md` |
-| Security authority | `SECURITY-REVIEW.md` and `RUNTIME-BOUNDARIES.md` |
-| Model mediation | `MODEL-GATEWAY.md` |
-| Capability manifests | `ENGINEERING-CAPABILITY-REGISTRY.md` |
+| Field                 | Value                                                                                         |
+| --------------------- | --------------------------------------------------------------------------------------------- |
+| Status                | Normative implementation specification; contract-tested scaffold, not integrated or supported |
+| Decisions             | 0042, 0043, and mandatory supersession 0045                                                   |
+| Product authority     | `PRD.md`                                                                                      |
+| Detailed requirements | `Agent-Scaffolding-Inventory.md`                                                              |
+| Security authority    | `SECURITY-REVIEW.md` and `RUNTIME-BOUNDARIES.md`                                              |
+| Model mediation       | `MODEL-GATEWAY.md`                                                                            |
+| Capability manifests  | `ENGINEERING-CAPABILITY-REGISTRY.md`                                                          |
 
 Current product lifecycle: `scaffolded`.
-Current integrated workflow: none.
+Current integrated workflow: deterministic fake-model repository-analysis vertical slice (Story 22.5).
+
+The bound [`vertical-slice-report.json`](artifacts/sprints/sprint-22/story-22.5/vertical-slice-report.json) proves one source-to-terminal deterministic fake-model repository-analysis path through prepared source, the reusable runtime, a production native artifact tool, receipts, citations, and verifier-owned success.
 Current enabled models: none.
 Current supported platforms: none.
 Stabilization scope freeze: active (Decision 0046) — Epics 0 through 8, 10, 11, and the Universal Story Definition of Done; Epics 9 and 12 through 16 preserved outside the freeze.
@@ -40,8 +42,8 @@ kernel-backed Team coordinator with bounded concurrent workers, independent
 review, correction, serialized integration, checkpoints, and final
 verification.
 
-This is not an integrated or supported product workflow. No model profile is
-currently qualified and selectable; no live private or managed remote endpoint
+The Story 22.5 path is integrated source-level workflow evidence, not a supported product workflow.
+No model profile is currently qualified and selectable; no live private or managed remote endpoint
 has passed qualification; the production host does not yet install a complete
 Team worker/reviewer/integrator stack; in-flight Team effects fail closed as
 recovery-uncertain; broad artifact parsing, installed VS Code acceptance,
@@ -118,33 +120,33 @@ explicit migration behavior. Existing schemas under `schemas/model/` and
 `schemas/runtime/` remain authoritative where they already cover a record.
 New Engineering Runtime schemas live under `schemas/engineering-runtime/`.
 
-| Record | Required purpose |
-|---|---|
-| `ArtifactEnvelope` | Immutable source identity, media type, byte identity, classification, origin class, collection state, and authority binding |
-| `ArtifactTransformation` | Parser and transformation identity, input/output hashes, exact ranges, warnings, and reproducibility |
-| `ArtifactIngestionResult` | Captured, parsed, partial, unsupported, denied, unavailable, failed, or explicitly omitted terminal disposition |
-| `ContextManifest` | Complete accounting for admitted, omitted, summarized, truncated, restricted, duplicate, stale, and unavailable material |
-| `ContextDeliveryReceipt` | Exact model-visible ranges, hashes, token budget, route identity, and required-unseen blocker state |
-| `WorkflowDefinition` | Versioned graph, steps, dependencies, budgets, side-effect classes, and verifier policy |
-| `WorkflowState` | Closed lifecycle, active step, attempts, consumed budgets, approvals, receipts, and terminal state |
-| `WorkflowCheckpoint` | Durable source, policy, environment, route, tool, receipt, and verifier bindings for safe resume |
-| `ToolObservation` | Exactly one complete terminal result for one admitted call, with artifact-backed output and state-change truth |
-| `VerificationResult` | Current postconditions, preserved invariants, prohibited effects, evidence, and pass or non-pass outcome |
-| `TerminalResult` | Verified success, verified no-op, blocked, failed, cancelled, timed out, resource exhausted, or uncertain |
+| Record                    | Required purpose                                                                                                            |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `ArtifactEnvelope`        | Immutable source identity, media type, byte identity, classification, origin class, collection state, and authority binding |
+| `ArtifactTransformation`  | Parser and transformation identity, input/output hashes, exact ranges, warnings, and reproducibility                        |
+| `ArtifactIngestionResult` | Captured, parsed, partial, unsupported, denied, unavailable, failed, or explicitly omitted terminal disposition             |
+| `ContextManifest`         | Complete accounting for admitted, omitted, summarized, truncated, restricted, duplicate, stale, and unavailable material    |
+| `ContextDeliveryReceipt`  | Exact model-visible ranges, hashes, token budget, route identity, and required-unseen blocker state                         |
+| `WorkflowDefinition`      | Versioned graph, steps, dependencies, budgets, side-effect classes, and verifier policy                                     |
+| `WorkflowState`           | Closed lifecycle, active step, attempts, consumed budgets, approvals, receipts, and terminal state                          |
+| `WorkflowCheckpoint`      | Durable source, policy, environment, route, tool, receipt, and verifier bindings for safe resume                            |
+| `ToolObservation`         | Exactly one complete terminal result for one admitted call, with artifact-backed output and state-change truth              |
+| `VerificationResult`      | Current postconditions, preserved invariants, prohibited effects, evidence, and pass or non-pass outcome                    |
+| `TerminalResult`          | Verified success, verified no-op, blocked, failed, cancelled, timed out, resource exhausted, or uncertain                   |
 
 ### 5.1 Existing-authority persistence map
 
 Canonical Engineering Runtime records reuse the authorities already admitted by the runtime. They
 do not introduce another database, artifact service, journal, or client-owned truth source.
 
-| Persisted surface | Existing authority | Rule |
-|---|---|---|
-| Complete canonical JSON bytes | Private content-addressed runtime artifact store | Validate the closed Rust record before canonical serialization and publication. |
-| Identity, digest, lifecycle, retention, and reference metadata | SQLCipher `OperationalStore` | Store only the metadata needed to locate, verify, retain, and reconcile the immutable payload. |
-| Ordered correctness and lifecycle history | Append-only runtime event journal | Record canonical references and transitions; journal order remains authoritative for reconstruction. |
-| Original source bytes named by `ArtifactEnvelope` | Request-bound source-artifact service | Reuse the captured source authority; no canonical record may copy source bytes into a second store. |
-| Current `WorkflowState` row | Rebuildable operational projection | A materialized row is an optimization and must be reconstructible from admitted events and artifacts. |
-| Client rendering | Runtime references and events | Chat, CLI, and future clients receive projections; they never acquire persistence authority. |
+| Persisted surface                                              | Existing authority                               | Rule                                                                                                  |
+| -------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Complete canonical JSON bytes                                  | Private content-addressed runtime artifact store | Validate the closed Rust record before canonical serialization and publication.                       |
+| Identity, digest, lifecycle, retention, and reference metadata | SQLCipher `OperationalStore`                     | Store only the metadata needed to locate, verify, retain, and reconcile the immutable payload.        |
+| Ordered correctness and lifecycle history                      | Append-only runtime event journal                | Record canonical references and transitions; journal order remains authoritative for reconstruction.  |
+| Original source bytes named by `ArtifactEnvelope`              | Request-bound source-artifact service            | Reuse the captured source authority; no canonical record may copy source bytes into a second store.   |
+| Current `WorkflowState` row                                    | Rebuildable operational projection               | A materialized row is an optimization and must be reconstructible from admitted events and artifacts. |
+| Client rendering                                               | Runtime references and events                    | Chat, CLI, and future clients receive projections; they never acquire persistence authority.          |
 
 [`canonical_record_authority_route`](kernel/engine/src/engineering_records.rs) is the executable,
 closed mapping for all nine record families. `CanonicalRuntimeRecordRef::artifact_payload` enforces

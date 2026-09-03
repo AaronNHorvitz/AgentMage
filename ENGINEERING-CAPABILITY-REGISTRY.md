@@ -1,14 +1,15 @@
 # AgentMage Engineering Capability Registry
 
-| Field | Value |
-|---|---|
-| Status | Normative implementation specification; contract-tested registry scaffold, no enabled product capability |
-| Decision | 0043 as mandatorily superseded by 0045 |
-| Runtime authority | `ENGINEERING-RUNTIME.md` |
-| Agent role catalog | `docs/architecture/planning-review-delivery-agent-profiles.md` |
+| Field              | Value                                                                                                    |
+| ------------------ | -------------------------------------------------------------------------------------------------------- |
+| Status             | Normative implementation specification; contract-tested registry scaffold, no enabled product capability |
+| Decision           | 0043 as mandatorily superseded by 0045                                                                   |
+| Runtime authority  | `ENGINEERING-RUNTIME.md`                                                                                 |
+| Agent role catalog | `docs/architecture/planning-review-delivery-agent-profiles.md`                                           |
 
 Current product lifecycle: `scaffolded`.
-Current integrated workflow: none.
+Current integrated workflow: deterministic fake-model repository-analysis vertical slice (Story 22.5).
+The bound evidence is [`vertical-slice-report.json`](artifacts/sprints/sprint-22/story-22.5/vertical-slice-report.json); it does not register or enable a product capability.
 Current enabled models: none.
 Current supported platforms: none.
 Stabilization scope freeze: active (Decision 0046) — Epics 0 through 8, 10, 11, and the Universal Story Definition of Done; Epics 9 and 12 through 16 preserved outside the freeze.
@@ -112,17 +113,17 @@ or read-only explanation. It does not improvise a hidden workflow.
 
 The initial planned registry composes already accepted AgentMage work:
 
-| Capability | Primary outcome | Earliest owning work |
-|---|---|---|
-| Repository inspection | Cited repository map and bounded source analysis | Sprints 18-23 |
-| Whole-codebase audit | Resumable evidence-backed comprehensive audit | Sprints 157-166 |
-| Coding change | Isolated plan, patch, validation, review, and handoff | Sprints 41-50 |
-| Pull-request review | Independent local and hosted review packet | Sprints 74, 85-86, 106-107 |
-| Issue and bug workflow | Evidence-backed issue, bug, and task lifecycle | Sprints 92-95 and 107 |
-| Test diagnosis | Structured test observation and bounded repair plan | Sprints 41-50 |
-| Release readiness | Traceable build, security, support, and release evidence | Sprints 96-100 and 103-126 |
-| Document workflow | Source-preserving Word, PDF, sheet, and presentation work | Sprints 54-65 |
-| Research with citations | Public-source research through isolated workers | Sprints 82 and 160 |
+| Capability              | Primary outcome                                           | Earliest owning work       |
+| ----------------------- | --------------------------------------------------------- | -------------------------- |
+| Repository inspection   | Cited repository map and bounded source analysis          | Sprints 18-23              |
+| Whole-codebase audit    | Resumable evidence-backed comprehensive audit             | Sprints 157-166            |
+| Coding change           | Isolated plan, patch, validation, review, and handoff     | Sprints 41-50              |
+| Pull-request review     | Independent local and hosted review packet                | Sprints 74, 85-86, 106-107 |
+| Issue and bug workflow  | Evidence-backed issue, bug, and task lifecycle            | Sprints 92-95 and 107      |
+| Test diagnosis          | Structured test observation and bounded repair plan       | Sprints 41-50              |
+| Release readiness       | Traceable build, security, support, and release evidence  | Sprints 96-100 and 103-126 |
+| Document workflow       | Source-preserving Word, PDF, sheet, and presentation work | Sprints 54-65              |
+| Research with citations | Public-source research through isolated workers           | Sprints 82 and 160         |
 
 Catalog inclusion above is planned identity, not enablement. Each capability
 requires its own manifest, fixtures, implementation, conformance, security,

@@ -8,7 +8,7 @@ AgentMage is an independent, privately developed product created by Aaron N. Hor
 
 | Field | Current baseline |
 |---|---|
-| Status | Pre-alpha scaffold; contract-tested Verified Chat and Engineering Runtime components exist under Decision 0045, but there is no integrated end-user workflow, enabled model, supported platform, or supported binary |
+| Status | Pre-alpha scaffold with one source-level deterministic fake-model repository-analysis workflow integrated under Story 22.5; no model, platform, package, or release is enabled or supported |
 | First supported public release | v1.0 GA Local-First Delivery, Productivity, Trusted Operations, and Whole-Codebase Audit System |
 | Internal milestones | v0.1-v0.7 and the inherited v1+ capability sequence |
 | First interface target | AgentMage Verified Chat in Visual Studio Code, with stable `@agentmage` and Language Model Chat Provider compatibility paths beside the separate Codex tab |
@@ -23,7 +23,9 @@ AgentMage is an independent, privately developed product created by Aaron N. Hor
 
 Current product lifecycle: `scaffolded`.
 
-Current integrated workflow: none.
+Current integrated workflow: deterministic fake-model repository-analysis vertical slice (Story 22.5).
+
+Evidence: [`vertical-slice-report.json`](./artifacts/sprints/sprint-22/story-22.5/vertical-slice-report.json) records one verified source-to-terminal run through prepared source, the reusable runtime coordinator, a production native artifact tool, exact receipt and citation state, and verifier-owned success. It uses a deterministic fake model and is not installed-package, production-model, platform-support, or release evidence.
 
 Current enabled models: none.
 

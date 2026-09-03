@@ -28,7 +28,9 @@
 
 Current product lifecycle: `scaffolded`.
 
-Current integrated workflow: none.
+Current integrated workflow: deterministic fake-model repository-analysis vertical slice (Story 22.5).
+
+Bound artifact: [`vertical-slice-report.json`](artifacts/sprints/sprint-22/story-22.5/vertical-slice-report.json). The claim is limited to one source-level deterministic fake-model repository-analysis path and enables no model, installed package, platform support, or release.
 
 Current enabled models: none.
 
@@ -3430,7 +3432,9 @@ campaigns remain separate gates.
 
 **Current gate result:** BLOCKED with deterministic coverage, rendering, source resolution, exact selective invalidation, native Fedora held-object projection and encrypted derivative-cache reconciliation, one-use pre-citation freshness, hostile-input isolation, cooperative parser cancellation, guarded Rust panic containment, golden identities, and read-only invariance passing. Remaining blockers are native Ubuntu, macOS, and Windows repository-map campaigns, the deliberately deferred manual parser fuzz campaign, and independent review. Rust panic containment does not claim native memory-fault or process-abort recovery and no release approval is inferred.
 
-### [ ] Sprint 20 - Evidence-State Assignment. `blocked: host change required — run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local policy evidence set and scripts/sprint_20_evidence.py --write`; substitution set: empty.
+### [ ] Sprint 20 - Evidence-State Assignment
+
+`blocked: host change required — run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local policy evidence set and scripts/sprint_20_evidence.py --write`; substitution set: empty.
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
@@ -3483,7 +3487,9 @@ campaigns remain separate gates.
 
 **Current gate result:** BLOCKED with the exact four-state assignment contract, eight Unknown/Blocked reasons, deterministic Observed and Derived provenance, exact Inferred model/runtime provenance, successful-answer integration, confidence-injection rejection, authority absence, source-bound recomputation, and product-security mapping passing. The repository-owned review renewal is blocked by the exact host-change tuple on the Sprint heading: the restricted filesystem reports the admitted worker executables as `nfsnobody`, so the manifest test correctly fails before launch. Citation freshness, per-statement ledgers, receipt chaining, keyed integrity, and clock sequencing remain dependent Sprint 21 work; no platform or release substitution is made.
 
-### [ ] Sprint 21 - Citation Freshness and Tamper-Evident Receipts. `blocked: host change required — run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty.
+### [ ] Sprint 21 - Citation Freshness and Tamper-Evident Receipts
+
+`blocked: host change required — run cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network --locked -- --ignored outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then renew the strict-local source policy and npm run -s evidence:sprint21:build`; substitution set: empty.
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
@@ -3739,7 +3745,7 @@ The reusable-gate ownership table assigns full `RV-56` (Engineering Capability R
   - [x] **Sub-task 22.2.2.3:** Publish a privacy-safe operator view for artifact identity, type, size, producer, integrity, retention, references, and cleanup state without exposing sensitive payloads by default. Evidence: closed schema-v2 [`RuntimeArtifactOperatorView`](kernel/contracts/src/runtime_artifact.rs), its public [`runtime-artifact-operator-view.schema.json`](schemas/runtime/runtime-artifact-operator-view.schema.json), canonical example, and the Operator Projection section of [`runtime-artifact-lifecycle.md`](docs/architecture/runtime-artifact-lifecycle.md) expose only the exact path-free reference (including identity, type-independent digest, byte size, and media), semantic kind, sensitivity, retention, owner/producer/optional receipt/policy identities, trusted times, lifecycle/integrity/revision/reason, checkpoint/shared-reference counts, and cleanup disposition. Preview text, payload bytes, native paths, environment values, credentials, keys, grant material, and future-read authority are structurally absent. The focused kernel lifecycle test verifies complete active, shared, released, eligible, and deleted projections while cross-owner content reads fail; the public-schema mutation test rejects forged cleanup and unknown path fields; strict contract/engine Clippy passes. A user-facing diagnostics command, installed-interface accessibility, other platforms, independent review, release, and deferred manual fuzzing remain later work.
   - [x] **Sub-task 22.2.2.4:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story. Evidence: [`evidence-index.json`](artifacts/sprints/sprint-22/story-22.2/evidence-index.json) maps all 17 Story 22.2 sub-tasks to exact statement digests, implementation paths, executable test identities, retained evidence, file sizes, and SHA-256 digests. The deterministic [`story_22_2_evidence_index.py`](scripts/story_22_2_evidence_index.py) generator and mutation suite reject task omission, reorder, status drift, statement drift, unsafe or missing files, unresolved tests, artifact mutation, false story completion, and index-digest substitution. The index preserves 17 complete local sub-task mappings with no partial or unclassified open mapping, while explicitly denying story, sprint, or release completion. Physical-fault injection, long mixed-artifact recovery, concurrent collection, larger pressure campaigns, Windows and installed-package evidence, independent human and cryptographic review, and deferred manual fuzzing remain open under their owning story or release gates.
 
-- [ ] **Task 22.2.3 - Verify integrity, limits, retention, and restart behavior**
+- [x] **Task 22.2.3 - Verify integrity, limits, retention, and restart behavior**
   - [x] **Sub-task 22.2.3.1:** Unit-test digest, size, media, identity, reference, preview, encryption, retention, and path contracts with missing, duplicate, colliding, partial, corrupt, oversized, stale, expired, and unknown-version objects. Evidence: [`native-artifact-integrity.json`](artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json) and its hash-bound redacted raw trace bind 22 kernel contract tests, nine native Linux store/adversarial tests, one production generated-file route test, and one public-schema mutation test to an exact source revision. The retained matrix covers every named class, including owner/checkpoint binding, encryption and plaintext-canary exclusion, quarantine and cleanup, identifier collision with canonical-state preservation, staging bounds, expiration, unsupported versions, path/link/namespace attacks, public-evidence separation, and path-free operator projection. A later focused contract extension also admits `application/octet-stream` only for command and test stream kinds while retaining the binary-model-output denial. It is current-host source evidence only and does not claim concurrent race, physical-fault, Windows, installed-package, independent-review, or deferred manual-fuzz evidence.
   - [x] **Sub-task 22.2.3.2:** Crash before and after staging, rename, metadata commit, event commit, checkpoint commit, reference release, and collection; assert no mutable overwrite, false reference, orphan leak beyond declared recovery retention, repeated effect, or false completion. Evidence: [`native-artifact-crash-matrix.json`](artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.json) and its hash-bound redacted raw trace retain fourteen deterministic no-unwind subprocess stops across the seven exact boundaries using the encrypted native Linux payload namespace and SQLCipher metadata. Every reopen reconciles staged residue, unreferenced placement, committed metadata/event/checkpoint state, release, and collection with zero false terminal events, duplicate artifact events, hidden orphans, or invented checkpoint roots. This closes the task's exact before/after boundary matrix on the current native Linux source path. Stops inside a filesystem or SQLite syscall, physical power loss, disk-full/device-latency faults, Windows evidence, independent review, and deferred manual fuzzing remain broader story or release evidence and are not claimed by this local closure.
   - [x] **Sub-task 22.2.3.3:** Resume sessions with large command/test/model artifacts, missing or quarantined payloads, stale repository state, changed policy, and changed model profile; assert exact reconstruction or one explicit blocked recovery result. Evidence: [`native-artifact-resume.json`](artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.json) and its hash-bound redacted raw trace exercise four production-coordinator paths through the encrypted native Linux authority. The exact path restores the committed event cursor, continuation, artifact-reference set, receipt, and terminal no-op outcome while one protected Git operation remains at one execution; separately resealed repository, policy, model-profile identity, and model-runtime drift each fail closed. A second path checkpoints after separately approved 70 KiB command and validation streams plus a clean Git observation, reopens and byte-verifies both the `standard_output` and `test_log` artifacts, restores the exact reference set, and completes without increasing the two command executions. A third path reopens and byte-verifies a 70 KiB terminal `model_output` artifact without representing terminal work as resumable. Missing and corrupt continuation payloads reconcile to path-free operator views with `quarantined` lifecycle, exact `missing` or `corrupt` integrity, `blocked` cleanup, and stable reason code; both block restoration, remove the active object, and leave the protected operation at one execution. The refreshed report is bound to commit `2bc8bab`; four evidence mutation tests and strict host Clippy pass. This is deterministic fake-model and instrumented-executor Linux source evidence. Long sessions with mixed artifacts, concurrent collection, physical storage faults, installed-interface and Windows evidence, real-model evidence, independent human review, and deferred manual fuzzing remain broader gates and are not claimed by this local closure.
@@ -3753,7 +3759,7 @@ The reusable-gate ownership table assigns full `RV-56` (Engineering Capability R
 - [ ] **Story AC 22.2.AC2:** Given interruption, corruption, missing bytes, reference drift, or concurrent collection, when the Story 22.1 startup or resume path reconciles artifacts, then it reconstructs one current reference set safely or blocks explicitly without replaying effects or claiming unavailable evidence.
 - [ ] **Story AC 22.2.AC3:** Given another session, a hostile path, or repository `artifacts/` content, when artifact access is attempted, then no path name or content hash alone grants access and no private runtime payload is confused with public verification evidence.
 
-#### [ ] Story 22.3 - Source-Artifact Preparation and Context Accounting
+#### [x] Story 22.3 - Source-Artifact Preparation and Context Accounting
 
 **User-facing value:** As a user, I need everything I supply to be represented truthfully in the
 model context or visibly excluded, with exact provenance and bounded resource use.
@@ -3830,7 +3836,7 @@ Windows, physical-fault, independently admitted real-model, independent-review, 
       reused, then stale dependencies invalidate transitively and unavailable evidence cannot be
       represented as current.
 
-#### [ ] Story 22.4 - Durable Attempt Recovery and Resume
+#### [x] Story 22.4 - Durable Attempt Recovery and Resume
 
 **User-facing value:** As a user, I need interrupted multi-step work to resume from the last verified
 state without repeating an effect or hiding why progress stopped.
@@ -3920,7 +3926,7 @@ Windows, physical-fault, and independent-review qualification remain explicitly 
 task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of
 Done are complete with current evidence. Otherwise it is BLOCKED.
 
-#### [ ] Story 22.5 - Engineering Runtime Vertical Slice
+#### [x] Story 22.5 - Engineering Runtime Vertical Slice
 
 **User-facing value:** As a user, I need one complete local read-only engineering task to travel
 from admitted source through context, model proposal, tools, verification, artifacts, and resume.
@@ -4232,9 +4238,9 @@ package, and independent review evidence remain explicitly outside this local st
 - [ ] **Sprint AC 23.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 - [ ] **Sprint AC 23.AC6:** `AT-VSC-003` proves zero hard-coded model prerequisite, zero stale/blocked profile launch, and zero automatic substitution across the complete lifecycle fixture matrix. Partial local evidence: pure kernel, host, and extension fixtures prove all three properties for discovery and immediate revalidation; native production launch and every request-phase lifecycle evidence remain open.
 - [ ] **Sprint AC 23.AC7:** Native Chat completes the approved read-only vertical slice through one interface-independent runtime coordinator with no shell-to-model/tool/storage bypass. Partial local evidence: deterministic authenticated-host and VS Code fixtures traverse the common coordinator adapter and prove the thin-client boundary; installed-host runtime/model composition and native acceptance remain absent.
-- [ ] **Sprint AC 23.AC8:** Runtime requests, events, receipts, cancellation, outcomes, and the optional journal/checkpoint/artifact ports are reusable by a non-Chat test client without changing kernel semantics.
-- [ ] **Sprint AC 23.AC9:** `ALLOW`, `ASK`, and `DENY` preserve exact `CapabilityGrant` authority and produce no approval-dialog or coordinator-created authority.
-- [ ] **Sprint AC 23.AC10:** Stable participant ingress accounts for every supplied part, and the
+- [x] **Sprint AC 23.AC8:** Runtime requests, events, receipts, cancellation, outcomes, and the optional journal/checkpoint/artifact ports are reusable by a non-Chat test client without changing kernel semantics.
+- [x] **Sprint AC 23.AC9:** `ALLOW`, `ASK`, and `DENY` preserve exact `CapabilityGrant` authority and produce no approval-dialog or coordinator-created authority.
+- [x] **Sprint AC 23.AC10:** Stable participant ingress accounts for every supplied part, and the
       fake-model workflow slice proves preflight, fresh attempts, verifier-only completion, bounded
       recovery, diagnosis, and cross-client parity.
 

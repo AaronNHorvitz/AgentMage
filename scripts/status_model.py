@@ -72,7 +72,12 @@ EXPECTED_CURRENT_PRODUCT = {
     "verification_status": "not-run",
     "disposition_status": "active",
     "support_status": "unsupported-pre-release",
-    "integrated_user_workflow": False,
+    "integrated_user_workflow": True,
+    "integrated_workflow": {
+        "id": "story-22.5-deterministic-repository-analysis",
+        "scope": "source-level deterministic fake-model repository-analysis vertical slice",
+        "evidence_path": "artifacts/sprints/sprint-22/story-22.5/vertical-slice-report.json",
+    },
     "enabled_models": [],
     "supported_platforms": [],
     "released_packages": [],

@@ -103,6 +103,17 @@ class StatusModelTests(unittest.TestCase):
         mutated["current_product"]["enabled_models"] = ["gemma-4-e4b-it"]
         self.assertTrue(any("enabled_models" in item for item in self.validate(mutated)))
 
+    def test_current_integrated_workflow_is_bound_to_story_22_5(self) -> None:
+        current = self.model["current_product"]
+        self.assertTrue(current["integrated_user_workflow"])
+        self.assertEqual(
+            current["integrated_workflow"]["evidence_path"],
+            "artifacts/sprints/sprint-22/story-22.5/vertical-slice-report.json",
+        )
+        mutated = copy.deepcopy(self.model)
+        mutated["current_product"]["integrated_user_workflow"] = False
+        self.assertTrue(any("integrated_user_workflow" in item for item in self.validate(mutated)))
+
     def test_windows_cannot_be_promoted_without_later_evidence(self) -> None:
         mutated = copy.deepcopy(self.model)
         windows = next(
