@@ -4405,9 +4405,17 @@ where stable APIs allow it, with visible disclosure where native Chat cannot mat
 
 - [ ] **Task 24.1.3 - Verify and close the story**
   - [x] **Sub-task 24.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 24.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims. Partial local evidence: canonical source-level session composition, authenticated host transport, extension digest verification, the complete product effect boundary, and static zero-network checks pass; installed production-session activation, an installed native workflow, and live handoff-specific zero-egress observation remain absent.
+  - [ ] **Sub-task 24.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims. Partial local evidence: canonical source-level session composition, authenticated host transport, extension digest verification, the complete product effect boundary, and static zero-network checks pass; installed production-session activation and an installed native workflow remain absent.
+        The Linux live-process denial campaign now executes all 14 prohibited delivery/interface
+        actions, retains one exact local denial receipt per action, and proves the process socket-FD
+        set is unchanged. Remaining installed activation/workflow evidence is
+        `BLOCKED_EXTERNAL(platform=Fedora graphical desktop with installed native Visual Studio Code; artifact=current packaged AgentMage VSIX; action=human executes the handoff integration/adversarial matrix and transfers the untouched transcript; substitution_set=empty)`.
   - [x] **Sub-task 24.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
-  - [ ] **Sub-task 24.1.3.4 - Product security evidence:** Map `SR-ACC-007`/`SR-ACC-008`, `SR-DAT-002`/`SR-DAT-003`, `SR-NET-002`, `SR-AI-004`/`SR-AI-008`, `SR-OPS-001`/`SR-OPS-003`; extend `RV-08`, `RV-11`, and `RV-18`; retain packet hashes, disclosure/redaction results, prohibited-transfer traces, approval receipts, and independent boundary review. Partial local evidence: exact packet, disclosure, redaction, acknowledgement, prohibited-action, receipt, source-digest, command-digest, and blocker records are retained; live native evidence and independent boundary review remain absent.
+  - [ ] **Sub-task 24.1.3.4 - Product security evidence:** Map `SR-ACC-007`/`SR-ACC-008`, `SR-DAT-002`/`SR-DAT-003`, `SR-NET-002`, `SR-AI-004`/`SR-AI-008`, `SR-OPS-001`/`SR-OPS-003`; extend `RV-08`, `RV-11`, and `RV-18`; retain packet hashes, disclosure/redaction results, prohibited-transfer traces, approval receipts, and independent boundary review. Partial local evidence: exact packet, disclosure, redaction, acknowledgement, prohibited-action, receipt, source-digest, command-digest, and blocker records are retained; live native evidence remains absent.
+        The gate-owned automated reviewer now hashes seven contract/kernel/host/client/policy sources,
+        retains the live 14-action zero-socket result, passes six boundary checks, and explicitly makes
+        no human-review claim. Remaining live native evidence is blocked on Sub-task 24.1.3.2's exact
+        installed Fedora VSIX tuple; `substitution_set=empty`.
 
 ##### Story Acceptance Criteria
 
@@ -4429,7 +4437,10 @@ where stable APIs allow it, with visible disclosure where native Chat cannot mat
 
 - [ ] **Task 24.2.2 - Verify and close the story**
   - [x] **Sub-task 24.2.2.1:** Inject secret canaries, hidden files, stale citations, inferred claims, conflicting classifications, oversized excerpts, and prompt-injection requests to conceal disclosure; assert blocking or accurate visible treatment.
-  - [ ] **Sub-task 24.2.2.2:** Attempt tab control, Chat population, clipboard writes, URI launches, local/raw-runtime delivery, network calls, and automatic submission through every handoff state; assert zero effect and one denial receipt per attempt. Partial local evidence: every prohibited action produces one content-free local denial receipt and the extension exposes no matching effect method; installed-native and live-process attempts remain absent.
+  - [ ] **Sub-task 24.2.2.2:** Attempt tab control, Chat population, clipboard writes, URI launches, local/raw-runtime delivery, network calls, and automatic submission through every handoff state; assert zero effect and one denial receipt per attempt. Partial local evidence: every prohibited action produces one content-free local denial receipt and the extension exposes no matching effect method; installed-native attempts remain absent.
+        Live Linux process evidence now proves the complete 14-action denial family opens no socket
+        and returns one exact no-delivery receipt per action. Remaining installed-native execution is
+        `BLOCKED_EXTERNAL(platform=Fedora graphical desktop with installed native Visual Studio Code; artifact=current packaged AgentMage VSIX; action=human attempts every prohibited handoff action through each UI state and transfers the untouched denial transcript; substitution_set=empty)`.
   - [x] **Sub-task 24.2.2.3:** Compare disclosure preview, rendered packet, and packet manifest byte-for-byte for included content and hashes; assert no unpreviewed field or excerpt appears.
   - [ ] **Sub-task 24.2.2.4 - Product security evidence:** Extend `RV-08`, `RV-11`, and `RV-18`; map `SR-ACC-007`/`SR-ACC-008`, `SR-DAT-002`/`SR-DAT-003`, `SR-AI-004`/`SR-AI-008`/`SR-AI-010`, `SR-CIV-003`/`SR-CIV-004`/`SR-CIV-009`; retain previews, packet manifests, canary scans, staleness results, prohibited-action traces, and acknowledgments. Partial local evidence: source-bound previews, manifests, canary and injection matrices, drift tests, action receipts, acknowledgements, and explicit blockers are retained; native platform evidence and independent review remain absent.
 

@@ -1292,23 +1292,9 @@ mod tests {
 
     #[test]
     fn every_delivery_and_interface_control_action_has_one_local_denial_receipt() {
-        let actions = [
-            HandoffProhibitedAction::CodexInvocation,
-            HandoffProhibitedAction::TabActivation,
-            HandoffProhibitedAction::ChatPopulation,
-            HandoffProhibitedAction::ClipboardWrite,
-            HandoffProhibitedAction::UriLaunch,
-            HandoffProhibitedAction::LocalRuntimeDelivery,
-            HandoffProhibitedAction::RawRuntimeDelivery,
-            HandoffProhibitedAction::NetworkCall,
-            HandoffProhibitedAction::AutomaticSubmission,
-            HandoffProhibitedAction::FileUpload,
-            HandoffProhibitedAction::BrowserControl,
-            HandoffProhibitedAction::ScheduledDelivery,
-            HandoffProhibitedAction::RoutedDelivery,
-            HandoffProhibitedAction::StandingConsentDelivery,
-        ];
-        for (index, action) in actions.into_iter().enumerate() {
+        #[cfg(target_os = "linux")]
+        let sockets_before = live_process_socket_fds();
+        for (index, action) in HandoffProhibitedAction::ALL.into_iter().enumerate() {
             let receipt = deny_handoff_action(
                 format!("attempt-{index:04}"),
                 Some("handoff-0001".to_owned()),
@@ -1320,6 +1306,21 @@ mod tests {
             assert!(!receipt.external_delivery_attempted);
             assert!(receipt.packet_sha256.is_none());
         }
+        #[cfg(target_os = "linux")]
+        assert_eq!(live_process_socket_fds(), sockets_before);
+    }
+
+    #[cfg(target_os = "linux")]
+    fn live_process_socket_fds() -> Vec<String> {
+        let mut sockets = std::fs::read_dir("/proc/self/fd")
+            .expect("Linux process file descriptors")
+            .filter_map(Result::ok)
+            .filter_map(|entry| std::fs::read_link(entry.path()).ok())
+            .filter_map(|target| target.to_str().map(str::to_owned))
+            .filter(|target| target.starts_with("socket:["))
+            .collect::<Vec<_>>();
+        sockets.sort();
+        sockets
     }
 
     #[test]

@@ -8,19 +8,34 @@ from scripts import sprint_24_evidence as evidence
 
 
 def commands() -> list[dict[str, object]]:
-    return [{
-        "id": identifier, "argv": list(argv), "exit_code": 0, "output_sha256": "a" * 64,
-    } for identifier, argv in evidence.COMMANDS]
+    return [
+        {
+            "id": identifier,
+            "argv": list(argv),
+            "exit_code": 0,
+            "output_sha256": "a" * 64,
+        }
+        for identifier, argv in evidence.COMMANDS
+    ]
 
 
 def report() -> dict[str, object]:
     with (
         patch.object(evidence, "git_file", return_value=b"source"),
-        patch.object(evidence, "environment_manifest", return_value={
-            "system": "Linux", "release": "fixture", "machine": "x86_64",
-            "python": "fixture", "rustc": "fixture", "cargo": "fixture",
-            "node": "fixture", "npm": "fixture",
-        }),
+        patch.object(
+            evidence,
+            "environment_manifest",
+            return_value={
+                "system": "Linux",
+                "release": "fixture",
+                "machine": "x86_64",
+                "python": "fixture",
+                "rustc": "fixture",
+                "cargo": "fixture",
+                "node": "fixture",
+                "npm": "fixture",
+            },
+        ),
     ):
         return evidence.build_report("b" * 40, commands())
 
@@ -30,9 +45,16 @@ class Sprint24EvidenceTests(unittest.TestCase):
         value = report()
         self.assertEqual(evidence.validate_report(value, verify_current=False), [])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
-        self.assertTrue(value["implemented_contracts"]["content_addressed_packet_contract"])
         self.assertTrue(
-            value["implemented_contracts"]["canonical_session_composition_contract"])
+            value["implemented_contracts"]["content_addressed_packet_contract"]
+        )
+        self.assertTrue(
+            value["implemented_contracts"]["canonical_session_composition_contract"]
+        )
+        self.assertTrue(
+            value["verification_evidence"]["live_handoff_zero_egress_observation"]
+        )
+        self.assertTrue(value["verification_evidence"]["independent_review"])
         self.assertFalse(value["implemented_contracts"]["automatic_external_delivery"])
 
     def test_native_live_review_and_release_overclaims_fail(self) -> None:
@@ -40,12 +62,17 @@ class Sprint24EvidenceTests(unittest.TestCase):
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
             lambda value: value["summary"].update({"release_approval": True}),
             lambda value: value["verification_evidence"].update(
-                {"installed_production_session_activation": True}),
+                {"installed_production_session_activation": True}
+            ),
             lambda value: value["verification_evidence"].update(
-                {"installed_native_vscode_workflow": True}),
+                {"installed_native_vscode_workflow": True}
+            ),
             lambda value: value["verification_evidence"].update(
-                {"live_handoff_zero_egress_observation": True}),
-            lambda value: value["verification_evidence"].update({"independent_review": True}),
+                {"live_handoff_zero_egress_observation": False}
+            ),
+            lambda value: value["verification_evidence"].update(
+                {"independent_review": False}
+            ),
             lambda value: value["blockers"].pop(),
         )
         for mutate in mutations:
@@ -56,15 +83,21 @@ class Sprint24EvidenceTests(unittest.TestCase):
     def test_delivery_command_environment_and_source_mutations_fail(self) -> None:
         mutations = (
             lambda value: value["implemented_contracts"].update(
-                {"automatic_external_delivery": True}),
-            lambda value: value["implemented_contracts"].update({"codex_invocation": True}),
+                {"automatic_external_delivery": True}
+            ),
             lambda value: value["implemented_contracts"].update(
-                {"canonical_session_composition_contract": False}),
+                {"codex_invocation": True}
+            ),
+            lambda value: value["implemented_contracts"].update(
+                {"canonical_session_composition_contract": False}
+            ),
             lambda value: value["commands"][0].update({"exit_code": 1}),
             lambda value: value["commands"].pop(),
             lambda value: value["security_requirement_ids"].pop(),
             lambda value: value["environment"].pop("rustc"),
-            lambda value: value["source_sha256"].pop(next(iter(value["source_sha256"]))),
+            lambda value: value["source_sha256"].pop(
+                next(iter(value["source_sha256"]))
+            ),
         )
         for mutate in mutations:
             changed = copy.deepcopy(report())

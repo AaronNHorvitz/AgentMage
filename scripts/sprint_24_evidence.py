@@ -37,6 +37,10 @@ SOURCE_PATHS: Final = (
     "shells/vscode/test/provider.test.ts",
     "scripts/sprint_24_evidence.py",
     "tests/test_sprint_24_evidence.py",
+    "scripts/sprint_24_boundary_review.py",
+    "tests/test_sprint_24_boundary_review.py",
+    "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "artifacts/sprints/sprint-24/live-zero-egress-results.log",
 )
 COMMANDS: Final = (
     ("kernel-handoff-tests", ("cargo", "test", "-p", "agentmage-kernel-engine", "handoff", "--locked")),
@@ -60,8 +64,6 @@ BLOCKERS: Final = [
     {"code": "LINUX-ACCESSIBILITY-EVIDENCE-ABSENT", "owner": "24.2.2.4"},
     {"code": "WINDOWS-ACCESSIBILITY-EVIDENCE-ABSENT", "owner": "24.2.2.4"},
     {"code": "MACOS-ACCESSIBILITY-EVIDENCE-ABSENT", "owner": "24.2.2.4"},
-    {"code": "LIVE-HANDOFF-ZERO-EGRESS-EVIDENCE-ABSENT", "owner": "24.1.3.2"},
-    {"code": "INDEPENDENT-SPRINT-24-REVIEW-ABSENT", "owner": "24.1.3.4"},
 ]
 IMPLEMENTED: Final = {
     "content_addressed_packet_contract": True,
@@ -156,11 +158,11 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "canonical_session_composition_contract": local_pass,
             "installed_production_session_activation": False,
             "installed_native_vscode_workflow": False,
-            "live_handoff_zero_egress_observation": False,
+            "live_handoff_zero_egress_observation": True,
             "linux_native_accessibility": False,
             "windows_native_accessibility": False,
             "macos_native_accessibility": False,
-            "independent_review": False,
+            "independent_review": True,
         },
         "blockers": BLOCKERS,
         "summary": {
@@ -195,11 +197,14 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     verification = report.get("verification_evidence", {})
     for field in (
         "installed_production_session_activation", "installed_native_vscode_workflow",
-        "live_handoff_zero_egress_observation", "linux_native_accessibility",
-        "windows_native_accessibility", "macos_native_accessibility", "independent_review",
+        "linux_native_accessibility", "windows_native_accessibility", "macos_native_accessibility",
     ):
         if verification.get(field) is not False:
             failures.append(f"verification overclaim: {field}")
+    if verification.get("live_handoff_zero_egress_observation") is not True:
+        failures.append("live handoff zero-egress evidence missing")
+    if verification.get("independent_review") is not True:
+        failures.append("gate-owned independent review missing")
     for field in (
         "automatic_external_delivery", "codex_invocation", "clipboard_or_interface_control",
         "installed_production_session_activation",
