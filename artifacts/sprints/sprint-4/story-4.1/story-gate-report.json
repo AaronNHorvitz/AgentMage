@@ -167,8 +167,8 @@
     ],
     "external_human_review_claim": "none",
     "finding_count": 0,
-    "reviewed_commit": "ec5d9ad8f60e2f0b46b5c28593adab0010966c8c",
-    "reviewed_tree": "8ebf118ec7f773db40d4174450ee9ca6bde0fbb7",
+    "reviewed_commit": "be901a824a1ae3051830b78d4ad9f511a63c6695",
+    "reviewed_tree": "d977b64353bfdd6bbc041314cb17f0eac5db0dc1",
     "reviewer_id": "agentmage-story-4.1-independent-gate-v1"
   },
   "macos_evidence_substituted": false,
@@ -178,8 +178,8 @@
   "positive_authority_path_claim": "none",
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "ec5d9ad8f60e2f0b46b5c28593adab0010966c8c",
-  "reviewed_tree": "8ebf118ec7f773db40d4174450ee9ca6bde0fbb7",
+  "reviewed_commit": "be901a824a1ae3051830b78d4ad9f511a63c6695",
+  "reviewed_tree": "d977b64353bfdd6bbc041314cb17f0eac5db0dc1",
   "schema_version": 1,
   "security_mapping": {
     "mapped_requirement_count": 7,

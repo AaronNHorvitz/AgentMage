@@ -248,8 +248,8 @@
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "1e31f4d8ea56e91365a1541c2050226ec575bce1",
-    "reviewed_tree": "7503e9fb08c01550366509bf141cf56ea0fb2fdd",
+    "reviewed_commit": "be901a824a1ae3051830b78d4ad9f511a63c6695",
+    "reviewed_tree": "d977b64353bfdd6bbc041314cb17f0eac5db0dc1",
     "reviewer_id": "agentmage-story-2.4-independent-gate-v1"
   },
   "installed_product_claim": "none",
@@ -292,8 +292,8 @@
   "product_context_delivery_claim": "none",
   "product_parser_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "1e31f4d8ea56e91365a1541c2050226ec575bce1",
-  "reviewed_tree": "7503e9fb08c01550366509bf141cf56ea0fb2fdd",
+  "reviewed_commit": "be901a824a1ae3051830b78d4ad9f511a63c6695",
+  "reviewed_tree": "d977b64353bfdd6bbc041314cb17f0eac5db0dc1",
   "rv51": {
     "context_receipt_count": 8,
     "derivative_range_identity_count": 21,

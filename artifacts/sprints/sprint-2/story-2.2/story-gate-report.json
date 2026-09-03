@@ -150,8 +150,8 @@
         "sha256": "6a1789d2866f4559a2e9b40fbb74de4b0af9d1da622c06db9fc4619081126790"
       }
     ],
-    "reviewed_commit": "7f247ad83cee15f8571b27cfea3c241738704cae",
-    "reviewed_tree": "0a2e5d74ca3dbe810041c151241a69d5e7d3479b",
+    "reviewed_commit": "be901a824a1ae3051830b78d4ad9f511a63c6695",
+    "reviewed_tree": "d977b64353bfdd6bbc041314cb17f0eac5db0dc1",
     "reviewer_id": "agentmage-story-2.2-independent-gate-v1"
   },
   "macos": {
@@ -163,8 +163,8 @@
   "product_acceptance_claim": "none",
   "product_boundary_execution_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "7f247ad83cee15f8571b27cfea3c241738704cae",
-  "reviewed_tree": "0a2e5d74ca3dbe810041c151241a69d5e7d3479b",
+  "reviewed_commit": "be901a824a1ae3051830b78d4ad9f511a63c6695",
+  "reviewed_tree": "d977b64353bfdd6bbc041314cb17f0eac5db0dc1",
   "schema_version": 1,
   "status": "blocked-macos",
   "story_id": "2.2",

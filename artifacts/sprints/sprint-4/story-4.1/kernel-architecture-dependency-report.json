@@ -713,9 +713,21 @@
         "manifest": "shells/host/Cargo.toml",
         "source": "shell-host",
         "target": "sha2"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "development",
+        "lock": {
+          "checksum": "5e2ec995d822e05cabc3f06d196ee43650af3fe4fe38012cacb35e0c3d113b68",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.44.0"
+        },
+        "manifest": "shells/host/Cargo.toml",
+        "source": "shell-host",
+        "target": "lopdf"
       }
     ],
-    "direct_cargo_count": 58,
+    "direct_cargo_count": 59,
     "locked_external_cargo_package_count": 110,
     "swift_external": [],
     "vscode_development": [
@@ -950,7 +962,7 @@
   "source_records": [
     {
       "path": "Cargo.lock",
-      "sha256": "60eca43376919ca47740e494d7e44a2812aa77e06a0c188013e285a7dea1a19e"
+      "sha256": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9"
     },
     {
       "path": "Cargo.toml",
@@ -1018,7 +1030,7 @@
     },
     {
       "path": "shells/host/Cargo.toml",
-      "sha256": "bd0cbb419186130d3d3219ef015ae647b6e8cad1b8660dfc27330d81aa3ab68c"
+      "sha256": "b6ad82e6be880f63c24d47a0341748261f2bd747d7a851264b81ab24beacf713"
     },
     {
       "path": "shells/vscode/package.json",
@@ -1033,7 +1045,7 @@
       "sha256": "7546d14d8ec5b014cd0c8ce541f603e0208ac6cb237b6b29a6d56d7f1a45b490"
     }
   ],
-  "source_revision": "c9d67411a6c14926f3a5e18769e9c12e48325426",
+  "source_revision": "be901a824a1ae3051830b78d4ad9f511a63c6695",
   "status": "pass-linux-architecture",
   "task_id": "4.1.2.4"
 }

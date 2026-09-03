@@ -17,7 +17,7 @@
   "source_records": [
     {
       "path": "Cargo.lock",
-      "sha256": "60eca43376919ca47740e494d7e44a2812aa77e06a0c188013e285a7dea1a19e"
+      "sha256": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9"
     },
     {
       "path": "kernel/contracts/src/boundary.rs",
@@ -44,7 +44,7 @@
       "sha256": "4f545441cfa9e47e27e7e5973529b5163b2c7baee2607529fb388117ce34d775"
     }
   ],
-  "source_revision": "c9d67411a6c14926f3a5e18769e9c12e48325426",
+  "source_revision": "be901a824a1ae3051830b78d4ad9f511a63c6695",
   "status": "pass-linux-boundary-integration",
   "success_contract": "ToolResult",
   "task_id": "4.1.3.4",
