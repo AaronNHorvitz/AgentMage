@@ -6,9 +6,9 @@
       "sha256": "62533387ddcdd384963564af25c7675dc2991fd47e1b7c0a068252e67251112e"
     },
     {
-      "byte_length": 19879,
+      "byte_length": 19757,
       "path": "shells/vscode/src/extension.ts",
-      "sha256": "ed06694e3e2b2b2fb6a857bd604bfb676fc9e52d2d3cd6534bc0c273625dfe8c"
+      "sha256": "64967df0feecb199b93d3467769ad617a2579d155c787fb1fc421bdf78b7b613"
     },
     {
       "byte_length": 862,
@@ -16,9 +16,9 @@
       "sha256": "da0fe8510dbab2c14ac59e61cdadee1fab05f67c4e6e65651bfb05b7881882bd"
     },
     {
-      "byte_length": 14948,
+      "byte_length": 16060,
       "path": "shells/vscode/src/participant_ingress.ts",
-      "sha256": "33e026cafe6923e864292170e24957efd1fb24ead20fbcd8ed0f22ab601257c6"
+      "sha256": "c3fa54e7db0dacab8c3d2e49821ba83fb9d6c8170f841c1c224e7c076b908641"
     },
     {
       "byte_length": 7755,
@@ -26,9 +26,9 @@
       "sha256": "52096bbff82fdd4401a45942a13f9088f5132727f78e03cbdd277bb744abad6a"
     },
     {
-      "byte_length": 10107,
+      "byte_length": 11941,
       "path": "shells/vscode/test/participant_ingress.test.ts",
-      "sha256": "28f883727a4d5a71b021a68394c6cbaea5d367487af4d84d8959d4060f618786"
+      "sha256": "68ee24f94e38c2498d2b147332ea39aef39b8c863341c2b7632c502f964d8eb6"
     },
     {
       "byte_length": 4611,
@@ -36,9 +36,9 @@
       "sha256": "656dedb589265ee99dc4fa93f666a14f45a019cf21959b6474c4c5767ca70620"
     },
     {
-      "byte_length": 64087,
+      "byte_length": 67977,
       "path": "shells/host/src/protocol.rs",
-      "sha256": "182c090cb006b050e36b5cf99553948746d378d8d537277aaa510842bd9233a2"
+      "sha256": "a875cc1c06fc5bd1601611f54c235f4bff8b6481da61a51b109b22eb527cceba"
     },
     {
       "byte_length": 96411,
@@ -46,9 +46,9 @@
       "sha256": "39dba04d6c953b0c3987a5c944260a4c4c6b2ebad703aa54f449dc0a40167e05"
     },
     {
-      "byte_length": 4612,
+      "byte_length": 5729,
       "path": "docs/architecture/stable-chat-participant-ingress.md",
-      "sha256": "c2d05a3cd321459fe9aa328fd2c0442c47cded7c681f700e85eaf7896e6d5263"
+      "sha256": "833494001d61cfb866da498e21376db52593eb18a9b28790103596bb3764c7f2"
     },
     {
       "byte_length": 6123,
@@ -61,9 +61,9 @@
       "sha256": "fd3942fe10b79b296da44029f6ece41e7bcbbd424ac744d90146d730af01bd11"
     },
     {
-      "byte_length": 7123,
+      "byte_length": 7215,
       "path": "scripts/story_23_5_participant_ingress_evidence.py",
-      "sha256": "91137ef64fc931023021db048ff2d9d359e2aa4bd557d952c90e6fc27bb26d8f"
+      "sha256": "ddc5f484fe22d7397259b1d433c2efeb541b100fe52657dbd3e8ad31f5724b46"
     },
     {
       "byte_length": 1054,
@@ -71,9 +71,9 @@
       "sha256": "26b45c68dc468700ac2b84774f1cbe0011e2a35ee260a988a056f9b278426102"
     },
     {
-      "byte_length": 11372,
+      "byte_length": 11555,
       "path": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-results.log",
-      "sha256": "44d08a593779c2ee2032b59afad37804dd035512751b4c0e8983f4a37ccdd8a8"
+      "sha256": "b6e63566ee6d0f1217e477712b2dfc5f309d5f84c46c43bed0e4f9690b2f8e86"
     }
   ],
   "commands": [
@@ -87,6 +87,7 @@
   ],
   "generated_on": "2026-08-31",
   "product_truth": {
+    "accessibility_source_contract": true,
     "ambient_workspace_enumeration": false,
     "assistive_technology_review_complete": false,
     "authenticated_rust_artifact_rpc": true,

@@ -46,7 +46,7 @@
   "sources": [
     {
       "path": "TASKS.md",
-      "sha256": "cc30e7e2b33305f04c1e8c745d81b9a35c831b1c85eebb01475b38362f9ac736"
+      "sha256": "91337dab2f05f82b10ef9500c696f2309e0a1b447997fa6cad25d2ea90edb06f"
     },
     {
       "path": "architecture/dependency-rules.json",
@@ -66,7 +66,7 @@
     },
     {
       "path": "architecture/status-model.json",
-      "sha256": "1abc5b06cbcec50deff18909187dbb65c5d38e4f291ae4c89b196ac4843da640"
+      "sha256": "16757dfcc1de91b303eedeb6207872e90ed85e6e12567162d63385fee0db361b"
     },
     {
       "path": "architecture/dependency-dispositions.json",
@@ -74,7 +74,7 @@
     },
     {
       "path": "architecture/schema-evolution-and-rollback.json",
-      "sha256": "e2da4839233fce9cebbbae8fe3c058fa94193ef513fc653fbe4151a4a527b8aa"
+      "sha256": "e43d887545d1e2b54e748acccdffe3492ab23aa027f1cc4a7b460b09655e7f0f"
     },
     {
       "path": "architecture/parser-ocr-platform-placement.json",
@@ -98,11 +98,11 @@
     },
     {
       "path": "scripts/status_model.py",
-      "sha256": "a8ba2fbfe1bbd994f44f9d0b197fe23a2b3c4a2991435015fe3533e12adc3993"
+      "sha256": "7f1933bd2265df8d3348a150ac3c7140a47a1bb4ab0224d181a3ad04b0d83319"
     },
     {
       "path": "scripts/contract_boundary_gate.py",
-      "sha256": "ae019cd7816e18dc9c3f2449584173a640c0116d57103f729cc51ea1f64262e7"
+      "sha256": "468853a9ef2ec970a96dc6664b28f9b2f938de1b17e854104b618a8499db4b7d"
     },
     {
       "path": "tests/test_engineering_runtime_schemas.mjs",
@@ -122,11 +122,11 @@
     },
     {
       "path": "tests/test_status_model.py",
-      "sha256": "6de02dd4189b26dcd25d678f09b997cada29d6979c54a6df8595eac0147f7e38"
+      "sha256": "a5f457bbf0d2911dc064f5f01f74decb4050121fe6f287a64a53d2425c243361"
     },
     {
       "path": "tests/test_contract_boundary_gate.py",
-      "sha256": "8536c2df61bada35d9444a0f241ed3700a64c4fb0cb57b484b88ca967b58c891"
+      "sha256": "ac2f32c1503381e1f00c90035a9b718768e48a6b3250fa364b1a491d1702f53d"
     },
     {
       "path": "schemas/engineering-runtime/*.schema.json",

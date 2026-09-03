@@ -24,11 +24,11 @@
         },
         {
           "path": "architecture/status-model.json",
-          "sha256": "1abc5b06cbcec50deff18909187dbb65c5d38e4f291ae4c89b196ac4843da640"
+          "sha256": "16757dfcc1de91b303eedeb6207872e90ed85e6e12567162d63385fee0db361b"
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "534d540ef165fe0614aedb3753c2557d0eb60a854f17b1b56cc8b27ac7f3cf4d"
+          "sha256": "85a5289b83900edd7c63b8ccf2aac54478f38a990cb3c4eed57be9346aa864cd"
         }
       ]
     },
@@ -41,11 +41,11 @@
         },
         {
           "path": "supply-chain/dependency-provenance.json",
-          "sha256": "3067268c2a5c7704b4e1bb6433f2453d2e4182fcfe68ca87b0fbb02b4ad75518"
+          "sha256": "e08999d8eb92957b2e5b04f8f40e65cf061724ded10cbc8f0363ce3c34a69e49"
         },
         {
           "path": "supply-chain/sbom.cdx.json",
-          "sha256": "d6f53b2398fd2e893cbeee9cd0b6f72e145a6fcfb8941b1b1e996f0d45f0697a"
+          "sha256": "a391f8d861593cc544da9ebd91bd40225516f558114e81bd0c54ce1695251286"
         }
       ]
     },
@@ -71,7 +71,7 @@
       "artifacts": [
         {
           "path": "architecture/schema-evolution-and-rollback.json",
-          "sha256": "e2da4839233fce9cebbbae8fe3c058fa94193ef513fc653fbe4151a4a527b8aa"
+          "sha256": "e43d887545d1e2b54e748acccdffe3492ab23aa027f1cc4a7b460b09655e7f0f"
         },
         {
           "path": "architecture/rollback-design.json",
@@ -88,7 +88,7 @@
       "artifacts": [
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-          "sha256": "75b4eac50abf11e693f30abf182ca74e6ffb296b023f1158761325053a3734a9"
+          "sha256": "67ec48952ce43dfca2d961b0b531a45827d2ba1b8d11373581e575f41841f2a5"
         }
       ]
     },
@@ -101,7 +101,7 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/security-evidence-map.json",
-          "sha256": "6b0eb693f8b86b6951b01160e57788239a0d3cd092fc2f340390e28e597b021a"
+          "sha256": "9142843896cb1dde9b586dd2261f25e79878b8a731549b655d1279dee79aae59"
         }
       ]
     },
@@ -110,15 +110,15 @@
       "artifacts": [
         {
           "path": "scripts/contract_boundary_gate.py",
-          "sha256": "ae019cd7816e18dc9c3f2449584173a640c0116d57103f729cc51ea1f64262e7"
+          "sha256": "468853a9ef2ec970a96dc6664b28f9b2f938de1b17e854104b618a8499db4b7d"
         },
         {
           "path": "scripts/contract_evidence_index.py",
-          "sha256": "91a95ff34b2e31488ee950c7fe798415cd3f1beda3718fd1320da8994a8ded97"
+          "sha256": "55d6b7857db19de532d849f8ef4290d1c7b76ae350b911ec34cb8ea4b7ff8ef5"
         },
         {
           "path": "tests/test_contract_boundary_gate.py",
-          "sha256": "8536c2df61bada35d9444a0f241ed3700a64c4fb0cb57b484b88ca967b58c891"
+          "sha256": "ac2f32c1503381e1f00c90035a9b718768e48a6b3250fa364b1a491d1702f53d"
         },
         {
           "path": "tests/test_contract_evidence_index.py",
@@ -132,7 +132,7 @@
     "data_class": "synthetic-local-contract-tests-only",
     "artifact": {
       "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-      "sha256": "75b4eac50abf11e693f30abf182ca74e6ffb296b023f1158761325053a3734a9"
+      "sha256": "67ec48952ce43dfca2d961b0b531a45827d2ba1b8d11373581e575f41841f2a5"
     },
     "required_markers": [
       "Validated 37 Engineering Runtime schemas and 6 reused contracts.",
@@ -144,7 +144,7 @@
       "vscode api surface validation passed",
       "Ran 13 tests",
       "status model validation passed",
-      "Ran 27 tests",
+      "Ran 29 tests",
       "Task 1.2.5.1 contract boundary gate passed locally"
     ]
   },
