@@ -5332,21 +5332,25 @@ sprint therefore remain open.
   - [x] **Sub-task 37.1.3.1:** `S-030-UT01` covers create, exact patch, copy, move, and delete with empty, nominal, maximum, existing, missing, wrong-type, case/Unicode collision, and metadata variants; assert documented bytes and metadata only. Evidence: commits `7dd0bdd1` and `e5537e96` add exact-ceiling/one-over tests for 128 operations, 8 MiB files, 32 MiB transactions, 64 path components, and 4,096 siblings; native missing and wrong-type cases across all five primitives; and exact zero-through-`0777` mode bindings with undeclared-bit refusal. Existing nominal, empty, collision, Unicode, link, hash, and permission-preservation fixtures remain passing.
   - [x] **Sub-task 37.1.3.2:** `S-030-UT02` verifies operation-specific previews against canonical serialized actions; alter one source/destination/hunk/delete target/metadata field and assert approval invalidation.
   - [ ] **Sub-task 37.1.3.3:** `S-030-ST01` targets repository control files, application state, secrets, sockets/devices, out-of-root paths, links, aliases, hard links, and files changed concurrently; assert protected-path denial and zero collateral effect. Partial local evidence: protected and excluded paths, unrelated dirty work, stale sources, destination collisions, symlinks, hard links, Unix sockets, and FIFOs fail closed. Commits `2a9bf39f`, `e7fe1605`, `4dab9ec0`, and `97fd251f` add descriptor-held parent-rename matrices for create/copy, move/trash, and create/copy restoration; every exercised boundary preserves the authorized object and a competing canonical owner. Privileged device nodes, alias variants, mount replacement, and the complete concurrent target/writer schedule remain open.
+    - `BLOCKED_EXTERNAL(platform=Fedora and Ubuntu native filesystems, Windows 11 x64 KVM guest, and physical supported MacBook; artifact=privileged device-node, alias, mount-replacement, and complete concurrent target/writer race results for every filesystem primitive; action=platform owners run the native S-030-ST01 matrix and transfer untouched evidence; credential=Windows image source and physical Mac access; payment=Windows license if required)`; `substitution_set=empty`.
   - [ ] **Sub-task 37.1.3.4:** `S-030-RT01` injects disk-full, permission, interruption, process death, verification mismatch, and restoration failure on each operation; assert atomic outcome or visible blocked recovery state. Partial local evidence: deterministic no-change, partial failure, verification mismatch, restoration failure, cancellation, and uncertain outcomes pass. Commit `290e5b79` executes 30 real child-process stops across copy/create, move/trash, copy restoration, and before/after commit/restoration verification; every canonical path reopens as an exact reviewed prestate or poststate. Exact-patch process stops are covered by Sprint 36. Disk-full, permission-loss, durability-failure, move-restoration process stops, and startup reconciliation of interrupted staging/tombstone artifacts remain open.
-  - [ ] **Sub-task 37.1.3.5 - Product security evidence:** Map `SR-PLT-004`, `SR-ACC-002` through `SR-ACC-006`, `SR-OPS-001`, `SR-TST-004`/`SR-TST-005`; retain operation matrix, preview digests, filesystem snapshots, collision corpus, recovery traces, and platform comparison. Partial local evidence: the retained source-bound report maps every named requirement and retains the local/Fedora operation matrix, exact digests, collision corpus, recovery results, and truthful platform comparison; independent review, other-platform native results, complete race/crash evidence, and deferred manual fuzzing remain open.
+    - `BLOCKED_EXTERNAL(platform=Fedora and Ubuntu fault-injection and power-loss-capable hosts, Windows 11 x64 KVM guest, and physical supported MacBook; artifact=disk-full, permission-loss, durability-failure, move-restoration process-stop, and startup staging/tombstone reconciliation results; action=platform owners run the destructive S-030-RT01 matrix and transfer untouched evidence; credential=Windows image source and physical Mac access; payment=Windows license or dedicated hardware if required)`; `substitution_set=empty`.
+  - [x] **Sub-task 37.1.3.5 - Product security evidence:** Map `SR-PLT-004`, `SR-ACC-002` through `SR-ACC-006`, `SR-OPS-001`, `SR-TST-004`/`SR-TST-005`; retain operation matrix, preview digests, filesystem snapshots, collision corpus, recovery traces, and platform comparison. The gate-owned automated [source-boundary review](artifacts/sprints/sprint-37/source-boundary-review.json) binds every named requirement, the local/Fedora operation matrix, exact digests, collision corpus, recovery results, and truthful platform comparison without a human-review or platform-completion claim.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 37.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then each primitive changes exactly the approved source/target bytes and declared metadata, with no implicit parent creation, overwrite, recursive deletion, wildcard expansion, or neighboring-file change.
 - [ ] **Story AC 37.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then cross-platform behavior is equivalent where promised and explicitly documented where filesystem semantics prevent parity; no platform silently weakens safety.
+  - `BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and physical supported MacBook; artifact=create/patch/copy/move/trash semantic parity and documented divergence matrix; action=platform owners execute and transfer untouched native comparison evidence; credential=Windows image source and physical Mac access; payment=Windows license if required)`; `substitution_set=empty`.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 37.AC1:** Every primitive passes success, denial, collision, stale-source, partial-failure, cancellation, and rollback tests.
+- [x] **Sprint AC 37.AC1:** Every primitive passes success, denial, collision, stale-source, partial-failure, cancellation, and rollback tests.
 - [x] **Sprint AC 37.AC2:** Unapproved overwrite and delete remain impossible.
 - [x] **Sprint AC 37.AC3:** Atomic writes preserve unrelated content, expected permissions, encoding, and line endings.
 - [x] **Sprint AC 37.AC4:** Source and destination hashes match every accepted operation receipt.
 - [ ] **Sprint AC 37.AC5:** Write workers remain bounded by operating-system isolation and exact granted paths.
+  - `blocked: host change required — run the Sprint 37 filesystem worker isolation suite outside the restricted filesystem sandbox with usable systemd-run/bwrap namespaces and platform-owned filesystem mounts`; `substitution_set=empty`.
 
 **Gate decision:** Sprint 37 is PASS only when Story 37.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
@@ -5368,7 +5372,12 @@ kernel/Linux, strict lint, product, documentation, architecture, dependency,
 effect-boundary, build-contract, strict-local, supply-chain, and evidence-unit gates. Sprint
 37 remains **BLOCKED** because Sprint 36 is not a passing upstream dependency, complete
 native race/fault/recovery and non-Fedora platform evidence is absent, operating-system worker
-isolation is not proven, independent review is absent, and manual fuzzing remains deferred.
+isolation is not proven, and manual fuzzing remains deferred under Decision 0025. The retained
+manual-fuzz blocker is
+`BLOCKED_EXTERNAL(platform=every supported native filesystem worker; artifact=manual fuzzing
+transcript and minimized corpus; action=authorized human executes the manual S-030 fuzz campaign
+and transfers untouched results; credential=platform access; payment=none)` with
+`substitution_set=empty`.
 Task 37.1.3, its open verification sub-tasks, both story criteria, Sprint AC 37.AC1 and
 37.AC5, the story, and the sprint therefore remain open.
 

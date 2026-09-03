@@ -1,0 +1,42 @@
+{
+  "checks": {
+    "network_shell_and_delivery_remain_disabled": true,
+    "operation_matrix_is_retained": true,
+    "platform_comparison_is_truthful": true,
+    "preview_and_receipt_digests_are_bound": true,
+    "protected_collision_corpus_is_closed": true,
+    "recovery_and_process_stop_traces_are_retained": true,
+    "security_requirements_are_mapped": true,
+    "worker_and_complete_fault_claims_remain_false": true
+  },
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is gate-owned automated review, not a human-review claim.",
+    "Non-Fedora platforms and complete race, fault, recovery, and worker proof remain blocked.",
+    "Manual fuzzing remains deferred and no release claim is made."
+  ],
+  "record_type": "agentmage-sprint-37-source-boundary-review",
+  "review_class": "gate-owned-automated-filesystem-control-review",
+  "reviewer_identity": "scripts/sprint_37_boundary_review.py",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-PLT-004",
+    "SR-ACC-002",
+    "SR-ACC-003",
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-OPS-001",
+    "SR-TST-004",
+    "SR-TST-005"
+  ],
+  "source_revision": "ecf6397e50a52a7f85af762a45269d0621dcb818",
+  "source_sha256": {
+    "docs/verification/sprint-37-local-results.md": "b45f514eaa237cdc1b7a5019372d41b56acc4b537b3772fcbb274c0a93ec66d4",
+    "docs/verification/sprint-37-protected-path-corpus.json": "916c209389a6189b460d9caf4311289f0366f7aed9e880ad731fa3063539f777",
+    "kernel/engine/src/filesystem_control.rs": "e1a862bf6994e777aefe5008d61fd8f18c1fd61c68ab07d8ba4178b6e3073673",
+    "platforms/linux/src/filesystem_control.rs": "a6eff4af2243495d3cff18b06a4e437836845540315a25cd17fdad04c5eb9f40",
+    "scripts/sprint_37_evidence.py": "2310e6f762f953c165eb40e7739ebd6ca91de4ed7127a57ee33ba8104dc5188c"
+  },
+  "status": "PASS_LOCAL_BOUNDARY_REVIEW"
+}
