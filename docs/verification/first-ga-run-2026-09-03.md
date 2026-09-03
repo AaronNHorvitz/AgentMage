@@ -811,3 +811,29 @@ handoff boundary review and live-process tests that can execute on this host.
 
 Exact next action: classify Sprint 24's remaining installed VSIX and platform accessibility leaves,
 propagate them to dependent rows, then advance to Sprint 25.
+
+## Batch 34 — Sprint 24 dependent-row blocker propagation
+
+### Completed
+
+- Closed 0 TASKS rows. Marked the 8 remaining open Sprint 24 sprint, story, task, and acceptance
+  dependents with the exact inherited installed Fedora VSIX, Windows 11 KVM image, physical
+  MacBook, and restricted-host aggregate tuples; every tuple records
+  `substitution_set=empty`. Promotions: 0. Substitutions: 0.
+- Commit: `38236345` (dependent blocker propagation and checklist-bound evidence). Commits: 1.
+  Commits per closed item: not applicable (0 closures). Review pins advanced: 0; complete
+  `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1; outputs remained current. Evidence regeneration passes: 1, ordered
+  requirements, traceability, contract boundary, and contract index. Recovery iterations: 0. Task
+  graph, requirements-current 45/45, contract boundary 29/29, and contract index 12/12 pass.
+- Full `docs:check`: 697.830 seconds, stopping only at the retained Story 6.1 Podman prerequisite
+  after every preceding gate passed. Recorded gate wall seconds: 698.
+- Sprint 24 disposition after propagation: 0 closed stories, 2 blocked stories, 0 release or
+  platform promotions. The sprint remains `BLOCKED`; no source or live Linux process result
+  substitutes for installed Fedora, Windows, macOS, or unrestricted-host evidence.
+
+Exact next action: continue at Sprint 25's first unblocked source and contract rows, while retaining
+all cross-platform release and hosted-lane prerequisites as exact external tuples.
