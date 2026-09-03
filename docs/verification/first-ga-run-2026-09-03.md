@@ -779,3 +779,35 @@ then proceed to Sprint 24 because all remaining Sprint 23 execution is human/hos
 
 Exact next action: continue at Sprint 24's first unblocked partial rows, beginning with gate-owned
 handoff boundary review and live-process tests that can execute on this host.
+
+## Batch 33 — Handoff live zero-egress and gate-owned review
+
+### Completed
+
+- Closed 0 TASKS rows. Resolved 2 Sprint 24 evidence dependencies:
+  `LIVE-HANDOFF-ZERO-EGRESS-EVIDENCE-ABSENT` and `INDEPENDENT-SPRINT-24-REVIEW-ABSENT`. The Linux
+  test process executes all 14 prohibited handoff delivery/interface actions, retains one exact local
+  denial receipt for each, and proves its `/proc/self/fd` socket set is unchanged. The gate-owned
+  reviewer hashes 7 contract/kernel/host/client/policy sources, passes 6 boundary checks, and records
+  `independent_human_review_performed=false`. Promotions: 0. Substitutions: 0.
+- Commits: `b9a3a615` (live-process test, review generator/mutations, Sprint 24 contract, and task
+  truth) and `2538b1ef` (review/raw observation plus supply-chain and dependent evidence). Commits: 2.
+  Commits per closed item: not applicable (0 closures). Review pins advanced: 0; complete
+  `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1. Evidence regeneration passes: 1 with 0 targeted source-recovery
+  iterations. Focused live-process test: 1/1 pass; review mutations: 3/3 pass; Sprint 24 evidence
+  mutations: 3/3 pass; strict Clippy, task graph, supply-chain, requirements, traceability,
+  configuration-startup, component inventory, Story 1.1, Story 3.1 security, and contract checks pass.
+- Sprint 24 aggregate ran 32.660 seconds, reached the retained restricted-host command failure, and
+  was restored byte-for-byte. Exact blocker: `blocked: host change required — run the AgentMage test
+  chain outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl,
+  /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then run python3
+  scripts/sprint_24_evidence.py --write --source-revision HEAD`; substitution set: empty.
+- Full `docs:check`: 699.780 seconds, stopping only at the retained Story 6.1 Podman prerequisite
+  after every preceding gate passed. Recorded gate wall seconds: 732.
+
+Exact next action: classify Sprint 24's remaining installed VSIX and platform accessibility leaves,
+propagate them to dependent rows, then advance to Sprint 25.
