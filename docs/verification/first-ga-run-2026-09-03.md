@@ -2027,3 +2027,41 @@ unblocked gate on the Decision 0047 first-release critical path.
 
 Exact next action: retain Sprint 50's external installed-client, model, fault-injection, platform,
 release, review, and fuzz blockers and continue at Sprint 51's first locally executable row.
+
+## Batch 60 — Sprint 62 structured spreadsheet source adapter
+
+### Completed
+
+- Closed 2 TASKS rows: Sub-tasks 62.2.1.1 and 62.2.1.2. The shared structured-source
+  contract now admits exact XLSX, CSV, and JSON media types; the authority-free adapter projects
+  the existing bounded parsers into canonical document, table, row, cell, and JSON-pointer
+  sections with exact source identities. XLSX cell content keeps type, raw/cache, display, formula,
+  style, number-format, derived-date, error, and inert-link fields visible without evaluation.
+  Focused execution passed 5 adapter tests and one gate-owned review mutation test. Sub-task
+  62.2.1.3 remains open because embedded-object, protected-sheet, and sparse-range policy is not
+  yet fully enumerated in source. Promotions: 0. Substitutions: 0. Cumulative closed items: 147.
+- Commits: `bddd7331` (shared structured-source adapter and review implementation) and `3e5267e3`
+  (bound review artifact, two TASKS closures, supply-chain outputs, and affected evidence carriers).
+  Commits: 2. Commits per closed item: 1.00. Review pins advanced: 0; complete
+  `REVIEWED_PATHS` intersection across 52 pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 5/5 Rust adapter tests, strict kernel-contract and knowledge-capability
+  Clippy, one review contract test with five mutations, Python compilation, supply-chain check,
+  traceability, contract-boundary, contract-evidence, Story 2.1, Story 2.2, and Sprint 2 checks
+  pass. Supply-chain builds: 1. Evidence regeneration passes: 1, covering the new review and every
+  changed supply-chain, configuration-startup, component-inventory, Story 3.1 security,
+  traceability, and foundational contract carrier. Recovery iterations: 1. The initial focused
+  review test exposed a multiline-token mismatch and a test that passed unresolved `HEAD` as an
+  artifact revision; recovery matched the exact formatted source token and adopted the established
+  resolved-revision/mocked-worktree mutation-test pattern, then regenerated the review inside the
+  same evidence pass. The full chain ran 690.220 seconds and stopped only at the retained Story 6.1
+  rootless-Podman prerequisite after every preceding gate passed. Recorded gate wall seconds: 690.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: complete Sub-task 62.2.1.3 by extending direct inspection and adapter policy for
+embedded objects, protected sheets, sparse ranges, and unsupported structures, then continue the
+bounded-retrieval rows without claiming time or memory ceilings until those fields are explicit.
