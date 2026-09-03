@@ -2,10 +2,11 @@
 
 ## Status
 
-The measured router is an isolated source-level kernel contract. It is not
-registered in an integrated workflow. AgentMage has zero enabled product models,
-automatic routing is disabled, and no current exact profile has the evidence
-required by this boundary.
+The measured router is composed behind a kernel-owned authenticated product
+service and native content-minimized audit projection. It is not registered in
+an integrated workflow or installed interface. AgentMage has zero enabled
+product models, automatic routing is disabled, and no current exact profile has
+the evidence required by this boundary.
 
 The router does not approve a model. It consumes already admitted, exact,
 current profile and role evidence. A failed identity, provenance, origin,
@@ -129,6 +130,21 @@ The receipt grants no model, tool, filesystem, connector, network, or effect
 authority. Runtime execution and any proposed action still cross their existing
 kernel policy, grant, worker, receipt, and deterministic-verifier boundaries.
 
+`MeasuredRoutingService` owns the immutable exact profile-catalog generation;
+a caller cannot supply a replacement candidate list per request. It accepts one
+actor/session/assertion envelope only after `RoutingAuthenticationVerifier`
+validates the protected assertion digest. Failed authentication emits no route
+and no audit entry.
+
+Each authenticated decision appends a `NativeRoutingAuditView` with the fixed
+deterministic method, exact task, result code, complete candidate rationales,
+ties, policy, benchmark generation, catalog generation, and receipt digest.
+When a profile is eligible, the view independently projects exact artifact,
+tokenizer, template, codec, runtime, context, decoding, resource, and platform
+evidence identities. The protected authentication digest, credentials, prompts,
+outputs, and model-visible content never enter the view. An empty product
+catalog produces a visible `no-eligible-profile` decision and enables nothing.
+
 ## Disabled Paths
 
 Invisible fallback, automatic model installation, broad provider marketplaces,
@@ -142,6 +158,7 @@ Current source tests use synthetic exact profiles. No real later profile has a
 complete manifest, current role benchmark, supported-platform result, or
 product activation. Role-specific live quality, grounding, reliability,
 latency, memory, energy where measured, and failure campaigns remain required.
-Integrated audit views, supported-platform package tests, independent review,
-and the deferred manual fuzz campaign also remain open. These blockers prevent
-Sprint 49 and every routing release claim from passing.
+Authenticated installed-interface transport, supported-platform package tests,
+independent human review, and the deferred manual fuzz campaign also remain
+open. These blockers prevent Sprint 49 and every routing release claim from
+passing.

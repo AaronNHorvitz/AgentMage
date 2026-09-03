@@ -473,6 +473,204 @@ pub struct MeasuredRoutingReceipt {
     pub receipt_sha256: String,
 }
 
+/// Authenticated product envelope for one deterministic measured-routing request.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct AuthenticatedRoutingEnvelope {
+    /// Stable authenticated actor identity.
+    pub actor_id: String,
+    /// Stable authenticated product-session identity.
+    pub session_id: String,
+    /// Digest of the protected authentication assertion; never the credential itself.
+    pub authentication_sha256: String,
+    /// Exact typed request whose authority remains bounded by the kernel router.
+    pub request: MeasuredRoutingRequest,
+}
+
+/// Product authentication boundary used before any routing decision is computed.
+pub trait RoutingAuthenticationVerifier {
+    /// Verifies the exact actor, session, and protected assertion digest.
+    fn verify(&self, actor_id: &str, session_id: &str, authentication_sha256: &str) -> bool;
+}
+
+/// Exact selected profile identity projected without prompts, outputs, or credentials.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct RoutingProfileIdentityAudit {
+    /// Exact profile identity.
+    pub profile_id: String,
+    /// Exact model artifact digest.
+    pub artifact_sha256: String,
+    /// Exact tokenizer digest.
+    pub tokenizer_sha256: String,
+    /// Exact template digest.
+    pub template_sha256: String,
+    /// Exact codec digest.
+    pub codec_sha256: String,
+    /// Exact runtime digest.
+    pub runtime_sha256: String,
+    /// Exact context-profile digest.
+    pub context_sha256: String,
+    /// Exact decoding-profile digest.
+    pub decoding_sha256: String,
+    /// Exact resource-envelope digest.
+    pub resource_sha256: String,
+    /// Exact platform-evidence digest.
+    pub platform_evidence_sha256: String,
+}
+
+/// Content-minimized native product audit projection for one routing decision.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct NativeRoutingAuditView {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Monotonic product-router sequence.
+    pub sequence: u64,
+    /// Authenticated actor identity.
+    pub actor_id: String,
+    /// Authenticated product-session identity.
+    pub session_id: String,
+    /// Exact task identity.
+    pub task_id: String,
+    /// Fixed deterministic method; never model self-selection.
+    pub routing_method: String,
+    /// Visible terminal result code.
+    pub result_code: String,
+    /// Exact selected primary identity, when one eligible profile exists.
+    pub selected_profile: Option<RoutingProfileIdentityAudit>,
+    /// Exact selected verifier identity, when measured policy requires one.
+    pub verification_profile: Option<RoutingProfileIdentityAudit>,
+    /// Every equally scored eligible profile exposed by the deterministic tie break.
+    pub disagreement_profile_ids: Vec<String>,
+    /// Complete content-free considered-candidate rationale.
+    pub candidates: Vec<RoutingCandidateAudit>,
+    /// Exact policy used by the decision.
+    pub policy_sha256: String,
+    /// Exact benchmark generation used by the decision.
+    pub benchmark_generation_sha256: String,
+    /// Exact immutable profile-catalog generation owned by the product service.
+    pub profile_catalog_sha256: String,
+    /// Hash of the complete underlying routing receipt.
+    pub routing_receipt_sha256: String,
+    /// Frontier transfer remains structurally absent.
+    pub frontier_transfer: bool,
+    /// Model confidence remains structurally unused.
+    pub model_confidence_used: bool,
+    /// Digest of this view with this field empty.
+    pub audit_sha256: String,
+}
+
+/// Kernel-owned authenticated product composition around the measured local router.
+pub struct MeasuredRoutingService<V: RoutingAuthenticationVerifier> {
+    verifier: V,
+    profiles: Vec<RoutableProfile>,
+    profile_catalog_sha256: String,
+    sequence: u64,
+    audit_log: Vec<NativeRoutingAuditView>,
+}
+
+impl<V: RoutingAuthenticationVerifier> MeasuredRoutingService<V> {
+    /// Creates one product router over an immutable kernel-owned catalog generation.
+    pub fn new(
+        verifier: V,
+        profiles: Vec<RoutableProfile>,
+        profile_catalog_sha256: String,
+    ) -> Result<Self, &'static str> {
+        if !valid_sha256(&profile_catalog_sha256) || profiles.len() > MAX_PROFILES {
+            return Err("model.routing.catalog-invalid");
+        }
+        let mut identities = profiles
+            .iter()
+            .map(|profile| profile.profile_id.as_str())
+            .collect::<Vec<_>>();
+        identities.sort_unstable();
+        if identities.windows(2).any(|pair| pair[0] == pair[1]) {
+            return Err("model.routing.profile-duplicate");
+        }
+        Ok(Self {
+            verifier,
+            profiles,
+            profile_catalog_sha256,
+            sequence: 0,
+            audit_log: Vec::new(),
+        })
+    }
+
+    /// Routes one authenticated product request and appends one native audit view.
+    pub fn route(
+        &mut self,
+        envelope: AuthenticatedRoutingEnvelope,
+    ) -> Result<&NativeRoutingAuditView, &'static str> {
+        if !valid_identifier(&envelope.actor_id)
+            || !valid_identifier(&envelope.session_id)
+            || !valid_sha256(&envelope.authentication_sha256)
+            || !self.verifier.verify(
+                &envelope.actor_id,
+                &envelope.session_id,
+                &envelope.authentication_sha256,
+            )
+        {
+            return Err("model.routing.authentication-failed");
+        }
+        let receipt = route_measured_local(envelope.request, self.profiles.clone())?;
+        self.sequence = self.sequence.saturating_add(1);
+        let mut view = NativeRoutingAuditView {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            sequence: self.sequence,
+            actor_id: envelope.actor_id,
+            session_id: envelope.session_id,
+            task_id: receipt.task_id.clone(),
+            routing_method: "deterministic-measured-local-v1".to_owned(),
+            result_code: receipt.result_code.clone(),
+            selected_profile: receipt
+                .selected_profile_id
+                .as_deref()
+                .and_then(|identity| self.profile_identity(identity)),
+            verification_profile: receipt
+                .verification_profile_id
+                .as_deref()
+                .and_then(|identity| self.profile_identity(identity)),
+            disagreement_profile_ids: receipt.disagreement_profile_ids.clone(),
+            candidates: receipt.candidates.clone(),
+            policy_sha256: receipt.policy_sha256.clone(),
+            benchmark_generation_sha256: receipt.benchmark_generation_sha256.clone(),
+            profile_catalog_sha256: self.profile_catalog_sha256.clone(),
+            routing_receipt_sha256: receipt.receipt_sha256,
+            frontier_transfer: receipt.frontier_transfer,
+            model_confidence_used: receipt.model_confidence_used,
+            audit_sha256: String::new(),
+        };
+        view.audit_sha256 = canonical_sha256(&view)?;
+        self.audit_log.push(view);
+        self.audit_log
+            .last()
+            .ok_or("model.routing.audit-unavailable")
+    }
+
+    /// Returns the append-only content-minimized native audit projection.
+    #[must_use]
+    pub fn audit_log(&self) -> &[NativeRoutingAuditView] {
+        &self.audit_log
+    }
+
+    fn profile_identity(&self, identity: &str) -> Option<RoutingProfileIdentityAudit> {
+        let profile = self
+            .profiles
+            .iter()
+            .find(|profile| profile.profile_id == identity)?;
+        Some(RoutingProfileIdentityAudit {
+            profile_id: profile.profile_id.clone(),
+            artifact_sha256: profile.artifact_sha256.clone(),
+            tokenizer_sha256: profile.tokenizer_sha256.clone(),
+            template_sha256: profile.template_sha256.clone(),
+            codec_sha256: profile.codec_sha256.clone(),
+            runtime_sha256: profile.runtime_sha256.clone(),
+            context_sha256: profile.context_sha256.clone(),
+            decoding_sha256: profile.decoding_sha256.clone(),
+            resource_sha256: profile.resource_sha256.clone(),
+            platform_evidence_sha256: profile.platform_evidence_sha256.clone(),
+        })
+    }
+}
+
 /// Computes one deterministic local routing decision over exact typed evidence.
 pub fn route_measured_local(
     request: MeasuredRoutingRequest,
@@ -727,6 +925,16 @@ fn lower_hex(bytes: &[u8]) -> String {
 mod tests {
     use super::*;
 
+    struct ExactAuthenticationVerifier;
+
+    impl RoutingAuthenticationVerifier for ExactAuthenticationVerifier {
+        fn verify(&self, actor_id: &str, session_id: &str, authentication_sha256: &str) -> bool {
+            actor_id == "actor-local-1"
+                && session_id == "session-local-1"
+                && authentication_sha256 == hash('e')
+        }
+    }
+
     fn hash(character: char) -> String {
         std::iter::repeat_n(character, 64).collect()
     }
@@ -799,6 +1007,15 @@ mod tests {
             manual_profile_id: None,
             policy_sha256: hash('c'),
             benchmark_generation_sha256: hash('d'),
+        }
+    }
+
+    fn authenticated(request: MeasuredRoutingRequest) -> AuthenticatedRoutingEnvelope {
+        AuthenticatedRoutingEnvelope {
+            actor_id: "actor-local-1".to_owned(),
+            session_id: "session-local-1".to_owned(),
+            authentication_sha256: hash('e'),
+            request,
         }
     }
 
@@ -1000,5 +1217,60 @@ mod tests {
             route_measured_local(invalid, Vec::new()),
             Err("model.routing.input-invalid")
         );
+    }
+
+    #[test]
+    fn authenticated_product_service_owns_catalog_and_exposes_exact_native_audit() {
+        let first = profile("profile-alpha", 65, 0);
+        let second = profile("profile-beta", 65, 0);
+        let mut service = MeasuredRoutingService::new(
+            ExactAuthenticationVerifier,
+            vec![second, first.clone()],
+            hash('f'),
+        )
+        .expect("product service");
+        let view = service
+            .route(authenticated(request()))
+            .expect("routed view");
+        assert_eq!(view.sequence, 1);
+        assert_eq!(view.routing_method, "deterministic-measured-local-v1");
+        assert_eq!(view.result_code, "model.routing.measured-selected");
+        assert_eq!(view.disagreement_profile_ids, ["profile-beta"]);
+        assert_eq!(view.candidates.len(), 2);
+        let identity = view.selected_profile.as_ref().expect("selected identity");
+        assert_eq!(identity.profile_id, first.profile_id);
+        assert_eq!(identity.artifact_sha256, first.artifact_sha256);
+        assert_eq!(identity.codec_sha256, first.codec_sha256);
+        assert_eq!(identity.runtime_sha256, first.runtime_sha256);
+        assert_eq!(identity.context_sha256, first.context_sha256);
+        assert_eq!(identity.decoding_sha256, first.decoding_sha256);
+        assert!(!view.frontier_transfer);
+        assert!(!view.model_confidence_used);
+        assert!(valid_sha256(&view.audit_sha256));
+        let encoded = serde_json::to_string(view).expect("audit JSON");
+        assert!(!encoded.contains(&hash('e')));
+        assert_eq!(service.audit_log().len(), 1);
+    }
+
+    #[test]
+    fn product_service_fails_authentication_without_decision_or_audit() {
+        let mut service =
+            MeasuredRoutingService::new(ExactAuthenticationVerifier, Vec::new(), hash('f'))
+                .expect("empty product service");
+        let mut envelope = authenticated(request());
+        envelope.authentication_sha256 = hash('a');
+        assert_eq!(
+            service.route(envelope),
+            Err("model.routing.authentication-failed")
+        );
+        assert!(service.audit_log().is_empty());
+
+        let blocked = service
+            .route(authenticated(request()))
+            .expect("blocked view");
+        assert_eq!(blocked.result_code, "model.routing.no-eligible-profile");
+        assert!(blocked.selected_profile.is_none());
+        assert!(blocked.candidates.is_empty());
+        assert_eq!(service.audit_log().len(), 1);
     }
 }

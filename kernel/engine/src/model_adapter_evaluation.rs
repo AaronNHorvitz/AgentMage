@@ -433,8 +433,14 @@ mod tests {
             candidate.kind = kind;
             candidate.runtime_contract_parity_passed = false;
             let evaluation = evaluate_alternate_runtime(&candidate).expect("evaluation");
-            assert_eq!(evaluation.disposition, AlternateRuntimeDisposition::Rejected);
-            assert_eq!(evaluation.reason_codes, ["model.adapter.runtime-parity-failed"]);
+            assert_eq!(
+                evaluation.disposition,
+                AlternateRuntimeDisposition::Rejected
+            );
+            assert_eq!(
+                evaluation.reason_codes,
+                ["model.adapter.runtime-parity-failed"]
+            );
             assert!(!evaluation.activation_authority);
         }
     }
