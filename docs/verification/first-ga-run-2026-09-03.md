@@ -491,3 +491,41 @@ profile-lifecycle source rows while preserving installed-model and physical-plat
 
 Exact next action: continue Sprint 23 current-activation/runtime-health discovery or request-phase
 lifecycle coverage, then classify the installed-native and accessibility rows by exact external tuple.
+
+## Batch 25 — Picker fact join and accessibility defect gate
+
+### Completed
+
+- Closed 2 TASKS rows: Sub-tasks 23.3.1.1 and 23.2.2.3. The signed-catalog projection requires
+  exact activation, adapter health, hardware/platform compatibility, policy, support, limitations,
+  and explicit-decision facts; the current zero-enabled production catalog truthfully yields no
+  ordinary picker entry. A closed native-accessibility evaluator now blocks missing names, invalid
+  focus order, color-only meaning, inaccessible update order, forced timeouts, and malformed
+  generated structure independently and in combination. Promotions: 0. Substitutions: 0.
+- Commits: `199d92fb` (capability, tests, task truth, and architecture) and `391af366` (supply-chain
+  and dependent evidence). Commits: 2. Commits per closed item: 1.00. Review pins advanced: 0;
+  complete `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1. Evidence regeneration passes: 1 with 1 targeted recovery iteration. The
+  Sprint 23 aggregate attempt failed on the retained restricted-host conditions after 33.402 seconds;
+  its output was restored byte-for-byte and unaffected consumers were regenerated once.
+- VS Code tests: 93/93 pass; accessibility seeds: 6/6 independently blocking; lint and format pass.
+  Sprint 23 evidence tests: 3/3 pass. Requirements-current: 45/45 pass. Supply-chain, task graph,
+  Story 1.3, Story 11.2 AC2, contract, traceability, configuration, component-inventory, Story 1.1,
+  and Story 3.1 checks pass. Full `docs:check`: 696.555 seconds, stopping only at the retained Story
+  6.1 Podman prerequisite after every preceding gate passed. Recorded gate wall seconds: 741.
+- Exact Sprint 23 aggregate host blocker: `blocked: host change required — run the AgentMage test
+  chain outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl,
+  /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then run python3
+  scripts/sprint_23_evidence.py --write --source-revision HEAD`; substitution set: empty.
+- Retained carrier blockers: Story 7.1 remains `blocked: host change required — make
+  /run/user/1000/libpod writable to uid 1000 and start a usable rootless Podman service, then run
+  npm run -s evidence:story7.1-platform-contract:build && npm run -s
+  evidence:story7.1-security:build`; substitution set: empty. Story 9.1 remains `blocked: host change
+  required — sudo dnf install gcc-c++, then run npm run -s evidence:story9.1-linux-inference:build`;
+  substitution set: empty.
+
+Exact next action: implement the Sprint 23 request-phase profile-failure matrix, then classify the
+remaining installed native-client, assistive-technology, and production-model dependencies.
