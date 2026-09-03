@@ -1410,3 +1410,71 @@ retaining Sprint 37's exact external, host, fuzz, and upstream blockers.
 
 Exact next action: continue at Sprint 40's first unblocked local or gate-owned row while retaining
 all exact upstream, release, platform, launcher, and fuzz blockers.
+
+## Batch 49 — Sprint 41 and 42 command/repository boundary reviews
+
+### Completed
+
+- Closed 6 TASKS rows: Sub-task 41.1.3.5, Story AC 41.1.AC1, Story AC 41.1.AC2,
+  Sub-task 42.1.3.5, Story AC 42.1.AC1, and Sprint AC 42.AC1. The gate-owned reviews bind the
+  12-requirement command boundary and 15-requirement repository boundary to exact grants,
+  no-shell templates, environment and descriptor confinement, process cleanup, resources,
+  owned-worktree preservation, 44 hostile cases, 10,000 protected-state mutations with 0
+  unauthorized acceptance, recovery, collision, and disabled remote-authority truth.
+  Promotions: 0. Substitutions: 0. Cumulative closed items: 100.
+- Commits: `a1cf0153` (both boundary reviews and mutation tests), `db2a1aa2` (review truth,
+  closures, and exact blockers), and `853b0fce` (both review artifacts, traceability, and contract
+  evidence). Commits: 3. Commits per closed item: 0.50. Review pins advanced: 0; complete 14-path
+  `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Focused boundary/evidence tests: 12/12; both boundary reviews, targeted Markdown lint,
+  requirements-current 45/45, traceability, contract-boundary, and contract-evidence gates pass.
+  Supply-chain builds: 1. Evidence regeneration passes: 1. Recovery iterations: 1; the first
+  focused run exposed one incorrect Linux repository source filename and symbolic `HEAD` strings
+  in tests requiring resolved 40-byte revisions. Both bindings were corrected and the focused run
+  passed. The full chain ran 678 seconds and stopped only at the retained Story 6.1 rootless-Podman
+  prerequisite after every preceding gate passed. Recorded gate wall seconds: 678.
+- Exact Sprint 41 helper blocker: `blocked: host change required — install an owner-approved
+  root-owned Sprint 41 multi-level process helper and register its exact executable identity for
+  the S-034-RT01 descendant-termination campaign`; `substitution_set=empty`.
+- Exact Sprint 41 platform blocker: `BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM
+  guest, and physical supported MacBook; artifact=every approved template at minimum and maximum
+  limits with exact identity, output, resources, filesystem/network effects, and exit
+  classification; action=platform owners run S-034-IT01 and transfer untouched evidence;
+  credential=Windows image source and physical Mac access; payment=Windows license if required)`;
+  `substitution_set=empty`.
+- Exact Sprint 41 launcher blocker: `blocked: host change required — run the Sprint 41 command
+  suite from the trusted packaged launcher outside the development shell`;
+  `substitution_set=empty`.
+- Exact Sprint 41 fuzz blocker: `BLOCKED_EXTERNAL(platform=every supported native command worker;
+  artifact=manual fuzzing transcript and minimized corpus; action=authorized human executes the
+  manual S-034 fuzz campaign and transfers untouched results; credential=platform access;
+  payment=none)`; `substitution_set=empty`.
+- Exact Sprint 42 network blocker: `BLOCKED_EXTERNAL(platform=approved credentialed Git remote;
+  artifact=bounded no-checkout clone, exact namespaced fetch, interruption, network trace, and
+  clone-success reconciliation results; action=repository owner provisions a disposable remote and
+  credential then transfers untouched execution evidence; credential=approved disposable Git
+  remote credential; payment=remote hosting if required)`; `substitution_set=empty`.
+- Exact Sprint 42 platform blocker: `BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM
+  guest, and physical supported MacBook; artifact=repository preservation, hostile configuration,
+  worktree lifecycle, and resource-accounting parity results; action=platform owners execute and
+  transfer untouched native evidence; credential=Windows image source and physical Mac access;
+  payment=Windows license if required)`; `substitution_set=empty`.
+- Exact Sprint 42 launcher blocker: `blocked: host change required — run the Sprint 42 repository
+  safety suite from the trusted packaged launcher outside the development shell`;
+  `substitution_set=empty`.
+- Exact Sprint 42 fuzz blocker: `BLOCKED_EXTERNAL(platform=every supported native repository
+  worker; artifact=manual fuzzing transcript and minimized corpus; action=authorized human
+  executes the manual S-035 fuzz campaign and transfers untouched results; credential=platform
+  access; payment=none)`; `substitution_set=empty`.
+- Exact upstream blockers: `blocked: awaiting Sprint 40 and G-V0.3 gate closure` for Sprint 41 and
+  `blocked: awaiting Sprint 41 gate closure` for Sprint 42; each retains all exact dependency
+  tuples; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: preserve Sprint 40 and Sprint 42's remaining exact external tuples, then continue
+at Sprint 43's first unblocked local or gate-owned verification row.
