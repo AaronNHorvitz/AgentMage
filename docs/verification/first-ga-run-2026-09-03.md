@@ -952,3 +952,32 @@ release, and supported-package tuples.
 
 Exact next action: continue at Sprint 27's first unblocked local source/evidence or mechanical parent
 rows while retaining Sprint 26's draft-Decision and release/package blockers.
+
+## Batch 39 — Vault watcher and Sprint 27–29 boundary reviews
+
+### Completed
+
+- Closed 6 TASKS rows: Task 28.1.1, Sub-task 28.1.1.4, Task 28.1.3, Sub-task 28.1.3.5,
+  Task 29.1.3, and Sub-task 29.1.3.5. The trusted host polling adapter performs bounded
+  symlink-safe filesystem observation, emits exact created/modified/deleted events, and updates only
+  the disposable index with content-free receipts. Gate-owned reviews resolve the automated-review
+  gaps for Sprints 27, 28, and 29 without a human-review claim. Promotions: 0. Substitutions: 0.
+- Commits: `a8d33226` (watcher and shared reviewer), `7aecc426` (Sprint 27 trust-wording
+  correction), `2a5a34ac` (three reviews and checklist-bound evidence), and `9d144ecb` (Story 3.1
+  cascade renewal). Commits: 4. Commits per closed item: 0.67. Review pins advanced: 0; complete
+  `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Focused watcher tests: 2/2; shared review mutation groups: 2/2; strict host Clippy passes.
+  Supply-chain builds: 2. Evidence regeneration passes: 2. Recovery iterations: 2. The first shared
+  review used the word `injection` while the authority says instruction-like prose is untrusted
+  data; the corrected review passes all Sprint 27–29 checks. The first full chain then exposed the
+  expected host-crate SBOM cascade at Story 3.1; configuration-startup, component-inventory,
+  security-map, Story 3.1, and Sprint 3 were rebuilt specifically and pass.
+- First full `docs:check`: 351.040 seconds to the stale Story 3.1 evidence. Recovery full
+  `docs:check`: 695.320 seconds, stopping only at the retained Story 6.1 Podman prerequisite after
+  every preceding gate passed. Recorded gate wall seconds: 1,046.
+
+Exact next action: propagate Sprint 29's inherited upstream blocker, then continue at Sprint 30's
+first unblocked local row; preserve Sprint 26's two draft-Decision and release/package tuples.
