@@ -43,3 +43,33 @@ filesystem sandbox with the current user's /run/user/1000/libpod writable`; subs
 
 Exact next action: continue the first authoritative unblocked frozen-scope gate after Story 13.4;
 do not activate any model or borrow the retained rejected-candidate results.
+
+## Batch 13 — Sprint 9 security-review prerequisite audit
+
+### Completed
+
+- Closed rows: 0. Promotions: 0. External rows closed by substitution: 0.
+- Commits: `9ec52de1` and `c813ed06`. Commits: 2. Commits per closed item: undefined
+  because 0 rows closed.
+
+### Validation and self-recovery
+
+- The initial audit correctly identified that AGENTS.md section 7 permits automated review-gate
+  provenance, but focused Story 9.1 and 9.2 validators found lower prerequisite artifacts stale
+  before either security map could be regenerated.
+- Story 9.1 requires a fresh Linux package-lifecycle artifact; Story 9.2 requires a fresh Docker
+  prerequisite artifact. Both repository build commands require Podman and therefore the same
+  writable `/run/user/1000/libpod` state already exhausted in 5 recovery attempts. No sixth
+  attempt, weakened validator, manual artifact edit, or support substitution was made.
+- The provisional automated-review source and 8 provisional TASKS closures were reversed in a
+  forward commit. Both affected story rows now record exact host-change blockers; the retained
+  security maps remain unchanged. Supply-chain regeneration count: 1; output delta: 0. Evidence
+  regeneration count: 0. Review pins advanced: 0. Gate wall seconds: 0.
+- Exact blockers: `blocked: host change required — run npm run -s
+evidence:story9.1-linux-package:build outside the restricted filesystem sandbox with the current
+user's /run/user/1000/libpod writable` and `blocked: host change required — run npm run -s
+evidence:story9.2-docker-prerequisite:build outside the restricted filesystem sandbox with the
+current user's /run/user/1000/libpod writable`; substitution sets: empty.
+
+Exact next action: continue with Sprint 10 repository-controlled strict-local work while the
+Sprint 9 package-evidence checkpoint remains blocked on the host change.
