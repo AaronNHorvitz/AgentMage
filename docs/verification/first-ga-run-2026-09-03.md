@@ -567,3 +567,50 @@ remaining installed native-client, assistive-technology, and production-model de
 
 Exact next action: extend the same no-fallback disposition through post-start request phases, then
 classify the remaining installed native-client, assistive-technology, and production-model rows.
+
+## Batch 27 — Post-receipt profile failure lifecycle
+
+### Completed
+
+- Closed 1 TASKS row: Sub-task 23.3.2.3. The shared coordinator now has a 4/4 post-tool-receipt
+  failure matrix for unavailable, uncertain/crashed, invalid/quarantined, and resource-exhausted
+  selected profiles. Each case preserves the exact run and profile, retains exactly 1 admitted tool
+  receipt, emits exactly 1 model-failure event and 1 truthful terminal outcome, and performs no
+  retry, replay, route, or substitution. Promotions: 0. Substitutions: 0.
+- Marked 3 rows with exact external tuples and empty substitution sets: Sub-tasks 23.2.2.1,
+  23.2.2.2, and 23.3.2.4 require the current packaged VSIX on installed Fedora graphical Visual
+  Studio Code and, where specified, a physical supported MacBook with VoiceOver. Linux source or
+  synthetic results were not substituted for installed-product or assistive-technology execution.
+- Commits: `39364488` (capability, tests, task truth, and exact blockers), `bb8894f3`
+  (supply-chain and dependent evidence), `cae20012` (targeted Story 11.2 AC2 evidence recovery), and
+  `ad60dd4b` (Story 11.2 review pin and story report). Commits: 4. Commits per closed item: 4.00.
+  Review pins advanced: 1; the initial complete `REVIEWED_PATHS` intersection was empty, then the
+  targeted AC2 rebuild changed 1 Story 11.2 reviewed artifact and required the sanctioned renewal.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1. Evidence regeneration passes: 1 with 2 targeted recovery iterations. The
+  Sprint 23 aggregate attempt reached the retained restricted-host failure after 35.533 seconds;
+  its output was restored byte-for-byte and unaffected consumers were regenerated once. The first
+  full chain found the Story 11.2 AC2 report stale after 160.830 seconds; rebuilding that derived
+  report exposed its reviewed-path intersection, so the immutable pin and story report were renewed
+  together and both focused gate runs passed 8/8 tests.
+- Runtime lifecycle test: 1/1 pass across 4 post-receipt dispositions; strict Clippy passes. Sprint
+  23, Story 23.4 runtime/security/index, and related evidence tests: 16/16 pass. Requirements-current:
+  45/45 pass. Supply-chain and task-graph checks pass. Full `docs:check` rerun: 693.550 seconds,
+  stopping only at the retained Story 6.1 Podman prerequisite after every preceding gate passed.
+  Recorded gate wall seconds: 890.
+- Exact Sprint 23 aggregate host blocker: `blocked: host change required — run the AgentMage test
+  chain outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl,
+  /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then run python3
+  scripts/sprint_23_evidence.py --write --source-revision HEAD`; substitution set: empty.
+- Retained carrier blockers: Story 7.1 remains `blocked: host change required — make
+  /run/user/1000/libpod writable to uid 1000 and start a usable rootless Podman service, then run
+  npm run -s evidence:story7.1-platform-contract:build && npm run -s
+  evidence:story7.1-security:build`; substitution set: empty. Story 9.1 remains `blocked: host change
+  required — sudo dnf install gcc-c++, then run npm run -s evidence:story9.1-linux-inference:build`;
+  substitution set: empty.
+
+Exact next action: classify every remaining Sprint 23 dependency row, close any source-verifiable
+parent whose children are complete, and continue to the next unblocked Decision 0047 critical-path
+gate without retrying the recorded host or physical-platform prerequisites.
