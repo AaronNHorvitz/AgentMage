@@ -72,9 +72,10 @@ pub use language_service::{
     seal_language_service_observation, verify_language_service_observation,
 };
 pub use package_scaffold::{
-    PackageLanguage, PackageScaffoldError, PackageScaffoldPlan, PackageScaffoldRequest,
-    ScaffoldCommand, ScaffoldCommandPurpose, ScaffoldFile, build_package_scaffold,
-    package_convention_sha256, verify_package_scaffold,
+    PackageLanguage, PackageScaffoldApplication, PackageScaffoldError, PackageScaffoldPlan,
+    PackageScaffoldRequest, ScaffoldCommand, ScaffoldCommandPurpose, ScaffoldFile,
+    build_package_scaffold, build_package_scaffold_application, package_convention_sha256,
+    verify_package_scaffold, verify_package_scaffold_application,
 };
 pub use parser::{
     ParseDisposition, RepositoryParseError, SourceRange, StructuralItem, StructuralItemKind,

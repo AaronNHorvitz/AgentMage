@@ -200,6 +200,44 @@ pub struct PackageScaffoldPlan {
     pub plan_sha256: String,
 }
 
+/// Exact authority-free application manifest for one approved absent package root.
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PackageScaffoldApplication {
+    /// Schema version.
+    pub schema_version: u16,
+    /// Exact verified scaffold-plan identity.
+    pub scaffold_plan_sha256: String,
+    /// Exact absent package root to publish once.
+    pub package_root: WorkspacePath,
+    /// Stable parent-before-child directory set, including the package root.
+    pub directories: Vec<WorkspacePath>,
+    /// Stable path-sorted exact file set.
+    pub files: Vec<ScaffoldFile>,
+    /// Stable purpose-sorted inert validation commands.
+    pub local_commands: Vec<ScaffoldCommand>,
+    /// Publication must be one no-replace atomic root transition.
+    pub atomic_root_publication_required: bool,
+    /// A later filesystem grant is mandatory.
+    pub separate_grant_required: bool,
+    /// This manifest carries no mutation authority.
+    pub mutation_authority: bool,
+    /// SHA-256 over every preceding field.
+    pub application_sha256: String,
+}
+
+impl std::fmt::Debug for PackageScaffoldApplication {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("PackageScaffoldApplication")
+            .field("package_root", &self.package_root)
+            .field("directory_count", &self.directories.len())
+            .field("file_count", &self.files.len())
+            .field("application_sha256", &self.application_sha256)
+            .finish_non_exhaustive()
+    }
+}
+
 impl std::fmt::Debug for PackageScaffoldPlan {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter
@@ -372,6 +410,56 @@ pub fn verify_package_scaffold(plan: &PackageScaffoldPlan) -> bool {
         && exact_files
         && plan.local_commands == convention_commands(plan.language, &plan.package_root)
         && plan.plan_sha256 == plan_digest(plan)
+}
+
+/// Composes a verified scaffold into one inert atomic-root application manifest.
+pub fn build_package_scaffold_application(
+    plan: &PackageScaffoldPlan,
+) -> Result<PackageScaffoldApplication, PackageScaffoldError> {
+    if !verify_package_scaffold(plan) {
+        return Err(PackageScaffoldError::InvalidInput);
+    }
+    let root_depth = plan.package_root.components().len();
+    let mut directories = BTreeSet::from([plan.package_root.clone()]);
+    for file in &plan.files {
+        let components = file.path.components();
+        if components.len() <= root_depth || !components.starts_with(plan.package_root.components())
+        {
+            return Err(PackageScaffoldError::InvalidInput);
+        }
+        for depth in root_depth + 1..components.len() {
+            directories.insert(
+                WorkspacePath::new(
+                    plan.package_root.workspace_id().clone(),
+                    components[..depth].iter().map(|value| value.as_str()),
+                )
+                .map_err(|_| PackageScaffoldError::InvalidInput)?,
+            );
+        }
+    }
+    let mut application = PackageScaffoldApplication {
+        schema_version: PACKAGE_SCAFFOLD_SCHEMA_VERSION,
+        scaffold_plan_sha256: plan.plan_sha256.clone(),
+        package_root: plan.package_root.clone(),
+        directories: directories.into_iter().collect(),
+        files: plan.files.clone(),
+        local_commands: plan.local_commands.clone(),
+        atomic_root_publication_required: true,
+        separate_grant_required: true,
+        mutation_authority: false,
+        application_sha256: String::new(),
+    };
+    application.application_sha256 = application_digest(&application);
+    Ok(application)
+}
+
+/// Verifies an application manifest by deterministic recomposition from its scaffold plan.
+#[must_use]
+pub fn verify_package_scaffold_application(
+    plan: &PackageScaffoldPlan,
+    application: &PackageScaffoldApplication,
+) -> bool {
+    build_package_scaffold_application(plan).is_ok_and(|expected| expected == *application)
 }
 
 fn validate_request(request: &PackageScaffoldRequest) -> Result<(), PackageScaffoldError> {
@@ -677,6 +765,12 @@ fn plan_digest(plan: &PackageScaffoldPlan) -> String {
     sha256_json(&canonical)
 }
 
+fn application_digest(application: &PackageScaffoldApplication) -> String {
+    let mut canonical = application.clone();
+    canonical.application_sha256.clear();
+    sha256_json(&canonical)
+}
+
 fn sha256_json(value: &impl Serialize) -> String {
     serde_json::to_vec(value)
         .map(|bytes| sha256_hex(&bytes))
@@ -821,6 +915,48 @@ mod tests {
                 _ => changed.plan_sha256 = "d".repeat(64),
             }
             assert!(!verify_package_scaffold(&changed));
+        }
+    }
+
+    #[test]
+    fn every_scaffold_composes_an_exact_inert_atomic_root_application() {
+        for language in PackageLanguage::ALL {
+            let plan = build_package_scaffold(request(language)).expect("plan");
+            let application = build_package_scaffold_application(&plan).expect("application");
+            assert!(verify_package_scaffold_application(&plan, &application));
+            assert_eq!(application.directories.first(), Some(&plan.package_root));
+            assert!(
+                application
+                    .directories
+                    .windows(2)
+                    .all(|pair| pair[0] < pair[1])
+            );
+            assert_eq!(application.files, plan.files);
+            assert_eq!(application.local_commands, plan.local_commands);
+            assert!(application.atomic_root_publication_required);
+            assert!(application.separate_grant_required);
+            assert!(!application.mutation_authority);
+        }
+    }
+
+    #[test]
+    fn scaffold_application_mutations_never_verify() {
+        let plan = build_package_scaffold(request(PackageLanguage::Python)).expect("plan");
+        let baseline = build_package_scaffold_application(&plan).expect("application");
+        for sequence in 0_u8..7 {
+            let mut changed = baseline.clone();
+            match sequence {
+                0 => changed.scaffold_plan_sha256 = "a".repeat(64),
+                1 => {
+                    changed.directories.pop();
+                }
+                2 => changed.files[0].content.push(b'x'),
+                3 => changed.local_commands[0].network_allowed = true,
+                4 => changed.atomic_root_publication_required = false,
+                5 => changed.mutation_authority = true,
+                _ => changed.application_sha256 = "b".repeat(64),
+            }
+            assert!(!verify_package_scaffold_application(&plan, &changed));
         }
     }
 }

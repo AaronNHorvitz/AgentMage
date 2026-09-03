@@ -48,6 +48,7 @@ class Sprint45EvidenceTests(unittest.TestCase):
         value = report()
         self.assertEqual(self.validate(value), [])
         self.assertTrue(value["summary"]["local_sprint_45_contract_passed"])
+        self.assertTrue(value["summary"]["controlled_package_scaffold_application_active"])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertFalse(value["summary"]["release_approval"])
 
@@ -56,7 +57,6 @@ class Sprint45EvidenceTests(unittest.TestCase):
             "upstream_sprint_44_closed",
             "production_chat_coding_coordinator_active",
             "production_language_service_sandbox_active",
-            "controlled_package_scaffold_application_active",
             "trusted_installed_parent_execution_complete",
             "cross_platform_acceptance_passed",
             "trusted_package_execution_complete",
@@ -106,4 +106,3 @@ class Sprint45EvidenceTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
