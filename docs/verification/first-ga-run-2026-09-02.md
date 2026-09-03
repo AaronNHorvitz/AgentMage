@@ -148,3 +148,37 @@ next locally actionable frozen-set blocker without promoting the externally bloc
 
 Exact next action: retain and push the Sprint 50 report/TASKS/traceability checkpoint, then audit
 Sprint 51 against later frontier-coordinator implementation and remove only stale local blockers.
+
+## Batch 6 — Sprint 60 PDF structured-source adapter
+
+### Completed
+
+- Added a shared PDF structured-source extractor over the existing admitted strict parser. It
+  verifies captured-byte media/digest identity, applies shared output and section ceilings, checks
+  cancellation, and emits ordered document/page sections with exact PDF object/generation and
+  one-based page provenance.
+- Preserved scan and parser limitations as visible warnings and retained false filesystem,
+  network, and execution effects. No OCR, renderer, generator, product, platform, or active-content
+  completion claim was added.
+- Added the shared PDF media type and page section kind plus two direct adapter tests, bringing the
+  focused executable PDF fixture count to eight.
+- Renewed traceability, configuration, contract-boundary, platform, Story 7.1, and Sprint 7
+  evidence through exact immutable review-pin sequences. The complete documentation gate passed.
+- Immutable Sprint 60 evidence passed against exact revision
+  `ccd9580138d25aed89993119d9a6adef3a68ebb3`; report SHA-256
+  `a07182466418958498aac235690763918101092dc30287c09ee67ccba5a1ba2b`.
+
+### Validation and blockers
+
+- Nine commands passed with zero blocking skips: three focused PDF suites, strict Clippy, format,
+  supply-chain, documentation, product-CI, and evidence mutation tests.
+- The retained report records the shared adapter true, eight Rust fixtures, the 82-case review
+  corpus, and zero enabled external effects.
+- Story 60.2.1.1 remains open for span geometry, reading-order observations, and text density;
+  active-content inspection and the rest of the lifecycle remain open. Sprint 60 truthfully keeps
+  13 upstream, component-admission, platform, accessibility, independent-review, and fuzz blockers.
+- External rows closed by substitution: 0.
+
+Exact next action: refresh traceability and source-bound evidence for the retained Sprint 60 report,
+commit and push the checkpoint, then continue the PDF batch with span/reading-order/text-density and
+active-content refusal without regenerating supply-chain evidence mid-source batch.

@@ -7180,11 +7180,12 @@ complete with current evidence. Otherwise it is BLOCKED.
 
 **Local evidence note:** The retained report at `artifacts/sprints/sprint-60/local-evidence-report.json`
 binds 9 passing commands and the 82-case review corpus to source revision
-`07b171bc12abdfe7564327d13c18b49d30ce3a6c` (report SHA-256
-`9e46a36e67c7208d5346294f352d5767a4836e4d8f497ed4923b67ad148aa2fd`). Exact parser
+`ccd9580138d25aed89993119d9a6adef3a68ebb3` (report SHA-256
+`a07182466418958498aac235690763918101092dc30287c09ee67ccba5a1ba2b`). Exact parser
 admission, bounded strict in-memory extraction, deterministic page/object identity, exact-page
-citations, scan/encryption/malformed/truncated/limit detection, OCR observation admission,
-two closed runtime schemas, and zero-effect checks are complete. Story 60.1 and Sprint 60 remain
+citations, scan/encryption/malformed/truncated/limit detection, OCR observation admission, the
+shared structured-source adapter, eight executable Rust fixtures, two closed runtime schemas, and
+zero-effect checks are complete. Story 60.1 and Sprint 60 remain
 **BLOCKED** by Sprint 59, unadmitted PDF generation, rendering, and OCR components, absent native
 OCR failure/cancellation and redaction-residue campaigns, missing native Fedora/Ubuntu/Windows and
 retained macOS evidence, installed accessibility and independent native-boundary review, and
