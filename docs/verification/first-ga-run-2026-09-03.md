@@ -152,3 +152,34 @@ admitted profiles and the open native-platform/profile-parity blockers.
 
 Exact next action: continue with the next dependency-independent frozen-scope gate; do not retry
 the exhausted Story 9.2/Sprint 14 Podman checkpoint in this environment.
+
+## Batch 17 — Sprint 17 Git parser fuzz activation audit
+
+### Completed
+
+- Closed 0 TASKS rows. Promotions: 0. External rows closed by substitution: 0.
+- Implemented a provisional real `FT-GIT-001` libFuzzer harness over arbitrary closed-request
+  bytes and all 13 bounded Git output-parser operations, 3 synthetic seeds, and a source-bound
+  60-second campaign generator. The harness was not retained because the pinned `libfuzzer-sys`
+  build requires a host C++ compiler and none exists.
+- Commits: `cb03b58b`, `a75f30cc`, and `f819e4e1`. The first two preserve the implementation
+  attempt and forward reversal; the third records the exact blocker. Commits per closed item:
+  undefined (0 items).
+
+### Validation and self-recovery
+
+- Harness evidence tests: 2/2 pass. Offline compile attempt: failed before target compilation when
+  `libfuzzer-sys 0.4.10` could not locate `c++`; `command -v c++`, `command -v g++`, and
+  `command -v clang++` returned no path. No package was installed and no root action was attempted.
+- The provisional files were removed only by a forward revert, not by reset, checkout, manual
+  artifact editing, or history rewriting. Supply-chain regeneration count: 0. Evidence
+  regeneration count: 0. Review-path intersections: 0; review pins advanced: 0.
+- The retained Sprint 17 report validates. Documentation invariants: 413 Markdown files pass;
+  requirement registry, planning scope, and traceability pass. Gate wall seconds: 71.
+- Exact blocker on Task 17.1.3 and Sub-task 17.1.3.5: `blocked: host change required — sudo dnf
+  install gcc-c++`, then rerun the registered `FT-GIT-001` parser campaign with `cargo
+  +nightly-2026-08-01 fuzz run`; substitution set: empty. Native macOS evidence remains a separate
+  `BLOCKED_EXTERNAL` dependency and Linux is not substituted.
+
+Exact next action: automate the repository-owned Sprint 20 review provenance and close its
+otherwise complete platform-neutral story/sprint gate; continue without retrying the C++ blocker.
