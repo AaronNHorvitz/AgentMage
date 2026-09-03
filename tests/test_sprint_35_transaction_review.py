@@ -18,7 +18,7 @@ def report() -> dict[str, object]:
         b"changed_preimage_invalidates_the_single_use_grant",
         b"preimage_sha256 expected_postimage_sha256 operation_sha256",
         b"preimage_bytes rollback Restore the reviewed preimage",
-        b"MAX_WRITE_GRANT_LIFETIME_MS permitted_uses: 1 invalidate_issued_grant",
+        b"MAX_WRITE_GRANT_LIFETIME_MS single-use operation grant invalidate_issued_grant",
         b"Success is not write authority Sprint 36 must",
     ))
     requirements = " ".join(review.SECURITY_REQUIREMENTS).encode()

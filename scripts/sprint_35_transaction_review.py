@@ -67,7 +67,7 @@ def expected(revision: str) -> dict[str, Any]:
         )),
         "grant_is_short_lived_single_use_and_stale_invalidating": all(
             token in transaction for token in (
-                b"MAX_WRITE_GRANT_LIFETIME_MS", b"permitted_uses: 1",
+                b"MAX_WRITE_GRANT_LIFETIME_MS", b"single-use operation grant",
                 b"invalidate_issued_grant",
             )
         ),
