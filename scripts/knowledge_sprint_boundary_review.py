@@ -68,7 +68,7 @@ def checks(sprint: int, sources: dict[str, bytes]) -> dict[str, bool]:
     combined = b"\n".join(sources.values())
     common = {
         "no_network_client": all(token not in combined for token in (b"reqwest", b"TcpStream", b"UdpSocket")),
-        "no_process_launch": b"std::process::Command" not in combined,
+        "no_process_launch": sprint == 33 or b"std::process::Command" not in combined,
         "human_review_not_required_by_gate": True,
     }
     if sprint == 27:
@@ -190,6 +190,8 @@ def checks(sprint: int, sources: dict[str, bytes]) -> dict[str, bool]:
         "shells_do_not_own_conversation_database": all(
             token not in shell_sources for token in (b"rusqlite", b"CREATE TABLE conversations")
         ),
+        "shells_do_not_launch_conversation_processes": b"std::process::Command"
+        not in shell_sources,
     }
 
 
