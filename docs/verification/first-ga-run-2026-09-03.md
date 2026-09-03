@@ -1818,3 +1818,54 @@ launcher, and fuzz blockers.
 
 Exact next action: continue at Story 49.2's first locally executable adapter-evaluation row while
 retaining Story 49.1's exact upstream, model, integration, platform, launcher, and fuzz blockers.
+
+## Batch 56 — Story 49.2 non-activating adapter evaluation
+
+### Completed
+
+- Closed 14 TASKS rows: Story 49.2; Tasks 49.2.1 through 49.2.3; Sub-tasks 49.2.1.1
+  through 49.2.1.3, 49.2.2.1/49.2.2.2, and 49.2.3.1/49.2.3.2; and Story AC
+  49.2.AC1 through 49.2.AC3. The bound matrix covers 10 named candidate families, 10 canonical
+  semantic dimensions per family, 8 fake parity/staleness cases, one exact pinned llama.cpp
+  package candidate, 9 unresolved unavailable candidates, 0 live candidates, 0 supported
+  adapters, 0 enabled routes, and false silent fallback. Promotions: 0. Substitutions: 0.
+  Cumulative closed items: 137.
+- Commits: `7f06e463` (matrix, evaluator families, tests, and truthful result document),
+  `0ce9eeaf` (story closures), and `d0b8b2b3` (revision-bound story evidence, supply chain,
+  traceability, contract evidence, and affected Sprint 3 carrier evidence). Commits: 3. Commits
+  per closed item: 0.21. Review pins advanced: 0; complete 20-gate `REVIEWED_PATHS`
+  intersection: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 3/3 matrix mutation tests, 6/6 alternate-runtime evaluator tests, 5/5
+  canonical gateway-routing tests, strict kernel Clippy, targeted Markdown lint,
+  requirements-current, traceability, contract-boundary, contract-evidence, supply-chain,
+  configuration-startup, component-inventory, and Story 3.1 security checks pass. Supply-chain
+  builds: 1; the kernel workspace edit changed the expected SBOM carrier. Evidence regeneration
+  passes: 1, including all 3 affected Sprint 3 carrier reports. Recovery iterations: 1
+  focused-command correction: Cargo accepts one test-name filter, so the combined two-filter
+  invocation was split into the two intended focused commands; both passed without source, test,
+  or evidence changes. The full chain ran 683.604 seconds and stopped only at the retained Story
+  6.1 rootless-Podman prerequisite after every preceding gate passed. Recorded gate wall seconds:
+  684.
+- Story 49.2 records no support substitution and closes only its required explicit evaluation
+  disposition. Any live candidate remains
+  `BLOCKED_EXTERNAL(platform=exact candidate runtime host; artifact=exact implementation,
+  version, endpoint, codec, field/event parity, failure, performance, lifecycle, removal, and
+  platform result bundle; action=authorized runtime owner provisions the exact candidate, runs the
+  canonical corpus, and transfers untouched results; credential=runtime or endpoint access if
+  restricted; payment=runtime service or hardware if applicable)`; `substitution_set=empty`.
+  This tuple blocks future support or routing promotion, not the completed non-support matrix.
+- Exact Story 49.1 integration dependency remains `blocked: awaiting authenticated product routing
+  and native routing audit-view composition`; `substitution_set=empty`. Its exact model, native
+  platform, trusted-launcher, and manual-fuzz tuples remain unchanged.
+- Exact upstream blocker: `blocked: awaiting Sprint 48 gate closure`, retaining Sprint 48's
+  transport/coordinator, model, disconnect, native-platform, trusted-launcher, and manual-fuzz
+  tuples; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: return to Story 49.1's unblocked authenticated product-routing composition and
+native routing audit view before advancing to Sprint 50; retain every exact external tuple above.
