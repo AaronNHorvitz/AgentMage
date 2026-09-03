@@ -237,7 +237,7 @@ pub use spreadsheet_ooxml::{
     SpreadsheetCell, SpreadsheetCellKind, SpreadsheetDateSystem, SpreadsheetError,
     SpreadsheetFinding, SpreadsheetFindingKind, SpreadsheetHyperlink, SpreadsheetInspection,
     SpreadsheetProfile, SpreadsheetSheetState, SpreadsheetWorksheet, excel_serial_date,
-    inspect_xlsx,
+    inspect_xlsx, inspect_xlsx_with_control,
 };
 pub use spreadsheet_source::SpreadsheetStructuredSourceExtractor;
 pub use store::{

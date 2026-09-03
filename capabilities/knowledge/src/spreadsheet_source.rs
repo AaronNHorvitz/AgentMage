@@ -11,7 +11,7 @@ use serde_json::Value;
 use crate::json_data::{StructuredJsonError, StructuredJsonProfile, parse_structured_json};
 use crate::spreadsheet_ooxml::{
     SpreadsheetCell, SpreadsheetError, SpreadsheetFindingKind, SpreadsheetProfile,
-    SpreadsheetSheetState, inspect_xlsx,
+    SpreadsheetSheetState, inspect_xlsx_with_control,
 };
 use crate::tabular::{DelimitedDialect, TabularError, TabularProfile, parse_delimited_table};
 use crate::word_ooxml::word_sha256;
@@ -168,6 +168,8 @@ fn map_spreadsheet_error(error: SpreadsheetError) -> StructuredSourceExtractionE
     match error {
         SpreadsheetError::InvalidInput => StructuredSourceExtractionError::InvalidInput,
         SpreadsheetError::ResourceLimit => StructuredSourceExtractionError::ResourceLimit,
+        SpreadsheetError::Cancelled => StructuredSourceExtractionError::Cancelled,
+        SpreadsheetError::TimeLimit => StructuredSourceExtractionError::ResourceLimit,
         SpreadsheetError::EncryptedPackage | SpreadsheetError::UnsafePackage => {
             StructuredSourceExtractionError::Quarantined
         }
@@ -203,10 +205,11 @@ fn project_xlsx<'a>(
     source: &[u8],
     cancelled: &mut dyn FnMut() -> bool,
 ) -> Result<Projection<'a>, StructuredSourceExtractionError> {
-    let inspection = inspect_xlsx(
+    let inspection = inspect_xlsx_with_control(
         request.source_path.clone(),
         source,
         &SpreadsheetProfile::default(),
+        cancelled,
     )
     .map_err(map_spreadsheet_error)?;
     let mut output = Projection::new(request, StructuredSourceFormat::Xlsx);

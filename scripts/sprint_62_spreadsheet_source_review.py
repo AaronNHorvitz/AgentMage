@@ -129,6 +129,15 @@ def expected(revision: str) -> dict[str, Any]:
                 "maximum_sheets",
                 "maximum_cells",
                 "maximum_shared_strings",
+                "maximum_rows",
+                "maximum_columns",
+                "maximum_relationships",
+                "maximum_string_bytes",
+                "maximum_working_memory_bytes",
+                "maximum_elapsed_milliseconds",
+                "InspectionControl",
+                "control.checkpoint()?",
+                "control.account(expected_size)?",
             ),
         )
         and has_all(
@@ -157,6 +166,7 @@ def expected(revision: str) -> dict[str, Any]:
                 "StructuredSourceExtractionError::ResourceLimit",
                 "StructuredSourceExtractionError::Cancelled",
                 "if cancelled()",
+                "inspect_xlsx_with_control",
             ),
         ),
         "focused_contract_tests_cover_formats_fidelity_and_failure": has_all(
@@ -168,7 +178,9 @@ def expected(revision: str) -> dict[str, Any]:
                 "cancellation_and_output_bounds_fail_closed",
                 "rejects_digest_mismatch_and_unknown_media_type",
             ),
-        ),
+        )
+        and "explicit_coordinate_memory_time_and_cancellation_ceilings_fail_closed"
+        in xlsx,
         "malicious_and_unsupported_content_remains_bounded_and_inert": has_all(
             xlsx,
             (

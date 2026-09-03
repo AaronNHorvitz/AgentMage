@@ -2,6 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::{Cursor, Read};
+use std::time::{Duration, Instant};
 
 use agentmage_kernel_contracts::{CONTRACT_SCHEMA_VERSION, WorkspacePath};
 use quick_xml::escape::unescape;
@@ -19,6 +20,12 @@ const MAX_TOTAL_BYTES: u64 = 512 * 1_024 * 1_024;
 const MAX_SHEETS: usize = 4_096;
 const MAX_CELLS: usize = 5_000_000;
 const MAX_SHARED_STRINGS: usize = 5_000_000;
+const MAX_ROWS: u32 = 1_048_576;
+const MAX_COLUMNS: u32 = 16_384;
+const MAX_RELATIONSHIPS: usize = 1_000_000;
+const MAX_STRING_BYTES: usize = 16 * 1_024 * 1_024;
+const MAX_WORKING_MEMORY_BYTES: u64 = 1_024 * 1_024 * 1_024;
+const MAX_ELAPSED_MILLISECONDS: u64 = 3_600_000;
 
 /// Closed resource profile for direct Open XML spreadsheet inspection.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -40,6 +47,18 @@ pub struct SpreadsheetProfile {
     pub maximum_cells: usize,
     /// Maximum shared strings.
     pub maximum_shared_strings: usize,
+    /// Maximum one-based row coordinate.
+    pub maximum_rows: u32,
+    /// Maximum one-based column coordinate.
+    pub maximum_columns: u32,
+    /// Maximum relationships retained from any relationship part.
+    pub maximum_relationships: usize,
+    /// Maximum decoded bytes in any sheet name, target, formula, or cell string.
+    pub maximum_string_bytes: usize,
+    /// Maximum accounted source plus retained decompressed bytes.
+    pub maximum_working_memory_bytes: u64,
+    /// Maximum elapsed parser time; checkpoints fail closed when exhausted.
+    pub maximum_elapsed_milliseconds: u64,
 }
 
 impl Default for SpreadsheetProfile {
@@ -53,6 +72,12 @@ impl Default for SpreadsheetProfile {
             maximum_sheets: 1_024,
             maximum_cells: 1_000_000,
             maximum_shared_strings: 1_000_000,
+            maximum_rows: MAX_ROWS,
+            maximum_columns: MAX_COLUMNS,
+            maximum_relationships: 100_000,
+            maximum_string_bytes: 4 * 1_024 * 1_024,
+            maximum_working_memory_bytes: 256 * 1_024 * 1_024,
+            maximum_elapsed_milliseconds: 60_000,
         }
     }
 }
@@ -74,6 +99,18 @@ impl SpreadsheetProfile {
             && self.maximum_cells <= MAX_CELLS
             && self.maximum_shared_strings > 0
             && self.maximum_shared_strings <= MAX_SHARED_STRINGS
+            && self.maximum_rows > 0
+            && self.maximum_rows <= MAX_ROWS
+            && self.maximum_columns > 0
+            && self.maximum_columns <= MAX_COLUMNS
+            && self.maximum_relationships > 0
+            && self.maximum_relationships <= MAX_RELATIONSHIPS
+            && self.maximum_string_bytes > 0
+            && self.maximum_string_bytes <= MAX_STRING_BYTES
+            && self.maximum_working_memory_bytes >= self.maximum_source_bytes
+            && self.maximum_working_memory_bytes <= MAX_WORKING_MEMORY_BYTES
+            && self.maximum_elapsed_milliseconds > 0
+            && self.maximum_elapsed_milliseconds <= MAX_ELAPSED_MILLISECONDS
     }
 }
 
@@ -288,6 +325,10 @@ pub enum SpreadsheetError {
     EncryptedPackage,
     /// A source, entry, sheet, string, cell, or expansion limit was exceeded.
     ResourceLimit,
+    /// Caller cancellation was observed at a parser checkpoint.
+    Cancelled,
+    /// The explicit elapsed-time ceiling was exhausted.
+    TimeLimit,
 }
 
 impl SpreadsheetError {
@@ -300,6 +341,8 @@ impl SpreadsheetError {
             Self::UnsafePackage => "spreadsheet.package.unsafe",
             Self::EncryptedPackage => "spreadsheet.package.encrypted",
             Self::ResourceLimit => "spreadsheet.resource.limit",
+            Self::Cancelled => "spreadsheet.cancelled",
+            Self::TimeLimit => "spreadsheet.time.limit",
         }
     }
 }
@@ -340,6 +383,54 @@ fn valid_identifier(value: &str) -> bool {
         && value
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b':' | b'-'))
+}
+
+struct InspectionControl<'a> {
+    deadline: Instant,
+    cancelled: &'a mut dyn FnMut() -> bool,
+    accounted_memory_bytes: u64,
+    maximum_working_memory_bytes: u64,
+}
+
+impl<'a> InspectionControl<'a> {
+    fn new(
+        profile: &SpreadsheetProfile,
+        source_bytes: usize,
+        cancelled: &'a mut dyn FnMut() -> bool,
+    ) -> Result<Self, SpreadsheetError> {
+        let accounted_memory_bytes =
+            u64::try_from(source_bytes).map_err(|_| SpreadsheetError::ResourceLimit)?;
+        if accounted_memory_bytes > profile.maximum_working_memory_bytes {
+            return Err(SpreadsheetError::ResourceLimit);
+        }
+        Ok(Self {
+            deadline: Instant::now() + Duration::from_millis(profile.maximum_elapsed_milliseconds),
+            cancelled,
+            accounted_memory_bytes,
+            maximum_working_memory_bytes: profile.maximum_working_memory_bytes,
+        })
+    }
+
+    fn checkpoint(&mut self) -> Result<(), SpreadsheetError> {
+        if (self.cancelled)() {
+            return Err(SpreadsheetError::Cancelled);
+        }
+        if Instant::now() >= self.deadline {
+            return Err(SpreadsheetError::TimeLimit);
+        }
+        Ok(())
+    }
+
+    fn account(&mut self, bytes: u64) -> Result<(), SpreadsheetError> {
+        self.accounted_memory_bytes = self
+            .accounted_memory_bytes
+            .checked_add(bytes)
+            .ok_or(SpreadsheetError::ResourceLimit)?;
+        if self.accounted_memory_bytes > self.maximum_working_memory_bytes {
+            return Err(SpreadsheetError::ResourceLimit);
+        }
+        Ok(())
+    }
 }
 
 fn local_name(name: &[u8]) -> &[u8] {
@@ -399,6 +490,7 @@ fn decoded_reference(event: BytesRef<'_>) -> Result<String, SpreadsheetError> {
 fn package_parts(
     source: &[u8],
     profile: &SpreadsheetProfile,
+    control: &mut InspectionControl<'_>,
 ) -> Result<BTreeMap<String, Vec<u8>>, SpreadsheetError> {
     if source.is_empty()
         || u64::try_from(source.len()).unwrap_or(u64::MAX) > profile.maximum_source_bytes
@@ -413,6 +505,7 @@ fn package_parts(
     let mut total = 0_u64;
     let mut parts = BTreeMap::new();
     for index in 0..archive.len() {
+        control.checkpoint()?;
         let mut file = archive
             .by_index(index)
             .map_err(|_| SpreadsheetError::MalformedPackage)?;
@@ -453,6 +546,7 @@ fn package_parts(
         if total > profile.maximum_total_uncompressed_bytes {
             return Err(SpreadsheetError::ResourceLimit);
         }
+        control.account(expected_size)?;
         let mut content = Vec::new();
         (&mut file)
             .take(profile.maximum_entry_bytes + 1)
@@ -466,11 +560,16 @@ fn package_parts(
     Ok(parts)
 }
 
-fn parse_relationships(content: &[u8]) -> Result<BTreeMap<String, Relationship>, SpreadsheetError> {
+fn parse_relationships(
+    content: &[u8],
+    profile: &SpreadsheetProfile,
+    control: &mut InspectionControl<'_>,
+) -> Result<BTreeMap<String, Relationship>, SpreadsheetError> {
     let mut reader = Reader::from_reader(content);
     reader.config_mut().trim_text(true);
     let mut relationships = BTreeMap::new();
     loop {
+        control.checkpoint()?;
         match reader
             .read_event()
             .map_err(|_| SpreadsheetError::MalformedPackage)?
@@ -483,6 +582,13 @@ fn parse_relationships(content: &[u8]) -> Result<BTreeMap<String, Relationship>,
                 let target = attribute(&event, b"Target", &reader)?
                     .ok_or(SpreadsheetError::MalformedPackage)?;
                 let relation_type = attribute(&event, b"Type", &reader)?.unwrap_or_default();
+                if id.len() > profile.maximum_string_bytes
+                    || target.len() > profile.maximum_string_bytes
+                    || relation_type.len() > profile.maximum_string_bytes
+                    || relationships.len() >= profile.maximum_relationships
+                {
+                    return Err(SpreadsheetError::ResourceLimit);
+                }
                 let external = attribute(&event, b"TargetMode", &reader)?
                     .is_some_and(|value| value.eq_ignore_ascii_case("external"));
                 if relationships
@@ -507,12 +613,15 @@ fn parse_relationships(content: &[u8]) -> Result<BTreeMap<String, Relationship>,
 
 fn parse_workbook(
     content: &[u8],
+    profile: &SpreadsheetProfile,
+    control: &mut InspectionControl<'_>,
 ) -> Result<(SpreadsheetDateSystem, Vec<SheetDefinition>), SpreadsheetError> {
     let mut reader = Reader::from_reader(content);
     reader.config_mut().trim_text(true);
     let mut date_system = SpreadsheetDateSystem::Excel1900;
     let mut sheets = Vec::new();
     loop {
+        control.checkpoint()?;
         match reader
             .read_event()
             .map_err(|_| SpreadsheetError::MalformedPackage)?
@@ -535,6 +644,12 @@ fn parse_workbook(
                     .map_err(|_| SpreadsheetError::MalformedPackage)?;
                 let relationship_id =
                     attribute(&event, b"id", &reader)?.ok_or(SpreadsheetError::MalformedPackage)?;
+                if name.len() > profile.maximum_string_bytes
+                    || relationship_id.len() > profile.maximum_string_bytes
+                    || sheets.len() >= profile.maximum_sheets
+                {
+                    return Err(SpreadsheetError::ResourceLimit);
+                }
                 let state = match attribute(&event, b"state", &reader)?.as_deref() {
                     None | Some("visible") => SpreadsheetSheetState::Visible,
                     Some("hidden") => SpreadsheetSheetState::Hidden,
@@ -556,7 +671,8 @@ fn parse_workbook(
 
 fn parse_shared_strings(
     content: Option<&Vec<u8>>,
-    limit: usize,
+    profile: &SpreadsheetProfile,
+    control: &mut InspectionControl<'_>,
 ) -> Result<Vec<String>, SpreadsheetError> {
     let Some(content) = content else {
         return Ok(Vec::new());
@@ -568,6 +684,7 @@ fn parse_shared_strings(
     let mut in_text = false;
     let mut value = String::new();
     loop {
+        control.checkpoint()?;
         match reader
             .read_event()
             .map_err(|_| SpreadsheetError::MalformedPackage)?
@@ -585,8 +702,11 @@ fn parse_shared_strings(
             }
             Event::End(event) if local_name(event.name().as_ref()) == b"t" => in_text = false,
             Event::End(event) if local_name(event.name().as_ref()) == b"si" => {
+                if value.len() > profile.maximum_string_bytes {
+                    return Err(SpreadsheetError::ResourceLimit);
+                }
                 values.push(value.clone());
-                if values.len() > limit {
+                if values.len() > profile.maximum_shared_strings {
                     return Err(SpreadsheetError::ResourceLimit);
                 }
                 in_item = false;
@@ -597,7 +717,11 @@ fn parse_shared_strings(
     }
 }
 
-fn parse_styles(content: Option<&Vec<u8>>) -> Result<StyleTable, SpreadsheetError> {
+fn parse_styles(
+    content: Option<&Vec<u8>>,
+    profile: &SpreadsheetProfile,
+    control: &mut InspectionControl<'_>,
+) -> Result<StyleTable, SpreadsheetError> {
     let Some(content) = content else {
         return Ok(StyleTable::default());
     };
@@ -606,6 +730,7 @@ fn parse_styles(content: Option<&Vec<u8>>) -> Result<StyleTable, SpreadsheetErro
     let mut table = StyleTable::default();
     let mut in_cell_xfs = false;
     loop {
+        control.checkpoint()?;
         match reader
             .read_event()
             .map_err(|_| SpreadsheetError::MalformedPackage)?
@@ -625,6 +750,9 @@ fn parse_styles(content: Option<&Vec<u8>>) -> Result<StyleTable, SpreadsheetErro
                     .map_err(|_| SpreadsheetError::MalformedPackage)?;
                 let code = attribute(&event, b"formatCode", &reader)?
                     .ok_or(SpreadsheetError::MalformedPackage)?;
+                if code.len() > profile.maximum_string_bytes {
+                    return Err(SpreadsheetError::ResourceLimit);
+                }
                 table.custom_formats.insert(id, code);
             }
             Event::Start(event) | Event::Empty(event)
@@ -744,11 +872,14 @@ fn workbook_target(target: &str) -> Result<String, SpreadsheetError> {
 fn hyperlink_records(
     worksheet: &[u8],
     relationships: &BTreeMap<String, Relationship>,
+    profile: &SpreadsheetProfile,
+    control: &mut InspectionControl<'_>,
 ) -> Result<Vec<SpreadsheetHyperlink>, SpreadsheetError> {
     let mut reader = Reader::from_reader(worksheet);
     reader.config_mut().trim_text(true);
     let mut links = Vec::new();
     loop {
+        control.checkpoint()?;
         match reader
             .read_event()
             .map_err(|_| SpreadsheetError::MalformedPackage)?
@@ -768,6 +899,12 @@ fn hyperlink_records(
                 } else {
                     (location.ok_or(SpreadsheetError::MalformedPackage)?, false)
                 };
+                if reference.len() > profile.maximum_string_bytes
+                    || target.len() > profile.maximum_string_bytes
+                    || links.len() >= profile.maximum_relationships
+                {
+                    return Err(SpreadsheetError::ResourceLimit);
+                }
                 links.push(SpreadsheetHyperlink {
                     reference,
                     target_sha256: word_sha256(target.as_bytes()),
@@ -798,8 +935,10 @@ fn parse_worksheet(
     content: &[u8],
     context: &WorksheetContext<'_>,
     remaining_cells: &mut usize,
+    profile: &SpreadsheetProfile,
+    control: &mut InspectionControl<'_>,
 ) -> Result<SpreadsheetWorksheet, SpreadsheetError> {
-    let hyperlinks = hyperlink_records(content, context.relationships)?;
+    let hyperlinks = hyperlink_records(content, context.relationships, profile, control)?;
     let hyperlink_map = hyperlinks
         .iter()
         .map(|item| (item.reference.as_str(), item.clone()))
@@ -820,6 +959,7 @@ fn parse_worksheet(
     let mut capture_value = false;
     let mut capture_inline = false;
     loop {
+        control.checkpoint()?;
         match reader
             .read_event()
             .map_err(|_| SpreadsheetError::MalformedPackage)?
@@ -922,6 +1062,19 @@ fn parse_worksheet(
                     .ok_or(SpreadsheetError::MalformedPackage)?;
                 let (row, column) =
                     cell_coordinates(&address).ok_or(SpreadsheetError::MalformedPackage)?;
+                if row > profile.maximum_rows
+                    || column > profile.maximum_columns
+                    || address.len() > profile.maximum_string_bytes
+                    || formula
+                        .as_ref()
+                        .is_some_and(|item| item.len() > profile.maximum_string_bytes)
+                    || value
+                        .as_ref()
+                        .is_some_and(|item| item.len() > profile.maximum_string_bytes)
+                    || inline.len() > profile.maximum_string_bytes
+                {
+                    return Err(SpreadsheetError::ResourceLimit);
+                }
                 if *remaining_cells == 0 {
                     return Err(SpreadsheetError::ResourceLimit);
                 }
@@ -978,10 +1131,12 @@ fn parse_worksheet(
             Event::Start(event) | Event::Empty(event)
                 if local_name(event.name().as_ref()) == b"mergeCell" =>
             {
-                merged_ranges.push(
-                    attribute(&event, b"ref", &reader)?
-                        .ok_or(SpreadsheetError::MalformedPackage)?,
-                );
+                let range = attribute(&event, b"ref", &reader)?
+                    .ok_or(SpreadsheetError::MalformedPackage)?;
+                if range.len() > profile.maximum_string_bytes {
+                    return Err(SpreadsheetError::ResourceLimit);
+                }
+                merged_ranges.push(range);
             }
             Event::Eof => break,
             _ => {}
@@ -1053,10 +1208,22 @@ pub fn inspect_xlsx(
     source: &[u8],
     profile: &SpreadsheetProfile,
 ) -> Result<SpreadsheetInspection, SpreadsheetError> {
+    inspect_xlsx_with_control(source_path, source, profile, &mut || false)
+}
+
+/// Inspects `.xlsx` bytes with cooperative cancellation and the profile's hard elapsed ceiling.
+pub fn inspect_xlsx_with_control(
+    source_path: WorkspacePath,
+    source: &[u8],
+    profile: &SpreadsheetProfile,
+    cancelled: &mut dyn FnMut() -> bool,
+) -> Result<SpreadsheetInspection, SpreadsheetError> {
     if !profile.valid() {
         return Err(SpreadsheetError::InvalidInput);
     }
-    let parts = package_parts(source, profile)?;
+    let mut control = InspectionControl::new(profile, source.len(), cancelled)?;
+    control.checkpoint()?;
+    let parts = package_parts(source, profile, &mut control)?;
     let workbook = parts
         .get("xl/workbook.xml")
         .ok_or(SpreadsheetError::MalformedPackage)?;
@@ -1064,16 +1231,15 @@ pub fn inspect_xlsx(
         parts
             .get("xl/_rels/workbook.xml.rels")
             .ok_or(SpreadsheetError::MalformedPackage)?,
+        profile,
+        &mut control,
     )?;
-    let (date_system, definitions) = parse_workbook(workbook)?;
+    let (date_system, definitions) = parse_workbook(workbook, profile, &mut control)?;
     if definitions.is_empty() || definitions.len() > profile.maximum_sheets {
         return Err(SpreadsheetError::ResourceLimit);
     }
-    let shared = parse_shared_strings(
-        parts.get("xl/sharedStrings.xml"),
-        profile.maximum_shared_strings,
-    )?;
-    let styles = parse_styles(parts.get("xl/styles.xml"))?;
+    let shared = parse_shared_strings(parts.get("xl/sharedStrings.xml"), profile, &mut control)?;
+    let styles = parse_styles(parts.get("xl/styles.xml"), profile, &mut control)?;
     let mut remaining_cells = profile.maximum_cells;
     let mut worksheets = Vec::new();
     let mut findings = Vec::new();
@@ -1100,6 +1266,7 @@ pub fn inspect_xlsx(
             || name.starts_with("xl/activeX/")
             || name.starts_with("xl/ctrlProps/")
     }) {
+        control.checkpoint()?;
         finding(
             &mut findings,
             SpreadsheetFindingKind::EmbeddedObject,
@@ -1117,6 +1284,7 @@ pub fn inspect_xlsx(
             || name.starts_with("xl/queryTables/")
             || name.as_str() == "xl/connections.xml"
     }) {
+        control.checkpoint()?;
         finding(
             &mut findings,
             SpreadsheetFindingKind::UnsupportedFeature,
@@ -1128,6 +1296,7 @@ pub fn inspect_xlsx(
         );
     }
     for definition in &definitions {
+        control.checkpoint()?;
         let relationship = workbook_relationships
             .get(&definition.relationship_id)
             .ok_or(SpreadsheetError::MalformedPackage)?;
@@ -1143,7 +1312,7 @@ pub fn inspect_xlsx(
             .ok_or(SpreadsheetError::MalformedPackage)?;
         let rels = worksheet_relationship_path(&part_name)
             .and_then(|name| parts.get(&name))
-            .map(|content| parse_relationships(content))
+            .map(|content| parse_relationships(content, profile, &mut control))
             .transpose()?
             .unwrap_or_default();
         let context = WorksheetContext {
@@ -1158,6 +1327,8 @@ pub fn inspect_xlsx(
             content,
             &context,
             &mut remaining_cells,
+            profile,
+            &mut control,
         )?;
         if sheet.protected {
             finding(
@@ -1182,6 +1353,7 @@ pub fn inspect_xlsx(
             );
         }
         for link in &sheet.hyperlinks {
+            control.checkpoint()?;
             if link.external {
                 finding(
                     &mut findings,
@@ -1195,6 +1367,7 @@ pub fn inspect_xlsx(
             }
         }
         for cell in &sheet.cells {
+            control.checkpoint()?;
             if let Some(formula) = cell.formula.as_deref() {
                 let lower = formula.to_ascii_lowercase();
                 if lower.contains("dde") {
@@ -1224,6 +1397,7 @@ pub fn inspect_xlsx(
         worksheets.push(sheet);
     }
     for relationship in workbook_relationships.values() {
+        control.checkpoint()?;
         if relationship.external || relationship.relation_type.contains("externalLink") {
             finding(
                 &mut findings,
@@ -1258,6 +1432,7 @@ pub fn inspect_xlsx(
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
+    use std::thread;
 
     use agentmage_kernel_contracts::{WorkspaceId, WorkspacePath};
 
@@ -1413,6 +1588,57 @@ mod tests {
         assert_eq!(
             excel_serial_date("1.5", SpreadsheetDateSystem::Excel1900),
             None
+        );
+    }
+
+    #[test]
+    fn explicit_coordinate_memory_time_and_cancellation_ceilings_fail_closed() {
+        let source = fixture("SUM(A2,1)");
+        for profile in [
+            SpreadsheetProfile {
+                maximum_rows: 1,
+                ..SpreadsheetProfile::default()
+            },
+            SpreadsheetProfile {
+                maximum_columns: 2,
+                ..SpreadsheetProfile::default()
+            },
+            SpreadsheetProfile {
+                maximum_string_bytes: 4,
+                ..SpreadsheetProfile::default()
+            },
+            SpreadsheetProfile {
+                maximum_source_bytes: source.len() as u64,
+                maximum_working_memory_bytes: source.len() as u64,
+                ..SpreadsheetProfile::default()
+            },
+        ] {
+            assert_eq!(
+                inspect_xlsx(path(), &source, &profile),
+                Err(SpreadsheetError::ResourceLimit)
+            );
+        }
+
+        assert_eq!(
+            inspect_xlsx_with_control(path(), &source, &SpreadsheetProfile::default(), &mut || {
+                true
+            },),
+            Err(SpreadsheetError::Cancelled)
+        );
+        let timed = SpreadsheetProfile {
+            maximum_elapsed_milliseconds: 1,
+            ..SpreadsheetProfile::default()
+        };
+        let mut first = true;
+        assert_eq!(
+            inspect_xlsx_with_control(path(), &source, &timed, &mut || {
+                if first {
+                    first = false;
+                    thread::sleep(Duration::from_millis(2));
+                }
+                false
+            }),
+            Err(SpreadsheetError::TimeLimit)
         );
     }
 }
