@@ -9,6 +9,10 @@ use agentmage_kernel_contracts::{
     RuntimeRunRequest, RuntimeSessionMode,
 };
 use agentmage_kernel_engine::{
+    model_routing::{
+        AuthenticatedRoutingEnvelope, MeasuredRoutingService, NativeRoutingAuditView,
+        RoutingAuthenticationVerifier,
+    },
     runtime_artifact::{MAX_RUNTIME_ARTIFACT_BYTES, MAX_RUNTIME_ARTIFACTS_PER_CHECKPOINT},
     runtime_coordinator::{
         verify_runtime_approval_challenge, verify_runtime_outcome, verify_runtime_run_request,
@@ -25,6 +29,43 @@ use crate::runtime_transport::{
 };
 
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
+
+/// Stable failure from the installed-interface measured-routing adapter.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum InteractiveCliRoutingError {
+    /// The kernel rejected authentication or the exact routing request.
+    Routing,
+    /// The installed interface could not present the verified native audit view.
+    Presentation,
+}
+
+/// Presentation-only sink for one verified native model-routing audit view.
+pub trait InteractiveCliRoutingSink {
+    /// Presents the complete content-minimized decision without gaining model authority.
+    fn present(&mut self, view: &NativeRoutingAuditView) -> Result<(), InteractiveCliRoutingError>;
+}
+
+/// Drives one authenticated installed-interface request through the kernel product router.
+///
+/// The host adapter cannot provide candidates, select a model, alter the audit view, retry a
+/// refusal, or gain model/runtime authority. The service owns the exact catalog and appends the
+/// canonical audit before this presentation-only adapter receives it.
+pub fn drive_interactive_cli_routing<V, S>(
+    service: &mut MeasuredRoutingService<V>,
+    envelope: AuthenticatedRoutingEnvelope,
+    sink: &mut S,
+) -> Result<NativeRoutingAuditView, InteractiveCliRoutingError>
+where
+    V: RoutingAuthenticationVerifier,
+    S: InteractiveCliRoutingSink,
+{
+    let view = service
+        .route(envelope)
+        .map_err(|_| InteractiveCliRoutingError::Routing)?
+        .clone();
+    sink.present(&view)?;
+    Ok(view)
+}
 
 /// Stable content-free failure from the interactive CLI runtime boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -518,6 +559,10 @@ mod tests {
         ToolCallId,
     };
     use agentmage_kernel_engine::{
+        model_routing::{
+            MeasuredRoutingRequest, RoutingActionRisk, RoutingBudget, RoutingPlatform,
+            RoutingResourceState, RoutingTaskClass,
+        },
         runtime_coordinator::{seal_runtime_approval_challenge, seal_runtime_outcome},
         runtime_event::{runtime_event_persistence, seal_runtime_event},
     };
@@ -526,6 +571,84 @@ mod tests {
 
     #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
     use agentmage_kernel_contracts::RuntimeArtifactId;
+
+    struct RoutingVerifier;
+
+    impl RoutingAuthenticationVerifier for RoutingVerifier {
+        fn verify(&self, actor_id: &str, session_id: &str, authentication_sha256: &str) -> bool {
+            actor_id == "actor-installed-1"
+                && session_id == "session-installed-1"
+                && authentication_sha256 == "e".repeat(64)
+        }
+    }
+
+    #[derive(Default)]
+    struct RoutingSink(Vec<NativeRoutingAuditView>);
+
+    impl InteractiveCliRoutingSink for RoutingSink {
+        fn present(
+            &mut self,
+            view: &NativeRoutingAuditView,
+        ) -> Result<(), InteractiveCliRoutingError> {
+            self.0.push(view.clone());
+            Ok(())
+        }
+    }
+
+    fn routing_envelope(authentication_sha256: String) -> AuthenticatedRoutingEnvelope {
+        AuthenticatedRoutingEnvelope {
+            actor_id: "actor-installed-1".to_owned(),
+            session_id: "session-installed-1".to_owned(),
+            authentication_sha256,
+            request: MeasuredRoutingRequest {
+                task_id: "task-installed-routing-1".to_owned(),
+                task_class: RoutingTaskClass::Coding,
+                action_risk: RoutingActionRisk::Moderate,
+                budget: RoutingBudget::Standard,
+                platform: RoutingPlatform::FedoraX86_64,
+                required_context_tokens: 8_192,
+                required_tool_proposals: 2,
+                resources: RoutingResourceState {
+                    available_memory_bytes: 32 * 1024 * 1024 * 1024,
+                    available_context_tokens: 16_384,
+                    current: true,
+                },
+                manual_profile_id: None,
+                policy_sha256: "a".repeat(64),
+                benchmark_generation_sha256: "b".repeat(64),
+            },
+        }
+    }
+
+    #[test]
+    fn installed_interface_presents_only_the_kernel_owned_zero_profile_audit() {
+        let mut service = MeasuredRoutingService::new(RoutingVerifier, Vec::new(), "c".repeat(64))
+            .expect("routing service");
+        let mut sink = RoutingSink::default();
+        assert_eq!(
+            drive_interactive_cli_routing(
+                &mut service,
+                routing_envelope("d".repeat(64)),
+                &mut sink,
+            ),
+            Err(InteractiveCliRoutingError::Routing)
+        );
+        assert!(sink.0.is_empty());
+        assert!(service.audit_log().is_empty());
+
+        let view = drive_interactive_cli_routing(
+            &mut service,
+            routing_envelope("e".repeat(64)),
+            &mut sink,
+        )
+        .expect("visible blocked routing view");
+        assert_eq!(view.result_code, "model.routing.no-eligible-profile");
+        assert!(view.selected_profile.is_none());
+        assert!(!view.frontier_transfer);
+        assert!(!view.model_confidence_used);
+        assert_eq!(sink.0, [view]);
+        assert_eq!(service.audit_log().len(), 1);
+    }
 
     struct ScriptedPort {
         input: NativeChatPrepareInput,

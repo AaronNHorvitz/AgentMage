@@ -15,6 +15,7 @@ ROOT: Final = Path(__file__).resolve().parents[1]
 REPORT: Final = ROOT / "artifacts/sprints/sprint-49/product-routing-review.json"
 SOURCES: Final = (
     "kernel/engine/src/model_routing.rs",
+    "shells/host/src/cli_runtime.rs",
     "docs/architecture/measured-local-model-routing.md",
     "model-profiles/routing/measured-routing-decision-table-v1.json",
     "model-profiles/routing/historical-later-candidates.json",
@@ -48,6 +49,7 @@ def git_bytes(revision: str, path: str) -> bytes:
 def expected(revision: str) -> dict[str, Any]:
     sources = {path: git_bytes(revision, path) for path in SOURCES}
     rust = sources["kernel/engine/src/model_routing.rs"].decode("utf-8")
+    host = sources["shells/host/src/cli_runtime.rs"].decode("utf-8")
     table = json.loads(sources["model-profiles/routing/measured-routing-decision-table-v1.json"])
     historical = json.loads(sources["model-profiles/routing/historical-later-candidates.json"])
     checks = {
@@ -55,6 +57,14 @@ def expected(revision: str) -> dict[str, Any]:
         "kernel_owned_catalog_service_is_bound": all(token in rust for token in REQUIRED_RUST[2:5]),
         "authentication_and_empty_catalog_fail_closed": all(token in rust for token in REQUIRED_RUST[5:8]),
         "native_exact_identity_audit_is_bound": all(token in rust for token in REQUIRED_RUST[8:]),
+        "installed_interface_adapter_is_bound": all(
+            token in host for token in (
+                "pub trait InteractiveCliRoutingSink",
+                "pub fn drive_interactive_cli_routing",
+                "MeasuredRoutingService<V>",
+                "installed_interface_presents_only_the_kernel_owned_zero_profile_audit",
+            )
+        ),
         "disabled_remote_authority_is_bound": (
             table.get("frontier_transfer") is False
             and table.get("invisible_fallback") is False
@@ -79,7 +89,7 @@ def expected(revision: str) -> dict[str, Any]:
         "status": "PASS_LOCAL_COMPOSITION_REVIEW" if all(checks.values()) else "FAIL",
         "limitations": [
             "This is gate-owned automated review, not a human-review claim.",
-            "The authenticated service is not an installed-interface transport claim.",
+            "The source adapter is not trusted installed-package execution evidence.",
             "No exact profile, model, route, adapter, platform, or release is enabled.",
             "Live benchmarks and supported-platform product campaigns remain absent.",
         ],

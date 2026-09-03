@@ -145,6 +145,14 @@ evidence identities. The protected authentication digest, credentials, prompts,
 outputs, and model-visible content never enter the view. An empty product
 catalog produces a visible `no-eligible-profile` decision and enables nothing.
 
+The host `drive_interactive_cli_routing` adapter forwards this authenticated
+envelope unchanged and presents only the already appended native audit view.
+It cannot provide a candidate list, select or retry a model, change the view,
+or gain model/runtime authority. Source tests prove invalid authentication
+produces no presentation and the current empty catalog produces the same
+visible no-profile result through the host path. This is source composition,
+not trusted installed-package execution or platform acceptance.
+
 ## Disabled Paths
 
 Invisible fallback, automatic model installation, broad provider marketplaces,
@@ -158,7 +166,6 @@ Current source tests use synthetic exact profiles. No real later profile has a
 complete manifest, current role benchmark, supported-platform result, or
 product activation. Role-specific live quality, grounding, reliability,
 latency, memory, energy where measured, and failure campaigns remain required.
-Authenticated installed-interface transport, supported-platform package tests,
-independent human review, and the deferred manual fuzz campaign also remain
-open. These blockers prevent Sprint 49 and every routing release claim from
-passing.
+Trusted installed-package execution, supported-platform package tests,
+independent human review, and the deferred manual fuzz campaign remain open.
+These blockers prevent Sprint 49 and every routing release claim from passing.
