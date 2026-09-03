@@ -346,7 +346,9 @@ def audit_source_anchors(
                 location,
                 "source heading does not match the anchored source line",
             )
-        if isinstance(identifier, str) and not source_line.startswith(f"| `{identifier}` |"):
+        if isinstance(identifier, str) and re.match(
+            rf"^\| `{re.escape(identifier)}`\s+\|", source_line
+        ) is None:
             add(
                 diagnostics,
                 "stale_source_anchor",
