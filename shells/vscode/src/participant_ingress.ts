@@ -12,6 +12,13 @@ export const PARTICIPANT_ID = "agentmage.participant" as const;
 export const MAX_PARTICIPANT_REFERENCES = 32;
 export const MAX_PARTICIPANT_TOTAL_BYTES = 64 * 1024 * 1024;
 export const PARTICIPANT_REFERENCE_TIMEOUT_MS = 30_000;
+export const MAX_PARTICIPANT_STATUS_CHARACTERS = 256;
+export const PARTICIPANT_ACCESSIBILITY_CONTRACT = Object.freeze({
+  statusDelivery: "chat-progress-polite",
+  cancellation: "request-token-and-standard-chat-cancel",
+  focusBehavior: "preserve-chat-input",
+  errorDetail: "bounded-reason-code-only",
+});
 
 export type ParticipantSourceState =
   | "queued"
@@ -336,7 +343,22 @@ export function accountProviderParts(
 export function renderParticipantSource(
   record: ParticipantSourceRecord,
 ): string {
-  return `Source ${record.referenceId}: ${record.state} (${record.reasonCode}); ${record.byteLength.toString()} bytes.`;
+  return boundedStatus(
+    `Source ${record.referenceId}: ${record.state} (${record.reasonCode}); ${record.byteLength.toString()} bytes.`,
+  );
+}
+
+/** Returns a bounded, content-free terminal status suitable for Chat's announced Markdown stream. */
+export function renderParticipantError(error: unknown): string {
+  const code =
+    error instanceof ParticipantIngressError
+      ? error.code
+      : "vscode.participant.failed";
+  const sourceCount =
+    error instanceof ParticipantIngressError ? error.records.length : 0;
+  return boundedStatus(
+    `AgentMage stopped safely (${code}); ${sourceCount.toString()} source record(s) require attention.`,
+  );
 }
 
 function effectivePrompt(input: ParticipantRequestInput): string {
@@ -353,11 +375,18 @@ function validateRequest(input: ParticipantRequestInput): void {
     Buffer.byteLength(effectivePrompt(input), "utf8") >
       MAX_PARTICIPANT_TOTAL_BYTES ||
     input.references.length > MAX_PARTICIPANT_REFERENCES ||
+    input.references.some((item) => !validIdentifier(item.referenceId)) ||
     new Set(input.references.map((item) => item.referenceId)).size !==
       input.references.length
   ) {
     throw new ParticipantIngressError("vscode.participant.request-invalid");
   }
+}
+
+function boundedStatus(value: string): string {
+  return value.length <= MAX_PARTICIPANT_STATUS_CHARACTERS
+    ? value
+    : `${value.slice(0, MAX_PARTICIPANT_STATUS_CHARACTERS - 1)}…`;
 }
 
 function checkedTotal(current: number, next: number): number {

@@ -74,6 +74,7 @@ def expected_report() -> dict[str, Any]:
             "typescript_parser_or_runtime_authority": False,
             "silent_provider_part_drop": False,
             "exact_model_revalidation_before_capture": True,
+            "accessibility_source_contract": True,
             "installed_vsix_campaign_complete": False,
             "supported_platform_matrix_complete": False,
             "assistive_technology_review_complete": False,
@@ -101,6 +102,7 @@ def validate_report(value: Any) -> list[str]:
         "authenticated_rust_artifact_rpc",
         "complete_part_accounting",
         "exact_model_revalidation_before_capture",
+        "accessibility_source_contract",
     )
     required_false = (
         "ambient_workspace_enumeration",

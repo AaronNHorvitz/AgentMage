@@ -31,6 +31,7 @@ import {
   MAX_PARTICIPANT_TOTAL_BYTES,
   ParticipantIngressError,
   accountProviderParts,
+  renderParticipantError,
   renderParticipantSource,
   runParticipantIngress,
   type ParticipantReferenceInput,
@@ -275,12 +276,9 @@ export async function activate(
             `${result.outputText}\n\n---\nSource manifest: \`${result.sourceManifestSha256}\`; ${result.sources.length.toString()} supplied reference(s) completely accounted for; ${result.totalBytes.toString()} / ${MAX_PARTICIPANT_TOTAL_BYTES.toString()} bytes used.\n\nNative Chat does not provide AgentMage's persistent lifecycle, complete inspector, or approval surface. Use **AgentMage: Open Verified Chat** (\`agentmage.openVerifiedChat\`) when those guarantees are required.`,
           );
         } catch (error) {
-          const code =
-            error instanceof ParticipantIngressError
-              ? error.code
-              : "vscode.participant.failed";
+          const accessibleStatus = renderParticipantError(error);
           response.markdown(
-            `# Request stopped\n\nAgentMage could not safely account for this participant request. No unsupported source was treated as available. Open **AgentMage: Open Verified Chat** and retry there when complete source and lifecycle guarantees are required.\n\n- Transition command: \`agentmage.openVerifiedChat\`\n- Code: \`${code}\``,
+            `# Request stopped\n\n${accessibleStatus} No unsupported source was treated as available. Open **AgentMage: Open Verified Chat** and retry there when complete source and lifecycle guarantees are required.\n\n- Transition command: \`agentmage.openVerifiedChat\``,
           );
         }
       },

@@ -64,6 +64,21 @@ provider label, proxy, or MCP adapter therefore cannot claim omitted bytes or a 
 receive. The complete matrix is documented in
 `docs/architecture/native-chat-compatibility-disclosure.md`.
 
+## Accessibility and Presentation Contract
+
+Participant progress uses the stable Chat progress stream, whose updates are announced politely in
+source order. Every status is content-free and bounded to 256 characters. Request-local source
+identities must use the closed identifier grammar, so a native path cannot become announced status
+text. Terminal errors render only a closed reason code and source-record count; raw exceptions,
+private paths, source content, and restricted metadata are excluded.
+
+The participant performs no focus-changing command, editor reveal, or timed interaction, so focus
+remains in the Chat input controlled by Visual Studio Code. Cancellation uses the request token and
+the standard keyboard-accessible Chat cancel action; the token is checked during reference
+resolution, every upload chunk, before commit, and before run submission. The exact source contract
+is exported as `PARTICIPANT_ACCESSIBILITY_CONTRACT` and mutation-tested. Packaged VSIX interaction
+with supported screen readers remains a verification task rather than an implementation claim.
+
 ## Local Verification and External Qualification
 
 The deterministic extension-host suite covers 999- and 1,001-character prompts, multiple text,
@@ -74,7 +89,7 @@ artifact frames at the Rust boundary.
 
 The following remain non-passes until run independently in their declared environments:
 
-- packaged VSIX interaction and keyboard/screen-reader behavior;
+- packaged VSIX keyboard and supported-screen-reader verification of the implemented contract;
 - Fedora, Ubuntu, Windows, macOS, WSL, Remote SSH, and Dev Container placement and cleanup;
 - execution with an independently qualified production profile; and
 - independent security, accessibility, and release review.

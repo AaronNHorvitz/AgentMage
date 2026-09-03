@@ -4,7 +4,11 @@ import test from "node:test";
 
 import {
   ParticipantIngressError,
+  MAX_PARTICIPANT_STATUS_CHARACTERS,
+  PARTICIPANT_ACCESSIBILITY_CONTRACT,
   accountProviderParts,
+  renderParticipantError,
+  renderParticipantSource,
   runParticipantIngress,
   type ParticipantReferenceInput,
   type ParticipantReferenceResolver,
@@ -248,6 +252,56 @@ void test("stale model revalidation immediately before submission starts no turn
   );
   assert.equal(revalidations, 1);
   assert.ok(!fixture.operations.includes("execute_verified_turn"));
+});
+
+void test("participant status is bounded, content-free, announced, cancellable, and focus preserving", () => {
+  const record = {
+    referenceId: "source-0001",
+    descriptorSha256: "a".repeat(64),
+    state: "failed" as const,
+    reasonCode: "participant.source.unavailable",
+    artifactId: null,
+    sourceSha256: null,
+    byteLength: 0,
+  };
+  const status = renderParticipantSource(record);
+  const terminal = renderParticipantError(
+    new ParticipantIngressError("vscode.participant.references-unresolved", [
+      record,
+    ]),
+  );
+  assert.ok(status.length <= MAX_PARTICIPANT_STATUS_CHARACTERS);
+  assert.ok(terminal.length <= MAX_PARTICIPANT_STATUS_CHARACTERS);
+  assert.ok(!terminal.includes("/home/private/source.txt"));
+  assert.deepEqual(PARTICIPANT_ACCESSIBILITY_CONTRACT, {
+    statusDelivery: "chat-progress-polite",
+    cancellation: "request-token-and-standard-chat-cancel",
+    focusBehavior: "preserve-chat-input",
+    errorDetail: "bounded-reason-code-only",
+  });
+});
+
+void test("path-like reference identities are refused before rendering or capture", async () => {
+  const fixture = new ExchangeFixture();
+  await assert.rejects(
+    runParticipantIngress(
+      fixture.exchange,
+      new Resolver(),
+      {
+        requestId: "participant-private-reference",
+        prompt: "inspect",
+        command: undefined,
+        references: [
+          reference("/home/private/source.txt", "text", { text: "secret" }),
+        ],
+      },
+      { isCancellationRequested: false },
+    ),
+    (error: unknown) =>
+      error instanceof ParticipantIngressError &&
+      error.code === "vscode.participant.request-invalid",
+  );
+  assert.deepEqual(fixture.operations, []);
 });
 
 void test("provider compatibility reports every non-text part instead of filtering", () => {

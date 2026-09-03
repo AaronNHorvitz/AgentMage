@@ -4101,7 +4101,7 @@ clients, supported-platform campaigns, and independent review remain explicit ex
 
 - [x] **Story AC 23.4.AC1:** Given an authenticated read-only request and admitted local or deterministic fake profile, when the coordinator runs, then one bounded state machine produces ordered events, exact tool receipts, grounded evidence, and one verifier-backed terminal outcome through existing kernel authority. Evidence: deterministic direct, one-read, and multi-read/search/Git fixtures pass through the common coordinator with exact receipts, evidence, and verifier-owned outcomes.
 - [x] **Story AC 23.4.AC2:** Given native Chat, a test CLI adapter, or a future bounded caller, when equivalent runtime requests are submitted, then policy, model, context, tool, event, receipt, and outcome semantics remain interface independent, including equivalent persistence references whenever persistence is enabled. Evidence: the three-client parity fixture proves equality for ephemeral read-only and controlled-write packets, including every present artifact and checkpoint reference.
-- [ ] **Story AC 23.4.AC3:** Given missing authority, malformed model output, cancellation, stale state, or a dependency failure, when the ephemeral run stops, then no client, model, coordinator, or event path broadens authority, retries an effect invisibly, or converts uncertainty into success.
+- [x] **Story AC 23.4.AC3:** Given missing authority, malformed model output, cancellation, stale state, or a dependency failure, when the ephemeral run stops, then no client, model, coordinator, or event path broadens authority, retries an effect invisibly, or converts uncertainty into success.
 
 #### [ ] Story 23.5 - Stable Chat Participant Reference Ingress
 
@@ -4132,10 +4132,10 @@ select.
         identity, and budget immediately before run submission; block stale substitutions.
   - [x] **Sub-task 23.5.2.4:** Add label-only provider, omitted-proxy-body, and MCP-without-resource
         fixtures proving that no compatibility adapter claims bytes or ingestion it did not receive.
-- [ ] **Task 23.5.3 - Implement presentation and accessibility**
+- [x] **Task 23.5.3 - Implement presentation and accessibility**
   - [x] **Sub-task 23.5.3.1:** Render per-source queued, reading, extracting, partial, unsupported,
         omitted, stale, cancelled, failed, and included states plus total budget accounting.
-  - [ ] **Sub-task 23.5.3.2:** Provide keyboard, screen-reader, focus, cancellation, and bounded
+  - [x] **Sub-task 23.5.3.2:** Provide keyboard, screen-reader, focus, cancellation, and bounded
         error-detail behavior without exposing private paths or restricted content.
   - [x] **Sub-task 23.5.3.3:** Document the supported participant accounting path, provider limitations,
         remote-workspace disclosure boundary, supported API matrix, and troubleshooting evidence.
@@ -4233,8 +4233,8 @@ package, and independent review evidence remain explicitly outside this local st
 
 - [ ] **Sprint AC 23.AC1:** Every numbered implementation sub-task in Stories 23.1 through 23.4 is complete and linked to its source requirement or issue identity.
 - [ ] **Sprint AC 23.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 23.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 23.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 23.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
+- [x] **Sprint AC 23.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 23.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 - [ ] **Sprint AC 23.AC6:** `AT-VSC-003` proves zero hard-coded model prerequisite, zero stale/blocked profile launch, and zero automatic substitution across the complete lifecycle fixture matrix. Partial local evidence: pure kernel, host, and extension fixtures prove all three properties for discovery and immediate revalidation; native production launch and every request-phase lifecycle evidence remain open.
 - [ ] **Sprint AC 23.AC7:** Native Chat completes the approved read-only vertical slice through one interface-independent runtime coordinator with no shell-to-model/tool/storage bypass. Partial local evidence: deterministic authenticated-host and VS Code fixtures traverse the common coordinator adapter and prove the thin-client boundary; installed-host runtime/model composition and native acceptance remain absent.
