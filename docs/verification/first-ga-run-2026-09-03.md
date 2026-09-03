@@ -837,3 +837,34 @@ propagate them to dependent rows, then advance to Sprint 25.
 
 Exact next action: continue at Sprint 25's first unblocked source and contract rows, while retaining
 all cross-platform release and hosted-lane prerequisites as exact external tuples.
+
+## Batch 35 — Sprint 25 RV-21 incident tabletop
+
+### Completed
+
+- Closed 4 TASKS rows: Sub-tasks 25.2.2.1 and 25.2.2.3 plus Story AC 25.2.AC1 and
+  25.2.AC3. The gate-owned deterministic exercise ran 4 required RV-21 scenarios through 11
+  ordered transitions each, injected 4 adverse signal classes per scenario, assigned 7 named
+  component-independent role actors, and retained zero canary or host-identity matches. Promotions:
+  0. Substitutions: 0.
+- Commits: `cbfc6e2e` (tabletop executor and 3 mutation-test groups) and `07beb0d9`
+  (source-bound report, checklist closures, and dependent evidence). Commits: 2. Commits per closed
+  item: 0.50. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Supply-chain builds: 1. Evidence regeneration passes: 1, including the RV-21 report followed by
+  requirements, traceability, contract boundary, and contract index. Recovery iterations: 0.
+  Tabletop scenarios: 4/4; required transitions: 44/44; injected signal decisions: 16/16; focused
+  mutation groups: 3/3; task graph, requirements-current 45/45, contract boundary 29/29, and
+  contract index 12/12 pass.
+- Full `docs:check`: 698.140 seconds, stopping only at the retained Story 6.1 Podman prerequisite
+  after every preceding gate passed. Recorded gate wall seconds: 698.
+- Exact retained blocker for Sub-tasks 25.2.2.2 and 25.2.2.4: `BLOCKED_EXTERNAL(platform=release
+  signing ceremony and every reference platform; artifact=production signing key, independently
+  distributed trust root, and exact signed Fedora, Ubuntu, and macOS packages; action=authorized
+  release owner provisions the signer/trust root and humans execute the production RV-22 lifecycle
+  on each platform and transfer untouched evidence; substitution_set=empty)`.
+
+Exact next action: execute Sprint 25's locally testable message-schema, effect-boundary, and
+release-blocking-threshold checks without claiming native-platform or production-release support.
