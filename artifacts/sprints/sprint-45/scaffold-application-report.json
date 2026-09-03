@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "record_type": "agentmage-sprint-45-scaffold-application-evidence",
+  "source_revision": "739c9bc4b5722308bbd171e13f2b00602cb95ea6",
+  "source_sha256": {
+    "capabilities/repository-map/src/package_scaffold.rs": "0aac3e9de0b0960d82a3c8dc4be6aaf8379bbaf89d04468fc48e91b898f90e7e",
+    "capabilities/repository-map/src/lib.rs": "ab17d523029981777f0e7c0a409cade6b31da168f15e311eccb00f749702496b",
+    "tests/test_sprint_45_scaffold_evidence.py": "bd5a23198af5ee8a4c95523f428f20bc916db1978bd797fb435b4edb80c54f31",
+    "scripts/sprint_45_scaffold_evidence.py": "abc1614f84d1a6a2514ca277f74a0568e72afd201322196c7745fbd9250fd1da"
+  },
+  "command": [
+    "cargo",
+    "test",
+    "-p",
+    "agentmage-capability-repository-map",
+    "package_scaffold",
+    "--lib",
+    "--locked"
+  ],
+  "command_exit_code": 0,
+  "command_output_sha256": "249b4c6799a9f7ad9e3ad497915560b92aafc87f7ab97fa34efd1172bc35aa3f",
+  "approved_package_convention_count": 5,
+  "application_manifest_count": 5,
+  "mutation_case_count": 7,
+  "ignored_test_count": 0,
+  "atomic_root_publication_required": true,
+  "separate_grant_required": true,
+  "mutation_authority": false,
+  "status": "PASS_LOCAL_SCAFFOLD_APPLICATION",
+  "limitations": [
+    "The application manifest is inert and grants no filesystem or command authority.",
+    "No native filesystem execution, trusted-launch, or platform claim is made."
+  ]
+}
