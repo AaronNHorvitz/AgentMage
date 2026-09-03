@@ -76,3 +76,9 @@ VoiceOver evidence is required on supported macOS hardware. The declared Linux
 screen reader and desktop session must be selected and recorded before Linux
 manual evidence can pass. Automated TypeScript tests cover AgentMage-owned
 structure and denial behavior only.
+
+The automated failure gate independently seeds missing names, invalid focus
+order, color-only meaning, inaccessible update ordering, forced timeout
+pressure, and malformed generated structure. Each defect produces one stable
+blocker, while combined defects remain complete and ordered. These checks do
+not replace native keyboard, zoom, reflow, or assistive-technology evidence.

@@ -33,9 +33,11 @@ SOURCE_PATHS: Final = (
     "shells/host/src/package_verify.rs",
     "shells/host/src/protocol.rs",
     "shells/vscode/src/model_discovery.ts",
+    "shells/vscode/src/native_accessibility.ts",
     "shells/vscode/src/provider.ts",
     "shells/vscode/src/runtime_transport.ts",
     "shells/vscode/test/model_discovery.test.ts",
+    "shells/vscode/test/native_accessibility.test.ts",
     "shells/vscode/test/provider.test.ts",
     "scripts/sprint_23_evidence.py",
     "tests/test_sprint_23_evidence.py",
@@ -85,6 +87,7 @@ IMPLEMENTED: Final = {
     "model_token_streaming": False,
     "exact_tokenizer_counting": False,
     "native_accessibility_conformance": False,
+    "accessibility_failure_seeding": True,
 }
 
 
