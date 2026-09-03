@@ -17,6 +17,11 @@ documentation, supply-chain metadata, and strict linting.
 - The canary scan serializes the index, traces, and export and finds no source canary.
 - Authentication, authorization, and data-flow traces remain `unknown_blocked` when no
   exact adapter fact supports them.
+- The gate-owned automated review independently rederives the eight-requirement map,
+  cited maps and coverage, history/slicing/exports, 12 hostile cases, 10,000 index
+  mutations with zero unauthorized acceptance, zero canary exports, and every false
+  missing-proof marker from committed sources. It makes no human-review or complete
+  repository-comprehension claim.
 
 These deterministic mutations are not manual or coverage-guided fuzzing.
 
@@ -27,4 +32,4 @@ toolchain run. It does not close Sprint 43. Upstream Sprint 42 is blocked; produ
 inventory/history collection, separately confined parser/language-server processes,
 complete semantic coverage, production cache orchestration, native cross-platform and
 trusted-package evidence, parser-process crash/cancellation campaigns, independent
-review, and manual fuzzing remain absent.
+human review, and manual fuzzing remain absent.

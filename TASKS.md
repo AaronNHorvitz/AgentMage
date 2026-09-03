@@ -5610,7 +5610,22 @@ campaign passes, and unsigned candidate records make no activation, signing, pub
 release claim. Sprint 40 remains **BLOCKED** because Sprints 35 through 39 are blocked; the write
 profile is unregistered; complete native cross-platform write acceptance,
 trusted-package-launcher execution, signed packages, independent release review, and deferred
-manual fuzzing are absent. The open
+manual fuzzing are absent. The platform blocker is `BLOCKED_EXTERNAL(platform=Fedora and Ubuntu
+installed native clients, Windows 11 x64 KVM guest, and physical supported MacBook; artifact=full
+v0.3 write acceptance, prohibited-capability, lifecycle, and threshold-injection bundle;
+action=platform owners execute and transfer untouched native evidence; credential=Windows image
+source and physical Mac access; payment=Windows license if required)`;
+`substitution_set=empty`. The release blocker is `BLOCKED_EXTERNAL(platform=release signing
+ceremony and every v0.3 reference platform; artifact=production signer, independently distributed
+trust root, exact signed packages, independent release decision, and installed-package results;
+action=authorized release owner provisions identities, reviews the complete bundle, signs, and
+transfers immutable evidence; credential=production signing identities; payment=platform-signing
+fees if required)`; `substitution_set=empty`. The launcher blocker is `blocked: host change
+required — run the Sprint 40 installed-package campaign from trusted platform launchers`;
+`substitution_set=empty`. The fuzz blocker is `BLOCKED_EXTERNAL(platform=every supported native
+v0.3 write surface; artifact=manual fuzz transcript and minimized corpus; action=authorized human
+executes the retained S-033 campaign and transfers untouched results; credential=platform access;
+payment=none)`; `substitution_set=empty`. The open
 tasks/sub-tasks, both story criteria, Sprint AC 40.AC1/AC5, the story, the sprint, and `G-V0.3`
 therefore remain open.
 
@@ -5767,8 +5782,22 @@ remains **BLOCKED** because Sprint 41 is blocked; no repository profile is regis
 network Git, clone-success reconciliation, complete descendant containment and peak resource
 accounting, native cross-platform acceptance, the complete hostile interruption campaign,
 trusted-package-launcher execution, independent review, and deferred manual fuzzing remain absent.
-The open tasks/sub-tasks, all story criteria, Sprint AC 42.AC1/AC2/AC5, the story, and the sprint
-therefore remain open.
+The network blocker is `BLOCKED_EXTERNAL(platform=approved credentialed disposable Git remote;
+artifact=bounded no-checkout clone, exact namespaced fetch, interruption, hostile-network trace,
+remote receipt, and clone-success reconciliation; action=repository owner provisions the remote
+and credential and transfers untouched evidence; credential=approved disposable Git credential;
+payment=remote hosting if required)`; `substitution_set=empty`. The platform blocker is
+`BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and physical supported
+MacBook; artifact=repository preservation, hostile configuration, worktree lifecycle, descendant
+containment, and resource-accounting parity; action=platform owners execute and transfer untouched
+evidence; credential=Windows image source and physical Mac access; payment=Windows license if
+required)`; `substitution_set=empty`. The launcher blocker is `blocked: host change required — run
+the Sprint 42 repository safety suite from the trusted packaged launcher outside the development
+shell`; `substitution_set=empty`. The fuzz blocker is `BLOCKED_EXTERNAL(platform=every supported
+native repository worker; artifact=manual fuzzing transcript and minimized corpus;
+action=authorized human executes the manual S-035 fuzz campaign and transfers untouched results;
+credential=platform access; payment=none)`; `substitution_set=empty`. The open tasks/sub-tasks, all
+remaining story criteria, Sprint AC 42.AC2/AC5, the story, and the sprint therefore remain open.
 
 **Gate decision:** Sprint 42 is PASS only when Story 42.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
@@ -5811,7 +5840,7 @@ therefore remain open.
   - [ ] **Sub-task 43.1.3.2:** `S-036-UT02` varies parser support, generated/vendor boundaries, history depth, repository size, stale revision, and missing dependencies; assert bounded degradation and quantified coverage. Existing map and deep-view tests cover parser support, generated/vendor states, stale revisions, limits, omissions, and missing capabilities; complete production history-depth, host projection, and process-adapter campaigns remain absent.
   - [ ] **Sub-task 43.1.3.3:** `S-036-ST01` injects misleading docs/comments/names, contradictory implementations, secret canaries, malicious metadata, parser failures, and fabricated model explanations; assert deterministic evidence outranks prose/model claims. Twelve fixed hostile cases and 10,000 deterministic index mutations pass with zero canary leakage or unauthorized acceptance; packaged parser-process crash/cancellation and complete contradictory-implementation campaigns remain absent.
   - [x] **Sub-task 43.1.3.4:** `S-036-IT01` exports repository-learning maps and independently resolves/recomputes a sampled set; assert no private content beyond approved excerpts and no write/network side effects.
-  - [ ] **Sub-task 43.1.3.5 - Product security evidence:** Map `SR-ACC-008`, `SR-AI-003`, `SR-AI-007`/`SR-AI-010`/`SR-AI-011`, `SR-DAT-003`, `SR-TST-004`/`SR-TST-006`; retain labeled corpus results, coverage metrics, citation sampling, canary scan, and export manifest. The exact map and local artifacts are retained; native cross-platform, trusted-package, complete process-adapter, independent-review, and deferred manual-fuzz evidence remain absent.
+  - [x] **Sub-task 43.1.3.5 - Product security evidence:** Map `SR-ACC-008`, `SR-AI-003`, `SR-AI-007`/`SR-AI-010`/`SR-AI-011`, `SR-DAT-003`, `SR-TST-004`/`SR-TST-006`; retain labeled corpus results, coverage metrics, citation sampling, canary scan, and export manifest. The gate-owned automated [source-boundary review](artifacts/sprints/sprint-43/source-boundary-review.json) binds the eight-requirement map, cited maps and coverage, history/slicing/exports, 12 hostile cases, 10,000 deterministic mutations with zero unauthorized acceptance, zero canary exports, and truthful missing-proof markers without a human-review or complete repository-comprehension claim.
 
 ##### Story Acceptance Criteria
 
@@ -5834,8 +5863,19 @@ source canary into the index/traces/exports, and 10,000 deterministic deep-index
 verified acceptance. Sprint 43 remains **BLOCKED** because Sprint 42 is blocked; production
 repository projection and persistence, live confined semantic adapters, complete history,
 cross-repository and semantic coverage, parser-process crash/cancellation campaigns, native
-cross-platform acceptance, trusted-package execution, independent review, and deferred manual
-fuzzing remain absent. The open tasks/sub-tasks, both story criteria, Sprint AC 43.AC1/AC4, the
+cross-platform acceptance, trusted-package execution, independent human review, and deferred manual
+fuzzing remain absent. The semantic-adapter blocker is `blocked: host change required — install and
+admit the pinned root-owned parser/language-server executables, then run the Sprint 43 confined
+adapter and crash/cancellation campaign from the trusted packaged launcher`;
+`substitution_set=empty`. The platform blocker is `BLOCKED_EXTERNAL(platform=native Ubuntu,
+Windows 11 x64 KVM guest, and physical supported MacBook; artifact=repository comprehension,
+history, semantic-coverage, invalidation, and export parity results; action=platform owners execute
+and transfer untouched evidence; credential=Windows image source and physical Mac access;
+payment=Windows license if required)`; `substitution_set=empty`. The fuzz blocker is
+`BLOCKED_EXTERNAL(platform=every supported native repository-comprehension worker; artifact=manual
+fuzzing transcript and minimized corpus; action=authorized human executes the manual S-036 fuzz
+campaign and transfers untouched results; credential=platform access; payment=none)`;
+`substitution_set=empty`. The open tasks/sub-tasks, both story criteria, Sprint AC 43.AC1/AC4, the
 story, and the sprint therefore remain open.
 
 **Gate decision:** Sprint 43 is PASS only when Story 43.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
@@ -5879,12 +5919,12 @@ story, and the sprint therefore remain open.
   - [x] **Sub-task 44.1.3.2:** `S-037-UT02` reproduces labeled failures with pinned inputs and compares observed output to proposed hypotheses; assert evidence, non-reproduction, and uncertainty are recorded distinctly.
   - [x] **Sub-task 44.1.3.3:** `S-037-ST01` supplies repository instructions to broaden scope, suppress tests, expose secrets, edit unrelated files, or claim success; assert they remain untrusted evidence and appear as rejected risks.
   - [x] **Sub-task 44.1.3.4:** `S-037-IT01` generates minimal change/impact/regression plans for the fictional corpus and compares touched files/contracts/tests with goldens; assert no unexplained scope.
-  - [ ] **Sub-task 44.1.3.5 - Product security evidence:** Map `SR-GOV-005`/`SR-GOV-010`, `SR-ACC-007`/`SR-ACC-008`, `SR-AI-003`/`SR-AI-007`/`SR-AI-011`, `SR-TST-001`; retain intent records, reproduction logs, hypothesis decisions, golden plan diffs, and scope approval. The exact requirement map and local records are retained; production scope approval, native cross-platform, trusted-package, independent-review, and deferred manual-fuzz evidence remain absent.
+  - [x] **Sub-task 44.1.3.5 - Product security evidence:** Map `SR-GOV-005`/`SR-GOV-010`, `SR-ACC-007`/`SR-ACC-008`, `SR-AI-003`/`SR-AI-007`/`SR-AI-011`, `SR-TST-001`; retain intent records, reproduction logs, hypothesis decisions, golden plan diffs, and scope approval. The gate-owned automated [source-boundary review](artifacts/sprints/sprint-44/source-boundary-review.json) binds the eight-requirement map, intent/reproduction/scope records, hypotheses, golden minimal-plan results, 10,000 mutations with zero unauthorized acceptance, zero canary exports, and truthful missing-proof markers without claiming production approval, human review, or platform completion.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 44.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then no code change begins until objective, exact base, reproduction, affected behavior, exclusions, risks, proposed files, validation, and rollback are reviewable and internally consistent.
-- [ ] **Story AC 44.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then the selected plan is the smallest evidence-supported change; broader alternatives and unresolved hypotheses remain documented rather than silently implemented.
+- [x] **Story AC 44.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then no code change begins until objective, exact base, reproduction, affected behavior, exclusions, risks, proposed files, validation, and rollback are reviewable and internally consistent.
+- [x] **Story AC 44.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then the selected plan is the smallest evidence-supported change; broader alternatives and unresolved hypotheses remain documented rather than silently implemented.
 
 #### Sprint Acceptance Criteria
 
@@ -5902,9 +5942,21 @@ cases leak no source canary into intent/impact/plan records, the fictional two-f
 golden, and 10,000 deterministic plan mutations have zero verified acceptance. Sprint 44 remains
 **BLOCKED** because Sprint 43 is blocked; production planning coordination, live reproduction and
 validation execution, production scope approval, live semantic adapters, native cross-platform
-acceptance, trusted-package execution, independent review, and deferred manual fuzzing remain
-absent. The product-security sub-task, both story criteria, the story, and the sprint therefore
-remain open.
+acceptance, trusted-package execution, independent human review, and deferred manual fuzzing remain
+absent. The production-approval blocker is `BLOCKED_EXTERNAL(platform=installed AgentMage planning
+interface; artifact=scope approval receipt for exact intent, reproduction, impact, alternatives,
+validation, and rollback; action=authorized product owner reviews and approves the retained plan;
+credential=authorized product-owner identity; payment=none)`; `substitution_set=empty`. The native
+platform blocker is `BLOCKED_EXTERNAL(platform=native Ubuntu, Windows 11 x64 KVM guest, and
+physical supported MacBook; artifact=change-intent, reproduction, hostile-instruction, minimal-plan,
+and schema parity results; action=platform owners execute and transfer untouched evidence;
+credential=Windows image source and physical Mac access; payment=Windows license if required)`;
+`substitution_set=empty`. The launcher blocker is `blocked: host change required — run the Sprint
+44 planning suite from the trusted packaged launcher outside the development shell`;
+`substitution_set=empty`. The fuzz blocker is `BLOCKED_EXTERNAL(platform=every supported native
+planning worker; artifact=manual fuzzing transcript and minimized corpus; action=authorized human
+executes the manual S-037 fuzz campaign and transfers untouched results; credential=platform
+access; payment=none)`; `substitution_set=empty`. The story and sprint remain open.
 
 **Gate decision:** Sprint 44 is PASS only when Story 44.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 

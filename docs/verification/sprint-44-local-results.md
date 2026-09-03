@@ -22,6 +22,11 @@ linting.
   false readiness, and false reproduction outcomes are rejected.
 - The hostile canary scan serializes intent, impact, and plan records and finds no
   source canary or instruction text.
+- The gate-owned automated review independently rederives the eight-requirement map,
+  intent/reproduction/scope bindings, minimal-plan controls, five hostile cases, one
+  golden plan, 10,000 plan mutations with zero unauthorized acceptance, zero canary
+  exports, and every false missing-proof marker from committed sources. It makes no
+  human-review, production-approval, or platform-completion claim.
 
 These deterministic mutations are not manual or coverage-guided fuzzing.
 
@@ -42,4 +47,4 @@ A green local report proves only the current platform-neutral planning contracts
 Fedora toolchain run. It does not close Sprint 44. Sprint 43 remains blocked; no
 production chat-to-plan coordinator, trusted reproduction/validation runner, scope
 approval UI, live semantic adapter, native cross-platform acceptance, trusted-package
-execution, independent review, or manual fuzzing exists.
+execution, independent human review, or manual fuzzing exists.
