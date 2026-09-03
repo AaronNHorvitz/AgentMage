@@ -44,6 +44,7 @@ agentmage-platform-linux.workspace = true
 [dev-dependencies]
 agentmage-platform-linux = { workspace = true, features = ["test-support"] }
 lopdf.workspace = true
+zip.workspace = true
 
 [lints]
 workspace = true

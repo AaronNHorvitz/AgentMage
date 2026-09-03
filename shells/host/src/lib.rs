@@ -87,6 +87,7 @@ pub mod runtime_tools;
 /// Production prepared-source adapter for the common artifact dispatcher.
 #[cfg(feature = "source-artifacts")]
 pub mod source_artifact_runtime;
+pub mod spreadsheet_source_artifact;
 #[cfg(feature = "workflow-caller")]
 /// Narrow child-assignment adapter over the shared workflow caller runtime.
 pub mod workflow_assignment;

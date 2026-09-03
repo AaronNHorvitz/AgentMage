@@ -19,6 +19,7 @@ SOURCES: Final = (
     "capabilities/knowledge/src/tabular.rs",
     "capabilities/knowledge/src/json_data.rs",
     "capabilities/knowledge/src/spreadsheet_source.rs",
+    "shells/host/src/spreadsheet_source_artifact.rs",
 )
 
 
@@ -47,6 +48,7 @@ def expected(revision: str) -> dict[str, Any]:
     csv = decoded["capabilities/knowledge/src/tabular.rs"]
     json_source = decoded["capabilities/knowledge/src/json_data.rs"]
     adapter = decoded["capabilities/knowledge/src/spreadsheet_source.rs"]
+    service = decoded["shells/host/src/spreadsheet_source_artifact.rs"]
     checks = {
         "shared_trait_covers_xlsx_csv_json": has_all(
             contract,
@@ -205,6 +207,54 @@ def expected(revision: str) -> dict[str, Any]:
                 "cancellation_and_output_bounds_fail_closed",
             ),
         ),
+        "runtime_service_binds_manifests_sheets_ranges_search_context_and_native_tools": has_all(
+            service,
+            (
+                "pub struct PreparedSpreadsheetSourceManifest",
+                "pub struct PreparedSpreadsheetSheetSummary",
+                "pub struct SpreadsheetSourceArtifactService",
+                "pub struct PreparedSpreadsheetLexicalEntry",
+                "pub fn prepared_manifest",
+                "fn get_sheet",
+                "pub fn lexical_index",
+                "pub fn context_candidates",
+                "ArtifactFragment::Sheet",
+                "ArtifactFragment::Cell",
+                "impl ArtifactBackend for SpreadsheetSourceArtifactService",
+                "pub fn dispatch_spreadsheet_source_artifact",
+                "dispatch_artifact(",
+                "freshness_sha256",
+                "manifest_sha256",
+                "ArtifactExtensionError::Stale",
+                "ArtifactExtensionError::LimitExceeded",
+                "ArtifactClassification::Restricted",
+                "admission_manifest_sheet_summary_and_cache_bind_exact_source",
+                "exact_sheet_cell_search_and_context_use_one_fresh_projection",
+                "stale_restricted_missing_and_bounded_sheet_requests_fail_closed",
+            ),
+        ),
+        "runtime_lifecycle_retention_restart_and_exact_token_accounting_are_closed": has_all(
+            service,
+            (
+                "pub enum PreparedSpreadsheetLifecycle",
+                "pub enum PreparedSpreadsheetRetention",
+                "PolicyPersisted",
+                "pub fn admit_with_retention",
+                "pub fn restore_persisted",
+                "pub fn invalidate",
+                "pub fn release",
+                "pub fn delete",
+                "extraction: Option<StructuredSourceExtraction>",
+                "pub fn account_combined_context",
+                "ExactSourceTokenCounter",
+                "token_counter_sha256",
+                "tokenizer_sha256",
+                "SourcePreparationError::ResourceLimit",
+                "persisted_restart_invalidation_release_delete_and_reattachment_are_exact",
+                "combined_artifact_context_uses_exact_counter_and_one_projection_per_source",
+            ),
+        )
+        and "source_bytes: Vec" not in service,
     }
     return {
         "schema_version": 1,
@@ -223,7 +273,7 @@ def expected(revision: str) -> dict[str, Any]:
         "limitations": [
             "This is gate-owned automated review, not a human-review claim.",
             "It proves authority-free parser projection and deterministic local tests only.",
-            "Native retrieval services, installed-client parity, live models, and physical-platform campaigns remain absent.",
+            "Installed-client parity, live models, and physical-platform campaigns remain absent.",
             "It grants no model, interface, platform, integration, milestone, or release support.",
         ],
     }
