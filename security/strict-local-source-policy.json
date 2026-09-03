@@ -69,9 +69,6 @@
     "capabilities/read-only/src/catalog.rs": [
       "https://json-schema.org/draft/2020-12/schema"
     ],
-    "capabilities/read-only/src/artifact.rs": [
-      "https://json-schema.org/draft/2020-12/schema"
-    ],
     "capabilities/read-only/src/git.rs": [
       "https://json-schema.org/draft/2020-12/schema"
     ],
@@ -97,17 +94,17 @@
   },
   "allowed_first_party_build_scripts": [],
   "approved_cargo_manifests": {
-    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.toml": "0104b55b6a0c57eb869812ad7a6c4ea648f3d256258bf261ebcf0d39e980ba4b",
     "capabilities/knowledge/Cargo.toml": "d1aaf75cd939ed948adce94dc56091873a6611fb8f5f8c6dc3a50acf6d0974de",
     "capabilities/read-only/Cargo.toml": "0779ae133a0b654cbd5686ffbde501f72ed333b271592467af87bba02379d25e",
     "capabilities/repository-map/Cargo.toml": "6893bed2643ac73332862345c84f6062bedb6ff506ba7bd3a4036921e6242de6",
     "kernel/contracts/Cargo.toml": "960fb2e7c1128ed9508a667f7240aa67eb5bf6da95f8d24df97658a0af958088",
-    "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
+    "kernel/engine/Cargo.toml": "66bcf914dd0f4fbf0bbc6971916d98f1f6a8b9380453515ddca344fe179ea68e",
     "platforms/linux-inference/Cargo.toml": "a4143fefbaa1ababfb26bc7701ef7c3fe9919a1122abbc98a0ae2841858d73b9",
-    "platforms/linux/Cargo.toml": "a6ed075a2e40f2120402cb2db636e3029b4e2f2f4070b3e2d64be93c9c0c796a",
+    "platforms/linux/Cargo.toml": "00426eed21bba2bd58421ef75b6d661b7bfe8dc91c0fa931e01fe58d502ccead",
     "platforms/windows/Cargo.toml": "7546d14d8ec5b014cd0c8ce541f603e0208ac6cb237b6b29a6d56d7f1a45b490",
     "release/xtask/Cargo.toml": "dd6e61c5561f24a35f8f802579f2c8374c15e77d76cd72a882dc104cff954a40",
-    "shells/host/Cargo.toml": "b6ad82e6be880f63c24d47a0341748261f2bd747d7a851264b81ab24beacf713"
+    "shells/host/Cargo.toml": "022c2254e404a7c54d790a894e98f6925a9f2b794f0ff37d7022bb4e19c9f923"
   },
   "approved_cargo_packages": [
     "adler2@2.0.1",
@@ -458,30 +455,13 @@
       "vendor"
     ],
     "contribution_keys": [
-      "chatParticipants",
       "commands",
-      "configuration",
       "languageModelChatProviders",
       "menus",
       "views",
       "viewsContainers"
     ],
     "contributions": {
-      "configuration": {
-        "title": "AgentMage feature activation",
-        "properties": {
-          "agentmage.features.nativeParticipant": {
-            "type": "boolean",
-            "default": true,
-            "description": "Register the bounded native @agentmage compatibility participant. Reload the extension host after changing."
-          },
-          "agentmage.features.nativeProviderCompatibility": {
-            "type": "boolean",
-            "default": true,
-            "description": "Register the native Language Model Chat Provider compatibility surface. Reload the extension host after changing."
-          }
-        }
-      },
       "commands": [
         {
           "command": "agentmage.openVerifiedChat",
@@ -494,21 +474,6 @@
           "title": "New Verified Session",
           "category": "AgentMage",
           "icon": "$(add)"
-        }
-      ],
-      "chatParticipants": [
-        {
-          "id": "agentmage.participant",
-          "name": "agentmage",
-          "fullName": "AgentMage",
-          "description": "Run a verified local AgentMage request with completely accounted references",
-          "isSticky": true,
-          "commands": [
-            {
-              "name": "ask",
-              "description": "Ask over explicitly supplied sources"
-            }
-          ]
         }
       ],
       "viewsContainers": {
