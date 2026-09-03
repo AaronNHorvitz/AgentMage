@@ -3979,6 +3979,9 @@ clients, supported-platform campaigns, and independent review remain explicit ex
 
 ### [ ] Sprint 23 - Native Visual Studio Code Chat Experience
 
+**Blocked:** exact host and external tuples are retained on Sprint AC 23.AC1, AC2, AC5, AC6,
+and AC7; all dependencies have `substitution_set=empty`.
+
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-021`, part 1 of 3.
@@ -3991,11 +3994,16 @@ clients, supported-platform campaigns, and independent review remain explicit ex
 
 #### [ ] Story 23.1 - Native Visual Studio Code Chat Experience
 
+**Blocked:** Sub-task 23.1.1.3 requires the exact `gcc-c++`/qualified-runtime host change, and
+Sub-tasks 23.1.3.1 through 23.1.3.4 require the exact installed Fedora VSIX campaign and
+restricted-host aggregate tuples; `substitution_set=empty`.
+
 **User-facing value:** As an AgentMage user, maintainer, or reviewer, I need native visual studio code chat experience so that AgentMage delivers the following bounded outcome: Deliver the complete v0.1 workflow in native Visual Studio Code Chat and close every blocking release threshold.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 23.1.1 - Implement the bounded story**
+- [ ] **Task 23.1.1 - Implement the bounded story** Blocked on Sub-task 23.1.1.3's exact
+  `gcc-c++`/qualified-runtime host tuple; `substitution_set=empty`.
   - [x] **Sub-task 23.1.1.1** (legacy `S-021-I01`): Register the AgentMage language-model provider through the pinned stable Visual Studio Code API.
   - [x] **Sub-task 23.1.1.2** (legacy `S-021-I02`, superseded in product direction by Decision 0027): Preserve traceability to the original E4B picker requirement but discover and expose only exact currently admitted local profiles with current capabilities, limits, runtime, and limitations; require no E4B or other family as a hard-coded prerequisite. Evidence: the kernel, authenticated host transport, and TypeScript provider implement exact candidate-neutral discovery with no compiled family prerequisite. The package-verified Linux bootstrap loads the manifest-bound exact catalog, joins the current activation, adapter health, hardware compatibility, policy, support, and limitations disposition, and truthfully exposes zero selectable profiles for the current zero-enabled catalog. Muse, Gemma, and an additional family fixtures project identically when their complete exact facts are admitted; candidate and unavailable states remain management-only. Every native runtime submission now revalidates the selected exact entry before prepare, and mutation starts no runtime or fallback. Installed native-session acceptance remains separately gated.
   - [ ] **Sub-task 23.1.1.3** (legacy `S-021-I03`): Route every request through the authenticated bridge, kernel runtime, selected model adapter, grants, and tool dispatcher. Partial local evidence: discovery, revalidation, diagnostics, and approved read requests traverse the authenticated bridge and kernel-mediated host workflow; no admitted profile is connected to a production inference adapter.
@@ -4003,13 +4011,15 @@ clients, supported-platform campaigns, and independent review remain explicit ex
   - [x] **Sub-task 23.1.1.4** (legacy `S-021-I04`): Stream text, evidence states, citations, progress, diagnostics, tool results, denials, cancellation, and failures. Evidence: native Chat emits the structural session boundary and every content-free runtime progress event as separate ordered updates. After the kernel returns a terminal outcome, the renderer validates evidence, digest, media type, and Markdown safety before emitting verified text and result facts as separate ordered parts. Raw unverified model tokens never cross the client boundary. Focused tests prove exact concatenation, output-before-summary order, denial, cancellation, tool/evidence states, and fail-closed payload mutation.
   - [x] **Sub-task 23.1.1.5** (legacy `S-021-I05`): Render validated clickable display links and session, workspace, model, permission, tool, and offline indicators. Evidence: bounded local display links are validated before rendering, and every runtime response begins with a structural Session Boundary containing textual exact session, workspace snapshot, model/manifest/artifact/runtime, permission policy, tool, offline, vision, and resource indicators. Focused tests bind every displayed identity to the host-framed request and selected exact profile.
 
-- [ ] **Task 23.1.2 - Produce reviewable artifacts**
+- [ ] **Task 23.1.2 - Produce reviewable artifacts** Blocked on Sub-task 23.1.2.2's exact
+  qualified-runtime and installed-VSIX tuples; `substitution_set=empty`.
   - [x] **Sub-task 23.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
   - [ ] **Sub-task 23.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story. Partial local evidence: the Sprint 23 report hashes the exact contract, host, extension, test, architecture, conformance, and evidence sources and maps the applicable security requirements; complete native-workflow traceability remains open.
         Blocked on Sub-task 23.1.1.3's exact `gcc-c++`/production-runtime tuple and Sub-task
         23.1.3.1's installed-VSIX tuple; `substitution_set=empty`.
 
-- [ ] **Task 23.1.3 - Verify and close the story**
+- [ ] **Task 23.1.3 - Verify and close the story** Blocked on its children's exact installed
+  Fedora VSIX, qualified-runtime, and restricted-host aggregate tuples; `substitution_set=empty`.
   - [ ] **Sub-task 23.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks. Partial local evidence: focused kernel, host, extension, link-grammar, cancellation, malformed-input, tamper, and full product tests pass; installed native Visual Studio Code and production-model cases remain open.
         `BLOCKED_EXTERNAL(platform=Fedora graphical desktop with installed native Visual Studio Code; artifact=current packaged AgentMage VSIX plus the exact Story 9.1-qualified production model/runtime tuple; action=human executes the complete native Chat positive, prohibited, boundary, cancellation, dependency-failure, and side-effect campaign and transfers the untouched transcript; substitution_set=empty)`; model qualification first requires `blocked: host change required — sudo dnf install gcc-c++`; `substitution_set=empty`.
   - [ ] **Sub-task 23.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims. Partial local evidence: authenticated transport, hostile-network, strict-local-source, effect-boundary, and product gates pass; native platform and production inference integration remain open.
@@ -4026,11 +4036,15 @@ clients, supported-platform campaigns, and independent review remain explicit ex
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 23.1.AC1:** Given the approved dependencies and source requirements for `S-021-I01`, `S-021-I02`, `S-021-I03`, `S-021-I04`, and `S-021-I05`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 23.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-021-I01`, `S-021-I02`, `S-021-I03`, `S-021-I04`, and `S-021-I05`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 23.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [ ] **Story AC 23.1.AC1:** Given the approved dependencies and source requirements for `S-021-I01`, `S-021-I02`, `S-021-I03`, `S-021-I04`, and `S-021-I05`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled. Blocked on Sub-task 23.1.1.3's exact `gcc-c++`/qualified-runtime tuple; `substitution_set=empty`.
+- [ ] **Story AC 23.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-021-I01`, `S-021-I02`, `S-021-I03`, `S-021-I04`, and `S-021-I05`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent. Blocked on Sub-task 23.1.3.1's exact installed Fedora VSIX/qualified-model tuple; `substitution_set=empty`.
+- [ ] **Story AC 23.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence. Blocked on Sub-task 23.1.3.3's exact restricted-host aggregate and installed-campaign tuples; `substitution_set=empty`.
 
 #### [ ] Story 23.2 - Accessible Native Chat Workflow
+
+**Blocked:** the exact installed Fedora keyboard/reflow and screen-reader tuples plus the physical
+MacBook VoiceOver tuple are retained on Sub-tasks 23.2.2.1 and 23.2.2.2;
+`substitution_set=empty`.
 
 **User-facing value:** As a user with varied visual, motor, or assistive-technology needs, I need every v0.1 action and status to remain operable and understandable in native Visual Studio Code Chat.
 
@@ -4045,7 +4059,8 @@ clients, supported-platform campaigns, and independent review remain explicit ex
   - [x] **Sub-task 23.2.1.3:** Make generated Markdown, citations, diagnostics, limitations, receipts, and error guidance structurally navigable and understandable by screen readers. Evidence: generated runtime output separates Session Boundary, Progress, and Result headings; emits ordered textual event list items; retains named safe citations; and renders diagnostics, limitations, receipts, evidence counts, and guidance as explicit text parts. Parser tests assert the complete structure. Native assistive-technology behavior remains honestly gated by Task 23.2.2.
   - [x] **Sub-task 23.2.1.4:** Publish a versioned accessibility conformance report that distinguishes automated passes, manual passes, failures, not-tested items, platform differences, and remediation.
 
-- [ ] **Task 23.2.2 - Verify and close the story**
+- [ ] **Task 23.2.2 - Verify and close the story** Blocked on its children's exact installed
+  Fedora and physical MacBook accessibility tuples; `substitution_set=empty`.
   - [ ] **Sub-task 23.2.2.1:** Complete each core workflow by keyboard alone at supported zoom/reflow levels; assert visible focus, no trap, no clipped control, no pointer-only action, and successful cancellation/recovery. `BLOCKED_EXTERNAL(platform=Fedora installed native Visual Studio Code; artifact=current packaged AgentMage VSIX; action=human keyboard-only execution at default zoom, 200 percent zoom, and declared narrow reflow width with focus/clipping/cancellation transcript; substitution_set=empty)`.
   - [ ] **Sub-task 23.2.2.2:** Perform manual VoiceOver testing on macOS and declared Linux screen-reader testing, plus automated accessibility checks where supported; retain exact OS, VS Code, extension, and assistive-technology versions. `BLOCKED_EXTERNAL(platform=physical supported MacBook; artifact=current packaged AgentMage VSIX; action=human VoiceOver workflow with exact macOS, VS Code, extension, and VoiceOver versions; substitution_set=empty)` and `BLOCKED_EXTERNAL(platform=Fedora graphical desktop with declared screen reader; artifact=current packaged AgentMage VSIX; action=human screen-reader workflow with exact OS, desktop, VS Code, extension, and assistive-technology versions; substitution_set=empty)`.
   - [x] **Sub-task 23.2.2.3:** Seed missing names, bad focus order, color-only meaning, inaccessible live updates, timeout pressure, and malformed generated structure; assert each blocks the core-workflow gate. Evidence: the closed `evaluateNativeAccessibility` gate emits stable blockers for all six defect classes. Three focused tests prove the complete observation passes, each independent seed blocks with its exact code, and combined defects remain complete, unique, and ordered. This automated AgentMage-owned structure gate does not substitute for native keyboard, zoom, reflow, or assistive-technology evidence.
@@ -4055,11 +4070,15 @@ clients, supported-platform campaigns, and independent review remain explicit ex
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 23.2.AC1:** Given a keyboard-only user, when each v0.1 core workflow is performed, then every action, status, citation, error, cancellation, and recovery path is reachable with visible logical focus and no trap.
-- [ ] **Story AC 23.2.AC2:** Given supported screen readers and zoom/reflow settings, when Chat streams text, tools, evidence states, diagnostics, and failures, then updates are announced in order without lost content, color-only meaning, overlap, or forced timing.
-- [ ] **Story AC 23.2.AC3:** Given raw automated and manual results, when the conformance report is generated, then every pass, failure, not-tested item, platform difference, and remediation reconciles to current evidence.
+- [ ] **Story AC 23.2.AC1:** Given a keyboard-only user, when each v0.1 core workflow is performed, then every action, status, citation, error, cancellation, and recovery path is reachable with visible logical focus and no trap. Blocked on Sub-task 23.2.2.1's exact installed Fedora keyboard/reflow tuple; `substitution_set=empty`.
+- [ ] **Story AC 23.2.AC2:** Given supported screen readers and zoom/reflow settings, when Chat streams text, tools, evidence states, diagnostics, and failures, then updates are announced in order without lost content, color-only meaning, overlap, or forced timing. Blocked on Sub-task 23.2.2.2's exact Fedora screen-reader and physical MacBook VoiceOver tuples; `substitution_set=empty`.
+- [ ] **Story AC 23.2.AC3:** Given raw automated and manual results, when the conformance report is generated, then every pass, failure, not-tested item, platform difference, and remediation reconciles to current evidence. Blocked on Sub-task 23.2.2.4 and its exact three installed accessibility tuples; `substitution_set=empty`.
 
 #### [ ] Story 23.3 - Admitted-Profile Discovery and Native Picker Truth
+
+**Blocked:** implementation and all three story criteria pass; closure depends only on Sub-task
+23.3.2.4's exact installed Fedora/MacBook accessibility tuple and its 23.3.2.5 evidence dependent;
+`substitution_set=empty`.
 
 **User-facing value:** As a user, I need the native Visual Studio Code model picker to show only local profiles that are actually admitted and usable on this machine so a candidate label, stale catalog row, or historical Gemma requirement cannot launch the wrong model.
 
@@ -4071,7 +4090,8 @@ clients, supported-platform campaigns, and independent review remain explicit ex
   - [x] **Sub-task 23.3.1.3:** Keep candidate, evaluating, quarantined, rejected, retired, incompatible, stale, and blocked profiles visible only in the appropriate management/diagnostic view and absent from ordinary selectable entries.
   - [x] **Sub-task 23.3.1.4:** Preserve the current task, plan, evidence, and checkpoint during explicit profile changes; require revalidation and a visible stop when the selected profile becomes unavailable, with no automatic substitution. Evidence: the native controller's closed profile-change boundary carries exact task identity, plan digest, ordered evidence digests, and an optional paired checkpoint identity/digest. It revalidates only the explicitly requested exact profile; admission returns the identical preserved state with that profile, while quarantine, removal, mutation, invalid state, or cancellation returns no selected profile, the identical state, and a visible stop. Focused fixtures prove no runtime start and no automatic substitution on either branch.
 
-- [ ] **Task 23.3.2 - Verify and close the story**
+- [ ] **Task 23.3.2 - Verify and close the story** Blocked on Sub-task 23.3.2.4's exact installed
+  Fedora/MacBook accessibility tuple and Sub-task 23.3.2.5; `substitution_set=empty`.
   - [x] **Sub-task 23.3.2.1:** `D027-S23-PICKER` enumerate zero-profile, one-profile, multiple-profile, Muse, Gemma, additional-candidate, blocked, incompatible, stale, quarantined, rejected, retired, degraded, and changed-profile fixtures; require exact ordinary selection and management visibility.
   - [x] **Sub-task 23.3.2.2:** `D027-S23-IDENTITY` mutate family name, display name, artifact, tokenizer, template, codec, runtime, context, decoding, hardware, policy, activation, and support state between discovery and use; require stale refusal and no launch.
   - [x] **Sub-task 23.3.2.3:** `D027-S23-NO-FALLBACK` remove, crash, quarantine, or exhaust the selected profile during every request phase; require preservation, one truthful terminal state, and no hidden local, Docker, frontier, or cloud switch. Evidence: exact pre-request revalidation rejects removed, crashed, quarantined, and exhausted profiles with zero prepare/start/advance calls. The shared coordinator injects unavailable, uncertain/crashed, invalid/quarantined, and resource-exhausted failures both on the first model call and after one admitted tool receipt; every case retains the same exact profile/run, emits one model-failure event and one terminal outcome, performs zero or exactly one already-receipted tool effect, and makes no retry, route, or substitution call. Approval-wait cancellation, terminal absorption, explicit state-preserving changes, and client-stream tamper fixtures cover the remaining phase boundaries.
@@ -4088,13 +4108,18 @@ clients, supported-platform campaigns, and independent review remain explicit ex
 
 #### [ ] Story 23.4 - Reusable Runtime Coordinator and Read-Only Session Loop
 
+**Blocked:** only Sub-task 23.4.1.7 remains, on its exact `gcc-c++`/qualified-runtime and installed
+Fedora VSIX tuples; `substitution_set=empty`.
+
 **User-facing value:** As an AgentMage user, I need native Chat to complete one real read-only agent session through a reusable runtime so later CLI and workflow clients can provide the same behavior without a second loop, permission system, tool path, or store.
 
 **Story-local dependencies:** Sprint 12 bounded agent state and verifier contracts; the Story 21.2 runtime-event envelope and ordered client-stream contracts; existing bounded context, model, tool, grant, dispatcher, and native Chat boundaries. Persistent session resume, the complete durable journal, and the content-addressed artifact lifecycle integrate through optional runtime ports but are not direct prerequisites for the ephemeral read-only vertical slice.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 23.4.1 - Compose one interface-independent runtime coordinator**
+- [ ] **Task 23.4.1 - Compose one interface-independent runtime coordinator** Blocked on Sub-task
+  23.4.1.7's exact `gcc-c++`/qualified-runtime and installed Fedora VSIX tuples;
+  `substitution_set=empty`.
   - [x] **Sub-task 23.4.1.1:** Define versioned `RuntimeRunRequest` and `RuntimeOutcome` contracts that bind session mode, task, work packet, workspace/repository snapshot, selected exact model profile, context budget, visible tool catalog, policy, limits, optional event cursor, and terminal result; consume rather than redefine the Story 21.2 `RuntimeEvent` envelope. Evidence: `kernel/contracts/src/runtime_run.rs`, `runtime_coordinator.rs`, and closed-contract mutation tests cover every named binding and canonical digest.
   - [x] **Sub-task 23.4.1.2:** Compose the existing agent state machine, `LocalModelRuntime` controller, family codec, context manager, `ToolRegistry`, `ToolDispatcher`, grant issuer, cancellation, and verifier registry behind one interface-independent coordinator, with explicit ports for canonical state, durable journal, checkpoints, and runtime artifacts when the selected session mode enables them. Evidence: `ReusableRuntimeCoordinator` adapts `LocalModelController<R, C>`, existing kernel state/dispatch/verifier owners, and optional narrow journal/artifact/checkpoint ports without duplicate services.
   - [x] **Sub-task 23.4.1.3:** Implement deterministic `ALLOW`, `ASK`, and `DENY` disposition mapping over existing policy and grant state; `ASK` emits a protected approval event and waits without effect, `ALLOW` reaches dispatch only after exact grant consumption, and `DENY` produces one no-effect result. Evidence: focused runtime-loop tests prove pause-before-effect, exact one-use resume, no-effect denial, cancellation precedence, and expiry refusal.
@@ -4125,6 +4150,10 @@ clients, supported-platform campaigns, and independent review remain explicit ex
 - [x] **Story AC 23.4.AC3:** Given missing authority, malformed model output, cancellation, stale state, or a dependency failure, when the ephemeral run stops, then no client, model, coordinator, or event path broadens authority, retries an effect invisibly, or converts uncertainty into success.
 
 #### [ ] Story 23.5 - Stable Chat Participant Reference Ingress
+
+**Blocked:** Task 23.5.4 retains exact installed Linux VSIX, Windows/WSL image, physical MacBook,
+Remote SSH target/account, rootless-Podman Dev Container, and qualified-runtime tuples;
+`substitution_set=empty`.
 
 **User-facing value:** As a Visual Studio Code user, I need files and text I deliberately attach to
 AgentMage to reach the Rust runtime or fail visibly, regardless of which compatible local model I
@@ -4160,7 +4189,8 @@ select.
         error-detail behavior without exposing private paths or restricted content.
   - [x] **Sub-task 23.5.3.3:** Document the supported participant accounting path, provider limitations,
         remote-workspace disclosure boundary, supported API matrix, and troubleshooting evidence.
-- [ ] **Task 23.5.4 - Verify real interface behavior**
+- [ ] **Task 23.5.4 - Verify real interface behavior** Blocked on Sub-tasks 23.5.4.1 and 23.5.4.3's
+  exact installed-platform, topology, and qualified-runtime tuples; `substitution_set=empty`.
   - [ ] **Sub-task 23.5.4.1:** Exercise 999/1,001-character prompts, multiple attachments, virtual
         and remote URIs, unknown parts, stale references, disconnect, cancellation, restart, and model
         changes through extension-host tests and installed VSIX evidence.
@@ -4260,13 +4290,15 @@ package, and independent review evidence remain explicitly outside this local st
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 23.AC1:** Every numbered implementation sub-task in Stories 23.1 through 23.4 is complete and linked to its source requirement or issue identity.
-- [ ] **Sprint AC 23.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
+- [ ] **Sprint AC 23.AC1:** Every numbered implementation sub-task in Stories 23.1 through 23.4 is complete and linked to its source requirement or issue identity. Blocked on the exact `gcc-c++`/qualified-runtime tuples at 23.1.1.3 and 23.4.1.7; `substitution_set=empty`.
+- [ ] **Sprint AC 23.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence. Blocked on the exact installed Fedora/MacBook accessibility, installed VSIX, and qualified-runtime campaign tuples; `substitution_set=empty`.
 - [x] **Sprint AC 23.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
 - [x] **Sprint AC 23.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
-- [ ] **Sprint AC 23.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
+- [ ] **Sprint AC 23.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review. Gate-owned source review passes; the result remains blocked on the exact restricted-host aggregate and external execution tuples above; `substitution_set=empty`.
 - [ ] **Sprint AC 23.AC6:** `AT-VSC-003` proves zero hard-coded model prerequisite, zero stale/blocked profile launch, and zero automatic substitution across the complete lifecycle fixture matrix. Partial local evidence: pure kernel, host, and extension fixtures prove all three properties for discovery, immediate revalidation, explicit profile change, and the complete pre-request/post-receipt failure matrix; native production launch and installed accessibility evidence remain open.
-- [ ] **Sprint AC 23.AC7:** Native Chat completes the approved read-only vertical slice through one interface-independent runtime coordinator with no shell-to-model/tool/storage bypass. Partial local evidence: deterministic authenticated-host and VS Code fixtures traverse the common coordinator adapter and prove the thin-client boundary; installed-host runtime/model composition and native acceptance remain absent.
+      Blocked on the exact `gcc-c++`/qualified-runtime and installed Fedora/MacBook accessibility
+      tuples at 23.1.1.3 and 23.3.2.4; `substitution_set=empty`.
+- [ ] **Sprint AC 23.AC7:** Native Chat completes the approved read-only vertical slice through one interface-independent runtime coordinator with no shell-to-model/tool/storage bypass. Partial local evidence: deterministic authenticated-host and VS Code fixtures traverse the common coordinator adapter and prove the thin-client boundary; installed-host runtime/model composition and native acceptance remain absent. Blocked on Sub-task 23.4.1.7's exact `gcc-c++`/qualified-runtime and installed Fedora VSIX tuples; `substitution_set=empty`.
 - [x] **Sprint AC 23.AC8:** Runtime requests, events, receipts, cancellation, outcomes, and the optional journal/checkpoint/artifact ports are reusable by a non-Chat test client without changing kernel semantics.
 - [x] **Sprint AC 23.AC9:** `ALLOW`, `ASK`, and `DENY` preserve exact `CapabilityGrant` authority and produce no approval-dialog or coordinator-created authority.
 - [x] **Sprint AC 23.AC10:** Stable participant ingress accounts for every supplied part, and the
@@ -4278,6 +4310,9 @@ task/sub-task, every story criterion, every sprint criterion, `AM-VSC-003`, `AT-
 Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
 #### [ ] Story 23.7 - AgentMage Verified Chat
+
+**Blocked:** Task 23.7.3 retains the exact installed Fedora/MacBook RV-55 and
+`gcc-c++`/qualified-runtime tuples; `substitution_set=empty`.
 
 **User-facing value:** As a VS Code user, I need a durable AgentMage-owned Chat surface where Ask,
 Plan, and Agent modes show exact evidence and cannot grant themselves authority.
@@ -4295,7 +4330,8 @@ Plan, and Agent modes show exact evidence and cannot grant themselves authority.
 - [x] **Task 23.7.2 - Prove lifecycle and IPC security**
   - [x] **Sub-task 23.7.2.1:** Test reload, duplicate view, stale/replayed/spoofed message, wrong session, extension-host restart, Rust-host restart, cancellation race, and slow-view backpressure. Source-bound fixtures cover exact replay/digest refusal, atomic reconstruction, single-view reuse, background cancellation arbitration, active-run exclusion, and count/byte backpressure; the Rust store suite covers reopen and restart.
   - [x] **Sub-task 23.7.2.2:** Scan webview state, logs, storage, IPC payloads, and diagnostics for secrets, hidden reasoning, private endpoint values, or undeclared durable truth. Stable-API, architecture, hostile-shape, CSP, and source-bound evidence gates pass; only session identity is held in VS Code workspace state and all durable truth is reread from Rust.
-- [ ] **Task 23.7.3 - Verify the canonical experience**
+- [ ] **Task 23.7.3 - Verify the canonical experience** Blocked on Sub-task 23.7.3.1's exact
+  installed Fedora/MacBook RV-55 and qualified-runtime tuples; `substitution_set=empty`.
   - [ ] **Sub-task 23.7.3.1:** Run `RV-55` Verified Chat cases on locally available platforms and retain accessibility, state-reconstruction, IPC-authentication, parity, and limitation evidence. Repository-level Linux fixtures and source-bound evidence pass; packaged VSIX interaction, keyboard/assistive-technology, and physical platform execution remain open and are not inferred from unit fixtures. (`RV-55` is the authoritative Verified Chat protocol; `RV-57` is multi-agent.)
         `BLOCKED_EXTERNAL(platform=Fedora graphical desktop and physical supported MacBook with installed native Visual Studio Code; artifact=current packaged AgentMage VSIX plus the exact Story 9.1-qualified production model/runtime tuple; action=human runs RV-55 with keyboard, declared Linux screen reader, and VoiceOver and transfers untouched reconstruction/authentication/parity/limitation evidence; substitution_set=empty)`; model qualification first requires `blocked: host change required — sudo dnf install gcc-c++`; `substitution_set=empty`.
   - [x] **Sub-task 23.7.3.2:** Leave macOS and Windows native execution rows open until their physical evidence exists; do not infer support from Linux or unit fixtures. Both rows remain explicitly open; macOS is deferred by current run direction and Windows awaits the final same-candidate local campaign.
@@ -4307,6 +4343,9 @@ Plan, and Agent modes show exact evidence and cannot grant themselves authority.
 - [x] **Story AC 23.7.AC3:** Given Ask, Plan, or Agent mode, when an effect is proposed, then the same deterministic policy, grant, approval, tool, and verifier boundaries apply.
 
 #### [ ] Story 23.8 - Native VS Code Chat Compatibility and Disclosure
+
+**Blocked:** Task 23.8.3 retains the exact installed pinned-VS-Code-version and RV-55 tuples;
+`substitution_set=empty`.
 
 **User-facing value:** As a VS Code user, I need `@agentmage` and provider integration to work
 where stable APIs allow it, with visible disclosure where native Chat cannot match Verified Chat.
@@ -4324,7 +4363,8 @@ where stable APIs allow it, with visible disclosure where native Chat cannot mat
 - [x] **Task 23.8.2 - Make semantic gaps visible**
   - [x] **Sub-task 23.8.2.1:** Detect unresolved required references, missing approval UI, hidden artifact limits, unsupported message parts, and unavailable lifecycle/inspector features before execution or completion. Closed projections refuse unknown/data/image/tool parts, external tools, model options, invalid roles/names, oversized history, and incomplete reference sets before model execution.
   - [x] **Sub-task 23.8.2.2:** Offer a visible transition to Verified Chat when native Chat cannot provide required guarantees; never silently weaken the request. Both native adapters name `agentmage.openVerifiedChat` in visible terminal output, and provider refusals also return a structured stable data record.
-- [ ] **Task 23.8.3 - Verify compatibility behavior**
+- [ ] **Task 23.8.3 - Verify compatibility behavior** Blocked on its children's exact installed
+  pinned-VS-Code-version and RV-55 tuples; `substitution_set=empty`.
   - [ ] **Sub-task 23.8.3.1:** Run request-reference, stream/event, cancellation, provider-selection, unsupported-part, reload, and disclosure fixtures across supported VS Code versions. Repository-level fixtures pass; packaged VSIX execution across the pinned stable version range remains open.
         `BLOCKED_EXTERNAL(platform=Fedora graphical desktop with every pinned supported native Visual Studio Code version; artifact=current packaged AgentMage VSIX; action=human runs the named compatibility matrix and transfers untouched versioned evidence; substitution_set=empty)`.
   - [ ] **Sub-task 23.8.3.2:** Run the compatibility portions of `RV-55` and retain API-version, platform, parity, disclosure, and unsupported-state evidence. Local source/API/runtime-parity evidence is retained; installed platform evidence remains open. (`RV-55` is the authoritative Verified Chat/native compatibility protocol; `RV-57` is multi-agent.)
