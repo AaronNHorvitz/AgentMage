@@ -1,11 +1,11 @@
 # Sprint 21 Local Verification Results
 
-| Field | Result |
-|---|---|
-| Gate | Sprint 21 |
-| Local core result | Pass |
-| Sprint result | Blocked |
-| Release approval | No |
+| Field             | Result    |
+| ----------------- | --------- |
+| Gate              | Sprint 21 |
+| Local core result | Pass      |
+| Sprint result     | Blocked   |
+| Release approval  | No        |
 
 ## Verified Locally
 
@@ -30,16 +30,19 @@
 - SQLCipher schema 9 persists verified answer ledgers and authority-owned receipt sequences with a
   separately keyed anchor history. Restart, retained-record tamper, wrong-key, and wall-clock
   regression cases fail closed.
-- Focused kernel and native Fedora host tests plus strict kernel/host Clippy pass. No external
-  network, installed model, private user data, or live credential broker was used.
+- Focused kernel and native Fedora host tests plus strict kernel/host Clippy pass. The evidence
+  gate independently recomputes the committed source hashes and all command results as an
+  automated boundary review; it does not claim an independent human review. No external network,
+  installed model, private user data, or live credential broker was used.
 
 ## Open Evidence
 
-Independent Sprint 21 review remains open. Live distinct-key broker execution, installed-interface
-rendering, physical storage faults, native Ubuntu/macOS/Windows execution, and deferred manual
-fuzzing remain broader platform or release evidence and are not claimed by this local result.
+The automated Sprint 21 source-boundary review is retained. Live distinct-key broker execution,
+installed-interface rendering, physical storage faults, native Ubuntu/macOS/Windows execution, and
+deferred manual fuzzing remain broader platform or release evidence and are not claimed by this
+local result. Sprint 20 also remains blocked on its exact strict-local host-manifest prerequisite.
 
 Sprint 21 therefore remains blocked despite completion of the locally executable Story 21.1
 integration. Story 21.2 still retains its own additional-profile, physical-latency, installed-model,
-and independent-review gates. The machine-readable record will be retained at
+and broader campaign gates. The machine-readable record will be retained at
 [`local-evidence-report.json`](../../artifacts/sprints/sprint-21/local-evidence-report.json).

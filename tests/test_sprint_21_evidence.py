@@ -39,7 +39,10 @@ class Sprint21EvidenceTests(unittest.TestCase):
                 {"native_linux_source_execution": False}),
             lambda value: value["verification_evidence"].update(
                 {"runtime_answer_integration": False}),
-            lambda value: value["verification_evidence"].update({"independent_review": True}),
+            lambda value: value["verification_evidence"].update(
+                {"automated_boundary_review": False}),
+            lambda value: value["verification_evidence"].update(
+                {"independent_human_review": True}),
             lambda value: value["blockers"].pop(),
         )
         for mutate in mutations:
