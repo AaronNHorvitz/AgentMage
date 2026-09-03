@@ -1139,3 +1139,56 @@ retaining Sprint 32's exact inherited upstream blocker.
 
 Exact next action: continue at Sprint 34's first unblocked local or gate-owned review row while
 retaining Sprint 33's exact inherited upstream blocker and all v0.2 platform/release tuples.
+
+## Batch 44 — Sprint 34 knowledge boundary review
+
+### Completed
+
+- Closed 3 TASKS rows: Story AC 34.1.AC1, Story AC 34.1.AC2, and Sprint AC 34.AC5. The
+  gate-owned review binds task, skill, workflow, headless, CLI, and knowledge-workflow runtime
+  sources and passes 10 checks covering network/process authority, evidence preview, zero skill
+  authority, influence/conflict receipts, no writes, plain/Obsidian contract parity, shared host
+  routing, and release guards. Story 34.1 and Sprint 34 remain blocked only on their exact
+  upstream governance, platform, signing, and release prerequisites. Promotions: 0.
+  Substitutions: 0.
+- Commits: `09a74a80` (Sprint 34 knowledge boundary review) and `5283b4a3` (source-bound
+  review, checklist, supply-chain, traceability, contract, and Story 3 evidence). Commits: 2.
+  Commits per closed item: 0.67. Review pins advanced: 0; complete `REVIEWED_PATHS`
+  intersection: empty.
+
+### Validation and self-recovery
+
+- Shared review mutation groups: 2/2; Sprint 27–34 source-boundary review, focused Sprint 34
+  evidence tests 5/5, targeted Markdown lint, requirements-current 45/45, traceability,
+  contract-boundary, and contract-evidence gates pass. Supply-chain builds: 1. Planned evidence
+  regeneration passes: 1. Targeted recovery regenerations: 2; traceability and contract artifacts
+  were proactively renewed because the shared review source is hash-bound by both gates. The full
+  chain ran 695 seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite
+  after every preceding gate passed. Recorded gate wall seconds: 695.
+- Exact Sprint 34 inherited upstream blocker: `blocked: host change required — run the
+  strict-local worker and source-policy renewal outside the restricted filesystem sandbox where
+  /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain
+  root-owned identities, then run python3 scripts/sprint_31_evidence.py --write --source-revision
+  HEAD`; `substitution_set=empty`.
+- Exact clean-upgrade blocker: `BLOCKED_EXTERNAL(platform=Fedora and Ubuntu graphical desktops,
+  Windows 11 x64 KVM guest, and physical supported MacBook; artifact=exact signed v0.1 and
+  candidate v0.2 packages, installed native Visual Studio Code and CLI surfaces, and one qualified
+  exact model/runtime profile; action=humans perform clean standard-user upgrade, offline,
+  privacy, recovery, accessibility, downgrade, rollback matrix every platform and transfer
+  untouched evidence; credential=production package trust roots and Windows image source if
+  required; payment=Windows license if required)`; `substitution_set=empty`.
+- Exact release blocker: `BLOCKED_EXTERNAL(platform=release signing ceremony and every v0.2
+  reference platform; artifact=production signing key, independently distributed trust root,
+  exact signed v0.2 packages, and completed Sub34.1.3.4 migration bundle; action=authorized release
+  owner provisions signer/trust root and independent human reviews complete security bundle,
+  signs release decision, transfers immutable decision receipt; credential=production signing
+  identities; payment=platform-signing fees if required)`; `substitution_set=empty`.
+- Governance blockers: `blocked: awaiting Decision DRAFT-0049-knowledge-privacy-governance` and
+  `blocked: awaiting Decision DRAFT-0050-knowledge-records-governance`;
+  `substitution_set=empty` for both.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue at Sprint 35's first unblocked local or gate-owned review row while
+retaining Sprint 34's exact upstream blockers and all platform/release tuples.
