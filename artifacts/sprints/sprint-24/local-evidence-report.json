@@ -41,7 +41,7 @@
       ],
       "exit_code": 0,
       "id": "kernel-handoff-tests",
-      "output_sha256": "57c8dc611931b25c5cee72d918cdf46b318bc7226029532402e9d25944dc525a"
+      "output_sha256": "40c32b39e71b598e4763bbedb1911646f381b16f1bc52be668a1dcfee53799ed"
     },
     {
       "argv": [
@@ -52,9 +52,9 @@
         "handoff",
         "--locked"
       ],
-      "exit_code": 101,
+      "exit_code": 0,
       "id": "host-handoff-tests",
-      "output_sha256": "b6b4b4f83741025bc8bfb61192eef923776ecf258e806e716dd3aafdf484ec08"
+      "output_sha256": "d5aaff55f1758bdd7122d8f5dcfa66cbfa67474f23817d8d86ac2f48ea33c66e"
     },
     {
       "argv": [
@@ -66,7 +66,7 @@
       ],
       "exit_code": 0,
       "id": "vscode-tests",
-      "output_sha256": "8dd2bb2441cfbb7feafe264dc43dccfc38c6847f5c2f472e961dd8f443118e9b"
+      "output_sha256": "e14b4f4e952e57025287f557677c67aa46168456b3bac71574e7c82befb6ee7b"
     },
     {
       "argv": [
@@ -86,9 +86,9 @@
         "run",
         "product:check"
       ],
-      "exit_code": 101,
+      "exit_code": 0,
       "id": "product-gate",
-      "output_sha256": "f3dae00415f869fcf833e159eefabd54096277cb2082badd640e617c9bf34c34"
+      "output_sha256": "f7dfbcd5cc669a21a441c1048837c9a3ae323292094d8f76b88425dea333703c"
     },
     {
       "argv": [
@@ -134,8 +134,8 @@
     "machine": "x86_64",
     "node": "v24.15.0",
     "npm": "11.12.1",
-    "python": "3.14.7",
-    "release": "7.1.10-200.fc44.x86_64",
+    "python": "3.14.6",
+    "release": "7.1.6-201.fc44.x86_64",
     "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
     "system": "Linux"
   },
@@ -171,48 +171,48 @@
     "SR-CIV-004",
     "SR-CIV-009"
   ],
-  "source_revision": "533db399909ffdbfa00d854901708117e42c6d5c",
+  "source_revision": "b6b08b8a9e79e0eaceee058d4c15337202f133a1",
   "source_sha256": {
     "docs/architecture/local-codex-handoff-boundary.md": "e0c8e8286bfde441da1bf4719e4a22ad1490ab154ddba4e0964b2a84b3b7c7f6",
     "docs/verification/sprint-24-local-results.md": "b5ede6e605055952b52e89adbb7fd10f958b434687fd1b76a6f4897f4c0e6ff3",
-    "kernel/contracts/src/handoff.rs": "230eea68dfbe59158221b006f1483591999a464e529b0e25ecac8c6213759a00",
+    "kernel/contracts/src/handoff.rs": "ef1cb45bd60fd2a3ac42dc42386ef133d8b28e0ead6fb0ac285abcebd2c1a8a0",
     "kernel/engine/src/context_management.rs": "bc6a562f4573364bc82a3972aae64d93e24b976303c52ce9227018717516c077",
     "kernel/engine/src/handoff.rs": "84b4ad4ae0381e0a0cf22735082c302deadca9df52c38cd78ebb926f097cf0f2",
-    "kernel/engine/src/lib.rs": "74e16b7d5134da7214e979519b12116fa002034a5c7bf4b8a1e83646b93d8d26",
+    "kernel/engine/src/lib.rs": "375e9a88e64c717a91d4c3b7e787801b327a34902cf3f789c38bc1d9b2b8a11d",
     "scripts/sprint_24_evidence.py": "27139cc9047cd71121f16c26c4718bfe4c4b765a94fc31636bf98197aba54767",
-    "security/strict-local-source-policy.json": "8574bd444d2e7ebb3758c6725f02e6b94e59ae89c0ea29addae997195f425d87",
-    "shells/host/src/linux_read.rs": "2761b074d459be37f73b1f5ca35b32df76aa3ca661e8b65fef94f2e88f9bae22",
-    "shells/host/src/protocol.rs": "a875cc1c06fc5bd1601611f54c235f4bff8b6481da61a51b109b22eb527cceba",
-    "shells/vscode/src/extension.ts": "ed06694e3e2b2b2fb6a857bd604bfb676fc9e52d2d3cd6534bc0c273625dfe8c",
+    "security/strict-local-source-policy.json": "db6421fa04932c123789389f42489ba4da41c60e9455f20954d515fca4b30677",
+    "shells/host/src/linux_read.rs": "b27d053b6dfdd8868e247b94dabb0e7611ffbcf91997b492b75a83763fbff95a",
+    "shells/host/src/protocol.rs": "a48a7d8ed8f43727bba23f14fb70acf73ce298ad9abfa96eab2a51d574579c43",
+    "shells/vscode/src/extension.ts": "c252adbe10b0a8f448260789a917a0fc698adab4ba4973d24d4b5e749b116a5d",
     "shells/vscode/src/handoff.ts": "f784df9ac32b6c3a67eed04a404b78503722edad9372aa4bba89547fdccd4da3",
-    "shells/vscode/src/host_bootstrap.ts": "5aac0dccc95984cb47078fea468c1e143f0ecd088a4d28357c719839f83a5ed5",
-    "shells/vscode/src/host_bridge.ts": "b7ea16224f2cf178af2a1d98302ce315fe81b934a19ffbd59fceaba350d63707",
-    "shells/vscode/src/provider.ts": "9c0824496c1e8e62e2fc7e98506c8568af927af75719331c5bdbe0b33f89a14e",
+    "shells/vscode/src/host_bootstrap.ts": "b0dd2377ea72c94437e923e5d985e67fde7261daf6022ebd77863e1e82d405ad",
+    "shells/vscode/src/host_bridge.ts": "049efd0066de16c6dca0cc8203a9b6ff7cc3e9c43e639e9250c9406c5379efa1",
+    "shells/vscode/src/provider.ts": "481d3f0fa8ada22800381ceebad9cb72f668e960832fa5a4caafada8664533ec",
     "shells/vscode/test/handoff.test.ts": "0e3c9a9ae9ce75d46618a89037c081ac608ae632b01620271dc752ff6b4728d8",
-    "shells/vscode/test/host_bridge.test.ts": "da9bd9c6f4161fac4823e576f5ad87bcea107368b09c0bb730d07f8196140664",
-    "shells/vscode/test/provider.test.ts": "b6a83e7ae7d7b53cdec383f08786babc75a63a4000a314158147d810f637f8ac",
+    "shells/vscode/test/host_bridge.test.ts": "cf696f19dba6289a3de8048e32efb24c070a6ad42907fc22849fa81c14a9b47b",
+    "shells/vscode/test/provider.test.ts": "4d00bbffe9901888d69bc5c151f6af41c3fec4f1f4c1b2b1ef814d76d867c7c5",
     "tests/test_sprint_24_evidence.py": "97e1fa6c452f0efff0735807b7f633cacbaaa6ad1ac3bc63b1495590b7b14901"
   },
   "summary": {
-    "local_contract_passed": false,
+    "local_contract_passed": true,
     "release_approval": false,
     "sprint_status": "BLOCKED"
   },
   "verification_evidence": {
-    "authenticated_host_transport": false,
-    "canonical_session_composition_contract": false,
-    "complete_product_local_gate": false,
-    "exact_disclosure_and_packet_matrix": false,
-    "independent_extension_digest_checks": false,
+    "authenticated_host_transport": true,
+    "canonical_session_composition_contract": true,
+    "complete_product_local_gate": true,
+    "exact_disclosure_and_packet_matrix": true,
+    "independent_extension_digest_checks": true,
     "independent_review": false,
     "installed_native_vscode_workflow": false,
     "installed_production_session_activation": false,
     "linux_native_accessibility": false,
     "live_handoff_zero_egress_observation": false,
     "macos_native_accessibility": false,
-    "prohibited_action_receipt_matrix": false,
-    "secret_redaction_and_injection_matrix": false,
-    "source_policy_and_expiry_drift_matrix": false,
+    "prohibited_action_receipt_matrix": true,
+    "secret_redaction_and_injection_matrix": true,
+    "source_policy_and_expiry_drift_matrix": true,
     "windows_native_accessibility": false
   }
 }
