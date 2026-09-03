@@ -37,6 +37,13 @@ tests.
 5. No AgentMage-owned custom webview, toolbar, focus manager, hover-only
    control, timed interaction, or color-only legend exists in this workflow.
 
+Every runtime response begins with a structural `Session Boundary` heading and
+textual session, workspace snapshot, exact model/runtime, tool, permission-policy,
+offline, vision, and resource indicators. Ordered progress remains a Markdown
+list, and the canonical outcome uses a separate `Result` heading with textual
+state, evidence, receipts, limitations, and output disposition. These structures
+preserve AgentMage-owned meaning independently of presentation styling.
+
 ## Native Evidence Protocol
 
 For every supported operating system, retain the exact OS, Visual Studio Code,

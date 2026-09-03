@@ -935,12 +935,19 @@ void test("native Chat renders one complete shared-runtime stream and outcome", 
 
   assert.deepEqual(streamed, response.parts);
   assert.match(response.text, /## Session Boundary/u);
+  assert.match(response.text, /Session: `session-0001`/u);
+  assert.match(response.text, /Workspace: `workspace-0001` \(1{64}\)/u);
   assert.match(response.text, /Model: `profile-0001`/u);
   assert.match(response.text, /Manifest: `6{64}`/u);
   assert.match(response.text, /Artifact: `7{64}`/u);
   assert.match(response.text, /Runtime: `runtime-adapter-0001` \(8{64}\)/u);
   assert.match(response.text, /8,192 input tokens; 256 output tokens/u);
   assert.match(response.text, /Tool limit: tool calling unavailable/u);
+  assert.match(response.text, /Permission: policy `policy-0001` \(4{64}\)/u);
+  assert.match(
+    response.text,
+    /Offline: strict-local runtime; network access unavailable/u,
+  );
   assert.match(response.text, /Vision limit: image input unavailable/u);
   assert.match(response.text, /Resource status: bounded/u);
   assert.match(response.text, /Verified local result/u);
