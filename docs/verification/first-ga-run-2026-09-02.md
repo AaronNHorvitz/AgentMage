@@ -247,3 +247,36 @@ and push it, then implement the remaining repository-controlled PDF structure-pr
 
 Exact next action: continue with repository-controlled Story 60.2 lifecycle, no-OCR degradation,
 context accounting, and hostile/resource fixtures without claiming the blocked immutable campaign.
+
+## Batch 9 — PDF prepared-source lifecycle
+
+### Completed
+
+- Added a runtime-owned prepared-PDF service with exact byte and media admission, deterministic
+  extraction caching, optional content-addressed artifact retention, digest-sealed restart
+  reconstruction, source refresh with stale-tool refusal, deletion, and canonical model-plan-bound
+  context accounting.
+- Added 2 host fixtures covering admission, cache hits, retained restart, tamper refusal, source
+  replacement, stale tool calls, multi-model context manifests, visible no-OCR degradation,
+  cancellation, deletion, and zero network, execution, or original-byte persistence.
+- Capability and supply-chain commit: `89e9bbbf`. Dependency evidence commit: `85a08e56`.
+- Closed 0 TASKS rows. Promotions: 0. Commits: 2. Commits per closed item: undefined (0 closed).
+  External rows closed by substitution: 0.
+
+### Validation, recovery, and exact blocker
+
+- The 2 focused host tests, strict host Clippy, formatting, Sprint 60 mutation tests, 13 regenerated
+  configuration/contract/traceability evidence layers, and their repository-only checks pass.
+- The batch-wide review-path intersection contained 0 gates, so no review pin was advanced.
+- Story 7.1 security regeneration reached its platform-contract command and stopped because Podman
+  cannot open `/run/user/1000/libpod/tmp/alive.lck` in the restricted read-only runtime. This is the
+  same cause already exhausted through 5 recovery attempts in Batch 8; no sixth substitution or
+  weakened command was attempted.
+- Measured post-resume evidence-check wall seconds: 16. Gate checkpoint remains blocked.
+- Blocked checkpoint tuple: `blocked: host change required — run npm run -s docs:check, npm run -s
+  evidence:story7.1-security:build, and python3 scripts/sprint_60_evidence.py --write
+  --source-revision 85a08e56 outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; substitution set: empty.
+
+Exact next action: select the next repository-controlled dependency gate after reconciling the
+current accepted Decision chain; retain Story 60.2 lifecycle and immutable evidence rows open.
