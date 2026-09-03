@@ -147,8 +147,9 @@ pub use pdf_diagram::{
 pub use pdf_extraction::{
     PdfExtractionError, PdfExtractionLimitation, PdfExtractionMethod, PdfExtractionProfile,
     PdfExtractionResult, PdfOcrAdmission, PdfOcrObservation, PdfOcrProjection, PdfPageCitation,
-    PdfPageExtraction, PdfPageIdentity, PdfPageState, PdfStructuredSourceExtractor,
-    extract_pdf_to_pages, pdf_extractor_identity_sha256, validate_pdf_ocr_observation,
+    PdfPageExtraction, PdfPageIdentity, PdfPageState, PdfReadingOrderObservation,
+    PdfStructuredSourceExtractor, PdfTextSpan, extract_pdf_to_pages, pdf_extractor_identity_sha256,
+    validate_pdf_ocr_observation,
 };
 pub use pdf_generation::{
     GeneratedPdfReport, PdfGenerationError, PdfGenerationLimit, PdfPageSettings, PdfReportBlock,

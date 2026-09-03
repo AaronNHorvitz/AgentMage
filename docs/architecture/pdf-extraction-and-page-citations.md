@@ -5,14 +5,19 @@
 `PdfStructuredSourceExtractor` adapts already captured PDF bytes to the common
 `StructuredSourceExtractor` boundary. It verifies the declared media type and complete source
 digest, applies the caller's section and output ceilings, and emits one document root followed by
-ordered page sections. Every page section retains the exact PDF object/generation identity and the
-one-based logical page in its provenance. Parser limitations become visible source warnings; an
-image-only page remains incomplete and requires a separately admitted OCR observation.
+ordered page and line-like span sections. Every page section retains the exact PDF object/generation
+identity and one-based logical page; child spans retain exact UTF-8 byte ranges and text digests.
+The page record reports visible-character density over decoded content bytes and labels span order
+only as unverified parser-emission order. It never promotes that observation to visual or semantic
+reading-order certainty. Parser limitations become visible source warnings; an image-only page
+remains incomplete and requires a separately admitted OCR observation.
 
 The adapter acquires no path, network, process, decryption, or write authority. Cancellation before
-or after parsing publishes no extraction. This source milestone does not yet claim span geometry,
-reading-order certainty, active-content inspection, OCR execution, runtime lifecycle integration,
-or installed-client support.
+or after parsing publishes no extraction. The existing inert artifact inspector gates publication:
+JavaScript, launch, submission, remote-document or external-URI actions, embedded files, encryption,
+and incomplete inspection quarantine the source without following or executing content. This source
+milestone does not claim region geometry, reading-order certainty, table or column semantics, OCR
+execution, runtime lifecycle integration, or installed-client support.
 
 ## Scope
 
@@ -64,6 +69,11 @@ An embedded-text citation repeats the page identity, exact text digest, extracti
 confidence. It resolves to an exact page but not a bounding region. The reason code
 `pdf.citation.region-unavailable` preserves that limitation without blocking page-level citation.
 Region-aware provenance belongs to a later admitted extractor and cannot be guessed.
+
+Each non-empty parser-emitted line becomes a source-bound span with one-based emission ordinal,
+inclusive/exclusive UTF-8 offsets into the exact page text, and its own digest. The separate
+`pdf.page.reading-order-unverified` limitation makes clear that these spans are not evidence of
+layout, columns, tables, ligatures, or semantic reading order.
 
 ## Failure States
 

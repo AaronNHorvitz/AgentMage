@@ -9,9 +9,10 @@ use agentmage_kernel_contracts::{
 use lopdf::{Document, LoadOptions};
 use serde::{Deserialize, Serialize};
 
+use crate::pdf_inspection::inspect_pdf_artifact;
 use crate::word_ooxml::word_sha256;
 
-const EXTRACTOR_ID: &str = "agentmage-pdf-extractor-v1;lopdf=0.44.0;strict=true;password=denied;ocr=external-admitted-observation;renderer=none;network=denied;filesystem=denied";
+const EXTRACTOR_ID: &str = "agentmage-pdf-extractor-v2;lopdf=0.44.0;strict=true;spans=utf8-lines;reading-order=parser-emission-unverified;active-external=quarantine;password=denied;ocr=external-admitted-observation;renderer=none;network=denied;filesystem=denied";
 const MAX_PROFILE_BYTES: usize = 512 * 1_024 * 1_024;
 const MAX_PROFILE_OBJECTS: usize = 1_000_000;
 const MAX_PROFILE_PAGES: usize = 100_000;
@@ -154,6 +155,32 @@ pub struct PdfExtractionLimitation {
     pub original_remains_authoritative: bool,
 }
 
+/// Closed statement about the only reading order the native parser can currently demonstrate.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PdfReadingOrderObservation {
+    /// Spans retain parser emission order; visual or semantic reading order is not verified.
+    ParserEmissionOrderUnverified,
+}
+
+/// One exact UTF-8 span in the inert page text emitted by the parser.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PdfTextSpan {
+    /// Stable page-bound span identity.
+    pub span_id: String,
+    /// One-based parser-emission order within the page.
+    pub ordinal: u32,
+    /// Inclusive UTF-8 byte offset in `PdfPageExtraction::text`.
+    pub start_byte: u64,
+    /// Exclusive UTF-8 byte offset in `PdfPageExtraction::text`.
+    pub end_byte_exclusive: u64,
+    /// Digest of the exact emitted span bytes.
+    pub text_sha256: String,
+    /// No region is claimed until a region-aware extractor is admitted.
+    pub exact_region: bool,
+}
+
 /// Extracted text and provenance for one logical PDF page.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -170,6 +197,14 @@ pub struct PdfPageExtraction {
     pub text: String,
     /// Digest of the exact UTF-8 text bytes.
     pub text_sha256: String,
+    /// Exact line-like spans over the emitted UTF-8 text, in parser emission order.
+    pub text_spans: Vec<PdfTextSpan>,
+    /// Number of non-whitespace Unicode scalar values in the emitted text.
+    pub visible_character_count: u64,
+    /// Visible-character density over decoded content bytes, capped at 10,000 basis points.
+    pub decoded_content_text_density_basis_points: Option<u16>,
+    /// Honest reading-order observation; never a visual-layout claim.
+    pub reading_order: Option<PdfReadingOrderObservation>,
     /// Extraction method when text is present.
     pub extraction_method: Option<PdfExtractionMethod>,
     /// Confidence in basis points when text is present.
@@ -424,12 +459,35 @@ impl StructuredSourceExtractor for PdfStructuredSourceExtractor {
         profile.maximum_total_text_bytes = usize::try_from(request.maximum_output_bytes)
             .unwrap_or(usize::MAX)
             .min(profile.maximum_total_text_bytes);
-        let result = extract_pdf_to_pages(&request.source_path, source, &profile)
+        let inspection = inspect_pdf_artifact(&request.source_path, source, &profile)
             .map_err(map_structured_error)?;
         if cancelled() {
             return Err(StructuredSourceExtractionError::Cancelled);
         }
-        let mut sections = Vec::with_capacity(result.pages.len() + 1);
+        if !inspection.inspection_complete
+            || !inspection.findings.is_empty()
+            || inspection.links.iter().any(|item| item.external_or_active)
+        {
+            return Err(StructuredSourceExtractionError::Quarantined);
+        }
+        let result = inspection
+            .extraction
+            .ok_or(StructuredSourceExtractionError::Malformed)?;
+        let required_sections = 1_usize
+            .checked_add(result.pages.len())
+            .and_then(|value| {
+                result.pages.iter().try_fold(value, |count, page| {
+                    count.checked_add(page.text_spans.len())
+                })
+            })
+            .ok_or(StructuredSourceExtractionError::ResourceLimit)?;
+        if required_sections
+            > usize::try_from(request.maximum_sections)
+                .map_err(|_| StructuredSourceExtractionError::ResourceLimit)?
+        {
+            return Err(StructuredSourceExtractionError::ResourceLimit);
+        }
+        let mut sections = Vec::with_capacity(required_sections);
         sections.push(StructuredSourceSection {
             section_id: format!("{}:document", request.source_id),
             parent_section_id: None,
@@ -444,7 +502,7 @@ impl StructuredSourceExtractor for PdfStructuredSourceExtractor {
                 parent_section_id: Some(format!("{}:document", request.source_id)),
                 ordinal: page.identity.page_number,
                 kind: StructuredSourceSectionKind::Page,
-                content: page.text.clone(),
+                content: String::new(),
                 provenance: pdf_provenance(
                     &format!(
                         "object-{}-{}",
@@ -454,6 +512,42 @@ impl StructuredSourceExtractor for PdfStructuredSourceExtractor {
                     Some(page.identity.page_number),
                 ),
             });
+            for span in &page.text_spans {
+                let start = usize::try_from(span.start_byte)
+                    .map_err(|_| StructuredSourceExtractionError::ResourceLimit)?;
+                let end = usize::try_from(span.end_byte_exclusive)
+                    .map_err(|_| StructuredSourceExtractionError::ResourceLimit)?;
+                let content = page
+                    .text
+                    .get(start..end)
+                    .ok_or(StructuredSourceExtractionError::Malformed)?;
+                sections.push(StructuredSourceSection {
+                    section_id: span.span_id.clone(),
+                    parent_section_id: Some(page.identity.page_id.clone()),
+                    ordinal: span.ordinal,
+                    kind: StructuredSourceSectionKind::Paragraph,
+                    content: content.to_owned(),
+                    provenance: StructuredSourceProvenance {
+                        source_part: format!(
+                            "object-{}-{}",
+                            page.identity.object_number, page.identity.object_generation
+                        ),
+                        structural_path: format!(
+                            "pages/{}/spans/{}",
+                            page.identity.page_number, span.ordinal
+                        ),
+                        start_byte: Some(span.start_byte),
+                        end_byte_exclusive: Some(span.end_byte_exclusive),
+                        paragraph: None,
+                        run: None,
+                        table: None,
+                        row: None,
+                        cell: None,
+                        relationship_id: None,
+                        rendered_page: Some(page.identity.page_number),
+                    },
+                });
+            }
         }
         let warnings = result
             .limitations
@@ -511,6 +605,31 @@ fn map_structured_error(error: PdfExtractionError) -> StructuredSourceExtraction
         PdfExtractionError::MalformedDocument => StructuredSourceExtractionError::Malformed,
         PdfExtractionError::OcrNotAdmitted => StructuredSourceExtractionError::Unsupported,
     }
+}
+
+fn text_spans(page_id: &str, text: &str) -> Result<Vec<PdfTextSpan>, PdfExtractionError> {
+    let mut spans = Vec::new();
+    let mut start = 0_usize;
+    for segment in text.split_inclusive('\n') {
+        let end = start
+            .checked_add(segment.len())
+            .ok_or(PdfExtractionError::ResourceLimit)?;
+        if !segment.trim().is_empty() {
+            let ordinal =
+                u32::try_from(spans.len() + 1).map_err(|_| PdfExtractionError::ResourceLimit)?;
+            spans.push(PdfTextSpan {
+                span_id: format!("{page_id}:span:{ordinal}"),
+                ordinal,
+                start_byte: u64::try_from(start).map_err(|_| PdfExtractionError::ResourceLimit)?,
+                end_byte_exclusive: u64::try_from(end)
+                    .map_err(|_| PdfExtractionError::ResourceLimit)?,
+                text_sha256: word_sha256(segment.as_bytes()),
+                exact_region: false,
+            });
+        }
+        start = end;
+    }
+    Ok(spans)
 }
 
 /// Extracts bounded page text and exact-page citations from in-memory PDF bytes.
@@ -618,6 +737,10 @@ pub fn extract_pdf_to_pages(
         let mut extraction_method = None;
         let mut confidence_basis_points = None;
         let mut citation = None;
+        let mut spans = Vec::new();
+        let mut visible_character_count = 0_u64;
+        let mut decoded_content_text_density_basis_points = None;
+        let mut reading_order = None;
 
         if decoded_content_bytes.is_some() {
             match extracted {
@@ -634,6 +757,20 @@ pub fn extract_pdf_to_pages(
                     if visible_characters >= profile.minimum_text_characters {
                         total_text_bytes += candidate.len();
                         text = candidate;
+                        spans = text_spans(&identity.page_id, &text)?;
+                        visible_character_count = u64::try_from(visible_characters)
+                            .map_err(|_| PdfExtractionError::ResourceLimit)?;
+                        decoded_content_text_density_basis_points = decoded_content_bytes
+                            .filter(|bytes| *bytes > 0)
+                            .map(|bytes| {
+                                visible_character_count
+                                    .saturating_mul(10_000)
+                                    .checked_div(bytes)
+                                    .unwrap_or(0)
+                                    .min(10_000) as u16
+                            });
+                        reading_order =
+                            Some(PdfReadingOrderObservation::ParserEmissionOrderUnverified);
                         state = PdfPageState::Text;
                         extraction_method = Some(PdfExtractionMethod::EmbeddedText);
                         confidence_basis_points = Some(10_000);
@@ -650,6 +787,14 @@ pub fn extract_pdf_to_pages(
                         let item = limitation(
                             Some(&identity.page_id),
                             "pdf.citation.region-unavailable",
+                            false,
+                            false,
+                        );
+                        page_limitations.push(item.limitation_id.clone());
+                        limitations.push(item);
+                        let item = limitation(
+                            Some(&identity.page_id),
+                            "pdf.page.reading-order-unverified",
                             false,
                             false,
                         );
@@ -698,6 +843,10 @@ pub fn extract_pdf_to_pages(
             image_count,
             text_sha256: word_sha256(text.as_bytes()),
             text,
+            text_spans: spans,
+            visible_character_count,
+            decoded_content_text_density_basis_points,
+            reading_order,
             extraction_method,
             confidence_basis_points,
             citation,
@@ -788,6 +937,17 @@ pub fn validate_pdf_ocr_observation(
         image_count: source_page.image_count,
         text: observation.text.clone(),
         text_sha256: text_sha256.clone(),
+        text_spans: text_spans(&source_page.identity.page_id, &observation.text)?,
+        visible_character_count: u64::try_from(
+            observation
+                .text
+                .chars()
+                .filter(|item| !item.is_whitespace())
+                .count(),
+        )
+        .map_err(|_| PdfExtractionError::ResourceLimit)?,
+        decoded_content_text_density_basis_points: None,
+        reading_order: Some(PdfReadingOrderObservation::ParserEmissionOrderUnverified),
         extraction_method: Some(PdfExtractionMethod::LocalOcr),
         confidence_basis_points: Some(observation.confidence_basis_points),
         citation: Some(PdfPageCitation {
@@ -908,6 +1068,22 @@ mod tests {
         assert_eq!(first.pages.len(), 2);
         assert_eq!(first.pages[0].identity.page_number, 1);
         assert!(first.pages[0].text.contains("Page one"));
+        assert_eq!(first.pages[0].text_spans.len(), 1);
+        assert_eq!(first.pages[0].text_spans[0].start_byte, 0);
+        assert_eq!(first.pages[0].visible_character_count, 7);
+        assert!(
+            first.pages[0]
+                .decoded_content_text_density_basis_points
+                .is_some()
+        );
+        assert_eq!(
+            first.pages[0].reading_order,
+            Some(PdfReadingOrderObservation::ParserEmissionOrderUnverified)
+        );
+        assert!(first.limitations.iter().any(|item| {
+            item.reason_code == "pdf.page.reading-order-unverified"
+                && !item.blocks_complete_extraction
+        }));
         let citation = first.pages[1].citation.as_ref().expect("citation");
         assert!(citation.exact_page);
         assert!(!citation.exact_region);
@@ -927,14 +1103,14 @@ mod tests {
             media_type: PDF_MEDIA_TYPE.to_owned(),
             source_sha256: word_sha256(&source),
             source_path: path(),
-            maximum_sections: 3,
+            maximum_sections: 4,
             maximum_output_bytes: 1_024,
         };
         let extraction = PdfStructuredSourceExtractor
             .extract(&request, &source, &mut || false)
             .expect("structured extraction");
         assert_eq!(extraction.format, StructuredSourceFormat::Pdf);
-        assert_eq!(extraction.sections.len(), 3);
+        assert_eq!(extraction.sections.len(), 4);
         assert_eq!(
             extraction.sections[0].kind,
             StructuredSourceSectionKind::Document
@@ -950,6 +1126,16 @@ mod tests {
                 .source_part
                 .starts_with("object-")
         );
+        assert_eq!(
+            extraction.sections[2].parent_section_id.as_deref(),
+            Some(extraction.sections[1].section_id.as_str())
+        );
+        assert_eq!(extraction.sections[2].content, "Page one\n");
+        assert_eq!(extraction.sections[2].provenance.start_byte, Some(0));
+        assert_eq!(
+            extraction.sections[2].provenance.end_byte_exclusive,
+            Some(9)
+        );
         assert!(extraction.warnings.iter().any(|warning| {
             warning.reason_code == "pdf.page.scanned-candidate-ocr-required"
                 && warning.original_remains_authoritative
@@ -959,6 +1145,13 @@ mod tests {
         assert!(!extraction.filesystem_effect_performed);
         assert!(!extraction.network_access_performed);
         assert!(!extraction.execution_performed);
+
+        let mut constrained = request;
+        constrained.maximum_sections = 3;
+        assert_eq!(
+            PdfStructuredSourceExtractor.extract(&constrained, &source, &mut || false),
+            Err(StructuredSourceExtractionError::ResourceLimit)
+        );
     }
 
     #[test]
@@ -982,6 +1175,42 @@ mod tests {
         assert_eq!(
             PdfStructuredSourceExtractor.extract(&request, &source, &mut || true),
             Err(StructuredSourceExtractionError::Cancelled)
+        );
+    }
+
+    #[test]
+    fn structured_adapter_quarantines_active_or_external_pdf_actions() {
+        let source = pdf(&[Some("bounded")], &[]);
+        let mut document = Document::load_mem(&source).expect("load fixture");
+        let action_id = document.add_object(dictionary! {
+            "Type" => "Action",
+            "S" => "JavaScript",
+            "JS" => Object::string_literal("never executed"),
+        });
+        let root_id = document
+            .trailer
+            .get(b"Root")
+            .and_then(Object::as_reference)
+            .expect("catalog");
+        document
+            .get_object_mut(root_id)
+            .and_then(Object::as_dict_mut)
+            .expect("catalog dictionary")
+            .set("OpenAction", action_id);
+        let mut active = Vec::new();
+        document.save_to(&mut active).expect("save active fixture");
+        let request = StructuredSourceExtractionRequest {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            source_id: "pdf-source-active".to_owned(),
+            media_type: PDF_MEDIA_TYPE.to_owned(),
+            source_sha256: word_sha256(&active),
+            source_path: path(),
+            maximum_sections: 3,
+            maximum_output_bytes: 1_024,
+        };
+        assert_eq!(
+            PdfStructuredSourceExtractor.extract(&request, &active, &mut || false),
+            Err(StructuredSourceExtractionError::Quarantined)
         );
     }
 
