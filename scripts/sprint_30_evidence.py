@@ -21,12 +21,9 @@ SOURCE_PATHS: Final = (
     "capabilities/knowledge/src/lib.rs",
     "capabilities/knowledge/src/semantic.rs",
     "capabilities/knowledge/src/semantic_benchmark.rs",
-    "shells/host/src/knowledge_workflow_runtime.rs",
     "docs/architecture/optional-local-semantic-retrieval.md",
     "docs/verification/sprint-30-local-results.md",
-    "scripts/knowledge_sprint_boundary_review.py",
     "scripts/sprint_30_evidence.py",
-    "tests/test_knowledge_sprint_boundary_review.py",
     "tests/test_sprint_30_evidence.py",
 )
 COMMANDS: Final = (
@@ -44,7 +41,6 @@ COMMANDS: Final = (
     ("dependency-rules", ("python3", "scripts/dependency_rules.py")),
     ("build-contract", ("python3", "scripts/build_contract.py")),
     ("strict-local-source", ("python3", "scripts/strict_local_source_audit.py")),
-    ("knowledge-review", ("python3", "scripts/knowledge_sprint_boundary_review.py")),
     ("supply-chain", ("python3", "scripts/supply_chain.py")),
     ("evidence-tests", ("python3", "-m", "unittest", "tests.test_sprint_30_evidence")),
 )
@@ -57,6 +53,8 @@ BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-29-BLOCKED", "owner": "29.1"},
     {"code": "REAL-APPROVED-SEMANTIC-PROFILES-ABSENT", "owner": "30.1.1.1"},
     {"code": "REAL-HARDWARE-COMPARATIVE-BENCHMARK-ABSENT", "owner": "30.1.1.8"},
+    {"code": "APPLICATION-SEMANTIC-INTEGRATION-ABSENT", "owner": "30.1.3.4"},
+    {"code": "INDEPENDENT-SPRINT-30-REVIEW-ABSENT", "owner": "30.1.3.5"},
 ]
 IMPLEMENTED: Final = {
     "exact_embedding_and_optional_reranker_admission_contract": True,
@@ -68,7 +66,6 @@ IMPLEMENTED: Final = {
     "deterministic_lexical_fallback": True,
     "remote_attempt_rejection_receipts": True,
     "four_mode_integer_comparison_gate": True,
-    "application_semantic_integration": True,
     "synthetic_contract_fixture_only": True,
     "real_approved_embedding_profile": False,
     "real_approved_reranker_profile": False,
@@ -152,8 +149,8 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "upstream_sprint_29_gate": False,
             "real_approved_semantic_profiles": False,
             "real_hardware_comparative_benchmark": False,
-            "application_semantic_integration": local_pass,
-            "independent_review": local_pass,
+            "application_semantic_integration": False,
+            "independent_review": False,
         },
         "blockers": BLOCKERS,
         "summary": {
@@ -199,13 +196,11 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     verification = report.get("verification_evidence", {})
     for field in (
         "upstream_sprint_29_gate", "real_approved_semantic_profiles",
-        "real_hardware_comparative_benchmark",
+        "real_hardware_comparative_benchmark", "application_semantic_integration",
+        "independent_review",
     ):
         if verification.get(field) is not False:
             failures.append(f"verification overclaim: {field}")
-    for field in ("application_semantic_integration", "independent_review"):
-        if verification.get(field) is not True:
-            failures.append(f"missing local verification: {field}")
     for field in (
         "real_approved_embedding_profile", "real_approved_reranker_profile",
         "real_runtime_generated_vectors", "real_hardware_benefit_benchmark",

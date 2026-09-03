@@ -34,7 +34,7 @@ class Sprint30EvidenceTests(unittest.TestCase):
         self.assertTrue(value["implemented_contracts"]["four_mode_integer_comparison_gate"])
         self.assertFalse(value["implemented_contracts"]["semantic_release_enabled"])
 
-    def test_model_benchmark_remote_write_release_and_missing_local_proof_fail(self) -> None:
+    def test_model_benchmark_integration_remote_write_and_release_overclaims_fail(self) -> None:
         mutations = (
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
             lambda value: value["summary"].update({"semantic_release_enabled": True}),
@@ -48,9 +48,8 @@ class Sprint30EvidenceTests(unittest.TestCase):
                 {"real_hardware_comparative_benchmark": True}
             ),
             lambda value: value["verification_evidence"].update(
-                {"application_semantic_integration": False}
+                {"application_semantic_integration": True}
             ),
-            lambda value: value["verification_evidence"].update({"independent_review": False}),
             lambda value: value["implemented_contracts"].update(
                 {"real_approved_embedding_profile": True}
             ),
