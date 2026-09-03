@@ -38,7 +38,7 @@
       ],
       "exit_code": 0,
       "id": "acquisition-review-contracts",
-      "output_sha256": "79daebfaf4e08538fc1bda14ed8ac12d0a38a3973734fa0e07e0be95bd435947"
+      "output_sha256": "83f5a0abb26f2d15abfff39ab1b6c0e16d4e41d1bbfe1aae49f0bcd720871f01"
     },
     {
       "argv": [
@@ -50,7 +50,7 @@
       ],
       "exit_code": 0,
       "id": "acquisition-review-vscode",
-      "output_sha256": "2e0ce3710b8a04c4607e555cdf62619edaa10a10aa194e62964cf9a97eab3392"
+      "output_sha256": "78731a7950c6d8c1b10632493060841f88eeff9f2a2d1cfedce98f16acb061f5"
     },
     {
       "argv": [
@@ -62,7 +62,7 @@
       ],
       "exit_code": 0,
       "id": "installer-runtime-contracts",
-      "output_sha256": "1992cc28c3a3f4c9d39ba9c0e71f71be31cbd78def20443afb97a12d9ab837ba"
+      "output_sha256": "502e1b78ce5a9aad7b8330f4c2c989382707f44440daec68ec85b5bab220d559"
     },
     {
       "argv": [
@@ -74,9 +74,9 @@
         "tests.test_linux_package_lifecycle_evidence",
         "tests.test_linux_docker_prerequisite_evidence"
       ],
-      "exit_code": 1,
+      "exit_code": 0,
       "id": "installer-package-contracts",
-      "output_sha256": "45ba6ab0ae69dd628fead6313b973bf7384ffb11c2e08ff790e27f167d5ea573"
+      "output_sha256": "74252a207a000678ca7f29a6f5da23a49d41036cf86a353c0811debd2b48793b"
     },
     {
       "argv": [
@@ -87,7 +87,7 @@
       ],
       "exit_code": 0,
       "id": "candidate-inventory-contracts",
-      "output_sha256": "667e20b3716b92a1c5684b7d1a271ffd03eab25311d0e7214ae1bb94527c184b"
+      "output_sha256": "6f8a987ff9d3dcb6541362dcfb63b18ec406e6a8b06eb1797ce44daef9fbd18f"
     },
     {
       "argv": [
@@ -152,7 +152,7 @@
       "RV-41"
     ]
   },
-  "source_revision": "642e13d500aaaaf04a57bdebd47c8361e42a60c1",
+  "source_revision": "6ddc21051873669d9410eb19b1f9f8f02528d518",
   "source_sha256": {
     "kernel/contracts/src/model_discovery.rs": "a5b3f600a3e7af159c1e4beff860db1f1164fd1e35376823728b791248cee1c0",
     "kernel/engine/src/model_discovery.rs": "e905afeeefbc58b634cbf7f07f242e4cf0642f1b744831a4e377b8c04dfcfb81",
@@ -165,46 +165,46 @@
     "platforms/linux-inference/src/model_installer_process.rs": "788e74cfbea178027079422b3331b80690edadee05f0f92c4de74407c3872757",
     "platforms/linux-inference/tests/process_boundary.rs": "fce1e4b82e0f2753362db51fdad99663dc9d188e6b732d420aea3dd7a4dabc75",
     "scripts/model_candidate_inventory.py": "b96087dc12d4ff7d63ed3a65b29b1e1131b3a81428e4065d429e51ad2f912370",
-    "scripts/package_candidate.py": "c68133f34c86a9ac91adb3319a793fee284fa2488bb7eaf79a0b1144e6bd2151",
-    "scripts/package_lifecycle.py": "0e55defb25dbe5af867b772c883e7f25f82240c8a40a6fddef1ebfae1745438f",
+    "scripts/package_candidate.py": "69f61c12e29b06260b3c60d19c7780572f59c56ee3110a550c284550840243ac",
+    "scripts/package_lifecycle.py": "228cce404328ce93738b6d226bb564bad69fe2e92ac52f2a68c320b0557096a2",
     "scripts/sprint_14_evidence.py": "93a78e6096e88c86fd946f4cd638334bbae7ffb97f44521f4e69885d3e70d729",
-    "shells/vscode/src/model_discovery.ts": "560e9e4cf8d7f50494a6b8eda98b803fed65e8d57911dec7965dfde0359db540",
-    "shells/vscode/src/provider.ts": "9c0824496c1e8e62e2fc7e98506c8568af927af75719331c5bdbe0b33f89a14e",
-    "shells/vscode/test/model_discovery.test.ts": "8fff497c0f9a5cb8adb52934cd7a2672741726b83fce28de6afde3c05626e31e",
-    "shells/vscode/test/provider.test.ts": "b6a83e7ae7d7b53cdec383f08786babc75a63a4000a314158147d810f637f8ac",
+    "shells/vscode/src/model_discovery.ts": "b91246b419af178f730d8807ea73ca6f386fad083344004f05dc4eb73d9b9113",
+    "shells/vscode/src/provider.ts": "211b05b5dcfb52c45756a7c3632f359995160c0a46440a45895433158ecabb58",
+    "shells/vscode/test/model_discovery.test.ts": "2f7c54e46cac921d8af0bc6b0748be39f64be79afe992fda67c38db55f87e417",
+    "shells/vscode/test/provider.test.ts": "74614b6deb26e4ba5f17ece25b6c58a202f93447bc33f20ab44d0c802b89236a",
     "tests/test_model_candidate_inventory.py": "2f6f242717606512d646b0713a71dd153dc43704978ae4b255660c52a047606f",
     "tests/test_sprint_14_evidence.py": "794134fcd57fbea6f0a3e9ce2214d0fe64c217a005b9edae5e5e7e5a76e51c48"
   },
   "stories": [
     {
-      "acquisition_review_facts_displayed": false,
-      "atomic_lifecycle_contract_implemented": false,
-      "bounded_download_contract_implemented": false,
+      "acquisition_review_facts_displayed": true,
+      "atomic_lifecycle_contract_implemented": true,
+      "bounded_download_contract_implemented": true,
       "end_user_effect_process_protocol_active": false,
-      "installer_packaged": false,
+      "installer_packaged": true,
       "live_acquisition_capture": false,
-      "local_import_contract_implemented": false,
+      "local_import_contract_implemented": true,
       "macos_evidence": false,
-      "preflight_contract_implemented": false,
-      "preflight_process_protocol_active": false,
+      "preflight_contract_implemented": true,
+      "preflight_process_protocol_active": true,
       "production_package_signed": false,
-      "review_ui_implemented": false,
-      "status": "BLOCKED",
+      "review_ui_implemented": true,
+      "status": "PASS-LOCAL-PREFLIGHT-BLOCKED-EFFECTS-AND-PLATFORMS",
       "story_id": "14.1"
     },
     {
       "exact_artifact_profiles_admitted": false,
-      "intake_mutations_passed": false,
+      "intake_mutations_passed": true,
       "reference_machine_preflight_complete": false,
-      "role_matrix_reconciled": false,
-      "source_population_reconciled": false,
-      "status": "BLOCKED",
+      "role_matrix_reconciled": true,
+      "source_population_reconciled": true,
+      "status": "PASS-SOURCE-INVENTORY-BLOCKED-EXACT-ARTIFACT-PREFLIGHT",
       "story_id": "14.2"
     }
   ],
   "summary": {
     "automatic_fallback": false,
-    "local_contract_passed": false,
+    "local_contract_passed": true,
     "product_activation": false,
     "release_approval": false,
     "sprint_status": "BLOCKED"
