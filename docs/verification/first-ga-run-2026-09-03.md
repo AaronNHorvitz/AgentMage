@@ -1869,3 +1869,46 @@ retaining Story 49.1's exact upstream, model, integration, platform, launcher, a
 
 Exact next action: return to Story 49.1's unblocked authenticated product-routing composition and
 native routing audit view before advancing to Sprint 50; retain every exact external tuple above.
+
+## Batch 57 — Sprint 49 authenticated routing and native audit composition
+
+### Completed
+
+- Closed 2 TASKS rows: Sub-task 49.1.2.4 and Story AC 49.1.AC2. The kernel-owned
+  product service now verifies an exact actor/session/assertion envelope, owns the immutable
+  profile-catalog generation, runs the existing measured router, and appends a content-minimized
+  native audit view with the exact selected tuple, all candidate rationales/disagreements,
+  policy/benchmark/catalog generations, and receipt digest. Authentication failure emits no route
+  or audit; the current empty catalog emits one visible no-profile decision. Promotions: 0.
+  Substitutions: 0. Enabled profiles: 0. Cumulative closed items: 139.
+- Commits: `a3c7fc56` (authenticated service, audit projection, tests, review, architecture, and
+  prior formatting normalization), `94885848` (truth and closures), and `0fd721c5`
+  (composition review, supply chain, traceability, contract evidence, and affected Sprint 3
+  carrier evidence). Commits: 3. Commits per closed item: 1.50. Review pins advanced: 0;
+  complete 20-gate `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 10/10 measured product-routing tests, 9/9 composition/boundary/artifact/
+  corpus tests, strict kernel Clippy, targeted Markdown lint, requirements-current, traceability,
+  contract-boundary, contract-evidence, supply-chain, configuration-startup,
+  component-inventory, and Story 3.1 security checks pass. Supply-chain builds: 1; the kernel
+  workspace edit changed the expected SBOM carrier. Evidence regeneration passes: 1, including
+  all 3 affected Sprint 3 carrier reports. Recovery iterations: 2. `cargo fmt --check` exposed a
+  prior Batch 56 assertion layout plus the new service layout; `cargo fmt` normalized both without
+  semantic change. The first compiled service revision named a nonexistent hash helper;
+  `sha256_serialize` was corrected to the existing `canonical_sha256`, after which all tests and
+  Clippy passed. The full chain ran 688.619 seconds and stopped only at the retained Story 6.1
+  rootless-Podman prerequisite after every preceding gate passed. Recorded gate wall seconds: 689.
+- Exact remaining installed-interface composition dependency: `blocked: awaiting authenticated
+  installed-interface transport to the kernel product-routing service`;
+  `substitution_set=empty`. This is unblocked source work and remains the next gate.
+- Exact approved-profile/live-benchmark, native-platform, trusted-launcher, and manual-fuzz tuples
+  remain unchanged from Batch 55. Exact upstream blocker remains `blocked: awaiting Sprint 48 gate
+  closure`; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: compose the authenticated installed-interface adapter to the kernel product-
+routing service without enabling a model, then re-evaluate the remaining Sprint 49 rows.
