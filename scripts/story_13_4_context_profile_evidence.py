@@ -11,6 +11,15 @@ import sys
 from pathlib import Path
 from typing import Any, Final
 
+try:
+    from scripts.story_13_4_profile_campaign import OUTPUT_PATH as CAMPAIGN_PATH
+    from scripts.story_13_4_profile_campaign import check as check_campaign
+    from scripts.story_13_4_profile_campaign import write as write_campaign
+except ModuleNotFoundError:  # Direct execution places scripts/ rather than the repository on sys.path.
+    from story_13_4_profile_campaign import OUTPUT_PATH as CAMPAIGN_PATH
+    from story_13_4_profile_campaign import check as check_campaign
+    from story_13_4_profile_campaign import write as write_campaign
+
 
 ROOT: Final = Path(__file__).resolve().parents[1]
 EVIDENCE_DIR: Final = ROOT / "artifacts/sprints/sprint-13/story-13.4"
@@ -38,9 +47,15 @@ SOURCE_PATHS: Final = (
     "schemas/model/orchestration-profile.schema.json",
     "docs/architecture/model-context-orchestration-profiles.md",
     "scripts/story_13_4_context_profile_evidence.py",
+    "scripts/story_13_4_profile_campaign.py",
     "tests/test_story_13_4_context_profile_evidence.py",
     "tests/test_model_orchestration_profile_schema.mjs",
     "artifacts/sprints/sprint-13/local-evidence-report.json",
+    "fixtures/artifact-admission/v1/context-accounting-manifests.json",
+    "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json",
+    "artifacts/sprints/sprint-13/story-13.3/muse-profile-evaluation.json",
+    "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json",
+    "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json",
 )
 TRUTH: Final = {
     "checked_context_allocation_contract_complete": True,
@@ -55,6 +70,7 @@ TRUTH: Final = {
     "muse_profile_disposition": "REJECTED",
     "gemma_profile_disposition": "REJECTED",
     "live_admitted_profile_corpus_complete": False,
+    "exact_tuple_campaign_ledger_complete": True,
     "cross_platform_profile_campaign_complete": False,
     "story_completion_claim": False,
     "sprint_completion_claim": False,
@@ -87,10 +103,11 @@ def expected_report() -> dict[str, Any]:
             "record-unallocated-remainder",
         ],
         "model_invariant_controls": ["policy", "grant", "approval", "side-effect", "retry", "verifier", "budget", "completion"],
-        "artifacts": [artifact(path) for path in SOURCE_PATHS] + [artifact(RAW_PATH.relative_to(ROOT).as_posix())],
+        "artifacts": [artifact(path) for path in SOURCE_PATHS]
+        + [artifact(CAMPAIGN_PATH.relative_to(ROOT).as_posix()), artifact(RAW_PATH.relative_to(ROOT).as_posix())],
         "product_truth": dict(TRUTH),
         "remaining_work": [
-            "run the artifact/workflow corpus and full metric ledger for the first independently admitted profile",
+            "run the retained corpus against the first independently admitted live profile",
             "retain matched native cross-platform profile evidence without borrowing rejected Muse or Gemma results",
             "complete applicable RV-13, RV-14, RV-16, and RV-41 installed-profile slices",
         ],
@@ -147,6 +164,10 @@ def main() -> int:
     args = parser.parse_args()
     failures = validate_sources() + validate_upstream()
     if args.write:
+        try:
+            write_campaign()
+        except ValueError as error:
+            failures.append(str(error))
         raw, returncode = capture()
         EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
         RAW_PATH.write_text(raw, encoding="utf-8")
@@ -160,7 +181,7 @@ def main() -> int:
         except (OSError, json.JSONDecodeError) as error:
             failures.append(f"cannot read retained evidence: {error}")
         else:
-            failures += validate_raw(raw) + validate_report(report)
+            failures += check_campaign() + validate_raw(raw) + validate_report(report)
     if failures:
         print("\n".join(failures), file=sys.stderr)
         return 1

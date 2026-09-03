@@ -23,6 +23,15 @@ never inferred across a model family. Compilation never enables automatic fallba
 orchestration evidence leaves a candidate disabled unless its exact underlying model profile is
 already enabled and has an approved or explicitly degraded lifecycle.
 
+The retained profile campaign ledger evaluates the complete synthetic context and workflow
+contract under `model-profile-fixture-a`. It records eight exact context manifests and eleven
+workflow cases with extraction, coverage, omission, malformed-call, repair, tool-call,
+completion, attempt, diagnosis, cancellation, logical-latency, and no-model-process memory
+measurements. Muse and both Gemma candidates are separate prelaunch-rejected tuples: their
+existing quality, runtime, and resource evidence remains linked by digest, profile execution
+metrics are null, and their results are never aggregated. The future-admitted-profile set is
+explicitly empty, automatic fallback is disabled, and no profile is enabled.
+
 The closed machine-readable contract is
 [`orchestration-profile.schema.json`](../../schemas/model/orchestration-profile.schema.json). A
 context-plan or orchestration schema change changes its digest and requires new exact evidence;
