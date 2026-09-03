@@ -113,10 +113,11 @@ def checks(sprint: int, sources: dict[str, bytes]) -> dict[str, bool]:
             for token in (b"compose_memory_backup_plan", b"RestoreLastGood")
         ),
         "simultaneous_edits_preserve_conflict_bundle": all(
-            token in combined for token in (b"ConflictPreserved", b"Conflicts")
+            token in combined for token in (b"PreserveConflict", b"Conflicts")
         ),
         "portable_export_is_digest_bound": all(
-            token in combined for token in (b"write_portable_export", b"read_portable_export")
+            token in combined
+            for token in (b"compose_portable_memory_export", b"expected_sha256")
         ),
     }
 
