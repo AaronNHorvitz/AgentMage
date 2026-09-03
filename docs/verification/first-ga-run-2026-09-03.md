@@ -1192,3 +1192,59 @@ retaining Sprint 33's exact inherited upstream blocker and all v0.2 platform/rel
 
 Exact next action: continue at Sprint 35's first unblocked local or gate-owned review row while
 retaining Sprint 34's exact upstream blockers and all platform/release tuples.
+
+## Batch 45 — Sprint 35 exact-preimage transaction review
+
+### Completed
+
+- Closed 4 TASKS rows: Task 35.1.3, Sub-task 35.1.3.4, Story AC 35.1.AC1, and Sprint AC
+  35.AC5. The gate-owned automated transaction review binds the 13 required security mappings,
+  transition/property results, three fail-closed attack families, exact preimage/postimage hashes,
+  restoration material and plan, short-lived single-use grant behavior, and stale invalidation.
+  It enables no mutation and makes no human-review claim. Story 35.1 and Sprint 35 remain open
+  only because Sprint 34 is not a passing upstream dependency. Promotions: 0. Substitutions: 0.
+- Commits: `e1242481` (transaction review implementation and initial aggregate wiring),
+  `69f8d4e7` (bind review to the actual single-use grant contract), `0b80bd43` (preserve the
+  immutable retained aggregate contract), and `756aef28` (transaction review, checklist,
+  traceability, and contract evidence). Commits: 4. Commits per closed item: 1.00. Review pins
+  advanced: 0; complete `REVIEWED_PATHS` intersection: empty.
+
+### Validation and self-recovery
+
+- Focused transaction/evidence tests: 5/5; transaction review, targeted Markdown lint,
+  requirements-current 45/45, traceability, contract-boundary, and contract-evidence gates pass.
+  Supply-chain builds: 1. Planned evidence regeneration passes: 1. Targeted recovery
+  regenerations: 1. The first review asserted a nonexistent `permitted_uses` field; it was aligned
+  to the real kernel `derive_operation` single-use contract. Initial aggregate wiring was removed
+  because the immutable legacy Sprint 35 generator embeds `docs:check` and cannot truthfully emit
+  a passing current aggregate inside the retained Podman-blocked host; the historical aggregate
+  remains unchanged and the new separately hash-bound review carries current closure evidence.
+  The full chain ran 689 seconds and stopped only at the retained Story 6.1 rootless-Podman
+  prerequisite after every preceding gate passed. Recorded gate wall seconds: 689.
+- Exact Sprint 35 upstream blocker: `blocked: awaiting Sprint 34 gate closure`; its dependencies
+  retain `blocked: host change required — run the strict-local worker and source-policy renewal
+  outside the restricted filesystem sandbox where /usr/bin/systemd-run, /usr/bin/systemctl,
+  /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities, then run python3
+  scripts/sprint_31_evidence.py --write --source-revision HEAD`; `substitution_set=empty`.
+- Exact inherited clean-upgrade blocker: `BLOCKED_EXTERNAL(platform=Fedora and Ubuntu graphical
+  desktops, Windows 11 x64 KVM guest, and physical supported MacBook; artifact=exact signed v0.1
+  and candidate v0.2 packages, installed native Visual Studio Code and CLI surfaces, and one
+  qualified exact model/runtime profile; action=humans perform clean standard-user upgrade,
+  offline, privacy, recovery, accessibility, downgrade, rollback matrix every platform and
+  transfer untouched evidence; credential=production package trust roots and Windows image source
+  if required; payment=Windows license if required)`; `substitution_set=empty`.
+- Exact inherited release blocker: `BLOCKED_EXTERNAL(platform=release signing ceremony and every
+  v0.2 reference platform; artifact=production signing key, independently distributed trust root,
+  exact signed v0.2 packages, and completed Sub34.1.3.4 migration bundle; action=authorized release
+  owner provisions signer/trust root and independent human reviews complete security bundle,
+  signs release decision, transfers immutable decision receipt; credential=production signing
+  identities; payment=platform-signing fees if required)`; `substitution_set=empty`.
+- Governance blockers: `blocked: awaiting Decision DRAFT-0049-knowledge-privacy-governance` and
+  `blocked: awaiting Decision DRAFT-0050-knowledge-records-governance`;
+  `substitution_set=empty` for both.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue at Sprint 36's first unblocked local or gate-owned review row while
+retaining Sprint 35's exact upstream dependency blocker and all inherited tuples.
