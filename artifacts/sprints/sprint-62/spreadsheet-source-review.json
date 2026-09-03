@@ -6,26 +6,29 @@
     "hidden_and_active_content_policy_is_explicit_and_non_executing": true,
     "malicious_and_unsupported_content_remains_bounded_and_inert": true,
     "parser_and_projection_resource_ceilings_fail_closed": true,
+    "runtime_lifecycle_retention_restart_and_exact_token_accounting_are_closed": true,
+    "runtime_service_binds_manifests_sheets_ranges_search_context_and_native_tools": true,
     "shared_trait_covers_xlsx_csv_json": true
   },
   "independent_human_review_performed": false,
   "limitations": [
     "This is gate-owned automated review, not a human-review claim.",
     "It proves authority-free parser projection and deterministic local tests only.",
-    "Native retrieval services, installed-client parity, live models, and physical-platform campaigns remain absent.",
+    "Installed-client parity, live models, and physical-platform campaigns remain absent.",
     "It grants no model, interface, platform, integration, milestone, or release support."
   ],
   "record_type": "agentmage-sprint-62-spreadsheet-source-review",
   "review_class": "gate-owned-automated-spreadsheet-source-contract-review",
   "reviewer_identity": "scripts/sprint_62_spreadsheet_source_review.py",
   "schema_version": 1,
-  "source_revision": "60e1b9ec0e6795d37bb1b4220566d0c8d03d91f9",
+  "source_revision": "bd46574194734f00331f6aa019a53d4522669078",
   "source_sha256": {
     "capabilities/knowledge/src/json_data.rs": "ca417a4b54bc0e5f8a34a4566330b3c1f575c7c12c20f0b586e4c1037adf8afa",
     "capabilities/knowledge/src/spreadsheet_ooxml.rs": "d064a6fa1ab16a3a0a7ef3594db8fe5a58fc83a1bb5f81a98f3b0dc0cba0b528",
     "capabilities/knowledge/src/spreadsheet_source.rs": "f25c1572f99ca70c5d3d52e219744bc23f603814d3bb26c73641065b35ffdb64",
     "capabilities/knowledge/src/tabular.rs": "7ec4a9df9e8a6ca4f00913c07b54dba32b715274e9c09160b08f632db1f45a50",
-    "kernel/contracts/src/structured_source.rs": "77af2ee3ad318ca05b83db62ab722ed320d1a2a49d47edb752aafff8a1ae7370"
+    "kernel/contracts/src/structured_source.rs": "77af2ee3ad318ca05b83db62ab722ed320d1a2a49d47edb752aafff8a1ae7370",
+    "shells/host/src/spreadsheet_source_artifact.rs": "b009e02fc96fd65a6d2217de26ae0683401bf69cd3aa64f29d19e43ec6bbaf62"
   },
   "status": "PASS_LOCAL_SPREADSHEET_SOURCE_REVIEW"
 }

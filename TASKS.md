@@ -7785,11 +7785,21 @@ provenance and honest formula, date, hidden-sheet, and size behavior.
         accounted working-memory, elapsed-millisecond, and cooperative-cancellation ceilings. Focused
         tests force coordinate, string, memory, elapsed-time, cancellation, and output exhaustion and
         receive only closed resource, time, or cancellation errors.
-  - [ ] **Sub-task 62.2.2.2:** Emit source manifests, sheet summaries, selected ranges, lexical
+  - [x] **Sub-task 62.2.2.2:** Emit source manifests, sheet summaries, selected ranges, lexical
         indexes, exact `get_sheet`/range retrieval, context candidates, and content-addressed references
         through shared services and native tools.
-  - [ ] **Sub-task 62.2.2.3:** Implement restart, cache/parser invalidation, retention, deletion,
+        Evidence: the gate-owned
+        [spreadsheet source review](artifacts/sprints/sprint-62/spreadsheet-source-review.json)
+        binds digest-sealed source manifests, ordered sheet summaries, a content-free lexical index,
+        freshness-checked exact sheet/cell ranges, bounded context candidates, production prepared-source
+        dispatch, and content-addressed large-result references through the common native artifact tools.
+  - [x] **Sub-task 62.2.2.3:** Implement restart, cache/parser invalidation, retention, deletion,
         reattachment, and combined-artifact token accounting without storing a second workbook copy.
+        Evidence: the same review binds ephemeral versus policy-persisted retention to the existing
+        path-free runtime artifact reference, exact persisted restart, monotonic stale/released/deleted
+        transitions, projection clearing and reattachment, and multi-workbook accounting under one exact
+        counter implementation and tokenizer identity. The runtime-owned service retains the canonical
+        projection and content-free index only; it has no original-workbook byte field.
 - [ ] **Task 62.2.3 - Verify malicious and fidelity cases**
   - [ ] **Sub-task 62.2.3.1:** Test malformed ZIP/XML, traversal, bombs, macros, formulas, external
         links, hidden sheets, sparse dimensions, date systems, errors, Unicode, protected content,
