@@ -26,7 +26,11 @@ class KnowledgeSprintBoundaryReviewTests(unittest.TestCase):
             b"OperationalStoreKeyProvider EvidenceBundlePreview detect_secret_classes "
             b"external_delivery_attempted: false execute_conversation_command "
             b"trait ConversationKernel impl ConversationKernel for OperationalStore "
-            b"ConversationCommandContext::Resume ConversationCommandContext::Branch"
+            b"ConversationCommandContext::Resume ConversationCommandContext::Branch "
+            b"evidence-bound transition preview no apply authority "
+            b"SkillAuthorityCeiling::denied() executed: false SkillInfluenceReceipt conflicts "
+            b"proposed_write_count: 0 PlainWorkspaceSteward ObsidianVaultSteward "
+            b"ClientSurface::NativeChat ClientSurface::InteractiveCli"
         )
         with patch.object(review, "git_bytes", return_value=source):
             return review.expected(sprint, "a" * 40)

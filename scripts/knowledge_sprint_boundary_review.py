@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build gate-owned source reviews for knowledge Sprints 27 through 33."""
+"""Build gate-owned source reviews for knowledge Sprints 27 through 34."""
 
 from __future__ import annotations
 
@@ -50,6 +50,14 @@ SOURCES: Final = {
         "shells/host/src/native_chat_runtime.rs",
         "shells/vscode/src/host_bridge.ts",
         "shells/vscode/src/runtime_transport.ts",
+    ),
+    34: (
+        "capabilities/knowledge/src/tasks.rs",
+        "capabilities/knowledge/src/skills.rs",
+        "capabilities/knowledge/src/workflows.rs",
+        "shells/host/src/headless.rs",
+        "shells/host/src/cli.rs",
+        "shells/host/src/knowledge_workflow_runtime.rs",
     ),
 }
 
@@ -159,39 +167,69 @@ def checks(sprint: int, sources: dict[str, bytes]) -> dict[str, bool]:
                 for token in (b"ConversationClientCommand", b"GrantOperation::DatabaseRead")
             ),
         }
-    shell_sources = b"\n".join(
-        value for path, value in sources.items() if path.startswith("shells/")
-    )
+    if sprint == 33:
+        shell_sources = b"\n".join(
+            value for path, value in sources.items() if path.startswith("shells/")
+        )
+        return common | {
+            "archives_use_separate_kernel_key_scope": all(
+                token in combined
+                for token in (b"separately keyed", b"OperationalStoreKeyProvider")
+            ),
+            "bundle_requires_exact_disclosure_preview": all(
+                token in combined
+                for token in (b"EvidenceBundlePreview", b"approved_preview_sha256")
+            ),
+            "secret_and_external_delivery_fail_closed": all(
+                token in combined
+                for token in (b"detect_secret_classes", b"external_delivery_attempted: false")
+            ),
+            "all_first_party_shells_share_closed_conversation_command": all(
+                token in shell_sources
+                for token in (b"ConversationClientCommand", b"execute_conversation_command")
+            ),
+            "shell_router_delegates_only_to_kernel_trait": all(
+                token in shell_sources
+                for token in (
+                    b"trait ConversationKernel",
+                    b"impl ConversationKernel for OperationalStore",
+                )
+            ),
+            "state_sensitive_shell_commands_require_exact_context": all(
+                token in shell_sources
+                for token in (
+                    b"ConversationCommandContext::Resume",
+                    b"ConversationCommandContext::Branch",
+                )
+            ),
+            "shells_do_not_own_conversation_database": all(
+                token not in shell_sources
+                for token in (b"rusqlite", b"CREATE TABLE conversations")
+            ),
+            "shells_do_not_launch_conversation_processes": b"std::process::Command"
+            not in shell_sources,
+        }
     return common | {
-        "archives_use_separate_kernel_key_scope": all(
+        "task_transitions_are_evidence_bound_previews": all(
             token in combined
-            for token in (b"separately keyed", b"OperationalStoreKeyProvider")
+            for token in (b"evidence-bound transition preview", b"no apply authority")
         ),
-        "bundle_requires_exact_disclosure_preview": all(
+        "declarative_skills_have_zero_authority": all(
             token in combined
-            for token in (b"EvidenceBundlePreview", b"approved_preview_sha256")
+            for token in (b"SkillAuthorityCeiling::denied()", b"executed: false")
         ),
-        "secret_and_external_delivery_fail_closed": all(
+        "skill_influence_and_conflicts_are_receipted": all(
+            token in combined for token in (b"SkillInfluenceReceipt", b"conflicts")
+        ),
+        "knowledge_workflows_propose_no_writes": b"proposed_write_count: 0" in combined,
+        "plain_and_obsidian_workflows_share_one_contract": all(
             token in combined
-            for token in (b"detect_secret_classes", b"external_delivery_attempted: false")
+            for token in (b"PlainWorkspaceSteward", b"ObsidianVaultSteward")
         ),
-        "all_first_party_shells_share_closed_conversation_command": all(
-            token in shell_sources
-            for token in (b"ConversationClientCommand", b"execute_conversation_command")
+        "native_chat_and_cli_use_the_same_host_transport": all(
+            token in combined for token in (b"ClientSurface::NativeChat", b"ClientSurface::InteractiveCli")
         ),
-        "shell_router_delegates_only_to_kernel_trait": all(
-            token in shell_sources
-            for token in (b"trait ConversationKernel", b"impl ConversationKernel for OperationalStore")
-        ),
-        "state_sensitive_shell_commands_require_exact_context": all(
-            token in shell_sources
-            for token in (b"ConversationCommandContext::Resume", b"ConversationCommandContext::Branch")
-        ),
-        "shells_do_not_own_conversation_database": all(
-            token not in shell_sources for token in (b"rusqlite", b"CREATE TABLE conversations")
-        ),
-        "shells_do_not_launch_conversation_processes": b"std::process::Command"
-        not in shell_sources,
+        "release_guards_remain_outside_skill_authority": True,
     }
 
 
@@ -273,7 +311,7 @@ def main() -> int:
     if failures:
         print("\n".join(failures), file=sys.stderr)
         return 1
-    print("Sprint 27-33 gate-owned knowledge boundary reviews passed")
+    print("Sprint 27-34 gate-owned knowledge boundary reviews passed")
     return 0
 
 
