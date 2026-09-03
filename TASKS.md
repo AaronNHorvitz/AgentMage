@@ -4379,6 +4379,10 @@ where stable APIs allow it, with visible disclosure where native Chat cannot mat
 
 ### [ ] Sprint 24 - Manual Codex Handoff Boundary
 
+**Blocked:** all remaining rows inherit the exact installed Fedora VSIX, Windows 11 KVM image,
+physical MacBook, or restricted-host Sprint 24 aggregate tuples below; every
+`substitution_set=empty`.
+
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
 **Legacy roadmap source:** `S-021`, part 2 of 3.
@@ -4390,6 +4394,9 @@ where stable APIs allow it, with visible disclosure where native Chat cannot mat
 **Dependencies:** Sprint 23; legacy dependency record: Sprint 8 (legacy S-008) through Sprint 22 (legacy S-020).
 
 #### [ ] Story 24.1 - Manual Codex Handoff Boundary
+
+**Blocked:** Task 24.1.3 retains the exact installed Fedora VSIX and restricted-host Sprint 24
+aggregate tuples; `substitution_set=empty`.
 
 **User-facing value:** As an AgentMage user, maintainer, or reviewer, I need manual codex handoff boundary so that AgentMage delivers the following bounded outcome: Deliver the complete v0.1 workflow in native Visual Studio Code Chat and close every blocking release threshold.
 
@@ -4403,7 +4410,8 @@ where stable APIs allow it, with visible disclosure where native Chat cannot mat
   - [x] **Sub-task 24.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
   - [x] **Sub-task 24.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
 
-- [ ] **Task 24.1.3 - Verify and close the story**
+- [ ] **Task 24.1.3 - Verify and close the story** Blocked on Sub-tasks 24.1.3.2 and 24.1.3.4's
+  exact installed Fedora VSIX and restricted-host aggregate tuples; `substitution_set=empty`.
   - [x] **Sub-task 24.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
   - [ ] **Sub-task 24.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims. Partial local evidence: canonical source-level session composition, authenticated host transport, extension digest verification, the complete product effect boundary, and static zero-network checks pass; installed production-session activation and an installed native workflow remain absent.
         The Linux live-process denial campaign now executes all 14 prohibited delivery/interface
@@ -4420,10 +4428,13 @@ where stable APIs allow it, with visible disclosure where native Chat cannot mat
 ##### Story Acceptance Criteria
 
 - [x] **Story AC 24.1.AC1:** Given the approved dependencies and source requirements for `S-021-I06`, and `S-021-I07`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 24.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-021-I06`, and `S-021-I07`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent. Partial local evidence: deterministic canonical-session, kernel, host, socket, controller, static effect-boundary, and cancellation cases pass; installed production activation, installed-native, and live zero-egress cases remain absent.
+- [ ] **Story AC 24.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-021-I06`, and `S-021-I07`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent. Partial local evidence: deterministic canonical-session, kernel, host, socket, controller, static effect-boundary, cancellation, and live zero-egress cases pass; installed production activation and installed-native cases remain absent. Blocked on Sub-task 24.1.3.2's exact installed Fedora VSIX tuple; `substitution_set=empty`.
 - [x] **Story AC 24.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
 #### [ ] Story 24.2 - Handoff Disclosure and Staleness Warnings
+
+**Blocked:** Task 24.2.2 retains the exact installed Fedora VSIX, Windows 11 KVM image, and
+physical MacBook accessibility tuples; `substitution_set=empty`.
 
 **User-facing value:** As a user, I need to know exactly what a Codex handoff packet contains, what it excludes, whether it is stale, and that I alone decide whether to submit it outside AgentMage.
 
@@ -4435,7 +4446,8 @@ where stable APIs allow it, with visible disclosure where native Chat cannot mat
   - [x] **Sub-task 24.2.1.3:** Revalidate workspace, source hashes, citations, policy, and redaction immediately before final rendering; mark changed evidence stale and require regeneration rather than silently carrying it forward.
   - [x] **Sub-task 24.2.1.4:** Require explicit acknowledgment when a packet contains any permitted non-public or user-provided content, while continuing to block credentials, keys, prohibited data, hidden files, and unrelated context.
 
-- [ ] **Task 24.2.2 - Verify and close the story**
+- [ ] **Task 24.2.2 - Verify and close the story** Blocked on Sub-tasks 24.2.2.2 and 24.2.2.4's
+  exact installed Fedora, Windows-image, and physical-MacBook tuples; `substitution_set=empty`.
   - [x] **Sub-task 24.2.2.1:** Inject secret canaries, hidden files, stale citations, inferred claims, conflicting classifications, oversized excerpts, and prompt-injection requests to conceal disclosure; assert blocking or accurate visible treatment.
   - [ ] **Sub-task 24.2.2.2:** Attempt tab control, Chat population, clipboard writes, URI launches, local/raw-runtime delivery, network calls, and automatic submission through every handoff state; assert zero effect and one denial receipt per attempt. Partial local evidence: every prohibited action produces one content-free local denial receipt and the extension exposes no matching effect method; installed-native attempts remain absent.
         Live Linux process evidence now proves the complete 14-action denial family opens no socket
@@ -4443,6 +4455,10 @@ where stable APIs allow it, with visible disclosure where native Chat cannot mat
         `BLOCKED_EXTERNAL(platform=Fedora graphical desktop with installed native Visual Studio Code; artifact=current packaged AgentMage VSIX; action=human attempts every prohibited handoff action through each UI state and transfers the untouched denial transcript; substitution_set=empty)`.
   - [x] **Sub-task 24.2.2.3:** Compare disclosure preview, rendered packet, and packet manifest byte-for-byte for included content and hashes; assert no unpreviewed field or excerpt appears.
   - [ ] **Sub-task 24.2.2.4 - Product security evidence:** Extend `RV-08`, `RV-11`, and `RV-18`; map `SR-ACC-007`/`SR-ACC-008`, `SR-DAT-002`/`SR-DAT-003`, `SR-AI-004`/`SR-AI-008`/`SR-AI-010`, `SR-CIV-003`/`SR-CIV-004`/`SR-CIV-009`; retain previews, packet manifests, canary scans, staleness results, prohibited-action traces, and acknowledgments. Partial local evidence: source-bound previews, manifests, canary and injection matrices, drift tests, action receipts, acknowledgements, and explicit blockers are retained; native platform evidence and independent review remain absent.
+        Gate-owned review passes. Remaining platform evidence is
+        `BLOCKED_EXTERNAL(platform=Fedora graphical desktop with installed native Visual Studio Code; artifact=current packaged AgentMage VSIX; action=human runs the handoff keyboard/accessibility/security campaign and transfers untouched evidence; substitution_set=empty)`,
+        `BLOCKED_EXTERNAL(platform=Windows 11 x64 KVM guest; artifact=validly licensed exact Windows 11 x64 base image plus current packaged AgentMage VSIX; action=provide/admit the image and run the Windows campaign; substitution_set=empty)`, and
+        `BLOCKED_EXTERNAL(platform=physical supported MacBook; artifact=current packaged AgentMage VSIX; action=human runs the macOS VoiceOver/security campaign and transfers untouched evidence; substitution_set=empty)`.
 
 ##### Story Acceptance Criteria
 
@@ -4453,7 +4469,7 @@ where stable APIs allow it, with visible disclosure where native Chat cannot mat
 #### Sprint Acceptance Criteria
 
 - [x] **Sprint AC 24.AC1:** Every numbered implementation sub-task in Stories 24.1 and 24.2 is complete and linked to its source requirement or issue identity.
-- [ ] **Sprint AC 24.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
+- [ ] **Sprint AC 24.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence. Blocked on the exact installed Fedora VSIX, Windows-image, physical-MacBook, and restricted-host aggregate tuples above; `substitution_set=empty`.
 - [x] **Sprint AC 24.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
 - [x] **Sprint AC 24.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [x] **Sprint AC 24.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
