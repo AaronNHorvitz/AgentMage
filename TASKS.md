@@ -6477,7 +6477,7 @@ remains zero. Both implementation and artifact tasks, the verification task, Sto
 
 **Gate decision:** Sprint 49 is PASS only when Story 49.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
-#### [ ] Story 49.2 - Alternate Runtime and Protocol Adapter Evaluation
+#### [x] Story 49.2 - Alternate Runtime and Protocol Adapter Evaluation
 
 **User-facing value:** As a user, I need candidate runtimes evaluated against one exact contract
 so that convenience compatibility never creates unmeasured support or semantic loss.
@@ -6488,22 +6488,22 @@ so that convenience compatibility never creates unmeasured support or semantic l
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 49.2.1 - Build the adapter evaluation matrix**
-  - [ ] **Sub-task 49.2.1.1:** Inventory exact versions and protocol surfaces for llama.cpp, Ollama, LM Studio, vLLM, SGLang, TGI, Ray Serve LLM, KServe, OpenAI Responses-compatible, and Anthropic Messages-compatible candidates.
-  - [ ] **Sub-task 49.2.1.2:** Map each candidate's message parts, structured output, proposals, stream events, usage, cancellation, errors, health, concurrency, and version behavior to the canonical protocol.
-  - [ ] **Sub-task 49.2.1.3:** Record unsupported, lossy, unavailable, rejected, or candidate states without promoting a support matrix.
-- [ ] **Task 49.2.2 - Run exact parity and failure fixtures**
-  - [ ] **Sub-task 49.2.2.1:** Execute identical fake/local fixtures for field preservation, ordering, backpressure, cancellation, malformed events, resource limits, and typed error mapping where each runtime is available.
-  - [ ] **Sub-task 49.2.2.2:** Compare results by exact runtime/codec identity; quarantine semantic substitution and invalidate stale evidence after version change.
-- [ ] **Task 49.2.3 - Record disposition and limitations**
-  - [ ] **Sub-task 49.2.3.1:** Produce one disposition per adapter/version with raw evidence, gaps, remediation, platform qualification, and explicit non-support language.
-  - [ ] **Sub-task 49.2.3.2:** Re-run applicable `RV-54` and performance checks; retain no silent fallback and no enabled-route evidence.
+- [x] **Task 49.2.1 - Build the adapter evaluation matrix** Evidence: the closed [alternate-runtime matrix](model-profiles/routing/alternate-runtime-matrix-v1.json) inventories all 10 required candidate families and applies one canonical semantic map without activation authority.
+  - [x] **Sub-task 49.2.1.1:** Inventory exact versions and protocol surfaces for llama.cpp, Ollama, LM Studio, vLLM, SGLang, TGI, Ray Serve LLM, KServe, OpenAI Responses-compatible, and Anthropic Messages-compatible candidates. Evidence: llama.cpp is pinned to the existing `b10333` package identity; all nine unavailable families retain null exact versions and named protocol surfaces rather than invented implementations.
+  - [x] **Sub-task 49.2.1.2:** Map each candidate's message parts, structured output, proposals, stream events, usage, cancellation, errors, health, concurrency, and version behavior to the canonical protocol. Evidence: the matrix applies all 10 closed dimensions to each family as either `unverified` or `unavailable`; no compatible shape is represented as parity.
+  - [x] **Sub-task 49.2.1.3:** Record unsupported, lossy, unavailable, rejected, or candidate states without promoting a support matrix. Evidence: every candidate has an explicit unavailable or unqualified disposition, gaps, remediation, false platform qualification, false support, and false route state.
+- [x] **Task 49.2.2 - Run exact parity and failure fixtures** Evidence: the existing canonical gateway fake adapters and the matrix's exact coverage record retain eight deterministic contract-only cases while every named live candidate remains unavailable or unqualified.
+  - [x] **Sub-task 49.2.2.1:** Execute identical fake/local fixtures for field preservation, ordering, backpressure, cancellation, malformed events, resource limits, and typed error mapping where each runtime is available. Evidence: eight fake-adapter cases cover every named class plus version-change staleness; zero live candidates were available, and the report fixes live-candidate and supported-adapter counts to zero.
+  - [x] **Sub-task 49.2.2.2:** Compare results by exact runtime/codec identity; quarantine semantic substitution and invalidate stale evidence after version change. Evidence: exact candidate, family, version, and protocol-surface identity plus version, codec, and endpoint invalidation rules fail closed; unresolved candidates cannot borrow the pinned llama.cpp result.
+- [x] **Task 49.2.3 - Record disposition and limitations** Evidence: [`story-49-2-local-results.md`](docs/verification/story-49-2-local-results.md) and the immutable [evaluation report](artifacts/sprints/sprint-49/story-49.2/adapter-evaluation-report.json) retain the exact non-activating result and limitations.
+  - [x] **Sub-task 49.2.3.1:** Produce one disposition per adapter/version with raw evidence, gaps, remediation, platform qualification, and explicit non-support language. Evidence: the pinned candidate names its unverified live gaps; every unresolved candidate names missing exact-version and live evidence, and all 10 explicitly deny support, platform qualification, and routing.
+  - [x] **Sub-task 49.2.3.2:** Re-run applicable `RV-54` and performance checks; retain no silent fallback and no enabled-route evidence. Evidence: the local identity/no-silent-fallback slice passes, live performance remains `unavailable_no_live_candidate`, and the report binds zero enabled routes and false fallback.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 49.2.AC1:** Given an adapter candidate, when the canonical corpus runs, then each supported semantic is preserved and every gap or unavailable feature is explicit.
-- [ ] **Story AC 49.2.AC2:** Given a runtime, codec, or endpoint version change, when prior evidence is evaluated, then affected qualification becomes stale before use.
-- [ ] **Story AC 49.2.AC3:** Given a passing subset, when disposition is recorded, then it does not enable a model, route, platform, fallback, or release claim without all owning gates.
+- [x] **Story AC 49.2.AC1:** Given an adapter candidate, when the canonical corpus runs, then each supported semantic is preserved and every gap or unavailable feature is explicit. Evidence: no named candidate has a supported semantic; all 100 candidate-semantic cells are explicitly unverified or unavailable, and the fake canonical contract result is separate.
+- [x] **Story AC 49.2.AC2:** Given a runtime, codec, or endpoint version change, when prior evidence is evaluated, then affected qualification becomes stale before use. Evidence: the closed staleness policy invalidates version, codec, and endpoint changes, and mutation tests reject weakened invalidation.
+- [x] **Story AC 49.2.AC3:** Given a passing subset, when disposition is recorded, then it does not enable a model, route, platform, fallback, or release claim without all owning gates. Evidence: the report binds 10 candidates, 8 passing contract-only fake cases, zero live candidates, zero supported adapters, zero enabled routes, false silent fallback, and four explicit non-claim limitations.
 
 ### [ ] Sprint 50 - Coding Skills, Documentation, and v0.4 Release
 
