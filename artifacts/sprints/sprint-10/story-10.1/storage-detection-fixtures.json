@@ -31,12 +31,12 @@
   ],
   "private_user_data_used": false,
   "schema_version": 1,
-  "source_revision": "533db399909ffdbfa00d854901708117e42c6d5c",
+  "source_revision": "a98a1d33d60c4d4133a350b9328dde8fd4d451c3",
   "sources": [
     {
-      "bytes": 28618,
+      "bytes": 13105,
       "path": "Cargo.lock",
-      "sha256": "60eca43376919ca47740e494d7e44a2812aa77e06a0c188013e285a7dea1a19e"
+      "sha256": "39fb73de641cf10feba7302aa1832d0bfbce780bce66866ee880f5d6fef25d77"
     },
     {
       "bytes": 16738,
@@ -54,9 +54,9 @@
       "sha256": "4206984a315f69467d43bbb36c55f6b5253570d22ad5f86379cdd670f4f7f95e"
     },
     {
-      "bytes": 793,
+      "bytes": 568,
       "path": "platforms/linux/Cargo.toml",
-      "sha256": "a6ed075a2e40f2120402cb2db636e3029b4e2f2f4070b3e2d64be93c9c0c796a"
+      "sha256": "861ad77c20a65c12306d98e538e37360546337997dbc5f47c81f0af1d5838e1d"
     },
     {
       "bytes": 33278,
@@ -69,9 +69,9 @@
       "sha256": "95f46df9cf7b38cd955cd4ba1bc05e5e19d2bd7af3b75fad12e5b290ea145380"
     },
     {
-      "bytes": 18794,
+      "bytes": 10025,
       "path": "security/strict-local-source-policy.json",
-      "sha256": "8574bd444d2e7ebb3758c6725f02e6b94e59ae89c0ea29addae997195f425d87"
+      "sha256": "0df4751b09ce1e705871d68b01f5e4721f32924f57b6c2577b20a6639c727c19"
     },
     {
       "bytes": 3696,

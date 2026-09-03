@@ -36,12 +36,12 @@
   ],
   "private_user_data_used": false,
   "schema_version": 1,
-  "source_revision": "533db399909ffdbfa00d854901708117e42c6d5c",
+  "source_revision": "e75955ba962dfbf58dce67837fdbcf8dbd366b89",
   "sources": [
     {
-      "bytes": 28618,
+      "bytes": 13115,
       "path": "Cargo.lock",
-      "sha256": "60eca43376919ca47740e494d7e44a2812aa77e06a0c188013e285a7dea1a19e"
+      "sha256": "34daad7cbda9889ba42438a54c108f205d74bffc152c0eea22cf93cb843951af"
     },
     {
       "bytes": 4533,
@@ -64,14 +64,14 @@
       "sha256": "4206984a315f69467d43bbb36c55f6b5253570d22ad5f86379cdd670f4f7f95e"
     },
     {
-      "bytes": 793,
+      "bytes": 591,
       "path": "platforms/linux/Cargo.toml",
-      "sha256": "a6ed075a2e40f2120402cb2db636e3029b4e2f2f4070b3e2d64be93c9c0c796a"
+      "sha256": "68fecf58c3e9ccf056060099a901b7f80af29400f9a22a173a29d4e26848a9ac"
     },
     {
-      "bytes": 73417,
+      "bytes": 51093,
       "path": "platforms/linux/src/lib.rs",
-      "sha256": "18f4bba6155d03c31d600cb7fa5a815cb5190bca083314ea2c19735958df8335"
+      "sha256": "8025ebf7da4896d6e25db1b813dbc4d8e3396c57555f16c84b44286d8e99eaa5"
     },
     {
       "bytes": 33278,
@@ -89,9 +89,9 @@
       "sha256": "c06b72b56ce2c9b2a9923c239122d4d0c5f410b7e70bdacc472dbf41e2dd8258"
     },
     {
-      "bytes": 18794,
+      "bytes": 10025,
       "path": "security/strict-local-source-policy.json",
-      "sha256": "8574bd444d2e7ebb3758c6725f02e6b94e59ae89c0ea29addae997195f425d87"
+      "sha256": "c58099babd8af205816529fa7890b44e84cb5417195031a2e01e646d79bee456"
     },
     {
       "bytes": 3876,
