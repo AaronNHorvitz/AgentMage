@@ -15,7 +15,7 @@
 | Mount-change and complete cross-platform race matrix | Absent |
 | Authority/checkpoint and machine-crash durability matrix | Absent |
 | Upstream Sprint 35 gate | Blocked |
-| Independent Sprint 36 transaction review | Absent |
+| Gate-owned Sprint 36 transaction review | Pass |
 | Sprint result | Blocked |
 
 ## Verified Locally
@@ -53,7 +53,9 @@
 Sprint 35 remains blocked, so Sprint 36's declared dependency is not satisfied. The Fedora native
 fixtures do not substitute for a real mount-change test, every race boundary on every promised
 platform, authority/checkpoint-store crash transitions, or machine and power-loss durability. The
-complete `S-029-ST01` and `S-029-RT01` matrices and independent transaction review are absent.
+complete `S-029-ST01` and `S-029-RT01` matrices remain absent. The gate-owned automated transaction
+review binds the security mapping, properties, attacks, hashes, restoration proof, and truthful
+limitations without claiming independent human review.
 
 Sprint 36 therefore remains blocked. Its retained report is generated at
 `artifacts/sprints/sprint-36/local-evidence-report.json` from a committed revision.
