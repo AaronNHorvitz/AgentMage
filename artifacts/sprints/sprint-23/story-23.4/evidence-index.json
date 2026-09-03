@@ -163,7 +163,7 @@
     {
       "bytes": 3052,
       "path": "tests/test_story_23_4_evidence_index.py",
-      "sha256": "fd791be49366131b87012a8f541fe3d45cd155dba4a2f5b88a48c7fc71532784"
+      "sha256": "d01873d266f15359ba18d027d6be004fd135a9fd715373044de0a21fc5223134"
     },
     {
       "bytes": 4041,
@@ -177,7 +177,7 @@
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "3a511d70560652e3e9f7694d8f63c1b8a02abe3afac0e3a33a7ad2df525d0c64",
+  "index_sha256": "5cf5ec92d6703fe6f6e74d5c7479e940dda96ec2928d4cd29d4b86243abf5caf",
   "limitations": [
     "The installed host still lacks a production runtime factory and admitted local model.",
     "The source-level boundary-by-boundary failure matrix is complete; physical process faults remain outside this source campaign.",
@@ -481,7 +481,7 @@
   ],
   "record_type": "story_23_4_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "5d2a03285dbe6d2b7c86482a6ec8c35815a175aa",
+  "source_revision": "de45ced25182a61dda4d3fc299f79d797815a7b1",
   "story_id": "23.4",
   "summary": {
     "complete_count": 16,
