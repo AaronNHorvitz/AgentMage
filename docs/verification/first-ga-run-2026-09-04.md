@@ -995,3 +995,39 @@ are 763; write the required 750-item checkpoint after push.
 Exact next action: Story 95.3 is locally complete but remains dependency-blocked; continue Decision
 0021 ordering at Story 95.4 bounded multi-agent capability composition. Cumulative closures are
 776; write the required 775-item checkpoint after push.
+
+## Batch 99 — Story 95.4 bounded pod composition
+
+### Completed
+
+- Closed all 13 Story 95.4 TASKS rows: Task 95.4.1 and all 3 pod/role sub-tasks; Task 95.4.2
+  and both review/integration sub-tasks; Task 95.4.3 and both attack/recovery sub-tasks; and all
+  3 Story acceptance criteria. The non-enabling composition contract binds exact qualified roles,
+  admitted capabilities, separate work packets/grants/budgets/context/worktrees/evidence, distinct
+  reviewers, a five-worker ceiling, current single-agent/resource/verifier evidence, serialized
+  integration, preservation/block/fresh-reschedule recovery, and absent publication authority.
+  Enabled pods: 0. Native workers: 0. Promotions: 0. Substitutions: 0. Cumulative closed items: 789.
+- Commits: `d751b0c1` (pod-composition source, 60-case corpus, tests, truthful closures, and final
+  supply-chain carrier), `7de90c6d` (source-bound Story 95.4 report), and `3e309751` (one affected
+  downstream evidence regeneration pass). Commits including log: 4. Commits per closed item:
+  0.31. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across all 27 Batch 99
+  paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 7 Rust cases across pod composition and the existing scheduler, 3 artifact-
+  contract tests, 3 evidence mutation tests, strict kernel Clippy, format, Python compilation,
+  Markdown, 60 attack/recovery cases across 15 classes, supply-chain currentness, and product CI
+  passed. Supply-chain builds: 1. Local report builds: 1. Downstream evidence regeneration passes:
+  1. Recovery iterations: 0. The full chain ran 721.07 seconds and stopped only at the retained
+  Story 6.1 rootless-Podman prerequisite after every preceding gate passed. Recorded gate wall
+  seconds: 721.
+- Native installed-worker composition and independent review remain blocked on the exact Sprint 95
+  `BLOCKED_EXTERNAL` tuple recorded in Batch 97; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 95 rows depend on upstream or exact external tuples;
+continue Decision 0021 ordering at Sprint 96 signed updates and supply-chain maintenance.
+Cumulative closures are 789; next checkpoint is 800.
