@@ -1450,3 +1450,49 @@ Cumulative closures are 913; next checkpoint is 925.
 
 Exact next action: continue Decision 0021 ordering at Sprint 108 Azure Repos and GitLab source
 adapters. Cumulative closures are 962; the 925-item and 950-item checkpoints are due after push.
+
+## Batch 108 — Sprint 108 Azure Repos and GitLab source boundary
+
+### Completed
+
+- Closed 21 local Sprint 108 rows: both provider read/write contract tasks, the synthetic
+  verification task, all story criteria, and Sprint AC 108.AC2 through AC4. Three provider
+  families and four published synthetic tuples span 48 read cases, 30 inert effect cases, 6
+  prohibited operations, 2,048 adversarial cases, and 512 recovery cases. Provider requests: 0.
+  Active-checkout changes: 0. Credential crossovers: 0. Stale effects: 0. Hidden effects: 0.
+  Duplicate effects: 0.
+- Promoted providers: 0. Live providers: 0. Complete `AT-SRC-001`: false. Independent human
+  reviews: 0. Promotions: 0. Substitutions: 0. Batch closures: 21. Cumulative closed items: 983.
+- Commits: `de39b3fa` (Azure Repos/GitLab contracts, corpus, tests, evidence definition, truthful
+  closures, and supply-chain renewal), `3108e847` (source-bound Sprint 108 report), and
+  `8b8db91a` (downstream contract/configuration/traceability renewal). Commits including log: 4.
+  Commits per closed item: 0.19. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across every Batch 108 changed or regenerated path and every pin-bearing gate: empty.
+
+### Validation and blockers
+
+- Focused validation passed 3 Rust source-provider tests, strict Clippy, 4 corpus tests, 3
+  evidence tests, Python compilation, dependency rules, supply-chain currentness, product CI, all
+  affected contract/configuration/traceability builders, and the source-bound report. Supply-chain
+  builds: 1. Corpus generations: 1. Local report builds: 1. Full gate wall seconds: 684; it stopped
+  only at the retained Story 6.1 rootless-Podman prerequisite after every preceding gate passed.
+  Self-recovery iterations: 0.
+- Exact live-provider matrices and `AT-SRC-001` remain
+  `BLOCKED_EXTERNAL(platform=isolated Azure Repos, GitLab.com, and supported self-managed GitLab
+  versions plus native Git/provider clients, signing identities, and independent review environment,
+  artifact=untouched API/Git traces, exact read/write/version/permission/fork/protection/merge matrix,
+  isolated worktree snapshots, signatures, pre/post provider state, receipts, recovery evidence,
+  AT-SRC-001 bundle, support matrix, and independent review, action=provision isolated Azure DevOps
+  and GitLab cloud/self-managed organizations, projects, repositories, accounts, credentials,
+  signers, runners, instrumentation, and independent reviewer; execute S-108-CT01/ST01/IT01/RT01 and
+  AT-SRC-001 against live providers, then transfer untouched evidence, credential=Azure DevOps,
+  GitLab.com/self-managed, repository, API, Git transport, signing, runner, instrumentation, and
+  reviewer access, payment=provider, self-managed hosting, runner, signing, instrumentation, or review
+  costs if applicable)`; `substitution_set=empty`.
+- Sprint 108 also remains dependency-blocked by `UPSTREAM-SPRINT-107-BLOCKED` with no
+  substitution. Exact full-chain carrier blocker: `blocked: host change required — run npm run -s
+  docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 109 multi-provider CI execution and
+evidence. Cumulative closures are 983; write the required 975-item checkpoint after push.
