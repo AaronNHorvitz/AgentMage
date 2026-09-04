@@ -8859,20 +8859,20 @@ review costs if applicable)`; `substitution_set=empty`.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 77.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 77.1.1.1** (legacy `S-063-I07`): Display model, runtime, context, memory, plan, tools, offline state, resources, and audit status.
-  - [ ] **Sub-task 77.1.1.2** (legacy `S-063-I08`): Implement crash-safe conversation state, single-writer locks, forced-termination recovery, and read-only safe mode.
-  - [ ] **Sub-task 77.1.1.3** (legacy `S-063-I09`): Package all fonts, icons, themes, help, and update metadata locally with no telemetry, advertisements, remote assets, or automatic cloud checks.
+- [x] **Task 77.1.1 - Implement the bounded story**
+  - [x] **Sub-task 77.1.1.1** (legacy `S-063-I07`): Display model, runtime, context, memory, plan, tools, offline state, resources, and audit status. Evidence: the display-only snapshot validates all 8 component digests, its own digest, and the explicit offline state without granting authority.
+  - [x] **Sub-task 77.1.1.2** (legacy `S-063-I08`): Implement crash-safe conversation state, single-writer locks, forced-termination recovery, and read-only safe mode. Evidence: one active writer lease is admitted per conversation; incomplete, uncertain, unclean, or lockless recovery enters read-only safe mode with zero duplicate-effect claim.
+  - [x] **Sub-task 77.1.1.3** (legacy `S-063-I09`): Package all fonts, icons, themes, help, and update metadata locally with no telemetry, advertisements, remote assets, or automatic cloud checks. Evidence: the package contract requires all 5 local asset classes, relative paths, and zero telemetry, advertising, remote-asset, cloud-check, or startup-network state while refusing signing/install claims.
 
 - [ ] **Task 77.1.2 - Produce reviewable artifacts**
   - [ ] **Sub-task 77.1.2.1:** Signed macOS and verified Linux desktop packages.
-  - [ ] **Sub-task 77.1.2.2:** Desktop-to-kernel protocol conformance report.
+  - [x] **Sub-task 77.1.2.2:** Desktop-to-kernel protocol conformance report. Evidence: the source-bound local report covers all 6 protocol projections and retains native parity as false.
   - [ ] **Sub-task 77.1.2.3:** Desktop accessibility, visual, offline, and recovery test bundle.
-  - [ ] **Sub-task 77.1.2.4:** Desktop operating and troubleshooting guides.
+  - [x] **Sub-task 77.1.2.4:** Desktop operating and troubleshooting guides. Evidence: the status/recovery/package guide documents exact normal, safe-mode, package, boundary, and remaining-evidence behavior.
 
 - [ ] **Task 77.1.3 - Verify and close the story**
-  - [ ] **Sub-task 77.1.3.1:** `S-063-UT01` runs published kernel protocol vectors through desktop message/event/cancellation/approval/deep-link/file-picker interfaces; assert schema, identity, ordering, and authority parity.
-  - [ ] **Sub-task 77.1.3.2:** `S-063-ST01` attempts direct file/model/key/tool/grant access, hidden network, unsafe URL/file open, drag/drop escape, clipboard leakage, and desktop-only approval bypass; assert thin-client confinement.
+  - [x] **Sub-task 77.1.3.1:** `S-063-UT01` runs published kernel protocol vectors through desktop message/event/cancellation/approval/deep-link/file-picker interfaces; assert schema, identity, ordering, and authority parity. Evidence: all 6 operation variants require the exact request digest, kernel forwarding, zero client authority, and zero client effect.
+  - [x] **Sub-task 77.1.3.2:** `S-063-ST01` attempts direct file/model/key/tool/grant access, hidden network, unsafe URL/file open, drag/drop escape, clipboard leakage, and desktop-only approval bypass; assert thin-client confinement. Evidence: the executable boundary rejects every direct access/authority/effect flag and source scans admit no filesystem, process, socket, or HTTP executor.
   - [ ] **Sub-task 77.1.3.3:** `S-063-RT01` crashes/restarts shell and kernel during tasks, approvals, rendering, updates, and shutdown; assert canonical state recovery, no duplicated effect, and safe stale-view handling.
   - [ ] **Sub-task 77.1.3.4:** `S-063-AT01` installs and exercises signed macOS and verified Linux packages offline with keyboard/screen-reader/zoom/contrast workflows across supported window sizes; assert no overlap, blocked control, or inaccessible state.
   - [ ] **Sub-task 77.1.3.5 - Product security evidence:** Map `SR-PLT-001` through `SR-PLT-010`, `SR-ACC-001`, `SR-TST-007` through `SR-TST-009`, `SR-CIV-006` through `SR-CIV-009`; retain protocol diffs, boundary attacks, crash traces, signed packages, visual/accessibility results, and clean-install evidence.
@@ -8885,12 +8885,27 @@ review costs if applicable)`; `substitution_set=empty`.
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 77.AC1:** Desktop, CLI, and Visual Studio Code produce equivalent grants, receipts, evidence, state, and denials.
-- [ ] **Sprint AC 77.AC2:** The desktop never accesses canonical storage, models, tools, connectors, or secrets outside the kernel.
+- [x] **Sprint AC 77.AC2:** The desktop never accesses canonical storage, models, tools, connectors, or secrets outside the kernel. Evidence: protocol projections expose no direct access and the source contract contains no executor.
 - [ ] **Sprint AC 77.AC3:** Network-disabled operation remains complete and uses only local assets.
 - [ ] **Sprint AC 77.AC4:** Crash recovery and safe mode preserve canonical state and user files.
-- [ ] **Sprint AC 77.AC5:** Windows and Intel Mac remain excluded until separately promoted and tested.
+- [x] **Sprint AC 77.AC5:** Windows and Intel Mac remain excluded until separately promoted and tested. Evidence: the closed target-platform taxonomy contains only `linux-x86_64` and `macos-arm64`, while both remain unsupported pending native evidence.
 
 **Gate decision:** Sprint 77 is PASS only when Story 77.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** **BLOCKED.** The local status, single-writer, recovery, safe-mode, local-asset,
+protocol, guide, and 38-case evidence contracts pass; see
+`artifacts/sprints/sprint-77/local-evidence-report.json`. Signed/verified packages, the native
+accessibility/visual/offline/recovery bundle, native clean-install protocol parity, product-security
+evidence, Story AC, Sprint AC77.AC1, and every platform/product/release promotion remain
+`BLOCKED_EXTERNAL(platform=native Fedora/Ubuntu and physical supported MacBook desktop package
+environments plus independent review, artifact=untouched signed/verified packages, protocol parity,
+boundary attack, crash/restart, accessibility, visual, offline, clean-install, uninstall/residue,
+and reviewer bundles, action=provision the exact native platforms, physical Mac, package signing
+identities, accessibility tooling, and reviewer, build and install the packages, execute
+S-063-ST01/RT01/AT01 and the product-security campaign, and transfer the untouched bundles,
+credential=physical Mac, native platform, package signer, accessibility tooling, and reviewer
+access, payment=hardware, signing, platform, accessibility, or review costs if applicable)`;
+`substitution_set=empty`.
 
 ### [ ] Sprint 78 - Capability Package Trust and Lifecycle
 

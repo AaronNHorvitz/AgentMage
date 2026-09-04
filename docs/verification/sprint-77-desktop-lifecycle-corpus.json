@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "corpus_id": "sprint-77-desktop-status-recovery-packaging-v1",
+  "case_count": 38,
+  "categories": {
+    "status": 6,
+    "recovery": 10,
+    "package": 10,
+    "protocol": 12
+  },
+  "cases": [
+    "status-all-digests", "status-offline", "status-display-only", "status-invalid-digest", "status-empty-id", "status-no-authority",
+    "recovery-first-writer", "recovery-conflicting-writer", "recovery-released-writer", "recovery-clean-complete", "recovery-uncertain", "recovery-unclean", "recovery-lock-unavailable", "recovery-effect-without-receipt", "recovery-receipt-without-effect", "recovery-no-duplicate-effect",
+    "package-font", "package-icon", "package-theme", "package-help", "package-update-metadata", "package-no-telemetry", "package-no-advertising", "package-no-remote-assets", "package-no-cloud-check", "package-no-signing-claim",
+    "protocol-message", "protocol-event-cursor", "protocol-cancel", "protocol-approval-response", "protocol-deep-link", "protocol-file-picker", "protocol-no-file-access", "protocol-no-model-access", "protocol-no-key-access", "protocol-no-tool-access", "protocol-no-authority", "protocol-no-effect"
+  ],
+  "local_contract_passed": true,
+  "signed_package_present": false,
+  "native_accessibility_complete": false,
+  "platform_support": false,
+  "substitution_set": []
+}
