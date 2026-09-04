@@ -577,3 +577,63 @@ write the required 500-item checkpoint after this batch push.
 Exact next action: all remaining Sprint 84 rows depend on upstream or exact external tuples;
 continue Decision 0021 ordering at Sprint 85 GitHub mutation preview and authority. Cumulative
 closures are 519; the next 25-item checkpoint is 525.
+
+## Batch 91 — Sprints 85–86 GitHub mutation and recovery
+
+### Completed
+
+- Closed 37 TASKS rows. Sprint 85: Task 85.1.1 and all 7 implementation sub-tasks; Task 85.1.2
+  and both artifact sub-tasks; verification Sub-tasks 85.1.3.1 through .3; all 3 Story AC; and
+  Sprint AC85.AC1, AC85.AC3, and AC85.AC4 (20 rows). Sprint 86: Task 86.1.1 and all 4
+  implementation sub-tasks; Task 86.1.2 and all 4 artifact sub-tasks; verification Sub-tasks
+  86.1.3.1 through .3 and 86.1.3.5; and Sprint AC86.AC2, AC86.AC3, and AC86.AC5 (17 rows).
+  The inert shared contract binds 14 capability classes, 12 prohibited-operation classes,
+  exact mutable-state refresh, signed task-ref push prerequisites, distinct commit/push approvals,
+  exact-once receipts, and partial/unknown retry refusal while owning 0 Git or network executors.
+  Promotions: 0. Substitutions: 0. Cumulative closed items: 556.
+- Commits: `be022ed0` (shared GitHub mutation/recovery source, guide, 104 corpus cases, tests,
+  truthful closures, and final supply-chain carrier), `5cc139e5` (both source-bound reports), and
+  `18e6fb91` (one affected evidence regeneration pass). Commits including log: 4. Commits per
+  closed item: 0.11. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across all
+  25 Batch 91 paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 6 Rust cases, 2 artifact-contract tests, 6 evidence mutation tests, strict
+  knowledge-crate Clippy, format, Python compilation, Markdown, 56 Sprint 85 corpus cases,
+  48 Sprint 86 corpus cases, supply-chain currentness, runtime schemas, and product CI passed.
+  Supply-chain builds: 1. Local report builds: 2. Downstream evidence regeneration passes: 1.
+  Recovery iterations: 0. The full chain ran 693.83 seconds and stopped only at the retained
+  Story 6.1 rootless-Podman prerequisite after every preceding gate passed. Recorded gate wall
+  seconds: 694.
+- Native mutation, signing, push, hosted-state, API-audit, prohibited-operation, and independent
+  review evidence for Sprint 85 remains blocked on `BLOCKED_EXTERNAL(platform=native GitHub
+  provider and signed-commit fixture plus independent security review, artifact=untouched mutation
+  requests/responses, pre/post hosted and remote-ref snapshots, signed-commit verification,
+  ordinary task-branch push trace, protection/ruleset/permission/check/push-rule snapshots,
+  prohibited-operation results, API audit, and reviewer bundle, action=provision an exact GitHub
+  fixture repository, GitHub App/account, task branch, signing identity, failure instrumentation,
+  and independent reviewer, execute the Sprint 85 native mutation, signed-commit, ordinary-push,
+  adversarial, and review campaign, and transfer untouched bundles, credential=GitHub App/account,
+  signing-key, fixture, instrumentation, and reviewer access, payment=provider, account, signing,
+  fixture, instrumentation, or review costs if applicable)`; `substitution_set=empty`.
+- Native idempotency, recovery, rollback, signed-push, failure-injection, API-audit, and independent
+  review evidence for Sprint 86 remains blocked on `BLOCKED_EXTERNAL(platform=native GitHub
+  provider and signed-push recovery fixture plus independent security review, artifact=untouched
+  idempotency/reconciliation traces, mutation requests/responses, pre/post hosted and remote-ref
+  snapshots, signed-commit and ordinary-push traces, injected timeout/conflict/rate-limit/
+  partial-effect results, rollback or compensation results, API audit, prohibited-operation
+  results, and reviewer bundle, action=provision an exact GitHub fixture repository, GitHub
+  App/account, task branch, signing identity, mutation and failure instrumentation, rollback
+  fixtures, and independent reviewer, execute S-067-IT01/RT01 and the native Sprint 86
+  product-security campaign, and transfer untouched bundles, credential=GitHub App/account,
+  signing-key, fixture, instrumentation, rollback, and reviewer access, payment=provider, account,
+  signing, fixture, instrumentation, rollback, or review costs if applicable)`;
+  `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 85 and 86 rows depend on upstream or exact external tuples;
+continue Decision 0021 ordering at Sprint 87 connector governance and isolation. Cumulative closures
+are 556; write one checkpoint covering the crossed 525-item and 550-item thresholds after push.
