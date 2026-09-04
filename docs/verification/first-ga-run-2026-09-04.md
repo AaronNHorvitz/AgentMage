@@ -1401,3 +1401,52 @@ write the required 900-item checkpoint after push.
 
 Exact next action: continue Decision 0021 ordering at Sprint 107 cross-provider work planning.
 Cumulative closures are 913; next checkpoint is 925.
+
+## Batch 107 — Sprint 107 cross-provider work planning
+
+### Completed
+
+- Closed 49 local Sprint 107 rows across both stories: provider-neutral work objects and links,
+  exact field-level drafts, immutable provider work packets, 14 planning/bug/review workflows,
+  deterministic synthetic verification, both story criteria sets, and Sprint AC 107.AC2 through
+  AC4 plus AC6. The retained corpus contains 4 provider fixtures, 80 object cases, 48 link cases,
+  40 effect cases, 56 workflow cases, 1,024 adversarial cases, 512 recovery cases, and 10 review
+  surfaces. Provider requests: 0. Authority-bearing inferred links: 0. Hidden recipients: 0.
+  Non-target changes: 0. Duplicate effects: 0.
+- Promoted providers: 0. Live providers: 0. Complete `AT-WRK-001`: false. Independent human
+  reviews: 0. Promotions: 0. Substitutions: 0. Batch closures: 49. Cumulative closed items: 962.
+- Commits: `3feac48e` (work-management contract, corpus, tests, evidence definition, truthful
+  closures, and supply-chain renewal), `e1aa5b16` (source-bound Sprint 107 report), and
+  `f1204785` (downstream contract/configuration/traceability renewal). Commits including log: 4.
+  Commits per closed item: 0.08. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across every Batch 107 changed or regenerated path and every pin-bearing gate: empty.
+
+### Validation and self-recovery
+
+- Focused validation passed 4 Rust work-management tests, strict Clippy, 5 corpus tests, 3 evidence
+  tests, Python compilation, dependency rules, supply-chain currentness, product CI, all affected
+  contract/configuration/traceability builders, and the source-bound report. Supply-chain builds:
+  1. Corpus generations: 1. Local report builds: 1 successful after one non-mutating invocation
+  rejected the abbreviated `HEAD` revision; the required full immutable revision was then supplied.
+  Full gate wall seconds: 681; it stopped only at the retained Story 6.1 rootless-Podman
+  prerequisite after every preceding gate passed. Self-recovery corrected an inverted plan-hash
+  validation predicate and added direct exact, stale, and hidden-effect admission tests before the
+  supply-chain boundary.
+- Exact live-provider conformance and `AT-WRK-001` remain
+  `BLOCKED_EXTERNAL(platform=isolated GitHub Issues, Jira Cloud, Jira Data Center, and Azure Boards
+  tenants at supported versions plus native provider clients and independent review environment,
+  artifact=untouched exact object/operation/version matrices, provider snapshots, API/event traces,
+  attachment scans, effect plans, approvals, receipts, recovery reconciliations, AT-WRK-001 bundle,
+  support matrix, and independent review, action=provision isolated provider tenants, accounts,
+  projects, repositories, boards, credentials, instrumentation, and independent reviewer; execute
+  S-107-CT01/ST01/IT01/RT01/IT02/ST02/RT02/AT02 and AT-WRK-001 against live providers, then transfer
+  untouched evidence, credential=GitHub, Atlassian Jira Cloud/Data Center, Azure DevOps, repository,
+  project, API, event, attachment, runner, instrumentation, and reviewer access, payment=provider,
+  hosting, runner, instrumentation, or review costs if applicable)`; `substitution_set=empty`.
+- Sprint 107 also remains dependency-blocked by `UPSTREAM-SPRINT-106-BLOCKED` with no
+  substitution. Exact full-chain carrier blocker: `blocked: host change required — run npm run -s
+  docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 108 Azure Repos and GitLab source
+adapters. Cumulative closures are 962; the 925-item and 950-item checkpoints are due after push.
