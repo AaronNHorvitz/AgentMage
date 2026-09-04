@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_126_local_evidence",
+  "source_revision": "ba5aa2b569517293ac133dae3b5e2dbaf6381494",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "README.md": "d633d87b3f178aa1e1653cfc39fbd82049733f430098567c88014ad8335c01d5",
+    "PRD.md": "2a4b3bbc9001c01f7f6d80d442a94c1c88b9caf00e711360d8f4db5a40aee218",
+    "TASKS.md": "08cec0bfa4155fba562170b54a0db2641b8130670b9905ff4f0f1badacffce11",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "DELIVERY-SYSTEM.md": "ca62de984cd9da28d28f183e768e8c07898f7b38ae2d89894dcec66a3293f72c",
+    "WINDOWS-BOUNDARIES.md": "b5ae84e42c31e5d7a1f3fb11cebef6927a1b252c2cbabf17eae31ff0eb6040ad",
+    "MODEL-PROVENANCE-POLICY.md": "528076ef9be354e5a463221811a0bf4bf735a50be0b3a73df91097d7e83594c7",
+    "SECURITY.md": "3cfe6fbd2a9192e26766096190c162600ecb9a9db2b263a6c099c117831818ea",
+    "requirements/registry.json": "79cbed21b971c16500d12131c5c3fb75a1a64169deacc69002714eca97ab8306",
+    "requirements/traceability-report.json": "da746eb9a9d31cf0be8f8abe5cbfcf9b56e95d9aa256f6f010a384085872a625",
+    "architecture/status-model.json": "16757dfcc1de91b303eedeb6207872e90ed85e6e12567162d63385fee0db361b",
+    "supply-chain/dependency-provenance.json": "a68da4bda2acb0ae5abd72fe94b6968c47f0bfba0973b897402fc3f9ca161107",
+    "supply-chain/sbom.cdx.json": "0fa1856d379bd76662399b59947a6efa3bbc839e619c7e97f412926ba1298b12",
+    "supply-chain/dependency-hashes.sha256": "f5b6b3b48df6f53fdbe369ba11732f0d5072de5d9a8f0677e7464e1d13ef9878",
+    "artifacts/sprints/sprint-126/release-checkpoint-corpus.json": "b225712cbb88e3b21dc0141eb426bcf6ee4871ebca4f812b2371f4fee0dbab1c",
+    "scripts/release_checkpoint_contract.py": "13cb830deb7205a70664aaabdfca3767b40bf781fb46f909df731a601e972733",
+    "tests/test_release_checkpoint_contract.py": "3c6ce7f6c203f5e74b4675e65087e95e79acc279d86dbc568c5c3fdf57cb62a2",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_126_evidence.py": "c83cdd2279609550ba1151d333ee0e6bcb3bdecc732fc022172d06c67c0f0b85",
+    "tests/test_sprint_126_evidence.py": "5e6d07ba65ee52b3da8800392dfc9bdf43fc1e378d41bbc73fb36e4284580655"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "release-checkpoint-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_release_checkpoint_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "traceability-currentness",
+      "argv": [
+        "python3",
+        "scripts/traceability_report.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "status-model-currentness",
+      "argv": [
+        "python3",
+        "scripts/status_model.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "699c138e49a6d2fd7bd660d28f643ebefde551d69d2e540c3a7b717b9e0e5f71",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_126_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "5279d1fc9a1ced44f9c96da1414ef59e4676f963fbad52e7a1a2903538819b0d",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-GA-001",
+    "AM-GAD-001",
+    "AT-GA-001",
+    "RV-01",
+    "RV-30",
+    "RV-49"
+  ],
+  "implemented_contracts": {
+    "truth_document_count": 8,
+    "release_blocker_case_count": 256,
+    "signed_binary_manifest_count": 0,
+    "native_reproduction_count": 0,
+    "reviewer_signature_count": 0,
+    "user_release_approval_count": 0,
+    "release_package_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "requirement_graph_current": true,
+    "documentation_truth_current": true,
+    "summary_reconciliation_complete": true,
+    "support_matrix_closed": true,
+    "negative_release_gate_complete": true,
+    "native_reproduction_complete": false,
+    "signed_bom_complete": false,
+    "rv01_30_complete": false,
+    "rv49_complete": false,
+    "at_ga_001_complete": false,
+    "independent_review_complete": false,
+    "user_approval_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-125-BLOCKED",
+      "owner": "126"
+    },
+    {
+      "code": "BLOCKED-EXTERNAL-RELEASE-CANDIDATE",
+      "owner": "126"
+    }
+  ],
+  "summary": {
+    "local_sprint_126_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_125_closed": false,
+    "g_ga_closed": false,
+    "release_package_produced": false,
+    "release_approval": false
+  }
+}
