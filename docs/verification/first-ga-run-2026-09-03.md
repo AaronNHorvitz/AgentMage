@@ -2448,3 +2448,41 @@ redaction, and visual-verification source truth.
 
 Exact next action: continue the first dependency-independent Sprint 65 multilayer-redaction and
 export-boundary work after the externally blocked native/provider rows, then proceed to Sprint 66.
+
+## Batch 71 — Sprint 65 multilayer redaction and export binding
+
+### Completed
+
+- Closed 2 TASKS rows: Story AC 65.1.AC2 and Sprint AC 65.AC3. Image export now requires an exact
+  current decoded-pixel, regenerated-BMP, redaction, metadata-removal, and workspace-path binding.
+  Generated-presentation redaction removes exact text from titles, blocks, tables, chart categories,
+  diagram labels, and notes, recomputes affected data hashes, fully regenerates/reopens the package,
+  and retains six content-free layer checks for specification, slide objects, notes, internal
+  relationships, absent thumbnails, and proposed exported bytes. Promotions: 0. Substitutions: 0.
+  Cumulative closed items: 203.
+- Commits: `d40c2158` (multilayer redaction, export boundary, focused tests, updated 102-case
+  contract, and final supply-chain carrier), `d69358ab` (source-bound 9-command local report and 2
+  truthful closures), and `ef48acd3` (one affected evidence regeneration pass). Commits: 3. Commits
+  per closed item: 1.50. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across 24
+  batch paths and all pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 6 image-workflow Rust cases, 1 presentation multilayer-redaction Rust case,
+  the 102-case image contract, evidence mutation tests, strict capability Clippy, format,
+  supply-chain currentness, product-CI contract, configuration startup/result, component inventory,
+  Story 3.1 security/gate, planning scope, traceability, contract boundary/evidence, Stories
+  2.1/2.2/2.4, and Sprint 2 pass. Supply-chain builds: 1. Local report builds: 1. Downstream evidence
+  regeneration passes: 1. Recovery iterations: 0. The full chain ran 683.31 seconds and stopped only
+  at the retained Story 6.1 rootless-Podman prerequisite after every preceding gate passed. Recorded
+  gate wall seconds: 683.
+- Native screenshot/view, native render/accessibility, provider/local image-model execution,
+  steganography scanning, cross-platform, independent-review, and manual-fuzz rows remain blocked on
+  the exact Batch 70 tuples with `substitution_set=empty`; no external result was closed by the new
+  local redaction/export contracts.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 65 rows depend on exact external tuples; continue Decision
+0021 ordering at Sprint 66 safe additional file parsers.
