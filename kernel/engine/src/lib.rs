@@ -34,6 +34,8 @@ pub mod capability_lifecycle;
 pub mod capability_registry;
 /// Exact child-authority intersection, isolation, ownership, and bounded cancellation.
 pub mod child_authority;
+/// Provider-neutral continuous-integration observation and effect admission.
+pub mod ci_control;
 /// Deterministic material-claim proof and truthful final-response construction.
 pub mod claim_evidence;
 /// Exact command templates, previews, execution permits, and terminal receipts.
