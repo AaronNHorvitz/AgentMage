@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_95_local_evidence",
+  "source_revision": "4bd6aa0f2849d1d94a095bdcefeed15543c079a4",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
+    "kernel/engine/src/lib.rs": "acadda69f469b317bb88994256a22e7950634d9d2a06417b804e37987aa152b4",
+    "kernel/engine/src/child_authority.rs": "df1614e507ecb489d79a5b7972118e0d27d267019076a22f648559101730a42c",
+    "kernel/engine/src/multi_agent.rs": "f3f049344725e93a489deeae2af0f073b53f6b0798e4b7350b0cd44516b9b34b",
+    "kernel/engine/src/profile_workflows.rs": "0f744f0500872e2123c335ff3ba7b0c12c36efb931795a996f389da1fd04ab48",
+    "artifacts/sprints/sprint-94/local-evidence-report.json": "49786c39225ba18841bf6af847803084024b41cb9934822e0dcac752230cca2f",
+    "artifacts/sprints/sprint-95/profile-workflow-corpus.json": "96caf2e8d87a6f27b6b33d776af46bdb6eec1a9305725f538f412e7094ed8545",
+    "scripts/profile_workflow_contract.py": "a055682795e246ee8a864b6966c836cbbbd68d2317d8171cf2fd360f9f63a526",
+    "tests/test_profile_workflow_contract.py": "1caffb319b1b6c5eb4264b990a2747e3440b1000ba3ac45b1951ab7dcf835062",
+    "supply-chain/dependency-hashes.sha256": "c76ea409cb5d84c368900e006fbbbe8ed9b7fa174a2967f2ac19eb960ca8eb10",
+    "supply-chain/dependency-provenance.json": "32e94c6d6410e402ff4a9623d2ac9719c48ecab0fe645bde0771742315cbea6f",
+    "supply-chain/sbom.cdx.json": "e7272562c6820c9de3a3a1c2d86cb3b3142c053b0d8c799a5d6b909fa4809297",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_95_evidence.py": "f590a73e4b3f947278c7e0be6f32225ab7dd792743cd3f62f98b8ebcba704bfb",
+    "tests/test_sprint_95_evidence.py": "0805d6c4aea039b80c13812739490d98110bd0be60b6d9f26c3afa785d6bbae2"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "profile-workflow-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "profile_workflows::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "9242fa21ef3166731e53bf16c3a916c4e9e15aa0a8a82e411e0ed6b92e0356ce",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "multi-agent-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "multi_agent::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "b0649e1b0bbfc548ea369813bcf48373993c9d2789ae0e80a9e1fdc64b9c0798",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "profile-workflow-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_profile_workflow_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "feabb4add9e2ca3374e538560634d1ec97dc4f4ce89aab12f3d726e36ea9b2f6",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "runtime-schema-contract",
+      "argv": [
+        "npm",
+        "run",
+        "-s",
+        "schemas:test"
+      ],
+      "exit_code": 0,
+      "output_sha256": "1af1f32ce3df6d7f0fb0e00b0571897de61d1bdf5b80ac2a59398a03581e7b81",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_95_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2c37d50a88147ca2ebd5197d74ee37d462dab650d793512e849814c28d5a38f0",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-GOV-010",
+    "SR-ACC-001",
+    "SR-ACC-002",
+    "SR-ACC-003",
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-AI-003",
+    "SR-AI-004",
+    "SR-AI-005",
+    "SR-AI-009",
+    "SR-AI-010",
+    "SR-TST-005",
+    "SR-TST-006",
+    "SR-TST-011"
+  ],
+  "implemented_contracts": {
+    "canonical_workflow_count": 4,
+    "workflow_node_count": 28,
+    "synthetic_case_count": 80,
+    "shared_runtime_count": 1,
+    "provider_effect_count": 0,
+    "native_descendant_cleanup_count": 0,
+    "native_worktree_pipeline_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "canonical_workflow_count": 4,
+    "synthetic_case_count": 80,
+    "dissent_preserved": true,
+    "real_effect_count": 0,
+    "native_descendant_cleanup_observed": false,
+    "native_worktree_pipeline_observed": false,
+    "independent_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-94-BLOCKED",
+      "owner": "95"
+    },
+    {
+      "code": "NATIVE-COORDINATION-RECOVERY-WORKTREE-AND-REVIEW-ABSENT",
+      "owner": "95.1.3.4-95.2.3.5-95.AC4"
+    }
+  ],
+  "summary": {
+    "local_sprint_95_coordination_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_94_closed": false,
+    "native_recovery_complete": false,
+    "native_writable_coordination_complete": false,
+    "independent_review_present": false,
+    "stories_95_3_and_95_4_complete": false,
+    "release_approval": false
+  }
+}
