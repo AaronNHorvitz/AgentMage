@@ -136,6 +136,8 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "hosted-local-relationship",
   "github-triage-item",
   "hosted-event-receipt",
+  "pull-request-worktree-binding",
+  "local-pull-request-review-packet",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -2197,6 +2199,16 @@ function runtimeSemanticErrors(recordType, data) {
     if (data.accepted !== true || data.duplicate !== false || data.stale !== false ||
         data.provider_state_changed !== false || data.local_task_created !== false) {
       errors.push("hosted event admission authority drifted");
+    }
+  } else if (recordType === "pull-request-worktree-binding") {
+    if (data.active_checkout_unchanged !== true || data.remote_state_unchanged !== true ||
+        data.base_revision === data.head_revision) {
+      errors.push("pull-request worktree identity or preservation drifted");
+    }
+  } else if (recordType === "local-pull-request-review-packet") {
+    if (["publication_enabled", "branch_update_enabled", "commit_enabled", "push_enabled", "merge_enabled", "release_enabled"].some((key) => data[key] !== false) ||
+        (data.shadow_fixes ?? []).some((fix) => fix.controlled_write_proposal !== true || fix.applied !== false || fix.committed !== false || fix.pushed !== false || fix.published !== false)) {
+      errors.push("local pull-request review effect boundary drifted");
     }
   } else if (recordType === "word-inspection-report") {
     const parts = data.parts ?? [];

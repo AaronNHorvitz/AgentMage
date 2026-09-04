@@ -40,6 +40,7 @@ mod pdf_visual;
 mod plain_folder;
 mod presentation_generation;
 mod presentation_ooxml;
+mod pull_request_review;
 mod reconciliation_workbook;
 mod retrieval;
 mod retrieval_integration;
@@ -259,6 +260,11 @@ pub use presentation_ooxml::{
     PresentationError, PresentationFinding, PresentationFindingKind, PresentationImageReference,
     PresentationInspection, PresentationLink, PresentationObject, PresentationObjectKind,
     PresentationProfile, PresentationSlide, inspect_pptx,
+};
+pub use pull_request_review::{
+    LocalPullRequestReviewPacket, LocalShadowFix, PullRequestFinding, PullRequestReviewError,
+    PullRequestWorktreeBinding, ReviewDimension, ReviewFindingState, ReviewSeverity,
+    build_local_pull_request_review,
 };
 pub use reconciliation_workbook::{
     GeneratedReconciliationWorkbook, ReconciliationFormula, ReconciliationWorkbookError,

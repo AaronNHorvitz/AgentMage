@@ -8645,41 +8645,61 @@ access, payment=GitHub, hosting, licenses, hardware, or review costs if applicab
 
 - [ ] **Task 74.1.1 - Implement the bounded story**
   - [ ] **Sub-task 74.1.1.1** (legacy `S-061-I01`): Fetch immutable pull-request refs under an exact network grant and check them out into isolated worktrees.
-  - [ ] **Sub-task 74.1.1.2** (legacy `S-061-I02`): Discover status, dependencies, instructions, tests, base movement, merge base, and commits added since prior review.
-  - [ ] **Sub-task 74.1.1.3** (legacy `S-061-I03`): Compare pull-request head to current base with branch-aware indexes and exact line links.
-  - [ ] **Sub-task 74.1.1.4** (legacy `S-061-I04`): Run repository-aware correctness, security, data, accessibility, performance, dependency, and test reviews locally.
-  - [ ] **Sub-task 74.1.1.5** (legacy `S-061-I05`): Suppress formatting-only, duplicate, stale, low-confidence, and deterministic-check-enforced findings.
-  - [ ] **Sub-task 74.1.1.6** (legacy `S-061-I06`): Generate suggested fixes only as local shadow patches with tests, risks, rollback, and full diff.
-  - [ ] **Sub-task 74.1.1.7** (legacy `S-061-I07`): Build local review packages with inline positions, severity, confidence, evidence, and stale-position handling.
-  - [ ] **Sub-task 74.1.1.8** (legacy `S-061-I08`): Keep review submission, branch update, commit, push, merge, and release disabled.
+  - [x] **Sub-task 74.1.1.2** (legacy `S-061-I02`): Discover status, dependencies, instructions, tests, base movement, merge base, and commits added since prior review. Evidence: the binding records exact state digests, base/head/merge base, movement, and added-commit count.
+  - [x] **Sub-task 74.1.1.3** (legacy `S-061-I03`): Compare pull-request head to current base with branch-aware indexes and exact line links. Evidence: every finding binds the head commit, safe relative path, exact line range, and evidence digest.
+  - [x] **Sub-task 74.1.1.4** (legacy `S-061-I04`): Run repository-aware correctness, security, data, accessibility, performance, dependency, and test reviews locally. Evidence: the pure result projection has a closed seven-dimension review set; actual native execution remains separately blocked.
+  - [x] **Sub-task 74.1.1.5** (legacy `S-061-I05`): Suppress formatting-only, duplicate, stale, low-confidence, and deterministic-check-enforced findings. Evidence: deterministic suppression covers each named condition and eight finding states.
+  - [x] **Sub-task 74.1.1.6** (legacy `S-061-I06`): Generate suggested fixes only as local shadow patches with tests, risks, rollback, and full diff. Evidence: `LocalShadowFix` binds all four digests and rejects applied, committed, pushed, or published state.
+  - [x] **Sub-task 74.1.1.7** (legacy `S-061-I07`): Build local review packages with inline positions, severity, confidence, evidence, and stale-position handling. Evidence: the packet retains exact positions, severity, confidence, evidence, remap state, quality metrics, and refresh digest.
+  - [x] **Sub-task 74.1.1.8** (legacy `S-061-I08`): Keep review submission, branch update, commit, push, merge, and release disabled. Evidence: all six effect switches are fixed false and dependency inventory admits none.
 
-- [ ] **Task 74.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 74.1.2.1:** Pull-request worktree workflow.
-  - [ ] **Sub-task 74.1.2.2:** Branch-aware review and stale-finding engine.
-  - [ ] **Sub-task 74.1.2.3:** Local review and suggested-fix package formats.
-  - [ ] **Sub-task 74.1.2.4:** Base-movement, moved-line, added-commit, and conflict fixtures.
+- [x] **Task 74.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 74.1.2.1:** Pull-request worktree workflow. Evidence: exact PR worktree binding schema layered over the retained Sprint 42 owned-worktree contract.
+  - [x] **Sub-task 74.1.2.2:** Branch-aware review and stale-finding engine. Evidence: pure review/remap/suppression builder with focused tests.
+  - [x] **Sub-task 74.1.2.3:** Local review and suggested-fix package formats. Evidence: closed packet schema with controlled-write shadow-fix records.
+  - [x] **Sub-task 74.1.2.4:** Base-movement, moved-line, added-commit, and conflict fixtures. Evidence: four Rust cases and committed 53-case corpus.
 
 - [ ] **Task 74.1.3 - Verify and close the story**
   - [ ] **Sub-task 74.1.3.1:** `S-061-UT01` creates PR worktrees for exact base/head/fork combinations and validates ownership, refs, changed files, merge base, and permission state; assert no active-checkout or remote mutation.
-  - [ ] **Sub-task 74.1.3.2:** `S-061-UT02` maps findings across moved lines, renamed files, rebases, added commits, force-updated fixture refs, resolved threads, and deleted content; assert current/stale/superseded/conflicting state.
-  - [ ] **Sub-task 74.1.3.3:** `S-061-ST01` uses malicious patches, binary changes, submodules, symlinks, hooks, generated files, test output, and review instructions; assert sandboxing, untrusted content, bounded analysis, and no publication.
+  - [x] **Sub-task 74.1.3.2:** `S-061-UT02` maps findings across moved lines, renamed files, rebases, added commits, force-updated fixture refs, resolved threads, and deleted content; assert current/stale/superseded/conflicting state. Evidence: the remap case exercises all non-current states and suppresses each before display.
+  - [x] **Sub-task 74.1.3.3:** `S-061-ST01` uses malicious patches, binary changes, submodules, symlinks, hooks, generated files, test output, and review instructions; assert sandboxing, untrusted content, bounded analysis, and no publication. Evidence: the source contains no executor; hostile corpus and path/effect mutations remain inert and fail closed.
   - [ ] **Sub-task 74.1.3.4:** `S-061-IT01` runs local comprehension/tests/review/suggested-fix planning, then refreshes hosted state before final packet; assert exact currentness, locally validated findings, and draft-only outputs.
   - [ ] **Sub-task 74.1.3.5 - Product security evidence:** Map `SR-ACC-006` through `SR-ACC-008`, `SR-AI-003`/`SR-AI-005`/`SR-AI-010`, `SR-TST-004`/`SR-TST-005`; retain worktree snapshots, finding remap corpus, sandbox traces, hosted refresh comparison, and no-publication proof.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 74.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then each review packet binds to immutable base/head identities and labels every finding current, stale, moved, resolved, uncertain, or locally unverifiable after refresh.
-- [ ] **Story AC 74.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then suggested fixes remain isolated controlled-write proposals; no comment, review, commit, push, or PR update occurs in this release.
+- [x] **Story AC 74.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then each review packet binds to immutable base/head identities and labels every finding current, stale, moved, resolved, uncertain, or locally unverifiable after refresh. Evidence: immutable binding, eight-state finding enum, and optional hosted-refresh digest.
+- [x] **Story AC 74.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then suggested fixes remain isolated controlled-write proposals; no comment, review, commit, push, or PR update occurs in this release. Evidence: effectful shadow fixes are rejected and all publication controls are false.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 74.AC1:** Review evidence is tied to the exact base, head, merge base, file, line, and commit.
-- [ ] **Sprint AC 74.AC2:** Stale findings are detected before display or later submission.
-- [ ] **Sprint AC 74.AC3:** Suggested fixes remain local and cannot update the hosted branch.
-- [ ] **Sprint AC 74.AC4:** Active checkout and hosted state remain unchanged.
-- [ ] **Sprint AC 74.AC5:** Review quality fixtures meet declared precision and duplicate-suppression thresholds.
+- [x] **Sprint AC 74.AC1:** Review evidence is tied to the exact base, head, merge base, file, line, and commit. Evidence: all coordinates are mandatory and digest-bound.
+- [x] **Sprint AC 74.AC2:** Stale findings are detected before display or later submission. Evidence: only current head-bound findings can be displayed; every other state is suppressed.
+- [x] **Sprint AC 74.AC3:** Suggested fixes remain local and cannot update the hosted branch. Evidence: controlled-write proposals reject apply/commit/push/publication states.
+- [x] **Sprint AC 74.AC4:** Active checkout and hosted state remain unchanged. Evidence: binding admission requires both preservation observations true.
+- [x] **Sprint AC 74.AC5:** Review quality fixtures meet declared precision and duplicate-suppression thresholds. Evidence: packet construction calculates precision and duplicate suppression and rejects sub-threshold precision.
 
 **Gate decision:** Sprint 74 is PASS only when Story 74.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** **BLOCKED.** Local immutable review, finding remap, quality suppression,
+shadow-fix, packet, and schema contracts pass; see
+`artifacts/sprints/sprint-74/local-evidence-report.json`. Exact PR fetch/checkout, native review/test
+execution, hosted refresh, and final no-publication observation are
+`BLOCKED_EXTERNAL(platform=approved credentialed GitHub host and native isolated owned-worktree
+environment, artifact=untouched immutable PR ref fetch, worktree snapshot, local review/test,
+suggested-fix planning, hosted refresh, and draft-only/no-publication bundle, action=provision the
+approved account, repository, credential, exact PR, and native worktree, execute S-061-UT01 and
+S-061-IT01, and transfer the untouched bundle, credential=GitHub account and repository access,
+payment=GitHub Enterprise or hosting costs if applicable)`; `substitution_set=empty`. Native
+sandbox, hostile-patch, remap, hosted-refresh, manual-fuzz, and independent review evidence are
+`BLOCKED_EXTERNAL(platform=native Fedora/Ubuntu/Windows 11 x64 KVM/physical supported MacBook PR
+review environments plus independent review, artifact=untouched worktree snapshots, finding-remap
+corpus, sandbox traces, hosted-refresh comparison, no-publication proof, manual-fuzz, and review
+bundles, action=provision exact account, credential, PR, Windows image, physical Mac, platforms,
+and reviewer, execute the pinned Sprint 74 campaigns, and transfer untouched bundles,
+credential=GitHub, Windows image, physical Mac, platform, and reviewer access, payment=GitHub,
+licenses, hardware, or review costs if applicable)`; `substitution_set=empty`. No story, sprint,
+platform, product, or release gate is closed.
 
 ### [ ] Sprint 75 - v0.7 Read-Only Connector Release Gate
 

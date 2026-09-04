@@ -439,6 +439,8 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "hosted-local-relationship",
     "github-triage-item",
     "hosted-event-receipt",
+    "pull-request-worktree-binding",
+    "local-pull-request-review-packet",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1794,6 +1796,19 @@ test("GitHub triage records reject publication, provider effects, and replay cla
     ["github-triage-item", (value) => { value.provider_state_changed = true; }],
     ["hosted-event-receipt", (value) => { value.duplicate = true; }],
     ["hosted-event-receipt", (value) => { value.local_task_created = true; }],
+  ]) {
+    const changed = load(name); mutate(changed);
+    assert.equal(validateRuntimeRecord(name, changed, runtimeValidators).valid, false);
+  }
+});
+
+test("pull-request review records reject identity and publication drift", () => {
+  const load = (name) => JSON.parse(fs.readFileSync(path.join(ROOT, `schemas/runtime/examples/${name}.valid.json`), "utf8"));
+  for (const [name, mutate] of [
+    ["pull-request-worktree-binding", (value) => { value.head_revision = value.base_revision; }],
+    ["pull-request-worktree-binding", (value) => { value.active_checkout_unchanged = false; }],
+    ["local-pull-request-review-packet", (value) => { value.push_enabled = true; }],
+    ["local-pull-request-review-packet", (value) => { value.shadow_fixes[0].published = true; }],
   ]) {
     const changed = load(name); mutate(changed);
     assert.equal(validateRuntimeRecord(name, changed, runtimeValidators).valid, false);
