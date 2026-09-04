@@ -2172,3 +2172,44 @@ model, and connected workers. Cumulative closures are 1,248; the next checkpoint
 Exact next action: continue Decision 0021 ordering at Sprint 123 provider version-skew, failure,
 and resource campaigns. Cumulative closures are 1,265; write the required 1,250-item checkpoint
 after push.
+
+## Batch 123 — Sprint 123 provider resilience campaigns
+
+### Completed
+
+- Closed 17 local Sprint 123 rows: the complete deterministic extreme-campaign harness,
+  cross-adapter hostile/failure fixtures, fake/fault conformance, hostile transition campaigns,
+  all three Story acceptance criteria, and Sprint AC3–AC4. Retained cases: 2,048 provider/version/
+  failure/resource conformance; 2,048 hostile transition/crash; 512 visible blocker states.
+  Approved live environments: 0. Native fuzz runs: 0. Prolonged campaign minutes: 0. Promoted
+  providers: 0. Promotions: 0. Substitutions: 0. Batch closures: 17. Cumulative closures: 1,282.
+- Commits: `e5d4c107` (campaign harness, corpus, tests, closures, and byte-stable supply-chain
+  rebuild), `593eac08` (source-bound report), and `6b420237` (five affected downstream artifacts).
+  Commits including log: 4. Commits per closed item: 0.24. Review pins advanced: 0; complete
+  `REVIEWED_PATHS` intersection: empty.
+
+### Validation and blockers
+
+- Focused validation passed 6 Python tests, dependency rules, the 4,608-case corpus, source-bound
+  report, and every affected downstream check. Supply-chain builds: 1. Corpus generations: 1.
+  Local report builds: 1. Full gate wall seconds: 692.15; it stopped only at the retained Story 6.1
+  rootless-Podman prerequisite after every preceding gate passed. Self-recovery iterations: 0.
+- Live/native/remote/reviewer work remains `BLOCKED_EXTERNAL(platform=approved live synthetic
+  provider environments, exact remote inference routes, native Fedora/Ubuntu/Windows resource and
+  sanitizer hosts, packet/process/resource/canary instrumentation, and independent red-team
+  environment, artifact=untouched provider/version/failure matrices, fuzz seeds/corpus/coverage/
+  crashes/sanitizers/shrinks, prolonged concurrency and resource traces, remote endpoint/route/TLS/
+  network/cost receipts, RV-15/RV-16/RV-17 and RV-23/RV-24/RV-25/RV-26/RV-27/RV-28/RV-29 results,
+  AT-XTE-001 bundle, and independent review, action=provision the approved live synthetic
+  providers, exact remote route credentials, native resource/sanitizer hosts, instrumentation,
+  and reviewers; execute S-123-FT01/FZ01/ST01/RT01, Story 123.2 campaigns, applicable review
+  vectors, and AT-XTE-001; then transfer untouched evidence, credential=provider, remote-route,
+  platform, instrumentation, sanitizer, and reviewer access, payment=provider, remote inference,
+  hosting, instrumentation, sanitizer, or review costs if applicable)`; `substitution_set=empty`.
+- Sprint 123 remains dependency-blocked by `UPSTREAM-SPRINT-122-BLOCKED`; `substitution_set=empty`.
+  Full-chain blocker: `blocked: host change required — run npm run -s docs:check outside the
+  restricted filesystem sandbox with the current user's /run/user/1000/libpod writable`;
+  `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 124 adapter removal and strict-local
+restoration. Cumulative closures are 1,282; write the required 1,275-item checkpoint after push.
