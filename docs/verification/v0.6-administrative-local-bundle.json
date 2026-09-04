@@ -13,11 +13,15 @@
     "artifacts/sprints/sprint-61/local-evidence-report.json",
     "artifacts/sprints/sprint-62/local-evidence-report.json",
     "artifacts/sprints/sprint-63/local-evidence-report.json",
-    "artifacts/sprints/sprint-64/local-evidence-report.json",
     "artifacts/sprints/sprint-65/local-evidence-report.json",
     "artifacts/sprints/sprint-66/local-evidence-report.json",
     "artifacts/sprints/sprint-67/local-evidence-report.json",
     "artifacts/sprints/sprint-68/local-evidence-report.json"
+  ],
+  "supplemental_sprint_64_sources": [
+    "docs/verification/sprint-64-local-results.md",
+    "docs/verification/sprint-64-presentation-corpus.json",
+    "docs/verification/sprint-64-presentation-dependency-manifest.json"
   ],
   "sending_enabled": false,
   "live_calendar_changes_enabled": false,

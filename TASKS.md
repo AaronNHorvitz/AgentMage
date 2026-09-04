@@ -8292,7 +8292,7 @@ the exact tuples above. No story, sprint, product, platform, database, or releas
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 69.1.1 - Implement the bounded story**
-  - [x] **Sub-task 69.1.1.1** (legacy `S-056-I01`): Run canonical-record, briefing, meeting, task, correspondence, deadline, document-control, and privacy suites. Evidence: the v0.6 aggregate validates 15 source-bound Sprint 54–68 reports with zero recorded command failures and inventories all eight administrative workflow classes; every source sprint and release decision remains visibly blocked.
+  - [x] **Sub-task 69.1.1.1** (legacy `S-056-I01`): Run canonical-record, briefing, meeting, task, correspondence, deadline, document-control, and privacy suites. Evidence: the v0.6 aggregate validates 14 source-bound Sprint reports plus Sprint 64's three committed result/corpus/dependency sources with zero recorded command failures and inventories all eight administrative workflow classes; every source sprint and release decision remains visibly blocked.
   - [ ] **Sub-task 69.1.1.2** (legacy `S-056-I02`): Run extraction, generation, round-trip, redaction, recalculation, page, slide, image, link, metadata, and accessibility checks for every promoted format. Local structural subsets are aggregated, but the native render/accessibility matrix remains blocked on the exact Sprint 60–68 platform tuples. **Substitution set:** empty.
   - [ ] **Sub-task 69.1.1.3** (legacy `S-056-I03`): Run malformed, encrypted, hostile, oversized, unsupported, and embedded-execution fixtures. Local hostile subsets are aggregated, but the cross-format native hostile/manual-fuzz matrix remains blocked on the exact Sprint 60–68 platform and independent-review tuples. **Substitution set:** empty.
   - [ ] **Sub-task 69.1.1.4** (legacy `S-056-I04`): Verify every output uses the controlled-write path and every factual claim retains evidence. Local proposal/evidence paths pass, but every-format installed controlled-write verification depends on Sub-task 69.1.1.2. **Substitution set:** empty.
@@ -8301,7 +8301,7 @@ the exact tuples above. No story, sprint, product, platform, database, or releas
 
 - [x] **Task 69.1.2 - Produce reviewable artifacts** Evidence: all four aggregate artifacts below are retained and source-bound while preserving blocked release truth.
   - [x] **Sub-task 69.1.2.1:** v0.6 cross-format acceptance corpus and results. Evidence: the matrix binds all 15 source Sprint reports and ten format classes, distinguishing local structural results from absent native visual/accessibility results and declaring zero supported formats/platforms.
-  - [x] **Sub-task 69.1.2.2:** Administrative workflow acceptance bundle. Evidence: the bundle enumerates eight workflow classes, all 15 exact report paths, all six disabled external-effect classes, blocked source truth, and false release approval.
+  - [x] **Sub-task 69.1.2.2:** Administrative workflow acceptance bundle. Evidence: the bundle enumerates eight workflow classes, 14 exact report paths, three committed Sprint 64 sources, all six disabled external-effect classes, blocked source truth, and false release approval.
   - [x] **Sub-task 69.1.2.3:** Fidelity, privacy, accessibility, and limitation matrix. Evidence: every format row separately records structural-local, native-visual, accessibility, and release-support truth; audio remains structurally absent and every native/accessibility/support state remains false.
   - [x] **Sub-task 69.1.2.4:** v0.6 release notes and capability matrix. Evidence: the candidate notes explicitly state that this is not a release, enumerate remaining native/model/review/signing dependencies, and preserve supported formats/platforms and release approval at 0/0/false.
 
@@ -8320,14 +8320,15 @@ the exact tuples above. No story, sprint, product, platform, database, or releas
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 69.AC1:** Every promoted format passes structural and rendered verification on declared platforms.
-- [x] **Sprint AC 69.AC2:** Every recommendation, draft, task, decision, and record is source-backed and correctly sensitivity-labeled. Evidence: the aggregate hashes all 15 source reports, each of which retains source hashes, command results, provenance/privacy state, limitations, and blocked completion truth.
+- [x] **Sprint AC 69.AC2:** Every recommendation, draft, task, decision, and record is source-backed and correctly sensitivity-labeled. Evidence: the aggregate hashes 14 source reports plus Sprint 64's committed result/corpus/dependency sources; the reports retain source hashes, command results, provenance/privacy state, limitations, and blocked completion truth.
 - [x] **Sprint AC 69.AC3:** No embedded content executes and no external message or state change occurs. Evidence: source reports retain zero admitted execution/external effects and the aggregate independently fixes sending, calendar changes, messaging, live databases, recipient selection, and unattended disposition to false.
 - [x] **Sprint AC 69.AC4:** Failed fidelity or privacy checks block artifact completion. Evidence: every matrix row retains false release support while native visual/accessibility work is absent, every source report remains BLOCKED, and the candidate notes refuse release approval.
 - [x] **Sprint AC 69.AC5:** `G-V0.6` closes only after all workflow, format, security, recovery, and documentation gates pass. Evidence: the source inventory is exact, any non-BLOCKED source or approval drift fails validation, the signed decision remains absent, and the aggregate terminal state stays BLOCKED.
 
 **Gate decision:** Sprint 69 is PASS only when Story 69.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
-**Current status:** **BLOCKED.** The local aggregate covers 15 source-bound Sprint reports, 8
+**Current status:** **BLOCKED.** The local aggregate covers 14 source-bound Sprint reports plus 3
+committed Sprint 64 sources, 8
 administrative workflows, 10 format classes, 14 review guides, 6 disabled external-effect classes,
 and zero supported formats/platforms; see `artifacts/sprints/sprint-69/local-evidence-report.json`.
 Native cross-format/render/accessibility/hostile/recovery/write campaigns, independent review,

@@ -24,7 +24,7 @@ def validate() -> list[str]:
     failures: list[str] = []
     bundle = json.loads(BUNDLE.read_text(encoding="utf-8"))
     matrix = json.loads(MATRIX.read_text(encoding="utf-8"))
-    expected_reports = [f"artifacts/sprints/sprint-{number}/local-evidence-report.json" for number in SPRINTS]
+    expected_reports = [f"artifacts/sprints/sprint-{number}/local-evidence-report.json" for number in SPRINTS if number != 64]
     if bundle.get("source_reports") != expected_reports: failures.append("source report inventory drifted")
     for path in expected_reports:
         report = json.loads((ROOT / path).read_text(encoding="utf-8"))
@@ -32,6 +32,15 @@ def validate() -> list[str]:
         if report.get("summary", {}).get("release_approval") is not False: failures.append(f"source release overclaim: {path}")
         if any(command.get("exit_code") != 0 for command in report.get("commands", [])): failures.append(f"source command failure: {path}")
         if not report.get("source_sha256"): failures.append(f"source binding absent: {path}")
+    expected_sprint_64 = [
+        "docs/verification/sprint-64-local-results.md",
+        "docs/verification/sprint-64-presentation-corpus.json",
+        "docs/verification/sprint-64-presentation-dependency-manifest.json",
+    ]
+    if bundle.get("supplemental_sprint_64_sources") != expected_sprint_64:
+        failures.append("Sprint 64 committed source inventory drifted")
+    if any(not (ROOT / path).is_file() for path in expected_sprint_64):
+        failures.append("Sprint 64 committed source absent")
     for field in ("sending_enabled", "live_calendar_changes_enabled", "messaging_enabled", "external_database_access_enabled", "automatic_recipient_selection_enabled", "unattended_disposition_enabled", "release_approval"):
         if bundle.get(field) is not False: failures.append(f"disabled capability broadened: {field}")
     if matrix.get("sprints") != list(SPRINTS) or matrix.get("supported_format_count") != 0 or matrix.get("supported_platform_count") != 0 or matrix.get("release_approval") is not False:
@@ -48,4 +57,4 @@ if __name__ == "__main__":
     if problems:
         for problem in problems: print(f"error: {problem}")
         raise SystemExit(1)
-    print("validated 15 blocked source sprints, 8 administrative workflows, and 10 unsupported format classes")
+    print("validated 14 bound reports plus Sprint 64 committed sources, 8 workflows, and 10 format classes")

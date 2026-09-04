@@ -17,7 +17,10 @@ SOURCE_PATHS: Final = (
     "docs/releases/v0.6-local-candidate-notes.md", "scripts/v0_6_admin_release_contract.py",
     "tests/test_v0_6_admin_release_contract.py", "scripts/sprint_evidence_recorder.py",
     "scripts/sprint_69_evidence.py", "tests/test_sprint_69_evidence.py",
-    *(f"artifacts/sprints/sprint-{number}/local-evidence-report.json" for number in range(54, 69)),
+    *(f"artifacts/sprints/sprint-{number}/local-evidence-report.json" for number in range(54, 69) if number != 64),
+    "docs/verification/sprint-64-local-results.md",
+    "docs/verification/sprint-64-presentation-corpus.json",
+    "docs/verification/sprint-64-presentation-dependency-manifest.json",
 )
 COMMANDS: Final = (
     ("v0.6-admin-release-contract", ("python3", "-m", "unittest", "tests.test_v0_6_admin_release_contract")),
@@ -28,7 +31,8 @@ COMMANDS: Final = (
 FOCUSED_COMMANDS: Final = (COMMANDS[0][0],)
 SECURITY_REQUIREMENTS: Final = ("SR-DAT-001", "SR-DAT-002", "SR-DAT-003", "SR-SUP-008", "SR-SUP-009", "SR-AI-007", "SR-OPS-001", "SR-OPS-002", "SR-TST-002", "SR-TST-004", "SR-CIV-006", "SR-CIV-007")
 IMPLEMENTED: Final = {
-    "source_sprint_count": 15, "administrative_workflow_class_count": 8,
+    "source_sprint_count": 15, "source_bound_report_count": 14,
+    "sprint_64_committed_source_count": 3, "administrative_workflow_class_count": 8,
     "format_class_count": 10, "review_guide_count": 14,
     "all_source_reports_blocked": True, "sending_enabled": False,
     "live_calendar_changes_enabled": False, "messaging_enabled": False,
@@ -48,7 +52,8 @@ BLOCKERS: Final = (
 )
 VERIFICATION: Final = {
     "focused_local_contracts": True, "focused_blocking_skip_count": 0,
-    "source_sprint_count": 15, "source_report_command_failures": 0,
+    "source_sprint_count": 15, "source_bound_report_count": 14,
+    "sprint_64_committed_source_count": 3, "source_report_command_failures": 0,
     "source_release_approval_count": 0, "supported_format_count": 0,
     "supported_platform_count": 0, "disabled_external_effect_count": 6,
     "native_format_matrix_complete": False, "accessibility_matrix_complete": False,
