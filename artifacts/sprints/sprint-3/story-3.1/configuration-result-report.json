@@ -157,11 +157,11 @@
     },
     {
       "path": "scripts/validate_planning_schemas.mjs",
-      "sha256": "9eb1e5277bc2ffe6953e2d2ecc6504f832825285beefecfb35c27aac4997ac20"
+      "sha256": "5f4f55bf1bdba1bbd020af993dd9ca9868d9a11a9534cb0dadec4eb3da621d9d"
     },
     {
       "path": "tests/test_planning_schemas.mjs",
-      "sha256": "7e91d19b6eed4e802db3f1577a514a9298c70d6becb1706ce9b2861d0565f42b"
+      "sha256": "41dc752a868f032ea8915fc73b051a437309e40249c2c2fb762a61c9b41221a9"
     },
     {
       "path": "scripts/configuration_result_evidence.py",
