@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_69_local_evidence",
+  "source_revision": "22cb98d93d1d228459326b497c4461389527c3a8",
+  "source_sha256": {
+    "docs/verification/v0.6-cross-format-local-matrix.json": "efd9cd6d2ddbf318394e6d5d790103f4ddc8625ae0d3db3a9986503a9bb8cd2e",
+    "docs/verification/v0.6-administrative-local-bundle.json": "f754eb7f6fe1184ba0a7f7820daaf7fc834205177c7e6ec59f1517e32b2fc59b",
+    "docs/guides/v0.6-administrative-artifact-review.md": "fbaaa8e45d1eccf9da679884d5915ef4a94ebfbb454b6730b944e5b8ff1fad19",
+    "docs/releases/v0.6-local-candidate-notes.md": "99b36bfe7c47bf7ce0cdb2af6b275d5bb097c231f55f872b7a2c6585293b1957",
+    "scripts/v0_6_admin_release_contract.py": "4c9408a741684a2e292d18240ddf6802622bd2d4f2f66476099300c3c14d3d5f",
+    "tests/test_v0_6_admin_release_contract.py": "6531e9d98e9df66fe746293e22211d04de83b8ad2ae4dc3cba84a1f562d46ceb",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_69_evidence.py": "bbea9f2ac3f7611786c94f75be02a32706a044099d72ee8697df1f43917e3eed",
+    "tests/test_sprint_69_evidence.py": "0489043885b88eeaed5cc8fdd091230c9e5098008104b317928d20d60dbc1596",
+    "artifacts/sprints/sprint-54/local-evidence-report.json": "ea067280cdeac0ec60c7cbe14da96342b001136dd380524e61af6df473f35ed5",
+    "artifacts/sprints/sprint-55/local-evidence-report.json": "ea15d0d5f1f9d3082879ee4c23e10118ef7a0234cf1a9ff490731961ebc93ae0",
+    "artifacts/sprints/sprint-56/local-evidence-report.json": "5e963ce0f33c212b7659e459c0998a8cca82df400321ea7cc7896ff46af4640e",
+    "artifacts/sprints/sprint-57/local-evidence-report.json": "525d7d498978a96d75eb8a69bbe3910c576432d57421a0927a60a6733dc9e139",
+    "artifacts/sprints/sprint-58/local-evidence-report.json": "29f392fe08fb99016beb37281755bd63050c95e1213f5b4ecce19870143eb733",
+    "artifacts/sprints/sprint-59/local-evidence-report.json": "c59aa595baf875bd610c24c5ba527b4facfc7d75d9a7ec8f89682c1891405fec",
+    "artifacts/sprints/sprint-60/local-evidence-report.json": "1ac6ca6e671a425271f12d3d4a2d14fa29735c4e1b05e0f669dd6059d4d345fa",
+    "artifacts/sprints/sprint-61/local-evidence-report.json": "06529afed0f84c954900401d8255837f90c61736390d02728dc379c00c347e37",
+    "artifacts/sprints/sprint-62/local-evidence-report.json": "74d297d6f843cf5f1f55418f23efd6ae8eb9abeae27acacd54c6449c2eca5c64",
+    "artifacts/sprints/sprint-63/local-evidence-report.json": "3cfe1d3a084e931d44c02d18fa37f9f75ce48f81324f6c1f00e8f8f5796e3a54",
+    "artifacts/sprints/sprint-65/local-evidence-report.json": "43de4ce92eef8708a1f49c3e6fd3ccd61870fcef69774665614592445e061361",
+    "artifacts/sprints/sprint-66/local-evidence-report.json": "4be0b5eb2ddadb1dbb1f46b15be0e62510f28b167733befffbe802bbb6fdda4c",
+    "artifacts/sprints/sprint-67/local-evidence-report.json": "3d53bb09b159b2dd893c68875cc458b20dd134c31212c96a4ab5b9ff3c3cccae",
+    "artifacts/sprints/sprint-68/local-evidence-report.json": "d54c13970e7c50903db575a7baca1d40408cf88de51bc5443dd3a46764eb4a53",
+    "docs/verification/sprint-64-local-results.md": "1a4b8081a1ae2a0bb6f0a17cbb0b98f453d44a339abca50641f323a3dd2ac91b",
+    "docs/verification/sprint-64-presentation-corpus.json": "1031564cad6976f5d8cf77a4ab92a7b3a804603d5e47fa9b6a8b508dc996ddc9",
+    "docs/verification/sprint-64-presentation-dependency-manifest.json": "d64238fcaf0aafe6e2e5a8bbb44dd5aceb2ad0310b44013bccb4c55d8858e41b"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "v0.6-admin-release-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_v0_6_admin_release_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "fe008aab760eb03ccac7578e2b84665b1b50b0d7f855b17a0c7a8d039435b658",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_69_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "372ee57a30b8a8b17bb056a0814266786a922da7dcf4139f4f9a2457745d6424",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-DAT-001",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-SUP-008",
+    "SR-SUP-009",
+    "SR-AI-007",
+    "SR-OPS-001",
+    "SR-OPS-002",
+    "SR-TST-002",
+    "SR-TST-004",
+    "SR-CIV-006",
+    "SR-CIV-007"
+  ],
+  "implemented_contracts": {
+    "source_sprint_count": 15,
+    "source_bound_report_count": 14,
+    "sprint_64_committed_source_count": 3,
+    "administrative_workflow_class_count": 8,
+    "format_class_count": 10,
+    "review_guide_count": 14,
+    "all_source_reports_blocked": true,
+    "sending_enabled": false,
+    "live_calendar_changes_enabled": false,
+    "messaging_enabled": false,
+    "external_database_access_enabled": false,
+    "automatic_recipient_selection_enabled": false,
+    "unattended_disposition_enabled": false,
+    "supported_format_count": 0,
+    "supported_platform_count": 0,
+    "native_format_matrix_complete": false,
+    "accessibility_matrix_complete": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "source_sprint_count": 15,
+    "source_bound_report_count": 14,
+    "sprint_64_committed_source_count": 3,
+    "source_report_command_failures": 0,
+    "source_release_approval_count": 0,
+    "supported_format_count": 0,
+    "supported_platform_count": 0,
+    "disabled_external_effect_count": 6,
+    "native_format_matrix_complete": false,
+    "accessibility_matrix_complete": false,
+    "independent_review": false,
+    "signed_gate_decision": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-54-68-BLOCKED",
+      "owner": "69.1"
+    },
+    {
+      "code": "NATIVE-CROSS-FORMAT-MATRIX-INCOMPLETE",
+      "owner": "69.1.1.2"
+    },
+    {
+      "code": "HOSTILE-CROSS-FORMAT-MATRIX-INCOMPLETE",
+      "owner": "69.1.1.3"
+    },
+    {
+      "code": "EVERY-OUTPUT-CONTROLLED-WRITE-MATRIX-INCOMPLETE",
+      "owner": "69.1.1.4"
+    },
+    {
+      "code": "RECOVERY-MATRIX-INCOMPLETE",
+      "owner": "69.1.3.3"
+    },
+    {
+      "code": "INDEPENDENT-ARTIFACT-REVIEW-ABSENT",
+      "owner": "69.1.3.4"
+    },
+    {
+      "code": "SIGNED-GATE-DECISION-ABSENT",
+      "owner": "69.1.3.5"
+    }
+  ],
+  "summary": {
+    "local_sprint_69_aggregate_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprints_closed": false,
+    "native_cross_format_complete": false,
+    "accessibility_complete": false,
+    "recovery_complete": false,
+    "independent_review_present": false,
+    "signed_gate_decision_present": false,
+    "release_approval": false
+  }
+}
