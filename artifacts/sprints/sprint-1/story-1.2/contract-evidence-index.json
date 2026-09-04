@@ -28,7 +28,7 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "2e405c26a292da3d374f169c6ea9bf74d21b0cdc5773e751d61143c5cddc49b6"
+          "sha256": "4bced033e1d380f79d2457f3f9310c04b8a4fc76cc0c17b7e0c6347d361eafd8"
         }
       ]
     },
@@ -41,11 +41,11 @@
         },
         {
           "path": "supply-chain/dependency-provenance.json",
-          "sha256": "0fc17456f793468b007119d17f045d98f077329c69a1977fe053b5dddbdee3d4"
+          "sha256": "9038bc052164691850b45cb1370a8150d9e6a57d852f7c1c71d8388aca91acc2"
         },
         {
           "path": "supply-chain/sbom.cdx.json",
-          "sha256": "78240f7cdb46122750e54059a91c466cbea1fcf96b2035ad4e41bae20e7df8b3"
+          "sha256": "39a11ba75d629da817970fc8515279e838633c0e7644bf54cfd08994b0c606c4"
         }
       ]
     },
@@ -88,7 +88,7 @@
       "artifacts": [
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-          "sha256": "6545e58101c79b5c57cfffe522e5614ca858db489a9e5419ffa44021f27f52fe"
+          "sha256": "2ff61867e22eac5725f6e8e051fe04a3fe8ea5baf43d9993ae082f7fe961451c"
         }
       ]
     },
@@ -101,7 +101,7 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/security-evidence-map.json",
-          "sha256": "6e0b23072cf72c0aa2c5d15b8a9a8cb70fdc2a016048ac479d8ccaa27b84a183"
+          "sha256": "280c87e4305ffa383a62043b12fa184fbad47698ad7e6a5bbdf8081c0f8f1ec0"
         }
       ]
     },
@@ -132,7 +132,7 @@
     "data_class": "synthetic-local-contract-tests-only",
     "artifact": {
       "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-      "sha256": "6545e58101c79b5c57cfffe522e5614ca858db489a9e5419ffa44021f27f52fe"
+      "sha256": "2ff61867e22eac5725f6e8e051fe04a3fe8ea5baf43d9993ae082f7fe961451c"
     },
     "required_markers": [
       "Validated 37 Engineering Runtime schemas and 6 reused contracts.",
