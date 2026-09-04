@@ -35,11 +35,6 @@
       "capability": "native-office-rendering",
       "reason_code": "reconciliation.native-render.not-admitted",
       "state": "blocked"
-    },
-    {
-      "capability": "arbitrary-precision-financial-methods",
-      "reason_code": "reconciliation.decimal-method.not-implemented",
-      "state": "blocked"
     }
   ],
   "required_first_ga_platforms": [

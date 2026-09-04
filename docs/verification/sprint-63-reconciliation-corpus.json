@@ -3,7 +3,7 @@
   "record_type": "sprint_63_reconciliation_corpus",
   "story_id": "63.1",
   "legacy_story_id": "S-052",
-  "case_count": 109,
+  "case_count": 124,
   "cases": [
     {
       "case_id": "data63-json_parse-01",
@@ -558,6 +558,126 @@
       "requirement": "63.1.2/63.1.3"
     },
     {
+      "case_id": "data63-advanced_reconciliation-01",
+      "category": "advanced_reconciliation",
+      "expected": "plain base-ten values parse without IEEE-754 coercion",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-02",
+      "category": "advanced_reconciliation",
+      "expected": "exponent notation rejects",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-03",
+      "category": "advanced_reconciliation",
+      "expected": "decimal coefficients admit up to 4096 digits",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-04",
+      "category": "advanced_reconciliation",
+      "expected": "source decimal scale remains explicit",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-05",
+      "category": "advanced_reconciliation",
+      "expected": "inclusive tolerance boundaries are exact across different scales and signs",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-06",
+      "category": "advanced_reconciliation",
+      "expected": "negative tolerances reject",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-07",
+      "category": "advanced_reconciliation",
+      "expected": "half-even financial ties are explicit",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-08",
+      "category": "advanced_reconciliation",
+      "expected": "half-away-from-zero financial ties are explicit",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-09",
+      "category": "advanced_reconciliation",
+      "expected": "negative rounding is sign-correct",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-10",
+      "category": "advanced_reconciliation",
+      "expected": "many-to-many allocation requires stable unique recipients and positive weights",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-11",
+      "category": "advanced_reconciliation",
+      "expected": "allocation conserves every exact minor unit",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-12",
+      "category": "advanced_reconciliation",
+      "expected": "allocation remainder ties use recipient identity order",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-13",
+      "category": "advanced_reconciliation",
+      "expected": "changed source digests fail as stale",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-14",
+      "category": "advanced_reconciliation",
+      "expected": "future capture instants fail as stale",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-15",
+      "category": "advanced_reconciliation",
+      "expected": "maximum source age is explicit and inclusive",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-16",
+      "category": "advanced_reconciliation",
+      "expected": "method records bind both source hashes",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-17",
+      "category": "advanced_reconciliation",
+      "expected": "method records bind schema type formula join tolerance rounding and version decisions",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-18",
+      "category": "advanced_reconciliation",
+      "expected": "method records count unmatched and conflicting keys separately",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-19",
+      "category": "advanced_reconciliation",
+      "expected": "method records retain exact totals and recompute their tolerance result",
+      "requirement": "63.1.3.2"
+    },
+    {
+      "case_id": "data63-advanced_reconciliation-20",
+      "category": "advanced_reconciliation",
+      "expected": "advanced reconciliation performs no filesystem network formula or native-office effect",
+      "requirement": "63.1.3.2"
+    },
+    {
       "case_id": "data63-external_blocker-01",
       "category": "external_blocker",
       "expected": "Sprint 62 remains blocked upstream",
@@ -566,95 +686,65 @@
     {
       "case_id": "data63-external_blocker-02",
       "category": "external_blocker",
-      "expected": "numeric tolerance reconciliation is not implemented",
+      "expected": "encrypted workbook handling is not implemented",
       "requirement": "63.1"
     },
     {
       "case_id": "data63-external_blocker-03",
       "category": "external_blocker",
-      "expected": "financial rounding policy is not implemented",
+      "expected": "legacy XLS handling is not implemented",
       "requirement": "63.1"
     },
     {
       "case_id": "data63-external_blocker-04",
       "category": "external_blocker",
-      "expected": "many-to-many allocation is not implemented",
+      "expected": "native office recalculation evidence is absent",
       "requirement": "63.1"
     },
     {
       "case_id": "data63-external_blocker-05",
       "category": "external_blocker",
-      "expected": "stale-data policy is not implemented",
+      "expected": "Fedora native visual evidence is absent",
       "requirement": "63.1"
     },
     {
       "case_id": "data63-external_blocker-06",
       "category": "external_blocker",
-      "expected": "arbitrary-precision decimal reconciliation is not implemented",
+      "expected": "Ubuntu native visual evidence is absent",
       "requirement": "63.1"
     },
     {
       "case_id": "data63-external_blocker-07",
       "category": "external_blocker",
-      "expected": "encrypted workbook handling is not implemented",
+      "expected": "Windows native visual evidence is absent",
       "requirement": "63.1"
     },
     {
       "case_id": "data63-external_blocker-08",
       "category": "external_blocker",
-      "expected": "legacy XLS handling is not implemented",
+      "expected": "retained macOS native visual evidence is absent",
       "requirement": "63.1"
     },
     {
       "case_id": "data63-external_blocker-09",
       "category": "external_blocker",
-      "expected": "native office recalculation evidence is absent",
+      "expected": "installed accessibility evidence is absent",
       "requirement": "63.1"
     },
     {
       "case_id": "data63-external_blocker-10",
       "category": "external_blocker",
-      "expected": "Fedora native visual evidence is absent",
+      "expected": "independent review is absent",
       "requirement": "63.1"
     },
     {
       "case_id": "data63-external_blocker-11",
       "category": "external_blocker",
-      "expected": "Ubuntu native visual evidence is absent",
-      "requirement": "63.1"
-    },
-    {
-      "case_id": "data63-external_blocker-12",
-      "category": "external_blocker",
-      "expected": "Windows native visual evidence is absent",
-      "requirement": "63.1"
-    },
-    {
-      "case_id": "data63-external_blocker-13",
-      "category": "external_blocker",
-      "expected": "retained macOS native visual evidence is absent",
-      "requirement": "63.1"
-    },
-    {
-      "case_id": "data63-external_blocker-14",
-      "category": "external_blocker",
-      "expected": "installed accessibility evidence is absent",
-      "requirement": "63.1"
-    },
-    {
-      "case_id": "data63-external_blocker-15",
-      "category": "external_blocker",
-      "expected": "independent review is absent",
-      "requirement": "63.1"
-    },
-    {
-      "case_id": "data63-external_blocker-16",
-      "category": "external_blocker",
       "expected": "manual fuzzing remains explicitly deferred",
       "requirement": "63.1"
     },
     {
-      "case_id": "data63-external_blocker-17",
+      "case_id": "data63-external_blocker-12",
       "category": "external_blocker",
       "expected": "Sprint 63 remains blocked while required evidence is absent",
       "requirement": "63.1"
@@ -662,8 +752,9 @@
   ],
   "json_rust_fixture_count": 5,
   "workbook_rust_fixture_count": 4,
+  "advanced_reconciliation_rust_fixture_count": 7,
   "runtime_schema_count": 5,
-  "implemented_method_count": 6,
+  "implemented_method_count": 11,
   "native_office_fixture_count": 0,
   "network_enabled": false,
   "filesystem_mutation_enabled": false,
