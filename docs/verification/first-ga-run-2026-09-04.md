@@ -214,3 +214,50 @@ Exact next action: all remaining Sprint 75 rows depend on exact external tuples;
 Exact next action: all remaining Sprint 76 rows depend on the upstream or exact external tuple;
 continue Decision 0021 ordering at Sprint 77 desktop status, recovery, and packaging. Cumulative
 closures are 401; the 400-item checkpoint handoff is required after this batch push.
+
+## Batch 83 — Sprint 77 desktop status, recovery, and package contracts
+
+### Completed
+
+- Closed 10 TASKS rows: Task 77.1.1 and all 3 implementation sub-tasks; artifact Sub-tasks
+  77.1.2.2 and .4; verification Sub-tasks 77.1.3.1 and .2; and Sprint AC77.AC2 and AC77.AC5. The
+  host-owned source contract binds 9 status digests/fields, a single-writer lease, fail-closed
+  recovery and read-only safe mode, 5 required local asset classes, and 6 kernel-forwarded protocol
+  projections while admitting zero direct client effect or authority. Promotions: 0.
+  Substitutions: 0. Cumulative closed items: 411.
+- Commits: `8555998e` (desktop lifecycle source, guide, 38-case corpus, tests, truthful closures,
+  and final supply-chain carrier), `82e34677` (source-bound 6-command Sprint 77 report), and
+  `bdd3c5cd` (one affected evidence regeneration pass). Commits including log: 4. Commits per
+  closed item: 0.40. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across all
+  Batch 83 paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 8 Rust cases, 2 artifact-contract tests, 3 evidence mutation tests, strict
+  host Clippy, format, Python compilation, 38 corpus cases, supply-chain currentness, product-CI
+  contract, configuration startup/result, component inventory, Story 3.1 security/gate, planning
+  scope, traceability, contract boundary/evidence, Stories 2.1/2.2/2.4, and Sprint 2 pass.
+  Supply-chain builds: 1. Local report builds: 1. Downstream evidence regeneration passes: 1.
+  Recovery iterations: 0. The closure audit left native crash/restart, offline package completion,
+  signing, installation, accessibility, visual, clean-install, and user-file recovery rows open;
+  the local state machine is not their substitute. The full chain ran 690.84 seconds and stopped
+  only at the retained Story 6.1 rootless-Podman prerequisite after every preceding gate passed.
+  Recorded gate wall seconds: 691.
+- Native signed/verified packages, protocol parity, crash/restart, accessibility, visual, offline,
+  clean-install, uninstall/residue, security, and independent-review evidence remain blocked on
+  `BLOCKED_EXTERNAL(platform=native Fedora/Ubuntu and physical supported MacBook desktop package
+  environments plus independent review, artifact=untouched signed/verified packages, protocol
+  parity, boundary attack, crash/restart, accessibility, visual, offline, clean-install,
+  uninstall/residue, and reviewer bundles, action=provision the exact native platforms, physical
+  Mac, package signing identities, accessibility tooling, and reviewer, build and install the
+  packages, execute S-063-ST01/RT01/AT01 and the product-security campaign, and transfer the
+  untouched bundles, credential=physical Mac, native platform, package signer, accessibility
+  tooling, and reviewer access, payment=hardware, signing, platform, accessibility, or review costs
+  if applicable)`; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 77 rows depend on upstream or exact external tuples;
+continue Decision 0021 ordering at Sprint 78 capability package trust and lifecycle. Cumulative
+closures are 411; the next checkpoint remains 425.
