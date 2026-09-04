@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_83_local_evidence",
+  "source_revision": "50e1eedf1161988ee056a501302a11dfe8a93500",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "shells/host/Cargo.toml": "b6ad82e6be880f63c24d47a0341748261f2bd747d7a851264b81ab24beacf713",
+    "shells/host/src/lib.rs": "cd0a9270dbcffad97ca2fc563aef6f24f345fa0f20d45e140cb393c663a382fd",
+    "shells/host/src/browser_inspection.rs": "c33c491bce7d0f2c93450fdab149111e48981dee2340da6cc74815beeb10f32a",
+    "docs/guides/sandboxed-browser-inspection.md": "cb0efbac964a7368789615b3b832ed67766bd99954d7f839724775aacd38f6f6",
+    "docs/verification/sprint-83-browser-inspection-corpus.json": "391f72188ba0cd6b7b0735b53715b11c3842c41065268281d9cb6afafdc06e94",
+    "artifacts/sprints/sprint-82/local-evidence-report.json": "d7a8b5103e0bc56a08e7bb735ceacd43fda2e06889e8853e6cb99ef1f8ecd830",
+    "scripts/browser_inspection_contract.py": "f9a30c970423002b9bcf0364d98cdea9edcbaba59dcb5f78fa2207344e0f227a",
+    "tests/test_browser_inspection_contract.py": "2b1e5cfa316efd0fccd60d700250d155c81675befb7c18995a34350ae1103f30",
+    "supply-chain/dependency-hashes.sha256": "e0a05a1578da3f2d957185ca522b020f3eb417ffc387be07e2ac3bad28595556",
+    "supply-chain/dependency-provenance.json": "a7b7d211755c13d6e62704319bd4566df41f639b363e5e1a47295256449b549f",
+    "supply-chain/sbom.cdx.json": "b8b35b547c202a565f67716cbb5ed95c0a6264118c7fdf18dfdd532a3452f314",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_83_evidence.py": "3e5ccbf92b40e3c2c85b5f165d5b351d9a0e93d140620c2979e8ec9085d18334",
+    "tests/test_sprint_83_evidence.py": "21b2e70be5b045de01e743e58d34fd1712ce96f354060dacd0bb54d3bacafea7"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "browser-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "browser_inspection::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "002e6915f970bfa9b25b3c5668e3939354a4b401ca4b2246abaaced3c7d8f0ff",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "browser-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_browser_inspection_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a6707d4eff38012da33ddc34bc6dc076a3b17151cfc9aef223c8790cbe64c3da",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "runtime-schema-contract",
+      "argv": [
+        "npm",
+        "run",
+        "-s",
+        "schemas:test"
+      ],
+      "exit_code": 0,
+      "output_sha256": "bfdb55e6ae26b2fd3c6fc68ab76ebc623117a93c0c887b24fee778d7a41d10fa",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_83_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-ACC-002",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-NET-003",
+    "SR-NET-004",
+    "SR-NET-005",
+    "SR-NET-006",
+    "SR-AI-004",
+    "SR-AI-005"
+  ],
+  "implemented_contracts": {
+    "action_count": 6,
+    "profile_class_count": 2,
+    "rust_test_count": 4,
+    "corpus_case_count": 36,
+    "browser_executor_count": 0,
+    "native_browser_action_count": 0,
+    "download_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "rust_test_count": 4,
+    "corpus_case_count": 36,
+    "native_browser_executed": false,
+    "download_scan_complete": false,
+    "privacy_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-82-BLOCKED",
+      "owner": "83"
+    },
+    {
+      "code": "NATIVE-BROWSER-SECURITY-AND-PRIVACY-REVIEW-ABSENT",
+      "owner": "83.1.3.4"
+    }
+  ],
+  "summary": {
+    "local_sprint_83_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_82_closed": false,
+    "native_browser_campaign_complete": false,
+    "native_security_evidence_complete": false,
+    "privacy_review_present": false,
+    "release_approval": false
+  }
+}
