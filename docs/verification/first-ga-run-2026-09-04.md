@@ -1891,3 +1891,51 @@ foundation. Cumulative closures are 1,128; write the required 1,125-item checkpo
 
 Exact next action: continue Decision 0021 ordering at Sprint 117 Datadog and multi-vendor
 observability. Cumulative closures are 1,149; next required 25-item checkpoint is 1,150.
+
+## Batch 117 — Sprint 117 bounded multi-vendor observability
+
+### Completed
+
+- Closed 20 local Sprint 117 rows: seven provider adapter families, ten object families,
+  OpenTelemetry-centered normalization with namespaced differences, exact query previews and
+  diagnostics, observe-only authority, all four synthetic verification suites, all three story
+  criteria, and Sprint AC 117.AC2 through AC4. The corpus contains 128 query cases, 2,048 hostile
+  cases, and 512 fault cases. Live queries: 0. Tenant crossovers: 0. Credential disclosures: 0.
+  Secret disclosures: 0. Hidden writes: 0. Remediations: 0. Unbounded queries: 0.
+- Promoted providers: 0. Complete published live-provider matrices: false. Complete
+  `AT-OBS-001`: false. Independent human reviews: 0. Promotions: 0. Substitutions: 0. Batch
+  closures: 20. Cumulative closed items: 1,169.
+- Commits: `41342c22` (vendor observability contracts, corpus, tests, truthful closures, and
+  supply-chain renewal), `9f0faee5` (source-bound Sprint 117 report), and `b0fa637f` (complete
+  downstream contract/configuration/traceability renewal). Commits including log: 4. Commits per
+  closed item: 0.20. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across every
+  Batch 117 changed or regenerated path and every pin-bearing gate: empty.
+
+### Validation and blockers
+
+- Focused validation passed 4 Rust vendor-observability tests, strict Clippy, 3 corpus tests, 3
+  evidence tests, Python compilation, dependency rules, supply-chain currentness, product CI, all
+  affected contract/configuration/traceability checks, and the source-bound report. Supply-chain
+  builds: 1. Corpus generations: 1. Local report builds: 1. Full gate wall seconds: 679.56; it
+  stopped only at the retained Story 6.1 rootless-Podman prerequisite after every preceding gate
+  passed. Self-recovery iterations: 0.
+- Real provider matrices, deployments, telemetry sources, service/environment effects, complete
+  `AT-OBS-001`, and independent review remain `BLOCKED_EXTERNAL(platform=isolated supported
+  Datadog, Prometheus, Grafana, Loki, Elastic, Splunk, and Sentry deployments plus telemetry
+  sources, instrumented services, release/deployment environments, and independent review
+  environment, artifact=untouched exact provider/version/object support matrices,
+  tenant/account/datasource/project identities, query plans, raw and normalized results,
+  pagination and degradation traces, canary scans, resource results, AT-OBS-001 bundle, and
+  independent review, action=provision isolated provider deployments, telemetry sources, services,
+  environments, credentials, instrumentation, and independent reviewer; execute
+  S-117-CT01/ST01/IT01/RT01 and AT-OBS-001 against real supported versions, then transfer untouched
+  evidence, credential=provider, tenant, account, datasource, project, service, instrumentation,
+  and reviewer access, payment=provider, hosting, telemetry, observability, instrumentation, or
+  review costs if applicable)`; `substitution_set=empty`.
+- Sprint 117 also remains dependency-blocked by `UPSTREAM-SPRINT-116-BLOCKED` with no
+  substitution. Exact full-chain carrier blocker: `blocked: host change required — run npm run -s
+  docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 118 incidents, bounded notifications,
+and ChatOps. Cumulative closures are 1,169; write the required 1,150-item checkpoint after push.
