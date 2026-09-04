@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_124_local_evidence",
+  "source_revision": "77a22ddfcec92169c8d1d0138cf67c1fda57d2af",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "supply-chain/dependency-provenance.json": "a68da4bda2acb0ae5abd72fe94b6968c47f0bfba0973b897402fc3f9ca161107",
+    "supply-chain/sbom.cdx.json": "0fa1856d379bd76662399b59947a6efa3bbc839e619c7e97f412926ba1298b12",
+    "supply-chain/dependency-hashes.sha256": "f5b6b3b48df6f53fdbe369ba11732f0d5072de5d9a8f0677e7464e1d13ef9878",
+    "artifacts/sprints/sprint-124/adapter-removal-corpus.json": "a0be9f274ad28d2d0db2493967dee757613ab4ef3f88d6020bf0b32fbd3fc361",
+    "scripts/adapter_removal_contract.py": "cd2a549609176996c5dcad61279cfa68d98c9746f2a9d0da8884877bd2c3bb18",
+    "tests/test_adapter_removal_contract.py": "da23deedb6392f442a3a2915167c6802a984163d91b151c2cc0b3989509b9bd4",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_124_evidence.py": "957b144b9050127204188ae0d406b41afe8957e3ef58daecafb33c1dbfcdd9ef",
+    "tests/test_sprint_124_evidence.py": "c2d828899c234438cd48278bfbd2df5056c20d13a2ba4aaf827b53d39c09dba0"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "adapter-removal-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_adapter_removal_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "7ba600c131d14938fa296eb6eb208c575bf239a15b65439f37d0578df0fff9bf",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary-contract",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_124_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-ADP-001",
+    "AM-XTE-001",
+    "AT-ADP-001",
+    "AT-XTE-001",
+    "SR-DEL-010",
+    "RV-30"
+  ],
+  "implemented_contracts": {
+    "plan_case_count": 1024,
+    "attack_case_count": 512,
+    "recovery_case_count": 512,
+    "native_platform_count": 0,
+    "strict_local_rerun_count": 0,
+    "zero_egress_minutes": 0,
+    "rv30_run_count": 0,
+    "remote_profile_removal_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "inventory_contract_complete": true,
+    "preview_contract_complete": true,
+    "ordered_removal_contract_complete": true,
+    "recovery_fixture_complete": true,
+    "native_residue_scan_complete": false,
+    "strict_local_acceptance_complete": false,
+    "rv30_complete": false,
+    "remote_profile_removal_complete": false,
+    "independent_human_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-123-BLOCKED",
+      "owner": "124"
+    },
+    {
+      "code": "BLOCKED-EXTERNAL-ADAPTER-REMOVAL",
+      "owner": "124"
+    }
+  ],
+  "summary": {
+    "local_sprint_124_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_123_closed": false,
+    "strict_local_restored_natively": false,
+    "release_approval": false
+  }
+}
