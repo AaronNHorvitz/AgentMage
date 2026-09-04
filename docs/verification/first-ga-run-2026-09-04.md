@@ -908,3 +908,52 @@ continue Decision 0021 ordering at Sprint 94 child authority and isolation. Cumu
 Exact next action: all remaining Sprint 94 rows depend on upstream or the exact external tuple;
 continue Decision 0021 ordering at Sprint 95 agent coordination, review, and direction. Cumulative
 closures are 725; write the required 725-item checkpoint after push.
+
+## Batch 97 — Sprint 95 local coordination and profile workflows
+
+### Completed
+
+- Closed 38 TASKS rows. Story 95.1: Task 95.1.1 and its 5 previously open implementation
+  sub-tasks; Task 95.1.2 and all 4 artifact sub-tasks; verification Sub-tasks 95.1.3.1 through
+  95.1.3.3; and both Story acceptance criteria (16 rows). Story 95.2: Task 95.2.1 and all 6 graph
+  sub-tasks; Task 95.2.2 and all 3 artifact sub-tasks; verification Sub-tasks 95.2.3.1 through
+  95.2.3.3; Story AC95.2.AC2 and AC95.2.AC4; and Sprint AC95.AC1, AC95.AC2, AC95.AC3,
+  AC95.AC5, AC95.AC6, and AC95.AC7 (22 rows). Four canonical graphs bind 28 profile nodes to the
+  one shared runtime, sequential writable ownership, bounded read-only work, parent review,
+  preserved dissent, and zero provider effects. Promotions: 0. Substitutions: 0. Cumulative
+  closed items: 763.
+- Commits: `4bd6aa0f` (profile-workflow source, 80-case corpus, tests, truthful closures, and final
+  supply-chain carrier), `ad3e425e` (source-bound Sprint 95 coordination report), and `93819495`
+  (one affected downstream evidence regeneration pass). Commits including log: 4. Commits per
+  closed item: 0.11. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across all
+  27 Batch 97 paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 8 Rust cases across the existing scheduler and new graphs, 4 artifact-
+  contract tests, 3 evidence mutation tests, strict kernel Clippy, format, Python compilation,
+  Markdown, 80 synthetic/adversarial cases, supply-chain currentness, and product CI passed.
+  Supply-chain builds: 1. Local report builds: 1. Downstream evidence regeneration passes: 1.
+  Recovery iterations: 0. The full chain ran 709.98 seconds and stopped only at the retained
+  Story 6.1 rootless-Podman prerequisite after every preceding gate passed. Recorded gate wall
+  seconds: 710.
+- Native multi-child coordination, descendant recovery, writable worktree, and independent review
+  evidence remains blocked on `BLOCKED_EXTERNAL(platform=native multi-child coordination,
+  cancellation, writable-worktree, and independent-review environment, artifact=untouched
+  assignment/event/receipt traces, descendant process/model/tool/network/write/lease cleanup
+  observations, sequential writable worktree pipelines, bounded parallel review outputs,
+  conflicts, dissent, parent decisions, crash/resume results, real-system no-effect snapshots, and
+  reviewer bundle, action=provision exact native multi-child runtime, dedicated repositories/
+  worktrees, model/tool/network/process and crash instrumentation, approved workflow fixtures, and
+  independent reviewer, execute S-072-RT01, S-072-IT01, S-095-RT01, and the native Sprint 95
+  coordination/product-security campaign, and transfer untouched bundles, credential=runtime,
+  repository/worktree, model, tool, network fixture, instrumentation, and reviewer access,
+  payment=platform, repository, model, tool, network, instrumentation, or review costs if
+  applicable)`; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: Stories 95.1/95.2 remaining rows depend on upstream or the exact external tuple;
+continue Decision 0021 ordering at Story 95.3 engineering capability registry. Cumulative closures
+are 763; write the required 750-item checkpoint after push.
