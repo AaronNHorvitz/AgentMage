@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_84_local_evidence",
+  "source_revision": "99bfb07f83fffb93d1d108cfbfd69f9b8e453ecb",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "shells/host/Cargo.toml": "b6ad82e6be880f63c24d47a0341748261f2bd747d7a851264b81ab24beacf713",
+    "shells/host/src/lib.rs": "caba630e86a5e6c49c87cf2c9c690eb5152b5b3741e4c68e21a9742e1355fe7c",
+    "shells/host/src/computer_use.rs": "a808481bb6e645010180867689f490d0fd93521474a34ee7b2b65e0b483b3c08",
+    "shells/host/src/public_research.rs": "c1ed85bf64894180066da79757bd0d3e4f66adaf2edb9d42513711da848e2ea3",
+    "shells/host/src/browser_inspection.rs": "c33c491bce7d0f2c93450fdab149111e48981dee2340da6cc74815beeb10f32a",
+    "docs/guides/confirmed-computer-use.md": "e38eb90a08239c863aa3160f0bb7766d0e64ae7d6c8c5d2a9f5185d7ae0e32fc",
+    "docs/verification/sprint-84-computer-use-corpus.json": "58c084980929d075e078b314cef8b6d64893d116923572cb2f3c2c18622542d4",
+    "artifacts/sprints/sprint-82/local-evidence-report.json": "d7a8b5103e0bc56a08e7bb735ceacd43fda2e06889e8853e6cb99ef1f8ecd830",
+    "artifacts/sprints/sprint-83/local-evidence-report.json": "53a8dc9ef952df389bf88eef5b9a342eb1b7c238328d00b1479d2035e4c67cf5",
+    "scripts/computer_use_contract.py": "ef83635e507db18e00d23cd7b7c641f53dd3a1788e9badc8d02a34b0a556a258",
+    "tests/test_computer_use_contract.py": "05b5e0a768faa38155c3a39d9493c1ca38812f19afedb678ca931fd60cf02346",
+    "supply-chain/dependency-hashes.sha256": "aeaa351dfc6b79a2c6b6050a2f3a2f1774964f3f21aed288f9ec68a16d2181d9",
+    "supply-chain/dependency-provenance.json": "b16e592c417629f82e8ac0b491063e27626d4d4539c725c7239abf471a8db021",
+    "supply-chain/sbom.cdx.json": "fd354614f3a8597787dbe1887cf48641bd4562f100a3f09d2947578b7f1c5d08",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_84_evidence.py": "7a1d5833d1e32f68be303eaf24e9bd8c3c706950730820053d618d0ad3e79b9a",
+    "tests/test_sprint_84_evidence.py": "bbd6909ad0b9d7965c85e193a02b5be0e3ae208c437115cd4c05c71c2b8bcf74"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "computer-use-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "computer_use::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "c27b60c88a04f98192bdf1f61520170a627d5ab599c3bd376004dca40eb61da0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "computer-use-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_computer_use_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a6707d4eff38012da33ddc34bc6dc076a3b17151cfc9aef223c8790cbe64c3da",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "runtime-schema-contract",
+      "argv": [
+        "npm",
+        "run",
+        "-s",
+        "schemas:test"
+      ],
+      "exit_code": 0,
+      "output_sha256": "548cebe813c095f18c2af1efa17425b871dcbdb97ab27f4822995fe3d144fdc3",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_84_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-ACC-002",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-NET-003",
+    "SR-NET-004",
+    "SR-NET-005",
+    "SR-NET-006",
+    "SR-AI-004",
+    "SR-AI-005"
+  ],
+  "implemented_contracts": {
+    "action_count": 5,
+    "rust_test_count": 4,
+    "corpus_case_count": 35,
+    "irreversible_confirmation_count": 4,
+    "effect_executor_count": 0,
+    "native_action_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "rust_test_count": 4,
+    "corpus_case_count": 35,
+    "native_action_executed": false,
+    "before_after_capture_complete": false,
+    "privacy_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-83-BLOCKED",
+      "owner": "84"
+    },
+    {
+      "code": "NATIVE-COMPUTER-USE-SECURITY-AND-PRIVACY-REVIEW-ABSENT",
+      "owner": "84.1.3.2-84.1.3.6"
+    }
+  ],
+  "summary": {
+    "local_sprint_84_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_83_closed": false,
+    "native_computer_use_complete": false,
+    "native_security_evidence_complete": false,
+    "privacy_review_present": false,
+    "release_approval": false
+  }
+}
