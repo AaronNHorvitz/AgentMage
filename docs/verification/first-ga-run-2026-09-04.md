@@ -2506,3 +2506,32 @@ checkpoint: 1,375.
 
 Exact next action: Sprint 129 connected identity and work graph. Cumulative closures: 1,393; next
 checkpoint: 1,400.
+
+## Batch 132 — Sprint 129 connected identity and work graph
+
+### Completed
+
+- Closed 20 local Sprint 129 rows: 13 native identity kinds, immutable/provider-scoped identity
+  separated from mutable display observations, six link states, evidence-cited joins, rename and
+  removal behavior, authorization refusal for display/proposed/conflicting/stale/removed links,
+  and graph-confusion fixtures spanning aliases, homoglyphs, transfers, recycled addresses,
+  merges, splits, deletion, and revocation. Corpus cases: 936; display, alias, and stale-link
+  authorizations: 0; unrelated-history corruptions: 0. Batch closures: 20. Cumulative closures:
+  1,413. Lifecycle promotions: 0.
+- Commits: `8fab50ce` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `8a29d6bd` (Sprint 129 report), and `30abd77f` (13 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.20. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 3 focused Rust tests, 7 focused Python tests, the 936-case AT-PGR-001 corpus, Sprint
+  evidence, dependency, traceability, supply-chain, Story 1.2, and Story 3.1 configuration chains.
+  Supply-chain builds: 1; evidence regeneration passes: 1. Full gate: 693.31 seconds, stopping
+  only at retained Story 6.1 Podman after every preceding gate passed.
+- Self-recovery: 0.
+- Sprint 129 remains `UPSTREAM-SPRINT-128-BLOCKED`; `substitution_set=empty`. Full-chain blocker:
+  `blocked: host change required — run npm run -s docs:check outside the restricted filesystem
+  sandbox with the current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 130 synchronization and event integrity. Cumulative closures: 1,413;
+next checkpoint: 1,425.
