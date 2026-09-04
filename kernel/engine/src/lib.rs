@@ -124,6 +124,8 @@ pub mod platform_startup;
 pub mod policy;
 /// Deterministic static and typed-fact checks before advisory classification.
 pub mod preclassification_policy;
+/// Deterministic authority-free local workflows for specialist profiles.
+pub mod profile_workflows;
 /// Cancellation trees and lossless typed failure propagation.
 pub mod propagation;
 /// Bounded concise reasoning records and deterministic verification gates.

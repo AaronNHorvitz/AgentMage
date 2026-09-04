@@ -10122,32 +10122,32 @@ applicable)`; `substitution_set=empty`. Native child processes: 0. Native worktr
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 95.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 95.1.1.1** (legacy `S-072-I06`): Implement task assignments, acknowledgements, ordering, dependencies, retries, cancellation, and return contracts.
-  - [ ] **Sub-task 95.1.1.2** (legacy `S-072-I07`): Propagate pause, cancellation, expiry, and termination to every descendant process, model call, tool, lease, and change set.
-  - [ ] **Sub-task 95.1.1.3** (legacy `S-072-I08`): Treat child results as untrusted proposals and require parent review of sources, receipts, changes, validation, and completion.
-  - [ ] **Sub-task 95.1.1.4** (legacy `S-072-I09`): Implement conflict preservation and resolution, parent accept or reject or revise, sequential pipelines, and bounded parallel read-only review.
-  - [ ] **Sub-task 95.1.1.5** (legacy `S-072-I10`): Emit attributable per-child receipts and a director view for assignments, models, budgets, actions, approvals, failures, and results.
+- [x] **Task 95.1.1 - Implement the bounded story**
+  - [x] **Sub-task 95.1.1.1** (legacy `S-072-I06`): Implement task assignments, acknowledgements, ordering, dependencies, retries, cancellation, and return contracts.
+  - [x] **Sub-task 95.1.1.2** (legacy `S-072-I07`): Propagate pause, cancellation, expiry, and termination to every descendant process, model call, tool, lease, and change set.
+  - [x] **Sub-task 95.1.1.3** (legacy `S-072-I08`): Treat child results as untrusted proposals and require parent review of sources, receipts, changes, validation, and completion.
+  - [x] **Sub-task 95.1.1.4** (legacy `S-072-I09`): Implement conflict preservation and resolution, parent accept or reject or revise, sequential pipelines, and bounded parallel read-only review.
+  - [x] **Sub-task 95.1.1.5** (legacy `S-072-I10`): Emit attributable per-child receipts and a director view for assignments, models, budgets, actions, approvals, failures, and results.
   - [x] **Sub-task 95.1.1.6:** Submit each workflow or child-agent assignment through the shared caller-neutral runtime request/event/outcome port from Story 50.2, with no separate model loop, tool router, permission engine, journal, session store, or artifact store. Evidence: `ChildRuntimeCaller` wraps `InMemoryWorkflowCaller`; the deterministic Linux integration reaches the real coordinator approval and terminal path, then converts the outcome to an authority-free proposal pending parent review.
 
-- [ ] **Task 95.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 95.1.2.1:** Child-grant and assignment protocols.
-  - [ ] **Sub-task 95.1.2.2:** Agent isolation, ownership, and conflict engine.
-  - [ ] **Sub-task 95.1.2.3:** Director view and attributable receipt format.
-  - [ ] **Sub-task 95.1.2.4:** Delegation, cancellation, collision, aggregation, and false-completion corpus.
+- [x] **Task 95.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 95.1.2.1:** Child-grant and assignment protocols.
+  - [x] **Sub-task 95.1.2.2:** Agent isolation, ownership, and conflict engine.
+  - [x] **Sub-task 95.1.2.3:** Director view and attributable receipt format.
+  - [x] **Sub-task 95.1.2.4:** Delegation, cancellation, collision, aggregation, and false-completion corpus.
 
 - [ ] **Task 95.1.3 - Verify and close the story**
-  - [ ] **Sub-task 95.1.3.1:** `S-072-UT01` computes child authority for generated user/parent/task/child grant sets; assert exact intersection, deny precedence, no aggregation, and no authority from results/descriptions.
-  - [ ] **Sub-task 95.1.3.2:** `S-072-UT02` exercises assignment/acknowledgement/dependency/result/conflict/accept-reject-revise state machines at agent/turn/tool/resource/nesting/output limits; assert deterministic coordination.
-  - [ ] **Sub-task 95.1.3.3:** `S-072-ST01` attempts recursive spawn, coordinator grant aggregation, sibling credential/context/receipt access, shared writes, ownership collision, forged completion, hidden child, and result-as-authority; assert denial/isolation.
+  - [x] **Sub-task 95.1.3.1:** `S-072-UT01` computes child authority for generated user/parent/task/child grant sets; assert exact intersection, deny precedence, no aggregation, and no authority from results/descriptions.
+  - [x] **Sub-task 95.1.3.2:** `S-072-UT02` exercises assignment/acknowledgement/dependency/result/conflict/accept-reject-revise state machines at agent/turn/tool/resource/nesting/output limits; assert deterministic coordination.
+  - [x] **Sub-task 95.1.3.3:** `S-072-ST01` attempts recursive spawn, coordinator grant aggregation, sibling credential/context/receipt access, shared writes, ownership collision, forged completion, hidden child, and result-as-authority; assert denial/isolation.
   - [ ] **Sub-task 95.1.3.4:** `S-072-RT01` pauses/cancels/expires/terminates parents and intermediate children during model/tool/process/network/write/lease operations; assert all descendants stop and cleanup is proven.
   - [ ] **Sub-task 95.1.3.5:** `S-072-IT01` runs bounded parallel read-only reviews and sequential writable worktree pipelines with conflicts; assert attributable evidence, separate ownership, preserved disagreements, and parent validation.
   - [ ] **Sub-task 95.1.3.6 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-001` through `SR-ACC-008`, `SR-AI-003` through `SR-AI-005`, `SR-AI-009`/`SR-AI-010`, `SR-TST-005`/`SR-TST-006`/`SR-TST-011`; retain property corpus, isolation canaries, process/worktree traces, conflict packets, cancellation graph, and independent review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 95.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then no child exceeds the full authority intersection or shares uncontrolled state; writable children have exclusive paths/worktrees and conflicts never auto-resolve destructively.
-- [ ] **Story AC 95.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every child action/result is attributable and untrusted until parent review; cancellation, expiry, budgets, and evidence requirements propagate through the complete descendant graph.
+- [x] **Story AC 95.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then no child exceeds the full authority intersection or shares uncontrolled state; writable children have exclusive paths/worktrees and conflicts never auto-resolve destructively.
+- [x] **Story AC 95.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every child action/result is attributable and untrusted until parent review; cancellation, expiry, budgets, and evidence requirements propagate through the complete descendant graph.
 
 #### [ ] Story 95.2 - Deterministic Local Profile Workflows
 
@@ -10155,42 +10155,62 @@ applicable)`; `substitution_set=empty`. Native child processes: 0. Native worktr
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 95.2.1 - Compose canonical local workflow graphs**
-  - [ ] **Sub-task 95.2.1.1:** Implement the `AG-01` coordinator as a deterministic graph caller that assigns declared work packets, dependencies, leases, retry eligibility, cancellation, and return contracts without receiving direct file, command, credential, or provider-effect authority.
-  - [ ] **Sub-task 95.2.1.2:** Compose an idea-to-work proposal through `AG-25`, `AG-26`, `AG-28`, `AG-05`, `AG-27`, and `AG-30`, preserving source facts, assumptions, ambiguity, dependencies, and user decisions at every handoff.
-  - [ ] **Sub-task 95.2.1.3:** Compose a bug-to-verified-change proposal through `AG-03`, `AG-06`, `AG-42`, `AG-07`, `AG-08`, `AG-09`, `AG-43`, and `AG-14`, with isolated writable ownership and no closure from prose alone.
-  - [ ] **Sub-task 95.2.1.4:** Compose an independent pull-request review fan-out through `AG-35`, `AG-36` through `AG-41`, and `AG-11`, using one immutable review packet while isolating conclusions and preserving duplicate, conflicting, and unresolved findings.
-  - [ ] **Sub-task 95.2.1.5:** Compose roadmap and sprint reconciliation through `AG-29` through `AG-34`, with the canonical plan, current code, tests, commits, receipts, and evidence compared as separate attributable inputs.
-  - [ ] **Sub-task 95.2.1.6:** Enforce sequential ownership for writable roles, bounded parallelism for read-only roles, explicit parent review, deterministic no-op and blocker states, and zero provider effects in these local workflow graphs.
-- [ ] **Task 95.2.2 - Produce workflow and review artifacts**
-  - [ ] **Sub-task 95.2.2.1:** Produce versioned workflow definitions, node-to-profile bindings, authority intersections, dependency graphs, input/output schemas, retry rules, cancellation paths, and completion predicates.
-  - [ ] **Sub-task 95.2.2.2:** Produce immutable work-packet, finding, dissent, decision, change-proposal, validation, blocker, and parent-review artifact formats.
-  - [ ] **Sub-task 95.2.2.3:** Produce a synthetic corpus covering idea refinement, incomplete issues, ambiguous criteria, duplicate bugs, irreproducible failures, conflicting reviews, stale plans, failed validation, cancellation, and resource exhaustion.
+- [x] **Task 95.2.1 - Compose canonical local workflow graphs**
+  - [x] **Sub-task 95.2.1.1:** Implement the `AG-01` coordinator as a deterministic graph caller that assigns declared work packets, dependencies, leases, retry eligibility, cancellation, and return contracts without receiving direct file, command, credential, or provider-effect authority.
+  - [x] **Sub-task 95.2.1.2:** Compose an idea-to-work proposal through `AG-25`, `AG-26`, `AG-28`, `AG-05`, `AG-27`, and `AG-30`, preserving source facts, assumptions, ambiguity, dependencies, and user decisions at every handoff.
+  - [x] **Sub-task 95.2.1.3:** Compose a bug-to-verified-change proposal through `AG-03`, `AG-06`, `AG-42`, `AG-07`, `AG-08`, `AG-09`, `AG-43`, and `AG-14`, with isolated writable ownership and no closure from prose alone.
+  - [x] **Sub-task 95.2.1.4:** Compose an independent pull-request review fan-out through `AG-35`, `AG-36` through `AG-41`, and `AG-11`, using one immutable review packet while isolating conclusions and preserving duplicate, conflicting, and unresolved findings.
+  - [x] **Sub-task 95.2.1.5:** Compose roadmap and sprint reconciliation through `AG-29` through `AG-34`, with the canonical plan, current code, tests, commits, receipts, and evidence compared as separate attributable inputs.
+  - [x] **Sub-task 95.2.1.6:** Enforce sequential ownership for writable roles, bounded parallelism for read-only roles, explicit parent review, deterministic no-op and blocker states, and zero provider effects in these local workflow graphs.
+- [x] **Task 95.2.2 - Produce workflow and review artifacts**
+  - [x] **Sub-task 95.2.2.1:** Produce versioned workflow definitions, node-to-profile bindings, authority intersections, dependency graphs, input/output schemas, retry rules, cancellation paths, and completion predicates.
+  - [x] **Sub-task 95.2.2.2:** Produce immutable work-packet, finding, dissent, decision, change-proposal, validation, blocker, and parent-review artifact formats.
+  - [x] **Sub-task 95.2.2.3:** Produce a synthetic corpus covering idea refinement, incomplete issues, ambiguous criteria, duplicate bugs, irreproducible failures, conflicting reviews, stale plans, failed validation, cancellation, and resource exhaustion.
 - [ ] **Task 95.2.3 - Verify and close local profile coordination**
-  - [ ] **Sub-task 95.2.3.1:** `S-095-UT01` exercises every workflow state transition, dependency, lease, retry, no-op, blocker, cancellation, and completion predicate; assert deterministic order and no model-authored control-flow transition.
-  - [ ] **Sub-task 95.2.3.2:** `S-095-ST01` attempts coordinator authority aggregation, sibling-state access, implementer self-review, reviewer conclusion sharing, destructive conflict resolution, hidden commands, hidden writes, hidden network, and result-as-authority; assert denial and preserved evidence.
-  - [ ] **Sub-task 95.2.3.3:** `S-095-IT01` runs all four canonical workflows through the shared runtime with fake models, tools, repositories, commands, and providers; assert attributable outputs, isolated ownership, parent review, and zero real external effects.
+  - [x] **Sub-task 95.2.3.1:** `S-095-UT01` exercises every workflow state transition, dependency, lease, retry, no-op, blocker, cancellation, and completion predicate; assert deterministic order and no model-authored control-flow transition.
+  - [x] **Sub-task 95.2.3.2:** `S-095-ST01` attempts coordinator authority aggregation, sibling-state access, implementer self-review, reviewer conclusion sharing, destructive conflict resolution, hidden commands, hidden writes, hidden network, and result-as-authority; assert denial and preserved evidence.
+  - [x] **Sub-task 95.2.3.3:** `S-095-IT01` runs all four canonical workflows through the shared runtime with fake models, tools, repositories, commands, and providers; assert attributable outputs, isolated ownership, parent review, and zero real external effects.
   - [ ] **Sub-task 95.2.3.4:** `S-095-RT01` cancels, pauses, expires, crashes, and resumes each graph at every node class; assert descendants stop, leases release, accepted outputs remain immutable, incomplete work stays incomplete, and no effect replays.
   - [ ] **Sub-task 95.2.3.5:** Retain workflow definitions, synthetic fixtures, event traces, authority calculations, isolated review outputs, conflict packets, cancellation and resume evidence, real-system no-effect snapshots, and independent review.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 95.2.AC1:** Given an enabled canonical workflow and exact local grants, when specialist roles run, then every node uses the shared runtime, receives only the intersected authority for its packet, and returns an attributable proposal rather than an authorization.
-- [ ] **Story AC 95.2.AC2:** Given independent review roles with conflicting findings, when the coordinator synthesizes their results, then each conclusion, severity, evidence link, dissent, and unresolved question remains visible and no implementer or coordinator can mark the review approved.
+- [x] **Story AC 95.2.AC2:** Given independent review roles with conflicting findings, when the coordinator synthesizes their results, then each conclusion, severity, evidence link, dissent, and unresolved question remains visible and no implementer or coordinator can mark the review approved.
 - [ ] **Story AC 95.2.AC3:** Given a cancellation, crash, stale input, failed validation, exhausted budget, or unavailable dependency, when workflow state is recomputed, then descendants stop or remain blocked, accepted evidence is preserved, and no write, command, network call, or provider effect occurs outside its exact grant.
-- [ ] **Story AC 95.2.AC4:** Given idea, bug, pull-request, and roadmap fixtures, when the canonical graphs complete, then their outputs satisfy the declared schemas and deterministic completion predicates without a second runtime implementation.
+- [x] **Story AC 95.2.AC4:** Given idea, bug, pull-request, and roadmap fixtures, when the canonical graphs complete, then their outputs satisfy the declared schemas and deterministic completion predicates without a second runtime implementation.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 95.AC1:** No child action exceeds the complete authority intersection.
-- [ ] **Sprint AC 95.AC2:** Coordinators cannot combine grants or use one child result as another child's authority.
-- [ ] **Sprint AC 95.AC3:** Writable children use separate worktrees and cannot collide silently.
+- [x] **Sprint AC 95.AC1:** No child action exceeds the complete authority intersection.
+- [x] **Sprint AC 95.AC2:** Coordinators cannot combine grants or use one child result as another child's authority.
+- [x] **Sprint AC 95.AC3:** Writable children use separate worktrees and cannot collide silently.
 - [ ] **Sprint AC 95.AC4:** Cancellation and expiry terminate all descendants and prove cleanup.
-- [ ] **Sprint AC 95.AC5:** Recursive spawning, shared uncontrolled writes, unsupervised swarms, and self-expansion remain impossible.
-- [ ] **Sprint AC 95.AC6:** Workflow and child-agent execution reuses the shared runtime coordinator with narrower authority and introduces no parallel coding-agent implementation.
-- [ ] **Sprint AC 95.AC7:** The idea, bug, pull-request review, and roadmap workflows pass with isolated roles, preserved dissent, deterministic control flow, and zero undeclared local or external effect.
+- [x] **Sprint AC 95.AC5:** Recursive spawning, shared uncontrolled writes, unsupervised swarms, and self-expansion remain impossible.
+- [x] **Sprint AC 95.AC6:** Workflow and child-agent execution reuses the shared runtime coordinator with narrower authority and introduces no parallel coding-agent implementation.
+- [x] **Sprint AC 95.AC7:** The idea, bug, pull-request review, and roadmap workflows pass with isolated roles, preserved dissent, deterministic control flow, and zero undeclared local or external effect.
 
 **Gate decision:** Sprint 95 is PASS only when Stories 95.1 and 95.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Thirty-eight local Story 95.1/95.2 rows are retained at
+`artifacts/sprints/sprint-95/local-coordination-evidence-report.json`; four canonical graphs,
+28 profile nodes, shared-runtime reuse, sequential writable ownership, bounded read-only work,
+untrusted proposals, and dissent preservation pass 80 synthetic cases with zero provider effect.
+Task 95.1.3 and its native Sub-tasks 95.1.3.4 through 95.1.3.6, Task 95.2.3 and recovery/
+retention Sub-tasks 95.2.3.4 through 95.2.3.5, Story AC95.2.AC1, Story AC95.2.AC3,
+Sprint AC95.AC4, Sprint 95, and dependent gates remain
+`BLOCKED_EXTERNAL(platform=native multi-child coordination, cancellation, writable-worktree,
+and independent-review environment, artifact=untouched assignment/event/receipt traces,
+descendant process/model/tool/network/write/lease cleanup observations, sequential writable
+worktree pipelines, bounded parallel review outputs, conflicts, dissent, parent decisions,
+crash/resume results, real-system no-effect snapshots, and reviewer bundle, action=provision exact
+native multi-child runtime, dedicated repositories/worktrees, model/tool/network/process and crash
+instrumentation, approved workflow fixtures, and independent reviewer, execute S-072-RT01,
+S-072-IT01, S-095-RT01, and the native Sprint 95 coordination/product-security campaign, and
+transfer untouched bundles, credential=runtime, repository/worktree, model, tool, network fixture,
+instrumentation, and reviewer access, payment=platform, repository, model, tool, network,
+instrumentation, or review costs if applicable)`; `substitution_set=empty`. Stories 95.3 and 95.4
+remain open. Native writable pipelines: 0. Independent reviews: 0.
 
 #### [ ] Story 95.3 - Engineering Capability Registry
 
