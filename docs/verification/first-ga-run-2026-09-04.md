@@ -354,3 +354,44 @@ closures are 429; the 425-item checkpoint handoff is required after this batch p
 Exact next action: all remaining Sprint 79 rows depend on upstream or exact external tuples;
 continue Decision 0021 ordering at Sprint 80 model trust, permissions, and disclosure. Cumulative
 closures are 450; write the required 450-item checkpoint after this batch push.
+
+## Batch 86 — Sprint 80 read-only MCP identity and manifests
+
+### Completed
+
+- Closed 9 TASKS rows: Tasks 80.1.1 and 80.1.2; Story AC80.1.AC1 through AC80.1.AC3; and Sprint
+  AC80.AC1, AC80.AC3, AC80.AC4, and AC80.AC6. The source-bound artifact retains 18 closed MCP
+  record types, 5 visible transports, one allowed operation, exact manifest/package/process/
+  endpoint/expiry identity, common-registry non-shadowing, 4 passing focused Rust cases, and zero
+  launched servers or remote connections. Promotions: 0. Substitutions: 0. Cumulative closed
+  items: 459.
+- Commits: `97e68e11` (artifact validator, evidence recorder/tests, and truthful local closures),
+  `2ca85342` (source-bound Sprint 80 report), and `7a3bf6da` (one affected evidence regeneration
+  pass). Commits including log: 4. Commits per closed item: 0.44. Review pins advanced: 0;
+  complete `REVIEWED_PATHS` intersection across all Batch 86 paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 4 Sprint 80 Rust cases, 2 MCP artifact-contract tests, 3 evidence mutation
+  tests, Python compilation, supply-chain currentness, runtime schemas, and product CI passed.
+  Supply-chain builds: 1. Local report builds: 1. Downstream evidence regeneration passes: 1.
+  Recovery iterations: 1 — corrected the validator to require the exact one-line
+  `workspace_read` admission expression instead of an invalid occurrence-count heuristic. The
+  full chain ran 691.38 seconds and stopped only at the retained Story 6.1 rootless-Podman
+  prerequisite after every preceding gate passed. Recorded gate wall seconds: 691.
+- Native MCP conformance and malicious-server execution, process/network traces, parity, cleanup,
+  and independent gateway review remain blocked on `BLOCKED_EXTERNAL(platform=native isolated MCP
+  server environments plus independent gateway review, artifact=untouched conformance vectors,
+  malicious-server corpus, process/network traces, parity report, cleanup scan, and independent
+  gateway review bundle, action=provision exact native environments, approved malicious and
+  conforming MCP fixtures, network/process instrumentation, and independent reviewer, execute the
+  Sprint 80 product-security campaign, and transfer untouched bundles, credential=native platform,
+  MCP fixture, network-instrumentation, and reviewer access, payment=platform, fixture,
+  instrumentation, or review costs if applicable)`; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 80 rows depend on upstream or exact external tuples;
+continue Decision 0021 ordering at Sprint 81 MCP request mediation and failure isolation.
+Cumulative closures are 459; the next checkpoint is 475.
