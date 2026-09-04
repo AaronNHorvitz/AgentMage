@@ -1143,3 +1143,66 @@ next checkpoint is 800.
 Exact next action: all remaining Sprints 97–98 rows depend on upstream or exact external tuples;
 continue Decision 0021 ordering at Sprint 99 cross-interface authority and isolation. Cumulative
 closures are 823; write the required 800-item checkpoint after push.
+
+## Batch 102 — Sprints 99–100 cross-interface and v1+ assurance
+
+### Completed
+
+- Closed 9 local Sprint 99 rows: Task 99.1.2 and both artifact/traceability sub-tasks;
+  Sub-tasks 99.1.3.1 through 99.1.3.3; Story AC 99.1.AC3; and Sprint AC 99.AC3 and
+  99.AC4. The assurance contract binds 13 interface/extension boundaries, 8 bypass classes,
+  7 distinct isolation dimensions, exact actor/grant/precondition/receipt shape, cancellation,
+  sandbox, and offline invariants across 104 deny-only cases. Native interfaces tested: 0.
+- Closed 11 local Sprint 100 rows: Sub-tasks 100.1.1.1 and 100.1.1.2; Sub-tasks
+  100.1.2.1, 100.1.2.2, and 100.1.2.4; Sub-tasks 100.1.3.2 through 100.1.3.4; and
+  Sprint AC 100.AC2 through 100.AC4. The corpus binds 72 cases across 12 recovery classes and
+  64 cases across 8 privacy paths with zero unauthorized/unattributed effects, persistence, or
+  disclosure and required cleanup. Strict-local all-packs-disabled observations: 0. Independent
+  reviews: 0. Promotions: 0. Substitutions: 0. Batch closures: 20. Cumulative closed items: 843.
+- Commits: `2f01dc31` (cross-interface source, boundary document, corpora, tests, truthful
+  closures, and final supply-chain carrier), `1a5fd95a` (source-bound Sprint 99 and Sprint 100
+  reports), and `bf66267e` (one affected downstream evidence regeneration pass). Commits
+  including log: 4. Commits per closed item: 0.20. Review pins advanced: 0; complete
+  `REVIEWED_PATHS` intersection across all 34 Batch 102 changed or regenerated paths and
+  pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 4 Rust cases, 6 corpus-contract tests, 6 evidence mutation tests, strict
+  kernel Clippy, Rust format, Python compilation, Markdown, 104 cross-interface cases, 72
+  recovery cases, 64 privacy cases, supply-chain currentness, product CI, 13 affected downstream
+  checks/test groups, and both source-bound reports passed. Supply-chain builds: 1. Corpus
+  generations: 2. Local report builds: 2. Downstream evidence regeneration passes: 1. Recovery
+  iterations: 0. The full chain ran 710.41 seconds and stopped only at the retained Story 6.1
+  rootless-Podman prerequisite after every preceding gate passed. Recorded gate wall seconds: 710.
+- Native cross-interface and isolation execution remain
+  `BLOCKED_EXTERNAL(platform=native VS Code, CLI, desktop, JSON, SDK, ACP, package, hook, MCP,
+  connector, browser, schedule, and child-agent boundaries with isolated account/workspace/project/
+  agent/worktree/connector/transport fixtures, artifact=untouched authority/data-flow parity
+  results, bypass/isolation attack traces, grants, preconditions, receipts, cancellation/descendant
+  traces, privacy canary scans, environment manifests, and independent review bundle,
+  action=provision every implemented native boundary and isolated identity fixture, execute S-074
+  cross-interface bypass and isolation campaign, independently review it, and transfer untouched
+  bundles, credential=all native client, account, workspace, project, connector, transport,
+  platform, instrumentation, and reviewer access, payment=client, account, platform,
+  instrumentation, or review costs if applicable)`; `substitution_set=empty`.
+- Native v1+ assurance and strict-local removal remain
+  `BLOCKED_EXTERNAL(platform=all implemented native v1+ boundaries, strict-local host with every
+  connected/executable pack removed, populated recovery systems, and independent clean release
+  runners, artifact=untouched cross-capability parity, authority/data-flow, privacy canary,
+  descendant recovery, strict-local removal, release-build, signature/hash/SBOM/provenance/CBOM/
+  Model-BOM, threat-model, guide, capability-matrix, and independent review bundles,
+  action=provision native boundaries, isolated identities, strict-local removal host, populated
+  recovery systems, clean runners, instrumentation, and independent reviewer; execute all S-074
+  native IT/ST/RT/AT campaigns and transfer untouched evidence, credential=native client, account/
+  workspace/project/connector/transport, strict-local host, platform, runner, signing, package/
+  model, instrumentation, and reviewer access, payment=client, account, platform, runner, signing,
+  instrumentation, package/model, or review costs if applicable)`; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprints 99–100 rows depend on upstream or exact external tuples;
+audit every remaining Decision 0046 Phase A row before any Phase B transition. Epic 9 remains out
+of scope while the freeze is active. Cumulative closures are 843; write the required 825-item
+checkpoint after push.
