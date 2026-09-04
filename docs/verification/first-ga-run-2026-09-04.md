@@ -2076,3 +2076,48 @@ Cumulative closures are 1,210; write the required 1,200-item checkpoint after pu
 
 Exact next action: continue Decision 0021 ordering at Sprint 121 Windows package, VS Code bridge,
 and IPC. Cumulative closures are 1,228; write the required 1,225-item checkpoint after push.
+
+## Batch 121 — Sprint 121 Windows delivery source contracts
+
+### Completed
+
+- Closed 20 local Sprint 121 rows: per-user MSIX delivery and downgrade/refusal contracts,
+  versioned VS Code bridge and transport identity, bounded named-pipe peer/handle/replay controls,
+  standard-user lifecycle and residue invariants, local source/contract/attack/fault suites, Story
+  AC2, and Sprint AC3–AC4. The retained corpus contains 128 lifecycle cases, 2,048 hostile cases,
+  and 512 fault cases. Native Windows guest executions: 0. Signed packages: 0. Promotions: 0.
+  Substitutions: 0. Batch closures: 20. Cumulative closed items: 1,248.
+- Commits: `5f498d99` (Windows delivery contracts, corpus, tests, and truthful closures), `b8498cd8`
+  (source-bound Sprint 121 report), and `cba754c5` (affected downstream contract,
+  configuration, security, and traceability renewal). Commits including log: 4. Commits per
+  closed item: 0.20. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection: empty.
+
+### Validation and blockers
+
+- Focused validation passed 8 Windows-platform Rust tests, strict Clippy, 6 Python tests, the
+  128/2,048/512 corpus validator, the source-bound Sprint 121 report, and every affected
+  downstream check. Supply-chain builds: 1. Corpus generations: 1. Local report builds: 1. Full
+  gate wall seconds: 698.42; it stopped only at the retained Story 6.1 rootless-Podman
+  prerequisite after every preceding gate passed. Self-recovery iterations: 0.
+- Native packaging, signing, Windows guest lifecycle/residue, hostile IPC, diagnostics,
+  accessibility, reviewer protocols, and independent review remain
+  `BLOCKED_EXTERNAL(platform=properly licensed Windows 11 x64 KVM image and isolated
+  standard-user guest with Visual Studio Code, SDK/toolchain, signing/timestamp identities,
+  accessibility tooling, packet/process/path/pipe instrumentation, and independent review
+  environment, artifact=untouched exact image and environment manifests, reproducible MSIX
+  packages, Authenticode and timestamp results, three lifecycle and residue bundles, hostile IPC
+  traces, native Chat/diagnostic results, RV-01/RV-02/RV-05 results, AT-WIN-001 bundle, and
+  independent review, action=provide the licensed image, certificate/timestamp and guest
+  credentials, provision the isolated guest, execute S-121-AT01/ST01/IT01/RT01,
+  RV-01/RV-02/RV-05, AT-WIN-001, and Story 121.2 native campaigns, then transfer untouched
+  evidence, credential=Windows image, signing certificate, timestamp service, guest, Visual
+  Studio Code, toolchain, and reviewer access, payment=Windows, signing, timestamp, toolchain,
+  hosting, accessibility, or review costs if applicable)`; `substitution_set=empty`.
+- Sprint 121 also remains dependency-blocked by `UPSTREAM-SPRINT-120-BLOCKED` with no
+  substitution. Exact full-chain carrier blocker: `blocked: host change required — run npm run -s
+  docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 122 Windows path, sandbox, keys,
+model, and connected workers. Cumulative closures are 1,248; the next checkpoint threshold is
+1,250.
