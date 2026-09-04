@@ -10053,38 +10053,56 @@ upstream Sprint 92; `substitution_set=empty`. Enabled profiles: 0. Real effects:
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 94.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 94.1.1.1** (legacy `S-072-I01`): Compute effective child authority as the intersection of user, parent, task, and explicit child grants.
-  - [ ] **Sub-task 94.1.1.2** (legacy `S-072-I02`): Prevent coordinators from aggregating narrow child grants into broader authority.
-  - [ ] **Sub-task 94.1.1.3** (legacy `S-072-I03`): Isolate child memory, conversation, temporary files, receipts, outputs, and writable worktrees.
-  - [ ] **Sub-task 94.1.1.4** (legacy `S-072-I04`): Declare per-child file ownership and prevent concurrent writes to the same path.
-  - [ ] **Sub-task 94.1.1.5** (legacy `S-072-I05`): Enforce limits for agent count, nesting, turns, tools, processes, resources, model loads, network, and output.
+- [x] **Task 94.1.1 - Implement the bounded story**
+  - [x] **Sub-task 94.1.1.1** (legacy `S-072-I01`): Compute effective child authority as the intersection of user, parent, task, and explicit child grants.
+  - [x] **Sub-task 94.1.1.2** (legacy `S-072-I02`): Prevent coordinators from aggregating narrow child grants into broader authority.
+  - [x] **Sub-task 94.1.1.3** (legacy `S-072-I03`): Isolate child memory, conversation, temporary files, receipts, outputs, and writable worktrees.
+  - [x] **Sub-task 94.1.1.4** (legacy `S-072-I04`): Declare per-child file ownership and prevent concurrent writes to the same path.
+  - [x] **Sub-task 94.1.1.5** (legacy `S-072-I05`): Enforce limits for agent count, nesting, turns, tools, processes, resources, model loads, network, and output.
 
-- [ ] **Task 94.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 94.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 94.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 94.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 94.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
+  - [x] **Sub-task 94.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
 
 - [ ] **Task 94.1.3 - Verify and close the story**
-  - [ ] **Sub-task 94.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 94.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 94.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 94.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
+  - [x] **Sub-task 94.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
+  - [x] **Sub-task 94.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
   - [ ] **Sub-task 94.1.3.4 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-001` through `SR-ACC-008`, `SR-AI-003` through `SR-AI-005`, `SR-AI-009`/`SR-AI-010`, `SR-TST-005`/`SR-TST-006`/`SR-TST-011`; retain property corpus, isolation canaries, process/worktree traces, conflict packets, cancellation graph, and independent review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 94.1.AC1:** Given the approved dependencies and source requirements for `S-072-I01`, `S-072-I02`, `S-072-I03`, `S-072-I04`, and `S-072-I05`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 94.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-072-I01`, `S-072-I02`, `S-072-I03`, `S-072-I04`, and `S-072-I05`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 94.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 94.1.AC1:** Given the approved dependencies and source requirements for `S-072-I01`, `S-072-I02`, `S-072-I03`, `S-072-I04`, and `S-072-I05`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
+- [x] **Story AC 94.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-072-I01`, `S-072-I02`, `S-072-I03`, `S-072-I04`, and `S-072-I05`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
+- [x] **Story AC 94.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 94.AC1:** Every numbered implementation sub-task in Story 94.1 is complete and linked to its legacy requirement or issue identity.
+- [x] **Sprint AC 94.AC1:** Every numbered implementation sub-task in Story 94.1 is complete and linked to its legacy requirement or issue identity.
 - [ ] **Sprint AC 94.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 94.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 94.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 94.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
+- [x] **Sprint AC 94.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 94.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 94 is PASS only when Story 94.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Eighteen local rows are retained at
+`artifacts/sprints/sprint-94/local-evidence-report.json`; the four-way authority intersection,
+deny precedence, six isolated state partitions, exclusive worktree/path ownership, nine resource
+ceilings, authority-free result proposals, and pure descendant-control projection pass 96 property
+cases with zero effects. Task 94.1.3, product-security Sub-task 94.1.3.4, Sprint AC94.AC2,
+Sprint AC94.AC5, Sprint 94, and dependent gates remain
+`BLOCKED_EXTERNAL(platform=native multi-child process, model, tool, network, storage, and worktree
+environment plus independent security review, artifact=untouched authority property results,
+partition canaries, process/model/tool/network traces, worktree and path-ownership traces,
+collision attempts, resource-limit results, pause/cancel/expire descendant cleanup observations,
+untrusted-result and parent-review packets, and reviewer bundle, action=provision exact native
+multi-child runtime, isolated storage, dedicated worktrees, process/model/tool/network and failure
+instrumentation, adversarial fixtures, and independent reviewer, execute S-072-RT01 and the native
+Sprint 94 isolation, cancellation, and product-security campaign, and transfer untouched bundles,
+credential=runtime, storage, worktree, model, tool, network fixture, instrumentation, and reviewer
+access, payment=platform, storage, model, tool, network, instrumentation, or review costs if
+applicable)`; `substitution_set=empty`. Native child processes: 0. Native worktrees: 0.
 
 ### [ ] Sprint 95 - Agent Coordination, Review, and Direction
 

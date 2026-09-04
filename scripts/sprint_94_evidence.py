@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+"""Build truthful Sprint 94 local child-authority evidence."""
+from pathlib import Path
+from typing import Final
+try:from scripts.sprint_evidence_recorder import SprintEvidenceDefinition,main
+except ModuleNotFoundError:from sprint_evidence_recorder import SprintEvidenceDefinition,main
+ROOT:Final=Path(__file__).resolve().parents[1]
+SOURCE_PATHS:Final=("Cargo.toml","Cargo.lock","kernel/engine/Cargo.toml","kernel/engine/src/lib.rs","kernel/engine/src/child_authority.rs","kernel/engine/src/multi_agent.rs","artifacts/sprints/sprint-93/local-evidence-report.json","artifacts/sprints/sprint-94/child-authority-corpus.json","scripts/child_authority_contract.py","tests/test_child_authority_contract.py","supply-chain/dependency-hashes.sha256","supply-chain/dependency-provenance.json","supply-chain/sbom.cdx.json","scripts/sprint_evidence_recorder.py","scripts/sprint_94_evidence.py","tests/test_sprint_94_evidence.py")
+COMMANDS:Final=(("child-authority-rust-contract",("cargo","test","-p","agentmage-kernel-engine","child_authority::tests","--lib")),("child-authority-artifact-contract",("python3","-m","unittest","tests.test_child_authority_contract")),("runtime-schema-contract",("npm","run","-s","schemas:test")),("supply-chain-currentness",("python3","scripts/supply_chain.py")),("product-ci-contract",("python3","scripts/product_ci.py","--check")),("evidence-tests",("python3","-m","unittest","tests.test_sprint_94_evidence")))
+FOCUSED_COMMANDS:Final=tuple(i[0] for i in COMMANDS[:2]);IMPLEMENTED:Final={"authority_ceiling_count":4,"resource_ceiling_count":9,"isolation_partition_count":6,"property_case_count":96,"property_class_count":24,"native_process_trace_count":0,"native_worktree_trace_count":0}
+BLOCKERS:Final=({"code":"UPSTREAM-SPRINT-93-BLOCKED","owner":"94"},{"code":"NATIVE-CHILD-ISOLATION-CANCELLATION-AND-REVIEW-ABSENT","owner":"94.1.3.4-94.AC2-94.AC5"})
+VERIFICATION:Final={"focused_local_contracts":True,"focused_blocking_skip_count":0,"rust_test_count":5,"property_case_count":96,"real_effect_count":0,"native_process_cleanup_observed":False,"native_worktree_isolation_observed":False,"independent_review":False,"sprint_gate_closed":False}
+SUMMARY:Final={"local_sprint_94_contract_passed":True,"sprint_status":"BLOCKED","upstream_sprint_93_closed":False,"native_isolation_complete":False,"native_cancellation_complete":False,"independent_review_present":False,"release_approval":False}
+DEFINITION:Final=SprintEvidenceDefinition(sprint=94,root=ROOT,output="artifacts/sprints/sprint-94/local-evidence-report.json",source_paths=SOURCE_PATHS,commands=COMMANDS,focused_commands=FOCUSED_COMMANDS,rust_focused_commands=frozenset(FOCUSED_COMMANDS[:1]),security_requirement_ids=("SR-GOV-010","SR-ACC-001","SR-ACC-002","SR-ACC-003","SR-ACC-004","SR-ACC-005","SR-ACC-006","SR-ACC-007","SR-ACC-008","SR-AI-003","SR-AI-004","SR-AI-005","SR-AI-009","SR-AI-010","SR-TST-005","SR-TST-006","SR-TST-011"),implemented_contracts=IMPLEMENTED,verification_evidence=VERIFICATION,blockers=BLOCKERS,summary=SUMMARY)
+if __name__=="__main__":raise SystemExit(main(DEFINITION))

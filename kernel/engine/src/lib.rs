@@ -28,6 +28,8 @@ pub mod authority;
 pub mod authority_transaction;
 /// Versioned executable engineering capability admission and deterministic execution.
 pub mod capability_registry;
+/// Exact child-authority intersection, isolation, ownership, and bounded cancellation.
+pub mod child_authority;
 /// Deterministic material-claim proof and truthful final-response construction.
 pub mod claim_evidence;
 /// Exact command templates, previews, execution permits, and terminal receipts.
