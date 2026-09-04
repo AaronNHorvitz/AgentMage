@@ -10639,35 +10639,37 @@ interfaces tested: 0. Strict-local all-packs-disabled observations: 0. Release a
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 101.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 101.1.1.1** (legacy `S-075-I01`): Rebuild the requirement registry from the current canonical documents and compare it with every sprint completion record.
+  - [x] **Sub-task 101.1.1.1** (legacy `S-075-I01`): Rebuild the requirement registry from the current canonical documents and compare it with every sprint completion record.
   - [ ] **Sub-task 101.1.1.2** (legacy `S-075-I02`): Prove every promoted `BUILD`, `VERIFY`, `CAPABILITY GATE`, and `ROADMAP` item maps to implementation, tests, documentation, release, owner, and evidence.
-  - [ ] **Sub-task 101.1.1.3** (legacy `S-075-I03`): Review every `DEFER` item and either preserve it as an explicit tested exclusion or promote it through a new approved stable backlog and acceptance gate.
+  - [x] **Sub-task 101.1.1.3** (legacy `S-075-I03`): Review every `DEFER` item and either preserve it as an explicit tested exclusion or promote it through a new approved stable backlog and acceptance gate.
 
-- [ ] **Task 101.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 101.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 101.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 101.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 101.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
+  - [x] **Sub-task 101.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
 
 - [ ] **Task 101.1.3 - Verify and close the story**
-  - [ ] **Sub-task 101.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 101.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 101.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 101.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
+  - [x] **Sub-task 101.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
+  - [x] **Sub-task 101.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
   - [ ] **Sub-task 101.1.3.4 - Product security evidence:** Map the full `SECURITY-REVIEW.md` control and reviewer-protocol sets; retain the complete signed evidence bundle, raw-result recomputation, clean-platform witnesses, deferred/exclusion register, risk/remediation inputs, rollback plan, and user approval.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 101.1.AC1:** Given the approved dependencies and source requirements for `S-075-I01`, `S-075-I02`, and `S-075-I03`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 101.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-075-I01`, `S-075-I02`, and `S-075-I03`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 101.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 101.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-075-I01`, `S-075-I02`, and `S-075-I03`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
+- [x] **Story AC 101.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 101.AC1:** Every numbered implementation sub-task in Story 101.1 is complete and linked to its legacy requirement or issue identity.
-- [ ] **Sprint AC 101.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 101.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 101.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 101.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
+- [x] **Sprint AC 101.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
+- [x] **Sprint AC 101.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 101.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 101 is PASS only when Story 101.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** local requirement rebuild, completion-record comparison, deferred-exclusion review, negative/adversarial checks, and summary reconciliation pass. Sprint 101 remains `UPSTREAM-SPRINT-100-BLOCKED` and `BLOCKED_EXTERNAL(platform=complete promoted inherited platform/model/capability matrix, clean-platform witnesses, signing and independent review environment, and user approval, artifact=untouched current implementation/test/document/release/owner/evidence mappings for every promoted BUILD, VERIFY, CAPABILITY GATE, and ROADMAP item plus signed security bundle, risk/remediation inputs, rollback plan, and approval, action=complete the retained upstream platform/model/release gates; provision exact native platforms, models, signing, reviewers, and user approver; execute the promoted-scope mapping and independent review; then transfer untouched evidence, credential=platform, model, signing, reviewer, and approver access, payment=platform, model, signing, instrumentation, or review costs if applicable)`; `substitution_set=empty`.
 
 ### [ ] Sprint 102 - Inherited-Scope Verification Checkpoint
 
