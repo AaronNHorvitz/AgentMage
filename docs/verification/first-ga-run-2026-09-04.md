@@ -761,3 +761,54 @@ are 589; write the required 575-item checkpoint after push.
 Exact next action: all remaining Sprint 89 and 90 rows depend on upstream or exact external tuples;
 continue Decision 0021 ordering at Sprint 91 separately threat-modeled scheduled actions.
 Cumulative closures are 623; write the required 600-item checkpoint after push.
+
+## Batch 94 — Sprint 91 separately threat-modeled scheduled authority
+
+### Completed
+
+- Closed 19 TASKS rows: Task 91.1.1 and all 8 implementation sub-tasks; Task 91.1.2 and all
+  4 artifact sub-tasks; verification Sub-tasks 91.1.3.1 and 91.1.3.2; and Sprint
+  AC91.AC1, AC91.AC2, and AC91.AC5. The pure shared authority contract binds prior-approved
+  configuration, threat model, allowlist, task/workspace/worktree/ownership/model/tool/
+  destination/payload scope, budgets, stop policy, dry-run preview, activation approval,
+  idempotency, expiry, refresh preconditions, and control state. It admits 3 predeclarable
+  effect classes, rejects 3 live/destructive classes, and converts uncertain outcomes to
+  retry-blocked without owning any scheduler, worktree, effect, persistence, clock, or process
+  executor. Promotions: 0. Substitutions: 0. Cumulative closed items: 642.
+- Commits: `ca3f0b2a` (scheduled-authority source, guide, 64-case corpus, tests, truthful
+  closures, and final supply-chain carrier), `30c5cbc5` (source-bound Sprint 91 report), and
+  `14d3e265` (one affected evidence regeneration pass plus targeted configuration recovery).
+  Commits including log: 4. Commits per closed item: 0.21. Review pins advanced: 0; complete
+  `REVIEWED_PATHS` intersection across all 27 Batch 94 paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 6 Rust cases, 2 artifact-contract tests, 3 evidence mutation tests,
+  strict kernel Clippy, format, Python compilation, Markdown, 64 Sprint 91 corpus cases,
+  supply-chain currentness, runtime schemas, and product CI passed. Supply-chain builds: 1.
+  Local report builds: 1. Downstream evidence regeneration passes: 1. Recovery iterations: 1.
+  The first targeted order built the configuration review before its component-inventory input;
+  rebuilding in dependency order (component inventory, configuration review, Story 3.1 security,
+  then traceability) restored all focused checks. The full chain ran 697.82 seconds and stopped
+  only at the retained Story 6.1 rootless-Podman prerequisite after every preceding gate passed.
+  Recorded gate wall seconds: 698.
+- Native state-changing scheduler/worktree/effect and independent review evidence for Sprint 91
+  remains blocked on `BLOCKED_EXTERNAL(platform=native state-changing scheduler/worktree/effect
+  environments plus independent unattended-authority security review, artifact=untouched
+  threat-model and allowlist review, grant-mutation results, dry-run/activation previews, exact
+  effect pre/post snapshots, dedicated-worktree and ownership traces, stale-state results,
+  pause/revoke/expire/emergency-stop and descendant-termination traces, uncertain-effect
+  reconciliation, history, and reviewer bundle, action=provision exact durable scheduler storage,
+  dedicated repository worktrees, allowlisted effect fixtures, mutation/crash/control
+  instrumentation, and independent unattended-authority reviewer, execute S-070-IT01/RT01 and the
+  native Sprint 91 product-security campaign, and transfer untouched bundles,
+  credential=scheduler-storage, repository/worktree, effect fixture, instrumentation, and reviewer
+  access, payment=platform, storage, repository, fixture, instrumentation, or review costs if
+  applicable)`; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 91 rows depend on upstream or the exact external tuple;
+continue Decision 0021 ordering at Sprint 92 agent definitions and registry. Cumulative closures
+are 642; write the required 625-item checkpoint after push.
