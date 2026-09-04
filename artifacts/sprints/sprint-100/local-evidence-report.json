@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_100_local_evidence",
+  "source_revision": "2f01dc3108c1bb6461b936e2efec5dd2180cb24a",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
+    "kernel/engine/src/lib.rs": "58beb694483c546361d35ec741321ca5ebd09e3097d0cf788187dfa7d8462489",
+    "kernel/engine/src/cross_interface_assurance.rs": "66e2d400df06349e62610f32864951d26abe96f187c37e0aaa77a2884599c90c",
+    "kernel/engine/src/maintenance_recovery.rs": "b5a9d0d1385546573ab75c3e83a5f5e098a62f8896ee88ebafb6ef62dceff689",
+    "docs/verification/v1-plus-assurance-boundary.md": "66bb9505b0a32d1f93f0fdb11fa273999e6d87f21674edbd80fdfacb0e632a65",
+    "artifacts/sprints/sprint-99/cross-interface-corpus.json": "a1501bcdb6ff82ec8a6ca9baa4b135a91b63008a78367f9f08abec56a8617427",
+    "artifacts/sprints/sprint-100/v1-plus-assurance-corpus.json": "d22ab01817ef9b899b2dfed6a38dfd2fbe23dee437a8bffb20ef6264fa8f294f",
+    "scripts/v1_plus_assurance_contract.py": "62b1667eb676d98f677d0df3cb89283b73eda79011c8617df0602452e03c9a28",
+    "tests/test_v1_plus_assurance_contract.py": "2e5cfb0cd86c3113ae31201221ef004cb91f992be8e4f77bd9e05b6e2396373c",
+    "supply-chain/dependency-hashes.sha256": "b312c20b71576272ac59dc85d57262d4f9464db2c6da34a3d7111913b9ec554c",
+    "supply-chain/dependency-provenance.json": "de61ae513114274da00f3d41064011f04365ef6174d104da79c5a07889534bec",
+    "supply-chain/sbom.cdx.json": "516ba88f77537279c37ed5996a620f61cdd6f191e0320c18746c77c5dda09826",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_100_evidence.py": "4ff95486d207deac79dcc5411c9be95d98ccc6491fc21e79a6402fa009117123",
+    "tests/test_sprint_100_evidence.py": "6a0ed04ace3c68ce3782341a9df1f97b1a3053652a87adf9dd501a27b2b6cc66"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "cross-interface-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "cross_interface_assurance::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "c84e7039b76488d9ece8c6f1a2ab82c4579af44d61cfdb487231433c9af51b8b",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "maintenance-recovery-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "maintenance_recovery::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "49b4d17f4bc5e6f1c2bf7a98be6f115cddd9c88187ef5acd94c7005181d081fc",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "v1-plus-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_v1_plus_assurance_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "921b60a7fd52e978fbb551cacd29df2d6708879400278e1fcc70fceeb0c6f8e0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_100_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-GOV-010",
+    "SR-ACC-001",
+    "SR-ACC-002",
+    "SR-ACC-003",
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-NET-002",
+    "SR-TST-005",
+    "SR-TST-006",
+    "SR-TST-011",
+    "RV-01",
+    "RV-02",
+    "RV-03",
+    "RV-04",
+    "RV-05",
+    "RV-06",
+    "RV-07",
+    "RV-08",
+    "RV-09",
+    "RV-10",
+    "RV-11",
+    "RV-12",
+    "RV-13",
+    "RV-14",
+    "RV-15",
+    "RV-16",
+    "RV-17",
+    "RV-18",
+    "RV-19",
+    "RV-20",
+    "RV-21",
+    "RV-22"
+  ],
+  "implemented_contracts": {
+    "recovery_class_count": 12,
+    "recovery_case_count": 72,
+    "privacy_path_count": 8,
+    "privacy_case_count": 64,
+    "native_interface_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "recovery_case_count": 72,
+    "privacy_case_count": 64,
+    "unauthorized_effect_count": 0,
+    "privacy_escape_count": 0,
+    "strict_local_all_packs_disabled_observed": false,
+    "native_interface_count": 0,
+    "independent_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-99-BLOCKED",
+      "owner": "100"
+    },
+    {
+      "code": "NATIVE-V1-PLUS-STRICT-LOCAL-PRIVACY-RECOVERY-AND-RELEASE-REVIEW-ABSENT",
+      "owner": "100.1-native-100.AC1-100.AC5"
+    }
+  ],
+  "summary": {
+    "local_sprint_100_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_99_closed": false,
+    "native_cross_capability_complete": false,
+    "strict_local_removal_complete": false,
+    "independent_review_present": false,
+    "release_approval": false
+  }
+}
