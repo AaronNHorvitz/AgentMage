@@ -2573,3 +2573,43 @@ artifact receipts; the next batch crossing 225 closures must write the 225-item 
 
 Exact next action: all remaining Sprint 67 rows depend on exact external tuples; continue Decision
 0021 ordering at Sprint 68 local database and structured evidence.
+
+## Batch 74 — Sprint 68 bounded local database and structured evidence
+
+### Completed
+
+- Closed 23 TASKS rows: Task 68.1.1 and all 8 implementation sub-tasks; Task 68.1.2 and all 4
+  artifact sub-tasks; verification Sub-tasks 68.1.3.3/.4; both Story AC; and all 5 Sprint AC. The
+  in-memory adapter exposes 3 fixed parameterized templates over only synthetic or AgentMage-owned
+  identities, separates schema/row/fixture grants, migrates transactionally, enforces query-only and
+  statement-read-only state, preserves typed/minimized rows, and binds limits, freshness, scope,
+  provenance, limitations, and denied effects into a receipt. Four Rust cases, 80 schema tests, and
+  the 58-case corpus prove the local subset. Promotions: 0. Substitutions: 0. Cumulative closed
+  items: 253.
+- Commits: `f8960148` (database adapter, schema, docs, 58-case contract, truthful closures, and final
+  supply-chain carrier), `65dd6ba3` (source-bound 8-command Sprint 68 report), and `281fe331` (one
+  affected evidence regeneration pass); the batch log commit also expands every native/reviewer
+  blocker into exact tuples. Commits: 4. Commits per closed item: 0.17. Review pins advanced: 0;
+  complete `REVIEWED_PATHS` intersection across 29 batch paths and all pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 4 database Rust cases, 2 database-contract tests, 3 evidence mutation tests,
+  80 runtime/planning schema tests, strict capability Clippy, format, supply-chain currentness,
+  product-CI contract, configuration startup/result, component inventory, Story 3.1 security/gate,
+  planning scope, traceability, contract boundary/evidence, Stories 2.1/2.2/2.4, and Sprint 2 pass.
+  Supply-chain builds: 1. Local report builds: 1. Downstream evidence regeneration passes: 1.
+  Recovery iterations: 0. The full chain ran 689.48 seconds and stopped only at the retained Story
+  6.1 rootless-Podman prerequisite after every preceding gate passed. Recorded gate wall seconds:
+  689.
+- Elapsed-time, lock-contention, corrupt-file, native query-plan/canary/resource, parity, independent
+  review, and manual fuzz evidence remain blocked on 4 exact tuple families recorded in Sub-task
+  68.1.3.5 with `substitution_set=empty`. No live database, external credential, path, PostgreSQL,
+  file effect, or network effect is admitted.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 68 rows depend on exact external tuples; continue Decision
+0021 ordering at Sprint 69 v0.6 administrative and document release gate. The 250-item checkpoint
+handoff is required after this batch push.
