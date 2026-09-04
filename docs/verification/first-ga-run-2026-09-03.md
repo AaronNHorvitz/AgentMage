@@ -2525,3 +2525,51 @@ Exact next action: all remaining Sprint 65 rows depend on exact external tuples;
 
 Exact next action: continue Decision 0021 ordering at Sprint 67 local audio transcription and common
 artifact receipts; the next batch crossing 225 closures must write the 225-item checkpoint handoff.
+
+## Batch 73 — Sprint 67 common artifact receipts and audio observations
+
+### Completed
+
+- Closed 8 TASKS rows: Sub-task 67.1.1.2; Sub-tasks 67.1.2.2/.3/.4; Story AC 67.1.AC2; and
+  Sprint AC 67.AC1/.AC3/.AC5. One authority-free builder and verifier now bind converter, parser,
+  generator, renderer, redactor, verifier, and transcriber observations to exact implementation,
+  profile, input/output, locator, fidelity, limitation, unsupported-feature, invariance, cleanup,
+  effect, and receipt-digest state. Four Rust cases, the closed runtime schema, 79 schema tests, a
+  seven-row fidelity matrix, dependency manifest, and the retained 140-case hostile parser corpus
+  prove the local subset. Promotions: 0. Substitutions: 0. Cumulative closed items: 230.
+- Commits: `6414f352` (common receipt/audio-observation contracts, runtime schema, docs, matrix,
+  contract tests, truthful closures, and final supply-chain carrier), `ef82e266` (source-bound
+  8-command Sprint 67 report), and `74e03f99` (one affected evidence regeneration pass). Commits: 3.
+  Commits per closed item: 0.38. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across 29 batch paths and all pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 4 common-receipt/audio-observation Rust cases, 2 common-receipt contract
+  tests, 3 evidence mutation tests, 79 runtime/planning schema tests, strict capability Clippy,
+  format, supply-chain currentness, product-CI contract, configuration startup/result, component
+  inventory, Story 3.1 security/gate, planning scope, traceability, contract boundary/evidence,
+  Stories 2.1/2.2/2.4, and Sprint 2 pass. Supply-chain builds: 1. Local report builds: 1 successful.
+  Downstream evidence regeneration passes: 1. Recovery corrections: 4 — replaced a symbolic source
+  revision, corrected one mistyped exact revision, used the recorder's no-flag validation interface,
+  and force-added its intentionally ignored evidence path. The full chain ran 688.67 seconds and
+  stopped only at the retained Story 6.1 rootless-Podman prerequisite after every preceding gate
+  passed. Recorded gate wall seconds: 689.
+- Actual local-engine transcription and its adapters/labeled metrics remain
+  `BLOCKED_EXTERNAL(platform=approved local audio-transcription host, artifact=exact admitted
+  engine/model/codec package plus labeled normal/empty/boundary/malformed/oversized/unsupported/
+  mixed-encoding/attack/accuracy/segmentation/timestamp/speaker/uncertainty/retention result bundle,
+  action=authorized model/platform owner provisions and admits the local engine and exact audio
+  fixtures, runs the pinned Sprint 67 campaign, and transfers the untouched bundle,
+  credential=model/fixture/platform access, payment=model artifact/runtime/hardware if applicable)`;
+  `substitution_set=empty`. Every-promoted-type integration is `blocked: host change required — run
+  the admitted converter/parser/generator/renderer/redactor/verifier/transcriber integration campaign
+  across every promoted type after the exact native tools and local audio engine are provisioned, and
+  transfer the untouched result bundle`; `substitution_set=empty`. Native parity, independent review,
+  and manual fuzzing remain blocked on the exact Sprint 66 tuples with `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 67 rows depend on exact external tuples; continue Decision
+0021 ordering at Sprint 68 local database and structured evidence.
