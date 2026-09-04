@@ -11536,37 +11536,57 @@ applicable)`; `substitution_set=empty`. Promoted tools: 0. Live backend contacts
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 115.1.1 - Implement release identity and promotion**
-  - [ ] **Sub-task 115.1.1.1:** Build semantic-version and changelog drafts from exact commits, work items, reviews, checks, artifacts, provenance, and prior releases with source citations.
-  - [ ] **Sub-task 115.1.1.2:** Define immutable release manifests linking source, CI, artifact, SBOM, provenance, signatures, environments, policies, migrations, flags, health, and rollback.
-  - [ ] **Sub-task 115.1.1.3:** Implement environment promotion with exact source/target, immutable digest, approval class, deployment plan, health window, and postcondition.
-- [ ] **Task 115.1.2 - Implement flags, progressive delivery, and migrations**
-  - [ ] **Sub-task 115.1.2.1:** Implement reference LaunchDarkly and Unleash flag reads/drafts/writes with project/environment/flag/variation/target/prerequisite identity and separate production approval.
-  - [ ] **Sub-task 115.1.2.2:** Implement progressive-delivery steps, traffic or audience bounds, pause, health decision, advance, abort, and rollback without autonomous advancement.
-  - [ ] **Sub-task 115.1.2.3:** Implement Flyway and Liquibase migration discovery, checksum/order/direction/compatibility/lock/backup/timeout/health contracts and separate destructive approval.
-  - [ ] **Sub-task 115.1.2.4:** Make every rollback or compensation a fresh exact plan that accounts for later releases, flag changes, schema state, and user changes.
-- [ ] **Task 115.1.3 - Verify and close the story**
-  - [ ] **Sub-task 115.1.3.1:** `S-115-UT01` mutates every release, version, artifact, environment, flag, rollout, migration, health, rollback, and compensation field.
-  - [ ] **Sub-task 115.1.3.2:** `S-115-ST01` tests tag/version reuse, artifact swap, hidden production target, audience expansion, prerequisite loops, migration checksum/order attacks, secret output, and destructive concealment.
-  - [ ] **Sub-task 115.1.3.3:** `S-115-IT01` creates a synthetic release, promotes progressively, applies a compatible migration, changes a flag under separate approval, detects failed health, and executes separately approved compensation.
-  - [ ] **Sub-task 115.1.3.4:** `S-115-RT01` injects concurrent release, changed flag, partial migration, lock timeout, health delay, provider outage, cancellation, crash, and later independent change.
+- [x] **Task 115.1.1 - Implement release identity and promotion**
+  - [x] **Sub-task 115.1.1.1:** Build semantic-version and changelog drafts from exact commits, work items, reviews, checks, artifacts, provenance, and prior releases with source citations.
+  - [x] **Sub-task 115.1.1.2:** Define immutable release manifests linking source, CI, artifact, SBOM, provenance, signatures, environments, policies, migrations, flags, health, and rollback.
+  - [x] **Sub-task 115.1.1.3:** Implement environment promotion with exact source/target, immutable digest, approval class, deployment plan, health window, and postcondition.
+- [x] **Task 115.1.2 - Implement flags, progressive delivery, and migrations**
+  - [x] **Sub-task 115.1.2.1:** Implement reference LaunchDarkly and Unleash flag reads/drafts/writes with project/environment/flag/variation/target/prerequisite identity and separate production approval.
+  - [x] **Sub-task 115.1.2.2:** Implement progressive-delivery steps, traffic or audience bounds, pause, health decision, advance, abort, and rollback without autonomous advancement.
+  - [x] **Sub-task 115.1.2.3:** Implement Flyway and Liquibase migration discovery, checksum/order/direction/compatibility/lock/backup/timeout/health contracts and separate destructive approval.
+  - [x] **Sub-task 115.1.2.4:** Make every rollback or compensation a fresh exact plan that accounts for later releases, flag changes, schema state, and user changes.
+- [x] **Task 115.1.3 - Verify and close the story**
+  - [x] **Sub-task 115.1.3.1:** `S-115-UT01` mutates every release, version, artifact, environment, flag, rollout, migration, health, rollback, and compensation field.
+  - [x] **Sub-task 115.1.3.2:** `S-115-ST01` tests tag/version reuse, artifact swap, hidden production target, audience expansion, prerequisite loops, migration checksum/order attacks, secret output, and destructive concealment.
+  - [x] **Sub-task 115.1.3.3:** `S-115-IT01` creates a synthetic release, promotes progressively, applies a compatible migration, changes a flag under separate approval, detects failed health, and executes separately approved compensation.
+  - [x] **Sub-task 115.1.3.4:** `S-115-RT01` injects concurrent release, changed flag, partial migration, lock timeout, health delay, provider outage, cancellation, crash, and later independent change.
   - [ ] **Sub-task 115.1.3.5:** Retain manifests, diffs, health windows, migration/flag identities, pre/post state, receipts, and independent review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 115.1.AC1:** Given a release manifest, when promotion begins, then source, artifact, policy, environment, flag, migration, health, and rollback identities are exact and current.
-- [ ] **Story AC 115.1.AC2:** Given deployment authority, when a production flag, migration, progressive step, destructive change, or database effect is requested, then it requires its own exact capability and approval.
-- [ ] **Story AC 115.1.AC3:** Given failed health or partial migration, when recovery runs, then no automatic advance or retry occurs and compensation preserves later independent state.
+- [x] **Story AC 115.1.AC1:** Given a release manifest, when promotion begins, then source, artifact, policy, environment, flag, migration, health, and rollback identities are exact and current.
+- [x] **Story AC 115.1.AC2:** Given deployment authority, when a production flag, migration, progressive step, destructive change, or database effect is requested, then it requires its own exact capability and approval.
+- [x] **Story AC 115.1.AC3:** Given failed health or partial migration, when recovery runs, then no automatic advance or retry occurs and compensation preserves later independent state.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 115.AC1:** Release manifests reconcile source through environment and rollback.
+- [x] **Sprint AC 115.AC1:** Release manifests reconcile source through environment and rollback.
 - [ ] **Sprint AC 115.AC2:** LaunchDarkly, Unleash, Flyway, and Liquibase pass their promoted matrices.
-- [ ] **Sprint AC 115.AC3:** Production, progressive, flag, migration, destructive, secret, and rollback effects remain distinct.
-- [ ] **Sprint AC 115.AC4:** Concurrent and partial-change recovery is deterministic and non-destructive.
+- [x] **Sprint AC 115.AC3:** Production, progressive, flag, migration, destructive, secret, and rollback effects remain distinct.
+- [x] **Sprint AC 115.AC4:** Concurrent and partial-change recovery is deterministic and non-destructive.
 - [ ] **Sprint AC 115.AC5:** `AT-REL-001` passes with independent evidence.
 
 **Gate decision:** Sprint 115 is PASS only when Story 115.1, all criteria, `AT-REL-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Twenty locally executable Story 115 rows are retained at
+`artifacts/sprints/sprint-115/local-evidence-report.json`; 4 synthetic tool families, 64 immutable
+release manifests, 2,048 hostile cases, and 512 fault cases preserve exact source, CI, artifact,
+SBOM, provenance, signature, environment, policy, flag, migration, health, rollback, and later-state
+identities with zero live environment contact, hidden effect, authority escape, sensitive
+disclosure, automatic advance, or automatic retry. Promoted LaunchDarkly, Unleash, Flyway, and
+Liquibase matrices, real release/environment/database effects, `AT-REL-001`, and independent review
+remain `BLOCKED_EXTERNAL(platform=isolated supported LaunchDarkly, Unleash, Flyway, and Liquibase
+toolchains plus non-production and production environments, databases, artifact registries,
+health/metrics systems, and independent review environment, artifact=untouched exact provider and
+version matrices, release manifests, changelog/version drafts, flag and migration identities,
+promotion and progressive-delivery diffs, pre/post state, health windows, rollback/compensation
+plans, receipts, AT-REL-001 bundle, support matrix, and independent review, action=provision isolated
+toolchains, provider projects, environments, databases, registries, identities, instrumentation,
+and independent reviewer; execute S-115-UT01/ST01/IT01/RT01 and AT-REL-001 against real supported
+versions, then transfer untouched evidence, credential=flag provider, migration tool, database,
+environment, registry, health, metrics, instrumentation, and reviewer access, payment=provider,
+database, environment, registry, observability, hosting, instrumentation, or review costs if
+applicable)`; `substitution_set=empty`. Promoted tools: 0. Live environments: 0. Promotions: 0.
 
 ### [ ] Sprint 116 - OpenTelemetry Correlation Foundation
 

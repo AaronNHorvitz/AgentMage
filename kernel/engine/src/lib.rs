@@ -156,6 +156,8 @@ pub mod propagation;
 pub mod reasoning;
 /// Continuous content reclassification before successive trust boundaries.
 pub mod reclassification;
+/// Exact release manifests, separately granted changes, and safe compensation.
+pub mod release_lifecycle;
 /// Encrypted derivative repository-map cache lifecycle.
 pub mod repository_cache;
 /// Typed, read-only Git inspection plans and nonforgeable execution permits.
