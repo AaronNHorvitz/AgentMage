@@ -12602,39 +12602,43 @@ multi-agent scope reconciled into release truth without promoting any unexecuted
 
 **Dependencies:** Sprint 127; v0.1 `CapabilityGrant`, policy intersection, authenticated configuration, receipt, and emergency-disable foundations.
 
-#### [ ] Story 128.1 - One Effective Autonomy Policy
+#### [x] Story 128.1 - One Effective Autonomy Policy
 
 **User-facing value:** As a user, I can select Disabled, Read only, Draft only, Confirm each write, Scoped autonomy, or Autonomous within policy and trust the displayed level to match enforced behavior.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 128.1.1 - Implement autonomy policy contracts**
-  - [ ] **Sub-task 128.1.1.1:** Define closed level, ceiling, operation, destination, recipient, channel, classification, schedule, budget, expiry, version, and policy-origin types.
-  - [ ] **Sub-task 128.1.1.2:** Implement deterministic intersection across global, pack, connector, account, workspace, workflow, and operation policy.
-  - [ ] **Sub-task 128.1.1.3:** Make money movement and cloud mutation unrepresentable regardless of selected level.
-- [ ] **Task 128.1.2 - Build the user control and transition flow**
-  - [ ] **Sub-task 128.1.2.1:** Add the native Visual Studio Code Autonomy Center control with effective-state, reason, expiry, budget, and narrower-ceiling visibility.
-  - [ ] **Sub-task 128.1.2.2:** Require authentication, exact delta preview, fresh policy revision, and a receipt for every authority increase.
-  - [ ] **Sub-task 128.1.2.3:** Implement narrowing, expiry, logout, revocation, cancellation, and global external-write disablement with in-flight reconciliation.
-- [ ] **Task 128.1.3 - Attack and verify enforcement**
-  - [ ] **Sub-task 128.1.3.1:** Cross product all levels and ceilings against every operation class and policy origin.
-  - [ ] **Sub-task 128.1.3.2:** Mutate stale display state, replayed approvals, session identity, recipients, destinations, payloads, schedules, budgets, and expiry around authorization.
-  - [ ] **Sub-task 128.1.3.3:** Run at least 2,000 authority mutations and prove emergency disablement blocks new writes while classifying every in-flight effect.
+- [x] **Task 128.1.1 - Implement autonomy policy contracts**
+  - [x] **Sub-task 128.1.1.1:** Define closed level, ceiling, operation, destination, recipient, channel, classification, schedule, budget, expiry, version, and policy-origin types.
+  - [x] **Sub-task 128.1.1.2:** Implement deterministic intersection across global, pack, connector, account, workspace, workflow, and operation policy.
+  - [x] **Sub-task 128.1.1.3:** Make money movement and cloud mutation unrepresentable regardless of selected level.
+- [x] **Task 128.1.2 - Build the user control and transition flow**
+  - [x] **Sub-task 128.1.2.1:** Add the native Visual Studio Code Autonomy Center control with effective-state, reason, expiry, budget, and narrower-ceiling visibility.
+  - [x] **Sub-task 128.1.2.2:** Require authentication, exact delta preview, fresh policy revision, and a receipt for every authority increase.
+  - [x] **Sub-task 128.1.2.3:** Implement narrowing, expiry, logout, revocation, cancellation, and global external-write disablement with in-flight reconciliation.
+- [x] **Task 128.1.3 - Attack and verify enforcement**
+  - [x] **Sub-task 128.1.3.1:** Cross product all levels and ceilings against every operation class and policy origin.
+  - [x] **Sub-task 128.1.3.2:** Mutate stale display state, replayed approvals, session identity, recipients, destinations, payloads, schedules, budgets, and expiry around authorization.
+  - [x] **Sub-task 128.1.3.3:** Run at least 2,000 authority mutations and prove emergency disablement blocks new writes while classifying every in-flight effect.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 128.1.AC1:** Given multiple autonomy ceilings, when an operation is evaluated, then the narrowest effective policy is enforced and explained.
-- [ ] **Story AC 128.1.AC2:** Given any changed operation field, stale policy revision, expired grant, or replayed approval, when execution is attempted, then the operation is denied before effect.
-- [ ] **Story AC 128.1.AC3:** Given emergency disablement during queued or in-flight work, when it completes, then no new write begins and every uncertain effect is reconciled visibly.
+- [x] **Story AC 128.1.AC1:** Given multiple autonomy ceilings, when an operation is evaluated, then the narrowest effective policy is enforced and explained.
+- [x] **Story AC 128.1.AC2:** Given any changed operation field, stale policy revision, expired grant, or replayed approval, when execution is attempted, then the operation is denied before effect.
+- [x] **Story AC 128.1.AC3:** Given emergency disablement during queued or in-flight work, when it completes, then no new write begins and every uncertain effect is reconciled visibly.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 128.AC1:** `AT-AUT-001` passes with zero authority broadening.
-- [ ] **Sprint AC 128.AC2:** The Visual Studio Code display and kernel effective policy agree for every fixture.
-- [ ] **Sprint AC 128.AC3:** Money movement and cloud mutation are absent from every autonomy schema and registration path.
-- [ ] **Sprint AC 128.AC4:** `RV-31` has current raw mutation, race, cancellation, disablement, and reconciliation evidence.
+- [x] **Sprint AC 128.AC1:** `AT-AUT-001` passes with zero authority broadening.
+- [x] **Sprint AC 128.AC2:** The Visual Studio Code display and kernel effective policy agree for every fixture.
+- [x] **Sprint AC 128.AC3:** Money movement and cloud mutation are absent from every autonomy schema and registration path.
+- [x] **Sprint AC 128.AC4:** `RV-31` has current raw mutation, race, cancellation, disablement, and reconciliation evidence.
 
 **Gate decision:** Sprint 128 is PASS only when Story 128.1, all criteria, `AM-ATC-001`, `AT-AUT-001`, `SR-PRD-001`, `RV-31`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 128 source and contract rows pass locally with 2,520 deterministic
+authority cases and zero authority broadening. Sprint 128 remains
+`UPSTREAM-SPRINT-127-BLOCKED`; `substitution_set=empty`.
 
 ### [ ] Sprint 129 - Connected Identity and Work Graph
 

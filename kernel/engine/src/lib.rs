@@ -28,6 +28,7 @@ pub mod attachment;
 pub mod authority;
 /// Kernel-owned authority-transaction ordering and recovery contract.
 pub mod authority_transaction;
+pub mod autonomy_center;
 /// Complete backup-domain manifests and non-mutating migration admission.
 pub mod backup_migration;
 /// Closed engineering-capability lifecycle and dependency qualification.
