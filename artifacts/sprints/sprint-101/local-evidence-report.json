@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "record_type": "sprint_101_local_evidence",
-  "source_revision": "237e119f2d0d36c96572df17c9f12f068b5efec3",
+  "source_revision": "23f7a657c3ef9277000e8fcd818d7641aafe1db3",
   "source_sha256": {
     "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
     "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
@@ -17,7 +17,7 @@
     "supply-chain/sbom.cdx.json": "0fa1856d379bd76662399b59947a6efa3bbc839e619c7e97f412926ba1298b12",
     "supply-chain/dependency-hashes.sha256": "f5b6b3b48df6f53fdbe369ba11732f0d5072de5d9a8f0677e7464e1d13ef9878",
     "artifacts/sprints/sprint-101/requirement-closure-corpus.json": "52fd9aa8ce135cf06206cb21a8798c6b214c75e408c8a341d808dec357719c77",
-    "scripts/inherited_scope_closure_contract.py": "9c46318c2d2763348697a74392ac4f343ebddc4f714fba02b59e5210b00d626f",
+    "scripts/inherited_scope_closure_contract.py": "6e1c9dece05cc082ebe69043f551acf62b7d39328e60b3143307ed86c3101c58",
     "tests/test_inherited_scope_closure_contract.py": "7392a93888b1b06dd7a7e41cd8e1bca087b0d5a1efc51e44cc9b72e558f2b62b",
     "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
     "scripts/sprint_101_evidence.py": "c6cdaaf41ed3e5939d4379b02d83c8f71211bd29f4b7142ec104c9b5a7e5187d",
