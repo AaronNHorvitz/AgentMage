@@ -67,7 +67,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
-      "sha256": "0c1a0d9b75c15bec62d80705b3eecacea4b8d1a3aa895074fc4e0b22a30514b8"
+      "sha256": "f43430a1476384e97266ccf56e3765087407a9da9fdcccb366b400786bc87a17"
     },
     {
       "path": "kernel/engine/src/configuration.rs",
