@@ -1,0 +1,30 @@
+{
+  "case_count": 32,
+  "categories": {
+    "identity": 5,
+    "protocol": 6,
+    "authority": 7,
+    "response": 5,
+    "lifecycle": 5,
+    "artifact_mapping": 4
+  },
+  "cases": [
+    "identity-package-drift", "identity-process-drift", "identity-endpoint-drift",
+    "identity-expired", "identity-uncontained-child", "protocol-unknown-version",
+    "protocol-schema-drift", "protocol-malformed-json", "protocol-oversized-request",
+    "protocol-duplicate-request", "protocol-unregistered-tool", "authority-workspace-write",
+    "authority-hidden-root", "authority-credential", "authority-undeclared-network",
+    "authority-native-shadow", "authority-approval-inheritance", "authority-model-channel",
+    "response-schema-drift", "response-oversized", "response-public-reclassification",
+    "response-request-spoof", "response-result-as-evidence", "lifecycle-cancel-with-live-child",
+    "lifecycle-disconnect-with-live-child", "lifecycle-response-after-cancel",
+    "lifecycle-call-after-disable", "lifecycle-replay-after-reconnect",
+    "artifact-native-schema-parity", "artifact-native-grant-parity",
+    "artifact-missing-source-authority", "artifact-disable-native-independence"
+  ],
+  "local_contract_passed": true,
+  "native_malicious_server_executed": false,
+  "native_cleanup_complete": false,
+  "independent_review_present": false,
+  "substitution_set": []
+}

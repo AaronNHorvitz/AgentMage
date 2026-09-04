@@ -9118,21 +9118,21 @@ payment=platform, fixture, instrumentation, or review costs if applicable)`;
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 81.1.1 - Implement the bounded story**
+- [x] **Task 81.1.1 - Implement the bounded story:** all five source sub-tasks are retained in the source-bound Sprint 81 local evidence report.
   - [x] **Sub-task 81.1.1.1** (legacy `S-065-I05`): Scope every server independently to workspace roots, network destinations, credentials, operation classes, response classes, budgets, and expiry. Evidence: each sealed manifest and expiring connection carries exact independent scopes, closed response classes, bounds, and identity; current admission permits no credential identity and only `workspace_read`.
   - [x] **Sub-task 81.1.1.2** (legacy `S-065-I06`): Validate request and response schemas, item counts, byte limits, content classification, bounded logging, timeout, cancellation, termination, and malformed output. Evidence: `mcp_gateway.rs` seals one-use requests and rejects schema, digest, item, byte, timeout, classification, identity, lifecycle, cancellation-cleanup, and disconnect-cleanup violations without retaining raw payloads in receipts.
   - [x] **Sub-task 81.1.1.3** (legacy `S-065-I07`): Emit receipts for discovery, connection, manifest verification, request, response classification, side effects, cancellation, failure, and disconnect. Evidence: `McpGatewaySession` emits canonically hashed, content-minimized receipts for every listed lifecycle class and fixes side effects to `NotChanged`.
   - [x] **Sub-task 81.1.1.4** (legacy `S-065-I08`): Register only read-only tools and prohibit direct filesystem, shell, secret, network, connector, publication, or approval inheritance. Evidence: manifest validation admits exactly one common `WorkspaceRead` effect per tool, denies changed side effects and credentials, and the gateway type exposes no filesystem, shell, connector, model, secret, publication, or approval API.
-  - [ ] **Sub-task 81.1.1.5:** Adapt each admitted MCP tool into the existing provider-neutral registration and dispatch path so native and MCP-backed tools share argument validation, classification, grants, budgets, cancellation, events, receipts, and evidence without sharing process authority.
+  - [x] **Sub-task 81.1.1.5:** Adapt each admitted MCP tool into the existing provider-neutral registration and dispatch path so native and MCP-backed tools share argument validation, classification, grants, budgets, cancellation, events, receipts, and evidence without sharing process authority. Evidence: `mcp_artifact_adapter.rs` admits the transport request through `McpGatewaySession`, translates only its tool identity, revalidates it in the native `ToolRegistry` and `ToolDispatcher`, and returns the unchanged single-use grant template without an executor.
 
-- [ ] **Task 81.1.2 - Produce reviewable artifacts**
+- [x] **Task 81.1.2 - Produce reviewable artifacts:** the gateway, registry, adapter, guide, 32-case corpus, and source-bound local report cover every artifact sub-task without claiming native execution.
   - [x] **Sub-task 81.1.2.1:** Kernel MCP gateway and manifest registry. Evidence: `mcp_gateway.rs` and `mcp_registry.rs`.
   - [x] **Sub-task 81.1.2.2:** Transport and process-identity verifier. Evidence: transport-specific manifest validation and exact package/process/endpoint/containment observations gate every connection and request; native process-launch enforcement remains explicitly open.
   - [x] **Sub-task 81.1.2.3:** Read-only MCP receipt and classification schemas. Evidence: `McpResponseClass`, `McpTerminalState`, `McpReceiptKind`, and `McpReceipt` are closed contracts with gateway validation and canonical hashing.
-  - [ ] **Sub-task 81.1.2.4:** Malicious server, malformed protocol, timeout, and bypass corpus.
+  - [x] **Sub-task 81.1.2.4:** Malicious server, malformed protocol, timeout, and bypass corpus. Evidence: `sprint-81-mcp-adversarial-corpus.json` inventories 32 unique identity, protocol, authority, response, lifecycle, and artifact-mapping cases while marking native server execution false.
 
 - [ ] **Task 81.1.3 - Verify and close the story**
-  - [ ] **Sub-task 81.1.3.1:** `S-065-UT01` validates MCP manifests, server identity, transport, tool/resource/prompt schemas, sizes, classifications, limits, versions, and read-only declarations; assert unsupported or write-capable registrations fail.
+  - [x] **Sub-task 81.1.3.1:** `S-065-UT01` validates MCP manifests, server identity, transport, tool/resource/prompt schemas, sizes, classifications, limits, versions, and read-only declarations; assert unsupported or write-capable registrations fail. Evidence: the Sprint 81 report retains seven passing kernel MCP cases, three passing adapter cases, and the 32-case mutation inventory with zero focused skips.
   - [ ] **Sub-task 81.1.3.2:** `S-065-ST01` runs malicious servers that spoof identity, mutate schemas, request roots/credentials/network, return injections/secrets/oversized streams, spawn children, write files, or bypass cancellation; assert isolation and denial.
   - [ ] **Sub-task 81.1.3.3:** `S-065-RT01` cancels/kills/disconnects/restarts server and gateway across initialize/list/call/result phases; assert process cleanup, one terminal receipt, no replay, and cache invalidation.
   - [ ] **Sub-task 81.1.3.4:** `S-065-IT01` compares equivalent core and MCP read tools; assert same grant/path/classification/budget/receipt/evidence semantics and no direct model-to-server channel.
@@ -9153,29 +9153,29 @@ required before MCP registration.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 81.2.1 - Define MCP artifact mapping**
-  - [ ] **Sub-task 81.2.1.1:** Map each of the six native artifact tools to exact MCP names,
+- [x] **Task 81.2.1 - Define MCP artifact mapping:** all three mapping sub-tasks are implemented by the inert host adapter and retained report.
+  - [x] **Sub-task 81.2.1.1:** Map each of the six native artifact tools to exact MCP names,
         schemas, versions, limits, annotations, errors, cancellation, provenance, and truncation without
-        adding an MCP-only operation.
-  - [ ] **Sub-task 81.2.1.2:** Translate MCP requests into the common registry and dispatcher and
+        adding an MCP-only operation. Evidence: the adapter maps the current seven-member native `ArtifactToolKind::ALL` family to collision-free `mcp.agentmage.*` names with identical version, schemas, effects, grant, and timeout; it adds no operation.
+  - [x] **Sub-task 81.2.1.2:** Translate MCP requests into the common registry and dispatcher and
         translate typed results back; keep source admission, extraction, storage, retrieval, policy,
-        grants, receipts, and verification in existing Rust owners.
-  - [ ] **Sub-task 81.2.1.3:** Require an exact local grant and source/session scope for every call;
-        server names, content hashes, paths, prompts, and resource metadata grant no authority.
+        grants, receipts, and verification in existing Rust owners. Evidence: `admit_mcp_artifact_request` uses the gateway plus the existing native registry and pre-grant dispatcher and exposes no artifact backend or executor.
+  - [x] **Sub-task 81.2.1.3:** Require an exact local grant and source/session scope for every call;
+        server names, content hashes, paths, prompts, and resource metadata grant no authority. Evidence: native artifact argument validation runs after identity translation and the adapter admits only a `GrantRequired` result carrying the unchanged single-use `workspace_read` template.
 - [ ] **Task 81.2.2 - Verify conformance and isolation**
   - [ ] **Sub-task 81.2.2.1:** Run native-versus-MCP golden parity for valid, malformed, stale,
         oversized, restricted, unsupported, cancelled, timeout, crash, duplicate, and cross-session
         cases; require equal correctness state and receipts.
-  - [ ] **Sub-task 81.2.2.2:** Attempt direct parser/store access, writable tools, hidden roots,
+  - [x] **Sub-task 81.2.2.2:** Attempt direct parser/store access, writable tools, hidden roots,
         undeclared network, credential use, authority transfer, alternate limits, and result-as-evidence;
-        require structural absence or denial.
+        require structural absence or denial. Evidence: the artifact adapter contract rejects any filesystem, process, network, parser/backend, or executor dependency; manifest admission rejects writes, credentials, undeclared destinations, shadows, and broadened bounds.
   - [ ] **Sub-task 81.2.2.3:** Disable and remove MCP during idle and active calls; require native
         artifact tools and clients remain functional and no process, socket, registration, cache,
         source, grant, or retained state remains.
 - [ ] **Task 81.2.3 - Document support and evidence**
-  - [ ] **Sub-task 81.2.3.1:** Publish MCP capability/version matrices, client limitations,
+  - [x] **Sub-task 81.2.3.1:** Publish MCP capability/version matrices, client limitations,
         troubleshooting, removal, and the explicit statement that MCP cannot recover bytes it was not
-        given through a usable handle or staged artifact.
+        given through a usable handle or staged artifact. Evidence: `docs/guides/mcp-artifact-tools.md` publishes all seven exact mappings, invariants, removal limits, and the required missing-byte statement.
   - [ ] **Sub-task 81.2.3.2:** Retain manifests, schema diffs, parity results, attack traces,
         cancellation/cleanup results, receipts, and applicable `RV-11`, `RV-16`, `RV-17`, and `RV-23`
         evidence.
@@ -9185,8 +9185,9 @@ required before MCP registration.
 - [ ] **Story AC 81.2.AC1:** Given the same admitted source and grant, when a native and MCP
       artifact call run, then schemas, limits, results, provenance, receipts, and terminal states are
       equivalent apart from transport presentation.
-- [ ] **Story AC 81.2.AC2:** Given an MCP request without exact source/session authority, when it is
+- [x] **Story AC 81.2.AC2:** Given an MCP request without exact source/session authority, when it is
       mediated, then no parser, store, tool, network, credential, or data access occurs.
+      Evidence: malformed native artifact arguments fail before gateway mutation, valid requests stop at the existing `GrantRequired` boundary, and the adapter owns no executor or data-access port.
 - [ ] **Story AC 81.2.AC3:** Given MCP removal, when native behavior is rerun, then the artifact
       service and every native client remain correct and MCP leaves no undeclared residue.
 
@@ -9194,9 +9195,9 @@ required before MCP registration.
 
 - [ ] **Sprint AC 81.AC1:** Every MCP interaction passes through the kernel tool dispatcher and effective grant.
 - [ ] **Sprint AC 81.AC2:** Direct server side effects and undeclared network, path, secret, or process access fail.
-- [ ] **Sprint AC 81.AC3:** Changed process or package identity invalidates connection authority.
+- [x] **Sprint AC 81.AC3:** Changed process or package identity invalidates connection authority. Evidence: the source-bound report retains the exact identity-drift gateway cases and Sprint 80 admission contract.
 - [ ] **Sprint AC 81.AC4:** Cancellation terminates pending server work and produces attributable receipts.
-- [ ] **Sprint AC 81.AC5:** No writable MCP tool is enabled.
+- [x] **Sprint AC 81.AC5:** No writable MCP tool is enabled. Evidence: manifest sealing admits only `workspace_read`, the artifact mappings preserve `StateChange::NotChanged`, and the report records one allowed operation and zero effect executors.
 - [ ] **Sprint AC 81.AC6:** Removing or disabling MCP leaves every native coding tool and the interactive harness functional under the same kernel contracts.
 - [ ] **Sprint AC 81.AC7:** Artifact-tool MCP exposure is schema- and result-equivalent to the
       native family and adds no ingestion, parser, store, policy, grant, or effect authority.
@@ -9204,6 +9205,21 @@ required before MCP registration.
 **Gate decision:** Sprint 81 is PASS only when Stories 81.1 and 81.2, every numbered task/sub-task,
 every story criterion, every sprint criterion, and the Universal Story Definition of Done are
 complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. The local mediation, mapping, structural-isolation, and corpus scope is
+retained at `artifacts/sprints/sprint-81/local-evidence-report.json`; all native server execution,
+malicious-server, timeout/cancellation/crash/restart, live parity, removal/residue, and independent
+review rows and their dependents remain
+`BLOCKED_EXTERNAL(platform=native isolated MCP server and artifact-tool environments plus
+independent gateway review, artifact=untouched malicious-server corpus results,
+process/network/file traces, timeout/cancellation/crash/restart/disable/remove traces,
+native-versus-MCP artifact parity results, cleanup scan, receipts, and independent review bundle,
+action=provision exact native environments, conforming and malicious MCP servers,
+process/network/file instrumentation, admitted source fixtures, and reviewer, execute S-065-ST01/
+RT01/IT01 and artifact parity/removal campaigns, and transfer untouched bundles, credential=native
+platform, MCP server, instrumentation, artifact-fixture, and reviewer access, payment=platform,
+server-fixture, instrumentation, or review costs if applicable)`; `substitution_set=empty`.
+Native server executions: 0. Native parity campaigns: 0.
 
 ### [ ] Sprint 82 - Public Research and Citations
 
