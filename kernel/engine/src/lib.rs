@@ -20,6 +20,8 @@ pub mod agent_state;
 pub mod agent_verifier;
 /// Deterministic non-authoritative approval-display construction.
 pub mod approval;
+/// Digest-first artifact registry observation and promotion admission.
+pub mod artifact_promotion;
 /// Metadata-only attachment classification and exact workspace path resolution.
 pub mod attachment;
 /// Sealed classification and denial of descriptive artifacts as authority.
