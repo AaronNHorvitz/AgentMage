@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_77_local_evidence",
+  "source_revision": "8555998e5f7dad20bcb42fa54bf16fc3bb47bcae",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "shells/host/Cargo.toml": "b6ad82e6be880f63c24d47a0341748261f2bd747d7a851264b81ab24beacf713",
+    "shells/host/src/lib.rs": "3df3aec3681fddad1c1e3ce6d5206216b771063c37387cf127acaaef928998e4",
+    "shells/host/src/desktop_experience.rs": "55ec604ce710a2438026748b4bfe9de559b5195a5958a7187e2dbf77a63136e0",
+    "shells/host/src/desktop_lifecycle.rs": "758a04f61ea334c06ff2056a3f4b41634f20965844a935ff2cdce79213dac3b2",
+    "kernel/contracts/src/conversation.rs": "474fffe35b951603f78ab16c25609beda1f8eaa9acf2ebceb94f8af5176e2dde",
+    "schemas/runtime/thin-client-request.schema.json": "72235d3f55f13ea300f1d0d2f61c8cf77135c1d804c3408227c2dcea0493c48a",
+    "schemas/runtime/thin-client-event.schema.json": "5952eb483182845e15a42ecc8a2458bae71c5ee15f18bf14cbb01089682b41e1",
+    "docs/architecture/thin-client-boundary.md": "ed5caf1bd8602e2759ca47ad3fc7544de4d2cd6cf58c8134d13c2f25e36e2a9a",
+    "docs/architecture/desktop-thin-client.md": "b15eb68172f9016501a06315bc9626049faad3a63f60553e60b7d2045f0114e1",
+    "docs/guides/desktop-status-recovery-packaging.md": "0325a5ffc779e1c98b1ad9b32a8ba6036d9c377eecf29ffb27423571152ab178",
+    "docs/verification/sprint-77-desktop-lifecycle-corpus.json": "706607a490d55721f81eac1e51438f308a6268bcfbb8deb81ffc9b54976bb007",
+    "artifacts/sprints/sprint-76/local-evidence-report.json": "f797fd8f0c64f7aca337a5f4a25f4caaf525083fc0e788512c0ed7058482b593",
+    "scripts/desktop_lifecycle_contract.py": "bfb37c80dee1b9d26109b24ad805768cd05888eb50d0198b8bb196567c70a845",
+    "tests/test_desktop_lifecycle_contract.py": "571146c4d033b257df6534e9228f87a5fa5b3d19dbc6479fb695cb7d27f4183a",
+    "supply-chain/dependency-hashes.sha256": "bc1fa12935d6971a5121802aed170b4ecf2926221e1fc2c510049a365c8b060d",
+    "supply-chain/dependency-provenance.json": "a11705de95f9dcb7334d800a34056665b8d4fce2244e0d4b1bfa2900af7cd36c",
+    "supply-chain/sbom.cdx.json": "1c61e81393c02a219b5d7111246bcfc47d3eba6db2ab284d451cf04e355f726a",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_77_evidence.py": "09f838b77bc6a7acc76d48a104063d5bc239c41dd975cc1c444628ec4541f04b",
+    "tests/test_sprint_77_evidence.py": "c6e5983c89a7829d9d283c115c44002a82d6888252b51a1d57ba78cfcd16cfaf"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "desktop-lifecycle-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "desktop_lifecycle::tests",
+        "--all-features"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d8d9ea17a6ef97c28e5b00caaf7b6ffca49db7fa70994629595aa65528696d0e",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "desktop-lifecycle-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_desktop_lifecycle_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "fe008aab760eb03ccac7578e2b84665b1b50b0d7f855b17a0c7a8d039435b658",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "runtime-schema-contract",
+      "argv": [
+        "npm",
+        "run",
+        "-s",
+        "schemas:test"
+      ],
+      "exit_code": 0,
+      "output_sha256": "3defdb47f5cdf982b88e7927a0fab5ff868dd307879ff5dbe75c8439d9c2ccf1",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_77_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2c37d50a88147ca2ebd5197d74ee37d462dab650d793512e849814c28d5a38f0",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-PLT-001",
+    "SR-PLT-002",
+    "SR-PLT-003",
+    "SR-PLT-004",
+    "SR-PLT-005",
+    "SR-PLT-006",
+    "SR-PLT-007",
+    "SR-PLT-008",
+    "SR-PLT-009",
+    "SR-PLT-010",
+    "SR-ACC-001",
+    "SR-TST-007",
+    "SR-TST-008",
+    "SR-TST-009",
+    "SR-CIV-006",
+    "SR-CIV-007",
+    "SR-CIV-008",
+    "SR-CIV-009"
+  ],
+  "implemented_contracts": {
+    "status_field_count": 9,
+    "single_writer_lease": true,
+    "read_only_safe_mode": true,
+    "local_asset_kind_count": 5,
+    "protocol_operation_count": 6,
+    "corpus_case_count": 38,
+    "telemetry_count": 0,
+    "advertisement_count": 0,
+    "remote_asset_count": 0,
+    "automatic_cloud_check_count": 0,
+    "direct_client_effect_count": 0,
+    "signed_package_present": false,
+    "native_package_tested": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "rust_test_count": 8,
+    "corpus_case_count": 38,
+    "direct_client_effect_count": 0,
+    "native_protocol_parity": false,
+    "native_crash_injection": false,
+    "native_accessibility": false,
+    "clean_install": false,
+    "independent_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-76-BLOCKED",
+      "owner": "77.1"
+    },
+    {
+      "code": "SIGNED-NATIVE-DESKTOP-PACKAGES-ABSENT",
+      "owner": "77.1.2.1"
+    },
+    {
+      "code": "NATIVE-DESKTOP-ACCESSIBILITY-RECOVERY-ABSENT",
+      "owner": "77.1.2.3"
+    },
+    {
+      "code": "NATIVE-DESKTOP-SECURITY-EVIDENCE-ABSENT",
+      "owner": "77.1.3.4"
+    }
+  ],
+  "summary": {
+    "local_sprint_77_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_76_closed": false,
+    "signed_package_present": false,
+    "native_package_tested": false,
+    "native_accessibility_complete": false,
+    "native_security_evidence_complete": false,
+    "independent_review_present": false,
+    "release_approval": false
+  }
+}
