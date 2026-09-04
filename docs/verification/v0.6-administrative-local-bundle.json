@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "bundle_id": "v0.6-administrative-local-bundle-v1",
+  "workflow_classes": ["canonical-record", "briefing", "meeting", "task", "correspondence", "deadline", "document-control", "privacy"],
+  "source_reports": [
+    "artifacts/sprints/sprint-54/local-evidence-report.json",
+    "artifacts/sprints/sprint-55/local-evidence-report.json",
+    "artifacts/sprints/sprint-56/local-evidence-report.json",
+    "artifacts/sprints/sprint-57/local-evidence-report.json",
+    "artifacts/sprints/sprint-58/local-evidence-report.json",
+    "artifacts/sprints/sprint-59/local-evidence-report.json",
+    "artifacts/sprints/sprint-60/local-evidence-report.json",
+    "artifacts/sprints/sprint-61/local-evidence-report.json",
+    "artifacts/sprints/sprint-62/local-evidence-report.json",
+    "artifacts/sprints/sprint-63/local-evidence-report.json",
+    "artifacts/sprints/sprint-64/local-evidence-report.json",
+    "artifacts/sprints/sprint-65/local-evidence-report.json",
+    "artifacts/sprints/sprint-66/local-evidence-report.json",
+    "artifacts/sprints/sprint-67/local-evidence-report.json",
+    "artifacts/sprints/sprint-68/local-evidence-report.json"
+  ],
+  "sending_enabled": false,
+  "live_calendar_changes_enabled": false,
+  "messaging_enabled": false,
+  "external_database_access_enabled": false,
+  "automatic_recipient_selection_enabled": false,
+  "unattended_disposition_enabled": false,
+  "all_source_reports_blocked": true,
+  "release_approval": false
+}

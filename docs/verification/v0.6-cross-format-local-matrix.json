@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "matrix_id": "v0.6-cross-format-local-matrix-v1",
+  "release_gate": "G-V0.6",
+  "sprints": [54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68],
+  "format_classes": [
+    { "format": "markdown", "structural_local": true, "native_visual": false, "accessibility": false, "release_supported": false },
+    { "format": "pdf", "structural_local": true, "native_visual": false, "accessibility": false, "release_supported": false },
+    { "format": "tabular-json", "structural_local": true, "native_visual": false, "accessibility": false, "release_supported": false },
+    { "format": "xlsx", "structural_local": true, "native_visual": false, "accessibility": false, "release_supported": false },
+    { "format": "docx", "structural_local": true, "native_visual": false, "accessibility": false, "release_supported": false },
+    { "format": "pptx", "structural_local": true, "native_visual": false, "accessibility": false, "release_supported": false },
+    { "format": "raster-image", "structural_local": true, "native_visual": false, "accessibility": false, "release_supported": false },
+    { "format": "additional-read-only", "structural_local": true, "native_visual": false, "accessibility": false, "release_supported": false },
+    { "format": "audio", "structural_local": false, "native_visual": false, "accessibility": false, "release_supported": false },
+    { "format": "sqlite-fixture", "structural_local": true, "native_visual": false, "accessibility": false, "release_supported": false }
+  ],
+  "supported_format_count": 0,
+  "supported_platform_count": 0,
+  "release_approval": false
+}

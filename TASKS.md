@@ -8292,40 +8292,47 @@ the exact tuples above. No story, sprint, product, platform, database, or releas
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 69.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 69.1.1.1** (legacy `S-056-I01`): Run canonical-record, briefing, meeting, task, correspondence, deadline, document-control, and privacy suites.
-  - [ ] **Sub-task 69.1.1.2** (legacy `S-056-I02`): Run extraction, generation, round-trip, redaction, recalculation, page, slide, image, link, metadata, and accessibility checks for every promoted format.
-  - [ ] **Sub-task 69.1.1.3** (legacy `S-056-I03`): Run malformed, encrypted, hostile, oversized, unsupported, and embedded-execution fixtures.
-  - [ ] **Sub-task 69.1.1.4** (legacy `S-056-I04`): Verify every output uses the controlled-write path and every factual claim retains evidence.
-  - [ ] **Sub-task 69.1.1.5** (legacy `S-056-I05`): Publish executive-assistant, secretary, document conversion, artifact verification, privacy, recovery, and limitation guides.
-  - [ ] **Sub-task 69.1.1.6** (legacy `S-056-I06`): Prove sending, live calendar changes, messaging, external database access, automatic recipient selection, and unattended disposition remain disabled.
+  - [x] **Sub-task 69.1.1.1** (legacy `S-056-I01`): Run canonical-record, briefing, meeting, task, correspondence, deadline, document-control, and privacy suites. Evidence: the v0.6 aggregate validates 15 source-bound Sprint 54–68 reports with zero recorded command failures and inventories all eight administrative workflow classes; every source sprint and release decision remains visibly blocked.
+  - [ ] **Sub-task 69.1.1.2** (legacy `S-056-I02`): Run extraction, generation, round-trip, redaction, recalculation, page, slide, image, link, metadata, and accessibility checks for every promoted format. Local structural subsets are aggregated, but the native render/accessibility matrix remains blocked on the exact Sprint 60–68 platform tuples. **Substitution set:** empty.
+  - [ ] **Sub-task 69.1.1.3** (legacy `S-056-I03`): Run malformed, encrypted, hostile, oversized, unsupported, and embedded-execution fixtures. Local hostile subsets are aggregated, but the cross-format native hostile/manual-fuzz matrix remains blocked on the exact Sprint 60–68 platform and independent-review tuples. **Substitution set:** empty.
+  - [ ] **Sub-task 69.1.1.4** (legacy `S-056-I04`): Verify every output uses the controlled-write path and every factual claim retains evidence. Local proposal/evidence paths pass, but every-format installed controlled-write verification depends on Sub-task 69.1.1.2. **Substitution set:** empty.
+  - [x] **Sub-task 69.1.1.5** (legacy `S-056-I05`): Publish executive-assistant, secretary, document conversion, artifact verification, privacy, recovery, and limitation guides. Evidence: the aggregate validator requires 14 exact existing workflow/format/privacy/write guides and the new v0.6 review guide states the cross-format, authority, limitation, and release-blocking procedure.
+  - [x] **Sub-task 69.1.1.6** (legacy `S-056-I06`): Prove sending, live calendar changes, messaging, external database access, automatic recipient selection, and unattended disposition remain disabled. Evidence: the aggregate bundle binds all six states to false, source reports retain denied effects, and mutations of any state fail the contract.
 
-- [ ] **Task 69.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 69.1.2.1:** v0.6 cross-format acceptance corpus and results.
-  - [ ] **Sub-task 69.1.2.2:** Administrative workflow acceptance bundle.
-  - [ ] **Sub-task 69.1.2.3:** Fidelity, privacy, accessibility, and limitation matrix.
-  - [ ] **Sub-task 69.1.2.4:** v0.6 release notes and capability matrix.
+- [x] **Task 69.1.2 - Produce reviewable artifacts** Evidence: all four aggregate artifacts below are retained and source-bound while preserving blocked release truth.
+  - [x] **Sub-task 69.1.2.1:** v0.6 cross-format acceptance corpus and results. Evidence: the matrix binds all 15 source Sprint reports and ten format classes, distinguishing local structural results from absent native visual/accessibility results and declaring zero supported formats/platforms.
+  - [x] **Sub-task 69.1.2.2:** Administrative workflow acceptance bundle. Evidence: the bundle enumerates eight workflow classes, all 15 exact report paths, all six disabled external-effect classes, blocked source truth, and false release approval.
+  - [x] **Sub-task 69.1.2.3:** Fidelity, privacy, accessibility, and limitation matrix. Evidence: every format row separately records structural-local, native-visual, accessibility, and release-support truth; audio remains structurally absent and every native/accessibility/support state remains false.
+  - [x] **Sub-task 69.1.2.4:** v0.6 release notes and capability matrix. Evidence: the candidate notes explicitly state that this is not a release, enumerate remaining native/model/review/signing dependencies, and preserve supported formats/platforms and release approval at 0/0/false.
 
 - [ ] **Task 69.1.3 - Verify and close the story**
   - [ ] **Sub-task 69.1.3.1:** `S-056-IT01` executes every administrative workflow and promoted file type from intake through extraction/draft/review/render/verify/export using fixed cross-format cases; assert linked provenance and no source overwrite.
   - [ ] **Sub-task 69.1.3.2:** `S-056-ST01` combines hostile mixed-format attachments, prompt injection, active content, secrets, malformed structures, excessive resources, hidden metadata, and unauthorized send/file actions; assert containment and exact limitations.
   - [ ] **Sub-task 69.1.3.3:** `S-056-RT01` interrupts conversion/edit/export/index/cleanup and migrates/rolls back v0.5 state; assert canonical sources, staged outputs, indexes, receipts, and retention reconcile.
   - [ ] **Sub-task 69.1.3.4:** `S-056-AT01` independently reviews representative artifacts for semantic accuracy, structural fidelity, visual fidelity, privacy, accessibility, provenance, and safe handling; force every threshold to fail and verify release blocking.
-  - [ ] **Sub-task 69.1.3.5 - Product security evidence:** Map applicable `SR-DAT-*`, `SR-SUP-*`, `SR-AI-*`, `SR-OPS-*`, `SR-TST-*`, and `SR-CIV-*`; retain cross-format raw results, independent artifact reviews, canary scans, recovery evidence, limitations matrix, and signed gate decision.
+  - [ ] **Sub-task 69.1.3.5 - Product security evidence:** Map applicable `SR-DAT-*`, `SR-SUP-*`, `SR-AI-*`, `SR-OPS-*`, `SR-TST-*`, and `SR-CIV-*`; retain cross-format raw results, independent artifact reviews, canary scans, recovery evidence, limitations matrix, and signed gate decision. Local mappings and limitations are retained; completion remains `BLOCKED_EXTERNAL(platform=all declared native v0.6 platform, model, accessibility, and independent-review environments, artifact=untouched cross-format raw results, artifact reviews, canary scans, recovery evidence, limitations reconciliation, signed gate decision, and manual-fuzz bundles, action=platform/model/review/release owners execute every open Sprint 54-68 tuple, reconcile the aggregate, sign the gate decision, and transfer untouched bundles, credential=Windows image, physical Mac, installed runtime, model, reviewer, and signing access as applicable, payment=licenses, model/runtime usage, hardware, review, and signing costs if applicable)`. **Substitution set:** empty.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 69.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every supported format meets its declared extraction, generation, round-trip, visual, accessibility, hostile-input, resource, privacy, and evidence thresholds on all supported platforms.
-- [ ] **Story AC 69.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then `G-V0.6` closes only when administrative drafts remain user-controlled and no connector send, external filing, live database, executable content, or unattended action is introduced.
+- [x] **Story AC 69.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then `G-V0.6` closes only when administrative drafts remain user-controlled and no connector send, external filing, live database, executable content, or unattended action is introduced. Evidence: the aggregate validator requires every source sprint to remain blocked, all six external-effect states false, all ten format support states false, and release approval false; any broadened or prematurely approved source/aggregate record fails.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 69.AC1:** Every promoted format passes structural and rendered verification on declared platforms.
-- [ ] **Sprint AC 69.AC2:** Every recommendation, draft, task, decision, and record is source-backed and correctly sensitivity-labeled.
-- [ ] **Sprint AC 69.AC3:** No embedded content executes and no external message or state change occurs.
-- [ ] **Sprint AC 69.AC4:** Failed fidelity or privacy checks block artifact completion.
-- [ ] **Sprint AC 69.AC5:** `G-V0.6` closes only after all workflow, format, security, recovery, and documentation gates pass.
+- [x] **Sprint AC 69.AC2:** Every recommendation, draft, task, decision, and record is source-backed and correctly sensitivity-labeled. Evidence: the aggregate hashes all 15 source reports, each of which retains source hashes, command results, provenance/privacy state, limitations, and blocked completion truth.
+- [x] **Sprint AC 69.AC3:** No embedded content executes and no external message or state change occurs. Evidence: source reports retain zero admitted execution/external effects and the aggregate independently fixes sending, calendar changes, messaging, live databases, recipient selection, and unattended disposition to false.
+- [x] **Sprint AC 69.AC4:** Failed fidelity or privacy checks block artifact completion. Evidence: every matrix row retains false release support while native visual/accessibility work is absent, every source report remains BLOCKED, and the candidate notes refuse release approval.
+- [x] **Sprint AC 69.AC5:** `G-V0.6` closes only after all workflow, format, security, recovery, and documentation gates pass. Evidence: the source inventory is exact, any non-BLOCKED source or approval drift fails validation, the signed decision remains absent, and the aggregate terminal state stays BLOCKED.
 
 **Gate decision:** Sprint 69 is PASS only when Story 69.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** **BLOCKED.** The local aggregate covers 15 source-bound Sprint reports, 8
+administrative workflows, 10 format classes, 14 review guides, 6 disabled external-effect classes,
+and zero supported formats/platforms; see `artifacts/sprints/sprint-69/local-evidence-report.json`.
+Native cross-format/render/accessibility/hostile/recovery/write campaigns, independent review,
+manual fuzzing, signing, and release approval remain incomplete under the exact tuples above. No
+story, sprint, product, platform, format, package, or release gate is closed.
 
 ## [ ] Epic 7 - v0.7 - Read-Only GitHub and Connectors
 
