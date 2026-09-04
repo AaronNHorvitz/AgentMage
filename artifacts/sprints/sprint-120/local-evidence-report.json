@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_120_local_evidence",
+  "source_revision": "fd50dce1ddee6a1ed5b1bb610f47d9b83654ba65",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
+    "kernel/engine/src/lib.rs": "5a4c2709e3a8d4fd4bc2e2442a5996b7f8eb2ea5faeca8f2973a662378bea4f9",
+    "kernel/engine/src/markdown_math.rs": "b28fc355ed690c8de8fa3b4aa29de9b6d9ab201b93c7c726e0bd8be476a8b16d",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "supply-chain/dependency-provenance.json": "47354427a44964032ae2c3b8ec3cea63bb5f2822e69515d00f708627aee4ecbd",
+    "supply-chain/sbom.cdx.json": "167983722eb7479a1986508b57e9e7d31e73f4494da6cc3522e9757dab1e6bbe",
+    "supply-chain/dependency-hashes.sha256": "31a2a9a22841507e5921c4df9bcea4f5f68d4a33fb27ba7092a4ce964c7de9da",
+    "artifacts/sprints/sprint-120/markdown-math-corpus.json": "ed0105532feea86334cb9422a3a86606c7c406fa16d4e7594c20cf137e6df69d",
+    "scripts/markdown_math_contract.py": "4b6a66e5194c5c805c212ee6ccfa6e477c1383255a5d83d441c3c3cf35b49a55",
+    "tests/test_markdown_math_contract.py": "288f28c30f23ac44d8589fbc8ae9ccd9a3b245d8e0d86318a9f83d0c06a8a11f",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_120_evidence.py": "7a1b715292b18da73a379640e51f1a0fc9d688350bb795ad1d9f0309615d8439",
+    "tests/test_sprint_120_evidence.py": "3cb3e1744c2cecf18e8a6167b0c9123ad669d831efa495f416cbf203902d6a26"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "math-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "markdown_math::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "c1cc8efac4ee6f6bc94bae9ede1fb547b1d068b848ba58ec34e3d11aeaed1c50",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "math-corpus-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_markdown_math_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "239573c1665ba0d20880d981ec7058ee3d44a42932e841724fdcee3ca672055d",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary-contract",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_120_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2c37d50a88147ca2ebd5197d74ee37d462dab650d793512e849814c28d5a38f0",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-MTH-001",
+    "AT-MTH-001",
+    "SR-TST-002",
+    "SR-TST-004",
+    "SR-CIV-006",
+    "SR-CIV-007",
+    "SR-CIV-008",
+    "SR-CIV-009",
+    "RV-15",
+    "RV-20"
+  ],
+  "implemented_contracts": {
+    "syntax_family_count": 15,
+    "round_trip_case_count": 128,
+    "attack_case_count": 2048,
+    "fault_case_count": 512,
+    "native_platform_execution_count": 0,
+    "file_access_count": 0,
+    "network_access_count": 0,
+    "promoted_platform_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "source_round_trip_exact": true,
+    "unsafe_commands_denied": true,
+    "offline_renderer_manifested": true,
+    "cross_platform_visual_complete": false,
+    "accessibility_native_complete": false,
+    "rv15_complete": false,
+    "rv20_complete": false,
+    "at_mth_001_complete": false,
+    "independent_human_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-119-BLOCKED",
+      "owner": "120"
+    },
+    {
+      "code": "BLOCKED-EXTERNAL-MATH-AT-MTH-001",
+      "owner": "120"
+    }
+  ],
+  "summary": {
+    "local_sprint_120_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_119_closed": false,
+    "native_math_support": false,
+    "release_approval": false
+  }
+}
