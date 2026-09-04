@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_76_local_evidence",
+  "source_revision": "8d266275fb4da55cc693d93036bbede9ad150706",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "shells/host/Cargo.toml": "b6ad82e6be880f63c24d47a0341748261f2bd747d7a851264b81ab24beacf713",
+    "shells/host/src/lib.rs": "7b798b1fcf73a058c860da516e99e885958465d06390372be0464b222d88f28a",
+    "shells/host/src/desktop_experience.rs": "55ec604ce710a2438026748b4bfe9de559b5195a5958a7187e2dbf77a63136e0",
+    "kernel/contracts/src/conversation.rs": "474fffe35b951603f78ab16c25609beda1f8eaa9acf2ebceb94f8af5176e2dde",
+    "schemas/runtime/thin-client-request.schema.json": "72235d3f55f13ea300f1d0d2f61c8cf77135c1d804c3408227c2dcea0493c48a",
+    "schemas/runtime/thin-client-event.schema.json": "5952eb483182845e15a42ecc8a2458bae71c5ee15f18bf14cbb01089682b41e1",
+    "docs/architecture/thin-client-boundary.md": "ed5caf1bd8602e2759ca47ad3fc7544de4d2cd6cf58c8134d13c2f25e36e2a9a",
+    "docs/architecture/desktop-thin-client.md": "b15eb68172f9016501a06315bc9626049faad3a63f60553e60b7d2045f0114e1",
+    "docs/guides/conversations.md": "6498780e43ec4defefbda0f2bf04b62cbffcaa9c79ed4993cc60b22fb9175ab7",
+    "docs/guides/desktop-conversation-workspace.md": "a96d37c198e7eaa36d9220340eb3c8a02605b6795d244b4f711a5aec4cd2a0d4",
+    "docs/verification/sprint-76-desktop-corpus.json": "7a2f34426e6c0fd90f3806f8d540d38483337bd99a2e344dd85fafa27615f5ba",
+    "scripts/desktop_experience_contract.py": "2e58531d4f38d92e782d54a5a33e04347db79f6d8467732b90cd7d6098539edf",
+    "tests/test_desktop_experience_contract.py": "c03d3219b70033af259d31d97650c364ba6d70d02cf5fd0c35502fe78b9a8c78",
+    "supply-chain/dependency-hashes.sha256": "75c60266efd54b8aa3f828d4b281ca7e8ba90980f86d4255c095b15fde4b5dce",
+    "supply-chain/dependency-provenance.json": "57225772e090069e2479b42c6d4da992761924e5594dc85f09bacdb1f7eccd69",
+    "supply-chain/sbom.cdx.json": "3a822a22f5ca1915219875247e96cabec3628375c28f023656319936cb6930c0",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_76_evidence.py": "2a18b443f62decebf7b64b6873467a333e3746ed2e29d9e6965c672526e4be68",
+    "tests/test_sprint_76_evidence.py": "94f6a6aa5b30ba415ecc6e5b398643539c1b276265c019594a3d87d966f69be9"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "desktop-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "desktop_experience::tests",
+        "--all-features"
+      ],
+      "exit_code": 0,
+      "output_sha256": "8be22b7b373e8d15be5c29eeef3c18848de117711ff9ce7627157d80711cfffc",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "desktop-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_desktop_experience_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "fe008aab760eb03ccac7578e2b84665b1b50b0d7f855b17a0c7a8d039435b658",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "runtime-schema-contract",
+      "argv": [
+        "npm",
+        "run",
+        "-s",
+        "schemas:test"
+      ],
+      "exit_code": 0,
+      "output_sha256": "7492b518a26a75422292421eb66ef950215fbcb6cefe765f1356c2a8ea3690fc",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_76_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2c37d50a88147ca2ebd5197d74ee37d462dab650d793512e849814c28d5a38f0",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-PLT-001",
+    "SR-PLT-002",
+    "SR-PLT-003",
+    "SR-PLT-004",
+    "SR-PLT-005",
+    "SR-PLT-006",
+    "SR-PLT-007",
+    "SR-PLT-008",
+    "SR-PLT-009",
+    "SR-PLT-010",
+    "SR-ACC-001",
+    "SR-TST-007",
+    "SR-TST-008",
+    "SR-TST-009",
+    "SR-CIV-006",
+    "SR-CIV-007",
+    "SR-CIV-008",
+    "SR-CIV-009"
+  ],
+  "implemented_contracts": {
+    "architecture_selection": true,
+    "navigation_filter_count": 9,
+    "transcript_item_kind_count": 11,
+    "conversation_action_count": 7,
+    "checkpoint_dimension_count": 6,
+    "approval_kind_count": 4,
+    "corpus_case_count": 42,
+    "external_web_service_count": 0,
+    "client_authority_count": 0,
+    "client_effect_count": 0,
+    "native_desktop_package": false,
+    "platform_support": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "rust_test_count": 9,
+    "corpus_case_count": 42,
+    "external_web_service_count": 0,
+    "client_authority_count": 0,
+    "client_effect_count": 0,
+    "native_protocol_parity": false,
+    "native_accessibility": false,
+    "clean_install": false,
+    "independent_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-75-BLOCKED",
+      "owner": "76.1"
+    },
+    {
+      "code": "NATIVE-DESKTOP-SECURITY-EVIDENCE-ABSENT",
+      "owner": "76.1.3.4"
+    }
+  ],
+  "summary": {
+    "local_sprint_76_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_75_closed": false,
+    "native_desktop_evidence_complete": false,
+    "native_security_evidence_complete": false,
+    "signed_package_present": false,
+    "independent_review_present": false,
+    "release_approval": false
+  }
+}
