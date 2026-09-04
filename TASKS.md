@@ -12650,39 +12650,43 @@ authority cases and zero authority broadening. Sprint 128 remains
 
 **Dependencies:** Sprints 127-128; existing provider-neutral identity and delivery-graph contracts.
 
-#### [ ] Story 129.1 - Evidence-Backed Cross-System Identity
+#### [x] Story 129.1 - Evidence-Backed Cross-System Identity
 
 **User-facing value:** As a user, I can relate messages, meetings, tasks, documents, financial records, cloud observations, and delivery work while always seeing the native source identity and confidence of each link.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 129.1.1 - Extend native identity types**
-  - [ ] **Sub-task 129.1.1.1:** Add provider, tenant, account, mailbox, workspace, team, channel, person, meeting, task, document, financial-record, and cloud-resource identities.
-  - [ ] **Sub-task 129.1.1.2:** Preserve native immutable identifiers, mutable display attributes, source observation, freshness, classification, and tombstone state separately.
-  - [ ] **Sub-task 129.1.1.3:** Define confirmed, deterministic, proposed, conflicting, stale, and removed cross-provider links.
-- [ ] **Task 129.1.2 - Build graph mutation and review flows**
-  - [ ] **Sub-task 129.1.2.1:** Add evidence-cited graph edges and user confirmation for non-deterministic identity joins.
-  - [ ] **Sub-task 129.1.2.2:** Implement rename, transfer, merge, split, account change, provider deletion, and link-revocation behavior.
-  - [ ] **Sub-task 129.1.2.3:** Deny authorization, recipient resolution, and destination selection from proposed or display-only links.
-- [ ] **Task 129.1.3 - Verify identity confusion resistance**
-  - [ ] **Sub-task 129.1.3.1:** Test aliases, duplicate names, homoglyphs, renamed channels, transferred resources, recycled addresses, and conflicting provider evidence.
-  - [ ] **Sub-task 129.1.3.2:** Mutate every graph edge around recipient, account, financial record, and cloud resource selection.
-  - [ ] **Sub-task 129.1.3.3:** Prove removal deletes or tombstones every derived edge without corrupting unrelated provider history.
+- [x] **Task 129.1.1 - Extend native identity types**
+  - [x] **Sub-task 129.1.1.1:** Add provider, tenant, account, mailbox, workspace, team, channel, person, meeting, task, document, financial-record, and cloud-resource identities.
+  - [x] **Sub-task 129.1.1.2:** Preserve native immutable identifiers, mutable display attributes, source observation, freshness, classification, and tombstone state separately.
+  - [x] **Sub-task 129.1.1.3:** Define confirmed, deterministic, proposed, conflicting, stale, and removed cross-provider links.
+- [x] **Task 129.1.2 - Build graph mutation and review flows**
+  - [x] **Sub-task 129.1.2.1:** Add evidence-cited graph edges and user confirmation for non-deterministic identity joins.
+  - [x] **Sub-task 129.1.2.2:** Implement rename, transfer, merge, split, account change, provider deletion, and link-revocation behavior.
+  - [x] **Sub-task 129.1.2.3:** Deny authorization, recipient resolution, and destination selection from proposed or display-only links.
+- [x] **Task 129.1.3 - Verify identity confusion resistance**
+  - [x] **Sub-task 129.1.3.1:** Test aliases, duplicate names, homoglyphs, renamed channels, transferred resources, recycled addresses, and conflicting provider evidence.
+  - [x] **Sub-task 129.1.3.2:** Mutate every graph edge around recipient, account, financial record, and cloud resource selection.
+  - [x] **Sub-task 129.1.3.3:** Prove removal deletes or tombstones every derived edge without corrupting unrelated provider history.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 129.1.AC1:** Given two objects with similar display attributes, when graph linkage is proposed, then they remain distinct until deterministic evidence or user confirmation exists.
-- [ ] **Story AC 129.1.AC2:** Given a confirmed link that becomes stale, conflicting, transferred, or removed, when an action is evaluated, then the link cannot authorize that action.
-- [ ] **Story AC 129.1.AC3:** Given a graph view, when the user inspects any node or edge, then native identity, source, freshness, classification, and link status are visible.
+- [x] **Story AC 129.1.AC1:** Given two objects with similar display attributes, when graph linkage is proposed, then they remain distinct until deterministic evidence or user confirmation exists.
+- [x] **Story AC 129.1.AC2:** Given a confirmed link that becomes stale, conflicting, transferred, or removed, when an action is evaluated, then the link cannot authorize that action.
+- [x] **Story AC 129.1.AC3:** Given a graph view, when the user inspects any node or edge, then native identity, source, freshness, classification, and link status are visible.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 129.AC1:** `AT-PGR-001` passes across every promoted identity class.
-- [ ] **Sprint AC 129.AC2:** No alias, display name, inferred similarity, or stale link authorizes an action.
-- [ ] **Sprint AC 129.AC3:** Rename, transfer, merge, split, deletion, and removal preserve exact lineage.
-- [ ] **Sprint AC 129.AC4:** `RV-32` records graph-confusion and cross-provider isolation evidence.
+- [x] **Sprint AC 129.AC1:** `AT-PGR-001` passes across every promoted identity class.
+- [x] **Sprint AC 129.AC2:** No alias, display name, inferred similarity, or stale link authorizes an action.
+- [x] **Sprint AC 129.AC3:** Rename, transfer, merge, split, deletion, and removal preserve exact lineage.
+- [x] **Sprint AC 129.AC4:** `RV-32` records graph-confusion and cross-provider isolation evidence.
 
 **Gate decision:** Sprint 129 is PASS only when Story 129.1, all criteria, `AM-PGR-001`, `AT-PGR-001`, `SR-PRD-002`, `RV-32`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 129 source and contract rows pass locally with 936 deterministic
+identity-confusion cases and zero display, alias, or stale-link authorization. Sprint 129 remains
+`UPSTREAM-SPRINT-128-BLOCKED`; `substitution_set=empty`.
 
 ### [ ] Sprint 130 - Synchronization and Event Integrity
 

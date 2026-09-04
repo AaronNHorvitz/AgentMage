@@ -153,6 +153,7 @@ pub mod pod_composition;
 pub mod policy;
 /// Deterministic static and typed-fact checks before advisory classification.
 pub mod preclassification_policy;
+pub mod productivity_identity_graph;
 /// Versioned productivity-pack manifests, lifecycle, discovery, and data-flow admission.
 pub mod productivity_pack;
 /// Deterministic authority-free local workflows for specialist profiles.
