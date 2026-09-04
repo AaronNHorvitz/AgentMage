@@ -307,3 +307,50 @@ closures are 411; the next checkpoint remains 425.
 Exact next action: all remaining Sprint 78 rows depend on upstream or exact external tuples;
 continue Decision 0021 ordering at Sprint 79 hooks, safe mode, and package recovery. Cumulative
 closures are 429; the 425-item checkpoint handoff is required after this batch push.
+
+## Batch 85 — Sprint 79 hooks, safe mode, and package recovery contracts
+
+### Completed
+
+- Closed 21 TASKS rows: Task 79.1.1 and all 4 implementation sub-tasks; Task 79.1.2 and all 4
+  artifact sub-tasks; verification Sub-tasks 79.1.3.1 through .4; both Story AC; and Sprint AC
+  79.AC1 through AC5. The host-owned contract binds 10 ordered hook phases, bounded hook
+  timeout/cancellation outcomes, receipt preservation, failure isolation and safe mode, exact
+  tool/skill provenance, 7 compatibility dimensions, 6 prohibited authority flags, exact
+  recovery manifests, and 5 inventory-delta dimensions. Promotions: 0. Substitutions: 0.
+  Cumulative closed items: 450.
+- Commits: `df178231` (package runtime source, guide, 48-case corpus, tests, truthful closures,
+  and final supply-chain carrier), `ec426af5` (source-bound Sprint 79 report), and `9aeb2f39`
+  (one affected evidence regeneration pass). Commits including log: 4. Commits per closed item:
+  0.19. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across all Batch 85
+  paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 8 Rust cases, 2 artifact-contract tests, 3 evidence mutation tests, strict
+  host Clippy, format, Python compilation, 48 corpus cases, and supply-chain currentness passed.
+  The downstream pass validated product CI, configuration startup/result, component inventory,
+  Story 3.1 security, planning scope, traceability, and contract boundary/evidence. Supply-chain
+  builds: 1. Local report builds: 1. Downstream evidence regeneration passes: 1. Recovery
+  iterations: 1 — removed an unused `BTreeSet` import reported by strict Clippy without changing
+  behavior. The full chain ran 691.18 seconds and stopped only at the retained Story 6.1
+  rootless-Podman prerequisite after every preceding gate passed. Recorded gate wall seconds: 691.
+- Native malicious-package execution, hook timeout/cancellation/crash traces, complete lifecycle
+  recovery, safe-mode startup, revocation scanning, and independent review remain blocked on
+  `BLOCKED_EXTERNAL(platform=native isolated capability-package hook and lifecycle environments
+  plus independent review, artifact=untouched malicious-package corpus,
+  process/file/tool/network/storage inventories, hook timeout/cancellation/crash traces,
+  install/enable/disable/update/rollback/remove recovery traces, safe-mode startup proof,
+  complete revocation scan, and reviewer bundle, action=provision the exact native environments,
+  trusted signing identities, approved synthetic packages, crash harness, and reviewer, execute
+  S-064-UT01/ST01/RT01/IT01 and the product-security campaign natively, and transfer the untouched
+  bundles, credential=native platform, package signer, trust-root, crash-harness, and reviewer
+  access, payment=platform, signing, review, or package-fixture costs if applicable)`;
+  `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 79 rows depend on upstream or exact external tuples;
+continue Decision 0021 ordering at Sprint 80 model trust, permissions, and disclosure. Cumulative
+closures are 450; write the required 450-item checkpoint after this batch push.
