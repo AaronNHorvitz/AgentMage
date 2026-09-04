@@ -122,6 +122,8 @@ pub mod persistence;
 pub mod persistent_supervisor;
 /// Fail-closed platform capability detection and adapter activation.
 pub mod platform_startup;
+/// Non-enabling composition of exact qualified roles and capabilities.
+pub mod pod_composition;
 /// Deterministic deny-first capability-grant policy evaluation.
 pub mod policy;
 /// Deterministic static and typed-fact checks before advisory classification.

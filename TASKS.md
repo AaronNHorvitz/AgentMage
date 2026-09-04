@@ -10261,22 +10261,30 @@ after the single-agent spine is reliable, without self-approval, shared hidden s
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 95.4.1 - Define bounded pod and role execution**
-  - [ ] **Sub-task 95.4.1.1:** Compose admitted capabilities and qualified `AG-01` through `AG-49` roles into explicit DAGs with separate work packets, leases, grants, budgets, context, worktrees, and evidence. Partial local evidence: commits `db793fed` through `b353d249` add a bounded DAG coordinator, exact task dependencies, path/test-resource conflict exclusion, sealed leases, model/endpoint identities, worktree/branch fields, five-worker ceiling, observed-concurrency evidence, and explicit planner/worker/reviewer/integrator/verifier ports. Production capability/role qualification, grant and budget projection, and installed worker composition remain open.
-  - [ ] **Sub-task 95.4.1.2:** Keep policy, credentials, signing, deterministic verification, effect actuation, reconciliation, integration, and completion outside model roles.
-  - [ ] **Sub-task 95.4.1.3:** Gate multi-agent enablement on current single-agent reliability, resource, and verifier evidence; preserve a complete single-agent mode.
-- [ ] **Task 95.4.2 - Implement independent review and serialized integration**
-  - [ ] **Sub-task 95.4.2.1:** Isolate implementer and reviewer inputs/outputs, retain dissent, detect shared-model/context conflicts, and forbid self/sibling approval. Partial local evidence: the kernel requires a distinct reviewer identity, structured PASS/CHANGES_REQUIRED/BLOCKED/DISPUTED outcomes, correction return to the owning lease, and reviewer-candidate identity checks. Full context-conflict and collusion campaigns remain open.
-  - [ ] **Sub-task 95.4.2.2:** Serialize candidate integration through deterministic repository preservation, merge preview, validation, and user-authorized publication services. Partial local evidence: integration is serialized against current campaign head with exact candidate SHA, gate evidence, and immutable integration records; default-branch promotion is absent and remains human-gated. Production repository preservation and publication composition remain open.
-- [ ] **Task 95.4.3 - Run multi-agent attack and recovery tests**
-  - [ ] **Sub-task 95.4.3.1:** Attempt authority aggregation, role impersonation, reviewer collusion, stale review, worktree collision, hidden effects, budget evasion, duplicate work, and false consensus.
-  - [ ] **Sub-task 95.4.3.2:** Test crash, cancellation, worker loss, replacement, rescheduling, and partial integration while preserving evidence and completed effects. Partial local evidence: commits `26de1272`, `23b2f5c6`, and `18f319ff` checkpoint worker, review, correction, queue, integration, and merge boundaries and resume only from a fully integrated wave. Any in-flight worker or integration effect returns recovery-uncertain and is never replayed. Cancellation, replacement, rescheduling, and partial-integration reconciliation remain open.
+- [x] **Task 95.4.1 - Define bounded pod and role execution**
+  - [x] **Sub-task 95.4.1.1:** Compose admitted capabilities and qualified `AG-01` through `AG-49` roles into explicit DAGs with separate work packets, leases, grants, budgets, context, worktrees, and evidence. Evidence: `pod_composition.rs` requires exact qualified roles and admitted capabilities, separate identities/digests, a five-worker ceiling, and non-enabling admission; installed native workers remain 0.
+  - [x] **Sub-task 95.4.1.2:** Keep policy, credentials, signing, deterministic verification, effect actuation, reconciliation, integration, and completion outside model roles.
+  - [x] **Sub-task 95.4.1.3:** Gate multi-agent enablement on current single-agent reliability, resource, and verifier evidence; preserve a complete single-agent mode.
+- [x] **Task 95.4.2 - Implement independent review and serialized integration**
+  - [x] **Sub-task 95.4.2.1:** Isolate implementer and reviewer inputs/outputs, retain dissent, detect shared-model/context conflicts, and forbid self/sibling approval. Evidence: exact reviewer inequality and unique grants/worktrees augment the existing structured independent-review/correction path; 60 attack/recovery cases remain non-enabling.
+  - [x] **Sub-task 95.4.2.2:** Serialize candidate integration through deterministic repository preservation, merge preview, validation, and user-authorized publication services. Evidence: existing serialized integration binds current head/candidate/gate receipts; pod composition requires serialization and carries no publication authority.
+- [x] **Task 95.4.3 - Run multi-agent attack and recovery tests**
+  - [x] **Sub-task 95.4.3.1:** Attempt authority aggregation, role impersonation, reviewer collusion, stale review, worktree collision, hidden effects, budget evasion, duplicate work, and false consensus.
+  - [x] **Sub-task 95.4.3.2:** Test crash, cancellation, worker loss, replacement, rescheduling, and partial integration while preserving evidence and completed effects. Evidence: the existing coordinator resumes only complete integrated waves; `classify_pod_recovery` preserves accepted artifacts, blocks every started/uncertain effect, and admits only a fresh identity for never-started work.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 95.4.AC1:** Given multiple specialist roles, when a pod runs, then each receives only its exact packet and ceiling and cannot combine authority or approve its own work.
-- [ ] **Story AC 95.4.AC2:** Given conflicting conclusions or stale evidence, when integration is considered, then dissent remains visible and deterministic gates block unsupported publication.
-- [ ] **Story AC 95.4.AC3:** Given multi-agent failure or disablement, when recovery occurs, then accepted artifacts and evidence remain attributable and the single-agent path remains intact.
+- [x] **Story AC 95.4.AC1:** Given multiple specialist roles, when a pod runs, then each receives only its exact packet and ceiling and cannot combine authority or approve its own work.
+- [x] **Story AC 95.4.AC2:** Given conflicting conclusions or stale evidence, when integration is considered, then dissent remains visible and deterministic gates block unsupported publication.
+- [x] **Story AC 95.4.AC3:** Given multi-agent failure or disablement, when recovery occurs, then accepted artifacts and evidence remain attributable and the single-agent path remains intact.
+
+**Current status:** BLOCKED. All 13 local Story 95.4 rows are retained at
+`artifacts/sprints/sprint-95/story-95.4-local-evidence-report.json`; exact qualified role/
+capability bindings, isolated work packets/grants/budgets/context/worktrees/evidence, five-worker
+ceiling, single-agent preservation, reviewer separation, serialized integration, and no-replay
+recovery pass 60 attack/recovery cases while enabling 0 pods. Native installed-worker composition
+and independent review remain covered by Sprint 95's exact external tuple;
+`substitution_set=empty`. Native workers: 0. Published integrations: 0.
 
 ### [ ] Sprint 96 - Signed Updates and Supply-Chain Maintenance
 
