@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "corpus_id": "sprint-76-desktop-conversation-workspace-v1",
+  "case_count": 42,
+  "categories": {
+    "architecture": 4,
+    "navigation": 10,
+    "transcript": 5,
+    "conversation_action": 8,
+    "checkpoint": 5,
+    "workspace": 5,
+    "approval": 5
+  },
+  "cases": [
+    "architecture-thin-local", "architecture-no-web-service", "architecture-no-client-authority", "architecture-local-assets",
+    "navigation-from-date", "navigation-to-date", "navigation-workspace", "navigation-project", "navigation-model", "navigation-tag", "navigation-status", "navigation-pinned", "navigation-archived", "navigation-stable-order",
+    "transcript-closed-kinds", "transcript-content-digest", "transcript-source-reference", "transcript-no-execution", "transcript-no-authority",
+    "action-open", "action-continue", "action-branch-exact-turn", "action-rename-bounded-title", "action-archive", "action-export", "action-delete-approval", "action-no-effect",
+    "checkpoint-files", "checkpoint-instructions", "checkpoint-repository", "checkpoint-model-permissions", "checkpoint-next-action",
+    "workspace-user-selection", "workspace-relative-components", "workspace-traversal-denied", "workspace-local-only", "workspace-obsidian-independent",
+    "approval-exact-diff", "approval-command", "approval-write", "approval-delete", "approval-existing-grant-only"
+  ],
+  "local_contract_passed": true,
+  "native_desktop_evidence": false,
+  "platform_support": false,
+  "substitution_set": []
+}

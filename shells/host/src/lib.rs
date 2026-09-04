@@ -34,6 +34,8 @@ pub mod coding_verifier;
 /// Shared first-party shell routing into the canonical kernel conversation library.
 pub mod conversation_runtime;
 
+/// Effect-free desktop conversation and workspace projections over kernel-owned identities.
+pub mod desktop_experience;
 /// One-use reviewed local diagnostic export workflow.
 pub mod diagnostic_export;
 /// Authority-free product composition for local document-control workflows.

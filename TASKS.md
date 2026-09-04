@@ -8793,39 +8793,53 @@ and release remain open.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 76.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 76.1.1.1** (legacy `S-063-I01`): Select and record the desktop architecture without creating an external web service or second authority boundary.
-  - [ ] **Sub-task 76.1.1.2** (legacy `S-063-I02`): Implement conversation navigation by date fields, workspace, project, model, tag, status, pinned, and archived state.
-  - [ ] **Sub-task 76.1.1.3** (legacy `S-063-I03`): Implement local search, transcript, citations, tools, approvals, errors, checkpoints, branches, open, continue, branch, rename, archive, export, and approval-gated delete views.
-  - [ ] **Sub-task 76.1.1.4** (legacy `S-063-I04`): Implement checkpoint comparison across files, instructions, repository, model, permissions, and next action.
-  - [ ] **Sub-task 76.1.1.5** (legacy `S-063-I05`): Implement workspace and vault selection with local-only path checks and no Obsidian dependency.
-  - [ ] **Sub-task 76.1.1.6** (legacy `S-063-I06`): Implement Markdown, links, tasks, backlinks, previews, exact diff, command, write, and delete approval screens through kernel contracts.
+- [x] **Task 76.1.1 - Implement the bounded story**
+  - [x] **Sub-task 76.1.1.1** (legacy `S-063-I01`): Select and record the desktop architecture without creating an external web service or second authority boundary. Evidence: the architecture record and executable contract select one local thin-client projection over the existing authenticated kernel protocol with zero client authority or canonical state.
+  - [x] **Sub-task 76.1.1.2** (legacy `S-063-I02`): Implement conversation navigation by date fields, workspace, project, model, tag, status, pinned, and archived state. Evidence: the deterministic projection validates and filters all 9 dimensions and applies stable pinned/update/identity ordering.
+  - [x] **Sub-task 76.1.1.3** (legacy `S-063-I03`): Implement local search, transcript, citations, tools, approvals, errors, checkpoints, branches, open, continue, branch, rename, archive, export, and approval-gated delete views. Evidence: 11 inert transcript item kinds and 7 kernel-bound action previews cover the declared surface; delete fails closed without visible approval.
+  - [x] **Sub-task 76.1.1.4** (legacy `S-063-I04`): Implement checkpoint comparison across files, instructions, repository, model, permissions, and next action. Evidence: the comparison projection reports exactly the changed subset of all 6 digest-bound dimensions.
+  - [x] **Sub-task 76.1.1.5** (legacy `S-063-I05`): Implement workspace and vault selection with local-only path checks and no Obsidian dependency. Evidence: selection requires an explicit user act and relative bounded components while rejecting traversal and retaining false Obsidian-dependency and client-path-authority flags.
+  - [x] **Sub-task 76.1.1.6** (legacy `S-063-I06`): Implement Markdown, links, tasks, backlinks, previews, exact diff, command, write, and delete approval screens through kernel contracts. Evidence: transcript projections cover content views and all 4 approval kinds bind target, preview, policy, and an existing grant without applying an effect.
 
-- [ ] **Task 76.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 76.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 76.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 76.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 76.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story. Evidence: the host module, architecture record, guide, and 42-case corpus are limited to Sprint 76's 6 implementation rows.
+  - [x] **Sub-task 76.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story. Evidence: the source-bound Sprint 76 report hashes every implementation, contract, test, guide, retained kernel protocol, and supply-chain input.
 
 - [ ] **Task 76.1.3 - Verify and close the story**
-  - [ ] **Sub-task 76.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 76.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 76.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 76.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks. Evidence: 9 Rust tests and the 42-case contract corpus pass with zero blocking skips.
+  - [x] **Sub-task 76.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims. Evidence: source scans reject filesystem, process, socket, HTTP, client-authority, and client-effect surfaces; mutation tests reject native or platform promotion.
+  - [x] **Sub-task 76.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check. Evidence: the recorder reruns both focused commands, validates all source hashes, records zero focused skips, and keeps Sprint 76 BLOCKED.
   - [ ] **Sub-task 76.1.3.4 - Product security evidence:** Map `SR-PLT-001` through `SR-PLT-010`, `SR-ACC-001`, `SR-TST-007` through `SR-TST-009`, `SR-CIV-006` through `SR-CIV-009`; retain protocol diffs, boundary attacks, crash traces, signed packages, visual/accessibility results, and clean-install evidence.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 76.1.AC1:** Given the approved dependencies and source requirements for `S-063-I01`, `S-063-I02`, `S-063-I03`, `S-063-I04`, `S-063-I05`, and `S-063-I06`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 76.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-063-I01`, `S-063-I02`, `S-063-I03`, `S-063-I04`, `S-063-I05`, and `S-063-I06`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 76.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 76.1.AC1:** Given the approved dependencies and source requirements for `S-063-I01`, `S-063-I02`, `S-063-I03`, `S-063-I04`, `S-063-I05`, and `S-063-I06`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled. Evidence: all 6 source contracts pass while native/platform capabilities remain explicitly false.
+- [x] **Story AC 76.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-063-I01`, `S-063-I02`, `S-063-I03`, `S-063-I04`, `S-063-I05`, and `S-063-I06`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent. Evidence: 9 Rust cases plus 42 enumerated contract cases retain zero client effects, authority, or external service paths.
+- [x] **Story AC 76.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence. Evidence: the immutable report retains command output hashes, environment, blockers, exact source revision, and candid BLOCKED summary.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 76.AC1:** Every numbered implementation sub-task in Story 76.1 is complete and linked to its legacy requirement or issue identity.
-- [ ] **Sprint AC 76.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 76.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 76.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 76.AC1:** Every numbered implementation sub-task in Story 76.1 is complete and linked to its legacy requirement or issue identity. Evidence: all 6 implementation rows link to the source-bound report and retained legacy identities.
+- [x] **Sprint AC 76.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence. Evidence: 51 local cases pass with zero focused blocking skips; native-only checks remain isolated under Sub-task 76.1.3.4.
+- [x] **Sprint AC 76.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes. Evidence: the module is an effect-free projection, source scan finds no executor, and the report records zero service, authority, or effect count.
+- [x] **Sprint AC 76.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment. Evidence: architecture, guide, corpus, source, tests, and dependencies are bound by the committed report.
 - [ ] **Sprint AC 76.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 76 is PASS only when Story 76.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** **BLOCKED.** The local thin-client architecture, 6 bounded implementation rows,
+42-case corpus, 9 Rust cases, reviewable artifacts, and local acceptance rows pass; see
+`artifacts/sprints/sprint-76/local-evidence-report.json`. The story, sprint, native desktop,
+platform, product, and release remain open because the upstream `G-V0.7` gate and native protocol,
+boundary, crash, package, visual, accessibility, clean-install, and independent-review evidence are
+`BLOCKED_EXTERNAL(platform=native Fedora/Ubuntu and physical supported MacBook desktop environments
+plus independent review, artifact=untouched protocol parity, boundary attack, crash/restart,
+signed-package, visual, accessibility, offline, clean-install, and reviewer bundles,
+action=provision the exact native platforms, physical Mac, package signing identities,
+accessibility tooling, and reviewer, execute the Sprint 76 native and product-security campaigns,
+and transfer the untouched bundles, credential=physical Mac, native platform, package signer,
+accessibility tooling, and reviewer access, payment=hardware, signing, platform, accessibility, or
+review costs if applicable)`; `substitution_set=empty`.
 
 ### [ ] Sprint 77 - Desktop Status, Recovery, and Packaging
 
