@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_89_local_evidence",
+  "source_revision": "64d98e007e59da739d41ee44ececd4cfbf053eb8",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
+    "kernel/engine/src/lib.rs": "623e587bab2300aebd08872b687c9a4ce071c55502cc09439d51a0aa7189a245",
+    "kernel/engine/src/job_scheduler.rs": "2209df39d416695395e160be013b15bb0874af39ff6fe8997f0127d684a1ed6c",
+    "docs/guides/read-only-jobs-and-schedules.md": "9bc98c0a7461621d026dd8b2183ac5495afc4211dabac07e1b9dcb909e0d7d0e",
+    "docs/verification/sprint-89-job-runtime-corpus.json": "471dcd7422bc3564e9f515874cf134147fbf4daf6b270b723c0b2a9714b39059",
+    "artifacts/sprints/sprint-88/local-evidence-report.json": "b38c2831051f6a7fb3c68e7c14bd5a2b8e9401f388f2abae4901e2a055485cf7",
+    "scripts/job_scheduler_contract.py": "533d1049af32f730c66cb516bebcfc1a0acc24a5ae18bfe2e94da6cee65d931c",
+    "tests/test_job_scheduler_contract.py": "c813a0a465503771739088df709394950df4bc55a4692f0a9f3fb98183843b19",
+    "supply-chain/dependency-hashes.sha256": "8e8444202929c54f5fecee8a6b6029679d4b63af5a462d30d7079504485d3712",
+    "supply-chain/dependency-provenance.json": "31c24b570115c06276fea9dc43a305a19bfce2f86e926244308d3292fc4547f5",
+    "supply-chain/sbom.cdx.json": "1523ec1b21096f5dc4e3949e7654f090130bdb054cad8737216b0a5805613f30",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_89_evidence.py": "354d0ddd0885cc22ca9a844912844b4df7de608b695e32be5299e1afec519636",
+    "tests/test_sprint_89_evidence.py": "201d5fa9885da81d3c7b7729338bdf752ff833ecd6996db3890961851c1751fc"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "job-scheduler-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "job_scheduler::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "9a36ef583bd0711f49a26d048327fc74af0487a778a0578e39a389aa8ca2dff1",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "job-scheduler-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_job_scheduler_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a6707d4eff38012da33ddc34bc6dc076a3b17151cfc9aef223c8790cbe64c3da",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "runtime-schema-contract",
+      "argv": [
+        "npm",
+        "run",
+        "-s",
+        "schemas:test"
+      ],
+      "exit_code": 0,
+      "output_sha256": "0e5e21a36564642dc2e3d0c4e582225da84df08980f45fd3ff7c431b7fc318b2",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_89_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-ACC-001",
+    "SR-ACC-007",
+    "SR-DAT-010",
+    "SR-AI-004",
+    "SR-AI-009",
+    "SR-OPS-001",
+    "SR-OPS-002",
+    "SR-TST-005",
+    "SR-TST-006"
+  ],
+  "implemented_contracts": {
+    "job_state_count": 7,
+    "schedule_control_count": 8,
+    "rust_test_count": 6,
+    "corpus_case_count": 56,
+    "effect_executor_count": 0,
+    "native_run_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "rust_test_count": 6,
+    "corpus_case_count": 56,
+    "native_multi_runner_executed": false,
+    "durable_restart_executed": false,
+    "post_run_receipt_captured": false,
+    "independent_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-88-BLOCKED",
+      "owner": "89"
+    },
+    {
+      "code": "NATIVE-MULTI-RUNNER-JOB-RECOVERY-AND-REVIEW-ABSENT",
+      "owner": "89.1.3.4"
+    }
+  ],
+  "summary": {
+    "local_sprint_89_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_88_closed": false,
+    "native_job_runtime_complete": false,
+    "multi_runner_recovery_complete": false,
+    "independent_review_present": false,
+    "release_approval": false
+  }
+}
