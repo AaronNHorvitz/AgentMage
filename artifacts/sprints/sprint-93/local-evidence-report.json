@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_93_local_evidence",
+  "source_revision": "18b7505796ebb452cd49ac8c01d7fb03b20667ce",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
+    "kernel/engine/src/lib.rs": "4576f642beb69e1d3e681a4c0ec35616f224251b23415025c423721ba0658e08",
+    "kernel/engine/src/agent_profiles.rs": "e80cd803c5ab916e85b6d4219290dafd0855a9733e70919f9b7494fa20e5058e",
+    "docs/architecture/planning-review-and-delivery-agent-profiles.md": "2775e39ab24521b76b06e8ea89567e0a3383a2a123e7653bdd428def62e3550f",
+    "artifacts/sprints/sprint-92/agent-profile-catalog.json": "66cc5bef5ec452dc8f9ad724ba3717546ec02a02593e7de5c7624072356b20d6",
+    "artifacts/sprints/sprint-92/agent-profile-reference.md": "76e47e297546f21e5832355338143e1705c481264db18a8ea9a44ad92465dd5f",
+    "artifacts/sprints/sprint-92/agent-profile-compatibility.json": "6bbf3a2e131e884374e0bc19fa3adc1d8b091926666ac500638f0fe091e120e3",
+    "artifacts/sprints/sprint-92/agent-profile-fixtures.json": "7693dacd7048882ead14695a6a3ebc9d914d38c6e317e12a8cf6ad5f8ac0a4f4",
+    "artifacts/sprints/sprint-92/local-evidence-report.json": "4dfd3e455b75230cc289d2241d7091cf058cc600b56be2538df97059da2ea115",
+    "artifacts/sprints/sprint-93/synthetic-agent-evaluation.json": "1823fccdd2448add8842f1dd88d1bad0bce8b7271ca71b81400a3ff9ea05ffe2",
+    "scripts/agent_profile_contract.py": "ed63e1f47f9151dbac9adcd7c11113174be37297168f6d3ce2e88f708cef7c2c",
+    "tests/test_agent_profile_contract.py": "87ea8f0aeea9abb4f966e32e8936858500601cf5a7b523185f3f103529c2c2fb",
+    "supply-chain/dependency-hashes.sha256": "08851de7bcfc70008b8aaff90cba619cc2d443dec9c74cd35995af22e58acf4c",
+    "supply-chain/dependency-provenance.json": "b9b780988b689bd117b056e174d05da2155d0670b7c15e231cba0b59b82759df",
+    "supply-chain/sbom.cdx.json": "e5d06f6b0d92c0c14887c103bb8446e41a9171787a0412d4420ff7d690aab337",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_93_evidence.py": "ae34e5180380dc2d740d843d01c3e758845a713d6ccabfafc28f49f91676016f",
+    "tests/test_sprint_93_evidence.py": "7bf6c0c436e612108a597e9e57bd7803eb239149b00065c96fa7182b110ed75e"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "agent-profile-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "agent_profiles::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "c38068ea7b831f015b30d0fc6e83bfa92e5c1de957181fe68a40ff2f35adcfb8",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "agent-profile-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_agent_profile_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "0f7e4b97443e54aca647179972594d13bb587afcbf151fab8228148587ea844a",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "runtime-schema-contract",
+      "argv": [
+        "npm",
+        "run",
+        "-s",
+        "schemas:test"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2b63248275301315cbbbf632f41b08a54b7e39ce660b8bc942d0982c4b88d96e",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_93_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-GOV-010",
+    "SR-ACC-001",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-SUP-005",
+    "SR-SUP-006",
+    "SR-AI-003",
+    "SR-AI-004",
+    "SR-AI-005",
+    "SR-AI-006",
+    "SR-TST-004"
+  ],
+  "implemented_contracts": {
+    "profile_count": 49,
+    "fixture_count": 343,
+    "hostile_class_count": 8,
+    "capability_state_count": 5,
+    "synthetic_dependency_class_count": 5,
+    "enabled_profile_count": 0,
+    "real_effect_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "fixture_count": 343,
+    "real_data_read_count": 0,
+    "real_external_effect_count": 0,
+    "all_signatures_verified": false,
+    "all_user_reviews_present": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-92-BLOCKED",
+      "owner": "93"
+    },
+    {
+      "code": "PROFILE-SIGNATURE-COMPATIBILITY-AND-USER-REVIEW-ABSENT",
+      "owner": "93-enable"
+    }
+  ],
+  "summary": {
+    "local_sprint_93_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_92_closed": false,
+    "synthetic_evaluation_complete": true,
+    "all_profiles_disabled": true,
+    "profile_enablement_complete": false,
+    "release_approval": false
+  }
+}
