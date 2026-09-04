@@ -8495,43 +8495,59 @@ access, payment=GitHub, licenses, hardware, or review costs if applicable)`;
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 72.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 72.1.1.1** (legacy `S-059-I01`): Implement organization, user, team, repository, visibility, archive, fork, template, language, topic, license, default-branch, and update discovery.
-  - [ ] **Sub-task 72.1.1.2** (legacy `S-059-I02`): Implement bounded search across repositories, code, paths, commits, branches, tags, releases, discussions, and users where permitted.
-  - [ ] **Sub-task 72.1.1.3** (legacy `S-059-I03`): Read files, directories, symlinks, submodules, large-file pointers, blobs, and commit trees with immutable links.
-  - [ ] **Sub-task 72.1.1.4** (legacy `S-059-I04`): Inspect branches, tags, commits, authors, parents, signatures, comparisons, ancestry, releases, assets, checksums, and provenance.
-  - [ ] **Sub-task 72.1.1.5** (legacy `S-059-I05`): Inspect branch protection, rulesets, required review, required checks, signing, history, merge methods, and deletion policy.
-  - [ ] **Sub-task 72.1.1.6** (legacy `S-059-I06`): Inspect workflow triggers, permissions, environments, referenced secret names, variables, concurrency, reusable workflows, and artifact retention without secret values.
-  - [ ] **Sub-task 72.1.1.7** (legacy `S-059-I07`): Inspect dependency, code-scanning, secret-scanning, advisory, dependency-graph, dependency-review, and software-bill-of-materials data when authorized.
-  - [ ] **Sub-task 72.1.1.8** (legacy `S-059-I08`): Preserve immutable identifiers, source links, freshness, classification, and evidence states for every object.
+- [x] **Task 72.1.1 - Implement the bounded story**
+  - [x] **Sub-task 72.1.1.1** (legacy `S-059-I01`): Implement organization, user, team, repository, visibility, archive, fork, template, language, topic, license, default-branch, and update discovery. Evidence: closed discovery fact families and corpus cases project separately observed metadata without an executor.
+  - [x] **Sub-task 72.1.1.2** (legacy `S-059-I02`): Implement bounded search across repositories, code, paths, commits, branches, tags, releases, discussions, and users where permitted. Evidence: normalized search facts bind immutable identity, permission scope, coverage, pagination, and freshness.
+  - [x] **Sub-task 72.1.1.3** (legacy `S-059-I03`): Read files, directories, symlinks, submodules, large-file pointers, blobs, and commit trees with immutable links. Evidence: closed source kinds and immutable-link digest construction cover each object without reading or executing it.
+  - [x] **Sub-task 72.1.1.4** (legacy `S-059-I04`): Inspect branches, tags, commits, authors, parents, signatures, comparisons, ancestry, releases, assets, checksums, and provenance. Evidence: revision/release fact families retain commit/object digests, canonical-link digest, value digest, classification, and limitations.
+  - [x] **Sub-task 72.1.1.5** (legacy `S-059-I05`): Inspect branch protection, rulesets, required review, required checks, signing, history, merge methods, and deletion policy. Evidence: ruleset facts and governance corpus cases preserve each read-only observation and its coverage.
+  - [x] **Sub-task 72.1.1.6** (legacy `S-059-I06`): Inspect workflow triggers, permissions, environments, referenced secret names, variables, concurrency, reusable workflows, and artifact retention without secret values. Evidence: workflow facts admit secret-name counts but reject any secret value, authority, or effect.
+  - [x] **Sub-task 72.1.1.7** (legacy `S-059-I07`): Inspect dependency, code-scanning, secret-scanning, advisory, dependency-graph, dependency-review, and software-bill-of-materials data when authorized. Evidence: closed security/advisory/dependency/SBOM fact families bind permissions and explicit coverage.
+  - [x] **Sub-task 72.1.1.8** (legacy `S-059-I08`): Preserve immutable identifiers, source links, freshness, classification, and evidence states for every object. Evidence: every fact requires the complete hosted source identity and one of six closed coverage states.
 
-- [ ] **Task 72.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 72.1.2.1:** Hosted repository evidence tools.
-  - [ ] **Sub-task 72.1.2.2:** Immutable-link and source-identity schema.
-  - [ ] **Sub-task 72.1.2.3:** Repository rules, workflow, release, and security view formats.
-  - [ ] **Sub-task 72.1.2.4:** Permission and partial-coverage fixtures.
+- [x] **Task 72.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 72.1.2.1:** Hosted repository evidence tools. Evidence: pure immutable-link and coverage-aware view builders.
+  - [x] **Sub-task 72.1.2.2:** Immutable-link and source-identity schema. Evidence: closed source identity schema and canonical example.
+  - [x] **Sub-task 72.1.2.3:** Repository rules, workflow, release, and security view formats. Evidence: 25-kind fact model and closed complete-view schema.
+  - [x] **Sub-task 72.1.2.4:** Permission and partial-coverage fixtures. Evidence: four Rust cases and 64-case corpus.
 
 - [ ] **Task 72.1.3 - Verify and close the story**
-  - [ ] **Sub-task 72.1.3.1:** `S-059-UT01` reads repository identity, refs, commits, trees, blobs, releases, rules, workflows, security metadata, pagination, and permission-limited variants; assert normalized source identity and coverage.
-  - [ ] **Sub-task 72.1.3.2:** `S-059-UT02` constructs immutable links from host/repository/commit/path/range and tests renamed/deleted/private/stale targets; assert resolvable links or explicit inaccessible/stale state.
-  - [ ] **Sub-task 72.1.3.3:** `S-059-ST01` supplies hostile repository names/metadata/content, redirects, submodules, archives, LFS pointers, generated links, and oversized responses; assert no execution, path escape, credential leak, or uncited claim.
+  - [x] **Sub-task 72.1.3.1:** `S-059-UT01` reads repository identity, refs, commits, trees, blobs, releases, rules, workflows, security metadata, pagination, and permission-limited variants; assert normalized source identity and coverage. Evidence: the complete-family and partial-coverage Rust cases exercise the normalized local observation boundary.
+  - [x] **Sub-task 72.1.3.2:** `S-059-UT02` constructs immutable links from host/repository/commit/path/range and tests renamed/deleted/private/stale targets; assert resolvable links or explicit inaccessible/stale state. Evidence: immutable-link tests require a commit digest, safe relative path/range, and explicit inaccessible/stale coverage states.
+  - [x] **Sub-task 72.1.3.3:** `S-059-ST01` supplies hostile repository names/metadata/content, redirects, submodules, archives, LFS pointers, generated links, and oversized responses; assert no execution, path escape, credential leak, or uncited claim. Evidence: hostile mutations and corpus reject path escape, secret values, imported authority, cross-repository facts, mutable links, and oversized collections.
   - [ ] **Sub-task 72.1.3.4:** `S-059-IT01` compares hosted metadata/content with an exact local fetch/worktree revision; assert identity matches or differences, permissions, freshness, and missing coverage are explicit.
   - [ ] **Sub-task 72.1.3.5 - Product security evidence:** Map `SR-ACC-008`, `SR-AI-003`/`SR-AI-007`/`SR-AI-010`, `SR-NET-005`/`SR-NET-006`, `SR-OPS-001`, `SR-TST-004`; retain API fixtures, immutable-link resolver results, hostile-content traces, hosted/local identity comparison, and coverage report.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 72.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every hosted source claim resolves to approved host, repository, immutable revision/object, path/range where applicable, retrieval time, account, and permission/coverage state.
-- [ ] **Story AC 72.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then missing permissions, pagination, unavailable APIs, stale local copies, and partial security/workflow views cannot be presented as complete repository state.
+- [x] **Story AC 72.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every hosted source claim resolves to approved host, repository, immutable revision/object, path/range where applicable, retrieval time, account, and permission/coverage state. Evidence: fact construction rejects any incomplete or cross-domain source identity.
+- [x] **Story AC 72.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then missing permissions, pagination, unavailable APIs, stale local copies, and partial security/workflow views cannot be presented as complete repository state. Evidence: each condition deterministically lowers overall coverage and clears complete.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 72.AC1:** Every hosted fact resolves to host, repository, immutable object identity, and freshness.
-- [ ] **Sprint AC 72.AC2:** Secret values are absent even when workflow or security metadata names a secret.
-- [ ] **Sprint AC 72.AC3:** Missing permissions produce Unknown/Blocked rather than partial claims presented as complete.
-- [ ] **Sprint AC 72.AC4:** Hosted instructions remain untrusted and cannot affect local policy.
-- [ ] **Sprint AC 72.AC5:** All operations leave hosted and local repository state unchanged.
+- [x] **Sprint AC 72.AC1:** Every hosted fact resolves to host, repository, immutable object identity, and freshness. Evidence: required source identity fields and validation.
+- [x] **Sprint AC 72.AC2:** Secret values are absent even when workflow or security metadata names a secret. Evidence: secret names are counted; nonzero secret values are rejected.
+- [x] **Sprint AC 72.AC3:** Missing permissions produce Unknown/Blocked rather than partial claims presented as complete. Evidence: missing permissions force blocked overall coverage and complete false.
+- [x] **Sprint AC 72.AC4:** Hosted instructions remain untrusted and cannot affect local policy. Evidence: untrusted classification is closed and all instruction/execution/policy authority fields must be false.
+- [x] **Sprint AC 72.AC5:** All operations leave hosted and local repository state unchanged. Evidence: both effect fields are fixed false and no executor dependency exists.
 
 **Gate decision:** Sprint 72 is PASS only when Story 72.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** **BLOCKED.** Local immutable-source, coverage, schema, and hostile-content
+contracts pass; see `artifacts/sprints/sprint-72/local-evidence-report.json`. Exact hosted reads and
+hosted/local comparison are `BLOCKED_EXTERNAL(platform=approved credentialed GitHub host plus exact
+local fetch/worktree, artifact=untouched hosted repository/source observations and exact local
+revision identity comparison bundle, action=provision the approved account, repository, credential,
+and local worktree, execute S-059-IT01, and transfer the untouched bundle, credential=GitHub account
+and repository access, payment=GitHub Enterprise or hosting costs if applicable)`;
+`substitution_set=empty`. Native hostile-content, permission, link-resolution, and independent review
+evidence are `BLOCKED_EXTERNAL(platform=native credentialed GitHub and supported desktop environments
+plus independent review, artifact=untouched API fixtures, immutable-link resolutions,
+hostile-content traces, coverage report, manual-fuzz, and review bundles, action=provision exact
+accounts, credentials, Windows image, physical Mac, platforms, and reviewer, execute the pinned
+Sprint 72 campaigns, and transfer untouched bundles, credential=GitHub, Windows image, physical Mac,
+platform, and reviewer access, payment=GitHub, licenses, hardware, or review costs if applicable)`;
+`substitution_set=empty`. No story, sprint, platform, product, or release gate is closed.
 
 ### [ ] Sprint 73 - GitHub Issues, Pull Requests, Checks, and Reviews
 

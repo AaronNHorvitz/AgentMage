@@ -434,6 +434,8 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "connector-cache-entry",
     "github-auth-diagnostic",
     "github-read-receipt",
+    "hosted-source-identity",
+    "hosted-repository-view",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1766,6 +1768,18 @@ test("GitHub provider records reject authentication and mutation authority drift
   for (const [recordType, mutate] of mutations) {
     const changed = structuredClone(fixtures[recordType]); mutate(changed);
     assert.equal(validateRuntimeRecord(recordType, changed, runtimeValidators).valid, false);
+  }
+});
+
+test("hosted repository records reject mutable identity, completeness, and effects", () => {
+  const load = (name) => JSON.parse(fs.readFileSync(path.join(ROOT, `schemas/runtime/examples/${name}.valid.json`), "utf8"));
+  for (const [name, mutate] of [
+    ["hosted-source-identity", (value) => { value.immutable_revision = "main"; }],
+    ["hosted-repository-view", (value) => { value.hosted_state_changed = true; }],
+    ["hosted-repository-view", (value) => { value.next_page_cursor_sha256 = "a".repeat(64); }],
+  ]) {
+    const changed = load(name); mutate(changed);
+    assert.equal(validateRuntimeRecord(name, changed, runtimeValidators).valid, false);
   }
 });
 

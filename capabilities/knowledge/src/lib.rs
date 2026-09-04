@@ -13,6 +13,7 @@ mod document_control_skills;
 mod domain;
 mod executive_skills;
 mod github_provider;
+mod hosted_repository;
 mod image_workflows;
 mod index;
 mod json_data;
@@ -114,6 +115,11 @@ pub use github_provider::{
     GithubProviderError, GithubReadObservation, GithubReadOperation, GithubReadReceipt,
     GithubReadRequest, GithubReadState, GithubTransport, admit_github_authentication,
     authorize_github_read, record_github_read,
+};
+pub use hosted_repository::{
+    HostedContentClassification, HostedCoverageState, HostedEvidenceKind, HostedRepositoryError,
+    HostedRepositoryFact, HostedRepositoryView, HostedSourceIdentity, build_hosted_repository_view,
+    immutable_source_link_sha256,
 };
 pub use image_workflows::{
     DecodedRgbaImage, ImageColorSpace, ImageExportProposal, ImageFormat, ImageGenerationPreview,
