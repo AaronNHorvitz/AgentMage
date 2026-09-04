@@ -698,3 +698,66 @@ are 556; write one checkpoint covering the crossed 525-item and 550-item thresho
 Exact next action: all remaining Sprint 87 and 88 rows depend on upstream or exact external tuples;
 continue Decision 0021 ordering at Sprint 89 queue, lease, and retry semantics. Cumulative closures
 are 589; write the required 575-item checkpoint after push.
+
+## Batch 93 — Sprints 89–90 read-only jobs and schedules
+
+### Completed
+
+- Closed 34 TASKS rows. Sprint 89: Task 89.1.1 and all 5 implementation sub-tasks; Task 89.1.2
+  and both artifact sub-tasks; verification Sub-tasks 89.1.3.1 through .3; all 3 Story AC; and
+  Sprint AC89.AC1, AC89.AC3, and AC89.AC4 (18 rows). Sprint 90: Task 90.1.1 and all 4
+  implementation sub-tasks; Task 90.1.2 and all 4 artifact sub-tasks; verification Sub-tasks
+  90.1.3.1 and 90.1.3.3; and Sprint AC90.AC1, AC90.AC2, AC90.AC4, and AC90.AC5 (16 rows).
+  The pure shared state machine binds 7 job states, single-owner leases, 7 resource ceilings,
+  explicit availability, durable no-repeat history, 8 schedule controls, 5 local notification
+  classes, 6 prohibited unattended effects, and complete post-run receipts while owning 0 clock,
+  persistence, notification, process, network, or schedule executors. Promotions: 0.
+  Substitutions: 0. Cumulative closed items: 623.
+- Commits: `64d98e00` (shared job/scheduler source, guide, 112 corpus cases, tests, truthful
+  closures, and final supply-chain carrier), `d7f0165b` (both source-bound reports), and
+  `785858a9` (one affected evidence regeneration pass plus targeted configuration recovery).
+  Commits including log: 4. Commits per closed item: 0.12. Review pins advanced: 0; complete
+  `REVIEWED_PATHS` intersection across all 32 Batch 93 paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 6 Rust cases, 2 artifact-contract tests, 6 evidence mutation tests, strict
+  kernel Clippy, format, Python compilation, Markdown, 56 Sprint 89 corpus cases, 56 Sprint 90
+  corpus cases, supply-chain currentness, runtime schemas, and product CI passed. Supply-chain
+  builds: 1. Local report builds: 2. Downstream evidence regeneration passes: 1. Recovery
+  iterations: 1. The initial downstream Story 3.1 security build identified 5 stale configuration
+  reports because the kernel SBOM carrier changed; the complete 8-report configuration family,
+  component inventory, Story 3.1 security map, and traceability were rebuilt once and all focused
+  checks passed. The full chain ran 697.91 seconds and stopped only at the retained Story 6.1
+  rootless-Podman prerequisite after every preceding gate passed. Recorded gate wall seconds: 698.
+- Native multi-runner state/race/recovery, fake-clock, descendant cleanup, post-run receipt, and
+  independent review evidence for Sprint 89 remains blocked on `BLOCKED_EXTERNAL(platform=native
+  durable multi-runner job environment plus independent security review, artifact=untouched
+  state/property outputs, fake-clock matrix, lease-race traces, retry/dead-letter results,
+  prohibited-action attempts, multi-runner crash and restart traces, descendant cleanup
+  observations, post-run receipts, and reviewer bundle, action=provision exact durable job storage,
+  multiple native runners, fake-clock and crash/failure instrumentation, approved job fixtures,
+  and independent reviewer, execute the Sprint 89 native state, race, recovery, cleanup, and
+  product-security campaign, and transfer untouched bundles, credential=job-storage, runner,
+  fixture, instrumentation, and reviewer access, payment=platform, storage, runner, fixture,
+  instrumentation, or review costs if applicable)`; `substitution_set=empty`.
+- Native schedule, notification, fake-clock, multi-runner recovery, descendant cleanup, receipt,
+  and independent review evidence for Sprint 90 remains blocked on
+  `BLOCKED_EXTERNAL(platform=native durable scheduler and local-notification environments plus
+  independent security review, artifact=untouched fake-clock due/missed/sleep/wake/offline/
+  time-change matrix, schedule-control traces, native local notifications, multi-runner
+  crash/restart traces, parent/descendant termination and resource-release observations, post-run
+  receipts, prohibited-action attempts, and reviewer bundle, action=provision exact durable
+  scheduler storage, multiple native runners, fake clock, sleep/wake/offline controls, local
+  notification capture, crash/failure instrumentation, approved schedule fixtures, and independent
+  reviewer, execute S-069-UT02/RT01 and the native Sprint 90 product-security campaign, and transfer
+  untouched bundles, credential=scheduler-storage, runner, clock, notification, fixture,
+  instrumentation, and reviewer access, payment=platform, storage, runner, notification, fixture,
+  instrumentation, or review costs if applicable)`; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 89 and 90 rows depend on upstream or exact external tuples;
+continue Decision 0021 ordering at Sprint 91 separately threat-modeled scheduled actions.
+Cumulative closures are 623; write the required 600-item checkpoint after push.
