@@ -48,6 +48,8 @@ pub mod conversation_archive;
 pub mod conversation_library;
 /// Interface-invariant authority, isolation, recovery, and privacy assurance.
 pub mod cross_interface_assurance;
+/// Provider-neutral delivery graph and non-inheriting adapter conformance.
+pub mod delivery_graph;
 /// Kernel-owned redacted local doctor report construction.
 pub mod diagnostics;
 /// Deterministic document registers, records review, and exact local action previews.

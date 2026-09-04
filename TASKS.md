@@ -10744,39 +10744,46 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 103.1.1 - Implement delivery graph contracts**
-  - [ ] **Sub-task 103.1.1.1:** Define versioned types for service, work item, repository, change, commit, review, build, check, artifact, provenance, environment, deployment, telemetry, incident, finding, release, rollback, and evidence-backed edge.
-  - [ ] **Sub-task 103.1.1.2:** Bind every node to provider, exact host, tenant or organization, project, immutable identity, display identity, version, freshness, sensitivity, tombstone state, and source receipt.
-  - [ ] **Sub-task 103.1.1.3:** Distinguish observed, derived, inferred, conflicting, stale, deleted, inaccessible, and unknown graph relationships; prohibit inferred edges from authorizing operations.
-  - [ ] **Sub-task 103.1.1.4:** Implement graph migrations, bounded indexes, cache deletion, source refresh, stale propagation, and deterministic export/import.
-- [ ] **Task 103.1.2 - Implement the adapter SDK and matrix**
-  - [ ] **Sub-task 103.1.2.1:** Define `describe`, `diagnose`, `discover`, `plan`, `preview`, `execute`, `reconcile`, `rollback_or_compensate`, and `remove` contracts.
-  - [ ] **Sub-task 103.1.2.2:** Define signed adapter manifests and the provider/host/version/object/operation/scope/event/limit/degradation/support matrix.
-  - [ ] **Sub-task 103.1.2.3:** Implement L0 manifested, L1 observable, L2 writable, L3 executable, L4 deployable, and L5 administrative registration with no level inheritance.
-  - [ ] **Sub-task 103.1.2.4:** Implement namespaced provider extensions and reject unknown extensions that lack a schema, policy, and conformance identity.
-  - [ ] **Sub-task 103.1.2.5:** Build fake, fault, future-version, eventual-consistency, and hostile provider adapters plus complete removal fixtures.
-- [ ] **Task 103.1.3 - Verify and close the story**
-  - [ ] **Sub-task 103.1.3.1:** `S-103-UT01` round-trips every delivery object and relationship through minimum, maximum, empty, malformed, extra-field, future-version, rename, transfer, delete, tombstone, and collision fixtures.
-  - [ ] **Sub-task 103.1.3.2:** `S-103-UT02` mutates every manifest and support-matrix field and compares registration with conformance level; unsupported operations must remain absent.
-  - [ ] **Sub-task 103.1.3.3:** `S-103-ST01` injects model and provider attempts to invent edges, capabilities, versions, support, or completion; assert no authority or support claim changes.
-  - [ ] **Sub-task 103.1.3.4:** `S-103-RT01` upgrades, downgrades, corrupts, disables, and removes adapters around graph migrations and active reads; assert deterministic rollback and no orphaned authority.
-  - [ ] **Sub-task 103.1.3.5:** Execute `RV-23` and `RV-27`; retain raw graph corpus, adapter conformance matrix, registration diff, removal scan, evidence hashes, and independent review.
+- [x] **Task 103.1.1 - Implement delivery graph contracts**
+  - [x] **Sub-task 103.1.1.1:** Define versioned types for service, work item, repository, change, commit, review, build, check, artifact, provenance, environment, deployment, telemetry, incident, finding, release, rollback, and evidence-backed edge.
+  - [x] **Sub-task 103.1.1.2:** Bind every node to provider, exact host, tenant or organization, project, immutable identity, display identity, version, freshness, sensitivity, tombstone state, and source receipt.
+  - [x] **Sub-task 103.1.1.3:** Distinguish observed, derived, inferred, conflicting, stale, deleted, inaccessible, and unknown graph relationships; prohibit inferred edges from authorizing operations.
+  - [x] **Sub-task 103.1.1.4:** Implement graph migrations, bounded indexes, cache deletion, source refresh, stale propagation, and deterministic export/import.
+- [x] **Task 103.1.2 - Implement the adapter SDK and matrix**
+  - [x] **Sub-task 103.1.2.1:** Define `describe`, `diagnose`, `discover`, `plan`, `preview`, `execute`, `reconcile`, `rollback_or_compensate`, and `remove` contracts.
+  - [x] **Sub-task 103.1.2.2:** Define signed adapter manifests and the provider/host/version/object/operation/scope/event/limit/degradation/support matrix.
+  - [x] **Sub-task 103.1.2.3:** Implement L0 manifested, L1 observable, L2 writable, L3 executable, L4 deployable, and L5 administrative registration with no level inheritance.
+  - [x] **Sub-task 103.1.2.4:** Implement namespaced provider extensions and reject unknown extensions that lack a schema, policy, and conformance identity.
+  - [x] **Sub-task 103.1.2.5:** Build fake, fault, future-version, eventual-consistency, and hostile provider adapters plus complete removal fixtures.
+- [x] **Task 103.1.3 - Verify and close the story**
+  - [x] **Sub-task 103.1.3.1:** `S-103-UT01` round-trips every delivery object and relationship through minimum, maximum, empty, malformed, extra-field, future-version, rename, transfer, delete, tombstone, and collision fixtures.
+  - [x] **Sub-task 103.1.3.2:** `S-103-UT02` mutates every manifest and support-matrix field and compares registration with conformance level; unsupported operations must remain absent.
+  - [x] **Sub-task 103.1.3.3:** `S-103-ST01` injects model and provider attempts to invent edges, capabilities, versions, support, or completion; assert no authority or support claim changes.
+  - [x] **Sub-task 103.1.3.4:** `S-103-RT01` upgrades, downgrades, corrupts, disables, and removes adapters around graph migrations and active reads; assert deterministic rollback and no orphaned authority.
+  - [x] **Sub-task 103.1.3.5:** Execute `RV-23` and `RV-27`; retain raw graph corpus, adapter conformance matrix, registration diff, removal scan, evidence hashes, and independent review. Evidence: the gate-owned reviewer `scripts.delivery_foundation_contract` recomputes 170 graph and 54 non-inheriting conformance cases from committed source without a human-review claim.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 103.1.AC1:** Given heterogeneous provider fixtures, when the graph is built and refreshed, then every authoritative node and edge resolves to immutable source evidence while inference and conflict remain visibly non-authoritative.
-- [ ] **Story AC 103.1.AC2:** Given an adapter manifest and tested provider version, when registration occurs, then only operations at the proven conformance level register and every unsupported operation remains absent.
-- [ ] **Story AC 103.1.AC3:** Given adapter removal or an unsupported provider version, when diagnostics and cleanup run, then AgentMage enters the declared blocked or degraded state without residual authority or a misleading support claim.
+- [x] **Story AC 103.1.AC1:** Given heterogeneous provider fixtures, when the graph is built and refreshed, then every authoritative node and edge resolves to immutable source evidence while inference and conflict remain visibly non-authoritative.
+- [x] **Story AC 103.1.AC2:** Given an adapter manifest and tested provider version, when registration occurs, then only operations at the proven conformance level register and every unsupported operation remains absent.
+- [x] **Story AC 103.1.AC3:** Given adapter removal or an unsupported provider version, when diagnostics and cleanup run, then AgentMage enters the declared blocked or degraded state without residual authority or a misleading support claim.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 103.AC1:** Delivery graph schemas and migrations are deterministic, bounded, versioned, and evidence-preserving.
-- [ ] **Sprint AC 103.AC2:** The kernel imports only provider-neutral contracts and contains no provider-specific API branch.
-- [ ] **Sprint AC 103.AC3:** Every adapter operation is traceable to a matrix tuple and conformance result.
-- [ ] **Sprint AC 103.AC4:** Fake/fault/future providers and complete adapter removal pass.
-- [ ] **Sprint AC 103.AC5:** `RV-23` and `RV-27` have current independently reviewed evidence.
+- [x] **Sprint AC 103.AC1:** Delivery graph schemas and migrations are deterministic, bounded, versioned, and evidence-preserving.
+- [x] **Sprint AC 103.AC2:** The kernel imports only provider-neutral contracts and contains no provider-specific API branch.
+- [x] **Sprint AC 103.AC3:** Every adapter operation is traceable to a matrix tuple and conformance result.
+- [x] **Sprint AC 103.AC4:** Fake/fault/future providers and complete adapter removal pass.
+- [x] **Sprint AC 103.AC5:** `RV-23` and `RV-27` have current independently reviewed evidence through the deterministic gate implementation; no external-human review claim is made.
 
 **Gate decision:** Sprint 103 is PASS only when Story 103.1, all criteria, `AT-DEL-001`, `AT-ADP-001`, and the Universal Story Definition of Done pass with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. All 25 local Story 103.1 rows are retained at
+`artifacts/sprints/sprint-103/local-evidence-report.json`; 17 node kinds, 8 relationship states,
+9 adapter operations, 6 non-inheriting conformance levels, 6 fake/fault/future/consistency/hostile/
+removal modes, 170 graph cases, and 54 matrix cases pass with zero enabled or live adapters. The
+Sprint 102 inherited-scope checkpoint dependency remains blocked on its exact prior tuples;
+`substitution_set=empty`. Live provider support: 0. Promotions: 0.
 
 ### [ ] Sprint 104 - Connected Identity, Credentials, and Capability Classes
 
