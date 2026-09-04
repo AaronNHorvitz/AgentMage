@@ -154,6 +154,7 @@ def expected(revision: str) -> dict[str, Any]:
         "limitations": [
             "Local parser and source-level three-client contracts are not installed-product workflows.",
             "The one integrated fake-model repository workflow is not a parser workflow or a second eligible model profile.",
+            "Legacy XLS, encrypted-workbook, native Office reopen, accessibility, independent-review, and deferred-manual-fuzz evidence remain absent.",
             "No OCR, live-model, Windows, macOS, installed-launcher, milestone, release, or support pass is inferred.",
         ],
         "status": "BLOCKED_M_FOUNDATIONAL_RUNTIME",
