@@ -1590,3 +1590,50 @@ promotion. Cumulative closures are 1,005; write the required 1,000-item checkpoi
 
 Exact next action: continue Decision 0021 ordering at Sprint 111 supply-chain evidence and security
 findings. Cumulative closures are 1,026; write the required 1,025-item checkpoint after push.
+
+## Batch 111 — Sprint 111 supply-chain evidence and finding reconciliation
+
+### Completed
+
+- Closed 23 local Sprint 111 rows: exact SPDX, CycloneDX, Sigstore, Cosign, SLSA, and policy-result
+  contracts; assurance and subject binding; signature identity and certificate validation;
+  conflict-preserving finding normalization; currentness refusal; deterministic corpus and local
+  evidence; every story criterion; and Sprint AC 111.AC3 and AC4. The corpus contains 6 document
+  cases, 7 tool-finding cases, and 2,048 hostile cases. Assurance overclaims: 0. Hidden findings: 0.
+  Stale acceptances: 0. Release-state changes: 0.
+- Promoted supply-chain toolchains: 0. Live signing or scanning services: 0. Complete `RV-19`,
+  `AT-SUP-001`, or `AT-SEC-003`: false. Independent human reviews: 0. Promotions: 0.
+  Substitutions: 0. Batch closures: 23. Cumulative closed items: 1,049.
+- Commits: `8710240c` (supply-chain and finding contracts, corpus, tests, truthful closures, and
+  supply-chain renewal), `9aec6361` (source-bound Sprint 111 report), and `003a0af8` (complete
+  downstream contract/configuration/traceability renewal). Commits including log: 4. Commits per
+  closed item: 0.17. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across every
+  Batch 111 changed or regenerated path and every pin-bearing gate: empty.
+
+### Validation and blockers
+
+- Focused validation passed 3 Rust supply-chain-evidence tests, strict Clippy, 3 corpus tests, 3
+  evidence tests, Python compilation, dependency rules, supply-chain currentness, product CI, all
+  affected contract/configuration/traceability checks, and the source-bound report. Supply-chain
+  builds: 1. Corpus generations: 1. Local report builds: 1. Full gate wall seconds: 683; it stopped
+  only at the retained Story 6.1 rootless-Podman prerequisite after every preceding gate passed.
+  Self-recovery iterations: 0.
+- Exact real-tool verification matrices and independent review remain
+  `BLOCKED_EXTERNAL(platform=isolated supported Sigstore/Cosign, SLSA, OPA/Conftest, CodeQL,
+  Semgrep, SonarQube, Snyk, Trivy, Grype, and SARIF toolchains plus signing/transparency services
+  and independent review environment, artifact=untouched real SPDX/CycloneDX documents, raw tool
+  output, normalization diffs, signature/attestation/transparency/provenance verification, policy
+  bundles, staleness results, RV-19 and AT-SUP-001/AT-SEC-003 bundles, and independent review,
+  action=provision supported toolchains, signed artifacts, identities, transparency access, policy
+  bundles, scanner feeds, instrumentation, and independent reviewer; execute S-111-UT01/ST01/IT01/RT01
+  plus RV-19, AT-SUP-001, and AT-SEC-003, then transfer untouched evidence, credential=signing,
+  transparency, scanner, policy, artifact, instrumentation, and reviewer access, payment=tool,
+  feed, signing, transparency, hosting, instrumentation, or review costs if applicable)`;
+  `substitution_set=empty`.
+- Sprint 111 also remains dependency-blocked by `UPSTREAM-SPRINT-110-BLOCKED` with no
+  substitution. Exact full-chain carrier blocker: `blocked: host change required — run npm run -s
+  docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 112 observability, audit, and incident
+response. Cumulative closures are 1,049.
