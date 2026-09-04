@@ -957,3 +957,41 @@ closures are 725; write the required 725-item checkpoint after push.
 Exact next action: Stories 95.1/95.2 remaining rows depend on upstream or the exact external tuple;
 continue Decision 0021 ordering at Story 95.3 engineering capability registry. Cumulative closures
 are 763; write the required 750-item checkpoint after push.
+
+## Batch 98 — Story 95.3 engineering capability lifecycle
+
+### Completed
+
+- Closed all 13 Story 95.3 TASKS rows: Task 95.3.1 and all 3 admission/lifecycle sub-tasks;
+  Task 95.3.2 and both candidate/composition sub-tasks; Task 95.3.3 and both verification/evidence
+  sub-tasks; and all 3 Story acceptance criteria. The additive lifecycle contract binds 7 states,
+  exact dependency versions and qualification, 4 independent budget classes, deterministic
+  verifiers/fixtures, degradation/compatibility/migration/removal contracts, immediate disable/
+  quarantine, residue-free retirement, and 9 disabled candidates while reusing one runtime and
+  enabling 0 capabilities. Promotions: 0. Substitutions: 0. Cumulative closed items: 776.
+- Commits: `bd2147e9` (capability-lifecycle source, 66-case corpus, tests, truthful closures, and
+  final supply-chain carrier), `ea7c73e2` (source-bound Story 95.3 report), and `bee924e5` (one
+  affected downstream evidence regeneration pass). Commits including log: 4. Commits per closed
+  item: 0.31. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across all 27
+  Batch 98 paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 4 Rust cases, 4 artifact-contract tests, 3 evidence mutation tests, strict
+  kernel Clippy, format, Python compilation, Markdown, 66 lifecycle/attack cases, supply-chain
+  currentness, and product CI passed. Supply-chain builds: 1. Local report builds: 1. Downstream
+  evidence regeneration passes: 1. Recovery iterations: 0. The full chain ran 713.94 seconds and
+  stopped only at the retained Story 6.1 rootless-Podman prerequisite after every preceding gate
+  passed. Recorded gate wall seconds: 714.
+- Native strict-local restoration remains blocked on `blocked: host change required — run the
+  strict-local worker and source-policy renewal outside the restricted filesystem sandbox where
+  /usr/bin/systemd-run, /usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain
+  root-owned identities, then run python3 scripts/sprint_31_evidence.py --write --source-revision
+  HEAD`; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: Story 95.3 is locally complete but remains dependency-blocked; continue Decision
+0021 ordering at Story 95.4 bounded multi-agent capability composition. Cumulative closures are
+776; write the required 775-item checkpoint after push.
