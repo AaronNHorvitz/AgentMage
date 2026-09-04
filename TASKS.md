@@ -11604,37 +11604,58 @@ applicable)`; `substitution_set=empty`. Promoted tools: 0. Live environments: 0.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 116.1.1 - Implement telemetry contracts**
-  - [ ] **Sub-task 116.1.1.1:** Define OpenTelemetry resource, service, environment, trace, span, metric, log, event, error, monitor, release, deployment, and time-window identities.
-  - [ ] **Sub-task 116.1.1.2:** Implement bounded query plans, time/range/cardinality/result limits, sampling metadata, clock/skew handling, freshness, classification, retention, and cancellation.
-  - [ ] **Sub-task 116.1.1.3:** Correlate telemetry with service/catalog, source, artifact, deployment, release, incident, and receipt through exact attributes or labeled inference.
-  - [ ] **Sub-task 116.1.1.4:** Implement deterministic aggregation and statistical summaries with method, missingness, sampling, uncertainty, and source citations.
-- [ ] **Task 116.1.2 - Enforce telemetry authority boundaries**
-  - [ ] **Sub-task 116.1.2.1:** Treat attributes, messages, stack traces, links, and logs as untrusted and secret-scanned before persistence or model use.
-  - [ ] **Sub-task 116.1.2.2:** Prevent telemetry, monitors, anomalies, and model interpretation from triggering rollback, deployment, notification, issue creation, or durable memory automatically.
-  - [ ] **Sub-task 116.1.2.3:** Label temporal/structural correlation separately from deterministic causation and require evidence for any causal claim.
-- [ ] **Task 116.1.3 - Verify and close the story**
-  - [ ] **Sub-task 116.1.3.1:** `S-116-UT01` mutates telemetry identity, timestamps, resources, sampling, attributes, units, aggregation, missingness, and relationship fields.
-  - [ ] **Sub-task 116.1.3.2:** `S-116-ST01` injects secrets, prompt attacks, cardinality explosions, malformed encodings, oversized payloads, clock skew, trace collisions, and false causal narratives.
-  - [ ] **Sub-task 116.1.3.3:** `S-116-IT01` correlates a synthetic release/deployment with metrics/logs/traces/errors and an incident window, preserving source and uncertainty.
-  - [ ] **Sub-task 116.1.3.4:** `S-116-RT01` exercises backend outage, partial data, sampling change, late arrival, duplicate spans, cancellation, full disk, and memory pressure.
+- [x] **Task 116.1.1 - Implement telemetry contracts**
+  - [x] **Sub-task 116.1.1.1:** Define OpenTelemetry resource, service, environment, trace, span, metric, log, event, error, monitor, release, deployment, and time-window identities.
+  - [x] **Sub-task 116.1.1.2:** Implement bounded query plans, time/range/cardinality/result limits, sampling metadata, clock/skew handling, freshness, classification, retention, and cancellation.
+  - [x] **Sub-task 116.1.1.3:** Correlate telemetry with service/catalog, source, artifact, deployment, release, incident, and receipt through exact attributes or labeled inference.
+  - [x] **Sub-task 116.1.1.4:** Implement deterministic aggregation and statistical summaries with method, missingness, sampling, uncertainty, and source citations.
+- [x] **Task 116.1.2 - Enforce telemetry authority boundaries**
+  - [x] **Sub-task 116.1.2.1:** Treat attributes, messages, stack traces, links, and logs as untrusted and secret-scanned before persistence or model use.
+  - [x] **Sub-task 116.1.2.2:** Prevent telemetry, monitors, anomalies, and model interpretation from triggering rollback, deployment, notification, issue creation, or durable memory automatically.
+  - [x] **Sub-task 116.1.2.3:** Label temporal/structural correlation separately from deterministic causation and require evidence for any causal claim.
+- [x] **Task 116.1.3 - Verify and close the story**
+  - [x] **Sub-task 116.1.3.1:** `S-116-UT01` mutates telemetry identity, timestamps, resources, sampling, attributes, units, aggregation, missingness, and relationship fields.
+  - [x] **Sub-task 116.1.3.2:** `S-116-ST01` injects secrets, prompt attacks, cardinality explosions, malformed encodings, oversized payloads, clock skew, trace collisions, and false causal narratives.
+  - [x] **Sub-task 116.1.3.3:** `S-116-IT01` correlates a synthetic release/deployment with metrics/logs/traces/errors and an incident window, preserving source and uncertainty.
+  - [x] **Sub-task 116.1.3.4:** `S-116-RT01` exercises backend outage, partial data, sampling change, late arrival, duplicate spans, cancellation, full disk, and memory pressure.
   - [ ] **Sub-task 116.1.3.5:** Execute telemetry portions of `RV-27` and `RV-29`; retain query plans, raw/normalized data, canary scans, statistical methods, and review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 116.1.AC1:** Given telemetry from a release window, when AgentMage correlates it, then every observation retains exact service/environment/time/provider identity and every inferred relationship is labeled.
-- [ ] **Story AC 116.1.AC2:** Given high-cardinality, malformed, secret-bearing, or injected telemetry, when processing runs, then limits, redaction, and untrusted-content controls prevent disclosure and unbounded use.
-- [ ] **Story AC 116.1.AC3:** Given a temporal association between deployment and failure, when AgentMage explains it, then it does not claim causation without deterministic evidence.
+- [x] **Story AC 116.1.AC1:** Given telemetry from a release window, when AgentMage correlates it, then every observation retains exact service/environment/time/provider identity and every inferred relationship is labeled.
+- [x] **Story AC 116.1.AC2:** Given high-cardinality, malformed, secret-bearing, or injected telemetry, when processing runs, then limits, redaction, and untrusted-content controls prevent disclosure and unbounded use.
+- [x] **Story AC 116.1.AC3:** Given a temporal association between deployment and failure, when AgentMage explains it, then it does not claim causation without deterministic evidence.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 116.AC1:** OpenTelemetry identities and queries are deterministic, bounded, stale-aware, and source-cited.
-- [ ] **Sprint AC 116.AC2:** Telemetry cannot create operation authority or durable memory automatically.
-- [ ] **Sprint AC 116.AC3:** Secret, injection, malformed, clock, and cardinality attacks pass.
-- [ ] **Sprint AC 116.AC4:** Statistical summaries expose method, missingness, sampling, and uncertainty.
+- [x] **Sprint AC 116.AC1:** OpenTelemetry identities and queries are deterministic, bounded, stale-aware, and source-cited.
+- [x] **Sprint AC 116.AC2:** Telemetry cannot create operation authority or durable memory automatically.
+- [x] **Sprint AC 116.AC3:** Secret, injection, malformed, clock, and cardinality attacks pass.
+- [x] **Sprint AC 116.AC4:** Statistical summaries expose method, missingness, sampling, and uncertainty.
 - [ ] **Sprint AC 116.AC5:** The OpenTelemetry subset of `AT-OBS-001` passes.
 
 **Gate decision:** Sprint 116 is PASS only when Story 116.1, all criteria, the OpenTelemetry subset of `AT-OBS-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Twenty-one locally executable Story 116 rows are retained at
+`artifacts/sprints/sprint-116/local-evidence-report.json`; 14 telemetry identity families, 64
+bounded query cases, 128 correlation cases, 2,048 hostile cases, and 512 fault cases preserve exact
+service, environment, provider, release, deployment, artifact, incident, time, source, method,
+sampling, missingness, and uncertainty identities with zero live query, sensitive disclosure,
+unbounded use, operation authority, durable-memory creation, or unsupported causal claim. Real
+OpenTelemetry backends, untouched query/telemetry evidence, `RV-27`/`RV-29`, the OpenTelemetry
+subset of `AT-OBS-001`, and independent review remain
+`BLOCKED_EXTERNAL(platform=isolated supported OpenTelemetry collectors and telemetry backends plus
+instrumented services, release/deployment environments, clock controls, load/resource
+instrumentation, and independent review environment, artifact=untouched exact query plans, raw and
+normalized metrics/logs/traces/errors, resource attributes, sampling and clock evidence, statistical
+methods, canary scans, resource results, RV-27/RV-29 results, AT-OBS-001 subset bundle, support
+matrix, and independent review, action=provision isolated collectors, backends, instrumented
+services, environments, clocks, load generators, credentials, instrumentation, and independent
+reviewer; execute S-116-UT01/ST01/IT01/RT01, RV-27, RV-29, and the OpenTelemetry AT-OBS-001 subset,
+then transfer untouched evidence, credential=collector, backend, service, environment,
+instrumentation, and reviewer access, payment=backend, collector, hosting, load, observability,
+instrumentation, or review costs if applicable)`; `substitution_set=empty`. Promoted backends: 0.
+Live queries: 0. Promotions: 0.
 
 ### [ ] Sprint 117 - Datadog and Multi-Vendor Observability
 

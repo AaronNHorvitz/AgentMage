@@ -211,6 +211,8 @@ pub mod strict_local;
 pub mod supply_chain_evidence;
 /// Deterministic descriptive task intent, complexity, and risk classification.
 pub mod task_classification;
+/// Bounded telemetry identity, correlation, aggregation, and authority refusal.
+pub mod telemetry_correlation;
 /// Deterministic tool-call normalization and single profile-bound repair admission.
 pub mod tool_call_repair;
 /// Deterministic native-tool preflight, attempt, launch, and verification composition.
