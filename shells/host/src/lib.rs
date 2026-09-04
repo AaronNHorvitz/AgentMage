@@ -6,6 +6,8 @@
 pub mod artifact_ingestion;
 /// Fail-closed capability package admission, lifecycle preview, and scope narrowing.
 pub mod capability_package;
+/// Deterministic capability-package hooks, catalog, recovery, and inventory projections.
+pub mod capability_package_runtime;
 
 /// Authority-free composition of structured edits into kernel shadow changes.
 pub mod code_change;

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "corpus_id": "sprint-79-package-hooks-safe-mode-recovery-v1",
+  "case_count": 48,
+  "categories": { "hooks": 12, "catalog": 8, "compatibility": 8, "policy": 8, "recovery": 6, "inventory": 6 },
+  "cases": [
+    "hook-phase-order", "hook-ordinal-order", "hook-timeout", "hook-cancellation", "hook-complete", "hook-failure", "hook-timeout-outcome", "hook-cancelled-outcome", "hook-failure-isolation", "hook-receipt-required", "hook-receipt-not-suppressed", "hook-safe-mode",
+    "catalog-tool-provider", "catalog-skill-provider", "catalog-manifest", "catalog-activation-reason", "catalog-verified", "catalog-enabled", "catalog-safe-mode-disabled", "catalog-duplicate-denied",
+    "compat-kernel", "compat-tool-protocol", "compat-configuration", "compat-memory", "compat-storage", "compat-shell", "compat-policy", "compat-complete-result",
+    "policy-no-public-discovery", "policy-no-auto-download", "policy-no-auto-enable", "policy-no-unsigned-execution", "policy-task-authority-ceiling", "policy-no-endpoint-bypass", "policy-no-self-update", "policy-disabled-default",
+    "recovery-install", "recovery-enable", "recovery-update", "recovery-remove", "recovery-cleanup", "recovery-kernel-unchanged",
+    "inventory-process", "inventory-file", "inventory-tool", "inventory-network", "inventory-storage", "inventory-declared-delta"
+  ],
+  "local_contract_passed": true,
+  "native_lifecycle_complete": false,
+  "safe_mode_startup_observed": false,
+  "independent_review_present": false,
+  "installed_package_count": 0,
+  "enabled_package_count": 0,
+  "substitution_set": []
+}

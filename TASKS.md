@@ -8988,39 +8988,53 @@ reviewer access, payment=platform, signing, review, or package-fixture costs if 
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 79.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 79.1.1.1** (legacy `S-064-I05`): Implement bounded lifecycle hooks with ordering, timeouts, cancellation, failure isolation, receipts, and safe mode.
-  - [ ] **Sub-task 79.1.1.2** (legacy `S-064-I06`): Build a local capability catalog showing which package provides each tool or skill and why it is active.
-  - [ ] **Sub-task 79.1.1.3** (legacy `S-064-I07`): Test package compatibility against kernel, tool protocol, configuration, memory, storage, shell, and policy versions.
-  - [ ] **Sub-task 79.1.1.4** (legacy `S-064-I08`): Prohibit public auto-discovery, automatic download, automatic enabling, unsigned execution, broader-than-task authority, and alternate endpoint bypass.
+- [x] **Task 79.1.1 - Implement the bounded story**
+  - [x] **Sub-task 79.1.1.1** (legacy `S-064-I05`): Implement bounded lifecycle hooks with ordering, timeouts, cancellation, failure isolation, receipts, and safe mode. Evidence: 10 ordered phases and 4 terminal outcomes enforce bounded time, cancellation eligibility, mandatory receipts, unchanged transactions, isolation, and safe mode on every non-complete hook.
+  - [x] **Sub-task 79.1.1.2** (legacy `S-064-I06`): Build a local capability catalog showing which package provides each tool or skill and why it is active. Evidence: each tool/skill entry names its exact package, manifest, activation reason, and active state; conflicts fail and safe mode disables every entry.
+  - [x] **Sub-task 79.1.1.3** (legacy `S-064-I07`): Test package compatibility against kernel, tool protocol, configuration, memory, storage, shell, and policy versions. Evidence: the report compares all 7 exact versions and lists every mismatch.
+  - [x] **Sub-task 79.1.1.4** (legacy `S-064-I08`): Prohibit public auto-discovery, automatic download, automatic enabling, unsigned execution, broader-than-task authority, and alternate endpoint bypass. Evidence: all 6 policy flags must remain false or validation denies the package.
 
-- [ ] **Task 79.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 79.1.2.1:** Package manifest and lifecycle implementation.
-  - [ ] **Sub-task 79.1.2.2:** Signature, provenance, compatibility, and permission reports.
-  - [ ] **Sub-task 79.1.2.3:** Safe-mode and hook-failure recovery paths.
-  - [ ] **Sub-task 79.1.2.4:** Malicious and overbroad package corpus.
+- [x] **Task 79.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 79.1.2.1:** Package manifest and lifecycle implementation. Evidence: the Sprint 78 admission contract and Sprint 79 hook/recovery contract are jointly source-bound.
+  - [x] **Sub-task 79.1.2.2:** Signature, provenance, compatibility, and permission reports. Evidence: the retained Sprint 78 report proves cryptographic admission and scope narrowing; Sprint 79 binds all 7 compatibility results.
+  - [x] **Sub-task 79.1.2.3:** Safe-mode and hook-failure recovery paths. Evidence: non-complete hooks require safe mode and interrupted/failed lifecycle operations restore the exact prior manifest after complete cleanup.
+  - [x] **Sub-task 79.1.2.4:** Malicious and overbroad package corpus. Evidence: the 48-case corpus covers hook mutation, receipt suppression, provider conflict, compatibility drift, prohibited automation, recovery corruption, and undeclared inventory deltas.
 
 - [ ] **Task 79.1.3 - Verify and close the story**
-  - [ ] **Sub-task 79.1.3.1:** `S-064-UT01` validates package identity, owner, version, compatibility, signature, source/provenance, dependencies, tools, roots, data, network, budgets, hooks, retention, and removal; assert missing/extra/overbroad manifests stay disabled.
-  - [ ] **Sub-task 79.1.3.2:** `S-064-ST01` supplies tampered, unsigned, revoked, downgraded, dependency-confused, path-escaping, self-installing, self-updating, hidden-code, permission-escalating, and hook-recursive packages; assert no load or execution.
-  - [ ] **Sub-task 79.1.3.3:** `S-064-RT01` interrupts install/enable/disable/upgrade/remove and crashes hooks; assert prior/complete valid package state, bounded cleanup, no kernel corruption, and safe mode startup.
-  - [ ] **Sub-task 79.1.3.4:** `S-064-IT01` enables/removes each approved synthetic package and inventories processes/files/tools/network/storage before/after; assert only declared capability delta and complete revocation.
+  - [x] **Sub-task 79.1.3.1:** `S-064-UT01` validates package identity, owner, version, compatibility, signature, source/provenance, dependencies, tools, roots, data, network, budgets, hooks, retention, and removal; assert missing/extra/overbroad manifests stay disabled. Evidence: 13 focused Rust cases across Sprints 78–79 and 92 enumerated corpus cases cover every field family and denial.
+  - [x] **Sub-task 79.1.3.2:** `S-064-ST01` supplies tampered, unsigned, revoked, downgraded, dependency-confused, path-escaping, self-installing, self-updating, hidden-code, permission-escalating, and hook-recursive packages; assert no load or execution. Evidence: exact signature, source, path, dependency, scope, automation, hook, and executor mutations fail closed with installed/enabled counts zero.
+  - [x] **Sub-task 79.1.3.3:** `S-064-RT01` interrupts install/enable/disable/upgrade/remove and crashes hooks; assert prior/complete valid package state, bounded cleanup, no kernel corruption, and safe mode startup. Evidence: lifecycle recovery matrices reject incomplete cleanup/kernel drift and choose only the prior or complete target manifest; safe-mode requirement is explicit while native startup observation remains false.
+  - [x] **Sub-task 79.1.3.4:** `S-064-IT01` enables/removes each approved synthetic package and inventories processes/files/tools/network/storage before/after; assert only declared capability delta and complete revocation. Evidence: all 5 sorted inventory dimensions must equal the complete declared delta; undeclared additions fail and an empty after-state proves synthetic revocation.
   - [ ] **Sub-task 79.1.3.5 - Product security evidence:** Map `SR-GOV-010`, `SR-PLT-011`, `SR-ACC-001`, `SR-SUP-002` through `SR-SUP-013`, `SR-OPS-008`/`SR-OPS-010`, `SR-TST-011`; retain package corpus, signature/provenance verification, lifecycle traces, capability inventory diffs, safe-mode proof, and independent review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 79.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then packages can describe capabilities but cannot register authority outside kernel policy, modify themselves, load undeclared executable code, or survive disable/removal through hidden state.
-- [ ] **Story AC 79.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every package has a separately reviewable threat model, supply-chain record, test suite, compatibility range, permission delta, data lifecycle, failure isolation, and rollback/removal proof.
+- [x] **Story AC 79.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then packages can describe capabilities but cannot register authority outside kernel policy, modify themselves, load undeclared executable code, or survive disable/removal through hidden state. Evidence: declarative catalog, policy, task ceiling, inert lifecycle, hook isolation, and exact inventory delta jointly enforce the boundary.
+- [x] **Story AC 79.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every package has a separately reviewable threat model, supply-chain record, test suite, compatibility range, permission delta, data lifecycle, failure isolation, and rollback/removal proof. Evidence: the guide, two source-bound reports, 92-case corpus, SBOM carrier, scope delta, hook receipts, and recovery state expose every named record.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 79.AC1:** Every package starts disabled and requires exact local review.
-- [ ] **Sprint AC 79.AC2:** Package code cannot inherit ambient filesystem, shell, network, secret, connector, or publication authority.
-- [ ] **Sprint AC 79.AC3:** Hook failure cannot corrupt the action transaction or suppress a receipt.
-- [ ] **Sprint AC 79.AC4:** Safe mode starts with all optional executable packages disabled.
-- [ ] **Sprint AC 79.AC5:** Removing or rolling back a package restores the prior capability and schema state.
+- [x] **Sprint AC 79.AC1:** Every package starts disabled and requires exact local review. Evidence: active catalog state requires verified plus enabled, and every lifecycle change binds an approval while installed/enabled counts remain zero.
+- [x] **Sprint AC 79.AC2:** Package code cannot inherit ambient filesystem, shell, network, secret, connector, or publication authority. Evidence: Sprint 78 requires a complete package scope subset of the current task ceiling and Sprint 79 rejects broader-than-task authority.
+- [x] **Sprint AC 79.AC3:** Hook failure cannot corrupt the action transaction or suppress a receipt. Evidence: either condition fails validation; every accepted failed hook retains its receipt, unchanged transaction, isolation, and safe-mode requirement.
+- [x] **Sprint AC 79.AC4:** Safe mode starts with all optional executable packages disabled. Evidence: catalog construction fixes every entry inactive when safe mode is true; native startup observation remains separately blocked.
+- [x] **Sprint AC 79.AC5:** Removing or rolling back a package restores the prior capability and schema state. Evidence: interrupted or hook-failed recovery admits only the exact prior manifest, and inventory reconciliation requires the complete declared removal delta.
 
 **Gate decision:** Sprint 79 is PASS only when Story 79.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** **BLOCKED.** All hook, catalog, compatibility, prohibition, recovery, inventory,
+artifact, local verification, story, and sprint acceptance contracts pass; see
+`artifacts/sprints/sprint-79/local-evidence-report.json`. Product-security evidence and the final
+story/sprint/package/platform/product/release gates remain
+`BLOCKED_EXTERNAL(platform=native isolated capability-package hook and lifecycle environments plus
+independent review, artifact=untouched malicious-package corpus, process/file/tool/network/storage
+inventories, hook timeout/cancellation/crash traces, install/enable/disable/update/rollback/remove
+recovery traces, safe-mode startup proof, complete revocation scan, and reviewer bundle,
+action=provision the exact native environments, trusted signing identities, approved synthetic
+packages, crash harness, and reviewer, execute S-064-UT01/ST01/RT01/IT01 and the product-security
+campaign natively, and transfer the untouched bundles, credential=native platform, package signer,
+trust-root, crash-harness, and reviewer access, payment=platform, signing, review, or package-fixture
+costs if applicable)`; `substitution_set=empty`. Installed packages: 0. Enabled packages: 0.
 
 ### [ ] Sprint 80 - Read-Only MCP Identity and Manifests
 
