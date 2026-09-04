@@ -16,7 +16,7 @@ Current integrated workflow: deterministic fake-model repository-analysis vertic
 The bound [`vertical-slice-report.json`](artifacts/sprints/sprint-22/story-22.5/vertical-slice-report.json) proves one source-to-terminal deterministic fake-model repository-analysis path through prepared source, the reusable runtime, a production native artifact tool, receipts, citations, and verifier-owned success.
 Current enabled models: none.
 Current supported platforms: none.
-Stabilization scope freeze: active (Decision 0046) — Epics 0 through 8, 10, 11, and the Universal Story Definition of Done; Epics 9 and 12 through 16 preserved outside the freeze.
+Stabilization scope freeze: inactive (Decision 0047) — the complete preserved plan is open under the Decision 0021 execution rule; blocked rows retain exact blockers and empty substitution sets.
 
 ## 1. Purpose
 

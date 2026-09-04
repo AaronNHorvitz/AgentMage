@@ -23,7 +23,7 @@
   "generated_from": [
     {
       "document": "requirements/registry.json",
-      "sha256": "79cbed21b971c16500d12131c5c3fb75a1a64169deacc69002714eca97ab8306"
+      "sha256": "0f3befe3caff4b16d47ff2d4e095aeea322fc2650e7fdb6bbab41f71a804231d"
     },
     {
       "document": "requirements/normative-map.json",
@@ -35,7 +35,7 @@
     },
     {
       "document": "TASKS.md",
-      "sha256": "08cec0bfa4155fba562170b54a0db2641b8130670b9905ff4f0f1badacffce11"
+      "sha256": "62c8ba8bf6cb4480a63fb55ebe546acfcbe45ffdebf20faa5c8ee72dc8e8f7d8"
     },
     {
       "document": "evidence/catalog.json",

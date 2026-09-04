@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "decision_id": "ADR-0012",
-  "amendment_decision_ids": ["ADR-0043", "ADR-0044", "ADR-0045", "ADR-0046"],
+  "amendment_decision_ids": ["ADR-0043", "ADR-0044", "ADR-0045", "ADR-0046", "ADR-0047"],
   "status": "accepted",
   "reference_contract": "architecture/status-model.json#<collection>=<record-id>",
   "dimensions": {
@@ -586,7 +586,7 @@
       "Current integrated workflow: deterministic fake-model repository-analysis vertical slice (Story 22.5).",
       "Current enabled models: none.",
       "Current supported platforms: none.",
-      "Stabilization scope freeze: active (Decision 0046)"
+      "Stabilization scope freeze: inactive (Decision 0047)"
     ]
   }
 }

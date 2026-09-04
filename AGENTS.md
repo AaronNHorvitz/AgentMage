@@ -115,14 +115,13 @@ one-time invalidation of the **48 artifacts** that hash `scripts/supply_chain.py
 re-pointing roughly 20 artifacts' inputs. **This requires an accepted Decision record. Do not
 implement it on agent initiative.**
 
-## 6. Execute within the Decision 0046 scope freeze
+## 6. Execute the full plan under Decision 0047
 
-Decision 0046 activates the stabilization scope freeze over Epics 0 through 8, 10, 11, and
-the Universal Story Definition of Done. Select the next unit of work under Decision 0021
-**from that set only**. Do not execute Epics 9 or 12 through 16 while the freeze is active.
-Do not close any row marked `blocked` for physical-platform unavailability by substitution.
-Epic 10 executes through the Decision 0040 local Windows 11 KVM guest lane once its external
-prerequisites exist.
+Decision 0047 records completion of the Decision 0046 frozen-set pass and opens the complete
+preserved plan: Epics 0 through 16 and the Universal Story Definition of Done. Select the next
+unit of work under the Decision 0021 first-authoritative-incomplete-dependency-gate rule across
+that full plan. Do not close any row marked `blocked` by substitution. Epic 10 continues through
+the Decision 0040 local Windows 11 KVM guest lane once its external prerequisites exist.
 
 ## 7. Review-pin renewal is routine automation, not a human act
 
