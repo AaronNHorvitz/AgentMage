@@ -11468,37 +11468,57 @@ cluster, registry, hosting, observability, instrumentation, or review costs if a
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 114.1.1 - Implement infrastructure reads and plans**
-  - [ ] **Sub-task 114.1.1.1:** Inspect Terraform/OpenTofu configuration, modules, providers, lock files, backends by non-secret identity, workspaces, state serial/lineage, resources, outputs by sensitivity, imports, and drift.
-  - [ ] **Sub-task 114.1.1.2:** Run init/validate/plan in an isolated worker using approved pinned providers/modules and explicit network grants where acquisition is required.
-  - [ ] **Sub-task 114.1.1.3:** Bind saved plans to tool/provider/module versions, source and lock hashes, backend/workspace identity, state lineage/serial, variables by redacted digest, policy result, and exact create/update/replace/delete effects.
-  - [ ] **Sub-task 114.1.1.4:** Classify destructive, replacement, production, data-loss, secret, cost, and policy-sensitive changes for separate approval or denial.
-- [ ] **Task 114.1.2 - Implement apply and recovery**
-  - [ ] **Sub-task 114.1.2.1:** Apply only an unchanged saved plan under current state lock and preconditions; prohibit ad hoc apply and implicit auto-approve.
-  - [ ] **Sub-task 114.1.2.2:** Stream bounded redacted progress, preserve provider request uncertainty, and verify state serial, resources, outputs, drift, and receipts after apply.
-  - [ ] **Sub-task 114.1.2.3:** Implement lock conflict, interruption, partial effect, provider failure, state recovery, import, and compensation workflows without automatic retry or state surgery.
-- [ ] **Task 114.1.3 - Verify and close the story**
-  - [ ] **Sub-task 114.1.3.1:** `S-114-UT01` mutates plan/source/lock/provider/module/backend/workspace/state/variable/policy/effect fields and asserts stale-plan denial.
-  - [ ] **Sub-task 114.1.3.2:** `S-114-ST01` tests malicious providers/modules, backend confusion, secret output, state injection, path traversal, plan substitution, destructive concealment, and nested cloud administration.
-  - [ ] **Sub-task 114.1.3.3:** `S-114-IT01` plans and applies a non-production synthetic change, verifies state and drift, then proves the same plan cannot apply after source or state movement.
-  - [ ] **Sub-task 114.1.3.4:** `S-114-FT01` injects lock loss, provider outage, rate limit, partial effect, timeout, cancellation, crash, full disk, and restart; assert unknown-state blocking.
+- [x] **Task 114.1.1 - Implement infrastructure reads and plans**
+  - [x] **Sub-task 114.1.1.1:** Inspect Terraform/OpenTofu configuration, modules, providers, lock files, backends by non-secret identity, workspaces, state serial/lineage, resources, outputs by sensitivity, imports, and drift.
+  - [x] **Sub-task 114.1.1.2:** Run init/validate/plan in an isolated worker using approved pinned providers/modules and explicit network grants where acquisition is required.
+  - [x] **Sub-task 114.1.1.3:** Bind saved plans to tool/provider/module versions, source and lock hashes, backend/workspace identity, state lineage/serial, variables by redacted digest, policy result, and exact create/update/replace/delete effects.
+  - [x] **Sub-task 114.1.1.4:** Classify destructive, replacement, production, data-loss, secret, cost, and policy-sensitive changes for separate approval or denial.
+- [x] **Task 114.1.2 - Implement apply and recovery**
+  - [x] **Sub-task 114.1.2.1:** Apply only an unchanged saved plan under current state lock and preconditions; prohibit ad hoc apply and implicit auto-approve.
+  - [x] **Sub-task 114.1.2.2:** Stream bounded redacted progress, preserve provider request uncertainty, and verify state serial, resources, outputs, drift, and receipts after apply.
+  - [x] **Sub-task 114.1.2.3:** Implement lock conflict, interruption, partial effect, provider failure, state recovery, import, and compensation workflows without automatic retry or state surgery.
+- [x] **Task 114.1.3 - Verify and close the story**
+  - [x] **Sub-task 114.1.3.1:** `S-114-UT01` mutates plan/source/lock/provider/module/backend/workspace/state/variable/policy/effect fields and asserts stale-plan denial.
+  - [x] **Sub-task 114.1.3.2:** `S-114-ST01` tests malicious providers/modules, backend confusion, secret output, state injection, path traversal, plan substitution, destructive concealment, and nested cloud administration.
+  - [x] **Sub-task 114.1.3.3:** `S-114-IT01` plans and applies a non-production synthetic change, verifies state and drift, then proves the same plan cannot apply after source or state movement.
+  - [x] **Sub-task 114.1.3.4:** `S-114-FT01` injects lock loss, provider outage, rate limit, partial effect, timeout, cancellation, crash, full disk, and restart; assert unknown-state blocking.
   - [ ] **Sub-task 114.1.3.5:** Execute infrastructure portions of `RV-25`, `RV-28`, and `RV-29`; retain plans, state digests, redaction scans, policy, pre/post snapshots, and review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 114.1.AC1:** Given a saved infrastructure plan, when any source, dependency, backend, workspace, state, variable, policy, or provider identity changes, then apply is denied.
-- [ ] **Story AC 114.1.AC2:** Given an approved non-production plan, when apply succeeds, then only the exact planned resources change and current state/postconditions are verified without secret disclosure.
-- [ ] **Story AC 114.1.AC3:** Given partial or unknown effect, when recovery runs, then no automatic retry or state mutation occurs until current infrastructure and state are reconciled.
+- [x] **Story AC 114.1.AC1:** Given a saved infrastructure plan, when any source, dependency, backend, workspace, state, variable, policy, or provider identity changes, then apply is denied.
+- [x] **Story AC 114.1.AC2:** Given an approved non-production plan, when apply succeeds, then only the exact planned resources change and current state/postconditions are verified without secret disclosure.
+- [x] **Story AC 114.1.AC3:** Given partial or unknown effect, when recovery runs, then no automatic retry or state mutation occurs until current infrastructure and state are reconciled.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 114.AC1:** Terraform and OpenTofu pass identical common contracts and separate version matrices.
-- [ ] **Sprint AC 114.AC2:** Plan/apply, non-production/production, destructive/non-destructive, secret, and admin authorities remain separate.
-- [ ] **Sprint AC 114.AC3:** State, plan, provider, module, variable, and policy identities are exact and stale-aware.
-- [ ] **Sprint AC 114.AC4:** Fault and resource cases never cause duplicate apply, secret leakage, or unsafe state surgery.
+- [x] **Sprint AC 114.AC2:** Plan/apply, non-production/production, destructive/non-destructive, secret, and admin authorities remain separate.
+- [x] **Sprint AC 114.AC3:** State, plan, provider, module, variable, and policy identities are exact and stale-aware.
+- [x] **Sprint AC 114.AC4:** Fault and resource cases never cause duplicate apply, secret leakage, or unsafe state surgery.
 - [ ] **Sprint AC 114.AC5:** `AT-IAC-001` passes with independent evidence.
 
 **Gate decision:** Sprint 114 is PASS only when Story 114.1, all criteria, `AT-IAC-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Twenty locally executable Story 114 rows are retained at
+`artifacts/sprints/sprint-114/local-evidence-report.json`; 2 synthetic tool families, 24 read cases,
+64 exact saved plans, 2,048 hostile cases, and 512 fault cases preserve source, lock, provider,
+module, backend, workspace, state, variable, policy, effect, and redacted receipt identities with
+zero live backend contact, secret value, plan substitution, authority escape, duplicate apply,
+automatic retry, or state surgery. Supported Terraform/OpenTofu version matrices, real backend and
+provider effects, `RV-25`/`RV-28`/`RV-29`, `AT-IAC-001`, and independent review remain
+`BLOCKED_EXTERNAL(platform=isolated supported Terraform and OpenTofu toolchains, provider/module
+mirrors, non-production and production backends, workspaces, state stores, policy services, cloud
+test accounts, and independent review environment, artifact=untouched exact version matrices,
+init/validate/saved plans, provider/module locks, redacted variables and outputs, state digests and
+lineage, policy results, pre/post snapshots, progress, provider uncertainty, drift, recovery and
+apply receipts, RV-25/RV-28/RV-29 results, AT-IAC-001 bundle, support matrix, and independent review,
+action=provision isolated toolchains, mirrors, backends, state stores, policies, accounts,
+credentials, instrumentation, and independent reviewer; execute S-114-UT01/ST01/IT01/FT01,
+RV-25, RV-28, RV-29, and AT-IAC-001 against real supported versions, then transfer untouched
+evidence, credential=backend, state, provider, module, policy, cloud, instrumentation, and reviewer
+access, payment=cloud, backend, state, mirror, policy, hosting, instrumentation, or review costs if
+applicable)`; `substitution_set=empty`. Promoted tools: 0. Live backend contacts: 0. Promotions: 0.
 
 ### [ ] Sprint 115 - Releases, Feature Flags, Progressive Delivery, and Migrations
 

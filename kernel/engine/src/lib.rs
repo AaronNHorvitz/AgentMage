@@ -100,6 +100,8 @@ pub mod gitops_control;
 pub mod grants;
 /// Deterministic local-only manual handoff construction and denial.
 pub mod handoff;
+/// Exact infrastructure plan admission, apply verification, and recovery.
+pub mod infrastructure_safety;
 /// Hash-bound discovery, reading, and narrowing-only trust for untrusted instructions.
 pub mod instruction_provenance;
 /// Deterministic resumable jobs, leases, read-only schedules, notifications, and receipts.
