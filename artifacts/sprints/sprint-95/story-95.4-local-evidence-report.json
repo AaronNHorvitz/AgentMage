@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_95_local_evidence",
+  "source_revision": "d751b0c1204a9edd53d0e164d3ebc712e8ba9c83",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
+    "kernel/engine/src/lib.rs": "bdf0c9f77b12805cab67ed5a7430e59c53236880f7b0a60489c560af8377063d",
+    "kernel/engine/src/multi_agent.rs": "f3f049344725e93a489deeae2af0f073b53f6b0798e4b7350b0cd44516b9b34b",
+    "kernel/engine/src/pod_composition.rs": "aa39c027fa7ddc5559dee36a2015f0927839dbeef8a0d429fec9a6754a63cc8e",
+    "artifacts/sprints/sprint-95/story-95.3-local-evidence-report.json": "fe74af8eadb9492c4808de71858bdaf10842b81b19930d48237c0490b40636df",
+    "artifacts/sprints/sprint-95/pod-composition-corpus.json": "2677dcbdfc6cc2dda8fd7f9352ba2122c23ee9a8c47a9600239c319d23275509",
+    "scripts/pod_composition_contract.py": "b9f536ee8f7eed991b6111135fa6f06e9f6e4545ab194e4dd82567958813d25e",
+    "tests/test_pod_composition_contract.py": "fa4da98caae0d978f771751fdaaacd587455047d75be7f2e094b3ff8adea74cf",
+    "supply-chain/dependency-hashes.sha256": "538f780a0e11892b5367880a870e734dd3fb5dc498abd35c04b408f7040a7fef",
+    "supply-chain/dependency-provenance.json": "9038bc052164691850b45cb1370a8150d9e6a57d852f7c1c71d8388aca91acc2",
+    "supply-chain/sbom.cdx.json": "39a11ba75d629da817970fc8515279e838633c0e7644bf54cfd08994b0c606c4",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/story_95_4_evidence.py": "7ad335e89d35458d2c941e80d0b83d463abd1432d56b1ff4a64c099bcbd97509",
+    "tests/test_story_95_4_evidence.py": "4bd9a6f68bea6436c16dd3828bda55cd788265fc877dad79b0856e048973a484"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "pod-composition-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "pod_composition::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "3d695c5f8f5c41bd9c6d0486b22ef94c650aee148716e99c7ecf7bfb79ba489d",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "multi-agent-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "multi_agent::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "209ea018ea5f011758fc1e563da0ceef8dfa36e57f369ec98bce2ed684e41021",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "pod-composition-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_pod_composition_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "33060fd73862c5e1af97335504d5b45211fce6d229657f556d8deceeadc52ce4",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_95_4_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-GOV-010",
+    "SR-ACC-001",
+    "SR-ACC-002",
+    "SR-ACC-003",
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-AI-003",
+    "SR-AI-004",
+    "SR-AI-005",
+    "SR-AI-009",
+    "SR-AI-010",
+    "SR-TST-005",
+    "SR-TST-006",
+    "SR-TST-011"
+  ],
+  "implemented_contracts": {
+    "attack_recovery_class_count": 15,
+    "case_count": 60,
+    "max_worker_count": 5,
+    "single_agent_mode_count": 1,
+    "enabled_pod_count": 0,
+    "native_worker_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "case_count": 60,
+    "serialized_integration": true,
+    "single_agent_mode_preserved": true,
+    "native_worker_count": 0,
+    "independent_review": false,
+    "story_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-STORIES-95.1-95.3-BLOCKED",
+      "owner": "95.4"
+    },
+    {
+      "code": "NATIVE-POD-COMPOSITION-AND-INDEPENDENT-REVIEW-ABSENT",
+      "owner": "95.4-native"
+    }
+  ],
+  "summary": {
+    "local_story_95_4_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_stories_closed": false,
+    "native_pod_complete": false,
+    "independent_review_present": false,
+    "release_approval": false
+  }
+}
