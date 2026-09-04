@@ -395,3 +395,52 @@ closures are 450; write the required 450-item checkpoint after this batch push.
 Exact next action: all remaining Sprint 80 rows depend on upstream or exact external tuples;
 continue Decision 0021 ordering at Sprint 81 MCP request mediation and failure isolation.
 Cumulative closures are 459; the next checkpoint is 475.
+
+## Batch 87 — Sprint 81 MCP mediation and artifact mapping
+
+### Completed
+
+- Closed 14 TASKS rows: Task 81.1.1, implementation Sub-task 81.1.1.5, Task 81.1.2,
+  artifact Sub-task 81.1.2.4, verification Sub-task 81.1.3.1, Task 81.2.1 and all 3 mapping
+  sub-tasks, isolation Sub-task 81.2.2.2, documentation Sub-task 81.2.3.1, Story AC81.2.AC2,
+  and Sprint AC81.AC3 and AC81.AC5. The host adapter maps all 7 current native artifact tools to
+  collision-free MCP identities while preserving schemas, effects, limits, and the single-use
+  `workspace_read` grant; it revalidates translated calls through the native registry and
+  pre-grant dispatcher and owns zero effect executors. Promotions: 0. Substitutions: 0.
+  Cumulative closed items: 473.
+- Commits: `362b2f5b` (adapter, guide, 32-case corpus, validators/tests, truthful closures, and
+  final supply-chain carrier), `e07a3587` (source-bound Sprint 81 report), and `967acaae` (one
+  affected evidence regeneration pass). Commits including log: 4. Commits per closed item: 0.29.
+  Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across all Batch 87 paths and
+  pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 7 kernel MCP cases, 3 host adapter cases, 2 adapter-contract tests, 3
+  evidence mutation tests, strict host Clippy, format, Python compilation, 32 corpus cases,
+  supply-chain currentness, runtime schemas, and product CI passed. Supply-chain builds: 1. Local
+  report builds: 1. Downstream evidence regeneration passes: 1. Recovery iterations: 4 — applied
+  canonical Rust formatting, removed one nonexistent test-only import, moved a test-only constant
+  out of the production import set for strict Clippy, and removed an incorrect validator
+  requirement for a type used only by test composition. The full chain ran 691.47 seconds and
+  stopped only at the retained Story 6.1 rootless-Podman prerequisite after every preceding gate
+  passed. Recorded gate wall seconds: 691.
+- Native MCP malicious-server execution, process/network/file traces, timeout/cancellation/crash/
+  restart and removal traces, native-versus-MCP artifact parity, cleanup, and independent review
+  remain blocked on `BLOCKED_EXTERNAL(platform=native isolated MCP server and artifact-tool
+  environments plus independent gateway review, artifact=untouched malicious-server corpus
+  results, process/network/file traces, timeout/cancellation/crash/restart/disable/remove traces,
+  native-versus-MCP artifact parity results, cleanup scan, receipts, and independent review bundle,
+  action=provision exact native environments, conforming and malicious MCP servers,
+  process/network/file instrumentation, admitted source fixtures, and reviewer, execute S-065-ST01/
+  RT01/IT01 and artifact parity/removal campaigns, and transfer untouched bundles,
+  credential=native platform, MCP server, instrumentation, artifact-fixture, and reviewer access,
+  payment=platform, server-fixture, instrumentation, or review costs if applicable)`;
+  `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 81 rows depend on upstream or exact external tuples;
+continue Decision 0021 ordering at Sprint 82 public research and citations. Cumulative closures
+are 473; the next checkpoint is 475.
