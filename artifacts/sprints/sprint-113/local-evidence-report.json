@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_113_local_evidence",
+  "source_revision": "5af2f744efbc58cc6da0a870fec68a9066371882",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
+    "kernel/engine/src/lib.rs": "022daa457b0146537d62756d693c984b0af009f3492a9c9d1690fced9b41b137",
+    "kernel/engine/src/gitops_control.rs": "3ef09cef43ff9d13ffb57ce2c3a13901b1ad88e2b42af2a5f25ef6cea271ea12",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "DELIVERY-SYSTEM.md": "ca62de984cd9da28d28f183e768e8c07898f7b38ae2d89894dcec66a3293f72c",
+    "supply-chain/dependency-provenance.json": "0ef35183fb7341511fd9017d0fc69af9cfdb869efd86e7be725e7659837925b3",
+    "supply-chain/sbom.cdx.json": "f9651412798a7a7859d429ef46d4eb845a9135704aba0d58cccf4bf943712ea5",
+    "supply-chain/dependency-hashes.sha256": "46896cf677e5bde7ec73431e169a6b88845631bd2123747786fa96610c95d162",
+    "artifacts/sprints/sprint-113/gitops-control-corpus.json": "efe4b8fac605c5702eedce703a23511e3e2281ea9508bb5438b8cea56b00f4c7",
+    "scripts/gitops_control_contract.py": "a6bb736d34fb9d233a61e11c71432e44beb9cb029e92212fcc788c47a82e427f",
+    "tests/test_gitops_control_contract.py": "176dcdefa7ea5efa826f91d1eb6cbe072c7beff9d17f9e46e0f113556cedb48d",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_113_evidence.py": "25672930c22897f331d30d5bbc1e18cb3b82c025bc79cb7b8193e6f71f531f27",
+    "tests/test_sprint_113_evidence.py": "566e68aeb0278f60e41be5744988d9d636e1d0d376c1417cd2fa938d7f6780fb"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "gitops-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "gitops_control::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "3d1b376eb4e4be9663d32ba92602a75101aec6fea13979b6ae9df756ad03dc68",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "gitops-corpus-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_gitops_control_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "b77b3eecbb8b58408bbf2c56825f5a7e1c3ea451dc9b20633ade6ed8a8a1e8e9",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary-contract",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_113_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-DEP-001",
+    "AT-DEP-001",
+    "SR-DEL-*",
+    "RV-25",
+    "RV-27",
+    "RV-28"
+  ],
+  "implemented_contracts": {
+    "provider_fixture_count": 2,
+    "read_case_count": 22,
+    "plan_case_count": 64,
+    "attack_case_count": 2048,
+    "fault_case_count": 512,
+    "controller_contact_count": 0,
+    "authority_escape_count": 0,
+    "unsafe_retry_count": 0,
+    "promoted_provider_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "desired_sync_authority_separate": true,
+    "strong_effects_default_disabled": true,
+    "controller_race_reconciliation": true,
+    "supported_version_matrix_complete": false,
+    "at_dep_001_complete": false,
+    "independent_human_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-112-BLOCKED",
+      "owner": "113"
+    },
+    {
+      "code": "BLOCKED-EXTERNAL-GITOPS-AT-DEP-001-RV-28",
+      "owner": "113"
+    }
+  ],
+  "summary": {
+    "local_sprint_113_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_112_closed": false,
+    "live_gitops_support": false,
+    "release_approval": false
+  }
+}
