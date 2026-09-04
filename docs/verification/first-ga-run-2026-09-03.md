@@ -2365,3 +2365,42 @@ later aggregate as dependency-complete.
 Exact next action: continue the first dependency-independent Sprint 63 row after the exact-method
 closure, preserving every native and independent blocker; write the 175-item checkpoint handoff as
 soon as the next batch closes at least one row.
+
+## Batch 69 — Sprint 64 local presentation reconciliation
+
+### Completed
+
+- Closed 16 TASKS rows: Task 64.1.1 and all 3 implementation sub-tasks; Task 64.1.2 and both
+  artifact sub-tasks; Sub-tasks 64.1.3.1/.2/.3; all 3 Story 64.1 acceptance criteria; and Sprint
+  AC 64.AC1/.AC3/.AC5. The immutable local report binds 10 passing commands with zero focused
+  skips, 27 source identities, 10 security requirements, and 10 visible blockers. The 57-case
+  contract and 7 Rust cases prove bounded direct PPTX inspection, inert active-content handling,
+  deterministic PPTX generation and full-regeneration editing, exact structural previews, and
+  deterministic table/chart/plot/diagram data binding with zero accepted file, network, renderer,
+  or execution effects. Promotions: 0. Substitutions: 0. Cumulative closed items: 190.
+- Commits: `6b620c88` (16 truthful presentation closures and exact external blocker tuples) and
+  `e69b2c95` (one affected evidence regeneration pass). Commits: 2. Commits per closed item: 0.13.
+  Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across the pin-bearing gates:
+  empty.
+
+### Validation and self-recovery
+
+- Focused validation: immutable Sprint 64 evidence, 57-case presentation contract plus six Python
+  mutations, 3 inspection Rust tests, 4 generation/edit Rust tests, strict capability Clippy,
+  planning scope, traceability, contract boundary/evidence, Stories 2.1, 2.2, and 2.4, and Sprint 2
+  pass. Supply-chain builds: 1. Evidence regeneration passes: 1. Recovery iterations: 0. The full
+  chain ran 685.688 seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite
+  after every preceding gate passed. Recorded gate wall seconds: 686.
+- Sub-task 64.1.3.4 and dependent Sprint AC 64.AC2/.AC4 remain open on 4 exact blocker families,
+  all with `substitution_set=empty`: a Fedora/Ubuntu host change to provision native renderer,
+  fonts, pixel diff, metadata scan, and accessibility dependencies; a licensed Windows 11 x64 KVM
+  guest plus admitted presentation suite; a physical supported MacBook plus admitted presentation
+  suite; and an independent boundary-review/manual-fuzz campaign. Complete platform, artifact,
+  action, credential, and payment fields are committed in TASKS.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at the first dependency-independent local row
+after the externally blocked Sprint 64 native-evidence gate, beginning with Sprint 65 image,
+redaction, and visual-verification source truth.
