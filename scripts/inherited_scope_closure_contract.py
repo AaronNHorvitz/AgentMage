@@ -18,7 +18,9 @@ def build()->bytes:
  requirements=trace["requirements"]
  reports=[]
  for path in sorted((ROOT/"artifacts/sprints").glob("sprint-*/local-evidence-report.json"),key=lambda p:int(p.parent.name.split("-")[1])):
-  value=json.loads(path.read_text());reports.append({"sprint":int(path.parent.name.split("-")[1]),"record_type":value["record_type"],"sprint_status":value["summary"]["sprint_status"],"sha256":sha(path.read_bytes())})
+  sprint=int(path.parent.name.split("-")[1])
+  if sprint==101:continue
+  value=json.loads(path.read_text());reports.append({"sprint":sprint,"record_type":value["record_type"],"sprint_status":value["summary"]["sprint_status"],"sha256":sha(path.read_bytes())})
  deferred=[{"line":x["line"],"statement_sha256":x["statement_sha256"],"explicit_exclusion":True,"negative_registration_test":True,"authority_added":False,"promoted":False}for x in inventory if x["class"]=="DEFER"]
  category_counts={key:sum(x["class"]==key for x in inventory)for key in EXPECTED}
  value={"schema_version":1,"registry_requirement_count":len(registry["requirements"]),"traceability_requirement_count":len(requirements),"unique_requirement_count":len({x["id"]for x in requirements}),"planning_mapped_requirement_count":sum(bool(x["implementation"]["planning_items"])for x in requirements),"current_evidence_requirement_count":sum(x["evidence"]["status"]=="current"for x in requirements),"missing_required_evidence_count":sum(x["evidence"].get("absence_disposition")=="missing-required"for x in requirements),"inventory_item_count":len(inventory),"category_counts":category_counts,"completion_record_count":len(reports),"completion_records":reports,"deferred_exclusions":deferred,"deferred_exclusion_count":len(deferred),"all_deferred_explicit_and_tested":all(x["explicit_exclusion"]and x["negative_registration_test"]and not x["authority_added"]and not x["promoted"]for x in deferred),"promoted_mapping_gate_closed":False,"inherited_release_approved":False}
