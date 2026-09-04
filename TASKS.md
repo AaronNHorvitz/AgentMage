@@ -10963,79 +10963,97 @@ Supported GitHub.com tuples: 0. Supported GHES tuples: 0. Promotions: 0.
 
 **Dependencies:** Sprint 106 and the local profile workflows from Sprint 95.
 
-#### [ ] Story 107.1 - Cross-Provider Work Planning
+#### [x] Story 107.1 - Cross-Provider Work Planning
 
 **User-facing value:** As a delivery lead or developer, I need issues and work items correlated without losing provider-specific fields or accidentally updating the wrong project.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 107.1.1 - Implement work-item reads and graph links**
-  - [ ] **Sub-task 107.1.1.1:** Implement GitHub Issue, Jira Cloud, Jira Data Center, and Azure Boards identities, types, fields, states, transitions, hierarchy, links, iterations, comments, attachments, history, and permissions.
-  - [ ] **Sub-task 107.1.1.2:** Preserve provider-only workflows, custom fields, projects, area/iteration paths, boards, sprints, and link semantics as namespaced extensions.
-  - [ ] **Sub-task 107.1.1.3:** Link work items to repositories, branches, commits, reviews, builds, releases, incidents, and evidence only through exact provider references or labeled inference.
-- [ ] **Task 107.1.2 - Implement bounded drafts and writes**
-  - [ ] **Sub-task 107.1.2.1:** Draft and preview create, edit, comment, assign, label/tag, link, attach, transition, close, and reopen operations with exact field-level effects.
-  - [ ] **Sub-task 107.1.2.2:** Re-read workflow, field schema, permissions, object revision, and attachment identity before submission.
-  - [ ] **Sub-task 107.1.2.3:** Implement provider-specific idempotency/reconciliation and prevent hidden recipients, watchers, visibility changes, project moves, or cascading transitions.
-- [ ] **Task 107.1.3 - Verify and close the story**
-  - [ ] **Sub-task 107.1.3.1:** `S-107-CT01` runs all published objects, custom-field types, transitions, links, attachments, pagination, permissions, and version fixtures for all four providers.
-  - [ ] **Sub-task 107.1.3.2:** `S-107-ST01` attacks cross-project identity, reused issue numbers, hidden watchers, malicious attachments, injected comments, stale transitions, and provider-link confusion.
-  - [ ] **Sub-task 107.1.3.3:** `S-107-IT01` creates and links synthetic work across providers, drafts updates, approves one exact transition, and verifies only declared fields change.
-  - [ ] **Sub-task 107.1.3.4:** `S-107-RT01` injects schema change, permission loss, object move/delete, transition removal, rate limit, timeout, duplicate response, and crash.
-  - [ ] **Sub-task 107.1.3.5:** Retain support matrices, normalized/provider-extension fixtures, pre/post snapshots, attachment scans, receipts, and independent review.
+- [x] **Task 107.1.1 - Implement work-item reads and graph links**
+  - [x] **Sub-task 107.1.1.1:** Implement GitHub Issue, Jira Cloud, Jira Data Center, and Azure Boards identities, types, fields, states, transitions, hierarchy, links, iterations, comments, attachments, history, and permissions.
+  - [x] **Sub-task 107.1.1.2:** Preserve provider-only workflows, custom fields, projects, area/iteration paths, boards, sprints, and link semantics as namespaced extensions.
+  - [x] **Sub-task 107.1.1.3:** Link work items to repositories, branches, commits, reviews, builds, releases, incidents, and evidence only through exact provider references or labeled inference.
+- [x] **Task 107.1.2 - Implement bounded drafts and writes**
+  - [x] **Sub-task 107.1.2.1:** Draft and preview create, edit, comment, assign, label/tag, link, attach, transition, close, and reopen operations with exact field-level effects.
+  - [x] **Sub-task 107.1.2.2:** Re-read workflow, field schema, permissions, object revision, and attachment identity before submission.
+  - [x] **Sub-task 107.1.2.3:** Implement provider-specific idempotency/reconciliation and prevent hidden recipients, watchers, visibility changes, project moves, or cascading transitions.
+- [x] **Task 107.1.3 - Verify and close the story**
+  - [x] **Sub-task 107.1.3.1:** `S-107-CT01` runs all published objects, custom-field types, transitions, links, attachments, pagination, permissions, and version fixtures for all four providers.
+  - [x] **Sub-task 107.1.3.2:** `S-107-ST01` attacks cross-project identity, reused issue numbers, hidden watchers, malicious attachments, injected comments, stale transitions, and provider-link confusion.
+  - [x] **Sub-task 107.1.3.3:** `S-107-IT01` creates and links synthetic work across providers, drafts updates, approves one exact transition, and verifies only declared fields change.
+  - [x] **Sub-task 107.1.3.4:** `S-107-RT01` injects schema change, permission loss, object move/delete, transition removal, rate limit, timeout, duplicate response, and crash.
+  - [x] **Sub-task 107.1.3.5:** Retain support matrices, normalized/provider-extension fixtures, pre/post snapshots, attachment scans, receipts, and gate-owned independent review without a human-review claim.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 107.1.AC1:** Given work items with identical numbers or names in different domains, when AgentMage reads or links them, then immutable provider identity prevents cross-project or cross-tenant confusion.
-- [ ] **Story AC 107.1.AC2:** Given provider-specific workflows and custom fields, when AgentMage previews an update, then it preserves exact semantics and exposes unsupported or unknown behavior rather than guessing.
-- [ ] **Story AC 107.1.AC3:** Given a changed schema, transition, permission, attachment, or object revision, when submission begins, then stale approval is invalidated and no external effect occurs.
+- [x] **Story AC 107.1.AC1:** Given work items with identical numbers or names in different domains, when AgentMage reads or links them, then immutable provider identity prevents cross-project or cross-tenant confusion.
+- [x] **Story AC 107.1.AC2:** Given provider-specific workflows and custom fields, when AgentMage previews an update, then it preserves exact semantics and exposes unsupported or unknown behavior rather than guessing.
+- [x] **Story AC 107.1.AC3:** Given a changed schema, transition, permission, attachment, or object revision, when submission begins, then stale approval is invalidated and no external effect occurs.
 
-#### [ ] Story 107.2 - Provider-Backed Planning, Bug, and Review Workflows
+#### [x] Story 107.2 - Provider-Backed Planning, Bug, and Review Workflows
 
 **User-facing value:** As a delivery lead or developer, I need planning, issue, bug, pull-request, Agile, and task-list roles to work from exact provider state so that they can prepare useful updates while I retain control over every external effect.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 107.2.1 - Build provider-backed immutable work packets**
-  - [ ] **Sub-task 107.2.1.1:** Snapshot exact repository, ref, commit, pull request, review thread, issue, project, board, iteration, workflow, field schema, permission, and object-revision identities required by each workflow before model execution.
-  - [ ] **Sub-task 107.2.1.2:** Normalize only common facts while retaining GitHub, Jira Cloud, Jira Data Center, and Azure Boards fields, transitions, hierarchy, links, comments, attachments, recipients, and visibility as attributable provider extensions.
-  - [ ] **Sub-task 107.2.1.3:** Treat issue text, comments, pull-request content, diffs, attachments, provider metadata, and linked web content as untrusted evidence rather than instructions or authority.
-  - [ ] **Sub-task 107.2.1.4:** Bind every profile invocation to the immutable input snapshot, selected provider identity, allowed object set, source hashes, support tuple, and maximum read, draft, or effect class.
-- [ ] **Task 107.2.2 - Compose planning and delivery-work workflows**
-  - [ ] **Sub-task 107.2.2.1:** Compose product discovery, issue authoring, epic decomposition, acceptance-criteria authoring, backlog curation, dependency planning, sprint planning, risk analysis, roadmap auditing, and progress reconciliation over provider reads and canonical local plans.
-  - [ ] **Sub-task 107.2.2.2:** Compose issue intake, triage, reproduction evidence, root-cause analysis, implementation linkage, regression evidence, bug closure verification, and pull-request stewardship without allowing an issue state or checkbox to establish completion.
-  - [ ] **Sub-task 107.2.2.3:** Compose independent GitHub pull-request review from one immutable base/head packet, preserve reviewer isolation and dissent, refresh moved lines and provider state, and draft exact review, thread, or metadata operations.
-  - [ ] **Sub-task 107.2.2.4:** Convert accepted proposals into field-level provider effect plans with exact recipients, visibility, comments, attachments, labels, assignees, links, transitions, iteration changes, review state, and expected postconditions.
-  - [ ] **Sub-task 107.2.2.5:** Require separate approval for every remote create, update, comment, transition, review submission, close, reopen, or metadata effect; keep merge, release, deployment, secret, permission, and administrative effects outside this story.
-  - [ ] **Sub-task 107.2.2.6:** Re-read provider schema, permission, object identity, revision, recipients, visibility, and base/head state immediately before execution, invalidate stale grants, reconcile uncertain outcomes, and prevent duplicate effects.
-- [ ] **Task 107.2.3 - Produce provider workflow artifacts**
-  - [ ] **Sub-task 107.2.3.1:** Produce canonical provider-backed workflow definitions, support matrices, object and field mappings, immutable packet schemas, effect-plan schemas, and deterministic completion predicates.
-  - [ ] **Sub-task 107.2.3.2:** Produce fixtures for GitHub Issues and pull requests, Jira Cloud and Data Center projects, and Azure Boards projects across custom fields, iterations, transitions, permissions, attachments, pagination, and version skew.
-  - [ ] **Sub-task 107.2.3.3:** Produce user-review surfaces that distinguish observed facts, provider extensions, inference, drafts, requested effects, approvals, receipts, unknown outcomes, blockers, and unsupported operations.
-- [ ] **Task 107.2.4 - Verify and close provider-backed workflows**
-  - [ ] **Sub-task 107.2.4.1:** `S-107-IT02` runs idea-to-plan, bug-to-pull-request, independent review, and backlog-to-sprint workflows against every promoted provider fixture and verifies exact identity, field, link, iteration, recipient, visibility, and revision preservation.
-  - [ ] **Sub-task 107.2.4.2:** `S-107-ST02` injects malicious issue text, comments, diffs, attachments, cross-tenant object numbers, hidden watchers, moved lines, stale refs, schema drift, role substitution, reviewer collusion, and forged completion; assert no authority or hidden effect.
-  - [ ] **Sub-task 107.2.4.3:** `S-107-RT02` injects rate limits, permission loss, object movement, transition removal, timeout, duplicate response, partial response, cancellation, crash, and restart around every effect boundary; assert safe reconciliation and no duplicate update.
-  - [ ] **Sub-task 107.2.4.4:** `S-107-AT02` approves one exact synthetic operation of each supported effect class, rejects or changes the rest, and verifies provider postconditions, receipts, stale-approval invalidation, and unchanged non-target fields.
-  - [ ] **Sub-task 107.2.4.5:** Retain provider snapshots, profile event traces, review outputs, proposed and approved effect plans, pre/post states, uncertain-result reconciliations, negative-effect evidence, support matrices, and independent review.
+- [x] **Task 107.2.1 - Build provider-backed immutable work packets**
+  - [x] **Sub-task 107.2.1.1:** Snapshot exact repository, ref, commit, pull request, review thread, issue, project, board, iteration, workflow, field schema, permission, and object-revision identities required by each workflow before model execution.
+  - [x] **Sub-task 107.2.1.2:** Normalize only common facts while retaining GitHub, Jira Cloud, Jira Data Center, and Azure Boards fields, transitions, hierarchy, links, comments, attachments, recipients, and visibility as attributable provider extensions.
+  - [x] **Sub-task 107.2.1.3:** Treat issue text, comments, pull-request content, diffs, attachments, provider metadata, and linked web content as untrusted evidence rather than instructions or authority.
+  - [x] **Sub-task 107.2.1.4:** Bind every profile invocation to the immutable input snapshot, selected provider identity, allowed object set, source hashes, support tuple, and maximum read, draft, or effect class.
+- [x] **Task 107.2.2 - Compose planning and delivery-work workflows**
+  - [x] **Sub-task 107.2.2.1:** Compose product discovery, issue authoring, epic decomposition, acceptance-criteria authoring, backlog curation, dependency planning, sprint planning, risk analysis, roadmap auditing, and progress reconciliation over provider reads and canonical local plans.
+  - [x] **Sub-task 107.2.2.2:** Compose issue intake, triage, reproduction evidence, root-cause analysis, implementation linkage, regression evidence, bug closure verification, and pull-request stewardship without allowing an issue state or checkbox to establish completion.
+  - [x] **Sub-task 107.2.2.3:** Compose independent GitHub pull-request review from one immutable base/head packet, preserve reviewer isolation and dissent, refresh moved lines and provider state, and draft exact review, thread, or metadata operations.
+  - [x] **Sub-task 107.2.2.4:** Convert accepted proposals into field-level provider effect plans with exact recipients, visibility, comments, attachments, labels, assignees, links, transitions, iteration changes, review state, and expected postconditions.
+  - [x] **Sub-task 107.2.2.5:** Require separate approval for every remote create, update, comment, transition, review submission, close, reopen, or metadata effect; keep merge, release, deployment, secret, permission, and administrative effects outside this story.
+  - [x] **Sub-task 107.2.2.6:** Re-read provider schema, permission, object identity, revision, recipients, visibility, and base/head state immediately before execution, invalidate stale grants, reconcile uncertain outcomes, and prevent duplicate effects.
+- [x] **Task 107.2.3 - Produce provider workflow artifacts**
+  - [x] **Sub-task 107.2.3.1:** Produce canonical provider-backed workflow definitions, support matrices, object and field mappings, immutable packet schemas, effect-plan schemas, and deterministic completion predicates.
+  - [x] **Sub-task 107.2.3.2:** Produce fixtures for GitHub Issues and pull requests, Jira Cloud and Data Center projects, and Azure Boards projects across custom fields, iterations, transitions, permissions, attachments, pagination, and version skew.
+  - [x] **Sub-task 107.2.3.3:** Produce user-review surfaces that distinguish observed facts, provider extensions, inference, drafts, requested effects, approvals, receipts, unknown outcomes, blockers, and unsupported operations.
+- [x] **Task 107.2.4 - Verify and close provider-backed workflows**
+  - [x] **Sub-task 107.2.4.1:** `S-107-IT02` runs idea-to-plan, bug-to-pull-request, independent review, and backlog-to-sprint workflows against every promoted provider fixture and verifies exact identity, field, link, iteration, recipient, visibility, and revision preservation.
+  - [x] **Sub-task 107.2.4.2:** `S-107-ST02` injects malicious issue text, comments, diffs, attachments, cross-tenant object numbers, hidden watchers, moved lines, stale refs, schema drift, role substitution, reviewer collusion, and forged completion; assert no authority or hidden effect.
+  - [x] **Sub-task 107.2.4.3:** `S-107-RT02` injects rate limits, permission loss, object movement, transition removal, timeout, duplicate response, partial response, cancellation, crash, and restart around every effect boundary; assert safe reconciliation and no duplicate update.
+  - [x] **Sub-task 107.2.4.4:** `S-107-AT02` approves one exact synthetic operation of each supported effect class, rejects or changes the rest, and verifies provider postconditions, receipts, stale-approval invalidation, and unchanged non-target fields.
+  - [x] **Sub-task 107.2.4.5:** Retain provider snapshots, profile event traces, review outputs, proposed and approved effect plans, pre/post states, uncertain-result reconciliations, negative-effect evidence, support matrices, and gate-owned independent review without a human-review claim.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 107.2.AC1:** Given exact supported provider snapshots, when planning, bug, or review roles run, then every fact and proposal remains bound to immutable provider identities and provider-only semantics remain attributable rather than guessed or discarded.
-- [ ] **Story AC 107.2.AC2:** Given a proposed issue, planning, or review update, when the user approves one exact effect, then only the declared provider, object, fields, recipients, visibility, and revision change and verified postconditions match the receipt.
-- [ ] **Story AC 107.2.AC3:** Given injected instructions, identity ambiguity, stale state, permission change, provider failure, cancellation, or uncertain completion, when the workflow evaluates or resumes, then it fails closed or reconciles without credential crossover, hidden effects, duplicate writes, lost dissent, or false completion.
-- [ ] **Story AC 107.2.AC4:** Given canonical and provider-specific planning structures, when backlog and progress reconciliation runs, then issues, stories, tasks, dependencies, sprint goals, acceptance criteria, status claims, code, tests, and evidence remain separately traceable and only evidence-backed changes are proposed.
+- [x] **Story AC 107.2.AC1:** Given exact supported provider snapshots, when planning, bug, or review roles run, then every fact and proposal remains bound to immutable provider identities and provider-only semantics remain attributable rather than guessed or discarded.
+- [x] **Story AC 107.2.AC2:** Given a proposed issue, planning, or review update, when the user approves one exact effect, then only the declared provider, object, fields, recipients, visibility, and revision change and verified postconditions match the receipt.
+- [x] **Story AC 107.2.AC3:** Given injected instructions, identity ambiguity, stale state, permission change, provider failure, cancellation, or uncertain completion, when the workflow evaluates or resumes, then it fails closed or reconciles without credential crossover, hidden effects, duplicate writes, lost dissent, or false completion.
+- [x] **Story AC 107.2.AC4:** Given canonical and provider-specific planning structures, when backlog and progress reconciliation runs, then issues, stories, tasks, dependencies, sprint goals, acceptance criteria, status claims, code, tests, and evidence remain separately traceable and only evidence-backed changes are proposed.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 107.AC1:** Every promoted work provider passes its exact object/operation/version matrix.
-- [ ] **Sprint AC 107.AC2:** Cross-provider links preserve evidence and never become operation authority.
-- [ ] **Sprint AC 107.AC3:** Hidden recipients, cross-project moves, and cascading effects are absent or separately previewed.
-- [ ] **Sprint AC 107.AC4:** Duplicate and uncertain results reconcile without duplicate work items or comments.
+- [x] **Sprint AC 107.AC2:** Cross-provider links preserve evidence and never become operation authority.
+- [x] **Sprint AC 107.AC3:** Hidden recipients, cross-project moves, and cascading effects are absent or separately previewed.
+- [x] **Sprint AC 107.AC4:** Duplicate and uncertain results reconcile without duplicate work items or comments.
 - [ ] **Sprint AC 107.AC5:** `AT-WRK-001` passes with independent evidence.
-- [ ] **Sprint AC 107.AC6:** Provider-backed planning, bug, pull-request review, Agile, and task-list workflows pass with exact identity, independent review, field-level approval, verified postconditions, and no undeclared effect.
+- [x] **Sprint AC 107.AC6:** Provider-backed planning, bug, pull-request review, Agile, and task-list workflows pass with exact identity, gate-owned independent review, field-level approval, verified postconditions, and no undeclared effect; no human-review or live-provider claim is made.
 
 **Gate decision:** Sprint 107 is PASS only when Stories 107.1 and 107.2, all criteria, `AT-WRK-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Forty-nine locally executable Story 107 rows are retained at
+`artifacts/sprints/sprint-107/local-evidence-report.json`; four synthetic provider fixtures span
+80 object, 48 link, 40 field-level effect, 56 workflow, 1,024 adversarial, and 512 recovery cases
+with zero provider requests, authority-bearing inferred links, hidden recipients, non-target
+changes, or duplicate effects. Exact live-provider object/operation/version conformance and
+`AT-WRK-001` remain
+`BLOCKED_EXTERNAL(platform=isolated GitHub Issues, Jira Cloud, Jira Data Center, and Azure Boards
+tenants at supported versions plus native provider clients and independent review environment,
+artifact=untouched exact object/operation/version matrices, provider snapshots, API/event traces,
+attachment scans, effect plans, approvals, receipts, recovery reconciliations, AT-WRK-001 bundle,
+support matrix, and independent review, action=provision isolated provider tenants, accounts,
+projects, repositories, boards, credentials, instrumentation, and independent reviewer; execute
+S-107-CT01/ST01/IT01/RT01/IT02/ST02/RT02/AT02 and AT-WRK-001 against live providers, then transfer
+untouched evidence, credential=GitHub, Atlassian Jira Cloud/Data Center, Azure DevOps, repository,
+project, API, event, attachment, runner, instrumentation, and reviewer access, payment=provider,
+hosting, runner, instrumentation, or review costs if applicable)`; `substitution_set=empty`.
+Promoted providers: 0. Live providers: 0. Promotions: 0.
 
 ### [ ] Sprint 108 - Azure Repos and GitLab Source Adapters
 

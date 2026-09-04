@@ -1,0 +1,10 @@
+import json,unittest
+from scripts.work_management_contract import ATTACKS,EFFECTS,FACETS,LINK_STATES,LINK_TARGETS,PROVIDERS,REVIEW_SURFACES,WORKFLOWS,build
+class WorkManagementContractTests(unittest.TestCase):
+ def setUp(self):self.value=json.loads(build())
+ def test_four_provider_object_matrix(self):self.assertEqual(tuple(self.value["providers"]),PROVIDERS);self.assertEqual(tuple(self.value["facets"]),FACETS);self.assertEqual(self.value["object_case_count"],len(PROVIDERS)*len(FACETS));self.assertTrue(all(c["immutable_identity_preserved"] and c["namespaced_extension"] and c["unknown_visible"] for c in self.value["object_cases"]))
+ def test_effects_are_field_exact(self):self.assertEqual(tuple(self.value["effects"]),EFFECTS);self.assertTrue(all(c["field_level"] and c["separate_approval"] and not c["non_target_change_count"] and not c["hidden_recipient_count"] for c in self.value["effect_cases"]))
+ def test_links_cannot_turn_inference_into_authority(self):self.assertEqual(tuple(self.value["link_targets"]),LINK_TARGETS);self.assertEqual(tuple(self.value["link_states"]),LINK_STATES);self.assertTrue(all(c["operation_authority"] == (c["state"] in ("observed","provider-reference")) for c in self.value["link_cases"]));self.assertEqual(tuple(self.value["review_surfaces"]),REVIEW_SURFACES)
+ def test_workflows_are_inert_and_source_bound(self):self.assertEqual(tuple(self.value["workflows"]),WORKFLOWS);self.assertTrue(all(c["immutable_packet"] and c["untrusted_inputs"] and not c["completion_from_provider_checkbox"] and not c["provider_effect_count"] for c in self.value["workflow_cases"]))
+ def test_attacks_and_recovery_fail_closed(self):self.assertEqual(tuple(self.value["attacks"]),ATTACKS);self.assertTrue(all(not c["authority_count"] and not c["hidden_effect_count"] for c in self.value["attack_cases"]));self.assertTrue(all(not c["duplicate_update_count"] and c["reconciled"] for c in self.value["recovery_cases"]));self.assertEqual(self.value["promoted_provider_count"],0);self.assertEqual(self.value["live_provider_count"],0)
+if __name__=="__main__":unittest.main()

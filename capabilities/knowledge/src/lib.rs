@@ -62,6 +62,7 @@ mod word_receipt;
 mod word_rich_generation;
 mod word_source;
 mod word_visual;
+mod work_management;
 mod workflows;
 
 pub use additional_parsers::{
@@ -377,6 +378,12 @@ pub use word_visual::{
     WordPageComparison, WordPageDifferenceBounds, WordPageImage, WordRenderEvidenceKind,
     WordRenderOutput, WordRenderPlatform, WordRenderProfile, WordVisualComparisonError,
     WordVisualComparisonReport, compare_word_page_images, word_render_profile_sha256,
+};
+pub use work_management::{
+    AdmittedWorkEffect, ProviderWorkPacket, ProviderWorkflow, WorkEffect, WorkEffectPlan, WorkItem,
+    WorkLink, WorkLinkState, WorkManagementError, WorkProvider, WorkSubmissionState,
+    admit_work_effect, admit_work_link, validate_work_item, validate_work_packet,
+    work_packet_sha256,
 };
 pub use workflows::{
     KnowledgeRetrievalMode, KnowledgeWorkflow, KnowledgeWorkflowEvidence, KnowledgeWorkflowResult,
