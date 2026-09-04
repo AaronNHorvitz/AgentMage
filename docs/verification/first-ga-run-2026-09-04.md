@@ -121,3 +121,50 @@ checkpoint handoff is required after this batch push.
 Exact next action: all remaining Sprint 74 rows depend on exact external tuples; continue Decision
 0021 ordering at Sprint 75 v0.7 read-only connector release gate. Cumulative closures are 373; the
 next checkpoint remains 375.
+
+## Batch 81 — Sprint 75 v0.7 read-only connector aggregate
+
+### Completed
+
+- Closed 8 TASKS rows: structural no-write proof Sub-task 75.1.1.4, consolidated guide Sub-task
+  75.1.1.5, future hosted-write exclusions Sub-task 75.1.1.6, Task 75.1.2, and all 4 artifact
+  sub-tasks. The aggregate binds the five committed Sprint 70–74 local reports, zero network,
+  hosted-mutation, credential-material, and strict-local-registration changes, a consolidated
+  operating guide, explicit future-write exclusions, and truthful blocked release artifacts.
+  Promotions: 0. Substitutions: 0. Cumulative closed items: 381.
+- Commits: `933ef76e` (aggregate contracts, artifacts, guides, tests, truthful closures, and the
+  byte-stable supply-chain carrier), `94a67407` (source-bound 6-command Sprint 75 report), and
+  `d2a323c9` (one affected evidence regeneration pass). Commits including log: 4. Commits per
+  closed item: 0.50. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across all
+  Batch 81 paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 2 aggregate contract tests, 3 evidence mutation tests, 85 runtime/planning
+  schema tests, supply-chain currentness, product-CI contract, configuration startup/result,
+  component inventory, Story 3.1 security/gate, planning scope, traceability, contract
+  boundary/evidence, Stories 2.1/2.2/2.4, and Sprint 2 pass. Supply-chain builds: 1. Local report
+  builds: 1. Downstream evidence regeneration passes: 1. Recovery iterations: 1 — corrected the
+  mutation test's mocked `Path.read_text` receiver and closed its fixture file after the initial
+  focused run exposed an `IndexError` and resource warning. The full chain ran 690.04 seconds and
+  stopped only at the retained Story 6.1 rootless-Podman prerequisite after every preceding gate
+  passed. Recorded gate wall seconds: 690.
+- Native network, credential, provider, cache, recovery, strict-local egress, platform,
+  independent-review, signing, and approval evidence remain blocked on
+  `BLOCKED_EXTERNAL(platform=native Fedora/Ubuntu/Windows 11 x64 KVM/physical supported MacBook
+  connector release environments plus independent review and release approval, artifact=untouched
+  network/credential/provider/cache/recovery suites, complete GitHub fixtures, strict-local
+  v0.1-v0.6 rerun with 60-minute egress trace, method/packet/mutation/cleanup traces, conformance
+  reconciliation, and signed gate decision, action=provision exact accounts, credentials, Windows
+  image, physical Mac, platforms, reviewer, and release approver, execute
+  S-062-IT01/ST01/RT01/AT01 and the product-security campaign, independently reconcile and sign the
+  gate, and transfer untouched bundles, credential=GitHub, secret-store, Windows image, physical
+  Mac, platform, reviewer, signer, and release approver access, payment=GitHub, hosting, licenses,
+  hardware, review, signing, or release costs if applicable)`; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 75 rows depend on exact external tuples; continue Decision
+0021 ordering at Sprint 76 desktop conversation and workspace experience. Cumulative closures are
+381; the 375-item checkpoint handoff is required after this batch push.
