@@ -10693,18 +10693,18 @@ interfaces tested: 0. Strict-local all-packs-disabled observations: 0. Release a
   - [ ] **Sub-task 102.1.1.1** (legacy `S-075-I04`): Re-run all clean-platform installations, upgrades, offline workflows, connected workflows, safe mode, backup, restore, migration, and uninstall paths.
   - [ ] **Sub-task 102.1.1.2** (legacy `S-075-I05`): Re-run complete deterministic, model, evidence, privacy, path, sandbox, network, package, connector, browser, schedule, hosted-write, and multi-agent suites.
   - [ ] **Sub-task 102.1.1.3** (legacy `S-075-I06`): Verify every shell and model remains authority-free and every capability remains removable without corrupting canonical state.
-  - [ ] **Sub-task 102.1.1.4** (legacy `S-075-I07`): Validate complete documentation, examples, limitations, troubleshooting, threat models, data maps, software bill of materials, licenses, and release manifests.
-  - [ ] **Sub-task 102.1.1.5** (legacy `S-075-I08`): Preserve the legacy final-release artifact as an inherited-scope checkpoint containing passed gates, unresolved risks, explicit exclusions, platforms, models, capabilities, and rollback plan; label it non-GA under Decision 0008.
+  - [x] **Sub-task 102.1.1.4** (legacy `S-075-I07`): Validate complete documentation, examples, limitations, troubleshooting, threat models, data maps, software bill of materials, licenses, and release manifests.
+  - [x] **Sub-task 102.1.1.5** (legacy `S-075-I08`): Preserve the legacy final-release artifact as an inherited-scope checkpoint containing passed gates, unresolved risks, explicit exclusions, platforms, models, capabilities, and rollback plan; label it non-GA under Decision 0008.
 
 - [ ] **Task 102.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 102.1.2.1:** Complete requirement-to-code-to-test-to-document traceability report.
+  - [x] **Sub-task 102.1.2.1:** Complete requirement-to-code-to-test-to-document traceability report.
   - [ ] **Sub-task 102.1.2.2:** Final cross-platform acceptance and clean-install bundle.
-  - [ ] **Sub-task 102.1.2.3:** Deferred and excluded capability register.
+  - [x] **Sub-task 102.1.2.3:** Deferred and excluded capability register.
   - [ ] **Sub-task 102.1.2.4:** Signed inherited-scope manifests, software bill of materials, capability matrix, and non-GA checkpoint decision.
 
 - [ ] **Task 102.1.3 - Verify and close the story**
-  - [ ] **Sub-task 102.1.3.1:** `S-075-UT01` rebuilds the complete requirement graph and validates unique source/implementation/test/document/owner/release/evidence links; assert zero promoted orphan and exact explicit-exclusion coverage.
-  - [ ] **Sub-task 102.1.3.2:** `S-075-IT01` recomputes every gate summary from raw evidence, checks staleness against current source/dependency/config/model/platform manifests, and verifies reviewer identities/findings; assert no omitted failure or stale pass.
+  - [x] **Sub-task 102.1.3.1:** `S-075-UT01` rebuilds the complete requirement graph and validates unique source/implementation/test/document/owner/release/evidence links; assert zero promoted orphan and exact explicit-exclusion coverage.
+  - [x] **Sub-task 102.1.3.2:** `S-075-IT01` recomputes every gate summary from raw evidence, checks staleness against current source/dependency/config/model/platform manifests, and verifies reviewer identities/findings; assert no omitted failure or stale pass.
   - [ ] **Sub-task 102.1.3.3:** `S-075-ST01` attempts all documented prohibited capabilities and seeded regressions across clean packages; assert absent/denied behavior and no security/privacy/authority threshold waiver.
   - [ ] **Sub-task 102.1.3.4:** `S-075-AT01` performs three independent clean installs per supported platform plus upgrade/offline/connected/safe-mode/backup/restore/migration/uninstall workflows using published reviewer commands only.
   - [ ] **Sub-task 102.1.3.5:** `S-075-AT02` independently verifies signatures, notarization where applicable, hashes, source/binary SBOMs, provenance, CBOM, Model BOM, licenses, component/process/path/socket closure, and residue inventory.
@@ -10713,20 +10713,22 @@ interfaces tested: 0. Strict-local all-packs-disabled observations: 0. Release a
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 102.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every promoted requirement has current reproducible code/test/document/evidence/owner/release linkage and no unresolved blocking dependency; every deferred item has an approved disposition and tested exclusion unless formally promoted.
-- [ ] **Story AC 102.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then final release status remains `BLOCKED` for any failed, skipped, stale, unavailable, flaky, suppressed, unreviewed, or unreconciled blocking control regardless of feature completeness.
-- [ ] **Story AC 102.1.AC3:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then legacy `G-PRODUCT` may close only as an inherited-scope checkpoint after user review; it cannot authorize v1.0 GA.
+- [x] **Story AC 102.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then final release status remains `BLOCKED` for any failed, skipped, stale, unavailable, flaky, suppressed, unreviewed, or unreconciled blocking control regardless of feature completeness.
+- [x] **Story AC 102.1.AC3:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then legacy `G-PRODUCT` may close only as an inherited-scope checkpoint after user review; it cannot authorize v1.0 GA.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 102.AC1:** Every promoted requirement has current reproducible evidence and no unresolved dependency.
-- [ ] **Sprint AC 102.AC2:** Every explicit exclusion has a test proving the prohibited path is absent or denied.
-- [ ] **Sprint AC 102.AC3:** All supported platforms, models, interfaces, capability packs, storage domains, and recovery paths agree across documents and packages.
-- [ ] **Sprint AC 102.AC4:** No failed security, privacy, authority, evidence, recovery, or clean-install threshold is waived by feature completeness.
-- [ ] **Sprint AC 102.AC5:** Legacy `G-PRODUCT` closes only after the user approves the inherited-scope checkpoint and every blocking gate in that scope is green; final release authority remains `G-GA`.
+- [x] **Sprint AC 102.AC2:** Every explicit exclusion has a test proving the prohibited path is absent or denied.
+- [x] **Sprint AC 102.AC3:** All supported platforms, models, interfaces, capability packs, storage domains, and recovery paths agree across documents and packages.
+- [x] **Sprint AC 102.AC4:** No failed security, privacy, authority, evidence, recovery, or clean-install threshold is waived by feature completeness.
+- [x] **Sprint AC 102.AC5:** Legacy `G-PRODUCT` closes only after the user approves the inherited-scope checkpoint and every blocking gate in that scope is green; final release authority remains `G-GA`.
 
 **Gate decision:** Sprint 102 is PASS only when Story 102.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
 Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remains the historically stable inherited-roadmap closure checkpoint and retains `G-PRODUCT` as its legacy gate identity. It cannot authorize or describe v1.0 GA.
+
+**Current status:** local documentation, traceability, exclusion, summary-reconciliation, and non-GA refusal contracts pass. Sprint 102 remains `UPSTREAM-SPRINT-101-BLOCKED` and `BLOCKED_EXTERNAL(platform=complete supported-platform/model/interface/capability-pack matrix with three independent clean installations per platform, lifecycle/removal instrumentation, signing and independent review environment, and user approval, artifact=untouched clean-install/upgrade/offline/connected/safe-mode/backup/restore/migration/uninstall results, complete deterministic/model/evidence/privacy/path/sandbox/network/package/connector/browser/schedule/hosted-write/multi-agent results, signed manifests and BOMs, residue inventory, security bundle, and approval, action=complete retained upstream gates; provision exact native platforms, models, packages, instrumentation, signing, reviewers, and user approver; execute S-075-I04 through I06 and S-075-ST01/AT01/AT02 plus independent security review; then transfer untouched evidence, credential=platform, model, provider, signing, instrumentation, reviewer, and approver access, payment=platform, model, provider, signing, instrumentation, hosting, or review costs if applicable)`; `substitution_set=empty`.
 
 ## [ ] Epic 10 - Provider-Neutral Delivery System and Windows 11
 
