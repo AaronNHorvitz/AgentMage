@@ -12223,37 +12223,58 @@ exact destination disclosure, isolated credentials, bounded cost/resources, and 
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 124.1.1 - Implement adapter removal and retention**
-  - [ ] **Sub-task 124.1.1.1:** Define per-adapter inventory for credentials, cache records, graph nodes/edges, event cursors, webhooks, schedules, workers, processes, sockets, firewall policy, temporary files, logs, receipts, and retained evidence.
-  - [ ] **Sub-task 124.1.1.2:** Preview remove, revoke, delete, retain, export, and inaccessible-remote actions without deleting user repositories, provider data, or neighboring adapters.
-  - [ ] **Sub-task 124.1.1.3:** Implement ordered cancellation, webhook/event disablement, credential revocation/removal, worker/network deregistration, cache/retention cleanup, graph tombstones, and residue report.
-  - [ ] **Sub-task 124.1.1.4:** Implement reinstall/reconnect with new identity and explicit import rather than silently reusing stale credentials, cache, approvals, or support state.
+- [x] **Task 124.1.1 - Implement adapter removal and retention**
+  - [x] **Sub-task 124.1.1.1:** Define per-adapter inventory for credentials, cache records, graph nodes/edges, event cursors, webhooks, schedules, workers, processes, sockets, firewall policy, temporary files, logs, receipts, and retained evidence.
+  - [x] **Sub-task 124.1.1.2:** Preview remove, revoke, delete, retain, export, and inaccessible-remote actions without deleting user repositories, provider data, or neighboring adapters.
+  - [x] **Sub-task 124.1.1.3:** Implement ordered cancellation, webhook/event disablement, credential revocation/removal, worker/network deregistration, cache/retention cleanup, graph tombstones, and residue report.
+  - [x] **Sub-task 124.1.1.4:** Implement reinstall/reconnect with new identity and explicit import rather than silently reusing stale credentials, cache, approvals, or support state.
 - [ ] **Task 124.1.2 - Restore and verify strict-local state**
-  - [ ] **Sub-task 124.1.2.1:** Remove each adapter independently, remove each provider domain, and remove all connected packs together from clean and failure-interrupted states.
+  - [x] **Sub-task 124.1.2.1:** Remove each adapter independently, remove each provider domain, and remove all connected packs together from clean and failure-interrupted states.
   - [ ] **Sub-task 124.1.2.2:** Inspect process, socket, network, credential, cache, database, file, registry, package, schedule, webhook, and temporary residue on Fedora, Ubuntu, and Windows.
   - [ ] **Sub-task 124.1.2.3:** Rerun complete strict-local tools, model, repository map, writes, coding, evidence, recovery, diagnostics, and 60-minute zero-egress suites.
 - [ ] **Task 124.1.3 - Verify and close the story**
-  - [ ] **Sub-task 124.1.3.1:** `S-124-UT01` validates removal plans against missing, duplicate, stale, partially removed, shared, retained, and legally held records.
-  - [ ] **Sub-task 124.1.3.2:** `S-124-ST01` attempts post-removal tool registration, credential recovery, cache access, event receipt, background sync, scheduled action, socket use, and model/provider crossover.
-  - [ ] **Sub-task 124.1.3.3:** `S-124-RT01` crashes/cancels every removal stage and resumes to a deterministic complete or visibly blocked state without harming unrelated data.
+  - [x] **Sub-task 124.1.3.1:** `S-124-UT01` validates removal plans against missing, duplicate, stale, partially removed, shared, retained, and legally held records.
+  - [x] **Sub-task 124.1.3.2:** `S-124-ST01` attempts post-removal tool registration, credential recovery, cache access, event receipt, background sync, scheduled action, socket use, and model/provider crossover.
+  - [x] **Sub-task 124.1.3.3:** `S-124-RT01` crashes/cancels every removal stage and resumes to a deterministic complete or visibly blocked state without harming unrelated data.
   - [ ] **Sub-task 124.1.3.4:** `S-124-AT01` runs strict-local acceptance on all first-GA platforms after each removal combination and complete removal.
   - [ ] **Sub-task 124.1.3.5:** Execute `RV-30`; retain before/after inventories, revocation evidence, residue scans, strict-local raw results, and independent review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 124.1.AC1:** Given an installed adapter, when removal is approved, then its credentials, tools, events, workers, network scope, cache, schedules, and policy registrations are removed according to retention without harming user/provider or neighboring state.
-- [ ] **Story AC 124.1.AC2:** Given interruption during removal, when recovery runs, then AgentMage reaches a deterministic complete removal or visible blocked state and cannot use partially removed authority.
+- [x] **Story AC 124.1.AC1:** Given an installed adapter, when removal is approved, then its credentials, tools, events, workers, network scope, cache, schedules, and policy registrations are removed according to retention without harming user/provider or neighboring state.
+- [x] **Story AC 124.1.AC2:** Given interruption during removal, when recovery runs, then AgentMage reaches a deterministic complete removal or visible blocked state and cannot use partially removed authority.
 - [ ] **Story AC 124.1.AC3:** Given all connected packs removed, when strict-local acceptance runs, then local behavior, privacy, storage, model, evidence, recovery, and zero-egress guarantees remain unchanged.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 124.AC1:** Every adapter passes independent and aggregate removal on Fedora, Ubuntu, and Windows.
-- [ ] **Sprint AC 124.AC2:** Zero undeclared credential, event, process, socket, schedule, cache, or network authority remains.
-- [ ] **Sprint AC 124.AC3:** Interrupted removal is recoverable and cannot damage unrelated data.
+- [x] **Sprint AC 124.AC2:** Zero undeclared credential, event, process, socket, schedule, cache, or network authority remains.
+- [x] **Sprint AC 124.AC3:** Interrupted removal is recoverable and cannot damage unrelated data.
 - [ ] **Sprint AC 124.AC4:** Strict-local acceptance and 60-minute zero-egress proof pass after removal.
 - [ ] **Sprint AC 124.AC5:** `RV-30` passes with independent evidence.
 
 **Gate decision:** Sprint 124 is PASS only when Story 124.1, all criteria, the removal portions of `AT-ADP-001` and `AT-XTE-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Thirteen locally executable Story 124.1 rows are retained at
+`artifacts/sprints/sprint-124/local-evidence-report.json`; 1,024 deterministic removal plans, 512
+post-removal hostile cases, and 512 interrupted-recovery cases cover the complete inventory,
+preview/action/state/stage matrix, new-identity reconnect, explicit import, and visible residue.
+They retain zero user/provider-resource deletion, neighboring mutation, post-removal admission,
+credential recovery, network attempt, stale-identity reuse, partial authority, unrelated damage,
+or duplicate effect. Native Fedora/Ubuntu/Windows residue inspection, full strict-local acceptance,
+60-minute zero-egress restoration, RV-30, Story 124.2 gateway-profile removal, and independent
+review remain `BLOCKED_EXTERNAL(platform=native Fedora, Ubuntu, and Windows installations with
+installed connected adapters and remote profiles, provider revocation access, process/socket/
+network/credential/cache/database/file/registry/package/schedule/webhook/residue instrumentation,
+and independent review environment, artifact=untouched before/after inventories, revocation and
+retention receipts, interruption traces, residue scans, complete strict-local results, 60-minute
+zero-egress captures, RV-30 and RV-54 removal results, and independent review, action=provision
+native platforms, installed adapters/profiles, provider accounts, instrumentation, and reviewer;
+execute S-124-UT01/ST01/RT01/AT01, Story 124.2 campaigns, RV-30/RV-54 removal portions, and transfer
+untouched evidence, credential=platform, provider, remote-profile, instrumentation, and reviewer
+access, payment=provider, remote inference, hosting, instrumentation, platform, or review costs if
+applicable)`; `substitution_set=empty`. Native platforms: 0. Strict-local reruns: 0. Zero-egress
+minutes: 0. Promotions: 0.
 
 #### [ ] Story 124.2 - Model Gateway Profile Removal and Strict-Local Restoration
 
