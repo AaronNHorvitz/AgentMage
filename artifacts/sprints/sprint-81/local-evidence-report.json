@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_81_local_evidence",
+  "source_revision": "362b2f5b791cf68c442f9e58dbe23c7fe461d0e3",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "kernel/contracts/src/mcp.rs": "3c794e37194085ea625eae4f9529f5cbe10c764d0368e5be04aa929eb36aeb9d",
+    "kernel/engine/src/mcp_registry.rs": "8adead1a47f72bd5c8c3819c7fc50e33d6a7ae14b979b01536d00f7cc79a861b",
+    "kernel/engine/src/mcp_gateway.rs": "7834b3d23dcc94e31f3fc07986eec1a2772fe65c636972531584f95ef42d24e4",
+    "kernel/engine/src/tooling.rs": "67f0bc19387bfdb3f40cd8e5cdb959e4de2d6e7827a109ff1f28bb1e0c4be7ba",
+    "capabilities/read-only/src/artifact.rs": "fb2f0212db74a6d795a3b82a1f5a78c81533fadd03c12b198a1aa0e1a02810ad",
+    "shells/host/Cargo.toml": "b6ad82e6be880f63c24d47a0341748261f2bd747d7a851264b81ab24beacf713",
+    "shells/host/src/lib.rs": "d194653bf5326954e23033d317fa7bc9c524bd9a1dc4f9ea3511f9f391d63ba1",
+    "shells/host/src/runtime_tools.rs": "b5bb30125f3c132f71c568aaf22def298fa61f7d40065e72f6bc662e6a167153",
+    "shells/host/src/mcp_artifact_adapter.rs": "2ba37ebc86d85704b13d8177b2fd9d05521ba053fb02d881f54a5be68ed4aa4c",
+    "docs/guides/mcp-artifact-tools.md": "5d1d3709bb272fb9762f2d2f9d44d404d32ffe879a5bba0c242993b2687345fc",
+    "docs/verification/shared-runtime-mcp-workflow-local-results.md": "1f10d9dd154f14abe50b0c4838c51e90a24f35719bcc9caff790362b2cb325a1",
+    "docs/verification/sprint-81-mcp-adversarial-corpus.json": "dc901c0364cdd1ea08eff116c13d98d3917ba28a5776af51a0986483c7767287",
+    "artifacts/sprints/sprint-80/local-evidence-report.json": "479ffb4e539327876ec16b9e12e4b5d5aea82c98f73a790cd865bdfdf1a3e3d7",
+    "scripts/mcp_artifact_adapter_contract.py": "36fd838a563ac4039ba6dbc3bbd9948871b05d8073c9dd9080dcd2313480d3bd",
+    "tests/test_mcp_artifact_adapter_contract.py": "3f01a86599dc894c1153ff22419d1d63917de067ac1e24bdded4efc888e85c85",
+    "supply-chain/dependency-hashes.sha256": "34e0c78a01b2fe156773f690a2ea7f4290fc321312fb25a24f23e6bcca70a4e0",
+    "supply-chain/dependency-provenance.json": "c9f0609fac8692a56a625cc588ffff05623ca12bffe53eed9734198f5fcdda73",
+    "supply-chain/sbom.cdx.json": "8689d257ed0b299c3f1bfd2bfd402d7825f23d32218c5f7f3c8070b31ac1f98f",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_81_evidence.py": "ec8345201f97c7825cc6d0be1269a253eab05b9e68eac59b143d4dce018df48f",
+    "tests/test_sprint_81_evidence.py": "a47952e318880cc059c5ce45d9364808a1e861d076955c3c2190350f8947a5c3"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "mcp-gateway-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "mcp_",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "3c0baac384f8ae002ac126589ead03935eeb53ee98647598bea3b762b90eb097",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "mcp-artifact-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "mcp_artifact_adapter::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "98471057ecefa147d9e11e7cc4f0389d67fd433d96005f028180ee5644fb55f8",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "mcp-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_mcp_artifact_adapter_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a6707d4eff38012da33ddc34bc6dc076a3b17151cfc9aef223c8790cbe64c3da",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "runtime-schema-contract",
+      "argv": [
+        "npm",
+        "run",
+        "-s",
+        "schemas:test"
+      ],
+      "exit_code": 0,
+      "output_sha256": "ab2bb6825ad5898da0b807e295f072c42c69383f2e8ae72f4f450d71687e9223",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_81_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2c37d50a88147ca2ebd5197d74ee37d462dab650d793512e849814c28d5a38f0",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-GOV-010",
+    "SR-ACC-001",
+    "SR-ACC-002",
+    "SR-ACC-003",
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-AI-005",
+    "SR-TST-002",
+    "SR-TST-004",
+    "SR-TST-006"
+  ],
+  "implemented_contracts": {
+    "gateway_rust_test_count": 7,
+    "artifact_adapter_rust_test_count": 3,
+    "artifact_tool_mapping_count": 7,
+    "adversarial_case_count": 32,
+    "allowed_operation_count": 1,
+    "effect_executor_count": 0,
+    "live_server_count": 0,
+    "native_parity_campaign_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "rust_test_count": 10,
+    "adversarial_case_count": 32,
+    "native_dispatcher_revalidation": true,
+    "single_use_grant_preserved": true,
+    "native_server_execution": false,
+    "native_cleanup_complete": false,
+    "native_parity_complete": false,
+    "independent_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-80-BLOCKED",
+      "owner": "81"
+    },
+    {
+      "code": "NATIVE-MCP-PARITY-ISOLATION-AND-REVIEW-ABSENT",
+      "owner": "81.1.3.2-81.2.3.2"
+    }
+  ],
+  "summary": {
+    "local_sprint_81_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_80_closed": false,
+    "native_mcp_campaign_complete": false,
+    "native_artifact_parity_complete": false,
+    "independent_review_present": false,
+    "release_approval": false
+  }
+}
