@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_88_local_evidence",
+  "source_revision": "4f1174f9494dc7a57cfc385f7a0208dfef18026c",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "capabilities/knowledge/Cargo.toml": "d1aaf75cd939ed948adce94dc56091873a6611fb8f5f8c6dc3a50acf6d0974de",
+    "capabilities/knowledge/src/lib.rs": "fc1ea3df5ff243d341f45e18659c9ef326f39a69d51d1f62bcb841aa6e8cb435",
+    "capabilities/knowledge/src/connector_mutation.rs": "bb5312311f7c44161592a4e6e5400ba52649db66beeb2be1560304ee2281de07",
+    "docs/guides/connector-governance-and-recovery.md": "21cd8709bf4c61500d2e140185e83ce520e97f2357c58c8d8708fe94b43f02dc",
+    "docs/verification/sprint-87-connector-isolation-corpus.json": "86342fc0fc6f47b0e019c53f35bd442a20c81ad7bb47075e4c4bbcaa7fbae485",
+    "docs/verification/sprint-88-connector-write-corpus.json": "d7e3d94d9d166c73d593b579c082001c120f882bbd1d4f1c3eea792d541314a2",
+    "artifacts/sprints/sprint-86/local-evidence-report.json": "01d16bc3678d4158f70a1c61a03ed447eec061afc447698196cbe619fb059ab5",
+    "scripts/connector_mutation_contract.py": "85703ba062fb9c12228860a67bd5c1f1580a453b01aea093159ce5f22334acd9",
+    "tests/test_connector_mutation_contract.py": "ed296098700df88e0105336f3baf23373820bfac937c328bb429ba843a0d15ad",
+    "supply-chain/dependency-hashes.sha256": "9f5c889182d0622ea0f60c251173af6d912e0a147bffa022e52a85e9c1abeee5",
+    "supply-chain/dependency-provenance.json": "49603340d99ef58afe04308786ab9c12aa554cb4b81995b9e1957bb26ef34c0d",
+    "supply-chain/sbom.cdx.json": "3893ad005c677b62eb2737b12a36646f6746db0b425d5d6c047635dfb6342440",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_88_evidence.py": "25d64d21977e0c08fba6ddbbdda18d323a39be2c9ceb21c02ab698ad4964e325",
+    "tests/test_sprint_88_evidence.py": "3dcfd642de2785b783c1114c9c90f8d0ab2f0898ce1e3783be456a775c80962a"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "connector-mutation-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "connector_mutation::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "1404fa399f95a5c59a33dde1dcdbfed4922e12caa5fbb6bb50e8117b5ecff738",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "connector-mutation-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_connector_mutation_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a6707d4eff38012da33ddc34bc6dc076a3b17151cfc9aef223c8790cbe64c3da",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "runtime-schema-contract",
+      "argv": [
+        "npm",
+        "run",
+        "-s",
+        "schemas:test"
+      ],
+      "exit_code": 0,
+      "output_sha256": "764be273fe524fbdc45f5e4d85e3d41279fe488535a67d5862add9d144d84deb",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_88_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-GOV-010",
+    "SR-ACC-001",
+    "SR-ACC-002",
+    "SR-ACC-003",
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-DAT-001",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-NET-003",
+    "SR-NET-004",
+    "SR-NET-005",
+    "SR-NET-006",
+    "SR-OPS-001",
+    "SR-OPS-002",
+    "SR-CIV-001",
+    "SR-CIV-002",
+    "SR-CIV-003",
+    "SR-CIV-004",
+    "SR-CIV-005"
+  ],
+  "implemented_contracts": {
+    "connector_family_count": 7,
+    "rust_test_count": 6,
+    "corpus_case_count": 56,
+    "write_class_count": 7,
+    "result_class_count": 4,
+    "effect_executor_count": 0,
+    "native_mutation_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "rust_test_count": 6,
+    "corpus_case_count": 56,
+    "native_mutation_executed": false,
+    "remote_reconciliation_executed": false,
+    "rollback_executed": false,
+    "independent_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-87-BLOCKED",
+      "owner": "88"
+    },
+    {
+      "code": "NATIVE-CONNECTOR-WRITE-RECOVERY-AND-REVIEW-ABSENT",
+      "owner": "88.1.3.3,88.1.3.5"
+    }
+  ],
+  "summary": {
+    "local_sprint_88_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_87_closed": false,
+    "native_connector_write_complete": false,
+    "native_recovery_complete": false,
+    "independent_review_present": false,
+    "release_approval": false
+  }
+}
