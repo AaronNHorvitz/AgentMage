@@ -226,6 +226,8 @@ pub mod update_maintenance;
 pub mod validation_result;
 /// Trusted validation-template provenance, exact registries, and focused selection.
 pub mod validation_template;
+/// Exact vendor telemetry identities, bounded queries, and observe-only authority.
+pub mod vendor_observability;
 /// Exact chunked source-artifact capture and bounded retrieval for Verified Chat.
 pub mod verified_artifact;
 /// Deterministic context admission and model-delivery coverage receipts.

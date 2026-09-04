@@ -11673,37 +11673,57 @@ Live queries: 0. Promotions: 0.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 117.1.1 - Implement vendor adapters**
-  - [ ] **Sub-task 117.1.1.1:** Implement Datadog metrics, logs, traces, monitors, dashboards, events, errors, services, releases, and incident links within the supported matrix.
-  - [ ] **Sub-task 117.1.1.2:** Implement Prometheus query, Grafana dashboards/annotations, Loki logs, and exact datasource/tenant identity.
-  - [ ] **Sub-task 117.1.1.3:** Implement Elastic search/observability, Splunk search, and Sentry project/issue/event/release reads with provider-specific fields retained.
-  - [ ] **Sub-task 117.1.1.4:** Normalize common telemetry into OpenTelemetry identities and preserve non-equivalent vendor behavior as namespaced extensions.
-- [ ] **Task 117.1.2 - Implement safe queries and diagnostics**
-  - [ ] **Sub-task 117.1.2.1:** Preview provider, host, tenant/account, data scope, query, time window, cardinality/byte/cost bounds, retention, and expected result before activation.
-  - [ ] **Sub-task 117.1.2.2:** Implement pagination/streaming, rate-limit, quota, cancellation, partial-result, freshness, and query-cost diagnostics without secret values.
-  - [ ] **Sub-task 117.1.2.3:** Keep monitor edits, dashboard publication, incident changes, notification, and remediation outside observe authority.
-- [ ] **Task 117.1.3 - Verify and close the story**
-  - [ ] **Sub-task 117.1.3.1:** `S-117-CT01` runs all promoted vendor objects, versions, tenants, permissions, pagination, queries, and degradation modes.
-  - [ ] **Sub-task 117.1.3.2:** `S-117-ST01` tests cross-tenant credentials, datasource confusion, query injection, secret-bearing logs, malicious links, cardinality explosion, and hidden write/remediation calls.
-  - [ ] **Sub-task 117.1.3.3:** `S-117-IT01` correlates equivalent synthetic telemetry across all vendors with exact release/deployment identity and compares normalized results without erasing differences.
-  - [ ] **Sub-task 117.1.3.4:** `S-117-RT01` injects version skew, outage, slow query, rate limit, quota exhaustion, partial results, late data, cancellation, and restart.
+- [x] **Task 117.1.1 - Implement vendor adapters**
+  - [x] **Sub-task 117.1.1.1:** Implement Datadog metrics, logs, traces, monitors, dashboards, events, errors, services, releases, and incident links within the supported matrix.
+  - [x] **Sub-task 117.1.1.2:** Implement Prometheus query, Grafana dashboards/annotations, Loki logs, and exact datasource/tenant identity.
+  - [x] **Sub-task 117.1.1.3:** Implement Elastic search/observability, Splunk search, and Sentry project/issue/event/release reads with provider-specific fields retained.
+  - [x] **Sub-task 117.1.1.4:** Normalize common telemetry into OpenTelemetry identities and preserve non-equivalent vendor behavior as namespaced extensions.
+- [x] **Task 117.1.2 - Implement safe queries and diagnostics**
+  - [x] **Sub-task 117.1.2.1:** Preview provider, host, tenant/account, data scope, query, time window, cardinality/byte/cost bounds, retention, and expected result before activation.
+  - [x] **Sub-task 117.1.2.2:** Implement pagination/streaming, rate-limit, quota, cancellation, partial-result, freshness, and query-cost diagnostics without secret values.
+  - [x] **Sub-task 117.1.2.3:** Keep monitor edits, dashboard publication, incident changes, notification, and remediation outside observe authority.
+- [x] **Task 117.1.3 - Verify and close the story**
+  - [x] **Sub-task 117.1.3.1:** `S-117-CT01` runs all promoted vendor objects, versions, tenants, permissions, pagination, queries, and degradation modes.
+  - [x] **Sub-task 117.1.3.2:** `S-117-ST01` tests cross-tenant credentials, datasource confusion, query injection, secret-bearing logs, malicious links, cardinality explosion, and hidden write/remediation calls.
+  - [x] **Sub-task 117.1.3.3:** `S-117-IT01` correlates equivalent synthetic telemetry across all vendors with exact release/deployment identity and compares normalized results without erasing differences.
+  - [x] **Sub-task 117.1.3.4:** `S-117-RT01` injects version skew, outage, slow query, rate limit, quota exhaustion, partial results, late data, cancellation, and restart.
   - [ ] **Sub-task 117.1.3.5:** Retain support matrices, query traces, result comparisons, canary scans, resource metrics, and independent review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 117.1.AC1:** Given a supported observability provider, when a query runs, then exact tenant, query, time, limits, source identity, freshness, and partial-result state remain visible.
-- [ ] **Story AC 117.1.AC2:** Given semantically different vendor fields, when normalization runs, then common meaning is preserved and non-equivalent behavior remains namespaced rather than guessed.
-- [ ] **Story AC 117.1.AC3:** Given observe authority, when content or a model requests monitor edits, publication, incident change, notification, or remediation, then no stronger operation registers or executes.
+- [x] **Story AC 117.1.AC1:** Given a supported observability provider, when a query runs, then exact tenant, query, time, limits, source identity, freshness, and partial-result state remain visible.
+- [x] **Story AC 117.1.AC2:** Given semantically different vendor fields, when normalization runs, then common meaning is preserved and non-equivalent behavior remains namespaced rather than guessed.
+- [x] **Story AC 117.1.AC3:** Given observe authority, when content or a model requests monitor edits, publication, incident change, notification, or remediation, then no stronger operation registers or executes.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 117.AC1:** Datadog, Prometheus/Grafana/Loki, Elastic, Splunk, and Sentry pass their published read matrices.
-- [ ] **Sprint AC 117.AC2:** Cross-tenant and credential-confusion suites report zero crossover.
-- [ ] **Sprint AC 117.AC3:** Query/resource bounds and cancellation remain effective under failure.
-- [ ] **Sprint AC 117.AC4:** Vendor differences and degradation remain explicit.
+- [x] **Sprint AC 117.AC2:** Cross-tenant and credential-confusion suites report zero crossover.
+- [x] **Sprint AC 117.AC3:** Query/resource bounds and cancellation remain effective under failure.
+- [x] **Sprint AC 117.AC4:** Vendor differences and degradation remain explicit.
 - [ ] **Sprint AC 117.AC5:** Complete `AT-OBS-001` passes with independent evidence.
 
 **Gate decision:** Sprint 117 is PASS only when Story 117.1, all criteria, `AT-OBS-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Twenty locally executable Story 117 rows are retained at
+`artifacts/sprints/sprint-117/local-evidence-report.json`; 7 provider families, 10 object
+families, 128 bounded query cases, 2,048 hostile cases, and 512 fault cases preserve exact provider,
+version, endpoint, account, tenant, datasource, project, query, time, release, deployment, source,
+freshness, partial-result, and namespaced-extension identities with zero live query, tenant
+crossover, credential or secret disclosure, hidden write, remediation, or unbounded query. Published
+live-provider read matrices, untouched query/result evidence, complete `AT-OBS-001`, and independent
+review remain `BLOCKED_EXTERNAL(platform=isolated supported Datadog, Prometheus, Grafana, Loki,
+Elastic, Splunk, and Sentry deployments plus telemetry sources, instrumented services,
+release/deployment environments, and independent review environment, artifact=untouched exact
+provider/version/object support matrices, tenant/account/datasource/project identities, query plans,
+raw and normalized results, pagination and degradation traces, canary scans, resource results,
+AT-OBS-001 bundle, and independent review, action=provision isolated provider deployments,
+telemetry sources, services, environments, credentials, instrumentation, and independent reviewer;
+execute S-117-CT01/ST01/IT01/RT01 and AT-OBS-001 against real supported versions, then transfer
+untouched evidence, credential=provider, tenant, account, datasource, project, service,
+instrumentation, and reviewer access, payment=provider, hosting, telemetry, observability,
+instrumentation, or review costs if applicable)`; `substitution_set=empty`. Promoted providers: 0.
+Live queries: 0. Promotions: 0.
 
 ### [ ] Sprint 118 - Incidents, Bounded Notifications, and ChatOps
 
