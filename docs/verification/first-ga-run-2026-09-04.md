@@ -2475,3 +2475,34 @@ rows are dependent on the recorded external tuples. Cumulative closures: 1,353; 
 
 Exact next action: Sprint 128 kernel-enforced Autonomy Center. Cumulative closures: 1,373; next
 checkpoint: 1,375.
+
+## Batch 131 — Sprint 128 kernel-enforced Autonomy Center
+
+### Completed
+
+- Closed 20 local Sprint 128 rows: six closed autonomy levels, seven-origin deterministic policy
+  intersection, unrepresentable money movement and cloud mutation, a display-only native VS Code
+  projection, fresh revision and one-use approval enforcement, expiry/budget/exact-field checks,
+  emergency disablement, and the AT-AUT-001/RV-31 mutation corpus. The corpus binds 2,520 cases;
+  authority broadening: 0; shell authority: 0; unclassified in-flight outcomes: 0. Batch closures:
+  20. Cumulative closures: 1,393. Lifecycle promotions: 0.
+- Commits: `97d9278e` (kernel/VS Code contracts, corpus, tests, closures, traceability and supply
+  chain), `79d0300d` (Sprint 128 report), and `1ecd5279` (13 downstream bound artifacts).
+  Including this log: 4; commits/item: 0.20. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 4 focused Rust tests, 7 focused Python tests, the 2,520-case corpus, Sprint evidence,
+  dependency, traceability, supply-chain, Story 1.2, and Story 3.1 configuration chains. Final
+  full gate: 696.28 seconds, stopping only at retained Story 6.1 Podman after every preceding gate
+  passed. Supply-chain builds: 3; final provenance regeneration followed the last source fix.
+- Self-recovery: 5. Added required Rust public documentation; fixed a real level-enforcement gap
+  that allowed a write enumerated under a read-only ceiling; resolved literal `HEAD` to the exact
+  immutable commit; replaced an unsupported report `--check` invocation with its validation mode;
+  replaced the nonexistent `scripts/traceability.py` check with `npm run -s traceability:check`.
+- Sprint 128 remains `UPSTREAM-SPRINT-127-BLOCKED`; `substitution_set=empty`. Full-chain blocker:
+  `blocked: host change required — run npm run -s docs:check outside the restricted filesystem
+  sandbox with the current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 129 connected identity and work graph. Cumulative closures: 1,393; next
+checkpoint: 1,400.
