@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "case_count": 64,
+  "categories": {"threat": 8, "allowlist": 8, "binding": 8, "worktree": 8, "activation": 8, "recovery": 8, "control": 8, "attack": 8},
+  "cases": [
+    "threat-prior-config", "threat-live-approval", "threat-recipient", "threat-payload", "threat-shell", "threat-force", "threat-self-edit", "threat-aggregation",
+    "allowlist-owned-log", "allowlist-owned-task", "allowlist-task-branch", "allowlist-message-deny", "allowlist-shell-deny", "allowlist-destructive-deny", "allowlist-variable-deny", "allowlist-judgment-deny",
+    "binding-template", "binding-workspace", "binding-worktree", "binding-model", "binding-tools", "binding-destination", "binding-payload-budget", "binding-expiry-stop",
+    "worktree-dedicated", "worktree-ownership", "worktree-cross-schedule", "worktree-cross-workspace", "worktree-unowned-path", "worktree-stale", "worktree-cleanup", "worktree-no-force",
+    "activation-dry-run", "activation-preview", "activation-distinct-approval", "activation-idempotency", "activation-current-state", "activation-expired", "activation-paused", "activation-revoked",
+    "recovery-precondition", "recovery-stale-stop", "recovery-cancel", "recovery-crash", "recovery-verified", "recovery-not-applied", "recovery-unknown", "recovery-no-retry",
+    "control-active", "control-pause", "control-revoke", "control-expire", "control-inspect", "control-emergency", "control-descendants", "control-model-independent",
+    "attack-recipient-selection", "attack-payload-selection", "attack-arbitrary-shell", "attack-force", "attack-self-edit", "attack-recursive-schedule", "attack-authority-expansion", "attack-prompt-injection"
+  ],
+  "local_contract_passed": true,
+  "native_scheduled_effect_executed": false,
+  "emergency_stop_executed": false,
+  "independent_review_present": false,
+  "substitution_set": []
+}

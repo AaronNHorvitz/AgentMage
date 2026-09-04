@@ -161,6 +161,8 @@ pub mod runtime_loop;
 pub mod runtime_projection;
 /// Deterministic, non-authoritative selection of one safe action after runtime interruption.
 pub mod runtime_recovery;
+/// Predeclared, threat-modeled unattended state-change admission without effect authority.
+pub mod scheduled_authority;
 /// Bounded, configuration-bound session environment and provenance capture.
 pub mod session_environment;
 /// Atomic source refresh, invalidation, retention, hold, deletion, and collection.

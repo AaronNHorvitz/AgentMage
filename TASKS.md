@@ -9834,25 +9834,25 @@ if applicable)`; `substitution_set=empty`. Native schedules: 0. Notifications de
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 91.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 91.1.1.1** (legacy `S-070-I01`): Define an unattended-authority threat model that distinguishes prior user configuration from live action approval.
-  - [ ] **Sub-task 91.1.1.2** (legacy `S-070-I02`): Define which repeatable actions may use predeclared narrow grants and which always require live approval.
-  - [ ] **Sub-task 91.1.1.3** (legacy `S-070-I03`): Bind schedules to exact task template, workspace, worktree, model, tools, destinations, payload constraints, budgets, expiry, and stop conditions.
-  - [ ] **Sub-task 91.1.1.4** (legacy `S-070-I04`): Use dedicated worktrees and file ownership for repository schedules.
-  - [ ] **Sub-task 91.1.1.5** (legacy `S-070-I05`): Require dry-run evidence and an exact activation preview before enabling a state-changing schedule.
-  - [ ] **Sub-task 91.1.1.6** (legacy `S-070-I06`): Implement lease, idempotency, precondition recheck, stale-state stop, cancellation propagation, and post-run verification.
-  - [ ] **Sub-task 91.1.1.7** (legacy `S-070-I07`): Implement pause, revoke, expire, inspect, and emergency-stop controls independent of the model.
-  - [ ] **Sub-task 91.1.1.8** (legacy `S-070-I08`): Prohibit autonomous recipient selection, open-ended messaging bots, arbitrary shell, force operations, self-edited schedules, and self-expanded authority.
+- [x] **Task 91.1.1 - Implement the bounded story:** all eight source sub-tasks are retained in one inert scheduled-authority boundary.
+  - [x] **Sub-task 91.1.1.1** (legacy `S-070-I01`): Define an unattended-authority threat model that distinguishes prior user configuration from live action approval. Evidence: every grant binds both digests and rejects equality between saved configuration and activation approval.
+  - [x] **Sub-task 91.1.1.2** (legacy `S-070-I02`): Define which repeatable actions may use predeclared narrow grants and which always require live approval. Evidence: three fixed repeatable classes are predeclarable; messaging, shell, and destructive classes are denied.
+  - [x] **Sub-task 91.1.1.3** (legacy `S-070-I03`): Bind schedules to exact task template, workspace, worktree, model, tools, destinations, payload constraints, budgets, expiry, and stop conditions. Evidence: every field is mandatory and hash-bound in `ScheduledAuthorityGrant`.
+  - [x] **Sub-task 91.1.1.4** (legacy `S-070-I04`): Use dedicated worktrees and file ownership for repository schedules. Evidence: exact worktree and ownership-manifest digests survive into every preview.
+  - [x] **Sub-task 91.1.1.5** (legacy `S-070-I05`): Require dry-run evidence and an exact activation preview before enabling a state-changing schedule. Evidence: dry-run, preview, and distinct activation-approval digests are mandatory.
+  - [x] **Sub-task 91.1.1.6** (legacy `S-070-I06`): Implement lease, idempotency, precondition recheck, stale-state stop, cancellation propagation, and post-run verification. Evidence: the Sprint 90 lease joins a grant idempotency key and exact current refresh; drift stops and unknown results block retry.
+  - [x] **Sub-task 91.1.1.7** (legacy `S-070-I07`): Implement pause, revoke, expire, inspect, and emergency-stop controls independent of the model. Evidence: the closed control taxonomy admits execution only in `Active` and is evaluated without a model.
+  - [x] **Sub-task 91.1.1.8** (legacy `S-070-I08`): Prohibit autonomous recipient selection, open-ended messaging bots, arbitrary shell, force operations, self-edited schedules, and self-expanded authority. Evidence: live-judgment/destructive classes and `self_modified=true` fail closed.
 
-- [ ] **Task 91.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 91.1.2.1:** Unattended-authority threat model and action allowlist.
-  - [ ] **Sub-task 91.1.2.2:** Predeclared schedule grant schema.
-  - [ ] **Sub-task 91.1.2.3:** State-changing schedule dry-run and activation interface.
-  - [ ] **Sub-task 91.1.2.4:** Adversarial unattended-action corpus.
+- [x] **Task 91.1.2 - Produce reviewable artifacts:** all four artifacts are retained in source, guide, 64-case corpus, validator, tests, and report.
+  - [x] **Sub-task 91.1.2.1:** Unattended-authority threat model and action allowlist. Evidence: the guide and grant bind threat model/allowlist separately.
+  - [x] **Sub-task 91.1.2.2:** Predeclared schedule grant schema. Evidence: the closed serde grant denies missing or widened fields.
+  - [x] **Sub-task 91.1.2.3:** State-changing schedule dry-run and activation interface. Evidence: `admit_scheduled_authority` returns an inert exact preview after validation.
+  - [x] **Sub-task 91.1.2.4:** Adversarial unattended-action corpus. Evidence: 64 cases cover threat, allowlist, binding, worktree, activation, recovery, control, and attack states.
 
 - [ ] **Task 91.1.3 - Verify and close the story**
-  - [ ] **Sub-task 91.1.3.1:** `S-070-UT01` validates predeclared grants for exact template/workspace/worktree/model/tool/destination/payload constraint/budget/expiry/stop fields; mutate each and assert no execution.
-  - [ ] **Sub-task 91.1.3.2:** `S-070-ST01` attempts autonomous recipient/payload selection, arbitrary shell, force operation, self-edited schedule, recursive scheduling, authority aggregation, stale state, and prompt-driven expansion; assert denial.
+  - [x] **Sub-task 91.1.3.1:** `S-070-UT01` validates predeclared grants for exact template/workspace/worktree/model/tool/destination/payload constraint/budget/expiry/stop fields; mutate each and assert no execution. Evidence: 6 Rust tests and 64 corpus cases validate exact binding and zero executors.
+  - [x] **Sub-task 91.1.3.2:** `S-070-ST01` attempts autonomous recipient/payload selection, arbitrary shell, force operation, self-edited schedule, recursive scheduling, authority aggregation, stale state, and prompt-driven expansion; assert denial. Evidence: all eight attack families are retained and forbidden classes, self-modification, inactive control, and drift fail closed.
   - [ ] **Sub-task 91.1.3.3:** `S-070-IT01` performs dry run, exact activation preview, approved fixture action, precondition refresh, postcondition verify, and history; assert only allowlisted repeatable effect.
   - [ ] **Sub-task 91.1.3.4:** `S-070-RT01` revokes, pauses, expires, emergency-stops, crashes, and creates uncertain external effects; assert descendant termination, no blind retry, reconciliation, and independently operable controls.
   - [ ] **Sub-task 91.1.3.5 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-001` through `SR-ACC-007`, `SR-AI-004`/`SR-AI-005`, `SR-OPS-001`/`SR-OPS-002`/`SR-OPS-006`, `SR-TST-005`/`SR-TST-011`; retain threat model, grant mutations, dry-run/activation evidence, emergency-stop traces, and independent unattended-authority review.
@@ -9864,13 +9864,30 @@ if applicable)`; `substitution_set=empty`. Native schedules: 0. Notifications de
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 91.AC1:** Only explicitly allowlisted repeatable effects can use a predeclared schedule grant.
-- [ ] **Sprint AC 91.AC2:** Changed state, payload, destination, workspace, worktree, tool, policy, or schedule invalidates execution.
+- [x] **Sprint AC 91.AC1:** Only explicitly allowlisted repeatable effects can use a predeclared schedule grant. Evidence: exactly three repeatable classes pass `predeclarable`.
+- [x] **Sprint AC 91.AC2:** Changed state, payload, destination, workspace, worktree, tool, policy, or schedule invalidates execution. Evidence: approved/current refresh equality binds every mutable family.
 - [ ] **Sprint AC 91.AC3:** Cancellation, expiry, revocation, and emergency stop terminate all descendants.
 - [ ] **Sprint AC 91.AC4:** Uncertain results stop and reconcile rather than retrying blindly.
-- [ ] **Sprint AC 91.AC5:** No schedule can create, edit, or broaden itself.
+- [x] **Sprint AC 91.AC5:** No schedule can create, edit, or broaden itself. Evidence: self-modification is an explicit denial and no schedule-management executor exists.
 
 **Gate decision:** Sprint 91 is PASS only when Story 91.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Local threat-model, allowlist, exact grant, worktree ownership,
+dry-run, activation, drift, control, and no-self-modification contracts are retained at
+`artifacts/sprints/sprint-91/local-evidence-report.json`; Task 91.1.3, native integration Sub-task
+91.1.3.3, recovery Sub-task 91.1.3.4, product-security Sub-task 91.1.3.5, both Story AC,
+Sprint 91, Sprint AC91.AC3, Sprint AC91.AC4, and dependent gates remain
+`BLOCKED_EXTERNAL(platform=native state-changing scheduler/worktree/effect environments plus
+independent unattended-authority security review, artifact=untouched threat-model and allowlist
+review, grant-mutation results, dry-run/activation previews, exact effect pre/post snapshots,
+dedicated-worktree and ownership traces, stale-state results, pause/revoke/expire/emergency-stop
+and descendant-termination traces, uncertain-effect reconciliation, history, and reviewer bundle,
+action=provision exact durable scheduler storage, dedicated repository worktrees, allowlisted effect
+fixtures, mutation/crash/control instrumentation, and independent unattended-authority reviewer,
+execute S-070-IT01/RT01 and the native Sprint 91 product-security campaign, and transfer untouched
+bundles, credential=scheduler-storage, repository/worktree, effect fixture, instrumentation, and
+reviewer access, payment=platform, storage, repository, fixture, instrumentation, or review costs
+if applicable)`; `substitution_set=empty`. Native scheduled effects: 0. Emergency stops: 0.
 
 ### [ ] Sprint 92 - Agent Definitions and Registry
 
