@@ -1082,3 +1082,64 @@ Cumulative closures are 789; next checkpoint is 800.
 Exact next action: all remaining Sprint 96 rows depend on upstream or the exact external tuple;
 continue Decision 0021 ordering at Sprint 97 backup and migration. Cumulative closures are 798;
 next checkpoint is 800.
+
+## Batch 101 — Sprints 97–98 backup, migration, safe mode, and recovery
+
+### Completed
+
+- Closed 9 local Sprint 97 rows: Task 97.1.2 and both artifact/traceability sub-tasks;
+  Sub-tasks 97.1.3.1 through 97.1.3.3; Story AC 97.1.AC3; and Sprint AC 97.AC3 and
+  97.AC4. The backup/migration contract binds 8 exact domains, distinct-key encrypted-store
+  backup and fresh-candidate restore, exact machine/adapter/schema/model/package identities,
+  zero secret or plaintext export, zero live replacement, and 64 cases across 16 classes.
+- Closed 16 local Sprint 98 rows: Task 98.1.1 and all 4 implementation/test/guide sub-tasks;
+  Sub-tasks 98.1.2.2 through 98.1.2.4; Sub-tasks 98.1.3.1 through 98.1.3.3; Story AC
+  98.1.AC2; and Sprint AC 98.AC2 through 98.AC5. Safe mode disables 8 optional authority
+  classes while retaining diagnostics/evidence/recovery; content-free diagnostics cover 6
+  subsystems; and 72 cases cover 9 maintenance failure classes with prior-or-complete-new-state
+  expectations. Native backup/restore/migration/recovery executions: 0. Independent reviews: 0.
+  Promotions: 0. Substitutions: 0. Batch closures: 25. Cumulative closed items: 823.
+- Commits: `93174aaa` (backup/migration/recovery source, guide, corpora, tests, truthful closures,
+  and final supply-chain carrier), `7bd3fc14` (source-bound Sprint 97 and Sprint 98 reports), and
+  `6fbd0c49` (one affected downstream evidence regeneration pass). Commits including log: 4.
+  Commits per closed item: 0.16. Review pins advanced: 0; complete `REVIEWED_PATHS`
+  intersection across all 35 Batch 101 changed or regenerated paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 13 Rust cases including 7 encrypted operational-store backup/restore
+  cases, 6 corpus-contract tests, 6 evidence mutation tests, strict kernel Clippy, Rust format,
+  Python compilation, Markdown, 64 backup/migration cases, 72 maintenance recovery cases,
+  supply-chain currentness, product CI, 13 affected downstream checks/test groups, and both
+  source-bound reports passed. Supply-chain builds: 1. Corpus generations: 2. Local report
+  builds: 2. Downstream evidence regeneration passes: 1. Recovery iterations: 0. The full
+  chain ran 707.56 seconds and stopped only at the retained Story 6.1 rootless-Podman
+  prerequisite after every preceding gate passed. Recorded gate wall seconds: 708.
+- Complete native backup/restore and supported migration remain
+  `BLOCKED_EXTERNAL(platform=supported source/destination machines and platform adapters,
+  artifact=untouched encrypted backup sets, source/destination configuration and canonical
+  identity, approved knowledge/index/manifest/package/conversation/audit inventories, migration
+  previews, compatibility results, pre/post/rollback snapshots, and independent review bundle,
+  action=provision supported populated machines and distinct backup-key custody, execute S-073
+  complete backup, restore, and cross-machine migration campaign, independently review it, and
+  transfer untouched bundles, credential=source/destination machine, secret-store, backup-key-
+  custody, package/model, and reviewer access, payment=machine, platform, storage, key-custody,
+  package/model, or review costs if applicable)`; `substitution_set=empty`.
+- Native populated-system recovery and clean-runner verification remain
+  `BLOCKED_EXTERNAL(platform=supported populated native systems, cross-platform migration targets,
+  and two clean release runners, artifact=untouched update/rollback/backup/restore/migration/safe-
+  mode/repair/uninstall results, privacy canary scans, pre/post/crash-point snapshots, rebuilt
+  package/signature/hash/SBOM/provenance/CBOM/Model-BOM comparisons, and independent review bundle,
+  action=provision supported populated systems and clean runners, execute S-073-IT01/S-073-AT01
+  plus native failure injection at every maintenance transition, independently verify and review
+  all bundles, and transfer untouched evidence, credential=platform, secret-store, signing/key-
+  custody, package/model, runner, instrumentation, and reviewer access, payment=platform, signing,
+  runner, instrumentation, package/model, or review costs if applicable)`;
+  `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprints 97–98 rows depend on upstream or exact external tuples;
+continue Decision 0021 ordering at Sprint 99 cross-interface authority and isolation. Cumulative
+closures are 823; write the required 800-item checkpoint after push.
