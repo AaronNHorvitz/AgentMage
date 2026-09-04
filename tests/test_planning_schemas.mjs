@@ -436,6 +436,9 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "github-read-receipt",
     "hosted-source-identity",
     "hosted-repository-view",
+    "hosted-local-relationship",
+    "github-triage-item",
+    "hosted-event-receipt",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1777,6 +1780,20 @@ test("hosted repository records reject mutable identity, completeness, and effec
     ["hosted-source-identity", (value) => { value.immutable_revision = "main"; }],
     ["hosted-repository-view", (value) => { value.hosted_state_changed = true; }],
     ["hosted-repository-view", (value) => { value.next_page_cursor_sha256 = "a".repeat(64); }],
+  ]) {
+    const changed = load(name); mutate(changed);
+    assert.equal(validateRuntimeRecord(name, changed, runtimeValidators).valid, false);
+  }
+});
+
+test("GitHub triage records reject publication, provider effects, and replay claims", () => {
+  const load = (name) => JSON.parse(fs.readFileSync(path.join(ROOT, `schemas/runtime/examples/${name}.valid.json`), "utf8"));
+  for (const [name, mutate] of [
+    ["hosted-local-relationship", (value) => { value.resolved = true; value.exact_revision_match = null; }],
+    ["github-triage-item", (value) => { value.draft.published = true; }],
+    ["github-triage-item", (value) => { value.provider_state_changed = true; }],
+    ["hosted-event-receipt", (value) => { value.duplicate = true; }],
+    ["hosted-event-receipt", (value) => { value.local_task_created = true; }],
   ]) {
     const changed = load(name); mutate(changed);
     assert.equal(validateRuntimeRecord(name, changed, runtimeValidators).valid, false);

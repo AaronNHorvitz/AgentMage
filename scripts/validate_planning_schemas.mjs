@@ -133,6 +133,9 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "github-read-receipt",
   "hosted-source-identity",
   "hosted-repository-view",
+  "hosted-local-relationship",
+  "github-triage-item",
+  "hosted-event-receipt",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -2180,6 +2183,20 @@ function runtimeSemanticErrors(recordType, data) {
           (data.missing_permission_scopes ?? []).length !== 0 ||
           (data.unavailable_families ?? []).length !== 0 || data.overall_coverage !== "complete"))) {
       errors.push("hosted repository coverage or mutation state drifted");
+    }
+  } else if (recordType === "hosted-local-relationship") {
+    if (data.resolved === true && data.exact_revision_match === null) {
+      errors.push("resolved hosted/local relationship lacks an identity disposition");
+    }
+  } else if (recordType === "github-triage-item") {
+    if (data.provider_state_changed !== false ||
+        (data.draft !== null && (data.draft.published !== false || data.draft.provider_effect_count !== 0))) {
+      errors.push("GitHub triage draft or provider effect drifted");
+    }
+  } else if (recordType === "hosted-event-receipt") {
+    if (data.accepted !== true || data.duplicate !== false || data.stale !== false ||
+        data.provider_state_changed !== false || data.local_task_created !== false) {
+      errors.push("hosted event admission authority drifted");
     }
   } else if (recordType === "word-inspection-report") {
     const parts = data.parts ?? [];

@@ -8567,43 +8567,63 @@ platform, and reviewer access, payment=GitHub, licenses, hardware, or review cos
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 73.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 73.1.1.1** (legacy `S-060-I01`): Inspect issues with authors, states, types, labels, assignees, milestones, project fields, comments, reactions, links, dependencies, timeline, and closing reason.
-  - [ ] **Sub-task 73.1.1.2** (legacy `S-060-I02`): Build read-only triage for unassigned, stale, blocked, duplicate, dependency-linked, recently changed, and user-selected work.
-  - [ ] **Sub-task 73.1.1.3** (legacy `S-060-I03`): Inspect pull requests with base and head, forks, commits, files, patches, comments, threads, reviews, labels, milestones, issues, draft state, mergeability, and update status.
-  - [ ] **Sub-task 73.1.1.4** (legacy `S-060-I04`): Inspect checks, workflow runs, jobs, steps, annotations, summaries, logs, artifacts, attempts, cancellations, reruns, and exact tested commit.
-  - [ ] **Sub-task 73.1.1.5** (legacy `S-060-I05`): Inspect notifications for reviews, assignments, mentions, failing checks, releases, and watched repositories with local deduplication and read state.
-  - [ ] **Sub-task 73.1.1.6** (legacy `S-060-I06`): Ingest user-initiated event updates with signature and replay protection when a bounded webhook or polling adapter is approved.
-  - [ ] **Sub-task 73.1.1.7** (legacy `S-060-I07`): Link hosted objects to local repository, branch, worktree, commit, task, decision, and evidence records.
-  - [ ] **Sub-task 73.1.1.8** (legacy `S-060-I08`): Build draft issue, pull-request, and review packages locally without submitting them.
+- [x] **Task 73.1.1 - Implement the bounded story**
+  - [x] **Sub-task 73.1.1.1** (legacy `S-060-I01`): Inspect issues with authors, states, types, labels, assignees, milestones, project fields, comments, reactions, links, dependencies, timeline, and closing reason. Evidence: normalized issue observations bind immutable source, state, content digest, permissions, freshness, coverage, and uncertainty while the corpus enumerates nested issue fields.
+  - [x] **Sub-task 73.1.1.2** (legacy `S-060-I02`): Build read-only triage for unassigned, stale, blocked, duplicate, dependency-linked, recently changed, and user-selected work. Evidence: the closed ten-reason triage projection records these states without effects.
+  - [x] **Sub-task 73.1.1.3** (legacy `S-060-I03`): Inspect pull requests with base and head, forks, commits, files, patches, comments, threads, reviews, labels, milestones, issues, draft state, mergeability, and update status. Evidence: PR/review/thread observations bind exact base/head and expose edit, moved-line, coverage, and currentness state.
+  - [x] **Sub-task 73.1.1.4** (legacy `S-060-I04`): Inspect checks, workflow runs, jobs, steps, annotations, summaries, logs, artifacts, attempts, cancellations, reruns, and exact tested commit. Evidence: check/workflow observations and corpus cases retain the immutable tested revision, state, attempts, and uncertainty.
+  - [x] **Sub-task 73.1.1.5** (legacy `S-060-I05`): Inspect notifications for reviews, assignments, mentions, failing checks, releases, and watched repositories with local deduplication and read state. Evidence: notification observations share stable identities and deterministic triage/dedup reasons.
+  - [x] **Sub-task 73.1.1.6** (legacy `S-060-I06`): Ingest user-initiated event updates with signature and replay protection when a bounded webhook or polling adapter is approved. Evidence: the pure admission contract accepts only user-initiated, fresh, externally signature-verified, unseen delivery observations and performs no ingestion effect.
+  - [x] **Sub-task 73.1.1.7** (legacy `S-060-I07`): Link hosted objects to local repository, branch, worktree, commit, task, decision, and evidence records. Evidence: the closed relationship binds every named identity and exact revision-match disposition.
+  - [x] **Sub-task 73.1.1.8** (legacy `S-060-I08`): Build draft issue, pull-request, and review packages locally without submitting them. Evidence: three draft kinds require immutable base/content identity, published false, and zero provider effects.
 
-- [ ] **Task 73.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 73.1.2.1:** Issue, pull-request, review, check, and notification read tools.
-  - [ ] **Sub-task 73.1.2.2:** Hosted-to-local relationship schema.
-  - [ ] **Sub-task 73.1.2.3:** Read-only triage views and local draft packages.
-  - [ ] **Sub-task 73.1.2.4:** Event signature and replay-protection report.
+- [x] **Task 73.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 73.1.2.1:** Issue, pull-request, review, check, and notification read tools. Evidence: pure seven-kind observation and triage module.
+  - [x] **Sub-task 73.1.2.2:** Hosted-to-local relationship schema. Evidence: closed relationship runtime schema and example.
+  - [x] **Sub-task 73.1.2.3:** Read-only triage views and local draft packages. Evidence: closed triage schema with effect-free draft format.
+  - [x] **Sub-task 73.1.2.4:** Event signature and replay-protection report. Evidence: event receipt schema, focused replay cases, and source-bound local report.
 
 - [ ] **Task 73.1.3 - Verify and close the story**
-  - [ ] **Sub-task 73.1.3.1:** `S-060-UT01` normalizes issue/PR/review/thread/check/workflow/notification states including pagination, edits, deletion, moved lines, partial permissions, and unknown provider fields; assert stable identity and freshness.
-  - [ ] **Sub-task 73.1.3.2:** `S-060-UT02` correlates hosted commits/lines/checks/reviews with local repository/worktree evidence; assert exact base/head and explicit unresolved relationships.
-  - [ ] **Sub-task 73.1.3.3:** `S-060-ST01` replays, reorders, duplicates, forges, delays, and mutates event fixtures and embeds prompt injections in every hosted text field; assert signature/idempotency/freshness handling and no authority change.
+  - [x] **Sub-task 73.1.3.1:** `S-060-UT01` normalizes issue/PR/review/thread/check/workflow/notification states including pagination, edits, deletion, moved lines, partial permissions, and unknown provider fields; assert stable identity and freshness. Evidence: focused currentness cases cover all seven kinds and each incomplete state.
+  - [x] **Sub-task 73.1.3.2:** `S-060-UT02` correlates hosted commits/lines/checks/reviews with local repository/worktree evidence; assert exact base/head and explicit unresolved relationships. Evidence: relationship records bind exact hosted/local revisions and nullable unresolved identities.
+  - [x] **Sub-task 73.1.3.3:** `S-060-ST01` replays, reorders, duplicates, forges, delays, and mutates event fixtures and embeds prompt injections in every hosted text field; assert signature/idempotency/freshness handling and no authority change. Evidence: focused signature/replay/staleness mutations and the hostile corpus fail closed while imported authority is rejected.
   - [ ] **Sub-task 73.1.3.4:** `S-060-IT01` produces triage views and local draft responses/fixes from read-only data, then inspects provider calls; assert zero comment, label, assignment, review, workflow, branch, or publication mutation.
   - [ ] **Sub-task 73.1.3.5 - Product security evidence:** Map `SR-ACC-007`/`SR-ACC-008`, `SR-AI-005`/`SR-AI-007`/`SR-AI-010`, `SR-OPS-001`/`SR-OPS-002`, `SR-TST-004`; retain normalized corpus, correlation results, replay/signature matrix, API method trace, and no-mutation snapshots.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 73.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every triage item exposes hosted identity, current state, source evidence, uncertainty, permission gaps, and local draft status without representing drafts as published.
-- [ ] **Story AC 73.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then event duplication/replay and provider inconsistency cannot duplicate local tasks, erase history, or silently mark stale findings current.
+- [x] **Story AC 73.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every triage item exposes hosted identity, current state, source evidence, uncertainty, permission gaps, and local draft status without representing drafts as published. Evidence: the triage record requires each field and rejects published drafts.
+- [x] **Story AC 73.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then event duplication/replay and provider inconsistency cannot duplicate local tasks, erase history, or silently mark stale findings current. Evidence: duplicate deliveries fail, accepted receipts create no task, and inconsistent observations clear currentness without deleting history.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 73.AC1:** Triage and draft packages reflect exact hosted state and immutable identifiers.
-- [ ] **Sprint AC 73.AC2:** Changed base, moved lines, added commits, stale reviews, and missing permissions are visible.
-- [ ] **Sprint AC 73.AC3:** No comment, label, assignment, review, workflow, branch, or notification state is changed.
-- [ ] **Sprint AC 73.AC4:** Event replay and invalid signatures are rejected.
-- [ ] **Sprint AC 73.AC5:** Connector data remains sensitivity-labeled, retained, deletable, and untrusted.
+- [x] **Sprint AC 73.AC1:** Triage and draft packages reflect exact hosted state and immutable identifiers. Evidence: immutable source/base/content identities are mandatory.
+- [x] **Sprint AC 73.AC2:** Changed base, moved lines, added commits, stale reviews, and missing permissions are visible. Evidence: base/head, edit/moved-line, coverage, update time, and uncertainty fields are explicit.
+- [x] **Sprint AC 73.AC3:** No comment, label, assignment, review, workflow, branch, or notification state is changed. Evidence: provider effect fields are fixed zero/false and no mutation operation exists.
+- [x] **Sprint AC 73.AC4:** Event replay and invalid signatures are rejected. Evidence: focused cases return stable replay and invalid-signature errors.
+- [x] **Sprint AC 73.AC5:** Connector data remains sensitivity-labeled, retained, deletable, and untrusted. Evidence: observations/drafts retain closed classification and import no authority; Sprint 70 remains the sole cache-retention owner.
 
 **Gate decision:** Sprint 73 is PASS only when Story 73.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** **BLOCKED.** Local observation, triage, relationship, draft, and event-admission
+contracts pass; see `artifacts/sprints/sprint-73/local-evidence-report.json`. Actual provider-call
+inspection, cryptographic signature verification, and hosted/local correlation are
+`BLOCKED_EXTERNAL(platform=approved credentialed GitHub host, bounded webhook or polling adapter,
+and exact local worktree, artifact=untouched issue/PR/review/check/notification observations,
+signature verification, triage/draft, hosted/local correlation, provider-call trace, and
+no-mutation snapshots, action=provision the approved account, fixture repository, credential,
+event endpoint, signing secret, and local worktree, execute S-060-IT01, and transfer the untouched
+bundle, credential=GitHub account, repository, webhook signing secret, and endpoint access,
+payment=GitHub Enterprise, hosting, or endpoint costs if applicable)`; `substitution_set=empty`.
+Native replay/signature, hostile-content, API trace, manual-fuzz, and independent review evidence is
+`BLOCKED_EXTERNAL(platform=native credentialed GitHub and supported desktop environments plus
+independent review, artifact=untouched normalized corpus, correlation results, replay/signature
+matrix, API method trace, no-mutation snapshots, manual-fuzz, and review bundles, action=provision
+exact accounts, credentials, event endpoint, signing secret, Windows image, physical Mac,
+platforms, and reviewer, execute the pinned Sprint 73 campaigns, and transfer untouched bundles,
+credential=GitHub, endpoint, signing secret, Windows image, physical Mac, platform, and reviewer
+access, payment=GitHub, hosting, licenses, hardware, or review costs if applicable)`;
+`substitution_set=empty`. No story, sprint, platform, product, or release gate is closed.
 
 ### [ ] Sprint 74 - Pull-Request Worktrees and Local Review Intelligence
 

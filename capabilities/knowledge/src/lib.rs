@@ -13,6 +13,7 @@ mod document_control_skills;
 mod domain;
 mod executive_skills;
 mod github_provider;
+mod github_triage;
 mod hosted_repository;
 mod image_workflows;
 mod index;
@@ -115,6 +116,11 @@ pub use github_provider::{
     GithubProviderError, GithubReadObservation, GithubReadOperation, GithubReadReceipt,
     GithubReadRequest, GithubReadState, GithubTransport, admit_github_authentication,
     authorize_github_read, record_github_read,
+};
+pub use github_triage::{
+    GithubTriageError, HostedEventObservation, HostedEventReceipt, HostedLocalRelationship,
+    HostedTriageObservation, LocalDraftKind, LocalDraftPackage, TriageItem, TriageObjectKind,
+    TriageReason, TriageState, admit_hosted_event, build_triage_item,
 };
 pub use hosted_repository::{
     HostedContentClassification, HostedCoverageState, HostedEvidenceKind, HostedRepositoryError,
