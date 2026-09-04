@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_82_local_evidence",
+  "source_revision": "3a414dd5e32b2e7e91d3c9945aaf660a3148433b",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "shells/host/Cargo.toml": "b6ad82e6be880f63c24d47a0341748261f2bd747d7a851264b81ab24beacf713",
+    "shells/host/src/lib.rs": "5b1ee425c976150c3c7781271d241a84d13ca62b6965ff0555c28ddc00eff853",
+    "shells/host/src/public_research.rs": "c1ed85bf64894180066da79757bd0d3e4f66adaf2edb9d42513711da848e2ea3",
+    "docs/guides/public-research.md": "f78640510bc636e7e5bfc994c688e11b564c6a16eefdfe033787b0ac88ab08b3",
+    "docs/verification/sprint-82-public-research-corpus.json": "84deba2298014d7bad6ae395cd94084e8b8b2dd558eb0588d866e39d13d7f78e",
+    "scripts/public_research_contract.py": "f7fcf30658079d4dbb6dbae6156093c42a7263ab26185cece2aefd9400f77586",
+    "tests/test_public_research_contract.py": "0f286ce33f8b24502ee78bf43f70aefcdb3ee4a1675ad0d35811c3f885495be2",
+    "supply-chain/dependency-hashes.sha256": "d6039f580a4736368291fffd40d1b663260ec6d1bc3e1651019abdd015df5bb3",
+    "supply-chain/dependency-provenance.json": "2e1c11445ba16fb58e99385e19a5ce72b0001d914e554472708720ce69ae7e1f",
+    "supply-chain/sbom.cdx.json": "f6842601bb23745fa6c59d0774eef5d5449baec374d0f1f40696063d4ac70cbb",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_82_evidence.py": "d4afec34a0bc11996bd2c84b615243a0b182c4d6d7e891806f1330551247e13c",
+    "tests/test_sprint_82_evidence.py": "b5ecf4872f037d3d1c8c0e36359cae0cc2e6547a50b49224ec5fd8a6d6a05d32"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "public-research-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "public_research::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d844ef7a28de666ac5941f03fe79cd2859bef70cf7b0e2ec745f04aa6906d038",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "public-research-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_public_research_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a6707d4eff38012da33ddc34bc6dc076a3b17151cfc9aef223c8790cbe64c3da",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "runtime-schema-contract",
+      "argv": [
+        "npm",
+        "run",
+        "-s",
+        "schemas:test"
+      ],
+      "exit_code": 0,
+      "output_sha256": "b15bc9739b9ab8d5fe66fe56c4093b912ef56c81f8ecd20c5fa27498866dc940",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_82_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-ACC-002",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-NET-003",
+    "SR-NET-004",
+    "SR-NET-005",
+    "SR-NET-006",
+    "SR-AI-004",
+    "SR-AI-005"
+  ],
+  "implemented_contracts": {
+    "source_type_count": 4,
+    "focused_rust_test_count": 4,
+    "corpus_case_count": 30,
+    "quotation_word_limit": 25,
+    "network_executor_count": 0,
+    "live_search_count": 0,
+    "browser_action_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "rust_test_count": 4,
+    "corpus_case_count": 30,
+    "citation_content_minimized": true,
+    "live_public_search_executed": false,
+    "browser_campaign_complete": false,
+    "privacy_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-81-BLOCKED",
+      "owner": "82"
+    },
+    {
+      "code": "LIVE-SEARCH-BROWSER-SECURITY-AND-PRIVACY-REVIEW-ABSENT",
+      "owner": "82.1.3.4"
+    }
+  ],
+  "summary": {
+    "local_sprint_82_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_81_closed": false,
+    "live_research_complete": false,
+    "native_security_evidence_complete": false,
+    "privacy_review_present": false,
+    "release_approval": false
+  }
+}
