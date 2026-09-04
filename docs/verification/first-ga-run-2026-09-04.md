@@ -2329,3 +2329,40 @@ Exact next action: Sprint 126 delivery/Windows release-candidate checkpoint. Cum
 
 Exact next action: audit Phase A frozen rows and, if all remaining rows are human-blocked, execute
 the authorized Decision 0047 transition. Cumulative closures: 1,328; next checkpoint: 1,350.
+
+## Batch 127 — Decision 0047 phase-boundary transition
+
+### Completed
+
+- Audited all 5,148 plan rows: 3,162 closed and 1,986 open. Exactly 1,007 open rows were in
+  Epics 9 and 12 through 16; the 979 open rows in the Decision 0046 set are downstream of
+  exact platform, credential, signing, instrumentation, reviewer, release-owner, or
+  strict-local host blockers with empty substitution sets. Net plan closure since the Decision
+  0046 baseline is 1,320; recorded closure events are 1,328 because 8 rows were added and closed
+  during the pass.
+- Accepted Decision 0047, ended the Decision 0046 scope freeze, opened Epics 9 and 12 through
+  16 under Decision 0021, updated AGENTS.md section 6, all 8 documentation-contract documents,
+  the status model, its validator, and all current derived bindings. Capability/status
+  promotions: 0. Batch closures: 0. Cumulative closures: 1,328.
+- Commits: `b998a367` (Decision 0047, contract markers, current evidence) and `c9b09d92`
+  (single Story 2.2 review-pin renewal). Including this log: 3; commits/item: not applicable.
+  Review pins advanced: 1; target `b998a367dcefa645f4eb225993a29bc8504480ba` / tree
+  `3b74dbf0b07ff064625be6dfcf3183aa8a75938f`.
+
+### Validation and blockers
+
+- Passed markdown, documentation, planning-scope, architecture, status-model, schema-evolution,
+  contract-boundary, contract-evidence, model-activation, Story 2.2, Sprint 2, and 55 focused
+  Python tests. Supply-chain builds: 1; transition regeneration passes: 1; review-renewal
+  passes: 1. Full gate: 699.94 seconds, stopping only at retained Story 6.1 Podman after every
+  preceding validator passed.
+- Self-recovery: 3. Refreshed the planning-scope manifest before rebuilding its report; renewed
+  the schema-evolution digest for the mandated ENGINEERING-RUNTIME.md marker; advanced the
+  Story 2.2 review pin because requirements/registry.json changed solely from the synchronized
+  documentation-contract update.
+- Former frozen-set blockers remain unchanged with `substitution_set=empty`. Full-chain blocker:
+  `blocked: host change required — run npm run -s docs:check outside the restricted filesystem
+  sandbox with the current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 101 requirement and deferred-scope closure, the first newly opened
+Decision 0021 dependency gate. Cumulative closures: 1,328; next checkpoint: 1,350.
