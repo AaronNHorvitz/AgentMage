@@ -2535,3 +2535,32 @@ checkpoint: 1,400.
 
 Exact next action: Sprint 130 synchronization and event integrity. Cumulative closures: 1,413;
 next checkpoint: 1,425.
+
+## Batch 133 — Sprint 130 synchronization and event integrity
+
+### Completed
+
+- Closed 20 local Sprint 130 rows: exact provider stream identity, monotonic event ingestion,
+  duplicate idempotence, sequence-gap refusal, tombstones, visible coverage/freshness/permission/
+  history/recovery truth, revocation and removal, zero event-created authority, and fake/fault/
+  hostile/future-version schedules. Corpus cases: 1,120; hidden incomplete states: 0; event-created
+  grants/schedules/workflows/effects: 0; removal-residual authority: 0. Batch closures: 20.
+  Cumulative closures: 1,433. Lifecycle promotions: 0.
+- Commits: `df3d7e7b` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `47af9f91` (Sprint 130 report), and `18fbf89a` (13 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.20. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 3 focused Rust tests, 7 focused Python tests, the 1,120-case AT-SYNC-001 corpus, Sprint
+  evidence, dependency, traceability, supply-chain, Story 1.2, and Story 3.1 configuration chains.
+  Supply-chain builds: 1; evidence regeneration passes: 1. Final full gate: 697.71 seconds,
+  stopping only at retained Story 6.1 Podman after every preceding gate passed.
+- Self-recovery: 1. The original full-gate process was lost across the mandatory runner turn
+  boundary with no retained result or filesystem mutation; reran the unchanged full chain once.
+- Sprint 130 remains `UPSTREAM-SPRINT-129-BLOCKED`; `substitution_set=empty`. Full-chain blocker:
+  `blocked: host change required — run npm run -s docs:check outside the restricted filesystem
+  sandbox with the current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 131 unified activity inbox. Cumulative closures: 1,433; next checkpoint:
+1,450.
