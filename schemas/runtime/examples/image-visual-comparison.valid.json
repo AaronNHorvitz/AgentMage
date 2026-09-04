@@ -1,0 +1,16 @@
+{
+  "schema_version": 2,
+  "comparison_id": "comparison-1",
+  "artifact_kind": "image",
+  "before_rgba_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "after_rgba_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "changed_pixels": 1,
+  "changed_pixel_ratio_ppm": 250000,
+  "maximum_channel_delta": 5,
+  "difference_bounds": { "x": 0, "y": 1, "width": 1, "height": 1 },
+  "machine_checks_passed": true,
+  "human_visual_review_required": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

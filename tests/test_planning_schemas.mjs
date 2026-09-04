@@ -425,6 +425,9 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "presentation-inspection",
     "generated-presentation",
     "edited-presentation",
+    "image-inspection",
+    "image-redaction-receipt",
+    "image-visual-comparison",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1660,6 +1663,31 @@ test("presentation records reject unsafe inspection, stale previews, and edit dr
     ["generated-presentation", (record) => { record.specification.slides[0].blocks[0].text = "drift"; }],
     ["edited-presentation", (record) => { record.changes[0].after_preview_sha256 = "a".repeat(64); }],
     ["edited-presentation", (record) => { record.unchanged_slide_count = 1; }],
+  ];
+  for (const [recordType, mutate] of mutations) {
+    const changed = structuredClone(fixtures[recordType]);
+    mutate(changed);
+    assert.equal(validateRuntimeRecord(recordType, changed, runtimeValidators).valid, false);
+  }
+});
+
+test("image records reject provenance, redaction, visual, and effect drift", () => {
+  const load = (recordType) => JSON.parse(
+    fs.readFileSync(path.join(ROOT, `schemas/runtime/examples/${recordType}.valid.json`), "utf8"),
+  );
+  const fixtures = {
+    "image-inspection": load("image-inspection"),
+    "image-redaction-receipt": load("image-redaction-receipt"),
+    "image-visual-comparison": load("image-visual-comparison"),
+  };
+  const mutations = [
+    ["image-inspection", (record) => { record.provenance.object_id = null; }],
+    ["image-inspection", (record) => { record.decoded_pixels_available = false; }],
+    ["image-inspection", (record) => { record.network_access_performed = true; }],
+    ["image-redaction-receipt", (record) => { record.decoded_pixel_scan_passed = false; }],
+    ["image-redaction-receipt", (record) => { record.metadata_removed = false; }],
+    ["image-visual-comparison", (record) => { record.changed_pixels = 0; }],
+    ["image-visual-comparison", (record) => { record.human_visual_review_required = false; }],
   ];
   for (const [recordType, mutate] of mutations) {
     const changed = structuredClone(fixtures[recordType]);

@@ -67,5 +67,5 @@ hashes, structural preview hashes, safe-reuse state, edit changes, and no-effect
 Legacy binary presentation formats, encrypted packages, arbitrary layouts, animation, audio/video,
 SmartArt fidelity, external media retrieval, embedded object execution, native rendering, pixel
 comparison, native accessibility inspection, and cross-platform office-suite acceptance are not
-admitted. Sprint 65 owns image redaction and visual-diff contracts. Native pixel and accessibility
-evidence remains a blocker for the complete Sprint 64 gate.
+admitted. The bounded Sprint 65 adapter now preserves slide/object image ownership; native pixel
+and accessibility evidence remains a blocker for the complete Sprint 64 gate.

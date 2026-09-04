@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "redaction_id": "redaction-1",
+  "source_rgba_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "output_rgba_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "output_bmp_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "regions": [{ "x": 1, "y": 0, "width": 1, "height": 2 }],
+  "decoded_pixel_scan_passed": true,
+  "metadata_removed": true,
+  "human_visual_review_required": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

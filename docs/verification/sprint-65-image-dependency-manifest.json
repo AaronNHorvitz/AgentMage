@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "manifest_id": "sprint-65-image-dependencies-v1",
+  "direct_image_dependencies": [
+    { "name": "serde", "authority": "closed-record-serialization", "executes-content": false },
+    { "name": "serde_json", "authority": "canonical-approval-binding", "executes-content": false },
+    { "name": "sha2", "authority": "content-addressed-provenance", "executes-content": false }
+  ],
+  "decoded_formats": ["bmp-rgba32"],
+  "metadata_only_formats": ["png"],
+  "native_viewers": [],
+  "native_renderers": [],
+  "network_providers": [],
+  "screenshot_capture": false,
+  "embedded_content_execution": false,
+  "native_visual_evidence_admitted": false,
+  "native_accessibility_evidence_admitted": false
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": 2,
+  "provenance": { "source_id": "slide-2-image-7", "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "slide_number": 2, "object_id": 7 },
+  "format": "bmp_rgba32",
+  "width": 2,
+  "height": 2,
+  "color_space": "srgb_rgba8",
+  "source_bytes": 70,
+  "ancillary_metadata_bytes": 0,
+  "decoded_pixels_available": true,
+  "safe_for_model_context": true,
+  "unsupported_features": [],
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

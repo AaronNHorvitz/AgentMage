@@ -122,6 +122,9 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "presentation-inspection",
   "generated-presentation",
   "edited-presentation",
+  "image-inspection",
+  "image-redaction-receipt",
+  "image-visual-comparison",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -2095,6 +2098,25 @@ function runtimeSemanticErrors(recordType, data) {
       ) {
         errors.push(`edited presentation preview binding drifted: ${change.slide_number}`);
       }
+    }
+  } else if (recordType === "image-inspection") {
+    const expectedSafe = data.format === "bmp_rgba32" && data.decoded_pixels_available === true &&
+      (data.unsupported_features ?? []).length === 0;
+    if (data.safe_for_model_context !== expectedSafe) {
+      errors.push("image safe-context state disagrees with decoded capability");
+    }
+    if ((data.provenance?.slide_number === null) !== (data.provenance?.object_id === null)) {
+      errors.push("image presentation provenance is incomplete");
+    }
+  } else if (recordType === "image-redaction-receipt") {
+    if (!isStrictlySortedBy(data.regions ?? [], (item) => `${String(item.x).padStart(5, "0")}:${String(item.y).padStart(5, "0")}:${String(item.width).padStart(5, "0")}:${String(item.height).padStart(5, "0")}`)) {
+      errors.push("image redaction regions are not canonical");
+    }
+  } else if (recordType === "image-visual-comparison") {
+    if ((data.changed_pixels === 0) !== (data.difference_bounds === null) ||
+        (data.changed_pixels === 0) !== (data.maximum_channel_delta === 0) ||
+        (data.changed_pixels === 0) !== (data.before_rgba_sha256 === data.after_rgba_sha256)) {
+      errors.push("image visual difference aggregate drifted");
     }
   } else if (recordType === "word-inspection-report") {
     const parts = data.parts ?? [];

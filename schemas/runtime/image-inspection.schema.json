@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/image-inspection.schema.json",
+  "title": "AgentMage Image Inspection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "provenance", "format", "width", "height", "color_space", "source_bytes", "ancillary_metadata_bytes", "decoded_pixels_available", "safe_for_model_context", "unsupported_features", "filesystem_effect_performed", "network_access_performed", "execution_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "provenance": { "$ref": "#/$defs/provenance" },
+    "format": { "enum": ["bmp_rgba32", "png"] },
+    "width": { "type": "integer", "minimum": 1, "maximum": 8192 },
+    "height": { "type": "integer", "minimum": 1, "maximum": 8192 },
+    "color_space": { "enum": ["srgb_rgba8", "srgb_rgb8", "gray8", "unsupported_png"] },
+    "source_bytes": { "type": "integer", "minimum": 1, "maximum": 67108918 },
+    "ancillary_metadata_bytes": { "type": "integer", "minimum": 0, "maximum": 67108864 },
+    "decoded_pixels_available": { "type": "boolean" },
+    "safe_for_model_context": { "type": "boolean" },
+    "unsupported_features": { "type": "array", "maxItems": 32, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+    "filesystem_effect_performed": { "const": false },
+    "network_access_performed": { "const": false },
+    "execution_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "provenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_id", "source_sha256", "slide_number", "object_id"],
+      "properties": {
+        "source_id": { "$ref": "#/$defs/identifier" },
+        "source_sha256": { "$ref": "#/$defs/sha256" },
+        "slide_number": { "oneOf": [{ "type": "integer", "minimum": 1, "maximum": 4096 }, { "type": "null" }] },
+        "object_id": { "oneOf": [{ "type": "integer", "minimum": 1, "maximum": 4294967295 }, { "type": "null" }] }
+      }
+    }
+  }
+}

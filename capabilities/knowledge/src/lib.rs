@@ -8,6 +8,7 @@ mod coding_skills;
 mod document_control_skills;
 mod domain;
 mod executive_skills;
+mod image_workflows;
 mod index;
 mod json_data;
 mod knowledge_write;
@@ -75,6 +76,13 @@ pub use domain::{
     KnowledgeRetentionKind, validate_record,
 };
 pub use executive_skills::{ExecutiveSkill, built_in_executive_skill_pack};
+pub use image_workflows::{
+    DecodedRgbaImage, ImageColorSpace, ImageFormat, ImageGenerationPreview, ImageGenerationReceipt,
+    ImageGenerationRoute, ImageInspection, ImageProvenance, ImageRedactionReceipt, ImageRegion,
+    ImageViewProposal, ImageVisualComparison, ImageWorkflowError, RedactedImage,
+    VisualArtifactKind, compare_images, decode_bmp_rgba, encode_bmp_rgba, inspect_image,
+    prepare_image_view, preview_image_generation, record_image_generation, redact_image,
+};
 pub use index::{KnowledgeIndex, KnowledgeIndexError, KnowledgeIndexHit, KnowledgeIndexReport};
 pub use json_data::{
     StructuredJsonComparison, StructuredJsonDifference, StructuredJsonDifferenceReason,

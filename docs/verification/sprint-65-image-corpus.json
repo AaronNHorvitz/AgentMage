@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "corpus_id": "sprint-65-image-contract-v1",
+  "positive_cases": [
+    "bmp top-down decode", "bmp bottom-up decode", "bmp deterministic regeneration", "bmp reopen pixel identity",
+    "dimensions and byte size", "color-space identity", "slide and object provenance", "png rgb metadata",
+    "png rgba metadata", "approved vision profile proposal", "decoded-pixel redaction", "redaction metadata removal",
+    "document visual diff", "slide visual diff", "image visual diff", "user-interface visual diff",
+    "local generation preview", "provider generation preview", "generation receipt binding"
+  ],
+  "prohibited_cases": [
+    "ambient screenshot capture", "filesystem image discovery", "implicit native viewer", "implicit native renderer",
+    "embedded executable launch", "external image resolution", "provider use in strict-local mode", "provider use without disclosure",
+    "sensitive pixels before model context", "sensitive pixels before export", "partial slide provenance", "synthetic native-evidence substitution"
+  ],
+  "invalid_cases": [
+    "unknown container", "short bmp header", "bmp invalid pixel offset", "bmp invalid dib size", "bmp zero width",
+    "bmp zero height", "bmp invalid planes", "bmp unsupported bit depth", "bmp compressed payload", "bmp truncated pixels",
+    "png invalid signature", "png missing ihdr", "png unsupported bit depth", "source digest mismatch", "invalid source identity",
+    "decoded rgba length mismatch", "decoded rgba digest mismatch", "empty redaction regions", "duplicate redaction regions",
+    "overlapping duplicate order", "out-of-bounds redaction", "zero-area redaction", "dimension-mismatched comparison",
+    "invalid comparison threshold", "stale redaction receipt", "stale generation preview", "invalid output digest"
+  ],
+  "boundary_cases": [
+    "one-by-one image", "maximum admitted dimension edge", "maximum admitted decoded bytes edge", "first pixel redaction",
+    "last pixel redaction", "full image redaction", "one changed channel", "maximum channel delta", "zero changed pixels",
+    "one changed pixel ratio floor", "exact ratio threshold", "exact channel threshold", "all four artifact kinds",
+    "maximum region count", "maximum disclosure count", "local route under strict-local", "provider route outside strict-local"
+  ],
+  "hostile_cases": [
+    "decompression-bomb declaration", "steganographic metadata canary", "pixel secret canary", "trailing bmp payload canary",
+    "external-link canary", "ole payload canary", "script payload canary", "formula payload canary", "attachment payload canary",
+    "malformed dimension arithmetic", "parser offset wrap", "approval digest replay"
+  ],
+  "evidence_limits": [
+    "png pixels not decoded", "jpeg not admitted", "vector images not admitted", "animation not admitted",
+    "ocr not admitted", "steganography detection not admitted", "native screenshot capture not admitted", "native rendering not admitted",
+    "accessibility review not admitted", "provider execution not admitted", "independent review absent", "manual fuzzing absent"
+  ]
+}
