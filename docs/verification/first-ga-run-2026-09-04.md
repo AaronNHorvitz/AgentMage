@@ -812,3 +812,51 @@ Cumulative closures are 623; write the required 600-item checkpoint after push.
 Exact next action: all remaining Sprint 91 rows depend on upstream or the exact external tuple;
 continue Decision 0021 ordering at Sprint 92 agent definitions and registry. Cumulative closures
 are 642; write the required 625-item checkpoint after push.
+
+## Batch 95 — Sprints 92–93 agent profiles and disabled synthetic enablement
+
+### Completed
+
+- Closed 65 TASKS rows. Sprint 92: every 13 Story 92.1 task/sub-task row, all 3 Story 92.1
+  acceptance criteria, every 17 Story 92.2 task/sub-task row, all 4 Story 92.2 acceptance
+  criteria, and all 5 sprint criteria (42 rows). Sprint 93: every 15 task/sub-task row, both
+  story criteria, and all 5 sprint criteria (23 rows). The catalog contains exactly 49 ordered
+  Decision 0041 profiles, 10 templates, 343 fixture cases, 9 independent-review contracts,
+  5 compatibility states, one shared-runtime implementation, and 0 enabled profiles, provider
+  connections, parallel runtimes, real-data reads, or real effects. Promotions: 0.
+  Substitutions: 0. Cumulative closed items: 707.
+- Commits: `723cf23c` (profile registry/lint/synthetic source, derived catalog, 343-case corpus,
+  tests, truthful closures, and final supply-chain carrier), `18b75057` (source-bound Sprint 92
+  report), `9722957c` (source-bound Sprint 93 report), and `85f7ed93` (one affected downstream
+  evidence regeneration pass). Commits including log: 5. Commits per closed item: 0.08. Review
+  pins advanced: 0; complete `REVIEWED_PATHS` intersection across all 34 Batch 95 paths and
+  pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 6 Rust cases, 5 catalog/artifact tests, 6 evidence mutation tests, strict
+  kernel Clippy, format, Python compilation, Markdown, 49 exact catalog entries, 343 fixture
+  cases, supply-chain currentness, runtime schemas, and product CI passed. Supply-chain builds: 1.
+  Local report builds: 2. Downstream evidence regeneration passes: 1. Recovery iterations: 1.
+  The first downstream invocation omitted the separately named Story 3.1 security-map builder;
+  running that builder before the Story 3.1 gate and traceability restored the complete ordered
+  chain, whose focused checks all passed. The full chain ran 698.30 seconds and stopped only at
+  the retained Story 6.1 rootless-Podman prerequisite after every preceding gate passed. Recorded
+  gate wall seconds: 698.
+- Profile enablement remains blocked on
+  `BLOCKED_EXTERNAL(platform=profile signing, installed-compatibility, and attributable user-review
+  environment, artifact=untouched signed profile sources, compatibility results against exact
+  admitted local model, codec, tool, and root packages, synthetic evaluation review decisions,
+  limitations, and enablement decisions, action=provision the exact signing and key-custody
+  service, admitted local package set, review UI, and attributable user reviewer, verify signatures
+  and compatibility for AG-01 through AG-49, review their synthetic suites and limitations, and
+  transfer untouched signed and reviewed bundles, credential=signer, key-custody, installed-package,
+  and reviewer access, payment=signing, package, platform, or review costs if applicable)`;
+  `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 92 and 93 rows depend on upstream or exact external tuples;
+continue Decision 0021 ordering at Sprint 94 child authority and isolation. Cumulative closures are
+707; write the required 650/675-item checkpoint after push.
