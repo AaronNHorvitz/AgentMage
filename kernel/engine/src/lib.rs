@@ -156,6 +156,8 @@ pub mod preclassification_policy;
 pub mod productivity_identity_graph;
 /// Versioned productivity-pack manifests, lifecycle, discovery, and data-flow admission.
 pub mod productivity_pack;
+/// Deterministic provider synchronization and incomplete-state truth.
+pub mod productivity_sync;
 /// Deterministic authority-free local workflows for specialist profiles.
 pub mod profile_workflows;
 /// Cancellation trees and lossless typed failure propagation.

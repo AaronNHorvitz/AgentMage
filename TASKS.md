@@ -12698,39 +12698,43 @@ identity-confusion cases and zero display, alias, or stale-link authorization. S
 
 **Dependencies:** Sprints 127 and 129; provider event and polling contracts from Sprints 103-105.
 
-#### [ ] Story 130.1 - Honest Incremental Synchronization
+#### [x] Story 130.1 - Honest Incremental Synchronization
 
 **User-facing value:** As a user, I can tell whether connected information is current, delayed, incomplete, permission-limited, reconciling, revoked, or offline.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 130.1.1 - Implement synchronization state machines**
-  - [ ] **Sub-task 130.1.1.1:** Define event, notification, delta, cursor, page, checkpoint, backfill, tombstone, coverage, freshness, permission, gap, and reconciliation records.
-  - [ ] **Sub-task 130.1.1.2:** Implement duplicate, reorder, edit, delete, delayed event, cursor expiry, bounded polling, and full-reconciliation transitions.
-  - [ ] **Sub-task 130.1.1.3:** Bind every stream to one exact provider, tenant, account, object family, scope, credential reference, and schema version.
-- [ ] **Task 130.1.2 - Surface and recover incomplete state**
-  - [ ] **Sub-task 130.1.2.1:** Add visible freshness, last-success, last-attempt, coverage, permission gap, history gap, throttling, and recovery state.
-  - [ ] **Sub-task 130.1.2.2:** Implement restart, revocation, reconnect, backfill, resubscribe, webhook rotation, and cursor-reset flows.
-  - [ ] **Sub-task 130.1.2.3:** Prevent events and synchronized content from creating grants, schedules, workflows, or external effects.
-- [ ] **Task 130.1.3 - Verify event and polling integrity**
-  - [ ] **Sub-task 130.1.3.1:** Inject forgery, replay, duplicates, omissions, reordering, clock skew, cursor loss, permission reduction, throttling, outage, partition, and crash.
-  - [ ] **Sub-task 130.1.3.2:** Compare incremental state with authoritative fixture snapshots after every schedule.
-  - [ ] **Sub-task 130.1.3.3:** Remove streams and prove zero remaining webhook, cursor, poller, schedule, cache, worker, socket, or credential authority.
+- [x] **Task 130.1.1 - Implement synchronization state machines**
+  - [x] **Sub-task 130.1.1.1:** Define event, notification, delta, cursor, page, checkpoint, backfill, tombstone, coverage, freshness, permission, gap, and reconciliation records.
+  - [x] **Sub-task 130.1.1.2:** Implement duplicate, reorder, edit, delete, delayed event, cursor expiry, bounded polling, and full-reconciliation transitions.
+  - [x] **Sub-task 130.1.1.3:** Bind every stream to one exact provider, tenant, account, object family, scope, credential reference, and schema version.
+- [x] **Task 130.1.2 - Surface and recover incomplete state**
+  - [x] **Sub-task 130.1.2.1:** Add visible freshness, last-success, last-attempt, coverage, permission gap, history gap, throttling, and recovery state.
+  - [x] **Sub-task 130.1.2.2:** Implement restart, revocation, reconnect, backfill, resubscribe, webhook rotation, and cursor-reset flows.
+  - [x] **Sub-task 130.1.2.3:** Prevent events and synchronized content from creating grants, schedules, workflows, or external effects.
+- [x] **Task 130.1.3 - Verify event and polling integrity**
+  - [x] **Sub-task 130.1.3.1:** Inject forgery, replay, duplicates, omissions, reordering, clock skew, cursor loss, permission reduction, throttling, outage, partition, and crash.
+  - [x] **Sub-task 130.1.3.2:** Compare incremental state with authoritative fixture snapshots after every schedule.
+  - [x] **Sub-task 130.1.3.3:** Remove streams and prove zero remaining webhook, cursor, poller, schedule, cache, worker, socket, or credential authority.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 130.1.AC1:** Given duplicate, reordered, delayed, or replayed events, when synchronization completes, then canonical state is deterministic and no action is duplicated.
-- [ ] **Story AC 130.1.AC2:** Given a cursor, permission, history, or provider gap, when data is displayed, then the gap is visible and the result cannot appear complete.
-- [ ] **Story AC 130.1.AC3:** Given revocation or removal, when synchronization stops, then every event and polling path loses authority and retained state follows policy.
+- [x] **Story AC 130.1.AC1:** Given duplicate, reordered, delayed, or replayed events, when synchronization completes, then canonical state is deterministic and no action is duplicated.
+- [x] **Story AC 130.1.AC2:** Given a cursor, permission, history, or provider gap, when data is displayed, then the gap is visible and the result cannot appear complete.
+- [x] **Story AC 130.1.AC3:** Given revocation or removal, when synchronization stops, then every event and polling path loses authority and retained state follows policy.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 130.AC1:** `AT-SYNC-001` passes against fake, fault, malicious, and future-version providers.
-- [ ] **Sprint AC 130.AC2:** Incremental and full-reconciliation snapshots agree for every complete fixture.
-- [ ] **Sprint AC 130.AC3:** Every incomplete fixture has explicit freshness, permission, history, or coverage state.
-- [ ] **Sprint AC 130.AC4:** Removal leaves zero event, polling, credential, schedule, process, socket, or cache authority.
+- [x] **Sprint AC 130.AC1:** `AT-SYNC-001` passes against fake, fault, malicious, and future-version providers.
+- [x] **Sprint AC 130.AC2:** Incremental and full-reconciliation snapshots agree for every complete fixture.
+- [x] **Sprint AC 130.AC3:** Every incomplete fixture has explicit freshness, permission, history, or coverage state.
+- [x] **Sprint AC 130.AC4:** Removal leaves zero event, polling, credential, schedule, process, socket, or cache authority.
 
 **Gate decision:** Sprint 130 is PASS only when Story 130.1, all criteria, `AM-SYNC-001`, `AT-SYNC-001`, `SR-PRD-003`, `RV-32`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 130 source and contract rows pass locally with 1,120 deterministic
+fault schedules, explicit incomplete-state truth, and zero event-created or removal-residual
+authority. Sprint 130 remains `UPSTREAM-SPRINT-129-BLOCKED`; `substitution_set=empty`.
 
 ### [ ] Sprint 131 - Unified Activity Inbox
 
