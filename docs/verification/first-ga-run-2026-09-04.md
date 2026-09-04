@@ -2031,3 +2031,48 @@ graph. Cumulative closures are 1,190; next required checkpoint is 1,200.
 
 Exact next action: continue Decision 0021 ordering at Sprint 120 Markdown and LaTeX mathematics.
 Cumulative closures are 1,210; write the required 1,200-item checkpoint after push.
+
+## Batch 120 — Sprint 120 bounded Markdown mathematics
+
+### Completed
+
+- Closed 18 local Sprint 120 rows: fifteen supported syntax families, source-preserving span
+  parsing, Markdown/code/currency separation, unsafe-command denial, a pinned offline reference
+  renderer manifest, accessible bounded preview contracts, local UT/ST/RT suites, Story AC1–AC2,
+  and Sprint AC1–AC3. The corpus contains 128 round-trip cases, 2,048 hostile cases, and 512 fault
+  cases. File accesses: 0. Network accesses: 0. Processes: 0. Package loads: 0. Authority grants:
+  0. Unbounded results: 0. Stale previews: 0.
+- Promoted platforms: 0. Native platform renders: 0. Complete `RV-15`, `RV-20`, or `AT-MTH-001`:
+  false. Independent human reviews: 0. Promotions: 0. Substitutions: 0. Batch closures: 18.
+  Cumulative closed items: 1,228.
+- Commits: `fd50dce1` (mathematics contracts, corpus, tests, truthful closures, and supply-chain
+  renewal), `96a14489` (source-bound Sprint 120 report), and `abd48df3` (complete downstream
+  contract/configuration/traceability renewal). Commits including log: 4. Commits per closed item:
+  0.22. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection: empty.
+
+### Validation and blockers
+
+- Focused validation passed 4 Rust mathematics tests, strict Clippy, 3 corpus tests, 3 evidence
+  tests, Python compilation, dependency rules, supply-chain currentness, product CI, all affected
+  downstream checks, and the source-bound report. Supply-chain builds: 1. Corpus generations: 1.
+  Local report builds: 1. Full gate wall seconds: 698.27; it stopped only at the retained Story 6.1
+  rootless-Podman prerequisite after every preceding gate passed. Self-recovery iterations: 0.
+- Native platform visual/accessibility parity, `RV-15`, `RV-20`, `AT-MTH-001`, and independent
+  review remain `BLOCKED_EXTERNAL(platform=native Fedora and Ubuntu hosts plus Windows 11 x64 KVM
+  guest with admitted display, font, accessibility, keyboard, and visual-comparison environments
+  and independent review environment, artifact=untouched exact renderer/font/license manifests,
+  native render and diagnostic outputs, accessibility trees, keyboard/zoom/contrast results,
+  visual diffs, resource traces, RV-15/RV-20 results, AT-MTH-001 bundle, platform matrix, and
+  independent review, action=provision native Fedora and Ubuntu display hosts and a properly
+  licensed Windows 11 x64 image, install the admitted pinned renderer/font and accessibility
+  dependencies, run S-120-VT01, applicable RV-15/RV-20, and AT-MTH-001, then transfer untouched
+  evidence, credential=Windows image, platform, display, accessibility, and reviewer access,
+  payment=Windows, font, renderer, accessibility, hardware, hosting, or review costs if applicable)`;
+  `substitution_set=empty`.
+- Sprint 120 also remains dependency-blocked by `UPSTREAM-SPRINT-119-BLOCKED` with no
+  substitution. Exact full-chain carrier blocker: `blocked: host change required — run npm run -s
+  docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 121 Windows package, VS Code bridge,
+and IPC. Cumulative closures are 1,228; write the required 1,225-item checkpoint after push.
