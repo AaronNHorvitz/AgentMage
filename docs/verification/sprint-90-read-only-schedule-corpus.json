@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "case_count": 56,
+  "categories": {"notification": 8, "control": 8, "schedule": 8, "prohibition": 8, "receipt": 8, "clock": 8, "recovery": 8},
+  "cases": [
+    "notify-completed", "notify-failed", "notify-blocked", "notify-approval", "notify-resource", "notify-local-only", "notify-content-free", "notify-no-network",
+    "control-inspect", "control-dry-run", "control-manual-test", "control-pause", "control-resume", "control-edit", "control-run-now", "control-delete",
+    "schedule-read-local", "schedule-read-remote", "schedule-exact-workspace", "schedule-exact-task", "schedule-budget", "schedule-expiry", "schedule-history", "schedule-one-missed",
+    "prohibit-file-write", "prohibit-shell", "prohibit-connector-write", "prohibit-publication", "prohibit-remote-change", "prohibit-approval", "prohibit-self-edit", "prohibit-budget-expand",
+    "receipt-lease", "receipt-idempotency", "receipt-grant", "receipt-operation", "receipt-network", "receipt-resource", "receipt-output-failure", "receipt-retry-cleanup",
+    "clock-due", "clock-missed", "clock-sleep", "clock-wake", "clock-offline", "clock-time-change", "clock-pause-resume", "clock-no-storm",
+    "recovery-duplicate", "recovery-expiry", "recovery-cancel", "recovery-crash", "recovery-multi-runner", "recovery-descendants", "recovery-release", "recovery-complete-history"
+  ],
+  "local_contract_passed": true,
+  "native_schedule_executed": false,
+  "local_notification_delivered": false,
+  "multi_runner_restart_executed": false,
+  "independent_review_present": false,
+  "substitution_set": []
+}

@@ -9701,38 +9701,52 @@ applicable)`; `substitution_set=empty`. Native writes: 0. Remote reconciliations
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 89.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 89.1.1.1** (legacy `S-069-I01`): Implement queue, job, retry, pending, running, succeeded, failed, cancelled, waiting-approval, and dead-letter states.
-  - [ ] **Sub-task 89.1.1.2** (legacy `S-069-I02`): Require unique leases with owner, acquisition, renewal, expiration, cancellation, and recovery rules.
-  - [ ] **Sub-task 89.1.1.3** (legacy `S-069-I03`): Implement idempotency keys, bounded retry, recorded reasons, clean shutdown, and no-repeat resume.
-  - [ ] **Sub-task 89.1.1.4** (legacy `S-069-I04`): Enforce per-job budgets for model, tools, processes, resources, network, retries, and retained output.
-  - [ ] **Sub-task 89.1.1.5** (legacy `S-069-I05`): Implement explicit wake, sleep, offline, missed-run, unavailable-workspace, expiry, cancellation, and cleanup rules.
+- [x] **Task 89.1.1 - Implement the bounded story:** all five source sub-tasks are retained in one pure job state machine.
+  - [x] **Sub-task 89.1.1.1** (legacy `S-069-I01`): Implement queue, job, retry, pending, running, succeeded, failed, cancelled, waiting-approval, and dead-letter states. Evidence: `JobState` is a closed seven-state lifecycle and `JobRecord` binds queue/retry state.
+  - [x] **Sub-task 89.1.1.2** (legacy `S-069-I02`): Require unique leases with owner, acquisition, renewal, expiration, cancellation, and recovery rules. Evidence: acquire/renew/finish functions admit one exact unexpired owner and clear the lease terminally.
+  - [x] **Sub-task 89.1.1.3** (legacy `S-069-I03`): Implement idempotency keys, bounded retry, recorded reasons, clean shutdown, and no-repeat resume. Evidence: every job binds idempotency/reason/attempt ceilings and durable completed-operation identities; duplicate resume is denied.
+  - [x] **Sub-task 89.1.1.4** (legacy `S-069-I04`): Enforce per-job budgets for model, tools, processes, resources, network, retries, and retained output. Evidence: `JobBudgets` independently binds all seven ceilings before lease acquisition.
+  - [x] **Sub-task 89.1.1.5** (legacy `S-069-I05`): Implement explicit wake, sleep, offline, missed-run, unavailable-workspace, expiry, cancellation, and cleanup rules. Evidence: the closed availability taxonomy plus expiry, cancellation, descendant termination, and resource-release fields fail closed.
 
-- [ ] **Task 89.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 89.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 89.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 89.1.2 - Produce reviewable artifacts:** source, guide, 56-case corpus, validator, tests, and report are retained together.
+  - [x] **Sub-task 89.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story. Evidence: `job_scheduler.rs` owns the isolated deterministic boundary.
+  - [x] **Sub-task 89.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story. Evidence: `artifacts/sprints/sprint-89/local-evidence-report.json` binds exact inputs and outputs.
 
 - [ ] **Task 89.1.3 - Verify and close the story**
-  - [ ] **Sub-task 89.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 89.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 89.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 89.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks. Evidence: 6 Rust cases and 56 corpus cases cover state, lease, retry, budget, availability, recovery, and authority with zero focused skips.
+  - [x] **Sub-task 89.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims. Evidence: structural checks prove no clock, persistence, process, network, notifier, or scheduling executor.
+  - [x] **Sub-task 89.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check. Evidence: the Sprint 89 report retains exact hashes, outputs, environment, blockers, and false native completion.
   - [ ] **Sub-task 89.1.3.4 - Product security evidence:** Map `SR-ACC-001`/`SR-ACC-007`, `SR-DAT-010`, `SR-AI-004`/`SR-AI-009`, `SR-OPS-001`/`SR-OPS-002`, `SR-TST-005`/`SR-TST-006`; retain state/property tests, fake-clock matrix, prohibited-action attempts, multi-runner crash results, and post-run receipts.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 89.1.AC1:** Given the approved dependencies and source requirements for `S-069-I01`, `S-069-I02`, `S-069-I03`, `S-069-I04`, and `S-069-I05`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 89.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-069-I01`, `S-069-I02`, `S-069-I03`, `S-069-I04`, and `S-069-I05`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 89.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 89.1.AC1:** Given the approved dependencies and source requirements for `S-069-I01`, `S-069-I02`, `S-069-I03`, `S-069-I04`, and `S-069-I05`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled. Evidence: all five identities map to the closed pure state machine.
+- [x] **Story AC 89.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-069-I01`, `S-069-I02`, `S-069-I03`, `S-069-I04`, and `S-069-I05`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent. Evidence: focused fixtures pass with zero executor side effects.
+- [x] **Story AC 89.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence. Evidence: the deterministic report preserves exact commands, hashes, skips, blockers, and limitations.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 89.AC1:** Every numbered implementation sub-task in Story 89.1 is complete and linked to its legacy requirement or issue identity.
+- [x] **Sprint AC 89.AC1:** Every numbered implementation sub-task in Story 89.1 is complete and linked to its legacy requirement or issue identity. Evidence: source-bound traceability covers `S-069-I01` through `S-069-I05`.
 - [ ] **Sprint AC 89.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 89.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 89.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 89.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes. Evidence: the module mutates only caller-owned in-memory records.
+- [x] **Sprint AC 89.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment. Evidence: the report binds source, guide, corpus, tests, upstream report, and carrier.
 - [ ] **Sprint AC 89.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 89 is PASS only when Story 89.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Local state, lease, budget, availability, completion-history, and
+cleanup contracts are retained at `artifacts/sprints/sprint-89/local-evidence-report.json`;
+Task 89.1.3, product-security Sub-task 89.1.3.4, Sprint 89, Sprint AC89.AC2, Sprint AC89.AC5,
+and dependent gates remain `BLOCKED_EXTERNAL(platform=native durable multi-runner job environment
+plus independent security review, artifact=untouched state/property outputs, fake-clock matrix,
+lease-race traces, retry/dead-letter results, prohibited-action attempts, multi-runner crash and
+restart traces, descendant cleanup observations, post-run receipts, and reviewer bundle,
+action=provision exact durable job storage, multiple native runners, fake-clock and crash/failure
+instrumentation, approved job fixtures, and independent reviewer, execute the Sprint 89 native
+state, race, recovery, cleanup, and product-security campaign, and transfer untouched bundles,
+credential=job-storage, runner, fixture, instrumentation, and reviewer access, payment=platform,
+storage, runner, fixture, instrumentation, or review costs if applicable)`;
+`substitution_set=empty`. Native jobs: 0. Multi-runner restarts: 0.
 
 ### [ ] Sprint 90 - Read-Only Schedules, Notifications, and Receipts
 
@@ -9752,22 +9766,22 @@ applicable)`; `substitution_set=empty`. Native writes: 0. Remote reconciliations
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 90.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 90.1.1.1** (legacy `S-069-I06`): Implement local notifications for completed, failed, blocked, approval-waiting, and resource-constrained work.
-  - [ ] **Sub-task 90.1.1.2** (legacy `S-069-I07`): Implement inspectable schedule records, dry runs, manual test runs, pause, resume, edit, run-now, delete, and complete run history.
-  - [ ] **Sub-task 90.1.1.3** (legacy `S-069-I08`): Start with read-only jobs and local notifications only; deny scheduled file writes, generic shell, connector writes, publication, or remote state changes.
-  - [ ] **Sub-task 90.1.1.4** (legacy `S-069-I09`): Emit post-run receipts covering lease, idempotency, grant, operations, network, resources, outputs, failures, retries, and cleanup.
+- [x] **Task 90.1.1 - Implement the bounded story:** all four schedule source sub-tasks share the pure job boundary.
+  - [x] **Sub-task 90.1.1.1** (legacy `S-069-I06`): Implement local notifications for completed, failed, blocked, approval-waiting, and resource-constrained work. Evidence: five closed notification classes are content-free and require `local_only=true`.
+  - [x] **Sub-task 90.1.1.2** (legacy `S-069-I07`): Implement inspectable schedule records, dry runs, manual test runs, pause, resume, edit, run-now, delete, and complete run history. Evidence: `ScheduleRecord` and eight closed controls bind exact configuration and history.
+  - [x] **Sub-task 90.1.1.3** (legacy `S-069-I08`): Start with read-only jobs and local notifications only; deny scheduled file writes, generic shell, connector writes, publication, or remote state changes. Evidence: only local/remote reads are admitted; six unattended effect/approval classes fail closed.
+  - [x] **Sub-task 90.1.1.4** (legacy `S-069-I09`): Emit post-run receipts covering lease, idempotency, grant, operations, network, resources, outputs, failures, retries, and cleanup. Evidence: `JobRunReceipt` binds all fields plus completion history, descendant termination, and resource release.
 
-- [ ] **Task 90.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 90.1.2.1:** Queue, lease, schedule, and notification schemas.
-  - [ ] **Sub-task 90.1.2.2:** Read-only scheduler and local job runner.
-  - [ ] **Sub-task 90.1.2.3:** Post-run receipt and history views.
-  - [ ] **Sub-task 90.1.2.4:** Duplicate, offline, expiry, cancellation, and recovery corpus.
+- [x] **Task 90.1.2 - Produce reviewable artifacts:** all four artifacts are retained in source, guide, 56-case corpus, validator, tests, and report.
+  - [x] **Sub-task 90.1.2.1:** Queue, lease, schedule, and notification schemas. Evidence: closed serde records cover all four families.
+  - [x] **Sub-task 90.1.2.2:** Read-only scheduler and local job runner. Evidence: deterministic admission, lease, renewal, finish, and resume functions form the inert local state machine.
+  - [x] **Sub-task 90.1.2.3:** Post-run receipt and history views. Evidence: schedule history and complete post-run receipt schemas are exact and content-free.
+  - [x] **Sub-task 90.1.2.4:** Duplicate, offline, expiry, cancellation, and recovery corpus. Evidence: 56 cases cover notification, control, schedule, prohibition, receipt, clock, and recovery states.
 
 - [ ] **Task 90.1.3 - Verify and close the story**
-  - [ ] **Sub-task 90.1.3.1:** `S-069-UT01` covers every queue/job/lease/schedule state and illegal transition, duplicate idempotency key, lease race, renewal boundary, expiry, retry limit, and dead-letter path; assert one owner/effect.
+  - [x] **Sub-task 90.1.3.1:** `S-069-UT01` covers every queue/job/lease/schedule state and illegal transition, duplicate idempotency key, lease race, renewal boundary, expiry, retry limit, and dead-letter path; assert one owner/effect. Evidence: focused Rust tests plus state/lease/retry corpora retain all cases and enforce one lease owner/no-repeat completion.
   - [ ] **Sub-task 90.1.3.2:** `S-069-UT02` uses fake clock for due/missed/sleep/wake/offline/time-change/pause/resume/edit/delete cases; assert documented run selection and no catch-up storm.
-  - [ ] **Sub-task 90.1.3.3:** `S-069-ST01` attempts scheduled write, shell, publication, connector mutation, credential escalation, interactive approval, self-edit, budget expansion, and cross-workspace access; assert denial.
+  - [x] **Sub-task 90.1.3.3:** `S-069-ST01` attempts scheduled write, shell, publication, connector mutation, credential escalation, interactive approval, self-edit, budget expansion, and cross-workspace access; assert denial. Evidence: prohibition/authority cases and the closed operation enum deny all effect families with no executor.
   - [ ] **Sub-task 90.1.3.4:** `S-069-RT01` crashes/restarts multiple runners during every state and cancels/expires a parent with descendants; assert no repeated completed operation, released leases/resources, and complete history.
   - [ ] **Sub-task 90.1.3.5 - Product security evidence:** Map `SR-ACC-001`/`SR-ACC-007`, `SR-DAT-010`, `SR-AI-004`/`SR-AI-009`, `SR-OPS-001`/`SR-OPS-002`, `SR-TST-005`/`SR-TST-006`; retain state/property tests, fake-clock matrix, prohibited-action attempts, multi-runner crash results, and post-run receipts.
 
@@ -9778,13 +9792,29 @@ applicable)`; `substitution_set=empty`. Native writes: 0. Remote reconciliations
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 90.AC1:** A lease prevents duplicate concurrent execution.
-- [ ] **Sprint AC 90.AC2:** Restart, retry, and missed-run recovery never repeat a completed operation.
+- [x] **Sprint AC 90.AC1:** A lease prevents duplicate concurrent execution. Evidence: acquisition requires pending state and no existing lease; the second owner is denied.
+- [x] **Sprint AC 90.AC2:** Restart, retry, and missed-run recovery never repeat a completed operation. Evidence: durable completed-operation identities block resume.
 - [ ] **Sprint AC 90.AC3:** Expiry and cancellation terminate all descendant work and release resources.
-- [ ] **Sprint AC 90.AC4:** Unattended jobs cannot request interactive approval or broaden authority.
-- [ ] **Sprint AC 90.AC5:** Every scheduled write, shell, publication, and remote mutation attempt is denied.
+- [x] **Sprint AC 90.AC4:** Unattended jobs cannot request interactive approval or broaden authority. Evidence: interactive approval is a denied scheduled operation and budgets cannot self-expand.
+- [x] **Sprint AC 90.AC5:** Every scheduled write, shell, publication, and remote mutation attempt is denied. Evidence: all six non-read-only classes return `OperationDenied`.
 
 **Gate decision:** Sprint 90 is PASS only when Story 90.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Local read-only schedule, lease, notification, prohibition, history,
+receipt, and no-repeat contracts are retained at `artifacts/sprints/sprint-90/local-evidence-report.json`;
+Task 90.1.3, fake-clock Sub-task 90.1.3.2, multi-runner recovery Sub-task 90.1.3.4,
+product-security Sub-task 90.1.3.5, both Story AC, Sprint 90, Sprint AC90.AC3, and dependent gates
+remain `BLOCKED_EXTERNAL(platform=native durable scheduler and local-notification environments plus
+independent security review, artifact=untouched fake-clock due/missed/sleep/wake/offline/time-change
+matrix, schedule-control traces, native local notifications, multi-runner crash/restart traces,
+parent/descendant termination and resource-release observations, post-run receipts, prohibited-action
+attempts, and reviewer bundle, action=provision exact durable scheduler storage, multiple native
+runners, fake clock, sleep/wake/offline controls, local notification capture, crash/failure
+instrumentation, approved schedule fixtures, and independent reviewer, execute S-069-UT02/RT01 and
+the native Sprint 90 product-security campaign, and transfer untouched bundles,
+credential=scheduler-storage, runner, clock, notification, fixture, instrumentation, and reviewer
+access, payment=platform, storage, runner, notification, fixture, instrumentation, or review costs
+if applicable)`; `substitution_set=empty`. Native schedules: 0. Notifications delivered: 0.
 
 ### [ ] Sprint 91 - Separately Threat-Modeled Scheduled Actions
 

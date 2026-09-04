@@ -80,6 +80,8 @@ pub mod grants;
 pub mod handoff;
 /// Hash-bound discovery, reading, and narrowing-only trust for untrusted instructions.
 pub mod instruction_provenance;
+/// Deterministic resumable jobs, leases, read-only schedules, notifications, and receipts.
+pub mod job_scheduler;
 /// Exact candidate-tree, signer, manual approval, and signed local commit contracts.
 pub mod local_commit;
 /// Stateful read-only MCP request mediation, response validation, and receipts.

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "case_count": 56,
+  "categories": {"state": 8, "lease": 8, "retry": 8, "budget": 8, "availability": 8, "recovery": 8, "authority": 8},
+  "cases": [
+    "state-pending", "state-running", "state-succeeded", "state-failed", "state-cancelled", "state-waiting-approval", "state-dead-letter", "state-illegal-transition",
+    "lease-owner", "lease-acquire", "lease-renew", "lease-expire", "lease-cancel", "lease-stale", "lease-race", "lease-release",
+    "retry-idempotency", "retry-bounded", "retry-reason", "retry-shutdown", "retry-no-repeat", "retry-exhausted", "retry-dead-letter", "retry-new-attempt",
+    "budget-model", "budget-tool", "budget-process", "budget-memory", "budget-network", "budget-retry", "budget-output", "budget-independent-stop",
+    "availability-wake", "availability-sleep", "availability-offline", "availability-missed", "availability-workspace", "availability-expiry", "availability-cancel", "availability-cleanup",
+    "recovery-before-run", "recovery-during-run", "recovery-after-effect", "recovery-after-receipt", "recovery-parent-cancel", "recovery-descendant", "recovery-resource", "recovery-history",
+    "authority-no-clock", "authority-no-persistence", "authority-no-process", "authority-no-network", "authority-no-notifier", "authority-no-repeat", "authority-zero-run", "authority-zero-background"
+  ],
+  "local_contract_passed": true,
+  "native_multi_runner_executed": false,
+  "durable_restart_executed": false,
+  "independent_review_present": false,
+  "substitution_set": []
+}
