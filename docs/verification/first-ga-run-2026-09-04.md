@@ -1206,3 +1206,46 @@ Exact next action: all remaining Sprints 99–100 rows depend on upstream or exa
 audit every remaining Decision 0046 Phase A row before any Phase B transition. Epic 9 remains out
 of scope while the freeze is active. Cumulative closures are 843; write the required 825-item
 checkpoint after push.
+
+## Batch 103 — Sprint 103 delivery graph and adapter SDK foundation
+
+### Completed
+
+- Closed all 25 local Sprint 103 rows. The kernel contract defines 17 provider-neutral delivery
+  node kinds, 8 explicit relationship states, bounded identity-preserving graph snapshots,
+  stale propagation, tombstone removal, and schema migration. Only directly observed fresh
+  relationships can authorize; provider inference cannot.
+- The adapter contract defines 9 exact non-inheriting operations, 6 conformance levels, signed
+  exact host/version/scope/event/limit/support tuples, namespaced schema-policy-conformance
+  extensions, and 6 fake-adapter modes. The deterministic corpus covers 170 graph cases and 54
+  conformance-matrix cases. Enabled adapters: 0. Live providers: 0. Independent reviews: 0.
+  Promotions: 0. Substitutions: 0. Batch closures: 25. Cumulative closed items: 868.
+- Commits: `53a83638` (kernel source, generators, tests, truthful closures, corpus, and final
+  supply-chain carrier), `76561dc6` (source-bound Sprint 103 report), and `f38f1056` (one affected
+  downstream evidence regeneration pass). Commits including log: 4. Commits per closed item:
+  0.16. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across all 27 Batch 103
+  changed or regenerated paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 4 Rust cases, 3 corpus-contract tests, 3 evidence mutation tests, strict
+  kernel Clippy, Rust format, Python compilation, Markdown, 170 graph cases, 54 conformance cases,
+  supply-chain currentness, product CI, 14 affected downstream checks/test groups, and the
+  source-bound report passed. Supply-chain builds: 1. Corpus generations: 1 successful. Local
+  report builds: 1 successful. Downstream evidence regeneration passes: 1. Recovery iterations:
+  3: added required public Rust documentation after `deny(missing_docs)` identified 114 exported
+  items, corrected the kernel package selector from `agentmage-kernel` to
+  `agentmage-kernel-engine`, and replaced an abbreviated evidence source revision with its exact
+  40-character commit. The full chain ran 713.24 seconds and stopped only at the retained Story
+  6.1 rootless-Podman prerequisite after every preceding gate passed. Recorded gate wall seconds:
+  713.
+- Sprint 103 remains dependency-blocked by `UPSTREAM-SPRINT-102-BLOCKED` with no substitution;
+  its locally implemented graph and adapter SDK foundation does not claim provider or release
+  support. `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 104 shared delivery security,
+reliability, observability, and forward-compatibility contracts. Cumulative closures are 868;
+write the required 850-item checkpoint after push.
