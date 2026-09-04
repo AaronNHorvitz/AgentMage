@@ -8723,15 +8723,15 @@ platform, product, or release gate is closed.
   - [ ] **Sub-task 75.1.1.1** (legacy `S-062-I01`): Run network scope, credential, host isolation, rate-limit, cancellation, uncertain-result, cache, retention, injection, and offline-return suites.
   - [ ] **Sub-task 75.1.1.2** (legacy `S-062-I02`): Run complete GitHub repository, issue, pull-request, check, security, workflow, notification, worktree, and review fixtures.
   - [ ] **Sub-task 75.1.1.3** (legacy `S-062-I03`): Re-run strict-local v0.1-v0.6 acceptance with connected packs disabled.
-  - [ ] **Sub-task 75.1.1.4** (legacy `S-062-I04`): Prove no write request type, submission command, publication hook, or ambient hosted credential is reachable.
-  - [ ] **Sub-task 75.1.1.5** (legacy `S-062-I05`): Publish connected-profile, authentication, privacy, cache, read-only GitHub, local review, offline return, recovery, and limitation guides.
-  - [ ] **Sub-task 75.1.1.6** (legacy `S-062-I06`): Publish exact future hosted-write exclusions and threat-model prerequisites.
+  - [x] **Sub-task 75.1.1.4** (legacy `S-062-I04`): Prove no write request type, submission command, publication hook, or ambient hosted credential is reachable. Evidence: the aggregate source/dependency scan covers all Sprint 70–74 modules and admits zero executor, hosted mutation, publication, or credential material.
+  - [x] **Sub-task 75.1.1.5** (legacy `S-062-I05`): Publish connected-profile, authentication, privacy, cache, read-only GitHub, local review, offline return, recovery, and limitation guides. Evidence: the consolidated connected-profile guide links the retained detailed guides and states every limitation and recovery boundary.
+  - [x] **Sub-task 75.1.1.6** (legacy `S-062-I06`): Publish exact future hosted-write exclusions and threat-model prerequisites. Evidence: the dedicated security document enumerates excluded effects and the accepted-Decision/evidence prerequisites.
 
-- [ ] **Task 75.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 75.1.2.1:** v0.7 network and connector acceptance bundle.
-  - [ ] **Sub-task 75.1.2.2:** Read-only GitHub conformance report.
-  - [ ] **Sub-task 75.1.2.3:** Strict-local regression proof.
-  - [ ] **Sub-task 75.1.2.4:** v0.7 release notes and capability matrix.
+- [x] **Task 75.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 75.1.2.1:** v0.7 network and connector acceptance bundle. Evidence: blocked aggregate binds the five committed local reports, exact zero counts, absent native acceptance, and empty substitution set.
+  - [x] **Sub-task 75.1.2.2:** Read-only GitHub conformance report. Evidence: structural conformance report distinguishes local proof from absent native results.
+  - [x] **Sub-task 75.1.2.3:** Strict-local regression proof. Evidence: partial regression report records unchanged local registration and the still-open native/60-minute campaign without substitution.
+  - [x] **Sub-task 75.1.2.4:** v0.7 release notes and capability matrix. Evidence: matrix labels every connected capability disabled, unsupported, and blocked with zero promotions.
 
 - [ ] **Task 75.1.3 - Verify and close the story**
   - [ ] **Sub-task 75.1.3.1:** `S-062-IT01` runs authentication, repository evidence, issue/PR/check/review triage, and local PR review across approved host/account/permission/network conditions; assert exact read scopes and evidence.
@@ -8754,6 +8754,24 @@ platform, product, or release gate is closed.
 - [ ] **Sprint AC 75.AC5:** `G-V0.7` closes only after network, credential, evidence, read-only, recovery, and documentation gates pass.
 
 **Gate decision:** Sprint 75 is PASS only when Story 75.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** **BLOCKED.** The local structural no-write aggregate, consolidated guide, future
+write exclusions, acceptance bundle, conformance report, partial strict-local report, and candid
+capability matrix pass; see `artifacts/sprints/sprint-75/local-evidence-report.json`. All remaining
+implementation, verification, story, sprint, and release rows require the exact native network,
+credential, provider, cache, recovery, strict-local egress, platform, independent-review, signing,
+and approval tuples retained by Sprints 70–74 plus
+`BLOCKED_EXTERNAL(platform=native Fedora/Ubuntu/Windows 11 x64 KVM/physical supported MacBook
+connector release environments plus independent review and release approval, artifact=untouched
+network/credential/provider/cache/recovery suites, complete GitHub fixtures, strict-local v0.1-v0.6
+rerun with 60-minute egress trace, method/packet/mutation/cleanup traces, conformance reconciliation,
+and signed gate decision, action=provision exact accounts, credentials, Windows image, physical Mac,
+platforms, reviewer, and release approver, execute S-062-IT01/ST01/RT01/AT01 and the product-security
+campaign, independently reconcile and sign the gate, and transfer untouched bundles,
+credential=GitHub, secret-store, Windows image, physical Mac, platform, reviewer, signer, and release
+approver access, payment=GitHub, hosting, licenses, hardware, review, signing, or release costs if
+applicable)`; `substitution_set=empty`. `G-V0.7`, the story, sprint, connector, platforms, product,
+and release remain open.
 
 ## [ ] Epic 8 - v1+ - Desktop, Extensions, Actions, Scheduling, and Agents
 
