@@ -2209,3 +2209,40 @@ and fidelity corpus around the prepared service without claiming installed-clien
 Exact next action: integrate the prepared spreadsheet service through Chat, CLI, and headless native
 client adapters so Sub-task 62.2.3.2 can prove client parity rather than substitute local parser
 results.
+
+## Batch 65 — Sprint 62 native spreadsheet client parity
+
+### Completed
+
+- Closed 2 TASKS rows: Task 62.2.3 and Sub-task 62.2.3.2. Native Chat, interactive CLI, and
+  headless now expose narrow spreadsheet adapters over the same host-owned production artifact
+  dispatcher. The focused parity case sends one freshness-bound cell range through all three and
+  requires byte-identical results, verified receipts, the production execution marker, and the exact
+  four cells. The bound review retains exact formula/cache/date/provenance and inert external-content
+  checks. Installed-binary and live-model campaigns remain open in Task 62.2.4 and are not inferred.
+  Promotions: 0. Substitutions: 0. Cumulative closed items: 158.
+- Commits: `653dc2c0` (shared native-client spreadsheet adapters), `e50f5cc4` (renewed bound
+  review, two TASKS closures, supply-chain and affected evidence carriers), and `9b64c4b9`
+  (single-pass Story 1.3 review-pin renewal). Commits: 3. Commits per closed item: 1.50. Review pins
+  advanced: 1; Story 1.3 now targets evidence commit `e50f5cc4` and tree `bc0496f7` after its RV-50
+  applicability inputs changed.
+
+### Validation and self-recovery
+
+- Focused validation: 7/7 prepared spreadsheet service/client tests, strict host Clippy, the
+  spreadsheet review contract and five mutations, supply-chain, Story 3.1, traceability,
+  contract-boundary, contract-evidence, Story 2.1, Story 2.2, Sprint 2, RV-50 and every downstream
+  artifact-context check pass. Supply-chain builds: 1. Evidence regeneration passes: 1. Recovery
+  iterations: 1. The first full chain ran 163.480 seconds and identified the RV-50 applicability
+  record as stale because it binds the changed client/runtime surface. Recovery regenerated RV-50,
+  advanced the sole intersecting review pin in one pass, and rebuilt and retested Story 1.3 and
+  Sprint 2. The recovered full chain ran 688.480 seconds and stopped only at the retained Story 6.1
+  rootless-Podman prerequisite after every preceding gate passed. Recorded final gate wall seconds:
+  688.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: evaluate Task 62.2.4 against existing runtime, model-profile, OCR, and platform
+evidence; implement every locally provable reconciliation and record exact external blockers for
+the remaining foundational milestone rows.
