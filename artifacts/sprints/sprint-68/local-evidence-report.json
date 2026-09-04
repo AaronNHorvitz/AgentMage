@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_68_local_evidence",
+  "source_revision": "f8960148b87fbfef8720ecd66cb12afb6b8d8b52",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "capabilities/knowledge/Cargo.toml": "d1aaf75cd939ed948adce94dc56091873a6611fb8f5f8c6dc3a50acf6d0974de",
+    "capabilities/knowledge/src/database_adapter.rs": "70533c0ee4b5eb9694501939851d6378ce1308a4f73f96611e8de92418939390",
+    "capabilities/knowledge/src/lib.rs": "222635dcfb0f8595f07cdbe4a936b5a195239b178a433f36aff854988231194e",
+    "schemas/runtime/structured-database-receipt.schema.json": "ff8c7379fc07382991b66d8455869d0ae1442bf940498eb9dc02f110776e35ee",
+    "schemas/runtime/examples/structured-database-receipt.valid.json": "e987ac6c8e9b78dab8b69c88424532f8c107f3aad96e561d1ec78f15b0f59e0a",
+    "scripts/validate_planning_schemas.mjs": "0eef445a4bf92715f829ab0d2ef94cd9658460b876efe9cf2e188ac122bdefd6",
+    "tests/test_planning_schemas.mjs": "9a3873f5959f8617782bbe5d9e96a14c56442d3a01f7cbb5b8c1e83f9c93394c",
+    "supply-chain/dependency-hashes.sha256": "1479807e49d008a7743e7a5eeb3e41cf7594f780f2f1eb286e2173104cd37714",
+    "supply-chain/dependency-provenance.json": "297a9cbcd6abe959468f9c24898282eeb8aa16a834d5f54d564326e0366a221f",
+    "supply-chain/sbom.cdx.json": "51040b2bb9a0402456262e715f3d90b943350cf6dbcc71735ebf3fe7b2e31c10",
+    "docs/architecture/bounded-local-structured-database.md": "464a677803c0638bd065223c536ff236f9cd2e5b136183fc9cbe1e97c8c1b85f",
+    "docs/guides/local-database-review.md": "67356bb3a80fb798e8ef5d5c01cf1ba677a605b668d9a71451248168f56a92cd",
+    "docs/verification/sprint-68-database-corpus.json": "46083ea8ef73b488f5f05457032c43b7d006a5496b4192afa52919bab3991d05",
+    "docs/verification/sprint-68-database-dependency-manifest.json": "481390b70da953bef85d5630e7f20b980f0dd04faae05b6dc3487a67539abb97",
+    "docs/verification/sprint-68-local-results.md": "d04d98f878b4b05c97de84a1177d331f68de282d9645eac37716354274a86a87",
+    "scripts/local_database_contract.py": "97cf591f8112d3231b5219a53fd67bfbd8252d7558a8cc6f07e1af2be216e524",
+    "tests/test_local_database_contract.py": "bf488f26cd07447e3467b4ff21e25b9f6278da944543b81f7642f41cfab6d5b5",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_68_evidence.py": "60555b32967b1e7781517cdcc20b38dbd81aa4767ab278d68a9924aca7fddf6e",
+    "tests/test_sprint_68_evidence.py": "5010b7f02c094ae87656abb662e6d5e0c9c312336a1eb5b66adc96d82388ddd6"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "local-database-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "database_adapter::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2280b62c948d37863e0d4ab387276e1375d5a3ca8b693a4b09fdd504b0295a30",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "local-database-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_local_database_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a6707d4eff38012da33ddc34bc6dc076a3b17151cfc9aef223c8790cbe64c3da",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "runtime-schema-contract",
+      "argv": [
+        "npm",
+        "run",
+        "-s",
+        "schemas:test"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a7a14e1777456919e758310d5ee184e73640e9678325fb36125137f1886fb98c",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "local-database-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "ee1d3fffa2022e962e63e0dbe4d35c9c198450a20c29fc09030f635dbb38bfcd",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "local-database-format",
+      "argv": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_68_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "372ee57a30b8a8b17bb056a0814266786a922da7dcf4139f4f9a2457745d6424",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-ACC-002",
+    "SR-ACC-006",
+    "SR-DAT-001",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-TST-002",
+    "SR-TST-004",
+    "SR-TST-006"
+  ],
+  "implemented_contracts": {
+    "database_rust_fixture_count": 4,
+    "database_corpus_case_count": 58,
+    "fixed_parameterized_templates": true,
+    "transactional_migration": true,
+    "separate_schema_row_fixture_permissions": true,
+    "sqlite_query_only": true,
+    "typed_null_precision_projection": true,
+    "redaction_before_result": true,
+    "row_column_byte_limits": true,
+    "cancellation": true,
+    "source_freshness_receipts": true,
+    "report_scope_authorization": true,
+    "live_database_access": false,
+    "raw_sql_access": false,
+    "external_credentials": false,
+    "filesystem_path_access": false,
+    "network_access": false,
+    "native_parity": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "database_corpus_case_count": 58,
+    "accepted_network_effect_count": 0,
+    "accepted_filesystem_effect_count": 0,
+    "live_connector_count": 0,
+    "external_credential_count": 0,
+    "raw_sql_entry_point_count": 0,
+    "permission_separation_verified": true,
+    "parameter_binding_verified": true,
+    "type_redaction_limit_receipt_verified": true,
+    "native_platform_count": 0,
+    "independent_review": false,
+    "manual_fuzzing": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-67-BLOCKED",
+      "owner": "68.1"
+    },
+    {
+      "code": "NATIVE-DATABASE-PARITY-ABSENT",
+      "owner": "68.1.3.5"
+    },
+    {
+      "code": "NATIVE-LOCK-TIMEOUT-CORRUPTION-CAMPAIGN-ABSENT",
+      "owner": "68.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-BOUNDARY-REVIEW-ABSENT",
+      "owner": "68.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-004"
+    }
+  ],
+  "summary": {
+    "local_sprint_68_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_67_closed": false,
+    "native_parity_complete": false,
+    "native_failure_campaign_complete": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "live_access_enabled": false,
+    "release_approval": false
+  }
+}
