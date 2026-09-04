@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_74_local_evidence",
+  "source_revision": "44231440560d577572591702a8ffb61c2643d53f",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "capabilities/knowledge/Cargo.toml": "d1aaf75cd939ed948adce94dc56091873a6611fb8f5f8c6dc3a50acf6d0974de",
+    "capabilities/knowledge/src/pull_request_review.rs": "cb7a45c1578acbf3f1c51e21ad63eef59ccf6520e66dbc1fa24187e45dbaef54",
+    "capabilities/knowledge/src/lib.rs": "e32285a5a1ee22ced27067f302b31afdd3f18e28750323bd99a30854a125eab7",
+    "schemas/runtime/pull-request-worktree-binding.schema.json": "f8a3b52f00dc0e5ac5fc49325b2f1385caeb8f33d172ea41f041f143f3356734",
+    "schemas/runtime/local-pull-request-review-packet.schema.json": "ca58b6623a5be5d4d052026323f81cc67dd1092e34c65f1403f2d83102956336",
+    "schemas/runtime/examples/pull-request-worktree-binding.valid.json": "a3fbe7a9872a7974f366f9960bad45290c9278d2ba83c4a2db771ab47f460eee",
+    "schemas/runtime/examples/local-pull-request-review-packet.valid.json": "5ed0e4b24517be9a7a9b57569e640de4fb56ed639ad14d41db05e1111e46939a",
+    "scripts/validate_planning_schemas.mjs": "c6f8b4cda580f37ce78e6c60f9df4b346c68e4bd53c550000e9248f78520f86e",
+    "tests/test_planning_schemas.mjs": "9ca263d7a1ad2a3b6c31e95b78872a6b11689770d43a1715e56e500f96f653b5",
+    "supply-chain/dependency-hashes.sha256": "b65be0393c66c56de2fa94b1511738ce5213bdf312697b12e2a90d42fcb5f1de",
+    "supply-chain/dependency-provenance.json": "ac800dfeb69a4314975b5c622d4b4986117609a4dac476e6572a928fd78d10c5",
+    "supply-chain/sbom.cdx.json": "3aa3778600f8b1eddc645f9de2abc1ad0899f845597c71f37f810caacebb26b9",
+    "docs/architecture/pull-request-local-review.md": "220a2352ae97bf300164c477275dcf0ee30881a487358b4b2693824828e9a66e",
+    "docs/guides/pull-request-local-review.md": "69fc54323eac14996249dce7bd8412913cd8c504e7b23cb390a20b76ba515f04",
+    "docs/verification/sprint-74-pr-review-corpus.json": "4225ec7d20434073af641fb02c7309f08eeb3f573055d4f28dec7f8f7b1e46d8",
+    "docs/verification/sprint-74-pr-review-dependencies.json": "b431d9e3c5d126c2a57d95851b631b5e1943ed4c79fc653d55dbd9f14ee27fd9",
+    "docs/verification/sprint-74-local-results.md": "58f2099fd066ec58b7e97fbdbd5239a201ffd82a7f7ce7d0f5593fb014f098a5",
+    "scripts/pull_request_review_contract.py": "1c30513e6cda5d871767e33351b13f52244177125671ec3d5156e7af0925be6e",
+    "tests/test_pull_request_review_contract.py": "28c0555fdb33e8ad1d0a86c05d115196d32b1e71334322e995b7f6d5a74d4868",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_74_evidence.py": "909809023320cdd95813cce17cbd0e1a513422e08bd15b04fbe89459277b6230",
+    "tests/test_sprint_74_evidence.py": "dd17c89aaf4389bf522c4533c24aa76e07d6867d44db5dc99697473796a84233"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "pr-review-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "pull_request_review::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "ffb4c6ad902613a23bc371af1dd47d54fdb06712eb7abc2ec3202c76ab1aeb6a",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "pr-review-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_pull_request_review_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "fb184ea57734512b1f088f9181209901b9cd46df3eb7eaa2500ea9e48dde20b5",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "runtime-schema-contract",
+      "argv": [
+        "npm",
+        "run",
+        "-s",
+        "schemas:test"
+      ],
+      "exit_code": 0,
+      "output_sha256": "4c9385966d32bfbfbe80e70ec1faca18db827d7a22fab3e45ff33dfadf4f54c5",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "pr-review-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "ee1d3fffa2022e962e63e0dbe4d35c9c198450a20c29fc09030f635dbb38bfcd",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "pr-review-format",
+      "argv": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_74_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "5279d1fc9a1ced44f9c96da1414ef59e4676f963fbad52e7a1a2903538819b0d",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-AI-003",
+    "SR-AI-005",
+    "SR-AI-010",
+    "SR-TST-004",
+    "SR-TST-005"
+  ],
+  "implemented_contracts": {
+    "rust_fixture_count": 4,
+    "corpus_case_count": 53,
+    "review_dimension_count": 7,
+    "finding_state_count": 8,
+    "runtime_schema_count": 2,
+    "owned_worktree_contract_reused": true,
+    "actual_pr_fetch_checkout": false,
+    "actual_review_execution": false,
+    "network_client_count": 0,
+    "publication_operation_count": 0,
+    "hosted_effect_count": 0,
+    "active_checkout_effect_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "corpus_case_count": 53,
+    "review_dimension_count": 7,
+    "finding_state_count": 8,
+    "publication_operation_count": 0,
+    "hosted_effect_count": 0,
+    "active_checkout_effect_count": 0,
+    "native_campaign": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-73-BLOCKED",
+      "owner": "74.1"
+    },
+    {
+      "code": "PR-FETCH-CHECKOUT-AND-NATIVE-REVIEW-ABSENT",
+      "owner": "74.1.1.1"
+    },
+    {
+      "code": "HOSTED-REFRESH-AND-REVIEW-CAMPAIGN-ABSENT",
+      "owner": "74.1.3.4"
+    },
+    {
+      "code": "NATIVE-PR-SECURITY-CAMPAIGN-ABSENT",
+      "owner": "74.1.3.5"
+    }
+  ],
+  "summary": {
+    "local_sprint_74_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_73_closed": false,
+    "actual_pr_fetch_checkout_complete": false,
+    "actual_review_execution_complete": false,
+    "hosted_refresh_complete": false,
+    "native_security_evidence_complete": false,
+    "independent_review_present": false,
+    "release_approval": false
+  }
+}
