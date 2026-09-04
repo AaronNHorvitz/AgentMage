@@ -2289,3 +2289,43 @@ Exact next action: Sprint 125 integrated delivery and Windows release gates. Cum
 
 Exact next action: Sprint 126 delivery/Windows release-candidate checkpoint. Cumulative closures:
 1,320; write the 1,300 checkpoint after push.
+
+## Batch 126 — Sprint 126 truthful release checkpoint
+
+### Completed
+
+- Closed 8 local Sprint 126 rows: requirement/release traceability, truth documentation, raw
+  summary reconciliation, closed support-state matrix, synthetic release-gate refusal, Story
+  AC2–AC3, and Sprint AC1. Retained 256 blocker cases and 8 truth documents. Native reproductions,
+  signatures, approvals, packages, and promotions: 0 each. Substitutions: 0. Batch closures: 8.
+  Cumulative closures: 1,328.
+- Commits: `ba5aa2b5` (checkpoint contracts/corpus/tests/closures and byte-stable supply chain),
+  `f42b2ea7` (source report), `622344c9` (five downstream artifacts). Including log: 4;
+  commits/item: 0.50. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 6 focused Python tests, traceability/status/dependency rules, corpus/report, and all
+  downstream checks. Supply-chain builds: 1; corpus generations: 2; successful report builds: 1.
+  Full gate: 692.28 seconds, stopping only at Story 6.1 Podman. Self-recovery: 2: replaced absent
+  `MODEL-POLICY.md` with authoritative `MODEL-PROVENANCE-POLICY.md`, then regenerated the stale
+  corpus; rebuilt traceability before the report after its initial pre-write currentness refusal.
+- Release qualification remains `BLOCKED_EXTERNAL(platform=exact Fedora, Ubuntu, and Windows
+  release-candidate platforms, promoted providers and credentials, native model/runtime, signing
+  infrastructure, accessibility/performance/network/process/residue instrumentation, independent
+  reproduction and review environment, and release owner approval, artifact=untouched signed
+  packages, binary/source/cryptographic/model BOMs, manifests, provenance, hashes, lifecycle/
+  provider/AT/RV/accessibility/performance/recovery/removal results, evidence index, reviewer
+  signatures, user approval, and release notes, action=provision exact release candidates,
+  providers, credentials, native platforms, models, signing, instrumentation, reviewers, and
+  release owner; execute all Sprint 126 native, provider, AT-GA-001, RV-01 through RV-30, RV-49,
+  and Story 126.2 campaigns; approve and sign only if green; then transfer untouched evidence,
+  credential=provider, platform, model, signing, instrumentation, reviewer, and release-owner
+  access, payment=provider, model, platform, hosting, signing, instrumentation, accessibility,
+  performance, or review costs if applicable)`; `substitution_set=empty`.
+- Sprint 126 remains `UPSTREAM-SPRINT-125-BLOCKED`; `substitution_set=empty`. Full-chain blocker:
+  `blocked: host change required — run npm run -s docs:check outside the restricted filesystem
+  sandbox with the current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: audit Phase A frozen rows and, if all remaining rows are human-blocked, execute
+the authorized Decision 0047 transition. Cumulative closures: 1,328; next checkpoint: 1,350.
