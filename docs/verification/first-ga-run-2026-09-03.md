@@ -2613,3 +2613,40 @@ Exact next action: all remaining Sprint 67 rows depend on exact external tuples;
 Exact next action: all remaining Sprint 68 rows depend on exact external tuples; continue Decision
 0021 ordering at Sprint 69 v0.6 administrative and document release gate. The 250-item checkpoint
 handoff is required after this batch push.
+
+## Batch 75 — Sprint 69 blocked v0.6 local aggregate
+
+### Completed
+
+- Closed 13 TASKS rows: implementation Sub-tasks 69.1.1.1/.5/.6; Task 69.1.2 and all 4 artifact
+  sub-tasks; Story AC 69.1.AC2; and Sprint AC 69.AC2/.AC3/.AC4/.AC5. The aggregate binds 14 committed
+  Sprint 54–68 reports plus 3 committed Sprint 64 result/corpus/dependency sources, 8 administrative
+  workflows, 10 format classes, 14 review guides, and 6 disabled external-effect classes. Every
+  source remains blocked, supported formats/platforms remain 0/0, and release approval remains false.
+  Promotions: 0. Substitutions: 0. Cumulative closed items: 266.
+- Commits: `059bf8b6` (v0.6 local aggregate artifacts and truthful closures), `22cb98d9` (replace one
+  uncommitted local Sprint 64 report reference with three committed sources), `7b5b5e2e`
+  (source-bound 4-command Sprint 69 report), and `c6d673d7` (one affected evidence regeneration
+  pass). Commits including log: 5. Commits per closed item: 0.38. Review pins advanced: 0; complete
+  `REVIEWED_PATHS` intersection across 15 batch paths and all pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 2 aggregate contract tests, 3 evidence mutation tests, Markdown lint,
+  supply-chain currentness, product-CI contract, configuration startup/result, component inventory,
+  Story 3.1 security/gate, planning scope, traceability, contract boundary/evidence, Stories
+  2.1/2.2/2.4, and Sprint 2 pass. Supply-chain builds: 1. Local report builds: 1 successful.
+  Downstream evidence regeneration passes: 1. Recovery iterations: 1 — the recorder rejected the
+  locally present but uncommitted Sprint 64 report, so the aggregate was corrected to bind its three
+  committed result/corpus/dependency sources instead. The full chain ran 690.07 seconds and stopped
+  only at the retained Story 6.1 rootless-Podman prerequisite after every preceding gate passed.
+  Recorded gate wall seconds: 690.
+- Native cross-format/render/accessibility/hostile/recovery/controlled-write campaigns, independent
+  review, manual fuzzing, signing, and release approval remain blocked on all exact Sprint 54–68
+  tuples plus the exact aggregate tuple in Sub-task 69.1.3.5; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 69 rows depend on exact external tuples; continue Decision
+0021 ordering at Sprint 70 visible network capability and connector cache.
