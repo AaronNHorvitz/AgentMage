@@ -1249,3 +1249,53 @@ checkpoint after push.
 Exact next action: continue Decision 0021 ordering at Sprint 104 shared delivery security,
 reliability, observability, and forward-compatibility contracts. Cumulative closures are 868;
 write the required 850-item checkpoint after push.
+
+## Batch 104 — Sprint 104 connected identity and credential isolation
+
+### Completed
+
+- Closed 21 local Sprint 104 rows: Tasks 104.1.1 and 104.1.2 and their 8 sub-tasks;
+  Sub-tasks 104.1.3.1 through 104.1.3.4; all 3 story acceptance criteria; and Sprint AC
+  104.AC1 through 104.AC4. The kernel contract binds 16 connected-identity axes, 6 credential
+  states, and 8 non-inheriting capability classes to exact operation-scoped workers, grants,
+  cache namespaces, network destinations, non-secret diagnostics, and receipts.
+- The deterministic corpus retains 2,048 identity-confusion cases, all 336 unequal class/origin
+  escalation combinations, 8 secret-canary surfaces, and 64 concurrent synthetic account pairs.
+  Wrong-domain requests: 0. Disclosures: 0. Admitted escalations: 0. Shared credential/cache/grant/
+  context states: 0. Native identities: 0. Live providers: 0. Independent reviews: 0.
+  Promotions: 0. Substitutions: 0. Batch closures: 21. Cumulative closed items: 889.
+- Commits: `09e00b1e` (kernel source, generators, tests, truthful closures, corpus, and final
+  supply-chain carrier), `7710c92b` (source-bound Sprint 104 report), and `e84c512b` (one affected
+  downstream evidence regeneration pass). Commits including log: 4. Commits per closed item:
+  0.19. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across all 27 Batch 104
+  changed or regenerated paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 4 Rust cases, 4 corpus-contract tests, 3 evidence mutation tests, strict
+  kernel Clippy, Rust format, Python compilation, Markdown, 2,048 confusion cases, 336 escalation
+  cases, 8 canary surfaces, 64 worker-pair cases, supply-chain currentness, product CI, 14 affected
+  downstream checks/test groups, and the source-bound report passed. Supply-chain builds: 1.
+  Corpus generations: 1. Local report builds: 1 successful. Downstream evidence regeneration
+  passes: 1. Recovery iterations: 1; a manually transcribed non-existent 40-character source hash
+  was replaced with the exact `git rev-parse` result before the successful evidence write. The
+  full chain ran 711.77 seconds and stopped only at the retained Story 6.1 rootless-Podman
+  prerequisite after every preceding gate passed. Recorded gate wall seconds: 712.
+- Native `RV-24` execution and independent review remain
+  `BLOCKED_EXTERNAL(platform=native operation-scoped provider workers with multiple accounts on
+  identical and different hosts plus an independent review environment, artifact=untouched RV-24
+  process/network traces, secret-canary scan, request destinations, denial matrix, concurrent
+  credential/cache/grant/context isolation results, environment manifest, and independent review,
+  action=provision native provider workers, isolated accounts and credential domains,
+  instrumentation, and independent reviewer; execute RV-24 and transfer untouched evidence,
+  credential=provider, host, tenant, account, project, environment, secret-store,
+  instrumentation, and reviewer access, payment=provider, host, instrumentation, or review costs
+  if applicable)`; `substitution_set=empty`.
+- Sprint 104 also remains dependency-blocked by `UPSTREAM-SPRINT-103-BLOCKED` with no
+  substitution. Exact full-chain carrier blocker: `blocked: host change required — run npm run -s
+  docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 105 external-effect and event
+lifecycle contracts. Cumulative closures are 889; write the required 875-item checkpoint after
+push.
