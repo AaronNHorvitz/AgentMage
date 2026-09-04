@@ -163,7 +163,7 @@
         "npm-workspace": 2,
         "swift-workspace": 1
       },
-      "identity_set_sha256": "7c0777a964b39c022eba71d971ed9164ebb4087bfe7967734de16daf93df99cf",
+      "identity_set_sha256": "f5982aea83e4dc0325609732e48bfc03ed3a49c58d6dcae86495a10731828025",
       "source": "supply-chain/dependency-provenance.json"
     },
     "product_runtimes": []
@@ -360,7 +360,7 @@
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "eab0fdd480623e6017e5f8787c70add6f4d88d7cf8a84c864155caae6b22a6d7"
+      "sha256": "e8165b24d70c44bc0e9c3e94a0824d1ef0424b4ff16425b09a7ca54b99e470be"
     },
     {
       "path": "architecture/dependency-classes.json",
@@ -396,11 +396,11 @@
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "971ae0a974d95bbe122b1df135ee573fb2ede3c4715680526b59a02f9aad2fac"
+      "sha256": "4df83f82370f320d0a56b7d325efc849fcd2ac02aeb1b4acd9561b02f9dc1d2a"
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "4222bb40ca22ae64e98aab3a439dcdea14a2c55ece6bea3d5cf3123d8f25d82d"
+      "sha256": "fd82e9a0f498c41d22295f51533db474dec49f2d389210f87ba556c473552e1e"
     },
     {
       "path": "scripts/component_inventory.py",
