@@ -13,6 +13,8 @@ use agentmage_kernel_contracts::PLATFORM_ADAPTER_API_VERSION;
 
 mod delivery_contract;
 pub use delivery_contract::*;
+mod runtime_boundary;
+pub use runtime_boundary::*;
 
 /// Stable component identity used by architecture and package manifests.
 pub const COMPONENT_ID: &str = "platform-windows";

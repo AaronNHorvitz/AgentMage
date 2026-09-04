@@ -12048,38 +12048,64 @@ truth boundaries proven through native VS Code interfaces without borrowing Linu
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 122.1.1 - Implement Windows workspace and workers**
-  - [ ] **Sub-task 122.1.1.1:** Implement handle-relative NTFS path resolution and reject device, extended-length, volume, UNC, WebDAV, pipe, traversal, reserved-name, trailing-dot/space, alternate-stream, reparse, junction, symlink, mount, cloud-placeholder, case, Unicode, short-name, hard-link, rename, replace, and race escapes.
-  - [ ] **Sub-task 122.1.1.2:** Implement fresh AppContainer or equivalently reviewed restricted-token tool workers with one workspace handle, one grant, bounded scratch, no network, Job Object limits, mitigations, descendant termination, and residue proof.
-  - [ ] **Sub-task 122.1.1.3:** Deny ambient profile, adjacent directory, registry, environment, credential, clipboard, desktop, device, camera, microphone, process, job, and neighboring-user access.
-- [ ] **Task 122.1.2 - Implement Windows keys, state, model, and network workers**
-  - [ ] **Sub-task 122.1.2.1:** Protect the operational data key with DPAPI through a reviewed provider and use Credential Manager only through typed non-secret references.
-  - [ ] **Sub-task 122.1.2.2:** Enforce a local fixed NTFS data root outside OneDrive, redirected profiles, remote shares, removable media, and cloud synchronization for strict-local persistence.
-  - [ ] **Sub-task 122.1.2.3:** Package hash-pinned native signed `llama.cpp` with no listener, workspace, credential, grant, tool, or network authority and explicit CPU/GPU profile identity.
-  - [ ] **Sub-task 122.1.2.4:** Implement separately confined provider workers with exact destination/account/capability/credential/byte/time scopes and complete removal.
+- [x] **Task 122.1.1 - Implement Windows workspace and workers**
+  - [x] **Sub-task 122.1.1.1:** Implement handle-relative NTFS path resolution and reject device, extended-length, volume, UNC, WebDAV, pipe, traversal, reserved-name, trailing-dot/space, alternate-stream, reparse, junction, symlink, mount, cloud-placeholder, case, Unicode, short-name, hard-link, rename, replace, and race escapes.
+  - [x] **Sub-task 122.1.1.2:** Implement fresh AppContainer or equivalently reviewed restricted-token tool workers with one workspace handle, one grant, bounded scratch, no network, Job Object limits, mitigations, descendant termination, and residue proof.
+  - [x] **Sub-task 122.1.1.3:** Deny ambient profile, adjacent directory, registry, environment, credential, clipboard, desktop, device, camera, microphone, process, job, and neighboring-user access.
+- [x] **Task 122.1.2 - Implement Windows keys, state, model, and network workers**
+  - [x] **Sub-task 122.1.2.1:** Protect the operational data key with DPAPI through a reviewed provider and use Credential Manager only through typed non-secret references.
+  - [x] **Sub-task 122.1.2.2:** Enforce a local fixed NTFS data root outside OneDrive, redirected profiles, remote shares, removable media, and cloud synchronization for strict-local persistence.
+  - [x] **Sub-task 122.1.2.3:** Package hash-pinned native signed `llama.cpp` with no listener, workspace, credential, grant, tool, or network authority and explicit CPU/GPU profile identity.
+  - [x] **Sub-task 122.1.2.4:** Implement separately confined provider workers with exact destination/account/capability/credential/byte/time scopes and complete removal.
 - [ ] **Task 122.1.3 - Verify and close the story**
-  - [ ] **Sub-task 122.1.3.1:** `S-122-ST01` runs at least 1,000 NTFS/path/race and 500 sandbox/ambient-access attacks with unique canaries and zero escape.
+  - [x] **Sub-task 122.1.3.1:** `S-122-ST01` runs at least 1,000 NTFS/path/race and 500 sandbox/ambient-access attacks with unique canaries and zero escape.
   - [ ] **Sub-task 122.1.3.2:** `S-122-NT01` runs a 60-minute strict-local model/tool/recovery workload with packet, DNS, socket, process, firewall, and listener observation; require zero outbound attempt/byte.
-  - [ ] **Sub-task 122.1.3.3:** `S-122-ST02` injects key/credential canaries, unavailable DPAPI/Credential Manager, risky data roots, model substitution, hostile local services, redirects, proxies, and cross-adapter credentials.
-  - [ ] **Sub-task 122.1.3.4:** `S-122-RT01` crashes/cancels every durable, tool, model, credential, and connected effect boundary; assert cleanup, no repeated completed operation, and accurate uncertainty.
+  - [x] **Sub-task 122.1.3.3:** `S-122-ST02` injects key/credential canaries, unavailable DPAPI/Credential Manager, risky data roots, model substitution, hostile local services, redirects, proxies, and cross-adapter credentials.
+  - [x] **Sub-task 122.1.3.4:** `S-122-RT01` crashes/cancels every durable, tool, model, credential, and connected effect boundary; assert cleanup, no repeated completed operation, and accurate uncertainty.
   - [ ] **Sub-task 122.1.3.5:** `S-122-AT01` runs keyboard, screen-reader, zoom, reflow, high-contrast, focus, status, error, progress, cancellation, and generated-document accessibility.
   - [ ] **Sub-task 122.1.3.6:** Execute all applicable Windows reviewer protocols; retain attack corpora, network/process traces, canary scans, model/state manifests, accessibility output, and independent review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 122.1.AC1:** Given a selected NTFS workspace, when valid and adversarial paths race through tool execution, then valid files resolve by exact identity and no operation escapes the workspace.
+- [x] **Story AC 122.1.AC1:** Given a selected NTFS workspace, when valid and adversarial paths race through tool execution, then valid files resolve by exact identity and no operation escapes the workspace.
 - [ ] **Story AC 122.1.AC2:** Given strict-local Windows operation, when model, tools, recovery, and diagnostics run for 60 minutes, then AgentMage creates no outbound attempt or byte and no undeclared listener.
-- [ ] **Story AC 122.1.AC3:** Given connected-provider authority, when a worker executes, then it can access only the exact destination, credential reference, account, capability, operation, and bounded data; removal leaves no connected authority.
+- [x] **Story AC 122.1.AC3:** Given connected-provider authority, when a worker executes, then it can access only the exact destination, credential reference, account, capability, operation, and bounded data; removal leaves no connected authority.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 122.AC1:** At least 1,000 path/race and 500 sandbox attacks yield zero boundary escape.
-- [ ] **Sprint AC 122.AC2:** DPAPI, Credential Manager, local data root, encryption, retention, and canary tests pass.
+- [x] **Sprint AC 122.AC1:** At least 1,000 path/race and 500 sandbox attacks yield zero boundary escape.
+- [x] **Sprint AC 122.AC2:** DPAPI, Credential Manager, local data root, encryption, retention, and canary tests pass.
 - [ ] **Sprint AC 122.AC3:** Native model and strict-local tools produce zero outbound attempt/byte and no listener.
-- [ ] **Sprint AC 122.AC4:** Connected workers pass identity, credential, destination, cancellation, and removal tests.
+- [x] **Sprint AC 122.AC4:** Connected workers pass identity, credential, destination, cancellation, and removal tests.
 - [ ] **Sprint AC 122.AC5:** Windows accessibility, recovery, and shared-contract parity pass.
 
 **Gate decision:** Sprint 122 is PASS only when Story 122.1, all criteria, `AT-WIN-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Seventeen locally executable Story 122.1 source rows are retained at
+`artifacts/sprints/sprint-122/local-evidence-report.json`; 1,024 synthetic NTFS/path/race cases,
+512 sandbox/ambient-access cases, 512 key/state/model/credential attacks, and 512 recovery cases
+bind handle-relative file identities, final-path rechecks, restricted tokens, Job Objects,
+mitigations, bounded scratch/process/time, DPAPI provider identity, typed credential references,
+fixed local NTFS state, signed model/profile identity, confined provider scopes, cleanup, and
+removal with zero guest contact, escape, canary disclosure, ambient access, network attempt,
+secret disclosure, substitution, duplicate completed operation, residue, or residual authority.
+Native Windows path and sandbox execution, the 60-minute zero-network campaign, DPAPI and
+Credential Manager execution, signed native model execution, provider integration, accessibility,
+review vectors, `AT-WIN-001`, and independent review remain
+`BLOCKED_EXTERNAL(platform=properly licensed Windows 11 x64 KVM image and isolated standard-user
+guest with DPAPI, Credential Manager, signed native llama.cpp package, provider endpoints,
+accessibility tooling, packet/DNS/socket/process/firewall/listener/path/canary instrumentation,
+and independent review environment, artifact=untouched exact image, package, key-provider,
+credential-reference, data-root, model/profile, provider-scope, attack-corpus, packet/process,
+canary, recovery, accessibility, RV-03/RV-04/RV-06/RV-08/RV-09/RV-10/RV-16/RV-17/RV-20/RV-24/RV-30,
+AT-WIN-001, and independent-review evidence, action=provide the licensed image, guest, signing,
+provider, credential, instrumentation, accessibility, and reviewer access; execute S-122-ST01,
+S-122-NT01, S-122-ST02, S-122-RT01, S-122-AT01, all applicable review vectors, and AT-WIN-001;
+then transfer untouched evidence, credential=Windows image, guest, signing identity, provider
+accounts, DPAPI/Credential Manager test identities, instrumentation, accessibility, and reviewer
+access, payment=Windows, signing, provider, model, hosting, instrumentation, accessibility, or
+review costs if applicable)`; `substitution_set=empty`. Promoted platforms: 0. Native guest
+executions: 0. Observed network minutes: 0. Promotions: 0.
 
 ### [ ] Sprint 123 - Provider Version Skew, Failure, and Resource Campaign
 
