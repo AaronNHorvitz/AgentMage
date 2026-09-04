@@ -2486,3 +2486,42 @@ export-boundary work after the externally blocked native/provider rows, then pro
 
 Exact next action: all remaining Sprint 65 rows depend on exact external tuples; continue Decision
 0021 ordering at Sprint 66 safe additional file parsers.
+
+## Batch 72 — Sprint 66 safe additional file parsers
+
+### Completed
+
+- Closed 19 TASKS rows: Task 66.1.1 and all 6 implementation sub-tasks; Task 66.1.2 and both artifact
+  sub-tasks; verification Sub-tasks 66.1.3.1/.2/.3; all 3 Story AC; and Sprint AC
+  66.AC1/.AC3/.AC5. The caller-supplied, effect-free parser surface now covers inert saved HTML,
+  entity-free bounded XML, Jupyter notebook cells/outputs/metadata, constructor-free secret-redacting
+  YAML, ordered JSON-lines/timestamp/stack/plain logs, metadata-only ZIP inventory and nested
+  quarantine, and 6 explicitly disabled deferred formats. Six Rust cases and a 140-case corpus bind
+  the local result. Promotions: 0. Substitutions: 0. Cumulative closed items: 222.
+- Commits: `bf0b907d` (all six parser capabilities, BOM, docs, 140-case contract, focused tests, and
+  final supply-chain carrier), `36553d30` (source-bound 7-command report, 19 truthful closures, and
+  exact blockers), and `47aef9d7` (one affected evidence regeneration pass). Commits: 3. Commits per
+  closed item: 0.16. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across 24 batch
+  paths and all pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 6 additional-parser Rust cases, 140-case parser contract, evidence mutation
+  tests, strict capability Clippy, format, supply-chain currentness, product-CI contract,
+  configuration startup/result, component inventory, Story 3.1 security/gate, planning scope,
+  traceability, contract boundary/evidence, Stories 2.1/2.2/2.4, and Sprint 2 pass. Supply-chain
+  builds: 1. Local report builds: 1. Downstream evidence regeneration passes: 1. Recovery iterations:
+  0. The full chain ran 694.68 seconds and stopped only at the retained Story 6.1 rootless-Podman
+  prerequisite after every preceding gate passed. Recorded gate wall seconds: 695.
+- Product-security Sub-task 66.1.3.4 and dependent Sprint AC 66.AC2/.AC4 remain open on the still-open
+  Sprint 67 transcription metrics plus 4 exact blocker families with `substitution_set=empty`: a
+  Fedora/Ubuntu host change for native comparison tools and the pinned parser campaign; a licensed
+  Windows 11 x64 KVM guest and admitted comparison tools; a physical supported MacBook and admitted
+  comparison tools; and an independent capability-decision/native-reconciliation/manual-fuzz
+  campaign. Read-only formats make no unsupported authoring round-trip claim.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 67 local audio transcription and common
+artifact receipts; the next batch crossing 225 closures must write the 225-item checkpoint handoff.
