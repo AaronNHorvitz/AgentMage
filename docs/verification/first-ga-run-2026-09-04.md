@@ -1738,3 +1738,55 @@ Cumulative closures are 1,070; write the required 1,050-item checkpoint after pu
 Exact next action: continue Decision 0021 ordering at Sprint 114 Terraform and OpenTofu
 infrastructure safety. Cumulative closures are 1,088; write the required 1,075-item checkpoint after
 push.
+
+## Batch 114 — Sprint 114 infrastructure safety
+
+### Completed
+
+- Closed 20 local Sprint 114 rows: Terraform/OpenTofu inspection, isolated init/validate/plan
+  contracts, exact saved-plan identity, effect classification, unchanged-plan admission, redacted
+  progress and receipts, no-retry recovery, all four synthetic verification suites, all story
+  criteria, and Sprint AC 114.AC2 through AC4. The corpus contains 2 tool families, 24 read cases,
+  64 saved plans, 2,048 hostile cases, and 512 fault cases. Live backend contacts: 0. Secret values:
+  0. Plan substitutions: 0. Authority escapes: 0. Duplicate applies: 0. Automatic retries: 0. State
+  surgery operations: 0.
+- Promoted IaC tools: 0. Live backends: 0. Complete supported-version matrix, `RV-29`, or
+  `AT-IAC-001`: false. Independent human reviews: 0. Promotions: 0. Substitutions: 0. Batch
+  closures: 20. Cumulative closed items: 1,108.
+- Commits: `3158b6ec` (infrastructure contracts, corpus, tests, truthful closures, and supply-chain
+  renewal), `39f1b213` (source-bound Sprint 114 report), and `8cee1c1b` (complete downstream
+  contract/configuration/traceability renewal). Commits including log: 4. Commits per closed item:
+  0.20. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across every Batch 114
+  changed or regenerated path and every pin-bearing gate: empty.
+
+### Validation and blockers
+
+- Focused validation passed 4 Rust infrastructure tests, strict Clippy, 3 corpus tests, 3 evidence
+  tests, Python compilation, dependency rules, supply-chain currentness, product CI, all affected
+  contract/configuration/traceability checks, and the source-bound report. Supply-chain builds: 1.
+  Corpus generations: 1. Local report builds: 1. Full gate wall seconds: 678; it stopped only at the
+  retained Story 6.1 rootless-Podman prerequisite after every preceding gate passed. Self-recovery
+  iterations: 2; an atomic patch used an absent module-order anchor and changed no file, then the
+  evidence unit test rejected a prohibited secret-shaped metadata field, which was renamed before
+  artifact generation.
+- Real Terraform/OpenTofu matrices, backend/provider effects, and independent review remain
+  `BLOCKED_EXTERNAL(platform=isolated supported Terraform and OpenTofu toolchains, provider/module
+  mirrors, non-production and production backends, workspaces, state stores, policy services, cloud
+  test accounts, and independent review environment, artifact=untouched exact version matrices,
+  init/validate/saved plans, provider/module locks, redacted variables and outputs, state digests
+  and lineage, policy results, pre/post snapshots, progress, provider uncertainty, drift, recovery
+  and apply receipts, RV-25/RV-28/RV-29 results, AT-IAC-001 bundle, support matrix, and independent
+  review, action=provision isolated toolchains, mirrors, backends, state stores, policies, accounts,
+  credentials, instrumentation, and independent reviewer; execute S-114-UT01/ST01/IT01/FT01,
+  RV-25, RV-28, RV-29, and AT-IAC-001 against real supported versions, then transfer untouched
+  evidence, credential=backend, state, provider, module, policy, cloud, instrumentation, and
+  reviewer access, payment=cloud, backend, state, mirror, policy, hosting, instrumentation, or
+  review costs if applicable)`; `substitution_set=empty`.
+- Sprint 114 also remains dependency-blocked by `UPSTREAM-SPRINT-113-BLOCKED` with no
+  substitution. Exact full-chain carrier blocker: `blocked: host change required — run npm run -s
+  docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 115 releases, feature flags,
+progressive delivery, and migrations. Cumulative closures are 1,108; write the required 1,100-item
+checkpoint after push.
