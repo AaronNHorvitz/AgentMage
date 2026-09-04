@@ -860,3 +860,51 @@ are 642; write the required 625-item checkpoint after push.
 Exact next action: all remaining Sprint 92 and 93 rows depend on upstream or exact external tuples;
 continue Decision 0021 ordering at Sprint 94 child authority and isolation. Cumulative closures are
 707; write the required 650/675-item checkpoint after push.
+
+## Batch 96 — Sprint 94 child authority and isolation
+
+### Completed
+
+- Closed 18 TASKS rows: Task 94.1.1 and all 5 implementation sub-tasks; Task 94.1.2 and both
+  artifact sub-tasks; verification Sub-tasks 94.1.3.1 through 94.1.3.3; all 3 Story acceptance
+  criteria; and Sprint AC94.AC1, AC94.AC3, and AC94.AC4. The pure shared contract computes a
+  four-way authority intersection with deny precedence, binds 6 isolated state/worktree
+  partitions, rejects sibling path/worktree collisions, enforces 9 resource ceilings, converts
+  results to authority-free parent-review proposals, and projects ancestor controls across every
+  descendant while owning 0 process, model, tool, network, storage, or worktree executor.
+  Promotions: 0. Substitutions: 0. Cumulative closed items: 725.
+- Commits: `247f6c66` (child-authority source, 96-case corpus, tests, truthful closures, and final
+  supply-chain carrier), `6bbebf75` (source-bound Sprint 94 report), and `a763db71` (one affected
+  downstream evidence regeneration pass). Commits including log: 4. Commits per closed item:
+  0.22. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across all 27 Batch 96
+  paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 5 Rust cases, 4 artifact-contract tests, 3 evidence mutation tests, strict
+  kernel Clippy, format, Python compilation, Markdown, 96 property cases across 24 classes,
+  supply-chain currentness, and product CI passed. Supply-chain builds: 2. Local report builds: 1.
+  Downstream evidence regeneration passes: 1. Recovery iterations: 1. Strict Clippy identified one
+  needless test-only clone after the first carrier build; the test was corrected and the
+  supply-chain carrier was rebuilt once after that final source edit. The full chain ran 713.10
+  seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite after every
+  preceding gate passed. Recorded gate wall seconds: 713.
+- Native child isolation, descendant cleanup, and independent review evidence remains blocked on
+  `BLOCKED_EXTERNAL(platform=native multi-child process, model, tool, network, storage, and
+  worktree environment plus independent security review, artifact=untouched authority property
+  results, partition canaries, process/model/tool/network traces, worktree and path-ownership
+  traces, collision attempts, resource-limit results, pause/cancel/expire descendant cleanup
+  observations, untrusted-result and parent-review packets, and reviewer bundle, action=provision
+  exact native multi-child runtime, isolated storage, dedicated worktrees, process/model/tool/
+  network and failure instrumentation, adversarial fixtures, and independent reviewer, execute
+  S-072-RT01 and the native Sprint 94 isolation, cancellation, and product-security campaign, and
+  transfer untouched bundles, credential=runtime, storage, worktree, model, tool, network fixture,
+  instrumentation, and reviewer access, payment=platform, storage, model, tool, network,
+  instrumentation, or review costs if applicable)`; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 94 rows depend on upstream or the exact external tuple;
+continue Decision 0021 ordering at Sprint 95 agent coordination, review, and direction. Cumulative
+closures are 725; write the required 725-item checkpoint after push.
