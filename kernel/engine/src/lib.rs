@@ -154,6 +154,8 @@ pub mod policy;
 /// Deterministic static and typed-fact checks before advisory classification.
 pub mod preclassification_policy;
 pub mod productivity_identity_graph;
+/// Truthful unified productivity inbox.
+pub mod productivity_inbox;
 /// Versioned productivity-pack manifests, lifecycle, discovery, and data-flow admission.
 pub mod productivity_pack;
 /// Deterministic provider synchronization and incomplete-state truth.

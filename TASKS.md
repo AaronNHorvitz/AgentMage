@@ -12746,39 +12746,43 @@ authority. Sprint 130 remains `UPSTREAM-SPRINT-129-BLOCKED`; `substitution_set=e
 
 **Dependencies:** Sprints 129-130; local retrieval, citation, classification, and Visual Studio Code shell foundations.
 
-#### [ ] Story 131.1 - One Cited Work Queue
+#### [x] Story 131.1 - One Cited Work Queue
 
 **User-facing value:** As a user, I can review communication, meetings, tasks, delivery work, bills, and cloud observations in one queue while retaining each item's native system and evidence.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 131.1.1 - Define inbox records and deterministic state**
-  - [ ] **Sub-task 131.1.1.1:** Define action, response, decision, waiting, blocked, due, reference, duplicate, stale, incomplete, uncertain, dismissed, and completed states.
-  - [ ] **Sub-task 131.1.1.2:** Store source identity, citations, observed time, effective time, freshness, classification, provider state, local disposition, and model suggestion separately.
-  - [ ] **Sub-task 131.1.1.3:** Define deterministic deduplication and grouping keys without merging native records.
-- [ ] **Task 131.1.2 - Build inbox query and interaction surfaces**
-  - [ ] **Sub-task 131.1.2.1:** Add filters for source, account, item class, state, due window, freshness, classification, confidence, and permission gap.
-  - [ ] **Sub-task 131.1.2.2:** Add cited detail views, source-open actions, local disposition changes, and draft handoffs that invoke no provider write by themselves.
-  - [ ] **Sub-task 131.1.2.3:** Distinguish deterministic priority, explicit user rules, and labeled model suggestions.
-- [ ] **Task 131.1.3 - Verify truthful aggregation**
-  - [ ] **Sub-task 131.1.3.1:** Build mixed-source fixtures with duplicates, stale records, missing history, revoked permissions, conflicting due dates, and uncertain actions.
-  - [ ] **Sub-task 131.1.3.2:** Test pagination, sort stability, restart, deletion, tombstone, source rename, and source removal.
-  - [ ] **Sub-task 131.1.3.3:** Run keyboard, screen-reader, focus, dynamic-update, and status-announcement checks.
+- [x] **Task 131.1.1 - Define inbox records and deterministic state**
+  - [x] **Sub-task 131.1.1.1:** Define action, response, decision, waiting, blocked, due, reference, duplicate, stale, incomplete, uncertain, dismissed, and completed states.
+  - [x] **Sub-task 131.1.1.2:** Store source identity, citations, observed time, effective time, freshness, classification, provider state, local disposition, and model suggestion separately.
+  - [x] **Sub-task 131.1.1.3:** Define deterministic deduplication and grouping keys without merging native records.
+- [x] **Task 131.1.2 - Build inbox query and interaction surfaces**
+  - [x] **Sub-task 131.1.2.1:** Add filters for source, account, item class, state, due window, freshness, classification, confidence, and permission gap.
+  - [x] **Sub-task 131.1.2.2:** Add cited detail views, source-open actions, local disposition changes, and draft handoffs that invoke no provider write by themselves.
+  - [x] **Sub-task 131.1.2.3:** Distinguish deterministic priority, explicit user rules, and labeled model suggestions.
+- [x] **Task 131.1.3 - Verify truthful aggregation**
+  - [x] **Sub-task 131.1.3.1:** Build mixed-source fixtures with duplicates, stale records, missing history, revoked permissions, conflicting due dates, and uncertain actions.
+  - [x] **Sub-task 131.1.3.2:** Test pagination, sort stability, restart, deletion, tombstone, source rename, and source removal.
+  - [x] **Sub-task 131.1.3.3:** Run keyboard, screen-reader, focus, dynamic-update, and status-announcement checks.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 131.1.AC1:** Given mixed connected records, when the inbox is built, then every item retains native identity, source citation, freshness, classification, and uncertainty.
-- [ ] **Story AC 131.1.AC2:** Given incomplete permissions or history, when a view is filtered or summarized, then missing coverage remains visible and cannot appear empty or complete.
-- [ ] **Story AC 131.1.AC3:** Given a model-suggested priority or grouping, when displayed, then it remains labeled and cannot alter source state or authorize an effect.
+- [x] **Story AC 131.1.AC1:** Given mixed connected records, when the inbox is built, then every item retains native identity, source citation, freshness, classification, and uncertainty.
+- [x] **Story AC 131.1.AC2:** Given incomplete permissions or history, when a view is filtered or summarized, then missing coverage remains visible and cannot appear empty or complete.
+- [x] **Story AC 131.1.AC3:** Given a model-suggested priority or grouping, when displayed, then it remains labeled and cannot alter source state or authorize an effect.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 131.AC1:** `AT-UIN-001` passes across communication, delivery, meeting, task, finance, and cloud fixture classes.
-- [ ] **Sprint AC 131.AC2:** Deterministic views reproduce byte-identically from the same normalized state.
-- [ ] **Sprint AC 131.AC3:** Source, freshness, permission, coverage, duplicate, stale, and uncertain states remain visible.
-- [ ] **Sprint AC 131.AC4:** Accessibility and removal tests pass with no source mutation or residual authority.
+- [x] **Sprint AC 131.AC1:** `AT-UIN-001` passes across communication, delivery, meeting, task, finance, and cloud fixture classes.
+- [x] **Sprint AC 131.AC2:** Deterministic views reproduce byte-identically from the same normalized state.
+- [x] **Sprint AC 131.AC3:** Source, freshness, permission, coverage, duplicate, stale, and uncertain states remain visible.
+- [x] **Sprint AC 131.AC4:** Accessibility and removal tests pass with no source mutation or residual authority.
 
 **Gate decision:** Sprint 131 is PASS only when Story 131.1, all criteria, `AM-UIN-001`, `AT-UIN-001`, `SR-PRD-004`, `RV-32`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 131 source and contract rows pass locally with 1,014 deterministic
+cited-inbox cases, zero native-record merges, and zero provider/model authority. Sprint 131
+remains `UPSTREAM-SPRINT-130-BLOCKED`; `substitution_set=empty`.
 
 ### [ ] Sprint 132 - Communications Contract and Outlook
 
