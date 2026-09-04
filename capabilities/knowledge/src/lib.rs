@@ -12,6 +12,7 @@ mod database_adapter;
 mod document_control_skills;
 mod domain;
 mod executive_skills;
+mod github_provider;
 mod image_workflows;
 mod index;
 mod json_data;
@@ -108,6 +109,12 @@ pub use domain::{
     KnowledgeRetentionKind, validate_record,
 };
 pub use executive_skills::{ExecutiveSkill, built_in_executive_skill_pack};
+pub use github_provider::{
+    GithubAuthBinding, GithubAuthDiagnostic, GithubCredentialClass, GithubHostKind,
+    GithubProviderError, GithubReadObservation, GithubReadOperation, GithubReadReceipt,
+    GithubReadRequest, GithubReadState, GithubTransport, admit_github_authentication,
+    authorize_github_read, record_github_read,
+};
 pub use image_workflows::{
     DecodedRgbaImage, ImageColorSpace, ImageExportProposal, ImageFormat, ImageGenerationPreview,
     ImageGenerationReceipt, ImageGenerationRoute, ImageInspection, ImageProvenance,

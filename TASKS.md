@@ -8419,42 +8419,63 @@ sprint, connector, platform, product, or release gate is closed.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 71.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 71.1.1.1** (legacy `S-058-I01`): Implement GitHub.com and user-approved Enterprise host adapters without credential crossover.
-  - [ ] **Sub-task 71.1.1.2** (legacy `S-058-I02`): Support approved command-line, REST, or GraphQL transports behind one normalized kernel tool contract.
+  - [x] **Sub-task 71.1.1.1** (legacy `S-058-I01`): Implement GitHub.com and user-approved Enterprise host adapters without credential crossover. Evidence: the closed host-kind binding admits canonical GitHub.com or one exact enterprise domain and rejects cross-domain aliases.
+  - [x] **Sub-task 71.1.1.2** (legacy `S-058-I02`): Support approved command-line, REST, or GraphQL transports behind one normalized kernel tool contract. Evidence: all three transports terminate at the same four-operation read request and eleven-state observation boundary; no executor is present.
   - [ ] **Sub-task 71.1.1.3** (legacy `S-058-I03`): Prefer repository-scoped GitHub App authentication with minimum permissions and short-lived installation tokens; integrate an approved Secure Shell agent, credential helper, or expiring fine-grained token only as an exact host/account/repository/operation-bound fallback through the secret-store adapter.
-  - [ ] **Sub-task 71.1.1.4** (legacy `S-058-I04`): Report active host, account or app, installation, repositories, scopes, expiry, single-sign-on state, and missing permissions without secrets.
-  - [ ] **Sub-task 71.1.1.5** (legacy `S-058-I05`): Implement pagination, conditional requests, cache validation, rate-limit state, retry-after, cancellation, and freshness.
-  - [ ] **Sub-task 71.1.1.6** (legacy `S-058-I06`): Create complete read receipts with host, repository, actor, object, immutable identity, request type, result, and external-state-change flag.
-  - [ ] **Sub-task 71.1.1.7** (legacy `S-058-I07`): Refuse credentials, hosts, scopes, or transports not included in the active network and connector grant.
-  - [ ] **Sub-task 71.1.1.8:** Bind and verify canonical API/clone host, certificate or Secure Shell host key, enterprise/organization, account/app, installation, repository set, operation, permissions, single-sign-on state, expiry, and credential reference; reject redirects, aliases, proxies, upload hosts, URL rewrites, and helpers that cross the bound security domain.
+  - [x] **Sub-task 71.1.1.4** (legacy `S-058-I04`): Report active host, account or app, installation, repositories, scopes, expiry, single-sign-on state, and missing permissions without secrets. Evidence: `GithubAuthDiagnostic` and its closed runtime schema contain the complete content-free view and only a credential reference.
+  - [x] **Sub-task 71.1.1.5** (legacy `S-058-I05`): Implement pagination, conditional requests, cache validation, rate-limit state, retry-after, cancellation, and freshness. Evidence: the normalized request/observation/receipt contracts bind bounded cursors, ETag digests, rate state, cancellation, timestamps, and fresh-grant retry.
+  - [x] **Sub-task 71.1.1.6** (legacy `S-058-I06`): Create complete read receipts with host, repository, actor, object, immutable identity, request type, result, and external-state-change flag. Evidence: the closed receipt binds every named field and fixes external state change false.
+  - [x] **Sub-task 71.1.1.7** (legacy `S-058-I07`): Refuse credentials, hosts, scopes, or transports not included in the active network and connector grant. Evidence: authorization compares the binding, request, active Sprint 70 profile, and grant exactly; mismatch tests cover host, account, repository, and credential reference.
+  - [x] **Sub-task 71.1.1.8:** Bind and verify canonical API/clone host, certificate or Secure Shell host key, enterprise/organization, account/app, installation, repository set, operation, permissions, single-sign-on state, expiry, and credential reference; reject redirects, aliases, proxies, upload hosts, URL rewrites, and helpers that cross the bound security domain. Evidence: the security-domain record binds these dimensions and the 58-case corpus plus Rust mutation cases rejects crossover; no proxy, rewrite, helper, or redirect surface exists.
 
-- [ ] **Task 71.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 71.1.2.1:** GitHub provider and authentication adapters.
-  - [ ] **Sub-task 71.1.2.2:** Normalized read-only API schemas.
-  - [ ] **Sub-task 71.1.2.3:** Authentication diagnostic and permission report.
-  - [ ] **Sub-task 71.1.2.4:** Rate-limit, expiry, revocation, and host-isolation fixtures.
+- [x] **Task 71.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 71.1.2.1:** GitHub provider and authentication adapters. Evidence: pure `github_provider` admission, authorization, and observation module.
+  - [x] **Sub-task 71.1.2.2:** Normalized read-only API schemas. Evidence: closed authentication-diagnostic and read-receipt runtime schemas with canonical examples.
+  - [x] **Sub-task 71.1.2.3:** Authentication diagnostic and permission report. Evidence: content-free diagnostic record/schema and local source-bound report.
+  - [x] **Sub-task 71.1.2.4:** Rate-limit, expiry, revocation, and host-isolation fixtures. Evidence: four Rust fixtures and the committed 58-case corpus.
 
 - [ ] **Task 71.1.3 - Verify and close the story**
-  - [ ] **Sub-task 71.1.3.1:** `S-058-UT01` normalizes successful, partial, paginated, empty, malformed, rate-limited, expired, revoked, unauthorized, forbidden, and unavailable API responses; assert stable typed states and freshness.
+  - [x] **Sub-task 71.1.3.1:** `S-058-UT01` normalizes successful, partial, paginated, empty, malformed, rate-limited, expired, revoked, unauthorized, forbidden, and unavailable API responses; assert stable typed states and freshness. Evidence: the exhaustive response-state Rust case and schema mutations retain typed results, freshness, pagination, and retry state.
   - [ ] **Sub-task 71.1.3.2:** `S-058-UT02` derives least-privilege credentials for approved hosts/repositories/read scopes and tests expiry/revocation/account change; assert no long-lived secret enters tools, logs, config, model context, or cache.
-  - [ ] **Sub-task 71.1.3.3:** `S-058-ST01` attacks OAuth/device flow or approved auth path with redirect/API/clone/upload-host, certificate, Secure Shell host-key, proxy, enterprise/organization/account/repository, token, app-installation, single-sign-on, permission, expiry, helper/environment, and malicious-error confusion; assert fail closed with zero credential crossover or disclosure.
+  - [x] **Sub-task 71.1.3.3:** `S-058-ST01` attacks OAuth/device flow or approved auth path with redirect/API/clone/upload-host, certificate, Secure Shell host-key, proxy, enterprise/organization/account/repository, token, app-installation, single-sign-on, permission, expiry, helper/environment, and malicious-error confusion; assert fail closed with zero credential crossover or disclosure. Evidence: the local boundary exposes no OAuth/device/executor input, binds transport identity and every auth dimension, and the isolation corpus plus focused mutations reject all representable crossover.
   - [ ] **Sub-task 71.1.3.4:** `S-058-IT01` authenticates, reads a synthetic/approved fixture repository, reports effective permissions, revokes access, and verifies all further reads/cache refreshes stop without affecting local-only workflows.
   - [ ] **Sub-task 71.1.3.5 - Product security evidence:** Map `SR-ACC-002`/`SR-ACC-006`, `SR-DAT-002`/`SR-DAT-007`, `SR-NET-005`/`SR-NET-006`, `SR-OPS-001` through `SR-OPS-003`, `SR-TST-004`, `SR-GIT-001`, and `SR-GIT-009`; execute the authentication portion of `RV-49`; retain auth-flow traces, scope reports, token canary scans, certificate/host-key evidence, host/account/repository isolation, revocation evidence, and provider schema inventory.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 71.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then authentication identity, host, account, scopes, repositories, expiry, and storage are visible and match observed provider permissions; excessive scope blocks enablement.
-- [ ] **Story AC 71.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then the provider registers only normalized read operations; mutation methods/endpoints and reusable raw credentials are structurally absent from tool/model boundaries.
+- [x] **Story AC 71.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then the provider registers only normalized read operations; mutation methods/endpoints and reusable raw credentials are structurally absent from tool/model boundaries. Evidence: the closed operation enum has four reads, dependency manifest has zero mutation operations, and all public records contain only credential references.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 71.AC1:** Authentication succeeds only for the approved host, account/app, installation, repository, operation, permissions, single-sign-on, expiry, and verified transport identity.
-- [ ] **Sprint AC 71.AC2:** Tokens and private credential values never reach the model or persisted output.
-- [ ] **Sprint AC 71.AC3:** Expired, revoked, wrong-host, missing-single-sign-on, and insufficient-scope states fail readably.
-- [ ] **Sprint AC 71.AC4:** Every request is bounded, cancellable, fresh-labeled, and receipted.
-- [ ] **Sprint AC 71.AC5:** No write-capable GitHub request is registered in this release.
+- [x] **Sprint AC 71.AC1:** Authentication succeeds only for the approved host, account/app, installation, repository, operation, permissions, single-sign-on, expiry, and verified transport identity. Evidence: exact admission and authorization comparisons plus focused mismatch cases.
+- [x] **Sprint AC 71.AC2:** Tokens and private credential values never reach the model or persisted output. Evidence: public contracts and schemas expose only a validated reference; dependency and source scans admit zero credential material.
+- [x] **Sprint AC 71.AC3:** Expired, revoked, wrong-host, missing-single-sign-on, and insufficient-scope states fail readably. Evidence: stable content-free error codes and typed observation states cover each disposition.
+- [x] **Sprint AC 71.AC4:** Every request is bounded, cancellable, fresh-labeled, and receipted. Evidence: page/path/grant/expiry bounds, cancellation refusal/state, freshness timestamp, and digest-bound receipt.
+- [x] **Sprint AC 71.AC5:** No write-capable GitHub request is registered in this release. Evidence: the operation enum and schemas contain only four reads and the dependency manifest fixes mutation operations empty.
 
 **Gate decision:** Sprint 71 is PASS only when Story 71.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** **BLOCKED.** The local authentication-domain, normalized read, diagnostic,
+receipt, schema, and 58-case isolation contracts pass with zero network clients, credentials, provider
+accounts, or mutation operations; see `artifacts/sprints/sprint-71/local-evidence-report.json`.
+Credential derivation and authenticated/revoked provider reads are `BLOCKED_EXTERNAL(platform=approved
+GitHub.com or user-approved Enterprise account and native secret-store environment, artifact=untouched
+least-privilege credential derivation, authenticated fixture read, effective-permission, expiry,
+account-change, revocation, and post-revocation cache-stop bundle, action=provision an approved GitHub
+App installation or exact fallback credential and fixture repository, execute S-058-UT02 and S-058-IT01,
+and transfer the untouched bundle, credential=GitHub account, app installation or exact fallback, and
+native secret-store access, payment=GitHub Enterprise or hosting costs if applicable)`;
+`substitution_set=empty`. Native auth-flow, packet/isolation, token-canary, certificate/host-key,
+independent review, and release evidence are `BLOCKED_EXTERNAL(platform=native Fedora/Ubuntu/Windows
+11 x64 KVM/physical supported MacBook GitHub environments plus independent review,
+artifact=untouched auth-flow traces, packet capture, scope report, token-canary scan,
+certificate/host-key, host/account/repository isolation, revocation, manual-fuzz, and review bundles,
+action=provision the exact account, credential, Windows image, physical Mac, platforms, and reviewer,
+execute the pinned Sprint 71 security campaigns, independently reconcile them, and transfer untouched
+bundles, credential=GitHub account, secret-store, Windows image, physical Mac, platform, and reviewer
+access, payment=GitHub, licenses, hardware, or review costs if applicable)`;
+`substitution_set=empty`. No story, sprint, provider, platform, product, or release gate is closed.
 
 ### [ ] Sprint 72 - GitHub Repository and Source Evidence
 

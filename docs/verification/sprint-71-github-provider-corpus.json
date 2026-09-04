@@ -1,0 +1,7 @@
+{
+  "schema_version":1,"corpus_id":"sprint-71-github-provider-v1",
+  "positive_cases":["github-app","github-com","enterprise","command-line","rest","graphql","metadata-read","content-read","commit-read","reference-read","pagination","conditional-cache","normalized-receipt","immutable-identity"],
+  "response_cases":["success","partial","paginated","empty","malformed","rate-limited","expired","revoked","unauthorized","forbidden","unavailable","cancelled"],
+  "isolation_cases":["redirect","api-alias","clone-alias","upload-host","proxy","url-rewrite","helper-override","wrong-certificate","wrong-host-key","wrong-enterprise","wrong-organization","wrong-account","wrong-app","wrong-installation","wrong-repository","wrong-operation","wrong-permission","missing-sso","expired-binding","revoked-binding"],
+  "prohibited_cases":["raw-token","private-key","oauth-code","device-code","write-scope","mutation-operation","ambient-env","ambient-helper","credential-crossover","background-refresh","blind-retry","unreceipted-read"]
+}

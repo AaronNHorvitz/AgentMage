@@ -129,6 +129,8 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "structured-database-receipt",
   "temporary-network-grant",
   "connector-cache-entry",
+  "github-auth-diagnostic",
+  "github-read-receipt",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -2157,6 +2159,18 @@ function runtimeSemanticErrors(recordType, data) {
         data.grant_authority !== false || data.tool_authority !== false ||
         data.completion_authority !== false || data.deletion_required !== true) {
       errors.push("connector cache retention or authority drifted");
+    }
+  } else if (recordType === "github-auth-diagnostic") {
+    if (data.enabled !== true || data.single_sign_on_active !== true ||
+        !isStrictlySorted(data.repository_ids ?? []) ||
+        !isStrictlySorted(data.effective_permission_scopes ?? []) ||
+        (data.missing_permission_scopes ?? []).length !== 0) {
+      errors.push("GitHub authentication diagnostic authority drifted");
+    }
+  } else if (recordType === "github-read-receipt") {
+    if (data.external_state_changed !== false ||
+        (["success", "partial", "empty"].includes(data.result) && data.fresh_grant_required_for_retry !== false)) {
+      errors.push("GitHub read receipt mutation or retry authority drifted");
     }
   } else if (recordType === "word-inspection-report") {
     const parts = data.parts ?? [];

@@ -432,6 +432,8 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "structured-database-receipt",
     "temporary-network-grant",
     "connector-cache-entry",
+    "github-auth-diagnostic",
+    "github-read-receipt",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1745,6 +1747,21 @@ test("temporary connector records reject background, expiry, encryption, and aut
     ["connector-cache-entry", (record) => { record.encrypted_at_rest_observed = false; }],
     ["connector-cache-entry", (record) => { record.policy_authority = true; }],
     ["connector-cache-entry", (record) => { record.deletion_required = false; }],
+  ];
+  for (const [recordType, mutate] of mutations) {
+    const changed = structuredClone(fixtures[recordType]); mutate(changed);
+    assert.equal(validateRuntimeRecord(recordType, changed, runtimeValidators).valid, false);
+  }
+});
+
+test("GitHub provider records reject authentication and mutation authority drift", () => {
+  const load = (name) => JSON.parse(fs.readFileSync(path.join(ROOT, `schemas/runtime/examples/${name}.valid.json`), "utf8"));
+  const fixtures = { "github-auth-diagnostic": load("github-auth-diagnostic"), "github-read-receipt": load("github-read-receipt") };
+  const mutations = [
+    ["github-auth-diagnostic", (record) => { record.enabled = false; }],
+    ["github-auth-diagnostic", (record) => { record.missing_permission_scopes = ["issues:write"]; }],
+    ["github-read-receipt", (record) => { record.external_state_changed = true; }],
+    ["github-read-receipt", (record) => { record.fresh_grant_required_for_retry = true; }],
   ];
   for (const [recordType, mutate] of mutations) {
     const changed = structuredClone(fixtures[recordType]); mutate(changed);
