@@ -2444,3 +2444,34 @@ Exact next action: Sprint 102 inherited-scope verification checkpoint. Cumulativ
 Exact next action: Sprint 127 productivity-pack scope and support contract; all remaining Epic 9
 rows are dependent on the recorded external tuples. Cumulative closures: 1,353; next checkpoint:
 1,375.
+
+## Batch 130 — Sprint 127 productivity-pack support contract
+
+### Completed
+
+- Closed 20 local Sprint 127 rows: the pack manifest, closed support states, first-GA operation
+  and exclusion matrices, lifecycle and data-flow boundaries, component inventory, exhaustive
+  fixtures, absence-authority proof, Story acceptance, and Sprint acceptance. The bound corpus
+  contains 144 deterministic cases; installed packs: 0; enabled packs: 0; optional processes,
+  sockets, credentials, tools, schedules, and network authorities while absent or disabled: 0.
+  Batch closures: 20. Cumulative closures: 1,373. Lifecycle promotions: 0.
+- Commits: `1779baa5` (kernel contract, verifier, corpus, tests, closures, traceability, supply
+  chain), `1847c889` (Sprint 127 report), `1e9ddc48` (downstream Story 1.2 evidence), and
+  `99693864` (configuration evidence cascade). Including this log: 5; commits/item: 0.25.
+  Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 6 Rust tests, 7 focused Python tests, the Sprint 127 corpus/report, requirement,
+  traceability, status, supply-chain, downstream contract and configuration checks. Supply-chain
+  builds: 1; evidence regeneration passes: 1; final full gate: 703.13 seconds, stopping only at
+  retained Story 6.1 Podman after every preceding gate passed.
+- Self-recovery: 2. Corrected the Decision 0009 source filename used by the new verifier; rebuilt
+  nine stale configuration reports and security mappings whose bound SBOM changed with the new
+  kernel source. The specific gates passed before the single final full-chain rerun.
+- Sprint 127 remains `UPSTREAM-SPRINT-126-BLOCKED`; `substitution_set=empty`. Full-chain blocker:
+  `blocked: host change required — run npm run -s docs:check outside the restricted filesystem
+  sandbox with the current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 128 kernel-enforced Autonomy Center. Cumulative closures: 1,373; next
+checkpoint: 1,375.
