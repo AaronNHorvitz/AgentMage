@@ -91,6 +91,8 @@ pub mod native_chat_runtime;
 pub mod runtime_transport;
 
 pub mod protocol;
+/// Bounded public-search preparation and claim-level citation verification.
+pub mod public_research;
 
 /// Native capability registration for the shared runtime tool dispatcher.
 pub mod runtime_tools;

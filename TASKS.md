@@ -9239,36 +9239,49 @@ Native server executions: 0. Native parity campaigns: 0.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 82.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 82.1.1.1** (legacy `S-066-I01`): Implement public search with query, domain, recency, source type, result, and byte controls.
-  - [ ] **Sub-task 82.1.1.2** (legacy `S-066-I02`): Prefer primary documentation, original research, and authoritative records and label every inference.
-  - [ ] **Sub-task 82.1.1.3** (legacy `S-066-I03`): Capture claim-level title, direct URL, access point, publication metadata, excerpt hash, freshness, and quotation limits.
+- [x] **Task 82.1.1 - Implement the bounded story:** all three source sub-tasks are retained in the source-bound Sprint 82 report without a network executor.
+  - [x] **Sub-task 82.1.1.1** (legacy `S-066-I01`): Implement public search with query, domain, recency, source type, result, and byte controls. Evidence: `PublicSearchRequest` and `prepare_public_search` reject invalid identity, query, sorted domains, source classes, result ceilings, and aggregate-byte ceilings before any network action.
+  - [x] **Sub-task 82.1.1.2** (legacy `S-066-I02`): Prefer primary documentation, original research, and authoritative records and label every inference. Evidence: `verify_public_results` deterministically ranks the closed source taxonomy and retains `inference_label_required` independently from provider claims.
+  - [x] **Sub-task 82.1.1.3** (legacy `S-066-I03`): Capture claim-level title, direct URL, access point, publication metadata, excerpt hash, freshness, and quotation limits. Evidence: `PublicCitation` carries every named field, hashes rather than retains excerpt content, rejects non-HTTPS and off-allowlist URLs, and fixes the quotation limit at 25 words.
 
-- [ ] **Task 82.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 82.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 82.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 82.1.2 - Produce reviewable artifacts:** the source, guide, 30-case corpus, contract validator, tests, and source-bound report are retained together.
+  - [x] **Sub-task 82.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story. Evidence: `public_research.rs` is an isolated content-minimizing preparation and result-verification owner with no browser, network, credential, download, publication, or workspace API.
+  - [x] **Sub-task 82.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story. Evidence: `artifacts/sprints/sprint-82/local-evidence-report.json` hashes the exact source, guide, corpus, tests, recorder, and supply-chain carrier at one immutable revision.
 
 - [ ] **Task 82.1.3 - Verify and close the story**
-  - [ ] **Sub-task 82.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 82.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 82.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 82.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks. Evidence: four focused Rust cases and the 30-case corpus cover source ordering, inference, freshness, query/domain/source/identity attacks, duplicates, and byte/result limits with zero focused skips.
+  - [x] **Sub-task 82.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims. Evidence: the artifact contract proves structural absence of network, process, filesystem, credential, browser, download, publication, and workspace-effect authority.
+  - [x] **Sub-task 82.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check. Evidence: the Sprint 82 recorder recomputes source hashes, exact commands, output digests, environment, zero focused skips, and explicit live-provider/browser/privacy blockers.
   - [ ] **Sub-task 82.1.3.4 - Product security evidence:** Map `SR-ACC-002`/`SR-ACC-007`/`SR-ACC-008`, `SR-DAT-002`/`SR-DAT-003`, `SR-NET-003` through `SR-NET-006`, `SR-AI-004`/`SR-AI-005`; retain source/citation set, browser attack traces, action previews/screenshots, download scans, uncertain-result tests, and privacy review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 82.1.AC1:** Given the approved dependencies and source requirements for `S-066-I01`, `S-066-I02`, and `S-066-I03`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 82.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-066-I01`, `S-066-I02`, and `S-066-I03`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 82.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 82.1.AC1:** Given the approved dependencies and source requirements for `S-066-I01`, `S-066-I02`, and `S-066-I03`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled. Evidence: the bounded source contract and 30-case corpus cover all three identities while recording zero network executors.
+- [x] **Story AC 82.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-066-I01`, `S-066-I02`, and `S-066-I03`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent. Evidence: focused tests pass with no skip and invalid domains, protocols, identities, sources, duplicates, and bounds fail closed without an effect.
+- [x] **Story AC 82.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence. Evidence: the deterministic report retains command-output digests, environment identity, source hashes, and all absent live evidence as false.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 82.AC1:** Every numbered implementation sub-task in Story 82.1 is complete and linked to its legacy requirement or issue identity.
+- [x] **Sprint AC 82.AC1:** Every numbered implementation sub-task in Story 82.1 is complete and linked to its legacy requirement or issue identity. Evidence: the report and this traceability bind all three implementation sub-tasks to `S-066-I01` through `S-066-I03`.
 - [ ] **Sprint AC 82.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 82.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 82.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 82.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes. Evidence: the pure verifier accepts candidate values and returns content-minimized citations; it owns no I/O or authority port.
+- [x] **Sprint AC 82.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment. Evidence: the Sprint 82 report binds source, tests, guide, corpus, and supply-chain inputs to one source revision and records exact successful commands.
 - [ ] **Sprint AC 82.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 82 is PASS only when Story 82.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. The local preparation, citation, disclosure, and adversarial-contract
+scope is retained at `artifacts/sprints/sprint-82/local-evidence-report.json`; Task 82.1.3,
+product-security Sub-task 82.1.3.4, Sprint 82, Sprint AC82.AC2, Sprint AC82.AC5, and dependent
+gates remain `BLOCKED_EXTERNAL(platform=native public-search and sandboxed-browser environments
+plus independent privacy review, artifact=untouched source/citation set, live provider transcripts,
+browser attack traces, action previews/screenshots, download scans, uncertain-result tests,
+network/privacy traces, and reviewer bundle, action=provision exact native platforms,
+public-search provider access, malicious/benign web fixtures, browser instrumentation, and privacy
+reviewer, execute the Sprint 82 live research and product-security campaign, and transfer untouched
+bundles, credential=public-search provider, browser fixture, instrumentation, and reviewer access,
+payment=provider, platform, fixture, instrumentation, or review costs if applicable)`;
+`substitution_set=empty`. Live public searches: 0. Browser actions: 0.
 
 ### [ ] Sprint 83 - Sandboxed Browser Inspection
 

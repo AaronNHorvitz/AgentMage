@@ -1,0 +1,24 @@
+{
+  "case_count": 30,
+  "categories": {
+    "query": 5,
+    "domain": 5,
+    "source": 5,
+    "citation": 5,
+    "limit": 5,
+    "authority": 5
+  },
+  "cases": [
+    "query-valid", "query-empty", "query-oversized", "query-identity-invalid", "query-recency-zero",
+    "domain-empty-allowlist", "domain-exact", "domain-subdomain", "domain-http-denied", "domain-userinfo-denied",
+    "source-primary-first", "source-original-second", "source-authoritative-third", "source-secondary-last", "source-unrequested-denied",
+    "citation-direct-url", "citation-publication-unknown", "citation-excerpt-hash", "citation-inference-label", "citation-stale-visible",
+    "limit-result-count", "limit-total-bytes", "limit-domain-count", "limit-quotation-25", "limit-duplicate-result",
+    "authority-no-network-port", "authority-no-credential", "authority-no-browser-profile", "authority-no-download", "authority-no-workspace-effect"
+  ],
+  "local_contract_passed": true,
+  "live_public_search_executed": false,
+  "browser_campaign_complete": false,
+  "privacy_review_present": false,
+  "substitution_set": []
+}
