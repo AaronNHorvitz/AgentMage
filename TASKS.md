@@ -11878,37 +11878,55 @@ payment=catalog, provider, hosting, instrumentation, or review costs if applicab
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 120.1.1 - Implement mathematics parsing and preservation**
-  - [ ] **Sub-task 120.1.1.1:** Define the supported inline/display delimiter, environment, command, macro, label, reference, escaping, Unicode, code-fence, and Markdown interaction subset.
-  - [ ] **Sub-task 120.1.1.2:** Build a structured parser that preserves exact source spans, delimiters, whitespace where meaningful, labels, references, diagnostics, and unsupported syntax.
-  - [ ] **Sub-task 120.1.1.3:** Implement round-trip edits and diffs that never reinterpret code fences, currency text, escaped delimiters, frontmatter, or ordinary Markdown as mathematics.
-  - [ ] **Sub-task 120.1.1.4:** Reject shell escape, file input/output, network resources, package loading, executable extensions, unsafe links, recursive/unbounded macros, and unsupported commands.
-- [ ] **Task 120.1.2 - Implement offline preview and accessibility**
-  - [ ] **Sub-task 120.1.2.1:** Select, pin, admit, and package an offline renderer with no runtime download, remote font, remote asset, or executable extension.
-  - [ ] **Sub-task 120.1.2.2:** Render deterministic native Chat previews with syntax errors, source links, copyable source, zoom/reflow, high contrast, keyboard navigation, and screen-reader text.
-  - [ ] **Sub-task 120.1.2.3:** Implement bounded render time, macro depth, input/output size, cancellation, cache identity, cleanup, and cross-platform parity.
-- [ ] **Task 120.1.3 - Verify and close the story**
-  - [ ] **Sub-task 120.1.3.1:** `S-120-UT01` round-trips valid equations across supported syntax, Unicode, labels/references, lists, tables, quotes, links, code fences, frontmatter, and escaping.
-  - [ ] **Sub-task 120.1.3.2:** `S-120-ST01` fuzzes malformed delimiters, nested environments, unsafe commands, path/file attempts, network URLs, package escapes, macro recursion, token bombs, and mixed Markdown attacks.
+- [x] **Task 120.1.1 - Implement mathematics parsing and preservation**
+  - [x] **Sub-task 120.1.1.1:** Define the supported inline/display delimiter, environment, command, macro, label, reference, escaping, Unicode, code-fence, and Markdown interaction subset.
+  - [x] **Sub-task 120.1.1.2:** Build a structured parser that preserves exact source spans, delimiters, whitespace where meaningful, labels, references, diagnostics, and unsupported syntax.
+  - [x] **Sub-task 120.1.1.3:** Implement round-trip edits and diffs that never reinterpret code fences, currency text, escaped delimiters, frontmatter, or ordinary Markdown as mathematics.
+  - [x] **Sub-task 120.1.1.4:** Reject shell escape, file input/output, network resources, package loading, executable extensions, unsafe links, recursive/unbounded macros, and unsupported commands.
+- [x] **Task 120.1.2 - Implement offline preview and accessibility**
+  - [x] **Sub-task 120.1.2.1:** Select, pin, admit, and package an offline renderer with no runtime download, remote font, remote asset, or executable extension.
+  - [x] **Sub-task 120.1.2.2:** Render deterministic native Chat previews with syntax errors, source links, copyable source, zoom/reflow, high contrast, keyboard navigation, and screen-reader text.
+  - [x] **Sub-task 120.1.2.3:** Implement bounded render time, macro depth, input/output size, cancellation, cache identity, cleanup, and cross-platform parity.
+- [x] **Task 120.1.3 - Verify and close the story**
+  - [x] **Sub-task 120.1.3.1:** `S-120-UT01` round-trips valid equations across supported syntax, Unicode, labels/references, lists, tables, quotes, links, code fences, frontmatter, and escaping.
+  - [x] **Sub-task 120.1.3.2:** `S-120-ST01` fuzzes malformed delimiters, nested environments, unsafe commands, path/file attempts, network URLs, package escapes, macro recursion, token bombs, and mixed Markdown attacks.
   - [ ] **Sub-task 120.1.3.3:** `S-120-VT01` renders the golden corpus on Fedora, Ubuntu, and Windows and compares structure, errors, accessibility tree, bounds, and approved visual tolerances.
-  - [ ] **Sub-task 120.1.3.4:** `S-120-RT01` cancels, crashes, fills cache/disk, changes renderer identity, corrupts cache, and resumes; assert cleanup and no stale preview reuse.
+  - [x] **Sub-task 120.1.3.4:** `S-120-RT01` cancels, crashes, fills cache/disk, changes renderer identity, corrupts cache, and resumes; assert cleanup and no stale preview reuse.
   - [ ] **Sub-task 120.1.3.5:** Execute applicable `RV-15` and `RV-20`; retain parser corpus, fuzz seeds/shrinks, renderer manifest, visual/accessibility output, resource traces, and review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 120.1.AC1:** Given supported mathematics in Markdown, when AgentMage reads, edits, and renders it, then source round-trips exactly except for explicitly previewed edits and references remain correct.
-- [ ] **Story AC 120.1.AC2:** Given unsafe, malformed, recursive, oversized, or executable LaTeX content, when parsing/rendering runs, then it is rejected or bounded without file, network, process, package, or authority access.
+- [x] **Story AC 120.1.AC1:** Given supported mathematics in Markdown, when AgentMage reads, edits, and renders it, then source round-trips exactly except for explicitly previewed edits and references remain correct.
+- [x] **Story AC 120.1.AC2:** Given unsafe, malformed, recursive, oversized, or executable LaTeX content, when parsing/rendering runs, then it is rejected or bounded without file, network, process, package, or authority access.
 - [ ] **Story AC 120.1.AC3:** Given the same document on Fedora, Ubuntu, and Windows, when previewed, then rendering, diagnostics, interaction, and accessibility satisfy the declared parity contract.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 120.AC1:** Supported Markdown mathematics round-trips source and exact locations.
-- [ ] **Sprint AC 120.AC2:** Unsafe commands and every executable/resource escape path are denied.
-- [ ] **Sprint AC 120.AC3:** Rendering is pinned, offline, deterministic, bounded, cancellable, and cache-safe.
+- [x] **Sprint AC 120.AC1:** Supported Markdown mathematics round-trips source and exact locations.
+- [x] **Sprint AC 120.AC2:** Unsafe commands and every executable/resource escape path are denied.
+- [x] **Sprint AC 120.AC3:** Rendering is pinned, offline, deterministic, bounded, cancellable, and cache-safe.
 - [ ] **Sprint AC 120.AC4:** Keyboard, screen-reader, zoom, contrast, and error workflows pass.
 - [ ] **Sprint AC 120.AC5:** `AT-MTH-001` passes on all first-GA platforms.
 
 **Gate decision:** Sprint 120 is PASS only when Story 120.1, all criteria, `AT-MTH-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Eighteen locally executable Story 120 rows are retained at
+`artifacts/sprints/sprint-120/local-evidence-report.json`; 15 syntax families, 128 exact round-trip
+cases, 2,048 hostile cases, and 512 fault cases bind source spans, delimiters, renderer identity,
+fonts, license, cache, diagnostics, screen-reader text, source links, bounds, and cancellation with
+zero file, network, process, package-load, authority, unbounded-result, or stale-preview effect.
+Native Fedora, Ubuntu, and Windows rendering, visual/accessibility parity, `RV-15`, `RV-20`,
+`AT-MTH-001`, and independent review remain `BLOCKED_EXTERNAL(platform=native Fedora and Ubuntu
+hosts plus Windows 11 x64 KVM guest with admitted display, font, accessibility, keyboard, and
+visual-comparison environments and independent review environment, artifact=untouched exact
+renderer/font/license manifests, native render and diagnostic outputs, accessibility trees,
+keyboard/zoom/contrast results, visual diffs, resource traces, RV-15/RV-20 results, AT-MTH-001
+bundle, platform matrix, and independent review, action=provision native Fedora and Ubuntu display
+hosts and a properly licensed Windows 11 x64 image, install the admitted pinned renderer/font and
+accessibility dependencies, run S-120-VT01, applicable RV-15/RV-20, and AT-MTH-001, then transfer
+untouched evidence, credential=Windows image, platform, display, accessibility, and reviewer
+access, payment=Windows, font, renderer, accessibility, hardware, hosting, or review costs if
+applicable)`; `substitution_set=empty`. Promoted platforms: 0. Native renders: 0. Promotions: 0.
 
 ### [ ] Sprint 121 - Windows Package, Visual Studio Code Bridge, and IPC
 

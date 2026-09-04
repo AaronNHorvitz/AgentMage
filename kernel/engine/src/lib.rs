@@ -112,6 +112,8 @@ pub mod job_scheduler;
 pub mod local_commit;
 /// Safe-mode capability closure and content-free maintenance diagnostics.
 pub mod maintenance_recovery;
+/// Source-preserving Markdown mathematics and offline-preview admission.
+pub mod markdown_math;
 /// Stateful read-only MCP request mediation, response validation, and receipts.
 pub mod mcp_gateway;
 /// Read-only MCP manifest admission, identity binding, and optional tool adaptation.
