@@ -1939,3 +1939,51 @@ observability. Cumulative closures are 1,149; next required 25-item checkpoint i
 
 Exact next action: continue Decision 0021 ordering at Sprint 118 incidents, bounded notifications,
 and ChatOps. Cumulative closures are 1,169; write the required 1,150-item checkpoint after push.
+
+## Batch 118 — Sprint 118 human-controlled incident lifecycle
+
+### Completed
+
+- Closed 21 local Sprint 118 rows: five incident/communication provider families, eight separately
+  granted effect classes, five evidence classes, exact previews and precondition rereads,
+  duplicate-safe uncertain-result recovery, all four synthetic suites, all three story criteria,
+  and Sprint AC 118.AC2 through AC4. The corpus contains 128 incident cases, 2,048 hostile cases,
+  and 512 fault cases. External effects: 0. Hidden recipients: 0. Cross-tenant effects: 0. Secret
+  disclosures: 0. Autonomous effects: 0. Duplicate effects: 0.
+- Promoted providers: 0. Complete live matrices: false. Complete expanded tabletop or
+  `AT-INC-001`: false. Independent human reviews: 0. Promotions: 0. Substitutions: 0. Batch
+  closures: 21. Cumulative closed items: 1,190.
+- Commits: `06339f72` (incident contracts, corpus, tests, truthful closures, and supply-chain
+  renewal), `a35836a3` (source-bound Sprint 118 report), and `aca4dbba` (complete downstream
+  contract/configuration/traceability renewal). Commits including log: 4. Commits per closed item:
+  0.19. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection: empty.
+
+### Validation and blockers
+
+- Focused validation passed 4 Rust incident-lifecycle tests, strict Clippy, 3 corpus tests, 3
+  evidence tests, Python compilation, dependency rules, supply-chain currentness, product CI, all
+  affected downstream checks, and the source-bound report. Supply-chain builds: 1. Corpus
+  generations: 1. Local report builds: 1. Full gate wall seconds: 695.61; it stopped only at the
+  retained Story 6.1 rootless-Podman prerequisite after every preceding gate passed. Self-recovery
+  iterations: 0.
+- Live matrices, providers, destinations, effects, expanded review vectors, `AT-INC-001`, and
+  independent review remain `BLOCKED_EXTERNAL(platform=isolated supported PagerDuty, Jira Service
+  Management, Datadog incidents, Slack, and Teams deployments plus work, release, deployment,
+  flag, telemetry, and independent review environments, artifact=untouched exact
+  provider/version/permission matrices, incident timelines and evidence graphs, destination and
+  membership identities, previews, message canary scans, effect and recovery traces, RV-21/RV-24
+  through RV-29 results, AT-INC-001 bundle, support matrix, and independent review,
+  action=provision isolated provider deployments, tenants, destinations, services, environments,
+  credentials, instrumentation, and independent reviewer; execute S-118-CT01/ST01/IT01/RT01,
+  expanded RV-21, applicable RV-24 through RV-29, and AT-INC-001 against real supported versions,
+  then transfer untouched evidence, credential=incident, work, messaging, release, deployment,
+  flag, telemetry, instrumentation, and reviewer access, payment=provider, messaging, work,
+  hosting, telemetry, observability, instrumentation, or review costs if applicable)`;
+  `substitution_set=empty`.
+- Sprint 118 also remains dependency-blocked by `UPSTREAM-SPRINT-117-BLOCKED` with no
+  substitution. Exact full-chain carrier blocker: `blocked: host change required — run npm run -s
+  docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 119 service catalog and ownership
+graph. Cumulative closures are 1,190; next required checkpoint is 1,200.
