@@ -444,3 +444,46 @@ Cumulative closures are 459; the next checkpoint is 475.
 Exact next action: all remaining Sprint 81 rows depend on upstream or exact external tuples;
 continue Decision 0021 ordering at Sprint 82 public research and citations. Cumulative closures
 are 473; the next checkpoint is 475.
+
+## Batch 88 — Sprint 82 public research and citations
+
+### Completed
+
+- Closed 16 TASKS rows: Task 82.1.1 and all 3 implementation sub-tasks; Task 82.1.2 and both
+  artifact sub-tasks; verification Sub-tasks 82.1.3.1 through .3; all 3 Story AC; and Sprint AC
+  82.AC1, AC82.AC3, and AC82.AC4. The host-owned contract binds query, domain, recency, source,
+  result, and byte controls; four ordered source classes; direct HTTPS citations; excerpt hashes;
+  freshness; inference labels; and a 25-word quotation limit while owning zero network or browser
+  executors. Promotions: 0. Substitutions: 0. Cumulative closed items: 489.
+- Commits: `3a414dd5` (public-research source, guide, 30-case corpus, tests, truthful closures, and
+  final supply-chain carrier), `98faae6b` (source-bound Sprint 82 report), and `b67b3e6f` (one
+  affected evidence regeneration pass). Commits including log: 4. Commits per closed item: 0.25.
+  Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across all Batch 88 paths and
+  pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 4 Rust cases, 2 artifact-contract tests, 3 evidence mutation tests, strict
+  host Clippy, format, Python compilation, Markdown, 30 corpus cases, supply-chain currentness,
+  runtime schemas, and product CI passed. Supply-chain builds: 1. Local report builds: 1.
+  Downstream evidence regeneration passes: 1. Recovery iterations: 0. The full chain ran 691.46
+  seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite after every
+  preceding gate passed. Recorded gate wall seconds: 691.
+- Live public-search/provider transcripts, browser attack traces, action previews/screenshots,
+  download scans, network/privacy traces, uncertain results, and independent review remain blocked
+  on `BLOCKED_EXTERNAL(platform=native public-search and sandboxed-browser environments plus
+  independent privacy review, artifact=untouched source/citation set, live provider transcripts,
+  browser attack traces, action previews/screenshots, download scans, uncertain-result tests,
+  network/privacy traces, and reviewer bundle, action=provision exact native platforms,
+  public-search provider access, malicious/benign web fixtures, browser instrumentation, and
+  privacy reviewer, execute the Sprint 82 live research and product-security campaign, and
+  transfer untouched bundles, credential=public-search provider, browser fixture, instrumentation,
+  and reviewer access, payment=provider, platform, fixture, instrumentation, or review costs if
+  applicable)`; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 82 rows depend on upstream or exact external tuples;
+continue Decision 0021 ordering at Sprint 83 sandboxed browser inspection. Cumulative closures are
+489; write the required 475-item checkpoint after this batch push.
