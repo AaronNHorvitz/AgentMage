@@ -2404,3 +2404,47 @@ soon as the next batch closes at least one row.
 Exact next action: continue Decision 0021 ordering at the first dependency-independent local row
 after the externally blocked Sprint 64 native-evidence gate, beginning with Sprint 65 image,
 redaction, and visual-verification source truth.
+
+## Batch 70 — Sprint 65 bounded image, redaction, and visual workflows
+
+### Completed
+
+- Closed 11 TASKS rows: Sub-tasks 65.1.1.1/.3/.4; Sub-tasks 65.1.2.1/.2/.3;
+  Sub-tasks 65.1.3.1/.2; and Sprint AC 65.AC1/.AC2/.AC5. The new effect-free capability
+  implements bounded BMP RGBA decode/regeneration, PNG metadata inspection, exact slide/object
+  provenance, sensitive-region view refusal, decoded-pixel redaction and metadata removal, exact
+  document/slide/image/UI diffs, and strict-local/provider disclosure approval. Three closed runtime
+  records, 6 Rust cases, 7 image-schema mutations, and a 99-case corpus bind the local result.
+  Promotions: 0. Substitutions: 0. Cumulative closed items: 201.
+- Commits: `f36b9e40` (bounded image capability, schemas, contracts, and final supply-chain carrier),
+  `f2146163` (source-bound local report, 11 truthful closures, and exact blocker tuples), and
+  `1b8b8fc7` (one affected evidence regeneration pass). Commits: 3. Commits per closed item: 0.27.
+  Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across 34 batch paths and all
+  pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 6 image-workflow Rust cases, 69 Node schema/semantic tests, the 99-case image
+  contract, evidence mutation tests, strict capability Clippy, format, supply-chain currentness,
+  product-CI contract, configuration startup/result, component inventory, Story 3.1 security/gate,
+  planning scope, traceability, contract boundary/evidence, Stories 2.1/2.2/2.4, and Sprint 2 pass.
+  Supply-chain builds: 1. Local report builds: 2 attempts, 1 retained artifact. Downstream evidence
+  regeneration passes: 1. Recovery iterations: 2. Attempt 1 passed literal `HEAD` to a recorder that
+  requires a 40-hex revision; recovery resolved the exact commit before the second run. The expanded
+  runtime-schema registry then made the configuration-result artifact stale; its targeted rebuild
+  restored Story 3.1 security before the remainder of the cascade ran once. The full chain ran
+  687.23 seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite after every
+  preceding gate passed. Recorded gate wall seconds: 687.
+- Remaining Sprint 65 rows preserve 6 exact blocker families with `substitution_set=empty`: native
+  Fedora/Ubuntu screenshot/view dependencies; an approved local image-model host or provider
+  account/credential/payment; an admitted native steganography and decoded-metadata scanner;
+  Fedora/Ubuntu native document/slide/image/UI rendering and accessibility dependencies; licensed
+  Windows 11 x64 KVM image and admitted suites; physical supported MacBook and admitted suites; plus
+  the dependent independent-review/accessibility/manual-fuzz tuple. Complete platform, artifact,
+  action, credential, and payment fields are committed in TASKS.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue the first dependency-independent Sprint 65 multilayer-redaction and
+export-boundary work after the externally blocked native/provider rows, then proceed to Sprint 66.
