@@ -94,6 +94,8 @@ pub mod frontier_release;
 pub mod gateway_candidate_identity;
 /// Versioned codec capability validation and deterministic no-silent-fallback routing.
 pub mod gateway_routing;
+/// Exact GitOps observation, bounded synchronization, and controller reconciliation.
+pub mod gitops_control;
 /// Kernel-only session and operation grant issuance.
 pub mod grants;
 /// Deterministic local-only manual handoff construction and denial.

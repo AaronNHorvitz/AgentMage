@@ -11402,36 +11402,55 @@ payment=cluster, registry, hosting, observability, instrumentation, or review co
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 113.1.1 - Implement GitOps reads and planning**
-  - [ ] **Sub-task 113.1.1.1:** Implement Argo CD and Flux application/source/revision/destination/resource/health/sync/drift/history/event/permission reads.
-  - [ ] **Sub-task 113.1.1.2:** Correlate exact Git source, rendered resources, artifact digests, cluster/namespace, current live state, desired state, and prior synchronization.
-  - [ ] **Sub-task 113.1.1.3:** Preview sync, prune, force, replace, hook, suspend, resume, reconcile, and rollback as distinct effects; keep force/replace/prune disabled by default.
-- [ ] **Task 113.1.2 - Implement approved GitOps effects**
-  - [ ] **Sub-task 113.1.2.1:** Implement ordinary sync/reconcile under exact revision, destination, resource diff, policy, health, timeout, and idempotency conditions.
-  - [ ] **Sub-task 113.1.2.2:** Implement suspend/resume and rollback as distinct grants with refreshed controller and live-cluster state.
-  - [ ] **Sub-task 113.1.2.3:** Detect controller-driven effects, concurrent reconciliation, changed desired state, auto-sync policy, and unknown completion before any retry.
-- [ ] **Task 113.1.3 - Verify and close the story**
+- [x] **Task 113.1.1 - Implement GitOps reads and planning**
+  - [x] **Sub-task 113.1.1.1:** Implement Argo CD and Flux application/source/revision/destination/resource/health/sync/drift/history/event/permission reads.
+  - [x] **Sub-task 113.1.1.2:** Correlate exact Git source, rendered resources, artifact digests, cluster/namespace, current live state, desired state, and prior synchronization.
+  - [x] **Sub-task 113.1.1.3:** Preview sync, prune, force, replace, hook, suspend, resume, reconcile, and rollback as distinct effects; keep force/replace/prune disabled by default.
+- [x] **Task 113.1.2 - Implement approved GitOps effects**
+  - [x] **Sub-task 113.1.2.1:** Implement ordinary sync/reconcile under exact revision, destination, resource diff, policy, health, timeout, and idempotency conditions.
+  - [x] **Sub-task 113.1.2.2:** Implement suspend/resume and rollback as distinct grants with refreshed controller and live-cluster state.
+  - [x] **Sub-task 113.1.2.3:** Detect controller-driven effects, concurrent reconciliation, changed desired state, auto-sync policy, and unknown completion before any retry.
+- [x] **Task 113.1.3 - Verify and close the story**
   - [ ] **Sub-task 113.1.3.1:** `S-113-CT01` runs application/source/destination/sync/health/drift/history matrices for supported Argo CD and Flux versions.
-  - [ ] **Sub-task 113.1.3.2:** `S-113-ST01` tests repository/cluster confusion, malicious hooks, prune escalation, auto-sync races, stale desired state, controller impersonation, and hidden secret/admin effects.
-  - [ ] **Sub-task 113.1.3.3:** `S-113-IT01` detects drift, previews ordinary sync, approves it, verifies health, changes desired state concurrently, and proves stale rollback/sync denial.
-  - [ ] **Sub-task 113.1.3.4:** `S-113-RT01` injects controller outage, partial sync, delayed events, duplicate reconciliation, permission loss, cancellation, crash, and restart.
+  - [x] **Sub-task 113.1.3.2:** `S-113-ST01` tests repository/cluster confusion, malicious hooks, prune escalation, auto-sync races, stale desired state, controller impersonation, and hidden secret/admin effects.
+  - [x] **Sub-task 113.1.3.3:** `S-113-IT01` detects drift, previews ordinary sync, approves it, verifies health, changes desired state concurrently, and proves stale rollback/sync denial.
+  - [x] **Sub-task 113.1.3.4:** `S-113-RT01` injects controller outage, partial sync, delayed events, duplicate reconciliation, permission loss, cancellation, crash, and restart.
   - [ ] **Sub-task 113.1.3.5:** Retain source/live/desired snapshots, controller events, resource diffs, effect reconciliation, receipts, and review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 113.1.AC1:** Given GitOps desired and live state, when AgentMage plans a sync, then it identifies the exact source revision, controller, destination, resource effects, health conditions, and auto-sync policy.
-- [ ] **Story AC 113.1.AC2:** Given ordinary sync authority, when prune, force, replace, hook, secret, or administration is embedded or inferred, then the stronger effect remains absent or separately gated.
-- [ ] **Story AC 113.1.AC3:** Given controller or desired-state changes during execution, when reconciliation runs, then AgentMage reports current effect truth and blocks unsafe retry or rollback.
+- [x] **Story AC 113.1.AC1:** Given GitOps desired and live state, when AgentMage plans a sync, then it identifies the exact source revision, controller, destination, resource effects, health conditions, and auto-sync policy.
+- [x] **Story AC 113.1.AC2:** Given ordinary sync authority, when prune, force, replace, hook, secret, or administration is embedded or inferred, then the stronger effect remains absent or separately gated.
+- [x] **Story AC 113.1.AC3:** Given controller or desired-state changes during execution, when reconciliation runs, then AgentMage reports current effect truth and blocks unsafe retry or rollback.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 113.AC1:** Argo CD and Flux pass their published observe and bounded-effect matrices.
-- [ ] **Sprint AC 113.AC2:** Desired-state write and environment synchronization remain distinct authorities.
-- [ ] **Sprint AC 113.AC3:** Prune, force, replace, hook, secret, and admin paths pass negative or separate-gate tests.
-- [ ] **Sprint AC 113.AC4:** Controller races, delayed events, and partial sync reconcile without duplicate effect.
+- [x] **Sprint AC 113.AC2:** Desired-state write and environment synchronization remain distinct authorities.
+- [x] **Sprint AC 113.AC3:** Prune, force, replace, hook, secret, and admin paths pass negative or separate-gate tests.
+- [x] **Sprint AC 113.AC4:** Controller races, delayed events, and partial sync reconcile without duplicate effect.
 - [ ] **Sprint AC 113.AC5:** The complete `AT-DEP-001` gate passes with independent evidence.
 
 **Gate decision:** Sprint 113 is PASS only when Story 113.1, all criteria, `AT-DEP-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Eighteen locally executable Story 113 rows are retained at
+`artifacts/sprints/sprint-113/local-evidence-report.json`; 2 synthetic provider families, 22 read
+cases, 64 exact plans, 2,048 hostile cases, and 512 fault cases separate desired-state writes from
+controller effects and preserve exact controller, source, destination, artifact, live/desired state,
+policy, health, and reconciliation identities with zero controller contact, stronger-effect
+enablement, hidden effect, authority escape, duplicate effect, or unsafe retry. Supported Argo CD and
+Flux version matrices, real controller effects, complete `AT-DEP-001`, and independent review remain
+`BLOCKED_EXTERNAL(platform=isolated supported Argo CD and Flux controllers, repositories,
+Kubernetes destinations, artifact registries, health/metrics systems, and independent review
+environment, artifact=untouched exact application/source/destination/version matrices, live and
+desired snapshots, rendered resources, controller events, resource diffs, health/drift/history,
+effect reconciliation, receipts, AT-DEP-001 bundle, support matrix, and independent review,
+action=provision isolated controllers, repositories, clusters, namespaces, registries, identities,
+instrumentation, and independent reviewer; execute S-113-CT01/ST01/IT01/RT01 and AT-DEP-001 against
+real supported versions, then transfer untouched evidence, credential=controller, repository,
+cluster, registry, health, metrics, instrumentation, and reviewer access, payment=controller,
+cluster, registry, hosting, observability, instrumentation, or review costs if applicable)`;
+`substitution_set=empty`. Promoted providers: 0. Live controller contacts: 0. Promotions: 0.
 
 ### [ ] Sprint 114 - Terraform and OpenTofu Infrastructure Safety
 
