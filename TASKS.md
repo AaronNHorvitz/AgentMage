@@ -12556,39 +12556,41 @@ multi-agent scope reconciled into release truth without promoting any unexecuted
 
 **Dependencies:** Sprint 126 checkpoint; existing adapter, identity, classification, receipt, support-matrix, and strict-local contracts.
 
-#### [ ] Story 127.1 - Truthful Optional-Pack Foundation
+#### [x] Story 127.1 - Truthful Optional-Pack Foundation
 
 **User-facing value:** As a user, I can see exactly which productivity packs, providers, accounts, objects, operations, and limitations are installed without an optional pack silently changing strict-local behavior.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 127.1.1 - Define pack and capability manifests**
-  - [ ] **Sub-task 127.1.1.1:** Define versioned pack, provider, account, object, operation, event, scope, classification, network, retention, recovery, removal, and support-state schemas.
-  - [ ] **Sub-task 127.1.1.2:** Define `supported`, `degraded`, `unsupported`, `disabled`, `revoked`, and `removed` states with fail-closed unknown-version behavior.
-  - [ ] **Sub-task 127.1.1.3:** Encode first-GA provider and operation matrices, including communications writes, financial-institution reads, Cloud Observer reads, money-movement absence, and cloud-mutation absence.
-- [ ] **Task 127.1.2 - Bind lifecycle and data-flow boundaries**
-  - [ ] **Sub-task 127.1.2.1:** Specify install, enable, authenticate, synchronize, suspend, revoke, disable, remove, and strict-local-restoration transitions.
-  - [ ] **Sub-task 127.1.2.2:** Enumerate every allowed cross-pack data-flow edge and deny all undeclared edges.
-  - [ ] **Sub-task 127.1.2.3:** Add component, process, socket, credential-reference, cache, cursor, schedule, webhook, index, and retained-data inventory fields.
-- [ ] **Task 127.1.3 - Verify contract completeness**
-  - [ ] **Sub-task 127.1.3.1:** Generate fixtures for every state, provider family, operation class, omission, future version, malformed manifest, and contradictory support claim.
-  - [ ] **Sub-task 127.1.3.2:** Prove optional packs add zero process, socket, credential, tool, schedule, or network authority while disabled or absent.
-  - [ ] **Sub-task 127.1.3.3:** Publish deterministic support and exclusion reports with source and schema digests.
+- [x] **Task 127.1.1 - Define pack and capability manifests**
+  - [x] **Sub-task 127.1.1.1:** Define versioned pack, provider, account, object, operation, event, scope, classification, network, retention, recovery, removal, and support-state schemas.
+  - [x] **Sub-task 127.1.1.2:** Define `supported`, `degraded`, `unsupported`, `disabled`, `revoked`, and `removed` states with fail-closed unknown-version behavior.
+  - [x] **Sub-task 127.1.1.3:** Encode first-GA provider and operation matrices, including communications writes, financial-institution reads, Cloud Observer reads, money-movement absence, and cloud-mutation absence.
+- [x] **Task 127.1.2 - Bind lifecycle and data-flow boundaries**
+  - [x] **Sub-task 127.1.2.1:** Specify install, enable, authenticate, synchronize, suspend, revoke, disable, remove, and strict-local-restoration transitions.
+  - [x] **Sub-task 127.1.2.2:** Enumerate every allowed cross-pack data-flow edge and deny all undeclared edges.
+  - [x] **Sub-task 127.1.2.3:** Add component, process, socket, credential-reference, cache, cursor, schedule, webhook, index, and retained-data inventory fields.
+- [x] **Task 127.1.3 - Verify contract completeness**
+  - [x] **Sub-task 127.1.3.1:** Generate fixtures for every state, provider family, operation class, omission, future version, malformed manifest, and contradictory support claim.
+  - [x] **Sub-task 127.1.3.2:** Prove optional packs add zero process, socket, credential, tool, schedule, or network authority while disabled or absent.
+  - [x] **Sub-task 127.1.3.3:** Publish deterministic support and exclusion reports with source and schema digests.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 127.1.AC1:** Given a supported, degraded, unsupported, disabled, or removed pack state, when capability discovery runs, then only exact manifested operations appear with their current limitations and evidence.
-- [ ] **Story AC 127.1.AC2:** Given an absent, malformed, contradictory, or future-version manifest, when registration is attempted, then no new authority is created and the reason is visible.
-- [ ] **Story AC 127.1.AC3:** Given every first-GA pack, when its lifecycle and data flows are inspected, then communications writes, read-only finance and cloud boundaries, and prohibited operation families are explicit.
+- [x] **Story AC 127.1.AC1:** Given a supported, degraded, unsupported, disabled, or removed pack state, when capability discovery runs, then only exact manifested operations appear with their current limitations and evidence.
+- [x] **Story AC 127.1.AC2:** Given an absent, malformed, contradictory, or future-version manifest, when registration is attempted, then no new authority is created and the reason is visible.
+- [x] **Story AC 127.1.AC3:** Given every first-GA pack, when its lifecycle and data flows are inspected, then communications writes, read-only finance and cloud boundaries, and prohibited operation families are explicit.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 127.AC1:** Every new pack, provider family, object, operation, lifecycle state, and data-flow edge has a versioned schema.
-- [ ] **Sprint AC 127.AC2:** Unsupported, disabled, absent, and future-version paths pass negative registration tests.
-- [ ] **Sprint AC 127.AC3:** Strict-local startup is byte- and authority-equivalent with all optional packs absent versus disabled.
-- [ ] **Sprint AC 127.AC4:** The generated support and exclusion matrices reconcile with README, PRD, inventory, security review, and Decision 0009.
+- [x] **Sprint AC 127.AC1:** Every new pack, provider family, object, operation, lifecycle state, and data-flow edge has a versioned schema.
+- [x] **Sprint AC 127.AC2:** Unsupported, disabled, absent, and future-version paths pass negative registration tests.
+- [x] **Sprint AC 127.AC3:** Strict-local startup is byte- and authority-equivalent with all optional packs absent versus disabled.
+- [x] **Sprint AC 127.AC4:** The generated support and exclusion matrices reconcile with README, PRD, inventory, security review, and Decision 0009.
 
 **Gate decision:** Sprint 127 is PASS only when Story 127.1, all criteria, pack-schema tests, absence tests, documentation checks, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 127 source and contract rows pass locally with 144 deterministic cases and zero installed or enabled optional packs. Sprint 127 remains `UPSTREAM-SPRINT-126-BLOCKED`; `substitution_set=empty`.
 
 ### [ ] Sprint 128 - Kernel-Enforced Autonomy Center
 

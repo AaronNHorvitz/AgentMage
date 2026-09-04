@@ -152,6 +152,8 @@ pub mod pod_composition;
 pub mod policy;
 /// Deterministic static and typed-fact checks before advisory classification.
 pub mod preclassification_policy;
+/// Versioned productivity-pack manifests, lifecycle, discovery, and data-flow admission.
+pub mod productivity_pack;
 /// Deterministic authority-free local workflows for specialist profiles.
 pub mod profile_workflows;
 /// Cancellation trees and lossless typed failure propagation.
