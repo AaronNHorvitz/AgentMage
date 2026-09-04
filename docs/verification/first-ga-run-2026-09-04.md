@@ -637,3 +637,64 @@ closures are 519; the next 25-item checkpoint is 525.
 Exact next action: all remaining Sprint 85 and 86 rows depend on upstream or exact external tuples;
 continue Decision 0021 ordering at Sprint 87 connector governance and isolation. Cumulative closures
 are 556; write one checkpoint covering the crossed 525-item and 550-item thresholds after push.
+
+## Batch 92 — Sprints 87–88 connector governance, writes, and recovery
+
+### Completed
+
+- Closed 33 TASKS rows. Sprint 87: Task 87.1.1 and all 4 implementation sub-tasks; Task 87.1.2
+  and both artifact sub-tasks; verification Sub-tasks 87.1.3.1 through .3; all 3 Story AC; and
+  Sprint AC87.AC1, AC87.AC3, and AC87.AC4 (17 rows). Sprint 88: Task 88.1.1 and all 4
+  implementation sub-tasks; Task 88.1.2 and all 4 artifact sub-tasks; verification Sub-tasks
+  88.1.3.1, 88.1.3.2, and 88.1.3.4; and Sprint AC88.AC2 through AC88.AC4 (16 rows). The inert
+  shared contract binds 7 connector families, 7 distinct write classes, complete per-connector
+  control manifests, 8 isolated identities, discovery/draft/review staging, exact mutation
+  previews, current remote refreshes, complete receipts, and partial/unknown retry refusal while
+  owning 0 secret-store, connector, database, or network executors. Promotions: 0. Substitutions:
+  0. Cumulative closed items: 589.
+- Commits: `4f1174f9` (shared connector source, guide, 112 corpus cases, tests, truthful closures,
+  and final supply-chain carrier), `f064b201` (both source-bound reports), and `f288d00b` (one
+  affected evidence regeneration pass). Commits including log: 4. Commits per closed item: 0.12.
+  Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across all 25 Batch 92 paths
+  and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 6 Rust cases, 2 artifact-contract tests, 6 evidence mutation tests, strict
+  knowledge-crate Clippy, format, Python compilation, Markdown, 56 Sprint 87 corpus cases,
+  56 Sprint 88 corpus cases, supply-chain currentness, runtime schemas, and product CI passed.
+  Supply-chain builds: 1. Local report builds: 2. Downstream evidence regeneration passes: 1.
+  Recovery iterations: 0. The full chain ran 693.37 seconds and stopped only at the retained
+  Story 6.1 rootless-Podman prerequisite after every preceding gate passed. Recorded gate wall
+  seconds: 693.
+- Native connector isolation, derived-credential, lifecycle, adversarial, and independent review
+  evidence for Sprint 87 remains blocked on `BLOCKED_EXTERNAL(platform=native connector
+  environments plus independent security/privacy/records/accessibility review,
+  artifact=untouched per-connector control maps, derived-credential observations,
+  cross-connector/account/workspace/task isolation traces, remote snapshots, lifecycle scans,
+  adversarial/recovery results, and reviewer bundle, action=provision exact email, messaging,
+  calendar, document-repository, archive, database, and cloud fixture accounts, platform
+  secret-store instrumentation, connector instrumentation, and independent reviewers, execute the
+  Sprint 87 native isolation, lifecycle, adversarial, and review campaign, and transfer untouched
+  bundles, credential=connector fixture accounts, platform secret-store, instrumentation, and
+  reviewer access, payment=provider, account, platform, instrumentation, or review costs if
+  applicable)`; `substitution_set=empty`.
+- Native connector write, remote-state, failure, rollback, lifecycle, and independent review
+  evidence for Sprint 88 remains blocked on `BLOCKED_EXTERNAL(platform=native connector
+  write/recovery environments plus independent security/privacy/records/accessibility review,
+  artifact=untouched read/draft/preview/approve/refresh/mutate/verify traces for all seven connector
+  families, exact remote pre/post snapshots, cross-partition attack results, injected
+  failure/reconciliation results, rollback or compensation results, lifecycle scans, and reviewer
+  bundle, action=provision exact email, messaging, calendar, document-repository, archive, database,
+  and cloud fixture accounts, mutation/failure/lifecycle instrumentation, rollback fixtures, and
+  independent reviewers, execute S-068-IT01 and the native Sprint 88 recovery/product-security
+  campaign, and transfer untouched bundles, credential=connector fixture accounts,
+  mutation/failure/lifecycle instrumentation, rollback, and reviewer access, payment=provider,
+  account, instrumentation, rollback, or review costs if applicable)`; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 87 and 88 rows depend on upstream or exact external tuples;
+continue Decision 0021 ordering at Sprint 89 queue, lease, and retry semantics. Cumulative closures
+are 589; write the required 575-item checkpoint after push.
