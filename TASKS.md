@@ -10858,38 +10858,45 @@ Native identities: 0. Live providers: 0. Promotions: 0.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 105.1.1 - Implement effect planning and execution**
-  - [ ] **Sub-task 105.1.1.1:** Define canonical effect plans containing actor, target, object, payload, attachments, visibility, source revision, environment, expected change, cost/budget, preconditions, expiry, and recovery.
-  - [ ] **Sub-task 105.1.1.2:** Re-read affected remote objects before preview and again before grant consumption; invalidate approval on any identity, policy, permission, state, or payload change.
-  - [ ] **Sub-task 105.1.1.3:** Implement provider idempotency keys and deterministic operation fingerprints with effect, non-effect, duplicate, partial, and unknown reconciliation states.
-  - [ ] **Sub-task 105.1.1.4:** Implement verified postconditions and receipts for denial, cancellation, validation failure, timeout, partial effect, unknown effect, duplicate effect, and success.
-  - [ ] **Sub-task 105.1.1.5:** Implement rollback/compensation only as a fresh plan and grant that refuses to overwrite later independent changes.
-- [ ] **Task 105.1.2 - Implement event integrity**
-  - [ ] **Sub-task 105.1.2.1:** Define webhook/event identity, signature, host, tenant, timestamp, nonce, sequence, cursor, ordering, duplication, tombstone, and backfill contracts.
-  - [ ] **Sub-task 105.1.2.2:** Implement replay windows, secret rotation, gap detection, bounded polling overlap, pagination-loop detection, and idempotent event application.
-  - [ ] **Sub-task 105.1.2.3:** Keep event content untrusted and unable to create a grant, approval, completion claim, or follow-on operation.
+- [x] **Task 105.1.1 - Implement effect planning and execution**
+  - [x] **Sub-task 105.1.1.1:** Define canonical effect plans containing actor, target, object, payload, attachments, visibility, source revision, environment, expected change, cost/budget, preconditions, expiry, and recovery.
+  - [x] **Sub-task 105.1.1.2:** Re-read affected remote objects before preview and again before grant consumption; invalidate approval on any identity, policy, permission, state, or payload change.
+  - [x] **Sub-task 105.1.1.3:** Implement provider idempotency keys and deterministic operation fingerprints with effect, non-effect, duplicate, partial, and unknown reconciliation states.
+  - [x] **Sub-task 105.1.1.4:** Implement verified postconditions and receipts for denial, cancellation, validation failure, timeout, partial effect, unknown effect, duplicate effect, and success.
+  - [x] **Sub-task 105.1.1.5:** Implement rollback/compensation only as a fresh plan and grant that refuses to overwrite later independent changes.
+- [x] **Task 105.1.2 - Implement event integrity**
+  - [x] **Sub-task 105.1.2.1:** Define webhook/event identity, signature, host, tenant, timestamp, nonce, sequence, cursor, ordering, duplication, tombstone, and backfill contracts.
+  - [x] **Sub-task 105.1.2.2:** Implement replay windows, secret rotation, gap detection, bounded polling overlap, pagination-loop detection, and idempotent event application.
+  - [x] **Sub-task 105.1.2.3:** Keep event content untrusted and unable to create a grant, approval, completion claim, or follow-on operation.
 - [ ] **Task 105.1.3 - Verify and close the story**
-  - [ ] **Sub-task 105.1.3.1:** `S-105-UT01` field-mutates every plan, preview, grant, request, result, reconciliation, receipt, and compensation schema.
-  - [ ] **Sub-task 105.1.3.2:** `S-105-FT01` injects loss/crash before send, during transport, after effect, before local commit, and during reconciliation across at least 1,000 runs; assert zero duplicate effect.
-  - [ ] **Sub-task 105.1.3.3:** `S-105-ST01` forges, delays, replays, duplicates, reorders, omits, truncates, and mutates events, cursors, signatures, timestamps, and tombstones.
-  - [ ] **Sub-task 105.1.3.4:** `S-105-RT01` changes remote state after effect and before rollback; assert a stale rollback cannot execute and later work is preserved.
+  - [x] **Sub-task 105.1.3.1:** `S-105-UT01` field-mutates every plan, preview, grant, request, result, reconciliation, receipt, and compensation schema.
+  - [x] **Sub-task 105.1.3.2:** `S-105-FT01` injects loss/crash before send, during transport, after effect, before local commit, and during reconciliation across at least 1,000 runs; assert zero duplicate effect.
+  - [x] **Sub-task 105.1.3.3:** `S-105-ST01` forges, delays, replays, duplicates, reorders, omits, truncates, and mutates events, cursors, signatures, timestamps, and tombstones.
+  - [x] **Sub-task 105.1.3.4:** `S-105-RT01` changes remote state after effect and before rollback; assert a stale rollback cannot execute and later work is preserved.
   - [ ] **Sub-task 105.1.3.5:** Execute `RV-25` and `RV-26`; retain raw provider snapshots, operation fingerprints, event streams, fault schedules, receipts, and independent review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 105.1.AC1:** Given a current exact preview, when the user approves and the provider responds normally, then exactly the previewed effect occurs and its postcondition and receipt are verified.
-- [ ] **Story AC 105.1.AC2:** Given a timeout, crash, duplicate response, or partial provider effect, when recovery runs, then no retry occurs until reconciliation proves the current effect state.
-- [ ] **Story AC 105.1.AC3:** Given forged, replayed, missing, or reordered events, when ingestion runs, then local state remains deterministic, gaps are visible, and no event gains operation authority.
+- [x] **Story AC 105.1.AC1:** Given a current exact preview, when the user approves and the provider responds normally, then exactly the previewed effect occurs and its postcondition and receipt are verified.
+- [x] **Story AC 105.1.AC2:** Given a timeout, crash, duplicate response, or partial provider effect, when recovery runs, then no retry occurs until reconciliation proves the current effect state.
+- [x] **Story AC 105.1.AC3:** Given forged, replayed, missing, or reordered events, when ingestion runs, then local state remains deterministic, gaps are visible, and no event gains operation authority.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 105.AC1:** Field or remote-state changes invalidate approval before any provider request.
-- [ ] **Sprint AC 105.AC2:** At least 1,000 fault schedules produce zero duplicate external effect.
-- [ ] **Sprint AC 105.AC3:** Unknown and partial effects remain visible and block unsafe retry.
-- [ ] **Sprint AC 105.AC4:** Rollback and compensation preserve later independent changes.
+- [x] **Sprint AC 105.AC1:** Field or remote-state changes invalidate approval before any provider request.
+- [x] **Sprint AC 105.AC2:** At least 1,000 fault schedules produce zero duplicate external effect.
+- [x] **Sprint AC 105.AC3:** Unknown and partial effects remain visible and block unsafe retry.
+- [x] **Sprint AC 105.AC4:** Rollback and compensation preserve later independent changes.
 - [ ] **Sprint AC 105.AC5:** `RV-25` and `RV-26` pass with current independent evidence.
 
 **Gate decision:** Sprint 105 is PASS only when Story 105.1, all criteria, the effect/event portions of `AT-XTE-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Twenty-one local Story 105.1 rows are retained at
+`artifacts/sprints/sprint-105/local-evidence-report.json`; 16 plan fields, 5 reconciliation
+outcomes, 80 schema mutations, 1,024 fault schedules, 12 hostile event cases, and 64 stale
+compensation races pass with zero duplicate effect, unsafe retry, event-created authority, or
+overwritten later work. Sprint 104 and native independently reviewed `RV-25`/`RV-26` dependencies
+remain blocked; `substitution_set=empty`. Live provider effects: 0. Promotions: 0.
 
 ### [ ] Sprint 106 - GitHub.com and GitHub Enterprise Full Conformance
 

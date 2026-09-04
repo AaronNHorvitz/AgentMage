@@ -75,6 +75,7 @@ pub mod evidence_state;
 pub mod evidence_store;
 /// Deterministic executive-assistant views, ranking, drafting, and local triage.
 pub mod executive_assistant;
+pub mod external_effect;
 /// Authority-free controlled filesystem plans, structured patches, and exact previews.
 pub mod filesystem_control;
 /// Non-executing frontier-result import, quarantine, and local revalidation.
