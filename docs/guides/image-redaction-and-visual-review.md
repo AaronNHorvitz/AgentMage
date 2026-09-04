@@ -17,6 +17,12 @@
 3. Reopen the regenerated BMP, scan the decoded rectangles, and confirm metadata removal.
 4. Refuse the view/export when the current pixel digest or any rectangle differs from the receipt.
 5. Retain a human visual review; opaque pixels can still cover the wrong region.
+6. Before export, reopen the exact proposed BMP again and match its digest, decoded pixels,
+   redaction identity, metadata-removal state, and workspace-relative destination.
+
+For AgentMage-generated presentations, review the exact target hashes and all six layer checks:
+specification, slide objects, speaker notes, internal relationships, absent thumbnails, and exported
+package. Identity, path, or timestamp targets are unsupported and must fail instead of being renamed.
 
 ## Before/After Review
 

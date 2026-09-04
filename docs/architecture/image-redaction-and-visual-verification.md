@@ -35,6 +35,11 @@ copied. The receipt contains only source/output hashes, region coordinates, laye
 denied effects. Native visual inspection is still required because a deterministic pixel scan does
 not establish human-perceived correctness.
 
+`prepare_redacted_image_export` accepts only the exact current decoded pixels, regenerated BMP
+bytes, and successful receipt. It reopens the bytes again and returns a workspace-relative `.bmp`
+proposal bound to the pixel, container, redaction, and metadata-removal identities. It does not
+persist the proposal.
+
 ## Visual Comparison
 
 `compare_images` accepts exact RGBA before/after values for document pages, presentation slides,

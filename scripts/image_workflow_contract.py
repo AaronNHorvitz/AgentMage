@@ -16,7 +16,7 @@ GROUPS: Final = (
     "evidence_limits",
 )
 EXPECTED_COUNTS: Final = {
-    "positive_cases": 19, "prohibited_cases": 12, "invalid_cases": 27,
+    "positive_cases": 21, "prohibited_cases": 12, "invalid_cases": 28,
     "boundary_cases": 17, "hostile_cases": 12, "evidence_limits": 12,
 }
 
@@ -56,6 +56,7 @@ def validate() -> list[str]:
     for fragment in (
         "pub fn inspect_image(", "pub fn decode_bmp_rgba(", "pub fn encode_bmp_rgba(",
         "pub fn prepare_image_view(", "pub fn redact_image(", "pub fn compare_images(",
+        "pub fn prepare_redacted_image_export(",
         "pub fn preview_image_generation(", "pub fn record_image_generation(",
         "ImageWorkflowError::SensitiveContent", "ImageWorkflowError::RouteDenied",
         "filesystem_effect_performed: false", "network_access_performed: false",
@@ -63,6 +64,14 @@ def validate() -> list[str]:
     ):
         if fragment not in source:
             failures.append(f"image boundary fragment absent: {fragment}")
+    presentation = (ROOT / "capabilities/knowledge/src/presentation_generation.rs").read_text(encoding="utf-8")
+    for fragment in (
+        "pub fn redact_generated_presentation(", "PresentationRedactionLayer::SpeakerNotes",
+        "PresentationRedactionLayer::Relationships", "PresentationRedactionLayer::Thumbnails",
+        "PresentationRedactionLayer::ExportedPackage", "full_regeneration_performed: true",
+    ):
+        if fragment not in presentation:
+            failures.append(f"presentation redaction fragment absent: {fragment}")
     registry = (ROOT / "scripts/validate_planning_schemas.mjs").read_text(encoding="utf-8")
     for record_type in ("image-inspection", "image-redaction-receipt", "image-visual-comparison"):
         if f'"{record_type}"' not in registry:

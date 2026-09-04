@@ -77,11 +77,12 @@ pub use domain::{
 };
 pub use executive_skills::{ExecutiveSkill, built_in_executive_skill_pack};
 pub use image_workflows::{
-    DecodedRgbaImage, ImageColorSpace, ImageFormat, ImageGenerationPreview, ImageGenerationReceipt,
-    ImageGenerationRoute, ImageInspection, ImageProvenance, ImageRedactionReceipt, ImageRegion,
-    ImageViewProposal, ImageVisualComparison, ImageWorkflowError, RedactedImage,
-    VisualArtifactKind, compare_images, decode_bmp_rgba, encode_bmp_rgba, inspect_image,
-    prepare_image_view, preview_image_generation, record_image_generation, redact_image,
+    DecodedRgbaImage, ImageColorSpace, ImageExportProposal, ImageFormat, ImageGenerationPreview,
+    ImageGenerationReceipt, ImageGenerationRoute, ImageInspection, ImageProvenance,
+    ImageRedactionReceipt, ImageRegion, ImageViewProposal, ImageVisualComparison,
+    ImageWorkflowError, RedactedImage, VisualArtifactKind, compare_images, decode_bmp_rgba,
+    encode_bmp_rgba, inspect_image, prepare_image_view, prepare_redacted_image_export,
+    preview_image_generation, record_image_generation, redact_image,
 };
 pub use index::{KnowledgeIndex, KnowledgeIndexError, KnowledgeIndexHit, KnowledgeIndexReport};
 pub use json_data::{
@@ -197,9 +198,11 @@ pub use presentation_generation::{
     PresentationDeckSpec, PresentationDiagramEdge, PresentationDiagramNode,
     PresentationDiagramSpec, PresentationEditRequest, PresentationGenerationError,
     PresentationObjectPreview, PresentationPlotPoint, PresentationPlotSpec,
-    PresentationSlideChange, PresentationSlidePreview, PresentationSlideReplacement,
-    PresentationSlideSpec, PresentationTableSpec, edit_generated_presentation,
-    generate_presentation,
+    PresentationRedactionLayer, PresentationRedactionLayerCheck, PresentationRedactionReceipt,
+    PresentationRedactionTarget, PresentationSlideChange, PresentationSlidePreview,
+    PresentationSlideReplacement, PresentationSlideSpec, PresentationTableSpec,
+    RedactedPresentation, edit_generated_presentation, generate_presentation,
+    redact_generated_presentation,
 };
 pub use presentation_ooxml::{
     PresentationError, PresentationFinding, PresentationFindingKind, PresentationImageReference,

@@ -51,6 +51,13 @@ data-source hash. The preview is structural evidence, not a rendered image. Ever
 sets `native_render_required` to `true`; a renderer or accessibility review cannot be inferred from
 successful package inspection.
 
+Sprint 65 adds full-regeneration redaction for AgentMage-generated decks. Exact targets are removed
+from titles, blocks, tables, chart categories, diagram labels, and speaker notes; changed structured
+data hashes are recomputed before generation. The result reopens through the bounded inspector and
+retains content-free checks for the specification, slide objects, notes, internal-only relationships,
+absent thumbnails, and proposed exported package. Targets cannot alter deck/slide identities,
+timestamps, or paths. Arbitrary presentation redaction remains unsupported.
+
 ## Runtime Records
 
 The closed runtime records are:

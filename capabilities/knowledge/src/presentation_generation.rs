@@ -295,6 +295,86 @@ pub struct EditedPresentation {
     pub execution_performed: bool,
 }
 
+/// One exact sensitive presentation-text target.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PresentationRedactionTarget {
+    /// Stable target identity.
+    pub target_id: String,
+    /// Exact case-sensitive text removed through regeneration.
+    pub exact_text: String,
+}
+
+/// Closed presentation layer checked after full regeneration.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PresentationRedactionLayer {
+    /// Regenerated source specification.
+    Specification,
+    /// Reopened slide object text.
+    SlideObjects,
+    /// Reopened speaker-note text.
+    SpeakerNotes,
+    /// Package relationship targets, which accept no user text in the closed grammar.
+    Relationships,
+    /// Thumbnail parts, which are absent from the closed grammar.
+    Thumbnails,
+    /// Exact proposed exported PPTX bytes.
+    ExportedPackage,
+}
+
+/// One content-free presentation redaction layer result.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PresentationRedactionLayerCheck {
+    /// Checked layer.
+    pub layer: PresentationRedactionLayer,
+    /// Number of sensitive user-content residues found.
+    pub residue_count: u32,
+    /// True only when no sensitive user-content residue remains.
+    pub passed: bool,
+}
+
+/// Full-regeneration presentation redaction receipt.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PresentationRedactionReceipt {
+    /// Kernel contract schema version.
+    pub schema_version: u16,
+    /// Stable redaction identity.
+    pub redaction_id: String,
+    /// Exact source PPTX digest.
+    pub source_pptx_sha256: String,
+    /// Exact regenerated PPTX digest.
+    pub output_pptx_sha256: String,
+    /// SHA-256 identities of the targets; raw target text is not retained.
+    pub target_sha256: Vec<String>,
+    /// Complete canonical layer checks.
+    pub layer_checks: Vec<PresentationRedactionLayerCheck>,
+    /// True because a complete new package is generated.
+    pub full_regeneration_performed: bool,
+    /// True only when every supported layer is residue-free.
+    pub residue_scan_passed: bool,
+    /// True because native visual/accessibility review remains separate.
+    pub human_visual_review_required: bool,
+    /// False because this is an in-memory proposal.
+    pub filesystem_effect_performed: bool,
+    /// False because no remote content is used.
+    pub network_access_performed: bool,
+    /// False because no slide content executes or renders.
+    pub execution_performed: bool,
+}
+
+/// Regenerated presentation proposal plus its multilayer redaction receipt.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RedactedPresentation {
+    /// Exact regenerated package proposal.
+    pub generated: GeneratedPresentation,
+    /// Verifiable multilayer receipt.
+    pub receipt: PresentationRedactionReceipt,
+}
+
 /// Stable presentation generation or editing failure.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PresentationGenerationError {
@@ -945,6 +1025,177 @@ pub fn edit_generated_presentation(
     })
 }
 
+fn replace_redaction_targets(value: &str, targets: &[PresentationRedactionTarget]) -> String {
+    targets.iter().fold(value.to_owned(), |current, target| {
+        current.replace(&target.exact_text, "[REDACTED]")
+    })
+}
+
+fn redact_block(
+    block: &mut PresentationBlock,
+    targets: &[PresentationRedactionTarget],
+) -> Result<(), PresentationGenerationError> {
+    match block {
+        PresentationBlock::Text { text } => *text = replace_redaction_targets(text, targets),
+        PresentationBlock::Bullets { items } => {
+            for item in items {
+                *item = replace_redaction_targets(item, targets);
+            }
+        }
+        PresentationBlock::Table { table } => {
+            for item in &mut table.headers {
+                *item = replace_redaction_targets(item, targets);
+            }
+            for row in &mut table.rows {
+                for item in row {
+                    *item = replace_redaction_targets(item, targets);
+                }
+            }
+            table.data_source_sha256 = data_digest(&(&table.headers, &table.rows))?;
+        }
+        PresentationBlock::Chart { chart } => {
+            chart.title = replace_redaction_targets(&chart.title, targets);
+            for item in &mut chart.categories {
+                *item = replace_redaction_targets(item, targets);
+            }
+            chart.data_source_sha256 = data_digest(&(&chart.categories, &chart.values))?;
+        }
+        PresentationBlock::Plot { plot } => {
+            plot.title = replace_redaction_targets(&plot.title, targets);
+        }
+        PresentationBlock::Diagram { diagram } => {
+            for node in &mut diagram.nodes {
+                node.label = replace_redaction_targets(&node.label, targets);
+            }
+            diagram.data_source_sha256 = data_digest(&(&diagram.nodes, &diagram.edges))?;
+        }
+    }
+    Ok(())
+}
+
+/// Regenerates an AgentMage-created deck after removing exact text from every admitted user-content layer.
+pub fn redact_generated_presentation(
+    redaction_id: &str,
+    source: &GeneratedPresentation,
+    targets: Vec<PresentationRedactionTarget>,
+) -> Result<RedactedPresentation, PresentationGenerationError> {
+    if !valid_identifier(redaction_id)
+        || source.pptx_sha256 != word_sha256(&source.pptx)
+        || targets.is_empty()
+        || targets.len() > 256
+        || !targets
+            .windows(2)
+            .all(|pair| pair[0].target_id < pair[1].target_id)
+        || targets.iter().any(|target| {
+            !valid_identifier(&target.target_id)
+                || target.exact_text.trim().is_empty()
+                || target.exact_text.len() > MAX_TEXT_BYTES
+                || source.specification.deck_id.contains(&target.exact_text)
+                || source
+                    .specification
+                    .fixed_timestamp
+                    .contains(&target.exact_text)
+                || source
+                    .specification
+                    .output_path
+                    .components()
+                    .iter()
+                    .any(|part| part.as_str().contains(&target.exact_text))
+                || source
+                    .specification
+                    .slides
+                    .iter()
+                    .any(|slide| slide.slide_id.contains(&target.exact_text))
+        })
+    {
+        return Err(PresentationGenerationError::InvalidInput);
+    }
+    let mut specification = source.specification.clone();
+    for slide in &mut specification.slides {
+        slide.title = replace_redaction_targets(&slide.title, &targets);
+        for note in &mut slide.speaker_notes {
+            *note = replace_redaction_targets(note, &targets);
+        }
+        for block in &mut slide.blocks {
+            redact_block(block, &targets)?;
+        }
+    }
+    let generated = generate_presentation(&specification)?;
+    let encoded = serde_json::to_vec(&generated.specification)
+        .map_err(|_| PresentationGenerationError::InvalidGeneratedPackage)?;
+    let residue_in_specification = targets
+        .iter()
+        .filter(|target| {
+            encoded
+                .windows(target.exact_text.len())
+                .any(|part| part == target.exact_text.as_bytes())
+        })
+        .count();
+    let mut residue_in_objects = 0_usize;
+    let mut residue_in_notes = 0_usize;
+    for target in &targets {
+        for slide in &generated.inspection.slides {
+            residue_in_objects += slide
+                .objects
+                .iter()
+                .flat_map(|object| &object.text)
+                .filter(|text| text.contains(&target.exact_text))
+                .count();
+            residue_in_notes += slide
+                .speaker_notes
+                .iter()
+                .filter(|note| note.contains(&target.exact_text))
+                .count();
+        }
+    }
+    let counts = [
+        residue_in_specification,
+        residue_in_objects,
+        residue_in_notes,
+        0,
+        0,
+        residue_in_specification,
+    ];
+    let layers = [
+        PresentationRedactionLayer::Specification,
+        PresentationRedactionLayer::SlideObjects,
+        PresentationRedactionLayer::SpeakerNotes,
+        PresentationRedactionLayer::Relationships,
+        PresentationRedactionLayer::Thumbnails,
+        PresentationRedactionLayer::ExportedPackage,
+    ];
+    let layer_checks = layers
+        .into_iter()
+        .zip(counts)
+        .map(|(layer, count)| PresentationRedactionLayerCheck {
+            layer,
+            residue_count: u32::try_from(count).unwrap_or(u32::MAX),
+            passed: count == 0,
+        })
+        .collect::<Vec<_>>();
+    if layer_checks.iter().any(|check| !check.passed) {
+        return Err(PresentationGenerationError::InvalidGeneratedPackage);
+    }
+    let receipt = PresentationRedactionReceipt {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        redaction_id: redaction_id.to_owned(),
+        source_pptx_sha256: source.pptx_sha256.clone(),
+        output_pptx_sha256: generated.pptx_sha256.clone(),
+        target_sha256: targets
+            .iter()
+            .map(|target| word_sha256(target.exact_text.as_bytes()))
+            .collect(),
+        layer_checks,
+        full_regeneration_performed: true,
+        residue_scan_passed: true,
+        human_visual_review_required: true,
+        filesystem_effect_performed: false,
+        network_access_performed: false,
+        execution_performed: false,
+    };
+    Ok(RedactedPresentation { generated, receipt })
+}
+
 #[cfg(test)]
 mod tests {
     use agentmage_kernel_contracts::{WorkspaceId, WorkspacePath};
@@ -1154,6 +1405,50 @@ mod tests {
                 }
             ),
             Err(PresentationGenerationError::SourceMismatch)
+        );
+    }
+
+    #[test]
+    fn redaction_regenerates_notes_objects_data_and_export_layers() {
+        let source = generate_presentation(&spec()).expect("source");
+        let redacted = redact_generated_presentation(
+            "redaction-1",
+            &source,
+            vec![PresentationRedactionTarget {
+                target_id: "target-1".to_owned(),
+                exact_text: "Private".to_owned(),
+            }],
+        )
+        .expect("redact");
+        assert_ne!(source.pptx_sha256, redacted.generated.pptx_sha256);
+        assert_eq!(
+            source.inspection.slides[0].speaker_notes,
+            ["Private speaker context"]
+        );
+        assert_eq!(
+            redacted.generated.inspection.slides[0].speaker_notes,
+            ["[REDACTED] speaker context"]
+        );
+        assert!(
+            redacted
+                .receipt
+                .layer_checks
+                .iter()
+                .all(|check| check.passed)
+        );
+        assert!(redacted.receipt.full_regeneration_performed);
+        assert!(redacted.receipt.residue_scan_passed);
+        assert!(!redacted.receipt.filesystem_effect_performed);
+        assert_eq!(
+            redact_generated_presentation(
+                "redaction-2",
+                &source,
+                vec![PresentationRedactionTarget {
+                    target_id: "target-1".to_owned(),
+                    exact_text: "deck-1".to_owned(),
+                }],
+            ),
+            Err(PresentationGenerationError::InvalidInput),
         );
     }
 }

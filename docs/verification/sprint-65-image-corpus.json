@@ -6,7 +6,8 @@
     "dimensions and byte size", "color-space identity", "slide and object provenance", "png rgb metadata",
     "png rgba metadata", "approved vision profile proposal", "decoded-pixel redaction", "redaction metadata removal",
     "document visual diff", "slide visual diff", "image visual diff", "user-interface visual diff",
-    "local generation preview", "provider generation preview", "generation receipt binding"
+    "local generation preview", "provider generation preview", "generation receipt binding",
+    "redacted image export proposal", "presentation multilayer regeneration"
   ],
   "prohibited_cases": [
     "ambient screenshot capture", "filesystem image discovery", "implicit native viewer", "implicit native renderer",
@@ -19,7 +20,8 @@
     "png invalid signature", "png missing ihdr", "png unsupported bit depth", "source digest mismatch", "invalid source identity",
     "decoded rgba length mismatch", "decoded rgba digest mismatch", "empty redaction regions", "duplicate redaction regions",
     "overlapping duplicate order", "out-of-bounds redaction", "zero-area redaction", "dimension-mismatched comparison",
-    "invalid comparison threshold", "stale redaction receipt", "stale generation preview", "invalid output digest"
+    "invalid comparison threshold", "stale redaction receipt", "stale generation preview", "invalid output digest",
+    "stale redacted export proposal"
   ],
   "boundary_cases": [
     "one-by-one image", "maximum admitted dimension edge", "maximum admitted decoded bytes edge", "first pixel redaction",

@@ -14,7 +14,7 @@ class ImageWorkflowContractTests(unittest.TestCase):
         self.assertEqual(validate(), [])
 
     def test_corpus_size_is_explicit(self) -> None:
-        self.assertEqual(sum(EXPECTED_COUNTS.values()), 99)
+        self.assertEqual(sum(EXPECTED_COUNTS.values()), 102)
 
 
 if __name__ == "__main__":

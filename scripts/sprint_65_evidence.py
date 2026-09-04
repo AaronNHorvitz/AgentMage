@@ -15,7 +15,8 @@ except ModuleNotFoundError:
 ROOT: Final = Path(__file__).resolve().parents[1]
 SOURCE_PATHS: Final = (
     "Cargo.toml", "Cargo.lock", "capabilities/knowledge/Cargo.toml",
-    "capabilities/knowledge/src/image_workflows.rs", "capabilities/knowledge/src/lib.rs",
+    "capabilities/knowledge/src/image_workflows.rs",
+    "capabilities/knowledge/src/presentation_generation.rs", "capabilities/knowledge/src/lib.rs",
     "schemas/runtime/image-inspection.schema.json",
     "schemas/runtime/image-redaction-receipt.schema.json",
     "schemas/runtime/image-visual-comparison.schema.json",
@@ -36,6 +37,7 @@ SOURCE_PATHS: Final = (
 )
 COMMANDS: Final = (
     ("image-workflow-unit", ("cargo", "test", "-p", "agentmage-capability-knowledge", "image_workflows::tests", "--lib", "--locked")),
+    ("presentation-redaction-unit", ("cargo", "test", "-p", "agentmage-capability-knowledge", "presentation_generation::tests::redaction_regenerates_notes_objects_data_and_export_layers", "--lib", "--locked")),
     ("image-runtime-schemas", ("node", "--test", "tests/test_planning_schemas.mjs")),
     ("image-review-corpus", ("python3", "-m", "unittest", "tests.test_image_workflow_contract")),
     ("image-strict-clippy", ("cargo", "clippy", "-p", "agentmage-capability-knowledge", "--all-targets", "--locked", "--", "-D", "warnings")),
@@ -44,18 +46,20 @@ COMMANDS: Final = (
     ("product-ci-contract", ("python3", "scripts/product_ci.py", "--check")),
     ("evidence-tests", ("python3", "-m", "unittest", "tests.test_sprint_65_evidence")),
 )
-FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:3])
+FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:4])
 SECURITY_REQUIREMENTS: Final = (
     "SR-DAT-002", "SR-DAT-003", "SR-SUP-008", "SR-SUP-009",
     "SR-TST-002", "SR-TST-004", "SR-CIV-006", "SR-CIV-007", "SR-CIV-008", "SR-CIV-009",
 )
 IMPLEMENTED: Final = {
     "runtime_schema_count": 3, "image_rust_fixture_count": 6,
-    "review_corpus_case_count": 99, "bounded_bmp_rgba_decoder": True,
+    "presentation_redaction_rust_fixture_count": 1,
+    "review_corpus_case_count": 102, "bounded_bmp_rgba_decoder": True,
     "png_metadata_inspection": True, "slide_object_image_provenance": True,
     "approved_vision_profile_view_proposal": True, "decoded_pixel_redaction": True,
     "deterministic_bmp_full_regeneration": True, "redaction_pixel_residue_scan": True,
-    "ancillary_metadata_removal": True, "four_artifact_visual_diff": True,
+    "ancillary_metadata_removal": True, "redacted_image_export_binding": True,
+    "presentation_multilayer_redaction": True, "four_artifact_visual_diff": True,
     "strict_local_provider_denial": True, "exact_disclosure_approval_receipt": True,
     "network_access_capability": False, "filesystem_mutation_capability": False,
     "content_execution_capability": False, "native_screenshot_capture_admitted": False,
@@ -80,7 +84,7 @@ BLOCKERS: Final = (
 )
 VERIFICATION: Final = {
     "focused_local_contracts": True, "focused_blocking_skip_count": 0,
-    "review_corpus_case_count": 99, "accepted_network_effect_count": 0,
+    "review_corpus_case_count": 102, "accepted_network_effect_count": 0,
     "accepted_execution_effect_count": 0, "accepted_filesystem_effect_count": 0,
     "bmp_round_trip_verified": True, "image_provenance_verified": True,
     "redaction_pixel_and_metadata_scan_verified": True, "visual_diff_semantics_verified": True,
@@ -101,7 +105,7 @@ SUMMARY: Final = {
 DEFINITION: Final = SprintEvidenceDefinition(
     sprint=65, root=ROOT, output="artifacts/sprints/sprint-65/local-evidence-report.json",
     source_paths=SOURCE_PATHS, commands=COMMANDS, focused_commands=FOCUSED_COMMANDS,
-    rust_focused_commands=frozenset(FOCUSED_COMMANDS[:1]),
+    rust_focused_commands=frozenset(FOCUSED_COMMANDS[:2]),
     security_requirement_ids=SECURITY_REQUIREMENTS, implemented_contracts=IMPLEMENTED,
     verification_evidence=VERIFICATION, blockers=BLOCKERS, summary=SUMMARY,
 )

@@ -2,7 +2,7 @@
 
 use std::collections::BTreeSet;
 
-use agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION;
+use agentmage_kernel_contracts::{CONTRACT_SCHEMA_VERSION, WorkspacePath};
 use serde::{Deserialize, Serialize};
 
 use crate::word_generation::valid_identifier;
@@ -179,6 +179,34 @@ pub struct RedactedImage {
     pub bmp: Vec<u8>,
     /// Verifiable redaction receipt.
     pub receipt: ImageRedactionReceipt,
+}
+
+/// Exact persistence proposal for a previously verified redacted image.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ImageExportProposal {
+    /// Stable export identity.
+    pub export_id: String,
+    /// Canonical workspace-relative proposed output path.
+    pub output_path: WorkspacePath,
+    /// Exact redaction receipt identity.
+    pub redaction_id: String,
+    /// Exact exported BMP bytes.
+    pub bmp: Vec<u8>,
+    /// SHA-256 of `bmp`.
+    pub bmp_sha256: String,
+    /// True only when the decoded-pixel scan passed.
+    pub decoded_pixel_scan_passed: bool,
+    /// True only when source ancillary metadata was removed.
+    pub metadata_removed: bool,
+    /// Always true; persistence requires a separate write approval.
+    pub proposal_only: bool,
+    /// False because this function writes nothing.
+    pub filesystem_effect_performed: bool,
+    /// False because export uses no network.
+    pub network_access_performed: bool,
+    /// False because export launches no viewer or content.
+    pub execution_performed: bool,
 }
 
 /// Artifact class associated with a visual comparison.
@@ -685,6 +713,40 @@ pub fn redact_image(
     })
 }
 
+/// Produces an exact export proposal only from the currently verified redacted pixels and bytes.
+pub fn prepare_redacted_image_export(
+    export_id: &str,
+    output_path: WorkspacePath,
+    redacted: &RedactedImage,
+) -> Result<ImageExportProposal, ImageWorkflowError> {
+    if !valid_identifier(export_id)
+        || !output_path
+            .components()
+            .last()
+            .is_some_and(|name| name.as_str().ends_with(".bmp") && name.as_str().len() > 4)
+        || redacted.receipt.output_rgba_sha256 != redacted.image.rgba_sha256
+        || redacted.receipt.output_bmp_sha256 != word_sha256(&redacted.bmp)
+        || !redacted.receipt.decoded_pixel_scan_passed
+        || !redacted.receipt.metadata_removed
+        || decode_bmp_rgba(&redacted.bmp)? != redacted.image
+    {
+        return Err(ImageWorkflowError::BindingMismatch);
+    }
+    Ok(ImageExportProposal {
+        export_id: export_id.to_owned(),
+        output_path,
+        redaction_id: redacted.receipt.redaction_id.clone(),
+        bmp: redacted.bmp.clone(),
+        bmp_sha256: redacted.receipt.output_bmp_sha256.clone(),
+        decoded_pixel_scan_passed: true,
+        metadata_removed: true,
+        proposal_only: true,
+        filesystem_effect_performed: false,
+        network_access_performed: false,
+        execution_performed: false,
+    })
+}
+
 /// Compares exact decoded pixels for documents, slides, images, or user interfaces.
 pub fn compare_images(
     comparison_id: &str,
@@ -866,6 +928,7 @@ pub fn record_image_generation(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use agentmage_kernel_contracts::WorkspaceId;
 
     fn image() -> DecodedRgbaImage {
         let rgba = vec![
@@ -918,6 +981,17 @@ mod tests {
             decode_bmp_rgba(&redacted.bmp).expect("reopen"),
             redacted.image
         );
+        assert_eq!(source.rgba[4..8], [40, 50, 60, 255]);
+        let path = WorkspacePath::new(
+            WorkspaceId::from_raw("workspace-image"),
+            ["exports", "redacted.bmp"],
+        )
+        .expect("path");
+        let export = prepare_redacted_image_export("export-1", path, &redacted).expect("export");
+        assert!(
+            export.decoded_pixel_scan_passed && export.metadata_removed && export.proposal_only
+        );
+        assert!(!export.filesystem_effect_performed);
     }
 
     #[test]

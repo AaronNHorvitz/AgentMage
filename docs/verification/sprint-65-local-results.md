@@ -3,13 +3,13 @@
 ## Scope
 
 The Sprint 65 recorder covers bounded image metadata, deterministic BMP decoding/regeneration,
-presentation-owner provenance, approved-profile view proposals, decoded-pixel redaction and residue
-scans, document/slide/image/UI before-after comparison, strict-local/provider disclosure admission,
+presentation-owner provenance, approved-profile view proposals, decoded-pixel redaction and export
+scans, generated-presentation multilayer redaction, document/slide/image/UI before-after comparison, strict-local/provider disclosure admission,
 three closed runtime records, and the hostile review corpus.
 
 ## Local Campaigns
 
-- Rust tests exercise byte/pixel round trips, source ownership, redaction, stale-receipt refusal,
+- Rust tests exercise byte/pixel round trips, source ownership, image and presentation redaction, stale-receipt refusal,
   exact visual bounds, strict-local denial, disclosure approval, malformed formats, and ceilings.
 - Runtime schemas and semantic checks preserve provenance, safe-context state, redaction regions,
   visual aggregates, and zero file/network/execution effects.
