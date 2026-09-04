@@ -2286,3 +2286,39 @@ the remaining foundational milestone rows.
 Exact next action: continue Decision 0021 ordering at the first authoritative incomplete dependency
 gate after Story 62.2, while preserving the four foundational milestone blockers without
 substitution.
+
+## Batch 67 — Sprint 62 local-verification reconciliation
+
+### Completed
+
+- Closed 3 TASKS rows: Sub-task 62.1.3.1, Story AC 62.1.AC2, and Sprint AC 62.AC5. The two
+  hash-bound Sprint 62 reports jointly retain the complete local issue-family campaign, zero focused
+  skips, exact error/cancellation/crash-cleanup outcomes, and zero accepted filesystem, network, or
+  active-content effect; the sprint gate remains visibly blocked rather than converting absent
+  native or independent evidence into a pass. Promotions: 0. Substitutions: 0. Cumulative closed
+  items: 169.
+- Commits: `260a78aa` (three truthful local verification closures and exact external blockers) and
+  `4326d549` (one affected evidence regeneration pass). Commits: 2. Commits per closed item: 0.67.
+  Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across the pin-bearing gates:
+  empty.
+
+### Validation and self-recovery
+
+- Focused validation: Sprint 62 local evidence, spreadsheet source review, foundational-runtime
+  evaluation, planning scope, traceability, contract boundary/evidence, Stories 2.1, 2.2, and 2.4,
+  and Sprint 2 pass. Supply-chain builds: 1. Evidence regeneration passes: 1. Recovery iterations:
+  0. The full chain ran 689.091 seconds and stopped only at the retained Story 6.1 rootless-Podman
+  prerequisite after every preceding gate passed. Recorded gate wall seconds: 689.
+- Sub-task 62.1.3.4 remains open on 4 exact `BLOCKED_EXTERNAL` tuples, all with
+  `substitution_set=empty`: native Fedora/Ubuntu office-suite reopen/recalculation plus
+  visual/accessibility output; Windows 11 x64 KVM plus admitted office-suite output; physical
+  supported MacBook plus admitted office-suite output; and independent recomputation plus the
+  deferred manual-fuzz protocol. The complete platform, artifact, action, credential, and payment
+  fields are committed in TASKS.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at the next dependency-independent, locally
+executable row after the blocked Sprint 62 security evidence, without treating Sprint 63 or any
+later aggregate as dependency-complete.
