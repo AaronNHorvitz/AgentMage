@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_127_local_evidence",
+  "source_revision": "1779baa5089f2325dbf90c37050280970755435a",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "8424721a7ebda368e63fd12d905a69217c4b741adb58356b107f9712ba3a363d",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "docs/decisions/0009-productivity-finance-and-cloud-observer-expansion.md": "33874cf98053655fdd2437f79f6edb39f6b9d365e3eaac587fde807ae265acdd",
+    "kernel/engine/src/lib.rs": "7cd88e19d1c3c5155ac9198a3449a2fbbf38390a97d7d3233316eafdb758decf",
+    "kernel/engine/src/productivity_pack.rs": "a30000844114d3c6d3e5272b003b26c80c9585a71ba9cd65c2c05cf6860c9b9b",
+    "supply-chain/dependency-provenance.json": "5dd70dfc33243b281075b805d074f49006279540dcbc49684e313e30de3a4231",
+    "supply-chain/sbom.cdx.json": "154247525af52180c2b80c3c39dd259e538477afd0a400a6d57b45b715d9e761",
+    "supply-chain/dependency-hashes.sha256": "f0245f45128d2f45f25c89ffa3fc0f80050903d22b5bbfba4e9c358c6a6d5161",
+    "artifacts/sprints/sprint-127/productivity-pack-corpus.json": "8a803db574f3e5aefd2ddeea1e619616916ad2816de7cb1cba3195b5918e0896",
+    "scripts/productivity_pack_contract.py": "4c9b0ec556beede5287dc2b5b5e232e5fc61a484f6b144e455a3ca101659e56a",
+    "tests/test_productivity_pack_contract.py": "e7aadfe92323f392021daaa0fe29327604ae36f896540f92570f6284f6e92d31",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_127_evidence.py": "df7be3e0a578f5e3dca7028bc90da80a3a13adad220a1bdfef86487c6515a2f3",
+    "tests/test_sprint_127_evidence.py": "45c2e04d953cf0e733e73b62a8a4a7feb58b8994b96375e26dcbb633716c76cf"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "productivity-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "productivity_pack::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "473736c1f3e12742416e4d85c59d110acd425aab171763279c5328919431a728",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "productivity-corpus-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_productivity_pack_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "56e03afda220e7ba78bbcecf9a2e53a0149cfc3e311fa10bbd01b25e8e5ba671",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_127_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-ATC-001",
+    "AM-SYNC-001",
+    "AM-PGR-001",
+    "AM-UIN-001",
+    "AM-COM-001",
+    "AM-FIN-001",
+    "AM-CLO-001"
+  ],
+  "implemented_contracts": {
+    "support_state_count": 6,
+    "pack_family_count": 3,
+    "operation_class_count": 5,
+    "lifecycle_action_count": 9,
+    "inventory_field_count": 11,
+    "fixture_case_count": 144,
+    "allowed_data_flow_count": 3,
+    "installed_pack_count": 0,
+    "enabled_pack_count": 0,
+    "provider_account_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "manifest_schema_complete": true,
+    "support_matrix_complete": true,
+    "lifecycle_contract_complete": true,
+    "data_flow_allowlist_complete": true,
+    "negative_registration_complete": true,
+    "strict_local_absence_equivalent": true,
+    "native_provider_conformance_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-126-BLOCKED",
+      "owner": "127"
+    }
+  ],
+  "summary": {
+    "local_sprint_127_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_126_closed": false,
+    "optional_pack_authority_count": 0,
+    "support_promotion_count": 0
+  }
+}
