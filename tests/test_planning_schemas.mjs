@@ -429,6 +429,7 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "image-redaction-receipt",
     "image-visual-comparison",
     "common-artifact-receipt",
+    "structured-database-receipt",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1711,6 +1712,24 @@ test("common artifact receipts reject inventory, fidelity, and effect drift", ()
     const changed = structuredClone(source);
     mutate(changed);
     assert.equal(validateRuntimeRecord("common-artifact-receipt", changed, runtimeValidators).valid, false);
+  }
+});
+
+test("structured database receipts reject source, permission, limit, and completion drift", () => {
+  const source = JSON.parse(fs.readFileSync(
+    path.join(ROOT, "schemas/runtime/examples/structured-database-receipt.valid.json"), "utf8",
+  ));
+  const mutations = [
+    (record) => { record.source.source_kind = "live_external"; },
+    (record) => { record.read_only_verified = false; },
+    (record) => { record.row_count = record.max_rows + 1; },
+    (record) => { record.complete = false; },
+    (record) => { record.receipt_sha256 = "A".repeat(64); },
+  ];
+  for (const mutate of mutations) {
+    const changed = structuredClone(source);
+    mutate(changed);
+    assert.equal(validateRuntimeRecord("structured-database-receipt", changed, runtimeValidators).valid, false);
   }
 });
 

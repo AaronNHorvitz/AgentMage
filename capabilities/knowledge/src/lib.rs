@@ -7,6 +7,7 @@ mod advanced_reconciliation;
 mod artifact_receipt;
 mod authority;
 mod coding_skills;
+mod database_adapter;
 mod document_control_skills;
 mod domain;
 mod executive_skills;
@@ -85,6 +86,12 @@ pub use coding_skills::{
     CodingSkill, CodingSkillAdmission, CodingSkillAssessment, CodingSkillDefinition,
     CodingSkillFinding, assess_coding_skill_definition, built_in_coding_skill_definitions,
     built_in_coding_skill_pack,
+};
+pub use database_adapter::{
+    DatabaseAccessGrant, DatabaseAdapterError, DatabaseAdapterKind, DatabaseFixtureRow,
+    DatabaseQueryLimits, DatabaseQueryRequest, DatabaseQueryResult, DatabaseQueryTemplate,
+    DatabaseSourceIdentity, DatabaseSourceKind, LocalStructuredDatabase, StructuredDatabaseReceipt,
+    StructuredEvidenceReviewerDecision, StructuredEvidenceRow, StructuredValue,
 };
 pub use document_control_skills::{DocumentControlSkill, built_in_document_control_skill_pack};
 pub use domain::{

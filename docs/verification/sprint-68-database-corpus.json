@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "corpus_id": "sprint-68-bounded-database-v1",
+  "positive_cases": ["synthetic-schema", "synthetic-all", "synthetic-category", "owned-schema", "owned-all", "null-value", "negative-integer", "real-bits", "utf8-text", "blob-hash", "redacted-text", "freshness", "receipt-recompute", "stable-row-order"],
+  "prohibited_cases": ["raw-select", "raw-insert", "multiple-statements", "pragma", "attach", "load-extension", "write-template", "live-source", "remote-uri", "credential", "postgresql", "caller-path"],
+  "invalid_cases": ["wrong-scope", "wrong-source", "missing-category", "category-on-all", "category-on-schema", "invalid-source-hash", "zero-freshness", "unordered-redaction", "duplicate-redaction", "invalid-row-id", "invalid-category", "zero-row-limit"],
+  "boundary_cases": ["one-row", "ten-thousand-rows", "one-column", "sixty-four-columns", "one-byte", "sixteen-mibibytes", "parameter-4096", "cancel-before", "cancel-during", "truncate-one"],
+  "hostile_cases": ["quote-injection", "comment-injection", "union-injection", "recursive-query-request", "malicious-identifier", "hidden-secret", "oversized-result", "corrupt-source-identity", "network-function", "filesystem-function"]
+}

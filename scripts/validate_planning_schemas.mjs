@@ -126,6 +126,7 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "image-redaction-receipt",
   "image-visual-comparison",
   "common-artifact-receipt",
+  "structured-database-receipt",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -2131,6 +2132,16 @@ function runtimeSemanticErrors(recordType, data) {
         ((data.fidelity_state === "limited" || data.fidelity_state === "blocked") &&
          (data.limitations ?? []).length === 0)) {
       errors.push("common artifact receipt fidelity disposition drifted");
+    }
+  } else if (recordType === "structured-database-receipt") {
+    if (!isStrictlySorted(data.limitations ?? []) ||
+        (data.complete === true && (data.limitations ?? []).length !== 0) ||
+        (data.complete === false && !(data.limitations ?? []).includes("database.result.truncated"))) {
+      errors.push("structured database completion or limitation state drifted");
+    }
+    if (data.read_only_verified !== true || data.row_count > data.max_rows ||
+        data.returned_bytes > data.max_bytes) {
+      errors.push("structured database read-only or resource state drifted");
     }
   } else if (recordType === "word-inspection-report") {
     const parts = data.parts ?? [];

@@ -1,0 +1,20 @@
+{
+  "schema_version": 2,
+  "source": { "source_id": "fixture-1", "source_kind": "synthetic_fixture", "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "freshness_epoch_milliseconds": 1788480000000 },
+  "adapter_kind": "fixture",
+  "report_scope_id": "report-1",
+  "template": "evidence_by_category",
+  "database_schema_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "parameters_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "rows_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "row_count": 1,
+  "returned_bytes": 256,
+  "max_rows": 10,
+  "max_bytes": 16384,
+  "read_only_verified": true,
+  "complete": true,
+  "limitations": [],
+  "filesystem_effect_performed": false,
+  "network_effect_performed": false,
+  "receipt_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "manifest_id": "sprint-68-bounded-database-dependencies-v1",
+  "direct_dependencies": [
+    { "name": "rusqlite", "version": "0.40.2", "features": ["backup", "bundled-sqlcipher"], "purpose": "in-memory fixed-template SQLite", "network": false },
+    { "name": "serde", "purpose": "closed typed results", "network": false },
+    { "name": "serde_json", "purpose": "receipt binding", "network": false },
+    { "name": "sha2", "purpose": "content identities", "network": false }
+  ],
+  "live_connectors": [],
+  "external_credentials": [],
+  "path_openers": [],
+  "postgresql_adapters": [],
+  "extension_loaders": []
+}

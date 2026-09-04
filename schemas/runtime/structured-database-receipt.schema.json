@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/structured-database-receipt.schema.json",
+  "title": "AgentMage Structured Database Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source", "adapter_kind", "report_scope_id", "template", "database_schema_sha256", "parameters_sha256", "rows_sha256", "row_count", "returned_bytes", "max_rows", "max_bytes", "read_only_verified", "complete", "limitations", "filesystem_effect_performed", "network_effect_performed", "receipt_sha256"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_id", "source_kind", "source_sha256", "freshness_epoch_milliseconds"],
+      "properties": {
+        "source_id": { "$ref": "#/$defs/identifier" },
+        "source_kind": { "enum": ["agent_mage_owned", "synthetic_fixture"] },
+        "source_sha256": { "$ref": "#/$defs/sha256" },
+        "freshness_epoch_milliseconds": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "adapter_kind": { "enum": ["sqlite", "fixture"] },
+    "report_scope_id": { "$ref": "#/$defs/identifier" },
+    "template": { "enum": ["schema_inventory", "evidence_by_category", "evidence_all"] },
+    "database_schema_sha256": { "$ref": "#/$defs/sha256" },
+    "parameters_sha256": { "$ref": "#/$defs/sha256" },
+    "rows_sha256": { "$ref": "#/$defs/sha256" },
+    "row_count": { "type": "integer", "minimum": 0, "maximum": 10000 },
+    "returned_bytes": { "type": "integer", "minimum": 0, "maximum": 16777216 },
+    "max_rows": { "type": "integer", "minimum": 1, "maximum": 10000 },
+    "max_bytes": { "type": "integer", "minimum": 1, "maximum": 16777216 },
+    "read_only_verified": { "const": true },
+    "complete": { "type": "boolean" },
+    "limitations": { "type": "array", "maxItems": 32, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+    "filesystem_effect_performed": { "const": false },
+    "network_effect_performed": { "const": false },
+    "receipt_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

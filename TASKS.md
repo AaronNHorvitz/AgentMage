@@ -8227,43 +8227,51 @@ gate is closed.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 68.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 68.1.1.1** (legacy `S-055-I01`): Implement parameterized SQLite helpers with transactions, migrations, limits, and typed results.
-  - [ ] **Sub-task 68.1.1.2** (legacy `S-055-I02`): Separate schema inspection, row-data access, and mutation permissions.
-  - [ ] **Sub-task 68.1.1.3** (legacy `S-055-I03`): Implement read-only query policy, approved-source registry, statement classification, result limits, cancellation, redaction, and receipts.
-  - [ ] **Sub-task 68.1.1.4** (legacy `S-055-I04`): Restrict database connections to AgentMage-owned stores and synthetic fixtures for this release.
-  - [ ] **Sub-task 68.1.1.5** (legacy `S-055-I05`): Define a database-adapter interface that keeps SQLite, future PostgreSQL, and fixture files distinct.
-  - [ ] **Sub-task 68.1.1.6** (legacy `S-055-I06`): Implement report-scope and authorization checks.
-  - [ ] **Sub-task 68.1.1.7** (legacy `S-055-I07`): Integrate structured rows with evidence normalization, source identity, reason codes, uncertainty, and reviewer decisions.
-  - [ ] **Sub-task 68.1.1.8** (legacy `S-055-I08`): Keep live external database access deferred.
+- [x] **Task 68.1.1 - Implement the bounded story** Evidence: all eight bounded implementation rows below are represented by the authority-free `database_adapter` module and its four focused cases; the surface admits no raw SQL, path, live connector, credential, arbitrary mutation, network, or filesystem effect.
+  - [x] **Sub-task 68.1.1.1** (legacy `S-055-I01`): Implement parameterized SQLite helpers with transactions, migrations, limits, and typed results. Evidence: an immediate transaction creates the strict versioned fixture schema and bound inserts; three fixed SELECT templates use bound values and LIMITs and project NULL, signed integer, IEEE-754 bits, UTF-8, blob hash/count, and redacted hash states.
+  - [x] **Sub-task 68.1.1.2** (legacy `S-055-I02`): Separate schema inspection, row-data access, and mutation permissions. Evidence: `inspect_schema`, `read_rows`, and `construct_fixture` are independent grant fields; a focused case proves a schema-only grant inventories the table but cannot read rows.
+  - [x] **Sub-task 68.1.1.3** (legacy `S-055-I03`): Implement read-only query policy, approved-source registry, statement classification, result limits, cancellation, redaction, and receipts. Evidence: only two admitted source classes and three query templates exist, `PRAGMA query_only=ON` plus `Statement::readonly` enforce reads, requests carry row/column/byte ceilings and cancellation, canonical redaction occurs before result creation, and each result is self-digested.
+  - [x] **Sub-task 68.1.1.4** (legacy `S-055-I04`): Restrict database connections to AgentMage-owned stores and synthetic fixtures for this release. Evidence: constructors require one of those exact source kinds and create only an in-memory projection; `live_external` fails before connection creation and no path/URI constructor exists.
+  - [x] **Sub-task 68.1.1.5** (legacy `S-055-I05`): Define a database-adapter interface that keeps SQLite, future PostgreSQL, and fixture files distinct. Evidence: the closed adapter enum distinguishes SQLite, fixture, and PostgreSQL; PostgreSQL is always refused and file fixtures are represented as caller-supplied rows rather than opened paths.
+  - [x] **Sub-task 68.1.1.6** (legacy `S-055-I06`): Implement report-scope and authorization checks. Evidence: every request requires a valid report scope, an exact match to the admitted source ID, the corresponding independent grant bit, canonical fields, and bounded limits; wrong scope/source/template combinations fail closed.
+  - [x] **Sub-task 68.1.1.7** (legacy `S-055-I07`): Integrate structured rows with evidence normalization, source identity, reason codes, uncertainty, and reviewer decisions. Evidence: each ordered row carries typed/minimized columns, `database.row.observed`, integer uncertainty, and a pending reviewer disposition; its receipt binds source hash/schema/template/parameters/rows/freshness and never auto-accepts evidence.
+  - [x] **Sub-task 68.1.1.8** (legacy `S-055-I08`): Keep live external database access deferred. Evidence: source and adapter refusal cases reject live external and PostgreSQL identities; dependency/source contracts prove zero live connectors, external credentials, path openers, or extension loaders.
 
-- [ ] **Task 68.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 68.1.2.1:** Local database adapter and query policy.
-  - [ ] **Sub-task 68.1.2.2:** Structured-evidence projection and receipt schemas.
-  - [ ] **Sub-task 68.1.2.3:** Injection, limit, timeout, redaction, and permission fixtures.
-  - [ ] **Sub-task 68.1.2.4:** Live-access exclusion test.
+- [x] **Task 68.1.2 - Produce reviewable artifacts** Evidence: all four artifacts below are source-bound by the Sprint 68 report.
+  - [x] **Sub-task 68.1.2.1:** Local database adapter and query policy. Evidence: the implementation, architecture boundary, review guide, and dependency manifest define the fixed-template in-memory SQLite policy and its absent authorities.
+  - [x] **Sub-task 68.1.2.2:** Structured-evidence projection and receipt schemas. Evidence: typed Rust records plus the closed runtime schema/example bind source, adapter, scope, query classification, schema/parameter/row identities, freshness, limits, completeness, limitations, denied effects, and receipt identity.
+  - [x] **Sub-task 68.1.2.3:** Injection, limit, timeout, redaction, and permission fixtures. Evidence: the 58-case corpus names 14 positive, 12 prohibited, 12 invalid, 10 boundary, and 10 hostile cases; focused cases execute bound injection-as-data, independent grants, cancellation, row/byte bounds, truncation, and redaction.
+  - [x] **Sub-task 68.1.2.4:** Live-access exclusion test. Evidence: focused refusal covers both a live source and future PostgreSQL adapter before any connection, while the contract rejects appearance of a live connector, credential, path opener, PostgreSQL adapter, or extension loader.
 
 - [ ] **Task 68.1.3 - Verify and close the story**
-  - [ ] **Sub-task 68.1.3.1:** `S-055-UT01` validates parameterized query templates, schemas, tables/columns, types, row/byte/time limits, and expected read effects; assert raw SQL, multiple statements, writes, pragmas, attachments, and extensions are rejected.
-  - [ ] **Sub-task 68.1.3.2:** `S-055-ST01` runs injection, malicious identifiers, recursive/expensive queries, lock contention, corrupt database, hidden secrets, external functions, and file/network access attempts; assert bounded read-only failure.
-  - [ ] **Sub-task 68.1.3.3:** `S-055-UT02` projects rows into evidence with source database hash/schema/query-template/parameters/row identity/freshness; assert deterministic ordering, redaction, truncation, and recomputation.
-  - [ ] **Sub-task 68.1.3.4:** `S-055-IT01` points adapters at AgentMage-owned fixtures and simulated live/remote/credentialed databases; assert only approved local fixtures open and no live connector is registered.
-  - [ ] **Sub-task 68.1.3.5 - Product security evidence:** Map `SR-ACC-002`/`SR-ACC-006`, `SR-DAT-001` through `SR-DAT-003`, `SR-TST-002`/`SR-TST-004`/`SR-TST-006`; retain query policy, injection corpus, plan/limit traces, evidence recomputation, canary scans, and live-access exclusion.
+  - [ ] **Sub-task 68.1.3.1:** `S-055-UT01` validates parameterized query templates, schemas, tables/columns, types, row/byte/time limits, and expected read effects; assert raw SQL, multiple statements, writes, pragmas, attachments, and extensions are rejected. All local contract classes except an elapsed-time interruption trace pass; that trace is blocked on the native campaign in Sub-task 68.1.3.5. **Substitution set:** empty.
+  - [ ] **Sub-task 68.1.3.2:** `S-055-ST01` runs injection, malicious identifiers, recursive/expensive queries, lock contention, corrupt database, hidden secrets, external functions, and file/network access attempts; assert bounded read-only failure. Injection, identifiers, secret redaction, bounds, and absent file/network surfaces pass; lock, corrupt-file, and elapsed-time injection are blocked on the native campaign in Sub-task 68.1.3.5. **Substitution set:** empty.
+  - [x] **Sub-task 68.1.3.3:** `S-055-UT02` projects rows into evidence with source database hash/schema/query-template/parameters/row identity/freshness; assert deterministic ordering, redaction, truncation, and recomputation. Evidence: fixed ORDER BY clauses and typed projection preserve row/value identity, hash redacted values, expose explicit truncation, and bind every required source/query/freshness field into a recomputable rows and receipt digest.
+  - [x] **Sub-task 68.1.3.4:** `S-055-IT01` points adapters at AgentMage-owned fixtures and simulated live/remote/credentialed databases; assert only approved local fixtures open and no live connector is registered. Evidence: both admitted constructors share the fixed in-memory projection, whereas live source and PostgreSQL identities return `database.operation.not-authorized`; the dependency inventory contains zero connectors or credentials.
+  - [ ] **Sub-task 68.1.3.5 - Product security evidence:** Map `SR-ACC-002`/`SR-ACC-006`, `SR-DAT-001` through `SR-DAT-003`, `SR-TST-002`/`SR-TST-004`/`SR-TST-006`; retain query policy, injection corpus, plan/limit traces, evidence recomputation, canary scans, and live-access exclusion. The local report maps all eight requirements and retains policy, corpus, receipt recomputation, redaction, limits, and exclusion results. Native lock/timeout/corrupt-file and parity evidence remains `blocked: host change required — run the pinned Sprint 68 SQLite lock-contention, elapsed-time cancellation, corrupt-file, query-plan, canary, and resource campaign on native Fedora and Ubuntu test hosts and transfer the untouched bundle`; matching `BLOCKED_EXTERNAL` Windows 11 x64 KVM and physical supported MacBook campaigns plus an independent review/manual-fuzz campaign require their platform/reviewer access. **Substitution set:** empty.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 68.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then all access is parameterized, query-plan/resource bounded, read-only at multiple layers, separately granted, and limited to declared local databases or synthetic fixtures.
-- [ ] **Story AC 68.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then results preserve type/null/precision and source provenance while secrets, excessive rows, and prohibited fields are minimized or blocked before model/context persistence.
+- [x] **Story AC 68.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then all access is parameterized, query-plan/resource bounded, read-only at multiple layers, separately granted, and limited to declared local databases or synthetic fixtures. Evidence: three fixed indexed/LIMIT templates, bound parameters, request ceilings, SQLite query-only mode, statement read-only classification, independent grants, and the two admitted source kinds enforce the local boundary; native plan traces remain separately required by product-security evidence.
+- [x] **Story AC 68.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then results preserve type/null/precision and source provenance while secrets, excessive rows, and prohibited fields are minimized or blocked before model/context persistence. Evidence: closed typed values preserve NULL, integer, real-bit, UTF-8 and blob identity, redaction retains only hashes, overflow fails or discloses truncation, and receipts bind source/schema/query/parameter/row/freshness before any model boundary.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 68.AC1:** Unparameterized, multi-statement, unauthorized, write, or live-source queries fail closed.
-- [ ] **Sprint AC 68.AC2:** Schema access does not imply row-data access.
-- [ ] **Sprint AC 68.AC3:** Query results obey row, column, byte, redaction, and scope limits.
-- [ ] **Sprint AC 68.AC4:** Every result identifies source, query classification, receipt, and freshness.
-- [ ] **Sprint AC 68.AC5:** No live database credential or external connection path exists.
+- [x] **Sprint AC 68.AC1:** Unparameterized, multi-statement, unauthorized, write, or live-source queries fail closed. Evidence: no raw statement input exists; fixed SELECT templates use parameters, query-only mode and read-only classification, and wrong grant/source/live identities fail before results.
+- [x] **Sprint AC 68.AC2:** Schema access does not imply row-data access. Evidence: a focused schema-only grant returns only the fixed table inventory and receives `not-authorized` for the parameterized row template.
+- [x] **Sprint AC 68.AC3:** Query results obey row, column, byte, redaction, and scope limits. Evidence: focused cases prove disclosed row truncation, byte-limit refusal, canonical redaction before projection, exact source scope, and compiled maxima.
+- [x] **Sprint AC 68.AC4:** Every result identifies source, query classification, receipt, and freshness. Evidence: the non-optional receipt carries the full source record, adapter/template, report scope, freshness, schema/parameter/row hashes, totals, limitations, and self-digest.
+- [x] **Sprint AC 68.AC5:** No live database credential or external connection path exists. Evidence: live source/future adapter refusal and source/dependency scans prove zero live connectors, credentials, paths, URIs, extension loaders, filesystem effects, or network effects.
 
 **Gate decision:** Sprint 68 is PASS only when Story 68.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** **BLOCKED.** The locally implementable fixed-template SQLite adapter, separate
+grants, transaction/migration, typed/redacted evidence, resource/cancellation controls, receipt
+schema, 58-case corpus, and live-access exclusion pass 8 retained commands with zero focused skips;
+see `artifacts/sprints/sprint-68/local-evidence-report.json` and
+`docs/verification/sprint-68-local-results.md`. Native lock/timeout/corruption/query-plan/canary
+campaigns, cross-platform parity, independent review, and manual fuzzing remain incomplete under
+the exact tuples above. No story, sprint, product, platform, database, or release gate is closed.
 
 ### [ ] Sprint 69 - v0.6 Administrative and Document Release Gate
 
