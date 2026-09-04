@@ -2404,3 +2404,43 @@ Decision 0021 dependency gate. Cumulative closures: 1,328; next checkpoint: 1,35
 
 Exact next action: Sprint 102 inherited-scope verification checkpoint. Cumulative closures:
 1,341; next checkpoint: 1,350.
+
+## Batch 129 — Sprint 102 non-GA inherited checkpoint
+
+### Completed
+
+- Closed 12 local Sprint 102 rows: documentation and non-GA checkpoint preservation, requirement
+  traceability, deferred register, graph/summary recomputation, Story AC2–AC3, and Sprint AC2–AC5.
+  Bound 112 inherited reports, 8 truth documents, and 256 fail-closed checkpoint cases. Clean
+  platform bundles, signed manifests, independent reviews, user approvals, enabled models,
+  supported platforms, release closures, and promotions: 0 each. Batch closures: 12. Cumulative
+  closures: 1,353.
+- Commits: `f611df2a` (contract/corpus/tests/closures/traceability), `752bc5af` (source report),
+  and `159661fd` (four downstream contract artifacts). Including this log: 4; commits/item: 0.33.
+  Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 6 focused Python tests, requirement/traceability/status/supply-chain currentness, the
+  Sprint 102 corpus/report, and all downstream checks. Supply-chain builds: 1; corpus generations:
+  2; successful report builds: 1. Full gate: 703.20 seconds, stopping only at retained Story 6.1
+  Podman after all preceding gates passed.
+- Self-recovery: 1. Replaced an incorrect model `disposition` lookup with the authoritative
+  `enabled` boolean before regenerating the corpus; zero enabled models remained proven.
+- Sprint 102 remains `UPSTREAM-SPRINT-101-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=complete supported-platform/model/interface/capability-pack matrix
+  with three independent clean installations per platform, lifecycle/removal instrumentation,
+  signing and independent review environment, and user approval, artifact=untouched clean-install/
+  upgrade/offline/connected/safe-mode/backup/restore/migration/uninstall results, complete
+  deterministic/model/evidence/privacy/path/sandbox/network/package/connector/browser/schedule/
+  hosted-write/multi-agent results, signed manifests and BOMs, residue inventory, security bundle,
+  and approval, action=complete retained upstream gates; provision exact native platforms,
+  models, packages, instrumentation, signing, reviewers, and user approver; execute S-075-I04
+  through I06 and S-075-ST01/AT01/AT02 plus independent security review; then transfer untouched
+  evidence, credential=platform, model, provider, signing, instrumentation, reviewer, and approver
+  access, payment=platform, model, provider, signing, instrumentation, hosting, or review costs if
+  applicable)`; `substitution_set=empty`. Full-chain blocker remains the exact Podman host tuple.
+
+Exact next action: Sprint 127 productivity-pack scope and support contract; all remaining Epic 9
+rows are dependent on the recorded external tuples. Cumulative closures: 1,353; next checkpoint:
+1,375.
