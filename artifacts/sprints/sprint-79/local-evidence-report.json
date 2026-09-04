@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_79_local_evidence",
+  "source_revision": "df178231d059437c97bc7cbbc060a95d091216ab",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "shells/host/Cargo.toml": "b6ad82e6be880f63c24d47a0341748261f2bd747d7a851264b81ab24beacf713",
+    "shells/host/src/lib.rs": "48aa9a0a9e72a7a827fd38ea8e0ef5a72a6f61769eaac18aca11e697c9e9c1a7",
+    "shells/host/src/capability_package.rs": "e20e5e95445bd1e9b1b110f19892fac8efeb697ff15fa2a4d5689e69107be329",
+    "shells/host/src/capability_package_runtime.rs": "671db72fd5a107ed630f29e710da7ef26f7ff3ee9348d3eb0dd124960ab2ad4d",
+    "docs/guides/capability-package-trust.md": "8e190d21d253b6544deda29c3140fe79bf9c9e3deb0ac7d4b0ed68ba211ab468",
+    "docs/guides/capability-package-runtime.md": "ef849a8718304ca8ee01df4c05075d664d3ee0a257e647650dba4c38028552db",
+    "docs/verification/sprint-78-capability-package-corpus.json": "6c419eccadb0d385cc5d8f22978749098d766e76db8d718e3a7d65df90c153db",
+    "docs/verification/sprint-79-package-runtime-corpus.json": "55200156180ed5fc25dd682204dfff514519e52bfadd0f1d9861f12f02b44c2d",
+    "artifacts/sprints/sprint-78/local-evidence-report.json": "fa890b49a3a42caf6ead9eb071b74f86e325ebc74d6e66d36c69c710751a5ebf",
+    "scripts/capability_package_runtime_contract.py": "1eada96d44517051f66d7d6ead796088f340d0c580752057f6faff6e9b1e5d21",
+    "tests/test_capability_package_runtime_contract.py": "f2a5ad3b1403241a7ae6b4ac3069033dab6a70e907142a6efa6a94346891db0b",
+    "supply-chain/dependency-hashes.sha256": "cf9de8495c4eb695caa80f47c995827ce7e136a50babb6b9dd7ae33ac988fed3",
+    "supply-chain/dependency-provenance.json": "8981f796cd71caf36d53ce6ce710f65a2864444e5a063a8f7ea0bd739ae19b76",
+    "supply-chain/sbom.cdx.json": "aa0b86d45447adaf865bba22cf2b6df4bbb58091124302bbc1d28bf489fa4687",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_79_evidence.py": "747e4146d760edf9bc1a82b79a5b02f289d14d656ae3ae2e4f556667a8750320",
+    "tests/test_sprint_79_evidence.py": "7f7aa394462a040f980723389e3a4384aa861a287639eb086aa1e49d42b83a3f"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "package-runtime-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "capability_package_runtime::tests",
+        "--all-features"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d3204fd9df064769bd1430e709b8ec6b093a50525f1c9adeb2a908ffcdf42b27",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "package-runtime-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_capability_package_runtime_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "fe008aab760eb03ccac7578e2b84665b1b50b0d7f855b17a0c7a8d039435b658",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "runtime-schema-contract",
+      "argv": [
+        "npm",
+        "run",
+        "-s",
+        "schemas:test"
+      ],
+      "exit_code": 0,
+      "output_sha256": "c0c44f7c704486c34dc8223e0d2ca7957e82ee7bace70b9332585608da787719",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_79_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-GOV-010",
+    "SR-PLT-011",
+    "SR-ACC-001",
+    "SR-SUP-002",
+    "SR-SUP-003",
+    "SR-SUP-004",
+    "SR-SUP-005",
+    "SR-SUP-006",
+    "SR-SUP-007",
+    "SR-SUP-008",
+    "SR-SUP-009",
+    "SR-SUP-010",
+    "SR-SUP-011",
+    "SR-SUP-012",
+    "SR-SUP-013",
+    "SR-OPS-008",
+    "SR-OPS-010",
+    "SR-TST-011"
+  ],
+  "implemented_contracts": {
+    "hook_phase_count": 10,
+    "hook_outcome_count": 4,
+    "compatibility_dimension_count": 7,
+    "inventory_dimension_count": 5,
+    "prohibited_automation_count": 6,
+    "corpus_case_count": 48,
+    "installed_package_count": 0,
+    "enabled_package_count": 0,
+    "native_lifecycle_complete": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "rust_test_count": 8,
+    "corpus_case_count": 48,
+    "installed_package_count": 0,
+    "enabled_package_count": 0,
+    "native_lifecycle_complete": false,
+    "safe_mode_startup_observed": false,
+    "independent_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-78-BLOCKED",
+      "owner": "79.1"
+    },
+    {
+      "code": "NATIVE-PACKAGE-RECOVERY-AND-INDEPENDENT-REVIEW-ABSENT",
+      "owner": "79.1.3.5"
+    }
+  ],
+  "summary": {
+    "local_sprint_79_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_78_closed": false,
+    "native_package_recovery_complete": false,
+    "native_security_evidence_complete": false,
+    "independent_review_present": false,
+    "release_approval": false
+  }
+}
