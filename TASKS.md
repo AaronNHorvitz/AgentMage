@@ -7935,24 +7935,24 @@ incomplete. No story, sprint, product, platform, or release gate is closed.
   - [x] **Sub-task 63.1.1.1** (legacy `S-052-I05`): Implement JSON parsing, schema validation, stable key ordering, size limits, and redaction.
   - [x] **Sub-task 63.1.1.2** (legacy `S-052-I06`): Implement deterministic comparisons with source hashes and match reasons.
   - [x] **Sub-task 63.1.1.3** (legacy `S-052-I07`): Generate reconciliation workbooks with escaped text, formulas, styles, tables, charts, validation, and formula-error scanning.
-  - [ ] **Sub-task 63.1.1.4** (legacy `S-052-I08`): Recalculate and visually verify generated workbooks while preserving originals.
+  - [ ] **Sub-task 63.1.1.4** (legacy `S-052-I08`): Recalculate and visually verify generated workbooks while preserving originals. **Blockers:** `blocked: host change required — provision admitted native office, rendering, font, and accessibility dependencies on native Fedora and Ubuntu test hosts, run the pinned Sprint 63 recalculation/visual campaign, and transfer the untouched result bundles`; `BLOCKED_EXTERNAL(platform=Windows 11 x64 KVM guest, artifact=untouched native workbook recalculation and rendered-visual result bundle, action=provide a properly licensed Windows 11 x64 image, provision the admitted office suite, run the pinned Sprint 63 campaign, and transfer the bundle, credential=Windows image and platform access, payment=Windows or office license if required)`; `BLOCKED_EXTERNAL(platform=physical supported MacBook, artifact=untouched native workbook recalculation and rendered-visual result bundle, action=provision the admitted office suite, run the pinned Sprint 63 campaign, and transfer the bundle, credential=physical Mac access, payment=office runtime or hardware if applicable)`. **Substitution set:** empty.
 
 - [ ] **Task 63.1.2 - Produce reviewable artifacts**
   - [x] **Sub-task 63.1.2.1:** Spreadsheet, CSV, and JSON adapters.
   - [x] **Sub-task 63.1.2.2:** Normalization and reconciliation method registry.
   - [x] **Sub-task 63.1.2.3:** Formula-injection and malformed-data corpus.
-  - [ ] **Sub-task 63.1.2.4:** Structural, recalculation, and visual verification reports.
+  - [ ] **Sub-task 63.1.2.4:** Structural, recalculation, and visual verification reports. The deterministic structural reopen report exists; native recalculation and visual reports are blocked on the exact Fedora/Ubuntu host-change, Windows 11 x64 KVM, and physical supported MacBook tuples in Sub-task 63.1.1.4. **Substitution set:** empty.
 
 - [ ] **Task 63.1.3 - Verify and close the story**
-  - [ ] **Sub-task 63.1.3.1:** `S-052-UT01` parses types, nulls, dates/time zones, decimals, formulas, errors, names, sheets, merged cells, hidden data, JSON nesting, CSV dialects, and malformed/large inputs; assert declared normalization.
-  - [ ] **Sub-task 63.1.3.2:** `S-052-UT02` runs reconciliation methods with duplicates, rounding, missing keys, many-to-many joins, conflicts, tolerance boundaries, and stale data; assert deterministic totals, unmatched rows, and method provenance.
-  - [ ] **Sub-task 63.1.3.3:** `S-052-ST01` seeds formula/CSV injection, external links, macros, DDE, hidden sheets/rows, unsafe numbers, prototype-like keys, zip bombs, and secrets; assert inert output, no recalculation side effect, and disclosure.
-  - [ ] **Sub-task 63.1.3.4:** `S-052-IT01` writes outputs, reopens them with independent parsers/calculation where approved, and compares structure/values/formulas/rendering; assert no source overwrite or silent precision/type loss.
-  - [ ] **Sub-task 63.1.3.5 - Product security evidence:** Map `SR-DAT-001` through `SR-DAT-003`, `SR-SUP-008`, `SR-TST-002`/`SR-TST-004`/`SR-TST-006`, `SR-CIV-008`; retain normalization goldens, reconciliation calculations, injection corpus, independent reopen/recalc output, and visual/accessibility checks.
+  - [x] **Sub-task 63.1.3.1:** `S-052-UT01` parses types, nulls, dates/time zones, decimals, formulas, errors, names, sheets, merged cells, hidden data, JSON nesting, CSV dialects, and malformed/large inputs; assert declared normalization. Evidence: the Sprint 62 parser campaign and Sprint 63 strict JSON, tabular, direct-Open-XML, and exact-decimal tests retain every named type and structure, explicit formula/cache/date/error/hidden/merged semantics, all three declared delimited dialects, 4,096-digit base-ten values without IEEE-754 coercion, and closed malformed/resource dispositions. The local evidence makes no native Office or supported-platform claim.
+  - [x] **Sub-task 63.1.3.2:** `S-052-UT02` runs reconciliation methods with duplicates, rounding, missing keys, many-to-many joins, conflicts, tolerance boundaries, and stale data; assert deterministic totals, unmatched rows, and method provenance. Evidence: [`advanced_reconciliation.rs`](capabilities/knowledge/src/advanced_reconciliation.rs) implements exact string-backed decimals, inclusive tolerance, explicit half-even and half-away-from-zero rounding, stable weighted allocation with exact minor-unit conservation, digest-and-age freshness refusal, and a record binding both source hashes, schema/type/formula decisions, join keys, tolerance, rounding, unmatched/conflict counts, exact totals, and method version. Seven focused tests cover positive, invalid, boundary, duplicate, rounding-tie, sign, allocation-remainder, changed/future/aged source, provenance, and zero-effect cases.
+  - [x] **Sub-task 63.1.3.3:** `S-052-ST01` seeds formula/CSV injection, external links, macros, DDE, hidden sheets/rows, unsafe numbers, prototype-like keys, zip bombs, and secrets; assert inert output, no recalculation side effect, and disclosure. Evidence: the hash-bound Sprint 62 spreadsheet source review and Sprint 63 local campaign jointly exercise every named hostile family; active content and formula-like output remain inert, prototype-like keys and unsafe numeric forms reject, compressed expansion is bounded, sensitive values are replaced by hashes or fixed redaction markers, and accepted filesystem, network, formula, macro, link, DDE, or native-recalculation effects remain zero.
+  - [ ] **Sub-task 63.1.3.4:** `S-052-IT01` writes outputs, reopens them with independent parsers/calculation where approved, and compares structure/values/formulas/rendering; assert no source overwrite or silent precision/type loss. The bounded direct parser reopens the generated bytes and source-preservation checks pass, but independent native calculation/rendering is blocked on the exact Fedora/Ubuntu host-change, Windows 11 x64 KVM, and physical supported MacBook tuples in Sub-task 63.1.1.4. **Substitution set:** empty.
+  - [ ] **Sub-task 63.1.3.5 - Product security evidence:** Map `SR-DAT-001` through `SR-DAT-003`, `SR-SUP-008`, `SR-TST-002`/`SR-TST-004`/`SR-TST-006`, `SR-CIV-008`; retain normalization goldens, reconciliation calculations, injection corpus, independent reopen/recalc output, and visual/accessibility checks. Local mappings, calculations, and hostile goldens are retained; native/independent outputs are blocked on the exact tuples in Sub-task 63.1.1.4 and `BLOCKED_EXTERNAL(platform=independent review environment, artifact=review disposition, installed accessibility result, and deferred manual-fuzz result bundle, action=an independent reviewer recomputes the native reopen/recalculation and security mapping, performs the accessibility review, and executes the deferred manual-fuzz protocol, credential=reviewer and installed-platform access, payment=review services if applicable)`. **Substitution set:** empty.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 63.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every transformation/reconciliation records source hashes, schema/type decisions, formula policy, join keys, tolerances, unmatched/conflicting rows, totals, and reproducible method version.
+- [x] **Story AC 63.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every transformation/reconciliation records source hashes, schema/type decisions, formula policy, join keys, tolerances, unmatched/conflicting rows, totals, and reproducible method version. Evidence: the exact-decimal method record contains every named field and recomputes the tolerance result from exact totals, while the existing content-minimized workbook separately retains both source hashes, method identity/version, fixed formula policy, join results, source rows, reason counts, and deterministic totals. Focused tests reject malformed values, negative tolerance, duplicate or zero-weight allocation, stale identities, and provenance drift without file, network, formula, or native-application effects.
 - [x] **Story AC 63.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then produced cells/CSV fields cannot execute when opened under the approved threat model; risky content is escaped, removed, or blocked and reported.
 
 #### Sprint Acceptance Criteria
@@ -7961,21 +7961,20 @@ incomplete. No story, sprint, product, platform, or release gate is closed.
 - [x] **Sprint AC 63.AC2:** Every match and discrepancy includes deterministic reason codes and source identities.
 - [x] **Sprint AC 63.AC3:** Generated CSV values cannot execute as formulas when opened in common spreadsheet software.
 - [ ] **Sprint AC 63.AC4:** Generated workbooks contain no formula errors and pass rendered visual checks.
-- [ ] **Sprint AC 63.AC5:** Malformed, oversized, encrypted, unsupported, and ambiguous input fails explicitly.
+- [x] **Sprint AC 63.AC5:** Malformed, oversized, encrypted, unsupported, and ambiguous input fails explicitly. Evidence: strict JSON, delimited, Open XML, exact-decimal, reconciliation, and generated-package boundaries return stable closed errors for malformed syntax, duplicate/prototype-like keys, oversized depth/node/string/row/column/package/decimal inputs, encrypted or legacy workbook formats, unsupported active/compression features, stale sources, ambiguous allocation identities, and invalid tolerance or rounding policy. None falls through to partial success or execution.
 
 **Gate decision:** Sprint 63 is PASS only when Story 63.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
 **Current status:** **BLOCKED.** The locally implementable strict JSON parse/schema/redaction,
 structural comparison, content-minimized reconciliation workbook, direct reopen, formula-error
-scan, synthetic verifier-semantics, runtime-schema, method-registry, and review-record subset passed
-11 retained commands with zero focused skips at revision
-`85557185be60c6746dd18b87d8e7a5dced47cc33`; see
+scan, synthetic verifier-semantics, runtime-schema, exact-decimal/tolerance/rounding/allocation/
+freshness methods, method-registry, and review-record subset pass 12 retained commands with zero
+focused skips; see
 `artifacts/sprints/sprint-63/local-evidence-report.json` and
-`docs/verification/sprint-63-local-results.md`. Numeric tolerance, financial rounding,
-many-to-many allocation, stale-data and arbitrary-precision methods, native recalculation,
-Fedora/Ubuntu/Windows 11 and retained macOS visual evidence, installed accessibility,
-independent review, and deferred manual fuzzing remain incomplete. No story, sprint, product,
-platform, or release gate is closed.
+`docs/verification/sprint-63-local-results.md`. Native recalculation, Fedora/Ubuntu/Windows 11 and
+retained macOS visual evidence, installed accessibility, independent review, and deferred manual
+fuzzing remain incomplete under the exact tuples above. No story, sprint, product, platform, or
+release gate is closed.
 
 ### [ ] Sprint 64 - Presentation Workflows
 

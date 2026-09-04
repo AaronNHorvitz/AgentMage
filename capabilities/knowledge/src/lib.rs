@@ -2,6 +2,7 @@
 #![forbid(unsafe_code)]
 //! Canonical user-owned Markdown knowledge-domain contracts without ambient authority.
 
+mod advanced_reconciliation;
 mod authority;
 mod coding_skills;
 mod document_control_skills;
@@ -52,6 +53,12 @@ mod word_source;
 mod word_visual;
 mod workflows;
 
+pub use advanced_reconciliation::{
+    AdvancedReconciliationError, AdvancedReconciliationRecord, AllocationRecipient,
+    AllocationResult, ExactDecimal, FinancialRoundingMode, ReconciliationSourceFreshness,
+    allocate_many_to_many, record_advanced_reconciliation, require_current_source, round_financial,
+    within_tolerance,
+};
 pub use authority::{
     KnowledgeDataOwner, KnowledgeFieldPolicy, KnowledgeStorageRule, knowledge_data_dictionary,
     verify_data_dictionary,

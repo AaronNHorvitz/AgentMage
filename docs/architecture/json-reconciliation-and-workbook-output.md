@@ -5,7 +5,8 @@
 Sprint 63 adds strict bounded JSON parsing, a closed recursive schema subset, canonical ordering,
 full-regeneration redaction, structural comparison, deterministic reconciliation workbook
 generation, direct reopen inspection, formula-error scanning, and pure validation of externally
-supplied native office evidence.
+supplied native office evidence. Exact string-backed decimal tolerance, explicit financial rounding,
+deterministic weighted allocation, and stale-source admission supplement the hash-only comparison.
 
 ```mermaid
 flowchart LR
@@ -15,6 +16,7 @@ flowchart LR
   C --> E[Canonical JSON]
   E --> F[Pointer and key redaction]
   E --> G[Hash-only structural comparison]
+  G --> R[Exact decimal methods and provenance record]
   H[Exact tabular comparison] --> I[Content-minimized workbook generator]
   I --> J[Deterministic XLSX bytes]
   J --> K[Direct bounded reopen]
@@ -37,6 +39,16 @@ Object keys serialize in stable lexical order. Redaction accepts sorted exact RF
 key names, hashes removed canonical values, substitutes a fixed marker, and serializes a completely
 new canonical document. Structural comparison walks objects and arrays deterministically and
 retains only pointers, closed reasons, and canonical value hashes.
+
+## Exact Reconciliation Methods
+
+The advanced method boundary parses plain base-ten values directly into a sign, coefficient, and
+scale, with a 4,096-digit resource ceiling and no floating-point conversion. It provides inclusive
+absolute tolerance, half-even and half-away-from-zero rounding, exact weighted allocation with
+stable remainder ordering, and digest-plus-age freshness admission. Its method record binds both
+source hashes, schema and type decisions, formula policy, join keys, tolerance, rounding mode,
+unmatched/conflicting counts, exact totals, and method identity/version. These operations are pure:
+they cannot read a file, launch Office, calculate a workbook formula, or access a network.
 
 ## Workbook Boundary
 
@@ -66,8 +78,6 @@ machine gate.
 
 ## Remaining Limits
 
-Numeric tolerance, financial rounding modes, many-to-many allocation, stale-data policies,
-arbitrary-precision decimal reconciliation, encrypted workbooks, legacy `.xls`, native
-recalculation, visual rendering, accessibility evaluation, cross-platform acceptance, independent
-review, and manual fuzzing remain incomplete. The generated workbook is not release-complete while
-those applicable requirements remain open.
+Encrypted workbooks, legacy `.xls`, native recalculation, visual rendering, accessibility
+evaluation, cross-platform acceptance, independent review, and manual fuzzing remain incomplete.
+The generated workbook is not release-complete while those applicable requirements remain open.
