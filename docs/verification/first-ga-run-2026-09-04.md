@@ -2252,3 +2252,40 @@ restoration. Cumulative closures are 1,282; write the required 1,275-item checkp
 
 Exact next action: Sprint 125 integrated delivery and Windows release gates. Cumulative closures:
 1,295; next checkpoint: 1,300.
+
+## Batch 125 — Sprint 125 integrated delivery and profile boundaries
+
+### Completed
+
+- Closed 25 local Sprint 125 rows: synthetic lifecycle/attack/recovery matrices, complete role and
+  deterministic-service boundaries, all 49 profile mappings, hostile profile/recovery/summary
+  fixtures, Story 125.1 AC2, Story 125.2 AC2–AC4, and Sprint AC2. Retained cases: 512 lifecycles,
+  2,048 attacks, 49 profile boundaries. Native platforms: 0. Promoted provider paths: 0. Enabled
+  profiles: 0. Release packages: 0. Promotions/substitutions: 0. Cumulative closures: 1,320.
+- Commits: `ab2f7173` (contracts/corpus/tests/closures and byte-stable supply chain), `02985c9e`
+  (source report), `d4d410ee` (five downstream artifacts). Including log: 4; commits/item: 0.16.
+  Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 6 focused Python tests, dependency rules, corpus/report, and all downstream checks.
+  Supply-chain builds: 1; corpus generations: 1; report builds: 1; self-recovery: 0. Full gate:
+  690.63 seconds, stopping only at retained Story 6.1 Podman after all preceding gates passed.
+- Native qualification remains `BLOCKED_EXTERNAL(platform=promoted provider matrix and exact
+  credentials, native Fedora, Ubuntu, and Windows release-candidate installations with Visual
+  Studio Code Chat, enabled standardized profiles, packet/process/resource/residue instrumentation,
+  signing identities, and independent review environment, artifact=untouched complete lifecycle,
+  cross-system graph, effect, attack, recovery, removal, profile-conformance, platform, package,
+  support-matrix, RV-01 through RV-30 and RV-49, AT-XTE-001, AT-WIN-001, G-DELIVERY, G-WINDOWS,
+  and independent-decision evidence, action=provision promoted providers, credentials, native
+  platforms, release-candidate packages, enabled profiles, instrumentation, signing, and reviewers;
+  execute S-125-AT01/ST01/RT01/AT02/AT03/ST02/RT02, Story 125.3, applicable review vectors and
+  gates; then transfer untouched evidence, credential=provider, platform, signing, profile,
+  instrumentation, and reviewer access, payment=provider, platform, hosting, signing,
+  instrumentation, or review costs if applicable)`; `substitution_set=empty`.
+- Sprint 125 remains `UPSTREAM-SPRINT-124-BLOCKED`; `substitution_set=empty`. Full-chain blocker:
+  `blocked: host change required — run npm run -s docs:check outside the restricted filesystem
+  sandbox with the current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 126 delivery/Windows release-candidate checkpoint. Cumulative closures:
+1,320; write the 1,300 checkpoint after push.
