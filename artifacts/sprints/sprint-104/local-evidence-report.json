@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_104_local_evidence",
+  "source_revision": "09e00b1e24547bb28afefa9f89125f53851c065a",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
+    "kernel/engine/src/lib.rs": "fe7192bca1130f45f1768250d377785b02cda8c82f755d7153434d515d407d20",
+    "kernel/engine/src/connected_identity.rs": "b66dfcb79ff82be5061c198037cd5e4eb3e3436667b2af08583c66f19e37623e",
+    "DELIVERY-SYSTEM.md": "ca62de984cd9da28d28f183e768e8c07898f7b38ae2d89894dcec66a3293f72c",
+    "artifacts/sprints/sprint-104/connected-identity-corpus.json": "0b33126f69036e25d4903f9040c87c71291c5ae9631357f8c32bb1ffda7b4d78",
+    "scripts/connected_identity_contract.py": "4ceb5ac0603b8987ce15e5ae17aa244b4f3b042e45c0cc7ad8017dc8ed768e6d",
+    "tests/test_connected_identity_contract.py": "3c9ba4c5f9feaffe53df2c791c643f606abbfe2abc1825820a99481b2464b77e",
+    "supply-chain/dependency-hashes.sha256": "7fbf4f79190e22a5a07bff90fd22a7d6a84b4ee1590907bb5b454f31d4cbb5a0",
+    "supply-chain/dependency-provenance.json": "d8323d38b978131ba0ced495b2ac0d00d60e69cd1d19a20f8f1cb3102fefdc57",
+    "supply-chain/sbom.cdx.json": "b3a5e633328c50419249b254e5bdfd0057f59d400e0793a15aa1c4a43248d440",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_104_evidence.py": "5a074be3fcae6511d96784822e4ddbefa0ecf554b2642099fe63d1674331b108",
+    "tests/test_sprint_104_evidence.py": "0bbebe9f263dec56ef738dde49433e55ec433a279d228799b065481803895348"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "connected-identity-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "connected_identity::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "7c8aaec4b95a21155c456a090d7906a419213dcbbed96aae0299dc5ce6b0f889",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "connected-identity-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_connected_identity_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "9d654695c0a90577e252109954dd749137ace81d33f39cf1a31990e7f48cf31d",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary-contract",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_104_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-DEL-002",
+    "SR-DEL-003",
+    "SR-DEL-004",
+    "RV-24"
+  ],
+  "implemented_contracts": {
+    "identity_axis_count": 16,
+    "credential_state_count": 6,
+    "capability_class_count": 8,
+    "confusion_case_count": 2048,
+    "escalation_case_count": 336,
+    "canary_surface_count": 8,
+    "isolated_worker_pair_count": 64,
+    "native_identity_count": 0,
+    "live_provider_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "wrong_domain_request_count": 0,
+    "secret_disclosure_count": 0,
+    "pairwise_escalation_admitted_count": 0,
+    "shared_worker_state_count": 0,
+    "reviewer": "scripts.connected_identity_contract",
+    "rv24_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-103-BLOCKED",
+      "owner": "104"
+    },
+    {
+      "code": "BLOCKED-EXTERNAL-RV24-NATIVE-IDENTITY-REVIEW",
+      "owner": "104.1.3.5"
+    }
+  ],
+  "summary": {
+    "local_sprint_104_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_103_closed": false,
+    "native_identity_support": false,
+    "release_approval": false
+  }
+}
