@@ -1,0 +1,275 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_65_local_evidence",
+  "source_revision": "f36b9e4032c9014a75812721c2b248a13bfb1e92",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "capabilities/knowledge/Cargo.toml": "d1aaf75cd939ed948adce94dc56091873a6611fb8f5f8c6dc3a50acf6d0974de",
+    "capabilities/knowledge/src/image_workflows.rs": "16447340b4dfcaa9169e6c80ee2f1f98adef93a70ea5ab3e371ea66518cdde60",
+    "capabilities/knowledge/src/lib.rs": "5780f819425e45e21d6b8b8525fd4fb503b30457019eaa3be5237c9f2bfddb60",
+    "schemas/runtime/image-inspection.schema.json": "33f120353cf34793ce71c2161cbadae172c148fa147811a947d835879f2bffe1",
+    "schemas/runtime/image-redaction-receipt.schema.json": "c2c0ae5eddd28c15173375b0dd76e4e3b27a1381ed8a0319127f619ff90f7c6d",
+    "schemas/runtime/image-visual-comparison.schema.json": "6d868a619171b9c540af06e526edcfa9dd3dc843e3249d00b8c8b9b4f873a9a7",
+    "schemas/runtime/examples/image-inspection.valid.json": "7368d16dc4fa20b26278cb5079102720ac297ec24c6d35614f99ef74d39e4079",
+    "schemas/runtime/examples/image-redaction-receipt.valid.json": "6e09132716cf865848e958bb4bea541e0f18d07ac60a3be3bd8cfdbd4c19624e",
+    "schemas/runtime/examples/image-visual-comparison.valid.json": "999d5453fb51bbfea3a313f90a402ff80666408610da45b6a1a891bb328fe74d",
+    "scripts/validate_planning_schemas.mjs": "5f4f55bf1bdba1bbd020af993dd9ca9868d9a11a9534cb0dadec4eb3da621d9d",
+    "tests/test_planning_schemas.mjs": "41dc752a868f032ea8915fc73b051a437309e40249c2c2fb762a61c9b41221a9",
+    "supply-chain/dependency-hashes.sha256": "05b7313c2475c33106ff82075f0f1151e60298a68a4c022d0c80f38e29525f07",
+    "supply-chain/dependency-provenance.json": "f91e5f348333652cbaf36b2a46078965b5e95d1ba8d05b4b1ea2580b427a56d4",
+    "supply-chain/sbom.cdx.json": "e5cee1348404973538dd4adfd07b350c53462a37864666e0d8ced1c9229db1f1",
+    "docs/architecture/presentation-workflows.md": "7b6e178182d06806d417a17fdf276bf2d2ae65cf63e64fb51901f7d4a62a22bf",
+    "docs/architecture/image-redaction-and-visual-verification.md": "b422d114cc7507c1d757eade6cc8e9fa592bc9e6d50eff06742f8d9af25b73f0",
+    "docs/guides/image-redaction-and-visual-review.md": "ce19446d0f0e6b46f83b373ed891ee913e17b2aa2d0aba25909451b8fd3e4cfc",
+    "docs/verification/sprint-65-image-corpus.json": "58243d0e41e3863d8ed99fc045207bebdd83fb83936213ceff972bbff316b9f3",
+    "docs/verification/sprint-65-image-dependency-manifest.json": "bc54b269030cdd5216bcaa9cdd501b39ee444c2afc5eca106840b857aa0386e9",
+    "docs/verification/sprint-65-local-results.md": "2b3ffd49a312f0658c1785c415e09798cd485b3fb002c5b14476ec34f2231ddd",
+    "scripts/image_workflow_contract.py": "56c5f08bdcef5b8c83a19c404f3e2dccecdce67abc4cf6eeec996cfe7d79dcf7",
+    "tests/test_image_workflow_contract.py": "375b4048615de234ff766d8125b62789b12cc3eabc2caa63276e338d2b5a645e",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_65_evidence.py": "1295d16852eb67dcce47ec1b1a1fc5cec860a52bbb82c787a0b9adf753d16523",
+    "tests/test_sprint_65_evidence.py": "643a642c98fea6bf6566b7bfa52f1224de447c39e08bf4fd7304ac0c97c41a9e"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "image-workflow-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "image_workflows::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "93277602c37df6342477c0755cfcdb6bbaf01bc43801339429252af9ba8975fa",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "image-runtime-schemas",
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_planning_schemas.mjs"
+      ],
+      "exit_code": 0,
+      "output_sha256": "788da9316f11311a4bb24dbf940ed43ed860de0e5198782f83f41742bfa9e9d7",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "image-review-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_image_workflow_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a6707d4eff38012da33ddc34bc6dc076a3b17151cfc9aef223c8790cbe64c3da",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "image-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "image-format",
+      "argv": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_65_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "5d8a174d448d59185fd227bcbab9c964e39b10a9c2e28965972cfb0c833dd854",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-SUP-008",
+    "SR-SUP-009",
+    "SR-TST-002",
+    "SR-TST-004",
+    "SR-CIV-006",
+    "SR-CIV-007",
+    "SR-CIV-008",
+    "SR-CIV-009"
+  ],
+  "implemented_contracts": {
+    "runtime_schema_count": 3,
+    "image_rust_fixture_count": 6,
+    "review_corpus_case_count": 99,
+    "bounded_bmp_rgba_decoder": true,
+    "png_metadata_inspection": true,
+    "slide_object_image_provenance": true,
+    "approved_vision_profile_view_proposal": true,
+    "decoded_pixel_redaction": true,
+    "deterministic_bmp_full_regeneration": true,
+    "redaction_pixel_residue_scan": true,
+    "ancillary_metadata_removal": true,
+    "four_artifact_visual_diff": true,
+    "strict_local_provider_denial": true,
+    "exact_disclosure_approval_receipt": true,
+    "network_access_capability": false,
+    "filesystem_mutation_capability": false,
+    "content_execution_capability": false,
+    "native_screenshot_capture_admitted": false,
+    "native_renderer_admitted": false,
+    "provider_execution_admitted": false,
+    "cross_platform_acceptance": false,
+    "accessibility_acceptance": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "review_corpus_case_count": 99,
+    "accepted_network_effect_count": 0,
+    "accepted_execution_effect_count": 0,
+    "accepted_filesystem_effect_count": 0,
+    "bmp_round_trip_verified": true,
+    "image_provenance_verified": true,
+    "redaction_pixel_and_metadata_scan_verified": true,
+    "visual_diff_semantics_verified": true,
+    "strict_local_provider_denial_verified": true,
+    "approval_receipt_binding_verified": true,
+    "native_screenshot_capture_admitted": false,
+    "native_renderer_admitted": false,
+    "native_visual_platform_count": 0,
+    "provider_execution_admitted": false,
+    "cross_platform_acceptance": false,
+    "accessibility_acceptance": false,
+    "independent_review": false,
+    "manual_fuzzing": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-64-BLOCKED",
+      "owner": "65.1"
+    },
+    {
+      "code": "NATIVE-SCREENSHOT-VIEWER-ABSENT",
+      "owner": "65.1.1.2"
+    },
+    {
+      "code": "PNG-JPEG-PIXEL-DECODER-ABSENT",
+      "owner": "65.1.3.2"
+    },
+    {
+      "code": "PROVIDER-IMAGE-MODEL-EXECUTION-ABSENT",
+      "owner": "65.1.1.5"
+    },
+    {
+      "code": "NATIVE-DOCUMENT-SLIDE-UI-RENDERER-ABSENT",
+      "owner": "65.1.3.4"
+    },
+    {
+      "code": "FEDORA-NATIVE-VISUAL-EVIDENCE-ABSENT",
+      "owner": "65.1.3.4"
+    },
+    {
+      "code": "UBUNTU-NATIVE-VISUAL-EVIDENCE-ABSENT",
+      "owner": "65.1.3.4"
+    },
+    {
+      "code": "WINDOWS-NATIVE-VISUAL-EVIDENCE-ABSENT",
+      "owner": "65.1.3.4"
+    },
+    {
+      "code": "MACOS-NATIVE-VISUAL-EVIDENCE-ABSENT",
+      "owner": "65.1.3.4"
+    },
+    {
+      "code": "STEGANOGRAPHY-CAMPAIGN-ABSENT",
+      "owner": "65.1.3.3"
+    },
+    {
+      "code": "ACCESSIBILITY-ACCEPTANCE-ABSENT",
+      "owner": "65.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-BOUNDARY-REVIEW-ABSENT",
+      "owner": "65.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-004"
+    }
+  ],
+  "summary": {
+    "local_sprint_65_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_64_closed": false,
+    "native_screenshot_view_complete": false,
+    "native_render_complete": false,
+    "provider_generation_complete": false,
+    "cross_platform_acceptance_passed": false,
+    "accessibility_acceptance_passed": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}
