@@ -36,6 +36,8 @@ pub mod coding_session;
 pub mod coding_tools;
 /// Deterministic completion verification for bounded coding sessions.
 pub mod coding_verifier;
+/// Confirmed local computer-use planning and before/after evidence contracts.
+pub mod computer_use;
 
 /// Shared first-party shell routing into the canonical kernel conversation library.
 pub mod conversation_runtime;

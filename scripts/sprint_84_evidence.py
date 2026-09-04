@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+"""Build truthful Sprint 84 local computer-use evidence."""
+from pathlib import Path
+from typing import Final
+try: from scripts.sprint_evidence_recorder import SprintEvidenceDefinition,main
+except ModuleNotFoundError: from sprint_evidence_recorder import SprintEvidenceDefinition,main
+ROOT:Final=Path(__file__).resolve().parents[1]
+SOURCE_PATHS:Final=("Cargo.toml","Cargo.lock","shells/host/Cargo.toml","shells/host/src/lib.rs","shells/host/src/computer_use.rs","shells/host/src/public_research.rs","shells/host/src/browser_inspection.rs","docs/guides/confirmed-computer-use.md","docs/verification/sprint-84-computer-use-corpus.json","artifacts/sprints/sprint-82/local-evidence-report.json","artifacts/sprints/sprint-83/local-evidence-report.json","scripts/computer_use_contract.py","tests/test_computer_use_contract.py","supply-chain/dependency-hashes.sha256","supply-chain/dependency-provenance.json","supply-chain/sbom.cdx.json","scripts/sprint_evidence_recorder.py","scripts/sprint_84_evidence.py","tests/test_sprint_84_evidence.py")
+COMMANDS:Final=(("computer-use-rust-contract",("cargo","test","-p","agentmage-host","computer_use::tests","--lib")),("computer-use-artifact-contract",("python3","-m","unittest","tests.test_computer_use_contract")),("runtime-schema-contract",("npm","run","-s","schemas:test")),("supply-chain-currentness",("python3","scripts/supply_chain.py")),("product-ci-contract",("python3","scripts/product_ci.py","--check")),("evidence-tests",("python3","-m","unittest","tests.test_sprint_84_evidence")))
+FOCUSED_COMMANDS:Final=tuple(i[0] for i in COMMANDS[:2]); IMPLEMENTED:Final={"action_count":5,"rust_test_count":4,"corpus_case_count":35,"irreversible_confirmation_count":4,"effect_executor_count":0,"native_action_count":0}
+BLOCKERS:Final=({"code":"UPSTREAM-SPRINT-83-BLOCKED","owner":"84"},{"code":"NATIVE-COMPUTER-USE-SECURITY-AND-PRIVACY-REVIEW-ABSENT","owner":"84.1.3.2-84.1.3.6"})
+VERIFICATION:Final={"focused_local_contracts":True,"focused_blocking_skip_count":0,"rust_test_count":4,"corpus_case_count":35,"native_action_executed":False,"before_after_capture_complete":False,"privacy_review":False,"sprint_gate_closed":False}
+SUMMARY:Final={"local_sprint_84_contract_passed":True,"sprint_status":"BLOCKED","upstream_sprint_83_closed":False,"native_computer_use_complete":False,"native_security_evidence_complete":False,"privacy_review_present":False,"release_approval":False}
+DEFINITION:Final=SprintEvidenceDefinition(sprint=84,root=ROOT,output="artifacts/sprints/sprint-84/local-evidence-report.json",source_paths=SOURCE_PATHS,commands=COMMANDS,focused_commands=FOCUSED_COMMANDS,rust_focused_commands=frozenset(FOCUSED_COMMANDS[:1]),security_requirement_ids=("SR-ACC-002","SR-ACC-007","SR-ACC-008","SR-DAT-002","SR-DAT-003","SR-NET-003","SR-NET-004","SR-NET-005","SR-NET-006","SR-AI-004","SR-AI-005"),implemented_contracts=IMPLEMENTED,verification_evidence=VERIFICATION,blockers=BLOCKERS,summary=SUMMARY)
+if __name__=="__main__":raise SystemExit(main(DEFINITION))

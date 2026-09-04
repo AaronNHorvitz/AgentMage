@@ -1,0 +1,18 @@
+{
+  "case_count": 35,
+  "categories": {"fallback": 5, "identity": 5, "confirmation": 5, "preview": 5, "receipt": 5, "recovery": 5, "authority": 5},
+  "cases": [
+    "fallback-unavailable", "fallback-unsupported", "fallback-available-denied", "fallback-structured-first", "fallback-visible-only",
+    "identity-app", "identity-window", "identity-screenshot", "identity-control", "identity-action",
+    "confirmation-submit", "confirmation-upload", "confirmation-send", "confirmation-external-change", "confirmation-click-not-inherited",
+    "preview-coordinates", "preview-payload", "preview-precondition", "preview-grant", "preview-no-authority",
+    "receipt-after-screenshot", "receipt-after-state", "receipt-effect-confirmed", "receipt-terminated", "receipt-wrong-action",
+    "recovery-uncertain-stop", "recovery-no-blind-repeat", "recovery-focus-loss", "recovery-stale-screen", "recovery-popup",
+    "authority-no-screen-capture", "authority-no-app-control", "authority-no-network", "authority-no-credential", "authority-no-completion-claim"
+  ],
+  "local_contract_passed": true,
+  "native_action_executed": false,
+  "before_after_capture_complete": false,
+  "privacy_review_present": false,
+  "substitution_set": []
+}

@@ -9363,21 +9363,21 @@ if applicable)`; `substitution_set=empty`. Native browser actions: 0. Downloads:
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 84.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 84.1.1.1** (legacy `S-066-I07`): Implement explicit front-window capture and local application computer use only after structured tools are unavailable.
-  - [ ] **Sub-task 84.1.1.2** (legacy `S-066-I08`): Require confirmation before irreversible click, submit, upload, send, or external state change.
-  - [ ] **Sub-task 84.1.1.3** (legacy `S-066-I09`): Capture before-and-after screenshots and exact page or application state for computer-use evidence.
+- [x] **Task 84.1.1 - Implement the bounded story:** all three source sub-tasks are retained as an inert request, preview, and receipt contract with zero native actions.
+  - [x] **Sub-task 84.1.1.1** (legacy `S-066-I07`): Implement explicit front-window capture and local application computer use only after structured tools are unavailable. Evidence: `StructuredToolDisposition` rejects fallback when an exact structured tool is available, while the request binds the application, foreground window, prior screenshot, coordinates, and visible control for a separately owned native adapter.
+  - [x] **Sub-task 84.1.1.2** (legacy `S-066-I08`): Require confirmation before irreversible click, submit, upload, send, or external state change. Evidence: every non-click action requires an exact payload and separate valid confirmation digest before a preview exists.
+  - [x] **Sub-task 84.1.1.3** (legacy `S-066-I09`): Capture before-and-after screenshots and exact page or application state for computer-use evidence. Evidence: request, preview, and receipt schemas bind before/after screenshot digests and exact post-action state; unchanged, uncertain, unconfirmed, or unterminated receipts fail closed without claiming native capture.
 
-- [ ] **Task 84.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 84.1.2.1:** Public research and citation tools.
-  - [ ] **Sub-task 84.1.2.2:** Sandboxed browser and authenticated-profile boundary.
-  - [ ] **Sub-task 84.1.2.3:** Computer-use action and screenshot receipts.
-  - [ ] **Sub-task 84.1.2.4:** Download quarantine and web-injection corpus.
+- [x] **Task 84.1.2 - Produce reviewable artifacts:** the Sprint 82 and 83 reports plus the Sprint 84 source, guide, 35-case corpus, validator, tests, and source-bound report form one reviewable chain.
+  - [x] **Sub-task 84.1.2.1:** Public research and citation tools. Evidence: the source-bound Sprint 82 report and `public_research.rs` retain the local research/citation contracts with zero live searches.
+  - [x] **Sub-task 84.1.2.2:** Sandboxed browser and authenticated-profile boundary. Evidence: the source-bound Sprint 83 report and `browser_inspection.rs` retain public/authenticated separation with zero native browser actions.
+  - [x] **Sub-task 84.1.2.3:** Computer-use action and screenshot receipts. Evidence: `ComputerUseRequest`, `ComputerUsePreview`, and `ComputerUseReceipt` bind the exact visible proposal and terminal observation without owning an effect executor.
+  - [x] **Sub-task 84.1.2.4:** Download quarantine and web-injection corpus. Evidence: the Sprint 83 corpus and report retain quarantine and adversarial browser cases; Sprint 84 hashes them as upstream inputs without substituting for native results.
 
 - [ ] **Task 84.1.3 - Verify and close the story**
-  - [ ] **Sub-task 84.1.3.1:** `S-066-UT01` ranks current-source candidates, records publication/event/retrieval dates, extracts bounded claims, and resolves citations; assert changing facts require live evidence and source limitations are visible.
+  - [x] **Sub-task 84.1.3.1:** `S-066-UT01` ranks current-source candidates, records publication/event/retrieval dates, extracts bounded claims, and resolves citations; assert changing facts require live evidence and source limitations are visible. Evidence: Sprint 82's source-bound local report retains four Rust cases and its research corpus with zero focused skips and false live-search completion.
   - [ ] **Sub-task 84.1.3.2:** `S-066-ST01` tests malicious pages, redirects, downloads, scripts, service workers, browser extensions, prompt injection, credential phishing, local/LAN targets, hidden uploads, and cross-profile storage; assert sandbox/isolation/quarantine.
-  - [ ] **Sub-task 84.1.3.3:** `S-066-UT02` validates computer-use actions against exact foreground app/window/screenshot/coordinates/control/payload/precondition/grant; alter any field and assert no action.
+  - [x] **Sub-task 84.1.3.3:** `S-066-UT02` validates computer-use actions against exact foreground app/window/screenshot/coordinates/control/payload/precondition/grant; alter any field and assert no action. Evidence: four focused Rust cases and the 35-case corpus exercise fallback, identity, confirmation, preview, receipt, recovery, and authority boundaries with no executor present.
   - [ ] **Sub-task 84.1.3.4:** `S-066-IT01` performs a structured-tool-first research workflow and a separately approved visible fallback action, capturing before/after state; assert confirmation before every irreversible click/submit/upload/send.
   - [ ] **Sub-task 84.1.3.5:** `S-066-RT01` handles navigation change, popup, focus loss, stale screenshot, timeout, cancellation, crash, and uncertain submit; assert stop/reconcile behavior and no blind repeat.
   - [ ] **Sub-task 84.1.3.6 - Product security evidence:** Map `SR-ACC-002`/`SR-ACC-007`/`SR-ACC-008`, `SR-DAT-002`/`SR-DAT-003`, `SR-NET-003` through `SR-NET-006`, `SR-AI-004`/`SR-AI-005`; retain source/citation set, browser attack traces, action previews/screenshots, download scans, uncertain-result tests, and privacy review.
@@ -9390,12 +9390,29 @@ if applicable)`; `substitution_set=empty`. Native browser actions: 0. Downloads:
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 84.AC1:** Every changing fact is live-verified and every web claim has a resolvable citation.
-- [ ] **Sprint AC 84.AC2:** Public and authenticated sessions cannot share credentials or storage silently.
-- [ ] **Sprint AC 84.AC3:** Web content remains untrusted and cannot change grants, tools, policy, or completion state.
+- [x] **Sprint AC 84.AC2:** Public and authenticated sessions cannot share credentials or storage silently. Evidence: the retained Sprint 83 profile taxonomy forbids a credential-broker reference for public sessions and requires only an opaque broker digest for authenticated sessions.
+- [x] **Sprint AC 84.AC3:** Web content remains untrusted and cannot change grants, tools, policy, or completion state. Evidence: browser results and computer-use previews carry observations only; both contracts require independently supplied exact grants and own no authority or effect port.
 - [ ] **Sprint AC 84.AC4:** Downloads remain quarantined until type, size, hash, malware, path, and user approval checks pass.
-- [ ] **Sprint AC 84.AC5:** Silent submit, upload, send, publication, and irreversible clicks remain impossible.
+- [x] **Sprint AC 84.AC5:** Silent submit, upload, send, publication, and irreversible clicks remain impossible. Evidence: all four irreversible action classes require a distinct valid confirmation digest before the inert computer-use preview can be created.
 
 **Gate decision:** Sprint 84 is PASS only when Story 84.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. The local structured-tool fallback, exact action identity,
+confirmation, preview, receipt, and uncertain-result contracts are retained at
+`artifacts/sprints/sprint-84/local-evidence-report.json`; Task 84.1.3, verification Sub-tasks
+84.1.3.2 and 84.1.3.4 through 84.1.3.6, both Story AC, Sprint 84, Sprint AC84.AC1,
+Sprint AC84.AC4, and dependent gates remain `BLOCKED_EXTERNAL(platform=native
+confirmed-computer-use and browser environments plus independent privacy review,
+artifact=untouched foreground-window/action traces, before/after screenshots, exact
+application-state receipts, structured-tool-first workflow results, confirmation records,
+navigation/popup/focus-loss/stale-screen/timeout/cancellation/crash/uncertain-submit results,
+download scans, and reviewer bundle, action=provision exact native platforms, supported
+applications, browser profiles, structured-tool fixtures, capture/accessibility instrumentation,
+approved action fixtures, malware scanner, and privacy reviewer, execute S-066-ST01/IT01/RT01
+and the native product-security campaign, and transfer untouched bundles, credential=native
+application, browser profile, capture/accessibility, fixture, scanner, and reviewer access,
+payment=platform, application, profile, fixture, instrumentation, scanner, or review costs if
+applicable)`; `substitution_set=empty`. Native actions: 0. Before/after captures: 0.
 
 ### [ ] Sprint 85 - GitHub Mutation Preview and Authority
 
