@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_108_local_evidence",
+  "source_revision": "de39b3faa988e38264134514dc5c690598b2aaff",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "capabilities/knowledge/Cargo.toml": "d1aaf75cd939ed948adce94dc56091873a6611fb8f5f8c6dc3a50acf6d0974de",
+    "capabilities/knowledge/src/lib.rs": "c7d70a715690a9ff2e310a5ddc52118b35dbaf5ec75c3e37fea778f30ab08c9f",
+    "capabilities/knowledge/src/multi_provider_source.rs": "76ff79e66895d53fed058ed8b83de1297a4f5cb9dd4ee1e7972e92dc0bdc42c3",
+    "DELIVERY-SYSTEM.md": "ca62de984cd9da28d28f183e768e8c07898f7b38ae2d89894dcec66a3293f72c",
+    "artifacts/sprints/sprint-108/multi-provider-source-corpus.json": "b4b010308946e2613931917e41ad0f85efb790370c2296640e4b0ff9a210c9bc",
+    "scripts/multi_provider_source_contract.py": "d49c33d960f19379f0ae0f6ea8fbbd9c89b8742b9bc9a03fbc29d9585f504bcd",
+    "tests/test_multi_provider_source_contract.py": "9cceb31ddd9860399514223e7256e90116e3a7e4c8122c7b8909866d18bbb18c",
+    "supply-chain/dependency-hashes.sha256": "203821f29b7998f337ee1cdeb167f2874fb94f2b1e8761922fb89cfa3f42e1ce",
+    "supply-chain/dependency-provenance.json": "eed4cdbefa6c50f49f26133a8be16661fccb36d5cd051384bc62bd300e1dc2b1",
+    "supply-chain/sbom.cdx.json": "212b87f609cc23b9786ef3f495524dd40191be009619ecec0f282b7563e6d73e",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_108_evidence.py": "baaf3a3b8e057bffaf2c1884feb0e1a124645d92639d58faac0c342428821a6c",
+    "tests/test_sprint_108_evidence.py": "2f31f90abdaa08a1ded37973b82cc23e507bafe93941feb311d997b8a4215279"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "multi-provider-source-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "multi_provider_source::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "bc9734b036abe2693eeb6cfa448b3c5324b03cc9ec2fbb285971e329c472490c",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "multi-provider-source-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_multi_provider_source_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "9d654695c0a90577e252109954dd749137ace81d33f39cf1a31990e7f48cf31d",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary-contract",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_108_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-DEL-001",
+    "SR-DEL-002",
+    "SR-DEL-003",
+    "SR-DEL-004",
+    "SR-DEL-005",
+    "SR-DEL-006",
+    "SR-DEL-007",
+    "SR-DEL-008",
+    "SR-DEL-009",
+    "SR-DEL-010",
+    "SR-DEL-011",
+    "SR-DEL-012",
+    "SR-DEL-013",
+    "RV-23",
+    "RV-24",
+    "RV-25",
+    "RV-26",
+    "RV-27"
+  ],
+  "implemented_contracts": {
+    "provider_family_count": 3,
+    "published_tuple_count": 4,
+    "read_case_count": 48,
+    "effect_case_count": 30,
+    "prohibited_operation_count": 6,
+    "attack_case_count": 2048,
+    "recovery_case_count": 512,
+    "provider_request_count": 0,
+    "promoted_provider_count": 0,
+    "live_provider_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "active_checkout_change_count": 0,
+    "credential_crossover_count": 0,
+    "stale_effect_count": 0,
+    "duplicate_effect_count": 0,
+    "reviewer": "scripts.multi_provider_source_contract",
+    "at_src_001_complete": false,
+    "independent_human_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-107-BLOCKED",
+      "owner": "108"
+    },
+    {
+      "code": "BLOCKED-EXTERNAL-AZURE-REPOS-GITLAB-AT-SRC-001",
+      "owner": "108"
+    }
+  ],
+  "summary": {
+    "local_sprint_108_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_107_closed": false,
+    "live_source_provider_support": false,
+    "release_approval": false
+  }
+}
