@@ -2121,3 +2121,54 @@ and IPC. Cumulative closures are 1,228; write the required 1,225-item checkpoint
 Exact next action: continue Decision 0021 ordering at Sprint 122 Windows path, sandbox, keys,
 model, and connected workers. Cumulative closures are 1,248; the next checkpoint threshold is
 1,250.
+
+## Batch 122 — Sprint 122 Windows runtime boundary contracts
+
+### Completed
+
+- Closed 17 local Sprint 122 rows: handle-relative NTFS identity and final-path contracts,
+  restricted worker/token/Job Object/mitigation contracts, ambient-authority denial, DPAPI and
+  typed credential-reference contracts, fixed local-state roots, signed hash-pinned native-model
+  identity, confined provider-worker scopes/removal, synthetic path/sandbox/state/recovery
+  campaigns, Story AC1 and AC3, and Sprint AC1, AC2, and AC4. The retained corpus contains 1,024
+  path/race cases, 512 sandbox/ambient cases, 512 state/key/model/credential attacks, and 512
+  recovery cases. Native guest executions: 0. Observed network minutes: 0. Promotions: 0.
+  Substitutions: 0. Batch closures: 17. Cumulative closed items: 1,265.
+- Commits: `7fd8534c` (Windows runtime contracts, corpus, tests, truthful closures, and supply-chain
+  renewal), `dee9a30c` (source-bound Sprint 122 report), and `24d01833` (affected downstream
+  contract, configuration, security, and traceability renewal). Commits including log: 4. Commits
+  per closed item: 0.24. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection: empty.
+
+### Validation and blockers
+
+- Focused validation passed 12 Windows-platform Rust tests, strict Clippy, 6 Python tests, the
+  1,024/512/512/512 corpus validator, the source-bound Sprint 122 report, and every affected
+  downstream check. Supply-chain builds: 1. Corpus generations: 1. Successful local report
+  builds: 1. Full gate wall seconds: 693.03; it stopped only at the retained Story 6.1
+  rootless-Podman prerequisite after every preceding gate passed. Self-recovery iterations: 1:
+  the recorder rejected literal `HEAD` before writing because it requires a full 40-character
+  revision; the single successful build used exact commit `7fd8534cb0d370f67b6a69c4a1c157665adb9ee8`.
+- Native Windows path/sandbox/key/model/provider execution, 60-minute zero-network observation,
+  accessibility, reviewer protocols, and independent review remain
+  `BLOCKED_EXTERNAL(platform=properly licensed Windows 11 x64 KVM image and isolated
+  standard-user guest with DPAPI, Credential Manager, signed native llama.cpp package, provider
+  endpoints, accessibility tooling, packet/DNS/socket/process/firewall/listener/path/canary
+  instrumentation, and independent review environment, artifact=untouched exact image, package,
+  key-provider, credential-reference, data-root, model/profile, provider-scope, attack-corpus,
+  packet/process, canary, recovery, accessibility,
+  RV-03/RV-04/RV-06/RV-08/RV-09/RV-10/RV-16/RV-17/RV-20/RV-24/RV-30, AT-WIN-001, and
+  independent-review evidence, action=provide the licensed image, guest, signing, provider,
+  credential, instrumentation, accessibility, and reviewer access; execute S-122-ST01,
+  S-122-NT01, S-122-ST02, S-122-RT01, S-122-AT01, all applicable review vectors, and AT-WIN-001;
+  then transfer untouched evidence, credential=Windows image, guest, signing identity, provider
+  accounts, DPAPI/Credential Manager test identities, instrumentation, accessibility, and
+  reviewer access, payment=Windows, signing, provider, model, hosting, instrumentation,
+  accessibility, or review costs if applicable)`; `substitution_set=empty`.
+- Sprint 122 also remains dependency-blocked by `UPSTREAM-SPRINT-121-BLOCKED` with no
+  substitution. Exact full-chain carrier blocker: `blocked: host change required — run npm run -s
+  docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 123 provider version-skew, failure,
+and resource campaigns. Cumulative closures are 1,265; write the required 1,250-item checkpoint
+after push.
