@@ -2366,3 +2366,41 @@ the authorized Decision 0047 transition. Cumulative closures: 1,328; next checkp
 
 Exact next action: Sprint 101 requirement and deferred-scope closure, the first newly opened
 Decision 0021 dependency gate. Cumulative closures: 1,328; next checkpoint: 1,350.
+
+## Batch 128 — Sprint 101 inherited requirement closure
+
+### Completed
+
+- Closed 13 local Sprint 101 rows: registry rebuild/completion-record comparison, all 30 DEFER
+  exclusions, both artifact rows and their parent, three local verification rows, Story AC2–AC3,
+  and Sprint AC2–AC4. Bound 294 requirements, 1,387 classified inventory rows, and 111 inherited
+  completion reports. Promoted mapping completions, approvals, and promotions: 0 each. Batch
+  closures: 13. Cumulative closures: 1,341.
+- Commits: `237e119f` (contract/corpus/tests/closures/traceability), `f33bfc53` (source report),
+  `23f7a657` (exclude the Sprint 101 self-report), `400b46e7` (corrected report), and `a1076a24`
+  (four downstream contract artifacts). Including this log: 6; commits/item: 0.46. Review pins
+  advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 6 focused Python tests, requirement/traceability/supply-chain currentness, the Sprint
+  101 corpus/report, and all downstream checks. Supply-chain builds: 1; corpus generations: 2;
+  report builds: 2. Final full gate: 692.08 seconds, stopping only at retained Story 6.1 Podman
+  after all preceding gates passed.
+- Self-recovery: 3. Resolved the literal `HEAD` argument to its immutable 40-character commit;
+  excluded Sprint 101's own report from the stated inherited Sprints 0–100 report inventory;
+  rebuilt the stale Story 1.2 contract/evidence pair after TASKS.md and traceability changed.
+- Sprint 101 remains `UPSTREAM-SPRINT-100-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=complete promoted inherited platform/model/capability matrix,
+  clean-platform witnesses, signing and independent review environment, and user approval,
+  artifact=untouched current implementation/test/document/release/owner/evidence mappings for
+  every promoted BUILD, VERIFY, CAPABILITY GATE, and ROADMAP item plus signed security bundle,
+  risk/remediation inputs, rollback plan, and approval, action=complete the retained upstream
+  platform/model/release gates; provision exact native platforms, models, signing, reviewers,
+  and user approver; execute the promoted-scope mapping and independent review; then transfer
+  untouched evidence, credential=platform, model, signing, reviewer, and approver access,
+  payment=platform, model, signing, instrumentation, or review costs if applicable)`;
+  `substitution_set=empty`. Full-chain blocker remains the exact recorded Podman host tuple.
+
+Exact next action: Sprint 102 inherited-scope verification checkpoint. Cumulative closures:
+1,341; next checkpoint: 1,350.
