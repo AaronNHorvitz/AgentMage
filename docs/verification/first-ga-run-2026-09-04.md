@@ -1031,3 +1031,54 @@ Exact next action: Story 95.3 is locally complete but remains dependency-blocked
 Exact next action: all remaining Sprint 95 rows depend on upstream or exact external tuples;
 continue Decision 0021 ordering at Sprint 96 signed updates and supply-chain maintenance.
 Cumulative closures are 789; next checkpoint is 800.
+
+## Batch 100 — Sprint 96 offline update and supply-maintenance contracts
+
+### Completed
+
+- Closed 9 local Sprint 96 rows: Task 96.1.2 and both artifact/traceability sub-tasks;
+  Sub-tasks 96.1.3.1 through 96.1.3.3; Story AC 96.1.AC3; and Sprint AC 96.AC3 and
+  96.AC4. The new kernel contract admits only an exact version advance after signature,
+  integrity, compatibility, preview, staged-tree, explicit-approval, and rollback-point
+  bindings; automatic remote checks are structurally denied. The corpus binds 498 provenance
+  components, 498 SBOM components, 498 license dispositions, 498 content/integrity hashes,
+  498 removal dispositions, and 72 cases across 18 classes. Signed packages: 0. Native staged
+  activations: 0. Native rollback executions: 0. Current vulnerability-feed reviews: 0.
+  Promotions: 0. Substitutions: 0. Cumulative closed items: 798.
+- Commits: `68058019` (update/maintenance source, corpus, tests, truthful closures, and final
+  supply-chain carrier), `e6840481` (source-bound Sprint 96 report), and `713d225c` (one
+  affected downstream evidence regeneration pass). Commits including log: 4. Commits per
+  closed item: 0.44. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across
+  all 26 Batch 100 changed or regenerated paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 4 Rust cases, 4 corpus-contract tests, 3 evidence mutation tests, strict
+  kernel Clippy, Rust format, Python compilation, Markdown, 72 update/maintenance cases,
+  supply-chain currentness, product CI, 13 affected downstream checks/test groups, and
+  source-bound evidence validation passed. Supply-chain builds: 1. Corpus generations: 1.
+  Local report builds: 1. Downstream evidence regeneration passes: 1. Recovery iterations: 1.
+  Self-recovery replaced the nonexistent `config-loader:build` shorthand with the repository's
+  authoritative `configuration-loader:build`, rebuilt the stale loader report, and reran only
+  the affected Story 3.1 security/gate/traceability aggregations. The full chain ran 707.94
+  seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite after every
+  preceding gate passed. Recorded gate wall seconds: 708.
+- Signed-package execution, native update/rollback, current advisory review, and independent
+  security review are `BLOCKED_EXTERNAL(platform=native signed-update staging/activation/
+  rollback environments, current vulnerability/advisory feeds, and independent supply-chain/
+  security review, artifact=untouched signed packages, key-custody/signature verification,
+  compatibility/pre-post/rollback snapshots, injected-failure results, complete dependency/
+  license/SBOM/vulnerability/removal bundle, and reviewer bundle, action=provision exact update
+  packages, signing/key-custody, native staged-install and rollback fixtures, current advisory
+  feeds, failure instrumentation, and independent reviewer, execute S-073 native update/
+  maintenance/product-security campaign, and transfer untouched bundles, credential=signer,
+  key-custody, advisory-feed, platform/install, instrumentation, and reviewer access,
+  payment=package, signing, advisory, platform, instrumentation, or review costs if applicable)`;
+  `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 96 rows depend on upstream or the exact external tuple;
+continue Decision 0021 ordering at Sprint 97 backup and migration. Cumulative closures are 798;
+next checkpoint is 800.
