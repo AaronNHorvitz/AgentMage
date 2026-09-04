@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_115_local_evidence",
+  "source_revision": "558b23c794a48aebde9cda96ebaec7acd2c54dba",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
+    "kernel/engine/src/lib.rs": "75a4ba509f37e7a060e64f86761fa57c2c1226177e0e5c8d51b29509b921d2fb",
+    "kernel/engine/src/release_lifecycle.rs": "ca09b4aa575d51edb23907852564d7b914802b983fce948c143e1fc352916e29",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "DELIVERY-SYSTEM.md": "ca62de984cd9da28d28f183e768e8c07898f7b38ae2d89894dcec66a3293f72c",
+    "supply-chain/dependency-provenance.json": "dd4b09f6405e6b6bc939b8150cdd9d8ab288bfeb0fddbe2ada0a0479d9795c85",
+    "supply-chain/sbom.cdx.json": "6aaa4eba63c02262243065b3ab6398e189884793ec2b842e6512bc6dd97accb3",
+    "supply-chain/dependency-hashes.sha256": "1c2991751f4c4eb9737d2577636c3803f678ea9a6d3cf71be1d3ff29c47ffa90",
+    "artifacts/sprints/sprint-115/release-lifecycle-corpus.json": "dc3287256b0031ef0405c44f1966fdf7c76f112f95bc1fd46760de9da3cbcdb0",
+    "scripts/release_lifecycle_contract.py": "251d3a218a05aed57d1b75f6d177822bc24e4d0b2f55b49643adcd66f310110e",
+    "tests/test_release_lifecycle_contract.py": "4a5747bb2c082e63f325dca85dde7bfa5c05dda2f2f8d6784bf1268e5d5c4dec",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_115_evidence.py": "0f2a86a1cd217be6cb7f70a5a5beb9a292ec9c12cd50cd8f580a8eae9ee7e754",
+    "tests/test_sprint_115_evidence.py": "05e703315f2d2d1999cd55d3c6755b2af0f240953c11bb6e7a58a6eb18ef3786"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "release-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "release_lifecycle::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "64793cabe3df1afdd82b085b61cd0307bab4629ed4620d75165c4f070fb12762",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "release-corpus-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_release_lifecycle_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "fd3429f6a39b0337f73fcc2e93bc92cfa556334244053e19baf5f74b054988a4",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary-contract",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_115_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-REL-001",
+    "AT-REL-001",
+    "SR-DEL-*",
+    "RV-25",
+    "RV-28"
+  ],
+  "implemented_contracts": {
+    "tool_fixture_count": 4,
+    "manifest_case_count": 64,
+    "attack_case_count": 2048,
+    "fault_case_count": 512,
+    "live_environment_count": 0,
+    "hidden_effect_count": 0,
+    "automatic_advance_count": 0,
+    "promoted_tool_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "release_manifest_bound": true,
+    "change_authority_separate": true,
+    "fresh_compensation_required": true,
+    "promoted_matrix_complete": false,
+    "at_rel_001_complete": false,
+    "independent_human_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-114-BLOCKED",
+      "owner": "115"
+    },
+    {
+      "code": "BLOCKED-EXTERNAL-RELEASE-AT-REL-001",
+      "owner": "115"
+    }
+  ],
+  "summary": {
+    "local_sprint_115_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_114_closed": false,
+    "live_release_support": false,
+    "release_approval": false
+  }
+}
