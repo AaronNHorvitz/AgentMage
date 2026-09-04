@@ -55,6 +55,8 @@ pub mod conversation_library;
 pub mod cross_interface_assurance;
 /// Provider-neutral delivery graph and non-inheriting adapter conformance.
 pub mod delivery_graph;
+/// Exact offline deployment planning, effect verification, and rollback admission.
+pub mod deployment_safety;
 /// Kernel-owned redacted local doctor report construction.
 pub mod diagnostics;
 /// Deterministic document registers, records review, and exact local action previews.

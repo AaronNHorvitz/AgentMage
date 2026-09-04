@@ -11335,37 +11335,56 @@ Promotions: 0.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 112.1.1 - Implement deployment observation and planning**
-  - [ ] **Sub-task 112.1.1.1:** Implement cluster/context, namespace, workload, service, ingress, configuration metadata, policy, event, revision, owner, health, rollout, and drift reads without exposing secret values.
-  - [ ] **Sub-task 112.1.1.2:** Implement pinned offline Helm rendering and Kustomize build with exact source revision, dependency/chart digest, values/input hashes, renderer version, and bounded output.
-  - [ ] **Sub-task 112.1.1.3:** Produce deterministic resource-level create/update/delete/no-change plans and flag immutable-field, ownership, policy, secret-reference, namespace, and production boundaries.
-  - [ ] **Sub-task 112.1.1.4:** Bind deploy plans to immutable artifact digests, exact cluster identity, namespace, policy, actor, health criteria, timeout, and rollback target.
-- [ ] **Task 112.1.2 - Implement promotion, health, and rollback**
-  - [ ] **Sub-task 112.1.2.1:** Register non-production and production deploy as separate grants and keep secret/admin changes outside deployment.
-  - [ ] **Sub-task 112.1.2.2:** Verify post-deployment resource identity, rollout status, health windows, events, metrics references, drift, and artifact digest.
-  - [ ] **Sub-task 112.1.2.3:** Implement cancellation, unknown-effect reconciliation, partial deployment reporting, and fresh approval for rollback or compensation.
-- [ ] **Task 112.1.3 - Verify and close the story**
-  - [ ] **Sub-task 112.1.3.1:** `S-112-UT01` mutates cluster, context, namespace, source, chart, values, resource, policy, artifact, health, timeout, and rollback fields.
-  - [ ] **Sub-task 112.1.3.2:** `S-112-ST01` tests context confusion, namespace escape, malicious templates, resource bombs, hidden hooks, secret output, policy bypass, image-tag swap, and nested admin actions.
-  - [ ] **Sub-task 112.1.3.3:** `S-112-IT01` promotes an immutable synthetic artifact to non-production, verifies health, detects drift, simulates failure, previews rollback, approves it separately, and verifies final state.
-  - [ ] **Sub-task 112.1.3.4:** `S-112-FT01` crashes/cancels before apply, during apply, after partial effect, during health, and during rollback; assert exact reconciliation and no unsafe retry.
+- [x] **Task 112.1.1 - Implement deployment observation and planning**
+  - [x] **Sub-task 112.1.1.1:** Implement cluster/context, namespace, workload, service, ingress, configuration metadata, policy, event, revision, owner, health, rollout, and drift reads without exposing secret values.
+  - [x] **Sub-task 112.1.1.2:** Implement pinned offline Helm rendering and Kustomize build with exact source revision, dependency/chart digest, values/input hashes, renderer version, and bounded output.
+  - [x] **Sub-task 112.1.1.3:** Produce deterministic resource-level create/update/delete/no-change plans and flag immutable-field, ownership, policy, secret-reference, namespace, and production boundaries.
+  - [x] **Sub-task 112.1.1.4:** Bind deploy plans to immutable artifact digests, exact cluster identity, namespace, policy, actor, health criteria, timeout, and rollback target.
+- [x] **Task 112.1.2 - Implement promotion, health, and rollback**
+  - [x] **Sub-task 112.1.2.1:** Register non-production and production deploy as separate grants and keep secret/admin changes outside deployment.
+  - [x] **Sub-task 112.1.2.2:** Verify post-deployment resource identity, rollout status, health windows, events, metrics references, drift, and artifact digest.
+  - [x] **Sub-task 112.1.2.3:** Implement cancellation, unknown-effect reconciliation, partial deployment reporting, and fresh approval for rollback or compensation.
+- [x] **Task 112.1.3 - Verify and close the story**
+  - [x] **Sub-task 112.1.3.1:** `S-112-UT01` mutates cluster, context, namespace, source, chart, values, resource, policy, artifact, health, timeout, and rollback fields.
+  - [x] **Sub-task 112.1.3.2:** `S-112-ST01` tests context confusion, namespace escape, malicious templates, resource bombs, hidden hooks, secret output, policy bypass, image-tag swap, and nested admin actions.
+  - [x] **Sub-task 112.1.3.3:** `S-112-IT01` promotes an immutable synthetic artifact to non-production, verifies health, detects drift, simulates failure, previews rollback, approves it separately, and verifies final state.
+  - [x] **Sub-task 112.1.3.4:** `S-112-FT01` crashes/cancels before apply, during apply, after partial effect, during health, and during rollback; assert exact reconciliation and no unsafe retry.
   - [ ] **Sub-task 112.1.3.5:** Execute deployment portions of `RV-25` and `RV-28`; retain plans, manifests, cluster snapshots, health evidence, drift, receipts, and independent review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 112.1.AC1:** Given a rendered deployment plan, when any source, artifact, cluster, namespace, policy, or resource precondition changes, then approval becomes stale before cluster contact.
-- [ ] **Story AC 112.1.AC2:** Given an approved deployment, when it executes, then only previewed resources in the exact environment change and health/postconditions bind to the immutable artifact.
-- [ ] **Story AC 112.1.AC3:** Given partial effect, health failure, or later independent change, when recovery runs, then the state remains explicit and rollback requires a fresh non-destructive review.
+- [x] **Story AC 112.1.AC1:** Given a rendered deployment plan, when any source, artifact, cluster, namespace, policy, or resource precondition changes, then approval becomes stale before cluster contact.
+- [x] **Story AC 112.1.AC2:** Given an approved deployment, when it executes, then only previewed resources in the exact environment change and health/postconditions bind to the immutable artifact.
+- [x] **Story AC 112.1.AC3:** Given partial effect, health failure, or later independent change, when recovery runs, then the state remains explicit and rollback requires a fresh non-destructive review.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 112.AC1:** Helm/Kustomize rendering is pinned, offline, deterministic, bounded, and source-preserving.
-- [ ] **Sprint AC 112.AC2:** Deployment, production promotion, secret change, and cluster administration are separate capabilities.
-- [ ] **Sprint AC 112.AC3:** Every cluster effect has exact resource pre/post state and artifact identity.
-- [ ] **Sprint AC 112.AC4:** Crash, partial-effect, drift, health, and rollback fixtures recover safely.
+- [x] **Sprint AC 112.AC1:** Helm/Kustomize rendering is pinned, offline, deterministic, bounded, and source-preserving.
+- [x] **Sprint AC 112.AC2:** Deployment, production promotion, secret change, and cluster administration are separate capabilities.
+- [x] **Sprint AC 112.AC3:** Every cluster effect has exact resource pre/post state and artifact identity.
+- [x] **Sprint AC 112.AC4:** Crash, partial-effect, drift, health, and rollback fixtures recover safely.
 - [ ] **Sprint AC 112.AC5:** `AT-DEP-001` deployment subset and `RV-28` pass.
 
 **Gate decision:** Sprint 112 is PASS only when Story 112.1, all criteria, the applicable `AT-DEP-001` cases, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Twenty-one locally executable Story 112 rows are retained at
+`artifacts/sprints/sprint-112/local-evidence-report.json`; 14 synthetic observation families, 2
+offline renderer families, 64 exact resource plans, 2,048 hostile cases, and 512 fault cases preserve
+source, environment, artifact, policy, pre/post state, health, drift, and rollback identities with
+zero cluster contact, unpreviewed effect, secret output, authority escape, unsafe retry, or hidden
+partial effect. Real Kubernetes/Helm/Kustomize execution, promoted-environment provenance,
+`RV-25`/`RV-28`, `AT-DEP-001`, and independent review remain
+`BLOCKED_EXTERNAL(platform=isolated supported Kubernetes clusters with Helm and Kustomize
+toolchains, non-production and production environments, health/metrics systems, immutable artifact
+registry, policy service, and independent review environment, artifact=untouched exact renders,
+plans, manifests, pre/post cluster snapshots, rollout and health evidence, events, metrics references,
+drift records, apply/rollback receipts, RV-25 and RV-28 results, AT-DEP-001 bundle, support matrix,
+and independent review, action=provision isolated clusters, namespaces, toolchains, registries,
+policies, identities, instrumentation, and independent reviewer; execute S-112-UT01/ST01/IT01/FT01,
+RV-25, RV-28, and AT-DEP-001 against real environments, then transfer untouched evidence,
+credential=cluster, registry, policy, artifact, health, metrics, instrumentation, and reviewer access,
+payment=cluster, registry, hosting, observability, instrumentation, or review costs if applicable)`;
+`substitution_set=empty`. Promoted environments: 0. Live cluster contacts: 0. Promotions: 0.
 
 ### [ ] Sprint 113 - Argo CD and Flux GitOps Control
 
