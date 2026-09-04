@@ -10801,38 +10801,46 @@ Sprint 102 inherited-scope checkpoint dependency remains blocked on its exact pr
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 104.1.1 - Implement connected identity and credential contracts**
-  - [ ] **Sub-task 104.1.1.1:** Define canonical provider, host, port, TLS identity, tenant, account, project, environment, credential reference, single-sign-on state, and capability-class identities.
-  - [ ] **Sub-task 104.1.1.2:** Resolve credentials only inside operation-scoped provider workers after kernel grant and worker identity validation.
-  - [ ] **Sub-task 104.1.1.3:** Validate redirects, proxies, DNS results, callback targets, clone hosts, provider-supplied URLs, and cross-host API links before sending a request or credential.
-  - [ ] **Sub-task 104.1.1.4:** Expose non-secret account/scope/expiry diagnostics and deny missing, ambiguous, excessive, stale, revoked, or cross-domain credentials.
-- [ ] **Task 104.1.2 - Implement capability-class separation**
-  - [ ] **Sub-task 104.1.2.1:** Encode `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, and `admin` as non-inheriting grant classes.
-  - [ ] **Sub-task 104.1.2.2:** Make each class use distinct tool registration, policy checks, preview fields, receipts, diagnostics, and support-matrix entries.
-  - [ ] **Sub-task 104.1.2.3:** Prevent nested provider calls, workflow inputs, issue content, plugins, and model output from escalating one class into another.
-  - [ ] **Sub-task 104.1.2.4:** Add secret canaries and cross-domain fixtures for every provider worker, cache, log, receipt, diagnostic, error, and model-context path.
+- [x] **Task 104.1.1 - Implement connected identity and credential contracts**
+  - [x] **Sub-task 104.1.1.1:** Define canonical provider, host, port, TLS identity, tenant, account, project, environment, credential reference, single-sign-on state, and capability-class identities.
+  - [x] **Sub-task 104.1.1.2:** Resolve credentials only inside operation-scoped provider workers after kernel grant and worker identity validation.
+  - [x] **Sub-task 104.1.1.3:** Validate redirects, proxies, DNS results, callback targets, clone hosts, provider-supplied URLs, and cross-host API links before sending a request or credential.
+  - [x] **Sub-task 104.1.1.4:** Expose non-secret account/scope/expiry diagnostics and deny missing, ambiguous, excessive, stale, revoked, or cross-domain credentials.
+- [x] **Task 104.1.2 - Implement capability-class separation**
+  - [x] **Sub-task 104.1.2.1:** Encode `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, and `admin` as non-inheriting grant classes.
+  - [x] **Sub-task 104.1.2.2:** Make each class use distinct tool registration, policy checks, preview fields, receipts, diagnostics, and support-matrix entries.
+  - [x] **Sub-task 104.1.2.3:** Prevent nested provider calls, workflow inputs, issue content, plugins, and model output from escalating one class into another.
+  - [x] **Sub-task 104.1.2.4:** Add secret canaries and cross-domain fixtures for every provider worker, cache, log, receipt, diagnostic, error, and model-context path.
 - [ ] **Task 104.1.3 - Verify and close the story**
-  - [ ] **Sub-task 104.1.3.1:** `S-104-UT01` mutates every connected identity field and credential state; assert stable denial reason, no request, no secret serialization, and one receipt.
-  - [ ] **Sub-task 104.1.3.2:** `S-104-ST01` runs all pairwise capability-class escalation attempts through direct requests, provider content, nested actions, imports, and model tool calls.
-  - [ ] **Sub-task 104.1.3.3:** `S-104-ST02` runs at least 2,000 host/tenant/account/project/environment/credential/redirect/proxy/DNS/callback confusion cases.
-  - [ ] **Sub-task 104.1.3.4:** `S-104-IT01` authenticates multiple synthetic accounts on identical and different hosts and performs bounded reads concurrently; assert complete credential, cache, and result isolation.
+  - [x] **Sub-task 104.1.3.1:** `S-104-UT01` mutates every connected identity field and credential state; assert stable denial reason, no request, no secret serialization, and one receipt.
+  - [x] **Sub-task 104.1.3.2:** `S-104-ST01` runs all pairwise capability-class escalation attempts through direct requests, provider content, nested actions, imports, and model tool calls.
+  - [x] **Sub-task 104.1.3.3:** `S-104-ST02` runs at least 2,000 host/tenant/account/project/environment/credential/redirect/proxy/DNS/callback confusion cases.
+  - [x] **Sub-task 104.1.3.4:** `S-104-IT01` authenticates multiple synthetic accounts on identical and different hosts and performs bounded reads concurrently; assert complete credential, cache, and result isolation.
   - [ ] **Sub-task 104.1.3.5:** Execute `RV-24`; retain process/network traces, secret-canary scan, request destinations, denial matrix, and independent review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 104.1.AC1:** Given multiple hosts and accounts with identical display names, when a connected operation is previewed and executed, then the exact destination and credential domain remain unambiguous and no credential crosses domains.
-- [ ] **Story AC 104.1.AC2:** Given authority for one capability class, when any direct or indirect escalation is attempted, then the stronger operation is absent or denied before provider contact.
-- [ ] **Story AC 104.1.AC3:** Given unavailable or excessive credentials, when diagnostics run, then AgentMage reports non-secret remediation and fails closed without persisting or exposing the credential.
+- [x] **Story AC 104.1.AC1:** Given multiple hosts and accounts with identical display names, when a connected operation is previewed and executed, then the exact destination and credential domain remain unambiguous and no credential crosses domains.
+- [x] **Story AC 104.1.AC2:** Given authority for one capability class, when any direct or indirect escalation is attempted, then the stronger operation is absent or denied before provider contact.
+- [x] **Story AC 104.1.AC3:** Given unavailable or excessive credentials, when diagnostics run, then AgentMage reports non-secret remediation and fails closed without persisting or exposing the credential.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 104.AC1:** All 2,000 confusion attacks produce zero wrong-domain request or disclosure.
-- [ ] **Sprint AC 104.AC2:** Every pairwise capability escalation is denied.
-- [ ] **Sprint AC 104.AC3:** Secret canaries are absent from all prohibited surfaces.
-- [ ] **Sprint AC 104.AC4:** Concurrent provider workers cannot share credentials, caches, grants, or context.
+- [x] **Sprint AC 104.AC1:** All 2,000 confusion attacks produce zero wrong-domain request or disclosure.
+- [x] **Sprint AC 104.AC2:** Every pairwise capability escalation is denied.
+- [x] **Sprint AC 104.AC3:** Secret canaries are absent from all prohibited surfaces.
+- [x] **Sprint AC 104.AC4:** Concurrent provider workers cannot share credentials, caches, grants, or context.
 - [ ] **Sprint AC 104.AC5:** `RV-24` passes with independently reproducible evidence.
 
 **Gate decision:** Sprint 104 is PASS only when Story 104.1, all criteria, `AT-IDN-001`, and the Universal Story Definition of Done pass with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Twenty-one local Story 104.1 rows are retained at
+`artifacts/sprints/sprint-104/local-evidence-report.json`; 16 connected-identity axes, 6
+credential states, 8 non-inheriting capability classes, 2,048 confusion cases, 336 escalation
+cases, 8 secret-canary surfaces, and 64 synthetic concurrent worker pairs pass with zero
+wrong-domain requests, disclosures, admitted escalation, or shared worker state. Sprint 103 and
+native independently reviewed `RV-24` dependencies remain blocked; `substitution_set=empty`.
+Native identities: 0. Live providers: 0. Promotions: 0.
 
 ### [ ] Sprint 105 - External Effects, Events, and Uncertain Results
 

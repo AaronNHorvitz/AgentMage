@@ -40,6 +40,7 @@ pub mod claim_evidence;
 pub mod command_runner;
 /// Versioned, fail-closed configuration loading and recovery.
 pub mod configuration;
+pub mod connected_identity;
 /// Deterministic bounded context, checked summaries, checkpoints, and drift gates.
 pub mod context_management;
 /// Separately keyed private conversation archives and controlled lifecycle operations.
