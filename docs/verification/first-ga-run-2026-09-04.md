@@ -1496,3 +1496,51 @@ adapters. Cumulative closures are 962; the 925-item and 950-item checkpoints are
 
 Exact next action: continue Decision 0021 ordering at Sprint 109 multi-provider CI execution and
 evidence. Cumulative closures are 983; write the required 975-item checkpoint after push.
+
+## Batch 109 — Sprint 109 multi-provider CI control
+
+### Completed
+
+- Closed 22 local Sprint 109 rows: CI observation, four separate execution classes, bounded
+  log/artifact admission, synthetic verification, all story criteria, and Sprint AC 109.AC2
+  through AC4. Four synthetic CI providers span 44 identity observations, 16 inert effects,
+  1,024 uncertain-result schedules, and 2,048 hostile definition/log/artifact cases. Provider
+  requests: 0. Duplicate runs: 0. Secret disclosures: 0. Stronger capabilities: 0. Unsafe
+  outputs: 0.
+- Promoted CI providers: 0. Live CI providers: 0. Complete `AT-CIC-001`: false. Independent
+  human reviews: 0. Promotions: 0. Substitutions: 0. Batch closures: 22. Cumulative closed items:
+  1,005.
+- Commits: `7c32f38a` (CI contracts, corpus, tests, evidence definition, truthful closures, and
+  supply-chain renewal), `25b15f9d` (source-bound Sprint 109 report), `11920798` and `60961c4a`
+  (complete downstream contract/configuration/traceability renewal). Commits including log: 5.
+  Commits per closed item: 0.23. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across every Batch 109 changed or regenerated path and every pin-bearing gate: empty.
+
+### Validation, self-recovery, and blockers
+
+- Focused validation passed 3 Rust CI tests, strict Clippy, 4 corpus tests, 3 evidence tests,
+  Python compilation, dependency rules, supply-chain currentness, product CI, all affected
+  contract/configuration/traceability builders, and the source-bound report. Supply-chain builds:
+  1. Corpus generations: 1. Local report builds: 1. Full gate wall seconds: 681; it stopped only
+  at the retained Story 6.1 rootless-Podman prerequisite after every preceding gate passed.
+  Self-recovery iterations: 1; the downstream status exposed 6 additional kernel-bound
+  configuration reports omitted from the first staging set, so they were retained in the same
+  batch before the full gate and the complete pin audit was rerun.
+- Exact live-provider matrices and `AT-CIC-001` remain
+  `BLOCKED_EXTERNAL(platform=isolated GitHub Actions, Azure Pipelines, GitLab CI, and Jenkins
+  instances with provider runners or agents and independent review environment, artifact=untouched
+  exact definition/read/dispatch/rerun/cancel/approval/log/artifact matrices, run graphs, provider
+  traces, secret scans, artifact inventories, reconciliation receipts, AT-CIC-001 bundle, support
+  matrix, and independent review, action=provision isolated provider organizations, projects,
+  repositories, CI instances, accounts, credentials, runners/agents, environments, instrumentation,
+  and independent reviewer; execute S-109-CT01/ST01/FT01/RT01 and AT-CIC-001 against live CI systems,
+  then transfer untouched evidence, credential=GitHub, Azure DevOps, GitLab, Jenkins, repository, CI,
+  runner/agent, environment, instrumentation, and reviewer access, payment=provider, CI, runner,
+  agent, hosting, instrumentation, or review costs if applicable)`; `substitution_set=empty`.
+- Sprint 109 also remains dependency-blocked by `UPSTREAM-SPRINT-108-BLOCKED` with no
+  substitution. Exact full-chain carrier blocker: `blocked: host change required — run npm run -s
+  docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 110 artifact registries and immutable
+promotion. Cumulative closures are 1,005; write the required 1,000-item checkpoint after push.
