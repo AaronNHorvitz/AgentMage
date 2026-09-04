@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "corpus_id": "sprint-78-capability-package-trust-v1",
+  "case_count": 44,
+  "categories": { "manifest": 14, "verification": 10, "lifecycle": 8, "scope": 12 },
+  "cases": [
+    "manifest-version", "manifest-identity", "manifest-source", "manifest-signer", "manifest-license", "manifest-compatibility", "manifest-tools", "manifest-skills", "manifest-hooks", "manifest-permissions", "manifest-dependencies", "manifest-entry-points", "manifest-side-effects", "manifest-canonical-order",
+    "verify-manifest-hash", "verify-source-hash", "verify-public-key-hash", "verify-signature", "verify-license", "verify-signer", "verify-provenance", "verify-dependency-lock", "verify-compatibility", "verify-domain-separation",
+    "lifecycle-install", "lifecycle-enable", "lifecycle-disable", "lifecycle-update", "lifecycle-rollback", "lifecycle-uninstall", "lifecycle-approval", "lifecycle-no-effect",
+    "scope-filesystem", "scope-command", "scope-network", "scope-credential", "scope-connector", "scope-publication", "scope-memory", "scope-cpu", "scope-retention", "scope-task-intersection", "scope-overbroad-denied", "scope-no-grant-minting"
+  ],
+  "local_contract_passed": true,
+  "installed_package_count": 0,
+  "enabled_package_count": 0,
+  "native_lifecycle_complete": false,
+  "independent_review_present": false,
+  "substitution_set": []
+}

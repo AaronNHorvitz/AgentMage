@@ -8925,37 +8925,50 @@ access, payment=hardware, signing, platform, accessibility, or review costs if a
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 78.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 78.1.1.1** (legacy `S-064-I01`): Define a versioned package manifest for identity, source, signer, hashes, license, compatibility, tools, skills, hooks, permissions, network domains, dependencies, entry points, and side effects.
-  - [ ] **Sub-task 78.1.1.2** (legacy `S-064-I02`): Implement exact preview and approval for install, enable, disable, update, rollback, and uninstall.
-  - [ ] **Sub-task 78.1.1.3** (legacy `S-064-I03`): Verify signatures, checksums, licenses, provenance, dependency locks, and compatibility before installation or update.
-  - [ ] **Sub-task 78.1.1.4** (legacy `S-064-I04`): Enforce per-package filesystem, command, network, credential, connector, publication, resource, and retention scopes through the shared policy engine.
+- [x] **Task 78.1.1 - Implement the bounded story**
+  - [x] **Sub-task 78.1.1.1** (legacy `S-064-I01`): Define a versioned package manifest for identity, source, signer, hashes, license, compatibility, tools, skills, hooks, permissions, network domains, dependencies, entry points, and side effects. Evidence: the version 1 manifest binds all 16 field groups with canonical ordering, exact paths, hashes, and bounds.
+  - [x] **Sub-task 78.1.1.2** (legacy `S-064-I02`): Implement exact preview and approval for install, enable, disable, update, rollback, and uninstall. Evidence: all 6 lifecycle actions bind exact before/after manifests, permission delta, approval identity, and verified-package state while `applied=false`.
+  - [x] **Sub-task 78.1.1.3** (legacy `S-064-I03`): Verify signatures, checksums, licenses, provenance, dependency locks, and compatibility before installation or update. Evidence: admission recomputes canonical/source/public-key digests, checks license, signer, exact locks and 7-version tuple, and verifies a domain-separated Ed25519 signature.
+  - [x] **Sub-task 78.1.1.4** (legacy `S-064-I04`): Enforce per-package filesystem, command, network, credential, connector, publication, resource, and retention scopes through the shared policy engine. Evidence: the 9-dimension scope projection admits only a complete requested subset of the task-provided ceiling and rejects every overbroad dimension.
 
-- [ ] **Task 78.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 78.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 78.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 78.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 78.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story. Evidence: the host module, guide, validator, and 44-case corpus remain limited to the 4 Sprint 78 implementation rows.
+  - [x] **Sub-task 78.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story. Evidence: the Sprint 78 report hashes every source, test, guide, corpus, and supply-chain input at one exact revision.
 
 - [ ] **Task 78.1.3 - Verify and close the story**
-  - [ ] **Sub-task 78.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 78.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 78.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 78.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks. Evidence: 5 Rust cases and the 44-case contract corpus pass with zero focused blocking skips.
+  - [x] **Sub-task 78.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims. Evidence: signature/source mutation, unverified enablement, overbroad scope, executor-source, installation-count, and promotion mutations fail closed.
+  - [x] **Sub-task 78.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check. Evidence: the source-bound recorder reruns focused commands, validates all hashes, and retains native lifecycle and independent review as blockers.
   - [ ] **Sub-task 78.1.3.4 - Product security evidence:** Map `SR-GOV-010`, `SR-PLT-011`, `SR-ACC-001`, `SR-SUP-002` through `SR-SUP-013`, `SR-OPS-008`/`SR-OPS-010`, `SR-TST-011`; retain package corpus, signature/provenance verification, lifecycle traces, capability inventory diffs, safe-mode proof, and independent review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 78.1.AC1:** Given the approved dependencies and source requirements for `S-064-I01`, `S-064-I02`, `S-064-I03`, and `S-064-I04`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 78.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-064-I01`, `S-064-I02`, `S-064-I03`, and `S-064-I04`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 78.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 78.1.AC1:** Given the approved dependencies and source requirements for `S-064-I01`, `S-064-I02`, `S-064-I03`, and `S-064-I04`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled. Evidence: all 4 bounded source contracts pass while installed and enabled package counts remain zero.
+- [x] **Story AC 78.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-064-I01`, `S-064-I02`, `S-064-I03`, and `S-064-I04`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent. Evidence: 49 local cases cover exact admission and prohibited mutations with lifecycle effects fixed false.
+- [x] **Story AC 78.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence. Evidence: the immutable report retains command digests, environment, source hashes, exact blockers, and BLOCKED summary.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 78.AC1:** Every numbered implementation sub-task in Story 78.1 is complete and linked to its legacy requirement or issue identity.
-- [ ] **Sprint AC 78.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 78.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 78.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 78.AC1:** Every numbered implementation sub-task in Story 78.1 is complete and linked to its legacy requirement or issue identity. Evidence: all 4 implementation rows link to the source-bound report and legacy S-064 identities.
+- [x] **Sprint AC 78.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence. Evidence: the complete 49-case local set passes; native-only security evidence remains isolated under Sub-task 78.1.3.4.
+- [x] **Sprint AC 78.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes. Evidence: the module exposes verification, narrowing, and inert previews only, with zero executor or installation path.
+- [x] **Sprint AC 78.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment. Evidence: source, guide, corpus, validator, tests, dependencies, and command outcomes are bound by the committed report.
 - [ ] **Sprint AC 78.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 78 is PASS only when Story 78.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** **BLOCKED.** The manifest, cryptographic admission, lifecycle-preview,
+task-scope-narrowing, guide, and 44-case local contracts pass; see
+`artifacts/sprints/sprint-78/local-evidence-report.json`. The product-security row, final sprint
+criterion, story/sprint gate, and every package/platform/product/release promotion remain
+`BLOCKED_EXTERNAL(platform=native isolated capability-package lifecycle environments plus
+independent review, artifact=untouched package corpus, signature/provenance results, install/enable/
+disable/update/rollback/uninstall traces, capability inventory diffs, safe-mode proof, and reviewer
+bundle, action=provision the exact native environments, trusted signing identities, approved
+synthetic packages, and reviewer, execute the Sprint 78 lifecycle and product-security campaigns,
+and transfer the untouched bundles, credential=native platform, package signer, trust-root, and
+reviewer access, payment=platform, signing, review, or package-fixture costs if applicable)`;
+`substitution_set=empty`. Installed packages: 0. Enabled packages: 0.
 
 ### [ ] Sprint 79 - Hooks, Safe Mode, and Package Recovery
 

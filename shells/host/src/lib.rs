@@ -4,6 +4,8 @@
 
 /// Deterministic in-memory ingestion over exact captured artifact bytes.
 pub mod artifact_ingestion;
+/// Fail-closed capability package admission, lifecycle preview, and scope narrowing.
+pub mod capability_package;
 
 /// Authority-free composition of structured edits into kernel shadow changes.
 pub mod code_change;
