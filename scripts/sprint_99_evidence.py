@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+"""Build truthful Sprint 99 local cross-interface evidence."""
+from pathlib import Path
+from typing import Final
+try:from scripts.sprint_evidence_recorder import SprintEvidenceDefinition,main
+except ModuleNotFoundError:from sprint_evidence_recorder import SprintEvidenceDefinition,main
+ROOT:Final=Path(__file__).resolve().parents[1]
+SOURCE_PATHS:Final=("Cargo.toml","Cargo.lock","kernel/engine/Cargo.toml","kernel/engine/src/lib.rs","kernel/engine/src/cross_interface_assurance.rs","docs/verification/v1-plus-assurance-boundary.md","artifacts/sprints/sprint-99/cross-interface-corpus.json","scripts/cross_interface_assurance_contract.py","tests/test_cross_interface_assurance_contract.py","supply-chain/dependency-hashes.sha256","supply-chain/dependency-provenance.json","supply-chain/sbom.cdx.json","scripts/sprint_evidence_recorder.py","scripts/sprint_99_evidence.py","tests/test_sprint_99_evidence.py")
+COMMANDS:Final=(("cross-interface-rust-contract",("cargo","test","-p","agentmage-kernel-engine","cross_interface_assurance::tests","--lib")),("cross-interface-artifact-contract",("python3","-m","unittest","tests.test_cross_interface_assurance_contract")),("runtime-schema-contract",("npm","run","-s","schemas:test")),("supply-chain-currentness",("python3","scripts/supply_chain.py")),("product-ci-contract",("python3","scripts/product_ci.py","--check")),("evidence-tests",("python3","-m","unittest","tests.test_sprint_99_evidence")))
+FOCUSED_COMMANDS:Final=tuple(i[0] for i in COMMANDS[:3]);IMPLEMENTED:Final={"boundary_count":13,"attack_class_count":8,"isolation_dimension_count":7,"case_count":104,"native_interface_count":0}
+BLOCKERS:Final=({"code":"UPSTREAM-SPRINT-98-BLOCKED","owner":"99"},{"code":"NATIVE-CROSS-INTERFACE-ISOLATION-AND-INDEPENDENT-REVIEW-ABSENT","owner":"99.1.1-99.1.3.4-99.AC1-99.AC2-99.AC5"})
+VERIFICATION:Final={"focused_local_contracts":True,"focused_blocking_skip_count":0,"case_count":104,"unauthorized_effect_count":0,"native_interface_count":0,"cross_account_native_test_count":0,"independent_review":False,"sprint_gate_closed":False}
+SUMMARY:Final={"local_sprint_99_contract_passed":True,"sprint_status":"BLOCKED","upstream_sprint_98_closed":False,"native_interface_parity_complete":False,"native_isolation_complete":False,"independent_review_present":False,"release_approval":False}
+DEFINITION:Final=SprintEvidenceDefinition(sprint=99,root=ROOT,output="artifacts/sprints/sprint-99/local-evidence-report.json",source_paths=SOURCE_PATHS,commands=COMMANDS,focused_commands=FOCUSED_COMMANDS,rust_focused_commands=frozenset(FOCUSED_COMMANDS[:1]),security_requirement_ids=("SR-GOV-010","SR-ACC-001","SR-ACC-002","SR-ACC-003","SR-ACC-004","SR-ACC-005","SR-ACC-006","SR-ACC-007","SR-ACC-008","SR-NET-002","SR-TST-005","SR-TST-006","SR-TST-011","RV-01","RV-02","RV-03","RV-04","RV-05","RV-06","RV-07","RV-08","RV-09","RV-10","RV-11","RV-12","RV-13","RV-14","RV-15","RV-16","RV-17","RV-18","RV-19","RV-20","RV-21","RV-22"),implemented_contracts=IMPLEMENTED,verification_evidence=VERIFICATION,blockers=BLOCKERS,summary=SUMMARY)
+if __name__=="__main__":raise SystemExit(main(DEFINITION))

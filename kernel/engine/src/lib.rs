@@ -46,6 +46,8 @@ pub mod context_management;
 pub mod conversation_archive;
 /// Encrypted canonical conversation records and immutable turn timelines.
 pub mod conversation_library;
+/// Interface-invariant authority, isolation, recovery, and privacy assurance.
+pub mod cross_interface_assurance;
 /// Kernel-owned redacted local doctor report construction.
 pub mod diagnostics;
 /// Deterministic document registers, records review, and exact local action previews.
