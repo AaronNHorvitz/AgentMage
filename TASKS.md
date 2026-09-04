@@ -9907,27 +9907,27 @@ if applicable)`; `substitution_set=empty`. Native scheduled effects: 0. Emergenc
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 92.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 92.1.1.1** (legacy `S-071-I01`): Define versioned agent specifications for identity, purpose, allowed and prohibited tasks, model profile, tools, roots, memory, budgets, approvals, output, evidence, completion, and stop conditions.
-  - [ ] **Sub-task 92.1.1.2** (legacy `S-071-I02`): Implement an agent registry with owners, versions, compatibility, status, source hashes, signatures, and package lifecycle.
-  - [ ] **Sub-task 92.1.1.3** (legacy `S-071-I03`): Implement a creation wizard that exposes purpose, prohibitions, evidence, budget, permission, and stopping gaps.
-  - [ ] **Sub-task 92.1.1.4** (legacy `S-071-I04`): Implement templates for research, planning, briefing, meetings, documents, repository learning, coding, testing, review, and verification.
+- [x] **Task 92.1.1 - Implement the bounded story**
+  - [x] **Sub-task 92.1.1.1** (legacy `S-071-I01`): Define versioned agent specifications for identity, purpose, allowed and prohibited tasks, model profile, tools, roots, memory, budgets, approvals, output, evidence, completion, and stop conditions.
+  - [x] **Sub-task 92.1.1.2** (legacy `S-071-I02`): Implement an agent registry with owners, versions, compatibility, status, source hashes, signatures, and package lifecycle.
+  - [x] **Sub-task 92.1.1.3** (legacy `S-071-I03`): Implement a creation wizard that exposes purpose, prohibitions, evidence, budget, permission, and stopping gaps.
+  - [x] **Sub-task 92.1.1.4** (legacy `S-071-I04`): Implement templates for research, planning, briefing, meetings, documents, repository learning, coding, testing, review, and verification.
 
-- [ ] **Task 92.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 92.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 92.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 92.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 92.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
+  - [x] **Sub-task 92.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
 
-- [ ] **Task 92.1.3 - Verify and close the story**
-  - [ ] **Sub-task 92.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 92.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 92.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
-  - [ ] **Sub-task 92.1.3.4 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-001`/`SR-ACC-007`/`SR-ACC-008`, `SR-SUP-005`/`SR-SUP-006`, `SR-AI-003` through `SR-AI-006`, `SR-TST-004`; retain schema/lint corpus, compatibility reports, hostile definitions, synthetic state snapshots, and enablement decision.
+- [x] **Task 92.1.3 - Verify and close the story**
+  - [x] **Sub-task 92.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
+  - [x] **Sub-task 92.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
+  - [x] **Sub-task 92.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 92.1.3.4 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-001`/`SR-ACC-007`/`SR-ACC-008`, `SR-SUP-005`/`SR-SUP-006`, `SR-AI-003` through `SR-AI-006`, `SR-TST-004`; retain schema/lint corpus, compatibility reports, hostile definitions, synthetic state snapshots, and enablement decision.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 92.1.AC1:** Given the approved dependencies and source requirements for `S-071-I01`, `S-071-I02`, `S-071-I03`, and `S-071-I04`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 92.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-071-I01`, `S-071-I02`, `S-071-I03`, and `S-071-I04`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 92.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 92.1.AC1:** Given the approved dependencies and source requirements for `S-071-I01`, `S-071-I02`, `S-071-I03`, and `S-071-I04`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
+- [x] **Story AC 92.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-071-I01`, `S-071-I02`, `S-071-I03`, and `S-071-I04`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
+- [x] **Story AC 92.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
 #### [ ] Story 92.2 - Standardized Planning, Review, and Delivery Profile Catalog
 
@@ -9935,40 +9935,46 @@ if applicable)`; `substitution_set=empty`. Native scheduled effects: 0. Emergenc
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 92.2.1 - Define the canonical role-profile contracts**
-  - [ ] **Sub-task 92.2.1.1:** Register exactly `AG-01` through `AG-49` with their canonical names, family, bounded responsibility, prohibited work, and default authority ceiling from Decision 0041.
-  - [ ] **Sub-task 92.2.1.2:** Require every profile to declare version, owner, source hash, signature, lifecycle, compatible model and codec profiles, requested tools and roots, provider-object classes, inputs, outputs, evidence, citations, budgets, approvals, completion, cancellation, and stop conditions.
-  - [ ] **Sub-task 92.2.1.3:** Implement each role as a declarative specialization of the shared caller-neutral runtime contract, with no private model loop, tool router, permission engine, journal, artifact store, session store, credential path, provider client, or completion authority.
-  - [ ] **Sub-task 92.2.1.4:** Encode policy and approval, credential brokerage, signing and key custody, evidence and provenance retention, artifact verification, merge and deployment actuation, and postcondition reconciliation as prohibited role substitutions owned by deterministic services.
-  - [ ] **Sub-task 92.2.1.5:** Declare independent-review requirements for `AG-10`, `AG-11`, and `AG-35` through `AG-41`, including immutable reviewed-source identity, isolated conclusions, attributable findings, dissent preservation, and no implementer-authored approval.
-- [ ] **Task 92.2.2 - Produce catalog and compatibility artifacts**
-  - [ ] **Sub-task 92.2.2.1:** Produce a machine-readable catalog, generated human-readable reference, profile-family index, and stable profile-name-to-identity map.
-  - [ ] **Sub-task 92.2.2.2:** Produce a profile-to-capability, profile-to-tool, profile-to-provider-object, profile-to-model-need, and profile-to-evidence matrix that records maximum requested authority rather than granting it.
-  - [ ] **Sub-task 92.2.2.3:** Produce template work packets and synthetic fixtures for every profile, including valid, incomplete, contradictory, stale, hostile, unsupported, and overbroad definitions.
-  - [ ] **Sub-task 92.2.2.4:** Produce lifecycle and compatibility records for addition, deprecation, replacement, disablement, package removal, and source-hash or signature change.
-- [ ] **Task 92.2.3 - Verify and close the profile catalog**
-  - [ ] **Sub-task 92.2.3.1:** `S-092-UT01` verifies exact cardinality, identity order, name uniqueness, family membership, required fields, schema versioning, deterministic serialization, and generated-reference parity for all 49 profiles.
-  - [ ] **Sub-task 92.2.3.2:** `S-092-UT02` mutates every authority, model, tool, root, provider, budget, completion, evidence, retention, and lifecycle field; assert invalid or broadened definitions fail closed and remain disabled.
-  - [ ] **Sub-task 92.2.3.3:** `S-092-ST01` attempts role substitution, self-approval, policy reinterpretation, credential selection, key access, forged evidence, hidden provider effects, automatic merge or deployment, and model-declared completion; assert no profile can impersonate a deterministic service.
-  - [ ] **Sub-task 92.2.3.4:** `S-092-IT01` loads every profile through the existing registry and shared runtime request validator against synthetic grants; assert exact authority narrowing, zero activation by registration, and no parallel execution engine.
-  - [ ] **Sub-task 92.2.3.5:** Retain the catalog, generated reference, compatibility matrix, mutation corpus, registry snapshot, source hashes, signatures, negative-effect proof, and requirement-to-story-to-test evidence index.
+- [x] **Task 92.2.1 - Define the canonical role-profile contracts**
+  - [x] **Sub-task 92.2.1.1:** Register exactly `AG-01` through `AG-49` with their canonical names, family, bounded responsibility, prohibited work, and default authority ceiling from Decision 0041.
+  - [x] **Sub-task 92.2.1.2:** Require every profile to declare version, owner, source hash, signature, lifecycle, compatible model and codec profiles, requested tools and roots, provider-object classes, inputs, outputs, evidence, citations, budgets, approvals, completion, cancellation, and stop conditions.
+  - [x] **Sub-task 92.2.1.3:** Implement each role as a declarative specialization of the shared caller-neutral runtime contract, with no private model loop, tool router, permission engine, journal, artifact store, session store, credential path, provider client, or completion authority.
+  - [x] **Sub-task 92.2.1.4:** Encode policy and approval, credential brokerage, signing and key custody, evidence and provenance retention, artifact verification, merge and deployment actuation, and postcondition reconciliation as prohibited role substitutions owned by deterministic services.
+  - [x] **Sub-task 92.2.1.5:** Declare independent-review requirements for `AG-10`, `AG-11`, and `AG-35` through `AG-41`, including immutable reviewed-source identity, isolated conclusions, attributable findings, dissent preservation, and no implementer-authored approval.
+- [x] **Task 92.2.2 - Produce catalog and compatibility artifacts**
+  - [x] **Sub-task 92.2.2.1:** Produce a machine-readable catalog, generated human-readable reference, profile-family index, and stable profile-name-to-identity map.
+  - [x] **Sub-task 92.2.2.2:** Produce a profile-to-capability, profile-to-tool, profile-to-provider-object, profile-to-model-need, and profile-to-evidence matrix that records maximum requested authority rather than granting it.
+  - [x] **Sub-task 92.2.2.3:** Produce template work packets and synthetic fixtures for every profile, including valid, incomplete, contradictory, stale, hostile, unsupported, and overbroad definitions.
+  - [x] **Sub-task 92.2.2.4:** Produce lifecycle and compatibility records for addition, deprecation, replacement, disablement, package removal, and source-hash or signature change.
+- [x] **Task 92.2.3 - Verify and close the profile catalog**
+  - [x] **Sub-task 92.2.3.1:** `S-092-UT01` verifies exact cardinality, identity order, name uniqueness, family membership, required fields, schema versioning, deterministic serialization, and generated-reference parity for all 49 profiles.
+  - [x] **Sub-task 92.2.3.2:** `S-092-UT02` mutates every authority, model, tool, root, provider, budget, completion, evidence, retention, and lifecycle field; assert invalid or broadened definitions fail closed and remain disabled.
+  - [x] **Sub-task 92.2.3.3:** `S-092-ST01` attempts role substitution, self-approval, policy reinterpretation, credential selection, key access, forged evidence, hidden provider effects, automatic merge or deployment, and model-declared completion; assert no profile can impersonate a deterministic service.
+  - [x] **Sub-task 92.2.3.4:** `S-092-IT01` loads every profile through the existing registry and shared runtime request validator against synthetic grants; assert exact authority narrowing, zero activation by registration, and no parallel execution engine.
+  - [x] **Sub-task 92.2.3.5:** Retain the catalog, generated reference, compatibility matrix, mutation corpus, registry snapshot, source hashes, signatures, negative-effect proof, and requirement-to-story-to-test evidence index.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 92.2.AC1:** Given the canonical profile source, when the catalog and reference are generated, then exactly `AG-01` through `AG-49` appear once with matching names, responsibilities, ceilings, contracts, and source hashes.
-- [ ] **Story AC 92.2.AC2:** Given any valid profile, when it is registered or selected, then it requests only declared capabilities through the shared runtime and gains no authority, tool, credential, model, provider connection, or execution merely from its definition.
-- [ ] **Story AC 92.2.AC3:** Given an overbroad, contradictory, stale, unsigned, incompatible, service-impersonating, or self-approving profile, when validation runs, then the profile remains disabled and the exact reason is attributable and reviewable.
-- [ ] **Story AC 92.2.AC4:** Given an independent-review profile, when its contract is inspected, then source identity, isolation, evidence, dissent, and prohibited self-review behavior are explicit and machine-testable.
+- [x] **Story AC 92.2.AC1:** Given the canonical profile source, when the catalog and reference are generated, then exactly `AG-01` through `AG-49` appear once with matching names, responsibilities, ceilings, contracts, and source hashes.
+- [x] **Story AC 92.2.AC2:** Given any valid profile, when it is registered or selected, then it requests only declared capabilities through the shared runtime and gains no authority, tool, credential, model, provider connection, or execution merely from its definition.
+- [x] **Story AC 92.2.AC3:** Given an overbroad, contradictory, stale, unsigned, incompatible, service-impersonating, or self-approving profile, when validation runs, then the profile remains disabled and the exact reason is attributable and reviewable.
+- [x] **Story AC 92.2.AC4:** Given an independent-review profile, when its contract is inspected, then source identity, isolation, evidence, dissent, and prohibited self-review behavior are explicit and machine-testable.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 92.AC1:** Every numbered implementation sub-task in Stories 92.1 and 92.2 is complete and linked to its legacy requirement, issue identity, or Decision 0041 profile identity.
-- [ ] **Sprint AC 92.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 92.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 92.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
-- [ ] **Sprint AC 92.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
+- [x] **Sprint AC 92.AC1:** Every numbered implementation sub-task in Stories 92.1 and 92.2 is complete and linked to its legacy requirement, issue identity, or Decision 0041 profile identity.
+- [x] **Sprint AC 92.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
+- [x] **Sprint AC 92.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
+- [x] **Sprint AC 92.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 92.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 92 is PASS only when Stories 92.1 and 92.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. All 42 local numbered rows are retained at
+`artifacts/sprints/sprint-92/local-evidence-report.json`; exactly 49 canonical profiles remain
+disabled, registration grants no authority, and no second runtime or provider connection exists.
+Sprint 92 and dependent gates remain blocked on upstream Sprint 91's exact native scheduled-
+authority tuple; `substitution_set=empty`. Enabled profiles: 0. Provider connections: 0.
 
 ### [ ] Sprint 93 - Agent Validation, Dry Runs, and Enablement
 
@@ -9988,39 +9994,46 @@ if applicable)`; `substitution_set=empty`. Native scheduled effects: 0. Emergenc
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 93.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 93.1.1.1** (legacy `S-071-I05`): Implement instruction checking for contradiction, vague completion, hidden network, missing evidence, excessive permission, and unsupported tool assumptions.
-  - [ ] **Sub-task 93.1.1.2** (legacy `S-071-I06`): Implement synthetic dry runs with fake files, tools, models, connectors, and grants.
-  - [ ] **Sub-task 93.1.1.3** (legacy `S-071-I07`): Produce capability reports for available, degraded, untested, denied, and incompatible requirements.
-  - [ ] **Sub-task 93.1.1.4** (legacy `S-071-I08`): Keep every new agent disabled until its definition and synthetic suite pass user review.
+- [x] **Task 93.1.1 - Implement the bounded story**
+  - [x] **Sub-task 93.1.1.1** (legacy `S-071-I05`): Implement instruction checking for contradiction, vague completion, hidden network, missing evidence, excessive permission, and unsupported tool assumptions.
+  - [x] **Sub-task 93.1.1.2** (legacy `S-071-I06`): Implement synthetic dry runs with fake files, tools, models, connectors, and grants.
+  - [x] **Sub-task 93.1.1.3** (legacy `S-071-I07`): Produce capability reports for available, degraded, untested, denied, and incompatible requirements.
+  - [x] **Sub-task 93.1.1.4** (legacy `S-071-I08`): Keep every new agent disabled until its definition and synthetic suite pass user review.
 
-- [ ] **Task 93.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 93.1.2.1:** Agent definition schema and registry.
-  - [ ] **Sub-task 93.1.2.2:** Agent creation wizard and template pack.
-  - [ ] **Sub-task 93.1.2.3:** Prompt, authority, and compatibility checker.
-  - [ ] **Sub-task 93.1.2.4:** Synthetic evaluation and capability report.
+- [x] **Task 93.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 93.1.2.1:** Agent definition schema and registry.
+  - [x] **Sub-task 93.1.2.2:** Agent creation wizard and template pack.
+  - [x] **Sub-task 93.1.2.3:** Prompt, authority, and compatibility checker.
+  - [x] **Sub-task 93.1.2.4:** Synthetic evaluation and capability report.
 
-- [ ] **Task 93.1.3 - Verify and close the story**
-  - [ ] **Sub-task 93.1.3.1:** `S-071-UT01` validates agent identity/purpose/prohibitions/model/tools/roots/memory/budgets/approvals/output/evidence/completion/stop schemas with omitted, vague, contradictory, recursive, and overbroad values.
-  - [ ] **Sub-task 93.1.3.2:** `S-071-UT02` evaluates compatibility and effective requested capabilities against installed packages/platform/policy; assert available/degraded/untested/denied/incompatible states with rationale.
-  - [ ] **Sub-task 93.1.3.3:** `S-071-ST01` supplies self-modifying, self-enabling, self-spawning, hidden-network, excessive-permission, source-instruction, credential, and vague-completion definitions; assert disabled status.
-  - [ ] **Sub-task 93.1.3.4:** `S-071-IT01` runs every template entirely against synthetic files/models/tools/connectors/grants and inspects real system state; assert zero real data/external effect and complete attributable evaluation.
-  - [ ] **Sub-task 93.1.3.5 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-001`/`SR-ACC-007`/`SR-ACC-008`, `SR-SUP-005`/`SR-SUP-006`, `SR-AI-003` through `SR-AI-006`, `SR-TST-004`; retain schema/lint corpus, compatibility reports, hostile definitions, synthetic state snapshots, and enablement decision.
+- [x] **Task 93.1.3 - Verify and close the story**
+  - [x] **Sub-task 93.1.3.1:** `S-071-UT01` validates agent identity/purpose/prohibitions/model/tools/roots/memory/budgets/approvals/output/evidence/completion/stop schemas with omitted, vague, contradictory, recursive, and overbroad values.
+  - [x] **Sub-task 93.1.3.2:** `S-071-UT02` evaluates compatibility and effective requested capabilities against installed packages/platform/policy; assert available/degraded/untested/denied/incompatible states with rationale.
+  - [x] **Sub-task 93.1.3.3:** `S-071-ST01` supplies self-modifying, self-enabling, self-spawning, hidden-network, excessive-permission, source-instruction, credential, and vague-completion definitions; assert disabled status.
+  - [x] **Sub-task 93.1.3.4:** `S-071-IT01` runs every template entirely against synthetic files/models/tools/connectors/grants and inspects real system state; assert zero real data/external effect and complete attributable evaluation.
+  - [x] **Sub-task 93.1.3.5 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-001`/`SR-ACC-007`/`SR-ACC-008`, `SR-SUP-005`/`SR-SUP-006`, `SR-AI-003` through `SR-AI-006`, `SR-TST-004`; retain schema/lint corpus, compatibility reports, hostile definitions, synthetic state snapshots, and enablement decision.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 93.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then an agent package remains disabled until source/signature/compatibility, authority analysis, deterministic lint, synthetic evaluation, limitations, and user review all pass.
-- [ ] **Story AC 93.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then agent definitions can restrict but never mint tools, roots, credentials, network, models, budgets, approval modes, child spawning, or completion authority.
+- [x] **Story AC 93.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then an agent package remains disabled until source/signature/compatibility, authority analysis, deterministic lint, synthetic evaluation, limitations, and user review all pass.
+- [x] **Story AC 93.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then agent definitions can restrict but never mint tools, roots, credentials, network, models, budgets, approval modes, child spawning, or completion authority.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 93.AC1:** Agent definitions cannot grant themselves tools, roots, credentials, network, models, or budgets.
-- [ ] **Sprint AC 93.AC2:** Contradictory, vague, unsupported, overbroad, or untestable definitions remain disabled.
-- [ ] **Sprint AC 93.AC3:** Package signatures and source hashes resolve before enablement.
-- [ ] **Sprint AC 93.AC4:** Dry runs touch no real user data or external system.
-- [ ] **Sprint AC 93.AC5:** Self-created, self-modifying, recursively spawning, and permission-expanding agents remain prohibited.
+- [x] **Sprint AC 93.AC1:** Agent definitions cannot grant themselves tools, roots, credentials, network, models, or budgets.
+- [x] **Sprint AC 93.AC2:** Contradictory, vague, unsupported, overbroad, or untestable definitions remain disabled.
+- [x] **Sprint AC 93.AC3:** Package signatures and source hashes resolve before enablement.
+- [x] **Sprint AC 93.AC4:** Dry runs touch no real user data or external system.
+- [x] **Sprint AC 93.AC5:** Self-created, self-modifying, recursively spawning, and permission-expanding agents remain prohibited.
 
 **Gate decision:** Sprint 93 is PASS only when Story 93.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. All 23 local numbered rows are retained at
+`artifacts/sprints/sprint-93/local-evidence-report.json`; 343 definition fixtures and all five
+compatibility states run only against fake files, tools, models, connectors, and grants, with zero
+real effects. All 49 profiles remain disabled because signatures, compatibility, and attributable
+user review have not established enablement. Sprint 93 and dependent gates remain blocked on
+upstream Sprint 92; `substitution_set=empty`. Enabled profiles: 0. Real effects: 0.
 
 ### [ ] Sprint 94 - Child Authority and Isolation
 

@@ -8,6 +8,8 @@ pub mod dependency_degradation;
 /// Authority-reducing application of advisory classifier output.
 pub mod advisory_policy;
 pub mod agent_ceiling;
+/// Declarative specialist-agent profiles, registry, lint, and synthetic evaluation.
+pub mod agent_profiles;
 /// One-active-step plan history, progress, interruption, and response validation.
 pub mod agent_progress;
 pub mod agent_proposal;
