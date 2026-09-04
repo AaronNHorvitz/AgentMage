@@ -12456,37 +12456,60 @@ interfaces, model routes, tools, providers, recovery, and removal before any exp
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 126.1.1 - Rebuild release scope and evidence**
-  - [ ] **Sub-task 126.1.1.1:** Rebuild the complete requirement graph and prove every promoted requirement has current source, design, code, test, evidence, owner, support, and release linkage.
+  - [x] **Sub-task 126.1.1.1:** Rebuild the complete requirement graph and prove every promoted requirement has current source, design, code, test, evidence, owner, support, and release linkage.
   - [ ] **Sub-task 126.1.1.2:** Generate signed Fedora, Ubuntu, Windows, model/runtime, component/process/path/socket, adapter, provider/version/capability, data-flow, retention, support, and exclusion manifests.
   - [ ] **Sub-task 126.1.1.3:** Regenerate source and binary SBOMs, cryptographic BOM, Model BOM, licenses, provenance, signatures, hashes, vulnerability dispositions, and support/end-of-support metadata.
-  - [ ] **Sub-task 126.1.1.4:** Publish exact install, diagnostics, strict-local, connected-profile, credential, provider, capability, recovery, rollback, removal, limitation, accessibility, and troubleshooting documentation.
+  - [x] **Sub-task 126.1.1.4:** Publish exact install, diagnostics, strict-local, connected-profile, credential, provider, capability, recovery, rollback, removal, limitation, accessibility, and troubleshooting documentation.
 - [ ] **Task 126.1.2 - Independently rerun the complete release**
   - [ ] **Sub-task 126.1.2.1:** Perform three clean standard-user install/upgrade/rollback/uninstall lifecycles per first-GA platform using published instructions only.
   - [ ] **Sub-task 126.1.2.2:** Rerun every promoted provider conformance matrix and every `AT-*` first-GA threshold against exact release candidates and synthetic provider environments.
   - [ ] **Sub-task 126.1.2.3:** Rerun `RV-01` through `RV-30`, `RV-49`, cross-provider lifecycles, strict-local removal, accessibility, performance, recovery, incident tabletop, and documentation checks.
-  - [ ] **Sub-task 126.1.2.4:** Recompute every summary from raw evidence, validate staleness against all source/dependency/config/model/platform/provider manifests, and reconcile every failure, skip, suppression, quarantine, and reviewer finding.
+  - [x] **Sub-task 126.1.2.4:** Recompute every summary from raw evidence, validate staleness against all source/dependency/config/model/platform/provider manifests, and reconcile every failure, skip, suppression, quarantine, and reviewer finding.
 - [ ] **Task 126.1.3 - Decide and sign the delivery and Windows checkpoint**
-  - [ ] **Sub-task 126.1.3.1:** Produce the final provider/version/capability matrix with exact supported, degraded, unsupported, disabled, and post-GA states.
+  - [x] **Sub-task 126.1.3.1:** Produce the final provider/version/capability matrix with exact supported, degraded, unsupported, disabled, and post-GA states.
   - [ ] **Sub-task 126.1.3.2:** Produce the final risk, limitation, remediation, rollback, support, vulnerability, and release decision from raw evidence.
-  - [ ] **Sub-task 126.1.3.3:** Force every release gate and support claim to fail in synthetic checks and prove packaging/publication cannot proceed.
+  - [x] **Sub-task 126.1.3.3:** Force every release gate and support claim to fail in synthetic checks and prove packaging/publication cannot proceed.
   - [ ] **Sub-task 126.1.3.4:** Obtain independent reviewer signatures over the exact evidence index and user approval over the final release decision.
   - [ ] **Sub-task 126.1.3.5:** Sign and hash the release manifests, packages, evidence index, checksums, and public release notes only after every blocking gate is green.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 126.1.AC1:** Given the exact v1.0 release candidates, when independent reviewers follow published procedures, then platform, provider, strict-local, connected, security, recovery, accessibility, support, and removal results reproduce from raw evidence.
-- [ ] **Story AC 126.1.AC2:** Given any failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking result, when release status is computed, then `G-GA` remains blocked and no supported-release package is produced.
-- [ ] **Story AC 126.1.AC3:** Given final release notes and support matrices, when compared with code, registrations, manifests, packages, and evidence, then every capability and limitation agrees exactly and Apple Silicon remains accurately labeled post-GA.
+- [x] **Story AC 126.1.AC2:** Given any failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking result, when release status is computed, then `G-GA` remains blocked and no supported-release package is produced.
+- [x] **Story AC 126.1.AC3:** Given final release notes and support matrices, when compared with code, registrations, manifests, packages, and evidence, then every capability and limitation agrees exactly and Apple Silicon remains accurately labeled post-GA.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 126.AC1:** Every promoted requirement has current reproducible requirement-to-release traceability.
+- [x] **Sprint AC 126.AC1:** Every promoted requirement has current reproducible requirement-to-release traceability.
 - [ ] **Sprint AC 126.AC2:** Fedora, Ubuntu, and Windows pass independent clean lifecycle, platform, accessibility, performance, recovery, and removal gates.
 - [ ] **Sprint AC 126.AC3:** Every promoted provider/version/capability tuple passes its exact conformance and extreme tests; every unsupported operation passes negative tests.
 - [ ] **Sprint AC 126.AC4:** Bills of materials, provenance, signatures, hashes, manifests, support matrices, documentation, and raw evidence reconcile exactly.
 - [ ] **Sprint AC 126.AC5:** The Sprint 126 delivery-and-Windows checkpoint closes only after independent reproduction and explicit user approval; expanded `G-GA` remains blocked pending Sprints 127-156.
 
 **Gate decision:** Sprint 126 is PASS only when Story 126.1, all criteria, `AT-GA-001`, every applicable delivery-and-Windows `AT-*`, every `RV-01` through `RV-30`, `RV-49`, and the Universal Story Definition of Done pass with current signed evidence. This checkpoint does not close expanded `G-GA`, which remains BLOCKED until Sprint 156. Otherwise Sprint 126 is BLOCKED.
+
+**Current status:** BLOCKED. Eight locally executable Story 126.1 rows are retained at
+`artifacts/sprints/sprint-126/local-evidence-report.json`; the current requirement graph,
+traceability, eight truth documents, closed support-state vocabulary, Apple Silicon post-GA state,
+and 256 synthetic failed/skipped/stale/unavailable/flaky/quarantined/suppressed/unreconciled/
+unreviewed release cases retain every blocker and produce zero package, publication, support
+promotion, or `G-GA` closure. Signed binary/model/BOM manifests, native release-candidate
+reproduction, provider/platform/accessibility/performance/recovery/removal campaigns, reviewer
+signatures, user approval, Story 126.2, `AT-GA-001`, RV-01 through RV-30, RV-49, and release signing
+remain `BLOCKED_EXTERNAL(platform=exact Fedora, Ubuntu, and Windows release-candidate platforms,
+promoted providers and credentials, native model/runtime, signing infrastructure, accessibility/
+performance/network/process/residue instrumentation, independent reproduction and review
+environment, and release owner approval, artifact=untouched signed packages, binary/source/
+cryptographic/model BOMs, manifests, provenance, hashes, lifecycle/provider/AT/RV/accessibility/
+performance/recovery/removal results, evidence index, reviewer signatures, user approval, and
+release notes, action=provision exact release candidates, providers, credentials, native platforms,
+models, signing, instrumentation, reviewers, and release owner; execute all Sprint 126 native,
+provider, AT-GA-001, RV-01 through RV-30, RV-49, and Story 126.2 campaigns; approve and sign only if
+green; then transfer untouched evidence, credential=provider, platform, model, signing,
+instrumentation, reviewer, and release-owner access, payment=provider, model, platform, hosting,
+signing, instrumentation, accessibility, performance, or review costs if applicable)`;
+`substitution_set=empty`. Native reproductions: 0. Reviewer signatures: 0. User approvals: 0.
+Release packages: 0. Promotions: 0.
 
 #### [ ] Story 126.2 - Engineering Runtime Release Reconciliation
 
