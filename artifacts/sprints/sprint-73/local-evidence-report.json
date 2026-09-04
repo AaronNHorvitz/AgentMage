@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_73_local_evidence",
+  "source_revision": "5b006ab51595ed1db9e49170180f212d5d8cda2f",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "capabilities/knowledge/Cargo.toml": "d1aaf75cd939ed948adce94dc56091873a6611fb8f5f8c6dc3a50acf6d0974de",
+    "capabilities/knowledge/src/hosted_repository.rs": "7e0bfcca7740ac20961648329cbed1955bbc58974684bf80fa506d4a0d989f4a",
+    "capabilities/knowledge/src/github_triage.rs": "f36b0e0ed129529bc840547cf725e2f8f47f50cda3343145208f13e9ee558374",
+    "capabilities/knowledge/src/lib.rs": "4cd979cf1295267c80bff82c88a37e4489e24dbe845ec096e386de0b1abef029",
+    "schemas/runtime/hosted-local-relationship.schema.json": "92a4b5fd1f7daead4cad813fe7c581a6f269998ff162f3de59def8a3c590b72a",
+    "schemas/runtime/github-triage-item.schema.json": "85221492be73a2fb648ddc74476fe69e6bf1e73b8c24a43eeeeab39003ac6046",
+    "schemas/runtime/hosted-event-receipt.schema.json": "97c112429e631f8d607b1558abf20eb675f5b6b8cef4a96e5e9f9665f701e22e",
+    "schemas/runtime/examples/hosted-local-relationship.valid.json": "44d8af33a01ee44323bd42d2592fd130732bba691cc7559f8be572ec5b73b1f6",
+    "schemas/runtime/examples/github-triage-item.valid.json": "911e3d388993dfab85af27c1b8de9c0c757fde39902b93dc00ee1d9be8d5c814",
+    "schemas/runtime/examples/hosted-event-receipt.valid.json": "4aaa201db6a4378a00cc178eda89f8f408befac2aeec5b62a249fc3b4c0fdff7",
+    "scripts/validate_planning_schemas.mjs": "cc1dc1cc5e5f13acdb071c90fb6444d7920dec3c0919e89aeb58afeda426caae",
+    "tests/test_planning_schemas.mjs": "08e7b1931df159ec5b4831b9c65886f4328aefba7a1bf4ae38ed07c3d52ec053",
+    "supply-chain/dependency-hashes.sha256": "c54f8a6df417e83c71edf46d24438a6cd4942dd16123f13f9838cc31ffcc9a6f",
+    "supply-chain/dependency-provenance.json": "909210122fa674d728afc158a806a37bd10d953ff12d1f758226a2a018b09e2e",
+    "supply-chain/sbom.cdx.json": "c0103e3fb410fe4b18623707346170233ee957be754b1a03e20e4a5566589406",
+    "docs/architecture/github-read-only-triage.md": "932c3a72775221a3f18452f2b37dcc6fef97c6e9c72cc33adf3da0c0f75ec20a",
+    "docs/guides/github-triage-review.md": "d0c0f3d7f24536d36dfca478f3a4235f3778d5697593660c072362eaa51b7138",
+    "docs/verification/sprint-73-github-triage-corpus.json": "f1545c3dada5f04aae7d079d68b28f696238d6d2c73a163ee0065eb42e45cf87",
+    "docs/verification/sprint-73-github-triage-dependencies.json": "8b573584918ecfb11baceb00452504287f62c3b73e66b77d18b36398ee63cc8a",
+    "docs/verification/sprint-73-local-results.md": "75c0942b3061560c373d6ad667c3bf7b8571fa7951180644f3476276fc445a31",
+    "scripts/github_triage_contract.py": "fc8fe1ee2cfdc818cf1b4bd928d9b6d1d0a3e9a8f4d0b3ad5ab63e793f104984",
+    "tests/test_github_triage_contract.py": "4bded15b316c67781ccf0d435c14b58a2d28fe8402d4089e86b467a7a14891b2",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_73_evidence.py": "74dd4ae417dbee70bf8befa5139c2b714c608ec6c360863a4bca0f8daa2e16e0",
+    "tests/test_sprint_73_evidence.py": "c8a4c5c6514d1e2d1d369656293760b31240702491fe13477fe941e77b0ef01b"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "triage-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "github_triage::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d280853b35bfb48c63c74a1e4cafbc3101bf18b0c283bf40bc3ea6cdddadd210",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "triage-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_github_triage_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "fb184ea57734512b1f088f9181209901b9cd46df3eb7eaa2500ea9e48dde20b5",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "runtime-schema-contract",
+      "argv": [
+        "npm",
+        "run",
+        "-s",
+        "schemas:test"
+      ],
+      "exit_code": 0,
+      "output_sha256": "bf4500e4a96397143b4c56210f4ab3ffcbfe75226b84938d2bbf7f9fc761a094",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "triage-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "triage-format",
+      "argv": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_73_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "5279d1fc9a1ced44f9c96da1414ef59e4676f963fbad52e7a1a2903538819b0d",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-AI-005",
+    "SR-AI-007",
+    "SR-AI-010",
+    "SR-OPS-001",
+    "SR-OPS-002",
+    "SR-TST-004"
+  ],
+  "implemented_contracts": {
+    "rust_fixture_count": 4,
+    "corpus_case_count": 60,
+    "hosted_object_kind_count": 7,
+    "triage_reason_count": 10,
+    "runtime_schema_count": 3,
+    "unpublished_drafts": true,
+    "externally_verified_event_admission": true,
+    "actual_provider_inspection": false,
+    "actual_signature_verification": false,
+    "network_client_count": 0,
+    "provider_effect_count": 0,
+    "local_effect_count": 0,
+    "credential_material_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "corpus_case_count": 60,
+    "hosted_object_kind_count": 7,
+    "provider_effect_count": 0,
+    "local_effect_count": 0,
+    "credential_material_count": 0,
+    "native_campaign": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-72-BLOCKED",
+      "owner": "73.1"
+    },
+    {
+      "code": "PROVIDER-INSPECTION-AND-SIGNATURE-VERIFICATION-ABSENT",
+      "owner": "73.1.3.4"
+    },
+    {
+      "code": "NATIVE-TRIAGE-SECURITY-CAMPAIGN-ABSENT",
+      "owner": "73.1.3.5"
+    }
+  ],
+  "summary": {
+    "local_sprint_73_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_72_closed": false,
+    "actual_provider_inspection_complete": false,
+    "actual_signature_verification_complete": false,
+    "hosted_local_correlation_complete": false,
+    "native_security_evidence_complete": false,
+    "independent_review_present": false,
+    "release_approval": false
+  }
+}
