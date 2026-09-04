@@ -1,0 +1,228 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_70_local_evidence",
+  "source_revision": "4667524cb57ce4a4be36ec48bd5066a6a40cec1b",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "capabilities/knowledge/Cargo.toml": "d1aaf75cd939ed948adce94dc56091873a6611fb8f5f8c6dc3a50acf6d0974de",
+    "capabilities/knowledge/src/connected_connector.rs": "344194a1e7ee5a2a582177d199e66d39dab631baac644ddd3197de26bbf93a50",
+    "capabilities/knowledge/src/lib.rs": "7b0271fbda63541e761611023dc48e17365d50c5fd7a36737ee1baab31fa221b",
+    "schemas/runtime/temporary-network-grant.schema.json": "6891b8a79258786c168854f705bfefe1b19ca1fd5a6fea2e4264375032a89981",
+    "schemas/runtime/connector-cache-entry.schema.json": "ea6fa03aeaf229902e08766a5dea7bf913714413de02155dc33903b5a4145c29",
+    "schemas/runtime/examples/temporary-network-grant.valid.json": "74123ea3a89221f4408a4e1c6128ffbae62c73fa9588e7e40cf83d2754e33706",
+    "schemas/runtime/examples/connector-cache-entry.valid.json": "e046a615b51a57fd1f5f1a2dde7c50fdaafd1a138c91caf93656c9c3835585bc",
+    "scripts/validate_planning_schemas.mjs": "2e79f5203ff1ded777ebdc8cc05fb5a958b7b595b60a4cefd9956ba818157116",
+    "tests/test_planning_schemas.mjs": "aec2eec4e4232d9718e752bd3c31519065ddac7ba976ceaf656c41a629606d15",
+    "supply-chain/dependency-hashes.sha256": "2f60a133fb913d3a26ffe63d5b6af1cf9b2b9c372491e368fa73d1690e350982",
+    "supply-chain/dependency-provenance.json": "64947c19a307d0339f29d6cd213849a8d28b2be044b0da3a12eecb09a3b46604",
+    "supply-chain/sbom.cdx.json": "a74706631b720ada20a7f44e74f02ca3c8781cfa812f9ef77b433930e6a0b7af",
+    "docs/architecture/temporary-connected-profile-and-cache.md": "456e9e2493f8ebe9558aa4886f8d4ef68e531aa853b120ef4158c6c517b1a40a",
+    "docs/guides/temporary-connected-profile-review.md": "66bcec37ed337108465c508d427a47dbfe8249f24a90993e5379aa96eb266a38",
+    "docs/verification/sprint-70-connector-corpus.json": "0f5feb2b1bb9f9a8f78745f7f944783cf50c6372c4cd408f09d7178fb4f2bbfa",
+    "docs/verification/sprint-70-connector-dependency-manifest.json": "5f322f4fb40cb21ca2646b6fe2af5eb3a0015f5e8e44d60b56ddb7e047e47b01",
+    "docs/verification/sprint-70-local-results.md": "66f93f7f2f52e54f6e0ea98df1d3e5490b85881ce83ad96d554784456976481e",
+    "scripts/temporary_connector_contract.py": "2b311490aa45c605e291b1f0e84f2cc50201c763a7186a114835db9b8f615df9",
+    "tests/test_temporary_connector_contract.py": "f7317e902795f5138fd80e3f8f22f323090f14ba5ac88d166378eee9996ea38d",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_70_evidence.py": "305be91aa6926723fd18034e35207bfad759c74fb65271052b3b4e236176420a",
+    "tests/test_sprint_70_evidence.py": "f55058bdcc5ed81304bdc957326bbb307fdce7cd369795eec399d0f17d0bf399"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "connector-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "connected_connector::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d66ff7de093e3f46e703a039726e036b131abd6d2de36a99c2f50fe15c351dbb",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "connector-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_temporary_connector_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a6707d4eff38012da33ddc34bc6dc076a3b17151cfc9aef223c8790cbe64c3da",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "runtime-schema-contract",
+      "argv": [
+        "npm",
+        "run",
+        "-s",
+        "schemas:test"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f013a097592861d2f444e0cc153b9b878344fb7ad2e0bb719138f12550215d72",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "connector-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "connector-format",
+      "argv": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_70_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "372ee57a30b8a8b17bb056a0814266786a922da7dcf4139f4f9a2457745d6424",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-GOV-010",
+    "SR-ACC-002",
+    "SR-ACC-007",
+    "SR-DAT-001",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-DAT-004",
+    "SR-NET-003",
+    "SR-NET-004",
+    "SR-NET-005",
+    "SR-NET-006",
+    "SR-NET-007",
+    "SR-OPS-001",
+    "SR-OPS-002",
+    "SR-OPS-003"
+  ],
+  "implemented_contracts": {
+    "connector_rust_fixture_count": 4,
+    "connector_corpus_case_count": 60,
+    "exact_visible_grant": true,
+    "temporary_activation": true,
+    "offline_restoration": true,
+    "fresh_grant_retry": true,
+    "powerless_cache_observation": true,
+    "strict_local_default_unchanged": true,
+    "actual_network_execution": false,
+    "credential_derivation": false,
+    "encrypted_cache_persistence": false,
+    "network_client_count": 0,
+    "background_worker_count": 0,
+    "connector_account_count": 0,
+    "native_packet_capture": false,
+    "independent_review": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "connector_corpus_case_count": 60,
+    "accepted_network_effect_count": 0,
+    "network_client_count": 0,
+    "credential_material_count": 0,
+    "connector_account_count": 0,
+    "cache_write_count": 0,
+    "offline_restoration_verified": true,
+    "imported_authority_count": 0,
+    "native_packet_capture": false,
+    "independent_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-69-BLOCKED",
+      "owner": "70.1"
+    },
+    {
+      "code": "NETWORK-EXECUTOR-AND-ACCOUNT-ABSENT",
+      "owner": "70.1.1.6"
+    },
+    {
+      "code": "ENCRYPTED-CACHE-PERSISTENCE-ABSENT",
+      "owner": "70.1.AC2"
+    },
+    {
+      "code": "NATIVE-PACKET-CAPTURE-ABSENT",
+      "owner": "70.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-BOUNDARY-REVIEW-ABSENT",
+      "owner": "70.1.3.5"
+    }
+  ],
+  "summary": {
+    "local_sprint_70_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_69_closed": false,
+    "actual_connector_read_complete": false,
+    "credential_derivation_complete": false,
+    "encrypted_cache_lifecycle_complete": false,
+    "native_network_evidence_complete": false,
+    "independent_review_present": false,
+    "release_approval": false
+  }
+}
