@@ -9054,14 +9054,14 @@ costs if applicable)`; `substitution_set=empty`. Installed packages: 0. Enabled 
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 80.1.1 - Implement the bounded story**
+- [x] **Task 80.1.1 - Implement the bounded story:** all five sub-tasks are retained in the source-bound Sprint 80 local evidence report.
   - [x] **Sub-task 80.1.1.1** (legacy `S-065-I01`): Define MCP connection, discovery, tool, resource, prompt, request, response, error, cancellation, and disconnect contracts. Evidence: `kernel/contracts/src/mcp.rs` defines the closed versioned data family without an execution or authority method.
   - [x] **Sub-task 80.1.1.2** (legacy `S-065-I02`): Require a declarative manifest containing identity, version, package and process hashes, transport, schemas, side effects, roots, destinations, secrets, limits, cancellation, and requested authority. Evidence: `McpManifest` and `seal_mcp_manifest` require every named field, canonical ordering, exact limits, and a canonical digest; current admission denies credential identities and operations other than `workspace_read`.
   - [x] **Sub-task 80.1.1.3** (legacy `S-065-I03`): Verify process identity and package hash at launch and connection and invalidate grants when either changes. Evidence: `McpProcessObservation`, `admit_mcp_connection`, and `verify_mcp_connection` bind package, process, endpoint, transport, containment, manifest, and expiry; any drift invalidates the connection authority before request admission.
   - [x] **Sub-task 80.1.1.4** (legacy `S-065-I04`): Distinguish in-process, local process, local socket, loopback, and remote transports visibly. Evidence: the closed `McpTransportKind` taxonomy and transport-specific destination validation cover all five families with focused tests.
   - [x] **Sub-task 80.1.1.5:** Define MCP as an optional external-tool provider adapter behind the common `ToolRegistry` and `ToolDispatcher`; preserve native filesystem, repository, patch, command, validation, and Git registrations without an MCP dependency. Evidence: `McpManifestRegistry::register_tools_into` uses the common `Tool` contract, rejects native and MCP identity shadowing, and tests rebuilding an independent native-only registry after MCP disablement.
 
-- [ ] **Task 80.1.2 - Produce reviewable artifacts**
+- [x] **Task 80.1.2 - Produce reviewable artifacts:** the source-bound local report hashes the implementation, contract, traceability, tests, and supply-chain carrier.
   - [x] **Sub-task 80.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story. Evidence: `mcp.rs` and `mcp_registry.rs` contain the isolated Story 80 contract and identity implementation.
   - [x] **Sub-task 80.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story. Evidence: `docs/verification/shared-runtime-mcp-workflow-local-results.md` maps source and tests; canonical source records are Git content-addressed and the documentation gate verifies links and traceability.
 
@@ -9073,20 +9073,32 @@ costs if applicable)`; `substitution_set=empty`. Installed packages: 0. Enabled 
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 80.1.AC1:** Given the approved dependencies and source requirements for `S-065-I01`, `S-065-I02`, `S-065-I03`, and `S-065-I04`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 80.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-065-I01`, `S-065-I02`, `S-065-I03`, and `S-065-I04`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 80.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 80.1.AC1:** Given the approved dependencies and source requirements for `S-065-I01`, `S-065-I02`, `S-065-I03`, and `S-065-I04`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled. Evidence: the Sprint 80 report binds 18 closed records, five visible transports, exact manifest and process identity checks, and four passing focused cases without launching a server.
+- [x] **Story AC 80.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-065-I01`, `S-065-I02`, `S-065-I03`, and `S-065-I04`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent. Evidence: the focused Rust and artifact contracts pass with zero skips while write, secret, shadow, expiry, drift, and containment violations fail closed.
+- [x] **Story AC 80.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence. Evidence: the deterministic Sprint 80 recorder retains command-output digests, exact environment identity, zero focused skips, source hashes, and explicit external blockers.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 80.AC1:** Every numbered implementation sub-task in Story 80.1 is complete and linked to its legacy requirement or issue identity.
+- [x] **Sprint AC 80.AC1:** Every numbered implementation sub-task in Story 80.1 is complete and linked to its legacy requirement or issue identity. Evidence: the source-bound report and local-results traceability bind all five implementation sub-tasks and legacy identities.
 - [ ] **Sprint AC 80.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 80.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 80.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 80.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes. Evidence: the inert identity layer has no process or network executor, admits only `workspace_read`, and records zero launched servers or remote connections.
+- [x] **Sprint AC 80.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment. Evidence: the Sprint 80 report binds every source and supply-chain input to one immutable revision and records the exact successful commands and environment.
 - [ ] **Sprint AC 80.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
-- [ ] **Sprint AC 80.AC6:** MCP manifests cannot replace, proxy, shadow, or become a prerequisite for a built-in native local tool registration.
+- [x] **Sprint AC 80.AC6:** MCP manifests cannot replace, proxy, shadow, or become a prerequisite for a built-in native local tool registration. Evidence: `McpManifestRegistry` rejects native and MCP identity shadowing, only adapts into a caller-owned common registry, and disabling MCP leaves a fresh native registry independent.
 
 **Gate decision:** Sprint 80 is PASS only when Story 80.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. The source and local contract scope is retained at
+`artifacts/sprints/sprint-80/local-evidence-report.json`; Task 80.1.3, product-security Sub-task
+80.1.3.4, Story 80.1, Sprint 80, Sprint AC80.AC2, Sprint AC80.AC5, and dependent gates remain
+`BLOCKED_EXTERNAL(platform=native isolated MCP server environments plus independent gateway
+review, artifact=untouched conformance vectors, malicious-server corpus, process/network traces,
+parity report, cleanup scan, and independent gateway review bundle, action=provision exact native
+environments, approved malicious and conforming MCP fixtures, network/process instrumentation, and
+independent reviewer, execute the Sprint 80 product-security campaign, and transfer untouched
+bundles, credential=native platform, MCP fixture, network-instrumentation, and reviewer access,
+payment=platform, fixture, instrumentation, or review costs if applicable)`;
+`substitution_set=empty`. Launched servers: 0. Remote connections: 0.
 
 ### [ ] Sprint 81 - MCP Request Mediation and Failure Isolation
 
