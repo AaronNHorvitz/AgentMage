@@ -11741,38 +11741,59 @@ Live queries: 0. Promotions: 0.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 118.1.1 - Implement incident and communication adapters**
-  - [ ] **Sub-task 118.1.1.1:** Implement PagerDuty, Jira Service Management, and Datadog incident identities, services, responders, status, severity, timeline, evidence, links, notes, and permissions.
-  - [ ] **Sub-task 118.1.1.2:** Implement Slack and Teams destination/channel/thread/member identities and local-only draft notifications with exact recipients, mentions, attachments, visibility, and disclosure warnings.
-  - [ ] **Sub-task 118.1.1.3:** Correlate incidents with service/catalog, work, source, CI, artifact, deployment, telemetry, finding, release, rollback, and receipts through exact evidence.
-  - [ ] **Sub-task 118.1.1.4:** Generate evidence-backed status, impact, hypothesis, action, owner, decision, and next-update drafts while separating fact, inference, conflict, and unknown.
-- [ ] **Task 118.1.2 - Implement bounded incident effects**
-  - [ ] **Sub-task 118.1.2.1:** Separately preview and grant incident state/severity/assignment, work-item creation, Slack/Teams message, deployment rollback, flag change, and closure.
-  - [ ] **Sub-task 118.1.2.2:** Re-read incident, destination membership, work item, environment, release, and remediation preconditions before submission.
-  - [ ] **Sub-task 118.1.2.3:** Implement duplicate-event/message/work prevention, uncertain-result reconciliation, correction/follow-up workflow, and complete audit receipts.
-  - [ ] **Sub-task 118.1.2.4:** Keep auto-remediation, auto-page, auto-message, autonomous rollback, and content-triggered severity changes prohibited.
-- [ ] **Task 118.1.3 - Verify and close the story**
-  - [ ] **Sub-task 118.1.3.1:** `S-118-CT01` runs incident and notification provider matrices across identity, permissions, lifecycle states, recipients, threads, attachments, edits, and deletion.
-  - [ ] **Sub-task 118.1.3.2:** `S-118-ST01` injects false telemetry, prompt attacks, hidden recipients, channel confusion, malicious attachments, cross-tenant incidents, urgency pressure, and nested remediation requests.
-  - [ ] **Sub-task 118.1.3.3:** `S-118-IT01` correlates a synthetic failed release, drafts an incident and message, separately approves work creation and notification, then separately previews rollback.
-  - [ ] **Sub-task 118.1.3.4:** `S-118-RT01` injects duplicate/delayed events, changed responders, destination membership changes, timeout, partial message, provider outage, cancellation, and crash.
+- [x] **Task 118.1.1 - Implement incident and communication adapters**
+  - [x] **Sub-task 118.1.1.1:** Implement PagerDuty, Jira Service Management, and Datadog incident identities, services, responders, status, severity, timeline, evidence, links, notes, and permissions.
+  - [x] **Sub-task 118.1.1.2:** Implement Slack and Teams destination/channel/thread/member identities and local-only draft notifications with exact recipients, mentions, attachments, visibility, and disclosure warnings.
+  - [x] **Sub-task 118.1.1.3:** Correlate incidents with service/catalog, work, source, CI, artifact, deployment, telemetry, finding, release, rollback, and receipts through exact evidence.
+  - [x] **Sub-task 118.1.1.4:** Generate evidence-backed status, impact, hypothesis, action, owner, decision, and next-update drafts while separating fact, inference, conflict, and unknown.
+- [x] **Task 118.1.2 - Implement bounded incident effects**
+  - [x] **Sub-task 118.1.2.1:** Separately preview and grant incident state/severity/assignment, work-item creation, Slack/Teams message, deployment rollback, flag change, and closure.
+  - [x] **Sub-task 118.1.2.2:** Re-read incident, destination membership, work item, environment, release, and remediation preconditions before submission.
+  - [x] **Sub-task 118.1.2.3:** Implement duplicate-event/message/work prevention, uncertain-result reconciliation, correction/follow-up workflow, and complete audit receipts.
+  - [x] **Sub-task 118.1.2.4:** Keep auto-remediation, auto-page, auto-message, autonomous rollback, and content-triggered severity changes prohibited.
+- [x] **Task 118.1.3 - Verify and close the story**
+  - [x] **Sub-task 118.1.3.1:** `S-118-CT01` runs incident and notification provider matrices across identity, permissions, lifecycle states, recipients, threads, attachments, edits, and deletion.
+  - [x] **Sub-task 118.1.3.2:** `S-118-ST01` injects false telemetry, prompt attacks, hidden recipients, channel confusion, malicious attachments, cross-tenant incidents, urgency pressure, and nested remediation requests.
+  - [x] **Sub-task 118.1.3.3:** `S-118-IT01` correlates a synthetic failed release, drafts an incident and message, separately approves work creation and notification, then separately previews rollback.
+  - [x] **Sub-task 118.1.3.4:** `S-118-RT01` injects duplicate/delayed events, changed responders, destination membership changes, timeout, partial message, provider outage, cancellation, and crash.
   - [ ] **Sub-task 118.1.3.5:** Execute an expanded `RV-21` plus applicable `RV-24` through `RV-29`; retain timelines, evidence graphs, previews, message canary scans, effect traces, and review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 118.1.AC1:** Given an incident window, when AgentMage builds the record, then observed evidence, hypotheses, conflicts, decisions, and unknowns remain distinct and source-linked.
-- [ ] **Story AC 118.1.AC2:** Given incident authority, when notification, work creation, rollback, flag, severity, assignment, or closure is requested, then each is previewed and approved as a separate external effect.
-- [ ] **Story AC 118.1.AC3:** Given duplicate, delayed, injected, or partial incident/provider data, when recovery runs, then no autonomous or duplicate communication/remediation occurs.
+- [x] **Story AC 118.1.AC1:** Given an incident window, when AgentMage builds the record, then observed evidence, hypotheses, conflicts, decisions, and unknowns remain distinct and source-linked.
+- [x] **Story AC 118.1.AC2:** Given incident authority, when notification, work creation, rollback, flag, severity, assignment, or closure is requested, then each is previewed and approved as a separate external effect.
+- [x] **Story AC 118.1.AC3:** Given duplicate, delayed, injected, or partial incident/provider data, when recovery runs, then no autonomous or duplicate communication/remediation occurs.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 118.AC1:** Incident and notification providers pass their exact promoted matrices.
-- [ ] **Sprint AC 118.AC2:** Zero hidden recipients, cross-tenant effects, secret disclosures, or autonomous remediation occur.
-- [ ] **Sprint AC 118.AC3:** Duplicate and uncertain effects reconcile without duplicate pages, messages, work, or rollback.
-- [ ] **Sprint AC 118.AC4:** Incident evidence distinguishes correlation, inference, conflict, and causation.
+- [x] **Sprint AC 118.AC2:** Zero hidden recipients, cross-tenant effects, secret disclosures, or autonomous remediation occur.
+- [x] **Sprint AC 118.AC3:** Duplicate and uncertain effects reconcile without duplicate pages, messages, work, or rollback.
+- [x] **Sprint AC 118.AC4:** Incident evidence distinguishes correlation, inference, conflict, and causation.
 - [ ] **Sprint AC 118.AC5:** `AT-INC-001` and the expanded incident tabletop pass.
 
 **Gate decision:** Sprint 118 is PASS only when Story 118.1, all criteria, `AT-INC-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Twenty-one locally executable Story 118 rows are retained at
+`artifacts/sprints/sprint-118/local-evidence-report.json`; 5 provider families, 8 separately
+granted effect classes, 5 evidence classes, 128 incident cases, 2,048 hostile cases, and 512 fault
+cases preserve exact incident, service, tenant, timeline, source, destination, recipient, membership,
+precondition, payload, approval, idempotency, and receipt identities with zero external effect,
+hidden recipient, cross-tenant effect, secret disclosure, autonomous effect, or duplicate effect.
+Promoted live-provider matrices, untouched timelines/effect traces, expanded review vectors,
+`AT-INC-001`, and independent review remain `BLOCKED_EXTERNAL(platform=isolated supported
+PagerDuty, Jira Service Management, Datadog incidents, Slack, and Teams deployments plus work,
+release, deployment, flag, telemetry, and independent review environments, artifact=untouched exact
+provider/version/permission matrices, incident timelines and evidence graphs, destination and
+membership identities, previews, message canary scans, effect and recovery traces, RV-21/RV-24
+through RV-29 results, AT-INC-001 bundle, support matrix, and independent review, action=provision
+isolated provider deployments, tenants, destinations, services, environments, credentials,
+instrumentation, and independent reviewer; execute S-118-CT01/ST01/IT01/RT01, expanded RV-21,
+applicable RV-24 through RV-29, and AT-INC-001 against real supported versions, then transfer
+untouched evidence, credential=incident, work, messaging, release, deployment, flag, telemetry,
+instrumentation, and reviewer access, payment=provider, messaging, work, hosting, telemetry,
+observability, instrumentation, or review costs if applicable)`; `substitution_set=empty`. Promoted
+providers: 0. External effects: 0. Promotions: 0.
 
 ### [ ] Sprint 119 - Service Catalog and Ownership Graph
 
