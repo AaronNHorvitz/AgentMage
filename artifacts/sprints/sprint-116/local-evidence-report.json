@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_116_local_evidence",
+  "source_revision": "34642a2638c7f04b78e259b5331d90809e8db588",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
+    "kernel/engine/src/lib.rs": "2edfbee1045fbdbe41a2420921620e334e2439a72ecf917f89daed24c7e74b1b",
+    "kernel/engine/src/telemetry_correlation.rs": "fb0b7cbd146e3411f19394d7ef45a1723af2d1aefe70ffa54c5fba1f4e2a230e",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "DELIVERY-SYSTEM.md": "ca62de984cd9da28d28f183e768e8c07898f7b38ae2d89894dcec66a3293f72c",
+    "supply-chain/dependency-provenance.json": "731ac266d8063e106b711a96a7a719904e6a8ba9ef9466af136fbfac4c11912e",
+    "supply-chain/sbom.cdx.json": "7001b395da30dae9e194878a9e59239f5e2aed19129446b7637ff491371a4766",
+    "supply-chain/dependency-hashes.sha256": "c43131c0a489051b41741d4be6369b47c416f680f4b4326d0ba3c2d4fdb33154",
+    "artifacts/sprints/sprint-116/telemetry-correlation-corpus.json": "9793d709eee59c4b98f68e62d6a23aec542e023bbe4710908a67634cc39c6de5",
+    "scripts/telemetry_correlation_contract.py": "185f690cf463b8477b0d6f071cf2876443c638555b35709f1a59162b4d7e6665",
+    "tests/test_telemetry_correlation_contract.py": "e7f4bb0521d43580765485f5c442d1055eadc1277c7782a358863c865f6f421b",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_116_evidence.py": "a28a513870207fc15734167122e42531eb3646bd4be4145547697ab451688688",
+    "tests/test_sprint_116_evidence.py": "6aec8f579e44c930f52d562ae9455de60a117633794a72daa05c20f3b74a53a5"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "telemetry-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "telemetry_correlation::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6839dbd8c998632f5a6c3786fa984671e17cb9739df3c74445aba8ccf8657200",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "telemetry-corpus-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_telemetry_correlation_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "3a315533b81287472852b81ae89b89d0f42abf74b1503c45c2c62712388d3eb1",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary-contract",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_116_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-OBS-001",
+    "AT-OBS-001",
+    "SR-DEL-004",
+    "SR-DEL-011",
+    "SR-DEL-014",
+    "RV-27",
+    "RV-29"
+  ],
+  "implemented_contracts": {
+    "identity_count": 14,
+    "query_case_count": 64,
+    "correlation_case_count": 128,
+    "attack_case_count": 2048,
+    "fault_case_count": 512,
+    "live_query_count": 0,
+    "operation_authority_count": 0,
+    "causation_claim_count": 0,
+    "promoted_backend_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "bounded_queries": true,
+    "inference_labeled": true,
+    "uncertainty_preserved": true,
+    "rv27_complete": false,
+    "rv29_complete": false,
+    "at_obs_001_complete": false,
+    "independent_human_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-115-BLOCKED",
+      "owner": "116"
+    },
+    {
+      "code": "BLOCKED-EXTERNAL-OTEL-AT-OBS-001",
+      "owner": "116"
+    }
+  ],
+  "summary": {
+    "local_sprint_116_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_115_closed": false,
+    "live_telemetry_support": false,
+    "release_approval": false
+  }
+}
