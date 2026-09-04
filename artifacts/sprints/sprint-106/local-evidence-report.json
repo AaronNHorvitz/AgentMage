@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_106_local_evidence",
+  "source_revision": "9c53c99d16acaffc02c7be0be1326886eacaf2e7",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
+    "kernel/engine/src/repository_safety.rs": "5271b163889aca167cc0aca5484aed8d1e4e6d933009a02bd68dce32c700bd8f",
+    "kernel/engine/tests/repository_safety_matrix.rs": "ce44de22d7623b99ba672921fbc7837bdfbd32aae91aca40a79855fa9d66ed32",
+    "capabilities/knowledge/Cargo.toml": "d1aaf75cd939ed948adce94dc56091873a6611fb8f5f8c6dc3a50acf6d0974de",
+    "capabilities/knowledge/src/github_provider.rs": "744fd3c588d6e59d2cbe10e6bfb6f5612979658ebfa56e2220b537fa1a168bf3",
+    "capabilities/knowledge/src/github_mutation.rs": "6a45569aca0ecf0a6b25f6fb98eba8ea288a0b340d575686932052cafdc6bc66",
+    "docs/security/repository-safety.md": "5de6783ef3e84ca50732d99f4cd9bd3f06d5f72ce8f0f8c581e7b8f3922c4cb8",
+    "artifacts/sprints/sprint-106/github-negative-corpus.json": "ecae17a92c1c6f1061caa0d409b6ae75c8fe77e09dd6ff163a7f6798e10ab2a2",
+    "scripts/github_provider_contract.py": "a0c04ea4075bb6685016269091a02f47c9ceed34d3ba900b3aebc494b4016aae",
+    "scripts/github_mutation_contract.py": "907085d618a8db6dfeba594a1c23c00e943ac799df882a030ce81d891ba70db2",
+    "scripts/github_full_negative_contract.py": "f1e97a8d6ba446f413835f3aa833749eeb1ac2624573ebc2dbfa9772112a27bf",
+    "tests/test_github_provider_contract.py": "a305aae336e79146de40e11a245cf044c84e1544fb6b5a0539b8094bb69e8972",
+    "tests/test_github_mutation_contract.py": "85afac74867f4fe7bf2ea51ec939d12757504dbf3768d57d8a7305944be86333",
+    "tests/test_github_full_negative_contract.py": "3e3ce2732a2204f329cadd8a41e9dd6541d27c7580a38e52689a6d18b41d91c1",
+    "supply-chain/dependency-hashes.sha256": "52fc5e6603dc2f7d7cf6c24dcf1c5f80f7808a7b48cfebfb6477afbd3fa13cad",
+    "supply-chain/dependency-provenance.json": "30eb575c39a54673aa32d38f49fa55e9d0ca071841d8dc336ad51d0dacd4780f",
+    "supply-chain/sbom.cdx.json": "52ec435e1a8d7a606a5951b4caec7dd4831cc5d5920cbd5de0e37009e6794951",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_106_evidence.py": "fbff1f85c455ac3038b8d734b0d8a324a756a8e35472ca85bf649bb9067f69d1",
+    "tests/test_sprint_106_evidence.py": "420813e43dbbbc961830bd00bc0393de7ef069dd7136ce92c6d34bc55fe5d90f"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "repository-preservation-ten-thousand",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--test",
+        "repository_safety_matrix",
+        "ten_thousand_protected_manifest_mutations_have_zero_acceptance"
+      ],
+      "exit_code": 0,
+      "output_sha256": "08588ee821fbd221d7675658ededa51fbfad75436eb11a8a950e2983182c0c9d",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "github-provider-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_github_provider_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "fb184ea57734512b1f088f9181209901b9cd46df3eb7eaa2500ea9e48dde20b5",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "github-mutation-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_github_mutation_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a6707d4eff38012da33ddc34bc6dc076a3b17151cfc9aef223c8790cbe64c3da",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "github-negative-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_github_full_negative_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6e90f96b5d05bd23b23201c9a761778f89ce1c52ec2079ec5765f547c4612183",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary-contract",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_106_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-GIT-001",
+    "SR-GIT-002",
+    "SR-GIT-003",
+    "SR-GIT-004",
+    "SR-GIT-005",
+    "SR-GIT-006",
+    "SR-GIT-007",
+    "SR-GIT-008",
+    "SR-GIT-009",
+    "SR-GIT-010",
+    "SR-GIT-011",
+    "SR-GIT-012",
+    "RV-49"
+  ],
+  "implemented_contracts": {
+    "prohibited_operation_count": 22,
+    "attack_class_count": 24,
+    "negative_mutation_count": 10000,
+    "unauthorized_effect_count": 0,
+    "user_work_loss_count": 0,
+    "native_request_count": 0,
+    "supported_github_com_tuple_count": 0,
+    "supported_ghes_tuple_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "prohibited_operations_absent": true,
+    "unsupported_ghes_denied_without_fallback": true,
+    "complete_rv49": false,
+    "independent_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-105-BLOCKED",
+      "owner": "106"
+    },
+    {
+      "code": "BLOCKED-EXTERNAL-GITHUB-COM-GHES-FULL-CONFORMANCE-RV49",
+      "owner": "106"
+    }
+  ],
+  "summary": {
+    "local_sprint_106_negative_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_105_closed": false,
+    "github_com_supported": false,
+    "ghes_supported": false,
+    "release_approval": false
+  }
+}
