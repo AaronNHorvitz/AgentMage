@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_85_local_evidence",
+  "source_revision": "be022ed05a9ebc3adeb7dd4db465239d880b12f2",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "capabilities/knowledge/Cargo.toml": "d1aaf75cd939ed948adce94dc56091873a6611fb8f5f8c6dc3a50acf6d0974de",
+    "capabilities/knowledge/src/lib.rs": "95dd39d64e2b4e9cfa95e857b240ebcb14233e7fa8b5625ed5ce0c4822517247",
+    "capabilities/knowledge/src/github_mutation.rs": "6a45569aca0ecf0a6b25f6fb98eba8ea288a0b340d575686932052cafdc6bc66",
+    "capabilities/knowledge/src/github_provider.rs": "744fd3c588d6e59d2cbe10e6bfb6f5612979658ebfa56e2220b537fa1a168bf3",
+    "capabilities/knowledge/src/github_triage.rs": "f36b0e0ed129529bc840547cf725e2f8f47f50cda3343145208f13e9ee558374",
+    "docs/guides/github-mutation-and-recovery.md": "327eecc03ebd28487553fcc7cf6bbb50872c2f4606f1f7af5a1878e18ed6e040",
+    "docs/security/repository-safety.md": "5de6783ef3e84ca50732d99f4cd9bd3f06d5f72ce8f0f8c581e7b8f3922c4cb8",
+    "docs/verification/sprint-85-github-mutation-corpus.json": "39bbe98b597938c58d3f9ea0e01251a9b273bd33c7c360406bc8c69f21cd041e",
+    "artifacts/sprints/sprint-84/local-evidence-report.json": "a39ccdc0b82f45f838fe8e68bb6b77a83ca988348212d79792acda5822d077c4",
+    "scripts/github_mutation_contract.py": "907085d618a8db6dfeba594a1c23c00e943ac799df882a030ce81d891ba70db2",
+    "tests/test_github_mutation_contract.py": "85afac74867f4fe7bf2ea51ec939d12757504dbf3768d57d8a7305944be86333",
+    "supply-chain/dependency-hashes.sha256": "5877e837c3a6103762fab72cdf02e926984543bd050090578fbfdb4ed15fe9f6",
+    "supply-chain/dependency-provenance.json": "51cd5c211fde1b6d69901d9702180ca1fec041d07ee9b358e40fbf0ecb911103",
+    "supply-chain/sbom.cdx.json": "9ee3979c313c7e96dcaf48da97072737b64201ac5840184c13687ca48b4ed84c",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_85_evidence.py": "55a25364d68405dd2dc90a28a27c89bab7f7a48c3c70890403e0f5ee74934e06",
+    "tests/test_sprint_85_evidence.py": "377d593b6f4e520f4a978eade9b87e52a58dc992c85bff0e81f26d07190f54a8"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "github-mutation-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "github_mutation::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "36d1324aa874275ba58624ea3ffffc6d1c6ef7ab7d948f7d021f7767d63db6c7",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "github-mutation-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_github_mutation_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a6707d4eff38012da33ddc34bc6dc076a3b17151cfc9aef223c8790cbe64c3da",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "runtime-schema-contract",
+      "argv": [
+        "npm",
+        "run",
+        "-s",
+        "schemas:test"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d823b0bd7c8e7ee465b2a40af280bf481479b3fef21a0998ebc5f19e0b6750d4",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_85_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2c37d50a88147ca2ebd5197d74ee37d462dab650d793512e849814c28d5a38f0",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-GOV-010",
+    "SR-ACC-001",
+    "SR-ACC-002",
+    "SR-ACC-003",
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-DAT-002",
+    "SR-OPS-001",
+    "SR-OPS-002",
+    "SR-TST-005",
+    "SR-TST-012",
+    "SR-GIT-002",
+    "SR-GIT-008",
+    "SR-GIT-009",
+    "SR-GIT-010",
+    "SR-GIT-011",
+    "SR-GIT-012"
+  ],
+  "implemented_contracts": {
+    "mutation_class_count": 14,
+    "rust_test_count": 6,
+    "corpus_case_count": 56,
+    "prohibited_operation_count": 12,
+    "effect_executor_count": 0,
+    "native_mutation_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "rust_test_count": 6,
+    "corpus_case_count": 56,
+    "native_mutation_executed": false,
+    "signed_commit_created": false,
+    "push_executed": false,
+    "independent_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-84-BLOCKED",
+      "owner": "85"
+    },
+    {
+      "code": "NATIVE-GITHUB-MUTATION-SIGNED-PUSH-AND-REVIEW-ABSENT",
+      "owner": "85.1.3.4"
+    }
+  ],
+  "summary": {
+    "local_sprint_85_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_84_closed": false,
+    "native_github_mutation_complete": false,
+    "signed_push_complete": false,
+    "independent_review_present": false,
+    "release_approval": false
+  }
+}
