@@ -8066,13 +8066,13 @@ release gate is closed.
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 65.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every generated visual artifact has source/provenance, content/structure validation, rendered comparison, accessibility results, and disclosure of substituted or unsupported features.
-- [ ] **Story AC 65.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then redaction and metadata removal are verified on decoded pixels, package parts, notes, thumbnails, relationships, and exported files, not accepted from visual appearance alone.
+- [x] **Story AC 65.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then redaction and metadata removal are verified on decoded pixels, package parts, notes, thumbnails, relationships, and exported files, not accepted from visual appearance alone. Evidence: image redaction scans the exact decoded rectangle pixels, regenerates a fixed-header BMP without ancillary source bytes, reopens the result, and admits an export proposal only when the pixel/container/receipt identities still match. Generated-presentation redaction removes exact targets from titles, blocks, structured-data labels, and notes, recomputes affected data hashes, regenerates and reopens the package, and retains six content-free checks for the specification, slide objects, notes, internal-only relationships, absent thumbnails, and proposed exported package. Identity/path/timestamp targets fail closed, and native visual review remains separately required.
 
 #### Sprint Acceptance Criteria
 
 - [x] **Sprint AC 65.AC1:** No macros, scripts, formulas, attachments, or embedded executables run during inspection. Evidence: presentation inspection retains all active content as inert blocking findings and the image adapter parses only caller-supplied headers/pixels; focused source, dependency, schema, and mutation checks admit no execution, viewer, renderer, office automation, link resolution, provider, or network authority.
 - [x] **Sprint AC 65.AC2:** Extracted notes, links, captions, and images preserve slide identity. Evidence: Sprint 64's source-bound presentation report retains every note/link/caption/image under its one-based slide and exact owning object, while Sprint 65's closed provenance record accepts a slide number only with its object identity and rejects partial ownership.
-- [ ] **Sprint AC 65.AC3:** Sensitive screenshots are blocked or redacted before model context or export.
+- [x] **Sprint AC 65.AC3:** Sensitive screenshots are blocked or redacted before model context or export. Evidence: declared sensitive regions make the view/model-context proposal fail until its exact pixel digest and canonical rectangle set match a successful decoded-pixel/metadata-removal receipt. The export boundary independently reopens the deterministic BMP and rejects stale pixel, container, receipt, metadata, path, or scan state before returning a proposal; neither boundary captures, displays, persists, or transmits pixels.
 - [ ] **Sprint AC 65.AC4:** Generated and edited artifacts pass structural and visual review.
 - [x] **Sprint AC 65.AC5:** Provider-backed generation cannot occur in strict-local mode or without exact disclosure approval. Evidence: route preview rejects every strict-local provider request and any provider request lacking the canonical external-processing disclosure; completion rejects stale or mutated previews and binds the exact approved preview digest to the output image digest without performing a network or filesystem effect.
 
@@ -8080,7 +8080,7 @@ release gate is closed.
 
 **Current status:** **BLOCKED.** The locally implementable metadata, exact provenance, deterministic
 BMP generation/reopen, decoded-pixel redaction, metadata removal, four-kind visual comparison,
-strict-local/provider admission, three runtime schemas, and 99-case review-contract subset pass 8
+strict-local/provider admission, three runtime schemas, and 102-case review-contract subset pass 9
 retained commands with zero focused skips; see
 `artifacts/sprints/sprint-65/local-evidence-report.json` and
 `docs/verification/sprint-65-local-results.md`. Native capture/view/render, decoded PNG/JPEG,

@@ -1,13 +1,14 @@
 {
   "schema_version": 1,
   "record_type": "sprint_65_local_evidence",
-  "source_revision": "f36b9e4032c9014a75812721c2b248a13bfb1e92",
+  "source_revision": "d40c2158a36ae5f6d6eec4c3599c963e65e37054",
   "source_sha256": {
     "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
     "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
     "capabilities/knowledge/Cargo.toml": "d1aaf75cd939ed948adce94dc56091873a6611fb8f5f8c6dc3a50acf6d0974de",
-    "capabilities/knowledge/src/image_workflows.rs": "16447340b4dfcaa9169e6c80ee2f1f98adef93a70ea5ab3e371ea66518cdde60",
-    "capabilities/knowledge/src/lib.rs": "5780f819425e45e21d6b8b8525fd4fb503b30457019eaa3be5237c9f2bfddb60",
+    "capabilities/knowledge/src/image_workflows.rs": "bfae59ee92095928159575c690e879c985eb4659d4245ef494085a5eece08f3b",
+    "capabilities/knowledge/src/presentation_generation.rs": "1588c2f9e5df7ab52f2e3e64a852bee7035f276d2be9f6bab484ac8565c6972d",
+    "capabilities/knowledge/src/lib.rs": "673d142268aec1a3a68965116d20a00ea822ab309c2948134dfeab3ea49897f8",
     "schemas/runtime/image-inspection.schema.json": "33f120353cf34793ce71c2161cbadae172c148fa147811a947d835879f2bffe1",
     "schemas/runtime/image-redaction-receipt.schema.json": "c2c0ae5eddd28c15173375b0dd76e4e3b27a1381ed8a0319127f619ff90f7c6d",
     "schemas/runtime/image-visual-comparison.schema.json": "6d868a619171b9c540af06e526edcfa9dd3dc843e3249d00b8c8b9b4f873a9a7",
@@ -16,19 +17,19 @@
     "schemas/runtime/examples/image-visual-comparison.valid.json": "999d5453fb51bbfea3a313f90a402ff80666408610da45b6a1a891bb328fe74d",
     "scripts/validate_planning_schemas.mjs": "5f4f55bf1bdba1bbd020af993dd9ca9868d9a11a9534cb0dadec4eb3da621d9d",
     "tests/test_planning_schemas.mjs": "41dc752a868f032ea8915fc73b051a437309e40249c2c2fb762a61c9b41221a9",
-    "supply-chain/dependency-hashes.sha256": "05b7313c2475c33106ff82075f0f1151e60298a68a4c022d0c80f38e29525f07",
-    "supply-chain/dependency-provenance.json": "f91e5f348333652cbaf36b2a46078965b5e95d1ba8d05b4b1ea2580b427a56d4",
-    "supply-chain/sbom.cdx.json": "e5cee1348404973538dd4adfd07b350c53462a37864666e0d8ced1c9229db1f1",
-    "docs/architecture/presentation-workflows.md": "7b6e178182d06806d417a17fdf276bf2d2ae65cf63e64fb51901f7d4a62a22bf",
-    "docs/architecture/image-redaction-and-visual-verification.md": "b422d114cc7507c1d757eade6cc8e9fa592bc9e6d50eff06742f8d9af25b73f0",
-    "docs/guides/image-redaction-and-visual-review.md": "ce19446d0f0e6b46f83b373ed891ee913e17b2aa2d0aba25909451b8fd3e4cfc",
-    "docs/verification/sprint-65-image-corpus.json": "58243d0e41e3863d8ed99fc045207bebdd83fb83936213ceff972bbff316b9f3",
+    "supply-chain/dependency-hashes.sha256": "0d0c82c86b20f6dffe7a78979e19065b2b612faf1738e654b9594333d372a076",
+    "supply-chain/dependency-provenance.json": "bdd7f921cf1700489e2b8b1e3186526209bd556f953c8bcda62a10af84f3c1db",
+    "supply-chain/sbom.cdx.json": "aadc1315218c5801495dfa4cfff5a12fa3d71493a712438f3b8a8564de2191db",
+    "docs/architecture/presentation-workflows.md": "d6a40ef6a421db27ef4ffc8388c13c1d83ec0cd7c141c1600fd12d16dc14d7d2",
+    "docs/architecture/image-redaction-and-visual-verification.md": "9579652bda13a4f637e0cb87e59a70af153e82186e90adb3f295ba9a4e2bade7",
+    "docs/guides/image-redaction-and-visual-review.md": "d049d23829bf81d489122d6e12943e347f3a702800667ec8af4f6188444fa27d",
+    "docs/verification/sprint-65-image-corpus.json": "630ac99fa33bc0a4ca4186fc669f28b94667705ccacb7c24aa27335d49bd4f9d",
     "docs/verification/sprint-65-image-dependency-manifest.json": "bc54b269030cdd5216bcaa9cdd501b39ee444c2afc5eca106840b857aa0386e9",
-    "docs/verification/sprint-65-local-results.md": "2b3ffd49a312f0658c1785c415e09798cd485b3fb002c5b14476ec34f2231ddd",
-    "scripts/image_workflow_contract.py": "56c5f08bdcef5b8c83a19c404f3e2dccecdce67abc4cf6eeec996cfe7d79dcf7",
-    "tests/test_image_workflow_contract.py": "375b4048615de234ff766d8125b62789b12cc3eabc2caa63276e338d2b5a645e",
+    "docs/verification/sprint-65-local-results.md": "59cdb6fae4a38bed27d4a7c466e9737f19fe559756445bc901e7c880806f548f",
+    "scripts/image_workflow_contract.py": "dfc8fd144490330070e8b021c7d883e5e79a61fba313d1e7d0ebdf1855bc4778",
+    "tests/test_image_workflow_contract.py": "25b911cb710770411256850f7c925aeb38d25d60f31c1c40dea7de212c0ade46",
     "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
-    "scripts/sprint_65_evidence.py": "1295d16852eb67dcce47ec1b1a1fc5cec860a52bbb82c787a0b9adf753d16523",
+    "scripts/sprint_65_evidence.py": "4779d14b422ec1aa6b1774d865bdf9019d1bad06f6fbc02e32c06e9c8a88cfa5",
     "tests/test_sprint_65_evidence.py": "643a642c98fea6bf6566b7bfa52f1224de447c39e08bf4fd7304ac0c97c41a9e"
   },
   "environment": {
@@ -54,7 +55,22 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "93277602c37df6342477c0755cfcdb6bbaf01bc43801339429252af9ba8975fa",
+      "output_sha256": "ec6b8db0a647a672b371c0c5d490c52da188d0b996045af3cc6f1429c5d790a8",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "presentation-redaction-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "presentation_generation::tests::redaction_regenerates_notes_objects_data_and_export_layers",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e3bad0de0e8ca160bd42215536231f3100a813cb45c14c67782aa9218e4ac542",
       "blocking_skip_count": 0
     },
     {
@@ -65,7 +81,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "788da9316f11311a4bb24dbf940ed43ed860de0e5198782f83f41742bfa9e9d7",
+      "output_sha256": "c63a3681a2f67fe8aad318e96a1bfe9fbe2ac889e5fe3dc3bae43d41b08c8d4e",
       "blocking_skip_count": 0
     },
     {
@@ -159,7 +175,8 @@
   "implemented_contracts": {
     "runtime_schema_count": 3,
     "image_rust_fixture_count": 6,
-    "review_corpus_case_count": 99,
+    "presentation_redaction_rust_fixture_count": 1,
+    "review_corpus_case_count": 102,
     "bounded_bmp_rgba_decoder": true,
     "png_metadata_inspection": true,
     "slide_object_image_provenance": true,
@@ -168,6 +185,8 @@
     "deterministic_bmp_full_regeneration": true,
     "redaction_pixel_residue_scan": true,
     "ancillary_metadata_removal": true,
+    "redacted_image_export_binding": true,
+    "presentation_multilayer_redaction": true,
     "four_artifact_visual_diff": true,
     "strict_local_provider_denial": true,
     "exact_disclosure_approval_receipt": true,
@@ -185,7 +204,7 @@
   "verification_evidence": {
     "focused_local_contracts": true,
     "focused_blocking_skip_count": 0,
-    "review_corpus_case_count": 99,
+    "review_corpus_case_count": 102,
     "accepted_network_effect_count": 0,
     "accepted_execution_effect_count": 0,
     "accepted_filesystem_effect_count": 0,
