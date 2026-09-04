@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_123_local_evidence",
+  "source_revision": "e5d4c107f24b8ecdda44689c109d90fe35b2fcae",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "DELIVERY-SYSTEM.md": "ca62de984cd9da28d28f183e768e8c07898f7b38ae2d89894dcec66a3293f72c",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "supply-chain/dependency-provenance.json": "a68da4bda2acb0ae5abd72fe94b6968c47f0bfba0973b897402fc3f9ca161107",
+    "supply-chain/sbom.cdx.json": "0fa1856d379bd76662399b59947a6efa3bbc839e619c7e97f412926ba1298b12",
+    "supply-chain/dependency-hashes.sha256": "f5b6b3b48df6f53fdbe369ba11732f0d5072de5d9a8f0677e7464e1d13ef9878",
+    "artifacts/sprints/sprint-123/provider-resilience-corpus.json": "80b5db609280361864a6d4a951c257dc96ff0613b41da8caeb178569b287841a",
+    "scripts/extreme_provider_campaign.py": "00814e9cacc53b24eb0fe0b472cdd77d811e1a19f0affe80730aa3855fc90bd3",
+    "tests/test_extreme_provider_campaign.py": "94fcd53c971bfa672a0aabf41811f517e9079de3ddc1ea7a78f9faaa121acf44",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_123_evidence.py": "71112907a59268f67f5f8c42df7062bf3019e2789552373f8c1731624f6411b6",
+    "tests/test_sprint_123_evidence.py": "55d1883d9b6b55cc2cf388ce968f890e1cb068176bc5d6632d5318dd8512e6fa"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "provider-resilience-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_extreme_provider_campaign"
+      ],
+      "exit_code": 0,
+      "output_sha256": "3bd43e1a0ffec9d494a6228cb440cca7e30f232cf60a41553f8eb87538a8d2a8",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary-contract",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_123_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2c37d50a88147ca2ebd5197d74ee37d462dab650d793512e849814c28d5a38f0",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-XTE-001",
+    "AT-XTE-001",
+    "SR-DEL-012",
+    "SR-DEL-013",
+    "SR-DEL-014",
+    "RV-15",
+    "RV-16",
+    "RV-17",
+    "RV-23",
+    "RV-24",
+    "RV-25",
+    "RV-26",
+    "RV-27",
+    "RV-28",
+    "RV-29"
+  ],
+  "implemented_contracts": {
+    "conformance_case_count": 2048,
+    "attack_case_count": 2048,
+    "blocker_case_count": 512,
+    "approved_live_environment_count": 0,
+    "native_fuzz_run_count": 0,
+    "prolonged_campaign_minutes": 0,
+    "review_vector_count": 0,
+    "promoted_provider_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "harness_contract_complete": true,
+    "cross_adapter_fixture_complete": true,
+    "fake_fault_campaign_complete": true,
+    "approved_live_campaign_complete": false,
+    "native_fuzz_complete": false,
+    "prolonged_resource_complete": false,
+    "rv15_17_complete": false,
+    "rv23_29_complete": false,
+    "at_xte_001_complete": false,
+    "independent_red_team_review": false,
+    "remote_route_qualification_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-122-BLOCKED",
+      "owner": "123"
+    },
+    {
+      "code": "BLOCKED-EXTERNAL-AT-XTE-001",
+      "owner": "123"
+    }
+  ],
+  "summary": {
+    "local_sprint_123_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_122_closed": false,
+    "provider_support_changed": false,
+    "release_approval": false
+  }
+}
