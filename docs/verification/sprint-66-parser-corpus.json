@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "corpus_id": "sprint-66-additional-parser-contract-v1",
+  "positive_cases": [
+    "saved html text ranges", "html script inert finding", "html frame inert finding", "html external link inert finding",
+    "bounded xml text ranges", "xml nested elements", "yaml nested mapping", "yaml plain scalar",
+    "yaml secret hash-only result", "notebook markdown cell", "notebook code cell", "notebook raw cell",
+    "notebook execution metadata", "notebook output digest", "notebook mime key order", "json-lines object",
+    "timestamped text log", "stack-trace continuation", "plain text log", "event sequence order",
+    "stored zip inventory", "deflated zip inventory", "archive size metadata", "nested archive quarantine",
+    "disabled proprietary inventory", "zero filesystem effect", "zero network effect", "zero execution effect"
+  ],
+  "prohibited_cases": [
+    "active browser launch", "html script execution", "html iframe loading", "external link retrieval",
+    "xml external entity", "xml recursive entity", "yaml python constructor", "yaml object constructor",
+    "yaml alias expansion", "yaml merge key", "notebook cell execution", "notebook output rendering",
+    "notebook external image retrieval", "log expression evaluation", "archive member extraction", "nested archive opening",
+    "encrypted archive access", "ambient scratch creation", "deferred proprietary activation", "embedded executable launch"
+  ],
+  "invalid_cases": [
+    "empty source", "invalid utf8", "invalid profile identity", "zero source ceiling", "overbroad source ceiling",
+    "html unterminated tag", "xml unterminated tag", "xml document type", "xml entity declaration",
+    "yaml odd indentation", "yaml missing separator", "yaml invalid key", "yaml tab indentation",
+    "notebook invalid json", "notebook non-object root", "notebook missing version", "notebook unsupported version",
+    "notebook missing cells", "notebook invalid cell", "notebook unsupported cell kind", "notebook invalid source",
+    "notebook invalid execution count", "notebook invalid output", "json-lines scalar", "archive malformed container",
+    "archive encrypted member", "archive unsupported compression", "archive absolute path", "archive parent escape",
+    "archive duplicate path", "archive empty component"
+  ],
+  "boundary_cases": [
+    "one-byte text span", "source ceiling exact", "item ceiling exact", "line ceiling exact",
+    "one html span", "one xml span", "one yaml scalar", "one notebook cell", "one notebook output",
+    "one log event", "last log without newline", "crlf log range", "maximum archive entries edge",
+    "maximum expanded bytes edge", "compression ratio edge", "first archive entry", "last archive entry",
+    "maximum deferred inventory", "empty notebook outputs", "null execution count"
+  ],
+  "hostile_cases": [
+    "billion-laughs xml", "external file entity", "javascript url", "html event handler", "html data exfiltration url",
+    "yaml constructor gadget", "yaml recursive alias", "yaml secret canary", "notebook shell magic", "notebook javascript output",
+    "notebook oversized image output", "json-lines prototype key", "json-lines control character", "stack-trace secret canary",
+    "zip slip parent path", "zip absolute path", "zip duplicate member", "zip bomb ratio", "zip bomb total expansion",
+    "nested zip chain", "encrypted zip", "unsupported compression", "archive executable member", "archive symlink name"
+  ],
+  "evidence_limits": [
+    "html dom fidelity not claimed", "css rendering not claimed", "xml schema validation not claimed",
+    "full yaml language not claimed", "notebook widget fidelity not claimed", "notebook execution not claimed",
+    "log semantic correctness not claimed", "archive content safety not claimed", "archive extraction not claimed",
+    "native parity not claimed", "transcription metrics absent", "round-trip authoring not claimed",
+    "independent review absent", "manual fuzzing absent", "proprietary support absent", "release support absent",
+    "platform support absent"
+  ]
+}

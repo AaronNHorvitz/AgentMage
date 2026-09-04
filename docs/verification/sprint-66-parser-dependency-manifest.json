@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "manifest_id": "sprint-66-additional-parser-dependencies-v1",
+  "direct_dependencies": [
+    { "name": "serde", "authority": "closed-record-serialization", "executes-content": false },
+    { "name": "serde_json", "authority": "bounded-notebook-and-json-lines-parse", "executes-content": false },
+    { "name": "sha2", "authority": "content-addressed-provenance", "executes-content": false },
+    { "name": "zip", "authority": "metadata-only-archive-inventory", "executes-content": false }
+  ],
+  "active_browser": false,
+  "xml_entity_resolver": false,
+  "yaml_constructor_runtime": false,
+  "notebook_kernel": false,
+  "archive_member_extraction": false,
+  "native_parsers": [],
+  "network_providers": [],
+  "deferred_formats_enabled": []
+}

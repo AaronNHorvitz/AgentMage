@@ -2,6 +2,7 @@
 #![forbid(unsafe_code)]
 //! Canonical user-owned Markdown knowledge-domain contracts without ambient authority.
 
+mod additional_parsers;
 mod advanced_reconciliation;
 mod authority;
 mod coding_skills;
@@ -54,6 +55,14 @@ mod word_source;
 mod word_visual;
 mod workflows;
 
+pub use additional_parsers::{
+    AdditionalFormat, AdditionalParserEnvelope, AdditionalParserError, AdditionalParserProfile,
+    ArchiveEntry, ArchiveInventory, DeferredFormatDisposition, LogRecordKind, MarkupParseResult,
+    MarkupTextSpan, NotebookCell, NotebookCellKind, NotebookOutput, NotebookParseResult,
+    ParserSourceRange, StructuredLogRecord, StructuredLogResult, YamlParseResult, YamlScalar,
+    deferred_format_dispositions, inventory_zip_archive, parse_bounded_xml, parse_notebook,
+    parse_saved_html, parse_structured_log, parse_yaml_configuration,
+};
 pub use advanced_reconciliation::{
     AdvancedReconciliationError, AdvancedReconciliationRecord, AllocationRecipient,
     AllocationResult, ExactDecimal, FinancialRoundingMode, ReconciliationSourceFreshness,
