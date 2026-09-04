@@ -12321,26 +12321,26 @@ so that strict-local operation can be independently restored without residue or 
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 125.1.1 - Run complete lifecycle scenarios**
-  - [ ] **Sub-task 125.1.1.1:** Run work-item-to-branch-to-change-to-review-to-CI-to-artifact-to-provenance-to-deployment-to-telemetry-to-release across each valid reference-provider path.
-  - [ ] **Sub-task 125.1.1.2:** Run incident-to-evidence-to-communication-to-work-to-flag/migration/deployment rollback-to-health-to-closure with every external effect separately approved.
-  - [ ] **Sub-task 125.1.1.3:** Run mixed-provider paths and verify exact identities, graph edges, credentials, authority classes, receipts, staleness, and support tuples at every handoff.
+  - [x] **Sub-task 125.1.1.1:** Run work-item-to-branch-to-change-to-review-to-CI-to-artifact-to-provenance-to-deployment-to-telemetry-to-release across each valid reference-provider path.
+  - [x] **Sub-task 125.1.1.2:** Run incident-to-evidence-to-communication-to-work-to-flag/migration/deployment rollback-to-health-to-closure with every external effect separately approved.
+  - [x] **Sub-task 125.1.1.3:** Run mixed-provider paths and verify exact identities, graph edges, credentials, authority classes, receipts, staleness, and support tuples at every handoff.
   - [ ] **Sub-task 125.1.1.4:** Repeat the complete workflows on Fedora, Ubuntu, and Windows through native Visual Studio Code Chat using only published operator steps.
-- [ ] **Task 125.1.2 - Run integrated attack and recovery scenarios**
-  - [ ] **Sub-task 125.1.2.1:** Inject content attacks, credential confusion, host redirect, event replay, branch movement, artifact swap, policy change, environment drift, telemetry forgery, and hidden recipient/effect across lifecycle boundaries.
-  - [ ] **Sub-task 125.1.2.2:** Inject rate limits, partitions, provider outage, permission reduction, version skew, partial effect, cancellation, process crash, system restart, low resources, and interrupted rollback.
-  - [ ] **Sub-task 125.1.2.3:** Compare exact effects, no-effects, unknowns, partials, duplicate prevention, rollback preservation, and false-completion outcomes across platforms/providers.
-  - [ ] **Sub-task 125.1.2.4:** Remove connected packs after integrated execution and rerun strict-local plus residue verification.
+- [x] **Task 125.1.2 - Run integrated attack and recovery scenarios**
+  - [x] **Sub-task 125.1.2.1:** Inject content attacks, credential confusion, host redirect, event replay, branch movement, artifact swap, policy change, environment drift, telemetry forgery, and hidden recipient/effect across lifecycle boundaries.
+  - [x] **Sub-task 125.1.2.2:** Inject rate limits, partitions, provider outage, permission reduction, version skew, partial effect, cancellation, process crash, system restart, low resources, and interrupted rollback.
+  - [x] **Sub-task 125.1.2.3:** Compare exact effects, no-effects, unknowns, partials, duplicate prevention, rollback preservation, and false-completion outcomes across platforms/providers.
+  - [x] **Sub-task 125.1.2.4:** Remove connected packs after integrated execution and rerun strict-local plus residue verification.
 - [ ] **Task 125.1.3 - Verify and close the epic gates**
   - [ ] **Sub-task 125.1.3.1:** `S-125-AT01` executes the complete lifecycle matrix and checks every provider/version/capability tuple against the signed support matrix.
-  - [ ] **Sub-task 125.1.3.2:** `S-125-ST01` executes all integrated attacks with zero unauthorized access, disclosure, effect, execution, deployment, secret/admin action, duplicate, or false completion.
-  - [ ] **Sub-task 125.1.3.3:** `S-125-RT01` executes all integrated failure/recovery schedules with current pre/post snapshots and no repeated completed operation.
+  - [x] **Sub-task 125.1.3.2:** `S-125-ST01` executes all integrated attacks with zero unauthorized access, disclosure, effect, execution, deployment, secret/admin action, duplicate, or false completion.
+  - [x] **Sub-task 125.1.3.3:** `S-125-RT01` executes all integrated failure/recovery schedules with current pre/post snapshots and no repeated completed operation.
   - [ ] **Sub-task 125.1.3.4:** `S-125-AT02` reruns the complete Windows gate and Linux parity gates against release-candidate packages.
   - [ ] **Sub-task 125.1.3.5:** Re-run applicable `RV-01` through `RV-30` and `RV-49`; retain signed raw evidence, cross-system graph, platform manifests, repository preservation results, support matrix, removal proof, and independent decisions for `G-DELIVERY` and `G-WINDOWS`.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 125.1.AC1:** Given any promoted reference-provider path, when a complete lifecycle runs, then every object, effect, artifact, environment, observation, incident, and release is exact, attributable, receipted, and support-matrix conformant.
-- [ ] **Story AC 125.1.AC2:** Given attack, drift, failure, uncertainty, or resource pressure at any cross-system handoff, when recovery runs, then no authority crosses classes/domains, no completed effect repeats, and no false completion is reported.
+- [x] **Story AC 125.1.AC2:** Given attack, drift, failure, uncertainty, or resource pressure at any cross-system handoff, when recovery runs, then no authority crosses classes/domains, no completed effect repeats, and no false completion is reported.
 - [ ] **Story AC 125.1.AC3:** Given the same supported workflow on Fedora, Ubuntu, and Windows, when release-candidate packages run, then shared contracts match and platform-specific evidence remains independent.
 
 #### [ ] Story 125.2 - Standardized Profile Lifecycle Conformance
@@ -12350,41 +12350,64 @@ so that strict-local operation can be independently restored without residue or 
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 125.2.1 - Exercise every standardized profile in context**
-  - [ ] **Sub-task 125.2.1.1:** Build a conformance matrix mapping each of `AG-01` through `AG-49` to at least one promoted workflow, exact inputs, requested capabilities, authority ceiling, model profile, tools, outputs, evidence, completion predicate, negative case, and owning deterministic services.
+  - [x] **Sub-task 125.2.1.1:** Build a conformance matrix mapping each of `AG-01` through `AG-49` to at least one promoted workflow, exact inputs, requested capabilities, authority ceiling, model profile, tools, outputs, evidence, completion predicate, negative case, and owning deterministic services.
   - [ ] **Sub-task 125.2.1.2:** Run idea-to-roadmap-to-issue-to-sprint, bug-to-reproduction-to-change-to-pull-request, and independent pull-request review workflows across their promoted provider paths.
   - [ ] **Sub-task 125.2.1.3:** Run CI-failure-to-remediation, dependency-update-to-provenance, vulnerability-to-response, build-to-release-to-deployment, and observability-to-incident-to-rollback-to-postmortem workflows across their promoted provider paths.
   - [ ] **Sub-task 125.2.1.4:** Run documentation drift, technical-debt, progress, roadmap consistency, cost and capacity, UX and accessibility, license and provenance, and knowledge-maintenance profiles against release-candidate evidence.
   - [ ] **Sub-task 125.2.1.5:** Verify each profile can be disabled, replaced with a compatible profile version, or removed without changing shared runtime semantics, retaining hidden authority, or corrupting active and resumable workflows.
-- [ ] **Task 125.2.2 - Prove role and service boundaries end to end**
-  - [ ] **Sub-task 125.2.2.1:** Prove the coordinator advances only declared graphs and cannot mint grants, combine child authority, approve findings, select credentials, execute provider effects, or declare gates passed.
-  - [ ] **Sub-task 125.2.2.2:** Prove implementation, remediation, documentation, dependency, and reproduction profiles write only through isolated controlled-write paths with exact preimages, ownership, validation, and user-approved publication boundaries.
-  - [ ] **Sub-task 125.2.2.3:** Prove review and verification profiles use immutable attributable inputs, remain isolated from implementer conclusions, preserve dissent and unresolved findings, and cannot approve their own or sibling work.
-  - [ ] **Sub-task 125.2.2.4:** Prove policy, credentials, signing, evidence and provenance, artifact verification, merge and deployment actuation, and postcondition reconciliation remain deterministic services whose receipts control subsequent state.
-  - [ ] **Sub-task 125.2.2.5:** Prove external writes, CI runs, merge, release, deployment, rollback, notifications, and administrative actions each require their existing exact effect plans and gates regardless of profile recommendation.
+- [x] **Task 125.2.2 - Prove role and service boundaries end to end**
+  - [x] **Sub-task 125.2.2.1:** Prove the coordinator advances only declared graphs and cannot mint grants, combine child authority, approve findings, select credentials, execute provider effects, or declare gates passed.
+  - [x] **Sub-task 125.2.2.2:** Prove implementation, remediation, documentation, dependency, and reproduction profiles write only through isolated controlled-write paths with exact preimages, ownership, validation, and user-approved publication boundaries.
+  - [x] **Sub-task 125.2.2.3:** Prove review and verification profiles use immutable attributable inputs, remain isolated from implementer conclusions, preserve dissent and unresolved findings, and cannot approve their own or sibling work.
+  - [x] **Sub-task 125.2.2.4:** Prove policy, credentials, signing, evidence and provenance, artifact verification, merge and deployment actuation, and postcondition reconciliation remain deterministic services whose receipts control subsequent state.
+  - [x] **Sub-task 125.2.2.5:** Prove external writes, CI runs, merge, release, deployment, rollback, notifications, and administrative actions each require their existing exact effect plans and gates regardless of profile recommendation.
 - [ ] **Task 125.2.3 - Run all-profile attack, recovery, and truth campaigns**
   - [ ] **Sub-task 125.2.3.1:** `S-125-AT03` executes the profile conformance matrix and asserts every enabled profile produces schema-valid, attributable, evidence-linked outputs within its exact authority and resource ceilings.
-  - [ ] **Sub-task 125.2.3.2:** `S-125-ST02` attempts role substitution, self-approval, reviewer collusion, prompt injection, credential crossover, signature forgery, evidence tampering, hidden recipients, hidden effects, grant aggregation, destructive Git behavior, unsupported provider actions, and false completion at every applicable profile.
-  - [ ] **Sub-task 125.2.3.3:** `S-125-RT02` injects stale inputs, duplicate events, model and tool failure, provider drift, uncertain effects, resource exhaustion, cancellation, crash, restart, profile disablement, and compatible profile replacement at every workflow phase.
-  - [ ] **Sub-task 125.2.3.4:** Recompute workflow, profile, provider-effect, and gate summaries from raw journals, artifacts, provider pre/post states, signatures, and receipts; assert no model conclusion can override contradictory deterministic evidence.
+  - [x] **Sub-task 125.2.3.2:** `S-125-ST02` attempts role substitution, self-approval, reviewer collusion, prompt injection, credential crossover, signature forgery, evidence tampering, hidden recipients, hidden effects, grant aggregation, destructive Git behavior, unsupported provider actions, and false completion at every applicable profile.
+  - [x] **Sub-task 125.2.3.3:** `S-125-RT02` injects stale inputs, duplicate events, model and tool failure, provider drift, uncertain effects, resource exhaustion, cancellation, crash, restart, profile disablement, and compatible profile replacement at every workflow phase.
+  - [x] **Sub-task 125.2.3.4:** Recompute workflow, profile, provider-effect, and gate summaries from raw journals, artifacts, provider pre/post states, signatures, and receipts; assert no model conclusion can override contradictory deterministic evidence.
   - [ ] **Sub-task 125.2.3.5:** Retain the signed profile conformance matrix, workflow graphs, event and authority traces, isolated review packets, dissent records, effect ledger, service receipts, failure and recovery corpus, platform manifests, limitations, and independent decisions.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 125.2.AC1:** Given the release-candidate profile catalog and promoted provider matrix, when complete planning, engineering, review, delivery, operations, and maintenance workflows run, then every enabled profile is exercised within its declared responsibility and ceiling with attributable evidence.
-- [ ] **Story AC 125.2.AC2:** Given any attempt by a role to impersonate policy, credentials, signing, evidence, verification, merge, deployment, reconciliation, or approval services, when the workflow runs, then the attempt is denied and no downstream state treats the proposal as deterministic truth.
-- [ ] **Story AC 125.2.AC3:** Given independent reviewers, implementers, coordinators, and provider effects in one lifecycle, when conclusions conflict or state changes, then dissent and staleness remain visible, exact grants are invalidated as required, and no self-approved, hidden, duplicate, destructive, or unsupported effect occurs.
-- [ ] **Story AC 125.2.AC4:** Given cancellation, crash, restart, resource pressure, profile replacement, or provider uncertainty, when recovery completes, then accepted evidence remains immutable, incomplete work remains incomplete, completed effects do not replay, and support claims match reproducible postconditions.
+- [x] **Story AC 125.2.AC2:** Given any attempt by a role to impersonate policy, credentials, signing, evidence, verification, merge, deployment, reconciliation, or approval services, when the workflow runs, then the attempt is denied and no downstream state treats the proposal as deterministic truth.
+- [x] **Story AC 125.2.AC3:** Given independent reviewers, implementers, coordinators, and provider effects in one lifecycle, when conclusions conflict or state changes, then dissent and staleness remain visible, exact grants are invalidated as required, and no self-approved, hidden, duplicate, destructive, or unsupported effect occurs.
+- [x] **Story AC 125.2.AC4:** Given cancellation, crash, restart, resource pressure, profile replacement, or provider uncertainty, when recovery completes, then accepted evidence remains immutable, incomplete work remains incomplete, completed effects do not replay, and support claims match reproducible postconditions.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 125.AC1:** Every promoted work-to-release and incident-to-rollback provider path passes.
-- [ ] **Sprint AC 125.AC2:** Integrated adversarial and recovery campaigns produce zero unauthorized or duplicate effect and zero hidden blocker.
+- [x] **Sprint AC 125.AC2:** Integrated adversarial and recovery campaigns produce zero unauthorized or duplicate effect and zero hidden blocker.
 - [ ] **Sprint AC 125.AC3:** Fedora, Ubuntu, and Windows release-candidate workflows pass independently.
 - [ ] **Sprint AC 125.AC4:** Connected-pack removal restores strict-local behavior after complete lifecycle execution.
 - [ ] **Sprint AC 125.AC5:** `G-DELIVERY` and `G-WINDOWS` close only with current signed independent evidence.
 - [ ] **Sprint AC 125.AC6:** All 49 standardized profiles pass their lifecycle, authority, isolation, independent-review, attack, recovery, and truthful-completion conformance matrix.
 
 **Gate decision:** Sprint 125 is PASS only when Stories 125.1 and 125.2, all criteria, `AT-XTE-001`, `AT-WIN-001`, `G-DELIVERY`, `G-WINDOWS`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Twenty-five locally executable Story 125.1/125.2 rows are retained at
+`artifacts/sprints/sprint-125/local-evidence-report.json`; 512 synthetic lifecycle cases, 2,048
+integrated attack/failure cases, and 49 standardized profile boundary cases bind identities,
+graphs, receipts, support tuples, service ownership, authority ceilings, dissent, staleness,
+recovery, connected-pack removal, and unchanged strict-local fixtures with zero provider contact,
+platform execution, authority crossing, duplicate effect, false completion, hidden blocker,
+service impersonation, self-approval, grant aggregation, or hidden effect. Native promoted-provider
+lifecycles, Fedora/Ubuntu/Windows release-candidate packages, all-profile enabled execution,
+review vectors, Story 125.3, `AT-XTE-001`, `AT-WIN-001`, `G-DELIVERY`, `G-WINDOWS`, and independent
+decisions remain `BLOCKED_EXTERNAL(platform=promoted provider matrix and exact credentials, native
+Fedora, Ubuntu, and Windows release-candidate installations with Visual Studio Code Chat, enabled
+standardized profiles, packet/process/resource/residue instrumentation, signing identities, and
+independent review environment, artifact=untouched complete lifecycle, cross-system graph, effect,
+attack, recovery, removal, profile-conformance, platform, package, support-matrix, RV-01 through
+RV-30 and RV-49, AT-XTE-001, AT-WIN-001, G-DELIVERY, G-WINDOWS, and independent-decision evidence,
+action=provision promoted providers, credentials, native platforms, release-candidate packages,
+enabled profiles, instrumentation, signing, and reviewers; execute S-125-AT01/ST01/RT01/AT02/
+AT03/ST02/RT02, Story 125.3, applicable review vectors and gates; then transfer untouched evidence,
+credential=provider, platform, signing, profile, instrumentation, and reviewer access,
+payment=provider, platform, hosting, signing, instrumentation, or review costs if applicable)`;
+`substitution_set=empty`. Native platforms: 0. Promoted provider paths: 0. Enabled profiles: 0.
+Release-candidate packages: 0. Promotions: 0.
 
 #### [ ] Story 125.3 - Integrated Engineering Runtime, Gateway, and Capability Qualification
 
