@@ -1790,3 +1790,52 @@ push.
 Exact next action: continue Decision 0021 ordering at Sprint 115 releases, feature flags,
 progressive delivery, and migrations. Cumulative closures are 1,108; write the required 1,100-item
 checkpoint after push.
+
+## Batch 115 — Sprint 115 governed release lifecycle
+
+### Completed
+
+- Closed 20 local Sprint 115 rows: cited version/changelog drafts, immutable release manifests,
+  environment promotion, reference flag/migration contracts, progressive delivery, fresh rollback
+  and compensation planning, all four synthetic verification suites, all story criteria, and Sprint
+  AC 115.AC1, AC3, and AC4. The corpus contains 4 tool families, 64 release manifests, 2,048 hostile
+  cases, and 512 fault cases. Live environment contacts: 0. Hidden effects: 0. Authority escapes: 0.
+  Sensitive disclosures: 0. Automatic advances: 0. Automatic retries: 0.
+- Promoted flag or migration tools: 0. Live environments: 0. Complete promoted matrices or
+  `AT-REL-001`: false. Independent human reviews: 0. Promotions: 0. Substitutions: 0. Batch
+  closures: 20. Cumulative closed items: 1,128.
+- Commits: `558b23c7` (release contracts, corpus, tests, truthful closures, and supply-chain
+  renewal), `de8a2fb5` (source-bound Sprint 115 report), and `2aa6048d` (complete downstream
+  contract/configuration/traceability renewal). Commits including log: 4. Commits per closed item:
+  0.20. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across every Batch 115
+  changed or regenerated path and every pin-bearing gate: empty.
+
+### Validation and blockers
+
+- Focused validation passed 4 Rust release-lifecycle tests, strict Clippy, 3 corpus tests, 3
+  evidence tests, Python compilation, dependency rules, supply-chain currentness, product CI, all
+  affected contract/configuration/traceability checks, and the source-bound report. Supply-chain
+  builds: 1. Corpus generations: 1. Local report builds: 1. Full gate wall seconds: 679; it stopped
+  only at the retained Story 6.1 rootless-Podman prerequisite after every preceding gate passed.
+  Self-recovery iterations: 1; strict Clippy found one unused import in the new module, removed
+  before supply-chain or evidence generation.
+- Real flag/migration matrices, release/environment/database effects, and independent review remain
+  `BLOCKED_EXTERNAL(platform=isolated supported LaunchDarkly, Unleash, Flyway, and Liquibase
+  toolchains plus non-production and production environments, databases, artifact registries,
+  health/metrics systems, and independent review environment, artifact=untouched exact provider
+  and version matrices, release manifests, changelog/version drafts, flag and migration identities,
+  promotion and progressive-delivery diffs, pre/post state, health windows, rollback/compensation
+  plans, receipts, AT-REL-001 bundle, support matrix, and independent review, action=provision
+  isolated toolchains, provider projects, environments, databases, registries, identities,
+  instrumentation, and independent reviewer; execute S-115-UT01/ST01/IT01/RT01 and AT-REL-001
+  against real supported versions, then transfer untouched evidence, credential=flag provider,
+  migration tool, database, environment, registry, health, metrics, instrumentation, and reviewer
+  access, payment=provider, database, environment, registry, observability, hosting,
+  instrumentation, or review costs if applicable)`; `substitution_set=empty`.
+- Sprint 115 also remains dependency-blocked by `UPSTREAM-SPRINT-114-BLOCKED` with no
+  substitution. Exact full-chain carrier blocker: `blocked: host change required — run npm run -s
+  docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 116 OpenTelemetry correlation
+foundation. Cumulative closures are 1,128; write the required 1,125-item checkpoint after push.
