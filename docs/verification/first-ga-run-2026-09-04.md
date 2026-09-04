@@ -82,3 +82,42 @@ handoff is required after this batch push.
 Exact next action: all remaining Sprint 73 rows depend on exact external tuples; continue Decision
 0021 ordering at Sprint 74 pull-request worktrees and local review intelligence. The 350-item
 checkpoint handoff is required after this batch push.
+
+## Batch 80 — Sprint 74 local pull-request review contracts
+
+### Completed
+
+- Closed 21 TASKS rows: implementation Sub-tasks 74.1.1.2 through .8; Task 74.1.2 and all 4
+  artifact sub-tasks; verification Sub-tasks 74.1.3.2/.3; both Story AC; and all 5 Sprint AC. The
+  pure projection binds repository/worktree/base/head/merge identity, seven review dimensions,
+  eight remap states, deterministic quality suppression, and effect-free controlled-write shadow
+  fixes while reusing the retained owned-worktree boundary. Promotions: 0. Substitutions: 0.
+  Cumulative closed items: 373.
+- Commits: `44231440` (review contracts, two schemas, docs, 53-case corpus, truthful closures, and
+  final supply-chain carrier), `d46132dc` (source-bound 8-command Sprint 74 report), and `5bdc0937`
+  (one affected evidence regeneration pass). Commits including log: 4. Commits per closed item:
+  0.19. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across 31 batch paths and
+  all pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 4 PR-review Rust cases, 1 artifact-contract test, 3 evidence mutation tests,
+  85 runtime/planning schema tests, strict capability Clippy, format, supply-chain currentness,
+  product-CI contract, configuration startup/result, component inventory, Story 3.1 security/gate,
+  planning scope, traceability, contract boundary/evidence, Stories 2.1/2.2/2.4, and Sprint 2 pass.
+  Supply-chain builds: 1. Local report builds: 1. Downstream evidence regeneration passes: 1.
+  Recovery iterations: 1 — strict Clippy identified a manually guarded division in the quality
+  metric, which was replaced by checked division with the same zero-displayed result. The full
+  chain ran 689.69 seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite
+  after every preceding gate passed. Recorded gate wall seconds: 690.
+- Exact PR fetch/checkout, native review/test execution, hosted refresh, and final no-publication
+  observation remain blocked on the exact Sub-task 74.1.1.1/74.1.3.1/74.1.3.4 tuple. Native
+  sandbox, hostile-patch, remap, hosted-refresh, manual-fuzz, and independent-review evidence
+  remain blocked on the exact Sub-task 74.1.3.5 tuple. `substitution_set=empty` for both.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 74 rows depend on exact external tuples; continue Decision
+0021 ordering at Sprint 75 v0.7 read-only connector release gate. Cumulative closures are 373; the
+next checkpoint remains 375.
