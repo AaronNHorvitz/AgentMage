@@ -197,6 +197,8 @@ pub mod runtime_projection;
 pub mod runtime_recovery;
 /// Predeclared, threat-modeled unattended state-change admission without effect authority.
 pub mod scheduled_authority;
+/// Evidence-backed service catalog identities and inert extension candidates.
+pub mod service_catalog;
 /// Bounded, configuration-bound session environment and provenance capture.
 pub mod session_environment;
 /// Atomic source refresh, invalidation, retention, hold, deletion, and collection.

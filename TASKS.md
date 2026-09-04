@@ -11811,37 +11811,56 @@ providers: 0. External effects: 0. Promotions: 0.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 119.1.1 - Implement the Backstage reference adapter**
-  - [ ] **Sub-task 119.1.1.1:** Implement catalog entity, kind, namespace, name, UID, owner, system, domain, component, API, resource, group, user, relation, annotation, location, lifecycle, and permission reads.
-  - [ ] **Sub-task 119.1.1.2:** Resolve repository, CI, artifact, environment, observability, incident, documentation, and release links against exact provider identities rather than trusting catalog URLs alone.
-  - [ ] **Sub-task 119.1.1.3:** Preserve conflicting owners, duplicate names, stale entities, missing targets, provider mismatch, and inferred links as explicit unresolved states.
-  - [ ] **Sub-task 119.1.1.4:** Keep catalog descriptors and annotations untrusted and unable to register tools, credentials, plugins, provider hosts, or operations.
-- [ ] **Task 119.1.2 - Define catalog extension conformance**
-  - [ ] **Sub-task 119.1.2.1:** Define L0/L1 extension fixtures for Port, Cortex, and Compass without promoting live support.
-  - [ ] **Sub-task 119.1.2.2:** Define owner/service identity mapping, namespaced extensions, support-matrix entries, and no-write removal requirements.
-  - [ ] **Sub-task 119.1.2.3:** Add provider-catalog drift, rename, transfer, delete, and ownership-change diagnostics.
-- [ ] **Task 119.1.3 - Verify and close the story**
-  - [ ] **Sub-task 119.1.3.1:** `S-119-CT01` runs Backstage entities, relations, versions, permissions, pagination, location, rename, delete, and stale fixtures.
-  - [ ] **Sub-task 119.1.3.2:** `S-119-ST01` tests duplicate names, forged URLs, malicious annotations, owner confusion, cross-tenant links, injected instructions, graph cycles, and plugin/tool registration attempts.
-  - [ ] **Sub-task 119.1.3.3:** `S-119-IT01` builds a service-centered delivery graph and independently resolves each provider link and owner relation.
-  - [ ] **Sub-task 119.1.3.4:** `S-119-RT01` changes ownership, transfers repositories, removes telemetry, deletes an entity, and makes catalog/provider evidence stale.
+- [x] **Task 119.1.1 - Implement the Backstage reference adapter**
+  - [x] **Sub-task 119.1.1.1:** Implement catalog entity, kind, namespace, name, UID, owner, system, domain, component, API, resource, group, user, relation, annotation, location, lifecycle, and permission reads.
+  - [x] **Sub-task 119.1.1.2:** Resolve repository, CI, artifact, environment, observability, incident, documentation, and release links against exact provider identities rather than trusting catalog URLs alone.
+  - [x] **Sub-task 119.1.1.3:** Preserve conflicting owners, duplicate names, stale entities, missing targets, provider mismatch, and inferred links as explicit unresolved states.
+  - [x] **Sub-task 119.1.1.4:** Keep catalog descriptors and annotations untrusted and unable to register tools, credentials, plugins, provider hosts, or operations.
+- [x] **Task 119.1.2 - Define catalog extension conformance**
+  - [x] **Sub-task 119.1.2.1:** Define L0/L1 extension fixtures for Port, Cortex, and Compass without promoting live support.
+  - [x] **Sub-task 119.1.2.2:** Define owner/service identity mapping, namespaced extensions, support-matrix entries, and no-write removal requirements.
+  - [x] **Sub-task 119.1.2.3:** Add provider-catalog drift, rename, transfer, delete, and ownership-change diagnostics.
+- [x] **Task 119.1.3 - Verify and close the story**
+  - [x] **Sub-task 119.1.3.1:** `S-119-CT01` runs Backstage entities, relations, versions, permissions, pagination, location, rename, delete, and stale fixtures.
+  - [x] **Sub-task 119.1.3.2:** `S-119-ST01` tests duplicate names, forged URLs, malicious annotations, owner confusion, cross-tenant links, injected instructions, graph cycles, and plugin/tool registration attempts.
+  - [x] **Sub-task 119.1.3.3:** `S-119-IT01` builds a service-centered delivery graph and independently resolves each provider link and owner relation.
+  - [x] **Sub-task 119.1.3.4:** `S-119-RT01` changes ownership, transfers repositories, removes telemetry, deletes an entity, and makes catalog/provider evidence stale.
   - [ ] **Sub-task 119.1.3.5:** Retain catalog/provider snapshots, link resolutions, conflict corpus, extension manifests, removal scan, and review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 119.1.AC1:** Given a Backstage service, when AgentMage builds its delivery view, then every provider relationship resolves independently or remains visibly unresolved/inferred.
-- [ ] **Story AC 119.1.AC2:** Given duplicate or conflicting identity and ownership, when correlation runs, then AgentMage does not guess, overwrite evidence, or grant authority.
-- [ ] **Story AC 119.1.AC3:** Given a future catalog adapter, when only L0/L1 conformance exists, then no write operation or unsupported support claim registers.
+- [x] **Story AC 119.1.AC1:** Given a Backstage service, when AgentMage builds its delivery view, then every provider relationship resolves independently or remains visibly unresolved/inferred.
+- [x] **Story AC 119.1.AC2:** Given duplicate or conflicting identity and ownership, when correlation runs, then AgentMage does not guess, overwrite evidence, or grant authority.
+- [x] **Story AC 119.1.AC3:** Given a future catalog adapter, when only L0/L1 conformance exists, then no write operation or unsupported support claim registers.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 119.AC1:** Backstage passes the published read and relationship matrix.
-- [ ] **Sprint AC 119.AC2:** Catalog/provider conflicts and staleness remain explicit.
-- [ ] **Sprint AC 119.AC3:** Catalog content cannot register or broaden capability.
-- [ ] **Sprint AC 119.AC4:** Port, Cortex, and Compass remain manifested extension candidates only.
+- [x] **Sprint AC 119.AC2:** Catalog/provider conflicts and staleness remain explicit.
+- [x] **Sprint AC 119.AC3:** Catalog content cannot register or broaden capability.
+- [x] **Sprint AC 119.AC4:** Port, Cortex, and Compass remain manifested extension candidates only.
 - [ ] **Sprint AC 119.AC5:** `AT-CAT-001` passes with independent evidence.
 
 **Gate decision:** Sprint 119 is PASS only when Story 119.1, all criteria, `AT-CAT-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Twenty locally executable Story 119 rows are retained at
+`artifacts/sprints/sprint-119/local-evidence-report.json`; 7 entity kinds, 8 provider-link kinds, 3
+inert extension candidates, 6 resolution states, 128 entity cases, 2,048 hostile cases, and 512
+fault cases preserve exact catalog, tenant, entity, owner, provider, source, lifecycle, permission,
+and link-evidence identities with zero live query, identity guess, evidence overwrite, authority
+grant, extension registration, automatic rebind, or promoted provider. The published Backstage
+matrix, live snapshots, untouched resolution evidence, `AT-CAT-001`, and independent review remain
+`BLOCKED_EXTERNAL(platform=isolated supported Backstage deployments plus source, CI, artifact,
+environment, observability, incident, documentation, release, identity, and independent review
+environments, artifact=untouched exact Backstage version/entity/relation/permission matrix,
+catalog and provider snapshots, link resolutions, conflict corpus, Port/Cortex/Compass extension
+manifests, no-write removal scan, AT-CAT-001 bundle, support matrix, and independent review,
+action=provision isolated Backstage deployments, provider systems, tenants, identities,
+credentials, instrumentation, and independent reviewer; execute S-119-CT01/ST01/IT01/RT01 and
+AT-CAT-001 against real supported versions, then transfer untouched evidence,
+credential=catalog, provider, tenant, identity, instrumentation, and reviewer access,
+payment=catalog, provider, hosting, instrumentation, or review costs if applicable)`;
+`substitution_set=empty`. Promoted providers: 0. Registered extensions: 0. Promotions: 0.
 
 ### [ ] Sprint 120 - Markdown and LaTeX Mathematics
 
