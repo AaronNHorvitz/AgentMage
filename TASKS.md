@@ -7744,7 +7744,7 @@ fuzzing remain incomplete. No story, sprint, product, platform, or release gate 
 - [ ] **Story AC 62.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-052-I01`, `S-052-I02`, `S-052-I03`, and `S-052-I04`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
 - [x] **Story AC 62.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
-#### [ ] Story 62.2 - Spreadsheet Source-Artifact Adapter
+#### [x] Story 62.2 - Spreadsheet Source-Artifact Adapter
 
 **User-facing value:** As a user, I need workbook facts to reach the model with exact sheet and cell
 provenance and honest formula, date, hidden-sheet, and size behavior.
@@ -7820,16 +7820,44 @@ provenance and honest formula, date, hidden-sheet, and size behavior.
         headless code to one host dispatcher. Their focused parity test requires byte-identical,
         verified, production-marked cell-range results; installed-binary and live-model campaigns are
         not inferred.
-- [ ] **Task 62.2.4 - Evaluate the complete foundational runtime milestone**
-  - [ ] **Sub-task 62.2.4.1:** Run text/log, DOCX, searchable PDF, scanned-PDF/OCR where admitted,
+- [x] **Task 62.2.4 - Evaluate the complete foundational runtime milestone**
+  - [x] **Sub-task 62.2.4.1:** Run text/log, DOCX, searchable PDF, scanned-PDF/OCR where admitted,
         and XLSX acceptance workflows through Chat, CLI, and headless clients under at least two exact
         eligible model profiles or record truthful profile blockers.
-  - [ ] **Sub-task 62.2.4.2:** Reconcile every source/context manifest, native tool result,
+        Evidence: the gate-owned
+        [foundational-runtime evaluation](artifacts/sprints/sprint-62/foundational-runtime-evaluation.json)
+        records 0 enabled model profiles and 0 qualifying installed campaigns. Exact blockers are
+        `BLOCKED_EXTERNAL(platform=approved local inference host; artifact=two exact eligible model
+        profile admission bundles and successful Chat, CLI, and headless text-log, DOCX, PDF, and XLSX
+        workflow records; action=authorized model owner admits two exact profiles, supplies any required
+        model artifacts or API credentials, runs the untouched matrix, and transfers the results;
+        credential=model artifact source and/or API credentials; payment=model artifact, API, or
+        hardware if applicable); substitution_set=empty` and `BLOCKED_EXTERNAL(platform=native
+        OCR-enabled Fedora and Ubuntu hosts; artifact=scanned-PDF/OCR Chat, CLI, and headless workflow
+        records with exact engine and language-pack identities; action=platform owner provisions the
+        admitted OCR runtime, runs the untouched workflow matrix, and transfers the results;
+        credential=platform access; payment=OCR runtime or hardware if applicable);
+        substitution_set=empty`.
+  - [x] **Sub-task 62.2.4.2:** Reconcile every source/context manifest, native tool result,
         preflight, attempt, receipt, verification, recovery decision, diagnosis, performance threshold,
         and security result with no hidden non-pass state.
-  - [ ] **Sub-task 62.2.4.3:** Record `M-FOUNDATIONAL-RUNTIME` PASS or BLOCKED with exact platform,
+        Evidence: the same evaluation records every named campaign record family as visibly
+        `absent_blocking`, with qualifying campaign count 0 and hidden non-pass count 0; local parser,
+        client-contract, legacy Word/PDF/spreadsheet, configuration, product, and integrated fake-model
+        states are hash-bound separately from the absent campaign.
+  - [x] **Sub-task 62.2.4.3:** Record `M-FOUNDATIONAL-RUNTIME` PASS or BLOCKED with exact platform,
         parser, OCR, model, API, independent-review, and deferred-manual-fuzz limitations; do not infer
         release or optional MCP support.
+        Evidence: the evaluation records `M-FOUNDATIONAL-RUNTIME` as `BLOCKED`, retains legacy XLS,
+        encrypted-workbook, native Office, accessibility, independent-review, and manual-fuzz
+        limitations, and adds `BLOCKED_EXTERNAL(platform=Windows 11 x64 KVM guest and physical
+        supported MacBook; artifact=foundational-runtime parser and client workflow campaign with exact
+        environment, resource, receipt, recovery, performance, and security results; action=platform
+        owners run the untouched campaign and transfer the results; credential=Windows image source and
+        physical Mac access; payment=Windows license or hardware if required);
+        substitution_set=empty` and `blocked: host change required — run the foundational-runtime Chat,
+        CLI, and headless workflow matrix from trusted installed AgentMage launchers outside the
+        development shell; substitution_set=empty`.
 
 ##### Story Acceptance Criteria
 
@@ -7851,9 +7879,12 @@ provenance and honest formula, date, hidden-sheet, and size behavior.
       macro, external-formula, DDE, embedded-object, protected, sparse, unsupported-part, cancellation,
       digest, and unknown-media cases to stable findings or closed errors; all successful projections
       assert filesystem, network, and execution effects false.
-- [ ] **Story AC 62.2.AC4:** Given the complete required format and workflow corpus, when
+- [x] **Story AC 62.2.AC4:** Given the complete required format and workflow corpus, when
       `M-FOUNDATIONAL-RUNTIME` is evaluated, then every core and parser gate is current and passing or
       the milestone remains explicitly blocked without weakening any earlier evidence.
+      Evidence: the foundational-runtime evaluation preserves all passing local contracts, records
+      every missing qualifying workflow family and exact blocker, and makes no milestone, release,
+      support, platform, installed-product, OCR, or live-model pass claim.
 
 #### Sprint Acceptance Criteria
 
@@ -7862,10 +7893,10 @@ provenance and honest formula, date, hidden-sheet, and size behavior.
 - [x] **Sprint AC 62.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
 - [x] **Sprint AC 62.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 62.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
-- [ ] **Sprint AC 62.AC6:** The spreadsheet source-artifact adapter passes sheet/cell provenance,
+- [x] **Sprint AC 62.AC6:** The spreadsheet source-artifact adapter passes sheet/cell provenance,
       formula/date/hidden-state semantics, malicious-package, resource, lifecycle, context, and parity
       gates.
-- [ ] **Sprint AC 62.AC7:** `M-FOUNDATIONAL-RUNTIME` reconciles text/log, DOCX, PDF/OCR, XLSX,
+- [x] **Sprint AC 62.AC7:** `M-FOUNDATIONAL-RUNTIME` reconciles text/log, DOCX, PDF/OCR, XLSX,
       context, workflow, security, performance, recovery, and interface evidence with zero hidden blocker.
 
 **Gate decision:** Sprint 62 is PASS only when Stories 62.1 and 62.2, every numbered task/sub-task,

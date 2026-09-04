@@ -1,0 +1,95 @@
+{
+  "blockers": [
+    "BLOCKED_EXTERNAL(platform=approved local inference host; artifact=two exact eligible model profile admission bundles and successful Chat, CLI, and headless text-log, DOCX, PDF, and XLSX workflow records; action=authorized model owner admits two exact profiles, supplies any required model artifacts or API credentials, runs the untouched matrix, and transfers the results; credential=model artifact source and/or API credentials; payment=model artifact, API, or hardware if applicable); substitution_set=empty",
+    "BLOCKED_EXTERNAL(platform=native OCR-enabled Fedora and Ubuntu hosts; artifact=scanned-PDF/OCR Chat, CLI, and headless workflow records with exact engine and language-pack identities; action=platform owner provisions the admitted OCR runtime, runs the untouched workflow matrix, and transfers the results; credential=platform access; payment=OCR runtime or hardware if applicable); substitution_set=empty",
+    "BLOCKED_EXTERNAL(platform=Windows 11 x64 KVM guest and physical supported MacBook; artifact=foundational-runtime parser and client workflow campaign with exact environment, resource, receipt, recovery, performance, and security results; action=platform owners run the untouched campaign and transfer the results; credential=Windows image source and physical Mac access; payment=Windows license or hardware if required); substitution_set=empty",
+    "blocked: host change required \u2014 run the foundational-runtime Chat, CLI, and headless workflow matrix from trusted installed AgentMage launchers outside the development shell; substitution_set=empty"
+  ],
+  "campaign_record_reconciliation": {
+    "attempts": {
+      "reason": "no qualifying two-profile installed foundational-runtime campaign exists",
+      "state": "absent_blocking"
+    },
+    "diagnoses": {
+      "reason": "no qualifying two-profile installed foundational-runtime campaign exists",
+      "state": "absent_blocking"
+    },
+    "native_tool_results": {
+      "reason": "no qualifying two-profile installed foundational-runtime campaign exists",
+      "state": "absent_blocking"
+    },
+    "performance_thresholds": {
+      "reason": "no qualifying two-profile installed foundational-runtime campaign exists",
+      "state": "absent_blocking"
+    },
+    "preflights": {
+      "reason": "no qualifying two-profile installed foundational-runtime campaign exists",
+      "state": "absent_blocking"
+    },
+    "receipts": {
+      "reason": "no qualifying two-profile installed foundational-runtime campaign exists",
+      "state": "absent_blocking"
+    },
+    "recovery_decisions": {
+      "reason": "no qualifying two-profile installed foundational-runtime campaign exists",
+      "state": "absent_blocking"
+    },
+    "security_results": {
+      "reason": "no qualifying two-profile installed foundational-runtime campaign exists",
+      "state": "absent_blocking"
+    },
+    "source_and_context_manifests": {
+      "reason": "no qualifying two-profile installed foundational-runtime campaign exists",
+      "state": "absent_blocking"
+    },
+    "verifications": {
+      "reason": "no qualifying two-profile installed foundational-runtime campaign exists",
+      "state": "absent_blocking"
+    }
+  },
+  "enabled_model_profile_ids": [],
+  "hidden_non_pass_state_count": 0,
+  "limitations": [
+    "Local parser and source-level three-client contracts are not installed-product workflows.",
+    "The one integrated fake-model repository workflow is not a parser workflow or a second eligible model profile.",
+    "Legacy XLS, encrypted-workbook, native Office reopen, accessibility, independent-review, and deferred-manual-fuzz evidence remain absent.",
+    "No OCR, live-model, Windows, macOS, installed-launcher, milestone, release, or support pass is inferred."
+  ],
+  "local_checks": {
+    "deterministic_fake_model_repository_workflow_is_bound": true,
+    "no_model_profile_is_enabled_or_product_registered": true,
+    "no_platform_or_release_support_is_claimed": true,
+    "pdf_local_contract_passes_but_product_and_ocr_workflows_are_absent": true,
+    "spreadsheet_legacy_local_contract_passes_with_platform_blocks": true,
+    "spreadsheet_parser_and_three_client_adapter_contracts_pass": true,
+    "word_local_contract_passes_but_product_workflow_is_absent": true
+  },
+  "qualifying_installed_campaign_count": 0,
+  "record_type": "agentmage-sprint-62-foundational-runtime-evaluation",
+  "rows": {
+    "62.2.4.1": "BLOCKED_EXTERNAL",
+    "62.2.4.2": "PASS_RECONCILED_WITH_VISIBLE_BLOCKERS",
+    "62.2.4.3": "PASS_RECORDED_BLOCKED_MILESTONE",
+    "M-FOUNDATIONAL-RUNTIME": "BLOCKED"
+  },
+  "schema_version": 1,
+  "source_revision": "14a8079033cebdd09091b9a28689b25bb3fb9186",
+  "source_sha256": {
+    "architecture/status-model.json": "16757dfcc1de91b303eedeb6207872e90ed85e6e12567162d63385fee0db361b",
+    "artifacts/sprints/sprint-22/story-22.5/vertical-slice-report.json": "b796f3db450e112396d9af1fc6a86831ec3c88cdd3da8ae84dd5136d11c40543",
+    "artifacts/sprints/sprint-58/local-evidence-report.json": "29f392fe08fb99016beb37281755bd63050c95e1213f5b4ecce19870143eb733",
+    "artifacts/sprints/sprint-60/local-evidence-report.json": "1ac6ca6e671a425271f12d3d4a2d14fa29735c4e1b05e0f669dd6059d4d345fa",
+    "artifacts/sprints/sprint-62/local-evidence-report.json": "74d297d6f843cf5f1f55418f23efd6ae8eb9abeae27acacd54c6449c2eca5c64",
+    "artifacts/sprints/sprint-62/spreadsheet-source-review.json": "23e84058ad2a6777f504f3116b3d0f21ae47060681ca69ef8f2d72f91d36e443",
+    "configuration/profiles/catalog.json": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774",
+    "configuration/profiles/coding.json": "9426c8772e1e8304a5dbb4d536b1ec770b662527f1ade059badbe7a740d83d67",
+    "configuration/profiles/development.json": "a7b4352dd2cf0166a640bbed92e1b42b8593fd767ceb491cb33cfed31c7aba4e",
+    "configuration/profiles/knowledge.json": "623f25104f695d44c74dc4db046627144184945baf04dfcfa2021c2f9f92c84e",
+    "configuration/profiles/later-network.json": "70c93758e37ff6930aadd943022ebf3527c2381374a839db40bd3b3e4969ec7c",
+    "configuration/profiles/strict-local-read-only.json": "878b025c72f30136c070c55a33bb5c1ad74bc0d322edebbbc81bca46789aada3",
+    "configuration/profiles/synthetic-test.json": "517999a3e6635fb5118f3cd0441bda51c6d66f437bc6f3bea404b6efa7a39eeb",
+    "configuration/profiles/write.json": "498a821b45f2de3daa757d34b54f3846d833b59e5ce86a6a279dc8d648add379",
+    "scripts/sprint_62_foundational_runtime_evaluation.py": "7394f5c86b5a61fdc629f47d7bb659b5c9eb9a63befbd0652c98e58be3029052"
+  },
+  "status": "BLOCKED_M_FOUNDATIONAL_RUNTIME"
+}
