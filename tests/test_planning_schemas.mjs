@@ -430,6 +430,8 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "image-visual-comparison",
     "common-artifact-receipt",
     "structured-database-receipt",
+    "temporary-network-grant",
+    "connector-cache-entry",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1730,6 +1732,23 @@ test("structured database receipts reject source, permission, limit, and complet
     const changed = structuredClone(source);
     mutate(changed);
     assert.equal(validateRuntimeRecord("structured-database-receipt", changed, runtimeValidators).valid, false);
+  }
+});
+
+test("temporary connector records reject background, expiry, encryption, and authority drift", () => {
+  const load = (name) => JSON.parse(fs.readFileSync(path.join(ROOT, `schemas/runtime/examples/${name}.valid.json`), "utf8"));
+  const fixtures = { "temporary-network-grant": load("temporary-network-grant"), "connector-cache-entry": load("connector-cache-entry") };
+  const mutations = [
+    ["temporary-network-grant", (record) => { record.background_operation = true; }],
+    ["temporary-network-grant", (record) => { record.expires_epoch_milliseconds = record.issued_epoch_milliseconds; }],
+    ["temporary-network-grant", (record) => { record.max_response_bytes = 0; }],
+    ["connector-cache-entry", (record) => { record.encrypted_at_rest_observed = false; }],
+    ["connector-cache-entry", (record) => { record.policy_authority = true; }],
+    ["connector-cache-entry", (record) => { record.deletion_required = false; }],
+  ];
+  for (const [recordType, mutate] of mutations) {
+    const changed = structuredClone(fixtures[recordType]); mutate(changed);
+    assert.equal(validateRuntimeRecord(recordType, changed, runtimeValidators).valid, false);
   }
 });
 

@@ -7,6 +7,7 @@ mod advanced_reconciliation;
 mod artifact_receipt;
 mod authority;
 mod coding_skills;
+mod connected_connector;
 mod database_adapter;
 mod document_control_skills;
 mod domain;
@@ -86,6 +87,13 @@ pub use coding_skills::{
     CodingSkill, CodingSkillAdmission, CodingSkillAssessment, CodingSkillDefinition,
     CodingSkillFinding, assess_coding_skill_definition, built_in_coding_skill_definitions,
     built_in_coding_skill_pack,
+};
+pub use connected_connector::{
+    CacheSensitivity, ConnectedOperation, ConnectedProfile, ConnectedProfileError,
+    ConnectorCacheEntry, ConnectorResponseObservation, NetworkGrantPreview, NetworkMethod,
+    NetworkOperationReceipt, NetworkTerminalState, TemporaryNetworkGrant,
+    activate_connected_profile, finish_connected_operation, prepare_network_grant,
+    record_connector_response,
 };
 pub use database_adapter::{
     DatabaseAccessGrant, DatabaseAdapterError, DatabaseAdapterKind, DatabaseFixtureRow,

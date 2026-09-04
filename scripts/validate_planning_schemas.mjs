@@ -127,6 +127,8 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "image-visual-comparison",
   "common-artifact-receipt",
   "structured-database-receipt",
+  "temporary-network-grant",
+  "connector-cache-entry",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -2142,6 +2144,19 @@ function runtimeSemanticErrors(recordType, data) {
     if (data.read_only_verified !== true || data.row_count > data.max_rows ||
         data.returned_bytes > data.max_bytes) {
       errors.push("structured database read-only or resource state drifted");
+    }
+  } else if (recordType === "temporary-network-grant") {
+    if (data.expires_epoch_milliseconds <= data.issued_epoch_milliseconds ||
+        data.expires_epoch_milliseconds - data.issued_epoch_milliseconds > 900000 ||
+        data.user_initiated !== true || data.background_operation !== false) {
+      errors.push("temporary network grant timing or initiation drifted");
+    }
+  } else if (recordType === "connector-cache-entry") {
+    if (data.expires_epoch_milliseconds <= data.retrieved_epoch_milliseconds ||
+        data.encrypted_at_rest_observed !== true || data.policy_authority !== false ||
+        data.grant_authority !== false || data.tool_authority !== false ||
+        data.completion_authority !== false || data.deletion_required !== true) {
+      errors.push("connector cache retention or authority drifted");
     }
   } else if (recordType === "word-inspection-report") {
     const parts = data.parts ?? [];

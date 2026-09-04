@@ -1,0 +1,10 @@
+{
+  "schema_version": 2, "grant_id": "grant-1", "actor_id": "actor-1", "session_id": "session-1", "task_id": "task-1", "connector_id": "connector-1",
+  "destination_host": "api.example.com", "method": "get", "destination_path": "/v1/items", "query_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "operation": "connector_read", "purpose": "user-requested-read", "scope_id": "workspace-1", "expected_data": "bounded-item-metadata", "max_response_bytes": 1024,
+  "issued_epoch_milliseconds": 1788480000000, "expires_epoch_milliseconds": 1788480300000,
+  "credential_reference_id": "credential-ref-1", "credential_scope_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "cache_partition_id": "account-1-workspace-1", "cache_retention_milliseconds": 300000, "user_initiated": true, "background_operation": false,
+  "destination_visible": true, "complete_disclosure": true, "network_effect_performed": false,
+  "preview_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+}

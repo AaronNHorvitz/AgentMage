@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/temporary-network-grant.schema.json",
+  "title": "AgentMage Temporary Network Grant",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "grant_id", "actor_id", "session_id", "task_id", "connector_id", "destination_host", "method", "destination_path", "query_sha256", "operation", "purpose", "scope_id", "expected_data", "max_response_bytes", "issued_epoch_milliseconds", "expires_epoch_milliseconds", "credential_reference_id", "credential_scope_sha256", "cache_partition_id", "cache_retention_milliseconds", "user_initiated", "background_operation", "destination_visible", "complete_disclosure", "network_effect_performed", "preview_sha256"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "grant_id": { "$ref": "#/$defs/identifier" }, "actor_id": { "$ref": "#/$defs/identifier" },
+    "session_id": { "$ref": "#/$defs/identifier" }, "task_id": { "$ref": "#/$defs/identifier" },
+    "connector_id": { "$ref": "#/$defs/identifier" },
+    "destination_host": { "type": "string", "minLength": 1, "maxLength": 253, "pattern": "^[a-z0-9][a-z0-9.-]*[a-z0-9]$" },
+    "method": { "enum": ["get", "head"] }, "destination_path": { "type": "string", "minLength": 1, "maxLength": 2048, "pattern": "^/[^?#\\\\]*$" },
+    "query_sha256": { "$ref": "#/$defs/sha256" }, "operation": { "const": "connector_read" },
+    "purpose": { "$ref": "#/$defs/identifier" }, "scope_id": { "$ref": "#/$defs/identifier" },
+    "expected_data": { "type": "string", "minLength": 1, "maxLength": 1024 },
+    "max_response_bytes": { "type": "integer", "minimum": 1, "maximum": 67108864 },
+    "issued_epoch_milliseconds": { "type": "integer", "minimum": 1 }, "expires_epoch_milliseconds": { "type": "integer", "minimum": 1 },
+    "credential_reference_id": { "$ref": "#/$defs/identifier" }, "credential_scope_sha256": { "$ref": "#/$defs/sha256" },
+    "cache_partition_id": { "$ref": "#/$defs/identifier" }, "cache_retention_milliseconds": { "type": "integer", "minimum": 1 },
+    "user_initiated": { "const": true }, "background_operation": { "const": false },
+    "destination_visible": { "const": true }, "complete_disclosure": { "const": true },
+    "network_effect_performed": { "const": false }, "preview_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": { "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
+}

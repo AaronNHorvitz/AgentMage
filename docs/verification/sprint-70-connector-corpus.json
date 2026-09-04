@@ -1,0 +1,8 @@
+{
+  "schema_version": 1, "corpus_id": "sprint-70-temporary-connector-v1",
+  "positive_cases": ["visible-get", "visible-head", "exact-approval", "public-cache", "private-cache", "restricted-cache", "completed", "cancelled", "rate-limited", "uncertain", "failed", "offline-restored"],
+  "prohibited_cases": ["startup-poll", "silent-refresh", "background-sync", "blind-retry", "source-upload", "remote-index", "cloud-fallback", "raw-credential", "policy-import", "grant-import", "tool-import", "completion-import"],
+  "invalid_cases": ["wrong-actor", "wrong-session", "wrong-task", "wrong-connector", "wrong-host", "ip-literal", "wrong-method", "query-drift", "wrong-purpose", "wrong-scope", "expired", "mutated-preview", "wrong-cache", "cross-grant"],
+  "boundary_cases": ["one-byte", "sixty-four-mibibytes", "one-millisecond", "fifteen-minutes", "empty-body", "status-100", "status-599", "retry-after-zero", "retry-after-fifteen-minutes", "retention-clamped"],
+  "hostile_cases": ["proxy-confusion", "dns-confusion", "redirect", "localhost", "lan-address", "container-address", "path-traversal", "query-smuggling", "credential-reuse", "oversized-response", "cross-partition", "malicious-content-authority"]
+}

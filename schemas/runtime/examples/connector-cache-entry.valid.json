@@ -1,0 +1,6 @@
+{
+  "schema_version": 2, "cache_partition_id": "account-1-workspace-1", "connector_id": "connector-1", "source_host": "api.example.com", "object_id": "object-1",
+  "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "content_bytes": 512,
+  "retrieved_epoch_milliseconds": 1788480010000, "expires_epoch_milliseconds": 1788480310000, "sensitivity": "private",
+  "encrypted_at_rest_observed": true, "policy_authority": false, "grant_authority": false, "tool_authority": false, "completion_authority": false, "deletion_required": true
+}

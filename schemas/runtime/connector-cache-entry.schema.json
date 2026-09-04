@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/connector-cache-entry.schema.json",
+  "title": "AgentMage Connector Cache Entry",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "cache_partition_id", "connector_id", "source_host", "object_id", "content_sha256", "content_bytes", "retrieved_epoch_milliseconds", "expires_epoch_milliseconds", "sensitivity", "encrypted_at_rest_observed", "policy_authority", "grant_authority", "tool_authority", "completion_authority", "deletion_required"],
+  "properties": {
+    "schema_version": { "const": 2 }, "cache_partition_id": { "$ref": "#/$defs/identifier" },
+    "connector_id": { "$ref": "#/$defs/identifier" }, "source_host": { "type": "string", "minLength": 1, "maxLength": 253 },
+    "object_id": { "$ref": "#/$defs/identifier" }, "content_sha256": { "$ref": "#/$defs/sha256" },
+    "content_bytes": { "type": "integer", "minimum": 0, "maximum": 67108864 },
+    "retrieved_epoch_milliseconds": { "type": "integer", "minimum": 1 }, "expires_epoch_milliseconds": { "type": "integer", "minimum": 1 },
+    "sensitivity": { "enum": ["public", "private", "restricted"] }, "encrypted_at_rest_observed": { "const": true },
+    "policy_authority": { "const": false }, "grant_authority": { "const": false }, "tool_authority": { "const": false },
+    "completion_authority": { "const": false }, "deletion_required": { "const": true }
+  },
+  "$defs": { "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
+}

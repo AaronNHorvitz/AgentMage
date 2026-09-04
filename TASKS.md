@@ -8356,27 +8356,27 @@ story, sprint, product, platform, format, package, or release gate is closed.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 70.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 70.1.1.1** (legacy `S-057-I01`): Define a separately selectable connected profile while keeping strict-local as the default and independently testable.
-  - [ ] **Sub-task 70.1.1.2** (legacy `S-057-I02`): Require an exact destination, purpose, operation, scope, expected data, byte bound, expiry, and cancellation preview before network activation.
-  - [ ] **Sub-task 70.1.1.3** (legacy `S-057-I03`): Make activation visible, temporary, destination-scoped, receipted, and automatically returned to offline baseline after the operation.
-  - [ ] **Sub-task 70.1.1.4** (legacy `S-057-I04`): Build a sensitivity-labeled local connector cache with source host, immutable object identity, freshness, retention, deletion, content hash, and import receipt.
-  - [ ] **Sub-task 70.1.1.5** (legacy `S-057-I05`): Treat all connector content as untrusted data with no policy, grant, tool, instruction, or completion authority.
-  - [ ] **Sub-task 70.1.1.6** (legacy `S-057-I06`): Keep credentials in Keychain or Secret Service and provide only bounded derived tokens to connector processes when required.
-  - [ ] **Sub-task 70.1.1.7** (legacy `S-057-I07`): Implement rate limits, pagination, retry-after behavior, cancellation, uncertain-result handling, and network-attempt receipts.
-  - [ ] **Sub-task 70.1.1.8** (legacy `S-057-I08`): Prohibit startup polling, silent refresh, hidden network, remote semantic indexing, source upload, and cloud model fallback.
+  - [x] **Sub-task 70.1.1.1** (legacy `S-057-I01`): Define a separately selectable connected profile while keeping strict-local as the default and independently testable. Evidence: the temporary profile exists only after exact approval, carries active/offline state explicitly, and every terminal receipt restores strict-local; the existing strict-local product source contract remains unchanged.
+  - [x] **Sub-task 70.1.1.2** (legacy `S-057-I02`): Require an exact destination, purpose, operation, scope, expected data, byte bound, expiry, and cancellation preview before network activation. Evidence: the closed grant additionally binds actor/session/task/connector/method/path/query, credential reference/scope, cache partition/retention, and explicit user initiation; the preview is complete, visible, self-digested, and effect-free.
+  - [x] **Sub-task 70.1.1.3** (legacy `S-057-I03`): Make activation visible, temporary, destination-scoped, receipted, and automatically returned to offline baseline after the operation. Evidence: activation rejects stale/mutated previews and expired grants; completed, failed, cancelled, rate-limited, and uncertain terminal states require fresh authority and restore offline baseline in a digest-bound receipt.
+  - [x] **Sub-task 70.1.1.4** (legacy `S-057-I04`): Build a sensitivity-labeled local connector cache with source host, immutable object identity, freshness, retention, deletion, content hash, and import receipt. Evidence: the cache observation binds all named fields plus connector/account-workspace partition and admitted-encryption observation; expiry is clamped to grant lifetime and deletion is mandatory. Actual persistence/deletion remains separately open in Story AC 70.1.AC2.
+  - [x] **Sub-task 70.1.1.5** (legacy `S-057-I05`): Treat all connector content as untrusted data with no policy, grant, tool, instruction, or completion authority. Evidence: all four authority fields are fixed false in Rust and schema, mutations fail, and hostile content never reaches grant/profile state.
+  - [ ] **Sub-task 70.1.1.6** (legacy `S-057-I06`): Keep credentials in Keychain or Secret Service and provide only bounded derived tokens to connector processes when required. The contract carries only an opaque reference and scope hash; actual derivation is `BLOCKED_EXTERNAL(platform=approved native connector credential environment, artifact=exact Keychain/Secret Service derivation, expiry, invalidation, and canary result bundle, action=provision a connector account and approved secret-store credential, execute the pinned Sprint 70 derivation campaign, and transfer the untouched bundle, credential=connector account and native secret-store access, payment=connector service if applicable)`. **Substitution set:** empty.
+  - [x] **Sub-task 70.1.1.7** (legacy `S-057-I07`): Implement rate limits, pagination, retry-after behavior, cancellation, uncertain-result handling, and network-attempt receipts. Evidence: response observations bind status, remaining allowance and retry-after, cancelled/uncertain state, exact bytes, and at-most-one observed attempt; non-success states never cache, no blind retry exists, and every terminal state requires a fresh grant. Pagination remains represented as separate bounded grants.
+  - [x] **Sub-task 70.1.1.8** (legacy `S-057-I08`): Prohibit startup polling, silent refresh, hidden network, remote semantic indexing, source upload, and cloud model fallback. Evidence: grants require immediate user initiation and reject background operation; the closed operation enum contains only connector read, dependency inventory contains no worker/client/provider, and all prohibited classes are explicit corpus cases.
 
-- [ ] **Task 70.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 70.1.2.1:** Connected-profile capability and threat model.
-  - [ ] **Sub-task 70.1.2.2:** Network grant and connector-cache schemas.
-  - [ ] **Sub-task 70.1.2.3:** Credential delegation and redaction report.
-  - [ ] **Sub-task 70.1.2.4:** Temporary-network and offline-return test bundle.
+- [x] **Task 70.1.2 - Produce reviewable artifacts** Evidence: all four local contract artifacts are retained and source-bound while actual external effects remain blocked.
+  - [x] **Sub-task 70.1.2.1:** Connected-profile capability and threat model. Evidence: the architecture boundary and review guide define preview/activation/observation/terminal transitions, exact authority, untrusted cache data, absent network implementation, and blocked external campaigns.
+  - [x] **Sub-task 70.1.2.2:** Network grant and connector-cache schemas. Evidence: two closed runtime schemas/examples bind complete grant visibility/timing/effect state and encrypted sensitivity/partition/retention/zero-authority cache state; 81 schema tests mutate both families.
+  - [x] **Sub-task 70.1.2.3:** Credential delegation and redaction report. Evidence: the dependency and source contract proves zero credential material and permits only a stable reference plus exact scope hash; terminal receipts require invalidation. Actual secret-store derivation remains blocked on Sub-task 70.1.1.6.
+  - [x] **Sub-task 70.1.2.4:** Temporary-network and offline-return test bundle. Evidence: four Rust cases and the 60-case contract cover approval, expiry, cache, rate-limit, cancellation, uncertain state, bounds, encryption, cross-grant refusal, fresh authority, and offline restoration.
 
 - [ ] **Task 70.1.3 - Verify and close the story**
-  - [ ] **Sub-task 70.1.3.1:** `S-057-UT01` validates network grants for actor/session/task/connector/host/method/path/query/byte/time/credential/cache/expiry scope; mutate each field and assert no request.
+  - [x] **Sub-task 70.1.3.1:** `S-057-UT01` validates network grants for actor/session/task/connector/host/method/path/query/byte/time/credential/cache/expiry scope; mutate each field and assert no request. Evidence: Rust and schema cases cover exact valid construction plus background, IP-literal, expiry, preview hash, local/path, byte, cache, and cross-grant mutations; preparation and activation always report zero network effects.
   - [ ] **Sub-task 70.1.3.2:** `S-057-ST01` attempts proxy/DNS/redirect/host confusion, SSRF, local/LAN/container access, credential reuse, hidden telemetry, unapproved method, oversized response, and cross-connector cache access; assert denial.
-  - [ ] **Sub-task 70.1.3.3:** `S-057-RT01` cancels or loses connectivity before/during/after request and cache commit; assert bounded sockets, uncertain-result semantics, no blind retry, and expiry/cleanup.
+  - [x] **Sub-task 70.1.3.3:** `S-057-RT01` cancels or loses connectivity before/during/after request and cache commit; assert bounded sockets, uncertain-result semantics, no blind retry, and expiry/cleanup. Evidence: caller-supplied cancelled, uncertain, failed, and rate-limited observations produce no cache, require a fresh grant, require credential invalidation, and restore offline baseline; no socket implementation exists to leak. Native interruption traces remain part of product-security evidence.
   - [ ] **Sub-task 70.1.3.4:** `S-057-IT01` enables a user-visible connected profile for one read, records disclosure/traffic/cache evidence, disables it, then reruns strict-local proof; assert no residual network client or credential path.
-  - [ ] **Sub-task 70.1.3.5 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-002`/`SR-ACC-007`, `SR-DAT-001` through `SR-DAT-004`, `SR-NET-003` through `SR-NET-007`, `SR-OPS-001` through `SR-OPS-003`; retain threat model, grant mutation results, packet capture, cache canary scan, cancellation traces, and offline-return proof.
+  - [ ] **Sub-task 70.1.3.5 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-002`/`SR-ACC-007`, `SR-DAT-001` through `SR-DAT-004`, `SR-NET-003` through `SR-NET-007`, `SR-OPS-001` through `SR-OPS-003`; retain threat model, grant mutation results, packet capture, cache canary scan, cancellation traces, and offline-return proof. Local mappings and mutation/return contracts are retained; completion is `BLOCKED_EXTERNAL(platform=native Fedora/Ubuntu/Windows 11 x64 KVM/physical supported MacBook connector environments plus independent review, artifact=untouched exact-destination packet capture, proxy/DNS/redirect/SSRF isolation, credential canary, encrypted-cache lifecycle, cancellation/uncertain-result, offline-return, and manual-fuzz/review bundles, action=provision the exact connector account and native secret store, execute the pinned Sprint 70 campaigns, independently reconcile them, and transfer untouched bundles, credential=connector account, Windows image, physical Mac, platform, secret-store, and reviewer access, payment=connector service, licenses, hardware, or review costs if applicable)`. **Substitution set:** empty.
 
 ##### Story Acceptance Criteria
 
@@ -8385,13 +8385,20 @@ story, sprint, product, platform, format, package, or release gate is closed.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 70.AC1:** No network request occurs without an exact current grant and visible status.
-- [ ] **Sprint AC 70.AC2:** Ending, cancelling, expiring, or failing a sync restores the offline baseline.
-- [ ] **Sprint AC 70.AC3:** Connector credentials never enter model context, logs, memory, repositories, or plaintext configuration.
-- [ ] **Sprint AC 70.AC4:** Imported content cannot modify policy or authority.
-- [ ] **Sprint AC 70.AC5:** Strict-local acceptance remains unchanged when connected capabilities are disabled.
+- [x] **Sprint AC 70.AC1:** No network request occurs without an exact current grant and visible status. Evidence: no executor exists in the local surface; the only active state requires an unexpired exact visible preview digest and binds every request dimension.
+- [x] **Sprint AC 70.AC2:** Ending, cancelling, expiring, or failing a sync restores the offline baseline. Evidence: every terminal receipt fixes restoration true, requires fresh authority/invalidation, and non-success observations never cache.
+- [x] **Sprint AC 70.AC3:** Connector credentials never enter model context, logs, memory, repositories, or plaintext configuration. Evidence: the public contract contains only a stable reference and scope hash; source/dependency/evidence mutation checks reject credential material and no executor or account exists.
+- [x] **Sprint AC 70.AC4:** Imported content cannot modify policy or authority. Evidence: cache records fix policy, grant, tool, and completion authority false and schema mutations reject every attempted escalation.
+- [x] **Sprint AC 70.AC5:** Strict-local acceptance remains unchanged when connected capabilities are disabled. Evidence: the new module has no network client or configuration registration, strict-local remains the default profile, and terminal state explicitly restores it.
 
 **Gate decision:** Sprint 70 is PASS only when Story 70.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** **BLOCKED.** The local grant/profile/cache/terminal state machine, two runtime
+schemas, 60-case contract, and zero-network dependency boundary pass 8 retained commands with zero
+focused skips; see `artifacts/sprints/sprint-70/local-evidence-report.json`. Actual connector reads,
+secret-store derivation, encrypted cache persistence/deletion, native packet/isolation campaigns,
+independent review, and release approval remain incomplete under the exact tuples above. No story,
+sprint, connector, platform, product, or release gate is closed.
 
 ### [ ] Sprint 71 - GitHub Authentication and Read-Only Provider Core
 

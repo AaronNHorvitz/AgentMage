@@ -1,0 +1,11 @@
+{
+  "schema_version": 1, "manifest_id": "sprint-70-temporary-connector-dependencies-v1",
+  "direct_dependencies": [
+    { "name": "agentmage-kernel-contracts", "purpose": "contract version", "network": false },
+    { "name": "serde", "purpose": "closed records", "network": false },
+    { "name": "serde_json", "purpose": "digest binding", "network": false },
+    { "name": "sha2", "purpose": "content identities", "network": false }
+  ],
+  "network_clients": [], "dns_resolvers": [], "proxy_clients": [], "credential_values": [],
+  "connector_accounts": [], "cache_writers": [], "background_workers": []
+}
