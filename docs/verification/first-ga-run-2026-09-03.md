@@ -2246,3 +2246,43 @@ results.
 Exact next action: evaluate Task 62.2.4 against existing runtime, model-profile, OCR, and platform
 evidence; implement every locally provable reconciliation and record exact external blockers for
 the remaining foundational milestone rows.
+
+## Batch 66 — Sprint 62 foundational-runtime blocked evaluation
+
+### Completed
+
+- Closed 8 TASKS rows: Story 62.2, Task 62.2.4, Sub-tasks 62.2.4.1/.2/.3, Story AC
+  62.2.AC4, and Sprint AC 62.AC6/.AC7. A new hash-bound evaluation reconciles the passing parser,
+  source-service, three-client source adapter, legacy Word/PDF/spreadsheet, configuration, product,
+  and one fake-model repository-workflow evidence against 0 enabled model profiles and 0 qualifying
+  installed foundational campaigns. It records all 10 required campaign record families as visibly
+  absent-blocking, hidden non-pass count 0, and `M-FOUNDATIONAL-RUNTIME` as BLOCKED. Promotions: 0.
+  Substitutions: 0. Cumulative closed items: 166.
+- Commits: `ab8039fe` (deterministic milestone evaluator and mutation test), `14a80790`
+  (complete parser/review/fuzz limitation inventory), and `6ad51c7e` (bound evaluation artifact,
+  eight TASKS closures, and affected evidence carriers). Commits: 3. Commits per closed item: 0.38.
+  Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across 20 pin-bearing gates:
+  empty.
+
+### Validation and self-recovery
+
+- Focused validation: the evaluator and six false-pass/blocker mutations, spreadsheet review,
+  supply-chain, traceability, contract-boundary, contract-evidence, Story 2.1, Story 2.2, refreshed
+  Story 2.4, and Sprint 2 checks pass. Supply-chain builds: 2. Evidence regeneration passes: 2.
+  Recovery iterations: 1. Final TASKS reconciliation correctly made Story 2.4's later-story
+  disposition stale; recovery rebuilt Story 2.4 and Sprint 2 before the full chain. The full chain ran
+  684.610 seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite after every
+  preceding gate passed. Recorded gate wall seconds: 685.
+- Exact milestone blockers, all with `substitution_set=empty`: 4 — approved local inference host and
+  two exact profiles/model or API credentials; native OCR-enabled Fedora/Ubuntu hosts and admitted OCR
+  runtime; Windows 11 x64 KVM guest plus physical supported MacBook; and a host change to run the
+  installed Chat/CLI/headless matrix outside the development shell. Their complete platform,
+  artifact, action, credential, and payment tuples are committed in TASKS and
+  `artifacts/sprints/sprint-62/foundational-runtime-evaluation.json`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at the first authoritative incomplete dependency
+gate after Story 62.2, while preserving the four foundational milestone blockers without
+substitution.
