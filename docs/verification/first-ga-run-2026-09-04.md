@@ -530,3 +530,50 @@ continue Decision 0021 ordering at Sprint 83 sandboxed browser inspection. Cumul
 Exact next action: all remaining Sprint 83 rows depend on upstream or exact external tuples;
 continue Decision 0021 ordering at Sprint 84 confirmed computer use. Cumulative closures are 505;
 write the required 500-item checkpoint after this batch push.
+
+## Batch 90 — Sprint 84 confirmed computer use
+
+### Completed
+
+- Closed 14 TASKS rows: Task 84.1.1 and all 3 implementation sub-tasks; Task 84.1.2 and all
+  4 artifact sub-tasks; verification Sub-tasks 84.1.3.1 and 84.1.3.3; and Sprint AC84.AC2,
+  Sprint AC84.AC3, and Sprint AC84.AC5. The inert host contract binds 5 action classes,
+  structured-tool-first fallback, exact application/window/screenshot/control/payload/precondition/
+  grant identities, separate confirmation for 4 irreversible classes, before/after receipt
+  evidence, and uncertain-result refusal while owning 0 effect executors. Promotions: 0.
+  Substitutions: 0. Cumulative closed items: 519.
+- Commits: `99bfb07f` (computer-use source, guide, 35-case corpus, tests, truthful closures, and
+  final supply-chain carrier), `071c6383` (source-bound Sprint 84 report), and `4a72e4ab` (one
+  affected evidence regeneration pass). Commits including log: 4. Commits per closed item: 0.29.
+  Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across all 21 Batch 90 paths
+  and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 4 Rust cases, 2 artifact-contract tests, 3 evidence mutation tests, strict
+  host Clippy, format, Python compilation, Markdown, 35 corpus cases, supply-chain currentness,
+  runtime schemas, and product CI passed. Supply-chain builds: 1. Local report builds: 1.
+  Downstream evidence regeneration passes: 1. Recovery iterations: 0. The full chain ran 693.23
+  seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite after every
+  preceding gate passed. Recorded gate wall seconds: 693.
+- Native computer-use actions, before/after captures, application-state receipts, structured-tool
+  fallback workflow results, uncertain-submit reconciliation, download scans, and independent
+  privacy review remain blocked on `BLOCKED_EXTERNAL(platform=native confirmed-computer-use and
+  browser environments plus independent privacy review, artifact=untouched foreground-window/
+  action traces, before/after screenshots, exact application-state receipts,
+  structured-tool-first workflow results, confirmation records, navigation/popup/focus-loss/
+  stale-screen/timeout/cancellation/crash/uncertain-submit results, download scans, and reviewer
+  bundle, action=provision exact native platforms, supported applications, browser profiles,
+  structured-tool fixtures, capture/accessibility instrumentation, approved action fixtures,
+  malware scanner, and privacy reviewer, execute S-066-ST01/IT01/RT01 and the native
+  product-security campaign, and transfer untouched bundles, credential=native application,
+  browser profile, capture/accessibility, fixture, scanner, and reviewer access, payment=platform,
+  application, profile, fixture, instrumentation, scanner, or review costs if applicable)`;
+  `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 84 rows depend on upstream or exact external tuples;
+continue Decision 0021 ordering at Sprint 85 GitHub mutation preview and authority. Cumulative
+closures are 519; the next 25-item checkpoint is 525.
