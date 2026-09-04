@@ -261,3 +261,49 @@ closures are 401; the 400-item checkpoint handoff is required after this batch p
 Exact next action: all remaining Sprint 77 rows depend on upstream or exact external tuples;
 continue Decision 0021 ordering at Sprint 78 capability package trust and lifecycle. Cumulative
 closures are 411; the next checkpoint remains 425.
+
+## Batch 84 — Sprint 78 capability package trust and lifecycle contracts
+
+### Completed
+
+- Closed 18 TASKS rows: Task 78.1.1 and all 4 implementation sub-tasks; Task 78.1.2 and both
+  artifact sub-tasks; verification Sub-tasks 78.1.3.1 through .3; all 3 Story AC; and Sprint AC
+  78.AC1 through AC4. The host-owned contract binds 16 manifest field groups, 7 compatibility
+  versions, domain-separated Ed25519 verification, 6 inert lifecycle actions, and all 9 task-scope
+  dimensions without installing or enabling a package. Promotions: 0. Substitutions: 0.
+  Cumulative closed items: 429.
+- Commits: `4d783e1d` (package source, guide, 44-case corpus, tests, truthful closures, and final
+  supply-chain carrier), `0fd0bf1b` (source-bound 6-command Sprint 78 report), and `760b6d99` (one
+  affected evidence regeneration pass). Commits including log: 4. Commits per closed item: 0.22.
+  Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across all Batch 84 paths and
+  pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 5 Rust cases, 2 artifact-contract tests, 3 evidence mutation tests, strict
+  host Clippy, format, Python compilation, 44 corpus cases, supply-chain currentness, product-CI
+  contract, configuration startup/result, component inventory, Story 3.1 security/gate, planning
+  scope, traceability, contract boundary/evidence, Stories 2.1/2.2/2.4, and Sprint 2 pass.
+  Supply-chain builds: 1. Local report builds: 1. Downstream evidence regeneration passes: 1.
+  Recovery iterations: 3 — disambiguated a cast comparison for the formatter, retained public-key
+  and compatibility fixtures long enough for borrowed admissions, and replaced an 8-argument
+  lifecycle function with one bounded input record under strict Clippy. The full chain ran 690.58
+  seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite after every
+  preceding gate passed. Recorded gate wall seconds: 691.
+- Native package corpus, lifecycle traces, capability inventory diffs, safe-mode proof, and
+  independent review remain blocked on `BLOCKED_EXTERNAL(platform=native isolated
+  capability-package lifecycle environments plus independent review, artifact=untouched package
+  corpus, signature/provenance results, install/enable/disable/update/rollback/uninstall traces,
+  capability inventory diffs, safe-mode proof, and reviewer bundle, action=provision the exact
+  native environments, trusted signing identities, approved synthetic packages, and reviewer,
+  execute the Sprint 78 lifecycle and product-security campaigns, and transfer the untouched
+  bundles, credential=native platform, package signer, trust-root, and reviewer access,
+  payment=platform, signing, review, or package-fixture costs if applicable)`;
+  `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 78 rows depend on upstream or exact external tuples;
+continue Decision 0021 ordering at Sprint 79 hooks, safe mode, and package recovery. Cumulative
+closures are 429; the 425-item checkpoint handoff is required after this batch push.
