@@ -2322,3 +2322,46 @@ substitution.
 Exact next action: continue Decision 0021 ordering at the next dependency-independent, locally
 executable row after the blocked Sprint 62 security evidence, without treating Sprint 63 or any
 later aggregate as dependency-complete.
+
+## Batch 68 — Sprint 63 exact advanced reconciliation
+
+### Completed
+
+- Closed 5 TASKS rows: Sub-tasks 63.1.3.1/.2/.3, Story AC 63.1.AC1, and Sprint AC 63.AC5.
+  The capability now parses up to 4,096 base-ten digits without IEEE-754 coercion, evaluates exact
+  inclusive tolerance, applies explicit half-even or half-away-from-zero financial rounding,
+  allocates exact totals across stable weighted recipients with deterministic remainder order,
+  rejects changed/future/aged sources, and records both source hashes plus every schema, type,
+  formula, join, tolerance, rounding, discrepancy, total, and method decision. Seven focused Rust
+  cases and a 124-case generated review corpus pass. Promotions: 0. Substitutions: 0. Cumulative
+  closed items: 174.
+- Commits: `2f3d19ca` (exact reconciliation implementation, five TASKS closures, documentation, and
+  final supply-chain tree) and `3780bb32` (one affected evidence regeneration pass). Commits: 2.
+  Commits per closed item: 0.40. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across the pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 7 exact-method Rust tests, strict capability Clippy, 124-case reconciliation
+  record and four mutations, immutable prior Sprint 63 local-evidence validation, configuration
+  startup, component inventory, Story 3.1 security, traceability, contract boundary/evidence,
+  Stories 2.1, 2.2, and 2.4, and Sprint 2 pass. Supply-chain builds: 2. Evidence regeneration
+  passes: 1. Recovery iterations: 1. Two additional invalid/boundary method tests were added after
+  the first supply-chain build, so recovery rebuilt the carrier after the true last source edit and
+  committed only the final crate tree. The full chain ran 684.235 seconds and stopped only at the
+  retained Story 6.1 rootless-Podman prerequisite after every preceding gate passed. Recorded gate
+  wall seconds: 684.
+- Native recalculation and visual rows remain open on 3 exact blocker families with
+  `substitution_set=empty`: a Fedora/Ubuntu host change to provision admitted native office,
+  rendering, font, and accessibility dependencies and run the pinned campaign; a licensed Windows
+  11 x64 KVM guest plus admitted office suite and untouched result transfer; and a physical
+  supported MacBook plus admitted office suite and untouched result transfer. Product-security
+  evidence additionally retains one exact independent-review/accessibility/manual-fuzz tuple. The
+  complete platform, artifact, action, credential, and payment fields are committed in TASKS.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: continue the first dependency-independent Sprint 63 row after the exact-method
+closure, preserving every native and independent blocker; write the 175-item checkpoint handoff as
+soon as the next batch closes at least one row.
