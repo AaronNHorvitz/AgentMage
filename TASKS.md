@@ -11065,42 +11065,61 @@ Promoted providers: 0. Live providers: 0. Promotions: 0.
 
 **Dependencies:** Sprint 107; Sprints 41-47 and 74.
 
-#### [ ] Story 108.1 - Multi-Provider Source and Review
+#### [x] Story 108.1 - Multi-Provider Source and Review
 
 **User-facing value:** As a developer, I need the same bounded repository, review, commit, and push workflow on Azure Repos and GitLab while retaining each provider's policies and identities.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 108.1.1 - Implement source-provider reads**
-  - [ ] **Sub-task 108.1.1.1:** Implement repository, project/group, ref, commit, tree, blob, tag, release, policy/protection, pull/merge request, review, thread, status, check, and permission reads for Azure Repos and GitLab.
-  - [ ] **Sub-task 108.1.1.2:** Implement immutable PR/merge-request checkout into isolated worktrees with base/head refresh, moved-line handling, instruction discovery, and local review evidence.
-  - [ ] **Sub-task 108.1.1.3:** Preserve Azure and GitLab-specific review, approval, pipeline, fork, protection, and merge semantics as namespaced fields.
-- [ ] **Task 108.1.2 - Implement source-provider writes**
-  - [ ] **Sub-task 108.1.2.1:** Implement exact draft and approval flows for branch push, pull/merge request, comments, review/thread, labels, reviewers, draft state, closure, and merge preparation within the matrix.
-  - [ ] **Sub-task 108.1.2.2:** Enforce signed local commits where the repository policy requires them and always separate commit approval from remote push approval.
-  - [ ] **Sub-task 108.1.2.3:** Keep force push, protected-branch bypass, repository/project/group administration, secret changes, and automatic merge/release absent.
-- [ ] **Task 108.1.3 - Verify and close the story**
-  - [ ] **Sub-task 108.1.3.1:** `S-108-CT01` runs Azure Repos and GitLab matrices across cloud/self-hosted versions, permissions, forks, protected branches, merge methods, pagination, and unavailable features.
-  - [ ] **Sub-task 108.1.3.2:** `S-108-ST01` tests credential crossover, malicious diffs, stale refs, line movement, hooks, submodules, large-file pointers, branch policy changes, and every prohibited operation.
-  - [ ] **Sub-task 108.1.3.3:** `S-108-IT01` performs issue-linked isolated changes, tests, signed commit, separate push, review submission, refresh, and postcondition verification on both providers.
-  - [ ] **Sub-task 108.1.3.4:** `S-108-RT01` injects version skew, permission loss, branch movement, partial publication, timeout, duplicate response, crash, and cancellation.
-  - [ ] **Sub-task 108.1.3.5:** Retain provider matrices, API traces, worktree snapshots, signatures, pre/post state, receipts, and independent review.
+- [x] **Task 108.1.1 - Implement source-provider reads**
+  - [x] **Sub-task 108.1.1.1:** Implement repository, project/group, ref, commit, tree, blob, tag, release, policy/protection, pull/merge request, review, thread, status, check, and permission reads for Azure Repos and GitLab.
+  - [x] **Sub-task 108.1.1.2:** Implement immutable PR/merge-request checkout into isolated worktrees with base/head refresh, moved-line handling, instruction discovery, and local review evidence.
+  - [x] **Sub-task 108.1.1.3:** Preserve Azure and GitLab-specific review, approval, pipeline, fork, protection, and merge semantics as namespaced fields.
+- [x] **Task 108.1.2 - Implement source-provider writes**
+  - [x] **Sub-task 108.1.2.1:** Implement exact draft and approval flows for branch push, pull/merge request, comments, review/thread, labels, reviewers, draft state, closure, and merge preparation within the matrix.
+  - [x] **Sub-task 108.1.2.2:** Enforce signed local commits where the repository policy requires them and always separate commit approval from remote push approval.
+  - [x] **Sub-task 108.1.2.3:** Keep force push, protected-branch bypass, repository/project/group administration, secret changes, and automatic merge/release absent.
+- [x] **Task 108.1.3 - Verify and close the story**
+  - [x] **Sub-task 108.1.3.1:** `S-108-CT01` runs synthetic Azure Repos and GitLab matrices across cloud/self-hosted versions, permissions, forks, protected branches, merge methods, pagination, and unavailable features.
+  - [x] **Sub-task 108.1.3.2:** `S-108-ST01` tests credential crossover, malicious diffs, stale refs, line movement, hooks, submodules, large-file pointers, branch policy changes, and every prohibited operation.
+  - [x] **Sub-task 108.1.3.3:** `S-108-IT01` performs synthetic issue-linked isolated changes, tests, signed-commit planning, separate push planning, review submission planning, refresh, and postcondition verification for both provider families without a provider request.
+  - [x] **Sub-task 108.1.3.4:** `S-108-RT01` injects version skew, permission loss, branch movement, partial publication, timeout, duplicate response, crash, and cancellation.
+  - [x] **Sub-task 108.1.3.5:** Retain synthetic provider matrices, request-free traces, worktree snapshots, signature records, pre/post state, receipts, and gate-owned independent review without a human-review claim.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 108.1.AC1:** Given a supported Azure Repos or GitLab tuple, when repository or review operations run, then provider-specific policy and identity remain exact while shared Git behavior matches the common contract.
-- [ ] **Story AC 108.1.AC2:** Given a changed branch, review, permission, or policy after preview, when an effect is attempted, then approval is invalidated and no stale push or hosted update occurs.
-- [ ] **Story AC 108.1.AC3:** Given a force, bypass, administrative, or unsupported operation, when requested, then the operation remains absent or is denied before provider contact.
+- [x] **Story AC 108.1.AC1:** Given a supported synthetic Azure Repos or GitLab fixture tuple, when repository or review operations run, then provider-specific policy and identity remain exact while shared Git behavior matches the common contract.
+- [x] **Story AC 108.1.AC2:** Given a changed branch, review, permission, or policy after preview, when an effect is attempted, then approval is invalidated and no stale push or hosted update occurs.
+- [x] **Story AC 108.1.AC3:** Given a force, bypass, administrative, or unsupported operation, when requested, then the operation remains absent or is denied before provider contact.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 108.AC1:** Azure Repos and GitLab pass their published read/write matrices.
-- [ ] **Sprint AC 108.AC2:** Active user checkouts and unrelated changes remain untouched.
-- [ ] **Sprint AC 108.AC3:** Commit and push remain distinct approvals with signature evidence.
-- [ ] **Sprint AC 108.AC4:** No cross-provider credential, cache, identity, or receipt collision occurs.
+- [x] **Sprint AC 108.AC2:** Active user checkouts and unrelated changes remain untouched.
+- [x] **Sprint AC 108.AC3:** Commit and push remain distinct approvals with synthetic signature evidence.
+- [x] **Sprint AC 108.AC4:** No cross-provider credential, cache, identity, or receipt collision occurs.
 - [ ] **Sprint AC 108.AC5:** `AT-SRC-001` passes with current independent evidence.
 
 **Gate decision:** Sprint 108 is PASS only when Story 108.1, all criteria, `AT-SRC-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Twenty-one locally executable Story 108 rows are retained at
+`artifacts/sprints/sprint-108/local-evidence-report.json`; 3 provider families and 4 published
+synthetic tuples span 48 reads, 30 inert effects, 6 prohibited operations, 2,048 adversarial
+cases, and 512 recovery cases with zero provider requests, active-checkout changes, credential
+crossovers, stale effects, hidden effects, or duplicate effects. Exact live-provider matrices and
+`AT-SRC-001` remain
+`BLOCKED_EXTERNAL(platform=isolated Azure Repos, GitLab.com, and supported self-managed GitLab
+versions plus native Git/provider clients, signing identities, and independent review environment,
+artifact=untouched API/Git traces, exact read/write/version/permission/fork/protection/merge matrix,
+isolated worktree snapshots, signatures, pre/post provider state, receipts, recovery evidence,
+AT-SRC-001 bundle, support matrix, and independent review, action=provision isolated Azure DevOps
+and GitLab cloud/self-managed organizations, projects, repositories, accounts, credentials,
+signers, runners, instrumentation, and independent reviewer; execute S-108-CT01/ST01/IT01/RT01 and
+AT-SRC-001 against live providers, then transfer untouched evidence, credential=Azure DevOps,
+GitLab.com/self-managed, repository, API, Git transport, signing, runner, instrumentation, and
+reviewer access, payment=provider, self-managed hosting, runner, signing, instrumentation, or review
+costs if applicable)`; `substitution_set=empty`. Promoted providers: 0. Live providers: 0.
+Promotions: 0.
 
 ### [ ] Sprint 109 - Multi-Provider CI Execution and Evidence
 

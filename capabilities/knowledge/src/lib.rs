@@ -30,6 +30,7 @@ mod memory;
 mod memory_lifecycle;
 mod memory_portable;
 mod memory_working;
+mod multi_provider_source;
 mod obsidian;
 mod obsidian_index;
 mod operations;
@@ -201,6 +202,11 @@ pub use memory_portable::{
 pub use memory_working::{
     MemoryLoadHit, MemoryLoadQuery, MemoryLoadReason, MemoryLoadResult, WorkingCompactionPreview,
     WorkingCompactionProposal, WorkingMemory, WorkingMemoryPreview, select_memory,
+};
+pub use multi_provider_source::{
+    AdmittedSourceEffect, CommitApproval, MultiProviderSourceError, ProviderSourceSnapshot,
+    PushApproval, ReviewLineState, SourceEffect, SourceEffectPlan, SourceProvider, SourceReadKind,
+    admit_source_effect, validate_source_snapshot,
 };
 pub use obsidian::{
     ObsidianAttachment, ObsidianBacklink, ObsidianBlockReference, ObsidianCallout,
