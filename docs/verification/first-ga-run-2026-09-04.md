@@ -1839,3 +1839,55 @@ checkpoint after push.
 
 Exact next action: continue Decision 0021 ordering at Sprint 116 OpenTelemetry correlation
 foundation. Cumulative closures are 1,128; write the required 1,125-item checkpoint after push.
+
+## Batch 116 — Sprint 116 bounded OpenTelemetry correlation
+
+### Completed
+
+- Closed 21 local Sprint 116 rows: 14 telemetry identity families, bounded query plans,
+  exact-versus-inferred correlation, evidence-gated causation, statistical summaries, untrusted
+  content and secret controls, operation-authority refusal, all four synthetic verification
+  suites, all three story criteria, and Sprint AC 116.AC1 through AC4. The corpus contains 64
+  query cases, 128 correlation cases, 2,048 hostile cases, and 512 fault cases. Live queries: 0.
+  Sensitive disclosures: 0. Unbounded uses: 0. Operation-authority grants: 0. Durable-memory
+  creations: 0. Unsupported causal claims: 0.
+- Promoted telemetry backends: 0. Complete `RV-27` or `RV-29`: false. Complete OpenTelemetry
+  `AT-OBS-001` subset: false. Independent human reviews: 0. Promotions: 0. Substitutions: 0.
+  Batch closures: 21. Cumulative closed items: 1,149.
+- Commits: `34642a26` (telemetry contracts, corpus, tests, truthful closures, and supply-chain
+  renewal), `9326e86c` (source-bound Sprint 116 report), and `d4322a0e` (complete downstream
+  contract/configuration/traceability renewal). Commits including log: 4. Commits per closed item:
+  0.19. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across every Batch 116
+  changed or regenerated path and every pin-bearing gate: empty.
+
+### Validation and blockers
+
+- Focused validation passed 4 Rust telemetry-correlation tests, strict Clippy, 3 corpus tests, 3
+  evidence tests, Python compilation, dependency rules, supply-chain currentness, product CI, all
+  affected contract/configuration/traceability checks, and the source-bound report. Supply-chain
+  builds: 1. Corpus generations: 1. Local report builds: 1. Full gate wall seconds: 677.87; it
+  stopped only at the retained Story 6.1 rootless-Podman prerequisite after every preceding gate
+  passed. Self-recovery iterations: 2; applied `cargo fmt` before generation after the format check
+  found the new Rust module unformatted, and replaced a mistyped focused command alias
+  `story-3.1:gate` with the authoritative `story-3.1:gate:check`; both corrected checks passed and
+  neither changed evidence after binding.
+- Real collectors/backends, instrumented services, clocks, load/resource instrumentation,
+  telemetry matrices, `RV-27`/`RV-29`, `AT-OBS-001`, and independent review remain
+  `BLOCKED_EXTERNAL(platform=isolated supported OpenTelemetry collectors and telemetry backends
+  plus instrumented services, release/deployment environments, clock controls, load/resource
+  instrumentation, and independent review environment, artifact=untouched exact query plans, raw
+  and normalized metrics/logs/traces/errors, resource attributes, sampling and clock evidence,
+  statistical methods, canary scans, resource results, RV-27/RV-29 results, AT-OBS-001 subset
+  bundle, support matrix, and independent review, action=provision isolated collectors, backends,
+  instrumented services, environments, clocks, load generators, credentials, instrumentation, and
+  independent reviewer; execute S-116-UT01/ST01/IT01/RT01, RV-27, RV-29, and the OpenTelemetry
+  AT-OBS-001 subset, then transfer untouched evidence, credential=collector, backend, service,
+  environment, instrumentation, and reviewer access, payment=backend, collector, hosting, load,
+  observability, instrumentation, or review costs if applicable)`; `substitution_set=empty`.
+- Sprint 116 also remains dependency-blocked by `UPSTREAM-SPRINT-115-BLOCKED` with no
+  substitution. Exact full-chain carrier blocker: `blocked: host change required — run npm run -s
+  docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 117 Datadog and multi-vendor
+observability. Cumulative closures are 1,149; next required 25-item checkpoint is 1,150.
