@@ -4,6 +4,8 @@
 
 /// Deterministic in-memory ingestion over exact captured artifact bytes.
 pub mod artifact_ingestion;
+/// Inert sandboxed-browser action planning and result verification.
+pub mod browser_inspection;
 /// Fail-closed capability package admission, lifecycle preview, and scope narrowing.
 pub mod capability_package;
 /// Deterministic capability-package hooks, catalog, recovery, and inventory projections.

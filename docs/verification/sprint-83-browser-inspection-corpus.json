@@ -1,0 +1,24 @@
+{
+  "case_count": 36,
+  "categories": {
+    "action": 6,
+    "profile": 6,
+    "domain": 6,
+    "grant": 6,
+    "result": 6,
+    "cleanup": 6
+  },
+  "cases": [
+    "action-navigate", "action-inspect", "action-find", "action-click", "action-screenshot", "action-download",
+    "profile-public-empty", "profile-public-secret-denied", "profile-auth-digest", "profile-auth-missing", "profile-cross-session", "profile-content-absent",
+    "domain-exact", "domain-subdomain", "domain-off-list", "domain-http", "domain-userinfo", "domain-unsorted",
+    "grant-exact", "grant-missing", "grant-malformed", "grant-per-action", "grant-no-inheritance", "grant-no-replay",
+    "result-bounded", "result-oversized", "result-redacted", "result-unredacted", "result-quarantined", "result-unquarantined",
+    "cleanup-terminated", "cleanup-live-child", "cleanup-action-trail", "cleanup-wrong-session", "cleanup-wrong-action", "cleanup-no-content-retention"
+  ],
+  "local_contract_passed": true,
+  "native_browser_executed": false,
+  "download_scan_complete": false,
+  "privacy_review_present": false,
+  "substitution_set": []
+}
