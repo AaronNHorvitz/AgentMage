@@ -1688,3 +1688,53 @@ response. Cumulative closures are 1,049.
 
 Exact next action: continue Decision 0021 ordering at Sprint 113 Argo CD and Flux GitOps control.
 Cumulative closures are 1,070; write the required 1,050-item checkpoint after push.
+
+## Batch 113 — Sprint 113 bounded GitOps control
+
+### Completed
+
+- Closed 18 local Sprint 113 rows: Argo CD/Flux observation, exact desired/live/source/controller
+  correlation, distinct effect planning, ordinary sync/reconcile, separate suspend/resume/rollback
+  grants, controller-race reconciliation, three synthetic verification suites, all story criteria,
+  and Sprint AC 113.AC2 through AC4. The corpus contains 2 provider families, 22 read cases, 64
+  exact plans, 2,048 hostile cases, and 512 fault cases. Controller contacts: 0. Stronger effects
+  enabled: 0. Desired-state writes under synchronization authority: 0. Hidden effects: 0. Authority
+  escapes: 0. Duplicate effects: 0. Unsafe retries: 0.
+- Promoted GitOps providers: 0. Live controllers: 0. Complete supported-version matrix or
+  `AT-DEP-001`: false. Independent human reviews: 0. Promotions: 0. Substitutions: 0. Batch
+  closures: 18. Cumulative closed items: 1,088.
+- Commits: `5af2f744` (GitOps contracts, corpus, tests, truthful closures, and supply-chain renewal),
+  `fc066f82` (source-bound Sprint 113 report), and `1912ded8` (complete downstream
+  contract/configuration/traceability renewal). Commits including log: 4. Commits per closed item:
+  0.22. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across every Batch 113
+  changed or regenerated path and every pin-bearing gate: empty.
+
+### Validation and blockers
+
+- Focused validation passed 4 Rust GitOps tests, strict Clippy, 3 corpus tests, 3 evidence tests,
+  Python compilation, dependency rules, supply-chain currentness, product CI, all affected
+  contract/configuration/traceability checks, and the source-bound report. Supply-chain builds: 1.
+  Corpus generations: 1. Local report builds: 1. Full gate wall seconds: 682; it stopped only at the
+  retained Story 6.1 rootless-Podman prerequisite after every preceding gate passed. Self-recovery
+  iterations: 1; the first atomic source patch used an absent module-order anchor, changed no file,
+  and was reapplied against the resolved current anchor.
+- Supported Argo CD/Flux matrices, real controller effects, and independent review remain
+  `BLOCKED_EXTERNAL(platform=isolated supported Argo CD and Flux controllers, repositories,
+  Kubernetes destinations, artifact registries, health/metrics systems, and independent review
+  environment, artifact=untouched exact application/source/destination/version matrices, live and
+  desired snapshots, rendered resources, controller events, resource diffs, health/drift/history,
+  effect reconciliation, receipts, AT-DEP-001 bundle, support matrix, and independent review,
+  action=provision isolated controllers, repositories, clusters, namespaces, registries,
+  identities, instrumentation, and independent reviewer; execute S-113-CT01/ST01/IT01/RT01 and
+  AT-DEP-001 against real supported versions, then transfer untouched evidence,
+  credential=controller, repository, cluster, registry, health, metrics, instrumentation, and
+  reviewer access, payment=controller, cluster, registry, hosting, observability, instrumentation,
+  or review costs if applicable)`; `substitution_set=empty`.
+- Sprint 113 also remains dependency-blocked by `UPSTREAM-SPRINT-112-BLOCKED` with no
+  substitution. Exact full-chain carrier blocker: `blocked: host change required — run npm run -s
+  docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 114 Terraform and OpenTofu
+infrastructure safety. Cumulative closures are 1,088; write the required 1,075-item checkpoint after
+push.
