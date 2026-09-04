@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_109_local_evidence",
+  "source_revision": "7c32f38a32389647d210b25eabe4db147c1d75e2",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
+    "kernel/engine/src/lib.rs": "7b039e4e4e3b8e4fc212471d6fb32d735fb0c017a8b68e0489da5367ddaaee5b",
+    "kernel/engine/src/ci_control.rs": "554ef08e599f6459bea6270f79741c51afd89ffe67d3c50d960a785bcb3f4970",
+    "DELIVERY-SYSTEM.md": "ca62de984cd9da28d28f183e768e8c07898f7b38ae2d89894dcec66a3293f72c",
+    "artifacts/sprints/sprint-109/ci-control-corpus.json": "5f95e99cd333487602480aa3f10603dc0433ca0f8dda374de51f16c4fc7f2575",
+    "scripts/ci_control_contract.py": "1d6745e0ec3811a0be108fcb167c0fef509a783076e53c3e468e86785ab064a3",
+    "tests/test_ci_control_contract.py": "b6c8eb80fa20ef3aeceef11f9793a597c5f1fb37fbd53ba54775344de13e66dd",
+    "supply-chain/dependency-hashes.sha256": "bd427296bafd059a08cab25b1724568b489a70b88a7b951e465abfe394f23ea6",
+    "supply-chain/dependency-provenance.json": "4c31f6361e3a7c553475c5a5d89e8b51f2009bcf7945065902c5a2d0b3a24a06",
+    "supply-chain/sbom.cdx.json": "7d5974c3c03a951289a8d45bb68ec1c7090e8cae4f45e321e8866f071ccc75fc",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_109_evidence.py": "6d3b4d4e1318cda654b76fafedbaee787cbd738fb371afbf5b7e28b338a6d511",
+    "tests/test_sprint_109_evidence.py": "b417a290f0bc50288729e2939c953bf907ea6c041d361f7058003a092967f991"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "ci-control-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "ci_control::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e2fea644e370e527fc442f2d4e78bac66de00277732be6fcf5e80bd83f2ab602",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "ci-control-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_ci_control_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "9d654695c0a90577e252109954dd749137ace81d33f39cf1a31990e7f48cf31d",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary-contract",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_109_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-DEL-005",
+    "SR-DEL-006",
+    "SR-DEL-007",
+    "SR-DEL-008",
+    "SR-DEL-009",
+    "SR-DEL-010",
+    "SR-DEL-011",
+    "SR-DEL-012",
+    "SR-DEL-013",
+    "SR-DEL-014",
+    "RV-23",
+    "RV-24",
+    "RV-25",
+    "RV-26",
+    "RV-29"
+  ],
+  "implemented_contracts": {
+    "provider_fixture_count": 4,
+    "observation_case_count": 44,
+    "effect_case_count": 16,
+    "fault_schedule_count": 1024,
+    "attack_case_count": 2048,
+    "duplicate_run_count": 0,
+    "secret_disclosure_count": 0,
+    "provider_request_count": 0,
+    "promoted_provider_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "duplicate_run_count": 0,
+    "stronger_capability_count": 0,
+    "unsafe_output_count": 0,
+    "reviewer": "scripts.ci_control_contract",
+    "at_cic_001_complete": false,
+    "independent_human_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-108-BLOCKED",
+      "owner": "109"
+    },
+    {
+      "code": "BLOCKED-EXTERNAL-CI-PROVIDERS-AT-CIC-001",
+      "owner": "109"
+    }
+  ],
+  "summary": {
+    "local_sprint_109_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_108_closed": false,
+    "live_ci_provider_support": false,
+    "release_approval": false
+  }
+}
