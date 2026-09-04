@@ -8169,36 +8169,45 @@ or release gate is closed.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 67.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 67.1.1.1** (legacy `S-054-I06`): Add optional local audio transcription with timestamps, speaker uncertainty, source identity, and original-audio retention controls.
-  - [ ] **Sub-task 67.1.1.2** (legacy `S-054-I07`): Emit a common artifact receipt for every converter, parser, generator, renderer, redactor, and verifier.
+  - [ ] **Sub-task 67.1.1.1** (legacy `S-054-I06`): Add optional local audio transcription with timestamps, speaker uncertainty, source identity, and original-audio retention controls. The validator binds caller-supplied source/engine/profile identity, exact half-open millisecond ranges, text confidence, unclear-language state, inferred-speaker confidence, and retention disposition without executing an engine. Actual transcription remains `BLOCKED_EXTERNAL(platform=approved local audio-transcription host, artifact=exact admitted engine/model/codec package plus labeled normal/empty/boundary/malformed/oversized/unsupported/mixed-encoding/attack/accuracy/segmentation/timestamp/speaker/uncertainty/retention result bundle, action=authorized model/platform owner provisions and admits the local engine and exact audio fixtures, runs the pinned Sprint 67 campaign, and transfers the untouched bundle, credential=model/fixture/platform access, payment=model artifact/runtime/hardware if applicable)`. **Substitution set:** empty.
+  - [x] **Sub-task 67.1.1.2** (legacy `S-054-I07`): Emit a common artifact receipt for every converter, parser, generator, renderer, redactor, and verifier. Evidence: one closed builder accepts converter, parser, generator, renderer, redactor, verifier, and transcriber operation classes and binds exact implementation/profile/input/output identities, fidelity/limitations, source invariance, cleanup, denied effects, and a recomputable receipt digest. Four focused cases construct and verify every class and reject stale digests, invalid locators, unordered identities, and contradictory fidelity; actual every-promoted-type integration remains separately open in Sub-task 67.1.3.4.
 
 - [ ] **Task 67.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 67.1.2.1:** Additional parser and transcription adapters.
-  - [ ] **Sub-task 67.1.2.2:** Common artifact receipt schema.
-  - [ ] **Sub-task 67.1.2.3:** Hostile archive, parser, notebook, YAML, and log corpus.
-  - [ ] **Sub-task 67.1.2.4:** Fidelity and unsupported-feature matrix.
+  - [ ] **Sub-task 67.1.2.1:** Additional parser and transcription adapters. The Sprint 66 parser adapters and authority-free audio-observation validator exist; the executable local-engine adapter is blocked on the exact Sub-task 67.1.1.1 tuple. **Substitution set:** empty.
+  - [x] **Sub-task 67.1.2.2:** Common artifact receipt schema. Evidence: the closed runtime schema/example requires all identity, input/output, locator, fidelity, limitation, invariance, cleanup, effect, and self-digest fields; the 79-test schema suite rejects missing/unknown fields plus inventory, fidelity, hash, and effect drift.
+  - [x] **Sub-task 67.1.2.3:** Hostile archive, parser, notebook, YAML, and log corpus. Evidence: the retained Sprint 66 140-case corpus covers 28 positive, 20 prohibited, 31 invalid, 20 boundary, 24 hostile, and 17 evidence-limit identities; the Sprint 67 contract revalidates its exact count and binds it as the parser portion of this split legacy `S-054` gate.
+  - [x] **Sub-task 67.1.2.4:** Fidelity and unsupported-feature matrix. Evidence: the closed seven-row matrix enumerates each operation class and its permitted fidelity states while preserving false every-type integration plus explicit audio-engine, accuracy, native-parity, and receipt-integration exclusions and zero receipt effect authority.
 
 - [ ] **Task 67.1.3 - Verify and close the story**
   - [ ] **Sub-task 67.1.3.1:** `S-054-UT01` validates each promoted parser/transcriber against normal, empty, boundary, malformed, oversized, unsupported-codec/feature, and mixed-encoding fixtures; assert stable typed output and limitations.
   - [ ] **Sub-task 67.1.3.2:** `S-054-ST01` attacks archives/notebooks/YAML/logs/audio and other formats with traversal, bombs, aliases, object tags, executable cells, terminal controls, remote references, polyglots, and parser exploits; assert non-execution and bounded resources.
-  - [ ] **Sub-task 67.1.3.3:** `S-054-UT02` checks audio segmentation/timestamps/speaker labels/confidence and transcription uncertainty against labeled fixtures; assert no invented words/speakers and exact source-time citations.
-  - [ ] **Sub-task 67.1.3.4:** `S-054-IT01` runs extraction/export/round-trip and common-receipt validation for every type; assert provenance, source invariance, cleanup, and an explicit fidelity/unsupported matrix.
-  - [ ] **Sub-task 67.1.3.5 - Product security evidence:** Map `SR-SUP-003`/`SR-SUP-006`/`SR-SUP-008`/`SR-SUP-009`, `SR-AI-007`, `SR-TST-002`/`SR-TST-004`/`SR-TST-006`; retain per-format BOM, fuzz/adversarial results, transcription metrics, round-trip comparisons, and capability decision.
+  - [ ] **Sub-task 67.1.3.3:** `S-054-UT02` checks audio segmentation/timestamps/speaker labels/confidence and transcription uncertainty against labeled fixtures; assert no invented words/speakers and exact source-time citations. Structural validation passes synthetic observations but labeled engine output remains blocked on the exact Sub-task 67.1.1.1 tuple. **Substitution set:** empty.
+  - [ ] **Sub-task 67.1.3.4:** `S-054-IT01` runs extraction/export/round-trip and common-receipt validation for every type; assert provenance, source invariance, cleanup, and an explicit fidelity/unsupported matrix. The generic receipt classes and matrix pass, but actual every-promoted-type wiring remains `blocked: host change required — run the admitted converter/parser/generator/renderer/redactor/verifier/transcriber integration campaign across every promoted type after the exact native tools and local audio engine are provisioned, and transfer the untouched result bundle`. **Substitution set:** empty.
+  - [ ] **Sub-task 67.1.3.5 - Product security evidence:** Map `SR-SUP-003`/`SR-SUP-006`/`SR-SUP-008`/`SR-SUP-009`, `SR-AI-007`, `SR-TST-002`/`SR-TST-004`/`SR-TST-006`; retain per-format BOM, fuzz/adversarial results, transcription metrics, round-trip comparisons, and capability decision. The local report retains the dependency manifest, hostile parser corpus, receipt mutations, and explicit disabled dependency state. Transcription metrics remain blocked on Sub-task 67.1.1.1; native parity and independent review remain blocked on the exact Sprint 66 platform/review tuples. **Substitution set:** empty.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 67.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then a file type is enabled only with a pinned dependency, threat model, resource limits, hostile corpus, provenance model, fidelity threshold, accessibility impact, and removal path.
-- [ ] **Story AC 67.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then executable semantics remain disabled; unsupported or ambiguous content is preserved inert, omitted with disclosure, or blocks completion.
+- [x] **Story AC 67.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then executable semantics remain disabled; unsupported or ambiguous content is preserved inert, omitted with disclosure, or blocks completion. Evidence: Sprint 66 parsers preserve active content as inert metadata or fail closed, deferred formats stay disabled, and Sprint 67 receipt/audio validators accept only caller-supplied observations with false content execution. Limited fidelity requires an explicit limitation, exact fidelity rejects any limitation or unsupported feature, and the dependency manifest admits no kernel, engine, provider, filesystem adapter, or execution adapter.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 67.AC1:** No parser executes macros, scripts, formulas, notebook cells, YAML constructors, or attachments.
+- [x] **Sprint AC 67.AC1:** No parser executes macros, scripts, formulas, notebook cells, YAML constructors, or attachments. Evidence: the retained 140-case parser contract and six Sprint 66 Rust cases reject or preserve all such constructs without execution, and the common receipt dependency/source checks admit no execution adapter or effect.
 - [ ] **Sprint AC 67.AC2:** Every extracted item retains source file, hash, location, parser identity, and limitation state.
-- [ ] **Sprint AC 67.AC3:** Archive traversal, decompression expansion, nested content, and malicious names remain bounded.
+- [x] **Sprint AC 67.AC3:** Archive traversal, decompression expansion, nested content, and malicious names remain bounded. Evidence: Sprint 66 metadata-only inventory rejects traversal, encryption, duplicates, unsupported compression, count/size/ratio overflow, and quarantines nested archive identities without opening member content; Sprint 67 revalidates the complete hostile corpus.
 - [ ] **Sprint AC 67.AC4:** Transcription distinguishes observed audio positions from inferred speakers or unclear language.
-- [ ] **Sprint AC 67.AC5:** Unsupported formats remain explicit exclusions rather than silent partial support.
+- [x] **Sprint AC 67.AC5:** Unsupported formats remain explicit exclusions rather than silent partial support. Evidence: the fidelity matrix names all absent audio-engine, labeled-accuracy, native-parity, and every-type integration work; limited receipts require a limitation and six deferred formats remain disabled with separate-promotion-required dispositions.
 
 **Gate decision:** Sprint 67 is PASS only when Story 67.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** **BLOCKED.** The locally implementable common receipt, closed runtime schema,
+audio-observation validation, fidelity matrix, dependency manifest, and retained 140-case parser
+corpus pass 8 recorded commands with zero focused skips; see
+`artifacts/sprints/sprint-67/local-evidence-report.json` and
+`docs/verification/sprint-67-local-results.md`. Actual local-engine transcription, labeled accuracy,
+every-promoted-type integration, native parity, independent review, and manual fuzzing remain
+incomplete under the exact tuples above. No story, sprint, product, platform, format, or release
+gate is closed.
 
 ### [ ] Sprint 68 - Local Database and Structured Evidence
 

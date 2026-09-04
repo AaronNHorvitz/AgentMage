@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "manifest_id": "sprint-67-common-artifact-receipt-dependencies-v1",
+  "direct_dependencies": [
+    { "name": "agentmage-kernel-contracts", "purpose": "contract schema version", "executes_content": false },
+    { "name": "serde", "purpose": "closed typed record serialization", "executes_content": false },
+    { "name": "serde_json", "purpose": "canonical receipt binding bytes", "executes_content": false },
+    { "name": "sha2", "purpose": "content-addressed receipt identity", "executes_content": false }
+  ],
+  "audio_engines": [],
+  "audio_models": [],
+  "codec_packages": [],
+  "network_providers": [],
+  "filesystem_adapters": [],
+  "content_execution_adapters": []
+}

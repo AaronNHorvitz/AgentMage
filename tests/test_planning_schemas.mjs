@@ -428,6 +428,7 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "image-inspection",
     "image-redaction-receipt",
     "image-visual-comparison",
+    "common-artifact-receipt",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1693,6 +1694,23 @@ test("image records reject provenance, redaction, visual, and effect drift", () 
     const changed = structuredClone(fixtures[recordType]);
     mutate(changed);
     assert.equal(validateRuntimeRecord(recordType, changed, runtimeValidators).valid, false);
+  }
+});
+
+test("common artifact receipts reject inventory, fidelity, and effect drift", () => {
+  const source = JSON.parse(fs.readFileSync(
+    path.join(ROOT, "schemas/runtime/examples/common-artifact-receipt.valid.json"), "utf8",
+  ));
+  const mutations = [
+    (record) => { record.inputs.push(structuredClone(record.inputs[0])); },
+    (record) => { record.fidelity_state = "exact"; },
+    (record) => { record.network_effect_observed = true; },
+    (record) => { record.receipt_sha256 = "A".repeat(64); },
+  ];
+  for (const mutate of mutations) {
+    const changed = structuredClone(source);
+    mutate(changed);
+    assert.equal(validateRuntimeRecord("common-artifact-receipt", changed, runtimeValidators).valid, false);
   }
 });
 

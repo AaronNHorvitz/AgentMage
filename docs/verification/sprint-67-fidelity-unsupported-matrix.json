@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "matrix_id": "sprint-67-common-artifact-fidelity-v1",
+  "operation_classes": [
+    { "operation_kind": "converter", "local_receipt_contract": true, "actual_every_type_integration": false, "fidelity_states": ["exact", "threshold_passed", "limited", "blocked"] },
+    { "operation_kind": "generator", "local_receipt_contract": true, "actual_every_type_integration": false, "fidelity_states": ["exact", "threshold_passed", "limited", "blocked"] },
+    { "operation_kind": "parser", "local_receipt_contract": true, "actual_every_type_integration": false, "fidelity_states": ["exact", "threshold_passed", "limited", "blocked"] },
+    { "operation_kind": "redactor", "local_receipt_contract": true, "actual_every_type_integration": false, "fidelity_states": ["exact", "threshold_passed", "limited", "blocked"] },
+    { "operation_kind": "renderer", "local_receipt_contract": true, "actual_every_type_integration": false, "fidelity_states": ["exact", "threshold_passed", "limited", "blocked"] },
+    { "operation_kind": "transcriber", "local_receipt_contract": true, "actual_every_type_integration": false, "fidelity_states": ["limited", "blocked"] },
+    { "operation_kind": "verifier", "local_receipt_contract": true, "actual_every_type_integration": false, "fidelity_states": ["exact", "threshold_passed", "limited", "blocked"] }
+  ],
+  "unsupported_features": [
+    "actual-audio-engine-execution",
+    "every-promoted-type-receipt-integration",
+    "labeled-transcription-accuracy",
+    "native-platform-parity"
+  ],
+  "receipt_effect_authority": { "filesystem": false, "network": false, "content_execution": false }
+}

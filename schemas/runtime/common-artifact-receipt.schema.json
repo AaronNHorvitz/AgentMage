@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/common-artifact-receipt.schema.json",
+  "title": "AgentMage Common Artifact Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "operation_id", "operation_kind", "implementation_id", "implementation_version", "implementation_sha256", "profile_sha256", "inputs", "outputs", "fidelity_state", "limitations", "unsupported_features", "source_invariant", "cleanup_verified", "filesystem_effect_observed", "network_effect_observed", "content_execution_observed", "receipt_sha256"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "operation_id": { "$ref": "#/$defs/identifier" },
+    "operation_kind": { "enum": ["converter", "parser", "generator", "renderer", "redactor", "verifier", "transcriber"] },
+    "implementation_id": { "$ref": "#/$defs/identifier" },
+    "implementation_version": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[ -~]+$" },
+    "implementation_sha256": { "$ref": "#/$defs/sha256" },
+    "profile_sha256": { "$ref": "#/$defs/sha256" },
+    "inputs": { "type": "array", "minItems": 1, "maxItems": 4096, "uniqueItems": true, "items": { "$ref": "#/$defs/reference" } },
+    "outputs": { "type": "array", "maxItems": 4096, "uniqueItems": true, "items": { "$ref": "#/$defs/reference" } },
+    "fidelity_state": { "enum": ["exact", "threshold_passed", "limited", "blocked"] },
+    "limitations": { "type": "array", "maxItems": 1024, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+    "unsupported_features": { "type": "array", "maxItems": 1024, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+    "source_invariant": { "type": "boolean" },
+    "cleanup_verified": { "type": "boolean" },
+    "filesystem_effect_observed": { "const": false },
+    "network_effect_observed": { "const": false },
+    "content_execution_observed": { "const": false },
+    "receipt_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reference_id", "sha256", "byte_count", "location_kind", "start", "end"],
+      "properties": {
+        "reference_id": { "$ref": "#/$defs/identifier" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "byte_count": { "type": "integer", "minimum": 0 },
+        "location_kind": { "enum": ["byte_range", "line_range", "page_range", "slide_range", "cell_range", "row_range", "time_range_milliseconds", "whole_artifact"] },
+        "start": { "oneOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }] },
+        "end": { "oneOf": [{ "type": "integer", "minimum": 1 }, { "type": "null" }] }
+      },
+      "allOf": [
+        { "if": { "properties": { "location_kind": { "const": "whole_artifact" } } }, "then": { "properties": { "start": { "type": "null" }, "end": { "type": "null" } } }, "else": { "properties": { "start": { "type": "integer" }, "end": { "type": "integer" } } } }
+      ]
+    }
+  }
+}

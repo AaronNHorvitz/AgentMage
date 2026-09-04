@@ -125,6 +125,7 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "image-inspection",
   "image-redaction-receipt",
   "image-visual-comparison",
+  "common-artifact-receipt",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -2117,6 +2118,19 @@ function runtimeSemanticErrors(recordType, data) {
         (data.changed_pixels === 0) !== (data.maximum_channel_delta === 0) ||
         (data.changed_pixels === 0) !== (data.before_rgba_sha256 === data.after_rgba_sha256)) {
       errors.push("image visual difference aggregate drifted");
+    }
+  } else if (recordType === "common-artifact-receipt") {
+    if (!isStrictlySortedBy(data.inputs ?? [], (item) => item.reference_id) ||
+        !isStrictlySortedBy(data.outputs ?? [], (item) => item.reference_id) ||
+        !isStrictlySorted(data.limitations ?? []) ||
+        !isStrictlySorted(data.unsupported_features ?? [])) {
+      errors.push("common artifact receipt inventories are not canonical");
+    }
+    if ((data.fidelity_state === "exact" &&
+         ((data.limitations ?? []).length !== 0 || (data.unsupported_features ?? []).length !== 0)) ||
+        ((data.fidelity_state === "limited" || data.fidelity_state === "blocked") &&
+         (data.limitations ?? []).length === 0)) {
+      errors.push("common artifact receipt fidelity disposition drifted");
     }
   } else if (recordType === "word-inspection-report") {
     const parts = data.parts ?? [];

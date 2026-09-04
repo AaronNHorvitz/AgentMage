@@ -1,0 +1,20 @@
+{
+  "schema_version": 2,
+  "operation_id": "parse-saved-html-1",
+  "operation_kind": "parser",
+  "implementation_id": "agentmage-safe-html-parser",
+  "implementation_version": "0.1.0",
+  "implementation_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "profile_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "inputs": [{ "reference_id": "source-html", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "byte_count": 42, "location_kind": "byte_range", "start": 0, "end": 42 }],
+  "outputs": [{ "reference_id": "extracted-text", "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "byte_count": 12, "location_kind": "whole_artifact", "start": null, "end": null }],
+  "fidelity_state": "limited",
+  "limitations": ["html.active-content-inert"],
+  "unsupported_features": ["html.layout-rendering"],
+  "source_invariant": true,
+  "cleanup_verified": true,
+  "filesystem_effect_observed": false,
+  "network_effect_observed": false,
+  "content_execution_observed": false,
+  "receipt_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+}

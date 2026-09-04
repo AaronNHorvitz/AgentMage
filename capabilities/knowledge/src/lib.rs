@@ -4,6 +4,7 @@
 
 mod additional_parsers;
 mod advanced_reconciliation;
+mod artifact_receipt;
 mod authority;
 mod coding_skills;
 mod document_control_skills;
@@ -68,6 +69,13 @@ pub use advanced_reconciliation::{
     AllocationResult, ExactDecimal, FinancialRoundingMode, ReconciliationSourceFreshness,
     allocate_many_to_many, record_advanced_reconciliation, require_current_source, round_financial,
     within_tolerance,
+};
+pub use artifact_receipt::{
+    ArtifactFidelityState, ArtifactOperationKind, ArtifactReceiptError, ArtifactReceiptReference,
+    ArtifactSourceLocationKind, AudioTranscriptionObservation, AudioTranscriptionSegment,
+    CommonArtifactReceipt, CommonArtifactReceiptRequest, OriginalAudioRetention,
+    ValidatedAudioTranscription, build_common_artifact_receipt,
+    validate_audio_transcription_observation, verify_common_artifact_receipt,
 };
 pub use authority::{
     KnowledgeDataOwner, KnowledgeFieldPolicy, KnowledgeStorageRule, knowledge_data_dictionary,
