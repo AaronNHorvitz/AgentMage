@@ -1299,3 +1299,54 @@ write the required 850-item checkpoint after push.
 Exact next action: continue Decision 0021 ordering at Sprint 105 external-effect and event
 lifecycle contracts. Cumulative closures are 889; write the required 875-item checkpoint after
 push.
+
+## Batch 105 — Sprint 105 external-effect and event lifecycle
+
+### Completed
+
+- Closed 21 local Sprint 105 rows: Tasks 105.1.1 and 105.1.2 and their 8 sub-tasks;
+  Sub-tasks 105.1.3.1 through 105.1.3.4; all 3 story acceptance criteria; and Sprint AC
+  105.AC1 through 105.AC4. The kernel contract binds 16 plan fields to current remote-state reads,
+  exact preview and operation fingerprints, one consumed grant, 5 explicit reconciled outcomes,
+  exactly one receipt, no retry before proved non-effect, and fresh compensation that preserves
+  later work. Signed event identities, rotating key IDs, replay windows, nonces, sequences,
+  cursors, gaps, tombstones, backfill, bounded retention, and content non-authority are explicit.
+- The deterministic corpus retains 80 schema mutations, 1,024 loss/crash schedules over 5 crash
+  points and 5 provider outcomes, 12 hostile event classes, and 64 stale-compensation races.
+  Duplicate effects: 0. Unsafe retries: 0. Event-created authority: 0. Stale compensations: 0.
+  Live providers: 0. Independent reviews: 0. Promotions: 0. Substitutions: 0. Batch closures: 21.
+  Cumulative closed items: 910.
+- Commits: `5dc82aa4` (kernel source, generators, tests, truthful closures, corpus, and final
+  supply-chain carrier), `c2df8f69` (source-bound Sprint 105 report), and `88f05cad` (one affected
+  downstream evidence regeneration pass). Commits including log: 4. Commits per closed item:
+  0.19. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across all 27 Batch 105
+  changed or regenerated paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 4 Rust cases, 4 corpus-contract tests, 3 evidence mutation tests, strict
+  kernel Clippy, Rust format, Python compilation, Markdown, 80 schema mutations, 1,024 fault
+  schedules, 12 event attacks, 64 rollback races, supply-chain currentness, product CI, 14 affected
+  downstream checks/test groups, and the source-bound report passed. Supply-chain builds: 1.
+  Corpus generations: 1. Local report builds: 1. Downstream evidence regeneration passes: 1.
+  Recovery iterations: 0. The full chain ran 714.41 seconds and stopped only at the retained Story
+  6.1 rootless-Podman prerequisite after every preceding gate passed. Recorded gate wall seconds:
+  714.
+- Native effect/event execution and independent review remain
+  `BLOCKED_EXTERNAL(platform=native credentialed provider effects, event endpoints, failure-
+  injection network, and independent review environment, artifact=untouched RV-25/RV-26 raw
+  provider snapshots, operation fingerprints, event streams, fault schedules, pre/post and
+  reconciliation states, receipts, process/network traces, environment manifest, and independent
+  review, action=provision isolated native provider objects, effect and event credentials,
+  failure-injection transport, instrumentation, and independent reviewer; execute RV-25 and RV-26
+  and transfer untouched evidence, credential=provider effect, webhook/event, host, tenant,
+  account, project, environment, instrumentation, and reviewer access, payment=provider, event,
+  host, instrumentation, or review costs if applicable)`; `substitution_set=empty`.
+- Sprint 105 also remains dependency-blocked by `UPSTREAM-SPRINT-104-BLOCKED` with no
+  substitution. Exact full-chain carrier blocker: `blocked: host change required — run npm run -s
+  docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: audit Sprint 106 GitHub.com/GHES rows for locally executable contract and
+negative-test work versus live credentialed provider dependencies. Cumulative closures are 910;
+write the required 900-item checkpoint after push.
