@@ -10922,10 +10922,10 @@ remain blocked; `substitution_set=empty`. Live provider effects: 0. Promotions: 
   - [ ] **Sub-task 106.1.2.1:** Implement exact drafts and approval-gated issue, comment, label, assignment, milestone, project-field, pull-request, review, thread, workflow, environment, and release operations.
   - [ ] **Sub-task 106.1.2.2:** Implement exact temporary-index tree/diff/message/parent/identity/signer approval, required commit signing and verification, plus a distinct preservation-manifest-bound approval for one ordinary fast-forward push to one full task-branch ref.
   - [ ] **Sub-task 106.1.2.3:** Implement approval-gated workflow dispatch/rerun/cancel and environment approval as `execute`, never generic `remote-write`.
-  - [ ] **Sub-task 106.1.2.4:** Keep generic pull, destructive/implicit Git, force and force-with-lease push, bypass use, repository/organization administration, secret changes, ruleset changes, automatic merge, automatic release, and automatic review absent unless a future taxonomy decision and separately promoted L5 contract explicitly admit them.
+  - [x] **Sub-task 106.1.2.4:** Keep generic pull, destructive/implicit Git, force and force-with-lease push, bypass use, repository/organization administration, secret changes, ruleset changes, automatic merge, automatic release, and automatic review absent unless a future taxonomy decision and separately promoted L5 contract explicitly admit them.
 - [ ] **Task 106.1.3 - Verify and close the story**
   - [ ] **Sub-task 106.1.3.1:** `S-106-CT01` runs every published GitHub object and operation across GitHub.com and the supported GHES version matrix, permission levels, pagination, rate limits, and unavailable features.
-  - [ ] **Sub-task 106.1.3.2:** `S-106-ST01` runs hostile Git configuration and objects, preservation-manifest races, cross-host/account/repository credentials, redirects/proxies/certificate/host-key changes, stale refs, moved lines, branch protection/ruleset/check/review changes, bypass capability, injected content, hidden fields, implicit refspecs, every force form, and every prohibited operation.
+  - [x] **Sub-task 106.1.3.2:** `S-106-ST01` runs hostile Git configuration and objects, preservation-manifest races, cross-host/account/repository credentials, redirects/proxies/certificate/host-key changes, stale refs, moved lines, branch protection/ruleset/check/review changes, bypass capability, injected content, hidden fields, implicit refspecs, every force form, and every prohibited operation.
   - [ ] **Sub-task 106.1.3.3:** `S-106-IT01` reads an issue, creates an isolated change, tests it, signs a local commit, separately pushes, opens a pull request, submits a review, dispatches CI, verifies checks, drafts a release, and reconciles every effect.
   - [ ] **Sub-task 106.1.3.4:** `S-106-RT01` injects GHES version skew, revocation, single-sign-on changes, rate limits, branch movement, timeout, duplicate response, partial publication, crash, and cancellation.
   - [ ] **Sub-task 106.1.3.5:** Execute applicable `RV-23` through `RV-26` and complete `RV-49`; retain API/Git traces, preservation manifests, prohibited-operation registry enumeration, pre/post local/remote snapshots, signatures, support matrix, receipts, and independent review.
@@ -10934,7 +10934,7 @@ remain blocked; `substitution_set=empty`. Live provider effects: 0. Promotions: 
 
 - [ ] **Story AC 106.1.AC1:** Given a supported GitHub.com or GHES tuple, when a published read or write operation runs, then its provider semantics, permissions, immutable identities, exact effects, and receipts match the support matrix.
 - [ ] **Story AC 106.1.AC2:** Given a local commit and remote push, when approvals occur, then exact temporary-index tree/diff/message/parent/signer and canonical host/account/repository/credential/full ref/old object/new object are reviewed and granted separately, with protection and ruleset state refreshed before push.
-- [ ] **Story AC 106.1.AC3:** Given an unsupported GHES feature or administrative operation, when requested directly or indirectly, then it is absent or denied without fallback to a different host or method.
+- [x] **Story AC 106.1.AC3:** Given an unsupported GHES feature or administrative operation, when requested directly or indirectly, then it is absent or denied without fallback to a different host or method.
 
 #### Sprint Acceptance Criteria
 
@@ -10945,6 +10945,13 @@ remain blocked; `substitution_set=empty`. Live provider effects: 0. Promotions: 
 - [ ] **Sprint AC 106.AC5:** All prohibited and unsupported operations pass negative tests, and complete `RV-49` reaches its 10,000-mutation threshold with zero user-work loss or unauthorized effect.
 
 **Gate decision:** Sprint 106 is PASS only when Story 106.1, all criteria, `AT-GHE-001`, complete `RV-49`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Three local Story 106.1 negative-contract rows are retained at
+`artifacts/sprints/sprint-106/local-evidence-report.json`; 22 prohibited operations and 24 hostile
+attack classes span 10,000 deterministic mutations with zero provider requests, fallback,
+unauthorized effects, or user-work loss. Complete `RV-49`, live GitHub.com/GHES conformance,
+signed pushes, hosted effects, and independent review remain blocked; `substitution_set=empty`.
+Supported GitHub.com tuples: 0. Supported GHES tuples: 0. Promotions: 0.
 
 ### [ ] Sprint 107 - Work Management Across GitHub, Jira, and Azure Boards
 
