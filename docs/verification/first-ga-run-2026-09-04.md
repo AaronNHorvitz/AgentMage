@@ -1544,3 +1544,49 @@ evidence. Cumulative closures are 983; write the required 975-item checkpoint af
 
 Exact next action: continue Decision 0021 ordering at Sprint 110 artifact registries and immutable
 promotion. Cumulative closures are 1,005; write the required 1,000-item checkpoint after push.
+
+## Batch 110 — Sprint 110 digest-first artifact lifecycle
+
+### Completed
+
+- Closed 21 local Sprint 110 rows: registry observations, digest-bound download and inert promotion
+  contracts, synthetic verification, all story criteria, and Sprint AC 110.AC2 through AC4. Five
+  synthetic registry providers span 65 read cases, 5 inert transfer cases, and 2,048 hostile and
+  recovery cases. Provider requests: 0. Mutable-label authority: 0. Corrupt promotions: 0. Unsafe
+  retries: 0. Residual partials: 0. Hidden effects: 0. Model binary accesses: 0.
+- Promoted artifact providers: 0. Live artifact providers: 0. Complete `AT-ART-001`: false.
+  Independent human reviews: 0. Promotions: 0. Substitutions: 0. Batch closures: 21. Cumulative
+  closed items: 1,026.
+- Commits: `7385d210` (artifact contracts, corpus, tests, evidence definition, truthful closures,
+  and supply-chain renewal), `059c8ffa` (source-bound Sprint 110 report), and `ff59ce15` (complete
+  downstream contract/configuration/traceability renewal). Commits including log: 4. Commits per
+  closed item: 0.19. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across every
+  Batch 110 changed or regenerated path and every pin-bearing gate: empty.
+
+### Validation and blockers
+
+- Focused validation passed 3 Rust artifact-promotion tests, strict Clippy, 3 corpus tests, 3
+  evidence tests, Python compilation, dependency rules, supply-chain currentness, product CI, all
+  affected contract/configuration/traceability builders, and the source-bound report. Supply-chain
+  builds: 1. Corpus generations: 1. Local report builds: 1. Full gate wall seconds: 682; it stopped
+  only at the retained Story 6.1 rootless-Podman prerequisite after every preceding gate passed.
+  Self-recovery iterations: 0.
+- Exact live-provider promotion matrices and `AT-ART-001` remain
+  `BLOCKED_EXTERNAL(platform=isolated OCI Distribution, GitHub Container Registry, Azure Container
+  Registry, Artifactory, and Nexus registries plus signing/scanning infrastructure and independent
+  review environment, artifact=untouched exact read/promotion/version/permission/retention matrices,
+  digest maps, transfer traces, scanner output, signatures, provenance, pre/post inventories, cleanup
+  scans, receipts, AT-ART-001 bundle, support matrix, and independent review, action=provision
+  isolated registries, repositories, accounts, credentials, signing/scanning services,
+  instrumentation, and independent reviewer; execute S-110-CT01/ST01/IT01/RT01 and AT-ART-001
+  against live registries, then transfer untouched evidence, credential=registry, repository,
+  signing, scanning, instrumentation, and reviewer access, payment=registry, hosting, storage,
+  network, signing, scanning, instrumentation, or review costs if applicable)`;
+  `substitution_set=empty`.
+- Sprint 110 also remains dependency-blocked by `UPSTREAM-SPRINT-109-BLOCKED` with no
+  substitution. Exact full-chain carrier blocker: `blocked: host change required — run npm run -s
+  docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 111 supply-chain evidence and security
+findings. Cumulative closures are 1,026; write the required 1,025-item checkpoint after push.
