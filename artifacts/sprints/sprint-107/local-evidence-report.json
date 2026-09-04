@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_107_local_evidence",
+  "source_revision": "3feac48e57f33d2cb4ee16862a29e05ccc1d6b64",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "capabilities/knowledge/Cargo.toml": "d1aaf75cd939ed948adce94dc56091873a6611fb8f5f8c6dc3a50acf6d0974de",
+    "capabilities/knowledge/src/lib.rs": "914d997e5663e5c7ae674f140cd4623ab2ded7495e44f09b6008709dd9fb3560",
+    "capabilities/knowledge/src/work_management.rs": "065dae26695fd81fab35f1de219cfca092af56e689c3414de4f060d262f5cee1",
+    "DELIVERY-SYSTEM.md": "ca62de984cd9da28d28f183e768e8c07898f7b38ae2d89894dcec66a3293f72c",
+    "docs/decisions/0041-standardized-planning-review-and-delivery-agent-profiles.md": "2a60db0460a096cf35530c67623dd1a854b519593e912fd9ed66a7842523f486",
+    "artifacts/sprints/sprint-107/work-management-corpus.json": "4cdae5eed92a38b70fdf633a008371b4292d28ede4359e4916a1f558c8663857",
+    "scripts/work_management_contract.py": "63d8ad930bfd65092538c22e4bcc374214a5aadbecc7826fc2249f1f10053aad",
+    "tests/test_work_management_contract.py": "1cc662fcf4ddcb3f9779b3d04b447da274a322f3d416c78471824d00d6c8859a",
+    "supply-chain/dependency-hashes.sha256": "6bba7dcff7f94c3203af3b048afe7c2a97025b6adddf085ec200a4efd3894cf6",
+    "supply-chain/dependency-provenance.json": "d4bc4ca0e5be3f7a99db5ede55d373a8f9941b84560b03c0460646a4bf35319d",
+    "supply-chain/sbom.cdx.json": "3a56f704f04a10092754f0929534d57a9820758d0de4cbfd210d193905dc63c3",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_107_evidence.py": "09f44e730aaccafde740aa3510dbe1691067d7ed5738386d3bc5ae8641fa85d2",
+    "tests/test_sprint_107_evidence.py": "1229d161cddea21d52ea68e29cde9a01ef599e1249ec804a3f054a037feba832"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "work-management-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "work_management::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "0ac28029452991b6dc61ea8f38500ba21bb28b20f2684c6e658ca2ac77968aa2",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "work-management-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_work_management_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f96363f8d8dff4c4abed7197c63606ead0bd955ea4259bdcb5fb6f47dbe53992",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary-contract",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_107_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-DEL-001",
+    "SR-DEL-002",
+    "SR-DEL-003",
+    "SR-DEL-004",
+    "SR-DEL-005",
+    "SR-DEL-006",
+    "SR-DEL-007",
+    "SR-DEL-008",
+    "SR-DEL-009",
+    "SR-DEL-010",
+    "SR-DEL-011",
+    "SR-DEL-012",
+    "SR-DEL-013",
+    "RV-23",
+    "RV-24",
+    "RV-25",
+    "RV-26",
+    "RV-27"
+  ],
+  "implemented_contracts": {
+    "provider_fixture_count": 4,
+    "object_case_count": 80,
+    "link_case_count": 48,
+    "effect_case_count": 40,
+    "workflow_case_count": 56,
+    "attack_case_count": 1024,
+    "recovery_case_count": 512,
+    "review_surface_count": 10,
+    "provider_request_count": 0,
+    "promoted_provider_count": 0,
+    "live_provider_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "link_authority_broadening_count": 0,
+    "non_target_change_count": 0,
+    "hidden_recipient_count": 0,
+    "duplicate_effect_count": 0,
+    "reviewer": "scripts.work_management_contract",
+    "at_wrk_001_complete": false,
+    "independent_human_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-106-BLOCKED",
+      "owner": "107"
+    },
+    {
+      "code": "BLOCKED-EXTERNAL-WORK-PROVIDERS-AT-WRK-001",
+      "owner": "107"
+    }
+  ],
+  "summary": {
+    "local_sprint_107_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_106_closed": false,
+    "live_work_provider_support": false,
+    "release_approval": false
+  }
+}
