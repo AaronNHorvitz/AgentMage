@@ -1350,3 +1350,54 @@ push.
 Exact next action: audit Sprint 106 GitHub.com/GHES rows for locally executable contract and
 negative-test work versus live credentialed provider dependencies. Cumulative closures are 910;
 write the required 900-item checkpoint after push.
+
+## Batch 106 — Sprint 106 GitHub full-conformance negative boundary
+
+### Completed
+
+- Closed 3 local Sprint 106 rows: Sub-task 106.1.2.4 prohibited-operation absence, Sub-task
+  106.1.3.2 hostile Git/GitHub security testing, and Story AC 106.1.AC3 unsupported GHES and
+  administrative-operation refusal. The source-bound corpus enumerates 22 prohibited operations
+  and 24 hostile attack classes across 10,000 deterministic mutations. Provider requests: 0.
+  Fallbacks: 0. Unauthorized effects: 0. User-work losses: 0.
+- Supported GitHub.com tuples: 0. Supported GHES tuples: 0. Native requests: 0. Complete `RV-49`:
+  false. Independent reviews: 0. Promotions: 0. Substitutions: 0. Batch closures: 3. Cumulative
+  closed items: 913.
+- Commits: `9c53c99d` (negative corpus generator, tests, truthful closures, and unchanged verified
+  supply-chain outputs), `90f99acd` (source-bound Sprint 106 report), `67a3c6d7` (traceability
+  renewal), and `d2b8829f` (contract-boundary recovery renewal). Commits including log: 5.
+  Commits per closed item: 1.67. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across all 12 Batch 106 changed or regenerated paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 1 real Rust 10,000-case preservation test, 9 GitHub corpus/evidence tests,
+  Python compilation, Markdown, 10,000 generated negative mutations, supply-chain currentness,
+  product CI, traceability, contract-boundary checks, and the source-bound report passed.
+  Supply-chain builds: 1, with byte-identical outputs because no Cargo workspace source changed.
+  Corpus generations: 1. Local report builds: 1. Initial downstream passes: 1 traceability build.
+  Recovery iterations: 1; the first full chain ran 703.88 seconds and identified the contract-
+  boundary report as stale because it also binds changed task truth. The specific contract-boundary
+  and contract-evidence chain was rebuilt and passed, then the required full rerun ran 677.15
+  seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite. Recorded full-
+  gate wall seconds: 1,381.
+- Live GitHub.com/GHES full conformance and complete `RV-49` remain
+  `BLOCKED_EXTERNAL(platform=isolated GitHub.com and supported GitHub Enterprise Server versions,
+  native Git clients, hosted API/event endpoints, clean signed-commit runners, and independent
+  review environment, artifact=untouched complete object/operation/version/permission/pagination/
+  rate-limit matrix, API and Git traces, preservation manifests, prohibited-operation enumeration,
+  pre/post local and remote snapshots, signatures, effect reconciliation receipts, 10,000-mutation
+  complete RV-49 bundle, support matrix, and independent review, action=provision isolated
+  GitHub.com/GHES organizations, repositories, accounts, apps, runners, signing identities,
+  instrumentation, and independent reviewer; execute S-106-CT01/ST01/IT01/RT01 plus RV-23 through
+  RV-26 and complete RV-49, then transfer untouched evidence, credential=GitHub.com/GHES account,
+  app, organization, repository, API, Git transport, workflow, environment, runner, signing,
+  instrumentation, and reviewer access, payment=GitHub Enterprise, runner, signing,
+  instrumentation, or review costs if applicable)`; `substitution_set=empty`.
+- Sprint 106 also remains dependency-blocked by `UPSTREAM-SPRINT-105-BLOCKED` with no
+  substitution. Exact full-chain carrier blocker: `blocked: host change required — run npm run -s
+  docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: continue Decision 0021 ordering at Sprint 107 cross-provider work planning.
+Cumulative closures are 913; next checkpoint is 925.
