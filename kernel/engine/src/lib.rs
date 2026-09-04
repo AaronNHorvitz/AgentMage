@@ -26,6 +26,8 @@ pub mod attachment;
 pub mod authority;
 /// Kernel-owned authority-transaction ordering and recovery contract.
 pub mod authority_transaction;
+/// Closed engineering-capability lifecycle and dependency qualification.
+pub mod capability_lifecycle;
 /// Versioned executable engineering capability admission and deterministic execution.
 pub mod capability_registry;
 /// Exact child-authority intersection, isolation, ownership, and bounded cancellation.

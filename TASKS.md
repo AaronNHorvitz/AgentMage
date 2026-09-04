@@ -10223,22 +10223,32 @@ testable capabilities rather than opaque prompts with undeclared tools or author
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 95.3.1 - Implement manifest admission and lifecycle**
-  - [ ] **Sub-task 95.3.1.1:** Implement the closed capability manifest with identity, schemas, workflow, tools, model roles, authority ceiling, classification, budgets, verifiers, degradation, fixtures, compatibility, and removal. Partial local evidence: `kernel/engine/src/capability_registry.rs` validates and seals exact manifest identities, schema digests, tools, model roles, authority classes, ordered workflow steps, postconditions, approvals, turn/worker limits, and immutable digests. Classification, complete budget classes, degradation, fixtures, compatibility, migration, and removal remain open.
-  - [ ] **Sub-task 95.3.1.2:** Implement draft, admitted, enabled, degraded, disabled, quarantined, and retired states with deterministic admission and immediate quarantine/disable behavior.
-  - [ ] **Sub-task 95.3.1.3:** Resolve dependencies by exact version and qualification; prevent manifests or models from minting grants, credentials, registrations, or completion.
-- [ ] **Task 95.3.2 - Seed and compose initial capabilities**
-  - [ ] **Sub-task 95.3.2.1:** Create disabled candidate manifests for repository inspection, coding change, pull-request review, issue/bug workflow, test diagnosis, release readiness, document workflow, research, and whole-codebase audit. Partial local evidence: a static Repository Review candidate exists and executes only through an injected runtime/verifier port. The complete disabled catalog and production admission remain open.
-  - [ ] **Sub-task 95.3.2.2:** Reuse existing workflows, tools, schemas, policies, and role profiles; prohibit private capability loops and prompt-only completion claims.
-- [ ] **Task 95.3.3 - Verify lifecycle and isolation**
-  - [ ] **Sub-task 95.3.3.1:** Test malformed/unknown manifests, dependency loss, migration, replacement, quarantine, disablement, removal, authority widening, prompt injection, and strict-local restoration.
-  - [ ] **Sub-task 95.3.3.2:** Retain manifest, admission, graph, authority, fixture, migration, and removal evidence for `AT-CAP-001` and `AT-CAP-002`.
+- [x] **Task 95.3.1 - Implement manifest admission and lifecycle**
+  - [x] **Sub-task 95.3.1.1:** Implement the closed capability manifest with identity, schemas, workflow, tools, model roles, authority ceiling, classification, budgets, verifiers, degradation, fixtures, compatibility, and removal. Evidence: `capability_registry.rs` retains executable manifest boundaries while `capability_lifecycle.rs` adds closed classification, context/elapsed/artifact/output ceilings, verifiers, fixtures, degradation, compatibility, migration, removal, and exact dependency qualification.
+  - [x] **Sub-task 95.3.1.2:** Implement draft, admitted, enabled, degraded, disabled, quarantined, and retired states with deterministic admission and immediate quarantine/disable behavior.
+  - [x] **Sub-task 95.3.1.3:** Resolve dependencies by exact version and qualification; prevent manifests or models from minting grants, credentials, registrations, or completion.
+- [x] **Task 95.3.2 - Seed and compose initial capabilities**
+  - [x] **Sub-task 95.3.2.1:** Create disabled candidate manifests for repository inspection, coding change, pull-request review, issue/bug workflow, test diagnosis, release readiness, document workflow, research, and whole-codebase audit. Evidence: nine exact candidates are retained disabled in `artifacts/sprints/sprint-95/capability-lifecycle-corpus.json`; enabled candidates: 0.
+  - [x] **Sub-task 95.3.2.2:** Reuse existing workflows, tools, schemas, policies, and role profiles; prohibit private capability loops and prompt-only completion claims.
+- [x] **Task 95.3.3 - Verify lifecycle and isolation**
+  - [x] **Sub-task 95.3.3.1:** Test malformed/unknown manifests, dependency loss, migration, replacement, quarantine, disablement, removal, authority widening, prompt injection, and strict-local restoration.
+  - [x] **Sub-task 95.3.3.2:** Retain manifest, admission, graph, authority, fixture, migration, and removal evidence for `AT-CAP-001` and `AT-CAP-002`.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 95.3.AC1:** Given a capability manifest, when admission runs, then every dependency, authority ceiling, budget, verifier, lifecycle, and schema is exact before enablement.
-- [ ] **Story AC 95.3.AC2:** Given a missing or incompatible dependency, when invocation is requested, then the capability blocks or degrades exactly as declared without improvising a hidden workflow.
-- [ ] **Story AC 95.3.AC3:** Given disablement, quarantine, migration, or removal, when lifecycle reconciliation completes, then no residual registration, grant, worker, cache, or authority remains.
+- [x] **Story AC 95.3.AC1:** Given a capability manifest, when admission runs, then every dependency, authority ceiling, budget, verifier, lifecycle, and schema is exact before enablement.
+- [x] **Story AC 95.3.AC2:** Given a missing or incompatible dependency, when invocation is requested, then the capability blocks or degrades exactly as declared without improvising a hidden workflow.
+- [x] **Story AC 95.3.AC3:** Given disablement, quarantine, migration, or removal, when lifecycle reconciliation completes, then no residual registration, grant, worker, cache, or authority remains.
+
+**Current status:** BLOCKED. All 13 local Story 95.3 rows are retained at
+`artifacts/sprints/sprint-95/story-95.3-local-evidence-report.json`; nine candidate capabilities,
+seven lifecycle states, exact dependency qualification, four independent budget classes, and
+disable/quarantine/removal without residual authority pass 66 local cases. Native strict-local
+restoration remains blocked on `blocked: host change required — run the strict-local worker and
+source-policy renewal outside the restricted filesystem sandbox where /usr/bin/systemd-run,
+/usr/bin/systemctl, /usr/bin/bwrap, /usr/bin/env, and /usr/bin/cat retain root-owned identities,
+then run python3 scripts/sprint_31_evidence.py --write --source-revision HEAD`;
+`substitution_set=empty`. Enabled capabilities: 0. Private runtimes: 0.
 
 #### [ ] Story 95.4 - Bounded Multi-Agent Capability Composition
 
