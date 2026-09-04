@@ -11,6 +11,9 @@ pub use native_identity::{
 
 use agentmage_kernel_contracts::PLATFORM_ADAPTER_API_VERSION;
 
+mod delivery_contract;
+pub use delivery_contract::*;
+
 /// Stable component identity used by architecture and package manifests.
 pub const COMPONENT_ID: &str = "platform-windows";
 

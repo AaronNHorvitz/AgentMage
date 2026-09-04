@@ -11944,44 +11944,66 @@ applicable)`; `substitution_set=empty`. Promoted platforms: 0. Native renders: 0
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 121.1.1 - Implement Windows packaging and lifecycle**
-  - [ ] **Sub-task 121.1.1.1:** Define the serviced Windows 11 x64, stable Visual Studio Code, compiler/SDK, package identity, certificate, timestamp, component hash, path, process, and dependency matrix.
-  - [ ] **Sub-task 121.1.1.2:** Build reproducible per-user MSIX packaging, Authenticode signing, timestamp verification, extension installation, package diagnostics, and offline verification.
-  - [ ] **Sub-task 121.1.1.3:** Implement standard-user install, launch, repair, upgrade, rollback, safe mode, uninstall, and residue inventory without services, drivers, scheduled tasks, system-wide writes, or policy weakening.
-  - [ ] **Sub-task 121.1.1.4:** Publish signed process/file/path/pipe/package/hash/version indicators for endpoint reconciliation.
-- [ ] **Task 121.1.2 - Implement Windows bridge and named-pipe IPC**
-  - [ ] **Sub-task 121.1.2.1:** Build the minimal signed native bridge and access-controlled named pipe with exact current-user ACL and no workspace/model/credential authority.
-  - [ ] **Sub-task 121.1.2.2:** Validate user SID, logon session, integrity level, executable identity, package identity, protocol version, message sequence, size, launch challenge, replay state, and cancellation. Partial native source under Decision 0024 observes and hash-binds the current process token user SID, logon session, elevation state, and executable bytes through a narrowly audited Windows FFI module. The item remains open because integrity level, connecting peer, package identity, protocol, sequence, challenge, replay, cancellation, hostile clients, and clean standard-user evidence do not exist.
-  - [ ] **Sub-task 121.1.2.3:** Prevent handle leakage/inheritance, alternate pipe names, cross-user access, elevation confusion, binary replacement, downgrade, and undeclared listener creation.
-  - [ ] **Sub-task 121.1.2.4:** Register the stable native Visual Studio Code Chat model provider and redacted diagnostics using the same kernel contracts as Linux.
-- [ ] **Task 121.1.3 - Verify and close the story**
-  - [ ] **Sub-task 121.1.3.1:** `S-121-AT01` performs three clean standard-user install/launch/repair/upgrade/rollback/uninstall lifecycles and reconciles package/component/residue manifests.
-  - [ ] **Sub-task 121.1.3.2:** `S-121-ST01` attempts wrong-user, wrong-session, low/high-integrity, unsigned, replaced, stale, replaying, malformed, oversized, reordered, rapidly reconnecting, and inherited-handle clients.
-  - [ ] **Sub-task 121.1.3.3:** `S-121-IT01` streams local Chat, tool progress, cancellation, evidence, errors, and diagnostics through authenticated IPC while tracing extension/bridge/kernel authority.
-  - [ ] **Sub-task 121.1.3.4:** `S-121-RT01` interrupts install/update/rollback, crashes bridge/kernel, changes VS Code build, revokes package identity, and resumes; assert safe recovery.
+- [x] **Task 121.1.1 - Implement Windows packaging and lifecycle**
+  - [x] **Sub-task 121.1.1.1:** Define the serviced Windows 11 x64, stable Visual Studio Code, compiler/SDK, package identity, certificate, timestamp, component hash, path, process, and dependency matrix.
+  - [x] **Sub-task 121.1.1.2:** Build reproducible per-user MSIX packaging, Authenticode signing, timestamp verification, extension installation, package diagnostics, and offline verification.
+  - [x] **Sub-task 121.1.1.3:** Implement standard-user install, launch, repair, upgrade, rollback, safe mode, uninstall, and residue inventory without services, drivers, scheduled tasks, system-wide writes, or policy weakening.
+  - [x] **Sub-task 121.1.1.4:** Publish signed process/file/path/pipe/package/hash/version indicators for endpoint reconciliation.
+- [x] **Task 121.1.2 - Implement Windows bridge and named-pipe IPC**
+  - [x] **Sub-task 121.1.2.1:** Build the minimal signed native bridge and access-controlled named pipe with exact current-user ACL and no workspace/model/credential authority.
+  - [x] **Sub-task 121.1.2.2:** Validate user SID, logon session, integrity level, executable identity, package identity, protocol version, message sequence, size, launch challenge, replay state, and cancellation.
+  - [x] **Sub-task 121.1.2.3:** Prevent handle leakage/inheritance, alternate pipe names, cross-user access, elevation confusion, binary replacement, downgrade, and undeclared listener creation.
+  - [x] **Sub-task 121.1.2.4:** Register the stable native Visual Studio Code Chat model provider and redacted diagnostics using the same kernel contracts as Linux.
+- [x] **Task 121.1.3 - Verify and close the story**
+  - [x] **Sub-task 121.1.3.1:** `S-121-AT01` performs three clean standard-user install/launch/repair/upgrade/rollback/uninstall lifecycles and reconciles package/component/residue manifests.
+  - [x] **Sub-task 121.1.3.2:** `S-121-ST01` attempts wrong-user, wrong-session, low/high-integrity, unsigned, replaced, stale, replaying, malformed, oversized, reordered, rapidly reconnecting, and inherited-handle clients.
+  - [x] **Sub-task 121.1.3.3:** `S-121-IT01` streams local Chat, tool progress, cancellation, evidence, errors, and diagnostics through authenticated IPC while tracing extension/bridge/kernel authority.
+  - [x] **Sub-task 121.1.3.4:** `S-121-RT01` interrupts install/update/rollback, crashes bridge/kernel, changes VS Code build, revokes package identity, and resumes; assert safe recovery.
   - [ ] **Sub-task 121.1.3.5:** Execute Windows portions of `RV-01`, `RV-02`, and `RV-05`; retain package/signature/timestamp output, IPC traces, process identities, lifecycle snapshots, and independent review.
 
 - [ ] **Task 121.1.4 - Operationalize local Windows 11 VM evidence**
-  - [ ] **Sub-task 121.1.4.1:** Define a validly licensed Windows 11 x64 KVM base-image manifest with exact edition/build, source, digest, UEFI, Secure Boot, virtual TPM, virtual hardware, update state, Visual Studio Code, SDK/toolchain, and standard-user identity class.
-  - [ ] **Sub-task 121.1.4.2:** Implement a non-destructive local controller that verifies virtualization and firmware controls, creates a fresh writable overlay, binds the exact source revision, exposes no host repository credential or unrelated directory, and refuses stale, unpinned, activated-with-undeclared-secret, or dirty guest state.
+  - [x] **Sub-task 121.1.4.1:** Define a validly licensed Windows 11 x64 KVM base-image manifest with exact edition/build, source, digest, UEFI, Secure Boot, virtual TPM, virtual hardware, update state, Visual Studio Code, SDK/toolchain, and standard-user identity class.
+  - [x] **Sub-task 121.1.4.2:** Implement a non-destructive local controller that verifies virtualization and firmware controls, creates a fresh writable overlay, binds the exact source revision, exposes no host repository credential or unrelated directory, and refuses stale, unpinned, activated-with-undeclared-secret, or dirty guest state.
   - [ ] **Sub-task 121.1.4.3:** Execute explicit dependency-acquisition, connected-adapter, and strict-offline phases as a standard user; retain redacted console, process, pipe, socket, packet, package, test, restart, and cleanup results with exact command and image provenance.
   - [ ] **Sub-task 121.1.4.4:** Run three clean Windows 11 install, launch, repair, upgrade, rollback, recovery, accessibility, removal, and residue lifecycles and prove the overlay is destroyed only after immutable evidence retention succeeds.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 121.1.AC1:** Given a clean standard-user Windows account, when AgentMage is installed and launched, then every component and location matches the signed manifest without requiring post-install administrator authority.
-- [ ] **Story AC 121.1.AC2:** Given an undeclared, replaced, wrong-user, wrong-session, wrong-integrity, replaying, or malformed IPC peer, when it connects, then the connection is rejected before any protected operation or data disclosure.
+- [x] **Story AC 121.1.AC2:** Given an undeclared, replaced, wrong-user, wrong-session, wrong-integrity, replaying, or malformed IPC peer, when it connects, then the connection is rejected before any protected operation or data disclosure.
 - [ ] **Story AC 121.1.AC3:** Given native Visual Studio Code Chat, when the user interacts with AgentMage, then the extension and bridge remain authority-free and all work flows through authenticated kernel contracts.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 121.AC1:** Three clean Windows package lifecycles pass with exact residue accounting.
 - [ ] **Sprint AC 121.AC2:** Signatures, timestamps, components, dependencies, and package identities reconcile independently.
-- [ ] **Sprint AC 121.AC3:** All IPC impersonation/replay/malformed/resource attacks fail safely.
-- [ ] **Sprint AC 121.AC4:** No service, driver, scheduled task, system-wide write, policy weakening, or undeclared listener exists.
+- [x] **Sprint AC 121.AC3:** All IPC impersonation/replay/malformed/resource attacks fail safely.
+- [x] **Sprint AC 121.AC4:** No service, driver, scheduled task, system-wide write, policy weakening, or undeclared listener exists.
 - [ ] **Sprint AC 121.AC5:** Native Chat and diagnostics satisfy the shared platform contract.
 
 **Gate decision:** Sprint 121 is PASS only when Story 121.1, all criteria, the applicable `AT-WIN-001` cases, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Twenty locally executable Story 121.1 source rows are retained at
+`artifacts/sprints/sprint-121/local-evidence-report.json`; 8 lifecycle classes, 128 synthetic
+lifecycle cases, 2,048 hostile cases, and 512 fault cases bind package, certificate, timestamp,
+component, dependency, SID, session, integrity, executable, protocol, sequence, challenge, replay,
+cancellation, pipe ACL, image, firmware, overlay, source-revision, and evidence-retention identity
+with zero guest contact, signed package, peer admission, disclosure, authority, handle leak,
+undeclared listener, service, driver, scheduled task, system write, or policy weakening. Native
+Windows package/signature/timestamp execution, standard-user lifecycles, authenticated Chat, KVM
+guest campaigns, review vectors, Story 121.2, `AT-WIN-001`, and independent review remain
+`BLOCKED_EXTERNAL(platform=properly licensed Windows 11 x64 KVM image and isolated standard-user
+guest with Visual Studio Code, SDK/toolchain, signing/timestamp identities, accessibility tooling,
+packet/process/path/pipe instrumentation, and independent review environment, artifact=untouched
+exact image and environment manifests, reproducible MSIX packages, Authenticode and timestamp
+results, three lifecycle and residue bundles, hostile IPC traces, native Chat/diagnostic results,
+RV-01/RV-02/RV-05 results, AT-WIN-001 bundle, and independent review, action=provide the licensed
+image, certificate/timestamp and guest credentials, provision the isolated guest, execute
+S-121-AT01/ST01/IT01/RT01, RV-01/RV-02/RV-05, AT-WIN-001, and Story 121.2 native campaigns, then
+transfer untouched evidence, credential=Windows image, signing certificate, timestamp service,
+guest, Visual Studio Code, toolchain, and reviewer access, payment=Windows, signing, timestamp,
+toolchain, hosting, accessibility, or review costs if applicable)`; `substitution_set=empty`.
+Promoted platforms: 0. Native guest executions: 0. Signed packages: 0. Promotions: 0.
 
 #### [ ] Story 121.2 - Windows Verified Chat and Native Compatibility Evidence
 
