@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "case_count": 56,
+  "categories": {
+    "draft": 8,
+    "refresh": 8,
+    "grant": 8,
+    "capability": 8,
+    "signed_push": 8,
+    "prohibition": 8,
+    "authority": 8
+  },
+  "cases": [
+    "draft-issue", "draft-pull-request", "draft-review", "draft-thread", "draft-label", "draft-assignment", "draft-workflow", "draft-release",
+    "refresh-hosted-object", "refresh-local-branch", "refresh-permission", "refresh-protection", "refresh-ruleset", "refresh-checks", "refresh-push-rule", "refresh-bypass-visible",
+    "grant-host", "grant-repository", "grant-actor", "grant-object", "grant-payload", "grant-effect", "grant-expiry", "grant-idempotency",
+    "capability-review", "capability-thread", "capability-workflow", "capability-commit", "capability-push", "capability-branch-update", "capability-merge", "capability-release",
+    "signed-push-full-ref", "signed-push-old-object", "signed-push-new-object", "signed-push-diff", "signed-push-message-tree-parent", "signed-push-signer", "signed-push-verified", "signed-push-distinct-approval",
+    "prohibit-implicit", "prohibit-configured-url", "prohibit-multiple", "prohibit-protected-tag", "prohibit-delete", "prohibit-scope-expansion", "prohibit-force-bypass", "prohibit-administration",
+    "authority-no-git", "authority-no-filesystem", "authority-no-process", "authority-no-network", "authority-no-credential-material", "authority-preview-not-grant", "authority-drift-denied", "authority-expiry-denied"
+  ],
+  "local_contract_passed": true,
+  "native_mutation_executed": false,
+  "signed_commit_created": false,
+  "push_executed": false,
+  "independent_review_present": false,
+  "substitution_set": []
+}

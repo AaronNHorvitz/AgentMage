@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "case_count": 48,
+  "categories": {
+    "idempotency": 8,
+    "result": 8,
+    "recovery": 8,
+    "receipt": 8,
+    "attack": 8,
+    "retry": 8
+  },
+  "cases": [
+    "idempotency-comment", "idempotency-label", "idempotency-issue", "idempotency-pull-request", "idempotency-workflow", "idempotency-release", "idempotency-push", "idempotency-replay",
+    "result-success", "result-conflict", "result-validation", "result-timeout-before", "result-timeout-after", "result-duplicate", "result-rate-limit", "result-unknown",
+    "recovery-credential-expiry", "recovery-permission-change", "recovery-repository-rename", "recovery-branch-delete", "recovery-line-move", "recovery-base-move", "recovery-partial-publication", "recovery-cancellation",
+    "receipt-request", "receipt-response", "receipt-external-identity", "receipt-freshness", "receipt-changed-state", "receipt-failure", "receipt-retry", "receipt-compensation",
+    "attack-cross-host", "attack-cross-repository", "attack-cross-account", "attack-hidden-field", "attack-refspec", "attack-force-lease", "attack-bypass", "attack-admin-secret-ruleset",
+    "retry-verified-changed-block", "retry-verified-unchanged-new-request", "retry-partial-block", "retry-unknown-block", "retry-fresh-observation", "retry-new-grant", "retry-new-idempotency", "retry-no-duplicate"
+  ],
+  "local_contract_passed": true,
+  "native_mutation_executed": false,
+  "remote_reconciliation_executed": false,
+  "rollback_executed": false,
+  "independent_review_present": false,
+  "substitution_set": []
+}

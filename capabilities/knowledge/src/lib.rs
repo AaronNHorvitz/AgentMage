@@ -12,6 +12,7 @@ mod database_adapter;
 mod document_control_skills;
 mod domain;
 mod executive_skills;
+mod github_mutation;
 mod github_provider;
 mod github_triage;
 mod hosted_repository;
@@ -112,6 +113,11 @@ pub use domain::{
     KnowledgeRetentionKind, validate_record,
 };
 pub use executive_skills::{ExecutiveSkill, built_in_executive_skill_pack};
+pub use github_mutation::{
+    GithubMutationError, GithubMutationKind, GithubMutationPreview, GithubMutationReceipt,
+    GithubMutationRequest, GithubMutationResult, GithubPushBinding, HostedRefresh,
+    ProhibitedGithubOperation, admit_github_mutation, reconcile_github_mutation,
+};
 pub use github_provider::{
     GithubAuthBinding, GithubAuthDiagnostic, GithubCredentialClass, GithubHostKind,
     GithubProviderError, GithubReadObservation, GithubReadOperation, GithubReadReceipt,

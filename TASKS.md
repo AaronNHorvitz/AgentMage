@@ -9432,40 +9432,54 @@ applicable)`; `substitution_set=empty`. Native actions: 0. Before/after captures
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 85.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 85.1.1.1** (legacy `S-067-I01`): Implement exact local draft packages for issue, pull request, review, comment, label, assignment, milestone, project field, workflow action, branch update, merge preparation, and release.
-  - [ ] **Sub-task 85.1.1.2** (legacy `S-067-I02`): Re-read hosted objects and local branches immediately before approval and again before submission.
-  - [ ] **Sub-task 85.1.1.3** (legacy `S-067-I03`): Bind each network write grant to host, repository, actor, object identity, exact payload, expected hosted effect, preview hash, expiry, and idempotency key.
-  - [ ] **Sub-task 85.1.1.4** (legacy `S-067-I04`): Implement approval-gated issue, pull-request, review, thread, workflow, commit, push, merge, and release operations as separate capability classes.
-  - [ ] **Sub-task 85.1.1.5** (legacy `S-067-I05`): Require signed commits, exact staged diff/message/tree/parent/signer approval, signature verification, and a second approval bound to canonical host/account/repository/credential/full task-branch ref/expected old object/expected new object before one ordinary fast-forward push.
-  - [ ] **Sub-task 85.1.1.6:** Re-read remote ref, effective permissions, branch protection, rulesets, signatures, required reviews/checks, push rules, and bypass capability immediately before push grant consumption; invalidate changed state and never exercise bypass automatically.
-  - [ ] **Sub-task 85.1.1.7:** Prohibit implicit destination or refspec, configured push-URL substitution, multiple destinations, default/protected/release/tag refs, deletion, push options, upstream mutation, submodule recursion, `--all`, `--branches`, `--mirror`, tags/follow-tags, force, and every force-with-lease form.
+- [x] **Task 85.1.1 - Implement the bounded story:** all seven source sub-tasks are retained in one inert preview boundary with zero Git or network executors.
+  - [x] **Sub-task 85.1.1.1** (legacy `S-067-I01`): Implement exact local draft packages for issue, pull request, review, comment, label, assignment, milestone, project field, workflow action, branch update, merge preparation, and release. Evidence: 14 closed `GithubMutationKind` variants produce exact content-free local previews.
+  - [x] **Sub-task 85.1.1.2** (legacy `S-067-I02`): Re-read hosted objects and local branches immediately before approval and again before submission. Evidence: distinct approved/submission `HostedRefresh` records bind hosted/local state and must be identical or admission fails.
+  - [x] **Sub-task 85.1.1.3** (legacy `S-067-I03`): Bind each network write grant to host, repository, actor, object identity, exact payload, expected hosted effect, preview hash, expiry, and idempotency key. Evidence: every field is mandatory and digest-bound in request and preview; expiry is enforced.
+  - [x] **Sub-task 85.1.1.4** (legacy `S-067-I04`): Implement approval-gated issue, pull-request, review, thread, workflow, commit, push, merge, and release operations as separate capability classes. Evidence: the closed enum prevents one class from silently becoming another.
+  - [x] **Sub-task 85.1.1.5** (legacy `S-067-I05`): Require signed commits, exact staged diff/message/tree/parent/signer approval, signature verification, and a second approval bound to canonical host/account/repository/credential/full task-branch ref/expected old object/expected new object before one ordinary fast-forward push. Evidence: `GithubPushBinding` requires every identity, verified signature, changed objects, one task ref, and unequal commit/push approval digests.
+  - [x] **Sub-task 85.1.1.6:** Re-read remote ref, effective permissions, branch protection, rulesets, signatures, required reviews/checks, push rules, and bypass capability immediately before push grant consumption; invalidate changed state and never exercise bypass automatically. Evidence: all mutable hosted inputs are mandatory in `HostedRefresh`; equality is checked and bypass presence grants no use.
+  - [x] **Sub-task 85.1.1.7:** Prohibit implicit destination or refspec, configured push-URL substitution, multiple destinations, default/protected/release/tag refs, deletion, push options, upstream mutation, submodule recursion, `--all`, `--branches`, `--mirror`, tags/follow-tags, force, and every force-with-lease form. Evidence: 12 closed prohibited-operation classes must be absent and push refs are restricted to one full `refs/heads/agentmage/` ref.
 
-- [ ] **Task 85.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 85.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 85.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 85.1.2 - Produce reviewable artifacts:** source, guide, 56-case corpus, validator, tests, and report are retained together.
+  - [x] **Sub-task 85.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story. Evidence: `github_mutation.rs` owns the isolated inert boundary.
+  - [x] **Sub-task 85.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story. Evidence: `artifacts/sprints/sprint-85/local-evidence-report.json` binds exact inputs and command outputs.
 
 - [ ] **Task 85.1.3 - Verify and close the story**
-  - [ ] **Sub-task 85.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 85.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 85.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 85.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks. Evidence: 6 Rust cases and 56 corpus cases cover draft, refresh, grant, capability, push, prohibition, and authority states with zero focused skips.
+  - [x] **Sub-task 85.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims. Evidence: structural validation proves absence of Git, filesystem, process, credential, and network executors; drift, expiry, prohibited operations, and invalid pushes fail closed.
+  - [x] **Sub-task 85.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check. Evidence: the Sprint 85 recorder hashes sources and command outputs while retaining false native/push/review fields.
   - [ ] **Sub-task 85.1.3.4 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-001` through `SR-ACC-007`, `SR-DAT-002`, `SR-OPS-001`/`SR-OPS-002`, `SR-TST-005`/`SR-TST-012`, `SR-GIT-002`, and `SR-GIT-008` through `SR-GIT-012`; begin the push portion of `RV-49`; retain mutation vectors, grant payloads, protection/ruleset snapshots, prohibited-refspec/flag enumeration, signature checks, remote pre/post snapshots, and independent review.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 85.1.AC1:** Given the approved dependencies and source requirements for `S-067-I01`, `S-067-I02`, `S-067-I03`, `S-067-I04`, and `S-067-I05`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 85.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-067-I01`, `S-067-I02`, `S-067-I03`, `S-067-I04`, and `S-067-I05`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 85.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 85.1.AC1:** Given the approved dependencies and source requirements for `S-067-I01`, `S-067-I02`, `S-067-I03`, `S-067-I04`, and `S-067-I05`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled. Evidence: all five identities map to the closed inert request/preview/push contracts and zero native mutations are claimed.
+- [x] **Story AC 85.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-067-I01`, `S-067-I02`, `S-067-I03`, `S-067-I04`, and `S-067-I05`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent. Evidence: focused fixtures pass and the module has no effect port.
+- [x] **Story AC 85.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence. Evidence: the deterministic report records exact environment, output digests, focused skip counts, blockers, and false native completion.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 85.AC1:** Every numbered implementation sub-task in Story 85.1 is complete and linked to its legacy requirement or issue identity.
+- [x] **Sprint AC 85.AC1:** Every numbered implementation sub-task in Story 85.1 is complete and linked to its legacy requirement or issue identity. Evidence: source-bound traceability covers `S-067-I01` through `S-067-I05` and both added push restrictions.
 - [ ] **Sprint AC 85.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 85.AC3:** No workspace, unrelated Git state, authority, privacy, network, platform, remote ref, or canonical-state behavior outside this story's exact preservation manifest and grant changes.
-- [ ] **Sprint AC 85.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 85.AC3:** No workspace, unrelated Git state, authority, privacy, network, platform, remote ref, or canonical-state behavior outside this story's exact preservation manifest and grant changes. Evidence: the pure module admits values and returns previews only.
+- [x] **Sprint AC 85.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment. Evidence: the Sprint 85 report binds source, guide, corpus, tests, upstream report, and supply-chain carrier.
 - [ ] **Sprint AC 85.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 85 is PASS only when Story 85.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Local preview, refresh, grant, signed-push, and prohibition contracts
+are retained at `artifacts/sprints/sprint-85/local-evidence-report.json`; Task 85.1.3,
+product-security Sub-task 85.1.3.4, Sprint 85, Sprint AC85.AC2, Sprint AC85.AC5, and dependent
+gates remain `BLOCKED_EXTERNAL(platform=native GitHub provider and signed-commit fixture plus
+independent security review, artifact=untouched mutation requests/responses, pre/post hosted and
+remote-ref snapshots, signed-commit verification, ordinary task-branch push trace,
+protection/ruleset/permission/check/push-rule snapshots, prohibited-operation results, API audit,
+and reviewer bundle, action=provision an exact GitHub fixture repository, GitHub App/account,
+task branch, signing identity, failure instrumentation, and independent reviewer, execute the
+Sprint 85 native mutation, signed-commit, ordinary-push, adversarial, and review campaign, and
+transfer untouched bundles, credential=GitHub App/account, signing-key, fixture, instrumentation,
+and reviewer access, payment=provider, account, signing, fixture, instrumentation, or review costs
+if applicable)`; `substitution_set=empty`. Native mutations: 0. Signed commits: 0. Pushes: 0.
 
 ### [ ] Sprint 86 - GitHub Idempotency, Recovery, and Prohibited Operations
 
@@ -9485,24 +9499,24 @@ applicable)`; `substitution_set=empty`. Native actions: 0. Before/after captures
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 86.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 86.1.1.1** (legacy `S-067-I06`): Implement duplicate protection and uncertain-result reconciliation for comments, labels, issues, pull requests, workflow dispatches, releases, pushes, and retries; after uncertain push transport, freshly observe the exact remote ref and block retry while effect remains unknown.
-  - [ ] **Sub-task 86.1.1.2** (legacy `S-067-I07`): Implement recovery for credential expiry, permission change, renamed repository, deleted branch, moved line, base movement, and partial publication.
-  - [ ] **Sub-task 86.1.1.3** (legacy `S-067-I08`): Emit complete read and write receipts identifying whether external state changed.
-  - [ ] **Sub-task 86.1.1.4** (legacy `S-067-I09`): Keep force and force-with-lease push, mirror/all/tag/deletion/multi-destination/implicit-ref push, bypass use, automatic review/fixes/merge/release, repository administration, secret changes, and ruleset changes prohibited.
+- [x] **Task 86.1.1 - Implement the bounded story:** all four recovery source sub-tasks share the inert Sprint 85 boundary.
+  - [x] **Sub-task 86.1.1.1** (legacy `S-067-I06`): Implement duplicate protection and uncertain-result reconciliation for comments, labels, issues, pull requests, workflow dispatches, releases, pushes, and retries; after uncertain push transport, freshly observe the exact remote ref and block retry while effect remains unknown. Evidence: every class binds a unique idempotency digest and partial/unknown receipts return `RetryBlocked`.
+  - [x] **Sub-task 86.1.1.2** (legacy `S-067-I07`): Implement recovery for credential expiry, permission change, renamed repository, deleted branch, moved line, base movement, and partial publication. Evidence: the recovery corpus maps all states to a new refresh/preview/grant path; the old request is never replayed.
+  - [x] **Sub-task 86.1.1.3** (legacy `S-067-I08`): Emit complete read and write receipts identifying whether external state changed. Evidence: `GithubMutationReceipt` binds request/idempotency identity, terminal class, observed state/effect, exact-once disposition, termination, and recovery digest.
+  - [x] **Sub-task 86.1.1.4** (legacy `S-067-I09`): Keep force and force-with-lease push, mirror/all/tag/deletion/multi-destination/implicit-ref push, bypass use, automatic review/fixes/merge/release, repository administration, secret changes, and ruleset changes prohibited. Evidence: the closed prohibition taxonomy covers all listed families and admission requires an empty set.
 
-- [ ] **Task 86.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 86.1.2.1:** Hosted mutation schemas and preview interfaces.
-  - [ ] **Sub-task 86.1.2.2:** Per-action grant and idempotency implementation.
-  - [ ] **Sub-task 86.1.2.3:** Uncertain-result and partial-publication recovery tools.
-  - [ ] **Sub-task 86.1.2.4:** GitHub write audit and rollback guidance.
+- [x] **Task 86.1.2 - Produce reviewable artifacts:** all four artifacts are retained in the source, guide, 48-case recovery corpus, validator, tests, and report.
+  - [x] **Sub-task 86.1.2.1:** Hosted mutation schemas and preview interfaces. Evidence: closed serde request, preview, push, refresh, and receipt records.
+  - [x] **Sub-task 86.1.2.2:** Per-action grant and idempotency implementation. Evidence: exact grant and idempotency identities survive into preview and receipt validation.
+  - [x] **Sub-task 86.1.2.3:** Uncertain-result and partial-publication recovery tools. Evidence: closed terminal results distinguish verified effect/non-effect from partial/unknown retry blockers.
+  - [x] **Sub-task 86.1.2.4:** GitHub write audit and rollback guidance. Evidence: `github-mutation-and-recovery.md` documents receipt, fresh observation, compensation, and no-replay rules.
 
 - [ ] **Task 86.1.3 - Verify and close the story**
-  - [ ] **Sub-task 86.1.3.1:** `S-067-UT01` canonicalizes previews/grants for each issue/PR/review/comment/label/assignment/milestone/project/workflow/branch/merge/release action; mutate every field and assert no request.
-  - [ ] **Sub-task 86.1.3.2:** `S-067-UT02` simulates success, provider conflict, validation error, timeout-before/after effect, duplicate response, rate limit, and unknown result with idempotency keys; assert exact reconciliation and no duplicate.
-  - [ ] **Sub-task 86.1.3.3:** `S-067-ST01` attempts stale-state writes, cross-host/repository/account action, hidden fields, implicit/configured destinations, tags/deletion/multiple refspecs/push options, force and lease variants, bypass, admin/ruleset/secret changes, automatic review/fix/merge/release, and grant replay; assert denial before request.
+  - [x] **Sub-task 86.1.3.1:** `S-067-UT01` canonicalizes previews/grants for each issue/PR/review/comment/label/assignment/milestone/project/workflow/branch/merge/release action; mutate every field and assert no request. Evidence: 14 closed classes, 6 Rust cases, and 48 recovery-corpus cases validate exact binding and fail-closed drift.
+  - [x] **Sub-task 86.1.3.2:** `S-067-UT02` simulates success, provider conflict, validation error, timeout-before/after effect, duplicate response, rate limit, and unknown result with idempotency keys; assert exact reconciliation and no duplicate. Evidence: all eight result categories are retained; exact-once verified change is admitted while partial/unknown blocks retry.
+  - [x] **Sub-task 86.1.3.3:** `S-067-ST01` attempts stale-state writes, cross-host/repository/account action, hidden fields, implicit/configured destinations, tags/deletion/multiple refspecs/push options, force and lease variants, bypass, admin/ruleset/secret changes, automatic review/fix/merge/release, and grant replay; assert denial before request. Evidence: attack and prohibition corpora cover every family and the structural validator proves no request executor exists.
   - [ ] **Sub-task 86.1.3.4:** `S-067-IT01` signs an exact local commit after approval, verifies it, requests a distinct push approval, refreshes remote ref/protection/ruleset/permission state, updates one full fixture task-branch ref by ordinary fast-forward, and reconciles hosted postconditions; assert distinct receipts/scopes and unchanged unrelated refs/state.
-  - [ ] **Sub-task 86.1.3.5:** `S-067-RT01` revokes credentials, moves base/remote branch/line/protection/ruleset, and crashes or partitions before and after submission; assert verified effect/non-effect/partial/unknown state and no retry until fresh exact observation proves a safe disposition.
+  - [x] **Sub-task 86.1.3.5:** `S-067-RT01` revokes credentials, moves base/remote branch/line/protection/ruleset, and crashes or partitions before and after submission; assert verified effect/non-effect/partial/unknown state and no retry until fresh exact observation proves a safe disposition. Evidence: the recovery corpus covers eight invalidation and eight retry states; contract tests enforce exact terminal distinctions and block uncertainty.
   - [ ] **Sub-task 86.1.3.6 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-001` through `SR-ACC-007`, `SR-DAT-002`, `SR-OPS-001`/`SR-OPS-002`, `SR-TST-005`/`SR-TST-012`, `SR-GIT-002`, `SR-GIT-003`, and `SR-GIT-008` through `SR-GIT-012`; complete the push portion of `RV-49`; retain preservation manifests, mutation vectors, idempotency/reconciliation traces, API audit, signature checks, remote pre/post snapshots, and independent review.
 
 ##### Story Acceptance Criteria
@@ -9513,12 +9527,28 @@ applicable)`; `substitution_set=empty`. Native actions: 0. Before/after captures
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 86.AC1:** Every mutation changes exactly the previewed hosted object and fields.
-- [ ] **Sprint AC 86.AC2:** Changed hosted state invalidates stale approval before submission.
-- [ ] **Sprint AC 86.AC3:** Duplicate retries cannot create duplicate external effects.
+- [x] **Sprint AC 86.AC2:** Changed hosted state invalidates stale approval before submission. Evidence: approved and submission refresh records must match exactly.
+- [x] **Sprint AC 86.AC3:** Duplicate retries cannot create duplicate external effects. Evidence: idempotency identity and exact-once receipts are mandatory; partial/unknown states block retry.
 - [ ] **Sprint AC 86.AC4:** Commit and push require distinct approvals; the push names one canonical host/account/repository/credential/full task ref/old object/new object, and the commit has a verified signature.
-- [ ] **Sprint AC 86.AC5:** Prohibited destructive, implicit, force, bypass, automatic, and administrative operations remain absent, and uncertain push effects block retry until reconciled.
+- [x] **Sprint AC 86.AC5:** Prohibited destructive, implicit, force, bypass, automatic, and administrative operations remain absent, and uncertain push effects block retry until reconciled. Evidence: all 12 prohibited classes deny admission and unknown/partial receipts return `RetryBlocked`.
 
 **Gate decision:** Sprint 86 is PASS only when Story 86.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Local idempotency, exact-receipt, recovery, prohibition, and
+uncertain-result contracts are retained at `artifacts/sprints/sprint-86/local-evidence-report.json`;
+Task 86.1.3, native integration Sub-task 86.1.3.4, product-security Sub-task 86.1.3.6, both Story
+AC, Sprint 86, Sprint AC86.AC1, Sprint AC86.AC4, and dependent gates remain
+`BLOCKED_EXTERNAL(platform=native GitHub provider and signed-push recovery fixture plus independent
+security review, artifact=untouched idempotency/reconciliation traces, mutation requests/responses,
+pre/post hosted and remote-ref snapshots, signed-commit and ordinary-push traces, injected
+timeout/conflict/rate-limit/partial-effect results, rollback or compensation results, API audit,
+prohibited-operation results, and reviewer bundle, action=provision an exact GitHub fixture
+repository, GitHub App/account, task branch, signing identity, mutation and failure instrumentation,
+rollback fixtures, and independent reviewer, execute S-067-IT01/RT01 and the native Sprint 86
+product-security campaign, and transfer untouched bundles, credential=GitHub App/account,
+signing-key, fixture, instrumentation, rollback, and reviewer access, payment=provider, account,
+signing, fixture, instrumentation, rollback, or review costs if applicable)`;
+`substitution_set=empty`. Native mutations: 0. Remote reconciliations: 0. Rollbacks: 0.
 
 ### [ ] Sprint 87 - Connector Governance and Isolation
 
