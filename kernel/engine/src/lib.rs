@@ -199,6 +199,8 @@ pub mod source_preparation;
 pub mod source_runtime_context;
 /// Strict-local endpoint policy, storage admission, and content-free attempt ledger.
 pub mod strict_local;
+/// Exact supply-chain evidence and conflict-preserving security findings.
+pub mod supply_chain_evidence;
 /// Deterministic descriptive task intent, complexity, and risk classification.
 pub mod task_classification;
 /// Deterministic tool-call normalization and single profile-bound repair admission.
