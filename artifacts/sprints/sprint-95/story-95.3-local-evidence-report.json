@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_95_local_evidence",
+  "source_revision": "bd2147e9c5b2094d8ab53ba382568ab78a0020e2",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
+    "kernel/engine/src/lib.rs": "bace7a03c795178b99ce0ed2acb8f98b4bbb4151313788dfd01f68f3372ab64d",
+    "kernel/engine/src/capability_registry.rs": "62551cb42342bc6b2032b5a352ae61aaf1be445fd6f69b579ebd3dff278817df",
+    "kernel/engine/src/capability_lifecycle.rs": "783ed6a13b33ab49b373a5b9b387e0d156ac3f2048198447fc465e107900d3b9",
+    "artifacts/sprints/sprint-95/local-coordination-evidence-report.json": "1c5413d4384c4726837b236afe669d79ce00407cae59c0f3d78e63f4acd62aa8",
+    "artifacts/sprints/sprint-95/capability-lifecycle-corpus.json": "a69ac4dc47df7a1e47911d7b784f7b0be46c3cb5dc164ba20e5edfa865ab1beb",
+    "scripts/capability_lifecycle_contract.py": "72991f678db728ea325733513dccc5f97aad22d07008d001debd836abfa0d1db",
+    "tests/test_capability_lifecycle_contract.py": "b47f35b4ffc37f1c1c80598df688a3d31c937de5101f58b40ed06edf58a79daf",
+    "supply-chain/dependency-hashes.sha256": "6999509268d638a6ebdf559928e960eaa600dd72d84ce2415108e5b6c6150f3e",
+    "supply-chain/dependency-provenance.json": "0fc17456f793468b007119d17f045d98f077329c69a1977fe053b5dddbdee3d4",
+    "supply-chain/sbom.cdx.json": "78240f7cdb46122750e54059a91c466cbea1fcf96b2035ad4e41bae20e7df8b3",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/story_95_3_evidence.py": "c4793991e7217fd31c90c796df90391f695e43569fb778f7e77b5f2442fe0e6c",
+    "tests/test_story_95_3_evidence.py": "d56da5cfd55d587435ca11d69e8983c30b810a7e2323864104752e995df01624"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "capability-lifecycle-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "capability_lifecycle::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "1670a86764f7fd34645cbad2394f9b93b7ae190554cfd5e4030b6491b9f3f79f",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "capability-lifecycle-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_capability_lifecycle_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "feabb4add9e2ca3374e538560634d1ec97dc4f4ce89aab12f3d726e36ea9b2f6",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_95_3_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-GOV-010",
+    "SR-ACC-001",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-AI-003",
+    "SR-AI-004",
+    "SR-AI-005",
+    "SR-TST-004"
+  ],
+  "implemented_contracts": {
+    "candidate_count": 9,
+    "lifecycle_state_count": 7,
+    "lifecycle_case_count": 66,
+    "shared_runtime_count": 1,
+    "enabled_capability_count": 0,
+    "native_strict_local_restoration_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "lifecycle_case_count": 66,
+    "enabled_capability_count": 0,
+    "residual_authority_count": 0,
+    "native_strict_local_restoration_observed": false,
+    "story_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-STORY-95.2-BLOCKED",
+      "owner": "95.3"
+    },
+    {
+      "code": "STRICT-LOCAL-NATIVE-RESTORATION-ABSENT",
+      "owner": "95.3-native"
+    }
+  ],
+  "summary": {
+    "local_story_95_3_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_story_95_2_closed": false,
+    "native_strict_local_complete": false,
+    "release_approval": false
+  }
+}
