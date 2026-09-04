@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_98_local_evidence",
+  "source_revision": "93174aaaee7ecfb5709ba85ecf94d1778330679f",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
+    "kernel/engine/src/lib.rs": "42c0c46928cc7e0f33812c84bb8a4f92fff988d0fc1d9f39071c05a2b2d9cce7",
+    "kernel/engine/src/update_maintenance.rs": "e476f336bb8740b956876ff4cf090afd0509429bfb86cd77706bad50c718d204",
+    "kernel/engine/src/backup_migration.rs": "d13f16ca3286efe0d3f65b431286d85bad85331ffe6038b3ea49d38658c893c6",
+    "kernel/engine/src/maintenance_recovery.rs": "b5a9d0d1385546573ab75c3e83a5f5e098a62f8896ee88ebafb6ef62dceff689",
+    "docs/operations/maintenance-and-recovery.md": "b19c8e0798c6e69c179321d47b0cc2df4e0fc0ba5f36880aecd74433f9b75163",
+    "artifacts/sprints/sprint-96/local-evidence-report.json": "62082d547bcc36a63f163111051fb041c40d2d74a03133aacc3c35ee2bf624f9",
+    "artifacts/sprints/sprint-97/backup-migration-corpus.json": "963f2d6d1130992b976f7e0988e9e678ddd121e699cd1c626df6b4ec6be2e5c2",
+    "artifacts/sprints/sprint-98/maintenance-recovery-corpus.json": "216c085227aefab42d8f82dee30f385dad2d1ed69f91aa2ecb8e9a8f929e1086",
+    "scripts/maintenance_recovery_contract.py": "bf1a186a387236651d30f32fd142359df98b78a6035c7e9ea84f87df41f552e4",
+    "tests/test_maintenance_recovery_contract.py": "b128600eb9cac84273685fd90b9e1443c71743feffb8f22e1a58f61c5a497307",
+    "supply-chain/dependency-hashes.sha256": "84af37ba1be875826bad6ff912a5647caa08d92eeefc2235eb3e11d203f44028",
+    "supply-chain/dependency-provenance.json": "082443ea9473afd1e986d33e4547992bfa619416556661ea287759ba2d3bbef1",
+    "supply-chain/sbom.cdx.json": "01388b1ba41498317a6a2f07e68f44fa64d96ee4f56e9ee9a794d14bf9e8b915",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_98_evidence.py": "33047dfaaf868671c0a83e00f4e87316e7f29d765964623dcb0b82f5f1d501ea",
+    "tests/test_sprint_98_evidence.py": "9c2dcb86835b6a86a71c1b5fbd179235bc67a9e69801532e46dda5b41863f412"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "maintenance-recovery-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "maintenance_recovery::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e976be3d9511d4f362669c9b9a78844c5400ea02292bca48b8f7f8fcc04b1310",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "backup-migration-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "backup_migration::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d065e7e6edef252f5969faae77e6bd401c7ad423ed21470ce96a098f0429bad4",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "update-maintenance-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "update_maintenance::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "4fe5d82d68ed428f8a39099085a158479fb06609a6e1ef1f16f0e136d5114323",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "maintenance-recovery-artifact-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_maintenance_recovery_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "921b60a7fd52e978fbb551cacd29df2d6708879400278e1fcc70fceeb0c6f8e0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_98_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2c37d50a88147ca2ebd5197d74ee37d462dab650d793512e849814c28d5a38f0",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-DAT-005",
+    "SR-DAT-006",
+    "SR-DAT-007",
+    "SR-DAT-008",
+    "SR-DAT-009",
+    "SR-DAT-010",
+    "SR-DAT-011",
+    "SR-DAT-012",
+    "SR-SUP-002",
+    "SR-SUP-003",
+    "SR-SUP-004",
+    "SR-SUP-005",
+    "SR-SUP-006",
+    "SR-SUP-007",
+    "SR-SUP-008",
+    "SR-SUP-009",
+    "SR-SUP-010",
+    "SR-SUP-011",
+    "SR-SUP-012",
+    "SR-SUP-013",
+    "SR-OPS-006",
+    "SR-OPS-007",
+    "SR-OPS-008",
+    "SR-OPS-009",
+    "SR-OPS-010",
+    "SR-TST-003",
+    "SR-TST-005",
+    "SR-TST-007",
+    "SR-TST-008",
+    "SR-TST-009",
+    "SR-TST-010",
+    "SR-TST-011",
+    "RV-19",
+    "RV-21",
+    "RV-22"
+  ],
+  "implemented_contracts": {
+    "safe_mode_disabled_capability_count": 8,
+    "diagnostic_subsystem_count": 6,
+    "failure_class_count": 9,
+    "case_count": 72,
+    "native_recovery_execution_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "case_count": 72,
+    "optional_capability_count_in_safe_mode": 0,
+    "raw_diagnostic_content_count": 0,
+    "secret_diagnostic_count": 0,
+    "network_count": 0,
+    "native_recovery_execution_count": 0,
+    "independent_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-97-BLOCKED",
+      "owner": "98"
+    },
+    {
+      "code": "NATIVE-MAINTENANCE-RECOVERY-CROSS-PLATFORM-AND-INDEPENDENT-REVIEW-ABSENT",
+      "owner": "98.1-native-98.AC1-98.AC3"
+    }
+  ],
+  "summary": {
+    "local_sprint_98_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_97_closed": false,
+    "native_maintenance_recovery_complete": false,
+    "cross_platform_recovery_complete": false,
+    "independent_review_present": false,
+    "release_approval": false
+  }
+}
