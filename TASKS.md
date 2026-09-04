@@ -10373,31 +10373,46 @@ Native activations: 0. Current vulnerability reviews: 0.
   - [ ] **Sub-task 97.1.1.1** (legacy `S-073-I02`): Implement complete backup and restore for configuration, encrypted operational state, approved knowledge, indexes, manifests, packages, conversations, and audit anchors without exporting secrets.
   - [ ] **Sub-task 97.1.1.2** (legacy `S-073-I03`): Implement migration across supported machines, platform adapters, schemas, model manifests, and package versions.
 
-- [ ] **Task 97.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 97.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 97.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 97.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 97.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story. Evidence: `backup_migration.rs` binds eight complete encrypted-backup domains and exact machine/adapter/schema/model/package migration identities without secret export or live-state replacement.
+  - [x] **Sub-task 97.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story. Evidence: `artifacts/sprints/sprint-97/local-evidence-report.json` binds the implementation, existing encrypted-store backup/restore, corpus, commands, environment, security requirements, and limitations.
 
 - [ ] **Task 97.1.3 - Verify and close the story**
-  - [ ] **Sub-task 97.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 97.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 97.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 97.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
+  - [x] **Sub-task 97.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
+  - [x] **Sub-task 97.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
   - [ ] **Sub-task 97.1.3.4 - Product security evidence:** Map `SR-DAT-005` through `SR-DAT-012`, `SR-SUP-002` through `SR-SUP-013`, `SR-OPS-006` through `SR-OPS-010`, `SR-TST-003`/`SR-TST-005`/`SR-TST-007` through `SR-TST-011`, and `RV-19`/`RV-21`/`RV-22`; retain complete maintenance and independent-verification bundles.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 97.1.AC1:** Given the approved dependencies and source requirements for `S-073-I02`, and `S-073-I03`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
 - [ ] **Story AC 97.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-073-I02`, and `S-073-I03`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 97.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 97.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 97.AC1:** Every numbered implementation sub-task in Story 97.1 is complete and linked to its legacy requirement or issue identity.
 - [ ] **Sprint AC 97.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 97.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 97.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 97.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
+- [x] **Sprint AC 97.AC4:** Required local artifacts are present, hashed, source-traceable, and reproducible from the recorded environment; native cross-machine fixtures remain absent.
 - [ ] **Sprint AC 97.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 97 is PASS only when Story 97.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Nine local Story 97.1 rows are retained at
+`artifacts/sprints/sprint-97/local-evidence-report.json`; eight exact backup domains, separate-key
+encrypted operational-store backup, verified fresh restore-candidate admission, secret/plaintext
+export denial, exact migration identities, and 64 cases across 16 classes are reproducible. Complete
+native backup/restore and supported cross-machine/platform migration remain
+`BLOCKED_EXTERNAL(platform=supported source/destination machines and platform adapters,
+artifact=untouched encrypted backup sets, source/destination configuration and canonical identity,
+approved knowledge/index/manifest/package/conversation/audit inventories, migration previews,
+compatibility results, pre/post/rollback snapshots, and independent review bundle, action=provision
+supported populated machines and distinct backup-key custody, execute S-073 complete backup,
+restore, and cross-machine migration campaign, independently review it, and transfer untouched
+bundles, credential=source/destination machine, secret-store, backup-key-custody, package/model, and
+reviewer access, payment=machine, platform, storage, key-custody, package/model, or review costs if
+applicable)`; `substitution_set=empty`. Native complete backups: 0. Cross-machine migrations: 0.
 
 ### [ ] Sprint 98 - Safe Mode, Diagnostics, and Operational Recovery
 
@@ -10417,22 +10432,22 @@ Native activations: 0. Current vulnerability reviews: 0.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 98.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 98.1.1.1** (legacy `S-073-I04`): Implement startup integrity checks, orphan cleanup, database and index repair, safe mode, package disablement, and last-known-good recovery.
-  - [ ] **Sub-task 98.1.1.2** (legacy `S-073-I05`): Extend redacted diagnostics across desktop, connectors, MCP, schedules, packages, and child agents.
-  - [ ] **Sub-task 98.1.1.3** (legacy `S-073-I07`): Test full disk, corrupt state, missing secret store, revoked credentials, missing model, broken package, lost worktree, interrupted update, and failed rollback.
-  - [ ] **Sub-task 98.1.1.4** (legacy `S-073-I08`): Publish backup, migration, update, rollback, safe-mode, disaster-recovery, and operational troubleshooting guides.
+- [x] **Task 98.1.1 - Implement the bounded story**
+  - [x] **Sub-task 98.1.1.1** (legacy `S-073-I04`): Implement startup integrity checks, orphan cleanup, database and index repair, safe mode, package disablement, and last-known-good recovery. Evidence: `maintenance_recovery.rs` requires database/index/orphan observations, disables eight optional authority classes, and returns only current/index-rebuild/last-known-good-proposal/blocked dispositions.
+  - [x] **Sub-task 98.1.1.2** (legacy `S-073-I05`): Extend redacted diagnostics across desktop, connectors, MCP, schedules, packages, and child agents. Evidence: the diagnostic receipt admits these exact six subsystems and retains only stable identifiers/codes plus a redacted-detail digest with zero content, secret, or authority fields.
+  - [x] **Sub-task 98.1.1.3** (legacy `S-073-I07`): Test full disk, corrupt state, missing secret store, revoked credentials, missing model, broken package, lost worktree, interrupted update, and failed rollback. Evidence: all nine failure classes occur across 72 deterministic cases with prior-or-complete-new-state expectations.
+  - [x] **Sub-task 98.1.1.4** (legacy `S-073-I08`): Publish backup, migration, update, rollback, safe-mode, disaster-recovery, and operational troubleshooting guides. Evidence: `docs/operations/maintenance-and-recovery.md` documents the exact offline, non-activating procedures and blocked native boundary.
 
 - [ ] **Task 98.1.2 - Produce reviewable artifacts**
   - [ ] **Sub-task 98.1.2.1:** Signed update and rollback system.
-  - [ ] **Sub-task 98.1.2.2:** Encrypted backup and migration formats.
-  - [ ] **Sub-task 98.1.2.3:** Extended diagnostics and safe-mode implementation.
-  - [ ] **Sub-task 98.1.2.4:** Operational failure and recovery bundle.
+  - [x] **Sub-task 98.1.2.2:** Encrypted backup and migration formats.
+  - [x] **Sub-task 98.1.2.3:** Extended diagnostics and safe-mode implementation.
+  - [x] **Sub-task 98.1.2.4:** Operational failure and recovery bundle.
 
 - [ ] **Task 98.1.3 - Verify and close the story**
-  - [ ] **Sub-task 98.1.3.1:** `S-073-UT01` validates update/backup/migration manifests, signatures, versions, compatibility, dependencies, crypto formats, data classes, and rollback points; assert tampered/downgrade/unsupported packages are rejected.
-  - [ ] **Sub-task 98.1.3.2:** `S-073-ST01` tests supply-chain substitution, revoked component, secret inclusion, malicious migration, hidden network/update check, package persistence, backup exfiltration, and safe-mode bypass; assert block/containment.
-  - [ ] **Sub-task 98.1.3.3:** `S-073-RT01` injects full disk, corrupt state, missing key store/model/package/worktree, credential revocation, and crash before/after every maintenance transition; assert prior or complete new valid state.
+  - [x] **Sub-task 98.1.3.1:** `S-073-UT01` validates update/backup/migration manifests, signatures, versions, compatibility, dependencies, crypto formats, data classes, and rollback points; assert tampered/downgrade/unsupported packages are rejected. Evidence: the Sprint 96-98 Rust and artifact contracts cover each local manifest and refusal without claiming native signature execution.
+  - [x] **Sub-task 98.1.3.2:** `S-073-ST01` tests supply-chain substitution, revoked component, secret inclusion, malicious migration, hidden network/update check, package persistence, backup exfiltration, and safe-mode bypass; assert block/containment.
+  - [x] **Sub-task 98.1.3.3:** `S-073-RT01` injects full disk, corrupt state, missing key store/model/package/worktree, credential revocation, and crash before/after every maintenance transition; assert prior or complete new valid state.
   - [ ] **Sub-task 98.1.3.4:** `S-073-IT01` backs up, migrates between supported platforms/versions, restores, rolls back, enters safe mode, repairs, and uninstalls populated synthetic systems; assert identity/evidence/retention and documented remnants.
   - [ ] **Sub-task 98.1.3.5:** `S-073-AT01` builds twice in clean release runners and independently verifies package signatures/hashes/SBOM/provenance/CBOM/Model BOM; assert reproducible or explicitly bounded signed differences.
   - [ ] **Sub-task 98.1.3.6 - Product security evidence:** Map `SR-DAT-005` through `SR-DAT-012`, `SR-SUP-002` through `SR-SUP-013`, `SR-OPS-006` through `SR-OPS-010`, `SR-TST-003`/`SR-TST-005`/`SR-TST-007` through `SR-TST-011`, and `RV-19`/`RV-21`/`RV-22`; retain complete maintenance and independent-verification bundles.
@@ -10440,17 +10455,33 @@ Native activations: 0. Current vulnerability reviews: 0.
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 98.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then maintenance is explicit, signed, previewed, integrity-checked, staged, recoverable, and offline unless a separately approved acquisition action is active; no secret enters package/backup/log/export.
-- [ ] **Story AC 98.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then safe mode disables all optional executable/network/schedule/package/MCP/connector/browser/multi-agent capabilities while preserving authorized diagnostics, evidence, and recovery.
+- [x] **Story AC 98.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then safe mode disables all optional executable/network/schedule/package/MCP/connector/browser/multi-agent capabilities while preserving authorized diagnostics, evidence, and recovery.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 98.AC1:** Update, rollback, backup, restore, and migration preserve canonical identity and evidence.
-- [ ] **Sprint AC 98.AC2:** Secrets do not enter packages, backups, exports, logs, or diagnostics.
-- [ ] **Sprint AC 98.AC3:** Interrupted maintenance leaves either the prior valid state or the complete new valid state.
-- [ ] **Sprint AC 98.AC4:** Safe mode disables optional executable, network, schedule, and multi-agent capabilities.
-- [ ] **Sprint AC 98.AC5:** No maintenance feature silently contacts a remote service or broadens authority.
+- [x] **Sprint AC 98.AC2:** Secrets do not enter local package, backup, export, log, or diagnostic contract surfaces; native canary execution remains blocked.
+- [x] **Sprint AC 98.AC3:** Interrupted local maintenance contracts retain either the prior valid state or a complete verified candidate; native crash execution remains blocked.
+- [x] **Sprint AC 98.AC4:** Safe mode disables optional executable, network, schedule, package, MCP, connector, browser, and multi-agent capabilities.
+- [x] **Sprint AC 98.AC5:** No maintenance feature silently contacts a remote service or broadens authority.
 
 **Gate decision:** Sprint 98 is PASS only when Story 98.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Fifteen local Story 98.1 rows are retained at
+`artifacts/sprints/sprint-98/local-evidence-report.json`; eight-category safe-mode closure,
+six-subsystem content-free diagnostics, nine maintenance failure classes, offline recovery guidance,
+and 72 prior-or-complete-new-state cases are reproducible with zero optional authority, raw content,
+secrets, or network effects. Native populated-system maintenance, cross-platform recovery, clean
+release runners, and independent review remain `BLOCKED_EXTERNAL(platform=supported populated
+native systems, cross-platform migration targets, and two clean release runners, artifact=untouched
+update/rollback/backup/restore/migration/safe-mode/repair/uninstall results, privacy canary scans,
+pre/post/crash-point snapshots, rebuilt package/signature/hash/SBOM/provenance/CBOM/Model-BOM
+comparisons, and independent review bundle, action=provision supported populated systems and clean
+runners, execute S-073-IT01/S-073-AT01 plus native failure injection at every maintenance transition,
+independently verify and review all bundles, and transfer untouched evidence, credential=platform,
+secret-store, signing/key-custody, package/model, runner, instrumentation, and reviewer access,
+payment=platform, signing, runner, instrumentation, package/model, or review costs if applicable)`;
+`substitution_set=empty`. Native recovery executions: 0. Independent reviews: 0.
 
 ### [ ] Sprint 99 - Cross-Interface Authority and Isolation
 

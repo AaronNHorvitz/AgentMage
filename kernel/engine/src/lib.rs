@@ -26,6 +26,8 @@ pub mod attachment;
 pub mod authority;
 /// Kernel-owned authority-transaction ordering and recovery contract.
 pub mod authority_transaction;
+/// Complete backup-domain manifests and non-mutating migration admission.
+pub mod backup_migration;
 /// Closed engineering-capability lifecycle and dependency qualification.
 pub mod capability_lifecycle;
 /// Versioned executable engineering capability admission and deterministic execution.
@@ -90,6 +92,8 @@ pub mod instruction_provenance;
 pub mod job_scheduler;
 /// Exact candidate-tree, signer, manual approval, and signed local commit contracts.
 pub mod local_commit;
+/// Safe-mode capability closure and content-free maintenance diagnostics.
+pub mod maintenance_recovery;
 /// Stateful read-only MCP request mediation, response validation, and receipts.
 pub mod mcp_gateway;
 /// Read-only MCP manifest admission, identity binding, and optional tool adaptation.
