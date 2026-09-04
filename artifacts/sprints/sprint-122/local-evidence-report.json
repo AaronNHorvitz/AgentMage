@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_122_local_evidence",
+  "source_revision": "7fd8534cb0d370f67b6a69c4a1c157665adb9ee8",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "platforms/windows/Cargo.toml": "7546d14d8ec5b014cd0c8ce541f603e0208ac6cb237b6b29a6d56d7f1a45b490",
+    "platforms/windows/src/lib.rs": "b917802630f10771ff1a2fa07fe1f118729704e799cbace3efaf58272ec2d700",
+    "platforms/windows/src/runtime_boundary.rs": "7cccd84f45fdfc06116dbd9c1aabb7b9164fa8851d3cadaecc178aedbb3a3103",
+    "WINDOWS-BOUNDARIES.md": "b5ae84e42c31e5d7a1f3fb11cebef6927a1b252c2cbabf17eae31ff0eb6040ad",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "supply-chain/dependency-provenance.json": "a68da4bda2acb0ae5abd72fe94b6968c47f0bfba0973b897402fc3f9ca161107",
+    "supply-chain/sbom.cdx.json": "0fa1856d379bd76662399b59947a6efa3bbc839e619c7e97f412926ba1298b12",
+    "supply-chain/dependency-hashes.sha256": "f5b6b3b48df6f53fdbe369ba11732f0d5072de5d9a8f0677e7464e1d13ef9878",
+    "artifacts/sprints/sprint-122/windows-runtime-corpus.json": "0790947a7a1efb558a7b6ec71a47713e2012ec895709bdbcef808b989f1b29f0",
+    "scripts/windows_runtime_boundary.py": "287abbd4f11439a80ee233326182456aa3335d386f671e9a96de5db96c6177ff",
+    "tests/test_windows_runtime_boundary.py": "8d1f83dbe88c07c55d01187815b38b00449e57f2733b5d53a6262b6a71236cff",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_122_evidence.py": "1c40a7f0ea6b94b4c056359d626b2b359ca8bddd9a39c77bc352ec7eb452e225",
+    "tests/test_sprint_122_evidence.py": "7c95bddab3dfa29deb4f0b2633e472cf9622debf3f2a429662fa840baf6e308a"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "windows-rust-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-windows",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "12e5fb8552f7c673ff575f44fb307e5925c9e5234924550c3aa63ba6dca339c2",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "windows-runtime-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_windows_runtime_boundary"
+      ],
+      "exit_code": 0,
+      "output_sha256": "fd3429f6a39b0337f73fcc2e93bc92cfa556334244053e19baf5f74b054988a4",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary-contract",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_122_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "372ee57a30b8a8b17bb056a0814266786a922da7dcf4139f4f9a2457745d6424",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-WIN-001",
+    "AT-WIN-001",
+    "SR-PLT-013",
+    "SR-PLT-014",
+    "SR-PLT-015",
+    "SR-PLT-016",
+    "SR-PLT-017",
+    "RV-03",
+    "RV-04",
+    "RV-06",
+    "RV-08",
+    "RV-09",
+    "RV-10",
+    "RV-16",
+    "RV-17",
+    "RV-20",
+    "RV-24",
+    "RV-30"
+  ],
+  "implemented_contracts": {
+    "path_case_count": 1024,
+    "sandbox_case_count": 512,
+    "state_attack_case_count": 512,
+    "recovery_case_count": 512,
+    "native_guest_execution_count": 0,
+    "observed_network_minutes": 0,
+    "packet_trace_count": 0,
+    "accessibility_run_count": 0,
+    "promoted_platform_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "path_contract_complete": true,
+    "restricted_worker_contract_complete": true,
+    "state_and_key_contract_complete": true,
+    "model_contract_complete": true,
+    "provider_worker_contract_complete": true,
+    "native_path_campaign_complete": false,
+    "strict_local_60_minute_complete": false,
+    "native_accessibility_complete": false,
+    "rv03_complete": false,
+    "rv04_complete": false,
+    "rv06_complete": false,
+    "rv08_10_complete": false,
+    "rv16_17_complete": false,
+    "rv20_complete": false,
+    "rv24_complete": false,
+    "rv30_complete": false,
+    "at_win_001_complete": false,
+    "independent_human_review": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-121-BLOCKED",
+      "owner": "122"
+    },
+    {
+      "code": "BLOCKED-EXTERNAL-WINDOWS-AT-WIN-001",
+      "owner": "122"
+    }
+  ],
+  "summary": {
+    "local_sprint_122_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_121_closed": false,
+    "windows_platform_supported": false,
+    "release_approval": false
+  }
+}
