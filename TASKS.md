@@ -10308,31 +10308,48 @@ and independent review remain covered by Sprint 95's exact external tuple;
   - [ ] **Sub-task 96.1.1.1** (legacy `S-073-I01`): Implement signed versioned update packages with exact change preview, compatibility checks, integrity verification, staged activation, rollback, and no automatic remote check.
   - [ ] **Sub-task 96.1.1.2** (legacy `S-073-I06`): Generate complete dependency inventory, licenses, hashes, software bill of materials, vulnerability review, and removal plan.
 
-- [ ] **Task 96.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 96.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 96.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 96.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 96.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story. Evidence: `update_maintenance.rs` defines offline signed-package preview, exact staging/approval/rollback bindings, dependency closure, and fail-closed vulnerability-review admission without performing an update or network check.
+  - [x] **Sub-task 96.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story. Evidence: `artifacts/sprints/sprint-96/local-evidence-report.json` binds source, supply-chain artifacts, 72 cases, commands, environment, security requirements, limitations, and exact blockers.
 
 - [ ] **Task 96.1.3 - Verify and close the story**
-  - [ ] **Sub-task 96.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 96.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 96.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 96.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
+  - [x] **Sub-task 96.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
+  - [x] **Sub-task 96.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
   - [ ] **Sub-task 96.1.3.4 - Product security evidence:** Map `SR-DAT-005` through `SR-DAT-012`, `SR-SUP-002` through `SR-SUP-013`, `SR-OPS-006` through `SR-OPS-010`, `SR-TST-003`/`SR-TST-005`/`SR-TST-007` through `SR-TST-011`, and `RV-19`/`RV-21`/`RV-22`; retain complete maintenance and independent-verification bundles.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 96.1.AC1:** Given the approved dependencies and source requirements for `S-073-I01`, and `S-073-I06`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
 - [ ] **Story AC 96.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-073-I01`, and `S-073-I06`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 96.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 96.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 96.AC1:** Every numbered implementation sub-task in Story 96.1 is complete and linked to its legacy requirement or issue identity.
 - [ ] **Sprint AC 96.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 96.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 96.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 96.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
+- [x] **Sprint AC 96.AC4:** Required local artifacts are present, hashed, source-traceable, and reproducible from the recorded environment; external update and review artifacts remain explicitly absent.
 - [ ] **Sprint AC 96.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 96 is PASS only when Story 96.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Nine local Story 96.1 rows are retained at
+`artifacts/sprints/sprint-96/local-evidence-report.json`; exact offline preview, compatibility,
+integrity, staged-activation authorization, rollback binding, complete 498-component dependency/
+license/hash/SBOM/removal closure, and 72 fail-closed cases are locally reproducible. Signed package
+verification, native staged activation and rollback, a current vulnerability/advisory feed, and
+independent product-security review remain `BLOCKED_EXTERNAL(platform=native signed-update staging/
+activation/rollback environments, current vulnerability/advisory feeds, and independent supply-
+chain/security review, artifact=untouched signed packages, key-custody/signature verification,
+compatibility/pre-post/rollback snapshots, injected-failure results, complete dependency/license/
+SBOM/vulnerability/removal bundle, and reviewer bundle, action=provision exact update packages,
+signing/key-custody, native staged-install and rollback fixtures, current advisory feeds, failure
+instrumentation, and independent reviewer, execute S-073 native update/maintenance/product-security
+campaign, and transfer untouched bundles, credential=signer, key-custody, advisory-feed, platform/
+install, instrumentation, and reviewer access, payment=package, signing, advisory, platform,
+instrumentation, or review costs if applicable)`; `substitution_set=empty`. Signed packages: 0.
+Native activations: 0. Current vulnerability reviews: 0.
 
 ### [ ] Sprint 97 - Backup and Migration
 

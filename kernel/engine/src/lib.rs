@@ -195,6 +195,8 @@ pub mod tool_composition;
 pub mod tool_observation;
 /// Exact tool registration, call validation, and pre-grant dispatch denial.
 pub mod tooling;
+/// Explicit offline update staging and fail-closed supply-chain maintenance.
+pub mod update_maintenance;
 pub mod validation_result;
 /// Trusted validation-template provenance, exact registries, and focused selection.
 pub mod validation_template;
