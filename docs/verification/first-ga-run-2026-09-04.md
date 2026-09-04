@@ -168,3 +168,49 @@ next checkpoint remains 375.
 Exact next action: all remaining Sprint 75 rows depend on exact external tuples; continue Decision
 0021 ordering at Sprint 76 desktop conversation and workspace experience. Cumulative closures are
 381; the 375-item checkpoint handoff is required after this batch push.
+
+## Batch 82 — Sprint 76 desktop conversation and workspace contracts
+
+### Completed
+
+- Closed 20 TASKS rows: Task 76.1.1 and all 6 implementation sub-tasks; Task 76.1.2 and both
+  artifact sub-tasks; verification Sub-tasks 76.1.3.1 through .3; all 3 Story AC; and Sprint AC
+  76.AC1 through AC4. The host-owned projection binds 9 navigation dimensions, 11 inert transcript
+  kinds, 7 conversation action previews, 6 checkpoint dimensions, local relative workspace
+  selection, and 4 approval-screen kinds to existing kernel identities with zero client effects or
+  authority. Promotions: 0. Substitutions: 0. Cumulative closed items: 401.
+- Commits: `8d266275` (desktop projection, architecture, guide, 42-case corpus, tests, truthful
+  closures, and final supply-chain carrier), `e7007a3b` (source-bound 6-command Sprint 76 report),
+  and `9d8d388b` (one affected evidence regeneration pass). Commits including log: 4. Commits per
+  closed item: 0.20. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across all
+  Batch 82 paths and pin-bearing gates: empty.
+
+### Validation and self-recovery
+
+- Focused validation: 9 Rust cases, 2 artifact-contract tests, 3 evidence mutation tests, strict
+  host Clippy, format, Python compilation, 42 corpus cases, supply-chain currentness, product-CI
+  contract, configuration startup/result, component inventory, Story 3.1 security/gate, planning
+  scope, traceability, contract boundary/evidence, Stories 2.1/2.2/2.4, and Sprint 2 pass.
+  Supply-chain builds: 1. Local report builds: 1. Downstream evidence regeneration passes: 1.
+  Recovery iterations: 3 — applied the formatter's deterministic layout, replaced unsupported
+  digest formatting and resolved a borrowed-vector move, then replaced an 8-argument function with
+  one bounded input record and removed a cloned single-item slice under strict Clippy. The full
+  chain ran 689.84 seconds and stopped only at the retained Story 6.1 rootless-Podman prerequisite
+  after every preceding gate passed. Recorded gate wall seconds: 690.
+- Native desktop protocol, boundary, crash, package, visual, accessibility, offline, clean-install,
+  and independent-review evidence remain blocked on
+  `BLOCKED_EXTERNAL(platform=native Fedora/Ubuntu and physical supported MacBook desktop
+  environments plus independent review, artifact=untouched protocol parity, boundary attack,
+  crash/restart, signed-package, visual, accessibility, offline, clean-install, and reviewer
+  bundles, action=provision the exact native platforms, physical Mac, package signing identities,
+  accessibility tooling, and reviewer, execute the Sprint 76 native and product-security
+  campaigns, and transfer the untouched bundles, credential=physical Mac, native platform,
+  package signer, accessibility tooling, and reviewer access, payment=hardware, signing, platform,
+  accessibility, or review costs if applicable)`; `substitution_set=empty`.
+- Exact full-chain carrier blocker: `blocked: host change required — run npm run -s docs:check
+  outside the restricted filesystem sandbox with the current user's /run/user/1000/libpod
+  writable`; `substitution_set=empty`.
+
+Exact next action: all remaining Sprint 76 rows depend on the upstream or exact external tuple;
+continue Decision 0021 ordering at Sprint 77 desktop status, recovery, and packaging. Cumulative
+closures are 401; the 400-item checkpoint handoff is required after this batch push.
