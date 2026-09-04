@@ -2213,3 +2213,42 @@ after push.
 
 Exact next action: continue Decision 0021 ordering at Sprint 124 adapter removal and strict-local
 restoration. Cumulative closures are 1,282; write the required 1,275-item checkpoint after push.
+
+## Batch 124 — Sprint 124 adapter removal contracts
+
+### Completed
+
+- Closed 13 local Sprint 124 rows: complete adapter inventories, preview/action/retention plans,
+  ordered teardown, new-identity reconnect, independent/aggregate synthetic removal, hostile
+  post-removal refusal, interrupted recovery, Story AC1–AC2, and Sprint AC2–AC3. Retained cases:
+  1,024 removal plans, 512 attacks, and 512 recoveries. Native platforms: 0. Strict-local reruns:
+  0. Zero-egress minutes: 0. Promotions: 0. Substitutions: 0. Batch closures: 13. Cumulative
+  closures: 1,295.
+- Commits: `77a22ddf` (removal contracts, corpus, tests, closures, and byte-stable supply-chain
+  rebuild), `2769cae3` (source-bound report), and `fad509fb` (five downstream artifacts). Commits
+  including log: 4. Commits per closed item: 0.31. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Focused validation passed 6 Python tests, dependency rules, corpus/report validation, and every
+  affected downstream check. Supply-chain builds: 1. Corpus generations: 1. Report builds: 1.
+  Full gate wall seconds: 693.40; only the retained Story 6.1 Podman prerequisite failed after all
+  preceding gates passed. Self-recovery iterations: 0.
+- Native restoration remains `BLOCKED_EXTERNAL(platform=native Fedora, Ubuntu, and Windows
+  installations with installed connected adapters and remote profiles, provider revocation access,
+  process/socket/network/credential/cache/database/file/registry/package/schedule/webhook/residue
+  instrumentation, and independent review environment, artifact=untouched before/after
+  inventories, revocation and retention receipts, interruption traces, residue scans, complete
+  strict-local results, 60-minute zero-egress captures, RV-30 and RV-54 removal results, and
+  independent review, action=provision native platforms, installed adapters/profiles, provider
+  accounts, instrumentation, and reviewer; execute S-124-UT01/ST01/RT01/AT01, Story 124.2
+  campaigns, RV-30/RV-54 removal portions, and transfer untouched evidence, credential=platform,
+  provider, remote-profile, instrumentation, and reviewer access, payment=provider, remote
+  inference, hosting, instrumentation, platform, or review costs if applicable)`;
+  `substitution_set=empty`.
+- Sprint 124 remains `UPSTREAM-SPRINT-123-BLOCKED`; `substitution_set=empty`. Full-chain blocker:
+  `blocked: host change required — run npm run -s docs:check outside the restricted filesystem
+  sandbox with the current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 125 integrated delivery and Windows release gates. Cumulative closures:
+1,295; next checkpoint: 1,300.
