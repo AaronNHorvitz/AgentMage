@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "case_count": 56,
+  "categories": {"manifest": 8, "stage": 8, "credential": 8, "isolation": 8, "scope": 8, "authority": 8, "failure": 8},
+  "cases": [
+    "manifest-email", "manifest-messaging", "manifest-calendar", "manifest-document", "manifest-archive", "manifest-database", "manifest-cloud", "manifest-acceptance",
+    "stage-discovery", "stage-draft", "stage-write", "stage-no-discovery", "stage-no-draft", "stage-no-review", "stage-expired", "stage-state-drift",
+    "credential-reference", "credential-scope", "credential-short-lived", "credential-no-material", "credential-expired", "credential-cross-account", "credential-cross-connector", "credential-revoked",
+    "isolation-connector", "isolation-account", "isolation-workspace", "isolation-task", "isolation-grant", "isolation-cache", "isolation-context", "isolation-attachment",
+    "scope-destination", "scope-payload", "scope-attachment", "scope-visibility", "scope-effect", "scope-preview", "scope-idempotency", "scope-permission",
+    "authority-no-secret-store", "authority-no-filesystem", "authority-no-process", "authority-no-network", "authority-no-database", "authority-content-untrusted", "authority-preview-not-grant", "authority-zero-write",
+    "failure-cancellation", "failure-rate-limit", "failure-permission", "failure-rename", "failure-delete", "failure-conflict", "failure-partial", "failure-unknown"
+  ],
+  "local_contract_passed": true,
+  "native_mutation_executed": false,
+  "derived_credential_obtained": false,
+  "independent_review_present": false,
+  "substitution_set": []
+}

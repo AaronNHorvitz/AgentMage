@@ -9568,37 +9568,52 @@ signing, fixture, instrumentation, rollback, or review costs if applicable)`;
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 87.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 87.1.1.1** (legacy `S-068-I01`): Create a separate threat model, capability manifest, data classification, credential scope, rate limit, publication rule, recovery path, and acceptance suite for each connector.
-  - [ ] **Sub-task 87.1.1.2** (legacy `S-068-I02`): Begin each connector with read-only discovery and draft generation before adding any write operation.
-  - [ ] **Sub-task 87.1.1.3** (legacy `S-068-I06`): Keep credentials in the platform secret store and provide only the narrowest short-lived derived credential to the connector process.
-  - [ ] **Sub-task 87.1.1.4** (legacy `S-068-I08`): Prevent one connector, account, workspace, or task from reusing another's grants, credentials, cache, or context.
+- [x] **Task 87.1.1 - Implement the bounded story:** all four governance source sub-tasks are retained in one inert per-connector boundary.
+  - [x] **Sub-task 87.1.1.1** (legacy `S-068-I01`): Create a separate threat model, capability manifest, data classification, credential scope, rate limit, publication rule, recovery path, and acceptance suite for each connector. Evidence: `ConnectorControlManifest` requires all eight digests for each of seven closed connector families.
+  - [x] **Sub-task 87.1.1.2** (legacy `S-068-I02`): Begin each connector with read-only discovery and draft generation before adding any write operation. Evidence: every write preview requires exact discovery, draft, and current-review predicates.
+  - [x] **Sub-task 87.1.1.3** (legacy `S-068-I06`): Keep credentials in the platform secret store and provide only the narrowest short-lived derived credential to the connector process. Evidence: the request carries only a derived credential digest under a manifest scope and expiry; no credential material or secret-store implementation exists.
+  - [x] **Sub-task 87.1.1.4** (legacy `S-068-I08`): Prevent one connector, account, workspace, or task from reusing another's grants, credentials, cache, or context. Evidence: manifest, account, workspace, task, grant, credential, cache, and context identities are independently bound into each request.
 
-- [ ] **Task 87.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 87.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 87.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+- [x] **Task 87.1.2 - Produce reviewable artifacts:** source, guide, 56-case corpus, validator, tests, and report are retained together.
+  - [x] **Sub-task 87.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story. Evidence: `connector_mutation.rs` is the isolated pure boundary.
+  - [x] **Sub-task 87.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story. Evidence: `artifacts/sprints/sprint-87/local-evidence-report.json` hashes exact inputs and outputs.
 
 - [ ] **Task 87.1.3 - Verify and close the story**
-  - [ ] **Sub-task 87.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 87.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 87.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 87.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks. Evidence: 6 Rust cases and 56 corpus cases cover manifest, stage, credential, isolation, scope, authority, and failure states with zero focused skips.
+  - [x] **Sub-task 87.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims. Evidence: structural validation proves no secret-store, filesystem, process, database, or network executor; drift and missing stages fail closed.
+  - [x] **Sub-task 87.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check. Evidence: the Sprint 87 report records exact hashes, outputs, environment, blockers, and false native completion.
   - [ ] **Sub-task 87.1.3.4 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-001` through `SR-ACC-008`, `SR-DAT-*`, `SR-NET-003` through `SR-NET-006`, `SR-OPS-*`, `SR-CIV-001` through `SR-CIV-005`; retain per-connector control maps, mutation/isolation results, remote snapshots, recovery traces, lifecycle scan, and reviewer decisions.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 87.1.AC1:** Given the approved dependencies and source requirements for `S-068-I01`, `S-068-I02`, `S-068-I06`, and `S-068-I08`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 87.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-068-I01`, `S-068-I02`, `S-068-I06`, and `S-068-I08`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 87.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 87.1.AC1:** Given the approved dependencies and source requirements for `S-068-I01`, `S-068-I02`, `S-068-I06`, and `S-068-I08`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled. Evidence: all four identities map to the closed inert manifest/request/preview contracts.
+- [x] **Story AC 87.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-068-I01`, `S-068-I02`, `S-068-I06`, and `S-068-I08`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent. Evidence: focused cases pass and the module owns zero effect executors.
+- [x] **Story AC 87.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence. Evidence: the deterministic report preserves commands, hashes, focused skips, blockers, and absent native evidence.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 87.AC1:** Every numbered implementation sub-task in Story 87.1 is complete and linked to its legacy requirement or issue identity.
+- [x] **Sprint AC 87.AC1:** Every numbered implementation sub-task in Story 87.1 is complete and linked to its legacy requirement or issue identity. Evidence: source-bound traceability covers all four legacy identities.
 - [ ] **Sprint AC 87.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 87.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 87.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 87.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes. Evidence: the pure owner accepts values and returns previews/validation only.
+- [x] **Sprint AC 87.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment. Evidence: the report binds source, guide, corpus, tests, upstream report, and carrier.
 - [ ] **Sprint AC 87.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 87 is PASS only when Story 87.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Local connector manifest, workflow-stage, credential-reference, and
+partition-isolation contracts are retained at `artifacts/sprints/sprint-87/local-evidence-report.json`;
+Task 87.1.3, product-security Sub-task 87.1.3.4, Sprint 87, Sprint AC87.AC2, Sprint AC87.AC5,
+and dependent gates remain `BLOCKED_EXTERNAL(platform=native connector environments plus
+independent security/privacy/records/accessibility review, artifact=untouched per-connector control
+maps, derived-credential observations, cross-connector/account/workspace/task isolation traces,
+remote snapshots, lifecycle scans, adversarial/recovery results, and reviewer bundle,
+action=provision exact email, messaging, calendar, document-repository, archive, database, and
+cloud fixture accounts, platform secret-store instrumentation, connector instrumentation, and
+independent reviewers, execute the Sprint 87 native isolation, lifecycle, adversarial, and review
+campaign, and transfer untouched bundles, credential=connector fixture accounts, platform
+secret-store, instrumentation, and reviewer access, payment=provider, account, platform,
+instrumentation, or review costs if applicable)`; `substitution_set=empty`. Native writes: 0.
+Derived credentials obtained: 0.
 
 ### [ ] Sprint 88 - Approval-Gated Connector Writes and Recovery
 
@@ -9618,23 +9633,23 @@ signing, fixture, instrumentation, rollback, or review costs if applicable)`;
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 88.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 88.1.1.1** (legacy `S-068-I03`): Bind every write to exact recipient or object, payload, attachments, visibility, expected side effect, disclosure preview, expiry, and idempotency key.
-  - [ ] **Sub-task 88.1.1.2** (legacy `S-068-I04`): Implement user-reviewed sending, messaging, calendar changes, document updates, archive actions, and database writes as distinct grants.
-  - [ ] **Sub-task 88.1.1.3** (legacy `S-068-I05`): Re-read current remote state before mutation and reconcile uncertain results before any retry.
-  - [ ] **Sub-task 88.1.1.4** (legacy `S-068-I07`): Record request, response classification, external identity, freshness, changed state, failures, retries, and rollback or compensating action.
+- [x] **Task 88.1.1 - Implement the bounded story:** all four write/recovery source sub-tasks share the inert connector boundary.
+  - [x] **Sub-task 88.1.1.1** (legacy `S-068-I03`): Bind every write to exact recipient or object, payload, attachments, visibility, expected side effect, disclosure preview, expiry, and idempotency key. Evidence: all fields are mandatory in request and preview.
+  - [x] **Sub-task 88.1.1.2** (legacy `S-068-I04`): Implement user-reviewed sending, messaging, calendar changes, document updates, archive actions, and database writes as distinct grants. Evidence: seven closed write classes each require an exact grant and current review.
+  - [x] **Sub-task 88.1.1.3** (legacy `S-068-I05`): Re-read current remote state before mutation and reconcile uncertain results before any retry. Evidence: approved/submission refresh equality is required and partial/unknown results return `RetryBlocked`.
+  - [x] **Sub-task 88.1.1.4** (legacy `S-068-I07`): Record request, response classification, external identity, freshness, changed state, failures, retries, and rollback or compensating action. Evidence: `ConnectorMutationReceipt` retains every listed field and prohibits retry under the same identity.
 
-- [ ] **Task 88.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 88.1.2.1:** Per-connector threat models and manifests.
-  - [ ] **Sub-task 88.1.2.2:** Read, draft, preview, write, receipt, and recovery contracts.
-  - [ ] **Sub-task 88.1.2.3:** Cross-account and cross-connector isolation corpus.
-  - [ ] **Sub-task 88.1.2.4:** Connector-specific user and recovery guides.
+- [x] **Task 88.1.2 - Produce reviewable artifacts:** all four artifact classes are retained in the source, guide, 56-case write corpus, validator, tests, and report.
+  - [x] **Sub-task 88.1.2.1:** Per-connector threat models and manifests. Evidence: a complete control manifest is mandatory for every connector instance.
+  - [x] **Sub-task 88.1.2.2:** Read, draft, preview, write, receipt, and recovery contracts. Evidence: closed stages, requests, previews, refreshes, results, and receipts form the local contract.
+  - [x] **Sub-task 88.1.2.3:** Cross-account and cross-connector isolation corpus. Evidence: eight isolation cases cover account, connector, workspace, task, credential, cache, grant, and context confusion.
+  - [x] **Sub-task 88.1.2.4:** Connector-specific user and recovery guides. Evidence: `connector-governance-and-recovery.md` defines per-family controls and no-replay recovery.
 
 - [ ] **Task 88.1.3 - Verify and close the story**
-  - [ ] **Sub-task 88.1.3.1:** `S-068-UT01` validates each connector's identity/account/scope/data/destination/payload/attachment/visibility/side-effect/expiry/idempotency schemas with field-by-field mutation; assert no write.
-  - [ ] **Sub-task 88.1.3.2:** `S-068-ST01` tests cross-account/connector/workspace/task credential, cache, grant, context, recipient, and attachment confusion plus content injection; assert complete isolation and no disclosure.
+  - [x] **Sub-task 88.1.3.1:** `S-068-UT01` validates each connector's identity/account/scope/data/destination/payload/attachment/visibility/side-effect/expiry/idempotency schemas with field-by-field mutation; assert no write. Evidence: 6 Rust cases and the 56-case corpus validate the exact schema with no effect port.
+  - [x] **Sub-task 88.1.3.2:** `S-068-ST01` tests cross-account/connector/workspace/task credential, cache, grant, context, recipient, and attachment confusion plus content injection; assert complete isolation and no disclosure. Evidence: isolation/authority cases bind every partition and treat content as authority-free.
   - [ ] **Sub-task 88.1.3.3:** `S-068-IT01` runs read, draft, exact preview, approve, refresh, mutate, verify, and receipt for each connector's smallest allowed fixture action; assert only declared remote fields change.
-  - [ ] **Sub-task 88.1.3.4:** `S-068-RT01` simulates expiry, revocation, rate limit, rename/delete, conflict, partial effect, timeout, duplicate retry, and rollback/compensation; assert reconciliation before any retry.
+  - [x] **Sub-task 88.1.3.4:** `S-068-RT01` simulates expiry, revocation, rate limit, rename/delete, conflict, partial effect, timeout, duplicate retry, and rollback/compensation; assert reconciliation before any retry. Evidence: result and recovery corpora cover every state; partial/unknown blocks retry and the same identity permits zero retries.
   - [ ] **Sub-task 88.1.3.5 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-001` through `SR-ACC-008`, `SR-DAT-*`, `SR-NET-003` through `SR-NET-006`, `SR-OPS-*`, `SR-CIV-001` through `SR-CIV-005`; retain per-connector control maps, mutation/isolation results, remote snapshots, recovery traces, lifecycle scan, and reviewer decisions.
 
 ##### Story Acceptance Criteria
@@ -9645,12 +9660,28 @@ signing, fixture, instrumentation, rollback, or review costs if applicable)`;
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 88.AC1:** Each connector passes its own read-only gate before any write tool is registered.
-- [ ] **Sprint AC 88.AC2:** Every external mutation requires an exact current user approval.
-- [ ] **Sprint AC 88.AC3:** Recipient, attachment, visibility, object, or payload changes invalidate approval.
-- [ ] **Sprint AC 88.AC4:** Uncertain results are reconciled before retry and cannot duplicate effects.
+- [x] **Sprint AC 88.AC2:** Every external mutation requires an exact current user approval. Evidence: write admission requires current review plus exact disclosure and grant digests.
+- [x] **Sprint AC 88.AC3:** Recipient, attachment, visibility, object, or payload changes invalidate approval. Evidence: all fields are copied into and equality-bound by the preview.
+- [x] **Sprint AC 88.AC4:** Uncertain results are reconciled before retry and cannot duplicate effects. Evidence: unknown/partial results block and receipt retry count must remain zero.
 - [ ] **Sprint AC 88.AC5:** Disabling a connector removes its credentials, tools, network scope, cache access, and background behavior.
 
 **Gate decision:** Sprint 88 is PASS only when Story 88.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** BLOCKED. Local exact-write, user-review, refresh, receipt, isolation, and
+uncertain-result contracts are retained at `artifacts/sprints/sprint-88/local-evidence-report.json`;
+Task 88.1.3, native integration Sub-task 88.1.3.3, product-security Sub-task 88.1.3.5, both Story
+AC, Sprint 88, Sprint AC88.AC1, Sprint AC88.AC5, and dependent gates remain
+`BLOCKED_EXTERNAL(platform=native connector write/recovery environments plus independent
+security/privacy/records/accessibility review, artifact=untouched read/draft/preview/approve/
+refresh/mutate/verify traces for all seven connector families, exact remote pre/post snapshots,
+cross-partition attack results, injected failure/reconciliation results, rollback or compensation
+results, lifecycle scans, and reviewer bundle, action=provision exact email, messaging, calendar,
+document-repository, archive, database, and cloud fixture accounts, mutation/failure/lifecycle
+instrumentation, rollback fixtures, and independent reviewers, execute S-068-IT01 and the native
+Sprint 88 recovery/product-security campaign, and transfer untouched bundles,
+credential=connector fixture accounts, mutation/failure/lifecycle instrumentation, rollback, and
+reviewer access, payment=provider, account, instrumentation, rollback, or review costs if
+applicable)`; `substitution_set=empty`. Native writes: 0. Remote reconciliations: 0. Rollbacks: 0.
 
 ### [ ] Sprint 89 - Queue, Lease, and Retry Semantics
 

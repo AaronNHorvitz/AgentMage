@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "case_count": 56,
+  "categories": {"write": 8, "grant": 8, "isolation": 8, "result": 8, "recovery": 8, "receipt": 8, "authority": 8},
+  "cases": [
+    "write-email", "write-message", "write-calendar", "write-document", "write-archive", "write-database", "write-cloud", "write-distinct-class",
+    "grant-destination", "grant-payload", "grant-attachments", "grant-visibility", "grant-effect", "grant-preview", "grant-expiry", "grant-idempotency",
+    "isolation-account", "isolation-connector", "isolation-workspace", "isolation-task", "isolation-credential", "isolation-cache", "isolation-grant", "isolation-context",
+    "result-success", "result-conflict", "result-validation", "result-timeout-before", "result-timeout-after", "result-duplicate", "result-rate-limit", "result-unknown",
+    "recovery-expiry", "recovery-revocation", "recovery-rename", "recovery-delete", "recovery-conflict", "recovery-partial", "recovery-timeout", "recovery-compensation",
+    "receipt-request", "receipt-response", "receipt-identity", "receipt-freshness", "receipt-changed", "receipt-failure", "receipt-retry", "receipt-rollback",
+    "authority-no-client", "authority-no-secret", "authority-no-network", "authority-no-effect", "authority-no-replay", "authority-untrusted-content", "authority-zero-native-write", "authority-zero-rollback"
+  ],
+  "local_contract_passed": true,
+  "native_mutation_executed": false,
+  "remote_reconciliation_executed": false,
+  "rollback_executed": false,
+  "independent_review_present": false,
+  "substitution_set": []
+}

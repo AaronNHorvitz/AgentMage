@@ -8,6 +8,7 @@ mod artifact_receipt;
 mod authority;
 mod coding_skills;
 mod connected_connector;
+mod connector_mutation;
 mod database_adapter;
 mod document_control_skills;
 mod domain;
@@ -99,6 +100,12 @@ pub use connected_connector::{
     NetworkOperationReceipt, NetworkTerminalState, TemporaryNetworkGrant,
     activate_connected_profile, finish_connected_operation, prepare_network_grant,
     record_connector_response,
+};
+pub use connector_mutation::{
+    ConnectorControlManifest, ConnectorKind, ConnectorMutationError, ConnectorMutationPreview,
+    ConnectorMutationReceipt, ConnectorMutationRequest, ConnectorMutationResult,
+    ConnectorOperation, ConnectorRemoteRefresh, admit_connector_mutation,
+    reconcile_connector_mutation,
 };
 pub use database_adapter::{
     DatabaseAccessGrant, DatabaseAdapterError, DatabaseAdapterKind, DatabaseFixtureRow,
