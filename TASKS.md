@@ -13948,33 +13948,38 @@ remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 154.1.1 - Define correlation records**
-  - [ ] **Sub-task 154.1.1.1:** Define native identities, observed and effective times, time windows, source evidence, structural links, temporal links, explicit provider links, statistical associations, confidence, freshness, and limitations.
-  - [ ] **Sub-task 154.1.1.2:** Separate provider-native relationship, deterministic cross-system mapping, user-confirmed link, model suggestion, statistical association, and causal claim states.
-  - [ ] **Sub-task 154.1.1.3:** Prohibit a correlation from creating deployment, infrastructure, incident, communication, financial, or cloud authority.
-- [ ] **Task 154.1.2 - Implement bounded cost and operational views**
-  - [ ] **Sub-task 154.1.2.1:** Link cost summaries to exact billing scope, service, resource where supported, time window, currency, granularity, source, freshness, and allocation assumptions.
-  - [ ] **Sub-task 154.1.2.2:** Build cited deployment-to-health, incident-to-observation, work-to-deployment, configuration-to-metric, and cost-to-service views.
-  - [ ] **Sub-task 154.1.2.3:** Keep remediation, rollback, notification, issue creation, and cloud action as separate delivery or communication operations with independent policy.
-- [ ] **Task 154.1.3 - Verify identity, time, cost, and causal restraint**
-  - [ ] **Sub-task 154.1.3.1:** Test identity collisions, renames, transfers, deleted resources, delayed telemetry, clock skew, stale costs, missing tags, shared services, currency differences, and conflicting evidence.
-  - [ ] **Sub-task 154.1.3.2:** Inject content claiming causation, urgency, approval, remediation, or completed action.
-  - [ ] **Sub-task 154.1.3.3:** Recompute correlations from raw evidence and verify labeled deterministic, statistical, model-assisted, uncertain, and rejected states.
+- [x] **Task 154.1.1 - Define correlation records**
+  - [x] **Sub-task 154.1.1.1:** Define native identities, observed and effective times, time windows, source evidence, structural links, temporal links, explicit provider links, statistical associations, confidence, freshness, and limitations.
+  - [x] **Sub-task 154.1.1.2:** Separate provider-native relationship, deterministic cross-system mapping, user-confirmed link, model suggestion, statistical association, and causal claim states.
+  - [x] **Sub-task 154.1.1.3:** Prohibit a correlation from creating deployment, infrastructure, incident, communication, financial, or cloud authority.
+- [x] **Task 154.1.2 - Implement bounded cost and operational views**
+  - [x] **Sub-task 154.1.2.1:** Link cost summaries to exact billing scope, service, resource where supported, time window, currency, granularity, source, freshness, and allocation assumptions.
+  - [x] **Sub-task 154.1.2.2:** Build cited deployment-to-health, incident-to-observation, work-to-deployment, configuration-to-metric, and cost-to-service views.
+  - [x] **Sub-task 154.1.2.3:** Keep remediation, rollback, notification, issue creation, and cloud action as separate delivery or communication operations with independent policy.
+- [x] **Task 154.1.3 - Verify identity, time, cost, and causal restraint**
+  - [x] **Sub-task 154.1.3.1:** Test identity collisions, renames, transfers, deleted resources, delayed telemetry, clock skew, stale costs, missing tags, shared services, currency differences, and conflicting evidence.
+  - [x] **Sub-task 154.1.3.2:** Inject content claiming causation, urgency, approval, remediation, or completed action.
+  - [x] **Sub-task 154.1.3.3:** Recompute correlations from raw evidence and verify labeled deterministic, statistical, model-assisted, uncertain, and rejected states.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 154.1.AC1:** Given correlated delivery, productivity, cloud, and cost records, when inspected, then every native identity, source, time window, freshness, assumption, and link type is visible.
-- [ ] **Story AC 154.1.AC2:** Given temporal or statistical association without deterministic evidence, when summarized, then it remains correlation and is not presented as causation.
-- [ ] **Story AC 154.1.AC3:** Given a correlation or hostile observation, when action is requested, then no cloud or delivery authority is inherited from the correlation.
+- [x] **Story AC 154.1.AC1:** Given correlated delivery, productivity, cloud, and cost records, when inspected, then every native identity, source, time window, freshness, assumption, and link type is visible.
+- [x] **Story AC 154.1.AC2:** Given temporal or statistical association without deterministic evidence, when summarized, then it remains correlation and is not presented as causation.
+- [x] **Story AC 154.1.AC3:** Given a correlation or hostile observation, when action is requested, then no cloud or delivery authority is inherited from the correlation.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 154.AC1:** `AT-CCST-001` passes across identity, time, rename, transfer, stale, cost, conflicting-evidence, and injected-causation fixtures.
-- [ ] **Sprint AC 154.AC2:** Every view retains native source identity and exact time, currency, granularity, freshness, and allocation assumptions.
-- [ ] **Sprint AC 154.AC3:** Unsupported causal claims are absent and every association class is labeled.
-- [ ] **Sprint AC 154.AC4:** Correlations create zero cloud, delivery, communication, finance, or workflow authority.
+- [x] **Sprint AC 154.AC1:** `AT-CCST-001` passes across identity, time, rename, transfer, stale, cost, conflicting-evidence, and injected-causation fixtures.
+- [x] **Sprint AC 154.AC2:** Every view retains native source identity and exact time, currency, granularity, freshness, and allocation assumptions.
+- [x] **Sprint AC 154.AC3:** Unsupported causal claims are absent and every association class is labeled.
+- [x] **Sprint AC 154.AC4:** Correlations create zero cloud, delivery, communication, finance, or workflow authority.
 
 **Gate decision:** Sprint 154 is PASS only when Story 154.1, all criteria, `AM-CCST-001`, `AT-CCST-001`, applicable security requirements, `RV-14`, `RV-27`, `RV-34`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 154 source and contract rows pass locally with 6,048 cited
+cross-system cloud-cost and delivery cases, six explicitly labeled association classes, and zero
+causal overclaim or inherited authority. Native cross-system campaigns and upstream Sprint closure
+remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 155 - Cross-Pack Extreme Verification and Removal
 

@@ -45,6 +45,8 @@ pub mod child_authority;
 pub mod ci_control;
 /// Deterministic material-claim proof and truthful final-response construction.
 pub mod claim_evidence;
+/// Cited cloud cost and delivery correlations without inherited authority or causal claims.
+pub mod cloud_delivery_correlation;
 /// Provider-neutral, strictly read-only cloud observation contracts.
 pub mod cloud_observer;
 /// Provider-native AWS, Azure, and Google Cloud read-only observer profiles.
