@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_132_local_evidence",
+  "source_revision": "fedf1d7b205a2d40a73f3c741ec3252987a5ff71",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "4ab7b9b37f7e8a49364d2fba495802bf52e088e80ebce85834e6ad4039543718",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "0ff79c7651f1598c9d25597e37a0b15746aacbf53f9825a0148c570df5d21cc3",
+    "kernel/engine/src/communications_outlook.rs": "882a73a42f07fba23f120d8255a8e54210359f0f3eed44e64580bc0916950b46",
+    "supply-chain/dependency-provenance.json": "3c4ee762cf90085687d0350d18e69d4d84fe8860347aa8acb96191499dd7b056",
+    "supply-chain/sbom.cdx.json": "be43293db9c55f03f3d41d2d9563f677d475fa9346b9d8e9e1259b744f522dae",
+    "supply-chain/dependency-hashes.sha256": "22d5d55ad1b5b2e237f034c30f4007d13cefaa5e2d1abb56e4faf44597b7359b",
+    "artifacts/sprints/sprint-132/outlook-corpus.json": "963505699a66a8603377c274b4e9cae1606700630e7120ab3bc558ae8842a935",
+    "scripts/communications_outlook_contract.py": "b1c5f1db28f046255dc15001066182adcf8ef6152e7053e318faf265f9803bb1",
+    "tests/test_communications_outlook_contract.py": "9d728145504a18c47a914e4b64033c592e3165abccf419f1e57c67ad379fcb84",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_132_evidence.py": "8cc9219372c0e6b9899753b446c0b32e265a215aa65b71962c695b2f133b96a8",
+    "tests/test_sprint_132_evidence.py": "ace56f9069b31f1b6fc73a9b3222e6079924367493e3f11709deb277d028c1e7"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "outlook-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "communications_outlook::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d9706bd9eea02a1bffc0a64f4f37a51d072e579864be2e0fd8cd41ca0e98abf6",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "outlook-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_communications_outlook_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "967c92d36cebcf36f2f214cac7698609db89c071c595426864067899c8d2dcc7",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_132_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-COM-001",
+    "AM-M365-001",
+    "AT-COM-001",
+    "AT-M365-001",
+    "SR-PRD-005",
+    "SR-PRD-006",
+    "RV-23",
+    "RV-24",
+    "RV-25",
+    "RV-26",
+    "RV-31"
+  ],
+  "implemented_contracts": {
+    "profile_count": 9,
+    "mutation_case_count": 3600,
+    "retry_case_count": 3150,
+    "unauthorized_effect_count": 0,
+    "duplicate_delivery_count": 0,
+    "removal_authority_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "common_communications_contract_complete": true,
+    "outlook_exact_effect_complete": true,
+    "mutation_floor_complete": true,
+    "retry_floor_complete": true,
+    "removal_contract_complete": true,
+    "native_provider_campaign_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-131-BLOCKED",
+      "owner": "132"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "Microsoft Graph Outlook/Exchange test tenants and mailboxes",
+      "artifact": "untouched native provider conformance, security, accessibility, and removal evidence",
+      "action": "provision exact tenants/accounts/mailboxes/credentials and run AT-COM-001, AT-M365-001, RV-23 through RV-26 and RV-31 native campaigns",
+      "credential": "Microsoft Graph delegated and application credentials",
+      "payment": "Microsoft 365 tenant or provider costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_132_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_131_closed": false,
+    "native_outlook_support_promoted": false,
+    "support_promotion_count": 0
+  }
+}
