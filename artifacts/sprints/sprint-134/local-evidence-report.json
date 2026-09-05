@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_134_local_evidence",
+  "source_revision": "16dc3cdcf5ff4a9ce69bb96d531badeaec1bdcf0",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "00b7a07c6d1185d3ebf5ce125407ae06cddfb34d30038ee1fd684ada8a3618d4",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "3993c6c38af7486687f36c89429e4c09ce93d14893fe4714c833a33d2b946ccc",
+    "kernel/engine/src/communications_gmail.rs": "e8d398fdc47bc7429b2dbc0121a5cfc5fc2ea7c5dd7966276ff5cc045aa2565b",
+    "supply-chain/dependency-provenance.json": "f4d88262d8e1bf8cbabf074f118181df60801fbd9758e6b99388ea5b2ff51f6d",
+    "supply-chain/sbom.cdx.json": "5d34a118664adda88bc6e618e2eeecc1a9c74ecc5f9a0a2f9463fa2147273cbf",
+    "supply-chain/dependency-hashes.sha256": "14e4eabbe96edf78645932450c511e77851007747313f929fd25375c40cb2c6d",
+    "artifacts/sprints/sprint-134/gmail-corpus.json": "eeb6c834db64dcebb1f9f456825aae3cf457083152e39a2071e2065b18ac08fe",
+    "scripts/communications_gmail_contract.py": "122a1ed2fb271f7d7a209c2f6335246b6d17ed28901cab8165fde3fa680773c5",
+    "tests/test_communications_gmail_contract.py": "2e2c05ad4d529a66d2a6a42d3f8fa092fb39b8ed8ec88bcc3c484a0e692dd299",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_134_evidence.py": "a9c2daca65105a740f8fb986fb44a1cd1253e68a8989aa42e1be5ac6ad5b2ef7",
+    "tests/test_sprint_134_evidence.py": "91f8321bf2646a0e6055cf98563abfeb7c6442f6a9be9380694a7ece828d8859"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "gmail-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "communications_gmail::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2e251a32b4015bbfa3dde0f118cb20d3bb4d1126539fa43bfb968ee48bbedaac",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "gmail-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_communications_gmail_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "bd0b3a0129c340bbbda7ba9481f5a5ee2c63fbce13388e075a7285e381743b02",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_134_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-GML-001",
+    "AT-GML-001",
+    "SR-PRD-005",
+    "SR-PRD-006",
+    "SR-PRD-007",
+    "RV-23",
+    "RV-24",
+    "RV-25",
+    "RV-26",
+    "RV-31"
+  ],
+  "implemented_contracts": {
+    "profile_count": 6,
+    "mutation_family_count": 12,
+    "fault_family_count": 15,
+    "fixture_case_count": 4320,
+    "unauthorized_effect_count": 0,
+    "duplicate_delivery_count": 0,
+    "removal_authority_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "gmail_identity_complete": true,
+    "least_scope_complete": true,
+    "exact_effect_complete": true,
+    "history_completeness_complete": true,
+    "recovery_and_removal_complete": true,
+    "native_provider_campaign_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-133-BLOCKED",
+      "owner": "134"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "Gmail test accounts and Google Cloud OAuth project",
+      "artifact": "untouched native account, history, push, delivery, security, reviewer, and removal evidence",
+      "action": "provision exact Gmail accounts/OAuth credentials and run AT-GML-001 plus RV-23 through RV-26 and RV-31 native campaigns",
+      "credential": "Google OAuth client and Gmail account credentials",
+      "payment": "Google Workspace or provider costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_134_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_133_closed": false,
+    "native_gmail_support_promoted": false,
+    "support_promotion_count": 0
+  }
+}
