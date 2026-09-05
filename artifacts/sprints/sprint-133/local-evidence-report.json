@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_133_local_evidence",
+  "source_revision": "1da06c6b252ecb4564bdfd0261a6509725d407fa",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "3197cb88231f92609d50ea0cb9af22cbc82d103ff42d0859948ec56a1bdabaad",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "25af3c953fc26c329662d78753d47cf5f59180bd14de65a73879a6dc2d7342f2",
+    "kernel/engine/src/communications_teams.rs": "9acd827270b0c9928b0ee35ff86f41a72ce3e319cc4d9b2791cc96078c694825",
+    "supply-chain/dependency-provenance.json": "43f9cd610b79a9983ede9099ad0b4c2185231cd888b636f3791d8cd61558b259",
+    "supply-chain/sbom.cdx.json": "209f69d1ed11d74f49eb1a2401ce7746c0eadf99dd0d7abe64ce162085331e9c",
+    "supply-chain/dependency-hashes.sha256": "db5307ceebdb25b45cb270403cf797bcd843c7a8ec97a530bde5532fb1b19792",
+    "artifacts/sprints/sprint-133/teams-corpus.json": "058fac7bbd8ed55fecc57482f50332bb4d351dd6c445d0d474aa8f0474cbb6db",
+    "scripts/communications_teams_contract.py": "90819e2e686030ad3bbe680d88c52581742f64067b85d6acb45c7695af59caa4",
+    "tests/test_communications_teams_contract.py": "67010ac2aa34c7605c9717bbc341078504c45522c7fb45feca2ca62a372d499b",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_133_evidence.py": "9a07d5f31144a6480f5d8dffb176b39b4245b6e2ba11f93a53bf4c1fdd4280b4",
+    "tests/test_sprint_133_evidence.py": "8e161182ce31bb0b4a858a0fe57780679423c457d5631b242858322e270905ae"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "teams-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "communications_teams::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "64fa524e17151e77a5f191ffe25e57d2bb601bc5cf37fb69f8c1e84847157d06",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "teams-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_communications_teams_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "b447673467de6e875ff3540180d0afdf3c3c9ba37ffbad827b4cb2a075505ede",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_133_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-TMS-001",
+    "AT-TMS-001",
+    "SR-PRD-005",
+    "SR-PRD-006",
+    "SR-PRD-007",
+    "RV-23",
+    "RV-24",
+    "RV-25",
+    "RV-26",
+    "RV-31"
+  ],
+  "implemented_contracts": {
+    "profile_count": 6,
+    "mutation_family_count": 17,
+    "failure_family_count": 9,
+    "fixture_case_count": 4590,
+    "unauthorized_effect_count": 0,
+    "duplicate_effect_count": 0,
+    "removal_authority_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "teams_identity_complete": true,
+    "capability_discovery_complete": true,
+    "exact_effect_complete": true,
+    "failure_reconciliation_complete": true,
+    "isolation_and_removal_complete": true,
+    "native_provider_campaign_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-132-BLOCKED",
+      "owner": "133"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "Microsoft Teams organizational test tenant and accounts",
+      "artifact": "untouched native tenant capability, effect, event, security, reviewer, and removal evidence",
+      "action": "provision exact tenant/accounts/credentials and run AT-TMS-001 plus RV-23 through RV-26 and RV-31 native campaigns",
+      "credential": "Microsoft Graph delegated Teams credentials",
+      "payment": "Microsoft 365 tenant or provider costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_133_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_132_closed": false,
+    "native_teams_support_promoted": false,
+    "support_promotion_count": 0
+  }
+}
