@@ -448,3 +448,47 @@ next checkpoint: 2,025.
 
 Exact next action: Sprint 159 tiered full command execution and enforced read-only audit gate.
 Cumulative closures: 2,038; next checkpoint: 2,050.
+
+## Batch 162 — Sprint 159 tiered commands and immutable audits
+
+### Completed
+
+- Closed 33 locally executable Sprint 159 rows across both stories: five intersected command
+  authority levels, 14 exact command semantic families, deterministic preview and receipt fields,
+  trusted-user-only expiring Owner activation, nine terminal revocation triggers, 22 repository
+  states, exact census dispositions, read-only source handles, disposable copy-on-write workers,
+  14-field before/after preservation snapshots, typed secret redaction, hostile-content isolation,
+  and bounded cleanup. Corpus: 6,300 authority plus 792 immutable-audit cases; constrained escape,
+  hidden launch, surviving process, reusable activation, canonical mutation, hosted mutation, raw
+  secret, content-created authority, silent omission, and parser escape counts: 0 each. Batch
+  closures: 33. Cumulative closures: 2,071. Promotions: 0.
+- Commits: `92fd7dea` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `e843a835` (Sprint 159 report), and `f1064366` (14 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.12. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across 14 regenerated paths and 20 pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed Clippy with warnings denied, 4 focused Rust tests, 6 focused Python contract/report
+  tests, both corpora, dependency, traceability, supply-chain, Story 1.2, and Story 3.1/Sprint 3
+  configuration chains. Supply-chain builds: 1; evidence regeneration passes: 1. Full gate: 706
+  seconds, stopping only at retained Story 6.1 Podman after every preceding gate passed.
+  Self-recovery: 1 — corrected the new module insertion context after the first atomic patch
+  rejected a mismatched documented `lib.rs` neighbor; the rejected patch changed no file.
+- Sprint 159 remains `UPSTREAM-SPRINTS-41-43-74-128-157-158-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=native Fedora, Ubuntu, and Windows command-worker, Owner-mode
+  user-interface, accessibility, process-control, repository, and independent review
+  environments, artifact=untouched platform command semantics, constraint, authentication,
+  warning, remaining-time, keyboard, screen-reader, focus, contrast, panic-stop, process-tree,
+  repository-state, canonical-immutability, canary, cleanup, RV-36, RV-44, and RV-45 evidence,
+  action=satisfy upstream blockers, provision exact native platforms and repository fixtures,
+  then run AT-AUT-002, AT-CLI-002, AT-CEN-001, AT-ROA-001, RV-36, RV-44, and RV-45 separately
+  per platform, credential=platform authentication, repository, container, package, network,
+  accessibility, and independent reviewer credentials, payment=platform, repository hosting,
+  accessibility, container, package, network, or independent evaluator costs if applicable)`;
+  `substitution_set=empty`. Full-chain blocker remains `blocked: host change required — run npm
+  run -s docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 160 current public research and citation safety gate. Cumulative
+closures: 2,071; next checkpoint: 2,075.
