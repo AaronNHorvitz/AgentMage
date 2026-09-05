@@ -150,6 +150,8 @@ pub mod job_scheduler;
 pub mod linux_mail_interop;
 /// Exact candidate-tree, signer, manual approval, and signed local commit contracts.
 pub mod local_commit;
+/// Encrypted local snapshots and transitive audit-checkpoint invalidation.
+pub mod local_continuity;
 /// Safe-mode capability closure and content-free maintenance diagnostics.
 pub mod maintenance_recovery;
 /// Source-preserving Markdown mathematics and offline-preview admission.

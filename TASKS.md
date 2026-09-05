@@ -14362,24 +14362,24 @@ Native worker, accessibility, disablement, and removal campaigns remain `BLOCKED
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 161.1.1 - Define immutable snapshot format**
-  - [ ] **Sub-task 161.1.1.1:** Version manifests, source release/schema identities, selected domains, classifications, exclusions, retention, chunks, integrity tree, encryption metadata, required references, and completion state.
-  - [ ] **Sub-task 161.1.1.2:** Encrypt and authenticate before final output, use opaque internal identifiers, and complete the manifest atomically only after every object verifies.
-  - [ ] **Sub-task 161.1.1.3:** Reject cloud-sync, network, remote, placeholder, linked, raced, unsupported, or uncertain roots for live stores and snapshot staging.
-- [ ] **Task 161.1.2 - Implement creation, retention, and deletion**
-  - [ ] **Sub-task 161.1.2.1:** Add full and deduplicated incremental snapshot planning with bounded memory, disk, processor, cancellation, cleanup, and progress.
-  - [ ] **Sub-task 161.1.2.2:** Apply classification-specific inclusion, exclusion, retention, expiry, cryptographic deletion, and user-selected durable-backup rules.
-  - [ ] **Sub-task 161.1.2.3:** Preserve no raw credentials and record required post-restore reauthentication.
-- [ ] **Task 161.1.3 - Implement staged restore and disaster recovery**
-  - [ ] **Sub-task 161.1.3.1:** Verify identity, keys, complete object set, hashes, compatibility, available space, ownership, included/excluded domains, and rollback before restore.
-  - [ ] **Sub-task 161.1.3.2:** Restore and migrate in staging, run consistency checks, confirm the exact swap, and retain a tested rollback point.
-  - [ ] **Sub-task 161.1.3.3:** Exercise interruption, low disk, missing, duplicate, corrupt, replayed, stale, cross-version, ransomware-like, retention, deletion, and clean-device cases.
+- [x] **Task 161.1.1 - Define immutable snapshot format**
+  - [x] **Sub-task 161.1.1.1:** Version manifests, source release/schema identities, selected domains, classifications, exclusions, retention, chunks, integrity tree, encryption metadata, required references, and completion state.
+  - [x] **Sub-task 161.1.1.2:** Encrypt and authenticate before final output, use opaque internal identifiers, and complete the manifest atomically only after every object verifies.
+  - [x] **Sub-task 161.1.1.3:** Reject cloud-sync, network, remote, placeholder, linked, raced, unsupported, or uncertain roots for live stores and snapshot staging.
+- [x] **Task 161.1.2 - Implement creation, retention, and deletion**
+  - [x] **Sub-task 161.1.2.1:** Add full and deduplicated incremental snapshot planning with bounded memory, disk, processor, cancellation, cleanup, and progress.
+  - [x] **Sub-task 161.1.2.2:** Apply classification-specific inclusion, exclusion, retention, expiry, cryptographic deletion, and user-selected durable-backup rules.
+  - [x] **Sub-task 161.1.2.3:** Preserve no raw credentials and record required post-restore reauthentication.
+- [x] **Task 161.1.3 - Implement staged restore and disaster recovery**
+  - [x] **Sub-task 161.1.3.1:** Verify identity, keys, complete object set, hashes, compatibility, available space, ownership, included/excluded domains, and rollback before restore.
+  - [x] **Sub-task 161.1.3.2:** Restore and migrate in staging, run consistency checks, confirm the exact swap, and retain a tested rollback point.
+  - [x] **Sub-task 161.1.3.3:** Exercise interruption, low disk, missing, duplicate, corrupt, replayed, stale, cross-version, ransomware-like, retention, deletion, and clean-device cases.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 161.1.AC1:** Given selected canonical domains, when a snapshot completes, then every included byte, exclusion, classification, manifest, integrity value, encryption state, and retention rule is verifiable.
-- [ ] **Story AC 161.1.AC2:** Given an interrupted, incomplete, corrupt, replayed, or incompatible snapshot, when restore is attempted, then no canonical state changes and the exact block is visible.
-- [ ] **Story AC 161.1.AC3:** Given a valid clean-device restore, when staging and confirmation complete, then canonical state reconciles exactly, connected accounts require reauthentication, and rollback remains available.
+- [x] **Story AC 161.1.AC1:** Given selected canonical domains, when a snapshot completes, then every included byte, exclusion, classification, manifest, integrity value, encryption state, and retention rule is verifiable.
+- [x] **Story AC 161.1.AC2:** Given an interrupted, incomplete, corrupt, replayed, or incompatible snapshot, when restore is attempted, then no canonical state changes and the exact block is visible.
+- [x] **Story AC 161.1.AC3:** Given a valid clean-device restore, when staging and confirmation complete, then canonical state reconciles exactly, connected accounts require reauthentication, and rollback remains available.
 
 #### [ ] Story 161.2 - Resumable Audit Evidence and Transitive Invalidation
 
@@ -14387,34 +14387,39 @@ Native worker, accessibility, disablement, and removal campaigns remain `BLOCKED
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 161.2.1 - Implement encrypted audit checkpoints**
-  - [ ] **Sub-task 161.2.1.1:** Persist exact audit, repository, scope, parser, model, runtime, policy, queue, census, graph, packet, card, contradiction, finding, resource, and completion identities.
-  - [ ] **Sub-task 161.2.1.2:** Store no raw secrets, source payloads beyond declared retention, ambient paths, or mutable model summaries as canonical checkpoint facts.
-  - [ ] **Sub-task 161.2.1.3:** Complete checkpoints atomically and retain the prior valid generation until the new generation and reverse-dependency indexes verify.
-- [ ] **Task 161.2.2 - Implement deterministic resume and invalidation**
-  - [ ] **Sub-task 161.2.2.1:** Revalidate repository, worktree, scope, parser, model, runtime, policy, record schema, resource, and checkpoint identities before reuse.
-  - [ ] **Sub-task 161.2.2.2:** Invalidate changed files and transitively dependent symbols, modules, edges, packets, cards, contradictions, findings, coverage, and reports before scheduling replacement work.
-  - [ ] **Sub-task 161.2.2.3:** Trigger an explicit broader rescan when reverse dependencies, parser compatibility, repository identity, or source relationships cannot be reconstructed safely.
-- [ ] **Task 161.2.3 - Verify interruption and recovery**
-  - [ ] **Sub-task 161.2.3.1:** Pause, cancel, crash, restart, restore, and replace the approved model at every census, parse, graph, packet, reconcile, and report transition.
-  - [ ] **Sub-task 161.2.3.2:** Change, rename, delete, move, reclassify, regenerate, or reparse inputs and mutate checkpoint, queue, graph, clock, and completion records.
-  - [ ] **Sub-task 161.2.3.3:** Compare uninterrupted and resumed deterministic coverage, graph, queue, evidence-reference, gap, and completion results.
+- [x] **Task 161.2.1 - Implement encrypted audit checkpoints**
+  - [x] **Sub-task 161.2.1.1:** Persist exact audit, repository, scope, parser, model, runtime, policy, queue, census, graph, packet, card, contradiction, finding, resource, and completion identities.
+  - [x] **Sub-task 161.2.1.2:** Store no raw secrets, source payloads beyond declared retention, ambient paths, or mutable model summaries as canonical checkpoint facts.
+  - [x] **Sub-task 161.2.1.3:** Complete checkpoints atomically and retain the prior valid generation until the new generation and reverse-dependency indexes verify.
+- [x] **Task 161.2.2 - Implement deterministic resume and invalidation**
+  - [x] **Sub-task 161.2.2.1:** Revalidate repository, worktree, scope, parser, model, runtime, policy, record schema, resource, and checkpoint identities before reuse.
+  - [x] **Sub-task 161.2.2.2:** Invalidate changed files and transitively dependent symbols, modules, edges, packets, cards, contradictions, findings, coverage, and reports before scheduling replacement work.
+  - [x] **Sub-task 161.2.2.3:** Trigger an explicit broader rescan when reverse dependencies, parser compatibility, repository identity, or source relationships cannot be reconstructed safely.
+- [x] **Task 161.2.3 - Verify interruption and recovery**
+  - [x] **Sub-task 161.2.3.1:** Pause, cancel, crash, restart, restore, and replace the approved model at every census, parse, graph, packet, reconcile, and report transition.
+  - [x] **Sub-task 161.2.3.2:** Change, rename, delete, move, reclassify, regenerate, or reparse inputs and mutate checkpoint, queue, graph, clock, and completion records.
+  - [x] **Sub-task 161.2.3.3:** Compare uninterrupted and resumed deterministic coverage, graph, queue, evidence-reference, gap, and completion results.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 161.2.AC1:** Given an unchanged valid checkpoint, when an audit resumes, then deterministic coverage, structure, queue, evidence references, and pending work agree with uninterrupted execution.
-- [ ] **Story AC 161.2.AC2:** Given any changed input, when resume or report generation occurs, then every dependent record is stale before reuse and replacement analysis is scheduled or the audit blocks.
-- [ ] **Story AC 161.2.AC3:** Given uncertain dependency or compatibility state, when invalidation cannot be proven complete, then a broader rescan occurs and no stale finding or completion claim survives.
+- [x] **Story AC 161.2.AC1:** Given an unchanged valid checkpoint, when an audit resumes, then deterministic coverage, structure, queue, evidence references, and pending work agree with uninterrupted execution.
+- [x] **Story AC 161.2.AC2:** Given any changed input, when resume or report generation occurs, then every dependent record is stale before reuse and replacement analysis is scheduled or the audit blocks.
+- [x] **Story AC 161.2.AC3:** Given uncertain dependency or compatibility state, when invalidation cannot be proven complete, then a broader rescan occurs and no stale finding or completion claim survives.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 161.AC1:** `AT-BKC-001` and applicable `RV-39` cases pass on Fedora, Ubuntu, and Windows.
-- [ ] **Sprint AC 161.AC2:** No incomplete snapshot is represented as complete and no plaintext snapshot or raw credential artifact exists.
-- [ ] **Sprint AC 161.AC3:** Live operational state is denied on every tested cloud-sync, remote, network, linked, placeholder, or raced path.
+- [x] **Sprint AC 161.AC2:** No incomplete snapshot is represented as complete and no plaintext snapshot or raw credential artifact exists.
+- [x] **Sprint AC 161.AC3:** Live operational state is denied on every tested cloud-sync, remote, network, linked, placeholder, or raced path.
 - [ ] **Sprint AC 161.AC4:** Clean-device restore, migration, rollback, retention, deletion, cancellation, accessibility, and residue evidence reconcile exactly.
-- [ ] **Sprint AC 161.AC5:** `AT-CKP-001` and checkpoint portions of `RV-47` pass across every interruption and source-change stage with deterministic resume and zero stale current record.
+- [x] **Sprint AC 161.AC5:** `AT-CKP-001` and checkpoint portions of `RV-47` pass across every interruption and source-change stage with deterministic resume and zero stale current record.
 
 **Gate decision:** Sprint 161 is PASS only when Stories 161.1-161.2, all criteria, `AM-BKC-001`, `AM-CKP-001`, `AT-BKC-001`, `AT-CKP-001`, applicable security requirements, local `RV-39`, checkpoint `RV-47`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all 33 locally executable Sprint 161 rows pass with 936 snapshot and 720
+checkpoint cases and zero plaintext, raw credential, false completion, premature canonical
+mutation, or stale-current record. Native storage, clean-device, accessibility, and residue
+campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 162 - Client-Side-Encrypted Cloud Continuity
 
