@@ -43,6 +43,7 @@ pub mod ci_control;
 pub mod claim_evidence;
 /// Exact command templates, previews, execution permits, and terminal receipts.
 pub mod command_runner;
+pub mod communication_write_safety;
 /// Gmail account, history, and delivery integrity contracts.
 pub mod communications_gmail;
 pub mod communications_mail;

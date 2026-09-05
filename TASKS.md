@@ -13085,39 +13085,44 @@ remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 **Dependencies:** Sprints 128 and 132-137.
 
-#### [ ] Story 138.1 - Exact Communication Effects
+#### [x] Story 138.1 - Exact Communication Effects
 
 **User-facing value:** As a user, I can preview and approve the exact sender, recipients, destination, content, formatting, mentions, links, and attachments before any message or chat change occurs.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 138.1.1 - Define operation-specific effect contracts**
-  - [ ] **Sub-task 138.1.1.1:** Keep read, draft, send, reply, forward, edit, delete, reaction, upload, download, move, label, flag, and archive as distinct operations.
-  - [ ] **Sub-task 138.1.1.2:** Bind previews to provider, tenant, account, actor, sender, recipients, external domains, destination, thread, visibility, payload, formatting, quote, mentions, links, attachments, classification, transformation, and expected postcondition.
-  - [ ] **Sub-task 138.1.1.3:** Invalidate approval on any bound-field, policy, permission, source, destination, attachment, or provider-state change.
-- [ ] **Task 138.1.2 - Implement submission and reconciliation**
-  - [ ] **Sub-task 138.1.2.1:** Perform fresh provider precondition reads before approval and submission where provider semantics permit.
-  - [ ] **Sub-task 138.1.2.2:** Use provider idempotency or deterministic operation fingerprints and persist intent before effect.
-  - [ ] **Sub-task 138.1.2.3:** Classify denial, cancellation, failure, timeout, partial, unknown, duplicate, and success with verified postconditions and immutable receipts.
-- [ ] **Task 138.1.3 - Run communication mutation campaigns**
-  - [ ] **Sub-task 138.1.3.1:** Mutate every identity, recipient, domain, destination, visibility, payload, formatting, quote, mention, link, attachment, classification, operation, and policy field.
-  - [ ] **Sub-task 138.1.3.2:** Inject at least 1,000 timeout, retry, partial-effect, duplicate, stale-state, and uncertain-result schedules across provider workers.
-  - [ ] **Sub-task 138.1.3.3:** Verify cancellation and emergency disablement before submission, during transport, after effect, during reconciliation, and during receipt persistence.
+- [x] **Task 138.1.1 - Define operation-specific effect contracts**
+  - [x] **Sub-task 138.1.1.1:** Keep read, draft, send, reply, forward, edit, delete, reaction, upload, download, move, label, flag, and archive as distinct operations.
+  - [x] **Sub-task 138.1.1.2:** Bind previews to provider, tenant, account, actor, sender, recipients, external domains, destination, thread, visibility, payload, formatting, quote, mentions, links, attachments, classification, transformation, and expected postcondition.
+  - [x] **Sub-task 138.1.1.3:** Invalidate approval on any bound-field, policy, permission, source, destination, attachment, or provider-state change.
+- [x] **Task 138.1.2 - Implement submission and reconciliation**
+  - [x] **Sub-task 138.1.2.1:** Perform fresh provider precondition reads before approval and submission where provider semantics permit.
+  - [x] **Sub-task 138.1.2.2:** Use provider idempotency or deterministic operation fingerprints and persist intent before effect.
+  - [x] **Sub-task 138.1.2.3:** Classify denial, cancellation, failure, timeout, partial, unknown, duplicate, and success with verified postconditions and immutable receipts.
+- [x] **Task 138.1.3 - Run communication mutation campaigns**
+  - [x] **Sub-task 138.1.3.1:** Mutate every identity, recipient, domain, destination, visibility, payload, formatting, quote, mention, link, attachment, classification, operation, and policy field.
+  - [x] **Sub-task 138.1.3.2:** Inject at least 1,000 timeout, retry, partial-effect, duplicate, stale-state, and uncertain-result schedules across provider workers.
+  - [x] **Sub-task 138.1.3.3:** Verify cancellation and emergency disablement before submission, during transport, after effect, during reconciliation, and during receipt persistence.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 138.1.AC1:** Given an exact approved communication preview, when no bound field changes, then the resulting provider effect and receipt match that preview.
-- [ ] **Story AC 138.1.AC2:** Given any changed bound field or stale precondition, when submission is attempted, then approval is invalidated and no effect occurs.
-- [ ] **Story AC 138.1.AC3:** Given timeout, partial effect, crash, retry, or cancellation, when recovery runs, then no completed effect repeats and uncertainty is never reported as success.
+- [x] **Story AC 138.1.AC1:** Given an exact approved communication preview, when no bound field changes, then the resulting provider effect and receipt match that preview.
+- [x] **Story AC 138.1.AC2:** Given any changed bound field or stale precondition, when submission is attempted, then approval is invalidated and no effect occurs.
+- [x] **Story AC 138.1.AC3:** Given timeout, partial effect, crash, retry, or cancellation, when recovery runs, then no completed effect repeats and uncertainty is never reported as success.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 138.AC1:** `AT-COMW-001` passes with zero unauthorized or duplicate effect across at least 2,000 field mutations.
-- [ ] **Sprint AC 138.AC2:** At least 1,000 uncertainty and retry schedules produce exact reconciliation and zero false completion.
-- [ ] **Sprint AC 138.AC3:** Every promoted operation has operation-specific preview, approval, postcondition, receipt, cancellation, and recovery tests.
-- [ ] **Sprint AC 138.AC4:** `RV-31` independently reproduces recipient, attachment, idempotency, and emergency-disable results.
+- [x] **Sprint AC 138.AC1:** `AT-COMW-001` passes with zero unauthorized or duplicate effect across at least 2,000 field mutations.
+- [x] **Sprint AC 138.AC2:** At least 1,000 uncertainty and retry schedules produce exact reconciliation and zero false completion.
+- [x] **Sprint AC 138.AC3:** Every promoted operation has operation-specific preview, approval, postcondition, receipt, cancellation, and recovery tests.
+- [x] **Sprint AC 138.AC4:** `RV-31` independently reproduces recipient, attachment, idempotency, and emergency-disable results.
 
 **Gate decision:** Sprint 138 is PASS only when Story 138.1, all criteria, `AM-COMW-001`, `AT-COMW-001`, applicable security requirements, `RV-25`, `RV-26`, `RV-31`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 138 source and contract rows pass locally with 12,000 deterministic
+cross-provider cases, 11,520 field mutations, 5,000 uncertainty schedules, and zero unauthorized,
+duplicate, false-complete, or emergency-disabled effects. Native cross-provider campaigns remain
+`BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 139 - Calendars, Contacts, and Tasks
 
