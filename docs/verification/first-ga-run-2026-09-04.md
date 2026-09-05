@@ -3038,3 +3038,38 @@ checkpoint: 1,725.
 
 Exact next action: Sprint 145 read-only financial data adapters. Cumulative closures: 1,736; next
 checkpoint: 1,750.
+
+## Batch 148 — Sprint 145 read-only financial data adapters
+
+### Completed
+
+- Closed 20 local Sprint 145 rows: exact provider, institution, item, owner, account, consent,
+  data-class, cursor, freshness, coverage, revocation, deletion, credential-reference, and support
+  identities; six read classes; immutable normalization; cursor and permission reconciliation; 13
+  structurally absent effect families; and zero-residue removal. Corpus cases: 4,320; writes,
+  cross-scope disclosures, credential exposures, prohibited representations, and residual
+  authority: 0 each. Batch closures: 20. Cumulative closures: 1,756. Promotions: 0.
+- Commits: `042d06e7` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `27af01e4` (Sprint 145 report), and `49c73430` (13 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.20. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed Clippy with warnings denied, 4 focused Rust tests, 8 focused Python tests, the 4,320-case
+  AT-BNK-001 corpus, Sprint evidence, dependency, traceability, supply-chain, Story 1.2, and Story
+  3.1 configuration chains. Supply-chain builds: 1; evidence regeneration passes: 1. Full gate:
+  702.37 seconds, stopping only at retained Story 6.1 Podman after every preceding gate passed.
+  Self-recovery: 0.
+- Sprint 145 remains `UPSTREAM-SPRINTS-128-130-142-143-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=Plaid sandbox provider, institution, items, and representative
+  financial accounts, artifact=untouched native provider-version, consent, account-scope, cursor,
+  privacy, security, reviewer, revocation, deletion, and removal evidence, action=provision the
+  exact Plaid sandbox account, institution/items, accounts, and credentials, then run AT-BNK-001
+  plus RV-23, RV-24, RV-26, RV-33, and RV-35 native campaigns, credential=Plaid sandbox client_id
+  and secret, payment=Plaid account costs if applicable)`; `substitution_set=empty`. Full-chain
+  blocker remains `blocked: host change required — run npm run -s docs:check outside the restricted
+  filesystem sandbox with the current user's /run/user/1000/libpod writable`;
+  `substitution_set=empty`.
+
+Exact next action: Sprint 146 budgets, cash flow, goals, and scenarios. Cumulative closures: 1,756;
+next checkpoint: 1,775.
