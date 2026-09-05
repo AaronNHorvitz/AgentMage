@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_163_local_evidence",
+  "source_revision": "be7837f219dd56cdc61bcb75144372739393fa7f",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "TASKS.md": "93af3548f72a8a1e975c553bee9de8ca23c7e73e05ba5853a1ba6492adad4dd9",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "MODEL-PROVENANCE-POLICY.md": "528076ef9be354e5a463221811a0bf4bf735a50be0b3a73df91097d7e83594c7",
+    "CODEBASE-AUDIT.md": "4a01791dfcd6e885fdd4337607b7eee21d77a774c6f1b0aa8c258f9cd34ee2e7",
+    "docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md": "dd0d1c98597cee8d7c2c1956336da8c97f75c9bca347eefb3051c2738afe43db",
+    "kernel/engine/src/lib.rs": "d4aa89df3238be3e83b0b7b3d28cda69c4b72d1e9b53822e78b1dd603a10ef0b",
+    "kernel/engine/src/model_catalog_semantic.rs": "50f88b7aa8e0c8aa1a1712f3a530f18bf2fbe80bcb223dc851b724a2c44d71a2",
+    "supply-chain/dependency-provenance.json": "f509ea4a900cb05de5013ada48a9513c237c58d0936814bfed599af6cf18b215",
+    "supply-chain/sbom.cdx.json": "fa8a35fa061362bcb75d72585d01ba9e59f714c6beb72ff7f8bfe53a1f219b05",
+    "supply-chain/dependency-hashes.sha256": "66fcc75e44fa6e02c61c7390130bf5cbe851120327c04a7f0fbaa01f2e581feb",
+    "artifacts/sprints/sprint-163/model-catalog-semantic-corpus.json": "c246841b85f7bd6c8dac9188219882f534816aa2a299dddd908297ede86db33b",
+    "scripts/model_catalog_semantic_contract.py": "293d4bf3727ca6d750afbf56775166e89ee9d7e21b854b206fb5d73ea4f13d91",
+    "tests/test_model_catalog_semantic_contract.py": "9bb4f232cc09b6032e11cb40a7c164cb6cb7384b3c35dc8904fdf488772a08b5",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_163_evidence.py": "bbac2af7a35bd9e20b801f87a04ee317fa915635aecb27cf77f6081a0f69b1bf",
+    "tests/test_sprint_163_evidence.py": "93162a5c9ad0f877c24018a7c09f22224255aa1c522046ce9a8b61d0161ea828"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "model-catalog-semantic-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "model_catalog_semantic::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "dadf9edc03de13a98a43cadce50d7c17aee696cf750662696fad892e8d70ae70",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "model-catalog-semantic-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_model_catalog_semantic_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "946acfd74cc11aff8da84cf35f68137c7af2d277f03e4bec7c5baf2f80df4833",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_163_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-MCAT-001",
+    "AM-MDL-004",
+    "AM-MDL-007",
+    "AM-AGT-001",
+    "AM-STR-001",
+    "AM-SEM-001",
+    "AT-MCAT-001",
+    "AT-STR-001",
+    "AT-SEM-001",
+    "SR-MGM-001",
+    "SR-MGM-005",
+    "SR-AI-015",
+    "SR-AI-018",
+    "SR-AUD-004",
+    "SR-AUD-005",
+    "RV-40",
+    "RV-41",
+    "RV-46"
+  ],
+  "implemented_contracts": {
+    "catalog_state_count": 7,
+    "compatibility_count": 7,
+    "mutation_count": 8,
+    "selection_channel_count": 8,
+    "parser_count": 10,
+    "partition_count": 8,
+    "variation_count": 8,
+    "catalog_case_count": 3136,
+    "semantic_case_count": 640,
+    "unauthorized_usability_count": 0,
+    "family_inheritance_count": 0,
+    "omitted_negative_count": 0,
+    "structural_gap_count": 0,
+    "coverage_gap_count": 0,
+    "authority_change_count": 0,
+    "completion_change_count": 0,
+    "signed_catalog_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "catalog_contract_complete": true,
+    "compatibility_contract_complete": true,
+    "negative_inventory_retained": true,
+    "structural_contract_complete": true,
+    "semantic_partition_contract_complete": true,
+    "model_memory_independence_complete": true,
+    "signed_catalog_complete": false,
+    "manifest_reconciliation_complete": false,
+    "decision_0027_reconciliation_complete": false,
+    "native_accessibility_removal_complete": false,
+    "rv40_41_46_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-13-15-103-157-158-BLOCKED",
+      "owner": "163"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "catalog signing infrastructure plus native published language/build, approved model/runtime, accessibility, offline selection, removal, and independent review environments",
+      "artifact": "untouched signed catalog, catalog-to-BOM/runtime/package/platform/support reconciliation, Decision 0027 completeness, native parser/partition/model-profile, quarantine, lifecycle, accessibility, removal, RV-40, RV-41, and RV-46 evidence",
+      "action": "satisfy upstream blockers, provision signing and exact native model/runtime/parser environments, sign the complete catalog, then run AT-MCAT-001, AT-STR-001, AT-SEM-001, RV-40, RV-41, and RV-46 campaigns",
+      "credential": "catalog-signing, model artifact, runtime, platform, accessibility, and independent reviewer credentials",
+      "payment": "model, signing, runtime, platform, accessibility, or independent evaluator costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_163_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "approved_model_count": 0,
+    "signed_catalog_count": 0,
+    "catalog_promoted": false,
+    "semantic_analysis_promoted": false,
+    "support_promotion_count": 0
+  }
+}
