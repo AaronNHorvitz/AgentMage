@@ -2653,3 +2653,36 @@ Exact next action: Sprint 133 Microsoft Teams adapter. Cumulative closures: 1,47
   `substitution_set=empty`. Full-chain blocker remains the exact recorded Podman host tuple.
 
 Exact next action: Sprint 134 Gmail adapter. Cumulative closures: 1,493; next checkpoint: 1,500.
+
+## Batch 137 — Sprint 134 Gmail adapter
+
+### Completed
+
+- Closed 20 local Sprint 134 rows: exact account/mailbox/scope identities, 12 closed Gmail
+  operations, exact recipient/content/attachment effect binding, history-gap and watch-expiry
+  visibility, replay refusal, failure/recovery, removal, security, accessibility, and reviewer
+  matrices. Corpus cases: 4,320; unauthorized effects, duplicate delivery, false completion,
+  and removal-residual authority: 0 each. Batch closures: 20. Cumulative closures: 1,513.
+  Promotions: 0.
+- Commits: `16dc3cdc` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `37d845b7` (Sprint 134 report), and `7aaae359` (13 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.20. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 3 focused Rust tests, 7 focused Python tests, the 4,320-case AT-GML-001 corpus, Sprint
+  evidence, dependency, traceability, supply-chain, Story 1.2, and Story 3.1 configuration chains.
+  Supply-chain builds: 1; evidence regeneration passes: 1. Full gate: 693.94 seconds, stopping
+  only at retained Story 6.1 Podman after every preceding gate passed. Self-recovery: 0.
+- Sprint 134 remains `UPSTREAM-SPRINT-133-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=Gmail test accounts and Google Cloud OAuth project,
+  artifact=untouched native account, history, push, delivery, security, reviewer, and removal
+  evidence, action=provision exact Gmail accounts/OAuth credentials and run AT-GML-001 plus
+  RV-23 through RV-26 and RV-31 native campaigns, credential=Google OAuth client and Gmail
+  account credentials, payment=Google Workspace or provider costs if applicable)`;
+  `substitution_set=empty`. Full-chain blocker remains
+  `blocked: host change required — run npm run -s docs:check outside the restricted filesystem
+  sandbox with the current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 135 standard mail protocols and Proton Bridge adapter. Cumulative
+closures: 1,513; next checkpoint: 1,525.
