@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_137_local_evidence",
+  "source_revision": "3a1ed2e21a1fc0f01e98126b3d0eb9b95aa5803d",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "c6822ad4f0311b65494e31f1f0b92773f53376ba6a1f536876c3fb72cee8eef1",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "11f65e28581261b7342196df244c94795b963164c5fb0f4d9b9e08133cab0a4c",
+    "kernel/engine/src/linux_mail_interop.rs": "aedca1ccb24b64b15f2622ab8f7e1b7bddc22b04eb10ddce5b64522d926f330d",
+    "supply-chain/dependency-provenance.json": "c19674331eac1045dca43496c777446eaaf212f17ed99f6f140383b22dd92f69",
+    "supply-chain/sbom.cdx.json": "232f5a1ce63d8f9a8d0c9d8fa5fcb9868da87018e5d903b66c188567d95f284b",
+    "supply-chain/dependency-hashes.sha256": "20c2ccff085ccff95105f4600403057323ab01bbb97e2a3e20f6ccd28f17a9c0",
+    "artifacts/sprints/sprint-137/linux-mail-corpus.json": "c3672393b479b69e4d52a827107fdf7fbe0cfbbe608b5e8ff60f4a70ee9bc7c1",
+    "scripts/linux_mail_interop_contract.py": "c62662c5c8645087a7ac3b143e1e21eb018c65a2c2543ffb0f44757795da579d",
+    "tests/test_linux_mail_interop_contract.py": "905ef8c78f4a6f27ed9511742c34b2b34406fbbee3b1ead8ff3f893ac52cd3bf",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_137_evidence.py": "2464342de778e760be993edd2513d19151a9aa0b16f55e975be6d55793081f2d",
+    "tests/test_sprint_137_evidence.py": "d525f37079b00a201a566d3f51e537c86488d24340786bfa3277a29da34a54df"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "linux-mail-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "linux_mail_interop::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "39a8c429dd4895f2ea3f399f37b775381e9ce8dc50c8289e047ed5fcc5459546",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-mail-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_linux_mail_interop_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "bd0b3a0129c340bbbda7ba9481f5a5ee2c63fbce13388e075a7285e381743b02",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_137_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-LMAIL-001",
+    "AT-LMAIL-001",
+    "SR-PRD-008",
+    "RV-23",
+    "RV-24",
+    "RV-30",
+    "RV-31"
+  ],
+  "implemented_contracts": {
+    "profile_count": 6,
+    "attack_family_count": 15,
+    "failure_family_count": 10,
+    "state_count": 5,
+    "fixture_case_count": 4500,
+    "source_mutation_count": 0,
+    "credential_extraction_count": 0,
+    "path_escape_count": 0,
+    "removal_authority_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "interop_routes_complete": true,
+    "private_profile_denial_complete": true,
+    "read_only_import_complete": true,
+    "source_nonmutation_complete": true,
+    "removal_complete": true,
+    "native_client_campaign_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-135-BLOCKED",
+      "owner": "137"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "native Thunderbird, Evolution, and KMail installations plus representative user-selected mbox and Maildir archives",
+      "artifact": "untouched native client-version, archive-parser, non-mutation, reviewer, and removal evidence",
+      "action": "provision exact supported and future client versions and representative archives, then run AT-LMAIL-001 plus RV-23, RV-24, RV-30, and RV-31 native campaigns",
+      "credential": null,
+      "payment": null
+    }
+  ],
+  "summary": {
+    "local_sprint_137_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_135_closed": false,
+    "native_linux_mail_support_promoted": false,
+    "support_promotion_count": 0
+  }
+}
