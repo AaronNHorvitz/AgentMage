@@ -155,6 +155,7 @@ pub mod operational_store;
 pub mod persistence;
 /// Persistent Engineering Runtime session supervision and ordered event replay.
 pub mod persistent_supervisor;
+pub mod personal_information_management;
 /// Fail-closed platform capability detection and adapter activation.
 pub mod platform_startup;
 /// Non-enabling composition of exact qualified roles and capabilities.

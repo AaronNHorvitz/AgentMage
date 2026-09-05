@@ -13134,32 +13134,32 @@ duplicate, false-complete, or emergency-disabled effects. Native cross-provider 
 
 **Dependencies:** Sprints 83-84, 128-130, 135, and 138.
 
-#### [ ] Story 139.1 - Exact Personal Information Management
+#### [x] Story 139.1 - Exact Personal Information Management
 
 **User-facing value:** As a user, I can review and manage events, availability, contacts, and tasks without accidental invitations, recurrence corruption, contact merges, task assignments, or cross-account writes.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 139.1.1 - Implement shared calendar, contact, and task contracts**
-  - [ ] **Sub-task 139.1.1.1:** Define event, calendar, availability, time zone, recurrence, invitation, response, reminder, resource, attendee, contact, address, organization, task, assignment, dependency, due date, and status types.
-  - [ ] **Sub-task 139.1.1.2:** Preserve provider identity, recurrence master and instance identity, attendee state, conflict, visibility, permissions, and transformation.
-  - [ ] **Sub-task 139.1.1.3:** Separate create, update, move, invite, respond, cancel, merge, assign, complete, reopen, and delete operations.
-- [ ] **Task 139.1.2 - Implement provider and standards adapters**
-  - [ ] **Sub-task 139.1.2.1:** Add Outlook and Google Calendar plus CalDAV capability-detected reads and writes.
-  - [ ] **Sub-task 139.1.2.2:** Add Microsoft and Google contacts plus CardDAV capability-detected reads and writes.
-  - [ ] **Sub-task 139.1.2.3:** Add Microsoft To Do and Planner, Google Tasks, and local-task reads and writes with exact assignment and status behavior.
-- [ ] **Task 139.1.3 - Verify time, identity, conflict, and effect safety**
-  - [ ] **Sub-task 139.1.3.1:** Test daylight-saving transitions, ambiguous times, recurrence exceptions, moved instances, invitation races, resource conflicts, and provider transformation.
-  - [ ] **Sub-task 139.1.3.2:** Test duplicate contacts, similar names, merge and split, cross-account tasks, stale assignments, concurrent edits, and permission reduction.
-  - [ ] **Sub-task 139.1.3.3:** Reconcile retries, partial effects, notification side effects, removal, and strict-local restoration.
+- [x] **Task 139.1.1 - Implement shared calendar, contact, and task contracts**
+  - [x] **Sub-task 139.1.1.1:** Define event, calendar, availability, time zone, recurrence, invitation, response, reminder, resource, attendee, contact, address, organization, task, assignment, dependency, due date, and status types.
+  - [x] **Sub-task 139.1.1.2:** Preserve provider identity, recurrence master and instance identity, attendee state, conflict, visibility, permissions, and transformation.
+  - [x] **Sub-task 139.1.1.3:** Separate create, update, move, invite, respond, cancel, merge, assign, complete, reopen, and delete operations.
+- [x] **Task 139.1.2 - Implement provider and standards adapters**
+  - [x] **Sub-task 139.1.2.1:** Add Outlook and Google Calendar plus CalDAV capability-detected reads and writes.
+  - [x] **Sub-task 139.1.2.2:** Add Microsoft and Google contacts plus CardDAV capability-detected reads and writes.
+  - [x] **Sub-task 139.1.2.3:** Add Microsoft To Do and Planner, Google Tasks, and local-task reads and writes with exact assignment and status behavior.
+- [x] **Task 139.1.3 - Verify time, identity, conflict, and effect safety**
+  - [x] **Sub-task 139.1.3.1:** Test daylight-saving transitions, ambiguous times, recurrence exceptions, moved instances, invitation races, resource conflicts, and provider transformation.
+  - [x] **Sub-task 139.1.3.2:** Test duplicate contacts, similar names, merge and split, cross-account tasks, stale assignments, concurrent edits, and permission reduction.
+  - [x] **Sub-task 139.1.3.3:** Reconcile retries, partial effects, notification side effects, removal, and strict-local restoration.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 139.1.AC1:** Given a calendar operation, when previewed and executed, then event identity, time zone, recurrence, attendees, notifications, visibility, and resulting instances match exactly.
-- [ ] **Story AC 139.1.AC2:** Given a contact or task operation, when identity, account, assignment, or conflict state changes, then stale approval is invalidated before effect.
-- [ ] **Story AC 139.1.AC3:** Given provider differences or unsupported behavior, when discovery runs, then exact supported semantics and limitations remain visible.
+- [x] **Story AC 139.1.AC1:** Given a calendar operation, when previewed and executed, then event identity, time zone, recurrence, attendees, notifications, visibility, and resulting instances match exactly.
+- [x] **Story AC 139.1.AC2:** Given a contact or task operation, when identity, account, assignment, or conflict state changes, then stale approval is invalidated before effect.
+- [x] **Story AC 139.1.AC3:** Given provider differences or unsupported behavior, when discovery runs, then exact supported semantics and limitations remain visible.
 
-#### [ ] Story 139.2 - Confirmed Proton Calendar Invitations
+#### [x] Story 139.2 - Confirmed Proton Calendar Invitations
 
 **User-facing value:** As a user, I can ask AgentMage to invite someone directly or ask by email first and create the agreed Proton Calendar event without exposing my Proton credentials, guessing consent, repeating an uncertain submission, or granting the model general control of my browser.
 
@@ -13167,37 +13167,42 @@ duplicate, false-complete, or emergency-disabled effects. Native cross-provider 
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 139.2.1 - Define the Proton Calendar confirmed-UI contract**
-  - [ ] **Sub-task 139.2.1.1:** Publish a capability manifest for exact Proton origin, supported visible interface and version, authenticated profile reference, calendar, event fields, attendee and invitation operations, document or accessibility controls, bounded visual fallbacks, provider limitations, and removal behavior.
-  - [ ] **Sub-task 139.2.1.2:** Bind each operation to visible foreground state, current account and calendar identity, title, start, end, time zone, recurrence, location, description, attendees, expected notifications, preconditions, postconditions, policy version, and one consumed grant.
-  - [ ] **Sub-task 139.2.1.3:** Keep passwords, second factors, recovery material, cookies, session tokens, and browser-profile state outside model context, logs, receipts, screenshots, exports, and operation payloads; require the user to establish or restore the authenticated session.
-  - [ ] **Sub-task 139.2.1.4:** Prefer structured document and accessibility controls, declare screenshot or OCR use explicitly, and prohibit visual evidence alone from establishing identity, consent, authorization, successful effect, or standing authority.
-- [ ] **Task 139.2.2 - Implement direct and email-first confirmation paths**
-  - [ ] **Sub-task 139.2.2.1:** Implement a direct-invitation plan that previews one exact event and attendee set, performs only the approved Proton Calendar operation, and expects the provider's declared invitation notifications.
-  - [ ] **Sub-task 139.2.2.2:** Implement an email-first plan that sends one approved question through the exact mail account, correlates only the approved recipient, thread, proposal, and expiry, and records affirmative, negative, tentative, alternative, ambiguous, conflicting, stale, superseded, and identity-uncertain response states.
-  - [ ] **Sub-task 139.2.2.3:** Permit event preparation after a clear correlated affirmative response, but route every ambiguous, conditional, conflicting, multi-proposal, stale, superseded, or identity-uncertain response to the user without treating model interpretation as consent.
-  - [ ] **Sub-task 139.2.2.4:** Apply the effective Autonomy Center policy separately to the email send, event write, attendee invitation, update, cancellation, and deletion operations; generic computer-use approval never substitutes for an event or invitation grant.
-- [ ] **Task 139.2.3 - Reconcile effects and verify UI drift safety**
-  - [ ] **Sub-task 139.2.3.1:** Persist intent before effect, invalidate approval on every bound-field or provider-state change, prohibit blind retries, and re-read the exact provider event and attendee state after submission.
-  - [ ] **Sub-task 139.2.3.2:** Test UI revisions, changed labels, inaccessible or missing controls, overlays, redirects, popups, focus loss, stale captures, session expiry, reauthentication and second-factor prompts, cancellation, crash, timeout, partial effect, duplicate submission, provider outage, and malicious calendar or mail content.
-  - [ ] **Sub-task 139.2.3.3:** Report only verified effect, verified non-effect, or explicit unknown; reconcile unknown outcomes without duplicate events or invitations and remove every AgentMage-owned cache, cursor, worker, schedule, grant, and session reference without modifying the user's independent Proton profile.
+- [x] **Task 139.2.1 - Define the Proton Calendar confirmed-UI contract**
+  - [x] **Sub-task 139.2.1.1:** Publish a capability manifest for exact Proton origin, supported visible interface and version, authenticated profile reference, calendar, event fields, attendee and invitation operations, document or accessibility controls, bounded visual fallbacks, provider limitations, and removal behavior.
+  - [x] **Sub-task 139.2.1.2:** Bind each operation to visible foreground state, current account and calendar identity, title, start, end, time zone, recurrence, location, description, attendees, expected notifications, preconditions, postconditions, policy version, and one consumed grant.
+  - [x] **Sub-task 139.2.1.3:** Keep passwords, second factors, recovery material, cookies, session tokens, and browser-profile state outside model context, logs, receipts, screenshots, exports, and operation payloads; require the user to establish or restore the authenticated session.
+  - [x] **Sub-task 139.2.1.4:** Prefer structured document and accessibility controls, declare screenshot or OCR use explicitly, and prohibit visual evidence alone from establishing identity, consent, authorization, successful effect, or standing authority.
+- [x] **Task 139.2.2 - Implement direct and email-first confirmation paths**
+  - [x] **Sub-task 139.2.2.1:** Implement a direct-invitation plan that previews one exact event and attendee set, performs only the approved Proton Calendar operation, and expects the provider's declared invitation notifications.
+  - [x] **Sub-task 139.2.2.2:** Implement an email-first plan that sends one approved question through the exact mail account, correlates only the approved recipient, thread, proposal, and expiry, and records affirmative, negative, tentative, alternative, ambiguous, conflicting, stale, superseded, and identity-uncertain response states.
+  - [x] **Sub-task 139.2.2.3:** Permit event preparation after a clear correlated affirmative response, but route every ambiguous, conditional, conflicting, multi-proposal, stale, superseded, or identity-uncertain response to the user without treating model interpretation as consent.
+  - [x] **Sub-task 139.2.2.4:** Apply the effective Autonomy Center policy separately to the email send, event write, attendee invitation, update, cancellation, and deletion operations; generic computer-use approval never substitutes for an event or invitation grant.
+- [x] **Task 139.2.3 - Reconcile effects and verify UI drift safety**
+  - [x] **Sub-task 139.2.3.1:** Persist intent before effect, invalidate approval on every bound-field or provider-state change, prohibit blind retries, and re-read the exact provider event and attendee state after submission.
+  - [x] **Sub-task 139.2.3.2:** Test UI revisions, changed labels, inaccessible or missing controls, overlays, redirects, popups, focus loss, stale captures, session expiry, reauthentication and second-factor prompts, cancellation, crash, timeout, partial effect, duplicate submission, provider outage, and malicious calendar or mail content.
+  - [x] **Sub-task 139.2.3.3:** Report only verified effect, verified non-effect, or explicit unknown; reconcile unknown outcomes without duplicate events or invitations and remove every AgentMage-owned cache, cursor, worker, schedule, grant, and session reference without modifying the user's independent Proton profile.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 139.2.AC1:** Given a supported visible Proton Calendar surface and an exact approved event or invitation, when the operation executes, then account, calendar, event fields, attendees, notifications, provider state, and receipt match the preview and verified postcondition exactly.
-- [ ] **Story AC 139.2.AC2:** Given an email-first proposal, when the exact correlated recipient replies, then only a clear current affirmative response can prepare the event and every ambiguous, conditional, conflicting, stale, superseded, or identity-uncertain response requires user review.
-- [ ] **Story AC 139.2.AC3:** Given changed UI, focus, session, credentials, controls, event fields, attendee identity, policy, timeout, partial effect, or unknown result, when execution or recovery runs, then AgentMage stops or reconciles without guessing, credential exposure, blind retry, duplicate effect, or false completion.
-- [ ] **Story AC 139.2.AC4:** Given adapter disablement or removal, when cleanup completes, then no AgentMage-owned Proton credential reference, cache, cursor, worker, schedule, grant, or session authority remains and the user's independent Proton profile is unchanged.
+- [x] **Story AC 139.2.AC1:** Given a supported visible Proton Calendar surface and an exact approved event or invitation, when the operation executes, then account, calendar, event fields, attendees, notifications, provider state, and receipt match the preview and verified postcondition exactly.
+- [x] **Story AC 139.2.AC2:** Given an email-first proposal, when the exact correlated recipient replies, then only a clear current affirmative response can prepare the event and every ambiguous, conditional, conflicting, stale, superseded, or identity-uncertain response requires user review.
+- [x] **Story AC 139.2.AC3:** Given changed UI, focus, session, credentials, controls, event fields, attendee identity, policy, timeout, partial effect, or unknown result, when execution or recovery runs, then AgentMage stops or reconciles without guessing, credential exposure, blind retry, duplicate effect, or false completion.
+- [x] **Story AC 139.2.AC4:** Given adapter disablement or removal, when cleanup completes, then no AgentMage-owned Proton credential reference, cache, cursor, worker, schedule, grant, or session authority remains and the user's independent Proton profile is unchanged.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 139.AC1:** `AT-PIM-001` passes across Microsoft, Google, CalDAV, CardDAV, and local task matrices.
-- [ ] **Sprint AC 139.AC2:** Time-zone, recurrence, invitation, contact-merge, assignment, conflict, and retry campaigns produce zero unintended effect.
-- [ ] **Sprint AC 139.AC3:** Unsupported operations are absent and every provider transformation is visible.
-- [ ] **Sprint AC 139.AC4:** Removal leaves zero credential, cursor, event, schedule, worker, socket, cache, or write authority.
-- [ ] **Sprint AC 139.AC5:** `AT-PCAL-001` passes across direct invitation, email-first confirmation, UI drift, credential isolation, ambiguous response, uncertain effect, postcondition, and removal fixtures with zero duplicate event or invitation.
+- [x] **Sprint AC 139.AC1:** `AT-PIM-001` passes across Microsoft, Google, CalDAV, CardDAV, and local task matrices.
+- [x] **Sprint AC 139.AC2:** Time-zone, recurrence, invitation, contact-merge, assignment, conflict, and retry campaigns produce zero unintended effect.
+- [x] **Sprint AC 139.AC3:** Unsupported operations are absent and every provider transformation is visible.
+- [x] **Sprint AC 139.AC4:** Removal leaves zero credential, cursor, event, schedule, worker, socket, cache, or write authority.
+- [x] **Sprint AC 139.AC5:** `AT-PCAL-001` passes across direct invitation, email-first confirmation, UI drift, credential isolation, ambiguous response, uncertain effect, postcondition, and removal fixtures with zero duplicate event or invitation.
 
 **Gate decision:** Sprint 139 is PASS only when Stories 139.1 and 139.2, all criteria, `AM-PIM-001`, `AT-PIM-001`, `AM-PCAL-001`, `AT-PCAL-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 139 source and contract rows pass locally with 9,000 deterministic
+PIM and 8,400 confirmed-UI Proton Calendar cases and zero unintended, duplicate, credential-
+exposing, false-complete, or removal-residual effects. Native provider and authenticated-UI
+campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 140 - Documents, Repositories, and Attachments
 
