@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_138_local_evidence",
+  "source_revision": "4d39c4818c17a5a1ba024df8c3ddd12e030ea136",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "948718b607f332ea5abf8de854070a0314c02a863329f9e3909dcd9619cbe154",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "f63d24f33e5e837858d5873d06d5cfb6e77dca6f8562024d14ce21f898f73a93",
+    "kernel/engine/src/communication_write_safety.rs": "ca9622a2f8035926060c33c572fb3eb22b8c475fba9d3a59eb5071fbb3818807",
+    "supply-chain/dependency-provenance.json": "97c06aff33b656d6abbd6f5204acf8aada0d1f38e5b21cbadd1c9b02d8ab7ee9",
+    "supply-chain/sbom.cdx.json": "4ae8e532d39607c57756e1f648a556d5d16995e536ec93aad2a968c2522b5810",
+    "supply-chain/dependency-hashes.sha256": "9ac26d091b6c90e2956feff273e2b19e13e7bf36663d6b6376ca61691736ead7",
+    "artifacts/sprints/sprint-138/communication-write-corpus.json": "a6440de91dfb1a19eb3ee02169b964d9e7d9de7716c15126d3758c4d646b2f2d",
+    "scripts/communication_write_contract.py": "0ab1f0aea6ac938e809221f1a2838d2e58c80b4caaf7e31f0aff5405c235f86d",
+    "tests/test_communication_write_contract.py": "729204e49098b1592c0642ecebdd731991bf10b04cd02f0de60a742d9f464666",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_138_evidence.py": "1a05377c2ac6c70f80788aecb645df606ff548071480a2c78d4b0422c2d720ca",
+    "tests/test_sprint_138_evidence.py": "8a9fe566d623f521f0f925dfa440b0309f9c1e2df3d8832e089b2a7c45a6df7a"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "communication-write-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "communication_write_safety::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "978c370cdb431e5ee5ff7e9c527199367191ca062b77ee2b5dee033e042f09f7",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "communication-write-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_communication_write_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2420551c62391f987d6bfca865b0ff36659cdb70ac6bf965bcb854909afc4fd0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_138_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-COMW-001",
+    "AT-COMW-001",
+    "SR-PRD-001",
+    "SR-PRD-005",
+    "SR-PRD-006",
+    "SR-PRD-007",
+    "RV-25",
+    "RV-26",
+    "RV-31"
+  ],
+  "implemented_contracts": {
+    "provider_count": 8,
+    "operation_count": 14,
+    "bound_field_count": 24,
+    "fixture_case_count": 12000,
+    "field_mutation_case_count": 11520,
+    "uncertainty_schedule_count": 5000,
+    "unauthorized_effect_count": 0,
+    "duplicate_effect_count": 0,
+    "false_completion_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "operation_specific_contracts_complete": true,
+    "exact_approval_complete": true,
+    "persisted_intent_complete": true,
+    "reconciliation_complete": true,
+    "mutation_and_schedule_floors_complete": true,
+    "native_cross_provider_campaign_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-132-137-BLOCKED",
+      "owner": "138"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "native Outlook, Gmail, standard mail, Proton Bridge, Teams, and Slack provider accounts",
+      "artifact": "untouched cross-provider effect, postcondition, cancellation, security, independent-reviewer, and reconciliation evidence",
+      "action": "provision every exact provider account and credential, then run AT-COMW-001 plus RV-25, RV-26, and RV-31 native campaigns",
+      "credential": "all provider-specific credentials recorded by Sprints 132 through 137",
+      "payment": "provider subscription costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_138_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprints_132_137_closed": false,
+    "native_write_safety_promoted": false,
+    "support_promotion_count": 0
+  }
+}
