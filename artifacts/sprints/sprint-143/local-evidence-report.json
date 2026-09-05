@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "record_type": "sprint_143_local_evidence",
-  "source_revision": "ea78e478a6a5a825ec9bdd3844ce6a7fa712cfe1",
+  "source_revision": "00ee6d8b164f0d7f8b5ac5d641dfa30b8a007e84",
   "source_sha256": {
     "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
     "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
@@ -9,11 +9,11 @@
     "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
     "kernel/engine/src/lib.rs": "3c9ec5476f758bee2bce2d0ba1a004989fc094c06827a2baaae7012f496ab448",
     "kernel/engine/src/financial_domain.rs": "d95b2531fc5da2c91719730725db922ef96716760f08514f6a1a8630bacc3584",
-    "kernel/engine/src/financial_import.rs": "fdb8d455e90c9cbbd247644f564e1d23668706c150d26cebb8acc35496d91ac4",
-    "supply-chain/dependency-provenance.json": "9320a6751995d3956a658189f9f682b27f938cecd584a8af8ebad39bdb576fbd",
-    "supply-chain/sbom.cdx.json": "91ac877c1174a22e90cec975553ede9596fe7b1686d8b2853bdde102e643d220",
-    "supply-chain/dependency-hashes.sha256": "4533d0f63271065591783b66e4b99aa21bc8df1b0c993e9ff575c981b29c2aa5",
-    "artifacts/sprints/sprint-143/import-corpus.json": "45759675701322d6089699eebb6896c2fab4b44809f8ae738e1b114d18a2c369",
+    "kernel/engine/src/financial_import.rs": "a2f0ca3cad05c0f3926b536271176ee4b374da82567f7ef4825f8c5ec5e0e64f",
+    "supply-chain/dependency-provenance.json": "f5edc8899695489b109cf839b8adcd7dc79b4bcdf4a1da752766a03ebfeabdfa",
+    "supply-chain/sbom.cdx.json": "0c156b014ad4c194e597a2e437221dfaa293cc956e52b2a889d4c05407ac5193",
+    "supply-chain/dependency-hashes.sha256": "0d7c95a046cc4d3532da98f944221e11f3418be143479cbddd6ed1c98b2396d9",
+    "artifacts/sprints/sprint-143/import-corpus.json": "350a7f509864ea76b72f23acec3d274a69da7072a3d034a80fb2c53cdb85aae9",
     "scripts/financial_import_contract.py": "3940218dcab1a8e27c045b2f72564b5096bc3f397a1f26ab5f0a6a38185bd0dc",
     "tests/test_financial_import_contract.py": "5432817a9c8626f86918f7468970b5003295b77cb77ba002ea0574319c9ab9ad",
     "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
@@ -42,7 +42,7 @@
         "--lib"
       ],
       "exit_code": 0,
-      "output_sha256": "00a4667c4107ac07448d88d4b3a2e6d79955e242e8c0853aa1123d53b1a05acf",
+      "output_sha256": "575da93b7a46a3f53e01fa1753351c4db453b57910b5efd5c1fb2bf70280acaf",
       "blocking_skip_count": 0
     },
     {
@@ -54,7 +54,7 @@
         "tests.test_financial_import_contract"
       ],
       "exit_code": 0,
-      "output_sha256": "7bedbeb36b6a646ba4fc569e75eb4f14fb018c246478c286fce00dcc085eebf6",
+      "output_sha256": "283b8c09e14cbf53bb2c8b1390fe2072f4156096ebadf7dce00b3cf63a367359",
       "blocking_skip_count": 0
     },
     {
