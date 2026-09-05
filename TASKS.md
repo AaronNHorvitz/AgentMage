@@ -13863,19 +13863,19 @@ or removal residue. Native reference-provider review and upstream Sprint closure
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 153.1.1 - Implement AWS identities and reads**
-  - [ ] **Sub-task 153.1.1.1:** Model partition, organization, organizational unit, account, region, service, ARN, resource, role session, token, query, metric, log group, trail reference, security observation, deployment, and cost identities.
-  - [ ] **Sub-task 153.1.1.2:** Implement admitted inventory, configuration, tag, health, bounded CloudWatch metric and log, CloudTrail reference, security observation, deployment identity, and Cost Explorer reads.
-  - [ ] **Sub-task 153.1.1.3:** Enforce exact account and role allowlists, external IDs where configured, region and service limits, query and byte limits, token expiry, and no secret values.
-- [ ] **Task 153.1.2 - Verify AWS isolation**
-  - [ ] **Sub-task 153.1.2.1:** Test assume-role chains, cross-account confusion, partition mismatch, ARN mutation, region and service escape, data-plane broadening, throttling, token expiry, and provider drift.
-  - [ ] **Sub-task 153.1.2.2:** Probe remote command, resource write, deploy, secret, identity, policy, logging, budget, upload, delete, and administration families for absence.
+- [x] **Task 153.1.1 - Implement AWS identities and reads**
+  - [x] **Sub-task 153.1.1.1:** Model partition, organization, organizational unit, account, region, service, ARN, resource, role session, token, query, metric, log group, trail reference, security observation, deployment, and cost identities.
+  - [x] **Sub-task 153.1.1.2:** Implement admitted inventory, configuration, tag, health, bounded CloudWatch metric and log, CloudTrail reference, security observation, deployment identity, and Cost Explorer reads.
+  - [x] **Sub-task 153.1.1.3:** Enforce exact account and role allowlists, external IDs where configured, region and service limits, query and byte limits, token expiry, and no secret values.
+- [x] **Task 153.1.2 - Verify AWS isolation**
+  - [x] **Sub-task 153.1.2.1:** Test assume-role chains, cross-account confusion, partition mismatch, ARN mutation, region and service escape, data-plane broadening, throttling, token expiry, and provider drift.
+  - [x] **Sub-task 153.1.2.2:** Probe remote command, resource write, deploy, secret, identity, policy, logging, budget, upload, delete, and administration families for absence.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 153.1.AC1:** Given an admitted AWS scope, when observation runs, then partition, organization, account, region, service, ARN, query, fields, limits, freshness, and costs match exactly.
-- [ ] **Story AC 153.1.AC2:** Given assume-role, cross-account, region, service, resource, data-plane, token, or prohibited-operation escape, when attempted, then no out-of-scope request or secret disclosure occurs.
-- [ ] **Story AC 153.1.AC3:** Given throttling, token expiry, partial data, or removal, when recovery completes, then limitations remain visible and residual AWS authority is zero.
+- [x] **Story AC 153.1.AC1:** Given an admitted AWS scope, when observation runs, then partition, organization, account, region, service, ARN, query, fields, limits, freshness, and costs match exactly.
+- [x] **Story AC 153.1.AC2:** Given assume-role, cross-account, region, service, resource, data-plane, token, or prohibited-operation escape, when attempted, then no out-of-scope request or secret disclosure occurs.
+- [x] **Story AC 153.1.AC3:** Given throttling, token expiry, partial data, or removal, when recovery completes, then limitations remain visible and residual AWS authority is zero.
 
 #### [ ] Story 153.2 - Azure Observer
 
@@ -13883,19 +13883,19 @@ or removal residue. Native reference-provider review and upstream Sprint closure
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 153.2.1 - Implement Azure identities and reads**
-  - [ ] **Sub-task 153.2.1.1:** Model cloud, tenant, management group, subscription, resource group, region, provider, resource ID, principal, token, query, metric, log workspace, activity reference, security observation, deployment, and cost identities.
-  - [ ] **Sub-task 153.2.1.2:** Implement admitted Resource Graph, configuration, tag, health, bounded Monitor metric and log, activity reference, security observation, deployment identity, and Cost Management reads.
-  - [ ] **Sub-task 153.2.1.3:** Enforce exact tenant, subscription, resource group, region, provider, field, time, row, byte, rate, token, and no-secret-value boundaries.
-- [ ] **Task 153.2.2 - Verify Azure isolation**
-  - [ ] **Sub-task 153.2.2.1:** Test tenant and subscription confusion, management-group escape, resource-ID mutation, provider registration drift, data-plane broadening, token audience, throttling, and API-version skew.
-  - [ ] **Sub-task 153.2.2.2:** Probe run-command, resource write, deploy, secret, identity, policy, logging, budget, upload, delete, and administration families for absence.
+- [x] **Task 153.2.1 - Implement Azure identities and reads**
+  - [x] **Sub-task 153.2.1.1:** Model cloud, tenant, management group, subscription, resource group, region, provider, resource ID, principal, token, query, metric, log workspace, activity reference, security observation, deployment, and cost identities.
+  - [x] **Sub-task 153.2.1.2:** Implement admitted Resource Graph, configuration, tag, health, bounded Monitor metric and log, activity reference, security observation, deployment identity, and Cost Management reads.
+  - [x] **Sub-task 153.2.1.3:** Enforce exact tenant, subscription, resource group, region, provider, field, time, row, byte, rate, token, and no-secret-value boundaries.
+- [x] **Task 153.2.2 - Verify Azure isolation**
+  - [x] **Sub-task 153.2.2.1:** Test tenant and subscription confusion, management-group escape, resource-ID mutation, provider registration drift, data-plane broadening, token audience, throttling, and API-version skew.
+  - [x] **Sub-task 153.2.2.2:** Probe run-command, resource write, deploy, secret, identity, policy, logging, budget, upload, delete, and administration families for absence.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 153.2.AC1:** Given an admitted Azure scope, when observation runs, then tenant, subscription, resource group, region, provider, resource ID, query, limits, freshness, and costs match exactly.
-- [ ] **Story AC 153.2.AC2:** Given tenant, subscription, resource, data-plane, token, API-version, or prohibited-operation escape, when attempted, then no out-of-scope request or secret disclosure occurs.
-- [ ] **Story AC 153.2.AC3:** Given quota, version skew, partial data, or removal, when recovery completes, then limitations remain visible and residual Azure authority is zero.
+- [x] **Story AC 153.2.AC1:** Given an admitted Azure scope, when observation runs, then tenant, subscription, resource group, region, provider, resource ID, query, limits, freshness, and costs match exactly.
+- [x] **Story AC 153.2.AC2:** Given tenant, subscription, resource, data-plane, token, API-version, or prohibited-operation escape, when attempted, then no out-of-scope request or secret disclosure occurs.
+- [x] **Story AC 153.2.AC3:** Given quota, version skew, partial data, or removal, when recovery completes, then limitations remain visible and residual Azure authority is zero.
 
 #### [ ] Story 153.3 - Google Cloud Observer
 
@@ -13903,29 +13903,34 @@ or removal residue. Native reference-provider review and upstream Sprint closure
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 153.3.1 - Implement Google Cloud identities and reads**
-  - [ ] **Sub-task 153.3.1.1:** Model universe or endpoint, organization, folder, project, region, zone, service, full resource name, principal, token, query, metric, log, audit reference, security observation, deployment, billing account, and cost identities.
-  - [ ] **Sub-task 153.3.1.2:** Implement admitted Asset Inventory, configuration, label, health, bounded Monitoring metric and log, audit reference, security observation, deployment identity, and billing-summary reads.
-  - [ ] **Sub-task 153.3.1.3:** Enforce exact organization, folder, project, region, zone, service, resource, field, time, row, byte, quota-project, token, and no-secret-value boundaries.
-- [ ] **Task 153.3.2 - Verify Google Cloud isolation**
-  - [ ] **Sub-task 153.3.2.1:** Test organization, folder, project, quota-project, service-account, resource-name, region, service, data-plane, endpoint, token, quota, and API-version confusion.
-  - [ ] **Sub-task 153.3.2.2:** Probe SSH or command, resource write, deploy, secret, identity, policy, logging, budget, upload, delete, and administration families for absence.
+- [x] **Task 153.3.1 - Implement Google Cloud identities and reads**
+  - [x] **Sub-task 153.3.1.1:** Model universe or endpoint, organization, folder, project, region, zone, service, full resource name, principal, token, query, metric, log, audit reference, security observation, deployment, billing account, and cost identities.
+  - [x] **Sub-task 153.3.1.2:** Implement admitted Asset Inventory, configuration, label, health, bounded Monitoring metric and log, audit reference, security observation, deployment identity, and billing-summary reads.
+  - [x] **Sub-task 153.3.1.3:** Enforce exact organization, folder, project, region, zone, service, resource, field, time, row, byte, quota-project, token, and no-secret-value boundaries.
+- [x] **Task 153.3.2 - Verify Google Cloud isolation**
+  - [x] **Sub-task 153.3.2.1:** Test organization, folder, project, quota-project, service-account, resource-name, region, service, data-plane, endpoint, token, quota, and API-version confusion.
+  - [x] **Sub-task 153.3.2.2:** Probe SSH or command, resource write, deploy, secret, identity, policy, logging, budget, upload, delete, and administration families for absence.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 153.3.AC1:** Given an admitted Google Cloud scope, when observation runs, then organization, folder, project, region, service, resource, query, limits, freshness, and billing match exactly.
-- [ ] **Story AC 153.3.AC2:** Given hierarchy, project, resource, data-plane, endpoint, token, quota, or prohibited-operation escape, when attempted, then no out-of-scope request or secret disclosure occurs.
-- [ ] **Story AC 153.3.AC3:** Given quota, API drift, partial data, or removal, when recovery completes, then limitations remain visible and residual Google Cloud authority is zero.
+- [x] **Story AC 153.3.AC1:** Given an admitted Google Cloud scope, when observation runs, then organization, folder, project, region, service, resource, query, limits, freshness, and billing match exactly.
+- [x] **Story AC 153.3.AC2:** Given hierarchy, project, resource, data-plane, endpoint, token, quota, or prohibited-operation escape, when attempted, then no out-of-scope request or secret disclosure occurs.
+- [x] **Story AC 153.3.AC3:** Given quota, API drift, partial data, or removal, when recovery completes, then limitations remain visible and residual Google Cloud authority is zero.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 153.AC1:** `AT-AWS-001`, `AT-AZR-001`, and `AT-GCP-001` pass independently for every published provider capability tuple.
-- [ ] **Sprint AC 153.AC2:** Cross-hierarchy, account, subscription, project, region, service, resource, data-plane, credential, token, endpoint, and quota attacks produce zero escape.
-- [ ] **Sprint AC 153.AC3:** Every cloud write, execute, deploy, secret, identity, policy, logging, budget, upload, delete, and administration family is absent before provider request.
-- [ ] **Sprint AC 153.AC4:** Throttling, quota, version skew, partial results, crash, revocation, and removal preserve honest state and zero residual authority.
-- [ ] **Sprint AC 153.AC5:** Provider-specific identities and semantics remain native and are not flattened into ambiguous shared identifiers.
+- [x] **Sprint AC 153.AC1:** `AT-AWS-001`, `AT-AZR-001`, and `AT-GCP-001` pass independently for every published provider capability tuple.
+- [x] **Sprint AC 153.AC2:** Cross-hierarchy, account, subscription, project, region, service, resource, data-plane, credential, token, endpoint, and quota attacks produce zero escape.
+- [x] **Sprint AC 153.AC3:** Every cloud write, execute, deploy, secret, identity, policy, logging, budget, upload, delete, and administration family is absent before provider request.
+- [x] **Sprint AC 153.AC4:** Throttling, quota, version skew, partial results, crash, revocation, and removal preserve honest state and zero residual authority.
+- [x] **Sprint AC 153.AC5:** Provider-specific identities and semantics remain native and are not flattened into ambiguous shared identifiers.
 
 **Gate decision:** Sprint 153 is PASS only when Stories 153.1 through 153.3, all criteria, all three provider requirements and acceptance tests, all `SR-CLD-*`, applicable reviewer protocols including `RV-34`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 153 source and contract rows pass locally with 19,200 exact
+provider-native AWS, Azure, and Google Cloud cases and zero secret disclosure, scope escape,
+provider effect, or residual authority. Native provider campaigns and upstream Sprint closure
+remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 154 - Cloud Cost and Delivery Correlation
 

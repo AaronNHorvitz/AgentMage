@@ -47,6 +47,8 @@ pub mod ci_control;
 pub mod claim_evidence;
 /// Provider-neutral, strictly read-only cloud observation contracts.
 pub mod cloud_observer;
+/// Provider-native AWS, Azure, and Google Cloud read-only observer profiles.
+pub mod cloud_provider_observer;
 /// Exact command templates, previews, execution permits, and terminal receipts.
 pub mod command_runner;
 pub mod communication_write_safety;
