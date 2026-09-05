@@ -195,3 +195,43 @@ next checkpoint: 1,900.
 
 Exact next action: Sprint 153 AWS, Azure, and GCP provider observer gates. Cumulative closures:
 1,897; next checkpoint: 1,900.
+
+## Batch 156 — Sprint 153 AWS, Azure, and Google Cloud observer gates
+
+### Completed
+
+- Closed 35 local Sprint 153 rows across all three provider stories: native AWS partition,
+  organization, account, ARN, role, telemetry, deployment, and cost identities; native Azure
+  cloud, tenant, management-group, subscription, resource-group, resource-ID, telemetry,
+  deployment, and cost identities; native Google Cloud universe, organization, folder, project,
+  zone, full-resource-name, telemetry, deployment, and billing identities; exact provider read
+  admission; bounded recovery; and absence of 11 prohibited operation families. Corpus cases:
+  19,200; secret disclosures, scope escapes, provider effects, and residual authority: 0 each.
+  Batch closures: 35. Cumulative closures: 1,932. Promotions: 0.
+- Commits: `cac9e9b3` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `095dd125` (Sprint 153 report), and `d0ef2544` (14 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.11. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across 14 regenerated paths and all pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed Clippy with warnings denied, 4 focused Rust tests, 7 focused Python tests, the
+  19,200-case AT-AWS/AZR/GCP-001 corpus, Sprint evidence, dependency, traceability, supply-chain,
+  Story 1.2, and Story 3.1/Sprint 3 configuration chains. Supply-chain builds: 1; evidence
+  regeneration passes: 1. Full gate: 707.440 seconds, stopping only at retained Story 6.1
+  Podman after every preceding gate passed. Self-recovery: 0.
+- Sprint 153 remains `UPSTREAM-SPRINTS-103-125-152-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=isolated AWS, Azure, and Google Cloud provider accounts plus
+  independent read-only review environment, artifact=untouched native hierarchy, identity,
+  scope, query, telemetry, security, deployment, cost, billing, isolation, throttling,
+  version-skew, reviewer, revocation, and removal evidence, action=provision exact AWS, Azure,
+  and Google Cloud accounts and credentials, then run AT-AWS-001, AT-AZR-001, AT-GCP-001, RV-23,
+  RV-24, RV-26, RV-29, RV-34, and RV-35 native campaigns, credential=AWS role credential, Azure
+  service principal credential, and Google Cloud workload identity credential, payment=cloud
+  account, resource, telemetry, and independent evaluator costs if applicable)`;
+  `substitution_set=empty`. Full-chain blocker remains `blocked: host change required — run npm
+  run -s docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 154 cloud cost and delivery correlation gate. Cumulative closures:
+1,932; next checkpoint: 1,950.
