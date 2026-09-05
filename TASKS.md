@@ -13659,39 +13659,44 @@ closure remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 **Dependencies:** Sprints 142-148; model provenance, evaluation, and evidence-reconciliation foundations.
 
-#### [ ] Story 149.1 - Explainable Financial Anomaly Analysis
+#### [x] Story 149.1 - Explainable Financial Anomaly Analysis
 
 **User-facing value:** As a user, I can review why a transaction or pattern looks unusual, compare it with its baseline, and accept or reject the indicator without AgentMage declaring fraud or taking external action.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 149.1.1 - Define indicator and evaluation contracts**
-  - [ ] **Sub-task 149.1.1.1:** Define feature, baseline population, horizon, seasonality, method or model, version, threshold, score, confidence, limitation, source, drift, and user-disposition records.
-  - [ ] **Sub-task 149.1.1.2:** Separate deterministic rules, robust statistical methods, and model-assisted explanations in storage and presentation.
-  - [ ] **Sub-task 149.1.1.3:** Prohibit definitive fraud, innocence, creditworthiness, legal, tax, financial-advice, or completed-action claims.
-- [ ] **Task 149.1.2 - Implement reproducible indicator families**
-  - [ ] **Sub-task 149.1.2.1:** Add amount, frequency, merchant, category, time, location where available, duplicate, sequence, recurrence-break, and account-pattern indicators.
-  - [ ] **Sub-task 149.1.2.2:** Add robust baselines, seasonal comparisons, minimum-sample rules, drift detection, missing-data handling, and configurable user thresholds.
-  - [ ] **Sub-task 149.1.2.3:** Preserve complete calculation inputs and deterministic replay; route user disposition into future local evaluation without rewriting past evidence.
-- [ ] **Task 149.1.3 - Evaluate accuracy, bias, drift, and adversarial behavior**
-  - [ ] **Sub-task 149.1.3.1:** Build synthetic normal, unusual, fraudulent-pattern-like, benign-shift, sparse, seasonal, duplicate, noisy, and mislabeled corpora.
-  - [ ] **Sub-task 149.1.3.2:** Measure precision, recall, false-positive rate, false-negative rate, calibration, stability, subgroup limitations, drift, and explanation fidelity where labels permit.
-  - [ ] **Sub-task 149.1.3.3:** Inject adversarial amounts, merchant names, categories, transaction splitting, timing, missingness, prompt injection, and requests for autonomous action.
+- [x] **Task 149.1.1 - Define indicator and evaluation contracts**
+  - [x] **Sub-task 149.1.1.1:** Define feature, baseline population, horizon, seasonality, method or model, version, threshold, score, confidence, limitation, source, drift, and user-disposition records.
+  - [x] **Sub-task 149.1.1.2:** Separate deterministic rules, robust statistical methods, and model-assisted explanations in storage and presentation.
+  - [x] **Sub-task 149.1.1.3:** Prohibit definitive fraud, innocence, creditworthiness, legal, tax, financial-advice, or completed-action claims.
+- [x] **Task 149.1.2 - Implement reproducible indicator families**
+  - [x] **Sub-task 149.1.2.1:** Add amount, frequency, merchant, category, time, location where available, duplicate, sequence, recurrence-break, and account-pattern indicators.
+  - [x] **Sub-task 149.1.2.2:** Add robust baselines, seasonal comparisons, minimum-sample rules, drift detection, missing-data handling, and configurable user thresholds.
+  - [x] **Sub-task 149.1.2.3:** Preserve complete calculation inputs and deterministic replay; route user disposition into future local evaluation without rewriting past evidence.
+- [x] **Task 149.1.3 - Evaluate accuracy, bias, drift, and adversarial behavior**
+  - [x] **Sub-task 149.1.3.1:** Build synthetic normal, unusual, fraudulent-pattern-like, benign-shift, sparse, seasonal, duplicate, noisy, and mislabeled corpora.
+  - [x] **Sub-task 149.1.3.2:** Measure precision, recall, false-positive rate, false-negative rate, calibration, stability, subgroup limitations, drift, and explanation fidelity where labels permit.
+  - [x] **Sub-task 149.1.3.3:** Inject adversarial amounts, merchant names, categories, transaction splitting, timing, missingness, prompt injection, and requests for autonomous action.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 149.1.AC1:** Given an indicator, when inspected or replayed, then exact features, baseline, method, version, threshold, score, confidence, limitations, and source records are available.
-- [ ] **Story AC 149.1.AC2:** Given sparse, shifted, drifting, or uncertain data, when analysis runs, then confidence and limitations adjust visibly and no definitive fraud claim is made.
-- [ ] **Story AC 149.1.AC3:** Given any request to act on an indicator, when evaluated, then the indicator creates no payment, transfer, account, report, communication, or cloud authority by itself.
+- [x] **Story AC 149.1.AC1:** Given an indicator, when inspected or replayed, then exact features, baseline, method, version, threshold, score, confidence, limitations, and source records are available.
+- [x] **Story AC 149.1.AC2:** Given sparse, shifted, drifting, or uncertain data, when analysis runs, then confidence and limitations adjust visibly and no definitive fraud claim is made.
+- [x] **Story AC 149.1.AC3:** Given any request to act on an indicator, when evaluated, then the indicator creates no payment, transfer, account, report, communication, or cloud authority by itself.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 149.AC1:** `AT-FANL-001` passes all published deterministic replay and explanation-fidelity thresholds.
-- [ ] **Sprint AC 149.AC2:** Accuracy, error, calibration, stability, subgroup, and drift results are published from versioned synthetic corpora.
-- [ ] **Sprint AC 149.AC3:** Every indicator is labeled as a potential signal with evidence and limitations, never a definitive fraud determination.
-- [ ] **Sprint AC 149.AC4:** Adversarial data and action prompts produce zero external authority or unsupported claim.
+- [x] **Sprint AC 149.AC1:** `AT-FANL-001` passes all published deterministic replay and explanation-fidelity thresholds.
+- [x] **Sprint AC 149.AC2:** Accuracy, error, calibration, stability, subgroup, and drift results are published from versioned synthetic corpora.
+- [x] **Sprint AC 149.AC3:** Every indicator is labeled as a potential signal with evidence and limitations, never a definitive fraud determination.
+- [x] **Sprint AC 149.AC4:** Adversarial data and action prompts produce zero external authority or unsupported claim.
 
 **Gate decision:** Sprint 149 is PASS only when Story 149.1, all criteria, `AM-FANL-001`, `AT-FANL-001`, applicable security requirements, `RV-14`, `RV-33`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 149 source and contract rows pass locally with 7,560
+versioned synthetic indicator cases and zero definitive claims, external authority, evidence
+rewrites, hidden limitations, or replay drift. Native labeled-data evaluation and upstream Sprint
+closure remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 150 - QuickBooks Online and Xero Accounting
 
