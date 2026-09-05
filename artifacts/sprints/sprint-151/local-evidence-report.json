@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_151_local_evidence",
+  "source_revision": "73a1fcf28266240326c18b091ffb1b66a673b01e",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "7474ba078cacca82590b40a962a396ec44f4de946bdd68fef70482d3895e5ebc",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "712312dbd85b9ebfedcc82235354aaa74178e28f064150b8aebb5fc61ee4e416",
+    "kernel/engine/src/finance_privacy.rs": "949d528770bf9ed924dd13a653c8d3c45043577ace8d850820642f1802dea9d3",
+    "supply-chain/dependency-provenance.json": "d5d4b24a06d548e722457c20b643c925975c81a97ff98464e764410833cfec29",
+    "supply-chain/sbom.cdx.json": "c0e76583b3fbf8634a0645b2d97f0f4755523747ca5825667dd506b9a98359ec",
+    "supply-chain/dependency-hashes.sha256": "aa95bce61680227e7959ede327054d8c9a1dff141a5b6c939f4d62eb65a2c419",
+    "artifacts/sprints/sprint-151/finance-privacy-corpus.json": "cbc80050c5e1c7d466199c0cb0326f275b0de0eca6fb8f50f2222ff19b048225",
+    "scripts/finance_privacy_contract.py": "ee45c257ce7f5cdc6a489cf366e54357f3c4156093376ce261908eebbccda3a1",
+    "tests/test_finance_privacy_contract.py": "268ddee7557f3b39193b90449f85b28de8b7260c14359cba4f3d8ae5673a9a2f",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_151_evidence.py": "b71f8af22c79d8d9d2e378b1680161c829af52afcac9145b4d885ff2cf65fad1",
+    "tests/test_sprint_151_evidence.py": "7fb0997c2eb34c6917f8e9d26a5d713d0bb6635c41af9d6426f3fbbf532ae720"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "privacy-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "finance_privacy::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "5aeb8d0f6c496ff6c7a0625698b613d567967d9db31ded6b0916893325657bf9",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "privacy-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_finance_privacy_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "ebc478192e3c70f9b36de54ebd776b29225eccac9330163c1f1a2da57631cc1e",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_151_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-FPRV-001",
+    "AT-FPRV-001",
+    "SR-FIN-001",
+    "SR-FIN-002",
+    "SR-FIN-003",
+    "SR-FIN-004",
+    "SR-FIN-005",
+    "SR-FIN-006",
+    "RV-18",
+    "RV-24",
+    "RV-33",
+    "RV-35"
+  ],
+  "implemented_contracts": {
+    "prohibited_family_count": 13,
+    "surface_count": 15,
+    "attack_source_count": 9,
+    "removal_state_count": 7,
+    "scan_class_count": 12,
+    "case_count": 12285,
+    "undeclared_disclosure_count": 0,
+    "capability_shape_count": 0,
+    "external_effect_count": 0,
+    "canary_disclosure_count": 0,
+    "residual_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "field_policy_complete": true,
+    "receipted_flows_complete": true,
+    "money_movement_absence_complete": true,
+    "canary_campaign_complete": true,
+    "removal_inventory_complete": true,
+    "native_integrated_finance_campaign_complete": false,
+    "finance_gate_closed": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-142-150-BLOCKED",
+      "owner": "151"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "all native finance providers, strict-local host, non-finance packs, backup/export destinations, and independent review environment",
+      "artifact": "untouched integrated privacy, canary, static, dynamic, compiled-artifact, provider-request, removal, restoration, reviewer, and support-matrix evidence",
+      "action": "satisfy every Sprint 142-150 external tuple, then run AT-FPRV-001, RV-18, RV-24, RV-33, and RV-35 native campaigns plus strict-local and non-finance restoration suites",
+      "credential": "all finance, backup, and export credentials recorded by Sprints 142-150",
+      "payment": "provider, host, backup, or evaluator costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_151_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprints_142_150_closed": false,
+    "finance_epic_closed": false,
+    "support_promotion_count": 0
+  }
+}
