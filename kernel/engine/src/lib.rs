@@ -45,6 +45,8 @@ pub mod child_authority;
 pub mod ci_control;
 /// Deterministic material-claim proof and truthful final-response construction.
 pub mod claim_evidence;
+/// Client-side-encrypted, namespace-exact cloud continuity contracts.
+pub mod cloud_continuity;
 /// Cited cloud cost and delivery correlations without inherited authority or causal claims.
 pub mod cloud_delivery_correlation;
 /// Provider-neutral, strictly read-only cloud observation contracts.

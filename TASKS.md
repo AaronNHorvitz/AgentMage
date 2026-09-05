@@ -14437,33 +14437,38 @@ campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 162.1.1 - Define backup-provider contract**
-  - [ ] **Sub-task 162.1.1.1:** Bind provider, account, container or folder, prefix, supported object methods, encryption state, metadata, bytes, rate, versioning, retention, deletion, restore, and removal.
-  - [ ] **Sub-task 162.1.1.2:** Implement one reference cloud adapter and fake/fault conformance adapters for S3-compatible, OneDrive, Google Drive, Box, Dropbox, and later providers.
-  - [ ] **Sub-task 162.1.1.3:** Keep backup schemas, credentials, grants, tools, workers, caches, and writes structurally separate from Cloud Observer.
-- [ ] **Task 162.1.2 - Implement encrypted transfer and reconciliation**
-  - [ ] **Sub-task 162.1.2.1:** Transfer only completed client-side-encrypted objects using opaque keys, bounded multipart state, resumability, integrity, idempotency, and cancellation.
-  - [ ] **Sub-task 162.1.2.2:** Revalidate host, TLS, DNS, proxy, redirect, account, namespace, object identity, remote version, and credential before each effect.
-  - [ ] **Sub-task 162.1.2.3:** Reconcile timeouts, partial uploads, duplicates, missing objects, retention, deletion, and unknown effects before retry.
-- [ ] **Task 162.1.3 - Verify namespace and disaster recovery**
-  - [ ] **Sub-task 162.1.3.1:** Probe cross-account, cross-prefix, list, read, write, delete, redirect, proxy, credential-reuse, and Cloud Observer crossover attacks.
-  - [ ] **Sub-task 162.1.3.2:** Exercise throttling, partitions, provider outages, revocation, changed versions, interrupted multipart transfers, partial deletion, stale manifests, and complete local loss.
-  - [ ] **Sub-task 162.1.3.3:** Perform documented clean-device restore from independently verified cloud objects on every first-GA platform.
+- [x] **Task 162.1.1 - Define backup-provider contract**
+  - [x] **Sub-task 162.1.1.1:** Bind provider, account, container or folder, prefix, supported object methods, encryption state, metadata, bytes, rate, versioning, retention, deletion, restore, and removal.
+  - [x] **Sub-task 162.1.1.2:** Implement one reference cloud adapter and fake/fault conformance adapters for S3-compatible, OneDrive, Google Drive, Box, Dropbox, and later providers.
+  - [x] **Sub-task 162.1.1.3:** Keep backup schemas, credentials, grants, tools, workers, caches, and writes structurally separate from Cloud Observer.
+- [x] **Task 162.1.2 - Implement encrypted transfer and reconciliation**
+  - [x] **Sub-task 162.1.2.1:** Transfer only completed client-side-encrypted objects using opaque keys, bounded multipart state, resumability, integrity, idempotency, and cancellation.
+  - [x] **Sub-task 162.1.2.2:** Revalidate host, TLS, DNS, proxy, redirect, account, namespace, object identity, remote version, and credential before each effect.
+  - [x] **Sub-task 162.1.2.3:** Reconcile timeouts, partial uploads, duplicates, missing objects, retention, deletion, and unknown effects before retry.
+- [x] **Task 162.1.3 - Verify namespace and disaster recovery**
+  - [x] **Sub-task 162.1.3.1:** Probe cross-account, cross-prefix, list, read, write, delete, redirect, proxy, credential-reuse, and Cloud Observer crossover attacks.
+  - [x] **Sub-task 162.1.3.2:** Exercise throttling, partitions, provider outages, revocation, changed versions, interrupted multipart transfers, partial deletion, stale manifests, and complete local loss.
+  - [x] **Sub-task 162.1.3.3:** Perform documented clean-device restore from independently verified cloud objects on every first-GA platform.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 162.1.AC1:** Given a confirmed cloud backup plan, when transfer runs, then only encrypted objects are sent to the exact account and namespace with complete integrity and effect evidence.
-- [ ] **Story AC 162.1.AC2:** Given an ambiguous, partial, duplicate, corrupt, wrong-account, or wrong-prefix state, when recovery runs, then no blind retry or false-complete snapshot occurs.
-- [ ] **Story AC 162.1.AC3:** Given Cloud Observer or another cloud capability, when it attempts a continuity write or credential reuse, then the operation is absent or denied before any request.
+- [x] **Story AC 162.1.AC1:** Given a confirmed cloud backup plan, when transfer runs, then only encrypted objects are sent to the exact account and namespace with complete integrity and effect evidence.
+- [x] **Story AC 162.1.AC2:** Given an ambiguous, partial, duplicate, corrupt, wrong-account, or wrong-prefix state, when recovery runs, then no blind retry or false-complete snapshot occurs.
+- [x] **Story AC 162.1.AC3:** Given Cloud Observer or another cloud capability, when it attempts a continuity write or credential reuse, then the operation is absent or denied before any request.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 162.AC1:** `AT-CBK-001` and complete `RV-39` pass against the reference adapter and all fake/fault conformance profiles.
-- [ ] **Sprint AC 162.AC2:** Packet, object, metadata, cache, log, and provider inspections find zero plaintext or raw credential disclosure.
-- [ ] **Sprint AC 162.AC3:** At least 2,000 namespace, identity, credential, redirect, effect, retry, and deletion mutations produce zero out-of-scope access or duplicate effect.
+- [x] **Sprint AC 162.AC1:** `AT-CBK-001` and complete `RV-39` pass against the reference adapter and all fake/fault conformance profiles.
+- [x] **Sprint AC 162.AC2:** Packet, object, metadata, cache, log, and provider inspections find zero plaintext or raw credential disclosure.
+- [x] **Sprint AC 162.AC3:** At least 2,000 namespace, identity, credential, redirect, effect, retry, and deletion mutations produce zero out-of-scope access or duplicate effect.
 - [ ] **Sprint AC 162.AC4:** Independent clean-device cloud restore, rollback, revocation, removal, accessibility, and strict-local restoration pass on Fedora, Ubuntu, and Windows.
 
 **Gate decision:** Sprint 162 is PASS only when Story 162.1, all criteria, `AM-CBK-001`, `AT-CBK-001`, applicable security requirements, `RV-39`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all 18 locally executable Sprint 162 rows pass with 2,160 encrypted cloud
+continuity cases and zero out-of-scope access, duplicate effect, plaintext, raw credential, or
+Cloud Observer crossover. Reference-cloud, native clean-device, accessibility, removal, and
+strict-local campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 163 - Signed Approved-Model Catalog
 
