@@ -294,7 +294,7 @@ mod tests {
             description_sha256: "b".repeat(64),
         };
         assert_eq!(
-            canonical_records(&[record.clone()]),
+            canonical_records(std::slice::from_ref(&record)),
             canonical_records(&[record])
         )
     }
