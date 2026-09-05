@@ -492,3 +492,43 @@ Cumulative closures: 2,038; next checkpoint: 2,050.
 
 Exact next action: Sprint 160 current public research and citation safety gate. Cumulative
 closures: 2,071; next checkpoint: 2,075.
+
+## Batch 163 — Sprint 160 public-web research safety
+
+### Completed
+
+- Closed 18 locally executable Sprint 160 rows: bounded query/provider/recency/domain/scheme/DNS/
+  proxy/certificate/redirect/item/byte/media/cache/time/cancellation contracts; an authority-free
+  public worker; inert download quarantine; direct citation, redirect, date, excerpt, source-class,
+  cache, freshness, inference and uncertainty records; hostile-page isolation; and exact approved
+  disclosure previews. Corpus: 2,688 `AT-WEB-001` cases; created authority, undeclared egress, raw
+  private data, and unadmitted download counts: 0 each. Batch closures: 18. Cumulative closures:
+  2,089. Promotions: 0.
+- Commits: `fe8b0c49` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `6e3863b2` (Sprint 160 report), and `2a5efaa9` (14 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.22. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across 14 regenerated paths and 20 pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed Clippy with warnings denied, 3 focused Rust tests, 6 focused Python contract/report
+  tests, corpus, dependency, traceability, supply-chain, Story 1.2, and Story 3.1/Sprint 3
+  configuration chains. Supply-chain builds: 1; evidence regeneration passes: 1. Full gate: 713
+  seconds, stopping only at retained Story 6.1 Podman after every preceding gate passed.
+  Self-recovery: 1 — corrected the new module insertion context after the first atomic patch
+  rejected a mismatched documented `lib.rs` neighbor; the rejected patch changed no file.
+- Sprint 160 remains `UPSTREAM-SPRINTS-21-66-74-157-158-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=native Fedora, Ubuntu, and Windows public-network worker, download
+  quarantine, accessibility, removal, and independent review environments, artifact=untouched
+  search-provider, DNS, proxy, certificate, redirect, retrieval, citation, freshness, quarantine,
+  cancellation, resource, accessibility, disablement, removal, and RV-37 evidence, action=satisfy
+  upstream blockers, provision exact native platforms and public search environments, then run
+  AT-WEB-001 and RV-37 separately per platform, credential=search-provider, network, proxy,
+  certificate, platform, accessibility, and independent reviewer credentials, payment=search,
+  proxy, certificate, platform, network, accessibility, or independent evaluator costs if
+  applicable)`; `substitution_set=empty`. Full-chain blocker remains `blocked: host change
+  required — run npm run -s docs:check outside the restricted filesystem sandbox with the current
+  user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 161 encrypted local continuity gate. Cumulative closures: 2,089; next
+checkpoint: 2,100.
