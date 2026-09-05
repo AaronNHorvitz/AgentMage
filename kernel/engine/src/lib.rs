@@ -166,6 +166,8 @@ pub mod mcp_registry;
 pub mod meeting_continuity;
 /// Exact non-activating evaluation gate for alternate local model runtimes.
 pub mod model_adapter_evaluation;
+/// Truthful exact-profile catalog and model-independent semantic structure contracts.
+pub mod model_catalog_semantic;
 pub mod model_codec;
 /// Candidate-neutral native-picker projection and stale-selection refusal.
 pub mod model_discovery;

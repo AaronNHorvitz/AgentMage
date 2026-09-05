@@ -35,7 +35,7 @@
     },
     {
       "document": "TASKS.md",
-      "sha256": "786f20247ea3a8389157036b74c4e05dd5310c0632ed73d6e79aa13fad74cfa4"
+      "sha256": "93af3548f72a8a1e975c553bee9de8ca23c7e73e05ba5853a1ba6492adad4dd9"
     },
     {
       "document": "evidence/catalog.json",
@@ -297,7 +297,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14597
+              "line": 14603
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -472,7 +472,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14597
+              "line": 14603
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -2510,7 +2510,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 167 - Isolated Experimental Model Import and Evaluation",
-              "line": 14748
+              "line": 14754
             },
             "sprint": 167,
             "story_id": "167.1",
@@ -2520,7 +2520,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 168 - Experimental Promotion and Removal Gate",
-              "line": 14792
+              "line": 14798
             },
             "sprint": 168,
             "story_id": "168.1",
@@ -3246,7 +3246,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 166 - Superseding First-GA Evidence and Release Decision",
-              "line": 14693
+              "line": 14699
             },
             "sprint": 166,
             "story_id": "166.1",
@@ -3298,7 +3298,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 166 - Superseding First-GA Evidence and Release Decision",
-              "line": 14693
+              "line": 14699
             },
             "sprint": 166,
             "story_id": "166.1",
@@ -4752,7 +4752,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14597
+              "line": 14603
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -5057,7 +5057,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14597
+              "line": 14603
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -5116,7 +5116,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 164 - Chat-Guided Model Installation and Lifecycle",
-              "line": 14553
+              "line": 14559
             },
             "sprint": 164,
             "story_id": "164.1",
@@ -5220,7 +5220,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14597
+              "line": 14603
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -5928,7 +5928,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14597
+              "line": 14603
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -8636,7 +8636,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14597
+              "line": 14603
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -9025,7 +9025,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14597
+              "line": 14603
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -9209,7 +9209,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14597
+              "line": 14603
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -10297,7 +10297,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14597
+              "line": 14603
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -11373,7 +11373,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 167 - Isolated Experimental Model Import and Evaluation",
-              "line": 14748
+              "line": 14754
             },
             "sprint": 167,
             "story_id": "167.1",
@@ -11383,7 +11383,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 168 - Experimental Promotion and Removal Gate",
-              "line": 14792
+              "line": 14798
             },
             "sprint": 168,
             "story_id": "168.1",
@@ -12054,7 +12054,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 166 - Superseding First-GA Evidence and Release Decision",
-              "line": 14693
+              "line": 14699
             },
             "sprint": 166,
             "story_id": "166.1",
@@ -12103,7 +12103,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 166 - Superseding First-GA Evidence and Release Decision",
-              "line": 14693
+              "line": 14699
             },
             "sprint": 166,
             "story_id": "166.1",
@@ -13253,7 +13253,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 164 - Chat-Guided Model Installation and Lifecycle",
-              "line": 14553
+              "line": 14559
             },
             "sprint": 164,
             "story_id": "164.1",
@@ -13435,7 +13435,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14597
+              "line": 14603
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -13588,7 +13588,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14597
+              "line": 14603
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -13686,7 +13686,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14597
+              "line": 14603
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -14609,7 +14609,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14597
+              "line": 14603
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -17178,7 +17178,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14597
+              "line": 14603
             },
             "sprint": 165,
             "story_id": "165.1",

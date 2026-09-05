@@ -14487,24 +14487,24 @@ strict-local campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 163.1.1 - Define signed catalog records**
-  - [ ] **Sub-task 163.1.1.1:** Record exact developer, publisher, model and artifact revision, origin, lineage, license, format, transformation, hashes, size, tokenizer, template, runtime, platform, hardware, quality, security, support, and re-review evidence.
-  - [ ] **Sub-task 163.1.1.2:** Implement candidate, evaluating, approved, degraded, quarantined, rejected, and retired states with closed transition rules and immutable decision history.
+  - [x] **Sub-task 163.1.1.1:** Record exact developer, publisher, model and artifact revision, origin, lineage, license, format, transformation, hashes, size, tokenizer, template, runtime, platform, hardware, quality, security, support, and re-review evidence.
+  - [x] **Sub-task 163.1.1.2:** Implement candidate, evaluating, approved, degraded, quarantined, rejected, and retired states with closed transition rules and immutable decision history.
   - [ ] **Sub-task 163.1.1.3:** Sign catalog releases and bind every entry to model, runtime, component, release, and support manifests.
   - [ ] **Sub-task 163.1.1.4:** Reconcile the early Muse-first and complete frozen eligible-Gemma inventory, role assignments, hardware blocks, quality/repeatability tuples, negative results, and other eligible candidate records into the signed catalog without changing their evidence or silently promoting them.
-- [ ] **Task 163.1.2 - Implement compatibility and lifecycle evaluation**
-  - [ ] **Sub-task 163.1.2.1:** Compare exact profile disk, memory, acceleration, context, concurrency, latency, and runtime requirements with measured platform facts.
-  - [ ] **Sub-task 163.1.2.2:** Distinguish compatible, compatible with limitations, incompatible, unknown, stale, revoked, and blocked states without guessing.
-  - [ ] **Sub-task 163.1.2.3:** Trigger quarantine, degradation, retirement, or re-review on every policy-defined identity, support, vulnerability, artifact, runtime, or behavior change.
+- [x] **Task 163.1.2 - Implement compatibility and lifecycle evaluation**
+  - [x] **Sub-task 163.1.2.1:** Compare exact profile disk, memory, acceleration, context, concurrency, latency, and runtime requirements with measured platform facts.
+  - [x] **Sub-task 163.1.2.2:** Distinguish compatible, compatible with limitations, incompatible, unknown, stale, revoked, and blocked states without guessing.
+  - [x] **Sub-task 163.1.2.3:** Trigger quarantine, degradation, retirement, or re-review on every policy-defined identity, support, vulnerability, artifact, runtime, or behavior change.
 - [ ] **Task 163.1.3 - Verify state and identity integrity**
-  - [ ] **Sub-task 163.1.3.1:** Mutate every catalog identity, evidence, state, transition, signature, expiry, support, and compatibility field.
-  - [ ] **Sub-task 163.1.3.2:** Exercise mutable tags, mirrors, aliases, substituted manifests, stale measurements, unsupported runtimes, and conflicting lineage or license evidence.
-  - [ ] **Sub-task 163.1.3.3:** Verify inaccessible states are absent from ordinary model selection and cannot be loaded through CLI, Chat, configuration, import, or fallback.
+  - [x] **Sub-task 163.1.3.1:** Mutate every catalog identity, evidence, state, transition, signature, expiry, support, and compatibility field.
+  - [x] **Sub-task 163.1.3.2:** Exercise mutable tags, mirrors, aliases, substituted manifests, stale measurements, unsupported runtimes, and conflicting lineage or license evidence.
+  - [x] **Sub-task 163.1.3.3:** Verify inaccessible states are absent from ordinary model selection and cannot be loaded through CLI, Chat, configuration, import, or fallback.
   - [ ] **Sub-task 163.1.3.4:** Recompute catalog completeness from the pinned first-party source freezes and Decision 0027 records; require every eligible profile, role, test applicability, context/decoding tuple, lifecycle result, and hardware disposition to resolve exactly.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 163.1.AC1:** Given an exact model profile, when displayed, then its catalog state, evidence identity, compatibility, limitations, support, and re-review status are current and reproducible.
-- [ ] **Story AC 163.1.AC2:** Given missing, stale, conflicting, invalid, revoked, or changed evidence, when catalog state is computed, then the profile cannot become ordinarily usable.
+- [x] **Story AC 163.1.AC1:** Given an exact model profile, when displayed, then its catalog state, evidence identity, compatibility, limitations, support, and re-review status are current and reproducible.
+- [x] **Story AC 163.1.AC2:** Given missing, stale, conflicting, invalid, revoked, or changed evidence, when catalog state is computed, then the profile cannot become ordinarily usable.
 - [ ] **Story AC 163.1.AC3:** Given a mutable name or model request, when resolution occurs, then only an exact signed artifact identity can be selected.
 - [ ] **Story AC 163.1.AC4:** Given the early Muse/Gemma evaluation inventory, when the signed catalog is built, then every record and negative result remains attributable and complete, no family or role gains approval by inheritance, and no candidate is omitted because it failed or did not fit the hardware.
 
@@ -14514,35 +14514,41 @@ strict-local campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 163.2.1 - Build deterministic repository structure**
-  - [ ] **Sub-task 163.2.1.1:** Integrate admitted compilers, abstract syntax trees, language services, package and build metadata, schema parsers, test discovery, workflow parsers, source-control records, and exact text search behind versioned contracts.
-  - [ ] **Sub-task 163.2.1.2:** Materialize packages, modules, services, symbols, interfaces, dependencies, calls, state, data, events, errors, configuration, schemas, migrations, tests, builds, releases, requirements, decisions, and provenance edges.
-  - [ ] **Sub-task 163.2.1.3:** Record parser failures, ambiguity, unsupported syntax, version skew, generated boundaries, unknown edges, and evidence spans without model inference filling a structural gap.
-- [ ] **Task 163.2.2 - Implement coherent semantic partitioning**
-  - [ ] **Sub-task 163.2.2.1:** Partition by package, service, responsibility, state boundary, feature, workflow, schema family, and cross-cutting concern under explicit context and resource budgets.
-  - [ ] **Sub-task 163.2.2.2:** Construct redacted work packets containing minimum exact spans, structural facts, neighbor interfaces, tests, decisions, prior conflicts, and one bounded audit question.
-  - [ ] **Sub-task 163.2.2.3:** Store decoded model observations as provisional evidence cards with exact source, packet, model, artifact, tokenizer, template, codec, runtime, context, decoding, platform/hardware, proposal, assumptions, uncertainty, confidence, conflict, requested follow-up, verifier, and reverse-dependency identities.
-- [ ] **Task 163.2.3 - Verify model-memory independence**
-  - [ ] **Sub-task 163.2.3.1:** Vary packet order, partition size, context limit, retrieval ranking, interruption, approved model profile, runtime restart, and summary depth.
-  - [ ] **Sub-task 163.2.3.2:** Inject false file, symbol, graph, coverage, authority, completion, and dependency claims into repository content and model output.
-  - [ ] **Sub-task 163.2.3.3:** Reproduce deterministic census, structural graph, packet identity, coverage, and evidence references independently of model prose.
+- [x] **Task 163.2.1 - Build deterministic repository structure**
+  - [x] **Sub-task 163.2.1.1:** Integrate admitted compilers, abstract syntax trees, language services, package and build metadata, schema parsers, test discovery, workflow parsers, source-control records, and exact text search behind versioned contracts.
+  - [x] **Sub-task 163.2.1.2:** Materialize packages, modules, services, symbols, interfaces, dependencies, calls, state, data, events, errors, configuration, schemas, migrations, tests, builds, releases, requirements, decisions, and provenance edges.
+  - [x] **Sub-task 163.2.1.3:** Record parser failures, ambiguity, unsupported syntax, version skew, generated boundaries, unknown edges, and evidence spans without model inference filling a structural gap.
+- [x] **Task 163.2.2 - Implement coherent semantic partitioning**
+  - [x] **Sub-task 163.2.2.1:** Partition by package, service, responsibility, state boundary, feature, workflow, schema family, and cross-cutting concern under explicit context and resource budgets.
+  - [x] **Sub-task 163.2.2.2:** Construct redacted work packets containing minimum exact spans, structural facts, neighbor interfaces, tests, decisions, prior conflicts, and one bounded audit question.
+  - [x] **Sub-task 163.2.2.3:** Store decoded model observations as provisional evidence cards with exact source, packet, model, artifact, tokenizer, template, codec, runtime, context, decoding, platform/hardware, proposal, assumptions, uncertainty, confidence, conflict, requested follow-up, verifier, and reverse-dependency identities.
+- [x] **Task 163.2.3 - Verify model-memory independence**
+  - [x] **Sub-task 163.2.3.1:** Vary packet order, partition size, context limit, retrieval ranking, interruption, approved model profile, runtime restart, and summary depth.
+  - [x] **Sub-task 163.2.3.2:** Inject false file, symbol, graph, coverage, authority, completion, and dependency claims into repository content and model output.
+  - [x] **Sub-task 163.2.3.3:** Reproduce deterministic census, structural graph, packet identity, coverage, and evidence references independently of model prose.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 163.2.AC1:** Given a supported repository, when structural indexing completes, then every canonical record and graph edge resolves to exact parser or source evidence and every unknown remains explicit.
-- [ ] **Story AC 163.2.AC2:** Given a repository exceeding model context, when semantic review runs, then every required coherent unit receives bounded source-pinned analysis without pretending the model retained the repository globally.
-- [ ] **Story AC 163.2.AC3:** Given packet, context, retrieval, model, or summary variation, when outputs are compared, then deterministic identity, coverage, structure, authority, and completion state remain unchanged.
+- [x] **Story AC 163.2.AC1:** Given a supported repository, when structural indexing completes, then every canonical record and graph edge resolves to exact parser or source evidence and every unknown remains explicit.
+- [x] **Story AC 163.2.AC2:** Given a repository exceeding model context, when semantic review runs, then every required coherent unit receives bounded source-pinned analysis without pretending the model retained the repository globally.
+- [x] **Story AC 163.2.AC3:** Given packet, context, retrieval, model, or summary variation, when outputs are compared, then deterministic identity, coverage, structure, authority, and completion state remain unchanged.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 163.AC1:** `AT-MCAT-001` and catalog portions of `RV-40` pass across all states and transition fixtures.
-- [ ] **Sprint AC 163.AC2:** At least 3,000 identity, evidence, compatibility, state, support, signature, expiry, and substitution mutations produce zero unauthorized usability.
+- [x] **Sprint AC 163.AC1:** `AT-MCAT-001` and catalog portions of `RV-40` pass across all states and transition fixtures.
+- [x] **Sprint AC 163.AC2:** At least 3,000 identity, evidence, compatibility, state, support, signature, expiry, and substitution mutations produce zero unauthorized usability.
 - [ ] **Sprint AC 163.AC3:** Catalog, Model BOM, runtime, package, platform, and support manifests reconcile exactly.
 - [ ] **Sprint AC 163.AC4:** Quarantine, degradation, retirement, re-review, accessibility, removal, and offline selection behavior pass.
-- [ ] **Sprint AC 163.AC5:** `AT-STR-001`, `AT-SEM-001`, and structural and partition portions of `RV-46` pass across the published language/build matrix, context budgets, packet orderings, and approved model profiles with no silent structural or coverage gap.
+- [x] **Sprint AC 163.AC5:** `AT-STR-001`, `AT-SEM-001`, and structural and partition portions of `RV-46` pass across the published language/build matrix, context budgets, packet orderings, and approved model profiles with no silent structural or coverage gap.
 - [ ] **Sprint AC 163.AC6:** Decision 0027 candidate, role, exact-profile, codec, quality/repeatability, hardware, lifecycle, and negative-evidence records reconcile 100% between the frozen source catalogs, early evaluation evidence, signed catalog, model/runtime manifests, and picker eligibility.
 
 **Gate decision:** Sprint 163 is PASS only when Stories 163.1-163.2, all criteria, `AM-MCAT-001`, `AM-MDL-004` through `AM-MDL-007`, `AM-AGT-001`, `AM-STR-001`, `AM-SEM-001`, named acceptance tests, `SR-MGM-001`, `SR-MGM-004`, `SR-MGM-005`, `SR-AI-015` through `SR-AI-018`, applicable model and audit policy, catalog `RV-40`, Decision 0027 reconciliation `RV-41`, structural and partition `RV-46`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all 29 locally executable Sprint 163 rows pass with 3,136 catalog and 640
+semantic-analysis cases and zero unauthorized usability, family inheritance, omitted negative,
+structural gap, coverage gap, authority change, or completion drift. Catalog signing, complete
+Decision 0027 reconciliation, and native campaigns remain `BLOCKED_EXTERNAL`;
+`substitution_set=empty`.
 
 ### [ ] Sprint 164 - Chat-Guided Model Installation and Lifecycle
 
