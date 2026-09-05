@@ -743,3 +743,44 @@ Cumulative closures: 2,184; next checkpoint: 2,200.
 
 Exact next action: Sprint 166 superseding first-GA evidence and release decision gate. Cumulative
 closures: 2,210; next checkpoint: 2,225.
+
+## Batch 169 — Sprint 166 fail-closed GA decision
+
+### Completed
+
+- Closed 3 locally executable Sprint 166 rows: independent failure injection across 20 release
+  blocker classes, exhaustive denial across 9 non-pass states, and the story criterion requiring
+  every blocker to prevent package publication and `G-GA` closure. Corpus: 180 `AT-GA-004` cases;
+  false publication, false GA closure, and substitution counts: 0 each. Batch closures: 3.
+  Cumulative closures: 2,213. Promotions: 0; release approvals and publications: 0/0.
+- Commits: `88726e74` (kernel release decision, corpus, tests, closures, traceability and supply
+  chain), `22545bb1` (Sprint 166 report), and `b5cbdbda` (14 downstream bound artifacts). Including
+  this log: 4; commits/item: 1.33. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across 14 regenerated paths and 20 pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed formatting, Clippy with warnings denied, 2 focused Rust tests, 6 focused Python
+  contract/report tests, corpus, dependency, traceability, supply-chain, Story 1.2, and Story
+  3.1/Sprint 3 configuration chains. Supply-chain builds: 1; evidence regeneration passes: 1. Full
+  gate: 716 seconds, stopping only at retained Story 6.1 Podman after every preceding gate passed.
+  Self-recovery: 2 — corrected two initially mismatched module/gate patch contexts against the
+  authoritative source; both rejected patches were transactional and changed no file.
+- Sprint 166 remains `UPSTREAM-SPRINTS-0-165-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=fresh disposable Fedora, Ubuntu, and Windows guests plus every
+  provider, model, accessibility, performance, backup, recovery, update, removal, signing,
+  fuzzing, and independent review environment, artifact=untouched three-run platform lifecycles,
+  complete provider/capability/model/audit matrices, signed manifests and packages, binary and
+  Model BOMs, real RM-024 sanitizer/coverage/crash evidence, RV-01 through RV-49, independent
+  reproduction, reviewer signatures, and explicit user approval, action=satisfy every upstream
+  blocker, provision all exact release candidates and environments, execute the complete published
+  release and real-fuzz campaigns, reconcile current raw evidence, obtain independent signatures
+  and explicit user approval, then sign the release decision, credential=all provider, model,
+  platform, signing, accessibility, fuzzing, and independent reviewer credentials, payment=provider,
+  model, hardware, hosted environment, signing, accessibility, or independent evaluator costs if
+  applicable)`; `substitution_set=empty`. Full-chain blocker remains `blocked: host change required
+  — run npm run -s docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 167 isolated experimental model import and evaluation gate. Cumulative
+closures: 2,213; next checkpoint: 2,225.
