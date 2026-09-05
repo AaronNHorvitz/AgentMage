@@ -173,6 +173,8 @@ pub mod model_codec;
 pub mod model_discovery;
 /// Deterministic local and remote model endpoint validation, routing, and protocol encoding.
 pub mod model_gateway;
+/// Exact-plan model acquisition, activation, rollback, and removal contracts.
+pub mod model_management;
 /// Checked model-specific context allocation and authority-invariant orchestration profiles.
 pub mod model_orchestration_profile;
 pub mod model_response;

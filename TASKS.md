@@ -14566,33 +14566,39 @@ Decision 0027 reconciliation, and native campaigns remain `BLOCKED_EXTERNAL`;
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 164.1.1 - Implement deterministic Chat intents and preflight**
-  - [ ] **Sub-task 164.1.1.1:** Support list, explain, recommend, download, import, resume, verify, activate, compare, cancel, roll back, remove, and clean-storage intents through closed schemas.
-  - [ ] **Sub-task 164.1.1.2:** Show exact profile, publisher, license, source host, artifact, tokenizer, template, codec, runtime, context, decoding, modality, expected size, free-space need, measured hardware fit, network use, destination, checks, limitations, and rollback.
-  - [ ] **Sub-task 164.1.1.3:** Bind confirmation to the exact plan digest and invalidate it on catalog, artifact, source, hardware, storage, policy, runtime, or support change.
-- [ ] **Task 164.1.2 - Implement isolated acquisition and activation**
-  - [ ] **Sub-task 164.1.2.1:** Launch the separate installer/importer with only one confirmed acquisition or import plan and no workspace, session, provider, credential, shell, or inference authority.
-  - [ ] **Sub-task 164.1.2.2:** Download or import into quarantine with bounded resume, hash/signature verification, scanning, format validation, hardware and runtime self-test, cancellation, and cleanup.
-  - [ ] **Sub-task 164.1.2.3:** Activate atomically, preserve the prior valid profile, verify postconditions, and implement crash-safe rollback, removal, and disk reclamation.
-- [ ] **Task 164.1.3 - Verify substitution, interruption, and usability**
-  - [ ] **Sub-task 164.1.3.1:** Mutate source, redirect, artifact, hash, license, size, tokenizer, template, codec, runtime, context, decoding, modality, platform, hardware, disk, catalog, preview, scan, and activation state.
-  - [ ] **Sub-task 164.1.3.2:** Interrupt every download, resume, import, verify, scan, self-test, activation, rollback, removal, and cleanup transition.
+- [x] **Task 164.1.1 - Implement deterministic Chat intents and preflight**
+  - [x] **Sub-task 164.1.1.1:** Support list, explain, recommend, download, import, resume, verify, activate, compare, cancel, roll back, remove, and clean-storage intents through closed schemas.
+  - [x] **Sub-task 164.1.1.2:** Show exact profile, publisher, license, source host, artifact, tokenizer, template, codec, runtime, context, decoding, modality, expected size, free-space need, measured hardware fit, network use, destination, checks, limitations, and rollback.
+  - [x] **Sub-task 164.1.1.3:** Bind confirmation to the exact plan digest and invalidate it on catalog, artifact, source, hardware, storage, policy, runtime, or support change.
+- [x] **Task 164.1.2 - Implement isolated acquisition and activation**
+  - [x] **Sub-task 164.1.2.1:** Launch the separate installer/importer with only one confirmed acquisition or import plan and no workspace, session, provider, credential, shell, or inference authority.
+  - [x] **Sub-task 164.1.2.2:** Download or import into quarantine with bounded resume, hash/signature verification, scanning, format validation, hardware and runtime self-test, cancellation, and cleanup.
+  - [x] **Sub-task 164.1.2.3:** Activate atomically, preserve the prior valid profile, verify postconditions, and implement crash-safe rollback, removal, and disk reclamation.
+- [x] **Task 164.1.3 - Verify substitution, interruption, and usability**
+  - [x] **Sub-task 164.1.3.1:** Mutate source, redirect, artifact, hash, license, size, tokenizer, template, codec, runtime, context, decoding, modality, platform, hardware, disk, catalog, preview, scan, and activation state.
+  - [x] **Sub-task 164.1.3.2:** Interrupt every download, resume, import, verify, scan, self-test, activation, rollback, removal, and cleanup transition.
   - [ ] **Sub-task 164.1.3.3:** Test novice Chat flows, clear errors, progress, cancellation, keyboard, screen reader, focus, storage explanation, and recovery guidance.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 164.1.AC1:** Given a compatible approved profile, when the user confirms the exact Chat plan, then the installer obtains and activates only that artifact and verifies all declared postconditions.
-- [ ] **Story AC 164.1.AC2:** Given any changed, malformed, unsupported, low-resource, failed-scan, stale-preview, or interrupted state, when the operation proceeds, then no partial or substituted profile becomes active.
-- [ ] **Story AC 164.1.AC3:** Given any model output or request for silent acquisition, self-approval, activation, replacement, or fallback, when evaluated, then no model-management effect occurs without deterministic policy and user confirmation.
+- [x] **Story AC 164.1.AC2:** Given any changed, malformed, unsupported, low-resource, failed-scan, stale-preview, or interrupted state, when the operation proceeds, then no partial or substituted profile becomes active.
+- [x] **Story AC 164.1.AC3:** Given any model output or request for silent acquisition, self-approval, activation, replacement, or fallback, when evaluated, then no model-management effect occurs without deterministic policy and user confirmation.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 164.AC1:** `AT-MGR-001` and `RV-40` pass on every first-GA platform and approved reference runtime tuple.
-- [ ] **Sprint AC 164.AC2:** At least 3,000 plan, source, artifact, identity, resource, interruption, activation, rollback, and deletion mutations produce zero silent or partial activation.
+- [x] **Sprint AC 164.AC2:** At least 3,000 plan, source, artifact, identity, resource, interruption, activation, rollback, and deletion mutations produce zero silent or partial activation.
 - [ ] **Sprint AC 164.AC3:** Installer process, path, network, credential, workspace, quarantine, store, and cleanup evidence matches runtime manifests exactly.
 - [ ] **Sprint AC 164.AC4:** Novice usability, accessibility, cancellation, recovery, removal, storage cleanup, and strict-local restoration pass.
 
 **Gate decision:** Sprint 164 is PASS only when Story 164.1, all criteria, `AM-MGR-001`, `AT-MGR-001`, `SR-MGM-002`, `SR-MGM-003`, `RV-40`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all 15 locally executable Sprint 164 rows pass with 3,120 plan, source,
+artifact, resource, interruption, activation, rollback, removal, and cleanup mutations and zero
+silent, partial, substituted, or unconfirmed activation. A signed approved compatible profile and
+native acquisition, activation, manifest, accessibility, removal, strict-local, and `RV-40`
+campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification
 
