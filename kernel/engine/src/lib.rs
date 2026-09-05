@@ -71,6 +71,8 @@ pub mod context_management;
 pub mod conversation_archive;
 /// Encrypted canonical conversation records and immutable turn timelines.
 pub mod conversation_library;
+/// Metadata-only platform credential references and exact bounded worker resolution.
+pub mod credential_broker;
 /// Interface-invariant authority, isolation, recovery, and privacy assurance.
 pub mod cross_interface_assurance;
 /// Cross-pack adversarial verification, removal inventory, and strict-local restoration contracts.

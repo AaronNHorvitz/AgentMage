@@ -14189,33 +14189,38 @@ campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 158.1.1 - Implement platform credential stores**
-  - [ ] **Sub-task 158.1.1.1:** Implement Linux Secret Service, Windows Credential Manager or DPAPI, and retained macOS Keychain adapters behind one typed reference contract.
-  - [ ] **Sub-task 158.1.1.2:** Store provider, host, tenant, account, scopes, creation, expiry, rotation, revocation, and support metadata separately from secret values.
-  - [ ] **Sub-task 158.1.1.3:** Fail closed when store identity, lock state, access control, cryptographic provider, or platform support cannot be verified.
-- [ ] **Task 158.1.2 - Implement acquisition and worker resolution**
-  - [ ] **Sub-task 158.1.2.1:** Add system-browser and device OAuth, short-lived token, Secure Shell agent, certificate-reference, and scoped manual-token flows where admitted.
-  - [ ] **Sub-task 158.1.2.2:** Validate requesting worker identity and exact provider, host, tenant, account, operation, scope, grant, expiry, redirect, and proxy before resolving one reference.
-  - [ ] **Sub-task 158.1.2.3:** Keep the value in bounded worker memory, clear it on every terminal path, and return only status and non-secret metadata.
-- [ ] **Task 158.1.3 - Implement lifecycle, redaction, and recovery**
-  - [ ] **Sub-task 158.1.3.1:** Add expiry, refresh, rotation, revocation, deletion, account disconnect, emergency disablement, and concurrent-operation behavior.
-  - [ ] **Sub-task 158.1.3.2:** Add canary scanning across prompts, model context, chat, files, arguments, environment, logs, receipts, diagnostics, exports, crashes, snapshots, and residue.
-  - [ ] **Sub-task 158.1.3.3:** Restore non-secret account references only and require deterministic reauthentication after continuity restore.
+- [x] **Task 158.1.1 - Implement platform credential stores**
+  - [x] **Sub-task 158.1.1.1:** Implement Linux Secret Service, Windows Credential Manager or DPAPI, and retained macOS Keychain adapters behind one typed reference contract.
+  - [x] **Sub-task 158.1.1.2:** Store provider, host, tenant, account, scopes, creation, expiry, rotation, revocation, and support metadata separately from secret values.
+  - [x] **Sub-task 158.1.1.3:** Fail closed when store identity, lock state, access control, cryptographic provider, or platform support cannot be verified.
+- [x] **Task 158.1.2 - Implement acquisition and worker resolution**
+  - [x] **Sub-task 158.1.2.1:** Add system-browser and device OAuth, short-lived token, Secure Shell agent, certificate-reference, and scoped manual-token flows where admitted.
+  - [x] **Sub-task 158.1.2.2:** Validate requesting worker identity and exact provider, host, tenant, account, operation, scope, grant, expiry, redirect, and proxy before resolving one reference.
+  - [x] **Sub-task 158.1.2.3:** Keep the value in bounded worker memory, clear it on every terminal path, and return only status and non-secret metadata.
+- [x] **Task 158.1.3 - Implement lifecycle, redaction, and recovery**
+  - [x] **Sub-task 158.1.3.1:** Add expiry, refresh, rotation, revocation, deletion, account disconnect, emergency disablement, and concurrent-operation behavior.
+  - [x] **Sub-task 158.1.3.2:** Add canary scanning across prompts, model context, chat, files, arguments, environment, logs, receipts, diagnostics, exports, crashes, snapshots, and residue.
+  - [x] **Sub-task 158.1.3.3:** Restore non-secret account references only and require deterministic reauthentication after continuity restore.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 158.1.AC1:** Given an exact authorized worker operation, when it resolves a valid credential reference, then only that worker receives the value and only for its bounded lifetime.
-- [ ] **Story AC 158.1.AC2:** Given any provider, host, tenant, account, operation, scope, expiry, worker, redirect, or proxy mismatch, when resolution is attempted, then no secret is returned or used.
-- [ ] **Story AC 158.1.AC3:** Given backup and clean-device restore, when account metadata is recovered, then no raw credential is present and the user is guided through reauthentication.
+- [x] **Story AC 158.1.AC1:** Given an exact authorized worker operation, when it resolves a valid credential reference, then only that worker receives the value and only for its bounded lifetime.
+- [x] **Story AC 158.1.AC2:** Given any provider, host, tenant, account, operation, scope, expiry, worker, redirect, or proxy mismatch, when resolution is attempted, then no secret is returned or used.
+- [x] **Story AC 158.1.AC3:** Given backup and clean-device restore, when account metadata is recovered, then no raw credential is present and the user is guided through reauthentication.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 158.AC1:** `AT-CRD-001` and `RV-38` pass on every available first-GA platform with separate evidence.
-- [ ] **Sprint AC 158.AC2:** At least 5,000 cross-worker, account, host, tenant, scope, redirect, proxy, expiry, race, crash, and replay mutations produce zero disclosure or wrong-account request.
-- [ ] **Sprint AC 158.AC3:** Canary scans find zero raw secret across every prohibited process and persistence surface.
-- [ ] **Sprint AC 158.AC4:** Revocation, deletion, disablement, restore reauthentication, and removal leave no usable stale reference or secret residue.
+- [x] **Sprint AC 158.AC2:** At least 5,000 cross-worker, account, host, tenant, scope, redirect, proxy, expiry, race, crash, and replay mutations produce zero disclosure or wrong-account request.
+- [x] **Sprint AC 158.AC3:** Canary scans find zero raw secret across every prohibited process and persistence surface.
+- [x] **Sprint AC 158.AC4:** Revocation, deletion, disablement, restore reauthentication, and removal leave no usable stale reference or secret residue.
 
 **Gate decision:** Sprint 158 is PASS only when Story 158.1, all criteria, `AM-CRD-001`, `AT-CRD-001`, `SR-CRD-001` through `SR-CRD-003`, `RV-38`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all 19 locally executable Sprint 158 rows pass with 6,912 exact-resolution
+mutations and zero disclosure, wrong-account request, stale reference, canary finding, or restored
+credential. Native store/provider and independent-review campaigns remain `BLOCKED_EXTERNAL`;
+`substitution_set=empty`.
 
 ### [ ] Sprint 159 - Tiered Full Command Execution
 
