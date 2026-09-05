@@ -260,7 +260,8 @@ Exact next action: Sprint 154 cloud cost and delivery correlation gate. Cumulati
   regeneration passes: 1. Full gate: 706.993 seconds, stopping only at retained Story 6.1
   Podman after every preceding gate passed. Self-recovery: 1 — collapsed a Clippy-reported
   nested confidence-bound check before regeneration, then replaced one prior-run-log shorthand
-  parsed as unresolved `AT-AWS` after a 148.196-second preliminary chain, reran the specific
+  parsed as an unresolved abbreviated stable identifier after a 148.196-second preliminary
+  chain, reran the specific
   documentation validators green, and completed one full-chain retry.
 - Sprint 154 remains `UPSTREAM-SPRINTS-129-131-152-153-BLOCKED` and
   `BLOCKED_EXTERNAL(platform=native cloud, delivery, productivity, incident, telemetry, and
@@ -276,3 +277,47 @@ Exact next action: Sprint 154 cloud cost and delivery correlation gate. Cumulati
 
 Exact next action: Sprint 155 cross-pack extreme verification and removal gate. Cumulative
 closures: 1,951; next checkpoint: 1,975.
+
+## Batch 158 — Sprint 155 cross-pack extreme verification and removal gate
+
+### Completed
+
+- Closed 25 local Sprint 155 rows: four autonomy levels; six individual and combined pack sets;
+  declared-effect and postcondition accounting; 16 hostile boundary families; replay, failure,
+  pressure, and lifecycle states; eight prohibited authority families; independent and combined
+  removal inventories; strict-local zero-network restoration contract; raw-evidence summary
+  reconciliation; and zero skips, suppressions, quarantines, or hidden blockers. Corpus cases:
+  15,360; unauthorized disclosures, effects, money movements, cloud mutations, duplicates, false
+  completions, hidden blockers, and residue: 0 each. Batch closures: 25. Cumulative closures:
+  1,976. Promotions: 0.
+- Commits: `9b852281` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `f8f21ebe` (Sprint 155 report), and `8e1d50b8` (14 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.16. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across 14 regenerated paths and all pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed Clippy with warnings denied, 4 focused Rust tests, 6 focused Python tests, the
+  15,360-case `AT-XPR-001` corpus, Sprint evidence, dependency, traceability, supply-chain,
+  Story 1.2, and Story 3.1/Sprint 3 configuration chains. Supply-chain builds: 1; evidence
+  regeneration passes: 1. Full gate: 704.548 seconds, stopping only at retained Story 6.1
+  Podman after every preceding gate passed. Self-recovery: 1 — removed the remaining malformed
+  abbreviated stable identifier from prior-batch recovery prose after a 147.997-second
+  preliminary chain, reran Markdown and documentation validation green, and completed one
+  full-chain retry.
+- Sprint 155 remains `UPSTREAM-SPRINTS-127-154-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=all productivity, communications, finance, cloud, delivery,
+  Windows, macOS, backup, update, and strict-local environments plus independent review
+  environment, artifact=untouched native cross-pack, mutation, fuzz, failure, resource,
+  removal, restoration, support, accessibility, reviewer, and recomputation evidence,
+  action=satisfy every Sprint 127-154 external tuple and strict-local host blocker, then run
+  AT-XPR-001, RV-01 through RV-35, complete platform, removal, restoration, accessibility,
+  update, rollback, uninstall, and independent reproduction campaigns, credential=all provider,
+  platform, backup, update, signing, and evaluator credentials named by Sprints 127-154,
+  payment=provider, hardware, hosted environment, backup, signing, and independent evaluator
+  costs if applicable)`; `substitution_set=empty`. Full-chain blocker remains `blocked: host
+  change required — run npm run -s docs:check outside the restricted filesystem sandbox with
+  the current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 156 expanded first-GA evidence checkpoint. Cumulative closures: 1,976;
+next checkpoint: 2,000.
