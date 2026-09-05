@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_168_local_evidence",
+  "source_revision": "e0c2a036044ce002701ff562c955a94dc307f7a5",
+  "source_sha256": {
+    "Cargo.toml": "5afd98c00697e9c6974495e4a9568ae42f46ec0acb1eb603641b1ec7bb5f5ea1",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "TASKS.md": "3957415860ad964133b90b42a559dfab7b8be1472c6c15e2faa7152d6cb11228",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "MODEL-PROVENANCE-POLICY.md": "528076ef9be354e5a463221811a0bf4bf735a50be0b3a73df91097d7e83594c7",
+    "experimental/model-lab/Cargo.toml": "71e154124a30d37a15e3321b0b4713900edce4528cd666756f327b3e819e5844",
+    "experimental/model-lab/Cargo.lock": "aa4bce4b49ced72807de01e7df69e149fab415bd019589b62e621998dbd7ef3f",
+    "experimental/model-lab/src/lib.rs": "4e1186101844d69a454bb63c2e1502ae08f8d41ee22e6d040ecd8bea7c7c3835",
+    "experimental/model-lab/src/promotion.rs": "0a1d2441e3ad565bd7829d9d482c259174929830c9ec0dd9271b38421ab502b7",
+    "supply-chain/dependency-provenance.json": "e17933c257289f7ae564d6d6e44d96c4a59c85d30e78f3719ed55a1254f01ff3",
+    "supply-chain/sbom.cdx.json": "4a0366b8fe83fda944fa24fa06ffb7fabc0992de65731857b3fdddc7be816a6f",
+    "supply-chain/dependency-hashes.sha256": "2e22a8aec27c45105c473b9df98b8d117d91943adf0e71bc97db282a7a3f559d",
+    "artifacts/sprints/sprint-168/experimental-promotion-corpus.json": "aab261e6c6934f25f3128563d0d6af5e76b03bc86b49fb68e084f7ea6a2429c5",
+    "scripts/experimental_promotion_contract.py": "7a8edb5ea2af668ce1c98ba2b2d9b7bfa639c6d815476963ddc5073215514d0e",
+    "tests/test_experimental_promotion_contract.py": "b03c7286db725da0ddc071467a49f01d2c74596c3d31b7e161534463e78b53ad",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_168_evidence.py": "9887c5fa633deca252df5bce89bca473a3641931eb00bfc13b6944f303ea9f8f",
+    "tests/test_sprint_168_evidence.py": "555c02a3693f55ecf3691f326ba2ef5b71b3e6a4b2cc54775c21d7bdd26ae3ae"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "experimental-promotion-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "experimental/model-lab/Cargo.toml",
+        "promotion::tests"
+      ],
+      "exit_code": 0,
+      "output_sha256": "ab079ef663b995d422573efdea91e5f4aa86385bebc77796aedd3b876b6b2ef0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "experimental-promotion-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_experimental_promotion_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "0d5f19ead2bf9676d74342ac6c647b4bf2294bed713605930a76f4b7d5b1c878",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_168_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "33060fd73862c5e1af97335504d5b45211fce6d229657f556d8deceeadc52ce4",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-EML-001",
+    "AT-EML-001",
+    "SR-LAB-001",
+    "SR-LAB-002",
+    "SR-LAB-003",
+    "RV-42"
+  ],
+  "implemented_contracts": {
+    "promotion_route_count": 10,
+    "mutation_count": 13,
+    "lifecycle_state_count": 16,
+    "fixture_case_count": 2080,
+    "ordinary_activation_count": 0,
+    "direct_promotion_count": 0,
+    "approved_state_change_count": 0,
+    "canonical_damage_count": 0,
+    "signed_support_matrix_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "no_direct_promotion_complete": true,
+    "normal_admission_contract_complete": true,
+    "signed_catalog_requirement_complete": true,
+    "promotion_bypass_mutations_complete": true,
+    "removal_preservation_contract_complete": true,
+    "native_removal_reinstall_complete": false,
+    "signed_support_matrix_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-163-164-167-BLOCKED",
+      "owner": "168"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "native supported lab platforms plus approved catalog/admission, signing, accessibility, resource, reinstall, crash-removal, residue, and independent review environments",
+      "artifact": "untouched complete AT-EML-001 and RV-42, signed approved-catalog transition, removal, crash recovery, reinstall, residue, accessibility, resource, neighboring-state, manifest reconciliation, signed post-GA support matrix, and independent-review evidence",
+      "action": "satisfy upstream blockers, provision exact native lab and approved-model environments, run complete promotion-denial, removal, crash, reinstall, residue, accessibility, and RV-42 campaigns, then independently reproduce and sign the post-GA support matrix",
+      "credential": "catalog-signing, artifact, platform, accessibility, and independent reviewer credentials",
+      "payment": "artifact, signing, platform, accessibility, or independent evaluator costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_168_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "experimental_model_promoted": false,
+    "experimental_lab_promoted": false,
+    "support_promotion_count": 0
+  }
+}
