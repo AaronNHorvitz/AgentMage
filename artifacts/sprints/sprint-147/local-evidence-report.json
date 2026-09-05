@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_147_local_evidence",
+  "source_revision": "82e6ba6eb708db03c17c2c367e7b4969a80a72dc",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "9f222455a54160ba7c0e7f0fd86debd2b1ccba79d76a7022039ef37d6737658c",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "732a114b9d489d4b0eef5e30dd66e0fb7a1f6ca8a76b9f5369ff78a853dcc748",
+    "kernel/engine/src/financial_domain.rs": "d95b2531fc5da2c91719730725db922ef96716760f08514f6a1a8630bacc3584",
+    "kernel/engine/src/recurring_obligation.rs": "22e5a93d2bacfabb03ac381ac377be19eb0aa05a0d17cffc1fb42f51aedfbf00",
+    "supply-chain/dependency-provenance.json": "d8ec4f3379e4e5a6df1f0c3219f164ba0c6f89aa9c32446cc23d01cc7c037f76",
+    "supply-chain/sbom.cdx.json": "5cbdc2a41ddbcf83a9c3232ae13cdfb67f46b89f645c1bc26065ef4352992a9e",
+    "supply-chain/dependency-hashes.sha256": "794a10d6b846a46998129ce8649bc58afedadb627cb6fa2e6cc2c2974db5d809",
+    "artifacts/sprints/sprint-147/obligation-corpus.json": "8e070bc0da030179b2cedaecd2a00d7ffee70bc9fb06938c77887e36d80d64e8",
+    "scripts/recurring_obligation_contract.py": "60553551ac49f4589bea0d3ebc2918caf903440bc98558b80d4b5cb4942c5236",
+    "tests/test_recurring_obligation_contract.py": "e947436d5f1e9eaed40e29e24df329f1390713cd08b4700f71ed7c0770b162ed",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_147_evidence.py": "c2d4175ee9059ee516108921fe28799cc9bebdfaa7b2749274e58ad6502cc6b7",
+    "tests/test_sprint_147_evidence.py": "a7daaed7cf0265c18143caa859716f26fd010c4322c36e48dc4e74094032175f"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "obligation-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "recurring_obligation::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "c61045686359d4bcf4d11448f98fe271f0ebfbbe131f0fd6c6a49d8004c81cb5",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "obligation-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_recurring_obligation_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "8debc548dcfcc8e4f7e3fbe2fad32dfc6b16ecdac0649d2b4cc13ec5f99d34db",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_147_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-BIL-001",
+    "AT-BIL-001",
+    "SR-FIN-003",
+    "SR-FIN-004",
+    "SR-FIN-006",
+    "RV-31",
+    "RV-33"
+  ],
+  "implemented_contracts": {
+    "obligation_kind_count": 8,
+    "mutation_family_count": 12,
+    "failure_family_count": 10,
+    "fixture_case_count": 5760,
+    "authority_count": 0,
+    "false_completion_count": 0,
+    "financial_effect_count": 0,
+    "hidden_uncertainty_count": 0,
+    "citation_loss_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "recurring_detection_complete": true,
+    "model_status_separation_complete": true,
+    "citation_links_complete": true,
+    "local_reminders_complete": true,
+    "communication_drafts_bounded": true,
+    "financial_effects_absent": true,
+    "native_provider_campaign_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-131-138-143-146-BLOCKED",
+      "owner": "147"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "native financial and communication provider accounts with recurring transaction and correspondence history",
+      "artifact": "untouched native detection, identity, citation, hostile-content, reminder, draft, security, reviewer, and removal evidence",
+      "action": "provision exact provider accounts, credentials, recurring history, and correspondence, then run AT-BIL-001, RV-31, and RV-33 native campaigns",
+      "credential": "applicable financial and communication provider credentials",
+      "payment": "provider subscription costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_147_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "native_obligation_support_promoted": false,
+    "support_promotion_count": 0
+  }
+}
