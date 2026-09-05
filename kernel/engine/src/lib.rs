@@ -103,6 +103,8 @@ pub mod financial_data_adapter;
 pub mod financial_domain;
 /// Immutable bounded financial imports and deterministic reconciliation.
 pub mod financial_import;
+/// Deterministic local budgets, forecasts, goals, and financial scenarios.
+pub mod financial_planning;
 /// Non-executing frontier-result import, quarantine, and local revalidation.
 pub mod frontier_import;
 /// Measured frontier recommendation and local-only disclosure packet composition.

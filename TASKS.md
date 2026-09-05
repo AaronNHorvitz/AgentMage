@@ -13512,39 +13512,44 @@ Sprint closure remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 **Dependencies:** Sprints 142-145.
 
-#### [ ] Story 146.1 - Explainable Personal Financial Planning
+#### [x] Story 146.1 - Explainable Personal Financial Planning
 
 **User-facing value:** As a user, I can compare budgets and financial scenarios while seeing the exact source data, assumptions, rules, uncertainty, and limitations behind every result.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 146.1.1 - Implement deterministic budget rules**
-  - [ ] **Sub-task 146.1.1.1:** Add category and envelope budgets, rollover, scheduled income and expense, allocation, overspending, goal contribution, and user-approved local rules.
-  - [ ] **Sub-task 146.1.1.2:** Preserve rule identity, priority, effective period, source, version, conflict, override, and user disposition.
-  - [ ] **Sub-task 146.1.1.3:** Make every amount use Sprint 142 fixed-point and currency contracts.
-- [ ] **Task 146.1.2 - Implement forecasts and scenarios**
-  - [ ] **Sub-task 146.1.2.1:** Build cash-flow horizons, savings goals, debt amortization scenarios, asset and liability views, and net-worth histories.
-  - [ ] **Sub-task 146.1.2.2:** Record inputs, assumptions, missing data, confidence class, scenario identity, calculation version, sensitivity, and limitations.
-  - [ ] **Sub-task 146.1.2.3:** Keep forecasts and scenarios local, non-authoritative, non-executing, and explicitly distinct from actual transactions.
-- [ ] **Task 146.1.3 - Verify determinism and truthful uncertainty**
-  - [ ] **Sub-task 146.1.3.1:** Test negative balances, irregular income, currency mismatch, missing periods, duplicate streams, changing rates, boundary values, and conflicting rules.
-  - [ ] **Sub-task 146.1.3.2:** Recompute every budget and scenario from immutable source records in varied input order and across supported platforms.
-  - [ ] **Sub-task 146.1.3.3:** Probe prompts and workflows attempting to convert a plan, forecast, or recommendation into payment, transfer, trade, credit, tax, or account action.
+- [x] **Task 146.1.1 - Implement deterministic budget rules**
+  - [x] **Sub-task 146.1.1.1:** Add category and envelope budgets, rollover, scheduled income and expense, allocation, overspending, goal contribution, and user-approved local rules.
+  - [x] **Sub-task 146.1.1.2:** Preserve rule identity, priority, effective period, source, version, conflict, override, and user disposition.
+  - [x] **Sub-task 146.1.1.3:** Make every amount use Sprint 142 fixed-point and currency contracts.
+- [x] **Task 146.1.2 - Implement forecasts and scenarios**
+  - [x] **Sub-task 146.1.2.1:** Build cash-flow horizons, savings goals, debt amortization scenarios, asset and liability views, and net-worth histories.
+  - [x] **Sub-task 146.1.2.2:** Record inputs, assumptions, missing data, confidence class, scenario identity, calculation version, sensitivity, and limitations.
+  - [x] **Sub-task 146.1.2.3:** Keep forecasts and scenarios local, non-authoritative, non-executing, and explicitly distinct from actual transactions.
+- [x] **Task 146.1.3 - Verify determinism and truthful uncertainty**
+  - [x] **Sub-task 146.1.3.1:** Test negative balances, irregular income, currency mismatch, missing periods, duplicate streams, changing rates, boundary values, and conflicting rules.
+  - [x] **Sub-task 146.1.3.2:** Recompute every budget and scenario from immutable source records in varied input order and across supported platforms.
+  - [x] **Sub-task 146.1.3.3:** Probe prompts and workflows attempting to convert a plan, forecast, or recommendation into payment, transfer, trade, credit, tax, or account action.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 146.1.AC1:** Given the same records, rules, assumptions, and calculation version, when a budget or scenario is recomputed, then the result is exact and deterministic.
-- [ ] **Story AC 146.1.AC2:** Given missing, stale, conflicting, or uncertain inputs, when a forecast is displayed, then limitations and sensitivity remain visible and no guaranteed claim is made.
-- [ ] **Story AC 146.1.AC3:** Given any request to execute a financial scenario, when evaluated, then no money-movement or financial-administration operation is available.
+- [x] **Story AC 146.1.AC1:** Given the same records, rules, assumptions, and calculation version, when a budget or scenario is recomputed, then the result is exact and deterministic.
+- [x] **Story AC 146.1.AC2:** Given missing, stale, conflicting, or uncertain inputs, when a forecast is displayed, then limitations and sensitivity remain visible and no guaranteed claim is made.
+- [x] **Story AC 146.1.AC3:** Given any request to execute a financial scenario, when evaluated, then no money-movement or financial-administration operation is available.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 146.AC1:** `AT-BUD-001` passes across budgeting, forecast, goal, debt, net-worth, and scenario fixtures.
-- [ ] **Sprint AC 146.AC2:** Repeated and reordered computation produces exact fixed-point results.
-- [ ] **Sprint AC 146.AC3:** Every displayed result retains source, assumption, version, confidence, limitation, and actual-versus-scenario status.
-- [ ] **Sprint AC 146.AC4:** Prohibited-action probes produce zero registered or attempted money-movement operation.
+- [x] **Sprint AC 146.AC1:** `AT-BUD-001` passes across budgeting, forecast, goal, debt, net-worth, and scenario fixtures.
+- [x] **Sprint AC 146.AC2:** Repeated and reordered computation produces exact fixed-point results.
+- [x] **Sprint AC 146.AC3:** Every displayed result retains source, assumption, version, confidence, limitation, and actual-versus-scenario status.
+- [x] **Sprint AC 146.AC4:** Prohibited-action probes produce zero registered or attempted money-movement operation.
 
 **Gate decision:** Sprint 146 is PASS only when Story 146.1, all criteria, `AM-BUD-001`, `AT-BUD-001`, applicable security requirements, `RV-33`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 146 source and contract rows pass locally with 4,320 exact
+planning cases and zero order drift, hidden limitation, guaranteed claim, or external execution
+attempt. Native macOS and Windows reproduction and upstream Sprint closure remain
+`BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 147 - Bills, Subscriptions, and Recurring Streams
 
