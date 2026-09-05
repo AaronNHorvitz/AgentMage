@@ -97,6 +97,8 @@ pub mod external_effect;
 pub mod filesystem_control;
 /// Exact fixed-point money, immutable source lineage, and reconciliation contracts.
 pub mod financial_domain;
+/// Immutable bounded financial imports and deterministic reconciliation.
+pub mod financial_import;
 /// Non-executing frontier-result import, quarantine, and local revalidation.
 pub mod frontier_import;
 /// Measured frontier recommendation and local-only disclosure packet composition.

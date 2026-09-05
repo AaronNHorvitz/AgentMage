@@ -13365,39 +13365,44 @@ upstream Sprint closure remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 **Dependencies:** Sprint 142; file parsing, path, archive, evidence, and local data controls.
 
-#### [ ] Story 143.1 - Reproducible Statement Import
+#### [x] Story 143.1 - Reproducible Statement Import
 
 **User-facing value:** As a user, I can import a financial export repeatedly without duplicate transactions, hidden corrections, lost source evidence, or unexplained reconciliation differences.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 143.1.1 - Implement immutable import profiles**
-  - [ ] **Sub-task 143.1.1.1:** Define source hash, format, profile, encoding, account, statement period, column or field mapping, locale, sign, currency, time zone, and parser-version records.
-  - [ ] **Sub-task 143.1.1.2:** Implement bounded CSV profile detection and explicit confirmation for ambiguous date, decimal, sign, currency, header, and account mappings.
-  - [ ] **Sub-task 143.1.1.3:** Implement OFX and QFX parsing with unsupported-version, extension, malformed-record, entity, encoding, size, and cancellation defenses.
-- [ ] **Task 143.1.2 - Implement matching and reconciliation**
-  - [ ] **Sub-task 143.1.2.1:** Add deterministic duplicate, pending-to-posted, transfer, split, correction, and supersession candidate rules with explainable evidence.
-  - [ ] **Sub-task 143.1.2.2:** Implement statement reconciliation using opening balance, closing balance, included records, pending exclusions, adjustments, tolerance, conflict, and reviewer disposition.
-  - [ ] **Sub-task 143.1.2.3:** Preserve unresolved conflicts without guessing or silently changing imported records.
-- [ ] **Task 143.1.3 - Verify repeatability and failure safety**
-  - [ ] **Sub-task 143.1.3.1:** Reimport identical, reordered, overlapping, partially changed, encoding-varied, and renamed source files.
-  - [ ] **Sub-task 143.1.3.2:** Inject duplicates, near-duplicates, transfer ambiguity, pending changes, reversed transactions, missing balances, malformed files, crash, and disk failure.
-  - [ ] **Sub-task 143.1.3.3:** Recompute all reconciliations from immutable source records and compare byte-identical outputs.
+- [x] **Task 143.1.1 - Implement immutable import profiles**
+  - [x] **Sub-task 143.1.1.1:** Define source hash, format, profile, encoding, account, statement period, column or field mapping, locale, sign, currency, time zone, and parser-version records.
+  - [x] **Sub-task 143.1.1.2:** Implement bounded CSV profile detection and explicit confirmation for ambiguous date, decimal, sign, currency, header, and account mappings.
+  - [x] **Sub-task 143.1.1.3:** Implement OFX and QFX parsing with unsupported-version, extension, malformed-record, entity, encoding, size, and cancellation defenses.
+- [x] **Task 143.1.2 - Implement matching and reconciliation**
+  - [x] **Sub-task 143.1.2.1:** Add deterministic duplicate, pending-to-posted, transfer, split, correction, and supersession candidate rules with explainable evidence.
+  - [x] **Sub-task 143.1.2.2:** Implement statement reconciliation using opening balance, closing balance, included records, pending exclusions, adjustments, tolerance, conflict, and reviewer disposition.
+  - [x] **Sub-task 143.1.2.3:** Preserve unresolved conflicts without guessing or silently changing imported records.
+- [x] **Task 143.1.3 - Verify repeatability and failure safety**
+  - [x] **Sub-task 143.1.3.1:** Reimport identical, reordered, overlapping, partially changed, encoding-varied, and renamed source files.
+  - [x] **Sub-task 143.1.3.2:** Inject duplicates, near-duplicates, transfer ambiguity, pending changes, reversed transactions, missing balances, malformed files, crash, and disk failure.
+  - [x] **Sub-task 143.1.3.3:** Recompute all reconciliations from immutable source records and compare byte-identical outputs.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 143.1.AC1:** Given an identical source file and profile, when imported repeatedly, then canonical records and reconciliation output do not duplicate or drift.
-- [ ] **Story AC 143.1.AC2:** Given ambiguous format, account, date, sign, currency, match, transfer, or reconciliation evidence, when import runs, then the ambiguity remains visible and no unsupported guess is committed.
-- [ ] **Story AC 143.1.AC3:** Given crash or failure at any import stage, when recovery runs, then source records remain immutable and partial derived state is absent or fully attributable.
+- [x] **Story AC 143.1.AC1:** Given an identical source file and profile, when imported repeatedly, then canonical records and reconciliation output do not duplicate or drift.
+- [x] **Story AC 143.1.AC2:** Given ambiguous format, account, date, sign, currency, match, transfer, or reconciliation evidence, when import runs, then the ambiguity remains visible and no unsupported guess is committed.
+- [x] **Story AC 143.1.AC3:** Given crash or failure at any import stage, when recovery runs, then source records remain immutable and partial derived state is absent or fully attributable.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 143.AC1:** `AT-FIMPORT-001` passes across CSV, OFX, QFX, overlap, duplicate, pending, transfer, split, correction, and statement fixtures.
-- [ ] **Sprint AC 143.AC2:** Repeated and reordered imports produce zero duplicate record and byte-stable reconciliations.
-- [ ] **Sprint AC 143.AC3:** Ambiguous and malformed inputs fail visibly without source or canonical-state corruption.
-- [ ] **Sprint AC 143.AC4:** `RV-33` includes current import, reconciliation, crash, and recovery evidence.
+- [x] **Sprint AC 143.AC1:** `AT-FIMPORT-001` passes across CSV, OFX, QFX, overlap, duplicate, pending, transfer, split, correction, and statement fixtures.
+- [x] **Sprint AC 143.AC2:** Repeated and reordered imports produce zero duplicate record and byte-stable reconciliations.
+- [x] **Sprint AC 143.AC3:** Ambiguous and malformed inputs fail visibly without source or canonical-state corruption.
+- [x] **Sprint AC 143.AC4:** `RV-33` includes current import, reconciliation, crash, and recovery evidence.
 
 **Gate decision:** Sprint 143 is PASS only when Story 143.1, all criteria, `AM-FIMPORT-001`, `AT-FIMPORT-001`, applicable security requirements, `RV-33`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 143 source and contract rows pass locally with 8,400 immutable
+import and reconciliation cases and zero duplicates, guesses, source mutations, partial states,
+or reconciliation drift. Native macOS and Windows reproduction and upstream Sprint closure remain
+`BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 144 - Actual Budget Reference Adapter
 
