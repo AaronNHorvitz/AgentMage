@@ -3073,3 +3073,36 @@ checkpoint: 1,750.
 
 Exact next action: Sprint 146 budgets, cash flow, goals, and scenarios. Cumulative closures: 1,756;
 next checkpoint: 1,775.
+
+## Batch 149 — Sprint 146 budgets, cash flow, goals, and scenarios
+
+### Completed
+
+- Closed 20 local Sprint 146 rows: eight budget-rule kinds with identity, priority, period,
+  source, version, conflict, override, and user disposition; six planning scenario kinds; exact
+  fixed-point computation; explicit assumptions, missing data, confidence, sensitivity,
+  limitations, calculation version, and actual-versus-scenario state; and zero execution authority.
+  Corpus cases: 4,320; inexact, order-drift, hidden-limitation, guaranteed-claim, and execution
+  outcomes: 0 each. Batch closures: 20. Cumulative closures: 1,776. Promotions: 0.
+- Commits: `d5b1f914` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `205bec49` (Sprint 146 report), and `411faae8` (13 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.20. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed Clippy with warnings denied, 4 focused Rust tests, 8 focused Python tests, the 4,320-case
+  AT-BUD-001 corpus, Sprint evidence, dependency, traceability, supply-chain, Story 1.2, and Story
+  3.1 configuration chains. Supply-chain builds: 1; evidence regeneration passes: 1. Full gate:
+  700.74 seconds, stopping only at retained Story 6.1 Podman after every preceding gate passed.
+  Self-recovery: 0.
+- Sprint 146 remains `UPSTREAM-SPRINTS-142-145-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=macOS arm64 and Windows 11 x86_64 native hosts,
+  artifact=untouched native fixed-point budget, forecast, goal, debt, net-worth, scenario,
+  uncertainty, and reviewer evidence, action=provision exact hosts and run AT-BUD-001 and RV-33
+  native campaigns, credential=none, payment=host acquisition or access costs if applicable)`;
+  `substitution_set=empty`. Full-chain blocker remains `blocked: host change required — run npm
+  run -s docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 147 bills, subscriptions, and recurring streams. Cumulative closures:
+1,776; next checkpoint: 1,800.
