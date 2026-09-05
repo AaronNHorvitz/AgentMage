@@ -176,6 +176,19 @@ Controls `G-DOD-01` through `G-DOD-13` apply to every story. Decision 0008 adds 
 - [ ] **G-DOD-22:** Every Verified Chat, native Chat, capability, and multi-agent change proves client reconstruction, declared capability limits, manifest authority denial, bounded resources, cancellation, recovery, removal, accessibility, and no private production API.
 - [ ] **G-DOD-23:** Every model-gateway or remote-inference change binds separate model, runtime, codec, endpoint, operator, route, disclosure, credential-reference, qualification, quota, cost, cancellation, fallback, disablement, and strict-local-restoration evidence.
 
+**Current status:** `G-DOD-01` through `G-DOD-23` remain
+`UPSTREAM-SPRINTS-0-168-BLOCKED` and
+`BLOCKED_EXTERNAL(platform=all native macOS, Fedora, Ubuntu, Windows, provider, model/artifact,
+accessibility, signing, hosted, credential, payment, physical-hardware, clean-device, fuzzing, and
+independent-review/approval environments named by Sprints 0-168, artifact=all untouched platform,
+runtime, provider, model, security, accessibility, removal, release, and review evidence named by
+the owning sprint blockers, action=satisfy every exact owning sprint blocker and rerun each
+applicable G-DOD control without substitution, credential=all credentials named by the owning
+sprint blockers, payment=all costs named by the owning sprint blockers if applicable)`;
+`substitution_set=empty`. The local full-chain remainder is `blocked: host change required — run
+npm run -s docs:check outside the restricted filesystem sandbox with the current user's
+/run/user/1000/libpod writable`; `substitution_set=empty`.
+
 ## Test and Evidence Contract
 
 Every numbered implementation sub-task inherits five issue-local cases: `UT-POS`, `UT-NEG`, `UT-BND`, `UT-ERR`, and `UT-SFX`. Each case records setup, fixture identity/hash, action, expected state/value, prohibited side effects, receipt/audit assertions, cleanup, and evidence path. Property tests record seeds and shrink results; fuzz tests record corpus, duration, tool version, coverage, crashes, and sanitizer results; model tests record model/runtime manifest and decoding profile.
