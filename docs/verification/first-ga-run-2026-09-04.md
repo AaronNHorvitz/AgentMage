@@ -3003,3 +3003,38 @@ next checkpoint: 1,700.
 
 Exact next action: Sprint 144 Actual Budget reference adapter. Cumulative closures: 1,716; next
 checkpoint: 1,725.
+
+## Batch 147 — Sprint 144 Actual Budget reference adapter
+
+### Completed
+
+- Closed 20 local Sprint 144 rows: exact API, server, client, schema, budget-file, sync,
+  encryption, authentication-reference, and compatibility versions; 12 native record kinds; 9
+  local non-money-movement operations; exact previews and postconditions; stale-sync and duplicate
+  rejection; backup/restore rehearsal; reconciliation; and zero-residue removal. Corpus cases:
+  4,680; wrong-file, duplicate, precision-loss, silent-rule, corrupt-recovery, network-broadening,
+  money-movement, and residual-authority outcomes: 0 each. Batch closures: 20. Cumulative closures:
+  1,736. Promotions: 0.
+- Commits: `cf007510` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `7006d113` (Sprint 144 report), and `9e700783` (13 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.20. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed Clippy with warnings denied, 4 focused Rust tests, 8 focused Python tests, the 4,680-case
+  AT-ACT-001 corpus, Sprint evidence, dependency, traceability, supply-chain, Story 1.2, and Story
+  3.1 configuration chains. Supply-chain builds: 1; evidence regeneration passes: 1. Full gate:
+  716.78 seconds, stopping only at retained Story 6.1 Podman after every preceding gate passed.
+  Self-recovery: 0.
+- Sprint 144 remains `UPSTREAM-SPRINTS-128-142-143-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=native supported Actual Budget server, client, and representative
+  budget files, artifact=untouched native API-version, budget-identity, sync, backup, recovery,
+  security, reviewer, and removal evidence, action=provision the exact supported Actual Budget
+  installation and representative budget files, then run AT-ACT-001 plus RV-23 through RV-26,
+  RV-33, and RV-35 native campaigns, credential=Actual Budget local server authentication
+  credential, payment=none)`; `substitution_set=empty`. Full-chain blocker remains `blocked: host
+  change required — run npm run -s docs:check outside the restricted filesystem sandbox with the
+  current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 145 read-only financial data adapters. Cumulative closures: 1,736; next
+checkpoint: 1,750.
