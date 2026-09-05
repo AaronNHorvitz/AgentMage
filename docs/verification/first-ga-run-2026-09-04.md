@@ -2592,3 +2592,34 @@ Exact next action: Sprint 131 unified activity inbox. Cumulative closures: 1,433
 
 Exact next action: Sprint 132 communications contract and Outlook adapter. Cumulative closures:
 1,453; next checkpoint: 1,475.
+
+## Batch 135 — Sprint 132 communications contract and Outlook adapter
+
+### Completed
+
+- Closed 20 local Sprint 132 rows: 14 object and 14 operation families, exact tenant/account/
+  mailbox/folder identities, least-scope credential references, exact recipient/content/attachment
+  effect binding, one-use idempotency, uncertain-result reconciliation, removal cleanup, nine
+  provider profiles, mutation and retry campaigns. Corpus cases: 3,600; mutation cases: 3,600;
+  retry/failure cases: 3,150; unauthorized effects, duplicate delivery, false completion, and
+  removal-residual authority: 0 each. Batch closures: 20. Cumulative closures: 1,473. Promotions: 0.
+- Commits: `fedf1d7b` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `797508de` (Sprint 132 report), and `21c13b4a` (13 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.20. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 3 focused Rust tests, 7 focused Python tests, the 3,600-case Outlook corpus, Sprint
+  evidence, dependency, traceability, supply-chain, Story 1.2, and Story 3.1 configuration chains.
+  Supply-chain builds: 1; evidence regeneration passes: 1. Full gate: 695.39 seconds, stopping
+  only at retained Story 6.1 Podman after every preceding gate passed. Self-recovery: 0.
+- Sprint 132 remains `UPSTREAM-SPRINT-131-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=Microsoft Graph Outlook/Exchange test tenants and mailboxes,
+  artifact=untouched native provider conformance, security, accessibility, and removal evidence,
+  action=provision exact tenants/accounts/mailboxes/credentials and run AT-COM-001, AT-M365-001,
+  RV-23 through RV-26 and RV-31 native campaigns, credential=Microsoft Graph delegated and
+  application credentials, payment=Microsoft 365 tenant or provider costs if applicable)`;
+  `substitution_set=empty`. Full-chain blocker remains the exact recorded Podman host tuple.
+
+Exact next action: Sprint 133 Microsoft Teams adapter. Cumulative closures: 1,473; next checkpoint:
+1,475.
