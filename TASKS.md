@@ -13561,39 +13561,44 @@ attempt. Native macOS and Windows reproduction and upstream Sprint closure remai
 
 **Dependencies:** Sprints 131, 138, 143, and 146.
 
-#### [ ] Story 147.1 - Cited Recurring-Obligation Tracking
+#### [x] Story 147.1 - Cited Recurring-Obligation Tracking
 
 **User-facing value:** As a user, I can see upcoming obligations, changed prices, missing expected transactions, and possible subscriptions with the exact records and communications that support each detection.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 147.1.1 - Implement recurring-stream detection**
-  - [ ] **Sub-task 147.1.1.1:** Define recurrence, merchant or payee identity, expected amount range, cadence, due window, confidence, source evidence, status, and user-disposition records.
-  - [ ] **Sub-task 147.1.1.2:** Detect recurring expense, recurring income, fee, subscription, price change, missing expected record, duplicate charge candidate, and cancellation candidate deterministically where possible.
-  - [ ] **Sub-task 147.1.1.3:** Keep model-assisted matches labeled, non-authoritative, reversible, and separate from deterministic rules.
-- [ ] **Task 147.1.2 - Correlate cited communications and reminders**
-  - [ ] **Sub-task 147.1.2.1:** Link invoices, renewal notices, receipts, price-change messages, cancellation terms, and transaction records through evidence-backed graph edges.
-  - [ ] **Sub-task 147.1.2.2:** Add local due, renewal, price-change, and missing-record reminders with exact source, expiry, acknowledgment, and dismissal behavior.
-  - [ ] **Sub-task 147.1.2.3:** Permit separately approved communication drafts while prohibiting autonomous cancellation, payment, transfer, or account administration.
-- [ ] **Task 147.1.3 - Verify detection, uncertainty, and absence**
-  - [ ] **Sub-task 147.1.3.1:** Test irregular cadence, variable amounts, merchant renames, split transactions, refunds, annual renewals, free trials, skipped periods, duplicates, and stale data.
-  - [ ] **Sub-task 147.1.3.2:** Inject misleading emails, fake cancellation instructions, hidden fees, altered links, missing history, and identity collisions.
-  - [ ] **Sub-task 147.1.3.3:** Probe cancellation and payment operation families at every autonomy level and through every workflow route.
+- [x] **Task 147.1.1 - Implement recurring-stream detection**
+  - [x] **Sub-task 147.1.1.1:** Define recurrence, merchant or payee identity, expected amount range, cadence, due window, confidence, source evidence, status, and user-disposition records.
+  - [x] **Sub-task 147.1.1.2:** Detect recurring expense, recurring income, fee, subscription, price change, missing expected record, duplicate charge candidate, and cancellation candidate deterministically where possible.
+  - [x] **Sub-task 147.1.1.3:** Keep model-assisted matches labeled, non-authoritative, reversible, and separate from deterministic rules.
+- [x] **Task 147.1.2 - Correlate cited communications and reminders**
+  - [x] **Sub-task 147.1.2.1:** Link invoices, renewal notices, receipts, price-change messages, cancellation terms, and transaction records through evidence-backed graph edges.
+  - [x] **Sub-task 147.1.2.2:** Add local due, renewal, price-change, and missing-record reminders with exact source, expiry, acknowledgment, and dismissal behavior.
+  - [x] **Sub-task 147.1.2.3:** Permit separately approved communication drafts while prohibiting autonomous cancellation, payment, transfer, or account administration.
+- [x] **Task 147.1.3 - Verify detection, uncertainty, and absence**
+  - [x] **Sub-task 147.1.3.1:** Test irregular cadence, variable amounts, merchant renames, split transactions, refunds, annual renewals, free trials, skipped periods, duplicates, and stale data.
+  - [x] **Sub-task 147.1.3.2:** Inject misleading emails, fake cancellation instructions, hidden fees, altered links, missing history, and identity collisions.
+  - [x] **Sub-task 147.1.3.3:** Probe cancellation and payment operation families at every autonomy level and through every workflow route.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 147.1.AC1:** Given recurring transaction and communication evidence, when an obligation is detected, then cadence, amount range, due window, confidence, sources, and limitations are visible.
-- [ ] **Story AC 147.1.AC2:** Given ambiguous, stale, conflicting, or missing evidence, when detection runs, then the item remains uncertain and no definitive or completed-action claim is made.
-- [ ] **Story AC 147.1.AC3:** Given a cancellation or payment request, when evaluated, then AgentMage can at most prepare an explicitly approved communication draft and cannot perform the financial or account action.
+- [x] **Story AC 147.1.AC1:** Given recurring transaction and communication evidence, when an obligation is detected, then cadence, amount range, due window, confidence, sources, and limitations are visible.
+- [x] **Story AC 147.1.AC2:** Given ambiguous, stale, conflicting, or missing evidence, when detection runs, then the item remains uncertain and no definitive or completed-action claim is made.
+- [x] **Story AC 147.1.AC3:** Given a cancellation or payment request, when evaluated, then AgentMage can at most prepare an explicitly approved communication draft and cannot perform the financial or account action.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 147.AC1:** `AT-BIL-001` passes across recurring, variable, missing, duplicate, renewal, fee, refund, and cancellation-candidate fixtures.
-- [ ] **Sprint AC 147.AC2:** Every detection retains exact financial and communication citations plus deterministic or model-assisted status.
-- [ ] **Sprint AC 147.AC3:** Hostile-content and identity-confusion fixtures create zero authority or false completion.
-- [ ] **Sprint AC 147.AC4:** Cancellation, payment, transfer, and account-admin operations remain absent at every autonomy level.
+- [x] **Sprint AC 147.AC1:** `AT-BIL-001` passes across recurring, variable, missing, duplicate, renewal, fee, refund, and cancellation-candidate fixtures.
+- [x] **Sprint AC 147.AC2:** Every detection retains exact financial and communication citations plus deterministic or model-assisted status.
+- [x] **Sprint AC 147.AC3:** Hostile-content and identity-confusion fixtures create zero authority or false completion.
+- [x] **Sprint AC 147.AC4:** Cancellation, payment, transfer, and account-admin operations remain absent at every autonomy level.
 
 **Gate decision:** Sprint 147 is PASS only when Story 147.1, all criteria, `AM-BIL-001`, `AT-BIL-001`, applicable security requirements, `RV-31`, `RV-33`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 147 source and contract rows pass locally with 5,760 cited
+obligation cases and zero content-created authority, false completion, or financial effect.
+Native finance/communication correlation campaigns and upstream Sprint closure remain
+`BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 148 - Financial Documents and Matching
 

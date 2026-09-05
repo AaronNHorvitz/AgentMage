@@ -191,6 +191,8 @@ pub mod propagation;
 pub mod reasoning;
 /// Continuous content reclassification before successive trust boundaries.
 pub mod reclassification;
+/// Cited recurring-obligation detection, reminders, and non-executing drafts.
+pub mod recurring_obligation;
 /// Exact release manifests, separately granted changes, and safe compensation.
 pub mod release_lifecycle;
 /// Encrypted derivative repository-map cache lifecycle.
