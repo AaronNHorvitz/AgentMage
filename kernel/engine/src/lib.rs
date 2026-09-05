@@ -5,6 +5,8 @@
 /// Closed dependency degradation and explicit substitution policy.
 pub mod dependency_degradation;
 
+/// Exact local Actual Budget API admission, effects, recovery, and removal.
+pub mod actual_budget_adapter;
 /// Authority-reducing application of advisory classifier output.
 pub mod advisory_policy;
 pub mod agent_ceiling;

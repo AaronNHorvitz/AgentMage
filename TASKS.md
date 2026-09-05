@@ -13414,39 +13414,44 @@ or reconciliation drift. Native macOS and Windows reproduction and upstream Spri
 
 **Dependencies:** Sprints 128, 142, and 143.
 
-#### [ ] Story 144.1 - Local-First Actual Budget Integration
+#### [x] Story 144.1 - Local-First Actual Budget Integration
 
 **User-facing value:** As a user, I can connect an exact local Actual Budget file, review and propose changes, synchronize safely, and disconnect without corrupting the budget or leaving hidden authority.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 144.1.1 - Define and admit the Actual Budget profile**
-  - [ ] **Sub-task 144.1.1.1:** Pin supported API, server, client, schema, budget-file, sync, encryption, authentication-reference, and compatibility versions.
-  - [ ] **Sub-task 144.1.1.2:** Map accounts, payees, categories, transactions, splits, transfers, rules, schedules, budgets, notes, imports, and reconciliation without losing native identity.
-  - [ ] **Sub-task 144.1.1.3:** Detect unsupported versions and capabilities before registration.
-- [ ] **Task 144.1.2 - Implement reads, drafts, bounded writes, and recovery**
-  - [ ] **Sub-task 144.1.2.1:** Implement local reads, search, import, export, draft changes, exact previews, approved non-money-movement writes, and verified postconditions.
-  - [ ] **Sub-task 144.1.2.2:** Implement synchronization conflict detection, stale-state rejection, backup, restore rehearsal, cancellation, crash recovery, and duplicate prevention.
-  - [ ] **Sub-task 144.1.2.3:** Implement disconnect and removal for credentials, process, socket, cache, index, schedule, sync state, and retained data.
-- [ ] **Task 144.1.3 - Verify local integrity and no money movement**
-  - [ ] **Sub-task 144.1.3.1:** Exercise supported, degraded, future, corrupt, locked, concurrently edited, restored, and removed budget fixtures.
-  - [ ] **Sub-task 144.1.3.2:** Mutate budget identity, account, transaction, category, amount, currency, split, rule, schedule, sync state, and postcondition.
-  - [ ] **Sub-task 144.1.3.3:** Probe every payment, transfer initiation, external-account administration, credential recovery, and financial-provider action family for absence.
+- [x] **Task 144.1.1 - Define and admit the Actual Budget profile**
+  - [x] **Sub-task 144.1.1.1:** Pin supported API, server, client, schema, budget-file, sync, encryption, authentication-reference, and compatibility versions.
+  - [x] **Sub-task 144.1.1.2:** Map accounts, payees, categories, transactions, splits, transfers, rules, schedules, budgets, notes, imports, and reconciliation without losing native identity.
+  - [x] **Sub-task 144.1.1.3:** Detect unsupported versions and capabilities before registration.
+- [x] **Task 144.1.2 - Implement reads, drafts, bounded writes, and recovery**
+  - [x] **Sub-task 144.1.2.1:** Implement local reads, search, import, export, draft changes, exact previews, approved non-money-movement writes, and verified postconditions.
+  - [x] **Sub-task 144.1.2.2:** Implement synchronization conflict detection, stale-state rejection, backup, restore rehearsal, cancellation, crash recovery, and duplicate prevention.
+  - [x] **Sub-task 144.1.2.3:** Implement disconnect and removal for credentials, process, socket, cache, index, schedule, sync state, and retained data.
+- [x] **Task 144.1.3 - Verify local integrity and no money movement**
+  - [x] **Sub-task 144.1.3.1:** Exercise supported, degraded, future, corrupt, locked, concurrently edited, restored, and removed budget fixtures.
+  - [x] **Sub-task 144.1.3.2:** Mutate budget identity, account, transaction, category, amount, currency, split, rule, schedule, sync state, and postcondition.
+  - [x] **Sub-task 144.1.3.3:** Probe every payment, transfer initiation, external-account administration, credential recovery, and financial-provider action family for absence.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 144.1.AC1:** Given a supported Actual Budget profile, when records are read or changed, then budget identity, native record identity, precision, lineage, preview, and postcondition remain exact.
-- [ ] **Story AC 144.1.AC2:** Given concurrent edits, stale sync, corruption, crash, or restore, when recovery runs, then no accepted change is duplicated and no independent change is overwritten silently.
-- [ ] **Story AC 144.1.AC3:** Given any money-movement request, when capability discovery or execution runs, then no corresponding tool or provider operation exists.
+- [x] **Story AC 144.1.AC1:** Given a supported Actual Budget profile, when records are read or changed, then budget identity, native record identity, precision, lineage, preview, and postcondition remain exact.
+- [x] **Story AC 144.1.AC2:** Given concurrent edits, stale sync, corruption, crash, or restore, when recovery runs, then no accepted change is duplicated and no independent change is overwritten silently.
+- [x] **Story AC 144.1.AC3:** Given any money-movement request, when capability discovery or execution runs, then no corresponding tool or provider operation exists.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 144.AC1:** `AT-ACT-001` passes for supported Actual Budget versions and published capabilities.
-- [ ] **Sprint AC 144.AC2:** Precision, identity, conflict, sync, backup, recovery, and removal fixtures produce deterministic results.
-- [ ] **Sprint AC 144.AC3:** Money-movement and external financial-administration operations are absent across every autonomy level.
-- [ ] **Sprint AC 144.AC4:** Removal leaves zero credential, process, socket, cache, schedule, sync, or write authority.
+- [x] **Sprint AC 144.AC1:** `AT-ACT-001` passes for supported Actual Budget versions and published capabilities.
+- [x] **Sprint AC 144.AC2:** Precision, identity, conflict, sync, backup, recovery, and removal fixtures produce deterministic results.
+- [x] **Sprint AC 144.AC3:** Money-movement and external financial-administration operations are absent across every autonomy level.
+- [x] **Sprint AC 144.AC4:** Removal leaves zero credential, process, socket, cache, schedule, sync, or write authority.
 
 **Gate decision:** Sprint 144 is PASS only when Story 144.1, all criteria, `AM-ACT-001`, `AT-ACT-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 144 source and contract rows pass locally with 4,680 deterministic
+Actual Budget cases and zero wrong-file, duplicate, precision-loss, silent-rule, corrupt-recovery,
+network-broadening, money-movement, or removal-residual effects. Native Actual Budget campaigns
+and upstream Sprint closure remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 145 - Read-Only Financial Data Adapters
 
