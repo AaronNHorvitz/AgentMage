@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_145_local_evidence",
+  "source_revision": "042d06e78368538522cf051a88575e95b099cd75",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "53bac3789b26ababaf492895b36c741a038e6ad065b064a5e127d310d87b0a62",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "74262e431efb76fa46a2abaa9976b720f46339c6d7633be0c64b7e08a92d7119",
+    "kernel/engine/src/financial_domain.rs": "d95b2531fc5da2c91719730725db922ef96716760f08514f6a1a8630bacc3584",
+    "kernel/engine/src/financial_data_adapter.rs": "b4b98715d264e1d2f2d6e61473af5e88a15b0b6dab078daf295192d8e17c060e",
+    "supply-chain/dependency-provenance.json": "d10ddc8254f4f349bf725f247ad34ced3228d5e96e25a24e55a2605df1ec6232",
+    "supply-chain/sbom.cdx.json": "6dbd50b83f6467c38cf1f11ab4316be40c7418976979bf7c09116e28b4b4290a",
+    "supply-chain/dependency-hashes.sha256": "06c57bd4ea1c5663094728dd7bf350ce5172a41f75cdfb9c65686b802289c097",
+    "artifacts/sprints/sprint-145/read-only-corpus.json": "5e74ba681fae8aae2a25102aece1475a1afc7199749906a9d4f0064f1acd228c",
+    "scripts/financial_data_adapter_contract.py": "c74b70d7349be6ac603aabcdf5da2eb124469afb3beddfa026464c58d2f63725",
+    "tests/test_financial_data_adapter_contract.py": "c374f8015761c9bf301097e61dab72806e78988679368e22b4b7dc55436ab997",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_145_evidence.py": "62d035c2726daf83592ea8b3f572ad7eb05aa21c86588d727c887781dd677b13",
+    "tests/test_sprint_145_evidence.py": "2795423cee4b5750746466bd477d05c4b15e5f8d627bb4cd389512cc536a6816"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "finance-read-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "financial_data_adapter::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "76637ed2913e97cbb646ddc3e73d6a9111bad9ee66b680c53894e10ed3892dcf",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "finance-read-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_financial_data_adapter_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d597ca70f0d21f8ab2b40cdc2e79c1ecb945767becca8a970930fe43c178e406",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_145_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-BNK-001",
+    "AT-BNK-001",
+    "SR-FIN-005",
+    "SR-FIN-006",
+    "RV-23",
+    "RV-24",
+    "RV-26",
+    "RV-33",
+    "RV-35"
+  ],
+  "implemented_contracts": {
+    "provider_count": 1,
+    "data_class_count": 6,
+    "mutation_family_count": 12,
+    "failure_family_count": 10,
+    "fixture_case_count": 4320,
+    "prohibited_family_count": 13,
+    "write_count": 0,
+    "disclosure_count": 0,
+    "credential_exposure_count": 0,
+    "removal_authority_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "read_only_profile_complete": true,
+    "consent_and_scope_complete": true,
+    "normalization_complete": true,
+    "sync_recovery_complete": true,
+    "prohibited_families_absent": true,
+    "revocation_and_removal_complete": true,
+    "native_provider_campaign_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-128-130-142-143-BLOCKED",
+      "owner": "145"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "Plaid sandbox provider, institution, items, and representative financial accounts",
+      "artifact": "untouched native provider-version, consent, account-scope, cursor, privacy, security, reviewer, revocation, deletion, and removal evidence",
+      "action": "provision the exact Plaid sandbox account, institution/items, accounts, and credentials, then run AT-BNK-001 plus RV-23, RV-24, RV-26, RV-33, and RV-35 native campaigns",
+      "credential": "Plaid sandbox client_id and secret",
+      "payment": "Plaid account costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_145_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "native_financial_provider_support_promoted": false,
+    "support_promotion_count": 0
+  }
+}
