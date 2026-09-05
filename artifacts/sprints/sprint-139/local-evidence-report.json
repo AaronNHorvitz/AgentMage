@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_139_local_evidence",
+  "source_revision": "b8fd7494699e6f57f4cd0df28c924dae37a2ec6e",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "7754df33ccdb60f735a994472306d83fc8307ad3d4db1c0b472f195572023f1e",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "66c73f8360132239158314d7b81a95a792336ff0ffc84b8991478d49734a3801",
+    "kernel/engine/src/personal_information_management.rs": "3eed43e4d9ddff148eeb8ff91c76bfb0adb32a063025d5b1740d974d37546fe8",
+    "supply-chain/dependency-provenance.json": "43e887de4604b83b06e26d5405696408085bbc3d1a18e7bad23666561f9ae2d2",
+    "supply-chain/sbom.cdx.json": "d14656987388ddd4663d0ee0387242f50117519db787549ae5df811514c38df0",
+    "supply-chain/dependency-hashes.sha256": "1a4920983928e7c99fca1138ac0078a4be8e647fea848c2934908d73340b22fa",
+    "artifacts/sprints/sprint-139/pim-corpus.json": "80b94315592a0ec2cfeae8456f4c4414fe10dc25ae9db1ba87a87e7aa606df88",
+    "scripts/pim_contract.py": "41120536330d101b9367fdfba1ad99e2a2b5d06dd8ef9a5250b290d9289d9a3e",
+    "tests/test_pim_contract.py": "3fa9035844381e1cf4bb516f7ab3bc61d0224bee77fdf4ba1522809fa95e46aa",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_139_evidence.py": "30a4b0603d3069a50cc90ea10a99218d2153a86403e73aa1c41df90de70b18a6",
+    "tests/test_sprint_139_evidence.py": "48357724677e11e75f6c1ac67dfefe63b67f816fe33704efc997d15ef01d468d"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "pim-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "personal_information_management::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "aeeb435e90075e15760f58ff34814493b7c0664ce36b6f009f5658b7632a547f",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "pim-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_pim_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "88b56a305437d17a8a53a5505169a8746c28031669b9c600c9a352580bb29cde",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_139_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-PIM-001",
+    "AT-PIM-001",
+    "AM-PCAL-001",
+    "AT-PCAL-001",
+    "SR-PRD-001",
+    "SR-PRD-002",
+    "SR-PRD-003",
+    "SR-PRD-005",
+    "SR-PRD-006",
+    "SR-PRD-007",
+    "SR-PRD-012",
+    "RV-23",
+    "RV-24",
+    "RV-25",
+    "RV-26",
+    "RV-31",
+    "RV-32"
+  ],
+  "implemented_contracts": {
+    "provider_profile_count": 9,
+    "pim_case_count": 9000,
+    "proton_case_count": 8400,
+    "unauthorized_effect_count": 0,
+    "credential_exposure_count": 0,
+    "duplicate_effect_count": 0,
+    "false_completion_count": 0,
+    "removal_authority_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "pim_types_and_operations_complete": true,
+    "provider_semantics_complete": true,
+    "time_conflict_recovery_complete": true,
+    "proton_confirmed_ui_complete": true,
+    "credential_isolation_complete": true,
+    "native_provider_campaign_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-83-84-128-130-135-138-BLOCKED",
+      "owner": "139"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "Microsoft and Google calendar/contact/task accounts, CalDAV/CardDAV servers, and authenticated Proton Calendar UI",
+      "artifact": "untouched native PIM capability, effect, time, recurrence, invitation, confirmed-UI, security, reviewer, and removal evidence",
+      "action": "provision every exact provider/server/account/credential and supported Proton UI surface, then run AT-PIM-001, AT-PCAL-001, RV-23 through RV-26, RV-31, and RV-32 native campaigns",
+      "credential": "Microsoft Graph, Google OAuth, CalDAV/CardDAV, and user-established Proton session credentials",
+      "payment": "provider or Proton subscription costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_139_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "native_pim_support_promoted": false,
+    "support_promotion_count": 0
+  }
+}
