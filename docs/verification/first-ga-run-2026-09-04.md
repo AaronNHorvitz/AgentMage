@@ -2893,3 +2893,39 @@ Exact next action: Sprint 140 documents, repositories, and attachments. Cumulati
 
 Exact next action: Sprint 141 deterministic productivity workflows and epic gate. Cumulative
 closures: 1,653; next checkpoint: 1,675.
+
+## Batch 144 — Sprint 141 deterministic productivity workflows
+
+### Completed
+
+- Closed 23 local Sprint 141 rows: immutable workflow graphs, exact preconditions, typed state
+  transitions, least-authority policy intersections, explicit approvals, replay-safe receipts,
+  bounded retries, reconciliation, cancellation, deterministic failure states, untrusted-content
+  isolation, and removal. Corpus cases: 5,600 across 7 workflows, 16 attack classes, 10 failure
+  classes, and 5 states; unauthorized effects, duplicate effects, inferred consent, hidden
+  destinations, content-created authority, and residual authority: 0 each. Batch closures: 23.
+  Cumulative closures: 1,676. Promotions: 0.
+- Commits: `a0438ba7` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `8a98ebef` (Sprint 141 report), and `c1d44700` (13 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.17. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 4 focused Rust tests, 7 focused Python tests, the 5,600-case workflow corpus, Sprint
+  evidence, dependency, traceability, supply-chain, Story 1.2, and Story 3.1 configuration chains.
+  Supply-chain builds: 1; evidence regeneration passes: 1. Full gate: 701.96 seconds, stopping
+  only at retained Story 6.1 Podman after every preceding gate passed. Self-recovery: 0.
+- Sprint 141 remains `UPSTREAM-SPRINTS-127-140-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=all native productivity provider accounts, authenticated Proton UI,
+  accessibility surfaces, and independent epic-review environment, artifact=untouched integrated
+  identity, synchronization, autonomy, injection, uncertainty, accessibility, reviewer,
+  strict-local, and removal evidence, action=satisfy every Sprint 127-140 external tuple, then run
+  AT-WFA-001, AT-PCAL-001, all applicable provider campaigns, RV-31, RV-32, and RV-35,
+  credential=all provider-specific credentials and user-established Proton session recorded by
+  Sprints 127-140, payment=provider subscription costs if applicable)`;
+  `substitution_set=empty`. Full-chain blocker remains `blocked: host change required — run npm
+  run -s docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 142 finance provider contracts. Cumulative closures: 1,676; next
+checkpoint: 1,700.
