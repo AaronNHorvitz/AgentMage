@@ -159,3 +159,39 @@ Exact next action: Sprint 151 financial privacy and no-money-movement gate. Cumu
 
 Exact next action: Sprint 152 cloud observer common read contract. Cumulative closures: 1,877;
 next checkpoint: 1,900.
+
+## Batch 155 — Sprint 152 common read-only cloud observer gate
+
+### Completed
+
+- Closed 20 local Sprint 152 rows: explicit provider scope and hierarchy; bounded inventory,
+  query, pagination, quota, retry, token, proxy, hostile-content, prohibited-family, revocation,
+  and removal behavior; ten read-only resource families; 12 lifecycle states; and fail-closed
+  denial of every mutating or authority-bearing shape. Corpus cases: 10,800; scope escapes,
+  provider effects, authority grants, and removal residue: 0 each. Batch closures: 20. Cumulative
+  closures: 1,897. Promotions: 0.
+- Commits: `38c045d5` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `82912db6` (Sprint 152 report), and `28ac71ab` (14 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.20. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across 14 regenerated paths and all pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed Clippy with warnings denied, 4 focused Rust tests, 6 focused Python tests, the
+  10,800-case AT-CLO-001 corpus, Sprint evidence, dependency, traceability, supply-chain, Story
+  1.2, and Story 3.1/Sprint 3 configuration chains. Supply-chain builds: 1; evidence regeneration
+  passes: 1. Full gate: 702.846 seconds, stopping only at retained Story 6.1 Podman after every
+  preceding gate passed. Self-recovery: 0.
+- Sprint 152 remains `UPSTREAM-SPRINTS-127-130-141-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=native reference cloud provider account and independent read-only
+  review environment, artifact=untouched native scope, hierarchy, query, pagination, quota,
+  token, proxy, hostile-content, prohibited-family, reviewer, revocation, and removal evidence,
+  action=provision an exact native reference cloud account and credentials, then run AT-CLO-001,
+  RV-34, and RV-35 native campaigns, credential=reference cloud provider read-only credential,
+  payment=cloud account and resource costs if applicable)`; `substitution_set=empty`. Full-chain
+  blocker remains `blocked: host change required — run npm run -s docs:check outside the
+  restricted filesystem sandbox with the current user's /run/user/1000/libpod writable`;
+  `substitution_set=empty`.
+
+Exact next action: Sprint 153 AWS, Azure, and GCP provider observer gates. Cumulative closures:
+1,897; next checkpoint: 1,900.
