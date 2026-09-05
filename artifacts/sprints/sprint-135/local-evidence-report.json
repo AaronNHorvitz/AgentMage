@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_135_local_evidence",
+  "source_revision": "ac945b49f665804674c3af0db74a5690f1aacf1a",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "7243ca3ea41943aa0ba5553e3601e9a14dce99db8b5f4408f9e4be3f28e21894",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "fe8bd55d68b777a2d556e23fcf008023a973b27b0bf51469788e9cd7a4f61cc3",
+    "kernel/engine/src/communications_mail.rs": "bec55e88a71f3c084bc22ca0b523371026210466e368b812a3bb6ac706b53159",
+    "supply-chain/dependency-provenance.json": "a83eb4296030dcad784b39e4f50823984cd7e7508cfb20eb36c98f917cd54bc9",
+    "supply-chain/sbom.cdx.json": "8edca696dab3e4e611a354cba3ab439573669a9868dd0578a235c8ca19774cf0",
+    "supply-chain/dependency-hashes.sha256": "99658992acd18b5bdc2a57e638e3d1e6c5557d82f020ac07727aa492f710e614",
+    "artifacts/sprints/sprint-135/mail-protocol-corpus.json": "cf11e62a0f582d9edb021e12dbdb308c3b1669947c8b3511e13ee86346804eb2",
+    "scripts/communications_mail_contract.py": "666a594fcc16ffbd45591c3d6cccf7e0d91428cdfbeef45ae29630e60de8c9d2",
+    "tests/test_communications_mail_contract.py": "146734314af8b37d5029e73a4aa10b958a7f2752ae325117090df7f4b81861da",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_135_evidence.py": "c8c4f317b6d46ed47f51162607cbc322afe9fce35a68ead7c00ca683ea081cb6",
+    "tests/test_sprint_135_evidence.py": "67acf069ac61ee47428bc921a439b44baefdd8c78ef795e2dbdb710ef477ee74"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "mail-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "communications_mail::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "430a822999b0ab07854d336d1324ba8116f14709195780252955e778e55d2d2c",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "mail-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_communications_mail_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f162ac6d170f5295dee020e348bd8c6f1c333f7c4f78e23f15f6a84c1e8e703b",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_135_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-MAIL-001",
+    "AT-MAIL-001",
+    "SR-PRD-005",
+    "SR-PRD-006",
+    "SR-PRD-007",
+    "RV-23",
+    "RV-24",
+    "RV-25",
+    "RV-26",
+    "RV-31"
+  ],
+  "implemented_contracts": {
+    "profile_count": 7,
+    "attack_family_count": 15,
+    "fault_family_count": 12,
+    "fixture_case_count": 5040,
+    "unauthorized_credential_disclosure_count": 0,
+    "unauthorized_effect_count": 0,
+    "duplicate_delivery_count": 0,
+    "false_completion_count": 0,
+    "removal_authority_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "protocol_identity_complete": true,
+    "transport_downgrade_refusal_complete": true,
+    "negotiated_registration_complete": true,
+    "uncertain_reconciliation_complete": true,
+    "removal_complete": true,
+    "native_protocol_campaign_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-132-BLOCKED",
+      "owner": "135"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "IMAP, SMTP, JMAP servers and Proton Mail Bridge test accounts",
+      "artifact": "untouched native protocol negotiation, transport, delivery, security, reviewer, and removal evidence",
+      "action": "provision exact servers/accounts/credentials and Proton Bridge host, then run AT-MAIL-001 plus RV-23 through RV-26 and RV-31 native campaigns",
+      "credential": "server-specific IMAP, SMTP, JMAP, and Proton Bridge account credentials",
+      "payment": "mail provider or Proton subscription costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_135_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_132_closed": false,
+    "native_mail_support_promoted": false,
+    "support_promotion_count": 0
+  }
+}
