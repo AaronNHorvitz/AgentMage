@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_154_local_evidence",
+  "source_revision": "c278e3631912af14b8aaa943b35effd2704ed63d",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "ab1f0a65bbabb9e2e26ccf4007fabc0cecc4a13e884d92f9ca7ba91e8df03105",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "0201d3a62fc603495c1103c6cc3da1460e2162f3d891e98a6b938f5a58e38810",
+    "kernel/engine/src/cloud_delivery_correlation.rs": "93b1ac7f348319d574ad55711b1554e1ad449f3c7bf3c3f81b9b1588f40cf5bb",
+    "supply-chain/dependency-provenance.json": "c4cc58b5141c9ea45a2597a1118f9157c0852a978b8d0cc883f20fb9d27e1a0c",
+    "supply-chain/sbom.cdx.json": "c42bf9d0944e72f4d2beb9867e7fe25756ac0b864eaba86e2f5ad0994a22e07c",
+    "supply-chain/dependency-hashes.sha256": "191f059e14d4a346f4582c72c80eef7b69211c840f092d48143ce20a279d8ace",
+    "artifacts/sprints/sprint-154/cloud-delivery-correlation-corpus.json": "720f9d2d5e41d018f4b77d31b117cb5ba27120f8a2d640b4ccaf589c8d078d7b",
+    "scripts/cloud_delivery_correlation_contract.py": "7351f5e685d6b2c96d4d189078fbdd292dd1a2b98cf088d48284f385d6224d70",
+    "tests/test_cloud_delivery_correlation_contract.py": "20161db3233d6af28a0d0cc3d62763afbfcdce57d45fbcaba0666e2e5795dc39",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_154_evidence.py": "1047317303703d38dab4bd2f76e51b341684587c233ad52b6f25a49ce4a34613",
+    "tests/test_sprint_154_evidence.py": "743c62c0fe0f4952db31fa741afd9fcbe912b79d82fc2884cd3c8d17cf460738"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "correlation-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "cloud_delivery_correlation::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "4eec55b620f3234ef4336f42055587afe25e1429494b87747ba22e496ea7573d",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "correlation-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_cloud_delivery_correlation_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "4d781620bc10541738c207349d827f2b375d4f72493bce92c5f0ea15cb151f4e",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_154_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-CCST-001",
+    "AT-CCST-001",
+    "SR-CLD-001",
+    "SR-CLD-002",
+    "SR-CLD-003",
+    "RV-14",
+    "RV-27",
+    "RV-34"
+  ],
+  "implemented_contracts": {
+    "provider_count": 3,
+    "view_count": 6,
+    "attack_count": 14,
+    "association_class_count": 6,
+    "fixture_count": 4,
+    "case_count": 6048,
+    "causal_claim_count": 0,
+    "inherited_authority_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "native_identity_complete": true,
+    "source_and_time_complete": true,
+    "cost_context_complete": true,
+    "association_labeling_complete": true,
+    "causal_restraint_complete": true,
+    "authority_absence_complete": true,
+    "native_cross_system_campaign_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-129-131-152-153-BLOCKED",
+      "owner": "154"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "native cloud, delivery, productivity, incident, telemetry, and billing providers plus independent review environment",
+      "artifact": "untouched native identity, source, time, cost, allocation, conflicting-evidence, causal-restraint, recomputation, reviewer, and authority-absence evidence",
+      "action": "satisfy Sprint 129, 131, and 152-153 external tuples, then run AT-CCST-001, RV-14, RV-27, and RV-34 native cross-system campaigns",
+      "credential": "all cloud, delivery, productivity, incident, telemetry, and billing credentials named by upstream sprints",
+      "payment": "provider, telemetry, billing, and independent evaluator costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_154_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "cloud_correlation_support_promoted": false,
+    "support_promotion_count": 0
+  }
+}
