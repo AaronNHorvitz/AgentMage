@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_159_local_evidence",
+  "source_revision": "92fd7dea790a90ad4ef8a52de70f0858800b2056",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "TASKS.md": "1a6535eee10261d4efa79c18a91e0ff0bbad2e41ee314d22c605677508eba946",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "TRUSTED-OPERATIONS.md": "cd318b816eab4106493a3d91e4a4f79105ac96edc901ee4a875bf482396e6b93",
+    "CODEBASE-AUDIT.md": "4a01791dfcd6e885fdd4337607b7eee21d77a774c6f1b0aa8c258f9cd34ee2e7",
+    "kernel/engine/src/lib.rs": "ed88b0901813444fede862797f7810d90078e4f822a0e0261694509c5eade92b",
+    "kernel/engine/src/tiered_command_audit.rs": "05fec6300e2f6562e46150c1ddeea50642a23392361ada54add0f4d87a709d7a",
+    "supply-chain/dependency-provenance.json": "318904adc264f15b4e9dc1bee0e1eb9c94c372948e548d6fd03cd047897bfa8a",
+    "supply-chain/sbom.cdx.json": "0f3cefd7fe565cd602f28552e180d75f1587b776cda87fbca4eb47c322c8d54a",
+    "supply-chain/dependency-hashes.sha256": "4b160119d7edbf6b84a317d9537c80bbb0dade38583dbf96856dc59a390b080b",
+    "artifacts/sprints/sprint-159/tiered-command-audit-corpus.json": "c0b0a8df30f6c6d43e441a78d0494acd981a481e71d3a99736cc9544516d0cc3",
+    "scripts/tiered_command_audit_contract.py": "a2b41cc15efb0c0000a185e4e6d5635903f5c845757afdc6f87c1fa8b9b6702e",
+    "tests/test_tiered_command_audit_contract.py": "b57d7879d723977b56c403615906e6742ae27738a52870935d6be6870ba3b71d",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_159_evidence.py": "bb3df4fc38c2374dbec3e382c26987c07f54c50818505757d8cd0bf0de355aba",
+    "tests/test_sprint_159_evidence.py": "2be81e2a1e8e79a3acd93589435930723835c157e7c10ff78f58b38eb5876883"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "tiered-command-audit-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "tiered_command_audit::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "0cf91ddb877ce1a10b0e7d95b3204c594a86aa1191956fc1cc215a4abc82aa27",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "tiered-command-audit-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_tiered_command_audit_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "3a172c55de7c4fc985c2eec12502fa584b176585174d269e7bf8844dda63959f",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_159_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-AUT-002",
+    "AM-CLI-002",
+    "AM-CEN-001",
+    "AM-ROA-001",
+    "AT-AUT-002",
+    "AT-CLI-002",
+    "AT-CEN-001",
+    "AT-ROA-001",
+    "SR-CMD-001",
+    "SR-CMD-004",
+    "SR-AUD-001",
+    "SR-AUD-004",
+    "RV-36",
+    "RV-44",
+    "RV-45"
+  ],
+  "implemented_contracts": {
+    "command_level_count": 5,
+    "command_semantic_count": 14,
+    "authority_attack_count": 10,
+    "owner_terminal_trigger_count": 9,
+    "repository_state_count": 22,
+    "audit_hazard_count": 12,
+    "authority_case_count": 6300,
+    "audit_case_count": 792,
+    "escape_count": 0,
+    "hidden_launch_count": 0,
+    "surviving_process_count": 0,
+    "canonical_mutation_count": 0,
+    "hosted_mutation_count": 0,
+    "raw_secret_count": 0,
+    "content_authority_count": 0,
+    "silent_omission_count": 0,
+    "parser_escape_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "tiered_authority_complete": true,
+    "command_plan_complete": true,
+    "owner_activation_complete": true,
+    "owner_revocation_complete": true,
+    "census_contract_complete": true,
+    "canonical_immutability_complete": true,
+    "hostile_content_isolation_complete": true,
+    "native_platform_campaign_complete": false,
+    "accessibility_campaign_complete": false,
+    "rv36_44_45_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-41-43-74-128-157-158-BLOCKED",
+      "owner": "159"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "native Fedora, Ubuntu, and Windows command-worker, Owner-mode user-interface, accessibility, process-control, repository, and independent review environments",
+      "artifact": "untouched platform command semantics, constraint, authentication, warning, remaining-time, keyboard, screen-reader, focus, contrast, panic-stop, process-tree, repository-state, canonical-immutability, canary, cleanup, RV-36, RV-44, and RV-45 evidence",
+      "action": "satisfy upstream blockers, provision exact native platforms and repository fixtures, then run AT-AUT-002, AT-CLI-002, AT-CEN-001, AT-ROA-001, RV-36, RV-44, and RV-45 separately per platform",
+      "credential": "platform authentication, repository, container, package, network, accessibility, and independent reviewer credentials",
+      "payment": "platform, repository hosting, accessibility, container, package, network, or independent evaluator costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_159_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "tiered_command_promoted": false,
+    "whole_codebase_audit_promoted": false,
+    "support_promotion_count": 0
+  }
+}
