@@ -2859,3 +2859,37 @@ checkpoint: 1,600.
 
 Exact next action: Sprint 140 documents, repositories, and attachments. Cumulative closures:
 1,633; next checkpoint: 1,650.
+
+## Batch 143 — Sprint 140 documents, repositories, and attachments
+
+### Completed
+
+- Closed 20 local Sprint 140 rows: exact repository, tenant, site, drive/space, object, version,
+  principal, permission, visibility, link, attachment, content, conflict, destination, and
+  postcondition identities; 13 distinct operations; attachment/malware/archive/macro defenses;
+  untrusted-content refusal; absent Notion/Box/Dropbox registration; reconciliation and removal.
+  Corpus cases: 6,720; disclosure, unauthorized and duplicate effects, content-created authority,
+  false completion, and removal-residual authority: 0 each. Batch closures: 20. Cumulative
+  closures: 1,653. Promotions: 0.
+- Commits: `15bb566e` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `9a8e4cd9` (Sprint 140 report), and `efa3e0b0` (13 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.20. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 3 focused Rust tests, 7 focused Python tests, the 6,720-case AT-DREP-001 corpus, Sprint
+  evidence, dependency, traceability, supply-chain, Story 1.2, and Story 3.1 configuration chains.
+  Supply-chain builds: 1; evidence regeneration passes: 1. Full gate: 694.20 seconds, stopping
+  only at retained Story 6.1 Podman after every preceding gate passed. Self-recovery: 0.
+- Sprint 140 remains `UPSTREAM-SPRINTS-128-130-138-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=OneDrive, SharePoint, Google Drive, and Confluence test repositories
+  and accounts, artifact=untouched native object, version, permission, attachment, effect,
+  security, reviewer, and removal evidence, action=provision exact repositories/accounts/
+  credentials and run AT-DREP-001 plus RV-23 through RV-26, RV-31, and RV-32 native campaigns,
+  credential=Microsoft Graph, Google Drive, and Atlassian credentials, payment=provider
+  subscription costs if applicable)`; `substitution_set=empty`. Full-chain blocker remains
+  `blocked: host change required — run npm run -s docs:check outside the restricted filesystem
+  sandbox with the current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 141 deterministic productivity workflows and epic gate. Cumulative
+closures: 1,653; next checkpoint: 1,675.
