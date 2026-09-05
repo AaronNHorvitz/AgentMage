@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_165_local_evidence",
+  "source_revision": "e519acb8fa426e7507a1d079d12e056c2eb763a9",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "TRUSTED-OPERATIONS.md": "cd318b816eab4106493a3d91e4a4f79105ac96edc901ee4a875bf482396e6b93",
+    "CODEBASE-AUDIT.md": "4a01791dfcd6e885fdd4337607b7eee21d77a774c6f1b0aa8c258f9cd34ee2e7",
+    "TASKS.md": "3931168729b0e637cff99eeee4dee78e550dd0ad6a00b7765d4623c9c8cc79fb",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "MODEL-PROVENANCE-POLICY.md": "528076ef9be354e5a463221811a0bf4bf735a50be0b3a73df91097d7e83594c7",
+    "docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md": "dd0d1c98597cee8d7c2c1956336da8c97f75c9bca347eefb3051c2738afe43db",
+    "kernel/engine/src/lib.rs": "4ec495d97e59f5ab98878024645dd0e9bf7e510e86ee4c434e9cda79a557d674",
+    "kernel/engine/src/final_reconciliation.rs": "ff0c04db6b78d031d2e93fcdc91ed4524e301f0d23fecf4b9c7da040a51dd7d6",
+    "supply-chain/dependency-provenance.json": "aa467c7dae8cc0d360545854c8d89369582384bd56eaa04a5ef0d03e56d7249f",
+    "supply-chain/sbom.cdx.json": "1020afcc9585e8b1ad07f3abb050c9552e0e652dec8ed59f927910acac30ae49",
+    "supply-chain/dependency-hashes.sha256": "0edd4c2dab786a18d1295741e2bfde56b0e1b11142cf9ac50c0d783f7b1ec996",
+    "artifacts/sprints/sprint-165/final-reconciliation-corpus.json": "71cbdc414e1761bdb250f24456e2df9b6fbe4ec7c839b82122966ca1735ffdfb",
+    "scripts/final_reconciliation_contract.py": "7b1b276100aaa7976be433e5983f4e024cb6453a037f5c9f02514c3ed7bb410f",
+    "tests/test_final_reconciliation_contract.py": "398af0e3098ebae574a6ef05db59201b6a7ffea486b4f535dfbc95c097f5f022",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_165_evidence.py": "960725d086c7af26edd8955a95a0feeeb3d02e0c71f5ca81a2250160acbd01bc",
+    "tests/test_sprint_165_evidence.py": "6a811062b7cd6863b9c7417347cfa1a34d3ea6bd48b6c656aa28f008685de214"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "final-reconciliation-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "final_reconciliation::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "eaf6d199e73849f920b7bca676907e0f8f4ff704d2b6ff4ce77b63322d29b246",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "final-reconciliation-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_final_reconciliation_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d0e3d8a052681731226cd254a8171a8b40e78294262e613b72ea5bac64b81444",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_165_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e6ec182765cd965f2837d8eeaef5a64af48a104f245cd1a0b7281559194c57c1",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-MUSE-001",
+    "AM-MDL-004",
+    "AM-MDL-007",
+    "AM-AGT-001",
+    "AM-XOP-001",
+    "AM-RCN-001",
+    "AM-AUR-001",
+    "AT-MUSE-001",
+    "AT-MODEL-003",
+    "AT-MODEL-005",
+    "AT-CLASS-001",
+    "AT-AGENT-001",
+    "AT-XOP-001",
+    "AT-RCN-001",
+    "AT-AUR-001",
+    "SR-MGM-004",
+    "SR-MGM-005",
+    "SR-AI-015",
+    "SR-AI-018",
+    "SR-TOP-001",
+    "SR-AUD-007",
+    "SR-AUD-010",
+    "RV-41",
+    "RV-43",
+    "RV-46",
+    "RV-47",
+    "RV-48"
+  ],
+  "implemented_contracts": {
+    "capability_count": 10,
+    "lifecycle_state_count": 8,
+    "attack_count": 13,
+    "variation_count": 10,
+    "composed_case_count": 10400,
+    "known_answer_fixture_count": 11,
+    "risk_class_count": 8,
+    "report_profile_count": 3,
+    "audit_case_count": 264,
+    "authority_reuse_count": 0,
+    "unauthorized_effect_count": 0,
+    "false_comprehensive_count": 0,
+    "muse_disposition": "BLOCKED",
+    "approved_model_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "candidate_negative_truth_complete": true,
+    "candidate_independence_complete": true,
+    "composed_authority_contract_complete": true,
+    "composed_mutation_scale_complete": true,
+    "cross_module_reconciliation_complete": true,
+    "finding_calibration_complete": true,
+    "report_completion_guard_complete": true,
+    "known_answer_contract_complete": true,
+    "native_candidate_admission_complete": false,
+    "native_removal_restoration_complete": false,
+    "independent_reproduction_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-0-164-BLOCKED",
+      "owner": "165"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "first-party Muse and complete eligible candidate sources plus native Fedora, Ubuntu, Windows, provider, storage, accessibility, strict-local, clean-install, removal, and independent review environments",
+      "artifact": "untouched exact candidate provenance, artifact, model/runtime/hardware, role-matrix, measurement, disposition, cross-capability native attack, disablement, removal, residue, accessibility, incident, recovery, support, RV-41, RV-43, and RV-46 through RV-48 evidence",
+      "action": "satisfy every upstream blocker, provision exact candidate artifacts and all native/provider/reviewer environments, then run the complete candidate admission, trusted-operations composition, removal, restoration, audit, accessibility, incident, recovery, and independent review campaigns",
+      "credential": "candidate-source, model artifact, provider, platform key-store, storage, accessibility, and independent reviewer credentials",
+      "payment": "model, provider, storage, platform, accessibility, or independent evaluator costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_165_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "muse_disposition": "BLOCKED",
+    "approved_model_count": 0,
+    "trusted_operations_promoted": false,
+    "codebase_audit_promoted": false,
+    "support_promotion_count": 0
+  }
+}
