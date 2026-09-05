@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_153_local_evidence",
+  "source_revision": "cac9e9b3df634ed1e52629d89975d2a63f002119",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "e03c0833af00f620a9133e5323b83d672e4a81e305c7a6051b9453234a8f8a0c",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "f368fe5a79aff8fe24e2f8186a61dd45b13b794aaace05cb4db4e466b4e879cc",
+    "kernel/engine/src/cloud_observer.rs": "13845248026dbaffd6d8b3f4d16e716b538f520fc92a955b4bb8f48bbf24c7c5",
+    "kernel/engine/src/cloud_provider_observer.rs": "e02b389fdfe87d5e7f09bd45b8b03e00b190b591392836618a79af2d259e94ae",
+    "supply-chain/dependency-provenance.json": "83b6113d3e6a52b3b5f88ebb3d69a570edc4b3d2d358cd8d7cd7e9226a33cc6f",
+    "supply-chain/sbom.cdx.json": "de0472b2107d4cb43de912b2a4523c971e0dd52a375856e89f197b563e4b3ff8",
+    "supply-chain/dependency-hashes.sha256": "d24ce439b4479c537854b4a983d01177224d42dc5fe6eb9fd74d8a60fe35bffb",
+    "artifacts/sprints/sprint-153/provider-observer-corpus.json": "4614634649f1f349bff55373842ed6c8962947d9a4de31c127017527d0b79148",
+    "scripts/cloud_provider_observer_contract.py": "b10fdda060cfc8aedf71fc807b91219c75f334cb04356eb7a96f39a57bffdc32",
+    "tests/test_cloud_provider_observer_contract.py": "fba554bfecddc7778b4ecd84076f66eb3d06a69b79073b0457bdfd861a84f7d5",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_153_evidence.py": "5604bce077471e8d86e6d5c99f6d5f233ee955baa156d98a9796524b72739c4c",
+    "tests/test_sprint_153_evidence.py": "b5daa4e196625842692f2025b644f19757220efd17b7c545aa641947a7e520c3"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "provider-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "cloud_provider_observer::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6784cb995e6601da95649937bc7d0205b19789e05865c6efaf5c202ff163760a",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "provider-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_cloud_provider_observer_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "7c38317dd098fad2fc5c0510ed6cb06fe6b7fcc9e9f066c70cadb12a94c9cd7e",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_153_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-AWS-001",
+    "AM-AZR-001",
+    "AM-GCP-001",
+    "AT-AWS-001",
+    "AT-AZR-001",
+    "AT-GCP-001",
+    "SR-CLD-001",
+    "SR-CLD-002",
+    "SR-CLD-003",
+    "RV-23",
+    "RV-24",
+    "RV-26",
+    "RV-29",
+    "RV-34",
+    "RV-35"
+  ],
+  "implemented_contracts": {
+    "provider_count": 3,
+    "read_count": 10,
+    "attack_count": 16,
+    "state_count": 8,
+    "fixture_count": 5,
+    "prohibited_count": 11,
+    "case_count": 19200,
+    "secret_disclosure_count": 0,
+    "escape_count": 0,
+    "provider_effect_count": 0,
+    "residual_authority_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "aws_contract_complete": true,
+    "azure_contract_complete": true,
+    "gcp_contract_complete": true,
+    "native_identity_preservation_complete": true,
+    "prohibited_families_absent": true,
+    "bounded_recovery_complete": true,
+    "native_provider_campaigns_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-103-125-152-BLOCKED",
+      "owner": "153"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "isolated AWS, Azure, and Google Cloud provider accounts plus independent read-only review environment",
+      "artifact": "untouched native hierarchy, identity, scope, query, telemetry, security, deployment, cost, billing, isolation, throttling, version-skew, reviewer, revocation, and removal evidence",
+      "action": "provision exact AWS, Azure, and Google Cloud accounts and credentials, then run AT-AWS-001, AT-AZR-001, AT-GCP-001, RV-23, RV-24, RV-26, RV-29, RV-34, and RV-35 native campaigns",
+      "credential": "AWS role credential, Azure service principal credential, and Google Cloud workload identity credential",
+      "payment": "cloud account, resource, telemetry, and independent evaluator costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_153_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "native_cloud_provider_support_promoted": false,
+    "support_promotion_count": 0
+  }
+}
