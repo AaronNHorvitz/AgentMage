@@ -2623,3 +2623,33 @@ Exact next action: Sprint 132 communications contract and Outlook adapter. Cumul
 
 Exact next action: Sprint 133 Microsoft Teams adapter. Cumulative closures: 1,473; next checkpoint:
 1,475.
+
+## Batch 136 — Sprint 133 Microsoft Teams adapter
+
+### Completed
+
+- Closed 20 local Sprint 133 rows: 13 Teams object families, six exact operations, tenant/account
+  capability discovery, personal-account exclusion, exact destination/thread/membership/
+  visibility/content/mention/file effect binding, replay refusal, failure/recovery and removal
+  matrices. Corpus cases: 4,590; unauthorized/duplicate/stale effects, cross-chat disclosures,
+  false completions, and removal-residual authority: 0 each. Batch closures: 20. Cumulative
+  closures: 1,493. Promotions: 0.
+- Commits: `1da06c6b` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `5c5ba519` (Sprint 133 report), and `550b66dc` (13 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.20. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 3 focused Rust tests, 7 focused Python tests, the 4,590-case AT-TMS-001 corpus, Sprint
+  evidence, dependency, traceability, supply-chain, Story 1.2, and Story 3.1 configuration chains.
+  Supply-chain builds: 1; evidence regeneration passes: 1. Full gate: 695.82 seconds, stopping
+  only at retained Story 6.1 Podman after every preceding gate passed. Self-recovery: 0.
+- Sprint 133 remains `UPSTREAM-SPRINT-132-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=Microsoft Teams organizational test tenant and accounts,
+  artifact=untouched native tenant capability, effect, event, security, reviewer, and removal
+  evidence, action=provision exact tenant/accounts/credentials and run AT-TMS-001 plus RV-23
+  through RV-26 and RV-31 native campaigns, credential=Microsoft Graph delegated Teams
+  credentials, payment=Microsoft 365 tenant or provider costs if applicable)`;
+  `substitution_set=empty`. Full-chain blocker remains the exact recorded Podman host tuple.
+
+Exact next action: Sprint 134 Gmail adapter. Cumulative closures: 1,493; next checkpoint: 1,500.
