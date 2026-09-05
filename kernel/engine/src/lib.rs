@@ -270,6 +270,8 @@ pub mod supply_chain_evidence;
 pub mod task_classification;
 /// Bounded telemetry identity, correlation, aggregation, and authority refusal.
 pub mod telemetry_correlation;
+/// Tiered command authority and immutable whole-repository audit contracts.
+pub mod tiered_command_audit;
 /// Deterministic tool-call normalization and single profile-bound repair admission.
 pub mod tool_call_repair;
 /// Deterministic native-tool preflight, attempt, launch, and verification composition.

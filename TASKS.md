@@ -14238,24 +14238,24 @@ credential. Native store/provider and independent-review campaigns remain `BLOCK
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 159.1.1 - Implement command levels and plan compiler**
-  - [ ] **Sub-task 159.1.1.1:** Implement Disabled, Inspect, Workspace Autonomous, Connected Operations, and Owner / Unrestricted Session policy states and intersections.
-  - [ ] **Sub-task 159.1.1.2:** Compile exact executable or shell, arguments, pipelines, redirections, interpreters, PTY, working directory, paths, environment, credentials, network, descendants, persistence, resources, timeout, output, changes, rollback, and cancellation.
-  - [ ] **Sub-task 159.1.1.3:** Render deterministic previews, effective authority, expected side effects, risk, limitations, and terminal receipts in native Chat and CLI.
-- [ ] **Task 159.1.2 - Implement constrained and owner workers**
-  - [ ] **Sub-task 159.1.2.1:** Run Inspect, Workspace Autonomous, and Connected Operations commands in platform-constrained workers with exact grants and process-tree cleanup.
-  - [ ] **Sub-task 159.1.2.2:** Require a direct user gesture, fresh platform authentication, exact duration, login-session binding, persistent warning, remaining-time display, panic stop, and explicit risk acknowledgement for Owner mode.
-  - [ ] **Sub-task 159.1.2.3:** Revoke Owner mode and terminate descendants on expiry, stop, lock, logout, restart, policy change, emergency disablement, or integrity failure.
-- [ ] **Task 159.1.3 - Verify semantics, boundaries, and truthful risk**
-  - [ ] **Sub-task 159.1.3.1:** Exercise direct commands, shells, pipelines, redirections, scripts, interpreters, PTYs, packages, builds, tests, Git, Docker, and interactive cancellation.
-  - [ ] **Sub-task 159.1.3.2:** Probe path, environment, credential, network, device, process, persistence, privilege, resource, timeout, output, descendant, and rollback boundaries.
-  - [ ] **Sub-task 159.1.3.3:** Attempt activation, inheritance, scheduling, renewal, replay, race, stale display, and concealment from every model and untrusted content channel.
+- [x] **Task 159.1.1 - Implement command levels and plan compiler**
+  - [x] **Sub-task 159.1.1.1:** Implement Disabled, Inspect, Workspace Autonomous, Connected Operations, and Owner / Unrestricted Session policy states and intersections.
+  - [x] **Sub-task 159.1.1.2:** Compile exact executable or shell, arguments, pipelines, redirections, interpreters, PTY, working directory, paths, environment, credentials, network, descendants, persistence, resources, timeout, output, changes, rollback, and cancellation.
+  - [x] **Sub-task 159.1.1.3:** Render deterministic previews, effective authority, expected side effects, risk, limitations, and terminal receipts in native Chat and CLI.
+- [x] **Task 159.1.2 - Implement constrained and owner workers**
+  - [x] **Sub-task 159.1.2.1:** Run Inspect, Workspace Autonomous, and Connected Operations commands in platform-constrained workers with exact grants and process-tree cleanup.
+  - [x] **Sub-task 159.1.2.2:** Require a direct user gesture, fresh platform authentication, exact duration, login-session binding, persistent warning, remaining-time display, panic stop, and explicit risk acknowledgement for Owner mode.
+  - [x] **Sub-task 159.1.2.3:** Revoke Owner mode and terminate descendants on expiry, stop, lock, logout, restart, policy change, emergency disablement, or integrity failure.
+- [x] **Task 159.1.3 - Verify semantics, boundaries, and truthful risk**
+  - [x] **Sub-task 159.1.3.1:** Exercise direct commands, shells, pipelines, redirections, scripts, interpreters, PTYs, packages, builds, tests, Git, Docker, and interactive cancellation.
+  - [x] **Sub-task 159.1.3.2:** Probe path, environment, credential, network, device, process, persistence, privilege, resource, timeout, output, descendant, and rollback boundaries.
+  - [x] **Sub-task 159.1.3.3:** Attempt activation, inheritance, scheduling, renewal, replay, race, stale display, and concealment from every model and untrusted content channel.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 159.1.AC1:** Given a constrained command level, when a command runs, then every process and side effect remains within the exact plan and current grant.
-- [ ] **Story AC 159.1.AC2:** Given Owner / Unrestricted Session, when the user activates it, then host-user risk is explicit, the state is continuously visible and expiring, and panic or revocation terminates all descendants.
-- [ ] **Story AC 159.1.AC3:** Given any model, webpage, repository, message, workflow, schedule, child agent, stale session, or replay request to enable or renew Owner mode, when evaluated, then no activation occurs.
+- [x] **Story AC 159.1.AC1:** Given a constrained command level, when a command runs, then every process and side effect remains within the exact plan and current grant.
+- [x] **Story AC 159.1.AC2:** Given Owner / Unrestricted Session, when the user activates it, then host-user risk is explicit, the state is continuously visible and expiring, and panic or revocation terminates all descendants.
+- [x] **Story AC 159.1.AC3:** Given any model, webpage, repository, message, workflow, schedule, child agent, stale session, or replay request to enable or renew Owner mode, when evaluated, then no activation occurs.
 
 #### [ ] Story 159.2 - Complete Census and Enforced Read-Only Verification
 
@@ -14263,34 +14263,39 @@ credential. Native store/provider and independent-review campaigns remain `BLOCK
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 159.2.1 - Implement deterministic repository census**
-  - [ ] **Sub-task 159.2.1.1:** Enumerate tracked, staged, unstaged, untracked, ignored, sparse, generated, vendored, binary, Large File Storage, submodule, worktree, archive, symbolic-link, hard-link, inaccessible, malformed, special, external, and changing path states.
-  - [ ] **Sub-task 159.2.1.2:** Record stable path identity, type, size, hash where readable, language, encoding, classification, repository state, parser, disposition, exclusion rule, errors, and dependencies.
-  - [ ] **Sub-task 159.2.1.3:** Reconcile filesystem, source-control, submodule, worktree, and audit totals and block completion on every unexplained mismatch or required unavailable path.
-- [ ] **Task 159.2.2 - Enforce canonical immutability**
-  - [ ] **Sub-task 159.2.2.1:** Give census and parser workers read-only source handles with no path, Git, hook, configuration, hosted, credential, or neighboring-data write authority.
-  - [ ] **Sub-task 159.2.2.2:** Create disposable copy-on-write audit workspaces for builds, tests, dependency resolution, generators, formatters, coverage, and language-service initialization.
-  - [ ] **Sub-task 159.2.2.3:** Compare canonical root, filesystem metadata, Git index, refs, configuration, hooks, worktrees, submodules, tracked, untracked, ignored, processes, sockets, and hosted state before and after every audit.
-- [ ] **Task 159.2.3 - Isolate hostile content and secrets**
-  - [ ] **Sub-task 159.2.3.1:** Parse archives, links, special files, build metadata, plugins, and language services in fresh workers with path, recursion, file, byte, process, output, resource, timeout, and cancellation limits.
-  - [ ] **Sub-task 159.2.3.2:** Detect and classify secrets before model-packet creation, replace protected values with typed redactions, and scan every retained audit surface with canaries.
-  - [ ] **Sub-task 159.2.3.3:** Exercise malicious repository instructions, hooks, build scripts, parser exploits, archive bombs, path traversal, link races, process descendants, crashes, cancellation, and cleanup.
+- [x] **Task 159.2.1 - Implement deterministic repository census**
+  - [x] **Sub-task 159.2.1.1:** Enumerate tracked, staged, unstaged, untracked, ignored, sparse, generated, vendored, binary, Large File Storage, submodule, worktree, archive, symbolic-link, hard-link, inaccessible, malformed, special, external, and changing path states.
+  - [x] **Sub-task 159.2.1.2:** Record stable path identity, type, size, hash where readable, language, encoding, classification, repository state, parser, disposition, exclusion rule, errors, and dependencies.
+  - [x] **Sub-task 159.2.1.3:** Reconcile filesystem, source-control, submodule, worktree, and audit totals and block completion on every unexplained mismatch or required unavailable path.
+- [x] **Task 159.2.2 - Enforce canonical immutability**
+  - [x] **Sub-task 159.2.2.1:** Give census and parser workers read-only source handles with no path, Git, hook, configuration, hosted, credential, or neighboring-data write authority.
+  - [x] **Sub-task 159.2.2.2:** Create disposable copy-on-write audit workspaces for builds, tests, dependency resolution, generators, formatters, coverage, and language-service initialization.
+  - [x] **Sub-task 159.2.2.3:** Compare canonical root, filesystem metadata, Git index, refs, configuration, hooks, worktrees, submodules, tracked, untracked, ignored, processes, sockets, and hosted state before and after every audit.
+- [x] **Task 159.2.3 - Isolate hostile content and secrets**
+  - [x] **Sub-task 159.2.3.1:** Parse archives, links, special files, build metadata, plugins, and language services in fresh workers with path, recursion, file, byte, process, output, resource, timeout, and cancellation limits.
+  - [x] **Sub-task 159.2.3.2:** Detect and classify secrets before model-packet creation, replace protected values with typed redactions, and scan every retained audit surface with canaries.
+  - [x] **Sub-task 159.2.3.3:** Exercise malicious repository instructions, hooks, build scripts, parser exploits, archive bombs, path traversal, link races, process descendants, crashes, cancellation, and cleanup.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 159.2.AC1:** Given any in-scope repository path, when census completes, then exactly one current disposition and evidence record exists or the audit remains incomplete.
-- [ ] **Story AC 159.2.AC2:** Given a build, test, generator, formatter, package operation, or language service that writes, when audit verification runs, then every write remains disposable and the canonical repository and hosted state are unchanged.
-- [ ] **Story AC 159.2.AC3:** Given secrets or hostile repository content, when census, parsing, verification, and packet preparation run, then no raw value or content-created authority reaches the model or a retained surface.
+- [x] **Story AC 159.2.AC1:** Given any in-scope repository path, when census completes, then exactly one current disposition and evidence record exists or the audit remains incomplete.
+- [x] **Story AC 159.2.AC2:** Given a build, test, generator, formatter, package operation, or language service that writes, when audit verification runs, then every write remains disposable and the canonical repository and hosted state are unchanged.
+- [x] **Story AC 159.2.AC3:** Given secrets or hostile repository content, when census, parsing, verification, and packet preparation run, then no raw value or content-created authority reaches the model or a retained surface.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 159.AC1:** `AT-AUT-002`, `AT-CLI-002`, and `RV-36` pass on Fedora, Ubuntu, and Windows with separate platform evidence.
-- [ ] **Sprint AC 159.AC2:** At least 5,000 authority mutations and all command-semantic fixtures produce zero constrained-mode escape or hidden launch.
-- [ ] **Sprint AC 159.AC3:** Every Owner-mode terminal trigger revokes authority and leaves zero surviving descendant, listener, scheduled launch, or reusable activation record.
+- [x] **Sprint AC 159.AC2:** At least 5,000 authority mutations and all command-semantic fixtures produce zero constrained-mode escape or hidden launch.
+- [x] **Sprint AC 159.AC3:** Every Owner-mode terminal trigger revokes authority and leaves zero surviving descendant, listener, scheduled launch, or reusable activation record.
 - [ ] **Sprint AC 159.AC4:** Keyboard, screen-reader, focus, contrast, warning, remaining-time, confirmation, cancellation, and panic-stop behavior pass.
-- [ ] **Sprint AC 159.AC5:** `AT-CEN-001`, `AT-ROA-001`, `RV-44`, and `RV-45` pass across every repository-state class with zero canonical or hosted mutation, raw-secret exposure, silent omission, parser escape, or surviving audit process.
+- [x] **Sprint AC 159.AC5:** `AT-CEN-001`, `AT-ROA-001`, `RV-44`, and `RV-45` pass across every repository-state class with zero canonical or hosted mutation, raw-secret exposure, silent omission, parser escape, or surviving audit process.
 
 **Gate decision:** Sprint 159 is PASS only when Stories 159.1-159.2, all criteria, `AM-AUT-002`, `AM-CLI-002`, `AM-CEN-001`, `AM-ROA-001`, named acceptance tests, `SR-CMD-001` through `SR-CMD-004`, `SR-AUD-001` through `SR-AUD-004`, `RV-36`, `RV-44`, `RV-45`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all 33 locally executable Sprint 159 rows pass with 6,300 authority and
+792 immutable-audit cases and zero escape, hidden launch, surviving process, canonical or hosted
+mutation, raw-secret exposure, content-created authority, silent omission, or parser escape.
+Native platform and accessibility campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 160 - Current Public Research and Citation Safety
 
