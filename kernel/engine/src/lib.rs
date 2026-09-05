@@ -221,6 +221,8 @@ pub mod reasoning;
 pub mod reclassification;
 /// Cited recurring-obligation detection, reminders, and non-executing drafts.
 pub mod recurring_obligation;
+/// Superseding release-decision blocker evaluation and publication denial.
+pub mod release_decision;
 /// Exact release manifests, separately granted changes, and safe compensation.
 pub mod release_lifecycle;
 /// Encrypted derivative repository-map cache lifecycle.

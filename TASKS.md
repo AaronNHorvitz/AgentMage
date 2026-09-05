@@ -14731,14 +14731,14 @@ independent-review campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`
   - [ ] **Sub-task 166.1.2.5:** Independently run comprehensive audits against each release-reference repository and known-answer corpus, then reconcile census, graphs, packets, cards, contradictions, checkpoints, findings, reports, read-only attestations, platform results, and removal evidence.
   - [ ] **Sub-task 166.1.2.6:** Execute the Decision 0025 final `RM-024` real-fuzz campaign against every promoted parser, IPC decoder, path boundary, model-output decoder, and reviewed FFI target; bind exact source/toolchain/harness/corpus/seed/duration/sanitizer/coverage identities, minimize and disposition every crash or hang, add regression tests, and rerun every boundary made stale by a fix.
 - [ ] **Task 166.1.3 - Prove release blocking and sign decision**
-  - [ ] **Sub-task 166.1.3.1:** Force each platform, provider, authority, credential, disclosure, backup, restore, model, audit-coverage, read-only, reconciliation, security, accessibility, recovery, support, removal, and evidence gate to fail independently.
-  - [ ] **Sub-task 166.1.3.2:** Prove each failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocker prevents package publication and `G-GA` closure.
+  - [x] **Sub-task 166.1.3.1:** Force each platform, provider, authority, credential, disclosure, backup, restore, model, audit-coverage, read-only, reconciliation, security, accessibility, recovery, support, removal, and evidence gate to fail independently.
+  - [x] **Sub-task 166.1.3.2:** Prove each failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocker prevents package publication and `G-GA` closure.
   - [ ] **Sub-task 166.1.3.3:** Obtain independent reviewer signatures and explicit user approval before signing manifests, packages, evidence indexes, checksums, and release notes.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 166.1.AC1:** Given exact v1.0 release candidates, when independent reviewers follow published procedures, then every supported platform, provider, capability, restriction, recovery, accessibility, support, whole-codebase audit, and removal result reproduces from raw evidence.
-- [ ] **Story AC 166.1.AC2:** Given any blocking non-pass state, when release status is computed, then `G-GA` remains blocked and no supported package is published.
+- [x] **Story AC 166.1.AC2:** Given any blocking non-pass state, when release status is computed, then `G-GA` remains blocked and no supported package is published.
 - [ ] **Story AC 166.1.AC3:** Given final packages, registrations, manifests, audit reports, coverage records, support matrices, limitations, and release notes, when compared, then every claim agrees exactly and every prohibited or incomplete path remains absent, denied, or visibly blocking.
 - [ ] **Story AC 166.1.AC4:** Given optional capabilities are disabled or removed, when strict-local restoration runs, then no undeclared authority or residue remains.
 - [ ] **Story AC 166.1.AC5:** Given any supported model claim, when an independent reviewer reconstructs it, then the exact profile, role, codec, runtime, hardware, quality, repeatability, security, lifecycle, picker, and limitation evidence agrees, every candidate non-pass remains visible, and no family result or model output supplies authority or completion.
@@ -14754,6 +14754,11 @@ independent-review campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`
 - [ ] **Sprint AC 166.AC7:** Decision 0027's 12 stable requirements/tests, all owning stories and gates, `SR-AI-015` through `SR-AI-018`, `SR-MGM-004`, `SR-MGM-005`, and extended `RV-13`, `RV-14`, `RV-17`, and `RV-41` reconcile to current signed raw evidence with zero unsupported determinism, model support, family-wide, authority, or completion claim.
 
 **Gate decision:** Sprint 166 and final `G-GA` are PASS only when Story 166.1, all criteria, `AM-GAD-003`, `AM-GAD-004`, `AT-GA-003`, `AT-GA-004`, every applicable `AM-*`, `AT-*`, `SR-*`, and `RV-01` through `RV-49`, every promoted milestone gate, and the Universal Story Definition of Done pass with current signed evidence. Otherwise they are BLOCKED.
+
+**Current status:** all 3 locally executable Sprint 166 rows pass across 20 release-blocker classes
+and 9 non-pass states with zero false publication, false `G-GA` closure, or substitution. Complete
+signed release artifacts, native and provider reproduction, real `RM-024`, independent signatures,
+and explicit user approval remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ## [ ] Epic 16 - Post-GA Experimental Model Lab
 

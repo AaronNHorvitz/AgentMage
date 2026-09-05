@@ -35,7 +35,7 @@
     },
     {
       "document": "TASKS.md",
-      "sha256": "3931168729b0e637cff99eeee4dee78e550dd0ad6a00b7765d4623c9c8cc79fb"
+      "sha256": "397f5bd115ff05b0f86297819cc40026050fbeb6d5bf6fee5d82be33224394a9"
     },
     {
       "document": "evidence/catalog.json",
@@ -2510,7 +2510,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 167 - Isolated Experimental Model Import and Evaluation",
-              "line": 14766
+              "line": 14771
             },
             "sprint": 167,
             "story_id": "167.1",
@@ -2520,7 +2520,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 168 - Experimental Promotion and Removal Gate",
-              "line": 14810
+              "line": 14815
             },
             "sprint": 168,
             "story_id": "168.1",
@@ -11373,7 +11373,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 167 - Isolated Experimental Model Import and Evaluation",
-              "line": 14766
+              "line": 14771
             },
             "sprint": 167,
             "story_id": "167.1",
@@ -11383,7 +11383,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 168 - Experimental Promotion and Removal Gate",
-              "line": 14810
+              "line": 14815
             },
             "sprint": 168,
             "story_id": "168.1",
