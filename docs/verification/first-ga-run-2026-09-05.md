@@ -831,3 +831,42 @@ closures: 2,213; next checkpoint: 2,225.
 
 Exact next action: Sprint 168 experimental promotion and removal gate. Cumulative closures: 2,228;
 next checkpoint: 2,250.
+
+## Batch 171 — Sprint 168 normal-admission-only promotion
+
+### Completed
+
+- Closed 8 locally executable Sprint 168 rows: absence of a direct promote operation, fresh normal
+  candidate admission, independent evidence and signed-catalog requirements, ten promotion-route
+  attacks, cleanup of lab-owned state, preservation of approved/canonical/exported/neighbor state,
+  ordinary-activation denial, and the required mutation scale. Corpus: 2,080 `AT-EML-001`
+  promotion cases; direct promotion, ordinary activation, approved-state change, and canonical
+  damage counts: 0 each. Batch closures: 8. Cumulative closures: 2,236. Promotions: 0.
+- Commits: `e0c2a036` (standalone-package promotion contract, corpus, tests, closures, traceability),
+  `b6547bbc` (Sprint 168 report), and `eb3ff35e` (4 downstream contract artifacts). Including this
+  log: 4; commits/item: 0.50. Review pins advanced: 0; complete intersection across 4 regenerated
+  paths and 20 pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed standalone-package formatting, 3 Rust tests, Clippy with warnings denied, 5 focused
+  Python tests, corpus, dependency, traceability, supply-chain, and Story 1.2 contract chain.
+  Supply-chain builds: 1; evidence regeneration passes: 1. Full gate: 718 seconds, stopping only at
+  retained Story 6.1 Podman after every preceding gate passed. Self-recovery: 0.
+- Sprint 168 remains `UPSTREAM-SPRINTS-163-164-167-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=native supported lab platforms plus approved catalog/admission,
+  signing, accessibility, resource, reinstall, crash-removal, residue, and independent review
+  environments, artifact=untouched complete AT-EML-001 and RV-42, signed approved-catalog
+  transition, removal, crash recovery, reinstall, residue, accessibility, resource,
+  neighboring-state, manifest reconciliation, signed post-GA support matrix, and
+  independent-review evidence, action=satisfy upstream blockers, provision exact native lab and
+  approved-model environments, run complete promotion-denial, removal, crash, reinstall, residue,
+  accessibility, and RV-42 campaigns, then independently reproduce and sign the post-GA support
+  matrix, credential=catalog-signing, artifact, platform, accessibility, and independent reviewer
+  credentials, payment=artifact, signing, platform, accessibility, or independent evaluator costs
+  if applicable)`; `substitution_set=empty`. Full-chain blocker remains `blocked: host change
+  required — run npm run -s docs:check outside the restricted filesystem sandbox with the current
+  user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: audit Universal Story Definition of Done and every remaining unchecked row for
+exact blocker coverage. Cumulative closures: 2,236; next checkpoint: 2,250.
