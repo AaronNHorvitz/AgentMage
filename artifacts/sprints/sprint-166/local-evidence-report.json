@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_166_local_evidence",
+  "source_revision": "88726e749f99a45cf427dd57f6005f8adf81d190",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "TASKS.md": "397f5bd115ff05b0f86297819cc40026050fbeb6d5bf6fee5d82be33224394a9",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "architecture/status-model.json": "d9299aee30acf8778feed1a69333331444883709bdb966faa240b30dd69d410a",
+    "docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md": "dd0d1c98597cee8d7c2c1956336da8c97f75c9bca347eefb3051c2738afe43db",
+    "kernel/engine/src/lib.rs": "93dce378bff00a8887467cdfaf816996da963a4f5e13cbed24e8b71b558eca47",
+    "kernel/engine/src/release_decision.rs": "8e4b6b851bf8ded7670d80b1a9a1d6d2a5aa4f8696ecfb5b3890e69585545fae",
+    "supply-chain/dependency-provenance.json": "3f6d4ecfbe2d46047afc84374773ae3d5d88ad2bc0f3162cdb5b91bfa43df98e",
+    "supply-chain/sbom.cdx.json": "3d078e80b3386dc79a507ade38de3d21c5a144253b6d099a807ac2893656faa1",
+    "supply-chain/dependency-hashes.sha256": "898e19fdbe508b13e6e386c167d4f836054166ebb5c8848a2cde8e7e038d963c",
+    "artifacts/sprints/sprint-166/release-decision-corpus.json": "64a5843a7af7761dcb2a3c25d6cd195455ab2721c8dc30e924c9876348159346",
+    "scripts/release_decision_contract.py": "cc38c018e152eb9d267c39cec87f938117751961cd519b501717401320a52446",
+    "tests/test_release_decision_contract.py": "1474b74e95b8a722de4068b9aa3cd66000fc453d6b3239f98189f7cbfa6fbef5",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_166_evidence.py": "4b0887e2c1facb5c21bc510f72bd32a0c21eb23f1878199ca2293a59c6c14c60",
+    "tests/test_sprint_166_evidence.py": "6ec2cf63f6bc949ce83f900d5dd28bea8434446313c8d3b96c550b88e964e686"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "release-decision-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "release_decision::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "c13eca0343bd5c73f19d8858a46c9eef84e19bc5f63c6356fc34790f2de87654",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "release-decision-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_release_decision_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "921b60a7fd52e978fbb551cacd29df2d6708879400278e1fcc70fceeb0c6f8e0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_166_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "33060fd73862c5e1af97335504d5b45211fce6d229657f556d8deceeadc52ce4",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-GAD-003",
+    "AM-GAD-004",
+    "AT-GA-003",
+    "AT-GA-004",
+    "RV-01",
+    "RV-49"
+  ],
+  "implemented_contracts": {
+    "blocker_class_count": 20,
+    "non_pass_state_count": 9,
+    "fixture_case_count": 180,
+    "false_publication_count": 0,
+    "false_ga_closure_count": 0,
+    "substitution_count": 0,
+    "release_approval_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "independent_blocker_injection_complete": true,
+    "non_pass_publication_denial_complete": true,
+    "release_traceability_complete": false,
+    "signed_manifest_reconciliation_complete": false,
+    "independent_release_reproduction_complete": false,
+    "real_rm024_complete": false,
+    "explicit_user_approval_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-0-165-BLOCKED",
+      "owner": "166"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "fresh disposable Fedora, Ubuntu, and Windows guests plus every provider, model, accessibility, performance, backup, recovery, update, removal, signing, fuzzing, and independent review environment",
+      "artifact": "untouched three-run platform lifecycles, complete provider/capability/model/audit matrices, signed manifests and packages, binary and Model BOMs, real RM-024 sanitizer/coverage/crash evidence, RV-01 through RV-49, independent reproduction, reviewer signatures, and explicit user approval",
+      "action": "satisfy every upstream blocker, provision all exact release candidates and environments, execute the complete published release and real-fuzz campaigns, reconcile current raw evidence, obtain independent signatures and explicit user approval, then sign the release decision",
+      "credential": "all provider, model, platform, signing, accessibility, fuzzing, and independent reviewer credentials",
+      "payment": "provider, model, hardware, hosted environment, signing, accessibility, or independent evaluator costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_166_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "release_decision": "BLOCKED",
+    "release_approval_count": 0,
+    "package_publication_count": 0,
+    "support_promotion_count": 0
+  }
+}
