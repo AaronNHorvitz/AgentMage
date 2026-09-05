@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_149_local_evidence",
+  "source_revision": "80cb7cdeaf701c7494b120a49279de1bae5059db",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "c051b3789c313e99bd694cd0a44ec3d6c6a9aea8d511d964cfa94e94f0351414",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "394645eb801ef4bdb1b23b2cd1118b4e16e5173e5131077b2c36bc216cbaa0e0",
+    "kernel/engine/src/financial_domain.rs": "d95b2531fc5da2c91719730725db922ef96716760f08514f6a1a8630bacc3584",
+    "kernel/engine/src/financial_anomaly.rs": "2194193033a39a11c318d310522743fd0a7cf3ea27a032518eaed17567567b67",
+    "supply-chain/dependency-provenance.json": "e41b5b9d6e0168f5a2706c54761e892da3d4a9bdd79630ee7b0793e8fa5adcb1",
+    "supply-chain/sbom.cdx.json": "c63cee06b45c404533fabc761b3fea17d8dc27257df404553266f86e0effbfa7",
+    "supply-chain/dependency-hashes.sha256": "2a4057ce6744fe58e2604a9d746e12638910b684f7414b7026c5daf8463b4309",
+    "artifacts/sprints/sprint-149/anomaly-corpus.json": "c58a0766c24074d837bd69a8b02ce1dfe864986a39f785eef8c265abd5d70826",
+    "scripts/financial_anomaly_contract.py": "1831a63495dce3b829c07285d2718c7467ebdc19ccec7940026b7d0faa5a5d72",
+    "tests/test_financial_anomaly_contract.py": "2ee9465d7765bbeb07d74b20f8a97089c32768ae024c40875958500774f99dfe",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_149_evidence.py": "87b3280e8db2b8b349806e0f4f853b25b7ba0101da0d75e45b60abf7b9a1459c",
+    "tests/test_sprint_149_evidence.py": "534b6af518716de7284eb3151428afdd6730591d6be4e369fc34934a04e315c8"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "anomaly-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "financial_anomaly::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "85411763a9c580bb78be4e8d99027f888ddb5eb905b276b941bf6cdbc37593df",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "anomaly-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_financial_anomaly_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "9dba3d065dda699002c6700e0740fb00e5184e83516519bdc79a2bac07f27713",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_149_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-FANL-001",
+    "AT-FANL-001",
+    "SR-FIN-004",
+    "SR-FIN-005",
+    "RV-14",
+    "RV-33"
+  ],
+  "implemented_contracts": {
+    "indicator_kind_count": 10,
+    "method_count": 3,
+    "attack_family_count": 14,
+    "corpus_family_count": 9,
+    "fixture_case_count": 7560,
+    "definitive_claim_count": 0,
+    "authority_count": 0,
+    "evidence_rewrite_count": 0,
+    "hidden_limitation_count": 0,
+    "replay_drift_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "method_separation_complete": true,
+    "reproducible_indicators_complete": true,
+    "versioned_metrics_complete": true,
+    "uncertainty_and_drift_complete": true,
+    "definitive_claims_absent": true,
+    "external_authority_absent": true,
+    "native_labeled_evaluation_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-142-148-BLOCKED",
+      "owner": "149"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "native supported financial data sources and independent evaluation environment with representative labeled records",
+      "artifact": "untouched native baseline, feature, replay, accuracy, calibration, subgroup, drift, explanation, adversarial, reviewer, and removal evidence",
+      "action": "provision exact native data sources, representative labeled records, and independent evaluation environment, then run AT-FANL-001, RV-14, and RV-33 native campaigns",
+      "credential": "applicable financial data-source credentials",
+      "payment": "data-source, evaluator, or host costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_149_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "native_anomaly_support_promoted": false,
+    "support_promotion_count": 0
+  }
+}
