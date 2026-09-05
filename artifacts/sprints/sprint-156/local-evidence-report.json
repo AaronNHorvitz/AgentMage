@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_156_local_evidence",
+  "source_revision": "90570d8f845d37ee04491c5dddb7f989b35eb145",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "README.md": "9afd82a7f4366450ae0ece33cf3434801152fdcc63d4480a4e1eb500ab90cc7d",
+    "PRD.md": "2062996cbd5a5a5c529a95e6122cfd66302baef368cbf4dfa2142800f3225a5b",
+    "Agent-Scaffolding-Inventory.md": "123d0d20f55c384801dc9d41ec929fc5ba5e89fb789bd2375c6242d23b736aec",
+    "TASKS.md": "a625117b508b037585d6d07b45a1af609269f91868ef3ccf2ed3e3518c01c7b4",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "RUNTIME-BOUNDARIES.md": "e7cf50297db4c0fdb9f4e510da43af2e001b09451e0d1d03cde75d20184cb40e",
+    "DELIVERY-SYSTEM.md": "ca62de984cd9da28d28f183e768e8c07898f7b38ae2d89894dcec66a3293f72c",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "WINDOWS-BOUNDARIES.md": "b5ae84e42c31e5d7a1f3fb11cebef6927a1b252c2cbabf17eae31ff0eb6040ad",
+    "SECURITY.md": "3cfe6fbd2a9192e26766096190c162600ecb9a9db2b263a6c099c117831818ea",
+    "requirements/registry.json": "0f3befe3caff4b16d47ff2d4e095aeea322fc2650e7fdb6bbab41f71a804231d",
+    "requirements/traceability-report.json": "a74a952e2c9998aa8e9ac88f8a46068c585a41d5f59211debb8e7e499c5d02f8",
+    "architecture/status-model.json": "d9299aee30acf8778feed1a69333331444883709bdb966faa240b30dd69d410a",
+    "supply-chain/dependency-provenance.json": "e796ae76d2a3a6c83afbc4a38cb1d4f72ec5761d9c166922926d01319069243c",
+    "supply-chain/sbom.cdx.json": "2b2fd15c4f4546b0062d11fa37d38f571ccbfbf15238f936d9fae0168da35a6b",
+    "supply-chain/dependency-hashes.sha256": "bbec6105cf611cc53048f19cdbd2c3f7ffba42e115b1bdedeb4bf6c13311dee4",
+    "artifacts/sprints/sprint-156/expanded-release-checkpoint-corpus.json": "8fb40ffcfeeb2197e2febdde165b41ec5992bf2216c3b8a0a3bd502cafddd9c5",
+    "scripts/expanded_release_checkpoint_contract.py": "1d8b0d769eeed2ec90f89065a483f39c2eb98feef3effbf9906a7a91dffa8fd8",
+    "tests/test_expanded_release_checkpoint_contract.py": "6e22f4bd19466da5351989579afb36ac8938eb6a79f9b9b74a669b0949f018f0",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_156_evidence.py": "f9c1c0c2c3f622d7e23a8c7f22a38615b6861f706adbeace5ec5c472402926a0",
+    "tests/test_sprint_156_evidence.py": "4bf30a4532b9192b4c85617585121fa85784436f1205f1faf714d3a805e832d9"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "expanded-checkpoint-contract",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_expanded_release_checkpoint_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "fa97c80fc3eb7334a7712f41052656d9ec705f0053004a58704211e91a7526ad",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "traceability-currentness",
+      "argv": [
+        "python3",
+        "scripts/traceability_report.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "status-model-currentness",
+      "argv": [
+        "python3",
+        "scripts/status_model.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "699c138e49a6d2fd7bd660d28f643ebefde551d69d2e540c3a7b717b9e0e5f71",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_156_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2c37d50a88147ca2ebd5197d74ee37d462dab650d793512e849814c28d5a38f0",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-GAD-002",
+    "AT-GA-002",
+    "RV-01",
+    "RV-35"
+  ],
+  "implemented_contracts": {
+    "truth_document_count": 10,
+    "local_evidence_report_count": 142,
+    "blocker_case_count": 512,
+    "signed_manifest_count": 0,
+    "native_reproduction_count": 0,
+    "reviewer_signature_count": 0,
+    "user_approval_count": 0,
+    "release_package_count": 0,
+    "checkpoint_closure_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "requirement_graph_current": true,
+    "documentation_truth_current": true,
+    "summary_reconciliation_complete": true,
+    "support_matrix_closed": true,
+    "negative_release_gate_complete": true,
+    "native_reproduction_complete": false,
+    "signed_bom_complete": false,
+    "rv01_35_complete": false,
+    "at_ga_002_complete": false,
+    "independent_review_complete": false,
+    "user_approval_complete": false,
+    "checkpoint_gate_closed": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-0-155-BLOCKED",
+      "owner": "156"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "exact Fedora, Ubuntu, and Windows expanded release candidates, every promoted provider and credential, signing infrastructure, accessibility, performance, recovery, update, rollback, removal, strict-local, independent reproduction and review environments, and release owner approval",
+      "artifact": "untouched signed packages, source, binary, cryptographic and model BOMs, manifests, provenance, hashes, lifecycle, provider, AT, RV, accessibility, performance, recovery, removal, strict-local restoration, evidence indexes, reviewer signatures, user approval, and release notes",
+      "action": "satisfy every upstream Sprint 0-155 blocker, provision exact candidates and environments, rerun AT-GA-002 and every applicable AT, SR, and RV-01 through RV-35 campaign, obtain independent signatures and explicit release-owner approval, then sign only if every gate is green",
+      "credential": "all provider, platform, model, signing, instrumentation, reviewer, and release-owner credentials",
+      "payment": "provider, model, platform, hosting, signing, instrumentation, accessibility, performance, or review costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_156_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprints_closed": false,
+    "g_ga_productivity_checkpoint_closed": false,
+    "g_ga_closed": false,
+    "release_package_produced": false,
+    "release_approval": false
+  }
+}
