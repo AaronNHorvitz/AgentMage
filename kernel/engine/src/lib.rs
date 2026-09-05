@@ -276,6 +276,8 @@ pub mod tool_composition;
 pub mod tool_observation;
 /// Exact tool registration, call validation, and pre-grant dispatch denial.
 pub mod tooling;
+/// Trusted-operations topology and whole-codebase audit identity contracts.
+pub mod trusted_audit_contract;
 /// Explicit offline update staging and fail-closed supply-chain maintenance.
 pub mod update_maintenance;
 pub mod validation_result;

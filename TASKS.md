@@ -14114,24 +14114,24 @@ release packages, and promotions remain zero and `BLOCKED_EXTERNAL`; `substituti
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 157.1.1 - Define typed capability and operation contracts**
-  - [ ] **Sub-task 157.1.1.1:** Add closed schemas for command levels, research plans, credential references, continuity plans, model-manager plans, lifecycle states, limits, cancellation, and terminal receipts.
-  - [ ] **Sub-task 157.1.1.2:** Register each capability independently and prohibit worker, grant, credential, network, storage, or policy union across capability classes.
-  - [ ] **Sub-task 157.1.1.3:** Add compatibility, migration, unsupported-version, unknown-field, and fail-closed parsing fixtures.
-- [ ] **Task 157.1.2 - Freeze process and platform topology**
-  - [ ] **Sub-task 157.1.2.1:** Declare every Linux, Windows, and retained macOS process, package, identity, IPC edge, socket, writable path, network destination class, secret edge, durable object, and cleanup owner.
-  - [ ] **Sub-task 157.1.2.2:** Extend release manifests, diagnostics, component inventory, threat cases, and data-flow maps with trusted-operations identities and states.
-  - [ ] **Sub-task 157.1.2.3:** Build fake and fault platform adapters for unavailable sandbox, key store, network enforcement, storage, clock, authentication, and cancellation dependencies.
-- [ ] **Task 157.1.3 - Define lifecycle, disablement, and evidence**
-  - [ ] **Sub-task 157.1.3.1:** Specify enable, start, active, cancel, uncertain, reconcile, stop, disable, remove, recover, and residue states for each capability.
-  - [ ] **Sub-task 157.1.3.2:** Assign `RV-36` through `RV-43` first-execution ownership and evidence schemas to Sprints 158-166.
-  - [ ] **Sub-task 157.1.3.3:** Generate cross-document support, limitation, authority, process, network, storage, and removal matrices.
+- [x] **Task 157.1.1 - Define typed capability and operation contracts**
+  - [x] **Sub-task 157.1.1.1:** Add closed schemas for command levels, research plans, credential references, continuity plans, model-manager plans, lifecycle states, limits, cancellation, and terminal receipts.
+  - [x] **Sub-task 157.1.1.2:** Register each capability independently and prohibit worker, grant, credential, network, storage, or policy union across capability classes.
+  - [x] **Sub-task 157.1.1.3:** Add compatibility, migration, unsupported-version, unknown-field, and fail-closed parsing fixtures.
+- [x] **Task 157.1.2 - Freeze process and platform topology**
+  - [x] **Sub-task 157.1.2.1:** Declare every Linux, Windows, and retained macOS process, package, identity, IPC edge, socket, writable path, network destination class, secret edge, durable object, and cleanup owner.
+  - [x] **Sub-task 157.1.2.2:** Extend release manifests, diagnostics, component inventory, threat cases, and data-flow maps with trusted-operations identities and states.
+  - [x] **Sub-task 157.1.2.3:** Build fake and fault platform adapters for unavailable sandbox, key store, network enforcement, storage, clock, authentication, and cancellation dependencies.
+- [x] **Task 157.1.3 - Define lifecycle, disablement, and evidence**
+  - [x] **Sub-task 157.1.3.1:** Specify enable, start, active, cancel, uncertain, reconcile, stop, disable, remove, recover, and residue states for each capability.
+  - [x] **Sub-task 157.1.3.2:** Assign `RV-36` through `RV-43` first-execution ownership and evidence schemas to Sprints 158-166.
+  - [x] **Sub-task 157.1.3.3:** Generate cross-document support, limitation, authority, process, network, storage, and removal matrices.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 157.1.AC1:** Given any trusted-operations request, when its contract is validated, then exactly one capability class, worker identity, authority level, inputs, limits, lifecycle, and receipt schema are selected or the request is denied.
-- [ ] **Story AC 157.1.AC2:** Given an unknown, conflicting, missing, or future contract field, when loading or dispatch occurs, then startup or the operation fails closed without guessing.
-- [ ] **Story AC 157.1.AC3:** Given any capability disablement or removal state, when inspected, then every process, socket, network rule, credential reference, store, cache, schedule, and retention owner has one declared disposition.
+- [x] **Story AC 157.1.AC1:** Given any trusted-operations request, when its contract is validated, then exactly one capability class, worker identity, authority level, inputs, limits, lifecycle, and receipt schema are selected or the request is denied.
+- [x] **Story AC 157.1.AC2:** Given an unknown, conflicting, missing, or future contract field, when loading or dispatch occurs, then startup or the operation fails closed without guessing.
+- [x] **Story AC 157.1.AC3:** Given any capability disablement or removal state, when inspected, then every process, socket, network rule, credential reference, store, cache, schedule, and retention owner has one declared disposition.
 
 #### [ ] Story 157.2 - Whole-Codebase Audit Contracts and Memory Model
 
@@ -14139,34 +14139,39 @@ release packages, and promotions remain zero and `BLOCKED_EXTERNAL`; `substituti
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 157.2.1 - Define audit identity and coverage contracts**
-  - [ ] **Sub-task 157.2.1.1:** Add closed schemas for repository root, revision, index, dirty state, inclusion and exclusion rules, depth, languages, parsers, history, submodules, worktrees, commands, network, resources, retention, cancellation, and outputs.
-  - [ ] **Sub-task 157.2.1.2:** Define path dispositions for analyzed, generated, vendored, binary, excluded, unavailable, unsupported, changed, and failed content without allowing silent omission.
-  - [ ] **Sub-task 157.2.1.3:** Bind audit identity to platform, release, policy, model/runtime profile, parser catalog, start state, and successor or incremental relationships.
-- [ ] **Task 157.2.2 - Define structured project-memory records**
-  - [ ] **Sub-task 157.2.2.1:** Add versioned schemas for file, symbol, module, graph edge, semantic packet, evidence card, contradiction, finding, checkpoint, invalidation, coverage, resource, and report records.
-  - [ ] **Sub-task 157.2.2.2:** Define exact source spans, hashes, provenance, observation-versus-inference state, confidence, uncertainty, counterevidence, reverse dependencies, and current/stale lifecycle.
-  - [ ] **Sub-task 157.2.2.3:** Prohibit model context, embeddings, summaries, mutable names, and retrieval rank from serving as canonical identity, coverage, dependency, authority, or evidence.
-- [ ] **Task 157.2.3 - Freeze audit process and evidence topology**
-  - [ ] **Sub-task 157.2.3.1:** Declare audit coordinator, census, parser/graph, disposable verification, model-packet, reconciliation, and report-compiler processes and IPC edges on every first-GA platform.
-  - [ ] **Sub-task 157.2.3.2:** Add audit components, stores, scratch roots, queues, retention, diagnostics, disablement, removal, and residue ownership to signed manifests.
-  - [ ] **Sub-task 157.2.3.3:** Assign `RV-44` through `RV-48` to owning stories and define machine-readable evidence schemas before implementation.
+- [x] **Task 157.2.1 - Define audit identity and coverage contracts**
+  - [x] **Sub-task 157.2.1.1:** Add closed schemas for repository root, revision, index, dirty state, inclusion and exclusion rules, depth, languages, parsers, history, submodules, worktrees, commands, network, resources, retention, cancellation, and outputs.
+  - [x] **Sub-task 157.2.1.2:** Define path dispositions for analyzed, generated, vendored, binary, excluded, unavailable, unsupported, changed, and failed content without allowing silent omission.
+  - [x] **Sub-task 157.2.1.3:** Bind audit identity to platform, release, policy, model/runtime profile, parser catalog, start state, and successor or incremental relationships.
+- [x] **Task 157.2.2 - Define structured project-memory records**
+  - [x] **Sub-task 157.2.2.1:** Add versioned schemas for file, symbol, module, graph edge, semantic packet, evidence card, contradiction, finding, checkpoint, invalidation, coverage, resource, and report records.
+  - [x] **Sub-task 157.2.2.2:** Define exact source spans, hashes, provenance, observation-versus-inference state, confidence, uncertainty, counterevidence, reverse dependencies, and current/stale lifecycle.
+  - [x] **Sub-task 157.2.2.3:** Prohibit model context, embeddings, summaries, mutable names, and retrieval rank from serving as canonical identity, coverage, dependency, authority, or evidence.
+- [x] **Task 157.2.3 - Freeze audit process and evidence topology**
+  - [x] **Sub-task 157.2.3.1:** Declare audit coordinator, census, parser/graph, disposable verification, model-packet, reconciliation, and report-compiler processes and IPC edges on every first-GA platform.
+  - [x] **Sub-task 157.2.3.2:** Add audit components, stores, scratch roots, queues, retention, diagnostics, disablement, removal, and residue ownership to signed manifests.
+  - [x] **Sub-task 157.2.3.3:** Assign `RV-44` through `RV-48` to owning stories and define machine-readable evidence schemas before implementation.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 157.2.AC1:** Given any audit request, when its contract is validated, then exact repository, scope, identity, depth, parsers, model, commands, resources, retention, outputs, and completion rules are selected or the audit is denied.
-- [ ] **Story AC 157.2.AC2:** Given any file or repository state, when coverage is represented, then one explicit disposition exists and no exclusion or failure can be confused with completed analysis.
-- [ ] **Story AC 157.2.AC3:** Given any model packet, evidence card, finding, checkpoint, or report, when inspected, then it resolves to current deterministic source records and cannot create authority or completeness by itself.
+- [x] **Story AC 157.2.AC1:** Given any audit request, when its contract is validated, then exact repository, scope, identity, depth, parsers, model, commands, resources, retention, outputs, and completion rules are selected or the audit is denied.
+- [x] **Story AC 157.2.AC2:** Given any file or repository state, when coverage is represented, then one explicit disposition exists and no exclusion or failure can be confused with completed analysis.
+- [x] **Story AC 157.2.AC3:** Given any model packet, evidence card, finding, checkpoint, or report, when inspected, then it resolves to current deterministic source records and cannot create authority or completeness by itself.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 157.AC1:** `AT-TRU-001` passes against the complete declared topology on Fedora, Ubuntu, and Windows fixtures.
-- [ ] **Sprint AC 157.AC2:** Schema, compatibility, migration, malformed-input, and fault-adapter tests fail closed with no capability registration or side effect.
-- [ ] **Sprint AC 157.AC3:** Release manifests and diagnostics enumerate every added component and no undeclared process, socket, write path, secret edge, or destination remains.
-- [ ] **Sprint AC 157.AC4:** Requirement, security, reviewer-protocol, task, artifact, and release traceability is complete for Sprints 158-166.
-- [ ] **Sprint AC 157.AC5:** `AT-CBA-001` contract, coverage, record, lifecycle, compatibility, malformed-input, and topology fixtures pass before any audit worker implementation begins.
+- [x] **Sprint AC 157.AC1:** `AT-TRU-001` passes against the complete declared topology on Fedora, Ubuntu, and Windows fixtures.
+- [x] **Sprint AC 157.AC2:** Schema, compatibility, migration, malformed-input, and fault-adapter tests fail closed with no capability registration or side effect.
+- [x] **Sprint AC 157.AC3:** Release manifests and diagnostics enumerate every added component and no undeclared process, socket, write path, secret edge, or destination remains.
+- [x] **Sprint AC 157.AC4:** Requirement, security, reviewer-protocol, task, artifact, and release traceability is complete for Sprints 158-166.
+- [x] **Sprint AC 157.AC5:** `AT-CBA-001` contract, coverage, record, lifecycle, compatibility, malformed-input, and topology fixtures pass before any audit worker implementation begins.
 
 **Gate decision:** Sprint 157 is PASS only when Stories 157.1-157.2, all criteria, `AM-TRU-001`, `AT-TRU-001`, `AM-CBA-001`, `AT-CBA-001`, applicable security requirements, the assigned `RV-*` ownership map, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all 35 Sprint 157 source and synthetic contract rows pass locally with 1,650
+trusted-operation and 1,170 whole-codebase-audit cases and zero authority union, external effect,
+audit-created authority, or false completeness. Native topology, signed-manifest, and independent
+campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 158 - Operating-System Credential Broker
 
