@@ -12842,39 +12842,43 @@ Microsoft Graph conformance remains `BLOCKED_EXTERNAL`; `substitution_set=empty`
 
 **Dependencies:** Sprint 132 common communications contract.
 
-#### [ ] Story 133.1 - Controlled Teams Conversations
+#### [x] Story 133.1 - Controlled Teams Conversations
 
 **User-facing value:** As a user, I can read, draft, reply, react, edit, and delete only where the exact Teams tenant, membership, visibility, provider support, and autonomy policy allow it.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 133.1.1 - Implement Teams identity and capability discovery**
-  - [ ] **Sub-task 133.1.1.1:** Model tenant, account, team, channel, chat, thread, message, reply, mention, reaction, file, membership, and visibility identities.
-  - [ ] **Sub-task 133.1.1.2:** Detect delegated permissions, tenant policy, personal-account exclusions, edit/delete windows, event support, and provider degradation.
-  - [ ] **Sub-task 133.1.1.3:** Register only operations supported by the exact tenant and account profile.
-- [ ] **Task 133.1.2 - Implement reads, drafts, writes, and events**
-  - [ ] **Sub-task 133.1.2.1:** Implement bounded history, pagination, replies, mentions, reactions, files, edits, deletions, and change notifications.
-  - [ ] **Sub-task 133.1.2.2:** Bind previews and effects to exact tenant, destination, thread, membership, visibility, content, mention expansion, file digest, and idempotency state.
-  - [ ] **Sub-task 133.1.2.3:** Reconcile throttling, timeout, partial effect, stale edit, deleted target, permission loss, and duplicate events.
-- [ ] **Task 133.1.3 - Verify Teams isolation and removal**
-  - [ ] **Sub-task 133.1.3.1:** Mutate tenant, team, channel, chat, thread, member, mention, external user, visibility, file, and edit target.
-  - [ ] **Sub-task 133.1.3.2:** Inject hidden mentions, broad mentions, malicious cards, hostile files, replayed events, and content-created instructions.
-  - [ ] **Sub-task 133.1.3.3:** Revoke and remove the adapter during idle, queued, in-flight, uncertain, and synchronizing states.
+- [x] **Task 133.1.1 - Implement Teams identity and capability discovery**
+  - [x] **Sub-task 133.1.1.1:** Model tenant, account, team, channel, chat, thread, message, reply, mention, reaction, file, membership, and visibility identities.
+  - [x] **Sub-task 133.1.1.2:** Detect delegated permissions, tenant policy, personal-account exclusions, edit/delete windows, event support, and provider degradation.
+  - [x] **Sub-task 133.1.1.3:** Register only operations supported by the exact tenant and account profile.
+- [x] **Task 133.1.2 - Implement reads, drafts, writes, and events**
+  - [x] **Sub-task 133.1.2.1:** Implement bounded history, pagination, replies, mentions, reactions, files, edits, deletions, and change notifications.
+  - [x] **Sub-task 133.1.2.2:** Bind previews and effects to exact tenant, destination, thread, membership, visibility, content, mention expansion, file digest, and idempotency state.
+  - [x] **Sub-task 133.1.2.3:** Reconcile throttling, timeout, partial effect, stale edit, deleted target, permission loss, and duplicate events.
+- [x] **Task 133.1.3 - Verify Teams isolation and removal**
+  - [x] **Sub-task 133.1.3.1:** Mutate tenant, team, channel, chat, thread, member, mention, external user, visibility, file, and edit target.
+  - [x] **Sub-task 133.1.3.2:** Inject hidden mentions, broad mentions, malicious cards, hostile files, replayed events, and content-created instructions.
+  - [x] **Sub-task 133.1.3.3:** Revoke and remove the adapter during idle, queued, in-flight, uncertain, and synchronizing states.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 133.1.AC1:** Given a Teams operation, when previewed and executed, then tenant, account, destination, thread, membership, visibility, content, mentions, and files match exactly.
-- [ ] **Story AC 133.1.AC2:** Given an unsupported tenant feature or personal-account path, when capability discovery runs, then the operation is absent and the limitation is visible.
-- [ ] **Story AC 133.1.AC3:** Given failure or removal, when reconciliation completes, then no duplicate effect, cross-chat disclosure, stale write, or residual event authority remains.
+- [x] **Story AC 133.1.AC1:** Given a Teams operation, when previewed and executed, then tenant, account, destination, thread, membership, visibility, content, mentions, and files match exactly.
+- [x] **Story AC 133.1.AC2:** Given an unsupported tenant feature or personal-account path, when capability discovery runs, then the operation is absent and the limitation is visible.
+- [x] **Story AC 133.1.AC3:** Given failure or removal, when reconciliation completes, then no duplicate effect, cross-chat disclosure, stale write, or residual event authority remains.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 133.AC1:** `AT-TMS-001` passes for every published Teams capability tuple.
-- [ ] **Sprint AC 133.AC2:** Wrong-tenant, destination, membership, mention, visibility, and file mutations produce zero unauthorized effect.
-- [ ] **Sprint AC 133.AC3:** Timeout, retry, edit, delete, and event-replay tests produce zero duplicate or false completion.
-- [ ] **Sprint AC 133.AC4:** Removal restores strict-local and pre-adapter authority inventories.
+- [x] **Sprint AC 133.AC1:** `AT-TMS-001` passes for every published Teams capability tuple.
+- [x] **Sprint AC 133.AC2:** Wrong-tenant, destination, membership, mention, visibility, and file mutations produce zero unauthorized effect.
+- [x] **Sprint AC 133.AC3:** Timeout, retry, edit, delete, and event-replay tests produce zero duplicate or false completion.
+- [x] **Sprint AC 133.AC4:** Removal restores strict-local and pre-adapter authority inventories.
 
 **Gate decision:** Sprint 133 is PASS only when Story 133.1, all criteria, `AM-TMS-001`, `AT-TMS-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 133 source and contract rows pass locally with 4,590 deterministic
+Teams cases and zero unauthorized, duplicate, cross-chat, or removal-residual effects. Native
+Microsoft Teams conformance remains `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 134 - Gmail Adapter
 

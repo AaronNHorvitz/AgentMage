@@ -45,6 +45,8 @@ pub mod claim_evidence;
 pub mod command_runner;
 /// Common communications and Outlook exact-effect contracts.
 pub mod communications_outlook;
+/// Microsoft Teams tenant and destination exact-effect contracts.
+pub mod communications_teams;
 /// Versioned, fail-closed configuration loading and recovery.
 pub mod configuration;
 pub mod connected_identity;
