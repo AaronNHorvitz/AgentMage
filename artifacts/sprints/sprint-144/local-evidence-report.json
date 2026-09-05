@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_144_local_evidence",
+  "source_revision": "cf007510ab1c1cdee9102e5b9ab57c96658f6e4a",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "51daff1bdc4a88cce28507c6e463e12ac6bd738db1d653f739f36292650bd529",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "c827cfec7cf6c1c2a76643db628d0c83760292d59b3779e2006d7f26858dd524",
+    "kernel/engine/src/financial_domain.rs": "d95b2531fc5da2c91719730725db922ef96716760f08514f6a1a8630bacc3584",
+    "kernel/engine/src/financial_import.rs": "a2f0ca3cad05c0f3926b536271176ee4b374da82567f7ef4825f8c5ec5e0e64f",
+    "kernel/engine/src/actual_budget_adapter.rs": "b95d072f0109201f91416429406682cad53e48ec7f974ea6a1e5ca11dd567cf5",
+    "supply-chain/dependency-provenance.json": "9fc156e2354dd9c4446ef5d38ba2bd9b36cfeeb16cd0825fe302975046b54c59",
+    "supply-chain/sbom.cdx.json": "4b9bb810eb2740ae1c3fb982200c2662485323c6ab4992e9fc500743366d2479",
+    "supply-chain/dependency-hashes.sha256": "691dc5207e417d790b5dd20e918c1acfdeb5ecdd69936414f921d105561b7e7e",
+    "artifacts/sprints/sprint-144/actual-budget-corpus.json": "0a4ce1b507071486c0562aca4d4d6b548c25142975adb3b0aff2e52c58554ee7",
+    "scripts/actual_budget_adapter_contract.py": "f65c7164d6131acb3ad110f90333fb797305e774d1f6e3dbb32aab12e43dad92",
+    "tests/test_actual_budget_adapter_contract.py": "42c188b4385dc1b8cc5d5878a696ffd0ffbd9a4dcb2ce36086b31519df015f98",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_144_evidence.py": "fa6273d16b83ea87745b99f0b4e4906bcfd6bf01d8f609dad1d4662bb4deaa7e",
+    "tests/test_sprint_144_evidence.py": "17c0d042fa2b2150c20f3c3d694d23096d57303cd7cf943a1f47a1bbf6b211ef"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "actual-budget-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "actual_budget_adapter::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6c04ba3ba4dd06d1179d572559d2d9f319bd95b2dc5b1c189265aa6039a99bab",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "actual-budget-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_actual_budget_adapter_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "1df0dc843fbde79fd29b1d33831815ffd9089eb1b69f6ce31856db5fb25a1765",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_144_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-ACT-001",
+    "AT-ACT-001",
+    "SR-FIN-001",
+    "SR-FIN-002",
+    "SR-FIN-006",
+    "RV-23",
+    "RV-24",
+    "RV-25",
+    "RV-26",
+    "RV-33",
+    "RV-35"
+  ],
+  "implemented_contracts": {
+    "profile_count": 6,
+    "operation_count": 9,
+    "record_kind_count": 12,
+    "mutation_family_count": 13,
+    "failure_family_count": 10,
+    "fixture_case_count": 4680,
+    "wrong_file_write_count": 0,
+    "duplicate_effect_count": 0,
+    "precision_loss_count": 0,
+    "money_movement_count": 0,
+    "network_broadening_count": 0,
+    "removal_authority_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "exact_profile_complete": true,
+    "native_identity_mapping_complete": true,
+    "bounded_effects_complete": true,
+    "backup_and_recovery_complete": true,
+    "money_movement_absent": true,
+    "removal_complete": true,
+    "native_actual_budget_campaign_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-128-142-143-BLOCKED",
+      "owner": "144"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "native supported Actual Budget server, client, and representative budget files",
+      "artifact": "untouched native API-version, budget-identity, sync, backup, recovery, security, reviewer, and removal evidence",
+      "action": "provision the exact supported Actual Budget installation and representative budget files, then run AT-ACT-001 plus RV-23 through RV-26, RV-33, and RV-35 native campaigns",
+      "credential": "Actual Budget local server authentication credential",
+      "payment": "none"
+    }
+  ],
+  "summary": {
+    "local_sprint_144_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "native_actual_budget_support_promoted": false,
+    "support_promotion_count": 0
+  }
+}
