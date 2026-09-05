@@ -13317,39 +13317,43 @@ remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 **Dependencies:** Sprints 127-129 and 141; existing local data, classification, encryption, and audit foundations.
 
-#### [ ] Story 142.1 - Deterministic Financial Records
+#### [x] Story 142.1 - Deterministic Financial Records
 
 **User-facing value:** As a user, I can trust that balances, transactions, splits, transfers, budgets, debts, and assets retain exact values, currencies, rounding rules, and source lineage.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 142.1.1 - Implement fixed-point money values**
-  - [ ] **Sub-task 142.1.1.1:** Define amount, currency, scale, sign, rounding mode, effective date, conversion source, overflow, comparison, aggregation, and serialization contracts.
-  - [ ] **Sub-task 142.1.1.2:** Prohibit binary floating-point values from canonical financial storage, comparison, reconciliation, budgeting, and decision paths.
-  - [ ] **Sub-task 142.1.1.3:** Add checked arithmetic, explicit rounding boundaries, stable ordering, deterministic allocation, and currency-mismatch failures.
-- [ ] **Task 142.1.2 - Implement the financial object model**
-  - [ ] **Sub-task 142.1.2.1:** Define institution, account, statement, transaction, pending, posted, split, transfer, category, payee, recurring stream, budget, goal, debt, asset, liability, receipt, invoice, reimbursement, and tax-label records.
-  - [ ] **Sub-task 142.1.2.2:** Preserve source records immutably and represent corrections through adjustment or supersession records with complete lineage.
-  - [ ] **Sub-task 142.1.2.3:** Define reconciliation, duplicate candidate, match, confidence, user disposition, and unresolved-conflict records.
-- [ ] **Task 142.1.3 - Verify arithmetic and lineage**
-  - [ ] **Sub-task 142.1.3.1:** Property-test currencies, scales, signs, boundary magnitudes, rounding modes, aggregate order, allocation remainders, splits, transfers, and conversions.
-  - [ ] **Sub-task 142.1.3.2:** Mutate source, correction, supersession, account, currency, effective date, and lineage fields.
-  - [ ] **Sub-task 142.1.3.3:** Fuzz parsing and serialization with malformed, extreme, future-version, and mixed-currency records.
+- [x] **Task 142.1.1 - Implement fixed-point money values**
+  - [x] **Sub-task 142.1.1.1:** Define amount, currency, scale, sign, rounding mode, effective date, conversion source, overflow, comparison, aggregation, and serialization contracts.
+  - [x] **Sub-task 142.1.1.2:** Prohibit binary floating-point values from canonical financial storage, comparison, reconciliation, budgeting, and decision paths.
+  - [x] **Sub-task 142.1.1.3:** Add checked arithmetic, explicit rounding boundaries, stable ordering, deterministic allocation, and currency-mismatch failures.
+- [x] **Task 142.1.2 - Implement the financial object model**
+  - [x] **Sub-task 142.1.2.1:** Define institution, account, statement, transaction, pending, posted, split, transfer, category, payee, recurring stream, budget, goal, debt, asset, liability, receipt, invoice, reimbursement, and tax-label records.
+  - [x] **Sub-task 142.1.2.2:** Preserve source records immutably and represent corrections through adjustment or supersession records with complete lineage.
+  - [x] **Sub-task 142.1.2.3:** Define reconciliation, duplicate candidate, match, confidence, user disposition, and unresolved-conflict records.
+- [x] **Task 142.1.3 - Verify arithmetic and lineage**
+  - [x] **Sub-task 142.1.3.1:** Property-test currencies, scales, signs, boundary magnitudes, rounding modes, aggregate order, allocation remainders, splits, transfers, and conversions.
+  - [x] **Sub-task 142.1.3.2:** Mutate source, correction, supersession, account, currency, effective date, and lineage fields.
+  - [x] **Sub-task 142.1.3.3:** Fuzz parsing and serialization with malformed, extreme, future-version, and mixed-currency records.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 142.1.AC1:** Given any valid financial fixture, when calculations repeat across supported platforms and execution orders, then canonical results are exact and deterministic.
-- [ ] **Story AC 142.1.AC2:** Given currency ambiguity, overflow, unsupported scale, malformed input, or silent-rounding risk, when evaluation runs, then it fails visibly before a financial result is stored.
-- [ ] **Story AC 142.1.AC3:** Given a corrected source record, when history is inspected, then the original, correction, reason, author, time, and resulting lineage remain available.
+- [x] **Story AC 142.1.AC1:** Given any valid financial fixture, when calculations repeat across supported platforms and execution orders, then canonical results are exact and deterministic.
+- [x] **Story AC 142.1.AC2:** Given currency ambiguity, overflow, unsupported scale, malformed input, or silent-rounding risk, when evaluation runs, then it fails visibly before a financial result is stored.
+- [x] **Story AC 142.1.AC3:** Given a corrected source record, when history is inspected, then the original, correction, reason, author, time, and resulting lineage remain available.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 142.AC1:** `AT-FIN-001` passes for 100% of arithmetic and domain fixtures.
-- [ ] **Sprint AC 142.AC2:** No canonical financial path accepts binary floating point, silent overflow, ambiguous currency, or order-dependent totals.
-- [ ] **Sprint AC 142.AC3:** Every mutation preserves immutable source lineage or fails closed.
-- [ ] **Sprint AC 142.AC4:** `RV-33` independently reproduces precision, rounding, currency, lineage, and malformed-input evidence.
+- [x] **Sprint AC 142.AC1:** `AT-FIN-001` passes for 100% of arithmetic and domain fixtures.
+- [x] **Sprint AC 142.AC2:** No canonical financial path accepts binary floating point, silent overflow, ambiguous currency, or order-dependent totals.
+- [x] **Sprint AC 142.AC3:** Every mutation preserves immutable source lineage or fails closed.
+- [x] **Sprint AC 142.AC4:** `RV-33` independently reproduces precision, rounding, currency, lineage, and malformed-input evidence.
 
 **Gate decision:** Sprint 142 is PASS only when Story 142.1, all criteria, `AM-FIN-001`, `AT-FIN-001`, `SR-FIN-001`, `SR-FIN-002`, `RV-33`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 142 source and contract rows pass locally with 8,400 exact
+arithmetic cases and 48 fail-closed lineage attacks. Native macOS and Windows reproduction and
+upstream Sprint closure remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 143 - Financial Import and Reconciliation
 

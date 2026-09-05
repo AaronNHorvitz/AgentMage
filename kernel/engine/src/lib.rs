@@ -95,6 +95,8 @@ pub mod executive_assistant;
 pub mod external_effect;
 /// Authority-free controlled filesystem plans, structured patches, and exact previews.
 pub mod filesystem_control;
+/// Exact fixed-point money, immutable source lineage, and reconciliation contracts.
+pub mod financial_domain;
 /// Non-executing frontier-result import, quarantine, and local revalidation.
 pub mod frontier_import;
 /// Measured frontier recommendation and local-only disclosure packet composition.
