@@ -14055,21 +14055,21 @@ platform, and independent campaigns remain `BLOCKED_EXTERNAL`; `substitution_set
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 156.1.1 - Rebuild requirements, artifacts, and support truth**
-  - [ ] **Sub-task 156.1.1.1:** Rebuild the complete requirement graph and prove every promoted `AM-*`, `AT-*`, `SR-*`, `RV-*`, story, task, test, artifact, owner, support state, and release claim has current linkage.
+  - [x] **Sub-task 156.1.1.1:** Rebuild the complete requirement graph and prove every promoted `AM-*`, `AT-*`, `SR-*`, `RV-*`, story, task, test, artifact, owner, support state, and release claim has current linkage.
   - [ ] **Sub-task 156.1.1.2:** Generate signed platform, model, runtime, component, process, socket, path, adapter, provider, version, account, object, operation, scope, data-flow, autonomy, retention, exclusion, recovery, and removal manifests.
   - [ ] **Sub-task 156.1.1.3:** Regenerate source and binary SBOMs, cryptographic BOM, Model BOM, licenses, provenance, signatures, hashes, vulnerability dispositions, support, degradation, and end-of-support metadata.
-  - [ ] **Sub-task 156.1.1.4:** Publish exact install, diagnostics, strict-local, connected-pack, autonomy, communication, finance, cloud-observer, credential, recovery, rollback, removal, limitation, accessibility, and troubleshooting documentation.
+  - [x] **Sub-task 156.1.1.4:** Publish exact install, diagnostics, strict-local, connected-pack, autonomy, communication, finance, cloud-observer, credential, recovery, rollback, removal, limitation, accessibility, and troubleshooting documentation.
 - [ ] **Task 156.1.2 - Independently rerun the expanded release**
   - [ ] **Sub-task 156.1.2.1:** Perform three clean standard-user install, upgrade, rollback, uninstall, and residue lifecycles per first-GA platform using published instructions only.
   - [ ] **Sub-task 156.1.2.2:** Rerun every promoted provider, protocol, version, account, object, operation, scope, autonomy, finance, and cloud conformance matrix against exact release candidates and synthetic environments.
   - [ ] **Sub-task 156.1.2.3:** Rerun `RV-01` through `RV-35`, cross-pack lifecycles, strict-local restoration, prohibited-authority absence, accessibility, performance, recovery, incident tabletop, and documentation checks.
-  - [ ] **Sub-task 156.1.2.4:** Recompute every summary from raw evidence and reconcile every failure, skip, suppression, quarantine, flake, stale result, unavailable dependency, and reviewer finding.
+  - [x] **Sub-task 156.1.2.4:** Recompute every summary from raw evidence and reconcile every failure, skip, suppression, quarantine, flake, stale result, unavailable dependency, and reviewer finding.
 - [ ] **Task 156.1.3 - Prove truthful failure and release blocking**
-  - [ ] **Sub-task 156.1.3.1:** Force each platform, provider, autonomy, effect, finance, cloud, privacy, security, accessibility, recovery, removal, support, and evidence gate to fail independently.
-  - [ ] **Sub-task 156.1.3.2:** Prove unsupported operations remain absent and every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking result prevents publication.
+  - [x] **Sub-task 156.1.3.1:** Force each platform, provider, autonomy, effect, finance, cloud, privacy, security, accessibility, recovery, removal, support, and evidence gate to fail independently.
+  - [x] **Sub-task 156.1.3.2:** Prove unsupported operations remain absent and every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, or unreviewed blocking result prevents publication.
   - [ ] **Sub-task 156.1.3.3:** Compare package contents and runtime registrations with public support and limitation matrices and block every mismatch.
 - [ ] **Task 156.1.4 - Decide and sign the expanded checkpoint**
-  - [ ] **Sub-task 156.1.4.1:** Produce final supported, degraded, unsupported, disabled, removed, and post-GA matrices for platforms, providers, operations, and capability packs.
+  - [x] **Sub-task 156.1.4.1:** Produce final supported, degraded, unsupported, disabled, removed, and post-GA matrices for platforms, providers, operations, and capability packs.
   - [ ] **Sub-task 156.1.4.2:** Produce final risk, privacy, prohibited-authority, limitation, remediation, rollback, support, vulnerability, and release decisions from raw evidence.
   - [ ] **Sub-task 156.1.4.3:** Obtain independent reviewer signatures over the exact evidence index and explicit user approval over the release decision.
   - [ ] **Sub-task 156.1.4.4:** Sign and hash checkpoint manifests, candidate packages, evidence indexes, and checksums only after every Decision 0009 blocking gate is green; do not publish v1.0 before Sprint 166.
@@ -14077,19 +14077,24 @@ platform, and independent campaigns remain `BLOCKED_EXTERNAL`; `substitution_set
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 156.1.AC1:** Given exact expanded v1.0 release candidates, when independent reviewers follow published procedures, then every supported platform, provider, operation, pack, restriction, recovery, accessibility, support, and removal result reproduces from raw evidence.
-- [ ] **Story AC 156.1.AC2:** Given any failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, unavailable, or unreviewed blocking result, when checkpoint status is computed, then `G-GA-PRODUCTIVITY-CHECKPOINT` and final `G-GA` remain blocked and no supported-release package is produced.
+- [x] **Story AC 156.1.AC2:** Given any failed, skipped, stale, unavailable, flaky, quarantined, suppressed, unreconciled, unavailable, or unreviewed blocking result, when checkpoint status is computed, then `G-GA-PRODUCTIVITY-CHECKPOINT` and final `G-GA` remain blocked and no supported-release package is produced.
 - [ ] **Story AC 156.1.AC3:** Given final packages, registrations, manifests, support matrices, limitations, and release notes, when compared, then every claim agrees exactly and prohibited authority remains absent.
 - [ ] **Story AC 156.1.AC4:** Given pack disablement or removal, when strict-local restoration is rerun against the release candidate, then no undeclared authority or residue remains.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 156.AC1:** Every promoted requirement has current reproducible requirement-to-release traceability.
+- [x] **Sprint AC 156.AC1:** Every promoted requirement has current reproducible requirement-to-release traceability.
 - [ ] **Sprint AC 156.AC2:** Fedora, Ubuntu, and Windows pass independent clean lifecycle, platform, accessibility, performance, recovery, update, rollback, uninstall, and residue gates.
 - [ ] **Sprint AC 156.AC3:** Every promoted provider, protocol, version, account, object, operation, scope, and autonomy tuple passes conformance and extreme tests; every unsupported family passes absence tests.
 - [ ] **Sprint AC 156.AC4:** Bills of materials, provenance, signatures, hashes, manifests, privacy, support, limitations, removal, documentation, and raw evidence reconcile exactly.
 - [ ] **Sprint AC 156.AC5:** `G-GA-PRODUCTIVITY-CHECKPOINT` closes only after independent reproduction, explicit user approval, and zero hidden Decision 0009 blocker; final `G-GA` remains blocked until Sprint 166.
 
 **Gate decision:** Sprint 156 and `G-GA-PRODUCTIVITY-CHECKPOINT` are PASS only when Story 156.1, all criteria, `AM-GAD-002`, `AT-GA-002`, every applicable `AT-*`, `SR-*`, and `RV-01` through `RV-35`, every promoted milestone gate through Decision 0009, and the Universal Story Definition of Done pass with current signed evidence. Final `G-GA` remains BLOCKED until Sprint 166 under Decision 0010.
+
+**Current status:** eight locally executable Sprint 156 rows pass with 142 prior local evidence
+reports, ten truth documents, and 512 synthetic release-blocker cases; signed manifests, native
+reproduction, platform/provider campaigns, independent review, user approval, checkpoint closure,
+release packages, and promotions remain zero and `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ## [ ] Epic 15 - Trusted Operations, Whole-Codebase Audit, and Superseding v1.0 GA
 
