@@ -405,3 +405,46 @@ Cumulative closures: 1,984; next checkpoint: 2,000.
 
 Exact next action: Sprint 158 operating-system credential broker gate. Cumulative closures: 2,019;
 next checkpoint: 2,025.
+
+## Batch 161 — Sprint 158 operating-system credential broker
+
+### Completed
+
+- Closed 19 locally executable Sprint 158 rows: four typed store-adapter contracts, six
+  acquisition flows, metadata-only credential references, exact worker/provider/host/tenant/
+  account/operation/scope/grant/expiry/redirect/proxy resolution, eight terminal lifecycle
+  states, bounded-memory clearing, 13 prohibited canary surfaces, and metadata-only continuity
+  restoration with deterministic reauthentication. Corpus: 6,912 `AT-CRD-001` mutations;
+  disclosure, wrong-account request, stale reference, canary finding, restored raw credential,
+  and restored usable credential counts: 0 each. Batch closures: 19. Cumulative closures: 2,038.
+  Promotions: 0.
+- Commits: `d46be1d8` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `2f11cca3` (Sprint 158 report), and `47801b94` (14 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.21. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across 14 regenerated paths and 20 pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed Clippy with warnings denied, 4 focused Rust tests, 6 focused Python contract/report
+  tests, the 6,912-case corpus, dependency, traceability, supply-chain, Story 1.2, and Story
+  3.1/Sprint 3 configuration chains. Supply-chain builds: 1; valid post-source evidence
+  regeneration passes: 1. Full gate: 710 seconds, stopping only at retained Story 6.1 Podman
+  after every preceding gate passed. Self-recovery: 2 — applied deterministic Rust formatting,
+  and replaced the recorder's rejected literal `HEAD` input with the verified 40-character
+  capability commit; the failed recorder attempt wrote no artifact. One pre-format focused
+  corpus emission became stale and was overwritten during the single valid post-source pass.
+- Sprint 158 remains `UPSTREAM-SPRINTS-9-11-104-128-130-157-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=native Linux Secret Service, Windows Credential Manager or DPAPI,
+  and retained macOS Keychain environments plus provider authentication and independent review
+  environments, artifact=untouched native store identity, access-control, cryptographic-provider,
+  acquisition, worker-resolution, lifetime, canary, revocation, restoration, removal, and RV-38
+  evidence, action=provision exact native platform key stores and provider credentials, then run
+  AT-CRD-001 and RV-38 separately on each available first-GA platform, credential=platform
+  key-store, OAuth, SSH-agent, certificate, provider, and independent reviewer credentials,
+  payment=platform, provider, certificate, or independent evaluator costs if applicable)`;
+  `substitution_set=empty`. Full-chain blocker remains `blocked: host change required — run npm
+  run -s docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 159 tiered full command execution and enforced read-only audit gate.
+Cumulative closures: 2,038; next checkpoint: 2,050.
