@@ -182,6 +182,37 @@
       "version": "0.0.0"
     },
     {
+      "bom-ref": "cargo:agentmage-experimental-model-lab@0.0.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e32cadad92903063adcbdca8ce63f7045e0dd009a5c1edfed5f7c1fad45ed24c"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "agentmage-experimental-model-lab",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/agentmage-experimental-model-lab@0.0.0",
+      "scope": "required",
+      "type": "library",
+      "version": "0.0.0"
+    },
+    {
       "bom-ref": "cargo:agentmage-host@0.0.0",
       "hashes": [
         {
@@ -15309,6 +15340,10 @@
       "ref": "cargo:agentmage-capability-repository-map@0.0.0"
     },
     {
+      "dependsOn": [],
+      "ref": "cargo:agentmage-experimental-model-lab@0.0.0"
+    },
+    {
       "dependsOn": [
         "cargo:agentmage-capability-knowledge@0.0.0",
         "cargo:agentmage-capability-read-only@0.0.0",
@@ -18416,7 +18451,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:641329b4-c0b4-5cd8-b18d-36b53d86b325",
+  "serialNumber": "urn:uuid:f8d1b00b-3277-5a90-9a38-067a440bc761",
   "specVersion": "1.6",
   "version": 1
 }

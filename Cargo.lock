@@ -75,6 +75,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "agentmage-experimental-model-lab"
+version = "0.0.0"
+
+[[package]]
 name = "agentmage-host"
 version = "0.0.0"
 dependencies = [

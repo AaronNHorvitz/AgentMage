@@ -14778,33 +14778,39 @@ and explicit user approval remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 167.1.1 - Implement separate lab package and authority**
-  - [ ] **Sub-task 167.1.1.1:** Create separate package, process identity, data root, quarantine, synthetic corpus, scratch, resource controller, cancellation, diagnostics, and removal contracts.
-  - [ ] **Sub-task 167.1.1.2:** Structurally omit network, credentials, commands, connectors, messaging, finance, delivery, cloud, backup, operational-memory, approved-store, and canonical-workspace-write interfaces.
-  - [ ] **Sub-task 167.1.1.3:** Retain the non-Chinese and non-Chinese-derived model rule and reject or block policy-excluded or unverifiable lineage.
-- [ ] **Task 167.1.2 - Implement import, quarantine, and evaluation**
-  - [ ] **Sub-task 167.1.2.1:** Record user-selected source, observed license, developer/publisher, provenance gaps, hashes, formats, transformations, warnings, and resource preflight.
-  - [ ] **Sub-task 167.1.2.2:** Parse and load under strict processor, memory, graphics, disk, context, output, duration, process, and cancellation limits.
-  - [ ] **Sub-task 167.1.2.3:** Run deterministic format, malformed-output, prompt-injection, tool-request, exfiltration, resource, coding, and quality evaluations over synthetic data.
-- [ ] **Task 167.1.3 - Verify hostile artifacts and truthful state**
-  - [ ] **Sub-task 167.1.3.1:** Exercise malformed, oversized, hostile, unknown, mirrored, mutable, provenance-incomplete, license-unclear, and unsupported artifacts.
-  - [ ] **Sub-task 167.1.3.2:** Probe every prohibited IPC, path, socket, interface, credential, network, store, and authority route.
-  - [ ] **Sub-task 167.1.3.3:** Interrupt import, parsing, loading, inference, evaluation, cleanup, and removal and inspect residue.
+- [x] **Task 167.1.1 - Implement separate lab package and authority**
+  - [x] **Sub-task 167.1.1.1:** Create separate package, process identity, data root, quarantine, synthetic corpus, scratch, resource controller, cancellation, diagnostics, and removal contracts.
+  - [x] **Sub-task 167.1.1.2:** Structurally omit network, credentials, commands, connectors, messaging, finance, delivery, cloud, backup, operational-memory, approved-store, and canonical-workspace-write interfaces.
+  - [x] **Sub-task 167.1.1.3:** Retain the non-Chinese and non-Chinese-derived model rule and reject or block policy-excluded or unverifiable lineage.
+- [x] **Task 167.1.2 - Implement import, quarantine, and evaluation**
+  - [x] **Sub-task 167.1.2.1:** Record user-selected source, observed license, developer/publisher, provenance gaps, hashes, formats, transformations, warnings, and resource preflight.
+  - [x] **Sub-task 167.1.2.2:** Parse and load under strict processor, memory, graphics, disk, context, output, duration, process, and cancellation limits.
+  - [x] **Sub-task 167.1.2.3:** Run deterministic format, malformed-output, prompt-injection, tool-request, exfiltration, resource, coding, and quality evaluations over synthetic data.
+- [x] **Task 167.1.3 - Verify hostile artifacts and truthful state**
+  - [x] **Sub-task 167.1.3.1:** Exercise malformed, oversized, hostile, unknown, mirrored, mutable, provenance-incomplete, license-unclear, and unsupported artifacts.
+  - [x] **Sub-task 167.1.3.2:** Probe every prohibited IPC, path, socket, interface, credential, network, store, and authority route.
+  - [x] **Sub-task 167.1.3.3:** Interrupt import, parsing, loading, inference, evaluation, cleanup, and removal and inspect residue.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 167.1.AC1:** Given an unapproved artifact, when imported, then its exact source, hashes, observed license, provenance gaps, quarantine, compatibility, warnings, and experimental status remain visible.
-- [ ] **Story AC 167.1.AC2:** Given hostile model output or artifact content, when evaluated, then it cannot access network, credentials, commands, connectors, canonical work, approved models, or user data.
+- [x] **Story AC 167.1.AC1:** Given an unapproved artifact, when imported, then its exact source, hashes, observed license, provenance gaps, quarantine, compatibility, warnings, and experimental status remain visible.
+- [x] **Story AC 167.1.AC2:** Given hostile model output or artifact content, when evaluated, then it cannot access network, credentials, commands, connectors, canonical work, approved models, or user data.
 - [ ] **Story AC 167.1.AC3:** Given resource exhaustion, crash, cancellation, or removal, when the lab stops, then limits hold and no undeclared process, socket, cache, artifact, or permission residue remains.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 167.AC1:** Implementation portions of `AT-EML-001` and `RV-42` pass on each promoted lab platform.
-- [ ] **Sprint AC 167.AC2:** Prohibited capability schemas, registrations, IPC routes, credentials, and writable canonical paths are structurally absent.
+- [x] **Sprint AC 167.AC2:** Prohibited capability schemas, registrations, IPC routes, credentials, and writable canonical paths are structurally absent.
 - [ ] **Sprint AC 167.AC3:** Malformed-artifact, parser, resource, injection, exfiltration, crash, cancellation, accessibility, and residue suites pass.
 - [ ] **Sprint AC 167.AC4:** Experimental state and all license/provenance/support limitations remain visible in Chat, diagnostics, exports, and evidence.
 
 **Gate decision:** Sprint 167 is PASS only when Story 167.1, all criteria, implementation portions of `AM-EML-001`, `AT-EML-001`, `SR-LAB-001`, `SR-LAB-002`, `RV-42`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all 15 locally executable Sprint 167 rows pass in a separate workspace package
+with 6,912 hostile artifact, lifecycle, prohibited-route, and fault cases and zero authority,
+network, canonical write, approved-store access, or hidden limitation. Native promoted-platform,
+accessibility, resource-pressure, interruption, removal, residue, and `RV-42` campaigns remain
+`BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 168 - Experimental Promotion and Removal Gate
 
