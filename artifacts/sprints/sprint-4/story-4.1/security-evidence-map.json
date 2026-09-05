@@ -78,12 +78,12 @@
     {
       "bytes": 35753,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json",
-      "sha256": "a30fec556b78abc84b3c28189bb23e83a6c14c4c6c63c12674cbfde9a59e32f1"
+      "sha256": "a72bb82afabafa34c40e33f6da9b047e56f87749a9d38ee483b2df34731ac26d"
     },
     {
       "bytes": 4896,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json",
-      "sha256": "6ab3f2e15a40ef974606a53929b727ce218cff9665ec180201119d160c9304d8"
+      "sha256": "7450785004887bdc54c45ef8c0de400108636244d62a262b0d44df1aeeb16d4f"
     },
     {
       "bytes": 4406,
@@ -258,7 +258,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "be901a824a1ae3051830b78d4ad9f511a63c6695",
+  "source_revision": "21182e1cde50ebedec8f96bbdae1e9917b333106",
   "status": "pass-linux-security-mapping",
   "story_id": "4.1",
   "summary": {

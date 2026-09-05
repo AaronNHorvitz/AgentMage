@@ -966,7 +966,7 @@
     },
     {
       "path": "Cargo.toml",
-      "sha256": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219"
+      "sha256": "5afd98c00697e9c6974495e4a9568ae42f46ec0acb1eb603641b1ec7bb5f5ea1"
     },
     {
       "path": "architecture/dependency-rules.json",
@@ -1045,7 +1045,7 @@
       "sha256": "7546d14d8ec5b014cd0c8ce541f603e0208ac6cb237b6b29a6d56d7f1a45b490"
     }
   ],
-  "source_revision": "be901a824a1ae3051830b78d4ad9f511a63c6695",
+  "source_revision": "21182e1cde50ebedec8f96bbdae1e9917b333106",
   "status": "pass-linux-architecture",
   "task_id": "4.1.2.4"
 }
