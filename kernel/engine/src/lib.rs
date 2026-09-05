@@ -73,6 +73,8 @@ pub mod conversation_archive;
 pub mod conversation_library;
 /// Interface-invariant authority, isolation, recovery, and privacy assurance.
 pub mod cross_interface_assurance;
+/// Cross-pack adversarial verification, removal inventory, and strict-local restoration contracts.
+pub mod cross_pack_verification;
 /// Provider-neutral delivery graph and non-inheriting adapter conformance.
 pub mod delivery_graph;
 /// Exact offline deployment planning, effect verification, and rollback admission.

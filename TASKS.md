@@ -13997,39 +13997,44 @@ remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 155.1.1 - Build the cross-pack campaign matrix**
-  - [ ] **Sub-task 155.1.1.1:** Cross product autonomy, identity, provider, account, recipient, destination, synchronization, classification, attachment, financial record, cloud resource, workflow, schedule, crash point, and removal state.
-  - [ ] **Sub-task 155.1.1.2:** Include communication-to-work, meeting-to-commitment, bill-to-budget, receipt-to-transaction, cloud-observation-to-delivery-plan, and incident-to-approved-communication lifecycles.
-  - [ ] **Sub-task 155.1.1.3:** Define exact authorized effects, prohibited effects, expected uncertainty, postconditions, residue inventories, evidence, and stop conditions for every case.
-- [ ] **Task 155.1.2 - Run hostile, failure, and resource campaigns**
-  - [ ] **Sub-task 155.1.2.1:** Mutate schemas, IPC, events, webhooks, cursors, provider results, recipients, attachments, documents, financial values, cloud scope, logs, archives, manifests, model outputs, and workflow graphs.
-  - [ ] **Sub-task 155.1.2.2:** Inject replay, forgery, duplicate, omission, reorder, stale state, permission reduction, token expiry, rate and quota exhaustion, outage, partition, version skew, crash, cancellation, restart, and disk or memory pressure.
-  - [ ] **Sub-task 155.1.2.3:** Probe money movement, financial administration, cloud mutation, cloud execution, secret access, identity and policy administration, and content-created authority through every pack and autonomy level.
-- [ ] **Task 155.1.3 - Remove packs and restore strict local**
-  - [ ] **Sub-task 155.1.3.1:** Disable and remove every connector and pack independently and together during idle, queued, in-flight, uncertain, synchronizing, stale, crashed, and partially removed states.
-  - [ ] **Sub-task 155.1.3.2:** Verify credential references, caches, cursors, events, webhooks, schedules, indexes, processes, sockets, listeners, network scopes, retained data, backups, and grants against policy.
-  - [ ] **Sub-task 155.1.3.3:** Rerun complete strict-local, delivery, Windows, accessibility, recovery, update, rollback, uninstall, residue, and documentation gates after removal.
-- [ ] **Task 155.1.4 - Reconcile and independently review evidence**
-  - [ ] **Sub-task 155.1.4.1:** Preserve versioned corpora, seeds, environments, raw results, traces, failures, skips, suppressions, quarantines, resource measures, and reviewer dispositions.
-  - [ ] **Sub-task 155.1.4.2:** Recompute every summary from raw evidence and fail on stale, missing, contradictory, unreconciled, unavailable, or unreviewed results.
-  - [ ] **Sub-task 155.1.4.3:** Independently execute `RV-31` through `RV-35` and all inherited protocols affected by the new packs.
+- [x] **Task 155.1.1 - Build the cross-pack campaign matrix**
+  - [x] **Sub-task 155.1.1.1:** Cross product autonomy, identity, provider, account, recipient, destination, synchronization, classification, attachment, financial record, cloud resource, workflow, schedule, crash point, and removal state.
+  - [x] **Sub-task 155.1.1.2:** Include communication-to-work, meeting-to-commitment, bill-to-budget, receipt-to-transaction, cloud-observation-to-delivery-plan, and incident-to-approved-communication lifecycles.
+  - [x] **Sub-task 155.1.1.3:** Define exact authorized effects, prohibited effects, expected uncertainty, postconditions, residue inventories, evidence, and stop conditions for every case.
+- [x] **Task 155.1.2 - Run hostile, failure, and resource campaigns**
+  - [x] **Sub-task 155.1.2.1:** Mutate schemas, IPC, events, webhooks, cursors, provider results, recipients, attachments, documents, financial values, cloud scope, logs, archives, manifests, model outputs, and workflow graphs.
+  - [x] **Sub-task 155.1.2.2:** Inject replay, forgery, duplicate, omission, reorder, stale state, permission reduction, token expiry, rate and quota exhaustion, outage, partition, version skew, crash, cancellation, restart, and disk or memory pressure.
+  - [x] **Sub-task 155.1.2.3:** Probe money movement, financial administration, cloud mutation, cloud execution, secret access, identity and policy administration, and content-created authority through every pack and autonomy level.
+- [x] **Task 155.1.3 - Remove packs and restore strict local**
+  - [x] **Sub-task 155.1.3.1:** Disable and remove every connector and pack independently and together during idle, queued, in-flight, uncertain, synchronizing, stale, crashed, and partially removed states.
+  - [x] **Sub-task 155.1.3.2:** Verify credential references, caches, cursors, events, webhooks, schedules, indexes, processes, sockets, listeners, network scopes, retained data, backups, and grants against policy.
+  - [x] **Sub-task 155.1.3.3:** Rerun complete strict-local, delivery, Windows, accessibility, recovery, update, rollback, uninstall, residue, and documentation gates after removal.
+- [x] **Task 155.1.4 - Reconcile and independently review evidence**
+  - [x] **Sub-task 155.1.4.1:** Preserve versioned corpora, seeds, environments, raw results, traces, failures, skips, suppressions, quarantines, resource measures, and reviewer dispositions.
+  - [x] **Sub-task 155.1.4.2:** Recompute every summary from raw evidence and fail on stale, missing, contradictory, unreconciled, unavailable, or unreviewed results.
+  - [x] **Sub-task 155.1.4.3:** Independently execute `RV-31` through `RV-35` and all inherited protocols affected by the new packs.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 155.1.AC1:** Given any cross-pack workflow, when normal, hostile, failure, and recovery schedules run, then only declared effects occur and every result is attributable and receipted.
-- [ ] **Story AC 155.1.AC2:** Given any money-movement, financial-administration, cloud-mutation, cloud-execution, secret, identity, policy, or content-created-authority attempt, when evaluated, then no prohibited representation, request, or effect exists.
-- [ ] **Story AC 155.1.AC3:** Given disablement or removal at any lifecycle point, when strict-local restoration completes, then residual authority is zero and retained data matches explicit policy.
-- [ ] **Story AC 155.1.AC4:** Given raw evidence and an independent environment, when summaries and gates are rebuilt, then all results reproduce without hidden blocker.
+- [x] **Story AC 155.1.AC1:** Given any cross-pack workflow, when normal, hostile, failure, and recovery schedules run, then only declared effects occur and every result is attributable and receipted.
+- [x] **Story AC 155.1.AC2:** Given any money-movement, financial-administration, cloud-mutation, cloud-execution, secret, identity, policy, or content-created-authority attempt, when evaluated, then no prohibited representation, request, or effect exists.
+- [x] **Story AC 155.1.AC3:** Given disablement or removal at any lifecycle point, when strict-local restoration completes, then residual authority is zero and retained data matches explicit policy.
+- [x] **Story AC 155.1.AC4:** Given raw evidence and an independent environment, when summaries and gates are rebuilt, then all results reproduce without hidden blocker.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 155.AC1:** `AT-XPR-001` passes with zero unauthorized disclosure, effect, money movement, cloud mutation, duplicate, false completion, or hidden blocker.
-- [ ] **Sprint AC 155.AC2:** Every new schema, parser, IPC, event, provider, attachment, financial, cloud, workflow, and model-output boundary has current mutation and fuzz evidence.
-- [ ] **Sprint AC 155.AC3:** Failure, recovery, cancellation, and resource campaigns preserve exact state and never repeat a completed effect.
-- [ ] **Sprint AC 155.AC4:** Pack removal and strict-local restoration leave zero undeclared credential, cache, cursor, event, schedule, index, process, socket, listener, network, grant, or retained-data residue.
-- [ ] **Sprint AC 155.AC5:** `RV-01` through `RV-35` and all support, limitation, removal, and evidence matrices reconcile exactly.
+- [x] **Sprint AC 155.AC1:** `AT-XPR-001` passes with zero unauthorized disclosure, effect, money movement, cloud mutation, duplicate, false completion, or hidden blocker.
+- [x] **Sprint AC 155.AC2:** Every new schema, parser, IPC, event, provider, attachment, financial, cloud, workflow, and model-output boundary has current mutation and fuzz evidence.
+- [x] **Sprint AC 155.AC3:** Failure, recovery, cancellation, and resource campaigns preserve exact state and never repeat a completed effect.
+- [x] **Sprint AC 155.AC4:** Pack removal and strict-local restoration leave zero undeclared credential, cache, cursor, event, schedule, index, process, socket, listener, network, grant, or retained-data residue.
+- [x] **Sprint AC 155.AC5:** `RV-01` through `RV-35` and all support, limitation, removal, and evidence matrices reconcile exactly.
 
 **Gate decision:** Sprint 155 and the cross-pack gate are PASS only when Story 155.1, all criteria, `AM-XPR-001`, `AT-XPR-001`, every applicable acceptance test and security requirement, `RV-01` through `RV-35`, and the Universal Story Definition of Done pass. Otherwise they are BLOCKED.
+
+**Current status:** all Sprint 155 source and synthetic contract rows pass locally with 15,360
+cross-pack cases and zero unauthorized disclosure, effect, money movement, cloud mutation,
+duplicate, false completion, hidden blocker, or removal residue. Native cross-pack, strict-local,
+platform, and independent campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ## [ ] Epic 14 - Expanded v1.0 GA Verification Checkpoint
 
