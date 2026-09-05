@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_136_local_evidence",
+  "source_revision": "e245e04dbf20fb7f4ed5dac05013936f894a31eb",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "da6443ed4b06bfe95d72a5807d7458937b6726ff25648f4e072a4425c9ee2fb1",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "ef24ca0fa7f25bad4fa96203c1b7bca0f22140add3009dd3394b20abf2bb5ac5",
+    "kernel/engine/src/communications_slack.rs": "00a94a6b21d76331abf86d768525ab30ed46f42057ab2dcd60eca215d6fa17a3",
+    "supply-chain/dependency-provenance.json": "3fbf10a9394965caaf312d9f7659f6fcb4d4be49e0416dfe505928b38adccf65",
+    "supply-chain/sbom.cdx.json": "2504c6da32610fc9eb602411c431e00b553474ee214d32be81d7ad5dd25c17d2",
+    "supply-chain/dependency-hashes.sha256": "21d55dc66b56e469960278972ba483ace62e54f83ccd58d720c5098ad4291df9",
+    "artifacts/sprints/sprint-136/slack-corpus.json": "8211d8242365120cf05dfb3e81738a342cb1b41155885dc1e4bd9e20c8e0ad0a",
+    "scripts/communications_slack_contract.py": "ae3e120617b10071b46f6a855d4816034d24029844ee044a31660c8a82ff910d",
+    "tests/test_communications_slack_contract.py": "11612d0dfbbcfed8e531730acdb7e590ba1a96c1f1251bb9041d0956ca65240b",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_136_evidence.py": "6a316075516238891b9e03daf01368dc98936efc0ef45c096e45b5e9697d267e",
+    "tests/test_sprint_136_evidence.py": "0f59d2ed246630010d5220675d24c0bfad9fe8d47f1f18e7a2fa46c3e153bdef"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "slack-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "communications_slack::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "25465bc8088bd2a4c979582688ca7dafe4d78dec9bd7ef4fce441628f2fcfa1e",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "slack-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_communications_slack_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "9d5822f16af9b5fe0e4ad15771f3fd6c5f0262b26a6ebc83b6ec6bd52bf2d655",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_136_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-SLK-001",
+    "AT-SLK-001",
+    "SR-PRD-005",
+    "SR-PRD-006",
+    "SR-PRD-007",
+    "RV-23",
+    "RV-24",
+    "RV-25",
+    "RV-26",
+    "RV-31"
+  ],
+  "implemented_contracts": {
+    "profile_count": 6,
+    "mutation_family_count": 16,
+    "failure_family_count": 10,
+    "lifecycle_state_count": 5,
+    "fixture_case_count": 4800,
+    "unauthorized_effect_count": 0,
+    "duplicate_post_count": 0,
+    "cross_workspace_disclosure_count": 0,
+    "removal_authority_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "workspace_identity_complete": true,
+    "capability_discovery_complete": true,
+    "exact_effect_complete": true,
+    "event_and_recovery_complete": true,
+    "isolation_and_removal_complete": true,
+    "native_provider_campaign_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-132-BLOCKED",
+      "owner": "136"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "Slack test workspaces, channels, direct messages, and accounts",
+      "artifact": "untouched native capability, membership, effect, event, rate, security, reviewer, and removal evidence",
+      "action": "provision exact Slack workspaces/accounts/tokens and run AT-SLK-001 plus RV-23 through RV-26 and RV-31 native campaigns",
+      "credential": "Slack OAuth app and workspace account credentials",
+      "payment": "Slack workspace or provider costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_136_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_132_closed": false,
+    "native_slack_support_promoted": false,
+    "support_promotion_count": 0
+  }
+}
