@@ -83,3 +83,41 @@ closures: 1,816; next checkpoint: 1,825.
 
 Exact next action: Sprint 150 QuickBooks Online and Xero accounting. Cumulative closures: 1,836;
 next checkpoint: 1,850.
+
+## Batch 153 — Sprint 150 QuickBooks Online and Xero accounting
+
+### Completed
+
+- Closed 20 local Sprint 150 rows: exact provider, organization, role, ledger, period, basis,
+  tax, currency, precision, version, rate, limitation, capability, object, immutable-source,
+  draft, approval, idempotency, attempt, postcondition, reconciliation, and removal records;
+  closed-period, stale-identity, money-movement, ambiguous-effect, and residual-authority refusal;
+  and ten prohibited financial-administration families. Corpus cases: 13,440; wrong writes,
+  duplicate writes, money-moving writes, and residual authority: 0 each. Batch closures: 20.
+  Cumulative closures: 1,856. Promotions: 0.
+- Commits: `d5f68e84` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `c604adcb` (Sprint 150 report), and `6ae4db58` (14 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.20. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across 27 changed or regenerated paths and all 20 pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed Clippy with warnings denied, 4 focused Rust tests, 7 focused Python tests, the
+  13,440-case AT-ACC-001 corpus, Sprint evidence, dependency, traceability, supply-chain, Story
+  1.2, and Story 3.1/Sprint 3 configuration chains. Supply-chain builds: 1; evidence regeneration
+  passes: 1. Full gate: 703.701 seconds, stopping only at retained Story 6.1 Podman after every
+  preceding gate passed. Self-recovery: 1 — renamed a test-local discovery binding that shadowed
+  its fixture constructor, then reran warning-denying Clippy and every focused test green.
+- Sprint 150 remains `UPSTREAM-SPRINTS-128-138-142-143-148-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=QuickBooks Online and Xero sandbox organizations with supported
+  accounting objects, artifact=untouched native organization, period, precision, tax,
+  idempotency, recovery, security, reviewer, revocation, and removal evidence, action=provision
+  exact QuickBooks Online and Xero sandbox organizations and credentials, then run AT-ACC-001 and
+  applicable reviewer campaigns, credential=QuickBooks Online and Xero OAuth credentials,
+  payment=provider subscription costs if applicable)`; `substitution_set=empty`. Full-chain
+  blocker remains `blocked: host change required — run npm run -s docs:check outside the
+  restricted filesystem sandbox with the current user's /run/user/1000/libpod writable`;
+  `substitution_set=empty`.
+
+Exact next action: Sprint 151 financial privacy and no-money-movement gate. Cumulative closures:
+1,856; next checkpoint: 1,875.
