@@ -366,3 +366,42 @@ next checkpoint: 2,000.
 
 Exact next action: Sprint 157 trusted-operations and whole-codebase-audit contract/topology gate.
 Cumulative closures: 1,984; next checkpoint: 2,000.
+
+## Batch 160 — Sprint 157 trusted-operations and whole-codebase-audit contracts
+
+### Completed
+
+- Closed 35 local Sprint 157 rows across both stories: five isolated trusted-capability classes,
+  11 lifecycle states, three platform topology classes, ten fault/compatibility families, exact
+  process and cleanup ownership, nine audit path dispositions, 13 structured project-memory record
+  kinds, source-derived identity, explicit coverage, and RV-36 through RV-48 ownership. Corpus:
+  1,650 `AT-TRU-001` plus 1,170 `AT-CBA-001` cases; authority unions, external effects,
+  audit-created authority, and false completeness: 0 each. Batch closures: 35. Cumulative
+  closures: 2,019. Promotions: 0.
+- Commits: `b70e0fb9` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `baaecc6f` (Sprint 157 report), and `0a75048a` (14 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.11. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across 14 regenerated paths and all pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed Clippy with warnings denied, 4 focused Rust tests, 6 focused Python tests, both corpora,
+  Sprint evidence, dependency, traceability, supply-chain, Story 1.2, and Story 3.1/Sprint 3
+  configuration chains. Supply-chain builds: 1; evidence regeneration passes: 1. Full gate:
+  707.052 seconds, stopping only at retained Story 6.1 Podman after every preceding gate passed.
+  Self-recovery: 0.
+- Sprint 157 remains `UPSTREAM-SPRINTS-4-16-103-105-121-125-156-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=native Fedora, Ubuntu, Windows, and retained macOS topology plus
+  signed release-manifest and independent review environments, artifact=untouched native
+  process, IPC, socket, path, network, secret, storage, cleanup, topology, manifest, diagnostic,
+  reviewer, and whole-codebase-audit contract evidence, action=satisfy upstream Sprint blockers,
+  provision exact native platforms and signed manifest environment, then run AT-TRU-001,
+  AT-CBA-001, and RV-36 through RV-48 native campaigns, credential=platform, signing, repository,
+  model/runtime, and independent reviewer credentials, payment=platform, signing, model, hosting,
+  or independent evaluator costs if applicable)`; `substitution_set=empty`. Full-chain blocker
+  remains `blocked: host change required — run npm run -s docs:check outside the restricted
+  filesystem sandbox with the current user's /run/user/1000/libpod writable`;
+  `substitution_set=empty`.
+
+Exact next action: Sprint 158 operating-system credential broker gate. Cumulative closures: 2,019;
+next checkpoint: 2,025.
