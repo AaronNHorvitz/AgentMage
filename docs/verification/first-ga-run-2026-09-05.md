@@ -870,3 +870,42 @@ next checkpoint: 2,250.
 
 Exact next action: audit Universal Story Definition of Done and every remaining unchecked row for
 exact blocker coverage. Cumulative closures: 2,236; next checkpoint: 2,250.
+
+## Batch 172 — complete remaining-row blocker audit
+
+### Completed
+
+- Added a deterministic whole-plan audit and committed evidence binding all 1,484 remaining
+  unchecked `TASKS.md` rows to their owning exact blocker records. Audit result: 1,484 blocked
+  rows, 0 unmapped rows, and 0 nonempty substitution sets. Added explicit current status for
+  `G-DOD-01` through `G-DOD-23`, preserving their dependency on the exact Sprint 0-168 blockers.
+  Batch closures: 0; cumulative closures: 2,236; promotions: 0.
+- Commits: `6e621b79` (remaining-row audit implementation, evidence, tests, and G-DOD blocker
+  binding) and `46c15375` (4 downstream Story 1.2 contract artifacts). Including this log: 3;
+  commits/item: N/A because this terminal audit closed 0 rows. Review pins advanced: 0; complete
+  intersection across 4 regenerated paths and 20 pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed 5 focused blocker-audit tests, deterministic audit validation, supply-chain, Story 1.2
+  contract evidence, and every full-chain gate preceding Story 6.1. Supply-chain builds: 1;
+  evidence regeneration passes: 2 (one provisional audit build before supply-chain and one
+  authoritative post-supply-chain regeneration). Full gate: 716 seconds, stopping only at the
+  retained Story 6.1 Podman boundary. Self-recovery: 1; corrected the provisional regeneration
+  ordering by rebuilding the audit evidence after the single supply-chain pass.
+- Every remaining row is blocked by its committed owning Sprint 0-168 blocker set or, for the
+  universal controls, `UPSTREAM-SPRINTS-0-168-BLOCKED` plus
+  `BLOCKED_EXTERNAL(platform=all native macOS, Fedora, Ubuntu, Windows, provider, model/artifact,
+  accessibility, signing, hosted, credential, payment, physical-hardware, clean-device, fuzzing,
+  and independent-review/approval environments named by Sprints 0-168, artifact=all untouched
+  platform, runtime, provider, model, security, accessibility, removal, release, and review
+  evidence named by the owning sprint blockers, action=satisfy every exact owning sprint blocker
+  and rerun each applicable G-DOD control without substitution, credential=all credentials named
+  by the owning sprint blockers, payment=all costs named by the owning sprint blockers if
+  applicable)`; `substitution_set=empty`. Full-chain blocker remains `blocked: host change
+  required — run npm run -s docs:check outside the restricted filesystem sandbox with the current
+  user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: none inside the authorized repository and host scope; all 1,484 remaining rows
+are audit-bound to exact human/external blockers with empty substitution sets. Decision 0047 is
+accepted. Cumulative closures: 2,236. Terminal stop follows the final handoff and push.
