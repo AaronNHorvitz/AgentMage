@@ -698,3 +698,48 @@ closures: 2,169; next checkpoint: 2,175.
 
 Exact next action: Sprint 165 Muse disposition and integrated trusted-operations verification gate.
 Cumulative closures: 2,184; next checkpoint: 2,200.
+
+## Batch 168 — Sprint 165 final trusted-operation reconciliation
+
+### Completed
+
+- Closed 26 locally executable Sprint 165 rows: explicit non-pass candidate evidence, family-result
+  independence, 10-capability hostile composition, exact one-capability/one-grant steps, 13 attack
+  families and 10 variations, module/flow/requirement reconciliation, duplicate/dead/orphan/stale
+  detection, contradiction retention and reverse dependencies, eight risk-directed passes, stable
+  calibrated findings, three report profiles, raw-record recomputation, false-completion refusal,
+  and 11 known-answer fixture families. Corpora: 10,400 composed attacks and 264 audit cases;
+  authority reuse, unauthorized effect, and false comprehensive completion counts: 0 each. Batch
+  closures: 26. Cumulative closures: 2,210. Promotions: 0; Muse disposition: `BLOCKED`; approved
+  models: 0.
+- Commits: `e519acb8` (kernel reconciliation, corpora, tests, closures, traceability and supply
+  chain), `c60809fc` (Sprint 165 report), and `544f1d62` (14 downstream bound artifacts). Including
+  this log: 4; commits/item: 0.15. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across 14 regenerated paths and 20 pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed formatting, Clippy with warnings denied, 3 focused Rust tests, 9 focused Python
+  contract/report tests, corpora, dependency, traceability, supply-chain, Story 1.2, and Story
+  3.1/Sprint 3 configuration chains. Supply-chain builds: 1; evidence regeneration passes: 1. Full
+  gate: 710 seconds, stopping only at retained Story 6.1 Podman after every preceding gate passed.
+  Self-recovery: 1 — corrected the initial nonexistent `feature_flag` module insertion context to
+  the authoritative trusted-audit module location; the rejected patch changed no file.
+- Sprint 165 remains `UPSTREAM-SPRINTS-0-164-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=first-party Muse and complete eligible candidate sources plus native
+  Fedora, Ubuntu, Windows, provider, storage, accessibility, strict-local, clean-install, removal,
+  and independent review environments, artifact=untouched exact candidate provenance, artifact,
+  model/runtime/hardware, role-matrix, measurement, disposition, cross-capability native attack,
+  disablement, removal, residue, accessibility, incident, recovery, support, RV-41, RV-43, and
+  RV-46 through RV-48 evidence, action=satisfy every upstream blocker, provision exact candidate
+  artifacts and all native/provider/reviewer environments, then run the complete candidate
+  admission, trusted-operations composition, removal, restoration, audit, accessibility, incident,
+  recovery, and independent review campaigns, credential=candidate-source, model artifact,
+  provider, platform key-store, storage, accessibility, and independent reviewer credentials,
+  payment=model, provider, storage, platform, accessibility, or independent evaluator costs if
+  applicable)`; `substitution_set=empty`. Full-chain blocker remains `blocked: host change required
+  — run npm run -s docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 166 superseding first-GA evidence and release decision gate. Cumulative
+closures: 2,210; next checkpoint: 2,225.
