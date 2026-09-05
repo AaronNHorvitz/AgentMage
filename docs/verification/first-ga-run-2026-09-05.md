@@ -321,3 +321,48 @@ closures: 1,951; next checkpoint: 1,975.
 
 Exact next action: Sprint 156 expanded first-GA evidence checkpoint. Cumulative closures: 1,976;
 next checkpoint: 2,000.
+
+## Batch 159 — Sprint 156 expanded first-GA evidence checkpoint
+
+### Completed
+
+- Closed 8 locally executable Sprint 156 rows: complete requirement and release-claim linkage;
+  exact truth documentation; raw-evidence summary reconciliation; independent negative cases for
+  16 release domains and ten blocking states; unsupported-operation publication refusal; final
+  support-state matrix generation; checkpoint-blocking acceptance; and current promoted-requirement
+  traceability. Corpus inventory: 142 prior local reports, ten truth documents, and 512
+  `AT-GA-002` blocker cases. Signed manifests, native reproductions, reviewer signatures, user
+  approvals, release packages, checkpoint closures, and promotions: 0 each. Batch closures: 8.
+  Cumulative closures: 1,984. Promotions: 0.
+- Commits: `90570d8f` (checkpoint corpus, tests, closures and traceability), `f548d296` (Sprint 156
+  report), and `1b326781` (four downstream Story 1.2 bound artifacts). Including this log: 4;
+  commits/item: 0.50. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across four
+  regenerated paths and all pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed 6 focused Python tests, the 512-case `AT-GA-002` blocker corpus, Sprint evidence,
+  dependency, status, product-CI, traceability, supply-chain, Story 1.2, and Story 3.1/Sprint 3
+  configuration chains. Supply-chain builds: 1; evidence regeneration passes: 1. Full gate:
+  712.073 seconds, stopping only at retained Story 6.1 Podman after every preceding gate passed.
+  Self-recovery: 0.
+- Sprint 156 remains `UPSTREAM-SPRINTS-0-155-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=exact Fedora, Ubuntu, and Windows expanded release candidates,
+  every promoted provider and credential, signing infrastructure, accessibility, performance,
+  recovery, update, rollback, removal, strict-local, independent reproduction and review
+  environments, and release owner approval, artifact=untouched signed packages, source, binary,
+  cryptographic and model BOMs, manifests, provenance, hashes, lifecycle, provider, AT, RV,
+  accessibility, performance, recovery, removal, strict-local restoration, evidence indexes,
+  reviewer signatures, user approval, and release notes, action=satisfy every upstream Sprint
+  0-155 blocker, provision exact candidates and environments, rerun AT-GA-002 and every applicable
+  AT, SR, and RV-01 through RV-35 campaign, obtain independent signatures and explicit
+  release-owner approval, then sign only if every gate is green, credential=all provider,
+  platform, model, signing, instrumentation, reviewer, and release-owner credentials,
+  payment=provider, model, platform, hosting, signing, instrumentation, accessibility,
+  performance, or review costs if applicable)`; `substitution_set=empty`. Full-chain blocker
+  remains `blocked: host change required — run npm run -s docs:check outside the restricted
+  filesystem sandbox with the current user's /run/user/1000/libpod writable`;
+  `substitution_set=empty`.
+
+Exact next action: Sprint 157 trusted-operations and whole-codebase-audit contract/topology gate.
+Cumulative closures: 1,984; next checkpoint: 2,000.
