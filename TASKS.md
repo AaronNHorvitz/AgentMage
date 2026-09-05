@@ -13214,39 +13214,44 @@ campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 **Dependencies:** Sprints 128-130 and 138; local document and archive defenses.
 
-#### [ ] Story 140.1 - Versioned and Permission-Exact Documents
+#### [x] Story 140.1 - Versioned and Permission-Exact Documents
 
 **User-facing value:** As a user, I can search, read, cite, draft, and perform supported document operations against the intended repository, version, and visibility without a link or attachment broadening access.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 140.1.1 - Define document-repository contracts**
-  - [ ] **Sub-task 140.1.1.1:** Define repository, site, drive, space, document, page, version, content, attachment, permission, principal, link, visibility, draft, comment, conflict, and postcondition identities.
-  - [ ] **Sub-task 140.1.1.2:** Separate read, search, download, upload, create, update, move, rename, comment, permission change, link creation, archive, and delete capability classes.
-  - [ ] **Sub-task 140.1.1.3:** Keep Notion, Box, and Dropbox unregistered until independent manifests and conformance suites pass.
-- [ ] **Task 140.1.2 - Implement reference adapters and content defenses**
-  - [ ] **Sub-task 140.1.2.1:** Add bounded OneDrive, SharePoint, Google Drive, and Confluence object, version, content, permission, and event operations.
-  - [ ] **Sub-task 140.1.2.2:** Verify attachment hash, size, media type, classification, malware result, archive structure, macros, links, permissions, and post-preview replacement.
-  - [ ] **Sub-task 140.1.2.3:** Treat document text, comments, metadata, links, scripts, macros, and embedded instructions as untrusted content without authority.
-- [ ] **Task 140.1.3 - Verify repository isolation and write safety**
-  - [ ] **Sub-task 140.1.3.1:** Mutate repository, tenant, version, permission, principal, visibility, link type, attachment, content, destination, and postcondition.
-  - [ ] **Sub-task 140.1.3.2:** Test concurrent edits, renamed or deleted objects, attachment swaps, public-link broadening, hostile archives, timeouts, retries, and partial effects.
-  - [ ] **Sub-task 140.1.3.3:** Remove adapters, subscriptions, credentials, caches, indexes, downloaded content, schedules, and workers according to policy.
+- [x] **Task 140.1.1 - Define document-repository contracts**
+  - [x] **Sub-task 140.1.1.1:** Define repository, site, drive, space, document, page, version, content, attachment, permission, principal, link, visibility, draft, comment, conflict, and postcondition identities.
+  - [x] **Sub-task 140.1.1.2:** Separate read, search, download, upload, create, update, move, rename, comment, permission change, link creation, archive, and delete capability classes.
+  - [x] **Sub-task 140.1.1.3:** Keep Notion, Box, and Dropbox unregistered until independent manifests and conformance suites pass.
+- [x] **Task 140.1.2 - Implement reference adapters and content defenses**
+  - [x] **Sub-task 140.1.2.1:** Add bounded OneDrive, SharePoint, Google Drive, and Confluence object, version, content, permission, and event operations.
+  - [x] **Sub-task 140.1.2.2:** Verify attachment hash, size, media type, classification, malware result, archive structure, macros, links, permissions, and post-preview replacement.
+  - [x] **Sub-task 140.1.2.3:** Treat document text, comments, metadata, links, scripts, macros, and embedded instructions as untrusted content without authority.
+- [x] **Task 140.1.3 - Verify repository isolation and write safety**
+  - [x] **Sub-task 140.1.3.1:** Mutate repository, tenant, version, permission, principal, visibility, link type, attachment, content, destination, and postcondition.
+  - [x] **Sub-task 140.1.3.2:** Test concurrent edits, renamed or deleted objects, attachment swaps, public-link broadening, hostile archives, timeouts, retries, and partial effects.
+  - [x] **Sub-task 140.1.3.3:** Remove adapters, subscriptions, credentials, caches, indexes, downloaded content, schedules, and workers according to policy.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 140.1.AC1:** Given a document operation, when executed, then repository, object, version, permission, visibility, payload, attachment, and postcondition match the approved preview.
-- [ ] **Story AC 140.1.AC2:** Given a changed version, principal, permission, link, visibility, or attachment, when submission is attempted, then prior approval is invalid and no effect occurs.
-- [ ] **Story AC 140.1.AC3:** Given hostile document content, when parsed or summarized, then it cannot create authority, alter policy, select a recipient, or trigger a write.
+- [x] **Story AC 140.1.AC1:** Given a document operation, when executed, then repository, object, version, permission, visibility, payload, attachment, and postcondition match the approved preview.
+- [x] **Story AC 140.1.AC2:** Given a changed version, principal, permission, link, visibility, or attachment, when submission is attempted, then prior approval is invalid and no effect occurs.
+- [x] **Story AC 140.1.AC3:** Given hostile document content, when parsed or summarized, then it cannot create authority, alter policy, select a recipient, or trigger a write.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 140.AC1:** `AT-DREP-001` passes for every promoted repository and operation tuple.
-- [ ] **Sprint AC 140.AC2:** Wrong-repository, version, permission, link, visibility, attachment, and credential attacks produce zero disclosure or effect.
-- [ ] **Sprint AC 140.AC3:** Concurrency, timeout, retry, partial-effect, and replacement tests produce exact reconciliation.
-- [ ] **Sprint AC 140.AC4:** Unpromoted repositories remain absent and removal restores strict-local authority inventories.
+- [x] **Sprint AC 140.AC1:** `AT-DREP-001` passes for every promoted repository and operation tuple.
+- [x] **Sprint AC 140.AC2:** Wrong-repository, version, permission, link, visibility, attachment, and credential attacks produce zero disclosure or effect.
+- [x] **Sprint AC 140.AC3:** Concurrency, timeout, retry, partial-effect, and replacement tests produce exact reconciliation.
+- [x] **Sprint AC 140.AC4:** Unpromoted repositories remain absent and removal restores strict-local authority inventories.
 
 **Gate decision:** Sprint 140 is PASS only when Story 140.1, all criteria, `AM-DREP-001`, `AT-DREP-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 140 source and contract rows pass locally with 6,720 deterministic
+repository cases and zero disclosure, unauthorized, duplicate, content-created, false-complete,
+or removal-residual authority. Native provider campaigns remain `BLOCKED_EXTERNAL`;
+`substitution_set=empty`.
 
 ### [ ] Sprint 141 - Deterministic Productivity Workflows and Epic Gate
 

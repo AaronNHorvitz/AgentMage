@@ -71,6 +71,7 @@ pub mod deployment_safety;
 pub mod diagnostics;
 /// Deterministic document registers, records review, and exact local action previews.
 pub mod document_control;
+pub mod document_repository_adapter;
 /// Durable attempt checkpoints and deterministic no-replay restart decisions.
 pub mod durable_attempt_recovery;
 pub mod engineering_execution;
