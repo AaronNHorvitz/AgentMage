@@ -2929,3 +2929,38 @@ closures: 1,653; next checkpoint: 1,675.
 
 Exact next action: Sprint 142 finance provider contracts. Cumulative closures: 1,676; next
 checkpoint: 1,700.
+
+## Batch 145 — Sprint 142 exact financial domain and arithmetic
+
+### Completed
+
+- Closed 20 local Sprint 142 rows: fixed-point `i128` money values, closed currencies and scales,
+  five explicit rounding modes, checked arithmetic, stable serialization, deterministic allocation,
+  20 financial object kinds, immutable sources, adjustment and supersession lineage, duplicate
+  candidates, confidence, user disposition, and unresolved conflicts. Corpus cases: 8,400;
+  fail-closed lineage attacks: 48; binary-float, inexact, order-dependent, silent-failure, and
+  lineage-loss outcomes: 0 each. Batch closures: 20. Cumulative closures: 1,696. Promotions: 0.
+- Commits: `1c2c9338` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `682ed405` (Sprint 142 report), and `2f75911b` (13 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.20. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 5 focused Rust tests, 9 focused Python tests, the 8,400-case AT-FIN-001 corpus, 48
+  malformed/mutated lineage attacks, Sprint evidence, dependency, traceability, supply-chain,
+  Story 1.2, and Story 3.1 configuration chains. Supply-chain builds: 1; evidence regeneration
+  passes: 2. Full gate: 708.78 seconds, stopping only at retained Story 6.1 Podman after every
+  preceding gate passed. Self-recovery: 2; applied `cargo fmt` after the focused format check
+  identified the exact source layout changes, and replaced a nonexistent direct
+  `scripts/traceability.py` check with the repository's `npm run -s traceability:check` command.
+- Sprint 142 remains `UPSTREAM-SPRINTS-127-129-141-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=macOS arm64 and Windows 11 x86_64 native hosts,
+  artifact=untouched native fixed-point arithmetic, serialization, ordering, lineage, and
+  reviewer evidence, action=provision exact hosts and run AT-FIN-001 and RV-33 native campaigns,
+  credential=none, payment=host acquisition or access costs if applicable)`;
+  `substitution_set=empty`. Full-chain blocker remains `blocked: host change required — run npm
+  run -s docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 143 financial import and reconciliation. Cumulative closures: 1,696;
+next checkpoint: 1,700.
