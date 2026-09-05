@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_141_local_evidence",
+  "source_revision": "a0438ba7be71fd4fd8bc975cf792bdb9814e58ca",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "5998a4fe0e666bfd02e7dedac61e1af3485b6c942a7263698f65b697728dfcfd",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "86c52a396efdc88a38ce0cfd88791b291d8b014811a26eed214a1c15e26c71b9",
+    "kernel/engine/src/productivity_workflow.rs": "576c2ed988abafb538d38ad591d091bb4da1e0e1d2189c183e6cf0d5f76154f7",
+    "supply-chain/dependency-provenance.json": "5e4de528d80b7d71cfaa75a62bd99dec133f41e6ada2c94a572f1b36e3e17c7c",
+    "supply-chain/sbom.cdx.json": "28b3216652be9cbdf5264c6048cfac40a7f887f0048af81a1e87eac9a234a448",
+    "supply-chain/dependency-hashes.sha256": "f3546f9dda0442a4b7a421d469e0a3e9cabf4393505f7b72bbfc50205e8c70fe",
+    "artifacts/sprints/sprint-141/workflow-corpus.json": "60d69bc19a8f1211ee1de5d6ea835ffa792db41c644675008563eb25567e4415",
+    "scripts/productivity_workflow_contract.py": "3aeb98ae8b6d3a02fe50ae9b146a247e51c7b6bc1172fee5a9407483d3473c2f",
+    "tests/test_productivity_workflow_contract.py": "3608dcbc9846d343a212c457b37ba9ac17d87ba8f1f43de36e3f7f3a247970aa",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_141_evidence.py": "ae9a2f7d5d018ab7549d42c90b886b7c1e3edbb446ffc3fc580092b2a7087c36",
+    "tests/test_sprint_141_evidence.py": "43fe1b26995c6b12e65bca87f162ee97a5e0c5567d08ca9bee6a3f9d970c617f"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "workflow-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "productivity_workflow::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2f59f2611bbac325dee0d4bd062dcc73ccc4c7f0dccd94b5d86c3d173621a923",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "workflow-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_productivity_workflow_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "7366ce53c393fa42c16131fc375c6d0a0840af99428b01a3d6d096ee49e146d2",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_141_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-WFA-001",
+    "AT-WFA-001",
+    "AM-PCAL-001",
+    "AT-PCAL-001",
+    "SR-PRD-009",
+    "SR-PRD-012",
+    "RV-31",
+    "RV-32",
+    "RV-35"
+  ],
+  "implemented_contracts": {
+    "workflow_family_count": 7,
+    "node_kind_count": 18,
+    "attack_family_count": 16,
+    "failure_family_count": 10,
+    "fixture_case_count": 5600,
+    "unauthorized_effect_count": 0,
+    "duplicate_effect_count": 0,
+    "inferred_consent_count": 0,
+    "content_authority_count": 0,
+    "removal_authority_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "immutable_compilation_complete": true,
+    "current_policy_intersection_complete": true,
+    "lifecycle_and_recovery_complete": true,
+    "hostile_workflow_campaign_complete": true,
+    "confirmed_calendar_workflow_complete": true,
+    "native_integrated_campaign_complete": false,
+    "epic_gate_closed": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-127-140-BLOCKED",
+      "owner": "141"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "all native productivity provider accounts, authenticated Proton UI, accessibility surfaces, and independent epic-review environment",
+      "artifact": "untouched integrated identity, synchronization, autonomy, injection, uncertainty, accessibility, reviewer, strict-local, and removal evidence",
+      "action": "satisfy every Sprint 127-140 external tuple, then run AT-WFA-001, AT-PCAL-001, all applicable provider campaigns, RV-31, RV-32, and RV-35",
+      "credential": "all provider-specific credentials and user-established Proton session recorded by Sprints 127-140",
+      "payment": "provider subscription costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_141_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprints_127_140_closed": false,
+    "epic_12_closed": false,
+    "support_promotion_count": 0
+  }
+}
