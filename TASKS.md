@@ -13610,39 +13610,44 @@ Native finance/communication correlation campaigns and upstream Sprint closure r
 
 **Dependencies:** Sprints 140, 142, and 143; local document, OCR, archive, malware, and evidence contracts.
 
-#### [ ] Story 148.1 - Source-Preserving Financial Records
+#### [x] Story 148.1 - Source-Preserving Financial Records
 
 **User-facing value:** As a user, I can find and match a receipt, invoice, reimbursement, statement, or tax document without losing the original file, extraction uncertainty, transaction evidence, or privacy classification.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 148.1.1 - Implement financial-document identities and extraction**
-  - [ ] **Sub-task 148.1.1.1:** Define source file, content hash, media type, page, region, extraction, field, value, confidence, currency, date, merchant, account hint, classification, retention, and provenance records.
-  - [ ] **Sub-task 148.1.1.2:** Extract bounded receipt, invoice, reimbursement, statement, and tax-document fields while preserving raw source and per-field evidence.
-  - [ ] **Sub-task 148.1.1.3:** Keep ambiguous dates, amounts, taxes, currencies, account identifiers, and document types unresolved until reviewed.
-- [ ] **Task 148.1.2 - Implement matching, storage, redaction, and export**
-  - [ ] **Sub-task 148.1.2.1:** Match documents to transactions using exact and explainable candidate evidence without silently merging records.
-  - [ ] **Sub-task 148.1.2.2:** Detect source and semantic duplicates, preserve versions, and retain user dispositions.
-  - [ ] **Sub-task 148.1.2.3:** Apply classification, encryption, minimization, retention, deletion, redaction, and report-export policies field by field.
-- [ ] **Task 148.1.3 - Verify hostile documents and privacy**
-  - [ ] **Sub-task 148.1.3.1:** Test malformed PDFs and images, archive bombs, macros, scripts, hidden text, links, prompt injection, OCR confusion, replaced files, and post-preview changes.
-  - [ ] **Sub-task 148.1.3.2:** Mutate document, page, field, amount, currency, date, merchant, transaction, account, classification, redaction, and export destination.
-  - [ ] **Sub-task 148.1.3.3:** Verify deletion, backup, restore, export, crash, and removal across original, derived, indexed, cached, and linked records.
+- [x] **Task 148.1.1 - Implement financial-document identities and extraction**
+  - [x] **Sub-task 148.1.1.1:** Define source file, content hash, media type, page, region, extraction, field, value, confidence, currency, date, merchant, account hint, classification, retention, and provenance records.
+  - [x] **Sub-task 148.1.1.2:** Extract bounded receipt, invoice, reimbursement, statement, and tax-document fields while preserving raw source and per-field evidence.
+  - [x] **Sub-task 148.1.1.3:** Keep ambiguous dates, amounts, taxes, currencies, account identifiers, and document types unresolved until reviewed.
+- [x] **Task 148.1.2 - Implement matching, storage, redaction, and export**
+  - [x] **Sub-task 148.1.2.1:** Match documents to transactions using exact and explainable candidate evidence without silently merging records.
+  - [x] **Sub-task 148.1.2.2:** Detect source and semantic duplicates, preserve versions, and retain user dispositions.
+  - [x] **Sub-task 148.1.2.3:** Apply classification, encryption, minimization, retention, deletion, redaction, and report-export policies field by field.
+- [x] **Task 148.1.3 - Verify hostile documents and privacy**
+  - [x] **Sub-task 148.1.3.1:** Test malformed PDFs and images, archive bombs, macros, scripts, hidden text, links, prompt injection, OCR confusion, replaced files, and post-preview changes.
+  - [x] **Sub-task 148.1.3.2:** Mutate document, page, field, amount, currency, date, merchant, transaction, account, classification, redaction, and export destination.
+  - [x] **Sub-task 148.1.3.3:** Verify deletion, backup, restore, export, crash, and removal across original, derived, indexed, cached, and linked records.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 148.1.AC1:** Given a supported financial document, when extracted, then every field retains exact source coordinates, confidence, parser identity, and original-file hash.
-- [ ] **Story AC 148.1.AC2:** Given an ambiguous or conflicting match, when review occurs, then candidates remain distinct and no transaction or document is silently merged.
-- [ ] **Story AC 148.1.AC3:** Given export, deletion, backup, or removal, when completed, then classification, redaction, retention, and residue match the explicit policy.
+- [x] **Story AC 148.1.AC1:** Given a supported financial document, when extracted, then every field retains exact source coordinates, confidence, parser identity, and original-file hash.
+- [x] **Story AC 148.1.AC2:** Given an ambiguous or conflicting match, when review occurs, then candidates remain distinct and no transaction or document is silently merged.
+- [x] **Story AC 148.1.AC3:** Given export, deletion, backup, or removal, when completed, then classification, redaction, retention, and residue match the explicit policy.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 148.AC1:** `AT-FDOC-001` passes for every supported document type and extraction field.
-- [ ] **Sprint AC 148.AC2:** Hostile file, archive, macro, script, link, hidden-text, injection, replacement, and OCR-confusion tests create zero authority or escape.
-- [ ] **Sprint AC 148.AC3:** Matching and duplicate detection remain explainable, reversible, and source preserving.
-- [ ] **Sprint AC 148.AC4:** Privacy, redaction, export, backup, deletion, and removal evidence reconciles across every data copy.
+- [x] **Sprint AC 148.AC1:** `AT-FDOC-001` passes for every supported document type and extraction field.
+- [x] **Sprint AC 148.AC2:** Hostile file, archive, macro, script, link, hidden-text, injection, replacement, and OCR-confusion tests create zero authority or escape.
+- [x] **Sprint AC 148.AC3:** Matching and duplicate detection remain explainable, reversible, and source preserving.
+- [x] **Sprint AC 148.AC4:** Privacy, redaction, export, backup, deletion, and removal evidence reconciles across every data copy.
 
 **Gate decision:** Sprint 148 is PASS only when Story 148.1, all criteria, `AM-FDOC-001`, `AT-FDOC-001`, applicable security requirements, `RV-33`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 148 source and contract rows pass locally with 6,720
+source-cited financial-document cases and zero silent merges, authority, hostile-file escape,
+privacy residue, or citation loss. Native document/OCR/privacy campaigns and upstream Sprint
+closure remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 149 - Statistical Outlier and Potential-Fraud Indicators
 

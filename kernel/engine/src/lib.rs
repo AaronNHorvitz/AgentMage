@@ -99,6 +99,8 @@ pub mod external_effect;
 pub mod filesystem_control;
 /// Consent-bound, account-exact, read-only financial data adapters.
 pub mod financial_data_adapter;
+/// Source-preserving financial-document extraction, matching, and privacy contracts.
+pub mod financial_document;
 /// Exact fixed-point money, immutable source lineage, and reconciliation contracts.
 pub mod financial_domain;
 /// Immutable bounded financial imports and deterministic reconciliation.
