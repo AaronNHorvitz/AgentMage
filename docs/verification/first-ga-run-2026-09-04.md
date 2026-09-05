@@ -2721,3 +2721,36 @@ closures: 1,513; next checkpoint: 1,525.
   `substitution_set=empty`.
 
 Exact next action: Sprint 136 Slack adapter. Cumulative closures: 1,533; next checkpoint: 1,550.
+
+## Batch 139 — Sprint 136 Slack adapter
+
+### Completed
+
+- Closed 20 local Sprint 136 rows: exact workspace, enterprise, account, channel, direct/group
+  message, thread, member, mention, visibility, file, event, cursor, token, scope, membership, and
+  rate identities; supported-only discovery; frozen effects; replay refusal; visible uncertainty;
+  event and removal cleanup. Corpus cases: 4,800; unauthorized effects, duplicate posts,
+  cross-workspace disclosures, false completions, and removal-residual authority: 0 each. Batch
+  closures: 20. Cumulative closures: 1,553. Promotions: 0.
+- Commits: `e245e04d` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `992078bc` (Sprint 136 report), and `fd68271b` (13 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.20. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 3 focused Rust tests, 7 focused Python tests, the 4,800-case AT-SLK-001 corpus, Sprint
+  evidence, dependency, traceability, supply-chain, Story 1.2, and Story 3.1 configuration chains.
+  Supply-chain builds: 1; evidence regeneration passes: 1. Full gate: 688.04 seconds, stopping
+  only at retained Story 6.1 Podman after every preceding gate passed. Self-recovery: 0.
+- Sprint 136 remains `UPSTREAM-SPRINT-132-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=Slack test workspaces, channels, direct messages, and accounts,
+  artifact=untouched native capability, membership, effect, event, rate, security, reviewer, and
+  removal evidence, action=provision exact Slack workspaces/accounts/tokens and run AT-SLK-001
+  plus RV-23 through RV-26 and RV-31 native campaigns, credential=Slack OAuth app and workspace
+  account credentials, payment=Slack workspace or provider costs if applicable)`;
+  `substitution_set=empty`. Full-chain blocker remains `blocked: host change required — run npm
+  run -s docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 137 Linux mail-client interoperability. Cumulative closures: 1,553;
+next checkpoint: 1,575.
