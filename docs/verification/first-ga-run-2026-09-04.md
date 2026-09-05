@@ -3106,3 +3106,40 @@ next checkpoint: 1,775.
 
 Exact next action: Sprint 147 bills, subscriptions, and recurring streams. Cumulative closures:
 1,776; next checkpoint: 1,800.
+
+## Batch 150 — Sprint 147 bills, subscriptions, and recurring streams
+
+### Completed
+
+- Closed 20 local Sprint 147 rows: deterministic recurring-obligation detection and stable
+  identity; source-cited amount, cadence, date, counterparty, category, account, confidence,
+  uncertainty, and missing-data state; duplicate and conflict handling; explicit renewal,
+  cancellation, reimbursement, refund, and autopay distinctions; bounded reminder and draft
+  proposals; hostile-content isolation; and zero financial, communication, cancellation, or
+  submission authority. Corpus cases: 5,760; unsupported financial effects, uncited facts,
+  automatic messages, hostile-instruction effects, and authority leaks: 0 each. Batch closures:
+  20. Cumulative closures: 1,796. Promotions: 0.
+- Commits: `82e6ba6e` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `9f8b0632` (Sprint 147 report), and `5c2fb930` (13 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.20. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed Clippy with warnings denied, 4 focused Rust tests, 8 focused Python tests, the
+  5,760-case AT-BIL-001 corpus, Sprint evidence, dependency, traceability, supply-chain, Story
+  1.2, and Story 3.1 configuration chains. Supply-chain builds: 1; evidence regeneration passes:
+  1. Full gate: 699.389 seconds, stopping only at retained Story 6.1 Podman after every preceding
+  gate passed. Self-recovery: 0.
+- Sprint 147 remains `UPSTREAM-SPRINTS-131-138-143-146-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=native financial and communication provider accounts with recurring
+  transaction and correspondence history, artifact=untouched native detection, identity,
+  citation, hostile-content, reminder, draft, security, reviewer, and removal evidence,
+  action=provision exact provider accounts, credentials, recurring history, and correspondence,
+  then run AT-BIL-001, RV-31, and RV-33 native campaigns, credential=applicable financial and
+  communication provider credentials, payment=provider subscription costs if applicable)`;
+  `substitution_set=empty`. Full-chain blocker remains `blocked: host change required — run npm
+  run -s docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 148 financial documents and matching. Cumulative closures: 1,796; next
+checkpoint: 1,800.
