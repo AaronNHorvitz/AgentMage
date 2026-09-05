@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_150_local_evidence",
+  "source_revision": "d5f68e844a9a3c210b4ea99bf93f9748f1e8753f",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "2829460d4f5f90352bbe66fef69fa2649ce0910cfe3510df01b50410742d38a3",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "4141443f84b0cb58d95b3c6c1b6e43acf54edb8abbee1c5ccbf79bcd86d0f097",
+    "kernel/engine/src/accounting_provider.rs": "f0292afed85e4dc1d617061de010622b913749caed5e4620503634c29ef485f4",
+    "supply-chain/dependency-provenance.json": "168b6ec3168a106daa0f2adea01dc1a80f6a3c410d3fdb6bad85351999587f98",
+    "supply-chain/sbom.cdx.json": "4e6fabcfefe1a031728320deaf1103449cdd7efe88490a2a75a30fb236efdc11",
+    "supply-chain/dependency-hashes.sha256": "50d640cd442c39f89675354358a468c0bc205e4c41e87be426fc72e494fd4d65",
+    "artifacts/sprints/sprint-150/accounting-corpus.json": "0c8112acf0c8e2a07b06ed86190e374f1a2b5e8cd46a6ed768cea453771a30d0",
+    "scripts/accounting_provider_contract.py": "b540a9fe914f55de1720129bd8d4760bd1cbf24dc8c27bacc5dfd3cf66ef034e",
+    "tests/test_accounting_provider_contract.py": "22eca8b74759fef6be5607a089d6a7bdf7d630f0531c758e799ddc706dbb7770",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_150_evidence.py": "b6ca42c7af13cc9d13b6ace184024b67ba4f06e5fd23934a3e9ba421de047854",
+    "tests/test_sprint_150_evidence.py": "7aaa6922ad1dcafcaa106762b3cc219d3cf8f95c81712c017f832250240f1514"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "accounting-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "accounting_provider::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d46a0d6ee70c84f8cf66944fc70a5ffe19d01aefcf40567666bcf51fbce636d7",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "accounting-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_accounting_provider_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "32e833bb3d1ee3d5cb17d825b0d9e46789d5dc89459e92e5cb60c42fb6134f22",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_150_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-ACC-001",
+    "AT-ACC-001",
+    "SR-FIN-001",
+    "SR-FIN-002",
+    "SR-FIN-003",
+    "SR-FIN-004",
+    "SR-FIN-005",
+    "SR-FIN-006",
+    "RV-23",
+    "RV-24",
+    "RV-25",
+    "RV-26",
+    "RV-31",
+    "RV-33",
+    "RV-35"
+  ],
+  "implemented_contracts": {
+    "provider_count": 2,
+    "object_count": 8,
+    "mutation_count": 14,
+    "failure_count": 10,
+    "case_count": 13440,
+    "wrong_write_count": 0,
+    "duplicate_write_count": 0,
+    "money_movement_count": 0,
+    "residual_authority_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "exact_discovery_complete": true,
+    "bounded_reads_complete": true,
+    "approved_writes_bounded": true,
+    "unknown_effect_reconciliation_complete": true,
+    "prohibited_families_absent": true,
+    "removal_contract_complete": true,
+    "native_provider_campaign_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-128-138-142-143-148-BLOCKED",
+      "owner": "150"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "QuickBooks Online and Xero sandbox organizations with supported accounting objects",
+      "artifact": "untouched native organization, period, precision, tax, idempotency, recovery, security, reviewer, revocation, and removal evidence",
+      "action": "provision exact QuickBooks Online and Xero sandbox organizations and credentials, then run AT-ACC-001 and applicable reviewer campaigns",
+      "credential": "QuickBooks Online and Xero OAuth credentials",
+      "payment": "provider subscription costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_150_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "native_accounting_support_promoted": false,
+    "support_promotion_count": 0
+  }
+}
