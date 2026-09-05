@@ -44,3 +44,42 @@ from the prior ledger.
 
 Exact next action: Sprint 149 statistical outlier and potential-fraud indicators. Cumulative
 closures: 1,816; next checkpoint: 1,825.
+
+## Batch 152 — Sprint 149 statistical outlier and potential-fraud indicators
+
+### Completed
+
+- Closed 20 local Sprint 149 rows: ten indicator families; separate deterministic-rule, robust-
+  statistic, and model-assisted explanation methods; versioned population, horizon, seasonality,
+  minimum-sample, drift, threshold, score, confidence, limitation, source, replay, evaluation,
+  subgroup, and future-feedback records; and hard rejection of definitive determinations or
+  indicator-derived action. Corpus cases: 7,560; definitive claims, external authority, evidence
+  rewrites, hidden limitations, and replay drift: 0 each. Published exact synthetic precision,
+  recall, false-positive, false-negative, calibration, stability, and explanation-fidelity
+  metrics with two explicit subgroup limitations. Batch closures: 20. Cumulative closures: 1,836.
+  Promotions: 0.
+- Commits: `80cb7cde` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `f25ffc47` (Sprint 149 report), and `c46aa8e8` (14 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.20. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across 27 changed or regenerated paths and all 20 pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed Clippy with warnings denied, 4 focused Rust tests, 8 focused Python tests, the
+  7,560-case AT-FANL-001 corpus, Sprint evidence, dependency, traceability, supply-chain, Story
+  1.2, and Story 3.1/Sprint 3 configuration chains. Supply-chain builds: 1; evidence regeneration
+  passes: 1. Full gate: 708.785 seconds, stopping only at retained Story 6.1 Podman after every
+  preceding gate passed. Self-recovery: 0.
+- Sprint 149 remains `UPSTREAM-SPRINTS-142-148-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=native supported financial data sources and independent evaluation
+  environment with representative labeled records, artifact=untouched native baseline, feature,
+  replay, accuracy, calibration, subgroup, drift, explanation, adversarial, reviewer, and removal
+  evidence, action=provision exact native data sources, representative labeled records, and
+  independent evaluation environment, then run AT-FANL-001, RV-14, and RV-33 native campaigns,
+  credential=applicable financial data-source credentials, payment=data-source, evaluator, or host
+  costs if applicable)`; `substitution_set=empty`. Full-chain blocker remains `blocked: host
+  change required — run npm run -s docs:check outside the restricted filesystem sandbox with the
+  current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 150 QuickBooks Online and Xero accounting. Cumulative closures: 1,836;
+next checkpoint: 1,850.
