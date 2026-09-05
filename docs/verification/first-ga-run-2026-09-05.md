@@ -532,3 +532,44 @@ closures: 2,071; next checkpoint: 2,075.
 
 Exact next action: Sprint 161 encrypted local continuity gate. Cumulative closures: 2,089; next
 checkpoint: 2,100.
+
+## Batch 164 — Sprint 161 encrypted local continuity
+
+### Completed
+
+- Closed 33 locally executable Sprint 161 rows across both stories: immutable authenticated
+  snapshot manifests, full and deduplicated incremental plans, eight unsafe-root refusals,
+  classification retention and cryptographic deletion, zero-credential restore, staged migration,
+  exact confirmed swap and rollback, complete encrypted checkpoint identities, atomic generations,
+  exact resume identity, transitive reverse-dependency invalidation, and broader-rescan fallback.
+  Corpus: 936 snapshot plus 720 checkpoint cases; plaintext, raw credential, false completion,
+  pre-confirmation canonical mutation, and stale-current record counts: 0 each. Batch closures: 33.
+  Cumulative closures: 2,122. Promotions: 0.
+- Commits: `06af8a2c` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `c58bd8f2` (Sprint 161 report), and `ed17d842` (14 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.12. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across 14 regenerated paths and 20 pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed Clippy with warnings denied, 3 focused Rust tests, 6 focused Python contract/report
+  tests, both corpora, dependency, traceability, supply-chain, Story 1.2, and Story 3.1/Sprint 3
+  configuration chains. Supply-chain builds: 1; evidence regeneration passes: 1. Full gate: 705
+  seconds, stopping only at retained Story 6.1 Podman after every preceding gate passed.
+  Self-recovery: 1 — replaced an invalid partial-line checkbox patch with a generated exact-line
+  `apply_patch`; the rejected attempt changed no file.
+- Sprint 161 remains `UPSTREAM-SPRINTS-11-22-32-73-102-157-158-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=native Fedora, Ubuntu, and Windows local storage, clean-device
+  restore, accessibility, residue, and independent review environments, artifact=untouched
+  encrypted snapshot, integrity, root rejection, interruption, migration, rollback, retention,
+  deletion, cancellation, accessibility, residue, checkpoint, resume, invalidation, RV-39, and
+  RV-47 evidence, action=satisfy upstream blockers, provision exact native storage and clean-device
+  environments, then run AT-BKC-001, AT-CKP-001, local RV-39, and checkpoint RV-47 separately per
+  platform, credential=platform key-store, filesystem, clean-device, accessibility, and independent
+  reviewer credentials, payment=platform, storage, accessibility, or independent evaluator costs
+  if applicable)`; `substitution_set=empty`. Full-chain blocker remains `blocked: host change
+  required — run npm run -s docs:check outside the restricted filesystem sandbox with the current
+  user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 162 client-side-encrypted cloud continuity gate. Cumulative closures:
+2,122; next checkpoint: 2,125.
