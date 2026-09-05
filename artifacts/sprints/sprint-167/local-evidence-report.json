@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_167_local_evidence",
+  "source_revision": "0b362f1c4b06cde3d7da4ed6b913cdb5a4c33fdc",
+  "source_sha256": {
+    "Cargo.toml": "77d264befeb59e7fd90193e1883f5c969f57022ab37b103d856d1f1735c3a457",
+    "Cargo.lock": "1423a70734b27d3a382e13979a2c22606c44b81cec8afd93e188476bfe92d8d2",
+    "TASKS.md": "45e7436deca310caf208441ba9eb2eec974bbe2ee6cd47fbe6dd11a7a4f60c81",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "MODEL-PROVENANCE-POLICY.md": "528076ef9be354e5a463221811a0bf4bf735a50be0b3a73df91097d7e83594c7",
+    "experimental/model-lab/Cargo.toml": "fea2a29dc49bd8893a8976d27ea54b1eb14d22064fbdb49a29427cffd503ee66",
+    "experimental/model-lab/src/lib.rs": "fc511ce8d7d2a966bd3433ea9924e2ee637c6089740ebeec5dbcc78c1cb5708b",
+    "experimental/model-lab/src/main.rs": "485e42fa48708852e801a50e7d317dab8518abfaf5c016aa588e7b9e91237645",
+    "supply-chain/dependency-provenance.json": "991ab3b30dd8acb8983fdbbe0ec37f02a66cc75198068ed5c3863a3fb7179ad6",
+    "supply-chain/sbom.cdx.json": "671d542f245f5427ca16144ec37cd6bb16ba5e004962df276785cb5534faeeec",
+    "supply-chain/dependency-hashes.sha256": "c3d1cfa629fc010c8d7324053ff57f7ab62ae022e46b6e599c489440347bd4e0",
+    "artifacts/sprints/sprint-167/experimental-model-lab-corpus.json": "40c27ac3c4c8401ee5ce848d1eddbc02e530b8ac6eb4c7bd3ea81d7f31d48a6c",
+    "scripts/experimental_model_lab_contract.py": "6f389e66d516bac6a0956d27433cb55f36b310e428898e28bdd6bc7ba3716018",
+    "tests/test_experimental_model_lab_contract.py": "b9c1acdf84ecbaa14e3df88a3d559a184ad3b49a72a1637d34c0f0340da892b5",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_167_evidence.py": "8a8d421b27694d88e26a63cd20ce1a6160a733d1676d035246c463518097f763",
+    "tests/test_sprint_167_evidence.py": "3dc164f1c8152ccc5d252e6f723d8b7871e479f41d1f21adbdd9be0c6099af38"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "experimental-model-lab-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-experimental-model-lab"
+      ],
+      "exit_code": 0,
+      "output_sha256": "19a97cc540a43b37618b0132aac1959cfe160ac8018f3778a037916190f65ff8",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "experimental-model-lab-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_experimental_model_lab_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f17e74ae6d4c64bbf7742b3b4c4070447c991e5a061c812e883aa883e88edd81",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_167_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "33060fd73862c5e1af97335504d5b45211fce6d229657f556d8deceeadc52ce4",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-EML-001",
+    "AT-EML-001",
+    "SR-LAB-001",
+    "SR-LAB-002",
+    "RV-42"
+  ],
+  "implemented_contracts": {
+    "hostile_artifact_count": 9,
+    "lifecycle_stage_count": 8,
+    "prohibited_route_count": 12,
+    "fault_count": 8,
+    "fixture_case_count": 6912,
+    "authority_count": 0,
+    "network_count": 0,
+    "canonical_write_count": 0,
+    "approved_store_count": 0,
+    "hidden_limitation_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "separate_package_complete": true,
+    "prohibited_authority_absent": true,
+    "policy_lineage_boundary_complete": true,
+    "quarantine_resource_contract_complete": true,
+    "synthetic_evaluation_complete": true,
+    "hostile_route_contract_complete": true,
+    "experimental_truth_complete": true,
+    "native_lab_campaign_complete": false,
+    "native_accessibility_removal_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-157-163-164-166-BLOCKED",
+      "owner": "167"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "native promoted lab platforms plus user-selected unapproved artifacts, accessibility, resource-pressure, crash, removal, residue, and independent review environments",
+      "artifact": "untouched native import, parser/load, resource, hostile artifact, injection, exfiltration, cancellation, crash, accessibility, removal, residue, limitation-display, AT-EML-001, and RV-42 evidence",
+      "action": "satisfy upstream blockers, provision exact native lab platforms and hostile user-selected artifacts, then run complete AT-EML-001 and RV-42 implementation, resource, accessibility, interruption, removal, and residue campaigns",
+      "credential": "artifact-source, platform, accessibility, and independent reviewer credentials",
+      "payment": "artifact, platform, accessibility, or independent evaluator costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_167_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "experimental_lab_promoted": false,
+    "support_promotion_count": 0
+  }
+}
