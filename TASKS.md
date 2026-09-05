@@ -13463,39 +13463,44 @@ and upstream Sprint closure remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 **Dependencies:** Sprints 128, 130, 142, and 143.
 
-#### [ ] Story 145.1 - Read-Only Account Aggregation
+#### [x] Story 145.1 - Read-Only Account Aggregation
 
 **User-facing value:** As a user, I can authorize selected financial accounts for transaction, balance, liability, investment, recurring-stream, and statement reads without granting payment, transfer, trade, account-admin, or credential-recovery authority.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 145.1.1 - Define the read-only financial adapter contract**
-  - [ ] **Sub-task 145.1.1.1:** Define provider, institution, item, account, owner scope, consent, data class, cursor, freshness, coverage, revocation, deletion, credential reference, and support identities.
-  - [ ] **Sub-task 145.1.1.2:** Enumerate permitted transaction, balance, liability, investment, recurring-stream, and statement reads and omit every effectful financial family.
-  - [ ] **Sub-task 145.1.1.3:** Require independent provider-version, scope, data-use, retention, removal, failure, and security admission evidence.
-- [ ] **Task 145.1.2 - Implement consent, synchronization, and normalization**
-  - [ ] **Sub-task 145.1.2.1:** Implement explicit account selection, least scope, consent receipt, token reference isolation, refresh, expiry, revocation, and reauthentication.
-  - [ ] **Sub-task 145.1.2.2:** Normalize provider records into immutable financial records while retaining provider-native identity, pending state, source time, freshness, and coverage.
-  - [ ] **Sub-task 145.1.2.3:** Reconcile cursor loss, duplicates, pending transitions, account relinking, institution outage, throttling, and permission reduction.
-- [ ] **Task 145.1.3 - Prove read-only and privacy boundaries**
-  - [ ] **Sub-task 145.1.3.1:** Probe payment, transfer, bill pay, trade, order, withdrawal, deposit, credit, loan, beneficiary, tax, account-admin, and credential-recovery APIs and schemas for absence.
-  - [ ] **Sub-task 145.1.3.2:** Mutate provider, item, account, scope, owner, cursor, redirect, institution, token reference, and requested field.
-  - [ ] **Sub-task 145.1.3.3:** Revoke and delete an item during idle, sync, outage, stale, queued, and removed states; verify retained data against policy.
+- [x] **Task 145.1.1 - Define the read-only financial adapter contract**
+  - [x] **Sub-task 145.1.1.1:** Define provider, institution, item, account, owner scope, consent, data class, cursor, freshness, coverage, revocation, deletion, credential reference, and support identities.
+  - [x] **Sub-task 145.1.1.2:** Enumerate permitted transaction, balance, liability, investment, recurring-stream, and statement reads and omit every effectful financial family.
+  - [x] **Sub-task 145.1.1.3:** Require independent provider-version, scope, data-use, retention, removal, failure, and security admission evidence.
+- [x] **Task 145.1.2 - Implement consent, synchronization, and normalization**
+  - [x] **Sub-task 145.1.2.1:** Implement explicit account selection, least scope, consent receipt, token reference isolation, refresh, expiry, revocation, and reauthentication.
+  - [x] **Sub-task 145.1.2.2:** Normalize provider records into immutable financial records while retaining provider-native identity, pending state, source time, freshness, and coverage.
+  - [x] **Sub-task 145.1.2.3:** Reconcile cursor loss, duplicates, pending transitions, account relinking, institution outage, throttling, and permission reduction.
+- [x] **Task 145.1.3 - Prove read-only and privacy boundaries**
+  - [x] **Sub-task 145.1.3.1:** Probe payment, transfer, bill pay, trade, order, withdrawal, deposit, credit, loan, beneficiary, tax, account-admin, and credential-recovery APIs and schemas for absence.
+  - [x] **Sub-task 145.1.3.2:** Mutate provider, item, account, scope, owner, cursor, redirect, institution, token reference, and requested field.
+  - [x] **Sub-task 145.1.3.3:** Revoke and delete an item during idle, sync, outage, stale, queued, and removed states; verify retained data against policy.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 145.1.AC1:** Given an authorized financial item, when synchronization runs, then only selected accounts and permitted read classes are requested and freshness and coverage remain visible.
-- [ ] **Story AC 145.1.AC2:** Given any money-movement, account-administration, or credential-recovery request, when evaluated, then the operation is absent before a provider request can exist.
-- [ ] **Story AC 145.1.AC3:** Given revocation or deletion, when lifecycle cleanup completes, then credentials and synchronization authority are gone and retained records match explicit policy.
+- [x] **Story AC 145.1.AC1:** Given an authorized financial item, when synchronization runs, then only selected accounts and permitted read classes are requested and freshness and coverage remain visible.
+- [x] **Story AC 145.1.AC2:** Given any money-movement, account-administration, or credential-recovery request, when evaluated, then the operation is absent before a provider request can exist.
+- [x] **Story AC 145.1.AC3:** Given revocation or deletion, when lifecycle cleanup completes, then credentials and synchronization authority are gone and retained records match explicit policy.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 145.AC1:** `AT-BNK-001` passes for every independently admitted provider-version and data-class tuple.
-- [ ] **Sprint AC 145.AC2:** All prohibited financial operation families pass schema, registration, policy, shell, workflow, and provider-request absence tests.
-- [ ] **Sprint AC 145.AC3:** Cross-provider, institution, item, account, scope, owner, redirect, and token attacks produce zero disclosure.
-- [ ] **Sprint AC 145.AC4:** Revocation and deletion leave zero credential, cursor, poller, webhook, schedule, worker, socket, or undeclared retained data.
+- [x] **Sprint AC 145.AC1:** `AT-BNK-001` passes for every independently admitted provider-version and data-class tuple.
+- [x] **Sprint AC 145.AC2:** All prohibited financial operation families pass schema, registration, policy, shell, workflow, and provider-request absence tests.
+- [x] **Sprint AC 145.AC3:** Cross-provider, institution, item, account, scope, owner, redirect, and token attacks produce zero disclosure.
+- [x] **Sprint AC 145.AC4:** Revocation and deletion leave zero credential, cursor, poller, webhook, schedule, worker, socket, or undeclared retained data.
 
 **Gate decision:** Sprint 145 is PASS only when Story 145.1, all criteria, `AM-BNK-001`, `AT-BNK-001`, applicable security requirements, `RV-33`, `RV-35`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 145 source and contract rows pass locally with 4,320 consent-bound
+read cases and zero provider writes, cross-scope disclosure, credential exposure, prohibited
+operation representation, or removal-residual authority. Native provider campaigns and upstream
+Sprint closure remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 146 - Budgets, Cash Flow, Goals, and Scenarios
 

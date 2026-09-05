@@ -97,6 +97,8 @@ pub mod executive_assistant;
 pub mod external_effect;
 /// Authority-free controlled filesystem plans, structured patches, and exact previews.
 pub mod filesystem_control;
+/// Consent-bound, account-exact, read-only financial data adapters.
+pub mod financial_data_adapter;
 /// Exact fixed-point money, immutable source lineage, and reconciliation contracts.
 pub mod financial_domain;
 /// Immutable bounded financial imports and deterministic reconciliation.
