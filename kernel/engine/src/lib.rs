@@ -117,6 +117,7 @@ pub mod infrastructure_safety;
 pub mod instruction_provenance;
 /// Deterministic resumable jobs, leases, read-only schedules, notifications, and receipts.
 pub mod job_scheduler;
+pub mod linux_mail_interop;
 /// Exact candidate-tree, signer, manual approval, and signed local commit contracts.
 pub mod local_commit;
 /// Safe-mode capability closure and content-free maintenance diagnostics.

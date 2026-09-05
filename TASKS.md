@@ -13036,39 +13036,44 @@ removal-residual effects. Native Slack conformance remains `BLOCKED_EXTERNAL`;
 
 **Dependencies:** Sprint 135; path-resolution, import, classification, and connector-removal foundations.
 
-#### [ ] Story 137.1 - Safe Linux Mail Interoperability
+#### [x] Story 137.1 - Safe Linux Mail Interoperability
 
 **User-facing value:** As a Linux user, I can connect the same underlying mail provider or import an explicit mail archive without AgentMage editing or depending on a mail client's private profile database.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 137.1.1 - Define supported interoperability paths**
-  - [ ] **Sub-task 137.1.1.1:** Publish provider-reuse, IMAP, SMTP, JMAP, mbox, and Maildir paths for Thunderbird, Evolution, and KMail.
-  - [ ] **Sub-task 137.1.1.2:** Classify private profile databases, credential stores, lock files, caches, and application state as denied inputs and denied write targets.
-  - [ ] **Sub-task 137.1.1.3:** Define explicit user-selected archive import, source snapshot, read-only handle, content hash, provenance, and removal contracts.
-- [ ] **Task 137.1.2 - Implement archive import and source protection**
-  - [ ] **Sub-task 137.1.2.1:** Parse bounded mbox and Maildir fixtures with path, link, size, encoding, duplicate, corruption, and cancellation defenses.
-  - [ ] **Sub-task 137.1.2.2:** Preserve message identity, headers, MIME structure, attachment hashes, folder context, import source, and parse failures.
-  - [ ] **Sub-task 137.1.2.3:** Refuse locked, mutable, replaced, linked, raced, unsupported, or credential-bearing profile inputs.
-- [ ] **Task 137.1.3 - Verify client independence and removal**
-  - [ ] **Sub-task 137.1.3.1:** Test supported client versions plus future, corrupted, symlinked, hard-linked, replaced, and concurrently modified profiles.
-  - [ ] **Sub-task 137.1.3.2:** Snapshot client profiles before and after every test and prove byte-for-byte non-mutation.
-  - [ ] **Sub-task 137.1.3.3:** Remove imported archives and derived indexes without changing the original archive or provider account.
+- [x] **Task 137.1.1 - Define supported interoperability paths**
+  - [x] **Sub-task 137.1.1.1:** Publish provider-reuse, IMAP, SMTP, JMAP, mbox, and Maildir paths for Thunderbird, Evolution, and KMail.
+  - [x] **Sub-task 137.1.1.2:** Classify private profile databases, credential stores, lock files, caches, and application state as denied inputs and denied write targets.
+  - [x] **Sub-task 137.1.1.3:** Define explicit user-selected archive import, source snapshot, read-only handle, content hash, provenance, and removal contracts.
+- [x] **Task 137.1.2 - Implement archive import and source protection**
+  - [x] **Sub-task 137.1.2.1:** Parse bounded mbox and Maildir fixtures with path, link, size, encoding, duplicate, corruption, and cancellation defenses.
+  - [x] **Sub-task 137.1.2.2:** Preserve message identity, headers, MIME structure, attachment hashes, folder context, import source, and parse failures.
+  - [x] **Sub-task 137.1.2.3:** Refuse locked, mutable, replaced, linked, raced, unsupported, or credential-bearing profile inputs.
+- [x] **Task 137.1.3 - Verify client independence and removal**
+  - [x] **Sub-task 137.1.3.1:** Test supported client versions plus future, corrupted, symlinked, hard-linked, replaced, and concurrently modified profiles.
+  - [x] **Sub-task 137.1.3.2:** Snapshot client profiles before and after every test and prove byte-for-byte non-mutation.
+  - [x] **Sub-task 137.1.3.3:** Remove imported archives and derived indexes without changing the original archive or provider account.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 137.1.AC1:** Given a supported client configuration, when interoperability is requested, then AgentMage uses the provider or standard protocol rather than private-profile mutation.
-- [ ] **Story AC 137.1.AC2:** Given an explicit mbox or Maildir import, when parsing completes, then the source remains unchanged and every normalized record retains provenance.
-- [ ] **Story AC 137.1.AC3:** Given a private, locked, credential-bearing, linked, replaced, or unsupported profile, when access is attempted, then the request is denied without mutation or credential extraction.
+- [x] **Story AC 137.1.AC1:** Given a supported client configuration, when interoperability is requested, then AgentMage uses the provider or standard protocol rather than private-profile mutation.
+- [x] **Story AC 137.1.AC2:** Given an explicit mbox or Maildir import, when parsing completes, then the source remains unchanged and every normalized record retains provenance.
+- [x] **Story AC 137.1.AC3:** Given a private, locked, credential-bearing, linked, replaced, or unsupported profile, when access is attempted, then the request is denied without mutation or credential extraction.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 137.AC1:** `AT-LMAIL-001` passes across Thunderbird, Evolution, KMail, mbox, and Maildir fixtures.
-- [ ] **Sprint AC 137.AC2:** Every private client profile remains byte-identical through success, failure, crash, and cancellation tests.
-- [ ] **Sprint AC 137.AC3:** Path, archive, encoding, corruption, size, link, and race attacks cause zero escape or source mutation.
-- [ ] **Sprint AC 137.AC4:** Removal deletes only authorized imported state and leaves zero residual worker or credential authority.
+- [x] **Sprint AC 137.AC1:** `AT-LMAIL-001` passes across Thunderbird, Evolution, KMail, mbox, and Maildir fixtures.
+- [x] **Sprint AC 137.AC2:** Every private client profile remains byte-identical through success, failure, crash, and cancellation tests.
+- [x] **Sprint AC 137.AC3:** Path, archive, encoding, corruption, size, link, and race attacks cause zero escape or source mutation.
+- [x] **Sprint AC 137.AC4:** Removal deletes only authorized imported state and leaves zero residual worker or credential authority.
 
 **Gate decision:** Sprint 137 is PASS only when Story 137.1, all criteria, `AM-LMAIL-001`, `AT-LMAIL-001`, `SR-PRD-008`, applicable reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 137 source and contract rows pass locally with 4,500 deterministic
+Linux mail interoperability cases, byte-identical sources, complete provenance, and zero
+credential extraction, path escape, or residual authority. Native client/version campaigns
+remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 138 - Communication Write Safety and Reconciliation
 
