@@ -216,7 +216,8 @@ Exact next action: Sprint 153 AWS, Azure, and GCP provider observer gates. Cumul
 ### Validation and blockers
 
 - Passed Clippy with warnings denied, 4 focused Rust tests, 7 focused Python tests, the
-  19,200-case AT-AWS/AZR/GCP-001 corpus, Sprint evidence, dependency, traceability, supply-chain,
+  19,200-case `AT-AWS-001`, `AT-AZR-001`, and `AT-GCP-001` corpus, Sprint evidence, dependency,
+  traceability, supply-chain,
   Story 1.2, and Story 3.1/Sprint 3 configuration chains. Supply-chain builds: 1; evidence
   regeneration passes: 1. Full gate: 707.440 seconds, stopping only at retained Story 6.1
   Podman after every preceding gate passed. Self-recovery: 0.
@@ -235,3 +236,43 @@ Exact next action: Sprint 153 AWS, Azure, and GCP provider observer gates. Cumul
 
 Exact next action: Sprint 154 cloud cost and delivery correlation gate. Cumulative closures:
 1,932; next checkpoint: 1,950.
+
+## Batch 157 — Sprint 154 cloud cost and delivery correlation gate
+
+### Completed
+
+- Closed 19 local Sprint 154 rows: native source identities; observed/effective times and exact
+  windows; cited structural, temporal, provider, deterministic, user-confirmed, model-assisted,
+  statistical, uncertain, and rejected associations; bounded cost scope, currency, granularity,
+  freshness, and allocation assumptions; five operational views; recomputation; causal restraint;
+  and zero inherited action authority. Corpus cases: 6,048; causal claims and inherited authority:
+  0 each. Batch closures: 19. Cumulative closures: 1,951. Promotions: 0.
+- Commits: `c278e363` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `84351c14` (Sprint 154 report), and `aacbf660` (14 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.21. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across 14 regenerated paths and all pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed Clippy with warnings denied, 4 focused Rust tests, 6 focused Python tests, the
+  6,048-case `AT-CCST-001` corpus, Sprint evidence, dependency, traceability, supply-chain,
+  Story 1.2, and Story 3.1/Sprint 3 configuration chains. Supply-chain builds: 1; evidence
+  regeneration passes: 1. Full gate: 706.993 seconds, stopping only at retained Story 6.1
+  Podman after every preceding gate passed. Self-recovery: 1 — collapsed a Clippy-reported
+  nested confidence-bound check before regeneration, then replaced one prior-run-log shorthand
+  parsed as unresolved `AT-AWS` after a 148.196-second preliminary chain, reran the specific
+  documentation validators green, and completed one full-chain retry.
+- Sprint 154 remains `UPSTREAM-SPRINTS-129-131-152-153-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=native cloud, delivery, productivity, incident, telemetry, and
+  billing providers plus independent review environment, artifact=untouched native identity,
+  source, time, cost, allocation, conflicting-evidence, causal-restraint, recomputation,
+  reviewer, and authority-absence evidence, action=satisfy Sprint 129, 131, and 152-153 external
+  tuples, then run AT-CCST-001, RV-14, RV-27, and RV-34 native cross-system campaigns,
+  credential=all cloud, delivery, productivity, incident, telemetry, and billing credentials
+  named by upstream sprints, payment=provider, telemetry, billing, and independent evaluator
+  costs if applicable)`; `substitution_set=empty`. Full-chain blocker remains `blocked: host
+  change required — run npm run -s docs:check outside the restricted filesystem sandbox with
+  the current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 155 cross-pack extreme verification and removal gate. Cumulative
+closures: 1,951; next checkpoint: 1,975.
