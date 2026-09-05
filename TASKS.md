@@ -12794,39 +12794,43 @@ remains `UPSTREAM-SPRINT-130-BLOCKED`; `substitution_set=empty`.
 
 **Dependencies:** Sprints 127-131; provider worker and external-effect foundations.
 
-#### [ ] Story 132.1 - Exact Outlook and Exchange Communication
+#### [x] Story 132.1 - Exact Outlook and Exchange Communication
 
 **User-facing value:** As a user, I can search, read, draft, and perform supported Outlook operations against the intended mailbox while every external effect remains separately controlled.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 132.1.1 - Implement common communication objects**
-  - [ ] **Sub-task 132.1.1.1:** Define mailbox, folder, conversation, thread, message, sender, recipient, mention, reaction, attachment, formatting, visibility, event, and provider-transformation contracts.
-  - [ ] **Sub-task 132.1.1.2:** Define distinct read, draft, send, reply, forward, edit, delete, archive, flag, label, upload, download, recovery, and removal operations.
-  - [ ] **Sub-task 132.1.1.3:** Make unsupported operations absent and provider differences explicit.
-- [ ] **Task 132.1.2 - Implement Microsoft Graph conformance**
-  - [ ] **Sub-task 132.1.2.1:** Add exact tenant, account, mailbox, shared-mailbox, folder, message, thread, category, flag, attachment, pagination, and delta identities.
-  - [ ] **Sub-task 132.1.2.2:** Implement least-scope authentication references, permission discovery, throttling, retry, uncertain-result, reconciliation, and revocation.
-  - [ ] **Sub-task 132.1.2.3:** Implement account removal, cache deletion, subscription deletion, cursor invalidation, worker shutdown, and retained-data policy.
-- [ ] **Task 132.1.3 - Verify common and Microsoft behavior**
-  - [ ] **Sub-task 132.1.3.1:** Exercise fake, fault, malicious, future-version, personal, organizational, delegated, application-denied, and shared-mailbox fixtures.
-  - [ ] **Sub-task 132.1.3.2:** Test wrong mailbox, hidden recipient, attachment substitution, stale message, duplicate send, timeout, partial effect, permission loss, and cross-account credential attacks.
-  - [ ] **Sub-task 132.1.3.3:** Reconcile every uncertain operation and prove removal restores the pre-pack authority inventory.
+- [x] **Task 132.1.1 - Implement common communication objects**
+  - [x] **Sub-task 132.1.1.1:** Define mailbox, folder, conversation, thread, message, sender, recipient, mention, reaction, attachment, formatting, visibility, event, and provider-transformation contracts.
+  - [x] **Sub-task 132.1.1.2:** Define distinct read, draft, send, reply, forward, edit, delete, archive, flag, label, upload, download, recovery, and removal operations.
+  - [x] **Sub-task 132.1.1.3:** Make unsupported operations absent and provider differences explicit.
+- [x] **Task 132.1.2 - Implement Microsoft Graph conformance**
+  - [x] **Sub-task 132.1.2.1:** Add exact tenant, account, mailbox, shared-mailbox, folder, message, thread, category, flag, attachment, pagination, and delta identities.
+  - [x] **Sub-task 132.1.2.2:** Implement least-scope authentication references, permission discovery, throttling, retry, uncertain-result, reconciliation, and revocation.
+  - [x] **Sub-task 132.1.2.3:** Implement account removal, cache deletion, subscription deletion, cursor invalidation, worker shutdown, and retained-data policy.
+- [x] **Task 132.1.3 - Verify common and Microsoft behavior**
+  - [x] **Sub-task 132.1.3.1:** Exercise fake, fault, malicious, future-version, personal, organizational, delegated, application-denied, and shared-mailbox fixtures.
+  - [x] **Sub-task 132.1.3.2:** Test wrong mailbox, hidden recipient, attachment substitution, stale message, duplicate send, timeout, partial effect, permission loss, and cross-account credential attacks.
+  - [x] **Sub-task 132.1.3.3:** Reconcile every uncertain operation and prove removal restores the pre-pack authority inventory.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 132.1.AC1:** Given a supported Outlook object or operation, when invoked, then exact tenant, account, mailbox, object, scope, transformation, and postcondition evidence is retained.
-- [ ] **Story AC 132.1.AC2:** Given an unsupported operation, insufficient permission, stale precondition, or changed recipient or attachment, when execution is attempted, then no effect occurs.
-- [ ] **Story AC 132.1.AC3:** Given timeout, throttling, partial effect, revocation, or removal, when recovery runs, then no duplicate send or hidden residual authority remains.
+- [x] **Story AC 132.1.AC1:** Given a supported Outlook object or operation, when invoked, then exact tenant, account, mailbox, object, scope, transformation, and postcondition evidence is retained.
+- [x] **Story AC 132.1.AC2:** Given an unsupported operation, insufficient permission, stale precondition, or changed recipient or attachment, when execution is attempted, then no effect occurs.
+- [x] **Story AC 132.1.AC3:** Given timeout, throttling, partial effect, revocation, or removal, when recovery runs, then no duplicate send or hidden residual authority remains.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 132.AC1:** `AT-COM-001` and `AT-M365-001` pass for the published Microsoft matrix.
-- [ ] **Sprint AC 132.AC2:** At least 2,000 wrong-domain, mailbox, recipient, payload, and attachment mutations produce zero unauthorized effect.
-- [ ] **Sprint AC 132.AC3:** At least 1,000 timeout, retry, and partial-effect cases produce zero duplicate delivery or false completion.
-- [ ] **Sprint AC 132.AC4:** Revocation and removal leave zero credential, cache, cursor, subscription, worker, socket, schedule, or network authority.
+- [x] **Sprint AC 132.AC1:** `AT-COM-001` and `AT-M365-001` pass for the published Microsoft matrix.
+- [x] **Sprint AC 132.AC2:** At least 2,000 wrong-domain, mailbox, recipient, payload, and attachment mutations produce zero unauthorized effect.
+- [x] **Sprint AC 132.AC3:** At least 1,000 timeout, retry, and partial-effect cases produce zero duplicate delivery or false completion.
+- [x] **Sprint AC 132.AC4:** Revocation and removal leave zero credential, cache, cursor, subscription, worker, socket, schedule, or network authority.
 
 **Gate decision:** Sprint 132 is PASS only when Story 132.1, all criteria, `AM-COM-001`, `AM-M365-001`, both acceptance tests, applicable security requirements, `RV-23` through `RV-26`, `RV-31`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 132 source and contract rows pass locally with 3,600 deterministic
+Outlook cases, zero unauthorized/duplicate effects, and zero removal-residual authority. Native
+Microsoft Graph conformance remains `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 133 - Microsoft Teams Adapter
 

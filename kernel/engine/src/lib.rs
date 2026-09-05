@@ -43,6 +43,8 @@ pub mod ci_control;
 pub mod claim_evidence;
 /// Exact command templates, previews, execution permits, and terminal receipts.
 pub mod command_runner;
+/// Common communications and Outlook exact-effect contracts.
+pub mod communications_outlook;
 /// Versioned, fail-closed configuration loading and recovery.
 pub mod configuration;
 pub mod connected_identity;
