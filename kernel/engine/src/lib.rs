@@ -99,6 +99,8 @@ pub mod executive_assistant;
 pub mod external_effect;
 /// Authority-free controlled filesystem plans, structured patches, and exact previews.
 pub mod filesystem_control;
+/// Finance-pack privacy, data-flow, absence, and removal contracts.
+pub mod finance_privacy;
 /// Reproducible, explainable, non-authoritative financial anomaly indicators.
 pub mod financial_anomaly;
 /// Consent-bound, account-exact, read-only financial data adapters.

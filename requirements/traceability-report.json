@@ -35,7 +35,7 @@
     },
     {
       "document": "TASKS.md",
-      "sha256": "2829460d4f5f90352bbe66fef69fa2649ce0910cfe3510df01b50410742d38a3"
+      "sha256": "7474ba078cacca82590b40a962a396ec44f4de946bdd68fef70482d3895e5ebc"
     },
     {
       "document": "evidence/catalog.json",
@@ -287,7 +287,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 14418
+              "line": 14424
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -297,7 +297,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14536
+              "line": 14542
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -472,7 +472,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14536
+              "line": 14542
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -583,7 +583,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 159 - Tiered Full Command Execution",
-              "line": 14190
+              "line": 14196
             },
             "sprint": 159,
             "story_id": "159.1",
@@ -634,7 +634,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 153 - AWS, Azure, and Google Cloud Observers",
-              "line": 13845
+              "line": 13851
             },
             "sprint": 153,
             "story_id": "153.1",
@@ -685,7 +685,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 153 - AWS, Azure, and Google Cloud Observers",
-              "line": 13845
+              "line": 13851
             },
             "sprint": 153,
             "story_id": "153.1",
@@ -788,7 +788,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 161 - Encrypted Local Continuity",
-              "line": 14304
+              "line": 14310
             },
             "sprint": 161,
             "story_id": "161.1",
@@ -1142,7 +1142,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 157 - Trusted-Operations Contracts and Platform Topology",
-              "line": 14076
+              "line": 14082
             },
             "sprint": 157,
             "story_id": "157.1",
@@ -1196,7 +1196,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 162 - Client-Side-Encrypted Cloud Continuity",
-              "line": 14374
+              "line": 14380
             },
             "sprint": 162,
             "story_id": "162.1",
@@ -1250,7 +1250,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 154 - Cloud Cost and Delivery Correlation",
-              "line": 13925
+              "line": 13931
             },
             "sprint": 154,
             "story_id": "154.1",
@@ -1301,7 +1301,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 159 - Tiered Full Command Execution",
-              "line": 14190
+              "line": 14196
             },
             "sprint": 159,
             "story_id": "159.1",
@@ -1457,7 +1457,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 161 - Encrypted Local Continuity",
-              "line": 14304
+              "line": 14310
             },
             "sprint": 161,
             "story_id": "161.1",
@@ -1509,7 +1509,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 159 - Tiered Full Command Execution",
-              "line": 14190
+              "line": 14196
             },
             "sprint": 159,
             "story_id": "159.1",
@@ -1573,7 +1573,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 152 - Cloud Observer Common Read Contract",
-              "line": 13801
+              "line": 13807
             },
             "sprint": 152,
             "story_id": "152.1",
@@ -1741,7 +1741,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 158 - Operating-System Credential Broker",
-              "line": 14146
+              "line": 14152
             },
             "sprint": 158,
             "story_id": "158.1",
@@ -2510,7 +2510,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 167 - Isolated Experimental Model Import and Evaluation",
-              "line": 14687
+              "line": 14693
             },
             "sprint": 167,
             "story_id": "167.1",
@@ -2520,7 +2520,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 168 - Experimental Promotion and Removal Gate",
-              "line": 14731
+              "line": 14737
             },
             "sprint": 168,
             "story_id": "168.1",
@@ -3194,7 +3194,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 156 - Expanded First-GA Evidence Checkpoint",
-              "line": 14021
+              "line": 14027
             },
             "sprint": 156,
             "story_id": "156.1",
@@ -3246,7 +3246,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 166 - Superseding First-GA Evidence and Release Decision",
-              "line": 14632
+              "line": 14638
             },
             "sprint": 166,
             "story_id": "166.1",
@@ -3298,7 +3298,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 166 - Superseding First-GA Evidence and Release Decision",
-              "line": 14632
+              "line": 14638
             },
             "sprint": 166,
             "story_id": "166.1",
@@ -3349,7 +3349,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 153 - AWS, Azure, and Google Cloud Observers",
-              "line": 13845
+              "line": 13851
             },
             "sprint": 153,
             "story_id": "153.1",
@@ -4460,7 +4460,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 14418
+              "line": 14424
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -4742,7 +4742,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 14418
+              "line": 14424
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -4752,7 +4752,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14536
+              "line": 14542
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -5047,7 +5047,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 14418
+              "line": 14424
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -5057,7 +5057,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14536
+              "line": 14542
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -5116,7 +5116,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 164 - Chat-Guided Model Installation and Lifecycle",
-              "line": 14492
+              "line": 14498
             },
             "sprint": 164,
             "story_id": "164.1",
@@ -5220,7 +5220,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14536
+              "line": 14542
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -5928,7 +5928,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14536
+              "line": 14542
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -6347,7 +6347,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 159 - Tiered Full Command Execution",
-              "line": 14190
+              "line": 14196
             },
             "sprint": 159,
             "story_id": "159.1",
@@ -6612,7 +6612,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 14418
+              "line": 14424
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -6921,7 +6921,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 14418
+              "line": 14424
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -7288,7 +7288,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 157 - Trusted-Operations Contracts and Platform Topology",
-              "line": 14076
+              "line": 14082
             },
             "sprint": 157,
             "story_id": "157.1",
@@ -8207,7 +8207,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 160 - Current Public Research and Citation Safety",
-              "line": 14260
+              "line": 14266
             },
             "sprint": 160,
             "story_id": "160.1",
@@ -8636,7 +8636,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14536
+              "line": 14542
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -8690,7 +8690,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 155 - Cross-Pack Extreme Verification and Removal",
-              "line": 13969
+              "line": 13975
             },
             "sprint": 155,
             "story_id": "155.1",
@@ -9015,7 +9015,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 14418
+              "line": 14424
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -9025,7 +9025,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14536
+              "line": 14542
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -9209,7 +9209,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14536
+              "line": 14542
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -9307,7 +9307,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 159 - Tiered Full Command Execution",
-              "line": 14190
+              "line": 14196
             },
             "sprint": 159,
             "story_id": "159.1",
@@ -9421,7 +9421,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 153 - AWS, Azure, and Google Cloud Observers",
-              "line": 13845
+              "line": 13851
             },
             "sprint": 153,
             "story_id": "153.1",
@@ -9470,7 +9470,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 153 - AWS, Azure, and Google Cloud Observers",
-              "line": 13845
+              "line": 13851
             },
             "sprint": 153,
             "story_id": "153.1",
@@ -9568,7 +9568,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 161 - Encrypted Local Continuity",
-              "line": 14304
+              "line": 14310
             },
             "sprint": 161,
             "story_id": "161.1",
@@ -9906,7 +9906,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 157 - Trusted-Operations Contracts and Platform Topology",
-              "line": 14076
+              "line": 14082
             },
             "sprint": 157,
             "story_id": "157.1",
@@ -9955,7 +9955,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 162 - Client-Side-Encrypted Cloud Continuity",
-              "line": 14374
+              "line": 14380
             },
             "sprint": 162,
             "story_id": "162.1",
@@ -10004,7 +10004,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 154 - Cloud Cost and Delivery Correlation",
-              "line": 13925
+              "line": 13931
             },
             "sprint": 154,
             "story_id": "154.1",
@@ -10053,7 +10053,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 159 - Tiered Full Command Execution",
-              "line": 14190
+              "line": 14196
             },
             "sprint": 159,
             "story_id": "159.1",
@@ -10215,7 +10215,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 161 - Encrypted Local Continuity",
-              "line": 14304
+              "line": 14310
             },
             "sprint": 161,
             "story_id": "161.1",
@@ -10287,7 +10287,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 14418
+              "line": 14424
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -10297,7 +10297,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14536
+              "line": 14542
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -10346,7 +10346,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 159 - Tiered Full Command Execution",
-              "line": 14190
+              "line": 14196
             },
             "sprint": 159,
             "story_id": "159.1",
@@ -10395,7 +10395,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 152 - Cloud Observer Common Read Contract",
-              "line": 13801
+              "line": 13807
             },
             "sprint": 152,
             "story_id": "152.1",
@@ -10593,7 +10593,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 158 - Operating-System Credential Broker",
-              "line": 14146
+              "line": 14152
             },
             "sprint": 158,
             "story_id": "158.1",
@@ -11373,7 +11373,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 167 - Isolated Experimental Model Import and Evaluation",
-              "line": 14687
+              "line": 14693
             },
             "sprint": 167,
             "story_id": "167.1",
@@ -11383,7 +11383,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 168 - Experimental Promotion and Removal Gate",
-              "line": 14731
+              "line": 14737
             },
             "sprint": 168,
             "story_id": "168.1",
@@ -12005,7 +12005,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 156 - Expanded First-GA Evidence Checkpoint",
-              "line": 14021
+              "line": 14027
             },
             "sprint": 156,
             "story_id": "156.1",
@@ -12054,7 +12054,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 166 - Superseding First-GA Evidence and Release Decision",
-              "line": 14632
+              "line": 14638
             },
             "sprint": 166,
             "story_id": "166.1",
@@ -12103,7 +12103,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 166 - Superseding First-GA Evidence and Release Decision",
-              "line": 14632
+              "line": 14638
             },
             "sprint": 166,
             "story_id": "166.1",
@@ -12152,7 +12152,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 153 - AWS, Azure, and Google Cloud Observers",
-              "line": 13845
+              "line": 13851
             },
             "sprint": 153,
             "story_id": "153.1",
@@ -13204,7 +13204,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 14418
+              "line": 14424
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -13253,7 +13253,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 164 - Chat-Guided Model Installation and Lifecycle",
-              "line": 14492
+              "line": 14498
             },
             "sprint": 164,
             "story_id": "164.1",
@@ -13425,7 +13425,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 14418
+              "line": 14424
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -13435,7 +13435,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14536
+              "line": 14542
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -13578,7 +13578,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 14418
+              "line": 14424
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -13588,7 +13588,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14536
+              "line": 14542
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -13686,7 +13686,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14536
+              "line": 14542
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -14609,7 +14609,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14536
+              "line": 14542
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -15137,7 +15137,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 159 - Tiered Full Command Execution",
-              "line": 14190
+              "line": 14196
             },
             "sprint": 159,
             "story_id": "159.1",
@@ -15419,7 +15419,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 14418
+              "line": 14424
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -15626,7 +15626,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 163 - Signed Approved-Model Catalog",
-              "line": 14418
+              "line": 14424
             },
             "sprint": 163,
             "story_id": "163.1",
@@ -16059,7 +16059,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 157 - Trusted-Operations Contracts and Platform Topology",
-              "line": 14076
+              "line": 14082
             },
             "sprint": 157,
             "story_id": "157.1",
@@ -16678,7 +16678,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 160 - Current Public Research and Citation Safety",
-              "line": 14260
+              "line": 14266
             },
             "sprint": 160,
             "story_id": "160.1",
@@ -17178,7 +17178,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 165 - Muse Candidate and Integrated Trusted-Operations Verification",
-              "line": 14536
+              "line": 14542
             },
             "sprint": 165,
             "story_id": "165.1",
@@ -17227,7 +17227,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 155 - Cross-Pack Extreme Verification and Removal",
-              "line": 13969
+              "line": 13975
             },
             "sprint": 155,
             "story_id": "155.1",
