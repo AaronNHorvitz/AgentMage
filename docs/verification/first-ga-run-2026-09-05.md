@@ -612,3 +612,46 @@ Exact next action: Sprint 162 client-side-encrypted cloud continuity gate. Cumul
 
 Exact next action: Sprint 163 signed approved-model catalog and bounded semantic analysis gate.
 Cumulative closures: 2,140; next checkpoint: 2,150.
+
+## Batch 166 — Sprint 163 signed catalog semantic contracts
+
+### Completed
+
+- Closed 29 locally executable Sprint 163 rows: authoritative catalog structure and source
+  precedence, canonical model identity and immutable digests, capability/runtime/packaging/support
+  reconciliation, inactive-profile honesty, bounded structural inspection and semantic analysis,
+  parse outcomes, unknown-version and malformed-input rejection, and deterministic family and
+  lifecycle handling. Corpora: 3,136 catalog mutations and 640 semantic cases; unauthorized
+  usability, family inheritance, omitted negative, structural gap, coverage gap, authority change,
+  and completion drift counts: 0 each. Batch closures: 29. Cumulative closures: 2,169. Promotions:
+  0; approved models: 0; signed catalogs: 0.
+- Commits: `be7837f2` (kernel and contract implementation, corpora, tests, closures, traceability and
+  supply chain), `62b9b31a` (Sprint 163 report), and `f2885a5b` (14 downstream bound artifacts).
+  Including this log: 4; commits/item: 0.14. Review pins advanced: 0; complete `REVIEWED_PATHS`
+  intersection across 14 regenerated paths and 20 pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed Clippy with warnings denied, 2 focused Rust tests, 6 focused Python contract/report tests,
+  both corpora, dependency, traceability, supply-chain, Story 1.2, and Story 3.1/Sprint 3
+  configuration chains. Supply-chain builds: 1; evidence regeneration passes: 1. Full gate: 710
+  seconds, stopping only at retained Story 6.1 Podman after every preceding gate passed.
+  Self-recovery: 2 — corrected the Decision 0027 source path after an initial nonexistent filename
+  lookup, then corrected the inactive-profile negative fixture and removed its exposed unused Rust
+  import after the focused tests and denied-warning Clippy identified them.
+- Sprint 163 remains `UPSTREAM-SPRINTS-13-15-103-157-158-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=catalog signing infrastructure plus native published language/build,
+  approved model/runtime, accessibility, offline selection, removal, and independent review
+  environments, artifact=untouched signed catalog, catalog-to-BOM/runtime/package/platform/support
+  reconciliation, Decision 0027 completeness, native parser/partition/model-profile, quarantine,
+  lifecycle, accessibility, removal, RV-40, RV-41, and RV-46 evidence, action=satisfy upstream
+  blockers, provision signing and exact native model/runtime/parser environments, sign the complete
+  catalog, then run AT-MCAT-001, AT-STR-001, AT-SEM-001, RV-40, RV-41, and RV-46 campaigns,
+  credential=catalog-signing, model artifact, runtime, platform, accessibility, and independent
+  reviewer credentials, payment=model, signing, runtime, platform, accessibility, or independent
+  evaluator costs if applicable)`; `substitution_set=empty`. Full-chain blocker remains `blocked:
+  host change required — run npm run -s docs:check outside the restricted filesystem sandbox with
+  the current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 164 model acquisition, activation, and uninstall gate. Cumulative
+closures: 2,169; next checkpoint: 2,175.
