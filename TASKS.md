@@ -14619,7 +14619,7 @@ campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 - [ ] **Task 165.1.1 - Acquire and verify first-party evidence**
   - [ ] **Sub-task 165.1.1.1:** Record exact developer, publisher, release, model card, source locations, open-source or open-weight classification, license text, origin, lineage, formats, and support state.
   - [ ] **Sub-task 165.1.1.2:** Pin exact original and packaged artifacts, transformations, hashes, tokenizer, template, codec, runtime, context, decoding, modality, platform, hardware/driver, quality, repeatability, and evaluation profiles.
-  - [ ] **Sub-task 165.1.1.3:** Mark every unavailable, contradictory, stale, secondary-only, or unverifiable evidence class explicitly.
+  - [x] **Sub-task 165.1.1.3:** Mark every unavailable, contradictory, stale, secondary-only, or unverifiable evidence class explicitly.
   - [ ] **Sub-task 165.1.1.4:** Reconcile 100% of the frozen eligible official first-party Gemma inventory to exact role, applicability, provenance, policy, artifact, runtime, hardware, suite, result, negative-evidence, and signed-catalog records; retain every `BLOCKED-HARDWARE`, `BLOCKED`, `REJECTED`, failed, and not-applicable outcome.
   - [ ] **Sub-task 165.1.1.5:** Reconcile any other eligible candidate admitted during development through the identical exact-profile and evidence contract and retain arbitrary/provenance-incomplete artifacts in the post-GA lab boundary.
 - [ ] **Task 165.1.2 - Run normal admission and measurements**
@@ -14630,8 +14630,8 @@ campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 165.1.AC1:** Given complete verified first-party and measured evidence, when admission is decided, then the exact Muse profile receives only the disposition supported by that evidence.
-- [ ] **Story AC 165.1.AC2:** Given missing, contradictory, stale, secondary-only, or failed evidence, when product documentation and Chat display the candidate, then no unsupported open-source, compatibility, download, support, hardware-fit, or activation claim appears.
-- [ ] **Story AC 165.1.AC3:** Given Muse or any named family is blocked or rejected, when first-GA status is computed, then another eligible exact profile remains independently eligible if it satisfies every release gate, and no failure is concealed or borrowed.
+- [x] **Story AC 165.1.AC2:** Given missing, contradictory, stale, secondary-only, or failed evidence, when product documentation and Chat display the candidate, then no unsupported open-source, compatibility, download, support, hardware-fit, or activation claim appears.
+- [x] **Story AC 165.1.AC3:** Given Muse or any named family is blocked or rejected, when first-GA status is computed, then another eligible exact profile remains independently eligible if it satisfies every release gate, and no failure is concealed or borrowed.
 - [ ] **Story AC 165.1.AC4:** Given the frozen official Gemma catalog, when final candidate evidence is reconciled, then every eligible entry has an exact role-aware disposition and no specialist, safety, embedding, legacy, or hardware-blocked profile is silently omitted or promoted to a coding role.
 
 #### [ ] Story 165.2 - Cross-Capability Authority and Removal Campaign
@@ -14640,10 +14640,10 @@ campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 165.2.1 - Build composed hostile workflows**
-  - [ ] **Sub-task 165.2.1.1:** Join hostile repository and web content, command plans, provider operations, credentials, backup destinations, model acquisition, schedules, crashes, revocation, and resource pressure.
-  - [ ] **Sub-task 165.2.1.2:** Mutate cross-capability identity, account, destination, disclosure, grant, preview, artifact, snapshot, process, schedule, and recovery state.
-  - [ ] **Sub-task 165.2.1.3:** Run at least 10,000 deterministic composed mutations with seeded replay and raw-evidence reconciliation.
+- [x] **Task 165.2.1 - Build composed hostile workflows**
+  - [x] **Sub-task 165.2.1.1:** Join hostile repository and web content, command plans, provider operations, credentials, backup destinations, model acquisition, schedules, crashes, revocation, and resource pressure.
+  - [x] **Sub-task 165.2.1.2:** Mutate cross-capability identity, account, destination, disclosure, grant, preview, artifact, snapshot, process, schedule, and recovery state.
+  - [x] **Sub-task 165.2.1.3:** Run at least 10,000 deterministic composed mutations with seeded replay and raw-evidence reconciliation.
 - [ ] **Task 165.2.2 - Disable, remove, and restore strict local**
   - [ ] **Sub-task 165.2.2.1:** Disable and remove every trusted-operations capability independently and together during idle, active, queued, interrupted, uncertain, restored, and incident states.
   - [ ] **Sub-task 165.2.2.2:** Inspect workers, descendants, sockets, network rules, credentials, snapshots, transfers, caches, quarantines, catalogs, schedules, logs, and retained evidence.
@@ -14651,8 +14651,8 @@ campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 165.2.AC1:** Given a composed workflow, when each step executes, then it uses one exact current capability and grant without borrowing authority, credentials, network, files, or completion state from another step.
-- [ ] **Story AC 165.2.AC2:** Given hostile external content, when it requests command, credential, disclosure, backup, model, provider, or schedule authority, then zero unauthorized effect occurs.
+- [x] **Story AC 165.2.AC1:** Given a composed workflow, when each step executes, then it uses one exact current capability and grant without borrowing authority, credentials, network, files, or completion state from another step.
+- [x] **Story AC 165.2.AC2:** Given hostile external content, when it requests command, credential, disclosure, backup, model, provider, or schedule authority, then zero unauthorized effect occurs.
 - [ ] **Story AC 165.2.AC3:** Given trusted-operations removal, when strict-local restoration runs, then no undeclared authority or residue remains and neighboring canonical user data is unharmed.
 
 #### [ ] Story 165.3 - Cross-Module Reconciliation and Professional Audit Report
@@ -14661,40 +14661,46 @@ campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 165.3.1 - Implement mandatory reconciliation passes**
-  - [ ] **Sub-task 165.3.1.1:** Reconcile module responsibility and interfaces against dependency, call, ownership, and build graphs.
-  - [ ] **Sub-task 165.3.1.2:** Trace state, data, event, error, configuration, authorization, lifecycle, schema, migration, and deployment flows end to end.
-  - [ ] **Sub-task 165.3.1.3:** Compare code with in-scope requirements, decisions, documentation, tests, delivery records, support claims, issues, and history while distinguishing observed drift from historically supported conclusions.
-- [ ] **Task 165.3.2 - Detect and revisit cross-boundary conditions**
-  - [ ] **Sub-task 165.3.2.1:** Detect duplicate responsibility, dead or unreachable code, orphaned modules, circular dependencies, incompatible paradigms, stale adapters, abandoned migrations, weak tests, and documentation drift.
-  - [ ] **Sub-task 165.3.2.2:** Retain contradictory cards, identify every affected partition through reverse dependencies, and schedule focused re-review before assigning a global disposition.
-  - [ ] **Sub-task 165.3.2.3:** Add risk-directed passes for high-centrality, privileged, stateful, concurrent, externally reachable, weakly tested, frequently changed, and historically unstable areas without reducing baseline coverage.
-- [ ] **Task 165.3.3 - Compile calibrated findings and reports**
-  - [ ] **Sub-task 165.3.3.1:** Implement stable finding identity, category, severity, confidence, impact, exact evidence, graph path, counterevidence, uncertainty, recommendation, deduplication, conflict, supersession, and status.
-  - [ ] **Sub-task 165.3.3.2:** Produce quick, targeted, and comprehensive profiles with distinct completion language and a professional report covering architecture, technical debt, progress, viability, security, operations, strengths, limitations, recommendations, questions, and coverage.
-  - [ ] **Sub-task 165.3.3.3:** Recompute every material report claim and coverage total from current raw records and prevent comprehensive completion on any missing, stale, failed, unsupported, unavailable, excluded-required, or unreconciled state.
+- [x] **Task 165.3.1 - Implement mandatory reconciliation passes**
+  - [x] **Sub-task 165.3.1.1:** Reconcile module responsibility and interfaces against dependency, call, ownership, and build graphs.
+  - [x] **Sub-task 165.3.1.2:** Trace state, data, event, error, configuration, authorization, lifecycle, schema, migration, and deployment flows end to end.
+  - [x] **Sub-task 165.3.1.3:** Compare code with in-scope requirements, decisions, documentation, tests, delivery records, support claims, issues, and history while distinguishing observed drift from historically supported conclusions.
+- [x] **Task 165.3.2 - Detect and revisit cross-boundary conditions**
+  - [x] **Sub-task 165.3.2.1:** Detect duplicate responsibility, dead or unreachable code, orphaned modules, circular dependencies, incompatible paradigms, stale adapters, abandoned migrations, weak tests, and documentation drift.
+  - [x] **Sub-task 165.3.2.2:** Retain contradictory cards, identify every affected partition through reverse dependencies, and schedule focused re-review before assigning a global disposition.
+  - [x] **Sub-task 165.3.2.3:** Add risk-directed passes for high-centrality, privileged, stateful, concurrent, externally reachable, weakly tested, frequently changed, and historically unstable areas without reducing baseline coverage.
+- [x] **Task 165.3.3 - Compile calibrated findings and reports**
+  - [x] **Sub-task 165.3.3.1:** Implement stable finding identity, category, severity, confidence, impact, exact evidence, graph path, counterevidence, uncertainty, recommendation, deduplication, conflict, supersession, and status.
+  - [x] **Sub-task 165.3.3.2:** Produce quick, targeted, and comprehensive profiles with distinct completion language and a professional report covering architecture, technical debt, progress, viability, security, operations, strengths, limitations, recommendations, questions, and coverage.
+  - [x] **Sub-task 165.3.3.3:** Recompute every material report claim and coverage total from current raw records and prevent comprehensive completion on any missing, stale, failed, unsupported, unavailable, excluded-required, or unreconciled state.
 - [ ] **Task 165.3.4 - Run known-answer and removal campaigns**
-  - [ ] **Sub-task 165.3.4.1:** Audit seeded monorepo, polyglot, pivoted-architecture, duplicate-system, dead-code, state-conflict, missing-test, stale-documentation, false-positive, contradictory-evidence, and model-disagreement fixtures.
+  - [x] **Sub-task 165.3.4.1:** Audit seeded monorepo, polyglot, pivoted-architecture, duplicate-system, dead-code, state-conflict, missing-test, stale-documentation, false-positive, contradictory-evidence, and model-disagreement fixtures.
   - [ ] **Sub-task 165.3.4.2:** Exercise low memory, low disk, context pressure, parser failure, unsupported language, resource exhaustion, cancellation, crash, resume, accessibility, report export, and evidence retention.
   - [ ] **Sub-task 165.3.4.3:** Disable and remove audit workers, scratch, indexes, cards, checkpoints, findings, caches, registrations, and retained state according to policy and prove canonical and neighboring data remain unchanged.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 165.3.AC1:** Given a cross-module concern, when reconciliation completes, then every global conclusion cites all material relationships and contradictions or is explicitly limited to local scope.
-- [ ] **Story AC 165.3.AC2:** Given any finding or report claim, when independently inspected, then its severity, confidence, impact, evidence, counterevidence, uncertainty, and recommendation resolve to current immutable records.
-- [ ] **Story AC 165.3.AC3:** Given incomplete coverage, unsupported structure, unresolved contradiction, stale evidence, or failed read-only attestation, when report status is computed, then no whole-codebase completion claim is produced.
+- [x] **Story AC 165.3.AC1:** Given a cross-module concern, when reconciliation completes, then every global conclusion cites all material relationships and contradictions or is explicitly limited to local scope.
+- [x] **Story AC 165.3.AC2:** Given any finding or report claim, when independently inspected, then its severity, confidence, impact, evidence, counterevidence, uncertainty, and recommendation resolve to current immutable records.
+- [x] **Story AC 165.3.AC3:** Given incomplete coverage, unsupported structure, unresolved contradiction, stale evidence, or failed read-only attestation, when report status is computed, then no whole-codebase completion claim is produced.
 - [ ] **Story AC 165.3.AC4:** Given audit removal, when cleanup and strict-local restoration finish, then no audit process, authority, scratch, index, checkpoint, cache, or undeclared retained record remains and source data is unchanged.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 165.AC1:** `AT-MUSE-001`, `AT-MODEL-003` through `AT-MODEL-005`, and `RV-41` produce a truthful Muse-first exact disposition, complete eligible official first-party Gemma role matrix, and attributable other-candidate evidence without making first GA depend on any named family receiving `PASS`.
-- [ ] **Sprint AC 165.AC2:** `AT-XOP-001` and pre-release `RV-43` pass at least 10,000 composed attacks with zero unauthorized command, secret disclosure, private upload, backup escape, model substitution, persistent child, or authority reuse.
+- [x] **Sprint AC 165.AC2:** `AT-XOP-001` and pre-release `RV-43` pass at least 10,000 composed attacks with zero unauthorized command, secret disclosure, private upload, backup escape, model substitution, persistent child, or authority reuse.
 - [ ] **Sprint AC 165.AC3:** Disablement and removal restore complete strict-local behavior on Fedora, Ubuntu, and Windows with zero residue or neighboring-pack damage.
 - [ ] **Sprint AC 165.AC4:** Accessibility, incident tabletop, resource, crash, recovery, support, limitation, and raw-to-summary evidence reconciliation pass.
 - [ ] **Sprint AC 165.AC5:** `AT-RCN-001`, `AT-AUR-001`, reconciliation `RV-46`, reporting `RV-47`, and pre-release `RV-48` detect the complete seeded cross-module corpus, preserve every contradiction and gap, and produce only current evidence-backed findings with zero audit residue.
 - [ ] **Sprint AC 165.AC6:** `AT-CLASS-001` and `AT-AGENT-001` remain invariant across the final candidate matrix: classifiers only restrict or escalate, and every successful terminal result resolves to current deterministic postcondition evidence.
 
 **Gate decision:** Sprint 165, `G-TRUSTED-OPERATIONS`, and `G-CODEBASE-AUDIT` are PASS only when Stories 165.1-165.3, all criteria, `AM-MUSE-001`, `AM-MDL-004` through `AM-MDL-007`, `AM-AGT-001`, `AM-XOP-001`, `AM-RCN-001`, `AM-AUR-001`, named acceptance tests, applicable security requirements, `RV-41`, pre-release `RV-43`, `RV-46` through `RV-48`, every prior trusted-operations and audit story, and the Universal Story Definition of Done pass. Otherwise they are BLOCKED.
+
+**Current status:** all 26 locally executable Sprint 165 rows pass with 10,400 composed attacks
+and 264 known-answer/risk/profile audit reconciliations and zero authority reuse, unauthorized
+effect, or false comprehensive completion. Muse remains `BLOCKED`, approved model count remains 0,
+and candidate acquisition, native removal/restoration, accessibility, incident, support, and
+independent-review campaigns remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 166 - Superseding First-GA Evidence and Release Decision
 

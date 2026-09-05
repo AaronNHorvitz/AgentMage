@@ -111,6 +111,8 @@ pub mod executive_assistant;
 pub mod external_effect;
 /// Authority-free controlled filesystem plans, structured patches, and exact previews.
 pub mod filesystem_control;
+/// Candidate truth, composed-authority, and cross-module reconciliation contracts.
+pub mod final_reconciliation;
 /// Finance-pack privacy, data-flow, absence, and removal contracts.
 pub mod finance_privacy;
 /// Reproducible, explainable, non-authoritative financial anomaly indicators.

@@ -35,7 +35,7 @@
     },
     {
       "document": "TASKS.md",
-      "sha256": "2cceeaa888c87a23fb0fe020d78c9f5e75a543f70fed7f50e54627ad5b7d5de9"
+      "sha256": "3931168729b0e637cff99eeee4dee78e550dd0ad6a00b7765d4623c9c8cc79fb"
     },
     {
       "document": "evidence/catalog.json",
@@ -2510,7 +2510,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 167 - Isolated Experimental Model Import and Evaluation",
-              "line": 14760
+              "line": 14766
             },
             "sprint": 167,
             "story_id": "167.1",
@@ -2520,7 +2520,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 168 - Experimental Promotion and Removal Gate",
-              "line": 14804
+              "line": 14810
             },
             "sprint": 168,
             "story_id": "168.1",
@@ -3246,7 +3246,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 166 - Superseding First-GA Evidence and Release Decision",
-              "line": 14705
+              "line": 14711
             },
             "sprint": 166,
             "story_id": "166.1",
@@ -3298,7 +3298,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 166 - Superseding First-GA Evidence and Release Decision",
-              "line": 14705
+              "line": 14711
             },
             "sprint": 166,
             "story_id": "166.1",
@@ -11373,7 +11373,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 167 - Isolated Experimental Model Import and Evaluation",
-              "line": 14760
+              "line": 14766
             },
             "sprint": 167,
             "story_id": "167.1",
@@ -11383,7 +11383,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 168 - Experimental Promotion and Removal Gate",
-              "line": 14804
+              "line": 14810
             },
             "sprint": 168,
             "story_id": "168.1",
@@ -12054,7 +12054,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 166 - Superseding First-GA Evidence and Release Decision",
-              "line": 14705
+              "line": 14711
             },
             "sprint": 166,
             "story_id": "166.1",
@@ -12103,7 +12103,7 @@
             "source": {
               "document": "TASKS.md",
               "heading": "Sprint 166 - Superseding First-GA Evidence and Release Decision",
-              "line": 14705
+              "line": 14711
             },
             "sprint": 166,
             "story_id": "166.1",
