@@ -14313,33 +14313,38 @@ Native platform and accessibility campaigns remain `BLOCKED_EXTERNAL`; `substitu
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 160.1.1 - Implement bounded search and retrieval**
-  - [ ] **Sub-task 160.1.1.1:** Define query, provider, recency, domain, scheme, DNS, proxy, certificate, redirect, item, byte, media, script, archive, download, cache, timeout, and cancellation contracts.
-  - [ ] **Sub-task 160.1.1.2:** Run public search and retrieval in a separate worker with no authenticated-browser state, broad workspace handle, connector credential, or external-effect tool.
-  - [ ] **Sub-task 160.1.1.3:** Quarantine downloads and require separate artifact-type admission before parsing, opening, installing, or executing them.
-- [ ] **Task 160.1.2 - Implement citations and freshness**
-  - [ ] **Sub-task 160.1.2.1:** Preserve query, source provider, direct URL, redirects, title, retrieval time, publication date, event date where known, excerpt hash, source class, and cache state.
-  - [ ] **Sub-task 160.1.2.2:** Bind web-grounded claims to citations and label observed source statements, deterministic derivations, model inference, conflict, staleness, and unknown state.
-  - [ ] **Sub-task 160.1.2.3:** Revalidate changing facts and prefer first-party or primary sources while preserving clearly labeled secondary corroboration.
-- [ ] **Task 160.1.3 - Prevent injection and private disclosure**
-  - [ ] **Sub-task 160.1.3.1:** Keep page text, hidden text, metadata, scripts, links, authentication prompts, and tool requests in untrusted evidence channels.
-  - [ ] **Sub-task 160.1.3.2:** Require an exact classified disclosure preview for any selected workspace, memory, communication, finance, connector, or other private field sent to a destination.
-  - [ ] **Sub-task 160.1.3.3:** Build malicious-site, redirect, tracking, injection, credential, form, upload, download, archive, script, and private-canary fixtures.
+- [x] **Task 160.1.1 - Implement bounded search and retrieval**
+  - [x] **Sub-task 160.1.1.1:** Define query, provider, recency, domain, scheme, DNS, proxy, certificate, redirect, item, byte, media, script, archive, download, cache, timeout, and cancellation contracts.
+  - [x] **Sub-task 160.1.1.2:** Run public search and retrieval in a separate worker with no authenticated-browser state, broad workspace handle, connector credential, or external-effect tool.
+  - [x] **Sub-task 160.1.1.3:** Quarantine downloads and require separate artifact-type admission before parsing, opening, installing, or executing them.
+- [x] **Task 160.1.2 - Implement citations and freshness**
+  - [x] **Sub-task 160.1.2.1:** Preserve query, source provider, direct URL, redirects, title, retrieval time, publication date, event date where known, excerpt hash, source class, and cache state.
+  - [x] **Sub-task 160.1.2.2:** Bind web-grounded claims to citations and label observed source statements, deterministic derivations, model inference, conflict, staleness, and unknown state.
+  - [x] **Sub-task 160.1.2.3:** Revalidate changing facts and prefer first-party or primary sources while preserving clearly labeled secondary corroboration.
+- [x] **Task 160.1.3 - Prevent injection and private disclosure**
+  - [x] **Sub-task 160.1.3.1:** Keep page text, hidden text, metadata, scripts, links, authentication prompts, and tool requests in untrusted evidence channels.
+  - [x] **Sub-task 160.1.3.2:** Require an exact classified disclosure preview for any selected workspace, memory, communication, finance, connector, or other private field sent to a destination.
+  - [x] **Sub-task 160.1.3.3:** Build malicious-site, redirect, tracking, injection, credential, form, upload, download, archive, script, and private-canary fixtures.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 160.1.AC1:** Given a changing public question, when research completes, then every material web-grounded claim has a direct citation, retrieval time, freshness state, and visible inference or uncertainty.
-- [ ] **Story AC 160.1.AC2:** Given hostile page content or a downloaded instruction, when processed, then it cannot activate a command, credential, model, connector, form, upload, publication, or other effect.
-- [ ] **Story AC 160.1.AC3:** Given private context is relevant, when research is prepared, then no field leaves the device until the exact destination and disclosure are previewed and approved.
+- [x] **Story AC 160.1.AC1:** Given a changing public question, when research completes, then every material web-grounded claim has a direct citation, retrieval time, freshness state, and visible inference or uncertainty.
+- [x] **Story AC 160.1.AC2:** Given hostile page content or a downloaded instruction, when processed, then it cannot activate a command, credential, model, connector, form, upload, publication, or other effect.
+- [x] **Story AC 160.1.AC3:** Given private context is relevant, when research is prepared, then no field leaves the device until the exact destination and disclosure are previewed and approved.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 160.AC1:** `AT-WEB-001` and `RV-37` pass across current, stale, conflicting, malicious, redirected, archived, and unavailable source fixtures.
-- [ ] **Sprint AC 160.AC2:** Citation resolution, excerpt hashes, dates, cache state, and evidence labels reproduce deterministically.
-- [ ] **Sprint AC 160.AC3:** At least 2,000 hostile-content and private-disclosure mutations produce zero created authority or undeclared egress.
+- [x] **Sprint AC 160.AC1:** `AT-WEB-001` and `RV-37` pass across current, stale, conflicting, malicious, redirected, archived, and unavailable source fixtures.
+- [x] **Sprint AC 160.AC2:** Citation resolution, excerpt hashes, dates, cache state, and evidence labels reproduce deterministically.
+- [x] **Sprint AC 160.AC3:** At least 2,000 hostile-content and private-disclosure mutations produce zero created authority or undeclared egress.
 - [ ] **Sprint AC 160.AC4:** Download quarantine, cancellation, resource limits, accessibility, disablement, and worker removal pass on every first-GA platform.
 
 **Gate decision:** Sprint 160 is PASS only when Story 160.1, all criteria, `AM-WEB-001`, `AT-WEB-001`, `SR-WEB-001` through `SR-WEB-004`, `RV-37`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all 18 locally executable Sprint 160 rows pass with 2,688 public-web safety
+cases and zero created authority, undeclared egress, raw private data, or unadmitted download.
+Native worker, accessibility, disablement, and removal campaigns remain `BLOCKED_EXTERNAL`;
+`substitution_set=empty`.
 
 ### [ ] Sprint 161 - Encrypted Local Continuity
 

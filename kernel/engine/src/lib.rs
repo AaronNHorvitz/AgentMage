@@ -296,6 +296,8 @@ pub mod verified_context;
 /// Dependency-ready orchestration over exact reusable-runtime step attempts.
 #[cfg(feature = "verified-workflow-supervisor")]
 pub mod verified_workflow_supervisor;
+/// Bounded public-web retrieval, citations, quarantine, and disclosure refusal.
+pub mod web_research_safety;
 /// Bounded work-packet validation, revision history, and plan adaptation.
 pub mod work_packet;
 /// Narrowing-only authority intersection for future workflow callers.
