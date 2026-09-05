@@ -573,3 +573,42 @@ checkpoint: 2,100.
 
 Exact next action: Sprint 162 client-side-encrypted cloud continuity gate. Cumulative closures:
 2,122; next checkpoint: 2,125.
+
+## Batch 165 — Sprint 162 encrypted cloud continuity
+
+### Completed
+
+- Closed 18 locally executable Sprint 162 rows: six provider profiles, exact account/container/
+  prefix/method/encryption/limit/version/retention/removal contracts, observer-separated schemas and
+  credentials, completed-snapshot-only opaque transfers, bounded resumable multipart integrity and
+  idempotency, exact host/TLS/DNS/proxy/redirect/account/namespace/object/version/credential checks,
+  and unknown-effect reconciliation before retry. Corpus: 2,160 `AT-CBK-001` cases; out-of-scope
+  access, duplicate effect, plaintext, raw credential, and Cloud Observer crossover counts: 0 each.
+  Batch closures: 18. Cumulative closures: 2,140. Promotions: 0.
+- Commits: `63f92ee2` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `592bee8d` (Sprint 162 report), and `baa4be27` (14 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.22. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection
+  across 14 regenerated paths and 20 pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed Clippy with warnings denied, 2 focused Rust tests, 6 focused Python contract/report
+  tests, corpus, dependency, traceability, supply-chain, Story 1.2, and Story 3.1/Sprint 3
+  configuration chains. Supply-chain builds: 1; evidence regeneration passes: 1. Full gate: 710
+  seconds, stopping only at retained Story 6.1 Podman after every preceding gate passed.
+  Self-recovery: 0.
+- Sprint 162 remains `UPSTREAM-SPRINTS-105-152-154-158-161-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=reference cloud account plus native Fedora, Ubuntu, and Windows
+  clean-device restore, accessibility, removal, strict-local, and independent review environments,
+  artifact=untouched provider identity, encrypted transfer, namespace, integrity, effect, retry,
+  deletion, clean-device restore, rollback, revocation, removal, accessibility, strict-local
+  restoration, and RV-39 evidence, action=satisfy upstream blockers, provision exact reference
+  cloud account and native platforms, then run AT-CBK-001 and complete RV-39 separately per
+  platform, credential=cloud-provider, platform key-store, clean-device, accessibility, and
+  independent reviewer credentials, payment=cloud storage, platform, accessibility, or independent
+  evaluator costs if applicable)`; `substitution_set=empty`. Full-chain blocker remains `blocked:
+  host change required — run npm run -s docs:check outside the restricted filesystem sandbox with
+  the current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 163 signed approved-model catalog and bounded semantic analysis gate.
+Cumulative closures: 2,140; next checkpoint: 2,150.
