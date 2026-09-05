@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_158_local_evidence",
+  "source_revision": "d46be1d8ce914a0cf86cef970b9d42d55f242b65",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "TASKS.md": "dcc64bce86f0203c429ef3098dcc0cf1ec34d8f9a96878a0710e8e9d78ccf3a8",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "ce3bd5b693fe6f854981d69dc8c4c35101dce979e60c8239ce19280b1b7e28e2",
+    "kernel/engine/src/credential_broker.rs": "d28da58d72de0bf6a82eadb8a8b245e40c196a6dddc8db4334123678ca2cf9a3",
+    "supply-chain/dependency-provenance.json": "27dcaccf6f1c6fbccd43d740eb8434a98eee02480f435b2afeae6ba8cabf2838",
+    "supply-chain/sbom.cdx.json": "48723866b14f6f9d32688eb0db32310dd7431e8b7a7a496e6be9a871c4d71e85",
+    "supply-chain/dependency-hashes.sha256": "b80ad4c7a06fcce3297876e80dfc03b3006c63af77c47d1dfca8db5df821127d",
+    "artifacts/sprints/sprint-158/credential-broker-corpus.json": "d895383c247e544a6db14b4c421a0fb13bd7ff5c2cfa3729478f5088acbb3582",
+    "scripts/credential_broker_contract.py": "9c493da893d0d8efedadefe58c2d96bb5412f094bc65b39fe10060370346aea2",
+    "tests/test_credential_broker_contract.py": "27d3ef1ba99f4ac73c78a21b9f1f0e98bd03c009dc1bf3bd3682605e2a0c2686",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_158_evidence.py": "4452de989a51e5bc2dd2951f014bd59c32e87c8ce53f251e584ea827182fd191",
+    "tests/test_sprint_158_evidence.py": "af140f068fdcbac52a7bae6e7ce8461070ffe3233487530add71c281322ce434"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "credential-broker-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "credential_broker::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e48a6b7e0b5621ef88bf696d4eb31e18a406df90fb12370653003558e9694468",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "credential-broker-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_credential_broker_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "800346069b7c77896a63bf9caf4716560e8342f5599a74f58ff8b74006e44266",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_158_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-CRD-001",
+    "AT-CRD-001",
+    "SR-CRD-001",
+    "SR-CRD-002",
+    "SR-CRD-003",
+    "RV-38"
+  ],
+  "implemented_contracts": {
+    "store_adapter_contract_count": 4,
+    "acquisition_flow_count": 6,
+    "credential_lifecycle_count": 8,
+    "prohibited_surface_count": 13,
+    "mutation_family_count": 12,
+    "mutation_case_count": 6912,
+    "disclosure_count": 0,
+    "wrong_account_count": 0,
+    "stale_reference_count": 0,
+    "canary_finding_count": 0,
+    "restored_raw_credential_count": 0,
+    "restored_usable_credential_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "typed_reference_contract_complete": true,
+    "store_attestation_contract_complete": true,
+    "acquisition_contract_complete": true,
+    "exact_worker_resolution_complete": true,
+    "bounded_memory_clear_complete": true,
+    "lifecycle_contract_complete": true,
+    "canary_surface_contract_complete": true,
+    "restore_reauthentication_complete": true,
+    "native_platform_campaign_complete": false,
+    "rv38_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-9-11-104-128-130-157-BLOCKED",
+      "owner": "158"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "native Linux Secret Service, Windows Credential Manager or DPAPI, and retained macOS Keychain environments plus provider authentication and independent review environments",
+      "artifact": "untouched native store identity, access-control, cryptographic-provider, acquisition, worker-resolution, lifetime, canary, revocation, restoration, removal, and RV-38 evidence",
+      "action": "provision exact native platform key stores and provider credentials, then run AT-CRD-001 and RV-38 separately on each available first-GA platform",
+      "credential": "platform key-store, OAuth, SSH-agent, certificate, provider, and independent reviewer credentials",
+      "payment": "platform, provider, certificate, or independent evaluator costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_158_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "credential_broker_promoted": false,
+    "support_promotion_count": 0
+  }
+}
