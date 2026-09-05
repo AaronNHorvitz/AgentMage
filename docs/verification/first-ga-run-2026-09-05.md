@@ -655,3 +655,46 @@ Cumulative closures: 2,140; next checkpoint: 2,150.
 
 Exact next action: Sprint 164 model acquisition, activation, and uninstall gate. Cumulative
 closures: 2,169; next checkpoint: 2,175.
+
+## Batch 167 — Sprint 164 fail-closed model management
+
+### Completed
+
+- Closed 15 locally executable Sprint 164 rows: 13 closed Chat intents, complete exact-profile
+  preview facts, digest-bound confirmation and invalidation, one-plan installer isolation with zero
+  ambient authority, quarantine verification, bounded lifecycle transitions, atomic activation,
+  prior-profile preservation, rollback, removal, cleanup, substitution refusal, interruption
+  handling, and deterministic no-self-approval rules. Corpus: 3,120 `AT-MGR-001` mutations; silent,
+  partial, substituted, and unconfirmed activation counts: 0 each. Batch closures: 15. Cumulative
+  closures: 2,184. Promotions: 0; approved-profile executions: 0.
+- Commits: `6862d852` (kernel lifecycle, corpus, tests, closures, traceability and supply chain),
+  `af67446a` (Sprint 164 report), and `a32b2896` (14 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.27. Review pins advanced: 0; complete `REVIEWED_PATHS` intersection across
+  14 regenerated paths and 20 pin-bearing gates: empty.
+
+### Validation and blockers
+
+- Passed formatting, Clippy with warnings denied, 3 focused Rust tests, 7 focused Python
+  contract/report tests, corpus, dependency, traceability, supply-chain, Story 1.2, and Story
+  3.1/Sprint 3 configuration chains. Supply-chain builds: 1; evidence regeneration passes: 1. Full
+  gate: 708 seconds, stopping only at retained Story 6.1 Podman after every preceding gate passed.
+  Self-recovery: 2 — applied repository formatting after the initial formatting check exposed the
+  new module ordering and wrapping, then replaced the rejected symbolic `HEAD` report argument with
+  the exact 40-character capability commit; the rejected report attempt wrote no artifact.
+- Sprint 164 remains `UPSTREAM-SPRINTS-14-15-23-157-158-163-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=catalog signing and approved model artifact infrastructure plus native
+  Fedora, Ubuntu, Windows, accessibility, strict-local, clean-install, and independent review
+  environments, artifact=untouched approved-profile acquisition, import, resume, signature, scan,
+  format, hardware, runtime self-test, atomic activation, rollback, removal, storage cleanup,
+  accessibility, strict-local restoration, AT-MGR-001, and RV-40 evidence, action=satisfy upstream
+  blockers, provision one signed approved compatible profile and exact native environments, then
+  run the complete acquisition, activation, interruption, rollback, removal, accessibility,
+  strict-local, AT-MGR-001, and RV-40 campaigns, credential=catalog-signing, model-source, artifact,
+  platform key-store, accessibility, and independent reviewer credentials, payment=model, signing,
+  storage, platform, accessibility, or independent evaluator costs if applicable)`;
+  `substitution_set=empty`. Full-chain blocker remains `blocked: host change required — run npm run
+  -s docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 165 Muse disposition and integrated trusted-operations verification gate.
+Cumulative closures: 2,184; next checkpoint: 2,200.
