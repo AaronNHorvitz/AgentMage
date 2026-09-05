@@ -2686,3 +2686,38 @@ Exact next action: Sprint 134 Gmail adapter. Cumulative closures: 1,493; next ch
 
 Exact next action: Sprint 135 standard mail protocols and Proton Bridge adapter. Cumulative
 closures: 1,513; next checkpoint: 1,525.
+
+## Batch 138 — Sprint 135 standard mail protocols and Proton Bridge
+
+### Completed
+
+- Closed 20 local Sprint 135 rows: exact server, transport, account, mailbox, folder, UID,
+  certificate, credential, extension, and capability identities; negotiated-only IMAP, SMTP,
+  JMAP, and Proton Bridge operations; loopback/process enforcement; uncertainty reconciliation;
+  capability drift and removal. Corpus cases: 5,040; unauthorized credential disclosures,
+  unauthorized effects, duplicate delivery, false completion, and removal-residual authority:
+  0 each. Batch closures: 20. Cumulative closures: 1,533. Promotions: 0.
+- Commits: `ac945b49` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `a66a202f` (Sprint 135 report), and `0b234519` (13 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.20. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 3 focused Rust tests, 7 focused Python tests, the 5,040-case AT-MAIL-001 corpus, Sprint
+  evidence, dependency, traceability, supply-chain, Story 1.2, and Story 3.1 configuration chains.
+  Supply-chain builds: 1; evidence regeneration passes: 1. Full gate: 687.65 seconds, stopping
+  only at retained Story 6.1 Podman after every preceding gate passed. Self-recovery: 1; the
+  evidence recorder rejected symbolic `HEAD`, so the same invocation was rerun with exact source
+  revision `ac945b49f665804674c3af0db74a5690f1aacf1a`.
+- Sprint 135 remains `UPSTREAM-SPRINT-132-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=IMAP, SMTP, JMAP servers and Proton Mail Bridge test accounts,
+  artifact=untouched native protocol negotiation, transport, delivery, security, reviewer, and
+  removal evidence, action=provision exact servers/accounts/credentials and Proton Bridge host,
+  then run AT-MAIL-001 plus RV-23 through RV-26 and RV-31 native campaigns,
+  credential=server-specific IMAP, SMTP, JMAP, and Proton Bridge account credentials,
+  payment=mail provider or Proton subscription costs if applicable)`; `substitution_set=empty`.
+  Full-chain blocker remains `blocked: host change required — run npm run -s docs:check outside
+  the restricted filesystem sandbox with the current user's /run/user/1000/libpod writable`;
+  `substitution_set=empty`.
+
+Exact next action: Sprint 136 Slack adapter. Cumulative closures: 1,533; next checkpoint: 1,550.
