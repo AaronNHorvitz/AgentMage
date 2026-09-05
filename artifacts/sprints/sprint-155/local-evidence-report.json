@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_155_local_evidence",
+  "source_revision": "9b85228119b496e9605dbec75ebde8b0133381b5",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "b40cfde06cf3aa8cecc4ab100e8be1851f10431a0c54d61ea0a869ea48dd0021",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "1ed38f2999f5d082342284e5a152eebcd6cb5595f18d881fdcd662934bf157bc",
+    "kernel/engine/src/cross_pack_verification.rs": "861cf1855fb9c11c993b8043b293f2582af380435ecb66cebb2296d25930f653",
+    "supply-chain/dependency-provenance.json": "e796ae76d2a3a6c83afbc4a38cb1d4f72ec5761d9c166922926d01319069243c",
+    "supply-chain/sbom.cdx.json": "2b2fd15c4f4546b0062d11fa37d38f571ccbfbf15238f936d9fae0168da35a6b",
+    "supply-chain/dependency-hashes.sha256": "bbec6105cf611cc53048f19cdbd2c3f7ffba42e115b1bdedeb4bf6c13311dee4",
+    "artifacts/sprints/sprint-155/cross-pack-corpus.json": "6e64c6cdaa82f06878eed1ead46e2e060a7c7d3657d341e9cb2814e5ebb7f2de",
+    "scripts/cross_pack_verification_contract.py": "e7ef48720c8ce2686de0f477230598abc25e4626633b381052c03e1368fba13a",
+    "tests/test_cross_pack_verification_contract.py": "bb9b18728e05a2db05e366b057b95deac40e2cb96b2c3e10582c0e324e3113d6",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_155_evidence.py": "3bb5cb3d75b78a33e3afa8905b4e29cf45503c693be781c1ea16fea84eb69acc",
+    "tests/test_sprint_155_evidence.py": "82849e7ba7a73e43000cbc0f2a87aa1ebc4c1250a71fc700fab59dd58303c0cf"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "cross-pack-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "cross_pack_verification::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "3cc0508ce09b4958e7a814ea3f1dc505a04544306fdfb888c549731142ad7b96",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "cross-pack-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_cross_pack_verification_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "0cda23a8d69f2190d52b3e6419e3e6190ea42deb776ce810c1c10f36d6980403",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_155_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-XPR-001",
+    "AT-XPR-001",
+    "SR-PRD-001",
+    "SR-FIN-001",
+    "SR-CLD-001",
+    "RV-01",
+    "RV-35"
+  ],
+  "implemented_contracts": {
+    "autonomy_level_count": 4,
+    "pack_set_count": 6,
+    "attack_count": 16,
+    "state_count": 8,
+    "removal_count": 5,
+    "prohibited_family_count": 8,
+    "case_count": 15360,
+    "unauthorized_disclosure_count": 0,
+    "unauthorized_effect_count": 0,
+    "money_movement_count": 0,
+    "cloud_mutation_count": 0,
+    "duplicate_count": 0,
+    "false_completion_count": 0,
+    "hidden_blocker_count": 0,
+    "residue_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "cross_pack_matrix_complete": true,
+    "hostile_failure_resource_contract_complete": true,
+    "prohibited_authority_absent": true,
+    "removal_inventory_complete": true,
+    "evidence_reconciliation_complete": true,
+    "native_cross_pack_campaign_complete": false,
+    "strict_local_restoration_complete": false,
+    "independent_review_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-127-154-BLOCKED",
+      "owner": "155"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "all productivity, communications, finance, cloud, delivery, Windows, macOS, backup, update, and strict-local environments plus independent review environment",
+      "artifact": "untouched native cross-pack, mutation, fuzz, failure, resource, removal, restoration, support, accessibility, reviewer, and recomputation evidence",
+      "action": "satisfy every Sprint 127-154 external tuple and strict-local host blocker, then run AT-XPR-001, RV-01 through RV-35, complete platform, removal, restoration, accessibility, update, rollback, uninstall, and independent reproduction campaigns",
+      "credential": "all provider, platform, backup, update, signing, and evaluator credentials named by Sprints 127-154",
+      "payment": "provider, hardware, hosted environment, backup, signing, and independent evaluator costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_155_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "cross_pack_gate_closed": false,
+    "support_promotion_count": 0
+  }
+}
