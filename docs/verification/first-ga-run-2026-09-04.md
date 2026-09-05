@@ -2964,3 +2964,42 @@ checkpoint: 1,700.
 
 Exact next action: Sprint 143 financial import and reconciliation. Cumulative closures: 1,696;
 next checkpoint: 1,700.
+
+## Batch 146 — Sprint 143 financial import and reconciliation
+
+### Completed
+
+- Closed 20 local Sprint 143 rows: immutable source/profile envelopes, bounded CSV detection with
+  explicit ambiguity confirmation, bounded OFX/QFX versions and extensions, canonical record
+  ordering, duplicate, pending-to-posted, transfer, split, correction and supersession matches,
+  statement reconciliation, visible unresolved conflicts, reimport, crash recovery, and
+  byte-stable recomputation. Corpus cases: 8,400; duplicate, guessed-field, source-mutation,
+  partial-state, and reconciliation-drift outcomes: 0 each. Batch closures: 20. Cumulative
+  closures: 1,716. Promotions: 0.
+- Commits: `ea78e478` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `70199396` (initial Sprint 143 report), `00ee6d8b` (Clippy correction and rebuilt supply chain),
+  `b7d9dc47` (report rebound to the corrective source), and `618f70c7` (13 downstream bound
+  artifacts). Including this log: 6; commits/item: 0.30. Review pins advanced: 0; intersection:
+  empty.
+
+### Validation and blockers
+
+- Passed 4 focused Rust tests, 8 focused Python tests, Clippy with warnings denied, the 8,400-case
+  AT-FIMPORT-001 corpus, Sprint evidence, dependency, traceability, supply-chain, Story 1.2, and
+  Story 3.1 configuration chains. Supply-chain builds: 2; evidence regeneration passes: 2. Full
+  gate: 715.83 seconds, stopping only at retained Story 6.1 Podman after every preceding gate
+  passed. Self-recovery: 1; the first downstream configuration-loader build found one
+  `cloned_ref_to_slice_refs` lint in a focused Rust test, so the test now uses
+  `std::slice::from_ref`, the source suite was rerun, and all bound artifacts were rebuilt.
+- Sprint 143 remains `UPSTREAM-SPRINT-142-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=macOS arm64 and Windows 11 x86_64 native hosts with representative
+  CSV, OFX, and QFX exports, artifact=untouched native parser, encoding, filesystem,
+  crash-recovery, byte-stability, and reviewer evidence, action=provision exact hosts and
+  representative exports, then run AT-FIMPORT-001 and RV-33 native campaigns, credential=none,
+  payment=host or financial-export access costs if applicable)`; `substitution_set=empty`.
+  Full-chain blocker remains `blocked: host change required — run npm run -s docs:check outside
+  the restricted filesystem sandbox with the current user's /run/user/1000/libpod writable`;
+  `substitution_set=empty`.
+
+Exact next action: Sprint 144 Actual Budget reference adapter. Cumulative closures: 1,716; next
+checkpoint: 1,725.
