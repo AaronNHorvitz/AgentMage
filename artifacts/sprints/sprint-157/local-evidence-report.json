@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_157_local_evidence",
+  "source_revision": "b70e0fb99c31c39f99dbb113bd9fd7a1b10eb35a",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "TRUSTED-OPERATIONS.md": "cd318b816eab4106493a3d91e4a4f79105ac96edc901ee4a875bf482396e6b93",
+    "CODEBASE-AUDIT.md": "4a01791dfcd6e885fdd4337607b7eee21d77a774c6f1b0aa8c258f9cd34ee2e7",
+    "TASKS.md": "458e23513a50d71960b6ee1e4d683df5868456a0994e1195f6b9cefa384ce22f",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "8978fa58143d45e6e65a65a3080236b0c357638c731d691ef3390dcd2a7186ed",
+    "kernel/engine/src/trusted_audit_contract.rs": "38627ca7df0caeede3277ef2b920902235cc1940fce5e73cf0cea6c87a6b8e76",
+    "supply-chain/dependency-provenance.json": "ecef003f0ea313bec6a14930864e0b41dec571db8fce5bf893aa2774d53193e8",
+    "supply-chain/sbom.cdx.json": "8b5820964a499d0997c2887cfc13afb9512751f400b0105173c05f52dd37826b",
+    "supply-chain/dependency-hashes.sha256": "eea55b9fa0fa3739633f8de33c222b8d9dde8eedd4b3afebf197e2d4895a168f",
+    "artifacts/sprints/sprint-157/trusted-audit-corpus.json": "5a8b8c80c7ec09440d7662bf6f9e34ad0517044f59ba248d5002ccb607197055",
+    "scripts/trusted_audit_contract.py": "d3c4e4931d7c8bd5c7f6af6ba38e749925fe11d470ca556eca27eb866cd2bcaa",
+    "tests/test_trusted_audit_contract.py": "5d36bea129ed55cc0712c619a96812292153e8f0b3f23ab67825a07e83ba2aca",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_157_evidence.py": "4e674183759605500b62cc02c875593fa7a89473814e45931c2945871dd6af53",
+    "tests/test_sprint_157_evidence.py": "dde5b031e4945c163b82e08b797229d6a4920ff1f5fa8989bfd42d321d825b49"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "trusted-audit-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "trusted_audit_contract::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "77bff5a2fec14c73918630a133421f7c365061002c2889ce196ceea610677d5a",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "trusted-audit-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_trusted_audit_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "79897d011a1aaa76145e639592b1207fa563cb1187e00ac85c3ee31c86a0b15f",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_157_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-TRU-001",
+    "AT-TRU-001",
+    "AM-CBA-001",
+    "AT-CBA-001",
+    "SR-CMD-001",
+    "SR-CMD-004",
+    "SR-TOP-001",
+    "SR-AUD-001",
+    "RV-36",
+    "RV-48"
+  ],
+  "implemented_contracts": {
+    "capability_count": 5,
+    "lifecycle_count": 11,
+    "platform_count": 3,
+    "fault_count": 10,
+    "path_disposition_count": 9,
+    "memory_record_kind_count": 13,
+    "trusted_case_count": 1650,
+    "audit_case_count": 1170,
+    "union_count": 0,
+    "effect_count": 0,
+    "audit_authority_count": 0,
+    "audit_completeness_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "trusted_contract_complete": true,
+    "topology_contract_complete": true,
+    "lifecycle_contract_complete": true,
+    "audit_identity_complete": true,
+    "project_memory_complete": true,
+    "audit_topology_complete": true,
+    "native_topology_campaign_complete": false,
+    "signed_manifest_complete": false,
+    "independent_review_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-4-16-103-105-121-125-156-BLOCKED",
+      "owner": "157"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "native Fedora, Ubuntu, Windows, and retained macOS topology plus signed release-manifest and independent review environments",
+      "artifact": "untouched native process, IPC, socket, path, network, secret, storage, cleanup, topology, manifest, diagnostic, reviewer, and whole-codebase-audit contract evidence",
+      "action": "satisfy upstream Sprint blockers, provision exact native platforms and signed manifest environment, then run AT-TRU-001, AT-CBA-001, and RV-36 through RV-48 native campaigns",
+      "credential": "platform, signing, repository, model/runtime, and independent reviewer credentials",
+      "payment": "platform, signing, model, hosting, or independent evaluator costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_157_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "trusted_operations_promoted": false,
+    "whole_codebase_audit_promoted": false,
+    "support_promotion_count": 0
+  }
+}
