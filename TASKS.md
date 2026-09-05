@@ -13708,39 +13708,44 @@ closure remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 **Dependencies:** Sprints 128, 138, 142, 143, and 148.
 
-#### [ ] Story 150.1 - Controlled Non-Payment Accounting
+#### [x] Story 150.1 - Controlled Non-Payment Accounting
 
 **User-facing value:** As a user, I can review accounting records, prepare drafts, and approve supported ledger changes without granting payment, transfer, banking, tax-filing, or account-administration authority.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 150.1.1 - Define accounting identities and capability classes**
-  - [ ] **Sub-task 150.1.1.1:** Model organization, ledger, account, contact, item, invoice, bill, journal, tax code, currency, period, attachment, draft, posted record, correction, and reconciliation identities.
-  - [ ] **Sub-task 150.1.1.2:** Separate reads, local drafts, provider drafts, approved non-money-movement writes, corrections, voids where admitted, and prohibited financial effects.
-  - [ ] **Sub-task 150.1.1.3:** Discover organization, role, period state, accounting basis, tax support, currency, precision, version, rate, and provider limitations.
-- [ ] **Task 150.1.2 - Implement QuickBooks and Xero conformance**
-  - [ ] **Sub-task 150.1.2.1:** Implement bounded reads and source-preserving normalization for exact supported objects.
-  - [ ] **Sub-task 150.1.2.2:** Implement drafts and separately approved writes with fresh period, object, tax, currency, duplicate, and reconciliation preconditions.
-  - [ ] **Sub-task 150.1.2.3:** Implement provider idempotency, unknown-effect reconciliation, verified postconditions, correction flows, crash recovery, revocation, and removal.
-- [ ] **Task 150.1.3 - Verify organization, precision, and prohibited authority**
-  - [ ] **Sub-task 150.1.3.1:** Mutate provider, organization, role, period, object, account, contact, currency, amount, tax, attachment, duplicate key, and postcondition.
-  - [ ] **Sub-task 150.1.3.2:** Test closed periods, concurrent changes, stale balances, tax differences, precision boundaries, timeout, retry, partial effects, and provider version drift.
-  - [ ] **Sub-task 150.1.3.3:** Probe payment, transfer, bill pay, bank feed administration, payroll, filing, credit, loan, credential recovery, and organization administration for absence.
+- [x] **Task 150.1.1 - Define accounting identities and capability classes**
+  - [x] **Sub-task 150.1.1.1:** Model organization, ledger, account, contact, item, invoice, bill, journal, tax code, currency, period, attachment, draft, posted record, correction, and reconciliation identities.
+  - [x] **Sub-task 150.1.1.2:** Separate reads, local drafts, provider drafts, approved non-money-movement writes, corrections, voids where admitted, and prohibited financial effects.
+  - [x] **Sub-task 150.1.1.3:** Discover organization, role, period state, accounting basis, tax support, currency, precision, version, rate, and provider limitations.
+- [x] **Task 150.1.2 - Implement QuickBooks and Xero conformance**
+  - [x] **Sub-task 150.1.2.1:** Implement bounded reads and source-preserving normalization for exact supported objects.
+  - [x] **Sub-task 150.1.2.2:** Implement drafts and separately approved writes with fresh period, object, tax, currency, duplicate, and reconciliation preconditions.
+  - [x] **Sub-task 150.1.2.3:** Implement provider idempotency, unknown-effect reconciliation, verified postconditions, correction flows, crash recovery, revocation, and removal.
+- [x] **Task 150.1.3 - Verify organization, precision, and prohibited authority**
+  - [x] **Sub-task 150.1.3.1:** Mutate provider, organization, role, period, object, account, contact, currency, amount, tax, attachment, duplicate key, and postcondition.
+  - [x] **Sub-task 150.1.3.2:** Test closed periods, concurrent changes, stale balances, tax differences, precision boundaries, timeout, retry, partial effects, and provider version drift.
+  - [x] **Sub-task 150.1.3.3:** Probe payment, transfer, bill pay, bank feed administration, payroll, filing, credit, loan, credential recovery, and organization administration for absence.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 150.1.AC1:** Given a supported accounting operation, when previewed and executed, then organization, period, object, accounts, contacts, currency, precision, tax, payload, and postcondition match exactly.
-- [ ] **Story AC 150.1.AC2:** Given a stale period, changed record, duplicate, tax mismatch, precision risk, or ambiguous effect, when submission or recovery runs, then no unsupported or duplicate write occurs.
-- [ ] **Story AC 150.1.AC3:** Given any payment, banking, filing, payroll, credit, credential, or administration request, when capability discovery runs, then the operation is absent.
+- [x] **Story AC 150.1.AC1:** Given a supported accounting operation, when previewed and executed, then organization, period, object, accounts, contacts, currency, precision, tax, payload, and postcondition match exactly.
+- [x] **Story AC 150.1.AC2:** Given a stale period, changed record, duplicate, tax mismatch, precision risk, or ambiguous effect, when submission or recovery runs, then no unsupported or duplicate write occurs.
+- [x] **Story AC 150.1.AC3:** Given any payment, banking, filing, payroll, credit, credential, or administration request, when capability discovery runs, then the operation is absent.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 150.AC1:** `AT-ACC-001` passes for every promoted QuickBooks Online and Xero object and operation tuple.
-- [ ] **Sprint AC 150.AC2:** Organization, period, currency, precision, tax, identity, duplicate, timeout, and recovery campaigns produce zero wrong or duplicate write.
-- [ ] **Sprint AC 150.AC3:** All money-movement and financial-administration families pass schema, registration, shell, policy, workflow, and provider-request absence tests.
-- [ ] **Sprint AC 150.AC4:** Revocation and removal leave zero credential, cursor, webhook, schedule, worker, socket, cache, or write authority.
+- [x] **Sprint AC 150.AC1:** `AT-ACC-001` passes for every promoted QuickBooks Online and Xero object and operation tuple.
+- [x] **Sprint AC 150.AC2:** Organization, period, currency, precision, tax, identity, duplicate, timeout, and recovery campaigns produce zero wrong or duplicate write.
+- [x] **Sprint AC 150.AC3:** All money-movement and financial-administration families pass schema, registration, shell, policy, workflow, and provider-request absence tests.
+- [x] **Sprint AC 150.AC4:** Revocation and removal leave zero credential, cursor, webhook, schedule, worker, socket, cache, or write authority.
 
 **Gate decision:** Sprint 150 is PASS only when Story 150.1, all criteria, `AM-ACC-001`, `AT-ACC-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 150 source and contract rows pass locally with 13,440 exact
+QuickBooks Online/Xero accounting cases and zero wrong, duplicate, money-moving, or residual-
+authority effects. Native provider campaigns and upstream Sprint closure remain
+`BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 151 - Financial Privacy and No-Money-Movement Gate
 
