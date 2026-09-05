@@ -153,11 +153,11 @@
   "source_artifacts": [
     {
       "path": "Cargo.toml",
-      "sha256": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219"
+      "sha256": "77d264befeb59e7fd90193e1883f5c969f57022ab37b103d856d1f1735c3a457"
     },
     {
       "path": "Cargo.lock",
-      "sha256": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9"
+      "sha256": "1423a70734b27d3a382e13979a2c22606c44b81cec8afd93e188476bfe92d8d2"
     },
     {
       "path": "kernel/engine/Cargo.toml",
