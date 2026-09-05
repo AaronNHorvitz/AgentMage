@@ -43,6 +43,8 @@ pub mod ci_control;
 pub mod claim_evidence;
 /// Exact command templates, previews, execution permits, and terminal receipts.
 pub mod command_runner;
+/// Gmail account, history, and delivery integrity contracts.
+pub mod communications_gmail;
 /// Common communications and Outlook exact-effect contracts.
 pub mod communications_outlook;
 /// Microsoft Teams tenant and destination exact-effect contracts.

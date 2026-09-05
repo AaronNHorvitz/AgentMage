@@ -12890,39 +12890,43 @@ Microsoft Teams conformance remains `BLOCKED_EXTERNAL`; `substitution_set=empty`
 
 **Dependencies:** Sprint 132 common communications contract; Sprint 130 synchronization contract.
 
-#### [ ] Story 134.1 - Controlled Gmail Communication
+#### [x] Story 134.1 - Controlled Gmail Communication
 
 **User-facing value:** As a user, I can work with the intended Gmail account and thread without broad scopes, history gaps, label drift, retries, or token confusion causing an unintended effect.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 134.1.1 - Implement Gmail identity and least-scope discovery**
-  - [ ] **Sub-task 134.1.1.1:** Model account, mailbox, message, thread, label, draft, attachment, history, watch, and cursor identities.
-  - [ ] **Sub-task 134.1.1.2:** Publish exact OAuth scope, account, operation, quota, pagination, history, push, and polling support.
-  - [ ] **Sub-task 134.1.1.3:** Deny broad-scope substitution and cross-account token use.
-- [ ] **Task 134.1.2 - Implement Gmail operations and synchronization**
-  - [ ] **Sub-task 134.1.2.1:** Implement bounded reads, search, threads, labels, drafts, sends, replies, forwards, attachments, history, push, and fallback polling.
-  - [ ] **Sub-task 134.1.2.2:** Preserve raw provider identity and transformations for MIME, aliases, threading, labels, and attachments.
-  - [ ] **Sub-task 134.1.2.3:** Reconcile history expiry, stale drafts, timeout, quota, duplicate delivery, watch expiry, permission loss, and account removal.
-- [ ] **Task 134.1.3 - Verify account, thread, and delivery integrity**
-  - [ ] **Sub-task 134.1.3.1:** Mutate account, alias, sender, recipients, thread, labels, body, quote, MIME parts, links, and attachments.
-  - [ ] **Sub-task 134.1.3.2:** Inject duplicate, reordered, omitted, and forged push events plus cursor and history gaps.
-  - [ ] **Sub-task 134.1.3.3:** Remove watches, tokens, caches, cursors, schedules, workers, and retained data according to policy.
+- [x] **Task 134.1.1 - Implement Gmail identity and least-scope discovery**
+  - [x] **Sub-task 134.1.1.1:** Model account, mailbox, message, thread, label, draft, attachment, history, watch, and cursor identities.
+  - [x] **Sub-task 134.1.1.2:** Publish exact OAuth scope, account, operation, quota, pagination, history, push, and polling support.
+  - [x] **Sub-task 134.1.1.3:** Deny broad-scope substitution and cross-account token use.
+- [x] **Task 134.1.2 - Implement Gmail operations and synchronization**
+  - [x] **Sub-task 134.1.2.1:** Implement bounded reads, search, threads, labels, drafts, sends, replies, forwards, attachments, history, push, and fallback polling.
+  - [x] **Sub-task 134.1.2.2:** Preserve raw provider identity and transformations for MIME, aliases, threading, labels, and attachments.
+  - [x] **Sub-task 134.1.2.3:** Reconcile history expiry, stale drafts, timeout, quota, duplicate delivery, watch expiry, permission loss, and account removal.
+- [x] **Task 134.1.3 - Verify account, thread, and delivery integrity**
+  - [x] **Sub-task 134.1.3.1:** Mutate account, alias, sender, recipients, thread, labels, body, quote, MIME parts, links, and attachments.
+  - [x] **Sub-task 134.1.3.2:** Inject duplicate, reordered, omitted, and forged push events plus cursor and history gaps.
+  - [x] **Sub-task 134.1.3.3:** Remove watches, tokens, caches, cursors, schedules, workers, and retained data according to policy.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 134.1.AC1:** Given a supported Gmail operation, when executed, then exact account, message or thread, labels, recipients, content, attachment digests, scopes, and postconditions are retained.
-- [ ] **Story AC 134.1.AC2:** Given history loss, watch expiry, permission reduction, stale content, or changed fields, when synchronization or execution runs, then incompleteness is visible and no stale approval is reused.
-- [ ] **Story AC 134.1.AC3:** Given a timeout or retry, when reconciliation completes, then no duplicate delivery or false completion occurs.
+- [x] **Story AC 134.1.AC1:** Given a supported Gmail operation, when executed, then exact account, message or thread, labels, recipients, content, attachment digests, scopes, and postconditions are retained.
+- [x] **Story AC 134.1.AC2:** Given history loss, watch expiry, permission reduction, stale content, or changed fields, when synchronization or execution runs, then incompleteness is visible and no stale approval is reused.
+- [x] **Story AC 134.1.AC3:** Given a timeout or retry, when reconciliation completes, then no duplicate delivery or false completion occurs.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 134.AC1:** `AT-GML-001` passes for every published Gmail capability tuple.
-- [ ] **Sprint AC 134.AC2:** Cross-account, broad-scope, recipient, thread, MIME, label, and attachment mutations produce zero unauthorized effect.
-- [ ] **Sprint AC 134.AC3:** Push, polling, cursor, quota, and recovery fixtures preserve visible completeness state.
-- [ ] **Sprint AC 134.AC4:** Revocation and removal restore the pre-adapter authority inventory.
+- [x] **Sprint AC 134.AC1:** `AT-GML-001` passes for every published Gmail capability tuple.
+- [x] **Sprint AC 134.AC2:** Cross-account, broad-scope, recipient, thread, MIME, label, and attachment mutations produce zero unauthorized effect.
+- [x] **Sprint AC 134.AC3:** Push, polling, cursor, quota, and recovery fixtures preserve visible completeness state.
+- [x] **Sprint AC 134.AC4:** Revocation and removal restore the pre-adapter authority inventory.
 
 **Gate decision:** Sprint 134 is PASS only when Story 134.1, all criteria, `AM-GML-001`, `AT-GML-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 134 source and contract rows pass locally with 4,320 deterministic
+Gmail cases and zero unauthorized, duplicate, false-complete, or removal-residual effects. Native
+Gmail conformance remains `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 135 - Standard Mail Protocols and Proton Bridge
 
