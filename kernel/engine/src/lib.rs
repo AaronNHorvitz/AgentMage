@@ -45,6 +45,7 @@ pub mod claim_evidence;
 pub mod command_runner;
 /// Gmail account, history, and delivery integrity contracts.
 pub mod communications_gmail;
+pub mod communications_mail;
 /// Common communications and Outlook exact-effect contracts.
 pub mod communications_outlook;
 /// Microsoft Teams tenant and destination exact-effect contracts.

@@ -12938,39 +12938,44 @@ Gmail conformance remains `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 **Dependencies:** Sprints 130 and 132.
 
-#### [ ] Story 135.1 - Interoperable and Bounded Mail
+#### [x] Story 135.1 - Interoperable and Bounded Mail
 
 **User-facing value:** As a user, I can connect standards-based mail or Proton Mail Bridge and see exactly which protocol capabilities are available for the authenticated server and mailbox.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 135.1.1 - Implement protocol negotiation and identity**
-  - [ ] **Sub-task 135.1.1.1:** Model server, certificate, account, mailbox, folder, UID, validity, message, thread hint, submission, extension, and capability identities.
-  - [ ] **Sub-task 135.1.1.2:** Enforce TLS, host, port, authentication reference, redirect, proxy, certificate, protocol-version, and downgrade policy.
-  - [ ] **Sub-task 135.1.1.3:** Register operations only from negotiated IMAP, SMTP, or JMAP capabilities.
-- [ ] **Task 135.1.2 - Implement mail and Proton Bridge profiles**
-  - [ ] **Sub-task 135.1.2.1:** Implement bounded reads, folder state, flags, moves, copies, drafts where supported, SMTP submission, JMAP methods, and deterministic protocol differences.
-  - [ ] **Sub-task 135.1.2.2:** Restrict Proton Bridge to authenticated loopback endpoints, exact process and certificate expectations, and one account-scoped operation at a time.
-  - [ ] **Sub-task 135.1.2.3:** Reconcile disconnect, UID validity change, duplicate submission, ambiguous server result, capability drift, and removal.
-- [ ] **Task 135.1.3 - Verify protocol and server isolation**
-  - [ ] **Sub-task 135.1.3.1:** Test malicious banners, capability lies, STARTTLS downgrade, certificate swap, DNS and proxy redirection, loopback escape, and wrong-server credentials.
-  - [ ] **Sub-task 135.1.3.2:** Exercise formatting, encoding, multipart, attachment, rate, duplicate, disconnect, and uncertain submission cases.
-  - [ ] **Sub-task 135.1.3.3:** Prove removal closes connections and deletes credential references, caches, cursors, schedules, and account-scoped state as required.
+- [x] **Task 135.1.1 - Implement protocol negotiation and identity**
+  - [x] **Sub-task 135.1.1.1:** Model server, certificate, account, mailbox, folder, UID, validity, message, thread hint, submission, extension, and capability identities.
+  - [x] **Sub-task 135.1.1.2:** Enforce TLS, host, port, authentication reference, redirect, proxy, certificate, protocol-version, and downgrade policy.
+  - [x] **Sub-task 135.1.1.3:** Register operations only from negotiated IMAP, SMTP, or JMAP capabilities.
+- [x] **Task 135.1.2 - Implement mail and Proton Bridge profiles**
+  - [x] **Sub-task 135.1.2.1:** Implement bounded reads, folder state, flags, moves, copies, drafts where supported, SMTP submission, JMAP methods, and deterministic protocol differences.
+  - [x] **Sub-task 135.1.2.2:** Restrict Proton Bridge to authenticated loopback endpoints, exact process and certificate expectations, and one account-scoped operation at a time.
+  - [x] **Sub-task 135.1.2.3:** Reconcile disconnect, UID validity change, duplicate submission, ambiguous server result, capability drift, and removal.
+- [x] **Task 135.1.3 - Verify protocol and server isolation**
+  - [x] **Sub-task 135.1.3.1:** Test malicious banners, capability lies, STARTTLS downgrade, certificate swap, DNS and proxy redirection, loopback escape, and wrong-server credentials.
+  - [x] **Sub-task 135.1.3.2:** Exercise formatting, encoding, multipart, attachment, rate, duplicate, disconnect, and uncertain submission cases.
+  - [x] **Sub-task 135.1.3.3:** Prove removal closes connections and deletes credential references, caches, cursors, schedules, and account-scoped state as required.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 135.1.AC1:** Given a server capability set, when connection succeeds, then only negotiated and policy-allowed operations are registered.
-- [ ] **Story AC 135.1.AC2:** Given a host, certificate, protocol, credential, or loopback mismatch, when connection is attempted, then no credential is disclosed and no operation is registered.
-- [ ] **Story AC 135.1.AC3:** Given ambiguous submission or disconnect, when recovery runs, then the result remains uncertain until reconciliation proves effect or non-effect.
+- [x] **Story AC 135.1.AC1:** Given a server capability set, when connection succeeds, then only negotiated and policy-allowed operations are registered.
+- [x] **Story AC 135.1.AC2:** Given a host, certificate, protocol, credential, or loopback mismatch, when connection is attempted, then no credential is disclosed and no operation is registered.
+- [x] **Story AC 135.1.AC3:** Given ambiguous submission or disconnect, when recovery runs, then the result remains uncertain until reconciliation proves effect or non-effect.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 135.AC1:** `AT-MAIL-001` passes across IMAP, SMTP, JMAP, and Proton Bridge matrices.
-- [ ] **Sprint AC 135.AC2:** Downgrade, redirection, certificate, loopback, and wrong-server credential attacks produce zero disclosure or effect.
-- [ ] **Sprint AC 135.AC3:** Duplicate and uncertain-submission campaigns produce zero duplicate delivery and zero false completion.
-- [ ] **Sprint AC 135.AC4:** Capability drift and removal update registrations and authority inventories immediately.
+- [x] **Sprint AC 135.AC1:** `AT-MAIL-001` passes across IMAP, SMTP, JMAP, and Proton Bridge matrices.
+- [x] **Sprint AC 135.AC2:** Downgrade, redirection, certificate, loopback, and wrong-server credential attacks produce zero disclosure or effect.
+- [x] **Sprint AC 135.AC3:** Duplicate and uncertain-submission campaigns produce zero duplicate delivery and zero false completion.
+- [x] **Sprint AC 135.AC4:** Capability drift and removal update registrations and authority inventories immediately.
 
 **Gate decision:** Sprint 135 is PASS only when Story 135.1, all criteria, `AM-MAIL-001`, `AT-MAIL-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 135 source and contract rows pass locally with 5,040 deterministic
+mail-protocol cases and zero credential disclosure, unauthorized, duplicate, false-complete, or
+removal-residual effects. Native server and Proton Bridge conformance remains
+`BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 136 - Slack Adapter
 
