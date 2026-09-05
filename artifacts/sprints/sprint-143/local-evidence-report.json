@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_143_local_evidence",
+  "source_revision": "ea78e478a6a5a825ec9bdd3844ce6a7fa712cfe1",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "TASKS.md": "a7bb49afc2cc63cb221de0b05076e18fde725648bf2f10b83e8c0e8cdcdb6b96",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "3c9ec5476f758bee2bce2d0ba1a004989fc094c06827a2baaae7012f496ab448",
+    "kernel/engine/src/financial_domain.rs": "d95b2531fc5da2c91719730725db922ef96716760f08514f6a1a8630bacc3584",
+    "kernel/engine/src/financial_import.rs": "fdb8d455e90c9cbbd247644f564e1d23668706c150d26cebb8acc35496d91ac4",
+    "supply-chain/dependency-provenance.json": "9320a6751995d3956a658189f9f682b27f938cecd584a8af8ebad39bdb576fbd",
+    "supply-chain/sbom.cdx.json": "91ac877c1174a22e90cec975553ede9596fe7b1686d8b2853bdde102e643d220",
+    "supply-chain/dependency-hashes.sha256": "4533d0f63271065591783b66e4b99aa21bc8df1b0c993e9ff575c981b29c2aa5",
+    "artifacts/sprints/sprint-143/import-corpus.json": "45759675701322d6089699eebb6896c2fab4b44809f8ae738e1b114d18a2c369",
+    "scripts/financial_import_contract.py": "3940218dcab1a8e27c045b2f72564b5096bc3f397a1f26ab5f0a6a38185bd0dc",
+    "tests/test_financial_import_contract.py": "5432817a9c8626f86918f7468970b5003295b77cb77ba002ea0574319c9ab9ad",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_143_evidence.py": "05d558b487332aad17afe123f7aefbb56254deb5d89f5cb892c22b4fbf36fce9",
+    "tests/test_sprint_143_evidence.py": "37842ccf42fd3e0887f3538943fe4548794def6134fd235405f27559ab233dbc"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "import-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "financial_import::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "00a4667c4107ac07448d88d4b3a2e6d79955e242e8c0853aa1123d53b1a05acf",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "import-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_financial_import_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "7bedbeb36b6a646ba4fc569e75eb4f14fb018c246478c286fce00dcc085eebf6",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_143_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-FIMPORT-001",
+    "AT-FIMPORT-001",
+    "SR-FIN-001",
+    "SR-FIN-002",
+    "RV-33"
+  ],
+  "implemented_contracts": {
+    "format_count": 3,
+    "encoding_count": 4,
+    "mutation_family_count": 14,
+    "failure_family_count": 10,
+    "fixture_case_count": 8400,
+    "duplicate_record_count": 0,
+    "guessed_field_count": 0,
+    "source_mutation_count": 0,
+    "partial_state_count": 0,
+    "reconciliation_drift_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "immutable_profiles_complete": true,
+    "bounded_parser_complete": true,
+    "matching_complete": true,
+    "reconciliation_complete": true,
+    "reimport_and_recovery_complete": true,
+    "native_cross_platform_campaign_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-142-BLOCKED",
+      "owner": "143"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "macOS arm64 and Windows 11 x86_64 native hosts with representative CSV, OFX, and QFX exports",
+      "artifact": "untouched native parser, encoding, filesystem, crash-recovery, byte-stability, and reviewer evidence",
+      "action": "provision exact hosts and representative exports, then run AT-FIMPORT-001 and RV-33 native campaigns",
+      "credential": "none",
+      "payment": "host or financial-export access costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_143_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "native_import_support_promoted": false,
+    "support_promotion_count": 0
+  }
+}
