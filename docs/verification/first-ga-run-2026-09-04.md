@@ -2564,3 +2564,31 @@ next checkpoint: 1,425.
 
 Exact next action: Sprint 131 unified activity inbox. Cumulative closures: 1,433; next checkpoint:
 1,450.
+
+## Batch 134 — Sprint 131 unified activity inbox
+
+### Completed
+
+- Closed 20 local Sprint 131 rows: 13 closed inbox states, six source families, immutable native
+  identity and citations, separate provider/local/model truth, deterministic filtering/order and
+  grouping without merging, visible coverage gaps, labeled model suggestions, display-only source
+  opening/draft handoff, and keyboard/screen-reader/focus/update announcement matrices. Corpus
+  cases: 1,014; native-record merges: 0; provider/model authority: 0. Batch closures: 20.
+  Cumulative closures: 1,453. Lifecycle promotions: 0.
+- Commits: `d0051528` (kernel/VS Code contracts, corpus, tests, closures, traceability and supply
+  chain), `836660b6` (Sprint 131 report), and `f05f109f` (13 downstream bound artifacts).
+  Including this log: 4; commits/item: 0.20. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 3 focused Rust tests, 8 focused Python tests, the 1,014-case AT-UIN-001 corpus, Sprint
+  evidence, dependency, traceability, supply-chain, Story 1.2, and Story 3.1 configuration chains.
+  Supply-chain builds: 1; evidence regeneration passes: 1. Full gate: 695.90 seconds, stopping
+  only at retained Story 6.1 Podman after every preceding gate passed.
+- Self-recovery: 0.
+- Sprint 131 remains `UPSTREAM-SPRINT-130-BLOCKED`; `substitution_set=empty`. Full-chain blocker:
+  `blocked: host change required — run npm run -s docs:check outside the restricted filesystem
+  sandbox with the current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 132 communications contract and Outlook adapter. Cumulative closures:
+1,453; next checkpoint: 1,475.
