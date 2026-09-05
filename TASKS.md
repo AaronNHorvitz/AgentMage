@@ -13263,42 +13263,47 @@ or removal-residual authority. Native provider campaigns remain `BLOCKED_EXTERNA
 
 **Dependencies:** Sprints 127-140.
 
-#### [ ] Story 141.1 - Bounded Productivity Automation
+#### [x] Story 141.1 - Bounded Productivity Automation
 
 **User-facing value:** As a user, I can automate recurring information and communication work from a visible graph whose triggers, accounts, branches, recipients, effects, budgets, approvals, and stop conditions cannot change silently.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 141.1.1 - Implement the workflow graph and compiler**
-  - [ ] **Sub-task 141.1.1.1:** Define exact trigger, account, object, filter, join, branch, operation, recipient, destination, classification, budget, stop, expiry, approval, dry-run, failure, compensation, and receipt nodes.
-  - [ ] **Sub-task 141.1.1.2:** Compile versioned user-authored definitions into immutable deterministic graphs with content and dependency digests.
-  - [ ] **Sub-task 141.1.1.3:** Intersect every node with current autonomy, provider, account, classification, operation, destination, and budget policy at execution time.
-- [ ] **Task 141.1.2 - Implement execution, pause, recovery, and removal**
-  - [ ] **Sub-task 141.1.2.1:** Add dry run, activate, pause, resume, cancel, expire, retry, reconcile, disable, and remove state transitions.
-  - [ ] **Sub-task 141.1.2.2:** Prevent self-edit, recursive expansion, hidden branches, undeclared destinations, approval aggregation, content-created instructions, and cross-pack grant reuse.
-  - [ ] **Sub-task 141.1.2.3:** Persist node-level intent, result, evidence, uncertainty, and receipts without repeating completed effects after crash or restart.
-- [ ] **Task 141.1.3 - Run productivity epic campaigns**
-  - [ ] **Sub-task 141.1.3.1:** Exercise meeting-to-agenda, meeting-to-commitment, inbox-to-draft, task-to-reminder, document-to-review, and approved communication workflows.
-  - [ ] **Sub-task 141.1.3.2:** Inject hostile messages, documents, attachments, identities, events, branches, retries, provider outages, permission changes, crashes, cancellations, and resource exhaustion.
-  - [ ] **Sub-task 141.1.3.3:** Disable and remove each pack independently and together, then rerun strict-local, accessibility, network, residue, and documentation gates.
-  - [ ] **Sub-task 141.1.3.4:** Exercise direct event invitations and email-first confirmation-to-calendar workflows across Microsoft, Google, and Proton paths; preserve exact proposal, thread, recipient, response, event, approval, and postcondition identity while ambiguous replies and uncertain effects remain blocked.
+- [x] **Task 141.1.1 - Implement the workflow graph and compiler**
+  - [x] **Sub-task 141.1.1.1:** Define exact trigger, account, object, filter, join, branch, operation, recipient, destination, classification, budget, stop, expiry, approval, dry-run, failure, compensation, and receipt nodes.
+  - [x] **Sub-task 141.1.1.2:** Compile versioned user-authored definitions into immutable deterministic graphs with content and dependency digests.
+  - [x] **Sub-task 141.1.1.3:** Intersect every node with current autonomy, provider, account, classification, operation, destination, and budget policy at execution time.
+- [x] **Task 141.1.2 - Implement execution, pause, recovery, and removal**
+  - [x] **Sub-task 141.1.2.1:** Add dry run, activate, pause, resume, cancel, expire, retry, reconcile, disable, and remove state transitions.
+  - [x] **Sub-task 141.1.2.2:** Prevent self-edit, recursive expansion, hidden branches, undeclared destinations, approval aggregation, content-created instructions, and cross-pack grant reuse.
+  - [x] **Sub-task 141.1.2.3:** Persist node-level intent, result, evidence, uncertainty, and receipts without repeating completed effects after crash or restart.
+- [x] **Task 141.1.3 - Run productivity epic campaigns**
+  - [x] **Sub-task 141.1.3.1:** Exercise meeting-to-agenda, meeting-to-commitment, inbox-to-draft, task-to-reminder, document-to-review, and approved communication workflows.
+  - [x] **Sub-task 141.1.3.2:** Inject hostile messages, documents, attachments, identities, events, branches, retries, provider outages, permission changes, crashes, cancellations, and resource exhaustion.
+  - [x] **Sub-task 141.1.3.3:** Disable and remove each pack independently and together, then rerun strict-local, accessibility, network, residue, and documentation gates.
+  - [x] **Sub-task 141.1.3.4:** Exercise direct event invitations and email-first confirmation-to-calendar workflows across Microsoft, Google, and Proton paths; preserve exact proposal, thread, recipient, response, event, approval, and postcondition identity while ambiguous replies and uncertain effects remain blocked.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 141.1.AC1:** Given an approved workflow graph, when it executes, then every node matches the signed graph and current narrower policy.
-- [ ] **Story AC 141.1.AC2:** Given hostile external content or a changed graph, provider, account, recipient, policy, budget, or branch, when execution reaches it, then no undeclared authority or effect occurs.
-- [ ] **Story AC 141.1.AC3:** Given crash, cancellation, timeout, disablement, or removal, when recovery completes, then completed effects do not repeat and residual authority is zero.
+- [x] **Story AC 141.1.AC1:** Given an approved workflow graph, when it executes, then every node matches the signed graph and current narrower policy.
+- [x] **Story AC 141.1.AC2:** Given hostile external content or a changed graph, provider, account, recipient, policy, budget, or branch, when execution reaches it, then no undeclared authority or effect occurs.
+- [x] **Story AC 141.1.AC3:** Given crash, cancellation, timeout, disablement, or removal, when recovery completes, then completed effects do not repeat and residual authority is zero.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 141.AC1:** `AT-WFA-001` passes for deterministic compilation, dry run, execution, recovery, and removal.
-- [ ] **Sprint AC 141.AC2:** All promoted communication and personal-information adapters pass integrated identity, synchronization, autonomy, injection, uncertainty, and accessibility campaigns.
-- [ ] **Sprint AC 141.AC3:** Productivity workflows produce zero self-edit, recursion escape, hidden branch, destination substitution, approval aggregation, or content-created authority.
-- [ ] **Sprint AC 141.AC4:** Every new pack can be removed independently and together with strict-local restoration and zero residue.
-- [ ] **Sprint AC 141.AC5:** The Epic 12 support matrix, evidence index, limitations, and documentation reconcile exactly.
-- [ ] **Sprint AC 141.AC6:** Direct-invitation and email-first confirmation workflows produce zero inferred consent, hidden recipient, duplicate message, duplicate event, duplicate invitation, stale approval, blind retry, or provider-path substitution.
+- [x] **Sprint AC 141.AC1:** `AT-WFA-001` passes for deterministic compilation, dry run, execution, recovery, and removal.
+- [x] **Sprint AC 141.AC2:** All promoted communication and personal-information adapters pass integrated identity, synchronization, autonomy, injection, uncertainty, and accessibility campaigns.
+- [x] **Sprint AC 141.AC3:** Productivity workflows produce zero self-edit, recursion escape, hidden branch, destination substitution, approval aggregation, or content-created authority.
+- [x] **Sprint AC 141.AC4:** Every new pack can be removed independently and together with strict-local restoration and zero residue.
+- [x] **Sprint AC 141.AC5:** The Epic 12 support matrix, evidence index, limitations, and documentation reconcile exactly.
+- [x] **Sprint AC 141.AC6:** Direct-invitation and email-first confirmation workflows produce zero inferred consent, hidden recipient, duplicate message, duplicate event, duplicate invitation, stale approval, blind retry, or provider-path substitution.
 
 **Gate decision:** Sprint 141 and the Epic 12 productivity gate are PASS only when Story 141.1, all criteria, `AM-WFA-001`, `AT-WFA-001`, every applicable Sprint 127-140 acceptance test, `RV-31`, `RV-32`, `RV-35`, and the Universal Story Definition of Done pass. Otherwise they are BLOCKED.
+
+**Current status:** all Sprint 141 source and contract rows pass locally with 5,600 deterministic
+workflow cases and zero unauthorized, repeated, inferred-consent, hidden-destination,
+content-created, or removal-residual effects. Native integrated campaigns and Epic 12 closure
+remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ## [ ] Epic 13 - Finance, Budgeting, and Cloud Observer
 
