@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_164_local_evidence",
+  "source_revision": "6862d85200330f44d7d950b7676d139a5257a029",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "TASKS.md": "2cceeaa888c87a23fb0fe020d78c9f5e75a543f70fed7f50e54627ad5b7d5de9",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "MODEL-PROVENANCE-POLICY.md": "528076ef9be354e5a463221811a0bf4bf735a50be0b3a73df91097d7e83594c7",
+    "docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md": "dd0d1c98597cee8d7c2c1956336da8c97f75c9bca347eefb3051c2738afe43db",
+    "kernel/engine/src/lib.rs": "d4571642398b85957c5c84a817ff8070d2e9607316b54056f383023c3f0a03c2",
+    "kernel/engine/src/model_management.rs": "df28a896c84cb268d4ca48bbfe5a036633556e11964c31518ba95acd6c038508",
+    "supply-chain/dependency-provenance.json": "446e1dc5c812352800696590acdd991cd828966bde20dfc1de531bf8655ad2ee",
+    "supply-chain/sbom.cdx.json": "ac1f1a614cb61183f5033c0b3624771cfda792b23de0a5a659858af60690af5d",
+    "supply-chain/dependency-hashes.sha256": "b0fbd7e35cd7f163b50ea6583a4e12cfccfe592d0d44925663328085236bd609",
+    "artifacts/sprints/sprint-164/model-management-corpus.json": "7c16ab90f8c368ab0a307ed7417a27c515fdeb6116fbbadb2dd91fadce8b92e1",
+    "scripts/model_management_contract.py": "c6fcf065c94fc3f105079f2683518eacfff0e591a0c195f115c026a96d592b97",
+    "tests/test_model_management_contract.py": "4cb9c3005746cba7078ad13aedd9c0150a74bd0a8a51fea71e7e23f221e6e26e",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_164_evidence.py": "2ac006732d8e061680dd31e90847bd03e2cb9f256182df043f90e5470ae28158",
+    "tests/test_sprint_164_evidence.py": "3bb9016a8153752d70ff1a31dc29c7ae8cb6b0ef3dabd7e69c84b117d5a2689f"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "model-management-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "model_management::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "bebeac531acafd8433cf87e26ff5b9b4da3bf62f0da3a2c6ec085cdbac04fa07",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "model-management-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_model_management_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f97776321b6d5f1db3efd766ff27e384b1098780b3a47b31413c7c947e35e6e5",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_164_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e6ec182765cd965f2837d8eeaef5a64af48a104f245cd1a0b7281559194c57c1",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-MGR-001",
+    "AT-MGR-001",
+    "SR-MGM-002",
+    "SR-MGM-003",
+    "RV-40"
+  ],
+  "implemented_contracts": {
+    "intent_count": 13,
+    "mutation_count": 24,
+    "transition_count": 10,
+    "outcome_count": 13,
+    "fixture_case_count": 3120,
+    "silent_activation_count": 0,
+    "partial_activation_count": 0,
+    "substituted_profile_count": 0,
+    "unconfirmed_effect_count": 0,
+    "approved_profile_execution_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "chat_intent_contract_complete": true,
+    "exact_preview_confirmation_complete": true,
+    "isolated_installer_scope_complete": true,
+    "quarantine_lifecycle_contract_complete": true,
+    "atomic_activation_rollback_contract_complete": true,
+    "mutation_and_interruption_contract_complete": true,
+    "approved_profile_campaign_complete": false,
+    "native_manifest_reconciliation_complete": false,
+    "native_accessibility_removal_complete": false,
+    "rv40_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-14-15-23-157-158-163-BLOCKED",
+      "owner": "164"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "catalog signing and approved model artifact infrastructure plus native Fedora, Ubuntu, Windows, accessibility, strict-local, clean-install, and independent review environments",
+      "artifact": "untouched approved-profile acquisition, import, resume, signature, scan, format, hardware, runtime self-test, atomic activation, rollback, removal, storage cleanup, accessibility, strict-local restoration, AT-MGR-001, and RV-40 evidence",
+      "action": "satisfy upstream blockers, provision one signed approved compatible profile and exact native environments, then run the complete acquisition, activation, interruption, rollback, removal, accessibility, strict-local, AT-MGR-001, and RV-40 campaigns",
+      "credential": "catalog-signing, model-source, artifact, platform key-store, accessibility, and independent reviewer credentials",
+      "payment": "model, signing, storage, platform, accessibility, or independent evaluator costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_164_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "approved_profile_execution_count": 0,
+    "model_management_promoted": false,
+    "support_promotion_count": 0
+  }
+}
