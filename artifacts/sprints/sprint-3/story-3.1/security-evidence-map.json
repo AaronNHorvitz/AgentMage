@@ -33,12 +33,12 @@
     {
       "bytes": 446056,
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "f509ea4a900cb05de5013ada48a9513c237c58d0936814bfed599af6cf18b215"
+      "sha256": "446e1dc5c812352800696590acdd991cd828966bde20dfc1de531bf8655ad2ee"
     },
     {
       "bytes": 997,
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "66fcc75e44fa6e02c61c7390130bf5cbe851120327c04a7f0fbaa01f2e581feb"
+      "sha256": "b0fbd7e35cd7f163b50ea6583a4e12cfccfe592d0d44925663328085236bd609"
     },
     {
       "bytes": 674343,
@@ -58,42 +58,42 @@
     {
       "bytes": 6978,
       "path": "artifacts/sprints/sprint-3/story-3.1/configuration-loader-report.json",
-      "sha256": "13ed878f837b0b6d492a6b03fa516c6c486711f3349a76a82f0efce63277ce9d"
+      "sha256": "c93979f320d9e7c99360f6c3c755a7bd58aecabed219e0c06c1cedede27c4a94"
     },
     {
       "bytes": 4346,
       "path": "artifacts/sprints/sprint-3/story-3.1/configuration-authority-mutation-report.json",
-      "sha256": "5d5f00332722857052302d4ddbe2e349a9dfe9419c9584339c37acf1c62b41ab"
+      "sha256": "cf92df3633d848e0a2f29067bfc25313c8b9eea520b3d0227663015f4042c2d3"
     },
     {
       "bytes": 3769,
       "path": "artifacts/sprints/sprint-3/story-3.1/configuration-migration-recovery-report.json",
-      "sha256": "8e7dfd3876ecabf2af6e9d8958887b0d805ba58f55fd4ad5c7c1a2ccee0b25f7"
+      "sha256": "4386e5b127fd560bb6dd4b3f2e65a3fe20dbabfd9f3a12d8f44ef0cdbf7c608c"
     },
     {
       "bytes": 9914,
       "path": "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
-      "sha256": "d1eff8ac044248dd080301a3c3a896ce561db6ccd13e7af91ecf23415391e9fa"
+      "sha256": "e1a7a0073817711f77aec349811769b8122a868cb78e715d83d536781589524a"
     },
     {
       "bytes": 5436,
       "path": "artifacts/sprints/sprint-3/story-3.1/configuration-result-report.json",
-      "sha256": "ba4ee5bacb024b61cd23951ce1a1252ededc9e3d6c8a3d217a15e79e4c0fc9a0"
+      "sha256": "5b0fdccbc2f0b4aa47421e00925fc94c847c87298ee1305e619dfd0c1087ab0a"
     },
     {
       "bytes": 5339,
       "path": "artifacts/sprints/sprint-3/story-3.1/configuration-schema-failure-report.json",
-      "sha256": "c04d3ea48ad08f3d4036808e40b546d13d5f88d2ebf7af3f0258124ffe9b3dc1"
+      "sha256": "ae75b1e9c16012e9cd94040f15ed1482e2c14fe6d8bd286e9636413dc58c8ec5"
     },
     {
       "bytes": 3816,
       "path": "artifacts/sprints/sprint-3/story-3.1/configuration-review-artifacts-report.json",
-      "sha256": "9413fa147d37a9114245759e1b8093cc0755215941a1de03b058b2f7b1d5f5af"
+      "sha256": "f4ab670a0d46fb72bc21a3942be8c797b9f7f78a40760dd33683cb3a76682e26"
     },
     {
       "bytes": 17136,
       "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
-      "sha256": "4ac588345078654d42f03f3ee76198591cb1eefe9c452290c6ff12d7bc0743da"
+      "sha256": "7c2d381fc22065f8a4353013c60fceeda32754e4615c138dcf8350cd56c00d0f"
     },
     {
       "bytes": 2320,
