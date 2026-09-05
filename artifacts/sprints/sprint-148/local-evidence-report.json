@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_148_local_evidence",
+  "source_revision": "4bbc3d86f759f6b39c6c60c6601ca946ae64ba4f",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "323c57d601cabda5114aa95b3cf7c36c1d600ef7ba7db8d7176dc38edd228b65",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "40765206955ba44c236fce63aa09156579fdee1b4794a81b9e851a3121e01787",
+    "kernel/engine/src/financial_domain.rs": "d95b2531fc5da2c91719730725db922ef96716760f08514f6a1a8630bacc3584",
+    "kernel/engine/src/financial_document.rs": "e09a6916bc9fd3378916f29939c1d9e31b92aa7741d47dfaa9f02040f8ed1d7f",
+    "supply-chain/dependency-provenance.json": "44f73c5c6cc6ee750af37927f207eb4e3b3f37cd6211e06041ec7118c8ff9f41",
+    "supply-chain/sbom.cdx.json": "dfa759edd005d3e8008423b90503274a72fb41dcf9d43e3f5b9a0c1898415b78",
+    "supply-chain/dependency-hashes.sha256": "b443094b9e6328fe355ab64af409eb72557e7a37e48c92de2a2221e328988d92",
+    "artifacts/sprints/sprint-148/financial-document-corpus.json": "81129180838cf8c6ff5b2d6efdb516ed4fa4564f0b4e9086294397b8a3150f60",
+    "scripts/financial_document_contract.py": "919e1885846d090db9aaf72100f5d3755341f046e390b258355790312231cf06",
+    "tests/test_financial_document_contract.py": "c0d5e5c042b95c13f4608b7c59566a736b724d82d501d8f0c3eff20014090946",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_148_evidence.py": "7acd8561840b4f0ced3bf886899e63ff6381e5696042c92f8e05b0885c3078d8",
+    "tests/test_sprint_148_evidence.py": "dd03b53facb892431d95df09844123a8a5623820c152a8cc8635f77c619cb132"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "financial-document-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "financial_document::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6edb9a758617dfdf18d1cd6b0a1c0cb74ec9edf0962ab6048aed8e6e44ad87c8",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "financial-document-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_financial_document_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "ca9adaa8311b834009d7f399daf482dd47bb12432a2e7f15608ed045b7f845af",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_148_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-FDOC-001",
+    "AT-FDOC-001",
+    "SR-FIN-001",
+    "SR-FIN-005",
+    "SR-FIN-006",
+    "RV-33"
+  ],
+  "implemented_contracts": {
+    "document_kind_count": 5,
+    "field_kind_count": 7,
+    "privacy_copy_kind_count": 7,
+    "mutation_family_count": 14,
+    "failure_family_count": 12,
+    "fixture_case_count": 6720,
+    "silent_merge_count": 0,
+    "authority_count": 0,
+    "escape_count": 0,
+    "residue_count": 0,
+    "citation_loss_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "source_preservation_complete": true,
+    "field_evidence_complete": true,
+    "ambiguity_preservation_complete": true,
+    "matching_reversible_complete": true,
+    "privacy_copy_reconciliation_complete": true,
+    "hostile_content_fail_closed": true,
+    "native_document_campaign_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-140-142-143-BLOCKED",
+      "owner": "148"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "native supported financial-document, OCR, archive, malware, encrypted-storage, backup, and export environments with representative documents",
+      "artifact": "untouched native extraction, coordinate, parser, matching, duplicate, hostile-file, privacy-copy, backup, restore, deletion, reviewer, and removal evidence",
+      "action": "provision exact native environments and representative receipt, invoice, reimbursement, statement, and tax documents, then run AT-FDOC-001 and RV-33 native campaigns",
+      "credential": "applicable encrypted-storage, backup, and export destination credentials",
+      "payment": "host, OCR, storage, or provider costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_148_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "native_financial_document_support_promoted": false,
+    "support_promotion_count": 0
+  }
+}
