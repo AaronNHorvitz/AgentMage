@@ -2821,3 +2821,41 @@ Exact next action: Sprint 138 communication write safety and reconciliation. Cum
 
 Exact next action: Sprint 139 calendars, contacts, and tasks. Cumulative closures: 1,593; next
 checkpoint: 1,600.
+
+## Batch 142 — Sprint 139 PIM and confirmed Proton Calendar UI
+
+### Completed
+
+- Closed 40 local Sprint 139 rows across two stories: exact event, availability, contact, task,
+  recurrence, attendee, invitation, reminder, resource, assignment, conflict, permission, and
+  provider-transformation semantics; 12 distinct operations; capability discovery; confirmed
+  Proton origin/session/control surface; direct and email-first consent; one-use grants; visible
+  uncertainty and removal. Corpus cases: 9,000 AT-PIM-001 plus 8,400 AT-PCAL-001; unintended and
+  duplicate effects, credential exposure, false completion, and removal-residual authority: 0
+  each. Batch closures: 40. Cumulative closures: 1,633. Promotions: 0.
+- Commits: `b8fd7494` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `ed3bf772` (Sprint 139 report), and `a98925fa` (13 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.10. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 4 focused Rust tests, 7 focused Python tests, both 17,400-case combined campaigns,
+  Sprint evidence, dependency, traceability, supply-chain, Story 1.2, and Story 3.1 configuration
+  chains. Supply-chain builds: 1; evidence regeneration passes: 1. Full gate: 687.29 seconds,
+  stopping only at retained Story 6.1 Podman after every preceding gate passed. Self-recovery: 1;
+  applied the adjacent-module scoped `missing_docs` allowance after the first focused compilation
+  identified 104 public-field/variant documentation lint errors, then reran the focused suite.
+- Sprint 139 remains `UPSTREAM-SPRINTS-83-84-128-130-135-138-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=Microsoft and Google calendar/contact/task accounts, CalDAV/CardDAV
+  servers, and authenticated Proton Calendar UI, artifact=untouched native PIM capability,
+  effect, time, recurrence, invitation, confirmed-UI, security, reviewer, and removal evidence,
+  action=provision every exact provider/server/account/credential and supported Proton UI surface,
+  then run AT-PIM-001, AT-PCAL-001, RV-23 through RV-26, RV-31, and RV-32 native campaigns,
+  credential=Microsoft Graph, Google OAuth, CalDAV/CardDAV, and user-established Proton session
+  credentials, payment=provider or Proton subscription costs if applicable)`;
+  `substitution_set=empty`. Full-chain blocker remains `blocked: host change required — run npm
+  run -s docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 140 documents, repositories, and attachments. Cumulative closures:
+1,633; next checkpoint: 1,650.
