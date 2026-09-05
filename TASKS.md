@@ -13808,39 +13808,44 @@ strict-local restoration, and upstream Sprint closure remain `BLOCKED_EXTERNAL`;
 
 **Dependencies:** Sprints 127-130 and 141; delivery-system identity, credential, provider, observability, and support contracts.
 
-#### [ ] Story 152.1 - Strictly Read-Only Cloud Observation
+#### [x] Story 152.1 - Strictly Read-Only Cloud Observation
 
 **User-facing value:** As a user, I can inspect bounded cloud inventory, health, configuration, telemetry, security observations, deployments, and costs without granting resource mutation, remote execution, deployment, secret, identity, policy, logging, or administration authority.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 152.1.1 - Define closed cloud read schemas**
-  - [ ] **Sub-task 152.1.1.1:** Define provider, organization, tenant, account, subscription, project, region, service, resource, query, time range, field, row, byte, rate, token, cache, freshness, result, and support identities.
-  - [ ] **Sub-task 152.1.1.2:** Enumerate allowed control-plane inventory, configuration, tags or labels, health, bounded metrics and logs, audit references, security observations, deployment identity, and cost-summary reads.
-  - [ ] **Sub-task 152.1.1.3:** Omit resource writes, data-plane broadening, commands, shells, deploys, secret values, credential rotation, identity, policy, logging, budget, upload, delete, and administration operations.
-- [ ] **Task 152.1.2 - Implement common worker and result controls**
-  - [ ] **Sub-task 152.1.2.1:** Bind each worker to one exact provider, credential reference, scope, account hierarchy, region set, service set, query, time, field, row, byte, rate, and cancellation budget.
-  - [ ] **Sub-task 152.1.2.2:** Implement pagination, throttling, quota, timeout, partial, stale, truncated, permission-limited, cached, revoked, recovered, and removed states.
-  - [ ] **Sub-task 152.1.2.3:** Treat cloud content and observations as untrusted evidence that cannot create cloud, delivery, communication, finance, or workflow authority.
-- [ ] **Task 152.1.3 - Prove common read-only enforcement**
-  - [ ] **Sub-task 152.1.3.1:** Run fake, fault, malicious, future-version, pagination-loop, quota, token-expiry, proxy, redirect, cross-account, and content-injection fixtures.
-  - [ ] **Sub-task 152.1.3.2:** Probe every prohibited cloud family through schemas, manifests, policy, registry, shell, workflows, workers, provider requests, and compiled artifacts.
-  - [ ] **Sub-task 152.1.3.3:** Revoke and remove the observer during idle, query, pagination, throttling, timeout, crash, and stale-cache states.
+- [x] **Task 152.1.1 - Define closed cloud read schemas**
+  - [x] **Sub-task 152.1.1.1:** Define provider, organization, tenant, account, subscription, project, region, service, resource, query, time range, field, row, byte, rate, token, cache, freshness, result, and support identities.
+  - [x] **Sub-task 152.1.1.2:** Enumerate allowed control-plane inventory, configuration, tags or labels, health, bounded metrics and logs, audit references, security observations, deployment identity, and cost-summary reads.
+  - [x] **Sub-task 152.1.1.3:** Omit resource writes, data-plane broadening, commands, shells, deploys, secret values, credential rotation, identity, policy, logging, budget, upload, delete, and administration operations.
+- [x] **Task 152.1.2 - Implement common worker and result controls**
+  - [x] **Sub-task 152.1.2.1:** Bind each worker to one exact provider, credential reference, scope, account hierarchy, region set, service set, query, time, field, row, byte, rate, and cancellation budget.
+  - [x] **Sub-task 152.1.2.2:** Implement pagination, throttling, quota, timeout, partial, stale, truncated, permission-limited, cached, revoked, recovered, and removed states.
+  - [x] **Sub-task 152.1.2.3:** Treat cloud content and observations as untrusted evidence that cannot create cloud, delivery, communication, finance, or workflow authority.
+- [x] **Task 152.1.3 - Prove common read-only enforcement**
+  - [x] **Sub-task 152.1.3.1:** Run fake, fault, malicious, future-version, pagination-loop, quota, token-expiry, proxy, redirect, cross-account, and content-injection fixtures.
+  - [x] **Sub-task 152.1.3.2:** Probe every prohibited cloud family through schemas, manifests, policy, registry, shell, workflows, workers, provider requests, and compiled artifacts.
+  - [x] **Sub-task 152.1.3.3:** Revoke and remove the observer during idle, query, pagination, throttling, timeout, crash, and stale-cache states.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 152.1.AC1:** Given an admitted cloud query, when it runs, then exact provider, hierarchy, scope, region, service, resource, fields, time, limits, freshness, and result identity are retained.
-- [ ] **Story AC 152.1.AC2:** Given a prohibited cloud operation or out-of-scope request, when evaluated, then no provider request or authority-bearing representation exists.
-- [ ] **Story AC 152.1.AC3:** Given partial, stale, cached, permission-limited, throttled, or truncated results, when displayed, then limitations are visible and cannot appear complete or current.
+- [x] **Story AC 152.1.AC1:** Given an admitted cloud query, when it runs, then exact provider, hierarchy, scope, region, service, resource, fields, time, limits, freshness, and result identity are retained.
+- [x] **Story AC 152.1.AC2:** Given a prohibited cloud operation or out-of-scope request, when evaluated, then no provider request or authority-bearing representation exists.
+- [x] **Story AC 152.1.AC3:** Given partial, stale, cached, permission-limited, throttled, or truncated results, when displayed, then limitations are visible and cannot appear complete or current.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 152.AC1:** `AT-CLO-001` passes against fake, fault, malicious, future-version, and reference-provider fixtures.
-- [ ] **Sprint AC 152.AC2:** All prohibited cloud families pass static, dynamic, compiled-artifact, and provider-request absence tests.
-- [ ] **Sprint AC 152.AC3:** Scope, token, account hierarchy, region, service, resource, query, time, field, row, byte, rate, proxy, and redirect attacks produce zero escape.
-- [ ] **Sprint AC 152.AC4:** Revocation and removal leave zero credential, cache, cursor, worker, socket, schedule, network, or cloud authority.
+- [x] **Sprint AC 152.AC1:** `AT-CLO-001` passes against fake, fault, malicious, future-version, and reference-provider fixtures.
+- [x] **Sprint AC 152.AC2:** All prohibited cloud families pass static, dynamic, compiled-artifact, and provider-request absence tests.
+- [x] **Sprint AC 152.AC3:** Scope, token, account hierarchy, region, service, resource, query, time, field, row, byte, rate, proxy, and redirect attacks produce zero escape.
+- [x] **Sprint AC 152.AC4:** Revocation and removal leave zero credential, cache, cursor, worker, socket, schedule, network, or cloud authority.
 
 **Gate decision:** Sprint 152 is PASS only when Story 152.1, all criteria, `AM-CLO-001`, `AT-CLO-001`, all `SR-CLD-*`, `RV-34`, `RV-35`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 152 source and contract rows pass locally with 10,800 exact
+read-only cloud-observer cases and zero scope escape, provider effect, content-created authority,
+or removal residue. Native reference-provider review and upstream Sprint closure remain
+`BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ### [ ] Sprint 153 - AWS, Azure, and Google Cloud Observers
 

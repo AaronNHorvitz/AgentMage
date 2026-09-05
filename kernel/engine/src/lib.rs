@@ -45,6 +45,8 @@ pub mod child_authority;
 pub mod ci_control;
 /// Deterministic material-claim proof and truthful final-response construction.
 pub mod claim_evidence;
+/// Provider-neutral, strictly read-only cloud observation contracts.
+pub mod cloud_observer;
 /// Exact command templates, previews, execution permits, and terminal receipts.
 pub mod command_runner;
 pub mod communication_write_safety;
