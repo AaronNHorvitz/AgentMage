@@ -2754,3 +2754,36 @@ Exact next action: Sprint 136 Slack adapter. Cumulative closures: 1,533; next ch
 
 Exact next action: Sprint 137 Linux mail-client interoperability. Cumulative closures: 1,553;
 next checkpoint: 1,575.
+
+## Batch 140 — Sprint 137 Linux mail-client interoperability
+
+### Completed
+
+- Closed 20 local Sprint 137 rows: provider/protocol reuse, explicit mbox/Maildir selection,
+  immutable snapshots, read-only handles, normalized message provenance, and denial of private,
+  credential-bearing, linked, locked, mutable, replaced, raced, unsupported, and oversized
+  inputs. Corpus cases: 4,500; source mutations, credential extractions, path escapes, missing
+  provenance, and removal-residual authority: 0 each. Batch closures: 20. Cumulative closures:
+  1,573. Promotions: 0.
+- Commits: `3a1ed2e2` (kernel contract, corpus, tests, closures, traceability and supply chain),
+  `712945dd` (Sprint 137 report), and `7e280623` (13 downstream bound artifacts). Including this
+  log: 4; commits/item: 0.20. Review pins advanced: 0; intersection: empty.
+
+### Validation and blockers
+
+- Passed 3 focused Rust tests, 7 focused Python tests, the 4,500-case AT-LMAIL-001 corpus, Sprint
+  evidence, dependency, traceability, supply-chain, Story 1.2, and Story 3.1 configuration chains.
+  Supply-chain builds: 1; evidence regeneration passes: 1. Full gate: 685.43 seconds, stopping
+  only at retained Story 6.1 Podman after every preceding gate passed. Self-recovery: 0.
+- Sprint 137 remains `UPSTREAM-SPRINT-135-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=native Thunderbird, Evolution, and KMail installations plus
+  representative user-selected mbox and Maildir archives, artifact=untouched native
+  client-version, archive-parser, non-mutation, reviewer, and removal evidence,
+  action=provision exact supported and future client versions and representative archives, then
+  run AT-LMAIL-001 plus RV-23, RV-24, RV-30, and RV-31 native campaigns, credential=none,
+  payment=none)`; `substitution_set=empty`. Full-chain blocker remains `blocked: host change
+  required — run npm run -s docs:check outside the restricted filesystem sandbox with the
+  current user's /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 138 communication write safety and reconciliation. Cumulative closures:
+1,573; next checkpoint: 1,575.
