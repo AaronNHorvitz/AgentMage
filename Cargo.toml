@@ -3,7 +3,6 @@ members = [
   "capabilities/knowledge",
   "capabilities/repository-map",
   "capabilities/read-only",
-  "experimental/model-lab",
   "kernel/contracts",
   "kernel/engine",
   "platforms/linux-inference",
@@ -13,6 +12,7 @@ members = [
   "shells/host",
 ]
 resolver = "3"
+exclude = ["experimental/model-lab"]
 
 [workspace.package]
 version = "0.0.0"
