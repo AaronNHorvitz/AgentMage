@@ -784,3 +784,50 @@ closures: 2,210; next checkpoint: 2,225.
 
 Exact next action: Sprint 167 isolated experimental model import and evaluation gate. Cumulative
 closures: 2,213; next checkpoint: 2,225.
+
+## Batch 170 — Sprint 167 isolated experimental model lab
+
+### Completed
+
+- Closed 15 locally executable Sprint 167 rows: a separately locked and separately invoked Cargo
+  package and process, experimental data-root/quarantine/resource/removal contracts, structurally
+  absent prohibited authority, policy and lineage denial, explicit provenance/license gaps,
+  bounded import/load/evaluation, hostile artifact and route probes, interruption handling, and
+  visible experimental state. Corpus: 6,912 `AT-EML-001` cases; authority, network, canonical
+  write, approved-store access, and hidden-limitation counts: 0 each. Batch closures: 15.
+  Cumulative closures: 2,228. Promotions: 0.
+- Commits: `0b362f1c` (initial standalone lab implementation and evidence), `b9d295d9` (initial
+  Sprint 167 report), `a556cfde` (initial 14 downstream artifacts), `e193e7bf` (exclude the lab from
+  the v1.0 workspace and restore exact root lock), `7a0519c8` (rebound Sprint report), `21182e1c`
+  (13 rebound downstream artifacts), and `a190fdc4` (3 Cargo-root-bound Sprint 4 artifacts).
+  Including this log: 8; commits/item: 0.53. Review pins advanced: 0; both complete audits across
+  20 pin-bearing gates had empty intersections.
+
+### Validation and blockers
+
+- Passed standalone-package formatting, build, Clippy with warnings denied, and 3 Rust tests; 5
+  focused Python tests; build-contract unit tests; corpus, dependency, traceability, supply-chain,
+  Story 1.2, Story 3.1/Sprint 3, and Story 4.1/Sprint 4 chains. Supply-chain builds: 2; evidence
+  regeneration passes: 2. Full-gate attempts: 3; 150 + 480 + 717 = 1,347 seconds. The final attempt
+  stopped only at retained Story 6.1 Podman after every preceding gate passed. Self-recovery: 5 —
+  moved the post-GA package out of the v1.0 workspace after build-contract rejection; restored 16
+  root transitive versions exactly after `cargo generate-lockfile` proposed unrelated upgrades;
+  skipped a redundant already-restored `miniz_oxide` pin and completed the remaining exact pins;
+  regenerated three Cargo-root-bound Sprint 4 artifacts exposed by the second full attempt; and
+  force-added those known ignored evidence paths after the ordinary add correctly refused them.
+- Sprint 167 remains `UPSTREAM-SPRINTS-157-163-164-166-BLOCKED` and
+  `BLOCKED_EXTERNAL(platform=native promoted lab platforms plus user-selected unapproved artifacts,
+  accessibility, resource-pressure, crash, removal, residue, and independent review environments,
+  artifact=untouched native import, parser/load, resource, hostile artifact, injection,
+  exfiltration, cancellation, crash, accessibility, removal, residue, limitation-display,
+  AT-EML-001, and RV-42 evidence, action=satisfy upstream blockers, provision exact native lab
+  platforms and hostile user-selected artifacts, then run complete AT-EML-001 and RV-42
+  implementation, resource, accessibility, interruption, removal, and residue campaigns,
+  credential=artifact-source, platform, accessibility, and independent reviewer credentials,
+  payment=artifact, platform, accessibility, or independent evaluator costs if applicable)`;
+  `substitution_set=empty`. Full-chain blocker remains `blocked: host change required — run npm run
+  -s docs:check outside the restricted filesystem sandbox with the current user's
+  /run/user/1000/libpod writable`; `substitution_set=empty`.
+
+Exact next action: Sprint 168 experimental promotion and removal gate. Cumulative closures: 2,228;
+next checkpoint: 2,250.
