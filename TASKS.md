@@ -12987,39 +12987,44 @@ removal-residual effects. Native server and Proton Bridge conformance remains
 
 **Dependencies:** Sprints 130 and 132.
 
-#### [ ] Story 136.1 - Controlled Slack Workspaces
+#### [x] Story 136.1 - Controlled Slack Workspaces
 
 **User-facing value:** As a user, I can read and act in the intended Slack workspace, channel, direct message, and thread without token, membership, mention, file, event, or retry confusion.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 136.1.1 - Implement Slack identity and capability discovery**
-  - [ ] **Sub-task 136.1.1.1:** Model workspace, account, enterprise, channel, direct and group message, thread, message, member, mention, reaction, file, event, and cursor identities.
-  - [ ] **Sub-task 136.1.1.2:** Detect scopes, membership, channel type, external or shared visibility, edit/delete support, event subscriptions, pagination, and rate tiers.
-  - [ ] **Sub-task 136.1.1.3:** Register only exact workspace- and membership-supported operations.
-- [ ] **Task 136.1.2 - Implement Slack operations and events**
-  - [ ] **Sub-task 136.1.2.1:** Implement bounded history, threads, replies, mentions, reactions, files, edits, deletions, events, retries, and rate handling.
-  - [ ] **Sub-task 136.1.2.2:** Bind every write to workspace, destination, thread, membership, visibility, expanded mentions, content, file digest, and idempotency receipt.
-  - [ ] **Sub-task 136.1.2.3:** Reconcile retries, timeouts, stale edits, deleted targets, membership loss, event replay, and provider outage.
-- [ ] **Task 136.1.3 - Verify Slack isolation and removal**
-  - [ ] **Sub-task 136.1.3.1:** Mutate workspace, enterprise, channel, direct message, thread, member, mention, visibility, file, scope, and token identity.
-  - [ ] **Sub-task 136.1.3.2:** Inject broad mentions, hostile blocks, links, files, event payloads, cursor loops, and rate exhaustion.
-  - [ ] **Sub-task 136.1.3.3:** Revoke and remove subscriptions, tokens, caches, cursors, workers, sockets, schedules, and retained state.
+- [x] **Task 136.1.1 - Implement Slack identity and capability discovery**
+  - [x] **Sub-task 136.1.1.1:** Model workspace, account, enterprise, channel, direct and group message, thread, message, member, mention, reaction, file, event, and cursor identities.
+  - [x] **Sub-task 136.1.1.2:** Detect scopes, membership, channel type, external or shared visibility, edit/delete support, event subscriptions, pagination, and rate tiers.
+  - [x] **Sub-task 136.1.1.3:** Register only exact workspace- and membership-supported operations.
+- [x] **Task 136.1.2 - Implement Slack operations and events**
+  - [x] **Sub-task 136.1.2.1:** Implement bounded history, threads, replies, mentions, reactions, files, edits, deletions, events, retries, and rate handling.
+  - [x] **Sub-task 136.1.2.2:** Bind every write to workspace, destination, thread, membership, visibility, expanded mentions, content, file digest, and idempotency receipt.
+  - [x] **Sub-task 136.1.2.3:** Reconcile retries, timeouts, stale edits, deleted targets, membership loss, event replay, and provider outage.
+- [x] **Task 136.1.3 - Verify Slack isolation and removal**
+  - [x] **Sub-task 136.1.3.1:** Mutate workspace, enterprise, channel, direct message, thread, member, mention, visibility, file, scope, and token identity.
+  - [x] **Sub-task 136.1.3.2:** Inject broad mentions, hostile blocks, links, files, event payloads, cursor loops, and rate exhaustion.
+  - [x] **Sub-task 136.1.3.3:** Revoke and remove subscriptions, tokens, caches, cursors, workers, sockets, schedules, and retained state.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 136.1.AC1:** Given a supported Slack operation, when previewed and executed, then workspace, destination, membership, thread, visibility, mentions, content, files, and postconditions match exactly.
-- [ ] **Story AC 136.1.AC2:** Given missing membership, scope, or provider support, when capability discovery or execution runs, then the operation is absent or denied before effect.
-- [ ] **Story AC 136.1.AC3:** Given timeout, rate limit, event replay, permission loss, or removal, when recovery completes, then no duplicate post, cross-workspace disclosure, or residual authority remains.
+- [x] **Story AC 136.1.AC1:** Given a supported Slack operation, when previewed and executed, then workspace, destination, membership, thread, visibility, mentions, content, files, and postconditions match exactly.
+- [x] **Story AC 136.1.AC2:** Given missing membership, scope, or provider support, when capability discovery or execution runs, then the operation is absent or denied before effect.
+- [x] **Story AC 136.1.AC3:** Given timeout, rate limit, event replay, permission loss, or removal, when recovery completes, then no duplicate post, cross-workspace disclosure, or residual authority remains.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 136.AC1:** `AT-SLK-001` passes for every published Slack capability tuple.
-- [ ] **Sprint AC 136.AC2:** Workspace, destination, member, mention, visibility, file, scope, and token attacks produce zero unauthorized effect.
-- [ ] **Sprint AC 136.AC3:** Event, pagination, rate, retry, and recovery fixtures produce deterministic visible state.
-- [ ] **Sprint AC 136.AC4:** Removal restores strict-local and pre-adapter authority inventories.
+- [x] **Sprint AC 136.AC1:** `AT-SLK-001` passes for every published Slack capability tuple.
+- [x] **Sprint AC 136.AC2:** Workspace, destination, member, mention, visibility, file, scope, and token attacks produce zero unauthorized effect.
+- [x] **Sprint AC 136.AC3:** Event, pagination, rate, retry, and recovery fixtures produce deterministic visible state.
+- [x] **Sprint AC 136.AC4:** Removal restores strict-local and pre-adapter authority inventories.
 
 **Gate decision:** Sprint 136 is PASS only when Story 136.1, all criteria, `AM-SLK-001`, `AT-SLK-001`, applicable security requirements and reviewer protocols, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+**Current status:** all Sprint 136 source and contract rows pass locally with 4,800 deterministic
+Slack cases and zero unauthorized, duplicate, cross-workspace, false-complete, or
+removal-residual effects. Native Slack conformance remains `BLOCKED_EXTERNAL`;
+`substitution_set=empty`.
 
 ### [ ] Sprint 137 - Linux Mail-Client Interoperability
 

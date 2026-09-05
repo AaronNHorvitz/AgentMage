@@ -48,6 +48,7 @@ pub mod communications_gmail;
 pub mod communications_mail;
 /// Common communications and Outlook exact-effect contracts.
 pub mod communications_outlook;
+pub mod communications_slack;
 /// Microsoft Teams tenant and destination exact-effect contracts.
 pub mod communications_teams;
 /// Versioned, fail-closed configuration loading and recovery.
