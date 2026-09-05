@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_140_local_evidence",
+  "source_revision": "15bb566ebd9ded7cf9c602c6d811231c50d815b1",
+  "source_sha256": {
+    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "PRODUCTIVITY-SYSTEM.md": "e0c2de9ba869974dc0971c4b7117d47c9b5d6a23d80dfcb73ca77710c8852867",
+    "TASKS.md": "7fb88bd6bfae229a653dc253204dc60fc1dd97823d8d77502f8b21f68b5a9398",
+    "SECURITY-REVIEW.md": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c",
+    "kernel/engine/src/lib.rs": "b87deb80ab4d1f15806386dc7e821c5b9f8aa8d1d2430645fb42a71d3063a97b",
+    "kernel/engine/src/document_repository_adapter.rs": "92d93b802062840f4096633a7de0783a823561185bd747922e09c75a16e44428",
+    "supply-chain/dependency-provenance.json": "3f3a1e093c9e3aed4db775be94af064778606b3c0fff19491ceaf14d19827b4a",
+    "supply-chain/sbom.cdx.json": "57e2621df24a88a1e468d5ecbefca9ada81f79fb7822f507be4ba5657f53392d",
+    "supply-chain/dependency-hashes.sha256": "45548ab482de3dbe7771a21c76b4d8a6aca6880dea0f94f0e62c3df3ccfa7297",
+    "artifacts/sprints/sprint-140/repository-corpus.json": "45cebbfcdef0d2e7b6270db48a6b5139cef5cf7e42093384acaf50362e184b15",
+    "scripts/document_repository_adapter_contract.py": "76dacef7b239d38e1647f2800755d40c2bd05f7b40341754649099158e1a627a",
+    "tests/test_document_repository_adapter_contract.py": "65c49744450cec2b7ba31d9f2dbd160b59d325269824204d0e263460c0700f1d",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_140_evidence.py": "aea918204e172f0a178b25360b8bb7751eb32d2fb3ef9a0e07fa908bfe69c88e",
+    "tests/test_sprint_140_evidence.py": "2c89d650c1aaed3ec979c3939053118a3ed63ee40d6532f96930ceb46d8b1371"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.10-200.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.7",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "repository-rust",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "document_repository_adapter::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "538ec461401cd760284c1ff39083bae9ab416ac3c765a701b1d7f6362e662a58",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "repository-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_document_repository_adapter_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e0d9723408580ec4ea0058882d5d24bc509d89bc5b9b8d2442e52e48a89a5c36",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "dependency-boundary",
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "supply-chain-currentness",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_140_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "AM-DREP-001",
+    "AT-DREP-001",
+    "SR-PRD-006",
+    "SR-PRD-007",
+    "RV-23",
+    "RV-24",
+    "RV-25",
+    "RV-26",
+    "RV-31",
+    "RV-32"
+  ],
+  "implemented_contracts": {
+    "profile_count": 7,
+    "operation_count": 13,
+    "mutation_family_count": 16,
+    "failure_family_count": 12,
+    "fixture_case_count": 6720,
+    "unauthorized_effect_count": 0,
+    "disclosure_count": 0,
+    "content_authority_count": 0,
+    "removal_authority_count": 0,
+    "promotion_count": 0
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "repository_identity_complete": true,
+    "operation_discovery_complete": true,
+    "attachment_defenses_complete": true,
+    "untrusted_content_complete": true,
+    "reconciliation_and_removal_complete": true,
+    "native_provider_campaign_complete": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-128-130-138-BLOCKED",
+      "owner": "140"
+    },
+    {
+      "code": "BLOCKED_EXTERNAL",
+      "platform": "OneDrive, SharePoint, Google Drive, and Confluence test repositories and accounts",
+      "artifact": "untouched native object, version, permission, attachment, effect, security, reviewer, and removal evidence",
+      "action": "provision exact repositories/accounts/credentials and run AT-DREP-001 plus RV-23 through RV-26, RV-31, and RV-32 native campaigns",
+      "credential": "Microsoft Graph, Google Drive, and Atlassian credentials",
+      "payment": "provider subscription costs if applicable"
+    }
+  ],
+  "summary": {
+    "local_sprint_140_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_closed": false,
+    "native_repository_support_promoted": false,
+    "support_promotion_count": 0
+  }
+}
