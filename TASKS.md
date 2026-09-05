@@ -14828,13 +14828,13 @@ accessibility, resource-pressure, interruption, removal, residue, and `RV-42` ca
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 168.1.1 - Enforce promotion through normal admission**
-  - [ ] **Sub-task 168.1.1.1:** Provide no direct promote operation; create a fresh candidate record and complete normal identity, license, lineage, artifact, runtime, resource, quality, security, platform, and review gates.
-  - [ ] **Sub-task 168.1.1.2:** Require independent evidence and an approved signed catalog transition before copying or activating any exact artifact in the approved store.
-  - [ ] **Sub-task 168.1.1.3:** Attempt promotion through chat, model output, files, copied manifests, catalog edits, stale approvals, aliases, hashes, preferences, and lab results.
+- [x] **Task 168.1.1 - Enforce promotion through normal admission**
+  - [x] **Sub-task 168.1.1.1:** Provide no direct promote operation; create a fresh candidate record and complete normal identity, license, lineage, artifact, runtime, resource, quality, security, platform, and review gates.
+  - [x] **Sub-task 168.1.1.2:** Require independent evidence and an approved signed catalog transition before copying or activating any exact artifact in the approved store.
+  - [x] **Sub-task 168.1.1.3:** Attempt promotion through chat, model output, files, copied manifests, catalog edits, stale approvals, aliases, hashes, preferences, and lab results.
 - [ ] **Task 168.1.2 - Implement and verify lab removal**
-  - [ ] **Sub-task 168.1.2.1:** Cancel evaluations, terminate descendants, close IPC, clear scratch, indexes, caches, quarantines, rules, registrations, and selected retained artifacts.
-  - [ ] **Sub-task 168.1.2.2:** Preserve approved models, canonical work, user-selected exported evidence, and unrelated platform dependencies.
+  - [x] **Sub-task 168.1.2.1:** Cancel evaluations, terminate descendants, close IPC, clear scratch, indexes, caches, quarantines, rules, registrations, and selected retained artifacts.
+  - [x] **Sub-task 168.1.2.2:** Preserve approved models, canonical work, user-selected exported evidence, and unrelated platform dependencies.
   - [ ] **Sub-task 168.1.2.3:** Reinstall, repeat, crash during removal, and verify strict-local and approved-model behavior afterward.
 - [ ] **Task 168.1.3 - Close the post-GA lab gate**
   - [ ] **Sub-task 168.1.3.1:** Rerun complete `AT-EML-001` and `RV-42` with all supported artifact and platform fixtures.
@@ -14843,18 +14843,24 @@ accessibility, resource-pressure, interruption, removal, residue, and `RV-42` ca
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 168.1.AC1:** Given any experimental artifact or result, when ordinary activation is requested, then no activation occurs until a separate complete admission and signed approved-catalog transition pass.
+- [x] **Story AC 168.1.AC1:** Given any experimental artifact or result, when ordinary activation is requested, then no activation occurs until a separate complete admission and signed approved-catalog transition pass.
 - [ ] **Story AC 168.1.AC2:** Given lab removal in any lifecycle state, when cleanup completes, then no undeclared artifact, process, socket, permission, cache, network rule, or authority remains and approved user state is unharmed.
 - [ ] **Story AC 168.1.AC3:** Given the final lab package and documentation, when independently reviewed, then every support, limitation, provenance, license, resource, authority, retention, and removal claim matches raw evidence.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 168.AC1:** Complete `AT-EML-001` and `RV-42` pass with zero direct-promotion path or prohibited authority.
-- [ ] **Sprint AC 168.AC2:** At least 2,000 promotion, identity, manifest, catalog, alias, stale-approval, and policy-bypass mutations produce zero ordinary activation.
+- [x] **Sprint AC 168.AC2:** At least 2,000 promotion, identity, manifest, catalog, alias, stale-approval, and policy-bypass mutations produce zero ordinary activation.
 - [ ] **Sprint AC 168.AC3:** Removal, crash recovery, reinstall, residue, accessibility, resource, and neighboring-approved-state tests pass on every supported lab platform.
 - [ ] **Sprint AC 168.AC4:** The signed support matrix and evidence bundle are reproducible and remain explicitly post-GA.
 
 **Gate decision:** Sprint 168 and `G-EXPERIMENTAL-MODELS` are PASS only when Story 168.1, all criteria, `AM-EML-001`, `AT-EML-001`, `SR-LAB-001` through `SR-LAB-003`, complete `RV-42`, and the Universal Story Definition of Done pass. This gate does not alter or block the independently decided v1.0 `G-GA`; otherwise the lab gate is BLOCKED.
+
+**Current status:** all 8 locally executable Sprint 168 rows pass across 2,080 promotion, identity,
+manifest, catalog, approval, policy, and lifecycle mutations with zero direct promotion, ordinary
+activation, approved-state change, or canonical damage. Native removal/reinstall/residue,
+accessibility/resource, complete `RV-42`, signed support-matrix, and independent-review campaigns
+remain `BLOCKED_EXTERNAL`; `substitution_set=empty`.
 
 ## Legacy Traceability Appendices
 

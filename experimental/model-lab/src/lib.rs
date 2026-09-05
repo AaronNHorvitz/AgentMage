@@ -2,6 +2,7 @@
 #![forbid(unsafe_code)]
 #![allow(missing_docs)]
 use std::collections::BTreeSet;
+pub mod promotion;
 
 pub const PROCESS_ID: &str = "agentmage-experimental-model-lab";
 pub const DATA_ROOT_CLASS: &str = "experimental-model-lab";
