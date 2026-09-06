@@ -12,7 +12,8 @@
 | **High-level implementation plan** | [IMPLEMENTATION-PLAN.md](./IMPLEMENTATION-PLAN.md) |
 | **Execution plan** | [TASKS.md](./TASKS.md) - 17 release epics, four foundational runtime epics, and 169 sequential dependency gates |
 | **First-GA reference platforms** | Fedora, Ubuntu, and Windows 11 x64; Apple Silicon MacBook Pro M5 retained post-GA |
-| **First interface target** | AgentMage Verified Chat as the canonical reliable surface, with native Visual Studio Code Chat compatibility |
+| **First interface target** | Standalone hardened desktop application (Windows 11 x64 first, Apple Silicon macOS second); Visual Studio Code Verified Chat as a secondary surface (Decision 0048) |
+| **First buyer** | a non-technical professional who holds information under a duty of confidentiality or a compliance regime and works alone or in a firm of one to twenty-five people (solo and small-firm lawyers, accountants and tax preparers, clinicians and small practices, independent financial advisers) (Decision 0048) |
 | **Current enabled model** | None; Muse Glimmer is the primary evaluation candidate, eligible first-party Gemma models form the initial role-aware comparison inventory, and prior evaluated Gemma 4 E4B and Gemma 4 12B Unified profiles remain rejected |
 | **License** | Apache License 2.0 |
 
@@ -35,6 +36,8 @@ Current enabled models: none.
 Current supported platforms: none.
 
 Stabilization scope freeze: inactive (Decision 0047) — the complete preserved plan is open under the Decision 0021 execution rule; blocked rows retain exact blockers and empty substitution sets.
+
+First-release surface: standalone hardened desktop application (Decision 0048).
 
 This PRD specifies the accepted target product; it does not claim that the
 target is currently available. The current state is governed by

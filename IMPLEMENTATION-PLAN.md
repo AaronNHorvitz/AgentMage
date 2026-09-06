@@ -37,6 +37,8 @@ Current supported platforms: none.
 
 Stabilization scope freeze: inactive (Decision 0047) — the complete preserved plan is open under the Decision 0021 execution rule; blocked rows retain exact blockers and empty substitution sets.
 
+First-release surface: standalone hardened desktop application (Decision 0048).
+
 [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md)
 and [`architecture/status-model.json`](./architecture/status-model.json) govern
 these current-state claims. This plan preserves the complete 17-release-epic,
@@ -236,7 +238,7 @@ Synthetic fixtures, read-only tools, Git inspection, repository mapping, receipt
 
 ### 4.5 One Interface Before Additional Shells
 
-Native Visual Studio Code Chat is the sole v0.1 interface. The deterministic `agentmage doctor` response is rendered there. A development diagnostic harness and read-only reviewer verifier may exercise contracts but are not supported end-user shells. The v0.4 interactive coding CLI is the first complete coding client of the same reusable runtime coordinator used by native Chat; it is not a second agent loop or storage authority. Standalone macOS and Linux desktop applications are introduced in v1+ only after the shared runtime and kernel are stable.
+Native Visual Studio Code Chat is the sole internal v0.1 harness; the first public release surface is defined by Decision 0048 as a signed standalone hardened desktop application. The deterministic `agentmage doctor` response is rendered there. A development diagnostic harness and read-only reviewer verifier may exercise contracts but are not supported end-user shells. The v0.4 interactive coding CLI is the first complete coding client of the same reusable runtime coordinator used by native Chat; it is not a second agent loop or storage authority. Standalone macOS and Linux desktop applications are introduced in v1+ only after the shared runtime and kernel are stable.
 
 ### 4.6 Authority Added Incrementally
 

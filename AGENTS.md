@@ -117,6 +117,8 @@ implement it on agent initiative.**
 
 ## 6. Execute the full plan under Decision 0047
 
+Decision 0048 orders that plan by a first-release critical path. Select the first authoritative incomplete dependency gate in this order: remaining Epic 0 gates; Foundational Runtime Epics F1, F3, and F4 to the extent the Decision 0048 item 4 workflow requires, with F4 limited to the `strict_local` profile; Epic 1 Sprints 4 through 25 including Sprint 14; the Decision 0048 item 5 standalone-application, model-manager, and background-presence stories, numbered by the implementing batch; the Epic 10 Windows package, process, path, IPC, key, model, tool-worker, network-worker, accessibility, clean-install, update, rollback, and uninstall rows through the Decision 0040 KVM lane; the v1.0-preview release gate story; then the remainder of the plan in numbered order. Do not execute a row outside the critical path while an unblocked critical-path row exists. Rows bound to exact blockers by the Decision 0047 terminal audit stay blocked and are not reopened.
+
 Decision 0047 records completion of the Decision 0046 frozen-set pass and opens the complete
 preserved plan: Epics 0 through 16 and the Universal Story Definition of Done. Select the next
 unit of work under the Decision 0021 first-authoritative-incomplete-dependency-gate rule across

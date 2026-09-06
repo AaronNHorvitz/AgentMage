@@ -38,6 +38,8 @@ Current supported platforms: none.
 
 Stabilization scope freeze: inactive (Decision 0047) — the complete preserved plan is open under the Decision 0021 execution rule; blocked rows retain exact blockers and empty substitution sets.
 
+First-release surface: standalone hardened desktop application (Decision 0048).
+
 The complete 17-release-epic, four-cross-cutting-foundational-runtime-epic,
 169-sprint, 294-requirement plan below remains the granular execution authority
 for the accepted target product. It is preserved,
@@ -1293,6 +1295,8 @@ retained [`story-gate-report.json`](artifacts/sprints/sprint-2/story-2.4/story-g
 **Gate decision:** Sprint 3 is PASS only when Stories 3.1 and 3.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
 ## [ ] Epic 1 - v0.1 - Read-Only Local Evidence Assistant
+
+**Decision 0048 critical path:** this epic is the first public release workflow (v1.0-preview: Hardened Local Evidence Assistant) and precedes all rows outside the Decision 0048 item 6 order.
 
 ### [ ] Sprint 4 - Kernel Contracts and Typed Boundaries
 
@@ -8787,6 +8791,8 @@ applicable)`; `substitution_set=empty`. `G-V0.7`, the story, sprint, connector, 
 and release remain open.
 
 ## [ ] Epic 8 - v1+ - Desktop, Extensions, Actions, Scheduling, and Agents
+
+**Decision 0048 critical path:** the standalone application shell, model manager, and background-presence stories in this epic are first-release rows under the Decision 0048 item 6 order.
 
 ### [ ] Sprint 76 - Desktop Conversation and Workspace Experience
 

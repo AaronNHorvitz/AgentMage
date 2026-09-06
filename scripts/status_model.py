@@ -396,6 +396,7 @@ def validate_status_model(
         "ADR-0045",
         "ADR-0046",
         "ADR-0047",
+        "ADR-0048",
     ]:
         failures.append("status model engineering-runtime amendments are incomplete")
     if (

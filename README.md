@@ -11,7 +11,8 @@ AgentMage is an independent, privately developed product created by Aaron N. Hor
 | Status | Pre-alpha scaffold with one source-level deterministic fake-model repository-analysis workflow integrated under Story 22.5; no model, platform, package, or release is enabled or supported |
 | First supported public release | v1.0 GA Local-First Delivery, Productivity, Trusted Operations, and Whole-Codebase Audit System |
 | Internal milestones | v0.1-v0.7 and the inherited v1+ capability sequence |
-| First interface target | AgentMage Verified Chat in Visual Studio Code, with stable `@agentmage` and Language Model Chat Provider compatibility paths beside the separate Codex tab |
+| First interface target | Standalone hardened desktop application (Windows 11 x64 first, Apple Silicon macOS second); Visual Studio Code Verified Chat as a secondary surface (Decision 0048) |
+| First buyer | a non-technical professional who holds information under a duty of confidentiality or a compliance regime and works alone or in a firm of one to twenty-five people (solo and small-firm lawyers, accountants and tax preparers, clinicians and small practices, independent financial advisers) (Decision 0048) |
 | Current enabled model | None; Muse Glimmer is the primary deep-evaluation candidate, eligible official first-party Gemma profiles form the initial role-aware comparison inventory, and evaluated E4B/12B profiles remain rejected |
 | Model runtime target | Candidate-neutral Model Gateway with strict-local native `llama.cpp` first, optional qualified local/private/managed adapters, and no enabled endpoint, route, or fallback |
 | v1.0 GA platforms | Fedora, Ubuntu, and Windows 11 x64; Apple Silicon macOS retained as a post-GA lane |
@@ -32,6 +33,8 @@ Current enabled models: none.
 Current supported platforms: none.
 
 Stabilization scope freeze: inactive (Decision 0047) — the complete preserved plan is open under the Decision 0021 execution rule; blocked rows retain exact blockers and empty substitution sets.
+
+First-release surface: standalone hardened desktop application (Decision 0048).
 
 These statements describe the integrated product, not the amount of contract,
 test, planning, or isolated Linux security work in the repository. The

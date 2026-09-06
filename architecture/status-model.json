@@ -1,7 +1,14 @@
 {
   "schema_version": 1,
   "decision_id": "ADR-0012",
-  "amendment_decision_ids": ["ADR-0043", "ADR-0044", "ADR-0045", "ADR-0046", "ADR-0047"],
+  "amendment_decision_ids": [
+    "ADR-0043",
+    "ADR-0044",
+    "ADR-0045",
+    "ADR-0046",
+    "ADR-0047",
+    "ADR-0048"
+  ],
   "status": "accepted",
   "reference_contract": "architecture/status-model.json#<collection>=<record-id>",
   "dimensions": {
@@ -40,10 +47,19 @@
       ]
     },
     "disposition": {
-      "values": ["active", "blocked", "rejected", "superseded"]
+      "values": [
+        "active",
+        "blocked",
+        "rejected",
+        "superseded"
+      ]
     },
     "support": {
-      "values": ["unsupported-pre-release", "supported", "end-of-support"],
+      "values": [
+        "unsupported-pre-release",
+        "supported",
+        "end-of-support"
+      ],
       "promotion_order": [
         "unsupported-pre-release",
         "supported",
@@ -53,29 +69,61 @@
   },
   "legal_transitions": {
     "lifecycle": {
-      "planned": ["designed"],
-      "designed": ["scaffolded"],
-      "scaffolded": ["implemented"],
-      "implemented": ["integrated"],
-      "integrated": ["packaged"],
-      "packaged": ["shipped"],
+      "planned": [
+        "designed"
+      ],
+      "designed": [
+        "scaffolded"
+      ],
+      "scaffolded": [
+        "implemented"
+      ],
+      "implemented": [
+        "integrated"
+      ],
+      "integrated": [
+        "packaged"
+      ],
+      "packaged": [
+        "shipped"
+      ],
       "shipped": []
     },
     "verification": {
-      "not-run": ["contract-tested"],
-      "contract-tested": ["native-tested"],
-      "native-tested": ["release-verified"],
+      "not-run": [
+        "contract-tested"
+      ],
+      "contract-tested": [
+        "native-tested"
+      ],
+      "native-tested": [
+        "release-verified"
+      ],
       "release-verified": []
     },
     "disposition": {
-      "active": ["blocked", "rejected", "superseded"],
-      "blocked": ["active", "rejected", "superseded"],
-      "rejected": ["superseded"],
+      "active": [
+        "blocked",
+        "rejected",
+        "superseded"
+      ],
+      "blocked": [
+        "active",
+        "rejected",
+        "superseded"
+      ],
+      "rejected": [
+        "superseded"
+      ],
       "superseded": []
     },
     "support": {
-      "unsupported-pre-release": ["supported"],
-      "supported": ["end-of-support"],
+      "unsupported-pre-release": [
+        "supported"
+      ],
+      "supported": [
+        "end-of-support"
+      ],
       "end-of-support": []
     }
   },
@@ -586,7 +634,8 @@
       "Current integrated workflow: deterministic fake-model repository-analysis vertical slice (Story 22.5).",
       "Current enabled models: none.",
       "Current supported platforms: none.",
-      "Stabilization scope freeze: inactive (Decision 0047)"
+      "Stabilization scope freeze: inactive (Decision 0047)",
+      "First-release surface: standalone hardened desktop application (Decision 0048)."
     ]
   }
 }
