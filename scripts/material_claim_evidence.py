@@ -57,7 +57,7 @@ SOURCE_FRAGMENTS: Final = {
     ),
     "kernel/engine/src/authority.rs": (
         "ClaimRecord,",
-        "impl_non_authoritative!(ClaimRecord =>",
+        "impl_non_authoritative!(ClaimRecord =>\n    MaterialClaim,",
     ),
     "kernel/engine/src/lib.rs": ("pub mod claim_evidence;",),
 }

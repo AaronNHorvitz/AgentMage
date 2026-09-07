@@ -32,7 +32,7 @@ class ContractEvidenceIndexTests(unittest.TestCase):
         raw = RAW_PATH.read_text(encoding="utf-8")
         for marker in RAW_MARKERS:
             with self.subTest(marker=marker):
-                changed = raw.replace(marker, "removed-marker", 1)
+                changed = raw.replace(marker, "removed-marker")
                 self.assertIn(f"raw contract results missing marker: {marker}", validate_raw(changed))
 
     def test_raw_results_reject_failure_markers(self) -> None:
