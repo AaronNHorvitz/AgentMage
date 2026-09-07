@@ -42,7 +42,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/artifact-scan-report.json",
-      "sha256": "c9bd1e4ba5620db955d8fb2b9462b8f919b7b533b8824c2a3058153981449ed6"
+      "sha256": "bb1b4a0d14af8996863116cc8c3388d6c39cd141b9c1e01e6aeb1a718d69f447"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
@@ -54,7 +54,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/locked-resolution-report.json",
-      "sha256": "d11f7e77b107cd579a196a8073c4f5ccfce8d24ab0a2b8819503aa3f9d92f465"
+      "sha256": "f8edc67d3c5179e1e36cc714a9835a5955d7f09f160f383034f7ea2510466922"
     },
     {
       "path": "docs/decisions/0003-blocked-platform-lane-continuation.md",

@@ -26,7 +26,7 @@ SOURCE_PATHS: Final = (
     "scripts/seeded_crash_recovery_evidence.py",
     "tests/test_seeded_crash_recovery_evidence.py",
 )
-BOUNDARY_IDS: Final = tuple(f"RT-{index:02}" for index in range(1, 9))
+BOUNDARY_IDS: Final = tuple(f"RT-{index:02}" for index in range(1, 17))
 BOUNDARIES: Final = (
     "transaction",
     "checkpoint",
@@ -36,11 +36,19 @@ BOUNDARIES: Final = (
     "restore",
     "expiry",
     "deletion",
+    "manifest",
+    "extraction",
+    "index",
+    "attempt",
+    "receipt",
+    "verification",
+    "recovery",
+    "session-checkpoint",
 )
 POSITIONS: Final = ("before", "after")
 DOCUMENT_FRAGMENTS: Final = (
-    "executes 128 deterministic subprocess runs",
-    "Every one of the 16 boundary-position pairs runs exactly eight",
+    "executes 224 deterministic subprocess runs",
+    "Every one of the 32 boundary-position pairs runs exactly seven",
     "Repeated completed durable transitions observed: **0**.",
     "Authority recovery/replay launches observed: **0**.",
     "deterministic `exit(86)` without unwinding",
@@ -52,14 +60,14 @@ AUTHORITY_FRAGMENTS: Final = (
     "assert_eq!(replay_driver.launches, 0);",
 )
 STORE_FRAGMENTS: Final = (
-    "const SEEDED_CRASH_RUNS: u64 = 128;",
+    "const SEEDED_CRASH_RUNS: u64 = 224;",
     "const SEEDED_CRASH_CHILD_EXIT: i32 = 86;",
     "enum SeededCrashBoundary {",
     "enum SeededCrashPosition {",
     "fn seeded_crash_recovery_child()",
     "fn seeded_crash_recovery_campaign_never_repeats_a_completed_transition()",
-    "assert_eq!(coverage.len(), 16);",
-    "assert_eq!(coverage.get(&(boundary, position)), Some(&8));",
+    "assert_eq!(coverage.len(), 32);",
+    "assert_eq!(coverage.get(&(boundary, position)), Some(&7));",
 )
 COMMAND_SPECS: Final = (
     (("cargo", "test", "-p", "agentmage-kernel-engine", "--lib", "--locked", "operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition", "--", "--exact"), "1 passed; 0 failed"),
@@ -69,12 +77,12 @@ COMMAND_SPECS: Final = (
     (("npm", "run", "docs:lint"), "Summary: 0 issues in 0 files"),
 )
 CLAIMS: Final = {
-    "seed_count": 128,
-    "boundary_family_count": 8,
+    "seed_count": 224,
+    "boundary_family_count": 16,
     "position_count": 2,
-    "boundary_position_pair_count": 16,
-    "runs_per_boundary_position_pair": 8,
-    "abrupt_subprocess_stop_count": 128,
+    "boundary_position_pair_count": 32,
+    "runs_per_boundary_position_pair": 7,
+    "abrupt_subprocess_stop_count": 224,
     "repeated_completed_durable_transitions": 0,
     "authority_recovery_or_replay_launches": 0,
     "hard_exit_without_unwinding": True,

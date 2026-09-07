@@ -5,7 +5,7 @@
 **Task:** `11.1.3.3`  
 **Fixture data:** Synthetic only
 
-This campaign executes 128 deterministic subprocess runs against real
+This campaign executes 224 deterministic subprocess runs against real
 SQLCipher files. Each child stops with a fixed nonzero process exit before or
 after one named durable transition, without Rust unwinding or destructor
 cleanup. The parent then reopens or reconciles the files and proves that the
@@ -13,8 +13,8 @@ transition has exactly one completed durable result.
 
 ## Seed Schedule
 
-Seeds `0` through `127` map deterministically to eight boundary families and
-two positions. Every one of the 16 boundary-position pairs runs exactly eight
+Seeds `0` through `223` map deterministically to sixteen boundary families and
+two positions. Every one of the 32 boundary-position pairs runs exactly seven
 times. The test rejects missing, extra, or uneven coverage.
 
 | ID | Boundary | Before-stop recovery | After-stop recovery | Duplicate assertion |
@@ -27,6 +27,14 @@ times. The test rejects missing, extra, or uneven coverage.
 | `RT-06` | Restore | Create the missing candidate once | Retain the completed candidate | Occupied-path retry fails and the encrypted-file digest is unchanged |
 | `RT-07` | Expiry | Commit the due transition once | Retain the committed transition | Repeated expiry returns no row; revision is two with two total events |
 | `RT-08` | Deletion | Destroy the synthetic key and ciphertext once | Retain verified absence | Key file and all known SQLite artifacts remain absent |
+| `RT-09` | Manifest | Publish the missing artifact manifest once | Retain the committed manifest | Exact identity and uniqueness prevent duplicate publication |
+| `RT-10` | Extraction | Publish the missing extraction once | Retain the committed extraction | Exact source identity and uniqueness prevent duplicate extraction |
+| `RT-11` | Index | Publish the missing artifact index once | Retain the committed index | Exact manifest identity and uniqueness prevent duplicate indexing |
+| `RT-12` | Attempt | Publish the missing workflow attempt once | Retain the committed attempt | Exact attempt identity and uniqueness prevent duplicate creation |
+| `RT-13` | Receipt | Publish the missing receipt once | Retain the committed receipt | Exact effect identity and uniqueness prevent duplicate receipt publication |
+| `RT-14` | Verification | Publish the missing verification once | Retain the committed verification | Exact verifier identity and uniqueness prevent duplicate verification |
+| `RT-15` | Recovery | Reconcile the interrupted recovery once | Retain the reconciled recovery | Recovery state remains exact and does not replay a completed transition |
+| `RT-16` | Session checkpoint | Publish the missing session checkpoint once | Retain the committed checkpoint | Generation and checkpoint identity prevent duplicate publication |
 
 ## Authority Effect Replay
 
@@ -40,11 +48,11 @@ effect-launch boundary.
 
 ## Result
 
-- Deterministic seeds executed: **128**.
-- Durable boundary families exercised: **8 of 8**.
+- Deterministic seeds executed: **224**.
+- Durable boundary families exercised: **16 of 16**.
 - Before/after positions exercised: **2 of 2**.
-- Runs per boundary-position pair: **8**.
-- Abrupt subprocess stops observed: **128**.
+- Runs per boundary-position pair: **7**.
+- Abrupt subprocess stops observed: **224**.
 - Repeated completed durable transitions observed: **0**.
 - Authority recovery/replay launches observed: **0**.
 - Private user records or credentials used: **0**.

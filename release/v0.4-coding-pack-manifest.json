@@ -124,7 +124,7 @@
     },
     {
       "path": "shells/host/src/headless.rs",
-      "sha256": "ef4d55c79413b4e17e497e78ca1d379b2bf847fa05cb36d6d1d334f8e1081eb5"
+      "sha256": "f5f8f7c85ddc910e62c8050a91d146b47efb89786783a9974e62f44e421f60f6"
     },
     {
       "path": "shells/host/src/runtime_parity_tests.rs",

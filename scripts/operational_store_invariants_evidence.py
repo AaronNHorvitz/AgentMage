@@ -108,7 +108,7 @@ LIMITATIONS: Final = [
 REQUIRED_SOURCE_FRAGMENTS: Final = (
     "claim_exclusive_writer(&connection)?;\n    verify_runtime_configuration(&connection)?;\n    migrate(&connection)?;",
     "let transaction = connection\n        .transaction_with_behavior(TransactionBehavior::Immediate)",
-    "INSERT INTO checkpoints(generation, state_sha256) VALUES (?1, ?2)",
+    "INSERT INTO checkpoints(\n                 generation, state_sha256, session_checkpoint_sha256",
     "PRAGMA foreign_keys = ON;",
     "PRAGMA synchronous = FULL;",
 )

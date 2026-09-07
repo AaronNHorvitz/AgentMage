@@ -264,7 +264,10 @@ class RegistryArtifactTests(unittest.TestCase):
             source_line = DEFAULT_SOURCE.read_text(encoding="utf-8").splitlines()[
                 requirement["source"]["line"] - 1
             ]
-            self.assertTrue(source_line.startswith(f"| `{requirement['id']}` |"))
+            self.assertEqual(
+                source_line.split("|", maxsplit=2)[1].strip(),
+                f"`{requirement['id']}`",
+            )
 
     def test_output_is_byte_deterministic(self) -> None:
         expected = render_registry(build_registry(DEFAULT_SOURCE))

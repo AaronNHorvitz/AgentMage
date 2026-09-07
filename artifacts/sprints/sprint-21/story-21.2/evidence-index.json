@@ -61,9 +61,9 @@
       "sha256": "2c7f2af40859d6f75bf009e8fd168419c3e09963cfd497443afda58bbbd812da"
     },
     {
-      "bytes": 11161,
+      "bytes": 17534,
       "path": "kernel/contracts/src/runtime_event.rs",
-      "sha256": "63a01ee7674916b9710cff5a326a75a3b95746bf0e45b704ded02d5cd9b3fd1e"
+      "sha256": "51d66d7ca4be6aeda45a10e25ae1dd60c0c6a7ec54dc4cbca59c39091c919938"
     },
     {
       "bytes": 102469,
@@ -71,39 +71,39 @@
       "sha256": "cf12332a555bf9a5849857aba6c7273226bb3056c012211299ca81cb436b92a2"
     },
     {
-      "bytes": 273638,
+      "bytes": 461249,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "d392ad9ecc11959425487793acdc3c900fc475ec6f0b9ca19614f6354cc989d6"
+      "sha256": "f814b7b99ad58eb5de3512ae95f4301a1bf2cc22b03c532b0a2ca920ab8f37aa"
     },
     {
-      "bytes": 143808,
+      "bytes": 167641,
       "path": "kernel/engine/src/runtime_artifact.rs",
-      "sha256": "09f720988bb3b78f90293a6063a26a6b3777cf1aa5beab7b615d1accf6d7e8f5"
+      "sha256": "a45dd60b5882cff330cb711bec7b1ecc5bac3413eb17f35d5dc530fbb0938ad4"
     },
     {
-      "bytes": 97875,
+      "bytes": 148475,
       "path": "kernel/engine/src/runtime_event.rs",
-      "sha256": "cc3095ea122644047a47c3fecd5c7a100676cf8eca0bd3a22d0445d533f0ed32"
+      "sha256": "9918d6194634c793162c09c4ea39bcdedb5df0f2e20e879c2f856c7d6468ca26"
     },
     {
-      "bytes": 96409,
+      "bytes": 116652,
       "path": "kernel/engine/src/runtime_journal.rs",
-      "sha256": "6d961665fc0163026e57ef38ad312c28a720347af178833f8d79679f7d81409e"
+      "sha256": "3588470c9ed56647802638f766c16418b9f61a8d7ea82a422371c56063b3d464"
     },
     {
-      "bytes": 136080,
+      "bytes": 142221,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "a62532d85d54052acc4e8ae7f9ab1547fc9d0d73470c743d40198a29e9e39728"
+      "sha256": "91ec216eaa831293a6330134f33b7e9c5590408adfda0275392bd0ce8c78b227"
     },
     {
-      "bytes": 90067,
+      "bytes": 135911,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "c8f24c701a6ad5afe895749c9353b20be4795f2f7c98725582f60a84be729d92"
+      "sha256": "72d327fc2e8cae5358ef2700c94c4bc9a60aecda7e22ce513a06268f300f83d9"
     },
     {
-      "bytes": 59587,
+      "bytes": 60943,
       "path": "kernel/engine/src/runtime_projection.rs",
-      "sha256": "fc8d15ead9d1535637e193ad54301ac7d4157f2dd46b667595cfc450486aca7f"
+      "sha256": "9b2a2274f3328ac8e33d1e8a493b4e374fb8a4dc7c28582b186002647b6de25d"
     },
     {
       "bytes": 812,
@@ -111,9 +111,9 @@
       "sha256": "7beb6c86d8d942183ed734f3212d85abcfeca7ab9771a03884bb7db8574869f5"
     },
     {
-      "bytes": 12447,
+      "bytes": 20345,
       "path": "schemas/runtime/runtime-event.schema.json",
-      "sha256": "4f548abe890a9f13b01f385e447be10ab6b3ea9dc69105b1bbc4c8726819d973"
+      "sha256": "436592c7035920e1fb622ee83b3770c2c16838809e1327a9b7a5da110b93470e"
     },
     {
       "bytes": 23455,
@@ -146,14 +146,14 @@
       "sha256": "0d48a3ebd0d420991b5a951c6bc2f2de7e8307fb2832c7e3606711be6c08a9b4"
     },
     {
-      "bytes": 43101,
+      "bytes": 49327,
       "path": "shells/host/src/cli_runtime.rs",
-      "sha256": "fb78655d3ce8c8adf655966f86aa69d38a0e368c1bd01d7d2e966e2d93a0593e"
+      "sha256": "4b5d68f00b199a46dc35c124cb2dacd351e682c3975184e7c2243981d758ca37"
     },
     {
-      "bytes": 204664,
+      "bytes": 316474,
       "path": "shells/host/src/linux_coding_runtime.rs",
-      "sha256": "b77e776074cbf1c7d7bd62610802b9e70b589bf09db6c2ffbedc6d42f5e95a5b"
+      "sha256": "468fa56f53a87fa6f390605d82ce6d03304dcd6946f1eea578f814185fdec4af"
     },
     {
       "bytes": 2502,
@@ -182,7 +182,7 @@
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "714ec241cf2b739632d84a31ff10a2b0b5c4978a1eb3f126fabc11562439a864",
+  "index_sha256": "938cd77c8de41f1c033e1aefc1a41e96495fa5b8b4f07e2ba5c32959d6650a6e",
   "limitations": [
     "Integrated physical-effect recovery-to-terminal-event reconciliation remains open.",
     "Physical filesystem/device latency, power-loss, and storage-failure campaigns remain open.",
@@ -484,7 +484,7 @@
   ],
   "record_type": "story_21_2_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "cafc859384f3387c4607c526d0b1594fcf5845d5",
+  "source_revision": "d359af20ac29d9c256a146c7b235bb986563f8fc",
   "story_id": "21.2",
   "summary": {
     "complete_count": 14,

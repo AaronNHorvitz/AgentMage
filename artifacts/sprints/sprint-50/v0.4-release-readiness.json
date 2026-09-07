@@ -21,7 +21,7 @@
   "independent_review_complete": false,
   "lifecycle_accessibility_recovery_complete": false,
   "local_manifest_valid": true,
-  "manifest_sha256": "3b4b7c549e2f04e4a147e1d52849998c13492c87b7fc7065883a9a9e836d4f68",
+  "manifest_sha256": "6dede0fb4f85aeaf8dc5fe3ec1b34ef21785c5e06a6a3ba4b58c58604e3c470e",
   "manual_fuzzing_complete": false,
   "native_chat_workflow_complete": false,
   "native_cli_workflow_complete": false,

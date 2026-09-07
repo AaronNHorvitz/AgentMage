@@ -106,14 +106,14 @@
       "sha256": "5794af19e7fb3d7cc8ef7c7bf446621ab01f0683a628b165383232ceb03761b3"
     },
     {
-      "bytes": 43765,
+      "bytes": 49327,
       "path": "shells/host/src/cli_runtime.rs",
-      "sha256": "929131ddeda90e7a32a018f692199a8f0c2310a3f7e1dcd1a26882669c77cb8f"
+      "sha256": "4b5d68f00b199a46dc35c124cb2dacd351e682c3975184e7c2243981d758ca37"
     },
     {
-      "bytes": 39918,
+      "bytes": 40749,
       "path": "shells/host/src/native_chat_runtime.rs",
-      "sha256": "4d950b3123a820902d82776e69b9f0c529f0377c01452c81e8bc36945c7ec0e0"
+      "sha256": "43493d95c9ffed085069ef1230c5d6afe5d9d6f47d576a090197d3e224fbd649"
     },
     {
       "bytes": 22624,
@@ -177,7 +177,7 @@
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "c7b502d2b39412a2253dd9fa405982ec52f4157faa060c09fb041b5969140049",
+  "index_sha256": "94755af778a1607b7049363f217fc9cda0a115403a2599f2e215f5518081d5fe",
   "limitations": [
     "The installed host still lacks a production runtime factory and admitted local model.",
     "The source-level boundary-by-boundary failure matrix is complete; physical process faults remain outside this source campaign.",
@@ -481,7 +481,7 @@
   ],
   "record_type": "story_23_4_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "393644886f9a884b2ff2b1755aec2475f0d8732e",
+  "source_revision": "d359af20ac29d9c256a146c7b235bb986563f8fc",
   "story_id": "23.4",
   "summary": {
     "complete_count": 16,

@@ -71,9 +71,9 @@
       "sha256": "8fdb490ec397bb2e7975876e03d196e78c2e3abad2ee3ea27983184be8b3ebb4"
     },
     {
-      "bytes": 437644,
+      "bytes": 461249,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "64ac3a2ab768f47f03f5fdb4343aae9df0d429eff727b74a875f909ab6e17a9a"
+      "sha256": "f814b7b99ad58eb5de3512ae95f4301a1bf2cc22b03c532b0a2ca920ab8f37aa"
     },
     {
       "bytes": 167641,
@@ -81,14 +81,14 @@
       "sha256": "a45dd60b5882cff330cb711bec7b1ecc5bac3413eb17f35d5dc530fbb0938ad4"
     },
     {
-      "bytes": 141945,
+      "bytes": 142221,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "72f2dd4c039788b19677e5977d0b81d92f3dade9c2a35cd6fc55f24b01aa4ffa"
+      "sha256": "91ec216eaa831293a6330134f33b7e9c5590408adfda0275392bd0ce8c78b227"
     },
     {
-      "bytes": 125847,
+      "bytes": 135911,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "dbd39f6852ff6d3a80723849b486a66241f0ebc9d2992d5cbf3eb382ba0d120e"
+      "sha256": "72d327fc2e8cae5358ef2700c94c4bc9a60aecda7e22ce513a06268f300f83d9"
     },
     {
       "bytes": 39200,
@@ -186,9 +186,9 @@
       "sha256": "468fa56f53a87fa6f390605d82ce6d03304dcd6946f1eea578f814185fdec4af"
     },
     {
-      "bytes": 70113,
+      "bytes": 77788,
       "path": "tests/test_planning_schemas.mjs",
-      "sha256": "7e91d19b6eed4e802db3f1577a514a9298c70d6becb1706ce9b2861d0565f42b"
+      "sha256": "9ca263d7a1ad2a3b6c31e95b78872a6b11689770d43a1715e56e500f96f653b5"
     },
     {
       "bytes": 2391,
@@ -227,7 +227,7 @@
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "ae6b75e4eb1f67a9a9a5af1d1291cbf2d79573668824cb9060f996298588748a",
+  "index_sha256": "d962a995cbcb261dfc185e6c957e25fcb4346e33ef86029a4de52ac5f35dbeed",
   "limitations": [
     "Stops inside filesystem or SQLite syscalls and physical storage-fault campaigns remain open.",
     "Long mixed-artifact sessions and concurrent collection campaigns remain open.",
@@ -554,7 +554,7 @@
   ],
   "record_type": "story_22_2_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "4f81d58d9acca8169ab55b28a482174b361df757",
+  "source_revision": "d359af20ac29d9c256a146c7b235bb986563f8fc",
   "story_id": "22.2",
   "summary": {
     "complete_count": 17,

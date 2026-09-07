@@ -15,10 +15,10 @@ packaging, or release gates.
 | ID | Required class | Executable coverage | Verified outcome |
 |---|---|---|---|
 | `UT-01` | Schema constraints | `schema_constraints_and_atomic_rollback_reject_partial_authority` | Duplicate immutable identity, invalid head references, and induced checkpoint failure reject or roll back without a partial generation |
-| `UT-02` | Foreign keys and relationships | `version_three_schema_is_normalized_closed_and_relational`; `retention_assignment_and_event_tampering_fail_closed` | Missing parents, invalid relationships, orphan retention, and event-chain drift fail closed |
+| `UT-02` | Foreign keys and relationships | `version_eighteen_schema_matches_fixture_snapshot_and_is_relational`; `retention_assignment_and_event_tampering_fail_closed` | Missing parents, invalid relationships, orphan retention, and event-chain drift fail closed |
 | `UT-03` | One writer and exact runtime policy | `exclusive_writer_and_encrypted_backup_are_verified`; `required_writer_and_database_configuration_is_verified` | A second independent SQLCipher connection cannot own the canonical writer; changed WAL, locking, foreign-key, trusted-schema, secure-delete, temporary-store, synchronization, checkpoint, or timeout policy is rejected |
 | `UT-04` | Retention transitions | `retention_holds_expiration_and_stale_revisions_are_atomic`; `retention_assignment_and_event_tampering_fail_closed` | User/legal holds, matching release, due expiry, stale revision denial, wrong-kind denial, orphan denial, and event tamper preserve one valid lifecycle state |
-| `UT-05` | Migration versions | `version_one_upgrades_through_three_with_exact_history`; `version_two_retention_rows_upgrade_to_three_with_initial_event` | Real encrypted v1 and v2 fixtures reach exact schema v3 with ordered immutable history and deterministic retention events |
+| `UT-05` | Migration versions | `version_one_upgrades_through_eighteen_with_exact_history`; `version_two_retention_rows_upgrade_to_three_with_initial_event` | Real encrypted v1 and v2 fixtures reach the current schema through exact ordered immutable history and deterministic retention events |
 | `UT-06` | Migration rollback | `failed_version_two_migration_rolls_back_without_partial_schema`; `failed_version_three_migration_rolls_back_all_alterations` | Induced conflicts retain the complete prior schema, history, indexes, columns, rows, and `user_version` |
 | `UT-07` | Invalid store and record states | `encrypted_store_requires_key_and_hides_sqlite_header`; `wrong_key_and_wrong_storage_class_fail_closed`; `future_schema_and_page_corruption_are_refused` | Missing/wrong keys, unsafe storage, future schema, malformed state, and page corruption do not become admitted authority |
 | `UT-08` | Backup, restore, export, and erasure boundaries | Six focused backup/restore/canary/erasure/export tests | Occupied destinations and failed operations preserve existing objects; invocation-created failed candidates are removed; derivatives never become startup authority |
@@ -54,8 +54,8 @@ The expected test set is exactly:
 11. `json_lines_export_rejects_occupied_or_ineligible_destinations_without_change`
 12. `schema_constraints_and_atomic_rollback_reject_partial_authority`
 13. `required_writer_and_database_configuration_is_verified`
-14. `version_three_schema_is_normalized_closed_and_relational`
-15. `version_one_upgrades_through_three_with_exact_history`
+14. `version_eighteen_schema_matches_fixture_snapshot_and_is_relational`
+15. `version_one_upgrades_through_eighteen_with_exact_history`
 16. `version_two_retention_rows_upgrade_to_three_with_initial_event`
 17. `failed_version_three_migration_rolls_back_all_alterations`
 18. `failed_version_two_migration_rolls_back_without_partial_schema`

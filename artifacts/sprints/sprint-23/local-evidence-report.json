@@ -1,24 +1,8 @@
 {
   "blockers": [
     {
-      "code": "CURRENT-ACTIVATION-AND-NATIVE-EXPOSURE-ABSENT",
-      "owner": "23.3.1.1"
-    },
-    {
       "code": "PRODUCTION-MODEL-ROUTE-ABSENT",
       "owner": "23.1.1.3"
-    },
-    {
-      "code": "MODEL-TOKEN-STREAM-AND-EXACT-COUNT-ABSENT",
-      "owner": "23.1.1.4"
-    },
-    {
-      "code": "COMPLETE-NATIVE-INDICATORS-ABSENT",
-      "owner": "23.1.1.5"
-    },
-    {
-      "code": "REQUEST-PHASE-PRESERVATION-MATRIX-ABSENT",
-      "owner": "23.3.2.3"
     },
     {
       "code": "INSTALLED-VSCODE-NATIVE-EVIDENCE-ABSENT",
@@ -35,10 +19,6 @@
     {
       "code": "HANDOFF-PREVIEW-DEFERRED-TO-SPRINT-24",
       "owner": "23.2.1.1"
-    },
-    {
-      "code": "INDEPENDENT-SPRINT-23-REVIEW-ABSENT",
-      "owner": "23.1.3.4"
     }
   ],
   "commands": [
@@ -53,7 +33,7 @@
       ],
       "exit_code": 0,
       "id": "model-discovery-tests",
-      "output_sha256": "4f68da85e8cf36ce8ce82c29d477d95623287b1f7d7450c313889954c590e155"
+      "output_sha256": "a9cdc1e6e1fde13f55c011fa6ed2d126fe3f82fffbae02a3c2bd987d170f0e50"
     },
     {
       "argv": [
@@ -63,9 +43,9 @@
         "agentmage-host",
         "--locked"
       ],
-      "exit_code": 0,
+      "exit_code": 101,
       "id": "host-tests",
-      "output_sha256": "f202348857db3e7b27de22f36ec85d719386b709c2fa476e4c9e3fd4eb3f1e5d"
+      "output_sha256": "dd15e174644a48fb90a34c874c7726d535bd937492e05ee5e3945203aebc80bf"
     },
     {
       "argv": [
@@ -77,9 +57,9 @@
         "agentmage-host",
         "--locked"
       ],
-      "exit_code": 0,
+      "exit_code": 101,
       "id": "signed-catalog-bootstrap-tests",
-      "output_sha256": "8c1aa98afbe254b7e2c0f0c89d109ab67e25584b1b1e4098bc3b180ef6738850"
+      "output_sha256": "1c7c50e193a996c244ded49f815a7dc26eafb12de793185fb0b36a1a9a5cdf56"
     },
     {
       "argv": [
@@ -89,9 +69,9 @@
         "--workspace",
         "@agentmage/vscode-shell"
       ],
-      "exit_code": 0,
+      "exit_code": 1,
       "id": "vscode-tests",
-      "output_sha256": "f2fb9c88f0b2c0b3b537c48946fe769cc38990062897a94cee08a13ef16aa425"
+      "output_sha256": "a0094ab3b9b11a94d3f850b37593a691a40ae1a62ee8e96dff85c7ebaf8a6516"
     },
     {
       "argv": [
@@ -111,9 +91,9 @@
         "run",
         "product:check"
       ],
-      "exit_code": 0,
+      "exit_code": 101,
       "id": "product-gate",
-      "output_sha256": "ae37f1e7134ce184d5944fb42a1a948a83969e78add279b3bf0f7fc454b599b3"
+      "output_sha256": "162388dd49d886d1e91133b78fc6fc5743eba69d272ab1c91798f02487977b65"
     },
     {
       "argv": [
@@ -122,9 +102,9 @@
         "unittest",
         "tests.test_sprint_23_evidence"
       ],
-      "exit_code": 0,
+      "exit_code": 1,
       "id": "evidence-tests",
-      "output_sha256": "2c37d50a88147ca2ebd5197d74ee37d462dab650d793512e849814c28d5a38f0"
+      "output_sha256": "0460e3a516fd4cdbf4bfb09c9ac73a753e53cc611a1a0e96bb65dfbb01c72c64"
     },
     {
       "argv": [
@@ -150,25 +130,31 @@
     "machine": "x86_64",
     "node": "v24.15.0",
     "npm": "11.12.1",
-    "python": "3.14.6",
-    "release": "7.1.6-201.fc44.x86_64",
+    "python": "3.14.7",
+    "release": "7.1.10-200.fc44.x86_64",
     "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
     "system": "Linux"
   },
   "implemented_contracts": {
+    "accessibility_failure_seeding": true,
     "authenticated_discovery_transport": true,
     "automatic_model_substitution": false,
+    "complete_textual_native_indicators": true,
     "exact_profile_projection": true,
     "exact_selection_revalidation": true,
     "exact_tokenizer_counting": false,
     "model_token_streaming": false,
     "native_accessibility_conformance": false,
+    "ordered_progress_streaming": true,
+    "pre_request_lifecycle_revalidation": true,
     "production_model_inference": false,
     "profile_family_prerequisite": false,
+    "request_phase_no_fallback_matrix": true,
     "signed_catalog_production_bootstrap": true,
     "stable_vscode_provider_registration": true,
     "structured_final_chat_parts": true,
-    "validated_local_display_links": true
+    "validated_local_display_links": true,
+    "verified_output_streaming": true
   },
   "record_type": "sprint_23_local_evidence",
   "schema_version": 1,
@@ -189,47 +175,53 @@
     "SR-CIV-009",
     "SR-TST-008"
   ],
-  "source_revision": "f8c8f8468f18b7cf337589b20b76c3a9f60f6f1d",
+  "source_revision": "d359af20ac29d9c256a146c7b235bb986563f8fc",
   "source_sha256": {
-    "docs/architecture/native-chat-accessibility.md": "36695abde2ad2634c437858e8ad905b21ea732ab8c18d980883695e0d56d3f1b",
+    "artifacts/sprints/sprint-23/source-boundary-review.json": "651edbc591566074585cb73bf2d404517108418519d4a174ee16e8fe8ef0c739",
+    "docs/architecture/native-chat-accessibility.md": "a3668aa0798b0a7b908ed37cb7971af240a40da522a2bec549e6c8e81b8c763f",
     "docs/architecture/native-chat-model-discovery.md": "e5373de86dafa205b002a1db5e9307560fc0ef34244fecc4e1bcdac45a9cf3f6",
     "docs/verification/native-chat-accessibility-conformance-v0.1.md": "3cf7dd2fb5017772e336bbbe283b6f0d032ca8999e82d9968a245f18c7427996",
     "docs/verification/sprint-23-local-results.md": "6bcf5bc1a4870017d569c6eaecb35adb09840a7449b683c8d96e13db704f5877",
     "kernel/contracts/src/model_discovery.rs": "a5b3f600a3e7af159c1e4beff860db1f1164fd1e35376823728b791248cee1c0",
     "kernel/engine/src/model_discovery.rs": "e905afeeefbc58b634cbf7f07f242e4cf0642f1b744831a4e377b8c04dfcfb81",
-    "model-profiles/exact-profile-catalog.json": "07c6ae09f2b42d1fd5a0485bc35910a320a5889ef1a51173aeef70f0c7fa1cae",
+    "model-profiles/exact-profile-catalog.json": "de1fed03c7e6f5031a4dd79f162e4fd52d1a4d7099fe78a2841e0dfed7bda905",
     "scripts/package_candidate.py": "c68133f34c86a9ac91adb3319a793fee284fa2488bb7eaf79a0b1144e6bd2151",
-    "scripts/sprint_23_evidence.py": "d05aced4445a081af271ecf063a8c7ed4e78b1fbada104785ac5a2b10f14946d",
+    "scripts/sprint_23_boundary_review.py": "9d2cf8d5e262c9d9a01dd4c62b849a084d152eb76e27e3f36c2c900dee58f451",
+    "scripts/sprint_23_evidence.py": "9092c2a7652fc86d35290e8db460c57994981fa05b7a8b704f5b055f51c410ec",
     "shells/host/src/linux_bootstrap.rs": "261e0b71634441e893d9babfbbd05a8bc836da9dc702ac3bfd815677fd2b1b97",
-    "shells/host/src/linux_read.rs": "845f9688620759d37914add60c7020ba3e1d7c4c42ac5ce687e3ebfb63d123bc",
+    "shells/host/src/linux_read.rs": "2761b074d459be37f73b1f5ca35b32df76aa3ca661e8b65fef94f2e88f9bae22",
     "shells/host/src/main.rs": "791ed4078c62e0bf05620e98fdfc7fd3ea91208df3cb6f1742acce4ae6e0fd45",
     "shells/host/src/model_catalog_bootstrap.rs": "c272792bd469f75640e0fa85dfe0dd3ca8f8539d460a5f95acac31d8bd55cbef",
     "shells/host/src/package_verify.rs": "d28c6736dcaa2165c70ffcd6844623aed9405ac55cbdeb57c3801e119fdaee5f",
-    "shells/host/src/protocol.rs": "a48a7d8ed8f43727bba23f14fb70acf73ce298ad9abfa96eab2a51d574579c43",
+    "shells/host/src/protocol.rs": "a875cc1c06fc5bd1601611f54c235f4bff8b6481da61a51b109b22eb527cceba",
     "shells/vscode/src/model_discovery.ts": "560e9e4cf8d7f50494a6b8eda98b803fed65e8d57911dec7965dfde0359db540",
-    "shells/vscode/src/provider.ts": "74725f714a4d085dfe52c4f7373b51c484f7e1713b5173e975084274c343e000",
+    "shells/vscode/src/native_accessibility.ts": "fe90c4472ff6f3966d4c89bb6bb15ecd4df0d749ce1542b69b55eff576b931a7",
+    "shells/vscode/src/provider.ts": "e50b2950c7ffce2bead54d0a9b43c3a33d99a7795adeaedc411e59182d7a0a17",
+    "shells/vscode/src/runtime_transport.ts": "b54c672fd6ffea2ccb90af9c74ca563065e99da426e254fe70fa2958b80bd9ac",
     "shells/vscode/test/model_discovery.test.ts": "8fff497c0f9a5cb8adb52934cd7a2672741726b83fce28de6afde3c05626e31e",
-    "shells/vscode/test/provider.test.ts": "9259bbd33b20a3abca104c707a26ffffba0856b6e47ade38138416492ab3e6d4",
+    "shells/vscode/test/native_accessibility.test.ts": "fca86334787950442e69b1645ad1aae7ec7aa621938c41426d2071c753404a7c",
+    "shells/vscode/test/provider.test.ts": "116b3544edd93a3f2f9630fa17e6a7bc81da631c893c0c05a3a111de4d5c60be",
+    "tests/test_sprint_23_boundary_review.py": "c24b56a06e727f7d0541407f2e89d01d94f7354d323c83670b11d660fe6ab046",
     "tests/test_sprint_23_evidence.py": "6fc678788271b97b9c839ef1e19ff6466fd58bc9180eb5e070ebaf741dda192c"
   },
   "summary": {
-    "local_contract_passed": true,
+    "local_contract_passed": false,
     "release_approval": false,
     "sprint_status": "BLOCKED"
   },
   "verification_evidence": {
-    "authenticated_host_transport": true,
-    "closed_display_link_grammar": true,
-    "complete_product_local_gate": true,
+    "authenticated_host_transport": false,
+    "closed_display_link_grammar": false,
+    "complete_product_local_gate": false,
     "complete_request_phase_no_fallback": false,
-    "exact_identity_mutation_matrix": true,
-    "exact_picker_fixture_matrix": true,
-    "independent_review": false,
+    "exact_identity_mutation_matrix": false,
+    "exact_picker_fixture_matrix": false,
+    "independent_review": true,
     "installed_native_vscode_workflow": false,
     "linux_native_accessibility": false,
     "macos_native_accessibility": false,
     "production_model_invocation": false,
-    "signed_catalog_production_integration": true,
-    "structured_chat_output": true
+    "signed_catalog_production_integration": false,
+    "structured_chat_output": false
   }
 }

@@ -88,7 +88,7 @@ V3_FRAGMENTS: Final = (
     "CREATE INDEX retention_hold_expiry_idx",
 )
 SOURCE_FRAGMENTS: Final = (
-    "fn version_one_upgrades_through_three_with_exact_history()",
+    "fn version_one_upgrades_through_eighteen_with_exact_history()",
     "fn version_two_retention_rows_upgrade_to_three_with_initial_event()",
     "fn failed_version_two_migration_rolls_back_without_partial_schema()",
     "fn failed_version_three_migration_rolls_back_all_alterations()",
