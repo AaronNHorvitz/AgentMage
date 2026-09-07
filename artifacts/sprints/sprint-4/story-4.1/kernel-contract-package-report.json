@@ -27,7 +27,7 @@
     {
       "executable": false,
       "path": ".cargo_vcs_info.json",
-      "sha256": "05fdd1450859d37b35dbf79c17dbee3e2de34da2f14f626ef9d6ede9d52547e6",
+      "sha256": "d0d045849c80475c3accf99d1c1b13bd7b22b5b31f514e773e65f84457a05f57",
       "size_bytes": 110
     },
     {
@@ -39,14 +39,14 @@
     {
       "executable": false,
       "path": "Cargo.toml",
-      "sha256": "03bb9d751a41f18396c3a7c4d4de2d7183d8a5f3057bda8956e1819890a456e4",
-      "size_bytes": 1385
+      "sha256": "dfcefe44274590c673e79a9937e6f5f1f6026ee297da39d5207ea49558e6ba8c",
+      "size_bytes": 1434
     },
     {
       "executable": false,
       "path": "Cargo.toml.orig",
-      "sha256": "960fb2e7c1128ed9508a667f7240aa67eb5bf6da95f8d24df97658a0af958088",
-      "size_bytes": 471
+      "sha256": "41b9192d56af6e360f2a77d065b823af009cc30ad04fdcb96c08f22cfc6fd6c8",
+      "size_bytes": 518
     },
     {
       "executable": false,
@@ -111,8 +111,8 @@
     {
       "executable": false,
       "path": "src/claim.rs",
-      "sha256": "193793b9aefa4aa7425060d46fa27fb1481b4e25d5a7f2265b8bdc9d8a8872fa",
-      "size_bytes": 3787
+      "sha256": "8ac9b5f8b4c5e2a53e7e6059abf0e39cb11727aba0ab692f32f52bbcb2ecb6e2",
+      "size_bytes": 9976
     },
     {
       "executable": false,
@@ -128,9 +128,45 @@
     },
     {
       "executable": false,
+      "path": "src/context.rs",
+      "sha256": "3fdc7d7f3a0b7b9c0b23bc6c5056bd9720f2d4729839546bdae8015aaf859a97",
+      "size_bytes": 12747
+    },
+    {
+      "executable": false,
+      "path": "src/conversation.rs",
+      "sha256": "474fffe35b951603f78ab16c25609beda1f8eaa9acf2ebceb94f8af5176e2dde",
+      "size_bytes": 7840
+    },
+    {
+      "executable": false,
+      "path": "src/diagnostics.rs",
+      "sha256": "08260d209729487869a19f43e72e5c836ee567c7aaa551c31779cae9aee31d8d",
+      "size_bytes": 4487
+    },
+    {
+      "executable": false,
       "path": "src/display_link.rs",
       "sha256": "5a7ce651ad075d629ec95be3c0db3934f8ace321f666f6058546777faadb1d0b",
       "size_bytes": 7260
+    },
+    {
+      "executable": false,
+      "path": "src/document_control.rs",
+      "sha256": "1ec04d45ddc6a22b1a9ad05bb89edd1409c24c321419eae49eda658c25402902",
+      "size_bytes": 15757
+    },
+    {
+      "executable": false,
+      "path": "src/engineering.rs",
+      "sha256": "705696d7bca5b7b88f0922183ce7ed141b37ced5be2e0821bf0de514a49e7aa7",
+      "size_bytes": 46456
+    },
+    {
+      "executable": false,
+      "path": "src/engineering_records.rs",
+      "sha256": "ac16659bab43ca0b0981d9f123d67d2d79abfdb43962a5602ef88bac286cf913",
+      "size_bytes": 132612
     },
     {
       "executable": false,
@@ -140,27 +176,69 @@
     },
     {
       "executable": false,
+      "path": "src/executive.rs",
+      "sha256": "4b04214c9d62d25b121103bff9b05dc04dd7939f4f5300486dd2651470d7a06f",
+      "size_bytes": 29112
+    },
+    {
+      "executable": false,
+      "path": "src/frontier.rs",
+      "sha256": "323fe72b93799e56ccb768e7d65022f7e72cb0a90b89dc1782023a1a0adbb060",
+      "size_bytes": 6474
+    },
+    {
+      "executable": false,
+      "path": "src/frontier_import.rs",
+      "sha256": "22a0fa7ed303e2030753c962108af9e5a8a8c809588724fa6893c2ad31079bfd",
+      "size_bytes": 12400
+    },
+    {
+      "executable": false,
       "path": "src/grant.rs",
-      "sha256": "c6baa52e28356c2374cb0fadcc973eb694c447606de9af623a715c23daee4924",
-      "size_bytes": 23505
+      "sha256": "d19d8a394eac5679f7d77260aaa61f6f4394286486962540fbdb7fba67b9e918",
+      "size_bytes": 27617
+    },
+    {
+      "executable": false,
+      "path": "src/handoff.rs",
+      "sha256": "230eea68dfbe59158221b006f1483591999a464e529b0e25ecac8c6213759a00",
+      "size_bytes": 9725
     },
     {
       "executable": false,
       "path": "src/ids.rs",
-      "sha256": "cfb6b68ff5669adf9cd416c8c21339f925a46281f9b3a3e8b0d27ea7b87f3132",
-      "size_bytes": 5264
+      "sha256": "c6eab569b2f194fada6a58004c32fbee162484f56b6f6b353518b5bdd73d16c5",
+      "size_bytes": 7194
     },
     {
       "executable": false,
       "path": "src/lib.rs",
-      "sha256": "57a994d2db0a7ccbc1cef96f67c2ae4d5fb279a9dd73d4880a71e0fa805d27e8",
-      "size_bytes": 6267
+      "sha256": "9d3d43c6d332f12de3b846dec2c90ebb2edaa5eeb3a303c9cf1b4474dbd54f84",
+      "size_bytes": 13353
+    },
+    {
+      "executable": false,
+      "path": "src/mcp.rs",
+      "sha256": "3c794e37194085ea625eae4f9529f5cbe10c764d0368e5be04aa929eb36aeb9d",
+      "size_bytes": 13266
+    },
+    {
+      "executable": false,
+      "path": "src/meeting.rs",
+      "sha256": "19190ab0366d87ee07b5a452168a5dfd211d2e1d2570c37a1f8320056be889c2",
+      "size_bytes": 16067
     },
     {
       "executable": false,
       "path": "src/model.rs",
       "sha256": "75d295c6a2e16a16e55bfc85321f5bed8f9ea74f5adb47058e2ac786d15559d3",
       "size_bytes": 33731
+    },
+    {
+      "executable": false,
+      "path": "src/model_discovery.rs",
+      "sha256": "a5b3f600a3e7af159c1e4beff860db1f1164fd1e35376823728b791248cee1c0",
+      "size_bytes": 7713
     },
     {
       "executable": false,
@@ -189,8 +267,8 @@
     {
       "executable": false,
       "path": "src/platform_path.rs",
-      "sha256": "0cff7fe61ab00464882b1dfc3a8be15e862bcd0ce0ee8bc1b4fff878fa1d03e1",
-      "size_bytes": 16733
+      "sha256": "7119a512a165b00ee1e88186bf55cd4d60b7b293aa3954a17215019cd5d9107b",
+      "size_bytes": 17192
     },
     {
       "executable": false,
@@ -206,9 +284,33 @@
     },
     {
       "executable": false,
+      "path": "src/runtime_artifact.rs",
+      "sha256": "8fdb490ec397bb2e7975876e03d196e78c2e3abad2ee3ea27983184be8b3ebb4",
+      "size_bytes": 14525
+    },
+    {
+      "executable": false,
+      "path": "src/runtime_event.rs",
+      "sha256": "51d66d7ca4be6aeda45a10e25ae1dd60c0c6a7ec54dc4cbca59c39091c919938",
+      "size_bytes": 17534
+    },
+    {
+      "executable": false,
+      "path": "src/runtime_run.rs",
+      "sha256": "6265a34a5400e91741d926a96f6abb8de7ecc41766604215ca7e08bb2d2119c0",
+      "size_bytes": 11320
+    },
+    {
+      "executable": false,
       "path": "src/serialization.rs",
-      "sha256": "2f2e7f302c625d3a549b2506336dab263d7e0d9c6f2429cf7b5045202550cd2b",
-      "size_bytes": 10992
+      "sha256": "0172e822ffd4297d769d752f75a6e06e27dbf36ca239ecc80167cd4358c9b4be",
+      "size_bytes": 13185
+    },
+    {
+      "executable": false,
+      "path": "src/structured_source.rs",
+      "sha256": "77af2ee3ad318ca05b83db62ab722ed320d1a2a49d47edb752aafff8a1ae7370",
+      "size_bytes": 8755
     },
     {
       "executable": false,
@@ -230,6 +332,12 @@
     },
     {
       "executable": false,
+      "path": "src/workspace_snapshot.rs",
+      "sha256": "136e67fd70c721d856a8a005a024f1bd13d7160a7f3f69a76b05e8571a140a09",
+      "size_bytes": 1263
+    },
+    {
+      "executable": false,
       "path": "tests/contract_family.rs",
       "sha256": "96e6bd04cc61a1717af5fe8549136fc87b9f1fd5ce68f2ee5589b26c6304f6d0",
       "size_bytes": 21911
@@ -237,8 +345,8 @@
     {
       "executable": false,
       "path": "tests/grant_target_contract.rs",
-      "sha256": "b9c0a026718d731ba9fff7ae2ede32c05f82163de76372e07f98201655e7b357",
-      "size_bytes": 6833
+      "sha256": "3d8a7527fedb03b31504bc5a338a411d942a4632899e27efa8b3546b59b004bc",
+      "size_bytes": 8830
     }
   ],
   "package": {
@@ -249,10 +357,10 @@
     "name": "agentmage-kernel-contracts",
     "path": "artifacts/sprints/sprint-4/story-4.1/agentmage-kernel-contracts-0.0.0.crate",
     "publish": false,
-    "sha256": "e82239e970873cbf3caeaf4dff076ed5fc68babdf24ed0b77d6391e7419c0cb5",
-    "size_bytes": 69048,
+    "sha256": "55fa2e1f83e21535b9fa39138dd0d6e58a9bbbf4ffccd39cd816747db22471ae",
+    "size_bytes": 145089,
     "source_path": "kernel/contracts",
-    "source_revision": "7e5e5528a71fe8f54a3bfd72e31fa3db3c62ecf7"
+    "source_revision": "2909e9728d18d16da50f17dff06f74762b248bcd"
   },
   "platform_status": {
     "linux_source_package": "verified-local",

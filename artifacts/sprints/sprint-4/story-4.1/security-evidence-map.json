@@ -11,9 +11,9 @@
       "sha256": "21235f069ba67f3eb1412a379197e336f7bd71490eb4789b96fb224bfb6b1040"
     },
     {
-      "bytes": 23273,
+      "bytes": 33028,
       "path": "docs/architecture/kernel-contract-reference.md",
-      "sha256": "f3825b04067d57554d0a941aeb0055494e8a5ede02a9a1aaf1474f2b37cd99e0"
+      "sha256": "8e0a601fef40e4b2f90dd281418a1e5f5c9717b64d88c5088fb6a39f4af42bdf"
     },
     {
       "bytes": 5469,
@@ -56,29 +56,29 @@
       "sha256": "9716abdff573a33a15b25b6c8a5edcf9271861828033f854e7bc0e58b177f1ec"
     },
     {
-      "bytes": 69048,
+      "bytes": 145089,
       "path": "artifacts/sprints/sprint-4/story-4.1/agentmage-kernel-contracts-0.0.0.crate",
-      "sha256": "e82239e970873cbf3caeaf4dff076ed5fc68babdf24ed0b77d6391e7419c0cb5"
+      "sha256": "55fa2e1f83e21535b9fa39138dd0d6e58a9bbbf4ffccd39cd816747db22471ae"
     },
     {
-      "bytes": 8394,
+      "bytes": 11755,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-package-report.json",
-      "sha256": "4a98bf3f206752b63347bd96a744732fa8c8d2903cacb018936dd8934462c0ae"
+      "sha256": "145d4a5b6b002c4c302892e69a22a877af45e6d898ab2a97657dbc440d9e83ab"
     },
     {
-      "bytes": 9920,
+      "bytes": 20063,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-reference-report.json",
-      "sha256": "d7e838d4664733324ace814df37cc9a870e02819fb4fe7a4bcfc4db166814215"
+      "sha256": "0d69ca24cb023cd6dbdeba142ac52db07597bfe2f6e5678148c3b78f21c82b5f"
     },
     {
       "bytes": 1827,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-fixture-report.json",
-      "sha256": "95d888d65993a60e6870eab3c47def863be84467c2161c4087336230796bc2b8"
+      "sha256": "4815ad718ae80772788afeced27b08d31ee8ae8ad0c279f19de931f10dcf9fb5"
     },
     {
       "bytes": 35753,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json",
-      "sha256": "a72bb82afabafa34c40e33f6da9b047e56f87749a9d38ee483b2df34731ac26d"
+      "sha256": "a5538ccbbedd65185e9c9c896a03da68c5682c849544c7de126548fd526357d5"
     },
     {
       "bytes": 4896,
@@ -91,14 +91,14 @@
       "sha256": "824d466257d7d70c03c6ece1f93952567eb1504d50fcaca15d00adb01a858bc8"
     },
     {
-      "bytes": 16032,
+      "bytes": 17394,
       "path": "scripts/kernel_contract_package.py",
-      "sha256": "b9912ba97d76c02c75431448985e4557a5750d3f5d60c76e1cf21929b0f7deae"
+      "sha256": "50ef4fd735b1029686dda82dbd3ac4a56eca0aab00766b59f4459635258456b5"
     },
     {
       "bytes": 11065,
       "path": "scripts/kernel_contract_reference.py",
-      "sha256": "5680d8264dea629cb1c8cc52d91241107ba8a312dc17735c90c09a3393a12dcb"
+      "sha256": "0a29ff987d17d3a68bb80f27ada4831d6606af228c2d61a9ad90bb8be650fc11"
     },
     {
       "bytes": 16596,
@@ -126,9 +126,9 @@
       "sha256": "159d50c38a03a230b478209971dc2cea38adc832c2347d3f0f550926838054e2"
     },
     {
-      "bytes": 2879,
+      "bytes": 2987,
       "path": "tests/test_kernel_contract_package.py",
-      "sha256": "ded04616b3677395f6f52bf6533ab6f6825001c6350906a2e4603f19a35b5cbf"
+      "sha256": "beb7bfb56322074e384dd1f19c92a0dd30cf444b4bb1af2ccaf333d6686be91e"
     },
     {
       "bytes": 1806,
@@ -258,7 +258,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "21182e1cde50ebedec8f96bbdae1e9917b333106",
+  "source_revision": "1ccc85ae86ec156908caf9ef577ef11945318761",
   "status": "pass-linux-security-mapping",
   "story_id": "4.1",
   "summary": {

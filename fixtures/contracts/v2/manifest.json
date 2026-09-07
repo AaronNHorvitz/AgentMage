@@ -5,13 +5,13 @@
   },
   "contract_schema_version": 2,
   "fixture_set": "kernel-contracts-v2",
-  "frozen_package_sha256": "e82239e970873cbf3caeaf4dff076ed5fc68babdf24ed0b77d6391e7419c0cb5",
+  "frozen_package_sha256": "55fa2e1f83e21535b9fa39138dd0d6e58a9bbbf4ffccd39cd816747db22471ae",
   "generated_oversized_case": {
     "expected_error_code": "contract.size.exceeded",
     "persisted": false,
     "size_bytes": 1048577
   },
-  "generator_revision": "2192b4d6c6ad4e6842c240d758acaad7619b55e5",
+  "generator_revision": "1ccc85ae86ec156908caf9ef577ef11945318761",
   "invalid_fixtures": [
     {
       "expected_error_code": "contract.version.unsupported",

@@ -994,7 +994,7 @@
     },
     {
       "path": "kernel/contracts/Cargo.toml",
-      "sha256": "960fb2e7c1128ed9508a667f7240aa67eb5bf6da95f8d24df97658a0af958088"
+      "sha256": "41b9192d56af6e360f2a77d065b823af009cc30ad04fdcb96c08f22cfc6fd6c8"
     },
     {
       "path": "kernel/engine/Cargo.toml",
@@ -1045,7 +1045,7 @@
       "sha256": "7546d14d8ec5b014cd0c8ce541f603e0208ac6cb237b6b29a6d56d7f1a45b490"
     }
   ],
-  "source_revision": "21182e1cde50ebedec8f96bbdae1e9917b333106",
+  "source_revision": "1ccc85ae86ec156908caf9ef577ef11945318761",
   "status": "pass-linux-architecture",
   "task_id": "4.1.2.4"
 }

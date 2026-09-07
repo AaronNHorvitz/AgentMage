@@ -3,7 +3,7 @@
   "canonical_byte_stability": "pass",
   "compatibility_rejection": "pass",
   "generated_oversized_case_count": 1,
-  "generator_revision": "2192b4d6c6ad4e6842c240d758acaad7619b55e5",
+  "generator_revision": "1ccc85ae86ec156908caf9ef577ef11945318761",
   "generator_sources": [
     {
       "path": "kernel/contracts/tests/contract_family.rs",
@@ -30,7 +30,7 @@
     "The oversized case is generated in memory and is not retained as a 1 MiB file.",
     "No macOS execution evidence or positive authority path is claimed."
   ],
-  "manifest_sha256": "8dc709019bf16bfc83340e4594945d647748a5340bbe2960c9dd8741a0b2a09b",
+  "manifest_sha256": "cc0bc1645c81e4835191d91beca51eb67797123b870bee575fcd948d4685782d",
   "network_authority": "none",
   "platform_status": {
     "linux_fixture_verification": "verified-local",
