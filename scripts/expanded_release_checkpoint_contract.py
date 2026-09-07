@@ -22,7 +22,7 @@ def check():
  expected=build()
  if not OUTPUT.is_file()or OUTPUT.read_bytes()!=expected:raise RuntimeError("expanded checkpoint corpus stale")
  value=json.loads(expected)
- if value["requirement_count"]!=294 or value["traceability_count"]!=294 or value["local_evidence_report_count"]!=142:raise RuntimeError("checkpoint inventory drift")
+ if value["requirement_count"]!=294 or value["traceability_count"]!=294 or value["local_evidence_report_count"]!=154:raise RuntimeError("checkpoint inventory drift")
  if len(value["documents"])!=10 or any(item["support_claim"]!="unsupported-pre-release" for item in value["documents"]):raise RuntimeError("documentation truth drift")
  if any(not case["visible"]or case["checkpoint_closed"]or case["g_ga_closed"]or case["package_produced"]or case["publication_allowed"]or case["support_promoted"] for case in value["cases"]):raise RuntimeError("release blocker drift")
  for key in ("supported_platform_count","enabled_model_count","signed_manifest_count","native_reproduction_count","reviewer_signature_count","user_approval_count","release_package_count","checkpoint_closure_count","promotion_count"):
@@ -30,5 +30,5 @@ def check():
 def main():
  parser=argparse.ArgumentParser();parser.add_argument("--write",action="store_true");args=parser.parse_args()
  if args.write:OUTPUT.parent.mkdir(parents=True,exist_ok=True);OUTPUT.write_bytes(build())
- check();print("validated 142 local reports and 512 AT-GA-002 blocker cases without checkpoint or release authority");return 0
+ check();print("validated 154 local reports and 512 AT-GA-002 blocker cases without checkpoint or release authority");return 0
 if __name__=="__main__":raise SystemExit(main())
