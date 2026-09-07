@@ -26,7 +26,11 @@ def valid_manifest() -> dict[str, object]:
             "repository": "https://github.com/AaronNHorvitz/AgentMage",
             "publish": False,
             "build": False,
-            "exclude": ["tests/path_corpus.rs", "tests/platform_path_contract.rs"],
+            "exclude": [
+                "tests/engineering_runtime_record_types.rs",
+                "tests/path_corpus.rs",
+                "tests/platform_path_contract.rs",
+            ],
         },
         "dependencies": copy.deepcopy(DIRECT_DEPENDENCIES),
         "lints": {"rust": {"unsafe_code": "forbid"}},

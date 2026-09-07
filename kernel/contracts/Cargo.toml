@@ -8,6 +8,7 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 exclude = [
+  "tests/engineering_runtime_record_types.rs",
   "tests/path_corpus.rs",
   "tests/platform_path_contract.rs",
 ]
