@@ -28,11 +28,11 @@ class RuntimeComponentRemovalEvidenceTests(unittest.TestCase):
         self.assertEqual(self.report["disposition"], "LOCAL-SOURCE-PASS")
         self.assertEqual(
             sum(item["tests"]["passed"] for item in self.report["scenarios"]),
-            923,
+            1788,
         )
         self.assertEqual(
             sum(item["tests"]["ignored"] for item in self.report["scenarios"]),
-            11,
+            62,
         )
 
     def test_source_log_result_manifest_and_limitation_mutations_fail_closed(self) -> None:
