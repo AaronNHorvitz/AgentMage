@@ -192,3 +192,20 @@ that decision, the next authorized task is to reconcile the license authority
 and reviewed manifest hashes, regenerate supply-chain and all dependent evidence
 once, rerun the readiness gate in a native environment that permits its required
 socket/namespace/browser checks, and only then begin Sub-task 13.3.4.1.
+
+### Final safe checkpoint — operator stop
+
+The preceding license-collision paragraph records the state observed during the
+run. Before this checkpoint was committed, an independent owner-side commit
+`b4b8f4d8` reverted `2fea871a`; the local branch therefore no longer contains
+the BUSL migration or duplicate Decision 0051. No license-collision decision is
+currently requested from the owner.
+
+At the final safe checkpoint, the run-specific STOP control remained absent but
+`/var/home/aaronnhorvitz/.local/share/agentmage-run/STOP` was present. Work
+stopped immediately. The six generated Story 1.2/Story 3.1 evidence files and
+the strict-local policy update remain uncommitted and preserved. No readiness
+gate, model/platform qualification, release, publication, or full-plan traversal
+is claimed. The next action is operator-controlled: remove the global STOP file
+and explicitly resume; then revalidate the concurrent revert and retained
+worktree before completing the evidence batch.
