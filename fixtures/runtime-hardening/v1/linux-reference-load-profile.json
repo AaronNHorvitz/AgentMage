@@ -105,9 +105,9 @@
         "-p",
         "agentmage-kernel-engine",
         "--lib",
-        "durable_large_"
+        "runtime_loop::tests::durable_"
       ],
-      "minimum_passed": 2,
+      "minimum_passed": 6,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 2097152,
       "requires_load_metrics": false
