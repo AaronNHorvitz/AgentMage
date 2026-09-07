@@ -118,3 +118,77 @@ revision-bound evidence uses the corrected sources, then refresh the planning
 manifest/report, blocker register, boundary chain, contract index, SBOM, and all
 affected downstream evidence once in dependency order. After readiness passes,
 implement Sub-task 13.3.4.1 in `platforms/linux-inference`.
+
+## Latest checkpoint — 2026-09-07
+
+This checkpoint supersedes the earlier resume paragraph above. The bounded
+readiness implementation and its first consolidated evidence pass were retained
+in commits `735a58a5`, `dd53b88e`, `d4d97030`, `d359af20`, and `691ac2a5`, with
+follow-up evidence repairs through `e1b32e7f`. The resumed audit then retained:
+
+- `2909e972`: close the live kernel-contract source package over all current
+  contract modules while explicitly excluding the repository-bound engineering
+  schema test from the self-contained crate;
+- `1ccc85ae`: refresh the live schema-v2 reference from 249 exports and 33
+  versioned contracts to the current 519 exports and 96 versioned contracts;
+- `9613571b`, `06252ba4`, `f44a7abf`, and `f40b25f3`: regenerate the package,
+  reference, fixture, architecture, security, Story 4.1, and Sprint 4 evidence,
+  and routinely advance the Story 4.1 and Sprint 4 automated review pins; and
+- `09b3c1fc`: repair three expanded-closure mutation checks: repeated contract
+  evidence markers, the nine-file Docker prerequisite package, and the distinct
+  material-claim authority mapping.
+
+Verified results in this resumed audit:
+
+- the kernel-contract package, Rustdoc reference, golden fixtures, architecture
+  report, security map, Story 4.1 gate, and Sprint 4 gate pass; their combined
+  story/sprint mutation suite passes 15 tests;
+- current requirements, planning scope, task graph, status, supply-chain,
+  artifact scan, dependency, policy, traceability, product-CI contract, schema,
+  Markdown, strict-local, and hostile-network checks pass in their recorded
+  pre-license-migration closure;
+- the strict-local audit reports zero undeclared network paths and all eight
+  hostile network mutations are blocked before execution; 16 focused tests pass;
+- the additional component-inventory, configuration-review, configuration-
+  startup, contract-index, Docker prerequisite, and material-claim repairs pass
+  their focused tests; and
+- fail-fast Python traversal reached 1,628 tests after excluding only exact
+  unavailable native/browser wrappers. It identified and preserved the existing
+  sandbox blockers below rather than weakening their gates.
+
+Exact unavailable prerequisites remain:
+
+- Chromium/Mermaid cannot launch in the managed sandbox;
+- IPv4 and Unix socket creation is denied, blocking the native Ubuntu listener,
+  VS Code host-bridge, inference-listener, and related native checks;
+- network-namespace inspection (`ip -j link show`) and the path-race namespace
+  harness are denied; and
+- the runtime-artifact boundary review cannot pass
+  `resume-report-integrity` because its required filtered host resume campaign is
+  unavailable here. Historical replay therefore stops truthfully at the Story
+  6.1 path-race gate.
+
+At 2026-09-07 17:47 -0500, an independent owner-authored commit,
+`2fea871a` (`Decision 0051: Business Source License 1.1`), advanced both HEAD and
+`origin/build/agentmage-ga` while this readiness traversal was running. Its
+license changes are preserved. It also creates a second accepted Decision 0051
+alongside `0051-decision-0048-restart-readiness-correction.md`. The new decision
+expressly forbids renumbering, so the agent cannot infer whether the license
+decision should become Decision 0052 or whether another identity is intended.
+Current documentation validation consequently fails the unique governance and
+Decision 0001 license-consistency closure. No evidence was regenerated over
+that unresolved authority collision.
+
+The worktree retains six generated evidence files from the interrupted
+pre-license refresh plus `security/strict-local-source-policy.json`; these are
+uncommitted and now stale relative to `2fea871a`, so they were preserved rather
+than committed as current. Product truth remains `scaffolded`: no model is
+enabled, no platform is supported, no package is released, and no release
+approval is claimed.
+
+Blocking owner action: assign the Business Source License decision a unique
+accepted identity or explicitly authorize another collision resolution. After
+that decision, the next authorized task is to reconcile the license authority
+and reviewed manifest hashes, regenerate supply-chain and all dependent evidence
+once, rerun the readiness gate in a native environment that permits its required
+socket/namespace/browser checks, and only then begin Sub-task 13.3.4.1.
