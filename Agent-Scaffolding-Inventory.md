@@ -26,6 +26,8 @@ Stabilization scope freeze: inactive (Decision 0047) — the complete preserved 
 
 First-release surface: standalone hardened desktop application (Decision 0048).
 
+First-release gate: Story 25.3 under the Decision 0051 restart-readiness correction.
+
 This inventory preserves accepted target requirements and historical wording; it
 does not promote them to current product claims. The 294 stable requirements and
 their additions-only identities remain protected. Under

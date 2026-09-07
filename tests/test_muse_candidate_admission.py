@@ -31,7 +31,7 @@ class MuseCandidateAdmissionTests(unittest.TestCase):
             mutate(record)
             self.assertTrue(admission.validate_runtime(record))
 
-    def test_source_policy_and_kernel_family_branch_drift_fail(self) -> None:
+    def test_historical_source_policy_and_kernel_family_branch_drift_fail(self) -> None:
         for mutate in (
             lambda record: record["policy"].update({"sha256": "0" * 64}),
             lambda record: record["codec_contract"].update({"kernel_family_branch_allowed": True}),
@@ -40,6 +40,18 @@ class MuseCandidateAdmissionTests(unittest.TestCase):
             record = copy.deepcopy(admission.load(admission.SOURCE))
             mutate(record)
             self.assertTrue(admission.validate_source(record))
+
+    def test_current_policy_binding_is_separate_and_current(self) -> None:
+        self.assertEqual(admission.validate_current_policy(), [])
+        original = admission.POLICY
+        try:
+            admission.POLICY = admission.CATALOG
+            self.assertIn(
+                "current catalog policy binding is stale",
+                admission.validate_current_policy(),
+            )
+        finally:
+            admission.POLICY = original
 
 
 if __name__ == "__main__":

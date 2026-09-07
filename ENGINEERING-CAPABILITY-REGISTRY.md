@@ -16,6 +16,8 @@ Stabilization scope freeze: inactive (Decision 0047) — the complete preserved 
 
 First-release surface: standalone hardened desktop application (Decision 0048).
 
+First-release gate: Story 25.3 under the Decision 0051 restart-readiness correction.
+
 The Rust kernel currently validates, seals, registers, resolves, and executes
 closed manifests through an injected execution/verifier port and includes one
 static Repository Review candidate manifest. This is scaffold evidence only:

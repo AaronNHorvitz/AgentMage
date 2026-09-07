@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "decision_id": "ADR-0051",
+  "milestones": {
+    "v1.0-preview-windows": {
+      "platforms": [
+        "windows-x86_64"
+      ],
+      "surface": "standalone-hardened-desktop",
+      "normal_operation_network": "denied",
+      "required_story_ids": [
+        "22.5",
+        "25.2",
+        "25.3",
+        "76.2",
+        "76.3",
+        "77.2"
+      ],
+      "release_gate_story_id": "25.3"
+    },
+    "v1.0-full-ga": {
+      "platforms": [
+        "fedora-x86_64",
+        "ubuntu-x86_64",
+        "windows-x86_64"
+      ],
+      "surface": "complete-preserved-plan",
+      "normal_operation_network": "policy-bound",
+      "required_story_ids": [
+        "25.1",
+        "166.1"
+      ],
+      "release_gate_story_id": "166.1"
+    },
+    "retained-platforms": {
+      "platforms": [
+        "macos-arm64",
+        "fedora-x86_64",
+        "ubuntu-x86_64"
+      ],
+      "surface": "retained-desktop-and-vscode",
+      "normal_operation_network": "profile-specific",
+      "required_story_ids": [
+        "25.1",
+        "76.1",
+        "77.1"
+      ],
+      "release_gate_story_id": "25.1"
+    }
+  },
+  "story_applicability": {
+    "25.3": [
+      "v1.0-preview-windows"
+    ],
+    "76.2": [
+      "v1.0-preview-windows",
+      "v1.0-full-ga"
+    ],
+    "76.3": [
+      "v1.0-preview-windows",
+      "v1.0-full-ga"
+    ],
+    "77.2": [
+      "v1.0-preview-windows",
+      "v1.0-full-ga"
+    ]
+  },
+  "source_document_write_policy": "denied",
+  "authorized_encrypted_application_state": true,
+  "network_phases": {
+    "normal-question-answering": "denied",
+    "model-acquisition": "separate-explicit-consent",
+    "signed-update-retrieval": "separate-explicit-consent",
+    "diagnostic-transmission": "explicit-per-report-consent-after-local-redaction"
+  }
+}

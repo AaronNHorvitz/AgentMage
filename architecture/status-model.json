@@ -7,7 +7,8 @@
     "ADR-0045",
     "ADR-0046",
     "ADR-0047",
-    "ADR-0048"
+    "ADR-0048",
+    "ADR-0051"
   ],
   "status": "accepted",
   "reference_contract": "architecture/status-model.json#<collection>=<record-id>",
@@ -635,7 +636,8 @@
       "Current enabled models: none.",
       "Current supported platforms: none.",
       "Stabilization scope freeze: inactive (Decision 0047)",
-      "First-release surface: standalone hardened desktop application (Decision 0048)."
+      "First-release surface: standalone hardened desktop application (Decision 0048).",
+      "First-release gate: Story 25.3 under the Decision 0051 restart-readiness correction."
     ]
   }
 }

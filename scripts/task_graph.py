@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Validate Decisions 0042-0045 task identities, dependencies, and roadmap coverage."""
+"""Validate governed story identities, dependencies, and release applicability."""
 
 from __future__ import annotations
 
 import re
+import json
 import sys
 from collections import Counter
 from pathlib import Path
@@ -51,7 +52,23 @@ DECISION_0043_0044_STORIES = (
     "125.3",
     "126.2",
 )
-DECISION_STORIES = DECISION_0042_STORIES + DECISION_0043_0044_STORIES
+DECISION_0051_STORIES = ("25.3", "76.2", "76.3", "77.2")
+DECISION_STORIES = (
+    DECISION_0042_STORIES + DECISION_0043_0044_STORIES + DECISION_0051_STORIES
+)
+RELEASE_APPLICABILITY_PATH = ROOT / "architecture" / "release-applicability.json"
+EXPECTED_STORY_APPLICABILITY = {
+    "25.3": ["v1.0-preview-windows"],
+    "76.2": ["v1.0-preview-windows", "v1.0-full-ga"],
+    "76.3": ["v1.0-preview-windows", "v1.0-full-ga"],
+    "77.2": ["v1.0-preview-windows", "v1.0-full-ga"],
+}
+EXPECTED_NETWORK_PHASES = {
+    "normal-question-answering": "denied",
+    "model-acquisition": "separate-explicit-consent",
+    "signed-update-retrieval": "separate-explicit-consent",
+    "diagnostic-transmission": "explicit-per-report-consent-after-local-redaction",
+}
 
 STORY = re.compile(r"^#### \[[ xX]\] Story (\d+\.\d+)\b", re.MULTILINE)
 TASK = re.compile(r"^- \[[ xX]\] \*\*Task (\d+\.\d+\.\d+)\b", re.MULTILINE)
@@ -104,7 +121,53 @@ def _cycle(graph: dict[str, set[str]]) -> list[str]:
     return []
 
 
-def validate_text(tasks: str, plan: str, architecture: str) -> list[str]:
+def validate_applicability(value: object, story_set: set[str]) -> list[str]:
+    failures: list[str] = []
+    if not isinstance(value, dict):
+        return ["release applicability must be an object"]
+    if value.get("schema_version") != 1 or value.get("decision_id") != "ADR-0051":
+        failures.append("release applicability must bind schema 1 and ADR-0051")
+
+    milestones = value.get("milestones")
+    expected_milestones = {
+        "v1.0-preview-windows",
+        "v1.0-full-ga",
+        "retained-platforms",
+    }
+    if not isinstance(milestones, dict) or set(milestones) != expected_milestones:
+        failures.append("release applicability milestone set is incomplete")
+        milestones = {}
+    expected_gates = {
+        "v1.0-preview-windows": "25.3",
+        "v1.0-full-ga": "166.1",
+        "retained-platforms": "25.1",
+    }
+    for milestone_id, gate in expected_gates.items():
+        record = milestones.get(milestone_id, {})
+        if not isinstance(record, dict) or record.get("release_gate_story_id") != gate:
+            failures.append(f"{milestone_id} release gate must be Story {gate}")
+            continue
+        required = record.get("required_story_ids")
+        if not isinstance(required, list) or any(item not in story_set for item in required):
+            failures.append(f"{milestone_id} has an unknown required story")
+
+    if value.get("story_applicability") != EXPECTED_STORY_APPLICABILITY:
+        failures.append("Decision 0051 story applicability differs from the accepted matrix")
+    if value.get("source_document_write_policy") != "denied":
+        failures.append("preview source-document writes must remain denied")
+    if value.get("authorized_encrypted_application_state") is not True:
+        failures.append("authorized encrypted application state must remain explicit")
+    if value.get("network_phases") != EXPECTED_NETWORK_PHASES:
+        failures.append("preview network phases or consent boundaries differ")
+    return failures
+
+
+def validate_text(
+    tasks: str,
+    plan: str,
+    architecture: str,
+    applicability: object | None = None,
+) -> list[str]:
     failures: list[str] = []
     story_ids = STORY.findall(tasks)
     task_ids = TASK.findall(tasks)
@@ -119,6 +182,7 @@ def validate_text(tasks: str, plan: str, architecture: str) -> list[str]:
     for label, expected_stories in (
         ("Decision 0042", DECISION_0042_STORIES),
         ("Decisions 0043-0045", DECISION_0043_0044_STORIES),
+        ("Decision 0051", DECISION_0051_STORIES),
     ):
         missing = sorted(set(expected_stories) - story_set)
         if missing:
@@ -153,7 +217,10 @@ def validate_text(tasks: str, plan: str, architecture: str) -> list[str]:
 
     cycle = _cycle(graph)
     if cycle:
-        failures.append("Decision 0042 story dependency cycle: " + " -> ".join(cycle))
+        failures.append("governed story dependency cycle: " + " -> ".join(cycle))
+
+    if applicability is not None:
+        failures.extend(validate_applicability(applicability, story_set))
 
     foundational_headings = re.findall(
         r"^## \[[ xX]\] Foundational Runtime Epic F\d+ - ", tasks, re.MULTILINE
@@ -178,6 +245,7 @@ def validate_text(tasks: str, plan: str, architecture: str) -> list[str]:
 
 
 def main() -> int:
+    applicability = json.loads(RELEASE_APPLICABILITY_PATH.read_text(encoding="utf-8"))
     failures = validate_text(
         (ROOT / "TASKS.md").read_text(encoding="utf-8"),
         (ROOT / "IMPLEMENTATION-PLAN.md").read_text(encoding="utf-8"),
@@ -188,8 +256,10 @@ def main() -> int:
                 "ENGINEERING-RUNTIME.md",
                 "MODEL-GATEWAY.md",
                 "ENGINEERING-CAPABILITY-REGISTRY.md",
+                "architecture/release-applicability.json",
             )
         ),
+        applicability,
     )
     if failures:
         for failure in failures:
@@ -199,7 +269,8 @@ def main() -> int:
         "task graph validation passed: "
         f"{len(DECISION_0042_STORIES)} Decision 0042 stories, "
         f"{len(DECISION_0043_0044_STORIES)} Decisions 0043-0045 stories, "
-        "4 foundational runtime epics"
+        f"{len(DECISION_0051_STORIES)} Decision 0051 stories, "
+        "3 release applicability classes, 4 foundational runtime epics"
     )
     return 0
 

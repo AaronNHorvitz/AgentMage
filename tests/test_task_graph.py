@@ -2,7 +2,13 @@ from __future__ import annotations
 
 import unittest
 
-from scripts.task_graph import DECISION_STORIES, validate_text
+from scripts.task_graph import (
+    DECISION_STORIES,
+    EXPECTED_NETWORK_PHASES,
+    EXPECTED_STORY_APPLICABILITY,
+    validate_applicability,
+    validate_text,
+)
 
 
 class TaskGraphTests(unittest.TestCase):
@@ -43,6 +49,45 @@ class TaskGraphTests(unittest.TestCase):
         failures = validate_text(text, "1.2 2.3", "1.2 2.3")
         self.assertTrue(any("duplicate task" in failure for failure in failures))
         self.assertTrue(any("dependency cycle" in failure for failure in failures))
+
+    def test_decision_0051_stories_cannot_be_omitted(self) -> None:
+        for story_id in ("25.3", "76.2", "76.3", "77.2"):
+            tasks = "".join(
+                f"#### [ ] Story {item} - Test\n\n**Dependencies:** None.\n\n"
+                for item in DECISION_STORIES
+                if item != story_id
+            )
+            failures = validate_text(tasks, " ".join(DECISION_STORIES), " ".join(DECISION_STORIES))
+            self.assertTrue(any(story_id in failure for failure in failures))
+
+    def test_release_applicability_is_closed_and_fail_closed(self) -> None:
+        milestones = {
+            "v1.0-preview-windows": {
+                "release_gate_story_id": "25.3",
+                "required_story_ids": ["25.3", "76.2", "76.3", "77.2"],
+            },
+            "v1.0-full-ga": {
+                "release_gate_story_id": "166.1",
+                "required_story_ids": ["166.1"],
+            },
+            "retained-platforms": {
+                "release_gate_story_id": "25.1",
+                "required_story_ids": ["25.1", "76.1", "77.1"],
+            },
+        }
+        value = {
+            "schema_version": 1,
+            "decision_id": "ADR-0051",
+            "milestones": milestones,
+            "story_applicability": EXPECTED_STORY_APPLICABILITY,
+            "source_document_write_policy": "denied",
+            "authorized_encrypted_application_state": True,
+            "network_phases": EXPECTED_NETWORK_PHASES,
+        }
+        story_set = set(DECISION_STORIES) | {"25.1", "76.1", "77.1", "166.1"}
+        self.assertEqual(validate_applicability(value, story_set), [])
+        value["milestones"]["v1.0-preview-windows"]["required_story_ids"].append("999.9")
+        self.assertTrue(any("unknown required story" in item for item in validate_applicability(value, story_set)))
 
 
 if __name__ == "__main__":

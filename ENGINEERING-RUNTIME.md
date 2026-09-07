@@ -20,6 +20,8 @@ Stabilization scope freeze: inactive (Decision 0047) — the complete preserved 
 
 First-release surface: standalone hardened desktop application (Decision 0048).
 
+First-release gate: Story 25.3 under the Decision 0051 restart-readiness correction.
+
 ## 1. Purpose
 
 The Engineering Runtime is AgentMage's Rust-owned engineering harness. It

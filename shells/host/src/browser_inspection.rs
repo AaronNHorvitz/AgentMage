@@ -301,9 +301,11 @@ mod tests {
             .then(|| "visible target".to_owned()),
             action_grant_sha256: "a".repeat(64),
             max_result_bytes: 4_096,
-            max_download_bytes: (action == BrowserInspectionAction::Download)
-                .then_some(8_192)
-                .unwrap_or(0),
+            max_download_bytes: if action == BrowserInspectionAction::Download {
+                8_192
+            } else {
+                0
+            },
             redaction_required: matches!(
                 action,
                 BrowserInspectionAction::Inspect | BrowserInspectionAction::Screenshot

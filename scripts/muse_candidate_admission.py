@@ -16,6 +16,10 @@ CANDIDATE: Final = ROOT / "model-profiles/candidates/muse-glimmer-30b-text-8k"
 SOURCE: Final = CANDIDATE / "source-admission.json"
 RUNTIME: Final = CANDIDATE / "runtime-support.json"
 POLICY: Final = ROOT / "MODEL-PROVENANCE-POLICY.md"
+CATALOG: Final = ROOT / "model-profiles/exact-profile-catalog.json"
+HISTORICAL_POLICY_SHA256: Final = (
+    "e20df3e968b6e9640ed814f4952f4c8b5accb032c62fe28422447c38e0544e75"
+)
 SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
 COMMIT: Final = re.compile(r"^[0-9a-f]{40}$")
 ALLOWED_HOSTS: Final = {"research.meta.ai", "huggingface.co", "github.com"}
@@ -50,8 +54,8 @@ def validate_source(record: dict[str, object]) -> list[str]:
     policy = record["policy"]
     if not isinstance(policy, dict) or policy.get("path") != "MODEL-PROVENANCE-POLICY.md":
         failures.append("source policy binding is absent")
-    elif policy.get("sha256") != _sha256(POLICY):
-        failures.append("source policy binding is stale")
+    elif policy.get("sha256") != HISTORICAL_POLICY_SHA256:
+        failures.append("historical source policy binding changed")
 
     identity = record["identity"]
     if not isinstance(identity, dict):
@@ -200,8 +204,38 @@ def validate_runtime(record: dict[str, object]) -> list[str]:
     return failures
 
 
+def validate_current_policy() -> list[str]:
+    """Keep current applicability separate from immutable historical admission."""
+    catalog = load(CATALOG)
+    failures: list[str] = []
+    if catalog.get("policy_path") != "MODEL-PROVENANCE-POLICY.md":
+        failures.append("current catalog policy path changed")
+    if catalog.get("policy_sha256") != _sha256(POLICY):
+        failures.append("current catalog policy binding is stale")
+    profiles = catalog.get("profiles")
+    if not isinstance(profiles, list):
+        failures.append("current exact-profile catalog is malformed")
+    else:
+        muse_profiles = [
+            item
+            for item in profiles
+            if isinstance(item, dict)
+            and str(item.get("profile_id", "")).startswith("muse-glimmer-30b-q4-k-m")
+        ]
+        if not muse_profiles:
+            failures.append("current catalog omits Muse candidate profiles")
+        for profile in muse_profiles:
+            if profile.get("enabled") is not False or profile.get("automatic_fallback") is not False:
+                failures.append("current Muse candidate gained activation or fallback")
+    return failures
+
+
 def validate() -> list[str]:
-    return validate_source(load(SOURCE)) + validate_runtime(load(RUNTIME))
+    return (
+        validate_source(load(SOURCE))
+        + validate_runtime(load(RUNTIME))
+        + validate_current_policy()
+    )
 
 
 def main() -> int:

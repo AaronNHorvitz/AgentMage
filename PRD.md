@@ -39,6 +39,8 @@ Stabilization scope freeze: inactive (Decision 0047) — the complete preserved 
 
 First-release surface: standalone hardened desktop application (Decision 0048).
 
+First-release gate: Story 25.3 under the Decision 0051 restart-readiness correction.
+
 This PRD specifies the accepted target product; it does not claim that the
 target is currently available. The current state is governed by
 [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md)

@@ -40,6 +40,8 @@ Stabilization scope freeze: inactive (Decision 0047) — the complete preserved 
 
 First-release surface: standalone hardened desktop application (Decision 0048).
 
+First-release gate: Story 25.3 under the Decision 0051 restart-readiness correction.
+
 The complete 17-release-epic, four-cross-cutting-foundational-runtime-epic,
 169-sprint, 294-requirement plan below remains the granular execution authority
 for the accepted target product. It is preserved,
@@ -2700,7 +2702,12 @@ later-story `RV-52` scopes.
   - [x] **Sub-task 13.3.3.1:** `D027-S13-MUSE-CODEC` mutates tokenizer, template, reasoning flag, message boundary, end token, tool envelope, stream split, unknown field, trailing bytes, and proposal identity; require inert rejection or exact decoding with no authority change.
   - [x] **Sub-task 13.3.3.2:** `D027-S13-MUSE-ISOLATION` probes workspace, environment, credentials, grants, tools, sockets, network, sibling processes, and persistent files; require zero access and bounded termination.
   - [x] **Sub-task 13.3.3.3:** `D027-S13-MUSE-REPEAT` reruns both profiles while changing one tuple field at a time; require separate reports, visible incomparability, and no universal determinism language.
-  - [ ] **Sub-task 13.3.3.4 - Product security evidence:** Extend `AT-MODEL-003`, `AT-MODEL-005`, `RV-13`, `RV-14`, and the early Muse portion of `RV-41`; map `SR-AI-015`, `SR-AI-016`, `SR-MGM-004`; retain first-party sources, exact manifests, preflight, packet capture, raw trials, resource traces, codec vectors, and disposition.
+  - [ ] **Sub-task 13.3.3.4 - Product security evidence:** Extend `AT-MODEL-003`, `AT-MODEL-005`, `RV-13`, `RV-14`, and the early Muse portion of `RV-41`; map `SR-AI-015`, `SR-AI-016`, `SR-MGM-004`; retain first-party sources, exact manifests, preflight, packet capture, raw trials, resource traces, codec vectors, and disposition. `BLOCKED_EXTERNAL(platform=pinned native inference host and independent product-security review venue; artifact=exact packet capture, raw native trial bundle, and independent decoder/product-security disposition; action=authorized model owner runs the packet-captured native campaign and transfers untouched results for independent review; credential=existing model artifact access if required; payment=none)`; `substitution_set=empty`.
+
+- [ ] **Task 13.3.4 - Correct the model-facing codec before renewed qualification**
+  - [ ] **Sub-task 13.3.4.1:** Accept only bounded model-origin text or schema-constrained tool arguments, construct canonical proposal identities and payload digests in trusted code, render role-aware messages and tool schemas at the Muse edge, and retain every existing authority and completion check. **Execution:** local; owner=`platforms/linux-inference`; venue=repository-local.
+  - [ ] **Sub-task 13.3.4.2:** Add known-answer, decode, truncation, stop-reason, transport, formatting, task-quality, and policy-rejection diagnostics without weakening strict unknown-field or malformed-output refusal. **Execution:** local; owner=`platforms/linux-inference`; venue=repository-local.
+  - [ ] **Sub-task 13.3.4.3:** Run a newly versioned, synthetic-only qualification tuple with an adequate output budget and per-trial diagnostics; preserve every prior rejected result, activate no model by inference, and perform no artifact acquisition or network access. **Execution:** local; owner=`model qualification`; venue=repository-local when the exact already-authorized artifact and runtime are available.
 
 ##### Story Acceptance Criteria
 
@@ -2793,7 +2800,14 @@ task/sub-task, every story criterion, every sprint criterion, `AM-MDL-004`, `AM-
 Story Definition of Done are complete with current evidence. A truthful Muse non-pass may close the
 evidence task but enables no profile. Otherwise the sprint is BLOCKED.
 
-**Current gate result:** BLOCKED with all currently executable local contract, negative Linux cross-adapter parity, and exact Muse evaluation work complete. The retained native and Docker Model Runner compatibility trials fail published quality thresholds and therefore cannot be merged or enabled. Remaining blockers are the native macOS adapter and execution evidence, successful matched cross-platform parity for an admitted profile, independent decoder review, and exact Muse packet-capture/product-security closure. Linux evidence is not substituted for those classes. The exact Muse quality profile is `REJECTED`, remains disabled, and triggers no fallback.
+**Current gate result:** BLOCKED. The additions-only corrective codec and diagnostic work in Task
+13.3.4 is the next local gate after restart readiness; prior negative Linux cross-adapter parity and
+exact Muse results remain immutable. The retained native and Docker Model Runner compatibility trials
+fail published quality thresholds and therefore cannot be merged or enabled. Other remaining blockers
+are the native macOS adapter and execution evidence, successful matched cross-platform parity for an
+admitted profile, independent decoder review, and exact Muse packet-capture/product-security closure.
+Linux evidence is not substituted for those classes. The exact Muse quality profile is `REJECTED`,
+remains disabled, and triggers no fallback.
 
 #### [x] Story 13.5 - Candidate-Neutral Model and Endpoint Identity
 
@@ -4495,10 +4509,12 @@ physical MacBook accessibility tuples; `substitution_set=empty`.
 
 ### [ ] Sprint 25 - v0.1 Cross-Platform Release
 
-**Blocked:** every remaining row depends on the production signer/trust root, signed Fedora,
-Ubuntu, and macOS packages, installed native workflows, qualified model/runtime evidence, manual
-platform/accessibility campaigns, or owning-sprint external tuples named below; every
-`substitution_set=empty`.
+**Dependency state:** Story 25.1 and the remaining Story 25.2 rows retain their production
+signer/trust-root, signed-package, installed-native-workflow, qualified-model/runtime,
+platform/accessibility, and owning-sprint external tuples with every `substitution_set=empty`.
+Decision 0051 adds locally executable Story 25.3 gate implementation; its installed-candidate,
+model, Windows, signing, publication, and independent-review acceptance rows remain separately
+dependency-bound or external.
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
 
@@ -4580,16 +4596,80 @@ root and signed Fedora, Ubuntu, and macOS packages named under Task 25.2.2;
 - [ ] **Story AC 25.2.AC2:** Given valid and adversarial signed manual patches, when `RV-22` runs, then only the exact authorized non-downgrade patch succeeds, rollback preserves security and data integrity, and revoked or unsupported states remain visibly constrained. Blocked on Sub-task 25.2.2.2's exact production signer/trust-root and signed-platform-package tuple; `substitution_set=empty`.
 - [x] **Story AC 25.2.AC3:** Given the complete tabletop evidence, when an independent reviewer reconstructs each timeline, then every action, decision, failure, notification, open risk, and follow-up owner is present and no synthetic secret canary is disclosed. Evidence: the gate validator independently recomputes the four ordered eleven-transition timelines, participant inventory, decisions, notifications, risks, owners, and zero-match content scan; the gate makes no external-human-review claim.
 
+#### [ ] Story 25.3 - v1.0-preview Release Gate
+
+**Dependencies:** Stories 22.5, 25.2, 76.2, 76.3, and 77.2; the Decision 0051
+`v1.0-preview-windows` applicability record; the exact Epic 10 Windows preview rows; one
+Decision 0044-approved model; and the Decision 0021 independent signed-release review.
+
+**Current status:** `DEPENDENCY_BLOCKED`. Local gate implementation is executable, but release
+acceptance remains blocked on the registered standalone, model, Windows, signing, clean-guest,
+accessibility, and independent-review prerequisites. No publication is authorized and every
+external `substitution_set=empty`.
+
+**User-facing value:** As a nontechnical Windows user, I need one fail-closed acceptance gate so
+that the installer, model, offline cited-answer workflow, recovery, limitations, and clean removal
+are evaluated as one exact product rather than inferred from separate component checks.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 25.3.1 - Implement the preview decision gate**
+  - [ ] **Sub-task 25.3.1.1:** Define the closed candidate manifest binding the installer, host,
+    workers, local assets, approved model profile, trust root, update policy, support documents,
+    source-format matrix, and evidence index. **Execution:** local; owner=preview-release-gate;
+    venue=repository-local.
+  - [ ] **Sub-task 25.3.1.2:** Reject missing, stale, failed, skipped, unknown, substituted,
+    unsigned, unapproved, network-dependent, or cross-platform evidence and preserve every
+    physical-only blocker. **Execution:** local; owner=preview-release-gate;
+    venue=repository-local.
+  - [ ] **Sub-task 25.3.1.3:** Require explicit release-owner authorization as a final separate
+    input; a passing technical candidate must never publish itself. **Execution:** local;
+    owner=preview-release-gate; venue=repository-local.
+- [ ] **Task 25.3.2 - Exercise the installed preview journey**
+  - [ ] **Sub-task 25.3.2.1:** On a fresh standard-user Windows 11 x64 Decision 0040 KVM guest,
+    install the exact signed candidate without developer tooling, obtain or discover one eligible
+    model with explicit consent, select a folder, ask questions, inspect citations and omissions,
+    cancel, restart, recover, and uninstall. `BLOCKED_EXTERNAL(platform=licensed Windows 11 x64
+    KVM guest; artifact=exact signed preview candidate and one approved model; action=provision the
+    admitted guest and candidate, then transfer untouched lifecycle evidence; credential=Windows
+    media and production signing access; payment=license or signing costs if applicable)`;
+    `substitution_set=empty`.
+  - [ ] **Sub-task 25.3.2.2:** Prove normal question-answering remains offline across the whole
+    process tree and that model acquisition, update retrieval, and per-report diagnostics are
+    separately consented phases. `BLOCKED_EXTERNAL(platform=instrumented Windows 11 x64 KVM
+    guest; artifact=whole-process-tree packet, DNS, listener, consent, and denial observations;
+    action=execute the declared network phases against the exact candidate and transfer untouched
+    observations; credential=approved acquisition/update endpoints if exercised; payment=network
+    or endpoint costs if applicable)`; `substitution_set=empty`.
+  - [ ] **Sub-task 25.3.2.3:** Obtain the independent review required by Decision 0021 against
+    the exact candidate and evidence closure. `BLOCKED_EXTERNAL(platform=independent review
+    environment; artifact=signed findings, dispositions, reruns, and final review decision;
+    action=commission the authorized independent reviewer and transfer the immutable decision;
+    credential=reviewer and signing identity; payment=review cost if applicable)`;
+    `substitution_set=empty`.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 25.3.AC1:** Given the exact signed candidate and approved model, when a fresh
+  Windows 11 user completes the preview journey, then cited answers, visible omissions,
+  cancellation, restart, recovery, and clean uninstall pass without developer tooling.
+- [ ] **Story AC 25.3.AC2:** Given every required blocker and negative state, when the gate runs,
+  then no substituted, stale, unknown, unsigned, unapproved, externally dependent, or
+  independently unreviewed candidate can pass or publish.
+- [ ] **Story AC 25.3.AC3:** Given read-only source scope, when the product runs, then user source
+  documents remain unchanged while only authorized encrypted application state is retained and
+  normal question-answering emits no network traffic.
+
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 25.AC1:** Every `AM-*` v0.1 backlog row is complete with its required `AT-*` receipts. Blocked on every exact open Story 25.1 and Story 25.2 tuple; `substitution_set=empty`.
+- [ ] **Sprint AC 25.AC1:** Every `AM-*` v0.1 backlog row and the Story 25.3 preview-gate row is complete with its required `AT-*` receipts. Blocked on every exact open Story 25.1, Story 25.2, and Story 25.3 tuple; `substitution_set=empty`.
 - [ ] **Sprint AC 25.AC2:** Every Section 31B threshold passes without waiver on the declared platforms. Blocked on the exact platform, model/runtime, accessibility, and manual-campaign tuples above; `substitution_set=empty`.
 - [ ] **Sprint AC 25.AC3:** `AT-HOF-001`, applicable historical `AT-VSC-001`, `AT-VSC-002`, `AT-VSC-003`, `AT-MODEL-003` through `AT-MODEL-005`, `AT-CLASS-001`, `AT-AGENT-001`, `AT-QUAL-001`, `AT-PERF-001`, `AT-SPEC-001`, `AT-DOC-001`, `RV-21`, and v0.1 `RV-22` pass. RV-21 passes; all remaining named protocols inherit the exact open tuples above; `substitution_set=empty`.
 - [x] **Sprint AC 25.AC4:** Release notes list every v0.1 exclusion, including writes, semantic indexing, Obsidian, full CLI, desktop, GitHub, browser, connectors, schedules, child agents, and Codex transfer.
 - [ ] **Sprint AC 25.AC5:** `G-V0.1` closes only after the signed artifacts, documentation, tests, and offline proof agree exactly. Blocked on the exact signed-package, installed-platform, and three-run offline lifecycle tuples above; `substitution_set=empty`.
 - [ ] **Sprint AC 25.AC6:** The release uses one explicitly selected exact admitted profile; the candidate-neutral kernel/codec boundary, complete initial candidate evidence, classifier non-authority, verifier-only completion, separate repeatability claims, and no-fallback behavior reproduce from raw evidence. Blocked on the exact qualified production model/runtime and native platform campaign tuples inherited from the owning sprints; `substitution_set=empty`.
 
-**Gate decision:** Sprint 25 is PASS only when Stories 25.1 and 25.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 25 is PASS only when Stories 25.1, 25.2, and 25.3, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED. Story 25.3 is the Decision 0051 v1.0-preview gate; it does not repurpose the incident-tabletop Story 25.2 or convert the broader v0.1/full-GA gates into preview evidence.
 
 ## [ ] Epic 2 - v0.2 - Knowledge, Obsidian, and Memory
 
@@ -8836,6 +8916,118 @@ and release remain open.
 - [x] **Story AC 76.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-063-I01`, `S-063-I02`, `S-063-I03`, `S-063-I04`, `S-063-I05`, and `S-063-I06`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent. Evidence: 9 Rust cases plus 42 enumerated contract cases retain zero client effects, authority, or external service paths.
 - [x] **Story AC 76.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence. Evidence: the immutable report retains command output hashes, environment, blockers, exact source revision, and candid BLOCKED summary.
 
+#### [ ] Story 76.2 - Standalone Application Shell and First Run
+
+**Dependencies:** Stories 22.5 and 76.1; Sprint 7 release-manifest contracts; the Decision 0051
+`v1.0-preview-windows` applicability record. Model acquisition is a later separately gated
+increment and does not block deterministic-fake shell integration.
+
+**Current status:** `LOCAL_IMPLEMENTATION_PENDING`. The shell and deterministic-fake first-run
+slice are repository-local work. Native Windows package, accessibility, and clean-install results
+remain external verification prerequisites and are not substitutes for implementation.
+
+**User-facing value:** As a nontechnical professional, I need a standalone application that starts
+without Visual Studio Code or a terminal, explains hardware fit, selects one local folder, and
+shows the verified read-only workflow without moving authority or canonical state into the UI.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 76.2.1 - Implement the standalone authority bridge**
+  - [ ] **Sub-task 76.2.1.1:** Add the standalone application process and authenticated local
+    bridge over the Rust host, with bundled local assets and no UI-owned filesystem, model, grant,
+    tool, policy, or completion authority. **Execution:** local; owner=standalone-shell;
+    venue=repository-local.
+  - [ ] **Sub-task 76.2.1.2:** Implement startup verification, explicit safe/unavailable states,
+    cancellation, reconnect, crash recovery, and durable-session projection through the same
+    ordered host protocol. **Execution:** local; owner=standalone-shell; venue=repository-local.
+  - [ ] **Sub-task 76.2.1.3:** Keep unsupported actions absent and fail closed when host identity,
+    profile qualification, IPC authentication, or required local assets are unavailable.
+    **Execution:** local; owner=standalone-shell; venue=repository-local.
+- [ ] **Task 76.2.2 - Implement accessible first run**
+  - [ ] **Sub-task 76.2.2.1:** Detect and render bounded hardware-fit facts without making a model
+    support claim; hand eligible catalog selection to Story 76.3. **Execution:** local;
+    owner=standalone-first-run; venue=repository-local.
+  - [ ] **Sub-task 76.2.2.2:** Add keyboard-accessible folder selection with Rust-owned
+    local-only path validation, explicit source-format accounting, and no ambient enumeration.
+    **Execution:** local; owner=standalone-first-run; venue=repository-local.
+  - [ ] **Sub-task 76.2.2.3:** Render a single question composer, evidence cards, source omissions,
+    inference labels, cancellation, recovery, and limitations using the Verified Chat protocol
+    concepts. **Execution:** local; owner=standalone-first-run; venue=repository-local.
+- [ ] **Task 76.2.3 - Verify the standalone increment**
+  - [ ] **Sub-task 76.2.3.1:** Run known-answer bridge, startup, folder, question, evidence-card,
+    cancellation, crash, stale-view, and authority-absence tests with the deterministic fake model.
+    **Execution:** local; owner=standalone-verification; venue=repository-local.
+  - [ ] **Sub-task 76.2.3.2:** Run native keyboard, screen-reader, secured-webview, package,
+    standard-user, offline, and clean-install tests on the exact Windows candidate.
+    `BLOCKED_EXTERNAL(platform=licensed Windows 11 x64 KVM guest with accessibility tooling;
+    artifact=exact packaged shell plus untouched accessibility, IPC, offline, install, and recovery
+    observations; action=provision the admitted guest and execute the native campaign;
+    credential=Windows media and signing identity; payment=license, signing, or accessibility-tool
+    costs if applicable)`; `substitution_set=empty`.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 76.2.AC1:** Given a machine without developer tooling, when the application
+  launches, then all assets and transport are local, the Rust host remains sole authority, and
+  unavailable security or model prerequisites fail visibly.
+- [ ] **Story AC 76.2.AC2:** Given keyboard-only first run, when the user selects a folder and asks
+  a question, then the UI accounts for sources and omissions, renders cited evidence and inference
+  distinctly, and supports cancellation and recovery without direct effects.
+- [ ] **Story AC 76.2.AC3:** Given hostile UI messages, stale events, spoofed peers, malformed
+  paths, missing assets, or a crashed host, when the bridge handles them, then no authority,
+  canonical-state write, source write, network access, or false completion occurs.
+
+#### [ ] Story 76.3 - Model Manager
+
+**Dependencies:** Stories 14.1 and 76.2; Decisions 0027 and 0044; the Decision 0051
+`v1.0-preview-windows` applicability record. Alignment with Story 164.1 is required without making
+that later full-GA story a substitute or circular prerequisite for the preview increment.
+
+**Current status:** `LOCAL_IMPLEMENTATION_PENDING`. Catalog filtering, consent, quarantine,
+download/import state, verification, activation, rollback, and removal mechanics are local work.
+An approved exact profile and native installed-product observations remain separate prerequisites.
+
+**User-facing value:** As a first-time user, I need the application to show only approved models
+that fit my machine and to acquire, verify, activate, roll back, or remove my explicit choice
+without a hidden fallback or trust-by-discovery.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 76.3.1 - Implement exact model selection and acquisition**
+  - [ ] **Sub-task 76.3.1.1:** Filter the signed approved catalog by exact hardware, runtime,
+    platform, context, and policy compatibility; rejected, unknown, and unqualified profiles stay
+    visible but ineligible. **Execution:** local; owner=model-manager; venue=repository-local.
+  - [ ] **Sub-task 76.3.1.2:** Require explicit acquisition consent, quarantine partial content,
+    resume by verified range, hash the complete artifact, and admit only its exact catalog
+    identity. **Execution:** local; owner=model-manager; venue=repository-local.
+  - [ ] **Sub-task 76.3.1.3:** Discover an existing local runtime read-only but require full
+    identity, confinement, codec, route, and profile qualification before eligibility; never infer
+    trust from a process name or compatible endpoint. **Execution:** local; owner=model-manager;
+    venue=repository-local.
+- [ ] **Task 76.3.2 - Implement lifecycle and recovery**
+  - [ ] **Sub-task 76.3.2.1:** Provide explicit import, activation, cancellation, atomic rollback,
+    removal, and interrupted-operation reconciliation with one selected profile and no automatic
+    fallback. **Execution:** local; owner=model-manager; venue=repository-local.
+  - [ ] **Sub-task 76.3.2.2:** Separate model acquisition network consent from offline inference,
+    signed update retrieval, and diagnostic transmission. **Execution:** local;
+    owner=model-manager; venue=repository-local.
+  - [ ] **Sub-task 76.3.2.3:** Prove manager removal clears only manager-owned quarantine,
+    downloads, and registrations while preserving imported external runtimes, user sources,
+    canonical evidence, and immutable rejection history. **Execution:** local;
+    owner=model-manager; venue=repository-local.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 76.3.AC1:** Given catalog and hardware facts, when eligibility is computed, then
+  only exact approved compatible profiles can be selected and no candidate inherits another
+  tuple's approval.
+- [ ] **Story AC 76.3.AC2:** Given download, resume, import, cancellation, corruption, interruption,
+  rollback, and removal, when lifecycle reconciliation completes, then state is exact, no partial
+  artifact activates, and no hidden fallback occurs.
+- [ ] **Story AC 76.3.AC3:** Given normal preview question-answering, when the selected model runs,
+  then the acquisition authority is absent, no credential is available, and the route remains the
+  qualified `strict_local` profile.
+
 #### Sprint Acceptance Criteria
 
 - [x] **Sprint AC 76.AC1:** Every numbered implementation sub-task in Story 76.1 is complete and linked to its legacy requirement or issue identity. Evidence: all 6 implementation rows link to the source-bound report and retained legacy identities.
@@ -8844,9 +9036,9 @@ and release remain open.
 - [x] **Sprint AC 76.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment. Evidence: architecture, guide, corpus, source, tests, and dependencies are bound by the committed report.
 - [ ] **Sprint AC 76.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
-**Gate decision:** Sprint 76 is PASS only when Story 76.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 76 is PASS only when Stories 76.1, 76.2, and 76.3, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED. Decision 0051 makes Stories 76.2 and 76.3 Windows-preview work while Story 76.1's retained Linux/macOS scope remains truthful and separately evidenced.
 
-**Current status:** **BLOCKED.** The local thin-client architecture, 6 bounded implementation rows,
+**Current status:** **PARTIAL LOCAL IMPLEMENTATION; GATE BLOCKED.** The legacy Story 76.1 local thin-client architecture, 6 bounded implementation rows,
 42-case corpus, 9 Rust cases, reviewable artifacts, and local acceptance rows pass; see
 `artifacts/sprints/sprint-76/local-evidence-report.json`. The story, sprint, native desktop,
 platform, product, and release remain open because the upstream `G-V0.7` gate and native protocol,
@@ -8858,7 +9050,9 @@ action=provision the exact native platforms, physical Mac, package signing ident
 accessibility tooling, and reviewer, execute the Sprint 76 native and product-security campaigns,
 and transfer the untouched bundles, credential=physical Mac, native platform, package signer,
 accessibility tooling, and reviewer access, payment=hardware, signing, platform, accessibility, or
-review costs if applicable)`; `substitution_set=empty`.
+review costs if applicable)`; `substitution_set=empty`. Stories 76.2 and 76.3 now contain explicit
+repository-local implementation rows and separately recorded native/model dependencies; they are
+not classified as externally blocked by Story 76.1's retained tuple.
 
 ### [ ] Sprint 77 - Desktop Status, Recovery, and Packaging
 
@@ -8901,17 +9095,78 @@ review costs if applicable)`; `substitution_set=empty`.
 - [ ] **Story AC 77.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then desktop, native Chat, and CLI produce equivalent kernel policy/evidence for the same work packet; no desktop-only authority or canonical state exists.
 - [ ] **Story AC 77.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then clean standard-user install, offline operation, accessibility, recovery, uninstall, and residue checks pass independently on each declared desktop platform.
 
+#### [ ] Story 77.2 - Background Presence, Signed Update, and Consented Diagnostics
+
+**Dependencies:** Stories 25.2, 76.2, and 77.1; Sprint 7 signing and release-manifest contracts;
+the Decision 0051 `v1.0-preview-windows` applicability record.
+
+**Current status:** `LOCAL_IMPLEMENTATION_PENDING`. Lifecycle policy, local projections, update
+verification, rollback, and diagnostic minimization are local work. Production signing,
+installed-background behavior, native update/rollback, and transmission observations remain
+external verification prerequisites.
+
+**User-facing value:** As a standalone application user, I need visible, controllable background
+presence, authenticated updates, and locally inspectable diagnostics that never become telemetry
+or network activity without my specific consent.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 77.2.1 - Implement controlled background presence**
+  - [ ] **Sub-task 77.2.1.1:** Add an explicit tray/background lifecycle with visible running,
+    idle, updating, recovery, and stopped states; startup persistence is opt-in and reversible.
+    **Execution:** local; owner=desktop-lifecycle; venue=repository-local.
+  - [ ] **Sub-task 77.2.1.2:** Ensure background presence owns no additional source, model, tool,
+    network, credential, grant, or completion authority and terminates descendants on stop.
+    **Execution:** local; owner=desktop-lifecycle; venue=repository-local.
+  - [ ] **Sub-task 77.2.1.3:** Reconcile crash, restart, session change, update interruption, and
+    uninstall without duplicating completed effects or losing uncertain-state visibility.
+    **Execution:** local; owner=desktop-lifecycle; venue=repository-local.
+- [ ] **Task 77.2.2 - Implement signed update and rollback**
+  - [ ] **Sub-task 77.2.2.1:** Fetch update metadata only after separate user consent, verify the
+    exact signed manifest and non-downgrade policy before acquisition, and quarantine incomplete or
+    invalid payloads. **Execution:** local; owner=desktop-update; venue=repository-local.
+  - [ ] **Sub-task 77.2.2.2:** Apply updates through the owned lifecycle boundary with atomic
+    activation, interrupted-upgrade recovery, signed rollback, and current/previous version
+    visibility. **Execution:** local; owner=desktop-update; venue=repository-local.
+  - [ ] **Sub-task 77.2.2.3:** Prove update disablement restores fully offline operation and leaves
+    no scheduler, listener, credential, partial payload, or unowned state. **Execution:** local;
+    owner=desktop-update; venue=repository-local.
+- [ ] **Task 77.2.3 - Implement per-report diagnostic consent**
+  - [ ] **Sub-task 77.2.3.1:** Assemble and redact diagnostics locally from an allowlisted schema;
+    prohibit raw prompts, source documents, credentials, keys, unrelated paths, full environment,
+    and unreviewed archives. **Execution:** local; owner=desktop-diagnostics;
+    venue=repository-local.
+  - [ ] **Sub-task 77.2.3.2:** Show the exact report and destination, require explicit consent for
+    that one transmission, issue one bounded network authorization, and retain only a local
+    receipt—not a delivery or support-resolution claim. **Execution:** local;
+    owner=desktop-diagnostics; venue=repository-local.
+  - [ ] **Sub-task 77.2.3.3:** Test denial, cancellation, stale preview, destination change,
+    redaction failure, replay, retry uncertainty, and revocation with zero silent send or reusable
+    credential. **Execution:** local; owner=desktop-diagnostics; venue=repository-local.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 77.2.AC1:** Given background presence, when the user starts, stops, disables, or
+  uninstalls it, then state and descendants reconcile visibly without acquiring new authority or
+  harming user source documents.
+- [ ] **Story AC 77.2.AC2:** Given update metadata or payload failure, interruption, downgrade,
+  signer mismatch, rollback, or revocation, when lifecycle verification runs, then only the exact
+  authorized signed transition succeeds and offline operation remains available.
+- [ ] **Story AC 77.2.AC3:** Given a locally redacted diagnostic report, when the user denies,
+  changes, or approves its exact preview, then only one approved destination-bound transmission can
+  occur and no hidden telemetry channel remains.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 77.AC1:** Desktop, CLI, and Visual Studio Code produce equivalent grants, receipts, evidence, state, and denials.
 - [x] **Sprint AC 77.AC2:** The desktop never accesses canonical storage, models, tools, connectors, or secrets outside the kernel. Evidence: protocol projections expose no direct access and the source contract contains no executor.
 - [ ] **Sprint AC 77.AC3:** Network-disabled operation remains complete and uses only local assets.
 - [ ] **Sprint AC 77.AC4:** Crash recovery and safe mode preserve canonical state and user files.
-- [x] **Sprint AC 77.AC5:** Windows and Intel Mac remain excluded until separately promoted and tested. Evidence: the closed target-platform taxonomy contains only `linux-x86_64` and `macos-arm64`, while both remain unsupported pending native evidence.
+- [x] **Sprint AC 77.AC5:** The legacy Story 77.1 target taxonomy remains `linux-x86_64` and `macos-arm64`; Windows preview applicability is registered separately for Story 77.2 under Decision 0051 and requires its own native promotion evidence. Intel Mac remains excluded.
 
-**Gate decision:** Sprint 77 is PASS only when Story 77.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 77 is PASS only when Stories 77.1 and 77.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED. The Windows preview gate evaluates Story 77.2 through its separate applicability record and does not relabel legacy Story 77.1 platform evidence.
 
-**Current status:** **BLOCKED.** The local status, single-writer, recovery, safe-mode, local-asset,
+**Current status:** **PARTIAL LOCAL IMPLEMENTATION; GATE BLOCKED.** The legacy Story 77.1 local status, single-writer, recovery, safe-mode, local-asset,
 protocol, guide, and 38-case evidence contracts pass; see
 `artifacts/sprints/sprint-77/local-evidence-report.json`. Signed/verified packages, the native
 accessibility/visual/offline/recovery bundle, native clean-install protocol parity, product-security
@@ -8924,7 +9179,9 @@ identities, accessibility tooling, and reviewer, build and install the packages,
 S-063-ST01/RT01/AT01 and the product-security campaign, and transfer the untouched bundles,
 credential=physical Mac, native platform, package signer, accessibility tooling, and reviewer
 access, payment=hardware, signing, platform, accessibility, or review costs if applicable)`;
-`substitution_set=empty`.
+`substitution_set=empty`. Story 77.2 now contains explicit repository-local lifecycle, update, and
+diagnostic implementation rows plus separately recorded production-signing and native installed-
+product prerequisites; it is not inherited into Story 77.1's external tuple.
 
 ### [ ] Sprint 78 - Capability Package Trust and Lifecycle
 

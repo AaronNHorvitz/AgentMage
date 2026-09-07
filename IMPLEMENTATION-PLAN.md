@@ -39,6 +39,8 @@ Stabilization scope freeze: inactive (Decision 0047) — the complete preserved 
 
 First-release surface: standalone hardened desktop application (Decision 0048).
 
+First-release gate: Story 25.3 under the Decision 0051 restart-readiness correction.
+
 [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md)
 and [`architecture/status-model.json`](./architecture/status-model.json) govern
 these current-state claims. This plan preserves the complete 17-release-epic,
@@ -469,6 +471,34 @@ Their dependency-ordered stories are distributed through existing owners in Spri
 DOCX, PDF/OCR, and spreadsheet adapters in Sprint 62. Decisions 0043 and 0044 add `ER-M0` through
 `ER-M9` for the Engineering Runtime and Model Gateway. All are internal evidence gates and none
 supersedes a release gate.
+
+### 6.0 Decision 0051 Preview Registration
+
+The Windows `v1.0-preview` is registered as four additions-only stories. Story
+76.2 owns the standalone shell, authenticated Rust-host bridge, accessible first
+run, folder selection, question composer, evidence cards, cancellation, and
+recovery. Story 76.3 owns approved-catalog hardware filtering, separately
+consented and hash-verified acquisition/import, activation, rollback, and
+removal. Story 77.2 owns controllable background presence, signed updates,
+rollback, and locally redacted per-report diagnostics. Story 25.3 is the clean
+Windows 11 installed-product release gate and preserves incident-tabletop Story
+25.2 unchanged.
+
+The machine-readable applicability authority is
+`architecture/release-applicability.json`. It distinguishes the Windows preview,
+the complete later full-GA plan, and retained macOS/Linux/Visual Studio Code
+work. Read-only protects user source documents while allowing only authorized
+encrypted application state. Normal question-answering remains offline; model
+acquisition, signed-update retrieval, and diagnostic transmission are separate
+consent phases. Decision 0051 corrects Decision 0048's mixed baseline and
+historical blocker assertion without reopening a genuine exact blocker.
+
+Before the newly registered application stories begin, corrective Task 13.3.4
+owns the audited model-facing Muse codec repair, its known-answer and failure-
+diagnostic suite, and a newly versioned synthetic qualification tuple. This is
+the first dependency-ready local gate after restart readiness. It preserves all
+prior rejected evidence and carries no activation, acquisition, network, model-
+approval, platform-support, or release authority.
 
 ### 6.1 Active Roadmap Execution Spine
 

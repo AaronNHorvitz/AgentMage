@@ -112,6 +112,9 @@ disposition.
      Decision 0040 KVM lane, with the physical-only rows of
      `WINDOWS-BOUNDARIES.md` remaining blocked until a physical machine exists.
    Each story carries the Universal Story Definition of Done unchanged.
+   **Correction (Decision 0051):** Story 25.2 was already assigned to Incident
+   Tabletop and Release Support Readiness. The preview gate is Story 25.3; the
+   proposed 25.2 identity above is retained only as historical decision text.
 6. **First-release critical path.** Across the full plan opened by Decision 0047, the
    Decision 0021 "first authoritative incomplete dependency gate" rule resolves
    in this order: (a) remaining Epic 0 gates; (b) Foundational Runtime Epics F1,
@@ -125,6 +128,11 @@ disposition.
    while an unblocked critical-path row exists. Rows already bound to exact
    blockers by the Decision 0047 terminal audit remain blocked and are not
    reopened by this decision.
+   **Correction (Decision 0051):** item (f) is Story 25.3 and item (g) is the
+   remainder of the complete preserved plan in numbered order. The historical
+   universal external-blockage assertion is not row-level proof; genuine exact
+   blockers remain binding while local, dependency, external, and unknown rows
+   are classified separately.
 7. **Decision 0045 first-release mandatory set, narrowed.** For the first
    public release, item 4 requires the Rust host, durable supervisor, artifact
    service, context service, workflow engine, tool-observation boundary,
@@ -144,6 +152,7 @@ disposition.
    passes on a clean Windows 11 guest, at least one model carries an approved
    disposition under Decision 0044, and the independent review required by
    Decision 0021 for signed release has occurred.
+   **Correction (Decision 0051):** the release gate identity is Story 25.3.
 10. **Markers and registration.** `README.md`, `PRD.md`, and
     `IMPLEMENTATION-PLAN.md` state the item 1 buyer and the item 2 surface in
     their product tables; every `documentation_contract` document carries the
@@ -162,6 +171,8 @@ disposition.
   hardened desktop application (Windows 11 x64 first, Apple Silicon macOS
   second); Visual Studio Code Verified Chat as a secondary surface (Decision
   0047)". A "First buyer" row follows with the item 1 text.
+  **Correction (Decision 0051):** the decision identity in that interface row is
+  Decision 0048.
 - `IMPLEMENTATION-PLAN.md` lines describing native Visual Studio Code Chat as
   the sole v0.1 interface are amended to "sole internal v0.1 harness; the first
   public release surface is defined by Decision 0048".
@@ -172,6 +183,7 @@ disposition.
 - `TASKS.md` contains Stories 76.2, 76.3, 77.2, and 25.2 (or the numbers the
   implementing batch assigns) with the Universal Story Definition of Done, and
   the Epic 1 and Epic 8 headers carry a "Decision 0048 critical path" note.
+  **Correction (Decision 0051):** the assigned preview-gate story is 25.3.
 - `AGENTS.md` section 6 names the critical path.
 - `docs:validate`, `planning-scope:check`, `architecture:check`,
   `task-graph:check`, and `tests/test_status_model.py` pass on the merge commit.
@@ -180,6 +192,10 @@ disposition.
   2026-09-06 merge: 4,041 done, 1,484 open, all open rows blocker-bound by the
   Decision 0047 terminal audit; lifecycle 1 integrated, 1 implemented,
   15 scaffolded; product `scaffolded`.
+  **Correction (Decision 0051):** at audited commit `b62eb543`, detailed items
+  are 4,041 done / 1,107 open / 5,148 total; all checkboxes including headings
+  are 4,094 done / 1,484 open / 5,578 total. The preceding mixed denominator is
+  retained only as historical text and must not be reused.
 
 ## Rationale
 
@@ -191,3 +207,7 @@ release deliberately excludes writes, connectors, Team mode, and remote routes:
 a product that can only read, only locally, with evidence for every answer, is
 the strongest possible first trust claim to the item 1 buyer and the smallest
 surface to harden.
+
+**Correction (Decision 0051):** the rationale's "frozen set" phrase refers to
+the complete preserved plan opened by Decision 0047; no scope freeze remains
+active.
