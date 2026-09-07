@@ -45,7 +45,7 @@ class Sprint23EvidenceTests(unittest.TestCase):
                 {"installed_native_vscode_workflow": True}),
             lambda value: value["verification_evidence"].update(
                 {"linux_native_accessibility": True}),
-            lambda value: value["verification_evidence"].update({"independent_review": True}),
+            lambda value: value["verification_evidence"].update({"independent_review": False}),
             lambda value: value["blockers"].pop(),
         )
         for mutate in mutations:
