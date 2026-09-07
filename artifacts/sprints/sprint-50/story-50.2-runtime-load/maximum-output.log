@@ -1,9 +1,13 @@
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-976e5806ff55a5c7)
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
-running 2 tests
-test runtime_loop::tests::durable_large_tool_output_is_receipt_bound_before_completion ... ok
+running 6 tests
+test runtime_loop::tests::durable_mode_remains_unavailable_without_journal_and_resume_ports ... ok
+test runtime_loop::tests::durable_mode_persists_ordered_session_events_before_terminal_return ... ok
+test runtime_loop::tests::durable_tool_stream_candidates_preserve_large_stdout_and_stderr_separately ... ok
+test runtime_loop::tests::durable_tool_receipt_commits_before_its_bound_large_artifact ... ok
 test runtime_loop::tests::durable_large_model_output_is_artifact_backed_and_event_referenced ... ok
+test runtime_loop::tests::durable_tool_outputs_use_only_the_declared_closed_artifact_kind ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 589 filtered out; finished in 0.03s
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 1031 filtered out; finished in 0.18s
 

@@ -1,8 +1,8 @@
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-976e5806ff55a5c7)
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 1 test
 test runtime_loop::tests::story_23_4_cancellation_wins_over_a_pending_allow_response ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 590 filtered out; finished in 0.01s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1036 filtered out; finished in 0.01s
 

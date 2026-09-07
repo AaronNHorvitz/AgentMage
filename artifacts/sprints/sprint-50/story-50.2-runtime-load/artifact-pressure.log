@@ -1,22 +1,29 @@
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-976e5806ff55a5c7)
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
-running 15 tests
-test runtime_artifact::tests::manifest_digest_or_reference_drift_fails_closed ... ok
+running 22 tests
 test runtime_artifact::tests::manifest_reference_and_event_projection_reconcile_exactly ... ok
-test runtime_artifact::tests::continuation_rejects_unsafe_or_inconsistent_state ... ok
-test runtime_artifact::tests::continuation_digest_binds_cursor_and_collected_state ... ok
-test runtime_artifact::tests::continuation_round_trips_one_exact_safe_boundary ... ok
-test runtime_artifact::tests::resume_binding_binds_cursor_and_sorted_exact_artifact_set ... ok
 test runtime_artifact::tests::resume_binding_rejects_run_drift_and_duplicate_references ... ok
+test runtime_artifact::tests::continuation_rejects_unsafe_or_inconsistent_state ... ok
+test runtime_artifact::tests::manifest_digest_or_reference_drift_fails_closed ... ok
+test runtime_artifact::tests::continuation_digest_binds_cursor_and_collected_state ... ok
+test runtime_artifact::tests::resume_binding_binds_cursor_and_sorted_exact_artifact_set ... ok
 test runtime_artifact::tests::size_media_retention_and_preview_bounds_are_closed ... ok
+test runtime_artifact::tests::continuation_round_trips_one_exact_safe_boundary ... ok
+test runtime_artifact::tests::continuation_codec_supports_verified_payloads_above_shared_json_limit ... ok
+test runtime_artifact::tests::corrupt_unreferenced_inventory_is_quarantined_without_trusting_size ... ok
+test runtime_artifact::tests::unknown_versions_and_expired_artifacts_fail_closed ... ok
+test runtime_artifact::tests::operator_view_is_path_free_complete_and_tracks_cleanup_state ... ok
+test runtime_artifact::tests::story_21_2_artifact_canaries_require_an_exact_owner_bound_payload_read ... ok
+test runtime_artifact::tests::current_checkpoint_reference_prevents_release_and_collection ... ok
 test runtime_artifact::tests::story_50_2_artifact_pages_are_owner_bound_bounded_and_exact ... ok
+test runtime_artifact::tests::publication_rejects_mismatched_producer_authority_before_staging ... ok
 test runtime_artifact::tests::publication_deduplicates_without_broadening_owner_or_reference_state ... ok
 test runtime_artifact::tests::checkpoint_cursor_and_artifact_set_publish_atomically_and_reopen ... ok
+test runtime_artifact::tests::partial_and_identifier_colliding_publications_preserve_canonical_state ... ok
 test runtime_artifact::tests::metadata_projection_tampering_blocks_durable_restart ... ok
 test runtime_artifact::tests::failed_resume_binding_rolls_back_the_checkpoint_and_requires_reopen ... ok
 test runtime_artifact::tests::missing_and_corrupt_payloads_quarantine_every_active_reference ... ok
-test runtime_artifact::tests::continuation_codec_supports_verified_payloads_above_shared_json_limit ... ok
 
-test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 576 filtered out; finished in 0.65s
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 1015 filtered out; finished in 1.81s
 

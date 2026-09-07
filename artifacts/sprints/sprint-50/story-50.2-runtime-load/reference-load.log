@@ -1,9 +1,9 @@
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-976e5806ff55a5c7)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 1 test
-AGENTMAGE_RUNTIME_LOAD_METRICS={"cleanup_verified":true,"event_count":8196,"fast_deliveries":8196,"journal_elapsed_ms":2356,"journal_events_per_second":3478,"lagged_subscribers":1,"maximum_queued_bytes":90932,"maximum_queued_events":127,"publish_elapsed_ms":254,"publish_events_per_second":32267,"resident_memory_kib":45952,"restart_cycles":16,"restart_elapsed_ms":13867,"retained_disk_bytes":10813336}
+AGENTMAGE_RUNTIME_LOAD_METRICS={"cleanup_verified":true,"event_count":8196,"fast_deliveries":8196,"journal_elapsed_ms":2297,"journal_events_per_second":3568,"lagged_subscribers":1,"maximum_queued_bytes":717824,"maximum_queued_events":1024,"publish_elapsed_ms":255,"publish_events_per_second":32141,"queue_saturations":7,"resident_memory_kib":57184,"restart_cycles":16,"restart_elapsed_ms":13794,"retained_disk_bytes":12066832}
 test runtime_journal::tests::story_50_2_reference_hardware_load_is_bounded_recoverable_and_nonblocking ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 590 filtered out; finished in 16.83s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1036 filtered out; finished in 16.75s
 

@@ -1,8 +1,8 @@
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_host-e0c398c46bbe93f0)
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-1b18b69b396ab8a2)
 
 running 1 test
 test cli_runtime::tests::protected_denial_and_cancellation_return_through_exact_runtime_cursor ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 123 filtered out; finished in 0.02s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 284 filtered out; finished in 0.02s
 

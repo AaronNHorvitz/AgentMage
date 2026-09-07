@@ -1,5 +1,5 @@
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-976e5806ff55a5c7)
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 6 tests
 test runtime_loop::tests::story_50_2_subscription_capacity_is_bounded_by_count_and_bytes ... ok
@@ -9,5 +9,5 @@ test runtime_loop::tests::story_50_2_durable_restore_rejects_usage_drift ... ok
 test runtime_loop::tests::story_50_2_controlled_write_requires_every_bound_resource_budget ... ok
 test runtime_loop::tests::story_50_2_event_and_artifact_overage_is_non_mutating ... ok
 
-test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 585 filtered out; finished in 0.00s
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 1031 filtered out; finished in 0.00s
 

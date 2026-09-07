@@ -13,32 +13,33 @@
         "--ignored",
         "--nocapture"
       ],
-      "elapsed_ms": 16890,
+      "elapsed_ms": 16790,
       "exit_code": 0,
       "failures": [],
       "id": "reference-load",
       "log": "reference-load.log",
-      "maximum_rss_kib": 43796,
+      "maximum_rss_kib": 56224,
       "metrics": {
         "cleanup_verified": true,
         "event_count": 8196,
         "fast_deliveries": 8196,
-        "journal_elapsed_ms": 2356,
-        "journal_events_per_second": 3478,
+        "journal_elapsed_ms": 2297,
+        "journal_events_per_second": 3568,
         "lagged_subscribers": 1,
-        "maximum_queued_bytes": 90932,
-        "maximum_queued_events": 127,
-        "publish_elapsed_ms": 254,
-        "publish_events_per_second": 32267,
-        "resident_memory_kib": 45952,
+        "maximum_queued_bytes": 717824,
+        "maximum_queued_events": 1024,
+        "publish_elapsed_ms": 255,
+        "publish_events_per_second": 32141,
+        "queue_saturations": 7,
+        "resident_memory_kib": 57184,
         "restart_cycles": 16,
-        "restart_elapsed_ms": 13867,
-        "retained_disk_bytes": 10813336
+        "restart_elapsed_ms": 13794,
+        "retained_disk_bytes": 12066832
       },
-      "output_sha256": "7f149bec2ac96e50b6136df02c74f6582658bed5ee5f4258fe319e3d4fa9825d",
+      "output_sha256": "71cfec0d51c898d05965ea6cb67573d2bd7b715eb0a65c7b2146f76c449bcaac",
       "tests": {
         "failed": 0,
-        "filtered_out": 590,
+        "filtered_out": 1036,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -58,12 +59,12 @@
       "failures": [],
       "id": "resource-ceilings",
       "log": "resource-ceilings.log",
-      "maximum_rss_kib": 38640,
+      "maximum_rss_kib": 39768,
       "metrics": null,
-      "output_sha256": "4777492e8b8aeb080ccbaa0b213c954d8b27d6bb1688096b8f443f17a296de21",
+      "output_sha256": "0ba66c91cfe7625fb95db9c01b918b385d64a66c9a7fb88e52cd8de02793f7e4",
       "tests": {
         "failed": 0,
-        "filtered_out": 585,
+        "filtered_out": 1031,
         "ignored": 0,
         "measured": 0,
         "passed": 6
@@ -83,12 +84,12 @@
       "failures": [],
       "id": "event-pressure",
       "log": "event-pressure.log",
-      "maximum_rss_kib": 38356,
+      "maximum_rss_kib": 39032,
       "metrics": null,
-      "output_sha256": "a21f13320c344ad6fbfd6f8ef031217a61d997b33f4e20e36af6538db9e080d0",
+      "output_sha256": "9f3b5727a0df0a53db6e963b3cad5ed1a35cf9674ee99dd7a7a6d29a887e7256",
       "tests": {
         "failed": 0,
-        "filtered_out": 586,
+        "filtered_out": 1032,
         "ignored": 0,
         "measured": 0,
         "passed": 5
@@ -101,22 +102,47 @@
         "-p",
         "agentmage-kernel-engine",
         "--lib",
-        "durable_large_"
+        "dedicated_writer"
       ],
-      "elapsed_ms": 70,
+      "elapsed_ms": 320,
+      "exit_code": 0,
+      "failures": [],
+      "id": "writer-isolation",
+      "log": "writer-isolation.log",
+      "maximum_rss_kib": 39380,
+      "metrics": null,
+      "output_sha256": "d6cd7647b5b4a77039222d319818d849cc542efb53793f4d4dd198e49c1cd8b0",
+      "tests": {
+        "failed": 0,
+        "filtered_out": 1034,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 3
+      }
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "runtime_loop::tests::durable_"
+      ],
+      "elapsed_ms": 220,
       "exit_code": 0,
       "failures": [],
       "id": "maximum-output",
       "log": "maximum-output.log",
-      "maximum_rss_kib": 38424,
+      "maximum_rss_kib": 39484,
       "metrics": null,
-      "output_sha256": "5f79f693f7a1f743e7369394c2d3d3d5c8e0e31927fab1220e62bf334590b073",
+      "output_sha256": "4dfd8e6a4edd7c6a51c204717722ea4173077a54d870f8e7d76eff7ed33ea84b",
       "tests": {
         "failed": 0,
-        "filtered_out": 589,
+        "filtered_out": 1031,
         "ignored": 0,
         "measured": 0,
-        "passed": 2
+        "passed": 6
       }
     },
     {
@@ -128,20 +154,20 @@
         "--lib",
         "runtime_artifact::tests"
       ],
-      "elapsed_ms": 700,
+      "elapsed_ms": 1860,
       "exit_code": 0,
       "failures": [],
       "id": "artifact-pressure",
       "log": "artifact-pressure.log",
-      "maximum_rss_kib": 40600,
+      "maximum_rss_kib": 66452,
       "metrics": null,
-      "output_sha256": "862f8cef7e56926b3045a4fbb37475683b54c7189222d4a29c34c85c01cc0e7c",
+      "output_sha256": "d95d03873fccee9dee6f4ada8a500cf93d4c6b21c84152d95791125bd6d4f5e0",
       "tests": {
         "failed": 0,
-        "filtered_out": 576,
+        "filtered_out": 1015,
         "ignored": 0,
         "measured": 0,
-        "passed": 15
+        "passed": 22
       }
     },
     {
@@ -153,17 +179,17 @@
         "--lib",
         "story_23_4_cancellation_wins_over_a_pending_allow_response"
       ],
-      "elapsed_ms": 50,
+      "elapsed_ms": 40,
       "exit_code": 0,
       "failures": [],
       "id": "cancellation",
       "log": "cancellation.log",
-      "maximum_rss_kib": 38968,
+      "maximum_rss_kib": 38924,
       "metrics": null,
-      "output_sha256": "920dfb4d176154212c2dfd93b58f6c796a3d0ec4bf185147ad7038e045eaa785",
+      "output_sha256": "2d6be2a78fb8a9311cfb26587226b7914542c7023db9e92f2e860a2abb41be4c",
       "tests": {
         "failed": 0,
-        "filtered_out": 590,
+        "filtered_out": 1036,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -183,12 +209,12 @@
       "failures": [],
       "id": "client-cancellation",
       "log": "client-cancellation.log",
-      "maximum_rss_kib": 45880,
+      "maximum_rss_kib": 48024,
       "metrics": null,
-      "output_sha256": "fe2a551f2da9fe2236101a7b872d345bae4684bdb263de02ba3b2003a7f3b47b",
+      "output_sha256": "c1ca3b50e8da9fcf6664f23ec7e861e5e85ea89d1b989f5c25348c8b6e925330",
       "tests": {
         "failed": 0,
-        "filtered_out": 123,
+        "filtered_out": 284,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -208,12 +234,12 @@
       "failures": [],
       "id": "restart-recovery",
       "log": "restart-recovery.log",
-      "maximum_rss_kib": 39408,
+      "maximum_rss_kib": 39272,
       "metrics": null,
-      "output_sha256": "bd94934ce79a9b0b0fae08f3c0b896695f8713edb3f093a7c069299f48f8ff5a",
+      "output_sha256": "501c74dcdd0e8eb72eae4dc1cea6693b12fb959f582e342dd2ff759e4c600da4",
       "tests": {
         "failed": 0,
-        "filtered_out": 583,
+        "filtered_out": 1029,
         "ignored": 0,
         "measured": 0,
         "passed": 8
@@ -222,8 +248,8 @@
   ],
   "declared_limitations": [
     "The campaign measures one recorded Fedora Linux host and is not portable platform evidence.",
-    "The current journal writer defers progress in bounded batches but still performs SQLite flushes on the coordinator thread.",
-    "No injected slow-disk worker-isolation result exists, so model-stream continuity under a blocked filesystem remains unproved.",
+    "The dedicated-writer test holds the sole SQLCipher connection lock as a deterministic slow-store surrogate; it is not an injected filesystem, device, or power-loss campaign.",
+    "The source-level worker-isolation group proves bounded producer and client-stream responsiveness while persistence is blocked, but it does not prove installed model-stream or cancellation latency under a real disk stall.",
     "The maximum-output group verifies artifact-backed output above the inline limit and exact configured resource ceilings; it is not a model-quality benchmark.",
     "Installed native Chat and authenticated CLI transport evidence remains outside this source-level campaign."
   ],
@@ -232,9 +258,9 @@
     "cpu_model": "13th Gen Intel(R) Core(TM) i9-13900KF",
     "logical_cpus": 32,
     "machine": "x86_64",
-    "memory_kib": 65570268,
-    "python": "3.14.6",
-    "release": "7.1.6-201.fc44.x86_64",
+    "memory_kib": 65570248,
+    "python": "3.14.7",
+    "release": "7.1.10-200.fc44.x86_64",
     "system": "Linux"
   },
   "failures": [],
@@ -254,35 +280,38 @@
     "cleanup_verified": true,
     "event_count": 8196,
     "fast_deliveries": 8196,
-    "journal_elapsed_ms": 2356,
-    "journal_events_per_second": 3478,
+    "journal_elapsed_ms": 2297,
+    "journal_events_per_second": 3568,
     "lagged_subscribers": 1,
-    "maximum_queued_bytes": 90932,
-    "maximum_queued_events": 127,
-    "publish_elapsed_ms": 254,
-    "publish_events_per_second": 32267,
-    "resident_memory_kib": 45952,
+    "maximum_queued_bytes": 717824,
+    "maximum_queued_events": 1024,
+    "publish_elapsed_ms": 255,
+    "publish_events_per_second": 32141,
+    "queue_saturations": 7,
+    "resident_memory_kib": 57184,
     "restart_cycles": 16,
-    "restart_elapsed_ms": 13867,
-    "retained_disk_bytes": 10813336
+    "restart_elapsed_ms": 13794,
+    "retained_disk_bytes": 12066832
   },
   "profile_id": "story-50.2-linux-reference-load-v1",
   "record_type": "story_50_2_runtime_load",
   "schema_version": 1,
   "source": {
-    "revision": "268ea924efb88c11eef24b0eee03cce9febb4548",
-    "tree": "4d0d1c2c3321ea62482114625219fddde06e39e0"
+    "revision": "f0343606f44fc13afe50b502cacd673715561860",
+    "tree": "7a62dcece285243fbcde6f482b92b54507deb187"
   },
   "source_sha256": {
-    "fixtures/runtime-hardening/v1/linux-reference-load-profile.json": "16ec45b31353f8ccc1969b3de69729ba7bde6e8fd92d12920997777e65867c0d",
-    "kernel/engine/src/runtime_artifact.rs": "cbca508696296ea2948eb8fcce31e6abfbb72a7573d1b536f4816a27b7d05308",
-    "kernel/engine/src/runtime_event.rs": "1b42a09d68da0da30bd0ca9facaff5c63b4c406021fa9d5a9daed828b736d740",
+    "fixtures/runtime-hardening/v1/linux-reference-load-profile.json": "645d0e5a48ae1530fcdb90d093c29838f66e8355193584bd6f154ddc7c725dec",
+    "kernel/engine/src/operational_store.rs": "f814b7b99ad58eb5de3512ae95f4301a1bf2cc22b03c532b0a2ca920ab8f37aa",
+    "kernel/engine/src/runtime_artifact.rs": "a45dd60b5882cff330cb711bec7b1ecc5bac3413eb17f35d5dc530fbb0938ad4",
+    "kernel/engine/src/runtime_event.rs": "9918d6194634c793162c09c4ea39bcdedb5df0f2e20e879c2f856c7d6468ca26",
     "kernel/engine/src/runtime_hardening.rs": "a0fd11e26ffd568e8da0d1e366d92caa11bbd94d6a8014fd913bdc0921871471",
-    "kernel/engine/src/runtime_journal.rs": "419c142cc52806c2ecb2bcb5bc46ce89af357ed1a5e52de9c8fd81cf56975a49",
-    "kernel/engine/src/runtime_loop_tests.rs": "2285f40b0b3d4787a280a4ac7b76720a4feb81fa4bd5edb5cc0c76c1f3aab2d2",
+    "kernel/engine/src/runtime_journal.rs": "3588470c9ed56647802638f766c16418b9f61a8d7ea82a422371c56063b3d464",
+    "kernel/engine/src/runtime_loop_tests.rs": "72d327fc2e8cae5358ef2700c94c4bc9a60aecda7e22ce513a06268f300f83d9",
     "kernel/engine/src/runtime_recovery.rs": "7997cf0ccae000d132eee6b92b990a0891884887441b06ba69cf28dd8494dcb6",
-    "scripts/runtime_hardening_load.py": "bfbdf2c788252373ab644a6663b65b06d070e729c5c896733f65a5a953028996",
-    "shells/host/src/cli_runtime.rs": "055a8776e6d24893be2e7837284d895a6271eaf5c9f3262d2ccc892503e67833",
+    "scripts/runtime_hardening_load.py": "e4cbd2358c2c155977945bf830d4c5687b863dc9ab536ff23b3b9e6113d93c36",
+    "shells/host/src/cli_runtime.rs": "4b5d68f00b199a46dc35c124cb2dacd351e682c3975184e7c2243981d758ca37",
+    "shells/host/src/linux_coding_runtime.rs": "468fa56f53a87fa6f390605d82ce6d03304dcd6946f1eea578f814185fdec4af",
     "tests/test_runtime_hardening_load.py": "e2dc909eae2a51a578f9fb188992ae0d0e10beea546fc7a9bbd19e7c70db0ac1"
   },
   "workload": {

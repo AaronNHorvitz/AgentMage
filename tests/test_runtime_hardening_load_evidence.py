@@ -28,7 +28,7 @@ class RuntimeHardeningLoadEvidenceTests(unittest.TestCase):
         )
         self.assertTrue(self.report["campaign_passed"])
         self.assertEqual(self.report["disposition"], "PARTIAL-PASS")
-        self.assertEqual(sum(item["tests"]["passed"] for item in self.report["commands"]), 39)
+        self.assertEqual(sum(item["tests"]["passed"] for item in self.report["commands"]), 53)
 
     def test_source_log_metric_and_disposition_mutations_fail_closed(self) -> None:
         mutations = []
