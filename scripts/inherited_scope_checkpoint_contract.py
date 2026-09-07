@@ -21,7 +21,7 @@ def check():
  expected=build()
  if not OUTPUT.is_file()or OUTPUT.read_bytes()!=expected:raise RuntimeError("inherited checkpoint corpus stale or absent")
  value=json.loads(expected)
- if value["requirement_count"]!=294 or value["traceability_count"]!=294 or value["completion_record_count"]!=112:raise RuntimeError("inherited checkpoint inventory drift")
+ if value["requirement_count"]!=294 or value["traceability_count"]!=294 or value["completion_record_count"]!=154:raise RuntimeError("inherited checkpoint inventory drift")
  if len(value["documents"])!=8 or any(not x["present"]for x in value["documents"]):raise RuntimeError("checkpoint documentation drift")
  if value["blocker_case_count"]!=256 or any(not x["visible"]or x["legacy_g_product_closed"]or x["g_ga_closed"]or x["release_authorized"]or x["support_promoted"]for x in value["blocker_cases"]):raise RuntimeError("checkpoint blocker visibility drift")
  for key in ("supported_platform_count","enabled_model_count","clean_platform_bundle_count","signed_manifest_count","independent_review_count","user_approval_count"):
@@ -30,5 +30,5 @@ def check():
 def main():
  parser=argparse.ArgumentParser();parser.add_argument("--write",action="store_true");args=parser.parse_args()
  if args.write:OUTPUT.parent.mkdir(parents=True,exist_ok=True);OUTPUT.write_bytes(build())
- check();print("validated 112 inherited reports and 256 non-GA blocker cases without release authority");return 0
+ check();print("validated 154 inherited reports and 256 non-GA blocker cases without release authority");return 0
 if __name__=="__main__":raise SystemExit(main())
