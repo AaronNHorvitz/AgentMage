@@ -171,7 +171,11 @@ class EffectBoundaryTests(unittest.TestCase):
     def test_platform_cannot_drop_kernel_mediation_dependency(self) -> None:
         relative = Path("platforms/linux/Cargo.toml")
         source = self.source(str(relative)).replace(
-            "agentmage-kernel-engine.workspace = true\n", "", 1
+            'agentmage-kernel-engine = { workspace = true, features = '
+            '["runtime-projections", "source-preparation", '
+            '"verified-workflow-supervisor"] }\n',
+            "",
+            1,
         )
         failures = validate_effect_boundary(overrides={relative: source})
         self.assertTrue(
