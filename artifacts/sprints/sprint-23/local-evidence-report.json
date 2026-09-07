@@ -45,7 +45,7 @@
       ],
       "exit_code": 101,
       "id": "host-tests",
-      "output_sha256": "dd15e174644a48fb90a34c874c7726d535bd937492e05ee5e3945203aebc80bf"
+      "output_sha256": "284765582e0b5bc3e9ea055ba70254bece2b8bb47b69e4e789cb34ef2e2691f2"
     },
     {
       "argv": [
@@ -59,7 +59,7 @@
       ],
       "exit_code": 101,
       "id": "signed-catalog-bootstrap-tests",
-      "output_sha256": "1c7c50e193a996c244ded49f815a7dc26eafb12de793185fb0b36a1a9a5cdf56"
+      "output_sha256": "fbada0a82994ccc5fc923bee6c932cc03696a0e1f839fc411c7cbcf4d0a52318"
     },
     {
       "argv": [
@@ -71,7 +71,7 @@
       ],
       "exit_code": 1,
       "id": "vscode-tests",
-      "output_sha256": "a0094ab3b9b11a94d3f850b37593a691a40ae1a62ee8e96dff85c7ebaf8a6516"
+      "output_sha256": "82a49ca90c86f441cef29eca4e7b90e77fe9347c4e9ad56461c47cbca3db3f3f"
     },
     {
       "argv": [
@@ -93,7 +93,7 @@
       ],
       "exit_code": 101,
       "id": "product-gate",
-      "output_sha256": "162388dd49d886d1e91133b78fc6fc5743eba69d272ab1c91798f02487977b65"
+      "output_sha256": "d9dabd23c2e085396f6e306b9dcce9132bbdf440473b10fbf714f061c586009b"
     },
     {
       "argv": [
@@ -102,9 +102,9 @@
         "unittest",
         "tests.test_sprint_23_evidence"
       ],
-      "exit_code": 1,
+      "exit_code": 0,
       "id": "evidence-tests",
-      "output_sha256": "0460e3a516fd4cdbf4bfb09c9ac73a753e53cc611a1a0e96bb65dfbb01c72c64"
+      "output_sha256": "2c37d50a88147ca2ebd5197d74ee37d462dab650d793512e849814c28d5a38f0"
     },
     {
       "argv": [
@@ -175,7 +175,7 @@
     "SR-CIV-009",
     "SR-TST-008"
   ],
-  "source_revision": "d359af20ac29d9c256a146c7b235bb986563f8fc",
+  "source_revision": "1a5ff85619348aeca17109242567c14c9fea8df9",
   "source_sha256": {
     "artifacts/sprints/sprint-23/source-boundary-review.json": "651edbc591566074585cb73bf2d404517108418519d4a174ee16e8fe8ef0c739",
     "docs/architecture/native-chat-accessibility.md": "a3668aa0798b0a7b908ed37cb7971af240a40da522a2bec549e6c8e81b8c763f",
@@ -202,7 +202,7 @@
     "shells/vscode/test/native_accessibility.test.ts": "fca86334787950442e69b1645ad1aae7ec7aa621938c41426d2071c753404a7c",
     "shells/vscode/test/provider.test.ts": "116b3544edd93a3f2f9630fa17e6a7bc81da631c893c0c05a3a111de4d5c60be",
     "tests/test_sprint_23_boundary_review.py": "c24b56a06e727f7d0541407f2e89d01d94f7354d323c83670b11d660fe6ab046",
-    "tests/test_sprint_23_evidence.py": "6fc678788271b97b9c839ef1e19ff6466fd58bc9180eb5e070ebaf741dda192c"
+    "tests/test_sprint_23_evidence.py": "747235acb2e035d526f65c44b735ac284d3a3a24f1d2cc3177d25cc0954ab1aa"
   },
   "summary": {
     "local_contract_passed": false,
