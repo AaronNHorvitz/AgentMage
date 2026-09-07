@@ -79,11 +79,11 @@
       },
       {
         "path": "fixtures/contracts/v2/manifest.json",
-        "sha256": "8dc709019bf16bfc83340e4594945d647748a5340bbe2960c9dd8741a0b2a09b"
+        "sha256": "cc0bc1645c81e4835191d91beca51eb67797123b870bee575fcd948d4685782d"
       }
     ],
-    "reviewed_commit": "94429fb44b4d7ec12f0ccc11aaf94c09a67a8ca7",
-    "reviewed_tree": "15cde9f29b9999c35870e8713120fbd5e05d4498",
+    "reviewed_commit": "9613571bf5e84f4a7010c368c8805b277c934c26",
+    "reviewed_tree": "d44e1dd6167bf747c66015a999ecd3ac9522d257",
     "reviewer_id": "agentmage-sprint-4-independent-gate-v1"
   },
   "macos": {
@@ -95,8 +95,8 @@
   "positive_authority_path_claim": "none",
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "94429fb44b4d7ec12f0ccc11aaf94c09a67a8ca7",
-  "reviewed_tree": "15cde9f29b9999c35870e8713120fbd5e05d4498",
+  "reviewed_commit": "9613571bf5e84f4a7010c368c8805b277c934c26",
+  "reviewed_tree": "d44e1dd6167bf747c66015a999ecd3ac9522d257",
   "schema_version": 1,
   "sprint_id": 4,
   "status": "blocked-macos",
