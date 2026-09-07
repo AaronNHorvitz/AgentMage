@@ -278,7 +278,7 @@ the first signal observed by a token remains stable.
 
 ## Versioned Top-Level Types
 
-The following 33 types implement `VersionedContract` and may be passed directly
+The following 96 types implement `VersionedContract` and may be passed directly
 to `from_json` or `to_canonical_json`:
 
 | Domain | Top-level types |
@@ -290,6 +290,12 @@ to `from_json` or `to_canonical_json`:
 | Tool | `ToolDefinition`, `ToolCall`, `ToolResult` |
 | Evidence | `EvidenceReference`, `Receipt` |
 | Failure | `ContractError`, `CancellationSignal`, `BoundaryFailure` |
+| Engineering runtime records | `CanonicalArtifactEnvelope`, `CanonicalArtifactIngestionResult`, `CanonicalArtifactTransformation`, `CanonicalAttemptCheckpoint`, `CanonicalCallEnvelope`, `CanonicalCapabilityManifest`, `CanonicalContextDeliveryReceipt`, `CanonicalContextManifest`, `CanonicalModelEndpointProfile`, `CanonicalModelRouteDecision`, `CanonicalOperationAttempt`, `CanonicalRecoveryDecision`, `CanonicalRetryAdmission`, `CanonicalSourceLocator`, `CanonicalSourceRetention`, `CanonicalStepExecution`, `CanonicalStepExecutionPolicy`, `CanonicalTerminalDiagnostic`, `CanonicalTerminalResult`, `CanonicalToolObservation`, `CanonicalVerificationEnvelope`, `CanonicalVerificationResult`, `CanonicalWorkflowCheckpoint`, `CanonicalWorkflowDefinition`, `CanonicalWorkflowExecution`, `CanonicalWorkflowState` |
+| Engineering coordination | `AgentLease`, `ArtifactCaptureResult`, `ArtifactRangeReceipt`, `ArtifactUploadChunk`, `CapabilityManifest`, `ContextDeliveryReceipt`, `EngineeringEvent`, `EngineeringSessionSnapshot`, `IntegrationRecord`, `ModelEndpointProfile`, `ModelRouteDecision`, `ReviewFinding`, `TeamCampaign`, `ToolObservation`, `VerifiedModelTurnResult` |
+| Context and conversation | `CheckedContextSummary`, `ComposedContextPacket`, `ConversationCompactionRecord`, `ConversationRecord`, `ConversationTurn`, `SessionCheckpoint` |
+| Handoff and claims | `HandoffDraft`, `HandoffReview`, `MaterialClaimEvidenceAssignment`, `RenderedHandoff` |
+| Model discovery | `ModelPickerSnapshot` |
+| Runtime control | `RuntimeApprovalChallenge`, `RuntimeApprovalResponse`, `RuntimeArtifactManifest`, `RuntimeArtifactRef`, `RuntimeContinuationState`, `RuntimeEvent`, `RuntimeOutcome`, `RuntimeResumeBinding`, `RuntimeRunRequest`, `RuntimeToolAttemptState` |
 
 Nested records and enums are encoded only as part of their owning top-level
 contract. Their fields remain closed even though they do not independently
@@ -332,7 +338,7 @@ does not silently relabel an existing package artifact.
 
 ## Public Symbol Index
 
-The package exports 249 public symbols. The index is grouped by source family so
+The package exports 519 public symbols. The index is grouped by source family so
 an implementation can distinguish wire types from helpers and identifiers.
 
 - Approval: `ApprovalRequest`.
@@ -416,6 +422,123 @@ an implementation can distinguish wire types from helpers and identifiers.
   `ToolCatalogId`, `UserMessageDisposition`, `UserMessageIntent`,
   `VerificationDisposition`, `VerifiedMaterialClaim`, `VerifierCandidate`,
   `VerifierDisposition`, `VerifierId`, `VerifierRecordId`, and `VerifierSource`.
+- Context and conversation additions: `CheckedContextSummary`, `CheckedSummaryState`,
+  `CheckpointFileIdentity`, `ComposedContextPacket`, `ContextAdmission`,
+  `ContextItemAccounting`, `ContextItemCandidate`, `ContextItemKind`,
+  `ContextOmissionReason`, `ContextSensitivity`, `ContextSummaryId`,
+  `ConversationAttachmentReference`, `ConversationCompactionId`,
+  `ConversationCompactionRecord`, `ConversationId`, `ConversationRecord`,
+  `ConversationRetention`, `ConversationRetentionKind`, `ConversationStatus`,
+  `ConversationTurn`, `ConversationTurnId`, `ConversationTurnRole`,
+  `ResumeDriftDecision`, `ResumeDriftDimension`, `SessionCheckpoint`, and
+  `SessionCheckpointId`.
+- Engineering coordination additions: `AgentLease`, `AgentLeaseId`, `AgentLeaseState`,
+  `ArtifactCaptureDisposition`, `ArtifactCaptureResult`, `ArtifactCoverageState`,
+  `ArtifactRangeReceipt`, `ArtifactSourceKind`, `ArtifactUploadChunk`,
+  `ArtifactUploadId`, `CampaignId`, `CapabilityId`, `CapabilityManifest`,
+  `ContextArtifactCoverage`, `ContextDeliveryReceipt`, `EndpointClass`,
+  `EndpointProfileId`, `EndpointProtocol`, `EngineeringEvent`,
+  `EngineeringEventKind`, `EngineeringPlanApproval`, `EngineeringPlanHandoff`,
+  `EngineeringRpcRequest`, `EngineeringRpcResponse`, `EngineeringRuntimeBinding`,
+  `EngineeringSessionMode`, `EngineeringSessionSnapshot`,
+  `EngineeringTerminalState`, `IntegrationId`, `IntegrationRecord`,
+  `IntegrationState`, `ModelEndpointProfile`, `ModelRouteDecision`, `ReviewFinding`,
+  `ReviewId`, `ReviewOutcome`, `RouteDecisionId`, `TeamCampaign`,
+  `TeamCampaignState`, `ToolObservation`, `ToolObservationTermination`, and
+  `VerifiedModelTurnResult`.
+- Claim-provenance additions: `DerivedClaimProvenance`,
+  `DeterministicMethodIdentity`, `InferenceRuntimeProvenance`,
+  `InferredClaimProvenance`, `MaterialClaimEvidenceAssignment`,
+  `MaterialClaimEvidenceState`, `MaterialClaimEvidenceStateKind`,
+  `ObservedClaimProvenance`, `UnknownBlockedClaimProvenance`, and
+  `UnknownBlockedReason`.
+- Diagnostics additions: `DiagnosticComponent`, `DiagnosticItem`,
+  `DiagnosticObservation`, `DiagnosticState`, and `DoctorReport`.
+- Document-control additions: `DocumentActionApproval`, `DocumentActionKind`,
+  `DocumentActionPreview`, `DocumentActionReview`, `DocumentAttachmentReviewState`,
+  `DocumentControlFinding`, `DocumentControlFindingKind`, `DocumentLifecycleState`,
+  `DocumentNamedParty`, `DocumentRegister`, `DocumentRegisterAttachment`,
+  `DocumentRegisterEntry`, `DocumentRegisterKind`, `DocumentRegisterStatement`,
+  `DocumentStatementClass`, `DocumentWorkflowKind`, and `DocumentWorkflowReport`.
+- Executive-workflow additions: `ExecutiveCorrespondenceDraft`,
+  `ExecutiveCorrespondenceIssue`, `ExecutiveCorrespondenceIssueKind`,
+  `ExecutiveCorrespondenceKind`, `ExecutiveCorrespondenceReview`,
+  `ExecutiveDraftClaim`, `ExecutiveDueWindow`, `ExecutiveEvidenceState`,
+  `ExecutiveField`, `ExecutiveLocalMessage`, `ExecutiveMessageTriageClass`,
+  `ExecutiveMessageTriageEntry`, `ExecutivePortfolioSnapshot`,
+  `ExecutivePriorityComponent`, `ExecutivePriorityComponentKind`,
+  `ExecutivePriorityEntry`, `ExecutivePriorityRanking`, `ExecutivePrivacyClass`,
+  `ExecutivePrivacyDecision`, `ExecutivePrivacyOperation`, `ExecutivePrivacyRequest`,
+  `ExecutiveRecord`, `ExecutiveRecordKind`, `ExecutiveRecordStatus`,
+  `ExecutiveReminder`, `ExecutiveReminderActionKind`, `ExecutiveReminderEvent`,
+  `ExecutiveReminderState`, `ExecutiveSourceReference`, `ExecutiveSourceStore`,
+  `ExecutiveTracker`, `ExecutiveTrackerEntry`, `ExecutiveTrackerKind`,
+  `ExecutiveView`, `ExecutiveViewItem`, and `ExecutiveViewKind`.
+- Frontier-workflow additions: `FrontierAcceptanceState`,
+  `FrontierClarificationClass`, `FrontierDisagreement`, `FrontierImportDisposition`,
+  `FrontierImportedClaimState`, `FrontierLocalFlowRequirements`,
+  `FrontierRecommendationReceipt`, `FrontierRecommendationTrigger`,
+  `FrontierReturnArtifactDeclaration`, `FrontierReturnArtifactKind`,
+  `FrontierReturnCitationClaim`, `FrontierReturnInput`, `FrontierReturnKind`,
+  `FrontierReturnManifest`, `FrontierReturnedStep`, `FrontierReturnedStepKind`,
+  `FrontierReturnedStepOutcome`, `FrontierRoundTripReceipt`, `FrontierTaskTier`,
+  `FrontierTierDecision`, and `FrontierTierEvidence`.
+- Handoff additions: `HandoffDestinationClass`, `HandoffDisclosureEntry`,
+  `HandoffDraft`, `HandoffEntryDisposition`, `HandoffEntryKind`,
+  `HandoffPacketManifest`, `HandoffProhibitedAction`, `HandoffReview`,
+  `HandoffSensitivity`, `LocalHandoffOutcome`, `LocalHandoffReceipt`, and
+  `RenderedHandoff`.
+- MCP additions: `McpCancellation`, `McpConnection`, `McpDisconnect`,
+  `McpDiscovery`, `McpError`, `McpLimits`, `McpManifest`, `McpPromptManifest`,
+  `McpReceipt`, `McpReceiptKind`, `McpRequest`, `McpRequestKind`,
+  `McpResourceManifest`, `McpResponse`, `McpResponseClass`, `McpTerminalState`,
+  `McpToolManifest`, `McpTransport`, and `McpTransportKind`.
+- Meeting additions: `MeetingAttendanceState`, `MeetingAttendee`, `MeetingCloseout`,
+  `MeetingContinuityItem`, `MeetingContinuityRecord`, `MeetingContinuityState`,
+  `MeetingContinuityUpdate`, `MeetingDraftKind`, `MeetingFieldState`,
+  `MeetingInvitationState`, `MeetingMinutes`, `MeetingMinutesItem`,
+  `MeetingMinutesItemKind`, `MeetingPlanDraft`, `MeetingPlanItem`,
+  `MeetingProjectionPrecondition`, `MeetingTextSourceKind`,
+  `MeetingTranscriptCleanup`, `MeetingTranscriptSegment`, and `MeetingUnclearMarker`.
+- Model-discovery additions: `ModelActivationState`, `ModelCompatibilityState`,
+  `ModelPickerCapability`, `ModelPickerDisposition`, `ModelPickerEntry`,
+  `ModelPickerSnapshot`, `ModelSelectionRevalidation`, and `ModelSupportState`.
+- Runtime-control additions: `RuntimeApprovalChallenge`,
+  `RuntimeApprovalDisposition`, `RuntimeApprovalResponse`,
+  `RuntimeArtifactCleanupState`, `RuntimeArtifactId`,
+  `RuntimeArtifactIntegrityState`, `RuntimeArtifactKind`,
+  `RuntimeArtifactLifecycleState`, `RuntimeArtifactManifest`,
+  `RuntimeArtifactOperatorView`, `RuntimeArtifactPreview`, `RuntimeArtifactRef`,
+  `RuntimeContinuationState`, `RuntimeEvent`, `RuntimeEventCursor`,
+  `RuntimeEventId`, `RuntimeEventKind`, `RuntimeEventPersistenceClass`,
+  `RuntimeEventRetention`, `RuntimeEventRetentionKind`, `RuntimeOperationId`,
+  `RuntimeOutcome`, `RuntimeOutput`, `RuntimePayloadReference`,
+  `RuntimePermissionDisposition`, `RuntimeResourceUsage`, `RuntimeResumeBinding`,
+  `RuntimeRunId`, `RuntimeRunLimits`, `RuntimeRunRequest`, `RuntimeSafeNextAction`,
+  `RuntimeSessionMode`, `RuntimeToolAttemptState`, `RuntimeToolReference`, and
+  `RuntimeTurnId`.
+- Structured-source additions: `CSV_MEDIA_TYPE`, `DOCX_MEDIA_TYPE`,
+  `JSON_MEDIA_TYPE`, `PDF_MEDIA_TYPE`, `StructuredSourceExtraction`,
+  `StructuredSourceExtractionError`, `StructuredSourceExtractionRequest`,
+  `StructuredSourceExtractor`, `StructuredSourceFormat`,
+  `StructuredSourceProvenance`, `StructuredSourceSection`,
+  `StructuredSourceSectionKind`, `StructuredSourceWarning`, and `XLSX_MEDIA_TYPE`.
+- Workspace-snapshot additions: `SnapshotEntry`, `SnapshotEntryKind`, and
+  `WorkspaceSnapshot`.
+- Canonical engineering-runtime records exported through the closed module:
+  `CanonicalArtifactEnvelope`, `CanonicalArtifactIngestionResult`,
+  `CanonicalArtifactTransformation`, `CanonicalAttemptCheckpoint`,
+  `CanonicalCallEnvelope`, `CanonicalCapabilityManifest`,
+  `CanonicalContextDeliveryReceipt`, `CanonicalContextManifest`,
+  `CanonicalModelEndpointProfile`, `CanonicalModelRouteDecision`,
+  `CanonicalOperationAttempt`, `CanonicalRecoveryDecision`,
+  `CanonicalRetryAdmission`, `CanonicalSourceLocator`, `CanonicalSourceRetention`,
+  `CanonicalStepExecution`, `CanonicalStepExecutionPolicy`,
+  `CanonicalTerminalDiagnostic`, `CanonicalTerminalResult`,
+  `CanonicalToolObservation`, `CanonicalVerificationEnvelope`,
+  `CanonicalVerificationResult`, `CanonicalWorkflowCheckpoint`,
+  `CanonicalWorkflowDefinition`, `CanonicalWorkflowExecution`, and
+  `CanonicalWorkflowState`.
 
 ## Scope Limits
 

@@ -144,7 +144,7 @@ def package_reference_inputs() -> tuple[
     exports = exported_symbols(lib_source)
     versioned = versioned_contracts(serialization_source)
     error_codes = boundary_error_codes(serialization_source)
-    if len(exports) != 249 or len(versioned) != 33 or len(error_codes) != 11:
+    if len(exports) != 519 or len(versioned) != 96 or len(error_codes) != 11:
         raise ReferenceValidationError("frozen package API counts are unexpected")
     return files, exports, versioned, error_codes
 
