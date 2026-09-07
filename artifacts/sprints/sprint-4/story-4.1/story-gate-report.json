@@ -6,7 +6,7 @@
       "dispatcher_denial_trace_count": 7,
       "positive_dispatch_path_available": false,
       "status": "pass-shared-linux",
-      "versioned_contract_count": 33
+      "versioned_contract_count": 96
     },
     {
       "criterion_id": "4.1.AC2",
@@ -34,7 +34,7 @@
       },
       {
         "path": "docs/architecture/kernel-contract-reference.md",
-        "sha256": "f3825b04067d57554d0a941aeb0055494e8a5ede02a9a1aaf1474f2b37cd99e0"
+        "sha256": "8e0a601fef40e4b2f90dd281418a1e5f5c9717b64d88c5088fb6a39f4af42bdf"
       },
       {
         "path": "kernel/engine/src/authority.rs",
@@ -70,7 +70,7 @@
       },
       {
         "path": "fixtures/contracts/v2/manifest.json",
-        "sha256": "8dc709019bf16bfc83340e4594945d647748a5340bbe2960c9dd8741a0b2a09b"
+        "sha256": "cc0bc1645c81e4835191d91beca51eb67797123b870bee575fcd948d4685782d"
       },
       {
         "path": "fixtures/contracts/v2/valid/action.json",
@@ -167,8 +167,8 @@
     ],
     "external_human_review_claim": "none",
     "finding_count": 0,
-    "reviewed_commit": "ec5d9ad8f60e2f0b46b5c28593adab0010966c8c",
-    "reviewed_tree": "8ebf118ec7f773db40d4174450ee9ca6bde0fbb7",
+    "reviewed_commit": "9613571bf5e84f4a7010c368c8805b277c934c26",
+    "reviewed_tree": "d44e1dd6167bf747c66015a999ecd3ac9522d257",
     "reviewer_id": "agentmage-story-4.1-independent-gate-v1"
   },
   "macos_evidence_substituted": false,
@@ -178,8 +178,8 @@
   "positive_authority_path_claim": "none",
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "ec5d9ad8f60e2f0b46b5c28593adab0010966c8c",
-  "reviewed_tree": "8ebf118ec7f773db40d4174450ee9ca6bde0fbb7",
+  "reviewed_commit": "9613571bf5e84f4a7010c368c8805b277c934c26",
+  "reviewed_tree": "d44e1dd6167bf747c66015a999ecd3ac9522d257",
   "schema_version": 1,
   "security_mapping": {
     "mapped_requirement_count": 7,
