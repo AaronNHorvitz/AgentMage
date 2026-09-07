@@ -2,7 +2,7 @@
   "name": "agentmage-planning-docs",
   "version": "0.0.0",
   "private": true,
-  "license": "Apache-2.0",
+  "license": "BUSL-1.1",
   "packageManager": "npm@11.12.1",
   "engines": {
     "node": ">=24.15.0 <25",

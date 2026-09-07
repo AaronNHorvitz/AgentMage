@@ -418,7 +418,7 @@ These workstreams continue across multiple epics even though their first deliver
 | Model management | Epic 15 and post-GA Epic 16 | Approved catalog, guided installation, Muse candidate admission, and isolated experimental evaluation |
 | Whole-codebase audit | Epic 15 | Exact scope and census, deterministic structure, semantic partitioning, evidence cards, checkpoint resume, invalidation, cross-module reconciliation, read-only verification, findings, coverage, and removal |
 | Security assurance | Epic 0 | Threat cases, `SR-*` mappings, assigned `RV-*` owners, continuous fuzzing, adversarial testing, independent review criteria, and incremental evidence bundles |
-| Release engineering | Epic 0 | Apache-2.0 licensing, reproducible builds, manifests, signing, software/model/crypto bills of materials, clean installation, vulnerability response, signed manual patches, rollback, and support |
+| Release engineering | Epic 0 | BUSL-1.1 licensing, reproducible builds, manifests, signing, software/model/crypto bills of materials, clean installation, vulnerability response, signed manual patches, rollback, and support |
 
 ## 6. Delivery Sequence
 
@@ -1199,7 +1199,7 @@ work queue.
 The first high-level sequence is:
 
 1. Establish the canonical requirement registry, decision and risk records, document traceability, public-authority provenance, conflict handling, and additions-only checks.
-2. Validate the Apache-2.0, model-provenance, vulnerability-response, runtime-boundary, and documentation-CI baseline.
+2. Validate the BUSL-1.1, model-provenance, vulnerability-response, runtime-boundary, and documentation-CI baseline.
 3. Preserve the completed Gemma 4 E4B and Gemma 4 12B Unified rejected feasibility records; implement the candidate-neutral profile/codec/proposal boundary; evaluate Muse first and eligible official first-party Gemma models by role; and admit a usable exact profile only through a new revision-bound artifact, runtime, policy, hardware, quality, repeatability, security, and activation decision.
 4. Create the repository and package architecture with enforced one-way dependencies and reproducible development commands.
 5. Build the synthetic fixture, attack, fuzz-harness, test-result, and evidence framework before real user data is touched; execute the real fuzz engine in the final campaign required by Decision 0025.
