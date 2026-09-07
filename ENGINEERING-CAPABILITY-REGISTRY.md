@@ -16,6 +16,8 @@ Stabilization scope freeze: inactive (Decision 0047) — the complete preserved 
 
 First-release surface: standalone hardened desktop application (Decision 0048).
 
+Repository license: Business Source License 1.1 (Decision 0051); versions published before 2026-09-07 remain under Apache License 2.0.
+
 First-release gate: Story 25.3 under the Decision 0051 restart-readiness correction.
 
 The Rust kernel currently validates, seals, registers, resolves, and executes

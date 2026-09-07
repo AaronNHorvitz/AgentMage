@@ -15,7 +15,7 @@
 | **First interface target** | Standalone hardened desktop application (Windows 11 x64 first, Apple Silicon macOS second); Visual Studio Code Verified Chat as a secondary surface (Decision 0048) |
 | **First buyer** | a non-technical professional who holds information under a duty of confidentiality or a compliance regime and works alone or in a firm of one to twenty-five people (solo and small-firm lawyers, accountants and tax preparers, clinicians and small practices, independent financial advisers) (Decision 0048) |
 | **Current enabled model** | None; Muse Glimmer is the primary evaluation candidate, eligible first-party Gemma models form the initial role-aware comparison inventory, and prior evaluated Gemma 4 E4B and Gemma 4 12B Unified profiles remain rejected |
-| **License** | Apache License 2.0 |
+| **License** | Business Source License 1.1 (Decision 0051); Change Date 2030-09-07 → Apache License 2.0 |
 
 AgentMage is a brand-new, from-scratch project. It is an independent, privately developed product created by Aaron N. Horvitz on personal time, on personally controlled hardware, with independently obtained tools and services. It is not sponsored, commissioned, or developed on behalf of an employer, and it is intended for public distribution. Evaluation or installation on a managed device is a separate decision by that device's owner or operator and does not change project ownership.
 
@@ -38,6 +38,8 @@ Current supported platforms: none.
 Stabilization scope freeze: inactive (Decision 0047) — the complete preserved plan is open under the Decision 0021 execution rule; blocked rows retain exact blockers and empty substitution sets.
 
 First-release surface: standalone hardened desktop application (Decision 0048).
+
+Repository license: Business Source License 1.1 (Decision 0051); versions published before 2026-09-07 remain under Apache License 2.0.
 
 First-release gate: Story 25.3 under the Decision 0051 restart-readiness correction.
 

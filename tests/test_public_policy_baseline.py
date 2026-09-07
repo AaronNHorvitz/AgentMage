@@ -17,18 +17,21 @@ class PublicPolicyBaselineTests(unittest.TestCase):
 
         self.assertEqual(
             hashlib.sha256(license_bytes).hexdigest(),
-            "02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f",
+            "3c0fe2e36ea4933e3fbf92bc2bac81ae05bc47800e85be7e1bb40ede19c5e5f7",
         )
-        self.assertIn("Apache License", license_text)
-        self.assertIn("Version 2.0, January 2004", license_text)
-        for section in range(1, 10):
-            self.assertIn(f"   {section}.", license_text)
-        self.assertIn("END OF TERMS AND CONDITIONS", license_text)
-        self.assertEqual(package["license"], "Apache-2.0")
+        self.assertIn("Business Source License 1.1", license_text)
+        self.assertIn("Licensor:             Aaron N. Horvitz", license_text)
+        self.assertIn("Change Date:          2030-09-07", license_text)
+        self.assertIn("Change License:       Apache License, Version 2.0", license_text)
+        self.assertIn("Covenants of Licensor", license_text)
+        # Manifests carry the SPDX identifier until the next evidence batch (Decision 0051).
+        self.assertIn(package["license"], ("Apache-2.0", "BUSL-1.1"))
 
         expected_references = {
-            "README.md": "[Apache License 2.0](./LICENSE)",
-            "PRD.md": "| **License** | Apache License 2.0 |",
+            "README.md": "[Business Source License 1.1](./LICENSE)",
+            "PRD.md": "| **License** | Business Source License 1.1 (Decision 0051)",
+            "NOTICE": "Business Source License 1.1",
+            "docs/decisions/0051-business-source-license.md": "Change Date 2030-09-07",
             "IMPLEMENTATION-PLAN.md": "Apache-2.0 licensing",
             "Agent-Scaffolding-Inventory.md": "Apache-2.0 license",
             "TASKS.md": "Publish the Apache License 2.0",

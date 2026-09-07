@@ -18,7 +18,7 @@ AgentMage is an independent, privately developed product created by Aaron N. Hor
 | v1.0 GA platforms | Fedora, Ubuntu, and Windows 11 x64; Apple Silicon macOS retained as a post-GA lane |
 | Delivery boundary | Full GitHub.com/GitHub Enterprise support within a published matrix, plus versioned provider adapters for planning, CI/CD, artifacts, deployment, infrastructure, observability, incidents, security, catalogs, releases, communications, productivity, finance, read-only cloud observation, public research, and encrypted continuity |
 | Execution plan | 17 release epics, four cross-cutting foundational runtime epics, 169 numbered dependency gates, and 294 stable requirements; completed work is preserved and all expansions or refinements are appended under accepted decisions |
-| License | [Apache License 2.0](./LICENSE) |
+| License | [Business Source License 1.1](./LICENSE) — Change Date 2030-09-07 → Apache License 2.0; earlier versions remain Apache 2.0 |
 
 ## Current Implementation Truth
 
@@ -35,6 +35,8 @@ Current supported platforms: none.
 Stabilization scope freeze: inactive (Decision 0047) — the complete preserved plan is open under the Decision 0021 execution rule; blocked rows retain exact blockers and empty substitution sets.
 
 First-release surface: standalone hardened desktop application (Decision 0048).
+
+Repository license: Business Source License 1.1 (Decision 0051); versions published before 2026-09-07 remain under Apache License 2.0.
 
 First-release gate: Story 25.3 under the Decision 0051 restart-readiness correction.
 
@@ -572,7 +574,7 @@ A gate is only `PASS` or `BLOCKED`. Failed, skipped, stale, unavailable, flaky, 
 - [Machine-Readable Requirement Registry](./requirements/README.md) - deterministic inventory and field contract for every canonical `AM-*`, `AT-*`, and `CR-*` identifier.
 - [Product Validation and Clean-Build Evidence](./docs/product-ci-and-clean-build.md) - local product gates, disposable platform execution, manual hosted macOS, native-test truth, exact source binding, and network isolation.
 - [Accepted Architecture Decisions](./docs/decisions/) - dated clarifications and supersessions that preserve stable requirement history.
-- [Apache License 2.0](./LICENSE) - permissions and conditions for use, modification, and distribution.
+- [Business Source License 1.1](./LICENSE) - source-available terms; production and commercial use reserved until the Change Date (2030-09-07), then Apache License 2.0. See NOTICE for versions published before 2026-09-07.
 
 ## Documentation Validation
 

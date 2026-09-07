@@ -285,7 +285,7 @@ CODEBASE_AUDIT_DECISION_FILE = "docs/decisions/0011-whole-codebase-audit.md"
 STATUS_DECISION_FILE = "docs/decisions/0012-stabilization-truth-and-status-model.md"
 DECISION_BOUNDARIES = {
     "license": (
-        re.compile(r"Apache(?: License)?[- ]2\.0", re.IGNORECASE),
+        re.compile(r"Business Source License 1\.1", re.IGNORECASE),
     ),
     "model": (
         re.compile(r"Gemma 4 E4B"),
@@ -501,8 +501,13 @@ def check_cross_document_contract(failures: list[str]) -> None:
         failures.append(f"TASKS.md: expected 169 sprint headings, found {sprint_count}")
 
     license_text = read("LICENSE")
-    if "Apache License" not in license_text or "Version 2.0" not in license_text:
-        failures.append("LICENSE: expected complete Apache License 2.0 text")
+    if (
+        "Business Source License 1.1" not in license_text
+        or "Change Date:" not in license_text
+        or "Change License:" not in license_text
+        or "Licensor:" not in license_text
+    ):
+        failures.append("LICENSE: expected complete Business Source License 1.1 text with parameters")
 
 
 def check_accepted_decision_contract(

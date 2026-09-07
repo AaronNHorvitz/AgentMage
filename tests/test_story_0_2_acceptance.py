@@ -66,7 +66,7 @@ class Story02AcceptanceTests(unittest.TestCase):
             "RUNTIME-BOUNDARIES.md",
         ):
             self.assertIn(public_path, readme)
-        self.assertIn("Apache License", license_text)
+        self.assertIn("Business Source License 1.1", license_text)
         self.assertIn("## Supported Versions", security)
         self.assertIn("## Reporting a Vulnerability", security)
         self.assertIn("signed release manifest", security)
