@@ -9,12 +9,12 @@
         "output_redacted": true
       },
       "diagnostics": [],
-      "graph_sha256": "31ddaf566602edcd3f5842f740fada98e5b95856d6b60df9242a0f4a94a52611",
+      "graph_sha256": "d511225168ae4d407fffddb004a4acc0fc971e074837bf92222d421c86ced94d",
       "locks_unchanged": true,
       "npm": {
         "command": "npm install --package-lock-only --ignore-scripts --offline --no-audit --no-fund",
         "exit_code": 0,
-        "output_captured": true,
+        "output_captured": false,
         "output_redacted": true
       },
       "run_id": "clean-a",
@@ -29,12 +29,12 @@
         "output_redacted": true
       },
       "diagnostics": [],
-      "graph_sha256": "31ddaf566602edcd3f5842f740fada98e5b95856d6b60df9242a0f4a94a52611",
+      "graph_sha256": "d511225168ae4d407fffddb004a4acc0fc971e074837bf92222d421c86ced94d",
       "locks_unchanged": true,
       "npm": {
         "command": "npm install --package-lock-only --ignore-scripts --offline --no-audit --no-fund",
         "exit_code": 0,
-        "output_captured": true,
+        "output_captured": false,
         "output_redacted": true
       },
       "run_id": "clean-b",

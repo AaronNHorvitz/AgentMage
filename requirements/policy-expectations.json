@@ -19,7 +19,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "11B. Secretary and Administrative Operations",
-        "line": 913,
+        "line": 919,
         "statement_sha256": "0fd98e760399539bff73304544c691b541696c04671143339330ffcc00f9ebb1"
       },
       "statement": "unattended scheduling, mass correspondence, automatic recipient selection, automatic records disposition, and silent changes to approved minutes or final documents.",
@@ -36,7 +36,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "13. Git and Source-Control Tools",
-        "line": 962,
+        "line": 968,
         "statement_sha256": "10aefb26e63037061f49350e41ddae79c469743726dfd8ba08b3b0b97000ba62"
       },
       "statement": "automatic commit, push, pull-request creation, issue editing, review submission, merge, reset, checkout-discard, and force operations.",
@@ -53,7 +53,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "13A. Remote Repositories, Hosting, and Isolated Worktrees",
-        "line": 989,
+        "line": 995,
         "statement_sha256": "171dacdf3af11c52b359efcf379108f321d8313f3e26093eecfe8c4b37ea32f1"
       },
       "statement": "automatic issue or pull-request publication, review submission, merge, release, branch deletion, and force push.",
@@ -70,7 +70,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "2C. Local Agent Studio and Agent Direction",
-        "line": 432,
+        "line": 438,
         "statement_sha256": "1ee9a477398cb139b205f0a255a6a16687b616c711210271f96b1c812ecd85fc"
       },
       "statement": "self-created agents, recursive agent spawning, self-modifying agent definitions, automatic permission expansion, and unsupervised agent swarms.",
@@ -87,7 +87,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "2A. AgentMage Session Behavior",
-        "line": 348,
+        "line": 354,
         "statement_sha256": "282ff7f99952ae7769f93aeacce8a74ba8fe93779613a31fa445cc87f49cd021"
       },
       "statement": "automatic multi-agent swarms, uncontrolled delegation, and shared writes by multiple agents.",
@@ -104,7 +104,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "26. External Connectors and Model Context Protocol",
-        "line": 1382,
+        "line": 1388,
         "statement_sha256": "286d7957e613c5833bb9768753341310551d79748314b3f9906a0c3ab4f921a7"
       },
       "statement": "Model Context Protocol servers until local filesystem, Git, documents, and memory are reliable.",
@@ -121,7 +121,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "24. Queues, Jobs, and Controlled Retries",
-        "line": 1333,
+        "line": 1339,
         "statement_sha256": "3d8dab6c5ad08603776be8802faf93d319d51112bb2eaee1d6979f179d312406"
       },
       "statement": "autonomous schedulers and unattended background jobs.",
@@ -138,7 +138,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "25. Browser and Web Access",
-        "line": 1358,
+        "line": 1364,
         "statement_sha256": "3d9970e0528eea749ada6499e1c31b5a033b3dfc4ee1c8ad377780c602485692"
       },
       "statement": "silent form submission, file upload, email send, messaging platform message send, or external publication.",
@@ -155,7 +155,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "12. Shell and Process Runner",
-        "line": 931,
+        "line": 937,
         "statement_sha256": "3f419926417a2107436e14535be729ed2457aa773d834cd1d2c6c3da879ca1d4"
       },
       "statement": "unrestricted shell access.",
@@ -172,7 +172,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "19A. File-Type Priority",
-        "line": 1239,
+        "line": 1245,
         "statement_sha256": "424ac94b71d0f351a663b87f702f5e2c39f689dfaf9480c222f326afe1be40e1"
       },
       "statement": "automatic execution of macros, spreadsheet formulas, notebook cells, embedded scripts, or document attachments.",
@@ -189,7 +189,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "26A. Plugins, Hooks, and Capability Packages",
-        "line": 1413,
+        "line": 1419,
         "statement_sha256": "5e6f362e6ebbe86debdb99752cb28670c90a7b5be7d1b27adb6e27c98af2cbef"
       },
       "statement": "executing unsigned or unapproved packages and packages that request broader authority than the active task.",
@@ -206,7 +206,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "25. Browser and Web Access",
-        "line": 1352,
+        "line": 1358,
         "statement_sha256": "6631960004e689a3a9d74dd2e1ff4c374792ee74bcd2347da5275f48c5df0694"
       },
       "statement": "browser automation from the first offline release.",
@@ -223,7 +223,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "27B. Local Desktop Application",
-        "line": 1502,
+        "line": 1508,
         "statement_sha256": "68e8b38bb68c06c3f22cdcb04c56b6f137ccd10f73c862f051da2f5ac7e65b92"
       },
       "statement": "Windows and Intel Mac support until the Apple Silicon macOS, Fedora, and Ubuntu implementation passes the complete offline, security, storage, and recovery suites.",
@@ -240,7 +240,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "11A. Executive Assistant and Chief-of-Staff Functions",
-        "line": 888,
+        "line": 894,
         "statement_sha256": "6af6812fdf1b10237d8cdf4a9a967722ac20523e5b1c5f25324dd1dcf815520b"
       },
       "statement": "automatic acceptance of invitations, sending correspondence, making commitments, changing calendars, contacting people, or presenting a recommendation as the user's decision.",
@@ -257,7 +257,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "1A. Model Routing and Local Resource Management",
-        "line": 271,
+        "line": 277,
         "statement_sha256": "6cf8fe2d56e3b3566f36e61d1f79bdfedf81ad84de726019676664cd965a10a9"
       },
       "statement": "automatic model ensembles and invisible task routing until local benchmarks prove that they improve results reliably.",
@@ -274,7 +274,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "13B. Complete GitHub Integration",
-        "line": 1046,
+        "line": 1052,
         "statement_sha256": "6f05013bb4695fca450a693633d9cb1ec412ccc6ed0db1a5fb547ab688c6c6ed"
       },
       "statement": "automatic reviews, automatic fixes, automatic issue or pull-request updates, automatic merges, automatic releases, branch deletion, repository administration, secret changes, ruleset changes, and force pushes until each action has a separately approved policy and proven rollback path.",
@@ -291,7 +291,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "14B. Coding Assistance and Controlled Change Development",
-        "line": 1133,
+        "line": 1139,
         "statement_sha256": "78410c6b9a2ecf2115cb192588ef45963abec31db1c04f7a4bd68553cb76477d"
       },
       "statement": "automatic broad refactors, dependency upgrades, migrations, commits, pushes, releases, deployments, or fixes applied without exact user review.",
@@ -308,7 +308,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "14. Codebase Understanding and Editing",
-        "line": 1066,
+        "line": 1072,
         "statement_sha256": "89ffcde12fb8565bd45592d950e1f7cbd62b3d26a3147eb5c068a4d46f28867e"
       },
       "statement": "broad repository rewrites and autonomous refactoring.",
@@ -325,7 +325,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "9. Retrieval and Grounded Context",
-        "line": 710,
+        "line": 716,
         "statement_sha256": "9860b103254e8a0754f4d73ab80e48388b23128a933416210f63219ba5a3727d"
       },
       "statement": "a graph database; use Markdown links and SQLite indexes first.",
@@ -342,7 +342,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "28. Specialized Workflow Skills",
-        "line": 1554,
+        "line": 1560,
         "statement_sha256": "9c3c0366cc815e2d86a9b0654ca38262d820f7d0ffc830bd9b247e54675f2760"
       },
       "statement": "large agent swarms and automatic parallel delegation.",
@@ -359,7 +359,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "2B. Reasoning, Verification, and Decision Quality",
-        "line": 378,
+        "line": 384,
         "statement_sha256": "9d37446de88ddfa2019476cab00a435af98dcfab23217398abe26163d6d9ba6a"
       },
       "statement": "unbounded tree search, repeated self-debate, large model councils, and autonomous recursive planning until controlled evaluations show a reliable benefit.",
@@ -376,7 +376,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "9. Retrieval and Grounded Context",
-        "line": 711,
+        "line": 717,
         "statement_sha256": "9fc0826b61c933fed6d25ed309f951709c45e7911169f7fbe4b9cd4621f06faf"
       },
       "statement": "a large vector database until measured retrieval failures justify it.",
@@ -393,7 +393,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "21. Database and Structured-Data Tools",
-        "line": 1266,
+        "line": 1272,
         "statement_sha256": "b46d2cdc1ff6e1b3d39a97d23448884bda5b5720022daec591df5dce5b92e7dc"
       },
       "statement": "live external database access until access, policy, environment, and audit requirements are approved.",
@@ -410,7 +410,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "19A. File-Type Priority",
-        "line": 1238,
+        "line": 1244,
         "statement_sha256": "ddc19ddff135783a7642916d9e9be3450faef8cc711e94cce1ff0a30e4f66469"
       },
       "statement": "database dumps, Parquet, Avro, compressed archives, email files, Outlook data files, and proprietary binary formats until a real task requires them.",
@@ -427,7 +427,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "20. Images, Screenshots, and Visual Verification",
-        "line": 1251,
+        "line": 1257,
         "statement_sha256": "df5208847cdab9bf2dafc20f51d74fd25345d257c8c77435588c8c58bc1721c9"
       },
       "statement": "image generation in the first contingency release.",
@@ -444,7 +444,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "24A. Notifications and User-Controlled Scheduled Work",
-        "line": 1346,
+        "line": 1352,
         "statement_sha256": "e22250b4e0c51d21cfa07f7f7eb24174053802ba37ab3bacaa77fda44bc23251"
       },
       "statement": "any recurring task that sends messages, publishes changes, modifies remote systems, or writes outside agent-owned state without a separately approved mechanism.",
@@ -461,7 +461,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "2. Agent Orchestrator",
-        "line": 315,
+        "line": 321,
         "statement_sha256": "e3a1e4904f454459ad241deeaf831addc1c21174a05bdab1b9f6dcad080015d2"
       },
       "statement": "autonomous self-improvement, self-modifying prompts, unlimited loops, and unsupervised background work.",
@@ -478,7 +478,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "26. External Connectors and Model Context Protocol",
-        "line": 1397,
+        "line": 1403,
         "statement_sha256": "f8e52b24375e0271442f92a9a134f61e811cc4791c54b943e1b83a680fbd5895"
       },
       "statement": "automatic plugin installation and connector discovery from untrusted sources.",
@@ -495,7 +495,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "4. Tool Protocol and Registry",
-        "line": 467,
+        "line": 473,
         "statement_sha256": "fe95b34f0a95bfbae1eff46be1c7cb112159a3b209107a0b9ed00ab15790a48d"
       },
       "statement": "automatic installation of tools or packages.",
@@ -512,7 +512,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "5. Permissions, Approval, and Safety",
-        "line": 501,
+        "line": 507,
         "statement_sha256": "fff6167311ebbfba0be0389303999abde6a556999d813697fad1bf10e1b2a33e"
       },
       "statement": "access to live databases, document repositories, archive services, downstream services, cloud platforms, messaging, email, calendars, and source-control hosting.",
@@ -529,7 +529,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 162,
+        "line": 169,
         "statement_sha256": "22fbe483892bf9d4f0655fd0872e802b105456764a3ceba6d4cb3bd2902cf34f"
       },
       "statement": "A claim of external certification, customer approval, or managed-environment approval that has not been independently granted.",
@@ -546,7 +546,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 161,
+        "line": 168,
         "statement_sha256": "32ee6e69fccade2566f3ae46b5d4038a97452c6e30a5b5d9f2b18d12a927a39d"
       },
       "statement": "A public model marketplace, arbitrary provider endpoint, automatically installed plugin ecosystem, or unrestricted Model Context Protocol client.",
@@ -563,7 +563,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 164,
+        "line": 171,
         "statement_sha256": "35d761d60cbeac8f19dbcb3249344139700d8e2b4a7ee08cc52e65b397a96ad6"
       },
       "statement": "A defense against hostile root or administrator access, a compromised operating-system account or kernel, or physical access to an unlocked workstation.",
@@ -580,7 +580,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 157,
+        "line": 164,
         "statement_sha256": "43189b76cfe082b71e13af88d7b88cd40cdbcd2ac55b1533072a50a01e4c24e1"
       },
       "statement": "A bridge that invokes Codex, controls or populates its tab, writes a handoff to the clipboard, or submits content on the user's behalf.",
@@ -597,7 +597,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 158,
+        "line": 165,
         "statement_sha256": "671f4236763b39dcc8e764fc9e3d5115b35b9011b64bf6a1a38417d6e14ecd1f"
       },
       "statement": "A scheduler or unattended background worker.",
@@ -614,7 +614,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 156,
+        "line": 163,
         "statement_sha256": "7a0156253401f3d720bbf4eec671a4d1c01c4dfdd876a649341498b35b06e168"
       },
       "statement": "A frontier-model transfer mechanism.",
@@ -631,7 +631,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 155,
+        "line": 162,
         "statement_sha256": "7c8d6457dc0ff1e059687385bf4afc6e13d8d3aa18db2ef1c7280234637a105f"
       },
       "statement": "A browser, email, calendar, messaging, database, or GitHub connector.",
@@ -648,7 +648,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 151,
+        "line": 158,
         "statement_sha256": "8389b2e223f7a3ae8c311b6e058f789f1c9b5cf371197a6ca6a285724d3a0686"
       },
       "statement": "A cloud assistant or hosted service.",
@@ -665,7 +665,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 163,
+        "line": 170,
         "statement_sha256": "8fc52fecc0347a66ab5770df903656b610899809de72bbbda9572b66d4735a80"
       },
       "statement": "Approval to process sensitive, regulated, confidential, personal, financial, credential, or customer-controlled data under a profile that has not been explicitly supported and tested.",
@@ -682,7 +682,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 159,
+        "line": 166,
         "statement_sha256": "a14448dff969d65f2261fb8e9a6b38f98f1b463562a057215374c8d29d1cf9bd"
       },
       "statement": "A multi-agent system.",
@@ -699,7 +699,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 152,
+        "line": 159,
         "statement_sha256": "b8dc5e3a93c4636d5104a2d9785c83bbf0cb3aaaca5e26a4cc4a905b5e255c8e"
       },
       "statement": "A coding agent that changes files.",
@@ -716,7 +716,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 153,
+        "line": 160,
         "statement_sha256": "c09dbfe6ac8e80cb04a5586a50751bb1cf98c866cae469215f2eb2f99e738b86"
       },
       "statement": "An Obsidian assistant.",
@@ -733,7 +733,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 154,
+        "line": 161,
         "statement_sha256": "cf2749acf143494ecfc5d0048d4c507f7d23b453c28f4c2d03eb5aabfcaa280d"
       },
       "statement": "A desktop application or complete command-line product.",
@@ -750,7 +750,7 @@
       "source": {
         "document": "PRD.md",
         "heading": "4. Non-Goals",
-        "line": 160,
+        "line": 167,
         "statement_sha256": "e64902474dbd23529208c47e192370c15c4f087eac07d49582133e1acc83246c"
       },
       "statement": "A semantic/vector code index, remote embedding service, or language-server write surface.",
@@ -767,7 +767,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "19A. File-Type Priority",
-        "line": 1230,
+        "line": 1236,
         "statement_sha256": "2bc8a48ebb87b674fc6e837b31ae1ba852e35cc46ffaf373322093ccffabd15f"
       },
       "statement": "Plain text (`.txt`), Markdown (`.md`), JSON (`.json`), Excel (`.xlsx`), comma-separated value (`.csv`), Word (`.docx`), and Portable Document Format (`.pdf`) support.",
@@ -784,7 +784,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "19A. File-Type Priority",
-        "line": 1231,
+        "line": 1237,
         "statement_sha256": "43a61be11832ce2e019e7bdad527642a79510dc65bb0b2a242d63fea30d6b33d"
       },
       "statement": "File metadata, source hashes, bounded extraction, citations, and safe sidecar output for every supported format.",
@@ -801,7 +801,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Calendar, Contacts, Tasks, Documents, and Workflows",
-        "line": 2142,
+        "line": 2148,
         "statement_sha256": "43d41a1a239f7235663ec380f24e8cda0b4ffa4df74d4f023f354d21414ed33a"
       },
       "statement": "Promote Notion, Box, Dropbox, and additional repositories only after their independent manifests and conformance suites pass.",
@@ -818,7 +818,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "Observability, Incidents, Security, and Catalogs",
-        "line": 1981,
+        "line": 1987,
         "statement_sha256": "512acec050222054fe430b8659575b76fa4279a40c8c4ea3ab7fb4206301b9bd"
       },
       "statement": "Add Port, Cortex, Compass, New Relic, Dynatrace, ServiceNow, Bitbucket, Gerrit, Buildkite, CircleCI, Pulumi, LaunchDarkly, Unleash, Flyway, and Liquibase only through the same staged conformance process.",
@@ -835,7 +835,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "19. Spreadsheet, Comma-Separated Value, and JSON Tools",
-        "line": 1209,
+        "line": 1215,
         "statement_sha256": "5a678fc0ebcf938fed1c213663e2b0828c1bbeb4188a699b42b694beacb2b708"
       },
       "statement": "Support bounded filtering, sorting, matching, duplicate detection, missing-value checks, and comparison between two workbook or comma-separated value sources.",
@@ -852,7 +852,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "19. Spreadsheet, Comma-Separated Value, and JSON Tools",
-        "line": 1211,
+        "line": 1217,
         "statement_sha256": "799dc60cce98432b642e63242c3760216f6019f03b9dddd3b7e3c690c118846d"
       },
       "statement": "Prevent spreadsheet formula injection when generating comma-separated value output.",
@@ -869,7 +869,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "19. Spreadsheet, Comma-Separated Value, and JSON Tools",
-        "line": 1210,
+        "line": 1216,
         "statement_sha256": "7abdaca7fd3fe9458cf322af6c2d1b7e2cddc06fcd7f4b409a474b8a4dddb0b1"
       },
       "statement": "Preserve the original workbook or comma-separated value file and write any normalized table or comparison to a separate output file.",
@@ -886,7 +886,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "10C. Local Conversation Library and Exact-Point Resume",
-        "line": 788,
+        "line": 794,
         "statement_sha256": "815a3c0c5cca3f345b5f33462471eb5a5402e0db1b87a07fde8d9ddc58c01fc4"
       },
       "statement": "Resume from a selected historical turn by creating a visible local branch from that checkpoint, preserving the original conversation unchanged.",
@@ -903,7 +903,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "10D. Human-Readable Memory Files and Frontier Interoperability",
-        "line": 816,
+        "line": 822,
         "statement_sha256": "8a7d678428fba1fb22a126281ff8950d2febcb520367972be9871d662473e644"
       },
       "statement": "frontier edit rules that treat all returned content as untrusted input and prohibit direct changes to canonical operational or knowledge state.",
@@ -920,7 +920,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "19A. File-Type Priority",
-        "line": 1236,
+        "line": 1242,
         "statement_sha256": "8e1a039a68f231291a9af48fa2e72172d33b37d66e18005c32980b2daa121407"
       },
       "statement": "log-file support for timestamped text, JSON Lines, stack traces, and bounded event summaries.",
@@ -937,7 +937,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "19. Spreadsheet, Comma-Separated Value, and JSON Tools",
-        "line": 1207,
+        "line": 1213,
         "statement_sha256": "924c214f60f5e934318229b5fd8dea3baa7648bc1939097e07d255ecc8db0ddc"
       },
       "statement": "Support Excel workbooks (`.xlsx`) and comma-separated value files (`.csv`) as read-only inputs.",
@@ -954,7 +954,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "19A. File-Type Priority",
-        "line": 1234,
+        "line": 1240,
         "statement_sha256": "9371cdc6d70b9c30366be305da087b221345f6dfee1452b10831b1f4aea55edd"
       },
       "statement": "YAML (`.yaml` or `.yml`) parsing for configuration, agent, and skill files, with secret redaction.",
@@ -971,7 +971,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "1. Local Model and Runtime",
-        "line": 232,
+        "line": 238,
         "statement_sha256": "a2faf022f4a0103589881cff684e296c50914f9efd2ad1ef6e9a9e8b71c71d31"
       },
       "statement": "a benchmark-gated task router that can recommend or select among enabled profiles only after v0.1 records sufficient task-class evidence.",
@@ -988,7 +988,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "1A. Model Routing and Local Resource Management",
-        "line": 265,
+        "line": 271,
         "statement_sha256": "be126c92a5fd84ccfb868b1f9ec41c57f03bf929325ec51855a39e5d54f444d8"
       },
       "statement": "a measured fallback chain that activates only after benchmark gates pass and the user enables automatic routing.",
@@ -1005,7 +1005,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "10D. Human-Readable Memory Files and Frontier Interoperability",
-        "line": 815,
+        "line": 821,
         "statement_sha256": "c4c3e1636c637c51add93754c140443c5b4766948e4faa6aae3495709eab3d5d"
       },
       "statement": "an `AGENTMAGE-FRONTIER.md` instruction file for the v0.5 Frontier Consultation pack.",
@@ -1022,7 +1022,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "19A. File-Type Priority",
-        "line": 1233,
+        "line": 1239,
         "statement_sha256": "d5caa0416b03a5300397d8dc10d048b9fa9deeaae70c96510a63d05cf20dc47f"
       },
       "statement": "Hypertext Markup Language (`.html`) and Extensible Markup Language (`.xml`) parsing for saved web pages, exports, and structured data.",
@@ -1039,7 +1039,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "19A. File-Type Priority",
-        "line": 1235,
+        "line": 1241,
         "statement_sha256": "e6a7906fcc3ae23d6b742fe3720f316d5945e857b165fdf7c89fe95d228e701f"
       },
       "statement": "Jupyter Notebook (`.ipynb`) extraction for Markdown, code, outputs, and execution metadata without executing cells.",
@@ -1056,7 +1056,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "19A. File-Type Priority",
-        "line": 1237,
+        "line": 1243,
         "statement_sha256": "efe12f4c76e28fdd6c6650fea7ef53d2666e925e54b8ccc57f84a4bc2b1596d3"
       },
       "statement": "image and screenshot metadata, local visual inspection, and optional local optical character recognition after approval.",
@@ -1073,7 +1073,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "19A. File-Type Priority",
-        "line": 1232,
+        "line": 1238,
         "statement_sha256": "f165618f8dc0ecd48f024ff517b8b9ea07688cf82125d07a779c51000954e772"
       },
       "statement": "PowerPoint (`.pptx`) slide, speaker-note, hyperlink, and image-caption extraction for meeting presentations.",
@@ -1090,7 +1090,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "19. Spreadsheet, Comma-Separated Value, and JSON Tools",
-        "line": 1208,
+        "line": 1214,
         "statement_sha256": "f2c11a53f12bb3bcb403ec8594b5291259636bb52198ca707631d4381d612647"
       },
       "statement": "Show workbook names, worksheet names, row and column counts, headers, formulas, displayed values, dates, hyperlinks, hidden rows or columns, and source hashes.",
@@ -1107,7 +1107,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "1. Local Model and Runtime",
-        "line": 248,
+        "line": 254,
         "statement_sha256": "f88d66ba329ee82b5ceec85608c1a9fe848693b045578aa27eb61dbc5ab4c9c2"
       },
       "statement": "admit later Ollama, vLLM, and OpenAI-compatible local endpoint adapters only as exact manifest-bound `LocalModelRuntime` profiles with endpoint identity, process/network boundary, codec, provenance, zero-egress, capability, parity, and removal evidence; do not expose a generic arbitrary endpoint in the coding-harness MVP.",
@@ -1124,7 +1124,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35A. Explicitly Rejected Defaults",
-        "line": 1832,
+        "line": 1838,
         "statement_sha256": "09ee04bad8139caaa849849076373960a320e805782ba22bdbdf926919969738"
       },
       "statement": "Reject automatic Codex invocation, tab control, prompt population, clipboard transfer, endpoint transfer, or submission; only the user may move a reviewed handoff between the separate interfaces.",
@@ -1141,7 +1141,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35A. Explicitly Rejected Defaults",
-        "line": 1829,
+        "line": 1835,
         "statement_sha256": "1ed029d3264626fa5406916556f319496f04cb79c5f106852c60d1d2cb600ecc"
       },
       "statement": "Reject every Model Context Protocol server, plugin, hook, client, or alternate endpoint that bypasses kernel policy, grants, limits, cancellation, classification, or receipts.",
@@ -1158,7 +1158,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35A. Explicitly Rejected Defaults",
-        "line": 1833,
+        "line": 1839,
         "statement_sha256": "355db4257fa3f6e6d571ab0a5814f69c9da536d4672883c9f102010cce18a8e3"
       },
       "statement": "Reject messaging bots, schedules, background writes, shell execution, publication, and remote state changes in early releases; later support requires its own threat model, gates, and receipts.",
@@ -1175,7 +1175,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35A. Explicitly Rejected Defaults",
-        "line": 1831,
+        "line": 1837,
         "statement_sha256": "439040090ec23e768fa933c9ae9efd2f8eff683b1f10e2ffe6734f75f1f9f6e4"
       },
       "statement": "Reject silent fallback from a local model or runtime to any cloud model, hosted provider, remote endpoint, or external service.",
@@ -1192,7 +1192,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35A. Explicitly Rejected Defaults",
-        "line": 1826,
+        "line": 1832,
         "statement_sha256": "4f926e18258ff624c4834c735457eb9f90643771d345a2bfbcb9105830556460"
       },
       "statement": "Reject unrestricted, \"yolo,\" blanket, wildcard, or approve-everything tool execution in every interface and operating mode.",
@@ -1209,7 +1209,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35A. Explicitly Rejected Defaults",
-        "line": 1830,
+        "line": 1836,
         "statement_sha256": "859156473e18c1f4609a8ee7b9c9cdf3a0b53143b8805f7444d8eac710a92d90"
       },
       "statement": "Reject remote semantic indexing, remote embedding, remote reranking, or source upload while the product or session is represented as local mode.",
@@ -1226,7 +1226,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35A. Explicitly Rejected Defaults",
-        "line": 1836,
+        "line": 1842,
         "statement_sha256": "c9b8fda1ccfa7c00e2392ae5be747bb21bac22c75f8d9993e674cf799987b32d"
       },
       "statement": "Never describe path checks, data directories, pending changes, shadow change sets, Git branches, or Git worktrees as the security sandbox; only the documented operating-system-enforced isolation boundary may carry that name.",
@@ -1243,7 +1243,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35A. Explicitly Rejected Defaults",
-        "line": 1827,
+        "line": 1833,
         "statement_sha256": "cbfa0e75460245b1895e7d1c4d8e9590ed822f8ac3139e072551c05871adfa75"
       },
       "statement": "Treat repository configuration as untrusted data and reject arbitrary executable repository configuration, setup scripts, hooks, tasks, or commands unless separately inspected and granted.",
@@ -1260,7 +1260,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35A. Explicitly Rejected Defaults",
-        "line": 1835,
+        "line": 1841,
         "statement_sha256": "e3c0aed933b9fcc4317bcd39834ff4fff2fe569ca4a52cd60f42ae4845cb2dcd"
       },
       "statement": "Reject any model, embedding, reranker, tokenizer, conversion, runtime, or derived artifact that violates the project's non-Chinese and non-Chinese-derived model-origin policy.",
@@ -1277,7 +1277,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35A. Explicitly Rejected Defaults",
-        "line": 1828,
+        "line": 1834,
         "statement_sha256": "fe1bc84ffc496580dbc116e103977b070a49e3b81dcde8051ef4a0b1b12169cd"
       },
       "statement": "Reject automatic download, installation, enabling, updating, or execution of public plugins, skills, hooks, agent packages, models, or capability bundles.",
@@ -1294,7 +1294,7 @@
       "source": {
         "document": "Agent-Scaffolding-Inventory.md",
         "heading": "35A. Explicitly Rejected Defaults",
-        "line": 1834,
+        "line": 1840,
         "statement_sha256": "fe26328997a78481fbe0a19b5b9dc9c2edb4cf415b2d3d8330a9617f77637f5b"
       },
       "statement": "Reject a broad provider or model marketplace as a first-release objective; expose only approved, manifest-pinned profiles that passed the complete review and evaluation process.",
@@ -1306,11 +1306,11 @@
   "sources": [
     {
       "document": "PRD.md",
-      "sha256": "88ab726edad26dd436859c9df31195484219ca924ed62b0d90aa63164d798386"
+      "sha256": "6f0c0bd9fceae0b02a50ec110ab9b9093a474726a1d2e567ba1aadc33d6c1a37"
     },
     {
       "document": "Agent-Scaffolding-Inventory.md",
-      "sha256": "80134b438d801f092f34ee7e19597c9d96eaf802e26365620ec802e3a405955b"
+      "sha256": "9d51fc65ee22b4cc1de0ce556d89a397a4a7ec70d1f8273ce17ded234a47ac49"
     }
   ],
   "test_contract": {
