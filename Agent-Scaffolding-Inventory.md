@@ -1720,7 +1720,7 @@ This matrix makes the design review executable. Each concern has one governing d
 This section lists the guides needed to install, operate, recover, and understand the local assistant. It exists so the project remains usable after a restart or handoff and so its limitations are visible rather than implied.
 
 - [ ] `BUILD` a five-minute install/start guide.
-- [ ] `BUILD` maintain the BUSL-1.1 license, public vulnerability policy, model-provenance policy, runtime-boundary specification, and accepted architecture decisions as release-controlled documents.
+- [ ] `BUILD` maintain the Apache-2.0 license, public vulnerability policy, model-provenance policy, runtime-boundary specification, and accepted architecture decisions as release-controlled documents.
 - [ ] `BUILD` a MacBook Pro M5 first-run guide covering the signed/notarized package, native workspace picker, read-only bookmark, Keychain, Metal runtime, model import, Gatekeeper verification, offline proof, uninstall, and recovery without Homebrew or Rosetta.
 - [ ] `BUILD` Fedora and Ubuntu installation guides covering the Linux sandbox, Secret Service, local runtime, offline proof, uninstall, and recovery.
 - [ ] `BUILD` a model installation and selection guide covering hardware-fit preflight, the approved-artifact catalog, separate downloader/importer, license and lineage display, resumable staging, manifest and hash verification, quarantine, atomic install, self-test, unload, failure cleanup, and proof that the installer has exited before offline inference.
