@@ -257,7 +257,7 @@
     "model:schemas:build": "node scripts/model_contract_schemas.mjs --write",
     "model:schemas:check": "node scripts/model_contract_schemas.mjs",
     "engineering-runtime:schemas:build": "node scripts/engineering_runtime_schemas.mjs --write",
-    "engineering-runtime:schemas:check": "node scripts/engineering_runtime_schemas.mjs && node --test tests/test_engineering_runtime_schemas.mjs",
+    "engineering-runtime:schemas:check": "node scripts/engineering_runtime_schemas.mjs && node --test tests/test_engineering_runtime_schemas.mjs && node -e \"console.log('generated Engineering Runtime schemas are current, closed, and compile')\"",
     "engineering-runtime:fixtures:build": "node scripts/engineering_runtime_fixture_corpus.mjs --write",
     "engineering-runtime:fixtures:check": "node scripts/engineering_runtime_fixture_corpus.mjs && node --test tests/test_engineering_runtime_fixture_corpus.mjs",
     "engineering-runtime:records:evidence:build": "python3 scripts/engineering_runtime_record_evidence.py --write && python3 -m unittest tests.test_engineering_runtime_record_evidence",
