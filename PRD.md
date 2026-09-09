@@ -3,9 +3,9 @@
 | | |
 |---|---|
 | **Product** | AgentMage - a portable, local-first AI agent |
-| **Version** | Draft v0.7 |
+| **Version** | Draft v0.8 |
 | **Author** | Aaron N. Horvitz |
-| **Date** | 2026-08-22 |
+| **Date** | 2026-09-08 |
 | **Status** | Pre-alpha scaffold with one source-level deterministic fake-model repository-analysis workflow integrated under Story 22.5; no enabled model, supported platform, supported package, or release |
 | **Detailed requirements** | [Agent-Scaffolding-Inventory.md](./Agent-Scaffolding-Inventory.md) |
 | **Security-review baseline** | [SECURITY-REVIEW.md](./SECURITY-REVIEW.md) |
@@ -442,6 +442,130 @@ behavior.
 
 Automatic routing, fallback, and ensembles remain disabled until a later release defines and passes task-class thresholds. A later release may recommend frontier consultation and prepare a packet, but no release may autonomously deliver it.
 
+### 8.1 Served-Context Safety and Trustworthy Continuity
+
+**Planning refinement, 2026-09-08:** G1 and G2 below record the owner's requested product behavior.
+They are prospective activation and release gates, including the Windows preview, not implemented
+capabilities or newly registered `AM-*` requirements. Task 13.1.4 owns alignment with the existing
+inventory, runtime/security contracts, schemas, and machine-checked plan before implementation.
+Preserve completed historical evidence and all existing admission and privacy controls. The two
+Decision 0051 files require an owner-directed governance resolution; this refinement assigns no
+decision number and authorizes no model, platform, endpoint, or automatic runner restart.
+
+**Current source baseline:** At `081a372d`, the Linux native adapter already owns a fixed 8,192-token,
+single-slot llama.cpp launch and uses server tokenization on codec-rendered input. Manifest
+observations already contain tokenizer/template identities, and historical live inference exists.
+However, the loaded-process contract does not attest effective capacity; dispatch checks input and
+output limits separately; and the driver does not preserve limit-stop/truncation semantics through
+the user result. Checked-summary and encrypted conversation/artifact mechanisms exist separately,
+but do not establish complete recording or question-dependent reopening in the model-call path.
+All catalog profiles remain disabled. This is source-inspected risk, not a reproduced product
+incident or evidence that every earlier trial was a no-model fixture.
+
+#### G1 — Preflight Against the Actually Served Context
+
+AgentMage must decide what fits before sending a generation request, so an admitted, unchanged,
+qualified server does not reject that request for context size. Architectural model ceilings,
+declared profile budgets, launch intent, and observed per-request capacity are distinct facts.
+
+1. Load must produce a versioned served-capability observation bound to the exact runtime build,
+   artifact, process instance/load generation, endpoint, launch/configuration digest, slot policy,
+   effective tokenizer, and actual prompt-rendering configuration. Record per-slot or otherwise
+   guaranteed per-request capacity, parallelism/shared-cache behavior, and supported context-shift
+   and reasoning behavior. Health alone, a model name, or copied profile digests is insufficient.
+   Missing, inconsistent, stale, or unsupported observations fail closed. Revalidate the binding
+   at dispatch and invalidate it on restart, reload, reconfiguration, or slot reassignment.
+2. Launch settings must derive from an exact profile admitted for the declared purpose. Product
+   activation requires an approved profile; authorized candidate evaluation remains a separately
+   admitted, product-disabled tuple and does not inherit product approval. A server serving less than that
+   profile requires refusal or explicit selection and qualification of a separate reduced profile;
+   silently taking a smaller window does not preserve admission. An operator-started server must
+   satisfy the same identity, isolation, immutable configuration, and capacity checks before use.
+3. One Rust-owned immutable prepared request must bind the exact rendered bytes/token sequence,
+   token count, profile, capability observation, reserved slot/capacity, requested generation limit,
+   and safety margin. Every generation path, including evaluation, summary generation, retries,
+   recovery, and thin clients, must consume that preparation through the common dispatch gate.
+   A caller-supplied count or a mutable packet cannot bypass it. Re-rendering requires rechecking.
+4. Use checked arithmetic with `C = min(approved profile window, verified served capacity)` only
+   after profile/serving compatibility passes. Require `I + O + M <= C`, where `I` is the complete
+   rendered input, `O` is the maximum total generated tokens (including reasoning and protocol/end
+   tokens), and `M` is the qualified safety margin. Include instructions, roles, templates, tool
+   schemas/results, special tokens, retrieved evidence, and all other model-visible overhead once.
+   Heuristic byte counts are planning estimates, not dispatch authority. Count with the effective
+   tokenizer and prove tokenization/rendering parity for the pinned generation endpoint; unexplained
+   counter/server drift blocks the tuple. Record planned partitions, observed counts, output use,
+   capacity, and any omission in the context manifest without double-counting reserves.
+5. Preserve end-of-sequence, configured stop, generation limit, context truncation, cancellation,
+   transport failure, and unknown finish states through the Rust host and every client. A limit or
+   truncation remains an incomplete result even when the text looks finished or parses as JSON.
+   A thinking budget must never silently consume the apparent answer allowance. No finish reason
+   creates tool authority or verifier-owned success.
+6. Fail closed with stable, distinguishable reasons and actionable recovery: reduce optional
+   sources with a visible disposition, use checked compaction only when G2 prerequisites hold,
+   start an explicitly linked thread with a checked summary and source references, or explicitly
+   choose an already approved compatible profile. Recheck the complete new request. Never rely on
+   server truncation/context shifting, silently drop content, retry unchanged overflow, or restart
+   a foreign process. A new thread cannot fix fixed instructions/tools that alone exceed capacity.
+
+The zero-context-rejection release target requires boundary tests on each claimed exact tuple,
+not a promise about arbitrary servers or future upstream bugs. Unexpected provider overflow is
+a contract violation: stop visibly, preserve available evidence, invalidate qualification for
+further dispatch pending investigation, and never conceal it as successful recovery.
+
+#### G2 — Retain Originals and Make Summary Use Visible
+
+Condensed context must not mislead a user about what was seen, remembered, or verified. Complete
+local recording is a prerequisite for the full continuity/automatic-compaction mode, not a
+requirement to send the entire transcript to the model or to copy an entire workspace.
+
+1. Before enabling this mode, disclose and obtain consent for recording every user/assistant turn,
+   authorized tool output, model-visible packet (including summary-generation inputs), and received
+   model response/partial stream in the approved encrypted local store. Reuse canonical SQLite
+   metadata and content-addressed payloads; keep full content out of ordinary logs, diagnostics,
+   telemetry, and exports. Credentials and prohibited content remain excluded by policy; any
+   redaction, denied capture, missing stream segment, or earlier unrecorded turn is an explicit
+   coverage gap, not an exact original. Never claim unreceived server output has been recorded.
+2. Durably bind exact input bytes, source references, counts, and process identity before dispatch.
+   Capture outputs with bounded encrypted staging/backpressure, and durably commit the received
+   result and capture disposition before accepting a turn/checkpoint for compaction. Do not require
+   one database transaction per streamed token. Crash, disk-full, quota, key, or capture failure
+   must expose the last verified boundary and incomplete coverage, stop automatic continuation,
+   and never invent a complete record or repeat an effect to reconstruct it.
+3. Summaries are additive derivatives bound to immutable original turn/artifact identities, hashes,
+   order, coverage, and omitted ranges. They cannot overwrite originals or become factual or
+   authorization authority. Each affected answer must visibly indicate summary use and provide
+   access to its coverage and reopened sources; marker state survives restart, branching, and
+   client reconstruction. Source hashes prove provenance, not semantic fidelity of a summary.
+4. A deterministic evidence policy, not a model's confidence, controls reopening. Historical quotes,
+   numbers, commands, decisions, corrections, and other specific claims require the exact original
+   ranges in the current request and delivery receipt. Explicit references, stale/disputed summaries,
+   or absent coverage trigger reopening; ambiguous historical dependence requires conservatively
+   retrieving originals or asking for clarification. Keyword matching alone is not a completeness
+   guarantee. If required originals cannot be located or fitted after approved source reduction,
+   narrow or block the answer and explain the gap; never answer those specifics from summary alone.
+5. Retention, user deletion, restricted-data consent, local-only storage, and key-loss behavior
+   remain binding. While continuity is offered, its required originals must remain retained under
+   the disclosed policy; impending expiry is visible. Deletion or expiry invalidates dependent
+   summaries/retrieval claims without preventing the user's deletion. With recording disabled or
+   incomplete, offer clearly labeled ephemeral/bounded work and explicit source resupply; do not
+   enable automatic compaction or promise complete historical recall.
+
+#### Context-Safety Acceptance Matrix
+
+These are planned regression cases under existing `AT-MODEL-003`, `AT-MODEL-005`, `AT-CTX-001`
+through `AT-CTX-004`, and resume/privacy controls; their task-local identifiers are not new
+inventory IDs. Retain synthetic raw evidence, exact tuples, negative results, and scope limits.
+
+| Planned case | Required result before the owning gate can close |
+|---|---|
+| `CTX-SERVED` | Profile larger than served capacity; missing/forged properties; changed process, tokenizer, template, slot, or cache policy: reject before generation. Cover single-slot and every proposed parallel configuration separately. |
+| `CTX-FIT` | Empty/fixed-overhead-only, exact fit, one token over, zero/maximum reserve, arithmetic overflow, Unicode, special tokens, and large tool schemas: deterministic accounting. An 8,192 window with 7,000 input plus 2,048 output is refused even with zero margin. |
+| `CTX-DISPATCH` | Direct dispatch without preparation, altered rendered bytes, stale leases, summary calls, retries, and reconnects cannot bypass the same gate; reconcile prompt usage with the pinned server, including cached tokens. |
+| `CTX-FINISH` | Limit-stopped plain text or otherwise valid JSON, context truncation, reasoning exhaustion, cancellation, and unknown finish reason never become an unmarked complete answer. |
+| `CTX-RECORD` | Crash at capture/commit boundaries, partial streams, disk full, disabled persistence, restricted-content denial, missing keys, expiry, deletion, and cross-session reads produce truthful coverage with no plaintext leak or repeated effect. |
+| `CTX-REOPEN` | Seed an omitted or later-corrected fact in old turns; ask for exact and implicit historical specifics after repeated compaction, restart, and branching. Deliver and cite originals or visibly narrow/block; summary-only guesses cannot pass. |
+| `CTX-JOURNEY` | Installed preview and each later claimed client show recording consent, capacity failures, summary markers, original-source access, incomplete answers, and checked recovery through the same Rust authority. |
+
 ### 5.5 Runtime Events, Sessions, and Artifacts
 
 One runtime run binds its request, session, task, work packet, workspace and repository snapshot, selected exact model profile, context packet, visible budgets, tool catalog, policy identity, and terminal outcome. The coordinator exposes `ALLOW`, `ASK`, and `DENY` as user-facing execution dispositions over the existing authority system:
@@ -452,7 +576,7 @@ One runtime run binds its request, session, task, work packet, workspace and rep
 
 The runtime event envelope carries schema, run, session, task, turn, operation, correlation, causation, sequence, sensitivity, retention, and payload-reference identities. Event families cover runs, turns, model calls, tool calls, permission decisions, file observations or changes, artifacts, checkpoints, and terminal outcomes. Correctness-bearing grant, effect, receipt, and checkpoint transitions share the canonical transaction boundary. Progress and content-free metrics use bounded asynchronous queues and batches. Streamed tokens remain presentation data rather than synchronous durable event rows.
 
-The durable execution journal, optional persisted conversation transcript, and optional content-free diagnostics or metrics are separate projections with separate retention. Large patches, command output, test logs, generated files, reports, and large model output use immutable content-addressed artifact references instead of giant event payloads. Runtime artifacts live under the approved local data root and are distinct from the repository's checked-in `artifacts/` verification evidence. Encrypted SQLite remains authoritative for artifact metadata, references, retention, journal order, and checkpoint linkage.
+The durable execution journal, persisted conversation transcript, and optional content-free diagnostics or metrics are separate projections with separate retention. Transcript persistence remains optional for bounded/ephemeral work; complete encrypted recording is mandatory before enabling the G2 continuity mode in Section 8.1. Large patches, command output, test logs, generated files, reports, and large model output use immutable content-addressed artifact references instead of giant event payloads. Runtime artifacts live under the approved local data root and are distinct from the repository's checked-in `artifacts/` verification evidence. Encrypted SQLite remains authoritative for artifact metadata, references, retention, journal order, and checkpoint linkage.
 
 Context construction stays deliberate and bounded. The coordinator uses the existing repository map, search, current Git state, project instructions, context manager, checked summaries, source reopening, and artifact excerpts instead of loading an entire repository or transcript into one model request.
 
@@ -530,7 +654,7 @@ Classification, secret detection, minimization, retention assignment, and encryp
 | Durable | Explicit user promotion to the domain's canonical store | Until superseded or deleted by policy |
 | Restricted | Ephemeral unless the user confirms encrypted persistence | Maximum 7 days by default |
 
-AgentMage does not persist raw attachments, full tool output, environment variables, prompts, or model responses by default. It retains hashes, bounded excerpts, and receipt metadata when those are sufficient. Private or restricted persistence fails closed when encryption is unavailable. Keys remain in macOS Keychain or Linux Secret Service through the platform adapter and never enter model context, configuration, logs, exports, or backups.
+Outside explicitly enabled G2 continuity mode (Section 8.1), AgentMage does not persist raw attachments, full tool output, environment variables, prompts, or model responses by default. It retains hashes, bounded excerpts, and receipt metadata when those are sufficient. G2 instead requires consented, complete encrypted recording of authorized conversation content before automatic compaction; hashes or excerpts alone cannot satisfy exact reopening. This exception is not permission to collect ambient environment variables, credentials, or unrelated source files. Existing classification, restricted-data consent, retention limits, and user deletion remain binding; incomplete recording disables the full-continuity claim. Private or restricted persistence fails closed when encryption is unavailable. Keys remain in macOS Keychain or Linux Secret Service through the platform adapter and never enter model context, configuration, logs, exports, or backups.
 
 Under the strict-local profile, conversations, memory, indexes, logs, checkpoints, temporary files, generated files, and backups remain in one user-selected local data root outside known cloud-synchronized folders and remote filesystems. A risky storage path blocks persistence rather than silently weakening the local-only claim.
 
@@ -569,7 +693,10 @@ Receipts use append-only records, chained hashes, and a per-session keyed integr
 
 ## 17. Release Acceptance
 
-The inventory's v0.1 quantitative acceptance matrix is mandatory. Key gates include:
+The inventory's v0.1 quantitative acceptance matrix is mandatory. The prospective G1 cases in
+Section 8.1 additionally block native-model activation; G2 cases block automatic-compaction and
+complete-continuity promotion. Their combined gates block the applicable preview/full-release
+workflow until its owning task gates pass. Key gates include:
 
 - Zero successful path or sandbox escapes across at least 500 attacks each.
 - Zero unauthorized actions or secret disclosures across at least 200 prompt-injection fixtures.

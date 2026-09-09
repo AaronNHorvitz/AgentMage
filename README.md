@@ -91,9 +91,9 @@ binds the 24 added requirements, 29 acceptance tests, 20 stories, 60 tasks, 141 
 controls, modules, and verification commands. The [scope and plan
 audit](./docs/reviews/2026-08-22-engineering-runtime-scope-and-plan-audit.md) records the adversarial
 review, repaired findings, exact limitations, and `PASS WITH RECORDED LIMITATION` planning
-disposition without promoting product status. Current planning, documentation, schema, and product
-contract gates pass locally; preserved historical-review chains and live qualifications remain open
-exactly as the audit records.
+disposition without promoting product status. That audit records historical local gate results,
+not a claim that the current checkout passes every gate. Preserved historical-review chains and
+live qualifications remain open exactly as the audit records.
 
 Accepted Decisions 0013 through 0016 define the current authority transaction,
 opaque effect permit, canonical held targets, exact-object Linux worker,
@@ -484,6 +484,36 @@ shows the exact artifact, license, source, size, hardware fit, network use, chec
 confirmation; the separate installer performs the operation. A post-GA Experimental Model Lab may
 evaluate user-selected unapproved artifacts with no network, credentials, command, connector, or
 canonical-workspace-write authority, but promotion still requires ordinary model admission.
+
+### Planned Context Safety and Conversation Continuity
+
+The 2026-09-08 owner-requested refinement adds two release requirements, not implemented features:
+
+- **G1 — fit the running server:** Count the exact rendered request, reserve all generated tokens
+  and a safety margin, and check the actual capacity available to that request before generation.
+  A model's architectural ceiling is not its served window. Missing capability observations,
+  tokenizer drift, or a restarted process must block dispatch; AgentMage must not silently lower
+  an approved profile's budget or switch models.
+- **G2 — preserve the evidence behind continuity:** Before enabling automatic compaction, obtain
+  explicit consent for complete encrypted local conversation recording. Retain original turns,
+  authorized tool outputs, exact model-visible packets, and received responses, including partial
+  output. Mark summary-assisted answers and reopen original evidence for historical specifics.
+  Recording disabled, missing originals, retention expiry, or storage failure means a visible
+  limitation or stop, not an invented recollection or silent deletion. This is not permission to
+  retain credentials or bypass classification, retention, or user deletion.
+
+Source inspection at `081a372d` found an existing Linux native llama.cpp adapter that launches a
+fixed 8,192-token, single-slot process and counts codec-rendered input through that server's
+tokenizer. Historical native inference evidence also exists, but no model is enabled. The missing
+integration is observed served-capacity binding, a mandatory combined input/output dispatch gate,
+preserved truncation semantics, and end-to-end recording and original-source reopening. Existing
+checked summaries and encrypted storage are foundations, not proof that G1 or G2 is satisfied.
+
+The [PRD requirements](./PRD.md#81-served-context-safety-and-trustworthy-continuity) define the
+behavior; the [build sequence](./IMPLEMENTATION-PLAN.md#431-context-safety-and-continuity-build-sequence)
+maps it to unchecked tasks in existing stories. Stable requirement/schema registration and the
+duplicate Decision 0051 governance issue remain explicit follow-up work; this documentation change
+does not renumber decisions, regenerate evidence, enable a model, or promote product status.
 
 ## Codex Handoff Boundary
 

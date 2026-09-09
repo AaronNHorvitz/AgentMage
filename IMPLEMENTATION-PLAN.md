@@ -3,8 +3,8 @@
 | Field | Planning baseline |
 |---|---|
 | Status | Pre-alpha scaffold with one source-level deterministic fake-model repository-analysis workflow integrated under Story 22.5; broader integration and every release gate remain open |
-| Version | 1.9 |
-| Date | 2026-08-22 |
+| Version | 1.10 |
+| Date | 2026-09-08 |
 | Product | AgentMage - a brand-new, from-scratch local-first assistant |
 | Product authority | [`PRD.md`](./PRD.md) |
 | Detailed requirement authority | [`Agent-Scaffolding-Inventory.md`](./Agent-Scaffolding-Inventory.md) |
@@ -235,6 +235,68 @@ policy, a consumed grant, a restricted worker, and a deterministic postcondition
 verifier surround every model proposal. Learned classification can restrict or
 escalate but cannot grant authority, override denial, switch models, or establish
 completion. Quality and diagnostic-repeatability profiles remain separate.
+
+#### 4.3.1 Context Safety and Continuity Build Sequence
+
+**Owner-requested planning refinement, 2026-09-08:** Implement the
+[PRD Section 8.1 G1/G2 requirements](./PRD.md#81-served-context-safety-and-trustworthy-continuity)
+as additions to existing stories, not a replacement runtime, context manager, or transcript store.
+All new work remains unchecked in `TASKS.md`; no completed identifier, historical trial, enabled
+profile count, or lifecycle status changes. These are native-activation and long-conversation
+release gates, not a claim of an incident in an already supported product.
+
+The source-inspected baseline at `081a372d` includes a real
+[`LinuxNativeModelAdapter`](./platforms/linux-inference/src/native_model_adapter.rs), an owned
+[`LlamaServerDriver`](./platforms/linux-inference/src/llama_server_driver.rs) launch fixed to
+8,192 tokens and one slot, and server tokenization of codec-rendered input. The existing
+[`model controller`](./kernel/engine/src/model_runtime.rs) lacks observed served-capacity binding
+and a mandatory combined input/output dispatch check. The driver loses limit-stop semantics and
+does not reconcile actual prompt use into resource reporting. The
+[`context manager`](./kernel/engine/src/context_management.rs) and
+[`conversation library`](./kernel/engine/src/conversation_library.rs) provide checked summaries
+and additive compaction, but their provenance checks do not prove semantic fidelity or complete
+host-path recording. Historical live Muse evidence is retained separately from the integrated
+fake-model slice; neither enables a model or proves these new gates.
+
+| Order | Existing owner / new task | Deliverable and dependency |
+|---|---|---|
+| 1 | Story 13.1 / Task 13.1.4 | Reconcile G1/G2 with the existing inventory, runtime, gateway, privacy, security, schema, and release contracts through governance; register exact dependencies and acceptance mappings before implementation. Resolve the duplicate Decision 0051 only with owner direction, without guessing a free number. |
+| 2 | Story 13.1 / Task 13.1.5 | Extend load/health/lifecycle observations with effective capacity and a process/configuration/slot binding; reject mismatches and stale observations. Build on the existing owned launch and identity/isolation checks. |
+| 3 | Story 13.4 / Task 13.4.5 | Enforce one immutable prepared request and checked `input + total output reserve + safety margin <= approved effective capacity` at every generation dispatch, with exact rendering, counter parity, drift denial, and a reconcilable manifest. Depends on Task 13.1.5 and aligns with Task 13.3.4 codec repair. |
+| 4 | Story 13.1 / Task 13.1.6 | Preserve finish/truncation reasons, actual usage, and incomplete status through the host boundary. Pair with Task 13.3.4 diagnostics; complete before its renewed qualification run or any activation. |
+| 5 | Story 22.1 / Task 22.1.4 | Integrate consented encrypted exact request/turn/tool/response capture, bounded staging, crash-safe coverage, retention and deletion into the existing journal/artifact/conversation stores. Depends on the prepared-request contract and existing storage primitives. |
+| 6 | Story 22.1 / Task 22.1.5 | Add deterministic original-evidence reopening, additive summary lineage, missing-source refusal, and visibly checked recovery. Depends on Task 22.1.4; summary generation itself uses G1. |
+| 7 | Stories 76.2 and 76.3 / Tasks 76.2.4 and 76.3.3 | Project capacity, recording consent, summary markers, original-source access, and incomplete/recovery states through the Rust host; add exact-model hardware preflight and served-configuration checks before activation. Earlier deterministic-fake shell work remains independent. |
+| 8 | Story 25.3 / Task 25.3.3 | Gate the installed Windows preview on the PRD context-safety matrix and exact model/runtime/platform evidence. Full-GA and later client/adapter promotions inherit the same common runtime gate; Linux fixtures cannot substitute for Windows evidence. |
+
+Order denotes dependencies, not a new permission to skip earlier authoritative gates. Task-local
+contract work may share one bounded source batch with the codec correction; native requalification
+must wait for the common preflight and truthful finish semantics. Do not create a backward
+whole-sprint dependency from model contracts to conversation/UI work, or require all retained
+macOS evidence to write platform-neutral corrective code. Record actual local, upstream, and
+external blockers per row, never by inheriting an unrelated blocked paragraph. Task 13.1.4 must
+add machine-readable task-level relationships that the current story-only validator cannot prove.
+
+For the pinned llama.cpp lane, investigate read-only `/props` observations of generation context,
+slot count, template, and build identity using the
+[b10423 server contract](https://github.com/ggml-org/llama.cpp/blob/b10423/tools/server/README.md).
+Validate capacity semantics for the exact build, slot scheduler, and KV-cache mode; do not assume
+total context divided by parallelism is universally correct. Server properties are observations,
+not cryptographic attestations or tokenizer digests. Bind them to the owned process and verified
+artifacts. Preserve one prompt renderer: the current raw-completion path already supplies encoded
+bytes, so reading a server template must not cause double templating or silently change the codec.
+
+Hardware preflight must budget exact weights, KV types, attention/recurrent state, concurrency,
+compute buffers, and host/accelerator headroom from artifact metadata and qualified measurements.
+An incident-specific bytes-per-token figure is not a universal allocation formula; a successful
+memory estimate is not proof of the window actually served. No Qwen profile, artifact acquisition,
+remote endpoint, unapproved reduced-context profile, or automatic fallback is authorized here.
+
+Complete source and focused fixture work for the bounded batch first, then perform one governed
+evidence/SBOM refresh under `AGENTS.md`. This four-document refinement regenerates neither.
+Publish fresh qualification separately from historical rejected evidence, and do not call the
+plan fully registered or the runtime fixed until the registration, implementation, and exact
+acceptance gates pass. Governance collisions and stale evidence remain visible, not waived.
 
 ### 4.4 Deterministic Tools Before Model Synthesis
 
@@ -497,10 +559,11 @@ historical blocker assertion without reopening a genuine exact blocker.
 
 Before the newly registered application stories begin, corrective Task 13.3.4
 owns the audited model-facing Muse codec repair, its known-answer and failure-
-diagnostic suite, and a newly versioned synthetic qualification tuple. This is
-the first dependency-ready local gate after restart readiness. It preserves all
-prior rejected evidence and carries no activation, acquisition, network, model-
-approval, platform-support, or release authority.
+diagnostic suite, and a newly versioned synthetic qualification tuple. It remains
+the restart-readiness codec correction; Section 4.3.1 adds registration, served-capacity,
+combined-budget, and finish-semantics prerequisites before that renewed native trial.
+These corrections preserve all prior rejected evidence and carry no activation,
+acquisition, network, model-approval, platform-support, or release authority.
 
 ### 6.1 Active Roadmap Execution Spine
 
@@ -1040,6 +1103,8 @@ Critical or high vulnerabilities, undeclared components or data flows, unavailab
 | Backup corruption or cloud namespace confusion | Work cannot be restored or encrypted objects are written or read under the wrong account or location | Local canonical store, client-side authenticated encryption, immutable manifests, exact destination binding, integrity trees, staged restore, cross-account tests, and disaster-recovery drills. |
 | Model-catalog or download substitution | A different, unlicensed, unsupported, or hostile artifact becomes active | Exact first-party identity, immutable hashes, quarantine, admission states, deterministic preview, separate installer, atomic activation, rollback, and no model self-approval. |
 | Large-repository context and summary drift | Files are omitted, contradictions disappear, or partial model summaries are presented as whole-codebase understanding | Complete census, deterministic structural graph, coherent packets, source-pinned evidence cards, persistent encrypted project memory, mandatory cross-module reconciliation, transitive invalidation, and explicit coverage gaps. |
+| Declared context exceeds served capacity | A request passes profile checks but overflows the actual slot or leaves no output allowance | G1 served-capability/process binding, immutable rendered-request preflight, checked input/output/margin arithmetic, tokenizer parity, finish-reason preservation, and exact-tuple boundary evidence before activation. |
+| Compacted conversation loses factual provenance | A summary omits a correction or exact detail and the user is shown an ungrounded historical answer | G2 consented encrypted original capture, additive summary lineage, per-answer markers, deterministic source reopening, missing-source refusal, and visible retention/storage limitations before automatic compaction. |
 | Read-only audit mutates source or exposes secrets | Builds, parsers, hooks, tools, or hostile repository content alter canonical state or place protected values in model context | Read-only source handles, disposable copy-on-write verification, no hosted or credential authority, before-and-after attestation, parser isolation, pre-model classification and redaction, canaries, and `RV-45`. |
 | Unsupported or oversized artifacts are silently omitted | The user believes the model saw evidence that never entered context | Participant-first reference accounting, fail-visible provider behavior, source-artifact manifests, exact extraction states, context manifests, token-ledger reconciliation, and zero-silent-drop fixtures. |
 | Hostile document parsing escapes its budget or authority | Malformed files consume resources, traverse paths, execute active content, or disclose data | Rust-owned admission, isolated bounded parsers, no active content, archive and relationship traversal defenses, cancellation, resource ceilings, secret classification, and parser-specific hostile corpora. |

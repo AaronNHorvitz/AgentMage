@@ -72,6 +72,41 @@ tests, stories, tasks, and evidence gates inside existing incomplete sprints;
 they add no release epic or sprint and do not enable any model, endpoint, route,
 capability, workflow, or platform.
 
+## Context Safety and Continuity Refinement — 2026-09-08
+
+The owner requested the G1/G2 product requirements in
+[PRD Section 8.1](PRD.md#81-served-context-safety-and-trustworthy-continuity) after source inspection
+of `081a372d`. This documentation-only refinement appends unchecked tasks to existing open stories;
+it preserves every existing checkbox state, completed identifier, historical evidence record,
+stable requirement count, sprint number, and current zero-enabled-model status. It does not assert
+that a product overflow was reproduced or that the native adapter/server token counter is absent.
+
+**Entry and priority:** Task 13.1.4 is the registration prerequisite. Tasks 13.1.5, 13.1.6, and
+13.4.5 are required before renewed native qualification/activation; Tasks 22.1.4 and 22.1.5 are
+required before automatic-compaction/complete-continuity claims; Tasks 76.2.4, 76.3.3, and 25.3.3
+bring them through the installed preview. These are release-blocking corrective work, not a
+reason to undo completed component work or substitute for existing platform/security gates.
+
+**Dependency scope:** New task-level entry conditions are prospective until Task 13.1.4 reconciles
+them through governance and machine-readable registration. Preserve whole-story closure gates,
+but register the corrective path without a cycle: served contract and codec-rendering repair,
+then dispatch/finish guards, then the renewed native trial; recording and reopening follow those
+contracts, then client projection and release. Do not make Task 13.4.5 wait for the native trial
+it must guard. The existing story-only task-graph check does not prove these task-level edges.
+
+**Evidence contract:** Each new sub-task inherits `UT-POS`, `UT-NEG`, `UT-BND`, `UT-ERR`, and
+`UT-SFX`, plus the applicable PRD `CTX-*` matrix cases. Before implementation, record owner,
+exact inputs/outputs, closed errors, dependencies, threat cases, migration, likely files, and
+test/evidence paths. Local contract and fake-fixture work is not externally blocked merely because
+native qualification or an unrelated retained platform row is blocked. Native trials require an
+already authorized exact runtime/artifact and venue; acquisition, foreign-server control, network,
+signing, publication, and independent-review authority are not granted by this refinement.
+
+G1/G2 are product labels, not new stable inventory IDs. Task 13.1.4 owns the supporting-contract
+and registration follow-up outside this four-document edit. Neither Decision 0051 is renumbered
+here, and no next decision number is presumed free. Do not regenerate or weaken evidence to hide
+that collision, assume registration is complete, or restart the unattended runner from this edit.
+
 ## Planning Hierarchy and Numbering
 
 - `Epic E` is a release or major product increment and is not itself story-sized.
@@ -2630,6 +2665,10 @@ later-story `RV-52` scopes.
 
 **User-facing value:** As an AgentMage user, maintainer, or reviewer, I need a model-neutral runtime and exact-profile contract so any eligible candidate can be evaluated without model-specific kernel branches, hidden authority, or silent substitution.
 
+**Corrective scope:** Existing completed identity/isolation work remains historical evidence.
+The G1 served-capacity and finish-semantics additions below are new activation gates, not a claim
+that the existing Linux native adapter or live evaluation path is missing.
+
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 13.1.1 - Implement the bounded story**
@@ -2654,10 +2693,66 @@ later-story `RV-52` scopes.
   - [x] **Sub-task 13.1.3.4:** `S-013-AT01` executes the pinned factual/coding/tool-call corpus under separately named quality and diagnostic-repeatability profiles; assert schema validity, grounding, uncertainty, repeated-trial statistics, negative results, and tuple differences are reported without a universal determinism claim.
   - [ ] **Sub-task 13.1.3.5 - Product security evidence:** Complete `AT-MODEL-003` and the contract portion of `AT-MODEL-005`; map `SR-PLT-007`, `SR-SUP-006` through `SR-SUP-009`, `SR-AI-001` through `SR-AI-016`, and `RV-13`/`RV-14`; retain Model BOM, licenses, hashes, transformation provenance, codec vectors, adapter traces, evaluations, and independent decoder review.
 
+- [ ] **Task 13.1.4 - Register the served-context and continuity correction**
+  - [ ] **Sub-task 13.1.4.1:** Reconcile PRD G1/G2 with `AM-MDL-004`, `AM-MDL-006`, `AM-CTX-001`
+    through `AM-CTX-003`, `AM-SES-001`, `AM-SES-002`, existing runtime/gateway/security contracts,
+    and privacy/retention rules. Record the dated owner request, additions-only requirement/test
+    mappings, schema/migration ownership, and any necessary decision through governance; do not
+    overwrite accepted requirements or assign/renumber either Decision 0051. **Execution:** local
+    planning; owner=runtime-contracts; exact decision-number resolution requires owner direction.
+  - [ ] **Sub-task 13.1.4.2:** Register all new task-level dependencies and PRD `CTX-*` acceptance
+    cases in the machine-checked plan, release applicability, and blocker register. Prove no cycle
+    between Task 13.4.5 and Sub-task 13.3.4.3, no orphan/duplicate identifiers, and no inherited
+    blanket external blocker; retain Windows preview/full-GA distinctions and original closure
+    gates. **Execution:** local; owner=planning-integrity.
+  - [ ] **Sub-task 13.1.4.3:** Publish versioned contract/schema migration and closed refusal-code
+    plans for served observations, prepared requests, finish/usage results, capture coverage, and
+    summary lineage. Missing legacy fields must require requalification, not assumed capacity or
+    complete history; record focused validation and evidence-refresh scope before source work.
+    **Execution:** local; owner=runtime-contracts.
+- [ ] **Task 13.1.5 - Bind the loaded process to observed serving capabilities**
+  - [ ] **Sub-task 13.1.5.1:** After Task 13.1.4, extend existing load/health/lifecycle contracts
+    with verified per-request capacity, slots/cache policy, runtime/artifact identity, process/load
+    generation, launch/configuration digest, effective tokenizer/rendering identity, and supported
+    reasoning/context-shift limits. Distinguish observed facts from profile assertions and reject
+    missing, unsupported, forged, or stale observations. **Execution:** local; owner=model-runtime.
+  - [ ] **Sub-task 13.1.5.2:** Extend the existing owned native launch with read-only effective
+    capability observation and immutable configuration/slot binding. Derive launch settings from
+    the admitted profile, refuse an undersized server, and invalidate on restart, reload, drift,
+    or reassignment. Operator-started servers remain ineligible without equivalent qualification;
+    never silently resize, reconfigure, or restart them. **Execution:** local; owner=native-adapter.
+  - [ ] **Sub-task 13.1.5.3:** Exercise `CTX-SERVED` with deterministic adapters before an
+    authorized pinned native boundary campaign; include missing properties, profile/served mismatch,
+    parallel/shared-cache variants, sleep/reload, stale process identity, and tokenizer/template
+    drift. Require zero generation dispatch on refusal and separately attributable adapter evidence.
+    **Execution:** local fixtures; native evidence requires the exact authorized runtime and venue.
+- [ ] **Task 13.1.6 - Preserve incomplete output and actual token accounting**
+  - [ ] **Sub-task 13.1.6.1:** After Task 13.1.4, extend the driver/controller/host result contract
+    to retain EOS, configured stop, token limit, context truncation, reasoning exhaustion,
+    cancellation, transport failure, and unknown finish states. Limit-stopped valid-looking JSON
+    or advisory prose stays incomplete and cannot become an unmarked final answer or executable
+    proposal. Coordinate with Sub-task 13.3.4.2. **Execution:** local; owner=model-result-boundary.
+  - [ ] **Sub-task 13.1.6.2:** Replace placeholder input usage with reconciled rendered prompt,
+    cached/evaluated input, generated/reasoning output, reserve, and remaining-capacity facts;
+    explicitly represent unavailable provider metrics. Preserve stable refusal/finish detail
+    through `shells/host` without leaking prompt content into diagnostics. **Execution:** local;
+    owner=model-runtime and Rust host.
+  - [ ] **Sub-task 13.1.6.3:** Run `CTX-FINISH` over split streams, length-stopped otherwise valid
+    proposals/plain text, truncation flags, contradictory usage, unknown stop reasons, cancellation,
+    and transport loss. Require truthful incomplete state, bounded partial capture, no effect, and
+    no hidden unchanged-overflow retry; combine with Task 13.4.5 before renewed native trials.
+    **Execution:** local; owner=model-result-verification.
+
 ##### Story Acceptance Criteria
 
 - [x] **Story AC 13.1.AC1:** Given any candidate profile, when load or inference is requested, then only its exact admitted artifact, tokenizer, template, codec, runtime, context, decoding, platform, and hardware tuple is eligible; every silent change triggers quarantine and security-impact review.
 - [x] **Story AC 13.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then runtime adapters are interchangeable at the kernel contract while platform, performance, quality, and limitation evidence remains separately attributable.
+- [ ] **Story AC 13.1.AC3:** Given an admitted profile and process, when effective capacity,
+  configuration, tokenizer, or slot identity is unavailable or incompatible, then G1 refuses before
+  generation with a stable reason; restart/drift invalidates any earlier capability binding.
+- [ ] **Story AC 13.1.AC4:** Given length-limited, truncated, cancelled, or ambiguous output,
+  when the result crosses driver, controller, and host boundaries, then its actual available usage
+  and incomplete disposition remain visible even if its content appears to be a complete answer.
 
 #### [ ] Story 13.2 - Cross-Adapter Model Parity and No-Fallback Gate
 
@@ -2711,6 +2806,12 @@ later-story `RV-52` scopes.
   - [ ] **Sub-task 13.3.4.2:** Add known-answer, decode, truncation, stop-reason, transport, formatting, task-quality, and policy-rejection diagnostics without weakening strict unknown-field or malformed-output refusal. **Execution:** local; owner=`platforms/linux-inference`; venue=repository-local.
   - [ ] **Sub-task 13.3.4.3:** Run a newly versioned, synthetic-only qualification tuple with an adequate output budget and per-trial diagnostics; preserve every prior rejected result, activate no model by inference, and perform no artifact acquisition or network access. **Execution:** local; owner=`model qualification`; venue=repository-local when the exact already-authorized artifact and runtime are available.
 
+**Prospective renewed-trial entry gate:** Sub-task 13.3.4.3 additionally requires the registered
+Task 13.1.5 serving observation, Task 13.4.5 combined dispatch budget, and Task 13.1.6 truthful
+finish/usage results. Sub-tasks 13.3.4.1 and 13.3.4.2 may supply the codec/diagnostic portions of
+that bounded batch first. Neither all of Story 13.4 nor downstream conversation/UI work is a
+prerequisite for the synthetic trial; Task 13.1.4 must register this acyclic task-level order.
+
 ##### Story Acceptance Criteria
 
 - [x] **Story AC 13.3.AC1:** Given the exact Muse text profile, when the isolated spike runs, then the model receives only bounded synthetic context and inference resources and receives no workspace, tool, grant, credential, connector, shell, or network authority.
@@ -2723,6 +2824,12 @@ later-story `RV-52` scopes.
 it can handle while all safety, authority, evidence, and completion rules stay model invariant.
 
 **Dependencies:** Stories 1.2, 2.3, 5.2, 11.2, and 13.1 through 13.3.
+
+**Corrective-task entry:** The existing dependencies remain whole-story closure requirements.
+For new Task 13.4.5, Task 13.1.4 must register the narrow entry on the served-capability contract
+and codec-rendering work, not the renewed trial in Sub-task 13.3.4.3 that this task must guard.
+Its recovery port must refuse unavailable G2 compaction until Tasks 22.1.4 and 22.1.5 pass; those
+later implementations are not prerequisites for closing the G1 dispatch/refusal guard itself.
 
 ##### Tasks and Sub-tasks
 
@@ -2767,6 +2874,32 @@ it can handle while all safety, authority, evidence, and completion rules stay m
         the campaign ledger hash-binds eight raw token manifests, the Muse and Gemma identity/quality/
         resource records, mutation tests, and truthful partial mappings for all four protocols.
 
+- [ ] **Task 13.4.5 - Enforce one served-window dispatch preflight**
+  - [ ] **Sub-task 13.4.5.1:** After Task 13.1.4 registration, Task 13.1.5, and the codec-rendering
+    contract in Sub-task 13.3.4.1, create an immutable prepared request binding exact rendered
+    bytes/tokens, count, profile, process/load generation, capacity/slot reservation, output limit,
+    and margin. Require this path at every generation dispatch; caller counts, stale preparation,
+    direct stream calls, summary generation, retries, and alternate clients cannot bypass it.
+    **Execution:** local; owner=kernel model controller.
+  - [ ] **Sub-task 13.4.5.2:** Reconcile the existing orchestration partitions and canonical
+    context manifest against actual serving facts using checked `I + O + M <= C`. Include template,
+    role, instruction, tool, special-token, and reasoning/protocol overhead exactly once. Refuse
+    unapproved reduced windows, unexplained token-counter/server drift, overflow, or an exhausted
+    fixed reserve; estimates cannot authorize dispatch. Preserve one renderer and record actual
+    usage without double-counting cached input or reserved partitions. **Execution:** local;
+    owner=context-budget and codec boundary.
+  - [ ] **Sub-task 13.4.5.3:** Run `CTX-FIT` and `CTX-DISPATCH`: exact fit and one token over,
+    7,000 input plus 2,048 output against 8,192 served tokens, integer bounds, tool-heavy/Unicode/
+    special-token input, modified prepared bytes, slot drift, and every common entry point.
+    Reconcile against the pinned native generation endpoint under an authorized tuple; zero
+    rejected preflights may send generation bytes. **Execution:** local fixtures; native evidence
+    requires the exact authorized runtime and venue.
+  - [ ] **Sub-task 13.4.5.4:** Expose stable capacity, mismatch, stale-binding, and token-drift
+    refusals with checked source reduction, eligible compaction, linked-thread, or explicit approved
+    profile options. G2 is mandatory before summary-based continuation; recheck the resulting full
+    request and explain when fixed overhead alone cannot fit. Never depend on server context shift,
+    hidden truncation, silent fallback, or an unchanged retry. **Execution:** local; owner=Rust host.
+
 ##### Story Acceptance Criteria
 
 - [x] **Story AC 13.4.AC1:** Given any admitted profile and input set, when the token plan is
@@ -2778,6 +2911,13 @@ it can handle while all safety, authority, evidence, and completion rules stay m
 - [x] **Story AC 13.4.AC3:** Given missing tokenizer, runtime, quality, hardware, or workflow
       evidence, when activation is requested, then the exact profile remains disabled without fallback
       or a family-wide conclusion. Evidence: tokenizer/counter mismatch and failed exact qualification refuse; a valid orchestration contract over a disabled model remains disabled with fallback false. The retained report imports the current rejected Muse and Gemma dispositions without borrowing them for another tuple.
+
+- [ ] **Story AC 13.4.AC4:** Given the exact prepared payload, output reserve, margin, and current
+  serving observation, when any generation entry point runs, then it dispatches only if the full
+  budget fits the approved effective capacity; exact fit succeeds and one-token overflow refuses.
+- [ ] **Story AC 13.4.AC5:** Given overflow, counter drift, or a stale process/slot binding, when
+  recovery is offered, then reasons and source dispositions are visible and any revised request
+  must pass the same guard without unapproved profile reduction, hidden omission, or fallback.
 
 #### Sprint Acceptance Criteria
 
@@ -2803,7 +2943,9 @@ Story Definition of Done are complete with current evidence. A truthful Muse non
 evidence task but enables no profile. Otherwise the sprint is BLOCKED.
 
 **Current gate result:** BLOCKED. The additions-only corrective codec and diagnostic work in Task
-13.3.4 is the next local gate after restart readiness; prior negative Linux cross-adapter parity and
+13.3.4 remains required after restart readiness. The 2026-09-08 refinement adds Task 13.1.4
+registration and Tasks 13.1.5, 13.1.6, and 13.4.5 before renewed native qualification or activation;
+these new rows are not closed by the historical checked criteria. Prior negative Linux cross-adapter parity and
 exact Muse results remain immutable. The retained native and Docker Model Runner compatibility trials
 fail published quality thresholds and therefore cannot be merged or enabled. Other remaining blockers
 are the native macOS adapter and execution evidence, successful matched cross-platform parity for an
@@ -3751,10 +3893,69 @@ The reusable-gate ownership table assigns full `RV-56` (Engineering Capability R
   - [x] **Sub-task 22.1.3.4:** `S-020-IT01` resumes long fixture sessions after model/runtime/configuration/repository changes; assert impact is surfaced, evidence is invalidated where needed, and original intent/revision history remains inspectable. Evidence: all nine drift dimensions and 100 repeated no-drift comparisons pass in the platform-neutral core. [`native-long-session-resume.json`](artifacts/sprints/sprint-22/story-22.1/native-long-session-resume.json) and its hash-bound redacted trace add the production Linux coordinator and encrypted authority at the longest safe-boundary prefix admitted by the unchanged fixture profile: seven tool turns, receipts, checkpoints, and continuation artifacts. Repository, policy, workspace, configuration, model-profile, model-manifest, and model-runtime changes each block before another action; exact state restores the canonical artifact set, objective, receipt/history counts, and completion with no eighth worker launch. The campaign uses a deterministic fake model and exact runtime records; installed real-model, clean-image, cross-platform, release, independent-review, and deferred manual-fuzz evidence are not claimed.
   - [ ] **Sub-task 22.1.3.5 - Product security evidence:** Map `SR-DAT-002`/`SR-DAT-003`, `SR-AI-008` through `SR-AI-010`, `SR-OPS-003`, `SR-TST-005`/`SR-TST-006`; retain checkpoint hashes, crash matrix, context manifests, canary scans, and resume comparisons. Partial local evidence: source-bound checkpoint hashes, context accounting, restricted-canary exclusion, atomic rollback, 126 platform-neutral crash runs, the 100-case native Linux tool-terminal/checkpoint matrix, the seven-checkpoint native long-session drift campaign, and platform-neutral drift comparisons are retained. [`current-product-canary-sweep.json`](artifacts/sprints/sprint-22/story-22.1/current-product-canary-sweep.json) and its hash-bound redacted trace compose eight passing checks over every currently named context, persistence, encrypted-store/export/crash-diagnostic, runtime projection, private-artifact, model/tool-event, native ciphertext, and external-telemetry source surface. That current Linux source-surface sweep uses synthetic data and no network. Process-memory, swap, SSD-remanence, filesystem-snapshot, installed real-model/package, supported-platform, release, and independent-review evidence remain open, so this product-evidence item is not closed.
 
+- [ ] **Task 22.1.4 - Integrate consented exact conversation recording**
+  - [ ] **Sub-task 22.1.4.1:** After Task 13.1.4 registration and the prepared-request/finish
+    contracts in Tasks 13.4.5 and 13.1.6, connect the existing encrypted conversation library,
+    Story 21.2 journal, and Story 22.2 artifact primitives through the Rust host. Capture every
+    authorized turn, tool output, exact model-visible packet, received response/partial stream,
+    source identity, process binding, and disposition; retain metadata in canonical SQLite and
+    payloads in the existing encrypted artifact store. **Execution:** local; owner=host continuity.
+  - [ ] **Sub-task 22.1.4.2:** Require explicit recording/retention consent before G2 continuity,
+    with separate restricted-data permission and no credential or ambient-source collection.
+    Preserve bounded/ephemeral mode when recording is declined; mark prior unrecorded turns,
+    redactions, denied capture, and missing bytes as gaps that prohibit a complete-history claim.
+    Keep full content out of ordinary journal metadata, diagnostics, exports, and telemetry.
+    **Execution:** local; owner=privacy and conversation storage.
+  - [ ] **Sub-task 22.1.4.3:** Persist the exact input and source manifest before dispatch; use
+    bounded encrypted output staging/backpressure and an acknowledged result/coverage commit before
+    accepting a turn or checkpoint for compaction. Define crash, partial-stream, disk-full, quota,
+    key, expiry, deletion, and cancellation behavior without per-token SQLite transactions or an
+    effect replay to recover missing output. Stop automatic continuation on capture failure.
+    **Execution:** local; owner=journal/artifact integration.
+  - [ ] **Sub-task 22.1.4.4:** Run `CTX-RECORD` through real host/storage boundaries with synthetic
+    data, exact-byte reconstruction, cross-session denial, canaries, capture/commit crashes, missing
+    payloads, revoked consent, retention/deletion, and capacity failures. Account for every received
+    segment or explicit gap; prove no plaintext fallback, false durable completion, hidden loss,
+    or repeated effect. Keep physical-fault and installed-platform evidence separate.
+    **Execution:** local fixtures; owner=continuity verification.
+- [ ] **Task 22.1.5 - Gate compaction on originals and deterministic reopening**
+  - [ ] **Sub-task 22.1.5.1:** After Task 22.1.4, integrate additive checked-summary records with
+    exact original turn/artifact hashes, ordering, source coverage, omitted ranges, and retention
+    dependencies. Summarization uses the common G1 dispatch path, preserves originals, and cannot
+    create authority or semantic proof from a valid digest. Block automatic compaction if complete
+    required recording is unavailable. **Execution:** local; owner=context and conversation library.
+  - [ ] **Sub-task 22.1.5.2:** Implement deterministic reopening/delivery rules for historical
+    quotes, numbers, commands, decisions, corrections, explicit references, and stale/disputed or
+    incomplete summaries. Ambiguous historical dependence must reopen conservative source ranges
+    or ask for clarification; no keyword-only completeness claim or model-selected waiver. Required
+    originals must be delivered and cited, otherwise narrow/block instead of answering from summary
+    alone. Reapply G1 to every retrieval/compaction result. **Execution:** local; owner=context policy.
+  - [ ] **Sub-task 22.1.5.3:** Persist summary-assisted-answer markers, coverage, reopened-source
+    references, incomplete capture, and linked-thread lineage in Rust-owned client projections.
+    Preserve them through resume/branch/client reconstruction; offer checked compaction, explicit
+    source reduction/resupply, or a linked new thread without promising that fixed prompt overhead
+    will fit. Deletion or expiry invalidates dependent recall claims and never blocks user deletion.
+    **Execution:** local; owner=host context projection.
+  - [ ] **Sub-task 22.1.5.4:** Run `CTX-REOPEN` with omitted/corrected/conflicting facts, implicit
+    historical questions, misleading but hash-valid summaries, repeated compaction, restart,
+    branches, unavailable originals, and originals too large to fit. Require exact delivered
+    evidence or a visible non-answer/clarification, zero summary-only factual completion, durable
+    markers, and no source overwrite or unauthorized retention. **Execution:** local;
+    owner=continuity verification.
+
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 22.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then resume restores one canonical task/session state or blocks visibly; it never merges incompatible state, silently drops current intent, or repeats a side effect.
 - [ ] **Story AC 22.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then context-debug output accounts for every included/excluded item, classification, token/size budget, source identity, and redaction without exposing prohibited content.
+- [ ] **Story AC 22.1.AC3:** Given consented G2 continuity, when a turn is accepted for compaction,
+  then all authorized original turn/tool/request/received-response bytes and lineage are durably
+  reconstructable; failed or incomplete recording blocks automatic compaction with a visible gap.
+- [ ] **Story AC 22.1.AC4:** Given a summary-assisted historical question, when specific claims
+  depend on pre-summary content, then the exact original ranges are reopened, delivered, and cited
+  or the answer is narrowed/blocked; the summary marker and coverage remain visible after resume.
+- [ ] **Story AC 22.1.AC5:** Given recording disabled, revoked consent, expired/deleted originals,
+  missing keys, or storage failure, when continuity is requested, then AgentMage respects privacy
+  and deletion, explains the unavailable history, and offers no false full-recall or success claim.
 
 #### [ ] Story 22.2 - Content-Addressed Runtime Artifacts and Resume Integration
 
@@ -4604,6 +4805,10 @@ root and signed Fedora, Ubuntu, and macOS packages named under Task 25.2.2;
 `v1.0-preview-windows` applicability record; the exact Epic 10 Windows preview rows; one
 Decision 0044-approved model; and the Decision 0021 independent signed-release review.
 
+**Context-safety release prerequisites:** Task 25.3.3 requires Tasks 13.1.4 through 13.1.6,
+13.4.5, 22.1.4, 22.1.5, 76.2.4, and 76.3.3. Register these exact task-level edges under Task
+13.1.4 without substituting a Linux/fake-model result for the installed Windows journey.
+
 **Current status:** `DEPENDENCY_BLOCKED`. Local gate implementation is executable, but release
 acceptance remains blocked on the registered standalone, model, Windows, signing, clean-guest,
 accessibility, and independent-review prerequisites. No publication is authorized and every
@@ -4650,6 +4855,28 @@ are evaluated as one exact product rather than inferred from separate component 
     credential=reviewer and signing identity; payment=review cost if applicable)`;
     `substitution_set=empty`.
 
+- [ ] **Task 25.3.3 - Verify served-context safety and trustworthy continuity in the preview**
+  - [ ] **Sub-task 25.3.3.1:** Extend the release gate with registered G1/G2 prerequisites and
+    the PRD `CTX-SERVED`, `CTX-FIT`, `CTX-DISPATCH`, `CTX-FINISH`, `CTX-RECORD`, `CTX-REOPEN`, and
+    `CTX-JOURNEY` cases. Mutation-test stale/missing tuples, silent reduced profiles, missing
+    originals, incomplete answers marked complete, and substituted platform evidence; all refuse
+    release without publication or relaxed earlier gates. **Execution:** local; owner=preview gate.
+  - [ ] **Sub-task 25.3.3.2:** Exercise long real-model conversations across exact-fit/overflow,
+    restart/configuration drift, tool-heavy prompts, recording consent, repeated compaction, exact
+    historical questions, partial outputs, storage failure, expiry/deletion, and client reconnect on
+    the installed Windows preview. Retain untouched synthetic-content evidence with served settings,
+    launch/rendering identities, manifests, usage/finish states, source reopening, and visible UI
+    results; require zero accepted-tuple context-size rejections and zero unmarked summary-only or
+    truncated answers. **Execution:** native verification; blocked on the same exact signed
+    Windows candidate, approved model, authorized guest, and review prerequisites as Task 25.3.2;
+    `substitution_set=empty`.
+  - [ ] **Sub-task 25.3.3.3:** Publish user recovery and retention guidance, remaining limitations,
+    independent review, and separate results for every claimed tuple/client. Complete source edits
+    before one governed evidence refresh; preserve historical rejection records and require the
+    same common G1/G2 gates in later full-GA/client/adapter promotions. No passing fixture or
+    technical candidate can enable, sign, or publish itself. **Execution:** local documentation;
+    independent review and release authorization remain separate exact prerequisites.
+
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 25.3.AC1:** Given the exact signed candidate and approved model, when a fresh
@@ -4661,6 +4888,10 @@ are evaluated as one exact product rather than inferred from separate component 
 - [ ] **Story AC 25.3.AC3:** Given read-only source scope, when the product runs, then user source
   documents remain unchanged while only authorized encrypted application state is retained and
   normal question-answering emits no network traffic.
+- [ ] **Story AC 25.3.AC4:** Given the registered context-safety matrix and installed preview,
+  when all G1/G2 cases execute, then each claimed tuple proves pre-dispatch fit, truthful incomplete
+  output, encrypted original recording, visible summary use, and source-backed historical recall;
+  missing, failed, stale, or substituted evidence blocks release.
 
 #### Sprint Acceptance Criteria
 
@@ -8924,6 +9155,10 @@ and release remain open.
 `v1.0-preview-windows` applicability record. Model acquisition is a later separately gated
 increment and does not block deterministic-fake shell integration.
 
+**Context projection dependency:** Task 76.2.4 additionally requires the registered host contracts
+from Tasks 13.4.5, 13.1.6, 22.1.4, and 22.1.5. This does not block earlier deterministic-fake shell
+implementation; it blocks complete-continuity and installed-preview acceptance claims.
+
 **Current status:** `LOCAL_IMPLEMENTATION_PENDING`. The shell and deterministic-fake first-run
 slice are repository-local work. Native Windows package, accessibility, and clean-install results
 remain external verification prerequisites and are not substitutes for implementation.
@@ -8967,6 +9202,24 @@ shows the verified read-only workflow without moving authority or canonical stat
     credential=Windows media and signing identity; payment=license, signing, or accessibility-tool
     costs if applicable)`; `substitution_set=empty`.
 
+- [ ] **Task 76.2.4 - Make capacity and continuity limitations visible**
+  - [ ] **Sub-task 76.2.4.1:** Render Rust-owned recording consent, retention/capture coverage,
+    declared-versus-served capacity, input/output/margin use, summary-assisted-answer markers,
+    original-source access, and incomplete finish states. The desktop is a projection, not a
+    second tokenizer, summary authority, prompt assembler, or durable store. **Execution:** local;
+    owner=standalone-shell.
+  - [ ] **Sub-task 76.2.4.2:** Offer only host-approved source reduction, checked compaction,
+    linked-thread/source-resupply, or explicit approved-profile choices. Explain unavailable
+    originals, disabled recording, storage failure, and fixed-overhead overflow without silently
+    dropping content, changing models, or promising complete recall. Preserve markers on reconnect
+    and align Verified Chat/CLI projections through the shared protocol. **Execution:** local;
+    owner=standalone recovery and host protocol.
+  - [ ] **Sub-task 76.2.4.3:** Run `CTX-JOURNEY` contract tests for consent, summary markers,
+    source access, length-stopped valid-looking answers, refused overflow, stale UI state, restart,
+    and keyboard/screen-reader announcements. Retain native installed Windows accessibility results
+    separately under Sub-task 76.2.3.2 prerequisites; no fake fixture substitutes for them.
+    **Execution:** local fixtures and separately authorized native verification.
+
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 76.2.AC1:** Given a machine without developer tooling, when the application
@@ -8978,12 +9231,19 @@ shows the verified read-only workflow without moving authority or canonical stat
 - [ ] **Story AC 76.2.AC3:** Given hostile UI messages, stale events, spoofed peers, malformed
   paths, missing assets, or a crashed host, when the bridge handles them, then no authority,
   canonical-state write, source write, network access, or false completion occurs.
+- [ ] **Story AC 76.2.AC4:** Given capacity, recording, summary, or incomplete-output limitations,
+  when a user reads or resumes an answer, then accessible host-owned markers explain what was
+  retained and delivered, provide original-source access where authorized, and offer only checked
+  recovery without a false full-history or completion claim.
 
 #### [ ] Story 76.3 - Model Manager
 
 **Dependencies:** Stories 14.1 and 76.2; Decisions 0027 and 0044; the Decision 0051
 `v1.0-preview-windows` applicability record. Alignment with Story 164.1 is required without making
 that later full-GA story a substitute or circular prerequisite for the preview increment.
+
+**Serving dependency:** Task 76.3.3 additionally requires Tasks 13.1.5 and 13.4.5. Discovery or a
+hardware estimate cannot replace the observed serving/profile contract before activation.
 
 **Current status:** `LOCAL_IMPLEMENTATION_PENDING`. Catalog filtering, consent, quarantine,
 download/import state, verification, activation, rollback, and removal mechanics are local work.
@@ -9018,6 +9278,23 @@ without a hidden fallback or trust-by-discovery.
     canonical evidence, and immutable rejection history. **Execution:** local;
     owner=model-manager; venue=repository-local.
 
+- [ ] **Task 76.3.3 - Preflight exact memory and serving capacity before activation**
+  - [ ] **Sub-task 76.3.3.1:** Estimate exact weights, KV-cache types, attention/recurrent state,
+    slots/concurrency, compute buffers, and host/accelerator headroom using verified artifact metadata
+    and qualified runtime measurements. Label uncertainty and refuse unsafe/unknown fits; do not
+    apply an incident-specific bytes-per-token constant to every model. **Execution:** local;
+    owner=model-manager preflight.
+  - [ ] **Sub-task 76.3.3.2:** Display architectural ceiling, approved profile window, observed
+    served capacity, and usable input after total output reserve/margin as separate facts. Bind
+    launch and activation to Tasks 13.1.5 and 13.4.5; refuse undersized or unverified discovered
+    servers and require explicit selection of a separately qualified reduced profile, with no
+    automatic resize, foreign-process restart, or fallback. **Execution:** local; owner=model-manager.
+  - [ ] **Sub-task 76.3.3.3:** Test insufficient memory/headroom, inaccurate estimates, changed
+    KV type or slot count, model reload, undersized serving windows, and operator-started endpoints.
+    Require a stable visible refusal before generation/activation or an exact approved compatible
+    tuple with current native evidence. Keep real hardware claims separate from fake estimates.
+    **Execution:** local fixtures; exact native hardware/runtime evidence before promotion.
+
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 76.3.AC1:** Given catalog and hardware facts, when eligibility is computed, then
@@ -9029,6 +9306,10 @@ without a hidden fallback or trust-by-discovery.
 - [ ] **Story AC 76.3.AC3:** Given normal preview question-answering, when the selected model runs,
   then the acquisition authority is absent, no credential is available, and the route remains the
   qualified `strict_local` profile.
+- [ ] **Story AC 76.3.AC4:** Given model metadata and a running process, when hardware fit and
+  activation are evaluated, then architectural, approved, served, and usable capacities remain
+  distinct and only a current qualified serving tuple can activate; estimates or foreign process
+  discovery alone never authorize inference.
 
 #### Sprint Acceptance Criteria
 
