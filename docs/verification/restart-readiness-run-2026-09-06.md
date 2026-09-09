@@ -209,3 +209,82 @@ gate, model/platform qualification, release, publication, or full-plan traversal
 is claimed. The next action is operator-controlled: remove the global STOP file
 and explicitly resume; then revalidate the concurrent revert and retained
 worktree before completing the evidence batch.
+
+## Local-testing milestone resume checkpoint — 2026-09-09
+
+The owner's September 8 local-testing milestone superseded the prior operator
+stop and whole-roadmap terminal objective for this run. At the 2026-09-09
+18:10 -0500 safe checkpoint, both
+`runner-state-20260908-local-EIVlvr/STOP` and the global AgentMage STOP control
+were absent. The session resumed from exact HEAD `081a372d`, preserved the 11
+inherited dirty files, and made no reset, stash, rebase, push, publication,
+download, model activation, platform qualification, or release claim.
+
+Completed local commits:
+
+- `8b874db3` preserves the owner's inherited README, PRD,
+  IMPLEMENTATION-PLAN, and TASKS G1/G2 additions as a planning-only commit;
+- `d1c93bae` implements Task 13.1.4's independently authorized registration
+  work: 53 release-compatible normative mappings over the unchanged 294 stable
+  requirements, a 34-node task/sub-task dependency DAG, all seven PRD `CTX-*`
+  cases, five versioned migration dispositions, sixteen closed refusal codes,
+  blocker-register integration, and focused mutation tests; and
+- `1679d980` preserves the distinct inherited readiness evidence batch after
+  validation: the schema-authority correction, Story 1.2 contract closure,
+  Story 3.1 configuration/security closure, strict-local source policy,
+  requirements registry, policy expectations, traceability, planning manifest
+  pointer, and row-level blocker register. The inherited evidence changes are
+  included only in this separate evidence commit and are not represented as
+  newly authored product capability.
+
+Task 13.1.4.2 and Task 13.1.4.3 are complete. The task graph now prevents the
+old paragraph scanner from turning an acceptance reference into a prerequisite,
+rejects cycles and unknown owners, and keeps the prepared-request guard ahead
+of the native trial it must protect. The registration truthfully preserves both
+full filenames, `docs/decisions/0051-business-source-license.md` and
+`docs/decisions/0051-decision-0048-restart-readiness-correction.md`, with status
+`blocked-owner-direction`; it assigns or renumbers neither file.
+
+Observed passing checks in this work unit:
+
+- 27 focused context-registration, blocker, task-graph, and requirement-coverage
+  tests; the dedicated combined registration/blocker/task-graph set passes 16;
+- requirement registry check, additions-only protection of 294 requirements and
+  1,407 checklist entries, and coverage of 294 requirements / 53 normative
+  statements;
+- task graph, schema-2 row-level blocker register, policy, traceability,
+  supply-chain, strict-local source, and eight-case hostile-network checks;
+- Engineering Runtime schema/contract boundary closure (52 Node cases plus 8,
+  15, 13, and 29 focused Python cases) and the 12-case contract-evidence suite;
+- Story 3.1 configuration startup, review, component inventory, security map,
+  story gate, and Sprint 3 gate, with their macOS blocker preserved; and
+- Python compilation and `git diff --check`.
+
+The restart-readiness gate is not passed. `planning_scope.py --check` now fails
+only at the intended immutable planning boundary: the accepted post-0040
+snapshot contains 31 normative mappings, the current G1/G2 source requires 53,
+and the planning manifest deliberately retains normative-map SHA-256
+`dee0d3b5cd845cc2acd75ff0352051c63c14f506933dd96f010fe48688e2be04`
+rather than accepting current SHA-256
+`dab0d7773e877fc389f5f2f409462757975aa210165c0b1b4035ac96026e5913`
+without governance. Documentation validation consequently fails on the same
+three planning-scope diagnostics. No validator, evidence binding, or release
+criterion was weakened to hide them.
+
+The row-level register records 54 local, 1,017 dependency, 92 external, and 427
+unknown open rows, with zero substitutions. Its next assessment is 50.3.4.1,
+but full-plan traversal remains prohibited while restart readiness fails. No
+other independent Task 13.1.4 readiness/preparatory row remains: 13.1.4.1 is
+the exact external owner-direction prerequisite. The required owner action is
+to assign a unique accepted decision identity that reconciles the G1/G2
+normative additions without silently renumbering either existing Decision 0051
+file. Once supplied, the next executable work is to record that exact decision,
+advance the planning-scope snapshot/report, regenerate affected evidence once,
+and rerun readiness before starting the served-capability source batch.
+
+Product truth remains `scaffolded`. No model is enabled, no eligible local
+artifact was demonstrated, no platform is supported, no package is released,
+and none of the six local-testing milestone outcomes is claimed complete.
+`docs/LOCAL-TESTING.md` has not been created because there is not yet a verified
+launch workflow to document; a refusal-only or fixture-only guide would not
+satisfy the requested milestone.
