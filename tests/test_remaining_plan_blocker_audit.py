@@ -115,6 +115,23 @@ class RemainingPlanBlockerRegisterTests(unittest.TestCase):
         self.assertEqual(leaf["owner"], "shell")
         self.assertEqual(leaf["execution_venue"], "repository-local")
 
+    def test_registered_task_dependencies_override_prose_mentions(self) -> None:
+        text = """#### [ ] Story 13.1 - Context
+- [ ] **Task 13.1.4 - Register**
+  - [ ] **Sub-task 13.1.4.2:** Prove no cycle with Task 13.4.5. **Execution:** local.
+#### [ ] Story 13.4 - Dispatch
+- [ ] **Task 13.4.5 - Prepare**
+  - [ ] **Sub-task 13.4.5.1:** Prepare. **Execution:** local.
+"""
+        value = build_from_text(
+            text,
+            {"13.1.4.2": [], "13.4.5.1": ["13.1.4"]},
+        )
+        self.assertEqual(self.row(value, "13.1.4.2")["prerequisite_row_ids"], [])
+        self.assertEqual(
+            self.row(value, "13.4.5.1")["prerequisite_row_ids"], ["13.1.4"]
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -11,10 +11,16 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+try:
+    from scripts.context_safety_registration import load, registered_dependencies
+except ModuleNotFoundError:
+    from context_safety_registration import load, registered_dependencies
+
 
 ROOT = Path(__file__).resolve().parents[1]
 TASKS = ROOT / "TASKS.md"
 OUTPUT = ROOT / "docs" / "verification" / "remaining-plan-blocker-audit.json"
+CONTEXT_SAFETY_REGISTRATION = ROOT / "requirements" / "context-safety-registration.json"
 ROW = re.compile(
     r"^(?P<indent>\s*)(?:(?P<heading>#{2,4})\s+|(?:-\s+))"
     r"\[(?P<state>[ xX])\]\s+(?P<body>.*)$"
@@ -256,6 +262,8 @@ def _paths(
 
 def _critical_rank(record: dict[str, Any]) -> tuple[int, int]:
     story = record.get("story_id")
+    if record["row_id"].startswith("13.1.4"):
+        return 10, record["line"]
     if story in CRITICAL_STORY_ORDER:
         return CRITICAL_STORY_ORDER[story], record["line"]
     if story:
@@ -273,7 +281,9 @@ def _critical_rank(record: dict[str, Any]) -> tuple[int, int]:
     return 60, record["line"]
 
 
-def build_from_text(text: str) -> dict[str, Any]:
+def build_from_text(
+    text: str, registered_graph: dict[str, list[str]] | None = None
+) -> dict[str, Any]:
     records = _row_records(text)
     known = {record["row_id"] for record in records}
     open_records = [record for record in records if not record["checked"]]
@@ -284,7 +294,10 @@ def build_from_text(text: str) -> dict[str, Any]:
     for record in open_records:
         referenced, unresolved = _references(record, known)
         structural = _structural_dependencies(record, records)
-        graph[record["row_id"]] = sorted((set(referenced) | set(structural)) & open_ids)
+        dependencies = set(referenced) | set(structural)
+        if registered_graph is not None and record["row_id"] in registered_graph:
+            dependencies = set(registered_graph[record["row_id"]])
+        graph[record["row_id"]] = sorted(dependencies & open_ids)
         unresolved_by_id[record["row_id"]] = unresolved
 
     rows: list[dict[str, Any]] = []
@@ -410,7 +423,10 @@ def build_from_text(text: str) -> dict[str, Any]:
 
 
 def build() -> bytes:
-    value = build_from_text(TASKS.read_text(encoding="utf-8"))
+    registration = load(CONTEXT_SAFETY_REGISTRATION)
+    value = build_from_text(
+        TASKS.read_text(encoding="utf-8"), registered_dependencies(registration)
+    )
     return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
 
 

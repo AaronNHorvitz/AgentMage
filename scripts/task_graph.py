@@ -9,6 +9,11 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+try:
+    from scripts.context_safety_registration import load, validate as validate_context_safety
+except ModuleNotFoundError:
+    from context_safety_registration import load, validate as validate_context_safety
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DECISION_0042_STORIES = (
@@ -57,6 +62,9 @@ DECISION_STORIES = (
     DECISION_0042_STORIES + DECISION_0043_0044_STORIES + DECISION_0051_STORIES
 )
 RELEASE_APPLICABILITY_PATH = ROOT / "architecture" / "release-applicability.json"
+CONTEXT_SAFETY_REGISTRATION_PATH = (
+    ROOT / "requirements" / "context-safety-registration.json"
+)
 EXPECTED_STORY_APPLICABILITY = {
     "25.3": ["v1.0-preview-windows"],
     "76.2": ["v1.0-preview-windows", "v1.0-full-ga"],
@@ -246,8 +254,10 @@ def validate_text(
 
 def main() -> int:
     applicability = json.loads(RELEASE_APPLICABILITY_PATH.read_text(encoding="utf-8"))
+    tasks_text = (ROOT / "TASKS.md").read_text(encoding="utf-8")
+    prd_text = (ROOT / "PRD.md").read_text(encoding="utf-8")
     failures = validate_text(
-        (ROOT / "TASKS.md").read_text(encoding="utf-8"),
+        tasks_text,
         (ROOT / "IMPLEMENTATION-PLAN.md").read_text(encoding="utf-8"),
         "\n".join(
             (ROOT / path).read_text(encoding="utf-8")
@@ -260,6 +270,14 @@ def main() -> int:
             )
         ),
         applicability,
+    )
+    failures.extend(
+        validate_context_safety(
+            load(CONTEXT_SAFETY_REGISTRATION_PATH),
+            tasks_text,
+            prd_text,
+            load(ROOT / "requirements" / "registry.json"),
+        )
     )
     if failures:
         for failure in failures:

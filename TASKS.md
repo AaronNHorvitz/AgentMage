@@ -2700,16 +2700,28 @@ that the existing Linux native adapter or live evaluation path is missing.
     mappings, schema/migration ownership, and any necessary decision through governance; do not
     overwrite accepted requirements or assign/renumber either Decision 0051. **Execution:** local
     planning; owner=runtime-contracts; exact decision-number resolution requires owner direction.
-  - [ ] **Sub-task 13.1.4.2:** Register all new task-level dependencies and PRD `CTX-*` acceptance
+    BLOCKED_EXTERNAL(owner=product owner; action=assign a unique accepted decision identity without
+    renumbering either existing Decision 0051 file by inference; credential=none; payment=none).
+  - [x] **Sub-task 13.1.4.2:** Register all new task-level dependencies and PRD `CTX-*` acceptance
     cases in the machine-checked plan, release applicability, and blocker register. Prove no cycle
     between Task 13.4.5 and Sub-task 13.3.4.3, no orphan/duplicate identifiers, and no inherited
     blanket external blocker; retain Windows preview/full-GA distinctions and original closure
-    gates. **Execution:** local; owner=planning-integrity.
-  - [ ] **Sub-task 13.1.4.3:** Publish versioned contract/schema migration and closed refusal-code
+    gates. **Execution:** local; owner=planning-integrity. Evidence: the versioned
+    [`context-safety-registration.json`](requirements/context-safety-registration.json) registers
+    34 exact task/sub-task nodes and all seven PRD `CTX-*` cases across preview, full-GA, and
+    retained-platform applicability. The shared task-graph check and blocker builder reject cycles,
+    unknown owners/prerequisites, guarded-trial inversion, and prose-derived false dependencies;
+    the unresolved Decision 0051 collision remains an exact external row with no substitution.
+  - [x] **Sub-task 13.1.4.3:** Publish versioned contract/schema migration and closed refusal-code
     plans for served observations, prepared requests, finish/usage results, capture coverage, and
     summary lineage. Missing legacy fields must require requalification, not assumed capacity or
     complete history; record focused validation and evidence-refresh scope before source work.
-    **Execution:** local; owner=runtime-contracts.
+    **Execution:** local; owner=runtime-contracts. Evidence: the same registration defines five
+    versioned migrations and sixteen closed refusal codes. Legacy served/result records require
+    requalification, an absent preparation rejects dispatch, and incomplete capture or lineage
+    disables complete continuity rather than manufacturing capacity or history. Four focused
+    mutation groups preserve the unresolved governance status, release bindings, graph ordering,
+    CTX ownership, and migration/refusal closure.
 - [ ] **Task 13.1.5 - Bind the loaded process to observed serving capabilities**
   - [ ] **Sub-task 13.1.5.1:** After Task 13.1.4, extend existing load/health/lifecycle contracts
     with verified per-request capacity, slots/cache policy, runtime/artifact identity, process/load

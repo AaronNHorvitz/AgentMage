@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "registration_id": "context-safety-g1-g2-2026-09-08",
+  "owner_request_date": "2026-09-08",
+  "governance": {
+    "status": "blocked-owner-direction",
+    "reason_code": "governance.decision-identity-collision",
+    "colliding_decision_files": [
+      "docs/decisions/0051-business-source-license.md",
+      "docs/decisions/0051-decision-0048-restart-readiness-correction.md"
+    ],
+    "required_action": "The owner must assign a unique accepted decision identity before the normative planning-scope snapshot can advance.",
+    "does_not_authorize": [
+      "decision-renumbering",
+      "model-activation",
+      "platform-qualification",
+      "release-closure"
+    ]
+  },
+  "requirement_bindings": {
+    "v0.1": [
+      "AM-DAT-001",
+      "AM-EVD-001",
+      "AM-EVD-002",
+      "AM-KRN-001",
+      "AM-MDL-003",
+      "AM-MDL-004",
+      "AM-MDL-006",
+      "AM-MDL-007",
+      "AM-PRV-001",
+      "AM-SES-001",
+      "AM-TST-002",
+      "AM-VSC-002"
+    ],
+    "v1.0": [
+      "AM-CTX-001",
+      "AM-CTX-002",
+      "AM-CTX-003",
+      "AM-OBS-002",
+      "AM-PERF-001",
+      "AM-SES-002"
+    ]
+  },
+  "task_dependencies": {
+    "13.1.4.1": [],
+    "13.1.4.2": [],
+    "13.1.4.3": [],
+    "13.1.5.1": ["13.1.4"],
+    "13.1.5.2": ["13.1.4", "13.1.5.1"],
+    "13.1.5.3": ["13.1.5.1", "13.1.5.2"],
+    "13.1.6.1": ["13.1.4", "13.3.4.2"],
+    "13.1.6.2": ["13.1.6.1"],
+    "13.1.6.3": ["13.1.6.1", "13.1.6.2", "13.4.5"],
+    "13.3.4.1": ["13.1.4"],
+    "13.3.4.2": ["13.1.4"],
+    "13.3.4.3": ["13.1.5", "13.1.6", "13.3.4.1", "13.3.4.2", "13.4.5"],
+    "13.4.5.1": ["13.1.4", "13.1.5", "13.3.4.1"],
+    "13.4.5.2": ["13.4.5.1"],
+    "13.4.5.3": ["13.4.5.1", "13.4.5.2"],
+    "13.4.5.4": ["13.4.5.1", "13.4.5.2", "13.4.5.3"],
+    "22.1.4.1": ["13.1.4", "13.1.6", "13.4.5", "21.2", "22.2"],
+    "22.1.4.2": ["22.1.4.1"],
+    "22.1.4.3": ["22.1.4.1", "22.1.4.2"],
+    "22.1.4.4": ["22.1.4.1", "22.1.4.2", "22.1.4.3"],
+    "22.1.5.1": ["22.1.4"],
+    "22.1.5.2": ["22.1.5.1"],
+    "22.1.5.3": ["22.1.5.1", "22.1.5.2"],
+    "22.1.5.4": ["22.1.5.1", "22.1.5.2", "22.1.5.3"],
+    "25.3.3.1": ["13.1.4", "13.1.5", "13.1.6", "13.4.5", "22.1.4", "22.1.5", "76.2.4", "76.3.3"],
+    "25.3.3.2": ["25.3.2", "25.3.3.1"],
+    "25.3.3.3": ["25.3.3.1", "25.3.3.2"],
+    "76.2.4.1": ["22.1.5"],
+    "76.2.4.2": ["13.1.5", "13.1.6", "13.4.5"],
+    "76.2.4.3": ["76.2.3.2", "76.2.4.1", "76.2.4.2"],
+    "76.3.3.1": ["13.1.5", "13.4.5"],
+    "76.3.3.2": ["13.1.5", "13.4.5"],
+    "76.3.3.3": ["76.3.3.1", "76.3.3.2"]
+  },
+  "acceptance_cases": {
+    "CTX-SERVED": {"owner": "13.1.5.3", "release_applicability": ["retained-platforms", "v1.0-full-ga", "v1.0-preview-windows"]},
+    "CTX-FIT": {"owner": "13.4.5.4", "release_applicability": ["retained-platforms", "v1.0-full-ga", "v1.0-preview-windows"]},
+    "CTX-DISPATCH": {"owner": "13.4.5.4", "release_applicability": ["retained-platforms", "v1.0-full-ga", "v1.0-preview-windows"]},
+    "CTX-FINISH": {"owner": "13.1.6.3", "release_applicability": ["retained-platforms", "v1.0-full-ga", "v1.0-preview-windows"]},
+    "CTX-RECORD": {"owner": "22.1.4.4", "release_applicability": ["retained-platforms", "v1.0-full-ga", "v1.0-preview-windows"]},
+    "CTX-REOPEN": {"owner": "22.1.5.4", "release_applicability": ["retained-platforms", "v1.0-full-ga", "v1.0-preview-windows"]},
+    "CTX-JOURNEY": {"owner": "25.3.3.1", "release_applicability": ["retained-platforms", "v1.0-full-ga", "v1.0-preview-windows"]}
+  },
+  "contract_migrations": [
+    {"contract": "served-capability-observation", "target_version": 1, "legacy_disposition": "requalify", "missing_reason_code": "model.served-capability.missing"},
+    {"contract": "prepared-model-request", "target_version": 1, "legacy_disposition": "reject", "missing_reason_code": "model.prepared-request.missing"},
+    {"contract": "model-run-result", "target_version": 2, "legacy_disposition": "requalify", "missing_reason_code": "model.finish-state.missing"},
+    {"contract": "continuity-capture-coverage", "target_version": 1, "legacy_disposition": "disable-complete-continuity", "missing_reason_code": "continuity.capture.incomplete"},
+    {"contract": "summary-lineage", "target_version": 1, "legacy_disposition": "reject-summary-authority", "missing_reason_code": "continuity.summary-lineage.missing"}
+  ],
+  "refusal_codes": [
+    "continuity.capture.incomplete",
+    "continuity.original.deleted",
+    "continuity.original.missing",
+    "continuity.recording.not-consented",
+    "continuity.storage.unavailable",
+    "continuity.summary-lineage.missing",
+    "model.capacity.arithmetic-overflow",
+    "model.capacity.fixed-overhead-too-large",
+    "model.capacity.request-overflow",
+    "model.finish-state.missing",
+    "model.prepared-request.missing",
+    "model.prepared-request.stale",
+    "model.served-capability.drift",
+    "model.served-capability.missing",
+    "model.served-capability.profile-mismatch",
+    "model.tokenizer-parity.mismatch"
+  ]
+}
