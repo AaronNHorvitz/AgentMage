@@ -1382,7 +1382,7 @@ fn validate_payload_inventory(
     Ok(())
 }
 
-fn valid_lifecycle_pair(
+pub(crate) fn valid_lifecycle_pair(
     lifecycle: RuntimeArtifactLifecycleState,
     integrity: RuntimeArtifactIntegrityState,
 ) -> bool {
