@@ -11,17 +11,17 @@ def _synthetic_snapshot() -> dict:
         "frozen_on": inventory.FREEZE_DATE,
         "entries": [
             {
-                "repository": "google/gemma-2-2b-it",
-                "revision": "f" * 40,
-                "artifact_listing": ["README.md", "model.safetensors"],
+                "repository": "google/codegemma-7b-it-GGUF",
+                "revision": "29ea2a44db5fd40a502119a477664692f2f04d0d",
+                "artifact_listing": ["README.md", "codegemma-7b-it-f16.gguf"],
                 "pipeline_tag": "text-generation",
                 "tags": [],
                 "private": False,
             },
             {
-                "repository": "google/gemma-2-2b-gguf",
-                "revision": "a" * 40,
-                "artifact_listing": ["README.md", "model.gguf"],
+                "repository": "google/gemma-unadmitted-fixture",
+                "revision": "b" * 40,
+                "artifact_listing": ["README.md"],
                 "pipeline_tag": "text-generation",
                 "tags": [],
                 "private": False,
@@ -451,13 +451,11 @@ class ModelCandidateInventoryTests(unittest.TestCase):
         snapshot = _synthetic_snapshot()
         result = inventory.preflight_matrix(snapshot)
         self.assertEqual(result["acquisition_authorized"], False)
-        self.assertEqual(
-            len(result["entries"]), len(inventory.EXACT_ARTIFACT_PROFILES)
-        )
+        self.assertEqual(len(result["entries"]), len(snapshot["entries"]))
         self.assertEqual(
             len(result["envelopes"]), len(inventory.REFERENCE_MACHINE_ENVELOPES)
         )
-        expected_result_count = len(inventory.EXACT_ARTIFACT_PROFILES) * len(
+        expected_result_count = len(snapshot["entries"]) * len(
             inventory.REFERENCE_MACHINE_ENVELOPES
         )
         self.assertEqual(result["counts"]["results"], expected_result_count)
@@ -476,36 +474,61 @@ class ModelCandidateInventoryTests(unittest.TestCase):
             for envelope_result in entry["results"]:
                 self.assertIs(envelope_result["acquisition_started"], False)
                 self.assertIn(
-                    envelope_result["status"], {"CANDIDATE", "BLOCKED-HARDWARE"}
+                    envelope_result["status"],
+                    {"CANDIDATE", "BLOCKED-HARDWARE", "BLOCKED"},
                 )
                 self.assertEqual(
                     set(envelope_result["dimensions"].keys()),
                     set(inventory.PREFLIGHT_DIMENSIONS),
                 )
-        # matrix has real dispositions rather than unconditional BLOCKED placeholders
         statuses = {
             result_["status"]
             for entry in result["entries"]
             for result_ in entry["results"]
         }
+        # Admitted synthetic entry produces real fit dispositions.
         self.assertIn("CANDIDATE", statuses)
         self.assertIn("BLOCKED-HARDWARE", statuses)
-        self.assertNotIn("BLOCKED", statuses)
+        # Unadmitted synthetic entry produces per-envelope BLOCKED with a reason
+        # instead of being silently omitted.
+        self.assertIn("BLOCKED", statuses)
+        unadmitted = [entry for entry in result["entries"] if not entry["admitted"]]
+        self.assertTrue(unadmitted)
+        for entry in unadmitted:
+            self.assertEqual(entry["admission_reason"], "exact-artifact-profile-not-admitted")
+            for envelope_result in entry["results"]:
+                self.assertEqual(envelope_result["status"], "BLOCKED")
+                self.assertEqual(
+                    envelope_result["reason"], "exact-artifact-profile-not-admitted"
+                )
 
     def test_preflight_matrix_validation_and_deep_compare(self) -> None:
         snapshot = _synthetic_snapshot()
         matrix = inventory.preflight_matrix(snapshot)
         self.assertEqual(inventory.validate_preflight_matrix(snapshot, matrix), [])
 
+        # Sanity-guard the fixture so mutations below always cross a boundary.
+        first_entry = matrix["entries"][0]
+        first_result = first_entry["results"][0]
+        self.assertTrue(first_entry["admitted"])
+        self.assertEqual(first_result["status"], "CANDIDATE")
+        self.assertEqual(first_result["dimensions"]["disk"]["status"], "CANDIDATE")
+
         mutations = (
             lambda m: m["entries"][0].update({"repository": "google/imposter"}),
             lambda m: m["entries"][0].update({"revision": "0" * 40}),
+            lambda m: m["entries"][0].update({"admitted": False}),
+            lambda m: m["entries"][0].update(
+                {"admission_reason": "spurious-mutation"}
+            ),
             lambda m: m["entries"][0]["results"][0].update(
                 {"repository": "google/imposter"}
             ),
-            lambda m: m["entries"][0]["results"][0].update({"status": "CANDIDATE"}),
+            lambda m: m["entries"][0]["results"][0].update(
+                {"status": "BLOCKED-HARDWARE"}
+            ),
             lambda m: m["entries"][0]["results"][0]["dimensions"]["disk"].update(
-                {"status": "CANDIDATE"}
+                {"status": "BLOCKED-HARDWARE"}
             ),
             lambda m: m["entries"][0]["results"][0]["dimensions"]["disk"].update(
                 {"envelope_available_bytes": 1}
@@ -532,7 +555,7 @@ class ModelCandidateInventoryTests(unittest.TestCase):
     def test_preflight_matrix_result_dimensions_and_envelope_pairing(self) -> None:
         snapshot = _synthetic_snapshot()
         matrix = inventory.preflight_matrix(snapshot)
-        expected_pairs = len(inventory.EXACT_ARTIFACT_PROFILES) * len(
+        expected_pairs = len(snapshot["entries"]) * len(
             inventory.REFERENCE_MACHINE_ENVELOPES
         )
         actual_pairs = sum(len(entry["results"]) for entry in matrix["entries"])
@@ -540,20 +563,176 @@ class ModelCandidateInventoryTests(unittest.TestCase):
         seen = set()
         for entry in matrix["entries"]:
             for result in entry["results"]:
-                key = (entry["profile_id"], result["envelope_id"])
+                key = (entry["entry_id"], result["envelope_id"])
                 self.assertNotIn(key, seen)
                 seen.add(key)
         self.assertEqual(len(seen), expected_pairs)
 
-    def test_stored_preflight_matrix_is_retained_and_deterministic(self) -> None:
-        self.assertTrue(inventory.PREFLIGHT_MATRIX.exists())
+    def test_preflight_matrix_covers_every_frozen_inventory_entry(self) -> None:
         snapshot = inventory.read_json(inventory.SOURCE_SNAPSHOT)
-        stored = inventory.read_json(inventory.PREFLIGHT_MATRIX)
-        self.assertEqual(inventory.validate_preflight_matrix(snapshot, stored), [])
-        expected_pairs = len(inventory.EXACT_ARTIFACT_PROFILES) * len(
+        normalized = inventory.read_json(inventory.INVENTORY)
+        matrix = inventory.preflight_matrix(snapshot)
+        inventory_entry_ids = [item["entry_id"] for item in normalized["entries"]]
+        matrix_entry_ids = [item["entry_id"] for item in matrix["entries"]]
+        # every inventory entry appears exactly once
+        self.assertEqual(matrix_entry_ids, inventory_entry_ids)
+        self.assertEqual(len(matrix_entry_ids), len(set(matrix_entry_ids)))
+        envelope_count = len(inventory.REFERENCE_MACHINE_ENVELOPES)
+        expected_pairs = len(inventory_entry_ids) * envelope_count
+        self.assertEqual(matrix["counts"]["results"], expected_pairs)
+        actual_pairs = 0
+        for entry in matrix["entries"]:
+            self.assertEqual(len(entry["results"]), envelope_count)
+            envelope_ids = [item["envelope_id"] for item in entry["results"]]
+            self.assertEqual(
+                envelope_ids,
+                [env["envelope_id"] for env in inventory.REFERENCE_MACHINE_ENVELOPES],
+            )
+            actual_pairs += len(entry["results"])
+            if not entry["admitted"]:
+                for envelope_result in entry["results"]:
+                    self.assertEqual(envelope_result["status"], "BLOCKED")
+                    self.assertEqual(
+                        envelope_result["reason"],
+                        "exact-artifact-profile-not-admitted",
+                    )
+                    self.assertIsNone(envelope_result["profile_id"])
+        self.assertEqual(actual_pairs, expected_pairs)
+        self.assertEqual(inventory.validate_preflight_matrix(snapshot, matrix), [])
+
+    def test_generated_preflight_matrix_from_frozen_sources_is_deterministic(self) -> None:
+        snapshot = inventory.read_json(inventory.SOURCE_SNAPSHOT)
+        normalized = inventory.read_json(inventory.INVENTORY)
+        matrix = inventory.preflight_matrix(snapshot)
+        self.assertEqual(inventory.validate_preflight_matrix(snapshot, matrix), [])
+        expected_pairs = len(normalized["entries"]) * len(
             inventory.REFERENCE_MACHINE_ENVELOPES
         )
-        self.assertEqual(stored["counts"]["results"], expected_pairs)
+        self.assertEqual(matrix["counts"]["results"], expected_pairs)
+        self.assertEqual(
+            matrix["counts"]["inventory_entries"], len(normalized["entries"])
+        )
+
+    def test_profile_validation_rejects_missing_snapshot_artifact(self) -> None:
+        snapshot = inventory.read_json(inventory.SOURCE_SNAPSHOT)
+        # Reproduces the pre-correction PaliGemma profile which referenced
+        # model-00001-of-00002.safetensors even though the pinned snapshot lists
+        # a three-shard set. Validation must reject rather than pass by
+        # regenerating from the same incorrect constant.
+        ghost_paligemma = {
+            "profile_id": (
+                "google/paligemma-3b-mix-448@"
+                "ead2d9a35598cb89119af004f5d023b311d1c4a1"
+                "#model-00001-of-00002.safetensors"
+            ),
+            "repository": "google/paligemma-3b-mix-448",
+            "revision": "ead2d9a35598cb89119af004f5d023b311d1c4a1",
+            "artifact_path": "model-00001-of-00002.safetensors",
+            "artifact_paths": (
+                "model-00001-of-00002.safetensors",
+                "model-00002-of-00002.safetensors",
+            ),
+            "architectures": ("arm64", "x86_64"),
+            "runtime_bindings": (
+                {"artifact_format": "safetensors", "runtime_family": "transformers"},
+            ),
+            "supported_accelerations": ("cuda",),
+            "artifact_size_bytes": 1,
+            "required_disk_bytes": 1,
+            "required_memory_bytes": 1,
+            "required_accelerator_bytes": 1,
+            "expected_working_set_bytes": 1,
+            "context_tokens": 1,
+            "modality": "image-text-to-text",
+        }
+        failures = inventory._validate_profiles_against_snapshot(
+            (ghost_paligemma,), snapshot
+        )
+        self.assertTrue(failures)
+        self.assertTrue(
+            any("model-00001-of-00002.safetensors" in msg for msg in failures)
+        )
+        # Every currently declared profile must bind to real shards in the
+        # pinned snapshot listing so a ghost artifact cannot survive
+        # validation.
+        self.assertEqual(
+            inventory._validate_profiles_against_snapshot(
+                inventory.EXACT_ARTIFACT_PROFILES, snapshot
+            ),
+            [],
+        )
+
+    def test_paligemma_profile_covers_every_declared_shard(self) -> None:
+        paligemma = next(
+            profile
+            for profile in inventory.EXACT_ARTIFACT_PROFILES
+            if profile["repository"] == "google/paligemma-3b-mix-448"
+        )
+        self.assertEqual(
+            paligemma["artifact_paths"],
+            (
+                "model-00001-of-00003.safetensors",
+                "model-00002-of-00003.safetensors",
+                "model-00003-of-00003.safetensors",
+            ),
+        )
+        self.assertEqual(
+            paligemma["artifact_path"], "model-00001-of-00003.safetensors"
+        )
+
+    def test_mac_unified_memory_is_not_double_counted(self) -> None:
+        mac = next(
+            envelope
+            for envelope in inventory.REFERENCE_MACHINE_ENVELOPES
+            if envelope["envelope_id"]
+            == "macbook-pro-m5-arm64-metal-llamacpp-native"
+        )
+        self.assertTrue(mac["unified_memory"])
+        memory_bytes = mac["available_memory_bytes"]
+        self.assertEqual(memory_bytes, 48 * 1024**3)
+        self.assertEqual(mac["available_accelerator_bytes"], memory_bytes)
+        # A compatible Mac profile requiring 48 GiB plus one byte of working
+        # set must be BLOCKED-HARDWARE because Metal uses the same unified
+        # physical memory as the CPU.
+        profile = _make_profile(
+            profile_id="google/unified-fixture@" + "e" * 40 + "#model.gguf",
+            repository="google/unified-fixture",
+            revision="e" * 40,
+            architectures=(inventory.ARCHITECTURE_NEUTRAL,),
+            supported_accelerations=("cpu", "cuda", "metal"),
+            runtime_bindings=(
+                {"artifact_format": "GGUF", "runtime_family": "llama.cpp"},
+            ),
+            required_disk_bytes=1,
+            required_memory_bytes=memory_bytes,
+            required_accelerator_bytes=memory_bytes,
+            expected_working_set_bytes=memory_bytes + 1,
+            context_tokens=1,
+            modality="text-generation",
+        )
+        result = inventory.reference_machine_preflight(profile, mac)
+        working_set = result["dimensions"]["expected_working_set"]
+        self.assertEqual(
+            working_set["envelope_available_working_set_bytes"], memory_bytes
+        )
+        self.assertTrue(working_set["envelope_unified_memory"])
+        self.assertEqual(working_set["status"], "BLOCKED-HARDWARE")
+        self.assertEqual(result["status"], "BLOCKED-HARDWARE")
+        # Discrete envelopes still add memory + accelerator when both are
+        # physically distinct.
+        windows = next(
+            envelope
+            for envelope in inventory.REFERENCE_MACHINE_ENVELOPES
+            if envelope["envelope_id"] == "windows-11-x86_64-cuda-llamacpp-native"
+        )
+        self.assertFalse(windows["unified_memory"])
+        result = inventory.reference_machine_preflight(profile, windows)
+        self.assertEqual(
+            result["dimensions"]["expected_working_set"][
+                "envelope_available_working_set_bytes"
+            ],
+            windows["available_memory_bytes"] + windows["available_accelerator_bytes"],
+        )
 
 
 if __name__ == "__main__":

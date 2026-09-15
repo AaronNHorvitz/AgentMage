@@ -77,6 +77,7 @@ REFERENCE_MACHINE_ENVELOPES: Final = (
         "available_memory_bytes": 128 * 1024**3,
         "available_accelerator_bytes": 24 * 1024**3,
         "maximum_context_tokens": 32768,
+        "unified_memory": False,
     },
     {
         "envelope_id": "fedora-kinoite-44-x86_64-cuda-docker-model-runner",
@@ -93,6 +94,7 @@ REFERENCE_MACHINE_ENVELOPES: Final = (
         "available_memory_bytes": 128 * 1024**3,
         "available_accelerator_bytes": 24 * 1024**3,
         "maximum_context_tokens": 32768,
+        "unified_memory": False,
     },
     {
         "envelope_id": "ubuntu-24-04-x86_64-cpu-llamacpp-native",
@@ -109,6 +111,7 @@ REFERENCE_MACHINE_ENVELOPES: Final = (
         "available_memory_bytes": 64 * 1024**3,
         "available_accelerator_bytes": 0,
         "maximum_context_tokens": 8192,
+        "unified_memory": False,
     },
     {
         "envelope_id": "windows-11-x86_64-cuda-llamacpp-native",
@@ -125,6 +128,7 @@ REFERENCE_MACHINE_ENVELOPES: Final = (
         "available_memory_bytes": 64 * 1024**3,
         "available_accelerator_bytes": 16 * 1024**3,
         "maximum_context_tokens": 16384,
+        "unified_memory": False,
     },
     {
         "envelope_id": "macbook-pro-m5-arm64-metal-llamacpp-native",
@@ -141,6 +145,7 @@ REFERENCE_MACHINE_ENVELOPES: Final = (
         "available_memory_bytes": 48 * 1024**3,
         "available_accelerator_bytes": 48 * 1024**3,
         "maximum_context_tokens": 16384,
+        "unified_memory": True,
     },
 )
 
@@ -152,6 +157,7 @@ EXACT_ARTIFACT_PROFILES: Final = (
         "repository": "google/gemma-2-2b-GGUF",
         "revision": "df5cd638ad27cf1be1a6266c0618397f82e8787e",
         "artifact_path": "2b_pt_v2.gguf",
+        "artifact_paths": ("2b_pt_v2.gguf",),
         "architectures": (ARCHITECTURE_NEUTRAL,),
         "runtime_bindings": (
             {"runtime_family": "llama.cpp", "artifact_format": "GGUF"},
@@ -170,6 +176,7 @@ EXACT_ARTIFACT_PROFILES: Final = (
         "repository": "google/codegemma-7b-it-GGUF",
         "revision": "29ea2a44db5fd40a502119a477664692f2f04d0d",
         "artifact_path": "codegemma-7b-it-f16.gguf",
+        "artifact_paths": ("codegemma-7b-it-f16.gguf",),
         "architectures": (ARCHITECTURE_NEUTRAL,),
         "runtime_bindings": (
             {"runtime_family": "llama.cpp", "artifact_format": "GGUF"},
@@ -188,6 +195,10 @@ EXACT_ARTIFACT_PROFILES: Final = (
         "repository": "google/gemma-2-2b-it",
         "revision": "299a8560bedf22ed1c72a8a11e7dce4a7f9f51f8",
         "artifact_path": "model-00001-of-00002.safetensors",
+        "artifact_paths": (
+            "model-00001-of-00002.safetensors",
+            "model-00002-of-00002.safetensors",
+        ),
         "architectures": ("arm64", "x86_64"),
         "runtime_bindings": (
             {"runtime_family": "transformers", "artifact_format": "safetensors"},
@@ -202,10 +213,15 @@ EXACT_ARTIFACT_PROFILES: Final = (
         "modality": "text-generation",
     },
     {
-        "profile_id": "google/paligemma-3b-mix-448@ead2d9a35598cb89119af004f5d023b311d1c4a1#model-00001-of-00002.safetensors",
+        "profile_id": "google/paligemma-3b-mix-448@ead2d9a35598cb89119af004f5d023b311d1c4a1#model-00001-of-00003.safetensors",
         "repository": "google/paligemma-3b-mix-448",
         "revision": "ead2d9a35598cb89119af004f5d023b311d1c4a1",
-        "artifact_path": "model-00001-of-00002.safetensors",
+        "artifact_path": "model-00001-of-00003.safetensors",
+        "artifact_paths": (
+            "model-00001-of-00003.safetensors",
+            "model-00002-of-00003.safetensors",
+            "model-00003-of-00003.safetensors",
+        ),
         "architectures": ("arm64", "x86_64"),
         "runtime_bindings": (
             {"runtime_family": "transformers", "artifact_format": "safetensors"},
@@ -224,6 +240,7 @@ EXACT_ARTIFACT_PROFILES: Final = (
         "repository": "google/embeddinggemma-300m",
         "revision": "57c266a740f537b4dc058e1b0cda161fd15afa75",
         "artifact_path": "model.safetensors",
+        "artifact_paths": ("model.safetensors",),
         "architectures": ("arm64", "x86_64"),
         "runtime_bindings": (
             {"runtime_family": "sentence-transformers", "artifact_format": "safetensors"},
@@ -643,8 +660,57 @@ def _profile_bindings(profile: dict[str, Any]) -> list[dict[str, str]]:
     ]
 
 
+def _profile_artifact_paths(profile: dict[str, Any]) -> tuple[str, ...]:
+    paths = profile.get("artifact_paths")
+    if paths is None:
+        return (profile["artifact_path"],)
+    return tuple(paths)
+
+
+def _validate_profiles_against_snapshot(
+    profiles: tuple[dict[str, Any], ...], snapshot: dict[str, Any]
+) -> list[str]:
+    """Reject profiles whose declared artifact paths are absent from their
+    pinned snapshot entry.
+
+    A profile whose (repository, revision) pair is not present in this
+    snapshot is skipped because the frozen source snapshot may be a fixture
+    that does not contain every declared profile. Callers that require strict
+    identity binding must reconcile inventory entries separately.
+    """
+
+    failures: list[str] = []
+    entries_by_key: dict[tuple[str, str], dict[str, Any]] = {}
+    for entry in snapshot.get("entries", []):
+        entries_by_key[
+            (str(entry.get("repository", "")), str(entry.get("revision", "")))
+        ] = entry
+    for profile in profiles:
+        profile_id = profile["profile_id"]
+        key = (profile["repository"], profile["revision"])
+        source = entries_by_key.get(key)
+        if source is None:
+            continue
+        listing = set(source.get("artifact_listing", []))
+        paths = _profile_artifact_paths(profile)
+        if profile["artifact_path"] not in paths:
+            failures.append(
+                f"exact profile artifact_path missing from artifact_paths: {profile_id}"
+            )
+        missing = sorted(p for p in paths if p not in listing)
+        if missing:
+            failures.append(
+                f"exact profile artifacts absent from pinned snapshot listing "
+                f"{profile_id}: {missing}"
+            )
+    return failures
+
+
 def reference_machine_preflight(
-    profile: dict[str, Any], envelope: dict[str, Any]
+    profile: dict[str, Any],
+    envelope: dict[str, Any],
+    *,
+    entry_id: str | None = None,
 ) -> dict[str, Any]:
     """Preflight one exact artifact profile against one reference-machine envelope.
 
@@ -754,6 +820,8 @@ def reference_machine_preflight(
 
     if acceleration == "cpu":
         available_working_set = envelope["available_memory_bytes"]
+    elif envelope.get("unified_memory"):
+        available_working_set = envelope["available_memory_bytes"]
     else:
         available_working_set = (
             envelope["available_memory_bytes"] + envelope["available_accelerator_bytes"]
@@ -765,6 +833,7 @@ def reference_machine_preflight(
             else "BLOCKED-HARDWARE"
         ),
         "envelope_available_working_set_bytes": available_working_set,
+        "envelope_unified_memory": bool(envelope.get("unified_memory")),
         "profile_required_working_set_bytes": profile["expected_working_set_bytes"],
     }
 
@@ -776,13 +845,42 @@ def reference_machine_preflight(
 
     return {
         "envelope_id": envelope["envelope_id"],
+        "entry_id": entry_id,
         "profile_id": profile["profile_id"],
         "repository": profile["repository"],
         "revision": profile["revision"],
         "artifact_path": profile["artifact_path"],
         "acquisition_started": False,
         "status": overall,
+        "reason": None,
         "dimensions": dimensions,
+    }
+
+
+def _blocked_dimension(reason: str) -> dict[str, Any]:
+    return {"status": "BLOCKED", "reason": reason}
+
+
+def _blocked_envelope_result(
+    entry_id: str,
+    repository: str,
+    revision: str,
+    envelope: dict[str, Any],
+    reason: str,
+) -> dict[str, Any]:
+    return {
+        "envelope_id": envelope["envelope_id"],
+        "entry_id": entry_id,
+        "profile_id": None,
+        "repository": repository,
+        "revision": revision,
+        "artifact_path": None,
+        "acquisition_started": False,
+        "status": "BLOCKED",
+        "reason": reason,
+        "dimensions": {
+            dimension: _blocked_dimension(reason) for dimension in PREFLIGHT_DIMENSIONS
+        },
     }
 
 
@@ -793,23 +891,55 @@ def preflight_matrix(
 ) -> dict[str, Any]:
     envelope_records = [_serialize_envelope(envelope) for envelope in envelopes]
     profile_records = [_serialize_profile(profile) for profile in profiles]
-    entries = []
+    profile_index: dict[tuple[str, str], dict[str, Any]] = {
+        (profile["repository"], profile["revision"]): profile for profile in profiles
+    }
+    entries: list[dict[str, Any]] = []
     status_counts = {status: 0 for status in sorted(PREFLIGHT_STATUSES)}
-    for profile in profiles:
-        results = [
-            reference_machine_preflight(profile, envelope) for envelope in envelopes
-        ]
-        for result in results:
-            status_counts[result["status"]] += 1
-        entries.append(
-            {
+    admission_reason = "exact-artifact-profile-not-admitted"
+    for source in snapshot.get("entries", []):
+        repository = str(source.get("repository", ""))
+        revision = str(source.get("revision", ""))
+        entry_id = sha256_bytes(f"{repository}@{revision}".encode())
+        profile = profile_index.get((repository, revision))
+        if profile is not None:
+            results = [
+                reference_machine_preflight(profile, envelope, entry_id=entry_id)
+                for envelope in envelopes
+            ]
+            entry_record = {
+                "entry_id": entry_id,
+                "repository": repository,
+                "revision": revision,
                 "profile_id": profile["profile_id"],
-                "repository": profile["repository"],
-                "revision": profile["revision"],
                 "artifact_path": profile["artifact_path"],
+                "artifact_paths": sorted(_profile_artifact_paths(profile)),
+                "admitted": True,
+                "admission_reason": None,
                 "results": results,
             }
-        )
+        else:
+            results = [
+                _blocked_envelope_result(
+                    entry_id, repository, revision, envelope, admission_reason
+                )
+                for envelope in envelopes
+            ]
+            entry_record = {
+                "entry_id": entry_id,
+                "repository": repository,
+                "revision": revision,
+                "profile_id": None,
+                "artifact_path": None,
+                "artifact_paths": [],
+                "admitted": False,
+                "admission_reason": admission_reason,
+                "results": results,
+            }
+        for result in results:
+            status_counts[result["status"]] += 1
+        entries.append(entry_record)
+    admitted_count = sum(1 for entry in entries if entry["admitted"])
     return {
         "schema_version": 1,
         "record_type": "reference_machine_preflight_matrix",
@@ -818,11 +948,17 @@ def preflight_matrix(
         "acquisition_authorized": False,
         "envelope_count": len(envelope_records),
         "profile_count": len(profile_records),
+        "inventory_entry_count": len(entries),
+        "admitted_entry_count": admitted_count,
+        "unadmitted_entry_count": len(entries) - admitted_count,
         "envelopes": envelope_records,
         "profiles": profile_records,
         "entries": entries,
         "counts": {
-            "profiles": len(entries),
+            "profiles": len(profile_records),
+            "inventory_entries": len(entries),
+            "admitted_entries": admitted_count,
+            "unadmitted_entries": len(entries) - admitted_count,
             "envelopes": len(envelope_records),
             "results": len(entries) * len(envelope_records),
             "by_status": status_counts,
@@ -844,9 +980,15 @@ def validate_preflight_matrix(
     envelopes: tuple[dict[str, Any], ...] = REFERENCE_MACHINE_ENVELOPES,
     profiles: tuple[dict[str, Any], ...] = EXACT_ARTIFACT_PROFILES,
 ) -> list[str]:
-    """Regenerate the deterministic matrix from bound inputs and deep-compare."""
+    """Regenerate the deterministic matrix from bound inputs and deep-compare.
 
-    failures: list[str] = []
+    Rejects profiles whose repository, revision, or artifact paths (including
+    every declared shard) are absent from the pinned snapshot listing so a
+    ghost artifact cannot pass by regenerating from the same incorrect
+    constant.
+    """
+
+    failures: list[str] = list(_validate_profiles_against_snapshot(profiles, snapshot))
     expected = preflight_matrix(snapshot, envelopes=envelopes, profiles=profiles)
 
     expected_canonical = _canonicalize(expected)
@@ -864,52 +1006,62 @@ def validate_preflight_matrix(
         failures.append("preflight matrix entry count drift")
     else:
         for expected_entry, actual_entry in zip(expected_entries, actual_entries):
-            profile_id = expected_entry.get("profile_id")
-            if actual_entry.get("profile_id") != profile_id:
-                failures.append(f"preflight matrix profile_id drift: {profile_id}")
+            entry_id = expected_entry.get("entry_id")
+            if actual_entry.get("entry_id") != entry_id:
+                failures.append(f"preflight matrix entry_id drift: {entry_id}")
                 continue
-            for scalar_key in ("repository", "revision", "artifact_path"):
+            for scalar_key in (
+                "repository",
+                "revision",
+                "profile_id",
+                "artifact_path",
+                "artifact_paths",
+                "admitted",
+                "admission_reason",
+            ):
                 if actual_entry.get(scalar_key) != expected_entry.get(scalar_key):
                     failures.append(
-                        f"preflight matrix entry {scalar_key} drift: {profile_id}"
+                        f"preflight matrix entry {scalar_key} drift: {entry_id}"
                     )
             expected_results = expected_entry.get("results", [])
             actual_results = actual_entry.get("results", [])
             if len(actual_results) != len(expected_results):
-                failures.append(f"preflight matrix envelope count drift: {profile_id}")
+                failures.append(f"preflight matrix envelope count drift: {entry_id}")
                 continue
             for expected_result, actual_result in zip(expected_results, actual_results):
                 envelope_id = expected_result.get("envelope_id")
                 if actual_result != expected_result:
                     if actual_result.get("envelope_id") != envelope_id:
                         failures.append(
-                            f"preflight matrix envelope_id drift: {profile_id}"
+                            f"preflight matrix envelope_id drift: {entry_id}"
                         )
                     if actual_result.get("status") != expected_result.get("status"):
                         failures.append(
-                            f"preflight matrix overall status drift: {profile_id}/{envelope_id}"
+                            f"preflight matrix overall status drift: {entry_id}/{envelope_id}"
                         )
                     expected_dims = expected_result.get("dimensions", {})
                     actual_dims = actual_result.get("dimensions", {})
                     if set(actual_dims) != set(expected_dims):
                         failures.append(
-                            f"preflight matrix dimension set drift: {profile_id}/{envelope_id}"
+                            f"preflight matrix dimension set drift: {entry_id}/{envelope_id}"
                         )
                     for dim_name in expected_dims:
                         if actual_dims.get(dim_name) != expected_dims.get(dim_name):
                             failures.append(
-                                f"preflight matrix dimension drift: {profile_id}/{envelope_id}/{dim_name}"
+                                f"preflight matrix dimension drift: {entry_id}/{envelope_id}/{dim_name}"
                             )
                     for scalar_key in (
                         "repository",
                         "revision",
                         "artifact_path",
                         "profile_id",
+                        "entry_id",
                         "acquisition_started",
+                        "reason",
                     ):
                         if actual_result.get(scalar_key) != expected_result.get(scalar_key):
                             failures.append(
-                                f"preflight matrix result {scalar_key} drift: {profile_id}/{envelope_id}"
+                                f"preflight matrix result {scalar_key} drift: {entry_id}/{envelope_id}"
                             )
 
     if actual_canonical != expected_canonical and not failures:
@@ -1034,15 +1186,8 @@ def main() -> int:
     stored_inventory = read_json(INVENTORY) if INVENTORY.exists() else inventory
     stored_matrix = read_json(ROLE_MATRIX) if ROLE_MATRIX.exists() else matrix
     failures = validate(snapshot, stored_inventory, stored_matrix)
-    if args.preflight:
-        if not PREFLIGHT_MATRIX.exists():
-            failures.append(
-                "preflight matrix missing: model-profiles/catalogs/2026-08-14/"
-                "reference-machine-preflight-matrix.json is required"
-            )
-        else:
-            stored_preflight = read_json(PREFLIGHT_MATRIX)
-            failures.extend(validate_preflight_matrix(snapshot, stored_preflight))
+    if args.preflight and preflight is not None:
+        failures.extend(validate_preflight_matrix(snapshot, preflight))
     if failures:
         print("Sprint 14 candidate inventory: invalid")
         for failure in failures:
@@ -1057,7 +1202,9 @@ def main() -> int:
         by_status = counts["by_status"]
         print(
             "Sprint 14 reference-machine preflight: "
-            f"{counts['profiles']} exact artifact profiles against "
+            f"{counts['inventory_entries']} inventory entries "
+            f"({counts['admitted_entries']} admitted, "
+            f"{counts['unadmitted_entries']} unadmitted) against "
             f"{counts['envelopes']} envelopes; "
             f"CANDIDATE={by_status['CANDIDATE']}, "
             f"BLOCKED={by_status['BLOCKED']}, "
