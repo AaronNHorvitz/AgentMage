@@ -902,6 +902,9 @@ pub struct CanonicalTerminalResult {
     pub result_sha256: String,
 }
 
+/// Supported schema version for the source-artifact retention contract.
+pub const SOURCE_ARTIFACT_RETENTION_SCHEMA_VERSION: u16 = 1;
+
 /// Retention semantic for one logical source-artifact ownership record.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -920,9 +923,10 @@ pub enum CanonicalSourceArtifactRetentionClass {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CanonicalSourceArtifactRetentionLifecycleState {
-    /// Retention is current and the backend payload may be opened under policy.
+    /// Retention is current and, when persistence permits, the payload may be opened
+    /// under policy.
     Active,
-    /// Retention was released and the backend payload is eligible for collection.
+    /// Retention was released and any backend payload is eligible for collection.
     Released,
     /// Retention is quarantined pending operator review.
     Quarantined,
@@ -930,15 +934,48 @@ pub enum CanonicalSourceArtifactRetentionLifecycleState {
     Deleted,
 }
 
+/// Explicit backend-persistence disposition for one logical source-artifact
+/// retention record. This decouples logical source ownership from the runtime
+/// artifact backend so that memory-only sources can be represented without
+/// forcing a persisted payload.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceArtifactPersistenceState {
+    /// No backend payload was ever persisted; bytes exist only for the current run.
+    MemoryOnly,
+    /// Exactly one immutable payload is present in the shared encrypted backend.
+    Persisted,
+    /// A prior backend payload was released and only bounded metadata remains.
+    Released,
+    /// A prior backend payload was deleted and only bounded metadata remains.
+    Deleted,
+}
+
+/// Opaque reference to one exact payload already present in the shared encrypted
+/// content-addressed runtime artifact backend. The reference carries no semantic
+/// family for the source artifact and never widens `RuntimeArtifactKind`.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalSourceArtifactPayloadReference {
+    /// Existing content-addressed backend payload identity; never a native path.
+    pub payload_artifact_id: String,
+    /// SHA-256 content address of the exact backend payload.
+    pub payload_sha256: String,
+}
+
 /// Logical source-artifact ownership and retention projected over the existing
 /// encrypted content-addressed runtime artifact backend.
 ///
-/// The record binds one source artifact to its owning request, authority, session, task,
-/// and run and to exactly one payload already present in the runtime artifact backend.
-/// `payload_kind` reuses the closed [`RuntimeArtifactKind`](crate::RuntimeArtifactKind);
-/// the record therefore cannot widen that enum and cannot declare a second physical store.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(deny_unknown_fields)]
+/// The record binds one source artifact to its owning request, authority, session,
+/// task, and run. When `persistence_state` is `Persisted`, `payload_reference`
+/// carries exactly one opaque reference to a payload already present in the
+/// shared backend; the record intentionally carries no `RuntimeArtifactKind`
+/// because source inputs do not belong to that runtime-generated taxonomy. When
+/// `persistence_state` is `MemoryOnly`, no backend payload exists and the record
+/// describes an in-memory source. `Released` and `Deleted` persistence states
+/// preserve bounded historical metadata without asserting that payload bytes still
+/// exist.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
 pub struct CanonicalSourceArtifactRetention {
     /// Contract schema version.
     pub schema_version: u16,
@@ -956,22 +993,19 @@ pub struct CanonicalSourceArtifactRetention {
     pub task_id: String,
     /// Runtime run responsible for admission.
     pub run_id: String,
-    /// Existing content-addressed backend payload identity; never a native path.
-    pub payload_artifact_id: String,
-    /// Closed backend payload semantic family; this record cannot widen the enum.
-    pub payload_kind: crate::RuntimeArtifactKind,
-    /// SHA-256 content address of the exact backend payload.
-    pub payload_sha256: String,
     /// Retention class.
     pub retention_class: CanonicalSourceArtifactRetentionClass,
     /// RFC 3339 expiration present only when `retention_class` is `UntilExpiration`.
-    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub expires_at: Option<String>,
     /// Stable code present only when `retention_class` is `UserHold`.
-    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub hold_reason_code: Option<String>,
     /// Current retention lifecycle state.
     pub lifecycle_state: CanonicalSourceArtifactRetentionLifecycleState,
+    /// Explicit backend-persistence disposition.
+    pub persistence_state: CanonicalSourceArtifactPersistenceState,
+    /// Opaque backend payload reference required only when `persistence_state` is
+    /// `Persisted`; every other state requires this field to be null.
+    pub payload_reference: Option<CanonicalSourceArtifactPayloadReference>,
     /// Stable current-state reason code.
     pub reason_code: String,
     /// Trusted RFC 3339 assignment time.
@@ -980,40 +1014,379 @@ pub struct CanonicalSourceArtifactRetention {
     pub retention_sha256: String,
 }
 
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawSourceArtifactRetention {
+    schema_version: u16,
+    retention_id: String,
+    source_artifact_id: String,
+    request_id: String,
+    authority_id: String,
+    session_id: String,
+    task_id: String,
+    run_id: String,
+    retention_class: CanonicalSourceArtifactRetentionClass,
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    expires_at: Option<String>,
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    hold_reason_code: Option<String>,
+    lifecycle_state: CanonicalSourceArtifactRetentionLifecycleState,
+    persistence_state: CanonicalSourceArtifactPersistenceState,
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    payload_reference: Option<CanonicalSourceArtifactPayloadReference>,
+    reason_code: String,
+    assigned_at: String,
+    retention_sha256: String,
+}
+
+impl TryFrom<RawSourceArtifactRetention> for CanonicalSourceArtifactRetention {
+    type Error = String;
+
+    fn try_from(raw: RawSourceArtifactRetention) -> Result<Self, Self::Error> {
+        let record = Self {
+            schema_version: raw.schema_version,
+            retention_id: raw.retention_id,
+            source_artifact_id: raw.source_artifact_id,
+            request_id: raw.request_id,
+            authority_id: raw.authority_id,
+            session_id: raw.session_id,
+            task_id: raw.task_id,
+            run_id: raw.run_id,
+            retention_class: raw.retention_class,
+            expires_at: raw.expires_at,
+            hold_reason_code: raw.hold_reason_code,
+            lifecycle_state: raw.lifecycle_state,
+            persistence_state: raw.persistence_state,
+            payload_reference: raw.payload_reference,
+            reason_code: raw.reason_code,
+            assigned_at: raw.assigned_at,
+            retention_sha256: raw.retention_sha256,
+        };
+        record.validate()?;
+        Ok(record)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for CanonicalSourceArtifactRetention {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let raw = RawSourceArtifactRetention::deserialize(deserializer)?;
+        Self::try_from(raw).map_err(serde::de::Error::custom)
+    }
+}
+
 impl CanonicalSourceArtifactRetention {
-    /// Returns `true` when `retention_class` and its dependent optional fields agree.
+    /// Validates every closed invariant of one canonical retention record.
     ///
-    /// * `UntilExpiration` requires `expires_at` present and `hold_reason_code` absent.
-    /// * `UserHold` requires `hold_reason_code` present and `expires_at` absent.
-    /// * Every other class requires both to be absent.
-    #[must_use]
-    pub fn retention_class_consistent(&self) -> bool {
-        let expires_present = self.expires_at.is_some();
-        let hold_present = self.hold_reason_code.is_some();
+    /// The check enforces the supported schema version, identifier and digest
+    /// formats, RFC 3339 timestamps, class-dependent optional fields, the
+    /// persistence-state / lifecycle-state / payload-reference agreement, and
+    /// that any `expires_at` is strictly later than `assigned_at`.
+    pub fn validate(&self) -> Result<(), String> {
+        if self.schema_version != SOURCE_ARTIFACT_RETENTION_SCHEMA_VERSION {
+            return Err(format!(
+                "unsupported schema_version {}; expected {SOURCE_ARTIFACT_RETENTION_SCHEMA_VERSION}",
+                self.schema_version
+            ));
+        }
+        for (name, value) in [
+            ("retention_id", &self.retention_id),
+            ("source_artifact_id", &self.source_artifact_id),
+            ("request_id", &self.request_id),
+            ("authority_id", &self.authority_id),
+            ("session_id", &self.session_id),
+            ("task_id", &self.task_id),
+            ("run_id", &self.run_id),
+            ("reason_code", &self.reason_code),
+        ] {
+            if !is_canonical_identifier(value) {
+                return Err(format!("{name} is not a canonical identifier"));
+            }
+        }
+        if !is_lowercase_hex_digest(&self.retention_sha256) {
+            return Err("retention_sha256 is not a 64-character lowercase hex digest".to_string());
+        }
+        if !is_rfc3339_datetime(&self.assigned_at) {
+            return Err("assigned_at is not an RFC 3339 timestamp".to_string());
+        }
         match self.retention_class {
             CanonicalSourceArtifactRetentionClass::UntilExpiration => {
-                expires_present && !hold_present
+                let expiration = self.expires_at.as_deref().ok_or_else(|| {
+                    "retention_class until_expiration requires expires_at".to_string()
+                })?;
+                if !is_rfc3339_datetime(expiration) {
+                    return Err("expires_at is not an RFC 3339 timestamp".to_string());
+                }
+                if self.hold_reason_code.is_some() {
+                    return Err(
+                        "retention_class until_expiration must not carry hold_reason_code"
+                            .to_string(),
+                    );
+                }
+                if compare_rfc3339(expiration, &self.assigned_at)
+                    .ok_or_else(|| "malformed timestamps for comparison".to_string())?
+                    != core::cmp::Ordering::Greater
+                {
+                    return Err("expires_at must be strictly later than assigned_at".to_string());
+                }
             }
-            CanonicalSourceArtifactRetentionClass::UserHold => hold_present && !expires_present,
+            CanonicalSourceArtifactRetentionClass::UserHold => {
+                let reason = self.hold_reason_code.as_deref().ok_or_else(|| {
+                    "retention_class user_hold requires hold_reason_code".to_string()
+                })?;
+                if !is_canonical_identifier(reason) {
+                    return Err("hold_reason_code is not a canonical identifier".to_string());
+                }
+                if self.expires_at.is_some() {
+                    return Err(
+                        "retention_class user_hold must not carry expires_at".to_string()
+                    );
+                }
+            }
             CanonicalSourceArtifactRetentionClass::Ephemeral
-            | CanonicalSourceArtifactRetentionClass::Session => !expires_present && !hold_present,
+            | CanonicalSourceArtifactRetentionClass::Session => {
+                if self.expires_at.is_some() {
+                    return Err(format!(
+                        "retention_class {:?} must not carry expires_at",
+                        self.retention_class
+                    ));
+                }
+                if self.hold_reason_code.is_some() {
+                    return Err(format!(
+                        "retention_class {:?} must not carry hold_reason_code",
+                        self.retention_class
+                    ));
+                }
+            }
         }
+        self.validate_persistence()?;
+        Ok(())
     }
+
+    fn validate_persistence(&self) -> Result<(), String> {
+        use CanonicalSourceArtifactPersistenceState as Persistence;
+        use CanonicalSourceArtifactRetentionClass as Class;
+        use CanonicalSourceArtifactRetentionLifecycleState as Lifecycle;
+        match (self.lifecycle_state, self.persistence_state) {
+            (Lifecycle::Active, Persistence::MemoryOnly) => {
+                if !matches!(self.retention_class, Class::Ephemeral) {
+                    return Err(
+                        "only ephemeral active retention may declare memory_only persistence"
+                            .to_string(),
+                    );
+                }
+            }
+            (Lifecycle::Active | Lifecycle::Quarantined, Persistence::Persisted) => {}
+            (Lifecycle::Released, Persistence::Released) => {}
+            (Lifecycle::Deleted, Persistence::Deleted) => {}
+            (lifecycle, persistence) => {
+                return Err(format!(
+                    "lifecycle_state {lifecycle:?} is incompatible with persistence_state {persistence:?}"
+                ));
+            }
+        }
+        match self.persistence_state {
+            Persistence::Persisted => {
+                let reference = self
+                    .payload_reference
+                    .as_ref()
+                    .ok_or_else(|| "persisted retention requires payload_reference".to_string())?;
+                if !is_canonical_identifier(&reference.payload_artifact_id) {
+                    return Err("payload_artifact_id is not a canonical identifier".to_string());
+                }
+                if !is_lowercase_hex_digest(&reference.payload_sha256) {
+                    return Err(
+                        "payload_sha256 is not a 64-character lowercase hex digest".to_string(),
+                    );
+                }
+            }
+            Persistence::MemoryOnly | Persistence::Released | Persistence::Deleted => {
+                if self.payload_reference.is_some() {
+                    return Err(format!(
+                        "persistence_state {:?} must not carry payload_reference",
+                        self.persistence_state
+                    ));
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+fn is_canonical_identifier(value: &str) -> bool {
+    if value.is_empty() || value.len() > 128 {
+        return false;
+    }
+    let bytes = value.as_bytes();
+    let head = bytes[0];
+    if !head.is_ascii_alphanumeric() {
+        return false;
+    }
+    bytes.iter().skip(1).copied().all(|byte| {
+        byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b':' | b'-')
+    })
+}
+
+fn is_lowercase_hex_digest(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+}
+
+fn is_rfc3339_datetime(value: &str) -> bool {
+    parse_rfc3339_epoch(value).is_some()
+}
+
+fn compare_rfc3339(left: &str, right: &str) -> Option<core::cmp::Ordering> {
+    let left_epoch = parse_rfc3339_epoch(left)?;
+    let right_epoch = parse_rfc3339_epoch(right)?;
+    Some(left_epoch.cmp(&right_epoch))
+}
+
+/// Returns an epoch tuple `(seconds, nanoseconds)` after normalizing to UTC.
+///
+/// The parser accepts the subset of RFC 3339 required by canonical records:
+/// `YYYY-MM-DDTHH:MM:SS[.fraction]{Z|+HH:MM|-HH:MM}`. Fractional seconds are
+/// bounded to nanosecond precision.
+fn parse_rfc3339_epoch(value: &str) -> Option<(i64, u32)> {
+    let bytes = value.as_bytes();
+    if bytes.len() < 20 {
+        return None;
+    }
+    let year: i32 = value.get(0..4)?.parse().ok()?;
+    if bytes[4] != b'-' {
+        return None;
+    }
+    let month: u32 = value.get(5..7)?.parse().ok()?;
+    if bytes[7] != b'-' {
+        return None;
+    }
+    let day: u32 = value.get(8..10)?.parse().ok()?;
+    if bytes[10] != b'T' && bytes[10] != b't' {
+        return None;
+    }
+    let hour: u32 = value.get(11..13)?.parse().ok()?;
+    if bytes[13] != b':' {
+        return None;
+    }
+    let minute: u32 = value.get(14..16)?.parse().ok()?;
+    if bytes[16] != b':' {
+        return None;
+    }
+    let second: u32 = value.get(17..19)?.parse().ok()?;
+    let mut cursor = 19;
+    let mut nanoseconds: u32 = 0;
+    if cursor < bytes.len() && bytes[cursor] == b'.' {
+        cursor += 1;
+        let start = cursor;
+        while cursor < bytes.len() && bytes[cursor].is_ascii_digit() {
+            cursor += 1;
+        }
+        if cursor == start || cursor - start > 9 {
+            return None;
+        }
+        let mut fraction = 0u32;
+        for &byte in &bytes[start..cursor] {
+            fraction = fraction * 10 + u32::from(byte - b'0');
+        }
+        for _ in 0..(9 - (cursor - start)) {
+            fraction *= 10;
+        }
+        nanoseconds = fraction;
+    }
+    if cursor >= bytes.len() {
+        return None;
+    }
+    let offset_seconds: i64 = match bytes[cursor] {
+        b'Z' | b'z' => {
+            if cursor + 1 != bytes.len() {
+                return None;
+            }
+            0
+        }
+        b'+' | b'-' => {
+            let sign: i64 = if bytes[cursor] == b'+' { 1 } else { -1 };
+            let hh: i64 = value.get(cursor + 1..cursor + 3)?.parse().ok()?;
+            if bytes.get(cursor + 3) != Some(&b':') {
+                return None;
+            }
+            let mm: i64 = value.get(cursor + 4..cursor + 6)?.parse().ok()?;
+            if cursor + 6 != bytes.len() {
+                return None;
+            }
+            if !(0..24).contains(&hh) || !(0..60).contains(&mm) {
+                return None;
+            }
+            sign * (hh * 3600 + mm * 60)
+        }
+        _ => return None,
+    };
+    if !(1..=12).contains(&month) || day == 0 || day > days_in_month(year, month) {
+        return None;
+    }
+    if hour > 23 || minute > 59 || second > 60 {
+        return None;
+    }
+    let mut days = days_from_civil(year, month, day);
+    let mut seconds = i64::from(hour) * 3600 + i64::from(minute) * 60 + i64::from(second);
+    seconds -= offset_seconds;
+    while seconds < 0 {
+        seconds += 86_400;
+        days -= 1;
+    }
+    while seconds >= 86_400 {
+        seconds -= 86_400;
+        days += 1;
+    }
+    let total = days * 86_400 + seconds;
+    Some((total, nanoseconds))
+}
+
+fn is_leap_year(year: i32) -> bool {
+    (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
+}
+
+fn days_in_month(year: i32, month: u32) -> u32 {
+    match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 => {
+            if is_leap_year(year) {
+                29
+            } else {
+                28
+            }
+        }
+        _ => 0,
+    }
+}
+
+fn days_from_civil(year: i32, month: u32, day: u32) -> i64 {
+    let year = if month <= 2 { year - 1 } else { year };
+    let month = i64::from(if month <= 2 { month + 12 } else { month });
+    let era = if year >= 0 { year } else { year - 399 } / 400;
+    let yoe = i64::from(year - era * 400);
+    let doy = (153 * (month - 3) + 2) / 5 + i64::from(day) - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    i64::from(era) * 146_097 + doe - 719_468
 }
 
 #[cfg(test)]
 mod source_artifact_retention_tests {
     use super::{
+        CanonicalSourceArtifactPayloadReference, CanonicalSourceArtifactPersistenceState,
         CanonicalSourceArtifactRetention, CanonicalSourceArtifactRetentionClass,
-        CanonicalSourceArtifactRetentionLifecycleState,
+        CanonicalSourceArtifactRetentionLifecycleState, SOURCE_ARTIFACT_RETENTION_SCHEMA_VERSION,
     };
-    use crate::RuntimeArtifactKind;
 
     const DIGEST: &str = "a1b2c3d4e5f60718293a4b5c6d7e8f900112233445566778899aabbccddeeff0";
 
-    fn base_record() -> CanonicalSourceArtifactRetention {
+    fn persisted_record() -> CanonicalSourceArtifactRetention {
         CanonicalSourceArtifactRetention {
-            schema_version: 1,
+            schema_version: SOURCE_ARTIFACT_RETENTION_SCHEMA_VERSION,
             retention_id: "retention-1".to_string(),
             source_artifact_id: "source-1".to_string(),
             request_id: "request-1".to_string(),
@@ -1021,127 +1394,195 @@ mod source_artifact_retention_tests {
             session_id: "session-1".to_string(),
             task_id: "task-1".to_string(),
             run_id: "run-1".to_string(),
-            payload_artifact_id: "artifact-1".to_string(),
-            payload_kind: RuntimeArtifactKind::GeneratedFile,
-            payload_sha256: DIGEST.to_string(),
             retention_class: CanonicalSourceArtifactRetentionClass::Session,
             expires_at: None,
             hold_reason_code: None,
             lifecycle_state: CanonicalSourceArtifactRetentionLifecycleState::Active,
+            persistence_state: CanonicalSourceArtifactPersistenceState::Persisted,
+            payload_reference: Some(CanonicalSourceArtifactPayloadReference {
+                payload_artifact_id: "artifact-1".to_string(),
+                payload_sha256: DIGEST.to_string(),
+            }),
             reason_code: "admitted".to_string(),
             assigned_at: "2026-08-25T12:00:00Z".to_string(),
             retention_sha256: DIGEST.to_string(),
         }
     }
 
+    fn ephemeral_memory_only_record() -> CanonicalSourceArtifactRetention {
+        CanonicalSourceArtifactRetention {
+            retention_class: CanonicalSourceArtifactRetentionClass::Ephemeral,
+            persistence_state: CanonicalSourceArtifactPersistenceState::MemoryOnly,
+            payload_reference: None,
+            ..persisted_record()
+        }
+    }
+
     #[test]
-    fn round_trips_json_and_reuses_closed_payload_kind() {
-        let record = base_record();
+    fn ephemeral_source_without_backend_reference_validates_and_omits_runtime_artifact_kind() {
+        let record = ephemeral_memory_only_record();
+        record.validate().expect("valid ephemeral memory-only record");
         let json = serde_json::to_string(&record).expect("serialize");
-        assert!(json.contains("\"payload_kind\":\"generated_file\""));
+        assert!(!json.contains("payload_kind"));
+        assert!(!json.contains("generated_file"));
         let decoded: CanonicalSourceArtifactRetention =
             serde_json::from_str(&json).expect("deserialize");
         assert_eq!(decoded, record);
     }
 
     #[test]
-    fn rejects_unknown_payload_kind_that_would_widen_runtime_artifact_kind() {
-        let json = serde_json::to_string(&base_record())
-            .expect("serialize")
-            .replace("\"generated_file\"", "\"source_dataset\"");
-        assert!(serde_json::from_str::<CanonicalSourceArtifactRetention>(&json).is_err());
+    fn persisted_active_record_round_trips_through_opaque_backend_reference() {
+        let record = persisted_record();
+        record.validate().expect("valid persisted record");
+        let json = serde_json::to_string(&record).expect("serialize");
+        assert!(json.contains("\"payload_artifact_id\":\"artifact-1\""));
+        assert!(!json.contains("payload_kind"));
+        let decoded: CanonicalSourceArtifactRetention =
+            serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(decoded, record);
     }
 
     #[test]
-    fn rejects_unknown_and_missing_fields() {
-        let record = base_record();
+    fn persisted_retention_without_backend_reference_fails_closed() {
+        let mut record = persisted_record();
+        record.payload_reference = None;
+        let error = record.validate().expect_err("must reject missing reference");
+        assert!(error.contains("payload_reference"));
+        let mut broken = serde_json::to_value(&persisted_record()).expect("serialize");
+        broken["payload_reference"] = serde_json::Value::Null;
+        let error = serde_json::from_value::<CanonicalSourceArtifactRetention>(broken)
+            .expect_err("must reject at deserialization");
+        assert!(error.to_string().contains("payload_reference"));
+    }
+
+    #[test]
+    fn active_session_class_requires_persisted_backend_reference() {
+        let mut record = ephemeral_memory_only_record();
+        record.retention_class = CanonicalSourceArtifactRetentionClass::Session;
+        let error = record.validate().expect_err("session must persist");
+        assert!(error.contains("memory_only"));
+    }
+
+    #[test]
+    fn deleted_retention_preserves_metadata_without_asserting_payload_bytes() {
+        let mut record = persisted_record();
+        record.lifecycle_state = CanonicalSourceArtifactRetentionLifecycleState::Deleted;
+        record.persistence_state = CanonicalSourceArtifactPersistenceState::Deleted;
+        record.payload_reference = None;
+        record.reason_code = "user-delete".to_string();
+        record.validate().expect("deleted metadata-only record must validate");
         let json = serde_json::to_string(&record).expect("serialize");
-        let with_extra = json.replace(
-            "{\"schema_version\"",
-            "{\"unknown_field\":true,\"schema_version\"",
+        assert!(!json.contains("payload_artifact_id"));
+    }
+
+    #[test]
+    fn retention_class_and_dependent_fields_fail_closed_at_deserialization() {
+        let mut with_missing_expiration = serde_json::to_value(&persisted_record()).expect("json");
+        with_missing_expiration["retention_class"] = serde_json::json!("until_expiration");
+        assert!(
+            serde_json::from_value::<CanonicalSourceArtifactRetention>(
+                with_missing_expiration.clone()
+            )
+            .is_err()
         );
-        assert!(serde_json::from_str::<CanonicalSourceArtifactRetention>(&with_extra).is_err());
-        let without_owner = json.replace("\"task_id\":\"task-1\",", "");
-        assert!(serde_json::from_str::<CanonicalSourceArtifactRetention>(&without_owner).is_err());
+        let mut simultaneous = with_missing_expiration.clone();
+        simultaneous["expires_at"] = serde_json::json!("2026-08-26T00:00:00Z");
+        simultaneous["hold_reason_code"] = serde_json::json!("user-hold");
+        assert!(
+            serde_json::from_value::<CanonicalSourceArtifactRetention>(simultaneous).is_err()
+        );
+        let mut hold_missing_reason = serde_json::to_value(&persisted_record()).expect("json");
+        hold_missing_reason["retention_class"] = serde_json::json!("user_hold");
+        assert!(
+            serde_json::from_value::<CanonicalSourceArtifactRetention>(hold_missing_reason)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn malformed_timestamps_digests_and_versions_fail_closed() {
+        let mut malformed_time = serde_json::to_value(&persisted_record()).expect("json");
+        malformed_time["assigned_at"] = serde_json::json!("2026/08/25 12:00:00");
+        assert!(
+            serde_json::from_value::<CanonicalSourceArtifactRetention>(malformed_time).is_err()
+        );
+        let mut malformed_digest = serde_json::to_value(&persisted_record()).expect("json");
+        malformed_digest["retention_sha256"] = serde_json::json!("not-a-digest");
+        assert!(
+            serde_json::from_value::<CanonicalSourceArtifactRetention>(malformed_digest).is_err()
+        );
+        let mut malformed_payload_digest =
+            serde_json::to_value(&persisted_record()).expect("json");
+        malformed_payload_digest["payload_reference"]["payload_sha256"] =
+            serde_json::json!("XYZ");
+        assert!(
+            serde_json::from_value::<CanonicalSourceArtifactRetention>(malformed_payload_digest)
+                .is_err()
+        );
+        let mut unsupported_version = serde_json::to_value(&persisted_record()).expect("json");
+        unsupported_version["schema_version"] = serde_json::json!(2);
+        assert!(
+            serde_json::from_value::<CanonicalSourceArtifactRetention>(unsupported_version)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn until_expiration_requires_expires_at_strictly_later_than_assigned_at() {
+        let mut record = persisted_record();
+        record.retention_class = CanonicalSourceArtifactRetentionClass::UntilExpiration;
+        record.expires_at = Some(record.assigned_at.clone());
+        assert!(record.validate().is_err());
+        record.expires_at = Some("2026-08-25T11:59:59Z".to_string());
+        assert!(record.validate().is_err());
+        record.expires_at = Some("2026-08-26T00:00:00Z".to_string());
+        record.validate().expect("later expires_at must pass");
+    }
+
+    #[test]
+    fn unknown_and_missing_fields_fail_closed() {
+        let record = persisted_record();
+        let mut value = serde_json::to_value(&record).expect("json");
+        value["unknown_field"] = serde_json::json!(true);
+        assert!(serde_json::from_value::<CanonicalSourceArtifactRetention>(value).is_err());
+        let mut missing = serde_json::to_value(&persisted_record()).expect("json");
+        missing.as_object_mut().unwrap().remove("task_id");
+        assert!(serde_json::from_value::<CanonicalSourceArtifactRetention>(missing).is_err());
     }
 
     #[test]
     fn required_optional_fields_must_be_present_as_explicit_null() {
-        let json = serde_json::to_string(&base_record())
-            .expect("serialize")
-            .replace("\"expires_at\":null,", "");
-        assert!(serde_json::from_str::<CanonicalSourceArtifactRetention>(&json).is_err());
+        let mut value = serde_json::to_value(&ephemeral_memory_only_record()).expect("json");
+        value.as_object_mut().unwrap().remove("expires_at");
+        assert!(serde_json::from_value::<CanonicalSourceArtifactRetention>(value).is_err());
     }
 
     #[test]
-    fn retention_class_consistency_binds_ephemeral_and_session_to_no_expiration_or_hold() {
-        for class in [
-            CanonicalSourceArtifactRetentionClass::Ephemeral,
-            CanonicalSourceArtifactRetentionClass::Session,
-        ] {
-            let mut record = base_record();
-            record.retention_class = class;
-            assert!(record.retention_class_consistent());
-            record.expires_at = Some("2026-08-26T00:00:00Z".to_string());
-            assert!(!record.retention_class_consistent());
-            record.expires_at = None;
-            record.hold_reason_code = Some("user-hold".to_string());
-            assert!(!record.retention_class_consistent());
-        }
-    }
-
-    #[test]
-    fn retention_class_consistency_requires_expiration_only_for_until_expiration() {
-        let mut record = base_record();
-        record.retention_class = CanonicalSourceArtifactRetentionClass::UntilExpiration;
-        assert!(!record.retention_class_consistent());
-        record.expires_at = Some("2026-08-26T00:00:00Z".to_string());
-        assert!(record.retention_class_consistent());
-        record.hold_reason_code = Some("user-hold".to_string());
-        assert!(!record.retention_class_consistent());
-    }
-
-    #[test]
-    fn retention_class_consistency_requires_reason_code_only_for_user_hold() {
-        let mut record = base_record();
-        record.retention_class = CanonicalSourceArtifactRetentionClass::UserHold;
-        assert!(!record.retention_class_consistent());
-        record.hold_reason_code = Some("operator-hold".to_string());
-        assert!(record.retention_class_consistent());
-        record.expires_at = Some("2026-08-26T00:00:00Z".to_string());
-        assert!(!record.retention_class_consistent());
-    }
-
-    #[test]
-    fn lifecycle_states_serialize_snake_case_and_reject_unknown_values() {
-        let mut record = base_record();
-        for (state, expected) in [
-            (
-                CanonicalSourceArtifactRetentionLifecycleState::Active,
-                "active",
-            ),
+    fn lifecycle_states_and_persistence_states_serialize_snake_case() {
+        for (lifecycle, persistence, expected_lifecycle, expected_persistence) in [
             (
                 CanonicalSourceArtifactRetentionLifecycleState::Released,
+                CanonicalSourceArtifactPersistenceState::Released,
+                "released",
                 "released",
             ),
             (
                 CanonicalSourceArtifactRetentionLifecycleState::Quarantined,
+                CanonicalSourceArtifactPersistenceState::Persisted,
                 "quarantined",
-            ),
-            (
-                CanonicalSourceArtifactRetentionLifecycleState::Deleted,
-                "deleted",
+                "persisted",
             ),
         ] {
-            record.lifecycle_state = state;
+            let mut record = persisted_record();
+            record.lifecycle_state = lifecycle;
+            record.persistence_state = persistence;
+            if matches!(persistence, CanonicalSourceArtifactPersistenceState::Released) {
+                record.payload_reference = None;
+            }
+            record.validate().expect("state pair must validate");
             let json = serde_json::to_string(&record).expect("serialize");
-            assert!(json.contains(&format!("\"lifecycle_state\":\"{expected}\"")));
+            assert!(json.contains(&format!("\"lifecycle_state\":\"{expected_lifecycle}\"")));
+            assert!(json.contains(&format!("\"persistence_state\":\"{expected_persistence}\"")));
         }
-        let record = base_record();
-        let json = serde_json::to_string(&record).expect("serialize").replace(
-            "\"lifecycle_state\":\"active\"",
-            "\"lifecycle_state\":\"pending\"",
-        );
-        assert!(serde_json::from_str::<CanonicalSourceArtifactRetention>(&json).is_err());
     }
 }
