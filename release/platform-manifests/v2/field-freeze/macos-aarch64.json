@@ -1,0 +1,71 @@
+{
+  "schema_version": 2,
+  "record_type": "platform-release-manifest-field-freeze",
+  "manifest_id": "agentmage-macos-aarch64-v2-field-freeze",
+  "status": "frozen-field-specification",
+  "adapter_api_version": 1,
+  "platform_family": "macos-apple-silicon",
+  "architecture": "aarch64",
+  "platform_build": {
+    "id": "macos-26.0-aarch64",
+    "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "product_toolchain": {
+    "id": "rust-1.95.0-aarch64-apple-darwin",
+    "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+  },
+  "vscode": {
+    "version": "1.132.0",
+    "commit": "df53daabb18cd157bdb08c7f01c34df936cf12f4",
+    "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "team_id": "AGNTMG0000",
+  "app_group": "AGNTMG0000.com.agentmage.shared",
+  "bundle_ids": {
+    "kernel_host": "com.agentmage.kernel",
+    "vscode_bridge": "com.agentmage.vscode-bridge",
+    "xpc_tool_helper": "com.agentmage.xpc-tool-helper",
+    "metal_inference": "com.agentmage.metal-inference"
+  },
+  "designated_requirements": {
+    "kernel_host": "identifier \"com.agentmage.kernel\" and anchor apple generic and certificate leaf[subject.OU] = \"AGNTMG0000\"",
+    "vscode_bridge": "identifier \"com.agentmage.vscode-bridge\" and anchor apple generic and certificate leaf[subject.OU] = \"AGNTMG0000\"",
+    "xpc_tool_helper": "identifier \"com.agentmage.xpc-tool-helper\" and anchor apple generic and certificate leaf[subject.OU] = \"AGNTMG0000\"",
+    "metal_inference": "identifier \"com.agentmage.metal-inference\" and anchor apple generic and certificate leaf[subject.OU] = \"AGNTMG0000\""
+  },
+  "entitlements": {
+    "kernel_host": [
+      "com.apple.security.app-sandbox",
+      "com.apple.security.application-groups:AGNTMG0000.com.agentmage.shared",
+      "com.apple.security.files.bookmarks.app-scope",
+      "com.apple.security.files.user-selected.read-only"
+    ],
+    "vscode_bridge": [
+      "com.apple.security.app-sandbox",
+      "com.apple.security.application-groups:AGNTMG0000.com.agentmage.shared"
+    ],
+    "xpc_tool_helper": [
+      "com.apple.security.app-sandbox",
+      "com.apple.security.application-groups:AGNTMG0000.com.agentmage.shared",
+      "com.apple.security.files.bookmarks.app-scope"
+    ],
+    "metal_inference": [
+      "com.apple.security.app-sandbox"
+    ]
+  },
+  "helper_hashes": {
+    "kernel_host": "5555555555555555555555555555555555555555555555555555555555555555",
+    "vscode_bridge": "6666666666666666666666666666666666666666666666666666666666666666",
+    "xpc_tool_helper": "7777777777777777777777777777777777777777777777777777777777777777",
+    "metal_inference": "8888888888888888888888888888888888888888888888888888888888888888"
+  },
+  "package": {
+    "format": "pkg",
+    "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+    "identity_class": "synthetic-field-freeze-fixture"
+  },
+  "credential_values_present": false,
+  "private_environment_values_present": false,
+  "linux_evidence_substituted": false,
+  "release_claim": "none"
+}
