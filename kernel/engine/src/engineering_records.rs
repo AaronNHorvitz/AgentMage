@@ -9,9 +9,11 @@ use agentmage_kernel_contracts::{
     CanonicalTerminalOutcome, CanonicalTerminalResult, CanonicalToolObservation,
     CanonicalVerificationOutcome, CanonicalVerificationResult, CanonicalWorkflowCheckpoint,
     CanonicalWorkflowDefinition, CanonicalWorkflowLifecycle, CanonicalWorkflowState,
-    VersionedContract, to_canonical_json,
+    RuntimeArtifactManifest, RuntimeEventRetentionKind, VersionedContract, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
+
+use crate::runtime_artifact::verify_runtime_artifact_manifest;
 
 const MAX_SHORT_TEXT: usize = 512;
 const MAX_IDENTIFIER: usize = 128;
@@ -481,8 +483,11 @@ impl ValidateCanonicalRecord for CanonicalSourceArtifactOwnership {
             &self.session_id,
             &self.task_id,
             &self.authority_id,
+            &self.policy_id,
         ])?;
+        sha(&self.runtime_manifest_sha256, "runtime_manifest_sha256")?;
         sha(&self.payload_sha256, "payload_sha256")?;
+        sha(&self.policy_sha256, "policy_sha256")?;
         sha(&self.ownership_sha256, "ownership_sha256")?;
         if self.admitted_at_epoch_ms == 0 || self.updated_at_epoch_ms < self.admitted_at_epoch_ms {
             return Err(error(
@@ -542,6 +547,124 @@ impl ValidateCanonicalRecord for CanonicalSourceArtifactOwnership {
         }
         Ok(())
     }
+}
+
+/// Seals one otherwise valid canonical source-artifact ownership record.
+///
+/// The `ownership_sha256` field is zeroed before validation and digest computation so the
+/// sealed record commits to every other declared field.
+pub fn seal_canonical_source_artifact_ownership(
+    mut ownership: CanonicalSourceArtifactOwnership,
+) -> Result<CanonicalSourceArtifactOwnership, CanonicalRecordError> {
+    ownership.ownership_sha256 = ZERO_SHA256.to_owned();
+    ownership.validate_canonical()?;
+    ownership.ownership_sha256 = canonical_record_sha256(&ownership)?;
+    Ok(ownership)
+}
+
+/// Verifies every declared field and the canonical digest of one sealed ownership record.
+pub fn verify_canonical_source_artifact_ownership(
+    ownership: &CanonicalSourceArtifactOwnership,
+) -> Result<(), CanonicalRecordError> {
+    let mut candidate = ownership.clone();
+    candidate.ownership_sha256 = ZERO_SHA256.to_owned();
+    candidate.validate_canonical()?;
+    let expected = canonical_record_sha256(&candidate)?;
+    if ownership.ownership_sha256 != expected {
+        return Err(error(
+            "engineering.source_ownership.digest_mismatch",
+            "ownership_sha256",
+        ));
+    }
+    Ok(())
+}
+
+/// Verifies one sealed ownership record and its exact binding to one sealed
+/// `RuntimeArtifactManifest`. Every backend-authoritative field must match; drift on identity,
+/// payload, kind, session, task, retention, lifecycle time, or governing policy is rejected.
+pub fn admit_canonical_source_artifact_ownership(
+    ownership: &CanonicalSourceArtifactOwnership,
+    manifest: &RuntimeArtifactManifest,
+) -> Result<(), CanonicalRecordError> {
+    verify_runtime_artifact_manifest(manifest)
+        .map_err(|_| error("engineering.source_ownership.unknown_backend", "manifest_sha256"))?;
+    verify_canonical_source_artifact_ownership(ownership)?;
+    if ownership.runtime_manifest_sha256 != manifest.manifest_sha256 {
+        return Err(error(
+            "engineering.source_ownership.manifest_mismatch",
+            "runtime_manifest_sha256",
+        ));
+    }
+    if ownership.runtime_artifact_id != manifest.artifact_id.as_str() {
+        return Err(error(
+            "engineering.source_ownership.artifact_mismatch",
+            "runtime_artifact_id",
+        ));
+    }
+    if ownership.payload_sha256 != manifest.payload_sha256 {
+        return Err(error(
+            "engineering.source_ownership.payload_mismatch",
+            "payload_sha256",
+        ));
+    }
+    if ownership.runtime_artifact_kind != manifest.kind {
+        return Err(error(
+            "engineering.source_ownership.kind_mismatch",
+            "runtime_artifact_kind",
+        ));
+    }
+    if ownership.session_id != manifest.session_id.as_str() {
+        return Err(error(
+            "engineering.source_ownership.session_mismatch",
+            "session_id",
+        ));
+    }
+    if ownership.task_id != manifest.task_id.as_str() {
+        return Err(error(
+            "engineering.source_ownership.task_mismatch",
+            "task_id",
+        ));
+    }
+    if ownership.policy_id != manifest.policy_id.as_str() {
+        return Err(error(
+            "engineering.source_ownership.policy_mismatch",
+            "policy_id",
+        ));
+    }
+    if ownership.policy_sha256 != manifest.policy_sha256 {
+        return Err(error(
+            "engineering.source_ownership.policy_mismatch",
+            "policy_sha256",
+        ));
+    }
+    let manifest_kind = match manifest.retention.kind {
+        RuntimeEventRetentionKind::Session => CanonicalSourceArtifactRetentionKind::Session,
+        RuntimeEventRetentionKind::UntilExpiration => {
+            CanonicalSourceArtifactRetentionKind::UntilExpiration
+        }
+        RuntimeEventRetentionKind::UserHold => CanonicalSourceArtifactRetentionKind::UserHold,
+        RuntimeEventRetentionKind::Ephemeral => {
+            return Err(error(
+                "engineering.source_ownership.retention_unsupported",
+                "retention.kind",
+            ));
+        }
+    };
+    if ownership.retention.kind != manifest_kind
+        || ownership.retention.expires_at_epoch_ms != manifest.retention.expires_at_epoch_ms
+    {
+        return Err(error(
+            "engineering.source_ownership.retention_mismatch",
+            "retention",
+        ));
+    }
+    if ownership.admitted_at_epoch_ms < manifest.created_at_epoch_ms {
+        return Err(error(
+            "engineering.source_ownership.admitted_before_manifest",
+            "admitted_at_epoch_ms",
+        ));
+    }
+    Ok(())
 }
 
 impl ValidateCanonicalRecord for CanonicalTerminalResult {
@@ -707,9 +830,12 @@ pub const fn zero_sha256() -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::runtime_artifact::seal_runtime_artifact_manifest;
     use agentmage_kernel_contracts::{
-        CanonicalArtifactOrigin, CanonicalClassification, CanonicalRuntimeArtifactBackendKind,
-        CanonicalSourceArtifactRetention,
+        CanonicalArtifactOrigin, CanonicalClassification, CanonicalSourceArtifactRetention,
+        ContextSensitivity, PolicyId, RuntimeArtifactId, RuntimeArtifactIntegrityState,
+        RuntimeArtifactKind, RuntimeArtifactPreview, RuntimeEventRetention, RuntimeRunId,
+        SessionId, TaskId,
     };
 
     fn digest() -> String {
@@ -776,33 +902,74 @@ mod tests {
         );
     }
 
-    #[test]
-    fn source_artifact_ownership_binds_to_the_existing_backend_and_retention() {
-        fn base() -> CanonicalSourceArtifactOwnership {
-            CanonicalSourceArtifactOwnership {
-                schema_version: CONTRACT_SCHEMA_VERSION,
-                ownership_id: "ownership:1".to_owned(),
-                source_artifact_id: "source:1".to_owned(),
-                runtime_artifact_id: "runtime-artifact:1".to_owned(),
-                payload_sha256: digest(),
-                runtime_artifact_kind: CanonicalRuntimeArtifactBackendKind::GeneratedFile,
-                request_id: "request:1".to_owned(),
-                session_id: "session:1".to_owned(),
-                task_id: "task:1".to_owned(),
-                authority_id: "authority:1".to_owned(),
-                session_exclusive: true,
-                retention: CanonicalSourceArtifactRetention {
-                    kind: CanonicalSourceArtifactRetentionKind::Session,
-                    expires_at_epoch_ms: None,
-                },
-                ownership_state: CanonicalSourceArtifactOwnershipState::Active,
-                admitted_at_epoch_ms: 1,
-                updated_at_epoch_ms: 2,
-                revision: 0,
-                reason_code: None,
-                ownership_sha256: digest(),
-            }
+    fn manifest_fixture() -> RuntimeArtifactManifest {
+        let payload = "84d89877f0d4041efb6bf91a16f0248f2fd573e6af05c19f96bedb9f882f7882";
+        seal_runtime_artifact_manifest(RuntimeArtifactManifest {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            artifact_id: RuntimeArtifactId::from_raw("runtime-artifact-1"),
+            kind: RuntimeArtifactKind::GeneratedFile,
+            payload_sha256: payload.to_owned(),
+            byte_size: 10,
+            media_type: "text/plain".to_owned(),
+            sensitivity: ContextSensitivity::Private,
+            retention: RuntimeEventRetention {
+                kind: RuntimeEventRetentionKind::Session,
+                expires_at_epoch_ms: None,
+            },
+            session_id: SessionId::from_raw("session-1"),
+            task_id: TaskId::from_raw("task-1"),
+            producer_run_id: RuntimeRunId::from_raw("run-1"),
+            producer_turn_id: None,
+            producer_operation_id: None,
+            receipt_id: None,
+            policy_id: PolicyId::from_raw("policy-1"),
+            policy_sha256: "b".repeat(64),
+            created_at_epoch_ms: 1,
+            integrity: RuntimeArtifactIntegrityState::Verified,
+            preview: Some(RuntimeArtifactPreview {
+                text: "0123456789".to_owned(),
+                byte_size: 10,
+                truncated: false,
+                sha256: payload.to_owned(),
+            }),
+            manifest_sha256: zero_sha256().to_owned(),
+        })
+        .expect("sealed manifest")
+    }
+
+    fn ownership_bound_to(manifest: &RuntimeArtifactManifest) -> CanonicalSourceArtifactOwnership {
+        CanonicalSourceArtifactOwnership {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            ownership_id: "ownership-1".to_owned(),
+            source_artifact_id: "source-1".to_owned(),
+            runtime_artifact_id: manifest.artifact_id.as_str().to_owned(),
+            runtime_manifest_sha256: manifest.manifest_sha256.clone(),
+            payload_sha256: manifest.payload_sha256.clone(),
+            runtime_artifact_kind: manifest.kind,
+            request_id: "request-1".to_owned(),
+            session_id: manifest.session_id.as_str().to_owned(),
+            task_id: manifest.task_id.as_str().to_owned(),
+            authority_id: "authority-1".to_owned(),
+            policy_id: manifest.policy_id.as_str().to_owned(),
+            policy_sha256: manifest.policy_sha256.clone(),
+            session_exclusive: true,
+            retention: CanonicalSourceArtifactRetention {
+                kind: CanonicalSourceArtifactRetentionKind::Session,
+                expires_at_epoch_ms: None,
+            },
+            ownership_state: CanonicalSourceArtifactOwnershipState::Active,
+            admitted_at_epoch_ms: manifest.created_at_epoch_ms,
+            updated_at_epoch_ms: manifest.created_at_epoch_ms + 1,
+            revision: 0,
+            reason_code: None,
+            ownership_sha256: zero_sha256().to_owned(),
         }
+    }
+
+    #[test]
+    fn source_artifact_ownership_internal_shape_is_validated() {
+        let manifest = manifest_fixture();
+        let base = || ownership_bound_to(&manifest);
         assert_eq!(base().validate_canonical(), Ok(()));
 
         let mut expiration_required = base();
@@ -814,7 +981,7 @@ mod tests {
         );
 
         let mut before_admission = expiration_required.clone();
-        before_admission.retention.expires_at_epoch_ms = Some(1);
+        before_admission.retention.expires_at_epoch_ms = Some(manifest.created_at_epoch_ms);
         assert_eq!(
             before_admission.validate_canonical().unwrap_err().code,
             "engineering.source_ownership.expiration_order"
@@ -861,6 +1028,195 @@ mod tests {
         assert_eq!(
             stale_update.validate_canonical().unwrap_err().code,
             "engineering.source_ownership.time_order"
+        );
+    }
+
+    #[test]
+    fn source_artifact_ownership_seal_binds_every_declared_field() {
+        let manifest = manifest_fixture();
+        let sealed =
+            seal_canonical_source_artifact_ownership(ownership_bound_to(&manifest)).expect("seal");
+        assert_eq!(verify_canonical_source_artifact_ownership(&sealed), Ok(()));
+
+        let fabricated = CanonicalSourceArtifactOwnership {
+            ownership_sha256: digest(),
+            ..ownership_bound_to(&manifest)
+        };
+        assert_eq!(
+            verify_canonical_source_artifact_ownership(&fabricated)
+                .unwrap_err()
+                .code,
+            "engineering.source_ownership.digest_mismatch"
+        );
+
+        let mutations: [(fn(&mut CanonicalSourceArtifactOwnership), &str); 8] = [
+            (
+                |value| value.source_artifact_id = "source-2".to_owned(),
+                "source_artifact_id",
+            ),
+            (
+                |value| value.ownership_id = "ownership-2".to_owned(),
+                "ownership_id",
+            ),
+            (
+                |value| value.request_id = "request-2".to_owned(),
+                "request_id",
+            ),
+            (
+                |value| value.authority_id = "authority-2".to_owned(),
+                "authority_id",
+            ),
+            (
+                |value| value.revision = value.revision.saturating_add(1),
+                "revision",
+            ),
+            (
+                |value| value.admitted_at_epoch_ms = value.admitted_at_epoch_ms + 1,
+                "admitted_at_epoch_ms",
+            ),
+            (
+                |value| value.updated_at_epoch_ms = value.updated_at_epoch_ms + 1,
+                "updated_at_epoch_ms",
+            ),
+            (
+                |value| {
+                    value.ownership_state = CanonicalSourceArtifactOwnershipState::Quarantined;
+                    value.reason_code = Some("holdover".to_owned());
+                },
+                "ownership_state",
+            ),
+        ];
+        for (mutate, field) in mutations {
+            let mut candidate = sealed.clone();
+            mutate(&mut candidate);
+            assert_eq!(
+                verify_canonical_source_artifact_ownership(&candidate)
+                    .unwrap_err()
+                    .code,
+                "engineering.source_ownership.digest_mismatch",
+                "mutation of {field} must be detected"
+            );
+        }
+    }
+
+    #[test]
+    fn source_artifact_ownership_admits_only_bound_manifests() {
+        let manifest = manifest_fixture();
+        let sealed =
+            seal_canonical_source_artifact_ownership(ownership_bound_to(&manifest)).expect("seal");
+        assert_eq!(
+            admit_canonical_source_artifact_ownership(&sealed, &manifest),
+            Ok(())
+        );
+
+        let unknown_manifest = RuntimeArtifactManifest {
+            manifest_sha256: digest(),
+            ..manifest.clone()
+        };
+        assert_eq!(
+            admit_canonical_source_artifact_ownership(&sealed, &unknown_manifest)
+                .unwrap_err()
+                .code,
+            "engineering.source_ownership.unknown_backend"
+        );
+
+        let mut altered_id = manifest.clone();
+        altered_id.artifact_id = RuntimeArtifactId::from_raw("runtime-artifact-2");
+        let altered_id = seal_runtime_artifact_manifest(altered_id).expect("seal");
+        assert_eq!(
+            admit_canonical_source_artifact_ownership(&sealed, &altered_id)
+                .unwrap_err()
+                .code,
+            "engineering.source_ownership.manifest_mismatch"
+        );
+
+        let mut altered_payload = manifest.clone();
+        altered_payload.payload_sha256 = digest();
+        let altered_payload = seal_runtime_artifact_manifest(altered_payload).expect("seal");
+        let ownership = seal_canonical_source_artifact_ownership(
+            CanonicalSourceArtifactOwnership {
+                runtime_manifest_sha256: altered_payload.manifest_sha256.clone(),
+                ..ownership_bound_to(&manifest)
+            },
+        )
+        .expect("seal");
+        assert_eq!(
+            admit_canonical_source_artifact_ownership(&ownership, &altered_payload)
+                .unwrap_err()
+                .code,
+            "engineering.source_ownership.payload_mismatch"
+        );
+
+        let rebind = |mutate: fn(&mut RuntimeArtifactManifest),
+                      patch: fn(&mut CanonicalSourceArtifactOwnership),
+                      expected: &str| {
+            let mut candidate = manifest.clone();
+            mutate(&mut candidate);
+            let candidate = seal_runtime_artifact_manifest(candidate).expect("seal");
+            let mut record = ownership_bound_to(&manifest);
+            record.runtime_manifest_sha256 = candidate.manifest_sha256.clone();
+            record.payload_sha256 = candidate.payload_sha256.clone();
+            record.runtime_artifact_id = candidate.artifact_id.as_str().to_owned();
+            patch(&mut record);
+            let sealed_record =
+                seal_canonical_source_artifact_ownership(record).expect("seal record");
+            assert_eq!(
+                admit_canonical_source_artifact_ownership(&sealed_record, &candidate)
+                    .unwrap_err()
+                    .code,
+                expected
+            );
+        };
+
+        rebind(
+            |manifest| manifest.kind = RuntimeArtifactKind::Report,
+            |_| {},
+            "engineering.source_ownership.kind_mismatch",
+        );
+        rebind(
+            |manifest| manifest.session_id = SessionId::from_raw("session-2"),
+            |_| {},
+            "engineering.source_ownership.session_mismatch",
+        );
+        rebind(
+            |manifest| manifest.task_id = TaskId::from_raw("task-2"),
+            |_| {},
+            "engineering.source_ownership.task_mismatch",
+        );
+        rebind(
+            |manifest| manifest.policy_id = PolicyId::from_raw("policy-2"),
+            |_| {},
+            "engineering.source_ownership.policy_mismatch",
+        );
+        rebind(
+            |manifest| manifest.policy_sha256 = "c".repeat(64),
+            |_| {},
+            "engineering.source_ownership.policy_mismatch",
+        );
+        rebind(
+            |manifest| {
+                manifest.retention = RuntimeEventRetention {
+                    kind: RuntimeEventRetentionKind::UntilExpiration,
+                    expires_at_epoch_ms: Some(manifest.created_at_epoch_ms + 100),
+                };
+            },
+            |_| {},
+            "engineering.source_ownership.retention_mismatch",
+        );
+
+        let mut later_manifest = manifest.clone();
+        later_manifest.created_at_epoch_ms = manifest.created_at_epoch_ms + 100;
+        let later_manifest = seal_runtime_artifact_manifest(later_manifest).expect("seal");
+        let stale = seal_canonical_source_artifact_ownership(CanonicalSourceArtifactOwnership {
+            runtime_manifest_sha256: later_manifest.manifest_sha256.clone(),
+            ..ownership_bound_to(&manifest)
+        })
+        .expect("seal");
+        assert_eq!(
+            admit_canonical_source_artifact_ownership(&stale, &later_manifest)
+                .unwrap_err()
+                .code,
+            "engineering.source_ownership.admitted_before_manifest"
         );
     }
 
