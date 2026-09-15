@@ -467,6 +467,7 @@ mod tests {
     use std::fs;
     use std::os::unix::fs::PermissionsExt;
     use std::path::PathBuf;
+    use std::rc::Rc;
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_kernel_contracts::{ExactModelProfile, PlatformFamily};
@@ -784,6 +785,93 @@ mod tests {
         assert_eq!(receipt.disposition, ModelDownloadDisposition::FailedCleaned);
         assert_eq!(receipt.retained_bytes, 0);
         assert_eq!(fs::read_dir(store).expect("empty").count(), 0);
+    }
+
+    struct ChunkedInspectorSource {
+        inner: MemorySource,
+        reads: Rc<Cell<u32>>,
+        closed: Rc<Cell<bool>>,
+    }
+
+    impl BoundedModelDownloadSource for ChunkedInspectorSource {
+        fn identity(&self) -> ModelDownloadIdentity {
+            self.inner.identity()
+        }
+
+        fn read_at(
+            &mut self,
+            offset: u64,
+            output: &mut [u8],
+        ) -> Result<usize, ModelDownloadReadError> {
+            self.reads.set(self.reads.get().saturating_add(1));
+            let limit = output.len().min(1);
+            self.inner.read_at(offset, &mut output[..limit])
+        }
+    }
+
+    impl Drop for ChunkedInspectorSource {
+        fn drop(&mut self) {
+            self.closed.set(true);
+        }
+    }
+
+    #[test]
+    fn cancellation_at_every_download_iteration_bounds_residue_and_closes_transport() {
+        let bytes = b"GGUFbounded-download-cancellation".to_vec();
+        let profile = profile(&bytes);
+        let total = bytes.len() as u32;
+        for cancel_after in 0..=total {
+            let directory = TestDirectory::new();
+            let store = directory.store();
+            let (memory, authorization) = source_and_authorization(&profile, &bytes);
+            let reads = Rc::new(Cell::new(0_u32));
+            let closed = Rc::new(Cell::new(false));
+            let mut source = ChunkedInspectorSource {
+                inner: memory,
+                reads: reads.clone(),
+                closed: closed.clone(),
+            };
+            let probe = reads.clone();
+            let receipt = download_model_artifact(
+                &profile,
+                &preflight(&profile),
+                &authorization,
+                &mut source,
+                &store,
+                move || probe.get() >= cancel_after,
+            )
+            .expect("bounded cancellation attempt");
+            assert_eq!(
+                reads.get(),
+                cancel_after.min(total),
+                "no transport read past the cancellation boundary at cancel_after={cancel_after}"
+            );
+            if cancel_after >= total {
+                assert_eq!(
+                    receipt.disposition,
+                    ModelDownloadDisposition::VerifiedStaged
+                );
+            } else {
+                assert_eq!(
+                    receipt.disposition,
+                    ModelDownloadDisposition::Cancelled,
+                    "cancel_after={cancel_after}"
+                );
+                assert_eq!(receipt.retained_bytes, 0);
+                assert_eq!(
+                    fs::read_dir(&store).expect("bounded residue").count(),
+                    0,
+                    "cancel_after={cancel_after}"
+                );
+                assert!(!store.join("active-model.json").exists());
+            }
+            assert!(!closed.get(), "transport handle stays owned by the caller");
+            drop(source);
+            assert!(
+                closed.get(),
+                "transport handle releases exactly on caller drop"
+            );
+        }
     }
 
     #[test]

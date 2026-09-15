@@ -634,9 +634,11 @@ fn valid_sha256(value: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use std::cell::Cell;
     use std::fs;
     use std::os::unix::fs::PermissionsExt;
     use std::path::{Path, PathBuf};
+    use std::rc::Rc;
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_kernel_contracts::{ExactModelProfile, ModelLifecycleState, PlatformFamily};
@@ -859,6 +861,76 @@ mod tests {
             );
             assert_eq!(fs::read_dir(store).expect("store entries").count(), 1);
         }
+    }
+
+    #[test]
+    fn cancellation_between_every_import_iteration_bounds_residue_and_leaves_source_intact() {
+        let directory = TestDirectory::new();
+        let mut bytes = vec![0_u8; 4 * 1024 * 1024 + 128];
+        bytes[..4].copy_from_slice(b"GGUF");
+        for (index, byte) in bytes.iter_mut().enumerate().skip(4) {
+            *byte = (index & 0xff) as u8;
+        }
+        let source_path = write_source(&directory.0, &bytes);
+        let store = directory.0.join("store");
+        fs::create_dir(&store).expect("store");
+        fs::set_permissions(&store, fs::Permissions::from_mode(0o700)).expect("store mode");
+        let profile = import_profile(&bytes);
+        let preflight = preflight_model_acquisition(&profile, &host(&profile));
+        let source_len = fs::metadata(&source_path).expect("source before").len();
+
+        for cancel_after in [0_u32, 1] {
+            for entry in fs::read_dir(&store).expect("store").flatten() {
+                let _ = fs::remove_file(entry.path());
+            }
+            let calls = Rc::new(Cell::new(0_u32));
+            let probe = calls.clone();
+            let receipt = import_local_model(
+                &profile,
+                &preflight,
+                &source_path,
+                &store,
+                move || {
+                    let seen = probe.get();
+                    probe.set(seen.saturating_add(1));
+                    seen >= cancel_after
+                },
+            )
+            .expect("bounded cancellation attempt");
+            assert_eq!(
+                receipt.disposition,
+                ModelImportDisposition::Cancelled,
+                "cancel_after={cancel_after}"
+            );
+            assert!(
+                receipt.source_unchanged,
+                "cancel_after={cancel_after} source_unchanged"
+            );
+            assert_eq!(
+                fs::metadata(&source_path).expect("source after").len(),
+                source_len,
+                "source untouched at cancel_after={cancel_after}"
+            );
+            assert_eq!(
+                fs::read_dir(&store).expect("store residue").count(),
+                0,
+                "no residue at cancel_after={cancel_after}"
+            );
+            assert!(!store.join("active-model.json").exists());
+        }
+
+        for entry in fs::read_dir(&store).expect("store").flatten() {
+            let _ = fs::remove_file(entry.path());
+        }
+        let receipt = import_local_model(&profile, &preflight, &source_path, &store, || false)
+            .expect("completion after every cancellation boundary");
+        assert_eq!(receipt.disposition, ModelImportDisposition::VerifiedStaged);
+        assert!(receipt.source_unchanged);
+        assert_eq!(
+            fs::metadata(&source_path).expect("source after complete").len(),
+            source_len,
+            "source untouched after full completion"
+        );
     }
 
     #[test]
