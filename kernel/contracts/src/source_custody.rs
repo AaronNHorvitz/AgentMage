@@ -6,11 +6,15 @@
 //! the reference must survive, and what blocks its release or collection. It introduces no
 //! payload location, no second physical store, and no additional `RuntimeArtifactKind` variant;
 //! source retention reuses the existing families listed in [`SOURCE_BACKING_ARTIFACT_KINDS`].
+//!
+//! Every claim carries a canonical seal over its complete record. This module defines the exact
+//! seal preimage in [`source_custody_seal_preimage`]; the owning engine layer holds the digest
+//! primitive that seals a claim, verifies it, and binds it to a canonically verified manifest.
 
 use crate::{
     ConversationId, PolicyId, RuntimeArtifactIntegrityState, RuntimeArtifactKind,
-    RuntimeArtifactLifecycleState, RuntimeArtifactManifest, RuntimeArtifactRef,
-    RuntimeEventRetentionKind, RuntimeRunId, SessionId, SourceArtifactId, SourceCustodyId, TaskId,
+    RuntimeArtifactLifecycleState, RuntimeArtifactRef, RuntimeEventRetentionKind, RuntimeRunId,
+    SessionId, SourceArtifactId, SourceCustodyId, TaskId,
 };
 
 /// Stable identity of the single physical store that retains every source-artifact payload.
@@ -33,6 +37,16 @@ pub const SOURCE_BACKING_ARTIFACT_KINDS: [RuntimeArtifactKind; 3] = [
 
 /// Maximum UTF-8 bytes admitted for one content-free custody reason code.
 pub const MAX_SOURCE_CUSTODY_REASON_CODE_BYTES: usize = 128;
+
+/// Maximum UTF-8 bytes admitted for one custody identity or media type.
+pub const MAX_SOURCE_CUSTODY_IDENTIFIER_BYTES: usize = 128;
+
+/// Maximum immutable payload size a custody claim may name, matching the artifact store ceiling.
+pub const MAX_SOURCE_CUSTODY_PAYLOAD_BYTES: u64 = 64 * 1024 * 1024;
+
+/// Digest placeholder written into `custody_sha256` while the canonical seal is computed.
+pub const SOURCE_CUSTODY_ZERO_SHA256: &str =
+    "0000000000000000000000000000000000000000000000000000000000000000";
 
 /// Closed logical owner scope for one retained source artifact.
 ///
@@ -102,6 +116,8 @@ pub enum SourceCustodyError {
     LifecycleInvalid,
     /// An identity, digest, reason code, or time field is malformed or empty.
     FieldMalformed,
+    /// The canonical custody seal does not cover this exact record.
+    SealMismatch,
     /// The claim does not bind the exact immutable payload manifest.
     ManifestMismatch,
 }
@@ -118,6 +134,7 @@ impl SourceCustodyError {
             Self::RetentionInvalid => "source.custody.retention_invalid",
             Self::LifecycleInvalid => "source.custody.lifecycle_invalid",
             Self::FieldMalformed => "source.custody.field_malformed",
+            Self::SealMismatch => "source.custody.seal_mismatch",
             Self::ManifestMismatch => "source.custody.manifest_mismatch",
         }
     }
@@ -199,6 +216,50 @@ fn is_lowercase_sha256(value: &str) -> bool {
     value.len() == 64 && value.bytes().all(hex)
 }
 
+/// Accepts exactly the published `identifier` grammar `^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$`.
+fn is_identifier(value: &str) -> bool {
+    let mut bytes = value.bytes();
+    value.len() <= MAX_SOURCE_CUSTODY_IDENTIFIER_BYTES
+        && bytes.next().is_some_and(|byte| byte.is_ascii_alphanumeric())
+        && bytes.all(|byte| {
+            byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b':' | b'/' | b'-')
+        })
+}
+
+/// Accepts exactly the published content-free reason grammar `^[a-z0-9][a-z0-9_.-]{0,127}$`.
+fn is_reason_code(value: &str) -> bool {
+    let mut bytes = value.bytes();
+    value.len() <= MAX_SOURCE_CUSTODY_REASON_CODE_BYTES
+        && bytes
+            .next()
+            .is_some_and(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
+        && bytes.all(|byte| {
+            byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'_' | b'.' | b'-')
+        })
+}
+
+/// Accepts exactly one `type/subtype` pair from the published media-type grammar.
+fn is_media_type(value: &str) -> bool {
+    if value.len() < 3 || value.len() > MAX_SOURCE_CUSTODY_IDENTIFIER_BYTES {
+        return false;
+    }
+    let mut parts = value.split('/');
+    match (parts.next(), parts.next(), parts.next()) {
+        (Some(name), Some(subtype), None) => is_media_token(name) && is_media_token(subtype),
+        _ => false,
+    }
+}
+
+fn is_media_token(value: &str) -> bool {
+    let mut bytes = value.bytes();
+    bytes
+        .next()
+        .is_some_and(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
+        && bytes.all(|byte| {
+            byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'.' | b'+' | b'-')
+        })
+}
+
 fn owner_identities_match_scope(record: &SourceArtifactCustody) -> bool {
     let task = record.task_id.is_some();
     let run = record.run_id.is_some();
@@ -218,12 +279,13 @@ fn validate_fields(record: &SourceArtifactCustody) -> Result<(), SourceCustodyEr
         record.payload.manifest_sha256.as_str(),
         record.payload.payload_sha256.as_str(),
     ];
-    let bounded_reason = !record.reason_code.is_empty()
-        && record.reason_code.len() <= MAX_SOURCE_CUSTODY_REASON_CODE_BYTES;
-    if !bounded_reason
+    if !is_reason_code(&record.reason_code)
         || !digests.iter().copied().all(is_lowercase_sha256)
         || record.payload.schema_version != crate::CONTRACT_SCHEMA_VERSION
-        || record.payload.artifact_id.as_str().is_empty()
+        || !is_identifier(record.payload.artifact_id.as_str())
+        || record.payload.byte_size == 0
+        || record.payload.byte_size > MAX_SOURCE_CUSTODY_PAYLOAD_BYTES
+        || !is_media_type(&record.payload.media_type)
     {
         return Err(SourceCustodyError::FieldMalformed);
     }
@@ -242,10 +304,10 @@ fn validate_owner(record: &SourceArtifactCustody) -> Result<(), SourceCustodyErr
         record.run_id.as_ref().map(RuntimeRunId::as_str),
         record.conversation_id.as_ref().map(ConversationId::as_str),
     ];
-    if required.iter().any(|value| value.is_empty()) {
+    if required.iter().any(|value| !is_identifier(value)) {
         return Err(SourceCustodyError::FieldMalformed);
     }
-    if optional.iter().flatten().any(|value| value.is_empty()) {
+    if optional.iter().flatten().any(|value| !is_identifier(value)) {
         return Err(SourceCustodyError::FieldMalformed);
     }
     if !owner_identities_match_scope(record) {
@@ -308,6 +370,14 @@ fn validate_lifecycle(record: &SourceArtifactCustody) -> Result<(), SourceCustod
 
 /// Verifies every closed-field, ownership, retention, and lifecycle invariant of one claim.
 ///
+/// Identity, reason-code, payload-size, and media-type grammars match the published
+/// `source-artifact-custody.schema.json` and `runtime-artifact-reference.schema.json` exactly, so
+/// a value rejected by one boundary is rejected by both.
+///
+/// This is the shape and semantics half of admission only. The canonical seal in
+/// `custody_sha256` is verified by the owning engine layer, which holds the digest primitive; no
+/// caller may treat a record as authoritative without that verification.
+///
 /// Rejection is deterministic and content-free: no field value is echoed, and no unknown field
 /// can reach this function because the record denies unknown fields at the parse boundary.
 ///
@@ -332,36 +402,33 @@ pub fn validate_source_artifact_custody(
     validate_lifecycle(record)
 }
 
-/// Verifies that one valid claim binds the exact immutable manifest it names.
+/// Returns the exact canonical bytes that one custody seal must digest.
 ///
-/// The manifest remains the single authority for the payload's family, size, and media type, so
-/// a claim can never assert a backing the store does not hold.
+/// The preimage is this record with `custody_sha256` replaced by
+/// [`SOURCE_CUSTODY_ZERO_SHA256`], so the seal covers every ownership, payload, retention, hold,
+/// policy, lifecycle, count, reason, and timestamp field. Contracts define the preimage; the
+/// owning engine layer owns the digest primitive that seals and verifies it.
 ///
 /// # Errors
 ///
-/// Returns [`SourceCustodyError::ManifestMismatch`] when any bound field differs, or the exact
-/// validation failure when the claim itself is invalid.
-pub fn bind_source_artifact_custody(
+/// Returns [`SourceCustodyError::SchemaVersionUnsupported`] for an unsupported version and
+/// [`SourceCustodyError::FieldMalformed`] when the record cannot be canonically encoded.
+pub fn source_custody_seal_preimage(
     record: &SourceArtifactCustody,
-    manifest: &RuntimeArtifactManifest,
-) -> Result<(), SourceCustodyError> {
-    validate_source_artifact_custody(record)?;
-    if record.payload.artifact_id != manifest.artifact_id
-        || record.payload.manifest_sha256 != manifest.manifest_sha256
-        || record.payload.payload_sha256 != manifest.payload_sha256
-        || record.payload.byte_size != manifest.byte_size
-        || record.payload.media_type != manifest.media_type
-        || record.payload_kind != manifest.kind
-    {
-        return Err(SourceCustodyError::ManifestMismatch);
+) -> Result<Vec<u8>, SourceCustodyError> {
+    if record.schema_version != crate::CONTRACT_SCHEMA_VERSION {
+        return Err(SourceCustodyError::SchemaVersionUnsupported);
     }
-    Ok(())
+    let mut candidate = record.clone();
+    candidate.custody_sha256 = SOURCE_CUSTODY_ZERO_SHA256.to_owned();
+    crate::to_canonical_json(&candidate).map_err(|_| SourceCustodyError::FieldMalformed)
 }
 
 /// Derives the exact content-free disposition of one valid claim at one trusted time.
 ///
 /// The result is total and deterministic: every valid claim resolves to exactly one
-/// disposition, and an invalid claim resolves to none.
+/// disposition, and an invalid claim resolves to none. Callers acting on a retained record must
+/// first verify its canonical seal at the owning engine layer.
 ///
 /// # Errors
 ///

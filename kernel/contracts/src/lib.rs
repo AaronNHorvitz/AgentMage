@@ -242,10 +242,11 @@ pub use serialization::{
     ContractResult, MAX_CONTRACT_JSON_BYTES, VersionedContract, from_json, to_canonical_json,
 };
 pub use source_custody::{
+    MAX_SOURCE_CUSTODY_IDENTIFIER_BYTES, MAX_SOURCE_CUSTODY_PAYLOAD_BYTES,
     MAX_SOURCE_CUSTODY_REASON_CODE_BYTES, SOURCE_BACKING_ARTIFACT_KINDS, SOURCE_CUSTODY_STORE_ID,
-    SourceArtifactCustody, SourceCustodyDisposition, SourceCustodyError, SourceCustodyHold,
-    SourceCustodyOwnerScope, SourceCustodyRetention, bind_source_artifact_custody,
-    source_custody_disposition, validate_source_artifact_custody,
+    SOURCE_CUSTODY_ZERO_SHA256, SourceArtifactCustody, SourceCustodyDisposition, SourceCustodyError,
+    SourceCustodyHold, SourceCustodyOwnerScope, SourceCustodyRetention, source_custody_disposition,
+    source_custody_seal_preimage, validate_source_artifact_custody,
 };
 pub use task::{
     Action, ActionKind, ActionState, BudgetLimit, BudgetResource, CompletionEvidence,
