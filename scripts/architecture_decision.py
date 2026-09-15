@@ -38,14 +38,37 @@ EXPECTED_TARGETS = {
     "ubuntu-x86_64": "x86_64-unknown-linux-gnu",
     "windows-x86_64": "x86_64-pc-windows-msvc",
 }
+REQUIRED_EXTENSION_AUTHORITY = [
+    "display",
+    "interaction",
+    "provider-registration",
+    "authenticated-ipc-client",
+    "current-request-reference-resolution",
+]
 PROHIBITED_EXTENSION_AUTHORITY = {
-    "workspace-read",
+    "ambient-workspace-read",
     "workspace-write",
     "git",
     "model-runtime",
     "tool-execution",
     "grant-minting",
     "secret-store",
+}
+# Decision 0042 narrows the former blanket extension read prohibition to the
+# current request. A generic read authority may never return under any spelling.
+AMBIENT_READ_AUTHORITY = {
+    "workspace-read",
+    "workspace-enumeration",
+    "workspace-index",
+    "filesystem-read",
+}
+PROHIBITED_RESOLUTION_BEHAVIOR = {
+    "ambient-workspace-enumeration",
+    "arbitrary-path-selection",
+    "background-indexing",
+    "cross-request-reference-reuse",
+    "out-of-policy-read",
+    "provider-path-reference-resolution",
 }
 
 
@@ -68,6 +91,47 @@ def _unique_by_id(records: Any, label: str, failures: list[str]) -> dict[str, An
             failures.append(f"duplicate {label} id: {record_id}")
         indexed[record_id] = record
     return indexed
+
+
+def _validate_reference_resolution(reference: Any) -> list[str]:
+    """Require reference reads to stay inside one AgentMage participant request."""
+    if not isinstance(reference, dict):
+        return ["reference_resolution_contract must be an object"]
+
+    failures: list[str] = []
+    if reference.get("decision_id") != "ADR-0042":
+        failures.append("reference resolution must cite amending Decision 0042")
+    if reference.get("permitted_scope") != "current-request-references-only":
+        failures.append("only current-request references may be resolvable")
+    if reference.get("delivery_surface") != "agentmage-chat-participant":
+        failures.append("references must be delivered to the AgentMage Chat Participant")
+    if reference.get("contribution_point") != "contributes.chatParticipants":
+        failures.append("the AgentMage participant contribution point must be selected")
+    if reference.get("participant_name") != "@agentmage":
+        failures.append("the AgentMage participant identity must not change")
+    if reference.get("resolvable_reference_kinds") != ["string", "uri", "location"]:
+        failures.append("resolvable reference kinds must remain string, URI, and location")
+    if reference.get("requires_stable_api") is not True:
+        failures.append("reference resolution must use stable VS Code APIs")
+    if reference.get("requires_explicit_user_delivery") is not True:
+        failures.append("reference resolution requires explicit delivery to the current request")
+    if reference.get("ambient_workspace_read_prohibited") is not True:
+        failures.append("ambient extension workspace reads must remain prohibited")
+    missing_behavior = PROHIBITED_RESOLUTION_BEHAVIOR - set(
+        reference.get("prohibited_resolution_behavior", [])
+    )
+    if missing_behavior:
+        failures.append(
+            "reference resolution missing prohibited behavior: "
+            + ", ".join(sorted(missing_behavior))
+        )
+    if reference.get("unresolved_reference_disposition") != "content_unavailable_upstream":
+        failures.append("an unresolved reference must remain visibly unavailable")
+    if reference.get("resolved_byte_authority") != "rust-host":
+        failures.append("the Rust host must own every resolved reference byte")
+    if reference.get("status_ref") != "architecture/status-model.json#component=vscode-extension":
+        failures.append("reference resolution must reference its canonical current status")
+    return failures
 
 
 def validate_matrix(matrix: Any) -> list[str]:
@@ -159,12 +223,30 @@ def validate_matrix(matrix: Any) -> list[str]:
             failures.append("the Verified Chat webview cannot own runtime state")
         if vscode.get("rust_host_state_authoritative") is not True:
             failures.append("the Rust host must own Verified Chat runtime state")
+        granted = vscode.get("extension_authority")
+        if granted != REQUIRED_EXTENSION_AUTHORITY:
+            failures.append("VS Code extension authority set is incomplete or changed")
         prohibited = set(vscode.get("extension_prohibited_authority", []))
         missing = PROHIBITED_EXTENSION_AUTHORITY - prohibited
         if missing:
             failures.append(
                 "VS Code extension missing prohibited authority: " + ", ".join(sorted(missing))
             )
+        regained = AMBIENT_READ_AUTHORITY & set(granted or [])
+        if regained:
+            failures.append(
+                "VS Code extension cannot regain ambient read authority: "
+                + ", ".join(sorted(regained))
+            )
+        overlap = prohibited & set(granted or [])
+        if overlap:
+            failures.append(
+                "VS Code extension authority is both granted and prohibited: "
+                + ", ".join(sorted(overlap))
+            )
+        failures.extend(
+            _validate_reference_resolution(vscode.get("reference_resolution_contract"))
+        )
 
     runtime = matrix.get("planned_runtime_contract")
     expected_runtime = {

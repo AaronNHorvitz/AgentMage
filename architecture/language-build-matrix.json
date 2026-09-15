@@ -150,17 +150,44 @@
       "display",
       "interaction",
       "provider-registration",
-      "authenticated-ipc-client"
+      "authenticated-ipc-client",
+      "current-request-reference-resolution"
     ],
     "extension_prohibited_authority": [
-      "workspace-read",
+      "ambient-workspace-read",
       "workspace-write",
       "git",
       "model-runtime",
       "tool-execution",
       "grant-minting",
       "secret-store"
-    ]
+    ],
+    "reference_resolution_contract": {
+      "decision_id": "ADR-0042",
+      "permitted_scope": "current-request-references-only",
+      "delivery_surface": "agentmage-chat-participant",
+      "contribution_point": "contributes.chatParticipants",
+      "participant_name": "@agentmage",
+      "resolvable_reference_kinds": [
+        "string",
+        "uri",
+        "location"
+      ],
+      "requires_stable_api": true,
+      "requires_explicit_user_delivery": true,
+      "ambient_workspace_read_prohibited": true,
+      "prohibited_resolution_behavior": [
+        "ambient-workspace-enumeration",
+        "arbitrary-path-selection",
+        "background-indexing",
+        "cross-request-reference-reuse",
+        "out-of-policy-read",
+        "provider-path-reference-resolution"
+      ],
+      "unresolved_reference_disposition": "content_unavailable_upstream",
+      "resolved_byte_authority": "rust-host",
+      "status_ref": "architecture/status-model.json#component=vscode-extension"
+    }
   },
   "planned_runtime_contract": {
     "language": "rust",

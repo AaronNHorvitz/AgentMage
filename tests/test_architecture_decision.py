@@ -43,6 +43,110 @@ class ArchitectureDecisionTests(unittest.TestCase):
                 mutated["vscode_contract"]["extension_prohibited_authority"].remove(authority)
                 self.assertTrue(validate_matrix(mutated))
 
+    def test_ambient_workspace_read_prohibition_is_retained(self) -> None:
+        self.assertIn(
+            "ambient-workspace-read",
+            self.matrix["vscode_contract"]["extension_prohibited_authority"],
+        )
+        mutated = copy.deepcopy(self.matrix)
+        mutated["vscode_contract"]["reference_resolution_contract"][
+            "ambient_workspace_read_prohibited"
+        ] = False
+        self.assertIn(
+            "ambient extension workspace reads must remain prohibited",
+            validate_matrix(mutated),
+        )
+
+    def test_generic_read_authority_cannot_return(self) -> None:
+        for authority in (
+            "workspace-read",
+            "workspace-enumeration",
+            "workspace-index",
+            "filesystem-read",
+        ):
+            with self.subTest(authority=authority):
+                mutated = copy.deepcopy(self.matrix)
+                mutated["vscode_contract"]["extension_authority"].append(authority)
+                failures = validate_matrix(mutated)
+                self.assertTrue(
+                    any("cannot regain ambient read authority" in item for item in failures)
+                )
+
+    def test_current_request_reference_authority_cannot_be_dropped(self) -> None:
+        mutated = copy.deepcopy(self.matrix)
+        mutated["vscode_contract"]["extension_authority"].remove(
+            "current-request-reference-resolution"
+        )
+        self.assertIn(
+            "VS Code extension authority set is incomplete or changed",
+            validate_matrix(mutated),
+        )
+
+    def test_reference_resolution_contract_is_required(self) -> None:
+        mutated = copy.deepcopy(self.matrix)
+        del mutated["vscode_contract"]["reference_resolution_contract"]
+        self.assertIn(
+            "reference_resolution_contract must be an object",
+            validate_matrix(mutated),
+        )
+
+    def test_reference_scope_cannot_widen_past_the_current_request(self) -> None:
+        for field, value, expected in (
+            ("permitted_scope", "workspace", "only current-request references may be resolvable"),
+            (
+                "delivery_surface",
+                "language-model-chat-provider",
+                "references must be delivered to the AgentMage Chat Participant",
+            ),
+            (
+                "requires_explicit_user_delivery",
+                False,
+                "reference resolution requires explicit delivery to the current request",
+            ),
+            (
+                "requires_stable_api",
+                False,
+                "reference resolution must use stable VS Code APIs",
+            ),
+            (
+                "resolved_byte_authority",
+                "vscode-extension",
+                "the Rust host must own every resolved reference byte",
+            ),
+            (
+                "unresolved_reference_disposition",
+                "silently_dropped",
+                "an unresolved reference must remain visibly unavailable",
+            ),
+        ):
+            with self.subTest(field=field):
+                mutated = copy.deepcopy(self.matrix)
+                mutated["vscode_contract"]["reference_resolution_contract"][field] = value
+                self.assertIn(expected, validate_matrix(mutated))
+
+    def test_each_prohibited_resolution_behavior_is_enforced(self) -> None:
+        contract = self.matrix["vscode_contract"]["reference_resolution_contract"]
+        for behavior in contract["prohibited_resolution_behavior"]:
+            with self.subTest(behavior=behavior):
+                mutated = copy.deepcopy(self.matrix)
+                mutated["vscode_contract"]["reference_resolution_contract"][
+                    "prohibited_resolution_behavior"
+                ].remove(behavior)
+                failures = validate_matrix(mutated)
+                self.assertTrue(
+                    any("missing prohibited behavior" in item for item in failures)
+                )
+
+    def test_granted_authority_cannot_also_be_prohibited(self) -> None:
+        mutated = copy.deepcopy(self.matrix)
+        mutated["vscode_contract"]["extension_prohibited_authority"].append(
+            "current-request-reference-resolution"
+        )
+        failures = validate_matrix(mutated)
+        self.assertTrue(
+            any("both granted and prohibited" in item for item in failures)
+        )
+
     def test_proposed_vscode_api_is_rejected(self) -> None:
         mutated = copy.deepcopy(self.matrix)
         mutated["vscode_contract"]["api_channel"] = "proposed"

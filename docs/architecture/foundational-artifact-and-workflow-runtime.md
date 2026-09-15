@@ -42,8 +42,9 @@ not evidence that these expanded services already pass.
 
 ```mermaid
 flowchart LR
-    U["User"] --> V["AgentMage VS Code participant"]
-    V -->|"stable references and bounded bytes"| H["Rust host transport"]
+    U["User"] -->|"references attached to one request"| V["AgentMage VS Code participant"]
+    A["Ambient workspace, Git, secrets"] -.->|"prohibited extension read"| V
+    V -->|"current-request references and bounded bytes"| H["Rust host transport"]
     P["Provider compatibility path"] -->|"surviving message parts only"| H
     H --> I["Artifact ingress and staging"]
     I --> X["Extractor and canonicalizer registry"]
@@ -88,14 +89,26 @@ It does not parse PDF, DOCX, or XLSX semantics, choose workflow transitions,
 classify side effects, execute tools, retain canonical state, or decide
 completion.
 
-The current `architecture/language-build-matrix.json` contract prohibits every
-extension workspace read. That remains current implementation truth until Story
-1.2 changes the contract, its validator, and mutation evidence together. The
-target permission is narrower than a generic workspace read: it permits only
-bounded resolution of a reference explicitly supplied to the active AgentMage
-participant request through stable VS Code APIs. Ambient enumeration, arbitrary
-path selection, background indexing, and reads outside the current request and
-policy remain prohibited.
+Sub-task 1.2.3.1 amended `architecture/language-build-matrix.json`, its
+validator, the Decision 0004 boundary diagram, and the mutation evidence
+together. `vscode_contract.extension_authority` now carries
+`current-request-reference-resolution`, and
+`vscode_contract.reference_resolution_contract` fixes its exact envelope: only a
+string, `Uri`, or `Location` explicitly delivered to the active `@agentmage`
+participant request is resolvable, and only through stable VS Code APIs.
+
+The prohibition did not shrink; it became exact. `ambient-workspace-read`
+replaces the former blanket `workspace-read` token, so ambient enumeration,
+arbitrary path selection, background indexing, cross-request reuse of an earlier
+reference, reads outside current policy, and reference resolution on the
+Language Model Chat Provider compatibility path all remain prohibited. Resolved
+bytes carry no extension authority: the Rust host remains the sole admission,
+storage, redaction, and provenance owner, and a label-only reference is reported
+as `content_unavailable_upstream`.
+
+This is a contract change, not an implementation claim. The participant ingress
+path and its reference accounting remain governed by
+`architecture/status-model.json#component=vscode-extension`.
 
 ### 4.2 Rust runtime responsibilities
 
@@ -118,7 +131,7 @@ import capability implementations.
 
 | Surface | Status used by the plan | Supported responsibility | Explicit limitation |
 |---|---|---|---|
-| Chat Participant API | Stable public API | Guaranteed AgentMage-owned request flow, accessible references, selected model, progress, and response rendering | It governs only requests routed through the participant |
+| Chat Participant API | Stable public API | Guaranteed AgentMage-owned request flow, accessible references, selected model, progress, and response rendering | It governs only requests routed through the participant, and only references attached to the request being served |
 | Language Model Chat Provider | Stable public API | Local model registration, normalized messages, token counting, streaming, and tool metadata | It cannot reconstruct original references or bytes omitted upstream |
 | Language Model Tool API | Stable public API | AgentMage-owned artifact and workflow tools | It does not wrap neighboring built-in tools |
 | MCP integration | Supported product protocol | Optional later artifact-resource and tool adapter | It needs an addressable path, URI, resource, handle, or staged artifact |

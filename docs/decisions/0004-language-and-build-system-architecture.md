@@ -6,6 +6,7 @@
 | Date | 2026-08-10 |
 | Scope | Product implementation languages, build systems, and platform targets |
 | Supersedes | No prior decision |
+| Amended by | [Decision 0012](0012-stabilization-truth-and-status-model.md), [Decision 0014](0014-kernel-issued-effect-mediation.md), [Decision 0042](0042-universal-artifact-ingestion-and-verified-workflow-execution.md) |
 
 ## Context
 
@@ -33,8 +34,10 @@ implementation and verification remain `BLOCKED-MACOS`.
    published stable `vscode.lm.registerLanguageModelChatProvider` API plus the
    `contributes.languageModelChatProviders` contribution point. It performs
    display, interaction, provider registration, and authenticated IPC client
-   duties. It receives no workspace, Git, model-runtime, tool, grant-minting, or
-   secret-store authority.
+   duties. It receives no ambient workspace, Git, model-runtime, tool,
+   grant-minting, or secret-store authority. Decision 0042 adds the single
+   narrow `current-request-reference-resolution` authority described in the
+   amendment below.
 3. **Swift owns the macOS platform boundary.** Swift and Apple frameworks provide
    App Sandbox, XPC, Keychain, security-scoped bookmark, code-identity, signing,
    and native IPC integration around the shared Rust kernel. Swift Package
@@ -56,27 +59,60 @@ implementation and verification remain `BLOCKED-MACOS`.
 8. The machine-readable contract is
    [`architecture/language-build-matrix.json`](../../architecture/language-build-matrix.json).
    Its validator fails when a component changes languages, Python becomes an
-   end-user dependency, the extension gains authority, a proposed Visual Studio
-   Code API is enabled, required lock files disappear, or blocked Mac status is
-   represented as passing.
+   end-user dependency, the extension gains authority, an ambient read authority
+   returns under any spelling, the reference-resolution scope widens past the
+   current participant request, a proposed Visual Studio Code API is enabled,
+   required lock files disappear, or blocked Mac status is represented as
+   passing.
 
 ## Dependency Boundary
 
 ```mermaid
 flowchart LR
+    U["User-supplied reference in one @agentmage request"] -->|"explicit delivery"| VSC
     VSC["TypeScript VS Code extension"] -->|"authenticated bounded IPC"| K["Rust kernel"]
     K --> LC["Rust Linux adapter"]
     K --> MC["Swift macOS adapter"]
     MC --> AF["Apple security frameworks"]
+    WS["Workspace, Git, secrets, tools"] -.->|"no ambient extension read"| VSC
     XT["Rust xtask"] -.->|"build orchestration only"| VSC
     XT -.->|"build orchestration only"| K
     XT -.->|"build orchestration only"| MC
 ```
 
-The arrows are calls toward authority or build orchestration. The kernel never
-imports a shell or capability pack. The TypeScript extension never bypasses the
-kernel to reach files, Git, tools, secrets, or a model runtime. Platform adapters
+The solid arrows are calls toward authority or delivery. The dotted workspace
+edge is prohibited, not implemented. The kernel never imports a shell or
+capability pack. The TypeScript extension never bypasses the kernel to reach
+files, Git, tools, secrets, or a model runtime, and it enumerates nothing the
+user did not attach to the request it is currently serving. Platform adapters
 implement shared contracts and do not redefine product policy.
+
+## Amendment: Current-Request Reference Resolution
+
+Decision 0042 requires the AgentMage Chat Participant to account for every
+reference a user attaches to a request. The original blanket `workspace-read`
+prohibition made that accounting impossible, so this decision replaces it with a
+narrower pair of rules recorded in `vscode_contract`:
+
+1. `extension_prohibited_authority` names `ambient-workspace-read` instead of
+   `workspace-read`. Ambient enumeration, arbitrary path selection, background
+   indexing, cross-request reuse of an earlier reference, out-of-policy reads,
+   and reference resolution on the Language Model Chat Provider compatibility
+   path all remain prohibited.
+2. `extension_authority` gains `current-request-reference-resolution`. It
+   permits bounded resolution of a string, `Uri`, or `Location` value that the
+   user explicitly delivered to the active `@agentmage` participant request,
+   through stable Visual Studio Code APIs only.
+
+The extension still owns no bytes. It streams resolved bytes to the Rust host,
+which remains the sole admission, storage, redaction, and provenance authority.
+A reference that exposes only a display label is reported as
+`content_unavailable_upstream` rather than silently dropped.
+
+This amendment changes the contract, its validator, this diagram, and the
+mutation evidence together. It records a contract, not an implementation: the
+participant contribution, its ingress path, and its accounting evidence remain
+governed by `architecture/status-model.json#component=vscode-extension`.
 
 ## Alternatives Considered
 
@@ -122,9 +158,14 @@ implement shared contracts and do not redefine product policy.
 ## Verification
 
 - `python3 scripts/architecture_decision.py` validates the exact component,
-  language, build-system, target, lock-file, API-channel, and authority matrix.
+  language, build-system, target, lock-file, API-channel, authority, and
+  reference-resolution matrix.
 - Mutation tests independently remove or weaken each key decision and require a
-  validation failure.
+  validation failure, including restoring an ambient read authority, dropping
+  `current-request-reference-resolution`, widening the reference scope past the
+  current participant request, moving resolution to the provider path, moving
+  resolved-byte authority out of the Rust host, and dropping the
+  `content_unavailable_upstream` disposition.
 - Documentation validation requires this decision and its machine-readable
   matrix.
 - Actual clean builds, dependency direction, reproducibility, packaging, and
