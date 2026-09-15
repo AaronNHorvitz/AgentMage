@@ -294,6 +294,58 @@ graph, index revision, references, and cleanup eligibility. Paths carry no
 authority. A source-artifact manifest may persist without the raw source when
 hashes, bounded excerpts, and provenance are sufficient.
 
+### 8.1 Logical source-artifact ownership and retention
+
+Ownership and retention are a frozen logical contract over the existing
+encrypted content-addressed payload backend described in
+[`runtime-artifact-lifecycle.md`](runtime-artifact-lifecycle.md). The contract
+adds no second physical store and no new `RuntimeArtifactKind`. No ingestion
+service, extractor, or source-retention transaction is implemented, so this
+section is a contract statement and not an implementation claim.
+
+| Property | Rule |
+|---|---|
+| Physical store | `agentmage-runtime-payload-store-v1` is the only admitted payload-store identity for retained source bytes |
+| Artifact kind | A retained source payload binds exactly `generated_file`; `patch`, `standard_output`, `standard_error`, `test_log`, `report`, and `model_output` are refused |
+| Content address | A durable binding requires `captured` state and reuses the exact source `sha256` as the private content address, so equal bytes deduplicate onto one immutable object |
+| Owner scope | Exactly one of `session`, `task`, or `request`, alongside the owning session and task identities |
+| Retention class | Exactly one of `ephemeral`, `session`, `until_expiration`, or `user_hold`, matching the existing runtime retention vocabulary |
+| Expiration | `until_expiration` carries an exact trusted expiration; every other class carries none |
+| Reason code | Memory-only ownership and every user hold publish a content-free reason code; a durable non-hold binding publishes none |
+| Ephemeral limit | An `ephemeral` source is memory-only and can never root a durable checkpoint |
+| Path authority | The record carries logical identity only; it names no native path, directory, or handle |
+
+A source artifact without retained bytes remains valid. Metadata, provenance,
+bounded excerpts, and an explicit reason code persist when policy, capture
+failure, or upstream unavailability leaves no admissible payload. A memory-only
+source has no payload to quarantine, so the `quarantined` lifecycle state is
+refused for that binding.
+
+Ownership advances through the same lifecycle and cleanup vocabulary as every
+other runtime artifact, and the cleanup disposition is derived rather than
+declared:
+
+| Lifecycle state | Current checkpoint or active reference | Cleanup projection |
+|---|---|---|
+| `active` | At least one active logical reference is required | `retained` |
+| `quarantined` | Any | `blocked` |
+| `released` | Any checkpoint or active reference remains | `retained` |
+| `released` | No checkpoint and no active reference remains | `eligible` |
+| `deleted` | No checkpoint and no active reference may remain | `completed` |
+
+A current checkpoint reference is a retention root: while it is counted,
+collection is never eligible and deletion is never recorded. Each lifecycle
+transition advances a one-based monotonic revision.
+
+The closed record is `schemas/engineering-runtime/source-artifact.schema.json`
+at contract version 2. Its Rust-owned admission is `CanonicalSourceRetention`
+with `admit_canonical_source_retention` and `canonical_source_cleanup_state` in
+`kernel/contracts`, which reuse `RuntimeArtifactKind`,
+`RuntimeArtifactLifecycleState`, and `RuntimeArtifactCleanupState` rather than
+restating them.
+
+### 8.2 Cache reuse and retrieval
+
 Cache reuse requires matching source digest, extractor and canonicalizer
 versions, limits, policy, and trust/sensitivity state. Source changes or policy
 narrowing invalidate dependent sections, summaries, indexes, context manifests,

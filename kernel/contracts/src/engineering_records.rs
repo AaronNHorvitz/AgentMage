@@ -1,5 +1,7 @@
 //! Canonical schema-bound records for the complete Engineering Runtime.
 
+use crate::{RuntimeArtifactCleanupState, RuntimeArtifactKind, RuntimeArtifactLifecycleState};
+
 /// One inclusive-exclusive byte range in an authoritative artifact.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -876,6 +878,255 @@ pub enum CanonicalTerminalOutcome {
     Uncertain,
 }
 
+/// Current closed schema version of the source-artifact ownership record.
+pub const SOURCE_ARTIFACT_SCHEMA_VERSION: u16 = 2;
+
+/// Sole physical payload store admitted for retained source bytes.
+///
+/// Source retention reuses the existing encrypted content-addressed runtime
+/// payload backend. No second physical store exists for source artifacts.
+pub const SOURCE_PAYLOAD_STORE_ID: &str = "agentmage-runtime-payload-store-v1";
+
+/// Sole existing [`RuntimeArtifactKind`] admitted for a retained source payload.
+///
+/// Source retention never widens the closed runtime artifact family.
+pub const SOURCE_PAYLOAD_ARTIFACT_KIND: RuntimeArtifactKind = RuntimeArtifactKind::GeneratedFile;
+
+/// Logical owner scope of one source artifact.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceOwnerScope {
+    /// The owning local session releases the source.
+    Session,
+    /// The owning task releases the source.
+    Task,
+    /// The originating request releases the source.
+    Request,
+}
+
+/// Closed retention class of one source artifact.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceRetentionClass {
+    /// Retained only in process memory for the current run.
+    Ephemeral,
+    /// Retained under the owning session lifecycle.
+    Session,
+    /// Retained until an exact policy-selected expiration.
+    UntilExpiration,
+    /// Retained until an explicit user release decision.
+    UserHold,
+}
+
+/// Whether source bytes reach the existing runtime payload backend.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourcePayloadBinding {
+    /// No durable payload exists; only metadata and provenance persist.
+    MemoryOnly,
+    /// Bytes persist in the existing encrypted content-addressed payload store.
+    RuntimePayloadStore,
+}
+
+/// Logical ownership and retention of one source artifact.
+///
+/// The record carries logical identity only. It grants no path authority, names
+/// no native location, and creates no store beyond
+/// [`SOURCE_PAYLOAD_STORE_ID`].
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalSourceRetention {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Owned source artifact identity.
+    pub source_artifact_id: String,
+    /// Owning local session; this identity is not read authority.
+    pub session_id: String,
+    /// Owning task.
+    pub task_id: String,
+    /// Logical owner scope.
+    pub owner_scope: CanonicalSourceOwnerScope,
+    /// Closed retention class.
+    pub retention_class: CanonicalSourceRetentionClass,
+    /// Trusted RFC 3339 expiration for `UntilExpiration`; absent otherwise.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub expires_at: Option<String>,
+    /// Whether durable bytes exist in the existing payload backend.
+    pub payload_binding: CanonicalSourcePayloadBinding,
+    /// Exact physical store identity when bytes are retained.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub payload_store_id: Option<String>,
+    /// Existing runtime artifact identity when bytes are retained.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub runtime_artifact_id: Option<String>,
+    /// Existing runtime artifact kind when bytes are retained.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub runtime_artifact_kind: Option<RuntimeArtifactKind>,
+    /// Content-free reason required for memory-only ownership and user holds.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub retention_reason_code: Option<String>,
+    /// Current metadata lifecycle state owned by the operational store.
+    pub lifecycle_state: RuntimeArtifactLifecycleState,
+    /// Content-free cleanup disposition derived from lifecycle and references.
+    pub cleanup_state: RuntimeArtifactCleanupState,
+    /// Monotonic one-based lifecycle revision.
+    pub lifecycle_revision: u64,
+    /// Current checkpoints that root this source as a retention root.
+    pub checkpoint_reference_count: u32,
+    /// Active logical references to this source.
+    pub active_reference_count: u32,
+}
+
+/// Deterministic reason one ownership and retention record is refused.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CanonicalSourceRetentionRejection {
+    /// The record declares an unsupported contract version.
+    UnsupportedSchemaVersion,
+    /// A durable binding named a store other than the single payload backend.
+    ForeignPayloadStore,
+    /// A durable binding named an artifact kind outside the admitted kind.
+    ForeignArtifactKind,
+    /// A durable binding omitted its exact runtime artifact identity.
+    MissingPayloadBinding,
+    /// Memory-only ownership carried durable payload identity.
+    UnexpectedPayloadBinding,
+    /// Memory-only ownership claimed a payload-integrity lifecycle state.
+    UnexpectedPayloadLifecycle,
+    /// Ephemeral retention claimed durable bytes or a checkpoint root.
+    EphemeralRetentionIsNotDurable,
+    /// An expiring class carried no expiration, or another class carried one.
+    ExpirationMismatch,
+    /// A required content-free retention reason code was absent or unexpected.
+    RetentionReasonMismatch,
+    /// The lifecycle revision is not one-based and monotonic.
+    InvalidLifecycleRevision,
+    /// An active lifecycle carried no active logical reference.
+    MissingActiveReference,
+    /// A deleted lifecycle still carried a live logical reference.
+    LiveReferenceAfterDeletion,
+    /// The declared cleanup state contradicts the deterministic projection.
+    CleanupProjectionMismatch,
+}
+
+impl CanonicalSourceRetentionRejection {
+    /// Stable content-free reason code for diagnostics and events.
+    pub fn reason_code(self) -> &'static str {
+        match self {
+            Self::UnsupportedSchemaVersion => "source-retention-unsupported-version",
+            Self::ForeignPayloadStore => "source-retention-foreign-store",
+            Self::ForeignArtifactKind => "source-retention-foreign-artifact-kind",
+            Self::MissingPayloadBinding => "source-retention-missing-payload-binding",
+            Self::UnexpectedPayloadBinding => "source-retention-unexpected-payload-binding",
+            Self::UnexpectedPayloadLifecycle => "source-retention-unexpected-payload-lifecycle",
+            Self::EphemeralRetentionIsNotDurable => "source-retention-ephemeral-not-durable",
+            Self::ExpirationMismatch => "source-retention-expiration-mismatch",
+            Self::RetentionReasonMismatch => "source-retention-reason-mismatch",
+            Self::InvalidLifecycleRevision => "source-retention-invalid-revision",
+            Self::MissingActiveReference => "source-retention-missing-active-reference",
+            Self::LiveReferenceAfterDeletion => "source-retention-live-reference-after-deletion",
+            Self::CleanupProjectionMismatch => "source-retention-cleanup-mismatch",
+        }
+    }
+}
+
+/// Deterministic cleanup projection for one owned source artifact.
+///
+/// A current checkpoint or any remaining active logical reference keeps a
+/// released source retained; integrity loss blocks collection.
+pub fn canonical_source_cleanup_state(
+    lifecycle_state: RuntimeArtifactLifecycleState,
+    checkpoint_reference_count: u32,
+    active_reference_count: u32,
+) -> RuntimeArtifactCleanupState {
+    match lifecycle_state {
+        RuntimeArtifactLifecycleState::Active => RuntimeArtifactCleanupState::Retained,
+        RuntimeArtifactLifecycleState::Quarantined => RuntimeArtifactCleanupState::Blocked,
+        RuntimeArtifactLifecycleState::Deleted => RuntimeArtifactCleanupState::Completed,
+        RuntimeArtifactLifecycleState::Released => {
+            if checkpoint_reference_count == 0 && active_reference_count == 0 {
+                RuntimeArtifactCleanupState::Eligible
+            } else {
+                RuntimeArtifactCleanupState::Retained
+            }
+        }
+    }
+}
+
+/// Admit one closed ownership and retention record or refuse it deterministically.
+pub fn admit_canonical_source_retention(
+    record: &CanonicalSourceRetention,
+) -> Result<(), CanonicalSourceRetentionRejection> {
+    use CanonicalSourceRetentionRejection as Rejection;
+
+    if record.schema_version != SOURCE_ARTIFACT_SCHEMA_VERSION {
+        return Err(Rejection::UnsupportedSchemaVersion);
+    }
+    if record.lifecycle_revision == 0 {
+        return Err(Rejection::InvalidLifecycleRevision);
+    }
+
+    let durable = record.payload_binding == CanonicalSourcePayloadBinding::RuntimePayloadStore;
+    if durable {
+        if record.payload_store_id.as_deref() != Some(SOURCE_PAYLOAD_STORE_ID) {
+            return Err(Rejection::ForeignPayloadStore);
+        }
+        if record.runtime_artifact_id.is_none() {
+            return Err(Rejection::MissingPayloadBinding);
+        }
+        if record.runtime_artifact_kind != Some(SOURCE_PAYLOAD_ARTIFACT_KIND) {
+            return Err(Rejection::ForeignArtifactKind);
+        }
+    } else {
+        if record.payload_store_id.is_some()
+            || record.runtime_artifact_id.is_some()
+            || record.runtime_artifact_kind.is_some()
+        {
+            return Err(Rejection::UnexpectedPayloadBinding);
+        }
+        if record.lifecycle_state == RuntimeArtifactLifecycleState::Quarantined {
+            return Err(Rejection::UnexpectedPayloadLifecycle);
+        }
+    }
+
+    if record.retention_class == CanonicalSourceRetentionClass::Ephemeral
+        && (durable || record.checkpoint_reference_count > 0)
+    {
+        return Err(Rejection::EphemeralRetentionIsNotDurable);
+    }
+
+    let expiring = record.retention_class == CanonicalSourceRetentionClass::UntilExpiration;
+    if expiring != record.expires_at.is_some() {
+        return Err(Rejection::ExpirationMismatch);
+    }
+
+    let reason_required =
+        !durable || record.retention_class == CanonicalSourceRetentionClass::UserHold;
+    if reason_required != record.retention_reason_code.is_some() {
+        return Err(Rejection::RetentionReasonMismatch);
+    }
+
+    if record.lifecycle_state == RuntimeArtifactLifecycleState::Active
+        && record.active_reference_count == 0
+    {
+        return Err(Rejection::MissingActiveReference);
+    }
+    if record.lifecycle_state == RuntimeArtifactLifecycleState::Deleted
+        && (record.active_reference_count > 0 || record.checkpoint_reference_count > 0)
+    {
+        return Err(Rejection::LiveReferenceAfterDeletion);
+    }
+
+    let projected = canonical_source_cleanup_state(
+        record.lifecycle_state,
+        record.checkpoint_reference_count,
+        record.active_reference_count,
+    );
+    if record.cleanup_state != projected {
+        return Err(Rejection::CleanupProjectionMismatch);
+    }
+    Ok(())
+}
+
 /// Final runtime-verifier result for one workflow.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -900,4 +1151,210 @@ pub struct CanonicalTerminalResult {
     pub established_by: String,
     /// Digest of this result with this field zeroed.
     pub result_sha256: String,
+}
+
+#[cfg(test)]
+mod source_retention_tests {
+    use super::{
+        CanonicalSourceOwnerScope, CanonicalSourcePayloadBinding, CanonicalSourceRetention,
+        CanonicalSourceRetentionClass, CanonicalSourceRetentionRejection,
+        RuntimeArtifactCleanupState, RuntimeArtifactKind, RuntimeArtifactLifecycleState,
+        SOURCE_ARTIFACT_SCHEMA_VERSION, SOURCE_PAYLOAD_ARTIFACT_KIND, SOURCE_PAYLOAD_STORE_ID,
+        admit_canonical_source_retention, canonical_source_cleanup_state,
+    };
+
+    type Rejection = CanonicalSourceRetentionRejection;
+    type Cleanup = RuntimeArtifactCleanupState;
+    type Lifecycle = RuntimeArtifactLifecycleState;
+    type Class = CanonicalSourceRetentionClass;
+
+    fn rejection(record: &CanonicalSourceRetention) -> Option<Rejection> {
+        admit_canonical_source_retention(record).err()
+    }
+
+    fn retained() -> CanonicalSourceRetention {
+        CanonicalSourceRetention {
+            schema_version: SOURCE_ARTIFACT_SCHEMA_VERSION,
+            source_artifact_id: "source-1".to_owned(),
+            session_id: "session-1".to_owned(),
+            task_id: "task-1".to_owned(),
+            owner_scope: CanonicalSourceOwnerScope::Session,
+            retention_class: Class::Session,
+            expires_at: None,
+            payload_binding: CanonicalSourcePayloadBinding::RuntimePayloadStore,
+            payload_store_id: Some(SOURCE_PAYLOAD_STORE_ID.to_owned()),
+            runtime_artifact_id: Some("artifact-1".to_owned()),
+            runtime_artifact_kind: Some(SOURCE_PAYLOAD_ARTIFACT_KIND),
+            retention_reason_code: None,
+            lifecycle_state: Lifecycle::Active,
+            cleanup_state: Cleanup::Retained,
+            lifecycle_revision: 1,
+            checkpoint_reference_count: 0,
+            active_reference_count: 1,
+        }
+    }
+
+    fn memory_only() -> CanonicalSourceRetention {
+        CanonicalSourceRetention {
+            payload_binding: CanonicalSourcePayloadBinding::MemoryOnly,
+            payload_store_id: None,
+            runtime_artifact_id: None,
+            runtime_artifact_kind: None,
+            retention_reason_code: Some("retention-memory-only".to_owned()),
+            ..retained()
+        }
+    }
+
+    #[test]
+    fn retained_and_memory_only_ownership_is_admitted() {
+        assert_eq!(rejection(&retained()), None);
+        assert_eq!(rejection(&memory_only()), None);
+    }
+
+    #[test]
+    fn durable_binding_admits_one_store_and_one_existing_artifact_kind() {
+        assert_eq!(SOURCE_PAYLOAD_ARTIFACT_KIND, RuntimeArtifactKind::GeneratedFile);
+
+        let mut foreign_store = retained();
+        foreign_store.payload_store_id = Some("agentmage-source-payload-store-v1".to_owned());
+        assert_eq!(rejection(&foreign_store), Some(Rejection::ForeignPayloadStore));
+
+        let mut absent_store = retained();
+        absent_store.payload_store_id = None;
+        assert_eq!(rejection(&absent_store), Some(Rejection::ForeignPayloadStore));
+
+        let mut absent_identity = retained();
+        absent_identity.runtime_artifact_id = None;
+        assert_eq!(rejection(&absent_identity), Some(Rejection::MissingPayloadBinding));
+
+        for kind in [
+            RuntimeArtifactKind::Patch,
+            RuntimeArtifactKind::StandardOutput,
+            RuntimeArtifactKind::StandardError,
+            RuntimeArtifactKind::TestLog,
+            RuntimeArtifactKind::Report,
+            RuntimeArtifactKind::ModelOutput,
+        ] {
+            let mut record = retained();
+            record.runtime_artifact_kind = Some(kind);
+            assert_eq!(rejection(&record), Some(Rejection::ForeignArtifactKind), "{kind:?}");
+        }
+    }
+
+    #[test]
+    fn memory_only_ownership_carries_no_payload_identity_or_quarantine() {
+        let mut bound = memory_only();
+        bound.runtime_artifact_id = Some("artifact-1".to_owned());
+        assert_eq!(rejection(&bound), Some(Rejection::UnexpectedPayloadBinding));
+
+        let mut quarantined = memory_only();
+        quarantined.lifecycle_state = Lifecycle::Quarantined;
+        quarantined.cleanup_state = Cleanup::Blocked;
+        assert_eq!(rejection(&quarantined), Some(Rejection::UnexpectedPayloadLifecycle));
+
+        let mut without_reason = memory_only();
+        without_reason.retention_reason_code = None;
+        assert_eq!(rejection(&without_reason), Some(Rejection::RetentionReasonMismatch));
+    }
+
+    #[test]
+    fn retention_classes_bind_expiration_holds_and_ephemeral_limits() {
+        let mut expiring = retained();
+        expiring.retention_class = Class::UntilExpiration;
+        assert_eq!(rejection(&expiring), Some(Rejection::ExpirationMismatch));
+        expiring.expires_at = Some("2026-09-25T12:00:00Z".to_owned());
+        assert_eq!(rejection(&expiring), None);
+
+        let mut unexpected_expiration = retained();
+        unexpected_expiration.expires_at = Some("2026-09-25T12:00:00Z".to_owned());
+        assert_eq!(rejection(&unexpected_expiration), Some(Rejection::ExpirationMismatch));
+
+        let mut hold = retained();
+        hold.retention_class = Class::UserHold;
+        assert_eq!(rejection(&hold), Some(Rejection::RetentionReasonMismatch));
+        hold.retention_reason_code = Some("user-hold".to_owned());
+        assert_eq!(rejection(&hold), None);
+
+        let mut durable_ephemeral = retained();
+        durable_ephemeral.retention_class = Class::Ephemeral;
+        let durable_reason = Some(Rejection::EphemeralRetentionIsNotDurable);
+        assert_eq!(rejection(&durable_ephemeral), durable_reason);
+
+        let mut rooted_ephemeral = memory_only();
+        rooted_ephemeral.retention_class = Class::Ephemeral;
+        rooted_ephemeral.checkpoint_reference_count = 1;
+        assert_eq!(rejection(&rooted_ephemeral), durable_reason);
+        rooted_ephemeral.checkpoint_reference_count = 0;
+        assert_eq!(rejection(&rooted_ephemeral), None);
+    }
+
+    #[test]
+    fn checkpoint_and_reference_roots_drive_the_cleanup_projection() {
+        assert_eq!(canonical_source_cleanup_state(Lifecycle::Released, 0, 0), Cleanup::Eligible);
+        assert_eq!(canonical_source_cleanup_state(Lifecycle::Released, 1, 0), Cleanup::Retained);
+        assert_eq!(canonical_source_cleanup_state(Lifecycle::Released, 0, 2), Cleanup::Retained);
+        assert_eq!(canonical_source_cleanup_state(Lifecycle::Quarantined, 0, 0), Cleanup::Blocked);
+        assert_eq!(canonical_source_cleanup_state(Lifecycle::Deleted, 0, 0), Cleanup::Completed);
+        assert_eq!(canonical_source_cleanup_state(Lifecycle::Active, 0, 1), Cleanup::Retained);
+
+        let mut released = retained();
+        released.lifecycle_state = Lifecycle::Released;
+        released.cleanup_state = Cleanup::Eligible;
+        released.active_reference_count = 0;
+        assert_eq!(rejection(&released), None);
+
+        let mut rooted = released.clone();
+        rooted.checkpoint_reference_count = 1;
+        assert_eq!(rejection(&rooted), Some(Rejection::CleanupProjectionMismatch));
+        rooted.cleanup_state = Cleanup::Retained;
+        assert_eq!(rejection(&rooted), None);
+
+        let mut inactive = retained();
+        inactive.active_reference_count = 0;
+        assert_eq!(rejection(&inactive), Some(Rejection::MissingActiveReference));
+
+        let mut deleted = retained();
+        deleted.lifecycle_state = Lifecycle::Deleted;
+        deleted.cleanup_state = Cleanup::Completed;
+        assert_eq!(rejection(&deleted), Some(Rejection::LiveReferenceAfterDeletion));
+        deleted.active_reference_count = 0;
+        assert_eq!(rejection(&deleted), None);
+    }
+
+    #[test]
+    fn unsupported_versions_revisions_and_reason_codes_fail_closed() {
+        for version in [0, 1, SOURCE_ARTIFACT_SCHEMA_VERSION + 1] {
+            let mut record = retained();
+            record.schema_version = version;
+            assert_eq!(rejection(&record), Some(Rejection::UnsupportedSchemaVersion));
+        }
+
+        let mut zero_revision = retained();
+        zero_revision.lifecycle_revision = 0;
+        assert_eq!(rejection(&zero_revision), Some(Rejection::InvalidLifecycleRevision));
+
+        let mut unexpected_reason = retained();
+        unexpected_reason.retention_reason_code = Some("unexpected".to_owned());
+        assert_eq!(rejection(&unexpected_reason), Some(Rejection::RetentionReasonMismatch));
+
+        let code = Rejection::ForeignArtifactKind.reason_code();
+        assert_eq!(code, "source-retention-foreign-artifact-kind");
+    }
+
+    #[test]
+    fn ownership_serialization_is_closed_and_path_free() {
+        let encoded = serde_json::to_string(&retained()).expect("serialize");
+        assert!(encoded.contains("\"payload_store_id\":\"agentmage-runtime-payload-store-v1\""));
+        assert!(encoded.contains("\"runtime_artifact_kind\":\"generated_file\""));
+        assert!(!encoded.contains('/'));
+
+        let decoded: CanonicalSourceRetention = serde_json::from_str(&encoded).expect("decode");
+        assert_eq!(decoded, retained());
+
+        let unknown = encoded.replace("{\"schema_version\"", "{\"path\":\"x\",\"schema_version\"");
+        assert!(serde_json::from_str::<CanonicalSourceRetention>(&unknown).is_err());
+
+        let absent = encoded.replace(",\"expires_at\":null", "");
+        assert!(serde_json::from_str::<CanonicalSourceRetention>(&absent).is_err());
+    }
 }

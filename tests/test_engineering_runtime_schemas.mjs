@@ -6,6 +6,12 @@ import addFormats from "ajv-formats";
 
 import {
   CONTEXT_MANIFEST_SCHEMA_VERSION,
+  SOURCE_ARTIFACT_SCHEMA_VERSION,
+  SOURCE_FAMILY_SCHEMA_VERSION,
+  SOURCE_PAYLOAD_ARTIFACT_KIND,
+  SOURCE_PAYLOAD_STORE_ID,
+  SOURCE_RETENTION_CLASSES,
+  RUNTIME_ARTIFACT_KINDS,
   ENGINEERING_RUNTIME_SCHEMAS,
   ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS,
   ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS,
@@ -42,7 +48,7 @@ test("generated Engineering Runtime schemas are current, closed, and compile", (
 test("source-artifact family schemas reject missing, extra, malformed, stale, oversized, and unsupported-version envelopes", () => {
   const timestamp = "2026-08-25T12:00:00Z";
   const captured = {
-    schema_version: 1,
+    schema_version: SOURCE_ARTIFACT_SCHEMA_VERSION,
     source_artifact_id: "source-1",
     request_id: "request-1",
     authority_id: "authority-1",
@@ -55,6 +61,21 @@ test("source-artifact family schemas reject missing, extra, malformed, stale, ov
     capture_state: "captured",
     byte_length: 3,
     sha256: SHA,
+    session_id: "session-1",
+    task_id: "task-1",
+    owner_scope: "session",
+    retention_class: "session",
+    expires_at: null,
+    payload_binding: "runtime_payload_store",
+    payload_store_id: SOURCE_PAYLOAD_STORE_ID,
+    runtime_artifact_id: "artifact-1",
+    runtime_artifact_kind: SOURCE_PAYLOAD_ARTIFACT_KIND,
+    retention_reason_code: null,
+    lifecycle_state: "active",
+    cleanup_state: "retained",
+    lifecycle_revision: 1,
+    checkpoint_reference_count: 0,
+    active_reference_count: 1,
     collected_at: timestamp,
     source_artifact_sha256: SHA,
   };
@@ -66,8 +87,24 @@ test("source-artifact family schemas reject missing, extra, malformed, stale, ov
   assert.equal(validateArtifact({ ...captured, sha256: "not-a-digest" }), false);
   assert.equal(validateArtifact({ ...captured, freshness_state: "stale" }), false);
   assert.equal(validateArtifact({ ...captured, byte_length: 200 * 1024 * 1024 }), false);
-  assert.equal(validateArtifact({ ...captured, schema_version: 2 }), false);
-  const unavailable = { ...captured, capture_state: "unavailable", byte_length: null, sha256: null };
+  for (const rejected of [0, SOURCE_FAMILY_SCHEMA_VERSION, SOURCE_ARTIFACT_SCHEMA_VERSION + 1]) {
+    assert.equal(
+      validateArtifact({ ...captured, schema_version: rejected }),
+      false,
+      `source-artifact schema_version ${rejected} must fail`,
+    );
+  }
+  const unavailable = {
+    ...captured,
+    capture_state: "unavailable",
+    byte_length: null,
+    sha256: null,
+    payload_binding: "memory_only",
+    payload_store_id: null,
+    runtime_artifact_id: null,
+    runtime_artifact_kind: null,
+    retention_reason_code: "source-unavailable",
+  };
   assert.equal(validateArtifact(unavailable), true, JSON.stringify(validateArtifact.errors));
   assert.equal(validateArtifact({ ...unavailable, byte_length: 3 }), false);
 
@@ -894,6 +931,251 @@ test("context-disposition terminal states forbid ranges and tokens outside admit
       `${state} must not claim admitted tokens`,
     );
   }
+});
+
+const OWNED_SOURCE_ARTIFACT = Object.freeze({
+  schema_version: SOURCE_ARTIFACT_SCHEMA_VERSION,
+  source_artifact_id: "source-1",
+  request_id: "request-1",
+  authority_id: "authority-1",
+  reference_id: "reference-1",
+  origin_id: "origin-1",
+  provenance_sha256: SHA,
+  declared_media_type: "text/plain",
+  classification: "internal",
+  freshness_state: "fresh",
+  capture_state: "captured",
+  byte_length: 3,
+  sha256: SHA,
+  session_id: "session-1",
+  task_id: "task-1",
+  owner_scope: "session",
+  retention_class: "session",
+  expires_at: null,
+  payload_binding: "runtime_payload_store",
+  payload_store_id: SOURCE_PAYLOAD_STORE_ID,
+  runtime_artifact_id: "artifact-1",
+  runtime_artifact_kind: SOURCE_PAYLOAD_ARTIFACT_KIND,
+  retention_reason_code: null,
+  lifecycle_state: "active",
+  cleanup_state: "retained",
+  lifecycle_revision: 1,
+  checkpoint_reference_count: 0,
+  active_reference_count: 1,
+  collected_at: "2026-08-25T12:00:00Z",
+  source_artifact_sha256: SHA,
+});
+
+const MEMORY_ONLY_SOURCE_ARTIFACT = Object.freeze({
+  ...OWNED_SOURCE_ARTIFACT,
+  payload_binding: "memory_only",
+  payload_store_id: null,
+  runtime_artifact_id: null,
+  runtime_artifact_kind: null,
+  retention_reason_code: "retention-memory-only",
+});
+
+test("source-artifact payload binding admits exactly one physical store and one existing artifact kind", () => {
+  const validateArtifact = validator("source-artifact");
+  assert.equal(validateArtifact(OWNED_SOURCE_ARTIFACT), true, JSON.stringify(validateArtifact.errors));
+  assert.equal(RUNTIME_ARTIFACT_KINDS.includes(SOURCE_PAYLOAD_ARTIFACT_KIND), true);
+  assert.equal(RUNTIME_ARTIFACT_KINDS.length, 7, "RuntimeArtifactKind must not be widened");
+  for (const kind of RUNTIME_ARTIFACT_KINDS) {
+    assert.equal(
+      validateArtifact({ ...OWNED_SOURCE_ARTIFACT, runtime_artifact_kind: kind }),
+      kind === SOURCE_PAYLOAD_ARTIFACT_KIND,
+      `retained source payload must bind only ${SOURCE_PAYLOAD_ARTIFACT_KIND}, not ${kind}`,
+    );
+  }
+  assert.equal(
+    validateArtifact({ ...OWNED_SOURCE_ARTIFACT, runtime_artifact_kind: "source_bytes" }),
+    false,
+    "a widened artifact kind must fail",
+  );
+  assert.equal(
+    validateArtifact({ ...OWNED_SOURCE_ARTIFACT, payload_store_id: "agentmage-source-payload-store-v1" }),
+    false,
+    "a second physical store identity must fail",
+  );
+  assert.equal(
+    validateArtifact({ ...OWNED_SOURCE_ARTIFACT, payload_store_id: null }),
+    false,
+    "a bound payload must name the single physical store",
+  );
+  assert.equal(
+    validateArtifact({ ...OWNED_SOURCE_ARTIFACT, capture_state: "denied", byte_length: null, sha256: null }),
+    false,
+    "an uncaptured source cannot claim a retained payload",
+  );
+
+  assert.equal(validateArtifact(MEMORY_ONLY_SOURCE_ARTIFACT), true, JSON.stringify(validateArtifact.errors));
+  const boundFields = {
+    payload_store_id: SOURCE_PAYLOAD_STORE_ID,
+    runtime_artifact_id: "artifact-1",
+    runtime_artifact_kind: SOURCE_PAYLOAD_ARTIFACT_KIND,
+  };
+  for (const [field, value] of Object.entries(boundFields)) {
+    assert.equal(
+      validateArtifact({ ...MEMORY_ONLY_SOURCE_ARTIFACT, [field]: value }),
+      false,
+      `memory_only ownership must not carry ${field}`,
+    );
+  }
+  assert.equal(
+    validateArtifact({ ...MEMORY_ONLY_SOURCE_ARTIFACT, retention_reason_code: null }),
+    false,
+    "memory_only ownership must publish a deterministic reason code",
+  );
+  assert.equal(
+    validateArtifact({ ...MEMORY_ONLY_SOURCE_ARTIFACT, lifecycle_state: "quarantined", cleanup_state: "blocked" }),
+    false,
+    "memory_only ownership has no payload to quarantine",
+  );
+});
+
+test("source-artifact retention classes bind expiration, holds, and owner scope", () => {
+  const validateArtifact = validator("source-artifact");
+  assert.deepEqual([...SOURCE_RETENTION_CLASSES], ["ephemeral", "session", "until_expiration", "user_hold"]);
+  const expiring = {
+    ...OWNED_SOURCE_ARTIFACT,
+    retention_class: "until_expiration",
+    expires_at: "2026-09-25T12:00:00Z",
+  };
+  assert.equal(validateArtifact(expiring), true, JSON.stringify(validateArtifact.errors));
+  assert.equal(
+    validateArtifact({ ...expiring, expires_at: null }),
+    false,
+    "until_expiration must carry an exact expiration",
+  );
+  assert.equal(
+    validateArtifact({ ...expiring, expires_at: "not-a-timestamp" }),
+    false,
+    "expiration must be a trusted timestamp",
+  );
+  for (const retention_class of ["ephemeral", "session", "user_hold"]) {
+    assert.equal(
+      validateArtifact({ ...MEMORY_ONLY_SOURCE_ARTIFACT, retention_class, expires_at: "2026-09-25T12:00:00Z" }),
+      false,
+      `${retention_class} must not carry an expiration`,
+    );
+  }
+  assert.equal(
+    validateArtifact({ ...OWNED_SOURCE_ARTIFACT, retention_class: "ephemeral" }),
+    false,
+    "ephemeral retention cannot retain a durable payload",
+  );
+  assert.equal(
+    validateArtifact({ ...MEMORY_ONLY_SOURCE_ARTIFACT, retention_class: "ephemeral" }),
+    true,
+    "ephemeral retention remains memory-only",
+  );
+  assert.equal(
+    validateArtifact({ ...OWNED_SOURCE_ARTIFACT, retention_class: "user_hold" }),
+    false,
+    "a user hold must publish its deterministic reason code",
+  );
+  assert.equal(
+    validateArtifact({ ...OWNED_SOURCE_ARTIFACT, retention_class: "user_hold", retention_reason_code: "user-hold" }),
+    true,
+    "a user hold with a reason code is admitted",
+  );
+  for (const owner_scope of ["session", "task", "request"]) {
+    assert.equal(validateArtifact({ ...OWNED_SOURCE_ARTIFACT, owner_scope }), true, `${owner_scope} owner scope`);
+  }
+  assert.equal(
+    validateArtifact({ ...OWNED_SOURCE_ARTIFACT, owner_scope: "workspace" }),
+    false,
+    "ambient owner scope must fail",
+  );
+  assert.equal(
+    validateArtifact({ ...OWNED_SOURCE_ARTIFACT, lifecycle_revision: 0 }),
+    false,
+    "lifecycle revisions are one-based and monotonic",
+  );
+});
+
+test("source-artifact lifecycle, cleanup, and checkpoint roots stay deterministic", () => {
+  const validateArtifact = combinedValidator("source-artifact");
+  const cases = [
+    ["active", "retained", true],
+    ["active", "eligible", false],
+    ["quarantined", "blocked", true],
+    ["quarantined", "retained", false],
+    ["released", "retained", true],
+    ["released", "completed", false],
+    ["deleted", "completed", true],
+    ["deleted", "eligible", false],
+  ];
+  for (const [lifecycle_state, cleanup_state, expected] of cases) {
+    const record = {
+      ...OWNED_SOURCE_ARTIFACT,
+      lifecycle_state,
+      cleanup_state,
+      active_reference_count: lifecycle_state === "active" ? 1 : 0,
+    };
+    assert.equal(validateArtifact(record), expected, `${lifecycle_state}/${cleanup_state}`);
+  }
+  assert.equal(
+    validateArtifact({ ...OWNED_SOURCE_ARTIFACT, active_reference_count: 0 }),
+    false,
+    "an active reference must be counted",
+  );
+  const released = {
+    ...OWNED_SOURCE_ARTIFACT,
+    lifecycle_state: "released",
+    cleanup_state: "eligible",
+    active_reference_count: 0,
+  };
+  assert.equal(validateArtifact(released), true, "an unreferenced released payload is collectable");
+  assert.equal(
+    validateArtifact({ ...released, active_reference_count: 1 }),
+    false,
+    "a still-referenced payload is never collectable",
+  );
+  assert.equal(
+    validateArtifact({ ...released, checkpoint_reference_count: 1 }),
+    false,
+    "a current checkpoint reference is a retention root",
+  );
+  assert.equal(
+    validateArtifact({ ...released, cleanup_state: "retained", checkpoint_reference_count: 2 }),
+    true,
+    "a checkpoint-rooted release stays retained",
+  );
+  assert.equal(
+    validateArtifact({
+      ...OWNED_SOURCE_ARTIFACT,
+      lifecycle_state: "deleted",
+      cleanup_state: "completed",
+      active_reference_count: 1,
+    }),
+    false,
+    "deletion cannot leave a live logical reference",
+  );
+  assert.equal(
+    validateArtifact({
+      ...MEMORY_ONLY_SOURCE_ARTIFACT,
+      retention_class: "ephemeral",
+      checkpoint_reference_count: 1,
+    }),
+    false,
+    "an ephemeral source cannot root a durable checkpoint",
+  );
+  assert.equal(
+    validateArtifact({
+      ...OWNED_SOURCE_ARTIFACT,
+      capture_state: "unavailable",
+      byte_length: null,
+      sha256: null,
+      payload_binding: "memory_only",
+      payload_store_id: null,
+      runtime_artifact_id: null,
+      runtime_artifact_kind: null,
+      retention_reason_code: "content-unavailable-upstream",
+    }),
+    true,
+    "a manifest without retained bytes remains valid",
+  );
 });
 
 test("context-disposition and context-manifest impose matching reason_code rules for each disposition", () => {
