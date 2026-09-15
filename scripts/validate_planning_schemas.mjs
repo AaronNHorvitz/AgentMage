@@ -58,6 +58,7 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "runtime-artifact-manifest",
   "runtime-artifact-operator-view",
   "runtime-resume-binding",
+  "source-artifact-retention",
   "session-environment-capture",
   "write-aware-checkpoint",
   "command-preview",
@@ -813,6 +814,51 @@ function runtimeSemanticErrors(recordType, data) {
       data.checkpoint_reference_count !== 0
     ) {
       errors.push("a non-active artifact cannot remain in the current checkpoint");
+    }
+  } else if (recordType === "source-artifact-retention") {
+    const expectedCleanup = {
+      active: "retained",
+      quarantined: "blocked",
+      released: "eligible",
+      deleted: "completed",
+    }[data.lifecycle];
+    if (expectedCleanup && data.cleanup !== expectedCleanup) {
+      errors.push("source cleanup state must match logical lifecycle state");
+    }
+    if (data.lifecycle === "active" && data.logical_reference_count < 1) {
+      errors.push(
+        "an active source artifact requires one logical owner reference",
+      );
+    }
+    if (data.lifecycle !== "active" && data.checkpoint_reference_count !== 0) {
+      errors.push(
+        "a non-active source artifact cannot remain in the current checkpoint",
+      );
+    }
+    if (data.checkpoint_reference_count > data.logical_reference_count) {
+      errors.push(
+        "checkpoint references cannot exceed logical owner references",
+      );
+    }
+    if (
+      ["released", "deleted"].includes(data.lifecycle) &&
+      data.logical_reference_count !== 0
+    ) {
+      errors.push(
+        "a released or deleted source artifact retains no logical owner",
+      );
+    }
+    if (data.updated_at_epoch_ms < data.created_at_epoch_ms) {
+      errors.push("source retention update time cannot precede creation");
+    }
+    if (
+      data.retention?.kind === "until_expiration" &&
+      data.retention.expires_at_epoch_ms <= data.created_at_epoch_ms
+    ) {
+      errors.push("source retention expiration must be later than creation");
+    }
+    if (data.retention?.kind === "ephemeral" && data.payload !== null) {
+      errors.push("memory-only source retention cannot bind a durable payload");
     }
   } else if (recordType === "runtime-resume-binding") {
     if (data.event_cursor?.run_id !== data.run_id) {

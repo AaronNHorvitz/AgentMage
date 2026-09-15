@@ -110,6 +110,14 @@ define_identifier!(
     "Stable identity for one content-addressed runtime artifact."
 );
 define_identifier!(
+    SourceArtifactId,
+    "Stable identity for one ingested source artifact."
+);
+define_identifier!(
+    SourceRetentionId,
+    "Stable identity for one source-artifact ownership and retention record."
+);
+define_identifier!(
     WorkPacketId,
     "Stable identity for one revision-controlled work packet."
 );

@@ -361,6 +361,7 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "runtime-artifact-manifest",
     "runtime-artifact-operator-view",
     "runtime-resume-binding",
+    "source-artifact-retention",
     "session-environment-capture",
     "write-aware-checkpoint",
     "command-preview",
@@ -511,6 +512,115 @@ test("runtime artifact schemas reject path authority and lifecycle drift", () =>
       runtimeValidators,
     ).valid,
     false,
+  );
+});
+
+test("source artifact retention keeps one payload store, one kind set, and reconciled ownership", () => {
+  const load = () =>
+    JSON.parse(
+      fs.readFileSync(
+        path.join(
+          ROOT,
+          "schemas/runtime/examples/source-artifact-retention.valid.json",
+        ),
+        "utf8",
+      ),
+    );
+  const invalid = (record) =>
+    assert.equal(
+      validateRuntimeRecord(
+        "source-artifact-retention",
+        record,
+        runtimeValidators,
+      ).valid,
+      false,
+    );
+
+  assert.equal(
+    validateRuntimeRecord("source-artifact-retention", load(), runtimeValidators)
+      .valid,
+    true,
+  );
+
+  const secondStore = load();
+  secondStore.payload_store = "source-artifact-payload-store-v1";
+  invalid(secondStore);
+
+  const widenedKind = load();
+  widenedKind.payload.kind = "source_document";
+  invalid(widenedKind);
+
+  const pathBearingPayload = load();
+  pathBearingPayload.payload.reference.path = "/private/runtime/payload";
+  invalid(pathBearingPayload);
+
+  const oversizedPayload = load();
+  oversizedPayload.payload.reference.byte_size = 67108865;
+  invalid(oversizedPayload);
+
+  const memoryOnlyWithPayload = load();
+  memoryOnlyWithPayload.retention = {
+    kind: "ephemeral",
+    expires_at_epoch_ms: null,
+  };
+  invalid(memoryOnlyWithPayload);
+
+  const expiredOnCreation = load();
+  expiredOnCreation.retention = {
+    kind: "until_expiration",
+    expires_at_epoch_ms: expiredOnCreation.created_at_epoch_ms,
+  };
+  invalid(expiredOnCreation);
+
+  const forgedCleanup = load();
+  forgedCleanup.cleanup = "completed";
+  invalid(forgedCleanup);
+
+  const unownedActive = load();
+  unownedActive.logical_reference_count = 0;
+  invalid(unownedActive);
+
+  const releasedWhileCheckpointed = load();
+  releasedWhileCheckpointed.lifecycle = "released";
+  releasedWhileCheckpointed.cleanup = "eligible";
+  releasedWhileCheckpointed.logical_reference_count = 0;
+  invalid(releasedWhileCheckpointed);
+
+  const excessCheckpointReferences = load();
+  excessCheckpointReferences.checkpoint_reference_count = 2;
+  invalid(excessCheckpointReferences);
+
+  const deletedWithPayload = load();
+  deletedWithPayload.lifecycle = "deleted";
+  deletedWithPayload.cleanup = "completed";
+  deletedWithPayload.logical_reference_count = 0;
+  deletedWithPayload.checkpoint_reference_count = 0;
+  invalid(deletedWithPayload);
+
+  const released = load();
+  released.lifecycle = "released";
+  released.cleanup = "eligible";
+  released.logical_reference_count = 0;
+  released.checkpoint_reference_count = 0;
+  assert.equal(
+    validateRuntimeRecord(
+      "source-artifact-retention",
+      released,
+      runtimeValidators,
+    ).valid,
+    true,
+  );
+
+  const memoryOnly = load();
+  memoryOnly.retention = { kind: "ephemeral", expires_at_epoch_ms: null };
+  memoryOnly.payload = null;
+  assert.equal(
+    validateRuntimeRecord(
+      "source-artifact-retention",
+      memoryOnly,
+      runtimeValidators,
+    ).valid,
+    true,
   );
 });
 

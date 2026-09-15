@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "retention_id": "source-retention-example-1",
+  "source_artifact_id": "source-artifact-example-1",
+  "source_artifact_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "payload_store": "runtime-artifact-payload-store-v1",
+  "session_id": "session-example-1",
+  "task_id": "task-example-1",
+  "owner_run_id": "run-example-1",
+  "policy_id": "policy-example-1",
+  "policy_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "sensitivity": "private",
+  "retention": {
+    "kind": "session",
+    "expires_at_epoch_ms": null
+  },
+  "payload": {
+    "reference": {
+      "schema_version": 2,
+      "artifact_id": "runtime-artifact-example-1",
+      "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "payload_sha256": "84d89877f0d4041efb6bf91a16f0248f2fd573e6af05c19f96bedb9f882f7882",
+      "byte_size": 10,
+      "media_type": "text/plain"
+    },
+    "kind": "generated_file"
+  },
+  "lifecycle": "active",
+  "cleanup": "retained",
+  "logical_reference_count": 1,
+  "checkpoint_reference_count": 1,
+  "reason_code": "source.retention.published",
+  "created_at_epoch_ms": 1000,
+  "updated_at_epoch_ms": 1000,
+  "retention_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+}

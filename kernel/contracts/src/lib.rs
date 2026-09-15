@@ -41,6 +41,7 @@ mod runtime_artifact;
 mod runtime_event;
 mod runtime_run;
 mod serialization;
+mod source_retention;
 mod task;
 mod tool;
 mod transaction;
@@ -158,8 +159,8 @@ pub use ids::{
     OperationAttemptId, PlanId, PlanStepId, PolicyId, PostconditionId, PromptId, ProposalId,
     ReceiptId, RepositorySnapshotId, ReviewId, RouteDecisionId, RuntimeArtifactId, RuntimeEventId,
     RuntimeOperationId, RuntimeRunId, RuntimeTurnId, SchemaId, SessionCheckpointId, SessionId,
-    TaskId, ToolCallId, ToolCatalogId, ToolId, VerifierId, VerifierRecordId, WorkPacketId,
-    WorkspaceAuthorizationId, WorkspaceId,
+    SourceArtifactId, SourceRetentionId, TaskId, ToolCallId, ToolCatalogId, ToolId, VerifierId,
+    VerifierRecordId, WorkPacketId, WorkspaceAuthorizationId, WorkspaceId,
 };
 pub use mcp::{
     McpCancellation, McpConnection, McpDisconnect, McpDiscovery, McpError, McpLimits, McpManifest,
@@ -239,6 +240,9 @@ pub use runtime_run::{
 };
 pub use serialization::{
     ContractResult, MAX_CONTRACT_JSON_BYTES, VersionedContract, from_json, to_canonical_json,
+};
+pub use source_retention::{
+    SOURCE_ARTIFACT_PAYLOAD_STORE, SourceArtifactPayloadBinding, SourceArtifactRetention,
 };
 pub use task::{
     Action, ActionKind, ActionState, BudgetLimit, BudgetResource, CompletionEvidence,

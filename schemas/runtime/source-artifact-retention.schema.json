@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/source-artifact-retention.schema.json",
+  "title": "AgentMage Source Artifact Retention",
+  "description": "Logical ownership, retention, and cleanup state for one ingested source artifact. Retained bytes are named only through an existing runtime artifact reference in the single encrypted content-addressed payload store; this record creates no second physical store and no additional artifact kind.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "retention_id",
+    "source_artifact_id",
+    "source_artifact_sha256",
+    "payload_store",
+    "session_id",
+    "task_id",
+    "owner_run_id",
+    "policy_id",
+    "policy_sha256",
+    "sensitivity",
+    "retention",
+    "payload",
+    "lifecycle",
+    "cleanup",
+    "logical_reference_count",
+    "checkpoint_reference_count",
+    "reason_code",
+    "created_at_epoch_ms",
+    "updated_at_epoch_ms",
+    "retention_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "retention_id": { "$ref": "#/$defs/identifier" },
+    "source_artifact_id": { "$ref": "#/$defs/identifier" },
+    "source_artifact_sha256": { "$ref": "#/$defs/sha256" },
+    "payload_store": { "const": "runtime-artifact-payload-store-v1" },
+    "session_id": { "$ref": "#/$defs/identifier" },
+    "task_id": { "$ref": "#/$defs/identifier" },
+    "owner_run_id": { "$ref": "#/$defs/identifier" },
+    "policy_id": { "$ref": "#/$defs/identifier" },
+    "policy_sha256": { "$ref": "#/$defs/sha256" },
+    "sensitivity": {
+      "enum": ["public", "internal", "private", "restricted"]
+    },
+    "retention": { "$ref": "#/$defs/retention" },
+    "payload": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/payloadBinding" }]
+    },
+    "lifecycle": {
+      "enum": ["active", "quarantined", "released", "deleted"]
+    },
+    "cleanup": {
+      "enum": ["retained", "eligible", "blocked", "completed"]
+    },
+    "logical_reference_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1024
+    },
+    "checkpoint_reference_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1024
+    },
+    "reason_code": { "$ref": "#/$defs/identifier" },
+    "created_at_epoch_ms": { "type": "integer", "minimum": 1 },
+    "updated_at_epoch_ms": { "type": "integer", "minimum": 1 },
+    "retention_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "retention": { "properties": { "kind": { "const": "ephemeral" } }, "required": ["kind"] } },
+        "required": ["retention"]
+      },
+      "then": {
+        "properties": { "payload": { "type": "null" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "lifecycle": { "const": "deleted" } },
+        "required": ["lifecycle"]
+      },
+      "then": {
+        "properties": {
+          "payload": { "type": "null" },
+          "cleanup": { "const": "completed" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "lifecycle": { "const": "quarantined" } },
+        "required": ["lifecycle"]
+      },
+      "then": {
+        "properties": { "cleanup": { "const": "blocked" } }
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "mediaType": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9][a-z0-9.+-]*/[a-z0-9][a-z0-9.+-]*$"
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "expires_at_epoch_ms"],
+      "properties": {
+        "kind": {
+          "enum": ["ephemeral", "session", "until_expiration", "user_hold"]
+        },
+        "expires_at_epoch_ms": {
+          "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 1 }]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "kind": { "const": "until_expiration" } },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": {
+              "expires_at_epoch_ms": { "type": "integer", "minimum": 1 }
+            }
+          },
+          "else": {
+            "properties": { "expires_at_epoch_ms": { "type": "null" } }
+          }
+        }
+      ]
+    },
+    "payloadBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reference", "kind"],
+      "properties": {
+        "reference": { "$ref": "#/$defs/artifactReference" },
+        "kind": {
+          "enum": [
+            "patch",
+            "standard_output",
+            "standard_error",
+            "test_log",
+            "generated_file",
+            "report",
+            "model_output"
+          ]
+        }
+      }
+    },
+    "artifactReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "artifact_id",
+        "manifest_sha256",
+        "payload_sha256",
+        "byte_size",
+        "media_type"
+      ],
+      "properties": {
+        "schema_version": { "const": 2 },
+        "artifact_id": { "$ref": "#/$defs/identifier" },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "payload_sha256": { "$ref": "#/$defs/sha256" },
+        "byte_size": { "type": "integer", "minimum": 1, "maximum": 67108864 },
+        "media_type": { "$ref": "#/$defs/mediaType" }
+      }
+    }
+  }
+}
