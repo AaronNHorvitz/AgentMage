@@ -42,7 +42,11 @@ produces an insufficient-evidence response with no citations.
   networkless namespace. No host network settings were changed.
 - `demo-restarted-browser-acceptance.json`: fresh browser launch/admission and repeated
   successful real inference after complete application/model stop and restart.
-- `demo-restart-acceptance.json`: successful command sequence and final running PID.
+- `demo-restart-acceptance.json`: successful full-smoke command sequence and running
+  PID at that run's completion.
+- `demo-final-handoff-acceptance.json`: an additional complete process restart and
+  fresh real browser answer; old authorization rejected, new authorization accepted,
+  final ready PID, and whole-file bindings to the browser/full-smoke evidence.
 - `demo-resource-observations.json`: actual point observations, not certified peaks.
 - `demo-regression-results.md`: relevant regressions and the five remaining unrelated
   scaffold fixture failures, recorded honestly.
@@ -61,7 +65,7 @@ Observed GPU use was 17,318 MiB including the desktop on the 24 GiB RTX 4090;
 model process RSS was 1,501,760 KiB. Per-interaction timings are retained in the JSON;
 final browser acceptance recorded 15 completed interactions at 4.446–19.650
 seconds, including reasoning. Offline inference took 15.780 seconds; the fresh
-post-restart answer took 15.598 seconds.
+final handoff post-restart answer took 17.051 seconds.
 These are observations on this machine, not a performance guarantee.
 
 ## Limits

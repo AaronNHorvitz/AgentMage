@@ -1,21 +1,21 @@
 {
   "record_type": "agentmage_local_demo_browser_acceptance",
-  "recorded_at": "2026-09-16T01:04:04.637Z",
+  "recorded_at": "2026-09-16T01:13:20.717Z",
   "tests": [
     {
       "name": "browser launch and real model ready",
       "passed": true,
-      "seconds": 15.038
+      "seconds": 15.047
     },
     {
       "name": "multi-document admission and unsupported input reasons",
       "passed": true,
-      "seconds": 0.049
+      "seconds": 0.037
     },
     {
       "name": "real inference through UI with checked source citation",
       "passed": true,
-      "seconds": 15.716
+      "seconds": 17.265
     }
   ],
   "real_model_interactions": [
@@ -35,7 +35,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 15.598,
+      "elapsed_seconds": 17.051,
       "prompt_tokens": 379,
       "output_tokens": 296,
       "omitted_count": 0,

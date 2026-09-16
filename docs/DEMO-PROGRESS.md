@@ -22,10 +22,13 @@ Owner milestone: 2026-09-15. Branch `demo/fedora-local-docs`, based on current `
 
 ## Exact next action
 
-Finish the single consolidated current-evidence renewal, rerun hash-binding checks
-and relevant governance gates, commit/push final deliverables, and leave the verified
-demo running. The final real smoke is being repeated against the once-regenerated
-SBOM; no further runtime source edits are planned.
+Complete three specifically stale current upstream captures (Stories 22.5, 23.7,
+23.8), then the final Story 50.4 core aggregate and active review-gate mutation
+checks. Demo acceptance, final ready instance/credentials, current hashes, G1/G2,
+review pins, contract index, planning corpora, load campaign, Story 50.3 and 50.4
+degradation have passed. Commit/push the remaining evidence and final recovery
+checkpoint, verify clean branch/origin equality, and keep the demo running. Do not
+regenerate the SBOM again; no further runtime source edits are planned.
 
 ## Integration checkpoint
 
@@ -81,3 +84,24 @@ The SBOM was regenerated once after the entire source batch. Full real acceptanc
 is now repeating against those final carrier hashes while current evidence builders
 renew in dependency order. Historical revision-bound artifacts stay immutable.
 The precise results and known limits are in `docs/verification/demo-acceptance.md`.
+
+## Final real-model acceptance retained
+
+Final source-batch provenance and current acceptance are committed/pushed as
+`6105d481`. All 11 browser cases, networkless real application inference and fresh
+post-restart inference passed again after the single SBOM regeneration. The four
+reports and `status_model.py` pass current validation. The documented launcher
+opened the desktop browser successfully; the app/model remain ready at loopback
+port 8765. Final browser generation observations: 15 interactions, 4.446–19.650 s;
+offline 15.780 s; restarted 15.598 s. Focused governance97/97 and context
+registration5/5 pass; task graph check passes. No external blocker remains for the
+demo; current evidence renewal is the remaining internal work.
+
+## Fresh final handoff instance
+
+One additional full stop/start rotated the local application/model credentials.
+The old application token was actually rejected with 403; the new token worked.
+Fresh browser launch/admission/real cited answer all passed (17.051 s). Current
+four-report checks pass, and the fifth `demo-final-handoff-acceptance.json` binds
+that actual new interaction, final ready PID and browser/full-smoke records. A fresh
+authorized desktop tab was opened. No runtime source changes or SBOM regeneration.

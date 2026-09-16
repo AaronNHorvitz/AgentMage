@@ -176,3 +176,35 @@ verified all four current whole-file-bound real demo reports after the SBOM rene
 The temporary raw focused-test log is `/tmp/agentmage-demo-final-governance-tests.log`.
 A separate `python3 -m unittest tests.test_context_safety_registration` run passed
 all **5 tests**, and `npm run task-graph:check` exited **0**.
+
+## Stable documentation validation
+
+Two ad-hoc `npm run docs:validate` attempts encountered `FileNotFoundError` on
+transient Cargo incremental output while other evidence builders were compiling.
+The scanner was left intact. Serialized Story 23.5 evidence capture subsequently
+passed its embedded `python3 scripts/validate_docs.py` against stable build output, along with
+its preceding checks; that actual command output is retained in
+`artifacts/sprints/sprint-23/story-23.5/participant-ingress-results.log`.
+This was an execution race, not a passing result for the interrupted attempts.
+
+## Current load-evidence correction during renewal
+
+The first Story 50.3 renewal rejected an upstream Story 50.2 load record because its
+maximum-output command used the historical `durable_large_` test filter while the
+accepted profile now requires `runtime_loop::tests::durable_`. The actual unchanged
+nine-command load campaign was re-executed from clean commit `df5a3033` in a detached
+worktree. All runtime tests/metrics passed on the first run, but compilation raised
+compile-inclusive RSS to 3.08 GiB/2.55 GiB and the memory-bound gate correctly failed.
+That cold-build failure is retained intact in
+`artifacts/sprints/sprint-50/demo-cold-compilation-load/` and locally at
+`/tmp/agentmage-demo-load-evidence/artifacts/sprints/sprint-50/demo-batch-runtime-load/`.
+The successful unchanged warm run is retained in
+`artifacts/sprints/sprint-50/story-50.2-runtime-load-worker/` and locally at
+`/tmp/agentmage-demo-load-evidence/artifacts/sprints/sprint-50/demo-batch-runtime-load-warm/`.
+
+The same tuple, commands and thresholds passed on a warmed Cargo cache: all nine
+commands succeeded, observed RSS 39–66 MiB (reference 56,128 KiB; client 48,448 KiB).
+The successful source-bound report/logs were copied intact and the actual upstream
+validator passed. These are kernel reference/client workload observations, not Muse
+inference memory, model qualification or certified production performance. No test
+filter, limit, evidence binding, policy or source was weakened to obtain the pass.
