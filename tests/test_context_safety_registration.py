@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import copy
+import shutil
+import tempfile
 import unittest
+from pathlib import Path
+from unittest.mock import patch
 
 from scripts.context_safety_registration import REGISTRATION, ROOT, load, validate
 
@@ -16,9 +20,9 @@ class ContextSafetyRegistrationTests(unittest.TestCase):
     def failures(self, value: dict) -> list[str]:
         return validate(value, self.tasks, self.prd, self.registry)
 
-    def test_current_registration_is_valid_and_truthfully_blocked(self) -> None:
+    def test_current_registration_is_valid_under_owner_delegation(self) -> None:
         self.assertEqual(self.failures(self.value), [])
-        self.assertEqual(self.value["governance"]["status"], "blocked-owner-direction")
+        self.assertEqual(self.value["governance"]["status"], "accepted")
 
     def test_cycle_and_guarded_trial_inversion_fail(self) -> None:
         value = copy.deepcopy(self.value)
@@ -46,14 +50,29 @@ class ContextSafetyRegistrationTests(unittest.TestCase):
         value["contract_migrations"][0]["missing_reason_code"] = "unknown.reason"
         self.assertTrue(any("refusal" in item for item in self.failures(value)))
 
-    def test_governance_collision_cannot_be_silently_resolved(self) -> None:
+    def test_governance_requires_exact_owner_delegation_and_corrected_identity(self) -> None:
         value = copy.deepcopy(self.value)
-        value["governance"]["status"] = "accepted"
-        self.assertTrue(any("owner-direction" in item for item in self.failures(value)))
+        value["governance"]["status"] = "blocked-owner-direction"
+        self.assertTrue(any("owner-delegated" in item for item in self.failures(value)))
 
         value = copy.deepcopy(self.value)
-        value["governance"]["colliding_decision_files"].pop()
+        value["governance"]["resolved_decision_files"].pop()
         self.assertTrue(any("filenames" in item for item in self.failures(value)))
+
+        value = copy.deepcopy(self.value)
+        value["governance"]["decision_source_sha256"] = "0" * 64
+        self.assertTrue(any("source hash" in item for item in self.failures(value)))
+
+    def test_duplicate_decision_identity_and_mismatched_title_are_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            shutil.copytree(ROOT / "docs" / "decisions", root / "docs" / "decisions")
+            duplicate = root / "docs" / "decisions" / "0053-shadow.md"
+            duplicate.write_text("# Decision 0054: Incorrect Identity\n", encoding="utf-8")
+            with patch("scripts.context_safety_registration.ROOT", root):
+                failures = self.failures(self.value)
+            self.assertTrue(any("duplicate accepted decision identity 0053" in item for item in failures))
+            self.assertTrue(any("title/filename identity mismatch" in item for item in failures))
 
 
 if __name__ == "__main__":

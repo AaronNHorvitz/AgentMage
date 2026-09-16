@@ -72,7 +72,7 @@ class RemainingPlanBlockerRegisterTests(unittest.TestCase):
         self.assertEqual(value["next_action_kind"], "assess-unknown")
         self.assertFalse(value["ready_for_unattended_execution"])
 
-    def test_decision_0051_local_work_is_selected_in_critical_order(self) -> None:
+    def test_decision_0052_local_work_is_selected_in_critical_order(self) -> None:
         value = build_from_text(
             """#### [ ] Story 25.3 - Gate
 - [ ] **Task 25.3.1 - Gate**

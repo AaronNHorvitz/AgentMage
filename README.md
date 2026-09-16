@@ -38,7 +38,7 @@ First-release surface: standalone hardened desktop application (Decision 0048).
 
 Repository license: Business Source License 1.1 (Decision 0051); versions published before 2026-09-07 remain under Apache License 2.0.
 
-First-release gate: Story 25.3 under the Decision 0051 restart-readiness correction.
+First-release gate: Story 25.3 under the Decision 0052 restart-readiness correction.
 
 These statements describe the integrated product, not the amount of contract,
 test, planning, or isolated Linux security work in the repository. The
@@ -511,9 +511,10 @@ checked summaries and encrypted storage are foundations, not proof that G1 or G2
 
 The [PRD requirements](./PRD.md#81-served-context-safety-and-trustworthy-continuity) define the
 behavior; the [build sequence](./IMPLEMENTATION-PLAN.md#431-context-safety-and-continuity-build-sequence)
-maps it to unchecked tasks in existing stories. Stable requirement/schema registration and the
-duplicate Decision 0051 governance issue remain explicit follow-up work; this documentation change
-does not renumber decisions, regenerate evidence, enable a model, or promote product status.
+maps it to unchecked tasks in existing stories. Decision 0053 accepts the G1/G2 normative
+registration and resolves the historical identity collision: BSL remains 0051 and restart
+readiness becomes 0052. Runtime/schema implementation and production qualification remain
+separate incomplete work. The owner authorized an independently verified Linux demo milestone.
 
 ## Codex Handoff Boundary
 

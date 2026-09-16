@@ -57,9 +57,9 @@ DECISION_0043_0044_STORIES = (
     "125.3",
     "126.2",
 )
-DECISION_0051_STORIES = ("25.3", "76.2", "76.3", "77.2")
+DECISION_0052_STORIES = ("25.3", "76.2", "76.3", "77.2")
 DECISION_STORIES = (
-    DECISION_0042_STORIES + DECISION_0043_0044_STORIES + DECISION_0051_STORIES
+    DECISION_0042_STORIES + DECISION_0043_0044_STORIES + DECISION_0052_STORIES
 )
 RELEASE_APPLICABILITY_PATH = ROOT / "architecture" / "release-applicability.json"
 CONTEXT_SAFETY_REGISTRATION_PATH = (
@@ -133,8 +133,8 @@ def validate_applicability(value: object, story_set: set[str]) -> list[str]:
     failures: list[str] = []
     if not isinstance(value, dict):
         return ["release applicability must be an object"]
-    if value.get("schema_version") != 1 or value.get("decision_id") != "ADR-0051":
-        failures.append("release applicability must bind schema 1 and ADR-0051")
+    if value.get("schema_version") != 1 or value.get("decision_id") != "ADR-0052":
+        failures.append("release applicability must bind schema 1 and ADR-0052")
 
     milestones = value.get("milestones")
     expected_milestones = {
@@ -160,7 +160,7 @@ def validate_applicability(value: object, story_set: set[str]) -> list[str]:
             failures.append(f"{milestone_id} has an unknown required story")
 
     if value.get("story_applicability") != EXPECTED_STORY_APPLICABILITY:
-        failures.append("Decision 0051 story applicability differs from the accepted matrix")
+        failures.append("Decision 0052 story applicability differs from the accepted matrix")
     if value.get("source_document_write_policy") != "denied":
         failures.append("preview source-document writes must remain denied")
     if value.get("authorized_encrypted_application_state") is not True:
@@ -190,7 +190,7 @@ def validate_text(
     for label, expected_stories in (
         ("Decision 0042", DECISION_0042_STORIES),
         ("Decisions 0043-0045", DECISION_0043_0044_STORIES),
-        ("Decision 0051", DECISION_0051_STORIES),
+        ("Decision 0052", DECISION_0052_STORIES),
     ):
         missing = sorted(set(expected_stories) - story_set)
         if missing:
@@ -287,7 +287,7 @@ def main() -> int:
         "task graph validation passed: "
         f"{len(DECISION_0042_STORIES)} Decision 0042 stories, "
         f"{len(DECISION_0043_0044_STORIES)} Decisions 0043-0045 stories, "
-        f"{len(DECISION_0051_STORIES)} Decision 0051 stories, "
+        f"{len(DECISION_0052_STORIES)} Decision 0052 stories, "
         "3 release applicability classes, 4 foundational runtime epics"
     )
     return 0

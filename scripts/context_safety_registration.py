@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Validate the owner-requested G1/G2 planning registration without resolving governance."""
+"""Validate the owner-requested G1/G2 planning registration under accepted owner-delegated governance."""
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import sys
@@ -33,9 +34,9 @@ EXPECTED_MILESTONES = {
     "v1.0-full-ga",
     "v1.0-preview-windows",
 }
-COLLIDING_FILES = [
+RESOLVED_FILES = [
     "docs/decisions/0051-business-source-license.md",
-    "docs/decisions/0051-decision-0048-restart-readiness-correction.md",
+    "docs/decisions/0052-decision-0048-restart-readiness-correction.md",
 ]
 PLAN_ID = re.compile(r"(?:Story|Task|Sub-task) (\d+\.\d+(?:\.\d+){0,2})\b")
 
@@ -94,15 +95,32 @@ def validate(
     if not isinstance(governance, dict):
         failures.append("governance record is missing")
         governance = {}
-    if governance.get("status") != "blocked-owner-direction":
-        failures.append("governance must preserve the unresolved owner-direction blocker")
-    if governance.get("reason_code") != "governance.decision-identity-collision":
-        failures.append("governance collision reason is missing or changed")
-    if governance.get("colliding_decision_files") != COLLIDING_FILES:
-        failures.append("both colliding Decision 0051 filenames must remain exact")
-    for relative in COLLIDING_FILES:
+    if governance.get("status") != "accepted" or governance.get("decision_id") != "ADR-0053":
+        failures.append("governance must bind accepted owner-delegated Decision 0053")
+    if governance.get("owner_direction_date") != "2026-09-15":
+        failures.append("governance owner-direction date is missing or changed")
+    if governance.get("resolved_decision_files") != RESOLVED_FILES:
+        failures.append("resolved decision filenames must preserve BSL 0051 and restart readiness 0052")
+    for relative in RESOLVED_FILES:
         if not (ROOT / relative).is_file():
-            failures.append(f"colliding decision file is missing: {relative}")
+            failures.append(f"resolved decision file is missing: {relative}")
+    decision_numbers: dict[str, str] = {}
+    for path in sorted((ROOT / "docs" / "decisions").glob("[0-9][0-9][0-9][0-9]-*.md")):
+        number = path.name[:4]
+        if number in decision_numbers:
+            failures.append(f"duplicate accepted decision identity {number}: {decision_numbers[number]}, {path.name}")
+        decision_numbers[number] = path.name
+        if not path.read_text(encoding="utf-8").startswith(f"# Decision {number}:"):
+            failures.append(f"decision title/filename identity mismatch: {path.name}")
+    document = "docs/decisions/0053-owner-delegated-linux-desktop-demo.md"
+    if governance.get("decision_document") != document or not (ROOT / document).is_file():
+        failures.append("accepted owner-delegation document is missing or changed")
+    else:
+        source = (ROOT / document).read_bytes()
+        if hashlib.sha256(source).hexdigest() != governance.get("decision_source_sha256"):
+            failures.append("accepted owner-delegation source hash changed")
+        if b"| Status | Accepted owner-delegated milestone decision |" not in source:
+            failures.append("owner-delegation acceptance marker is missing")
 
     records = registry.get("requirements", [])
     by_id = {
@@ -215,7 +233,7 @@ def main() -> int:
         return 1
     print(
         "context-safety registration validated: 34 task nodes, 7 CTX cases, "
-        "5 migrations; governance remains blocked-owner-direction"
+        "5 migrations; governance accepted under Decision 0053"
     )
     return 0
 

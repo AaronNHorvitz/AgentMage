@@ -50,7 +50,7 @@ class TaskGraphTests(unittest.TestCase):
         self.assertTrue(any("duplicate task" in failure for failure in failures))
         self.assertTrue(any("dependency cycle" in failure for failure in failures))
 
-    def test_decision_0051_stories_cannot_be_omitted(self) -> None:
+    def test_decision_0052_stories_cannot_be_omitted(self) -> None:
         for story_id in ("25.3", "76.2", "76.3", "77.2"):
             tasks = "".join(
                 f"#### [ ] Story {item} - Test\n\n**Dependencies:** None.\n\n"
@@ -77,7 +77,7 @@ class TaskGraphTests(unittest.TestCase):
         }
         value = {
             "schema_version": 1,
-            "decision_id": "ADR-0051",
+            "decision_id": "ADR-0052",
             "milestones": milestones,
             "story_applicability": EXPECTED_STORY_APPLICABILITY,
             "source_document_write_policy": "denied",

@@ -42,7 +42,7 @@ First-release surface: standalone hardened desktop application (Decision 0048).
 
 Repository license: Business Source License 1.1 (Decision 0051); versions published before 2026-09-07 remain under Apache License 2.0.
 
-First-release gate: Story 25.3 under the Decision 0051 restart-readiness correction.
+First-release gate: Story 25.3 under the Decision 0052 restart-readiness correction.
 
 The complete 17-release-epic, four-cross-cutting-foundational-runtime-epic,
 169-sprint, 294-requirement plan below remains the granular execution authority
@@ -102,10 +102,11 @@ native qualification or an unrelated retained platform row is blocked. Native tr
 already authorized exact runtime/artifact and venue; acquisition, foreign-server control, network,
 signing, publication, and independent-review authority are not granted by this refinement.
 
-G1/G2 are product labels, not new stable inventory IDs. Task 13.1.4 owns the supporting-contract
-and registration follow-up outside this four-document edit. Neither Decision 0051 is renumbered
-here, and no next decision number is presumed free. Do not regenerate or weaken evidence to hide
-that collision, assume registration is complete, or restart the unattended runner from this edit.
+G1/G2 are product labels, not new stable inventory IDs. The owner delegation recorded in
+Decision 0053 resolves the historical collision: Business Source License remains Decision 0051;
+restart readiness is Decision 0052. Decision 0053 accepts the explicit 53-statement G1/G2 planning
+snapshot while preserving the historical 31-statement snapshot and incomplete runtime gates.
+The Linux demo milestone follows its separate acceptance checklist; production gates remain open.
 
 ## Planning Hierarchy and Numbering
 
@@ -2698,10 +2699,10 @@ that the existing Linux native adapter or live evaluation path is missing.
     through `AM-CTX-003`, `AM-SES-001`, `AM-SES-002`, existing runtime/gateway/security contracts,
     and privacy/retention rules. Record the dated owner request, additions-only requirement/test
     mappings, schema/migration ownership, and any necessary decision through governance; do not
-    overwrite accepted requirements or assign/renumber either Decision 0051. **Execution:** local
-    planning; owner=runtime-contracts; exact decision-number resolution requires owner direction.
-    BLOCKED_EXTERNAL(owner=product owner; action=assign a unique accepted decision identity without
-    renumbering either existing Decision 0051 file by inference; credential=none; payment=none).
+    overwrite accepted requirements. **Execution:** local planning; owner=runtime-contracts.
+    Owner direction supplied on 2026-09-15 is recorded in Decision 0053: BSL retains 0051,
+    restart readiness becomes 0052, and the explicit post-0053 normative snapshot accepts G1/G2.
+    Current evidence regeneration and registration verification remain required before closure.
   - [x] **Sub-task 13.1.4.2:** Register all new task-level dependencies and PRD `CTX-*` acceptance
     cases in the machine-checked plan, release applicability, and blocker register. Prove no cycle
     between Task 13.4.5 and Sub-task 13.3.4.3, no orphan/duplicate identifiers, and no inherited
@@ -2711,7 +2712,8 @@ that the existing Linux native adapter or live evaluation path is missing.
     34 exact task/sub-task nodes and all seven PRD `CTX-*` cases across preview, full-GA, and
     retained-platform applicability. The shared task-graph check and blocker builder reject cycles,
     unknown owners/prerequisites, guarded-trial inversion, and prose-derived false dependencies;
-    the unresolved Decision 0051 collision remains an exact external row with no substitution.
+    the Decision 0051 collision was resolved by explicit owner delegation in Decision 0053;
+    unrelated exact external blockers retain their original meaning and cannot be substituted.
   - [x] **Sub-task 13.1.4.3:** Publish versioned contract/schema migration and closed refusal-code
     plans for served observations, prepared requests, finish/usage results, capture coverage, and
     summary lineage. Missing legacy fields must require requalification, not assumed capacity or
@@ -4727,7 +4729,7 @@ physical MacBook accessibility tuples; `substitution_set=empty`.
 **Dependency state:** Story 25.1 and the remaining Story 25.2 rows retain their production
 signer/trust-root, signed-package, installed-native-workflow, qualified-model/runtime,
 platform/accessibility, and owning-sprint external tuples with every `substitution_set=empty`.
-Decision 0051 adds locally executable Story 25.3 gate implementation; its installed-candidate,
+Decision 0052 adds locally executable Story 25.3 gate implementation; its installed-candidate,
 model, Windows, signing, publication, and independent-review acceptance rows remain separately
 dependency-bound or external.
 
@@ -4813,7 +4815,7 @@ root and signed Fedora, Ubuntu, and macOS packages named under Task 25.2.2;
 
 #### [ ] Story 25.3 - v1.0-preview Release Gate
 
-**Dependencies:** Stories 22.5, 25.2, 76.2, 76.3, and 77.2; the Decision 0051
+**Dependencies:** Stories 22.5, 25.2, 76.2, 76.3, and 77.2; the Decision 0052
 `v1.0-preview-windows` applicability record; the exact Epic 10 Windows preview rows; one
 Decision 0044-approved model; and the Decision 0021 independent signed-release review.
 
@@ -4914,7 +4916,7 @@ are evaluated as one exact product rather than inferred from separate component 
 - [ ] **Sprint AC 25.AC5:** `G-V0.1` closes only after the signed artifacts, documentation, tests, and offline proof agree exactly. Blocked on the exact signed-package, installed-platform, and three-run offline lifecycle tuples above; `substitution_set=empty`.
 - [ ] **Sprint AC 25.AC6:** The release uses one explicitly selected exact admitted profile; the candidate-neutral kernel/codec boundary, complete initial candidate evidence, classifier non-authority, verifier-only completion, separate repeatability claims, and no-fallback behavior reproduce from raw evidence. Blocked on the exact qualified production model/runtime and native platform campaign tuples inherited from the owning sprints; `substitution_set=empty`.
 
-**Gate decision:** Sprint 25 is PASS only when Stories 25.1, 25.2, and 25.3, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED. Story 25.3 is the Decision 0051 v1.0-preview gate; it does not repurpose the incident-tabletop Story 25.2 or convert the broader v0.1/full-GA gates into preview evidence.
+**Gate decision:** Sprint 25 is PASS only when Stories 25.1, 25.2, and 25.3, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED. Story 25.3 is the Decision 0052 v1.0-preview gate; it does not repurpose the incident-tabletop Story 25.2 or convert the broader v0.1/full-GA gates into preview evidence.
 
 ## [ ] Epic 2 - v0.2 - Knowledge, Obsidian, and Memory
 
@@ -9163,7 +9165,7 @@ and release remain open.
 
 #### [ ] Story 76.2 - Standalone Application Shell and First Run
 
-**Dependencies:** Stories 22.5 and 76.1; Sprint 7 release-manifest contracts; the Decision 0051
+**Dependencies:** Stories 22.5 and 76.1; Sprint 7 release-manifest contracts; the Decision 0052
 `v1.0-preview-windows` applicability record. Model acquisition is a later separately gated
 increment and does not block deterministic-fake shell integration.
 
@@ -9250,7 +9252,7 @@ shows the verified read-only workflow without moving authority or canonical stat
 
 #### [ ] Story 76.3 - Model Manager
 
-**Dependencies:** Stories 14.1 and 76.2; Decisions 0027 and 0044; the Decision 0051
+**Dependencies:** Stories 14.1 and 76.2; Decisions 0027 and 0044; the Decision 0052
 `v1.0-preview-windows` applicability record. Alignment with Story 164.1 is required without making
 that later full-GA story a substitute or circular prerequisite for the preview increment.
 
@@ -9331,7 +9333,7 @@ without a hidden fallback or trust-by-discovery.
 - [x] **Sprint AC 76.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment. Evidence: architecture, guide, corpus, source, tests, and dependencies are bound by the committed report.
 - [ ] **Sprint AC 76.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
-**Gate decision:** Sprint 76 is PASS only when Stories 76.1, 76.2, and 76.3, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED. Decision 0051 makes Stories 76.2 and 76.3 Windows-preview work while Story 76.1's retained Linux/macOS scope remains truthful and separately evidenced.
+**Gate decision:** Sprint 76 is PASS only when Stories 76.1, 76.2, and 76.3, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED. Decision 0052 makes Stories 76.2 and 76.3 Windows-preview work while Story 76.1's retained Linux/macOS scope remains truthful and separately evidenced.
 
 **Current status:** **PARTIAL LOCAL IMPLEMENTATION; GATE BLOCKED.** The legacy Story 76.1 local thin-client architecture, 6 bounded implementation rows,
 42-case corpus, 9 Rust cases, reviewable artifacts, and local acceptance rows pass; see
@@ -9393,7 +9395,7 @@ not classified as externally blocked by Story 76.1's retained tuple.
 #### [ ] Story 77.2 - Background Presence, Signed Update, and Consented Diagnostics
 
 **Dependencies:** Stories 25.2, 76.2, and 77.1; Sprint 7 signing and release-manifest contracts;
-the Decision 0051 `v1.0-preview-windows` applicability record.
+the Decision 0052 `v1.0-preview-windows` applicability record.
 
 **Current status:** `LOCAL_IMPLEMENTATION_PENDING`. Lifecycle policy, local projections, update
 verification, rollback, and diagnostic minimization are local work. Production signing,
@@ -9457,7 +9459,7 @@ or network activity without my specific consent.
 - [x] **Sprint AC 77.AC2:** The desktop never accesses canonical storage, models, tools, connectors, or secrets outside the kernel. Evidence: protocol projections expose no direct access and the source contract contains no executor.
 - [ ] **Sprint AC 77.AC3:** Network-disabled operation remains complete and uses only local assets.
 - [ ] **Sprint AC 77.AC4:** Crash recovery and safe mode preserve canonical state and user files.
-- [x] **Sprint AC 77.AC5:** The legacy Story 77.1 target taxonomy remains `linux-x86_64` and `macos-arm64`; Windows preview applicability is registered separately for Story 77.2 under Decision 0051 and requires its own native promotion evidence. Intel Mac remains excluded.
+- [x] **Sprint AC 77.AC5:** The legacy Story 77.1 target taxonomy remains `linux-x86_64` and `macos-arm64`; Windows preview applicability is registered separately for Story 77.2 under Decision 0052 and requires its own native promotion evidence. Intel Mac remains excluded.
 
 **Gate decision:** Sprint 77 is PASS only when Stories 77.1 and 77.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED. The Windows preview gate evaluates Story 77.2 through its separate applicability record and does not relabel legacy Story 77.1 platform evidence.
 

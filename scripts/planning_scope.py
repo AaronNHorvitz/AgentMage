@@ -29,7 +29,7 @@ DEFAULT_TRACEABILITY: Final = ROOT / "requirements" / "traceability-report.json"
 DEFAULT_STATUS: Final = ROOT / "architecture" / "status-model.json"
 DEFAULT_TASKS: Final = ROOT / "TASKS.md"
 
-EXPECTED_DECISIONS: Final = ("ADR-0027", "ADR-0040")
+EXPECTED_DECISIONS: Final = ("ADR-0027", "ADR-0040", "ADR-0053")
 EXPECTED_FOUNDATIONAL_DECISIONS: Final = ("ADR-0042", "ADR-0043", "ADR-0044")
 DECISION_0043_REQUIREMENTS: Final = (
     "AM-CAP-001",
@@ -311,16 +311,20 @@ def validate_planning_scope(
     if not isinstance(snapshots, dict):
         failures.append("planning snapshots must be an object")
         snapshots = {}
-    names = ("pre-0027", "post-0027", "post-0040")
+    names = ("pre-0027", "post-0027", "post-0040", "post-0053")
     parsed = {
         name: _validate_snapshot(snapshots.get(name), name, failures) for name in names
     }
     pre_ids, pre_normative = parsed["pre-0027"]
     d27_ids, d27_normative = parsed["post-0027"]
     d40_ids, d40_normative = parsed["post-0040"]
+    d53_ids, d53_normative = parsed["post-0053"]
 
     d27 = decisions[0] if len(decisions) > 0 else {}
     d40 = decisions[1] if len(decisions) > 1 else {}
+    d53 = decisions[2] if len(decisions) > 2 else {}
+    if d53.get("appended_requirement_ids") != []:
+        failures.append("ADR-0053: G1/G2 must not create new stable requirement identities")
     appended = d27.get("appended_requirement_ids")
     if not isinstance(appended, list) or any(not isinstance(item, str) for item in appended):
         failures.append("ADR-0027: appended requirement id set is malformed")
@@ -334,6 +338,7 @@ def validate_planning_scope(
     expected_transitions = (
         (d27, "pre-0027", "post-0027", pre_normative, d27_normative),
         (d40, "post-0027", "post-0040", d27_normative, d40_normative),
+        (d53, "post-0040", "post-0053", d40_normative, d53_normative),
     )
     for decision, before_name, after_name, before, after in expected_transitions:
         decision_id = decision.get("id", "<unknown>")
@@ -373,13 +378,15 @@ def validate_planning_scope(
             "current requirement identities do not match accepted decisions; "
             f"missing={missing}, unapproved={added}"
         )
-    if current_normative != d40_normative:
-        failures.append("current normative mappings do not match the ordered post-0040 snapshot")
+    if d53_ids != accepted_current_ids:
+        failures.append("ADR-0053: snapshot does not preserve accepted stable requirement identities")
+    if current_normative != d53_normative:
+        failures.append("current normative mappings do not match the ordered post-0053 snapshot")
 
     counts = _validate_counts(registry, normative_map, tasks_text, failures)
     expected_counts = {
         "stable_requirements": 294,
-        "normative_mappings": 31,
+        "normative_mappings": 53,
         "epics": 17,
         "foundational_runtime_epics": 4,
         "sprints": 169,
@@ -540,6 +547,14 @@ def build_manifest() -> dict[str, Any]:
         )
         snapshots[name]["source_revision"] = revision
 
+    # Preserve this accepted snapshot during routine hash refreshes. Future
+    # normative edits need a new accepted transition, never silent reapproval.
+    existing = load_object(DEFAULT_MANIFEST) if DEFAULT_MANIFEST.is_file() else {}
+    accepted = existing.get("snapshots", {}).get("post-0053")
+    if not isinstance(accepted, dict):
+        raise PlanningScopeError("accepted post-0053 snapshot is missing; owner-delegated registration required")
+    snapshots["post-0053"] = accepted
+
     def hashes(name: str) -> set[str]:
         return {
             str(item["statement_sha256"])
@@ -550,6 +565,7 @@ def build_manifest() -> dict[str, Any]:
     d27_ids = set(snapshots["post-0027"]["requirement_ids"])
     d27_before, d27_after = hashes("pre-0027"), hashes("post-0027")
     d40_before, d40_after = hashes("post-0027"), hashes("post-0040")
+    d53_before, d53_after = hashes("post-0040"), hashes("post-0053")
     return {
         "schema_version": 1,
         "decisions": [
@@ -586,6 +602,21 @@ def build_manifest() -> dict[str, Any]:
                 "appended_requirement_ids": [],
                 "appended_normative_hashes": sorted(d40_after - d40_before),
                 "superseded_normative_hashes": sorted(d40_before - d40_after),
+            },
+            {
+                "id": "ADR-0053",
+                "status": "accepted",
+                "document": "docs/decisions/0053-owner-delegated-linux-desktop-demo.md",
+                "source_sha256": sha256_file(ROOT / "docs/decisions/0053-owner-delegated-linux-desktop-demo.md"),
+                "approval_markers": [
+                    "| Status | Accepted owner-delegated milestone decision |",
+                    "repository-level sequencing requirements for this milestone only.",
+                ],
+                "before_snapshot": "post-0040",
+                "after_snapshot": "post-0053",
+                "appended_requirement_ids": [],
+                "appended_normative_hashes": sorted(d53_after - d53_before),
+                "superseded_normative_hashes": sorted(d53_before - d53_after),
             },
         ],
         "foundational_runtime_decisions": [
@@ -736,7 +767,7 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         print(
             "Planning scope validation passed: Decision 0027 baseline 241/30; "
-            "current accepted chain 294/31; Decisions 0042-0045 add 4 foundational "
+            "current accepted chain 294/53 under Decision 0053; Decisions 0042-0045 add 4 foundational "
             "runtime epics, 53 stable requirements, and 0 release epics or sprints."
         )
         return 0

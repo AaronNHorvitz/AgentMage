@@ -54,7 +54,7 @@ class PlanningScopeTests(unittest.TestCase):
         self.assertEqual(failures, [])
         self.assertEqual(
             report["accepted_decisions"],
-            ["ADR-0027", "ADR-0040", "ADR-0042", "ADR-0043", "ADR-0044"],
+            ["ADR-0027", "ADR-0040", "ADR-0053", "ADR-0042", "ADR-0043", "ADR-0044"],
         )
         self.assertEqual(
             report["historical_baseline"],
@@ -64,7 +64,7 @@ class PlanningScopeTests(unittest.TestCase):
             report["current_counts"],
             {
                 "stable_requirements": 294,
-                "normative_mappings": 31,
+                "normative_mappings": 53,
                 "epics": 17,
                 "foundational_runtime_epics": 4,
                 "sprints": 169,
@@ -76,6 +76,20 @@ class PlanningScopeTests(unittest.TestCase):
         self.assertEqual(
             tuple(report["required_negative_controls"]), EXPECTED_NEGATIVE_CONTROLS
         )
+
+    def test_g1_g2_transition_rejects_unapproved_or_corrupt_snapshot(self) -> None:
+        changed = copy.deepcopy(self.manifest)
+        changed["decisions"][2]["status"] = "draft"
+        failures, _ = self.validate(manifest=changed)
+        self.assertTrue(any("ADR-0053" in item and "approval" in item for item in failures))
+        changed = copy.deepcopy(self.manifest)
+        changed["decisions"][2]["appended_normative_hashes"].pop()
+        failures, _ = self.validate(manifest=changed)
+        self.assertTrue(any("ADR-0053" in item and "reconciliation" in item for item in failures))
+        changed = copy.deepcopy(self.manifest)
+        changed["snapshots"]["post-0053"]["normative_mappings"].reverse()
+        failures, _ = self.validate(manifest=changed)
+        self.assertTrue(any("ordered post-0053" in item for item in failures))
 
     def test_preserved_requirement_mutation_is_rejected(self) -> None:
         changed = copy.deepcopy(self.registry)

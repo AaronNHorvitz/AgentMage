@@ -400,7 +400,7 @@ def build_from_text(
         ready_for_unattended_execution = False
     return {
         "schema_version": 2,
-        "decision_id": "ADR-0051",
+        "decision_id": "ADR-0052",
         "dependency_path_policy": (
             "one deterministic transitive witness per direct prerequisite; "
             "cycle-terminated; maximum 64 nodes"

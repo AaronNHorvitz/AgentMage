@@ -1,0 +1,33 @@
+# Fedora local desktop demo progress
+
+Owner milestone: 2026-09-15. Branch `demo/fedora-local-docs`, based on current `build/agentmage-ga`; initial worktree clean. Production qualification remains incomplete.
+
+## Dependency checklist
+
+- [x] Inspect current branch, rules, status, September 7 checkpoint and local hardware.
+- [x] Reconcile delegated decision identities and G1/G2 registration (48 focused tests).
+- [x] Verify existing Muse Q4_K_M + llama.cpp b10423 Vulkan provenance and scoped JSON-schema Q&A.
+- [x] Implement bounded folder admission and cited retrieval through AgentMage host/capability runtime (5 tests).
+- [ ] Implement protected loopback desktop browser UI, local inference, followups and recovery.
+- [ ] Run real-model browser acceptance, offline isolation, restart and regressions.
+- [ ] Consolidate affected evidence after source batch; document, commit and push milestones.
+
+## Observations and decisions
+
+- RTX 4090: 24 GiB VRAM, about 1.6 GiB initially used; system RAM 62 GiB, 38 GiB available; disk ~1007 GiB available.
+- Installed llama-server v10361 (14e78ddef); Ollama installed but stopped.
+- Muse historical exact-profile closed-proposal quality evaluation remains REJECTED (0/12); this demo requires new scoped document-Q&A evidence and confers no release qualification.
+- Practical route: localhost browser shell controlling a Rust AgentMage host document runtime and a local model process. Production native shells retained.
+- Synthetic documents only during development; source snapshots read-only; compaction disabled.
+
+## Exact next action
+
+Resolve a false model abstention in the first real UI question despite correct retrieved source content, rerun full browser acceptance, then isolated offline/restart tests. No SBOM regeneration until all source changes are final.
+
+## Integration checkpoint
+
+- Application built and launched; protected loopback browser connects to real Rust host snapshot/retrieval process and Muse UNIX socket.
+- Fixed model process lifetime: bwrap death monitoring follows its launching thread, so the startup thread now stays alive until model exit. Initial probe/app overlap briefly exhausted VRAM; probe is stopped, only app model remains.
+- Browser launch, model readiness, file admission/unsupported reasons pass. First fact question incorrectly abstained; investigating exact prompt/template/decoding before any success claim.
+- Final runtime targeted tests 5/5, strict host binary Clippy, governance tests 48/48 pass.
+- No production release status promoted; no weights/caches/keys intended for Git.

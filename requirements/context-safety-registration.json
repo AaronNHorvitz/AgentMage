@@ -3,17 +3,20 @@
   "registration_id": "context-safety-g1-g2-2026-09-08",
   "owner_request_date": "2026-09-08",
   "governance": {
-    "status": "blocked-owner-direction",
-    "reason_code": "governance.decision-identity-collision",
-    "colliding_decision_files": [
+    "status": "accepted",
+    "decision_id": "ADR-0053",
+    "decision_document": "docs/decisions/0053-owner-delegated-linux-desktop-demo.md",
+    "decision_source_sha256": "ec30281b1bd019dcca85871e073b7df49d178f7c19b2071b9c335de52f613ed1",
+    "owner_direction_date": "2026-09-15",
+    "resolved_decision_files": [
       "docs/decisions/0051-business-source-license.md",
-      "docs/decisions/0051-decision-0048-restart-readiness-correction.md"
+      "docs/decisions/0052-decision-0048-restart-readiness-correction.md"
     ],
-    "required_action": "The owner must assign a unique accepted decision identity before the normative planning-scope snapshot can advance.",
+    "resolution": "Owner explicitly delegated identity correction: BSL remains 0051; restart readiness becomes 0052. Decision 0053 accepts the G1/G2 normative transition without claiming implementation or production qualification.",
     "does_not_authorize": [
-      "decision-renumbering",
-      "model-activation",
+      "automatic-compaction-activation",
       "platform-qualification",
+      "production-model-activation",
       "release-closure"
     ]
   },

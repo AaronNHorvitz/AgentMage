@@ -1,4 +1,4 @@
-# Decision 0051: Decision 0048 Restart-Readiness Correction
+# Decision 0052: Decision 0048 Restart-Readiness Correction
 
 | Field | Value |
 |---|---|
@@ -87,3 +87,10 @@ explicitly directed implementation and verification of its required
 restart-readiness batch under the prompt's governance and approval requirements.
 This record is limited to the corrective local work above and carries none of
 the external authorities excluded in this decision.
+
+## Identity correction — 2026-09-15
+
+Decision 0053 assigns this existing restart-readiness decision the unique identity
+0052. Its original acceptance date, meaning, and historical evidence remain
+unchanged. Historical records referring to the restart-readiness Decision 0051
+resolve to this document; Business Source License Decision 0051 retains its identity.

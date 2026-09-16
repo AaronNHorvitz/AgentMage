@@ -41,7 +41,7 @@ First-release surface: standalone hardened desktop application (Decision 0048).
 
 Repository license: Business Source License 1.1 (Decision 0051); versions published before 2026-09-07 remain under Apache License 2.0.
 
-First-release gate: Story 25.3 under the Decision 0051 restart-readiness correction.
+First-release gate: Story 25.3 under the Decision 0052 restart-readiness correction.
 
 [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md)
 and [`architecture/status-model.json`](./architecture/status-model.json) govern
@@ -260,7 +260,7 @@ fake-model slice; neither enables a model or proves these new gates.
 
 | Order | Existing owner / new task | Deliverable and dependency |
 |---|---|---|
-| 1 | Story 13.1 / Task 13.1.4 | Reconcile G1/G2 with the existing inventory, runtime, gateway, privacy, security, schema, and release contracts through governance; register exact dependencies and acceptance mappings before implementation. Resolve the duplicate Decision 0051 only with owner direction, without guessing a free number. |
+| 1 | Story 13.1 / Task 13.1.4 | Reconcile G1/G2 with the existing inventory, runtime, gateway, privacy, security, schema, and release contracts through governance; register exact dependencies and acceptance mappings before implementation. Decision 0053 records supplied owner direction: preserve BSL 0051, assign restart readiness 0052, and accept the explicit G1/G2 normative transition while retaining incomplete implementation gates. |
 | 2 | Story 13.1 / Task 13.1.5 | Extend load/health/lifecycle observations with effective capacity and a process/configuration/slot binding; reject mismatches and stale observations. Build on the existing owned launch and identity/isolation checks. |
 | 3 | Story 13.4 / Task 13.4.5 | Enforce one immutable prepared request and checked `input + total output reserve + safety margin <= approved effective capacity` at every generation dispatch, with exact rendering, counter parity, drift denial, and a reconcilable manifest. Depends on Task 13.1.5 and aligns with Task 13.3.4 codec repair. |
 | 4 | Story 13.1 / Task 13.1.6 | Preserve finish/truncation reasons, actual usage, and incomplete status through the host boundary. Pair with Task 13.3.4 diagnostics; complete before its renewed qualification run or any activation. |
@@ -536,7 +536,7 @@ DOCX, PDF/OCR, and spreadsheet adapters in Sprint 62. Decisions 0043 and 0044 ad
 `ER-M9` for the Engineering Runtime and Model Gateway. All are internal evidence gates and none
 supersedes a release gate.
 
-### 6.0 Decision 0051 Preview Registration
+### 6.0 Decision 0052 Preview Registration
 
 The Windows `v1.0-preview` is registered as four additions-only stories. Story
 76.2 owns the standalone shell, authenticated Rust-host bridge, accessible first
@@ -554,7 +554,7 @@ the complete later full-GA plan, and retained macOS/Linux/Visual Studio Code
 work. Read-only protects user source documents while allowing only authorized
 encrypted application state. Normal question-answering remains offline; model
 acquisition, signed-update retrieval, and diagnostic transmission are separate
-consent phases. Decision 0051 corrects Decision 0048's mixed baseline and
+consent phases. Decision 0052 corrects Decision 0048's mixed baseline and
 historical blocker assertion without reopening a genuine exact blocker.
 
 Before the newly registered application stories begin, corrective Task 13.3.4

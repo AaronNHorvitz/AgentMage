@@ -41,7 +41,7 @@ First-release surface: standalone hardened desktop application (Decision 0048).
 
 Repository license: Business Source License 1.1 (Decision 0051); versions published before 2026-09-07 remain under Apache License 2.0.
 
-First-release gate: Story 25.3 under the Decision 0051 restart-readiness correction.
+First-release gate: Story 25.3 under the Decision 0052 restart-readiness correction.
 
 This PRD specifies the accepted target product; it does not claim that the
 target is currently available. The current state is governed by
@@ -448,9 +448,10 @@ Automatic routing, fallback, and ensembles remain disabled until a later release
 They are prospective activation and release gates, including the Windows preview, not implemented
 capabilities or newly registered `AM-*` requirements. Task 13.1.4 owns alignment with the existing
 inventory, runtime/security contracts, schemas, and machine-checked plan before implementation.
-Preserve completed historical evidence and all existing admission and privacy controls. The two
-Decision 0051 files require an owner-directed governance resolution; this refinement assigns no
-decision number and authorizes no model, platform, endpoint, or automatic runner restart.
+Preserve completed historical evidence and all existing admission and privacy controls. Decision
+0053 records the 2026-09-15 owner direction: BSL remains Decision 0051, restart readiness is
+Decision 0052, and G1/G2 planning registration is accepted without claiming runtime completion.
+Its separate Linux demo milestone does not substitute for production qualification.
 
 **Current source baseline:** At `081a372d`, the Linux native adapter already owns a fixed 8,192-token,
 single-slot llama.cpp launch and uses server tokenization on codec-rendered input. Manifest
