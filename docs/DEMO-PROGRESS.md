@@ -31,3 +31,13 @@ Resolve a false model abstention in the first real UI question despite correct r
 - Browser launch, model readiness, file admission/unsupported reasons pass. First fact question incorrectly abstained; investigating exact prompt/template/decoding before any success claim.
 - Final runtime targeted tests 5/5, strict host binary Clippy, governance tests 48/48 pass.
 - No production release status promoted; no weights/caches/keys intended for Git.
+
+## Current-question integration repair
+
+The first raw grammar implementation falsely abstained on known facts/follow-ups. A shorter prompt helped initial questions; native chat completions preserve Muse reasoning, but role-history still sometimes answered an earlier question. The demo now sends one explicit CURRENT QUESTION and complete bounded conversation background as untrusted JSON, plus current source evidence. Real browser launch/ingest, known facts/citations, rehearsal follow-up, insufficient evidence and actual 8192-token context overflow pass. The remaining browser cases, offline isolation and full restart are still running/planned; no completion claim yet.
+
+Governance milestone `9a3abe22` is committed and pushed to origin. Relevant regressions: 1710 Rust tests pass, 15 declared ignored; VS Code 95 pass; locked workspace build, formatting and strict lint/security gates pass. Broad workspace test retains five unrelated repository-map scaffold LicenseMismatch failures caused by Apache scaffold fixtures reading preserved BSL LICENSE.
+
+## Full browser cases checkpoint
+
+Known facts, source inspection, rehearsal follow-up, absent fact, actual context overflow, cancellation/recovery, model unavailable/retry and six-turn limit/new conversation pass. The boundary model answered token 44321 and ignored injected SECRET ROBOT instruction; a test assertion incorrectly searched both answer and quoted source attack text. Fixed the helper to inspect answer text separately, which also strengthens all known-fact assertions. Full real browser/offline/restart smoke is next.

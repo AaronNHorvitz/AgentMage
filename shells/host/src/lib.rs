@@ -42,6 +42,9 @@ pub mod computer_use;
 /// Shared first-party shell routing into the canonical kernel conversation library.
 pub mod conversation_runtime;
 
+#[cfg(target_os = "linux")]
+/// Bounded, read-only local document admission and canonical knowledge retrieval for the demo.
+pub mod demo_documents;
 /// Effect-free desktop conversation and workspace projections over kernel-owned identities.
 pub mod desktop_experience;
 /// Effect-free desktop status, recovery, protocol, and local-package contracts.

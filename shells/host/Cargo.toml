@@ -18,6 +18,10 @@ name = "agentmage"
 path = "src/bin/agentmage.rs"
 required-features = ["interactive-cli"]
 
+[[bin]]
+name = "agentmage-demo-documents"
+path = "src/bin/agentmage-demo-documents.rs"
+
 [features]
 default = ["interactive-cli", "native-chat", "workflow-caller", "source-artifacts", "workflow-supervisor"]
 interactive-cli = []

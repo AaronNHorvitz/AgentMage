@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>AgentMage · Local documents</title
+  ><link rel="stylesheet" href="/style.css" />
+  <body>
+    <header>
+      <div class="mark">A</div>
+      <div>
+        <h1>AgentMage</h1>
+        <p>Local document workspace · Linux demo</p>
+      </div>
+      <span id="modelState">Connecting…</span>
+    </header>
+    <main>
+      <aside>
+        <h2>1. Choose your documents</h2>
+        <p>
+          Select a local folder. AgentMage reads text and Markdown; source files
+          stay read-only.
+        </p>
+        <label for="folder">Folder on this computer</label
+        ><input id="folder" placeholder="/absolute/path/to/folder" />
+        <div class="row">
+          <button id="browse">Browse…</button
+          ><button id="load" class="primary">Read folder</button>
+        </div>
+        <button id="fixture" class="subtle">Use synthetic Aurora demo</button>
+        <p id="folderStatus" role="status"></p>
+        <ul id="files"></ul>
+        <details>
+          <summary>Demo limits & privacy</summary>
+          <p>
+            Local inference only. UTF-8 .txt and .md. Up to 200 entries, 128 KiB
+            per file, 1 MiB per folder. Hidden files and symbolic links are
+            skipped or rejected. Retrieval may return only part of a large
+            folder; omissions are shown. Six turns per conversation; automatic
+            compaction is disabled. Conversations live in memory and disappear
+            on restart. No encryption claim is made.
+          </p>
+        </details>
+      </aside>
+      <section>
+        <div class="row heading">
+          <div>
+            <h2>2. Ask about your folder</h2>
+            <p>Answers cite source snapshots you can inspect.</p>
+          </div>
+          <button id="new">New conversation</button>
+        </div>
+        <div id="messages" aria-live="polite">
+          <div class="welcome">
+            <h3>A small workspace, grounded answers.</h3>
+            <p>Load the Aurora demo folder, then try:</p>
+            <button id="example">
+              When does Aurora launch, and who leads it?
+            </button>
+            <p>Follow up with “Who is responsible for the rehearsal?”</p>
+          </div>
+        </div>
+        <form id="ask">
+          <label for="question">Your question</label
+          ><textarea
+            id="question"
+            rows="3"
+            maxlength="16000"
+            placeholder="Ask a question about the selected documents…"
+          ></textarea>
+          <div class="row">
+            <button id="send" class="primary">Ask AgentMage</button
+            ><button type="button" id="cancel" disabled>
+              Cancel generation</button
+            ><span id="turns">0 / 6 turns</span>
+          </div>
+        </form>
+        <p id="status" role="status"></p>
+        <details>
+          <summary>Model controls</summary>
+          <p id="modelDetail"></p>
+          <div class="row">
+            <button id="modelStop">Stop model</button
+            ><button id="modelStart">Start / retry model</button>
+          </div>
+        </details>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>

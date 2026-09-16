@@ -1,0 +1,25 @@
+{
+  "recorded_at_unix": 1789519437.1316254,
+  "gpu_csv_fields": "name,total_MiB,used_MiB,gpu_utilization_percent",
+  "gpu_observation": "NVIDIA GeForce RTX 4090, 24564 MiB, 17318 MiB, 1 %",
+  "model_processes": [
+    {
+      "pid": 2182897,
+      "rss": "1501760 kB",
+      "network_namespace": "net:[4026532888]"
+    }
+  ],
+  "host_network_namespace": "net:[4026531833]",
+  "ram_observation": "               total        used        free      shared  buff/cache   available\nMem:            62Gi        22Gi       2.1Gi       1.3Gi        40Gi        40Gi\nSwap:          8.0Gi       4.1Gi       3.9Gi\n",
+  "app_storage_modes": {
+    "agentmage-demo": "0o700",
+    "launch.json": "0o600",
+    "model.log": "0o600",
+    "application.log": "0o600"
+  },
+  "loopback_listener": "State  Recv-Q Send-Q Local Address:Port Peer Address:Port\nLISTEN 0      5          127.0.0.1:8765      0.0.0.0:*   \n",
+  "limitations": [
+    "Point observations during synthetic browser acceptance, not certified peaks or throughput bounds.",
+    "Latency and token counts are recorded per real application interaction in acceptance JSON."
+  ]
+}
