@@ -1,5 +1,5 @@
 {
-  "campaign_passed": true,
+  "campaign_passed": false,
   "commands": [
     {
       "argv": [
@@ -13,30 +13,32 @@
         "--ignored",
         "--nocapture"
       ],
-      "elapsed_ms": 17170,
+      "elapsed_ms": 48420,
       "exit_code": 0,
-      "failures": [],
+      "failures": [
+        "runtime.load.command.memory"
+      ],
       "id": "reference-load",
       "log": "reference-load.log",
-      "maximum_rss_kib": 56128,
+      "maximum_rss_kib": 3233356,
       "metrics": {
         "cleanup_verified": true,
         "event_count": 8196,
         "fast_deliveries": 8196,
-        "journal_elapsed_ms": 2371,
-        "journal_events_per_second": 3456,
+        "journal_elapsed_ms": 2376,
+        "journal_events_per_second": 3449,
         "lagged_subscribers": 1,
         "maximum_queued_bytes": 717824,
         "maximum_queued_events": 1024,
         "publish_elapsed_ms": 258,
         "publish_events_per_second": 31767,
         "queue_saturations": 7,
-        "resident_memory_kib": 57344,
+        "resident_memory_kib": 57484,
         "restart_cycles": 16,
-        "restart_elapsed_ms": 14083,
+        "restart_elapsed_ms": 15204,
         "retained_disk_bytes": 12066832
       },
-      "output_sha256": "2e3b7a08c8a396fb51e3bd15b21f099566734dbf6c48be83835fa8dd49d78169",
+      "output_sha256": "970efdd5e9c9bd2c38720567c908b95373a9382b858562bdc0c28729e090c5b3",
       "tests": {
         "failed": 0,
         "filtered_out": 1036,
@@ -59,7 +61,7 @@
       "failures": [],
       "id": "resource-ceilings",
       "log": "resource-ceilings.log",
-      "maximum_rss_kib": 40004,
+      "maximum_rss_kib": 39612,
       "metrics": null,
       "output_sha256": "2970c11618f31687dcdfd32358889cf5d591a7c59d4c78653dbfb154d68109b5",
       "tests": {
@@ -79,14 +81,14 @@
         "--lib",
         "runtime_event::tests::story_50_2_"
       ],
-      "elapsed_ms": 50,
+      "elapsed_ms": 40,
       "exit_code": 0,
       "failures": [],
       "id": "event-pressure",
       "log": "event-pressure.log",
-      "maximum_rss_kib": 39484,
+      "maximum_rss_kib": 39488,
       "metrics": null,
-      "output_sha256": "97b7df497c0bf234f12ee57e5d0e844ebf14a7c9d65b1e3bc450dd6455128b14",
+      "output_sha256": "f6c2cb20a34100b52fa2d044e45b089b4ae342d89bf0dbcee1448174b7b0ac1b",
       "tests": {
         "failed": 0,
         "filtered_out": 1032,
@@ -104,14 +106,14 @@
         "--lib",
         "dedicated_writer"
       ],
-      "elapsed_ms": 320,
+      "elapsed_ms": 330,
       "exit_code": 0,
       "failures": [],
       "id": "writer-isolation",
       "log": "writer-isolation.log",
-      "maximum_rss_kib": 39948,
+      "maximum_rss_kib": 39644,
       "metrics": null,
-      "output_sha256": "132b9287fc688ecdad782af0b0e270f392dc9405a287d1f4c43da13ed0950204",
+      "output_sha256": "10759d69fee5c14b68fab13ca225d99621dd57ae37b30984147a88f6674a1449",
       "tests": {
         "failed": 0,
         "filtered_out": 1034,
@@ -134,9 +136,9 @@
       "failures": [],
       "id": "maximum-output",
       "log": "maximum-output.log",
-      "maximum_rss_kib": 39468,
+      "maximum_rss_kib": 39472,
       "metrics": null,
-      "output_sha256": "bd4f810970407d48b56d19363e4b0d8a20b6b90ccea641d4bd8ef0cb3ef9c6cf",
+      "output_sha256": "380006ffdc35f480980f61f879bb0e1a5df53f5f92e5fc25225c5ac122392d76",
       "tests": {
         "failed": 0,
         "filtered_out": 1031,
@@ -154,14 +156,14 @@
         "--lib",
         "runtime_artifact::tests"
       ],
-      "elapsed_ms": 2190,
+      "elapsed_ms": 2000,
       "exit_code": 0,
       "failures": [],
       "id": "artifact-pressure",
       "log": "artifact-pressure.log",
-      "maximum_rss_kib": 66252,
+      "maximum_rss_kib": 68088,
       "metrics": null,
-      "output_sha256": "0c189f44a7b001f0fe8aa346d3ddca0f93198d894419079382ab13272bcf5ce6",
+      "output_sha256": "516bf8e2a5cdf87163fbf2a088b7ae577f746acd71c1ce942504228915b1f69f",
       "tests": {
         "failed": 0,
         "filtered_out": 1015,
@@ -184,7 +186,7 @@
       "failures": [],
       "id": "cancellation",
       "log": "cancellation.log",
-      "maximum_rss_kib": 39732,
+      "maximum_rss_kib": 39108,
       "metrics": null,
       "output_sha256": "29b3b34ac92f383db244c4ae33b42b0b00c8d617037a1b6dd170b4bae28dfe40",
       "tests": {
@@ -204,14 +206,16 @@
         "--lib",
         "protected_denial_and_cancellation_return_through_exact_runtime_cursor"
       ],
-      "elapsed_ms": 90,
+      "elapsed_ms": 35420,
       "exit_code": 0,
-      "failures": [],
+      "failures": [
+        "runtime.load.command.memory"
+      ],
       "id": "client-cancellation",
       "log": "client-cancellation.log",
-      "maximum_rss_kib": 48448,
+      "maximum_rss_kib": 2669880,
       "metrics": null,
-      "output_sha256": "8e28edbb65c779b7e2f2290c8a8f0d70fe900d6300402a28433683077a94f892",
+      "output_sha256": "b149f21efeada9ef87d35c066a1cc12a4a7c102a3e84793d40e5230a72caeca3",
       "tests": {
         "failed": 0,
         "filtered_out": 289,
@@ -229,14 +233,14 @@
         "--lib",
         "runtime_recovery::tests"
       ],
-      "elapsed_ms": 60,
+      "elapsed_ms": 40,
       "exit_code": 0,
       "failures": [],
       "id": "restart-recovery",
       "log": "restart-recovery.log",
-      "maximum_rss_kib": 40256,
+      "maximum_rss_kib": 39484,
       "metrics": null,
-      "output_sha256": "a5a3c15e6b17c41b0ed771d274c90448329ec55e3654b503549f155f1a3e2604",
+      "output_sha256": "8144b81a2a3f25d3a18988bad8e33b197bea6f40dbb0c74ae55e8e1210907ea0",
       "tests": {
         "failed": 0,
         "filtered_out": 1029,
@@ -253,7 +257,7 @@
     "The maximum-output group verifies artifact-backed output above the inline limit and exact configured resource ceilings; it is not a model-quality benchmark.",
     "Installed native Chat and authenticated CLI transport evidence remains outside this source-level campaign."
   ],
-  "disposition": "PARTIAL-PASS",
+  "disposition": "FAILED",
   "environment": {
     "cpu_model": "13th Gen Intel(R) Core(TM) i9-13900KF",
     "logical_cpus": 32,
@@ -263,7 +267,9 @@
     "release": "7.1.10-200.fc44.x86_64",
     "system": "Linux"
   },
-  "failures": [],
+  "failures": [
+    "runtime.load.command.memory"
+  ],
   "metric_thresholds": {
     "expected_lagged_subscribers": 1,
     "maximum_journal_elapsed_ms": 30000,
@@ -280,17 +286,17 @@
     "cleanup_verified": true,
     "event_count": 8196,
     "fast_deliveries": 8196,
-    "journal_elapsed_ms": 2371,
-    "journal_events_per_second": 3456,
+    "journal_elapsed_ms": 2376,
+    "journal_events_per_second": 3449,
     "lagged_subscribers": 1,
     "maximum_queued_bytes": 717824,
     "maximum_queued_events": 1024,
     "publish_elapsed_ms": 258,
     "publish_events_per_second": 31767,
     "queue_saturations": 7,
-    "resident_memory_kib": 57344,
+    "resident_memory_kib": 57484,
     "restart_cycles": 16,
-    "restart_elapsed_ms": 14083,
+    "restart_elapsed_ms": 15204,
     "retained_disk_bytes": 12066832
   },
   "profile_id": "story-50.2-linux-reference-load-v1",

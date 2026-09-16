@@ -46,7 +46,7 @@
   "sources": [
     {
       "path": "TASKS.md",
-      "sha256": "6530567e6a575c88062d7b1b2a7b572743ae547ebe05fe9b2ef0ec8edea93f98"
+      "sha256": "a886f28036b34ad066c25cceedaca1ac87d1ee67911506c1d213d842dd18d9e3"
     },
     {
       "path": "architecture/dependency-rules.json",
@@ -66,7 +66,7 @@
     },
     {
       "path": "architecture/status-model.json",
-      "sha256": "781b4bd8d83bf3b1ab4dd5e5cafbd427643dde31d3215b77987ad6ee6734a49d"
+      "sha256": "1077338baac248654bbbfc3f45342b02b07ad40b90d9433c4d5485f65cb00ebc"
     },
     {
       "path": "architecture/dependency-dispositions.json",
@@ -74,7 +74,7 @@
     },
     {
       "path": "architecture/schema-evolution-and-rollback.json",
-      "sha256": "d3d3de13752b6537633a261eb94491b64d9287cda2c763906dcd6af67c173128"
+      "sha256": "be2aa6bdba1d7c6835ba78c2f76990ef409192dfdbdd2854c378ec28b0bffa99"
     },
     {
       "path": "architecture/parser-ocr-platform-placement.json",
@@ -98,7 +98,7 @@
     },
     {
       "path": "scripts/status_model.py",
-      "sha256": "e20c0a689237d1d6d61cd64886874d49d3e448e9ecb1172b4fbebd6f168c78cf"
+      "sha256": "5293454dda7dc54ec21008a85bbfc0cdee366706d8a0e91b93f164ff18b5ac8c"
     },
     {
       "path": "scripts/contract_boundary_gate.py",
@@ -122,7 +122,7 @@
     },
     {
       "path": "tests/test_status_model.py",
-      "sha256": "a5f457bbf0d2911dc064f5f01f74decb4050121fe6f287a64a53d2425c243361"
+      "sha256": "f5fa63fa1a5b6602842bbdec9c900f06aa555d2739d9a70f1ed4282f73c197e3"
     },
     {
       "path": "tests/test_contract_boundary_gate.py",

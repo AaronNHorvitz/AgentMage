@@ -10,7 +10,7 @@ Owner milestone: 2026-09-15. Branch `demo/fedora-local-docs`, based on current `
 - [x] Implement bounded folder admission and cited retrieval through AgentMage host/capability runtime (5 tests).
 - [x] Implement protected loopback desktop browser UI, local inference, followups and recovery.
 - [x] Run real-model browser acceptance, offline isolation, restart and regressions.
-- [ ] Consolidate affected evidence after source batch; document, commit and push milestones.
+- [x] Consolidate affected evidence after source batch; document, commit and push milestones.
 
 ## Observations and decisions
 
@@ -22,13 +22,11 @@ Owner milestone: 2026-09-15. Branch `demo/fedora-local-docs`, based on current `
 
 ## Exact next action
 
-Complete three specifically stale current upstream captures (Stories 22.5, 23.7,
-23.8), then the final Story 50.4 core aggregate and active review-gate mutation
-checks. Demo acceptance, final ready instance/credentials, current hashes, G1/G2,
-review pins, contract index, planning corpora, load campaign, Story 50.3 and 50.4
-degradation have passed. Commit/push the remaining evidence and final recovery
-checkpoint, verify clean branch/origin equality, and keep the demo running. Do not
-regenerate the SBOM again; no further runtime source edits are planned.
+The verified demo is running. The owner can launch/open it with
+`python3 scripts/demo.py start`, follow the five-minute walkthrough in `docs/LOCAL-TESTING.md`, and stop it with
+`python3 scripts/demo.py stop`. All demo acceptance work and current evidence
+renewal are complete. Production qualification and five existing Apache scaffold
+fixture failures remain separate and are recorded honestly in the regression report.
 
 ## Integration checkpoint
 
@@ -66,7 +64,8 @@ and every roadmap checkbox remain unchanged. The demo guard verifies all browser
 cases, cited inference, honest abstention, scoped external-network denial, restart
 metadata, and full source bindings including supply-chain artifacts.
 
-Exact next action: commit this acceptance milestone, regenerate supply-chain once
+At that earlier checkpoint, the next action was to commit the acceptance milestone,
+regenerate supply-chain once
 after the final source batch, repeat the real acceptance smoke for its new hashes,
 then regenerate the affected current evidence DAG in dependency order. Historical
 Git-revision evidence bundles stay immutable and receive truthful applicability.
@@ -105,3 +104,11 @@ Fresh browser launch/admission/real cited answer all passed (17.051 s). Current
 four-report checks pass, and the fifth `demo-final-handoff-acceptance.json` binds
 that actual new interaction, final ready PID and browser/full-smoke records. A fresh
 authorized desktop tab was opened. No runtime source changes or SBOM regeneration.
+
+### Consolidated current evidence renewal (2026-09-15)
+
+- Owner-authorized G1/G2 planning reconciliation 13.1.4.1 is verified and closed; production runtime/qualification rows remain separate. Decision 0051 BSL is preserved; restart readiness 0052 and owner delegation 0053 are validated.
+- One final source-batch SBOM regeneration completed by root. Current registry/coverage/planning checks pass 294 requirements / 53 normative statements and accepted 34-node / 7-CTX / 5-migration registration. Historical recorded-revision reports are preserved.
+- Current Story1.1/1.2/3.1/4.1/7.1/23.5/23.6/50.3/50.4-degradation evidence renewed through actual builders. Routine 2.2 / 7.1 / Sprint 7 review pins preserve whole reviewed-path binding. Relevant gates pass with their original platform/release blockers retained. Gate mutation suites pass 30 tests in 587.211 seconds (2.2/Sprint2/4.1/Sprint4) and 9 tests in 162.495 seconds (7.1/Sprint7); contract index 12 tests pass.
+- Initial 50.3 capture rejected stale retained 50.2 command tuple; unchanged exact nine-command load campaign cold compilation exceeded RSS bounds, then warmed-cache run passed. Both failing immutable evidence and successful actual source-bound logs retained; no limits/source/bindings changed.
+- Inherited/expanded checkpoint corpora validate 154 historical reports with 256 / 512 non-GA blocker cases. Final required upstream captures 22.5, 23.7 and 23.8 passed, and the actual 13-command 50.4-core aggregate passed. Final current checks and all five real acceptance report bindings pass; the consolidated evidence milestone is committed and pushed. No supply-chain regeneration remains.

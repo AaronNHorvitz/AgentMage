@@ -8,5 +8,5 @@ test runtime_event::tests::story_50_2_slow_client_drains_then_reconnects_without
 test runtime_event::tests::story_50_2_replay_rejects_cursor_drift_and_undersized_pages ... ok
 test runtime_event::tests::story_50_2_replay_pages_reconstruct_the_exact_terminal_chain ... ok
 
-test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1032 filtered out; finished in 0.01s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1032 filtered out; finished in 0.00s
 

@@ -45,7 +45,7 @@ running 2 tests
 test capability_registry::tests::manifest_cannot_invent_an_authority_class_or_exceed_team_limit ... ok
 test capability_registry::tests::repository_review_executes_from_the_registered_manifest ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 782 filtered out; finished in 0.00s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 1035 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -164,11 +164,11 @@ $ cargo test -p agentmage-kernel-engine multi_agent::tests --all-features --lock
 
 running 4 tests
 test multi_agent::tests::dependency_cycle_and_overlapping_paths_fail_before_workers_start ... ok
-test multi_agent::tests::three_workers_run_concurrently_and_integrate_serially ... ok
 test multi_agent::tests::integrated_wave_resumes_without_replaying_and_inflight_state_is_refused ... ok
+test multi_agent::tests::three_workers_run_concurrently_and_integrate_serially ... ok
 test multi_agent::tests::successful_campaign_projection_binds_every_lease_integration_and_plan ... ok
 
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 780 filtered out; finished in 0.00s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 1033 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -284,61 +284,61 @@ COMMAND_9_EXIT=0
 $ npm run engineering-runtime:schemas:check
 
 > agentmage-planning-docs@0.0.0 engineering-runtime:schemas:check
-> node scripts/engineering_runtime_schemas.mjs && node --test tests/test_engineering_runtime_schemas.mjs
+> node scripts/engineering_runtime_schemas.mjs && node --test tests/test_engineering_runtime_schemas.mjs && node -e "console.log('generated Engineering Runtime schemas are current, closed, and compile')"
 
 Validated 37 Engineering Runtime schemas and 6 reused contracts.
-✔ generated Engineering Runtime schemas are current, closed, and compile (105.045219ms)
-✔ canonical runtime record schemas reject every unsupported version (0.484306ms)
-✔ source-artifact family schemas reject missing, extra, malformed, stale, oversized, and unsupported-version envelopes (47.866173ms)
-✔ multi-agent schemas require bounded workers and verifier-owned completion evidence (18.196601ms)
-✔ artifact capture and context delivery fail closed (13.299716ms)
-✔ remote endpoint and route records cannot enable or silently fallback (14.385384ms)
-✔ tool observations and terminal results preserve runtime authority (14.06133ms)
-✔ context-manifest binds schema_version to the authoritative Rust contract version (7.169344ms)
-✔ structural sections and context dispositions reject reversed ranges through trusted semantic validation (11.937948ms)
-✔ extraction terminal states forbid payload contradicting the declared disposition (5.614605ms)
-✔ context-manifest semantic validation reconciles source_artifact_count, artifact_id uniqueness, and ordered ranges (6.77261ms)
-✔ context-manifest items reject non-admitting dispositions carrying ranges or tokens (6.182978ms)
-✔ context-manifest items require a deterministic reason_code for every non-complete disposition (6.116093ms)
-✔ createEngineeringRuntimeValidator is the mandatory public path that binds structural and semantic contracts (32.694807ms)
-✔ createEngineeringRuntimeValidator refuses to reuse a mismatched schema registered under the authoritative $id (11.104438ms)
-✔ source-reference records reject contradictory reference_class and support_state combinations (5.496473ms)
-✔ context-disposition terminal states forbid ranges and tokens outside admitting states (5.995817ms)
-✔ context-disposition and context-manifest impose matching reason_code rules for each disposition (11.93ms)
-✔ source-retention binds schema_version to the authoritative Rust contract version (7.422613ms)
-✔ source-retention rejects missing, extra, malformed, and oversized fields (7.349156ms)
-✔ source-retention cannot widen RuntimeArtifactKind or name a second physical store (6.620672ms)
-✔ source-retention forbids persistence contradicting the declared retention class (8.442278ms)
-✔ source-retention requires a deterministic reason_code for every non-active lifecycle state (6.373005ms)
-✔ source-retention semantic validation reconciles retention_class with lifecycle_state (12.418622ms)
-✔ source-retention carries protected metadata only as a digest (6.05442ms)
-✔ source-locator binds schema_version and admits every authoritative coordinate space (24.28446ms)
-✔ source-locator carries exactly the payload of its declared kind (9.95134ms)
-✔ source-locator forbids naming a position it never resolved (10.552545ms)
-✔ source-locator requires a deterministic reason_code for every non-complete state (9.761571ms)
-✔ source-locator semantic validation rejects reversed ranges and degenerate coordinates (18.520875ms)
-✔ source-locator rejects missing, extra, malformed, and out-of-range fields (9.54865ms)
-✔ step-execution-policy binds schema_version and names eight identities keyed to the existing plan step (18.681285ms)
-✔ step-execution-policy is a companion record and restates no plan, tool, grant, receipt, or completion state (8.189932ms)
-✔ step-execution-policy admits exactly the retry classes its effect class permits (7.506265ms)
-✔ step-execution-policy never automatically retries a destructive, external, non-idempotent, or unclassified effect (8.168311ms)
-✔ step-execution-policy retries an idempotent write only against a verified key or desired state (7.613839ms)
-✔ step-execution-policy resolves completion to verifier evidence or exactly one recorded deferral (7.451722ms)
-✔ step-execution-policy gives an unretried step exactly one attempt (7.763706ms)
-✔ step-execution-policy rejects missing, malformed, oversized, and duplicated identities (14.717665ms)
-✔ execution envelopes are admitted, versioned, and established only by the runtime (74.328337ms)
-✔ execution envelopes reference the protected contracts by identity and never restate them (34.769017ms)
-✔ workflow and step executions bind the existing plan and step identities (4.928935ms)
-✔ call envelope carries only the digest of validated arguments and explains every rejection (5.274307ms)
-✔ operation attempts are new attempts that resolve to an executor receipt (5.650884ms)
-✔ recovery decisions reconcile an uncertain outcome and retry only a classified transient failure (5.141067ms)
-✔ terminal diagnostics stay content free (9.663565ms)
-✔ execution envelopes reject missing, malformed, and unknown fields (73.502255ms)
-✔ retry admission opens a new attempt and never replays a prior identity (6.011413ms)
-✔ retry admission keeps attempts an ordered chain rather than a repeated identity (11.494434ms)
-✔ retry admission requires a fresh approval per attempt and reconciliation before reattempt (5.041448ms)
-✔ retry admission carries no receipt and no replay surface (5.396371ms)
-✔ retry compatibility and migration rules are closed, complete, and enforced (0.119846ms)
+✔ generated Engineering Runtime schemas are current, closed, and compile (106.606101ms)
+✔ canonical runtime record schemas reject every unsupported version (0.425177ms)
+✔ source-artifact family schemas reject missing, extra, malformed, stale, oversized, and unsupported-version envelopes (45.694766ms)
+✔ multi-agent schemas require bounded workers and verifier-owned completion evidence (16.420651ms)
+✔ artifact capture and context delivery fail closed (13.922663ms)
+✔ remote endpoint and route records cannot enable or silently fallback (12.331308ms)
+✔ tool observations and terminal results preserve runtime authority (14.306948ms)
+✔ context-manifest binds schema_version to the authoritative Rust contract version (6.941323ms)
+✔ structural sections and context dispositions reject reversed ranges through trusted semantic validation (11.229643ms)
+✔ extraction terminal states forbid payload contradicting the declared disposition (5.591817ms)
+✔ context-manifest semantic validation reconciles source_artifact_count, artifact_id uniqueness, and ordered ranges (6.641387ms)
+✔ context-manifest items reject non-admitting dispositions carrying ranges or tokens (6.21809ms)
+✔ context-manifest items require a deterministic reason_code for every non-complete disposition (6.048412ms)
+✔ createEngineeringRuntimeValidator is the mandatory public path that binds structural and semantic contracts (31.213066ms)
+✔ createEngineeringRuntimeValidator refuses to reuse a mismatched schema registered under the authoritative $id (10.46067ms)
+✔ source-reference records reject contradictory reference_class and support_state combinations (5.119512ms)
+✔ context-disposition terminal states forbid ranges and tokens outside admitting states (5.359357ms)
+✔ context-disposition and context-manifest impose matching reason_code rules for each disposition (11.528958ms)
+✔ source-retention binds schema_version to the authoritative Rust contract version (7.230959ms)
+✔ source-retention rejects missing, extra, malformed, and oversized fields (6.019224ms)
+✔ source-retention cannot widen RuntimeArtifactKind or name a second physical store (5.985741ms)
+✔ source-retention forbids persistence contradicting the declared retention class (6.114893ms)
+✔ source-retention requires a deterministic reason_code for every non-active lifecycle state (5.821586ms)
+✔ source-retention semantic validation reconciles retention_class with lifecycle_state (11.82356ms)
+✔ source-retention carries protected metadata only as a digest (6.14683ms)
+✔ source-locator binds schema_version and admits every authoritative coordinate space (22.813359ms)
+✔ source-locator carries exactly the payload of its declared kind (9.69247ms)
+✔ source-locator forbids naming a position it never resolved (10.225217ms)
+✔ source-locator requires a deterministic reason_code for every non-complete state (8.785832ms)
+✔ source-locator semantic validation rejects reversed ranges and degenerate coordinates (18.319885ms)
+✔ source-locator rejects missing, extra, malformed, and out-of-range fields (9.551915ms)
+✔ step-execution-policy binds schema_version and names eight identities keyed to the existing plan step (18.141125ms)
+✔ step-execution-policy is a companion record and restates no plan, tool, grant, receipt, or completion state (7.231637ms)
+✔ step-execution-policy admits exactly the retry classes its effect class permits (7.49248ms)
+✔ step-execution-policy never automatically retries a destructive, external, non-idempotent, or unclassified effect (7.284884ms)
+✔ step-execution-policy retries an idempotent write only against a verified key or desired state (7.516869ms)
+✔ step-execution-policy resolves completion to verifier evidence or exactly one recorded deferral (7.096244ms)
+✔ step-execution-policy gives an unretried step exactly one attempt (6.796646ms)
+✔ step-execution-policy rejects missing, malformed, oversized, and duplicated identities (14.247569ms)
+✔ execution envelopes are admitted, versioned, and established only by the runtime (72.542818ms)
+✔ execution envelopes reference the protected contracts by identity and never restate them (34.12208ms)
+✔ workflow and step executions bind the existing plan and step identities (4.790727ms)
+✔ call envelope carries only the digest of validated arguments and explains every rejection (5.058578ms)
+✔ operation attempts are new attempts that resolve to an executor receipt (6.013565ms)
+✔ recovery decisions reconcile an uncertain outcome and retry only a classified transient failure (4.764235ms)
+✔ terminal diagnostics stay content free (9.689705ms)
+✔ execution envelopes reject missing, malformed, and unknown fields (70.787491ms)
+✔ retry admission opens a new attempt and never replays a prior identity (5.789433ms)
+✔ retry admission keeps attempts an ordered chain rather than a repeated identity (10.842813ms)
+✔ retry admission requires a fresh approval per attempt and reconciliation before reattempt (5.388391ms)
+✔ retry admission carries no receipt and no replay surface (5.233392ms)
+✔ retry compatibility and migration rules are closed, complete, and enforced (0.120006ms)
 ℹ tests 52
 ℹ suites 0
 ℹ pass 52
@@ -346,16 +346,17 @@ Validated 37 Engineering Runtime schemas and 6 reused contracts.
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 841.231365
+ℹ duration_ms 815.690551
+generated Engineering Runtime schemas are current, closed, and compile
 
 COMMAND_10_EXIT=0
 
 $ python3 scripts/requirement_coverage.py
-Validated 294 requirement records and 31 normative statement mappings.
+Validated 294 requirement records and 53 normative statement mappings.
 
 COMMAND_11_EXIT=0
 
 $ python3 scripts/task_graph.py
-task graph validation passed: 17 Decision 0042 stories, 20 Decisions 0043-0045 stories, 4 foundational runtime epics
+task graph validation passed: 17 Decision 0042 stories, 20 Decisions 0043-0045 stories, 4 Decision 0052 stories, 3 release applicability classes, 4 foundational runtime epics
 
 COMMAND_12_EXIT=0

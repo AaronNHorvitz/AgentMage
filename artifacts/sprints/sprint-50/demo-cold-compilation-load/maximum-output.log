@@ -9,5 +9,5 @@ test runtime_loop::tests::durable_tool_receipt_commits_before_its_bound_large_ar
 test runtime_loop::tests::durable_large_model_output_is_artifact_backed_and_event_referenced ... ok
 test runtime_loop::tests::durable_tool_outputs_use_only_the_declared_closed_artifact_kind ... ok
 
-test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 1031 filtered out; finished in 0.18s
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 1031 filtered out; finished in 0.19s
 

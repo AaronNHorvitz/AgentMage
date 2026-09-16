@@ -3,10 +3,10 @@ $ cargo test -p agentmage-kernel-engine --test dependency_degradation --all-feat
      Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-0b41c11af9f7bcef)
 
 running 7 tests
-test fresh_narrower_stronger_same_kind_substitute_is_explicitly_selected ... ok
-test every_dependency_family_is_classified_and_available ... ok
 test inventory_and_exact_identity_drift_never_silently_omit ... ok
+test every_dependency_family_is_classified_and_available ... ok
 test optional_loss_remains_permitted_but_never_silent ... ok
+test fresh_narrower_stronger_same_kind_substitute_is_explicitly_selected ... ok
 test required_optional_disabled_and_quarantined_loss_are_visible ... ok
 test missing_stale_hidden_cross_kind_or_weaker_substitution_is_denied ... ok
 test every_dependency_health_and_requirement_class_has_one_deterministic_disposition ... ok
@@ -17,62 +17,61 @@ test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 COMMAND_0_EXIT=0
 
 $ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
-    Checking agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 13.12s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.06s
 
 COMMAND_1_EXIT=0
 
 $ python3 -m pytest -q tests/test_story_50_4_dependency_degradation_evidence.py tests/test_task_graph.py
-.....                                                                    [100%]
-5 passed in 0.14s
+.......                                                                  [100%]
+7 passed in 0.20s
 
 COMMAND_2_EXIT=0
 
 $ python3 scripts/validate_docs.py
-Validated 408 Markdown file(s) and all policy invariants.
+Validated 481 Markdown file(s) and all policy invariants.
 
 COMMAND_3_EXIT=0
 
 $ cargo test -p agentmage-kernel-engine story_50_2_ --all-features --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 33 tests
 test runtime_journal::tests::story_50_2_reference_hardware_load_is_bounded_recoverable_and_nonblocking ... ignored, explicit reference-hardware campaign; run through runtime_hardening_load.py
-test runtime_recovery::tests::story_50_2_terminal_result_requires_exact_proof_and_no_pending_authority ... ok
-test runtime_lifecycle::tests::story_50_2_plan_mutation_and_field_confusion_fail_closed ... ok
-test runtime_loop::tests::story_50_2_subscription_capacity_is_bounded_by_count_and_bytes ... ok
-test runtime_lifecycle::tests::story_50_2_targets_are_unique_canonical_and_never_share_aggregate_authority ... ok
-test runtime_recovery::tests::story_50_2_every_boundary_selects_one_closed_safe_action ... ok
-test runtime_lifecycle::tests::story_50_2_safe_mode_allows_only_diagnostics_export_and_preserving_hold ... ok
-test runtime_recovery::tests::story_50_2_consumed_or_uncertain_effect_is_never_replayed ... ok
-test runtime_recovery::tests::story_50_2_write_recovery_plan_is_composed_without_gaining_authority ... ok
-test runtime_event::tests::story_50_2_status_coalescing_never_removes_canonical_events ... ok
-test runtime_recovery::tests::story_50_2_missing_stale_or_invalid_durable_evidence_enters_safe_mode ... ok
-test runtime_recovery::tests::story_50_2_restart_result_mapping_is_exhaustive ... ok
-test runtime_recovery::tests::story_50_2_incoherent_observations_fail_closed_before_recovery ... ok
-test runtime_loop::tests::story_50_2_controlled_write_requires_every_bound_resource_budget ... ok
-test runtime_event::tests::story_50_2_slow_client_drains_then_reconnects_without_event_loss ... ok
-test runtime_loop::tests::story_50_2_durable_restore_rejects_usage_drift ... ok
-test runtime_lifecycle::tests::story_50_2_optional_transcript_and_metric_collection_requires_current_opt_in ... ok
-test runtime_recovery::tests::story_50_2_restart_failures_never_fall_through_to_resume ... ok
-test runtime_loop::tests::story_50_2_cumulative_budget_overage_is_non_mutating ... ok
-test runtime_loop::tests::story_50_2_event_and_artifact_overage_is_non_mutating ... ok
-test runtime_loop::tests::story_50_2_peak_memory_and_failure_ceilings_are_non_mutating ... ok
 test runtime_lifecycle::tests::story_50_2_deletion_requires_release_dependencies_and_worktree_cleanup ... ok
+test runtime_lifecycle::tests::story_50_2_targets_are_unique_canonical_and_never_share_aggregate_authority ... ok
+test runtime_recovery::tests::story_50_2_incoherent_observations_fail_closed_before_recovery ... ok
+test runtime_lifecycle::tests::story_50_2_safe_mode_allows_only_diagnostics_export_and_preserving_hold ... ok
+test runtime_lifecycle::tests::story_50_2_optional_transcript_and_metric_collection_requires_current_opt_in ... ok
+test runtime_event::tests::story_50_2_status_coalescing_never_removes_canonical_events ... ok
+test runtime_recovery::tests::story_50_2_restart_failures_never_fall_through_to_resume ... ok
+test runtime_lifecycle::tests::story_50_2_plan_mutation_and_field_confusion_fail_closed ... ok
+test runtime_recovery::tests::story_50_2_write_recovery_plan_is_composed_without_gaining_authority ... ok
+test runtime_recovery::tests::story_50_2_restart_result_mapping_is_exhaustive ... ok
+test runtime_recovery::tests::story_50_2_terminal_result_requires_exact_proof_and_no_pending_authority ... ok
+test runtime_loop::tests::story_50_2_cumulative_budget_overage_is_non_mutating ... ok
+test runtime_recovery::tests::story_50_2_every_boundary_selects_one_closed_safe_action ... ok
+test runtime_recovery::tests::story_50_2_missing_stale_or_invalid_durable_evidence_enters_safe_mode ... ok
 test runtime_projection::tests::story_50_2_collection_overage_and_binding_drift_are_non_mutating ... ok
+test runtime_recovery::tests::story_50_2_consumed_or_uncertain_effect_is_never_replayed ... ok
 test runtime_event::tests::story_50_2_live_batch_stashes_the_first_event_beyond_its_byte_ceiling ... ok
-test runtime_lifecycle::tests::story_50_2_every_domain_and_action_retains_one_exact_owner ... ok
+test runtime_loop::tests::story_50_2_peak_memory_and_failure_ceilings_are_non_mutating ... ok
+test runtime_loop::tests::story_50_2_controlled_write_requires_every_bound_resource_budget ... ok
+test runtime_loop::tests::story_50_2_event_and_artifact_overage_is_non_mutating ... ok
+test runtime_loop::tests::story_50_2_subscription_capacity_is_bounded_by_count_and_bytes ... ok
+test runtime_projection::tests::story_50_2_safe_mode_and_restricted_events_never_collect_optional_telemetry ... ok
+test runtime_loop::tests::story_50_2_durable_restore_rejects_usage_drift ... ok
 test runtime_projection::tests::story_50_2_metrics_and_diagnostics_are_content_free_event_bound_and_bounded ... ok
 test runtime_event::tests::story_50_2_replay_pages_reconstruct_the_exact_terminal_chain ... ok
-test runtime_projection::tests::story_50_2_safe_mode_and_restricted_events_never_collect_optional_telemetry ... ok
+test runtime_event::tests::story_50_2_slow_client_drains_then_reconnects_without_event_loss ... ok
 test runtime_event::tests::story_50_2_replay_rejects_cursor_drift_and_undersized_pages ... ok
+test runtime_lifecycle::tests::story_50_2_every_domain_and_action_retains_one_exact_owner ... ok
 test runtime_projection::tests::story_50_2_verified_runtime_exchange_projects_valid_non_authoritative_turns ... ok
 test runtime_projection::tests::story_50_2_transcript_projection_obeys_opt_in_safe_mode_sensitivity_and_budget ... ok
 test runtime_journal::tests::story_50_2_dedicated_writer_saturation_is_bounded_and_recoverable ... ok
 test runtime_artifact::tests::story_50_2_artifact_pages_are_owner_bound_bounded_and_exact ... ok
 
-test result: ok. 32 passed; 0 failed; 1 ignored; 0 measured; 751 filtered out; finished in 0.18s
+test result: ok. 32 passed; 0 failed; 1 ignored; 0 measured; 1004 filtered out; finished in 0.17s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -187,26 +186,32 @@ COMMAND_4_EXIT=0
 
 $ cargo test -p agentmage-host story_22_2_linux_restart_restores_large_command_and_test_artifacts_without_replay --all-features --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_host-f0a5c135596f652b)
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-1b18b69b396ab8a2)
 
 running 1 test
 test linux_coding_runtime::tests::story_22_2_linux_restart_restores_large_command_and_test_artifacts_without_replay ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 170 filtered out; finished in 1.30s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 289 filtered out; finished in 1.27s
 
-     Running unittests src/bin/agent.rs (target/debug/deps/agent-96577979ca877677)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-
-     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-ac39fe6d405c29b2)
+     Running unittests src/bin/agent.rs (target/debug/deps/agent-ab1780041ce75a7c)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/main.rs (target/debug/deps/agentmage_host-8394ab74e8370b41)
+     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-00cda116f7610489)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agentmage-demo-documents.rs (target/debug/deps/agentmage_demo_documents-9b789c4edb3a05ff)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/agentmage_host-14f48993d0eba91d)
 
 running 0 tests
 

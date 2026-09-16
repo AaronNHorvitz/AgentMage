@@ -6,5 +6,5 @@ test runtime_journal::tests::story_21_2_dedicated_writer_poison_is_sticky_withou
 test runtime_journal::tests::story_50_2_dedicated_writer_saturation_is_bounded_and_recoverable ... ok
 test runtime_journal::tests::story_21_2_dedicated_writer_keeps_progress_and_clients_off_slow_store ... ok
 
-test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 1034 filtered out; finished in 0.28s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 1034 filtered out; finished in 0.29s
 

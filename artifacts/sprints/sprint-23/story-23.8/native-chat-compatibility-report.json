@@ -6,9 +6,9 @@
       "sha256": "62533387ddcdd384963564af25c7675dc2991fd47e1b7c0a068252e67251112e"
     },
     {
-      "byte_length": 19879,
+      "byte_length": 19757,
       "path": "shells/vscode/src/extension.ts",
-      "sha256": "ed06694e3e2b2b2fb6a857bd604bfb676fc9e52d2d3cd6534bc0c273625dfe8c"
+      "sha256": "64967df0feecb199b93d3467769ad617a2579d155c787fb1fc421bdf78b7b613"
     },
     {
       "byte_length": 7688,
@@ -16,19 +16,19 @@
       "sha256": "f2e09200c7d4b1c03dc40e6386f43cd8aa87ab9743f155e8a9587a599dd059e7"
     },
     {
-      "byte_length": 14948,
+      "byte_length": 16204,
       "path": "shells/vscode/src/participant_ingress.ts",
-      "sha256": "33e026cafe6923e864292170e24957efd1fb24ead20fbcd8ed0f22ab601257c6"
+      "sha256": "ffaf688d7a5bb5f4655cfd9dbc04148bfb95f31f425b1a26807ed1fd90a1a91f"
     },
     {
-      "byte_length": 60309,
+      "byte_length": 63466,
       "path": "shells/vscode/src/provider.ts",
-      "sha256": "9c0824496c1e8e62e2fc7e98506c8568af927af75719331c5bdbe0b33f89a14e"
+      "sha256": "e50b2950c7ffce2bead54d0a9b43c3a33d99a7795adeaedc411e59182d7a0a17"
     },
     {
-      "byte_length": 44694,
+      "byte_length": 45092,
       "path": "shells/vscode/src/runtime_transport.ts",
-      "sha256": "2e88de28536f4bda0202a780e64074e67f69dc38a08c1d984bd3083b5e640b4a"
+      "sha256": "b54c672fd6ffea2ccb90af9c74ca563065e99da426e254fe70fa2958b80bd9ac"
     },
     {
       "byte_length": 4429,
@@ -36,9 +36,9 @@
       "sha256": "2828cf8fee1c669a118fceb7f1c9d5d9b9bd3cde2a16574ca385f129475cc483"
     },
     {
-      "byte_length": 10107,
+      "byte_length": 12997,
       "path": "shells/vscode/test/participant_ingress.test.ts",
-      "sha256": "28f883727a4d5a71b021a68394c6cbaea5d367487af4d84d8959d4060f618786"
+      "sha256": "a23226252b90add654f7e9cf24381234dba6904239591808e30ebc4dbd930beb"
     },
     {
       "byte_length": 2793,
@@ -61,9 +61,9 @@
       "sha256": "e8edf9d238b741d861c4dc70d98110f07901fe7fe5db9fc53430282a1fe66d54"
     },
     {
-      "byte_length": 4612,
+      "byte_length": 6234,
       "path": "docs/architecture/stable-chat-participant-ingress.md",
-      "sha256": "c2d05a3cd321459fe9aa328fd2c0442c47cded7c681f700e85eaf7896e6d5263"
+      "sha256": "0e61dd4902fc703bd7672a693585d67549e2bb416caae7808947adbcf366e899"
     },
     {
       "byte_length": 8421,
@@ -76,9 +76,9 @@
       "sha256": "667177246e1f44edc1f79c1132a45a3718dc32397510a35db3bb8584dfe60baf"
     },
     {
-      "byte_length": 11282,
+      "byte_length": 12525,
       "path": "artifacts/sprints/sprint-23/story-23.8/native-chat-compatibility-results.log",
-      "sha256": "890f902307460a9f9b0cae131cf61698dc5dc57fd347bd53f74c78827563a0b1"
+      "sha256": "f7ea878f7b7d087b1db2f58a31ba38f1ad9dabdb88a276e4ba2fbba6acf4b57a"
     }
   ],
   "commands": [

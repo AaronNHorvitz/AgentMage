@@ -16,9 +16,9 @@
       "sha256": "91ec216eaa831293a6330134f33b7e9c5590408adfda0275392bd0ce8c78b227"
     },
     {
-      "byte_length": 130404,
+      "byte_length": 135911,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "5871d9c23024e36593fcfeac9741c92d0c97cada4e0adfbf06fc13fb2a37c448"
+      "sha256": "72d327fc2e8cae5358ef2700c94c4bc9a60aecda7e22ce513a06268f300f83d9"
     },
     {
       "byte_length": 17703,
@@ -56,9 +56,9 @@
       "sha256": "633e9a1901d8c472e4392e1b610092553af1c4f4df16fbac545ec6e6d783a7e5"
     },
     {
-      "byte_length": 38885,
+      "byte_length": 39382,
       "path": "artifacts/sprints/sprint-22/story-22.5/vertical-slice-results.log",
-      "sha256": "26522fab64b7317119d38e6995db5e62f52817e39eb68873e588bb4a13dd845b"
+      "sha256": "c5619d627d84ac97576b316e2615eb5fe798d39753cf086201d2bbae308723b2"
     },
     {
       "byte_length": 32183,

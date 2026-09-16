@@ -208,3 +208,13 @@ The successful source-bound report/logs were copied intact and the actual upstre
 validator passed. These are kernel reference/client workload observations, not Muse
 inference memory, model qualification or certified production performance. No test
 filter, limit, evidence binding, policy or source was weakened to obtain the pass.
+
+## Final current-evidence renewal
+
+The batch renewed only concretely stale current reports, retaining historical recorded-revision evidence. Current Story 22.5, 23.5–23.8, 50.3 and 50.4 degradation captures passed; the final 13-command 50.4-core aggregate passed after its stale upstream reports were actually regenerated. The initial core attempt stopped at stale Story 22.5 evidence; its failed log remains `/tmp/agentmage-demo-story50.4-core-first-attempt.log`. The initial 50.3 failed log remains `/tmp/agentmage-demo-story50.3-first-attempt.log`. Story 16.4’s invoked authoritative CLI also renewed its real report/log.
+
+Routine whole-path review pins were renewed for Story 2.2, Story 7.1 and Sprint 7, with no external human review claim. Their relevant gate mutation suites passed **30 tests in 587.211 seconds** (Story 2.2/Sprint 2/Story 4.1/Sprint 4) and **9 tests in 162.495 seconds** (Story 7.1/Sprint 7). Contract-index tests passed **12 tests**. Gates retain their exact original platform, independent review and release blockers.
+
+`npm run requirements:check` and read-only `npm run supply-chain:check` both exited **0**. The initial requirements check correctly rejected the stale current model-activation report after the status source changed. Its authoritative builder renewed the refusal report with production enabled profiles still empty and historical rejected candidates unchanged; the complete requirements check then passed. No model was qualified or activated for production by this renewal.
+
+Final standalone checks for the contract index, both checkpoint corpora, core aggregate, planning scope, context-safety registration, supply-chain artifacts, demo acceptance and status model all exited **0**. All five real demo reports retain current whole-file input bindings. Exact final command output is `/tmp/agentmage-demo-final-current-checks.log`; generated report/log artifacts retain their underlying command output and hashes. Production qualification remains incomplete.

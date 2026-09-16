@@ -6,14 +6,14 @@
       "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
     },
     {
-      "byte_length": 19339,
+      "byte_length": 22041,
       "path": "ENGINEERING-RUNTIME.md",
-      "sha256": "3dff78bc2a21f15a189c1c0c7f723c709d9db820a039aa1053eb3b5bfeb9e9fc"
+      "sha256": "1e007c75745900e3440d4806b997a6ebe628480f4f0f88a6a0d7adbedb0e24a2"
     },
     {
-      "byte_length": 13178,
+      "byte_length": 14907,
       "path": "MODEL-GATEWAY.md",
-      "sha256": "c84f6df2226f5771a4684516127c7ac9644e9d6220713748f3aae69d3b264d8a"
+      "sha256": "86fd7dc2fd905b6d7ea4609e534b8a16ce5eee5245fa57bfd0e72fce2bb54960"
     },
     {
       "byte_length": 18891,
@@ -38,12 +38,12 @@
     {
       "byte_length": 9896,
       "path": "artifacts/sprints/sprint-50/story-50.3-foundational-runtime/report.json",
-      "sha256": "6de50bba3d0f907afb8897bc0058b87ea7454d6004167db34dbad58d869ec22f"
+      "sha256": "d3f475dcd399e2ebbbc0f7649ff1d12e0ff7de08ae43e21e0513b0c56b51ab19"
     },
     {
       "byte_length": 5641,
       "path": "artifacts/sprints/sprint-50/story-50.4-dependency-degradation/report.json",
-      "sha256": "dec453ec25d9ba350d3549f98cee106d39258cb4e90eccd4a84620e47fbc3d73"
+      "sha256": "e7cec9ff9073a4f630c0cb6d970bcb2d5a5eb00004f89821bea5271dfb4ef675"
     },
     {
       "byte_length": 8764,
@@ -56,9 +56,9 @@
       "sha256": "7ee867cb3555fc11e82a104b801ba472adcfa28ceba56fe6b9720fea468deca1"
     },
     {
-      "byte_length": 16232,
+      "byte_length": 16465,
       "path": "artifacts/sprints/sprint-50/story-50.4-core-milestone/local-results.log",
-      "sha256": "6d7cbe8dbba8dcca21281c2dfa3a0a8a753786e6bf9de15d2512d13078671c7b"
+      "sha256": "7390002dd6cd4a223d01dd5d73e50c4e2e79fb123b60ab2c03ed0612d0c5d56d"
     }
   ],
   "commands": [

@@ -1,0 +1,11 @@
+   Compiling agentmage-kernel-contracts v0.0.0 (/tmp/agentmage-demo-load-evidence/kernel/contracts)
+   Compiling agentmage-kernel-engine v0.0.0 (/tmp/agentmage-demo-load-evidence/kernel/engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 30.14s
+     Running unittests src/lib.rs (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
+
+running 1 test
+AGENTMAGE_RUNTIME_LOAD_METRICS={"cleanup_verified":true,"event_count":8196,"fast_deliveries":8196,"journal_elapsed_ms":2376,"journal_events_per_second":3449,"lagged_subscribers":1,"maximum_queued_bytes":717824,"maximum_queued_events":1024,"publish_elapsed_ms":258,"publish_events_per_second":31767,"queue_saturations":7,"resident_memory_kib":57484,"restart_cycles":16,"restart_elapsed_ms":15204,"retained_disk_bytes":12066832}
+test runtime_journal::tests::story_50_2_reference_hardware_load_is_bounded_recoverable_and_nonblocking ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1036 filtered out; finished in 18.24s
+
