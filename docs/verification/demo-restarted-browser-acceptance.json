@@ -1,16 +1,16 @@
 {
   "record_type": "agentmage_local_demo_browser_acceptance",
-  "recorded_at": "2026-09-16T00:55:50.738Z",
+  "recorded_at": "2026-09-16T01:04:04.637Z",
   "tests": [
     {
       "name": "browser launch and real model ready",
       "passed": true,
-      "seconds": 15.031
+      "seconds": 15.038
     },
     {
       "name": "multi-document admission and unsupported input reasons",
       "passed": true,
-      "seconds": 0.051
+      "seconds": 0.049
     },
     {
       "name": "real inference through UI with checked source citation",
@@ -35,7 +35,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 15.457,
+      "elapsed_seconds": 15.598,
       "prompt_tokens": 379,
       "output_tokens": 296,
       "omitted_count": 0,
@@ -48,9 +48,9 @@
     "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
     "shells/host/Cargo.toml": "23e076624d2c6be50259f00e59449f48544fdc39c6c471c7468f85438a66ef17",
     "shells/host/src/lib.rs": "de57f7476dd4476179a399ca0f6855c9d3a3d1de3045ddaf1237d5d0c55b95c7",
-    "supply-chain/sbom.cdx.json": "a5e7bb97a168825cfd638b0ff7abbc9dd2e112b78f7e574f26857a9fbf72dbf4",
-    "supply-chain/dependency-provenance.json": "13c0f5e5fbe5332cae16f118ad55b91997d09be96f66cbea7390f404b76cac69",
-    "supply-chain/dependency-hashes.sha256": "a36b7b5b3336ca130fc15cfb7a883789302045cdb581ffeb07eeae8424a03163",
+    "supply-chain/sbom.cdx.json": "6924b6fe27ab5fd223f8b900d136d4039b3040acdcfafa811e9638c6b949219a",
+    "supply-chain/dependency-provenance.json": "ee81fc695a7ec94078f806028860b4c15a30bc9308d633b0b8b0070c5852b99a",
+    "supply-chain/dependency-hashes.sha256": "caa1a9b866d56a2718850d4fcb51463931766ccbc313fc535125a09319e5f86d",
     "scripts/demo.py": "8bb351d41e2833a166a1645004c1d3e9167f0056a02b5bd2c83d6baf1fe3fcdf",
     "scripts/demo_browser_smoke.mjs": "cc74666724a4c6e1c737e2df0493d64a12e9dab5fa7f02bff674d23888185549",
     "shells/host/src/demo_documents.rs": "e97ea0d5c75facb7f92ed0e3ca8688f754153863f78dfa2fd137200c51c7afe4",

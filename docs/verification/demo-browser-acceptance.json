@@ -1,56 +1,56 @@
 {
   "record_type": "agentmage_local_demo_browser_acceptance",
-  "recorded_at": "2026-09-16T00:54:49.700Z",
+  "recorded_at": "2026-09-16T01:03:02.857Z",
   "tests": [
     {
       "name": "browser launch and real model ready",
       "passed": true,
-      "seconds": 15.027
+      "seconds": 0.031
     },
     {
       "name": "multi-document admission and unsupported input reasons",
       "passed": true,
-      "seconds": 0.051
+      "seconds": 0.044
     },
     {
       "name": "real inference through UI with checked source citation",
       "passed": true,
-      "seconds": 15.715
+      "seconds": 6.631
     },
     {
       "name": "follow-up and second source grounding",
       "passed": true,
-      "seconds": 8.123
+      "seconds": 8.153
     },
     {
       "name": "unanswerable question has honest insufficient evidence",
       "passed": true,
-      "seconds": 6.345
+      "seconds": 6.367
     },
     {
       "name": "context overflow fails before generation without silent truncation",
       "passed": true,
-      "seconds": 0.099
+      "seconds": 0.098
     },
     {
       "name": "cancel generation then recover with real model answer",
       "passed": true,
-      "seconds": 4.885
+      "seconds": 4.917
     },
     {
       "name": "model-unavailable error and recovery through interface",
       "passed": true,
-      "seconds": 33.012
+      "seconds": 38.581
     },
     {
       "name": "bounded six-turn conversation and explicit new-conversation recovery",
       "passed": true,
-      "seconds": 64.831
+      "seconds": 65.13
     },
     {
       "name": "folder boundary symlink traversal and unsupported/invalid inputs",
       "passed": true,
-      "seconds": 29.465
+      "seconds": 29.732
     },
     {
       "name": "privileged endpoints reject missing token wrong origin and DNS rebinding host",
@@ -75,7 +75,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 15.539,
+      "elapsed_seconds": 6.485,
       "prompt_tokens": 379,
       "output_tokens": 296,
       "omitted_count": 0,
@@ -98,7 +98,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 8.004,
+      "elapsed_seconds": 8.027,
       "prompt_tokens": 432,
       "output_tokens": 378,
       "omitted_count": 0,
@@ -109,7 +109,7 @@
       "answer": "The selected documents do not provide enough evidence to answer this question.",
       "citations": [],
       "insufficient_evidence": true,
-      "elapsed_seconds": 6.068,
+      "elapsed_seconds": 6.113,
       "prompt_tokens": 492,
       "output_tokens": 283,
       "omitted_count": 0,
@@ -132,7 +132,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 4.411,
+      "elapsed_seconds": 4.446,
       "prompt_tokens": 376,
       "output_tokens": 205,
       "omitted_count": 0,
@@ -155,7 +155,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 17.166,
+      "elapsed_seconds": 19.65,
       "prompt_tokens": 415,
       "output_tokens": 383,
       "omitted_count": 0,
@@ -178,7 +178,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 12.094,
+      "elapsed_seconds": 12.166,
       "prompt_tokens": 373,
       "output_tokens": 577,
       "omitted_count": 0,
@@ -201,7 +201,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 7.959,
+      "elapsed_seconds": 7.985,
       "prompt_tokens": 415,
       "output_tokens": 375,
       "omitted_count": 0,
@@ -224,7 +224,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 8.718,
+      "elapsed_seconds": 8.733,
       "prompt_tokens": 457,
       "output_tokens": 410,
       "omitted_count": 0,
@@ -247,7 +247,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 8.569,
+      "elapsed_seconds": 8.589,
       "prompt_tokens": 499,
       "output_tokens": 402,
       "omitted_count": 0,
@@ -270,7 +270,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 7.385,
+      "elapsed_seconds": 7.468,
       "prompt_tokens": 541,
       "output_tokens": 347,
       "omitted_count": 0,
@@ -293,7 +293,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 6.909,
+      "elapsed_seconds": 6.938,
       "prompt_tokens": 583,
       "output_tokens": 321,
       "omitted_count": 0,
@@ -316,7 +316,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 11.985,
+      "elapsed_seconds": 12.08,
       "prompt_tokens": 373,
       "output_tokens": 577,
       "omitted_count": 0,
@@ -339,7 +339,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 6.306,
+      "elapsed_seconds": 6.323,
       "prompt_tokens": 201,
       "output_tokens": 297,
       "omitted_count": 0,
@@ -350,7 +350,7 @@
       "answer": "The selected documents do not provide enough evidence to answer this question.",
       "citations": [],
       "insufficient_evidence": true,
-      "elapsed_seconds": 14.085,
+      "elapsed_seconds": 14.098,
       "prompt_tokens": 242,
       "output_tokens": 673,
       "omitted_count": 0,
@@ -373,7 +373,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 8.686,
+      "elapsed_seconds": 8.62,
       "prompt_tokens": 374,
       "output_tokens": 409,
       "omitted_count": 0,
@@ -386,9 +386,9 @@
     "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
     "shells/host/Cargo.toml": "23e076624d2c6be50259f00e59449f48544fdc39c6c471c7468f85438a66ef17",
     "shells/host/src/lib.rs": "de57f7476dd4476179a399ca0f6855c9d3a3d1de3045ddaf1237d5d0c55b95c7",
-    "supply-chain/sbom.cdx.json": "a5e7bb97a168825cfd638b0ff7abbc9dd2e112b78f7e574f26857a9fbf72dbf4",
-    "supply-chain/dependency-provenance.json": "13c0f5e5fbe5332cae16f118ad55b91997d09be96f66cbea7390f404b76cac69",
-    "supply-chain/dependency-hashes.sha256": "a36b7b5b3336ca130fc15cfb7a883789302045cdb581ffeb07eeae8424a03163",
+    "supply-chain/sbom.cdx.json": "6924b6fe27ab5fd223f8b900d136d4039b3040acdcfafa811e9638c6b949219a",
+    "supply-chain/dependency-provenance.json": "ee81fc695a7ec94078f806028860b4c15a30bc9308d633b0b8b0070c5852b99a",
+    "supply-chain/dependency-hashes.sha256": "caa1a9b866d56a2718850d4fcb51463931766ccbc313fc535125a09319e5f86d",
     "scripts/demo.py": "8bb351d41e2833a166a1645004c1d3e9167f0056a02b5bd2c83d6baf1fe3fcdf",
     "scripts/demo_browser_smoke.mjs": "cc74666724a4c6e1c737e2df0493d64a12e9dab5fa7f02bff674d23888185549",
     "shells/host/src/demo_documents.rs": "e97ea0d5c75facb7f92ed0e3ca8688f754153863f78dfa2fd137200c51c7afe4",

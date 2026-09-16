@@ -8,8 +8,8 @@ Owner milestone: 2026-09-15. Branch `demo/fedora-local-docs`, based on current `
 - [x] Reconcile delegated decision identities and G1/G2 registration (48 focused tests).
 - [x] Verify existing Muse Q4_K_M + llama.cpp b10423 Vulkan provenance and scoped JSON-schema Q&A.
 - [x] Implement bounded folder admission and cited retrieval through AgentMage host/capability runtime (5 tests).
-- [ ] Implement protected loopback desktop browser UI, local inference, followups and recovery.
-- [ ] Run real-model browser acceptance, offline isolation, restart and regressions.
+- [x] Implement protected loopback desktop browser UI, local inference, followups and recovery.
+- [x] Run real-model browser acceptance, offline isolation, restart and regressions.
 - [ ] Consolidate affected evidence after source batch; document, commit and push milestones.
 
 ## Observations and decisions
@@ -22,7 +22,10 @@ Owner milestone: 2026-09-15. Branch `demo/fedora-local-docs`, based on current `
 
 ## Exact next action
 
-Resolve a false model abstention in the first real UI question despite correct retrieved source content, rerun full browser acceptance, then isolated offline/restart tests. No SBOM regeneration until all source changes are final.
+Finish the single consolidated current-evidence renewal, rerun hash-binding checks
+and relevant governance gates, commit/push final deliverables, and leave the verified
+demo running. The final real smoke is being repeated against the once-regenerated
+SBOM; no further runtime source edits are planned.
 
 ## Integration checkpoint
 
@@ -64,3 +67,17 @@ Exact next action: commit this acceptance milestone, regenerate supply-chain onc
 after the final source batch, repeat the real acceptance smoke for its new hashes,
 then regenerate the affected current evidence DAG in dependency order. Historical
 Git-revision evidence bundles stay immutable and receive truthful applicability.
+
+## Verified workflow and final evidence renewal
+
+All 11 real browser cases passed, followed by real application inference in a scoped
+networkless namespace and a fresh successful interaction after full stop/restart.
+All four acceptance reports pass `scripts/demo_evidence_check.py`. Scope-specific
+status is integrated/native-tested/verified-local-demo; production qualification
+objects and roadmap checkboxes remain unchanged. Milestone `380c643a` retains this
+verified scope and inspected acceptance evidence.
+
+The SBOM was regenerated once after the entire source batch. Full real acceptance
+is now repeating against those final carrier hashes while current evidence builders
+renew in dependency order. Historical revision-bound artifacts stay immutable.
+The precise results and known limits are in `docs/verification/demo-acceptance.md`.

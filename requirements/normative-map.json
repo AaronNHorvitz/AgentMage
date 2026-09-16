@@ -123,8 +123,8 @@
       "statement_sha256": "187ba288f458f95b2dc17bc769115783f9375ebf04865b567e6363d13beb95d0"
     },
     {
-      "heading": "G1 — Preflight Against the Actually Served Context",
-      "line": 467,
+      "heading": "G1 \u2014 Preflight Against the Actually Served Context",
+      "line": 468,
       "requirement_ids": [
         "AM-MDL-004",
         "AM-TST-002"
@@ -132,8 +132,8 @@
       "statement_sha256": "6dc914a9f18d34a7ee716a7598a23a8ba59e4c68077a7a5c59f2b40fbe60025d"
     },
     {
-      "heading": "G1 — Preflight Against the Actually Served Context",
-      "line": 471,
+      "heading": "G1 \u2014 Preflight Against the Actually Served Context",
+      "line": 472,
       "requirement_ids": [
         "AM-MDL-004",
         "AM-MDL-006"
@@ -141,8 +141,8 @@
       "statement_sha256": "5dcf1ccdc4307557d5a8dc596f9f66a819b6a52ec755ccf971ab7e4049da36dc"
     },
     {
-      "heading": "G1 — Preflight Against the Actually Served Context",
-      "line": 476,
+      "heading": "G1 \u2014 Preflight Against the Actually Served Context",
+      "line": 477,
       "requirement_ids": [
         "AM-MDL-004",
         "AM-MDL-007"
@@ -150,8 +150,8 @@
       "statement_sha256": "e722c98a94b521af4739538b83111e64f44e6285554f11c137b1d7ea21704fbf"
     },
     {
-      "heading": "G1 — Preflight Against the Actually Served Context",
-      "line": 478,
+      "heading": "G1 \u2014 Preflight Against the Actually Served Context",
+      "line": 479,
       "requirement_ids": [
         "AM-MDL-003",
         "AM-MDL-004",
@@ -160,16 +160,16 @@
       "statement_sha256": "b21f6f0505d464b19cf4f8f9707012e42dd3a879478067a067876e247c997b9e"
     },
     {
-      "heading": "G1 — Preflight Against the Actually Served Context",
-      "line": 482,
+      "heading": "G1 \u2014 Preflight Against the Actually Served Context",
+      "line": 483,
       "requirement_ids": [
         "AM-MDL-004"
       ],
       "statement_sha256": "72797f6f7f7e9fe353d58074cd36cb8c464dbce1d77033c4a33dbe6fd26ab0f2"
     },
     {
-      "heading": "G1 — Preflight Against the Actually Served Context",
-      "line": 484,
+      "heading": "G1 \u2014 Preflight Against the Actually Served Context",
+      "line": 485,
       "requirement_ids": [
         "AM-KRN-001",
         "AM-MDL-004"
@@ -177,8 +177,8 @@
       "statement_sha256": "2ad8df293bc5a1dc5a65ac28ca638c838852ba976832e8bbbd15b3f5e64acb57"
     },
     {
-      "heading": "G1 — Preflight Against the Actually Served Context",
-      "line": 487,
+      "heading": "G1 \u2014 Preflight Against the Actually Served Context",
+      "line": 488,
       "requirement_ids": [
         "AM-KRN-001",
         "AM-MDL-004"
@@ -186,8 +186,8 @@
       "statement_sha256": "2efba4c52f4249f461834186eec4e1924914bd827492bd632b6203914c8ab9f7"
     },
     {
-      "heading": "G1 — Preflight Against the Actually Served Context",
-      "line": 488,
+      "heading": "G1 \u2014 Preflight Against the Actually Served Context",
+      "line": 489,
       "requirement_ids": [
         "AM-KRN-001",
         "AM-MDL-004"
@@ -195,8 +195,8 @@
       "statement_sha256": "8c507b024c0aaf1dd111f5272748a8c879a25627db576170e880bf653231ef50"
     },
     {
-      "heading": "G1 — Preflight Against the Actually Served Context",
-      "line": 501,
+      "heading": "G1 \u2014 Preflight Against the Actually Served Context",
+      "line": 502,
       "requirement_ids": [
         "AM-MDL-004",
         "AM-TST-002"
@@ -204,8 +204,8 @@
       "statement_sha256": "2fb2c87fee520aea942693d0a572dae9dfe8fa00c3435d95c3c7a07b7df02552"
     },
     {
-      "heading": "G1 — Preflight Against the Actually Served Context",
-      "line": 503,
+      "heading": "G1 \u2014 Preflight Against the Actually Served Context",
+      "line": 504,
       "requirement_ids": [
         "AM-KRN-001",
         "AM-MDL-004",
@@ -214,8 +214,8 @@
       "statement_sha256": "deccb0b0aae0e5fde1a112ef016b1b313517c43b675031fb1c8228d72c1c23db"
     },
     {
-      "heading": "G1 — Preflight Against the Actually Served Context",
-      "line": 506,
+      "heading": "G1 \u2014 Preflight Against the Actually Served Context",
+      "line": 507,
       "requirement_ids": [
         "AM-KRN-001",
         "AM-MDL-004",
@@ -224,8 +224,8 @@
       "statement_sha256": "40ec578d65b1c802c10cabb6137fee50bb6b248e0f63912f4b1b330121462033"
     },
     {
-      "heading": "G1 — Preflight Against the Actually Served Context",
-      "line": 508,
+      "heading": "G1 \u2014 Preflight Against the Actually Served Context",
+      "line": 509,
       "requirement_ids": [
         "AM-MDL-004",
         "AM-TST-002"
@@ -233,8 +233,8 @@
       "statement_sha256": "547a95ab5b240f6cd659b5c8d29ddc8a0b04f76cdf51ff07dbfe3dafd7194f5b"
     },
     {
-      "heading": "G1 — Preflight Against the Actually Served Context",
-      "line": 513,
+      "heading": "G1 \u2014 Preflight Against the Actually Served Context",
+      "line": 514,
       "requirement_ids": [
         "AM-EVD-001",
         "AM-MDL-004",
@@ -243,8 +243,8 @@
       "statement_sha256": "cfb66f8285fa24a70625d2dfc40130c3e15423eca5a57e126e7f68ed6336bb49"
     },
     {
-      "heading": "G2 — Retain Originals and Make Summary Use Visible",
-      "line": 517,
+      "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
+      "line": 518,
       "requirement_ids": [
         "AM-DAT-001",
         "AM-PRV-001",
@@ -253,8 +253,8 @@
       "statement_sha256": "a7e2418d33dcde339d990c2308ece9af6a790e60dffadde0791843370690d596"
     },
     {
-      "heading": "G2 — Retain Originals and Make Summary Use Visible",
-      "line": 527,
+      "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
+      "line": 528,
       "requirement_ids": [
         "AM-DAT-001",
         "AM-EVD-001",
@@ -263,8 +263,8 @@
       "statement_sha256": "53666395338b5d7e29533689a98bbec04bd17b140191fa8c674456f329f619a0"
     },
     {
-      "heading": "G2 — Retain Originals and Make Summary Use Visible",
-      "line": 532,
+      "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
+      "line": 533,
       "requirement_ids": [
         "AM-DAT-001",
         "AM-PRV-001",
@@ -273,8 +273,8 @@
       "statement_sha256": "4b13c4b96be9722a90f0097901cca9b289b6e0fff472dc9a865a3f50498e1846"
     },
     {
-      "heading": "G2 — Retain Originals and Make Summary Use Visible",
-      "line": 533,
+      "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
+      "line": 534,
       "requirement_ids": [
         "AM-EVD-001",
         "AM-SES-001"
@@ -282,8 +282,8 @@
       "statement_sha256": "e43f987a56b08d9dc1e89f184d382d9ba889fd52011821186546301757667c10"
     },
     {
-      "heading": "G2 — Retain Originals and Make Summary Use Visible",
-      "line": 535,
+      "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
+      "line": 536,
       "requirement_ids": [
         "AM-DAT-001",
         "AM-SES-001"
@@ -291,8 +291,8 @@
       "statement_sha256": "5c8acf7c3873842021dda4d4bf65343b0bc7ec631f7a7aac1b4a32088c28fc7c"
     },
     {
-      "heading": "G2 — Retain Originals and Make Summary Use Visible",
-      "line": 536,
+      "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
+      "line": 537,
       "requirement_ids": [
         "AM-EVD-002",
         "AM-VSC-002"
@@ -300,8 +300,8 @@
       "statement_sha256": "adade6a7df2e4b146a50679f9e6a4eebdcf6bf87072311ccc83dc0a0ebca46f2"
     },
     {
-      "heading": "G2 — Retain Originals and Make Summary Use Visible",
-      "line": 544,
+      "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
+      "line": 545,
       "requirement_ids": [
         "AM-EVD-001",
         "AM-EVD-002",
@@ -310,8 +310,8 @@
       "statement_sha256": "04c6d9a335ae28ce929483f46de04c847279ebcaad6197a345c84ba80af38620"
     },
     {
-      "heading": "G2 — Retain Originals and Make Summary Use Visible",
-      "line": 545,
+      "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
+      "line": 546,
       "requirement_ids": [
         "AM-EVD-002",
         "AM-SES-001"
@@ -319,8 +319,8 @@
       "statement_sha256": "d99e9d2f49f7a551905c9e7602d27da170d41120c622cc131b4aab9c4649e8f1"
     },
     {
-      "heading": "G2 — Retain Originals and Make Summary Use Visible",
-      "line": 547,
+      "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
+      "line": 548,
       "requirement_ids": [
         "AM-PRV-001",
         "AM-SES-001"
@@ -329,7 +329,7 @@
     },
     {
       "heading": "9. Threat Model and Process Boundaries",
-      "line": 587,
+      "line": 588,
       "requirement_ids": [
         "AM-INS-001"
       ],
@@ -337,7 +337,7 @@
     },
     {
       "heading": "9. Threat Model and Process Boundaries",
-      "line": 589,
+      "line": 590,
       "requirement_ids": [
         "AM-MDL-001",
         "AM-MDL-003",
@@ -351,7 +351,7 @@
     },
     {
       "heading": "9. Threat Model and Process Boundaries",
-      "line": 591,
+      "line": 592,
       "requirement_ids": [
         "AM-SEC-001"
       ],
@@ -359,7 +359,7 @@
     },
     {
       "heading": "10. Capability Grants",
-      "line": 606,
+      "line": 607,
       "requirement_ids": [
         "AM-AUT-001"
       ],
@@ -367,7 +367,7 @@
     },
     {
       "heading": "11. Path Contract",
-      "line": 614,
+      "line": 615,
       "requirement_ids": [
         "AM-PTH-001"
       ],
@@ -375,7 +375,7 @@
     },
     {
       "heading": "12. Canonical Data and Storage",
-      "line": 623,
+      "line": 624,
       "requirement_ids": [
         "AM-DAT-001"
       ],
@@ -383,7 +383,7 @@
     },
     {
       "heading": "12. Canonical Data and Storage",
-      "line": 638,
+      "line": 639,
       "requirement_ids": [
         "AM-DAT-001"
       ],
@@ -391,7 +391,7 @@
     },
     {
       "heading": "12. Canonical Data and Storage",
-      "line": 642,
+      "line": 643,
       "requirement_ids": [
         "AM-DAT-001",
         "AM-REP-001",
@@ -401,7 +401,7 @@
     },
     {
       "heading": "13. Privacy, Encryption, and Retention",
-      "line": 657,
+      "line": 658,
       "requirement_ids": [
         "AM-DAT-001",
         "AM-EVD-001",
@@ -412,7 +412,7 @@
     },
     {
       "heading": "14. Offline and Network Contract",
-      "line": 665,
+      "line": 666,
       "requirement_ids": [
         "AM-MDL-001",
         "AM-MDL-004",
@@ -422,7 +422,7 @@
     },
     {
       "heading": "15. Codex Handoff Boundary",
-      "line": 673,
+      "line": 674,
       "requirement_ids": [
         "AM-HOF-001"
       ],
@@ -430,7 +430,7 @@
     },
     {
       "heading": "15. Codex Handoff Boundary",
-      "line": 675,
+      "line": 676,
       "requirement_ids": [
         "AM-HOF-001"
       ],
@@ -438,7 +438,7 @@
     },
     {
       "heading": "16. Evidence and Completion",
-      "line": 690,
+      "line": 691,
       "requirement_ids": [
         "AM-AGT-001",
         "AM-EVD-001",
@@ -448,7 +448,7 @@
     },
     {
       "heading": "16. Evidence and Completion",
-      "line": 692,
+      "line": 693,
       "requirement_ids": [
         "AM-DAT-001",
         "AM-EVD-001"
@@ -457,7 +457,7 @@
     },
     {
       "heading": "17. Release Acceptance",
-      "line": 718,
+      "line": 719,
       "requirement_ids": [
         "AM-MDL-004",
         "AM-MDL-006",
@@ -467,7 +467,7 @@
     },
     {
       "heading": "17. Release Acceptance",
-      "line": 720,
+      "line": 721,
       "requirement_ids": [
         "AM-MDL-005",
         "AM-MDL-006",
@@ -477,7 +477,7 @@
     },
     {
       "heading": "17. Release Acceptance",
-      "line": 728,
+      "line": 729,
       "requirement_ids": [
         "AM-DOC-001",
         "AM-TST-001",

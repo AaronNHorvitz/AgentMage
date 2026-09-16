@@ -6,7 +6,7 @@
     },
     {
       "path": "LICENSE",
-      "sha256": "02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f"
+      "sha256": "3c0fe2e36ea4933e3fbf92bc2bac81ae05bc47800e85be7e1bb40ede19c5e5f7"
     },
     {
       "path": "architecture/artifact-scan-policy.json",
@@ -38,7 +38,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/artifact-index.json",
-      "sha256": "f947a85eb6eb9a9af0f3958fb13108125ae4c2fe33f1c2619cca15f099847a09"
+      "sha256": "0a5916677097be2b9f5f1c21912f47abeb118fc831f61479f53b4b10ed3f2107"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/artifact-scan-report.json",
@@ -102,15 +102,15 @@
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "e62ea70c4e170ffc9a18a0da4df8fe5a26c001ca3251710639ea6f3a67364097"
+      "sha256": "caa1a9b866d56a2718850d4fcb51463931766ccbc313fc535125a09319e5f86d"
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "efa9d79f65dc4005bb102f860351a2940b604c5ac99a11d92a7e592c5c16b322"
+      "sha256": "ee81fc695a7ec94078f806028860b4c15a30bc9308d633b0b8b0070c5852b99a"
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "c0259a9c151eaf18a6ec47c3229c5a20728ba8b9b1c9284803882bbf424b5de4"
+      "sha256": "6924b6fe27ab5fd223f8b900d136d4039b3040acdcfafa811e9638c6b949219a"
     }
   ],
   "macos": {

@@ -53,7 +53,7 @@
     {
       "bytes": 4142,
       "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
-      "sha256": "b8c90ac20bfa741c0d72c21dc8236591601b8f08a4a9699ea8628880f31303c5"
+      "sha256": "f02d700e5bfc7da8681b7cf034116dd926fd456c2effef8fdb8dc84f0ce7436e"
     },
     {
       "bytes": 6520,
@@ -71,14 +71,14 @@
       "sha256": "1ec253627f8aa8a21cc1a9f23430859a45b46932569ba1a93e69020ed563b2d4"
     },
     {
-      "bytes": 446026,
+      "bytes": 446056,
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "12c63a23fba8fb8f4b9766782587029452abb05c2238376c8cf2b888a94abab9"
+      "sha256": "ee81fc695a7ec94078f806028860b4c15a30bc9308d633b0b8b0070c5852b99a"
     },
     {
-      "bytes": 465835,
+      "bytes": 465865,
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "d7cf9eb4a5b55e81b04946e3c1a4773422d5626d5800d1a498f23968cc5d3381"
+      "sha256": "6924b6fe27ab5fd223f8b900d136d4039b3040acdcfafa811e9638c6b949219a"
     },
     {
       "bytes": 23467,
@@ -260,7 +260,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "9a078d24a7da51ad74eb95c86e74337d694263b4",
+  "source_revision": "380c643ad7148a49e3b61f17a15e13ba85be1863",
   "status": "pass-non-macos-security-mapping",
   "story_id": "7.1",
   "summary": {

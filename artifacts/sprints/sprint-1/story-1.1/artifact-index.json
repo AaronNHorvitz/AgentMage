@@ -17,7 +17,7 @@
         },
         {
           "path": "kernel/contracts/Cargo.toml",
-          "sha256": "960fb2e7c1128ed9508a667f7240aa67eb5bf6da95f8d24df97658a0af958088"
+          "sha256": "41b9192d56af6e360f2a77d065b823af009cc30ad04fdcb96c08f22cfc6fd6c8"
         },
         {
           "path": "kernel/engine/Cargo.toml",
@@ -37,7 +37,7 @@
         },
         {
           "path": "shells/host/Cargo.toml",
-          "sha256": "b6ad82e6be880f63c24d47a0341748261f2bd747d7a851264b81ab24beacf713"
+          "sha256": "23e076624d2c6be50259f00e59449f48544fdc39c6c471c7468f85438a66ef17"
         },
         {
           "path": "shells/vscode/package.json",
@@ -85,15 +85,15 @@
         },
         {
           "path": "supply-chain/dependency-hashes.sha256",
-          "sha256": "e62ea70c4e170ffc9a18a0da4df8fe5a26c001ca3251710639ea6f3a67364097"
+          "sha256": "caa1a9b866d56a2718850d4fcb51463931766ccbc313fc535125a09319e5f86d"
         },
         {
           "path": "supply-chain/dependency-provenance.json",
-          "sha256": "efa9d79f65dc4005bb102f860351a2940b604c5ac99a11d92a7e592c5c16b322"
+          "sha256": "ee81fc695a7ec94078f806028860b4c15a30bc9308d633b0b8b0070c5852b99a"
         },
         {
           "path": "supply-chain/sbom.cdx.json",
-          "sha256": "c0259a9c151eaf18a6ec47c3229c5a20728ba8b9b1c9284803882bbf424b5de4"
+          "sha256": "6924b6fe27ab5fd223f8b900d136d4039b3040acdcfafa811e9638c6b949219a"
         }
       ],
       "task_id": "1.1.2.3"
