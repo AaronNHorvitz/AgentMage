@@ -2714,14 +2714,18 @@ that the existing Linux native adapter or live evaluation path is missing.
   - [ ] **Sub-task 13.1.3.5 - Product security evidence:** Complete `AT-MODEL-003` and the contract portion of `AT-MODEL-005`; map `SR-PLT-007`, `SR-SUP-006` through `SR-SUP-009`, `SR-AI-001` through `SR-AI-016`, and `RV-13`/`RV-14`; retain Model BOM, licenses, hashes, transformation provenance, codec vectors, adapter traces, evaluations, and independent decoder review.
 
 - [ ] **Task 13.1.4 - Register the served-context and continuity correction**
-  - [ ] **Sub-task 13.1.4.1:** Reconcile PRD G1/G2 with `AM-MDL-004`, `AM-MDL-006`, `AM-CTX-001`
+  - [x] **Sub-task 13.1.4.1:** Reconcile PRD G1/G2 with `AM-MDL-004`, `AM-MDL-006`, `AM-CTX-001`
     through `AM-CTX-003`, `AM-SES-001`, `AM-SES-002`, existing runtime/gateway/security contracts,
     and privacy/retention rules. Record the dated owner request, additions-only requirement/test
     mappings, schema/migration ownership, and any necessary decision through governance; do not
     overwrite accepted requirements. **Execution:** local planning; owner=runtime-contracts.
     Owner direction supplied on 2026-09-15 is recorded in Decision 0053: BSL retains 0051,
     restart readiness becomes 0052, and the explicit post-0053 normative snapshot accepts G1/G2.
-    Current evidence regeneration and registration verification remain required before closure.
+    Verification: accepted additions-only registration, decision identity/hash validation, schema
+    migration/refusal ownership, and the post-0053 planning snapshot pass the focused governance
+    suite (97 tests), context-safety registration tests (5 tests), and task-graph validation.
+    This closes planning reconciliation only; runtime implementation and production qualification
+    remain governed by their separate incomplete rows.
   - [x] **Sub-task 13.1.4.2:** Register all new task-level dependencies and PRD `CTX-*` acceptance
     cases in the machine-checked plan, release applicability, and blocker register. Prove no cycle
     between Task 13.4.5 and Sub-task 13.3.4.3, no orphan/duplicate identifiers, and no inherited
@@ -2741,7 +2745,7 @@ that the existing Linux native adapter or live evaluation path is missing.
     versioned migrations and sixteen closed refusal codes. Legacy served/result records require
     requalification, an absent preparation rejects dispatch, and incomplete capture or lineage
     disables complete continuity rather than manufacturing capacity or history. Four focused
-    mutation groups preserve the unresolved governance status, release bindings, graph ordering,
+    mutation groups enforce accepted governance identity/hash binding, release bindings, graph ordering,
     CTX ownership, and migration/refusal closure.
 - [ ] **Task 13.1.5 - Bind the loaded process to observed serving capabilities**
   - [ ] **Sub-task 13.1.5.1:** After Task 13.1.4, extend existing load/health/lifecycle contracts

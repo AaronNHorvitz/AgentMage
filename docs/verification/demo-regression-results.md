@@ -157,3 +157,22 @@ The broad `product:check` umbrella is not represented as passing because its
 Raw development logs are in `/tmp/agentmage-demo-cargo-regression.log`,
 `/tmp/agentmage-demo-clippy.log`, and `/tmp/agentmage-demo-product-*.log`; they are
 temporary local logs, not required release evidence inputs.
+
+## Final delegated-governance regressions
+
+After the final source batch, real acceptance and single SBOM renewal:
+
+```sh
+python3 -m unittest tests.test_architecture_decision tests.test_planning_scope tests.test_requirement_registry tests.test_requirement_coverage tests.test_status_model tests.test_schema_evolution_plan tests.test_remaining_plan_blocker_audit
+python3 scripts/status_model.py
+python3 scripts/demo_evidence_check.py
+```
+
+All exited **0**. The focused suite ran **97 tests in 1.302 seconds**. It validates
+unique accepted decision identities, the explicit delegated normative snapshot,
+registry/coverage/planning integrity, scoped native demo promotion, retained schema
+migration bindings and accurate blockers. The acceptance checker independently
+verified all four current whole-file-bound real demo reports after the SBOM renewal.
+The temporary raw focused-test log is `/tmp/agentmage-demo-final-governance-tests.log`.
+A separate `python3 -m unittest tests.test_context_safety_registration` run passed
+all **5 tests**, and `npm run task-graph:check` exited **0**.
