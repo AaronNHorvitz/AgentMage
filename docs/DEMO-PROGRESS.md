@@ -41,3 +41,11 @@ Governance milestone `9a3abe22` is committed and pushed to origin. Relevant regr
 ## Full browser cases checkpoint
 
 Known facts, source inspection, rehearsal follow-up, absent fact, actual context overflow, cancellation/recovery, model unavailable/retry and six-turn limit/new conversation pass. The boundary model answered token 44321 and ignored injected SECRET ROBOT instruction; a test assertion incorrectly searched both answer and quoted source attack text. Fixed the helper to inspect answer text separately, which also strengthens all known-fact assertions. Full real browser/offline/restart smoke is next.
+
+## Retained implementation milestone
+
+Implementation/docs milestone `49cd3fb3` is pushed. The full smoke command is now exercising answer-only assertions (source quotes inspected separately), real local chat completions, offline backend/model isolation and full stop/restart. Demo status is implemented/contract-tested pending full acceptance; production current_product markers stay unchanged. After all source/governance inputs are finalized: one SBOM regeneration, rerun final hash-bound real-model acceptance, then renew current evidence in dependency order.
+
+## Acceptance runner diagnostic
+
+Full smoke passed 10 browser cases, including boundary enforcement and malicious-source handling. Its final Host-header test used Node fetch, which replaced the overridden Host and returned 200 for the actual valid host. Independent raw urllib requests correctly returned 403 for missing token, wrong Origin and wrong Host. Updated the runner to use Node HTTP requests for exact header tests; backend protection was already correct. Full smoke rerun remains required before native demo promotion.

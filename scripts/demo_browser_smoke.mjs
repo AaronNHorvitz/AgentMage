@@ -1,5 +1,6 @@
 // Real browser acceptance over the running AgentMage application and local model.
 import puppeteer from "puppeteer";
+import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
@@ -92,17 +93,38 @@ async function newConversation() {
   await statusContains("New conversation ready");
 }
 async function api(op, data = {}, headers = {}) {
-  const r = await fetch(origin + "/api/" + op, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-AgentMage-Token": token,
-      ...headers,
-    },
-    body: JSON.stringify(data),
+  const body = JSON.stringify(data);
+  return new Promise((resolve, reject) => {
+    const request = http.request(
+      origin + "/api/" + op,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body),
+          "X-AgentMage-Token": token,
+          ...headers,
+        },
+      },
+      (response) => {
+        let result = "";
+        response.on("data", (chunk) => {
+          result += chunk;
+        });
+        response.on("end", () => {
+          try {
+            resolve({ status: response.statusCode, value: JSON.parse(result) });
+          } catch (e) {
+            reject(e);
+          }
+        });
+      },
+    );
+    request.on("error", reject);
+    request.end(body);
   });
-  return { status: r.status, value: await r.json() };
 }
+
 let boundaryDir;
 try {
   await test("browser launch and real model ready", async () => {

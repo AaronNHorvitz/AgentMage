@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+import json
+import tempfile
 import unittest
+from pathlib import Path
 
 from scripts.status_model import (
     ROOT,
@@ -9,6 +13,9 @@ from scripts.status_model import (
     load_status_model,
     transition_is_legal,
     validate_status_model,
+    _validate_demo_native_evidence,
+    DEMO_ACCEPTANCE_REPORTS,
+    DEMO_BROWSER_CASES,
 )
 
 
@@ -31,6 +38,76 @@ class StatusModelTests(unittest.TestCase):
 
     def test_canonical_status_model_passes(self) -> None:
         self.assertEqual(self.validate(self.model), [])
+
+    def test_demo_scope_cannot_promote_production_or_enable_compaction(self) -> None:
+        mutated = copy.deepcopy(self.model)
+        demo = mutated["demo_milestones"][0]
+        demo["automatic_compaction_enabled"] = True
+        demo["production_qualification"] = True
+        failures = self.validate(mutated)
+        self.assertTrue(any("automatic_compaction_enabled" in item for item in failures))
+        self.assertTrue(any("production_qualification" in item for item in failures))
+
+    def test_demo_selected_model_binding_cannot_drift(self) -> None:
+        mutated = copy.deepcopy(self.model)
+        mutated["demo_milestones"][0]["model_sha256"] = "0" * 64
+        self.assertTrue(any("selected-model binding" in item for item in self.validate(mutated)))
+
+    def test_demo_native_state_requires_actual_complete_acceptance(self) -> None:
+        mutated = copy.deepcopy(self.model)
+        demo = mutated["demo_milestones"][0]
+        demo["verification_status"] = "native-tested"
+        demo["acceptance_status"] = "pending-real-browser-offline-restart"
+        self.assertTrue(any("verified-local-demo acceptance" in item for item in self.validate(mutated)))
+        with tempfile.TemporaryDirectory() as temporary:
+            failures = []
+            _validate_demo_native_evidence(Path(temporary), failures)
+        self.assertEqual(len(failures), len(DEMO_ACCEPTANCE_REPORTS))
+
+    def test_demo_native_report_guard_rejects_failed_cases_omitted_bindings_and_stale_inputs(self) -> None:
+        # Synthetic unit fixtures exercise the validator, never demo acceptance.
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            inputs = ["scripts/demo.py", "scripts/demo_smoke.py", "scripts/demo_offline_smoke.py",
+                      "scripts/demo_browser_smoke.mjs", "shells/host/src/demo_documents.rs",
+                      "demo/model.json", "demo/web/app.js", "supply-chain/sbom.cdx.json",
+                      "supply-chain/dependency-provenance.json", "supply-chain/dependency-hashes.sha256"]
+            bindings = {}
+            for relative in inputs:
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("unit fixture", encoding="utf-8")
+                bindings[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+            output = root / "docs" / "verification"
+            output.mkdir(parents=True)
+            for name, record_type in DEMO_ACCEPTANCE_REPORTS.items():
+                report = {"record_type": record_type, "passed": True, "source_sha256": bindings,
+                          "network": {"external_connect_blocked": True},
+                          "real_application_result": {"answer": "unit fact", "citations": ["unit source"]},
+                          "acceptance_reports": ["docs/verification/demo-browser-acceptance.json",
+                                                 "docs/verification/demo-offline-acceptance.json",
+                                                 "docs/verification/demo-restarted-browser-acceptance.json"],
+                          "final_running_pid": 123}
+                if "browser" in name:
+                    report["tests"] = [{"name": case, "passed": True} for case in sorted(DEMO_BROWSER_CASES)]
+                    report["real_model_interactions"] = [
+                        {"answer": "unit fact", "citations": ["unit source"], "insufficient_evidence": False},
+                        {"answer": "unit abstention", "citations": [], "insufficient_evidence": True}]
+                (output / name).write_text(json.dumps(report), encoding="utf-8")
+            failures = []
+            _validate_demo_native_evidence(root, failures)
+            self.assertEqual(failures, [])
+            path = output / "demo-browser-acceptance.json"
+            report = json.loads(path.read_text())
+            report["tests"][0]["passed"] = False
+            report["source_sha256"].pop("scripts/demo.py")
+            path.write_text(json.dumps(report), encoding="utf-8")
+            (root / "demo" / "model.json").write_text("changed unit fixture", encoding="utf-8")
+            failures = []
+            _validate_demo_native_evidence(root, failures)
+            self.assertTrue(any("failed or missing cases" in item for item in failures))
+            self.assertTrue(any("source binding coverage" in item for item in failures))
+            self.assertTrue(any("input is stale" in item for item in failures))
 
     def test_unknown_status_is_rejected(self) -> None:
         mutated = copy.deepcopy(self.model)

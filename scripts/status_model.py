@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -104,6 +105,139 @@ EXPECTED_MODEL_DISPOSITIONS = {
         "REJECTED",
     ),
 }
+DEMO_ACCEPTANCE_REPORTS = {
+    "demo-browser-acceptance.json": "agentmage_local_demo_browser_acceptance",
+    "demo-offline-acceptance.json": "agentmage_scoped_offline_demo_acceptance",
+    "demo-restarted-browser-acceptance.json": "agentmage_local_demo_browser_acceptance",
+    "demo-restart-acceptance.json": "agentmage_demo_stop_restart_acceptance",
+}
+DEMO_BROWSER_CASES = {
+    "browser launch and real model ready",
+    "multi-document admission and unsupported input reasons",
+    "real inference through UI with checked source citation",
+    "follow-up and second source grounding",
+    "unanswerable question has honest insufficient evidence",
+    "context overflow fails before generation without silent truncation",
+    "cancel generation then recover with real model answer",
+    "model-unavailable error and recovery through interface",
+    "bounded six-turn conversation and explicit new-conversation recovery",
+    "folder boundary symlink traversal and unsupported/invalid inputs",
+    "privileged endpoints reject missing token wrong origin and DNS rebinding host",
+}
+
+
+def _validate_demo_native_evidence(root: Path, failures: list[str]) -> None:
+    """Require actual successful, current application acceptance for this demo."""
+    for name, record_type in DEMO_ACCEPTANCE_REPORTS.items():
+        path = root / "docs" / "verification" / name
+        try:
+            report = load_json(path)
+        except (OSError, ValueError) as error:
+            failures.append(f"demo native acceptance report unavailable: {name}: {error}")
+            continue
+        if not isinstance(report, dict) or report.get("record_type") != record_type:
+            failures.append(f"demo native acceptance report identity differs: {name}")
+            continue
+        bindings = report.get("source_sha256")
+        if not isinstance(bindings, dict) or not bindings:
+            failures.append(f"demo native acceptance lacks source bindings: {name}")
+        else:
+            required_inputs = {"scripts/demo_smoke.py"} if name == "demo-restart-acceptance.json" else {
+                "scripts/demo.py", "shells/host/src/demo_documents.rs", "demo/model.json",
+                "supply-chain/sbom.cdx.json", "supply-chain/dependency-provenance.json",
+                "supply-chain/dependency-hashes.sha256",
+            }
+            if "browser" in name:
+                required_inputs |= {"scripts/demo_browser_smoke.mjs", "demo/web/app.js"}
+            elif name == "demo-offline-acceptance.json":
+                required_inputs.add("scripts/demo_offline_smoke.py")
+            if not required_inputs.issubset(bindings):
+                failures.append(f"demo native acceptance source binding coverage is incomplete: {name}")
+            for relative, expected in bindings.items():
+                source = _safe_evidence_path(relative, root)
+                try:
+                    actual = hashlib.sha256(source.read_bytes()).hexdigest() if source else None
+                except OSError:
+                    actual = None
+                if not isinstance(expected, str) or actual != expected:
+                    failures.append(f"demo native acceptance input is stale or unavailable: {name}: {relative}")
+        if "browser" in name:
+            tests = report.get("tests")
+            if not isinstance(tests, list) or not tests or any(
+                not isinstance(test, dict) or test.get("passed") is not True for test in tests
+            ):
+                failures.append(f"demo browser acceptance has failed or missing cases: {name}")
+                tests = []
+            case_names = {test.get("name") for test in tests if isinstance(test, dict)}
+            required = DEMO_BROWSER_CASES if name == "demo-browser-acceptance.json" else {
+                "browser launch and real model ready",
+                "multi-document admission and unsupported input reasons",
+                "real inference through UI with checked source citation",
+            }
+            if not required.issubset(case_names):
+                failures.append(f"demo browser acceptance case coverage is incomplete: {name}")
+            interactions = report.get("real_model_interactions")
+            if not isinstance(interactions, list) or not interactions or not any(
+                isinstance(item, dict) and item.get("answer") and item.get("citations")
+                and item.get("insufficient_evidence") is False for item in interactions
+            ):
+                failures.append(f"demo browser acceptance lacks cited real application inference: {name}")
+            if not isinstance(interactions, list):
+                interactions = []
+            if name == "demo-browser-acceptance.json" and not any(
+                isinstance(item, dict) and item.get("insufficient_evidence") is True
+                and item.get("citations") == [] for item in interactions
+            ):
+                failures.append("demo browser acceptance lacks honest insufficient-evidence inference")
+        elif report.get("passed") is not True:
+            failures.append(f"demo native acceptance failed: {name}")
+        if name == "demo-offline-acceptance.json":
+            network = report.get("network", {})
+            result = report.get("real_application_result", {})
+            if not isinstance(network, dict) or network.get("external_connect_blocked") is not True:
+                failures.append("demo native acceptance lacks scoped external-network denial")
+            if not isinstance(result, dict) or not result.get("answer") or not result.get("citations"):
+                failures.append("demo native acceptance lacks real offline application inference")
+        if name == "demo-restart-acceptance.json" and (
+            report.get("acceptance_reports") != [
+                "docs/verification/demo-browser-acceptance.json",
+                "docs/verification/demo-offline-acceptance.json",
+                "docs/verification/demo-restarted-browser-acceptance.json",
+            ] or not isinstance(report.get("final_running_pid"), int) or report["final_running_pid"] <= 0
+        ):
+            failures.append("demo native acceptance lacks completed stop/restart evidence")
+
+
+def _validate_demo_milestones(model: dict[str, Any], root: Path, failures: list[str]) -> None:
+    records = _index_records(model.get("demo_milestones"), "demo milestone", failures)
+    if set(records) != {"fedora-local-document-qa"}:
+        failures.append("demo milestone set must bind the owner-delegated Fedora document QA scope")
+    for record in records.values():
+        _validate_record(record, "demo milestone", model, root, failures)
+        for field, expected in {
+            "decision_id": "ADR-0053", "platform_id": "fedora-x86_64",
+            "inference_local_only": True, "automatic_compaction_enabled": False,
+            "production_qualification": False,
+            "supported_formats": [".markdown", ".md", ".txt"],
+            "model_configuration_path": "demo/model.json",
+        }.items():
+            if record.get(field) != expected:
+                failures.append(f"demo milestone {field} differs from its accepted scope")
+        try:
+            configuration = load_json(root / "demo" / "model.json")
+            for field in ("model_sha256", "runtime_release", "runtime_backend", "quantization"):
+                if record.get(field) != configuration.get(field):
+                    failures.append(f"demo milestone selected-model binding differs: {field}")
+        except (OSError, ValueError) as error:
+            failures.append(f"demo milestone model configuration unavailable: {error}")
+        if record.get("support_status") != "unsupported-pre-release" or record.get("verification_status") == "release-verified":
+            failures.append("demo milestone cannot claim production support or release verification")
+        if record.get("verification_status") == "native-tested":
+            if record.get("acceptance_status") != "verified-local-demo":
+                failures.append("demo native-tested status requires verified-local-demo acceptance")
+            _validate_demo_native_evidence(root, failures)
+        elif record.get("acceptance_status") != "pending-real-browser-offline-restart":
+            failures.append("demo acceptance must remain pending before actual native verification")
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -442,6 +576,7 @@ def validate_status_model(
             failures.append(f"platform {platform_id} status does not match current truth")
 
     _validate_models(models, root, failures)
+    _validate_demo_milestones(model, root, failures)
     _validate_scope(model, root, failures)
     _validate_documents(model, root, documents, failures)
     selected_matrix = matrix if matrix is not None else load_json(MATRIX_PATH)
