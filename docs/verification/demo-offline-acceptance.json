@@ -1,0 +1,59 @@
+{
+  "record_type": "agentmage_scoped_offline_demo_acceptance",
+  "passed": true,
+  "network": {
+    "interfaces": [
+      [
+        1,
+        "lo"
+      ]
+    ],
+    "namespace": "net:[4026532891]",
+    "external_connect_blocked": true,
+    "external_connect_error": "[Errno 101] Network is unreachable"
+  },
+  "admitted_files": 3,
+  "real_application_result": {
+    "ok": true,
+    "done": true,
+    "answer": "Project Aurora launches on 18 October 2026 and the project lead is Mira Chen.",
+    "citations": [
+      {
+        "citation_sha256": "b73b9194b647f6c55679e3d4a8c69ac50095412b02447121bdc65e82d71f7490",
+        "content_sha256": "e9891717f23b97da1871255c5ef913d7537aa2b93b389647af9eec0a5443206e",
+        "end_column": 38,
+        "end_line": 6,
+        "id": "S2",
+        "path": "project.md",
+        "start_column": 1,
+        "start_line": 1,
+        "text": "# Project Aurora\n\nProject Aurora launches on 18 October 2026.\nThe project lead is Mira Chen.\nThe launch venue is the Cedar Room in the North Campus building.\nThe project budget is 42,000 credits."
+      }
+    ],
+    "insufficient_evidence": false,
+    "elapsed_seconds": 15.324,
+    "prompt_tokens": 379,
+    "output_tokens": 296,
+    "omitted_count": 0,
+    "snapshot_sha256": "bcdd94806852dc1c56dd3835159f37ebe979b07719490fd847d182d4b8a6d52c",
+    "model": "Meta Muse Glimmer 30B \u00b7 first-party Q4_K_M \u00b7 local demo QA"
+  },
+  "total_seconds": 29.426,
+  "limits": [
+    "Scoped backend/model network namespaces only; host network configuration untouched.",
+    "Uses same Application operation and Rust document runtime as browser backend."
+  ],
+  "source_sha256": {
+    "Cargo.toml": "5afd98c00697e9c6974495e4a9568ae42f46ec0acb1eb603641b1ec7bb5f5ea1",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "shells/host/Cargo.toml": "23e076624d2c6be50259f00e59449f48544fdc39c6c471c7468f85438a66ef17",
+    "shells/host/src/lib.rs": "de57f7476dd4476179a399ca0f6855c9d3a3d1de3045ddaf1237d5d0c55b95c7",
+    "supply-chain/sbom.cdx.json": "a5e7bb97a168825cfd638b0ff7abbc9dd2e112b78f7e574f26857a9fbf72dbf4",
+    "supply-chain/dependency-provenance.json": "13c0f5e5fbe5332cae16f118ad55b91997d09be96f66cbea7390f404b76cac69",
+    "supply-chain/dependency-hashes.sha256": "a36b7b5b3336ca130fc15cfb7a883789302045cdb581ffeb07eeae8424a03163",
+    "scripts/demo.py": "8bb351d41e2833a166a1645004c1d3e9167f0056a02b5bd2c83d6baf1fe3fcdf",
+    "scripts/demo_offline_smoke.py": "f6aac261ccbd00a203c9d389eba38d0691df83f2ef8d60eda5325f6c42fc585d",
+    "demo/model.json": "f007bf5a668a88d2c00446f4233a073274cc529bde05bb9c37cd91f5a82f9ba1",
+    "shells/host/src/demo_documents.rs": "e97ea0d5c75facb7f92ed0e3ca8688f754153863f78dfa2fd137200c51c7afe4"
+  }
+}

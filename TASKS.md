@@ -49,15 +49,19 @@ Repository license: Business Source License 1.1 (Decision 0051); versions publis
 
 First-release gate: Story 25.3 under the Decision 0052 restart-readiness correction.
 
-Demo milestone under Decision 0053: implemented and contract-tested; full real-model
-browser, scoped offline, and stop/restart acceptance remains pending. The selected
-demo artifact is Meta Muse Glimmer 30B first-party Q4_K_M, SHA-256
+Demo milestone under Decision 0053: integrated and native-tested on this Fedora
+Kinoite machine. Real-model browser, scoped offline, and stop/restart acceptance
+passed the current source-bound checks. This verifies the local demo only;
+production qualification and historical rejected model dispositions remain unchanged.
+The selected demo artifact is Meta Muse Glimmer 30B first-party Q4_K_M, SHA-256
 `4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e`,
 with llama.cpp b10423 Vulkan, 8,192 context tokens and a 2,048 output-token budget.
 It supports read-only UTF-8 `.txt`, `.md`, and `.markdown` documents. Automatic
 compaction is disabled. See [local testing](docs/LOCAL-TESTING.md),
 [model probe](docs/verification/demo-model-probe.md), and
-[regressions](docs/verification/demo-regression-results.md) for evidence and limits.
+[regressions](docs/verification/demo-regression-results.md) for evidence and limits. The
+[four-report acceptance check](scripts/demo_evidence_check.py) verifies actual recorded
+results and current source bindings; it must pass after affected input changes.
 
 The complete 17-release-epic, four-cross-cutting-foundational-runtime-epic,
 169-sprint, 294-requirement plan below remains the granular execution authority

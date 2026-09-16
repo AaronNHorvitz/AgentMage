@@ -1,0 +1,22 @@
+{
+  "record_type": "agentmage_demo_stop_restart_acceptance",
+  "passed": true,
+  "commands": [
+    "python3 scripts/demo.py start --no-open",
+    "node scripts/demo_browser_smoke.mjs",
+    "python3 scripts/demo.py stop",
+    "python3 scripts/demo_offline_smoke.py",
+    "python3 scripts/demo.py start --no-open",
+    "node scripts/demo_browser_smoke.mjs --restart-only"
+  ],
+  "final_running_pid": 2188665,
+  "recorded_at_unix": 1789520150.77162,
+  "source_sha256": {
+    "scripts/demo_smoke.py": "34ff7bcb695ee746f9557ec7b00195c63cc5b904bfff81f33294ebe20fea8e7c"
+  },
+  "acceptance_reports": [
+    "docs/verification/demo-browser-acceptance.json",
+    "docs/verification/demo-offline-acceptance.json",
+    "docs/verification/demo-restarted-browser-acceptance.json"
+  ]
+}

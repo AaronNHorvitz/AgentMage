@@ -49,3 +49,18 @@ Implementation/docs milestone `49cd3fb3` is pushed. The full smoke command is no
 ## Acceptance runner diagnostic
 
 Full smoke passed 10 browser cases, including boundary enforcement and malicious-source handling. Its final Host-header test used Node fetch, which replaced the overridden Host and returned 200 for the actual valid host. Independent raw urllib requests correctly returned 403 for missing token, wrong Origin and wrong Host. Updated the runner to use Node HTTP requests for exact header tests; backend protection was already correct. Full smoke rerun remains required before native demo promotion.
+
+## Scoped demo status promotion
+
+The first complete real-model acceptance pass now verifies all four current-bound
+browser/offline/restart reports (`python3 scripts/demo_evidence_check.py` passed).
+Only `demo_milestones=fedora-local-document-qa` advances to integrated/native-tested;
+production product/platform/model qualification, rejected historical configurations,
+and every roadmap checkbox remain unchanged. The demo guard verifies all browser
+cases, cited inference, honest abstention, scoped external-network denial, restart
+metadata, and full source bindings including supply-chain artifacts.
+
+Exact next action: commit this acceptance milestone, regenerate supply-chain once
+after the final source batch, repeat the real acceptance smoke for its new hashes,
+then regenerate the affected current evidence DAG in dependency order. Historical
+Git-revision evidence bundles stay immutable and receive truthful applicability.

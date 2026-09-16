@@ -1,0 +1,72 @@
+{
+  "record_type": "agentmage_local_demo_browser_acceptance",
+  "recorded_at": "2026-09-16T00:55:50.738Z",
+  "tests": [
+    {
+      "name": "browser launch and real model ready",
+      "passed": true,
+      "seconds": 15.031
+    },
+    {
+      "name": "multi-document admission and unsupported input reasons",
+      "passed": true,
+      "seconds": 0.051
+    },
+    {
+      "name": "real inference through UI with checked source citation",
+      "passed": true,
+      "seconds": 15.716
+    }
+  ],
+  "real_model_interactions": [
+    {
+      "answer": "Project Aurora launches on 18 October 2026 and the project lead is Mira Chen.",
+      "citations": [
+        {
+          "citation_sha256": "b73b9194b647f6c55679e3d4a8c69ac50095412b02447121bdc65e82d71f7490",
+          "content_sha256": "e9891717f23b97da1871255c5ef913d7537aa2b93b389647af9eec0a5443206e",
+          "end_column": 38,
+          "end_line": 6,
+          "id": "S2",
+          "path": "project.md",
+          "start_column": 1,
+          "start_line": 1,
+          "text": "# Project Aurora\n\nProject Aurora launches on 18 October 2026.\nThe project lead is Mira Chen.\nThe launch venue is the Cedar Room in the North Campus building.\nThe project budget is 42,000 credits."
+        }
+      ],
+      "insufficient_evidence": false,
+      "elapsed_seconds": 15.457,
+      "prompt_tokens": 379,
+      "output_tokens": 296,
+      "omitted_count": 0,
+      "snapshot_sha256": "bcdd94806852dc1c56dd3835159f37ebe979b07719490fd847d182d4b8a6d52c",
+      "model": "Meta Muse Glimmer 30B · first-party Q4_K_M · local demo QA"
+    }
+  ],
+  "source_sha256": {
+    "Cargo.toml": "5afd98c00697e9c6974495e4a9568ae42f46ec0acb1eb603641b1ec7bb5f5ea1",
+    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
+    "shells/host/Cargo.toml": "23e076624d2c6be50259f00e59449f48544fdc39c6c471c7468f85438a66ef17",
+    "shells/host/src/lib.rs": "de57f7476dd4476179a399ca0f6855c9d3a3d1de3045ddaf1237d5d0c55b95c7",
+    "supply-chain/sbom.cdx.json": "a5e7bb97a168825cfd638b0ff7abbc9dd2e112b78f7e574f26857a9fbf72dbf4",
+    "supply-chain/dependency-provenance.json": "13c0f5e5fbe5332cae16f118ad55b91997d09be96f66cbea7390f404b76cac69",
+    "supply-chain/dependency-hashes.sha256": "a36b7b5b3336ca130fc15cfb7a883789302045cdb581ffeb07eeae8424a03163",
+    "scripts/demo.py": "8bb351d41e2833a166a1645004c1d3e9167f0056a02b5bd2c83d6baf1fe3fcdf",
+    "scripts/demo_browser_smoke.mjs": "cc74666724a4c6e1c737e2df0493d64a12e9dab5fa7f02bff674d23888185549",
+    "shells/host/src/demo_documents.rs": "e97ea0d5c75facb7f92ed0e3ca8688f754153863f78dfa2fd137200c51c7afe4",
+    "shells/host/src/bin/agentmage-demo-documents.rs": "1946399c87cc2acdee62cba192de27d7f737dc3226764616aa91f7ef38f19bb9",
+    "demo/model.json": "f007bf5a668a88d2c00446f4233a073274cc529bde05bb9c37cd91f5a82f9ba1",
+    "demo/web/index.html": "47d17dfdd06ffd204f94397d430147306af5424851dbcf3fa7c317848cb6e26c",
+    "demo/web/app.js": "eea09393aa8da121445d34b8ca2bca013d306393c52f1072597da9e7c0294560",
+    "demo/web/style.css": "3793e2dfba6e4119ce8a9b6b790b6ed2259c8712aa719923c7f9fc0b3af4fef9",
+    "demo/fixtures/aurora/operations.txt": "2b6565c0af2739bfc6ca9b43a6ef5685acf4e268da181866bf481681f8d22e68",
+    "demo/fixtures/aurora/project.md": "e9891717f23b97da1871255c5ef913d7537aa2b93b389647af9eec0a5443206e",
+    "demo/fixtures/aurora/supplies.md": "82a3eb1ab653374ccc87fcb74d6fd315fac53dda0fbab391e928b67befa6a2b5",
+    "demo/fixtures/aurora/unsupported.pdf": "18ec703809269bf2afbf054e6f91e2cc442bc0ec2b1b68bb826fd226e379e877"
+  },
+  "limitations": [
+    "Synthetic fixture document QA only; does not qualify production profiles or release.",
+    "Citation validation proves membership and source ranges; semantic entailment checked for synthetic acceptance facts.",
+    "Chromium automation uses --no-sandbox for this test process; application model remains network-isolated."
+  ]
+}
