@@ -1,13 +1,20 @@
 # USTE memory integration proposal
 
-Date: 2026-09-16
+Date: 2026-09-18 (original proposal: 2026-09-16)
 
 Status: owner-requested planning document, not an implemented backend, accepted runtime
 cutover, release-gate closure or authorization to bypass the existing execution order.
 AgentMage source baseline inspected: `c99c8254a4795d2a076c36f700e2daf8e2753bc4`.
-USTE is documentation-only at the time of this proposal. Its design baseline is
+USTE was documentation-only at the original proposal date. Its original design baseline is
 [`be5f7a489f5fcaf4d4eb9c08f9860b9a06f68170`](https://github.com/AaronNHorvitz/USTE/commit/be5f7a489f5fcaf4d4eb9c08f9860b9a06f68170)
 (design draft 1.2), not a tested runtime dependency.
+
+The updated delivery plan is pinned to USTE
+[`1ad74fa`](https://github.com/AaronNHorvitz/USTE/commit/1ad74fa650dcdb1e2562d765ca30e47d310272cd):
+[M1 milestone](https://github.com/AaronNHorvitz/USTE/blob/1ad74fa650dcdb1e2562d765ca30e47d310272cd/docs/memory-first-milestone.md)
+and [Decision 0054](https://github.com/AaronNHorvitz/USTE/blob/1ad74fa650dcdb1e2562d765ca30e47d310272cd/docs/decisions/0054-memory-first-delivery.md).
+This is a planning reference, not a qualified runtime pin. The Rust foundation now exists;
+M1 acceptance and AgentMage integration are still open.
 
 ## Purpose and authority
 
@@ -126,6 +133,32 @@ Physics output may inform a hypothetical plan but cannot become a remembered obs
 
 ## Staged integration and migration
 
+### Delivery priority — bounded memory pilot before full world-model support
+
+The owner-approved USTE M1 plan separates a small, experimental memory backend from its full
+spatial/physics and disk-scale release. USTE tasks T-63–T-68 cover a verified bounded baseline,
+durable source-backed writes, cited graph/lexical retrieval, correction/revocation, restart,
+and a generic offline Rust consumer harness. All are open planning tasks, not working features.
+Its existing R1/R2/R3/R4 gates and benchmarks remain unchanged.
+
+For AgentMage, prioritize the proposed ordinary-memory path through UM-06 before optional
+UM-09 spatial/physics work once these tasks have been admitted to the authoritative roadmap.
+This proposal does not reorder the existing first-release critical path, register new stories,
+enable persistent memory, or authorize a runtime cutover.
+
+The earlier backend checkpoint can qualify Stage B without completing all of USTE R2, but
+only after every required M1 case and AgentMage's own admission/security tests pass.
+Start with synthetic fixtures and shadow retrieval; keep the existing source store authoritative.
+An embedded Rust harness is not proof that the proposed authenticated service transport works.
+Require separate process/IPC/key validation if that transport is selected.
+
+Use the exact tested build and declared caps, not a moving branch or unverified recovery edit.
+Full state, history, journal/retry metadata, source storage and recovery peaks must fit the
+profile; refuse out-of-budget ingestion instead of risking desktop memory exhaustion.
+Basic revocation and fail-closed rebuild are mandatory now. Complete physical purge,
+backup/restore, sensitive production data and authoritative migration remain later gates.
+A USTE-only demonstration does not complete UM-04–UM-06 or prove AgentMage integration.
+
 ### Stage A — Contract fixtures, no runtime dependency
 
 Register the proposal with the authoritative roadmap and make mapping/reference fixtures.
@@ -134,8 +167,9 @@ dependency, running service or new memory authority is required for this step.
 
 ### Stage B — Experimental derived index
 
-Entry: USTE R2 scope needed by memory passes its tests; AgentMage's applicable admission,
-process/IPC and evidence gates are satisfied. Existing AgentMage memory remains authoritative.
+Entry: USTE M1/T-68 passes its bounded memory acceptance cases (or a later fully qualified
+superset); AgentMage's applicable admission, process/IPC and evidence gates are satisfied.
+The initial experiment uses synthetic data. Existing AgentMage memory remains authoritative.
 Import only approved exact versions into an opt-in rebuildable index. Journal/outbox design
 must make source changes retryable with stable IDs, explicit sync watermarks and reconciliation;
 do not pretend two stores share an atomic transaction. Index lag must never admit revoked or
@@ -181,7 +215,7 @@ existing completed evidence and the first-release critical path.
 | [ ] UM-01 | Register backend decision, scope owners and threat model | Existing roadmap admission | Accepted decision, mapped authoritative tasks, no status inflation |
 | [ ] UM-02 | Define schema/identity/approval/lifecycle mapping and version policy | UM-01 | Exact round-trip fixtures for all memory types, conflicts and forbidden inputs |
 | [ ] UM-03 | Fake adapter and bounded query/prompt contract | UM-02 | Positive/negative/error/boundary/no-side-effect tests; no context overflow |
-| [ ] UM-04 | Pin USTE and design authenticated service/key/process lifecycle | UM-03; USTE R2 needed scope | Dependency/license/unsafe review, offline launch/lock/crash/version refusal tests |
+| [ ] UM-04 | Pin USTE and design authenticated service/key/process lifecycle | UM-03; verified USTE M1/T-68 or qualified superset | Dependency/license/unsafe review, offline launch/lock/crash/version refusal tests |
 | [ ] UM-05 | Derived index ingestion, outbox/checkpoints and reconciliation | UM-04 | No loss/duplicates after retry; revocation and stale watermark denial |
 | [ ] UM-06 | Cited retrieval, source resolution and shadow comparison | UM-05 | Correct scope/citations, conflict visibility, relevance baseline and measured latency |
 | [ ] UM-07 | Retention/purge/backup/restore across both systems | UM-06; USTE R3 | Dependency deletion, no stale resurrection, exact receipts and key-loss behavior |
@@ -191,10 +225,13 @@ existing completed evidence and the first-release critical path.
 
 ## Acceptance and measurements
 
-Use synthetic data: approve a fact from a document; restart; retrieve it with an exact citation;
+Stage B uses synthetic data: approve a fact from a document; restart; retrieve it with an exact citation;
 correct it with a new approved version; answer current and historical questions correctly;
-retain a contradiction visibly; deny a second workspace; purge source and derivatives; restart
-and attempt stale restore. Add malicious document instructions, disconnected service, disk
+retain a contradiction visibly; deny a second workspace; revoke a source; restart and refuse
+stale indexed results. Rebuild from the current authority without losing source records.
+Stage C/UM-07 must additionally prove purge of source and derivatives and rejection of stale
+restore; a Stage B read-exclusion receipt must never claim physical erasure.
+Add malicious document instructions, disconnected service, disk
 full, malformed responses, wrong keys, changed source digests and budget exhaustion.
 
 For the optional spatial slice, attach a source to a moving object; query its observed location
