@@ -73,7 +73,7 @@
       "schema_version": 2,
       "profile_id": "deterministic-fake-muse-v1",
       "manifest_id": "deterministic-fake-muse-manifest-v1",
-      "manifest_sha256": "77fd846b6fe4114cb6a2a684206dea7d3acfae1b3534384a924a6852fb0d5ee5",
+      "manifest_sha256": "a45951922c93d5ce171586550389348f473f1d745f5f8e40ba863f170b72cc5f",
       "display_name": "Deterministic fake Muse contract profile",
       "family": "deterministic_fake_muse",
       "publisher_control": "AgentMage test fixture",
@@ -95,7 +95,7 @@
       "codec": {
         "codec_id": "deterministic-fake-muse-codec-v1",
         "codec_version": "1.0.0",
-        "codec_sha256": "34b30269fdde6bcbdc26d0502859279b544122479566a106837eb56fdbdd584e",
+        "codec_sha256": "25421b3a43730caa17f4d4bff1e58fdc6e5daefbbc31cb6702bb76050f11a1d6",
         "tokenizer": "deterministic-fake-muse-tokenizer-v1",
         "tokenizer_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "template": "deterministic-fake-muse-template-v1",
@@ -111,7 +111,7 @@
         "kind": "deterministic_fake",
         "contract_version": 1,
         "runtime_build": "agentmage-kernel-engine-test-fixture",
-        "runtime_sha256": "77fd846b6fe4114cb6a2a684206dea7d3acfae1b3534384a924a6852fb0d5ee5",
+        "runtime_sha256": "a45951922c93d5ce171586550389348f473f1d745f5f8e40ba863f170b72cc5f",
         "platform": "deterministic_fake",
         "architecture": "x86_64"
       },
@@ -170,7 +170,7 @@
       "schema_version": 2,
       "profile_id": "deterministic-fake-gemma-v1",
       "manifest_id": "deterministic-fake-gemma-manifest-v1",
-      "manifest_sha256": "77fd846b6fe4114cb6a2a684206dea7d3acfae1b3534384a924a6852fb0d5ee5",
+      "manifest_sha256": "a45951922c93d5ce171586550389348f473f1d745f5f8e40ba863f170b72cc5f",
       "display_name": "Deterministic fake Gemma contract profile",
       "family": "deterministic_fake_gemma",
       "publisher_control": "AgentMage test fixture",
@@ -192,7 +192,7 @@
       "codec": {
         "codec_id": "deterministic-fake-gemma-codec-v1",
         "codec_version": "1.0.0",
-        "codec_sha256": "34b30269fdde6bcbdc26d0502859279b544122479566a106837eb56fdbdd584e",
+        "codec_sha256": "25421b3a43730caa17f4d4bff1e58fdc6e5daefbbc31cb6702bb76050f11a1d6",
         "tokenizer": "deterministic-fake-gemma-tokenizer-v1",
         "tokenizer_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "template": "deterministic-fake-gemma-template-v1",
@@ -208,7 +208,7 @@
         "kind": "deterministic_fake",
         "contract_version": 1,
         "runtime_build": "agentmage-kernel-engine-test-fixture",
-        "runtime_sha256": "77fd846b6fe4114cb6a2a684206dea7d3acfae1b3534384a924a6852fb0d5ee5",
+        "runtime_sha256": "a45951922c93d5ce171586550389348f473f1d745f5f8e40ba863f170b72cc5f",
         "platform": "deterministic_fake",
         "architecture": "x86_64"
       },
