@@ -869,3 +869,118 @@ host blocker this session also verified stale. Its named work is
 `npm run -s evidence:sprint21:build`. After that, the register's selected row `14.1.3.3` is the
 next implementation target. Both owner decisions stated in the earlier checkpoints — the rustup
 provenance question and the vulnerability-workflow fixture binding above — remain open.
+
+## Claude Code checkpoint — 2026-09-20 16:00 CDT
+
+This checkpoint records a regression this session introduced and repaired, two further review-pin
+advances, and a measured sweep of every Cargo-free gate in `npm run docs:check`. USTE and
+CodingMage held the shared Cargo window for most of this period; no work of theirs was read,
+written, signalled, or interrupted, and this session's own scopes were the only ones stopped.
+
+### A regression this session introduced, found and repaired
+
+`TASKS.md` is a hashed input of `scripts/contract_boundary_gate.py` (`SOURCE_PATHS`). The 34
+continuation lines added across the blocker-truth pass therefore invalidated the Story 1.2
+contract-boundary report, and nothing in the earlier commits regenerated it. The earlier leaf
+sweep had stopped at 79 of 109 leaves and never reached `contract-boundary:check`, so the break
+went unnoticed until the Cargo-free sweep below reached it.
+
+`9c4610b1` repairs it: `contract-boundary:build` changed exactly one hash (TASKS.md) and
+`contract-evidence:build` then renewed the dependent security evidence map, contract evidence
+index, and raw results log. `contract-boundary:check` and `contract-evidence:check` both pass.
+This is recorded plainly because the commits that caused it, `1ace629f` through `5e849412`, landed
+while that gate was red and unmeasured.
+
+`535d6e68` advances the Story 1.3 gate review pin from `e50f5cc4fa` to `9c4610b1` (tree
+`bc0496f78b` to `53ebc2571b`) under AGENTS.md §7. Exactly two reviewed paths had changed —
+`rv50-applicability.json` and `rv50-applicable-results.log` — and the reason is this session's own
+RV-50 renewal in `5b2c03cb`. The gate now reports "Story 1.3 current local record scope passed
+with later-story and platform blockers preserved"; eight tests pass and no external-human review is
+claimed.
+
+### Measured gate sweep, and a resource rule this session broke and corrected
+
+`npm run docs:check` was expanded to its 109 leaf scripts and the Cargo-free subset was executed
+individually. **45 leaves were measured: 42 pass and 3 fail.** The three failures are
+`story-1.3:gate:check`, which that sweep observed *before* `535d6e68` repaired it and which passes
+now, plus `story-3.2:gate:check` and `sprint-3:gate:check`, the owner-decision pair above. No
+other gate is red among the leaves measured.
+
+The sweep was stopped at 45 rather than 73, deliberately and for a resource reason worth recording
+against this session: `tests.test_story_4_1_gate` spawns Cargo of its own, and it began compiling
+in `/tmp/agentmage-contract-package-*` while USTE's `cargo test --workspace --all-features` was
+running. That is two heavy workloads on the shared machine at once, which this run is required to
+avoid. This session's own `agentmage-lightsweep` scope was stopped immediately; USTE's process was
+confirmed untouched and still running. The rule was broken by this session and corrected by this
+session, and it is recorded rather than quietly dropped. An earlier sweep was stopped for the same
+reason.
+
+The 28 unmeasured leaves were then closed out analytically instead of by brute force, because the
+only question that mattered was whether the `TASKS.md` additions had invalidated anything else.
+Of the unmeasured leaves, exactly three reference `TASKS.md`: `story-4.1:gate:check`,
+`sprint-4:gate:check`, and `evidence:story8.1-security:check`. All three read it with `read_text`
+and check for specific task markers; none binds its SHA-256. Since this session added only
+continuation lines and altered no checklist statement or marker, none of the three can be affected.
+`contract-boundary` was the only hash-binding consumer, and it is repaired.
+
+### Verified properties of the blocker-truth pass
+
+Two constraints the owner set were checked by measurement rather than asserted:
+
+- **No locally implementable work was relabelled external.** Of the 14 rows newly marked external,
+  zero previously carried an `**Execution:** local` marker — all 14 were unmarked `unknown` rows.
+- **No external blocker was overridden.** Of the 6 rows newly marked local, zero previously
+  carried a `BLOCKED_EXTERNAL` record.
+- **No dependency cycle was introduced.** The plan graph held 164 cycles before and 164 after, the
+  two sets are identical, and none of the 164 touches any of the 34 rows bound this session.
+
+### Work that remains and why
+
+Three things remain, and none of them was worked around:
+
+1. **Story 9.1 clean-build cascade** — blocked on the rustup provenance decision recorded in the
+   14:35 checkpoint. The pinned `rustup_init_linux_x64_sha256` no longer matches what
+   `static.rust-lang.org` serves, because the Containerfile fetches rustup from an unversioned
+   URL. Re-pinning or changing that URL edits accepted, hash-bound clean-build inputs.
+2. **`story-3.2:gate` and `sprint-3:gate`** — blocked on the fixture-binding decision recorded in
+   the same checkpoint. `fixtures/support/vulnerability-workflow/workflow.valid.json` is
+   hand-maintained and binds the manual patch verification report's SHA-256, which legitimately
+   changed when this host's OpenSSL moved from 3.5.7 to 3.5.8.
+3. **Sub-task `21.1.3.5`, the Sprint 13/21 aggregates, and implementing `14.1.3.3`** — not
+   blocked, only queued. Each needs the shared Cargo window, which USTE and CodingMage held for
+   the remainder of this run. A guarded wrapper was left ready: it waits for a sustained free
+   window, re-checks immediately before starting, and runs inside a capped scope.
+
+### Honest status
+
+Product truth remains `scaffolded`. No production model is enabled, no platform or package is
+qualified, and no release claim is made. Story 9.1's independent-review gate remains open, and
+the independent-review blockers recorded against `16.1.3.5`, `21.2.3.5`, and `22.1.3.5` are
+blockers, not claims — nothing this session asserted is offered as an independent review.
+
+The Fedora demo was not running at any point during this session; the machine rebooted after the
+demo session that produced `docs/DEMO-PROGRESS.md`. This session neither started nor stopped it
+and did not modify the demo checklist, which remains complete from 2026-09-15.
+
+No checkbox in `TASKS.md` was flipped by this session. Every `TASKS.md` change is an addition:
+34 inserted lines, zero deletions, and every protected checklist statement verified byte-identical
+by SHA-256 after each edit.
+
+### Smallest owner actions required
+
+Two decisions, both provenance judgements this run deliberately did not make on its own:
+
+1. **rustup acquisition for the clean build.** Approve either re-pinning
+   `rustup_init_linux_x64_sha256` in `architecture/clean-build-policy.json` to an independently
+   verified digest (served on 2026-09-20:
+   `dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71`), or changing
+   `release/clean-build/Containerfile.linux` to a version-pinned
+   `https://static.rust-lang.org/rustup/archive/<version>/x86_64-unknown-linux-gnu/rustup-init`
+   URL with its verified digest. The second is the durable fix; the current unversioned URL will
+   break again on the next rustup release. This unblocks the Story 9.1 clean-build cascade.
+2. **The vulnerability-workflow fixture binding.** Approve updating the
+   `patch-verification-results` SHA-256 in
+   `fixtures/support/vulnerability-workflow/workflow.valid.json` to match the renewed manual patch
+   verification report. This unblocks `story-3.2:gate` and `sprint-3:gate`.
+
+Of the two, (1) is the one that matters for the recorded Story 9.1 continuation.
