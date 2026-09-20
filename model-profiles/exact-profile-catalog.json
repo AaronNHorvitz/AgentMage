@@ -82,7 +82,7 @@
         "deterministic-fake-muse-v1"
       ],
       "license_spdx": "Apache-2.0",
-      "license_terms_sha256": "02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f",
+      "license_terms_sha256": "3c0fe2e36ea4933e3fbf92bc2bac81ae05bc47800e85be7e1bb40ede19c5e5f7",
       "artifact": {
         "artifact_id": "deterministic-fake-muse-bytes-v1",
         "publisher": "AgentMage test fixture",
@@ -179,7 +179,7 @@
         "deterministic-fake-gemma-v1"
       ],
       "license_spdx": "Apache-2.0",
-      "license_terms_sha256": "02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f",
+      "license_terms_sha256": "3c0fe2e36ea4933e3fbf92bc2bac81ae05bc47800e85be7e1bb40ede19c5e5f7",
       "artifact": {
         "artifact_id": "deterministic-fake-gemma-bytes-v1",
         "publisher": "AgentMage test fixture",
@@ -267,7 +267,7 @@
       "schema_version": 2,
       "profile_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora-first-party-quality",
       "manifest_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora-first-party-quality-manifest-v1",
-      "manifest_sha256": "ee8353ddf9abb244db9ecf871962a2b3039e920ee247028f14e127299395522d",
+      "manifest_sha256": "1484f966ef55d0cabb5a96732a3c4584549f0caf3309b4d427433b6c45e7f19f",
       "display_name": "Muse Glimmer 30B Q4_K_M text 8k Fedora first-party-quality",
       "family": "muse_glimmer",
       "publisher_control": "Meta",
@@ -290,7 +290,7 @@
       "codec": {
         "codec_id": "muse-glimmer-atem-closed-proposal-v1",
         "codec_version": "1.0.0",
-        "codec_sha256": "c4a177fb449ba8590dd901ce19ebecd82d55fb21207f641362cc0c231fc47982",
+        "codec_sha256": "50cb464262daae11d677b7af7cc72ec0b166ad9a147224281d3ea597d0efa5d5",
         "tokenizer": "meta-models/Muse-Glimmer-30B tokenizer",
         "tokenizer_sha256": "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d",
         "template": "meta-models/Muse-Glimmer-30B ATEM chat template",
@@ -393,7 +393,7 @@
       "schema_version": 2,
       "profile_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora-diagnostic-repeatability",
       "manifest_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora-diagnostic-repeatability-manifest-v1",
-      "manifest_sha256": "ec9537e5e7bd48001837da25d91e1ae6829c5fa7b76a1db9243613bc930aaeb9",
+      "manifest_sha256": "853a57928076eb0d8d89cdada8caa8960ebdf646507b7619b6cfa8a10c511591",
       "display_name": "Muse Glimmer 30B Q4_K_M text 8k Fedora diagnostic-repeatability",
       "family": "muse_glimmer",
       "publisher_control": "Meta",
@@ -416,7 +416,7 @@
       "codec": {
         "codec_id": "muse-glimmer-atem-closed-proposal-v1",
         "codec_version": "1.0.0",
-        "codec_sha256": "c4a177fb449ba8590dd901ce19ebecd82d55fb21207f641362cc0c231fc47982",
+        "codec_sha256": "50cb464262daae11d677b7af7cc72ec0b166ad9a147224281d3ea597d0efa5d5",
         "tokenizer": "meta-models/Muse-Glimmer-30B tokenizer",
         "tokenizer_sha256": "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d",
         "template": "meta-models/Muse-Glimmer-30B ATEM chat template",
