@@ -38,7 +38,7 @@
       ],
       "exit_code": 0,
       "id": "acquisition-review-contracts",
-      "output_sha256": "83f5a0abb26f2d15abfff39ab1b6c0e16d4e41d1bbfe1aae49f0bcd720871f01"
+      "output_sha256": "0703bf69869d86c43164dbfd7d12195428f4f8ace814700de0745df7fcabcffa"
     },
     {
       "argv": [
@@ -50,7 +50,7 @@
       ],
       "exit_code": 0,
       "id": "acquisition-review-vscode",
-      "output_sha256": "78731a7950c6d8c1b10632493060841f88eeff9f2a2d1cfedce98f16acb061f5"
+      "output_sha256": "567cd362de114f5fd95502e5a1c68354f87061527f8ae5db89a2e1b9126b72b1"
     },
     {
       "argv": [
@@ -62,7 +62,7 @@
       ],
       "exit_code": 0,
       "id": "installer-runtime-contracts",
-      "output_sha256": "502e1b78ce5a9aad7b8330f4c2c989382707f44440daec68ec85b5bab220d559"
+      "output_sha256": "cec1023e8d5d0f4a5e70c9b751c00fdf224b96b9f7b4d92996aca3ddf3710471"
     },
     {
       "argv": [
@@ -76,7 +76,7 @@
       ],
       "exit_code": 0,
       "id": "installer-package-contracts",
-      "output_sha256": "74252a207a000678ca7f29a6f5da23a49d41036cf86a353c0811debd2b48793b"
+      "output_sha256": "c47beecf1225dfa1906c4ea8c164f7479281eab5eb29a09b59ec8353e9b8432b"
     },
     {
       "argv": [
@@ -87,7 +87,7 @@
       ],
       "exit_code": 0,
       "id": "candidate-inventory-contracts",
-      "output_sha256": "6f8a987ff9d3dcb6541362dcfb63b18ec406e6a8b06eb1797ce44daef9fbd18f"
+      "output_sha256": "4b2eab0728c5c4ae9fd7c6fbdf16a4544ec13b4bfe6b2721ad94483db7f8934d"
     },
     {
       "argv": [
@@ -101,7 +101,7 @@
   ],
   "evidence_sha256": {
     "artifacts/sprints/sprint-10/story-10.1/firewall-packet-capture.json": "7090793a26390da2851b986e332346e195fc1b01ecdfc33d60c3b81f56e665fc",
-    "artifacts/sprints/sprint-9/story-9.2/linux-docker-production-prerequisites.json": "fa9760ecdde5942995829cdb4bd1c0ad26f393209230679cbfbc81fea9245338",
+    "artifacts/sprints/sprint-9/story-9.2/linux-docker-production-prerequisites.json": "a5d014a34bcb84cb54f1e55c99ca29400ce9f2821cf99c491fff824cdd5f13f1",
     "model-profiles/catalogs/2026-08-14/candidate-inventory.json": "e21c0ef3a44b0d11320071f09b81b3d4c1475a462c5e20f7ef070fc5eeca2ecd",
     "model-profiles/catalogs/2026-08-14/candidate-role-suite-matrix.json": "52f49ebdb687701441579ee6a63535adc0d5730d06af7b51ab92fdf214230166",
     "model-profiles/catalogs/2026-08-14/first-party-source-snapshot.json": "4068826fe76237630233ff44b792860900c8d0ebdc28e7e3a16a0219cf7c4af1"
@@ -152,7 +152,7 @@
       "RV-41"
     ]
   },
-  "source_revision": "6ddc21051873669d9410eb19b1f9f8f02528d518",
+  "source_revision": "8a5bc21e5f83f1e454e1cf5364c7b8449a3c48bd",
   "source_sha256": {
     "kernel/contracts/src/model_discovery.rs": "a5b3f600a3e7af159c1e4beff860db1f1164fd1e35376823728b791248cee1c0",
     "kernel/engine/src/model_discovery.rs": "e905afeeefbc58b634cbf7f07f242e4cf0642f1b744831a4e377b8c04dfcfb81",
@@ -160,18 +160,18 @@
     "platforms/linux-inference/src/model_acquisition.rs": "45412c0f2d8e234368a9ff2ae81ae2129a83eeb5a26aec65390d6f2fcc519ecd",
     "platforms/linux-inference/src/model_download.rs": "332042dd6addb7fc9a313e9152da8b5ca5b25d5e18ec7a0b4cd79d713b09e754",
     "platforms/linux-inference/src/model_install_lifecycle.rs": "50b339662935303743255cf07f090bd6c68ea5b7c2eb2026637240099474b7b7",
-    "platforms/linux-inference/src/model_install_verifier.rs": "d1b2d61af29c3865e34c0913edc941c5f9c7fed4041ca74be6076d3de717553a",
+    "platforms/linux-inference/src/model_install_verifier.rs": "1b073b10d994f29c228c6626ea3bc8e1fa4ff52f2a26a9089bacfbab4e4dac9b",
     "platforms/linux-inference/src/model_installer_main.rs": "20df8976328a1d2d2ab90d35916559afbeb93924aba45fd43e389240280f5e98",
     "platforms/linux-inference/src/model_installer_process.rs": "788e74cfbea178027079422b3331b80690edadee05f0f92c4de74407c3872757",
     "platforms/linux-inference/tests/process_boundary.rs": "fce1e4b82e0f2753362db51fdad99663dc9d188e6b732d420aea3dd7a4dabc75",
     "scripts/model_candidate_inventory.py": "b96087dc12d4ff7d63ed3a65b29b1e1131b3a81428e4065d429e51ad2f912370",
-    "scripts/package_candidate.py": "69f61c12e29b06260b3c60d19c7780572f59c56ee3110a550c284550840243ac",
-    "scripts/package_lifecycle.py": "228cce404328ce93738b6d226bb564bad69fe2e92ac52f2a68c320b0557096a2",
+    "scripts/package_candidate.py": "c68133f34c86a9ac91adb3319a793fee284fa2488bb7eaf79a0b1144e6bd2151",
+    "scripts/package_lifecycle.py": "0e55defb25dbe5af867b772c883e7f25f82240c8a40a6fddef1ebfae1745438f",
     "scripts/sprint_14_evidence.py": "93a78e6096e88c86fd946f4cd638334bbae7ffb97f44521f4e69885d3e70d729",
-    "shells/vscode/src/model_discovery.ts": "b91246b419af178f730d8807ea73ca6f386fad083344004f05dc4eb73d9b9113",
-    "shells/vscode/src/provider.ts": "211b05b5dcfb52c45756a7c3632f359995160c0a46440a45895433158ecabb58",
-    "shells/vscode/test/model_discovery.test.ts": "2f7c54e46cac921d8af0bc6b0748be39f64be79afe992fda67c38db55f87e417",
-    "shells/vscode/test/provider.test.ts": "74614b6deb26e4ba5f17ece25b6c58a202f93447bc33f20ab44d0c802b89236a",
+    "shells/vscode/src/model_discovery.ts": "560e9e4cf8d7f50494a6b8eda98b803fed65e8d57911dec7965dfde0359db540",
+    "shells/vscode/src/provider.ts": "e50b2950c7ffce2bead54d0a9b43c3a33d99a7795adeaedc411e59182d7a0a17",
+    "shells/vscode/test/model_discovery.test.ts": "8fff497c0f9a5cb8adb52934cd7a2672741726b83fce28de6afde3c05626e31e",
+    "shells/vscode/test/provider.test.ts": "116b3544edd93a3f2f9630fa17e6a7bc81da631c893c0c05a3a111de4d5c60be",
     "tests/test_model_candidate_inventory.py": "2f6f242717606512d646b0713a71dd153dc43704978ae4b255660c52a047606f",
     "tests/test_sprint_14_evidence.py": "794134fcd57fbea6f0a3e9ce2214d0fe64c217a005b9edae5e5e7e5a76e51c48"
   },
