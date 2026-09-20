@@ -124,8 +124,8 @@ def capture() -> tuple[str, int]:
         )
         chunks.append(f"$ {' '.join(command)}\n{result.stdout}")
         if result.returncode != 0:
-            return "\n".join(chunks), result.returncode
-    return "\n".join(chunks), 0
+            return "\n".join(chunks).rstrip() + "\n", result.returncode
+    return "\n".join(chunks).rstrip() + "\n", 0
 
 
 def validate_raw(value: str) -> list[str]:
