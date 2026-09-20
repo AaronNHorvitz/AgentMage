@@ -1,0 +1,80 @@
+{
+  "claims": {
+    "local_contract_complete": true,
+    "model_profile_enabled": false,
+    "native_boundary_campaign_executed": false,
+    "native_model_loaded": false,
+    "platform_qualified": false,
+    "release_claim": "none"
+  },
+  "commands": [
+    "cargo test -p agentmage-kernel-engine --locked dispatch_preflight_ -- --test-threads=1",
+    "cargo test -p agentmage-kernel-engine --locked prepared_request_mutation_stale_binding_and_token_drift_send_no_generation_bytes -- --test-threads=1",
+    "cargo test -p agentmage-kernel-engine --locked orchestration_plan_and_tool_heavy_unicode_render_reconcile_once -- --test-threads=1",
+    "cargo test -p agentmage-host --locked model_preflight_refusals_have_closed_codes_and_recovery -- --test-threads=1",
+    "cargo test -p agentmage-platform-linux-inference --locked --no-run"
+  ],
+  "ctx_dispatch": [
+    "mandatory-prepared-request",
+    "modified-rendered-bytes",
+    "stale-process-load-slot-binding",
+    "dispatch-time-token-drift",
+    "fresh-preparation-for-retry-summary-reconnect",
+    "zero-generation-bytes-on-refusal"
+  ],
+  "ctx_fit": [
+    "exact-fit",
+    "one-token-over",
+    "7000-input-plus-2048-output-against-8192",
+    "zero-margin",
+    "checked-integer-bounds",
+    "tool-heavy-unicode-special-token-render",
+    "orchestration-plan-reconciliation"
+  ],
+  "limitations": [
+    "Deterministic fake-runtime counts prove the common gate but do not qualify a native model or platform.",
+    "Ignored live Muse targets compile against the mandatory preflight contract; this evidence run does not execute them.",
+    "No demo service, model configuration, artifact, or USTE process is changed."
+  ],
+  "raw_results": {
+    "path": "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-results.log",
+    "sha256": "cc291c1cf15f81c20261062487b38b75984acb689c44de5817a1e652c2a2974d"
+  },
+  "record_type": "agentmage-story-13-4-dispatch-preflight-evidence",
+  "recovery": {
+    "approved_profile_only": true,
+    "compaction_requires_g2_admission": true,
+    "linked_thread_requires_checked_summary_and_sources": true,
+    "server_context_shift": false,
+    "silent_fallback": false,
+    "source_reduction_visible": true,
+    "unchanged_retry": false
+  },
+  "remaining_prerequisite": "Run CTX-FIT and CTX-DISPATCH against the exact separately authorized native model/runtime/venue tuple and retain endpoint token reconciliation plus zero-generation refusal evidence.",
+  "schema_version": 1,
+  "source_revision": "e764f686a07e41760b6572ca61ed38b3a85a484e",
+  "source_sha256": {
+    "kernel/contracts/src/lib.rs": "b6f1307ac15647c4d5e81b4c1fd2c4a4e9734f9360df800de8d8c0fbcecdea07",
+    "kernel/contracts/src/model.rs": "1aab079d0b7a793baaeebc49ea7da50f968c8a33ce1edcd7892f265c7dca1977",
+    "kernel/engine/src/model_orchestration_profile.rs": "07b35ccf495e4cb2cf3ceefca449e009d5ed9d1314c3eb31a7e68dd2b38ef528",
+    "kernel/engine/src/model_runtime.rs": "9cd6cefae30cfdffea1469069a3425fc0e2401651157cecd0b8580fd8f563e91",
+    "kernel/engine/src/runtime_loop.rs": "a12265b53e79a278661128f7f9fd09b25b51812c400258a056cb74d41a8b2b19",
+    "platforms/linux-inference/src/llama_server_driver.rs": "ab373cd62764da11783b49ef9b556ca9fe2c3a78270eadf12d44f3368065d9f2",
+    "platforms/linux-inference/src/native_model_adapter.rs": "bcc8774f3aab24f9941d0b3f6690ad7a7e2d0992c35e323a2c72b931c8816d61",
+    "platforms/linux-inference/tests/muse_live_evaluation.rs": "535bc05c58a941a3397375f25d34af435d222d88c16d42b0a638c1a5a45b080c",
+    "platforms/linux-inference/tests/muse_live_install.rs": "fcedf5c7551c2adc98b54ca54802ed9f3fbb5f7090abca7bb5906d006bafb4a4",
+    "scripts/story_13_4_dispatch_preflight_evidence.py": "4015731d548935c3b0918c9e60f290726a556f848a2499527affed1401ceda30",
+    "shells/host/src/engineering_model.rs": "68b5b1698550ca6b1d1452ff9ea64bdfdf8665951b325c4a3e215961518e97d8",
+    "shells/host/src/engineering_runtime.rs": "552c76232750ffa4a47384645a9f7465fe73c47ae53254c4db2c2f3a8dc2639e",
+    "tests/test_story_13_4_dispatch_preflight_evidence.py": "cd86ef5419d853701735c9a1a80f90e7f3be44892d1af06783ed30d458f07006"
+  },
+  "stable_refusal_codes": [
+    "model.prepared-request.capacity-exceeded",
+    "model.prepared-request.mismatch",
+    "model.prepared-request.stale-binding",
+    "model.prepared-request.token-drift"
+  ],
+  "status": "PASS_LOCAL_FIXTURES_BLOCKED_NATIVE_BOUNDARY",
+  "story_id": "13.4",
+  "task_id": "13.4.5"
+}
