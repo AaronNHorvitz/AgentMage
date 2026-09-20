@@ -517,11 +517,11 @@ further dispatch pending investigation, and never conceal it as successful recov
 finish/usage contract plus deterministic `CTX-FINISH` matrix in Task 13.1.6, and Task 13.4.5's
 immutable prepared-request and combined pre-dispatch capacity gate are implemented.
 Limit, truncation, cancellation, deadline, transport-loss, reasoning-exhaustion, and unknown
-results cannot become complete proposals or answers; actual rendered/provider/generation usage is
-retained through the Rust host without content-bearing diagnostics. Exact-fit, overflow, stale
-binding, modified preparation, and dispatch-time token drift now refuse before generation where
-required. The exact native campaigns and all production model/platform qualification remain open.
-No profile is enabled by this progress.
+results are refused as complete proposals or answers; actual rendered/provider/generation usage
+is retained through the Rust host without content-bearing diagnostics. Exact-fit, overflow,
+stale binding, modified preparation, and dispatch-time token drift now refuse before generation
+wherever the contract directs. The exact native campaigns and all production model/platform
+qualification remain open. No profile is enabled by this progress.
 
 #### G2 — Retain Originals and Make Summary Use Visible
 

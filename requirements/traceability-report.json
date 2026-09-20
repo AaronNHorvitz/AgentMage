@@ -27,7 +27,7 @@
     },
     {
       "document": "requirements/normative-map.json",
-      "sha256": "65232153cfa394a10b820950c24eade50aa0564ef4d1e53674c82e3bf515d4aa"
+      "sha256": "4b6fa4894c191727ac561375c85befdad32d935fca7638f4bbf79d4494a68db5"
     },
     {
       "document": "requirements/policy-expectations.json",
@@ -310,7 +310,7 @@
         {
           "document": "PRD.md",
           "heading": "16. Evidence and Completion",
-          "line": 691,
+          "line": 701,
           "statement_sha256": "707e32ec639dbc50a39bf3648e1d5a7f3bc8c2d0565e171c233b5f0c2090034a"
         }
       ],
@@ -537,7 +537,7 @@
         {
           "document": "PRD.md",
           "heading": "10. Capability Grants",
-          "line": 607,
+          "line": 617,
           "statement_sha256": "5dc78665369093add51b210d23e54d5f9a93bf93a6270a65d5016d8886e3321e"
         }
       ],
@@ -2061,55 +2061,55 @@
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 518,
+          "line": 528,
           "statement_sha256": "a7e2418d33dcde339d990c2308ece9af6a790e60dffadde0791843370690d596"
         },
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 528,
+          "line": 538,
           "statement_sha256": "53666395338b5d7e29533689a98bbec04bd17b140191fa8c674456f329f619a0"
         },
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 533,
+          "line": 543,
           "statement_sha256": "4b13c4b96be9722a90f0097901cca9b289b6e0fff472dc9a865a3f50498e1846"
         },
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 536,
+          "line": 546,
           "statement_sha256": "5c8acf7c3873842021dda4d4bf65343b0bc7ec631f7a7aac1b4a32088c28fc7c"
         },
         {
           "document": "PRD.md",
           "heading": "12. Canonical Data and Storage",
-          "line": 624,
+          "line": 634,
           "statement_sha256": "0b115665a50cd989d74d59bd686f256e313c53a6046636e4e3108cc94f51043f"
         },
         {
           "document": "PRD.md",
           "heading": "12. Canonical Data and Storage",
-          "line": 639,
+          "line": 649,
           "statement_sha256": "8955a68792ad335068c2b8af8779fcad3776c392a02aeb3efdcd57012255c380"
         },
         {
           "document": "PRD.md",
           "heading": "12. Canonical Data and Storage",
-          "line": 643,
+          "line": 653,
           "statement_sha256": "afb1eb75b75244dbe7528e0553d35f3bc95effbabfe8c757af9302db357c4771"
         },
         {
           "document": "PRD.md",
           "heading": "13. Privacy, Encryption, and Retention",
-          "line": 658,
+          "line": 668,
           "statement_sha256": "aa24eb4e14f55299f45a24a6d6f5f1ffdb582e7df3b47a861e83024adeb7c849"
         },
         {
           "document": "PRD.md",
           "heading": "16. Evidence and Completion",
-          "line": 693,
+          "line": 703,
           "statement_sha256": "221e520e26494d411aa7346b24184001997696a97fe7dde84612578b4f027905"
         }
       ],
@@ -2443,7 +2443,7 @@
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 729,
+          "line": 739,
           "statement_sha256": "e1f71136aca779258458b6805294d6264661d410cbe3790e0ee81c00b4223c8f"
         }
       ],
@@ -2728,37 +2728,37 @@
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 528,
+          "line": 538,
           "statement_sha256": "53666395338b5d7e29533689a98bbec04bd17b140191fa8c674456f329f619a0"
         },
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 534,
+          "line": 544,
           "statement_sha256": "e43f987a56b08d9dc1e89f184d382d9ba889fd52011821186546301757667c10"
         },
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 545,
+          "line": 555,
           "statement_sha256": "04c6d9a335ae28ce929483f46de04c847279ebcaad6197a345c84ba80af38620"
         },
         {
           "document": "PRD.md",
           "heading": "13. Privacy, Encryption, and Retention",
-          "line": 658,
+          "line": 668,
           "statement_sha256": "aa24eb4e14f55299f45a24a6d6f5f1ffdb582e7df3b47a861e83024adeb7c849"
         },
         {
           "document": "PRD.md",
           "heading": "16. Evidence and Completion",
-          "line": 691,
+          "line": 701,
           "statement_sha256": "707e32ec639dbc50a39bf3648e1d5a7f3bc8c2d0565e171c233b5f0c2090034a"
         },
         {
           "document": "PRD.md",
           "heading": "16. Evidence and Completion",
-          "line": 693,
+          "line": 703,
           "statement_sha256": "221e520e26494d411aa7346b24184001997696a97fe7dde84612578b4f027905"
         }
       ],
@@ -2829,19 +2829,19 @@
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 537,
+          "line": 547,
           "statement_sha256": "adade6a7df2e4b146a50679f9e6a4eebdcf6bf87072311ccc83dc0a0ebca46f2"
         },
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 545,
+          "line": 555,
           "statement_sha256": "04c6d9a335ae28ce929483f46de04c847279ebcaad6197a345c84ba80af38620"
         },
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 546,
+          "line": 556,
           "statement_sha256": "d99e9d2f49f7a551905c9e7602d27da170d41120c622cc131b4aab9c4649e8f1"
         }
       ],
@@ -3940,19 +3940,19 @@
         {
           "document": "PRD.md",
           "heading": "15. Codex Handoff Boundary",
-          "line": 674,
+          "line": 684,
           "statement_sha256": "767afd022d4a9fb8c87dc99441149dbd2c063133b717cf8a26ed83491ec10d4b"
         },
         {
           "document": "PRD.md",
           "heading": "15. Codex Handoff Boundary",
-          "line": 676,
+          "line": 686,
           "statement_sha256": "d73da09d0b10faca7804005e436ea0a5d9674158546164787ea04450b3c21466"
         },
         {
           "document": "PRD.md",
           "heading": "16. Evidence and Completion",
-          "line": 691,
+          "line": 701,
           "statement_sha256": "707e32ec639dbc50a39bf3648e1d5a7f3bc8c2d0565e171c233b5f0c2090034a"
         }
       ],
@@ -4180,7 +4180,7 @@
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 588,
+          "line": 598,
           "statement_sha256": "a166af7d0aacba042da0831eddd1e07f63068433b41992beba7def85be0cec5a"
         }
       ],
@@ -4634,13 +4634,13 @@
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 590,
+          "line": 600,
           "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
         },
         {
           "document": "PRD.md",
           "heading": "14. Offline and Network Contract",
-          "line": 666,
+          "line": 676,
           "statement_sha256": "dfef02a533bb5c2dfc8b96ed1b0bb449979c8eef312f41f5a032403a9dde11f9"
         }
       ],
@@ -4776,7 +4776,7 @@
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 590,
+          "line": 600,
           "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
         }
       ],
@@ -4970,19 +4970,19 @@
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 590,
+          "line": 600,
           "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
         },
         {
           "document": "PRD.md",
           "heading": "14. Offline and Network Contract",
-          "line": 666,
+          "line": 676,
           "statement_sha256": "dfef02a533bb5c2dfc8b96ed1b0bb449979c8eef312f41f5a032403a9dde11f9"
         },
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 719,
+          "line": 729,
           "statement_sha256": "d005f211f1d79061023ab4d10f6d66900dfea76a3818a65826d9789db4069d11"
         }
       ],
@@ -5072,7 +5072,7 @@
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 721,
+          "line": 731,
           "statement_sha256": "d127f70016c77257b5a483e631942d50a5d431ee011717a19bb0cfe67061ebe4"
         }
       ],
@@ -5171,13 +5171,13 @@
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 719,
+          "line": 729,
           "statement_sha256": "d005f211f1d79061023ab4d10f6d66900dfea76a3818a65826d9789db4069d11"
         },
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 721,
+          "line": 731,
           "statement_sha256": "d127f70016c77257b5a483e631942d50a5d431ee011717a19bb0cfe67061ebe4"
         }
       ],
@@ -5502,7 +5502,7 @@
         {
           "document": "PRD.md",
           "heading": "14. Offline and Network Contract",
-          "line": 666,
+          "line": 676,
           "statement_sha256": "dfef02a533bb5c2dfc8b96ed1b0bb449979c8eef312f41f5a032403a9dde11f9"
         }
       ],
@@ -6042,31 +6042,31 @@
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 518,
+          "line": 528,
           "statement_sha256": "a7e2418d33dcde339d990c2308ece9af6a790e60dffadde0791843370690d596"
         },
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 528,
+          "line": 538,
           "statement_sha256": "53666395338b5d7e29533689a98bbec04bd17b140191fa8c674456f329f619a0"
         },
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 533,
+          "line": 543,
           "statement_sha256": "4b13c4b96be9722a90f0097901cca9b289b6e0fff472dc9a865a3f50498e1846"
         },
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 548,
+          "line": 558,
           "statement_sha256": "5416d43ef17aa815e09b3bf1836b6db01a497e344d75befcef4cb399fd750632"
         },
         {
           "document": "PRD.md",
           "heading": "13. Privacy, Encryption, and Retention",
-          "line": 658,
+          "line": 668,
           "statement_sha256": "aa24eb4e14f55299f45a24a6d6f5f1ffdb582e7df3b47a861e83024adeb7c849"
         }
       ],
@@ -6124,7 +6124,7 @@
         {
           "document": "PRD.md",
           "heading": "11. Path Contract",
-          "line": 615,
+          "line": 625,
           "statement_sha256": "10a64f3847d91c466de217ca3b2ef311bed74b67ce7871b24b18ef1b33b6f074"
         }
       ],
@@ -6542,7 +6542,7 @@
         {
           "document": "PRD.md",
           "heading": "12. Canonical Data and Storage",
-          "line": 643,
+          "line": 653,
           "statement_sha256": "afb1eb75b75244dbe7528e0553d35f3bc95effbabfe8c757af9302db357c4771"
         }
       ],
@@ -6669,13 +6669,13 @@
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 590,
+          "line": 600,
           "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
         },
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 592,
+          "line": 602,
           "statement_sha256": "e41b86e6e980cc3af24fdbfaa3169f3f5f4a852d926b69babf36355a266b5aa0"
         }
       ],
@@ -6756,7 +6756,7 @@
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 590,
+          "line": 600,
           "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
         }
       ],
@@ -6930,55 +6930,55 @@
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 518,
+          "line": 528,
           "statement_sha256": "a7e2418d33dcde339d990c2308ece9af6a790e60dffadde0791843370690d596"
         },
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 533,
+          "line": 543,
           "statement_sha256": "4b13c4b96be9722a90f0097901cca9b289b6e0fff472dc9a865a3f50498e1846"
         },
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 534,
+          "line": 544,
           "statement_sha256": "e43f987a56b08d9dc1e89f184d382d9ba889fd52011821186546301757667c10"
         },
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 536,
+          "line": 546,
           "statement_sha256": "5c8acf7c3873842021dda4d4bf65343b0bc7ec631f7a7aac1b4a32088c28fc7c"
         },
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 545,
+          "line": 555,
           "statement_sha256": "04c6d9a335ae28ce929483f46de04c847279ebcaad6197a345c84ba80af38620"
         },
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 546,
+          "line": 556,
           "statement_sha256": "d99e9d2f49f7a551905c9e7602d27da170d41120c622cc131b4aab9c4649e8f1"
         },
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 548,
+          "line": 558,
           "statement_sha256": "5416d43ef17aa815e09b3bf1836b6db01a497e344d75befcef4cb399fd750632"
         },
         {
           "document": "PRD.md",
           "heading": "12. Canonical Data and Storage",
-          "line": 643,
+          "line": 653,
           "statement_sha256": "afb1eb75b75244dbe7528e0553d35f3bc95effbabfe8c757af9302db357c4771"
         },
         {
           "document": "PRD.md",
           "heading": "13. Privacy, Encryption, and Retention",
-          "line": 658,
+          "line": 668,
           "statement_sha256": "aa24eb4e14f55299f45a24a6d6f5f1ffdb582e7df3b47a861e83024adeb7c849"
         }
       ],
@@ -7691,7 +7691,7 @@
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 729,
+          "line": 739,
           "statement_sha256": "e1f71136aca779258458b6805294d6264661d410cbe3790e0ee81c00b4223c8f"
         }
       ],
@@ -7837,19 +7837,19 @@
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 719,
+          "line": 729,
           "statement_sha256": "d005f211f1d79061023ab4d10f6d66900dfea76a3818a65826d9789db4069d11"
         },
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 721,
+          "line": 731,
           "statement_sha256": "d127f70016c77257b5a483e631942d50a5d431ee011717a19bb0cfe67061ebe4"
         },
         {
           "document": "PRD.md",
           "heading": "17. Release Acceptance",
-          "line": 729,
+          "line": 739,
           "statement_sha256": "e1f71136aca779258458b6805294d6264661d410cbe3790e0ee81c00b4223c8f"
         }
       ],
@@ -8079,7 +8079,7 @@
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 590,
+          "line": 600,
           "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
         }
       ],
@@ -8161,7 +8161,7 @@
         {
           "document": "PRD.md",
           "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-          "line": 537,
+          "line": 547,
           "statement_sha256": "adade6a7df2e4b146a50679f9e6a4eebdcf6bf87072311ccc83dc0a0ebca46f2"
         }
       ],
@@ -8232,7 +8232,7 @@
         {
           "document": "PRD.md",
           "heading": "9. Threat Model and Process Boundaries",
-          "line": 590,
+          "line": 600,
           "statement_sha256": "8f32f841a611fd2232f490cf4019d1ec5a5e6a79f2411649e76e479d914e6f56"
         }
       ],

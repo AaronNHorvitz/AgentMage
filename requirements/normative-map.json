@@ -244,7 +244,7 @@
     },
     {
       "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-      "line": 518,
+      "line": 528,
       "requirement_ids": [
         "AM-DAT-001",
         "AM-PRV-001",
@@ -254,7 +254,7 @@
     },
     {
       "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-      "line": 528,
+      "line": 538,
       "requirement_ids": [
         "AM-DAT-001",
         "AM-EVD-001",
@@ -264,7 +264,7 @@
     },
     {
       "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-      "line": 533,
+      "line": 543,
       "requirement_ids": [
         "AM-DAT-001",
         "AM-PRV-001",
@@ -274,7 +274,7 @@
     },
     {
       "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-      "line": 534,
+      "line": 544,
       "requirement_ids": [
         "AM-EVD-001",
         "AM-SES-001"
@@ -283,7 +283,7 @@
     },
     {
       "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-      "line": 536,
+      "line": 546,
       "requirement_ids": [
         "AM-DAT-001",
         "AM-SES-001"
@@ -292,7 +292,7 @@
     },
     {
       "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-      "line": 537,
+      "line": 547,
       "requirement_ids": [
         "AM-EVD-002",
         "AM-VSC-002"
@@ -301,7 +301,7 @@
     },
     {
       "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-      "line": 545,
+      "line": 555,
       "requirement_ids": [
         "AM-EVD-001",
         "AM-EVD-002",
@@ -311,7 +311,7 @@
     },
     {
       "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-      "line": 546,
+      "line": 556,
       "requirement_ids": [
         "AM-EVD-002",
         "AM-SES-001"
@@ -320,7 +320,7 @@
     },
     {
       "heading": "G2 \u2014 Retain Originals and Make Summary Use Visible",
-      "line": 548,
+      "line": 558,
       "requirement_ids": [
         "AM-PRV-001",
         "AM-SES-001"
@@ -329,7 +329,7 @@
     },
     {
       "heading": "9. Threat Model and Process Boundaries",
-      "line": 588,
+      "line": 598,
       "requirement_ids": [
         "AM-INS-001"
       ],
@@ -337,7 +337,7 @@
     },
     {
       "heading": "9. Threat Model and Process Boundaries",
-      "line": 590,
+      "line": 600,
       "requirement_ids": [
         "AM-MDL-001",
         "AM-MDL-003",
@@ -351,7 +351,7 @@
     },
     {
       "heading": "9. Threat Model and Process Boundaries",
-      "line": 592,
+      "line": 602,
       "requirement_ids": [
         "AM-SEC-001"
       ],
@@ -359,7 +359,7 @@
     },
     {
       "heading": "10. Capability Grants",
-      "line": 607,
+      "line": 617,
       "requirement_ids": [
         "AM-AUT-001"
       ],
@@ -367,7 +367,7 @@
     },
     {
       "heading": "11. Path Contract",
-      "line": 615,
+      "line": 625,
       "requirement_ids": [
         "AM-PTH-001"
       ],
@@ -375,7 +375,7 @@
     },
     {
       "heading": "12. Canonical Data and Storage",
-      "line": 624,
+      "line": 634,
       "requirement_ids": [
         "AM-DAT-001"
       ],
@@ -383,7 +383,7 @@
     },
     {
       "heading": "12. Canonical Data and Storage",
-      "line": 639,
+      "line": 649,
       "requirement_ids": [
         "AM-DAT-001"
       ],
@@ -391,7 +391,7 @@
     },
     {
       "heading": "12. Canonical Data and Storage",
-      "line": 643,
+      "line": 653,
       "requirement_ids": [
         "AM-DAT-001",
         "AM-REP-001",
@@ -401,7 +401,7 @@
     },
     {
       "heading": "13. Privacy, Encryption, and Retention",
-      "line": 658,
+      "line": 668,
       "requirement_ids": [
         "AM-DAT-001",
         "AM-EVD-001",
@@ -412,7 +412,7 @@
     },
     {
       "heading": "14. Offline and Network Contract",
-      "line": 666,
+      "line": 676,
       "requirement_ids": [
         "AM-MDL-001",
         "AM-MDL-004",
@@ -422,7 +422,7 @@
     },
     {
       "heading": "15. Codex Handoff Boundary",
-      "line": 674,
+      "line": 684,
       "requirement_ids": [
         "AM-HOF-001"
       ],
@@ -430,7 +430,7 @@
     },
     {
       "heading": "15. Codex Handoff Boundary",
-      "line": 676,
+      "line": 686,
       "requirement_ids": [
         "AM-HOF-001"
       ],
@@ -438,7 +438,7 @@
     },
     {
       "heading": "16. Evidence and Completion",
-      "line": 691,
+      "line": 701,
       "requirement_ids": [
         "AM-AGT-001",
         "AM-EVD-001",
@@ -448,7 +448,7 @@
     },
     {
       "heading": "16. Evidence and Completion",
-      "line": 693,
+      "line": 703,
       "requirement_ids": [
         "AM-DAT-001",
         "AM-EVD-001"
@@ -457,7 +457,7 @@
     },
     {
       "heading": "17. Release Acceptance",
-      "line": 719,
+      "line": 729,
       "requirement_ids": [
         "AM-MDL-004",
         "AM-MDL-006",
@@ -467,7 +467,7 @@
     },
     {
       "heading": "17. Release Acceptance",
-      "line": 721,
+      "line": 731,
       "requirement_ids": [
         "AM-MDL-005",
         "AM-MDL-006",
@@ -477,7 +477,7 @@
     },
     {
       "heading": "17. Release Acceptance",
-      "line": 729,
+      "line": 739,
       "requirement_ids": [
         "AM-DOC-001",
         "AM-TST-001",

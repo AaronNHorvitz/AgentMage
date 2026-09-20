@@ -399,7 +399,7 @@
   "source_hashes": {
     "architecture/status-model.json": "1077338baac248654bbbfc3f45342b02b07ad40b90d9433c4d5485f65cb00ebc",
     "requirements/additions-only-baseline.json": "8480b7f1a971f3e8da6c8bf80f25eac68d45a431469b618fcad6aa2918009190",
-    "requirements/normative-map.json": "65232153cfa394a10b820950c24eade50aa0564ef4d1e53674c82e3bf515d4aa",
+    "requirements/normative-map.json": "4b6fa4894c191727ac561375c85befdad32d935fca7638f4bbf79d4494a68db5",
     "requirements/registry.json": "7c4207abefb07613d84b663227a88dbc2ad44250f1c63bdf7ebcfc31af122afe"
   },
   "status": "pass",
