@@ -382,7 +382,6 @@ Next action: implement the dependency-ready Task 13.1.6 finish-state and actual
 token-accounting source batch, then regenerate its dependent evidence once after
 the related source edits are complete.
 
-
 ## Guarded-dispatch and blocker-truth checkpoint — 2026-09-20
 
 This run preserved the active Fedora demo, its model configuration, and every USTE process and
