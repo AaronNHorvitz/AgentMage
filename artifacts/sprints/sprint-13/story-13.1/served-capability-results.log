@@ -1,6 +1,5 @@
 $ cargo test -p agentmage-kernel-engine --locked served_capabilit
-   Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.27s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 3 tests
@@ -192,7 +191,7 @@ test llama_server_driver::tests::serving_properties_reject_missing_undersized_id
 test llama_server_driver::tests::unix_socket_path_is_fixed_name_and_bounded_by_linux_address_limit ... ok
 test llama_server_driver::tests::verified_file_snapshot_detects_inode_mode_and_link_drift ... ok
 
-test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 76 filtered out; finished in 0.30s
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 76 filtered out; finished in 0.31s
 
      Running unittests src/docker_guard_main.rs (target/debug/deps/agentmage_docker_guard-e694f0eb4f1ba26d)
 

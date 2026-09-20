@@ -48,12 +48,12 @@
   ],
   "raw_results": {
     "path": "artifacts/sprints/sprint-13/story-13.1/served-capability-results.log",
-    "sha256": "90ecc42709cb0cc78a9eddec65dc710632f421e682e0653979df83c57abeb135"
+    "sha256": "be6affa89c356c3f3d2790295f35feb9b9595e93456d638b87719479420de8db"
   },
   "record_type": "agentmage-story-13-1-served-capability-evidence",
   "remaining_prerequisite": "Run CTX-SERVED against the exact separately authorized artifact/runtime/venue tuple; retain attributable restart, reload, reassignment, tokenizer/template, slot, and cache-policy evidence.",
   "schema_version": 1,
-  "source_revision": "d29b35d64fcdb271135b53547209f1efc8dbd265",
+  "source_revision": "399b2d4f8dbecb36f0f39dff12a2b202013406e0",
   "source_sha256": {
     "kernel/contracts/src/lib.rs": "c88a8095771f7d003d78e9f9f206d3b16489dcf1d10d90bf9d2e5392b1591092",
     "kernel/contracts/src/model.rs": "34b30269fdde6bcbdc26d0502859279b544122479566a106837eb56fdbdd584e",
@@ -63,7 +63,7 @@
     "platforms/linux-inference/src/model_install_verifier.rs": "7e5e57584acd908c4ef4b5e0ca07c73cbaaa6f8dae413b0effda8befacee3d9f",
     "platforms/linux-inference/src/native_model_adapter.rs": "566ddabb49e5a2ae32a280b3ac87b13bc1e5f77129efa1071e7ff7dbb67d9804",
     "requirements/context-safety-registration.json": "b5ccfefc532179d8ba9e5104772103d36273c98ab179aae6ba812f206ef82f7d",
-    "scripts/story_13_1_served_capability_evidence.py": "1df02ed7ce6421f81099c306e2a0f3e18d64f253113dd49a2906d257eb45c99c",
+    "scripts/story_13_1_served_capability_evidence.py": "7ff49c87b4c13b81a259f3b1f3efb2901e258e647638dc73316ccc5bc3d37fed",
     "tests/test_story_13_1_served_capability_evidence.py": "0d134d6897a3f5c742b965c6d6e5149b4a4aa1060c4f79ad626330b68d2d9b12"
   },
   "status": "PASS_LOCAL_FIXTURES_BLOCKED_NATIVE_BOUNDARY",
