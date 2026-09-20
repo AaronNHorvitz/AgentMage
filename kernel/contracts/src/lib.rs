@@ -185,9 +185,9 @@ pub use model::{
     ModelLoadReceipt, ModelManifestObservation, ModelMessage, ModelMessageRole, ModelModality,
     ModelProposalKind, ModelProposalWireCandidate, ModelResourceReport, ModelRole, ModelRunRequest,
     ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity,
-    ModelRuntimeKind, ModelStreamSink, ModelToolCallCandidate, ModelToolCallWireCandidate,
-    ModelTransformation, ModelUnloadReceipt, RuntimeIsolationObservation, StreamedModelFragment,
-    TokenCountResult,
+    ModelRuntimeKind, ModelServingCachePolicy, ModelServingCapabilities, ModelStreamSink,
+    ModelToolCallCandidate, ModelToolCallWireCandidate, ModelTransformation, ModelUnloadReceipt,
+    RuntimeIsolationObservation, StreamedModelFragment, TokenCountResult,
 };
 pub use model_discovery::{
     ModelActivationState, ModelCompatibilityState, ModelPickerCapability, ModelPickerDisposition,

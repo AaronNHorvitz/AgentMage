@@ -429,6 +429,72 @@ pub struct ModelLoadReceipt {
     pub elapsed_ms: u64,
     /// Content-free isolation observation after load.
     pub isolation: RuntimeIsolationObservation,
+    /// Effective serving capabilities observed from the loaded process.
+    pub served_capabilities: ModelServingCapabilities,
+}
+
+/// Effective prompt-cache behavior of one loaded serving process.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ModelServingCachePolicy {
+    /// Prompt reuse is disabled for every request.
+    Disabled,
+    /// Each request slot owns an isolated cache that is never shared across slots.
+    IsolatedPerSlot,
+    /// A shared cache is explicitly qualified for the exact serving tuple.
+    QualifiedShared,
+}
+
+/// Content-free observation of the effective capabilities of one loaded process.
+///
+/// Profile fields remain assertions until this record is returned by the runtime
+/// boundary and independently matched by the kernel. A restart or reload must
+/// change at least one of `process_generation` or `load_generation`.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ModelServingCapabilities {
+    /// Serving-capability contract version.
+    pub schema_version: u16,
+    /// Exact loaded profile identity.
+    pub profile_id: ModelProfileId,
+    /// Exact loaded manifest digest.
+    pub manifest_sha256: String,
+    /// Exact loaded artifact digest.
+    pub artifact_sha256: String,
+    /// Exact serving adapter.
+    pub adapter_id: ModelAdapterId,
+    /// Exact runtime build observed for the process.
+    pub runtime: ModelRuntimeIdentity,
+    /// Exact local serving endpoint owned by the adapter.
+    pub endpoint: String,
+    /// Operating-system process identity, never reused as a generation identity.
+    pub process_id: u32,
+    /// Platform-observed process start generation.
+    pub process_generation: u64,
+    /// Monotonic adapter-owned generation for this load.
+    pub load_generation: u64,
+    /// Digest of the effective immutable launch/configuration tuple.
+    pub launch_configuration_sha256: String,
+    /// Maximum tokens the process actually serves for one request.
+    pub context_capacity_tokens: u32,
+    /// Number of independently attributable request slots.
+    pub parallel_slots: u32,
+    /// Effective prompt-cache isolation policy.
+    pub cache_policy: ModelServingCachePolicy,
+    /// Effective tokenizer identity bound to the loaded process.
+    pub tokenizer_sha256: String,
+    /// Effective rendering/template identity bound to the loaded process.
+    pub template_sha256: String,
+    /// Effective model-edge codec identity.
+    pub codec_sha256: String,
+    /// Whether reasoning controls are effectively supported for this tuple.
+    pub reasoning_supported: bool,
+    /// Whether server-side context shifting is effectively enabled.
+    pub context_shift_supported: bool,
+    /// Logical observation time in milliseconds after load.
+    pub observed_at_ms: u64,
+    /// Digest of the complete observation procedure and result.
+    pub observation_sha256: String,
 }
 
 /// Content-free result of unloading one exact profile.
@@ -496,6 +562,9 @@ pub trait LocalModelRuntime {
 
     /// Returns a content-free health observation.
     fn health(&self) -> ModelHealth;
+
+    /// Re-observes effective capabilities for the currently loaded process.
+    fn serving_capabilities(&self) -> Result<ModelServingCapabilities, ModelRuntimeFailure>;
 
     /// Counts one exact context packet using the selected profile tokenizer.
     fn count_tokens(

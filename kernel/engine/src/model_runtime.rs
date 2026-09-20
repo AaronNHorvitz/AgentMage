@@ -7,8 +7,8 @@ use agentmage_kernel_contracts::{
     ModelCapabilityState, ModelContextPacket, ModelFamilyCodec, ModelHealth, ModelHealthState,
     ModelLifecycleState, ModelLoadReceipt, ModelManifestObservation, ModelModality, ModelProfileId,
     ModelResourceReport, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
-    ModelRuntimeFailure, ModelRuntimeIdentity, ModelStreamSink, ModelUnloadReceipt,
-    StreamedModelFragment, TaskId, TokenCountResult,
+    ModelRuntimeFailure, ModelRuntimeIdentity, ModelServingCachePolicy, ModelServingCapabilities,
+    ModelStreamSink, ModelUnloadReceipt, StreamedModelFragment, TaskId, TokenCountResult,
 };
 use sha2::{Digest, Sha256};
 
@@ -52,6 +52,12 @@ pub enum ModelRuntimeGateError {
     RuntimeMismatch,
     /// Runtime manifest observation differs from the exact tuple.
     ManifestObservationMismatch,
+    /// Effective served capabilities are absent for the loaded process.
+    ServedCapabilityMissing,
+    /// Effective served capabilities name a different admitted tuple.
+    ServedCapabilityProfileMismatch,
+    /// Effective served capabilities changed after load or contain invalid facts.
+    ServedCapabilityDrift,
     /// Runtime observed network, workspace, authority, or credential material.
     IsolationViolation,
     /// A profile is already loaded.
@@ -82,6 +88,9 @@ impl ModelRuntimeGateError {
             Self::AutomaticFallbackProhibited => "model.profile.automatic-fallback-prohibited",
             Self::RuntimeMismatch => "model.runtime.identity-mismatch",
             Self::ManifestObservationMismatch => "model.runtime.manifest-observation-mismatch",
+            Self::ServedCapabilityMissing => "model.served-capability.missing",
+            Self::ServedCapabilityProfileMismatch => "model.served-capability.profile-mismatch",
+            Self::ServedCapabilityDrift => "model.served-capability.drift",
             Self::IsolationViolation => "model.runtime.isolation-violation",
             Self::AlreadyLoaded => "model.runtime.already-loaded",
             Self::NotLoaded => "model.runtime.not-loaded",
@@ -220,6 +229,7 @@ pub struct LocalModelController<R: LocalModelRuntime, C: ModelFamilyCodec> {
     codec: C,
     admitted: AdmittedModelProfile,
     loaded: bool,
+    served_capabilities: Option<ModelServingCapabilities>,
 }
 
 /// Complete model result plus the exact response bytes validated by the controller.
@@ -248,6 +258,7 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             codec,
             admitted,
             loaded: false,
+            served_capabilities: None,
         })
     }
 
@@ -278,6 +289,7 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             .load(&self.admitted.profile)
             .map_err(|_| ModelRuntimeGateError::RuntimeFailure)?;
         validate_load_receipt(&self.admitted.profile, &receipt)?;
+        self.served_capabilities = Some(receipt.served_capabilities.clone());
         self.loaded = true;
         Ok(receipt)
     }
@@ -294,7 +306,26 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         {
             return Err(ModelRuntimeGateError::RuntimeMismatch);
         }
+        let current = self.runtime.serving_capabilities().map_err(|error| {
+            if error.code == "model.served-capability.missing" {
+                ModelRuntimeGateError::ServedCapabilityMissing
+            } else {
+                ModelRuntimeGateError::ServedCapabilityDrift
+            }
+        })?;
+        validate_served_capabilities(&self.admitted.profile, &current)?;
+        if self.served_capabilities.as_ref() != Some(&current) {
+            return Err(ModelRuntimeGateError::ServedCapabilityDrift);
+        }
         Ok(health)
+    }
+
+    /// Returns the current effective served-capability binding after revalidation.
+    pub fn serving_capabilities(&self) -> Result<ModelServingCapabilities, ModelRuntimeGateError> {
+        self.health()?;
+        self.served_capabilities
+            .clone()
+            .ok_or(ModelRuntimeGateError::ServedCapabilityMissing)
     }
 
     /// Counts an exact bounded context packet with no fallback or substitution.
@@ -390,6 +421,7 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         packet: &ModelContextPacket,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<VerifiedModelOutput, ModelRuntimeGateError> {
+        self.health()?;
         self.validate_packet(packet)?;
         if request.profile_id != self.admitted.profile.profile_id
             || request.manifest_sha256 != self.admitted.profile.manifest_sha256
@@ -506,6 +538,7 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             return Err(ModelRuntimeGateError::ResultMismatch);
         }
         self.loaded = false;
+        self.served_capabilities = None;
         Ok(receipt)
     }
 
@@ -651,6 +684,41 @@ fn validate_load_receipt(
         || isolation.credential_material_available
     {
         return Err(ModelRuntimeGateError::IsolationViolation);
+    }
+    validate_served_capabilities(profile, &receipt.served_capabilities)?;
+    Ok(())
+}
+
+fn validate_served_capabilities(
+    profile: &ExactModelProfile,
+    served: &ModelServingCapabilities,
+) -> Result<(), ModelRuntimeGateError> {
+    if served.profile_id != profile.profile_id
+        || served.manifest_sha256 != profile.manifest_sha256
+        || served.artifact_sha256 != profile.artifact.sha256
+        || served.adapter_id != profile.runtime.adapter_id
+        || served.runtime != profile.runtime
+        || served.tokenizer_sha256 != profile.codec.tokenizer_sha256
+        || served.template_sha256 != profile.codec.template_sha256
+        || served.codec_sha256 != profile.codec.codec_sha256
+        || served.reasoning_supported != profile.codec.reasoning_enabled
+    {
+        return Err(ModelRuntimeGateError::ServedCapabilityProfileMismatch);
+    }
+    if served.schema_version != 1
+        || !valid_text(&served.endpoint)
+        || served.process_id == 0
+        || served.process_generation == 0
+        || served.load_generation == 0
+        || !valid_sha256(&served.launch_configuration_sha256)
+        || served.context_capacity_tokens < profile.context.max_context_tokens
+        || served.parallel_slots == 0
+        || served.context_shift_supported
+        || !valid_sha256(&served.observation_sha256)
+        || (served.parallel_slots > 1
+            && served.cache_policy == ModelServingCachePolicy::QualifiedShared)
+    {
+        return Err(ModelRuntimeGateError::ServedCapabilityDrift);
     }
     Ok(())
 }
@@ -884,14 +952,15 @@ mod tests {
         ModelMessage, ModelMessageId, ModelMessageRole, ModelModality, ModelProfileId,
         ModelProposalKind, ModelResourceReport, ModelRole, ModelRunId, ModelRunRequest,
         ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity,
-        ModelRuntimeKind, ModelStreamId, ModelStreamSink, ModelTransformation, ModelUnloadReceipt,
-        PlatformArchitecture, PlatformFamily, RuntimeIsolationObservation, SessionId,
-        StreamedModelFragment, TaskId, TokenCountResult, ToolCatalogId,
+        ModelRuntimeKind, ModelServingCachePolicy, ModelServingCapabilities, ModelStreamId,
+        ModelStreamSink, ModelTransformation, ModelUnloadReceipt, PlatformArchitecture,
+        PlatformFamily, RuntimeIsolationObservation, SessionId, StreamedModelFragment, TaskId,
+        TokenCountResult, ToolCatalogId,
     };
 
     use super::{
         LocalModelController, ModelAdmissionCatalog, ModelRuntimeGateError, ModelUsePurpose,
-        runtime_failure, sha256_hex,
+        runtime_failure, sha256_hex, validate_served_capabilities,
     };
     use crate::model_codec::ClosedJsonFamilyCodec;
 
@@ -909,13 +978,27 @@ mod tests {
         FalseCompletion,
     }
 
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum ServedDrift {
+        Missing,
+        Endpoint,
+        ProcessGeneration,
+        LoadGeneration,
+        Tokenizer,
+        Template,
+        Slots,
+        CachePolicy,
+    }
+
     #[derive(Clone)]
     struct FakeRuntime {
         identity: ModelRuntimeIdentity,
         token_counter: String,
         loaded: Option<ModelProfileId>,
+        served: Option<ModelServingCapabilities>,
         manifest_drift: bool,
         isolation_drift: bool,
+        served_drift_after_load: Option<ServedDrift>,
         scenario: FakeScenario,
         resident_memory_bytes: u64,
     }
@@ -926,8 +1009,10 @@ mod tests {
                 identity: profile.runtime.clone(),
                 token_counter: profile.context.token_counter.clone(),
                 loaded: None,
+                served: None,
                 manifest_drift: false,
                 isolation_drift: false,
+                served_drift_after_load: None,
                 scenario: FakeScenario::Happy,
                 resident_memory_bytes: 1,
             }
@@ -963,6 +1048,30 @@ mod tests {
             profile: &ExactModelProfile,
         ) -> Result<ModelLoadReceipt, ModelRuntimeFailure> {
             self.loaded = Some(profile.profile_id.clone());
+            let served = ModelServingCapabilities {
+                schema_version: 1,
+                profile_id: profile.profile_id.clone(),
+                manifest_sha256: profile.manifest_sha256.clone(),
+                artifact_sha256: profile.artifact.sha256.clone(),
+                adapter_id: self.identity.adapter_id.clone(),
+                runtime: self.identity.clone(),
+                endpoint: "fixture://served-profile".to_owned(),
+                process_id: 1,
+                process_generation: 1,
+                load_generation: 1,
+                launch_configuration_sha256: SHA.to_owned(),
+                context_capacity_tokens: profile.context.max_context_tokens,
+                parallel_slots: 1,
+                cache_policy: ModelServingCachePolicy::Disabled,
+                tokenizer_sha256: profile.codec.tokenizer_sha256.clone(),
+                template_sha256: profile.codec.template_sha256.clone(),
+                codec_sha256: profile.codec.codec_sha256.clone(),
+                reasoning_supported: profile.codec.reasoning_enabled,
+                context_shift_supported: false,
+                observed_at_ms: 1,
+                observation_sha256: SHA.to_owned(),
+            };
+            self.served = Some(served.clone());
             Ok(ModelLoadReceipt {
                 profile_id: profile.profile_id.clone(),
                 manifest_sha256: profile.manifest_sha256.clone(),
@@ -977,6 +1086,7 @@ mod tests {
                     credential_material_available: false,
                     observation_sha256: SHA.to_owned(),
                 },
+                served_capabilities: served,
             })
         }
 
@@ -985,6 +1095,7 @@ mod tests {
             profile_id: &ModelProfileId,
         ) -> Result<ModelUnloadReceipt, ModelRuntimeFailure> {
             self.loaded = None;
+            self.served = None;
             Ok(ModelUnloadReceipt {
                 profile_id: profile_id.clone(),
                 adapter_id: self.identity.adapter_id.clone(),
@@ -1005,6 +1116,29 @@ mod tests {
                 reason_code: "fixture.ready".to_owned(),
                 observed_at_ms: 1,
             }
+        }
+
+        fn serving_capabilities(&self) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+            if self.served_drift_after_load == Some(ServedDrift::Missing) {
+                return Err(runtime_failure("model.served-capability.missing"));
+            }
+            let mut served = self
+                .served
+                .clone()
+                .ok_or_else(|| runtime_failure("model.served-capability.missing"))?;
+            match self.served_drift_after_load {
+                Some(ServedDrift::Endpoint) => served.endpoint.push_str("-changed"),
+                Some(ServedDrift::ProcessGeneration) => served.process_generation += 1,
+                Some(ServedDrift::LoadGeneration) => served.load_generation += 1,
+                Some(ServedDrift::Tokenizer) => served.tokenizer_sha256 = "b".repeat(64),
+                Some(ServedDrift::Template) => served.template_sha256 = "b".repeat(64),
+                Some(ServedDrift::Slots) => served.parallel_slots += 1,
+                Some(ServedDrift::CachePolicy) => {
+                    served.cache_policy = ModelServingCachePolicy::IsolatedPerSlot
+                }
+                Some(ServedDrift::Missing) | None => {}
+            }
+            Ok(served)
         }
 
         fn count_tokens(
@@ -1338,6 +1472,185 @@ mod tests {
         );
         assert!(controller.unload().expect("unload").empty);
         assert_eq!(controller.health(), Err(ModelRuntimeGateError::NotLoaded));
+    }
+
+    #[test]
+    fn served_capabilities_reject_missing_forged_undersized_and_unsafe_facts() {
+        let profile = profile();
+        let mut runtime = FakeRuntime::new(&profile);
+        let baseline = runtime
+            .load(&profile)
+            .expect("fixture load")
+            .served_capabilities;
+        assert_eq!(validate_served_capabilities(&profile, &baseline), Ok(()));
+
+        macro_rules! rejects {
+            ($field:ident, $value:expr, $expected:expr) => {{
+                let mut changed = baseline.clone();
+                changed.$field = $value;
+                assert_eq!(
+                    validate_served_capabilities(&profile, &changed),
+                    Err($expected),
+                    "field {}",
+                    stringify!($field)
+                );
+            }};
+        }
+        rejects!(
+            endpoint,
+            String::new(),
+            ModelRuntimeGateError::ServedCapabilityDrift
+        );
+        rejects!(
+            schema_version,
+            0,
+            ModelRuntimeGateError::ServedCapabilityDrift
+        );
+        rejects!(
+            profile_id,
+            ModelProfileId::from_raw("foreign"),
+            ModelRuntimeGateError::ServedCapabilityProfileMismatch
+        );
+        rejects!(
+            manifest_sha256,
+            "b".repeat(64),
+            ModelRuntimeGateError::ServedCapabilityProfileMismatch
+        );
+        rejects!(
+            artifact_sha256,
+            "b".repeat(64),
+            ModelRuntimeGateError::ServedCapabilityProfileMismatch
+        );
+        rejects!(process_id, 0, ModelRuntimeGateError::ServedCapabilityDrift);
+        rejects!(
+            process_generation,
+            0,
+            ModelRuntimeGateError::ServedCapabilityDrift
+        );
+        rejects!(
+            load_generation,
+            0,
+            ModelRuntimeGateError::ServedCapabilityDrift
+        );
+        rejects!(
+            launch_configuration_sha256,
+            String::new(),
+            ModelRuntimeGateError::ServedCapabilityDrift
+        );
+        rejects!(
+            context_capacity_tokens,
+            profile.context.max_context_tokens - 1,
+            ModelRuntimeGateError::ServedCapabilityDrift
+        );
+        rejects!(
+            parallel_slots,
+            0,
+            ModelRuntimeGateError::ServedCapabilityDrift
+        );
+        rejects!(
+            tokenizer_sha256,
+            "b".repeat(64),
+            ModelRuntimeGateError::ServedCapabilityProfileMismatch
+        );
+        rejects!(
+            template_sha256,
+            "b".repeat(64),
+            ModelRuntimeGateError::ServedCapabilityProfileMismatch
+        );
+        rejects!(
+            codec_sha256,
+            "b".repeat(64),
+            ModelRuntimeGateError::ServedCapabilityProfileMismatch
+        );
+        rejects!(
+            reasoning_supported,
+            !profile.codec.reasoning_enabled,
+            ModelRuntimeGateError::ServedCapabilityProfileMismatch
+        );
+        rejects!(
+            observation_sha256,
+            String::new(),
+            ModelRuntimeGateError::ServedCapabilityDrift
+        );
+        rejects!(
+            context_shift_supported,
+            true,
+            ModelRuntimeGateError::ServedCapabilityDrift
+        );
+
+        let mut unsafe_shared = baseline;
+        unsafe_shared.parallel_slots = 2;
+        unsafe_shared.cache_policy = ModelServingCachePolicy::QualifiedShared;
+        assert_eq!(
+            validate_served_capabilities(&profile, &unsafe_shared),
+            Err(ModelRuntimeGateError::ServedCapabilityDrift)
+        );
+        let mut isolated_parallel = unsafe_shared;
+        isolated_parallel.cache_policy = ModelServingCachePolicy::IsolatedPerSlot;
+        assert_eq!(
+            validate_served_capabilities(&profile, &isolated_parallel),
+            Ok(())
+        );
+    }
+
+    #[test]
+    fn health_rejects_every_served_capability_drift_before_dispatch() {
+        let profile = profile();
+        let admitted = ModelAdmissionCatalog::new(vec![profile.clone()])
+            .expect("catalog")
+            .admit(&profile, ModelUsePurpose::ContractTest)
+            .expect("admitted");
+        for (drift, expected) in [
+            (
+                ServedDrift::Missing,
+                ModelRuntimeGateError::ServedCapabilityMissing,
+            ),
+            (
+                ServedDrift::Endpoint,
+                ModelRuntimeGateError::ServedCapabilityDrift,
+            ),
+            (
+                ServedDrift::ProcessGeneration,
+                ModelRuntimeGateError::ServedCapabilityDrift,
+            ),
+            (
+                ServedDrift::LoadGeneration,
+                ModelRuntimeGateError::ServedCapabilityDrift,
+            ),
+            (
+                ServedDrift::Tokenizer,
+                ModelRuntimeGateError::ServedCapabilityProfileMismatch,
+            ),
+            (
+                ServedDrift::Template,
+                ModelRuntimeGateError::ServedCapabilityProfileMismatch,
+            ),
+            (
+                ServedDrift::Slots,
+                ModelRuntimeGateError::ServedCapabilityDrift,
+            ),
+            (
+                ServedDrift::CachePolicy,
+                ModelRuntimeGateError::ServedCapabilityDrift,
+            ),
+        ] {
+            let mut runtime = FakeRuntime::new(&profile);
+            runtime.served_drift_after_load = Some(drift);
+            runtime.scenario = FakeScenario::Crashed;
+            let mut controller = LocalModelController::new(
+                runtime,
+                ClosedJsonFamilyCodec::new(profile.codec.clone()),
+                admitted.clone(),
+            )
+            .expect("controller");
+            controller.load().expect("load");
+            assert_eq!(controller.health(), Err(expected), "drift={drift:?}");
+            assert_eq!(
+                controller.stream(&request(&profile), &packet(&profile), None),
+                Err(expected),
+                "drift={drift:?}"
+            );
+        }
     }
 
     #[test]

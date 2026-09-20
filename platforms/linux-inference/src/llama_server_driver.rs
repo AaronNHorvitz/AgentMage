@@ -16,9 +16,9 @@ use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, DecodingProfile, EncodedModelContext, ExactModelProfile,
     ModelCancellationProbe, ModelHealth, ModelHealthState, ModelLoadReceipt,
     ModelManifestObservation, ModelProfileId, ModelResourceReport, ModelRunRequest, ModelRunResult,
-    ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity, ModelStreamId,
-    ModelStreamSink, ModelUnloadReceipt, RuntimeIsolationObservation, StreamedModelFragment,
-    TokenCountResult,
+    ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity, ModelServingCachePolicy,
+    ModelServingCapabilities, ModelStreamId, ModelStreamSink, ModelUnloadReceipt,
+    RuntimeIsolationObservation, StreamedModelFragment, TokenCountResult,
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -166,6 +166,15 @@ fn valid_socket_path(path: &Path) -> bool {
 struct LoadedRuntime {
     profile_id: ModelProfileId,
     manifest_sha256: String,
+    artifact_sha256: String,
+    tokenizer_sha256: String,
+    template_sha256: String,
+    codec_sha256: String,
+    reasoning_supported: bool,
+    context_capacity_tokens: u32,
+    launch_configuration_sha256: String,
+    load_generation: u64,
+    capability_observed_at_ms: u64,
     token_counter: String,
     decoding: DecodingProfile,
     child: Child,
@@ -221,6 +230,7 @@ pub struct LlamaServerDriver {
     config: LlamaServerDriverConfig,
     loaded: Option<LoadedRuntime>,
     verified_model: RefCell<Option<VerifiedModel>>,
+    load_generation: u64,
 }
 
 impl LlamaServerDriver {
@@ -231,6 +241,7 @@ impl LlamaServerDriver {
             config,
             loaded: None,
             verified_model: RefCell::new(None),
+            load_generation: 0,
         }
     }
 
@@ -432,6 +443,22 @@ impl NativeModelDriver for LlamaServerDriver {
             return Err(failure("model.llama-driver.socket-exists", false));
         }
         self.verify_sandbox_dependencies()?;
+        self.load_generation = self
+            .load_generation
+            .checked_add(1)
+            .ok_or_else(|| failure("model.llama-driver.load-generation-exhausted", false))?;
+        let effective_launch = launch_arguments(
+            GUEST_MODEL_PATH,
+            profile.profile_id.as_str(),
+            GUEST_SOCKET_PATH,
+            profile.context.max_context_tokens,
+            1,
+        );
+        let launch_configuration_sha256 = sha256(
+            serde_json::to_string(&effective_launch)
+                .map_err(|_| failure("model.llama-driver.configuration-invalid", false))?
+                .as_bytes(),
+        );
         let mut command = Command::new(BWRAP_PATH);
         command
             .args(sandbox_arguments(
@@ -441,11 +468,7 @@ impl NativeModelDriver for LlamaServerDriver {
             ))
             .arg("--")
             .arg(format!("{GUEST_RUNTIME_ROOT}/bin/llama-server"))
-            .args(launch_arguments(
-                GUEST_MODEL_PATH,
-                profile.profile_id.as_str(),
-                GUEST_SOCKET_PATH,
-            ))
+            .args(effective_launch)
             .env_clear()
             .stdin(Stdio::null())
             .stdout(Stdio::null())
@@ -456,6 +479,15 @@ impl NativeModelDriver for LlamaServerDriver {
         self.loaded = Some(LoadedRuntime {
             profile_id: profile.profile_id.clone(),
             manifest_sha256: profile.manifest_sha256.clone(),
+            artifact_sha256: profile.artifact.sha256.clone(),
+            tokenizer_sha256: profile.codec.tokenizer_sha256.clone(),
+            template_sha256: profile.codec.template_sha256.clone(),
+            codec_sha256: profile.codec.codec_sha256.clone(),
+            reasoning_supported: profile.codec.reasoning_enabled,
+            context_capacity_tokens: profile.context.max_context_tokens,
+            launch_configuration_sha256,
+            load_generation: self.load_generation,
+            capability_observed_at_ms: 0,
             token_counter: profile.context.token_counter.clone(),
             decoding: profile.decoding.clone(),
             child,
@@ -488,16 +520,21 @@ impl NativeModelDriver for LlamaServerDriver {
                 return Err(error);
             }
         };
-        self.loaded
-            .as_mut()
-            .expect("loaded state retained")
-            .runtime_pid = runtime_pid;
+        let loaded = self.loaded.as_mut().expect("loaded state retained");
+        loaded.runtime_pid = runtime_pid;
+        loaded.capability_observed_at_ms = loaded
+            .loaded_at
+            .elapsed()
+            .as_millis()
+            .min(u128::from(u64::MAX)) as u64;
+        let served_capabilities = self.serving_capabilities()?;
         Ok(ModelLoadReceipt {
             profile_id: profile.profile_id.clone(),
             manifest_sha256: profile.manifest_sha256.clone(),
             adapter_id: self.config.identity.adapter_id.clone(),
             elapsed_ms: started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64,
             isolation: isolation.clone(),
+            served_capabilities,
         })
     }
 
@@ -545,6 +582,55 @@ impl NativeModelDriver for LlamaServerDriver {
                 .as_ref()
                 .map_or(0, |loaded| loaded.loaded_at.elapsed().as_millis() as u64),
         }
+    }
+
+    fn serving_capabilities(&self) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+        let loaded = self
+            .loaded
+            .as_ref()
+            .ok_or_else(|| failure("model.served-capability.missing", false))?;
+        if loaded.runtime_pid == 0 || self.client().health().is_err() {
+            return Err(failure("model.served-capability.drift", false));
+        }
+        verify_runtime_command_line(
+            loaded.runtime_pid,
+            &launch_arguments(
+                GUEST_MODEL_PATH,
+                loaded.profile_id.as_str(),
+                GUEST_SOCKET_PATH,
+                loaded.context_capacity_tokens,
+                1,
+            ),
+        )?;
+        let process_generation = process_start_generation(loaded.runtime_pid)?;
+        let mut observation = ModelServingCapabilities {
+            schema_version: 1,
+            profile_id: loaded.profile_id.clone(),
+            manifest_sha256: loaded.manifest_sha256.clone(),
+            artifact_sha256: loaded.artifact_sha256.clone(),
+            adapter_id: self.config.identity.adapter_id.clone(),
+            runtime: self.config.identity.clone(),
+            endpoint: format!("unix:{GUEST_SOCKET_PATH}"),
+            process_id: loaded.runtime_pid,
+            process_generation,
+            load_generation: loaded.load_generation,
+            launch_configuration_sha256: loaded.launch_configuration_sha256.clone(),
+            context_capacity_tokens: loaded.context_capacity_tokens,
+            parallel_slots: 1,
+            cache_policy: ModelServingCachePolicy::Disabled,
+            tokenizer_sha256: loaded.tokenizer_sha256.clone(),
+            template_sha256: loaded.template_sha256.clone(),
+            codec_sha256: loaded.codec_sha256.clone(),
+            reasoning_supported: loaded.reasoning_supported,
+            context_shift_supported: false,
+            observed_at_ms: loaded.capability_observed_at_ms,
+            observation_sha256: String::new(),
+        };
+        observation.observation_sha256 = sha256(
+            &serde_json::to_vec(&observation)
+                .map_err(|_| failure("model.served-capability.drift", false))?,
+        );
+        Ok(observation)
     }
 
     fn count_tokens(
@@ -652,24 +738,30 @@ impl NativeModelDriver for LlamaServerDriver {
     }
 }
 
-fn launch_arguments<'a>(model: &'a str, profile_id: &'a str, socket: &'a str) -> [&'a str; 16] {
-    [
-        "--model",
-        model,
-        "--alias",
-        profile_id,
-        "--host",
-        socket,
-        "--ctx-size",
-        "8192",
-        "--parallel",
-        "1",
-        "--n-gpu-layers",
-        "999",
-        "--no-webui",
-        "--no-slots",
-        "--jinja",
-        "--no-context-shift",
+fn launch_arguments(
+    model: &str,
+    profile_id: &str,
+    socket: &str,
+    context_tokens: u32,
+    parallel_slots: u32,
+) -> Vec<String> {
+    vec![
+        "--model".to_owned(),
+        model.to_owned(),
+        "--alias".to_owned(),
+        profile_id.to_owned(),
+        "--host".to_owned(),
+        socket.to_owned(),
+        "--ctx-size".to_owned(),
+        context_tokens.to_string(),
+        "--parallel".to_owned(),
+        parallel_slots.to_string(),
+        "--n-gpu-layers".to_owned(),
+        "999".to_owned(),
+        "--no-webui".to_owned(),
+        "--no-slots".to_owned(),
+        "--jinja".to_owned(),
+        "--no-context-shift".to_owned(),
     ]
 }
 
@@ -1484,6 +1576,43 @@ fn exact_runtime_descendant(supervisor_pid: u32) -> Result<u32, ModelRuntimeFail
     Ok(matches[0])
 }
 
+fn process_start_generation(pid: u32) -> Result<u64, ModelRuntimeFailure> {
+    let stat = fs::read_to_string(format!("/proc/{pid}/stat"))
+        .map_err(|_| failure("model.served-capability.drift", false))?;
+    let end = stat
+        .rfind(") ")
+        .ok_or_else(|| failure("model.served-capability.drift", false))?;
+    stat[end + 2..]
+        .split_whitespace()
+        .nth(19)
+        .and_then(|value| value.parse::<u64>().ok())
+        .filter(|value| *value != 0)
+        .ok_or_else(|| failure("model.served-capability.drift", false))
+}
+
+fn verify_runtime_command_line(
+    pid: u32,
+    expected_arguments: &[String],
+) -> Result<(), ModelRuntimeFailure> {
+    let bytes = fs::read(format!("/proc/{pid}/cmdline"))
+        .map_err(|_| failure("model.served-capability.drift", false))?;
+    let actual = bytes
+        .split(|byte| *byte == 0)
+        .filter(|item| !item.is_empty())
+        .collect::<Vec<_>>();
+    let executable = format!("{GUEST_RUNTIME_ROOT}/bin/llama-server");
+    if actual.first().copied() != Some(executable.as_bytes())
+        || actual.len() != expected_arguments.len() + 1
+        || actual[1..]
+            .iter()
+            .zip(expected_arguments)
+            .any(|(observed, expected)| *observed != expected.as_bytes())
+    {
+        return Err(failure("model.served-capability.drift", false));
+    }
+    Ok(())
+}
+
 fn status_value<'a>(status: &'a str, key: &str) -> Option<&'a str> {
     status
         .lines()
@@ -1721,7 +1850,8 @@ mod tests {
         CONTRACT_SCHEMA_VERSION, Endpoint, FileSnapshot, GUEST_MODEL_PATH, GUEST_RUNTIME_ROOT,
         GUEST_SOCKET_PATH, GUEST_SOCKET_ROOT, SANDBOX_DEVICE_PATHS, SANDBOX_READ_ONLY_DIRECTORIES,
         UnixHttpClient, exact_directory, launch_arguments, parse_accelerator_memory,
-        parse_http_response, plain_text, sandbox_arguments, valid_socket_path,
+        parse_http_response, plain_text, process_start_generation, sandbox_arguments,
+        valid_socket_path,
     };
 
     static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
@@ -1919,7 +2049,9 @@ mod tests {
             launch_arguments(
                 "/models/model.gguf",
                 "exact-profile",
-                "/run/private/llama-server.sock"
+                "/run/private/llama-server.sock",
+                8192,
+                1,
             ),
             [
                 "--model",
@@ -1939,7 +2071,17 @@ mod tests {
                 "--jinja",
                 "--no-context-shift",
             ]
+            .map(str::to_owned)
         );
+        let derived = launch_arguments("/model", "profile", "/run/llama-server.sock", 4096, 2);
+        assert_eq!(derived[7], "4096");
+        assert_eq!(derived[9], "2");
+    }
+
+    #[test]
+    fn process_generation_is_read_from_the_live_process_identity() {
+        assert!(process_start_generation(std::process::id()).expect("start generation") > 0);
+        assert!(process_start_generation(u32::MAX).is_err());
     }
 
     #[test]
@@ -1989,7 +2131,7 @@ mod tests {
             assert!(!values.contains(&prohibited), "admitted {prohibited}");
         }
         assert_eq!(
-            launch_arguments(GUEST_MODEL_PATH, "profile", GUEST_SOCKET_PATH)[0..6],
+            launch_arguments(GUEST_MODEL_PATH, "profile", GUEST_SOCKET_PATH, 8192, 1)[0..6],
             [
                 "--model",
                 GUEST_MODEL_PATH,
@@ -1998,6 +2140,7 @@ mod tests {
                 "--host",
                 GUEST_SOCKET_PATH
             ]
+            .map(str::to_owned)
         );
     }
 

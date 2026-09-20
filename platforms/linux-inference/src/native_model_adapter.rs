@@ -4,8 +4,9 @@ use agentmage_kernel_contracts::{
     EncodedModelContext, ExactModelProfile, LocalModelRuntime, ModelCancellationProbe, ModelHealth,
     ModelHealthState, ModelLoadReceipt, ModelManifestObservation, ModelProfileId,
     ModelResourceReport, ModelRunRequest, ModelRunResult, ModelRuntimeFailure,
-    ModelRuntimeIdentity, ModelRuntimeKind, ModelStreamSink, ModelUnloadReceipt,
-    PlatformArchitecture, PlatformFamily, RuntimeIsolationObservation, TokenCountResult,
+    ModelRuntimeIdentity, ModelRuntimeKind, ModelServingCapabilities, ModelStreamSink,
+    ModelUnloadReceipt, PlatformArchitecture, PlatformFamily, RuntimeIsolationObservation,
+    TokenCountResult,
 };
 
 /// Driver operations available behind the Linux runtime adapter.
@@ -34,6 +35,9 @@ pub trait NativeModelDriver {
 
     /// Returns a content-free health observation.
     fn health(&self) -> ModelHealth;
+
+    /// Re-observes the effective immutable serving tuple of the loaded process.
+    fn serving_capabilities(&self) -> Result<ModelServingCapabilities, ModelRuntimeFailure>;
 
     /// Counts tokens for one exact bounded packet.
     fn count_tokens(
@@ -112,6 +116,32 @@ impl<D: NativeModelDriver> LinuxNativeModelAdapter<D> {
             Err(failure("model.linux-adapter.profile-not-loaded"))
         }
     }
+
+    fn exact_serving_capabilities(
+        &self,
+        profile: &ExactModelProfile,
+        served: &ModelServingCapabilities,
+    ) -> bool {
+        served.schema_version == 1
+            && served.profile_id == profile.profile_id
+            && served.manifest_sha256 == profile.manifest_sha256
+            && served.artifact_sha256 == profile.artifact.sha256
+            && served.adapter_id == self.identity.adapter_id
+            && served.runtime == self.identity
+            && !served.endpoint.trim().is_empty()
+            && served.process_id != 0
+            && served.process_generation != 0
+            && served.load_generation != 0
+            && served.context_capacity_tokens >= profile.context.max_context_tokens
+            && served.parallel_slots != 0
+            && served.tokenizer_sha256 == profile.codec.tokenizer_sha256
+            && served.template_sha256 == profile.codec.template_sha256
+            && served.codec_sha256 == profile.codec.codec_sha256
+            && served.reasoning_supported == profile.codec.reasoning_enabled
+            && !served.context_shift_supported
+            && valid_sha256(&served.launch_configuration_sha256)
+            && valid_sha256(&served.observation_sha256)
+    }
 }
 
 impl<D: NativeModelDriver> LocalModelRuntime for LinuxNativeModelAdapter<D> {
@@ -154,8 +184,10 @@ impl<D: NativeModelDriver> LocalModelRuntime for LinuxNativeModelAdapter<D> {
             || receipt.manifest_sha256 != profile.manifest_sha256
             || receipt.adapter_id != self.identity.adapter_id
             || receipt.isolation != self.isolation
+            || !self.exact_serving_capabilities(profile, &receipt.served_capabilities)
         {
             self.verified = None;
+            let _ = self.driver.unload(&profile.profile_id);
             return Err(failure("model.linux-adapter.load-receipt-drift"));
         }
         self.loaded = Some(profile.profile_id.clone());
@@ -181,10 +213,21 @@ impl<D: NativeModelDriver> LocalModelRuntime for LinuxNativeModelAdapter<D> {
 
     fn health(&self) -> ModelHealth {
         let health = self.driver.health();
+        let capabilities_valid = self.loaded.as_ref().is_none_or(|_| {
+            self.driver
+                .serving_capabilities()
+                .ok()
+                .is_some_and(|served| {
+                    served.adapter_id == self.identity.adapter_id
+                        && health.profile_id.as_ref() == Some(&served.profile_id)
+                        && valid_sha256(&served.observation_sha256)
+                })
+        });
         let valid = health.adapter_id == self.identity.adapter_id
             && health.profile_id == self.loaded
             && ((self.loaded.is_some() && health.state == ModelHealthState::Ready)
-                || (self.loaded.is_none() && health.state == ModelHealthState::Unloaded));
+                || (self.loaded.is_none() && health.state == ModelHealthState::Unloaded))
+            && capabilities_valid;
         if valid {
             health
         } else {
@@ -196,6 +239,18 @@ impl<D: NativeModelDriver> LocalModelRuntime for LinuxNativeModelAdapter<D> {
                 observed_at_ms: health.observed_at_ms,
             }
         }
+    }
+
+    fn serving_capabilities(&self) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+        let profile_id = self
+            .loaded
+            .as_ref()
+            .ok_or_else(|| failure("model.served-capability.missing"))?;
+        let served = self.driver.serving_capabilities()?;
+        if served.adapter_id != self.identity.adapter_id || served.profile_id != *profile_id {
+            return Err(failure("model.served-capability.drift"));
+        }
+        Ok(served)
     }
 
     fn count_tokens(
@@ -259,8 +314,8 @@ mod tests {
     use agentmage_kernel_contracts::{
         EncodedModelContext, ExactModelProfile, LocalModelRuntime, ModelHealth, ModelHealthState,
         ModelLoadReceipt, ModelManifestObservation, ModelProfileId, ModelResourceReport,
-        ModelRuntimeFailure, ModelStreamSink, ModelUnloadReceipt, RuntimeIsolationObservation,
-        TokenCountResult,
+        ModelRuntimeFailure, ModelServingCachePolicy, ModelServingCapabilities, ModelStreamSink,
+        ModelUnloadReceipt, RuntimeIsolationObservation, TokenCountResult,
     };
 
     use super::{LinuxNativeModelAdapter, NativeModelDriver, failure};
@@ -269,6 +324,7 @@ mod tests {
         profile: ExactModelProfile,
         loaded: bool,
         drift_manifest: bool,
+        drift_served: bool,
     }
 
     impl NativeModelDriver for FakeDriver {
@@ -297,12 +353,17 @@ mod tests {
             isolation: &RuntimeIsolationObservation,
         ) -> Result<ModelLoadReceipt, ModelRuntimeFailure> {
             self.loaded = true;
+            let mut served_capabilities = served(profile);
+            if self.drift_served {
+                served_capabilities.context_capacity_tokens -= 1;
+            }
             Ok(ModelLoadReceipt {
                 profile_id: profile.profile_id.clone(),
                 manifest_sha256: profile.manifest_sha256.clone(),
                 adapter_id: profile.runtime.adapter_id.clone(),
                 elapsed_ms: 1,
                 isolation: isolation.clone(),
+                served_capabilities,
             })
         }
 
@@ -333,6 +394,18 @@ mod tests {
             }
         }
 
+        fn serving_capabilities(&self) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+            if self.loaded {
+                let mut value = served(&self.profile);
+                if self.drift_served {
+                    value.context_capacity_tokens -= 1;
+                }
+                Ok(value)
+            } else {
+                Err(failure("model.served-capability.missing"))
+            }
+        }
+
         fn count_tokens(
             &self,
             _context: &EncodedModelContext,
@@ -352,6 +425,32 @@ mod tests {
 
         fn resources(&self) -> Result<ModelResourceReport, ModelRuntimeFailure> {
             Err(failure("fixture.not-used"))
+        }
+    }
+
+    fn served(profile: &ExactModelProfile) -> ModelServingCapabilities {
+        ModelServingCapabilities {
+            schema_version: 1,
+            profile_id: profile.profile_id.clone(),
+            manifest_sha256: profile.manifest_sha256.clone(),
+            artifact_sha256: profile.artifact.sha256.clone(),
+            adapter_id: profile.runtime.adapter_id.clone(),
+            runtime: profile.runtime.clone(),
+            endpoint: "fixture://native-model".to_owned(),
+            process_id: 1,
+            process_generation: 1,
+            load_generation: 1,
+            launch_configuration_sha256: "a".repeat(64),
+            context_capacity_tokens: profile.context.max_context_tokens,
+            parallel_slots: 1,
+            cache_policy: ModelServingCachePolicy::Disabled,
+            tokenizer_sha256: profile.codec.tokenizer_sha256.clone(),
+            template_sha256: profile.codec.template_sha256.clone(),
+            codec_sha256: profile.codec.codec_sha256.clone(),
+            reasoning_supported: profile.codec.reasoning_enabled,
+            context_shift_supported: false,
+            observed_at_ms: 1,
+            observation_sha256: "a".repeat(64),
         }
     }
 
@@ -396,6 +495,7 @@ mod tests {
                 profile,
                 loaded: false,
                 drift_manifest,
+                drift_served: false,
             },
         )
         .expect("adapter")
@@ -440,6 +540,7 @@ mod tests {
                         profile: profile.clone(),
                         loaded: false,
                         drift_manifest: false,
+                        drift_served: false,
                     },
                 )
                 .is_err()
@@ -459,5 +560,26 @@ mod tests {
             mutate(&mut changed);
             assert!(adapter(false).load(&changed).is_err());
         }
+    }
+
+    #[test]
+    fn undersized_served_capacity_refuses_and_retains_no_loaded_binding() {
+        let profile = profile();
+        let mut adapter = LinuxNativeModelAdapter::new(
+            profile.runtime.clone(),
+            isolation(&profile),
+            FakeDriver {
+                profile: profile.clone(),
+                loaded: false,
+                drift_manifest: false,
+                drift_served: true,
+            },
+        )
+        .expect("adapter");
+        assert_eq!(
+            adapter.load(&profile).expect_err("undersized refusal").code,
+            "model.linux-adapter.load-receipt-drift"
+        );
+        assert_eq!(adapter.health().state, ModelHealthState::Unloaded);
     }
 }

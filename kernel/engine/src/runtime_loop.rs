@@ -3574,6 +3574,9 @@ fn map_model_error(error: ModelRuntimeGateError) -> RuntimePortFailure {
         | ModelRuntimeGateError::AutomaticFallbackProhibited
         | ModelRuntimeGateError::RuntimeMismatch
         | ModelRuntimeGateError::ManifestObservationMismatch
+        | ModelRuntimeGateError::ServedCapabilityMissing
+        | ModelRuntimeGateError::ServedCapabilityProfileMismatch
+        | ModelRuntimeGateError::ServedCapabilityDrift
         | ModelRuntimeGateError::IsolationViolation
         | ModelRuntimeGateError::AlreadyLoaded
         | ModelRuntimeGateError::RequestMismatch

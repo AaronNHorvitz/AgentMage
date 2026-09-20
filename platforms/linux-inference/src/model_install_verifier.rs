@@ -176,7 +176,8 @@ mod tests {
     use agentmage_kernel_contracts::{
         EncodedModelContext, ExactModelProfile, ModelHealth, ModelHealthState, ModelLoadReceipt,
         ModelManifestObservation, ModelProfileId, ModelResourceReport, ModelRuntimeFailure,
-        ModelStreamSink, ModelUnloadReceipt, RuntimeIsolationObservation, TokenCountResult,
+        ModelServingCachePolicy, ModelServingCapabilities, ModelStreamSink, ModelUnloadReceipt,
+        RuntimeIsolationObservation, TokenCountResult,
     };
     use serde_json::Value;
     use sha2::Digest;
@@ -219,6 +220,7 @@ mod tests {
                 adapter_id: profile.runtime.adapter_id.clone(),
                 elapsed_ms: 1,
                 isolation: isolation.clone(),
+                served_capabilities: served(profile),
             })
         }
 
@@ -249,6 +251,17 @@ mod tests {
             }
         }
 
+        fn serving_capabilities(&self) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+            self.loaded
+                .then(|| served(&self.profile))
+                .ok_or_else(|| ModelRuntimeFailure {
+                    code: "model.served-capability.missing".to_owned(),
+                    retryable_after_correction: false,
+                    dependency_recovery_required: false,
+                    contract_error: None,
+                })
+        }
+
         fn count_tokens(
             &self,
             _context: &EncodedModelContext,
@@ -268,6 +281,32 @@ mod tests {
 
         fn resources(&self) -> Result<ModelResourceReport, ModelRuntimeFailure> {
             unreachable!("not used")
+        }
+    }
+
+    fn served(profile: &ExactModelProfile) -> ModelServingCapabilities {
+        ModelServingCapabilities {
+            schema_version: 1,
+            profile_id: profile.profile_id.clone(),
+            manifest_sha256: profile.manifest_sha256.clone(),
+            artifact_sha256: profile.artifact.sha256.clone(),
+            adapter_id: profile.runtime.adapter_id.clone(),
+            runtime: profile.runtime.clone(),
+            endpoint: "fixture://model-install-verifier".to_owned(),
+            process_id: 1,
+            process_generation: 1,
+            load_generation: 1,
+            launch_configuration_sha256: "a".repeat(64),
+            context_capacity_tokens: profile.context.max_context_tokens,
+            parallel_slots: 1,
+            cache_policy: ModelServingCachePolicy::Disabled,
+            tokenizer_sha256: profile.codec.tokenizer_sha256.clone(),
+            template_sha256: profile.codec.template_sha256.clone(),
+            codec_sha256: profile.codec.codec_sha256.clone(),
+            reasoning_supported: profile.codec.reasoning_enabled,
+            context_shift_supported: false,
+            observed_at_ms: 1,
+            observation_sha256: "a".repeat(64),
         }
     }
 
