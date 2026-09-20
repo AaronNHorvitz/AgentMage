@@ -23,8 +23,8 @@ from scripts.story_7_1_security_evidence import check_map as check_security
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-7/story-7.1/story-gate-report.json"
-REVIEWED_COMMIT = "18aacfe3c575d87bd910a22ed76a1d25aaea82d9"
-REVIEWED_TREE = "ff2979cf3ba2fe93221c3851aafeae789b51141d"
+REVIEWED_COMMIT = "fa4d6284b10c93dbe99ddb93bb31a78dfb3ee2f1"
+REVIEWED_TREE = "c0240c5080701b2432eea4169a858f3749080bb4"
 REVIEWED_PATHS = (
     "docs/architecture/platform-adapter-contract.md",
     "kernel/contracts/src/platform.rs",
