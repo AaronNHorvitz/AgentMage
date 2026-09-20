@@ -694,6 +694,9 @@ def run_platform(
             "--build-arg",
             f"RUST_VERSION={policy['toolchains']['rustc']}",
             "--build-arg",
+            "RUSTUP_VERSION="
+            f"{policy['download_integrity']['rustup_init_version']}",
+            "--build-arg",
             "RUSTUP_INIT_SHA256="
             f"{policy['download_integrity']['rustup_init_linux_x64_sha256']}",
             "--build-arg",

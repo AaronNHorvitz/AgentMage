@@ -31,7 +31,8 @@ REPORT_PATH: Final = ROOT / "artifacts/sprints/sprint-9/story-9.1/linux-vm-promo
 REVISION = re.compile(r"^[0-9a-f]{40}$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 NODE_SHA256: Final = "472655581fb851559730c48763e0c9d3bc25975c59d518003fc0849d3e4ba0f6"
-RUSTUP_SHA256: Final = "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10"
+RUSTUP_VERSION: Final = "1.29.1"
+RUSTUP_SHA256: Final = "dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71"
 SOURCE_PATHS: Final = (
     "TASKS.md",
     "architecture/clean-build-policy.json",
@@ -168,7 +169,7 @@ echo '{NODE_SHA256}  /tmp/node.tar.xz' | sha256sum --check --strict
 sudo tar -xJf /tmp/node.tar.xz -C /opt/node --strip-components=1
 sudo env PATH=/opt/node/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
   /opt/node/bin/npm install --global --ignore-scripts --no-audit --no-fund npm@11.12.1 >/dev/null
-curl --fail --location --silent --show-error https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init -o /tmp/rustup-init
+curl --fail --location --silent --show-error https://static.rust-lang.org/rustup/archive/{RUSTUP_VERSION}/x86_64-unknown-linux-gnu/rustup-init -o /tmp/rustup-init
 echo '{RUSTUP_SHA256}  /tmp/rustup-init' | sha256sum --check --strict
 chmod 0755 /tmp/rustup-init
 sudo env CARGO_HOME=/opt/cargo RUSTUP_HOME=/opt/rustup /tmp/rustup-init -y --no-modify-path --profile minimal --default-toolchain 1.95.0 --component clippy,rustfmt >/dev/null
