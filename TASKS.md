@@ -2943,8 +2943,9 @@ later implementations are not prerequisites for closing the G1 dispatch/refusal 
         resource records, mutation tests, and truthful partial mappings for all four protocols.
 
 - [ ] **Task 13.4.5 - Enforce one served-window dispatch preflight**
-  - [ ] **Sub-task 13.4.5.1:** After Task 13.1.4 registration, Task 13.1.5, and the codec-rendering
-    contract in Sub-task 13.3.4.1, create an immutable prepared request binding exact rendered
+  - [ ] **Sub-task 13.4.5.1:** After Task 13.1.4 registration, the local served-capability
+    implementation in Sub-tasks 13.1.5.1 and 13.1.5.2, and the codec-rendering contract in
+    Sub-task 13.3.4.1, create an immutable prepared request binding exact rendered
     bytes/tokens, count, profile, process/load generation, capacity/slot reservation, output limit,
     and margin. Require this path at every generation dispatch; caller counts, stale preparation,
     direct stream calls, summary generation, retries, and alternate clients cannot bypass it.

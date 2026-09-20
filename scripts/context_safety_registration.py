@@ -161,7 +161,12 @@ def validate(
                 failures.append(f"unknown task dependency: {node} -> {dependency}")
     if cycle := _cycle(graph):
         failures.append("context-safety task cycle: " + " -> ".join(cycle))
-    if graph.get("13.4.5.1") != ["13.1.4", "13.1.5", "13.3.4.1"]:
+    if graph.get("13.4.5.1") != [
+        "13.1.4",
+        "13.1.5.1",
+        "13.1.5.2",
+        "13.3.4.1",
+    ]:
         failures.append("prepared-request entry must not depend on its guarded native trial")
     if "13.4.5" not in graph.get("13.3.4.3", []):
         failures.append("native trial must remain downstream of prepared-request enforcement")

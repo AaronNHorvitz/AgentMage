@@ -37,6 +37,14 @@ class ContextSafetyRegistrationTests(unittest.TestCase):
         failures = self.failures(value)
         self.assertTrue(any("entry" in item or "cycle" in item for item in failures))
 
+        value = copy.deepcopy(self.value)
+        value["task_dependencies"]["13.4.5.1"] = [
+            "13.1.4",
+            "13.1.5",
+            "13.3.4.1",
+        ]
+        self.assertTrue(any("guarded native trial" in item for item in self.failures(value)))
+
     def test_case_owner_release_and_migration_refusal_fail_closed(self) -> None:
         value = copy.deepcopy(self.value)
         del value["acceptance_cases"]["CTX-FIT"]
