@@ -51,7 +51,7 @@
     }
   ],
   "private_environment_values_recorded": false,
-  "reference_revision": "380c643ad7148a49e3b61f17a15e13ba85be1863",
+  "reference_revision": "00640169e326d3c99482db6f202c43af3040eca4",
   "release_claim": "none",
   "schema_version": 1,
   "sources": [
@@ -61,7 +61,7 @@
     },
     {
       "path": "kernel/contracts/src/lib.rs",
-      "sha256": "9d3d43c6d332f12de3b846dec2c90ebb2edaa5eeb3a303c9cf1b4474dbd54f84"
+      "sha256": "c88a8095771f7d003d78e9f9f206d3b16489dcf1d10d90bf9d2e5392b1591092"
     },
     {
       "path": "kernel/contracts/src/platform.rs",
