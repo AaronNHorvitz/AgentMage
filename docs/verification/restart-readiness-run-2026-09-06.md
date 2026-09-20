@@ -679,3 +679,100 @@ approve changing `release/clean-build/Containerfile.linux` to a version-pinned
 `https://static.rust-lang.org/rustup/archive/<version>/x86_64-unknown-linux-gnu/rustup-init` URL
 with its verified digest. Both edit accepted, hash-bound clean-build inputs, so neither was done
 unattended.
+
+## Claude Code checkpoint — 2026-09-20 15:05 CDT
+
+This checkpoint records the completed row-level blocker-truth pass. Commits `1ace629f`,
+`54886b95`, and `5e849412` are pushed to `origin/demo/fedora-local-docs`. No USTE or CodingMage
+repository, process, scope, or Cargo target was read, written, or signalled; the shared Cargo
+window was occupied by those repositories throughout this increment, so only work that needs no
+Cargo was performed.
+
+### Correction to the previous checkpoint's effort estimate
+
+The previous checkpoint said reaching the first executable row required working a 341-row unknown
+queue "in order". That framing was imprecise and is corrected here rather than rewritten above.
+Decision 0052's selector compares `(critical_path_rank, line)` and only stops at unknown rows that
+sort **before** the first dependency-ready local row. Measured against the register, exactly **32**
+unknown rows — all at rank 20 — sorted ahead of `76.2.1.1` at rank 30. That bounded set, not the
+whole queue, was the actual blocking work, and all 32 are now resolved.
+
+### What was recorded
+
+Thirty-two rows across Sprints 13, 14, 15, 16, 21, 22, 23, and 25 received an exact classification,
+added as an indented continuation line beneath each row. Every protected checklist statement is
+byte-identical afterwards; this was asserted by SHA-256 comparison inside the applier, which
+refuses to write if any statement line moves. The repository's existing vocabulary was reused
+throughout: `BLOCKED_EXTERNAL(platform=…; artifact=…; action=…; substitution_set=empty)` for
+external rows, `**Execution:** local; owner=…` for local rows, and `Blocked on Sub-task …` for
+dependency rows.
+
+Register movement across the pass: `unknown` 343 → 309, `local` 42 → 48, `external` 146 → 160,
+`dependency` 1043 → 1057, with `unresolved_reference_count` and `nonempty_substitution_count`
+held at zero throughout. The selector moved from `assess-unknown:11.1.AC1` with
+`ready_for_unattended_execution=false` to **`execute-local:14.1.3.3` with
+`ready_for_unattended_execution=true`**, and zero unknown rows now sort ahead of that row.
+
+### No cycle was introduced — measured, not asserted
+
+The plan graph already contained **164** dependency cycles before this pass (for example
+`16.4 -> 16.4.3 -> 16.4.3.2 -> 16.4`); the register tolerates them by design, since `_paths` is
+cycle-terminated. After the pass the graph still contains exactly **164**, the two sets are
+identical, and **none of the 164 involves any of the 34 rows this session bound**. Binding text
+was written to avoid the literal strings `Story 11.1`, `Story 13.2`, `Story 15.3`, and `Story 22.2`,
+because the reference regular expression would otherwise have captured the row's own story
+identifier out of the explanation and produced a real self-cycle.
+
+### Two recorded blockers were verified stale, not merely reclassified
+
+Three rows carried a `host change required` note written by an earlier agent that ran inside a
+restricted filesystem sandbox. Each named condition was tested on this host and found satisfied:
+
+- Sub-tasks `14.2.1.1` and `14.2.3.5` required `/run/user/1000/libpod` to be writable outside the
+  sandbox. It exists, is writable, and rootless Podman reports `Rootless=true`.
+- Sub-task `21.1.3.5` required `/usr/bin/systemd-run`, `/usr/bin/systemctl`, `/usr/bin/bwrap`,
+  `/usr/bin/env`, and `/usr/bin/cat` to retain root-owned identities. All five are `root:root 755`
+  and transient user scopes start normally.
+
+`14.2.1.1` and `21.1.3.5` are therefore recorded as **local**, not external, with the verification
+written into the row. Their remaining work is genuinely executable on this machine and is queued
+only behind a free shared Cargo window, which is a scheduling constraint rather than a blocker;
+`14.2.3.5` depends on `14.2.1.1` and `14.2.2.2`. No row was closed on this basis — the evidence
+builders have not been run.
+
+### Independent review was recorded as a blocker, never claimed
+
+Sub-tasks `16.1.3.5`, `21.2.3.5`, and `22.1.3.5` each stop on a review that this implementing agent
+cannot supply. Each carries `owner=an independent reviewer who is not the implementing agent`.
+Consistent with the standing instruction, no assertion by this session is offered as that review,
+and Story 9.1's independent-review gate likewise remains open.
+
+### Judgement recorded for owner review
+
+These are this session's assessments derived from each row's own recorded text and its siblings'
+state, not owner rulings. The conservative rule applied throughout was to prefer a dependency on a
+clearly external sibling over declaring a row external itself, so that no locally implementable
+work was relabelled external. The rows newly marked **local** are `14.1.3.3`, `14.1.3.4`,
+`14.2.1.1`, `14.2.2.2`, `15.1.3.3`, and `21.1.3.5`; the rows newly marked **external** are
+`13.1.1.3`, `14.1.2.1`, `15.2.2.1`, `15.3.1.2`, `15.3.1.3`, `15.3.1.4`, `16.1.1.5`, `16.1.3.3`,
+`16.1.3.4`, `16.1.3.5`, `21.2.3.3`, `21.2.3.5`, `22.1.3.5`, and `23.1.1.3`. Each external record
+states in the same line which part of the work is already complete locally, so an owner can check
+the boundary without re-reading the history.
+
+### Storage-seam note
+
+This pass changed planning records only. No memory, persistence, or retrieval seam was added or
+altered, so nothing was hard-wired toward any future graph database backend.
+
+### State and next action
+
+Product truth remains `scaffolded`. No production model is enabled, no platform or package is
+qualified, and no release, independent-review, or platform-qualification claim is made. The demo
+checklist in `docs/DEMO-PROGRESS.md` remains complete from 2026-09-15 and was not modified.
+
+Next dependency-permitted actions, all waiting on a free shared Cargo window: renew the five red
+gates recorded in the previous checkpoint; run `evidence:story9.2-docker-prerequisite:build` and
+`scripts/sprint_14_evidence.py --write` for `14.2.1.1`; run the named ignored worker test and the
+Sprint 21 evidence build for `21.1.3.5`; and implement `14.1.3.3`, which the register now selects.
+The Story 9.1 clean-build cascade stays blocked on the unchanged rustup provenance question stated
+at the end of the previous checkpoint.
