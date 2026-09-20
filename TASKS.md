@@ -2943,31 +2943,49 @@ later implementations are not prerequisites for closing the G1 dispatch/refusal 
         resource records, mutation tests, and truthful partial mappings for all four protocols.
 
 - [ ] **Task 13.4.5 - Enforce one served-window dispatch preflight**
-  - [ ] **Sub-task 13.4.5.1:** After Task 13.1.4 registration, the local served-capability
+  - [x] **Sub-task 13.4.5.1:** After Task 13.1.4 registration, the local served-capability
     implementation in Sub-tasks 13.1.5.1 and 13.1.5.2, and the codec-rendering contract in
     Sub-task 13.3.4.1, create an immutable prepared request binding exact rendered
     bytes/tokens, count, profile, process/load generation, capacity/slot reservation, output limit,
     and margin. Require this path at every generation dispatch; caller counts, stale preparation,
     direct stream calls, summary generation, retries, and alternate clients cannot bypass it.
-    **Execution:** local; owner=kernel model controller.
-  - [ ] **Sub-task 13.4.5.2:** Reconcile the existing orchestration partitions and canonical
+    **Execution:** local; owner=kernel model controller. Evidence: `PreparedModelRequest` is a
+    move-only kernel value that binds the once-rendered bytes, exact tokenizer count, context and
+    orchestration manifests, request/output limit, qualified margin, effective served capacity,
+    process/load generations, launch/observation digests, and slot/cache policy. Every runtime
+    stream now requires that preflight, while the controller consumes it and re-observes serving
+    facts before dispatch.
+  - [x] **Sub-task 13.4.5.2:** Reconcile the existing orchestration partitions and canonical
     context manifest against actual serving facts using checked `I + O + M <= C`. Include template,
     role, instruction, tool, special-token, and reasoning/protocol overhead exactly once. Refuse
     unapproved reduced windows, unexplained token-counter/server drift, overflow, or an exhausted
     fixed reserve; estimates cannot authorize dispatch. Preserve one renderer and record actual
     usage without double-counting cached input or reserved partitions. **Execution:** local;
-    owner=context-budget and codec boundary.
+    owner=context-budget and codec boundary. Evidence: plan-aware preparation verifies the existing
+    plan digest and exact profile/runtime/tokenizer/counter identities, checked-sums every rendered
+    input partition, requires the plan's output reserve and margin to equal dispatch facts, then
+    renders and counts once. Both kernel and native driver apply checked capacity arithmetic; the
+    native driver re-observes the served tuple and recounts before sending generation bytes.
   - [ ] **Sub-task 13.4.5.3:** Run `CTX-FIT` and `CTX-DISPATCH`: exact fit and one token over,
     7,000 input plus 2,048 output against 8,192 served tokens, integer bounds, tool-heavy/Unicode/
     special-token input, modified prepared bytes, slot drift, and every common entry point.
     Reconcile against the pinned native generation endpoint under an authorized tuple; zero
     rejected preflights may send generation bytes. **Execution:** local fixtures; native evidence
-    requires the exact authorized runtime and venue.
-  - [ ] **Sub-task 13.4.5.4:** Expose stable capacity, mismatch, stale-binding, and token-drift
+    requires the exact authorized runtime and venue. Local progress: deterministic `CTX-FIT` and
+    `CTX-DISPATCH` fixtures cover exact fit, one token over, 7,000 plus 2,048 against 8,192,
+    checked bounds, Unicode/tool/special-token rendering, modified preparation, slot drift, and
+    dispatch-time tokenizer drift with zero generation bytes on every refusal. The ignored native
+    entry points compile with mandatory preflight. The native campaign remains open:
+    `BLOCKED_EXTERNAL(platform=authorized pinned native inference host; artifact=the exact admitted model artifact and b10423 runtime tuple plus attributable CTX-FIT and CTX-DISPATCH raw results; action=the model owner runs endpoint token reconciliation, exact-fit, overflow, stale-slot, and drift trials and transfers untouched evidence; credential=existing model artifact access if required; payment=none)`; `substitution_set=empty`.
+  - [x] **Sub-task 13.4.5.4:** Expose stable capacity, mismatch, stale-binding, and token-drift
     refusals with checked source reduction, eligible compaction, linked-thread, or explicit approved
     profile options. G2 is mandatory before summary-based continuation; recheck the resulting full
     request and explain when fixed overhead alone cannot fit. Never depend on server context shift,
     hidden truncation, silent fallback, or an unchanged retry. **Execution:** local; owner=Rust host.
+    Evidence: the kernel and host expose four distinct content-free refusal codes. The host returns
+    a closed recovery set for visible optional-source reduction, G2-admitted checked compaction,
+    linked thread plus checked summary/source references, or an already approved profile, and
+    separately identifies when fixed input, output reserve, and margin alone exceed capacity.
 
 ##### Story Acceptance Criteria
 
@@ -2981,10 +2999,10 @@ later implementations are not prerequisites for closing the G1 dispatch/refusal 
       evidence, when activation is requested, then the exact profile remains disabled without fallback
       or a family-wide conclusion. Evidence: tokenizer/counter mismatch and failed exact qualification refuse; a valid orchestration contract over a disabled model remains disabled with fallback false. The retained report imports the current rejected Muse and Gemma dispositions without borrowing them for another tuple.
 
-- [ ] **Story AC 13.4.AC4:** Given the exact prepared payload, output reserve, margin, and current
+- [x] **Story AC 13.4.AC4:** Given the exact prepared payload, output reserve, margin, and current
   serving observation, when any generation entry point runs, then it dispatches only if the full
   budget fits the approved effective capacity; exact fit succeeds and one-token overflow refuses.
-- [ ] **Story AC 13.4.AC5:** Given overflow, counter drift, or a stale process/slot binding, when
+- [x] **Story AC 13.4.AC5:** Given overflow, counter drift, or a stale process/slot binding, when
   recovery is offered, then reasons and source dispositions are visible and any revised request
   must pass the same guard without unapproved profile reduction, hidden omission, or fallback.
 
@@ -3014,8 +3032,9 @@ evidence task but enables no profile. Otherwise the sprint is BLOCKED.
 **Current gate result:** BLOCKED. The additions-only corrective codec and diagnostic work in Task
 13.3.4 remains required after restart readiness. The 2026-09-08 refinement added Task 13.1.4
 registration and Tasks 13.1.5, 13.1.6, and 13.4.5 before renewed native qualification or activation.
-Task 13.1.6's local finish/usage contract and matrix are complete; Task 13.1.5's exact native campaign
-and Task 13.4.5 remain open and are not closed by the historical checked criteria. Prior negative Linux cross-adapter parity and
+Task 13.1.6's local finish/usage contract and matrix and Task 13.4.5's common dispatch guard are
+complete locally; Task 13.1.5's and Task 13.4.5's exact native campaigns remain open and are not
+closed by the historical checked criteria. Prior negative Linux cross-adapter parity and
 exact Muse results remain immutable. The retained native and Docker Model Runner compatibility trials
 fail published quality thresholds and therefore cannot be merged or enabled. Other remaining blockers
 are the native macOS adapter and execution evidence, successful matched cross-platform parity for an

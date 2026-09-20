@@ -144,10 +144,14 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> EngineeringModelPort
             max_output_tokens: profile.decoding.max_output_tokens,
             timeout_ms: 120_000,
         };
+        let prepared = self
+            .controller
+            .prepare(&request, &packet)
+            .map_err(EngineeringModelError::from_gate)?;
         let output = self
             .controller
-            .stream_with_output(&request, &packet, None)
-            .map_err(|_| EngineeringModelError::Failed)?;
+            .dispatch_with_output(prepared, None)
+            .map_err(EngineeringModelError::from_gate)?;
         let result_sha256 =
             sha256(&to_canonical_json(&output.result).map_err(|_| EngineeringModelError::Failed)?);
         self.last_diagnostic = Some(EngineeringModelDiagnostic {

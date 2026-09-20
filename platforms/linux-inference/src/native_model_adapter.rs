@@ -1,12 +1,12 @@
 //! Candidate-neutral Linux `LocalModelRuntime` adapter boundary.
 
 use agentmage_kernel_contracts::{
-    EncodedModelContext, ExactModelProfile, LocalModelRuntime, ModelCancellationProbe, ModelHealth,
-    ModelHealthState, ModelLoadReceipt, ModelManifestObservation, ModelProfileId,
-    ModelResourceReport, ModelRunRequest, ModelRunResult, ModelRuntimeFailure,
-    ModelRuntimeIdentity, ModelRuntimeKind, ModelServingCapabilities, ModelStreamSink,
-    ModelUnloadReceipt, PlatformArchitecture, PlatformFamily, RuntimeIsolationObservation,
-    TokenCountResult,
+    EncodedModelContext, ExactModelProfile, LocalModelRuntime, ModelCancellationProbe,
+    ModelDispatchPreflight, ModelHealth, ModelHealthState, ModelLoadReceipt,
+    ModelManifestObservation, ModelProfileId, ModelResourceReport, ModelRunRequest, ModelRunResult,
+    ModelRuntimeFailure, ModelRuntimeIdentity, ModelRuntimeKind, ModelServingCapabilities,
+    ModelStreamSink, ModelUnloadReceipt, PlatformArchitecture, PlatformFamily,
+    RuntimeIsolationObservation, TokenCountResult,
 };
 
 /// Driver operations available behind the Linux runtime adapter.
@@ -50,6 +50,7 @@ pub trait NativeModelDriver {
         &mut self,
         request: &ModelRunRequest,
         context: &EncodedModelContext,
+        preflight: &ModelDispatchPreflight,
         cancellation: Option<&dyn ModelCancellationProbe>,
         sink: &mut dyn ModelStreamSink,
     ) -> Result<ModelRunResult, ModelRuntimeFailure>;
@@ -265,6 +266,7 @@ impl<D: NativeModelDriver> LocalModelRuntime for LinuxNativeModelAdapter<D> {
         &mut self,
         request: &ModelRunRequest,
         context: &EncodedModelContext,
+        preflight: &ModelDispatchPreflight,
         cancellation: Option<&dyn ModelCancellationProbe>,
         sink: &mut dyn ModelStreamSink,
     ) -> Result<ModelRunResult, ModelRuntimeFailure> {
@@ -277,7 +279,8 @@ impl<D: NativeModelDriver> LocalModelRuntime for LinuxNativeModelAdapter<D> {
         {
             return Err(failure("model.linux-adapter.request-drift"));
         }
-        self.driver.stream(request, context, cancellation, sink)
+        self.driver
+            .stream(request, context, preflight, cancellation, sink)
     }
 
     fn resources(&self) -> Result<ModelResourceReport, ModelRuntimeFailure> {
@@ -417,6 +420,7 @@ mod tests {
             &mut self,
             _request: &agentmage_kernel_contracts::ModelRunRequest,
             _context: &EncodedModelContext,
+            _preflight: &agentmage_kernel_contracts::ModelDispatchPreflight,
             _cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
             _sink: &mut dyn ModelStreamSink,
         ) -> Result<agentmage_kernel_contracts::ModelRunResult, ModelRuntimeFailure> {

@@ -156,8 +156,83 @@ pub struct EngineeringModelDiagnostic {
 /// Stable content-free model-execution refusal.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum EngineeringModelError {
+    /// Exact rendered input, total output reserve, and safety margin do not fit.
+    CapacityExceeded,
+    /// Request, rendered bytes, manifest, or immutable preparation digest changed.
+    PreparedMismatch,
+    /// Process, load, launch, serving observation, or reserved slot changed.
+    StaleBinding,
+    /// Effective tokenizer count changed before generation dispatch.
+    TokenDrift,
     /// The already-qualified model executor failed closed.
     Failed,
+}
+
+impl EngineeringModelError {
+    /// Returns one stable content-free refusal code.
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::CapacityExceeded => "engineering.model.capacity-exceeded",
+            Self::PreparedMismatch => "engineering.model.prepared-request-mismatch",
+            Self::StaleBinding => "engineering.model.stale-binding",
+            Self::TokenDrift => "engineering.model.token-drift",
+            Self::Failed => "engineering.model.failed",
+        }
+    }
+
+    /// Returns the closed recovery choices that still require a fresh full preflight.
+    #[must_use]
+    pub const fn recovery_options(self) -> &'static [&'static str] {
+        match self {
+            Self::CapacityExceeded => &[
+                "reduce-optional-sources-with-visible-disposition",
+                "checked-compaction-after-g2-admission",
+                "linked-thread-with-checked-summary-and-source-references",
+                "select-already-approved-compatible-profile",
+            ],
+            Self::PreparedMismatch | Self::StaleBinding | Self::TokenDrift => {
+                &["prepare-and-check-a-new-request"]
+            }
+            Self::Failed => &[],
+        }
+    }
+
+    /// Explains whether fixed overhead alone exhausts the approved effective capacity.
+    #[must_use]
+    pub fn capacity_reason(
+        self,
+        fixed_input_tokens: u32,
+        output_reserve_tokens: u32,
+        safety_margin_tokens: u32,
+        effective_capacity_tokens: u32,
+    ) -> Option<&'static str> {
+        if self != Self::CapacityExceeded {
+            return None;
+        }
+        let fixed_fits = fixed_input_tokens
+            .checked_add(output_reserve_tokens)
+            .and_then(|used| used.checked_add(safety_margin_tokens))
+            .is_some_and(|used| used <= effective_capacity_tokens);
+        Some(if fixed_fits {
+            "engineering.model.capacity-exceeded.request-content"
+        } else {
+            "engineering.model.capacity-exceeded.fixed-overhead"
+        })
+    }
+
+    pub(crate) const fn from_gate(
+        error: agentmage_kernel_engine::model_runtime::ModelRuntimeGateError,
+    ) -> Self {
+        use agentmage_kernel_engine::model_runtime::ModelRuntimeGateError;
+        match error {
+            ModelRuntimeGateError::DispatchCapacityExceeded => Self::CapacityExceeded,
+            ModelRuntimeGateError::PreparedRequestMismatch => Self::PreparedMismatch,
+            ModelRuntimeGateError::PreparedRequestStale => Self::StaleBinding,
+            ModelRuntimeGateError::DispatchTokenDrift => Self::TokenDrift,
+            _ => Self::Failed,
+        }
+    }
 }
 
 /// Trusted composition boundary for one qualified model and endpoint route.
@@ -1432,6 +1507,31 @@ mod tests {
         EngineeringTeamInput, EngineeringTeamPlannerPort, EngineeringTeamPort,
         KernelEngineeringTeamExecutor,
     };
+
+    #[test]
+    fn model_preflight_refusals_have_closed_codes_and_recovery() {
+        assert_eq!(
+            EngineeringModelError::PreparedMismatch.code(),
+            "engineering.model.prepared-request-mismatch"
+        );
+        assert_eq!(
+            EngineeringModelError::TokenDrift.recovery_options(),
+            &["prepare-and-check-a-new-request"]
+        );
+        assert_eq!(
+            EngineeringModelError::CapacityExceeded.capacity_reason(7_000, 2_048, 0, 8_192),
+            Some("engineering.model.capacity-exceeded.fixed-overhead")
+        );
+        assert_eq!(
+            EngineeringModelError::CapacityExceeded.capacity_reason(100, 64, 1, 8_192),
+            Some("engineering.model.capacity-exceeded.request-content")
+        );
+        assert!(
+            EngineeringModelError::CapacityExceeded
+                .recovery_options()
+                .contains(&"checked-compaction-after-g2-admission")
+        );
+    }
 
     #[derive(Clone)]
     struct FixtureTeamWorker;

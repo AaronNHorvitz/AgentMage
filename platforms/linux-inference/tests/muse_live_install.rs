@@ -9,11 +9,12 @@ use std::time::Duration;
 
 use agentmage_kernel_contracts::{
     BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason, CancellationSignal,
-    ContextPacketId, ContractPayload, CorrelationId, ExactModelProfile, LocalModelRuntime,
-    ModelCancellationProbe, ModelContextPacket, ModelFamilyCodec, ModelMessage, ModelMessageId,
-    ModelMessageRole, ModelRunId, ModelRunRequest, ModelRunTerminalState, ModelRuntimeFailure,
-    ModelStreamSink, PlatformFamily, RuntimeIsolationObservation, SchemaId, SchemaReference,
-    SessionId, StreamedModelFragment, TaskId, ToolCatalogId,
+    ContextPacketId, ContractPayload, CorrelationId, EncodedModelContext, ExactModelProfile,
+    LocalModelRuntime, ModelCancellationProbe, ModelContextPacket, ModelDispatchPreflight,
+    ModelFamilyCodec, ModelMessage, ModelMessageId, ModelMessageRole, ModelRunId, ModelRunRequest,
+    ModelRunTerminalState, ModelRuntimeFailure, ModelStreamSink, PlatformFamily,
+    RuntimeIsolationObservation, SchemaId, SchemaReference, SessionId, StreamedModelFragment,
+    TaskId, ToolCatalogId,
 };
 use agentmage_platform_linux_inference::{
     LinuxNativeModelAdapter, LlamaServerDriver, LlamaServerDriverConfig, ModelAcquisitionHost,
@@ -175,6 +176,52 @@ fn request(profile: &ExactModelProfile, run: &str) -> ModelRunRequest {
     }
 }
 
+fn dispatch_preflight(
+    runtime: &impl LocalModelRuntime,
+    profile: &ExactModelProfile,
+    request: &ModelRunRequest,
+    packet: &ModelContextPacket,
+    context: &EncodedModelContext,
+) -> ModelDispatchPreflight {
+    let served = runtime
+        .serving_capabilities()
+        .expect("current serving capabilities");
+    let count = runtime.count_tokens(context).expect("exact token count");
+    let effective = profile
+        .context
+        .max_context_tokens
+        .min(served.context_capacity_tokens);
+    let safety_margin_tokens = 1;
+    let usable_input_tokens = effective
+        .checked_sub(request.max_output_tokens)
+        .and_then(|remaining| remaining.checked_sub(safety_margin_tokens))
+        .expect("bounded live request");
+    assert!(count.tokens <= usable_input_tokens);
+    ModelDispatchPreflight {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        context_manifest_sha256: packet.packet_sha256.clone(),
+        orchestration_plan_sha256: packet.packet_sha256.clone(),
+        rendered_prompt_sha256: context.sha256.clone(),
+        rendered_prompt_tokens: count.tokens,
+        token_counter: count.counter,
+        token_counter_sha256: profile.context.token_counter_sha256.clone(),
+        approved_profile_capacity_tokens: profile.context.max_context_tokens,
+        served_capacity_tokens: served.context_capacity_tokens,
+        effective_capacity_tokens: effective,
+        total_output_reserve_tokens: request.max_output_tokens,
+        safety_margin_tokens,
+        usable_input_tokens,
+        process_generation: served.process_generation,
+        load_generation: served.load_generation,
+        launch_configuration_sha256: served.launch_configuration_sha256,
+        serving_observation_sha256: served.observation_sha256,
+        parallel_slots: served.parallel_slots,
+        reserved_slot: 0,
+        cache_policy: served.cache_policy,
+        preflight_sha256: "0".repeat(64),
+    }
+}
+
 #[test]
 #[ignore = "hashes the exact 16.7 GB Muse artifact through the native driver"]
 fn exact_muse_driver_manifest_diagnostic() {
@@ -314,9 +361,10 @@ fn exact_muse_sandboxed_advisory_cancellation_and_unload() {
     assert!(count.tokens > 0 && count.tokens <= 8192);
 
     let run_request = request(&profile, "muse-live-run-1");
+    let run_preflight = dispatch_preflight(&adapter, &profile, &run_request, &packet, &encoded);
     let mut capture = FragmentCapture::default();
     let result = adapter
-        .stream(&run_request, &encoded, None, &mut capture)
+        .stream(&run_request, &encoded, &run_preflight, None, &mut capture)
         .expect("bounded exact inference");
     assert_eq!(result.fragment_count as usize, capture.fragments.len());
     assert!(result.fragment_count > 1);
@@ -352,6 +400,8 @@ fn exact_muse_sandboxed_advisory_cancellation_and_unload() {
     }
 
     let mid_run_request = request(&profile, "muse-live-run-mid-cancelled");
+    let mid_run_preflight =
+        dispatch_preflight(&adapter, &profile, &mid_run_request, &packet, &encoded);
     let output_seen = Arc::new(AtomicBool::new(false));
     let mid_run_cancellation = FragmentAwareCancellation {
         output_seen: Arc::clone(&output_seen),
@@ -372,6 +422,7 @@ fn exact_muse_sandboxed_advisory_cancellation_and_unload() {
         .stream(
             &mid_run_request,
             &encoded,
+            &mid_run_preflight,
             Some(&mid_run_cancellation),
             &mut mid_run_capture,
         )
@@ -404,6 +455,8 @@ fn exact_muse_sandboxed_advisory_cancellation_and_unload() {
     assert!(mid_run_cancelled.failure.is_some());
 
     let cancel_request = request(&profile, "muse-live-run-cancelled");
+    let cancel_preflight =
+        dispatch_preflight(&adapter, &profile, &cancel_request, &packet, &encoded);
     let cancellation = CancellationSignal {
         schema_version: CONTRACT_SCHEMA_VERSION,
         cancellation_id: CancellationId::from_raw("muse-live-cancellation-1"),
@@ -417,6 +470,7 @@ fn exact_muse_sandboxed_advisory_cancellation_and_unload() {
         .stream(
             &cancel_request,
             &encoded,
+            &cancel_preflight,
             Some(&cancellation),
             &mut cancelled_capture,
         )

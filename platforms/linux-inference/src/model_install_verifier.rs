@@ -273,6 +273,7 @@ mod tests {
             &mut self,
             _request: &agentmage_kernel_contracts::ModelRunRequest,
             _context: &EncodedModelContext,
+            _preflight: &agentmage_kernel_contracts::ModelDispatchPreflight,
             _cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
             _sink: &mut dyn ModelStreamSink,
         ) -> Result<agentmage_kernel_contracts::ModelRunResult, ModelRuntimeFailure> {

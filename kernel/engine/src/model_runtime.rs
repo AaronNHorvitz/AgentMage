@@ -4,15 +4,18 @@ use std::collections::BTreeSet;
 
 use agentmage_kernel_contracts::{
     CorrelationId, ExactModelProfile, LocalModelRuntime, ModelCancellationProbe,
-    ModelCapabilityState, ModelContextPacket, ModelFamilyCodec, ModelFinishReason, ModelHealth,
-    ModelHealthState, ModelLifecycleState, ModelLoadReceipt, ModelManifestObservation,
-    ModelModality, ModelProfileId, ModelResourceReport, ModelRunRequest, ModelRunResult,
-    ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity, ModelServingCachePolicy,
-    ModelServingCapabilities, ModelStreamSink, ModelUnloadReceipt, StreamedModelFragment, TaskId,
-    TokenCountResult,
+    ModelCapabilityState, ModelContextPacket, ModelDispatchPreflight, ModelFamilyCodec,
+    ModelFinishReason, ModelHealth, ModelHealthState, ModelLifecycleState, ModelLoadReceipt,
+    ModelManifestObservation, ModelModality, ModelProfileId, ModelResourceReport, ModelRunRequest,
+    ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity,
+    ModelServingCachePolicy, ModelServingCapabilities, ModelStreamSink, ModelUnloadReceipt,
+    StreamedModelFragment, TaskId, TokenCountResult,
 };
 use sha2::{Digest, Sha256};
 
+use crate::model_orchestration_profile::{
+    ModelContextWindowPlan, verify_model_context_window_plan,
+};
 use crate::model_selection::{ModelResourceGovernor, ModelResourceObservation, ResourceDecision};
 
 const MAX_TEXT_BYTES: usize = 256;
@@ -69,6 +72,14 @@ pub enum ModelRuntimeGateError {
     RequestMismatch,
     /// Token accounting does not match the packet and profile.
     TokenCountMismatch,
+    /// Exact rendered input plus output reserve and safety margin exceeds effective capacity.
+    DispatchCapacityExceeded,
+    /// A prepared request no longer matches the current process, load, slot, or configuration.
+    PreparedRequestStale,
+    /// The effective tokenizer count changed between preparation and dispatch.
+    DispatchTokenDrift,
+    /// A prepared request or its digest does not match its immutable request/context tuple.
+    PreparedRequestMismatch,
     /// Stream fragments are malformed, noncontiguous, oversized, or stale.
     StreamInvalid,
     /// Terminal result does not match the exact run or stream.
@@ -97,6 +108,10 @@ impl ModelRuntimeGateError {
             Self::NotLoaded => "model.runtime.not-loaded",
             Self::RequestMismatch => "model.runtime.request-mismatch",
             Self::TokenCountMismatch => "model.runtime.token-count-mismatch",
+            Self::DispatchCapacityExceeded => "model.prepared-request.capacity-exceeded",
+            Self::PreparedRequestStale => "model.prepared-request.stale-binding",
+            Self::DispatchTokenDrift => "model.prepared-request.token-drift",
+            Self::PreparedRequestMismatch => "model.prepared-request.mismatch",
             Self::StreamInvalid => "model.runtime.stream-invalid",
             Self::ResultMismatch => "model.runtime.result-mismatch",
             Self::RuntimeFailure => "model.runtime.failed",
@@ -231,6 +246,33 @@ pub struct LocalModelController<R: LocalModelRuntime, C: ModelFamilyCodec> {
     admitted: AdmittedModelProfile,
     loaded: bool,
     served_capabilities: Option<ModelServingCapabilities>,
+    safety_margin_tokens: u32,
+}
+
+/// Move-only immutable generation preparation produced by the trusted controller.
+///
+/// Dispatch consumes this value, so retries, summaries, and recovery runs must render, count, and
+/// revalidate a fresh request rather than replaying a stale preparation.
+#[derive(Debug, PartialEq, Eq)]
+pub struct PreparedModelRequest {
+    request: ModelRunRequest,
+    context: agentmage_kernel_contracts::EncodedModelContext,
+    preflight: ModelDispatchPreflight,
+    task_id: TaskId,
+}
+
+impl PreparedModelRequest {
+    /// Returns content-free preflight facts for diagnostics and evidence.
+    #[must_use]
+    pub const fn preflight(&self) -> &ModelDispatchPreflight {
+        &self.preflight
+    }
+
+    /// Returns the exact run request bound by this preparation.
+    #[must_use]
+    pub const fn request(&self) -> &ModelRunRequest {
+        &self.request
+    }
 }
 
 /// Complete model result plus the exact response bytes validated by the controller.
@@ -248,11 +290,17 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         runtime: R,
         codec: C,
         admitted: AdmittedModelProfile,
+        safety_margin_tokens: u32,
     ) -> Result<Self, ModelRuntimeGateError> {
         if runtime.identity() != &admitted.profile.runtime
             || codec.identity() != &admitted.profile.codec
         {
             return Err(ModelRuntimeGateError::RuntimeMismatch);
+        }
+        if safety_margin_tokens == 0
+            || safety_margin_tokens >= admitted.profile.context.max_context_tokens
+        {
+            return Err(ModelRuntimeGateError::DispatchCapacityExceeded);
         }
         Ok(Self {
             runtime,
@@ -260,6 +308,7 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             admitted,
             loaded: false,
             served_capabilities: None,
+            safety_margin_tokens,
         })
     }
 
@@ -404,26 +453,207 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         Err(ModelRuntimeGateError::TokenCountMismatch)
     }
 
-    /// Runs one exact bounded request and validates its complete inert stream.
-    pub fn stream(
-        &mut self,
+    /// Renders once, counts with the effective tokenizer, and binds current serving capacity.
+    pub fn prepare(
+        &self,
         request: &ModelRunRequest,
         packet: &ModelContextPacket,
+    ) -> Result<PreparedModelRequest, ModelRuntimeGateError> {
+        let served = self.serving_capabilities()?;
+        self.validate_packet(packet)?;
+        self.validate_request(request, packet)?;
+        let context = self
+            .codec
+            .encode_context(&self.admitted.profile, packet)
+            .map_err(|_| ModelRuntimeGateError::RequestMismatch)?;
+        let count = self
+            .runtime
+            .count_tokens(&context)
+            .map_err(|_| ModelRuntimeGateError::RuntimeFailure)?;
+        if count.profile_id != self.admitted.profile.profile_id
+            || count.context_packet_id != packet.context_packet_id
+            || count.packet_sha256 != context.sha256
+            || count.counter != self.admitted.profile.context.token_counter
+            || count.tokens != packet.input_tokens
+        {
+            return Err(ModelRuntimeGateError::DispatchTokenDrift);
+        }
+        let approved = self.admitted.profile.context.max_context_tokens;
+        let effective = approved.min(served.context_capacity_tokens);
+        let usable_input = effective
+            .checked_sub(request.max_output_tokens)
+            .and_then(|remaining| remaining.checked_sub(self.safety_margin_tokens))
+            .ok_or(ModelRuntimeGateError::DispatchCapacityExceeded)?;
+        if count.tokens > usable_input {
+            return Err(ModelRuntimeGateError::DispatchCapacityExceeded);
+        }
+        let mut preflight = ModelDispatchPreflight {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            context_manifest_sha256: packet.packet_sha256.clone(),
+            orchestration_plan_sha256: packet.packet_sha256.clone(),
+            rendered_prompt_sha256: context.sha256.clone(),
+            rendered_prompt_tokens: count.tokens,
+            token_counter: count.counter,
+            token_counter_sha256: self.admitted.profile.context.token_counter_sha256.clone(),
+            approved_profile_capacity_tokens: approved,
+            served_capacity_tokens: served.context_capacity_tokens,
+            effective_capacity_tokens: effective,
+            total_output_reserve_tokens: request.max_output_tokens,
+            safety_margin_tokens: self.safety_margin_tokens,
+            usable_input_tokens: usable_input,
+            process_generation: served.process_generation,
+            load_generation: served.load_generation,
+            launch_configuration_sha256: served.launch_configuration_sha256,
+            serving_observation_sha256: served.observation_sha256,
+            parallel_slots: served.parallel_slots,
+            reserved_slot: 0,
+            cache_policy: served.cache_policy,
+            preflight_sha256: "0".repeat(64),
+        };
+        preflight.preflight_sha256 = prepared_request_digest(request, &context, &preflight)?;
+        Ok(PreparedModelRequest {
+            request: request.clone(),
+            context,
+            preflight,
+            task_id: packet.task_id.clone(),
+        })
+    }
+
+    /// Prepares one request only after its earlier context allocation reconciles exactly.
+    pub fn prepare_with_plan(
+        &self,
+        request: &ModelRunRequest,
+        packet: &ModelContextPacket,
+        plan: &ModelContextWindowPlan,
+    ) -> Result<PreparedModelRequest, ModelRuntimeGateError> {
+        let planned_input = [
+            plan.system_and_tool_tokens,
+            plan.user_input_tokens,
+            plan.source_artifacts.allocated_tokens,
+            plan.retrieved_context.allocated_tokens,
+        ]
+        .into_iter()
+        .try_fold(0_u32, u32::checked_add)
+        .ok_or(ModelRuntimeGateError::DispatchCapacityExceeded)?;
+        if verify_model_context_window_plan(plan).is_err()
+            || plan.model_profile_id != self.admitted.profile.profile_id.as_str()
+            || plan.model_manifest_sha256 != self.admitted.profile.manifest_sha256
+            || plan.model_runtime_sha256 != self.admitted.profile.runtime.runtime_sha256
+            || plan.tokenizer_sha256 != self.admitted.profile.codec.tokenizer_sha256
+            || plan.token_counter_sha256 != self.admitted.profile.context.token_counter_sha256
+            || plan.total_window_tokens != self.admitted.profile.context.max_context_tokens
+            || plan.output_reserve_tokens != request.max_output_tokens
+            || plan.safety_margin_tokens != self.safety_margin_tokens
+            || planned_input != packet.input_tokens
+        {
+            return Err(ModelRuntimeGateError::PreparedRequestMismatch);
+        }
+        let mut prepared = self.prepare(request, packet)?;
+        prepared.preflight.orchestration_plan_sha256 = plan.plan_sha256.clone();
+        prepared.preflight.preflight_sha256 =
+            prepared_request_digest(&prepared.request, &prepared.context, &prepared.preflight)?;
+        Ok(prepared)
+    }
+
+    /// Consumes one immutable preparation and validates its complete inert stream.
+    pub fn dispatch(
+        &mut self,
+        prepared: PreparedModelRequest,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<ModelRunResult, ModelRuntimeGateError> {
-        self.stream_with_output(request, packet, cancellation)
+        self.dispatch_with_output(prepared, cancellation)
             .map(|output| output.result)
     }
 
-    /// Runs one exact bounded request and returns its validated inert response bytes.
-    pub fn stream_with_output(
+    /// Consumes one immutable preparation and returns its validated inert response bytes.
+    pub fn dispatch_with_output(
         &mut self,
-        request: &ModelRunRequest,
-        packet: &ModelContextPacket,
+        prepared: PreparedModelRequest,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<VerifiedModelOutput, ModelRuntimeGateError> {
-        self.health()?;
-        self.validate_packet(packet)?;
+        let PreparedModelRequest {
+            request,
+            context,
+            preflight,
+            task_id,
+        } = prepared;
+        validate_prepared_request(&self.admitted.profile, &request, &context, &preflight)?;
+        let current = self
+            .runtime
+            .serving_capabilities()
+            .map_err(|_| ModelRuntimeGateError::PreparedRequestStale)?;
+        if validate_served_capabilities(&self.admitted.profile, &current).is_err()
+            || self.served_capabilities.as_ref() != Some(&current)
+            || !preflight_matches_serving(&preflight, &current)
+        {
+            return Err(ModelRuntimeGateError::PreparedRequestStale);
+        }
+        let bound_cancellation = cancellation.map(|source| BoundCancellationProbe {
+            source,
+            task_id: &task_id,
+            correlation_id: &request.correlation_id,
+        });
+        let mut capture = StreamCapture::new(&request);
+        let mut result = self
+            .runtime
+            .stream(
+                &request,
+                &context,
+                &preflight,
+                bound_cancellation
+                    .as_ref()
+                    .map(|probe| probe as &dyn ModelCancellationProbe),
+                &mut capture,
+            )
+            .map_err(|error| match error.code.as_str() {
+                "model.prepared-request.token-drift" => ModelRuntimeGateError::DispatchTokenDrift,
+                "model.prepared-request.stale-binding" => {
+                    ModelRuntimeGateError::PreparedRequestStale
+                }
+                _ => ModelRuntimeGateError::RuntimeFailure,
+            })?;
+        capture.finish(&result)?;
+        if result.response_sha256 != sha256_hex(&capture.bytes) {
+            return Err(ModelRuntimeGateError::ResultMismatch);
+        }
+        if !valid_usage(
+            preflight.rendered_prompt_tokens,
+            preflight.effective_capacity_tokens,
+            &request,
+            &result,
+        ) || (matches!(
+            result.terminal_state,
+            ModelRunTerminalState::Proposed | ModelRunTerminalState::AdvisoryText
+        ) && !result.finish_reason.is_complete())
+        {
+            return Err(ModelRuntimeGateError::ResultMismatch);
+        }
+        if result.terminal_state == ModelRunTerminalState::Proposed {
+            let decoded = self
+                .codec
+                .decode_proposal(&self.admitted.profile, &request, &capture.bytes)
+                .map_err(|_| ModelRuntimeGateError::ResultMismatch)?;
+            if result.proposal.is_some() {
+                return Err(ModelRuntimeGateError::ResultMismatch);
+            }
+            result.proposal = Some(decoded);
+        } else if result.terminal_state == ModelRunTerminalState::AdvisoryText
+            && !crate::model_response::plain_text_advisory(&capture.bytes)
+        {
+            return Err(ModelRuntimeGateError::ResultMismatch);
+        }
+        validate_result(&self.admitted.profile, &request, &result)?;
+        Ok(VerifiedModelOutput {
+            result,
+            response_bytes: capture.bytes,
+        })
+    }
+
+    fn validate_request(
+        &self,
+        request: &ModelRunRequest,
+        packet: &ModelContextPacket,
+    ) -> Result<(), ModelRuntimeGateError> {
         if request.profile_id != self.admitted.profile.profile_id
             || request.manifest_sha256 != self.admitted.profile.manifest_sha256
             || request.adapter_id != self.admitted.profile.runtime.adapter_id
@@ -435,63 +665,7 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         {
             return Err(ModelRuntimeGateError::RequestMismatch);
         }
-        let bound_cancellation = cancellation.map(|source| BoundCancellationProbe {
-            source,
-            task_id: &packet.task_id,
-            correlation_id: &request.correlation_id,
-        });
-        let context = self
-            .codec
-            .encode_context(&self.admitted.profile, packet)
-            .map_err(|_| ModelRuntimeGateError::RequestMismatch)?;
-        let mut capture = StreamCapture::new(request);
-        let mut result = self
-            .runtime
-            .stream(
-                request,
-                &context,
-                bound_cancellation
-                    .as_ref()
-                    .map(|probe| probe as &dyn ModelCancellationProbe),
-                &mut capture,
-            )
-            .map_err(|_| ModelRuntimeGateError::RuntimeFailure)?;
-        capture.finish(&result)?;
-        if result.response_sha256 != sha256_hex(&capture.bytes) {
-            return Err(ModelRuntimeGateError::ResultMismatch);
-        }
-        let served_capacity = self
-            .served_capabilities
-            .as_ref()
-            .ok_or(ModelRuntimeGateError::ServedCapabilityMissing)?
-            .context_capacity_tokens;
-        if !valid_usage(packet.input_tokens, served_capacity, request, &result)
-            || (matches!(
-                result.terminal_state,
-                ModelRunTerminalState::Proposed | ModelRunTerminalState::AdvisoryText
-            ) && !result.finish_reason.is_complete())
-        {
-            return Err(ModelRuntimeGateError::ResultMismatch);
-        }
-        if result.terminal_state == ModelRunTerminalState::Proposed {
-            let decoded = self
-                .codec
-                .decode_proposal(&self.admitted.profile, request, &capture.bytes)
-                .map_err(|_| ModelRuntimeGateError::ResultMismatch)?;
-            if result.proposal.is_some() {
-                return Err(ModelRuntimeGateError::ResultMismatch);
-            }
-            result.proposal = Some(decoded);
-        } else if result.terminal_state == ModelRunTerminalState::AdvisoryText
-            && !crate::model_response::plain_text_advisory(&capture.bytes)
-        {
-            return Err(ModelRuntimeGateError::ResultMismatch);
-        }
-        validate_result(&self.admitted.profile, request, &result)?;
-        Ok(VerifiedModelOutput {
-            result,
-            response_bytes: capture.bytes,
-        })
+        Ok(())
     }
 
     /// Returns resource accounting only for the exact loaded tuple.
@@ -569,6 +743,7 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             || packet.input_tokens == 0
             || packet.input_tokens > self.admitted.profile.context.max_context_tokens
             || !valid_sha256(&packet.packet_sha256)
+            || model_packet_digest(packet)? != packet.packet_sha256
         {
             return Err(ModelRuntimeGateError::RequestMismatch);
         }
@@ -735,6 +910,88 @@ fn validate_served_capabilities(
         return Err(ModelRuntimeGateError::ServedCapabilityDrift);
     }
     Ok(())
+}
+
+#[derive(serde::Serialize)]
+struct PreparedRequestDigest<'a> {
+    request: &'a ModelRunRequest,
+    context: &'a agentmage_kernel_contracts::EncodedModelContext,
+    preflight: &'a ModelDispatchPreflight,
+}
+
+fn prepared_request_digest(
+    request: &ModelRunRequest,
+    context: &agentmage_kernel_contracts::EncodedModelContext,
+    preflight: &ModelDispatchPreflight,
+) -> Result<String, ModelRuntimeGateError> {
+    let mut candidate = preflight.clone();
+    candidate.preflight_sha256 = "0".repeat(64);
+    let bytes = serde_json::to_vec(&PreparedRequestDigest {
+        request,
+        context,
+        preflight: &candidate,
+    })
+    .map_err(|_| ModelRuntimeGateError::PreparedRequestMismatch)?;
+    Ok(sha256_hex(&bytes))
+}
+
+fn validate_prepared_request(
+    profile: &ExactModelProfile,
+    request: &ModelRunRequest,
+    context: &agentmage_kernel_contracts::EncodedModelContext,
+    preflight: &ModelDispatchPreflight,
+) -> Result<(), ModelRuntimeGateError> {
+    let usable = preflight
+        .effective_capacity_tokens
+        .checked_sub(preflight.total_output_reserve_tokens)
+        .and_then(|remaining| remaining.checked_sub(preflight.safety_margin_tokens))
+        .ok_or(ModelRuntimeGateError::DispatchCapacityExceeded)?;
+    if preflight.schema_version != agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION
+        || context.profile_id != profile.profile_id
+        || context.context_packet_id != request.context_packet_id
+        || preflight.context_manifest_sha256.is_empty()
+        || !valid_sha256(&preflight.orchestration_plan_sha256)
+        || preflight.rendered_prompt_sha256 != context.sha256
+        || preflight.rendered_prompt_tokens == 0
+        || preflight.token_counter != profile.context.token_counter
+        || preflight.token_counter_sha256 != profile.context.token_counter_sha256
+        || preflight.approved_profile_capacity_tokens != profile.context.max_context_tokens
+        || preflight.effective_capacity_tokens
+            != preflight
+                .approved_profile_capacity_tokens
+                .min(preflight.served_capacity_tokens)
+        || preflight.total_output_reserve_tokens != request.max_output_tokens
+        || preflight.safety_margin_tokens == 0
+        || preflight.usable_input_tokens != usable
+        || preflight.rendered_prompt_tokens > usable
+        || preflight.process_generation == 0
+        || preflight.load_generation == 0
+        || !valid_sha256(&preflight.context_manifest_sha256)
+        || !valid_sha256(&preflight.rendered_prompt_sha256)
+        || !valid_sha256(&preflight.launch_configuration_sha256)
+        || !valid_sha256(&preflight.serving_observation_sha256)
+        || !valid_sha256(&preflight.preflight_sha256)
+        || preflight.parallel_slots == 0
+        || preflight.reserved_slot >= preflight.parallel_slots
+        || prepared_request_digest(request, context, preflight)? != preflight.preflight_sha256
+    {
+        return Err(ModelRuntimeGateError::PreparedRequestMismatch);
+    }
+    Ok(())
+}
+
+fn preflight_matches_serving(
+    preflight: &ModelDispatchPreflight,
+    served: &ModelServingCapabilities,
+) -> bool {
+    preflight.served_capacity_tokens == served.context_capacity_tokens
+        && preflight.process_generation == served.process_generation
+        && preflight.load_generation == served.load_generation
+        && preflight.launch_configuration_sha256 == served.launch_configuration_sha256
+        && preflight.serving_observation_sha256 == served.observation_sha256
+        && preflight.parallel_slots == served.parallel_slots
+        && preflight.reserved_slot < served.parallel_slots
+        && preflight.cache_policy == served.cache_policy
 }
 
 fn validate_result(
@@ -1048,6 +1305,9 @@ mod tests {
         runtime_failure, sha256_hex, validate_served_capabilities,
     };
     use crate::model_codec::ClosedJsonFamilyCodec;
+    use crate::model_orchestration_profile::{
+        AdaptableTokenDemand, ContextWindowDemand, ExactTokenCounterBinding, compile_context_window,
+    };
 
     const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
@@ -1088,6 +1348,8 @@ mod tests {
         resident_memory_bytes: u64,
         load_generation: u64,
         stream_calls: Rc<Cell<u32>>,
+        generation_calls: Rc<Cell<u32>>,
+        counted_tokens: Rc<Cell<u32>>,
     }
 
     impl FakeRuntime {
@@ -1104,6 +1366,8 @@ mod tests {
                 resident_memory_bytes: 1,
                 load_generation: 0,
                 stream_calls: Rc::new(Cell::new(0)),
+                generation_calls: Rc::new(Cell::new(0)),
+                counted_tokens: Rc::new(Cell::new(1)),
             }
         }
     }
@@ -1238,7 +1502,7 @@ mod tests {
             Ok(TokenCountResult {
                 profile_id: context.profile_id.clone(),
                 context_packet_id: context.context_packet_id.clone(),
-                tokens: 1,
+                tokens: self.counted_tokens.get(),
                 counter: self.token_counter.clone(),
                 packet_sha256: context.sha256.clone(),
             })
@@ -1248,10 +1512,15 @@ mod tests {
             &mut self,
             request: &ModelRunRequest,
             _context: &EncodedModelContext,
+            preflight: &agentmage_kernel_contracts::ModelDispatchPreflight,
             cancellation: Option<&dyn ModelCancellationProbe>,
             sink: &mut dyn ModelStreamSink,
         ) -> Result<ModelRunResult, ModelRuntimeFailure> {
             self.stream_calls.set(self.stream_calls.get() + 1);
+            if self.counted_tokens.get() != preflight.rendered_prompt_tokens {
+                return Err(runtime_failure("model.prepared-request.token-drift"));
+            }
+            self.generation_calls.set(self.generation_calls.get() + 1);
             if self.scenario == FakeScenario::Crashed {
                 return Err(runtime_failure("fixture.runtime-crashed"));
             }
@@ -1337,16 +1606,17 @@ mod tests {
                 proposal,
                 failure,
                 usage: ModelTokenUsage {
-                    rendered_prompt_tokens: 1,
+                    rendered_prompt_tokens: self.counted_tokens.get(),
                     cached_input_tokens: None,
                     evaluated_input_tokens: None,
                     generated_output_tokens: 1,
                     reasoning_output_tokens: None,
                     output_token_reserve: request.max_output_tokens,
-                    remaining_capacity_tokens: self
-                        .served
-                        .as_ref()
-                        .and_then(|served| served.context_capacity_tokens.checked_sub(2)),
+                    remaining_capacity_tokens: self.served.as_ref().and_then(|served| {
+                        served
+                            .context_capacity_tokens
+                            .checked_sub(self.counted_tokens.get().checked_add(1)?)
+                    }),
                 },
                 resources: ModelResourceReport {
                     adapter_id: self.identity.adapter_id.clone(),
@@ -1354,7 +1624,7 @@ mod tests {
                     model_run_id: Some(request.model_run_id.clone()),
                     resident_memory_bytes: 1,
                     accelerator_memory_bytes: 0,
-                    input_tokens: 1,
+                    input_tokens: self.counted_tokens.get(),
                     output_tokens: 1,
                     elapsed_ms: 1,
                 },
@@ -1483,7 +1753,7 @@ mod tests {
     }
 
     fn packet(profile: &ExactModelProfile) -> ModelContextPacket {
-        ModelContextPacket {
+        let mut packet = ModelContextPacket {
             schema_version: CONTRACT_SCHEMA_VERSION,
             context_packet_id: ContextPacketId::from_raw("context-1"),
             session_id: SessionId::from_raw("session-1"),
@@ -1508,7 +1778,13 @@ mod tests {
             input_bytes: 7,
             input_tokens: 1,
             packet_sha256: SHA.to_owned(),
-        }
+        };
+        packet.packet_sha256 = super::model_packet_digest(&packet).expect("packet digest");
+        packet
+    }
+
+    fn reseal_packet(packet: &mut ModelContextPacket) {
+        packet.packet_sha256 = super::model_packet_digest(packet).expect("packet digest");
     }
 
     fn request(profile: &ExactModelProfile) -> ModelRunRequest {
@@ -1548,6 +1824,7 @@ mod tests {
             FakeRuntime::new(&profile),
             ClosedJsonFamilyCodec::new(profile.codec.clone()),
             admitted,
+            1,
         )
         .expect("controller");
 
@@ -1567,8 +1844,11 @@ mod tests {
             super::model_packet_digest(&packet).expect("packet digest")
         );
         assert_eq!(controller.count_tokens(&packet).expect("count").tokens, 1);
+        let prepared = controller
+            .prepare(&request(&profile), &packet)
+            .expect("prepare");
         let output = controller
-            .stream_with_output(&request(&profile), &packet, None)
+            .dispatch_with_output(prepared, None)
             .expect("stream");
         assert_eq!(
             output.result.terminal_state,
@@ -1584,6 +1864,236 @@ mod tests {
         );
         assert!(controller.unload().expect("unload").empty);
         assert_eq!(controller.health(), Err(ModelRuntimeGateError::NotLoaded));
+    }
+
+    #[test]
+    fn dispatch_preflight_accepts_exact_fit_and_refuses_one_token_over_before_stream() {
+        for (input_tokens, expected) in [
+            (111, Ok(ModelRunTerminalState::Proposed)),
+            (112, Err(ModelRuntimeGateError::DispatchCapacityExceeded)),
+        ] {
+            let profile = profile();
+            let admitted = ModelAdmissionCatalog::new(vec![profile.clone()])
+                .expect("catalog")
+                .admit(&profile, ModelUsePurpose::ContractTest)
+                .expect("admitted");
+            let runtime = FakeRuntime::new(&profile);
+            runtime.counted_tokens.set(input_tokens);
+            let stream_calls = Rc::clone(&runtime.stream_calls);
+            let generation_calls = Rc::clone(&runtime.generation_calls);
+            let mut controller = LocalModelController::new(
+                runtime,
+                ClosedJsonFamilyCodec::new(profile.codec.clone()),
+                admitted,
+                1,
+            )
+            .expect("controller");
+            controller.load().expect("load");
+            let mut packet = packet(&profile);
+            packet.input_tokens = input_tokens;
+            reseal_packet(&mut packet);
+            let observed = controller
+                .prepare(&request(&profile), &packet)
+                .and_then(|prepared| controller.dispatch(prepared, None))
+                .map(|result| result.terminal_state);
+            assert_eq!(observed, expected, "input_tokens={input_tokens}");
+            let dispatched = u32::from(expected.is_ok());
+            assert_eq!(stream_calls.get(), dispatched);
+            assert_eq!(generation_calls.get(), dispatched);
+        }
+    }
+
+    #[test]
+    fn dispatch_preflight_refuses_7000_plus_2048_against_8192_and_invalid_margin() {
+        let mut profile = profile();
+        profile.context.max_context_tokens = 8_192;
+        profile.decoding.max_output_tokens = 2_048;
+        let admitted = ModelAdmissionCatalog::new(vec![profile.clone()])
+            .expect("catalog")
+            .admit(&profile, ModelUsePurpose::ContractTest)
+            .expect("admitted");
+        assert!(matches!(
+            LocalModelController::new(
+                FakeRuntime::new(&profile),
+                ClosedJsonFamilyCodec::new(profile.codec.clone()),
+                admitted.clone(),
+                0,
+            ),
+            Err(ModelRuntimeGateError::DispatchCapacityExceeded)
+        ));
+        let runtime = FakeRuntime::new(&profile);
+        runtime.counted_tokens.set(7_000);
+        let generation_calls = Rc::clone(&runtime.generation_calls);
+        let mut controller = LocalModelController::new(
+            runtime,
+            ClosedJsonFamilyCodec::new(profile.codec.clone()),
+            admitted,
+            1,
+        )
+        .expect("controller");
+        controller.load().expect("load");
+        let mut packet = packet(&profile);
+        packet.input_tokens = 7_000;
+        reseal_packet(&mut packet);
+        let mut run = request(&profile);
+        run.max_output_tokens = 2_048;
+        assert_eq!(
+            controller.prepare(&run, &packet),
+            Err(ModelRuntimeGateError::DispatchCapacityExceeded)
+        );
+        assert_eq!(generation_calls.get(), 0);
+    }
+
+    #[test]
+    fn prepared_request_mutation_stale_binding_and_token_drift_send_no_generation_bytes() {
+        let profile = profile();
+        let admitted = ModelAdmissionCatalog::new(vec![profile.clone()])
+            .expect("catalog")
+            .admit(&profile, ModelUsePurpose::ContractTest)
+            .expect("admitted");
+
+        let runtime = FakeRuntime::new(&profile);
+        let stream_calls = Rc::clone(&runtime.stream_calls);
+        let generation_calls = Rc::clone(&runtime.generation_calls);
+        let mut controller = LocalModelController::new(
+            runtime,
+            ClosedJsonFamilyCodec::new(profile.codec.clone()),
+            admitted.clone(),
+            1,
+        )
+        .expect("controller");
+        controller.load().expect("load");
+        let mut prepared = controller
+            .prepare(&request(&profile), &packet(&profile))
+            .expect("prepare");
+        prepared.context.bytes.push(b'!');
+        assert_eq!(
+            controller.dispatch(prepared, None),
+            Err(ModelRuntimeGateError::PreparedRequestMismatch)
+        );
+        assert_eq!(stream_calls.get(), 0);
+        assert_eq!(generation_calls.get(), 0);
+
+        let runtime = FakeRuntime::new(&profile);
+        let stream_calls = Rc::clone(&runtime.stream_calls);
+        let mut controller = LocalModelController::new(
+            runtime,
+            ClosedJsonFamilyCodec::new(profile.codec.clone()),
+            admitted.clone(),
+            1,
+        )
+        .expect("controller");
+        controller.load().expect("load");
+        let prepared = controller
+            .prepare(&request(&profile), &packet(&profile))
+            .expect("prepare");
+        controller.runtime.served_drift_after_load = Some(ServedDrift::Slots);
+        assert_eq!(
+            controller.dispatch(prepared, None),
+            Err(ModelRuntimeGateError::PreparedRequestStale)
+        );
+        assert_eq!(stream_calls.get(), 0);
+
+        let runtime = FakeRuntime::new(&profile);
+        let stream_calls = Rc::clone(&runtime.stream_calls);
+        let generation_calls = Rc::clone(&runtime.generation_calls);
+        let counted_tokens = Rc::clone(&runtime.counted_tokens);
+        let mut controller = LocalModelController::new(
+            runtime,
+            ClosedJsonFamilyCodec::new(profile.codec.clone()),
+            admitted,
+            1,
+        )
+        .expect("controller");
+        controller.load().expect("load");
+        let prepared = controller
+            .prepare(&request(&profile), &packet(&profile))
+            .expect("prepare");
+        counted_tokens.set(2);
+        assert_eq!(
+            controller.dispatch(prepared, None),
+            Err(ModelRuntimeGateError::DispatchTokenDrift)
+        );
+        assert_eq!(stream_calls.get(), 1);
+        assert_eq!(generation_calls.get(), 0);
+    }
+
+    #[test]
+    fn orchestration_plan_and_tool_heavy_unicode_render_reconcile_once() {
+        let profile = profile();
+        let admitted = ModelAdmissionCatalog::new(vec![profile.clone()])
+            .expect("catalog")
+            .admit(&profile, ModelUsePurpose::ContractTest)
+            .expect("admitted");
+        let runtime = FakeRuntime::new(&profile);
+        runtime.counted_tokens.set(4);
+        let mut controller = LocalModelController::new(
+            runtime,
+            ClosedJsonFamilyCodec::new(profile.codec.clone()),
+            admitted,
+            1,
+        )
+        .expect("controller");
+        controller.load().expect("load");
+        let plan = compile_context_window(
+            &profile,
+            &ContextWindowDemand {
+                counter: ExactTokenCounterBinding {
+                    token_counter_id: profile.context.token_counter.clone(),
+                    token_counter_sha256: profile.context.token_counter_sha256.clone(),
+                    tokenizer_sha256: profile.codec.tokenizer_sha256.clone(),
+                },
+                system_and_tool_tokens: 1,
+                user_input_tokens: 1,
+                source_artifacts: AdaptableTokenDemand {
+                    requested_tokens: 1,
+                    minimum_tokens: 1,
+                },
+                retrieved_context: AdaptableTokenDemand {
+                    requested_tokens: 1,
+                    minimum_tokens: 1,
+                },
+                workflow_recovery_reserve_tokens: 1,
+                output_reserve_tokens: profile.decoding.max_output_tokens,
+                safety_margin_tokens: 1,
+            },
+        )
+        .expect("context plan");
+        let mut packet = packet(&profile);
+        let tool_bytes = "{\"schema\":\"工具🧰\",\"special\":\"<|end|>\"}"
+            .as_bytes()
+            .to_vec();
+        packet.input_bytes += u64::try_from(tool_bytes.len()).expect("bounded fixture");
+        packet.messages.push(ModelMessage {
+            message_id: ModelMessageId::from_raw("message-tool-unicode"),
+            role: ModelMessageRole::Tool,
+            content: agentmage_kernel_contracts::ContractPayload {
+                schema: agentmage_kernel_contracts::SchemaReference {
+                    schema_id: agentmage_kernel_contracts::SchemaId::from_raw("tool-result-v1"),
+                    schema_version: 1,
+                    schema_sha256: SHA.to_owned(),
+                },
+                media_type: "application/json".to_owned(),
+                sha256: sha256_hex(&tool_bytes),
+                bytes: tool_bytes,
+            },
+        });
+        packet.input_tokens = 4;
+        reseal_packet(&mut packet);
+        let prepared = controller
+            .prepare_with_plan(&request(&profile), &packet, &plan)
+            .expect("plan-bound preparation");
+        assert_eq!(
+            prepared.preflight().orchestration_plan_sha256,
+            plan.plan_sha256
+        );
+        assert_eq!(prepared.preflight().rendered_prompt_tokens, 4);
+        assert_eq!(
+            controller
+                .dispatch(prepared, None)
+                .map(|value| value.terminal_state),
+            Ok(ModelRunTerminalState::Proposed)
+        );
     }
 
     #[test]
@@ -1754,12 +2264,13 @@ mod tests {
                 runtime,
                 ClosedJsonFamilyCodec::new(profile.codec.clone()),
                 admitted.clone(),
+                1,
             )
             .expect("controller");
             controller.load().expect("load");
             assert_eq!(controller.health(), Err(expected), "drift={drift:?}");
             assert_eq!(
-                controller.stream(&request(&profile), &packet(&profile), None),
+                controller.prepare(&request(&profile), &packet(&profile)),
                 Err(expected),
                 "drift={drift:?}"
             );
@@ -1778,6 +2289,7 @@ mod tests {
             FakeRuntime::new(&profile),
             ClosedJsonFamilyCodec::new(profile.codec.clone()),
             admitted,
+            1,
         )
         .expect("controller");
         let first = controller.load().expect("first load").served_capabilities;
@@ -1803,6 +2315,7 @@ mod tests {
             runtime,
             ClosedJsonFamilyCodec::new(profile.codec.clone()),
             admitted,
+            1,
         )
         .expect("controller");
         controller.load().expect("load");
@@ -1895,6 +2408,7 @@ mod tests {
                 fake,
                 ClosedJsonFamilyCodec::new(profile.codec.clone()),
                 admitted,
+                1,
             )
             .expect("controller");
             assert_eq!(controller.load(), Err(expected));
@@ -1909,11 +2423,15 @@ mod tests {
             fake,
             ClosedJsonFamilyCodec::new(profile.codec.clone()),
             admitted,
+            1,
         )
         .expect("controller");
         controller.load().expect("load");
+        let prepared = controller
+            .prepare(&request(&profile), &packet(&profile))
+            .expect("prepare");
         assert_eq!(
-            controller.stream(&request(&profile), &packet(&profile), None),
+            controller.dispatch(prepared, None),
             Err(ModelRuntimeGateError::RuntimeFailure)
         );
 
@@ -1967,15 +2485,18 @@ mod tests {
                     fake,
                     ClosedJsonFamilyCodec::new(profile.codec.clone()),
                     admitted,
+                    1,
                 )
                 .expect("controller");
                 controller.load().expect("load");
                 let packet = packet(&profile);
                 let signal = cancellation();
+                let prepared = controller
+                    .prepare(&request(&profile), &packet)
+                    .expect("prepare");
                 let observed = controller
-                    .stream(
-                        &request(&profile),
-                        &packet,
+                    .dispatch(
+                        prepared,
                         (scenario == FakeScenario::Cancelled).then_some(&signal),
                     )
                     .map(|result| result.terminal_state);

@@ -37,3 +37,19 @@ The closed machine-readable contract is
 context-plan or orchestration schema change changes its digest and requires new exact evidence;
 there is no permissive migration or borrowed compatibility. Manual selection can choose only an
 already enabled exact model/orchestration tuple and does not alter any invariant control.
+
+Before generation, the kernel creates one move-only prepared request. It binds the canonical
+context and orchestration-plan digests, once-rendered bytes, exact tokenizer count, full output
+reserve, non-spendable margin, approved and observed capacities, process/load generations, launch
+and observation digests, and reserved slot/cache policy. Dispatch consumes that value, re-observes
+the serving tuple, and the native runtime recounts the same bytes before it can send generation
+bytes. Checked subtraction enforces `input + output reserve + margin <= min(approved, served)`;
+exact fit is allowed and one-token overflow is refused.
+
+Capacity, prepared-request mismatch, stale binding, and tokenizer drift have separate stable
+codes. Recovery creates a fresh request and repeats the whole guard. Optional sources may be
+reduced only with visible dispositions; compaction requires G2 admission; a linked thread requires
+a checked summary and source references; profile changes require an already approved exact tuple.
+Server context shift, hidden omission, unchanged retry, and silent fallback cannot recover a
+refusal. Deterministic local fixtures cover this common contract. Native endpoint reconciliation
+remains a separate open qualification campaign and no profile is enabled.

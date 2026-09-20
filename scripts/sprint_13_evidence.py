@@ -41,6 +41,7 @@ EVIDENCE_PATHS: Final = (
     "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json",
     "artifacts/sprints/sprint-13/story-13.2/linux-cross-adapter-parity.json",
     "artifacts/sprints/sprint-13/story-13.1/finish-usage-report.json",
+    "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-report.json",
 )
 COMMANDS: Final = (
     (
@@ -125,6 +126,9 @@ EXPECTED_EVIDENCE_STATE: Final = {
     "finish_usage_status": "PASS_LOCAL_CONTRACT",
     "finish_usage_local_contract_complete": True,
     "finish_usage_platform_qualified": False,
+    "dispatch_preflight_status": "PASS_LOCAL_FIXTURES_BLOCKED_NATIVE_BOUNDARY",
+    "dispatch_preflight_local_contract_complete": True,
+    "dispatch_preflight_native_campaign_executed": False,
 }
 
 
@@ -244,6 +248,13 @@ def evidence_state() -> dict[str, Any]:
         "finish_usage_platform_qualified": values[EVIDENCE_PATHS[9]]["claims"][
             "platform_qualified"
         ],
+        "dispatch_preflight_status": values[EVIDENCE_PATHS[10]]["status"],
+        "dispatch_preflight_local_contract_complete": values[EVIDENCE_PATHS[10]]["claims"][
+            "local_contract_complete"
+        ],
+        "dispatch_preflight_native_campaign_executed": values[EVIDENCE_PATHS[10]]["claims"][
+            "native_boundary_campaign_executed"
+        ],
     }
 
 
@@ -300,6 +311,17 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
                 "exact_profile_disposition": state["muse_disposition"],
                 "quality_and_repeatability_measured": local_contract_pass,
                 "packet_capture_executed": False,
+                "profile_enabled": False,
+            },
+            {
+                "story_id": "13.4",
+                "status": (
+                    "PASS-LOCAL-DISPATCH-GUARD-BLOCKED-NATIVE"
+                    if local_contract_pass
+                    else "BLOCKED"
+                ),
+                "dispatch_preflight_local_contract_passed": local_contract_pass,
+                "native_boundary_campaign_executed": False,
                 "profile_enabled": False,
             },
         ],

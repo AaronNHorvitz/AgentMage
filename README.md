@@ -504,10 +504,11 @@ The 2026-09-08 owner-requested refinement adds two release requirements, not imp
 
 Source inspection at `081a372d` found an existing Linux native llama.cpp adapter that launches a
 fixed 8,192-token, single-slot process and counts codec-rendered input through that server's
-tokenizer. Historical native inference evidence also exists, but no model is enabled. The missing
-integration is observed served-capacity binding, a mandatory combined input/output dispatch gate,
-preserved truncation semantics, and end-to-end recording and original-source reopening. Existing
-checked summaries and encrypted storage are foundations, not proof that G1 or G2 is satisfied.
+tokenizer. Historical native inference evidence also exists, but no model is enabled. The common
+Rust path now binds observed serving capacity, requires an immutable combined input/output/margin
+preflight, and preserves finish reasons and actual usage. Exact native boundary qualification,
+end-to-end recording, and original-source reopening remain open. Existing checked summaries and
+encrypted storage are foundations, not proof that G2 or production qualification is satisfied.
 
 The [PRD requirements](./PRD.md#81-served-context-safety-and-trustworthy-continuity) define the
 behavior; the [build sequence](./IMPLEMENTATION-PLAN.md#431-context-safety-and-continuity-build-sequence)

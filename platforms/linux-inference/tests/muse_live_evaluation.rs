@@ -5,11 +5,12 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use agentmage_kernel_contracts::{
-    CONTRACT_SCHEMA_VERSION, ContextPacketId, ContractPayload, CorrelationId, ExactModelProfile,
-    LocalModelRuntime, ModelContextPacket, ModelFamilyCodec, ModelMessage, ModelMessageId,
-    ModelMessageRole, ModelProposalKind, ModelRunId, ModelRunRequest, ModelRunTerminalState,
-    ModelRuntimeFailure, ModelStreamSink, RuntimeIsolationObservation, SchemaId, SchemaReference,
-    SessionId, StreamedModelFragment, TaskId, ToolCatalogId,
+    CONTRACT_SCHEMA_VERSION, ContextPacketId, ContractPayload, CorrelationId, EncodedModelContext,
+    ExactModelProfile, LocalModelRuntime, ModelContextPacket, ModelDispatchPreflight,
+    ModelFamilyCodec, ModelMessage, ModelMessageId, ModelMessageRole, ModelProposalKind,
+    ModelRunId, ModelRunRequest, ModelRunTerminalState, ModelRuntimeFailure, ModelStreamSink,
+    RuntimeIsolationObservation, SchemaId, SchemaReference, SessionId, StreamedModelFragment,
+    TaskId, ToolCatalogId,
 };
 use agentmage_platform_linux_inference::{
     LinuxNativeModelAdapter, LlamaServerDriver, LlamaServerDriverConfig, MuseAtemFamilyCodec,
@@ -123,6 +124,52 @@ fn request(profile: &ExactModelProfile, case_id: &str, trial: u32) -> ModelRunRe
         decoding_profile_id: profile.decoding.profile_id.clone(),
         max_output_tokens: 64,
         timeout_ms: 120_000,
+    }
+}
+
+fn dispatch_preflight(
+    runtime: &impl LocalModelRuntime,
+    profile: &ExactModelProfile,
+    request: &ModelRunRequest,
+    packet: &ModelContextPacket,
+    context: &EncodedModelContext,
+) -> ModelDispatchPreflight {
+    let served = runtime
+        .serving_capabilities()
+        .expect("current serving capabilities");
+    let count = runtime.count_tokens(context).expect("exact token count");
+    let effective = profile
+        .context
+        .max_context_tokens
+        .min(served.context_capacity_tokens);
+    let safety_margin_tokens = 1;
+    let usable_input_tokens = effective
+        .checked_sub(request.max_output_tokens)
+        .and_then(|remaining| remaining.checked_sub(safety_margin_tokens))
+        .expect("bounded evaluation request");
+    assert!(count.tokens <= usable_input_tokens);
+    ModelDispatchPreflight {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        context_manifest_sha256: packet.packet_sha256.clone(),
+        orchestration_plan_sha256: packet.packet_sha256.clone(),
+        rendered_prompt_sha256: context.sha256.clone(),
+        rendered_prompt_tokens: count.tokens,
+        token_counter: count.counter,
+        token_counter_sha256: profile.context.token_counter_sha256.clone(),
+        approved_profile_capacity_tokens: profile.context.max_context_tokens,
+        served_capacity_tokens: served.context_capacity_tokens,
+        effective_capacity_tokens: effective,
+        total_output_reserve_tokens: request.max_output_tokens,
+        safety_margin_tokens,
+        usable_input_tokens,
+        process_generation: served.process_generation,
+        load_generation: served.load_generation,
+        launch_configuration_sha256: served.launch_configuration_sha256,
+        serving_observation_sha256: served.observation_sha256,
+        parallel_slots: served.parallel_slots,
+        reserved_slot: 0,
+        cache_policy: served.cache_policy,
+        preflight_sha256: "0".repeat(64),
     }
 }
 
@@ -241,9 +288,10 @@ fn evaluate_quality() -> (Vec<CaseSummary>, u64, u64) {
         let mut elapsed = 0_u64;
         for trial in 0..TRIALS_PER_QUALITY_CASE {
             let request = request(&profile, case.id, trial);
+            let preflight = dispatch_preflight(&runtime, &profile, &request, &packet, &encoded);
             let mut capture = Capture::default();
             let result = runtime
-                .stream(&request, &encoded, None, &mut capture)
+                .stream(&request, &encoded, &preflight, None, &mut capture)
                 .expect("bounded quality inference");
             let bytes = response_bytes(&capture);
             assert_eq!(sha256(&bytes), result.response_sha256);
@@ -322,9 +370,10 @@ fn evaluate_repeatability() -> Vec<String> {
     let mut hashes = Vec::new();
     for trial in 0..REPEAT_TRIALS {
         let request = request(&profile, case.id, trial);
+        let preflight = dispatch_preflight(&runtime, &profile, &request, &packet, &encoded);
         let mut capture = Capture::default();
         let result = runtime
-            .stream(&request, &encoded, None, &mut capture)
+            .stream(&request, &encoded, &preflight, None, &mut capture)
             .expect("bounded repeatability inference");
         let bytes = response_bytes(&capture);
         assert_eq!(sha256(&bytes), result.response_sha256);

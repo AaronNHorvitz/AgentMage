@@ -513,13 +513,15 @@ not a promise about arbitrary servers or future upstream bugs. Unexpected provid
 a contract violation: stop visibly, preserve available evidence, invalidate qualification for
 further dispatch pending investigation, and never conceal it as successful recovery.
 
-**Implementation progress, 2026-09-19:** The local served-capability contract in Task 13.1.5 and
-the finish/usage contract plus deterministic `CTX-FINISH` matrix in Task 13.1.6 are implemented.
+**Implementation progress, 2026-09-20:** The local served-capability contract in Task 13.1.5, the
+finish/usage contract plus deterministic `CTX-FINISH` matrix in Task 13.1.6, and Task 13.4.5's
+immutable prepared-request and combined pre-dispatch capacity gate are implemented.
 Limit, truncation, cancellation, deadline, transport-loss, reasoning-exhaustion, and unknown
 results cannot become complete proposals or answers; actual rendered/provider/generation usage is
-retained through the Rust host without content-bearing diagnostics. Task 13.4.5's immutable
-prepared-request and combined pre-dispatch capacity gate remains open, as do the exact native
-campaigns and all production model/platform qualification. No profile is enabled by this progress.
+retained through the Rust host without content-bearing diagnostics. Exact-fit, overflow, stale
+binding, modified preparation, and dispatch-time token drift now refuse before generation where
+required. The exact native campaigns and all production model/platform qualification remain open.
+No profile is enabled by this progress.
 
 #### G2 — Retain Originals and Make Summary Use Visible
 

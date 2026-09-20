@@ -608,6 +608,7 @@ pub trait LocalModelRuntime {
         &mut self,
         request: &ModelRunRequest,
         context: &EncodedModelContext,
+        preflight: &ModelDispatchPreflight,
         cancellation: Option<&dyn ModelCancellationProbe>,
         sink: &mut dyn ModelStreamSink,
     ) -> Result<ModelRunResult, ModelRuntimeFailure>;
@@ -901,6 +902,58 @@ pub struct TokenCountResult {
     pub counter: String,
     /// Lowercase SHA-256 digest of the counted encoded context bytes.
     pub packet_sha256: String,
+}
+
+/// Immutable content-free preflight facts required before one generation dispatch.
+///
+/// The trusted kernel binds this record to the exact rendered context and current serving
+/// observation. A runtime must re-count the rendered bytes and re-observe its serving facts before
+/// it sends generation bytes; caller estimates never authorize dispatch.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ModelDispatchPreflight {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Digest of the canonical context manifest selecting every model-visible item.
+    pub context_manifest_sha256: String,
+    /// Digest of the verified orchestration plan, or the context manifest when no prior plan exists.
+    pub orchestration_plan_sha256: String,
+    /// Digest of the exact once-rendered prompt bytes.
+    pub rendered_prompt_sha256: String,
+    /// Exact tokenizer count over the rendered prompt bytes.
+    pub rendered_prompt_tokens: u32,
+    /// Exact tokenizer/counter implementation identity.
+    pub token_counter: String,
+    /// Digest of the admitted token-counter implementation.
+    pub token_counter_sha256: String,
+    /// Maximum context admitted by the exact profile.
+    pub approved_profile_capacity_tokens: u32,
+    /// Per-request capacity observed from the serving process.
+    pub served_capacity_tokens: u32,
+    /// Checked minimum of approved and served capacity.
+    pub effective_capacity_tokens: u32,
+    /// Total output reserve, including reasoning, protocol, and end tokens.
+    pub total_output_reserve_tokens: u32,
+    /// Qualified non-spendable safety margin.
+    pub safety_margin_tokens: u32,
+    /// Maximum rendered input remaining after output reserve and margin.
+    pub usable_input_tokens: u32,
+    /// Current platform-observed process generation.
+    pub process_generation: u64,
+    /// Current adapter-owned load generation.
+    pub load_generation: u64,
+    /// Digest of the immutable launch/configuration tuple.
+    pub launch_configuration_sha256: String,
+    /// Digest of the exact serving observation.
+    pub serving_observation_sha256: String,
+    /// Number of currently attributable serving slots.
+    pub parallel_slots: u32,
+    /// Zero-based slot reserved for this synchronous dispatch.
+    pub reserved_slot: u32,
+    /// Effective prompt-cache isolation policy.
+    pub cache_policy: ModelServingCachePolicy,
+    /// Digest binding this record to the run request and rendered context.
+    pub preflight_sha256: String,
 }
 
 /// Terminal content-free run result plus an optional inert proposal.

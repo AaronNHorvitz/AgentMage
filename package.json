@@ -348,6 +348,8 @@
     "story-13.1:finish-usage:evidence:check": "python3 scripts/story_13_1_finish_usage_evidence.py && python3 -m unittest tests.test_story_13_1_finish_usage_evidence",
     "story-13.4:context-profile:evidence:build": "python3 scripts/story_13_4_context_profile_evidence.py --write && python3 -m unittest tests.test_story_13_4_context_profile_evidence",
     "story-13.4:context-profile:evidence:check": "python3 scripts/story_13_4_context_profile_evidence.py && python3 -m unittest tests.test_story_13_4_context_profile_evidence",
+    "story-13.4:dispatch-preflight:evidence:build": "python3 scripts/story_13_4_dispatch_preflight_evidence.py --source-revision HEAD --write && python3 -m unittest tests.test_story_13_4_dispatch_preflight_evidence",
+    "story-13.4:dispatch-preflight:evidence:check": "python3 scripts/story_13_4_dispatch_preflight_evidence.py && python3 -m unittest tests.test_story_13_4_dispatch_preflight_evidence",
     "story-13.5:gateway-identity:evidence:build": "python3 scripts/story_13_5_gateway_identity_evidence.py --write && python3 -m unittest tests.test_story_13_5_gateway_identity_evidence",
     "story-13.5:gateway-identity:evidence:check": "python3 scripts/story_13_5_gateway_identity_evidence.py && python3 -m unittest tests.test_story_13_5_gateway_identity_evidence",
     "story-13.6:gateway-routing:evidence:build": "python3 scripts/story_13_6_gateway_routing_evidence.py --write && python3 -m unittest tests.test_story_13_6_gateway_routing_evidence",

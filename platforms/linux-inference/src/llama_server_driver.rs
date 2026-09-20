@@ -14,10 +14,11 @@ use std::time::{Duration, Instant};
 
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, DecodingProfile, EncodedModelContext, ExactModelProfile,
-    ModelCancellationProbe, ModelFinishReason, ModelHealth, ModelHealthState, ModelLoadReceipt,
-    ModelManifestObservation, ModelProfileId, ModelResourceReport, ModelRunRequest, ModelRunResult,
-    ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity, ModelServingCachePolicy,
-    ModelServingCapabilities, ModelStreamId, ModelStreamSink, ModelTokenUsage, ModelUnloadReceipt,
+    ModelCancellationProbe, ModelDispatchPreflight, ModelFinishReason, ModelHealth,
+    ModelHealthState, ModelLoadReceipt, ModelManifestObservation, ModelProfileId,
+    ModelResourceReport, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
+    ModelRuntimeFailure, ModelRuntimeIdentity, ModelServingCachePolicy, ModelServingCapabilities,
+    ModelStreamId, ModelStreamSink, ModelTokenUsage, ModelUnloadReceipt,
     RuntimeIsolationObservation, StreamedModelFragment, TokenCountResult,
 };
 use serde_json::{Value, json};
@@ -163,6 +164,14 @@ fn valid_socket_path(path: &Path) -> bool {
         && path.file_name().and_then(|name| name.to_str()) == Some("llama-server.sock")
 }
 
+fn valid_sha256(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .as_bytes()
+            .iter()
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+}
+
 struct LoadedRuntime {
     profile_id: ModelProfileId,
     manifest_sha256: String,
@@ -176,6 +185,7 @@ struct LoadedRuntime {
     load_generation: u64,
     capability_observed_at_ms: u64,
     token_counter: String,
+    token_counter_sha256: String,
     decoding: DecodingProfile,
     child: Child,
     runtime_pid: u32,
@@ -489,6 +499,7 @@ impl NativeModelDriver for LlamaServerDriver {
             load_generation: self.load_generation,
             capability_observed_at_ms: 0,
             token_counter: profile.context.token_counter.clone(),
+            token_counter_sha256: profile.context.token_counter_sha256.clone(),
             decoding: profile.decoding.clone(),
             child,
             runtime_pid: 0,
@@ -665,6 +676,7 @@ impl NativeModelDriver for LlamaServerDriver {
         &mut self,
         request: &ModelRunRequest,
         context: &EncodedModelContext,
+        preflight: &ModelDispatchPreflight,
         cancellation: Option<&dyn ModelCancellationProbe>,
         sink: &mut dyn ModelStreamSink,
     ) -> Result<ModelRunResult, ModelRuntimeFailure> {
@@ -679,6 +691,32 @@ impl NativeModelDriver for LlamaServerDriver {
         {
             return Err(failure("model.llama-driver.request-mismatch", false));
         }
+        let current = self.serving_capabilities()?;
+        if preflight.schema_version != CONTRACT_SCHEMA_VERSION
+            || !valid_sha256(&preflight.context_manifest_sha256)
+            || !valid_sha256(&preflight.orchestration_plan_sha256)
+            || preflight.rendered_prompt_sha256 != context.sha256
+            || preflight.token_counter != loaded.token_counter
+            || preflight.token_counter_sha256 != loaded.token_counter_sha256
+            || !valid_sha256(&preflight.preflight_sha256)
+            || preflight.approved_profile_capacity_tokens != loaded.context_capacity_tokens
+            || preflight.served_capacity_tokens != current.context_capacity_tokens
+            || preflight.effective_capacity_tokens
+                != preflight
+                    .approved_profile_capacity_tokens
+                    .min(preflight.served_capacity_tokens)
+            || preflight.total_output_reserve_tokens != request.max_output_tokens
+            || preflight.safety_margin_tokens == 0
+            || preflight.process_generation != current.process_generation
+            || preflight.load_generation != current.load_generation
+            || preflight.launch_configuration_sha256 != current.launch_configuration_sha256
+            || preflight.serving_observation_sha256 != current.observation_sha256
+            || preflight.parallel_slots != current.parallel_slots
+            || preflight.reserved_slot >= current.parallel_slots
+            || preflight.cache_policy != current.cache_policy
+        {
+            return Err(failure("model.prepared-request.stale-binding", false));
+        }
         let started = Instant::now();
         let client = self.client();
         let properties = client.serving_properties()?;
@@ -686,6 +724,13 @@ impl NativeModelDriver for LlamaServerDriver {
             return Err(failure("model.served-capability.drift", false));
         }
         let rendered_prompt_tokens = client.token_count(&context.bytes)?;
+        let fits = rendered_prompt_tokens
+            .checked_add(preflight.total_output_reserve_tokens)
+            .and_then(|used| used.checked_add(preflight.safety_margin_tokens))
+            .is_some_and(|used| used <= preflight.effective_capacity_tokens);
+        if rendered_prompt_tokens != preflight.rendered_prompt_tokens || !fits {
+            return Err(failure("model.prepared-request.token-drift", false));
+        }
         let stream_id =
             ModelStreamId::from_raw(format!("stream:{}", request.model_run_id.as_str()));
         let completion = client.completion_stream(

@@ -135,9 +135,8 @@ where
         context: &ModelContextPacket,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<ModelRunResult, RuntimePortFailure> {
-        self.health().map_err(map_model_error)?;
-        self.count_tokens(context).map_err(map_model_error)?;
-        self.stream(request, context, cancellation)
+        let prepared = self.prepare(request, context).map_err(map_model_error)?;
+        self.dispatch(prepared, cancellation)
             .map_err(map_model_error)
     }
 }
@@ -3607,6 +3606,7 @@ fn map_model_error(error: ModelRuntimeGateError) -> RuntimePortFailure {
         ModelRuntimeGateError::NotLoaded | ModelRuntimeGateError::RuntimeFailure => {
             RuntimePortFailure::Unavailable
         }
+        ModelRuntimeGateError::DispatchCapacityExceeded => RuntimePortFailure::ResourceExhausted,
         ModelRuntimeGateError::ProfileInvalid
         | ModelRuntimeGateError::ProfileNotRegistered
         | ModelRuntimeGateError::ProfileChanged
@@ -3621,6 +3621,9 @@ fn map_model_error(error: ModelRuntimeGateError) -> RuntimePortFailure {
         | ModelRuntimeGateError::AlreadyLoaded
         | ModelRuntimeGateError::RequestMismatch
         | ModelRuntimeGateError::TokenCountMismatch
+        | ModelRuntimeGateError::PreparedRequestStale
+        | ModelRuntimeGateError::DispatchTokenDrift
+        | ModelRuntimeGateError::PreparedRequestMismatch
         | ModelRuntimeGateError::StreamInvalid
         | ModelRuntimeGateError::ResultMismatch => RuntimePortFailure::Invalid,
     }
