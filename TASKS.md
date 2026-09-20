@@ -2748,21 +2748,37 @@ that the existing Linux native adapter or live evaluation path is missing.
     mutation groups enforce accepted governance identity/hash binding, release bindings, graph ordering,
     CTX ownership, and migration/refusal closure.
 - [ ] **Task 13.1.5 - Bind the loaded process to observed serving capabilities**
-  - [ ] **Sub-task 13.1.5.1:** After Task 13.1.4, extend existing load/health/lifecycle contracts
+  - [x] **Sub-task 13.1.5.1:** After Task 13.1.4, extend existing load/health/lifecycle contracts
     with verified per-request capacity, slots/cache policy, runtime/artifact identity, process/load
     generation, launch/configuration digest, effective tokenizer/rendering identity, and supported
     reasoning/context-shift limits. Distinguish observed facts from profile assertions and reject
     missing, unsupported, forged, or stale observations. **Execution:** local; owner=model-runtime.
-  - [ ] **Sub-task 13.1.5.2:** Extend the existing owned native launch with read-only effective
+    Evidence: `served-capability-report.json` binds the versioned content-free observation to the
+    exact endpoint, runtime/artifact/profile, process and load generations, launch digest, observed
+    per-request window, slots/cache policy, tokenizer/template/codec, and reasoning/context-shift
+    behavior. The kernel re-observes and exact-compares that tuple before dispatch; three stable
+    refusal codes cover missing, profile-mismatched, and stale/unsupported observations.
+  - [x] **Sub-task 13.1.5.2:** Extend the existing owned native launch with read-only effective
     capability observation and immutable configuration/slot binding. Derive launch settings from
     the admitted profile, refuse an undersized server, and invalidate on restart, reload, drift,
     or reassignment. Operator-started servers remain ineligible without equivalent qualification;
     never silently resize, reconfigure, or restart them. **Execution:** local; owner=native-adapter.
+    Evidence: the owned b10423 launch derives context and slot arguments from the admitted profile,
+    verifies the immutable `/proc` executable, command line, and process-start generation, and reads
+    llama.cpp's read-only `GET /props` response for the effective per-slot `n_ctx`, total slots,
+    exact model path, and non-sleeping state. Missing, malformed, undersized, sleeping, wrong-model,
+    restarted, reloaded, or reassigned observations fail closed without resizing or restarting a
+    foreign process.
   - [ ] **Sub-task 13.1.5.3:** Exercise `CTX-SERVED` with deterministic adapters before an
     authorized pinned native boundary campaign; include missing properties, profile/served mismatch,
     parallel/shared-cache variants, sleep/reload, stale process identity, and tokenizer/template
     drift. Require zero generation dispatch on refusal and separately attributable adapter evidence.
     **Execution:** local fixtures; native evidence requires the exact authorized runtime and venue.
+    Local progress: the hash-bound report covers missing/forged/undersized facts, stable sleep
+    re-observation, reload and process generations, endpoint/tokenizer/template/slot/cache drift,
+    single-slot and isolated/shared parallel variants, and an explicit zero driver-dispatch count on
+    every refusal. The native campaign remains open:
+    `BLOCKED_EXTERNAL(platform=authorized pinned native inference host; artifact=the exact admitted model artifact and b10423 runtime tuple plus attributable CTX-SERVED raw results; action=the model owner authorizes and runs the restart, reload, sleep, reassignment, tokenizer/template, slot, and cache-policy native boundary campaign and transfers untouched evidence; credential=existing model artifact access if required; payment=none)`; `substitution_set=empty`.
 - [ ] **Task 13.1.6 - Preserve incomplete output and actual token accounting**
   - [ ] **Sub-task 13.1.6.1:** After Task 13.1.4, extend the driver/controller/host result contract
     to retain EOS, configured stop, token limit, context truncation, reasoning exhaustion,
