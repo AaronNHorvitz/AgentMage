@@ -40,7 +40,7 @@
       ],
       "exit_code": 0,
       "id": "model-engine",
-      "output_sha256": "693876a114a9872f83804a48e3543e838a0789dbbcd56ede091637cec6d4e70a",
+      "output_sha256": "78c3744067eff6a3d4e2c8be545b5135aa58fcf06929a46cc5eae209e2607fa0",
       "story_id": "13.1"
     },
     {
@@ -53,7 +53,7 @@
       ],
       "exit_code": 0,
       "id": "linux-native-adapter",
-      "output_sha256": "532445b627341a23a6d3899778e7bd358fe2765fd050914d17185ef1b0dfe06f",
+      "output_sha256": "aa7da395bd4fad1b397abdc72535b9e8f20f779a51e3d45e028f5a5843f645a8",
       "story_id": "13.1"
     },
     {
@@ -65,7 +65,7 @@
       ],
       "exit_code": 0,
       "id": "model-json-contracts",
-      "output_sha256": "05eb56bc4a5e2fb8484b54b23816f662f803a7dd52326c310395c5b9af56c62c",
+      "output_sha256": "4a9d3581787665c34da1bde21c24fd5089215b5349295ff062c08083c550bfc1",
       "story_id": "13.1"
     },
     {
@@ -167,16 +167,16 @@
       "SR-MGM-004"
     ]
   },
-  "source_revision": "36d2ebd1922f9bb660d9d9bdd173f0b483c147c8",
+  "source_revision": "fa4d6284b10c93dbe99ddb93bb31a78dfb3ee2f1",
   "source_sha256": {
-    "kernel/contracts/src/model.rs": "75d295c6a2e16a16e55bfc85321f5bed8f9ea74f5adb47058e2ac786d15559d3",
+    "kernel/contracts/src/model.rs": "34b30269fdde6bcbdc26d0502859279b544122479566a106837eb56fdbdd584e",
     "kernel/engine/src/model_codec.rs": "46afc648d5e538c370cba40bb4963474b64581faec9551361610e89591683741",
     "kernel/engine/src/model_response.rs": "d678d842734355c398115e3638c88d57c06cf1eb2ebb218a4a02522ca0da093d",
-    "kernel/engine/src/model_runtime.rs": "7de667a8e37f6d436f26c5423ce5c5692ec65b5fc3148e7b56f2424c97bc704c",
-    "model-profiles/exact-profile-catalog.json": "52ae10d3d22e53a7172729db7837da72636e4e0951a14678169a02e8896ee2cf",
-    "platforms/linux-inference/src/llama_server_driver.rs": "94f8a0c6d8466f90f342cfd06a7363588566e46e645935f4c068cc4ff702eb5c",
+    "kernel/engine/src/model_runtime.rs": "77fd846b6fe4114cb6a2a684206dea7d3acfae1b3534384a924a6852fb0d5ee5",
+    "model-profiles/exact-profile-catalog.json": "00672eae3b4ff204e87331ec94ee9e49ee56baee7085dc95887e94d8fd63202d",
+    "platforms/linux-inference/src/llama_server_driver.rs": "b5dfa2fbce773b9f24b47b1e3c8c1eccab02107eb5b565c0d19b24ed7bbee88b",
     "platforms/linux-inference/src/muse_atem_codec.rs": "50cb464262daae11d677b7af7cc72ec0b166ad9a147224281d3ea597d0efa5d5",
-    "platforms/linux-inference/src/native_model_adapter.rs": "b9d19739d1b1bdbc54069c3a9f591ce8f4e266190f5c51b78ed5269ea858a7dc",
+    "platforms/linux-inference/src/native_model_adapter.rs": "566ddabb49e5a2ae32a280b3ac87b13bc1e5f77129efa1071e7ff7dbb67d9804",
     "platforms/linux-inference/tests/muse_live_evaluation.rs": "f81aeef927c0a61dc95f66975c84c237ac47d819aa9999de5c07489ae26a825e",
     "scripts/sprint_13_cross_adapter_parity.py": "e73e90243e2717f049e28ab0f72cb8817d45f2e0f4cd68fb4bc28aec07220c12",
     "scripts/sprint_13_evidence.py": "ab921f03a99e15fa0b9e24ef57436f6b66a8759e34e95bc2dc728f4286342ff3",
