@@ -98,6 +98,20 @@ class RemainingPlanBlockerRegisterTests(unittest.TestCase):
         self.assertEqual(value["next_action_row_id"], "13.3.4.1")
         self.assertTrue(value["ready_for_unattended_execution"])
 
+    def test_registered_serving_work_precedes_later_foundational_unknowns(self) -> None:
+        value = build_from_text(
+            """#### [ ] Story 13.1 - Model contracts
+- [ ] **Task 13.1.5 - Bind serving capabilities**
+  - [ ] **Sub-task 13.1.5.1:** Implement observation. **Execution:** local; owner=model-runtime; venue=repository-local.
+#### [ ] Story 50.3 - Evaluation
+- [ ] **Task 50.3.4 - Evaluate**
+  - [ ] **Sub-task 50.3.4.1:** Compare admitted profiles.
+"""
+        )
+        self.assertEqual(value["next_action_kind"], "execute-local")
+        self.assertEqual(value["next_action_row_id"], "13.1.5.1")
+        self.assertTrue(value["ready_for_unattended_execution"])
+
     def test_every_open_row_has_action_owner_venue_and_evidence(self) -> None:
         value = build_from_text(
             """#### [ ] Story 76.2 - Shell

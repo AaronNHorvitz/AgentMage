@@ -27,7 +27,7 @@
       ],
       "exit_code": 0,
       "id": "model-contracts",
-      "output_sha256": "efc7834955f431618a67943aa7495a6cc509df24e01680406a0bd26028609794",
+      "output_sha256": "156ea0f57dc78ed06e5756a8f26ef096fdc83c6ee1cd633e1adebbecd9d64a19",
       "story_id": "13.1"
     },
     {
@@ -40,7 +40,7 @@
       ],
       "exit_code": 0,
       "id": "model-engine",
-      "output_sha256": "28a2c6d5077cc1d80c00c7b57f276a2226f6f0ccb4ad41fcf132e7b78a4d151f",
+      "output_sha256": "693876a114a9872f83804a48e3543e838a0789dbbcd56ede091637cec6d4e70a",
       "story_id": "13.1"
     },
     {
@@ -53,7 +53,7 @@
       ],
       "exit_code": 0,
       "id": "linux-native-adapter",
-      "output_sha256": "69cdad5b044b7bc2a0c3d860ecf6946f65c5277f9f3fdaadcf00952402a6acb5",
+      "output_sha256": "532445b627341a23a6d3899778e7bd358fe2765fd050914d17185ef1b0dfe06f",
       "story_id": "13.1"
     },
     {
@@ -65,7 +65,7 @@
       ],
       "exit_code": 0,
       "id": "model-json-contracts",
-      "output_sha256": "602863b36883e161f19a6564ea0a04f61eb5c2b76a4a76bea28d760b85889fed",
+      "output_sha256": "05eb56bc4a5e2fb8484b54b23816f662f803a7dd52326c310395c5b9af56c62c",
       "story_id": "13.1"
     },
     {
@@ -84,14 +84,14 @@
       ],
       "exit_code": 0,
       "id": "model-policy-evidence",
-      "output_sha256": "60eabc45f6fc8f07dbaebd4d8b3a501b54c275191e92b07415a3dd8edea1d778",
+      "output_sha256": "ed317d9175f0332b9364cf3a5608aa8ac260708fa57552ac9e7e7fa802fc753d",
       "story_id": "13.2"
     }
   ],
   "evidence_sha256": {
     "artifacts/sprints/sprint-13/story-13.1/muse-native-adapter-contract-v2.json": "9c4980f2167f052c4da1a063f470bb1d5852b616247d3b6dc507910eddedaf19",
     "artifacts/sprints/sprint-13/story-13.2/linux-cross-adapter-parity.json": "6733691ce2a645dec00fc7dfec22403d82d1daf00bf1970d69b8ff3752ce1503",
-    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "d3073ed89b2ce7467dd031181d91a4ab70a164c20b8487b82b584cc7d09f54c1",
+    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "e5a34ad3ee8b42da7b6d01e9fa9bb6a3fbe830ad58e9216ffe99b44b893b57f9",
     "artifacts/sprints/sprint-13/story-13.3/muse-live-install.json": "91826d99f497a212ab32f87176a5b034a8b7e1fe510c9a12a05d95fc38a8dd18",
     "artifacts/sprints/sprint-13/story-13.3/muse-profile-evaluation.json": "88f560db0a1486f39a1004a0cd88e699948d194bf9221ee6e1a6d037c2e5b670",
     "artifacts/sprints/sprint-13/story-13.3/muse-sandbox-inference.json": "07260b4b60bc5d19d986fdea9bea807b3aa9e0cc543e0ce3a145a3c56a0bd547",
@@ -167,15 +167,15 @@
       "SR-MGM-004"
     ]
   },
-  "source_revision": "7e16acb76d0835d87dba9cda5fb5a4529fe6d668",
+  "source_revision": "36d2ebd1922f9bb660d9d9bdd173f0b483c147c8",
   "source_sha256": {
     "kernel/contracts/src/model.rs": "75d295c6a2e16a16e55bfc85321f5bed8f9ea74f5adb47058e2ac786d15559d3",
     "kernel/engine/src/model_codec.rs": "46afc648d5e538c370cba40bb4963474b64581faec9551361610e89591683741",
     "kernel/engine/src/model_response.rs": "d678d842734355c398115e3638c88d57c06cf1eb2ebb218a4a02522ca0da093d",
-    "kernel/engine/src/model_runtime.rs": "6da5daa2e0423c469aaa84c2795c796d5021ff08223797b8f142c2f962d73f5c",
-    "model-profiles/exact-profile-catalog.json": "bf10ed028860ffc97a903545edd82d0ea6273282e08d7d2e8458b87ae0a040bc",
+    "kernel/engine/src/model_runtime.rs": "7de667a8e37f6d436f26c5423ce5c5692ec65b5fc3148e7b56f2424c97bc704c",
+    "model-profiles/exact-profile-catalog.json": "52ae10d3d22e53a7172729db7837da72636e4e0951a14678169a02e8896ee2cf",
     "platforms/linux-inference/src/llama_server_driver.rs": "94f8a0c6d8466f90f342cfd06a7363588566e46e645935f4c068cc4ff702eb5c",
-    "platforms/linux-inference/src/muse_atem_codec.rs": "c4a177fb449ba8590dd901ce19ebecd82d55fb21207f641362cc0c231fc47982",
+    "platforms/linux-inference/src/muse_atem_codec.rs": "50cb464262daae11d677b7af7cc72ec0b166ad9a147224281d3ea597d0efa5d5",
     "platforms/linux-inference/src/native_model_adapter.rs": "b9d19739d1b1bdbc54069c3a9f591ce8f4e266190f5c51b78ed5269ea858a7dc",
     "platforms/linux-inference/tests/muse_live_evaluation.rs": "f81aeef927c0a61dc95f66975c84c237ac47d819aa9999de5c07489ae26a825e",
     "scripts/sprint_13_cross_adapter_parity.py": "e73e90243e2717f049e28ab0f72cb8817d45f2e0f4cd68fb4bc28aec07220c12",

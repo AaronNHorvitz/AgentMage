@@ -7038,7 +7038,9 @@ adapters may be exercised as they become available without claiming their later 
 - [ ] **Task 50.3.4 - Close evaluation, documentation, and removal**
   - [ ] **Sub-task 50.3.4.1:** Compare admitted model profiles without changing invariant safety
         controls; report coverage, quality, invalid calls, interventions, resource use, and limitations
-        per exact tuple.
+        per exact tuple. **Dependency state:** Blocked on Story 13.3 and Task 13.4.5; the current
+        exact catalog contains zero admitted, enabled profiles, so rejected candidates and synthetic
+        fixtures cannot substitute for the required comparison.
   - [x] **Sub-task 50.3.4.2:** Disable and remove source persistence, parser adapters, workflow
         supervision, and clients separately and together; require native baseline operation and no
         undeclared data, process, socket, cache, grant, or registration residue. Evidence: the closed
@@ -7056,6 +7058,9 @@ adapters may be exercised as they become available without claiming their later 
         non-claim and invalidation boundary.
   - [ ] **Sub-task 50.3.4.4:** Run applicable `RV-03`, `RV-04`, `RV-08`, `RV-11`, `RV-12`,
         `RV-15` through `RV-18`, and `RV-25` protocols and retain independent review where required.
+        **Dependency state:** Blocked on Sub-task 50.3.4.1 so the applicable model-comparison
+        protocols bind exact admitted tuples; independent review remains a separate required gate
+        and is not supplied by local protocol execution.
   - [x] **Sub-task 50.3.4.5:** Implement independent feature flags for artifact ingress, each
         extractor, OCR, retrieval, workflow supervision, model-assisted repair, participant, provider
         compatibility, and MCP; disabled features leave no registration or authority. Evidence:
@@ -7076,6 +7081,8 @@ adapters may be exercised as they become available without claiming their later 
         product tests execute migration, activation, rollback, emergency disablement, reenrollment, and
         a post-release-phase diagnostic rehearsal. Because AgentMage is not released, the actual
         post-release operator review remains open and the rehearsal is not substituted for it.
+        **Dependency state:** Blocked on Story 25.3 and Sub-task 50.3.4.4; release qualification and
+        its required reviews must exist before the actual post-release operator review can run.
 
 ##### Story Acceptance Criteria
 
@@ -7904,7 +7911,7 @@ with honest reading-order, table, OCR, confidence, and encryption limitations.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 60.2.1 - Adapt native PDF text extraction**
+- [x] **Task 60.2.1 - Adapt native PDF text extraction**
   - [x] **Sub-task 60.2.1.1:** Implement the shared extractor trait over the existing PDF parser
         with page boundaries, spans, reading-order observations, text density, image-only detection,
         password/encryption state, warnings, and page-level provenance.
@@ -7928,10 +7935,12 @@ with honest reading-order, table, OCR, confidence, and encryption limitations.
 - [ ] **Task 60.2.2 - Admit OCR as a separate optional path**
   - [ ] **Sub-task 60.2.2.1:** Define an OCR trait and evaluate pure-Rust and optional isolated
         native candidates for license, model files, quality, language, CPU/GPU, package size, platform,
-        cancellation, and security; adopt none without an ADR-backed disposition.
+        cancellation, and security; adopt none without an ADR-backed disposition. **Dependency
+        state:** Blocked on Story 23.5, Story 50.3, and Story 60.1.
   - [ ] **Sub-task 60.2.2.2:** Implement per-page eligibility and fallback with page/image regions,
         engine/model identity, preprocessing, language, confidence, thresholds, and explicit
-        machine-derived status; never merge OCR with observed PDF text silently.
+        machine-derived status; never merge OCR with observed PDF text silently. **Dependency
+        state:** Blocked on Story 23.5, Story 50.3, and Story 60.1.
   - [ ] **Sub-task 60.2.2.3:** Package OCR behind an optional feature and isolated bounded worker;
         absence degrades to a visible scanned-page state and never blocks native PDF extraction.
 
@@ -7945,9 +7954,10 @@ with honest reading-order, table, OCR, confidence, and encryption limitations.
 - [ ] **Task 60.2.3 - Integrate lifecycle, context, and tools**
   - [ ] **Sub-task 60.2.3.1:** Emit source manifests, native and OCR sections, extraction metrics,
         warnings, page retrieval, context candidates, and content-addressed references through shared
-        runtime paths.
+        runtime paths. **Dependency state:** Blocked on Story 23.5, Story 50.3, and Story 60.1.
   - [ ] **Sub-task 60.2.3.2:** Implement cancellation, restart, cache and OCR-model invalidation,
-        retention, deletion, reattachment, and multi-model context accounting.
+        retention, deletion, reattachment, and multi-model context accounting. **Dependency state:**
+        Blocked on Story 23.5, Story 50.3, and Story 60.1.
 
   Local source progress: the Rust host now owns exact PDF admission and projection caching, optional
   binding to an existing content-addressed runtime artifact, digest-sealed restart reconstruction,
@@ -7959,10 +7969,11 @@ with honest reading-order, table, OCR, confidence, and encryption limitations.
 - [ ] **Task 60.2.4 - Verify fidelity, isolation, and resources**
   - [ ] **Sub-task 60.2.4.1:** Test digital, scanned, mixed, encrypted, malformed, recursive,
         oversized, action-bearing, image-heavy, low-text, multilingual, cancellation, timeout, crash,
-        low-memory, and cleanup fixtures.
+        low-memory, and cleanup fixtures. **Dependency state:** Blocked on Story 23.5, Story 50.3,
+        and Story 60.1.
   - [ ] **Sub-task 60.2.4.2:** Require exact page provenance, visible confidence and limitations,
         no active content or network, bounded extraction/OCR, complete context accounting, and client
-        parity.
+        parity. **Dependency state:** Blocked on Story 23.5, Story 50.3, and Story 60.1.
 
   Local source progress: two host fixtures cover native admission, cache hits, retained restart,
   source replacement, stale tool calls, model-plan changes, context accounting, no-OCR degradation,
@@ -9761,20 +9772,22 @@ required before MCP registration.
 - [ ] **Task 81.2.2 - Verify conformance and isolation**
   - [ ] **Sub-task 81.2.2.1:** Run native-versus-MCP golden parity for valid, malformed, stale,
         oversized, restricted, unsupported, cancelled, timeout, crash, duplicate, and cross-session
-        cases; require equal correctness state and receipts.
+        cases; require equal correctness state and receipts. **Dependency state:** Blocked on Story
+        21.3, Story 50.3, Story 80.1, and Story 81.1.
   - [x] **Sub-task 81.2.2.2:** Attempt direct parser/store access, writable tools, hidden roots,
         undeclared network, credential use, authority transfer, alternate limits, and result-as-evidence;
         require structural absence or denial. Evidence: the artifact adapter contract rejects any filesystem, process, network, parser/backend, or executor dependency; manifest admission rejects writes, credentials, undeclared destinations, shadows, and broadened bounds.
   - [ ] **Sub-task 81.2.2.3:** Disable and remove MCP during idle and active calls; require native
         artifact tools and clients remain functional and no process, socket, registration, cache,
-        source, grant, or retained state remains.
+        source, grant, or retained state remains. **Dependency state:** Blocked on Story 21.3,
+        Story 50.3, Story 80.1, and Story 81.1.
 - [ ] **Task 81.2.3 - Document support and evidence**
   - [x] **Sub-task 81.2.3.1:** Publish MCP capability/version matrices, client limitations,
         troubleshooting, removal, and the explicit statement that MCP cannot recover bytes it was not
         given through a usable handle or staged artifact. Evidence: `docs/guides/mcp-artifact-tools.md` publishes all seven exact mappings, invariants, removal limits, and the required missing-byte statement.
   - [ ] **Sub-task 81.2.3.2:** Retain manifests, schema diffs, parity results, attack traces,
         cancellation/cleanup results, receipts, and applicable `RV-11`, `RV-16`, `RV-17`, and `RV-23`
-        evidence.
+        evidence. **Dependency state:** Blocked on Story 21.3, Story 50.3, Story 80.1, and Story 81.1.
 
 ##### Story Acceptance Criteria
 

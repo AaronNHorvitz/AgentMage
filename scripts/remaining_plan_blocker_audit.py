@@ -262,7 +262,7 @@ def _paths(
 
 def _critical_rank(record: dict[str, Any]) -> tuple[int, int]:
     story = record.get("story_id")
-    if record["row_id"].startswith("13.1.4"):
+    if record["row_id"].startswith(("13.1.4", "13.1.5", "13.1.6")):
         return 10, record["line"]
     if story in CRITICAL_STORY_ORDER:
         return CRITICAL_STORY_ORDER[story], record["line"]
