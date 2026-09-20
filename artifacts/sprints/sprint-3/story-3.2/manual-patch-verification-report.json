@@ -274,8 +274,8 @@
   },
   "task_id": "3.2.2.1",
   "verification_engine": {
-    "executable_sha256": "0469f12d909da7bd5401e584f7c0d3f19db10270c21cd238823d08227bcf8c00",
+    "executable_sha256": "ac3648bc6db6ba9c9be4da0abf04ed6c28cdac6f6757f83f0e3d6d29f33248f4",
     "path": "/usr/bin/openssl",
-    "version": "OpenSSL 3.5.7 9 Jun 2026 (Library: OpenSSL 3.5.7 9 Jun 2026)"
+    "version": "OpenSSL 3.5.8 25 Aug 2026 (Library: OpenSSL 3.5.8 25 Aug 2026)"
   }
 }
