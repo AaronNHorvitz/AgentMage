@@ -41,12 +41,34 @@ class ConfigurationStartupEvidenceTests(unittest.TestCase):
                 for item in report["result_bundles"]
             ]
             lines.append(f"test configuration::tests::{EXPECTED_TEST} ... ok")
+            lines.append("test result: ok. 1 passed; 0 failed; 0 ignored")
             return "\n".join(lines)
 
         self.assertEqual(
             list(execute_gate(runner=runner)), report["result_bundles"]
         )
         self.assertEqual(calls, [COMMAND, CLIPPY_COMMAND])
+
+    def test_gate_parses_nocapture_result_on_the_test_status_line(self) -> None:
+        report = read_json(REPORT_PATH)
+
+        def runner(command: tuple[str, ...], _root: Path) -> str:
+            if command == CLIPPY_COMMAND:
+                return "lint passed"
+            lines = [
+                (
+                    f"test configuration::tests::{EXPECTED_TEST} ... {RESULT_PREFIX}"
+                    f"{json.dumps(report['result_bundles'][0], separators=(',', ':'))}"
+                )
+            ]
+            lines.extend(
+                f"{RESULT_PREFIX}{json.dumps(item, separators=(',', ':'))}"
+                for item in report["result_bundles"][1:]
+            )
+            lines.extend(("ok", "test result: ok. 1 passed; 0 failed; 0 ignored"))
+            return "\n".join(lines)
+
+        self.assertEqual(list(execute_gate(runner=runner)), report["result_bundles"])
 
     def test_missing_or_failed_test_stops_evidence_generation(self) -> None:
         def missing(_command: tuple[str, ...], _root: Path) -> str:

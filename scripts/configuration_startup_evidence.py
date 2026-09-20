@@ -74,9 +74,6 @@ SOURCE_PATHS = (
     "scripts/configuration_startup_evidence.py",
     "tests/test_configuration_startup_evidence.py",
 )
-TEST_NAME = re.compile(
-    r"^test configuration::tests::([a-z0-9_]+) \.\.\. ok$", re.MULTILINE
-)
 RESULT_PREFIX = "agentmage-startup-result:"
 HASH = re.compile(r"^[0-9a-f]{64}$")
 Runner = Callable[[Sequence[str], Path], str]
@@ -238,12 +235,13 @@ def execute_gate(
     root: Path = ROOT, runner: Runner = subprocess_runner
 ) -> tuple[dict[str, Any], ...]:
     output = runner(COMMAND, root)
-    if TEST_NAME.findall(output) != [EXPECTED_TEST]:
+    test_prefix = f"test configuration::tests::{EXPECTED_TEST} ... "
+    if output.count(test_prefix) != 1 or "test result: ok. 1 passed; 0 failed;" not in output:
         raise RuntimeError("configuration startup test closure failed")
     results = []
     for line in output.splitlines():
-        if line.startswith(RESULT_PREFIX):
-            results.append(json.loads(line.removeprefix(RESULT_PREFIX)))
+        if RESULT_PREFIX in line:
+            results.append(json.loads(line.split(RESULT_PREFIX, maxsplit=1)[1]))
     failures = validate_results(results, root)
     if failures:
         raise RuntimeError("; ".join(failures))
