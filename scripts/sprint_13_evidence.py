@@ -411,13 +411,16 @@ def validate_report(report: Any, *, verify_current: bool = True) -> list[str]:
         failures.append("Sprint 13 evidence state changed")
     stories = report.get("stories", [])
     if (
-        len(stories) != 3
-        or [item.get("story_id") for item in stories] != ["13.1", "13.2", "13.3"]
+        len(stories) != 4
+        or [item.get("story_id") for item in stories] != ["13.1", "13.2", "13.3", "13.4"]
         or stories[0].get("finish_usage_local_contract_passed") is not True
         or stories[0].get("macos_adapter_implemented") is not False
         or stories[1].get("docker_live_parity_evidence") is not True
         or stories[1].get("all_linux_adapters_meet_thresholds") is not False
         or stories[2].get("profile_enabled") is not False
+        or stories[3].get("dispatch_preflight_local_contract_passed") is not True
+        or stories[3].get("native_boundary_campaign_executed") is not False
+        or stories[3].get("profile_enabled") is not False
     ):
         failures.append("Sprint 13 story truth changed")
     blockers = report.get("blockers", [])

@@ -47,6 +47,9 @@ def report() -> dict[str, object]:
                 "finish_usage_status": "PASS_LOCAL_CONTRACT",
                 "finish_usage_local_contract_complete": True,
                 "finish_usage_platform_qualified": False,
+                "dispatch_preflight_status": "PASS_LOCAL_FIXTURES_BLOCKED_NATIVE_BOUNDARY",
+                "dispatch_preflight_local_contract_complete": True,
+                "dispatch_preflight_native_campaign_executed": False,
             },
         ),
     ):
@@ -69,6 +72,7 @@ class Sprint13EvidenceTests(unittest.TestCase):
         self.assertEqual(evidence.validate_report(value, verify_current=False), [])
         self.assertTrue(value["summary"]["local_contract_passed"])
         self.assertTrue(value["stories"][0]["finish_usage_local_contract_passed"])
+        self.assertTrue(value["stories"][3]["dispatch_preflight_local_contract_passed"])
         self.assertEqual(value["summary"]["candidate_disposition"], "REJECTED")
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertEqual(len(value["blockers"]), 3)
@@ -89,6 +93,9 @@ class Sprint13EvidenceTests(unittest.TestCase):
             ),
             lambda item: item["stories"][1].update({"all_linux_adapters_meet_thresholds": True}),
             lambda item: item["stories"][2].update({"profile_enabled": True}),
+            lambda item: item["stories"][3].update(
+                {"native_boundary_campaign_executed": True}
+            ),
             lambda item: item["blockers"].pop(),
             lambda item: item["summary"].update({"automatic_fallback": True}),
             lambda item: item["summary"].update({"release_approval": True}),
