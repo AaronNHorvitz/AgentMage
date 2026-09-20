@@ -27,7 +27,7 @@
       ],
       "exit_code": 0,
       "id": "model-contracts",
-      "output_sha256": "156ea0f57dc78ed06e5756a8f26ef096fdc83c6ee1cd633e1adebbecd9d64a19",
+      "output_sha256": "d09c0bb02a1717746bac614cf7e4f3a2cf61101e7789446b62323a6d70297288",
       "story_id": "13.1"
     },
     {
@@ -40,7 +40,7 @@
       ],
       "exit_code": 0,
       "id": "model-engine",
-      "output_sha256": "a8da1bf533bb746e430f3250e27a2947567ffa27ac6bc58ca49a6ba3f92891b6",
+      "output_sha256": "25362c788af23f08732cc5751960a9e789116bb1ca9b06f0ad1ab044919d21c1",
       "story_id": "13.1"
     },
     {
@@ -53,7 +53,7 @@
       ],
       "exit_code": 0,
       "id": "linux-native-adapter",
-      "output_sha256": "e79418eff409181581a44a777f27d5240c5a5bc56fad4903e4296b55b6a6bb83",
+      "output_sha256": "a82d5f37a70f480785da0f89d9be4942fc793f90082057d55669c928753a0f02",
       "story_id": "13.1"
     },
     {
@@ -65,7 +65,7 @@
       ],
       "exit_code": 0,
       "id": "model-json-contracts",
-      "output_sha256": "0ce34b4649df3e3e1e2d5b087d95b3d3860fcbc830a42c9702c0e8f7d2c565d3",
+      "output_sha256": "1905ff6145780053d432022a0815c7bd6beafc20d2627f565c1f30495b7c694b",
       "story_id": "13.1"
     },
     {
@@ -84,11 +84,12 @@
       ],
       "exit_code": 0,
       "id": "model-policy-evidence",
-      "output_sha256": "fbae42af29c332f1c5b925a67e74ec673369763b9e0cf4af7ee72259e213093b",
+      "output_sha256": "06c42f10a34617e3f26935e8d79a2c6bd934218b1c88251d68544d3a040074a4",
       "story_id": "13.2"
     }
   ],
   "evidence_sha256": {
+    "artifacts/sprints/sprint-13/story-13.1/finish-usage-report.json": "f4902131f2ca3322bc424a9af280a795769d44be499345997b2929c56041bfa3",
     "artifacts/sprints/sprint-13/story-13.1/muse-native-adapter-contract-v2.json": "9c4980f2167f052c4da1a063f470bb1d5852b616247d3b6dc507910eddedaf19",
     "artifacts/sprints/sprint-13/story-13.2/linux-cross-adapter-parity.json": "6733691ce2a645dec00fc7dfec22403d82d1daf00bf1970d69b8ff3752ce1503",
     "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "e5a34ad3ee8b42da7b6d01e9fa9bb6a3fbe830ad58e9216ffe99b44b893b57f9",
@@ -102,6 +103,9 @@
   "evidence_state": {
     "adapter_contract": "CONTRACT-PASS-LIVE-BLOCKED",
     "codec_contract": "PASS-CONTRACT",
+    "finish_usage_local_contract_complete": true,
+    "finish_usage_platform_qualified": false,
+    "finish_usage_status": "PASS_LOCAL_CONTRACT",
     "gemma_12b_disposition": "REJECTED",
     "gemma_e4b_disposition": "REJECTED",
     "linux_parity_status": "COMPLETE-NEGATIVE-BLOCKED-QUALITY",
@@ -167,24 +171,25 @@
       "SR-MGM-004"
     ]
   },
-  "source_revision": "e7863b5a1fc300e1d2a94b9cfc0ce17388584443",
+  "source_revision": "6f6c815d2a210bd278f9fb11a347b8390ed739bd",
   "source_sha256": {
-    "kernel/contracts/src/model.rs": "34b30269fdde6bcbdc26d0502859279b544122479566a106837eb56fdbdd584e",
+    "kernel/contracts/src/model.rs": "25421b3a43730caa17f4d4bff1e58fdc6e5daefbbc31cb6702bb76050f11a1d6",
     "kernel/engine/src/model_codec.rs": "46afc648d5e538c370cba40bb4963474b64581faec9551361610e89591683741",
     "kernel/engine/src/model_response.rs": "d678d842734355c398115e3638c88d57c06cf1eb2ebb218a4a02522ca0da093d",
-    "kernel/engine/src/model_runtime.rs": "77fd846b6fe4114cb6a2a684206dea7d3acfae1b3534384a924a6852fb0d5ee5",
-    "model-profiles/exact-profile-catalog.json": "00672eae3b4ff204e87331ec94ee9e49ee56baee7085dc95887e94d8fd63202d",
-    "platforms/linux-inference/src/llama_server_driver.rs": "b5dfa2fbce773b9f24b47b1e3c8c1eccab02107eb5b565c0d19b24ed7bbee88b",
+    "kernel/engine/src/model_runtime.rs": "a45951922c93d5ce171586550389348f473f1d745f5f8e40ba863f170b72cc5f",
+    "model-profiles/exact-profile-catalog.json": "afce94c9963f433fb3b5126677f768d1db8eb7d0d5af9340b2b5fb216fd575c9",
+    "platforms/linux-inference/src/llama_server_driver.rs": "96f5b9ed1b78a53f4d7787af97b5672ab66c910cc13aa70ff7bb37de6ece9f85",
     "platforms/linux-inference/src/muse_atem_codec.rs": "50cb464262daae11d677b7af7cc72ec0b166ad9a147224281d3ea597d0efa5d5",
     "platforms/linux-inference/src/native_model_adapter.rs": "566ddabb49e5a2ae32a280b3ac87b13bc1e5f77129efa1071e7ff7dbb67d9804",
     "platforms/linux-inference/tests/muse_live_evaluation.rs": "f81aeef927c0a61dc95f66975c84c237ac47d819aa9999de5c07489ae26a825e",
     "scripts/sprint_13_cross_adapter_parity.py": "e73e90243e2717f049e28ab0f72cb8817d45f2e0f4cd68fb4bc28aec07220c12",
-    "scripts/sprint_13_evidence.py": "ab921f03a99e15fa0b9e24ef57436f6b66a8759e34e95bc2dc728f4286342ff3",
+    "scripts/sprint_13_evidence.py": "85efb5ea27b1b558b342ad10ada5a75c9e758475c25c041aab4432125d7ca8f8",
     "tests/test_sprint_13_cross_adapter_parity.py": "a654425e2a7ac8fc0a48e3ed2d83fd6cd0ddc3d4111325cf916b7c533635bc50",
-    "tests/test_sprint_13_evidence.py": "8023d4cc1f5c1a87ea4dc91d93da61fe723e34a72dc5dffc089579b9beac52f2"
+    "tests/test_sprint_13_evidence.py": "ae6385ba3ae9ec6a7239a6be76bec2579a5a1d8398705de0a9469739f6f8215e"
   },
   "stories": [
     {
+      "finish_usage_local_contract_passed": true,
       "local_contract_passed": true,
       "macos_adapter_implemented": false,
       "macos_execution_evidence": false,
