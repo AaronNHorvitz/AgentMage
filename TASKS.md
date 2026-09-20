@@ -2713,7 +2713,7 @@ that the existing Linux native adapter or live evaluation path is missing.
   - [x] **Sub-task 13.1.3.4:** `S-013-AT01` executes the pinned factual/coding/tool-call corpus under separately named quality and diagnostic-repeatability profiles; assert schema validity, grounding, uncertainty, repeated-trial statistics, negative results, and tuple differences are reported without a universal determinism claim.
   - [ ] **Sub-task 13.1.3.5 - Product security evidence:** Complete `AT-MODEL-003` and the contract portion of `AT-MODEL-005`; map `SR-PLT-007`, `SR-SUP-006` through `SR-SUP-009`, `SR-AI-001` through `SR-AI-016`, and `RV-13`/`RV-14`; retain Model BOM, licenses, hashes, transformation provenance, codec vectors, adapter traces, evaluations, and independent decoder review.
 
-- [ ] **Task 13.1.4 - Register the served-context and continuity correction**
+- [x] **Task 13.1.4 - Register the served-context and continuity correction**
   - [x] **Sub-task 13.1.4.1:** Reconcile PRD G1/G2 with `AM-MDL-004`, `AM-MDL-006`, `AM-CTX-001`
     through `AM-CTX-003`, `AM-SES-001`, `AM-SES-002`, existing runtime/gateway/security contracts,
     and privacy/retention rules. Record the dated owner request, additions-only requirement/test
