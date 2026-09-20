@@ -40,6 +40,7 @@ EVIDENCE_PATHS: Final = (
     "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json",
     "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json",
     "artifacts/sprints/sprint-13/story-13.2/linux-cross-adapter-parity.json",
+    "artifacts/sprints/sprint-13/story-13.1/finish-usage-report.json",
 )
 COMMANDS: Final = (
     (
@@ -106,6 +107,25 @@ EXPECTED_SECURITY: Final = {
 }
 REVISION: Final = re.compile(r"^[0-9a-f]{40}$")
 SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
+EXPECTED_EVIDENCE_STATE: Final = {
+    "adapter_contract": "CONTRACT-PASS-LIVE-BLOCKED",
+    "codec_contract": "PASS-CONTRACT",
+    "live_lifecycle": "ISOLATED-LIFECYCLE-PASS",
+    "live_inference": "SANDBOXED-LIVE-INFERENCE-PASS",
+    "muse_evaluation": "REJECTED",
+    "muse_disposition": "REJECTED",
+    "gemma_e4b_disposition": "REJECTED",
+    "gemma_12b_disposition": "REJECTED",
+    "packet_capture_executed": False,
+    "quality_trial_count": 12,
+    "repeatability_trial_count": 5,
+    "linux_parity_status": "COMPLETE-NEGATIVE-BLOCKED-QUALITY",
+    "linux_parity_trials_complete": True,
+    "linux_parity_thresholds_passed": False,
+    "finish_usage_status": "PASS_LOCAL_CONTRACT",
+    "finish_usage_local_contract_complete": True,
+    "finish_usage_platform_qualified": False,
+}
 
 
 def sha256_bytes(value: bytes) -> str:
@@ -217,6 +237,13 @@ def evidence_state() -> dict[str, Any]:
         "linux_parity_thresholds_passed": values[EVIDENCE_PATHS[8]]["disposition"][
             "all_adapters_meet_thresholds"
         ],
+        "finish_usage_status": values[EVIDENCE_PATHS[9]]["status"],
+        "finish_usage_local_contract_complete": values[EVIDENCE_PATHS[9]]["claims"][
+            "local_contract_complete"
+        ],
+        "finish_usage_platform_qualified": values[EVIDENCE_PATHS[9]]["claims"][
+            "platform_qualified"
+        ],
     }
 
 
@@ -224,23 +251,7 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
     references = production_family_references()
     state = evidence_state()
     command_pass = all(item["exit_code"] == 0 for item in commands)
-    expected_state = {
-        "adapter_contract": "CONTRACT-PASS-LIVE-BLOCKED",
-        "codec_contract": "PASS-CONTRACT",
-        "live_lifecycle": "ISOLATED-LIFECYCLE-PASS",
-        "live_inference": "SANDBOXED-LIVE-INFERENCE-PASS",
-        "muse_evaluation": "REJECTED",
-        "muse_disposition": "REJECTED",
-        "gemma_e4b_disposition": "REJECTED",
-        "gemma_12b_disposition": "REJECTED",
-        "packet_capture_executed": False,
-        "quality_trial_count": 12,
-        "repeatability_trial_count": 5,
-        "linux_parity_status": "COMPLETE-NEGATIVE-BLOCKED-QUALITY",
-        "linux_parity_trials_complete": True,
-        "linux_parity_thresholds_passed": False,
-    }
-    local_contract_pass = command_pass and not references and state == expected_state
+    local_contract_pass = command_pass and not references and state == EXPECTED_EVIDENCE_STATE
     return {
         "schema_version": 1,
         "record_type": "sprint_13_local_evidence",
@@ -262,6 +273,7 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
                     else "BLOCKED"
                 ),
                 "local_contract_passed": local_contract_pass,
+                "finish_usage_local_contract_passed": local_contract_pass,
                 "macos_adapter_implemented": False,
                 "macos_execution_evidence": False,
             },
@@ -373,10 +385,13 @@ def validate_report(report: Any, *, verify_current: bool = True) -> list[str]:
         failures.append("Sprint 13 command evidence is invalid")
     if report.get("production_kernel_family_references") != []:
         failures.append("production kernel contains a model-family reference")
+    if report.get("evidence_state") != EXPECTED_EVIDENCE_STATE:
+        failures.append("Sprint 13 evidence state changed")
     stories = report.get("stories", [])
     if (
         len(stories) != 3
         or [item.get("story_id") for item in stories] != ["13.1", "13.2", "13.3"]
+        or stories[0].get("finish_usage_local_contract_passed") is not True
         or stories[0].get("macos_adapter_implemented") is not False
         or stories[1].get("docker_live_parity_evidence") is not True
         or stories[1].get("all_linux_adapters_meet_thresholds") is not False

@@ -44,6 +44,9 @@ def report() -> dict[str, object]:
                 "linux_parity_status": "COMPLETE-NEGATIVE-BLOCKED-QUALITY",
                 "linux_parity_trials_complete": True,
                 "linux_parity_thresholds_passed": False,
+                "finish_usage_status": "PASS_LOCAL_CONTRACT",
+                "finish_usage_local_contract_complete": True,
+                "finish_usage_platform_qualified": False,
             },
         ),
     ):
@@ -65,6 +68,7 @@ class Sprint13EvidenceTests(unittest.TestCase):
         value = report()
         self.assertEqual(evidence.validate_report(value, verify_current=False), [])
         self.assertTrue(value["summary"]["local_contract_passed"])
+        self.assertTrue(value["stories"][0]["finish_usage_local_contract_passed"])
         self.assertEqual(value["summary"]["candidate_disposition"], "REJECTED")
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertEqual(len(value["blockers"]), 3)
@@ -77,6 +81,12 @@ class Sprint13EvidenceTests(unittest.TestCase):
                 {"family": "muse"}
             ),
             lambda item: item["stories"][0].update({"macos_adapter_implemented": True}),
+            lambda item: item["stories"][0].update(
+                {"finish_usage_local_contract_passed": False}
+            ),
+            lambda item: item["evidence_state"].update(
+                {"finish_usage_platform_qualified": True}
+            ),
             lambda item: item["stories"][1].update({"all_linux_adapters_meet_thresholds": True}),
             lambda item: item["stories"][2].update({"profile_enabled": True}),
             lambda item: item["blockers"].pop(),
