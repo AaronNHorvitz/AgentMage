@@ -1140,3 +1140,50 @@ at the then-current `HEAD`. That costs roughly one 14-minute build.
 Product truth remains `scaffolded`. No production model is enabled, no platform or package is
 qualified, and no release or independent-review claim is made. The clean Linux build passing is
 build reproducibility evidence, not platform qualification and not a release.
+
+## Claude Code checkpoint — 2026-09-20 19:00 CDT
+
+Continuing under the Decision 0054 delegation. Commits `20dce0e6` and the Decision 0057 record
+below complete this block.
+
+### Strict Clippy and the Sprint 13 aggregate
+
+Strict Clippy passed with `-D warnings` and produced no warnings on all four crates named in the
+recorded continuation: `agentmage-kernel-contracts`, `agentmage-kernel-engine`,
+`agentmage-platform-linux-inference`, and `agentmage-host`. The Sprint 13 aggregate was renewed at
+the current source and reports its own honest verdict verbatim: **"Sprint 13 local contracts pass;
+sprint remains blocked on three explicit evidence classes"** (`20dce0e6`).
+
+### Package lifecycle — direction fixed by Decision 0057
+
+The install failure diagnosed in the previous checkpoint was taken further rather than patched.
+Both pinned base images were probed directly and provide none of the three declared
+prerequisites:
+
+```text
+docker.io/library/fedora@sha256:89f61a12…   bwrap MISSING  git MISSING  systemctl MISSING
+docker.io/library/ubuntu@sha256:7b202b0e…   bwrap MISSING  git MISSING  systemctl MISSING
+```
+
+Two resolutions were considered and **rejected in writing**: `--nodeps`, which would stop the
+evidence checking dependency declarations at all; and running the lifecycle in a locally built
+image carrying the prerequisites, which would retire the tested control that the lifecycle runs on
+an immutable, publicly verifiable image (`test_mutable_image_reference_is_refused_before_inspection`
+pins that behaviour). Both are weakenings and neither was taken.
+
+Decision 0057 fixes the direction instead: resolve the prerequisite package closure on the host
+where network use is already an accepted recorded phase, record every file with its SHA-256, mount
+them read-only into the container exactly as the AgentMage packages already are, and install them
+in a recorded offline bootstrap step before the lifecycle begins. The base image stays immutable
+and published, no lifecycle step gains network, and `rpm`/`dpkg` still verify dependencies. That
+is the next work unit.
+
+`artifacts/sprints/sprint-9/story-9.1/linux-clean-package-lifecycle.json` is left **stale at its
+last passing revision `36e2d4d2`**. It was deliberately not re-bound to current source without a
+passing run. Story 9.1 remains open and its independent-review gate remains open and unclaimed.
+
+### Honest status
+
+Product truth remains `scaffolded`. The clean Linux build passing on both platforms is build
+reproducibility evidence at one exact revision; it is not platform qualification, not a package
+lifecycle result, and not a release.
