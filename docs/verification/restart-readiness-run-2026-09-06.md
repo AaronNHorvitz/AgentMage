@@ -1001,3 +1001,142 @@ USTE held the window continuously across that period with a single
 campaign. No USTE process was interrupted, signalled, or inspected beyond reading its command
 line and working directory, and no AgentMage Cargo work was started alongside it. The wrapper is
 preserved and can be rerun as-is; it is the first thing to retry when the machine is quiet.
+
+## Claude Code checkpoint — 2026-09-20 18:30 CDT
+
+This checkpoint covers the first block of work under the standing owner delegation of
+2026-09-20, recorded as **Decision 0054**. Every decision below carries the status line
+"Accepted under owner delegation, 2026-09-20". The delegation also replaced the shared-machine
+rule: this session no longer waits for another repository's Cargo work and starts a build
+whenever `free -h` reports at least 16 GB available, keeping the scope caps and using up to four
+Cargo jobs. USTE, CodingMage and AgentMagik were not read, written, or signalled at any point.
+
+### The rustup blocker is resolved — Decision 0055
+
+The clean build fetched `rustup-init` from an **unversioned** URL while the policy pinned a
+digest, so the two drifted apart on every rustup release. The versioned immutable archive path is
+now used and the unversioned `/rustup/dist/` path is gone from every build input:
+
+- `rustup_init_version`: **1.29.1**, resolved from `release-stable.toml`
+- `rustup_init_linux_x64_sha256`:
+  **`dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71`**
+
+The digest was verified against the publisher's own `rustup-init.sha256` for that exact archive
+path, and independently against a locally computed hash of the 21,113,232-byte download. The
+artifact was hashed only — never made executable, never run outside the container — and deleted
+afterwards. Version and digest live together in `architecture/clean-build-policy.json` and are
+passed as build arguments, so the Containerfile cannot silently disagree with the policy. The
+in-image `sha256sum --check --strict` verification is retained unchanged; the versioned URL is an
+additional control, not a replacement. `scripts/linux_vm_promoted_matrix.py` carried the same
+unversioned pattern and the same stale pin, and was corrected identically.
+
+### The five scaffold test failures are fixed — Decision 0056
+
+With rustup resolved, the clean build advanced to the container's `test` command and failed there
+on five `LicenseMismatch` panics — the long-recorded "five existing Apache scaffold fixture
+failures" from `docs/DEMO-PROGRESS.md`. The cause was a test-input defect, not a licensing one.
+
+`package_scaffold` generates **new user projects** under Apache-2.0 and pins the exact artifact it
+emits. Its shared test helper fed it `include_bytes!("../../../LICENSE")` — the AgentMage
+repository's own licence. That was coincidentally correct while AgentMage was itself Apache-2.0;
+when Decision 0051 relicensed it to the Business Source License, the helper began feeding BSL
+bytes into an Apache-2.0 scaffolder and all five tests panicked before reaching any assertion.
+
+The exact Apache-2.0 text the constant pins was recovered from this repository's own history —
+commit `b4b8f4d8` carries a `LICENSE` blob whose SHA-256 is exactly
+`02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f` — and retained at
+`fixtures/licensing/apache-2.0.txt`. The helper now reads that fixture.
+
+**No licence choice was made.** AgentMage remains under the Business Source License 1.1;
+`LICENSE` and `NOTICE` are byte-identical. The scaffolder still emits Apache-2.0 projects; the
+pinned digest and all seven `Apache-2.0` output declarations are unchanged. **No test was
+weakened**: the suite moved from 43 passed / 5 failed to 48 passed / 0 failed with no assertion or
+threshold relaxed, because the tests now reach the assertions they were written for.
+
+### Demo acceptance was re-run with the real model
+
+Editing a Cargo workspace member flipped the SBOM, which the demo acceptance reports bind as
+inputs, so those reports went stale. Re-binding them without re-running would have fabricated
+evidence, so the full acceptance suite was re-run through `scripts/demo_smoke.py` against the
+actual Muse Glimmer 30B Q4_K_M under llama.cpp b10423 Vulkan.
+
+All cases passed: browser launch and real model ready, multi-document admission and unsupported
+input reasons, real inference with checked source citation, follow-up and second-source grounding,
+honest insufficient evidence, context overflow refused before generation without silent
+truncation, cancellation then recovery, model-unavailable recovery, bounded six-turn conversation
+with explicit new-conversation recovery, folder-boundary symlink traversal and invalid inputs,
+and privileged endpoints rejecting missing token, wrong origin and DNS rebinding. Offline
+isolation passed with the model inside a networkless `bwrap` namespace, and a full stop/restart
+was followed by a successful fresh interaction. Report timestamps advanced from 2026-09-16 to
+2026-09-20 with 15 recorded real model interactions, so these are genuine new runs.
+
+The demo acceptance ran in a scope sized for a 16.7 GB model (`MemoryHigh=20G`, `MemoryMax=24G`,
+`MemorySwapMax=0`) rather than the 6 GB build cap. That is a delegated choice recorded here: the
+build cap is retained for builds, tests and evidence regeneration, and a model-serving workload
+gets containment sized to it rather than no containment. The demo is left running, as the suite
+intends.
+
+### The clean Linux build now passes — the Story 9.1 headline result
+
+At source revision `b29056b1`, with the four pre-existing ignored cache/build directories
+preserved and restored intact:
+
+```text
+clean-build evidence passed: applicability=current-reviewed-source
+```
+
+Both `fedora-x86_64` and `ubuntu-x86_64` passed **11 of 11 commands**, `linux_platforms_passed`
+is 2 of 2, and `linux_scope_complete` is true. `cross_platform_task_complete` remains **false**,
+which is correct: macOS stays blocked. Scope `memory.peak` was 5.0 GiB against the 6 GB cap with
+**zero swap**. The report is committed in `7b9caca3`.
+
+### Package lifecycle evidence — exact blocker, not worked around
+
+`npm run evidence:story9.1-linux-package:build` now clears the clean-build binding that used to
+stop it and fails further in, at the container install step. The precise cause was reproduced:
+
+```text
+error: Failed dependencies:
+  bubblewrap is needed by agentmage-0.0.0-1.fc44.x86_64
+  git-core is needed by agentmage-0.0.0-1.fc44.x86_64
+  systemd is needed by agentmage-0.0.0-1.fc44.x86_64
+```
+
+A prior session added real runtime dependencies to `packaging/linux/agentmage.spec.in` and
+`debian-control.in` (`Requires` moved from `glibc, openssl-libs` to include `bubblewrap`,
+`git-core`, `systemd`) when the read-only worker and isolated Git inspection landed. The lifecycle
+evidence was never re-run afterwards. `rpm -i` is therefore failing **correctly**: the pinned bare
+base image does not provide the package's declared prerequisites, and the lifecycle container runs
+`--network=none`.
+
+This was deliberately **not** resolved by `--nodeps`, which would stop the test verifying the
+dependency declarations at all. It was also not resolved by preparing a local image with the
+prerequisites installed, because `validate_container_lifecycle` requires the lifecycle image to be
+an **immutable published reference present in its own `repo_digests`**, and a locally built image
+has no repo digest. Relaxing that control, or the `network_used: false` assertion, would weaken an
+evidence binding, which the delegation explicitly does not permit.
+
+The recommended resolution, for the next work unit, is to give the lifecycle the same accepted
+**two-phase shape the clean build already uses**: a recorded bootstrap phase that installs exactly
+the prerequisites `architecture/clean-build-policy.json` already documents under
+`runtime_dependencies.platform_packaged`, followed by the lifecycle steps with network disabled,
+with the bootstrap recorded as its own phase rather than folded into `lifecycle_network_used`.
+That mirrors `bootstrap-container-build` / `container-disabled` and weakens nothing. It is a
+material change to an accepted evidence artifact's meaning, so it is recorded here before being
+implemented rather than slipped in.
+
+### Sequencing note for whoever runs this next
+
+The clean-build report records the revision it was built from, so committing it advances `HEAD`
+past that revision and the package-lifecycle builder — which requires
+`clean_build.source_revision == HEAD` — will refuse. The correct order is therefore: run the clean
+build, run the package-lifecycle evidence at that same `HEAD` while the only worktree change is
+the clean-build report, then commit both together. This run committed the clean-build report on
+its own because the package step is blocked above, so the next attempt needs a fresh clean build
+at the then-current `HEAD`. That costs roughly one 14-minute build.
+
+### Honest status
+
+Product truth remains `scaffolded`. No production model is enabled, no platform or package is
+qualified, and no release or independent-review claim is made. The clean Linux build passing is
+build reproducibility evidence, not platform qualification and not a release.
