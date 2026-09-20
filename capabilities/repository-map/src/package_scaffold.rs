@@ -829,7 +829,7 @@ mod tests {
             convention_sha256: package_convention_sha256(language),
             observed_parent_entries_sha256: "3".repeat(64),
             package_root_absent: true,
-            license_bytes: include_bytes!("../../../LICENSE").to_vec(),
+            license_bytes: include_bytes!("../../../fixtures/licensing/apache-2.0.txt").to_vec(),
             existing_paths: Vec::new(),
         }
     }

@@ -1,31 +1,31 @@
 {
   "record_type": "agentmage_local_demo_browser_acceptance",
-  "recorded_at": "2026-09-16T01:03:02.857Z",
+  "recorded_at": "2026-09-20T22:55:09.837Z",
   "tests": [
     {
       "name": "browser launch and real model ready",
       "passed": true,
-      "seconds": 0.031
+      "seconds": 18.068
     },
     {
       "name": "multi-document admission and unsupported input reasons",
       "passed": true,
-      "seconds": 0.044
+      "seconds": 0.048
     },
     {
       "name": "real inference through UI with checked source citation",
       "passed": true,
-      "seconds": 6.631
+      "seconds": 16.788
     },
     {
       "name": "follow-up and second source grounding",
       "passed": true,
-      "seconds": 8.153
+      "seconds": 8.382
     },
     {
       "name": "unanswerable question has honest insufficient evidence",
       "passed": true,
-      "seconds": 6.367
+      "seconds": 6.382
     },
     {
       "name": "context overflow fails before generation without silent truncation",
@@ -35,27 +35,27 @@
     {
       "name": "cancel generation then recover with real model answer",
       "passed": true,
-      "seconds": 4.917
+      "seconds": 4.634
     },
     {
       "name": "model-unavailable error and recovery through interface",
       "passed": true,
-      "seconds": 38.581
+      "seconds": 33.416
     },
     {
       "name": "bounded six-turn conversation and explicit new-conversation recovery",
       "passed": true,
-      "seconds": 65.13
+      "seconds": 66.963
     },
     {
       "name": "folder boundary symlink traversal and unsupported/invalid inputs",
       "passed": true,
-      "seconds": 29.732
+      "seconds": 29.265
     },
     {
       "name": "privileged endpoints reject missing token wrong origin and DNS rebinding host",
       "passed": true,
-      "seconds": 0.006
+      "seconds": 0.007
     }
   ],
   "real_model_interactions": [
@@ -75,7 +75,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 6.485,
+      "elapsed_seconds": 16.469,
       "prompt_tokens": 379,
       "output_tokens": 296,
       "omitted_count": 0,
@@ -98,7 +98,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 8.027,
+      "elapsed_seconds": 8.226,
       "prompt_tokens": 432,
       "output_tokens": 378,
       "omitted_count": 0,
@@ -109,7 +109,7 @@
       "answer": "The selected documents do not provide enough evidence to answer this question.",
       "citations": [],
       "insufficient_evidence": true,
-      "elapsed_seconds": 6.113,
+      "elapsed_seconds": 6.259,
       "prompt_tokens": 492,
       "output_tokens": 283,
       "omitted_count": 0,
@@ -132,9 +132,9 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 4.446,
+      "elapsed_seconds": 4.231,
       "prompt_tokens": 376,
-      "output_tokens": 205,
+      "output_tokens": 190,
       "omitted_count": 0,
       "snapshot_sha256": "bcdd94806852dc1c56dd3835159f37ebe979b07719490fd847d182d4b8a6d52c",
       "model": "Meta Muse Glimmer 30B · first-party Q4_K_M · local demo QA"
@@ -155,7 +155,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 19.65,
+      "elapsed_seconds": 18.491,
       "prompt_tokens": 415,
       "output_tokens": 383,
       "omitted_count": 0,
@@ -178,9 +178,9 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 12.166,
+      "elapsed_seconds": 12.563,
       "prompt_tokens": 373,
-      "output_tokens": 577,
+      "output_tokens": 576,
       "omitted_count": 0,
       "snapshot_sha256": "bcdd94806852dc1c56dd3835159f37ebe979b07719490fd847d182d4b8a6d52c",
       "model": "Meta Muse Glimmer 30B · first-party Q4_K_M · local demo QA"
@@ -201,9 +201,9 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 7.985,
+      "elapsed_seconds": 8.525,
       "prompt_tokens": 415,
-      "output_tokens": 375,
+      "output_tokens": 386,
       "omitted_count": 0,
       "snapshot_sha256": "bcdd94806852dc1c56dd3835159f37ebe979b07719490fd847d182d4b8a6d52c",
       "model": "Meta Muse Glimmer 30B · first-party Q4_K_M · local demo QA"
@@ -224,9 +224,9 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 8.733,
+      "elapsed_seconds": 9.297,
       "prompt_tokens": 457,
-      "output_tokens": 410,
+      "output_tokens": 423,
       "omitted_count": 0,
       "snapshot_sha256": "bcdd94806852dc1c56dd3835159f37ebe979b07719490fd847d182d4b8a6d52c",
       "model": "Meta Muse Glimmer 30B · first-party Q4_K_M · local demo QA"
@@ -247,9 +247,9 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 8.589,
+      "elapsed_seconds": 7.678,
       "prompt_tokens": 499,
-      "output_tokens": 402,
+      "output_tokens": 348,
       "omitted_count": 0,
       "snapshot_sha256": "bcdd94806852dc1c56dd3835159f37ebe979b07719490fd847d182d4b8a6d52c",
       "model": "Meta Muse Glimmer 30B · first-party Q4_K_M · local demo QA"
@@ -270,9 +270,9 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 7.468,
+      "elapsed_seconds": 7.378,
       "prompt_tokens": 541,
-      "output_tokens": 347,
+      "output_tokens": 335,
       "omitted_count": 0,
       "snapshot_sha256": "bcdd94806852dc1c56dd3835159f37ebe979b07719490fd847d182d4b8a6d52c",
       "model": "Meta Muse Glimmer 30B · first-party Q4_K_M · local demo QA"
@@ -293,9 +293,9 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 6.938,
+      "elapsed_seconds": 8.108,
       "prompt_tokens": 583,
-      "output_tokens": 321,
+      "output_tokens": 359,
       "omitted_count": 0,
       "snapshot_sha256": "bcdd94806852dc1c56dd3835159f37ebe979b07719490fd847d182d4b8a6d52c",
       "model": "Meta Muse Glimmer 30B · first-party Q4_K_M · local demo QA"
@@ -316,7 +316,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 12.08,
+      "elapsed_seconds": 12.37,
       "prompt_tokens": 373,
       "output_tokens": 577,
       "omitted_count": 0,
@@ -339,9 +339,9 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 6.323,
+      "elapsed_seconds": 6.539,
       "prompt_tokens": 201,
-      "output_tokens": 297,
+      "output_tokens": 296,
       "omitted_count": 0,
       "snapshot_sha256": "66a7733aa6a17852d31edcb309f06b7a348bc6ffea80ac569a1da369327a4e28",
       "model": "Meta Muse Glimmer 30B · first-party Q4_K_M · local demo QA"
@@ -350,9 +350,9 @@
       "answer": "The selected documents do not provide enough evidence to answer this question.",
       "citations": [],
       "insufficient_evidence": true,
-      "elapsed_seconds": 14.098,
+      "elapsed_seconds": 13.387,
       "prompt_tokens": 242,
-      "output_tokens": 673,
+      "output_tokens": 620,
       "omitted_count": 0,
       "snapshot_sha256": "66a7733aa6a17852d31edcb309f06b7a348bc6ffea80ac569a1da369327a4e28",
       "model": "Meta Muse Glimmer 30B · first-party Q4_K_M · local demo QA"
@@ -373,7 +373,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 8.62,
+      "elapsed_seconds": 8.931,
       "prompt_tokens": 374,
       "output_tokens": 409,
       "omitted_count": 0,
@@ -386,9 +386,9 @@
     "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
     "shells/host/Cargo.toml": "23e076624d2c6be50259f00e59449f48544fdc39c6c471c7468f85438a66ef17",
     "shells/host/src/lib.rs": "de57f7476dd4476179a399ca0f6855c9d3a3d1de3045ddaf1237d5d0c55b95c7",
-    "supply-chain/sbom.cdx.json": "0c7f2f54834168060db819fefa631ba12780c281e530ce1c6fa1deca8a1a7e8b",
-    "supply-chain/dependency-provenance.json": "7f90dd558cc7d8c5ba9da6f3f9356e0d3ed6465f59826c127d4d24c4b381ac68",
-    "supply-chain/dependency-hashes.sha256": "f48f80c625df3be14e01510e299ce5428cb79f992d6c276bf3d72c7b6b25bfe7",
+    "supply-chain/sbom.cdx.json": "69b95d1d32d8fa6601c2ecd443949e6a3c571f5d86e8e626ada2d9b2b936579b",
+    "supply-chain/dependency-provenance.json": "745cfe70a3b7891d67ed9803a01326ba786e736a24b06195ca60168a1e2ab3c8",
+    "supply-chain/dependency-hashes.sha256": "01d7f0c5391c8d1ff3f2399b6b2c5f9eb9b7c255e5fbd6774c615e2dbd86ccbf",
     "scripts/demo.py": "8bb351d41e2833a166a1645004c1d3e9167f0056a02b5bd2c83d6baf1fe3fcdf",
     "scripts/demo_browser_smoke.mjs": "cc74666724a4c6e1c737e2df0493d64a12e9dab5fa7f02bff674d23888185549",
     "shells/host/src/demo_documents.rs": "e97ea0d5c75facb7f92ed0e3ca8688f754153863f78dfa2fd137200c51c7afe4",

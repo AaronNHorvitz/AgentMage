@@ -1,21 +1,21 @@
 {
   "record_type": "agentmage_local_demo_browser_acceptance",
-  "recorded_at": "2026-09-16T01:13:20.717Z",
+  "recorded_at": "2026-09-20T22:56:12.608Z",
   "tests": [
     {
       "name": "browser launch and real model ready",
       "passed": true,
-      "seconds": 15.047
+      "seconds": 15.064
     },
     {
       "name": "multi-document admission and unsupported input reasons",
       "passed": true,
-      "seconds": 0.037
+      "seconds": 0.049
     },
     {
       "name": "real inference through UI with checked source citation",
       "passed": true,
-      "seconds": 17.265
+      "seconds": 16.247
     }
   ],
   "real_model_interactions": [
@@ -35,7 +35,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 17.051,
+      "elapsed_seconds": 15.957,
       "prompt_tokens": 379,
       "output_tokens": 296,
       "omitted_count": 0,
@@ -48,9 +48,9 @@
     "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
     "shells/host/Cargo.toml": "23e076624d2c6be50259f00e59449f48544fdc39c6c471c7468f85438a66ef17",
     "shells/host/src/lib.rs": "de57f7476dd4476179a399ca0f6855c9d3a3d1de3045ddaf1237d5d0c55b95c7",
-    "supply-chain/sbom.cdx.json": "0c7f2f54834168060db819fefa631ba12780c281e530ce1c6fa1deca8a1a7e8b",
-    "supply-chain/dependency-provenance.json": "7f90dd558cc7d8c5ba9da6f3f9356e0d3ed6465f59826c127d4d24c4b381ac68",
-    "supply-chain/dependency-hashes.sha256": "f48f80c625df3be14e01510e299ce5428cb79f992d6c276bf3d72c7b6b25bfe7",
+    "supply-chain/sbom.cdx.json": "69b95d1d32d8fa6601c2ecd443949e6a3c571f5d86e8e626ada2d9b2b936579b",
+    "supply-chain/dependency-provenance.json": "745cfe70a3b7891d67ed9803a01326ba786e736a24b06195ca60168a1e2ab3c8",
+    "supply-chain/dependency-hashes.sha256": "01d7f0c5391c8d1ff3f2399b6b2c5f9eb9b7c255e5fbd6774c615e2dbd86ccbf",
     "scripts/demo.py": "8bb351d41e2833a166a1645004c1d3e9167f0056a02b5bd2c83d6baf1fe3fcdf",
     "scripts/demo_browser_smoke.mjs": "cc74666724a4c6e1c737e2df0493d64a12e9dab5fa7f02bff674d23888185549",
     "shells/host/src/demo_documents.rs": "e97ea0d5c75facb7f92ed0e3ca8688f754153863f78dfa2fd137200c51c7afe4",
