@@ -288,3 +288,51 @@ and none of the six local-testing milestone outcomes is claimed complete.
 `docs/LOCAL-TESTING.md` has not been created because there is not yet a verified
 launch workflow to document; a refusal-only or fixture-only guide would not
 satisfy the requested milestone.
+
+## Roadmap continuation checkpoint — 2026-09-19
+
+The run resumed from clean branch revision `4ad6d700` with the Fedora document-QA
+demo already running. The demo process and model configuration were left intact.
+No USTE repository, branch, process, or uncommitted interface was used or changed.
+
+Completed commits:
+
+- `706a52a7` hardens the Muse ATEM platform-edge codec with bounded role-aware
+  rendering, inert payload encoding, canonical schema-bound tool arguments, and
+  trusted proposal identities and digests;
+- `c1a2418a` retains the eight-class codec diagnostic matrix and hostile mutations;
+- `5a5d85b6` performs the work unit's single supply-chain regeneration and retains
+  the current codec evidence;
+- `af3024d4` repairs configuration-startup evidence parsing for Rust `--nocapture`
+  interleaving and adds a regression test;
+- `36d2ebd1` renews the exact disabled model-profile catalog after the codec report
+  digest changed;
+- `18aacfe3` closes the dependent evidence cascade, records exact blocker
+  dependencies, corrects the Decision 0048 selector so Tasks 13.1.5 and 13.1.6
+  retain restart-critical rank, and selects Sub-task 13.1.5.1 next; and
+- `a09d8c27` and `83142df5` routinely advance the automated Story 7.1 and Sprint 7
+  review pins to the renewed evidence commits. These gates make no external-human
+  review claim.
+
+Passing checks include 88 Linux-inference Rust tests and strict Clippy; five codec
+tests; the six-check/eight-diagnostic Muse codec report; configuration startup and
+its regression suite; supply-chain validation; Engineering Runtime schema and
+contract closure; Story 1.2, Story 3.1, Story 7.1, Sprint 3, and Sprint 7 evidence
+and gates; native Linux inference-boundary evidence; Sprint 13's five command
+groups; all four retained Fedora demo acceptance checks; status-model validation;
+traceability; and the nine-case blocker-register suite. Heavy native checks ran in
+user scopes with `MemoryHigh=5G`, `MemoryMax=6G`, `MemorySwapMax=512M`, one Cargo
+job, and one Rust test thread. The largest observed peak was 4.7 GiB with no swap.
+
+The row-level register is current at 52 local, 1,028 dependency, 91 external, and
+414 unknown open rows with zero substitutions. It reports
+`execute-local:13.1.5.1` and `ready_for_unattended_execution=true`. Task 13.3.4
+remains open because its synthetic trial still depends on Tasks 13.1.5, 13.1.6,
+and 13.4.5 plus the exact authorized runtime/artifact boundary. Native macOS,
+Windows, signing, independent review, production model qualification, packaging,
+and release gates remain open. Product truth remains `scaffolded`, with no enabled
+production model, supported platform, released package, or release approval.
+
+Next action: implement the Task 13.1.5 serving-capability batch beginning with
+Sub-task 13.1.5.1, then continue through its dependency-ready siblings before the
+next single supply-chain and evidence regeneration pass.
