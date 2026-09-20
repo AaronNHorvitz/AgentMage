@@ -42,14 +42,14 @@
   },
   "packages": [
     {
-      "bytes": 1311180,
+      "bytes": 1311186,
       "format": "rpm",
-      "sha256": "75adb574235ed7500a2e88eaba8d78b1d10941fe29ba25421508581140b0b34c"
+      "sha256": "aefc126c8e4f38328c6a5aa7d2536006194095ae41342e850aa2b66978c48faa"
     },
     {
-      "bytes": 2527742,
+      "bytes": 2527738,
       "format": "deb",
-      "sha256": "4255d017e2f3494cc30b27aabd50471abf68e03d3ba3cb2bbeaef1a136840cd8"
+      "sha256": "61edc17ff4af41eba3d8be878c3821474a1ae53da1532aee8ec246507bcb9ba2"
     },
     {
       "bytes": 62732,
@@ -83,7 +83,7 @@
   },
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "00640169e326d3c99482db6f202c43af3040eca4",
+  "source_revision": "2e6d48f48c15fa26708feb669d0d8508ddd4e8f0",
   "sources": [
     {
       "bytes": 28628,
