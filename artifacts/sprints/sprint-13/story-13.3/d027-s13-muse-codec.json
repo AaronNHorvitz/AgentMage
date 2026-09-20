@@ -6,6 +6,11 @@
       "result": "PASS"
     },
     {
+      "code": "native-transport-diagnostics-pass",
+      "id": "native-transport-diagnostics",
+      "result": "PASS"
+    },
+    {
       "code": "generic-codec-pass",
       "id": "generic-codec",
       "result": "PASS"
@@ -38,7 +43,20 @@
       ],
       "exit_code": 0,
       "id": "muse-edge-codec",
-      "output_sha256": "588c6c8feb59a9145d71d2c8304c75d0b3145683a0c3bb1faef9646f7bb3eb07"
+      "output_sha256": "01e2aa2695f6e5540e20c4c30a4fb14d192faca808402a8867355690fc767673"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux-inference",
+        "--locked",
+        "llama_server_driver::tests::"
+      ],
+      "exit_code": 0,
+      "id": "native-transport-diagnostics",
+      "output_sha256": "19cc3898fceee1ad07fd99075b9b8c4fc6f56a3c02d792c6e479b635651d66bb"
     },
     {
       "argv": [
@@ -51,7 +69,7 @@
       ],
       "exit_code": 0,
       "id": "generic-codec",
-      "output_sha256": "90bb98f8d2e883c50bf2aa593808415dd5cb96842a7b4a6ecc2c411de141e565"
+      "output_sha256": "2fc7a17d37ec1ce967bf7ada5ee7c36939df622c4c3beb4a0bfa25ea487d6b59"
     },
     {
       "argv": [
@@ -64,7 +82,7 @@
       ],
       "exit_code": 0,
       "id": "bounded-response",
-      "output_sha256": "47c411ac5704ae8c3fbc67ef80990ae6d57646d104e33a13c18d8d21755a1b74"
+      "output_sha256": "324fc91fb634363e4ae29c0a76a822ae9d5df8c3f50f97dff2487e5090a8b58d"
     },
     {
       "argv": [
@@ -77,7 +95,49 @@
       ],
       "exit_code": 0,
       "id": "fake-family-parity",
-      "output_sha256": "425e6f841590165d5d1c6a1d7e1956ac958804d0a8c4dca1cc18c7c18394447b"
+      "output_sha256": "572ab7d57bb65dae1b29d7e9474eb36ddcc104e8caeb33968af90790266428f8"
+    }
+  ],
+  "diagnostics": [
+    {
+      "id": "known-answer",
+      "proving_test": "renders_exact_bounded_atem_context_and_closed_proposal",
+      "result": "PASS"
+    },
+    {
+      "id": "decode",
+      "proving_test": "accepts_only_bounded_text_or_canonical_schema_bound_tool_arguments",
+      "result": "PASS"
+    },
+    {
+      "id": "truncation",
+      "proving_test": "plain_text_is_bounded_display_only_and_structured_failures_never_downgrade",
+      "result": "PASS"
+    },
+    {
+      "id": "stop-reason",
+      "proving_test": "completion_streams_exact_sampling_tuple_and_classifies_inert_output",
+      "result": "PASS"
+    },
+    {
+      "id": "transport",
+      "proving_test": "malformed_chunked_sse_contracts_fail_without_advisory_fallback",
+      "result": "PASS"
+    },
+    {
+      "id": "formatting",
+      "proving_test": "rejects_context_response_and_unknown_field_drift",
+      "result": "PASS"
+    },
+    {
+      "id": "task-quality",
+      "proving_test": "accepts_only_bounded_text_or_canonical_schema_bound_tool_arguments",
+      "result": "PASS"
+    },
+    {
+      "id": "policy-rejection",
+      "proving_test": "rejects_context_response_and_unknown_field_drift",
+      "result": "PASS"
     }
   ],
   "disposition": {
@@ -91,7 +151,8 @@
   },
   "limitations": [
     "This campaign uses deterministic synthetic packets and proposals, not model output.",
-    "Codec conformance does not prove model quality, runtime isolation, or release readiness.",
+    "Task-quality diagnostics prove only closed synthetic response shapes; they do not prove model quality.",
+    "Codec conformance does not prove runtime isolation or release readiness.",
     "Test-only family labels exercise parity and are not production kernel branches."
   ],
   "mutations": [
@@ -149,19 +210,40 @@
       "id": "proposal-identity",
       "proving_test": "malformed_stale_replayed_and_authority_seeking_envelopes_remain_inert",
       "result": "PASS"
+    },
+    {
+      "id": "role-boundary",
+      "proving_test": "renders_each_role_and_schema_without_interpreting_payload_tokens",
+      "result": "PASS"
+    },
+    {
+      "id": "response-bounds",
+      "proving_test": "accepts_only_bounded_text_or_canonical_schema_bound_tool_arguments",
+      "result": "PASS"
+    },
+    {
+      "id": "text-or-tool-shape",
+      "proving_test": "accepts_only_bounded_text_or_canonical_schema_bound_tool_arguments",
+      "result": "PASS"
+    },
+    {
+      "id": "canonical-tool-arguments",
+      "proving_test": "accepts_only_bounded_text_or_canonical_schema_bound_tool_arguments",
+      "result": "PASS"
     }
   ],
   "production_kernel_family_references": [],
   "record_type": "d027_s13_muse_codec_evidence",
-  "schema_version": 1,
-  "source_revision": "dfc4ae6806b79caae8a89570dad6d183cbc47930",
+  "schema_version": 2,
+  "source_revision": "c1a2418ae3789cc5c82205ffbca01675741ccbdd",
   "source_sha256": {
-    "kernel/contracts/src/model.rs": "cced4c92c1608baa0257cd20dac8e6e9ad2e0cd45b490027423dc4df0e84c218",
-    "kernel/engine/src/model_codec.rs": "99b050126cdbff486f906e611920ff1c422e0db9554d76db885dee9b1ff55d66",
+    "kernel/contracts/src/model.rs": "75d295c6a2e16a16e55bfc85321f5bed8f9ea74f5adb47058e2ac786d15559d3",
+    "kernel/engine/src/model_codec.rs": "46afc648d5e538c370cba40bb4963474b64581faec9551361610e89591683741",
     "kernel/engine/src/model_response.rs": "d678d842734355c398115e3638c88d57c06cf1eb2ebb218a4a02522ca0da093d",
-    "kernel/engine/src/model_runtime.rs": "a0fa0f86578824a680ac21dcadcf51f969e4c64ced594a202afb56baa97e1a9a",
-    "platforms/linux-inference/src/muse_atem_codec.rs": "4a63ad223eefb2dbd772ba4267449a76b93cd3dc7c9a5c8c85b5316e5b46662f",
-    "scripts/muse_codec_evidence.py": "9dc85655d8cc76fb224c4a9a020dcb0280cbcc9d789000ed6c77384223dff27e",
-    "tests/test_muse_codec_evidence.py": "bc54637ef8ecde8b234b5412d9d3b599bcb8652148050344a07ed1ca26aca701"
+    "kernel/engine/src/model_runtime.rs": "7de667a8e37f6d436f26c5423ce5c5692ec65b5fc3148e7b56f2424c97bc704c",
+    "platforms/linux-inference/src/llama_server_driver.rs": "94f8a0c6d8466f90f342cfd06a7363588566e46e645935f4c068cc4ff702eb5c",
+    "platforms/linux-inference/src/muse_atem_codec.rs": "50cb464262daae11d677b7af7cc72ec0b166ad9a147224281d3ea597d0efa5d5",
+    "scripts/muse_codec_evidence.py": "734ccb9190d4906b5233db5b9d9a9c759cda2b9d71671533f591c76f09a84e63",
+    "tests/test_muse_codec_evidence.py": "659d41c5ee61999fe47808e35121260dce5c618870bfe9072d2c859a61d0ace9"
   }
 }
