@@ -48,21 +48,21 @@
   ],
   "raw_results": {
     "path": "artifacts/sprints/sprint-13/story-13.1/served-capability-results.log",
-    "sha256": "be6affa89c356c3f3d2790295f35feb9b9595e93456d638b87719479420de8db"
+    "sha256": "5ad1cde8c5b161d632069d235adf564fd5eb463e039cb422d76eb6d58746960c"
   },
   "record_type": "agentmage-story-13-1-served-capability-evidence",
   "remaining_prerequisite": "Run CTX-SERVED against the exact separately authorized artifact/runtime/venue tuple; retain attributable restart, reload, reassignment, tokenizer/template, slot, and cache-policy evidence.",
   "schema_version": 1,
-  "source_revision": "399b2d4f8dbecb36f0f39dff12a2b202013406e0",
+  "source_revision": "c003bf475645d819da8afecc7f6820c40d0b8bda",
   "source_sha256": {
-    "kernel/contracts/src/lib.rs": "c88a8095771f7d003d78e9f9f206d3b16489dcf1d10d90bf9d2e5392b1591092",
-    "kernel/contracts/src/model.rs": "34b30269fdde6bcbdc26d0502859279b544122479566a106837eb56fdbdd584e",
-    "kernel/engine/src/model_runtime.rs": "77fd846b6fe4114cb6a2a684206dea7d3acfae1b3534384a924a6852fb0d5ee5",
-    "kernel/engine/src/runtime_loop.rs": "6e434cf0eb4f2d7b962b5365e18977b0839f58db35fc718e8a0f9196f3951326",
-    "platforms/linux-inference/src/llama_server_driver.rs": "b5dfa2fbce773b9f24b47b1e3c8c1eccab02107eb5b565c0d19b24ed7bbee88b",
+    "kernel/contracts/src/lib.rs": "6dbc9403ec7b951ac90aa29b52dfc72bd4167d1cf7176ecab245fb4c5416b081",
+    "kernel/contracts/src/model.rs": "25421b3a43730caa17f4d4bff1e58fdc6e5daefbbc31cb6702bb76050f11a1d6",
+    "kernel/engine/src/model_runtime.rs": "a45951922c93d5ce171586550389348f473f1d745f5f8e40ba863f170b72cc5f",
+    "kernel/engine/src/runtime_loop.rs": "40d81f5296baffc865d5d3ae6516271f6914134854f2f66145c5a5ae0be65fbd",
+    "platforms/linux-inference/src/llama_server_driver.rs": "96f5b9ed1b78a53f4d7787af97b5672ab66c910cc13aa70ff7bb37de6ece9f85",
     "platforms/linux-inference/src/model_install_verifier.rs": "7e5e57584acd908c4ef4b5e0ca07c73cbaaa6f8dae413b0effda8befacee3d9f",
     "platforms/linux-inference/src/native_model_adapter.rs": "566ddabb49e5a2ae32a280b3ac87b13bc1e5f77129efa1071e7ff7dbb67d9804",
-    "requirements/context-safety-registration.json": "b5ccfefc532179d8ba9e5104772103d36273c98ab179aae6ba812f206ef82f7d",
+    "requirements/context-safety-registration.json": "3b8276f37403337586a5cdef8b468c170ed7c78d14aad65835b76288ec12ad4d",
     "scripts/story_13_1_served_capability_evidence.py": "7ff49c87b4c13b81a259f3b1f3efb2901e258e647638dc73316ccc5bc3d37fed",
     "tests/test_story_13_1_served_capability_evidence.py": "0d134d6897a3f5c742b965c6d6e5149b4a4aa1060c4f79ad626330b68d2d9b12"
   },

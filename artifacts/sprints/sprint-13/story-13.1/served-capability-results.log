@@ -1,5 +1,5 @@
 $ cargo test -p agentmage-kernel-engine --locked served_capabilit
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 3 tests
@@ -7,7 +7,7 @@ test model_runtime::tests::health_rejects_every_served_capability_drift_before_d
 test model_runtime::tests::served_capabilities_reject_missing_forged_undersized_and_unsafe_facts ... ok
 test model_runtime::tests::served_capability_stable_sleep_reobservation_and_reload_generation_are_explicit ... ok
 
-test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 1037 filtered out; finished in 0.00s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 1038 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -125,7 +125,7 @@ $ cargo test -p agentmage-platform-linux-inference --locked undersized_served_ca
 running 1 test
 test native_model_adapter::tests::undersized_served_capacity_refuses_and_retains_no_loaded_binding ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 90 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 91 filtered out; finished in 0.00s
 
      Running unittests src/docker_guard_main.rs (target/debug/deps/agentmage_docker_guard-e694f0eb4f1ba26d)
 
@@ -174,9 +174,10 @@ $ cargo test -p agentmage-platform-linux-inference --locked llama_server_driver:
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_platform_linux_inference-9b8eded1ee48c32a)
 
-running 15 tests
+running 16 tests
 test llama_server_driver::tests::accelerator_observation_is_exact_bounded_and_process_specific ... ok
 test llama_server_driver::tests::completion_streams_exact_sampling_tuple_and_classifies_inert_output ... ok
+test llama_server_driver::tests::ctx_finish_retains_incomplete_reasons_usage_and_bounded_partial_bytes ... ok
 test llama_server_driver::tests::deadline_interrupts_a_silent_stream_with_one_terminal_fragment ... ok
 test llama_server_driver::tests::exact_directory_does_not_assume_filesystem_link_count_semantics ... ok
 test llama_server_driver::tests::exact_health_and_tokenize_requests_use_only_closed_endpoints ... ok
@@ -191,7 +192,7 @@ test llama_server_driver::tests::serving_properties_reject_missing_undersized_id
 test llama_server_driver::tests::unix_socket_path_is_fixed_name_and_bounded_by_linux_address_limit ... ok
 test llama_server_driver::tests::verified_file_snapshot_detects_inode_mode_and_link_drift ... ok
 
-test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 76 filtered out; finished in 0.31s
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 76 filtered out; finished in 0.31s
 
      Running unittests src/docker_guard_main.rs (target/debug/deps/agentmage_docker_guard-e694f0eb4f1ba26d)
 
