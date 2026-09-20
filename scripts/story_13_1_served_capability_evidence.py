@@ -215,13 +215,13 @@ def main() -> int:
     parser.add_argument("--source-revision", default="HEAD")
     parser.add_argument("--write", action="store_true")
     args = parser.parse_args()
-    try:
-        revision = resolve_revision(args.source_revision)
-    except ValueError as error:
-        print(error, file=sys.stderr)
-        return 1
     failures: list[str] = []
     if args.write:
+        try:
+            revision = resolve_revision(args.source_revision)
+        except ValueError as error:
+            print(error, file=sys.stderr)
+            return 1
         raw_text, returncode = capture()
         raw = raw_text.encode()
         failures += validate_raw(raw_text)
@@ -237,8 +237,14 @@ def main() -> int:
         except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
             failures.append(f"cannot read served-capability evidence: {error}")
         else:
+            try:
+                revision = resolve_revision(str(report.get("source_revision", "")))
+            except ValueError as error:
+                failures.append(str(error))
+                revision = ""
             failures += validate_raw(raw_text)
-            failures += validate_report(report, revision, raw)
+            if revision:
+                failures += validate_report(report, revision, raw)
     if failures:
         print("\n".join(failures), file=sys.stderr)
         return 1
