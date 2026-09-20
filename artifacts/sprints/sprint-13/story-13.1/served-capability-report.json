@@ -11,7 +11,7 @@
   "commands": [
     "cargo test -p agentmage-kernel-engine --locked served_capabilit",
     "cargo test -p agentmage-platform-linux-inference --locked undersized_served_capacity_refuses_and_retains_no_loaded_binding",
-    "cargo test -p agentmage-platform-linux-inference --locked process_generation_is_read_from_the_live_process_identity"
+    "cargo test -p agentmage-platform-linux-inference --locked llama_server_driver::tests::"
   ],
   "ctx_served": {
     "deterministic_adapter_matrix": [
@@ -30,6 +30,7 @@
     ],
     "native_launch_derived_from_profile": true,
     "native_process_and_command_line_reobserved": true,
+    "native_read_only_properties_reobserved": true,
     "parallel_isolated_slots_covered": true,
     "parallel_shared_cache_refused": true,
     "single_slot_covered": true,
@@ -47,22 +48,22 @@
   ],
   "raw_results": {
     "path": "artifacts/sprints/sprint-13/story-13.1/served-capability-results.log",
-    "sha256": "2fc595cd3c3a8b990dd15f45d2136dc79ac05f91e77dd6615fa44786d932705e"
+    "sha256": "90ecc42709cb0cc78a9eddec65dc710632f421e682e0653979df83c57abeb135"
   },
   "record_type": "agentmage-story-13-1-served-capability-evidence",
   "remaining_prerequisite": "Run CTX-SERVED against the exact separately authorized artifact/runtime/venue tuple; retain attributable restart, reload, reassignment, tokenizer/template, slot, and cache-policy evidence.",
   "schema_version": 1,
-  "source_revision": "54871259d35f5e6cedf84cba4e1b2c3f9d92169b",
+  "source_revision": "d29b35d64fcdb271135b53547209f1efc8dbd265",
   "source_sha256": {
     "kernel/contracts/src/lib.rs": "c88a8095771f7d003d78e9f9f206d3b16489dcf1d10d90bf9d2e5392b1591092",
     "kernel/contracts/src/model.rs": "34b30269fdde6bcbdc26d0502859279b544122479566a106837eb56fdbdd584e",
     "kernel/engine/src/model_runtime.rs": "77fd846b6fe4114cb6a2a684206dea7d3acfae1b3534384a924a6852fb0d5ee5",
     "kernel/engine/src/runtime_loop.rs": "6e434cf0eb4f2d7b962b5365e18977b0839f58db35fc718e8a0f9196f3951326",
-    "platforms/linux-inference/src/llama_server_driver.rs": "ce8b8269c96917b4cbf4705fc647fb4fe0ef2fd2f87ca877a1f4f55a5d1c8a88",
+    "platforms/linux-inference/src/llama_server_driver.rs": "b5dfa2fbce773b9f24b47b1e3c8c1eccab02107eb5b565c0d19b24ed7bbee88b",
     "platforms/linux-inference/src/model_install_verifier.rs": "7e5e57584acd908c4ef4b5e0ca07c73cbaaa6f8dae413b0effda8befacee3d9f",
     "platforms/linux-inference/src/native_model_adapter.rs": "566ddabb49e5a2ae32a280b3ac87b13bc1e5f77129efa1071e7ff7dbb67d9804",
     "requirements/context-safety-registration.json": "b5ccfefc532179d8ba9e5104772103d36273c98ab179aae6ba812f206ef82f7d",
-    "scripts/story_13_1_served_capability_evidence.py": "5946a0384079d095b66bd96e0002bd96bdfaf764e3e41099d757183d13538a22",
+    "scripts/story_13_1_served_capability_evidence.py": "1df02ed7ce6421f81099c306e2a0f3e18d64f253113dd49a2906d257eb45c99c",
     "tests/test_story_13_1_served_capability_evidence.py": "0d134d6897a3f5c742b965c6d6e5149b4a4aa1060c4f79ad626330b68d2d9b12"
   },
   "status": "PASS_LOCAL_FIXTURES_BLOCKED_NATIVE_BOUNDARY",
