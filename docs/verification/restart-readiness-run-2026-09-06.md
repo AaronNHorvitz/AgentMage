@@ -336,3 +336,48 @@ production model, supported platform, released package, or release approval.
 Next action: implement the Task 13.1.5 serving-capability batch beginning with
 Sub-task 13.1.5.1, then continue through its dependency-ready siblings before the
 next single supply-chain and evidence regeneration pass.
+
+## Served-capability checkpoint — 2026-09-19
+
+Commits `9c3244e6`, `54871259`, and `d29b35d6` implement the Task 13.1.5 local
+serving contract. Load now returns a content-free tuple bound to the exact endpoint,
+runtime/artifact/profile, process and load generations, launch digest, effective
+window, slots/cache policy, tokenizer/template/codec, and reasoning/context-shift
+behavior. The kernel re-observes and exact-compares that tuple before dispatch.
+The owned llama.cpp b10423 boundary separately verifies `/proc` launch intent and
+reads the server's read-only `/props` response for effective per-slot `n_ctx`, total
+slots, model path, and sleep state. Refusal tests record zero driver stream calls.
+
+Commits `50ef07c2`, `3e192b16`, `cba464fb`, and `2e6d48f4` retain the hash-bound
+`CTX-SERVED` report and lifecycle matrix. `59012b25` and `399b2d4f` correct the
+evidence generator's terminal-newline and immutable-source-revision handling.
+Commits `fa4d6284` and `11219a33` renew the dependent supply-chain, Story 1.2,
+Story 3.1, Story 7.1, Story 9.1, Sprint 13, demo-hash, blocker, and traceability
+artifacts. `e71afba3`, `c589991f`, and `d305e58e` routinely advance and rebuild
+the gate-owned Story 7.1 and Sprint 7 review pins; no external-human review is
+claimed. `e7863b5a` retains the final reproducible Linux package-boundary result
+after every release binary was current. `00640169` closes Sub-tasks 13.1.5.1 and
+13.1.5.2 and records the exact native-campaign blocker for Sub-task 13.1.5.3.
+
+Passing checks include the 69-test contracts suite, 1,039-test engine suite,
+90-test Linux inference suite, integration/doc tests, strict Clippy, the focused
+three-case lifecycle matrix, 15 native-driver cases, four evidence mutation tests,
+the full clean Linux inference boundary, Story 1.2, Story 3.1, Story 7.1, Sprint 3,
+Sprint 7, Sprint 13, all retained Fedora demo checks, status-model validation,
+traceability, and the blocker-register suite. Heavy work ran with one Cargo job,
+one Rust test thread, `MemoryHigh=5G`, `MemoryMax=6G`, and `MemorySwapMax=512M`.
+The full affected suite peaked at 5 GiB and used 15.9 MiB swap; later final scopes
+used no swap.
+
+Sub-task 13.1.5.3 remains open only for the exact authorized native model/runtime
+campaign; deterministic local fixtures are complete and cannot substitute for it.
+The current register records 49 local, 1,028 dependency, 92 external, and 414
+unknown open rows, zero substitutions, and selects
+`execute-local:13.1.6.1` with unattended execution ready. Product truth remains
+`scaffolded`: no production model is enabled, no platform or package is qualified,
+and no release or independent-review claim is made. The Fedora demo and all USTE
+state and processes remained untouched.
+
+Next action: implement the dependency-ready Task 13.1.6 finish-state and actual
+token-accounting source batch, then regenerate its dependent evidence once after
+the related source edits are complete.

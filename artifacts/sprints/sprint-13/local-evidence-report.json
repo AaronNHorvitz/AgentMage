@@ -40,7 +40,7 @@
       ],
       "exit_code": 0,
       "id": "model-engine",
-      "output_sha256": "78c3744067eff6a3d4e2c8be545b5135aa58fcf06929a46cc5eae209e2607fa0",
+      "output_sha256": "a8da1bf533bb746e430f3250e27a2947567ffa27ac6bc58ca49a6ba3f92891b6",
       "story_id": "13.1"
     },
     {
@@ -53,7 +53,7 @@
       ],
       "exit_code": 0,
       "id": "linux-native-adapter",
-      "output_sha256": "aa7da395bd4fad1b397abdc72535b9e8f20f779a51e3d45e028f5a5843f645a8",
+      "output_sha256": "e79418eff409181581a44a777f27d5240c5a5bc56fad4903e4296b55b6a6bb83",
       "story_id": "13.1"
     },
     {
@@ -65,7 +65,7 @@
       ],
       "exit_code": 0,
       "id": "model-json-contracts",
-      "output_sha256": "4a9d3581787665c34da1bde21c24fd5089215b5349295ff062c08083c550bfc1",
+      "output_sha256": "0ce34b4649df3e3e1e2d5b087d95b3d3860fcbc830a42c9702c0e8f7d2c565d3",
       "story_id": "13.1"
     },
     {
@@ -84,7 +84,7 @@
       ],
       "exit_code": 0,
       "id": "model-policy-evidence",
-      "output_sha256": "ed317d9175f0332b9364cf3a5608aa8ac260708fa57552ac9e7e7fa802fc753d",
+      "output_sha256": "fbae42af29c332f1c5b925a67e74ec673369763b9e0cf4af7ee72259e213093b",
       "story_id": "13.2"
     }
   ],
@@ -167,7 +167,7 @@
       "SR-MGM-004"
     ]
   },
-  "source_revision": "fa4d6284b10c93dbe99ddb93bb31a78dfb3ee2f1",
+  "source_revision": "e7863b5a1fc300e1d2a94b9cfc0ce17388584443",
   "source_sha256": {
     "kernel/contracts/src/model.rs": "34b30269fdde6bcbdc26d0502859279b544122479566a106837eb56fdbdd584e",
     "kernel/engine/src/model_codec.rs": "46afc648d5e538c370cba40bb4963474b64581faec9551361610e89591683741",
