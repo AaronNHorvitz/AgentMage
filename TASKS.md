@@ -2779,22 +2779,37 @@ that the existing Linux native adapter or live evaluation path is missing.
     single-slot and isolated/shared parallel variants, and an explicit zero driver-dispatch count on
     every refusal. The native campaign remains open:
     `BLOCKED_EXTERNAL(platform=authorized pinned native inference host; artifact=the exact admitted model artifact and b10423 runtime tuple plus attributable CTX-SERVED raw results; action=the model owner authorizes and runs the restart, reload, sleep, reassignment, tokenizer/template, slot, and cache-policy native boundary campaign and transfers untouched evidence; credential=existing model artifact access if required; payment=none)`; `substitution_set=empty`.
-- [ ] **Task 13.1.6 - Preserve incomplete output and actual token accounting**
-  - [ ] **Sub-task 13.1.6.1:** After Task 13.1.4, extend the driver/controller/host result contract
+- [x] **Task 13.1.6 - Preserve incomplete output and actual token accounting**
+  - [x] **Sub-task 13.1.6.1:** After Task 13.1.4, extend the driver/controller/host result contract
     to retain EOS, configured stop, token limit, context truncation, reasoning exhaustion,
     cancellation, transport failure, and unknown finish states. Limit-stopped valid-looking JSON
     or advisory prose stays incomplete and cannot become an unmarked final answer or executable
     proposal. Coordinate with Sub-task 13.3.4.2. **Execution:** local; owner=model-result-boundary.
-  - [ ] **Sub-task 13.1.6.2:** Replace placeholder input usage with reconciled rendered prompt,
+    Evidence: the closed result contract retains all nine finish classes; only EOS and configured
+    stop may classify structured or advisory bytes as complete. Token-limit, context-truncation,
+    reasoning-exhaustion, cancellation, deadline, transport-loss, and unknown results remain
+    inert and carry a typed failure without proposal decoding.
+  - [x] **Sub-task 13.1.6.2:** Replace placeholder input usage with reconciled rendered prompt,
     cached/evaluated input, generated/reasoning output, reserve, and remaining-capacity facts;
     explicitly represent unavailable provider metrics. Preserve stable refusal/finish detail
     through `shells/host` without leaking prompt content into diagnostics. **Execution:** local;
-    owner=model-runtime and Rust host.
-  - [ ] **Sub-task 13.1.6.3:** Run `CTX-FINISH` over split streams, length-stopped otherwise valid
+    owner=model-runtime and Rust host. Evidence: the driver counts the exact rendered prompt before
+    generation and reconciles b10423's cached, evaluated, predicted, and truncation fields with the
+    generated count, request reserve, effective served capacity, and explicit unavailable reasoning
+    metric. The Rust host retains a content-free diagnostic containing identities, digests, finish,
+    usage, and stable failure code, never prompt or response bytes.
+  - [x] **Sub-task 13.1.6.3:** Run `CTX-FINISH` over split streams, length-stopped otherwise valid
     proposals/plain text, truncation flags, contradictory usage, unknown stop reasons, cancellation,
     and transport loss. Require truthful incomplete state, bounded partial capture, no effect, and
     no hidden unchanged-overflow retry; combine with Task 13.4.5 before renewed native trials.
-    **Execution:** local; owner=model-result-verification.
+    **Execution:** local; owner=model-result-verification. Evidence:
+    [`finish-usage-report.json`](artifacts/sprints/sprint-13/story-13.1/finish-usage-report.json)
+    binds the deterministic `CTX-FINISH` raw log and source revision. Split streams, valid-looking
+    length-stopped JSON/text, explicit truncation with reduced evaluated input, contradictory usage,
+    unknown stop reason, cancellation, deadline, and transport loss retain bounded partial bytes,
+    dispatch no proposal, cause no effect, and perform no hidden retry. The matrix loads no native
+    model and makes no model, platform, support, activation, or release claim; renewed native trials
+    remain prohibited until Task 13.4.5 also closes.
 
 ##### Story Acceptance Criteria
 
@@ -2996,9 +3011,10 @@ Story Definition of Done are complete with current evidence. A truthful Muse non
 evidence task but enables no profile. Otherwise the sprint is BLOCKED.
 
 **Current gate result:** BLOCKED. The additions-only corrective codec and diagnostic work in Task
-13.3.4 remains required after restart readiness. The 2026-09-08 refinement adds Task 13.1.4
-registration and Tasks 13.1.5, 13.1.6, and 13.4.5 before renewed native qualification or activation;
-these new rows are not closed by the historical checked criteria. Prior negative Linux cross-adapter parity and
+13.3.4 remains required after restart readiness. The 2026-09-08 refinement added Task 13.1.4
+registration and Tasks 13.1.5, 13.1.6, and 13.4.5 before renewed native qualification or activation.
+Task 13.1.6's local finish/usage contract and matrix are complete; Task 13.1.5's exact native campaign
+and Task 13.4.5 remain open and are not closed by the historical checked criteria. Prior negative Linux cross-adapter parity and
 exact Muse results remain immutable. The retained native and Docker Model Runner compatibility trials
 fail published quality thresholds and therefore cannot be merged or enabled. Other remaining blockers
 are the native macOS adapter and execution evidence, successful matched cross-platform parity for an

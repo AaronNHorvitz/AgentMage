@@ -1,0 +1,74 @@
+{
+  "claims": {
+    "local_contract_complete": true,
+    "model_profile_enabled": false,
+    "native_model_trial_executed": false,
+    "platform_qualified": false,
+    "product_support_claim": false,
+    "release_claim": "none"
+  },
+  "commands": [
+    "cargo test -p agentmage-platform-linux-inference --locked llama_server_driver::tests:: -- --test-threads=1",
+    "cargo test -p agentmage-kernel-engine --locked ctx_finish -- --test-threads=1",
+    "cargo test -p agentmage-kernel-engine --locked fake_muse_and_gemma_cover_every_runtime_terminal_and_hostile_response_state -- --test-threads=1",
+    "cargo test -p agentmage-host --locked engineering_model::tests::current_local_profiles_cannot_cross_the_product_bridge -- --test-threads=1"
+  ],
+  "ctx_finish": {
+    "bounded_partial_transport_capture": true,
+    "contradictory_usage_refused": true,
+    "finish_matrix": [
+      "end-of-sequence",
+      "configured-stop",
+      "output-token-limit",
+      "context-truncation",
+      "reasoning-exhaustion",
+      "cancellation",
+      "deadline-exceeded",
+      "transport-failure",
+      "unknown"
+    ],
+    "hidden_overflow_retry": false,
+    "host_diagnostic_contains_content": false,
+    "incomplete_proposal_dispatch": false,
+    "limit_stopped_json_is_incomplete": true,
+    "limit_stopped_text_is_incomplete": true,
+    "provider_metrics_unavailable_is_explicit": true,
+    "usage_facts": [
+      "rendered-prompt",
+      "cached-input",
+      "evaluated-input",
+      "generated-output",
+      "reasoning-output",
+      "output-reserve",
+      "remaining-capacity"
+    ]
+  },
+  "limitations": [
+    "The matrix uses deterministic Unix-stream fixtures and fake admitted profiles.",
+    "Reasoning exhaustion is exercised at the provider-neutral controller contract because the pinned b10423 server exposes no separate reasoning-token finish reason.",
+    "No native model, running demo service, model configuration, artifact, or USTE process was changed."
+  ],
+  "raw_results": {
+    "path": "artifacts/sprints/sprint-13/story-13.1/finish-usage-results.log",
+    "sha256": "f7ace927aacfbb50a0c5741867a9c88ed5942e4931f19083e793876266eaa99f"
+  },
+  "record_type": "agentmage-story-13-1-finish-usage-evidence",
+  "schema_version": 1,
+  "source_revision": "28a2408c90392dc4085f2b1ca35e815f5c461e42",
+  "source_sha256": {
+    "kernel/contracts/src/lib.rs": "6dbc9403ec7b951ac90aa29b52dfc72bd4167d1cf7176ecab245fb4c5416b081",
+    "kernel/contracts/src/model.rs": "25421b3a43730caa17f4d4bff1e58fdc6e5daefbbc31cb6702bb76050f11a1d6",
+    "kernel/engine/src/model_runtime.rs": "a45951922c93d5ce171586550389348f473f1d745f5f8e40ba863f170b72cc5f",
+    "kernel/engine/src/runtime_event.rs": "c37bb278015875e420865739b045bd9bb8c9162527188a0b5d67af85d63ff0ff",
+    "kernel/engine/src/runtime_loop.rs": "40d81f5296baffc865d5d3ae6516271f6914134854f2f66145c5a5ae0be65fbd",
+    "kernel/engine/src/runtime_loop_tests.rs": "fc56feb54d767ba32613e0432a73a832b7086729719bbe1ea416567ea192183b",
+    "platforms/linux-inference/src/llama_server_driver.rs": "96f5b9ed1b78a53f4d7787af97b5672ab66c910cc13aa70ff7bb37de6ece9f85",
+    "scripts/story_13_1_finish_usage_evidence.py": "06d2b92eb42b8354d1dcd147a76492f27c8c11b6d6bb637c133c95b71231811e",
+    "shells/host/src/engineering_model.rs": "05334de3cb0772ca4b5cb3e0a180aa1dfe1aba495cd29cce38d2c74b54969a28",
+    "shells/host/src/engineering_runtime.rs": "9d88d1195623dd1157a36ec473b0f35eb2e999e5f5138c1fe4e0032c6f63fb36",
+    "tests/test_story_13_1_finish_usage_evidence.py": "4a60b6c016c023411671f884a516c32b3080881d3b8956377adf632fb66ff525"
+  },
+  "status": "PASS_LOCAL_CONTRACT",
+  "story_id": "13.1",
+  "task_id": "13.1.6"
+}
