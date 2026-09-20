@@ -1,13 +1,14 @@
 $ cargo test -p agentmage-kernel-engine --locked served_capabilit
    Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.90s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.14s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
-running 2 tests
+running 3 tests
 test model_runtime::tests::health_rejects_every_served_capability_drift_before_dispatch ... ok
 test model_runtime::tests::served_capabilities_reject_missing_forged_undersized_and_unsafe_facts ... ok
+test model_runtime::tests::served_capability_stable_sleep_reobservation_and_reload_generation_are_explicit ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 1037 filtered out; finished in 0.00s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 1037 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
