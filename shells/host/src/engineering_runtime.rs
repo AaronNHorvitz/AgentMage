@@ -134,6 +134,25 @@ pub struct EngineeringModelInput {
     pub context_bytes: Vec<u8>,
 }
 
+/// Content-free diagnostic projection of the last qualified model run.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EngineeringModelDiagnostic {
+    /// Exact model-run identity.
+    pub model_run_id: agentmage_kernel_contracts::ModelRunId,
+    /// Validated terminal disposition.
+    pub terminal_state: agentmage_kernel_contracts::ModelRunTerminalState,
+    /// Truthful provider-neutral finish reason.
+    pub finish_reason: agentmage_kernel_contracts::ModelFinishReason,
+    /// Reconciled per-run token accounting.
+    pub usage: agentmage_kernel_contracts::ModelTokenUsage,
+    /// Optional stable content-free runtime failure code.
+    pub failure_code: Option<String>,
+    /// Digest of the bounded response bytes, never the bytes themselves.
+    pub response_sha256: String,
+    /// Digest of the complete typed result.
+    pub result_sha256: String,
+}
+
 /// Stable content-free model-execution refusal.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum EngineeringModelError {
@@ -149,6 +168,10 @@ pub trait EngineeringModelPort {
     fn endpoint_profile_id(&self) -> EndpointProfileId;
     /// Exact deterministic route decision.
     fn route_decision_id(&self) -> RouteDecisionId;
+    /// Returns the last content-free qualified run diagnostic, when supported.
+    fn last_diagnostic(&self) -> Option<&EngineeringModelDiagnostic> {
+        None
+    }
     /// Executes one bounded model turn over exact verified bytes.
     fn execute(&mut self, input: &EngineeringModelInput) -> Result<String, EngineeringModelError>;
 }

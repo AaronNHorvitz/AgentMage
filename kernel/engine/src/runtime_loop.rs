@@ -1177,10 +1177,11 @@ where
             ModelRunTerminalState::AdvisoryText
             | ModelRunTerminalState::Failed
             | ModelRunTerminalState::Rejected => {
+                let failure_code = incomplete_model_failure_code(result.finish_reason);
                 self.emit(
                     RuntimeEventKind::ModelFailed {
                         model_run_id,
-                        failure_code: "runtime.model.no_typed_proposal".to_owned(),
+                        failure_code: failure_code.to_owned(),
                     },
                     Some(&turn_id),
                     None,
@@ -2786,6 +2787,24 @@ where
     }
 }
 
+fn incomplete_model_failure_code(
+    reason: agentmage_kernel_contracts::ModelFinishReason,
+) -> &'static str {
+    use agentmage_kernel_contracts::ModelFinishReason;
+    match reason {
+        ModelFinishReason::EndOfSequence | ModelFinishReason::ConfiguredStop => {
+            "runtime.model.no_typed_proposal"
+        }
+        ModelFinishReason::OutputTokenLimit => "runtime.model.incomplete.output_token_limit",
+        ModelFinishReason::ContextTruncation => "runtime.model.incomplete.context_truncation",
+        ModelFinishReason::ReasoningExhausted => "runtime.model.incomplete.reasoning_exhausted",
+        ModelFinishReason::Cancelled => "runtime.model.cancelled",
+        ModelFinishReason::DeadlineExceeded => "runtime.model.timed_out",
+        ModelFinishReason::TransportFailure => "runtime.model.incomplete.transport_failure",
+        ModelFinishReason::Unknown => "runtime.model.incomplete.unknown",
+    }
+}
+
 fn append_runtime_event<T: RuntimeJournalPort>(
     port: &mut T,
     event: &RuntimeEvent,
@@ -3351,6 +3370,27 @@ fn valid_model_result(result: &ModelRunResult, request: &ModelRunRequest) -> boo
         || result.resources.model_run_id.as_ref() != Some(&request.model_run_id)
         || result.resources.output_tokens > request.max_output_tokens
         || result.resources.elapsed_ms > request.timeout_ms
+        || result.resources.input_tokens != result.usage.rendered_prompt_tokens
+        || result.resources.output_tokens != result.usage.generated_output_tokens
+        || result.usage.output_token_reserve != request.max_output_tokens
+        || result.usage.generated_output_tokens > result.usage.output_token_reserve
+        || result.usage.cached_input_tokens.is_some()
+            != result.usage.evaluated_input_tokens.is_some()
+        || result
+            .usage
+            .cached_input_tokens
+            .zip(result.usage.evaluated_input_tokens)
+            .is_some_and(|(cached, evaluated)| {
+                cached > evaluated || evaluated != result.usage.rendered_prompt_tokens
+            })
+        || result
+            .usage
+            .reasoning_output_tokens
+            .is_some_and(|tokens| tokens > result.usage.generated_output_tokens)
+        || (matches!(
+            result.terminal_state,
+            ModelRunTerminalState::Proposed | ModelRunTerminalState::AdvisoryText
+        ) && !result.finish_reason.is_complete())
     {
         return false;
     }

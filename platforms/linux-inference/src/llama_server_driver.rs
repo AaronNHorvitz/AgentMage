@@ -14,10 +14,10 @@ use std::time::{Duration, Instant};
 
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, DecodingProfile, EncodedModelContext, ExactModelProfile,
-    ModelCancellationProbe, ModelHealth, ModelHealthState, ModelLoadReceipt,
+    ModelCancellationProbe, ModelFinishReason, ModelHealth, ModelHealthState, ModelLoadReceipt,
     ModelManifestObservation, ModelProfileId, ModelResourceReport, ModelRunRequest, ModelRunResult,
     ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity, ModelServingCachePolicy,
-    ModelServingCapabilities, ModelStreamId, ModelStreamSink, ModelUnloadReceipt,
+    ModelServingCapabilities, ModelStreamId, ModelStreamSink, ModelTokenUsage, ModelUnloadReceipt,
     RuntimeIsolationObservation, StreamedModelFragment, TokenCountResult,
 };
 use serde_json::{Value, json};
@@ -680,20 +680,35 @@ impl NativeModelDriver for LlamaServerDriver {
             return Err(failure("model.llama-driver.request-mismatch", false));
         }
         let started = Instant::now();
+        let client = self.client();
+        let properties = client.serving_properties()?;
+        if properties.parallel_slots != 1 {
+            return Err(failure("model.served-capability.drift", false));
+        }
+        let rendered_prompt_tokens = client.token_count(&context.bytes)?;
         let stream_id =
             ModelStreamId::from_raw(format!("stream:{}", request.model_run_id.as_str()));
-        let completion = self.client().completion_stream(
-            &context.bytes,
-            request,
-            &loaded.decoding,
-            cancellation,
-            &stream_id,
+        let completion = client.completion_stream(
+            CompletionInvocation {
+                context: &context.bytes,
+                rendered_prompt_tokens,
+                request,
+                decoding: &loaded.decoding,
+                cancellation,
+                stream_id: &stream_id,
+            },
             sink,
         )?;
         let response_sha256 = sha256(&completion.bytes);
         let loaded = self.loaded.as_mut().expect("loaded state retained");
-        loaded.input_tokens = loaded.input_tokens.saturating_add(0);
-        loaded.output_tokens = loaded.output_tokens.saturating_add(completion.tokens);
+        loaded.input_tokens = loaded
+            .input_tokens
+            .checked_add(rendered_prompt_tokens)
+            .ok_or_else(|| failure("model.llama-driver.input-accounting-overflow", false))?;
+        loaded.output_tokens = loaded
+            .output_tokens
+            .checked_add(completion.tokens)
+            .ok_or_else(|| failure("model.llama-driver.output-accounting-overflow", false))?;
         let resident_memory_bytes = resident_memory_bytes(loaded.runtime_pid);
         let accelerator_memory_bytes = accelerator_memory_bytes(loaded.runtime_pid)?;
         Ok(ModelRunResult {
@@ -702,17 +717,31 @@ impl NativeModelDriver for LlamaServerDriver {
             stream_id,
             correlation_id: request.correlation_id.clone(),
             terminal_state: completion.terminal_state,
+            finish_reason: completion.finish_reason,
             fragment_count: completion.fragments,
             response_sha256,
             proposal: None,
             failure: completion.failure,
+            usage: ModelTokenUsage {
+                rendered_prompt_tokens,
+                cached_input_tokens: completion.cached_input_tokens,
+                evaluated_input_tokens: completion.evaluated_input_tokens,
+                generated_output_tokens: completion.tokens,
+                reasoning_output_tokens: None,
+                output_token_reserve: request.max_output_tokens,
+                remaining_capacity_tokens: Some(
+                    properties
+                        .context_capacity_tokens
+                        .saturating_sub(rendered_prompt_tokens.saturating_add(completion.tokens)),
+                ),
+            },
             resources: ModelResourceReport {
                 adapter_id: self.config.identity.adapter_id.clone(),
                 profile_id: request.profile_id.clone(),
                 model_run_id: Some(request.model_run_id.clone()),
                 resident_memory_bytes,
                 accelerator_memory_bytes,
-                input_tokens: loaded.input_tokens,
+                input_tokens: rendered_prompt_tokens,
                 output_tokens: completion.tokens,
                 elapsed_ms: started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64,
             },
@@ -844,7 +873,19 @@ struct Completion {
     tokens: u32,
     fragments: u32,
     terminal_state: ModelRunTerminalState,
+    finish_reason: ModelFinishReason,
+    cached_input_tokens: Option<u32>,
+    evaluated_input_tokens: Option<u32>,
     failure: Option<ModelRuntimeFailure>,
+}
+
+struct CompletionInvocation<'a> {
+    context: &'a [u8],
+    rendered_prompt_tokens: u32,
+    request: &'a ModelRunRequest,
+    decoding: &'a DecodingProfile,
+    cancellation: Option<&'a dyn ModelCancellationProbe>,
+    stream_id: &'a ModelStreamId,
 }
 
 #[derive(Clone, Copy)]
@@ -930,13 +971,17 @@ impl UnixHttpClient {
 
     fn completion_stream(
         &self,
-        context: &[u8],
-        request: &ModelRunRequest,
-        decoding: &DecodingProfile,
-        cancellation: Option<&dyn ModelCancellationProbe>,
-        stream_id: &ModelStreamId,
+        invocation: CompletionInvocation<'_>,
         sink: &mut dyn ModelStreamSink,
     ) -> Result<Completion, ModelRuntimeFailure> {
+        let CompletionInvocation {
+            context,
+            rendered_prompt_tokens,
+            request,
+            decoding,
+            cancellation,
+            stream_id,
+        } = invocation;
         let prompt = std::str::from_utf8(context)
             .map_err(|_| failure("model.llama-driver.context-not-utf8", false))?;
         let body = serde_json::to_vec(&json!({
@@ -957,7 +1002,7 @@ impl UnixHttpClient {
             "id_slot": 0
         }))
         .map_err(|_| failure("model.llama-driver.completion-request-invalid", false))?;
-        let mut state = SseCompletionState::new(request, stream_id, sink);
+        let mut state = SseCompletionState::new(request, stream_id, rendered_prompt_tokens, sink);
         if cancellation_requested(cancellation, request)? {
             return state.interrupted(ModelRunTerminalState::Cancelled);
         }
@@ -987,6 +1032,15 @@ impl UnixHttpClient {
             Ok(()) => state.complete(),
             Err(StreamReadError::Cancelled) => state.interrupted(ModelRunTerminalState::Cancelled),
             Err(StreamReadError::TimedOut) => state.interrupted(ModelRunTerminalState::TimedOut),
+            Err(StreamReadError::Failed(error))
+                if matches!(
+                    error.code.as_str(),
+                    "model.llama-driver.http-unexpected-eof"
+                        | "model.llama-driver.http-read-failed"
+                ) =>
+            {
+                state.transport_failed(error)
+            }
             Err(StreamReadError::Failed(error)) => Err(error),
         }
     }
@@ -1167,15 +1221,21 @@ struct SseCompletionState<'a> {
     event_buffer: Vec<u8>,
     bytes: Vec<u8>,
     tokens: u32,
+    rendered_prompt_tokens: u32,
     fragments: u32,
     stop_seen: bool,
     done_seen: bool,
+    finish_reason: Option<ModelFinishReason>,
+    cached_input_tokens: Option<u32>,
+    evaluated_input_tokens: Option<u32>,
+    terminal_failure: Option<ModelRuntimeFailure>,
 }
 
 impl<'a> SseCompletionState<'a> {
     fn new(
         request: &ModelRunRequest,
         stream_id: &ModelStreamId,
+        rendered_prompt_tokens: u32,
         sink: &'a mut dyn ModelStreamSink,
     ) -> Self {
         Self {
@@ -1185,9 +1245,14 @@ impl<'a> SseCompletionState<'a> {
             event_buffer: Vec::new(),
             bytes: Vec::new(),
             tokens: 0,
+            rendered_prompt_tokens,
             fragments: 0,
             stop_seen: false,
             done_seen: false,
+            finish_reason: None,
+            cached_input_tokens: None,
+            evaluated_input_tokens: None,
+            terminal_failure: None,
         }
     }
 
@@ -1260,13 +1325,48 @@ impl<'a> SseCompletionState<'a> {
             .get("stop")
             .and_then(Value::as_bool)
             .ok_or_else(|| failure("model.llama-driver.sse-stop-invalid", false))?;
-        if terminal
-            && value
-                .get("stop_type")
-                .and_then(Value::as_str)
-                .is_some_and(|kind| !matches!(kind, "eos" | "limit" | "word"))
-        {
-            return Err(failure("model.llama-driver.sse-stop-type-invalid", false));
+        if terminal {
+            let truncated = value.get("truncated").and_then(Value::as_bool);
+            let predicted = u32_field(&value, "tokens_predicted");
+            let evaluated = u32_field(&value, "tokens_evaluated");
+            let cached = u32_field(&value, "tokens_cached");
+            let stop_type = value.get("stop_type").and_then(Value::as_str);
+            self.finish_reason = Some(if truncated == Some(true) {
+                ModelFinishReason::ContextTruncation
+            } else {
+                match stop_type {
+                    Some("eos") => ModelFinishReason::EndOfSequence,
+                    Some("word") => ModelFinishReason::ConfiguredStop,
+                    Some("limit") => ModelFinishReason::OutputTokenLimit,
+                    _ => ModelFinishReason::Unknown,
+                }
+            });
+            self.cached_input_tokens = cached;
+            self.evaluated_input_tokens = evaluated;
+            let evaluated_matches = evaluated.is_some_and(|evaluated| {
+                if truncated == Some(true) {
+                    evaluated <= self.rendered_prompt_tokens
+                } else {
+                    evaluated == self.rendered_prompt_tokens
+                }
+            });
+            let usage_matches = predicted == Some(self.tokens)
+                && evaluated_matches
+                && cached
+                    .zip(evaluated)
+                    .is_some_and(|(cached, evaluated)| cached <= evaluated)
+                && truncated.is_some()
+                && stop_type.is_some();
+            if !usage_matches {
+                self.finish_reason = Some(ModelFinishReason::Unknown);
+                self.terminal_failure = Some(failure(
+                    "model.llama-driver.completion-usage-contradiction",
+                    false,
+                ));
+            } else if self.finish_reason == Some(ModelFinishReason::Unknown) {
+                self.terminal_failure =
+                    Some(failure("model.llama-driver.sse-stop-type-unknown", false));
+            }
         }
         let content = content.as_bytes();
         if self.bytes.len().saturating_add(content.len()) > MAX_COMPLETION_BYTES {
@@ -1319,7 +1419,34 @@ impl<'a> SseCompletionState<'a> {
             tokens: self.tokens,
             fragments: self.fragments,
             terminal_state,
+            finish_reason: match terminal_state {
+                ModelRunTerminalState::Cancelled => ModelFinishReason::Cancelled,
+                ModelRunTerminalState::TimedOut => ModelFinishReason::DeadlineExceeded,
+                _ => unreachable!("validated interruption state"),
+            },
+            cached_input_tokens: None,
+            evaluated_input_tokens: None,
             failure: Some(failure(code, false)),
+        })
+    }
+
+    fn transport_failed(
+        mut self,
+        error: ModelRuntimeFailure,
+    ) -> Result<Completion, ModelRuntimeFailure> {
+        if self.stop_seen {
+            return Err(error);
+        }
+        self.emit(Vec::new(), true)?;
+        Ok(Completion {
+            bytes: self.bytes,
+            tokens: self.tokens,
+            fragments: self.fragments,
+            terminal_state: ModelRunTerminalState::Failed,
+            finish_reason: ModelFinishReason::TransportFailure,
+            cached_input_tokens: None,
+            evaluated_input_tokens: None,
+            failure: Some(error),
         })
     }
 
@@ -1343,27 +1470,46 @@ impl<'a> SseCompletionState<'a> {
                 return Err(failure(code, false));
             }
         }
-        let (terminal_state, failure) = match self
-            .bytes
-            .iter()
-            .copied()
-            .find(|byte| !byte.is_ascii_whitespace())
-        {
-            Some(b'{') | Some(b'[') => (ModelRunTerminalState::Proposed, None),
-            _ if plain_text(&self.bytes) => (ModelRunTerminalState::AdvisoryText, None),
-            _ => (
+        let finish_reason = self.finish_reason.unwrap_or(ModelFinishReason::Unknown);
+        let (terminal_state, failure) = if !finish_reason.is_complete() {
+            (
                 ModelRunTerminalState::Rejected,
-                Some(failure("model.llama-driver.completion-rejected", false)),
-            ),
+                self.terminal_failure
+                    .or_else(|| Some(failure("model.llama-driver.completion-incomplete", false))),
+            )
+        } else {
+            match self
+                .bytes
+                .iter()
+                .copied()
+                .find(|byte| !byte.is_ascii_whitespace())
+            {
+                Some(b'{') | Some(b'[') => (ModelRunTerminalState::Proposed, None),
+                _ if plain_text(&self.bytes) => (ModelRunTerminalState::AdvisoryText, None),
+                _ => (
+                    ModelRunTerminalState::Rejected,
+                    Some(failure("model.llama-driver.completion-rejected", false)),
+                ),
+            }
         };
         Ok(Completion {
             bytes: self.bytes,
             tokens: self.tokens,
             fragments: self.fragments,
             terminal_state,
+            finish_reason,
+            cached_input_tokens: self.cached_input_tokens,
+            evaluated_input_tokens: self.evaluated_input_tokens,
             failure,
         })
     }
+}
+
+fn u32_field(value: &Value, name: &str) -> Option<u32> {
+    value
+        .get(name)
+        .and_then(Value::as_u64)
+        .and_then(|value| u32::try_from(value).ok())
 }
 
 fn next_sse_event(bytes: &[u8]) -> Option<(usize, usize)> {
@@ -1884,18 +2030,18 @@ mod tests {
 
     use agentmage_kernel_contracts::{
         BoundaryKind, CancellationId, CancellationReason, CancellationSignal, ContextPacketId,
-        CorrelationId, DecodingProfile, ModelAdapterId, ModelCancellationProbe, ModelProfileId,
-        ModelRunId, ModelRunRequest, ModelRunTerminalState, ModelRuntimeFailure, ModelStreamId,
-        ModelStreamSink, StreamedModelFragment, TaskId,
+        CorrelationId, DecodingProfile, ModelAdapterId, ModelCancellationProbe, ModelFinishReason,
+        ModelProfileId, ModelRunId, ModelRunRequest, ModelRunTerminalState, ModelRuntimeFailure,
+        ModelStreamId, ModelStreamSink, StreamedModelFragment, TaskId,
     };
     use serde_json::{Value, json};
 
     use super::{
-        CONTRACT_SCHEMA_VERSION, Endpoint, FileSnapshot, GUEST_MODEL_PATH, GUEST_RUNTIME_ROOT,
-        GUEST_SOCKET_PATH, GUEST_SOCKET_ROOT, SANDBOX_DEVICE_PATHS, SANDBOX_READ_ONLY_DIRECTORIES,
-        UnixHttpClient, exact_directory, launch_arguments, parse_accelerator_memory,
-        parse_http_response, parse_serving_properties, plain_text, process_start_generation,
-        sandbox_arguments, valid_socket_path,
+        CONTRACT_SCHEMA_VERSION, CompletionInvocation, Endpoint, FileSnapshot, GUEST_MODEL_PATH,
+        GUEST_RUNTIME_ROOT, GUEST_SOCKET_PATH, GUEST_SOCKET_ROOT, SANDBOX_DEVICE_PATHS,
+        SANDBOX_READ_ONLY_DIRECTORIES, UnixHttpClient, exact_directory, launch_arguments,
+        parse_accelerator_memory, parse_http_response, parse_serving_properties, plain_text,
+        process_start_generation, sandbox_arguments, valid_socket_path,
     };
 
     static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
@@ -2026,6 +2172,35 @@ mod tests {
             decoding_profile_id: "diagnostic-repeatability-v1".to_owned(),
             max_output_tokens: 8,
             timeout_ms: 1_000,
+        }
+    }
+
+    fn completion_invocation<'a>(
+        request: &'a ModelRunRequest,
+        decoding: &'a DecodingProfile,
+        cancellation: Option<&'a dyn ModelCancellationProbe>,
+        stream_id: &'a ModelStreamId,
+    ) -> CompletionInvocation<'a> {
+        CompletionInvocation {
+            context: b"encoded context",
+            rendered_prompt_tokens: 2,
+            request,
+            decoding,
+            cancellation,
+            stream_id,
+        }
+    }
+
+    fn test_decoding(request: &ModelRunRequest) -> DecodingProfile {
+        DecodingProfile {
+            profile_id: request.decoding_profile_id.clone(),
+            sampler_order: vec!["greedy".to_owned()],
+            temperature: 0.0,
+            top_p: 1.0,
+            top_k: 1,
+            repeat_penalty: 1.0,
+            seed: 42,
+            max_output_tokens: 8,
         }
     }
 
@@ -2306,7 +2481,9 @@ mod tests {
         let events = [
             crlf_event,
             sse(json!({"content": "advisory", "tokens": [2], "stop": false})),
-            sse(json!({"content": "", "tokens": [], "stop": true, "stop_type": "eos"})),
+            sse(
+                json!({"content": "", "tokens": [], "stop": true, "stop_type": "eos", "truncated": false, "tokens_predicted": 2, "tokens_evaluated": 2, "tokens_cached": 0}),
+            ),
             b"data: [DONE]\n\n".to_vec(),
         ];
         let ((completion, fragments), request) = exchange(streaming_response(&events), |client| {
@@ -2315,11 +2492,7 @@ mod tests {
             let mut sink = RecordingSink::default();
             let completion = client
                 .completion_stream(
-                    b"encoded context",
-                    &request,
-                    &decoding,
-                    None,
-                    &stream_id,
+                    completion_invocation(&request, &decoding, None, &stream_id),
                     &mut sink,
                 )
                 .expect("completion");
@@ -2368,7 +2541,9 @@ mod tests {
         // transports also expose the implementation's optional [DONE] marker.
         let structured = [
             sse(json!({"content": "{}", "tokens": [1], "stop": false})),
-            sse(json!({"content": "", "tokens": [], "stop": true, "stop_type": "limit"})),
+            sse(
+                json!({"content": "", "tokens": [], "stop": true, "stop_type": "limit", "truncated": false, "tokens_predicted": 1, "tokens_evaluated": 2, "tokens_cached": 1}),
+            ),
         ];
         let ((completion, _), _) = exchange(streaming_response(&structured), |client| {
             let request = run_request();
@@ -2376,18 +2551,98 @@ mod tests {
             let mut sink = RecordingSink::default();
             let completion = client
                 .completion_stream(
-                    b"encoded context",
-                    &request,
-                    &decoding,
-                    None,
-                    &stream_id,
+                    completion_invocation(&request, &decoding, None, &stream_id),
                     &mut sink,
                 )
                 .expect("structured candidate");
             (completion, sink.fragments)
         });
-        assert_eq!(completion.terminal_state, ModelRunTerminalState::Proposed);
-        assert!(completion.failure.is_none());
+        assert_eq!(completion.terminal_state, ModelRunTerminalState::Rejected);
+        assert_eq!(
+            completion.finish_reason,
+            ModelFinishReason::OutputTokenLimit
+        );
+        assert!(completion.failure.is_some());
+    }
+
+    #[test]
+    fn ctx_finish_retains_incomplete_reasons_usage_and_bounded_partial_bytes() {
+        let decoding = DecodingProfile {
+            profile_id: "diagnostic-repeatability-v1".to_owned(),
+            sampler_order: vec!["greedy".to_owned()],
+            temperature: 0.0,
+            top_p: 1.0,
+            top_k: 1,
+            repeat_penalty: 1.0,
+            seed: 42,
+            max_output_tokens: 8,
+        };
+        let cases = [
+            (
+                json!({"content": "complete", "tokens": [1], "stop": true, "stop_type": "word", "truncated": false, "tokens_predicted": 1, "tokens_evaluated": 2, "tokens_cached": 1}),
+                ModelRunTerminalState::AdvisoryText,
+                ModelFinishReason::ConfiguredStop,
+            ),
+            (
+                json!({"content": "{\"partial\":true}", "tokens": [1], "stop": true, "stop_type": "limit", "truncated": true, "tokens_predicted": 1, "tokens_evaluated": 1, "tokens_cached": 0}),
+                ModelRunTerminalState::Rejected,
+                ModelFinishReason::ContextTruncation,
+            ),
+            (
+                json!({"content": "partial prose", "tokens": [1], "stop": true, "stop_type": "future", "truncated": false, "tokens_predicted": 1, "tokens_evaluated": 2, "tokens_cached": 0}),
+                ModelRunTerminalState::Rejected,
+                ModelFinishReason::Unknown,
+            ),
+            (
+                json!({"content": "{\"looks\":\"valid\"}", "tokens": [1], "stop": true, "stop_type": "eos", "truncated": false, "tokens_predicted": 2, "tokens_evaluated": 3, "tokens_cached": 4}),
+                ModelRunTerminalState::Rejected,
+                ModelFinishReason::Unknown,
+            ),
+        ];
+        for (event, terminal_state, finish_reason) in cases {
+            let ((completion, fragments), _) =
+                exchange(streaming_response(&[sse(event)]), |client| {
+                    let request = run_request();
+                    let stream_id = ModelStreamId::from_raw("stream-ctx-finish");
+                    let mut sink = RecordingSink::default();
+                    let completion = client
+                        .completion_stream(
+                            completion_invocation(&request, &decoding, None, &stream_id),
+                            &mut sink,
+                        )
+                        .expect("truthful terminal result");
+                    (completion, sink.fragments)
+                });
+            assert_eq!(completion.terminal_state, terminal_state);
+            assert_eq!(completion.finish_reason, finish_reason);
+            assert_eq!(fragments.len(), 1);
+            assert!(fragments[0].terminal);
+            assert_ne!(completion.terminal_state, ModelRunTerminalState::Proposed);
+        }
+
+        let partial = sse(json!({"content": "bounded partial", "tokens": [1], "stop": false}));
+        let mut lost_transport = streaming_headers();
+        lost_transport.extend_from_slice(&chunk(&partial));
+        let ((completion, fragments), _) = exchange(lost_transport, |client| {
+            let request = run_request();
+            let stream_id = ModelStreamId::from_raw("stream-transport-loss");
+            let mut sink = RecordingSink::default();
+            let completion = client
+                .completion_stream(
+                    completion_invocation(&request, &decoding, None, &stream_id),
+                    &mut sink,
+                )
+                .expect("transport loss result");
+            (completion, sink.fragments)
+        });
+        assert_eq!(completion.terminal_state, ModelRunTerminalState::Failed);
+        assert_eq!(
+            completion.finish_reason,
+            ModelFinishReason::TransportFailure
+        );
+        assert_eq!(completion.bytes, b"bounded partial");
+        assert_eq!(fragments.len(), 2);
+        assert!(fragments[1].terminal);
     }
 
     #[test]
@@ -2404,23 +2659,11 @@ mod tests {
             |client| {
                 let request = run_request();
                 let stream_id = ModelStreamId::from_raw("stream-1");
+                let decoding = test_decoding(&request);
                 let mut sink = RecordingSink::default();
                 let completion = client
                     .completion_stream(
-                        b"encoded context",
-                        &request,
-                        &DecodingProfile {
-                            profile_id: request.decoding_profile_id.clone(),
-                            sampler_order: vec!["greedy".to_owned()],
-                            temperature: 0.0,
-                            top_p: 1.0,
-                            top_k: 1,
-                            repeat_penalty: 1.0,
-                            seed: 42,
-                            max_output_tokens: 8,
-                        },
-                        Some(&probe),
-                        &stream_id,
+                        completion_invocation(&request, &decoding, Some(&probe), &stream_id),
                         &mut sink,
                     )
                     .expect("cancelled completion");
@@ -2449,23 +2692,11 @@ mod tests {
             ],
             |client| {
                 let stream_id = ModelStreamId::from_raw("stream-1");
+                let decoding = test_decoding(&request);
                 let mut sink = RecordingSink::default();
                 let completion = client
                     .completion_stream(
-                        b"encoded context",
-                        &request,
-                        &DecodingProfile {
-                            profile_id: request.decoding_profile_id.clone(),
-                            sampler_order: vec!["greedy".to_owned()],
-                            temperature: 0.0,
-                            top_p: 1.0,
-                            top_k: 1,
-                            repeat_penalty: 1.0,
-                            seed: 42,
-                            max_output_tokens: 8,
-                        },
-                        None,
-                        &stream_id,
+                        completion_invocation(&request, &decoding, None, &stream_id),
                         &mut sink,
                     )
                     .expect("timed out completion");
@@ -2485,36 +2716,20 @@ mod tests {
         let incomplete = streaming_response(&[sse(
             json!({"content": "partial", "tokens": [1], "stop": false}),
         )]);
-        let bad_stop = streaming_response(&[
-            sse(json!({"content": "x", "tokens": [1], "stop": true, "stop_type": "other"})),
-            b"data: [DONE]\n\n".to_vec(),
-        ]);
         let wrong_headers =
             b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nContent-Length: 0\r\n\r\n"
                 .to_vec();
         let mut extended_chunk = streaming_headers();
         extended_chunk.extend_from_slice(b"1;extension=true\r\nx\r\n0\r\n\r\n");
-        for response in [incomplete, bad_stop, wrong_headers, extended_chunk] {
+        for response in [incomplete, wrong_headers, extended_chunk] {
             let (failed, _) = exchange(response, |client| {
                 let request = run_request();
                 let stream_id = ModelStreamId::from_raw("stream-1");
+                let decoding = test_decoding(&request);
                 let mut sink = RecordingSink::default();
                 client
                     .completion_stream(
-                        b"encoded context",
-                        &request,
-                        &DecodingProfile {
-                            profile_id: request.decoding_profile_id.clone(),
-                            sampler_order: vec!["greedy".to_owned()],
-                            temperature: 0.0,
-                            top_p: 1.0,
-                            top_k: 1,
-                            repeat_penalty: 1.0,
-                            seed: 42,
-                            max_output_tokens: 8,
-                        },
-                        None,
-                        &stream_id,
+                        completion_invocation(&request, &decoding, None, &stream_id),
                         &mut sink,
                     )
                     .is_err()

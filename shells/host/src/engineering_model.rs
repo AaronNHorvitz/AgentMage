@@ -13,7 +13,7 @@ use agentmage_kernel_engine::model_runtime::{
 use sha2::{Digest, Sha256};
 
 use crate::engineering_runtime::{
-    EngineeringModelError, EngineeringModelInput, EngineeringModelPort,
+    EngineeringModelDiagnostic, EngineeringModelError, EngineeringModelInput, EngineeringModelPort,
 };
 
 /// Qualified bridge construction failure without model or prompt content.
@@ -33,6 +33,7 @@ pub struct QualifiedLocalEngineeringModel<R: LocalModelRuntime, C: ModelFamilyCo
     endpoint_profile_id: EndpointProfileId,
     route_decision_id: RouteDecisionId,
     next_run: u64,
+    last_diagnostic: Option<EngineeringModelDiagnostic>,
 }
 
 impl<R: LocalModelRuntime, C: ModelFamilyCodec> QualifiedLocalEngineeringModel<R, C> {
@@ -59,6 +60,7 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> QualifiedLocalEngineeringModel<R
             endpoint_profile_id,
             route_decision_id,
             next_run: 0,
+            last_diagnostic: None,
         })
     }
 }
@@ -76,6 +78,10 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> EngineeringModelPort
 
     fn route_decision_id(&self) -> RouteDecisionId {
         self.route_decision_id.clone()
+    }
+
+    fn last_diagnostic(&self) -> Option<&EngineeringModelDiagnostic> {
+        self.last_diagnostic.as_ref()
     }
 
     fn execute(&mut self, input: &EngineeringModelInput) -> Result<String, EngineeringModelError> {
@@ -142,6 +148,21 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> EngineeringModelPort
             .controller
             .stream_with_output(&request, &packet, None)
             .map_err(|_| EngineeringModelError::Failed)?;
+        let result_sha256 =
+            sha256(&to_canonical_json(&output.result).map_err(|_| EngineeringModelError::Failed)?);
+        self.last_diagnostic = Some(EngineeringModelDiagnostic {
+            model_run_id: output.result.model_run_id.clone(),
+            terminal_state: output.result.terminal_state,
+            finish_reason: output.result.finish_reason,
+            usage: output.result.usage.clone(),
+            failure_code: output
+                .result
+                .failure
+                .as_ref()
+                .map(|failure| failure.code.clone()),
+            response_sha256: output.result.response_sha256.clone(),
+            result_sha256,
+        });
         match output.result.terminal_state {
             ModelRunTerminalState::AdvisoryText => {
                 String::from_utf8(output.response_bytes).map_err(|_| EngineeringModelError::Failed)

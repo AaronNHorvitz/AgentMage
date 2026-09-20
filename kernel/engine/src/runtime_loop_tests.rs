@@ -10,19 +10,20 @@ use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason, CancellationSignal,
     ContextPacketId, ContractPayload, CorrelationId, DataSensitivity, EvidenceId, EvidenceKind,
     EvidenceReference, ExactModelProfile, GrantId, GrantOperation, ModelContextPacket,
-    ModelMessage, ModelMessageId, ModelMessageRole, ModelProposalKind, ModelResourceReport,
-    ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure, ModelStreamId,
-    ModelToolCallCandidate, OperationBinding, OperationOutcome, PlanId, PlanStepId, PolicyId,
-    PostconditionResult, ReceiptId, RepositorySnapshotId, RequiredGrantTemplate, RollbackPlan,
-    RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeArtifactKind,
-    RuntimeArtifactManifest, RuntimeArtifactRef, RuntimeEvent, RuntimeEventKind,
-    RuntimeEventRetentionKind, RuntimeOperationId, RuntimeOutput, RuntimeResourceUsage,
-    RuntimeResumeBinding, RuntimeRunId, RuntimeRunLimits, RuntimeRunRequest, RuntimeSessionMode,
-    SchemaId, SchemaReference, SessionCheckpoint, SessionCheckpointId, SessionId, StateChange,
-    StopCondition, StopConditionKind, StorageFilesystemClass, StrictLocalStorageObservation, Task,
-    TaskId, TaskStatus, ToolCall, ToolCatalogId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel,
-    VerifierCandidate, VerifierDisposition, VerifierId, VerifierRecordId, VerifierSource,
-    WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, WorkspacePath, to_canonical_json,
+    ModelFinishReason, ModelMessage, ModelMessageId, ModelMessageRole, ModelProposalKind,
+    ModelResourceReport, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
+    ModelRuntimeFailure, ModelStreamId, ModelTokenUsage, ModelToolCallCandidate, OperationBinding,
+    OperationOutcome, PlanId, PlanStepId, PolicyId, PostconditionResult, ReceiptId,
+    RepositorySnapshotId, RequiredGrantTemplate, RollbackPlan, RuntimeApprovalDisposition,
+    RuntimeApprovalResponse, RuntimeArtifactKind, RuntimeArtifactManifest, RuntimeArtifactRef,
+    RuntimeEvent, RuntimeEventKind, RuntimeEventRetentionKind, RuntimeOperationId, RuntimeOutput,
+    RuntimeResourceUsage, RuntimeResumeBinding, RuntimeRunId, RuntimeRunLimits, RuntimeRunRequest,
+    RuntimeSessionMode, SchemaId, SchemaReference, SessionCheckpoint, SessionCheckpointId,
+    SessionId, StateChange, StopCondition, StopConditionKind, StorageFilesystemClass,
+    StrictLocalStorageObservation, Task, TaskId, TaskStatus, ToolCall, ToolCatalogId,
+    ToolDefinition, ToolId, ToolResult, ToolRiskLevel, VerifierCandidate, VerifierDisposition,
+    VerifierId, VerifierRecordId, VerifierSource, WorkPacket, WorkPacketId, WorkPacketState,
+    WorkspaceId, WorkspacePath, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -33,9 +34,10 @@ use super::{
     RuntimeJournalPort, RuntimeLoopError, RuntimeModelPort, RuntimePermissionEvaluation,
     RuntimePortFailure, RuntimeResumeSnapshot, RuntimeToolArtifactCandidate, RuntimeToolBoundary,
     RuntimeToolCorrectnessCommit, RuntimeToolExecution, RuntimeVerificationInput,
-    RuntimeVerifierPort, derived_id, runtime_action_id, runtime_event_cursor,
-    runtime_tool_references,
+    RuntimeVerifierPort, derived_id, incomplete_model_failure_code, runtime_action_id,
+    runtime_event_cursor, runtime_tool_references,
 };
+
 use crate::context_management::finalize_checkpoint;
 use crate::evidence_reconciliation::{
     CitationFileIdentity, CitationSelector, SourceCitation, resolve_citation,
@@ -73,6 +75,36 @@ use crate::tooling::{Tool, ToolRegistry};
 
 const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const SNAPSHOT: &str = "snapshot-0001";
+
+#[test]
+fn ctx_finish_projects_stable_content_free_host_failure_codes() {
+    for (reason, expected) in [
+        (
+            ModelFinishReason::OutputTokenLimit,
+            "runtime.model.incomplete.output_token_limit",
+        ),
+        (
+            ModelFinishReason::ContextTruncation,
+            "runtime.model.incomplete.context_truncation",
+        ),
+        (
+            ModelFinishReason::ReasoningExhausted,
+            "runtime.model.incomplete.reasoning_exhausted",
+        ),
+        (
+            ModelFinishReason::TransportFailure,
+            "runtime.model.incomplete.transport_failure",
+        ),
+        (
+            ModelFinishReason::Unknown,
+            "runtime.model.incomplete.unknown",
+        ),
+    ] {
+        assert_eq!(incomplete_model_failure_code(reason), expected);
+        assert!(!expected.contains("prompt"));
+        assert!(!expected.contains("response"));
+    }
+}
 static PRESSURE_TEMP_ID: AtomicU64 = AtomicU64::new(1);
 
 #[test]
@@ -200,10 +232,20 @@ impl RuntimeModelPort for FakeModel {
             stream_id: ModelStreamId::from_raw(format!("stream-{}", self.calls)),
             correlation_id: request.correlation_id.clone(),
             terminal_state: ModelRunTerminalState::Proposed,
+            finish_reason: ModelFinishReason::EndOfSequence,
             fragment_count: 1,
             response_sha256: sha256(proposal.proposal_sha256.as_bytes()),
             proposal: Some(proposal),
             failure: None,
+            usage: ModelTokenUsage {
+                rendered_prompt_tokens: 1,
+                cached_input_tokens: None,
+                evaluated_input_tokens: None,
+                generated_output_tokens: 1,
+                reasoning_output_tokens: None,
+                output_token_reserve: request.max_output_tokens,
+                remaining_capacity_tokens: None,
+            },
             resources: ModelResourceReport {
                 adapter_id: request.adapter_id.clone(),
                 profile_id: request.profile_id.clone(),
@@ -264,6 +306,7 @@ impl RuntimeModelPort for PressureStreamingModel {
                     stream_id: ModelStreamId::from_raw("pressure-stream-1"),
                     correlation_id: request.correlation_id.clone(),
                     terminal_state: ModelRunTerminalState::Cancelled,
+                    finish_reason: ModelFinishReason::Cancelled,
                     fragment_count,
                     response_sha256: sha256(format!("pressure:{fragments}").as_bytes()),
                     proposal: None,
@@ -273,6 +316,15 @@ impl RuntimeModelPort for PressureStreamingModel {
                         dependency_recovery_required: false,
                         contract_error: None,
                     }),
+                    usage: ModelTokenUsage {
+                        rendered_prompt_tokens: 1,
+                        cached_input_tokens: None,
+                        evaluated_input_tokens: None,
+                        generated_output_tokens: 1,
+                        reasoning_output_tokens: None,
+                        output_token_reserve: request.max_output_tokens,
+                        remaining_capacity_tokens: None,
+                    },
                     resources: ModelResourceReport {
                         adapter_id: request.adapter_id.clone(),
                         profile_id: request.profile_id.clone(),

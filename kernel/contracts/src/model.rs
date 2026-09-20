@@ -117,6 +117,37 @@ pub enum ModelRunTerminalState {
     Rejected,
 }
 
+/// Provider-neutral reason that one model generation stopped.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ModelFinishReason {
+    /// The runtime observed the model's end-of-sequence token.
+    EndOfSequence,
+    /// The runtime matched one configured stopping sequence.
+    ConfiguredStop,
+    /// The request's generated-token ceiling was reached.
+    OutputTokenLimit,
+    /// The runtime truncated or shifted model-visible context.
+    ContextTruncation,
+    /// A separately metered reasoning-token ceiling was reached.
+    ReasoningExhausted,
+    /// The caller cancelled the run.
+    Cancelled,
+    /// The exact request deadline elapsed.
+    DeadlineExceeded,
+    /// The response transport ended before a complete stop record.
+    TransportFailure,
+    /// The provider supplied no recognized truthful finish reason.
+    Unknown,
+}
+
+impl ModelFinishReason {
+    /// Whether this reason permits complete response classification.
+    pub const fn is_complete(self) -> bool {
+        matches!(self, Self::EndOfSequence | Self::ConfiguredStop)
+    }
+}
+
 /// Role of one bounded message supplied to the model edge.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -832,6 +863,30 @@ pub struct ModelResourceReport {
     pub elapsed_ms: u64,
 }
 
+/// Reconciled token accounting for one exact rendered generation request.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ModelTokenUsage {
+    /// Tokens in the exact rendered prompt counted before dispatch.
+    pub rendered_prompt_tokens: u32,
+    /// Provider-reported prompt tokens reused from cache, when available.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub cached_input_tokens: Option<u32>,
+    /// Provider-reported total evaluated prompt tokens, when available.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub evaluated_input_tokens: Option<u32>,
+    /// Generated tokens observed in the bounded response stream.
+    pub generated_output_tokens: u32,
+    /// Provider-reported reasoning-token subset, when separately available.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub reasoning_output_tokens: Option<u32>,
+    /// Output-token reserve fixed by the admitted request.
+    pub output_token_reserve: u32,
+    /// Capacity remaining after rendered input and received output, when known.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub remaining_capacity_tokens: Option<u32>,
+}
+
 /// Exact token-count result before admission of a run.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -862,6 +917,8 @@ pub struct ModelRunResult {
     pub correlation_id: CorrelationId,
     /// Terminal run disposition.
     pub terminal_state: ModelRunTerminalState,
+    /// Truthful reason the provider or local boundary stopped generation.
+    pub finish_reason: ModelFinishReason,
     /// Number of accepted contiguous fragments.
     pub fragment_count: u32,
     /// Lowercase SHA-256 digest of the complete response bytes.
@@ -872,6 +929,8 @@ pub struct ModelRunResult {
     /// Optional typed runtime failure.
     #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub failure: Option<ModelRuntimeFailure>,
+    /// Per-run prompt, generation, reserve, and remaining-capacity facts.
+    pub usage: ModelTokenUsage,
     /// Content-free resource report.
     pub resources: ModelResourceReport,
 }

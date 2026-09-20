@@ -4,11 +4,12 @@ use std::collections::BTreeSet;
 
 use agentmage_kernel_contracts::{
     CorrelationId, ExactModelProfile, LocalModelRuntime, ModelCancellationProbe,
-    ModelCapabilityState, ModelContextPacket, ModelFamilyCodec, ModelHealth, ModelHealthState,
-    ModelLifecycleState, ModelLoadReceipt, ModelManifestObservation, ModelModality, ModelProfileId,
-    ModelResourceReport, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
-    ModelRuntimeFailure, ModelRuntimeIdentity, ModelServingCachePolicy, ModelServingCapabilities,
-    ModelStreamSink, ModelUnloadReceipt, StreamedModelFragment, TaskId, TokenCountResult,
+    ModelCapabilityState, ModelContextPacket, ModelFamilyCodec, ModelFinishReason, ModelHealth,
+    ModelHealthState, ModelLifecycleState, ModelLoadReceipt, ModelManifestObservation,
+    ModelModality, ModelProfileId, ModelResourceReport, ModelRunRequest, ModelRunResult,
+    ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity, ModelServingCachePolicy,
+    ModelServingCapabilities, ModelStreamSink, ModelUnloadReceipt, StreamedModelFragment, TaskId,
+    TokenCountResult,
 };
 use sha2::{Digest, Sha256};
 
@@ -459,6 +460,19 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         if result.response_sha256 != sha256_hex(&capture.bytes) {
             return Err(ModelRuntimeGateError::ResultMismatch);
         }
+        let served_capacity = self
+            .served_capabilities
+            .as_ref()
+            .ok_or(ModelRuntimeGateError::ServedCapabilityMissing)?
+            .context_capacity_tokens;
+        if !valid_usage(packet.input_tokens, served_capacity, request, &result)
+            || (matches!(
+                result.terminal_state,
+                ModelRunTerminalState::Proposed | ModelRunTerminalState::AdvisoryText
+            ) && !result.finish_reason.is_complete())
+        {
+            return Err(ModelRuntimeGateError::ResultMismatch);
+        }
         if result.terminal_state == ModelRunTerminalState::Proposed {
             let decoded = self
                 .codec
@@ -735,6 +749,8 @@ fn validate_result(
         || result.resources.profile_id != profile.profile_id
         || result.resources.model_run_id.as_ref() != Some(&request.model_run_id)
         || result.resources.output_tokens > request.max_output_tokens
+        || result.resources.input_tokens != result.usage.rendered_prompt_tokens
+        || result.resources.output_tokens != result.usage.generated_output_tokens
     {
         return Err(ModelRuntimeGateError::ResultMismatch);
     }
@@ -765,7 +781,73 @@ fn validate_result(
             }
         }
     }
+    match result.finish_reason {
+        ModelFinishReason::Cancelled
+            if result.terminal_state != ModelRunTerminalState::Cancelled =>
+        {
+            return Err(ModelRuntimeGateError::ResultMismatch);
+        }
+        ModelFinishReason::DeadlineExceeded
+            if result.terminal_state != ModelRunTerminalState::TimedOut =>
+        {
+            return Err(ModelRuntimeGateError::ResultMismatch);
+        }
+        ModelFinishReason::TransportFailure
+            if result.terminal_state != ModelRunTerminalState::Failed =>
+        {
+            return Err(ModelRuntimeGateError::ResultMismatch);
+        }
+        reason
+            if !reason.is_complete()
+                && matches!(
+                    result.terminal_state,
+                    ModelRunTerminalState::Proposed | ModelRunTerminalState::AdvisoryText
+                ) =>
+        {
+            return Err(ModelRuntimeGateError::ResultMismatch);
+        }
+        _ => {}
+    }
     Ok(())
+}
+
+fn valid_usage(
+    packet_input_tokens: u32,
+    served_capacity: u32,
+    request: &ModelRunRequest,
+    result: &ModelRunResult,
+) -> bool {
+    let usage = &result.usage;
+    if usage.rendered_prompt_tokens != packet_input_tokens
+        || usage.generated_output_tokens != result.resources.output_tokens
+        || usage.output_token_reserve != request.max_output_tokens
+        || usage.generated_output_tokens > usage.output_token_reserve
+        || usage
+            .reasoning_output_tokens
+            .is_some_and(|tokens| tokens > usage.generated_output_tokens)
+        || usage.cached_input_tokens.is_some() != usage.evaluated_input_tokens.is_some()
+    {
+        return false;
+    }
+    if let (Some(cached), Some(evaluated)) =
+        (usage.cached_input_tokens, usage.evaluated_input_tokens)
+        && (cached > evaluated
+            || if result.finish_reason == ModelFinishReason::ContextTruncation {
+                evaluated > usage.rendered_prompt_tokens
+            } else {
+                evaluated != usage.rendered_prompt_tokens
+            })
+    {
+        return false;
+    }
+    usage.remaining_capacity_tokens
+        == Some(
+            served_capacity.saturating_sub(
+                usage
+                    .rendered_prompt_tokens
+                    .saturating_add(usage.generated_output_tokens),
+            ),
+        )
 }
 
 fn valid_profile(profile: &ExactModelProfile) -> bool {
@@ -950,15 +1032,15 @@ mod tests {
         CancellationSignal, ContextBudget, ContextPacketId, CorrelationId, DecodingProfile,
         EncodedModelContext, ExactModelProfile, FamilyCodecIdentity, HardwareEnvelope,
         LocalModelRuntime, ModelAdapterId, ModelArtifact, ModelCancellationProbe, ModelCapability,
-        ModelCapabilityState, ModelCodecId, ModelContextPacket, ModelHealth, ModelHealthState,
-        ModelLifecycleState, ModelLoadReceipt, ModelManifestId, ModelManifestObservation,
-        ModelMessage, ModelMessageId, ModelMessageRole, ModelModality, ModelProfileId,
-        ModelProposalKind, ModelResourceReport, ModelRole, ModelRunId, ModelRunRequest,
-        ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity,
-        ModelRuntimeKind, ModelServingCachePolicy, ModelServingCapabilities, ModelStreamId,
-        ModelStreamSink, ModelTransformation, ModelUnloadReceipt, PlatformArchitecture,
-        PlatformFamily, RuntimeIsolationObservation, SessionId, StreamedModelFragment, TaskId,
-        TokenCountResult, ToolCatalogId,
+        ModelCapabilityState, ModelCodecId, ModelContextPacket, ModelFinishReason, ModelHealth,
+        ModelHealthState, ModelLifecycleState, ModelLoadReceipt, ModelManifestId,
+        ModelManifestObservation, ModelMessage, ModelMessageId, ModelMessageRole, ModelModality,
+        ModelProfileId, ModelProposalKind, ModelResourceReport, ModelRole, ModelRunId,
+        ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure,
+        ModelRuntimeIdentity, ModelRuntimeKind, ModelServingCachePolicy, ModelServingCapabilities,
+        ModelStreamId, ModelStreamSink, ModelTokenUsage, ModelTransformation, ModelUnloadReceipt,
+        PlatformArchitecture, PlatformFamily, RuntimeIsolationObservation, SessionId,
+        StreamedModelFragment, TaskId, TokenCountResult, ToolCatalogId,
     };
 
     use super::{
@@ -1241,10 +1323,31 @@ mod tests {
                 stream_id,
                 correlation_id: request.correlation_id.clone(),
                 terminal_state,
+                finish_reason: match self.scenario {
+                    FakeScenario::FalseCompletion => ModelFinishReason::ReasoningExhausted,
+                    _ => match terminal_state {
+                        ModelRunTerminalState::Proposed => ModelFinishReason::EndOfSequence,
+                        ModelRunTerminalState::TimedOut => ModelFinishReason::DeadlineExceeded,
+                        ModelRunTerminalState::Cancelled => ModelFinishReason::Cancelled,
+                        _ => ModelFinishReason::Unknown,
+                    },
+                },
                 fragment_count: 1,
                 response_sha256,
                 proposal,
                 failure,
+                usage: ModelTokenUsage {
+                    rendered_prompt_tokens: 1,
+                    cached_input_tokens: None,
+                    evaluated_input_tokens: None,
+                    generated_output_tokens: 1,
+                    reasoning_output_tokens: None,
+                    output_token_reserve: request.max_output_tokens,
+                    remaining_capacity_tokens: self
+                        .served
+                        .as_ref()
+                        .and_then(|served| served.context_capacity_tokens.checked_sub(2)),
+                },
                 resources: ModelResourceReport {
                     adapter_id: self.identity.adapter_id.clone(),
                     profile_id: request.profile_id.clone(),
