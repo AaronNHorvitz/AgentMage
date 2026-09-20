@@ -942,6 +942,9 @@ fn runtime_failure(code: &str) -> ModelRuntimeFailure {
 
 #[cfg(test)]
 mod tests {
+    use std::cell::Cell;
+    use std::rc::Rc;
+
     use agentmage_kernel_contracts::{
         BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason,
         CancellationSignal, ContextBudget, ContextPacketId, CorrelationId, DecodingProfile,
@@ -1001,6 +1004,8 @@ mod tests {
         served_drift_after_load: Option<ServedDrift>,
         scenario: FakeScenario,
         resident_memory_bytes: u64,
+        load_generation: u64,
+        stream_calls: Rc<Cell<u32>>,
     }
 
     impl FakeRuntime {
@@ -1015,6 +1020,8 @@ mod tests {
                 served_drift_after_load: None,
                 scenario: FakeScenario::Happy,
                 resident_memory_bytes: 1,
+                load_generation: 0,
+                stream_calls: Rc::new(Cell::new(0)),
             }
         }
     }
@@ -1047,6 +1054,7 @@ mod tests {
             &mut self,
             profile: &ExactModelProfile,
         ) -> Result<ModelLoadReceipt, ModelRuntimeFailure> {
+            self.load_generation += 1;
             self.loaded = Some(profile.profile_id.clone());
             let served = ModelServingCapabilities {
                 schema_version: 1,
@@ -1058,7 +1066,7 @@ mod tests {
                 endpoint: "fixture://served-profile".to_owned(),
                 process_id: 1,
                 process_generation: 1,
-                load_generation: 1,
+                load_generation: self.load_generation,
                 launch_configuration_sha256: SHA.to_owned(),
                 context_capacity_tokens: profile.context.max_context_tokens,
                 parallel_slots: 1,
@@ -1161,6 +1169,7 @@ mod tests {
             cancellation: Option<&dyn ModelCancellationProbe>,
             sink: &mut dyn ModelStreamSink,
         ) -> Result<ModelRunResult, ModelRuntimeFailure> {
+            self.stream_calls.set(self.stream_calls.get() + 1);
             if self.scenario == FakeScenario::Crashed {
                 return Err(runtime_failure("fixture.runtime-crashed"));
             }
@@ -1637,6 +1646,7 @@ mod tests {
             let mut runtime = FakeRuntime::new(&profile);
             runtime.served_drift_after_load = Some(drift);
             runtime.scenario = FakeScenario::Crashed;
+            let stream_calls = Rc::clone(&runtime.stream_calls);
             let mut controller = LocalModelController::new(
                 runtime,
                 ClosedJsonFamilyCodec::new(profile.codec.clone()),
@@ -1650,7 +1660,31 @@ mod tests {
                 Err(expected),
                 "drift={drift:?}"
             );
+            assert_eq!(stream_calls.get(), 0, "drift={drift:?}");
         }
+    }
+
+    #[test]
+    fn served_capability_stable_sleep_reobservation_and_reload_generation_are_explicit() {
+        let profile = profile();
+        let admitted = ModelAdmissionCatalog::new(vec![profile.clone()])
+            .expect("catalog")
+            .admit(&profile, ModelUsePurpose::ContractTest)
+            .expect("admitted");
+        let mut controller = LocalModelController::new(
+            FakeRuntime::new(&profile),
+            ClosedJsonFamilyCodec::new(profile.codec.clone()),
+            admitted,
+        )
+        .expect("controller");
+        let first = controller.load().expect("first load").served_capabilities;
+        std::thread::sleep(std::time::Duration::from_millis(1));
+        assert_eq!(controller.serving_capabilities(), Ok(first.clone()));
+        controller.unload().expect("unload");
+        let second = controller.load().expect("reload").served_capabilities;
+        assert_eq!(second.process_generation, first.process_generation);
+        assert_eq!(second.load_generation, first.load_generation + 1);
+        assert_ne!(second, first);
     }
 
     #[test]

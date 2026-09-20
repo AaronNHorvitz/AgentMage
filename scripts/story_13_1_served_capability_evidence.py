@@ -46,6 +46,7 @@ COMMANDS: Final = (
 MARKERS: Final = (
     "served_capabilities_reject_missing_forged_undersized_and_unsafe_facts ... ok",
     "health_rejects_every_served_capability_drift_before_dispatch ... ok",
+    "served_capability_stable_sleep_reobservation_and_reload_generation_are_explicit ... ok",
     "undersized_served_capacity_refuses_and_retains_no_loaded_binding ... ok",
     "process_generation_is_read_from_the_live_process_identity ... ok",
 )
@@ -67,8 +68,9 @@ REJECTION_MATRIX: Final = (
     "forged-profile-manifest-artifact-runtime",
     "unsafe-parallel-shared-cache",
     "endpoint-drift",
-    "process-restart-generation",
-    "adapter-load-generation",
+    "sleep-resume-stable-process-generation",
+    "process-restart-generation-drift",
+    "adapter-reload-generation",
     "tokenizer-drift",
     "template-drift",
     "slot-drift",
