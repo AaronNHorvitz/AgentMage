@@ -24,6 +24,7 @@ class MuseCodecEvidenceTests(unittest.TestCase):
         self.assertEqual(evidence.validate_report(report), [])
         self.assertEqual(report["disposition"]["status"], "PASS-CONTRACT")
         self.assertEqual(len(report["mutations"]), len(evidence.MUTATIONS))
+        self.assertEqual(len(report["diagnostics"]), len(evidence.DIAGNOSTICS))
 
     def test_failed_command_forces_blocked_disposition(self) -> None:
         values = commands()
@@ -37,6 +38,7 @@ class MuseCodecEvidenceTests(unittest.TestCase):
         for mutate in (
             lambda report: report["disposition"].update({"profile_activated": True}),
             lambda report: report["mutations"].pop(),
+            lambda report: report["diagnostics"].pop(),
             lambda report: report["checks"][0].update({"result": "FAIL"}),
             lambda report: report.update({"unknown": True}),
         ):

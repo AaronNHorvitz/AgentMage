@@ -21,6 +21,7 @@ SOURCE_PATHS: Final = (
     "kernel/engine/src/model_codec.rs",
     "kernel/engine/src/model_response.rs",
     "kernel/engine/src/model_runtime.rs",
+    "platforms/linux-inference/src/llama_server_driver.rs",
     "platforms/linux-inference/src/muse_atem_codec.rs",
     "scripts/muse_codec_evidence.py",
     "tests/test_muse_codec_evidence.py",
@@ -31,6 +32,13 @@ COMMANDS: Final = (
         (
             "cargo", "test", "-p", "agentmage-platform-linux-inference", "--locked",
             "muse_atem_codec::tests::",
+        ),
+    ),
+    (
+        "native-transport-diagnostics",
+        (
+            "cargo", "test", "-p", "agentmage-platform-linux-inference", "--locked",
+            "llama_server_driver::tests::",
         ),
     ),
     (
@@ -67,6 +75,20 @@ MUTATIONS: Final = {
     "unknown-field": "rejects_context_response_and_unknown_field_drift",
     "trailing-bytes": "rejects_context_response_and_unknown_field_drift",
     "proposal-identity": "malformed_stale_replayed_and_authority_seeking_envelopes_remain_inert",
+    "role-boundary": "renders_each_role_and_schema_without_interpreting_payload_tokens",
+    "response-bounds": "accepts_only_bounded_text_or_canonical_schema_bound_tool_arguments",
+    "text-or-tool-shape": "accepts_only_bounded_text_or_canonical_schema_bound_tool_arguments",
+    "canonical-tool-arguments": "accepts_only_bounded_text_or_canonical_schema_bound_tool_arguments",
+}
+DIAGNOSTICS: Final = {
+    "known-answer": "renders_exact_bounded_atem_context_and_closed_proposal",
+    "decode": "accepts_only_bounded_text_or_canonical_schema_bound_tool_arguments",
+    "truncation": "plain_text_is_bounded_display_only_and_structured_failures_never_downgrade",
+    "stop-reason": "completion_streams_exact_sampling_tuple_and_classifies_inert_output",
+    "transport": "malformed_chunked_sse_contracts_fail_without_advisory_fallback",
+    "formatting": "rejects_context_response_and_unknown_field_drift",
+    "task-quality": "accepts_only_bounded_text_or_canonical_schema_bound_tool_arguments",
+    "policy-rejection": "rejects_context_response_and_unknown_field_drift",
 }
 
 
@@ -139,7 +161,7 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
     )
     passed = all(check["result"] == "PASS" for check in checks)
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "record_type": "d027_s13_muse_codec_evidence",
         "source_revision": source_revision,
         "source_sha256": {path: sha256_file(ROOT / path) for path in SOURCE_PATHS},
@@ -147,6 +169,10 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
         "mutations": [
             {"id": identifier, "proving_test": test, "result": "PASS" if passed else "BLOCKED"}
             for identifier, test in MUTATIONS.items()
+        ],
+        "diagnostics": [
+            {"id": identifier, "proving_test": test, "result": "PASS" if passed else "BLOCKED"}
+            for identifier, test in DIAGNOSTICS.items()
         ],
         "production_kernel_family_references": references,
         "checks": checks,
@@ -161,7 +187,8 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
         },
         "limitations": [
             "This campaign uses deterministic synthetic packets and proposals, not model output.",
-            "Codec conformance does not prove model quality, runtime isolation, or release readiness.",
+            "Task-quality diagnostics prove only closed synthetic response shapes; they do not prove model quality.",
+            "Codec conformance does not prove runtime isolation or release readiness.",
             "Test-only family labels exercise parity and are not production kernel branches.",
         ],
     }
@@ -171,10 +198,10 @@ def validate_report(report: dict[str, Any]) -> list[str]:
     failures: list[str] = []
     if set(report) != {
         "schema_version", "record_type", "source_revision", "source_sha256", "commands",
-        "mutations", "production_kernel_family_references", "checks", "disposition", "limitations",
+        "mutations", "diagnostics", "production_kernel_family_references", "checks", "disposition", "limitations",
     }:
         return ["codec evidence fields are not closed"]
-    if report.get("schema_version") != 1 or report.get("record_type") != "d027_s13_muse_codec_evidence":
+    if report.get("schema_version") != 2 or report.get("record_type") != "d027_s13_muse_codec_evidence":
         failures.append("codec evidence identity changed")
     if not REVISION.fullmatch(str(report.get("source_revision", ""))):
         failures.append("codec evidence revision is not exact")
@@ -211,6 +238,13 @@ def validate_report(report: dict[str, Any]) -> list[str]:
         or any(item.get("result") != ("PASS" if passed else "BLOCKED") for item in mutations)
     ):
         failures.append("codec mutation matrix changed")
+    diagnostics = report.get("diagnostics", [])
+    if (
+        [item.get("id") for item in diagnostics] != list(DIAGNOSTICS)
+        or any(item.get("proving_test") != DIAGNOSTICS.get(item.get("id")) for item in diagnostics)
+        or any(item.get("result") != ("PASS" if passed else "BLOCKED") for item in diagnostics)
+    ):
+        failures.append("codec diagnostic matrix changed")
     disposition = report.get("disposition", {})
     if disposition.get("status") != ("PASS-CONTRACT" if passed else "BLOCKED"):
         failures.append("codec disposition overstates checks")
