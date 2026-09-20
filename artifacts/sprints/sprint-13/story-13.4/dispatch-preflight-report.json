@@ -38,7 +38,7 @@
   ],
   "raw_results": {
     "path": "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-results.log",
-    "sha256": "cc291c1cf15f81c20261062487b38b75984acb689c44de5817a1e652c2a2974d"
+    "sha256": "c3ec1d69584c7d4a97bfa9b0349c2d54934e3d5524b7fa7063ad7dce800f2741"
   },
   "record_type": "agentmage-story-13-4-dispatch-preflight-evidence",
   "recovery": {
@@ -52,12 +52,12 @@
   },
   "remaining_prerequisite": "Run CTX-FIT and CTX-DISPATCH against the exact separately authorized native model/runtime/venue tuple and retain endpoint token reconciliation plus zero-generation refusal evidence.",
   "schema_version": 1,
-  "source_revision": "e764f686a07e41760b6572ca61ed38b3a85a484e",
+  "source_revision": "386ad79fde5d808052c8b706cff434c16f0eeeb1",
   "source_sha256": {
     "kernel/contracts/src/lib.rs": "b6f1307ac15647c4d5e81b4c1fd2c4a4e9734f9360df800de8d8c0fbcecdea07",
     "kernel/contracts/src/model.rs": "1aab079d0b7a793baaeebc49ea7da50f968c8a33ce1edcd7892f265c7dca1977",
     "kernel/engine/src/model_orchestration_profile.rs": "07b35ccf495e4cb2cf3ceefca449e009d5ed9d1314c3eb31a7e68dd2b38ef528",
-    "kernel/engine/src/model_runtime.rs": "9cd6cefae30cfdffea1469069a3425fc0e2401651157cecd0b8580fd8f563e91",
+    "kernel/engine/src/model_runtime.rs": "a4f799361362aa4a1b4414b2c4e1d8d65778eb045f6002dba636278752bf4b3d",
     "kernel/engine/src/runtime_loop.rs": "a12265b53e79a278661128f7f9fd09b25b51812c400258a056cb74d41a8b2b19",
     "platforms/linux-inference/src/llama_server_driver.rs": "ab373cd62764da11783b49ef9b556ca9fe2c3a78270eadf12d44f3368065d9f2",
     "platforms/linux-inference/src/native_model_adapter.rs": "bcc8774f3aab24f9941d0b3f6690ad7a7e2d0992c35e323a2c72b931c8816d61",

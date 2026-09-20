@@ -1,6 +1,6 @@
 $ cargo test -p agentmage-kernel-engine --locked dispatch_preflight_ -- --test-threads=1
    Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.98s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.05s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 2 tests
@@ -237,7 +237,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; fini
 
 
 $ cargo test -p agentmage-kernel-engine --locked orchestration_plan_and_tool_heavy_unicode_render_reconcile_once -- --test-threads=1
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 1 test
@@ -358,7 +358,7 @@ $ cargo test -p agentmage-host --locked model_preflight_refusals_have_closed_cod
    Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
    Compiling agentmage-platform-linux v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/platforms/linux)
    Compiling agentmage-host v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/shells/host)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 8.71s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 8.66s
      Running unittests src/lib.rs (target/debug/deps/agentmage_host-1b18b69b396ab8a2)
 
 running 1 test
@@ -393,7 +393,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; fin
 
 $ cargo test -p agentmage-platform-linux-inference --locked --no-run
    Compiling agentmage-platform-linux-inference v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/platforms/linux-inference)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.48s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.10s
   Executable unittests src/lib.rs (target/debug/deps/agentmage_platform_linux_inference-9b8eded1ee48c32a)
   Executable unittests src/docker_guard_main.rs (target/debug/deps/agentmage_docker_guard-e694f0eb4f1ba26d)
   Executable unittests src/docker_topology_collector_main.rs (target/debug/deps/agentmage_docker_topology_collector-0b7fc57f4622dd2b)
