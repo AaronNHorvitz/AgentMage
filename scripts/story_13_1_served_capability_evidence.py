@@ -40,7 +40,7 @@ COMMANDS: Final = (
         "-p",
         "agentmage-platform-linux-inference",
         "--locked",
-        "process_generation_is_read_from_the_live_process_identity",
+        "llama_server_driver::tests::",
     ),
 )
 MARKERS: Final = (
@@ -49,6 +49,7 @@ MARKERS: Final = (
     "served_capability_stable_sleep_reobservation_and_reload_generation_are_explicit ... ok",
     "undersized_served_capacity_refuses_and_retains_no_loaded_binding ... ok",
     "process_generation_is_read_from_the_live_process_identity ... ok",
+    "serving_properties_reject_missing_undersized_identity_and_sleep_drift ... ok",
 )
 SOURCE_PATHS: Final = (
     "kernel/contracts/src/lib.rs",
@@ -166,6 +167,7 @@ def expected_report(source_revision: str, raw: bytes) -> dict[str, Any]:
             "parallel_shared_cache_refused": True,
             "native_launch_derived_from_profile": True,
             "native_process_and_command_line_reobserved": True,
+            "native_read_only_properties_reobserved": True,
         },
         "claims": {
             "local_contract_complete": True,

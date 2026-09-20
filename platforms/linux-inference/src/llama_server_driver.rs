@@ -603,6 +603,10 @@ impl NativeModelDriver for LlamaServerDriver {
             ),
         )?;
         let process_generation = process_start_generation(loaded.runtime_pid)?;
+        let properties = self.client().serving_properties()?;
+        if properties.parallel_slots != 1 {
+            return Err(failure("model.served-capability.drift", false));
+        }
         let mut observation = ModelServingCapabilities {
             schema_version: 1,
             profile_id: loaded.profile_id.clone(),
@@ -615,8 +619,8 @@ impl NativeModelDriver for LlamaServerDriver {
             process_generation,
             load_generation: loaded.load_generation,
             launch_configuration_sha256: loaded.launch_configuration_sha256.clone(),
-            context_capacity_tokens: loaded.context_capacity_tokens,
-            parallel_slots: 1,
+            context_capacity_tokens: properties.context_capacity_tokens,
+            parallel_slots: properties.parallel_slots,
             cache_policy: ModelServingCachePolicy::Disabled,
             tokenizer_sha256: loaded.tokenizer_sha256.clone(),
             template_sha256: loaded.template_sha256.clone(),
@@ -846,6 +850,7 @@ struct Completion {
 #[derive(Clone, Copy)]
 enum Endpoint {
     Health,
+    Properties,
     Tokenize,
 }
 
@@ -853,6 +858,7 @@ impl Endpoint {
     const fn method(self) -> &'static str {
         match self {
             Self::Health => "GET",
+            Self::Properties => "GET",
             Self::Tokenize => "POST",
         }
     }
@@ -860,9 +866,16 @@ impl Endpoint {
     const fn path(self) -> &'static str {
         match self {
             Self::Health => "/health",
+            Self::Properties => "/props",
             Self::Tokenize => "/tokenize",
         }
     }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct ServingProperties {
+    context_capacity_tokens: u32,
+    parallel_slots: u32,
 }
 
 struct UnixHttpClient {
@@ -882,6 +895,11 @@ impl UnixHttpClient {
             return Err(failure("model.llama-driver.health-not-ready", true));
         }
         Ok(())
+    }
+
+    fn serving_properties(&self) -> Result<ServingProperties, ModelRuntimeFailure> {
+        let body = self.request(Endpoint::Properties, None, MAX_HTTP_RESPONSE_BYTES, 1_000)?;
+        parse_serving_properties(&body)
     }
 
     fn token_count(&self, context: &[u8]) -> Result<u32, ModelRuntimeFailure> {
@@ -1008,6 +1026,32 @@ impl UnixHttpClient {
         }
         parse_http_response(&response)
     }
+}
+
+fn parse_serving_properties(body: &[u8]) -> Result<ServingProperties, ModelRuntimeFailure> {
+    let value: Value = serde_json::from_slice(body)
+        .map_err(|_| failure("model.llama-driver.properties-invalid", false))?;
+    let context_capacity_tokens = value
+        .pointer("/default_generation_settings/n_ctx")
+        .and_then(Value::as_u64)
+        .and_then(|value| u32::try_from(value).ok())
+        .filter(|value| *value != 0)
+        .ok_or_else(|| failure("model.llama-driver.properties-invalid", false))?;
+    let parallel_slots = value
+        .get("total_slots")
+        .and_then(Value::as_u64)
+        .and_then(|value| u32::try_from(value).ok())
+        .filter(|value| *value != 0)
+        .ok_or_else(|| failure("model.llama-driver.properties-invalid", false))?;
+    if value.get("model_path").and_then(Value::as_str) != Some(GUEST_MODEL_PATH)
+        || value.get("is_sleeping").and_then(Value::as_bool) != Some(false)
+    {
+        return Err(failure("model.llama-driver.properties-drift", false));
+    }
+    Ok(ServingProperties {
+        context_capacity_tokens,
+        parallel_slots,
+    })
 }
 
 enum StreamReadError {
@@ -1850,8 +1894,8 @@ mod tests {
         CONTRACT_SCHEMA_VERSION, Endpoint, FileSnapshot, GUEST_MODEL_PATH, GUEST_RUNTIME_ROOT,
         GUEST_SOCKET_PATH, GUEST_SOCKET_ROOT, SANDBOX_DEVICE_PATHS, SANDBOX_READ_ONLY_DIRECTORIES,
         UnixHttpClient, exact_directory, launch_arguments, parse_accelerator_memory,
-        parse_http_response, plain_text, process_start_generation, sandbox_arguments,
-        valid_socket_path,
+        parse_http_response, parse_serving_properties, plain_text, process_start_generation,
+        sandbox_arguments, valid_socket_path,
     };
 
     static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
@@ -2041,6 +2085,42 @@ mod tests {
             serde_json::from_slice::<serde_json::Value>(&value).unwrap()["tokens"],
             json!([1, 2, 3])
         );
+        let properties_body = json!({
+            "default_generation_settings": {"n_ctx": 8192},
+            "total_slots": 1,
+            "model_path": GUEST_MODEL_PATH,
+            "is_sleeping": false,
+            "ignored_upstream_field": true
+        });
+        let (properties, request) = exchange(response(properties_body), |client| {
+            client.serving_properties().expect("properties")
+        });
+        assert!(request.starts_with(b"GET /props HTTP/1.1\r\n"));
+        assert_eq!(properties.context_capacity_tokens, 8192);
+        assert_eq!(properties.parallel_slots, 1);
+    }
+
+    #[test]
+    fn serving_properties_reject_missing_undersized_identity_and_sleep_drift() {
+        let valid = json!({
+            "default_generation_settings": {"n_ctx": 8192},
+            "total_slots": 1,
+            "model_path": GUEST_MODEL_PATH,
+            "is_sleeping": false
+        });
+        assert!(parse_serving_properties(&serde_json::to_vec(&valid).unwrap()).is_ok());
+        for changed in [
+            json!({}),
+            json!({"default_generation_settings": {"n_ctx": 0}, "total_slots": 1, "model_path": GUEST_MODEL_PATH, "is_sleeping": false}),
+            json!({"default_generation_settings": {"n_ctx": 8192}, "total_slots": 0, "model_path": GUEST_MODEL_PATH, "is_sleeping": false}),
+            json!({"default_generation_settings": {"n_ctx": 8192}, "total_slots": 1, "model_path": "/models/foreign.gguf", "is_sleeping": false}),
+            json!({"default_generation_settings": {"n_ctx": 8192}, "total_slots": 1, "model_path": GUEST_MODEL_PATH, "is_sleeping": true}),
+        ] {
+            assert!(
+                parse_serving_properties(&serde_json::to_vec(&changed).unwrap()).is_err(),
+                "accepted {changed}"
+            );
+        }
     }
 
     #[test]
