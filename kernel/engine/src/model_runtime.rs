@@ -1905,40 +1905,65 @@ mod tests {
 
     #[test]
     fn dispatch_preflight_refuses_7000_plus_2048_against_8192_and_invalid_margin() {
-        let mut profile = profile();
-        profile.context.max_context_tokens = 8_192;
-        profile.decoding.max_output_tokens = 2_048;
-        let admitted = ModelAdmissionCatalog::new(vec![profile.clone()])
+        let mut bounded_profile = profile();
+        bounded_profile.context.max_context_tokens = 8_192;
+        bounded_profile.decoding.max_output_tokens = 2_048;
+        let admitted = ModelAdmissionCatalog::new(vec![bounded_profile.clone()])
             .expect("catalog")
-            .admit(&profile, ModelUsePurpose::ContractTest)
+            .admit(&bounded_profile, ModelUsePurpose::ContractTest)
             .expect("admitted");
         assert!(matches!(
             LocalModelController::new(
-                FakeRuntime::new(&profile),
-                ClosedJsonFamilyCodec::new(profile.codec.clone()),
+                FakeRuntime::new(&bounded_profile),
+                ClosedJsonFamilyCodec::new(bounded_profile.codec.clone()),
                 admitted.clone(),
                 0,
             ),
             Err(ModelRuntimeGateError::DispatchCapacityExceeded)
         ));
-        let runtime = FakeRuntime::new(&profile);
+        let runtime = FakeRuntime::new(&bounded_profile);
         runtime.counted_tokens.set(7_000);
         let generation_calls = Rc::clone(&runtime.generation_calls);
         let mut controller = LocalModelController::new(
             runtime,
-            ClosedJsonFamilyCodec::new(profile.codec.clone()),
+            ClosedJsonFamilyCodec::new(bounded_profile.codec.clone()),
             admitted,
             1,
         )
         .expect("controller");
         controller.load().expect("load");
-        let mut packet = packet(&profile);
-        packet.input_tokens = 7_000;
-        reseal_packet(&mut packet);
-        let mut run = request(&profile);
+        let mut bounded_packet = packet(&bounded_profile);
+        bounded_packet.input_tokens = 7_000;
+        reseal_packet(&mut bounded_packet);
+        let mut run = request(&bounded_profile);
         run.max_output_tokens = 2_048;
         assert_eq!(
-            controller.prepare(&run, &packet),
+            controller.prepare(&run, &bounded_packet),
+            Err(ModelRuntimeGateError::DispatchCapacityExceeded)
+        );
+        assert_eq!(generation_calls.get(), 0);
+
+        let mut maximum = profile();
+        maximum.context.max_context_tokens = u32::MAX;
+        maximum.decoding.max_output_tokens = u32::MAX;
+        let admitted = ModelAdmissionCatalog::new(vec![maximum.clone()])
+            .expect("maximum-bound catalog")
+            .admit(&maximum, ModelUsePurpose::ContractTest)
+            .expect("maximum-bound admission");
+        let runtime = FakeRuntime::new(&maximum);
+        let generation_calls = Rc::clone(&runtime.generation_calls);
+        let mut controller = LocalModelController::new(
+            runtime,
+            ClosedJsonFamilyCodec::new(maximum.codec.clone()),
+            admitted,
+            1,
+        )
+        .expect("maximum-bound controller");
+        controller.load().expect("maximum-bound load");
+        let mut run = request(&maximum);
+        run.max_output_tokens = u32::MAX;
+        assert_eq!(
+            controller.prepare(&run, &packet(&maximum)),
             Err(ModelRuntimeGateError::DispatchCapacityExceeded)
         );
         assert_eq!(generation_calls.get(), 0);
