@@ -31,49 +31,61 @@
         "raw_target": "private-namespace-loopback-only",
         "sessions": 1
       },
-      "manifest_sha256": "433ca2ac7e50c1ff247f4afe3c3a1a5935575625b7f344c862feb1b7022b5b30",
+      "manifest_sha256": "1916c9319689b2e85229440abe5358aa227735774093f8f56bc71c602a5bc672",
       "payload": [
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-docker-guard",
-          "sha256": "99c84b93c097a4fd2154741a40ae3c09dde4eaaa127ce7eaa19e584f20938b09",
-          "size": 560128
+          "sha256": "6682a39ca35b66dc716be0a15c2d66c102b327221d716f0e8a4ffe80a54ee697",
+          "size": 562936
         },
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-docker-topology-collector",
-          "sha256": "b3a7177ad6727044bc844e5771475926c26b9ac99c5e69824b13c788a8e3ffff",
-          "size": 1038080
+          "sha256": "42a48df0fc5cff5d130dff787c8b0f56e30d5aa8938205331b092e5218b1b8d8",
+          "size": 1041328
         },
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-host",
-          "sha256": "448d3aad31b8c52a8ca26de57c9f5506f59192450eeeafb60831e9923fd9c9ef",
-          "size": 933712
+          "sha256": "1d48501e578db18a514606285a11892a38ef65d1e5fa0ee573eccae005fcd541",
+          "size": 2271408
         },
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-model-installer",
-          "sha256": "83498426678d8412f76663c96e6e7e9b72c4a0b195230c004b407fc15183d9a5",
-          "size": 453800
+          "sha256": "2702356e9037d6d10a8a079fe9c31d491bc05f7f03a416f19702d534c33c0c41",
+          "size": 846128
         },
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-native-inference",
-          "sha256": "056f8a23eb45ecc2d2bc52187e8653eaddcc07580d696c4c745a229afbf237f9",
-          "size": 454448
+          "sha256": "29545f595d889632bae0cec0bd77eab777f94dfb7beb5e9cc3c073aed6b44dff",
+          "size": 454496
+        },
+        {
+          "mode": 493,
+          "path": "usr/libexec/agentmage/agentmage-read-only-worker",
+          "sha256": "4a30b29040259e2335a9237cedde657a99fbe4e1c7bc6053c42429a6ce9a18c2",
+          "size": 907488
         },
         {
           "mode": 420,
           "path": "usr/share/agentmage/agentmage.vsix",
-          "sha256": "b5a7ea4ed68672bafb4db8caf35cb91859681bf2361fb2e5c173eed62bdc1392",
-          "size": 15193
+          "sha256": "ffbdd97d3086ca232c984647ab6905b1bfb4a4c35fb76bf6a321bdfa63f0ba39",
+          "size": 62732
+        },
+        {
+          "mode": 420,
+          "path": "usr/share/agentmage/model-profiles/exact-profile-catalog.json",
+          "sha256": "55dd3b52e078bd39475b0856e3e07896e530524050a2b06604f240fade538857",
+          "size": 19201
         },
         {
           "mode": 420,
           "path": "usr/share/licenses/agentmage/LICENSE",
-          "sha256": "02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f",
-          "size": 11357
+          "sha256": "3c0fe2e36ea4933e3fbf92bc2bac81ae05bc47800e85be7e1bb40ede19c5e5f7",
+          "size": 4349
         }
       ]
     },
@@ -107,49 +119,61 @@
         "raw_target": "private-namespace-loopback-only",
         "sessions": 1
       },
-      "manifest_sha256": "433ca2ac7e50c1ff247f4afe3c3a1a5935575625b7f344c862feb1b7022b5b30",
+      "manifest_sha256": "1916c9319689b2e85229440abe5358aa227735774093f8f56bc71c602a5bc672",
       "payload": [
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-docker-guard",
-          "sha256": "99c84b93c097a4fd2154741a40ae3c09dde4eaaa127ce7eaa19e584f20938b09",
-          "size": 560128
+          "sha256": "6682a39ca35b66dc716be0a15c2d66c102b327221d716f0e8a4ffe80a54ee697",
+          "size": 562936
         },
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-docker-topology-collector",
-          "sha256": "b3a7177ad6727044bc844e5771475926c26b9ac99c5e69824b13c788a8e3ffff",
-          "size": 1038080
+          "sha256": "42a48df0fc5cff5d130dff787c8b0f56e30d5aa8938205331b092e5218b1b8d8",
+          "size": 1041328
         },
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-host",
-          "sha256": "448d3aad31b8c52a8ca26de57c9f5506f59192450eeeafb60831e9923fd9c9ef",
-          "size": 933712
+          "sha256": "1d48501e578db18a514606285a11892a38ef65d1e5fa0ee573eccae005fcd541",
+          "size": 2271408
         },
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-model-installer",
-          "sha256": "83498426678d8412f76663c96e6e7e9b72c4a0b195230c004b407fc15183d9a5",
-          "size": 453800
+          "sha256": "2702356e9037d6d10a8a079fe9c31d491bc05f7f03a416f19702d534c33c0c41",
+          "size": 846128
         },
         {
           "mode": 493,
           "path": "usr/libexec/agentmage/agentmage-native-inference",
-          "sha256": "056f8a23eb45ecc2d2bc52187e8653eaddcc07580d696c4c745a229afbf237f9",
-          "size": 454448
+          "sha256": "29545f595d889632bae0cec0bd77eab777f94dfb7beb5e9cc3c073aed6b44dff",
+          "size": 454496
+        },
+        {
+          "mode": 493,
+          "path": "usr/libexec/agentmage/agentmage-read-only-worker",
+          "sha256": "4a30b29040259e2335a9237cedde657a99fbe4e1c7bc6053c42429a6ce9a18c2",
+          "size": 907488
         },
         {
           "mode": 420,
           "path": "usr/share/agentmage/agentmage.vsix",
-          "sha256": "b5a7ea4ed68672bafb4db8caf35cb91859681bf2361fb2e5c173eed62bdc1392",
-          "size": 15193
+          "sha256": "ffbdd97d3086ca232c984647ab6905b1bfb4a4c35fb76bf6a321bdfa63f0ba39",
+          "size": 62732
+        },
+        {
+          "mode": 420,
+          "path": "usr/share/agentmage/model-profiles/exact-profile-catalog.json",
+          "sha256": "55dd3b52e078bd39475b0856e3e07896e530524050a2b06604f240fade538857",
+          "size": 19201
         },
         {
           "mode": 420,
           "path": "usr/share/licenses/agentmage/LICENSE",
-          "sha256": "02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f",
-          "size": 11357
+          "sha256": "3c0fe2e36ea4933e3fbf92bc2bac81ae05bc47800e85be7e1bb40ede19c5e5f7",
+          "size": 4349
         }
       ]
     }
@@ -197,40 +221,40 @@
   },
   "packages": {
     "deb": {
-      "bytes": 1472090,
+      "bytes": 2528472,
       "filename": "agentmage_0.0.0_amd64.deb",
-      "sha256": "af4154cc804b710478e76b8abbffd8491c3ab6ea6a888edf608bbb4206a92279"
+      "sha256": "670e0b88ebbd4aec7ac0e475c8107a6614f86d5a358af764e8bb5afe10b4629f"
     },
     "rpm": {
-      "bytes": 663062,
+      "bytes": 1308468,
       "filename": "agentmage-0.0.0-1.fc44.x86_64.rpm",
-      "sha256": "24b088772c4317ea311f8b90caa084bbea8c9ceda84d0b78280a1d7c561be857"
+      "sha256": "f36177dfdcba8911883cd5724388ea7745a483748e94a80ec74fb3e96f498cf0"
     },
     "vsix": {
-      "bytes": 15193,
+      "bytes": 62732,
       "filename": "agentmage-vscode-0.0.0.vsix",
-      "sha256": "b5a7ea4ed68672bafb4db8caf35cb91859681bf2361fb2e5c173eed62bdc1392"
+      "sha256": "ffbdd97d3086ca232c984647ab6905b1bfb4a4c35fb76bf6a321bdfa63f0ba39"
     }
   },
   "release_claim": "none",
   "reproducible_package_rebuild": true,
   "schema_version": 1,
-  "source_revision": "b545d858f174cf889888e4d3a51052680f2d8a3a",
+  "source_revision": "a3266796d4efba7ce35c31f251359f7b5f147d03",
   "sources": [
     {
-      "bytes": 13115,
+      "bytes": 28628,
       "path": "Cargo.lock",
-      "sha256": "34daad7cbda9889ba42438a54c108f205d74bffc152c0eea22cf93cb843951af"
+      "sha256": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9"
     },
     {
-      "bytes": 1452,
+      "bytes": 2289,
       "path": "Cargo.toml",
-      "sha256": "a3fbb6ac6d0309db197aeb55bd23428e1bb440d18db47775be8e722b44040e86"
+      "sha256": "5afd98c00697e9c6974495e4a9568ae42f46ec0acb1eb603641b1ec7bb5f5ea1"
     },
     {
-      "bytes": 11357,
+      "bytes": 4349,
       "path": "LICENSE",
-      "sha256": "02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f"
+      "sha256": "3c0fe2e36ea4933e3fbf92bc2bac81ae05bc47800e85be7e1bb40ede19c5e5f7"
     },
     {
       "bytes": 6373,
@@ -268,19 +292,19 @@
       "sha256": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5"
     },
     {
-      "bytes": 23557,
+      "bytes": 69246,
       "path": "package.json",
-      "sha256": "86670baa069bb9cf35d6642752ef443c7fcfa048338d8892fb857c2963289f81"
+      "sha256": "5c25127ac887fe48cbb8a87da6dac32d6c2e2c77efacf28ee02f0411c4f7a74c"
     },
     {
-      "bytes": 1281,
+      "bytes": 1466,
       "path": "packaging/linux/agentmage-release.spec.in",
-      "sha256": "28000f1500f618b4979446671b0646a41a9be35e42010c81ef1269f8beffa265"
+      "sha256": "0774081f77929f875e001f5b2897e56e25c0f061ff55fec8b010eae641b9cb5d"
     },
     {
-      "bytes": 1265,
+      "bytes": 1450,
       "path": "packaging/linux/agentmage.spec.in",
-      "sha256": "611bfbfcd6100fbbebcf1858436845cd26573b18270cd425f9822cf28e50e413"
+      "sha256": "6081d4001a047978c51663d00d903f4ef36f5d43b8f269e2b264675a35e8a082"
     },
     {
       "bytes": 820,
@@ -338,9 +362,9 @@
       "sha256": "a58568d2d00cfccb1518ba4a2e24cbaaef13f44f35a56547c9c7b42423a124eb"
     },
     {
-      "bytes": 10013,
+      "bytes": 10103,
       "path": "platforms/linux-inference/src/lib.rs",
-      "sha256": "217781dfac5151ac95334134e3eb5f45c6a0d24aa7bebdeea28d1005975eb51c"
+      "sha256": "efa4f393990cc0caf8115897c2c2818d2a903646cb21b7c867708d59031eb977"
     },
     {
       "bytes": 574,
@@ -348,9 +372,9 @@
       "sha256": "bffe193a197fa51c5c714630f04e49defe12b90f4efdd9836f030571f84e7ea5"
     },
     {
-      "bytes": 6127,
+      "bytes": 8582,
       "path": "platforms/linux-inference/tests/process_boundary.rs",
-      "sha256": "99809033b45a2c64d3d8c541cb84c02f00e76378570ba6986c944b6b870d7c0b"
+      "sha256": "fce1e4b82e0f2753362db51fdad99663dc9d188e6b732d420aea3dd7a4dabc75"
     },
     {
       "bytes": 86,
@@ -358,29 +382,29 @@
       "sha256": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310"
     },
     {
-      "bytes": 49937,
+      "bytes": 50010,
       "path": "scripts/linux_clean_image_acceptance.py",
-      "sha256": "6ff3335f20845587fe8613a7a4445308b565d85a28e6a8b46d6c78e46c327715"
+      "sha256": "1d63cd55f7ae7f1bfdb29d3b1e5d1cce58877e157bf5ba47b0cf520139258a80"
     },
     {
-      "bytes": 18159,
+      "bytes": 18173,
       "path": "scripts/linux_docker_prerequisite_evidence.py",
-      "sha256": "d6eb97a2c927b14858da193b2337acdc6e6ae07dd866af40bc1f880a62dce75d"
+      "sha256": "b64d29cc479871c58e3e712c100043fe9a2fe0ad46967744b9e1ffc01a275582"
     },
     {
-      "bytes": 20432,
+      "bytes": 20525,
       "path": "scripts/linux_package_lifecycle_evidence.py",
-      "sha256": "3d4364775916d559abeb892988a6814eff1de6cd4ccc38f08dd75b66ba60fe64"
+      "sha256": "6d2cfc1e542faede37e3cda907c7af92ef8a40835a9276d0db92b270d31e60c2"
     },
     {
-      "bytes": 18654,
+      "bytes": 19763,
       "path": "scripts/package_candidate.py",
-      "sha256": "69f61c12e29b06260b3c60d19c7780572f59c56ee3110a550c284550840243ac"
+      "sha256": "c68133f34c86a9ac91adb3319a793fee284fa2488bb7eaf79a0b1144e6bd2151"
     },
     {
-      "bytes": 39624,
+      "bytes": 42575,
       "path": "scripts/package_lifecycle.py",
-      "sha256": "c5c257192b0bea2a6671457725a757e6b7637fd178dce83e6f785a4aa84e4de8"
+      "sha256": "0e55defb25dbe5af867b772c883e7f25f82240c8a40a6fddef1ebfae1745438f"
     },
     {
       "bytes": 6082,
@@ -388,14 +412,14 @@
       "sha256": "88962ea92149b1974eccb09b614f0d8c17f7ffed3eaa585e6a28a4c79c273328"
     },
     {
-      "bytes": 18469,
+      "bytes": 19325,
       "path": "shells/host/src/linux_bootstrap.rs",
-      "sha256": "5c0fc8279b024fdd56b102407f839a5ba7b1d92d1f888d0a00ceed00124745f6"
+      "sha256": "261e0b71634441e893d9babfbbd05a8bc836da9dc702ac3bfd815677fd2b1b97"
     },
     {
-      "bytes": 23000,
+      "bytes": 29106,
       "path": "shells/host/src/package_verify.rs",
-      "sha256": "c5fb92c9d38eafbaf29ace545260121de0efb1bcda5a5a7a0d8ee4abeb9ecbb5"
+      "sha256": "d28c6736dcaa2165c70ffcd6844623aed9405ac55cbdeb57c3801e119fdaee5f"
     },
     {
       "bytes": 10594,
@@ -405,22 +429,22 @@
     {
       "bytes": 4358,
       "path": "tests/test_linux_docker_prerequisite_evidence.py",
-      "sha256": "4a8f7f5215f8a7f73ea0d8cfb888afef7fdf38cc0fc73b08019ce1a451000842"
+      "sha256": "b2de9a274204b786c8e476fcc168a689bcbc3ed5d22bff7490077cbb13dd46b3"
     },
     {
       "bytes": 6254,
       "path": "tests/test_linux_package_lifecycle_evidence.py",
-      "sha256": "6e7b0180690d6a49d99ec4867a2ad345c4a37a5910a5851b26ee006c717391a1"
+      "sha256": "058fe3fc268c73fae5a67cba9ecec1b0b25ca5f28ec212c43347c0f4f8eea100"
     },
     {
-      "bytes": 9695,
+      "bytes": 10714,
       "path": "tests/test_package_candidate.py",
-      "sha256": "e66f487301c38424254de25038262bab928dfc1b4e46595f93676f66a6b5c4db"
+      "sha256": "1ac4e4e7a44ab1ce714ddaf10a87bc017636057b9d8f586689d7fedf6255116a"
     },
     {
-      "bytes": 9144,
+      "bytes": 10446,
       "path": "tests/test_package_lifecycle.py",
-      "sha256": "e67fb6581531640588cc5fb628e711d9a31782c839451e649cc23a068cc2cc25"
+      "sha256": "feaef5a248b937e3efac0ef788f667b1147ac199d3f669e42fb6e56dd1c2668c"
     }
   ],
   "status": "pass-packaged-prerequisites-no-live-docker",
