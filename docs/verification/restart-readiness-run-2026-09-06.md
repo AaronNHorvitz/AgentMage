@@ -984,3 +984,20 @@ Two decisions, both provenance judgements this run deliberately did not make on 
    verification report. This unblocks `story-3.2:gate` and `sprint-3:gate`.
 
 Of the two, (1) is the one that matters for the recorded Story 9.1 continuation.
+
+### Sprint 21 attempt — waited, then stood down cleanly
+
+Sub-task `21.1.3.5`'s named work was queued behind a guarded wrapper that waits for a sustained
+free shared Cargo window, re-checks immediately before starting, and would run inside a capped
+scope. It waited its full 60-minute budget, from 15:20 to 16:20 CDT, and stood down without
+starting anything:
+
+```text
+ABORT: no free Cargo window within the wait budget
+```
+
+USTE held the window continuously across that period with a single
+`cargo test --locked --offline --workspace --all-targets --all-features -- --test-threads=1`
+campaign. No USTE process was interrupted, signalled, or inspected beyond reading its command
+line and working directory, and no AgentMage Cargo work was started alongside it. The wrapper is
+preserved and can be rerun as-is; it is the first thing to retry when the machine is quiet.
