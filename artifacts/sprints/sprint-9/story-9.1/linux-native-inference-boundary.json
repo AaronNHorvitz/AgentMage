@@ -42,14 +42,14 @@
   },
   "packages": [
     {
-      "bytes": 1318787,
+      "bytes": 1312333,
       "format": "rpm",
-      "sha256": "439f46da02d2ab8a40b9cd9b47f6e2020104d4e015670aab32e0a5518698d0e4"
+      "sha256": "474e639123b3859b273add577883fa85edb53514b4dc1cd0c873cc0799dacbfb"
     },
     {
-      "bytes": 2543108,
+      "bytes": 2527278,
       "format": "deb",
-      "sha256": "1c538afe2e56eb0da1371f98e241d21bc399fb4e76de9f707c2f693d8ba2d85c"
+      "sha256": "43687ccf8b32fa632df04b9ee9ea466e4204eefa86585c3a9051a0bc8733a724"
     },
     {
       "bytes": 62732,
@@ -83,7 +83,7 @@
   },
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "cf3bf07605e4bb4692ef5b82a29ab4f9b6d61842",
+  "source_revision": "80ab4dbab4bb39eab6c534cfce4a24fffa64b2d1",
   "sources": [
     {
       "bytes": 28628,
@@ -156,14 +156,14 @@
       "sha256": "40eae8a59214b40e5adeca292a20ba4f73fabbd5e692f3fbaeec1be1234957e2"
     },
     {
-      "bytes": 121297,
+      "bytes": 121453,
       "path": "IMPLEMENTATION-PLAN.md",
-      "sha256": "14c0a9692e29054ffc1c063bbe20fb7840e5d6581941b02839c81612399dd23b"
+      "sha256": "c5e57a295f53602f180a06bdcb36cf94ea4c9c518653a6ee182b97840bf55748"
     },
     {
-      "bytes": 68843,
+      "bytes": 69246,
       "path": "package.json",
-      "sha256": "5c0c99d0bc82fba5870c9eb81cf105596c714b3c25fcd3d164ae8283839cd3c9"
+      "sha256": "5c25127ac887fe48cbb8a87da6dac32d6c2e2c77efacf28ee02f0411c4f7a74c"
     },
     {
       "bytes": 3486,
@@ -308,17 +308,17 @@
     {
       "bytes": 997,
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "333cf6d0f53e88b7345c9a4ad09ae01351508bad6e4404c116f75dde9389986d"
+      "sha256": "f48f80c625df3be14e01510e299ce5428cb79f992d6c276bf3d72c7b6b25bfe7"
     },
     {
       "bytes": 446056,
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "deb4adb894446379797b7e0572f2c2d9d783e5088486c1fae6ec472f6597d860"
+      "sha256": "7f90dd558cc7d8c5ba9da6f3f9356e0d3ed6465f59826c127d4d24c4b381ac68"
     },
     {
       "bytes": 465865,
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "f51e3fa3a1321ce8e31ea35458664982cbfa9b30226be14bbf552ab1d2e654cf"
+      "sha256": "0c7f2f54834168060db819fefa631ba12780c281e530ce1c6fa1deca8a1a7e8b"
     },
     {
       "bytes": 4437,
