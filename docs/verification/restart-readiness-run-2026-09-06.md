@@ -776,3 +776,96 @@ gates recorded in the previous checkpoint; run `evidence:story9.2-docker-prerequ
 Sprint 21 evidence build for `21.1.3.5`; and implement `14.1.3.3`, which the register now selects.
 The Story 9.1 clean-build cascade stays blocked on the unchanged rustup provenance question stated
 at the end of the previous checkpoint.
+
+## Claude Code checkpoint — 2026-09-20 15:25 CDT
+
+This checkpoint records the evidence and review-pin repairs performed once the shared Cargo window
+freed. Commits `396dd9bb`, `3582f3c9`, `5b2c03cb`, `a3266796`, `8a5bc21e`, and `3ba8b747` are
+pushed. All heavy steps ran one at a time in user scopes with `MemoryHigh=5G`, `MemoryMax=6G`,
+`MemorySwapMax=512M`, `CARGO_BUILD_JOBS=1`, and `RUST_TEST_THREADS=1`, in this repository's own
+target directory. The largest observed scope peak was 1.41 GiB with zero swap. When USTE resumed
+its own Cargo campaign the remaining work was suspended rather than run concurrently.
+
+### Three of the five red gates are now green
+
+- `396dd9bb` renews the Story 11.2 AC2 invalidation report. The rebuild re-hashed
+  `kernel/engine/src/runtime_loop.rs` and `runtime_loop_tests.rs`, which the previous session
+  changed, and regenerated the results log; five tests pass.
+- `3582f3c9` advances the Story 11.2 gate review pin from `cae2001232` to `396dd9bb72`
+  (tree `6b0f2441cc` to `b1d284980f`) under AGENTS.md §7 and rebuilds the gate report. Exactly one
+  reviewed path had changed — `kernel/engine/src/runtime_loop.rs` — and the reason is the previous
+  session's guarded-dispatch work. The AC2 report is itself a reviewed path, so it was renewed and
+  committed **first** and the pin was advanced to that commit. The gate now reports
+  "Story 11.2 current Linux scope passed with dependency and platform blockers preserved"; eight
+  tests pass. No external-human review is claimed by this pin, exactly as §7 states.
+- `5b2c03cb` renews the RV-50 applicability record after `shells/host/src/runtime_read_tests.rs`
+  changed; five tests pass.
+
+`story-11.2-ac2:evidence:check`, `story-11.2:gate:check`, and
+`engineering-runtime:rv50:evidence:check` were each re-run afterwards and pass.
+
+### The remaining two red gates are blocked on one owner decision
+
+`story-3.2:gate` and `sprint-3:gate` both reduce to a single root cause, which was diagnosed
+exactly rather than worked around. The manual patch verification report records the verification
+engine it actually used, and **this host's OpenSSL was upgraded from 3.5.7 to 3.5.8**. The
+committed report still named 3.5.7, so the report was genuinely stale rather than
+non-deterministic:
+
+```text
+.verification_engine.version: committed "OpenSSL 3.5.7 9 Jun 2026" -> rebuilt "OpenSSL 3.5.8 25 Aug 2026"
+.verification_engine.executable_sha256: 0469f12d… -> ac3648bc…
+```
+
+`a3266796` rebuilds that generated report so it records the engine actually present; its own check
+and seven tests pass. The cascade then stops one step later, and **this step was deliberately not
+taken**: `fixtures/support/vulnerability-workflow/workflow.valid.json` binds
+`patch-verification-results` to the report's SHA-256, and no generator writes that fixture — it is
+hand-maintained. Updating that hash is editing an evidence binding to make a check pass, which
+this run is explicitly forbidden to do, so it was left alone and is recorded here instead.
+
+Before and after were measured, so no regression is hidden: at the committed parent,
+`manual-patch-verification:check`, `vulnerability-support-workflow:check`, and
+`story-3.2:gate:check` all failed. After `a3266796` the first passes and the other two still fail
+on the fixture binding. The change is a strict improvement and introduces no new failure.
+
+A design note for the owner, offered as an observation and not acted on: that fixture couples a
+synthetic test fixture to a host-dependent artifact, because the report embeds the local OpenSSL
+build hash. As written, this gate will go red on every OpenSSL update on any machine.
+
+### Two stale host blockers were cleared by actually running the work
+
+The `host change required` notes recorded against Sub-tasks `14.2.1.1` and `14.2.3.5` named two
+commands. Both were run successfully on this host, which confirms the earlier sandbox blocker was
+stale:
+
+- `8a5bc21e` renews the Linux docker production prerequisites. The recorded
+  "component closure changed" failure was correct: the candidate payload has gained
+  `usr/libexec/agentmage/agentmage-read-only-worker` and several release binaries were rebuilt, and
+  the evidence had not been renewed since.
+- `3ba8b747` renews the Sprint 14 local evidence, rebinding it to source revision `8a5bc21e` with
+  updated input hashes. Its own honest verdict is retained verbatim:
+  **"PASS locally; sprint remains BLOCKED"**.
+
+**No checkbox was flipped for either row.** Running the two named commands clears the recorded
+host blocker and renews the evidence; it does not by itself satisfy `14.2.1.1`'s substantive
+requirement to freeze the dated first-party catalogs, and the generator itself still reports the
+sprint as blocked. Closure remains a reviewer's decision.
+
+### Storage-seam note
+
+These repairs renewed generated evidence and one review pin only. No memory, persistence, or
+retrieval seam was added or altered.
+
+### State and next action
+
+Product truth remains `scaffolded`. No production model is enabled, no platform or package is
+qualified, and no release, independent-review, or platform-qualification claim is made.
+
+Next dependency-permitted action when the shared Cargo window is free: Sub-task `21.1.3.5`, whose
+host blocker this session also verified stale. Its named work is
+`cargo test -p agentmage-platform-linux worker_receives_only_the_fixed_environment_and_no_network
+--locked -- --ignored`, then the strict-local source policy renewal and
+`npm run -s evidence:sprint21:build`. After that, the register's selected row `14.1.3.3` is the
+next implementation target. Both owner decisions stated in the earlier checkpoints — the rustup
+provenance question and the vulnerability-workflow fixture binding above — remain open.
