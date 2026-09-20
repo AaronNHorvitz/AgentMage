@@ -381,3 +381,66 @@ state and processes remained untouched.
 Next action: implement the dependency-ready Task 13.1.6 finish-state and actual
 token-accounting source batch, then regenerate its dependent evidence once after
 the related source edits are complete.
+
+
+## Guarded-dispatch and blocker-truth checkpoint — 2026-09-20
+
+This run preserved the active Fedora demo, its model configuration, and every USTE process and
+repository boundary. AgentMage heavy checks ran one at a time in user services with
+`MemoryHigh=5G`, `MemoryMax=6G`, `MemorySwapMax=512M`, one Cargo job, and one Rust test thread.
+When USTE began a Cargo workload after an AgentMage preflight, the AgentMage service alone was
+stopped; no USTE process was changed. Four pre-existing ignored cache/build directories were moved
+to a private temporary directory for clean-source inspection and restored unchanged by an exit
+trap. No model, platform, package, release, or independent-review qualification is claimed.
+
+Completed commits in this continuation are:
+
+- `28a2408c`, `8b579f3b`, `b99681ce`, `cf3bf076`, `feb1d3c4`, `cbc763b8`,
+  `6f6c815d`, `f2959309`, `c003bf47`, and `8a2ef13d`, which implement and retain
+  truthful finish-state and actual token-usage behavior plus its dependent evidence;
+- `e764f686` implements mandatory guarded generation dispatch through a move-only prepared
+  request bound to canonical rendered bytes, exact token accounting, context/orchestration
+  identities, effective served capacity, output reserve, safety margin, process/load generations,
+  launch/observation digests, and slot/cache policy;
+- `7b907e70`, `d9823565`, `299350bc`, `bcaef484`, `7eaec580`, `386ad79f`, and
+  `22938cc8` add the CTX-FIT/CTX-DISPATCH evidence, Sprint 13 aggregation, maximum-integer
+  regression, and the work unit's final single supply-chain/dependency regeneration;
+- `2728de0d` and `63e3e74e` routinely renew the automated Story 7.1 and Sprint 7 pins without
+  claiming external-human review;
+- `728ee0b9` renews the Story 1.2 contract-evidence closure;
+- `80ab4dba` renews traceability and the row-level blocker register for guarded dispatch;
+- `17e14c3f` rebuilds the Linux native-inference package boundary at the current guarded-dispatch
+  source; and
+- `2b014994` replaces vague or stale physical-platform blockers through the first part of the
+  critical path with exact dependency or external records. It records the completed Decision 0040
+  Fedora/Ubuntu guest work, retains Story 9.1's independent-review gate, and reduces unassessed
+  rows from 414 to 343 without treating any unknown or external prerequisite as satisfied.
+
+Passing checks include the focused guarded-dispatch Rust tests, maximum-`u32` capacity regression,
+host refusal projection, configuration startup, Story 1.2 contract boundary and evidence index,
+Story 3.1 security evidence, Story 7.1 and Sprint 7 gates, the final Linux native-inference package
+boundary, supply-chain validation, traceability, planning-scope, context-safety registration,
+task-graph and row-level blocker tests, status-model validation, and the CTX-FIT/CTX-DISPATCH
+evidence generator and mutation suite. The final Linux boundary service completed in 3 minutes 27
+seconds with a 1.6 GiB peak and no swap. Product truth remains `scaffolded`; zero production models,
+supported platforms, released packages, or release approvals are recorded.
+
+The row-level audit currently records 42 local, 1,043 dependency, 146 external, and 343 unknown
+rows with zero substitutions. Decision 0052 correctly stops unattended selection at
+`assess-unknown:11.1.AC1`; `76.2.1.1` is the first dependency-ready local row but cannot be selected
+past that earlier unknown. Story 11.1's current prose says its acceptance criteria depend on later
+typed ingress, active logging/model-context coverage, live key operations, CBOM reconciliation,
+rotation, uninstall/residue, audit-ledger, clock-anomaly, and RV-09/RV-10 work without naming exact
+owning roadmap rows. The next blocker-assessment action is to bind those owners without creating a
+false dependency cycle or relabeling locally implementable work as external.
+
+One locally actionable Story 9.1 cascade remains unfinished. The unrestricted package-lifecycle
+builder now runs but correctly refuses because `clean-build-report.json` is bound to an older source
+revision. Regenerating it first exposed four unapproved ignored cache/build directories; they were
+preserved and the clean build was retried using an automatic move/restore wrapper. Two retries were
+stopped when USTE independently began Cargo campaigns during AgentMage startup. Resource limits,
+test thresholds, and evidence bindings were not changed. The exact continuation is: wait for a free
+shared Cargo window; run capped `npm run clean-build:run`; before committing, run capped
+`npm run evidence:story9.1-linux-package:build` at that same HEAD; inspect and commit both reports;
+then run the capped Sprint 13 aggregate and final strict Clippy for contracts, engine, Linux
+inference, and host. Update this handoff and blocker/traceability outputs afterward.
