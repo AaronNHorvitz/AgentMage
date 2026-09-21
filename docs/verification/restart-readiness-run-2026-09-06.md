@@ -1583,3 +1583,81 @@ individually and close only if all eight hold. (2) `14.2.2.2`: the Sprint 14 gen
 `reference_machine_preflight_complete: false`; it is non-acquiring and executable here. (3) Continue
 through every row that is executable on this machine, reading the implementation before trusting a
 row's prose — three rows this session read as `local` and were not.
+
+## Claude Code checkpoint — 2026-09-21 02:15 CDT
+
+Owner rule added and now in force: **do not close a row on a generator's summary alone.** Verify
+the row's enumerated items individually, close only if every one holds, and record the evidence in
+the row. Never supply an independent review and never tick an approval belonging to a reviewer or
+the owner.
+
+### 14.2.1.1 closed on individually verified evidence
+
+All eight artifact classes were checked across **all 416 frozen entries** in
+`model-profiles/catalogs/2026-08-14/`, not from a summary field:
+
+| Class | Result |
+|---|---|
+| Meta Muse catalog | boundary declared, 4 repositories, matches `counts.meta` |
+| Google Gemma catalog | boundary declared, 412 repositories, 33 selected collections |
+| Retrieval identities | 36 sources with `id`/`url`/64-hex `sha256`; 416 `immutable_source_url` pinned to revision |
+| License/use-term sources | 413 resolved; 3 carry explicit `license-use-terms-unresolved` and are `BLOCKED` |
+| Model cards | 416/416 `model_card_url` pinned to the immutable revision |
+| Artifact listings | 416/416 listed and 416/416 digest-bound |
+| Runtime documentation | 416/416 populated |
+| Eligibility policy | present in both snapshot boundary and inventory policy |
+
+The licence class is the one a summary would have hidden: three entries have no licence value, and
+checking them individually showed each carries an explicit `license-use-terms-unresolved` blocker
+because the upstream metadata genuinely has no licence tag. The freeze records the gap instead of
+inventing a value, which is the correct behaviour and is why the class passes.
+
+Both files record `frozen_on: 2026-08-14`, the digest chain holds
+(`inventory.source_snapshot_sha256` equals `snapshot.snapshot_sha256`, matrix bound to
+`inventory_sha256`), `model_candidate_inventory.py` reports "valid (416 exact source entries; zero
+acquisition authority)", and `product_state` records 0 enabled models and 0 authorized
+acquisitions. **Task 14.2.1** was then closed on the same basis: its host blocker is cleared by
+execution and all four sub-tasks are complete. No reviewer or owner approval is claimed by either
+closure.
+
+### Two more rows corrected, and the local queue is now consistent
+
+- **14.2.2.2** — all 416 entries record `hardware_preflight: BLOCKED` with reason
+  `exact-artifact-size-working-set-and-runtime-envelope-required`, `acquisition_allowed` is false
+  for every one, and `reference_machine_preflight_complete` is a **hardcoded `False`** in
+  `sprint_14_evidence.py`. Corrected from `local` to blocked on exact artifact admission.
+- **15.1.3.3** — the Sprint 15 generator records `os_worker_resource_enforcement: false` and the
+  blockers `RESOURCE-STOP-NOT-WIRED-TO-OS-WORKER` and `NO-ADMITTED-PRODUCT-MODEL`. Corrected to
+  blocked on those. Its purely local halves already pass and are retained.
+
+That makes **five** rows this session that read `local` in prose and were not — `21.1.3.5`,
+`14.1.3.3`, `14.1.3.4`, `14.2.2.2`, `15.1.3.3`. Each correction supersedes this session's own
+earlier judgement and names the evidence.
+
+**A completeness check was then run over the whole local queue**: for each of the 42 remaining
+local rows, its own sprint's `local-evidence-report.json` was searched for a blocker whose owner is
+that row or an ancestor. All 155 sprint reports were found, so the check is not vacuous, and
+**no remaining local row is named by such a blocker**. The five corrected rows were exactly the
+disagreements. This is a necessary check, not a sufficient one: it proves no generator contradicts
+the queue, not that every row is implementable.
+
+### Selector observation, recorded not acted on
+
+Sub-task rows do not inherit their story's declared `**Dependencies:**` block, because
+`_structural_dependencies` gives subtasks no structural edges. Story 76.2 declares dependencies on
+Stories 22.5 and 76.1, yet `76.2.1.1` is offered as a dependency-free local leaf. Decision 0052
+item 6 says the selector may pick only a leaf whose exact dependencies are satisfied, so this is a
+gap. It was **not** patched here: propagating story dependencies to leaves would reclassify a large
+number of rows at once and deserves a deliberate decision rather than a late edit.
+
+For `76.2.1.1` specifically the dependency is substantially met: Story 22.5 is closed, and Story
+76.1's implementation tasks 76.1.1 and 76.1.2 are complete with only Sub-task 76.1.3.4 open, which
+is the external native-desktop security evidence that cannot close on this machine. Story 76.2 also
+carves out model acquisition as non-blocking. So `76.2.1.1` — add the standalone application
+process and authenticated local bridge over the Rust host — is the genuine next implementation
+target, and it is a feature build rather than an evidence renewal.
+
+### Honest status
+
+Product truth remains `scaffolded`. Two rows were closed this session, both on individually
+verified evidence, and neither claims platform qualification, independent review, or release.
