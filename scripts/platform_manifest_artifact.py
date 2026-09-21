@@ -385,8 +385,9 @@ def run_ubuntu_contract(revision: str, root: Path = ROOT) -> str:
                 "--mount", f"type=bind,src={source},dst=/source,ro=true",
                 "--mount", f"type=bind,src={registry},dst=/registry,ro=true",
                 "--user=10001:10001", UBUNTU_IMAGE, "sh", "-lc",
-                "mkdir -p /tmp/cargo /tmp/work /tmp/target"
-                " && cp -a /registry /tmp/cargo/registry"
+                "mkdir -p /tmp/cargo/registry /tmp/work /tmp/target"
+                " && cp -a /registry/index /tmp/cargo/registry/index"
+                " && cp -a /registry/cache /tmp/cargo/registry/cache"
                 " && cp -a /source/. /tmp/work/"
                 " && cd /tmp/work"
                 " && CARGO_HOME=/tmp/cargo CARGO_TARGET_DIR=/tmp/target CARGO_BUILD_JOBS=1"

@@ -61,3 +61,11 @@ size, runtime user and test command are all byte-identical. The same package is 
 same locked, offline dependency graph and the same tests execute. Only the provisioning of the
 dependency cache changed, from "copy everything" to "copy what the lockfile resolves". No limit
 was raised and no assertion was relaxed.
+
+## Extended to the platform manifest artifact — 2026-09-20
+
+`scripts/platform_manifest_artifact.py` carried the identical defect: the same
+`cp -a /registry /tmp/cargo/registry` into the same 2 GB tmpfs under the same `--memory=2g`,
+and it failed the same way once the conformance check was fixed and `docs:check` reached it.
+The same provisioning is applied there, with the same controls untouched. A repository-wide
+search confirms these were the only two occurrences of the pattern.
