@@ -80,7 +80,7 @@
       },
       {
         "path": "fixtures/support/vulnerability-workflow/workflow.valid.json",
-        "sha256": "8d2473a3e1ead586074a11af777b329f1d402fd69fb6bdf52c7d04b462202af4"
+        "sha256": "25099945571417aad374db6928dbbe4ff273fdd5a5f042dc90ccedd8b321323d"
       },
       {
         "path": "fixtures/support/manual-patch/cases.json",
@@ -154,8 +154,8 @@
     "external_human_review_claim": "none",
     "finding_count": 0,
     "findings": [],
-    "reviewed_commit": "a2221e5ef88e8a9e99433ea482a15cbb65692dd3",
-    "reviewed_tree": "fdcc8ea0648df7e78a6f3b4b4917cf920822463a",
+    "reviewed_commit": "68a83c080064e06bbf47a78adde6fc8de1a6125a",
+    "reviewed_tree": "5e29fab95fc8acdb571d731a320887aa4bbf2cbe",
     "reviewer_id": "agentmage-story-3.2-independent-gate-v1"
   },
   "macos_evidence_substituted": false,
@@ -169,8 +169,8 @@
   "product_startup_integration_claim": "none",
   "product_support_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "a2221e5ef88e8a9e99433ea482a15cbb65692dd3",
-  "reviewed_tree": "fdcc8ea0648df7e78a6f3b4b4917cf920822463a",
+  "reviewed_commit": "68a83c080064e06bbf47a78adde6fc8de1a6125a",
+  "reviewed_tree": "5e29fab95fc8acdb571d731a320887aa4bbf2cbe",
   "schema_version": 1,
   "security_mapping": {
     "mapped_requirement_count": 10,

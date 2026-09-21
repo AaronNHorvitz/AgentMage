@@ -92,7 +92,7 @@
       },
       {
         "path": "fixtures/support/vulnerability-workflow/workflow.valid.json",
-        "sha256": "8d2473a3e1ead586074a11af777b329f1d402fd69fb6bdf52c7d04b462202af4"
+        "sha256": "25099945571417aad374db6928dbbe4ff273fdd5a5f042dc90ccedd8b321323d"
       },
       {
         "path": "fixtures/support/manual-patch/cases.json",
@@ -111,8 +111,8 @@
         "sha256": "d464f02ded4c5dc664d632d10f6a19fefdbc804e432797dea8352aeeb61688a5"
       }
     ],
-    "reviewed_commit": "a2221e5ef88e8a9e99433ea482a15cbb65692dd3",
-    "reviewed_tree": "fdcc8ea0648df7e78a6f3b4b4917cf920822463a",
+    "reviewed_commit": "68a83c080064e06bbf47a78adde6fc8de1a6125a",
+    "reviewed_tree": "5e29fab95fc8acdb571d731a320887aa4bbf2cbe",
     "reviewer_id": "agentmage-sprint-3-independent-gate-v1"
   },
   "macos": {
@@ -124,8 +124,8 @@
   "product_acceptance_claim": "none",
   "product_startup_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "a2221e5ef88e8a9e99433ea482a15cbb65692dd3",
-  "reviewed_tree": "fdcc8ea0648df7e78a6f3b4b4917cf920822463a",
+  "reviewed_commit": "68a83c080064e06bbf47a78adde6fc8de1a6125a",
+  "reviewed_tree": "5e29fab95fc8acdb571d731a320887aa4bbf2cbe",
   "schema_version": 1,
   "sprint_id": 3,
   "status": "blocked-macos",

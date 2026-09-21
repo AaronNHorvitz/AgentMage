@@ -35,8 +35,8 @@ from scripts.vulnerability_report_evidence import check_artifact as check_diagno
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-3/sprint-gate-report.json"
-REVIEWED_COMMIT = "a2221e5ef88e8a9e99433ea482a15cbb65692dd3"
-REVIEWED_TREE = "fdcc8ea0648df7e78a6f3b4b4917cf920822463a"
+REVIEWED_COMMIT = "68a83c080064e06bbf47a78adde6fc8de1a6125a"
+REVIEWED_TREE = "5e29fab95fc8acdb571d731a320887aa4bbf2cbe"
 REVIEWED_PATHS = (
     "configuration/profiles/catalog.json",
     "configuration/profiles/capability-deltas.json",
