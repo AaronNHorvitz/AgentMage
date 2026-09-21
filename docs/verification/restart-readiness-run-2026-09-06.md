@@ -1429,3 +1429,37 @@ blocker were two different things stacked on one row, and clearing the first exp
 
 Product truth remains `scaffolded`. Nothing in this block closed a checklist row. `docs:check`
 remains green after the TASKS.md edit and its contract-boundary cascade.
+
+### Sub-task 14.1.3.3 — the register's selected row was not actually ready
+
+With `21.1.3.5` corrected, the register selected `14.1.3.3` as the next dependency-ready local
+row. Reading the implementation before starting it showed it is not ready, for a reason its own
+text does not state: **no process performs a download or import.**
+
+- `execute_model_installer` admits exactly `self-check` and `preflight-stdin`, returning
+  `ModelInstallerProcessError::OperationUnavailable` otherwise.
+- Its self-check descriptor declares `"normal_operation": false`, `"network_authority": false`,
+  `"activation_authority": false`, `"one_shot": true`.
+- `download_model_artifact` is called only from unit tests inside `model_download.rs`.
+
+The existing interruption coverage is in-process and simulated, which is exactly why the row says
+actual process termination remains open. Producing that evidence would require first admitting
+download and import operations through the installer executable — widening an authority the
+product deliberately withholds and that Decision 0052 keeps behind separate consent.
+
+Decision 0060 records this. The row is corrected from `local` to `dependency`, and that correction
+explicitly supersedes **this session's own earlier classification**, which was made from the row's
+prose before the process boundary was read. Nothing was granted, stubbed, or pre-implemented: no
+operation was admitted, no authority flag changed, no test weakened.
+
+Register after the correction: 46 local, 1,058 dependency, 161 external, 309 unknown, selecting
+`execute-local:14.1.3.4`.
+
+### A note on the blocker-truth method
+
+Two rows this session had previously classified as `local` turned out, on reading the code and
+running the commands, to be blocked on something their prose did not name — `21.1.3.5` on an
+independent review, `14.1.3.3` on an inactive process boundary. Prose-level classification is a
+starting point, not a verdict; the classification is only trustworthy once the named work has been
+attempted or the implementation read. Both corrections are recorded as supersessions rather than
+silent edits.
