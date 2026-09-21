@@ -1463,3 +1463,70 @@ independent review, `14.1.3.3` on an inactive process boundary. Prose-level clas
 starting point, not a verdict; the classification is only trustworthy once the named work has been
 attempted or the implementation read. Both corrections are recorded as supersessions rather than
 silent edits.
+
+## Claude Code checkpoint — 2026-09-21 00:30 CDT
+
+A background-task notification reported "failed with exit code 1" for a `docs:check` waiter. It
+was benign and was verified rather than reported as a regression: the waiter's last command was
+`grep -c`, which exits 1 when it finds **zero** matches, so the non-zero status was caused by there
+being no failures. The real task recorded `DOCS_CHECK_EXIT=0`.
+
+### Two more rows were not what their prose said, and the generator agrees
+
+Continuing down the register, the next two selected rows were both read against the implementation
+before any work started, and both turned out to be blocked on something their text never named.
+
+- **14.1.3.3** — no process performs a download or import, so actual process termination cannot be
+  observed. Recorded in Decision 0060.
+- **14.1.3.4** — "runs installer and operational host concurrently" requires a host that actually
+  holds workspace, session, tool, grant and inference authority. The host refuses to become
+  operational: `agentmage-host --bootstrap-linux` exits `agentmage.bootstrap.package_untrusted`
+  because `/etc/agentmage/release/package-manifest.ed25519` and
+  `/etc/agentmage/trust/package-signing-ed25519.pub` are both absent. Those are the exact
+  production signing key and independently distributed trust root already recorded as external
+  under Sub-task 14.1.2.1, so the row now depends on it. With no arguments the binary only
+  composes components and exits, which is not an operational host.
+
+Both findings are **independently corroborated by the repository's own Sprint 14 generator**,
+which records these blockers without any input from this session:
+
+```text
+INSTALLER-EFFECT-PROTOCOL-INACTIVE (14.1)  local import, bounded download, activation, rollback
+                                           and cleanup are not yet wired to a closed end-user
+                                           process protocol
+PRODUCTION-SIGNING-NOT-AVAILABLE  (14.1)   no approved external production signing identity exists
+```
+
+That corroboration matters: these corrections are not this agent's opinion about the roadmap, they
+are the same facts the evidence generator already publishes.
+
+### 14.2.1.1 — named commands executed, closure deliberately not claimed
+
+The host blocker on this row was cleared by **execution**, not reclassification:
+`evidence:story9.2-docker-prerequisite:build` and `scripts/sprint_14_evidence.py --write` both ran
+successfully at `8a5bc21e` and `3ba8b747`. The generator now reports
+`source_population_reconciled: true`, `role_matrix_reconciled: true`, and status
+`PASS-SOURCE-INVENTORY-BLOCKED-EXACT-ARTIFACT-PREFLIGHT`.
+
+The checkbox is **left open on purpose**, and the reason is recorded in the row itself: the
+generator summary attests a reconciled source inventory, but this agent did not individually verify
+each of the eight artifact classes the row enumerates, and a checkbox asserts the whole row. The
+remaining Sprint 14 blocker owned by this story is `EXACT-ARTIFACT-PROFILES-NOT-ADMITTED`, which is
+separate artifact-admission work.
+
+### Next genuinely local row
+
+Story 14.2's generator reports `reference_machine_preflight_complete: false`, which is Sub-task
+**14.2.2.2** — the non-acquiring architecture, runtime, format, acceleration, disk, memory,
+context, modality and expected-working-set preflight against each declared reference-machine
+envelope. It acquires nothing and activates no model, so unlike 14.1.3.3 and 14.1.3.4 it is
+genuinely executable here. That is the next implementation target.
+
+Register: 45 local, 1,059 dependency, 161 external, 309 unknown.
+
+### Honest status
+
+Product truth remains `scaffolded`. No checkbox was flipped in this block. Three rows this session
+had been classified `local` from prose and were corrected once the code was read or the commands
+were run — `21.1.3.5`, `14.1.3.3` and `14.1.3.4`. Each correction is recorded as a supersession of
+this session's own earlier judgement.
