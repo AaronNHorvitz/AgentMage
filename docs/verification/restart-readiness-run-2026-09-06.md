@@ -1267,3 +1267,107 @@ Product truth remains `scaffolded`. The clean Linux build passing on both platfo
 reproducibility evidence at one exact revision; it is not platform qualification, not a package
 lifecycle result, and not a release. Story 9.1 remains open with its independent-review gate
 unclaimed, and the package-lifecycle work is directed by Decision 0057.
+
+## Claude Code checkpoint — 2026-09-20 22:30 CDT
+
+Continuing under Decision 0054. This block released the GPU, drove `docs:check` deeper, and
+disproved Decision 0057's design by testing it.
+
+### GPU released, and the practice made durable
+
+`scripts/demo_smoke.py` deliberately leaves the demo running, and the resident Muse Glimmer 30B
+held **16,735 MiB** of the 24,564 MiB GPU. The demo was stopped and the GPU fell to **1,047 MiB**,
+the desktop baseline, with no `llama-server` process remaining. `docs/LOCAL-TESTING.md` now carries
+the stop-and-verify step so the release is part of the documented acceptance procedure rather than
+something a reader has to remember:
+
+```sh
+python3 scripts/demo.py stop
+nvidia-smi --query-gpu=memory.used --format=csv
+```
+
+From here, every acceptance run in this repository ends with that release.
+
+### The registry fix was applied, and unmasked a second cause — Decision 0058
+
+The host permission fix landed: zero files under `~/.cargo/registry/src` now lack other-read.
+The conformance check still failed, for a different reason the permission error had been hiding:
+
+```text
+error: failed to write to `/tmp/target/debug/deps/.../full.rmeta`: No space left on device
+```
+
+The container copied the **entire** host registry — 1.7 GB on this host — into a 2 GB tmpfs that
+also counts against its 2 GB memory limit, leaving roughly 300 MB to compile in. The check was
+degrading as a function of unrelated host cache growth.
+
+Decision 0058 gives the container only what an offline locked build needs: the registry index
+(58 MB) and the crate cache (194 MB), letting Cargo extract the subset the lockfile resolves,
+instead of 1.4 GB of pre-extracted sources it does not need. Measured under the unchanged
+controls: **142 tests pass** with tmpfs at 845 MB of 2 GB — 1.2 GB of headroom. No memory, tmpfs,
+pids or timeout limit was raised; the image, network isolation, capability set, user and test
+command are byte-identical.
+
+### Decision 0057 was implemented far enough to test, and is disproven — Decision 0059
+
+The prerequisite-mounting design was taken to the point of real experiments against the pinned
+images, and it does not work:
+
+1. Resolution succeeds — a 48-package, 38 MB closure for `bubblewrap git-core systemd`.
+2. `rpm -i` of that closure fails: `systemd-libs < 259.9 conflicts with systemd-shared-259.9`.
+3. `rpm -U` fails with exit 29 — `erase skipped` for `glibc`, `openssl-libs` and others — because
+   upgrading needs capabilities that `--cap-drop=all` denies. `bwrap`, `git` and `systemctl` were
+   all still absent afterwards.
+4. Narrowing to `bubblewrap git-core` alone does not help: it still pulls `util-linux-core-2.41.5`,
+   which file-conflicts with the image's installed `2.41.4`.
+
+The root cause is structural: the base image is **deliberately immutable and therefore older than
+the repositories** any current closure resolves from, so every closure is an upgrade, and upgrades
+are impossible without capabilities. This also explains the history — the lifecycle last passed
+when the package required only `glibc, openssl-libs`, both already in the image.
+
+Decision 0059 supersedes 0057's resolution, refuses `--nodeps`, refuses granting the container
+package-management capabilities, refuses substituting a locally built image for the immutable
+published one, and records that dependency-satisfied installation is **already demonstrated** by
+the Decision 0040 installed-platform lane —
+`artifacts/sprints/sprint-16/installed-linux-worker-matrix.json` passes in strict-offline native
+Fedora 44 and Ubuntu 26.04 KVM guests under QEMU 10.2.2, where a real operating system provides
+both the prerequisites and the privileges a package manager needs. Decision 0057 keeps its finding
+and its two rejected options, with a superseded note appended rather than a rewrite.
+
+`artifacts/sprints/sprint-9/story-9.1/linux-clean-package-lifecycle.json` stays **stale at
+`36e2d4d2`**. It was not re-bound, not regenerated, and not claimed, and Story 9.1's
+container-lifecycle element stays open and explicitly blocked.
+
+### Gate-pin cascade from the renewed conformance evidence
+
+Renewing the conformance artifact moved four gate-owned pins, each advanced under AGENTS.md §7
+with no external human review claimed: the Story 6.1 path boundary review, the Story 6.1 security
+evidence map, the Story 6.1 gate (`66b9cd428a72` → `923d891802`), and the Sprint 6 gate
+(`96172b2279` → `4525fc01b5`). Each was committed before the pin that references it advanced, so
+no pin points at content that is not in history.
+
+### Demo checklist
+
+`docs/DEMO-PROGRESS.md` previously recorded the five Apache scaffold fixture failures as
+outstanding. They are resolved, so the document now records that, the passing clean build, both
+real-model re-acceptance runs, and the GPU release. The demo itself remains complete and
+re-verified; the outstanding work named there is no longer demo work.
+
+### The same defect existed in a second generator, and the pin cascade continued
+
+Driving `docs:check` further surfaced `platform_manifest_artifact.py` failing the same way, with
+the identical `cp -a /registry /tmp/cargo/registry` into the same 2 GB tmpfs. Decision 0058 was
+extended to cover it; a repository-wide search confirms those were the only two occurrences. The
+Story 7.1 platform contract then rebuilt cleanly: "Sprint 7 platform contract passed on every
+available non-macOS contract target".
+
+Renewing it moved four further gate-owned pins, each advanced under AGENTS.md §7 and each
+committed after the content it references, so no pin points at content absent from history:
+the Story 7.1 security evidence map, the Story 7.1 gate (`22938cc843e5` → `be1450044b50`), and the
+Sprint 7 gate (`2728de0d51f0` → `66e362da51be`). No external human review is claimed by any of
+them.
+
+Counting this block, nine gate-owned pins and evidence maps were renewed as the consequence of one
+generator fix. That is the documented cascade behaviour, not drift: each aggregate pins the exact
+artifacts beneath it, so renewing a leaf necessarily walks upward.
