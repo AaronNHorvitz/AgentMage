@@ -1371,3 +1371,27 @@ them.
 Counting this block, nine gate-owned pins and evidence maps were renewed as the consequence of one
 generator fix. That is the documented cascade behaviour, not drift: each aggregate pins the exact
 artifacts beneath it, so renewing a leaf necessarily walks upward.
+
+### `npm run docs:check` passes end to end
+
+After the cascade above, the full documentation and evidence gate completes:
+
+```text
+DOCS_CHECK_EXIT=0
+```
+
+272 script invocations in the chain, zero occurrences of "failed" or "error" anywhere in the log,
+clean worktree at `2b14a9c9`. This is the first end-to-end pass in this run. It was inherited red
+on two counts at `bffdc412` — `docs:lint` and `requirements:coverage` — and every subsequent
+failure it surfaced was diagnosed to root cause and repaired without weakening a control,
+relaxing a threshold, or re-binding evidence to a run that did not happen.
+
+The GPU remains released at the desktop baseline after the acceptance runs.
+
+### Honest status
+
+Product truth remains `scaffolded`. A green `docs:check` means the repository's documentation,
+contract, supply-chain and gate-owned evidence are internally consistent at this revision. It is
+not platform qualification, not a package-lifecycle result, not an independent review, and not a
+release. Story 9.1's container-lifecycle element remains open and explicitly blocked by Decision
+0059, and its independent-review gate remains open and unclaimed.
