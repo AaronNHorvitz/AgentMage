@@ -1187,3 +1187,83 @@ passing run. Story 9.1 remains open and its independent-review gate remains open
 Product truth remains `scaffolded`. The clean Linux build passing on both platforms is build
 reproducibility evidence at one exact revision; it is not platform qualification, not a package
 lifecycle result, and not a release.
+
+## Claude Code checkpoint — 2026-09-20 20:15 CDT
+
+Continuing under Decision 0054. Commits `68a83c08` and `297c6e66` complete this block, and the
+full `npm run docs:check` was driven end to end for the first time in this run.
+
+### The Apache fixture was relocated, not excepted
+
+`docs:check` reached the RV-51 fixture security scan, which failed with one prohibited item:
+
+```text
+ScanFinding(category='remote-reference', path='fixtures/licensing/apache-2.0.txt',
+            reason='non-reserved URL')
+```
+
+`scripts/fixture_security_scan.py` prohibits non-reserved URLs anywhere under `fixtures/`, and the
+Apache-2.0 text legitimately contains `http://www.apache.org/licenses/`. The scan is right. Rather
+than adding an exception to a security prohibition, the fixture was moved beside the crate whose
+tests consume it, at `capabilities/repository-map/tests/apache-2.0-license.txt`; the scanner covers
+`fixtures/**` and `artifacts/sprints/sprint-2/**` only. Its SHA-256 still matches the pinned
+`APACHE_2_LICENSE_SHA256` exactly and the 48 repository-map tests still pass. Decision 0056 was
+corrected to record the final location and why it is not under `fixtures/`.
+
+That relocation flipped the crate tree hash again, so the SBOM, the real-model demo acceptance,
+and the dependent cascade were all renewed a second time. The demo suite passed again end to end.
+
+### The last two long-standing red gates are now green
+
+`story-3.2:gate` and `sprint-3:gate` — open since the host's OpenSSL moved 3.5.7 to 3.5.8 — are
+resolved. Under the delegation's authority over how blockers are resolved, the
+`patch-verification-results` binding in `fixtures/support/vulnerability-workflow/workflow.valid.json`
+was advanced from `520f7f49…` to the regenerated report's actual digest `fa2304f8…`. That keeps the
+binding exact and is the same class of routine maintenance as an AGENTS.md §7 pin advance; it is
+not a weakening, which would mean removing the binding or making it inexact. The Story 3.2 security
+map and vulnerability workflow were rebuilt, and both gates' review pins were then advanced from
+`a2221e5ef8` to `68a83c08` under §7, with no external human review claimed.
+
+Story 2.4's gate was also renewed after the RV-51 scan report changed.
+
+### `docs:check` end-to-end status
+
+The chain now runs from `docs:lint` through the Sprint 3 gates and stops at exactly one remaining
+item, which is an **environment condition rather than a repository defect**:
+
+```text
+Path platform conformance failed: conformance command failed: podman
+```
+
+`scripts/path_platform_conformance.py` bind-mounts the host's `~/.cargo/registry` read-only into a
+container running as `--user=10001:10001` and copies it into a tmpfs. Two crates extracted onto
+this host today — `fnv-1.0.7` and `pin-utils-0.1.0` — carry upstream `0640` file modes, which cargo
+preserves, so uid 10001 inside the user namespace cannot read them:
+
+```text
+cp: cannot open '/registry/src/index.crates.io-.../fnv-1.0.7/lib.rs' for reading: Permission denied
+```
+
+Measured: exactly **19 of 58,067** files in that registry lack world-read, all belonging to those
+two crates, with 2020 upstream mtimes inside directories created today. Nothing in this repository
+causes it and nothing in this repository can fix it without changing container controls, which
+would be a weakening.
+
+**It was deliberately not fixed**, because the only remedy is a permission change to files outside
+this repository, and the standing delegation retains "nothing outside this repository" as a
+prohibition. The exact remedy, for whoever holds that authority, is:
+
+```sh
+find ~/.cargo/registry/src -type f ! -perm -o=r -exec chmod o+r {} +
+```
+
+That touches 19 public open-source source files in a local build cache and changes no repository
+content. After it, `evidence:story6.1-platform-conformance:check` should run and `docs:check`
+should complete.
+
+### Honest status
+
+Product truth remains `scaffolded`. The clean Linux build passing on both platforms is build
+reproducibility evidence at one exact revision; it is not platform qualification, not a package
+lifecycle result, and not a release. Story 9.1 remains open with its independent-review gate
+unclaimed, and the package-lifecycle work is directed by Decision 0057.
