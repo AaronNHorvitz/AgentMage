@@ -25,7 +25,7 @@
     "macos": "blocked-macos",
     "ubuntu_26_04": "verified-no-network-container"
   },
-  "reference_revision": "894ba8e723d3da5395a6ca0f6dc96fa1442bd1fc",
+  "reference_revision": "6cce100c03514d9701d62d071f2599013093c249",
   "release_claim": "none",
   "results": [
     {
@@ -45,12 +45,12 @@
     {
       "adapter": "linux",
       "container_image": "localhost/agentmage-clean-build:ubuntu-x86_64",
-      "container_image_id": "sha256:92d587476507b8668199c22f54c49b68d84b61e07527599560645ca61cd9ff18",
+      "container_image_id": "sha256:24cabc5cb783c5db8bb6e2ea24f95794bf6354d4a346128184185dd22bfad80a",
       "container_network": "none",
       "identity_evidence": "linux-mount-object-digests-and-exact-preimage",
       "platform": "ubuntu-26.04-x86_64",
       "policy_decision": "admit-canonical-read",
-      "source_revision": "894ba8e723d3da5395a6ca0f6dc96fa1442bd1fc",
+      "source_revision": "6cce100c03514d9701d62d071f2599013093c249",
       "status": "pass"
     }
   ],
@@ -74,7 +74,7 @@
     },
     {
       "path": "scripts/path_platform_conformance.py",
-      "sha256": "d7cd197f836e8f5cd0240ecd56c1874fe532cfa9f646107ddcc3830de98befce"
+      "sha256": "020030b30129fabd41bbcfc2100c0fbc2c77e950e64e9c595fedd727854ce11b"
     },
     {
       "path": "tests/test_path_platform_conformance.py",
