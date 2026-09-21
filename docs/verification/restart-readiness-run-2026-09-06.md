@@ -1395,3 +1395,37 @@ contract, supply-chain and gate-owned evidence are internally consistent at this
 not platform qualification, not a package-lifecycle result, not an independent review, and not a
 release. Story 9.1's container-lifecycle element remains open and explicitly blocked by Decision
 0059, and its independent-review gate remains open and unclaimed.
+
+## Claude Code checkpoint — 2026-09-20 23:40 CDT
+
+### Sub-task 21.1.3.5 — host prerequisite cleared, blocker corrected to its real owner
+
+The stale host-change note recorded against this row named three commands. All were executed on
+this host and all passed:
+
+- the previously ignored `worker_receives_only_the_fixed_environment_and_no_network` test —
+  1 passed, 0 failed;
+- `strict-local-source:check` — "passed with zero undeclared network paths";
+- both repository-owned runtime boundary reviews;
+- `evidence:sprint21:build`, now recording `local_contract_passed: true` at commit `e29dbf7f`.
+
+The host prerequisite is therefore genuinely satisfied, not merely reclassified. But the row is
+**not closed**, because the generator states its own remaining blocker:
+
+```text
+blockers = [{"code": "INDEPENDENT-SPRINT-21-REVIEW-NOT-RETAINED", "owner": "21.1.3.5"}]
+```
+
+That blocker is an independent review of the classification, citation-resolver, receipt-chain and
+recomputation evidence. This agent cannot supply its own independent review and does not claim
+one, so the row was corrected from `local` to **`external`** against an independent review venue,
+with the evidence of what now passes recorded in the row itself. The register moved to 47 local,
+1,057 dependency, 161 external, 309 unknown.
+
+This is the outcome the earlier classification could not see: the host blocker and the real
+blocker were two different things stacked on one row, and clearing the first exposed the second.
+
+### Honest status
+
+Product truth remains `scaffolded`. Nothing in this block closed a checklist row. `docs:check`
+remains green after the TASKS.md edit and its contract-boundary cascade.
