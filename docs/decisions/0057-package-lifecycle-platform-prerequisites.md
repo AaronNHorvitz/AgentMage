@@ -86,3 +86,18 @@ clean-build report advances `HEAD` past the revision the report records, which b
 equality. The implementing run must therefore: run the clean build, run the package-lifecycle
 evidence at that same `HEAD` while the clean-build report is the only worktree change, and then
 commit both together.
+
+## Superseded — 2026-09-20
+
+The resolution chosen above was implemented far enough to test against the real pinned images and
+**does not work**. Resolving the closure succeeds, but installing it inside the lifecycle container
+fails: the closure carries newer versions of packages the immutable base image already has, so the
+transaction becomes an upgrade, and upgrades require capabilities that `--cap-drop=all` denies
+(`rpm -U` exits 29 with `erase skipped` for `glibc`, `openssl-libs` and others, leaving `bwrap`,
+`git` and `systemctl` absent).
+
+**Decision 0059** supersedes this record's chosen resolution, states the root cause — an immutable
+base image that predates the repositories a current closure resolves from — and identifies the
+Decision 0040 KVM installed-platform lane as the place where dependency-satisfied installation is
+already demonstrated. The finding above, and the two resolutions this record rejected, remain
+accurate and are preserved unchanged.
