@@ -99,7 +99,7 @@
     {
       "bytes": 6846,
       "path": "fixtures/support/vulnerability-workflow/workflow.valid.json",
-      "sha256": "8d2473a3e1ead586074a11af777b329f1d402fd69fb6bdf52c7d04b462202af4"
+      "sha256": "25099945571417aad374db6928dbbe4ff273fdd5a5f042dc90ccedd8b321323d"
     },
     {
       "bytes": 1827,
@@ -142,14 +142,14 @@
       "sha256": "1df1722723f0d6442dc4d1781890bf1e9b7964d824ae84d0c26e3e7816871786"
     },
     {
-      "bytes": 10581,
+      "bytes": 10583,
       "path": "artifacts/sprints/sprint-3/story-3.2/manual-patch-verification-report.json",
-      "sha256": "520f7f49dcd4c426ab53e31cd4a7f8daf29e473dddb79b6dde790a166ec84205"
+      "sha256": "fa2304f81794d218febc86cf251a836b07df6fea8f4c5a2e8f3d41d0a19b23d0"
     },
     {
-      "bytes": 6952,
+      "bytes": 6954,
       "path": "artifacts/sprints/sprint-3/story-3.2/vulnerability-workflow-report.json",
-      "sha256": "a94fc8f586d5d5fecfe159dc0c10052c55aad074b2f5e55a1907e2d9f11e3ff9"
+      "sha256": "417a8d0452392a4bb9987b22f7388a0225d87323a5c9cc893702a4374f327006"
     },
     {
       "bytes": 16261,

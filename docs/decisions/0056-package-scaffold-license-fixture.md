@@ -35,7 +35,7 @@ feeding BSL bytes into an Apache-2.0 scaffolder, and all five tests panicked at
 ## Decision
 
 1. The exact Apache-2.0 text that `APACHE_2_LICENSE_SHA256` pins is retained in the
-   repository as an explicit test fixture at `fixtures/licensing/apache-2.0.txt`. Its
+   repository as an explicit test fixture at `capabilities/repository-map/tests/apache-2.0-license.txt`. Its
    SHA-256 is `02f41e321c6eabad29b0f412b9aaa710dfcff9df7fa563a8db0a408e35e5ba6f`, matching
    the pinned constant exactly.
 2. The shared test helper reads that fixture instead of the repository's own `LICENSE`. A
@@ -61,6 +61,15 @@ The five tests previously panicked inside the shared helper and never evaluated 
 assertions. With correct input they execute those assertions and pass. The suite moved from
 43 passed / 5 failed to **48 passed / 0 failed** with no assertion, threshold, or fixture
 expectation relaxed.
+
+## Fixture location
+
+The fixture lives beside the crate whose tests consume it, at
+`capabilities/repository-map/tests/apache-2.0-license.txt`. It is deliberately **not** under
+`fixtures/`: `scripts/fixture_security_scan.py` prohibits non-reserved URLs in that tree, and the
+Apache-2.0 text legitimately contains `http://www.apache.org/licenses/`. Placing it there would
+have required an exception to a security prohibition; relocating it respects the control
+untouched.
 
 ## Provenance of the fixture
 

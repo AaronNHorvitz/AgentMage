@@ -6,7 +6,7 @@
         "base_image_sha256": "89f61a124414261868224666aa7fb8df1b78397a53623774bdfb105d1612b48b",
         "component_id": "build-environment:fedora-x86_64",
         "platform": "fedora-x86_64",
-        "sha256": "f980826a8babd88b4d189dc6e211194db4d42f2dc37b81c00f297332b2168489",
+        "sha256": "5b5719b5f8d3fbbeb9206610930f924a824f631928918887b18f745ad2cbbdd5",
         "version": "Fedora Linux 44 (Container Image)"
       },
       {
@@ -14,7 +14,7 @@
         "base_image_sha256": "7b202b0e2e0028c6250f5fcf41d04df492d145a1654c6995a6553f0c1f6f1960",
         "component_id": "build-environment:ubuntu-x86_64",
         "platform": "ubuntu-x86_64",
-        "sha256": "92d587476507b8668199c22f54c49b68d84b61e07527599560645ca61cd9ff18",
+        "sha256": "24cabc5cb783c5db8bb6e2ea24f95794bf6354d4a346128184185dd22bfad80a",
         "version": "Ubuntu 26.04 LTS"
       }
     ],
@@ -24,7 +24,7 @@
         "component_id": "executable:fedora-x86_64:cargo",
         "executable_id": "cargo",
         "platform": "fedora-x86_64",
-        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "sha256": "dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71",
         "version": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)"
       },
       {
@@ -32,7 +32,7 @@
         "component_id": "executable:fedora-x86_64:clippy-driver",
         "executable_id": "clippy-driver",
         "platform": "fedora-x86_64",
-        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "sha256": "dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71",
         "version": "clippy 0.1.95 (59807616e1 2026-04-14)"
       },
       {
@@ -64,15 +64,15 @@
         "component_id": "executable:fedora-x86_64:python3",
         "executable_id": "python3",
         "platform": "fedora-x86_64",
-        "sha256": "7af874aca05879e1823cd820913b42fb8d8b994738a05ec39ce4256d85b03861",
-        "version": "Python 3.14.6"
+        "sha256": "0d64bd6d66d68dac91cdadafc46e22d4f09f22bdc997aaae870f42865b024a3e",
+        "version": "Python 3.14.7"
       },
       {
         "approval_scope": "build-and-test-only",
         "component_id": "executable:fedora-x86_64:rustc",
         "executable_id": "rustc",
         "platform": "fedora-x86_64",
-        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "sha256": "dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71",
         "version": "rustc 1.95.0 (59807616e 2026-04-14)"
       },
       {
@@ -80,7 +80,7 @@
         "component_id": "executable:fedora-x86_64:rustfmt",
         "executable_id": "rustfmt",
         "platform": "fedora-x86_64",
-        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "sha256": "dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71",
         "version": "rustfmt 1.9.0-stable (59807616e1 2026-04-14)"
       },
       {
@@ -88,7 +88,7 @@
         "component_id": "executable:ubuntu-x86_64:cargo",
         "executable_id": "cargo",
         "platform": "ubuntu-x86_64",
-        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "sha256": "dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71",
         "version": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)"
       },
       {
@@ -96,7 +96,7 @@
         "component_id": "executable:ubuntu-x86_64:clippy-driver",
         "executable_id": "clippy-driver",
         "platform": "ubuntu-x86_64",
-        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "sha256": "dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71",
         "version": "clippy 0.1.95 (59807616e1 2026-04-14)"
       },
       {
@@ -128,7 +128,7 @@
         "component_id": "executable:ubuntu-x86_64:python3",
         "executable_id": "python3",
         "platform": "ubuntu-x86_64",
-        "sha256": "b8d8288faefdd300201f43fcf00f6f539a27218eeed3a3dff5ab10b9c4c99700",
+        "sha256": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
         "version": "Python 3.14.4"
       },
       {
@@ -136,7 +136,7 @@
         "component_id": "executable:ubuntu-x86_64:rustc",
         "executable_id": "rustc",
         "platform": "ubuntu-x86_64",
-        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "sha256": "dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71",
         "version": "rustc 1.95.0 (59807616e 2026-04-14)"
       },
       {
@@ -144,7 +144,7 @@
         "component_id": "executable:ubuntu-x86_64:rustfmt",
         "executable_id": "rustfmt",
         "platform": "ubuntu-x86_64",
-        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "sha256": "dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71",
         "version": "rustfmt 1.9.0-stable (59807616e1 2026-04-14)"
       }
     ],
@@ -163,7 +163,7 @@
         "npm-workspace": 2,
         "swift-workspace": 1
       },
-      "identity_set_sha256": "e7814141010e8279539cd897d735b315bb8ea45f76ffcfac3b8fb699d0b5c2d5",
+      "identity_set_sha256": "37ad96332ef977affd043d4a1a471679c4167792fa1f4babc564afe2ba1bbc50",
       "source": "supply-chain/dependency-provenance.json"
     },
     "product_runtimes": []
@@ -356,11 +356,11 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
-      "sha256": "b42c7f997ccc69e9e9eceea327fff405a40c3ac618becedd21b1fa3c2a5d3693"
+      "sha256": "2c67691eaccac57dd1ecddff3c4568416c89d539347a3c9a10c6029e318d992e"
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "745cfe70a3b7891d67ed9803a01326ba786e736a24b06195ca60168a1e2ab3c8"
+      "sha256": "4343ddb6cbd2c0c0444fd5618a7fe20cf3a07c1bd959edf959b7ee8e6e9a6d45"
     },
     {
       "path": "architecture/dependency-classes.json",
@@ -396,11 +396,11 @@
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "69b95d1d32d8fa6601c2ecd443949e6a3c571f5d86e8e626ada2d9b2b936579b"
+      "sha256": "468d3652d71caf9431826fd287b4b7fb69bb49f77ebea5acb819e8c8307a681a"
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "01d7f0c5391c8d1ff3f2399b6b2c5f9eb9b7c255e5fbd6774c615e2dbd86ccbf"
+      "sha256": "fa5bfda4cb0519ee2b9b277503d336f67b5ad2e32d84c185efa13b3f3f3f194f"
     },
     {
       "path": "scripts/component_inventory.py",

@@ -9,8 +9,8 @@
     "python3 scripts/demo.py start --no-open",
     "node scripts/demo_browser_smoke.mjs --restart-only"
   ],
-  "final_running_pid": 631619,
-  "recorded_at_unix": 1789944972.6448822,
+  "final_running_pid": 830540,
+  "recorded_at_unix": 1789948213.1782374,
   "source_sha256": {
     "scripts/demo_smoke.py": "34ff7bcb695ee746f9557ec7b00195c63cc5b904bfff81f33294ebe20fea8e7c"
   },

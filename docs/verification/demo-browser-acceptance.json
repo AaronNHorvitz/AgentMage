@@ -1,66 +1,66 @@
 {
   "record_type": "agentmage_local_demo_browser_acceptance",
-  "recorded_at": "2026-09-20T22:55:09.837Z",
+  "recorded_at": "2026-09-20T23:49:09.980Z",
   "tests": [
     {
       "name": "browser launch and real model ready",
       "passed": true,
-      "seconds": 18.068
+      "seconds": 0.032
     },
     {
       "name": "multi-document admission and unsupported input reasons",
       "passed": true,
-      "seconds": 0.048
+      "seconds": 0.046
     },
     {
       "name": "real inference through UI with checked source citation",
       "passed": true,
-      "seconds": 16.788
+      "seconds": 7.143
     },
     {
       "name": "follow-up and second source grounding",
       "passed": true,
-      "seconds": 8.382
+      "seconds": 8.36
     },
     {
       "name": "unanswerable question has honest insufficient evidence",
       "passed": true,
-      "seconds": 6.382
+      "seconds": 6.35
     },
     {
       "name": "context overflow fails before generation without silent truncation",
       "passed": true,
-      "seconds": 0.098
+      "seconds": 0.095
     },
     {
       "name": "cancel generation then recover with real model answer",
       "passed": true,
-      "seconds": 4.634
+      "seconds": 4.652
     },
     {
       "name": "model-unavailable error and recovery through interface",
       "passed": true,
-      "seconds": 33.416
+      "seconds": 32.565
     },
     {
       "name": "bounded six-turn conversation and explicit new-conversation recovery",
       "passed": true,
-      "seconds": 66.963
+      "seconds": 66.884
     },
     {
       "name": "folder boundary symlink traversal and unsupported/invalid inputs",
       "passed": true,
-      "seconds": 29.265
+      "seconds": 29.463
     },
     {
       "name": "privileged endpoints reject missing token wrong origin and DNS rebinding host",
       "passed": true,
-      "seconds": 0.007
+      "seconds": 0.006
     }
   ],
   "real_model_interactions": [
     {
-      "answer": "Project Aurora launches on 18 October 2026 and the project lead is Mira Chen.",
+      "answer": "Project Aurora launches on 18 October 2026. The project lead is Mira Chen.",
       "citations": [
         {
           "citation_sha256": "b73b9194b647f6c55679e3d4a8c69ac50095412b02447121bdc65e82d71f7490",
@@ -75,9 +75,9 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 16.469,
+      "elapsed_seconds": 6.956,
       "prompt_tokens": 379,
-      "output_tokens": 296,
+      "output_tokens": 313,
       "omitted_count": 0,
       "snapshot_sha256": "bcdd94806852dc1c56dd3835159f37ebe979b07719490fd847d182d4b8a6d52c",
       "model": "Meta Muse Glimmer 30B · first-party Q4_K_M · local demo QA"
@@ -98,7 +98,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 8.226,
+      "elapsed_seconds": 8.256,
       "prompt_tokens": 432,
       "output_tokens": 378,
       "omitted_count": 0,
@@ -109,9 +109,9 @@
       "answer": "The selected documents do not provide enough evidence to answer this question.",
       "citations": [],
       "insufficient_evidence": true,
-      "elapsed_seconds": 6.259,
+      "elapsed_seconds": 6.076,
       "prompt_tokens": 492,
-      "output_tokens": 283,
+      "output_tokens": 275,
       "omitted_count": 0,
       "snapshot_sha256": "bcdd94806852dc1c56dd3835159f37ebe979b07719490fd847d182d4b8a6d52c",
       "model": "Meta Muse Glimmer 30B · first-party Q4_K_M · local demo QA"
@@ -132,7 +132,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 4.231,
+      "elapsed_seconds": 4.255,
       "prompt_tokens": 376,
       "output_tokens": 190,
       "omitted_count": 0,
@@ -155,7 +155,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 18.491,
+      "elapsed_seconds": 17.055,
       "prompt_tokens": 415,
       "output_tokens": 383,
       "omitted_count": 0,
@@ -178,7 +178,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 12.563,
+      "elapsed_seconds": 12.499,
       "prompt_tokens": 373,
       "output_tokens": 576,
       "omitted_count": 0,
@@ -201,7 +201,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 8.525,
+      "elapsed_seconds": 8.415,
       "prompt_tokens": 415,
       "output_tokens": 386,
       "omitted_count": 0,
@@ -224,7 +224,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 9.297,
+      "elapsed_seconds": 9.236,
       "prompt_tokens": 457,
       "output_tokens": 423,
       "omitted_count": 0,
@@ -247,7 +247,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 7.678,
+      "elapsed_seconds": 7.638,
       "prompt_tokens": 499,
       "output_tokens": 348,
       "omitted_count": 0,
@@ -293,7 +293,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 8.108,
+      "elapsed_seconds": 7.886,
       "prompt_tokens": 583,
       "output_tokens": 359,
       "omitted_count": 0,
@@ -316,7 +316,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 12.37,
+      "elapsed_seconds": 12.345,
       "prompt_tokens": 373,
       "output_tokens": 577,
       "omitted_count": 0,
@@ -339,7 +339,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 6.539,
+      "elapsed_seconds": 6.449,
       "prompt_tokens": 201,
       "output_tokens": 296,
       "omitted_count": 0,
@@ -350,7 +350,7 @@
       "answer": "The selected documents do not provide enough evidence to answer this question.",
       "citations": [],
       "insufficient_evidence": true,
-      "elapsed_seconds": 13.387,
+      "elapsed_seconds": 13.402,
       "prompt_tokens": 242,
       "output_tokens": 620,
       "omitted_count": 0,
@@ -373,7 +373,7 @@
         }
       ],
       "insufficient_evidence": false,
-      "elapsed_seconds": 8.931,
+      "elapsed_seconds": 8.908,
       "prompt_tokens": 374,
       "output_tokens": 409,
       "omitted_count": 0,
@@ -386,9 +386,9 @@
     "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
     "shells/host/Cargo.toml": "23e076624d2c6be50259f00e59449f48544fdc39c6c471c7468f85438a66ef17",
     "shells/host/src/lib.rs": "de57f7476dd4476179a399ca0f6855c9d3a3d1de3045ddaf1237d5d0c55b95c7",
-    "supply-chain/sbom.cdx.json": "69b95d1d32d8fa6601c2ecd443949e6a3c571f5d86e8e626ada2d9b2b936579b",
-    "supply-chain/dependency-provenance.json": "745cfe70a3b7891d67ed9803a01326ba786e736a24b06195ca60168a1e2ab3c8",
-    "supply-chain/dependency-hashes.sha256": "01d7f0c5391c8d1ff3f2399b6b2c5f9eb9b7c255e5fbd6774c615e2dbd86ccbf",
+    "supply-chain/sbom.cdx.json": "468d3652d71caf9431826fd287b4b7fb69bb49f77ebea5acb819e8c8307a681a",
+    "supply-chain/dependency-provenance.json": "4343ddb6cbd2c0c0444fd5618a7fe20cf3a07c1bd959edf959b7ee8e6e9a6d45",
+    "supply-chain/dependency-hashes.sha256": "fa5bfda4cb0519ee2b9b277503d336f67b5ad2e32d84c185efa13b3f3f3f194f",
     "scripts/demo.py": "8bb351d41e2833a166a1645004c1d3e9167f0056a02b5bd2c83d6baf1fe3fcdf",
     "scripts/demo_browser_smoke.mjs": "cc74666724a4c6e1c737e2df0493d64a12e9dab5fa7f02bff674d23888185549",
     "shells/host/src/demo_documents.rs": "e97ea0d5c75facb7f92ed0e3ca8688f754153863f78dfa2fd137200c51c7afe4",
