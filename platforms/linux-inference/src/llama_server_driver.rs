@@ -32,7 +32,7 @@ const MAX_COMPLETION_BYTES: usize = 16 * 1024 * 1024;
 const MAX_HTTP_HEADER_BYTES: usize = 32 * 1024;
 const MAX_SSE_EVENT_BYTES: usize = 1024 * 1024;
 const STREAM_POLL_INTERVAL: Duration = Duration::from_millis(50);
-const EXPECTED_CONTEXT_TOKENS: u32 = 8192;
+const MAX_CONTEXT_TOKENS: u32 = 131_072;
 const MAX_UNIX_SOCKET_PATH_BYTES: usize = 107;
 const BWRAP_PATH: &str = "/usr/bin/bwrap";
 const BWRAP_SHA256: &str = "139bf12775025adf5c8523d119c5ad2950281335573708fd839c60181a3886dc";
@@ -129,6 +129,67 @@ pub struct LlamaServerDriverConfig {
     socket_path: PathBuf,
     identity: ModelRuntimeIdentity,
     startup_timeout: Duration,
+    launch: LlamaServerLaunchProfile,
+}
+
+/// Resource and family-template controls bound into one exact llama-server launch.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LlamaServerLaunchProfile {
+    context_tokens: u32,
+    threads: u16,
+    batch_tokens: u32,
+    microbatch_tokens: u32,
+    cache_type_k: String,
+    cache_type_v: String,
+    chat_template_kwargs_json: Option<String>,
+}
+
+impl LlamaServerLaunchProfile {
+    /// Constructs an exact bounded launch profile without starting a process.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        context_tokens: u32,
+        threads: u16,
+        batch_tokens: u32,
+        microbatch_tokens: u32,
+        cache_type_k: impl Into<String>,
+        cache_type_v: impl Into<String>,
+        chat_template_kwargs_json: Option<String>,
+    ) -> Result<Self, ModelRuntimeFailure> {
+        let cache_type_k = cache_type_k.into();
+        let cache_type_v = cache_type_v.into();
+        let valid_kwargs = chat_template_kwargs_json.as_ref().is_none_or(|value| {
+            serde_json::from_str::<Value>(value)
+                .ok()
+                .is_some_and(|value| value.as_object().is_some_and(|object| !object.is_empty()))
+        });
+        if !(4_096..=MAX_CONTEXT_TOKENS).contains(&context_tokens)
+            || !(1..=4).contains(&threads)
+            || !(1..=512).contains(&batch_tokens)
+            || microbatch_tokens == 0
+            || microbatch_tokens > batch_tokens
+            || !matches!(cache_type_k.as_str(), "f16" | "q8_0")
+            || !matches!(cache_type_v.as_str(), "f16" | "q8_0")
+            || !valid_kwargs
+        {
+            return Err(failure("model.llama-driver.launch-profile-invalid", false));
+        }
+        Ok(Self {
+            context_tokens,
+            threads,
+            batch_tokens,
+            microbatch_tokens,
+            cache_type_k,
+            cache_type_v,
+            chat_template_kwargs_json,
+        })
+    }
+
+    /// Returns the exact configured per-slot context capacity.
+    #[must_use]
+    pub const fn context_tokens(&self) -> u32 {
+        self.context_tokens
+    }
 }
 
 impl LlamaServerDriverConfig {
@@ -155,7 +216,15 @@ impl LlamaServerDriverConfig {
             socket_path,
             identity,
             startup_timeout,
+            launch: LlamaServerLaunchProfile::new(8_192, 4, 256, 128, "f16", "f16", None)?,
         })
+    }
+
+    /// Replaces the legacy 8K launch defaults with one explicit validated profile.
+    #[must_use]
+    pub fn with_launch_profile(mut self, launch: LlamaServerLaunchProfile) -> Self {
+        self.launch = launch;
+        self
     }
 }
 
@@ -187,6 +256,7 @@ struct LoadedRuntime {
     token_counter: String,
     token_counter_sha256: String,
     decoding: DecodingProfile,
+    launch_arguments: Vec<String>,
     child: Child,
     runtime_pid: u32,
     loaded_at: Instant,
@@ -418,7 +488,7 @@ impl NativeModelDriver for LlamaServerDriver {
     ) -> Result<ModelManifestObservation, ModelRuntimeFailure> {
         if self.loaded.is_some()
             || profile.runtime != self.config.identity
-            || profile.context.max_context_tokens != EXPECTED_CONTEXT_TOKENS
+            || profile.context.max_context_tokens != self.config.launch.context_tokens
             || profile.modalities != [agentmage_kernel_contracts::ModelModality::Text]
         {
             return Err(failure("model.llama-driver.profile-invalid", false));
@@ -459,10 +529,9 @@ impl NativeModelDriver for LlamaServerDriver {
             .ok_or_else(|| failure("model.llama-driver.load-generation-exhausted", false))?;
         let effective_launch = launch_arguments(
             GUEST_MODEL_PATH,
-            profile.profile_id.as_str(),
             GUEST_SOCKET_PATH,
-            profile.context.max_context_tokens,
-            1,
+            profile,
+            &self.config.launch,
         );
         let launch_configuration_sha256 = sha256(
             serde_json::to_string(&effective_launch)
@@ -478,7 +547,7 @@ impl NativeModelDriver for LlamaServerDriver {
             ))
             .arg("--")
             .arg(format!("{GUEST_RUNTIME_ROOT}/bin/llama-server"))
-            .args(effective_launch)
+            .args(&effective_launch)
             .env_clear()
             .stdin(Stdio::null())
             .stdout(Stdio::null())
@@ -501,6 +570,7 @@ impl NativeModelDriver for LlamaServerDriver {
             token_counter: profile.context.token_counter.clone(),
             token_counter_sha256: profile.context.token_counter_sha256.clone(),
             decoding: profile.decoding.clone(),
+            launch_arguments: effective_launch,
             child,
             runtime_pid: 0,
             loaded_at: Instant::now(),
@@ -603,16 +673,7 @@ impl NativeModelDriver for LlamaServerDriver {
         if loaded.runtime_pid == 0 || self.client().health().is_err() {
             return Err(failure("model.served-capability.drift", false));
         }
-        verify_runtime_command_line(
-            loaded.runtime_pid,
-            &launch_arguments(
-                GUEST_MODEL_PATH,
-                loaded.profile_id.as_str(),
-                GUEST_SOCKET_PATH,
-                loaded.context_capacity_tokens,
-                1,
-            ),
-        )?;
+        verify_runtime_command_line(loaded.runtime_pid, &loaded.launch_arguments)?;
         let process_generation = process_start_generation(loaded.runtime_pid)?;
         let properties = self.client().serving_properties()?;
         if properties.parallel_slots != 1 {
@@ -818,29 +879,70 @@ impl NativeModelDriver for LlamaServerDriver {
 
 fn launch_arguments(
     model: &str,
-    profile_id: &str,
     socket: &str,
-    context_tokens: u32,
-    parallel_slots: u32,
+    profile: &ExactModelProfile,
+    launch: &LlamaServerLaunchProfile,
 ) -> Vec<String> {
-    vec![
+    let mut arguments = vec![
         "--model".to_owned(),
         model.to_owned(),
         "--alias".to_owned(),
-        profile_id.to_owned(),
+        profile.profile_id.as_str().to_owned(),
         "--host".to_owned(),
         socket.to_owned(),
         "--ctx-size".to_owned(),
-        context_tokens.to_string(),
+        launch.context_tokens.to_string(),
         "--parallel".to_owned(),
-        parallel_slots.to_string(),
+        "1".to_owned(),
         "--n-gpu-layers".to_owned(),
         "999".to_owned(),
+        "--fit".to_owned(),
+        "off".to_owned(),
+        "--flash-attn".to_owned(),
+        "on".to_owned(),
+        "--cache-type-k".to_owned(),
+        launch.cache_type_k.clone(),
+        "--cache-type-v".to_owned(),
+        launch.cache_type_v.clone(),
+        "--threads".to_owned(),
+        launch.threads.to_string(),
+        "--threads-batch".to_owned(),
+        launch.threads.to_string(),
+        "--threads-http".to_owned(),
+        "2".to_owned(),
+        "--batch-size".to_owned(),
+        launch.batch_tokens.to_string(),
+        "--ubatch-size".to_owned(),
+        launch.microbatch_tokens.to_string(),
+        "--n-predict".to_owned(),
+        profile.decoding.max_output_tokens.to_string(),
+        "--temp".to_owned(),
+        profile.decoding.temperature.to_string(),
+        "--top-p".to_owned(),
+        profile.decoding.top_p.to_string(),
+        "--top-k".to_owned(),
+        profile.decoding.top_k.to_string(),
+        "--repeat-penalty".to_owned(),
+        profile.decoding.repeat_penalty.to_string(),
+        "--seed".to_owned(),
+        profile.decoding.seed.to_string(),
         "--no-webui".to_owned(),
+        "--no-agent".to_owned(),
         "--no-slots".to_owned(),
         "--jinja".to_owned(),
         "--no-context-shift".to_owned(),
-    ]
+        "--no-cache-prompt".to_owned(),
+        "--cache-ram".to_owned(),
+        "0".to_owned(),
+        "--offline".to_owned(),
+    ];
+    if profile.codec.reasoning_enabled {
+        arguments.extend(["--reasoning".to_owned(), "auto".to_owned()]);
+    }
+    if let Some(kwargs) = &launch.chat_template_kwargs_json {
+        arguments.extend(["--chat-template-kwargs".to_owned(), kwargs.clone()]);
+    }
+    arguments
 }
 
 fn sandbox_arguments(runtime_root: &Path, model_path: &Path, socket_root: &Path) -> Vec<OsString> {
@@ -2075,21 +2177,29 @@ mod tests {
 
     use agentmage_kernel_contracts::{
         BoundaryKind, CancellationId, CancellationReason, CancellationSignal, ContextPacketId,
-        CorrelationId, DecodingProfile, ModelAdapterId, ModelCancellationProbe, ModelFinishReason,
-        ModelProfileId, ModelRunId, ModelRunRequest, ModelRunTerminalState, ModelRuntimeFailure,
-        ModelStreamId, ModelStreamSink, StreamedModelFragment, TaskId,
+        CorrelationId, DecodingProfile, ExactModelProfile, ModelAdapterId, ModelCancellationProbe,
+        ModelFinishReason, ModelProfileId, ModelRunId, ModelRunRequest, ModelRunTerminalState,
+        ModelRuntimeFailure, ModelStreamId, ModelStreamSink, StreamedModelFragment, TaskId,
     };
     use serde_json::{Value, json};
 
     use super::{
         CONTRACT_SCHEMA_VERSION, CompletionInvocation, Endpoint, FileSnapshot, GUEST_MODEL_PATH,
-        GUEST_RUNTIME_ROOT, GUEST_SOCKET_PATH, GUEST_SOCKET_ROOT, SANDBOX_DEVICE_PATHS,
-        SANDBOX_READ_ONLY_DIRECTORIES, UnixHttpClient, exact_directory, launch_arguments,
-        parse_accelerator_memory, parse_http_response, parse_serving_properties, plain_text,
-        process_start_generation, sandbox_arguments, valid_socket_path,
+        GUEST_RUNTIME_ROOT, GUEST_SOCKET_PATH, GUEST_SOCKET_ROOT, LlamaServerLaunchProfile,
+        SANDBOX_DEVICE_PATHS, SANDBOX_READ_ONLY_DIRECTORIES, UnixHttpClient, exact_directory,
+        launch_arguments, parse_accelerator_memory, parse_http_response, parse_serving_properties,
+        plain_text, process_start_generation, sandbox_arguments, valid_socket_path,
     };
 
     static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
+
+    fn exact_profile() -> ExactModelProfile {
+        let catalog: Value = serde_json::from_str(include_str!(
+            "../../../model-profiles/exact-profile-catalog.json"
+        ))
+        .expect("catalog");
+        serde_json::from_value(catalog["profiles"][2].clone()).expect("exact profile")
+    }
 
     struct TestDirectory(PathBuf);
 
@@ -2345,37 +2455,71 @@ mod tests {
 
     #[test]
     fn launch_tuple_is_fixed_to_one_private_socket_and_slot() {
-        assert_eq!(
-            launch_arguments(
-                "/models/model.gguf",
-                "exact-profile",
-                "/run/private/llama-server.sock",
-                8192,
-                1,
-            ),
-            [
-                "--model",
-                "/models/model.gguf",
-                "--alias",
-                "exact-profile",
-                "--host",
-                "/run/private/llama-server.sock",
-                "--ctx-size",
-                "8192",
-                "--parallel",
-                "1",
-                "--n-gpu-layers",
-                "999",
-                "--no-webui",
-                "--no-slots",
-                "--jinja",
-                "--no-context-shift",
-            ]
-            .map(str::to_owned)
+        let mut profile = exact_profile();
+        profile.profile_id = ModelProfileId::from_raw("exact-profile");
+        let launch = LlamaServerLaunchProfile::new(8_192, 4, 256, 128, "q8_0", "q8_0", None)
+            .expect("launch profile");
+        let arguments = launch_arguments(
+            "/models/model.gguf",
+            "/run/private/llama-server.sock",
+            &profile,
+            &launch,
         );
-        let derived = launch_arguments("/model", "profile", "/run/llama-server.sock", 4096, 2);
-        assert_eq!(derived[7], "4096");
-        assert_eq!(derived[9], "2");
+        for (name, expected) in [
+            ("--alias", "exact-profile"),
+            ("--ctx-size", "8192"),
+            ("--parallel", "1"),
+            ("--threads", "4"),
+            ("--batch-size", "256"),
+            ("--ubatch-size", "128"),
+            ("--cache-type-k", "q8_0"),
+            ("--cache-type-v", "q8_0"),
+        ] {
+            let index = arguments
+                .iter()
+                .position(|value| value == name)
+                .expect(name);
+            assert_eq!(arguments[index + 1], expected);
+        }
+        for required in [
+            "--fit",
+            "--flash-attn",
+            "--no-cache-prompt",
+            "--no-context-shift",
+            "--offline",
+            "--no-agent",
+        ] {
+            assert!(arguments.iter().any(|value| value == required));
+        }
+        assert_eq!(launch.context_tokens(), profile.context.max_context_tokens);
+
+        let development = LlamaServerLaunchProfile::new(
+            32_768,
+            4,
+            256,
+            128,
+            "q8_0",
+            "q8_0",
+            Some(r#"{"reasoning_effort":"medium"}"#.to_owned()),
+        )
+        .expect("32K development launch");
+        profile.context.max_context_tokens = 32_768;
+        profile.codec.reasoning_enabled = true;
+        let derived = launch_arguments("/model", "/run/llama-server.sock", &profile, &development);
+        assert_eq!(
+            derived[derived
+                .iter()
+                .position(|value| value == "--ctx-size")
+                .unwrap()
+                + 1],
+            "32768"
+        );
+        assert!(derived.iter().any(|value| value == "--reasoning"));
+        assert!(
+            derived
+                .iter()
+                .any(|value| value == "--chat-template-kwargs")
+        );
     }
 
     #[test]
@@ -2431,7 +2575,18 @@ mod tests {
             assert!(!values.contains(&prohibited), "admitted {prohibited}");
         }
         assert_eq!(
-            launch_arguments(GUEST_MODEL_PATH, "profile", GUEST_SOCKET_PATH, 8192, 1)[0..6],
+            {
+                let mut profile = exact_profile();
+                profile.profile_id = ModelProfileId::from_raw("profile");
+                launch_arguments(
+                    GUEST_MODEL_PATH,
+                    GUEST_SOCKET_PATH,
+                    &profile,
+                    &LlamaServerLaunchProfile::new(8_192, 4, 256, 128, "f16", "f16", None)
+                        .expect("launch profile"),
+                )[0..6]
+                    .to_vec()
+            },
             [
                 "--model",
                 GUEST_MODEL_PATH,

@@ -17,6 +17,7 @@ mod docker_live_collector;
 mod docker_preflight;
 mod docker_runtime;
 mod docker_topology_collector;
+mod gpt_oss_harmony_codec;
 mod llama_server_driver;
 mod model_acquisition;
 mod model_download;
@@ -60,8 +61,11 @@ pub use docker_topology_collector::{
     DOCKER_COLLECTOR_MAX_INPUT_BYTES, DockerCollectorInput, DockerCollectorOutput,
     DockerTopologyCollectorError, validate_topology_from_reader,
 };
+pub use gpt_oss_harmony_codec::GptOssHarmonyFamilyCodec;
 
-pub use llama_server_driver::{LlamaServerDriver, LlamaServerDriverConfig};
+pub use llama_server_driver::{
+    LlamaServerDriver, LlamaServerDriverConfig, LlamaServerLaunchProfile,
+};
 pub use model_acquisition::{
     ModelAcquisitionBlocker, ModelAcquisitionDisposition, ModelAcquisitionHost,
     ModelAcquisitionPreflight, ModelAcquisitionReview, ModelImportDisposition, ModelImportError,

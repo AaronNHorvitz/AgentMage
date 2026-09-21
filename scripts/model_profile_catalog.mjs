@@ -232,6 +232,158 @@ function museProfile(mode) {
   };
 }
 
+function codingDevelopmentProfile(family) {
+  const muse = family === "muse";
+  const profileId = muse
+    ? "muse-glimmer-30b-q4-k-m-text-32k-fedora-coding-development"
+    : "gpt-oss-20b-mxfp4-text-32k-fedora-coding-development";
+  const codecPath = muse
+    ? "platforms/linux-inference/src/muse_atem_codec.rs"
+    : "platforms/linux-inference/src/gpt_oss_harmony_codec.rs";
+  const preparationProfileSha256 = sha256("model-profiles/development/coding-model-lab.json");
+  const preparationEvidenceSha256 = sha256(
+    "docs/verification/coding-model-preparation-2026-09-21.md",
+  );
+  const manifestPreimage = JSON.stringify({
+    profile_id: profileId,
+    preparation_profile_sha256: preparationProfileSha256,
+    preparation_evidence_sha256: preparationEvidenceSha256,
+    codec_sha256: sha256(codecPath),
+    context_tokens: 32768,
+    output_tokens: 4096,
+    reasoning: "medium",
+  });
+  const commonLimitations = [
+    "coding-campaign-not-run",
+    "product-transport-not-demonstrated",
+    "repeated-run-admission-not-evaluated",
+  ];
+  const conversionLimitations = muse
+    ? commonLimitations
+    : [...commonLimitations, "conversion-equivalence-not-established"];
+  return {
+    schema_version: 2,
+    profile_id: profileId,
+    manifest_id: `${profileId}-manifest-v1`,
+    manifest_sha256: crypto.createHash("sha256").update(manifestPreimage).digest("hex"),
+    display_name: muse
+      ? "Muse Glimmer 30B Q4_K_M text 32k Fedora coding development"
+      : "OpenAI gpt-oss-20b MXFP4 ggml-org text 32k Fedora coding development",
+    family: muse ? "muse_glimmer" : "gpt_oss",
+    publisher_control: muse ? "Meta" : "OpenAI; GGUF conversion published by ggml-org",
+    lineage: muse
+      ? [
+          "meta-models/Muse-Glimmer-30B@a4e59da52a7bc87ae7251dd5545c0dd437c44b68",
+          "meta-models/Muse-Glimmer-30B-GGUF@43c7eadd41352a299ea8e0a36b3157978dd63596",
+          "Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf",
+        ]
+      : [
+          "openai/gpt-oss-20b@6cee5e81ee83917806bbde320786a8fb61efebee",
+          "ggml-org/gpt-oss-20b-GGUF@ef9b12f2ff56c69cf32153a02784e7a3c88bf524",
+          "gpt-oss-20b-MXFP4.gguf",
+        ],
+    license_spdx: "Apache-2.0",
+    license_terms_sha256: muse
+      ? "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+      : "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+    artifact: muse
+      ? {
+          artifact_id: "meta-muse-glimmer-30b-kquant-17gb-q4-k-m",
+          publisher: "Meta",
+          source_revision: "43c7eadd41352a299ea8e0a36b3157978dd63596",
+          format: "GGUF",
+          bytes: 16_756_683_904,
+          sha256: "4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e",
+        }
+      : {
+          artifact_id: "ggml-org-gpt-oss-20b-mxfp4",
+          publisher: "ggml-org",
+          source_revision: "ef9b12f2ff56c69cf32153a02784e7a3c88bf524",
+          format: "GGUF",
+          bytes: 12_109_566_624,
+          sha256: "27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901",
+        },
+    transformations: [],
+    codec: {
+      codec_id: muse
+        ? "muse-glimmer-atem-reasoning-medium-closed-proposal-v1"
+        : "gpt-oss-harmony-closed-proposal-v1",
+      codec_version: "1.0.0",
+      codec_sha256: sha256(codecPath),
+      tokenizer: muse
+        ? "meta-models/Muse-Glimmer-30B tokenizer"
+        : "gpt-oss-20b MXFP4 GGUF embedded tokenizer",
+      tokenizer_sha256: muse
+        ? "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d"
+        : "27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901",
+      template: muse
+        ? "meta-models/Muse-Glimmer-30B ATEM chat template"
+        : "openai/gpt-oss-20b Harmony chat template at 6cee5e81",
+      template_sha256: muse
+        ? "cfc67e5f349f37690dfd31ed1f18bc4442a9dd32fe39a648f993cb4eb3cae678"
+        : "a4c9919cbbd4acdd51ccffe22da049264b1b73e59055fa58811a99efbd7c8146",
+      tool_protocol_version: muse
+        ? "atem-reasoning-medium-closed-proposal-v1"
+        : "harmony-closed-proposal-v1",
+      end_tokens: muse ? [200001, 200008] : [200002, 200012],
+      reasoning_enabled: true,
+    },
+    runtime: {
+      adapter_id: "linux-native-llama-cpp-b10423-vulkan-x86_64",
+      kind: "native_llama_cpp",
+      contract_version: 1,
+      runtime_build: "llama.cpp b10423 a94d563ed801d1da1b8c2432946de07d0231bb3d",
+      runtime_sha256: "3b1194ef38f4b02b6329d698e29532435a5a7c3567c84b8bb822459ca0893286",
+      platform: "fedora",
+      architecture: "x86_64",
+    },
+    quantization: muse ? "Q4_K_M first-party 17GB GGUF" : "MXFP4 ggml-org GGUF conversion",
+    modalities: ["text"],
+    context: {
+      max_context_tokens: 32768,
+      max_input_bytes: 524288,
+      max_messages: 4096,
+      token_counter: muse
+        ? "llama.cpp b10423 Muse tokenizer"
+        : "llama.cpp b10423 GPT-OSS embedded tokenizer",
+      token_counter_sha256: muse
+        ? "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d"
+        : "27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901",
+    },
+    decoding: {
+      profile_id: muse
+        ? "coding-development-muse-medium-32k-v1"
+        : "coding-development-gpt-oss-medium-32k-v1",
+      sampler_order: ["greedy"],
+      temperature: 0,
+      top_p: 1,
+      top_k: 1,
+      repeat_penalty: 1,
+      seed: 42,
+      max_output_tokens: 4096,
+    },
+    hardware: [{
+      platform: "fedora",
+      architecture: "x86_64",
+      minimum_system_memory_bytes: 16 * 1024 * 1024 * 1024,
+      minimum_accelerator_memory_bytes: 21_000 * 1024 * 1024,
+      accelerator: "NVIDIA Vulkan",
+      driver_constraint: "NVIDIA 610.43.03 preparation tuple; changes require re-evaluation",
+    }],
+    capabilities: ["dialogue", "coding_planner", "tool_selection"].map((role) => ({
+      role,
+      state: "blocked",
+      evaluation_profile: null,
+      result_sha256: null,
+      limitations: conversionLimitations,
+    })),
+    policy_sha256: sha256("MODEL-PROVENANCE-POLICY.md"),
+    lifecycle: "candidate",
+    enabled: false,
+    automatic_fallback: false,
+  };
+}
+
 export function buildCatalog() {
   return {
     schema_version: 1,
@@ -254,6 +406,8 @@ export function buildCatalog() {
       fakeProfile("gemma"),
       museProfile("first-party-quality"),
       museProfile("diagnostic-repeatability"),
+      codingDevelopmentProfile("muse"),
+      codingDevelopmentProfile("gpt-oss"),
     ],
   };
 }

@@ -18,7 +18,9 @@ test("catalog preserves every historical candidate record and enables nothing", 
 
 test("real Muse quality and diagnostic tuples remain separate and disabled", () => {
   const catalog = validateCatalog();
-  const profiles = catalog.profiles.filter((profile) => profile.family === "muse_glimmer");
+  const profiles = catalog.profiles.filter(
+    (profile) => profile.family === "muse_glimmer" && profile.context.max_context_tokens === 8192,
+  );
   assert.equal(profiles.length, 2);
   assert.notEqual(profiles[0].profile_id, profiles[1].profile_id);
   assert.notEqual(profiles[0].manifest_sha256, profiles[1].manifest_sha256);
@@ -32,6 +34,34 @@ test("real Muse quality and diagnostic tuples remain separate and disabled", () 
     assert.equal(profile.context.max_context_tokens, 8192);
     assert.equal(profile.capabilities.every((capability) => capability.state === "blocked"), true);
   }
+});
+
+test("32k coding candidates preserve exact family boundaries without enabling admission", () => {
+  const catalog = validateCatalog();
+  const profiles = catalog.profiles.filter((profile) =>
+    profile.profile_id.endsWith("text-32k-fedora-coding-development"),
+  );
+  assert.deepEqual(profiles.map((profile) => profile.family), ["muse_glimmer", "gpt_oss"]);
+  for (const profile of profiles) {
+    assert.equal(profile.context.max_context_tokens, 32768);
+    assert.equal(profile.decoding.max_output_tokens, 4096);
+    assert.equal(profile.codec.reasoning_enabled, true);
+    assert.equal(profile.enabled, false);
+    assert.equal(profile.automatic_fallback, false);
+    assert.equal(profile.capabilities.every((capability) => capability.state === "blocked"), true);
+    assert.equal(
+      profile.capabilities.every((capability) =>
+        capability.limitations.includes("coding-campaign-not-run")),
+      true,
+    );
+  }
+  assert.equal(profiles[0].codec.tool_protocol_version.includes("atem"), true);
+  assert.equal(profiles[1].codec.tool_protocol_version.includes("harmony"), true);
+  assert.equal(
+    profiles[1].capabilities.every((capability) =>
+      capability.limitations.includes("conversion-equivalence-not-established")),
+    true,
+  );
 });
 
 test("fake Muse and Gemma entries are synthetic, exact, disabled, and non-fallback", () => {
