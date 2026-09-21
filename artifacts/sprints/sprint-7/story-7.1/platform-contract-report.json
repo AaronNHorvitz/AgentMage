@@ -14,7 +14,7 @@
     "networked_test_count": 0,
     "ubuntu_contract": "verified-no-network-container",
     "ubuntu_image": "localhost/agentmage-clean-build:ubuntu-x86_64",
-    "ubuntu_image_id": "sha256:92d587476507b8668199c22f54c49b68d84b61e07527599560645ca61cd9ff18"
+    "ubuntu_image_id": "sha256:24cabc5cb783c5db8bb6e2ea24f95794bf6354d4a346128184185dd22bfad80a"
   },
   "limitations": [
     "Linux fixtures validate manifest and shared startup semantics, not native mechanism readiness",
@@ -51,7 +51,7 @@
     }
   ],
   "private_environment_values_recorded": false,
-  "reference_revision": "386ad79fde5d808052c8b706cff434c16f0eeeb1",
+  "reference_revision": "f9eb3b337c2b9764851f33401cc18fa93743bca4",
   "release_claim": "none",
   "schema_version": 1,
   "sources": [
@@ -93,7 +93,7 @@
     },
     {
       "path": "scripts/platform_manifest_artifact.py",
-      "sha256": "62084df764356c08bfe953905d84ab53d0047f9575a8204eeb05461f0b89a2b7"
+      "sha256": "0f210fb557d3785026ce219604a18067199b17cb308b26f1aea7659a06f395de"
     },
     {
       "path": "tests/test_platform_manifest_artifact.py",
