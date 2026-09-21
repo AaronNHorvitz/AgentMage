@@ -133,3 +133,20 @@ was local and uncommitted. The owner subsequently authorized committing and
 pushing this revision to `origin/demo/fedora-local-docs`. Publication does not
 authorize restarting the worker. Runtime implementation starts only after an
 operator restart, beginning with Sub-task 48.2.4.1 above.
+
+## Subsequent Two-Model Preparation
+
+The owner subsequently requested downloading gpt-oss-20b and preparing both it
+and Muse Glimmer with larger context and lightweight resource use. Decision
+0062 and [the model preparation guide](../guides/coding-model-lab.md) govern
+that separate batch. Read its [measured evidence](coding-model-preparation-2026-09-21.md) and exact profile before
+restarting. The 8K document-QA demo remains unchanged; the new coding-development
+profiles target 32K and remain unqualified for production or installed coding.
+
+The next implementation must test both models through the same real AgentMage
+coding workflow. In particular, resolve the native driver's hard-coded 8K
+profile requirement through validated configuration and supply an explicit
+GPT-OSS Harmony codec; do not attach an arbitrary HTTP endpoint or disable a
+guard to claim integration. Keep work limited to Tasks 48.2.4, 48.2.5, 48.2.6
+and 50.2.4 plus necessary prerequisites. This preparation did not restart the
+worker or remove its stop marker.

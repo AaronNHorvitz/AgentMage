@@ -5,6 +5,9 @@ The immediate workstream is the standalone coding harness:
 - [Decision 0061](decisions/0061-standalone-coding-harness-critical-path.md)
 - [Architecture and acceptance matrix](architecture/standalone-coding-harness.md)
 - [Stopped-worker and implementation handoff](verification/coding-harness-replan-2026-09-21.md)
+- [Two-model preparation decision](decisions/0062-two-model-coding-preparation.md)
+- [Bounded Muse and GPT-OSS preparation](guides/coding-model-lab.md)
+- [Measured model-preparation results](verification/coding-model-preparation-2026-09-21.md)
 
 The PRD, implementation plan and Story 48.2 carry its product and task authority.
 These documents do not assert that the current executable can perform coding.

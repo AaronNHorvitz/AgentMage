@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "scope": "synthetic-development-preparation-only",
+  "product_enabled": false,
+  "runtime_manifest": "demo/model.json",
+  "data_root": "~/.local/share/agentmage/coding-model-lab",
+  "state_root": "~/.local/state/agentmage-model-lab",
+  "context_tokens": 32768,
+  "output_tokens": 4096,
+  "parallel_slots": 1,
+  "threads": 4,
+  "batch_tokens": 256,
+  "microbatch_tokens": 128,
+  "cache_type_k": "q8_0",
+  "cache_type_v": "q8_0",
+  "temperature": 0,
+  "seed": 42,
+  "decoding_scope": "diagnostic smoke checks, not model-quality qualification",
+  "minimum_available_ram_gib": 16,
+  "minimum_free_vram_mib": 21000,
+  "maximum_total_vram_used_mib": 22528,
+  "models": {
+    "muse": {
+      "label": "Muse Glimmer 30B Q4_K_M",
+      "path": "~/.local/share/agentmage/live-evidence/0505a50/model-store/4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e.gguf",
+      "sha256": "4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e",
+      "size_bytes": 16756683904,
+      "source_kind": "first-party Meta GGUF",
+      "source_repository": "meta-models/Muse-Glimmer-30B-GGUF",
+      "source_revision": "43c7eadd41352a299ea8e0a36b3157978dd63596",
+      "chat_template_kwargs": {"reasoning_strength": "medium"},
+      "coding_qualification": "not-qualified"
+    },
+    "gpt-oss": {
+      "label": "OpenAI gpt-oss-20b MXFP4, ggml-org conversion",
+      "path": "~/.local/share/agentmage/coding-model-lab/models/gpt-oss-20b-MXFP4.gguf",
+      "sha256": "27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901",
+      "size_bytes": 12109566624,
+      "source_kind": "llama.cpp-maintainer conversion; not first-party OpenAI GGUF",
+      "source_repository": "ggml-org/gpt-oss-20b-GGUF",
+      "source_revision": "ef9b12f2ff56c69cf32153a02784e7a3c88bf524",
+      "base_repository": "openai/gpt-oss-20b",
+      "base_revision": "6cee5e81ee83917806bbde320786a8fb61efebee",
+      "chat_template_kwargs": {"reasoning_effort": "medium"},
+      "coding_qualification": "not-qualified"
+    }
+  }
+}

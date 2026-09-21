@@ -158,3 +158,10 @@ the operator stop marker remains in effect. Do not mark a component test as an
 executable workflow, or a document-QA model as a qualified coding model. Native
 tools stay native; no embedded OpenCode engine or dependency on other stack
 projects is introduced. Other project repositories and workers remain untouched.
+
+Decision 0062 and `docs/guides/coding-model-lab.md` prepare Muse Glimmer and
+gpt-oss-20b as separate 32K, resource-bounded development candidates. Read the
+linked preparation evidence before implementation. Run both through the eventual
+coding campaign; do not treat direct inference smoke checks as coding admission.
+For this phase execute only Tasks 48.2.4, 48.2.5, 48.2.6 and 50.2.4 plus their
+necessary prerequisites, not unrelated roadmap work. The worker remains stopped.
