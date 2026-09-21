@@ -135,6 +135,18 @@ python3 scripts/demo.py start --no-open
 node scripts/demo_browser_smoke.mjs --restart-only
 ```
 
+Release the GPU when an acceptance run is finished. `scripts/demo_smoke.py` deliberately
+leaves the demo running so a reviewer can use it, and the resident model holds roughly 15.7 GB
+of GPU memory. Other work on this machine needs that memory, so stop the demo and confirm the
+GPU is released:
+
+```sh
+python3 scripts/demo.py stop
+nvidia-smi --query-gpu=memory.used --format=csv
+```
+
+Used memory should fall back to the desktop baseline, around 1 GB on this host.
+
 Verification JSON and regression results live in `docs/verification/demo-*`.
 The screenshot is local application-owned test output, not backend proof.
 

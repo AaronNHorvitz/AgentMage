@@ -112,3 +112,36 @@ authorized desktop tab was opened. No runtime source changes or SBOM regeneratio
 - Current Story1.1/1.2/3.1/4.1/7.1/23.5/23.6/50.3/50.4-degradation evidence renewed through actual builders. Routine 2.2 / 7.1 / Sprint 7 review pins preserve whole reviewed-path binding. Relevant gates pass with their original platform/release blockers retained. Gate mutation suites pass 30 tests in 587.211 seconds (2.2/Sprint2/4.1/Sprint4) and 9 tests in 162.495 seconds (7.1/Sprint7); contract index 12 tests pass.
 - Initial 50.3 capture rejected stale retained 50.2 command tuple; unchanged exact nine-command load campaign cold compilation exceeded RSS bounds, then warmed-cache run passed. Both failing immutable evidence and successful actual source-bound logs retained; no limits/source/bindings changed.
 - Inherited/expanded checkpoint corpora validate 154 historical reports with 256 / 512 non-GA blocker cases. Final required upstream captures 22.5, 23.7 and 23.8 passed, and the actual 13-command 50.4-core aggregate passed. Final current checks and all five real acceptance report bindings pass; the consolidated evidence milestone is committed and pushed. No supply-chain regeneration remains.
+
+### Scaffold regression cleared and acceptance re-run (2026-09-20)
+
+- The five long-standing Apache scaffold fixture failures recorded above are **resolved**. They
+  were a test-input defect, not a licensing one: the `package_scaffold` tests fed the scaffolder
+  this repository's own `LICENSE`, which became the Business Source License under Decision 0051,
+  into a scaffolder that pins Apache-2.0 for the projects it generates. The tests now read an
+  Apache-2.0 fixture at `capabilities/repository-map/tests/apache-2.0-license.txt` whose SHA-256
+  matches the pinned constant exactly. The suite moved from 43 passed / 5 failed to
+  **48 passed / 0 failed** with no assertion relaxed. AgentMage remains BSL-licensed and the
+  scaffolder still emits Apache-2.0 projects; see Decision 0056.
+- `npm run product:test` therefore passes, and the reproducible clean Linux build now passes on
+  both platforms: `fedora-x86_64` and `ubuntu-x86_64`, 11 of 11 commands each, at a single exact
+  source revision. See Decision 0055 for the versioned rustup acquisition that unblocked it.
+- The full real-model demo acceptance was re-run twice on 2026-09-20, because each workspace
+  source change flips the SBOM that the demo acceptance reports bind. Both runs passed every
+  case: browser launch with real model ready, multi-document admission and unsupported input
+  reasons, real inference with checked citation, follow-up and second-source grounding, honest
+  insufficient evidence, context overflow refused before generation, cancellation and recovery,
+  model-unavailable recovery, bounded six-turn conversation, folder-boundary symlink traversal,
+  privileged endpoint rejection, offline isolation in a networkless namespace, and a successful
+  interaction after a complete stop and restart.
+- The demo is **stopped** after acceptance and the GPU is released. Leaving the model resident
+  holds roughly 15.7 GB of GPU memory that other work on this machine needs.
+
+## Exact next action (2026-09-20)
+
+The demo itself remains complete and re-verified. Outstanding work is not demo work:
+
+- Story 9.1's container package-lifecycle element is blocked; Decision 0059 records the exact
+  reason and refuses to weaken any container control to clear it.
+- Production qualification, signing, publication, macOS, and independent review remain open and
+  are unchanged by this run.
