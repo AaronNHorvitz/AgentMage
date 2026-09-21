@@ -1,5 +1,10 @@
 # Local Command-Line Interface
 
+Decision 0061 prioritizes the [standalone coding implementation](../architecture/standalone-coding-harness.md).
+`agentmage code` is the selected public command. The status below describes the
+current scaffold, not the completed architecture; operational commands still
+return a hardcoded unavailable result without attempting a connection.
+
 ## Current Status
 
 The `agent` binary is a pre-alpha command and protocol scaffold. It provides

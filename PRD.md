@@ -1456,3 +1456,71 @@ endpoint, route, capability, workflow, or platform; do not qualify a live
 service; and do not close a release gate. Every live model, endpoint, adapter,
 platform, package, security, performance, accessibility, removal, and
 independent-review result remains open until executed against its exact tuple.
+
+## 40. Standalone Coding as a Central Product Capability
+
+Decision 0061 makes independently usable coding a central AgentMage outcome.
+The product is not complete as a coding harness merely because it contains a
+model interface, tool definitions, policy contracts or passing component tests.
+It must connect those components through the executable users actually launch.
+The detailed contract is [Standalone Coding Harness](docs/architecture/standalone-coding-harness.md).
+
+### User Outcome
+
+A Linux user starts `agentmage code`, selects an approved local repository and
+qualified local model, requests a change, inspects progress and proposed effects,
+controls authority, sees tests and corrections, and receives a verified result.
+The session can explore, search, plan, patch, create bounded files, run approved
+checks and inspect Git state without CodingMage, USTE, AgentMagik, OpenCode,
+MCP or an online account. Those systems can add interfaces, delegation or
+retrieval later; they do not supply a missing core coding capability.
+
+### Required Architecture
+
+- One Rust-owned runtime and existing native tool dispatcher serve the terminal
+  and subsequent clients. Adopt OpenCode's connected workflow patterns, not a
+  second execution engine or an asserted compatible protocol.
+- The actual executable connects to an authenticated host with a real factory,
+  qualified model, confined workers, bounded context and deterministic verifier.
+  Hardcoded unavailable responses and replay-only factories cannot satisfy this.
+- Live progress, approval and cancellation remain responsive while inference
+  or commands are running. Ordered correctness records and bounded progress
+  have different delivery/retention needs; no unbounded queue or per-token
+  synchronous durable-write requirement is introduced.
+- Every consequential effect retains exact current authority. Approval UI
+  convenience does not replace kernel grants or platform confinement.
+- Tool/test results feed bounded correction. A model's stop token, confident
+  summary, zero-test run or exit code alone cannot establish completion.
+- Original source and evidence remain authoritative. Small-context operation
+  uses preflight, bounded retrieval and explicit accounting, not a claim that
+  lossy compaction or graph memory eliminates information loss.
+
+### Functional and Daily-Use Gates
+
+`M-HARNESS-MVP` requires one ephemeral coding session through actual CLI/host
+binaries on the named Linux profile, one exact admitted model, owned-worktree
+preservation, live control, protected approvals, real test-failure correction
+and a usable evidence-backed report. Tasks 48.2.4-48.2.6 strengthen the original
+Story 48.2 gate. Scripted-provider executable tests and real-model qualification
+remain separate evidence classes. Persistent resume and complete artifact
+lifecycle are not hidden prerequisites for this first milestone.
+
+`M-HARNESS-DAILY`, owned by Task 50.2.4, then requires durable continuation,
+drift-aware recovery, complete output inspection, source-preserving context,
+conflict-aware rollback, reproducible setup, pressure/soak acceptance and
+independent review. Direct-user-approved bounded session preauthorization may
+reduce repeated prompts only through policy-checked fresh exact grants, with
+expiry, budgets and revocation; this is not unrestricted agent authority.
+
+### Delivery and Truth
+
+The immediate workstream is the coding harness and its exact prerequisites,
+ahead of unrelated desktop, enterprise, orchestration and protocol expansion.
+Producing its exact model-admission bundle does not require passing the entire
+downstream Sprint 49 routing gate; all model provenance, quality, resource and
+isolation checks remain required. New external authority remains explicit.
+
+The existing 294 stable requirements, sprint identities, completed evidence and
+release gates remain intact. These additions refine existing coding and runtime
+requirements rather than declaring a supported release. The independent
+document-QA demo remains a separate result and does not qualify coding.

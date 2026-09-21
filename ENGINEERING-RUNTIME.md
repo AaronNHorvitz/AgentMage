@@ -1,5 +1,9 @@
 # AgentMage Engineering Runtime
 
+Decision 0061 adds the [standalone coding delivery contract](docs/architecture/standalone-coding-harness.md).
+The existing Rust runtime remains the execution authority; OpenCode contributes
+workflow design references, not an embedded service or replacement engine.
+
 | Field                 | Value                                                                                         |
 | --------------------- | --------------------------------------------------------------------------------------------- |
 | Status                | Normative implementation specification; contract-tested scaffold, not integrated or supported |
@@ -388,3 +392,27 @@ the [Language Model API](https://code.visualstudio.com/api/extension-guides/ai/l
 and [webviews](https://code.visualstudio.com/api/extension-guides/webview).
 The open VS Code [External Agent Host API request](https://github.com/microsoft/vscode/issues/325827)
 is treated as future compatibility work, not a stable production dependency.
+
+## 19. Standalone Coding Integration
+
+PRD Section 40 and Decision 0061 require the runtime to support a complete
+standalone coding session through the actual terminal executable. The current
+hardcoded transport refusal, replay-only factory boundary and incomplete host
+activation are implementation work, not an unavailable third-party stack.
+
+Tasks 48.2.4-48.2.6 compose the existing runtime, native tools, model gateway,
+context, grants and verifier through a live authenticated service. Host control
+must remain responsive while model/tool workers run; progress uses bounded
+buffers, correctness events retain ordering and cancellation has an independent
+service path. Synchronous step APIs alone do not establish these properties.
+
+The first ephemeral milestone may omit durable resume and complete artifact
+retention, but not authority/effect truth or exact-model qualification. Task
+50.2.4 subsequently adds daily-use persistence, context continuity, inspectable
+full output, fresh-authority rollback, bounded session preauthorization and
+independent review through existing canonical services. Broader Verified Chat,
+Team and release requirements remain intact and are not MVP prerequisites.
+
+The [architecture and acceptance matrix](docs/architecture/standalone-coding-harness.md)
+define the precise factory, transport, lifecycle, context and safety obligations.
+No OpenCode, CodingMage, USTE or AgentMagik dependency is needed to satisfy them.

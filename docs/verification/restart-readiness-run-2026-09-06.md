@@ -1661,3 +1661,21 @@ target, and it is a feature build rather than an evidence renewal.
 
 Product truth remains `scaffolded`. Two rows were closed this session, both on individually
 verified evidence, and neither claims platform qualification, independent review, or release.
+
+## Operator Stop and Coding-Harness Replan - 2026-09-21
+
+The owner stopped the AgentMage worker and directed a standalone coding-harness
+architecture revision using OpenCode as the workflow reference. The Claude
+process, four polling shells and `agentmage-claude` tmux session were stopped;
+`~/.local/share/agentmage-run/STOP-CLAUDE` remains present. Other stack workers
+were not interrupted.
+
+Decision 0061 supersedes the earlier next-action instruction to start 76.2.1.1
+for this workstream. The new entry is Sub-task 48.2.4.1, followed by the actual
+host/transport/factory/CLI work, live control and exact-model executable proof.
+The complete design and restart rules are in
+[the coding-harness handoff](coding-harness-replan-2026-09-21.md).
+Do not restart automatically or remove the stop marker based on this note.
+
+All prior checkpoints remain historical evidence. This revision does not close
+implementation, model, platform, independent-review or release gates.

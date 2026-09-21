@@ -1306,11 +1306,11 @@
   "sources": [
     {
       "document": "PRD.md",
-      "sha256": "fb3455e88a09de2c1b70910947f87f8fbfa2da8dbd2669e1863135d7344e4153"
+      "sha256": "37e050d5e15878ecc8336053bac3b3c90101332a4140cc2d6288ff42266dfe8f"
     },
     {
       "document": "Agent-Scaffolding-Inventory.md",
-      "sha256": "199af9a3010b1290a14749f83e8243bb50a1f12e9ad57043ee932b1a3ba9b6d1"
+      "sha256": "71ea8e693134e43a735c4f2dd3ad80dbbbd1533147528ce47dbc4dada51ae4df"
     }
   ],
   "test_contract": {

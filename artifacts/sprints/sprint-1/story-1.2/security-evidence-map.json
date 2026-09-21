@@ -19,15 +19,15 @@
       "evidence": [
         {
           "path": "architecture/parser-ocr-platform-placement.json",
-          "sha256": "60c84d48c13e2858ab886a3881c0a7068a553cd6ce8e7570d70afcc02c5eee51"
+          "sha256": "7e1dc601ed19ff60c97f026b4ff833e105eccc294144cd731dd843674fd8e8bf"
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "e509c11b0651c4dede62d4c4e9692bacd55dc3c5d0bd8b6b3a408c611fc6701d"
+          "sha256": "82fe32eeb59750e67c8eea16ade118ef18bf3129589a2e63544021e7f0067d4a"
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-          "sha256": "90a435e9c22694281add42dc3d957e8a85fcb41485441a759ae2607e4362c75c"
+          "sha256": "727d9487c7df871eb3e82463785e4411686f5d4300221e624670f6ebfbab8067"
         }
       ],
       "protocol_complete": false
@@ -42,15 +42,15 @@
       "evidence": [
         {
           "path": "architecture/parser-ocr-platform-placement.json",
-          "sha256": "60c84d48c13e2858ab886a3881c0a7068a553cd6ce8e7570d70afcc02c5eee51"
+          "sha256": "7e1dc601ed19ff60c97f026b4ff833e105eccc294144cd731dd843674fd8e8bf"
         },
         {
           "path": "RUNTIME-BOUNDARIES.md",
-          "sha256": "e7cf50297db4c0fdb9f4e510da43af2e001b09451e0d1d03cde75d20184cb40e"
+          "sha256": "f4600d5b6bf42f46d82d41b51a07afc40e791fc62879756807a85c3634cde97b"
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "e509c11b0651c4dede62d4c4e9692bacd55dc3c5d0bd8b6b3a408c611fc6701d"
+          "sha256": "82fe32eeb59750e67c8eea16ade118ef18bf3129589a2e63544021e7f0067d4a"
         }
       ],
       "protocol_complete": false
@@ -65,15 +65,15 @@
       "evidence": [
         {
           "path": "architecture/parser-ocr-platform-placement.json",
-          "sha256": "60c84d48c13e2858ab886a3881c0a7068a553cd6ce8e7570d70afcc02c5eee51"
+          "sha256": "7e1dc601ed19ff60c97f026b4ff833e105eccc294144cd731dd843674fd8e8bf"
         },
         {
           "path": "architecture/schema-evolution-and-rollback.json",
-          "sha256": "be2aa6bdba1d7c6835ba78c2f76990ef409192dfdbdd2854c378ec28b0bffa99"
+          "sha256": "7bcae2af58a056666b96e846e6b7bf898c64797f5fdfec635b738cb20eded06d"
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "e509c11b0651c4dede62d4c4e9692bacd55dc3c5d0bd8b6b3a408c611fc6701d"
+          "sha256": "82fe32eeb59750e67c8eea16ade118ef18bf3129589a2e63544021e7f0067d4a"
         }
       ],
       "protocol_complete": false
@@ -96,11 +96,11 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "e509c11b0651c4dede62d4c4e9692bacd55dc3c5d0bd8b6b3a408c611fc6701d"
+          "sha256": "82fe32eeb59750e67c8eea16ade118ef18bf3129589a2e63544021e7f0067d4a"
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-          "sha256": "90a435e9c22694281add42dc3d957e8a85fcb41485441a759ae2607e4362c75c"
+          "sha256": "727d9487c7df871eb3e82463785e4411686f5d4300221e624670f6ebfbab8067"
         }
       ],
       "protocol_complete": false
@@ -123,11 +123,11 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "e509c11b0651c4dede62d4c4e9692bacd55dc3c5d0bd8b6b3a408c611fc6701d"
+          "sha256": "82fe32eeb59750e67c8eea16ade118ef18bf3129589a2e63544021e7f0067d4a"
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-          "sha256": "90a435e9c22694281add42dc3d957e8a85fcb41485441a759ae2607e4362c75c"
+          "sha256": "727d9487c7df871eb3e82463785e4411686f5d4300221e624670f6ebfbab8067"
         }
       ],
       "protocol_complete": false
@@ -142,15 +142,15 @@
       "evidence": [
         {
           "path": "architecture/schema-evolution-and-rollback.json",
-          "sha256": "be2aa6bdba1d7c6835ba78c2f76990ef409192dfdbdd2854c378ec28b0bffa99"
+          "sha256": "7bcae2af58a056666b96e846e6b7bf898c64797f5fdfec635b738cb20eded06d"
         },
         {
           "path": "architecture/parser-ocr-platform-placement.json",
-          "sha256": "60c84d48c13e2858ab886a3881c0a7068a553cd6ce8e7570d70afcc02c5eee51"
+          "sha256": "7e1dc601ed19ff60c97f026b4ff833e105eccc294144cd731dd843674fd8e8bf"
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "e509c11b0651c4dede62d4c4e9692bacd55dc3c5d0bd8b6b3a408c611fc6701d"
+          "sha256": "82fe32eeb59750e67c8eea16ade118ef18bf3129589a2e63544021e7f0067d4a"
         }
       ],
       "protocol_complete": false

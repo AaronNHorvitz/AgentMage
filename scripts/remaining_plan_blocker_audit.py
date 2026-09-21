@@ -21,6 +21,9 @@ ROOT = Path(__file__).resolve().parents[1]
 TASKS = ROOT / "TASKS.md"
 OUTPUT = ROOT / "docs" / "verification" / "remaining-plan-blocker-audit.json"
 CONTEXT_SAFETY_REGISTRATION = ROOT / "requirements" / "context-safety-registration.json"
+CODING_PRIORITY_DECISION = (
+    ROOT / "docs" / "decisions" / "0061-standalone-coding-harness-critical-path.md"
+)
 ROW = re.compile(
     r"^(?P<indent>\s*)(?:(?P<heading>#{2,4})\s+|(?:-\s+))"
     r"\[(?P<state>[ xX])\]\s+(?P<body>.*)$"
@@ -49,6 +52,7 @@ FIELD = re.compile(
 )
 
 CRITICAL_STORY_ORDER = {"76.2": 30, "76.3": 31, "77.2": 32, "25.3": 50}
+CODING_TASK_ORDER = {"48.2.4": -30, "48.2.5": -20, "48.2.6": -10, "50.2.4": -5}
 FOUNDATIONAL_PREVIEW_STORIES = {
     "1.2", "2.3", "11.2", "13.3", "13.4", "16.2", "21.3", "22.3", "23.5", "50.3",
     "58.2", "60.2", "62.2", "81.2", "1.3", "2.4", "5.3", "11.3", "16.4",
@@ -281,6 +285,31 @@ def _critical_rank(record: dict[str, Any]) -> tuple[int, int]:
     return 60, record["line"]
 
 
+def _coding_task_id(row_id: str) -> str | None:
+    return next(
+        (task_id for task_id in CODING_TASK_ORDER
+         if row_id == task_id or row_id.startswith(task_id + ".")),
+        None,
+    )
+
+
+def _coding_dependency_ranks(graph: dict[str, list[str]]) -> dict[str, int]:
+    """Prioritize only the accepted coding additions and their exact prerequisites."""
+    ranks: dict[str, int] = {}
+    for row_id in graph:
+        task_id = _coding_task_id(row_id)
+        if task_id is not None:
+            ranks[row_id] = CODING_TASK_ORDER[task_id]
+    pending = list(ranks)
+    while pending:
+        row_id = pending.pop()
+        for dependency in graph.get(row_id, []):
+            if ranks.get(dependency, 0) > ranks[row_id]:
+                ranks[dependency] = ranks[row_id]
+                pending.append(dependency)
+    return ranks
+
+
 def build_from_text(
     text: str, registered_graph: dict[str, list[str]] | None = None
 ) -> dict[str, Any]:
@@ -292,7 +321,12 @@ def build_from_text(
     graph: dict[str, list[str]] = {}
     unresolved_by_id: dict[str, list[str]] = {}
     for record in open_records:
-        referenced, unresolved = _references(record, known)
+        dependency_record = record
+        if _coding_task_id(record["row_id"]) is not None:
+            # Decision 0061 gives these new rows explicit, inline prerequisites.
+            # Trailing story/release commentary is not an entry dependency.
+            dependency_record = {**record, "dependency_text": record["text"]}
+        referenced, unresolved = _references(dependency_record, known)
         structural = _structural_dependencies(record, records)
         dependencies = set(referenced) | set(structural)
         if registered_graph is not None and record["row_id"] in registered_graph:
@@ -300,6 +334,7 @@ def build_from_text(
         graph[record["row_id"]] = sorted(dependencies & open_ids)
         unresolved_by_id[record["row_id"]] = unresolved
 
+    coding_ranks = _coding_dependency_ranks(graph)
     rows: list[dict[str, Any]] = []
     for record in open_records:
         source = record["source_text"]
@@ -361,7 +396,9 @@ def build_from_text(
                 "execution_venue": fields.get("venue", venue),
                 "external_fields": fields,
                 "substitution_set": [],
-                "critical_path_rank": _critical_rank(record)[0],
+                "critical_path_rank": coding_ranks.get(
+                    record["row_id"], _critical_rank(record)[0]
+                ),
             }
         )
 
@@ -427,6 +464,13 @@ def build() -> bytes:
     value = build_from_text(
         TASKS.read_text(encoding="utf-8"), registered_dependencies(registration)
     )
+    value["priority_amendment"] = {
+        "decision_id": "ADR-0061",
+        "path": CODING_PRIORITY_DECISION.relative_to(ROOT).as_posix(),
+        "sha256": hashlib.sha256(CODING_PRIORITY_DECISION.read_bytes()).hexdigest(),
+        "task_ranks": CODING_TASK_ORDER,
+        "scope": "coding additions and exact prerequisites; no blocker substitution",
+    }
     return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
 
 

@@ -142,3 +142,19 @@ stop condition. Do stop if the change to a reviewed path is unexplained or unint
 
 **Diagnosis of record:** `~/dev/10_obsidian/09-LLM_Handoff_Records/2026-09-01 2230 - SESSION
 HANDOFF - Full Day Ledger, Counsel Retained, AgentMage Cascade Diagnosis.md`, §4.
+
+## 8. Standalone coding priority under Decision 0061
+
+The owner stopped the prior worker on 2026-09-21 to correct the central coding
+workflow. Read `docs/decisions/0061-standalone-coding-harness-critical-path.md`,
+`docs/architecture/standalone-coding-harness.md` and
+`docs/verification/coding-harness-replan-2026-09-21.md` before selecting work.
+For this workstream, Decision 0061 supersedes conflicting sequencing in Section
+6: prioritize Tasks 48.2.4-48.2.6 and their exact prerequisites, then Task 50.2.4.
+Preserve every authority, evidence, release and independent-review boundary.
+
+Do not continue the stale `start 76.2.1.1` instruction or restart an agent while
+the operator stop marker remains in effect. Do not mark a component test as an
+executable workflow, or a document-QA model as a qualified coding model. Native
+tools stay native; no embedded OpenCode engine or dependency on other stack
+projects is introduced. Other project repositories and workers remain untouched.

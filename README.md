@@ -1,5 +1,12 @@
 # AgentMage
 
+**Current development priority:** the standalone Linux coding harness under
+[Decision 0061](docs/decisions/0061-standalone-coding-harness-critical-path.md).
+The [architecture](docs/architecture/standalone-coding-harness.md) adopts
+OpenCode's connected workflow patterns within AgentMage's existing Rust runtime.
+`agentmage code` is still unavailable; this planning revision does not implement
+the executable workflow. Other stack services are not prerequisites.
+
 **AgentMage is being built as a universal, cross-platform, local-first agent harness for coding, software delivery, research, productivity, and automation, with explicit user control over every consequential action.**
 
 **AgentMage is a brand-new, from-scratch project.** It is a portable, local-first development, delivery, productivity, research, continuity, whole-codebase audit, and financial-management assistant that combines deterministic tools with approved local models under enforceable Linux and Windows security boundaries.

@@ -1,5 +1,9 @@
 # AgentMage - High-Level Implementation Plan
 
+Current execution amendment: [Decision 0061](docs/decisions/0061-standalone-coding-harness-critical-path.md)
+and Section 15 prioritize the standalone coding harness. Earlier broad roadmap
+ordering remains historical context where it conflicts with this workstream.
+
 | Field | Planning baseline |
 |---|---|
 | Status | Pre-alpha scaffold with one source-level deterministic fake-model repository-analysis workflow integrated under Story 22.5; broader integration and every release gate remain open |
@@ -1144,6 +1148,11 @@ Changes to the implementation sequence follow these rules:
 
 ### 12.1 Interactive Coding Runtime Execution Order
 
+**Decision 0061 correction:** Section 15 is the current execution order for this
+workstream. The historical sequence below must not postpone the installed CLI
+until after durable storage, or postpone the exact model prerequisite until
+after the MVP that needs it. Full release/sprint gates remain unchanged.
+
 The dependency-preserving implementation order for the interactive coding runtime is:
 
 1. Complete the Story 21.2 runtime-event envelope and ordered client stream.
@@ -1295,3 +1304,79 @@ The implementation plan is complete only when:
 - Every prohibited path has a test proving that it is absent or denied.
 - Every release-blocking security, privacy, authority, evidence, recovery, supply-chain, accessibility, and clean-install threshold passes without being overridden by feature completeness.
 - The final `G-GA` decision is reviewed by the user; any later customer-specific managed-device decision remains separate and optional.
+
+## 15. Standalone Coding-Harness Delivery Amendment
+
+Decision 0061 and PRD Section 40 make a working standalone coding harness the
+immediate product workstream. See the [architecture](docs/architecture/standalone-coding-harness.md)
+for exact ownership, live transport, trust, state, authority and acceptance.
+
+### Execution Order
+
+1. **Resolve exact prerequisites and launch trust.** Start at Sub-task 48.2.4.1.
+   Record actual host, state/key, confinement, model, codec, served-context and
+   resource facts. Missing production activation is not fixed by deleting a
+   refusal. A separate development profile needs an accepted security contract.
+2. **Compose and connect the real executable.** Implement host lifecycle,
+   authenticated IPC, the non-replay runtime factory, terminal input and useful
+   diagnostics through the existing Rust coordinator and native tool boundary.
+3. **Prepare exact coding-model qualification alongside integration.** Model and
+   platform owners produce the prerequisite under 48.2.4.7-48.2.4.8. This consumes
+   the existing admission contracts without waiting for the entire Sprint 49
+   gate. No model becomes enabled from planning or plain chat evidence.
+4. **Finish live interaction.** Task 48.2.5 provides actual progress during work,
+   protected approvals, cancellation/descendant cleanup, follow-up turns,
+   evidence-backed reports and the tool/test/correction loop.
+5. **Prove the functional milestone.** Task 48.2.6 launches actual binaries with
+   scripted proposals, then separately with the exact admitted model. Retain the
+   original stale, adversarial and absence suites. Do not mark success from an
+   internal helper or a polished terminal transcript.
+6. **Deliver daily reliability.** Task 50.2.4 integrates the existing journal,
+   artifact and context authorities, actual-process recovery, inspectable
+   outputs, safe rollback, bounded session policy, setup/soak and independent
+   review. Record `M-HARNESS-DAILY` separately from the earlier MVP.
+7. **Add selected clients and integrations.** AgentMagik, CodingMage, USTE,
+   providers and protocols consume the established runtime contracts through
+   their own qualification gates. No dependency on those projects is introduced
+   into the standalone coding milestone.
+
+### Dependency and Selection Rules
+
+The new rows are task-level refinements inside existing Stories 48.2 and 50.2,
+not a parallel roadmap or renumbering. Select a dependency-ready row from this
+workstream or its prerequisites before unrelated work. Existing completed
+component rows remain complete within their stated evidence scope.
+
+The row-level blocker register records the Decision 0061 priority amendment.
+Explicit prerequisites remain binding even when a row says `Execution: local`.
+The new rows record those prerequisites on their numbered lines; task parents
+also retain their incomplete child rows. Explanatory story/release text after a
+row is not an entry dependency or a reason to introduce a parent/child cycle.
+An external model or trust dependency blocks its live acceptance, not unrelated
+contract/scripted integration. Unknown prerequisites require assessment, not
+substitution or automatic closure. Whole-story dependencies still govern story
+closure; a task-level functional slice does not close its parent release gate.
+
+The implementation agent stays stopped until explicitly restarted by the
+operator. Read [the current handoff](docs/verification/coding-harness-replan-2026-09-21.md)
+instead of continuing the superseded desktop-shell instruction.
+
+### Evidence and Definition of Done
+
+Keep separate records for design, component tests, executable scripted-model
+integration, exact-model coding, native platform and independent review. The
+current product status remains unchanged by this amendment. A checked component
+box cannot stand in for a connected workflow.
+
+Before each implementation batch, name the capability, dependencies, threat
+cases, code owners, actual launch/test commands and evidence outputs. Complete
+the source changes, inspect the diff, then regenerate affected evidence once.
+Historical snapshots remain immutable; stale current reports are reported and
+renewed through their real commands rather than relabeled as passes.
+
+The mandatory demonstration fixes a real synthetic bug, observes an actual
+failed check, revises within budget and verifies the result while preserving
+human work. Negative runs prove denial, stale approval, cancellation, overflow,
+uncertain-effect reporting and operation with the rest of the stack absent.
+Daily use additionally proves recovery and independent review. Neither milestone
+is a production-support, all-platform, all-model or full-GA claim.

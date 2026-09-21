@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from scripts.remaining_plan_blocker_audit import build_from_text
+from scripts.remaining_plan_blocker_audit import _coding_dependency_ranks, build_from_text
 
 
 class RemainingPlanBlockerRegisterTests(unittest.TestCase):
@@ -145,6 +145,113 @@ class RemainingPlanBlockerRegisterTests(unittest.TestCase):
         self.assertEqual(
             self.row(value, "13.4.5.1")["prerequisite_row_ids"], ["13.1.4"]
         )
+
+    def test_coding_integration_precedes_unrelated_desktop_work(self) -> None:
+        value = build_from_text(
+            """#### [ ] Story 48.2 - Coding
+- [ ] **Task 48.2.4 - Connect**
+  - [ ] **Sub-task 48.2.4.1:** Assess launch. **Execution:** local.
+#### [ ] Story 76.2 - Desktop
+- [ ] **Task 76.2.1 - Desktop**
+  - [ ] **Sub-task 76.2.1.1:** Build shell. **Execution:** local.
+"""
+        )
+        self.assertEqual(value["next_action_row_id"], "48.2.4.1")
+        self.assertTrue(value["ready_for_unattended_execution"])
+
+    def test_coding_priority_retains_external_and_unfinished_prerequisites(self) -> None:
+        value = build_from_text(
+            """#### [ ] Story 48.2 - Coding
+- [ ] **Task 48.2.4 - Connect**
+  - [ ] **Sub-task 48.2.4.1:** Obtain activation. BLOCKED_EXTERNAL(platform=Linux; action=admit exact trust).
+  - [ ] **Sub-task 48.2.4.2:** Connect. Depends on Sub-task 48.2.4.1. **Execution:** local.
+  - [ ] **Sub-task 48.2.4.7:** Prepare model plan. **Execution:** local.
+"""
+        )
+        self.assertEqual(value["next_action_row_id"], "48.2.4.7")
+        self.assertEqual(self.row(value, "48.2.4.1")["classification"], "external")
+        self.assertEqual(self.row(value, "48.2.4.2")["prerequisite_row_ids"], ["48.2.4.1"])
+        self.assertTrue(all(row["substitution_set"] == [] for row in value["rows"]))
+
+    def test_coding_prerequisite_assessment_precedes_ready_downstream_work(self) -> None:
+        value = build_from_text(
+            """#### [ ] Story 13.1 - Prerequisite
+- [ ] **Task 13.1.9 - Unknown model contract**
+#### [ ] Story 48.2 - Coding
+- [ ] **Task 48.2.4 - Connect**
+  - [ ] **Sub-task 48.2.4.1:** Connect. Depends on Task 13.1.9. **Execution:** local.
+  - [ ] **Sub-task 48.2.4.7:** Prepare. **Execution:** local.
+"""
+        )
+        self.assertEqual(value["next_action_kind"], "assess-unknown")
+        self.assertEqual(value["next_action_row_id"], "13.1.9")
+        self.assertFalse(value["ready_for_unattended_execution"])
+
+    def test_coding_priority_does_not_promote_a_similar_unapproved_task(self) -> None:
+        ranks = _coding_dependency_ranks({"48.2.40.1": [], "48.2.4.1": []})
+        self.assertEqual(ranks, {"48.2.4.1": -30})
+
+    def test_coding_prerequisite_cycle_terminates_without_becoming_executable(self) -> None:
+        value = build_from_text(
+            """#### [ ] Story 48.2 - Coding
+- [ ] **Task 48.2.4 - Connect**
+  - [ ] **Sub-task 48.2.4.1:** A. Depends on Sub-task 48.2.4.2. **Execution:** local.
+  - [ ] **Sub-task 48.2.4.2:** B. Depends on Sub-task 48.2.4.1. **Execution:** local.
+"""
+        )
+        self.assertIsNone(value["next_executable_row_id"])
+        self.assertFalse(value["ready_for_unattended_execution"])
+
+    def test_daily_use_does_not_precede_mvp_and_completed_work_is_not_reopened(self) -> None:
+        value = build_from_text(
+            """#### [ ] Story 48.2 - Coding
+- [ ] **Task 48.2.4 - Connect**
+  - [x] **Sub-task 48.2.4.1:** Completed assessment.
+  - [ ] **Sub-task 48.2.4.2:** Connect. Depends on Sub-task 48.2.4.1. **Execution:** local.
+#### [ ] Story 50.2 - Daily
+- [ ] **Task 50.2.4 - Reliability**
+  - [ ] **Sub-task 50.2.4.1:** Recover. **Execution:** local.
+"""
+        )
+        self.assertEqual(value["next_action_row_id"], "48.2.4.2")
+        self.assertNotIn("48.2.4.1", {row["row_id"] for row in value["rows"]})
+        self.assertEqual(self.row(value, "48.2.4.2")["prerequisite_row_ids"], [])
+
+    def test_coding_unresolved_prerequisite_cannot_be_selected(self) -> None:
+        value = build_from_text(
+            """#### [ ] Story 48.2 - Coding
+- [ ] **Task 48.2.4 - Connect**
+  - [ ] **Sub-task 48.2.4.1:** A. Depends on Task 99.9.9. **Execution:** local.
+"""
+        )
+        self.assertIsNone(value["next_executable_row_id"])
+        self.assertEqual(self.row(value, "48.2.4.1")["unresolved_reference_ids"], ["99.9.9"])
+
+    def test_coding_parent_does_not_inherit_its_own_story_closure_gate(self) -> None:
+        value = build_from_text(
+            """#### [ ] Story 48.2 - Coding
+- [ ] **Task 48.2.6 - Verify**
+  - [ ] **Sub-task 48.2.6.1:** Verify. **Execution:** local.
+##### Story Acceptance Criteria
+- [ ] **Story AC 48.2.AC1:** Complete coding.
+**Gate decision:** Story 48.2 must close before release.
+"""
+        )
+        self.assertEqual(self.row(value, "48.2.6")["prerequisite_row_ids"], ["48.2.6.1"])
+        self.assertEqual(value["next_action_row_id"], "48.2.6.1")
+
+    def test_daily_leaf_does_not_depend_on_parent_from_following_commentary(self) -> None:
+        value = build_from_text(
+            """#### [ ] Story 50.2 - Daily
+- [ ] **Task 50.2.4 - Reliability**
+  - [ ] **Sub-task 50.2.4.7:** Review. BLOCKED_EXTERNAL(platform=independent review).
+  - [ ] **Sub-task 50.2.4.8:** Record. Depends on Sub-task 50.2.4.7. **Execution:** local.
+
+**Daily-use milestone:** Task 50.2.4 does not close Story 50.2.
+"""
+        )
+        self.assertEqual(self.row(value, "50.2.4.8")["prerequisite_row_ids"], ["50.2.4.7"])
+        self.assertIsNone(value["next_executable_row_id"])
 
 
 if __name__ == "__main__":

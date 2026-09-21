@@ -529,3 +529,33 @@ a route unavailable but cannot choose another destination or widen disclosure. S
 do not depend on a remote worker, account, credential, listener, or cloud service. Disabling and
 removing remote inference reconciles in-flight requests, stops workers, closes sockets, revokes
 credential access, removes route registration, applies retention, and reruns strict-local gates.
+
+## 16. Standalone Coding Host and Client Boundary
+
+Decision 0061 and the [coding-harness architecture](docs/architecture/standalone-coding-harness.md)
+refine the existing process topology without adding a second executor. The
+terminal is a thin authenticated client. The Rust host owns lifecycle and
+composition, the kernel owns policy/grants/completion, and the existing platform
+workers enforce filesystem, process, network and resource limits.
+
+The Linux coding connection uses the existing private IPC and stable peer
+identity contract. A control/event adapter is not platform activation; package,
+trust, confinement and exact model checks still precede effects. Development
+trust, if needed, is separately accepted and cannot qualify production. No
+OpenCode server or ambient shell path is introduced.
+
+Control servicing and cancellation remain available while inference or tools
+block. Bounded progress may coalesce; ordered approval, effect, observation and
+terminal records cannot disappear. A slow client cannot create unbounded memory
+or prevent descendant cleanup. Cancellation acknowledgement describes actual
+cleanup and effects, including uncertainty, not merely receipt of a request.
+
+Session preauthorization planned for daily use is a revocable bounded policy
+ceiling selected by an authenticated user. It never replaces fresh exact kernel
+grants or allows a client/model to approve its own proposal. The MVP retains
+per-operation approval. Existing workflow and child-agent intersections remain.
+
+Owned worktrees do not replace confinement. Model acquisition, arbitrary shell,
+network access, credentials, commits, publication and other-stack services are
+not implicitly admitted by a coding session. Store and memory integrations
+remain behind the existing operational/context authorities.

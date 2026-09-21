@@ -1,5 +1,11 @@
 # Bounded Coding Workflows
 
+The [Decision 0061 delivery architecture](../architecture/standalone-coding-harness.md)
+now makes this workflow the immediate implementation priority. It adopts
+OpenCode's connected interaction patterns without embedding OpenCode or requiring
+the other stack services. Tasks 48.2.4-48.2.6 own the executable MVP; Task 50.2.4
+owns subsequent daily reliability. These are open work, not launchable features.
+
 ## Current Availability
 
 The coding contracts, declarative skill pack, reusable coordinator, native coding catalog, MVP
@@ -85,3 +91,8 @@ The public [`agentmage code` CLI](./local-command-line-interface.md) currently r
 production runtime-factory installation, and stdin/history composition are not available. The
 source-level verified driver does not change that package status. Treat the result as an unavailable
 dependency, not as a coding failure and not as permission to use a hidden fallback.
+
+More precisely, the current binary constructs that error unconditionally; it
+has not attempted a connection. Changing credentials or restarting a model
+server cannot repair it. Host activation and real coding-model admission are
+separate prerequisites, not consequences of removing the error branch.

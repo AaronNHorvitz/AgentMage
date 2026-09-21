@@ -1,5 +1,11 @@
 # Reusable Runtime Coordinator
 
+The [Decision 0061 standalone integration](standalone-coding-harness.md) supplies
+the current implementation plan for the installed factory, client/host transport
+and qualified coding model. It preserves this coordinator's ownership and adds
+explicit live-control and executable acceptance requirements; it does not claim
+the remaining integration described below is complete.
+
 ## Status
 
 This document records the implemented source-level Story 23.4 coordinator and

@@ -24,6 +24,18 @@
 | High-level implementation guide                                         | `IMPLEMENTATION-PLAN.md` (derived; does not override requirements or task gates)                                                                                                                   |
 | Execution rule                                                          | Execute the first authoritative incomplete dependency gate under Decision 0021; no platform evidence may be substituted and no open release or security blocker is waived                          |
 
+## Immediate Coding-Harness Priority
+
+[Decision 0061](docs/decisions/0061-standalone-coding-harness-critical-path.md)
+makes the standalone coding workflow the immediate workstream. Tasks 48.2.4,
+48.2.5 and 48.2.6 add the missing executable integration; Task 50.2.4 defines
+daily-use reliability after the MVP. Existing completed component work remains
+credited. None of these additions is implemented by this planning revision.
+The worker is stopped; follow the
+[restart handoff](docs/verification/coding-harness-replan-2026-09-21.md)
+only after an explicit operator restart. The older desktop-demo queue is not
+the next-work instruction for this workstream.
+
 ## Current Implementation Truth
 
 The following current-product markers describe production qualification under
@@ -6792,7 +6804,40 @@ and transfers untouched results; credential=platform and signing access; payment
   - [x] **Sub-task 48.2.3.4:** `S-048-MVP-ABSENCE` proves persistent resume, complete journal/artifact lifecycle, remote Git, commit, push, automatic routing, MCP dependency, browser/network use, package installation, complete conversation-library behavior, workflow execution, child agents, and autonomous publication are absent from `M-HARNESS-MVP` manifests and dispatch tables. Evidence: all 14 exclusions are frozen in the exact profile digest or native catalog and mapped to passing tests; separately implemented durable and MCP capabilities do not enter the ephemeral MVP profile.
   - [ ] **Sub-task 48.2.3.5 - Product security evidence:** Map applicable `SR-ACC-*`, `SR-AI-*`, `SR-DAT-*`, `SR-GIT-*`, `SR-OPS-*`, `SR-PLT-*`, and `SR-TST-*`; retain complete functional session traces, before/after repository manifests, approval records, bounded or truncated command/test output, adversarial results, and automated local boundary checks. Local evidence and exact remaining gaps are recorded in [`story-48-2-local-results.md`](docs/verification/story-48-2-local-results.md); runtime crash/recovery, pressure, complete artifact lifecycle, cross-interface parity, independent review, installed-platform evidence, and deferred fuzz evidence remain open.
 
-##### Story Acceptance Criteria
+##### Standalone Executable Integration Additions
+
+Decision 0061 adds the following work to Story 48.2. Explicit row dependencies
+govern the internal milestone; no broad Sprint 49 closure is required to produce
+the exact model prerequisite. The original tasks and fixture results above are
+preserved. Every new row inherits positive, negative, boundary, error and
+side-effect tests plus the applicable security controls. Component/fake evidence
+cannot close a live-model or installed-process row.
+
+- [ ] **Task 48.2.4 - Deliver the real Linux coding composition**
+  - [ ] **Sub-task 48.2.4.1:** Inventory and resolve the launch/trust, Linux confinement, state/key, exact model/runtime/codec, served-context, resource and build prerequisites; record the accepted activation path and exact blockers before admitting effects. A development-only trust path needs its own accepted contract, never a bypass of production activation. **Execution:** local; owner=host-platform-model; venue=repository-local.
+  - [ ] **Sub-task 48.2.4.2:** Implement the ordinary host's bounded service lifecycle through the accepted activation path, with single-owner launch, startup cleanup, profile/workspace binding and precise unavailable diagnostics; prove invalid activation produces no effects. Depends on Sub-task 48.2.4.1. **Execution:** local; owner=host-platform; venue=repository-local.
+  - [ ] **Sub-task 48.2.4.3:** Connect the actual CLI and host using the existing Linux peer-identity and private IPC mechanisms; version closed control/event framing and reject foreign peers, stale challenges, bad workspace/profile identities and duplicate effect-bearing submissions. Depends on Sub-task 48.2.4.2. **Execution:** local; owner=host-transport; venue=repository-local.
+  - [ ] **Sub-task 48.2.4.4:** Implement the non-replay runtime factory with the existing coordinator, context, model port, native catalog, Linux effect boundary, clock and verifier; retain scripted injection only in an explicitly non-production fixture profile and prove production cannot select it. Depends on Sub-task 48.2.4.2. **Execution:** local; owner=host-runtime; venue=repository-local.
+  - [ ] **Sub-task 48.2.4.5:** Replace the executable's unconditional unavailable branch with the verified driver and installed input loop; preserve exact typed failures, bounded multiline input, follow-ups, EOF behavior, safe rendering and opt-in history policy. Depends on Sub-tasks 48.2.4.3 and 48.2.4.4. **Execution:** local; owner=cli; venue=repository-local.
+  - [ ] **Sub-task 48.2.4.6:** Publish and exercise clean setup, start, status, stop and diagnosis commands for the supported development profile; document implementation absence separately from authentication, activation, model and confinement failure. Depends on Sub-task 48.2.4.5. **Execution:** local; owner=cli-platform; venue=repository-local.
+  - [ ] **Sub-task 48.2.4.7:** Produce the exact coding-profile admission plan with model/platform owners: artifact provenance and terms, runtime/codec, served context, decoding, tool protocol, isolation, resource caps, quality thresholds, repeated trials and raw-result paths; enumerate any withheld acquisition/activation authority. This produces the prerequisite plan, not an enabled model. Depends on Sub-task 48.2.4.1. **Execution:** local; owner=model-platform; venue=repository-local.
+  - [ ] **Sub-task 48.2.4.8:** Obtain and verify the exact coding-model admission bundle under the existing model gates, independently of broad routing closure; retain every failure and rejected disposition. Depends on Sub-task 48.2.4.7. BLOCKED_EXTERNAL(platform=pinned local inference host; artifact=exact approved coding-model runtime codec context resource isolation and quality bundle; action=model and platform owners satisfy the recorded admission and activation prerequisites and transfer untouched results; owner=model-platform; credential=only if the approved artifact source requires it; payment=none authorized); substitution_set=empty.
+
+- [ ] **Task 48.2.5 - Connect live interaction and effect control**
+  - [ ] **Sub-task 48.2.5.1:** Separate control servicing from blocking inference/tools; implement bounded live progress and ordered correctness events, reserved cancellation capacity, slow-consumer handling and explicit cursor expiry. Demonstrate progress before work ends and cancellation while output queues are full. Depends on Sub-tasks 48.2.4.3 and 48.2.4.4. **Execution:** local; owner=runtime-transport; venue=repository-local.
+  - [ ] **Sub-task 48.2.5.2:** Complete protected approval presentation with targets, arguments, preimages, effects, limits, expiry and digest; test denial, stale state, replay and approval/cancel races through actual IPC. Depends on Sub-tasks 48.2.4.5 and 48.2.5.1. **Execution:** local; owner=cli-policy; venue=repository-local.
+  - [ ] **Sub-task 48.2.5.3:** Wire installed signals and cancellation to model, approval, tool, command, test and rendering phases; verify descendant termination, bounded cleanup, no delayed writes and truthful uncertain effects rather than equating a request with successful cancellation. Depends on Sub-task 48.2.5.1. **Execution:** local; owner=runtime-platform; venue=repository-local.
+  - [ ] **Sub-task 48.2.5.4:** Complete bounded stdout/stderr, test observations, current diff inspection and terminal reports with checks run/not run, failures, receipts, risks and exact status; disclose every truncation and absence of full output retention. Depends on Sub-tasks 48.2.4.5 and 48.2.5.1. **Execution:** local; owner=cli-verification; venue=repository-local.
+  - [ ] **Sub-task 48.2.5.5:** Exercise follow-up turns, fresh context/authority framing, worktree writer leases, no-progress limits and failed-test correction; pending tools or failed validation prevent premature completion. Depends on Sub-tasks 48.2.5.2 and 48.2.5.4. **Execution:** local; owner=runtime-context; venue=repository-local.
+  - [ ] **Sub-task 48.2.5.6:** Validate the connected path against missing stack services, unavailable model, served-context overflow, hostile instructions, process failures and preservation of staged/unstaged/untracked human work. Depends on Sub-tasks 48.2.5.3 and 48.2.5.5. **Execution:** local; owner=verification-platform; venue=repository-local.
+
+- [ ] **Task 48.2.6 - Prove the executable coding milestone**
+  - [ ] **Sub-task 48.2.6.1:** Spawn the actual CLI and host in fresh disposable repositories for scripted-model launch, patch/test/revision, new-file, bounded multi-file, no-op, denial, stale approval, cancel, overflow and false-completion cases; inspect actual filesystem, process, event and exit results. Internal helper calls alone cannot pass this row. Depends on Sub-tasks 48.2.4.6 and 48.2.5.6. **Execution:** local; owner=executable-verification; venue=repository-local.
+  - [ ] **Sub-task 48.2.6.2:** Run the separate repeated exact admitted-model coding campaign through those binaries, including a genuine failed test followed by bounded correction; record failures, interventions, latency and resource use without cherry-picking or changing thresholds. Depends on Sub-tasks 48.2.6.1 and 48.2.4.8. **Execution:** local; owner=model-verification; venue=pinned-Linux-profile.
+  - [ ] **Sub-task 48.2.6.3:** Reconcile the original MVP E2E, stale, adversarial and absence groups with the executable matrix, retaining component versus executable-scripted versus qualified-model scope and all incomplete platform/release gates. Depends on Sub-task 48.2.6.2. **Execution:** local; owner=verification; venue=repository-local.
+  - [ ] **Sub-task 48.2.6.4:** Record the milestone disposition and implementation handoff from actual source-bound evidence; update affected evidence once per completed batch, never from generator summaries alone. Depends on Sub-task 48.2.6.3. **Execution:** local; owner=integration; venue=repository-local.
+
+##### Original Story Acceptance Criteria
 
 - [ ] **Story AC 48.2.AC1:** Given one approved local repository, owned worktree, admitted local model, and coding profile, when a user completes a bounded change, then AgentMage explores, plans, previews, obtains exact authority, changes only approved bytes, runs approved targeted checks, shows Git state, and reports one evidence-backed outcome.
 - [x] **Story AC 48.2.AC2:** Given a write, command, test, or other consequential proposal, when current exact authority is absent, then the runtime emits `ASK` or `DENY`, starts no effect, and cannot obtain authority from the model, CLI, prompt text, MCP, repository content, or prior approval. Evidence: exact approval, denial, stale-grant, hostile-instruction, client-boundary, and MCP-separation tests pass.
@@ -6800,6 +6845,11 @@ and transfers untouched results; credential=platform and signing access; payment
 - [x] **Story AC 48.2.AC4:** Given a later interface or workflow caller, when it submits the same bounded runtime request, then the coding runtime has no CLI-specific model, tool, permission, journal, artifact, session, or terminal-state dependency that requires reimplementation. Evidence: `CodingCoordinatorPort`, shared runtime contracts, headless surfaces, and workflow callers all consume the same coordinator and terminal outcome without owning effect authority.
 
 **Earliest usable internal milestone - `M-HARNESS-MVP`:** The milestone is complete when Sub-tasks 48.2.1.1 through 48.2.1.6, 48.2.2.1 through 48.2.2.6, and the exact `S-048-MVP-E2E`, `S-048-MVP-STALE`, `S-048-MVP-ADVERSARIAL`, and `S-048-MVP-ABSENCE` fixtures plus Story AC 48.2.AC1 through 48.2.AC3 pass on the named local platform profile. It permits one ephemeral functional session with bounded, explicitly truncated output. Sub-tasks 48.2.1.7 and 48.2.3.5, persistent resume, complete journal/artifact lifecycle, cross-interface hardening, pressure testing, independent review, and release evidence remain open. Recording the milestone does not complete Story 48.2, mark Sprint 48 or Sprint 50 PASS, close `G-V0.4`, or imply any excluded capability.
+
+**Decision 0061 strengthening:** Tasks 48.2.4 through 48.2.6 are additionally
+required for this milestone. They make actual executable integration and real
+coding-model qualification explicit; the historical source-level fixture result
+alone cannot satisfy it. Daily-use completion additionally requires Task 50.2.4.
 
 #### Sprint Acceptance Criteria
 
@@ -7059,7 +7109,23 @@ so that convenience compatibility never creates unmeasured support or semantic l
   - [x] **Sub-task 50.2.3.5:** Remove the CLI, native Chat adapter, optional local metrics, and future-caller test adapter independently; assert the coordinator and remaining interfaces retain correct behavior and no removed-client residue or authority. Evidence: source commit `33c619402260d0fc735b36134979ac1541c414fc` extracts one caller-neutral `RuntimeTransportPort` and independently feature-gates the CLI, native Chat adapter, future workflow caller, and optional runtime projections. The retained [`report.json`](artifacts/sprints/sprint-50/story-50.2-component-removal/report.json) executes four clean-target, offline, no-shell Cargo test and strict-Clippy pairs: 110 tests pass with CLI sources absent, 116 with native Chat absent, 113 with workflow caller and assignment sources absent, and 584 with runtime projections absent. Rust dep-info proves each removed source is outside its compilation while the coordinator, coding harness, Linux read and coding paths, shared transport, and applicable remaining clients stay present; all 11 ignored executions remain explicit. This is local source-removal evidence only: installed package, process, socket, credential, persistent-data, supported-platform, accessibility, and independent-review residue campaigns remain open under later gates.
   - [ ] **Sub-task 50.2.3.6 - Product security evidence:** Extend `RV-05`, `RV-17`, `RV-18`, `RV-20`, and applicable coding reviews; retain parity diffs, authority-intersection property results, load traces, queue/artifact pressure, crash recovery, removal scans, limitations, and independent runtime review.
 
-##### Story Acceptance Criteria
+##### Daily-Use Integration Additions
+
+- [ ] **Task 50.2.4 - Deliver standalone daily-use coding reliability**
+  - [ ] **Sub-task 50.2.4.1:** Integrate actual-process session persistence and drift-aware resume through existing journals/checkpoints; revalidate source, model, policy and worktree and reconcile interrupted effects without replay. Depends on Tasks 48.2.6 and 21.2.2. **Execution:** local; owner=runtime-storage; venue=repository-local.
+  - [ ] **Sub-task 50.2.4.2:** Integrate full verified stdout/stderr/diff artifacts, inspection, retention and deletion with bounded previews and pressure behavior, without adding a competing store. Complete the Linux coding-session resume/retention acceptance using the existing artifact owners; do not wait for unrelated whole-story platform/release closure. Depends on Tasks 22.2.1, 22.2.2 and 22.2.3 and Sub-task 50.2.4.1. **Execution:** local; owner=runtime-artifacts; venue=repository-local.
+  - [ ] **Sub-task 50.2.4.3:** Deliver the Linux coding integration slice of existing G1/G2 work (`22.1.4` recording and `22.1.5` compaction/reopening) with its current owners and acceptance cases, not a second continuity implementation. Integrate served-context preflight, source-backed retrieval, visible summaries/omissions and retained originals; prove stale, deleted and cross-project evidence is not used and USTE absence does not disable coding. Depends on Task 22.3.3 and Sub-tasks 13.4.5.1, 13.4.5.2, 50.2.4.1 and 50.2.4.2. **Execution:** local; owner=context-storage; venue=repository-local.
+  - [ ] **Sub-task 50.2.4.4:** Implement direct-user-approved bounded session preauthorization for exact writable paths and registered command templates with expiry, budgets and revocation; kernel issuance/consumption of fresh exact grants remains mandatory and unknown scope still asks or denies. No automatic approval responder, wildcard shell or Owner fallback. Depends on Task 48.2.6. **Execution:** local; owner=policy-cli; venue=repository-local.
+  - [ ] **Sub-task 50.2.4.5:** Deliver inspectable change history and conflict-aware rollback as new exact-authority operations; preserve concurrent human edits and never use broad reset, clean, stash or deletion. Depends on Sub-tasks 50.2.4.1 and 50.2.4.2. **Execution:** local; owner=coding-verification; venue=repository-local.
+  - [ ] **Sub-task 50.2.4.6:** Exercise repeatable setup, restart, worktree contention, disk/output pressure, slow clients, model failure and long-session soak with declared performance and resource thresholds; record supported languages/commands and limitations. Depends on Sub-tasks 50.2.4.3, 50.2.4.4 and 50.2.4.5. **Execution:** local; owner=platform-verification; venue=pinned-Linux-profile.
+  - [ ] **Sub-task 50.2.4.7:** Obtain independent review of the connected coding, policy, context, recovery and process boundaries, retain findings and verify their resolution without the implementer signing its own review. Depends on Sub-task 50.2.4.6. BLOCKED_EXTERNAL(platform=independent review venue; artifact=source-bound coding-harness review and findings disposition; action=independent reviewer assesses the delivered connected workflow; owner=independent-review; credential=repository access; payment=none authorized); substitution_set=empty.
+  - [ ] **Sub-task 50.2.4.8:** Record `M-HARNESS-DAILY` only after all daily-use rows pass, preserve separate release/platform gates and publish the operational guide plus optional-stack integration boundaries. Depends on Sub-task 50.2.4.7. **Execution:** local; owner=integration; venue=repository-local.
+
+**Daily-use milestone:** `M-HARNESS-DAILY` requires all of Task 50.2.4 and the
+underlying MVP. It qualifies only the named development/platform/model profile;
+it does not close Story 50.2, Sprint 50 or any release gate by itself.
+
+##### Original Story Acceptance Criteria
 
 - [ ] **Story AC 50.2.AC1:** Given equivalent work through native Chat, interactive CLI, or a future bounded caller, when the shared runtime executes it, then every non-presentation decision and evidence record is equivalent and no client owns a private execution path.
 - [x] **Story AC 50.2.AC2:** Given a future workflow node with narrower authority, when it requests tools or effects, then the runtime enforces the complete authority intersection and cannot infer approval, aggregate grants, broaden scope, or trust node output as completion. Evidence: seven-layer authority property tests and the consolidated zero-execution attack matrix reject every named operation, tool, root, model, retry, result-authority, and child-spawn broadening.
