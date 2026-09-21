@@ -1530,3 +1530,56 @@ Product truth remains `scaffolded`. No checkbox was flipped in this block. Three
 had been classified `local` from prose and were corrected once the code was read or the commands
 were run — `21.1.3.5`, `14.1.3.3` and `14.1.3.4`. Each correction is recorded as a supersession of
 this session's own earlier judgement.
+
+## RESUME NOTE — how a fresh session picks this up (2026-09-21)
+
+Read this section first, then AGENTS.md (all seven sections), then Decisions 0053, 0054 and 0052.
+
+**Authority.** Decision 0054 is a standing owner delegation: decide everything yourself, never stop
+to ask, never end a turn to request confirmation. Mark anything you decide "Accepted under owner
+delegation, 2026-09-20" and cite 0054. Decisions 0055 through 0060 were all taken under it.
+
+**Retained prohibitions, unchanged by the delegation.** No spending, accounts, credentials,
+publishing, releases, or merges to a default branch. No force-push. No weakening of tests,
+thresholds or evidence bindings. No licence or trademark choices. Nothing outside this repository;
+USTE, CodingMage and AgentMagik are off limits. **Never supply an independent review and never tick
+an approval that belongs to a reviewer or the owner.**
+
+**Owner rule added 2026-09-21: do not close a row on a generator's summary alone.** Verify the
+row's enumerated items individually, close only if every one holds, and record the evidence in the
+row itself.
+
+**Resources.** Start a build whenever `free -h` shows ≥16 GB available; do not wait for other
+repositories' Cargo work. Keep every build, test and evidence regeneration inside
+`systemd-run --user --scope -p MemoryHigh=5G -p MemoryMax=6G -p MemorySwapMax=512M`, and use up to
+4 Cargo jobs. Model-serving workloads get a scope sized to the model (20G/24G/0) instead.
+**Release the GPU after every acceptance run**: `python3 scripts/demo.py stop`, then confirm with
+`nvidia-smi`. `scripts/demo_smoke.py` deliberately leaves the demo running.
+
+**State at this note.** Branch `demo/fedora-local-docs`, HEAD `bbe519a7`, clean tree, nothing
+unpushed. `npm run docs:check` passes end to end (272 scripts, exit 0). The clean Linux build
+passes on `fedora-x86_64` and `ubuntu-x86_64`, 11/11 commands each. Register: 45 local, 1,059
+dependency, 161 external, 309 unknown.
+
+**Cascade you will hit.** `TASKS.md` is a hashed input of `contract_boundary_gate.py`, so any
+TASKS.md edit requires `npm run traceability:build`, `contract-boundary:build` and
+`contract-evidence:build` before the commit gate passes. Any edit inside a Cargo workspace member
+flips the SBOM, which the demo acceptance reports bind, which means re-running
+`scripts/demo_smoke.py` and then the Story 1.2 / 3.1 cascade. Batch source edits and regenerate
+once (AGENTS.md §1 and §3).
+
+**Open blockers, each already diagnosed — do not re-litigate them.**
+
+- Story 9.1 container package lifecycle — Decision 0059. Immutable base image predates the repos a
+  closure resolves from, so every closure is an upgrade and upgrades need capabilities
+  `--cap-drop=all` denies. Dependency-satisfied install already passes in the Decision 0040 KVM lane.
+- `14.1.3.3` — Decision 0060. No process performs a download or import.
+- `14.1.3.4` — depends on `14.1.2.1`; the host will not bootstrap without the production package
+  signature and trust root.
+- `21.1.3.5` — host prerequisite cleared by execution; remaining blocker is an independent review.
+
+**Next actions, in order.** (1) `14.2.1.1`: verify the eight enumerated artifact classes
+individually and close only if all eight hold. (2) `14.2.2.2`: the Sprint 14 generator reports
+`reference_machine_preflight_complete: false`; it is non-acquiring and executable here. (3) Continue
+through every row that is executable on this machine, reading the implementation before trusting a
+row's prose — three rows this session read as `local` and were not.
