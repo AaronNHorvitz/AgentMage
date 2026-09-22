@@ -11,6 +11,7 @@ The immediate workstream is the standalone coding harness:
 - [Disposable coding development activation](decisions/0063-disposable-coding-development-activation.md)
 - [Coding activation inventory](verification/coding-activation-inventory-2026-09-21.md)
 - [Live coding control scheduling](decisions/0064-live-coding-control-scheduling.md)
+- [Coding daily-use verification thresholds](decisions/0065-coding-daily-use-verification-thresholds.md)
 - [Standalone coding development harness](guides/standalone-coding-development.md)
 
 The PRD, implementation plan and Story 48.2 carry its product and task authority.

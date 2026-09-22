@@ -179,6 +179,10 @@ pub enum CodingDevelopmentScenario {
     FalseCompletion,
     /// Exhaust the exact canonical event budget before a second model turn.
     Overflow,
+    /// Exhaust the predeclared run disk budget before any model or tool effect.
+    DiskPressure,
+    /// Exhaust the predeclared output budget without presenting partial output as complete.
+    OutputPressure,
 }
 
 impl CodingDevelopmentScenario {
@@ -194,6 +198,8 @@ impl CodingDevelopmentScenario {
             "rollback" => Some(Self::Rollback),
             "false-completion" => Some(Self::FalseCompletion),
             "overflow" => Some(Self::Overflow),
+            "disk-pressure" => Some(Self::DiskPressure),
+            "output-pressure" => Some(Self::OutputPressure),
             _ => None,
         }
     }
@@ -729,7 +735,9 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         let (acceptance, required_evidence) = match self.scenario {
             CodingDevelopmentScenario::NoOp
             | CodingDevelopmentScenario::SlowCancel
-            | CodingDevelopmentScenario::Overflow => (
+            | CodingDevelopmentScenario::Overflow
+            | CodingDevelopmentScenario::DiskPressure
+            | CodingDevelopmentScenario::OutputPressure => (
                 vec![
                     "The exact Git status proves the disposable repository is unchanged".to_owned(),
                 ],
@@ -758,6 +766,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             &acceptance,
             mutable_files,
             required_evidence,
+            self.scenario,
         );
         let request = build_ephemeral_coding_run_request(
             self.profile,
@@ -1600,7 +1609,9 @@ fn scripted_steps(
     match scenario {
         CodingDevelopmentScenario::NoOp
         | CodingDevelopmentScenario::SlowCancel
-        | CodingDevelopmentScenario::Overflow => Ok([
+        | CodingDevelopmentScenario::Overflow
+        | CodingDevelopmentScenario::DiskPressure
+        | CodingDevelopmentScenario::OutputPressure => Ok([
             ScriptedDevelopmentStep::Tool(git),
             ScriptedDevelopmentStep::Complete(completion(
                 CodingTerminalClaim::NoOp,
@@ -1942,6 +1953,7 @@ fn development_work_packet(
     acceptance: &[String],
     mutable_files: Vec<String>,
     required_evidence: Vec<EvidenceKind>,
+    scenario: CodingDevelopmentScenario,
 ) -> WorkPacket {
     let native_candidate = profile.model_profile().runtime.kind == ModelRuntimeKind::NativeLlamaCpp;
     WorkPacket {
@@ -1965,7 +1977,14 @@ fn development_work_packet(
             (BudgetResource::ModelCalls, 16),
             (BudgetResource::ToolCalls, 16),
             (BudgetResource::InputBytes, 8 * 1024 * 1024),
-            (BudgetResource::OutputBytes, 4 * 1024 * 1024),
+            (
+                BudgetResource::OutputBytes,
+                if scenario == CodingDevelopmentScenario::OutputPressure {
+                    1_024
+                } else {
+                    4 * 1024 * 1024
+                },
+            ),
             (
                 BudgetResource::ElapsedMilliseconds,
                 if native_candidate {
@@ -1982,7 +2001,14 @@ fn development_work_packet(
                     256 * 1024 * 1024
                 },
             ),
-            (BudgetResource::DiskBytes, 64 * 1024 * 1024),
+            (
+                BudgetResource::DiskBytes,
+                if scenario == CodingDevelopmentScenario::DiskPressure {
+                    1_024
+                } else {
+                    64 * 1024 * 1024
+                },
+            ),
             (BudgetResource::ProcessCount, 32),
         ]
         .into_iter()
@@ -2695,7 +2721,14 @@ fn runtime_limits(
         } else {
             600_000
         },
-        max_output_bytes: 4 * 1024 * 1024,
+        max_output_bytes: if matches!(
+            scenario,
+            CodingDevelopmentScenario::DiskPressure | CodingDevelopmentScenario::OutputPressure
+        ) {
+            1_024
+        } else {
+            4 * 1024 * 1024
+        },
     }
 }
 

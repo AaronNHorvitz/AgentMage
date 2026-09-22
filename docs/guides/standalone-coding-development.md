@@ -67,14 +67,19 @@ and a truthful terminal result. A cancellation request alone is not completion.
 
 The `no-op` scenario performs verified Git inspection without source mutation. `new-file` uses the
 controlled-create boundary against an absent path, and `multi-file` proves two separately approved
-writes with a durable safe-boundary checkpoint between them. `false-completion` proves the verifier
-withholds an unsupported success claim. `overflow` terminates as resource-bounded exhaustion under
-an exact 13-event profile. The `slow-cancel` scenario is a non-qualified test fixture that holds one
-cancellable model call for signal and slow-client acceptance; it is not a performance simulation or
-model result. `--stale-approval-probe` is restricted to this development client and corrupts one
-response digest so the real host rejection can be tested before an effect.
+writes with a durable safe-boundary checkpoint between them. `rollback` uses retained exact
+preimages and fresh exact-path authority; a changed postimage refuses instead of overwriting a
+concurrent human edit. `false-completion` proves the verifier withholds an unsupported success
+claim. `overflow` terminates as resource-bounded exhaustion under an exact 13-event profile.
+`disk-pressure` refuses the canonical request before a model or tool effect under a 1,024-byte disk
+budget. `output-pressure` admits complete individual outputs but terminates `EXHAUSTED` when their
+aggregate exceeds the matching 1,024-byte output budget. The `slow-cancel` scenario is a
+non-qualified test fixture that holds one cancellable model call for signal and slow-client
+acceptance; it is not a performance simulation or model result. `--stale-approval-probe` is
+restricted to this development client and corrupts one response digest so the real host rejection
+can be tested before an effect.
 
-Run all thirteen actual-process cases with short disposable roots and a fresh create-only log root:
+Run all sixteen actual-process cases with short disposable roots and a fresh create-only log root:
 
 ```bash
 systemd-run --user --scope --quiet \
@@ -89,6 +94,28 @@ The report distinguishes `SUCCESS`, `NO_OP`, `DECLINED`, `CANCELLED`, `EXHAUSTED
 results. It hashes both binaries and every retained stdout/stderr stream. Its qualification remains
 `executable-scripted-only`.
 
+Decision 0065 declares the separate daily-use thresholds. After the exact Muse and GPT-OSS
+candidate campaigns have each produced one retained live-binary result, verify repeatable setup,
+pressure, worktree contention/cancellation, 25 follow-ups in one session, and both model-failure
+dispositions with short fresh roots:
+
+```bash
+systemd-run --user --scope --quiet \
+  -p MemoryHigh=5G -p MemoryMax=6G -p MemorySwapMax=512M \
+  python3 scripts/coding_harness_daily_acceptance.py \
+    --work-root /tmp/am-daily-1/w \
+    --log-root "$HOME/.local/state/agentmage-codex-coding/runs/daily-1" \
+    --muse-root /tmp/exact-muse-fixture \
+    --muse-log-dir "$HOME/.local/state/agentmage-codex-coding/runs/muse-1" \
+    --gpt-oss-root /tmp/exact-gpt-oss-fixture \
+    --gpt-oss-log-dir "$HOME/.local/state/agentmage-codex-coding/runs/gpt-oss-1"
+```
+
+The daily report can pass candidate *failure handling* while both candidates remain
+`not-qualified`. It supports executable Python only through the exact registered
+`fixture.python-validation@1.0.0` command. It does not supply independent review,
+`M-HARNESS-DAILY`, platform support, or release evidence.
+
 ## Failure handling
 
 Invalid marker contents, permissions, workspace identity, Git state, profile identity, peer
@@ -98,4 +125,6 @@ commits, deletes, or overwrites a working tree. Use a newly named root for anoth
 Log directories are create-only and mode `0700`; `stdout.jsonl`, `stderr.log`, and `result.json`
 are mode `0600`. Preserve failed and rejected runs alongside successful ones. A scripted success is
 only executable-path evidence. Model qualification requires the separate repeated Muse Glimmer and
-gpt-oss-20b campaigns through these same binaries and their exact admitted profiles.
+gpt-oss-20b campaigns through these same binaries and their exact admitted profiles. A strict
+codec, runtime, resource, tool-use, or quality failure remains a separate rejected disposition and
+is never replaced by the scripted fixture or a direct model-server probe.

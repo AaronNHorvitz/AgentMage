@@ -599,7 +599,7 @@ def parser() -> argparse.ArgumentParser:
         "--scenario",
         choices=(
             "no-op", "failed-test-repair", "slow-cancel", "new-file", "multi-file", "rollback",
-            "false-completion", "overflow",
+            "false-completion", "overflow", "disk-pressure", "output-pressure",
         ),
         required=True,
     )

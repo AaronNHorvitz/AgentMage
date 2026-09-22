@@ -23,6 +23,7 @@ use crate::headless::{
 
 const MAX_ARGUMENT_COUNT: usize = 128;
 const MAX_ARGUMENT_BYTES: usize = 64 * 1024;
+const MAX_DEVELOPMENT_FOLLOW_UPS: usize = 32;
 
 /// Stable AgentMage CLI version, independent from model or protocol versions.
 pub const CLI_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -256,7 +257,7 @@ fn parse_coding_development(
             "--scenario" if scenario.is_none() => &mut scenario,
             "--model" if model.is_none() => &mut model,
             "--objective" if objective.is_none() => &mut objective,
-            "--follow-up" if follow_ups.len() < 8 => {
+            "--follow-up" if follow_ups.len() < MAX_DEVELOPMENT_FOLLOW_UPS => {
                 let value = arguments
                     .get(cursor + 1)
                     .filter(|value| {
@@ -397,6 +398,8 @@ fn parse_coding_development(
             | "rollback"
             | "false-completion"
             | "overflow"
+            | "disk-pressure"
+            | "output-pressure"
     ) {
         return Err(ThinClientError::InvalidValue);
     }
@@ -1036,7 +1039,7 @@ Usage: agentmage [--json] [--surface interactive-cli|json|sdk|acp] COMMAND\n\
 Commands:\n\
   code\n\
   code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
-       --scenario no-op|failed-test-repair|slow-cancel|restart-repair|new-file|multi-file|rollback|false-completion|overflow\n\
+       --scenario no-op|failed-test-repair|slow-cancel|restart-repair|new-file|multi-file|rollback|false-completion|overflow|disk-pressure|output-pressure\n\
        --objective TEXT [--follow-up TEXT]... [--resume|--record-session] [--artifact-release-probe-before-follow-ups] [--approve-this-run] [--stale-approval-probe|--replay-approval-probe|--expired-cursor-probe|--artifact-integrity-probe] [--slow-subscriber-probe]\n\
        [--preauthorize-workspace-reads] [--preauthorize-path RELATIVE_PATH]... [--preauthorize-command ID@VERSION@SHA256]...\n\
        [--preauthorization-budget N --preauthorization-minutes N] [--revoke-preauthorization-before-follow-ups]\n\
@@ -1457,6 +1460,35 @@ mod tests {
             parse_cli_arguments(&["x".repeat(MAX_ARGUMENT_BYTES + 1)]),
             Err(ThinClientError::SizeExceeded)
         );
+
+        let mut bounded_follow_ups = strings(&[
+            "code",
+            "--development",
+            "--state-root",
+            "/tmp/state",
+            "--disposable-root",
+            "/tmp/disposable",
+            "--workspace-root",
+            "/tmp/disposable/worktree",
+            "--scenario",
+            "no-op",
+            "--objective",
+            "inspect",
+        ]);
+        for index in 0..MAX_DEVELOPMENT_FOLLOW_UPS {
+            bounded_follow_ups.push("--follow-up".to_owned());
+            bounded_follow_ups.push(format!("follow-up-{index}"));
+        }
+        assert!(matches!(
+            parse_cli_arguments(&bounded_follow_ups),
+            Ok(CliInvocation::Code {
+                development: Some(CodingDevelopmentCliOptions { follow_ups, .. }),
+                ..
+            }) if follow_ups.len() == MAX_DEVELOPMENT_FOLLOW_UPS
+        ));
+        bounded_follow_ups.push("--follow-up".to_owned());
+        bounded_follow_ups.push("one-too-many".to_owned());
+        assert!(parse_cli_arguments(&bounded_follow_ups).is_err());
     }
 
     #[test]
