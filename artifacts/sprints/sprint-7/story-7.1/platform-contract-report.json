@@ -14,7 +14,7 @@
     "networked_test_count": 0,
     "ubuntu_contract": "verified-no-network-container",
     "ubuntu_image": "localhost/agentmage-clean-build:ubuntu-x86_64",
-    "ubuntu_image_id": "sha256:24cabc5cb783c5db8bb6e2ea24f95794bf6354d4a346128184185dd22bfad80a"
+    "ubuntu_image_id": "sha256:1b8ace9c0258bcd68e7ece0cc606cb4e9f7b81d7c12f748e2571d3398937564b"
   },
   "limitations": [
     "Linux fixtures validate manifest and shared startup semantics, not native mechanism readiness",
@@ -51,7 +51,7 @@
     }
   ],
   "private_environment_values_recorded": false,
-  "reference_revision": "f9eb3b337c2b9764851f33401cc18fa93743bca4",
+  "reference_revision": "f16b085e2990def088d1d21e1079c848975afa69",
   "release_claim": "none",
   "schema_version": 1,
   "sources": [
@@ -61,7 +61,7 @@
     },
     {
       "path": "kernel/contracts/src/lib.rs",
-      "sha256": "b6f1307ac15647c4d5e81b4c1fd2c4a4e9734f9360df800de8d8c0fbcecdea07"
+      "sha256": "d16d98371a5405115735820ba50ce3441a30298ed4eae74fbec6fe4c434e7f74"
     },
     {
       "path": "kernel/contracts/src/platform.rs",
@@ -93,11 +93,11 @@
     },
     {
       "path": "scripts/platform_manifest_artifact.py",
-      "sha256": "0f210fb557d3785026ce219604a18067199b17cb308b26f1aea7659a06f395de"
+      "sha256": "93ad97d3b45ddff31ccb1907f3faa2dc169945eea8abfa1f4d1fcb08861f85fa"
     },
     {
       "path": "tests/test_platform_manifest_artifact.py",
-      "sha256": "8c95802f7784a00f615ce6a4e834f6ee86157ef12fc7d3366635f0fb542e78a2"
+      "sha256": "20a22fd5f2f5f0f218dc09b6baf374c97c25c6b8daab06fdd5e45f1f1dea69e7"
     }
   ],
   "status": "pass-all-available-non-macos-contract-scope",
