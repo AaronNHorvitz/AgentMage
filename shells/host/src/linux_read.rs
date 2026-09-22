@@ -575,6 +575,7 @@ where
                 RuntimePrepareInput {
                     resume: false,
                     slow_subscriber_probe: false,
+                    preauthorization: None,
                     engineering_session_id,
                     profile_id,
                     expected_entry_sha256,

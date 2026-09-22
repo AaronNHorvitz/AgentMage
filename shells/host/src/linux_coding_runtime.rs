@@ -3,6 +3,7 @@
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 use std::io::Cursor;
+use std::sync::{Arc, Mutex};
 
 use agentmage_capability_read_only::{
     GitCommandPlan, GitInspectionOperation, GitInspectionOutcome, GitInspectionRequest,
@@ -31,8 +32,8 @@ use agentmage_kernel_engine::{
         FileClassification, FilesystemApprovalDecision, FilesystemApprovalPreview,
         FilesystemApprovalReceipt, FilesystemGrantRequest, FilesystemOperationDraft,
         FilesystemPlan, FilesystemPlanRequest, FilesystemTransactionOutcome,
-        FilesystemTransactionRequest, build_filesystem_plan, render_filesystem_preview,
-        verify_filesystem_receipts,
+        FilesystemTransactionRequest, SessionPreauthorizedFilesystemDecision,
+        build_filesystem_plan, render_filesystem_preview, verify_filesystem_receipts,
     },
     grants::SessionReadGrantRequest,
     operational_store::{
@@ -67,8 +68,9 @@ use agentmage_kernel_engine::{
         normalize_validation_result, verify_validation_receipt,
     },
     write_approval::{
-        ShadowChangeSet, WriteApprovalDecision, WriteApprovalPreview, WriteApprovalReceipt,
-        WriteChangeScope, WriteGrantRequest, WriteReviewNarrative, render_write_preview,
+        SessionPreauthorizedWriteDecision, ShadowChangeSet, WriteApprovalDecision,
+        WriteApprovalPreview, WriteApprovalReceipt, WriteChangeScope, WriteGrantRequest,
+        WriteReviewNarrative, render_write_preview,
     },
     write_recovery::{
         WriteAwareCheckpoint, WriteAwareCheckpointInput, WriteBoundaryField, WriteCheckpointPhase,
@@ -92,14 +94,16 @@ use crate::{
     },
     coding_authority::{
         ApprovedCodingGrant, ApprovedCodingGrantRequest, CodingApprovalRequest,
-        CodingRuntimePolicy, derive_approved_coding_grant, derive_approved_coding_grant_with_event,
-        render_coding_approval_request,
+        CodingRuntimePolicy, PreauthorizedCodingGrantRequest, derive_approved_coding_grant,
+        derive_approved_coding_grant_with_event, derive_preauthorized_coding_grant,
+        derive_preauthorized_coding_grant_with_event, render_coding_approval_request,
     },
     coding_dispatch::PreparedNativeCodingCall,
     linux_coding::{
         LinuxCodingTargetBinding, LinuxCodingWorkspace, LinuxCodingWriteDraft,
         PreparedLinuxCodingOperation,
     },
+    runtime_transport::RuntimeSessionPreauthorization,
 };
 
 const PREVIEW_LIFETIME_MS: u64 = 60_000;
@@ -435,6 +439,8 @@ where
     pub sensitivity: DataSensitivity,
     /// CSPRNG or deterministic test identity source.
     pub identities: I,
+    /// Optional direct-user-approved bounded authority envelope.
+    pub preauthorization: Option<LinuxCodingSessionPreauthorization>,
 }
 
 /// Production Linux implementation of the reusable runtime's native coding boundary.
@@ -454,6 +460,7 @@ where
     session_id: SessionId,
     sensitivity: DataSensitivity,
     identities: I,
+    preauthorization: Option<LinuxCodingSessionPreauthorization>,
     pending: BTreeMap<String, PendingCodingOperation<'workspace>>,
     issued: BTreeMap<String, IssuedCodingOperation<'workspace>>,
     pending_write_completion: Option<PendingWriteCheckpointCompletion>,
@@ -468,6 +475,155 @@ struct PendingWriteCheckpointCompletion {
     receipt_id: ReceiptId,
     receipt_sha256: String,
     evidence_set_sha256: String,
+}
+
+struct ActiveSessionPreauthorization {
+    contract: RuntimeSessionPreauthorization,
+    consumed_operations: u32,
+    revoked_at_epoch_ms: Option<u64>,
+}
+
+/// Shared session-lifetime preauthorization usage and revocation state.
+#[derive(Clone)]
+pub struct LinuxCodingSessionPreauthorization(Arc<Mutex<ActiveSessionPreauthorization>>);
+
+impl LinuxCodingSessionPreauthorization {
+    /// Starts one verified session budget from the exact direct-user contract.
+    #[must_use]
+    pub fn new(contract: RuntimeSessionPreauthorization) -> Self {
+        Self(Arc::new(Mutex::new(ActiveSessionPreauthorization {
+            contract,
+            consumed_operations: 0,
+            revoked_at_epoch_ms: None,
+        })))
+    }
+
+    fn admitted_decision(
+        &self,
+        prepared: &PreparedNativeCodingCall,
+        workspace_id: &str,
+        now_epoch_ms: u64,
+    ) -> Option<String> {
+        self.0
+            .lock()
+            .ok()
+            .filter(|state| state.admits(prepared, workspace_id, now_epoch_ms))
+            .map(|state| state.decision_sha256().to_owned())
+    }
+
+    fn active_expiry(&self, workspace_id: &str, now_epoch_ms: u64) -> Option<u64> {
+        self.0.lock().ok().and_then(|state| {
+            (state.revoked_at_epoch_ms.is_none()
+                && state.contract.verify(workspace_id, now_epoch_ms).is_ok())
+            .then_some(state.contract.expires_at_epoch_ms)
+        })
+    }
+
+    fn consume(&self) -> Result<(), RuntimePortFailure> {
+        self.0
+            .lock()
+            .map_err(|_| RuntimePortFailure::Unavailable)?
+            .consume()
+    }
+
+    /// Returns the exact underlying contract digest for request binding.
+    pub fn contract_sha256(&self) -> Result<String, RuntimePortFailure> {
+        self.0
+            .lock()
+            .map(|state| state.contract.preauthorization_sha256.clone())
+            .map_err(|_| RuntimePortFailure::Unavailable)
+    }
+
+    /// Returns whether this state was created from the exact same sealed contract.
+    pub fn matches(&self, contract: &RuntimeSessionPreauthorization) -> bool {
+        self.0.lock().is_ok_and(|state| state.contract == *contract)
+    }
+
+    /// Revokes this shared session envelope before any later operation evaluation.
+    pub fn revoke(
+        &self,
+        preauthorization_sha256: &str,
+        revoked_at_epoch_ms: u64,
+    ) -> Result<(), RuntimePortFailure> {
+        let mut state = self.0.lock().map_err(|_| RuntimePortFailure::Unavailable)?;
+        if state.contract.preauthorization_sha256 != preauthorization_sha256
+            || revoked_at_epoch_ms < state.contract.approved_at_epoch_ms
+            || state.revoked_at_epoch_ms.is_some()
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        state.revoked_at_epoch_ms = Some(revoked_at_epoch_ms);
+        Ok(())
+    }
+}
+
+impl ActiveSessionPreauthorization {
+    fn admits(
+        &self,
+        prepared: &PreparedNativeCodingCall,
+        workspace_id: &str,
+        now_epoch_ms: u64,
+    ) -> bool {
+        if self.consumed_operations >= self.contract.maximum_operations
+            || self.revoked_at_epoch_ms.is_some()
+            || self.contract.verify(workspace_id, now_epoch_ms).is_err()
+        {
+            return false;
+        }
+        match prepared {
+            PreparedNativeCodingCall::ReadOnly { .. }
+            | PreparedNativeCodingCall::GitInspection { .. } => self.contract.allow_workspace_reads,
+            PreparedNativeCodingCall::StructuredPatch { proposal } => self
+                .contract
+                .writable_paths
+                .binary_search(&proposal.path)
+                .is_ok(),
+            PreparedNativeCodingCall::ControlledCreate { proposal } => self
+                .contract
+                .writable_paths
+                .binary_search(&proposal.path)
+                .is_ok(),
+            PreparedNativeCodingCall::Command { prepared } => {
+                let command = prepared.command();
+                self.admits_command(
+                    &command.template_id,
+                    &command.template_version,
+                    &command.spec_sha256,
+                )
+            }
+            PreparedNativeCodingCall::Validation { template, .. } => self.admits_command(
+                &template.validation_id,
+                &template.command.template_version,
+                &template.template_sha256,
+            ),
+        }
+    }
+
+    fn admits_command(&self, identity: &str, version: &str, sha256: &str) -> bool {
+        self.contract
+            .command_templates
+            .binary_search_by(|candidate| {
+                (
+                    candidate.template_id.as_str(),
+                    candidate.template_version.as_str(),
+                    candidate.template_sha256.as_str(),
+                )
+                    .cmp(&(identity, version, sha256))
+            })
+            .is_ok()
+    }
+
+    fn consume(&mut self) -> Result<(), RuntimePortFailure> {
+        self.consumed_operations = self
+            .consumed_operations
+            .checked_add(1)
+            .ok_or(RuntimePortFailure::Invalid)?;
+        Ok(())
+    }
+
+    fn decision_sha256(&self) -> &str {
+        &self.contract.preauthorization_sha256
+    }
 }
 
 impl<'workspace, 'session, 'platform, I, E, G>
@@ -492,6 +648,7 @@ where
             session_id,
             sensitivity,
             identities,
+            preauthorization,
         } = input;
         let root = workspace.workspace();
         if policy.parent_targets().len() != 1
@@ -529,6 +686,7 @@ where
             session_id,
             sensitivity,
             identities,
+            preauthorization,
             pending: BTreeMap::new(),
             issued: BTreeMap::new(),
             pending_write_completion: None,
@@ -562,9 +720,14 @@ where
         let prepared = workspace
             .prepare(call)
             .map_err(|_| RuntimePortFailure::Invalid)?;
-        let expires_at_epoch_ms = now_epoch_ms
+        let mut expires_at_epoch_ms = now_epoch_ms
             .checked_add(PREVIEW_LIFETIME_MS)
             .ok_or(RuntimePortFailure::Invalid)?;
+        if let Some(expires) = self.preauthorization.as_ref().and_then(|preauthorization| {
+            preauthorization.active_expiry(request.workspace_id.as_str(), now_epoch_ms)
+        }) {
+            expires_at_epoch_ms = expires_at_epoch_ms.min(expires);
+        }
         let parent_preview_sha256 = parent_preview_sha256(
             request,
             operation_id,
@@ -615,6 +778,42 @@ where
             };
             Ok::<_, RuntimePortFailure>((authority, evaluation))
         };
+        let preauthorization_sha256 = self.preauthorization.as_ref().and_then(|preauthorization| {
+            preauthorization.admitted_decision(
+                prepared.operation().prepared(),
+                request.workspace_id.as_str(),
+                now_epoch_ms,
+            )
+        });
+        if let Some(preauthorization_sha256) = preauthorization_sha256 {
+            // Reserve the bounded operation before issuing any grant. If later grant
+            // construction fails the reservation remains consumed, which is conservative;
+            // the inverse order could leave a usable grant after a poisoned budget lock.
+            self.preauthorization
+                .as_ref()
+                .ok_or(RuntimePortFailure::Invalid)?
+                .consume()?;
+            let parent = self
+                .authority
+                .authority_mut()
+                .issue_session_read(grant_request)
+                .map_err(|_| RuntimePortFailure::Invalid)?;
+            let (authority, _) = build_authority(&parent)?;
+            let pending = PendingCodingOperation {
+                operation_id: operation_id.clone(),
+                operation: prepared.operation().operation().operation(),
+                tool_call: call.clone(),
+                expires_at_epoch_ms,
+                authority,
+                prepared,
+            };
+            return self.issue_preauthorized_operation(
+                pending,
+                &preauthorization_sha256,
+                now_epoch_ms,
+                build_event,
+            );
+        }
         let (authority, evaluation, committed_event) = if let Some(builder) = build_event.as_mut() {
             let (_, (authority, evaluation), event) = self
                 .authority
@@ -651,6 +850,226 @@ where
                     prepared,
                 },
             )
+            .is_some()
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Unavailable)?;
+        Ok((evaluation, committed_event))
+    }
+
+    fn issue_preauthorized_operation(
+        &mut self,
+        pending: PendingCodingOperation<'workspace>,
+        preauthorization_sha256: &str,
+        now_epoch_ms: u64,
+        mut build_event: Option<&mut PermissionEventBuilder<'_>>,
+    ) -> Result<(RuntimePermissionEvaluation, Option<RuntimeEvent>), RuntimePortFailure> {
+        pending
+            .prepared
+            .revalidate()
+            .map_err(|_| RuntimePortFailure::Invalid)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Unavailable)?;
+        let operation_nonce = GrantNonce::from_raw(self.next_id("nonce-operation")?);
+        let (issued_authority, committed_event) = match pending.authority {
+            PendingCodingAuthority::Generic(approval) => {
+                let request = PreauthorizedCodingGrantRequest {
+                    authority: self.authority.authority_mut(),
+                    registry: self.workspace.profile().registry(),
+                    policy: self.policy.engine(),
+                    approval: &approval,
+                    preauthorization_sha256,
+                    nonce: operation_nonce,
+                    now_epoch_ms,
+                };
+                let (approved, event) = if let Some(builder) = build_event.as_mut() {
+                    let (approved, event) =
+                        derive_preauthorized_coding_grant_with_event(request, *builder)
+                            .map_err(|_| RuntimePortFailure::Invalid)?;
+                    (approved, Some(event))
+                } else {
+                    (
+                        derive_preauthorized_coding_grant(request)
+                            .map_err(|_| RuntimePortFailure::Invalid)?,
+                        None,
+                    )
+                };
+                (
+                    IssuedCodingAuthority::Generic {
+                        approval,
+                        approved: Box::new(approved),
+                    },
+                    event,
+                )
+            }
+            PendingCodingAuthority::StructuredWrite {
+                approval_id,
+                proposed_grant_id,
+                parent_grant_id,
+                preview,
+                change_set,
+            } => {
+                let decision = SessionPreauthorizedWriteDecision {
+                    approval_id: approval_id.clone(),
+                    preauthorization_sha256: preauthorization_sha256.to_owned(),
+                    authorized_at_epoch_ms: now_epoch_ms,
+                    expires_at_epoch_ms: pending.expires_at_epoch_ms,
+                    permitted_verification: change_set.permitted_verification().to_vec(),
+                };
+                let request = WriteGrantRequest {
+                    parent_grant_id,
+                    grant_id: proposed_grant_id,
+                    action_id: pending.tool_call.action_id.clone(),
+                    action_kind: ActionKind::DeterministicTool,
+                    tool_id: pending.tool_call.tool_id.clone(),
+                    tool_version: pending.tool_call.tool_version.clone(),
+                    nonce: operation_nonce,
+                    policy_sha256: self.policy.engine().policy_sha256().to_owned(),
+                };
+                let (approval, event) = if let Some(builder) = build_event.as_mut() {
+                    let (approval, _, event) = self
+                        .authority
+                        .authority_mut()
+                        .issue_session_preauthorized_write_with_runtime_event(
+                            &change_set,
+                            &preview,
+                            &decision,
+                            request,
+                            |approval| {
+                                let evaluation = RuntimePermissionEvaluation::Allow {
+                                    approval_id: approval_id.clone(),
+                                    preview_sha256: preview.preview_sha256.clone(),
+                                    expires_at_epoch_ms: pending.expires_at_epoch_ms,
+                                    grant_id: approval.grant.grant_id.clone(),
+                                    decision_sha256: preauthorization_sha256.to_owned(),
+                                    authority_sha256: approval.binding_sha256.clone(),
+                                };
+                                let event = builder(&evaluation)
+                                    .map_err(|_| RuntimeJournalError::InvalidEvent)?;
+                                Ok(((), event))
+                            },
+                        )
+                        .map_err(map_journal_failure)?;
+                    (approval, Some(event))
+                } else {
+                    (
+                        self.authority
+                            .authority_mut()
+                            .issue_session_preauthorized_write(
+                                &change_set,
+                                &preview,
+                                &decision,
+                                request,
+                            )
+                            .map_err(|_| RuntimePortFailure::Unavailable)?,
+                        None,
+                    )
+                };
+                (
+                    IssuedCodingAuthority::StructuredWrite {
+                        approval_id,
+                        preview_sha256: preview.preview_sha256,
+                        decision_sha256: preauthorization_sha256.to_owned(),
+                        approval: Box::new(approval),
+                        change_set,
+                    },
+                    event,
+                )
+            }
+            PendingCodingAuthority::FilesystemWrite {
+                approval_id,
+                proposed_grant_id,
+                parent_grant_id,
+                preview,
+                plan,
+            } => {
+                let decision = SessionPreauthorizedFilesystemDecision {
+                    approval_id: approval_id.clone(),
+                    preauthorization_sha256: preauthorization_sha256.to_owned(),
+                    authorized_at_epoch_ms: now_epoch_ms,
+                    expires_at_epoch_ms: pending.expires_at_epoch_ms,
+                    permitted_verification: plan.permitted_verification().to_vec(),
+                };
+                let request = FilesystemGrantRequest {
+                    parent_grant_id,
+                    grant_id: proposed_grant_id,
+                    action_id: pending.tool_call.action_id.clone(),
+                    action_kind: ActionKind::DeterministicTool,
+                    tool_id: pending.tool_call.tool_id.clone(),
+                    tool_version: pending.tool_call.tool_version.clone(),
+                    nonce: operation_nonce,
+                    policy_sha256: self.policy.engine().policy_sha256().to_owned(),
+                };
+                let (approval, event) = if let Some(builder) = build_event.as_mut() {
+                    let (approval, _, event) = self
+                        .authority
+                        .authority_mut()
+                        .issue_session_preauthorized_filesystem_with_runtime_event(
+                            &plan,
+                            &preview,
+                            &decision,
+                            request,
+                            |approval| {
+                                let evaluation = RuntimePermissionEvaluation::Allow {
+                                    approval_id: approval_id.clone(),
+                                    preview_sha256: preview.preview_sha256.clone(),
+                                    expires_at_epoch_ms: pending.expires_at_epoch_ms,
+                                    grant_id: approval.grant.grant_id.clone(),
+                                    decision_sha256: preauthorization_sha256.to_owned(),
+                                    authority_sha256: approval.binding_sha256.clone(),
+                                };
+                                let event = builder(&evaluation)
+                                    .map_err(|_| RuntimeJournalError::InvalidEvent)?;
+                                Ok(((), event))
+                            },
+                        )
+                        .map_err(map_journal_failure)?;
+                    (approval, Some(event))
+                } else {
+                    (
+                        self.authority
+                            .authority_mut()
+                            .issue_session_preauthorized_filesystem(
+                                &plan, &preview, &decision, request,
+                            )
+                            .map_err(|_| RuntimePortFailure::Unavailable)?,
+                        None,
+                    )
+                };
+                (
+                    IssuedCodingAuthority::FilesystemWrite {
+                        approval_id,
+                        preview_sha256: preview.preview_sha256,
+                        decision_sha256: preauthorization_sha256.to_owned(),
+                        approval: Box::new(approval),
+                        plan,
+                    },
+                    event,
+                )
+            }
+        };
+        let issued = IssuedCodingOperation {
+            tool_call: pending.tool_call,
+            expires_at_epoch_ms: pending.expires_at_epoch_ms,
+            authority: issued_authority,
+            prepared: pending.prepared,
+            resolved_at_epoch_ms: now_epoch_ms,
+        };
+        let evaluation = RuntimePermissionEvaluation::Allow {
+            approval_id: issued.approval_id().clone(),
+            preview_sha256: issued.preview_sha256().to_owned(),
+            expires_at_epoch_ms: issued.expires_at_epoch_ms,
+            grant_id: issued.grant_id().clone(),
+            decision_sha256: issued.decision_sha256().to_owned(),
+            authority_sha256: issued.authority_sha256().to_owned(),
+        };
+        if self
+            .issued
+            .insert(issued.grant_id().as_str().to_owned(), issued)
             .is_some()
         {
             return Err(RuntimePortFailure::Invalid);
@@ -3605,6 +4024,7 @@ mod tests {
             CodingCompletionCandidate, CodingTerminalClaim, coding_completion_payload,
         },
         linux_coding::LinuxCodingWorkspace,
+        runtime_transport::RuntimePreauthorizedCommand,
     };
 
     fn projected_read_result(content: &str) -> ReadOnlyResult {
@@ -4269,6 +4689,7 @@ mod tests {
                 || TestIdentities::new(0),
                 |clock| TestIdentities::stop_after_checkpoint(0, clock),
             ),
+            preauthorization: None,
         })
         .expect("coding runtime boundary");
         Fixture {
@@ -4830,6 +5251,27 @@ mod tests {
                 now_epoch_ms + 1,
             )
             .expect("exact approval")
+    }
+
+    fn read_preauthorization(
+        fixture: &Fixture,
+        maximum_operations: u32,
+    ) -> RuntimeSessionPreauthorization {
+        RuntimeSessionPreauthorization {
+            schema_version: 1,
+            preauthorization_id: "preauthorization-coding-runtime".to_owned(),
+            workspace_id: fixture.request.workspace_id.as_str().to_owned(),
+            writable_paths: Vec::new(),
+            command_templates: Vec::new(),
+            allow_workspace_reads: true,
+            maximum_operations,
+            approved_at_epoch_ms: 1,
+            expires_at_epoch_ms: 60_001,
+            revoked_at_epoch_ms: None,
+            preauthorization_sha256: "0".repeat(64),
+        }
+        .seal()
+        .expect("read preauthorization seals")
     }
 
     #[test]
@@ -5771,6 +6213,7 @@ mod tests {
                 session_id: base_request.session_id.clone(),
                 sensitivity: DataSensitivity::Operational,
                 identities: TestIdentities::new(30_000),
+                preauthorization: None,
             })
             .expect("long-session resumed boundary");
         let mut resumed_request = base_request.clone();
@@ -6263,6 +6706,7 @@ mod tests {
                 session_id: base_request.session_id.clone(),
                 sensitivity: DataSensitivity::Operational,
                 identities: TestIdentities::new(30_000),
+                preauthorization: None,
             })
             .expect("large-artifact resumed boundary");
         let mut resumed_request = base_request.clone();
@@ -6544,6 +6988,7 @@ mod tests {
                 session_id: base_request.session_id.clone(),
                 sensitivity: DataSensitivity::Operational,
                 identities: TestIdentities::new(10_000),
+                preauthorization: None,
             })
             .expect("resumed Linux boundary");
         let mut resumed_request = base_request.clone();
@@ -6817,6 +7262,7 @@ mod tests {
                     session_id: base_request.session_id.clone(),
                     sensitivity: DataSensitivity::Operational,
                     identities: TestIdentities::new(20_000),
+                    preauthorization: None,
                 })
                 .expect("lost-continuation Linux boundary");
             let mut resumed_request = base_request.clone();
@@ -7061,6 +7507,254 @@ mod tests {
         assert!(fixture.boundary.pending.is_empty());
         assert_eq!(fixture.boundary.issued.len(), 1);
         assert!(fixture.boundary.authority.authority().receipts().is_empty());
+    }
+
+    #[test]
+    fn story_50_2_session_preauthorization_issues_fresh_grants_and_exhausts_exact_budget() {
+        let mut fixture = fixture();
+        let contract = read_preauthorization(&fixture, 1);
+        let contract_sha256 = contract.preauthorization_sha256.clone();
+        let preauthorization = LinuxCodingSessionPreauthorization::new(contract);
+        fixture.boundary.preauthorization = Some(preauthorization.clone());
+
+        let evaluation = fixture
+            .boundary
+            .evaluate(
+                &fixture.request,
+                &fixture.operation_id,
+                &fixture.definition,
+                &fixture.call,
+                1_000,
+            )
+            .expect("preauthorized read grant");
+
+        match evaluation {
+            RuntimePermissionEvaluation::Allow {
+                decision_sha256, ..
+            } => assert_eq!(decision_sha256, contract_sha256),
+            other => panic!("expected preauthorized allow, got {other:?}"),
+        }
+        assert!(fixture.boundary.pending.is_empty());
+        assert_eq!(fixture.boundary.issued.len(), 1);
+
+        let prepared = fixture
+            .boundary
+            .workspace
+            .prepare(&fixture.call)
+            .expect("same read remains structurally valid");
+        assert_eq!(
+            preauthorization.admitted_decision(
+                prepared.operation().prepared(),
+                fixture.request.workspace_id.as_str(),
+                1_001,
+            ),
+            None,
+            "the session budget must be consumed before another grant is considered"
+        );
+    }
+
+    #[test]
+    fn story_50_2_session_preauthorization_revocation_and_expiry_fail_closed() {
+        let fixture = fixture();
+        let contract = read_preauthorization(&fixture, 3);
+        let contract_sha256 = contract.preauthorization_sha256.clone();
+        let preauthorization = LinuxCodingSessionPreauthorization::new(contract);
+        let prepared = fixture
+            .boundary
+            .workspace
+            .prepare(&fixture.call)
+            .expect("read preparation");
+
+        assert_eq!(
+            preauthorization.admitted_decision(
+                prepared.operation().prepared(),
+                fixture.request.workspace_id.as_str(),
+                1_000,
+            ),
+            Some(contract_sha256.clone())
+        );
+        assert_eq!(
+            preauthorization.admitted_decision(
+                prepared.operation().prepared(),
+                fixture.request.workspace_id.as_str(),
+                60_001,
+            ),
+            None,
+            "expiry is exclusive"
+        );
+
+        preauthorization
+            .revoke(&contract_sha256, 2_000)
+            .expect("exact contract revocation");
+        assert_eq!(
+            preauthorization.admitted_decision(
+                prepared.operation().prepared(),
+                fixture.request.workspace_id.as_str(),
+                2_001,
+            ),
+            None,
+            "revocation must make the envelope inert"
+        );
+    }
+
+    #[test]
+    fn story_50_2_exact_path_preauthorization_uses_kernel_write_grant_and_unknown_path_asks() {
+        let mut exact = fixture();
+        configure_structured_patch(&mut exact);
+        let contract = RuntimeSessionPreauthorization {
+            schema_version: 1,
+            preauthorization_id: "preauthorization-exact-write".to_owned(),
+            workspace_id: exact.request.workspace_id.as_str().to_owned(),
+            writable_paths: vec![vec!["src".to_owned(), "lib.rs".to_owned()]],
+            command_templates: Vec::new(),
+            allow_workspace_reads: false,
+            maximum_operations: 1,
+            approved_at_epoch_ms: 1,
+            expires_at_epoch_ms: 60_001,
+            revoked_at_epoch_ms: None,
+            preauthorization_sha256: "0".repeat(64),
+        }
+        .seal()
+        .expect("write preauthorization seals");
+        let contract_sha256 = contract.preauthorization_sha256.clone();
+        exact.boundary.preauthorization = Some(LinuxCodingSessionPreauthorization::new(contract));
+
+        let allowed = exact
+            .boundary
+            .evaluate(
+                &exact.request,
+                &exact.operation_id,
+                &exact.definition,
+                &exact.call,
+                1_000,
+            )
+            .expect("exact path receives fresh grant");
+        assert!(matches!(
+            &allowed,
+            RuntimePermissionEvaluation::Allow {
+                decision_sha256,
+                ..
+            } if decision_sha256.as_str() == contract_sha256.as_str()
+        ));
+        let execution = exact
+            .boundary
+            .execute(
+                &exact.request,
+                &allowed,
+                &exact.definition,
+                &exact.call,
+                None,
+            )
+            .expect("preauthorized write executes through kernel transaction");
+        assert_eq!(execution.result.outcome, OperationOutcome::Succeeded);
+        assert_eq!(
+            fs::read(exact.root.join("worktree/src/lib.rs")).expect("written source"),
+            b"pub fn runtime_updated() {}\n"
+        );
+
+        let mut unknown = fixture();
+        configure_controlled_create(&mut unknown);
+        let contract = RuntimeSessionPreauthorization {
+            schema_version: 1,
+            preauthorization_id: "preauthorization-other-path".to_owned(),
+            workspace_id: unknown.request.workspace_id.as_str().to_owned(),
+            writable_paths: vec![vec!["src".to_owned(), "lib.rs".to_owned()]],
+            command_templates: Vec::new(),
+            allow_workspace_reads: false,
+            maximum_operations: 1,
+            approved_at_epoch_ms: 1,
+            expires_at_epoch_ms: 60_001,
+            revoked_at_epoch_ms: None,
+            preauthorization_sha256: "0".repeat(64),
+        }
+        .seal()
+        .expect("narrow write preauthorization seals");
+        unknown.boundary.preauthorization = Some(LinuxCodingSessionPreauthorization::new(contract));
+        assert!(matches!(
+            unknown
+                .boundary
+                .evaluate(
+                    &unknown.request,
+                    &unknown.operation_id,
+                    &unknown.definition,
+                    &unknown.call,
+                    1_000,
+                )
+                .expect("unknown path uses ordinary approval"),
+            RuntimePermissionEvaluation::Ask { .. }
+        ));
+    }
+
+    #[test]
+    fn story_50_2_exact_registered_command_preauthorization_uses_fresh_grant() {
+        let mut fixture = fixture();
+        let command = fixture
+            .profile_for_test()
+            .commands()
+            .commands()
+            .into_iter()
+            .next()
+            .expect("registered command");
+        configure_bounded_command(&mut fixture);
+        let contract = RuntimeSessionPreauthorization {
+            schema_version: 1,
+            preauthorization_id: "preauthorization-exact-command".to_owned(),
+            workspace_id: fixture.request.workspace_id.as_str().to_owned(),
+            writable_paths: Vec::new(),
+            command_templates: vec![RuntimePreauthorizedCommand {
+                template_id: command.template_id.clone(),
+                template_version: command.template_version.clone(),
+                template_sha256: command.spec_sha256.clone(),
+            }],
+            allow_workspace_reads: false,
+            maximum_operations: 1,
+            approved_at_epoch_ms: 1,
+            expires_at_epoch_ms: 60_001,
+            revoked_at_epoch_ms: None,
+            preauthorization_sha256: "0".repeat(64),
+        }
+        .seal()
+        .expect("command preauthorization seals");
+        let contract_sha256 = contract.preauthorization_sha256.clone();
+        fixture.boundary.preauthorization = Some(LinuxCodingSessionPreauthorization::new(contract));
+
+        let allowed = fixture
+            .boundary
+            .evaluate(
+                &fixture.request,
+                &fixture.operation_id,
+                &fixture.definition,
+                &fixture.call,
+                1_000,
+            )
+            .expect("exact command receives fresh grant");
+        assert!(matches!(
+            &allowed,
+            RuntimePermissionEvaluation::Allow {
+                decision_sha256,
+                ..
+            } if decision_sha256.as_str() == contract_sha256.as_str()
+        ));
+        let execution = fixture
+            .boundary
+            .execute(
+                &fixture.request,
+                &allowed,
+                &fixture.definition,
+                &fixture.call,
+                None,
+            )
+            .expect("preauthorized command executes through kernel transaction");
+        assert_eq!(execution.result.outcome, OperationOutcome::Succeeded);
+        assert_eq!(
+            fixture
+                .boundary
+                .command_executor
+                .as_ref()
+                .expect("command executor")
+                .launches,
+            1
+        );
     }
 
     #[test]

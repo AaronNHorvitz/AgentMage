@@ -487,6 +487,7 @@ fn prepare_input(request: &RuntimeRunRequest) -> NativeChatPrepareInput {
     NativeChatPrepareInput {
         resume: false,
         slow_subscriber_probe: false,
+        preauthorization: None,
         engineering_session_id: None,
         profile_id: request.model_profile.profile_id.as_str().to_owned(),
         expected_entry_sha256: "a".repeat(64),

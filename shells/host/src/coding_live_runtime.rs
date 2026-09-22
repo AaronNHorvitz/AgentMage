@@ -388,6 +388,15 @@ where
             .release_artifact(request_sha256, reference)
     }
 
+    fn revoke_session_preauthorization(
+        &mut self,
+        session_id: &agentmage_kernel_contracts::SessionId,
+        preauthorization_sha256: &str,
+    ) -> Result<(), RuntimeTransportError> {
+        self.factory
+            .revoke_session_preauthorization(session_id, preauthorization_sha256)
+    }
+
     fn release(
         &mut self,
         run_id: &RuntimeRunId,
@@ -423,6 +432,7 @@ struct LiveCodingSession {
     cancellation: Arc<SharedCancellation>,
     worker: Option<JoinHandle<()>>,
     events: Vec<RuntimeEvent>,
+    latest_presented_cursor: Option<RuntimeEventCursor>,
     artifacts: Vec<RuntimeArtifactRef>,
     pending_approval: Option<RuntimeApprovalChallenge>,
     outcome: Option<RuntimeOutcome>,
@@ -501,6 +511,7 @@ impl LiveCodingSession {
             cancellation,
             worker: Some(worker),
             events: Vec::new(),
+            latest_presented_cursor: None,
             artifacts: Vec::new(),
             pending_approval: None,
             outcome: None,
@@ -515,7 +526,7 @@ impl LiveCodingSession {
         if self.events.is_empty() {
             return Err(RuntimeTransportError::RuntimeFailed);
         }
-        self.project(None)
+        self.project(None, true)
     }
 
     fn advance(
@@ -526,7 +537,7 @@ impl LiveCodingSession {
     ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
         self.verify_binding(request_sha256)?;
         self.refresh(Duration::ZERO)?;
-        let _ = self.project(after_event_cursor)?;
+        let _ = self.project(after_event_cursor, false)?;
         if let Some(response) = response {
             let challenge = self
                 .pending_approval
@@ -539,7 +550,7 @@ impl LiveCodingSession {
             self.dispatch(Some(response.clone()))?;
         }
         self.refresh(CONTROL_WAIT)?;
-        self.project(after_event_cursor)
+        self.project(after_event_cursor, true)
     }
 
     fn cancel(
@@ -550,9 +561,9 @@ impl LiveCodingSession {
     ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
         self.verify_binding(request_sha256)?;
         self.refresh(Duration::ZERO)?;
-        let _ = self.project(after_event_cursor)?;
+        let _ = self.project(after_event_cursor, false)?;
         if self.outcome.is_some() {
-            return self.project(after_event_cursor);
+            return self.project(after_event_cursor, true);
         }
         let correlation_id = self
             .events
@@ -572,7 +583,7 @@ impl LiveCodingSession {
             self.dispatch(None)?;
         }
         self.refresh(CONTROL_WAIT)?;
-        self.project(after_event_cursor)
+        self.project(after_event_cursor, true)
     }
 
     fn dispatch(
@@ -694,6 +705,7 @@ impl LiveCodingSession {
     fn project(
         &mut self,
         after_event_cursor: Option<&RuntimeEventCursor>,
+        record_presentation: bool,
     ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
         if self.outcome.is_some() != self.event_stream_terminal
             || self.pending_approval.is_some() && self.outcome.is_some()
@@ -760,7 +772,9 @@ impl LiveCodingSession {
             Some(cursor) => {
                 let index = usize::try_from(cursor.sequence)
                     .map_err(|_| RuntimeTransportError::EventCursorDenied)?;
-                if index < visible_event_len.saturating_sub(MAX_LIVE_CURSOR_AGE_EVENTS) {
+                if index < visible_event_len.saturating_sub(MAX_LIVE_CURSOR_AGE_EVENTS)
+                    && self.latest_presented_cursor.as_ref() != Some(cursor)
+                {
                     return Err(RuntimeTransportError::EventCursorExpired);
                 }
                 if index >= visible_event_len {
@@ -782,10 +796,23 @@ impl LiveCodingSession {
                     .ok_or(RuntimeTransportError::EventCursorDenied)?
             }
         };
+        let events = self.events[first..visible_event_len].to_vec();
+        if record_presentation {
+            if let Some(event) = events.last() {
+                self.latest_presented_cursor = Some(RuntimeEventCursor {
+                    run_id: event.run_id.clone(),
+                    event_id: event.event_id.clone(),
+                    sequence: event.sequence,
+                    event_sha256: event.event_sha256.clone(),
+                });
+            } else if let Some(cursor) = after_event_cursor {
+                self.latest_presented_cursor = Some(cursor.clone());
+            }
+        }
         Ok(RuntimeTransportStep {
             run_id: self.request.run_id.clone(),
             request_sha256: self.request.request_sha256.clone(),
-            events: self.events[first..visible_event_len].to_vec(),
+            events,
             artifacts: self.artifacts.clone(),
             approval: self.pending_approval.clone(),
             outcome: self.outcome.clone(),

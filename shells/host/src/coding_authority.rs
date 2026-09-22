@@ -103,6 +103,24 @@ pub struct ApprovedCodingGrantRequest<'request> {
     pub now_epoch_ms: u64,
 }
 
+/// Inputs for deriving one fresh exact grant from an already verified session preauthorization.
+pub struct PreauthorizedCodingGrantRequest<'request> {
+    /// Durable kernel authority store that owns grant issuance.
+    pub authority: &'request mut DurableAuthorityRuntime,
+    /// Exact immutable native tool registry used to verify the retained preview.
+    pub registry: &'request ToolRegistry,
+    /// Exact run-stable policy already bound into the parent and runtime request.
+    pub policy: &'request PolicyEngine,
+    /// Exact protected display object retained by the trusted boundary.
+    pub approval: &'request ApprovalRequest,
+    /// Digest of the verified direct-user session contract used as the decision basis.
+    pub preauthorization_sha256: &'request str,
+    /// Fresh kernel-selected anti-replay nonce.
+    pub nonce: GrantNonce,
+    /// Trusted issuance instant supplied by the coordinator clock.
+    pub now_epoch_ms: u64,
+}
+
 /// One exact issued operation grant and the policy required to consume it.
 #[derive(Debug)]
 pub struct ApprovedCodingGrant {
@@ -498,6 +516,107 @@ pub fn derive_approved_coding_grant_with_event(
         })
         .map_err(|_| CodingApprovalError::AuthorityDenied)?;
     Ok((approved, event))
+}
+
+/// Derives one fresh exact single-use grant from a verified bounded session contract.
+pub fn derive_preauthorized_coding_grant(
+    request: PreauthorizedCodingGrantRequest<'_>,
+) -> Result<ApprovedCodingGrant, CodingApprovalError> {
+    let (parent_grant_id, grant_request, policy) = preauthorized_coding_derivation(&request)?;
+    let grant = request
+        .authority
+        .derive_operation(&parent_grant_id, grant_request)
+        .map_err(|_| CodingApprovalError::AuthorityDenied)?;
+    let authority_sha256 =
+        canonical_contract_sha256(&grant).map_err(|_| CodingApprovalError::AuthorityDenied)?;
+    Ok(ApprovedCodingGrant {
+        grant,
+        policy,
+        decision_sha256: request.preauthorization_sha256.to_owned(),
+        authority_sha256,
+    })
+}
+
+/// Derives a preauthorized exact grant and atomically co-publishes its runtime decision event.
+pub fn derive_preauthorized_coding_grant_with_event(
+    request: PreauthorizedCodingGrantRequest<'_>,
+    build_event: &mut dyn FnMut(
+        &RuntimePermissionEvaluation,
+    ) -> Result<RuntimeEvent, RuntimePortFailure>,
+) -> Result<(ApprovedCodingGrant, RuntimeEvent), CodingApprovalError> {
+    let (parent_grant_id, grant_request, policy) = preauthorized_coding_derivation(&request)?;
+    let (_, approved, event) = request
+        .authority
+        .derive_operation_with_runtime_event(&parent_grant_id, grant_request, |grant| {
+            let authority_sha256 =
+                canonical_contract_sha256(grant).map_err(|_| RuntimeJournalError::InvalidEvent)?;
+            let approved = ApprovedCodingGrant {
+                grant: grant.clone(),
+                policy: policy.clone(),
+                decision_sha256: request.preauthorization_sha256.to_owned(),
+                authority_sha256,
+            };
+            let evaluation = RuntimePermissionEvaluation::Allow {
+                approval_id: request.approval.approval_id.clone(),
+                preview_sha256: request.approval.confirmation_sha256.clone(),
+                expires_at_epoch_ms: request.approval.expires_at_epoch_ms,
+                grant_id: approved.grant.grant_id.clone(),
+                decision_sha256: approved.decision_sha256.clone(),
+                authority_sha256: approved.authority_sha256.clone(),
+            };
+            let event = build_event(&evaluation).map_err(|_| RuntimeJournalError::InvalidEvent)?;
+            Ok((approved, event))
+        })
+        .map_err(|_| CodingApprovalError::AuthorityDenied)?;
+    Ok((approved, event))
+}
+
+fn preauthorized_coding_derivation(
+    request: &PreauthorizedCodingGrantRequest<'_>,
+) -> Result<(GrantId, DerivedOperationGrantRequest, PolicyEngine), CodingApprovalError> {
+    verify_approval_request(request.registry, request.approval)
+        .map_err(|_| CodingApprovalError::DecisionDenied)?;
+    if request.policy.policy_sha256() != request.approval.policy_sha256
+        || request.preauthorization_sha256.len() != 64
+        || !request
+            .preauthorization_sha256
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+        || request.now_epoch_ms < request.approval.issued_at_epoch_ms
+        || request.now_epoch_ms >= request.approval.expires_at_epoch_ms
+    {
+        return Err(CodingApprovalError::DecisionDenied);
+    }
+    let current_parent = request
+        .authority
+        .current_grant(&request.approval.parent_grant_id)
+        .ok_or(CodingApprovalError::AuthorityDenied)?;
+    if current_parent.actor_id != request.approval.actor_id
+        || current_parent.session_id != request.approval.session_id
+        || current_parent.task_id != request.approval.task_id
+        || current_parent.policy_sha256 != request.approval.policy_sha256
+        || canonical_contract_sha256(current_parent)
+            .map_err(|_| CodingApprovalError::AuthorityDenied)?
+            != request.approval.parent_grant_sha256
+    {
+        return Err(CodingApprovalError::AuthorityDenied);
+    }
+    let operation_expires_at_epoch_ms = request
+        .now_epoch_ms
+        .checked_add(OPERATION_GRANT_LIFETIME_MS)
+        .map(|expires| expires.min(request.approval.expires_at_epoch_ms))
+        .ok_or(CodingApprovalError::AuthorityDenied)?;
+    let grant_request = operation_grant_request(
+        request.approval,
+        request.nonce.clone(),
+        request.now_epoch_ms,
+        operation_expires_at_epoch_ms,
+    )?;
+    Ok((
+        request.approval.parent_grant_id.clone(),
+        grant_request,
+        request.policy.clone(),
+    ))
 }
 
 fn approved_coding_derivation(

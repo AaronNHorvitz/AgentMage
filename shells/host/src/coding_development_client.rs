@@ -6,6 +6,7 @@ use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
 };
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use agentmage_kernel_contracts::{
     AgentStateKind, RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeEvent,
@@ -25,7 +26,10 @@ use crate::coding_development_activation::CodingDevelopmentActivation;
 use crate::coding_development_runtime::CodingDevelopmentModel;
 use crate::headless::ClientExitCode;
 use crate::runtime_ipc::LinuxRuntimeIpcClient;
-use crate::runtime_transport::RuntimePrepareInput;
+use crate::runtime_transport::{
+    RuntimePreauthorizedCommand, RuntimePrepareInput, RuntimeSessionPreauthorization,
+    RuntimeTransportPort,
+};
 
 /// Stable content-free failure from the development-only CLI launcher.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -132,6 +136,7 @@ fn run_with_child(
     let mut sink = TerminalEventSink { output };
     let mut cancellation = InstalledSignalCancellation::install()?;
     let workspace_id = format!("coding-development-{}", &activation.marker_sha256()[..24]);
+    let preauthorization = direct_session_preauthorization(options, &workspace_id)?;
     let profile_id = CodingDevelopmentModel::parse(&options.model)
         .ok_or(CodingDevelopmentClientError::Activation)?
         .profile_id();
@@ -140,12 +145,13 @@ fn run_with_child(
     objectives.extend(options.follow_ups.iter().map(String::as_str));
     let mut engineering_session_id = None;
     let mut final_exit = ClientExitCode::Success;
-    for objective in objectives {
+    for (objective_index, objective) in objectives.into_iter().enumerate() {
         let result = drive_interactive_cli_runtime(
             &mut runtime,
             RuntimePrepareInput {
                 resume: options.resume,
                 slow_subscriber_probe: options.slow_subscriber_probe,
+                preauthorization: preauthorization.clone(),
                 engineering_session_id: engineering_session_id.clone(),
                 profile_id: profile_id.to_owned(),
                 expected_entry_sha256: activation.marker_sha256().to_owned(),
@@ -206,6 +212,24 @@ fn run_with_child(
             AgentStateKind::Exhausted => ClientExitCode::ResourceBound,
             _ => ClientExitCode::Uncertain,
         };
+        if objective_index == 0
+            && final_exit == ClientExitCode::Success
+            && options.revoke_preauthorization_before_follow_ups
+        {
+            let contract = preauthorization
+                .as_ref()
+                .ok_or(CodingDevelopmentClientError::Runtime)?;
+            runtime
+                .revoke_session_preauthorization(
+                    &result.request.session_id,
+                    &contract.preauthorization_sha256,
+                )
+                .map_err(|_| CodingDevelopmentClientError::Runtime)?;
+            eprintln!(
+                "session_preauthorization_revoked id={} digest={}",
+                contract.preauthorization_id, contract.preauthorization_sha256
+            );
+        }
         if final_exit != ClientExitCode::Success {
             break;
         }
@@ -214,6 +238,124 @@ fn run_with_child(
         .shutdown()
         .map_err(|_| CodingDevelopmentClientError::Transport)?;
     Ok(final_exit)
+}
+
+fn direct_session_preauthorization(
+    options: &CodingDevelopmentCliOptions,
+    workspace_id: &str,
+) -> Result<Option<RuntimeSessionPreauthorization>, CodingDevelopmentClientError> {
+    let requested = options.preauthorize_workspace_reads
+        || !options.preauthorized_paths.is_empty()
+        || !options.preauthorized_commands.is_empty();
+    if !requested {
+        return Ok(None);
+    }
+    if options.approve_this_run
+        || options.preauthorization_budget == 0
+        || options.preauthorization_minutes == 0
+    {
+        return Err(CodingDevelopmentClientError::Activation);
+    }
+    let mut writable_paths = options
+        .preauthorized_paths
+        .iter()
+        .map(|path| {
+            if path.starts_with('/') || path.contains('\\') {
+                return Err(CodingDevelopmentClientError::Activation);
+            }
+            let components = path.split('/').map(str::to_owned).collect::<Vec<_>>();
+            if components.is_empty()
+                || components.iter().any(|component| {
+                    component.is_empty() || matches!(component.as_str(), "." | "..")
+                })
+            {
+                return Err(CodingDevelopmentClientError::Activation);
+            }
+            Ok(components)
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    writable_paths.sort();
+    if writable_paths.windows(2).any(|pair| pair[0] == pair[1]) {
+        return Err(CodingDevelopmentClientError::Activation);
+    }
+    let mut command_templates = options
+        .preauthorized_commands
+        .iter()
+        .map(|selector| {
+            let fields = selector.split('@').collect::<Vec<_>>();
+            let [template_id, template_version, template_sha256] = fields.as_slice() else {
+                return Err(CodingDevelopmentClientError::Activation);
+            };
+            Ok(RuntimePreauthorizedCommand {
+                template_id: (*template_id).to_owned(),
+                template_version: (*template_version).to_owned(),
+                template_sha256: (*template_sha256).to_owned(),
+            })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    command_templates.sort_by(|left, right| {
+        (
+            &left.template_id,
+            &left.template_version,
+            &left.template_sha256,
+        )
+            .cmp(&(
+                &right.template_id,
+                &right.template_version,
+                &right.template_sha256,
+            ))
+    });
+    if command_templates.windows(2).any(|pair| pair[0] == pair[1]) {
+        return Err(CodingDevelopmentClientError::Activation);
+    }
+    let approved_at_epoch_ms = u64::try_from(
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_err(|_| CodingDevelopmentClientError::Activation)?
+            .as_millis(),
+    )
+    .map_err(|_| CodingDevelopmentClientError::Activation)?;
+    let lifetime_ms = options
+        .preauthorization_minutes
+        .checked_mul(60_000)
+        .ok_or(CodingDevelopmentClientError::Activation)?;
+    let contract = RuntimeSessionPreauthorization {
+        schema_version: 1,
+        preauthorization_id: format!("coding-preauthorization-{approved_at_epoch_ms:016x}"),
+        workspace_id: workspace_id.to_owned(),
+        writable_paths,
+        command_templates,
+        allow_workspace_reads: options.preauthorize_workspace_reads,
+        maximum_operations: options.preauthorization_budget,
+        approved_at_epoch_ms,
+        expires_at_epoch_ms: approved_at_epoch_ms
+            .checked_add(lifetime_ms)
+            .ok_or(CodingDevelopmentClientError::Activation)?,
+        revoked_at_epoch_ms: None,
+        preauthorization_sha256: "0".repeat(64),
+    }
+    .seal()
+    .map_err(|_| CodingDevelopmentClientError::Activation)?;
+    let rendered =
+        serde_json::to_string(&contract).map_err(|_| CodingDevelopmentClientError::Presentation)?;
+    eprintln!("session_preauthorization_proposed {rendered}");
+    eprint!("Type preauthorize to approve this exact bounded session contract: ");
+    let mut line = String::new();
+    io::stdin()
+        .lock()
+        .read_line(&mut line)
+        .map_err(|_| CodingDevelopmentClientError::Presentation)?;
+    if line.trim() != "preauthorize" {
+        return Err(CodingDevelopmentClientError::Runtime);
+    }
+    eprintln!(
+        "session_preauthorization_accepted id={} digest={} expires={} budget={}",
+        contract.preauthorization_id,
+        contract.preauthorization_sha256,
+        contract.expires_at_epoch_ms,
+        contract.maximum_operations,
+    );
+    Ok(Some(contract))
 }
 
 struct InstalledSignalCancellation {

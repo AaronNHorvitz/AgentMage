@@ -487,6 +487,24 @@ pub struct WriteApprovalDecision {
     pub user_confirmed: bool,
 }
 
+/// One active direct-user session envelope authorizing a later exact write grant.
+///
+/// This is deliberately distinct from [`WriteApprovalDecision`]: the user approved
+/// the bounded session path, budget and lifetime, not the later rendered diff.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SessionPreauthorizedWriteDecision {
+    /// Fresh approval identity assigned to this exact operation grant.
+    pub approval_id: ApprovalId,
+    /// Digest of the independently verified bounded session contract.
+    pub preauthorization_sha256: String,
+    /// Kernel-clock time at which this operation consumed one session budget unit.
+    pub authorized_at_epoch_ms: u64,
+    /// Expiry bounded by both the session envelope and short-lived grant ceiling.
+    pub expires_at_epoch_ms: u64,
+    /// Exact verification labels allowed after this future apply.
+    pub permitted_verification: Vec<String>,
+}
+
 /// Kernel-selected identities needed to derive one existing operation grant.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WriteGrantRequest {
@@ -747,12 +765,6 @@ pub fn issue_write_grant(
     verify_preview(change_set, preview)?;
     validate_identifier(decision.approval_id.as_str())?;
     validate_verification(&decision.permitted_verification)?;
-    let current_parent = issuer
-        .current(&request.parent_grant_id)
-        .ok_or(WriteApprovalError::ParentUnavailable)?;
-    let current_parent_sha256 = issuer
-        .revision_hash(&current_parent.grant_id, current_parent.revision)
-        .ok_or(WriteApprovalError::GrantState)?;
     if !decision.user_confirmed
         || decision.approved_change_set_sha256 != change_set.change_set_sha256
         || decision.approved_preview_sha256 != preview.preview_sha256
@@ -761,13 +773,82 @@ pub fn issue_write_grant(
         || decision.expires_at_epoch_ms <= decision.approved_at_epoch_ms
         || decision.expires_at_epoch_ms - decision.approved_at_epoch_ms
             > MAX_WRITE_GRANT_LIFETIME_MS
-        || request.parent_grant_id != change_set.parent_grant_id
+    {
+        return Err(WriteApprovalError::ApprovalMismatch);
+    }
+    issue_write_grant_from_authority(
+        issuer,
+        change_set,
+        preview,
+        &decision.approval_id,
+        decision.approved_at_epoch_ms,
+        decision.expires_at_epoch_ms,
+        &decision.permitted_verification,
+        request,
+    )
+}
+
+/// Derives one fresh exact write grant from an active bounded session envelope.
+///
+/// The exact change set, preview, current parent, preimages and side effects remain
+/// kernel-validated. This function does not claim that the later diff was directly
+/// reviewed as an individual approval.
+pub fn issue_session_preauthorized_write_grant(
+    issuer: &mut GrantIssuer,
+    change_set: &ShadowChangeSet,
+    preview: &WriteApprovalPreview,
+    decision: &SessionPreauthorizedWriteDecision,
+    request: WriteGrantRequest,
+) -> Result<WriteApprovalReceipt, WriteApprovalError> {
+    verify_change_set(change_set)?;
+    verify_preview(change_set, preview)?;
+    validate_identifier(decision.approval_id.as_str())?;
+    validate_verification(&decision.permitted_verification)?;
+    if !valid_sha256(&decision.preauthorization_sha256)
+        || decision.permitted_verification != change_set.permitted_verification
+        || decision.authorized_at_epoch_ms < change_set.observed_at_epoch_ms
+        || decision.expires_at_epoch_ms <= decision.authorized_at_epoch_ms
+        || decision.expires_at_epoch_ms - decision.authorized_at_epoch_ms
+            > MAX_WRITE_GRANT_LIFETIME_MS
+    {
+        return Err(WriteApprovalError::ApprovalMismatch);
+    }
+    issue_write_grant_from_authority(
+        issuer,
+        change_set,
+        preview,
+        &decision.approval_id,
+        decision.authorized_at_epoch_ms,
+        decision.expires_at_epoch_ms,
+        &decision.permitted_verification,
+        request,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn issue_write_grant_from_authority(
+    issuer: &mut GrantIssuer,
+    change_set: &ShadowChangeSet,
+    preview: &WriteApprovalPreview,
+    approval_id: &ApprovalId,
+    issued_at_epoch_ms: u64,
+    expires_at_epoch_ms: u64,
+    permitted_verification: &[String],
+    request: WriteGrantRequest,
+) -> Result<WriteApprovalReceipt, WriteApprovalError> {
+    let current_parent = issuer
+        .current(&request.parent_grant_id)
+        .ok_or(WriteApprovalError::ParentUnavailable)?;
+    let current_parent_sha256 = issuer
+        .revision_hash(&current_parent.grant_id, current_parent.revision)
+        .ok_or(WriteApprovalError::GrantState)?;
+    if request.parent_grant_id != change_set.parent_grant_id
         || current_parent_sha256 != change_set.parent_grant_sha256
         || request.policy_sha256.is_empty()
     {
         return Err(WriteApprovalError::ApprovalMismatch);
     }
-    let verification_sha256 = canonical_sha256(&decision.permitted_verification)?;
+    let verification_sha256 = canonical_sha256(&permitted_verification)?;
     let targets: Vec<_> = change_set
         .operations
         .iter()
@@ -810,7 +891,7 @@ pub fn issue_write_grant(
         &request.parent_grant_id,
         DerivedOperationGrantRequest {
             grant_id: request.grant_id,
-            approval_id: decision.approval_id.clone(),
+            approval_id: approval_id.clone(),
             action_id: request.action_id,
             action_kind: request.action_kind,
             operation,
@@ -821,8 +902,8 @@ pub fn issue_write_grant(
             preimages,
             expected_side_effects,
             rollback_description: change_set.review.rollback.clone(),
-            issued_at_epoch_ms: decision.approved_at_epoch_ms,
-            expires_at_epoch_ms: decision.expires_at_epoch_ms,
+            issued_at_epoch_ms,
+            expires_at_epoch_ms,
             nonce: request.nonce,
             preview_sha256: preview.preview_sha256.clone(),
             policy_sha256: request.policy_sha256,
@@ -832,13 +913,13 @@ pub fn issue_write_grant(
         grant.grant_id.as_str(),
         change_set.change_set_sha256.as_str(),
         preview.preview_sha256.as_str(),
-        decision.permitted_verification.as_slice(),
+        permitted_verification,
     ))?;
     Ok(WriteApprovalReceipt {
         grant,
         change_set_sha256: change_set.change_set_sha256.clone(),
         preview_sha256: preview.preview_sha256.clone(),
-        permitted_verification: decision.permitted_verification.clone(),
+        permitted_verification: permitted_verification.to_vec(),
         binding_sha256,
     })
 }

@@ -2,7 +2,7 @@
 
 use agentmage_kernel_contracts::{
     CancellationId, RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEventCursor, RuntimeRunId,
-    RuntimeRunRequest,
+    RuntimeRunRequest, SessionId,
 };
 use agentmage_kernel_engine::runtime_artifact::{RuntimeArtifactPage, RuntimeArtifactState};
 use agentmage_platform_linux::LinuxAuthenticatedIpcSession;
@@ -12,7 +12,7 @@ use crate::runtime_transport::{
     RuntimePrepareInput, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
 };
 
-const WIRE_VERSION: u16 = 3;
+const WIRE_VERSION: u16 = 4;
 const MAX_WIRE_BYTES: usize = 4 * 1024 * 1024;
 
 /// One closed operation accepted by the host-owned runtime service.
@@ -49,6 +49,10 @@ enum RuntimeIpcRequest {
         request_sha256: String,
         reference: RuntimeArtifactRef,
     },
+    RevokeSessionPreauthorization {
+        session_id: SessionId,
+        preauthorization_sha256: String,
+    },
     Release {
         run_id: RuntimeRunId,
         request_sha256: String,
@@ -64,6 +68,7 @@ enum RuntimeIpcResponse {
     Step { step: RuntimeTransportStep },
     ArtifactPage { page: RuntimeArtifactPage },
     ArtifactState { state: RuntimeArtifactState },
+    PreauthorizationRevoked,
     Released,
     Shutdown,
     Error { error: RuntimeTransportError },
@@ -308,6 +313,20 @@ impl RuntimeTransportPort for LinuxRuntimeIpcClient {
         }
     }
 
+    fn revoke_session_preauthorization(
+        &mut self,
+        session_id: &SessionId,
+        preauthorization_sha256: &str,
+    ) -> Result<(), RuntimeTransportError> {
+        match self.exchange(RuntimeIpcRequest::RevokeSessionPreauthorization {
+            session_id: session_id.clone(),
+            preauthorization_sha256: preauthorization_sha256.to_owned(),
+        })? {
+            RuntimeIpcResponse::PreauthorizationRevoked => Ok(()),
+            _ => Err(RuntimeTransportError::RuntimeEvidenceDenied),
+        }
+    }
+
     fn release(
         &mut self,
         run_id: &RuntimeRunId,
@@ -395,6 +414,15 @@ pub fn serve_linux_runtime_ipc<P: RuntimeTransportPort>(
                 reference,
             }) => match runtime.release_artifact(&run_id, &request_sha256, &reference) {
                 Ok(state) => (RuntimeIpcResponse::ArtifactState { state }, false),
+                Err(error) => (RuntimeIpcResponse::Error { error }, false),
+            },
+            Some(RuntimeIpcRequest::RevokeSessionPreauthorization {
+                session_id,
+                preauthorization_sha256,
+            }) => match runtime
+                .revoke_session_preauthorization(&session_id, &preauthorization_sha256)
+            {
+                Ok(()) => (RuntimeIpcResponse::PreauthorizationRevoked, false),
                 Err(error) => (RuntimeIpcResponse::Error { error }, false),
             },
             Some(RuntimeIpcRequest::Release {

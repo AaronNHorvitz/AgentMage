@@ -77,6 +77,18 @@ pub struct CodingDevelopmentCliOptions {
     pub expired_cursor_probe: bool,
     /// Whether to install one undrained bounded event subscriber for executable pressure testing.
     pub slow_subscriber_probe: bool,
+    /// Canonical workspace-relative paths proposed for direct session preauthorization.
+    pub preauthorized_paths: Vec<String>,
+    /// Exact `identity@version@sha256` command/template selectors proposed for the session.
+    pub preauthorized_commands: Vec<String>,
+    /// Whether descriptor-bound workspace reads are included in the proposed session envelope.
+    pub preauthorize_workspace_reads: bool,
+    /// Inclusive operation budget for the proposed session envelope.
+    pub preauthorization_budget: u32,
+    /// Lifetime in minutes for the proposed session envelope.
+    pub preauthorization_minutes: u64,
+    /// Revoke the exact envelope after the first run and before any declared follow-up.
+    pub revoke_preauthorization_before_follow_ups: bool,
     /// Bounded delay used only to exercise cancellation while approval is displayed.
     pub approval_delay_ms: u64,
 }
@@ -219,6 +231,12 @@ fn parse_coding_development(
     let mut replay_approval_probe = false;
     let mut expired_cursor_probe = false;
     let mut slow_subscriber_probe = false;
+    let mut preauthorized_paths = Vec::new();
+    let mut preauthorized_commands = Vec::new();
+    let mut preauthorize_workspace_reads = false;
+    let mut preauthorization_budget = None;
+    let mut preauthorization_minutes = None;
+    let mut revoke_preauthorization_before_follow_ups = false;
     let mut approval_delay_ms = None;
     let mut cursor = 0;
     while let Some(argument) = arguments.get(cursor) {
@@ -272,6 +290,56 @@ fn parse_coding_development(
                 cursor += 1;
                 continue;
             }
+            "--preauthorize-path" if preauthorized_paths.len() < 64 => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| !value.is_empty() && !value.starts_with("--"))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                preauthorized_paths.push(value.clone());
+                cursor += 2;
+                continue;
+            }
+            "--preauthorize-command" if preauthorized_commands.len() < 32 => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| !value.is_empty() && !value.starts_with("--"))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                preauthorized_commands.push(value.clone());
+                cursor += 2;
+                continue;
+            }
+            "--preauthorize-workspace-reads" if !preauthorize_workspace_reads => {
+                preauthorize_workspace_reads = true;
+                cursor += 1;
+                continue;
+            }
+            "--preauthorization-budget" if preauthorization_budget.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .and_then(|value| value.parse::<u32>().ok())
+                    .filter(|value| (1..=256).contains(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                preauthorization_budget = Some(value);
+                cursor += 2;
+                continue;
+            }
+            "--preauthorization-minutes" if preauthorization_minutes.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .and_then(|value| value.parse::<u64>().ok())
+                    .filter(|value| (1..=1_440).contains(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                preauthorization_minutes = Some(value);
+                cursor += 2;
+                continue;
+            }
+            "--revoke-preauthorization-before-follow-ups"
+                if !revoke_preauthorization_before_follow_ups =>
+            {
+                revoke_preauthorization_before_follow_ups = true;
+                cursor += 1;
+                continue;
+            }
             "--approval-delay-ms" if approval_delay_ms.is_none() => {
                 let value = arguments
                     .get(cursor + 1)
@@ -316,6 +384,17 @@ fn parse_coding_development(
     if resume && !follow_ups.is_empty() {
         return Err(ThinClientError::InvalidValue);
     }
+    let preauthorization_requested = preauthorize_workspace_reads
+        || !preauthorized_paths.is_empty()
+        || !preauthorized_commands.is_empty();
+    if preauthorization_requested
+        != (preauthorization_budget.is_some() && preauthorization_minutes.is_some())
+        || resume && preauthorization_requested
+        || revoke_preauthorization_before_follow_ups
+            && (!preauthorization_requested || follow_ups.is_empty())
+    {
+        return Err(ThinClientError::InvalidValue);
+    }
     if [
         stale_approval_probe,
         replay_approval_probe,
@@ -342,6 +421,12 @@ fn parse_coding_development(
         replay_approval_probe,
         expired_cursor_probe,
         slow_subscriber_probe,
+        preauthorized_paths,
+        preauthorized_commands,
+        preauthorize_workspace_reads,
+        preauthorization_budget: preauthorization_budget.unwrap_or(0),
+        preauthorization_minutes: preauthorization_minutes.unwrap_or(0),
+        revoke_preauthorization_before_follow_ups,
         approval_delay_ms: approval_delay_ms.unwrap_or(0),
     })
 }
@@ -920,6 +1005,8 @@ Commands:\n\
   code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
        --scenario no-op|failed-test-repair|slow-cancel|restart-repair|new-file|multi-file|false-completion|overflow\n\
        --objective TEXT [--follow-up TEXT]... [--resume] [--approve-this-run] [--stale-approval-probe|--replay-approval-probe|--expired-cursor-probe] [--slow-subscriber-probe]\n\
+       [--preauthorize-workspace-reads] [--preauthorize-path RELATIVE_PATH]... [--preauthorize-command ID@VERSION@SHA256]...\n\
+       [--preauthorization-budget N --preauthorization-minutes N] [--revoke-preauthorization-before-follow-ups]\n\
        [--approval-delay-ms 1..10000]\n\
   chat MESSAGE\n\
   conversations list [--from YYYY-MM-DD] [--to YYYY-MM-DD]\n\
@@ -1183,6 +1270,44 @@ mod tests {
                 }),
                 ..
             }) if follow_ups == ["inspect again"]
+        ));
+        assert!(matches!(
+            parse_cli_arguments(&strings(&[
+                "code",
+                "--development",
+                "--state-root",
+                "/tmp/state",
+                "--disposable-root",
+                "/tmp/disposable",
+                "--workspace-root",
+                "/tmp/disposable/worktree",
+                "--scenario",
+                "no-op",
+                "--objective",
+                "inspect",
+                "--follow-up",
+                "inspect after revocation",
+                "--preauthorize-workspace-reads",
+                "--preauthorize-path",
+                "src/lib.rs",
+                "--preauthorize-command",
+                "validation-unit@1.0.0@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "--preauthorization-budget",
+                "4",
+                "--preauthorization-minutes",
+                "10",
+                "--revoke-preauthorization-before-follow-ups",
+            ])),
+            Ok(CliInvocation::Code {
+                development: Some(CodingDevelopmentCliOptions {
+                    preauthorize_workspace_reads: true,
+                    preauthorization_budget: 4,
+                    preauthorization_minutes: 10,
+                    revoke_preauthorization_before_follow_ups: true,
+                    ..
+                }),
+                ..
+            })
         ));
         assert!(
             parse_cli_arguments(&strings(&[

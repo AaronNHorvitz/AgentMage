@@ -537,6 +537,24 @@ pub struct FilesystemApprovalDecision {
     pub high_risk_delete_confirmed: bool,
 }
 
+/// One active direct-user session envelope authorizing a later exact filesystem grant.
+///
+/// Session preauthorization can cover exact writable paths, but never supplies the
+/// separate confirmation required by a high-risk deletion.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SessionPreauthorizedFilesystemDecision {
+    /// Fresh approval identity assigned to this exact operation grant.
+    pub approval_id: ApprovalId,
+    /// Digest of the independently verified bounded session contract.
+    pub preauthorization_sha256: String,
+    /// Kernel-clock time at which this operation consumed one session budget unit.
+    pub authorized_at_epoch_ms: u64,
+    /// Expiry bounded by both the session envelope and short-lived grant ceiling.
+    pub expires_at_epoch_ms: u64,
+    /// Exact verification labels allowed after this future operation.
+    pub permitted_verification: Vec<String>,
+}
+
 /// Kernel-selected identities needed to derive one controlled-filesystem grant.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FilesystemGrantRequest {
@@ -1112,12 +1130,6 @@ pub fn issue_filesystem_grant(
     verify_preview(plan, preview)?;
     validate_identifier(decision.approval_id.as_str())?;
     validate_verification(&decision.permitted_verification)?;
-    let current_parent = issuer
-        .current(&request.parent_grant_id)
-        .ok_or(FilesystemPlanError::ParentUnavailable)?;
-    let current_parent_sha256 = issuer
-        .revision_hash(&current_parent.grant_id, current_parent.revision)
-        .ok_or(FilesystemPlanError::GrantState)?;
     if !decision.user_confirmed
         || decision.high_risk_delete_confirmed != plan.requires_high_risk_delete_grant
         || decision.approved_plan_sha256 != plan.plan_sha256
@@ -1127,7 +1139,75 @@ pub fn issue_filesystem_grant(
         || decision.expires_at_epoch_ms <= decision.approved_at_epoch_ms
         || decision.expires_at_epoch_ms - decision.approved_at_epoch_ms
             > MAX_FILESYSTEM_GRANT_LIFETIME_MS
-        || request.parent_grant_id != plan.parent_grant_id
+    {
+        return Err(FilesystemPlanError::ApprovalMismatch);
+    }
+
+    issue_filesystem_grant_from_authority(
+        issuer,
+        plan,
+        preview,
+        &decision.approval_id,
+        decision.approved_at_epoch_ms,
+        decision.expires_at_epoch_ms,
+        &decision.permitted_verification,
+        request,
+    )
+}
+
+/// Derives one fresh exact filesystem grant from an active bounded session envelope.
+pub fn issue_session_preauthorized_filesystem_grant(
+    issuer: &mut GrantIssuer,
+    plan: &FilesystemPlan,
+    preview: &FilesystemApprovalPreview,
+    decision: &SessionPreauthorizedFilesystemDecision,
+    request: FilesystemGrantRequest,
+) -> Result<FilesystemApprovalReceipt, FilesystemPlanError> {
+    verify_plan(plan)?;
+    verify_preview(plan, preview)?;
+    validate_identifier(decision.approval_id.as_str())?;
+    validate_verification(&decision.permitted_verification)?;
+    if !valid_sha256(&decision.preauthorization_sha256)
+        || plan.requires_high_risk_delete_grant
+        || decision.permitted_verification != plan.permitted_verification
+        || decision.authorized_at_epoch_ms < plan.observed_at_epoch_ms
+        || decision.expires_at_epoch_ms <= decision.authorized_at_epoch_ms
+        || decision.expires_at_epoch_ms - decision.authorized_at_epoch_ms
+            > MAX_FILESYSTEM_GRANT_LIFETIME_MS
+    {
+        return Err(FilesystemPlanError::ApprovalMismatch);
+    }
+
+    issue_filesystem_grant_from_authority(
+        issuer,
+        plan,
+        preview,
+        &decision.approval_id,
+        decision.authorized_at_epoch_ms,
+        decision.expires_at_epoch_ms,
+        &decision.permitted_verification,
+        request,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn issue_filesystem_grant_from_authority(
+    issuer: &mut GrantIssuer,
+    plan: &FilesystemPlan,
+    preview: &FilesystemApprovalPreview,
+    approval_id: &ApprovalId,
+    issued_at_epoch_ms: u64,
+    expires_at_epoch_ms: u64,
+    permitted_verification: &[String],
+    request: FilesystemGrantRequest,
+) -> Result<FilesystemApprovalReceipt, FilesystemPlanError> {
+    let current_parent = issuer
+        .current(&request.parent_grant_id)
+        .ok_or(FilesystemPlanError::ParentUnavailable)?;
+    let current_parent_sha256 = issuer
+        .revision_hash(&current_parent.grant_id, current_parent.revision)
+        .ok_or(FilesystemPlanError::GrantState)?;
+    if request.parent_grant_id != plan.parent_grant_id
         || current_parent_sha256 != plan.parent_grant_sha256
         || request.policy_sha256.is_empty()
     {
@@ -1139,7 +1219,7 @@ pub fn issue_filesystem_grant(
     } else {
         GrantOperation::WorkspaceWrite
     });
-    let verification_sha256 = canonical_sha256(&decision.permitted_verification)?;
+    let verification_sha256 = canonical_sha256(&permitted_verification)?;
     let mut targets = Vec::new();
     for item in &plan.operations {
         for target in [item.source.as_ref(), item.destination_parent.as_ref()]
@@ -1205,7 +1285,7 @@ pub fn issue_filesystem_grant(
         &request.parent_grant_id,
         DerivedOperationGrantRequest {
             grant_id: request.grant_id,
-            approval_id: decision.approval_id.clone(),
+            approval_id: approval_id.clone(),
             action_id: request.action_id,
             action_kind: request.action_kind,
             operation,
@@ -1216,8 +1296,8 @@ pub fn issue_filesystem_grant(
             preimages,
             expected_side_effects,
             rollback_description: plan.review.rollback.clone(),
-            issued_at_epoch_ms: decision.approved_at_epoch_ms,
-            expires_at_epoch_ms: decision.expires_at_epoch_ms,
+            issued_at_epoch_ms,
+            expires_at_epoch_ms,
             nonce: request.nonce,
             preview_sha256: preview.preview_sha256.clone(),
             policy_sha256: request.policy_sha256,
@@ -1227,14 +1307,14 @@ pub fn issue_filesystem_grant(
         grant.grant_id.as_str(),
         plan.plan_sha256.as_str(),
         preview.preview_sha256.as_str(),
-        decision.permitted_verification.as_slice(),
+        permitted_verification,
         operation,
     ))?;
     Ok(FilesystemApprovalReceipt {
         grant,
         plan_sha256: plan.plan_sha256.clone(),
         preview_sha256: preview.preview_sha256.clone(),
-        permitted_verification: decision.permitted_verification.clone(),
+        permitted_verification: permitted_verification.to_vec(),
         binding_sha256,
     })
 }

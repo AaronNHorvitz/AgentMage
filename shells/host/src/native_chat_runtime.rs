@@ -61,6 +61,15 @@ pub trait NativeChatRuntimeFactory {
         &mut self,
         request: &RuntimeRunRequest,
     ) -> Result<Self::Coordinator, NativeChatRuntimeError>;
+
+    /// Revokes one exact direct-user session envelope; unsupported factories fail closed.
+    fn revoke_session_preauthorization(
+        &mut self,
+        _session_id: &agentmage_kernel_contracts::SessionId,
+        _preauthorization_sha256: &str,
+    ) -> Result<(), NativeChatRuntimeError> {
+        Err(NativeChatRuntimeError::RequestDenied)
+    }
 }
 
 /// Bounded host registry for prepared and active native Chat runs.
@@ -516,6 +525,7 @@ mod tests {
         let input = NativeChatPrepareInput {
             resume: false,
             slow_subscriber_probe: false,
+            preauthorization: None,
             engineering_session_id: None,
             profile_id: request.model_profile.profile_id.as_str().to_owned(),
             expected_entry_sha256: "a".repeat(64),
@@ -602,6 +612,7 @@ mod tests {
         let input = NativeChatPrepareInput {
             resume: false,
             slow_subscriber_probe: false,
+            preauthorization: None,
             engineering_session_id: None,
             profile_id: controlled_request
                 .model_profile

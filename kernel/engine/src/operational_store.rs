@@ -42,7 +42,8 @@ use crate::filesystem_control::{
     ControlledFilesystemDriver, FilesystemApprovalDecision, FilesystemApprovalPreview,
     FilesystemApprovalReceipt, FilesystemGrantRequest, FilesystemPlan, FilesystemPlanError,
     FilesystemTransactionError, FilesystemTransactionRequest, FilesystemTransactionResult,
-    execute_filesystem_transaction_with_checkpoint, issue_filesystem_grant,
+    SessionPreauthorizedFilesystemDecision, execute_filesystem_transaction_with_checkpoint,
+    issue_filesystem_grant, issue_session_preauthorized_filesystem_grant,
 };
 use crate::grants::{
     DerivedOperationGrantRequest, GrantIssueError, GrantIssuer, SessionReadGrantRequest,
@@ -68,8 +69,9 @@ use crate::runtime_journal::{
 use crate::strict_local::{StrictLocalStorageDecision, evaluate_storage};
 use crate::tooling::ToolRegistry;
 use crate::write_approval::{
-    ShadowChangeSet, WriteApprovalDecision, WriteApprovalError, WriteApprovalPreview,
-    WriteApprovalReceipt, WriteGrantRequest, issue_write_grant,
+    SessionPreauthorizedWriteDecision, ShadowChangeSet, WriteApprovalDecision, WriteApprovalError,
+    WriteApprovalPreview, WriteApprovalReceipt, WriteGrantRequest,
+    issue_session_preauthorized_write_grant, issue_write_grant,
 };
 use crate::write_recovery::{
     WriteAwareCheckpoint, verify_write_checkpoint, verify_write_checkpoint_chain,
@@ -2395,6 +2397,60 @@ impl DurableAuthorityRuntime {
         Ok((approval, result, event))
     }
 
+    /// Issues one exact controlled-write grant from a bounded session envelope.
+    pub fn issue_session_preauthorized_write(
+        &mut self,
+        change_set: &ShadowChangeSet,
+        preview: &WriteApprovalPreview,
+        decision: &SessionPreauthorizedWriteDecision,
+        request: WriteGrantRequest,
+    ) -> Result<WriteApprovalReceipt, DurableAuthorityError> {
+        self.ensure_usable()?;
+        let mut candidate = self.issuer.clone();
+        let approval = issue_session_preauthorized_write_grant(
+            &mut candidate,
+            change_set,
+            preview,
+            decision,
+            request,
+        )
+        .map_err(DurableAuthorityError::WriteApproval)?;
+        let result = self
+            .lock_store()?
+            .persist_authority(&candidate, &self.coordinator);
+        result.map_err(|error| self.poison(error))?;
+        self.issuer = candidate;
+        Ok(approval)
+    }
+
+    /// Issues a session-preauthorized write grant and co-publishes its correctness event.
+    pub fn issue_session_preauthorized_write_with_runtime_event<R, F>(
+        &mut self,
+        change_set: &ShadowChangeSet,
+        preview: &WriteApprovalPreview,
+        decision: &SessionPreauthorizedWriteDecision,
+        request: WriteGrantRequest,
+        build_event: F,
+    ) -> Result<(WriteApprovalReceipt, R, RuntimeEvent), DurableAuthorityError>
+    where
+        F: FnOnce(&WriteApprovalReceipt) -> Result<(R, RuntimeEvent), RuntimeJournalError>,
+    {
+        self.ensure_usable()?;
+        let mut candidate = self.issuer.clone();
+        let approval = issue_session_preauthorized_write_grant(
+            &mut candidate,
+            change_set,
+            preview,
+            decision,
+            request,
+        )
+        .map_err(DurableAuthorityError::WriteApproval)?;
+        let (result, event) =
+            build_event(&approval).map_err(DurableAuthorityError::RuntimeJournal)?;
+        self.commit_candidate_with_runtime_events(candidate, std::slice::from_ref(&event))?;
+        Ok((approval, result, event))
+    }
+
     /// Issues one exact controlled-filesystem grant and atomically publishes its revisions.
     pub fn issue_filesystem_approval(
         &mut self,
@@ -2431,6 +2487,60 @@ impl DurableAuthorityRuntime {
         let mut candidate = self.issuer.clone();
         let approval = issue_filesystem_grant(&mut candidate, plan, preview, decision, request)
             .map_err(DurableAuthorityError::FilesystemApproval)?;
+        let (result, event) =
+            build_event(&approval).map_err(DurableAuthorityError::RuntimeJournal)?;
+        self.commit_candidate_with_runtime_events(candidate, std::slice::from_ref(&event))?;
+        Ok((approval, result, event))
+    }
+
+    /// Issues one exact filesystem grant from a bounded session envelope.
+    pub fn issue_session_preauthorized_filesystem(
+        &mut self,
+        plan: &FilesystemPlan,
+        preview: &FilesystemApprovalPreview,
+        decision: &SessionPreauthorizedFilesystemDecision,
+        request: FilesystemGrantRequest,
+    ) -> Result<FilesystemApprovalReceipt, DurableAuthorityError> {
+        self.ensure_usable()?;
+        let mut candidate = self.issuer.clone();
+        let approval = issue_session_preauthorized_filesystem_grant(
+            &mut candidate,
+            plan,
+            preview,
+            decision,
+            request,
+        )
+        .map_err(DurableAuthorityError::FilesystemApproval)?;
+        let result = self
+            .lock_store()?
+            .persist_authority(&candidate, &self.coordinator);
+        result.map_err(|error| self.poison(error))?;
+        self.issuer = candidate;
+        Ok(approval)
+    }
+
+    /// Issues a session-preauthorized filesystem grant and co-publishes its event.
+    pub fn issue_session_preauthorized_filesystem_with_runtime_event<R, F>(
+        &mut self,
+        plan: &FilesystemPlan,
+        preview: &FilesystemApprovalPreview,
+        decision: &SessionPreauthorizedFilesystemDecision,
+        request: FilesystemGrantRequest,
+        build_event: F,
+    ) -> Result<(FilesystemApprovalReceipt, R, RuntimeEvent), DurableAuthorityError>
+    where
+        F: FnOnce(&FilesystemApprovalReceipt) -> Result<(R, RuntimeEvent), RuntimeJournalError>,
+    {
+        self.ensure_usable()?;
+        let mut candidate = self.issuer.clone();
+        let approval = issue_session_preauthorized_filesystem_grant(
+            &mut candidate,
+            plan,
+            preview,
+            decision,
+            request,
+        )
+        .map_err(DurableAuthorityError::FilesystemApproval)?;
         let (result, event) =
             build_event(&approval).map_err(DurableAuthorityError::RuntimeJournal)?;
         self.commit_candidate_with_runtime_events(candidate, std::slice::from_ref(&event))?;

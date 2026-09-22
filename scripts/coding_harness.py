@@ -386,6 +386,12 @@ def start(
     approval_delay_ms: int = 0,
     model: str = "scripted",
     slow_subscriber_probe: bool = False,
+    preauthorized_paths: tuple[str, ...] = (),
+    preauthorized_commands: tuple[str, ...] = (),
+    preauthorize_workspace_reads: bool = False,
+    preauthorization_budget: int | None = None,
+    preauthorization_minutes: int | None = None,
+    revoke_preauthorization_before_follow_ups: bool = False,
 ) -> int:
     base = base.resolve(strict=True)
     state, disposable, workspace = paths(base)
@@ -416,6 +422,18 @@ def start(
         command.extend(("--approval-delay-ms", str(approval_delay_ms)))
     if slow_subscriber_probe:
         command.append("--slow-subscriber-probe")
+    for path in preauthorized_paths:
+        command.extend(("--preauthorize-path", path))
+    for template in preauthorized_commands:
+        command.extend(("--preauthorize-command", template))
+    if preauthorize_workspace_reads:
+        command.append("--preauthorize-workspace-reads")
+    if preauthorization_budget is not None:
+        command.extend(("--preauthorization-budget", str(preauthorization_budget)))
+    if preauthorization_minutes is not None:
+        command.extend(("--preauthorization-minutes", str(preauthorization_minutes)))
+    if revoke_preauthorization_before_follow_ups:
+        command.append("--revoke-preauthorization-before-follow-ups")
     resource_guard = None
     stdout_target = None
     stderr_target = None
@@ -490,6 +508,11 @@ def start(
                 "replay_approval_probe": replay_approval_probe,
                 "expired_cursor_probe": expired_cursor_probe,
                 "approval_delay_ms": approval_delay_ms,
+                "session_preauthorization_requested": bool(
+                    preauthorized_paths
+                    or preauthorized_commands
+                    or preauthorize_workspace_reads
+                ),
             }
             if resource_guard is not None:
                 result["candidate_resources"] = resource_guard.report()
@@ -570,6 +593,14 @@ def parser() -> argparse.ArgumentParser:
     start_command.add_argument("--expired-cursor-probe", action="store_true")
     start_command.add_argument("--approval-delay-ms", type=approval_delay, default=0)
     start_command.add_argument("--slow-subscriber-probe", action="store_true")
+    start_command.add_argument("--preauthorize-path", action="append", default=[])
+    start_command.add_argument("--preauthorize-command", action="append", default=[])
+    start_command.add_argument("--preauthorize-workspace-reads", action="store_true")
+    start_command.add_argument("--preauthorization-budget", type=int)
+    start_command.add_argument("--preauthorization-minutes", type=int)
+    start_command.add_argument(
+        "--revoke-preauthorization-before-follow-ups", action="store_true"
+    )
     start_command.add_argument("--log-dir", type=Path)
     return result
 
@@ -591,6 +622,10 @@ def main() -> int:
             arguments.approve_this_run, arguments.stale_approval_probe, arguments.log_dir,
             arguments.replay_approval_probe, arguments.expired_cursor_probe,
             arguments.approval_delay_ms, arguments.model, arguments.slow_subscriber_probe,
+            tuple(arguments.preauthorize_path), tuple(arguments.preauthorize_command),
+            arguments.preauthorize_workspace_reads, arguments.preauthorization_budget,
+            arguments.preauthorization_minutes,
+            arguments.revoke_preauthorization_before_follow_ups,
         )
     except (HarnessError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as error:
         print(str(error), file=sys.stderr)

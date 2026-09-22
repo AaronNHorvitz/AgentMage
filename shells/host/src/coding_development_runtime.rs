@@ -6,7 +6,6 @@ use std::fs::{self, OpenOptions};
 use std::io::Write as _;
 use std::os::unix::fs::{MetadataExt, OpenOptionsExt, PermissionsExt};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use agentmage_capability_read_only::{
@@ -94,7 +93,8 @@ use crate::{
     coding_verifier::{CodingCompletionCandidate, CodingTerminalClaim, coding_completion_payload},
     linux_coding::LinuxCodingWorkspace,
     linux_coding_runtime::{
-        LinuxCodingRuntimeBoundary, LinuxCodingRuntimeBoundaryInput, OsCodingIdentitySource,
+        CodingIdentitySource, LinuxCodingRuntimeBoundary, LinuxCodingRuntimeBoundaryInput,
+        LinuxCodingSessionPreauthorization, OsCodingIdentitySource,
     },
     linux_repository_map::{LinuxRepositoryMapPolicy, build_development_linux_repository_map},
     native_chat_runtime::{NativeChatRuntimeError, NativeChatRuntimeFactory},
@@ -110,7 +110,6 @@ pub const MUSE_DEVELOPMENT_PROFILE_ID: &str =
 pub const GPT_OSS_DEVELOPMENT_PROFILE_ID: &str =
     "gpt-oss-20b-mxfp4-text-32k-fedora-coding-development";
 const VALIDATION_ID: &str = "validation-unit";
-static NEXT_RUN: AtomicU64 = AtomicU64::new(1);
 
 /// Explicit proposal source selected for one development host process.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -249,6 +248,7 @@ struct PreparedDevelopmentRun {
     request: agentmage_kernel_contracts::RuntimeRunRequest,
     policy: CodingRuntimePolicy,
     skip_scripted_steps: usize,
+    preauthorization: Option<LinuxCodingSessionPreauthorization>,
 }
 
 /// Factory that composes the real coordinator only for one explicit disposable activation.
@@ -261,6 +261,7 @@ pub struct CodingDevelopmentRuntimeFactory {
     workspace: &'static LinuxCodingWorkspace<'static, 'static>,
     supporting_sources: Vec<CodingContextSource>,
     session_id: Option<SessionId>,
+    preauthorization: Option<LinuxCodingSessionPreauthorization>,
     resume_requested: bool,
     prepared: BTreeMap<String, PreparedDevelopmentRun>,
 }
@@ -299,6 +300,7 @@ impl CodingDevelopmentRuntimeFactory {
             workspace,
             supporting_sources,
             session_id: None,
+            preauthorization: None,
             resume_requested,
             prepared: BTreeMap::new(),
         })
@@ -455,6 +457,7 @@ impl CodingDevelopmentRuntimeFactory {
                 policy,
                 skip_scripted_steps: usize::try_from(continuation.model_call_count)
                     .map_err(|_| prepare_denied("resume-model-count"))?,
+                preauthorization: None,
             },
         );
         Ok(request)
@@ -624,6 +627,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             .revalidate()
             .map_err(|_| prepare_denied("activation"))?;
         if input.resume != self.resume_requested
+            || self.resume_requested && input.preauthorization.is_some()
             || input.profile_id != self.model.profile_id()
             || input.expected_entry_sha256 != self.activation.marker_sha256()
             || input.workspace_id != self.profile.write_scope().workspace_id().as_str()
@@ -640,12 +644,18 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         if self.resume_requested {
             return self.prepare_resume_request(input);
         }
+        let preparation_time = now_epoch_ms().map_err(|_| prepare_denied("time"))?;
+        if let Some(preauthorization) = &input.preauthorization {
+            preauthorization
+                .verify(&input.workspace_id, preparation_time)
+                .map_err(|_| prepare_denied("preauthorization"))?;
+        }
         let current_session = self.session_id.clone();
+        let existing_session = current_session.is_some();
         let session_id = match (current_session, &input.engineering_session_id) {
             (None, None) => {
-                let sequence = NEXT_RUN.fetch_add(1, Ordering::Relaxed);
                 let session_id =
-                    SessionId::from_raw(format!("coding-development-session-{sequence:016x}"));
+                    SessionId::from_raw(next_development_identity("coding-development-session")?);
                 self.session_id = Some(session_id.clone());
                 session_id
             }
@@ -656,8 +666,16 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             }
             _ => return Err(prepare_denied("session-binding")),
         };
-        let sequence = NEXT_RUN.fetch_add(1, Ordering::Relaxed);
-        let run_id = RuntimeRunId::from_raw(format!("coding-development-run-{sequence:016x}"));
+        match (&self.preauthorization, &input.preauthorization) {
+            (None, Some(contract)) if !existing_session => {
+                self.preauthorization =
+                    Some(LinuxCodingSessionPreauthorization::new(contract.clone()));
+            }
+            (Some(active), Some(contract)) if active.matches(contract) => {}
+            (None, None) => {}
+            _ => return Err(prepare_denied("preauthorization-drift")),
+        }
+        let run_id = RuntimeRunId::from_raw(next_development_identity("coding-development-run")?);
         let task_id = TaskId::from_raw(self.profile.worktree().task_id.clone());
         let policy = build_coding_runtime_policy(CodingRuntimePolicyRequest {
             actor_id: &ActorId::from_raw("coding-development-user"),
@@ -707,10 +725,21 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 session_id,
                 objective: input.prompt.clone(),
                 acceptance_criteria: acceptance,
-                constraints: vec![
-                    "Disposable synthetic repository only".to_owned(),
-                    "No network, publication, package installation, or commit".to_owned(),
-                ],
+                constraints: {
+                    let mut constraints = vec![
+                        "Disposable synthetic repository only".to_owned(),
+                        "No network, publication, package installation, or commit".to_owned(),
+                    ];
+                    if let Some(preauthorization) = &self.preauthorization {
+                        constraints.push(format!(
+                            "Direct session preauthorization digest: {}",
+                            preauthorization
+                                .contract_sha256()
+                                .map_err(|_| prepare_denied("preauthorization-state"))?
+                        ));
+                    }
+                    constraints
+                },
                 work_packet: packet,
                 policy_id: policy.policy_id().clone(),
                 policy_sha256: policy.engine().policy_sha256().to_owned(),
@@ -723,6 +752,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 request: request.clone(),
                 policy,
                 skip_scripted_steps: 0,
+                preauthorization: self.preauthorization.clone(),
             },
         );
         Ok(request)
@@ -839,6 +869,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             session_id: request.session_id.clone(),
             sensitivity: DataSensitivity::Operational,
             identities: OsCodingIdentitySource,
+            preauthorization: prepared.preauthorization,
         })
         .map_err(|error| {
             eprintln!("coding.development.compose.boundary-{error:?}");
@@ -862,11 +893,36 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             coordinator
         })
     }
+
+    fn revoke_session_preauthorization(
+        &mut self,
+        session_id: &SessionId,
+        preauthorization_sha256: &str,
+    ) -> Result<(), NativeChatRuntimeError> {
+        if self.session_id.as_ref() != Some(session_id) {
+            return Err(NativeChatRuntimeError::RequestDenied);
+        }
+        self.preauthorization
+            .as_ref()
+            .ok_or(NativeChatRuntimeError::RequestDenied)?
+            .revoke(
+                preauthorization_sha256,
+                now_epoch_ms().map_err(|_| NativeChatRuntimeError::RuntimeFailed)?,
+            )
+            .map_err(|_| NativeChatRuntimeError::RequestDenied)
+    }
 }
 
 fn prepare_denied(stage: &str) -> NativeChatRuntimeError {
     eprintln!("coding.development.prepare.{stage}-denied");
     NativeChatRuntimeError::RequestDenied
+}
+
+fn next_development_identity(prefix: &str) -> Result<String, NativeChatRuntimeError> {
+    let mut identities = OsCodingIdentitySource;
+    identities
+        .next(prefix)
+        .map_err(|_| prepare_denied("identity"))
 }
 
 fn build_profile(
