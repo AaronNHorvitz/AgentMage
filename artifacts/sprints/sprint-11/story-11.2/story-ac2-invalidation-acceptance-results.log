@@ -1,11 +1,11 @@
 $ cargo test -p agentmage-kernel-engine story_11_2_changed_source_parser_policy_model_plan_tool_and_environment_block_resume --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 1 test
 test runtime_loop::tests::story_11_2_changed_source_parser_policy_model_plan_tool_and_environment_block_resume ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1044 filtered out; finished in 0.02s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1044 filtered out; finished in 0.03s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -119,4 +119,4 @@ Sub-task 11.2.1.3 atomic source lifecycle transactions validated
 $ python3 scripts/workflow_attempt_invariants_evidence.py
 Sub-task 11.2.2.2 workflow attempt invariants validated
 $ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.06s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s
