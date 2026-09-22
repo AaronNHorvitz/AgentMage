@@ -31,6 +31,7 @@ EXPECTED_INTERNAL_CARGO = {
     "agentmage-kernel-contracts",
     "agentmage-kernel-engine",
     "agentmage-platform-linux",
+    "agentmage-platform-linux-inference",
 }
 EXPECTED_EXTERNAL_CARGO = {
     "chacha20poly1305",
@@ -45,6 +46,7 @@ EXPECTED_EXTERNAL_CARGO = {
     "serde_json",
     "sha1",
     "sha2",
+    "signal-hook",
     "tree-sitter",
     "tree-sitter-javascript",
     "tree-sitter-python",

@@ -5,6 +5,7 @@
 
 mod command_runner;
 mod configuration_store;
+mod development_boundary;
 mod filesystem_control;
 mod instruction_discovery;
 mod inventory;
@@ -31,6 +32,10 @@ pub use configuration_store::{
     LinuxConfigurationEffectDriver, LinuxConfigurationEffectOutput,
     LinuxConfigurationEffectRequest, LinuxConfigurationError, LinuxConfigurationErrorKind,
     LinuxConfigurationStore, open_linux_configuration_store,
+};
+pub use development_boundary::{
+    LinuxDevelopmentBoundaryError, LinuxDevelopmentBoundaryErrorKind, LinuxDevelopmentHostProcess,
+    ensure_private_development_directory, retain_rejected_development_output,
 };
 pub use filesystem_control::{LinuxControlledFilesystemDriver, LinuxFilesystemDriverLimits};
 pub use instruction_discovery::{

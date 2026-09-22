@@ -22,7 +22,8 @@
       "agentmage-capability-read-only",
       "agentmage-kernel-contracts",
       "agentmage-kernel-engine",
-      "agentmage-platform-linux"
+      "agentmage-platform-linux",
+      "agentmage-platform-linux-inference"
     ],
     "cargo_external_packages": [
       "chacha20poly1305",
@@ -37,6 +38,7 @@
       "serde_json",
       "sha1",
       "sha2",
+      "signal-hook",
       "tree-sitter",
       "tree-sitter-javascript",
       "tree-sitter-python",

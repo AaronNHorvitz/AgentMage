@@ -131,11 +131,13 @@ EXPECTED_CARGO_PACKAGES = {
             "agentmage-kernel-contracts",
             "agentmage-kernel-engine",
             "agentmage-platform-linux",
+            "agentmage-platform-linux-inference",
             "ed25519-dalek",
             "rustix",
             "serde",
             "serde_json",
             "sha2",
+            "signal-hook",
         },
     ),
 }

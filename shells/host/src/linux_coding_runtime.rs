@@ -21,9 +21,7 @@ use agentmage_kernel_contracts::{
     ToolDefinition, ToolResult, ValidationIssue, ValidationSeverity, to_canonical_json,
 };
 use agentmage_kernel_engine::{
-    authority_transaction::{
-        AuthorityTransactionRequest, EffectAuthorization, EffectDriver, EffectLaunch, EffectResult,
-    },
+    authority_transaction::{AuthorityTransactionRequest, CompletedObservationEffectDriver},
     command_runner::{
         BoundedCommandExecutor, CommandCapturedOutput, CommandEffectDriver, CommandReceipt,
         RegisteredCommandWrapperBinding, verify_command_receipt,
@@ -360,20 +358,6 @@ struct RuntimeEffectEventContext<'builder> {
     started_event: RuntimeEvent,
     build_terminal_event:
         &'builder mut dyn FnMut(&RuntimeToolExecution) -> Result<RuntimeEvent, RuntimePortFailure>,
-}
-
-struct HistoryInspectionEffectDriver {
-    material: Vec<u8>,
-}
-
-impl EffectDriver for HistoryInspectionEffectDriver {
-    fn execute(&mut self, _authorization: EffectAuthorization<'_>) -> EffectLaunch {
-        EffectLaunch::completed(EffectResult::from_redacted_material(
-            OperationOutcome::Succeeded,
-            &self.material,
-            StateChange::NotChanged,
-        ))
-    }
 }
 
 type PermissionEventBuilder<'a> =
@@ -1851,9 +1835,8 @@ where
         if output_bytes.len() as u64 > request.limits.max_output_bytes {
             return Err(RuntimePortFailure::ResourceExhausted);
         }
-        let mut driver = HistoryInspectionEffectDriver {
-            material: output.result_sha256.as_bytes().to_vec(),
-        };
+        let mut driver =
+            CompletedObservationEffectDriver::new(output.result_sha256.as_bytes().to_vec());
         let (receipt, pending) = self.execute_effect_authority(
             self.workspace.profile().registry(),
             &policy,

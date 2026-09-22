@@ -2,9 +2,8 @@
 
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt::Write as _;
-use std::fs::{self, OpenOptions};
-use std::io::Write as _;
-use std::os::unix::fs::{MetadataExt, OpenOptionsExt, PermissionsExt};
+use std::fs;
+use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -62,9 +61,10 @@ use agentmage_platform_linux::{
     LinuxBoundedCommandExecutor, LinuxBoundedRepositoryInspectionExecutor, LinuxCommandManifest,
     LinuxDevelopmentPlatformAdapter, LinuxGitArtifact, LinuxRepositoryCollector,
     LinuxRepositoryInspectionManifest, LinuxRepositoryInventoryState, LinuxRepositoryScope,
-    LinuxSandboxLimits, LinuxSandboxManifest, LinuxSandboxRunner, linux_repository_path_sha256,
+    LinuxSandboxLimits, LinuxSandboxManifest, LinuxSandboxRunner,
+    ensure_private_development_directory, linux_repository_path_sha256,
     open_linux_development_authority, resolve_development_linux_workspace_object,
-    select_development_linux_workspace,
+    retain_rejected_development_output, select_development_linux_workspace,
 };
 use agentmage_platform_linux_inference::{
     GptOssHarmonyFamilyCodec, LinuxNativeModelAdapter, LlamaServerDriver, LlamaServerDriverConfig,
@@ -515,7 +515,8 @@ fn build_repository_composition(
     )
     .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
     let management = activation.state_root().join("repository-management");
-    ensure_private_directory(&management)?;
+    ensure_private_development_directory(&management)
+        .map_err(|_| CodingDevelopmentRuntimeError::State)?;
     let scope = LinuxRepositoryScope::verify(
         activation.workspace_root(),
         activation.workspace_root().join(".git"),
@@ -2174,11 +2175,7 @@ fn retain_rejected_candidate(
     rejection_root: &Path,
     rejected: &RejectedModelOutput,
 ) -> Result<(), &'static str> {
-    ensure_private_directory(rejection_root).map_err(|_| "directory-denied")?;
     let identity = sha256(rejected.model_run_id.as_str().as_bytes());
-    let raw_path = rejection_root.join(format!("{}.response.bin", &identity[..24]));
-    let metadata_path = rejection_root.join(format!("{}.metadata.json", &identity[..24]));
-    write_private_new(&raw_path, &rejected.response_bytes).map_err(|_| "raw-write-failed")?;
     let metadata = serde_json::to_vec(&serde_json::json!({
         "schema_version": 1,
         "model_run_id": rejected.model_run_id.as_str(),
@@ -2188,23 +2185,13 @@ fn retain_rejected_candidate(
         "disposition": "untrusted-codec-rejected-no-authority"
     }))
     .map_err(|_| "metadata-invalid")?;
-    if let Err(error) = write_private_new(&metadata_path, &metadata) {
-        let _ = fs::remove_file(&raw_path);
-        return Err(error);
-    }
-    Ok(())
-}
-
-fn write_private_new(path: &Path, bytes: &[u8]) -> Result<(), &'static str> {
-    let mut file = OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .mode(0o600)
-        .open(path)
-        .map_err(|_| "create-failed")?;
-    file.write_all(bytes)
-        .and_then(|()| file.sync_all())
-        .map_err(|_| "write-failed")
+    retain_rejected_development_output(
+        rejection_root,
+        &identity[..24],
+        &rejected.response_bytes,
+        &metadata,
+    )
+    .map_err(|_| "retention-failed")
 }
 
 fn load_candidate_model(
@@ -2235,23 +2222,23 @@ fn load_candidate_model(
         CodingDevelopmentModel::GptOss => "candidate-gpt-oss",
         CodingDevelopmentModel::Scripted => return Err(CodingDevelopmentRuntimeError::Profile),
     });
-    ensure_private_directory(&socket_root).map_err(|error| {
+    ensure_private_development_directory(&socket_root).map_err(|_| {
         eprintln!("coding.development.candidate.socket-root-denied");
-        error
+        CodingDevelopmentRuntimeError::State
     })?;
     let rejection_parent = state_root.join("candidate-rejections");
-    ensure_private_directory(&rejection_parent).map_err(|error| {
+    ensure_private_development_directory(&rejection_parent).map_err(|_| {
         eprintln!("coding.development.candidate.rejection-root-denied");
-        error
+        CodingDevelopmentRuntimeError::State
     })?;
     let rejection_root = rejection_parent.join(match model {
         CodingDevelopmentModel::Muse => "muse",
         CodingDevelopmentModel::GptOss => "gpt-oss",
         CodingDevelopmentModel::Scripted => return Err(CodingDevelopmentRuntimeError::Profile),
     });
-    ensure_private_directory(&rejection_root).map_err(|error| {
+    ensure_private_development_directory(&rejection_root).map_err(|_| {
         eprintln!("coding.development.candidate.rejection-root-denied");
-        error
+        CodingDevelopmentRuntimeError::State
     })?;
     let launch = LlamaServerLaunchProfile::new(32_768, 4, 256, 128, "q8_0", "q8_0", Some(kwargs))
         .map_err(|error| {
@@ -2729,23 +2716,6 @@ fn runtime_limits(
         } else {
             4 * 1024 * 1024
         },
-    }
-}
-
-fn ensure_private_directory(path: &Path) -> Result<(), CodingDevelopmentRuntimeError> {
-    match fs::create_dir(path) {
-        Ok(()) => fs::set_permissions(path, fs::Permissions::from_mode(0o700))
-            .map_err(|_| CodingDevelopmentRuntimeError::State),
-        Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
-            let metadata =
-                fs::symlink_metadata(path).map_err(|_| CodingDevelopmentRuntimeError::State)?;
-            if metadata.is_dir() && metadata.permissions().mode() & 0o777 == 0o700 {
-                Ok(())
-            } else {
-                Err(CodingDevelopmentRuntimeError::State)
-            }
-        }
-        Err(_) => Err(CodingDevelopmentRuntimeError::State),
     }
 }
 

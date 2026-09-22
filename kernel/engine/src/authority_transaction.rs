@@ -360,6 +360,33 @@ pub trait EffectDriver {
     fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch;
 }
 
+/// In-memory observation driver for already verified, redacted material.
+///
+/// This driver performs no native operation. It lets a shell submit an inert
+/// observation payload through the same durable authority transaction without
+/// receiving or implementing the opaque effect authorization itself.
+pub struct CompletedObservationEffectDriver {
+    material: Vec<u8>,
+}
+
+impl CompletedObservationEffectDriver {
+    /// Creates an inert driver over the exact redacted material to be digested.
+    #[must_use]
+    pub fn new(material: Vec<u8>) -> Self {
+        Self { material }
+    }
+}
+
+impl EffectDriver for CompletedObservationEffectDriver {
+    fn execute(&mut self, _authorization: EffectAuthorization<'_>) -> EffectLaunch {
+        EffectLaunch::completed(EffectResult::from_redacted_material(
+            OperationOutcome::Succeeded,
+            &self.material,
+            StateChange::NotChanged,
+        ))
+    }
+}
+
 /// Deterministic transaction state machine cached from canonical encrypted state.
 ///
 /// This type has no public launch method. [`crate::operational_store::DurableAuthorityRuntime`]

@@ -1,7 +1,6 @@
 //! Executable CLI client for the explicitly activated disposable coding harness.
 
 use std::io::{self, BufRead};
-use std::process::{Child, Command, Stdio};
 use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
@@ -11,7 +10,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use agentmage_kernel_contracts::{
     AgentStateKind, RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeEvent,
 };
-use agentmage_platform_linux::LinuxLaunchEnvelope;
+use agentmage_platform_linux::LinuxDevelopmentHostProcess;
 
 use crate::cli::{
     CliOutputFormat, CodingDevelopmentCliOptions, render_runtime_approval_human,
@@ -78,28 +77,23 @@ pub fn run_coding_development(
         &options.workspace_root,
     )
     .map_err(|_| CodingDevelopmentClientError::Activation)?;
-    let host = sibling_host_path()?;
-    let mut child = Command::new(host)
-        .arg("--coding-development-host")
-        .arg(activation.state_root())
-        .arg(activation.disposable_root())
-        .arg(activation.workspace_root())
-        .arg(&options.scenario)
-        .arg(&options.model)
-        .arg(if options.resume { "resume" } else { "new" })
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::inherit())
-        .spawn()
-        .map_err(|_| CodingDevelopmentClientError::Transport)?;
+    let mut child = LinuxDevelopmentHostProcess::launch(
+        activation.state_root(),
+        activation.disposable_root(),
+        activation.workspace_root(),
+        &options.scenario,
+        &options.model,
+        options.resume,
+    )
+    .map_err(|_| CodingDevelopmentClientError::Transport)?;
     let result = run_with_child(&activation, options, output, &mut child);
     if result.is_err() {
-        let _ = child.kill();
+        let _ = child.terminate();
     }
-    let status = child
-        .wait()
+    let success = child
+        .wait_success()
         .map_err(|_| CodingDevelopmentClientError::Transport)?;
-    if !status.success() && result.is_ok() {
+    if !success && result.is_ok() {
         return Err(CodingDevelopmentClientError::Transport);
     }
     result
@@ -109,14 +103,11 @@ fn run_with_child(
     activation: &CodingDevelopmentActivation,
     options: &CodingDevelopmentCliOptions,
     output: CliOutputFormat,
-    child: &mut Child,
+    child: &mut LinuxDevelopmentHostProcess,
 ) -> Result<ClientExitCode, CodingDevelopmentClientError> {
-    let stdout = child
-        .stdout
-        .as_mut()
-        .ok_or(CodingDevelopmentClientError::Transport)?;
-    let envelope =
-        LinuxLaunchEnvelope::read(stdout).map_err(|_| CodingDevelopmentClientError::Transport)?;
+    let envelope = child
+        .read_launch_envelope()
+        .map_err(|_| CodingDevelopmentClientError::Transport)?;
     let session = envelope
         .connect_development()
         .map_err(|_| CodingDevelopmentClientError::Transport)?;
@@ -426,13 +417,6 @@ impl InteractiveCliCancellationPort for InstalledSignalCancellation {
             ),
         )))
     }
-}
-
-fn sibling_host_path() -> Result<std::path::PathBuf, CodingDevelopmentClientError> {
-    let current = std::env::current_exe().map_err(|_| CodingDevelopmentClientError::Transport)?;
-    let host = current.with_file_name("agentmage-host");
-    host.canonicalize()
-        .map_err(|_| CodingDevelopmentClientError::Transport)
 }
 
 struct TerminalEventSink {
