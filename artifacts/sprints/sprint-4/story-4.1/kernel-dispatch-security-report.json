@@ -18,11 +18,11 @@
   "source_records": [
     {
       "path": "Cargo.lock",
-      "sha256": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9"
+      "sha256": "7c2c11b7d4955e51f451979d05012ccec8859b82b8d87b3f9c224488e727b498"
     },
     {
       "path": "Cargo.toml",
-      "sha256": "5afd98c00697e9c6974495e4a9568ae42f46ec0acb1eb603641b1ec7bb5f5ea1"
+      "sha256": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc"
     },
     {
       "path": "kernel/contracts/src/tool.rs",
@@ -45,7 +45,7 @@
       "sha256": "158ee96b773436c76ca36b870baf9edef37f4beb227363cd30d4ad12db323006"
     }
   ],
-  "source_revision": "21182e1cde50ebedec8f96bbdae1e9917b333106",
+  "source_revision": "1814cf806bc26ea758ded3856224db89dcecfb29",
   "status": "pass-linux-zero-execution",
   "task_id": "4.1.3.3",
   "test_id": "S-004-ST01",

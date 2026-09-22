@@ -6,9 +6,9 @@
       "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
     },
     {
-      "bytes": 4817,
+      "bytes": 4903,
       "path": "architecture/dependency-rules.json",
-      "sha256": "21235f069ba67f3eb1412a379197e336f7bd71490eb4789b96fb224bfb6b1040"
+      "sha256": "b8d7045ff966e7d551ac50e5bfb39cc613d81997009e2505121a38da840d45d1"
     },
     {
       "bytes": 33028,
@@ -16,9 +16,9 @@
       "sha256": "8e0a601fef40e4b2f90dd281418a1e5f5c9717b64d88c5088fb6a39f4af42bdf"
     },
     {
-      "bytes": 5469,
+      "bytes": 5567,
       "path": "docs/architecture/kernel-dependency-report.md",
-      "sha256": "c78d1637958f28e997e0dafcc136c23514bf238242cd1cf98a566b6e413eb2df"
+      "sha256": "bbd12f734633aab13af420c6cffe80f01ebbd95bacc1d6e214623887e2ce9b99"
     },
     {
       "bytes": 18823,
@@ -76,19 +76,19 @@
       "sha256": "4815ad718ae80772788afeced27b08d31ee8ae8ad0c279f19de931f10dcf9fb5"
     },
     {
-      "bytes": 35753,
+      "bytes": 36509,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json",
-      "sha256": "9e5dbef42957626f7cd1b7a263a54b713e006a3cd9f9d0de52bfb53f114eb149"
+      "sha256": "bfffadf748946f15350e41ccfac6746a6fa7f478954c5fa3cb0c29cf73277923"
     },
     {
       "bytes": 4896,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json",
-      "sha256": "7450785004887bdc54c45ef8c0de400108636244d62a262b0d44df1aeeb16d4f"
+      "sha256": "479539e7e6e68459fd8e448375e1b7f79a1430216b710393a2d6f221a6348c3e"
     },
     {
       "bytes": 4406,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-boundary-integration-report.json",
-      "sha256": "824d466257d7d70c03c6ece1f93952567eb1504d50fcaca15d00adb01a858bc8"
+      "sha256": "72b819855a7b3355ac811ac5428b2920df0e3f8521ccb7b89e30d5492cd0ba11"
     },
     {
       "bytes": 17394,
@@ -141,9 +141,9 @@
       "sha256": "a69a610df0d2ae0aef5246b4779a217e595b06462ec6e377ad1ad5f43e6152a6"
     },
     {
-      "bytes": 1784,
+      "bytes": 1783,
       "path": "tests/test_kernel_architecture_report.py",
-      "sha256": "73025244fb66718f34798dfeaae56a8c6918adc09492c53195d82452442c4368"
+      "sha256": "39ceb5f23442d6b674bfc2446fd33701883847a7dea161b3d01e0f20b71ae7dd"
     },
     {
       "bytes": 1389,
@@ -258,7 +258,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "380c643ad7148a49e3b61f17a15e13ba85be1863",
+  "source_revision": "1814cf806bc26ea758ded3856224db89dcecfb29",
   "status": "pass-linux-security-mapping",
   "story_id": "4.1",
   "summary": {

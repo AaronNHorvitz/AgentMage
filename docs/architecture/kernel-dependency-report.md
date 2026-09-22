@@ -36,11 +36,12 @@ flowchart BT
     SH["shell-host"] --> KC
     SH --> KE
     SH --> PL
+    SH --> PLI
     SH --> CR
     SH --> CRM
 ```
 
-The fourteen materialized internal product edges are:
+The fifteen materialized internal product edges are:
 
 - `capability-knowledge` -> `kernel-contracts`
 - `capability-read-only` -> `kernel-contracts`
@@ -56,8 +57,9 @@ The fourteen materialized internal product edges are:
 - `shell-host` -> `kernel-contracts`
 - `shell-host` -> `kernel-engine`
 - `shell-host` -> `platform-linux` under `cfg(target_os = "linux")`
+- `shell-host` -> `platform-linux-native-inference` under `cfg(target_os = "linux")`
 
-Both the amended eighteen-edge logical graph and this fourteen-edge materialized graph
+Both the amended nineteen-edge logical graph and this fifteen-edge materialized graph
 are acyclic. Every materialized edge is in the source module's exact allowlist.
 
 ## Declared but Unmaterialized Edges

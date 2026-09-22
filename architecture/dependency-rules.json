@@ -120,6 +120,7 @@
         "kernel-contracts",
         "kernel-engine",
         "platform-linux",
+        "platform-linux-native-inference",
         "platform-macos"
       ],
       "declared_imports": [
@@ -129,6 +130,7 @@
         "kernel-contracts",
         "kernel-engine",
         "platform-linux",
+        "platform-linux-native-inference",
         "platform-macos"
       ],
       "assembly_inputs": []
