@@ -13,6 +13,8 @@ The immediate workstream is the standalone coding harness:
 - [Live coding control scheduling](decisions/0064-live-coding-control-scheduling.md)
 - [Coding daily-use verification thresholds](decisions/0065-coding-daily-use-verification-thresholds.md)
 - [Standalone coding development harness](guides/standalone-coding-development.md)
+- [Implementation verification](verification/coding-harness-implementation-2026-09-22.md)
+- [Independent-review package](reviews/2026-09-22-standalone-coding-independent-review-package.md)
 
 The PRD, implementation plan and Story 48.2 carry its product and task authority.
 The development guide covers a demonstrated executable scripted path. These documents do not

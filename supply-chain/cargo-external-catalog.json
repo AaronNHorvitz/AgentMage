@@ -83,6 +83,8 @@
     {"name": "sha1", "version": "0.10.6", "license": "MIT OR Apache-2.0"},
     {"name": "sha2", "version": "0.11.0", "license": "MIT OR Apache-2.0"},
     {"name": "shlex", "version": "2.0.1", "license": "MIT OR Apache-2.0"},
+    {"name": "signal-hook", "version": "0.3.18", "license": "Apache-2.0/MIT"},
+    {"name": "signal-hook-registry", "version": "1.4.8", "license": "MIT OR Apache-2.0"},
     {"name": "signature", "version": "3.0.0", "license": "Apache-2.0 OR MIT"},
     {"name": "simd-adler32", "version": "0.3.10", "license": "MIT"},
     {"name": "smallvec", "version": "1.15.2", "license": "MIT OR Apache-2.0"},
