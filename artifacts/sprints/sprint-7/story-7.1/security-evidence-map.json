@@ -48,12 +48,12 @@
     {
       "bytes": 4405,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
-      "sha256": "c2e6c66783739031f11bd478442445436e76fcf56618cb7f778d4047a16da65a"
+      "sha256": "22e9be80011f6024bd3b287fc3f7ffa9f4ba9490411799364bdd089cc95da7d7"
     },
     {
       "bytes": 4142,
       "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
-      "sha256": "67eeecc9de8881e18d6603ef982e7bee17edaa49ba0ed06904a0cb713185fc8c"
+      "sha256": "aa0b43f9c603be6c15cee3653a45bc4d0840b89ae9c23a0e073a1bb73151fc5d"
     },
     {
       "bytes": 6520,
@@ -71,19 +71,19 @@
       "sha256": "1ec253627f8aa8a21cc1a9f23430859a45b46932569ba1a93e69020ed563b2d4"
     },
     {
-      "bytes": 446056,
+      "bytes": 447753,
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "4343ddb6cbd2c0c0444fd5618a7fe20cf3a07c1bd959edf959b7ee8e6e9a6d45"
+      "sha256": "f8d10ae2ef67ba0cf9b26094f5803ef0a671031d0c2bca265786ee4e0183b4aa"
     },
     {
-      "bytes": 465865,
+      "bytes": 467660,
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "468d3652d71caf9431826fd287b4b7fb69bb49f77ebea5acb819e8c8307a681a"
+      "sha256": "8e3713dc570c629537bb9c04d279674bf3483734750913d3c8981b56b4f5f967"
     },
     {
-      "bytes": 23558,
+      "bytes": 24109,
       "path": "scripts/platform_manifest_artifact.py",
-      "sha256": "0f210fb557d3785026ce219604a18067199b17cb308b26f1aea7659a06f395de"
+      "sha256": "93ad97d3b45ddff31ccb1907f3faa2dc169945eea8abfa1f4d1fcb08861f85fa"
     },
     {
       "bytes": 17584,
@@ -96,9 +96,9 @@
       "sha256": "ae19f1eb78fd3ebd75c3f5f8ee14b66c820ec01935851b48607da11736d857ad"
     },
     {
-      "bytes": 6384,
+      "bytes": 7593,
       "path": "tests/test_platform_manifest_artifact.py",
-      "sha256": "8c95802f7784a00f615ce6a4e834f6ee86157ef12fc7d3366635f0fb542e78a2"
+      "sha256": "20a22fd5f2f5f0f218dc09b6baf374c97c25c6b8daab06fdd5e45f1f1dea69e7"
     },
     {
       "bytes": 8072,
@@ -260,7 +260,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "c1762277d591437dad84e8242808fe224e677cd2",
+  "source_revision": "c0a8809992855725b855808e34e514a6f18745d2",
   "status": "pass-non-macos-security-mapping",
   "story_id": "7.1",
   "summary": {
