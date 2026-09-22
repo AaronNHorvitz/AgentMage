@@ -37,51 +37,51 @@
     "reviewed_artifacts": [
       {
         "path": "artifacts/sprints/sprint-6/story-6.1/story-gate-report.json",
-        "sha256": "bb4adbed7dbe20e483a7ad8f5df663535b4ef1480229155747620f42c0b6bb0a"
+        "sha256": "06d1749b85d1942f708ce73dfd4b0c4a0e6fd9006cf793f30964abea4093900a"
       },
       {
         "path": "scripts/story_6_1_gate.py",
-        "sha256": "b5481c722e17fc1bbc4d9cc24fa852bec0e6dfa760f668a1cdb82839feb14ff3"
+        "sha256": "21a9e1b70e38b3757616ed2b0699f7218dc9747a2811b389b496bf7c4599ca06"
       },
       {
         "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
-        "sha256": "36386ffa93c9a063235af7f8cdcf7480c946e009746c13d133015914f40d1a3a"
+        "sha256": "9663658fcd01b0ad54c171f753b76f59651963f52482f3b51cd5da88688389f0"
       },
       {
         "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
-        "sha256": "0d8244fb334d20c0fef660eea7d1ecdf9cb067c079cbc9f11150b75f77c0dfde"
+        "sha256": "305dee445e983a353babfcae9c1aa2472f028369a330f1273763c367e9ff4276"
       },
       {
         "path": "artifacts/sprints/sprint-6/story-6.1/display-link-authority-report.json",
-        "sha256": "3261ef541a7a9df123a29a0ab0ef078fe142e1583b91ad05494dd645968fa1dc"
+        "sha256": "0f7be96a2f5581e1c1e54e606d0da2105a72489c9f979265ba4f374e7d6d5c98"
       },
       {
         "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
-        "sha256": "73720eda040ff86d3d72b22a6ddbeb16638e6a059e7da4a02fcee631760e1ab5"
+        "sha256": "bfd2dba35bde2fbf177956074c42196157037428a1cc76ccdcce916cf05ead60"
       },
       {
         "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
-        "sha256": "49bdf35031e1e4de4bb231bdddcb0fb1e47139d032e17c0604aff29b7621e8f2"
+        "sha256": "8a569e7f795f23a89c0e21f96c09de3ab4acd5277a7e9d07436423f5dc25ea45"
       },
       {
         "path": "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
-        "sha256": "c2e6c66783739031f11bd478442445436e76fcf56618cb7f778d4047a16da65a"
+        "sha256": "22e9be80011f6024bd3b287fc3f7ffa9f4ba9490411799364bdd089cc95da7d7"
       },
       {
         "path": "artifacts/sprints/sprint-6/story-6.1/security-evidence-map.json",
-        "sha256": "0bf23b8eb02f2aa91dd8377f9b32116bd146f6af5b6b12a76b0e4e534ff6cab1"
+        "sha256": "61b63f668682077aa684d4eaaa60d7eb2ec590cfe245a5a87d2b7b8c44432ca6"
       }
     ],
-    "reviewed_commit": "4525fc01b53e518cda074c677ec6d0cd456c6746",
-    "reviewed_tree": "de04cb0bf41adcf01274fb69152fc10f2725a3fd",
+    "reviewed_commit": "8f43920fbbc69c8e8a3a8f87275dce655fea7f46",
+    "reviewed_tree": "f8040bcb684a442cbc484ccad6b4f7053ebbd6d2",
     "reviewer_id": "agentmage-sprint-6-independent-gate-v1"
   },
   "installed_product_claim": "none",
   "macos_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "4525fc01b53e518cda074c677ec6d0cd456c6746",
-  "reviewed_tree": "de04cb0bf41adcf01274fb69152fc10f2725a3fd",
+  "reviewed_commit": "8f43920fbbc69c8e8a3a8f87275dce655fea7f46",
+  "reviewed_tree": "f8040bcb684a442cbc484ccad6b4f7053ebbd6d2",
   "schema_version": 1,
   "sprint_id": 6,
   "status": "blocked-macos",
