@@ -27,8 +27,8 @@ from scripts.story_4_1_security_evidence import check_map as check_security
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-4/story-4.1/story-gate-report.json"
-REVIEWED_COMMIT = "9613571bf5e84f4a7010c368c8805b277c934c26"
-REVIEWED_TREE = "d44e1dd6167bf747c66015a999ecd3ac9522d257"
+REVIEWED_COMMIT = "f2314035b6aa0ff86c47aa345734f468def29e6b"
+REVIEWED_TREE = "54a82f244e25d2f1c6369e8530dbde8cce146998"
 REVIEWED_PATHS = (
     "architecture/dependency-rules.json",
     "docs/architecture/kernel-contract-reference.md",
