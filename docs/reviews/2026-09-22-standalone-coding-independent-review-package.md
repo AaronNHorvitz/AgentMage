@@ -10,14 +10,14 @@ identity, review date, exact target commit, methods, findings and final disposit
 
 ## Immutable review target
 
-- Target commit: `5ccc77e3f420cc833ed1e51268a39e3fa3ee08e5`.
+- Target commit: `ee220b71cb4786f6955e6336f2067ecdb4c2b087`.
 - Baseline commit: `c365d44d73d44c8d13d6810e557882134b8251d0`.
 - Branch at preparation: `demo/fedora-local-docs`.
 - Scope authority: Decisions 0054, 0061, 0062, 0063, 0064, 0065 and 0066.
 - Implementation commits, oldest first:
   `ab76d781`, `452a789a`, `f8dd4e79`, `ea16322f`, `86823491`, `fe898a96`,
   `0dcd13d0`, `4fc23603`, `d6863f7d`, `690e5e43`, `e30e9ffb`, `03c01ded`,
-  `fabe3897` and `5ccc77e3`.
+  `fabe3897`, `5ccc77e3` and `ee220b71`.
 
 Review the exact target, not a moving worktree. The implementation record is
 [`coding-harness-implementation-2026-09-22.md`](../verification/coding-harness-implementation-2026-09-22.md).

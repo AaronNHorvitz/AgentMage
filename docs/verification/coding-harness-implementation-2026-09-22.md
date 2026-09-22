@@ -2,7 +2,7 @@
 
 ## Scope and source identity
 
-- Source candidate: `5ccc77e3f420cc833ed1e51268a39e3fa3ee08e5`.
+- Source candidate: `ee220b71cb4786f6955e6336f2067ecdb4c2b087`.
 - Planned baseline: `c365d44d73d44c8d13d6810e557882134b8251d0`.
 - Scope: Tasks 48.2.4, 48.2.5, 48.2.6 and 50.2.4 only, plus their necessary
   prerequisites.
@@ -72,6 +72,9 @@ socket path during output-pressure diagnosis. It failed before launch and remain
 retry above passed without changing a runtime threshold. An earlier platform-launch smoke also
 retained the rejected Cargo hard-link assumption and its successful correction in the
 `2026-09-22-effect-boundary-smoke` and `2026-09-22-effect-boundary-smoke-retry` run directories.
+These actual-process campaigns were built from `5ccc77e3f420cc833ed1e51268a39e3fa3ee08e5`.
+The later source candidate differs only by replacing an error-observing `map_err` with
+behavior-equivalent `inspect_err`; strict kernel Clippy passes at the source candidate.
 
 Safe restart `/tmp/am-resume-4` resumed the same canonical run/session after the injected
 post-checkpoint stop, completed the repair and did not replay the earlier validation. Drift case
