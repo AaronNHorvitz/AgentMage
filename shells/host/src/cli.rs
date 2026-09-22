@@ -67,6 +67,10 @@ pub struct CodingDevelopmentCliOptions {
     pub follow_ups: Vec<String>,
     /// Resume the one exact safe-boundary run in the private canonical store.
     pub resume: bool,
+    /// Explicitly consent to retain exact model exchanges for this session's checked continuity.
+    pub record_session: bool,
+    /// Probe that the artifact owner blocks deletion needed by a declared follow-up.
+    pub artifact_release_probe_before_follow_ups: bool,
     /// Whether this invocation explicitly preauthorizes its displayed exact operations.
     pub approve_this_run: bool,
     /// Whether to send one intentionally stale response for executable rejection testing.
@@ -75,6 +79,8 @@ pub struct CodingDevelopmentCliOptions {
     pub replay_approval_probe: bool,
     /// Whether to reuse one cursor after its live replay window expires.
     pub expired_cursor_probe: bool,
+    /// Whether to corrupt one returned artifact page for executable verifier testing.
+    pub artifact_integrity_probe: bool,
     /// Whether to install one undrained bounded event subscriber for executable pressure testing.
     pub slow_subscriber_probe: bool,
     /// Canonical workspace-relative paths proposed for direct session preauthorization.
@@ -226,10 +232,13 @@ fn parse_coding_development(
     let mut objective = None;
     let mut follow_ups = Vec::new();
     let mut resume = false;
+    let mut record_session = false;
+    let mut artifact_release_probe_before_follow_ups = false;
     let mut approve_this_run = false;
     let mut stale_approval_probe = false;
     let mut replay_approval_probe = false;
     let mut expired_cursor_probe = false;
+    let mut artifact_integrity_probe = false;
     let mut slow_subscriber_probe = false;
     let mut preauthorized_paths = Vec::new();
     let mut preauthorized_commands = Vec::new();
@@ -265,6 +274,18 @@ fn parse_coding_development(
                 cursor += 1;
                 continue;
             }
+            "--record-session" if !record_session => {
+                record_session = true;
+                cursor += 1;
+                continue;
+            }
+            "--artifact-release-probe-before-follow-ups"
+                if !artifact_release_probe_before_follow_ups =>
+            {
+                artifact_release_probe_before_follow_ups = true;
+                cursor += 1;
+                continue;
+            }
             "--approve-this-run" if !approve_this_run => {
                 approve_this_run = true;
                 cursor += 1;
@@ -282,6 +303,11 @@ fn parse_coding_development(
             }
             "--expired-cursor-probe" if !expired_cursor_probe => {
                 expired_cursor_probe = true;
+                cursor += 1;
+                continue;
+            }
+            "--artifact-integrity-probe" if !artifact_integrity_probe => {
+                artifact_integrity_probe = true;
                 cursor += 1;
                 continue;
             }
@@ -381,7 +407,9 @@ fn parse_coding_development(
     if objective.trim().is_empty() || objective.len() > 16 * 1024 {
         return Err(ThinClientError::InvalidValue);
     }
-    if resume && !follow_ups.is_empty() {
+    if resume && (!follow_ups.is_empty() || record_session)
+        || artifact_release_probe_before_follow_ups && (!record_session || follow_ups.is_empty())
+    {
         return Err(ThinClientError::InvalidValue);
     }
     let preauthorization_requested = preauthorize_workspace_reads
@@ -399,6 +427,7 @@ fn parse_coding_development(
         stale_approval_probe,
         replay_approval_probe,
         expired_cursor_probe,
+        artifact_integrity_probe,
     ]
     .into_iter()
     .filter(|enabled| *enabled)
@@ -416,10 +445,13 @@ fn parse_coding_development(
         objective,
         follow_ups,
         resume,
+        record_session,
+        artifact_release_probe_before_follow_ups,
         approve_this_run,
         stale_approval_probe,
         replay_approval_probe,
         expired_cursor_probe,
+        artifact_integrity_probe,
         slow_subscriber_probe,
         preauthorized_paths,
         preauthorized_commands,
@@ -1004,7 +1036,7 @@ Commands:\n\
   code\n\
   code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
        --scenario no-op|failed-test-repair|slow-cancel|restart-repair|new-file|multi-file|false-completion|overflow\n\
-       --objective TEXT [--follow-up TEXT]... [--resume] [--approve-this-run] [--stale-approval-probe|--replay-approval-probe|--expired-cursor-probe] [--slow-subscriber-probe]\n\
+       --objective TEXT [--follow-up TEXT]... [--resume|--record-session] [--artifact-release-probe-before-follow-ups] [--approve-this-run] [--stale-approval-probe|--replay-approval-probe|--expired-cursor-probe|--artifact-integrity-probe] [--slow-subscriber-probe]\n\
        [--preauthorize-workspace-reads] [--preauthorize-path RELATIVE_PATH]... [--preauthorize-command ID@VERSION@SHA256]...\n\
        [--preauthorization-budget N --preauthorization-minutes N] [--revoke-preauthorization-before-follow-ups]\n\
        [--approval-delay-ms 1..10000]\n\

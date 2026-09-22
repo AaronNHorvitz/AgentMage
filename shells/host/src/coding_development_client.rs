@@ -127,6 +127,8 @@ fn run_with_child(
         runtime = runtime.with_replayed_approval_probe();
     } else if options.expired_cursor_probe {
         runtime = runtime.with_expired_cursor_probe();
+    } else if options.artifact_integrity_probe {
+        runtime = runtime.with_artifact_integrity_probe();
     }
     let mut approvals = TerminalApprovals {
         output,
@@ -150,6 +152,7 @@ fn run_with_child(
             &mut runtime,
             RuntimePrepareInput {
                 resume: options.resume,
+                record_session: options.record_session,
                 slow_subscriber_probe: options.slow_subscriber_probe,
                 preauthorization: preauthorization.clone(),
                 engineering_session_id: engineering_session_id.clone(),
@@ -179,8 +182,9 @@ fn run_with_child(
         for verified in &result.verified_artifacts {
             match output {
                 CliOutputFormat::Human => println!(
-                    "artifact_verified id={} sha256={} bytes={} pages={}",
+                    "artifact_verified id={} media_type={} sha256={} bytes={} pages={}",
                     verified.reference.artifact_id.as_str(),
+                    verified.reference.media_type,
                     verified.reference.payload_sha256,
                     verified.reference.byte_size,
                     verified.page_count,
@@ -190,6 +194,7 @@ fn run_with_child(
                     serde_json::json!({
                         "type": "runtime_artifact_verified",
                         "artifact_id": verified.reference.artifact_id.as_str(),
+                        "media_type": verified.reference.media_type,
                         "payload_sha256": verified.reference.payload_sha256,
                         "byte_size": verified.reference.byte_size,
                         "page_count": verified.page_count,
@@ -212,6 +217,29 @@ fn run_with_child(
             AgentStateKind::Exhausted => ClientExitCode::ResourceBound,
             _ => ClientExitCode::Uncertain,
         };
+        if objective_index == 0
+            && final_exit == ClientExitCode::Success
+            && options.artifact_release_probe_before_follow_ups
+        {
+            let reference = result
+                .artifacts
+                .first()
+                .ok_or(CodingDevelopmentClientError::Runtime)?;
+            if runtime
+                .release_artifact(
+                    &result.request.run_id,
+                    &result.request.request_sha256,
+                    reference,
+                )
+                .is_ok()
+            {
+                return Err(CodingDevelopmentClientError::Runtime);
+            }
+            eprintln!(
+                "coding.development.artifact-release-blocked-by-continuity-owner id={}",
+                reference.artifact_id.as_str()
+            );
+        }
         if objective_index == 0
             && final_exit == ClientExitCode::Success
             && options.revoke_preauthorization_before_follow_ups

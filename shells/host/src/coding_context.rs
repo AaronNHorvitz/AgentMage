@@ -3,13 +3,16 @@
 use std::fmt::Write;
 
 use agentmage_kernel_contracts::{
-    CONTRACT_SCHEMA_VERSION, ContextAdmission, ContextItemCandidate, ContextItemKind,
-    ContextPacketId, ContextSensitivity, ContractPayload, EvidenceReference, ModelContextPacket,
-    ModelMessage, ModelMessageId, ModelMessageRole, RuntimeRunRequest, RuntimeSessionMode,
-    SchemaId, SchemaReference, ToolResult, to_canonical_json,
+    CONTRACT_SCHEMA_VERSION, CheckedContextSummary, ContextAdmission, ContextItemCandidate,
+    ContextItemKind, ContextPacketId, ContextSensitivity, ContractPayload, EvidenceReference,
+    ModelContextPacket, ModelMessage, ModelMessageId, ModelMessageRole, RuntimeRunRequest,
+    RuntimeSessionMode, SchemaId, SchemaReference, SessionId, ToolResult, WorkspaceId,
+    to_canonical_json,
 };
 use agentmage_kernel_engine::{
-    context_management::{ContextCompositionBudget, compose_context},
+    context_management::{
+        ContextCompositionBudget, SummaryUseDecision, compose_context, evaluate_checked_summary,
+    },
     runtime_loop::{RuntimeContextPort, RuntimePortFailure},
 };
 use serde::Serialize;
@@ -26,6 +29,7 @@ const CONTEXT_ITEM_SCHEMA: &[u8] = br#"{"type":"string"}"#;
 const SYSTEM_SOURCE_ID: &str = "agentmage:coding-system-contract";
 const USER_SOURCE_ID: &str = "agentmage:runtime-request";
 const TOOL_RESULT_SOURCE_PREFIX: &str = "agentmage:tool-result:";
+const CONTINUITY_SOURCE_PREFIX: &str = "agentmage:coding-continuity:";
 
 /// Exact token counter used before a packet reaches the model adapter.
 pub trait CodingTokenCounter {
@@ -48,6 +52,56 @@ pub struct CodingContextSource {
     source_revision: String,
     content_sha256: String,
     bounded_excerpt: String,
+}
+
+/// One checked source-preserving continuity input for a same-session follow-up.
+#[derive(Clone)]
+pub struct CodingContextContinuityInput {
+    session_id: SessionId,
+    workspace_id: WorkspaceId,
+    summary: CheckedContextSummary,
+    original_sources: Vec<CodingContextSource>,
+}
+
+impl CodingContextContinuityInput {
+    /// Verifies one checked summary against exact retained originals before model delivery.
+    pub fn new(
+        session_id: SessionId,
+        workspace_id: WorkspaceId,
+        summary: CheckedContextSummary,
+        mut original_sources: Vec<CodingContextSource>,
+    ) -> Result<Self, CodingContextError> {
+        evaluate_checked_summary(&summary).map_err(|_| CodingContextError::InvalidSource)?;
+        original_sources.sort_by(|left, right| left.item_id.cmp(&right.item_id));
+        let source_prefix = format!("{CONTINUITY_SOURCE_PREFIX}{}:", session_id.as_str());
+        if original_sources.is_empty()
+            || original_sources
+                .windows(2)
+                .any(|pair| pair[0].item_id == pair[1].item_id)
+            || original_sources.iter().any(|source| {
+                source.kind == ContextItemKind::Instruction
+                    || source.admission != ContextAdmission::Eligible
+                    || !source.source_id.starts_with(&source_prefix)
+            })
+        {
+            return Err(CodingContextError::InvalidSource);
+        }
+        let mut hashes = original_sources
+            .iter()
+            .map(|source| source.content_sha256.clone())
+            .collect::<Vec<_>>();
+        hashes.sort();
+        hashes.dedup();
+        if checked_continuity_source_set_sha256(&hashes) != summary.source_set_sha256 {
+            return Err(CodingContextError::InvalidSource);
+        }
+        Ok(Self {
+            session_id,
+            workspace_id,
+            summary,
+            original_sources,
+        })
+    }
 }
 
 impl CodingContextSource {
@@ -82,6 +136,12 @@ impl CodingContextSource {
             return Err(CodingContextError::InvalidSource);
         }
         Ok(source)
+    }
+
+    /// Returns the exact content identity represented by this bounded source.
+    #[must_use]
+    pub fn content_sha256(&self) -> &str {
+        &self.content_sha256
     }
 }
 
@@ -132,6 +192,7 @@ where
     binding: CodingContextBinding,
     system_contract: String,
     supporting_sources: Vec<CodingContextSource>,
+    continuity: Option<CodingContextContinuityInput>,
     counter: C,
 }
 
@@ -194,8 +255,21 @@ where
             },
             system_contract,
             supporting_sources,
+            continuity: None,
             counter,
         })
+    }
+
+    /// Installs one already checked same-session continuity envelope.
+    pub fn with_checked_continuity(
+        mut self,
+        continuity: CodingContextContinuityInput,
+    ) -> Result<Self, CodingContextError> {
+        if continuity.workspace_id != self.binding.workspace_id {
+            return Err(CodingContextError::InvalidSource);
+        }
+        self.continuity = Some(continuity);
+        Ok(self)
     }
 
     /// Returns the exact coding-profile digest represented by this context port.
@@ -287,6 +361,44 @@ where
         );
 
         let mut candidates = vec![self.candidate(&system)?, self.candidate(&user)?];
+        if let Some(continuity) = self.continuity.clone() {
+            if continuity.session_id != request.session_id
+                || continuity.workspace_id != request.workspace_id
+            {
+                return Err(RuntimePortFailure::Invalid);
+            }
+            let decision = evaluate_checked_summary(&continuity.summary)
+                .map_err(|_| RuntimePortFailure::Invalid)?;
+            let summary_bytes = serde_json::to_string(&CodingContinuityEnvelope {
+                schema_version: 1,
+                summary: &continuity.summary,
+                summary_use: match decision {
+                    SummaryUseDecision::UseSummary => "summary_with_originals_reopened",
+                    SummaryUseDecision::ReopenOriginalSources => "summary_stale_originals_reopened",
+                },
+                original_source_ids: continuity
+                    .original_sources
+                    .iter()
+                    .map(|source| source.source_id.as_str())
+                    .collect(),
+                omitted_original_source_ids: Vec::<&str>::new(),
+            })
+            .map_err(|_| RuntimePortFailure::Invalid)?;
+            let summary = internal_source(
+                format!("coding-continuity-summary-{turn}"),
+                ContextItemKind::Memory,
+                "agentmage:coding-continuity-summary",
+                &continuity.summary.source_set_sha256,
+                summary_bytes,
+                true,
+            );
+            candidates.push(self.candidate(&summary)?);
+            for source in continuity.original_sources.clone() {
+                let mut source = source;
+                source.essential = true;
+                candidates.push(self.candidate(&source)?);
+            }
+        }
         for source in self.supporting_sources.clone() {
             candidates.push(self.candidate(&source)?);
         }
@@ -400,6 +512,15 @@ struct CodingUserContext<'a> {
     work_packet: &'a agentmage_kernel_contracts::WorkPacket,
 }
 
+#[derive(Serialize)]
+struct CodingContinuityEnvelope<'a> {
+    schema_version: u16,
+    summary: &'a CheckedContextSummary,
+    summary_use: &'static str,
+    original_source_ids: Vec<&'a str>,
+    omitted_original_source_ids: Vec<&'a str>,
+}
+
 fn internal_source(
     item_id: String,
     kind: ContextItemKind,
@@ -477,13 +598,24 @@ fn sha256(bytes: &[u8]) -> String {
     output
 }
 
+/// Computes the existing checked-summary source-set identity for sorted unique source hashes.
+#[must_use]
+pub fn checked_continuity_source_set_sha256(source_sha256: &[String]) -> String {
+    let mut value = String::from("conversation-source-hashes-v1\n");
+    for source in source_sha256 {
+        writeln!(&mut value, "{source}").expect("writing to String cannot fail");
+    }
+    sha256(value.as_bytes())
+}
+
 #[cfg(test)]
 mod tests {
     use agentmage_kernel_contracts::{
-        AuthorityClass, BudgetLimit, BudgetResource, DataSensitivity, EvidenceId, EvidenceKind,
-        OperationOutcome, PlanId, PolicyId, RollbackPlan, RuntimeRunId, RuntimeRunRequest,
-        SessionId, StateChange, StopCondition, StopConditionKind, Task, TaskId, TaskStatus,
-        ToolCallId, ToolCatalogId, ToolResult, WorkPacket, WorkPacketId, WorkPacketState,
+        AuthorityClass, BudgetLimit, BudgetResource, CheckedSummaryState, ContextSummaryId,
+        DataSensitivity, EvidenceId, EvidenceKind, OperationOutcome, PlanId, PolicyId,
+        RollbackPlan, RuntimeRunId, RuntimeRunRequest, SessionId, StateChange, StopCondition,
+        StopConditionKind, Task, TaskId, TaskStatus, ToolCallId, ToolCatalogId, ToolResult,
+        WorkPacket, WorkPacketId, WorkPacketState,
     };
     use agentmage_kernel_engine::runtime_coordinator::seal_runtime_run_request;
 
@@ -650,6 +782,102 @@ mod tests {
         assert!(matches!(
             CodingContextPort::for_profile(&profile, Vec::new(), FixtureCounter("wrong-counter")),
             Err(CodingContextError::TokenCounterMismatch)
+        ));
+    }
+
+    #[test]
+    fn story_50_2_checked_continuity_reopens_originals_and_rejects_cross_session_sources() {
+        let profile = CodingSessionProfile::build(input()).expect("coding profile");
+        let request = request(&profile);
+        let original = "Exact prior command: cargo test -p agentmage-host";
+        let source = CodingContextSource::new(
+            "continuity-original-1",
+            ContextItemKind::Supporting,
+            ContextSensitivity::Private,
+            ContextAdmission::Eligible,
+            true,
+            format!(
+                "agentmage:coding-continuity:{}:request:artifact-1",
+                request.session_id.as_str()
+            ),
+            "manifest-1",
+            sha256(original.as_bytes()),
+            original,
+        )
+        .expect("continuity source");
+        let source_set_sha256 =
+            checked_continuity_source_set_sha256(&[source.content_sha256().to_owned()]);
+        let summary = CheckedContextSummary {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            summary_id: ContextSummaryId::from_raw("summary-coding-test-1"),
+            state: CheckedSummaryState::Stale,
+            summary: "A stale summary cannot replace its original source.".to_owned(),
+            paths: Vec::new(),
+            errors: Vec::new(),
+            identifiers: vec![request.session_id.as_str().to_owned()],
+            commands: Vec::new(),
+            decisions: Vec::new(),
+            unresolved_questions: vec!["Reopen the retained original.".to_owned()],
+            evidence_ids: Vec::new(),
+            citation_ids: Vec::new(),
+            receipt_ids: Vec::new(),
+            source_set_sha256,
+        };
+        let continuity = CodingContextContinuityInput::new(
+            request.session_id.clone(),
+            request.workspace_id.clone(),
+            summary.clone(),
+            vec![source.clone()],
+        )
+        .expect("checked continuity");
+        let mut context = CodingContextPort::for_profile(
+            &profile,
+            Vec::new(),
+            FixtureCounter("fixture-counter-v1"),
+        )
+        .expect("context port")
+        .with_checked_continuity(continuity)
+        .expect("continuity binds");
+        let packet = context
+            .build_context(
+                &request,
+                ContextPacketId::from_raw("coding-context-continuity"),
+                2,
+                &[],
+                &[],
+            )
+            .expect("continuity context");
+        assert!(
+            packet
+                .messages
+                .iter()
+                .any(|message| { String::from_utf8_lossy(&message.content.bytes) == original })
+        );
+        assert!(packet.messages.iter().any(|message| {
+            String::from_utf8_lossy(&message.content.bytes)
+                .contains("summary_stale_originals_reopened")
+        }));
+
+        let foreign = CodingContextSource::new(
+            "continuity-original-foreign",
+            ContextItemKind::Supporting,
+            ContextSensitivity::Private,
+            ContextAdmission::Eligible,
+            true,
+            "agentmage:coding-continuity:foreign-session:request:artifact-1",
+            "manifest-1",
+            source.content_sha256().to_owned(),
+            original,
+        )
+        .expect("foreign source shape");
+        assert!(matches!(
+            CodingContextContinuityInput::new(
+                request.session_id,
+                request.workspace_id,
+                summary,
+                vec![foreign],
+            ),
+            Err(CodingContextError::InvalidSource)
         ));
     }
 

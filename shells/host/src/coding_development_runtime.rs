@@ -18,19 +18,21 @@ use agentmage_capability_repository_map::{
 };
 use agentmage_kernel_contracts::{
     ActorId, AdapterInstanceId, AuthorityClass, BudgetLimit, BudgetResource,
-    CONTRACT_SCHEMA_VERSION, ClosedModelProposal, ContextAdmission, ContextBudget, ContextItemKind,
-    ContextSensitivity, ContractPayload, DataSensitivity, DecodingProfile, EvidenceKind,
-    ExactModelProfile, FamilyCodecIdentity, GrantTarget, HardwareEnvelope, LocalEndpointIdentity,
-    LocalTransport, ModelAdapterId, ModelArtifact, ModelCancellationProbe, ModelCapability,
-    ModelCapabilityState, ModelCodecId, ModelFinishReason, ModelManifestId, ModelMessageRole,
-    ModelModality, ModelProfileId, ModelProposalKind, ModelResourceReport, ModelRole,
-    ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure,
-    ModelRuntimeIdentity, ModelRuntimeKind, ModelStreamId, ModelTokenUsage, ModelToolCallCandidate,
-    NetworkComponent, NetworkDestinationClass, NetworkObservation, PathResolutionIntent, PlanId,
+    CONTRACT_SCHEMA_VERSION, CheckedContextSummary, CheckedSummaryState, ClosedModelProposal,
+    ContextAdmission, ContextBudget, ContextItemKind, ContextSensitivity, ContextSummaryId,
+    ContractPayload, DataSensitivity, DecodingProfile, EvidenceKind, ExactModelProfile,
+    FamilyCodecIdentity, GrantTarget, HardwareEnvelope, LocalEndpointIdentity, LocalTransport,
+    ModelAdapterId, ModelArtifact, ModelCancellationProbe, ModelCapability, ModelCapabilityState,
+    ModelCodecId, ModelFinishReason, ModelManifestId, ModelMessageRole, ModelModality,
+    ModelProfileId, ModelProposalKind, ModelResourceReport, ModelRole, ModelRunRequest,
+    ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity,
+    ModelRuntimeKind, ModelStreamId, ModelTokenUsage, ModelToolCallCandidate, NetworkComponent,
+    NetworkDestinationClass, NetworkObservation, PathResolutionIntent, PlanId,
     PlatformArchitecture, PlatformFamily, ProposalId, RepositorySnapshotId, RollbackPlan,
-    RuntimeEventCursor, RuntimeIsolationObservation, RuntimeRunId, RuntimeRunLimits, SessionId,
-    StopCondition, StopConditionKind, TaskId, ToolCallId, ToolCatalogId, ToolId, WorkPacket,
-    WorkPacketId, WorkPacketState, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
+    RuntimeEventCursor, RuntimeEventKind, RuntimeIsolationObservation, RuntimeRunId,
+    RuntimeRunLimits, SessionId, StopCondition, StopConditionKind, TaskId, ToolCallId,
+    ToolCatalogId, ToolId, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceAuthorizationId,
+    WorkspaceId, WorkspacePath,
 };
 use agentmage_kernel_engine::{
     command_runner::{
@@ -79,7 +81,10 @@ use crate::{
         ControlledFileClassification, ControlledFileCreationProposal, STRUCTURED_PATCH_TOOL_ID,
         StructuredPatchProposal, controlled_create_parent_observation_sha256,
     },
-    coding_context::{CodingContextPort, CodingContextSource, CodingTokenCounter},
+    coding_context::{
+        CodingContextContinuityInput, CodingContextPort, CodingContextSource, CodingTokenCounter,
+        checked_continuity_source_set_sha256,
+    },
     coding_development_activation::{
         CODING_DEVELOPMENT_ACTIVATION, CodingDevelopmentActivation, CodingDevelopmentKeyProvider,
     },
@@ -249,6 +254,8 @@ struct PreparedDevelopmentRun {
     policy: CodingRuntimePolicy,
     skip_scripted_steps: usize,
     preauthorization: Option<LinuxCodingSessionPreauthorization>,
+    continuity: Option<CodingContextContinuityInput>,
+    record_session: bool,
 }
 
 /// Factory that composes the real coordinator only for one explicit disposable activation.
@@ -262,6 +269,8 @@ pub struct CodingDevelopmentRuntimeFactory {
     supporting_sources: Vec<CodingContextSource>,
     session_id: Option<SessionId>,
     preauthorization: Option<LinuxCodingSessionPreauthorization>,
+    record_session: Option<bool>,
+    prior_run_id: Option<RuntimeRunId>,
     resume_requested: bool,
     prepared: BTreeMap<String, PreparedDevelopmentRun>,
 }
@@ -301,6 +310,8 @@ impl CodingDevelopmentRuntimeFactory {
             supporting_sources,
             session_id: None,
             preauthorization: None,
+            record_session: None,
+            prior_run_id: None,
             resume_requested,
             prepared: BTreeMap::new(),
         })
@@ -458,6 +469,8 @@ impl CodingDevelopmentRuntimeFactory {
                 skip_scripted_steps: usize::try_from(continuation.model_call_count)
                     .map_err(|_| prepare_denied("resume-model-count"))?,
                 preauthorization: None,
+                continuity: None,
+                record_session: false,
             },
         );
         Ok(request)
@@ -627,7 +640,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             .revalidate()
             .map_err(|_| prepare_denied("activation"))?;
         if input.resume != self.resume_requested
-            || self.resume_requested && input.preauthorization.is_some()
+            || self.resume_requested && (input.preauthorization.is_some() || input.record_session)
             || input.profile_id != self.model.profile_id()
             || input.expected_entry_sha256 != self.activation.marker_sha256()
             || input.workspace_id != self.profile.write_scope().workspace_id().as_str()
@@ -675,6 +688,26 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             (None, None) => {}
             _ => return Err(prepare_denied("preauthorization-drift")),
         }
+        match self.record_session {
+            None if !existing_session => self.record_session = Some(input.record_session),
+            Some(active) if active == input.record_session => {}
+            _ => return Err(prepare_denied("recording-consent-drift")),
+        }
+        let continuity = if existing_session && input.record_session {
+            let prior_run_id = self
+                .prior_run_id
+                .as_ref()
+                .ok_or_else(|| prepare_denied("continuity-run-absent"))?;
+            Some(build_follow_up_continuity(
+                &self.activation,
+                self.platform,
+                self.profile,
+                &session_id,
+                prior_run_id,
+            )?)
+        } else {
+            None
+        };
         let run_id = RuntimeRunId::from_raw(next_development_identity("coding-development-run")?);
         let task_id = TaskId::from_raw(self.profile.worktree().task_id.clone());
         let policy = build_coding_runtime_policy(CodingRuntimePolicyRequest {
@@ -753,8 +786,11 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 policy,
                 skip_scripted_steps: 0,
                 preauthorization: self.preauthorization.clone(),
+                continuity,
+                record_session: input.record_session,
             },
         );
+        self.prior_run_id = Some(request.run_id.clone());
         Ok(request)
     }
 
@@ -814,7 +850,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                     .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?
             }
         };
-        let context = CodingContextPort::for_profile(
+        let mut context = CodingContextPort::for_profile(
             self.profile,
             self.supporting_sources.clone(),
             DevelopmentTokenCounter::new(
@@ -822,6 +858,11 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             ),
         )
         .map_err(|_| NativeChatRuntimeError::RequestDenied)?;
+        if let Some(continuity) = prepared.continuity {
+            context = context
+                .with_checked_continuity(continuity)
+                .map_err(|_| NativeChatRuntimeError::RequestDenied)?;
+        }
         let mut key = CodingDevelopmentKeyProvider::open(&self.activation)
             .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
         let authority = open_linux_development_authority(
@@ -870,6 +911,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             sensitivity: DataSensitivity::Operational,
             identities: OsCodingIdentitySource,
             preauthorization: prepared.preauthorization,
+            retain_model_exchanges: prepared.record_session,
         })
         .map_err(|error| {
             eprintln!("coding.development.compose.boundary-{error:?}");
@@ -923,6 +965,262 @@ fn next_development_identity(prefix: &str) -> Result<String, NativeChatRuntimeEr
     identities
         .next(prefix)
         .map_err(|_| prepare_denied("identity"))
+}
+
+fn build_follow_up_continuity(
+    activation: &CodingDevelopmentActivation,
+    platform: &'static LinuxDevelopmentPlatformAdapter,
+    profile: &CodingSessionProfile,
+    session_id: &SessionId,
+    prior_run_id: &RuntimeRunId,
+) -> Result<CodingContextContinuityInput, NativeChatRuntimeError> {
+    const MAX_CONTINUITY_ARTIFACT_READ_BYTES: u64 = 4 * 1024 * 1024;
+
+    let mut key = CodingDevelopmentKeyProvider::open(activation)
+        .map_err(|_| prepare_denied("continuity-key"))?;
+    let authority = open_linux_development_authority(
+        platform,
+        activation.state_root(),
+        &mut key,
+        now_epoch_ms().map_err(|_| prepare_denied("continuity-time"))?,
+    )
+    .map_err(|_| prepare_denied("continuity-store"))?;
+    let checkpoint = authority
+        .authority()
+        .current_session_checkpoint()
+        .map_err(|_| prepare_denied("continuity-checkpoint"))?
+        .ok_or_else(|| prepare_denied("continuity-checkpoint-absent"))?;
+    let binding = authority
+        .authority()
+        .current_runtime_resume_binding()
+        .map_err(|_| prepare_denied("continuity-binding"))?
+        .ok_or_else(|| prepare_denied("continuity-binding-absent"))?;
+    if &binding.run_id != prior_run_id
+        || &binding.session_id != session_id
+        || binding.checkpoint_id != checkpoint.checkpoint_id
+        || binding.checkpoint_sha256 != checkpoint.checkpoint_sha256
+    {
+        return Err(prepare_denied("continuity-binding-drift"));
+    }
+    let events = authority
+        .authority()
+        .runtime_events(prior_run_id)
+        .map_err(|_| prepare_denied("continuity-events"))?;
+    let Some(last_event) = events.last() else {
+        return Err(prepare_denied("continuity-events-absent"));
+    };
+    let terminal_state = match &last_event.kind {
+        RuntimeEventKind::RunTerminal { state, .. } => *state,
+        _ => return Err(prepare_denied("continuity-run-nonterminal")),
+    };
+    if events.iter().any(|event| {
+        &event.run_id != prior_run_id
+            || &event.session_id != session_id
+            || event.task_id != checkpoint.task_id
+    }) {
+        return Err(prepare_denied("continuity-event-binding"));
+    }
+
+    let request_references = binding
+        .artifacts
+        .iter()
+        .filter(|reference| reference.media_type == RUNTIME_REQUEST_MEDIA_TYPE)
+        .collect::<Vec<_>>();
+    let [request_reference] = request_references.as_slice() else {
+        return Err(prepare_denied("continuity-request-reference"));
+    };
+    let read_artifact = |reference: &agentmage_kernel_contracts::RuntimeArtifactRef| {
+        if reference.byte_size > MAX_CONTINUITY_ARTIFACT_READ_BYTES {
+            return Err(prepare_denied("continuity-source-overflow"));
+        }
+        authority
+            .read_runtime_artifact(&RuntimeArtifactReadRequest {
+                session_id: checkpoint.session_id.clone(),
+                task_id: checkpoint.task_id.clone(),
+                policy_sha256: checkpoint.policy_sha256.clone(),
+                reference: reference.clone(),
+                now_epoch_ms: now_epoch_ms().map_err(|_| prepare_denied("continuity-time"))?,
+                maximum_bytes: MAX_CONTINUITY_ARTIFACT_READ_BYTES,
+            })
+            .map_err(|_| prepare_denied("continuity-source-unavailable"))
+    };
+    let request_bytes = read_artifact(request_reference)?;
+    let prior_request: agentmage_kernel_contracts::RuntimeRunRequest =
+        serde_json::from_slice(&request_bytes)
+            .map_err(|_| prepare_denied("continuity-request-decode"))?;
+    agentmage_kernel_engine::runtime_coordinator::verify_runtime_run_request(&prior_request)
+        .map_err(|_| prepare_denied("continuity-request-invalid"))?;
+    if prior_request.run_id != *prior_run_id
+        || prior_request.session_id != *session_id
+        || prior_request.workspace_id != *profile.write_scope().workspace_id()
+        || prior_request.model_profile != *profile.model_profile()
+    {
+        return Err(prepare_denied("continuity-request-drift"));
+    }
+
+    let mut continuations = Vec::new();
+    for reference in binding
+        .artifacts
+        .iter()
+        .filter(|reference| reference.media_type == RUNTIME_CONTINUATION_MEDIA_TYPE)
+    {
+        let bytes = read_artifact(reference)?;
+        let continuation = decode_runtime_continuation_state(&bytes)
+            .map_err(|_| prepare_denied("continuity-state-decode"))?;
+        if continuation.run_id != *prior_run_id
+            || continuation.session_id != *session_id
+            || continuation.task_id != checkpoint.task_id
+            || continuation.request_sha256 != prior_request.request_sha256
+        {
+            return Err(prepare_denied("continuity-state-drift"));
+        }
+        continuations.push((continuation.turn_count, reference, bytes, continuation));
+    }
+    continuations.sort_by_key(|(turn_count, _, _, _)| *turn_count);
+    let Some((_, continuation_reference, continuation_bytes, continuation)) = continuations.last()
+    else {
+        return Err(prepare_denied("continuity-state-absent"));
+    };
+    let event_bytes =
+        serde_json::to_vec(&events).map_err(|_| prepare_denied("continuity-event-encode"))?;
+    let continuation_projection = serde_json::to_vec(&serde_json::json!({
+        "schema_version": 1,
+        "kind": "checked_runtime_continuation_projection",
+        "artifact_id": continuation_reference.artifact_id,
+        "manifest_sha256": continuation_reference.manifest_sha256,
+        "payload_sha256": continuation_reference.payload_sha256,
+        "continuation_sha256": continuation.continuation_sha256,
+        "event_cursor": continuation.event_cursor,
+        "agent_state": continuation.agent_state,
+        "agent_state_revision": continuation.agent_state_revision,
+        "turn_count": continuation.turn_count,
+        "model_call_count": continuation.model_call_count,
+        "tool_call_count": continuation.tool_call_count,
+        "context_refresh_count": continuation.context_refresh_count,
+        "no_progress_turns": continuation.no_progress_turns,
+        "resources": continuation.resources,
+        "state_transition_count": continuation.state_transitions.len(),
+        "tool_attempt_count": continuation.tool_attempts.len(),
+        "tool_result_count": continuation.tool_results.len(),
+        "evidence": continuation.evidence,
+        "receipt_ids": continuation.receipt_ids,
+        "artifacts": continuation.artifacts,
+        "verified_payload_byte_size": continuation_bytes.len(),
+        "verified_payload_sha256": sha256(&continuation_bytes),
+    }))
+    .map_err(|_| prepare_denied("continuity-state-projection"))?;
+    let event_projection = serde_json::to_vec(&serde_json::json!({
+        "schema_version": 1,
+        "kind": "checked_terminal_event_chain_projection",
+        "run_id": prior_run_id,
+        "session_id": session_id,
+        "event_count": events.len(),
+        "first_event_id": events.first().map(|event| &event.event_id),
+        "first_event_sha256": events.first().map(|event| event.event_sha256.as_str()),
+        "terminal_event_id": last_event.event_id,
+        "terminal_event_sha256": last_event.event_sha256,
+        "terminal_state": terminal_state,
+        "verified_chain_bytes_sha256": sha256(&event_bytes),
+        "verified_chain_byte_size": event_bytes.len(),
+    }))
+    .map_err(|_| prepare_denied("continuity-event-projection"))?;
+
+    let source_material = [
+        (
+            "request",
+            request_reference.artifact_id.as_str(),
+            request_reference.manifest_sha256.as_str(),
+            request_bytes,
+        ),
+        (
+            "continuation",
+            continuation_reference.artifact_id.as_str(),
+            continuation_reference.manifest_sha256.as_str(),
+            continuation_projection,
+        ),
+        (
+            "events",
+            last_event.event_id.as_str(),
+            last_event.event_sha256.as_str(),
+            event_projection,
+        ),
+    ];
+    let mut sources = Vec::with_capacity(source_material.len());
+    for (kind, identity, revision, bytes) in source_material {
+        let content_sha256 = sha256(&bytes);
+        let content =
+            String::from_utf8(bytes).map_err(|_| prepare_denied("continuity-source-encoding"))?;
+        sources.push(
+            CodingContextSource::new(
+                format!("continuity-{kind}-{}", &content_sha256[..16]),
+                ContextItemKind::Supporting,
+                ContextSensitivity::Private,
+                ContextAdmission::Eligible,
+                true,
+                format!(
+                    "agentmage:coding-continuity:{}:{kind}:{identity}",
+                    session_id.as_str()
+                ),
+                revision,
+                content_sha256,
+                content,
+            )
+            .map_err(|_| prepare_denied("continuity-source-invalid"))?,
+        );
+    }
+    let mut source_hashes = sources
+        .iter()
+        .map(|source| source.content_sha256().to_owned())
+        .collect::<Vec<_>>();
+    source_hashes.sort();
+    source_hashes.dedup();
+    let source_set_sha256 = checked_continuity_source_set_sha256(&source_hashes);
+    let mut identifiers = vec![
+        prior_run_id.as_str().to_owned(),
+        session_id.as_str().to_owned(),
+        profile.write_scope().workspace_id().as_str().to_owned(),
+    ];
+    identifiers.sort();
+    identifiers.dedup();
+    let mut evidence_ids = continuation
+        .evidence
+        .iter()
+        .map(|evidence| evidence.evidence_id.clone())
+        .collect::<Vec<_>>();
+    evidence_ids.sort_by(|left, right| left.as_str().cmp(right.as_str()));
+    evidence_ids.dedup();
+    let mut receipt_ids = continuation.receipt_ids.clone();
+    receipt_ids.sort_by(|left, right| left.as_str().cmp(right.as_str()));
+    receipt_ids.dedup();
+    let summary = CheckedContextSummary {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        summary_id: ContextSummaryId::from_raw(format!(
+            "summary-coding-{}",
+            &source_set_sha256[..24]
+        )),
+        state: CheckedSummaryState::Current,
+        summary: "Prior same-session work is retained; its exact request and digest-bound checked projections of the verified latest safe continuation and complete terminal event chain are reopened as untrusted sources."
+            .to_owned(),
+        paths: Vec::new(),
+        errors: Vec::new(),
+        identifiers,
+        commands: Vec::new(),
+        decisions: vec![format!("prior_terminal_state={terminal_state:?}")],
+        unresolved_questions: vec![
+            "Any claim depending on unavailable prior bytes must remain blocked.".to_owned(),
+        ],
+        evidence_ids,
+        citation_ids: Vec::new(),
+        receipt_ids,
+        source_set_sha256,
+    };
+    CodingContextContinuityInput::new(
+        session_id.clone(),
+        profile.write_scope().workspace_id().clone(),
+        summary,
+        sources,
+    )
+    .map_err(|_| prepare_denied("continuity-summary-invalid"))
 }
 
 fn build_profile(

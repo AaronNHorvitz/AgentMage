@@ -386,12 +386,16 @@ def start(
     approval_delay_ms: int = 0,
     model: str = "scripted",
     slow_subscriber_probe: bool = False,
+    artifact_integrity_probe: bool = False,
     preauthorized_paths: tuple[str, ...] = (),
     preauthorized_commands: tuple[str, ...] = (),
     preauthorize_workspace_reads: bool = False,
     preauthorization_budget: int | None = None,
     preauthorization_minutes: int | None = None,
     revoke_preauthorization_before_follow_ups: bool = False,
+    record_session: bool = False,
+    artifact_release_probe_before_follow_ups: bool = False,
+    follow_ups: tuple[str, ...] = (),
 ) -> int:
     base = base.resolve(strict=True)
     state, disposable, workspace = paths(base)
@@ -422,6 +426,14 @@ def start(
         command.extend(("--approval-delay-ms", str(approval_delay_ms)))
     if slow_subscriber_probe:
         command.append("--slow-subscriber-probe")
+    if artifact_integrity_probe:
+        command.append("--artifact-integrity-probe")
+    if record_session:
+        command.append("--record-session")
+    if artifact_release_probe_before_follow_ups:
+        command.append("--artifact-release-probe-before-follow-ups")
+    for follow_up in follow_ups:
+        command.extend(("--follow-up", follow_up))
     for path in preauthorized_paths:
         command.extend(("--preauthorize-path", path))
     for template in preauthorized_commands:
@@ -508,6 +520,10 @@ def start(
                 "replay_approval_probe": replay_approval_probe,
                 "expired_cursor_probe": expired_cursor_probe,
                 "approval_delay_ms": approval_delay_ms,
+                "artifact_integrity_probe": artifact_integrity_probe,
+                "record_session": record_session,
+                "artifact_release_probe_before_follow_ups": artifact_release_probe_before_follow_ups,
+                "follow_up_count": len(follow_ups),
                 "session_preauthorization_requested": bool(
                     preauthorized_paths
                     or preauthorized_commands
@@ -586,6 +602,7 @@ def parser() -> argparse.ArgumentParser:
         required=True,
     )
     start_command.add_argument("--objective", required=True)
+    start_command.add_argument("--follow-up", action="append", default=[])
     start_command.add_argument("--model", choices=("scripted", "muse", "gpt-oss"), default="scripted")
     start_command.add_argument("--approve-this-run", action="store_true")
     start_command.add_argument("--stale-approval-probe", action="store_true")
@@ -593,6 +610,9 @@ def parser() -> argparse.ArgumentParser:
     start_command.add_argument("--expired-cursor-probe", action="store_true")
     start_command.add_argument("--approval-delay-ms", type=approval_delay, default=0)
     start_command.add_argument("--slow-subscriber-probe", action="store_true")
+    start_command.add_argument("--artifact-integrity-probe", action="store_true")
+    start_command.add_argument("--record-session", action="store_true")
+    start_command.add_argument("--artifact-release-probe-before-follow-ups", action="store_true")
     start_command.add_argument("--preauthorize-path", action="append", default=[])
     start_command.add_argument("--preauthorize-command", action="append", default=[])
     start_command.add_argument("--preauthorize-workspace-reads", action="store_true")
@@ -622,10 +642,14 @@ def main() -> int:
             arguments.approve_this_run, arguments.stale_approval_probe, arguments.log_dir,
             arguments.replay_approval_probe, arguments.expired_cursor_probe,
             arguments.approval_delay_ms, arguments.model, arguments.slow_subscriber_probe,
+            arguments.artifact_integrity_probe,
             tuple(arguments.preauthorize_path), tuple(arguments.preauthorize_command),
             arguments.preauthorize_workspace_reads, arguments.preauthorization_budget,
             arguments.preauthorization_minutes,
             arguments.revoke_preauthorization_before_follow_ups,
+            arguments.record_session,
+            arguments.artifact_release_probe_before_follow_ups,
+            tuple(arguments.follow_up),
         )
     except (HarnessError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as error:
         print(str(error), file=sys.stderr)

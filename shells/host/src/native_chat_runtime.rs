@@ -524,6 +524,7 @@ mod tests {
         assert!(observed_result);
         let input = NativeChatPrepareInput {
             resume: false,
+            record_session: false,
             slow_subscriber_probe: false,
             preauthorization: None,
             engineering_session_id: None,
@@ -611,6 +612,7 @@ mod tests {
         let (_, controlled_request) = crate::coding_run::tests::fixture_profile_and_request();
         let input = NativeChatPrepareInput {
             resume: false,
+            record_session: false,
             slow_subscriber_probe: false,
             preauthorization: None,
             engineering_session_id: None,

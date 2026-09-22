@@ -12,7 +12,7 @@ use crate::runtime_transport::{
     RuntimePrepareInput, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
 };
 
-const WIRE_VERSION: u16 = 4;
+const WIRE_VERSION: u16 = 5;
 const MAX_WIRE_BYTES: usize = 4 * 1024 * 1024;
 
 /// One closed operation accepted by the host-owned runtime service.
@@ -86,6 +86,7 @@ enum DevelopmentIpcProbe {
     StaleApproval,
     ReplayApproval(Option<RuntimeApprovalResponse>),
     ExpiredCursor(Option<RuntimeEventCursor>),
+    ArtifactIntegrity,
 }
 
 /// Client-side adapter that contains transport authority but no runtime or effect authority.
@@ -127,6 +128,13 @@ impl LinuxRuntimeIpcClient {
     #[must_use]
     pub(crate) fn with_expired_cursor_probe(mut self) -> Self {
         self.development_probe = DevelopmentIpcProbe::ExpiredCursor(None);
+        self
+    }
+
+    /// Corrupts one returned artifact page after the authenticated host response.
+    #[must_use]
+    pub(crate) fn with_artifact_integrity_probe(mut self) -> Self {
+        self.development_probe = DevelopmentIpcProbe::ArtifactIntegrity;
         self
     }
 
@@ -246,6 +254,7 @@ impl RuntimeTransportPort for LinuxRuntimeIpcClient {
                 }
                 Some(_) => {}
             },
+            DevelopmentIpcProbe::ArtifactIntegrity => {}
             DevelopmentIpcProbe::None => {}
         }
         match self.exchange(RuntimeIpcRequest::Advance {
@@ -292,7 +301,17 @@ impl RuntimeTransportPort for LinuxRuntimeIpcClient {
             offset,
             maximum_bytes,
         })? {
-            RuntimeIpcResponse::ArtifactPage { page } => Ok(page),
+            RuntimeIpcResponse::ArtifactPage { mut page } => {
+                if matches!(
+                    self.development_probe,
+                    DevelopmentIpcProbe::ArtifactIntegrity
+                ) && let Some(byte) = page.bytes.first_mut()
+                {
+                    *byte ^= 1;
+                    self.development_probe = DevelopmentIpcProbe::None;
+                }
+                Ok(page)
+            }
             _ => Err(RuntimeTransportError::RuntimeEvidenceDenied),
         }
     }

@@ -40,6 +40,7 @@ CASE_ROOTS.update({
     "replayed-approval": "c11",
     "expired-cursor": "c12",
     "approval-cancel-race": "c13",
+    "artifact-integrity": "c14",
 })
 
 
@@ -310,6 +311,42 @@ def run_approval_cancel_race(work_root: Path, log_root: Path) -> dict:
     }
 
 
+def run_artifact_integrity_probe(work_root: Path, log_root: Path) -> dict:
+    case = "artifact-integrity"
+    base = work_root / CASE_ROOTS[case]
+    log_dir = log_root / case
+    coding_harness.setup(base, "repair")
+    exit_code = coding_harness.start(
+        base,
+        "no-op",
+        "Reject a substituted verified-artifact page.",
+        True,
+        False,
+        log_dir,
+        artifact_integrity_probe=True,
+    )
+    stderr = (log_dir / "stderr.log").read_text(encoding="utf-8")
+    status = git_status(coding_harness.paths(base)[2])
+    checks = {
+        "exit": exit_code == 5,
+        "exact-refusal": "cli.runtime.evidence_denied\n" in stderr,
+        "filesystem": status == [],
+        "no-outcome": not any("state" in row for row in rows(log_dir)),
+    }
+    return {
+        "case": case,
+        "scenario": "no-op",
+        "exit_code": exit_code,
+        "terminal": None,
+        "event_count": len(rows(log_dir)),
+        "worktree_status": status,
+        "checks": checks,
+        "passed": all(checks.values()),
+        "stdout_sha256": sha256(log_dir / "stdout.jsonl"),
+        "stderr_sha256": sha256(log_dir / "stderr.log"),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--work-root", type=Path, required=True)
@@ -328,6 +365,7 @@ def main() -> int:
         run_transport_probe("replayed-approval", work_root, log_root),
         run_transport_probe("expired-cursor", work_root, log_root),
         run_approval_cancel_race(work_root, log_root),
+        run_artifact_integrity_probe(work_root, log_root),
     ])
     agentmage = coding_harness.binary("agentmage")
     host = coding_harness.binary("agentmage-host")

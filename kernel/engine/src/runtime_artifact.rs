@@ -28,6 +28,12 @@ pub const RUNTIME_CONTINUATION_MEDIA_TYPE: &str =
     "application/vnd.agentmage.runtime-continuation+json";
 /// Exact media type for the sealed base request retained to reconstruct a durable run.
 pub const RUNTIME_REQUEST_MEDIA_TYPE: &str = "application/vnd.agentmage.runtime-request+json";
+/// Exact media type for one model-visible packet retained before generation dispatch.
+pub const RUNTIME_CONTEXT_PACKET_MEDIA_TYPE: &str =
+    "application/vnd.agentmage.runtime-context-packet+json";
+/// Exact media type for one accepted model-boundary result retained before interpretation.
+pub const RUNTIME_MODEL_RESULT_MEDIA_TYPE: &str =
+    "application/vnd.agentmage.runtime-model-result+json";
 const MAX_RUNTIME_CONTINUATION_RESULTS: usize = 1_024;
 const MAX_RUNTIME_CONTINUATION_TRANSITIONS: usize = 4_096;
 
@@ -2610,7 +2616,10 @@ fn valid_kind_media(kind: RuntimeArtifactKind, media_type: &str) -> bool {
         ),
         RuntimeArtifactKind::ModelOutput => matches!(
             media_type,
-            "text/plain" | "application/json" | "application/x-ndjson"
+            "text/plain"
+                | "application/json"
+                | "application/x-ndjson"
+                | RUNTIME_MODEL_RESULT_MEDIA_TYPE
         ),
         RuntimeArtifactKind::GeneratedFile | RuntimeArtifactKind::Report => true,
     }

@@ -27,10 +27,11 @@ use crate::context_management::verify_checkpoint;
 use crate::model_runtime::{LocalModelController, ModelRuntimeGateError};
 use crate::runtime_answer::compose_inferred_runtime_answer;
 use crate::runtime_artifact::{
-    MAX_RUNTIME_ARTIFACT_PREVIEW_BYTES, RUNTIME_CONTINUATION_MEDIA_TYPE,
-    RUNTIME_REQUEST_MEDIA_TYPE, RuntimeArtifactPage, RuntimeArtifactState,
-    encode_runtime_continuation_state, runtime_artifact_ref, runtime_payload_reference,
-    seal_runtime_artifact_manifest, seal_runtime_continuation_state, verify_runtime_artifact_ref,
+    MAX_RUNTIME_ARTIFACT_PREVIEW_BYTES, RUNTIME_CONTEXT_PACKET_MEDIA_TYPE,
+    RUNTIME_CONTINUATION_MEDIA_TYPE, RUNTIME_MODEL_RESULT_MEDIA_TYPE, RUNTIME_REQUEST_MEDIA_TYPE,
+    RuntimeArtifactPage, RuntimeArtifactState, encode_runtime_continuation_state,
+    runtime_artifact_ref, runtime_payload_reference, seal_runtime_artifact_manifest,
+    seal_runtime_continuation_state, verify_runtime_artifact_ref,
     verify_runtime_continuation_state, verify_runtime_resume_binding,
 };
 use crate::runtime_coordinator::{
@@ -343,6 +344,11 @@ pub trait RuntimeJournalPort {
 /// Implementations receive only a sealed path-free manifest and bounded bytes. The model, client,
 /// tool registry, and renderer never receive native payload-store authority.
 pub trait RuntimeArtifactPort {
+    /// Returns whether exact model-visible packets and accepted model results must be retained.
+    fn retain_model_exchanges(&self) -> bool {
+        false
+    }
+
     /// Publishes one exact immutable payload and returns its complete path-free reference.
     fn publish_runtime_artifact(
         &mut self,
@@ -521,6 +527,7 @@ struct RuntimeJournalHooks<T> {
 
 #[derive(Clone, Copy)]
 struct RuntimeArtifactHooks<T> {
+    retain_model_exchanges: fn(&T) -> bool,
     publish: fn(
         &mut T,
         RuntimeArtifactManifest,
@@ -718,6 +725,7 @@ where
                 load: load_runtime_events::<T>,
             }),
             Some(RuntimeArtifactHooks {
+                retain_model_exchanges: retain_model_exchanges::<T>,
                 publish: publish_runtime_artifact::<T>,
             }),
             None,
@@ -755,6 +763,7 @@ where
                 load: load_runtime_events::<T>,
             }),
             Some(RuntimeArtifactHooks {
+                retain_model_exchanges: retain_model_exchanges::<T>,
                 publish: publish_runtime_artifact::<T>,
             }),
             Some(RuntimeCheckpointHooks {
@@ -1157,6 +1166,29 @@ where
         {
             return self.finish_budget_exhaustion(&turn_id);
         }
+        if self
+            .artifact
+            .as_ref()
+            .is_some_and(|hooks| (hooks.retain_model_exchanges)(&self.tool_boundary))
+        {
+            let context_bytes =
+                to_canonical_json(&context).map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+            self.resources
+                .admit_artifact(
+                    u64::try_from(context_bytes.len())
+                        .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?,
+                )
+                .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+            self.publish_artifact_bytes(
+                &context_bytes,
+                RUNTIME_CONTEXT_PACKET_MEDIA_TYPE,
+                RuntimeArtifactKind::Report,
+                Some(&turn_id),
+                None,
+                None,
+                false,
+            )?;
+        }
 
         self.resources
             .consume(BudgetResource::ModelCalls, 1)
@@ -1212,6 +1244,29 @@ where
                 None,
             )?;
             return self.finish_model_failure(&turn_id, RuntimePortFailure::Invalid);
+        }
+        if self
+            .artifact
+            .as_ref()
+            .is_some_and(|hooks| (hooks.retain_model_exchanges)(&self.tool_boundary))
+        {
+            let result_bytes =
+                to_canonical_json(&result).map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+            self.resources
+                .admit_artifact(
+                    u64::try_from(result_bytes.len())
+                        .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?,
+                )
+                .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+            self.publish_artifact_bytes(
+                &result_bytes,
+                RUNTIME_MODEL_RESULT_MEDIA_TYPE,
+                RuntimeArtifactKind::ModelOutput,
+                Some(&turn_id),
+                None,
+                None,
+                false,
+            )?;
         }
         let model_memory = result
             .resources
@@ -2975,6 +3030,10 @@ fn publish_runtime_artifact<T: RuntimeArtifactPort>(
     payload: &[u8],
 ) -> Result<RuntimeArtifactRef, RuntimePortFailure> {
     port.publish_runtime_artifact(manifest, payload)
+}
+
+fn retain_model_exchanges<T: RuntimeArtifactPort>(port: &T) -> bool {
+    port.retain_model_exchanges()
 }
 
 fn commit_runtime_checkpoint<T: RuntimeCheckpointPort>(

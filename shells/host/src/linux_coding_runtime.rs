@@ -441,6 +441,8 @@ where
     pub identities: I,
     /// Optional direct-user-approved bounded authority envelope.
     pub preauthorization: Option<LinuxCodingSessionPreauthorization>,
+    /// Whether the user explicitly consented to retain exact model exchanges for this session.
+    pub retain_model_exchanges: bool,
 }
 
 /// Production Linux implementation of the reusable runtime's native coding boundary.
@@ -461,6 +463,7 @@ where
     sensitivity: DataSensitivity,
     identities: I,
     preauthorization: Option<LinuxCodingSessionPreauthorization>,
+    retain_model_exchanges: bool,
     pending: BTreeMap<String, PendingCodingOperation<'workspace>>,
     issued: BTreeMap<String, IssuedCodingOperation<'workspace>>,
     pending_write_completion: Option<PendingWriteCheckpointCompletion>,
@@ -649,6 +652,7 @@ where
             sensitivity,
             identities,
             preauthorization,
+            retain_model_exchanges,
         } = input;
         let root = workspace.workspace();
         if policy.parent_targets().len() != 1
@@ -687,6 +691,7 @@ where
             sensitivity,
             identities,
             preauthorization,
+            retain_model_exchanges,
             pending: BTreeMap::new(),
             issued: BTreeMap::new(),
             pending_write_completion: None,
@@ -3376,6 +3381,10 @@ where
     E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
     G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
 {
+    fn retain_model_exchanges(&self) -> bool {
+        self.retain_model_exchanges
+    }
+
     fn publish_runtime_artifact(
         &mut self,
         manifest: RuntimeArtifactManifest,
@@ -4690,6 +4699,7 @@ mod tests {
                 |clock| TestIdentities::stop_after_checkpoint(0, clock),
             ),
             preauthorization: None,
+            retain_model_exchanges: false,
         })
         .expect("coding runtime boundary");
         Fixture {
@@ -6214,6 +6224,7 @@ mod tests {
                 sensitivity: DataSensitivity::Operational,
                 identities: TestIdentities::new(30_000),
                 preauthorization: None,
+                retain_model_exchanges: false,
             })
             .expect("long-session resumed boundary");
         let mut resumed_request = base_request.clone();
@@ -6707,6 +6718,7 @@ mod tests {
                 sensitivity: DataSensitivity::Operational,
                 identities: TestIdentities::new(30_000),
                 preauthorization: None,
+                retain_model_exchanges: false,
             })
             .expect("large-artifact resumed boundary");
         let mut resumed_request = base_request.clone();
@@ -6989,6 +7001,7 @@ mod tests {
                 sensitivity: DataSensitivity::Operational,
                 identities: TestIdentities::new(10_000),
                 preauthorization: None,
+                retain_model_exchanges: false,
             })
             .expect("resumed Linux boundary");
         let mut resumed_request = base_request.clone();
@@ -7263,6 +7276,7 @@ mod tests {
                     sensitivity: DataSensitivity::Operational,
                     identities: TestIdentities::new(20_000),
                     preauthorization: None,
+                    retain_model_exchanges: false,
                 })
                 .expect("lost-continuation Linux boundary");
             let mut resumed_request = base_request.clone();

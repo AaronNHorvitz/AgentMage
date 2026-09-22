@@ -182,6 +182,8 @@ fn hex(bytes: &[u8]) -> String {
 pub struct RuntimePrepareInput {
     /// Whether the host must reconstruct one exact safe-boundary durable run.
     pub resume: bool,
+    /// Explicit session consent to retain exact model exchanges for checked continuity.
+    pub record_session: bool,
     /// Development-only probe that installs one intentionally undrained bounded subscriber.
     pub slow_subscriber_probe: bool,
     /// Optional direct-user-approved bounded session authority contract.

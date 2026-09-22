@@ -1227,6 +1227,7 @@ mod tests {
     fn input(request: &RuntimeRunRequest) -> NativeChatPrepareInput {
         NativeChatPrepareInput {
             resume: false,
+            record_session: false,
             slow_subscriber_probe: false,
             preauthorization: None,
             engineering_session_id: None,
