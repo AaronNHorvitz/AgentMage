@@ -6,7 +6,7 @@
         "base_image_sha256": "89f61a124414261868224666aa7fb8df1b78397a53623774bdfb105d1612b48b",
         "component_id": "build-environment:fedora-x86_64",
         "platform": "fedora-x86_64",
-        "sha256": "5b5719b5f8d3fbbeb9206610930f924a824f631928918887b18f745ad2cbbdd5",
+        "sha256": "c1274676db0e48d93686014b99be52cf1ada8e84e6962192cb2ed63fa49bdeef",
         "version": "Fedora Linux 44 (Container Image)"
       },
       {
@@ -14,7 +14,7 @@
         "base_image_sha256": "7b202b0e2e0028c6250f5fcf41d04df492d145a1654c6995a6553f0c1f6f1960",
         "component_id": "build-environment:ubuntu-x86_64",
         "platform": "ubuntu-x86_64",
-        "sha256": "24cabc5cb783c5db8bb6e2ea24f95794bf6354d4a346128184185dd22bfad80a",
+        "sha256": "1b8ace9c0258bcd68e7ece0cc606cb4e9f7b81d7c12f748e2571d3398937564b",
         "version": "Ubuntu 26.04 LTS"
       }
     ],
@@ -163,7 +163,7 @@
         "npm-workspace": 2,
         "swift-workspace": 1
       },
-      "identity_set_sha256": "8c290bfd733bfb21fe849579ede708ff8de3a8ef7014044e9bd2ce2dc3fbae3c",
+      "identity_set_sha256": "82989eea531200a8cc9f6efa2ad5fddd24750f58918e764690406e3a6cddce10",
       "source": "supply-chain/dependency-provenance.json"
     },
     "product_runtimes": []
@@ -356,11 +356,11 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
-      "sha256": "2c67691eaccac57dd1ecddff3c4568416c89d539347a3c9a10c6029e318d992e"
+      "sha256": "bfbed835c85e2e621b9c7ce4532311c622ccc10af6f62faf3f210022c4c17bb7"
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "14d894036af40f0682e69834886032152a102051346133f84af0157e43e5963c"
+      "sha256": "f8d10ae2ef67ba0cf9b26094f5803ef0a671031d0c2bca265786ee4e0183b4aa"
     },
     {
       "path": "architecture/dependency-classes.json",
@@ -396,11 +396,11 @@
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "1596e8333e24a764d11bf905ce686ab0407732d993cf0c2bf57bb7e1014b4e8f"
+      "sha256": "8e3713dc570c629537bb9c04d279674bf3483734750913d3c8981b56b4f5f967"
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "3a783232ea6efd52d66dd1eedba5de652ac94b1e0c80c813914da9ad99db4ff1"
+      "sha256": "202228269833f87023e9cb332e38c8ef822a44d9334e53d01bd06d334c6933cb"
     },
     {
       "path": "scripts/component_inventory.py",
