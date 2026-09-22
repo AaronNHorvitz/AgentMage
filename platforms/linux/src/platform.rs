@@ -95,6 +95,61 @@ pub struct LinuxPlatformAdapter {
     path_adapter: LinuxPathAdapter,
 }
 
+/// Explicit non-production Linux adapter identity for a validated disposable coding activation.
+///
+/// This type cannot satisfy `VerifiedPlatformAdapter` and therefore cannot activate production
+/// platform, package, model, or release paths.
+pub struct LinuxDevelopmentPlatformAdapter {
+    adapter_instance_id: AdapterInstanceId,
+    activation_sha256: String,
+    path_adapter: LinuxPathAdapter,
+}
+
+impl fmt::Debug for LinuxDevelopmentPlatformAdapter {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LinuxDevelopmentPlatformAdapter")
+            .field("adapter_instance_id", &self.adapter_instance_id)
+            .field("activation_sha256", &self.activation_sha256)
+            .finish_non_exhaustive()
+    }
+}
+
+impl LinuxDevelopmentPlatformAdapter {
+    /// Creates only the separate accepted disposable coding activation.
+    pub fn activate(
+        activation: &str,
+        activation_sha256: String,
+        adapter_instance_id: AdapterInstanceId,
+    ) -> Result<Self, agentmage_kernel_contracts::PathAdapterError> {
+        if activation != "coding-development-v1"
+            || activation_sha256.len() != 64
+            || !activation_sha256
+                .bytes()
+                .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+        {
+            return Err(agentmage_kernel_contracts::PathAdapterError::new(
+                agentmage_kernel_contracts::PathAdapterErrorKind::UnsafeComponent,
+                None,
+            ));
+        }
+        Ok(Self {
+            path_adapter: LinuxPathAdapter::new(
+                adapter_instance_id.clone(),
+                DEFAULT_MAX_PREIMAGE_BYTES,
+            ),
+            adapter_instance_id,
+            activation_sha256,
+        })
+    }
+
+    /// Returns the exact development adapter instance identity.
+    #[must_use]
+    pub const fn adapter_instance_id(&self) -> &AdapterInstanceId {
+        &self.adapter_instance_id
+    }
+}
+
 impl fmt::Debug for LinuxPlatformAdapter {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
@@ -202,6 +257,42 @@ pub fn select_linux_workspace(
         authorization_id,
         verified.adapter().adapter_instance_id.clone(),
     )
+}
+
+/// Authorizes one explicit disposable workspace without asserting production release activation.
+pub fn select_development_linux_workspace(
+    development: &LinuxDevelopmentPlatformAdapter,
+    root: &Path,
+    workspace_id: WorkspaceId,
+    authorization_id: WorkspaceAuthorizationId,
+) -> Result<LinuxAuthorizedWorkspace, agentmage_kernel_contracts::PathAdapterError> {
+    authorize_workspace_root(
+        root,
+        workspace_id,
+        authorization_id,
+        development.adapter_instance_id.clone(),
+    )
+}
+
+/// Resolves one held object through the explicit disposable development adapter.
+pub fn resolve_development_linux_workspace_object(
+    development: &LinuxDevelopmentPlatformAdapter,
+    workspace: &LinuxAuthorizedWorkspace,
+    path: &WorkspacePath,
+    intent: PathResolutionIntent,
+) -> Result<LinuxHeldObject, agentmage_kernel_contracts::PathAdapterError> {
+    development.path_adapter.resolve(workspace, path, intent)
+}
+
+/// Observes one symbolic link through the explicit disposable development adapter.
+pub fn observe_development_linux_workspace_symbolic_link(
+    development: &LinuxDevelopmentPlatformAdapter,
+    workspace: &LinuxAuthorizedWorkspace,
+    path: &WorkspacePath,
+) -> Result<LinuxSymbolicLinkEvidence, agentmage_kernel_contracts::PathAdapterError> {
+    development
+        .path_adapter
+        .observe_symbolic_link(workspace, path)
 }
 
 /// Resolves one canonical object through the verified aggregate path adapter.
@@ -479,6 +570,22 @@ pub fn open_linux_authority(
     if verified.adapter().family != verified.manifest_identity().target().family() {
         return Err(LinuxAuthorityOpenError::Platform);
     }
+    let root = LinuxStrictLocalRootInspector::inspect(state_root)
+        .map_err(LinuxAuthorityOpenError::Root)?;
+    open_linux_authority_in_root(root, provider, recovery_epoch_ms)
+}
+
+/// Opens isolated development state without asserting production key or platform activation.
+pub fn open_linux_development_authority<P: OperationalStoreKeyProvider>(
+    development: &LinuxDevelopmentPlatformAdapter,
+    state_root: &Path,
+    provider: &mut P,
+    recovery_epoch_ms: u64,
+) -> Result<LinuxAuthorityRuntime, LinuxAuthorityOpenError> {
+    let _activation_identity = (
+        development.adapter_instance_id(),
+        development.activation_sha256.as_str(),
+    );
     let root = LinuxStrictLocalRootInspector::inspect(state_root)
         .map_err(LinuxAuthorityOpenError::Root)?;
     open_linux_authority_in_root(root, provider, recovery_epoch_ms)

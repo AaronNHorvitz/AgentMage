@@ -21,6 +21,21 @@ fn main() -> Result<(), HostExit> {
         let result = match arguments.as_slice() {
             #[cfg(target_os = "linux")]
             [command] if command == "--bootstrap-linux" => return bootstrap_linux(),
+            #[cfg(target_os = "linux")]
+            [
+                command,
+                state_root,
+                disposable_root,
+                workspace_root,
+                scenario,
+            ] if command == "--coding-development-host" => {
+                return coding_development_host(
+                    state_root,
+                    disposable_root,
+                    workspace_root,
+                    scenario,
+                );
+            }
             [command, root] if command == "--verify-package-candidate-root" => {
                 package_verify::verify_package_candidate_root(root)
             }
@@ -65,6 +80,45 @@ fn main() -> Result<(), HostExit> {
 
     let _composition = (shared_components, platform_component);
     Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn coding_development_host(
+    state_root: &std::ffi::OsStr,
+    disposable_root: &std::ffi::OsStr,
+    workspace_root: &std::ffi::OsStr,
+    scenario: &std::ffi::OsStr,
+) -> Result<(), HostExit> {
+    use agentmage_host::coding_development_activation::CodingDevelopmentActivation;
+    use agentmage_host::coding_development_runtime::{
+        CodingDevelopmentRuntimeFactory, CodingDevelopmentScenario,
+    };
+    use agentmage_host::native_chat_runtime::NativeChatRuntimeService;
+    use agentmage_host::runtime_ipc::serve_linux_runtime_ipc;
+
+    let scenario = scenario
+        .to_str()
+        .and_then(CodingDevelopmentScenario::parse)
+        .ok_or(HostExit("coding.development.scenario-denied"))?;
+    let activation = CodingDevelopmentActivation::validate(
+        std::path::Path::new(state_root),
+        std::path::Path::new(disposable_root),
+        std::path::Path::new(workspace_root),
+    )
+    .map_err(|error| HostExit(error.code()))?;
+    let factory = CodingDevelopmentRuntimeFactory::new(activation.clone(), scenario)
+        .map_err(|error| HostExit(error.code()))?;
+    let parent = linux_bootstrap::parent_process_id().map_err(|error| HostExit(error.code()))?;
+    let bootstrap = linux_bootstrap::bootstrap_development_for_peer(&activation, parent)
+        .map_err(|error| HostExit(error.code()))?;
+    bootstrap
+        .write_launch_envelope(&mut std::io::stdout().lock())
+        .map_err(|error| HostExit(error.code()))?;
+    let mut session = bootstrap
+        .accept()
+        .map_err(|error| HostExit(error.kind().code()))?;
+    let mut runtime = NativeChatRuntimeService::new(factory);
+    serve_linux_runtime_ipc(&mut session, &mut runtime).map_err(|error| HostExit(error.code()))
 }
 
 #[cfg(target_os = "linux")]

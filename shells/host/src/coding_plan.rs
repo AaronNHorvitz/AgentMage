@@ -283,8 +283,10 @@ fn sha256(bytes: &[u8]) -> String {
     output
 }
 
-#[cfg(test)]
-pub(crate) fn fixture_coding_plan_binding(map: &RepositoryMap) -> CodingPlanBinding {
+/// Builds the fixed, authority-free plan chain used only by the explicit executable fixture.
+pub fn build_coding_development_plan_binding(
+    map: &RepositoryMap,
+) -> Result<CodingPlanBinding, CodingPlanBindingError> {
     use agentmage_capability_repository_map::{
         ChangeAlternativeDimension, ChangeAlternativeOption, ChangeAlternativeSet,
         ChangeImpactSurfaceKind, ChangeIntentInput, ChangePlanInput, ChangeRiskDomain,
@@ -294,7 +296,8 @@ pub(crate) fn fixture_coding_plan_binding(map: &RepositoryMap) -> CodingPlanBind
         normalize_change_intent,
     };
 
-    let index = build_deep_repository_index(map, Vec::new(), Vec::new()).expect("fixture index");
+    let index = build_deep_repository_index(map, Vec::new(), Vec::new())
+        .map_err(|_| CodingPlanBindingError::SourceDenied)?;
     let target = index
         .facts
         .iter()
@@ -305,7 +308,7 @@ pub(crate) fn fixture_coding_plan_binding(map: &RepositoryMap) -> CodingPlanBind
                 .iter()
                 .find(|fact| fact.kind == RepositoryFactKind::Language)
         })
-        .expect("fixture source fact")
+        .ok_or(CodingPlanBindingError::SourceDenied)?
         .fact_id
         .clone();
     let intent = normalize_change_intent(
@@ -334,8 +337,9 @@ pub(crate) fn fixture_coding_plan_binding(map: &RepositoryMap) -> CodingPlanBind
             clarifications: Vec::new(),
         },
     )
-    .expect("fixture intent");
-    let impact = build_minimal_change_impact(&index, &intent).expect("fixture impact");
+    .map_err(|_| CodingPlanBindingError::SourceDenied)?;
+    let impact = build_minimal_change_impact(&index, &intent)
+        .map_err(|_| CodingPlanBindingError::SourceDenied)?;
     let alternatives = ChangeAlternativeDimension::ALL
         .into_iter()
         .map(|dimension| ChangeAlternativeSet {
@@ -394,9 +398,8 @@ pub(crate) fn fixture_coding_plan_binding(map: &RepositoryMap) -> CodingPlanBind
             }],
         },
     )
-    .expect("fixture plan");
+    .map_err(|_| CodingPlanBindingError::SourceDenied)?;
     CodingPlanBinding::from_verified_records(map, &index, &intent, &impact, &plan)
-        .expect("fixture coding plan binding")
 }
 
 #[cfg(test)]
@@ -434,7 +437,7 @@ mod tests {
 
     #[test]
     fn story_48_2_plan_binding_accepts_only_the_verified_record_chain() {
-        let binding = fixture_coding_plan_binding(&map());
+        let binding = build_coding_development_plan_binding(&map()).expect("fixture plan");
         assert!(binding.verify());
         assert!(binding.matches_write_proposal(binding.intent_sha256(), binding.plan_sha256()));
         assert!(!binding.matches_write_proposal(&"f".repeat(64), binding.plan_sha256()));

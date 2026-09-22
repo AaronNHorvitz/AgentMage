@@ -18,9 +18,11 @@ use agentmage_kernel_engine::{
     operational_store::DurableAuthorityRuntime, repository_cache::RepositoryCacheRecord,
 };
 use agentmage_platform_linux::{
-    LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxPlatformAdapter, LinuxRepositoryInventory,
-    LinuxRepositoryInventoryEntry, LinuxRepositoryInventoryState, LinuxRepositoryObjectHint,
-    LinuxSymbolicLinkEvidence, linux_git_blob_object_id, observe_linux_workspace_symbolic_link,
+    LinuxAuthorizedWorkspace, LinuxDevelopmentPlatformAdapter, LinuxHeldObject,
+    LinuxPlatformAdapter, LinuxRepositoryInventory, LinuxRepositoryInventoryEntry,
+    LinuxRepositoryInventoryState, LinuxRepositoryObjectHint, LinuxSymbolicLinkEvidence,
+    linux_git_blob_object_id, observe_development_linux_workspace_symbolic_link,
+    observe_linux_workspace_symbolic_link, resolve_development_linux_workspace_object,
     resolve_linux_workspace_object,
 };
 use serde::Serialize;
@@ -279,6 +281,24 @@ pub fn build_linux_repository_map(
         |path| observe_linux_workspace_symbolic_link(platform, workspace, path),
     )
     .map(|map| PendingLinuxRepositoryMap { map })
+}
+
+/// Projects a complete Git inventory through the explicit disposable development adapter.
+pub fn build_development_linux_repository_map(
+    platform: &LinuxDevelopmentPlatformAdapter,
+    workspace: &LinuxAuthorizedWorkspace,
+    inventory: LinuxRepositoryInventory,
+    policy: &LinuxRepositoryMapPolicy,
+) -> Result<RepositoryMap, LinuxRepositoryMapProjectionError> {
+    project(
+        workspace,
+        inventory,
+        policy,
+        |path, intent| {
+            resolve_development_linux_workspace_object(platform, workspace, path, intent)
+        },
+        |path| observe_development_linux_workspace_symbolic_link(platform, workspace, path),
+    )
 }
 
 fn project(

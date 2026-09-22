@@ -182,11 +182,13 @@ impl CodingCompletionVerifier {
             .iter()
             .map(|(_, validation_id)| validation_id.as_str())
             .collect::<BTreeSet<_>>();
-        if (validation_required && validations.is_empty())
-            || self
-                .unconditional_validation_ids
-                .iter()
-                .any(|required| !completed_validation_ids.contains(required.as_str()))
+        if validation_required && validations.is_empty() {
+            return None;
+        }
+        if self
+            .unconditional_validation_ids
+            .iter()
+            .any(|required| !completed_validation_ids.contains(required.as_str()))
         {
             return None;
         }
@@ -201,11 +203,16 @@ impl CodingCompletionVerifier {
                 .iter()
                 .chain(&self.unconditional_validation_ids)
                 .any(|required| !post_write_validation_ids.contains(required.as_str()))
-                || !git_results.iter().any(|(index, _)| *index > last_write)
-                || !input
-                    .evidence
-                    .iter()
-                    .any(|evidence| evidence.kind == EvidenceKind::Receipt)
+            {
+                return None;
+            }
+            if !git_results.iter().any(|(index, _)| *index > last_write) {
+                return None;
+            }
+            if !input
+                .evidence
+                .iter()
+                .any(|evidence| evidence.kind == EvidenceKind::Receipt)
             {
                 return None;
             }
@@ -227,18 +234,20 @@ impl CodingCompletionVerifier {
         {
             return None;
         }
-        serde_json::from_slice::<ValidationReceipt>(&payload.bytes)
-            .ok()
-            .filter(|receipt| {
-                receipt.is_full_pass()
-                    && !receipt.execution_authority
-                    && receipt.execution_scope_sha256 == self.workspace_snapshot_sha256
-                    && self.validation_templates.contains(&(
-                        receipt.validation_id.clone(),
-                        receipt.validation_template_sha256.clone(),
-                    ))
-            })
-            .map(|receipt| receipt.validation_id)
+        let receipt = serde_json::from_slice::<ValidationReceipt>(&payload.bytes).ok()?;
+        if !receipt.is_full_pass() {
+            return None;
+        }
+        if receipt.execution_authority
+            || receipt.execution_scope_sha256 != self.workspace_snapshot_sha256
+            || !self.validation_templates.contains(&(
+                receipt.validation_id.clone(),
+                receipt.validation_template_sha256.clone(),
+            ))
+        {
+            return None;
+        }
+        Some(receipt.validation_id)
     }
 
     fn git_result(

@@ -9,7 +9,8 @@ use std::path::{Path, PathBuf};
 
 use agentmage_platform_linux::{
     LinuxHostIpcEndpoint, LinuxIpcAuthenticator, LinuxLaunchCredentials, LinuxPeerIdentity,
-    observe_linux_process_identity, open_linux_bootstrap_ipc,
+    observe_linux_development_process_identity, observe_linux_process_identity,
+    open_linux_bootstrap_ipc,
 };
 
 use crate::package_verify;
@@ -37,6 +38,8 @@ pub enum LinuxBootstrapError {
     TransportDenied,
     /// Direct bootstrap transfer failed.
     TransferFailed,
+    /// The explicit disposable development activation changed or was invalid.
+    DevelopmentActivationDenied,
 }
 
 impl LinuxBootstrapError {
@@ -49,6 +52,9 @@ impl LinuxBootstrapError {
             Self::RuntimeDenied => "agentmage.bootstrap.runtime_denied",
             Self::TransportDenied => "agentmage.bootstrap.transport_denied",
             Self::TransferFailed => "agentmage.bootstrap.transfer_failed",
+            Self::DevelopmentActivationDenied => {
+                "agentmage.bootstrap.development_activation_denied"
+            }
         }
     }
 }
@@ -120,27 +126,7 @@ impl VerifiedLinuxBootstrap {
         &self,
         output: &mut impl Write,
     ) -> Result<(), LinuxBootstrapError> {
-        let endpoint = self
-            .endpoint
-            .path()
-            .to_str()
-            .filter(|value| !value.is_empty() && !value.as_bytes().contains(&0))
-            .ok_or(LinuxBootstrapError::TransferFailed)?;
-        let endpoint_length =
-            u16::try_from(endpoint.len()).map_err(|_| LinuxBootstrapError::TransferFailed)?;
-        output
-            .write_all(b"AGMB")
-            .and_then(|()| output.write_all(&BOOTSTRAP_SCHEMA_VERSION.to_be_bytes()))
-            .and_then(|()| output.write_all(&endpoint_length.to_be_bytes()))
-            .and_then(|()| output.write_all(endpoint.as_bytes()))
-            .and_then(|()| output.write_all(self.credentials.challenge()))
-            .and_then(|()| output.write_all(self.credentials.launch_secret()))
-            .and_then(|()| output.write_all(&self.peer.uid().to_be_bytes()))
-            .and_then(|()| output.write_all(&self.peer.pid().to_be_bytes()))
-            .and_then(|()| output.write_all(&self.peer.start_time_ticks().to_be_bytes()))
-            .and_then(|()| output.write_all(self.peer.executable_sha256()))
-            .and_then(|()| output.flush())
-            .map_err(|_| LinuxBootstrapError::TransferFailed)
+        write_launch_envelope(&self.endpoint, &self.credentials, &self.peer, output)
     }
 
     /// Accepts and authenticates exactly the peer named in the launch envelope.
@@ -151,6 +137,89 @@ impl VerifiedLinuxBootstrap {
             .accept(&self.authenticator)
             .map_err(|_| LinuxBootstrapError::TransportDenied)
     }
+}
+
+/// Development-only authenticated endpoint with no production-package activation claim.
+pub struct DevelopmentLinuxBootstrap {
+    endpoint: LinuxHostIpcEndpoint,
+    authenticator: LinuxIpcAuthenticator,
+    credentials: LinuxLaunchCredentials,
+    peer: LinuxPeerIdentity,
+}
+
+impl DevelopmentLinuxBootstrap {
+    /// Writes the same one-use binary peer envelope as production bootstrap.
+    pub fn write_launch_envelope(
+        &self,
+        output: &mut impl Write,
+    ) -> Result<(), LinuxBootstrapError> {
+        write_launch_envelope(&self.endpoint, &self.credentials, &self.peer, output)
+    }
+
+    /// Accepts only the exact parent named in the one-use envelope.
+    pub fn accept(
+        &self,
+    ) -> Result<
+        agentmage_platform_linux::LinuxAuthenticatedIpcSession,
+        agentmage_platform_linux::LinuxIpcError,
+    > {
+        self.endpoint.accept_development(&self.authenticator)
+    }
+}
+
+/// Creates the separate development bootstrap after its exact activation was validated.
+pub fn bootstrap_development_for_peer(
+    activation: &agentmage_host::coding_development_activation::CodingDevelopmentActivation,
+    peer_pid: i32,
+) -> Result<DevelopmentLinuxBootstrap, LinuxBootstrapError> {
+    activation
+        .revalidate()
+        .map_err(|_| LinuxBootstrapError::DevelopmentActivationDenied)?;
+    let peer = observe_linux_development_process_identity(peer_pid)
+        .map_err(|_| LinuxBootstrapError::ParentUntrusted)?;
+    let endpoint_path = activation.state_root().join(format!(
+        "coding-development-{}-{}.sock",
+        rustix::process::getpid().as_raw_pid(),
+        peer.start_time_ticks()
+    ));
+    let endpoint = open_linux_bootstrap_ipc(&endpoint_path)
+        .map_err(|_| LinuxBootstrapError::TransportDenied)?;
+    let (authenticator, credentials) = LinuxIpcAuthenticator::generate(peer.clone())
+        .map_err(|_| LinuxBootstrapError::TransportDenied)?;
+    Ok(DevelopmentLinuxBootstrap {
+        endpoint,
+        authenticator,
+        credentials,
+        peer,
+    })
+}
+
+fn write_launch_envelope(
+    endpoint: &LinuxHostIpcEndpoint,
+    credentials: &LinuxLaunchCredentials,
+    peer: &LinuxPeerIdentity,
+    output: &mut impl Write,
+) -> Result<(), LinuxBootstrapError> {
+    let endpoint = endpoint
+        .path()
+        .to_str()
+        .filter(|value| !value.is_empty() && !value.as_bytes().contains(&0))
+        .ok_or(LinuxBootstrapError::TransferFailed)?;
+    let endpoint_length =
+        u16::try_from(endpoint.len()).map_err(|_| LinuxBootstrapError::TransferFailed)?;
+    output
+        .write_all(b"AGMB")
+        .and_then(|()| output.write_all(&BOOTSTRAP_SCHEMA_VERSION.to_be_bytes()))
+        .and_then(|()| output.write_all(&endpoint_length.to_be_bytes()))
+        .and_then(|()| output.write_all(endpoint.as_bytes()))
+        .and_then(|()| output.write_all(credentials.challenge()))
+        .and_then(|()| output.write_all(credentials.launch_secret()))
+        .and_then(|()| output.write_all(&peer.uid().to_be_bytes()))
+        .and_then(|()| output.write_all(&peer.pid().to_be_bytes()))
+        .and_then(|()| output.write_all(&peer.start_time_ticks().to_be_bytes()))
+        .and_then(|()| output.write_all(peer.executable_sha256()))
+        .and_then(|()| output.flush())
+        .map_err(|_| LinuxBootstrapError::TransferFailed)
 }
 
 /// Verifies a signed package before creating any local endpoint or launch secret.

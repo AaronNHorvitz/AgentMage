@@ -1,5 +1,7 @@
 //! Strict local CLI parsing and display without storage, model, tool, or network access.
 
+use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 
 use agentmage_kernel_contracts::{
@@ -46,6 +48,23 @@ pub enum CompletionShell {
     Fish,
 }
 
+/// Exact inputs for the separately activated disposable coding-development harness.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CodingDevelopmentCliOptions {
+    /// Private state root owned by this launcher.
+    pub state_root: PathBuf,
+    /// Private parent containing disposable repositories.
+    pub disposable_root: PathBuf,
+    /// Exact marked ordinary Git worktree.
+    pub workspace_root: PathBuf,
+    /// Closed executable acceptance scenario.
+    pub scenario: String,
+    /// Exact bounded objective supplied to the runtime.
+    pub objective: String,
+    /// Whether this invocation explicitly preauthorizes its displayed exact operations.
+    pub approve_this_run: bool,
+}
+
 /// Parsed CLI action before any transport or authority boundary.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CliInvocation {
@@ -59,6 +78,8 @@ pub enum CliInvocation {
     Code {
         /// Exact output format.
         output: CliOutputFormat,
+        /// Explicit development activation; absent for the production command.
+        development: Option<CodingDevelopmentCliOptions>,
     },
     /// Submit one exact command through a selected thin-client surface.
     Execute {
@@ -136,7 +157,26 @@ pub fn parse_cli_arguments(arguments: &[String]) -> Result<CliInvocation, ThinCl
         if surface != ClientSurface::InteractiveCli {
             return Err(ThinClientError::InvalidValue);
         }
-        return Ok(CliInvocation::Code { output });
+        return Ok(CliInvocation::Code {
+            output,
+            development: None,
+        });
+    }
+    if arguments
+        .get(cursor)
+        .is_some_and(|command| command == "code")
+        && arguments
+            .get(cursor + 1)
+            .is_some_and(|value| value == "--development")
+    {
+        if surface != ClientSurface::InteractiveCli {
+            return Err(ThinClientError::InvalidValue);
+        }
+        let development = parse_coding_development(&arguments[cursor + 2..])?;
+        return Ok(CliInvocation::Code {
+            output,
+            development: Some(development),
+        });
     }
     let command = parse_command(&arguments[cursor..])?;
     command.verify()?;
@@ -144,6 +184,55 @@ pub fn parse_cli_arguments(arguments: &[String]) -> Result<CliInvocation, ThinCl
         surface,
         output,
         command,
+    })
+}
+
+fn parse_coding_development(
+    arguments: &[String],
+) -> Result<CodingDevelopmentCliOptions, ThinClientError> {
+    let mut state_root = None;
+    let mut disposable_root = None;
+    let mut workspace_root = None;
+    let mut scenario = None;
+    let mut objective = None;
+    let mut approve_this_run = false;
+    let mut cursor = 0;
+    while let Some(argument) = arguments.get(cursor) {
+        let target = match argument.as_str() {
+            "--state-root" if state_root.is_none() => &mut state_root,
+            "--disposable-root" if disposable_root.is_none() => &mut disposable_root,
+            "--workspace-root" if workspace_root.is_none() => &mut workspace_root,
+            "--scenario" if scenario.is_none() => &mut scenario,
+            "--objective" if objective.is_none() => &mut objective,
+            "--approve-this-run" if !approve_this_run => {
+                approve_this_run = true;
+                cursor += 1;
+                continue;
+            }
+            _ => return Err(ThinClientError::InvalidValue),
+        };
+        let value = arguments
+            .get(cursor + 1)
+            .filter(|value| !value.is_empty() && !value.starts_with("--"))
+            .ok_or(ThinClientError::InvalidValue)?;
+        *target = Some(value.clone());
+        cursor += 2;
+    }
+    let scenario = scenario.ok_or(ThinClientError::InvalidValue)?;
+    if !matches!(scenario.as_str(), "no-op" | "failed-test-repair") {
+        return Err(ThinClientError::InvalidValue);
+    }
+    let objective = objective.ok_or(ThinClientError::InvalidValue)?;
+    if objective.trim().is_empty() || objective.len() > 16 * 1024 {
+        return Err(ThinClientError::InvalidValue);
+    }
+    Ok(CodingDevelopmentCliOptions {
+        state_root: PathBuf::from(state_root.ok_or(ThinClientError::InvalidValue)?),
+        disposable_root: PathBuf::from(disposable_root.ok_or(ThinClientError::InvalidValue)?),
+        workspace_root: PathBuf::from(workspace_root.ok_or(ThinClientError::InvalidValue)?),
+        scenario,
+        objective,
+        approve_this_run,
     })
 }
 
@@ -687,6 +776,8 @@ Usage: agentmage [--json] [--surface interactive-cli|json|sdk|acp] COMMAND\n\
 \n\
 Commands:\n\
   code\n\
+  code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
+       --scenario no-op|failed-test-repair --objective TEXT [--approve-this-run]\n\
   chat MESSAGE\n\
   conversations list [--from YYYY-MM-DD] [--to YYYY-MM-DD]\n\
   conversations search QUERY\n\
@@ -888,14 +979,40 @@ mod tests {
             parse_cli_arguments(&strings(&["code"])),
             Ok(CliInvocation::Code {
                 output: CliOutputFormat::Human,
+                development: None,
             })
         );
         assert_eq!(
             parse_cli_arguments(&strings(&["--json", "code"])),
             Ok(CliInvocation::Code {
                 output: CliOutputFormat::Json,
+                development: None,
             })
         );
+        assert!(matches!(
+            parse_cli_arguments(&strings(&[
+                "code",
+                "--development",
+                "--state-root",
+                "/tmp/state",
+                "--disposable-root",
+                "/tmp/disposable",
+                "--workspace-root",
+                "/tmp/disposable/worktree",
+                "--scenario",
+                "failed-test-repair",
+                "--objective",
+                "repair the failing test",
+                "--approve-this-run",
+            ])),
+            Ok(CliInvocation::Code {
+                development: Some(CodingDevelopmentCliOptions {
+                    approve_this_run: true,
+                    ..
+                }),
+                ..
+            })
+        ));
         let parsed =
             parse_cli_arguments(&strings(&["--json", "--surface", "acp", "vault", "tasks"]));
         assert!(matches!(

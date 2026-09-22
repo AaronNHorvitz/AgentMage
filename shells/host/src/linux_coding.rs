@@ -12,9 +12,10 @@ use agentmage_kernel_engine::{
     filesystem_control::FilesystemOperationDraft, platform_startup::VerifiedPlatformAdapter,
 };
 use agentmage_platform_linux::{
-    LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxPlatformAdapter,
-    MAX_DIRECTORY_OBSERVATION_BYTES, MAX_DIRECTORY_OBSERVATION_NAMES, linux_repository_path_sha256,
-    resolve_linux_workspace_object, select_linux_workspace,
+    LinuxAuthorizedWorkspace, LinuxDevelopmentPlatformAdapter, LinuxHeldObject,
+    LinuxPlatformAdapter, MAX_DIRECTORY_OBSERVATION_BYTES, MAX_DIRECTORY_OBSERVATION_NAMES,
+    linux_repository_path_sha256, resolve_development_linux_workspace_object,
+    resolve_linux_workspace_object, select_development_linux_workspace, select_linux_workspace,
 };
 
 #[cfg(test)]
@@ -215,6 +216,7 @@ pub struct LinuxCodingWorkspace<'session, 'platform> {
 
 enum LinuxCodingPlatform<'platform> {
     Verified(&'platform VerifiedPlatformAdapter<LinuxPlatformAdapter>),
+    Development(&'platform LinuxDevelopmentPlatformAdapter),
     #[cfg(test)]
     Test(AdapterInstanceId),
 }
@@ -259,6 +261,40 @@ impl<'session, 'platform> LinuxCodingWorkspace<'session, 'platform> {
             .map_err(|_| LinuxCodingBindingError::WorktreeDenied)?;
         Ok(Self {
             platform: LinuxCodingPlatform::Verified(platform),
+            profile,
+            projection,
+            workspace,
+        })
+    }
+
+    /// Binds the distinct disposable development activation without a production-platform claim.
+    pub fn bind_development(
+        platform: &'platform LinuxDevelopmentPlatformAdapter,
+        profile: &'session CodingSessionProfile,
+        repository_map: RepositoryMap,
+        worktree_root: &Path,
+        authorization_id: WorkspaceAuthorizationId,
+    ) -> Result<Self, LinuxCodingBindingError> {
+        verify_worktree_path(
+            profile.worktree().worktree_path_sha256.as_str(),
+            worktree_root,
+        )?;
+        let projection = CodingRepositoryProjection::for_profile(profile, repository_map)
+            .map_err(|_| LinuxCodingBindingError::ProjectionDenied)?;
+        let workspace = select_development_linux_workspace(
+            platform,
+            worktree_root,
+            profile.write_scope().workspace_id().clone(),
+            authorization_id,
+        )
+        .map_err(|_| LinuxCodingBindingError::WorktreeDenied)?;
+        workspace
+            .revalidate()
+            .map_err(|_| LinuxCodingBindingError::WorktreeDenied)?;
+        GrantTarget::held_workspace_root(&workspace)
+            .map_err(|_| LinuxCodingBindingError::WorktreeDenied)?;
+        Ok(Self {
+            platform: LinuxCodingPlatform::Development(platform),
             profile,
             projection,
             workspace,
@@ -328,6 +364,14 @@ impl<'session, 'platform> LinuxCodingWorkspace<'session, 'platform> {
             |path, intent| match &self.platform {
                 LinuxCodingPlatform::Verified(platform) => {
                     resolve_linux_workspace_object(platform, &self.workspace, path, intent)
+                }
+                LinuxCodingPlatform::Development(platform) => {
+                    resolve_development_linux_workspace_object(
+                        platform,
+                        &self.workspace,
+                        path,
+                        intent,
+                    )
                 }
                 #[cfg(test)]
                 LinuxCodingPlatform::Test(adapter_instance_id) => {

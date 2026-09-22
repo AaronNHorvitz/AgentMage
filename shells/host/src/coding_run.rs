@@ -34,7 +34,7 @@ pub enum CodingRunRequestError {
     /// Task, packet, profile, or policy bindings disagree.
     BindingDenied,
     /// The common runtime request contract rejected the final envelope.
-    ContractDenied,
+    ContractDenied(agentmage_kernel_engine::runtime_coordinator::RuntimeCoordinatorError),
 }
 
 impl CodingRunRequestError {
@@ -43,7 +43,16 @@ impl CodingRunRequestError {
     pub const fn code(self) -> &'static str {
         match self {
             Self::BindingDenied => "runtime.coding-run.binding-denied",
-            Self::ContractDenied => "runtime.coding-run.contract-denied",
+            Self::ContractDenied(_) => "runtime.coding-run.contract-denied",
+        }
+    }
+
+    /// Returns the most precise content-free source refusal available.
+    #[must_use]
+    pub const fn source_code(self) -> &'static str {
+        match self {
+            Self::BindingDenied => self.code(),
+            Self::ContractDenied(error) => error.code(),
         }
     }
 }
@@ -119,7 +128,7 @@ fn build_coding_run_request(
         event_cursor,
         request_sha256: "0".repeat(64),
     };
-    seal_runtime_run_request(request).map_err(|_| CodingRunRequestError::ContractDenied)
+    seal_runtime_run_request(request).map_err(CodingRunRequestError::ContractDenied)
 }
 
 #[cfg(test)]

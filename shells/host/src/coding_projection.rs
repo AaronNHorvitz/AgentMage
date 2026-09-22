@@ -76,7 +76,6 @@ impl CodingRepositoryProjection {
             map,
             profile.write_scope().workspace_id(),
             profile.repository_snapshot_sha256(),
-            &profile.worktree().worktree_path_sha256,
             profile.immutable_base_commit(),
         )
     }
@@ -85,13 +84,11 @@ impl CodingRepositoryProjection {
         map: RepositoryMap,
         workspace_id: &agentmage_kernel_contracts::WorkspaceId,
         map_sha256: &str,
-        worktree_sha256: &str,
         commit_id: &str,
     ) -> Result<Self, CodingProjectionError> {
         if !verify_repository_map(&map)
             || &map.workspace_id != workspace_id
             || map.map_sha256 != map_sha256
-            || map.worktree_sha256 != worktree_sha256
             || map.commit_id != commit_id
         {
             return Err(CodingProjectionError::MapBindingDenied);
@@ -301,7 +298,6 @@ mod tests {
             map,
             &WorkspaceId::from_raw("workspace-coding"),
             &map_sha256,
-            &"b".repeat(64),
             &"c".repeat(40),
         )
         .expect("projection")
@@ -325,7 +321,7 @@ mod tests {
     }
 
     #[test]
-    fn story_48_2_projection_binds_map_worktree_commit_and_workspace() {
+    fn story_48_2_projection_binds_complete_map_commit_and_workspace() {
         let map = map();
         let map_sha256 = map.map_sha256.clone();
         assert!(
@@ -333,7 +329,6 @@ mod tests {
                 map.clone(),
                 &WorkspaceId::from_raw("workspace-coding"),
                 &map_sha256,
-                &"b".repeat(64),
                 &"c".repeat(40),
             )
             .is_ok()
@@ -343,7 +338,6 @@ mod tests {
                 map,
                 &WorkspaceId::from_raw("workspace-coding"),
                 &"f".repeat(64),
-                &"b".repeat(64),
                 &"c".repeat(40),
             ),
             Err(CodingProjectionError::MapBindingDenied)

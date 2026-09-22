@@ -50,7 +50,8 @@ pub use inventory::{
 pub use ipc::{
     LINUX_IPC_PROTOCOL_VERSION, LinuxAuthenticatedIpcSession, LinuxAuthenticatedPeer,
     LinuxHandshakeRequest, LinuxHostIpcEndpoint, LinuxIpcAuthenticator, LinuxIpcError,
-    LinuxIpcErrorKind, LinuxLaunchCredentials, LinuxPeerIdentity, observe_linux_process_identity,
+    LinuxIpcErrorKind, LinuxLaunchCredentials, LinuxLaunchEnvelope, LinuxPeerIdentity,
+    observe_linux_development_process_identity, observe_linux_process_identity,
 };
 pub use lifecycle::{
     LinuxOperationalKeyLifecycleError, LinuxOperationalKeyLifecycleErrorKind,
@@ -61,10 +62,12 @@ pub use local_commit::{
     LinuxLocalCommitError, LinuxLocalCommitErrorKind, LinuxLocalCommitExecutor, LinuxOpenPgpSigner,
 };
 pub use platform::{
-    LinuxAuthorityOpenError, LinuxAuthorityRuntime, LinuxPlatformAdapter,
-    LinuxPlatformDiscoveryError, LinuxPlatformDiscoveryErrorKind,
-    observe_linux_workspace_symbolic_link, open_linux_authority, open_linux_bootstrap_ipc,
-    open_linux_host_ipc, resolve_linux_workspace_object, select_linux_workspace,
+    LinuxAuthorityOpenError, LinuxAuthorityRuntime, LinuxDevelopmentPlatformAdapter,
+    LinuxPlatformAdapter, LinuxPlatformDiscoveryError, LinuxPlatformDiscoveryErrorKind,
+    observe_development_linux_workspace_symbolic_link, observe_linux_workspace_symbolic_link,
+    open_linux_authority, open_linux_bootstrap_ipc, open_linux_development_authority,
+    open_linux_host_ipc, resolve_development_linux_workspace_object,
+    resolve_linux_workspace_object, select_development_linux_workspace, select_linux_workspace,
 };
 #[cfg(feature = "test-support")]
 pub use platform::{

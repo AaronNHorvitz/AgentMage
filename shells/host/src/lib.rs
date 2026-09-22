@@ -20,6 +20,15 @@ pub mod coding_changes;
 pub mod coding_client;
 /// Bounded model-context composition for shared coding sessions.
 pub mod coding_context;
+#[cfg(target_os = "linux")]
+/// Explicit disposable-workspace activation for executable coding development only.
+pub mod coding_development_activation;
+#[cfg(all(target_os = "linux", feature = "interactive-cli"))]
+/// Executable CLI client for the explicit disposable coding development harness.
+pub mod coding_development_client;
+#[cfg(target_os = "linux")]
+/// Executable development-only composition of the real coding coordinator and Linux boundaries.
+pub mod coding_development_runtime;
 pub mod coding_dispatch;
 /// Deterministic narrowing of coding profiles from explicitly trusted guidance.
 pub mod coding_guidance;
@@ -96,6 +105,10 @@ pub mod native_chat_runtime;
 
 /// Caller-neutral transport contract shared by authenticated local clients.
 pub mod runtime_transport;
+
+#[cfg(target_os = "linux")]
+/// Authenticated bounded Linux IPC projection of the shared runtime transport.
+pub mod runtime_ipc;
 
 pub mod protocol;
 /// Bounded public-search preparation and claim-level citation verification.

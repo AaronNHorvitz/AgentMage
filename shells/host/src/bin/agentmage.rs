@@ -30,7 +30,20 @@ fn main() -> ExitCode {
             print!("{}", shell_completion(shell));
             ExitCode::SUCCESS
         }
-        CliInvocation::Code { output } | CliInvocation::Execute { output, .. } => {
+        #[cfg(target_os = "linux")]
+        CliInvocation::Code {
+            output,
+            development: Some(options),
+        } => match agentmage_host::coding_development_client::run_coding_development(
+            &options, output,
+        ) {
+            Ok(code) => ExitCode::from(code.process_code()),
+            Err(error) => {
+                eprintln!("{}", error.code());
+                ExitCode::from(error.exit_code().process_code())
+            }
+        },
+        CliInvocation::Code { output, .. } | CliInvocation::Execute { output, .. } => {
             let error = ThinClientError::TransportFailed;
             eprintln!("{}", render_cli_error(error, output));
             ExitCode::from(unavailable_exit_code().process_code())

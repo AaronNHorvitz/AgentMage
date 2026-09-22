@@ -2,13 +2,16 @@
 
 use std::fmt;
 
+use serde::{Deserialize, Serialize};
+
 use agentmage_kernel_contracts::{
     CancellationId, RuntimeApprovalChallenge, RuntimeApprovalResponse, RuntimeArtifactRef,
     RuntimeEvent, RuntimeEventCursor, RuntimeOutcome, RuntimeRunId, RuntimeRunRequest, SessionId,
 };
 
 /// Trusted inputs from one authenticated runtime preparation request.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct RuntimePrepareInput {
     /// Exact pre-existing Engineering session for approved-Plan execution, when applicable.
     pub engineering_session_id: Option<SessionId>,
@@ -25,7 +28,8 @@ pub struct RuntimePrepareInput {
 }
 
 /// One verified coordinator boundary returned to a transport-only client.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct RuntimeTransportStep {
     /// Exact active runtime run.
     pub run_id: RuntimeRunId,
@@ -42,7 +46,8 @@ pub struct RuntimeTransportStep {
 }
 
 /// Stable content-free refusal from a shared runtime transport boundary.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum RuntimeTransportError {
     /// The preparation or runtime request was invalid, stale, or substituted.
     RequestDenied,

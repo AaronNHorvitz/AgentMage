@@ -3422,18 +3422,21 @@ const fn git_outcome(outcome: GitInspectionOutcome) -> OperationOutcome {
 
 const fn validation_outcome(status: ValidationStatus) -> OperationOutcome {
     match status {
-        ValidationStatus::Passed => OperationOutcome::Succeeded,
-        ValidationStatus::Cancelled => OperationOutcome::Cancelled,
-        ValidationStatus::TimedOut => OperationOutcome::TimedOut,
-        ValidationStatus::AssertionFailed
+        // These are successfully captured validation observations. Their semantic result remains
+        // explicit in the signed receipt so the model may make one bounded correction; treating
+        // an assertion as a transport/tool failure would terminate before repair is possible.
+        ValidationStatus::Passed
+        | ValidationStatus::AssertionFailed
         | ValidationStatus::CompileFailed
-        | ValidationStatus::InfrastructureFailed
-        | ValidationStatus::Crashed
         | ValidationStatus::Flaky
         | ValidationStatus::SkippedOnly
+        | ValidationStatus::ZeroTests => OperationOutcome::Succeeded,
+        ValidationStatus::Cancelled => OperationOutcome::Cancelled,
+        ValidationStatus::TimedOut => OperationOutcome::TimedOut,
+        ValidationStatus::InfrastructureFailed
+        | ValidationStatus::Crashed
         | ValidationStatus::Malformed
         | ValidationStatus::Truncated
-        | ValidationStatus::ZeroTests
         | ValidationStatus::Unverified
         | ValidationStatus::SensitiveOutput => OperationOutcome::Failed,
     }
@@ -4136,7 +4139,8 @@ mod tests {
         .expect("repository map");
         profile_input.repository_snapshot_sha256 = repository_map.map_sha256.clone();
         profile_input.change_plan =
-            crate::coding_plan::fixture_coding_plan_binding(&repository_map);
+            crate::coding_plan::build_coding_development_plan_binding(&repository_map)
+                .expect("fixture coding plan");
         let profile = Box::leak(Box::new(
             CodingSessionProfile::build(profile_input).expect("coding profile"),
         ));
@@ -6873,7 +6877,7 @@ mod tests {
     }
 
     #[test]
-    fn s_048_mvp_e2e_failed_validation_is_never_reported_as_success() {
+    fn s_048_mvp_e2e_failed_validation_requires_a_repair_before_success() {
         let mut fixture = fixture();
         configure_structured_patch(&mut fixture);
         let patch = scripted_call(&fixture.call);
@@ -6941,12 +6945,15 @@ mod tests {
             }
         };
 
-        assert_eq!(outcome.state, AgentStateKind::Failed, "{outcome:#?}");
+        // A semantic test failure is a successfully captured observation so the model can
+        // repair it. With no repair step available the bounded model port exhausts, and the
+        // coordinator must still refuse to report the changed worktree as successful.
+        assert_eq!(outcome.state, AgentStateKind::Exhausted, "{outcome:#?}");
         assert!(
             outcome
                 .unresolved_codes
                 .iter()
-                .any(|code| code == "runtime.tool.failed")
+                .any(|code| code == "runtime.port.resource_exhausted")
         );
         assert_eq!(
             fs::read(root.join("worktree/src/lib.rs")).expect("changed source"),

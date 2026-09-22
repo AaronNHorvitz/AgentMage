@@ -17,11 +17,17 @@ use sha2::{Digest, Sha256};
 pub const LINUX_IPC_PROTOCOL_VERSION: u32 = 1;
 
 const HANDSHAKE_FRAME_BYTES: usize = 68;
-#[cfg(not(any(test, feature = "test-support")))]
+const LAUNCH_ENVELOPE_SCHEMA_VERSION: u16 = 1;
+const LAUNCH_ENVELOPE_MAGIC: &[u8; 4] = b"AGMB";
+const MAX_ENDPOINT_BYTES: usize = 107;
+#[cfg_attr(any(test, feature = "test-support"), allow(dead_code))]
 const MAX_PEER_EXECUTABLE_BYTES: u64 = 64 * 1024 * 1024;
-// Debug test binaries can exceed the production executable-size ceiling.
+// Development and test binaries retain debug information and can exceed the production ceiling.
+const MAX_DEVELOPMENT_PEER_EXECUTABLE_BYTES: u64 = 512 * 1024 * 1024;
 #[cfg(any(test, feature = "test-support"))]
-const MAX_PEER_EXECUTABLE_BYTES: u64 = 512 * 1024 * 1024;
+const DEFAULT_PEER_EXECUTABLE_BYTES: u64 = MAX_DEVELOPMENT_PEER_EXECUTABLE_BYTES;
+#[cfg(not(any(test, feature = "test-support")))]
+const DEFAULT_PEER_EXECUTABLE_BYTES: u64 = MAX_PEER_EXECUTABLE_BYTES;
 
 /// Stable content-free Linux IPC authentication failure.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -254,6 +260,148 @@ impl Drop for LinuxLaunchCredentials {
     }
 }
 
+/// One-use launch envelope transferred directly from a spawned host to its declared client.
+///
+/// The contained secret is never exposed as text and is erased when the envelope is consumed or
+/// dropped. Reading an envelope does not grant authority; it only permits the exact named process
+/// to authenticate to the private host endpoint.
+pub struct LinuxLaunchEnvelope {
+    endpoint: PathBuf,
+    credentials: LinuxLaunchCredentials,
+    peer: LinuxPeerIdentity,
+}
+
+impl fmt::Debug for LinuxLaunchEnvelope {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LinuxLaunchEnvelope")
+            .field("endpoint", &"redacted")
+            .field("credentials", &self.credentials)
+            .field("peer", &self.peer)
+            .finish()
+    }
+}
+
+impl LinuxLaunchEnvelope {
+    /// Reads one exact bounded binary launch envelope from an inherited pipe.
+    pub fn read(input: &mut impl Read) -> Result<Self, LinuxIpcError> {
+        let mut header = [0_u8; 8];
+        input
+            .read_exact(&mut header)
+            .map_err(|_| ipc_error(LinuxIpcErrorKind::MalformedFrame))?;
+        if &header[..4] != LAUNCH_ENVELOPE_MAGIC
+            || u16::from_be_bytes([header[4], header[5]]) != LAUNCH_ENVELOPE_SCHEMA_VERSION
+        {
+            return Err(ipc_error(LinuxIpcErrorKind::VersionMismatch));
+        }
+        let endpoint_length = usize::from(u16::from_be_bytes([header[6], header[7]]));
+        if endpoint_length == 0 || endpoint_length > MAX_ENDPOINT_BYTES {
+            return Err(ipc_error(LinuxIpcErrorKind::ResourceLimitExceeded));
+        }
+        let mut endpoint = vec![0_u8; endpoint_length];
+        let mut fixed = [0_u8; 112];
+        input
+            .read_exact(&mut endpoint)
+            .and_then(|()| input.read_exact(&mut fixed))
+            .map_err(|_| ipc_error(LinuxIpcErrorKind::MalformedFrame))?;
+        if endpoint.contains(&0) {
+            return Err(ipc_error(LinuxIpcErrorKind::MalformedFrame));
+        }
+        let endpoint = std::str::from_utf8(&endpoint)
+            .ok()
+            .map(PathBuf::from)
+            .filter(|path| path.is_absolute())
+            .ok_or_else(|| ipc_error(LinuxIpcErrorKind::MalformedFrame))?;
+        let mut challenge = [0_u8; 32];
+        challenge.copy_from_slice(&fixed[..32]);
+        let mut launch_secret = [0_u8; 32];
+        launch_secret.copy_from_slice(&fixed[32..64]);
+        let uid = u32::from_be_bytes(fixed[64..68].try_into().expect("fixed slice"));
+        let pid = i32::from_be_bytes(fixed[68..72].try_into().expect("fixed slice"));
+        let start_time_ticks = u64::from_be_bytes(fixed[72..80].try_into().expect("fixed slice"));
+        let mut executable_sha256 = [0_u8; 32];
+        executable_sha256.copy_from_slice(&fixed[80..]);
+        if pid <= 1 || start_time_ticks == 0 || challenge == [0; 32] || launch_secret == [0; 32] {
+            launch_secret.fill(0);
+            return Err(ipc_error(LinuxIpcErrorKind::MalformedFrame));
+        }
+        Ok(Self {
+            endpoint,
+            credentials: LinuxLaunchCredentials {
+                challenge,
+                launch_secret,
+            },
+            peer: LinuxPeerIdentity::new(uid, pid, start_time_ticks, executable_sha256),
+        })
+    }
+
+    /// Connects and authenticates only when this process still matches the envelope identity.
+    pub fn connect(self) -> Result<LinuxAuthenticatedIpcSession, LinuxIpcError> {
+        self.connect_with_limit(DEFAULT_PEER_EXECUTABLE_BYTES)
+    }
+
+    /// Connects the explicit development harness while retaining a bounded debug-binary ceiling.
+    pub fn connect_development(self) -> Result<LinuxAuthenticatedIpcSession, LinuxIpcError> {
+        self.connect_with_limit(MAX_DEVELOPMENT_PEER_EXECUTABLE_BYTES)
+    }
+
+    fn connect_with_limit(
+        self,
+        maximum_executable_bytes: u64,
+    ) -> Result<LinuxAuthenticatedIpcSession, LinuxIpcError> {
+        let current = stable_peer_identity_with_limit(
+            rustix::process::getuid().as_raw(),
+            rustix::process::getpid().as_raw_pid(),
+            maximum_executable_bytes,
+        )?;
+        if current != self.peer {
+            return Err(ipc_error(LinuxIpcErrorKind::ProcessIdentityChanged));
+        }
+        verify_client_socket_path(&self.endpoint)?;
+        let mut stream = UnixStream::connect(&self.endpoint)
+            .map_err(|_| ipc_error(LinuxIpcErrorKind::PlatformFailure))?;
+        stream
+            .set_write_timeout(Some(Duration::from_secs(2)))
+            .map_err(|_| ipc_error(LinuxIpcErrorKind::PlatformFailure))?;
+        let request = self.credentials.request(&current).encode();
+        stream
+            .write_all(&request)
+            .and_then(|()| stream.flush())
+            .map_err(|_| ipc_error(LinuxIpcErrorKind::PlatformFailure))?;
+        stream
+            .set_write_timeout(None)
+            .map_err(|_| ipc_error(LinuxIpcErrorKind::PlatformFailure))?;
+        Ok(LinuxAuthenticatedIpcSession {
+            stream,
+            peer: LinuxAuthenticatedPeer {
+                identity: current,
+                protocol_version: LINUX_IPC_PROTOCOL_VERSION,
+            },
+        })
+    }
+}
+
+fn verify_client_socket_path(path: &Path) -> Result<(), LinuxIpcError> {
+    let parent = path
+        .parent()
+        .ok_or_else(|| ipc_error(LinuxIpcErrorKind::UnsafeSocketParent))?;
+    let owner = rustix::process::getuid().as_raw();
+    let parent_metadata = fs::symlink_metadata(parent)
+        .map_err(|_| ipc_error(LinuxIpcErrorKind::UnsafeSocketParent))?;
+    let socket_metadata =
+        fs::symlink_metadata(path).map_err(|_| ipc_error(LinuxIpcErrorKind::UnsafeSocketMode))?;
+    if !parent_metadata.is_dir()
+        || parent_metadata.uid() != owner
+        || parent_metadata.mode() & 0o077 != 0
+        || !socket_metadata.file_type().is_socket()
+        || socket_metadata.uid() != owner
+        || socket_metadata.mode() & 0o777 != 0o600
+    {
+        return Err(ipc_error(LinuxIpcErrorKind::UnsafeSocketMode));
+    }
+    Ok(())
+}
+
 /// Evidence returned only after one fresh local peer authenticates.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LinuxAuthenticatedPeer {
@@ -355,7 +503,25 @@ impl LinuxHostIpcEndpoint {
         &self,
         authenticator: &LinuxIpcAuthenticator,
     ) -> Result<LinuxAuthenticatedIpcSession, LinuxIpcError> {
-        let (stream, peer) = self.listener.accept_authenticated(authenticator)?;
+        self.accept_with_limit(authenticator, DEFAULT_PEER_EXECUTABLE_BYTES)
+    }
+
+    /// Accepts the explicit development peer under the bounded debug-binary ceiling.
+    pub fn accept_development(
+        &self,
+        authenticator: &LinuxIpcAuthenticator,
+    ) -> Result<LinuxAuthenticatedIpcSession, LinuxIpcError> {
+        self.accept_with_limit(authenticator, MAX_DEVELOPMENT_PEER_EXECUTABLE_BYTES)
+    }
+
+    fn accept_with_limit(
+        &self,
+        authenticator: &LinuxIpcAuthenticator,
+        maximum_executable_bytes: u64,
+    ) -> Result<LinuxAuthenticatedIpcSession, LinuxIpcError> {
+        let (stream, peer) = self
+            .listener
+            .accept_authenticated(authenticator, maximum_executable_bytes)?;
         Ok(LinuxAuthenticatedIpcSession { stream, peer })
     }
 }
@@ -549,6 +715,7 @@ impl PrivateUnixListener {
     fn accept_authenticated(
         &self,
         authenticator: &LinuxIpcAuthenticator,
+        maximum_executable_bytes: u64,
     ) -> Result<(UnixStream, LinuxAuthenticatedPeer), LinuxIpcError> {
         let (mut stream, _) = self
             .listener
@@ -560,7 +727,11 @@ impl PrivateUnixListener {
         let credentials =
             socket_peercred(&stream).map_err(|_| ipc_error(LinuxIpcErrorKind::PlatformFailure))?;
         let pid = credentials.pid.as_raw_pid();
-        let observed = stable_peer_identity(credentials.uid.as_raw(), pid)?;
+        let observed = stable_peer_identity_with_limit(
+            credentials.uid.as_raw(),
+            pid,
+            maximum_executable_bytes,
+        )?;
         let mut frame = [0_u8; HANDSHAKE_FRAME_BYTES];
         stream
             .read_exact(&mut frame)
@@ -622,8 +793,16 @@ impl SocketPathIdentity {
 }
 
 fn stable_peer_identity(uid: u32, pid: i32) -> Result<LinuxPeerIdentity, LinuxIpcError> {
+    stable_peer_identity_with_limit(uid, pid, DEFAULT_PEER_EXECUTABLE_BYTES)
+}
+
+fn stable_peer_identity_with_limit(
+    uid: u32,
+    pid: i32,
+    maximum_executable_bytes: u64,
+) -> Result<LinuxPeerIdentity, LinuxIpcError> {
     let start_time_ticks = process_start_time_ticks(pid)?;
-    let executable_sha256 = process_executable_sha256(pid)?;
+    let executable_sha256 = process_executable_sha256_bounded(pid, maximum_executable_bytes)?;
     if process_start_time_ticks(pid)? != start_time_ticks {
         return Err(ipc_error(LinuxIpcErrorKind::ProcessIdentityChanged));
     }
@@ -642,6 +821,17 @@ fn stable_peer_identity(uid: u32, pid: i32) -> Result<LinuxPeerIdentity, LinuxIp
 /// compared with this process, start time, and executable digest.
 pub fn observe_linux_process_identity(pid: i32) -> Result<LinuxPeerIdentity, LinuxIpcError> {
     stable_peer_identity(rustix::process::getuid().as_raw(), pid)
+}
+
+/// Observes one explicit development peer under the separate debug-binary size ceiling.
+pub fn observe_linux_development_process_identity(
+    pid: i32,
+) -> Result<LinuxPeerIdentity, LinuxIpcError> {
+    stable_peer_identity_with_limit(
+        rustix::process::getuid().as_raw(),
+        pid,
+        MAX_DEVELOPMENT_PEER_EXECUTABLE_BYTES,
+    )
 }
 
 pub(crate) fn process_start_time_ticks(pid: i32) -> Result<u64, LinuxIpcError> {
@@ -668,6 +858,13 @@ fn parse_process_start_time_ticks(bytes: &[u8]) -> Result<u64, LinuxIpcError> {
 }
 
 pub(crate) fn process_executable_sha256(pid: i32) -> Result<[u8; 32], LinuxIpcError> {
+    process_executable_sha256_bounded(pid, DEFAULT_PEER_EXECUTABLE_BYTES)
+}
+
+fn process_executable_sha256_bounded(
+    pid: i32,
+    maximum_executable_bytes: u64,
+) -> Result<[u8; 32], LinuxIpcError> {
     let mut file = File::open(format!("/proc/{pid}/exe"))
         .map_err(|_| ipc_error(LinuxIpcErrorKind::WrongExecutable))?;
     let mut hasher = Sha256::new();
@@ -683,7 +880,7 @@ pub(crate) fn process_executable_sha256(pid: i32) -> Result<[u8; 32], LinuxIpcEr
         observed = observed
             .checked_add(count as u64)
             .ok_or_else(|| ipc_error(LinuxIpcErrorKind::ResourceLimitExceeded))?;
-        if observed > MAX_PEER_EXECUTABLE_BYTES {
+        if observed > maximum_executable_bytes {
             return Err(ipc_error(LinuxIpcErrorKind::ResourceLimitExceeded));
         }
         hasher.update(&buffer[..count]);
@@ -746,8 +943,8 @@ mod tests {
 
     use super::{
         LINUX_IPC_PROTOCOL_VERSION, LinuxHandshakeRequest, LinuxHostIpcEndpoint,
-        LinuxIpcAuthenticator, LinuxIpcErrorKind, LinuxPeerIdentity, PrivateUnixListener,
-        parse_process_start_time_ticks, stable_peer_identity,
+        LinuxIpcAuthenticator, LinuxIpcErrorKind, LinuxLaunchEnvelope, LinuxPeerIdentity,
+        PrivateUnixListener, parse_process_start_time_ticks, stable_peer_identity,
     };
 
     fn peer() -> LinuxPeerIdentity {
@@ -896,11 +1093,48 @@ mod tests {
             stream.write_all(&request.encode()).expect("write frame");
         });
         let (_, authenticated) = listener
-            .accept_authenticated(&authenticator())
+            .accept_authenticated(&authenticator(), super::DEFAULT_PEER_EXECUTABLE_BYTES)
             .expect("authenticated socket peer");
         assert_eq!(authenticated.identity(), &identity);
         client.join().expect("client thread");
         drop(listener);
+        assert!(!socket.exists());
+        std::fs::remove_dir(directory).expect("remove directory");
+    }
+
+    #[test]
+    fn direct_launch_envelope_connects_the_exact_current_process() {
+        let directory = private_test_directory();
+        let socket = directory.join("launch.sock");
+        let endpoint = LinuxHostIpcEndpoint::bind(&socket).expect("endpoint");
+        let identity = peer();
+        let (authenticator, credentials) =
+            LinuxIpcAuthenticator::generate(identity.clone()).expect("launch material");
+        let endpoint_bytes = socket.to_str().expect("UTF-8 path").as_bytes();
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(b"AGMB");
+        bytes.extend_from_slice(&1_u16.to_be_bytes());
+        bytes.extend_from_slice(
+            &u16::try_from(endpoint_bytes.len())
+                .expect("bounded path")
+                .to_be_bytes(),
+        );
+        bytes.extend_from_slice(endpoint_bytes);
+        bytes.extend_from_slice(credentials.challenge());
+        bytes.extend_from_slice(credentials.launch_secret());
+        bytes.extend_from_slice(&identity.uid().to_be_bytes());
+        bytes.extend_from_slice(&identity.pid().to_be_bytes());
+        bytes.extend_from_slice(&identity.start_time_ticks().to_be_bytes());
+        bytes.extend_from_slice(identity.executable_sha256());
+
+        let host = thread::spawn(move || endpoint.accept(&authenticator).expect("authenticated"));
+        let envelope = LinuxLaunchEnvelope::read(&mut bytes.as_slice()).expect("envelope");
+        let client = envelope.connect().expect("client session");
+        let server = host.join().expect("host thread");
+        assert_eq!(client.peer().identity(), &identity);
+        assert_eq!(server.peer().identity(), &identity);
+        drop(client);
+        drop(server);
         assert!(!socket.exists());
         std::fs::remove_dir(directory).expect("remove directory");
     }
@@ -966,7 +1200,7 @@ mod tests {
         });
         assert_eq!(
             listener
-                .accept_authenticated(&authenticator())
+                .accept_authenticated(&authenticator(), super::DEFAULT_PEER_EXECUTABLE_BYTES)
                 .expect_err("short frame")
                 .kind(),
             LinuxIpcErrorKind::MalformedFrame

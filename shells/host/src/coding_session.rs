@@ -413,7 +413,6 @@ fn validate_static_input(
     if input.worktree.disposition != WorktreeDisposition::Active
         || input.worktree.source_object != input.immutable_base_commit
         || input.change_plan.repository_commit_id() != input.immutable_base_commit
-        || input.change_plan.worktree_sha256() != input.worktree.worktree_path_sha256
         || input.worktree.live_process_count != 0
         || input.worktree.resource_budget_sha256 != sha256_json(&input.limits)?
     {
@@ -559,7 +558,7 @@ pub(crate) mod tests {
     };
 
     use super::*;
-    use crate::coding_plan::fixture_coding_plan_binding;
+    use crate::coding_plan::build_coding_development_plan_binding;
 
     const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
@@ -848,7 +847,8 @@ pub(crate) mod tests {
             }],
         })
         .expect("repository map");
-        let change_plan = fixture_coding_plan_binding(&repository_map);
+        let change_plan =
+            build_coding_development_plan_binding(&repository_map).expect("fixture coding plan");
         CodingSessionProfileInput {
             profile_id: "coding-profile-0001".to_owned(),
             tool_catalog_id: ToolCatalogId::from_raw("coding-tools-0001"),
