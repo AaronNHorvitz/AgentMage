@@ -21,7 +21,9 @@ use agentmage_kernel_contracts::{
     ToolDefinition, ToolResult, ValidationIssue, ValidationSeverity, to_canonical_json,
 };
 use agentmage_kernel_engine::{
-    authority_transaction::AuthorityTransactionRequest,
+    authority_transaction::{
+        AuthorityTransactionRequest, EffectAuthorization, EffectDriver, EffectLaunch, EffectResult,
+    },
     command_runner::{
         BoundedCommandExecutor, CommandCapturedOutput, CommandEffectDriver, CommandReceipt,
         RegisteredCommandWrapperBinding, verify_command_receipt,
@@ -99,6 +101,10 @@ use crate::{
         derive_preauthorized_coding_grant_with_event, render_coding_approval_request,
     },
     coding_dispatch::PreparedNativeCodingCall,
+    coding_history::{
+        CODING_CHANGE_RECORD_MEDIA_TYPE, ChangeHistoryOutput, CodingChangeRecord,
+        RetainedCodingChange, seal_change_record, seal_history_output, verify_change_record,
+    },
     linux_coding::{
         LinuxCodingTargetBinding, LinuxCodingWorkspace, LinuxCodingWriteDraft,
         PreparedLinuxCodingOperation,
@@ -223,7 +229,9 @@ fn build_pending_coding_authority(
     expires_at_epoch_ms: u64,
 ) -> Result<PendingCodingAuthority, RuntimePortFailure> {
     match prepared.write_draft() {
-        Some(LinuxCodingWriteDraft::StructuredPatch(plan)) => {
+        Some(
+            LinuxCodingWriteDraft::StructuredPatch(plan) | LinuxCodingWriteDraft::Rollback(plan),
+        ) => {
             let LinuxCodingTargetBinding::ExistingFile { target, .. } = prepared.binding() else {
                 return Err(RuntimePortFailure::Invalid);
             };
@@ -352,6 +360,20 @@ struct RuntimeEffectEventContext<'builder> {
     started_event: RuntimeEvent,
     build_terminal_event:
         &'builder mut dyn FnMut(&RuntimeToolExecution) -> Result<RuntimeEvent, RuntimePortFailure>,
+}
+
+struct HistoryInspectionEffectDriver {
+    material: Vec<u8>,
+}
+
+impl EffectDriver for HistoryInspectionEffectDriver {
+    fn execute(&mut self, _authorization: EffectAuthorization<'_>) -> EffectLaunch {
+        EffectLaunch::completed(EffectResult::from_redacted_material(
+            OperationOutcome::Succeeded,
+            &self.material,
+            StateChange::NotChanged,
+        ))
+    }
 }
 
 type PermissionEventBuilder<'a> =
@@ -575,7 +597,8 @@ impl ActiveSessionPreauthorization {
         }
         match prepared {
             PreparedNativeCodingCall::ReadOnly { .. }
-            | PreparedNativeCodingCall::GitInspection { .. } => self.contract.allow_workspace_reads,
+            | PreparedNativeCodingCall::GitInspection { .. }
+            | PreparedNativeCodingCall::ChangeHistory { .. } => self.contract.allow_workspace_reads,
             PreparedNativeCodingCall::StructuredPatch { proposal } => self
                 .contract
                 .writable_paths
@@ -585,6 +608,11 @@ impl ActiveSessionPreauthorization {
                 .contract
                 .writable_paths
                 .binary_search(&proposal.path)
+                .is_ok(),
+            PreparedNativeCodingCall::Rollback { request } => self
+                .contract
+                .writable_paths
+                .binary_search(&request.source.record.path)
                 .is_ok(),
             PreparedNativeCodingCall::Command { prepared } => {
                 let command = prepared.command();
@@ -725,6 +753,12 @@ where
         let prepared = workspace
             .prepare(call)
             .map_err(|_| RuntimePortFailure::Invalid)?;
+        verify_rollback_source(
+            &self.authority,
+            request,
+            prepared.operation().prepared(),
+            now_epoch_ms,
+        )?;
         let mut expires_at_epoch_ms = now_epoch_ms
             .checked_add(PREVIEW_LIFETIME_MS)
             .ok_or(RuntimePortFailure::Invalid)?;
@@ -1412,6 +1446,13 @@ where
             PreparedNativeCodingCall::GitInspection { .. } => {
                 self.execute_prepared_git(request, definition, call, issued, event_context)
             }
+            PreparedNativeCodingCall::ChangeHistory { .. } => self.execute_prepared_change_history(
+                request,
+                definition,
+                call,
+                issued,
+                event_context,
+            ),
             PreparedNativeCodingCall::Command { .. } => {
                 self.execute_prepared_command(request, definition, call, issued, event_context)
             }
@@ -1426,6 +1467,13 @@ where
                     issued,
                     event_context,
                 ),
+            PreparedNativeCodingCall::Rollback { .. } => self.execute_prepared_structured_write(
+                request,
+                definition,
+                call,
+                issued,
+                event_context,
+            ),
             PreparedNativeCodingCall::ControlledCreate { .. } => self
                 .execute_prepared_controlled_create(
                     request,
@@ -1724,6 +1772,131 @@ where
         self.finish_effect_execution(execution, event_context, pending)
     }
 
+    fn execute_prepared_change_history(
+        &mut self,
+        request: &RuntimeRunRequest,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        issued: IssuedCodingOperation<'workspace>,
+        event_context: Option<RuntimeEffectEventContext<'_>>,
+    ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
+        let policy = issued.generic_authority()?.1.policy.clone();
+        let transaction = self.authority_transaction(call, &issued)?;
+        let resolved_at_epoch_ms = issued.resolved_at_epoch_ms;
+        let (operation, binding, write_draft, _) = issued.prepared.into_parts();
+        let maximum = match operation.prepared() {
+            PreparedNativeCodingCall::ChangeHistory { request } => request.max_records as usize,
+            _ => return Err(RuntimePortFailure::Invalid),
+        };
+        if !matches!(binding, LinuxCodingTargetBinding::OwnedWorktreeRoot { .. })
+            || operation.expected_state_change() != StateChange::NotChanged
+            || write_draft.is_some()
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        let checkpoint = self
+            .authority
+            .authority()
+            .current_session_checkpoint()
+            .map_err(map_journal_failure)?
+            .ok_or(RuntimePortFailure::Invalid)?;
+        let binding = self
+            .authority
+            .authority()
+            .current_runtime_resume_binding()
+            .map_err(map_journal_failure)?
+            .ok_or(RuntimePortFailure::Invalid)?;
+        let mut records = Vec::new();
+        for reference in binding
+            .artifacts
+            .iter()
+            .rev()
+            .filter(|reference| reference.media_type == CODING_CHANGE_RECORD_MEDIA_TYPE)
+            .take(maximum)
+        {
+            let bytes = self
+                .authority
+                .read_runtime_artifact(&RuntimeArtifactReadRequest {
+                    session_id: checkpoint.session_id.clone(),
+                    task_id: checkpoint.task_id.clone(),
+                    policy_sha256: checkpoint.policy_sha256.clone(),
+                    reference: reference.clone(),
+                    now_epoch_ms: resolved_at_epoch_ms,
+                    maximum_bytes: 4 * 1024 * 1024,
+                })
+                .map_err(map_journal_failure)?;
+            let record: CodingChangeRecord =
+                serde_json::from_slice(&bytes).map_err(|_| RuntimePortFailure::Invalid)?;
+            verify_change_record(&record).map_err(|_| RuntimePortFailure::Invalid)?;
+            if record.session_id != request.session_id.as_str()
+                || record.task_id != request.task.task_id.as_str()
+                || reference.payload_sha256 != sha256(&bytes)
+                || reference.byte_size != bytes.len() as u64
+            {
+                return Err(RuntimePortFailure::Invalid);
+            }
+            records.push(RetainedCodingChange {
+                reference: reference.clone(),
+                record,
+            });
+        }
+        records.reverse();
+        let output = seal_history_output(ChangeHistoryOutput {
+            schema_version: 1,
+            records,
+            result_sha256: "0".repeat(64),
+        })
+        .map_err(|_| RuntimePortFailure::Invalid)?;
+        let output_bytes = serde_json::to_vec(&output).map_err(|_| RuntimePortFailure::Invalid)?;
+        if output_bytes.len() as u64 > request.limits.max_output_bytes {
+            return Err(RuntimePortFailure::ResourceExhausted);
+        }
+        let mut driver = HistoryInspectionEffectDriver {
+            material: output.result_sha256.as_bytes().to_vec(),
+        };
+        let (receipt, pending) = self.execute_effect_authority(
+            self.workspace.profile().registry(),
+            &policy,
+            transaction,
+            &mut driver,
+            event_context.as_ref(),
+        )?;
+        let evidence = vec![EvidenceReference {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            evidence_id: EvidenceId::from_raw(self.next_id("evidence")?),
+            kind: EvidenceKind::Observation,
+            source_id: format!("native:{}@{}", call.tool_id.as_str(), call.tool_version),
+            object_id: call.tool_call_id.as_str().to_owned(),
+            fragment: None,
+            content_sha256: output.result_sha256.clone(),
+            observed_revision: Some(request.repository_snapshot_id.as_str().to_owned()),
+        }];
+        let execution = RuntimeToolExecution {
+            receipt_id: receipt.receipt_id,
+            receipt_sha256: receipt.receipt_sha256,
+            result: ToolResult {
+                schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                tool_call_id: call.tool_call_id.clone(),
+                correlation_id: call.correlation_id.clone(),
+                outcome: OperationOutcome::Succeeded,
+                output: Some(ContractPayload {
+                    schema: definition.output_schema.clone(),
+                    media_type: "application/json".to_owned(),
+                    sha256: sha256(&output_bytes),
+                    bytes: output_bytes,
+                }),
+                validation_issues: Vec::new(),
+                evidence,
+                error: None,
+                elapsed_ms: 0,
+                state_change: StateChange::NotChanged,
+            },
+            result_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates: Vec::new(),
+        };
+        self.finish_effect_execution(execution, event_context, pending)
+    }
+
     fn git_execution(
         &mut self,
         request: &RuntimeRunRequest,
@@ -2014,8 +2187,28 @@ where
             return Err(RuntimePortFailure::Invalid);
         };
         let (operation, binding, write_draft, workspace) = prepared.into_parts();
-        let Some(LinuxCodingWriteDraft::StructuredPatch(plan)) = write_draft else {
-            return Err(RuntimePortFailure::Invalid);
+        let (record_path, record_language, record_artifact_class, record_generated) =
+            match operation.prepared() {
+                PreparedNativeCodingCall::StructuredPatch { proposal } => (
+                    proposal.path.clone(),
+                    proposal.language,
+                    proposal.artifact_class,
+                    proposal.generated,
+                ),
+                PreparedNativeCodingCall::Rollback { request } => (
+                    request.source.record.path.clone(),
+                    request.source.record.language,
+                    request.source.record.artifact_class,
+                    request.source.record.generated,
+                ),
+                _ => return Err(RuntimePortFailure::Invalid),
+            };
+        let plan = match write_draft {
+            Some(
+                LinuxCodingWriteDraft::StructuredPatch(plan)
+                | LinuxCodingWriteDraft::Rollback(plan),
+            ) => plan,
+            _ => return Err(RuntimePortFailure::Invalid),
         };
         let LinuxCodingTargetBinding::ExistingFile { target, .. } = binding else {
             return Err(RuntimePortFailure::Invalid);
@@ -2024,10 +2217,6 @@ where
             return Err(RuntimePortFailure::Invalid);
         };
         if change_set.operations().len() != 1
-            || !matches!(
-                operation.prepared(),
-                PreparedNativeCodingCall::StructuredPatch { .. }
-            )
             || operation.expected_state_change() != StateChange::Changed
             || change.target() != &target
             || change.preimage_bytes() != plan.preimage()
@@ -2135,7 +2324,8 @@ where
             resolved_at_epoch_ms,
         )?;
         let (outcome, state_change) = write_transaction_outcome(result.outcome);
-        let execution = self.controlled_change_execution(
+        let specialized_receipt_id = specialized_receipt_id("write", &receipt.receipt_sha256);
+        let mut execution = self.controlled_change_execution(
             request,
             definition,
             call,
@@ -2146,11 +2336,49 @@ where
                 path_sha256: sha256(change.path().as_bytes()),
                 preimage_sha256: Some(receipt.preimage_sha256.clone()),
                 postimage_sha256: receipt.postimage_sha256.clone(),
-                receipt_id: specialized_receipt_id("write", &receipt.receipt_sha256),
+                receipt_id: specialized_receipt_id.clone(),
                 receipt_sha256: receipt.receipt_sha256.clone(),
             },
             state_change,
         )?;
+        if state_change == StateChange::Changed {
+            let preimage = String::from_utf8(plan.preimage().to_vec())
+                .map_err(|_| RuntimePortFailure::Invalid)?;
+            let record = seal_change_record(CodingChangeRecord {
+                schema_version: 1,
+                record_id: format!("change-record:{}", &receipt.receipt_sha256[..24]),
+                session_id: request.session_id.as_str().to_owned(),
+                task_id: request.task.task_id.as_str().to_owned(),
+                producer_run_id: request.run_id.as_str().to_owned(),
+                operation_id: receipt.operation_id.clone(),
+                path: record_path,
+                language: record_language,
+                artifact_class: record_artifact_class,
+                preimage,
+                preimage_sha256: receipt.preimage_sha256.clone(),
+                postimage_sha256: receipt.postimage_sha256.clone(),
+                generated: record_generated,
+                receipt_id: specialized_receipt_id,
+                receipt_sha256: receipt.receipt_sha256.clone(),
+                created_at_epoch_ms: resolved_at_epoch_ms,
+                record_sha256: "0".repeat(64),
+            })
+            .map_err(|_| RuntimePortFailure::Invalid)?;
+            let record_bytes =
+                serde_json::to_vec(&record).map_err(|_| RuntimePortFailure::Invalid)?;
+            require_safe_write_boundary(
+                WritePrivacyBoundary::Backup,
+                "coding_change_record",
+                &record_bytes,
+            )?;
+            execution
+                .artifact_candidates
+                .push(RuntimeToolArtifactCandidate {
+                    kind: RuntimeArtifactKind::Report,
+                    media_type: CODING_CHANGE_RECORD_MEDIA_TYPE.to_owned(),
+                    bytes: record_bytes,
+                });
+        }
         self.finish_specialized_effect_event(execution, event_context, pending, &write_checkpoints)
     }
 
@@ -3801,6 +4029,54 @@ fn captured_output_matches(output: &CommandCapturedOutput, receipt: &CommandRece
             receipt.stderr_total_bytes == receipt.stderr_retained_bytes
                 && sha256(output.stderr()) == receipt.stderr_sha256
         }
+}
+
+fn verify_rollback_source(
+    authority: &LinuxAuthorityRuntime,
+    request: &RuntimeRunRequest,
+    prepared: &PreparedNativeCodingCall,
+    now_epoch_ms: u64,
+) -> Result<(), RuntimePortFailure> {
+    let PreparedNativeCodingCall::Rollback { request: rollback } = prepared else {
+        return Ok(());
+    };
+    let checkpoint = authority
+        .authority()
+        .current_session_checkpoint()
+        .map_err(map_journal_failure)?
+        .ok_or(RuntimePortFailure::Invalid)?;
+    let binding = authority
+        .authority()
+        .current_runtime_resume_binding()
+        .map_err(map_journal_failure)?
+        .ok_or(RuntimePortFailure::Invalid)?;
+    if checkpoint.session_id != request.session_id
+        || checkpoint.task_id != request.task.task_id
+        || rollback.source.record.session_id != request.session_id.as_str()
+        || rollback.source.record.task_id != request.task.task_id.as_str()
+        || !binding
+            .artifacts
+            .iter()
+            .any(|reference| reference == &rollback.source.reference)
+    {
+        return Err(RuntimePortFailure::Invalid);
+    }
+    let bytes = authority
+        .read_runtime_artifact(&RuntimeArtifactReadRequest {
+            session_id: checkpoint.session_id.clone(),
+            task_id: checkpoint.task_id.clone(),
+            policy_sha256: checkpoint.policy_sha256.clone(),
+            reference: rollback.source.reference.clone(),
+            now_epoch_ms,
+            maximum_bytes: 4 * 1024 * 1024,
+        })
+        .map_err(map_journal_failure)?;
+    let exact =
+        serde_json::to_vec(&rollback.source.record).map_err(|_| RuntimePortFailure::Invalid)?;
+    if bytes != exact || sha256(&bytes) != rollback.source.reference.payload_sha256 {
+        return Err(RuntimePortFailure::Invalid);
+    }
+    Ok(())
 }
 
 fn captured_output_artifact_candidates(

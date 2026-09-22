@@ -189,14 +189,16 @@ def setup(base: Path, fixture: str = "repair") -> dict:
     run_git(workspace, "init", "--initial-branch", BRANCH)
     run_git(workspace, "config", "user.name", "AgentMage Synthetic Fixture")
     run_git(workspace, "config", "user.email", "fixture.invalid@agentmage.local")
-    if fixture not in ("repair", "new-file", "multi-file"):
+    if fixture not in ("repair", "new-file", "multi-file", "stable"):
         raise HarnessError("coding.harness.fixture-denied")
     tracked = ["tests/run_validation.py", MARKER]
     if fixture != "new-file":
-        private_file(
-            workspace / "src/calc.py",
-            "def broken_add(left, right):\n    return left + right\n",
+        source = (
+            "def add(left, right):\n    return left + right\n"
+            if fixture == "stable"
+            else "def broken_add(left, right):\n    return left + right\n"
         )
+        private_file(workspace / "src/calc.py", source)
         tracked.append("src/calc.py")
     if fixture == "multi-file":
         private_file(
@@ -589,14 +591,14 @@ def parser() -> argparse.ArgumentParser:
         command.add_argument("--root", type=Path, required=True)
         if name == "setup":
             command.add_argument(
-                "--fixture", choices=("repair", "new-file", "multi-file"), default="repair"
+                "--fixture", choices=("repair", "new-file", "multi-file", "stable"), default="repair"
             )
     start_command = commands.add_parser("start")
     start_command.add_argument("--root", type=Path, required=True)
     start_command.add_argument(
         "--scenario",
         choices=(
-            "no-op", "failed-test-repair", "slow-cancel", "new-file", "multi-file",
+            "no-op", "failed-test-repair", "slow-cancel", "new-file", "multi-file", "rollback",
             "false-completion", "overflow",
         ),
         required=True,

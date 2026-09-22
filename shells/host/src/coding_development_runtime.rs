@@ -31,8 +31,8 @@ use agentmage_kernel_contracts::{
     PlatformArchitecture, PlatformFamily, ProposalId, RepositorySnapshotId, RollbackPlan,
     RuntimeEventCursor, RuntimeEventKind, RuntimeIsolationObservation, RuntimeRunId,
     RuntimeRunLimits, SessionId, StopCondition, StopConditionKind, TaskId, ToolCallId,
-    ToolCatalogId, ToolId, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceAuthorizationId,
-    WorkspaceId, WorkspacePath,
+    ToolCatalogId, ToolDefinition, ToolId, ToolResult, WorkPacket, WorkPacketId, WorkPacketState,
+    WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
 };
 use agentmage_kernel_engine::{
     command_runner::{
@@ -89,6 +89,10 @@ use crate::{
         CODING_DEVELOPMENT_ACTIVATION, CodingDevelopmentActivation, CodingDevelopmentKeyProvider,
     },
     coding_harness::{DurableCodingCoordinator, compose_durable_coding_coordinator},
+    coding_history::{
+        CHANGE_HISTORY_OUTPUT_SCHEMA_ID, CHANGE_HISTORY_TOOL_ID, CODING_HISTORY_TOOL_VERSION,
+        ChangeHistoryOutput, ChangeHistoryRequest, ROLLBACK_TOOL_ID, RollbackRequest,
+    },
     coding_plan::build_coding_development_plan_binding,
     coding_run::{CodingRunRequestInput, build_ephemeral_coding_run_request},
     coding_session::{CodingSessionProfile, CodingSessionProfileInput},
@@ -169,6 +173,8 @@ pub enum CodingDevelopmentScenario {
     NewFile,
     /// Repair two bounded source files before one complete validation.
     MultiFile,
+    /// Apply, inspect, and exactly roll back one structured source change.
+    Rollback,
     /// Submit an unsupported success claim with no required evidence.
     FalseCompletion,
     /// Exhaust the exact canonical event budget before a second model turn.
@@ -185,6 +191,7 @@ impl CodingDevelopmentScenario {
             "restart-repair" => Some(Self::RestartRepair),
             "new-file" => Some(Self::NewFile),
             "multi-file" => Some(Self::MultiFile),
+            "rollback" => Some(Self::Rollback),
             "false-completion" => Some(Self::FalseCompletion),
             "overflow" => Some(Self::Overflow),
             _ => None,
@@ -732,6 +739,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             | CodingDevelopmentScenario::RestartRepair
             | CodingDevelopmentScenario::NewFile
             | CodingDevelopmentScenario::MultiFile
+            | CodingDevelopmentScenario::Rollback
             | CodingDevelopmentScenario::FalseCompletion => (
                 vec!["The exact synthetic validation passes after the bounded repair".to_owned()],
                 vec![EvidenceKind::Validation],
@@ -1807,6 +1815,88 @@ fn scripted_steps(
             .into_iter()
             .collect())
         }
+        CodingDevelopmentScenario::Rollback => {
+            let validation_template = profile
+                .validations()
+                .templates
+                .first()
+                .ok_or(CodingDevelopmentRuntimeError::Composition)?;
+            let source = fs::read(workspace_root.join("src/calc.py"))
+                .map_err(|_| CodingDevelopmentRuntimeError::Composition)?;
+            let patch = tool_candidate(
+                profile,
+                STRUCTURED_PATCH_TOOL_ID,
+                CONTROLLED_CHANGE_TOOL_VERSION,
+                "scripted-rollback-patch",
+                &StructuredPatchProposal {
+                    schema_version: 1,
+                    change_id: "scripted-rollback-change".to_owned(),
+                    path: vec!["src".to_owned(), "calc.py".to_owned()],
+                    expected_preimage_sha256: sha256(&source),
+                    intent_sha256: profile.change_plan().intent_sha256().to_owned(),
+                    change_plan_sha256: profile.change_plan().plan_sha256().to_owned(),
+                    language: StructuredLanguage::Python,
+                    artifact_class: StructuredArtifactClass::Code,
+                    edits: vec![StructuredEdit::RenameIdentifier {
+                        edit_id: "scripted-temporary-rename".to_owned(),
+                        old: "add".to_owned(),
+                        replacement: "temporary_add".to_owned(),
+                    }],
+                    additional_review_hooks: Vec::new(),
+                    generated: false,
+                    allow_generated: false,
+                },
+            )?;
+            let history = tool_candidate(
+                profile,
+                CHANGE_HISTORY_TOOL_ID,
+                CODING_HISTORY_TOOL_VERSION,
+                "scripted-change-history",
+                &ChangeHistoryRequest {
+                    schema_version: 1,
+                    max_records: 1,
+                },
+            )?;
+            let rollback_definition = profile
+                .registry()
+                .get_tool(
+                    &ToolId::from_raw(ROLLBACK_TOOL_ID),
+                    CODING_HISTORY_TOOL_VERSION,
+                )
+                .ok_or(CodingDevelopmentRuntimeError::Composition)?
+                .clone();
+            let validation = tool_candidate(
+                profile,
+                TARGETED_VALIDATION_TOOL_ID,
+                TARGETED_VALIDATION_TOOL_VERSION,
+                "scripted-rollback-validation",
+                &TargetedValidationRequest {
+                    schema_version: 1,
+                    validation_attempt_id: "scripted-rollback-validation".to_owned(),
+                    validation_id: validation_template.validation_id.clone(),
+                    template_sha256: validation_template.template_sha256.clone(),
+                },
+            )?;
+            Ok([
+                ScriptedDevelopmentStep::Tool(patch),
+                ScriptedDevelopmentStep::Tool(history),
+                ScriptedDevelopmentStep::RollbackFromHistory {
+                    definition: rollback_definition,
+                    intent_sha256: profile.change_plan().intent_sha256().to_owned(),
+                    change_plan_sha256: profile.change_plan().plan_sha256().to_owned(),
+                },
+                ScriptedDevelopmentStep::Tool(validation),
+                ScriptedDevelopmentStep::Tool(git_diff),
+                ScriptedDevelopmentStep::Tool(git),
+                ScriptedDevelopmentStep::Complete(completion(
+                    CodingTerminalClaim::Changed,
+                    "Applied one bounded change, inspected its retained history, and restored the exact preimage through a fresh controlled write.",
+                    Vec::new(),
+                )?),
+            ]
+            .into_iter()
+            .collect())
+        }
         CodingDevelopmentScenario::FalseCompletion => {
             Ok([ScriptedDevelopmentStep::Complete(completion(
                 CodingTerminalClaim::Changed,
@@ -1933,6 +2023,11 @@ fn development_work_packet(
 
 enum ScriptedDevelopmentStep {
     Tool(ModelToolCallCandidate),
+    RollbackFromHistory {
+        definition: ToolDefinition,
+        intent_sha256: String,
+        change_plan_sha256: String,
+    },
     Complete(ContractPayload),
 }
 
@@ -2392,6 +2487,20 @@ impl RuntimeModelPort for ScriptedDevelopmentModel {
             .ok_or(RuntimePortFailure::ResourceExhausted)?;
         let (kind, payload, tool_call) = match step {
             ScriptedDevelopmentStep::Tool(call) => (ModelProposalKind::ToolCall, None, Some(call)),
+            ScriptedDevelopmentStep::RollbackFromHistory {
+                definition,
+                intent_sha256,
+                change_plan_sha256,
+            } => (
+                ModelProposalKind::ToolCall,
+                None,
+                Some(rollback_from_history_candidate(
+                    context,
+                    &definition,
+                    intent_sha256,
+                    change_plan_sha256,
+                )?),
+            ),
             ScriptedDevelopmentStep::Complete(payload) => {
                 (ModelProposalKind::CompletionCandidate, Some(payload), None)
             }
@@ -2442,6 +2551,52 @@ impl RuntimeModelPort for ScriptedDevelopmentModel {
             },
         })
     }
+}
+
+fn rollback_from_history_candidate(
+    context: &agentmage_kernel_contracts::ModelContextPacket,
+    definition: &ToolDefinition,
+    intent_sha256: String,
+    change_plan_sha256: String,
+) -> Result<ModelToolCallCandidate, RuntimePortFailure> {
+    let history = context
+        .messages
+        .iter()
+        .rev()
+        .filter(|message| message.role == ModelMessageRole::Tool)
+        .filter_map(|message| serde_json::from_slice::<ToolResult>(&message.content.bytes).ok())
+        .filter_map(|result| result.output)
+        .find(|output| output.schema.schema_id.as_str() == CHANGE_HISTORY_OUTPUT_SCHEMA_ID)
+        .ok_or(RuntimePortFailure::Invalid)?;
+    if history.sha256 != sha256(&history.bytes) {
+        return Err(RuntimePortFailure::Invalid);
+    }
+    let history: ChangeHistoryOutput =
+        serde_json::from_slice(&history.bytes).map_err(|_| RuntimePortFailure::Invalid)?;
+    let source = history
+        .records
+        .last()
+        .cloned()
+        .ok_or(RuntimePortFailure::Invalid)?;
+    let request = RollbackRequest {
+        schema_version: 1,
+        rollback_id: "scripted-exact-rollback".to_owned(),
+        source,
+        intent_sha256,
+        change_plan_sha256,
+    };
+    let bytes = serde_json::to_vec(&request).map_err(|_| RuntimePortFailure::Invalid)?;
+    Ok(ModelToolCallCandidate {
+        tool_call_id: ToolCallId::from_raw("scripted-exact-rollback"),
+        tool_id: definition.tool_id.clone(),
+        tool_version: definition.tool_version.clone(),
+        arguments: ContractPayload {
+            schema: definition.input_schema.clone(),
+            media_type: "application/json".to_owned(),
+            sha256: sha256(&bytes),
+            bytes,
+        },
+    })
 }
 
 fn cancelled_model_result(

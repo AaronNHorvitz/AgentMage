@@ -206,6 +206,11 @@ fn non_read_target(
             NativeCodingTargetPlan::OwnedWorktreeRoot,
             StateChange::NotChanged,
         )),
+        PreparedNativeCodingCall::ChangeHistory { .. } => Ok((
+            OperationBinding::new(GrantOperation::WorkspaceRead),
+            NativeCodingTargetPlan::OwnedWorktreeRoot,
+            StateChange::NotChanged,
+        )),
         PreparedNativeCodingCall::StructuredPatch { proposal } => {
             let path = write_scope
                 .resolve(&proposal.path)
@@ -240,6 +245,19 @@ fn non_read_target(
                     parent,
                     destination,
                     expected_parent_sha256: proposal.expected_parent_sha256.clone(),
+                },
+                StateChange::Changed,
+            ))
+        }
+        PreparedNativeCodingCall::Rollback { request } => {
+            let path = write_scope
+                .resolve(&request.source.record.path)
+                .map_err(|_| NativeCodingOperationError::InvariantDenied)?;
+            Ok((
+                OperationBinding::new(GrantOperation::WorkspaceWrite),
+                NativeCodingTargetPlan::ExistingFile {
+                    path,
+                    expected_preimage_sha256: request.source.record.postimage_sha256.clone(),
                 },
                 StateChange::Changed,
             ))

@@ -34,6 +34,7 @@ pub mod coding_dispatch;
 pub mod coding_guidance;
 /// Interface-neutral composition for the shared local coding runtime.
 pub mod coding_harness;
+pub mod coding_history;
 #[cfg(target_os = "linux")]
 pub mod coding_live_runtime;
 /// Profile-bound authority planning for native coding calls.

@@ -394,6 +394,7 @@ fn parse_coding_development(
             | "restart-repair"
             | "new-file"
             | "multi-file"
+            | "rollback"
             | "false-completion"
             | "overflow"
     ) {
@@ -1035,7 +1036,7 @@ Usage: agentmage [--json] [--surface interactive-cli|json|sdk|acp] COMMAND\n\
 Commands:\n\
   code\n\
   code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
-       --scenario no-op|failed-test-repair|slow-cancel|restart-repair|new-file|multi-file|false-completion|overflow\n\
+       --scenario no-op|failed-test-repair|slow-cancel|restart-repair|new-file|multi-file|rollback|false-completion|overflow\n\
        --objective TEXT [--follow-up TEXT]... [--resume|--record-session] [--artifact-release-probe-before-follow-ups] [--approve-this-run] [--stale-approval-probe|--replay-approval-probe|--expired-cursor-probe|--artifact-integrity-probe] [--slow-subscriber-probe]\n\
        [--preauthorize-workspace-reads] [--preauthorize-path RELATIVE_PATH]... [--preauthorize-command ID@VERSION@SHA256]...\n\
        [--preauthorization-budget N --preauthorization-minutes N] [--revoke-preauthorization-before-follow-ups]\n\

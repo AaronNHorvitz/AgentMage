@@ -17,6 +17,10 @@ use crate::{
         CONTROLLED_CHANGE_TOOL_VERSION, CONTROLLED_CREATE_TOOL_ID, ControlledFileCreationProposal,
         STRUCTURED_PATCH_TOOL_ID, StructuredPatchProposal,
     },
+    coding_history::{
+        CHANGE_HISTORY_TOOL_ID, CODING_HISTORY_TOOL_VERSION, ChangeHistoryRequest,
+        ROLLBACK_TOOL_ID, RollbackRequest,
+    },
     coding_session::CodingSessionProfile,
     coding_tools::{
         BOUNDED_COMMAND_TOOL_ID, BOUNDED_COMMAND_TOOL_VERSION, TARGETED_VALIDATION_TOOL_ID,
@@ -64,6 +68,16 @@ pub enum PreparedNativeCodingCall {
         template: Box<ValidationTemplate>,
         /// Authority-free prepared command owned by the template.
         prepared: Box<PreparedCommand>,
+    },
+    /// Bounded inspection of sealed change records retained by the canonical artifact owner.
+    ChangeHistory {
+        /// Exact caller limit.
+        request: ChangeHistoryRequest,
+    },
+    /// One sealed retained source selected for a fresh inverse write.
+    Rollback {
+        /// Exact rollback source and fresh operation identities.
+        request: RollbackRequest,
     },
 }
 
@@ -126,6 +140,8 @@ impl<'profile> NativeCodingCallPreparer<'profile> {
                 .profile
                 .change_plan()
                 .admits_validation(&request.validation_id),
+            PreparedNativeCodingCall::ChangeHistory { .. }
+            | PreparedNativeCodingCall::Rollback { .. } => true,
             PreparedNativeCodingCall::ReadOnly { .. }
             | PreparedNativeCodingCall::GitInspection { .. }
             | PreparedNativeCodingCall::Command { .. } => true,
@@ -197,6 +213,16 @@ fn prepare_from_parts(
                 template: Box::new(template),
                 prepared: Box::new(prepared),
             })
+        }
+        (CHANGE_HISTORY_TOOL_ID, CODING_HISTORY_TOOL_VERSION) => {
+            let request = serde_json::from_slice::<ChangeHistoryRequest>(&call.arguments.bytes)
+                .map_err(|_| NativeCodingDispatchError::ProviderDenied)?;
+            Ok(PreparedNativeCodingCall::ChangeHistory { request })
+        }
+        (ROLLBACK_TOOL_ID, CODING_HISTORY_TOOL_VERSION) => {
+            let request = serde_json::from_slice::<RollbackRequest>(&call.arguments.bytes)
+                .map_err(|_| NativeCodingDispatchError::ProviderDenied)?;
+            Ok(PreparedNativeCodingCall::Rollback { request })
         }
         _ => Err(NativeCodingDispatchError::ToolUnavailable),
     }

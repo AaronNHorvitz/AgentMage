@@ -24,6 +24,10 @@ use crate::{
         STRUCTURED_PATCH_INPUT_SCHEMA_ID, STRUCTURED_PATCH_INPUT_SCHEMA_JSON,
         register_controlled_change_runtime_tools,
     },
+    coding_history::{
+        CHANGE_HISTORY_INPUT_SCHEMA_ID, CHANGE_HISTORY_INPUT_SCHEMA_JSON, ROLLBACK_INPUT_SCHEMA_ID,
+        ROLLBACK_INPUT_SCHEMA_JSON, register_coding_history_tools,
+    },
     runtime_tools::read_only_runtime_registry,
 };
 
@@ -291,6 +295,8 @@ pub fn native_coding_runtime_registry(
         read_only_runtime_registry().map_err(|_| CodingToolCatalogError::RegistrationDenied)?;
     register_controlled_change_runtime_tools(&mut registry, write_scope)
         .map_err(|_| CodingToolCatalogError::RegistrationDenied)?;
+    register_coding_history_tools(&mut registry)
+        .map_err(|_| CodingToolCatalogError::RegistrationDenied)?;
     register_bounded_command_runtime_tool(&mut registry, commands.clone())?;
     register_targeted_validation_runtime_tool(&mut registry, commands, validations)?;
     Ok(registry)
@@ -328,6 +334,8 @@ fn coding_input_schema_json(schema_id: &str) -> Option<&'static str> {
         GIT_INSPECTION_INPUT_SCHEMA_ID => Some(GIT_INSPECTION_INPUT_SCHEMA_JSON),
         STRUCTURED_PATCH_INPUT_SCHEMA_ID => Some(STRUCTURED_PATCH_INPUT_SCHEMA_JSON),
         CONTROLLED_CREATE_INPUT_SCHEMA_ID => Some(CONTROLLED_CREATE_INPUT_SCHEMA_JSON),
+        CHANGE_HISTORY_INPUT_SCHEMA_ID => Some(CHANGE_HISTORY_INPUT_SCHEMA_JSON),
+        ROLLBACK_INPUT_SCHEMA_ID => Some(ROLLBACK_INPUT_SCHEMA_JSON),
         BOUNDED_COMMAND_INPUT_SCHEMA_ID => Some(BOUNDED_COMMAND_INPUT_SCHEMA_JSON),
         TARGETED_VALIDATION_INPUT_SCHEMA_ID => Some(TARGETED_VALIDATION_INPUT_SCHEMA_JSON),
         _ => None,
@@ -603,7 +611,7 @@ mod tests {
         let definitions = registry.list_tools();
         assert_eq!(
             definitions.len(),
-            ReadOnlyToolKind::ALL.len() + ArtifactToolKind::ALL.len() + 5
+            ReadOnlyToolKind::ALL.len() + ArtifactToolKind::ALL.len() + 7
         );
 
         let ids = definitions
@@ -616,6 +624,8 @@ mod tests {
             CONTROLLED_CREATE_TOOL_ID,
             BOUNDED_COMMAND_TOOL_ID,
             TARGETED_VALIDATION_TOOL_ID,
+            crate::coding_history::CHANGE_HISTORY_TOOL_ID,
+            crate::coding_history::ROLLBACK_TOOL_ID,
         ] {
             assert!(ids.contains(required), "missing {required}");
         }

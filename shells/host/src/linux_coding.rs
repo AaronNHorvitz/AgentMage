@@ -3,7 +3,10 @@
 use std::fmt::Write;
 use std::path::Path;
 
-use agentmage_capability_repository_map::{RepositoryMap, StructuredFileChangePlan};
+use agentmage_capability_repository_map::{
+    RepositoryMap, StructuredEdit, StructuredFileChangePlan, StructuredLanguage,
+    StructuredReviewHook,
+};
 use agentmage_kernel_contracts::{
     AuthorizedWorkspaceHandle, GrantTarget, HeldWorkspaceObject, PathResolutionIntent,
     WorkspaceAuthorizationId, WorkspaceObjectKind, WorkspacePath,
@@ -23,7 +26,7 @@ use agentmage_kernel_contracts::AdapterInstanceId;
 
 use crate::{
     coding_changes::{
-        CodingWriteScope, bind_structured_patch_proposal,
+        CodingWriteScope, StructuredPatchProposal, bind_structured_patch_proposal,
         controlled_create_parent_observation_sha256, prepare_controlled_file_creation,
     },
     coding_dispatch::PreparedNativeCodingCall,
@@ -101,6 +104,8 @@ pub enum LinuxCodingWriteDraft {
     StructuredPatch(StructuredFileChangePlan),
     /// Existing controlled-filesystem creation draft bound to a held parent observation.
     ControlledCreate(FilesystemOperationDraft),
+    /// Fresh inverse plan bound to a sealed retained change and exact current bytes.
+    Rollback(StructuredFileChangePlan),
 }
 
 impl std::fmt::Debug for LinuxCodingTargetBinding {
@@ -578,6 +583,67 @@ fn compose_write_draft(
             .map_err(|_| LinuxCodingBindingError::TargetDenied)
         }
         (
+            PreparedNativeCodingCall::Rollback { request },
+            NativeCodingTargetPlan::ExistingFile {
+                path,
+                expected_preimage_sha256,
+            },
+            LinuxCodingTargetBinding::ExistingFile { held, target },
+        ) if held.workspace_path() == path
+            && target.workspace_path() == Some(path)
+            && request.source.record.postimage_sha256 == *expected_preimage_sha256 =>
+        {
+            let current = held
+                .read_exact_bytes()
+                .map_err(|_| LinuxCodingBindingError::TargetDenied)?;
+            let current_text = String::from_utf8(current.clone())
+                .map_err(|_| LinuxCodingBindingError::TargetDenied)?;
+            let edit = if matches!(
+                request.source.record.language,
+                StructuredLanguage::Rust
+                    | StructuredLanguage::Python
+                    | StructuredLanguage::TypeScript
+                    | StructuredLanguage::Tsx
+                    | StructuredLanguage::JavaScript
+                    | StructuredLanguage::Swift
+            ) {
+                StructuredEdit::ReplaceSyntaxNode {
+                    edit_id: format!("{}:inverse", request.rollback_id),
+                    start_byte: 0,
+                    end_byte: current.len() as u64,
+                    expected_node_sha256: request.source.record.postimage_sha256.clone(),
+                    replacement: request.source.record.preimage.clone(),
+                }
+            } else {
+                StructuredEdit::ReplaceExactText {
+                    edit_id: format!("{}:inverse", request.rollback_id),
+                    expected: current_text,
+                    replacement: request.source.record.preimage.clone(),
+                }
+            };
+            bind_structured_patch_proposal(
+                scope,
+                StructuredPatchProposal {
+                    schema_version: 1,
+                    change_id: request.rollback_id.clone(),
+                    path: request.source.record.path.clone(),
+                    expected_preimage_sha256: request.source.record.postimage_sha256.clone(),
+                    intent_sha256: request.intent_sha256.clone(),
+                    change_plan_sha256: request.change_plan_sha256.clone(),
+                    language: request.source.record.language,
+                    artifact_class: request.source.record.artifact_class,
+                    edits: vec![edit],
+                    additional_review_hooks: vec![StructuredReviewHook::Migration],
+                    generated: request.source.record.generated,
+                    allow_generated: request.source.record.generated,
+                },
+                current,
+            )
+            .map(LinuxCodingWriteDraft::Rollback)
+            .map(Some)
+            .map_err(|_| LinuxCodingBindingError::TargetDenied)
+        }
+        (
             PreparedNativeCodingCall::ReadOnly { .. },
             NativeCodingTargetPlan::ReadProjection { .. },
             LinuxCodingTargetBinding::ReadProjection { .. },
@@ -585,7 +651,8 @@ fn compose_write_draft(
         | (
             PreparedNativeCodingCall::GitInspection { .. }
             | PreparedNativeCodingCall::Command { .. }
-            | PreparedNativeCodingCall::Validation { .. },
+            | PreparedNativeCodingCall::Validation { .. }
+            | PreparedNativeCodingCall::ChangeHistory { .. },
             NativeCodingTargetPlan::OwnedWorktreeRoot,
             LinuxCodingTargetBinding::OwnedWorktreeRoot { .. },
         ) => Ok(None),

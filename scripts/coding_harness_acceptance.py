@@ -27,6 +27,7 @@ EXPECTED = {
     "patch-test-revision": ("failed-test-repair", "repair", True, False, 0, "SUCCESS"),
     "new-file": ("new-file", "new-file", True, False, 0, "SUCCESS"),
     "multi-file": ("multi-file", "multi-file", True, False, 0, "SUCCESS"),
+    "rollback": ("rollback", "stable", True, False, 0, "SUCCESS"),
     "no-op": ("no-op", "repair", True, False, 0, "NO_OP"),
     "denial": ("failed-test-repair", "repair", False, False, 4, "DECLINED"),
     "stale-approval": ("failed-test-repair", "repair", True, True, 5, None),
@@ -34,13 +35,14 @@ EXPECTED = {
     "false-completion": ("false-completion", "repair", True, False, 8, "FAILED"),
 }
 CASE_ROOTS = {case: f"c{index:02d}" for index, case in enumerate(EXPECTED, start=1)}
-CASE_ROOTS["cancel"] = "c09"
+CASE_ROOTS["cancel"] = "c10"
 CASE_ROOTS.update({
-    "invalid-activation": "c10",
-    "replayed-approval": "c11",
-    "expired-cursor": "c12",
-    "approval-cancel-race": "c13",
-    "artifact-integrity": "c14",
+    "invalid-activation": "c11",
+    "replayed-approval": "c12",
+    "expired-cursor": "c13",
+    "approval-cancel-race": "c14",
+    "artifact-integrity": "c15",
+    "rollback-conflict": "c16",
 })
 
 
@@ -103,6 +105,10 @@ def verify_case(case: str, base: Path, log_dir: Path, exit_code: int) -> dict:
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
         )
         checks["complete-validation"] = validation.returncode == 0
+    elif case == "rollback":
+        checks["exact-preimage-restored"] = (workspace / "src/calc.py").read_text() == (
+            "def add(left, right):\n    return left + right\n"
+        )
     elif stale:
         stderr = (log_dir / "stderr.log").read_text(encoding="utf-8")
         checks["stale-rejected"] = "host.runtime.approval_denied\n" in stderr
@@ -347,6 +353,88 @@ def run_artifact_integrity_probe(work_root: Path, log_root: Path) -> dict:
     }
 
 
+def run_rollback_conflict(work_root: Path, log_root: Path) -> dict:
+    case = "rollback-conflict"
+    base = work_root / CASE_ROOTS[case]
+    log_dir = log_root / case
+    coding_harness.setup(base, "stable")
+    command = [
+        sys.executable, str(coding_harness.ROOT / "scripts/coding_harness.py"), "start",
+        "--root", str(base), "--scenario", "rollback", "--objective",
+        "Refuse rollback if a concurrent edit changes the exact postimage.",
+        "--approve-this-run", "--approval-delay-ms", "10000", "--log-dir", str(log_dir),
+    ]
+    process = subprocess.Popen(
+        command,
+        cwd=coding_harness.ROOT,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    deadline = time.monotonic() + 60
+    rollback_challenge = "tool=agentmage.code.rollback@"
+    while time.monotonic() < deadline:
+        if (log_dir / "stderr.log").is_file() and rollback_challenge in (
+            log_dir / "stderr.log"
+        ).read_text(encoding="utf-8"):
+            source = coding_harness.paths(base)[2] / "src/calc.py"
+            if source.read_text(encoding="utf-8") != (
+                "def temporary_add(left, right):\n    return left + right\n"
+            ):
+                process.terminate()
+                raise coding_harness.HarnessError(
+                    "coding.acceptance.rollback-conflict-preimage-denied"
+                )
+            descriptor = os.open(source, os.O_WRONLY | os.O_TRUNC | os.O_NOFOLLOW)
+            try:
+                os.write(
+                    descriptor,
+                    b"def human_concurrent_add(left, right):\n    return left + right + 1\n",
+                )
+            finally:
+                os.close(descriptor)
+            break
+        if process.poll() is not None:
+            raise coding_harness.HarnessError(
+                "coding.acceptance.rollback-ended-before-conflict"
+            )
+        time.sleep(0.02)
+    else:
+        process.terminate()
+        raise coding_harness.HarnessError("coding.acceptance.rollback-conflict-timeout")
+    stdout, stderr = process.communicate(timeout=30)
+    if stderr:
+        raise coding_harness.HarnessError("coding.acceptance.rollback-runner-stderr")
+    exit_code = process.returncode
+    workspace = coding_harness.paths(base)[2]
+    retained = (workspace / "src/calc.py").read_text(encoding="utf-8")
+    runtime_stderr = (log_dir / "stderr.log").read_text(encoding="utf-8")
+    status = git_status(workspace)
+    checks = {
+        "exit": exit_code == 5,
+        "runner-result": '"exit_code": 5' in stdout,
+        "rollback-challenged": rollback_challenge in runtime_stderr,
+        "exact-refusal": "host.runtime.failed\n" in runtime_stderr,
+        "human-edit-retained": retained == (
+            "def human_concurrent_add(left, right):\n    return left + right + 1\n"
+        ),
+        "filesystem": status == [" M src/calc.py"],
+        "no-outcome": not any("state" in row for row in rows(log_dir)),
+    }
+    return {
+        "case": case,
+        "scenario": "rollback",
+        "exit_code": exit_code,
+        "terminal": None,
+        "event_count": len(rows(log_dir)),
+        "worktree_status": status,
+        "checks": checks,
+        "passed": all(checks.values()),
+        "stdout_sha256": sha256(log_dir / "stdout.jsonl"),
+        "stderr_sha256": sha256(log_dir / "stderr.log"),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--work-root", type=Path, required=True)
@@ -366,6 +454,7 @@ def main() -> int:
         run_transport_probe("expired-cursor", work_root, log_root),
         run_approval_cancel_race(work_root, log_root),
         run_artifact_integrity_probe(work_root, log_root),
+        run_rollback_conflict(work_root, log_root),
     ])
     agentmage = coding_harness.binary("agentmage")
     host = coding_harness.binary("agentmage-host")
