@@ -154,16 +154,16 @@
       "all_versions_present": true,
       "classifications": {
         "development": 371,
-        "production": 127
+        "production": 129
       },
-      "component_count": 498,
+      "component_count": 500,
       "ecosystems": {
-        "cargo": 125,
+        "cargo": 127,
         "npm": 370,
         "npm-workspace": 2,
         "swift-workspace": 1
       },
-      "identity_set_sha256": "37ad96332ef977affd043d4a1a471679c4167792fa1f4babc564afe2ba1bbc50",
+      "identity_set_sha256": "8c290bfd733bfb21fe849579ede708ff8de3a8ef7014044e9bd2ce2dc3fbae3c",
       "source": "supply-chain/dependency-provenance.json"
     },
     "product_runtimes": []
@@ -360,11 +360,11 @@
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "4343ddb6cbd2c0c0444fd5618a7fe20cf3a07c1bd959edf959b7ee8e6e9a6d45"
+      "sha256": "14d894036af40f0682e69834886032152a102051346133f84af0157e43e5963c"
     },
     {
       "path": "architecture/dependency-classes.json",
-      "sha256": "f1fb7d96a70274a3ae2baeacad8991686d379f0439885fff3c27598e46d0d0ba"
+      "sha256": "384da74ee8dbd809b1bb7d4fd647d95d3a717fa37ae6d5afdad7e2bb5728ab61"
     },
     {
       "path": "architecture/optional-component-inventory.json",
@@ -396,11 +396,11 @@
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "468d3652d71caf9431826fd287b4b7fb69bb49f77ebea5acb819e8c8307a681a"
+      "sha256": "1596e8333e24a764d11bf905ce686ab0407732d993cf0c2bf57bb7e1014b4e8f"
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "fa5bfda4cb0519ee2b9b277503d336f67b5ad2e32d84c185efa13b3f3f3f194f"
+      "sha256": "3a783232ea6efd52d66dd1eedba5de652ac94b1e0c80c813914da9ad99db4ff1"
     },
     {
       "path": "scripts/component_inventory.py",
@@ -415,9 +415,9 @@
   "summary": {
     "approved_build_environment_count": 2,
     "approved_build_executable_count": 16,
-    "approved_component_count": 516,
+    "approved_component_count": 518,
     "approved_optional_dependency_count": 0,
-    "approved_package_count": 498,
+    "approved_package_count": 500,
     "approved_product_runtime_count": 0,
     "approved_records_missing_hash_count": 0,
     "approved_records_missing_version_count": 0,
