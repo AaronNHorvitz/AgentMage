@@ -18,17 +18,17 @@ use agentmage_capability_repository_map::{
 use agentmage_kernel_contracts::{
     ActorId, AdapterInstanceId, AuthorityClass, BudgetLimit, BudgetResource,
     CONTRACT_SCHEMA_VERSION, ClosedModelProposal, ContextBudget, ContractPayload, DataSensitivity,
-    DecodingProfile, EvidenceKind, ExactModelProfile, FamilyCodecIdentity, HardwareEnvelope,
-    LocalEndpointIdentity, LocalTransport, ModelAdapterId, ModelArtifact, ModelCancellationProbe,
-    ModelCapability, ModelCapabilityState, ModelCodecId, ModelFinishReason, ModelManifestId,
-    ModelMessageRole, ModelModality, ModelProfileId, ModelProposalKind, ModelResourceReport,
-    ModelRole, ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure,
-    ModelRuntimeIdentity, ModelRuntimeKind, ModelStreamId, ModelTokenUsage, ModelToolCallCandidate,
-    NetworkComponent, NetworkDestinationClass, NetworkObservation, PlanId, PlatformArchitecture,
-    PlatformFamily, ProposalId, RepositorySnapshotId, RollbackPlan, RuntimeRunId, RuntimeRunLimits,
-    SessionId, StopCondition, StopConditionKind, TaskId, ToolCallId, ToolCatalogId, ToolId,
-    WorkPacket, WorkPacketId, WorkPacketState, WorkspaceAuthorizationId, WorkspaceId,
-    WorkspacePath,
+    DecodingProfile, EvidenceKind, ExactModelProfile, FamilyCodecIdentity, GrantTarget,
+    HardwareEnvelope, LocalEndpointIdentity, LocalTransport, ModelAdapterId, ModelArtifact,
+    ModelCancellationProbe, ModelCapability, ModelCapabilityState, ModelCodecId, ModelFinishReason,
+    ModelManifestId, ModelMessageRole, ModelModality, ModelProfileId, ModelProposalKind,
+    ModelResourceReport, ModelRole, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
+    ModelRuntimeFailure, ModelRuntimeIdentity, ModelRuntimeKind, ModelStreamId, ModelTokenUsage,
+    ModelToolCallCandidate, NetworkComponent, NetworkDestinationClass, NetworkObservation,
+    PathResolutionIntent, PlanId, PlatformArchitecture, PlatformFamily, ProposalId,
+    RepositorySnapshotId, RollbackPlan, RuntimeRunId, RuntimeRunLimits, SessionId, StopCondition,
+    StopConditionKind, TaskId, ToolCallId, ToolCatalogId, ToolId, WorkPacket, WorkPacketId,
+    WorkPacketState, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
 };
 use agentmage_kernel_engine::{
     command_runner::{
@@ -52,7 +52,8 @@ use agentmage_platform_linux::{
     LinuxDevelopmentPlatformAdapter, LinuxGitArtifact, LinuxRepositoryCollector,
     LinuxRepositoryInspectionManifest, LinuxRepositoryInventoryState, LinuxRepositoryScope,
     LinuxSandboxLimits, LinuxSandboxManifest, LinuxSandboxRunner, linux_repository_path_sha256,
-    open_linux_development_authority, select_development_linux_workspace,
+    open_linux_development_authority, resolve_development_linux_workspace_object,
+    select_development_linux_workspace,
 };
 use sha2::{Digest, Sha256};
 
@@ -60,12 +61,16 @@ use crate::{
     coding_authority::{
         CodingRuntimePolicy, CodingRuntimePolicyRequest, build_coding_runtime_policy,
     },
-    coding_changes::{CodingWriteScope, STRUCTURED_PATCH_TOOL_ID, StructuredPatchProposal},
+    coding_changes::{
+        CONTROLLED_CHANGE_TOOL_VERSION, CONTROLLED_CREATE_TOOL_ID, CodingWriteScope,
+        ControlledFileClassification, ControlledFileCreationProposal, STRUCTURED_PATCH_TOOL_ID,
+        StructuredPatchProposal, controlled_create_parent_observation_sha256,
+    },
     coding_context::{CodingContextPort, CodingTokenCounter},
     coding_development_activation::{
         CODING_DEVELOPMENT_ACTIVATION, CodingDevelopmentActivation, CodingDevelopmentKeyProvider,
     },
-    coding_harness::{EphemeralCodingCoordinator, compose_ephemeral_coding_coordinator},
+    coding_harness::{DurableCodingCoordinator, compose_durable_coding_coordinator},
     coding_plan::build_coding_development_plan_binding,
     coding_run::{CodingRunRequestInput, build_ephemeral_coding_run_request},
     coding_session::{CodingSessionProfile, CodingSessionProfileInput},
@@ -96,6 +101,14 @@ pub enum CodingDevelopmentScenario {
     FailedTestRepair,
     /// Hold one cancellable model call so actual signal propagation can be exercised.
     SlowCancel,
+    /// Create the exact absent source file and validate it.
+    NewFile,
+    /// Repair two bounded source files before one complete validation.
+    MultiFile,
+    /// Submit an unsupported success claim with no required evidence.
+    FalseCompletion,
+    /// Exhaust the exact canonical event budget before a second model turn.
+    Overflow,
 }
 
 impl CodingDevelopmentScenario {
@@ -105,6 +118,10 @@ impl CodingDevelopmentScenario {
             "no-op" => Some(Self::NoOp),
             "failed-test-repair" => Some(Self::FailedTestRepair),
             "slow-cancel" => Some(Self::SlowCancel),
+            "new-file" => Some(Self::NewFile),
+            "multi-file" => Some(Self::MultiFile),
+            "false-completion" => Some(Self::FalseCompletion),
+            "overflow" => Some(Self::Overflow),
             _ => None,
         }
     }
@@ -160,7 +177,7 @@ type DevelopmentBoundary = LinuxCodingRuntimeBoundary<
     LinuxBoundedRepositoryInspectionExecutor,
 >;
 /// Exact coordinator type served by the development IPC host.
-pub type CodingDevelopmentCoordinator = EphemeralCodingCoordinator<
+pub type CodingDevelopmentCoordinator = DurableCodingCoordinator<
     ScriptedDevelopmentModel,
     CodingContextPort<DevelopmentTokenCounter>,
     DevelopmentBoundary,
@@ -260,6 +277,7 @@ impl CodingDevelopmentRuntimeFactory {
             workspace_id,
             &inventory,
             &repository_map,
+            scenario,
         )?));
         let workspace = Box::leak(Box::new(
             LinuxCodingWorkspace::bind_development(
@@ -316,9 +334,37 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             excluded_scopes: Vec::new(),
         })
         .map_err(|_| prepare_denied("policy"))?;
-        let acceptance =
-            vec!["The exact synthetic validation passes after the bounded repair".to_owned()];
-        let packet = development_work_packet(self.profile, &task_id, &input.prompt, &acceptance);
+        let (acceptance, required_evidence) = match self.scenario {
+            CodingDevelopmentScenario::NoOp
+            | CodingDevelopmentScenario::SlowCancel
+            | CodingDevelopmentScenario::Overflow => (
+                vec![
+                    "The exact Git status proves the disposable repository is unchanged".to_owned(),
+                ],
+                vec![EvidenceKind::Observation],
+            ),
+            CodingDevelopmentScenario::FailedTestRepair
+            | CodingDevelopmentScenario::NewFile
+            | CodingDevelopmentScenario::MultiFile
+            | CodingDevelopmentScenario::FalseCompletion => (
+                vec!["The exact synthetic validation passes after the bounded repair".to_owned()],
+                vec![EvidenceKind::Validation],
+            ),
+        };
+        let mutable_files = match self.scenario {
+            CodingDevelopmentScenario::MultiFile => {
+                vec!["src/calc.py".to_owned(), "src/subtract.py".to_owned()]
+            }
+            _ => vec!["src/calc.py".to_owned()],
+        };
+        let packet = development_work_packet(
+            self.profile,
+            &task_id,
+            &input.prompt,
+            &acceptance,
+            mutable_files,
+            required_evidence,
+        );
         let request = build_ephemeral_coding_run_request(
             self.profile,
             CodingRunRequestInput {
@@ -365,6 +411,8 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             self.profile,
             request,
             self.activation.workspace_root(),
+            self.platform,
+            self.workspace.workspace(),
         )
         .map_err(|_| NativeChatRuntimeError::RequestDenied)?;
         let model = ScriptedDevelopmentModel {
@@ -426,7 +474,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             identities: OsCodingIdentitySource,
         })
         .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
-        compose_ephemeral_coding_coordinator(
+        compose_durable_coding_coordinator(
             self.profile,
             request.clone(),
             model,
@@ -448,8 +496,9 @@ fn build_profile(
     workspace_id: WorkspaceId,
     inventory: &agentmage_platform_linux::LinuxRepositoryInventory,
     repository_map: &agentmage_capability_repository_map::RepositoryMap,
+    scenario: CodingDevelopmentScenario,
 ) -> Result<CodingSessionProfile, CodingDevelopmentRuntimeError> {
-    let limits = runtime_limits();
+    let limits = runtime_limits(scenario);
     let path_sha256 = linux_repository_path_sha256(activation.workspace_root())
         .map_err(|_| CodingDevelopmentRuntimeError::Worktree)?;
     let branch = inventory
@@ -726,6 +775,8 @@ fn scripted_steps(
     profile: &CodingSessionProfile,
     request: &agentmage_kernel_contracts::RuntimeRunRequest,
     workspace_root: &Path,
+    platform: &LinuxDevelopmentPlatformAdapter,
+    workspace: &agentmage_platform_linux::LinuxAuthorizedWorkspace,
 ) -> Result<VecDeque<ScriptedDevelopmentStep>, CodingDevelopmentRuntimeError> {
     let git = tool_candidate(
         profile,
@@ -754,7 +805,9 @@ fn scripted_steps(
         .map_err(|_| CodingDevelopmentRuntimeError::Composition)
     };
     match scenario {
-        CodingDevelopmentScenario::NoOp | CodingDevelopmentScenario::SlowCancel => Ok([
+        CodingDevelopmentScenario::NoOp
+        | CodingDevelopmentScenario::SlowCancel
+        | CodingDevelopmentScenario::Overflow => Ok([
             ScriptedDevelopmentStep::Tool(git),
             ScriptedDevelopmentStep::Complete(completion(
                 CodingTerminalClaim::NoOp,
@@ -824,6 +877,157 @@ fn scripted_steps(
             .into_iter()
             .collect())
         }
+        CodingDevelopmentScenario::NewFile => {
+            if workspace_root.join("src/calc.py").exists() {
+                return Err(CodingDevelopmentRuntimeError::Composition);
+            }
+            let parent_path =
+                WorkspacePath::new(profile.write_scope().workspace_id().clone(), ["src"])
+                    .map_err(|_| CodingDevelopmentRuntimeError::Composition)?;
+            let held_parent = resolve_development_linux_workspace_object(
+                platform,
+                workspace,
+                &parent_path,
+                PathResolutionIntent::ReadDirectory,
+            )
+            .map_err(|_| CodingDevelopmentRuntimeError::Composition)?;
+            let parent = GrantTarget::held_object(&held_parent)
+                .map_err(|_| CodingDevelopmentRuntimeError::Composition)?;
+            let siblings = held_parent
+                .observe_directory_names(4_096, 1024 * 1024)
+                .map_err(|_| CodingDevelopmentRuntimeError::Composition)?;
+            let expected_parent_sha256 =
+                controlled_create_parent_observation_sha256(&parent, &siblings)
+                    .map_err(|_| CodingDevelopmentRuntimeError::Composition)?;
+            let create = tool_candidate(
+                profile,
+                CONTROLLED_CREATE_TOOL_ID,
+                CONTROLLED_CHANGE_TOOL_VERSION,
+                "scripted-create-calc",
+                &ControlledFileCreationProposal {
+                    schema_version: 1,
+                    creation_id: "scripted-create-calc".to_owned(),
+                    path: vec!["src".to_owned(), "calc.py".to_owned()],
+                    content: "def add(left, right):\n    return left + right\n".to_owned(),
+                    mode: 0o600,
+                    classification: ControlledFileClassification::SourceCode,
+                    intent_sha256: profile.change_plan().intent_sha256().to_owned(),
+                    change_plan_sha256: profile.change_plan().plan_sha256().to_owned(),
+                    expected_parent_sha256,
+                },
+            )?;
+            let validation_template = profile
+                .validations()
+                .templates
+                .first()
+                .ok_or(CodingDevelopmentRuntimeError::Composition)?;
+            let validation = tool_candidate(
+                profile,
+                TARGETED_VALIDATION_TOOL_ID,
+                TARGETED_VALIDATION_TOOL_VERSION,
+                "scripted-create-validation",
+                &TargetedValidationRequest {
+                    schema_version: 1,
+                    validation_attempt_id: "scripted-create-validation".to_owned(),
+                    validation_id: validation_template.validation_id.clone(),
+                    template_sha256: validation_template.template_sha256.clone(),
+                },
+            )?;
+            Ok([
+                ScriptedDevelopmentStep::Tool(create),
+                ScriptedDevelopmentStep::Tool(validation),
+                ScriptedDevelopmentStep::Tool(git),
+                ScriptedDevelopmentStep::Complete(completion(
+                    CodingTerminalClaim::Changed,
+                    "Created the absent bounded source file and verified it.",
+                    Vec::new(),
+                )?),
+            ]
+            .into_iter()
+            .collect())
+        }
+        CodingDevelopmentScenario::MultiFile => {
+            let validation_template = profile
+                .validations()
+                .templates
+                .first()
+                .ok_or(CodingDevelopmentRuntimeError::Composition)?;
+            let validation = |call_id: &str| {
+                tool_candidate(
+                    profile,
+                    TARGETED_VALIDATION_TOOL_ID,
+                    TARGETED_VALIDATION_TOOL_VERSION,
+                    call_id,
+                    &TargetedValidationRequest {
+                        schema_version: 1,
+                        validation_attempt_id: call_id.to_owned(),
+                        validation_id: validation_template.validation_id.clone(),
+                        template_sha256: validation_template.template_sha256.clone(),
+                    },
+                )
+            };
+            let patch = |call_id: &str, file: &str, old: &str, replacement: &str| {
+                let source = fs::read(workspace_root.join("src").join(file))
+                    .map_err(|_| CodingDevelopmentRuntimeError::Composition)?;
+                tool_candidate(
+                    profile,
+                    STRUCTURED_PATCH_TOOL_ID,
+                    CONTROLLED_CHANGE_TOOL_VERSION,
+                    call_id,
+                    &StructuredPatchProposal {
+                        schema_version: 1,
+                        change_id: call_id.to_owned(),
+                        path: vec!["src".to_owned(), file.to_owned()],
+                        expected_preimage_sha256: sha256(&source),
+                        intent_sha256: profile.change_plan().intent_sha256().to_owned(),
+                        change_plan_sha256: profile.change_plan().plan_sha256().to_owned(),
+                        language: StructuredLanguage::Python,
+                        artifact_class: StructuredArtifactClass::Code,
+                        edits: vec![StructuredEdit::RenameIdentifier {
+                            edit_id: format!("{call_id}-rename"),
+                            old: old.to_owned(),
+                            replacement: replacement.to_owned(),
+                        }],
+                        additional_review_hooks: Vec::new(),
+                        generated: false,
+                        allow_generated: false,
+                    },
+                )
+            };
+            Ok([
+                ScriptedDevelopmentStep::Tool(validation("scripted-multi-failing")?),
+                ScriptedDevelopmentStep::Tool(patch(
+                    "scripted-multi-add",
+                    "calc.py",
+                    "broken_add",
+                    "add",
+                )?),
+                ScriptedDevelopmentStep::Tool(patch(
+                    "scripted-multi-subtract",
+                    "subtract.py",
+                    "broken_subtract",
+                    "subtract",
+                )?),
+                ScriptedDevelopmentStep::Tool(validation("scripted-multi-passing")?),
+                ScriptedDevelopmentStep::Tool(git),
+                ScriptedDevelopmentStep::Complete(completion(
+                    CodingTerminalClaim::Changed,
+                    "Repaired two bounded source files and verified the complete fixture.",
+                    Vec::new(),
+                )?),
+            ]
+            .into_iter()
+            .collect())
+        }
+        CodingDevelopmentScenario::FalseCompletion => {
+            Ok([ScriptedDevelopmentStep::Complete(completion(
+                CodingTerminalClaim::Changed,
+                "Unsupported completion claim without tools or validation.",
+                Vec::new(),
+            )?)]
+            .into_iter()
+            .collect())
+        }
     }
 }
 
@@ -858,6 +1062,8 @@ fn development_work_packet(
     task_id: &TaskId,
     objective: &str,
     acceptance: &[String],
+    mutable_files: Vec<String>,
+    required_evidence: Vec<EvidenceKind>,
 ) -> WorkPacket {
     WorkPacket {
         schema_version: CONTRACT_SCHEMA_VERSION,
@@ -868,11 +1074,11 @@ fn development_work_packet(
         reason: "Exercise the real coordinator in an explicitly disposable fixture".to_owned(),
         owner: "local-user".to_owned(),
         authoritative_evidence: Vec::new(),
-        mutable_files: vec!["src/calc.py".to_owned()],
+        mutable_files,
         protected_files: vec![".git".to_owned(), "tests/run_validation.py".to_owned()],
         expected_output: "One verifier-backed coding outcome".to_owned(),
         acceptance_checks: acceptance.to_vec(),
-        required_evidence: vec![EvidenceKind::Validation],
+        required_evidence,
         required_capability_class: AuthorityClass::LocalWrite,
         budgets: [
             (BudgetResource::PlanSteps, 16),
@@ -1108,7 +1314,7 @@ impl RuntimeClock for OsRuntimeClock {
     }
 }
 
-fn runtime_limits() -> RuntimeRunLimits {
+fn runtime_limits(scenario: CodingDevelopmentScenario) -> RuntimeRunLimits {
     RuntimeRunLimits {
         max_turns: 16,
         max_model_calls: 16,
@@ -1117,7 +1323,11 @@ fn runtime_limits() -> RuntimeRunLimits {
         max_tool_call_depth: 2,
         max_no_progress_turns: 4,
         max_context_refreshes: 16,
-        max_events: 2_048,
+        max_events: if scenario == CodingDevelopmentScenario::Overflow {
+            13
+        } else {
+            2_048
+        },
         max_elapsed_ms: 600_000,
         max_output_bytes: 4 * 1024 * 1024,
     }

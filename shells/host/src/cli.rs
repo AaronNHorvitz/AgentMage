@@ -63,6 +63,8 @@ pub struct CodingDevelopmentCliOptions {
     pub objective: String,
     /// Whether this invocation explicitly preauthorizes its displayed exact operations.
     pub approve_this_run: bool,
+    /// Whether to send one intentionally stale response for executable rejection testing.
+    pub stale_approval_probe: bool,
 }
 
 /// Parsed CLI action before any transport or authority boundary.
@@ -196,6 +198,7 @@ fn parse_coding_development(
     let mut scenario = None;
     let mut objective = None;
     let mut approve_this_run = false;
+    let mut stale_approval_probe = false;
     let mut cursor = 0;
     while let Some(argument) = arguments.get(cursor) {
         let target = match argument.as_str() {
@@ -206,6 +209,11 @@ fn parse_coding_development(
             "--objective" if objective.is_none() => &mut objective,
             "--approve-this-run" if !approve_this_run => {
                 approve_this_run = true;
+                cursor += 1;
+                continue;
+            }
+            "--stale-approval-probe" if !stale_approval_probe => {
+                stale_approval_probe = true;
                 cursor += 1;
                 continue;
             }
@@ -221,7 +229,13 @@ fn parse_coding_development(
     let scenario = scenario.ok_or(ThinClientError::InvalidValue)?;
     if !matches!(
         scenario.as_str(),
-        "no-op" | "failed-test-repair" | "slow-cancel"
+        "no-op"
+            | "failed-test-repair"
+            | "slow-cancel"
+            | "new-file"
+            | "multi-file"
+            | "false-completion"
+            | "overflow"
     ) {
         return Err(ThinClientError::InvalidValue);
     }
@@ -236,6 +250,7 @@ fn parse_coding_development(
         scenario,
         objective,
         approve_this_run,
+        stale_approval_probe,
     })
 }
 
@@ -780,7 +795,8 @@ Usage: agentmage [--json] [--surface interactive-cli|json|sdk|acp] COMMAND\n\
 Commands:\n\
   code\n\
   code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
-       --scenario no-op|failed-test-repair --objective TEXT [--approve-this-run]\n\
+       --scenario no-op|failed-test-repair|slow-cancel|new-file|multi-file|false-completion|overflow\n\
+       --objective TEXT [--approve-this-run] [--stale-approval-probe]\n\
   chat MESSAGE\n\
   conversations list [--from YYYY-MM-DD] [--to YYYY-MM-DD]\n\
   conversations search QUERY\n\
@@ -1007,10 +1023,12 @@ mod tests {
                 "--objective",
                 "repair the failing test",
                 "--approve-this-run",
+                "--stale-approval-probe",
             ])),
             Ok(CliInvocation::Code {
                 development: Some(CodingDevelopmentCliOptions {
                     approve_this_run: true,
+                    stale_approval_probe: true,
                     ..
                 }),
                 ..

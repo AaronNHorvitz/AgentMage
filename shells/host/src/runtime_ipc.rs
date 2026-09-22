@@ -64,6 +64,7 @@ struct RuntimeIpcEnvelope<T> {
 pub struct LinuxRuntimeIpcClient {
     session: LinuxAuthenticatedIpcSession,
     last_error: Option<RuntimeTransportError>,
+    stale_approval_probe: bool,
 }
 
 impl LinuxRuntimeIpcClient {
@@ -73,7 +74,18 @@ impl LinuxRuntimeIpcClient {
         Self {
             session,
             last_error: None,
+            stale_approval_probe: false,
         }
+    }
+
+    /// Corrupts exactly one approval digest for the executable development acceptance probe.
+    ///
+    /// This does not alter a host challenge, grant, or policy decision. The host must reject the
+    /// resulting stale response before launching an effect.
+    #[must_use]
+    pub(crate) const fn with_stale_approval_probe(mut self) -> Self {
+        self.stale_approval_probe = true;
+        self
     }
 
     /// Returns the last exact transport refusal observed from the host or local channel.
@@ -87,7 +99,9 @@ impl LinuxRuntimeIpcClient {
         request: RuntimeIpcRequest,
     ) -> Result<RuntimeIpcResponse, RuntimeTransportError> {
         let result = self.exchange_inner(request);
-        if let Err(error) = &result {
+        if let Err(error) = &result
+            && self.last_error.is_none()
+        {
             self.last_error = Some(*error);
         }
         result
@@ -134,6 +148,7 @@ impl RuntimeTransportPort for LinuxRuntimeIpcClient {
         &mut self,
         input: RuntimePrepareInput,
     ) -> Result<RuntimeRunRequest, RuntimeTransportError> {
+        self.last_error = None;
         match self.exchange(RuntimeIpcRequest::Prepare { input })? {
             RuntimeIpcResponse::Prepared { request } => Ok(request),
             _ => Err(RuntimeTransportError::RuntimeEvidenceDenied),
@@ -157,11 +172,18 @@ impl RuntimeTransportPort for LinuxRuntimeIpcClient {
         after_event_cursor: Option<&RuntimeEventCursor>,
         response: Option<&RuntimeApprovalResponse>,
     ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+        let mut response = response.cloned();
+        if self.stale_approval_probe
+            && let Some(response) = response.as_mut()
+        {
+            response.challenge_sha256 = "0".repeat(64);
+            self.stale_approval_probe = false;
+        }
         match self.exchange(RuntimeIpcRequest::Advance {
             run_id: run_id.clone(),
             request_sha256: request_sha256.to_owned(),
             after_event_cursor: after_event_cursor.cloned(),
-            response: response.cloned(),
+            response,
         })? {
             RuntimeIpcResponse::Step { step } => Ok(step),
             _ => Err(RuntimeTransportError::RuntimeEvidenceDenied),

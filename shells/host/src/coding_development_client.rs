@@ -115,6 +115,9 @@ fn run_with_child(
         .connect_development()
         .map_err(|_| CodingDevelopmentClientError::Transport)?;
     let mut runtime = LinuxRuntimeIpcClient::new(session);
+    if options.stale_approval_probe {
+        runtime = runtime.with_stale_approval_probe();
+    }
     let mut approvals = TerminalApprovals {
         output,
         preauthorized: options.approve_this_run,

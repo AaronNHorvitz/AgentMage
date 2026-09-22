@@ -65,9 +65,28 @@ handler and created the isolated key, it validates `/proc` executable and argume
 sending SIGINT. The runtime must then emit cancellation-requested and cancellation-observed events
 and a truthful terminal result. A cancellation request alone is not completion.
 
-The `no-op` scenario performs verified Git inspection without source mutation. The `slow-cancel`
-scenario is a non-qualified test fixture that holds one cancellable model call for signal and
-slow-client acceptance; it is not a performance simulation or model result.
+The `no-op` scenario performs verified Git inspection without source mutation. `new-file` uses the
+controlled-create boundary against an absent path, and `multi-file` proves two separately approved
+writes with a durable safe-boundary checkpoint between them. `false-completion` proves the verifier
+withholds an unsupported success claim. `overflow` terminates as resource-bounded exhaustion under
+an exact 13-event profile. The `slow-cancel` scenario is a non-qualified test fixture that holds one
+cancellable model call for signal and slow-client acceptance; it is not a performance simulation or
+model result. `--stale-approval-probe` is restricted to this development client and corrupts one
+response digest so the real host rejection can be tested before an effect.
+
+Run all nine actual-process cases with short disposable roots and a fresh create-only log root:
+
+```bash
+systemd-run --user --scope --quiet \
+  -p MemoryHigh=5G -p MemoryMax=6G -p MemorySwapMax=512M \
+  python3 scripts/coding_harness_acceptance.py \
+    --work-root /tmp/am-coding-matrix-1 \
+    --log-root "$HOME/.local/state/agentmage-codex-coding/runs/matrix-1"
+```
+
+The report distinguishes `SUCCESS`, `NO_OP`, `DECLINED`, `CANCELLED`, `EXHAUSTED`, verifier
+`FAILED`, and transport-level stale-approval rejection. It hashes both binaries and every retained
+stdout/stderr stream. Its qualification remains `executable-scripted-only`.
 
 ## Failure handling
 

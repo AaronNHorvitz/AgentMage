@@ -65,7 +65,7 @@ def paths(base: Path) -> tuple[Path, Path, Path]:
     return exact / "state", exact / "disposable", exact / "disposable/worktree"
 
 
-def setup(base: Path) -> dict:
+def setup(base: Path, fixture: str = "repair") -> dict:
     base = base.resolve(strict=False)
     if base.exists() or base.is_symlink():
         raise HarnessError("coding.harness.setup-target-exists")
@@ -80,13 +80,22 @@ def setup(base: Path) -> dict:
     run_git(workspace, "init", "--initial-branch", BRANCH)
     run_git(workspace, "config", "user.name", "AgentMage Synthetic Fixture")
     run_git(workspace, "config", "user.email", "fixture.invalid@agentmage.local")
-    private_file(
-        workspace / "src/calc.py",
-        "def broken_add(left, right):\n    return left + right\n",
-    )
-    private_file(
-        workspace / "tests/run_validation.py",
-        """import json
+    if fixture not in ("repair", "new-file", "multi-file"):
+        raise HarnessError("coding.harness.fixture-denied")
+    tracked = ["tests/run_validation.py", MARKER]
+    if fixture != "new-file":
+        private_file(
+            workspace / "src/calc.py",
+            "def broken_add(left, right):\n    return left + right\n",
+        )
+        tracked.append("src/calc.py")
+    if fixture == "multi-file":
+        private_file(
+            workspace / "src/subtract.py",
+            "def broken_subtract(left, right):\n    return left - right\n",
+        )
+        tracked.append("src/subtract.py")
+    validation = """import json
 import sys
 from pathlib import Path
 
@@ -111,11 +120,45 @@ result = {"schema_version": 1, "status": "passed" if passed else "assertion_fail
           "retry_count": 0, "initial_failure_sha256": None}
 print(json.dumps(result, sort_keys=True))
 raise SystemExit(0 if passed else 1)
-""",
+"""
+    if fixture == "multi-file":
+        validation = """import json
+import sys
+from pathlib import Path
+
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+failed = []
+try:
+    from src.calc import add
+except ImportError:
+    add = None
+    failed.append("fixture::add")
+try:
+    from src.subtract import subtract
+except ImportError:
+    subtract = None
+    failed.append("fixture::subtract")
+if add is not None and add(2, 3) != 5:
+    failed.append("fixture::add")
+if subtract is not None and subtract(7, 2) != 5:
+    failed.append("fixture::subtract")
+passed = 2 - len(failed)
+result = {"schema_version": 1, "status": "passed" if not failed else "assertion_failed",
+          "passed": passed, "failed": len(failed), "skipped": 0, "duration_ms": 1,
+          "failed_names": failed, "artifact_ids": [], "retry_count": 0,
+          "initial_failure_sha256": None}
+print(json.dumps(result, sort_keys=True))
+raise SystemExit(0 if not failed else 1)
+"""
+    private_file(
+        workspace / "tests/run_validation.py",
+        validation,
     )
     marker = f"activation=coding-development-v1\nworkspace={workspace}\n"
     private_file(workspace / MARKER, marker)
-    run_git(workspace, "add", "--", "src/calc.py", "tests/run_validation.py", MARKER)
+    run_git(workspace, "add", "--", *tracked)
     run_git(workspace, "commit", "-m", "test: initialize synthetic coding fixture")
     status = diagnose(base)
     print(json.dumps(status, sort_keys=True))
@@ -222,7 +265,14 @@ def status(base: Path) -> dict:
     return result
 
 
-def start(base: Path, scenario: str, objective: str, approve: bool, log_dir: Path | None) -> int:
+def start(
+    base: Path,
+    scenario: str,
+    objective: str,
+    approve: bool,
+    stale_approval_probe: bool,
+    log_dir: Path | None,
+) -> int:
     base = base.resolve(strict=True)
     state, disposable, workspace = paths(base)
     current = diagnose(base)
@@ -241,6 +291,8 @@ def start(base: Path, scenario: str, objective: str, approve: bool, log_dir: Pat
     ]
     if approve:
         command.append("--approve-this-run")
+    if stale_approval_probe:
+        command.append("--stale-approval-probe")
     stdout_target = None
     stderr_target = None
     opened = []
@@ -270,6 +322,7 @@ def start(base: Path, scenario: str, objective: str, approve: bool, log_dir: Pat
             private_file(log_dir / "result.json", json.dumps({
                 "schema_version": 1, "exit_code": exit_code, "scenario": scenario,
                 "objective": objective, "approved_for_this_run": approve,
+                "stale_approval_probe": stale_approval_probe,
             }, sort_keys=True) + "\n")
             print(json.dumps({"exit_code": exit_code, "log_dir": str(log_dir)}, sort_keys=True))
         return exit_code
@@ -302,13 +355,23 @@ def parser() -> argparse.ArgumentParser:
     for name in ("setup", "status", "diagnose", "stop"):
         command = commands.add_parser(name)
         command.add_argument("--root", type=Path, required=True)
+        if name == "setup":
+            command.add_argument(
+                "--fixture", choices=("repair", "new-file", "multi-file"), default="repair"
+            )
     start_command = commands.add_parser("start")
     start_command.add_argument("--root", type=Path, required=True)
     start_command.add_argument(
-        "--scenario", choices=("no-op", "failed-test-repair", "slow-cancel"), required=True
+        "--scenario",
+        choices=(
+            "no-op", "failed-test-repair", "slow-cancel", "new-file", "multi-file",
+            "false-completion", "overflow",
+        ),
+        required=True,
     )
     start_command.add_argument("--objective", required=True)
     start_command.add_argument("--approve-this-run", action="store_true")
+    start_command.add_argument("--stale-approval-probe", action="store_true")
     start_command.add_argument("--log-dir", type=Path)
     return result
 
@@ -317,7 +380,7 @@ def main() -> int:
     arguments = parser().parse_args()
     try:
         if arguments.command == "setup":
-            setup(arguments.root)
+            setup(arguments.root, arguments.fixture)
             return 0
         if arguments.command in ("status", "diagnose"):
             status(arguments.root)
@@ -327,7 +390,7 @@ def main() -> int:
             return 0
         return start(
             arguments.root, arguments.scenario, arguments.objective,
-            arguments.approve_this_run, arguments.log_dir,
+            arguments.approve_this_run, arguments.stale_approval_probe, arguments.log_dir,
         )
     except (HarnessError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as error:
         print(str(error), file=sys.stderr)
