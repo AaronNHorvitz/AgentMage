@@ -574,6 +574,7 @@ where
                 &request_id,
                 RuntimePrepareInput {
                     resume: false,
+                    slow_subscriber_probe: false,
                     engineering_session_id,
                     profile_id,
                     expected_entry_sha256,

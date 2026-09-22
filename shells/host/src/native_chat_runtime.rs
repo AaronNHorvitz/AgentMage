@@ -417,12 +417,13 @@ const fn map_client_error(error: CodingClientError) -> NativeChatRuntimeError {
 #[cfg(all(test, feature = "source-artifacts", feature = "workflow-supervisor"))]
 mod tests {
     use agentmage_kernel_contracts::{
-        AgentStateKind, ApprovalId, CancellationSignal, ContextSensitivity, CorrelationId, GrantId,
-        GrantOperation, ModelCancellationProbe, ModelRunId, RuntimeApprovalDisposition,
+        AgentStateKind, ApprovalId, CancellationSignal, ContextSensitivity, ContractPayload,
+        CorrelationId, GrantId, GrantOperation, ModelCancellationProbe, ModelRunId,
+        OperationBinding, RuntimeApprovalDisposition, RuntimeApprovalPresentation,
         RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEvent, RuntimeEventCursor,
         RuntimeEventId, RuntimeEventKind, RuntimeEventRetention, RuntimeEventRetentionKind,
         RuntimeOperationId, RuntimeOutcome, RuntimePermissionDisposition, RuntimeRunRequest,
-        RuntimeTurnId, ToolCallId,
+        RuntimeTurnId, SchemaId, SchemaReference, ToolCallId, ToolId, ToolRiskLevel,
     };
     use agentmage_kernel_engine::{
         runtime_coordinator::{seal_runtime_approval_challenge, seal_runtime_outcome},
@@ -514,6 +515,7 @@ mod tests {
         assert!(observed_result);
         let input = NativeChatPrepareInput {
             resume: false,
+            slow_subscriber_probe: false,
             engineering_session_id: None,
             profile_id: request.model_profile.profile_id.as_str().to_owned(),
             expected_entry_sha256: "a".repeat(64),
@@ -599,6 +601,7 @@ mod tests {
         let (_, controlled_request) = crate::coding_run::tests::fixture_profile_and_request();
         let input = NativeChatPrepareInput {
             resume: false,
+            slow_subscriber_probe: false,
             engineering_session_id: None,
             profile_id: controlled_request
                 .model_profile
@@ -773,6 +776,7 @@ mod tests {
                     approval_id,
                     proposed_grant_id: GrantId::from_raw("native-chat-grant-0001"),
                     operation: GrantOperation::WorkspaceRead,
+                    presentation: fixture_approval_presentation(),
                     preview_sha256: "5".repeat(64),
                     expires_at_epoch_ms: 50_000,
                     challenge_sha256: ZERO_SHA256.to_owned(),
@@ -923,6 +927,30 @@ mod tests {
         ) {
             self.events
                 .push(self.stream.event(kind, turn_id, operation_id));
+        }
+    }
+
+    fn fixture_approval_presentation() -> RuntimeApprovalPresentation {
+        RuntimeApprovalPresentation {
+            tool_id: ToolId::from_raw("fixture.read"),
+            tool_version: "1.0.0".to_owned(),
+            display_name: "Fixture read".to_owned(),
+            risk_level: ToolRiskLevel::Low,
+            target_scope: "one fixture object".to_owned(),
+            arguments: ContractPayload {
+                schema: SchemaReference {
+                    schema_id: SchemaId::from_raw("fixture.read.input"),
+                    schema_version: 1,
+                    schema_sha256: "a".repeat(64),
+                },
+                media_type: "application/json".to_owned(),
+                bytes: b"{}".to_vec(),
+                sha256: "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+                    .to_owned(),
+            },
+            declared_effects: vec![OperationBinding::new(GrantOperation::WorkspaceRead)],
+            single_use: true,
+            timeout_ms: 1_000,
         }
     }
 

@@ -5,8 +5,8 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 use agentmage_kernel_contracts::{
-    RuntimeApprovalChallenge, RuntimeEvent, RuntimeEventKind, RuntimeOutcome, RuntimeOutput,
-    RuntimeRunRequest,
+    EvidenceKind, RuntimeApprovalChallenge, RuntimeEvent, RuntimeEventKind, RuntimeOutcome,
+    RuntimeOutput, RuntimeRunRequest,
 };
 use agentmage_kernel_engine::{
     runtime_coordinator::{verify_runtime_approval_challenge, verify_runtime_outcome},
@@ -75,6 +75,8 @@ pub struct CodingDevelopmentCliOptions {
     pub replay_approval_probe: bool,
     /// Whether to reuse one cursor after its live replay window expires.
     pub expired_cursor_probe: bool,
+    /// Whether to install one undrained bounded event subscriber for executable pressure testing.
+    pub slow_subscriber_probe: bool,
     /// Bounded delay used only to exercise cancellation while approval is displayed.
     pub approval_delay_ms: u64,
 }
@@ -216,6 +218,7 @@ fn parse_coding_development(
     let mut stale_approval_probe = false;
     let mut replay_approval_probe = false;
     let mut expired_cursor_probe = false;
+    let mut slow_subscriber_probe = false;
     let mut approval_delay_ms = None;
     let mut cursor = 0;
     while let Some(argument) = arguments.get(cursor) {
@@ -261,6 +264,11 @@ fn parse_coding_development(
             }
             "--expired-cursor-probe" if !expired_cursor_probe => {
                 expired_cursor_probe = true;
+                cursor += 1;
+                continue;
+            }
+            "--slow-subscriber-probe" if !slow_subscriber_probe => {
+                slow_subscriber_probe = true;
                 cursor += 1;
                 continue;
             }
@@ -333,6 +341,7 @@ fn parse_coding_development(
         stale_approval_probe,
         replay_approval_probe,
         expired_cursor_probe,
+        slow_subscriber_probe,
         approval_delay_ms: approval_delay_ms.unwrap_or(0),
     })
 }
@@ -749,10 +758,24 @@ pub fn render_runtime_approval_human(
     challenge: &RuntimeApprovalChallenge,
 ) -> Result<String, ThinClientError> {
     verify_runtime_approval_challenge(challenge).map_err(|_| ThinClientError::Malformed)?;
+    let arguments: serde_json::Value =
+        serde_json::from_slice(&challenge.presentation.arguments.bytes)
+            .map_err(|_| ThinClientError::Malformed)?;
+    let arguments = serde_json::to_string(&arguments).map_err(|_| ThinClientError::Malformed)?;
     bounded_render(format!(
-        "approval={} operation={:?} tool_call={} preview={} expires={} confirmation={}",
+        "approval={} operation={:?} tool={}@{} name={:?} risk={:?} target={:?} arguments={} arguments_sha256={} preimages=arguments-bound effects={:?} single_use={} timeout_ms={} tool_call={} preview={} expires={} confirmation={}",
         challenge.approval_id.as_str(),
         challenge.operation,
+        challenge.presentation.tool_id.as_str(),
+        challenge.presentation.tool_version,
+        challenge.presentation.display_name,
+        challenge.presentation.risk_level,
+        challenge.presentation.target_scope,
+        arguments,
+        challenge.presentation.arguments.sha256,
+        challenge.presentation.declared_effects,
+        challenge.presentation.single_use,
+        challenge.presentation.timeout_ms,
         challenge.tool_call_id.as_str(),
         challenge.preview_sha256,
         challenge.expires_at_epoch_ms,
@@ -786,15 +809,32 @@ pub fn render_runtime_outcome_human(
         || "none".to_owned(),
         |answer| format!("inferred:{}", answer.assignments.len()),
     );
+    let checks_run = outcome
+        .evidence
+        .iter()
+        .filter(|evidence| evidence.kind == EvidenceKind::Validation)
+        .count();
+    let receipt_ids = outcome
+        .receipt_ids
+        .iter()
+        .map(|receipt| receipt.as_str())
+        .collect::<Vec<_>>()
+        .join(",");
+    let failures = if outcome.unresolved_codes.is_empty() {
+        "none".to_owned()
+    } else {
+        outcome.unresolved_codes.join(",")
+    };
     bounded_render(format!(
-        "state={:?} turns={} model_calls={} tool_calls={} evidence={} answer_evidence={answer_evidence} receipts={} unresolved={} output={output} outcome={}",
+        "status={:?} turns={} model_calls={} tool_calls={} evidence={} answer_evidence={answer_evidence} checks_run={} checks_not_run=not_reported failures={} receipts=[{}] risks=not_reported truncation=see_artifact_verification_records output={output} outcome={}",
         outcome.state,
         outcome.turn_count,
         outcome.model_call_count,
         outcome.tool_call_count,
         outcome.evidence.len(),
-        outcome.receipt_ids.len(),
-        outcome.unresolved_codes.join(","),
+        checks_run,
+        failures,
+        receipt_ids,
         outcome.outcome_sha256,
     ))
 }
@@ -879,7 +919,7 @@ Commands:\n\
   code\n\
   code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
        --scenario no-op|failed-test-repair|slow-cancel|restart-repair|new-file|multi-file|false-completion|overflow\n\
-       --objective TEXT [--follow-up TEXT]... [--resume] [--approve-this-run] [--stale-approval-probe|--replay-approval-probe|--expired-cursor-probe]\n\
+       --objective TEXT [--follow-up TEXT]... [--resume] [--approve-this-run] [--stale-approval-probe|--replay-approval-probe|--expired-cursor-probe] [--slow-subscriber-probe]\n\
        [--approval-delay-ms 1..10000]\n\
   chat MESSAGE\n\
   conversations list [--from YYYY-MM-DD] [--to YYYY-MM-DD]\n\

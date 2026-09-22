@@ -385,6 +385,7 @@ def start(
     expired_cursor_probe: bool = False,
     approval_delay_ms: int = 0,
     model: str = "scripted",
+    slow_subscriber_probe: bool = False,
 ) -> int:
     base = base.resolve(strict=True)
     state, disposable, workspace = paths(base)
@@ -413,6 +414,8 @@ def start(
         command.append("--expired-cursor-probe")
     if approval_delay_ms:
         command.extend(("--approval-delay-ms", str(approval_delay_ms)))
+    if slow_subscriber_probe:
+        command.append("--slow-subscriber-probe")
     resource_guard = None
     stdout_target = None
     stderr_target = None
@@ -566,6 +569,7 @@ def parser() -> argparse.ArgumentParser:
     start_command.add_argument("--replay-approval-probe", action="store_true")
     start_command.add_argument("--expired-cursor-probe", action="store_true")
     start_command.add_argument("--approval-delay-ms", type=approval_delay, default=0)
+    start_command.add_argument("--slow-subscriber-probe", action="store_true")
     start_command.add_argument("--log-dir", type=Path)
     return result
 
@@ -586,7 +590,7 @@ def main() -> int:
             arguments.root, arguments.scenario, arguments.objective,
             arguments.approve_this_run, arguments.stale_approval_probe, arguments.log_dir,
             arguments.replay_approval_probe, arguments.expired_cursor_probe,
-            arguments.approval_delay_ms, arguments.model,
+            arguments.approval_delay_ms, arguments.model, arguments.slow_subscriber_probe,
         )
     except (HarnessError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as error:
         print(str(error), file=sys.stderr)

@@ -145,6 +145,7 @@ fn run_with_child(
             &mut runtime,
             RuntimePrepareInput {
                 resume: options.resume,
+                slow_subscriber_probe: options.slow_subscriber_probe,
                 engineering_session_id: engineering_session_id.clone(),
                 profile_id: profile_id.to_owned(),
                 expected_entry_sha256: activation.marker_sha256().to_owned(),

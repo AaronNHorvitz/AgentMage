@@ -722,10 +722,11 @@ fn valid_media_type(value: &str) -> bool {
 #[cfg(all(test, feature = "source-artifacts", feature = "workflow-supervisor"))]
 mod tests {
     use agentmage_kernel_contracts::{
-        AgentStateKind, ApprovalId, ContextSensitivity, CorrelationId, GrantId, GrantOperation,
-        ModelRunId, RuntimeApprovalDisposition, RuntimeEventId, RuntimeEventRetention,
+        AgentStateKind, ApprovalId, ContextSensitivity, ContractPayload, CorrelationId, GrantId,
+        GrantOperation, ModelRunId, OperationBinding, RuntimeApprovalDisposition,
+        RuntimeApprovalPresentation, RuntimeEventId, RuntimeEventRetention,
         RuntimeEventRetentionKind, RuntimeOperationId, RuntimePermissionDisposition, RuntimeTurnId,
-        ToolCallId,
+        SchemaId, SchemaReference, ToolCallId, ToolId, ToolRiskLevel,
     };
     use agentmage_kernel_engine::{
         model_routing::{
@@ -1226,6 +1227,7 @@ mod tests {
     fn input(request: &RuntimeRunRequest) -> NativeChatPrepareInput {
         NativeChatPrepareInput {
             resume: false,
+            slow_subscriber_probe: false,
             engineering_session_id: None,
             profile_id: request.model_profile.profile_id.as_str().to_owned(),
             expected_entry_sha256: "a".repeat(64),
@@ -1271,6 +1273,7 @@ mod tests {
             approval_id: ApprovalId::from_raw("cli-approval-0001"),
             proposed_grant_id: GrantId::from_raw("cli-grant-0001"),
             operation: GrantOperation::WorkspaceRead,
+            presentation: fixture_approval_presentation(),
             preview_sha256: "a".repeat(64),
             expires_at_epoch_ms: 50_000,
             challenge_sha256: ZERO_SHA256.to_owned(),
@@ -1382,6 +1385,30 @@ mod tests {
             awaiting,
             denied: step(request, denied_events, None, Some(denied_outcome)),
             cancelled: step(request, cancelled_events, None, Some(cancelled_outcome)),
+        }
+    }
+
+    fn fixture_approval_presentation() -> RuntimeApprovalPresentation {
+        RuntimeApprovalPresentation {
+            tool_id: ToolId::from_raw("fixture.read"),
+            tool_version: "1.0.0".to_owned(),
+            display_name: "Fixture read".to_owned(),
+            risk_level: ToolRiskLevel::Low,
+            target_scope: "one fixture object".to_owned(),
+            arguments: ContractPayload {
+                schema: SchemaReference {
+                    schema_id: SchemaId::from_raw("fixture.read.input"),
+                    schema_version: 1,
+                    schema_sha256: "a".repeat(64),
+                },
+                media_type: "application/json".to_owned(),
+                bytes: b"{}".to_vec(),
+                sha256: "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+                    .to_owned(),
+            },
+            declared_effects: vec![OperationBinding::new(GrantOperation::WorkspaceRead)],
+            single_use: true,
+            timeout_ms: 1_000,
         }
     }
 

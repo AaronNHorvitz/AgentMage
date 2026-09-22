@@ -3,9 +3,9 @@
 use crate::{
     AgentStateKind, ApprovalId, ContextBudget, ContractPayload, EvidenceReference,
     ExactModelProfile, GrantId, GrantOperation, MaterialClaimEvidenceAssignment, ModelRunId,
-    PolicyId, ReceiptId, RepositorySnapshotId, RuntimeEventId, RuntimeOperationId,
-    RuntimePayloadReference, RuntimeRunId, RuntimeTurnId, SessionId, Task, TaskId, ToolCallId,
-    ToolCatalogId, ToolId, WorkPacket, WorkspaceId,
+    OperationBinding, PolicyId, ReceiptId, RepositorySnapshotId, RuntimeEventId,
+    RuntimeOperationId, RuntimePayloadReference, RuntimeRunId, RuntimeTurnId, SessionId, Task,
+    TaskId, ToolCallId, ToolCatalogId, ToolId, ToolRiskLevel, WorkPacket, WorkspaceId,
 };
 
 /// Closed persistence and authority mode selected for one runtime run.
@@ -82,6 +82,34 @@ pub enum RuntimeApprovalDisposition {
     Deny,
 }
 
+/// Complete protected, non-authoritative presentation of one proposed tool operation.
+///
+/// The presentation is sealed into the approval challenge. It lets a thin client show the exact
+/// registered tool, opaque schema-bound arguments (including path and preimage fields), declared
+/// effects, execution ceiling, and single-use requirement without gaining effect authority.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeApprovalPresentation {
+    /// Exact registered tool identity.
+    pub tool_id: ToolId,
+    /// Exact immutable tool-contract version.
+    pub tool_version: String,
+    /// Registered human-readable tool name.
+    pub display_name: String,
+    /// Registered review risk.
+    pub risk_level: ToolRiskLevel,
+    /// Registered descriptive scope that the future exact grant must narrow.
+    pub target_scope: String,
+    /// Complete schema-bound proposed arguments, including target and preimage bindings.
+    pub arguments: ContractPayload,
+    /// Complete registered effect set for this tool version.
+    pub declared_effects: Vec<OperationBinding>,
+    /// Whether any derived operation grant must be single use.
+    pub single_use: bool,
+    /// Registered maximum worker execution time in milliseconds.
+    pub timeout_ms: u64,
+}
+
 /// One immutable protected approval challenge returned by the coordinator.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -104,6 +132,8 @@ pub struct RuntimeApprovalChallenge {
     pub proposed_grant_id: GrantId,
     /// Closed canonical operation awaiting approval.
     pub operation: GrantOperation,
+    /// Complete digest-bound presentation that the protected client must show.
+    pub presentation: RuntimeApprovalPresentation,
     /// Digest of the complete user-visible preview.
     pub preview_sha256: String,
     /// Exclusive approval expiration in Unix epoch milliseconds.

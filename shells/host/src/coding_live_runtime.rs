@@ -230,8 +230,13 @@ where
     F::Coordinator: LiveCodingCoordinatorPort,
 {
     factory: F,
-    prepared: BTreeMap<String, RuntimeRunRequest>,
+    prepared: BTreeMap<String, PreparedLiveRun>,
     active: BTreeMap<String, LiveCodingSession>,
+}
+
+struct PreparedLiveRun {
+    request: RuntimeRunRequest,
+    slow_subscriber_probe: bool,
 }
 
 impl<F> LiveCodingRuntimeService<F>
@@ -292,8 +297,13 @@ where
         {
             return Err(RuntimeTransportError::RequestDenied);
         }
-        self.prepared
-            .insert(request.run_id.as_str().to_owned(), request.clone());
+        self.prepared.insert(
+            request.run_id.as_str().to_owned(),
+            PreparedLiveRun {
+                request: request.clone(),
+                slow_subscriber_probe: input.slow_subscriber_probe,
+            },
+        );
         Ok(request)
     }
 
@@ -303,14 +313,20 @@ where
     ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
         verify_runtime_run_request(&request).map_err(|_| RuntimeTransportError::RequestDenied)?;
         let key = request.run_id.as_str().to_owned();
-        if self.prepared.get(&key) != Some(&request) || self.active.contains_key(&key) {
+        let prepared = self
+            .prepared
+            .get(&key)
+            .ok_or(RuntimeTransportError::RequestDenied)?;
+        if prepared.request != request || self.active.contains_key(&key) {
             return Err(RuntimeTransportError::RequestDenied);
         }
+        let slow_subscriber_probe = prepared.slow_subscriber_probe;
         let coordinator = self.factory.compose_runtime(&request)?;
-        let mut session = LiveCodingSession::spawn(request, coordinator).map_err(|error| {
-            eprintln!("coding.live.spawn-denied");
-            error
-        })?;
+        let mut session = LiveCodingSession::spawn(request, coordinator, slow_subscriber_probe)
+            .map_err(|error| {
+                eprintln!("coding.live.spawn-denied");
+                error
+            })?;
         self.prepared.remove(&key);
         let step = session.start().map_err(|error| {
             eprintln!("coding.live.start-denied");
@@ -379,7 +395,7 @@ where
     ) -> Result<(), RuntimeTransportError> {
         let key = run_id.as_str();
         if let Some(request) = self.prepared.get(key) {
-            if request.request_sha256 != request_sha256 {
+            if request.request.request_sha256 != request_sha256 {
                 return Err(RuntimeTransportError::RequestDenied);
             }
             self.prepared.remove(key);
@@ -402,6 +418,8 @@ struct LiveCodingSession {
     commands: SyncSender<WorkerCommand>,
     results: Receiver<Result<WorkerResponse, CodingClientError>>,
     event_pump: EventPump,
+    slow_subscriber_probe: Option<RuntimeEventSubscription>,
+    slow_subscriber_verified: bool,
     cancellation: Arc<SharedCancellation>,
     worker: Option<JoinHandle<()>>,
     events: Vec<RuntimeEvent>,
@@ -413,7 +431,11 @@ struct LiveCodingSession {
 }
 
 impl LiveCodingSession {
-    fn spawn<R>(request: RuntimeRunRequest, mut runtime: R) -> Result<Self, RuntimeTransportError>
+    fn spawn<R>(
+        request: RuntimeRunRequest,
+        mut runtime: R,
+        slow_subscriber_probe: bool,
+    ) -> Result<Self, RuntimeTransportError>
     where
         R: LiveCodingCoordinatorPort,
     {
@@ -427,6 +449,9 @@ impl LiveCodingSession {
         .filter(|capacity| *capacity > 0)
         .ok_or(RuntimeTransportError::RequestDenied)?;
         let initial_events = runtime.runtime_events().to_vec();
+        let slow_subscriber_probe = slow_subscriber_probe
+            .then(|| runtime.subscribe_live_events(1).map_err(map_client_error))
+            .transpose()?;
         let subscription = runtime
             .subscribe_live_events(capacity)
             .map_err(map_client_error)?;
@@ -471,6 +496,8 @@ impl LiveCodingSession {
             commands: command_tx,
             results: result_rx,
             event_pump,
+            slow_subscriber_probe,
+            slow_subscriber_verified: false,
             cancellation,
             worker: Some(worker),
             events: Vec::new(),
@@ -564,6 +591,7 @@ impl LiveCodingSession {
 
     fn refresh(&mut self, wait: Duration) -> Result<(), RuntimeTransportError> {
         let deadline = Instant::now() + wait;
+        let boundary_deadline = deadline + START_WAIT;
         loop {
             let mut progressed = self.sync_events()?;
             match self.results.try_recv() {
@@ -583,10 +611,21 @@ impl LiveCodingSession {
                 Err(TryRecvError::Disconnected) => {}
             }
             let boundary_visible = self.boundary_visible();
-            if progressed && boundary_visible || Instant::now() >= deadline {
+            if progressed && boundary_visible
+                || Instant::now() >= deadline && (self.busy || boundary_visible)
+            {
                 return Ok(());
             }
-            thread::sleep(WAIT_SLICE.min(deadline.saturating_duration_since(Instant::now())));
+            if Instant::now() >= boundary_deadline {
+                eprintln!("coding.live.boundary-visibility-timeout");
+                return Err(RuntimeTransportError::RuntimeEvidenceDenied);
+            }
+            let wait_until = if Instant::now() < deadline {
+                deadline
+            } else {
+                boundary_deadline
+            };
+            thread::sleep(WAIT_SLICE.min(wait_until.saturating_duration_since(Instant::now())));
         }
     }
 
@@ -653,7 +692,7 @@ impl LiveCodingSession {
     }
 
     fn project(
-        &self,
+        &mut self,
         after_event_cursor: Option<&RuntimeEventCursor>,
     ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
         if self.outcome.is_some() != self.event_stream_terminal
@@ -661,6 +700,26 @@ impl LiveCodingSession {
         {
             eprintln!("coding.live.terminal-binding-denied");
             return Err(RuntimeTransportError::RuntimeEvidenceDenied);
+        }
+        if self.outcome.is_some()
+            && self.slow_subscriber_probe.is_some()
+            && !self.slow_subscriber_verified
+        {
+            let subscriber = self
+                .slow_subscriber_probe
+                .as_ref()
+                .ok_or(RuntimeTransportError::RuntimeEvidenceDenied)?;
+            if subscriber
+                .try_next()
+                .map_err(|_| RuntimeTransportError::RuntimeEvidenceDenied)?
+                .is_none()
+                || subscriber.try_next().is_ok()
+            {
+                eprintln!("coding.live.slow-subscriber-not-disconnected");
+                return Err(RuntimeTransportError::RuntimeEvidenceDenied);
+            }
+            self.slow_subscriber_verified = true;
+            eprintln!("coding.live.slow-subscriber-disconnected");
         }
         if let Some(challenge) = &self.pending_approval {
             let Some(RuntimeEvent {

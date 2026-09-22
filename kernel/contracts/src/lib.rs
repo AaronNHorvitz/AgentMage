@@ -238,8 +238,8 @@ pub use runtime_event::{
 };
 pub use runtime_run::{
     RuntimeAnswerEvidence, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
-    RuntimeApprovalResponse, RuntimeEventCursor, RuntimeOutcome, RuntimeOutput, RuntimeRunLimits,
-    RuntimeRunRequest, RuntimeSessionMode, RuntimeToolReference,
+    RuntimeApprovalPresentation, RuntimeApprovalResponse, RuntimeEventCursor, RuntimeOutcome,
+    RuntimeOutput, RuntimeRunLimits, RuntimeRunRequest, RuntimeSessionMode, RuntimeToolReference,
 };
 pub use serialization::{
     ContractResult, MAX_CONTRACT_JSON_BYTES, VersionedContract, from_json, to_canonical_json,

@@ -139,7 +139,8 @@ def run_cancel(work_root: Path, log_root: Path) -> dict:
     command = [
         sys.executable, str(coding_harness.ROOT / "scripts/coding_harness.py"), "start",
         "--root", str(base), "--scenario", "slow-cancel", "--objective",
-        "Cancel the actual blocked model call.", "--approve-this-run", "--log-dir", str(log_dir),
+        "Cancel the actual blocked model call.", "--approve-this-run",
+        "--slow-subscriber-probe", "--log-dir", str(log_dir),
     ]
     process = subprocess.Popen(command, cwd=coding_harness.ROOT)
     deadline = time.monotonic() + 30
@@ -162,12 +163,14 @@ def run_cancel(work_root: Path, log_root: Path) -> dict:
     outcome = observed_rows[-1]
     status = git_status(coding_harness.paths(base)[2])
     events = [row.get("kind", {}).get("event") for row in observed_rows[:-1]]
+    stderr = (log_dir / "stderr.log").read_text(encoding="utf-8")
     checks = {
         "exit": exit_code == 6,
         "terminal": outcome.get("state") == "CANCELLED",
         "requested": "cancellation_requested" in events,
         "observed": "cancellation_observed" in events,
         "filesystem": status == [],
+        "slow-subscriber-disconnected": "coding.live.slow-subscriber-disconnected" in stderr,
     }
     return {
         "case": case,

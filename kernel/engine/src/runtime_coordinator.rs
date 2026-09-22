@@ -258,6 +258,21 @@ fn validate_approval_challenge_shape(
         || !valid_identifier(challenge.tool_call_id.as_str())
         || !valid_identifier(challenge.approval_id.as_str())
         || !valid_identifier(challenge.proposed_grant_id.as_str())
+        || !valid_identifier(challenge.presentation.tool_id.as_str())
+        || !valid_identifier(&challenge.presentation.tool_version)
+        || !valid_text(&challenge.presentation.display_name)
+        || !valid_text(&challenge.presentation.target_scope)
+        || challenge.presentation.declared_effects.is_empty()
+        || challenge.presentation.declared_effects.len() > MAX_LIST_ITEMS
+        || !challenge
+            .presentation
+            .declared_effects
+            .iter()
+            .any(|effect| effect.operation() == challenge.operation)
+        || !challenge.presentation.single_use
+        || challenge.presentation.timeout_ms == 0
+        || challenge.presentation.timeout_ms > MAX_ELAPSED_MS
+        || !valid_approval_arguments(&challenge.presentation.arguments)
         || !valid_sha256(&challenge.preview_sha256)
         || challenge.expires_at_epoch_ms == 0
         || !valid_sha256(&challenge.challenge_sha256)
@@ -265,6 +280,16 @@ fn validate_approval_challenge_shape(
         return Err(RuntimeCoordinatorError::ApprovalDenied);
     }
     Ok(())
+}
+
+fn valid_approval_arguments(payload: &ContractPayload) -> bool {
+    valid_identifier(payload.schema.schema_id.as_str())
+        && payload.schema.schema_version > 0
+        && valid_sha256(&payload.schema.schema_sha256)
+        && valid_media_type(&payload.media_type)
+        && !payload.bytes.is_empty()
+        && payload.bytes.len() <= MAX_CONTRACT_JSON_BYTES
+        && payload.sha256 == sha256(&payload.bytes)
 }
 
 fn validate_profile_and_context(
@@ -542,20 +567,21 @@ fn sha256(bytes: &[u8]) -> String {
 mod tests {
     use super::{
         RuntimeCoordinatorError, runtime_tool_catalog_sha256, seal_runtime_approval_challenge,
-        seal_runtime_outcome, seal_runtime_run_request, sha256, verify_runtime_approval_response,
-        verify_runtime_outcome, verify_runtime_run_request,
+        seal_runtime_outcome, seal_runtime_run_request, sha256, verify_runtime_approval_challenge,
+        verify_runtime_approval_response, verify_runtime_outcome, verify_runtime_run_request,
     };
     use agentmage_kernel_contracts::{
         AgentStateKind, ApprovalId, AuthorityClass, BudgetLimit, BudgetResource,
         CONTRACT_SCHEMA_VERSION, ContractPayload, DataSensitivity, EvidenceId, EvidenceKind,
         EvidenceReference, GrantId, GrantOperation, MaterialClaimEvidenceState, ModelRunId, PlanId,
         ReceiptId, RepositorySnapshotId, RollbackPlan, RuntimeAnswerEvidence,
-        RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalResponse,
-        RuntimeEventCursor, RuntimeEventId, RuntimeOperationId, RuntimeOutcome, RuntimeOutput,
-        RuntimeRunId, RuntimeRunLimits, RuntimeRunRequest, RuntimeSessionMode, RuntimeTurnId,
-        SchemaId, SchemaReference, SessionId, StopCondition, StopConditionKind, Task, TaskId,
-        TaskStatus, ToolCallId, ToolCatalogId, WorkPacket, WorkPacketId, WorkPacketState,
-        WorkspaceId, from_json, to_canonical_json,
+        RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalPresentation,
+        RuntimeApprovalResponse, RuntimeEventCursor, RuntimeEventId, RuntimeOperationId,
+        RuntimeOutcome, RuntimeOutput, RuntimeRunId, RuntimeRunLimits, RuntimeRunRequest,
+        RuntimeSessionMode, RuntimeTurnId, SchemaId, SchemaReference, SessionId, StopCondition,
+        StopConditionKind, Task, TaskId, TaskStatus, ToolCallId, ToolCatalogId, ToolId,
+        ToolRiskLevel, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, from_json,
+        to_canonical_json,
     };
 
     const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -849,6 +875,28 @@ mod tests {
             approval_id: ApprovalId::from_raw("approval-runtime"),
             proposed_grant_id: GrantId::from_raw("grant-runtime"),
             operation: GrantOperation::WorkspaceRead,
+            presentation: RuntimeApprovalPresentation {
+                tool_id: ToolId::from_raw("fixture.read"),
+                tool_version: "1.0.0".to_owned(),
+                display_name: "Fixture read".to_owned(),
+                risk_level: ToolRiskLevel::Low,
+                target_scope: "one fixture object".to_owned(),
+                arguments: ContractPayload {
+                    schema: SchemaReference {
+                        schema_id: SchemaId::from_raw("fixture.read.input"),
+                        schema_version: 1,
+                        schema_sha256: "a".repeat(64),
+                    },
+                    media_type: "application/json".to_owned(),
+                    bytes: b"{}".to_vec(),
+                    sha256: sha256(b"{}"),
+                },
+                declared_effects: vec![agentmage_kernel_contracts::OperationBinding::new(
+                    GrantOperation::WorkspaceRead,
+                )],
+                single_use: true,
+                timeout_ms: 1_000,
+            },
             preview_sha256: "d".repeat(64),
             expires_at_epoch_ms: 10_000,
             challenge_sha256: "0".repeat(64),
@@ -864,6 +912,14 @@ mod tests {
         };
         verify_runtime_approval_response(&challenge, &response, 1_000)
             .expect("exact grant response verifies");
+
+        let mut altered_presentation = challenge.clone();
+        altered_presentation.presentation.target_scope = "a broader fixture scope".to_owned();
+        assert_eq!(
+            verify_runtime_approval_challenge(&altered_presentation),
+            Err(RuntimeCoordinatorError::DigestMismatch),
+            "presentation fields are sealed by the protected challenge"
+        );
 
         let mut substituted = response;
         substituted.grant_id = Some(GrantId::from_raw("grant-substituted"));

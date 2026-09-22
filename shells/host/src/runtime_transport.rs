@@ -16,6 +16,8 @@ use agentmage_kernel_engine::runtime_artifact::{RuntimeArtifactPage, RuntimeArti
 pub struct RuntimePrepareInput {
     /// Whether the host must reconstruct one exact safe-boundary durable run.
     pub resume: bool,
+    /// Development-only probe that installs one intentionally undrained bounded subscriber.
+    pub slow_subscriber_probe: bool,
     /// Exact pre-existing Engineering session for approved-Plan execution, when applicable.
     pub engineering_session_id: Option<SessionId>,
     /// Exact selected profile identity.

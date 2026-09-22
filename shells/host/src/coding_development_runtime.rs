@@ -630,6 +630,9 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             || input.workspace_root != self.activation.workspace_root().to_string_lossy()
             || input.prompt.is_empty()
             || input.prompt.len() > 16 * 1024
+            || input.slow_subscriber_probe
+                && (self.model != CodingDevelopmentModel::Scripted
+                    || self.scenario != CodingDevelopmentScenario::SlowCancel)
             || !self.prepared.is_empty()
         {
             return Err(prepare_denied("input-binding"));
@@ -1206,6 +1209,21 @@ fn scripted_steps(
             max_output_bytes: 4_096,
         },
     )?;
+    let git_diff = tool_candidate(
+        profile,
+        GIT_INSPECTION_TOOL_ID,
+        GIT_INSPECTION_TOOL_VERSION,
+        "scripted-git-diff",
+        &GitInspectionRequest {
+            schema_version: 1,
+            operation: GitInspectionOperation::Diff,
+            revision: None,
+            object_id: None,
+            pathspecs: Vec::new(),
+            max_records: 1_000,
+            max_output_bytes: 256 * 1024,
+        },
+    )?;
     let completion = |claim, summary: &str, checks_not_run| {
         coding_completion_payload(&CodingCompletionCandidate {
             schema_version: 1,
@@ -1280,6 +1298,7 @@ fn scripted_steps(
                 ScriptedDevelopmentStep::Tool(validation("scripted-validation-failing")?),
                 ScriptedDevelopmentStep::Tool(patch),
                 ScriptedDevelopmentStep::Tool(validation("scripted-validation-passing")?),
+                ScriptedDevelopmentStep::Tool(git_diff),
                 ScriptedDevelopmentStep::Tool(git),
                 ScriptedDevelopmentStep::Complete(completion(
                     CodingTerminalClaim::Changed,
@@ -1349,6 +1368,7 @@ fn scripted_steps(
             Ok([
                 ScriptedDevelopmentStep::Tool(create),
                 ScriptedDevelopmentStep::Tool(validation),
+                ScriptedDevelopmentStep::Tool(git_diff),
                 ScriptedDevelopmentStep::Tool(git),
                 ScriptedDevelopmentStep::Complete(completion(
                     CodingTerminalClaim::Changed,
@@ -1422,6 +1442,7 @@ fn scripted_steps(
                     "subtract",
                 )?),
                 ScriptedDevelopmentStep::Tool(validation("scripted-multi-passing")?),
+                ScriptedDevelopmentStep::Tool(git_diff),
                 ScriptedDevelopmentStep::Tool(git),
                 ScriptedDevelopmentStep::Complete(completion(
                     CodingTerminalClaim::Changed,
