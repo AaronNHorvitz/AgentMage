@@ -1,10 +1,33 @@
 import copy
+import tempfile
 import unittest
+from pathlib import Path
 
 from scripts import path_platform_conformance as conformance
 
 
 class PathPlatformConformanceTests(unittest.TestCase):
+    def test_container_source_modes_are_independent_of_restrictive_umask(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            nested = root / "nested"
+            nested.mkdir()
+            source = nested / "source.rs"
+            source.write_text("fn main() {}\n", encoding="utf-8")
+            executable = root / "tool"
+            executable.write_text("#!/bin/sh\n", encoding="utf-8")
+            root.chmod(0o700)
+            nested.chmod(0o700)
+            source.chmod(0o600)
+            executable.chmod(0o700)
+
+            conformance.make_container_readable(root)
+
+            self.assertEqual(root.stat().st_mode & 0o777, 0o755)
+            self.assertEqual(nested.stat().st_mode & 0o777, 0o755)
+            self.assertEqual(source.stat().st_mode & 0o777, 0o644)
+            self.assertEqual(executable.stat().st_mode & 0o777, 0o755)
+
     def report(self):
         return {
             "schema_version": 1,

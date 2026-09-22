@@ -105,6 +105,19 @@ def git_archive(revision: str, destination: Path, root: Path = ROOT) -> None:
         raise PathPlatformConformanceError("could not archive conformance source")
     with tarfile.open(fileobj=io.BytesIO(completed.stdout), mode="r:") as archive:
         archive.extractall(destination, filter="data")
+    make_container_readable(destination)
+
+
+def make_container_readable(root: Path) -> None:
+    """Restore committed modes independently of the invoking process umask."""
+    for path in (root, *root.rglob("*")):
+        if path.is_symlink() or not (path.is_dir() or path.is_file()):
+            raise PathPlatformConformanceError("conformance source is not regular")
+        if path.is_dir():
+            path.chmod(0o755)
+        else:
+            executable = bool(path.stat().st_mode & 0o111)
+            path.chmod(0o755 if executable else 0o644)
 
 
 def image_identity(root: Path = ROOT) -> str:
