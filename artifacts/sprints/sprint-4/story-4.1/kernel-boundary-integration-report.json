@@ -44,7 +44,7 @@
       "sha256": "4f545441cfa9e47e27e7e5973529b5163b2c7baee2607529fb388117ce34d775"
     }
   ],
-  "source_revision": "1814cf806bc26ea758ded3856224db89dcecfb29",
+  "source_revision": "fb055f637edb816acba6bb3e43162af5f28bc945",
   "status": "pass-linux-boundary-integration",
   "success_contract": "ToolResult",
   "task_id": "4.1.3.4",

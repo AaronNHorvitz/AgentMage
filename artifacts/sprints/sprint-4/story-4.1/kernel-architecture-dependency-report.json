@@ -1068,7 +1068,7 @@
       "sha256": "7546d14d8ec5b014cd0c8ce541f603e0208ac6cb237b6b29a6d56d7f1a45b490"
     }
   ],
-  "source_revision": "1814cf806bc26ea758ded3856224db89dcecfb29",
+  "source_revision": "fb055f637edb816acba6bb3e43162af5f28bc945",
   "status": "pass-linux-architecture",
   "task_id": "4.1.2.4"
 }
