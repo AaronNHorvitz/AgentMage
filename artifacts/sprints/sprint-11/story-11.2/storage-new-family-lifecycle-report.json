@@ -28,7 +28,7 @@
     {
       "byte_length": 31234,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-results.log",
-      "sha256": "94794694e9b8f8b9fe49bf5444e4b0f964a9112cc37c4872b66f5424a1ca1adb"
+      "sha256": "5eca82416de8f8f97edfc56b900b4fe0c75a92d8129d12c07e253af0687e1cb2"
     }
   ],
   "canonical_store": "operational-store",

@@ -28,7 +28,7 @@
     {
       "byte_length": 31284,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-results.log",
-      "sha256": "1693c9e60846f1669e05229843f5b2cba0ef79890e0e4f2544fccb5ee608bb69"
+      "sha256": "99a05d8333d146bd8231393b4e205b76e72cd460524ab3728aefebb86675c13c"
     }
   ],
   "canonical_store": "operational-store",

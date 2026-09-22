@@ -1,6 +1,6 @@
 $ cargo test -p agentmage-kernel-engine operational_store::tests::version_eighteen_schema_matches_fixture_snapshot_and_is_relational --locked
    Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.81s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.90s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 1 test
@@ -232,7 +232,7 @@ running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
 $ cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_eighteen_with_exact_history --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 1 test
@@ -354,7 +354,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_r
 running 1 test
 test operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1044 filtered out; finished in 27.99s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1044 filtered out; finished in 27.47s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -465,4 +465,4 @@ running 0 tests
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
 $ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
     Checking agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 9.03s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 8.94s
