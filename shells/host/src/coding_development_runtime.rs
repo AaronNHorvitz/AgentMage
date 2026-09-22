@@ -6,7 +6,7 @@ use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use agentmage_capability_read_only::{
     GIT_INSPECTION_TOOL_ID, GIT_INSPECTION_TOOL_VERSION, GitInspectionOperation,
@@ -22,12 +22,13 @@ use agentmage_kernel_contracts::{
     LocalEndpointIdentity, LocalTransport, ModelAdapterId, ModelArtifact, ModelCancellationProbe,
     ModelCapability, ModelCapabilityState, ModelCodecId, ModelFinishReason, ModelManifestId,
     ModelMessageRole, ModelModality, ModelProfileId, ModelProposalKind, ModelResourceReport,
-    ModelRole, ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelRuntimeIdentity,
-    ModelRuntimeKind, ModelStreamId, ModelTokenUsage, ModelToolCallCandidate, NetworkComponent,
-    NetworkDestinationClass, NetworkObservation, PlanId, PlatformArchitecture, PlatformFamily,
-    ProposalId, RepositorySnapshotId, RollbackPlan, RuntimeRunId, RuntimeRunLimits, SessionId,
-    StopCondition, StopConditionKind, TaskId, ToolCallId, ToolCatalogId, ToolId, WorkPacket,
-    WorkPacketId, WorkPacketState, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
+    ModelRole, ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure,
+    ModelRuntimeIdentity, ModelRuntimeKind, ModelStreamId, ModelTokenUsage, ModelToolCallCandidate,
+    NetworkComponent, NetworkDestinationClass, NetworkObservation, PlanId, PlatformArchitecture,
+    PlatformFamily, ProposalId, RepositorySnapshotId, RollbackPlan, RuntimeRunId, RuntimeRunLimits,
+    SessionId, StopCondition, StopConditionKind, TaskId, ToolCallId, ToolCatalogId, ToolId,
+    WorkPacket, WorkPacketId, WorkPacketState, WorkspaceAuthorizationId, WorkspaceId,
+    WorkspacePath,
 };
 use agentmage_kernel_engine::{
     command_runner::{
@@ -93,6 +94,8 @@ pub enum CodingDevelopmentScenario {
     NoOp,
     /// Observe a genuine failing test, repair one identifier, rerun, and verify.
     FailedTestRepair,
+    /// Hold one cancellable model call so actual signal propagation can be exercised.
+    SlowCancel,
 }
 
 impl CodingDevelopmentScenario {
@@ -101,6 +104,7 @@ impl CodingDevelopmentScenario {
         match value {
             "no-op" => Some(Self::NoOp),
             "failed-test-repair" => Some(Self::FailedTestRepair),
+            "slow-cancel" => Some(Self::SlowCancel),
             _ => None,
         }
     }
@@ -367,6 +371,8 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             profile: self.profile.model_profile().clone(),
             steps,
             calls: 0,
+            initial_delay_ms: (self.scenario == CodingDevelopmentScenario::SlowCancel)
+                .then_some(120_000),
         };
         let context =
             CodingContextPort::for_profile(self.profile, Vec::new(), DevelopmentTokenCounter)
@@ -748,7 +754,7 @@ fn scripted_steps(
         .map_err(|_| CodingDevelopmentRuntimeError::Composition)
     };
     match scenario {
-        CodingDevelopmentScenario::NoOp => Ok([
+        CodingDevelopmentScenario::NoOp | CodingDevelopmentScenario::SlowCancel => Ok([
             ScriptedDevelopmentStep::Tool(git),
             ScriptedDevelopmentStep::Complete(completion(
                 CodingTerminalClaim::NoOp,
@@ -926,6 +932,7 @@ pub struct ScriptedDevelopmentModel {
     profile: ExactModelProfile,
     steps: VecDeque<ScriptedDevelopmentStep>,
     calls: u32,
+    initial_delay_ms: Option<u64>,
 }
 
 impl RuntimeModelPort for ScriptedDevelopmentModel {
@@ -939,6 +946,27 @@ impl RuntimeModelPort for ScriptedDevelopmentModel {
         context: &agentmage_kernel_contracts::ModelContextPacket,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<ModelRunResult, RuntimePortFailure> {
+        if let Some(delay_ms) = self.initial_delay_ms.take() {
+            let mut remaining = delay_ms;
+            while remaining > 0 {
+                if cancellation
+                    .map(|probe| probe.observe())
+                    .transpose()
+                    .map_err(|_| RuntimePortFailure::Invalid)?
+                    .flatten()
+                    .is_some()
+                {
+                    return Ok(cancelled_model_result(
+                        request,
+                        context.input_tokens,
+                        delay_ms,
+                    ));
+                }
+                let slice = remaining.min(10);
+                std::thread::sleep(Duration::from_millis(slice));
+                remaining -= slice;
+            }
+        }
         if cancellation
             .map(|probe| probe.observe())
             .transpose()
@@ -950,7 +978,7 @@ impl RuntimeModelPort for ScriptedDevelopmentModel {
                 .iter()
                 .any(|message| message.role == ModelMessageRole::System)
         {
-            return Err(RuntimePortFailure::Cancelled);
+            return Ok(cancelled_model_result(request, context.input_tokens, 1));
         }
         let step = self
             .steps
@@ -1011,6 +1039,49 @@ impl RuntimeModelPort for ScriptedDevelopmentModel {
                 elapsed_ms: 1,
             },
         })
+    }
+}
+
+fn cancelled_model_result(
+    request: &ModelRunRequest,
+    input_tokens: u32,
+    elapsed_ms: u64,
+) -> ModelRunResult {
+    ModelRunResult {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        model_run_id: request.model_run_id.clone(),
+        stream_id: ModelStreamId::from_raw("scripted-cancelled-stream"),
+        correlation_id: request.correlation_id.clone(),
+        terminal_state: ModelRunTerminalState::Cancelled,
+        finish_reason: ModelFinishReason::Cancelled,
+        fragment_count: 1,
+        response_sha256: sha256(b"scripted-cancelled"),
+        proposal: None,
+        failure: Some(ModelRuntimeFailure {
+            code: "runtime.model.cancelled".to_owned(),
+            retryable_after_correction: false,
+            dependency_recovery_required: false,
+            contract_error: None,
+        }),
+        usage: ModelTokenUsage {
+            rendered_prompt_tokens: input_tokens,
+            cached_input_tokens: None,
+            evaluated_input_tokens: None,
+            generated_output_tokens: 0,
+            reasoning_output_tokens: None,
+            output_token_reserve: request.max_output_tokens,
+            remaining_capacity_tokens: None,
+        },
+        resources: ModelResourceReport {
+            adapter_id: request.adapter_id.clone(),
+            profile_id: request.profile_id.clone(),
+            model_run_id: Some(request.model_run_id.clone()),
+            resident_memory_bytes: 1,
+            accelerator_memory_bytes: 0,
+            input_tokens,
+            output_tokens: 0,
+            elapsed_ms: elapsed_ms.min(request.timeout_ms),
+        },
     }
 }
 

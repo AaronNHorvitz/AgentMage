@@ -2,6 +2,10 @@
 
 use std::io::{self, BufRead};
 use std::process::{Child, Command, Stdio};
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
 
 use agentmage_kernel_contracts::{
     AgentStateKind, RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeEvent,
@@ -13,7 +17,9 @@ use crate::cli::{
     render_runtime_event_human, render_runtime_event_json, render_runtime_outcome_human,
     render_runtime_outcome_json,
 };
-use crate::cli_runtime::{NeverCancelInteractiveCli, drive_interactive_cli_runtime};
+use crate::cli_runtime::{
+    InteractiveCliCancellationPort, InteractiveCliRuntimeError, drive_interactive_cli_runtime,
+};
 use crate::coding_client::{CodingApprovalPort, CodingClientError, CodingEventSink};
 use crate::coding_development_activation::CodingDevelopmentActivation;
 use crate::coding_development_runtime::SCRIPTED_PROFILE_ID;
@@ -114,6 +120,7 @@ fn run_with_child(
         preauthorized: options.approve_this_run,
     };
     let mut sink = TerminalEventSink { output };
+    let mut cancellation = InstalledSignalCancellation::install()?;
     let workspace_id = format!("coding-development-{}", &activation.marker_sha256()[..24]);
     let result = drive_interactive_cli_runtime(
         &mut runtime,
@@ -127,7 +134,7 @@ fn run_with_child(
         },
         &mut approvals,
         &mut sink,
-        &mut NeverCancelInteractiveCli,
+        &mut cancellation,
     );
     if let Err(error) = &result {
         if let Some(transport) = runtime.last_error() {
@@ -154,6 +161,48 @@ fn run_with_child(
         AgentStateKind::Exhausted => ClientExitCode::ResourceBound,
         _ => ClientExitCode::Uncertain,
     })
+}
+
+struct InstalledSignalCancellation {
+    requested: Arc<AtomicBool>,
+    sequence: u64,
+}
+
+impl InstalledSignalCancellation {
+    fn install() -> Result<Self, CodingDevelopmentClientError> {
+        let requested = Arc::new(AtomicBool::new(false));
+        signal_hook::flag::register(signal_hook::consts::SIGINT, Arc::clone(&requested))
+            .map_err(|_| CodingDevelopmentClientError::Transport)?;
+        signal_hook::flag::register(signal_hook::consts::SIGTERM, Arc::clone(&requested))
+            .map_err(|_| CodingDevelopmentClientError::Transport)?;
+        Ok(Self {
+            requested,
+            sequence: 0,
+        })
+    }
+}
+
+impl InteractiveCliCancellationPort for InstalledSignalCancellation {
+    fn poll(
+        &mut self,
+        request: &agentmage_kernel_contracts::RuntimeRunRequest,
+    ) -> Result<Option<agentmage_kernel_contracts::CancellationId>, InteractiveCliRuntimeError>
+    {
+        if !self.requested.swap(false, Ordering::AcqRel) {
+            return Ok(None);
+        }
+        self.sequence = self
+            .sequence
+            .checked_add(1)
+            .ok_or(InteractiveCliRuntimeError::Cancellation)?;
+        Ok(Some(agentmage_kernel_contracts::CancellationId::from_raw(
+            format!(
+                "cli-signal-{}-{:016x}",
+                request.run_id.as_str(),
+                self.sequence
+            ),
+        )))
+    }
 }
 
 fn sibling_host_path() -> Result<std::path::PathBuf, CodingDevelopmentClientError> {

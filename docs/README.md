@@ -10,9 +10,12 @@ The immediate workstream is the standalone coding harness:
 - [Measured model-preparation results](verification/coding-model-preparation-2026-09-21.md)
 - [Disposable coding development activation](decisions/0063-disposable-coding-development-activation.md)
 - [Coding activation inventory](verification/coding-activation-inventory-2026-09-21.md)
+- [Live coding control scheduling](decisions/0064-live-coding-control-scheduling.md)
+- [Standalone coding development harness](guides/standalone-coding-development.md)
 
 The PRD, implementation plan and Story 48.2 carry its product and task authority.
-These documents do not assert that the current executable can perform coding.
+The development guide covers a demonstrated executable scripted path. These documents do not
+assert qualified-model, supported-platform, release, or production-activation completion.
 
 This tree contains accepted decisions, evaluation procedures, architecture
 guidance, and later user and maintainer documentation. Root product and policy

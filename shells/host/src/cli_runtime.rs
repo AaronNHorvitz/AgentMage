@@ -224,10 +224,6 @@ where
             });
         }
 
-        let Some(challenge) = step.approval.as_ref() else {
-            best_effort_release(runtime, &request);
-            return Err(InteractiveCliRuntimeError::Evidence);
-        };
         let cancellation_id = match cancellation.poll(&request) {
             Ok(cancellation_id) => cancellation_id,
             Err(error) => {
@@ -248,7 +244,7 @@ where
                     return Err(map_runtime_error(error));
                 }
             }
-        } else {
+        } else if let Some(challenge) = step.approval.as_ref() {
             let disposition = match approvals.decide(challenge) {
                 Ok(disposition) => disposition,
                 Err(error) => {
@@ -262,6 +258,23 @@ where
                 &request.request_sha256,
                 verifier.cursor().as_ref(),
                 Some(&response),
+            ) {
+                Ok(step) => step,
+                Err(error) => {
+                    best_effort_release(runtime, &request);
+                    return Err(map_runtime_error(error));
+                }
+            }
+        } else {
+            // A live host may return a verified nonterminal progress page while inference or a
+            // native tool continues on its owned worker. Keep the control path responsive without
+            // granting any new action or busy-spinning the local IPC channel.
+            std::thread::sleep(std::time::Duration::from_millis(10));
+            match runtime.advance(
+                &request.run_id,
+                &request.request_sha256,
+                verifier.cursor().as_ref(),
+                None,
             ) {
                 Ok(step) => step,
                 Err(error) => {
@@ -321,8 +334,11 @@ impl InteractiveCliRuntimeVerifier {
     fn accept(&mut self, step: &NativeChatRuntimeStep) -> Result<(), InteractiveCliRuntimeError> {
         if step.run_id != self.request.run_id
             || step.request_sha256 != self.request.request_sha256
-            || (step.approval.is_some() == step.outcome.is_some())
-            || step.events.is_empty()
+            || (step.approval.is_some() && step.outcome.is_some())
+            || (step.events.is_empty()
+                && self.sequence.event_count() == 0
+                && step.approval.is_none()
+                && step.outcome.is_none())
             || u64::try_from(step.events.len()).map_or(true, |event_count| {
                 self.sequence
                     .event_count()
@@ -341,6 +357,7 @@ impl InteractiveCliRuntimeVerifier {
         match (&step.approval, &step.outcome) {
             (Some(challenge), None) => candidate.verify_approval(challenge)?,
             (None, Some(outcome)) => candidate.verify_outcome(outcome, &step.artifacts)?,
+            (None, None) if !candidate.sequence.is_terminal() => {}
             _ => return Err(InteractiveCliRuntimeError::Evidence),
         }
         *self = candidate;

@@ -9,6 +9,7 @@ use agentmage_kernel_contracts::{
 };
 use agentmage_kernel_engine::{
     runtime_event::RuntimeEventSequence,
+    runtime_event::RuntimeEventSubscription,
     runtime_loop::{
         ReusableRuntimeCoordinator, RuntimeClock, RuntimeContextPort, RuntimeCoordinatorStep,
         RuntimeModelPort, RuntimeToolBoundary, RuntimeVerifierPort,
@@ -65,6 +66,18 @@ pub trait CodingCoordinatorPort {
     fn runtime_artifacts(&self) -> &[RuntimeArtifactRef];
 }
 
+/// Coordinator capability needed only by hosts that service control traffic while work runs.
+///
+/// The subscription carries already sealed canonical events. It cannot dispatch a tool, answer an
+/// approval, or mutate coordinator state.
+pub trait LiveCodingCoordinatorPort: CodingCoordinatorPort + Send + 'static {
+    /// Registers one bounded event subscriber before the worker begins execution.
+    fn subscribe_live_events(
+        &self,
+        capacity: usize,
+    ) -> Result<RuntimeEventSubscription, CodingClientError>;
+}
+
 impl<M, X, T, V, C> CodingCoordinatorPort for ReusableRuntimeCoordinator<M, X, T, V, C>
 where
     M: RuntimeModelPort,
@@ -88,6 +101,23 @@ where
 
     fn runtime_artifacts(&self) -> &[RuntimeArtifactRef] {
         self.artifact_references()
+    }
+}
+
+impl<M, X, T, V, C> LiveCodingCoordinatorPort for ReusableRuntimeCoordinator<M, X, T, V, C>
+where
+    M: RuntimeModelPort + Send + 'static,
+    X: RuntimeContextPort + Send + 'static,
+    T: RuntimeToolBoundary + Send + 'static,
+    V: RuntimeVerifierPort + Send + 'static,
+    C: RuntimeClock + Send + 'static,
+{
+    fn subscribe_live_events(
+        &self,
+        capacity: usize,
+    ) -> Result<RuntimeEventSubscription, CodingClientError> {
+        self.subscribe_events(capacity)
+            .map_err(|_| CodingClientError::EventStream)
     }
 }
 

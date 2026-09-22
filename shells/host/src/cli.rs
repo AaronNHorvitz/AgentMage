@@ -219,7 +219,10 @@ fn parse_coding_development(
         cursor += 2;
     }
     let scenario = scenario.ok_or(ThinClientError::InvalidValue)?;
-    if !matches!(scenario.as_str(), "no-op" | "failed-test-repair") {
+    if !matches!(
+        scenario.as_str(),
+        "no-op" | "failed-test-repair" | "slow-cancel"
+    ) {
         return Err(ThinClientError::InvalidValue);
     }
     let objective = objective.ok_or(ThinClientError::InvalidValue)?;

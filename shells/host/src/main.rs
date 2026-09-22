@@ -93,7 +93,7 @@ fn coding_development_host(
     use agentmage_host::coding_development_runtime::{
         CodingDevelopmentRuntimeFactory, CodingDevelopmentScenario,
     };
-    use agentmage_host::native_chat_runtime::NativeChatRuntimeService;
+    use agentmage_host::coding_live_runtime::LiveCodingRuntimeService;
     use agentmage_host::runtime_ipc::serve_linux_runtime_ipc;
 
     let scenario = scenario
@@ -117,7 +117,7 @@ fn coding_development_host(
     let mut session = bootstrap
         .accept()
         .map_err(|error| HostExit(error.kind().code()))?;
-    let mut runtime = NativeChatRuntimeService::new(factory);
+    let mut runtime = LiveCodingRuntimeService::new(factory);
     serve_linux_runtime_ipc(&mut session, &mut runtime).map_err(|error| HostExit(error.code()))
 }
 
