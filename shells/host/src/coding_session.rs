@@ -424,20 +424,28 @@ fn validate_static_input(
     {
         return Err(CodingSessionProfileError::InstructionDenied);
     }
-    if input.model.exact_profile().automatic_fallback
-        || ![ModelRole::CodingPlanner, ModelRole::ToolSelection]
-            .into_iter()
-            .all(|role| {
-                input
-                    .model
-                    .exact_profile()
-                    .capabilities
-                    .iter()
-                    .any(|capability| {
-                        capability.role == role && capability.state == ModelCapabilityState::Passed
-                    })
-            })
-    {
+    let required_model_roles_present = [ModelRole::CodingPlanner, ModelRole::ToolSelection]
+        .into_iter()
+        .all(|role| {
+            input
+                .model
+                .exact_profile()
+                .capabilities
+                .iter()
+                .any(|capability| {
+                    capability.role == role
+                        && match input.model.purpose() {
+                            ModelUsePurpose::Evaluation => matches!(
+                                capability.state,
+                                ModelCapabilityState::Blocked | ModelCapabilityState::NotEvaluated
+                            ),
+                            ModelUsePurpose::ContractTest | ModelUsePurpose::Product => {
+                                capability.state == ModelCapabilityState::Passed
+                            }
+                        }
+                })
+        });
+    if input.model.exact_profile().automatic_fallback || !required_model_roles_present {
         return Err(CodingSessionProfileError::ModelDenied);
     }
     if input

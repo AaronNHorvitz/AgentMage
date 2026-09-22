@@ -28,12 +28,14 @@ fn main() -> Result<(), HostExit> {
                 disposable_root,
                 workspace_root,
                 scenario,
+                model,
             ] if command == "--coding-development-host" => {
                 return coding_development_host(
                     state_root,
                     disposable_root,
                     workspace_root,
                     scenario,
+                    model,
                 );
             }
             [command, root] if command == "--verify-package-candidate-root" => {
@@ -88,10 +90,11 @@ fn coding_development_host(
     disposable_root: &std::ffi::OsStr,
     workspace_root: &std::ffi::OsStr,
     scenario: &std::ffi::OsStr,
+    model: &std::ffi::OsStr,
 ) -> Result<(), HostExit> {
     use agentmage_host::coding_development_activation::CodingDevelopmentActivation;
     use agentmage_host::coding_development_runtime::{
-        CodingDevelopmentRuntimeFactory, CodingDevelopmentScenario,
+        CodingDevelopmentModel, CodingDevelopmentRuntimeFactory, CodingDevelopmentScenario,
     };
     use agentmage_host::coding_live_runtime::LiveCodingRuntimeService;
     use agentmage_host::runtime_ipc::serve_linux_runtime_ipc;
@@ -100,13 +103,17 @@ fn coding_development_host(
         .to_str()
         .and_then(CodingDevelopmentScenario::parse)
         .ok_or(HostExit("coding.development.scenario-denied"))?;
+    let model = model
+        .to_str()
+        .and_then(CodingDevelopmentModel::parse)
+        .ok_or(HostExit("coding.development.model-denied"))?;
     let activation = CodingDevelopmentActivation::validate(
         std::path::Path::new(state_root),
         std::path::Path::new(disposable_root),
         std::path::Path::new(workspace_root),
     )
     .map_err(|error| HostExit(error.code()))?;
-    let factory = CodingDevelopmentRuntimeFactory::new(activation.clone(), scenario)
+    let factory = CodingDevelopmentRuntimeFactory::new(activation.clone(), scenario, model)
         .map_err(|error| HostExit(error.code()))?;
     let parent = linux_bootstrap::parent_process_id().map_err(|error| HostExit(error.code()))?;
     let bootstrap = linux_bootstrap::bootstrap_development_for_peer(&activation, parent)

@@ -3625,6 +3625,8 @@ fn map_model_error(error: ModelRuntimeGateError) -> RuntimePortFailure {
         | ModelRuntimeGateError::DispatchTokenDrift
         | ModelRuntimeGateError::PreparedRequestMismatch
         | ModelRuntimeGateError::StreamInvalid
+        | ModelRuntimeGateError::ProposalInvalid
+        | ModelRuntimeGateError::UsageMismatch
         | ModelRuntimeGateError::ResultMismatch => RuntimePortFailure::Invalid,
     }
 }

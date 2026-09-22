@@ -59,6 +59,8 @@ pub struct CodingDevelopmentCliOptions {
     pub workspace_root: PathBuf,
     /// Closed executable acceptance scenario.
     pub scenario: String,
+    /// Explicit proposal source: the non-model fixture or one exact evaluation-only candidate.
+    pub model: String,
     /// Exact bounded objective supplied to the runtime.
     pub objective: String,
     /// Whether this invocation explicitly preauthorizes its displayed exact operations.
@@ -202,6 +204,7 @@ fn parse_coding_development(
     let mut disposable_root = None;
     let mut workspace_root = None;
     let mut scenario = None;
+    let mut model = None;
     let mut objective = None;
     let mut approve_this_run = false;
     let mut stale_approval_probe = false;
@@ -215,6 +218,7 @@ fn parse_coding_development(
             "--disposable-root" if disposable_root.is_none() => &mut disposable_root,
             "--workspace-root" if workspace_root.is_none() => &mut workspace_root,
             "--scenario" if scenario.is_none() => &mut scenario,
+            "--model" if model.is_none() => &mut model,
             "--objective" if objective.is_none() => &mut objective,
             "--approve-this-run" if !approve_this_run => {
                 approve_this_run = true;
@@ -268,6 +272,10 @@ fn parse_coding_development(
     ) {
         return Err(ThinClientError::InvalidValue);
     }
+    let model = model.unwrap_or_else(|| "scripted".to_owned());
+    if !matches!(model.as_str(), "scripted" | "muse" | "gpt-oss") {
+        return Err(ThinClientError::InvalidValue);
+    }
     let objective = objective.ok_or(ThinClientError::InvalidValue)?;
     if objective.trim().is_empty() || objective.len() > 16 * 1024 {
         return Err(ThinClientError::InvalidValue);
@@ -289,6 +297,7 @@ fn parse_coding_development(
         disposable_root: PathBuf::from(disposable_root.ok_or(ThinClientError::InvalidValue)?),
         workspace_root: PathBuf::from(workspace_root.ok_or(ThinClientError::InvalidValue)?),
         scenario,
+        model,
         objective,
         approve_this_run,
         stale_approval_probe,

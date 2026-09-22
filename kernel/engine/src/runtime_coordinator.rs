@@ -272,6 +272,16 @@ fn validate_profile_and_context(
 ) -> Result<(), RuntimeCoordinatorError> {
     let purpose = if request.model_profile.runtime.kind == ModelRuntimeKind::DeterministicFake {
         ModelUsePurpose::ContractTest
+    } else if matches!(
+        request.model_profile.lifecycle,
+        agentmage_kernel_contracts::ModelLifecycleState::Candidate
+            | agentmage_kernel_contracts::ModelLifecycleState::Evaluating
+    ) && !request.model_profile.enabled
+    {
+        // Evaluation admission is still non-product: the exact profile must remain disabled and
+        // the host must separately compose an evaluation-purpose model controller. This permits
+        // the real coding harness to measure a candidate without falsely marking it qualified.
+        ModelUsePurpose::Evaluation
     } else {
         ModelUsePurpose::Product
     };

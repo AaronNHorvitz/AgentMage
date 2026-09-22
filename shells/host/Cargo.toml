@@ -45,6 +45,7 @@ rustix.workspace = true
 
 [target.'cfg(target_os = "linux")'.dependencies]
 agentmage-platform-linux.workspace = true
+agentmage-platform-linux-inference.workspace = true
 
 [dev-dependencies]
 agentmage-platform-linux = { workspace = true, features = ["test-support"] }

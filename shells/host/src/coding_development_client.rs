@@ -22,7 +22,7 @@ use crate::cli_runtime::{
 };
 use crate::coding_client::{CodingApprovalPort, CodingClientError, CodingEventSink};
 use crate::coding_development_activation::CodingDevelopmentActivation;
-use crate::coding_development_runtime::SCRIPTED_PROFILE_ID;
+use crate::coding_development_runtime::CodingDevelopmentModel;
 use crate::headless::ClientExitCode;
 use crate::runtime_ipc::LinuxRuntimeIpcClient;
 use crate::runtime_transport::RuntimePrepareInput;
@@ -81,6 +81,7 @@ pub fn run_coding_development(
         .arg(activation.disposable_root())
         .arg(activation.workspace_root())
         .arg(&options.scenario)
+        .arg(&options.model)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::inherit())
@@ -130,11 +131,14 @@ fn run_with_child(
     let mut sink = TerminalEventSink { output };
     let mut cancellation = InstalledSignalCancellation::install()?;
     let workspace_id = format!("coding-development-{}", &activation.marker_sha256()[..24]);
+    let profile_id = CodingDevelopmentModel::parse(&options.model)
+        .ok_or(CodingDevelopmentClientError::Activation)?
+        .profile_id();
     let result = drive_interactive_cli_runtime(
         &mut runtime,
         RuntimePrepareInput {
             engineering_session_id: None,
-            profile_id: SCRIPTED_PROFILE_ID.to_owned(),
+            profile_id: profile_id.to_owned(),
             expected_entry_sha256: activation.marker_sha256().to_owned(),
             workspace_id,
             workspace_root: activation.workspace_root().to_string_lossy().into_owned(),

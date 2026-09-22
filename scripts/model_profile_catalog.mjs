@@ -368,7 +368,7 @@ function codingDevelopmentProfile(family) {
       minimum_system_memory_bytes: 16 * 1024 * 1024 * 1024,
       minimum_accelerator_memory_bytes: 21_000 * 1024 * 1024,
       accelerator: "NVIDIA Vulkan",
-      driver_constraint: "NVIDIA 610.43.03 preparation tuple; changes require re-evaluation",
+      driver_constraint: "NVIDIA 615.71.09 coding re-evaluation tuple; changes require re-evaluation",
     }],
     capabilities: ["dialogue", "coding_planner", "tool_selection"].map((role) => ({
       role,

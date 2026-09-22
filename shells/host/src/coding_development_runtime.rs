@@ -2,9 +2,10 @@
 
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt::Write as _;
-use std::fs;
-use std::os::unix::fs::PermissionsExt;
-use std::path::Path;
+use std::fs::{self, OpenOptions};
+use std::io::Write as _;
+use std::os::unix::fs::{MetadataExt, OpenOptionsExt, PermissionsExt};
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -26,16 +27,19 @@ use agentmage_kernel_contracts::{
     ModelRuntimeFailure, ModelRuntimeIdentity, ModelRuntimeKind, ModelStreamId, ModelTokenUsage,
     ModelToolCallCandidate, NetworkComponent, NetworkDestinationClass, NetworkObservation,
     PathResolutionIntent, PlanId, PlatformArchitecture, PlatformFamily, ProposalId,
-    RepositorySnapshotId, RollbackPlan, RuntimeRunId, RuntimeRunLimits, SessionId, StopCondition,
-    StopConditionKind, TaskId, ToolCallId, ToolCatalogId, ToolId, WorkPacket, WorkPacketId,
-    WorkPacketState, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
+    RepositorySnapshotId, RollbackPlan, RuntimeIsolationObservation, RuntimeRunId,
+    RuntimeRunLimits, SessionId, StopCondition, StopConditionKind, TaskId, ToolCallId,
+    ToolCatalogId, ToolId, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceAuthorizationId,
+    WorkspaceId, WorkspacePath,
 };
 use agentmage_kernel_engine::{
     command_runner::{
         CommandBounds, CommandRegistry, CommandRisk, CommandSpec, CommandWorkingDirectory,
     },
     instruction_provenance::build_instruction_ledger,
-    model_runtime::{ModelAdmissionCatalog, ModelUsePurpose},
+    model_runtime::{
+        LocalModelController, ModelAdmissionCatalog, ModelUsePurpose, RejectedModelOutput,
+    },
     repository_safety::{OwnedWorktreeRecord, WorktreeDisposition},
     runtime_loop::{RuntimeClock, RuntimeModelPort, RuntimePortFailure},
     strict_local::{
@@ -54,6 +58,10 @@ use agentmage_platform_linux::{
     LinuxSandboxLimits, LinuxSandboxManifest, LinuxSandboxRunner, linux_repository_path_sha256,
     open_linux_development_authority, resolve_development_linux_workspace_object,
     select_development_linux_workspace,
+};
+use agentmage_platform_linux_inference::{
+    GptOssHarmonyFamilyCodec, LinuxNativeModelAdapter, LlamaServerDriver, LlamaServerDriverConfig,
+    LlamaServerLaunchProfile, MuseAtemFamilyCodec,
 };
 use sha2::{Digest, Sha256};
 
@@ -89,8 +97,52 @@ use crate::{
 
 /// Explicitly non-qualified profile used only by the executable development fixture.
 pub const SCRIPTED_PROFILE_ID: &str = "scripted-executable-fixture-32k-v1";
+/// Exact Muse development candidate profile. It remains evaluation-only until campaign evidence.
+pub const MUSE_DEVELOPMENT_PROFILE_ID: &str =
+    "muse-glimmer-30b-q4-k-m-text-32k-fedora-coding-development";
+/// Exact GPT-OSS development candidate profile. It remains evaluation-only until campaign evidence.
+pub const GPT_OSS_DEVELOPMENT_PROFILE_ID: &str =
+    "gpt-oss-20b-mxfp4-text-32k-fedora-coding-development";
 const VALIDATION_ID: &str = "validation-unit";
 static NEXT_RUN: AtomicU64 = AtomicU64::new(1);
+
+/// Explicit proposal source selected for one development host process.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CodingDevelopmentModel {
+    /// Deterministic non-model source used only by executable contract tests.
+    Scripted,
+    /// Pinned Muse Glimmer candidate through the native ATEM boundary.
+    Muse,
+    /// Pinned GPT-OSS candidate through the native Harmony boundary.
+    GptOss,
+}
+
+impl CodingDevelopmentModel {
+    /// Parses one exact CLI label without aliases or fallback.
+    #[must_use]
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "scripted" => Some(Self::Scripted),
+            "muse" => Some(Self::Muse),
+            "gpt-oss" => Some(Self::GptOss),
+            _ => None,
+        }
+    }
+
+    /// Returns the only exact profile identity accepted for this source.
+    #[must_use]
+    pub const fn profile_id(self) -> &'static str {
+        match self {
+            Self::Scripted => SCRIPTED_PROFILE_ID,
+            Self::Muse => MUSE_DEVELOPMENT_PROFILE_ID,
+            Self::GptOss => GPT_OSS_DEVELOPMENT_PROFILE_ID,
+        }
+    }
+
+    const fn is_candidate(self) -> bool {
+        !matches!(self, Self::Scripted)
+    }
+}
 
 /// Closed executable-fixture scenarios. Every value is visibly non-model-qualified.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -178,7 +230,7 @@ type DevelopmentBoundary = LinuxCodingRuntimeBoundary<
 >;
 /// Exact coordinator type served by the development IPC host.
 pub type CodingDevelopmentCoordinator = DurableCodingCoordinator<
-    ScriptedDevelopmentModel,
+    CodingDevelopmentModelPort,
     CodingContextPort<DevelopmentTokenCounter>,
     DevelopmentBoundary,
     OsRuntimeClock,
@@ -193,6 +245,7 @@ struct PreparedDevelopmentRun {
 pub struct CodingDevelopmentRuntimeFactory {
     activation: CodingDevelopmentActivation,
     scenario: CodingDevelopmentScenario,
+    model: CodingDevelopmentModel,
     platform: &'static LinuxDevelopmentPlatformAdapter,
     profile: &'static CodingSessionProfile,
     workspace: &'static LinuxCodingWorkspace<'static, 'static>,
@@ -204,6 +257,7 @@ impl CodingDevelopmentRuntimeFactory {
     pub fn new(
         activation: CodingDevelopmentActivation,
         scenario: CodingDevelopmentScenario,
+        model: CodingDevelopmentModel,
     ) -> Result<Self, CodingDevelopmentRuntimeError> {
         activation
             .revalidate()
@@ -278,6 +332,7 @@ impl CodingDevelopmentRuntimeFactory {
             &inventory,
             &repository_map,
             scenario,
+            model,
         )?));
         let workspace = Box::leak(Box::new(
             LinuxCodingWorkspace::bind_development(
@@ -292,6 +347,7 @@ impl CodingDevelopmentRuntimeFactory {
         Ok(Self {
             activation,
             scenario,
+            model,
             platform,
             profile,
             workspace,
@@ -311,7 +367,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             .revalidate()
             .map_err(|_| prepare_denied("activation"))?;
         if input.engineering_session_id.is_some()
-            || input.profile_id != SCRIPTED_PROFILE_ID
+            || input.profile_id != self.model.profile_id()
             || input.expected_entry_sha256 != self.activation.marker_sha256()
             || input.workspace_id != self.profile.write_scope().workspace_id().as_str()
             || input.workspace_root != self.activation.workspace_root().to_string_lossy()
@@ -406,25 +462,38 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         if prepared.request != *request {
             return Err(NativeChatRuntimeError::RequestDenied);
         }
-        let steps = scripted_steps(
-            self.scenario,
+        let model = match self.model {
+            CodingDevelopmentModel::Scripted => {
+                let steps = scripted_steps(
+                    self.scenario,
+                    self.profile,
+                    request,
+                    self.activation.workspace_root(),
+                    self.platform,
+                    self.workspace.workspace(),
+                )
+                .map_err(|_| NativeChatRuntimeError::RequestDenied)?;
+                CodingDevelopmentModelPort::Scripted(ScriptedDevelopmentModel {
+                    profile: self.profile.model_profile().clone(),
+                    steps,
+                    calls: 0,
+                    initial_delay_ms: (self.scenario == CodingDevelopmentScenario::SlowCancel)
+                        .then_some(120_000),
+                })
+            }
+            candidate => {
+                load_candidate_model(candidate, self.profile, self.activation.state_root())
+                    .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?
+            }
+        };
+        let context = CodingContextPort::for_profile(
             self.profile,
-            request,
-            self.activation.workspace_root(),
-            self.platform,
-            self.workspace.workspace(),
+            Vec::new(),
+            DevelopmentTokenCounter::new(
+                self.profile.model_profile().context.token_counter.clone(),
+            ),
         )
         .map_err(|_| NativeChatRuntimeError::RequestDenied)?;
-        let model = ScriptedDevelopmentModel {
-            profile: self.profile.model_profile().clone(),
-            steps,
-            calls: 0,
-            initial_delay_ms: (self.scenario == CodingDevelopmentScenario::SlowCancel)
-                .then_some(120_000),
-        };
-        let context =
-            CodingContextPort::for_profile(self.profile, Vec::new(), DevelopmentTokenCounter)
-                .map_err(|_| NativeChatRuntimeError::RequestDenied)?;
         let mut key = CodingDevelopmentKeyProvider::open(&self.activation)
             .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
         let authority = open_linux_development_authority(
@@ -497,8 +566,9 @@ fn build_profile(
     inventory: &agentmage_platform_linux::LinuxRepositoryInventory,
     repository_map: &agentmage_capability_repository_map::RepositoryMap,
     scenario: CodingDevelopmentScenario,
+    model: CodingDevelopmentModel,
 ) -> Result<CodingSessionProfile, CodingDevelopmentRuntimeError> {
-    let limits = runtime_limits(scenario);
+    let limits = runtime_limits(scenario, model);
     let path_sha256 = linux_repository_path_sha256(activation.workspace_root())
         .map_err(|_| CodingDevelopmentRuntimeError::Worktree)?;
     let branch = inventory
@@ -582,7 +652,7 @@ fn build_profile(
         repository_snapshot_sha256: repository_map.map_sha256.clone(),
         immutable_base_commit: inventory.commit_id.clone(),
         worktree,
-        model: scripted_admitted_model()?,
+        model: admitted_development_model(model)?,
         offline_proof: offline_proof(activation)?,
         session_boundary_sha256: digest_bytes(activation.marker_sha256().as_bytes()),
         write_scope,
@@ -718,6 +788,41 @@ fn scripted_admitted_model() -> Result<
     ModelAdmissionCatalog::new(vec![profile.clone()])
         .and_then(|catalog| catalog.admit(&profile, ModelUsePurpose::ContractTest))
         .map_err(|_| CodingDevelopmentRuntimeError::Composition)
+}
+
+fn admitted_development_model(
+    model: CodingDevelopmentModel,
+) -> Result<
+    agentmage_kernel_engine::model_runtime::AdmittedModelProfile,
+    CodingDevelopmentRuntimeError,
+> {
+    if model == CodingDevelopmentModel::Scripted {
+        return scripted_admitted_model();
+    }
+    let profile = catalog_profile(model.profile_id())?;
+    ModelAdmissionCatalog::new(vec![profile.clone()])
+        .and_then(|catalog| catalog.admit(&profile, ModelUsePurpose::Evaluation))
+        .map_err(|_| CodingDevelopmentRuntimeError::Composition)
+}
+
+fn catalog_profile(profile_id: &str) -> Result<ExactModelProfile, CodingDevelopmentRuntimeError> {
+    let catalog: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../model-profiles/exact-profile-catalog.json"
+    ))
+    .map_err(|_| CodingDevelopmentRuntimeError::Composition)?;
+    let value = catalog
+        .get("profiles")
+        .and_then(serde_json::Value::as_array)
+        .and_then(|profiles| {
+            profiles.iter().find(|profile| {
+                profile
+                    .get("profile_id")
+                    .and_then(serde_json::Value::as_str)
+                    == Some(profile_id)
+            })
+        })
+        .ok_or(CodingDevelopmentRuntimeError::Composition)?;
+    serde_json::from_value(value.clone()).map_err(|_| CodingDevelopmentRuntimeError::Composition)
 }
 
 fn offline_proof(
@@ -1065,6 +1170,7 @@ fn development_work_packet(
     mutable_files: Vec<String>,
     required_evidence: Vec<EvidenceKind>,
 ) -> WorkPacket {
+    let native_candidate = profile.model_profile().runtime.kind == ModelRuntimeKind::NativeLlamaCpp;
     WorkPacket {
         schema_version: CONTRACT_SCHEMA_VERSION,
         work_packet_id: WorkPacketId::from_raw(format!("packet-{}", task_id.as_str())),
@@ -1087,8 +1193,22 @@ fn development_work_packet(
             (BudgetResource::ToolCalls, 16),
             (BudgetResource::InputBytes, 8 * 1024 * 1024),
             (BudgetResource::OutputBytes, 4 * 1024 * 1024),
-            (BudgetResource::ElapsedMilliseconds, 600_000),
-            (BudgetResource::MemoryBytes, 256 * 1024 * 1024),
+            (
+                BudgetResource::ElapsedMilliseconds,
+                if native_candidate {
+                    45 * 60 * 1_000
+                } else {
+                    600_000
+                },
+            ),
+            (
+                BudgetResource::MemoryBytes,
+                if native_candidate {
+                    64 * 1024 * 1024 * 1024
+                } else {
+                    256 * 1024 * 1024
+                },
+            ),
             (BudgetResource::DiskBytes, 64 * 1024 * 1024),
             (BudgetResource::ProcessCount, 32),
         ]
@@ -1139,6 +1259,399 @@ pub struct ScriptedDevelopmentModel {
     steps: VecDeque<ScriptedDevelopmentStep>,
     calls: u32,
     initial_delay_ms: Option<u64>,
+}
+
+type NativeDevelopmentRuntime = LinuxNativeModelAdapter<LlamaServerDriver>;
+type MuseDevelopmentController =
+    LocalModelController<NativeDevelopmentRuntime, MuseAtemFamilyCodec>;
+type GptOssDevelopmentController =
+    LocalModelController<NativeDevelopmentRuntime, GptOssHarmonyFamilyCodec>;
+
+/// Exact development proposal port. Candidate variants remain evaluation-only.
+pub enum CodingDevelopmentModelPort {
+    /// Deterministic non-model executable fixture.
+    Scripted(ScriptedDevelopmentModel),
+    /// Native Muse ATEM candidate controller.
+    Muse {
+        /// Exact admitted controller.
+        controller: MuseDevelopmentController,
+        /// Private raw rejection retention root.
+        rejection_root: PathBuf,
+    },
+    /// Native GPT-OSS Harmony candidate controller.
+    GptOss {
+        /// Exact admitted controller.
+        controller: GptOssDevelopmentController,
+        /// Private raw rejection retention root.
+        rejection_root: PathBuf,
+    },
+}
+
+impl RuntimeModelPort for CodingDevelopmentModelPort {
+    fn exact_profile(&self) -> &ExactModelProfile {
+        match self {
+            Self::Scripted(model) => model.exact_profile(),
+            Self::Muse { controller, .. } => controller.exact_profile(),
+            Self::GptOss { controller, .. } => controller.exact_profile(),
+        }
+    }
+
+    fn run_model(
+        &mut self,
+        request: &ModelRunRequest,
+        context: &agentmage_kernel_contracts::ModelContextPacket,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+    ) -> Result<ModelRunResult, RuntimePortFailure> {
+        match self {
+            Self::Scripted(model) => model.run_model(request, context, cancellation),
+            Self::Muse {
+                controller,
+                rejection_root,
+            } => run_native_candidate(controller, rejection_root, request, context, cancellation),
+            Self::GptOss {
+                controller,
+                rejection_root,
+            } => run_native_candidate(controller, rejection_root, request, context, cancellation),
+        }
+    }
+}
+
+fn run_native_candidate<R, C>(
+    controller: &mut LocalModelController<R, C>,
+    rejection_root: &Path,
+    request: &ModelRunRequest,
+    context: &agentmage_kernel_contracts::ModelContextPacket,
+    cancellation: Option<&dyn ModelCancellationProbe>,
+) -> Result<ModelRunResult, RuntimePortFailure>
+where
+    R: agentmage_kernel_contracts::LocalModelRuntime,
+    C: agentmage_kernel_contracts::ModelFamilyCodec,
+{
+    // The context composer uses a conservative planning count for source allocation. The native
+    // controller replaces it with the pinned tokenizer's count over the exact family rendering
+    // before capacity admission and dispatch; no approximate count reaches llama.cpp.
+    let mut exact_context = context.clone();
+    controller
+        .bind_token_count(&mut exact_context)
+        .map_err(|error| {
+            eprintln!(
+                "coding.development.candidate.context-binding.{}",
+                error.code()
+            );
+            RuntimePortFailure::Invalid
+        })?;
+    let prepared = controller
+        .prepare(request, &exact_context)
+        .map_err(|error| {
+            eprintln!("coding.development.candidate.preflight.{}", error.code());
+            RuntimePortFailure::Invalid
+        })?;
+    controller.dispatch(prepared, cancellation).map_err(|error| {
+        if let Some(rejected) = controller.take_rejected_output() {
+            if let Err(retention_error) = retain_rejected_candidate(rejection_root, &rejected) {
+                eprintln!("coding.development.candidate.rejection-retention.{retention_error}");
+            } else {
+                eprintln!(
+                    "coding.development.candidate.rejection-retained:codec={}:sha256={}:bytes={}",
+                    rejected.codec_failure_code,
+                    rejected.response_sha256,
+                    rejected.response_bytes.len()
+                );
+            }
+        }
+        {
+            eprintln!("coding.development.candidate.dispatch.{}", error.code());
+            RuntimePortFailure::Unavailable
+        }
+    })
+}
+
+fn retain_rejected_candidate(
+    rejection_root: &Path,
+    rejected: &RejectedModelOutput,
+) -> Result<(), &'static str> {
+    ensure_private_directory(rejection_root).map_err(|_| "directory-denied")?;
+    let identity = sha256(rejected.model_run_id.as_str().as_bytes());
+    let raw_path = rejection_root.join(format!("{}.response.bin", &identity[..24]));
+    let metadata_path = rejection_root.join(format!("{}.metadata.json", &identity[..24]));
+    write_private_new(&raw_path, &rejected.response_bytes).map_err(|_| "raw-write-failed")?;
+    let metadata = serde_json::to_vec(&serde_json::json!({
+        "schema_version": 1,
+        "model_run_id": rejected.model_run_id.as_str(),
+        "response_sha256": rejected.response_sha256,
+        "response_bytes": rejected.response_bytes.len(),
+        "codec_failure_code": rejected.codec_failure_code,
+        "disposition": "untrusted-codec-rejected-no-authority"
+    }))
+    .map_err(|_| "metadata-invalid")?;
+    if let Err(error) = write_private_new(&metadata_path, &metadata) {
+        let _ = fs::remove_file(&raw_path);
+        return Err(error);
+    }
+    Ok(())
+}
+
+fn write_private_new(path: &Path, bytes: &[u8]) -> Result<(), &'static str> {
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(path)
+        .map_err(|_| "create-failed")?;
+    file.write_all(bytes)
+        .and_then(|()| file.sync_all())
+        .map_err(|_| "write-failed")
+}
+
+fn load_candidate_model(
+    model: CodingDevelopmentModel,
+    session_profile: &CodingSessionProfile,
+    state_root: &Path,
+) -> Result<CodingDevelopmentModelPort, CodingDevelopmentRuntimeError> {
+    let expected_profile = session_profile.model_profile();
+    if !model.is_candidate() || expected_profile.profile_id.as_str() != model.profile_id() {
+        eprintln!("coding.development.candidate.profile-binding-denied");
+        return Err(CodingDevelopmentRuntimeError::Profile);
+    }
+    let admitted = admitted_development_model(model).map_err(|error| {
+        eprintln!("coding.development.candidate.evaluation-admission-denied");
+        error
+    })?;
+    if admitted.exact_profile() != expected_profile {
+        eprintln!("coding.development.candidate.profile-substitution-denied");
+        return Err(CodingDevelopmentRuntimeError::Profile);
+    }
+    let (runtime_root, model_path, kwargs) =
+        candidate_paths(model, expected_profile).map_err(|error| {
+            eprintln!("coding.development.candidate.preparation-tuple-denied");
+            error
+        })?;
+    let socket_root = state_root.join(match model {
+        CodingDevelopmentModel::Muse => "candidate-muse",
+        CodingDevelopmentModel::GptOss => "candidate-gpt-oss",
+        CodingDevelopmentModel::Scripted => return Err(CodingDevelopmentRuntimeError::Profile),
+    });
+    ensure_private_directory(&socket_root).map_err(|error| {
+        eprintln!("coding.development.candidate.socket-root-denied");
+        error
+    })?;
+    let rejection_parent = state_root.join("candidate-rejections");
+    ensure_private_directory(&rejection_parent).map_err(|error| {
+        eprintln!("coding.development.candidate.rejection-root-denied");
+        error
+    })?;
+    let rejection_root = rejection_parent.join(match model {
+        CodingDevelopmentModel::Muse => "muse",
+        CodingDevelopmentModel::GptOss => "gpt-oss",
+        CodingDevelopmentModel::Scripted => return Err(CodingDevelopmentRuntimeError::Profile),
+    });
+    ensure_private_directory(&rejection_root).map_err(|error| {
+        eprintln!("coding.development.candidate.rejection-root-denied");
+        error
+    })?;
+    let launch = LlamaServerLaunchProfile::new(32_768, 4, 256, 128, "q8_0", "q8_0", Some(kwargs))
+        .map_err(|error| {
+        eprintln!("coding.development.candidate.launch-profile.{}", error.code);
+        CodingDevelopmentRuntimeError::Profile
+    })?;
+    let driver = LlamaServerDriver::new(
+        LlamaServerDriverConfig::new(
+            runtime_root,
+            model_path,
+            socket_root.join("llama-server.sock"),
+            expected_profile.runtime.clone(),
+            Duration::from_secs(600),
+        )
+        .map_err(|error| {
+            eprintln!("coding.development.candidate.driver-config.{}", error.code);
+            CodingDevelopmentRuntimeError::Profile
+        })?
+        .with_launch_profile(launch),
+    );
+    let isolation = RuntimeIsolationObservation {
+        adapter_id: expected_profile.runtime.adapter_id.clone(),
+        profile_id: expected_profile.profile_id.clone(),
+        network_available: false,
+        workspace_available: false,
+        authority_material_available: false,
+        credential_material_available: false,
+        observation_sha256: sha256(
+            format!(
+                "coding-development-native-isolation-v1:{}",
+                expected_profile.profile_id.as_str()
+            )
+            .as_bytes(),
+        ),
+    };
+    let runtime = LinuxNativeModelAdapter::new(expected_profile.runtime.clone(), isolation, driver)
+        .map_err(|error| {
+            eprintln!("coding.development.candidate.adapter.{}", error.code);
+            CodingDevelopmentRuntimeError::Platform
+        })?;
+    match model {
+        CodingDevelopmentModel::Muse => {
+            let codec =
+                MuseAtemFamilyCodec::new(expected_profile.codec.clone()).map_err(|error| {
+                    eprintln!("coding.development.candidate.muse-codec.{}", error.code);
+                    CodingDevelopmentRuntimeError::Profile
+                })?;
+            let mut controller =
+                LocalModelController::new(runtime, codec, admitted, 256).map_err(|error| {
+                    eprintln!("coding.development.candidate.controller.{}", error.code());
+                    CodingDevelopmentRuntimeError::Profile
+                })?;
+            load_and_verify_candidate(&mut controller)?;
+            Ok(CodingDevelopmentModelPort::Muse {
+                controller,
+                rejection_root,
+            })
+        }
+        CodingDevelopmentModel::GptOss => {
+            let codec = GptOssHarmonyFamilyCodec::new(expected_profile.codec.clone())
+                .and_then(|codec| {
+                    codec.with_native_tools(
+                        session_profile
+                            .registry()
+                            .list_tools()
+                            .into_iter()
+                            .cloned()
+                            .collect(),
+                    )
+                })
+                .map_err(|error| {
+                    eprintln!("coding.development.candidate.gpt-oss-codec.{}", error.code);
+                    CodingDevelopmentRuntimeError::Profile
+                })?;
+            let mut controller =
+                LocalModelController::new(runtime, codec, admitted, 256).map_err(|error| {
+                    eprintln!("coding.development.candidate.controller.{}", error.code());
+                    CodingDevelopmentRuntimeError::Profile
+                })?;
+            load_and_verify_candidate(&mut controller)?;
+            Ok(CodingDevelopmentModelPort::GptOss {
+                controller,
+                rejection_root,
+            })
+        }
+        CodingDevelopmentModel::Scripted => Err(CodingDevelopmentRuntimeError::Profile),
+    }
+}
+
+fn load_and_verify_candidate<R, C>(
+    controller: &mut LocalModelController<R, C>,
+) -> Result<(), CodingDevelopmentRuntimeError>
+where
+    R: agentmage_kernel_contracts::LocalModelRuntime,
+    C: agentmage_kernel_contracts::ModelFamilyCodec,
+{
+    controller.load().map_err(|error| {
+        eprintln!("coding.development.candidate.load.{}", error.code());
+        CodingDevelopmentRuntimeError::Platform
+    })?;
+    let served = controller.serving_capabilities().map_err(|error| {
+        eprintln!("coding.development.candidate.capabilities.{}", error.code());
+        CodingDevelopmentRuntimeError::Platform
+    })?;
+    if served.context_capacity_tokens != 32_768 || served.parallel_slots != 1 {
+        eprintln!("coding.development.candidate.served-profile-denied");
+        return Err(CodingDevelopmentRuntimeError::Profile);
+    }
+    Ok(())
+}
+
+fn candidate_paths(
+    model: CodingDevelopmentModel,
+    profile: &ExactModelProfile,
+) -> Result<(PathBuf, PathBuf, String), CodingDevelopmentRuntimeError> {
+    let lab: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../model-profiles/development/coding-model-lab.json"
+    ))
+    .map_err(|_| CodingDevelopmentRuntimeError::Profile)?;
+    let runtime: serde_json::Value = serde_json::from_str(include_str!("../../../demo/model.json"))
+        .map_err(|_| CodingDevelopmentRuntimeError::Profile)?;
+    if lab.get("scope").and_then(serde_json::Value::as_str)
+        != Some("synthetic-development-preparation-only")
+        || lab
+            .get("product_enabled")
+            .and_then(serde_json::Value::as_bool)
+            != Some(false)
+        || lab
+            .get("context_tokens")
+            .and_then(serde_json::Value::as_u64)
+            != Some(32_768)
+        || lab
+            .get("parallel_slots")
+            .and_then(serde_json::Value::as_u64)
+            != Some(1)
+    {
+        return Err(CodingDevelopmentRuntimeError::Profile);
+    }
+    let label = match model {
+        CodingDevelopmentModel::Muse => "muse",
+        CodingDevelopmentModel::GptOss => "gpt-oss",
+        CodingDevelopmentModel::Scripted => return Err(CodingDevelopmentRuntimeError::Profile),
+    };
+    let candidate = lab
+        .pointer(&format!("/models/{label}"))
+        .ok_or(CodingDevelopmentRuntimeError::Profile)?;
+    if candidate.get("sha256").and_then(serde_json::Value::as_str)
+        != Some(profile.artifact.sha256.as_str())
+        || candidate
+            .get("size_bytes")
+            .and_then(serde_json::Value::as_u64)
+            != Some(profile.artifact.bytes)
+        || candidate
+            .get("coding_qualification")
+            .and_then(serde_json::Value::as_str)
+            != Some("not-qualified")
+    {
+        return Err(CodingDevelopmentRuntimeError::Profile);
+    }
+    let runtime_root = runtime
+        .get("runtime_root")
+        .and_then(serde_json::Value::as_str)
+        .map(PathBuf::from)
+        .ok_or(CodingDevelopmentRuntimeError::Profile)?;
+    let model_path = expand_preparation_path(
+        candidate
+            .get("path")
+            .and_then(serde_json::Value::as_str)
+            .ok_or(CodingDevelopmentRuntimeError::Profile)?,
+    )?;
+    let kwargs = serde_json::to_string(
+        candidate
+            .get("chat_template_kwargs")
+            .ok_or(CodingDevelopmentRuntimeError::Profile)?,
+    )
+    .map_err(|_| CodingDevelopmentRuntimeError::Profile)?;
+    Ok((runtime_root, model_path, kwargs))
+}
+
+fn expand_preparation_path(value: &str) -> Result<PathBuf, CodingDevelopmentRuntimeError> {
+    if let Some(relative) = value.strip_prefix("~/") {
+        let home = std::env::var_os("HOME")
+            .map(PathBuf::from)
+            .ok_or(CodingDevelopmentRuntimeError::State)?;
+        let canonical = home
+            .canonicalize()
+            .map_err(|_| CodingDevelopmentRuntimeError::State)?;
+        let metadata =
+            fs::symlink_metadata(&canonical).map_err(|_| CodingDevelopmentRuntimeError::State)?;
+        if !canonical.is_absolute()
+            || !metadata.is_dir()
+            || metadata.uid() != rustix::process::getuid().as_raw()
+            || metadata.mode() & 0o077 != 0
+            || relative.split('/').any(|part| part == "..")
+        {
+            return Err(CodingDevelopmentRuntimeError::State);
+        }
+        return Ok(canonical.join(relative));
+    }
+    let path = PathBuf::from(value);
+    if !path.is_absolute() {
+        return Err(CodingDevelopmentRuntimeError::State);
+    }
+    Ok(path)
 }
 
 impl RuntimeModelPort for ScriptedDevelopmentModel {
@@ -1291,12 +1804,20 @@ fn cancelled_model_result(
     }
 }
 
-/// Exact bounded token counter for the scripted executable fixture only.
-pub struct DevelopmentTokenCounter;
+/// Conservative context-allocation counter; native candidates are exactly recounted at dispatch.
+pub struct DevelopmentTokenCounter {
+    counter_id: String,
+}
+
+impl DevelopmentTokenCounter {
+    fn new(counter_id: String) -> Self {
+        Self { counter_id }
+    }
+}
 
 impl CodingTokenCounter for DevelopmentTokenCounter {
     fn counter_id(&self) -> &str {
-        "bounded-byte-counter-v1"
+        &self.counter_id
     }
 
     fn count_tokens(&mut self, bytes: &[u8]) -> Result<u32, RuntimePortFailure> {
@@ -1314,7 +1835,10 @@ impl RuntimeClock for OsRuntimeClock {
     }
 }
 
-fn runtime_limits(scenario: CodingDevelopmentScenario) -> RuntimeRunLimits {
+fn runtime_limits(
+    scenario: CodingDevelopmentScenario,
+    model: CodingDevelopmentModel,
+) -> RuntimeRunLimits {
     RuntimeRunLimits {
         max_turns: 16,
         max_model_calls: 16,
@@ -1328,7 +1852,11 @@ fn runtime_limits(scenario: CodingDevelopmentScenario) -> RuntimeRunLimits {
         } else {
             2_048
         },
-        max_elapsed_ms: 600_000,
+        max_elapsed_ms: if model.is_candidate() {
+            45 * 60 * 1_000
+        } else {
+            600_000
+        },
         max_output_bytes: 4 * 1024 * 1024,
     }
 }

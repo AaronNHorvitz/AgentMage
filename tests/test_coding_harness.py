@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import stat
+import subprocess
 import tempfile
 import unittest
 from unittest import mock
@@ -46,6 +47,32 @@ class CodingHarnessTests(unittest.TestCase):
                 stdout=coding_harness.subprocess.PIPE, text=True,
             )
             self.assertNotEqual(validation.returncode, 0)
+
+    def test_gpu_observation_requires_one_exact_numeric_device(self):
+        completed = subprocess.CompletedProcess([], 0, stdout="1234, 23000\n", stderr="")
+        with mock.patch.object(coding_harness.subprocess, "run", return_value=completed):
+            self.assertEqual(coding_harness.gpu_memory(), (1234, 23000))
+        for output in ("", "1, 2\n3, 4\n", "used, free\n"):
+            completed = subprocess.CompletedProcess([], 0, stdout=output, stderr="")
+            with mock.patch.object(coding_harness.subprocess, "run", return_value=completed):
+                with self.assertRaises(coding_harness.HarnessError):
+                    coding_harness.gpu_memory()
+
+    def test_candidate_guard_cancels_only_its_run_on_sampled_pressure(self):
+        guard = coding_harness.CandidateResourceGuard(
+            -1,
+            {"maximum_total_vram_used_mib": 22528},
+            {"memory.peak": "0"},
+            1200,
+            23000,
+        )
+        with mock.patch.object(coding_harness, "gpu_memory", return_value=(22529, 1000)):
+            self.assertFalse(guard.sample())
+        self.assertEqual(
+            guard.error,
+            "coding.harness.candidate.gpu-headroom-exceeded",
+        )
+        self.assertEqual(guard.peak_total_gpu_used_mib_sampled, 22529)
 
 
 if __name__ == "__main__":

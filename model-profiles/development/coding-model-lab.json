@@ -19,6 +19,13 @@
   "minimum_available_ram_gib": 16,
   "minimum_free_vram_mib": 21000,
   "maximum_total_vram_used_mib": 22528,
+  "platform_tuple": {
+    "bubblewrap_package": "bubblewrap-0.12.0-1.fc44.x86_64",
+    "bubblewrap_sha256": "6da06f152b0865172d73348c34cb88487c326ce2f21cd980fc25ff10c4dbcdfb",
+    "nvidia_package": "xorg-x11-drv-nvidia-cuda-615.71.09-3.fc44.x86_64",
+    "nvidia_smi_sha256": "23448637d24ac559d1eafff075cde5ec97c1e6779c55d5d3fbdfb431d5bf3657",
+    "disposition": "changed since preparation; exact coding campaign must re-evaluate"
+  },
   "models": {
     "muse": {
       "label": "Muse Glimmer 30B Q4_K_M",

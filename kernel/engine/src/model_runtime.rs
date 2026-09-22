@@ -82,6 +82,10 @@ pub enum ModelRuntimeGateError {
     PreparedRequestMismatch,
     /// Stream fragments are malformed, noncontiguous, oversized, or stale.
     StreamInvalid,
+    /// The completed model bytes do not satisfy the exact family proposal codec.
+    ProposalInvalid,
+    /// Runtime token-usage fields contradict the trusted preflight or bounded stream.
+    UsageMismatch,
     /// Terminal result does not match the exact run or stream.
     ResultMismatch,
     /// Runtime returned a typed non-success.
@@ -113,6 +117,8 @@ impl ModelRuntimeGateError {
             Self::DispatchTokenDrift => "model.prepared-request.token-drift",
             Self::PreparedRequestMismatch => "model.prepared-request.mismatch",
             Self::StreamInvalid => "model.runtime.stream-invalid",
+            Self::ProposalInvalid => "model.runtime.proposal-invalid",
+            Self::UsageMismatch => "model.runtime.usage-mismatch",
             Self::ResultMismatch => "model.runtime.result-mismatch",
             Self::RuntimeFailure => "model.runtime.failed",
         }
@@ -247,6 +253,7 @@ pub struct LocalModelController<R: LocalModelRuntime, C: ModelFamilyCodec> {
     loaded: bool,
     served_capabilities: Option<ModelServingCapabilities>,
     safety_margin_tokens: u32,
+    rejected_output: Option<RejectedModelOutput>,
 }
 
 /// Move-only immutable generation preparation produced by the trusted controller.
@@ -284,6 +291,19 @@ pub struct VerifiedModelOutput {
     pub response_bytes: Vec<u8>,
 }
 
+/// Bounded untrusted response retained after an exact family codec rejects it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RejectedModelOutput {
+    /// Exact run that produced the bytes.
+    pub model_run_id: agentmage_kernel_contracts::ModelRunId,
+    /// Digest of the complete rejected response.
+    pub response_sha256: String,
+    /// Content-free exact codec rejection code.
+    pub codec_failure_code: String,
+    /// Complete bounded untrusted response bytes; never executable authority.
+    pub response_bytes: Vec<u8>,
+}
+
 impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
     /// Binds one admitted profile to one exact runtime identity.
     pub fn new(
@@ -309,6 +329,7 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             loaded: false,
             served_capabilities: None,
             safety_margin_tokens,
+            rejected_output: None,
         })
     }
 
@@ -322,6 +343,11 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
     #[must_use]
     pub const fn purpose(&self) -> ModelUsePurpose {
         self.admitted.purpose()
+    }
+
+    /// Removes the most recent bounded codec-rejected response, when one exists.
+    pub fn take_rejected_output(&mut self) -> Option<RejectedModelOutput> {
+        self.rejected_output.take()
     }
 
     /// Verifies and loads the exact selected tuple.
@@ -441,9 +467,11 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
                 || result.packet_sha256 != context.sha256
                 || result.counter != self.admitted.profile.context.token_counter
                 || result.tokens == 0
-                || result.tokens > self.admitted.profile.context.max_context_tokens
             {
                 return Err(ModelRuntimeGateError::TokenCountMismatch);
+            }
+            if result.tokens > self.admitted.profile.context.max_context_tokens {
+                return Err(ModelRuntimeGateError::DispatchCapacityExceeded);
             }
             if packet.input_tokens == result.tokens {
                 return Ok(result);
@@ -571,6 +599,7 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         prepared: PreparedModelRequest,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<VerifiedModelOutput, ModelRuntimeGateError> {
+        self.rejected_output = None;
         let PreparedModelRequest {
             request,
             context,
@@ -621,18 +650,33 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             preflight.effective_capacity_tokens,
             &request,
             &result,
-        ) || (matches!(
+        ) {
+            return Err(ModelRuntimeGateError::UsageMismatch);
+        }
+        if matches!(
             result.terminal_state,
             ModelRunTerminalState::Proposed | ModelRunTerminalState::AdvisoryText
-        ) && !result.finish_reason.is_complete())
+        ) && !result.finish_reason.is_complete()
         {
             return Err(ModelRuntimeGateError::ResultMismatch);
         }
         if result.terminal_state == ModelRunTerminalState::Proposed {
-            let decoded = self
-                .codec
-                .decode_proposal(&self.admitted.profile, &request, &capture.bytes)
-                .map_err(|_| ModelRuntimeGateError::ResultMismatch)?;
+            let decoded =
+                match self
+                    .codec
+                    .decode_proposal(&self.admitted.profile, &request, &capture.bytes)
+                {
+                    Ok(decoded) => decoded,
+                    Err(error) => {
+                        self.rejected_output = Some(RejectedModelOutput {
+                            model_run_id: request.model_run_id.clone(),
+                            response_sha256: result.response_sha256.clone(),
+                            codec_failure_code: error.code,
+                            response_bytes: capture.bytes,
+                        });
+                        return Err(ModelRuntimeGateError::ProposalInvalid);
+                    }
+                };
             if result.proposal.is_some() {
                 return Err(ModelRuntimeGateError::ResultMismatch);
             }
@@ -1592,14 +1636,11 @@ mod tests {
                 stream_id,
                 correlation_id: request.correlation_id.clone(),
                 terminal_state,
-                finish_reason: match self.scenario {
-                    FakeScenario::FalseCompletion => ModelFinishReason::ReasoningExhausted,
-                    _ => match terminal_state {
-                        ModelRunTerminalState::Proposed => ModelFinishReason::EndOfSequence,
-                        ModelRunTerminalState::TimedOut => ModelFinishReason::DeadlineExceeded,
-                        ModelRunTerminalState::Cancelled => ModelFinishReason::Cancelled,
-                        _ => ModelFinishReason::Unknown,
-                    },
+                finish_reason: match terminal_state {
+                    ModelRunTerminalState::Proposed => ModelFinishReason::EndOfSequence,
+                    ModelRunTerminalState::TimedOut => ModelFinishReason::DeadlineExceeded,
+                    ModelRunTerminalState::Cancelled => ModelFinishReason::Cancelled,
+                    _ => ModelFinishReason::Unknown,
                 },
                 fragment_count: 1,
                 response_sha256,
@@ -2496,7 +2537,7 @@ mod tests {
                 ),
                 (
                     FakeScenario::FalseCompletion,
-                    Err(ModelRuntimeGateError::ResultMismatch),
+                    Err(ModelRuntimeGateError::ProposalInvalid),
                 ),
             ] {
                 let profile = family_profile(family);
@@ -2526,6 +2567,22 @@ mod tests {
                     )
                     .map(|result| result.terminal_state);
                 assert_eq!(observed, expected, "family={family} scenario={scenario:?}");
+                if scenario == FakeScenario::FalseCompletion {
+                    let rejected = controller
+                        .take_rejected_output()
+                        .expect("codec-rejected bytes retained");
+                    assert_eq!(rejected.model_run_id.as_str(), "run-1");
+                    assert_eq!(
+                        rejected.response_sha256,
+                        sha256_hex(&rejected.response_bytes)
+                    );
+                    assert_eq!(rejected.codec_failure_code, "model.codec.proposal-invalid");
+                    assert_eq!(
+                        rejected.response_bytes,
+                        b"{\"schema_version\":2,\"kind\":\"completion_candidate\"}"
+                    );
+                    assert!(controller.take_rejected_output().is_none());
+                }
                 assert!(controller.unload().expect("unload").empty);
             }
         }
@@ -2577,10 +2634,12 @@ mod tests {
             ModelRuntimeGateError::RequestMismatch,
             ModelRuntimeGateError::TokenCountMismatch,
             ModelRuntimeGateError::StreamInvalid,
+            ModelRuntimeGateError::ProposalInvalid,
+            ModelRuntimeGateError::UsageMismatch,
             ModelRuntimeGateError::ResultMismatch,
             ModelRuntimeGateError::RuntimeFailure,
         ];
-        assert_eq!(codes.len(), 15);
+        assert_eq!(codes.len(), 17);
         for code in codes {
             assert!(code.code().starts_with("model."));
             assert!(!code.code().contains('/'));

@@ -2,10 +2,10 @@
 
 use std::cell::RefCell;
 use std::ffi::OsString;
-use std::fs;
+use std::fs::{self, OpenOptions};
 use std::io::{ErrorKind, Read, Write};
 use std::os::unix::ffi::OsStrExt;
-use std::os::unix::fs::{FileTypeExt, MetadataExt, PermissionsExt};
+use std::os::unix::fs::{FileTypeExt, MetadataExt, OpenOptionsExt, PermissionsExt};
 use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
@@ -21,8 +21,10 @@ use agentmage_kernel_contracts::{
     ModelStreamId, ModelStreamSink, ModelTokenUsage, ModelUnloadReceipt,
     RuntimeIsolationObservation, StreamedModelFragment, TokenCountResult,
 };
+use rustix::rand::{GetRandomFlags, getrandom};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
+use zeroize::{Zeroize, Zeroizing};
 
 use crate::NativeModelDriver;
 
@@ -35,13 +37,15 @@ const STREAM_POLL_INTERVAL: Duration = Duration::from_millis(50);
 const MAX_CONTEXT_TOKENS: u32 = 131_072;
 const MAX_UNIX_SOCKET_PATH_BYTES: usize = 107;
 const BWRAP_PATH: &str = "/usr/bin/bwrap";
-const BWRAP_SHA256: &str = "139bf12775025adf5c8523d119c5ad2950281335573708fd839c60181a3886dc";
+const BWRAP_SHA256: &str = "6da06f152b0865172d73348c34cb88487c326ce2f21cd980fc25ff10c4dbcdfb";
 const NVIDIA_SMI_PATH: &str = "/usr/bin/nvidia-smi";
-const NVIDIA_SMI_SHA256: &str = "915f6e333651d7bf03252e605743ae1d5cf1587d85f436a25aa5ff6c462cd982";
+const NVIDIA_SMI_SHA256: &str = "23448637d24ac559d1eafff075cde5ec97c1e6779c55d5d3fbdfb431d5bf3657";
 const GUEST_RUNTIME_ROOT: &str = "/runtime";
 const GUEST_MODEL_PATH: &str = "/model/model.gguf";
 const GUEST_SOCKET_ROOT: &str = "/run/agentmage";
 const GUEST_SOCKET_PATH: &str = "/run/agentmage/llama-server.sock";
+const GUEST_API_KEY_PATH: &str = "/run/agentmage/llama-server-api.key";
+const API_KEY_FILE_NAME: &str = "llama-server-api.key";
 const SANDBOX_READ_ONLY_DIRECTORIES: &[&str] = &[
     "/usr/lib64",
     "/usr/share/vulkan",
@@ -233,6 +237,58 @@ fn valid_socket_path(path: &Path) -> bool {
         && path.file_name().and_then(|name| name.to_str()) == Some("llama-server.sock")
 }
 
+fn api_key_path(socket_path: &Path) -> Result<PathBuf, ModelRuntimeFailure> {
+    socket_path
+        .parent()
+        .map(|parent| parent.join(API_KEY_FILE_NAME))
+        .ok_or_else(|| failure("model.llama-driver.socket-parent-invalid", false))
+}
+
+fn create_api_key(path: &Path) -> Result<Zeroizing<String>, ModelRuntimeFailure> {
+    let mut random = [0_u8; 32];
+    if getrandom(&mut random, GetRandomFlags::empty()) != Ok(random.len()) {
+        random.zeroize();
+        return Err(failure("model.llama-driver.api-key-random-failed", true));
+    }
+    let key = Zeroizing::new(
+        random
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>(),
+    );
+    random.zeroize();
+    let opened = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(path);
+    let mut file = match opened {
+        Ok(file) => file,
+        Err(_) => return Err(failure("model.llama-driver.api-key-create-failed", false)),
+    };
+    if file
+        .write_all(key.as_bytes())
+        .and_then(|()| file.write_all(b"\n"))
+        .and_then(|()| file.sync_all())
+        .is_err()
+    {
+        let _ = fs::remove_file(path);
+        return Err(failure("model.llama-driver.api-key-write-failed", true));
+    }
+    let metadata = fs::symlink_metadata(path)
+        .map_err(|_| failure("model.llama-driver.api-key-identity-failed", true))?;
+    if !metadata.is_file()
+        || metadata.file_type().is_symlink()
+        || metadata.uid() != rustix::process::getuid().as_raw()
+        || metadata.mode() & 0o777 != 0o600
+        || metadata.nlink() != 1
+    {
+        let _ = fs::remove_file(path);
+        return Err(failure("model.llama-driver.api-key-identity-failed", false));
+    }
+    Ok(key)
+}
+
 fn valid_sha256(value: &str) -> bool {
     value.len() == 64
         && value
@@ -257,6 +313,7 @@ struct LoadedRuntime {
     token_counter_sha256: String,
     decoding: DecodingProfile,
     launch_arguments: Vec<String>,
+    api_key: Zeroizing<String>,
     child: Child,
     runtime_pid: u32,
     loaded_at: Instant,
@@ -415,7 +472,13 @@ impl LlamaServerDriver {
     }
 
     fn client(&self) -> UnixHttpClient {
-        UnixHttpClient::new(self.config.socket_path.clone())
+        let api_key = self
+            .loaded
+            .as_ref()
+            .expect("client is available only for a loaded runtime")
+            .api_key
+            .to_string();
+        UnixHttpClient::new(self.config.socket_path.clone(), api_key)
     }
 
     fn wait_until_ready(&mut self) -> Result<(), ModelRuntimeFailure> {
@@ -464,6 +527,11 @@ impl LlamaServerDriver {
             fs::remove_file(&self.config.socket_path)
                 .map_err(|_| failure("model.llama-driver.socket-cleanup-failed", true))?;
         }
+        let api_key_path = api_key_path(&self.config.socket_path)?;
+        if api_key_path.exists() {
+            fs::remove_file(api_key_path)
+                .map_err(|_| failure("model.llama-driver.api-key-cleanup-failed", true))?;
+        }
         let elapsed = started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64;
         Ok((loaded.profile_id, elapsed))
     }
@@ -477,6 +545,12 @@ impl Drop for LlamaServerDriver {
         }
         if self.loaded.is_some() && self.config.socket_path.exists() {
             let _ = fs::remove_file(&self.config.socket_path);
+        }
+        if self.loaded.is_some()
+            && let Ok(path) = api_key_path(&self.config.socket_path)
+            && path.exists()
+        {
+            let _ = fs::remove_file(path);
         }
     }
 }
@@ -519,7 +593,8 @@ impl NativeModelDriver for LlamaServerDriver {
             .parent()
             .ok_or_else(|| failure("model.llama-driver.socket-parent-invalid", false))?;
         exact_directory(socket_parent, 0o700)?;
-        if self.config.socket_path.exists() {
+        let api_key_path = api_key_path(&self.config.socket_path)?;
+        if self.config.socket_path.exists() || api_key_path.exists() {
             return Err(failure("model.llama-driver.socket-exists", false));
         }
         self.verify_sandbox_dependencies()?;
@@ -533,6 +608,7 @@ impl NativeModelDriver for LlamaServerDriver {
             profile,
             &self.config.launch,
         );
+        let api_key = create_api_key(&api_key_path)?;
         let launch_configuration_sha256 = sha256(
             serde_json::to_string(&effective_launch)
                 .map_err(|_| failure("model.llama-driver.configuration-invalid", false))?
@@ -552,9 +628,13 @@ impl NativeModelDriver for LlamaServerDriver {
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null());
-        let child = command
-            .spawn()
-            .map_err(|_| failure("model.llama-driver.process-start-failed", true))?;
+        let child = match command.spawn() {
+            Ok(child) => child,
+            Err(_) => {
+                let _ = fs::remove_file(&api_key_path);
+                return Err(failure("model.llama-driver.process-start-failed", true));
+            }
+        };
         self.loaded = Some(LoadedRuntime {
             profile_id: profile.profile_id.clone(),
             manifest_sha256: profile.manifest_sha256.clone(),
@@ -571,6 +651,7 @@ impl NativeModelDriver for LlamaServerDriver {
             token_counter_sha256: profile.context.token_counter_sha256.clone(),
             decoding: profile.decoding.clone(),
             launch_arguments: effective_launch,
+            api_key,
             child,
             runtime_pid: 0,
             loaded_at: Instant::now(),
@@ -800,6 +881,7 @@ impl NativeModelDriver for LlamaServerDriver {
                 rendered_prompt_tokens,
                 request,
                 decoding: &loaded.decoding,
+                family_codec_owns_response: loaded.reasoning_supported,
                 cancellation,
                 stream_id: &stream_id,
             },
@@ -890,6 +972,8 @@ fn launch_arguments(
         profile.profile_id.as_str().to_owned(),
         "--host".to_owned(),
         socket.to_owned(),
+        "--api-key-file".to_owned(),
+        GUEST_API_KEY_PATH.to_owned(),
         "--ctx-size".to_owned(),
         launch.context_tokens.to_string(),
         "--parallel".to_owned(),
@@ -1031,6 +1115,7 @@ struct CompletionInvocation<'a> {
     rendered_prompt_tokens: u32,
     request: &'a ModelRunRequest,
     decoding: &'a DecodingProfile,
+    family_codec_owns_response: bool,
     cancellation: Option<&'a dyn ModelCancellationProbe>,
     stream_id: &'a ModelStreamId,
 }
@@ -1068,11 +1153,15 @@ struct ServingProperties {
 
 struct UnixHttpClient {
     socket_path: PathBuf,
+    api_key: Zeroizing<String>,
 }
 
 impl UnixHttpClient {
-    const fn new(socket_path: PathBuf) -> Self {
-        Self { socket_path }
+    fn new(socket_path: PathBuf, api_key: String) -> Self {
+        Self {
+            socket_path,
+            api_key: Zeroizing::new(api_key),
+        }
     }
 
     fn health(&self) -> Result<(), ModelRuntimeFailure> {
@@ -1095,7 +1184,9 @@ impl UnixHttpClient {
             .map_err(|_| failure("model.llama-driver.context-not-utf8", false))?;
         let body = serde_json::to_vec(&json!({
             "content": content,
-            "add_special": false,
+            // Match raw completion evaluation and the accepted preparation campaign. Muse adds
+            // its BOS token through this tokenizer option; GPT-OSS has no additional BOS here.
+            "add_special": true,
             "parse_special": true,
             "with_pieces": false
         }))
@@ -1126,6 +1217,7 @@ impl UnixHttpClient {
             rendered_prompt_tokens,
             request,
             decoding,
+            family_codec_owns_response,
             cancellation,
             stream_id,
         } = invocation;
@@ -1149,7 +1241,13 @@ impl UnixHttpClient {
             "id_slot": 0
         }))
         .map_err(|_| failure("model.llama-driver.completion-request-invalid", false))?;
-        let mut state = SseCompletionState::new(request, stream_id, rendered_prompt_tokens, sink);
+        let mut state = SseCompletionState::new(
+            request,
+            stream_id,
+            rendered_prompt_tokens,
+            family_codec_owns_response,
+            sink,
+        );
         if cancellation_requested(cancellation, request)? {
             return state.interrupted(ModelRunTerminalState::Cancelled);
         }
@@ -1164,7 +1262,8 @@ impl UnixHttpClient {
             })
             .map_err(|_| failure("model.llama-driver.socket-timeout-failed", true))?;
         let header = format!(
-            "POST /completion HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nConnection: close\r\nContent-Length: {}\r\n\r\n",
+            "POST /completion HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer {}\r\nContent-Type: application/json\r\nConnection: close\r\nContent-Length: {}\r\n\r\n",
+            self.api_key.as_str(),
             body.len()
         );
         stream
@@ -1208,9 +1307,10 @@ impl UnixHttpClient {
             .map_err(|_| failure("model.llama-driver.socket-timeout-failed", true))?;
         let payload = body.unwrap_or_default();
         let header = format!(
-            "{} {} HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nConnection: close\r\nContent-Length: {}\r\n\r\n",
+            "{} {} HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer {}\r\nContent-Type: application/json\r\nConnection: close\r\nContent-Length: {}\r\n\r\n",
             endpoint.method(),
             endpoint.path(),
+            self.api_key.as_str(),
             payload.len()
         );
         stream
@@ -1369,6 +1469,7 @@ struct SseCompletionState<'a> {
     bytes: Vec<u8>,
     tokens: u32,
     rendered_prompt_tokens: u32,
+    family_codec_owns_response: bool,
     fragments: u32,
     stop_seen: bool,
     done_seen: bool,
@@ -1383,6 +1484,7 @@ impl<'a> SseCompletionState<'a> {
         request: &ModelRunRequest,
         stream_id: &ModelStreamId,
         rendered_prompt_tokens: u32,
+        family_codec_owns_response: bool,
         sink: &'a mut dyn ModelStreamSink,
     ) -> Self {
         Self {
@@ -1393,6 +1495,7 @@ impl<'a> SseCompletionState<'a> {
             bytes: Vec::new(),
             tokens: 0,
             rendered_prompt_tokens,
+            family_codec_owns_response,
             fragments: 0,
             stop_seen: false,
             done_seen: false,
@@ -1488,7 +1591,11 @@ impl<'a> SseCompletionState<'a> {
                     _ => ModelFinishReason::Unknown,
                 }
             });
-            self.cached_input_tokens = cached;
+            // The raw completion endpoint's `tokens_cached` is current slot KV occupancy and
+            // includes generated tokens. This launch fixes `cache_prompt=false` and
+            // `--no-cache-prompt`, so reused prompt tokens are exactly zero once the separately
+            // reported evaluated prompt count matches the trusted tokenizer preflight.
+            self.cached_input_tokens = cached.map(|_| 0);
             self.evaluated_input_tokens = evaluated;
             let evaluated_matches = evaluated.is_some_and(|evaluated| {
                 if truncated == Some(true) {
@@ -1499,17 +1606,29 @@ impl<'a> SseCompletionState<'a> {
             });
             let usage_matches = predicted == Some(self.tokens)
                 && evaluated_matches
-                && cached
-                    .zip(evaluated)
-                    .is_some_and(|(cached, evaluated)| cached <= evaluated)
+                && cached.is_some()
                 && truncated.is_some()
                 && stop_type.is_some();
             if !usage_matches {
+                let contradiction = if predicted != Some(self.tokens) {
+                    "model.llama-driver.completion-predicted-token-contradiction"
+                } else if !evaluated_matches {
+                    "model.llama-driver.completion-evaluated-token-contradiction"
+                } else {
+                    "model.llama-driver.completion-usage-fields-missing"
+                };
+                eprintln!(
+                    "{contradiction}:predicted={}:streamed={}:evaluated={}:preflight={}:cached={}:truncated={}:stop_type={}",
+                    optional_u32(predicted),
+                    self.tokens,
+                    optional_u32(evaluated),
+                    self.rendered_prompt_tokens,
+                    optional_u32(cached),
+                    optional_bool(truncated),
+                    stop_type.unwrap_or("missing")
+                );
                 self.finish_reason = Some(ModelFinishReason::Unknown);
-                self.terminal_failure = Some(failure(
-                    "model.llama-driver.completion-usage-contradiction",
-                    false,
-                ));
+                self.terminal_failure = Some(failure(contradiction, false));
             } else if self.finish_reason == Some(ModelFinishReason::Unknown) {
                 self.terminal_failure =
                     Some(failure("model.llama-driver.sse-stop-type-unknown", false));
@@ -1631,6 +1750,9 @@ impl<'a> SseCompletionState<'a> {
                 .copied()
                 .find(|byte| !byte.is_ascii_whitespace())
             {
+                Some(_) if self.family_codec_owns_response => {
+                    (ModelRunTerminalState::Proposed, None)
+                }
                 Some(b'{') | Some(b'[') => (ModelRunTerminalState::Proposed, None),
                 _ if plain_text(&self.bytes) => (ModelRunTerminalState::AdvisoryText, None),
                 _ => (
@@ -1657,6 +1779,18 @@ fn u32_field(value: &Value, name: &str) -> Option<u32> {
         .get(name)
         .and_then(Value::as_u64)
         .and_then(|value| u32::try_from(value).ok())
+}
+
+fn optional_u32(value: Option<u32>) -> String {
+    value.map_or_else(|| "missing".to_owned(), |value| value.to_string())
+}
+
+fn optional_bool(value: Option<bool>) -> &'static str {
+    match value {
+        Some(true) => "true",
+        Some(false) => "false",
+        None => "missing",
+    }
 }
 
 fn next_sse_event(bytes: &[u8]) -> Option<(usize, usize)> {
@@ -2184,11 +2318,12 @@ mod tests {
     use serde_json::{Value, json};
 
     use super::{
-        CONTRACT_SCHEMA_VERSION, CompletionInvocation, Endpoint, FileSnapshot, GUEST_MODEL_PATH,
-        GUEST_RUNTIME_ROOT, GUEST_SOCKET_PATH, GUEST_SOCKET_ROOT, LlamaServerLaunchProfile,
-        SANDBOX_DEVICE_PATHS, SANDBOX_READ_ONLY_DIRECTORIES, UnixHttpClient, exact_directory,
-        launch_arguments, parse_accelerator_memory, parse_http_response, parse_serving_properties,
-        plain_text, process_start_generation, sandbox_arguments, valid_socket_path,
+        CONTRACT_SCHEMA_VERSION, CompletionInvocation, Endpoint, FileSnapshot, GUEST_API_KEY_PATH,
+        GUEST_MODEL_PATH, GUEST_RUNTIME_ROOT, GUEST_SOCKET_PATH, GUEST_SOCKET_ROOT,
+        LlamaServerLaunchProfile, SANDBOX_DEVICE_PATHS, SANDBOX_READ_ONLY_DIRECTORIES,
+        UnixHttpClient, create_api_key, exact_directory, launch_arguments,
+        parse_accelerator_memory, parse_http_response, parse_serving_properties, plain_text,
+        process_start_generation, sandbox_arguments, valid_socket_path,
     };
 
     static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
@@ -2236,7 +2371,7 @@ mod tests {
             request.truncate(count);
             request
         });
-        let client = UnixHttpClient::new(socket.clone());
+        let client = UnixHttpClient::new(socket.clone(), "test-api-key".to_owned());
         let value = operation(&client);
         let request = server.join().expect("server");
         fs::remove_file(socket).ok();
@@ -2263,7 +2398,7 @@ mod tests {
             request.truncate(count);
             request
         });
-        let client = UnixHttpClient::new(socket.clone());
+        let client = UnixHttpClient::new(socket.clone(), "test-api-key".to_owned());
         let value = operation(&client);
         let request = server.join().expect("server");
         fs::remove_file(socket).ok();
@@ -2341,6 +2476,7 @@ mod tests {
             rendered_prompt_tokens: 2,
             request,
             decoding,
+            family_codec_owns_response: false,
             cancellation,
             stream_id,
         }
@@ -2405,6 +2541,11 @@ mod tests {
             client.health().expect("health");
         });
         assert!(request.starts_with(b"GET /health HTTP/1.1\r\n"));
+        assert!(
+            request
+                .windows(b"Authorization: Bearer test-api-key\r\n".len())
+                .any(|window| window == b"Authorization: Bearer test-api-key\r\n")
+        );
         let (value, request) = exchange(response(json!({"tokens": [1, 2, 3]})), |client| {
             client
                 .request(Endpoint::Tokenize, Some(b"{}"), 4096, 1000)
@@ -2428,6 +2569,40 @@ mod tests {
         assert!(request.starts_with(b"GET /props HTTP/1.1\r\n"));
         assert_eq!(properties.context_capacity_tokens, 8192);
         assert_eq!(properties.parallel_slots, 1);
+    }
+
+    #[test]
+    fn ephemeral_api_key_is_private_random_and_never_part_of_launch_arguments() {
+        let directory = TestDirectory::new();
+        let first_path = directory.0.join("first.key");
+        let second_path = directory.0.join("second.key");
+        let first = create_api_key(&first_path).expect("first key");
+        let second = create_api_key(&second_path).expect("second key");
+        assert_eq!(first.len(), 64);
+        assert!(first.bytes().all(|byte| byte.is_ascii_hexdigit()));
+        assert_ne!(*first, *second);
+        assert_eq!(
+            fs::metadata(&first_path).unwrap().permissions().mode() & 0o777,
+            0o600
+        );
+        assert_eq!(
+            fs::read_to_string(&first_path).unwrap(),
+            format!("{}\n", first.as_str())
+        );
+
+        let arguments = launch_arguments(
+            GUEST_MODEL_PATH,
+            GUEST_SOCKET_PATH,
+            &exact_profile(),
+            &LlamaServerLaunchProfile::new(8_192, 4, 256, 128, "f16", "f16", None)
+                .expect("launch profile"),
+        );
+        let key_option = arguments
+            .iter()
+            .position(|argument| argument == "--api-key-file")
+            .expect("API key file option");
+        assert_eq!(arguments[key_option + 1], GUEST_API_KEY_PATH);
+        assert!(!arguments.iter().any(|argument| argument == first.as_str()));
     }
 
     #[test]
@@ -2763,6 +2938,30 @@ mod tests {
             ModelFinishReason::OutputTokenLimit
         );
         assert!(completion.failure.is_some());
+
+        let reasoning_envelope = [
+            sse(
+                json!({"content": "<|channel|>analysis<|message|>bounded<|end|><|start|>assistant<|channel|>final<|message|>{}<|return|>", "tokens": [1], "stop": false}),
+            ),
+            sse(
+                json!({"content": "", "tokens": [], "stop": true, "stop_type": "eos", "truncated": false, "tokens_predicted": 1, "tokens_evaluated": 2, "tokens_cached": 3}),
+            ),
+        ];
+        let ((completion, _), _) = exchange(streaming_response(&reasoning_envelope), |client| {
+            let request = run_request();
+            let stream_id = ModelStreamId::from_raw("stream-reasoning");
+            let mut sink = RecordingSink::default();
+            let mut invocation = completion_invocation(&request, &decoding, None, &stream_id);
+            invocation.family_codec_owns_response = true;
+            let completion = client
+                .completion_stream(invocation, &mut sink)
+                .expect("family-owned reasoning envelope");
+            (completion, sink.fragments)
+        });
+        assert_eq!(completion.terminal_state, ModelRunTerminalState::Proposed);
+        assert!(completion.failure.is_none());
+        assert_eq!(completion.cached_input_tokens, Some(0));
+        assert_eq!(completion.evaluated_input_tokens, Some(2));
     }
 
     #[test]

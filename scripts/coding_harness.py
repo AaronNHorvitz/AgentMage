@@ -1,11 +1,12 @@
 """Operate the explicit AgentMage disposable coding-development harness.
 
-This wrapper creates only synthetic private repositories. It does not activate a production
-model, relax AgentMage policy, or turn the scripted fixture profile into a qualified model.
+This wrapper creates only synthetic private repositories. Candidate selection is evaluation-only;
+it does not activate a production model, relax AgentMage policy, or claim qualification.
 """
 from __future__ import annotations
 
 import argparse
+import fcntl
 import json
 import os
 from pathlib import Path
@@ -23,10 +24,118 @@ MARKER = ".agentmage-development-workspace"
 RUN_RECORD = "coding-harness-run.json"
 MAX_RECORD_BYTES = 16 * 1024
 MAX_LINUX_SOCKET_PATH_BYTES = 107
+MODEL_LAB_PROFILE = ROOT / "model-profiles/development/coding-model-lab.json"
+MODEL_LAB_LOCK = Path.home() / ".local/state/agentmage-model-lab/gpu.lock"
 
 
 class HarnessError(RuntimeError):
     """One content-minimized operator error."""
+
+
+def scope_resources() -> dict[str, str]:
+    group = Path("/proc/self/cgroup").read_text(encoding="utf-8").strip().split("::", 1)[1]
+    root = Path("/sys/fs/cgroup") / group.lstrip("/")
+    return {
+        name: (root / name).read_text(encoding="utf-8").strip()
+        for name in ("memory.high", "memory.max", "memory.swap.max", "memory.peak", "cpu.max")
+    }
+
+
+def gpu_memory() -> tuple[int, int]:
+    result = subprocess.run(
+        [
+            "/usr/bin/nvidia-smi",
+            "--query-gpu=memory.used,memory.free",
+            "--format=csv,noheader,nounits",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    lines = result.stdout.strip().splitlines()
+    if len(lines) != 1:
+        raise HarnessError("coding.harness.candidate.single-gpu-required")
+    try:
+        used, free = (int(value.strip()) for value in lines[0].split(","))
+    except (TypeError, ValueError) as error:
+        raise HarnessError("coding.harness.candidate.gpu-observation-invalid") from error
+    return used, free
+
+
+class CandidateResourceGuard:
+    """Cooperatively guards one exact candidate run without touching other processes."""
+
+    def __init__(self, descriptor: int, profile: dict, resources: dict[str, str], used: int, free: int):
+        self.descriptor = descriptor
+        self.profile = profile
+        self.resources = resources
+        self.baseline_used_mib = used
+        self.baseline_free_mib = free
+        self.peak_total_gpu_used_mib_sampled = used
+        self.error: str | None = None
+
+    @classmethod
+    def acquire(cls) -> "CandidateResourceGuard":
+        profile = json.loads(MODEL_LAB_PROFILE.read_text(encoding="utf-8"))
+        if profile.get("product_enabled") is not False or profile.get("parallel_slots") != 1:
+            raise HarnessError("coding.harness.candidate.profile-denied")
+        resources = scope_resources()
+        for name, maximum in (
+            ("memory.high", 5 * 1024**3),
+            ("memory.max", 6 * 1024**3),
+            ("memory.swap.max", 512 * 1024**2),
+        ):
+            if resources[name] == "max" or int(resources[name]) > maximum:
+                raise HarnessError("coding.harness.candidate.scope-denied")
+        quota, period = resources["cpu.max"].split()
+        if quota == "max" or int(quota) > 2 * int(period):
+            raise HarnessError("coding.harness.candidate.scope-denied")
+        memory = {
+            name: value
+            for name, value in (
+                line.split(":", 1) for line in Path("/proc/meminfo").read_text().splitlines()
+            )
+        }
+        if int(memory["MemAvailable"].split()[0]) < profile["minimum_available_ram_gib"] * 1024**2:
+            raise HarnessError("coding.harness.candidate.ram-contended")
+        private_directory(MODEL_LAB_LOCK.parent)
+        descriptor = os.open(MODEL_LAB_LOCK, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+        try:
+            info = os.fstat(descriptor)
+            if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
+                raise HarnessError("coding.harness.candidate.gpu-lock-denied")
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            used, free = gpu_memory()
+            if free < profile["minimum_free_vram_mib"]:
+                raise HarnessError("coding.harness.candidate.gpu-contended")
+            return cls(descriptor, profile, resources, used, free)
+        except BaseException:
+            os.close(descriptor)
+            raise
+
+    def sample(self) -> bool:
+        try:
+            used, _ = gpu_memory()
+            self.peak_total_gpu_used_mib_sampled = max(self.peak_total_gpu_used_mib_sampled, used)
+            if used > self.profile["maximum_total_vram_used_mib"]:
+                self.error = "coding.harness.candidate.gpu-headroom-exceeded"
+        except (HarnessError, OSError, subprocess.SubprocessError):
+            self.error = "coding.harness.candidate.gpu-observation-failed"
+        return self.error is None
+
+    def report(self) -> dict:
+        return {
+            "baseline_gpu_used_mib": self.baseline_used_mib,
+            "baseline_gpu_free_mib": self.baseline_free_mib,
+            "peak_total_gpu_used_mib_sampled": self.peak_total_gpu_used_mib_sampled,
+            "resource_guard_error": self.error,
+            "scope_resources": scope_resources(),
+        }
+
+    def close(self) -> None:
+        fcntl.flock(self.descriptor, fcntl.LOCK_UN)
+        os.close(self.descriptor)
 
 
 def private_directory(path: Path) -> Path:
@@ -275,6 +384,7 @@ def start(
     replay_approval_probe: bool = False,
     expired_cursor_probe: bool = False,
     approval_delay_ms: int = 0,
+    model: str = "scripted",
 ) -> int:
     base = base.resolve(strict=True)
     state, disposable, workspace = paths(base)
@@ -290,6 +400,7 @@ def start(
         str(executable), "--json", "code", "--development",
         "--state-root", str(state), "--disposable-root", str(disposable),
         "--workspace-root", str(workspace), "--scenario", scenario,
+        "--model", model,
         "--objective", objective,
     ]
     if approve:
@@ -302,49 +413,106 @@ def start(
         command.append("--expired-cursor-probe")
     if approval_delay_ms:
         command.extend(("--approval-delay-ms", str(approval_delay_ms)))
+    resource_guard = None
     stdout_target = None
     stderr_target = None
     opened = []
-    if log_dir is not None:
-        log_dir = log_dir.resolve(strict=False)
-        if log_dir.exists() or log_dir.is_symlink():
-            raise HarnessError("coding.harness.log-target-exists")
-        private_directory(log_dir)
-        stdout_target = os.fdopen(
-            os.open(log_dir / "stdout.jsonl", os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600),
-            "wb",
-        )
-        stderr_target = os.fdopen(
-            os.open(log_dir / "stderr.log", os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600),
-            "wb",
-        )
-        opened.extend((stdout_target, stderr_target))
-    process = subprocess.Popen(command, stdin=None, stdout=stdout_target, stderr=stderr_target)
+    process = None
     record_path = state / RUN_RECORD
-    private_file(record_path, json.dumps({
-        "pid": process.pid, "base": str(base), "binary": str(executable),
-        "started_at_epoch_ms": time.time_ns() // 1_000_000,
-    }, sort_keys=True) + "\n")
     try:
-        exit_code = process.wait()
         if log_dir is not None:
-            private_file(log_dir / "result.json", json.dumps({
+            log_dir = log_dir.resolve(strict=False)
+            if log_dir.exists() or log_dir.is_symlink():
+                raise HarnessError("coding.harness.log-target-exists")
+            private_directory(log_dir)
+            stdout_target = os.fdopen(
+                os.open(
+                    log_dir / "stdout.jsonl",
+                    os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                    0o600,
+                ),
+                "wb",
+            )
+            opened.append(stdout_target)
+            stderr_target = os.fdopen(
+                os.open(
+                    log_dir / "stderr.log",
+                    os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                    0o600,
+                ),
+                "wb",
+            )
+            opened.append(stderr_target)
+        resource_guard = CandidateResourceGuard.acquire() if model != "scripted" else None
+        process = subprocess.Popen(command, stdin=None, stdout=stdout_target, stderr=stderr_target)
+        private_file(
+            record_path,
+            json.dumps(
+                {
+                    "pid": process.pid,
+                    "base": str(base),
+                    "binary": str(executable),
+                    "started_at_epoch_ms": time.time_ns() // 1_000_000,
+                },
+                sort_keys=True,
+            )
+            + "\n",
+        )
+        if resource_guard is None:
+            exit_code = process.wait()
+        else:
+            while process.poll() is None:
+                time.sleep(1)
+                if resource_guard.sample():
+                    continue
+                process.send_signal(signal.SIGINT)
+                try:
+                    exit_code = process.wait(timeout=30)
+                except subprocess.TimeoutExpired:
+                    process.terminate()
+                    try:
+                        exit_code = process.wait(timeout=10)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        exit_code = process.wait(timeout=10)
+                break
+            else:
+                exit_code = process.returncode
+        if log_dir is not None:
+            result = {
                 "schema_version": 1, "exit_code": exit_code, "scenario": scenario,
+                "model": model,
                 "objective": objective, "approved_for_this_run": approve,
                 "stale_approval_probe": stale_approval_probe,
                 "replay_approval_probe": replay_approval_probe,
                 "expired_cursor_probe": expired_cursor_probe,
                 "approval_delay_ms": approval_delay_ms,
-            }, sort_keys=True) + "\n")
+            }
+            if resource_guard is not None:
+                result["candidate_resources"] = resource_guard.report()
+            private_file(log_dir / "result.json", json.dumps(result, sort_keys=True) + "\n")
             print(json.dumps({"exit_code": exit_code, "log_dir": str(log_dir)}, sort_keys=True))
         return exit_code
     finally:
+        if process is not None and process.poll() is None:
+            process.send_signal(signal.SIGINT)
+            try:
+                process.wait(timeout=30)
+            except subprocess.TimeoutExpired:
+                process.terminate()
+                try:
+                    process.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait(timeout=10)
         for target in opened:
             target.close()
         try:
             record_path.unlink()
         except FileNotFoundError:
             pass
+        if resource_guard is not None:
+            resource_guard.close()
 
 
 def stop(base: Path) -> None:
@@ -392,6 +560,7 @@ def parser() -> argparse.ArgumentParser:
         required=True,
     )
     start_command.add_argument("--objective", required=True)
+    start_command.add_argument("--model", choices=("scripted", "muse", "gpt-oss"), default="scripted")
     start_command.add_argument("--approve-this-run", action="store_true")
     start_command.add_argument("--stale-approval-probe", action="store_true")
     start_command.add_argument("--replay-approval-probe", action="store_true")
@@ -417,7 +586,7 @@ def main() -> int:
             arguments.root, arguments.scenario, arguments.objective,
             arguments.approve_this_run, arguments.stale_approval_probe, arguments.log_dir,
             arguments.replay_approval_probe, arguments.expired_cursor_probe,
-            arguments.approval_delay_ms,
+            arguments.approval_delay_ms, arguments.model,
         )
     except (HarnessError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as error:
         print(str(error), file=sys.stderr)
