@@ -344,6 +344,10 @@ def build_report(revision: str) -> dict[str, Any]:
         ]
     )
     adapter = ROOT / ADAPTER_BINARY
+    # Cargo applies the invoking process umask to a newly linked binary.  The
+    # package boundary is fixed at 0755, so normalize the candidate to the same
+    # package-owned mode before recording and exercising its identity.
+    adapter.chmod(0o755)
     adapter_metadata = adapter.stat()
     if not stat.S_ISREG(adapter_metadata.st_mode):
         raise LinuxInferenceBoundaryEvidenceError("adapter build output is not regular")
