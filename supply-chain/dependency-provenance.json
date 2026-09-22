@@ -127,7 +127,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "a99637a9f14488b48b5f315c59f93316477f600b1c200d1a96e18d9d5a90c6b2"
+          "content": "5a8834da77a85b544edff730d1bf2622f2dc6e67f992941f6a56f0eff3934760"
         }
       ],
       "integrity": null,
@@ -147,7 +147,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "ac505f7f6793a1caf19cd26f84833943d56ef8d68acf1a3f77a1ed324292ad85"
+          "content": "fa69bb0f9cac76d5c745b0d672770a22997f27756659b4c85a3cd31f20ef6139"
         }
       ],
       "integrity": null,
@@ -167,7 +167,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "857efd98f64485a99f19f59bd59c3dd1005a6a5242ac62b184f685cd90f29091"
+          "content": "dbcbd0672cc10f72d534e363bff1869bb4c081ada613b523d8d6bbe6836ad575"
         }
       ],
       "integrity": null,
@@ -187,7 +187,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "a81ddf8429e6196cddcee9cac53c932d807cebd02cfcc39be73262c1d194de30"
+          "content": "a00d3e952c6705e9d53e8af3f36bc8e8324327c68c21830131a573012b455d82"
         }
       ],
       "integrity": null,
@@ -207,7 +207,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "7e84b51eb0f369f383a8e0488e354edc89d461889b81562c401ed7d7a0ccb144"
+          "content": "672ad9b138371e736ce271e0668d1a1c26759f47bde603442030aeca7871f1a0"
         }
       ],
       "integrity": null,
@@ -1799,6 +1799,46 @@
         "url": "https://crates.io/crates/shlex/2.0.1"
       },
       "version": "2.0.1"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:signal-hook-registry@1.4.8",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "c4db69cba1110affc0e9f7bcd48bbf87b3f4fc7c61fc9155afd4c469eb3d6c1b"
+        }
+      ],
+      "integrity": "sha256:c4db69cba1110affc0e9f7bcd48bbf87b3f4fc7c61fc9155afd4c469eb3d6c1b",
+      "license": "MIT OR Apache-2.0",
+      "name": "signal-hook-registry",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/signal-hook-registry/1.4.8"
+      },
+      "version": "1.4.8"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:signal-hook@0.3.18",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "d881a16cf4426aa584979d30bd82cb33429027e42122b169753d6ef1085ed6e2"
+        }
+      ],
+      "integrity": "sha256:d881a16cf4426aa584979d30bd82cb33429027e42122b169753d6ef1085ed6e2",
+      "license": "Apache-2.0/MIT",
+      "name": "signal-hook",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/signal-hook/0.3.18"
+      },
+      "version": "0.3.18"
     },
     {
       "classification": "production",
@@ -10032,13 +10072,15 @@
         "cargo:agentmage-capability-repository-map@0.0.0",
         "cargo:agentmage-kernel-contracts@0.0.0",
         "cargo:agentmage-kernel-engine@0.0.0",
+        "cargo:agentmage-platform-linux-inference@0.0.0",
         "cargo:agentmage-platform-linux@0.0.0",
         "cargo:ed25519-dalek@3.0.0",
         "cargo:lopdf@0.44.0",
         "cargo:rustix@1.1.4",
         "cargo:serde@1.0.229",
         "cargo:serde_json@1.0.151",
-        "cargo:sha2@0.11.0"
+        "cargo:sha2@0.11.0",
+        "cargo:signal-hook@0.3.18"
       ]
     },
     {
@@ -10609,6 +10651,20 @@
     {
       "component_id": "cargo:shlex@2.0.1",
       "depends_on": []
+    },
+    {
+      "component_id": "cargo:signal-hook-registry@1.4.8",
+      "depends_on": [
+        "cargo:errno@0.3.14",
+        "cargo:libc@0.2.189"
+      ]
+    },
+    {
+      "component_id": "cargo:signal-hook@0.3.18",
+      "depends_on": [
+        "cargo:libc@0.2.189",
+        "cargo:signal-hook-registry@1.4.8"
+      ]
     },
     {
       "component_id": "cargo:signature@3.0.0",
@@ -13113,15 +13169,15 @@
   ],
   "document_id": "agentmage-dependency-provenance",
   "generated_from": {
-    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
-    "Cargo.toml": "5afd98c00697e9c6974495e4a9568ae42f46ec0acb1eb603641b1ec7bb5f5ea1",
+    "Cargo.lock": "7c2c11b7d4955e51f451979d05012ccec8859b82b8d87b3f9c224488e727b498",
+    "Cargo.toml": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc",
     "package-lock.json": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
     "package.json": "5c25127ac887fe48cbb8a87da6dac32d6c2e2c77efacf28ee02f0411c4f7a74c",
     "platforms/macos/Package.resolved": "5b5e7b222df13b8f50caf4f16a31cddc336aaffca1859dae1513e29eeeb0b71d",
     "platforms/macos/Package.swift": "180ad855bcc16e5c395ed3490b8f1d7be5fa552e20ecaac551220cdfe1d72948",
     "rust-toolchain.toml": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310",
     "shells/vscode/package.json": "62533387ddcdd384963564af25c7675dc2991fd47e1b7c0a068252e67251112e",
-    "supply-chain/cargo-external-catalog.json": "73339375071827cc539fc7a6753faae9b920a7e313da52131b0f597cdf9d8adc"
+    "supply-chain/cargo-external-catalog.json": "c9e4d98123be1059994e54f34f6ffd59c79a2b0fa3a84885c41a815b0ac81c07"
   },
   "platform_status": {
     "macos": "blocked-macos",

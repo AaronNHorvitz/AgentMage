@@ -186,7 +186,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "a99637a9f14488b48b5f315c59f93316477f600b1c200d1a96e18d9d5a90c6b2"
+          "content": "5a8834da77a85b544edff730d1bf2622f2dc6e67f992941f6a56f0eff3934760"
         }
       ],
       "licenses": [
@@ -217,7 +217,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "ac505f7f6793a1caf19cd26f84833943d56ef8d68acf1a3f77a1ed324292ad85"
+          "content": "fa69bb0f9cac76d5c745b0d672770a22997f27756659b4c85a3cd31f20ef6139"
         }
       ],
       "licenses": [
@@ -248,7 +248,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "857efd98f64485a99f19f59bd59c3dd1005a6a5242ac62b184f685cd90f29091"
+          "content": "dbcbd0672cc10f72d534e363bff1869bb4c081ada613b523d8d6bbe6836ad575"
         }
       ],
       "licenses": [
@@ -279,7 +279,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "a81ddf8429e6196cddcee9cac53c932d807cebd02cfcc39be73262c1d194de30"
+          "content": "a00d3e952c6705e9d53e8af3f36bc8e8324327c68c21830131a573012b455d82"
         }
       ],
       "licenses": [
@@ -310,7 +310,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "7e84b51eb0f369f383a8e0488e354edc89d461889b81562c401ed7d7a0ccb144"
+          "content": "672ad9b138371e736ce271e0668d1a1c26759f47bde603442030aeca7871f1a0"
         }
       ],
       "licenses": [
@@ -2646,6 +2646,64 @@
       "scope": "required",
       "type": "library",
       "version": "2.0.1"
+    },
+    {
+      "bom-ref": "cargo:signal-hook-registry@1.4.8",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "c4db69cba1110affc0e9f7bcd48bbf87b3f4fc7c61fc9155afd4c469eb3d6c1b"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "signal-hook-registry",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/signal-hook-registry@1.4.8",
+      "scope": "required",
+      "type": "library",
+      "version": "1.4.8"
+    },
+    {
+      "bom-ref": "cargo:signal-hook@0.3.18",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "d881a16cf4426aa584979d30bd82cb33429027e42122b169753d6ef1085ed6e2"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "Apache-2.0/MIT"
+        }
+      ],
+      "name": "signal-hook",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/signal-hook@0.3.18",
+      "scope": "required",
+      "type": "library",
+      "version": "0.3.18"
     },
     {
       "bom-ref": "cargo:signature@3.0.0",
@@ -15315,13 +15373,15 @@
         "cargo:agentmage-capability-repository-map@0.0.0",
         "cargo:agentmage-kernel-contracts@0.0.0",
         "cargo:agentmage-kernel-engine@0.0.0",
+        "cargo:agentmage-platform-linux-inference@0.0.0",
         "cargo:agentmage-platform-linux@0.0.0",
         "cargo:ed25519-dalek@3.0.0",
         "cargo:lopdf@0.44.0",
         "cargo:rustix@1.1.4",
         "cargo:serde@1.0.229",
         "cargo:serde_json@1.0.151",
-        "cargo:sha2@0.11.0"
+        "cargo:sha2@0.11.0",
+        "cargo:signal-hook@0.3.18"
       ],
       "ref": "cargo:agentmage-host@0.0.0"
     },
@@ -15893,6 +15953,20 @@
     {
       "dependsOn": [],
       "ref": "cargo:shlex@2.0.1"
+    },
+    {
+      "dependsOn": [
+        "cargo:errno@0.3.14",
+        "cargo:libc@0.2.189"
+      ],
+      "ref": "cargo:signal-hook-registry@1.4.8"
+    },
+    {
+      "dependsOn": [
+        "cargo:libc@0.2.189",
+        "cargo:signal-hook-registry@1.4.8"
+      ],
+      "ref": "cargo:signal-hook@0.3.18"
     },
     {
       "dependsOn": [],
@@ -18416,7 +18490,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:d9f71adb-7909-50e4-8b7e-79c340798aa4",
+  "serialNumber": "urn:uuid:83ae1e20-6bf0-5cb5-a13c-1885c605f5c4",
   "specVersion": "1.6",
   "version": 1
 }
