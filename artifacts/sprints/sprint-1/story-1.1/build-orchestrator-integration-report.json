@@ -6,10 +6,10 @@
     "vsix"
   ],
   "artifact_sha256": {
-    "deb": "29d28524caf020e9d4877fcb9c97bd76315c717ff92fe65ccfd5e73d673aabe3",
-    "manifest": "7a630541da423eeb2ca4e664c3e414d888edda0de1eca20846584a2af155dfd7",
-    "rpm": "34ae5049c4192a1ff3592d08b316e66ef57bda38e0dc8b402a0dc7aaa3de3f06",
-    "vsix": "4e733ac4de493b3fce014531fea9c7d2e83d638129188264c25423b8bbd1855d"
+    "deb": "93ec7beea00c559c7bb22cd86775fa2f2ef23228dbb792120d4766c8f3494e0b",
+    "manifest": "2b3afb900a932ff3c65474c79e18bf152fd1b64889a9530f778d48391ee8b0b5",
+    "rpm": "153db369c4584289388e3baf484c997c061849a03dc2bc7f7b924c47f9585586",
+    "vsix": "e3f6e69e241a6a140844597c51824b6a81bf850f0526b95378717abedef7c596"
   },
   "checks": {
     "bundle_outputs_byte_identical": "pass",
@@ -61,11 +61,11 @@
     },
     {
       "path": "scripts/package_lifecycle.py",
-      "sha256": "0e55defb25dbe5af867b772c883e7f25f82240c8a40a6fddef1ebfae1745438f"
+      "sha256": "37aa705fc4e5134bd22ea6fb2e858d9933f7b4839555c89da4ff1cb1364b24c7"
     },
     {
       "path": "shells/host/src/cli.rs",
-      "sha256": "ff5bce423a9478a66941ffa4875ff6ef41dcd66efb33fb775b83ae6793135aa2"
+      "sha256": "b9cad90be87c96f6d490a1a2c24b8d5d602468940500bd74205fa0dfbd20b82e"
     },
     {
       "path": "packaging/linux/debian-release-control.in",

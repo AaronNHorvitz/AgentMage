@@ -50,7 +50,7 @@
     },
     {
       "path": "architecture/dependency-rules.json",
-      "sha256": "21235f069ba67f3eb1412a379197e336f7bd71490eb4789b96fb224bfb6b1040"
+      "sha256": "b8d7045ff966e7d551ac50e5bfb39cc613d81997009e2505121a38da840d45d1"
     },
     {
       "path": "architecture/module-inventory.json",
@@ -86,7 +86,7 @@
     },
     {
       "path": "scripts/dependency_rules.py",
-      "sha256": "bd2e2da00089b5ea3c550dd067090926b3795b037814ad7dfe341bf31e2eceba"
+      "sha256": "a18ba41ff7f07cb74624a4a041427a4e1cafd4b1966d5f85cb816e57a6d6f937"
     },
     {
       "path": "scripts/runtime_ownership.py",
