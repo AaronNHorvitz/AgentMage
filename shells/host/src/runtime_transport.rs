@@ -55,6 +55,8 @@ pub enum RuntimeTransportError {
     RunUnavailable,
     /// The supplied event cursor does not identify the exact current stream.
     EventCursorDenied,
+    /// The supplied exact cursor is older than the live service replay window.
+    EventCursorExpired,
     /// The approval response did not match the one pending challenge.
     ApprovalDenied,
     /// The reusable runtime failed closed.
@@ -73,6 +75,7 @@ impl RuntimeTransportError {
             Self::RequestDenied => "host.runtime.request_denied",
             Self::RunUnavailable => "host.runtime.run_unavailable",
             Self::EventCursorDenied => "host.runtime.event_cursor_denied",
+            Self::EventCursorExpired => "host.runtime.event_cursor_expired",
             Self::ApprovalDenied => "host.runtime.approval_denied",
             Self::RuntimeFailed => "host.runtime.failed",
             Self::RuntimeEvidenceDenied => "host.runtime.evidence_denied",

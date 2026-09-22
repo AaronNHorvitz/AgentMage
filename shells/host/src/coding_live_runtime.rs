@@ -38,6 +38,7 @@ use crate::runtime_transport::{
 };
 
 const MAX_LIVE_RUNS: usize = 4;
+const MAX_LIVE_CURSOR_AGE_EVENTS: usize = 32;
 const CONTROL_WAIT: Duration = Duration::from_millis(25);
 const START_WAIT: Duration = Duration::from_millis(250);
 const WAIT_SLICE: Duration = Duration::from_millis(2);
@@ -326,6 +327,7 @@ impl LiveCodingSession {
     ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
         self.verify_binding(request_sha256)?;
         self.refresh(Duration::ZERO)?;
+        let _ = self.project(after_event_cursor)?;
         if let Some(response) = response {
             let challenge = self
                 .pending_approval
@@ -349,6 +351,7 @@ impl LiveCodingSession {
     ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
         self.verify_binding(request_sha256)?;
         self.refresh(Duration::ZERO)?;
+        let _ = self.project(after_event_cursor)?;
         if self.outcome.is_some() {
             return self.project(after_event_cursor);
         }
@@ -518,6 +521,9 @@ impl LiveCodingSession {
             Some(cursor) => {
                 let index = usize::try_from(cursor.sequence)
                     .map_err(|_| RuntimeTransportError::EventCursorDenied)?;
+                if index < visible_event_len.saturating_sub(MAX_LIVE_CURSOR_AGE_EVENTS) {
+                    return Err(RuntimeTransportError::EventCursorExpired);
+                }
                 if index >= visible_event_len {
                     return Err(RuntimeTransportError::EventCursorDenied);
                 }

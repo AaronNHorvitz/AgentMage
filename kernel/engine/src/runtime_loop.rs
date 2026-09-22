@@ -920,6 +920,12 @@ where
             self.start()?;
         }
         if self.pending.is_some() {
+            if let Some(signal) = observe_cancellation(cancellation)? {
+                self.cancel(signal)?;
+                return Ok(RuntimeCoordinatorStep::Complete {
+                    outcome: self.outcome.clone().expect("cancellation is terminal"),
+                });
+            }
             let Some(response) = response else {
                 return Ok(RuntimeCoordinatorStep::AwaitingApproval {
                     challenge: self
@@ -930,12 +936,6 @@ where
                         .clone(),
                 });
             };
-            if let Some(signal) = observe_cancellation(cancellation)? {
-                self.cancel(signal)?;
-                return Ok(RuntimeCoordinatorStep::Complete {
-                    outcome: self.outcome.clone().expect("cancellation is terminal"),
-                });
-            }
             self.resume_pending(response, cancellation)?;
         } else if response.is_some() {
             return Err(RuntimeLoopError::Contract(

@@ -117,10 +117,15 @@ fn run_with_child(
     let mut runtime = LinuxRuntimeIpcClient::new(session);
     if options.stale_approval_probe {
         runtime = runtime.with_stale_approval_probe();
+    } else if options.replay_approval_probe {
+        runtime = runtime.with_replayed_approval_probe();
+    } else if options.expired_cursor_probe {
+        runtime = runtime.with_expired_cursor_probe();
     }
     let mut approvals = TerminalApprovals {
         output,
         preauthorized: options.approve_this_run,
+        delay_ms: options.approval_delay_ms,
     };
     let mut sink = TerminalEventSink { output };
     let mut cancellation = InstalledSignalCancellation::install()?;
@@ -234,6 +239,7 @@ impl CodingEventSink for TerminalEventSink {
 struct TerminalApprovals {
     output: CliOutputFormat,
     preauthorized: bool,
+    delay_ms: u64,
 }
 
 impl CodingApprovalPort for TerminalApprovals {
@@ -245,6 +251,9 @@ impl CodingApprovalPort for TerminalApprovals {
             render_runtime_approval_human(challenge).map_err(|_| CodingClientError::Approval)?;
         if self.preauthorized {
             eprintln!("preauthorized_for_this_run {rendered}");
+            if self.delay_ms > 0 {
+                std::thread::sleep(std::time::Duration::from_millis(self.delay_ms));
+            }
             return Ok(RuntimeApprovalDisposition::Allow);
         }
         if self.output == CliOutputFormat::Json {

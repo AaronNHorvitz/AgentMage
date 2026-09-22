@@ -272,6 +272,9 @@ def start(
     approve: bool,
     stale_approval_probe: bool,
     log_dir: Path | None,
+    replay_approval_probe: bool = False,
+    expired_cursor_probe: bool = False,
+    approval_delay_ms: int = 0,
 ) -> int:
     base = base.resolve(strict=True)
     state, disposable, workspace = paths(base)
@@ -293,6 +296,12 @@ def start(
         command.append("--approve-this-run")
     if stale_approval_probe:
         command.append("--stale-approval-probe")
+    if replay_approval_probe:
+        command.append("--replay-approval-probe")
+    if expired_cursor_probe:
+        command.append("--expired-cursor-probe")
+    if approval_delay_ms:
+        command.extend(("--approval-delay-ms", str(approval_delay_ms)))
     stdout_target = None
     stderr_target = None
     opened = []
@@ -323,6 +332,9 @@ def start(
                 "schema_version": 1, "exit_code": exit_code, "scenario": scenario,
                 "objective": objective, "approved_for_this_run": approve,
                 "stale_approval_probe": stale_approval_probe,
+                "replay_approval_probe": replay_approval_probe,
+                "expired_cursor_probe": expired_cursor_probe,
+                "approval_delay_ms": approval_delay_ms,
             }, sort_keys=True) + "\n")
             print(json.dumps({"exit_code": exit_code, "log_dir": str(log_dir)}, sort_keys=True))
         return exit_code
@@ -349,6 +361,16 @@ def stop(base: Path) -> None:
     print("coding.harness.cancellation-requested")
 
 
+def approval_delay(value: str) -> int:
+    try:
+        delay = int(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("approval delay must be an integer") from error
+    if not 1 <= delay <= 10_000:
+        raise argparse.ArgumentTypeError("approval delay must be between 1 and 10000 milliseconds")
+    return delay
+
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(description=__doc__)
     commands = result.add_subparsers(dest="command", required=True)
@@ -372,6 +394,9 @@ def parser() -> argparse.ArgumentParser:
     start_command.add_argument("--objective", required=True)
     start_command.add_argument("--approve-this-run", action="store_true")
     start_command.add_argument("--stale-approval-probe", action="store_true")
+    start_command.add_argument("--replay-approval-probe", action="store_true")
+    start_command.add_argument("--expired-cursor-probe", action="store_true")
+    start_command.add_argument("--approval-delay-ms", type=approval_delay, default=0)
     start_command.add_argument("--log-dir", type=Path)
     return result
 
@@ -391,6 +416,8 @@ def main() -> int:
         return start(
             arguments.root, arguments.scenario, arguments.objective,
             arguments.approve_this_run, arguments.stale_approval_probe, arguments.log_dir,
+            arguments.replay_approval_probe, arguments.expired_cursor_probe,
+            arguments.approval_delay_ms,
         )
     except (HarnessError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as error:
         print(str(error), file=sys.stderr)

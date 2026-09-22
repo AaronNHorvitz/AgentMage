@@ -35,6 +35,12 @@ EXPECTED = {
 }
 CASE_ROOTS = {case: f"c{index:02d}" for index, case in enumerate(EXPECTED, start=1)}
 CASE_ROOTS["cancel"] = "c09"
+CASE_ROOTS.update({
+    "invalid-activation": "c10",
+    "replayed-approval": "c11",
+    "expired-cursor": "c12",
+    "approval-cancel-race": "c13",
+})
 
 
 def sha256(path: Path) -> str:
@@ -177,6 +183,130 @@ def run_cancel(work_root: Path, log_root: Path) -> dict:
     }
 
 
+def run_invalid_activation(work_root: Path, log_root: Path) -> dict:
+    case = "invalid-activation"
+    base = work_root / CASE_ROOTS[case]
+    log_dir = log_root / case
+    coding_harness.setup(base, "repair")
+    marker = coding_harness.paths(base)[2] / coding_harness.MARKER
+    marker.chmod(0o644)
+    exit_code = coding_harness.start(
+        base, "no-op", "Reject the invalid development activation.", True, False, log_dir,
+    )
+    stderr = (log_dir / "stderr.log").read_text(encoding="utf-8")
+    checks = {
+        "exit": exit_code == 3,
+        "activation-rejected": "coding.development.client.activation-denied\n" in stderr,
+        "filesystem": git_status(coding_harness.paths(base)[2]) == [],
+        "no-state-key": not (coding_harness.paths(base)[0] / "operational-store-development-v1.key").exists(),
+    }
+    return {
+        "case": case,
+        "scenario": "no-op",
+        "exit_code": exit_code,
+        "terminal": None,
+        "event_count": 0,
+        "worktree_status": git_status(coding_harness.paths(base)[2]),
+        "checks": checks,
+        "passed": all(checks.values()),
+        "stdout_sha256": sha256(log_dir / "stdout.jsonl"),
+        "stderr_sha256": sha256(log_dir / "stderr.log"),
+    }
+
+
+def run_transport_probe(case: str, work_root: Path, log_root: Path) -> dict:
+    base = work_root / CASE_ROOTS[case]
+    log_dir = log_root / case
+    coding_harness.setup(base, "repair")
+    replay = case == "replayed-approval"
+    expired = case == "expired-cursor"
+    exit_code = coding_harness.start(
+        base,
+        "failed-test-repair",
+        f"Reject the actual {case} probe.",
+        True,
+        False,
+        log_dir,
+        replay_approval_probe=replay,
+        expired_cursor_probe=expired,
+    )
+    stderr = (log_dir / "stderr.log").read_text(encoding="utf-8")
+    status = git_status(coding_harness.paths(base)[2])
+    expected_code = (
+        "host.runtime.approval_denied\n" if replay
+        else "host.runtime.event_cursor_expired\n"
+    )
+    checks = {
+        "exit": exit_code == 5,
+        "exact-refusal": expected_code in stderr,
+        "filesystem": status == ([] if replay else [" M src/calc.py"]),
+        "no-outcome": not any("state" in row for row in rows(log_dir)),
+    }
+    return {
+        "case": case,
+        "scenario": "failed-test-repair",
+        "exit_code": exit_code,
+        "terminal": None,
+        "event_count": len(rows(log_dir)),
+        "worktree_status": status,
+        "checks": checks,
+        "passed": all(checks.values()),
+        "stdout_sha256": sha256(log_dir / "stdout.jsonl"),
+        "stderr_sha256": sha256(log_dir / "stderr.log"),
+    }
+
+
+def run_approval_cancel_race(work_root: Path, log_root: Path) -> dict:
+    case = "approval-cancel-race"
+    base = work_root / CASE_ROOTS[case]
+    log_dir = log_root / case
+    coding_harness.setup(base, "repair")
+    command = [
+        sys.executable, str(coding_harness.ROOT / "scripts/coding_harness.py"), "start",
+        "--root", str(base), "--scenario", "failed-test-repair", "--objective",
+        "Cancel while the exact approval is displayed.", "--approve-this-run",
+        "--approval-delay-ms", "5000", "--log-dir", str(log_dir),
+    ]
+    process = subprocess.Popen(command, cwd=coding_harness.ROOT)
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline:
+        if (log_dir / "stderr.log").is_file() and "preauthorized_for_this_run " in (
+            log_dir / "stderr.log"
+        ).read_text(encoding="utf-8"):
+            coding_harness.stop(base)
+            break
+        if process.poll() is not None:
+            raise coding_harness.HarnessError("coding.acceptance.approval-ended-before-cancel")
+        time.sleep(0.05)
+    else:
+        process.terminate()
+        raise coding_harness.HarnessError("coding.acceptance.approval-cancel-timeout")
+    exit_code = process.wait(timeout=30)
+    observed_rows = rows(log_dir)
+    events = [row.get("kind", {}).get("event") for row in observed_rows[:-1]]
+    status = git_status(coding_harness.paths(base)[2])
+    checks = {
+        "exit": exit_code == 6,
+        "terminal": observed_rows[-1].get("state") == "CANCELLED",
+        "requested": "cancellation_requested" in events,
+        "observed": "cancellation_observed" in events,
+        "no-permission-decision": "permission_decided" not in events,
+        "filesystem": status == [],
+    }
+    return {
+        "case": case,
+        "scenario": "failed-test-repair",
+        "exit_code": exit_code,
+        "terminal": observed_rows[-1].get("state"),
+        "event_count": len(observed_rows) - 1,
+        "worktree_status": status,
+        "checks": checks,
+        "passed": all(checks.values()),
+        "stdout_sha256": sha256(log_dir / "stdout.jsonl"),
+        "stderr_sha256": sha256(log_dir / "stderr.log"),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--work-root", type=Path, required=True)
@@ -190,6 +320,12 @@ def main() -> int:
         coding_harness.private_directory(target)
     results = [run_case(case, work_root, log_root) for case in EXPECTED]
     results.insert(6, run_cancel(work_root, log_root))
+    results.extend([
+        run_invalid_activation(work_root, log_root),
+        run_transport_probe("replayed-approval", work_root, log_root),
+        run_transport_probe("expired-cursor", work_root, log_root),
+        run_approval_cancel_race(work_root, log_root),
+    ])
     agentmage = coding_harness.binary("agentmage")
     host = coding_harness.binary("agentmage-host")
     report = {

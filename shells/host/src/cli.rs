@@ -65,6 +65,12 @@ pub struct CodingDevelopmentCliOptions {
     pub approve_this_run: bool,
     /// Whether to send one intentionally stale response for executable rejection testing.
     pub stale_approval_probe: bool,
+    /// Whether to replay one accepted response for executable rejection testing.
+    pub replay_approval_probe: bool,
+    /// Whether to reuse one cursor after its live replay window expires.
+    pub expired_cursor_probe: bool,
+    /// Bounded delay used only to exercise cancellation while approval is displayed.
+    pub approval_delay_ms: u64,
 }
 
 /// Parsed CLI action before any transport or authority boundary.
@@ -199,6 +205,9 @@ fn parse_coding_development(
     let mut objective = None;
     let mut approve_this_run = false;
     let mut stale_approval_probe = false;
+    let mut replay_approval_probe = false;
+    let mut expired_cursor_probe = false;
+    let mut approval_delay_ms = None;
     let mut cursor = 0;
     while let Some(argument) = arguments.get(cursor) {
         let target = match argument.as_str() {
@@ -215,6 +224,26 @@ fn parse_coding_development(
             "--stale-approval-probe" if !stale_approval_probe => {
                 stale_approval_probe = true;
                 cursor += 1;
+                continue;
+            }
+            "--replay-approval-probe" if !replay_approval_probe => {
+                replay_approval_probe = true;
+                cursor += 1;
+                continue;
+            }
+            "--expired-cursor-probe" if !expired_cursor_probe => {
+                expired_cursor_probe = true;
+                cursor += 1;
+                continue;
+            }
+            "--approval-delay-ms" if approval_delay_ms.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .and_then(|value| value.parse::<u64>().ok())
+                    .filter(|value| (1..=10_000).contains(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                approval_delay_ms = Some(value);
+                cursor += 2;
                 continue;
             }
             _ => return Err(ThinClientError::InvalidValue),
@@ -243,6 +272,18 @@ fn parse_coding_development(
     if objective.trim().is_empty() || objective.len() > 16 * 1024 {
         return Err(ThinClientError::InvalidValue);
     }
+    if [
+        stale_approval_probe,
+        replay_approval_probe,
+        expired_cursor_probe,
+    ]
+    .into_iter()
+    .filter(|enabled| *enabled)
+    .count()
+        > 1
+    {
+        return Err(ThinClientError::InvalidValue);
+    }
     Ok(CodingDevelopmentCliOptions {
         state_root: PathBuf::from(state_root.ok_or(ThinClientError::InvalidValue)?),
         disposable_root: PathBuf::from(disposable_root.ok_or(ThinClientError::InvalidValue)?),
@@ -251,6 +292,9 @@ fn parse_coding_development(
         objective,
         approve_this_run,
         stale_approval_probe,
+        replay_approval_probe,
+        expired_cursor_probe,
+        approval_delay_ms: approval_delay_ms.unwrap_or(0),
     })
 }
 
@@ -796,7 +840,8 @@ Commands:\n\
   code\n\
   code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
        --scenario no-op|failed-test-repair|slow-cancel|new-file|multi-file|false-completion|overflow\n\
-       --objective TEXT [--approve-this-run] [--stale-approval-probe]\n\
+       --objective TEXT [--approve-this-run] [--stale-approval-probe|--replay-approval-probe|--expired-cursor-probe]\n\
+       [--approval-delay-ms 1..10000]\n\
   chat MESSAGE\n\
   conversations list [--from YYYY-MM-DD] [--to YYYY-MM-DD]\n\
   conversations search QUERY\n\

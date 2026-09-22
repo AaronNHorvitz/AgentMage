@@ -60,11 +60,18 @@ struct RuntimeIpcEnvelope<T> {
     payload: T,
 }
 
+enum DevelopmentIpcProbe {
+    None,
+    StaleApproval,
+    ReplayApproval(Option<RuntimeApprovalResponse>),
+    ExpiredCursor(Option<RuntimeEventCursor>),
+}
+
 /// Client-side adapter that contains transport authority but no runtime or effect authority.
 pub struct LinuxRuntimeIpcClient {
     session: LinuxAuthenticatedIpcSession,
     last_error: Option<RuntimeTransportError>,
-    stale_approval_probe: bool,
+    development_probe: DevelopmentIpcProbe,
 }
 
 impl LinuxRuntimeIpcClient {
@@ -74,7 +81,7 @@ impl LinuxRuntimeIpcClient {
         Self {
             session,
             last_error: None,
-            stale_approval_probe: false,
+            development_probe: DevelopmentIpcProbe::None,
         }
     }
 
@@ -83,8 +90,22 @@ impl LinuxRuntimeIpcClient {
     /// This does not alter a host challenge, grant, or policy decision. The host must reject the
     /// resulting stale response before launching an effect.
     #[must_use]
-    pub(crate) const fn with_stale_approval_probe(mut self) -> Self {
-        self.stale_approval_probe = true;
+    pub(crate) fn with_stale_approval_probe(mut self) -> Self {
+        self.development_probe = DevelopmentIpcProbe::StaleApproval;
+        self
+    }
+
+    /// Replays one already accepted approval for executable rejection testing.
+    #[must_use]
+    pub(crate) fn with_replayed_approval_probe(mut self) -> Self {
+        self.development_probe = DevelopmentIpcProbe::ReplayApproval(None);
+        self
+    }
+
+    /// Reuses an aged exact cursor after the live replay window advances past it.
+    #[must_use]
+    pub(crate) fn with_expired_cursor_probe(mut self) -> Self {
+        self.development_probe = DevelopmentIpcProbe::ExpiredCursor(None);
         self
     }
 
@@ -172,17 +193,44 @@ impl RuntimeTransportPort for LinuxRuntimeIpcClient {
         after_event_cursor: Option<&RuntimeEventCursor>,
         response: Option<&RuntimeApprovalResponse>,
     ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+        let mut after_event_cursor = after_event_cursor.cloned();
         let mut response = response.cloned();
-        if self.stale_approval_probe
-            && let Some(response) = response.as_mut()
-        {
-            response.challenge_sha256 = "0".repeat(64);
-            self.stale_approval_probe = false;
+        match &mut self.development_probe {
+            DevelopmentIpcProbe::StaleApproval => {
+                if let Some(response) = response.as_mut() {
+                    response.challenge_sha256 = "0".repeat(64);
+                    self.development_probe = DevelopmentIpcProbe::None;
+                }
+            }
+            DevelopmentIpcProbe::ReplayApproval(saved) => match saved {
+                None => {
+                    if response.is_some() {
+                        *saved = response.clone();
+                    }
+                }
+                Some(previous) => {
+                    response = Some(previous.clone());
+                    self.development_probe = DevelopmentIpcProbe::None;
+                }
+            },
+            DevelopmentIpcProbe::ExpiredCursor(saved) => match saved {
+                None => *saved = after_event_cursor.clone(),
+                Some(previous)
+                    if after_event_cursor
+                        .as_ref()
+                        .is_some_and(|cursor| cursor.sequence >= 40) =>
+                {
+                    after_event_cursor = Some(previous.clone());
+                    self.development_probe = DevelopmentIpcProbe::None;
+                }
+                Some(_) => {}
+            },
+            DevelopmentIpcProbe::None => {}
         }
         match self.exchange(RuntimeIpcRequest::Advance {
             run_id: run_id.clone(),
             request_sha256: request_sha256.to_owned(),
-            after_event_cursor: after_event_cursor.cloned(),
+            after_event_cursor,
             response,
         })? {
             RuntimeIpcResponse::Step { step } => Ok(step),

@@ -74,7 +74,7 @@ cancellable model call for signal and slow-client acceptance; it is not a perfor
 model result. `--stale-approval-probe` is restricted to this development client and corrupts one
 response digest so the real host rejection can be tested before an effect.
 
-Run all nine actual-process cases with short disposable roots and a fresh create-only log root:
+Run all thirteen actual-process cases with short disposable roots and a fresh create-only log root:
 
 ```bash
 systemd-run --user --scope --quiet \
@@ -85,8 +85,9 @@ systemd-run --user --scope --quiet \
 ```
 
 The report distinguishes `SUCCESS`, `NO_OP`, `DECLINED`, `CANCELLED`, `EXHAUSTED`, verifier
-`FAILED`, and transport-level stale-approval rejection. It hashes both binaries and every retained
-stdout/stderr stream. Its qualification remains `executable-scripted-only`.
+`FAILED`, invalid activation, stale/replayed approval, expired cursor and approval/cancel race
+results. It hashes both binaries and every retained stdout/stderr stream. Its qualification remains
+`executable-scripted-only`.
 
 ## Failure handling
 

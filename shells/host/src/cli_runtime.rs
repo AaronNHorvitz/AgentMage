@@ -253,16 +253,34 @@ where
                 }
             };
             let response = runtime_approval_response(challenge, disposition);
-            match runtime.advance(
-                &request.run_id,
-                &request.request_sha256,
-                verifier.cursor().as_ref(),
-                Some(&response),
-            ) {
-                Ok(step) => step,
+            match cancellation.poll(&request) {
+                Ok(Some(cancellation_id)) => match runtime.cancel(
+                    &request.run_id,
+                    &request.request_sha256,
+                    cancellation_id,
+                    verifier.cursor().as_ref(),
+                ) {
+                    Ok(step) => step,
+                    Err(error) => {
+                        best_effort_release(runtime, &request);
+                        return Err(map_runtime_error(error));
+                    }
+                },
+                Ok(None) => match runtime.advance(
+                    &request.run_id,
+                    &request.request_sha256,
+                    verifier.cursor().as_ref(),
+                    Some(&response),
+                ) {
+                    Ok(step) => step,
+                    Err(error) => {
+                        best_effort_release(runtime, &request);
+                        return Err(map_runtime_error(error));
+                    }
+                },
                 Err(error) => {
                     best_effort_release(runtime, &request);
-                    return Err(map_runtime_error(error));
+                    return Err(error);
                 }
             }
         } else {
