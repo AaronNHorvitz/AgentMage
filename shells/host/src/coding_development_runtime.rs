@@ -1124,7 +1124,7 @@ fn build_follow_up_continuity(
         "receipt_ids": continuation.receipt_ids,
         "artifacts": continuation.artifacts,
         "verified_payload_byte_size": continuation_bytes.len(),
-        "verified_payload_sha256": sha256(&continuation_bytes),
+        "verified_payload_sha256": sha256(continuation_bytes),
     }))
     .map_err(|_| prepare_denied("continuity-state-projection"))?;
     let event_projection = serde_json::to_vec(&serde_json::json!({
@@ -2204,18 +2204,16 @@ fn load_candidate_model(
         eprintln!("coding.development.candidate.profile-binding-denied");
         return Err(CodingDevelopmentRuntimeError::Profile);
     }
-    let admitted = admitted_development_model(model).map_err(|error| {
+    let admitted = admitted_development_model(model).inspect_err(|_| {
         eprintln!("coding.development.candidate.evaluation-admission-denied");
-        error
     })?;
     if admitted.exact_profile() != expected_profile {
         eprintln!("coding.development.candidate.profile-substitution-denied");
         return Err(CodingDevelopmentRuntimeError::Profile);
     }
     let (runtime_root, model_path, kwargs) =
-        candidate_paths(model, expected_profile).map_err(|error| {
+        candidate_paths(model, expected_profile).inspect_err(|_| {
             eprintln!("coding.development.candidate.preparation-tuple-denied");
-            error
         })?;
     let socket_root = state_root.join(match model {
         CodingDevelopmentModel::Muse => "candidate-muse",

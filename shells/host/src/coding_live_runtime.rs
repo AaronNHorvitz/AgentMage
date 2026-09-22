@@ -61,6 +61,9 @@ struct WorkerBoundary {
     artifacts: Vec<RuntimeArtifactRef>,
 }
 
+// The synchronous channel has capacity one, so keeping the typed boundary
+// inline cannot produce an unbounded queue of large values.
+#[allow(clippy::large_enum_variant)]
 enum WorkerResponse {
     Boundary(WorkerBoundary),
     ArtifactPage(RuntimeArtifactPage),
@@ -323,14 +326,12 @@ where
         let slow_subscriber_probe = prepared.slow_subscriber_probe;
         let coordinator = self.factory.compose_runtime(&request)?;
         let mut session = LiveCodingSession::spawn(request, coordinator, slow_subscriber_probe)
-            .map_err(|error| {
+            .inspect_err(|_| {
                 eprintln!("coding.live.spawn-denied");
-                error
             })?;
         self.prepared.remove(&key);
-        let step = session.start().map_err(|error| {
+        let step = session.start().inspect_err(|_| {
             eprintln!("coding.live.start-denied");
-            error
         })?;
         self.active.insert(key, session);
         Ok(step)
@@ -641,9 +642,8 @@ impl LiveCodingSession {
     }
 
     fn sync_events(&mut self) -> Result<bool, RuntimeTransportError> {
-        let (events, terminal, _disconnected) = self.event_pump.snapshot().map_err(|error| {
+        let (events, terminal, _disconnected) = self.event_pump.snapshot().inspect_err(|_| {
             eprintln!("coding.live.event-pump-denied");
-            error
         })?;
         if events.len() < self.events.len() || events[..self.events.len()] != self.events {
             return Err(RuntimeTransportError::RuntimeEvidenceDenied);

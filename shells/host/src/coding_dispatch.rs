@@ -30,6 +30,9 @@ use crate::{
 
 /// One validated, authority-free native operation ready for a trusted effect boundary.
 #[derive(Clone, Debug)]
+// Calls are bounded, moved once into the effect owner, and retain their native
+// typed request without a second allocation or wire representation.
+#[allow(clippy::large_enum_variant)]
 pub enum PreparedNativeCodingCall {
     /// A bounded workspace projection request.
     ReadOnly {

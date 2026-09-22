@@ -94,6 +94,9 @@
     "shells/host/src/coding_changes.rs": [
       "https://json-schema.org/draft/2020-12/schema"
     ],
+    "shells/host/src/coding_history.rs": [
+      "https://json-schema.org/draft/2020-12/schema"
+    ],
     "shells/host/src/coding_tools.rs": [
       "https://json-schema.org/draft/2020-12/schema"
     ],
@@ -103,7 +106,7 @@
   },
   "allowed_first_party_build_scripts": [],
   "approved_cargo_manifests": {
-    "Cargo.toml": "5afd98c00697e9c6974495e4a9568ae42f46ec0acb1eb603641b1ec7bb5f5ea1",
+    "Cargo.toml": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc",
     "capabilities/knowledge/Cargo.toml": "d1aaf75cd939ed948adce94dc56091873a6611fb8f5f8c6dc3a50acf6d0974de",
     "capabilities/read-only/Cargo.toml": "0779ae133a0b654cbd5686ffbde501f72ed333b271592467af87bba02379d25e",
     "capabilities/repository-map/Cargo.toml": "6893bed2643ac73332862345c84f6062bedb6ff506ba7bd3a4036921e6242de6",
@@ -113,7 +116,7 @@
     "platforms/linux/Cargo.toml": "a6ed075a2e40f2120402cb2db636e3029b4e2f2f4070b3e2d64be93c9c0c796a",
     "platforms/windows/Cargo.toml": "7546d14d8ec5b014cd0c8ce541f603e0208ac6cb237b6b29a6d56d7f1a45b490",
     "release/xtask/Cargo.toml": "dd6e61c5561f24a35f8f802579f2c8374c15e77d76cd72a882dc104cff954a40",
-    "shells/host/Cargo.toml": "23e076624d2c6be50259f00e59449f48544fdc39c6c471c7468f85438a66ef17"
+    "shells/host/Cargo.toml": "91da28076b9b935bbde267111d424c80cff334149ecfe67be2d5c8db32bd9a7d"
   },
   "approved_cargo_packages": [
     "adler2@2.0.1",
@@ -206,6 +209,8 @@
     "sha1@0.10.6",
     "sha2@0.11.0",
     "shlex@2.0.1",
+    "signal-hook-registry@1.4.8",
+    "signal-hook@0.3.18",
     "signature@3.0.0",
     "simd-adler32@0.3.10",
     "smallvec@1.15.2",

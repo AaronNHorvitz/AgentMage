@@ -18,6 +18,9 @@ const MAX_WIRE_BYTES: usize = 4 * 1024 * 1024;
 /// One closed operation accepted by the host-owned runtime service.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "operation", rename_all = "snake_case", deny_unknown_fields)]
+// Authenticated IPC admits one bounded request frame at a time; keeping the
+// closed serde shape inline avoids a second internal representation.
+#[allow(clippy::large_enum_variant)]
 enum RuntimeIpcRequest {
     Prepare {
         input: RuntimePrepareInput,
@@ -63,6 +66,8 @@ enum RuntimeIpcRequest {
 /// One closed response from the host-owned runtime service.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "result", rename_all = "snake_case", deny_unknown_fields)]
+// Responses are bounded by MAX_WIRE_BYTES and exchanged synchronously.
+#[allow(clippy::large_enum_variant)]
 enum RuntimeIpcResponse {
     Prepared { request: RuntimeRunRequest },
     Step { step: RuntimeTransportStep },
