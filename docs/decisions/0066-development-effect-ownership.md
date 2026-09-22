@@ -54,4 +54,3 @@ effects reside in their accepted platform or kernel owners. The structural
 effect checker can continue rejecting shell process launch, shell filesystem
 mutation and unregistered permit consumers without an exemption for the coding
 harness.
-

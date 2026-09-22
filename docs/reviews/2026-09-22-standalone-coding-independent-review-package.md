@@ -10,14 +10,14 @@ identity, review date, exact target commit, methods, findings and final disposit
 
 ## Immutable review target
 
-- Target commit: `b0f88801d9b615150eea5c7f5dfab23231dbdbbf`.
+- Target commit: `5ccc77e3f420cc833ed1e51268a39e3fa3ee08e5`.
 - Baseline commit: `c365d44d73d44c8d13d6810e557882134b8251d0`.
 - Branch at preparation: `demo/fedora-local-docs`.
-- Scope authority: Decisions 0054, 0061, 0062, 0063, 0064 and 0065.
+- Scope authority: Decisions 0054, 0061, 0062, 0063, 0064, 0065 and 0066.
 - Implementation commits, oldest first:
   `ab76d781`, `452a789a`, `f8dd4e79`, `ea16322f`, `86823491`, `fe898a96`,
-  `0dcd13d0`, `4fc23603`, `d6863f7d`, `690e5e43`, `e30e9ffb`, `03c01ded` and
-  `fabe3897`.
+  `0dcd13d0`, `4fc23603`, `d6863f7d`, `690e5e43`, `e30e9ffb`, `03c01ded`,
+  `fabe3897` and `5ccc77e3`.
 
 Review the exact target, not a moving worktree. The implementation record is
 [`coding-harness-implementation-2026-09-22.md`](../verification/coding-harness-implementation-2026-09-22.md).
@@ -81,7 +81,10 @@ Owner-only raw records are under:
 
 The directory contains the 16-case matrix streams, daily report and streams, both candidate logs,
 and both exact retained candidate rejection payloads. The source-bound implementation report lists
-their material hashes and measured thresholds. Earlier genuine failed diagnostics remain named in
+their material hashes and measured thresholds. Current-target matrix and daily results are retained
+under `2026-09-22-effect-boundary-matrix` and `2026-09-22-daily-current-short`; the rejected
+long-path daily attempt is retained under `2026-09-22-daily-current`. Earlier genuine failed
+diagnostics remain named in
 `~/.local/state/agentmage-codex-coding/progress.md`; they must not be hidden when assessing the
 repair sequence.
 
