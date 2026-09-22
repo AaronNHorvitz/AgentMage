@@ -81,12 +81,12 @@
       {
         "byte_length": 4142,
         "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
-        "sha256": "67eeecc9de8881e18d6603ef982e7bee17edaa49ba0ed06904a0cb713185fc8c"
+        "sha256": "aa0b43f9c603be6c15cee3653a45bc4d0840b89ae9c23a0e073a1bb73151fc5d"
       },
       {
         "byte_length": 12364,
         "path": "artifacts/sprints/sprint-7/story-7.1/security-evidence-map.json",
-        "sha256": "5630004e95a5aa18cc346edaf18ed48d5ad0d0a78654dcbd0fcda68bbce55a01"
+        "sha256": "787c2c0a174a45482bd249bab3d75de02e528ecb69721d69a2b4bb2e991d83c8"
       },
       {
         "byte_length": 6520,
@@ -114,9 +114,9 @@
         "sha256": "a35b3557156673c2215e5441187e65e4b51ea237aaf2d0954cef5e2e8b96a7b3"
       },
       {
-        "byte_length": 23558,
+        "byte_length": 24109,
         "path": "scripts/platform_manifest_artifact.py",
-        "sha256": "0f210fb557d3785026ce219604a18067199b17cb308b26f1aea7659a06f395de"
+        "sha256": "93ad97d3b45ddff31ccb1907f3faa2dc169945eea8abfa1f4d1fcb08861f85fa"
       },
       {
         "byte_length": 17584,
@@ -129,9 +129,9 @@
         "sha256": "ae19f1eb78fd3ebd75c3f5f8ee14b66c820ec01935851b48607da11736d857ad"
       },
       {
-        "byte_length": 6384,
+        "byte_length": 7593,
         "path": "tests/test_platform_manifest_artifact.py",
-        "sha256": "8c95802f7784a00f615ce6a4e834f6ee86157ef12fc7d3366635f0fb542e78a2"
+        "sha256": "20a22fd5f2f5f0f218dc09b6baf374c97c25c6b8daab06fdd5e45f1f1dea69e7"
       },
       {
         "byte_length": 8072,
@@ -148,16 +148,16 @@
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-aggregate-review-not-external-human-review",
-    "reviewed_commit": "be1450044b506698ee90921d39048e697921f54c",
-    "reviewed_tree": "c6d8378ed0d0963d8cd4a72a0315054ebff4c748",
+    "reviewed_commit": "2a766fa858adabea9cd61a7a40869f4f62035cf8",
+    "reviewed_tree": "24406b4c8083f67f58ea3cc9bab8c7c38112d2ab",
     "reviewer_id": "agentmage-story-7.1-automated-aggregate-v1"
   },
   "installed_product_claim": "none",
   "macos_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "be1450044b506698ee90921d39048e697921f54c",
-  "reviewed_tree": "c6d8378ed0d0963d8cd4a72a0315054ebff4c748",
+  "reviewed_commit": "2a766fa858adabea9cd61a7a40869f4f62035cf8",
+  "reviewed_tree": "24406b4c8083f67f58ea3cc9bab8c7c38112d2ab",
   "schema_version": 1,
   "sprint_completion_claim": false,
   "status": "blocked-native-platforms-and-external-review",
