@@ -573,6 +573,7 @@ where
             } => self.prepare_runtime(
                 &request_id,
                 RuntimePrepareInput {
+                    resume: false,
                     engineering_session_id,
                     profile_id,
                     expected_entry_sha256,

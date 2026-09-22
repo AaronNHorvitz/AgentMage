@@ -63,6 +63,10 @@ pub struct CodingDevelopmentCliOptions {
     pub model: String,
     /// Exact bounded objective supplied to the runtime.
     pub objective: String,
+    /// Bounded follow-up objectives, each framed as a fresh run in the same host session.
+    pub follow_ups: Vec<String>,
+    /// Resume the one exact safe-boundary run in the private canonical store.
+    pub resume: bool,
     /// Whether this invocation explicitly preauthorizes its displayed exact operations.
     pub approve_this_run: bool,
     /// Whether to send one intentionally stale response for executable rejection testing.
@@ -206,6 +210,8 @@ fn parse_coding_development(
     let mut scenario = None;
     let mut model = None;
     let mut objective = None;
+    let mut follow_ups = Vec::new();
+    let mut resume = false;
     let mut approve_this_run = false;
     let mut stale_approval_probe = false;
     let mut replay_approval_probe = false;
@@ -220,6 +226,24 @@ fn parse_coding_development(
             "--scenario" if scenario.is_none() => &mut scenario,
             "--model" if model.is_none() => &mut model,
             "--objective" if objective.is_none() => &mut objective,
+            "--follow-up" if follow_ups.len() < 8 => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| {
+                        !value.trim().is_empty()
+                            && !value.starts_with("--")
+                            && value.len() <= 16 * 1024
+                    })
+                    .ok_or(ThinClientError::InvalidValue)?;
+                follow_ups.push(value.clone());
+                cursor += 2;
+                continue;
+            }
+            "--resume" if !resume => {
+                resume = true;
+                cursor += 1;
+                continue;
+            }
             "--approve-this-run" if !approve_this_run => {
                 approve_this_run = true;
                 cursor += 1;
@@ -265,6 +289,7 @@ fn parse_coding_development(
         "no-op"
             | "failed-test-repair"
             | "slow-cancel"
+            | "restart-repair"
             | "new-file"
             | "multi-file"
             | "false-completion"
@@ -278,6 +303,9 @@ fn parse_coding_development(
     }
     let objective = objective.ok_or(ThinClientError::InvalidValue)?;
     if objective.trim().is_empty() || objective.len() > 16 * 1024 {
+        return Err(ThinClientError::InvalidValue);
+    }
+    if resume && !follow_ups.is_empty() {
         return Err(ThinClientError::InvalidValue);
     }
     if [
@@ -299,6 +327,8 @@ fn parse_coding_development(
         scenario,
         model,
         objective,
+        follow_ups,
+        resume,
         approve_this_run,
         stale_approval_probe,
         replay_approval_probe,
@@ -848,8 +878,8 @@ Usage: agentmage [--json] [--surface interactive-cli|json|sdk|acp] COMMAND\n\
 Commands:\n\
   code\n\
   code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
-       --scenario no-op|failed-test-repair|slow-cancel|new-file|multi-file|false-completion|overflow\n\
-       --objective TEXT [--approve-this-run] [--stale-approval-probe|--replay-approval-probe|--expired-cursor-probe]\n\
+       --scenario no-op|failed-test-repair|slow-cancel|restart-repair|new-file|multi-file|false-completion|overflow\n\
+       --objective TEXT [--follow-up TEXT]... [--resume] [--approve-this-run] [--stale-approval-probe|--replay-approval-probe|--expired-cursor-probe]\n\
        [--approval-delay-ms 1..10000]\n\
   chat MESSAGE\n\
   conversations list [--from YYYY-MM-DD] [--to YYYY-MM-DD]\n\
@@ -1088,6 +1118,52 @@ mod tests {
                 ..
             })
         ));
+        assert!(matches!(
+            parse_cli_arguments(&strings(&[
+                "code",
+                "--development",
+                "--state-root",
+                "/tmp/state",
+                "--disposable-root",
+                "/tmp/disposable",
+                "--workspace-root",
+                "/tmp/disposable/worktree",
+                "--scenario",
+                "no-op",
+                "--objective",
+                "inspect",
+                "--follow-up",
+                "inspect again",
+            ])),
+            Ok(CliInvocation::Code {
+                development: Some(CodingDevelopmentCliOptions {
+                    follow_ups,
+                    resume: false,
+                    ..
+                }),
+                ..
+            }) if follow_ups == ["inspect again"]
+        ));
+        assert!(
+            parse_cli_arguments(&strings(&[
+                "code",
+                "--development",
+                "--state-root",
+                "/tmp/state",
+                "--disposable-root",
+                "/tmp/disposable",
+                "--workspace-root",
+                "/tmp/disposable/worktree",
+                "--scenario",
+                "restart-repair",
+                "--objective",
+                "resume",
+                "--resume",
+                "--follow-up",
+                "invalid",
+            ]))
+            .is_err()
+        );
         let parsed =
             parse_cli_arguments(&strings(&["--json", "--surface", "acp", "vault", "tasks"]));
         assert!(matches!(

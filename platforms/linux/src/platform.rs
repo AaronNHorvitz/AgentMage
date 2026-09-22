@@ -19,9 +19,10 @@ use agentmage_kernel_engine::operational_store::{
 };
 use agentmage_kernel_engine::platform_startup::VerifiedPlatformAdapter;
 use agentmage_kernel_engine::runtime_artifact::{
-    RuntimeArtifactPayloadError, RuntimeArtifactPayloadObservation, RuntimeArtifactPayloadStore,
-    RuntimeArtifactPublication, RuntimeArtifactReadRequest, RuntimeArtifactReconciliation,
-    RuntimeArtifactState, RuntimeArtifactStoreError,
+    RuntimeArtifactPage, RuntimeArtifactPageRequest, RuntimeArtifactPayloadError,
+    RuntimeArtifactPayloadObservation, RuntimeArtifactPayloadStore, RuntimeArtifactPublication,
+    RuntimeArtifactReadRequest, RuntimeArtifactReconciliation, RuntimeArtifactState,
+    RuntimeArtifactStoreError,
 };
 use agentmage_kernel_engine::write_recovery::WriteAwareCheckpoint;
 use sha2::{Digest, Sha256};
@@ -449,6 +450,19 @@ impl LinuxAuthorityRuntime {
         let result = self
             .runtime
             .read_runtime_artifact(&self.artifact_store, request);
+        self.ensure_artifact_root()?;
+        result
+    }
+
+    /// Reads one exact bounded verified artifact page without exposing its native payload path.
+    pub fn read_runtime_artifact_page(
+        &self,
+        request: &RuntimeArtifactPageRequest,
+    ) -> Result<RuntimeArtifactPage, DurableAuthorityError> {
+        self.ensure_artifact_root()?;
+        let result = self
+            .runtime
+            .read_runtime_artifact_page(&self.artifact_store, request);
         self.ensure_artifact_root()?;
         result
     }

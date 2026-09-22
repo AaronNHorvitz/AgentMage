@@ -48,16 +48,17 @@ use agentmage_kernel_engine::{
         RepositoryInspectionTermination, prepare_repository_inspection,
     },
     runtime_artifact::{
-        MAX_RUNTIME_ARTIFACT_BYTES, RUNTIME_CONTINUATION_MEDIA_TYPE, RuntimeArtifactReadRequest,
+        MAX_RUNTIME_ARTIFACT_BYTES, RUNTIME_CONTINUATION_MEDIA_TYPE, RuntimeArtifactPage,
+        RuntimeArtifactPageRequest, RuntimeArtifactReadRequest, RuntimeArtifactState,
         decode_runtime_continuation_state, seal_runtime_resume_binding,
         verify_runtime_continuation_state,
     },
     runtime_coordinator::{verify_runtime_approval_response, verify_runtime_run_request},
     runtime_journal::RuntimeJournalError,
     runtime_loop::{
-        RuntimeArtifactPort, RuntimeCheckpointCommit, RuntimeCheckpointPort,
-        RuntimeCheckpointPublication, RuntimeCorrectnessTransactionPort, RuntimeJournalPort,
-        RuntimePermissionEvaluation, RuntimePortFailure, RuntimeResumeSnapshot,
+        RuntimeArtifactAccessPort, RuntimeArtifactPort, RuntimeCheckpointCommit,
+        RuntimeCheckpointPort, RuntimeCheckpointPublication, RuntimeCorrectnessTransactionPort,
+        RuntimeJournalPort, RuntimePermissionEvaluation, RuntimePortFailure, RuntimeResumeSnapshot,
         RuntimeToolArtifactCandidate, RuntimeToolBoundary, RuntimeToolCorrectnessCommit,
         RuntimeToolExecution,
     },
@@ -2972,6 +2973,58 @@ where
     }
 }
 
+impl<'workspace, 'session, 'platform, I, E, G> RuntimeArtifactAccessPort
+    for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
+where
+    I: CodingIdentitySource,
+    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+{
+    fn read_runtime_artifact_page(
+        &mut self,
+        request: &RuntimeRunRequest,
+        reference: &RuntimeArtifactRef,
+        offset: u64,
+        maximum_bytes: u32,
+        now_epoch_ms: u64,
+    ) -> Result<RuntimeArtifactPage, RuntimePortFailure> {
+        if !self.request_matches(request) {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        self.authority
+            .read_runtime_artifact_page(&RuntimeArtifactPageRequest {
+                session_id: request.session_id.clone(),
+                task_id: request.task.task_id.clone(),
+                policy_sha256: request.policy_sha256.clone(),
+                reference: reference.clone(),
+                now_epoch_ms,
+                offset,
+                maximum_bytes,
+            })
+            .map_err(map_journal_failure)
+    }
+
+    fn release_runtime_artifact(
+        &mut self,
+        request: &RuntimeRunRequest,
+        reference: &RuntimeArtifactRef,
+        now_epoch_ms: u64,
+    ) -> Result<RuntimeArtifactState, RuntimePortFailure> {
+        if !self.request_matches(request) {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        self.authority
+            .release_runtime_artifact(
+                &request.session_id,
+                &request.task.task_id,
+                &request.policy_sha256,
+                reference,
+                now_epoch_ms,
+            )
+            .map_err(map_journal_failure)
+    }
+}
+
 impl<'workspace, 'session, 'platform, I, E, G> RuntimeCheckpointPort
     for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
 where
@@ -5799,7 +5852,10 @@ mod tests {
         assert_eq!(outcome.tool_call_count, TOOL_TURNS as u32);
         assert_eq!(outcome.receipt_ids.len(), TOOL_TURNS);
         assert_eq!(shared_launches.load(Ordering::SeqCst), TOOL_TURNS);
-        assert_eq!(resumed.artifact_references(), expected_binding_artifacts);
+        let mut resumed_artifacts = resumed.artifact_references().to_vec();
+        resumed_artifacts
+            .sort_by(|left, right| left.artifact_id.as_str().cmp(right.artifact_id.as_str()));
+        assert_eq!(resumed_artifacts, expected_binding_artifacts);
         assert_eq!(
             base_request.task.objective,
             "Inspect the exact current source"
@@ -6206,7 +6262,10 @@ mod tests {
             RuntimeCheckpointPort::load_runtime_checkpoint(&mut resumed_boundary, &resumed_request)
                 .expect("large-artifact checkpoint reads")
                 .expect("large-artifact checkpoint exists");
-        assert_eq!(snapshot.binding.artifacts, pre_restart_artifacts);
+        let mut canonical_pre_restart_artifacts = pre_restart_artifacts.clone();
+        canonical_pre_restart_artifacts
+            .sort_by(|left, right| left.artifact_id.as_str().cmp(right.artifact_id.as_str()));
+        assert_eq!(snapshot.binding.artifacts, canonical_pre_restart_artifacts);
 
         let resumed_model = ScriptedCodingModel {
             profile: profile.model_profile().clone(),

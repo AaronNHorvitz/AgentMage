@@ -28,6 +28,7 @@ use crate::model_runtime::{LocalModelController, ModelRuntimeGateError};
 use crate::runtime_answer::compose_inferred_runtime_answer;
 use crate::runtime_artifact::{
     MAX_RUNTIME_ARTIFACT_PREVIEW_BYTES, RUNTIME_CONTINUATION_MEDIA_TYPE,
+    RUNTIME_REQUEST_MEDIA_TYPE, RuntimeArtifactPage, RuntimeArtifactState,
     encode_runtime_continuation_state, runtime_artifact_ref, runtime_payload_reference,
     seal_runtime_artifact_manifest, seal_runtime_continuation_state, verify_runtime_artifact_ref,
     verify_runtime_continuation_state, verify_runtime_resume_binding,
@@ -350,6 +351,27 @@ pub trait RuntimeArtifactPort {
     ) -> Result<RuntimeArtifactRef, RuntimePortFailure>;
 }
 
+/// Verified operator access to artifacts already owned by the canonical runtime store.
+pub trait RuntimeArtifactAccessPort {
+    /// Reads one bounded verified page without exposing a native payload path.
+    fn read_runtime_artifact_page(
+        &mut self,
+        request: &RuntimeRunRequest,
+        reference: &RuntimeArtifactRef,
+        offset: u64,
+        maximum_bytes: u32,
+        now_epoch_ms: u64,
+    ) -> Result<RuntimeArtifactPage, RuntimePortFailure>;
+
+    /// Releases one exact logical reference through the canonical lifecycle owner.
+    fn release_runtime_artifact(
+        &mut self,
+        request: &RuntimeRunRequest,
+        reference: &RuntimeArtifactRef,
+        now_epoch_ms: u64,
+    ) -> Result<RuntimeArtifactState, RuntimePortFailure>;
+}
+
 /// Immutable safe-boundary material supplied to the trusted checkpoint host.
 pub struct RuntimeCheckpointCommit<'a> {
     /// Exact current runtime request.
@@ -601,6 +623,7 @@ where
     tool_call_count: u32,
     context_refresh_count: u32,
     no_progress_turns: u32,
+    stop_after_next_checkpoint: bool,
 }
 
 impl<M, X, T, V, C> ReusableRuntimeCoordinator<M, X, T, V, C>
@@ -836,11 +859,24 @@ where
             tool_call_count: 0,
             context_refresh_count: 0,
             no_progress_turns: 0,
+            stop_after_next_checkpoint: false,
         };
         if coordinator.request.event_cursor.is_some() {
             coordinator.restore_runtime_checkpoint()?;
         }
         Ok(coordinator)
+    }
+
+    /// Installs a one-shot development fault probe immediately after the next durable checkpoint.
+    ///
+    /// The checkpoint and its correctness event are already committed before the probe returns a
+    /// dependency failure. It is used only by an explicitly activated disposable harness to
+    /// exercise a process restart from an exact safe boundary; it grants no authority and cannot
+    /// turn the interrupted invocation into success.
+    #[must_use]
+    pub fn with_development_checkpoint_stop_probe(mut self) -> Self {
+        self.stop_after_next_checkpoint = true;
+        self
     }
 
     /// Registers one bounded ordered event subscriber before or during execution.
@@ -870,6 +906,63 @@ where
     #[must_use]
     pub fn artifact_references(&self) -> &[RuntimeArtifactRef] {
         &self.artifact_references
+    }
+
+    /// Reads one verified bounded page from an artifact already published by this run.
+    pub fn read_artifact_page(
+        &mut self,
+        reference: &RuntimeArtifactRef,
+        offset: u64,
+        maximum_bytes: u32,
+    ) -> Result<RuntimeArtifactPage, RuntimeLoopError>
+    where
+        T: RuntimeArtifactAccessPort,
+    {
+        if !self
+            .artifact_references
+            .iter()
+            .any(|retained| retained == reference)
+        {
+            return Err(RuntimeLoopError::InvalidBoundaryResult);
+        }
+        let now_epoch_ms = self
+            .clock
+            .now_epoch_ms()
+            .map_err(RuntimeLoopError::Dependency)?;
+        self.tool_boundary
+            .read_runtime_artifact_page(
+                &self.request,
+                reference,
+                offset,
+                maximum_bytes,
+                now_epoch_ms,
+            )
+            .map_err(RuntimeLoopError::Dependency)
+    }
+
+    /// Releases one exact terminal-run artifact reference through its canonical lifecycle owner.
+    pub fn release_artifact(
+        &mut self,
+        reference: &RuntimeArtifactRef,
+    ) -> Result<RuntimeArtifactState, RuntimeLoopError>
+    where
+        T: RuntimeArtifactAccessPort,
+    {
+        if self.outcome.is_none()
+            || !self
+                .artifact_references
+                .iter()
+                .any(|retained| retained == reference)
+        {
+            return Err(RuntimeLoopError::InvalidBoundaryResult);
+        }
+        let now_epoch_ms = self
+            .clock
+            .now_epoch_ms()
+            .map_err(RuntimeLoopError::Dependency)?;
+        self.tool_boundary
+            .release_runtime_artifact(&self.request, reference, now_epoch_ms)
+            .map_err(RuntimeLoopError::Dependency)
     }
 
     /// Returns the caller-neutral context adapter for read-only accounting and diagnostics.
@@ -991,6 +1084,29 @@ where
             None,
             None,
         )?;
+        if let (Some(journal), Some(_artifact), Some(_checkpoint)) =
+            (&self.journal, &self.artifact, &self.checkpoint)
+        {
+            // The canonical store must know the run owner before accepting a bound artifact.
+            (journal.flush)(&mut self.tool_boundary).map_err(RuntimeLoopError::Dependency)?;
+            let request_bytes = to_canonical_json(&self.request)
+                .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+            self.resources
+                .admit_artifact(
+                    u64::try_from(request_bytes.len())
+                        .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?,
+                )
+                .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+            self.publish_artifact_bytes(
+                &request_bytes,
+                RUNTIME_REQUEST_MEDIA_TYPE,
+                RuntimeArtifactKind::Report,
+                None,
+                None,
+                None,
+                false,
+            )?;
+        }
         Ok(())
     }
 
@@ -2207,6 +2323,12 @@ where
                 None,
             )?;
         }
+        if self.stop_after_next_checkpoint {
+            self.stop_after_next_checkpoint = false;
+            return Err(RuntimeLoopError::Dependency(
+                RuntimePortFailure::Unavailable,
+            ));
+        }
         Ok(())
     }
 
@@ -2282,6 +2404,26 @@ where
             self.publisher.publish(event.clone())?;
         }
 
+        let mut remaining_artifacts = snapshot
+            .binding
+            .artifacts
+            .iter()
+            .map(|reference| (reference.artifact_id.as_str(), reference))
+            .collect::<std::collections::BTreeMap<_, _>>();
+        let mut restored_artifacts = Vec::with_capacity(remaining_artifacts.len());
+        for event in &events {
+            if let RuntimeEventKind::ArtifactCreated { artifact_id, .. } = &event.kind
+                && let Some(reference) = remaining_artifacts.remove(artifact_id.as_str())
+            {
+                restored_artifacts.push(reference.clone());
+            }
+        }
+        if !remaining_artifacts.is_empty()
+            || restored_artifacts.len() != snapshot.binding.artifacts.len()
+        {
+            return Err(RuntimeLoopError::InvalidBoundaryResult);
+        }
+
         self.started_at_epoch_ms = events.first().map(|event| event.occurred_at_epoch_ms);
         self.events = events;
         self.state = restored_state;
@@ -2290,7 +2432,7 @@ where
         self.tool_results = snapshot.continuation.tool_results;
         self.evidence = snapshot.continuation.evidence;
         self.receipt_ids = snapshot.continuation.receipt_ids;
-        self.artifact_references = snapshot.binding.artifacts;
+        self.artifact_references = restored_artifacts;
         self.tool_attempts = snapshot.continuation.tool_attempts;
         self.turn_count = snapshot.continuation.turn_count;
         self.model_call_count = snapshot.continuation.model_call_count;
@@ -2671,8 +2813,13 @@ where
         {
             return Ok(false);
         }
-        if candidate.bytes.len() <= MAX_RUNTIME_INLINE_OUTPUT_BYTES || self.artifact.is_none() {
-            return Ok(true);
+        // An artifact candidate is the trusted boundary's request to retain the complete bytes,
+        // not merely permission to expose a small inline preview. Durable runtimes therefore
+        // publish every candidate through the sole artifact owner regardless of payload size.
+        // Ephemeral runtimes may still consume a bounded small candidate without claiming that a
+        // full artifact was retained.
+        if self.artifact.is_none() {
+            return Ok(candidate.bytes.len() <= MAX_RUNTIME_INLINE_OUTPUT_BYTES);
         }
         if self.resources.admit_artifact(payload_bytes).is_err() {
             return Ok(false);
@@ -3124,12 +3271,14 @@ fn validate_runtime_resume_snapshot(
     snapshot: &RuntimeResumeSnapshot,
 ) -> Result<(), RuntimeLoopError> {
     if events.is_empty() || events.len() > request.limits.max_events as usize {
+        eprintln!("runtime.resume.events-invalid");
         return Err(RuntimeLoopError::InvalidBoundaryResult);
     }
     let last = events
         .last()
         .ok_or(RuntimeLoopError::InvalidBoundaryResult)?;
     if &runtime_event_cursor(last) != requested_cursor {
+        eprintln!("runtime.resume.cursor-mismatch");
         return Err(RuntimeLoopError::UnsupportedMode);
     }
     validate_runtime_checkpoint_publication(
@@ -3142,11 +3291,17 @@ fn validate_runtime_resume_snapshot(
             checkpoint: snapshot.checkpoint.clone(),
             binding: snapshot.binding.clone(),
         },
-    )?;
+    )
+    .map_err(|error| {
+        eprintln!("runtime.resume.publication-invalid");
+        error
+    })?;
     let RuntimeEventKind::RunStarted { request_sha256 } = &events[0].kind else {
+        eprintln!("runtime.resume.start-event-invalid");
         return Err(RuntimeLoopError::InvalidBoundaryResult);
     };
     if request_sha256 != &snapshot.continuation.request_sha256 {
+        eprintln!("runtime.resume.base-request-mismatch");
         return Err(RuntimeLoopError::InvalidBoundaryResult);
     }
     let continuation_index = usize::try_from(snapshot.continuation.event_cursor.sequence)
@@ -3166,6 +3321,7 @@ fn validate_runtime_resume_snapshot(
             RuntimeEventKind::TurnCompleted { .. }
         )
     {
+        eprintln!("runtime.resume.continuation-cursor-invalid");
         return Err(RuntimeLoopError::InvalidBoundaryResult);
     }
     let RuntimeEventKind::ArtifactCreated {
@@ -3173,6 +3329,7 @@ fn validate_runtime_resume_snapshot(
         manifest_sha256,
     } = &events[binding_index].kind
     else {
+        eprintln!("runtime.resume.continuation-artifact-event-invalid");
         return Err(RuntimeLoopError::InvalidBoundaryResult);
     };
     let expected_payload =
@@ -3183,6 +3340,7 @@ fn validate_runtime_resume_snapshot(
         || events[binding_index].operation_id.is_some()
         || events[binding_index].payload_reference.as_ref() != Some(&expected_payload)
     {
+        eprintln!("runtime.resume.continuation-artifact-binding-invalid");
         return Err(RuntimeLoopError::InvalidBoundaryResult);
     }
     match events.len().saturating_sub(binding_index) {
@@ -3193,15 +3351,20 @@ fn validate_runtime_resume_snapshot(
                 checkpoint_sha256,
             } = &events[binding_index + 1].kind
             else {
+                eprintln!("runtime.resume.checkpoint-event-invalid");
                 return Err(RuntimeLoopError::InvalidBoundaryResult);
             };
             if checkpoint_id != &snapshot.checkpoint.checkpoint_id
                 || checkpoint_sha256 != &snapshot.checkpoint.checkpoint_sha256
             {
+                eprintln!("runtime.resume.checkpoint-binding-invalid");
                 return Err(RuntimeLoopError::InvalidBoundaryResult);
             }
         }
-        _ => return Err(RuntimeLoopError::InvalidBoundaryResult),
+        _ => {
+            eprintln!("runtime.resume.journal-tail-invalid");
+            return Err(RuntimeLoopError::InvalidBoundaryResult);
+        }
     }
     Ok(())
 }

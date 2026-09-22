@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -12,6 +13,7 @@ use agentmage_kernel_contracts::{
 };
 use agentmage_kernel_engine::{
     runtime_answer::compose_inferred_runtime_answer,
+    runtime_artifact::RuntimeArtifactPage,
     runtime_coordinator::{seal_runtime_outcome, verify_runtime_outcome},
     runtime_event::{RuntimeEventSequence, runtime_event_persistence, seal_runtime_event},
     runtime_loop::RuntimeCoordinatorStep,
@@ -19,6 +21,7 @@ use agentmage_kernel_engine::{
         WorkflowAuthorityLayer, WorkflowAuthorityLayerKind, intersect_workflow_authority,
     },
 };
+use sha2::{Digest, Sha256};
 
 use crate::cli_runtime::{NeverCancelInteractiveCli, drive_interactive_cli_runtime};
 use crate::coding_client::{
@@ -40,6 +43,7 @@ struct ParityFixture {
     request: RuntimeRunRequest,
     events: Vec<RuntimeEvent>,
     artifacts: Vec<RuntimeArtifactRef>,
+    artifact_payloads: BTreeMap<String, Vec<u8>>,
     outcome: RuntimeOutcome,
 }
 
@@ -62,6 +66,7 @@ fn story_50_2_read_only_and_coding_packets_are_equal_across_all_three_callers() 
         request,
         events,
         artifacts: Vec::new(),
+        artifact_payloads: BTreeMap::new(),
         outcome,
     });
     assert_three_client_parity(controlled_write_fixture());
@@ -219,7 +224,12 @@ fn run_native_chat(fixture: &ParityFixture) -> ClientProjection {
 
 fn run_interactive_cli(fixture: &ParityFixture) -> ClientProjection {
     let input = prepare_input(&fixture.request);
-    let mut service = NativeChatRuntimeService::new(ReplayFactory::new(input.clone(), fixture));
+    let service = NativeChatRuntimeService::new(ReplayFactory::new(input.clone(), fixture));
+    let mut service = ParityCliPort {
+        service,
+        request: fixture.request.clone(),
+        payloads: fixture.artifact_payloads.clone(),
+    };
     let mut sink = RecordingSink::default();
     let result = drive_interactive_cli_runtime(
         &mut service,
@@ -235,6 +245,96 @@ fn run_interactive_cli(fixture: &ParityFixture) -> ClientProjection {
         result.artifacts,
         result.outcome,
     )
+}
+
+struct ParityCliPort {
+    service: NativeChatRuntimeService<ReplayFactory>,
+    request: RuntimeRunRequest,
+    payloads: BTreeMap<String, Vec<u8>>,
+}
+
+impl NativeChatRuntimePort for ParityCliPort {
+    fn prepare(
+        &mut self,
+        input: NativeChatPrepareInput,
+    ) -> Result<RuntimeRunRequest, NativeChatRuntimeError> {
+        self.service.prepare(input)
+    }
+
+    fn start(
+        &mut self,
+        request: RuntimeRunRequest,
+    ) -> Result<crate::native_chat_runtime::NativeChatRuntimeStep, NativeChatRuntimeError> {
+        self.service.start(request)
+    }
+
+    fn advance(
+        &mut self,
+        run_id: &agentmage_kernel_contracts::RuntimeRunId,
+        request_sha256: &str,
+        after_event_cursor: Option<&agentmage_kernel_contracts::RuntimeEventCursor>,
+        response: Option<&RuntimeApprovalResponse>,
+    ) -> Result<crate::native_chat_runtime::NativeChatRuntimeStep, NativeChatRuntimeError> {
+        self.service
+            .advance(run_id, request_sha256, after_event_cursor, response)
+    }
+
+    fn cancel(
+        &mut self,
+        run_id: &agentmage_kernel_contracts::RuntimeRunId,
+        request_sha256: &str,
+        cancellation_id: agentmage_kernel_contracts::CancellationId,
+        after_event_cursor: Option<&agentmage_kernel_contracts::RuntimeEventCursor>,
+    ) -> Result<crate::native_chat_runtime::NativeChatRuntimeStep, NativeChatRuntimeError> {
+        self.service
+            .cancel(run_id, request_sha256, cancellation_id, after_event_cursor)
+    }
+
+    fn read_artifact_page(
+        &mut self,
+        run_id: &agentmage_kernel_contracts::RuntimeRunId,
+        request_sha256: &str,
+        reference: &RuntimeArtifactRef,
+        offset: u64,
+        maximum_bytes: u32,
+    ) -> Result<RuntimeArtifactPage, NativeChatRuntimeError> {
+        if run_id != &self.request.run_id
+            || request_sha256 != self.request.request_sha256
+            || maximum_bytes == 0
+        {
+            return Err(NativeChatRuntimeError::RequestDenied);
+        }
+        let bytes = self
+            .payloads
+            .get(reference.artifact_id.as_str())
+            .ok_or(NativeChatRuntimeError::RequestDenied)?;
+        let start = usize::try_from(offset).map_err(|_| NativeChatRuntimeError::RequestDenied)?;
+        if start >= bytes.len() {
+            return Err(NativeChatRuntimeError::RequestDenied);
+        }
+        let end = start
+            .saturating_add(maximum_bytes as usize)
+            .min(bytes.len());
+        let page_bytes = bytes[start..end].to_vec();
+        let page_digest: [u8; 32] = Sha256::digest(&page_bytes).into();
+        let complete = end == bytes.len();
+        Ok(RuntimeArtifactPage {
+            reference: reference.clone(),
+            offset,
+            page_sha256: hex(&page_digest),
+            bytes: page_bytes,
+            next_offset: (!complete).then_some(end as u64),
+            complete,
+        })
+    }
+
+    fn release(
+        &mut self,
+        run_id: &agentmage_kernel_contracts::RuntimeRunId,
+        request_sha256: &str,
+    ) -> Result<(), NativeChatRuntimeError> {
+        self.service.release(run_id, request_sha256)
+    }
 }
 
 fn run_workflow_caller(fixture: &ParityFixture) -> ClientProjection {
@@ -385,6 +485,7 @@ impl CodingApprovalPort for UnexpectedApproval {
 
 fn prepare_input(request: &RuntimeRunRequest) -> NativeChatPrepareInput {
     NativeChatPrepareInput {
+        resume: false,
         engineering_session_id: None,
         profile_id: request.model_profile.profile_id.as_str().to_owned(),
         expected_entry_sha256: "a".repeat(64),
@@ -445,9 +546,11 @@ fn controlled_write_fixture() -> ParityFixture {
     );
     let turn_id = RuntimeTurnId::from_raw("parity-coding-turn-0001");
     let artifact_id = RuntimeArtifactId::from_raw("parity-coding-artifact-0001");
+    let artifact_bytes = vec![b'p'; 31];
+    let artifact_sha256 = hex(&Sha256::digest(&artifact_bytes));
     let payload = RuntimePayloadReference {
         artifact_id: artifact_id.clone(),
-        sha256: "d".repeat(64),
+        sha256: artifact_sha256,
         byte_size: 31,
         media_type: "text/plain".to_owned(),
     };
@@ -528,8 +631,22 @@ fn controlled_write_fixture() -> ParityFixture {
         request,
         events,
         artifacts: vec![artifact],
+        artifact_payloads: BTreeMap::from([(
+            "parity-coding-artifact-0001".to_owned(),
+            artifact_bytes,
+        )]),
         outcome,
     }
+}
+
+fn hex(bytes: &[u8]) -> String {
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let mut encoded = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        encoded.push(char::from(DIGITS[usize::from(byte >> 4)]));
+        encoded.push(char::from(DIGITS[usize::from(byte & 0x0f)]));
+    }
+    encoded
 }
 
 #[derive(Clone)]

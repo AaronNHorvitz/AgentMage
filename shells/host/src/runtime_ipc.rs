@@ -1,8 +1,10 @@
 //! Authenticated bounded Linux IPC projection of the shared runtime transport.
 
 use agentmage_kernel_contracts::{
-    CancellationId, RuntimeApprovalResponse, RuntimeEventCursor, RuntimeRunId, RuntimeRunRequest,
+    CancellationId, RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEventCursor, RuntimeRunId,
+    RuntimeRunRequest,
 };
+use agentmage_kernel_engine::runtime_artifact::{RuntimeArtifactPage, RuntimeArtifactState};
 use agentmage_platform_linux::LinuxAuthenticatedIpcSession;
 use serde::{Deserialize, Serialize};
 
@@ -10,7 +12,7 @@ use crate::runtime_transport::{
     RuntimePrepareInput, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
 };
 
-const WIRE_VERSION: u16 = 1;
+const WIRE_VERSION: u16 = 3;
 const MAX_WIRE_BYTES: usize = 4 * 1024 * 1024;
 
 /// One closed operation accepted by the host-owned runtime service.
@@ -35,6 +37,18 @@ enum RuntimeIpcRequest {
         cancellation_id: CancellationId,
         after_event_cursor: Option<RuntimeEventCursor>,
     },
+    ReadArtifactPage {
+        run_id: RuntimeRunId,
+        request_sha256: String,
+        reference: RuntimeArtifactRef,
+        offset: u64,
+        maximum_bytes: u32,
+    },
+    ReleaseArtifact {
+        run_id: RuntimeRunId,
+        request_sha256: String,
+        reference: RuntimeArtifactRef,
+    },
     Release {
         run_id: RuntimeRunId,
         request_sha256: String,
@@ -48,6 +62,8 @@ enum RuntimeIpcRequest {
 enum RuntimeIpcResponse {
     Prepared { request: RuntimeRunRequest },
     Step { step: RuntimeTransportStep },
+    ArtifactPage { page: RuntimeArtifactPage },
+    ArtifactState { state: RuntimeArtifactState },
     Released,
     Shutdown,
     Error { error: RuntimeTransportError },
@@ -256,6 +272,42 @@ impl RuntimeTransportPort for LinuxRuntimeIpcClient {
         }
     }
 
+    fn read_artifact_page(
+        &mut self,
+        run_id: &RuntimeRunId,
+        request_sha256: &str,
+        reference: &RuntimeArtifactRef,
+        offset: u64,
+        maximum_bytes: u32,
+    ) -> Result<RuntimeArtifactPage, RuntimeTransportError> {
+        match self.exchange(RuntimeIpcRequest::ReadArtifactPage {
+            run_id: run_id.clone(),
+            request_sha256: request_sha256.to_owned(),
+            reference: reference.clone(),
+            offset,
+            maximum_bytes,
+        })? {
+            RuntimeIpcResponse::ArtifactPage { page } => Ok(page),
+            _ => Err(RuntimeTransportError::RuntimeEvidenceDenied),
+        }
+    }
+
+    fn release_artifact(
+        &mut self,
+        run_id: &RuntimeRunId,
+        request_sha256: &str,
+        reference: &RuntimeArtifactRef,
+    ) -> Result<RuntimeArtifactState, RuntimeTransportError> {
+        match self.exchange(RuntimeIpcRequest::ReleaseArtifact {
+            run_id: run_id.clone(),
+            request_sha256: request_sha256.to_owned(),
+            reference: reference.clone(),
+        })? {
+            RuntimeIpcResponse::ArtifactState { state } => Ok(state),
+            _ => Err(RuntimeTransportError::RuntimeEvidenceDenied),
+        }
+    }
+
     fn release(
         &mut self,
         run_id: &RuntimeRunId,
@@ -319,6 +371,30 @@ pub fn serve_linux_runtime_ipc<P: RuntimeTransportPort>(
                 after_event_cursor.as_ref(),
             ) {
                 Ok(step) => (RuntimeIpcResponse::Step { step }, false),
+                Err(error) => (RuntimeIpcResponse::Error { error }, false),
+            },
+            Some(RuntimeIpcRequest::ReadArtifactPage {
+                run_id,
+                request_sha256,
+                reference,
+                offset,
+                maximum_bytes,
+            }) => match runtime.read_artifact_page(
+                &run_id,
+                &request_sha256,
+                &reference,
+                offset,
+                maximum_bytes,
+            ) {
+                Ok(page) => (RuntimeIpcResponse::ArtifactPage { page }, false),
+                Err(error) => (RuntimeIpcResponse::Error { error }, false),
+            },
+            Some(RuntimeIpcRequest::ReleaseArtifact {
+                run_id,
+                request_sha256,
+                reference,
+            }) => match runtime.release_artifact(&run_id, &request_sha256, &reference) {
+                Ok(state) => (RuntimeIpcResponse::ArtifactState { state }, false),
                 Err(error) => (RuntimeIpcResponse::Error { error }, false),
             },
             Some(RuntimeIpcRequest::Release {

@@ -26,6 +26,8 @@ pub const MAX_RUNTIME_ARTIFACTS_PER_CHECKPOINT: usize = 1_024;
 /// Exact media type used only for sealed runtime continuation-state artifacts.
 pub const RUNTIME_CONTINUATION_MEDIA_TYPE: &str =
     "application/vnd.agentmage.runtime-continuation+json";
+/// Exact media type for the sealed base request retained to reconstruct a durable run.
+pub const RUNTIME_REQUEST_MEDIA_TYPE: &str = "application/vnd.agentmage.runtime-request+json";
 const MAX_RUNTIME_CONTINUATION_RESULTS: usize = 1_024;
 const MAX_RUNTIME_CONTINUATION_TRANSITIONS: usize = 4_096;
 
@@ -255,7 +257,8 @@ pub struct RuntimeArtifactPublication {
 }
 
 /// Privacy-safe current metadata projection for one artifact.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct RuntimeArtifactState {
     /// Path-free immutable artifact reference.
     pub reference: RuntimeArtifactRef,
@@ -308,7 +311,8 @@ pub struct RuntimeArtifactPageRequest {
 }
 
 /// One bounded verified artifact page without path or future-read authority.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct RuntimeArtifactPage {
     /// Exact path-free artifact reference used for the read.
     pub reference: RuntimeArtifactRef,

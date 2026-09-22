@@ -8,11 +8,14 @@ use agentmage_kernel_contracts::{
     CancellationId, RuntimeApprovalChallenge, RuntimeApprovalResponse, RuntimeArtifactRef,
     RuntimeEvent, RuntimeEventCursor, RuntimeOutcome, RuntimeRunId, RuntimeRunRequest, SessionId,
 };
+use agentmage_kernel_engine::runtime_artifact::{RuntimeArtifactPage, RuntimeArtifactState};
 
 /// Trusted inputs from one authenticated runtime preparation request.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RuntimePrepareInput {
+    /// Whether the host must reconstruct one exact safe-boundary durable run.
+    pub resume: bool,
     /// Exact pre-existing Engineering session for approved-Plan execution, when applicable.
     pub engineering_session_id: Option<SessionId>,
     /// Exact selected profile identity.
@@ -123,6 +126,28 @@ pub trait RuntimeTransportPort {
         cancellation_id: CancellationId,
         after_event_cursor: Option<&RuntimeEventCursor>,
     ) -> Result<RuntimeTransportStep, RuntimeTransportError>;
+
+    /// Reads one bounded verified artifact page from an active terminal run.
+    fn read_artifact_page(
+        &mut self,
+        _run_id: &RuntimeRunId,
+        _request_sha256: &str,
+        _reference: &RuntimeArtifactRef,
+        _offset: u64,
+        _maximum_bytes: u32,
+    ) -> Result<RuntimeArtifactPage, RuntimeTransportError> {
+        Err(RuntimeTransportError::RequestDenied)
+    }
+
+    /// Releases one exact terminal-run artifact through its canonical lifecycle owner.
+    fn release_artifact(
+        &mut self,
+        _run_id: &RuntimeRunId,
+        _request_sha256: &str,
+        _reference: &RuntimeArtifactRef,
+    ) -> Result<RuntimeArtifactState, RuntimeTransportError> {
+        Err(RuntimeTransportError::RequestDenied)
+    }
 
     /// Discards one unstarted request or removes one already terminal run.
     fn release(

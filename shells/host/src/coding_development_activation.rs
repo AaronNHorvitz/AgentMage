@@ -59,6 +59,7 @@ pub struct CodingDevelopmentActivation {
     disposable_root: PathBuf,
     workspace_root: PathBuf,
     marker_sha256: String,
+    marker_epoch_ms: u64,
 }
 
 impl CodingDevelopmentActivation {
@@ -94,6 +95,16 @@ impl CodingDevelopmentActivation {
         {
             return Err(CodingDevelopmentActivationError::MarkerDenied);
         }
+        let marker_epoch_ms = u64::try_from(metadata.mtime())
+            .ok()
+            .and_then(|seconds| seconds.checked_mul(1_000))
+            .and_then(|millis| {
+                u64::try_from(metadata.mtime_nsec())
+                    .ok()
+                    .and_then(|nanos| millis.checked_add(nanos / 1_000_000))
+            })
+            .filter(|value| *value > 0)
+            .ok_or(CodingDevelopmentActivationError::MarkerDenied)?;
         let bytes =
             fs::read(&marker).map_err(|_| CodingDevelopmentActivationError::MarkerDenied)?;
         let expected = marker_contents(&workspace_root)?;
@@ -105,6 +116,7 @@ impl CodingDevelopmentActivation {
             disposable_root,
             workspace_root,
             marker_sha256: hex(&Sha256::digest(bytes)),
+            marker_epoch_ms,
         })
     }
 
@@ -143,6 +155,12 @@ impl CodingDevelopmentActivation {
     #[must_use]
     pub fn marker_sha256(&self) -> &str {
         &self.marker_sha256
+    }
+
+    /// Returns the marker-bound start time used for stable development-session retention.
+    #[must_use]
+    pub const fn marker_epoch_ms(&self) -> u64 {
+        self.marker_epoch_ms
     }
 }
 

@@ -2131,7 +2131,7 @@ fn durable_tool_outputs_use_only_the_declared_closed_artifact_kind() {
 }
 
 #[test]
-fn durable_tool_stream_candidates_preserve_large_stdout_and_stderr_separately() {
+fn durable_tool_stream_candidates_preserve_full_stdout_and_small_stderr_separately() {
     let profile = profile("runtime-loop-tool-streams");
     let registry = registry_for_operation(GrantOperation::WorkspaceRead);
     let mut request = request(profile.clone(), &registry);
@@ -2162,7 +2162,7 @@ fn durable_tool_stream_candidates_preserve_large_stdout_and_stderr_separately() 
                 RuntimeToolArtifactCandidate {
                     kind: RuntimeArtifactKind::StandardError,
                     media_type: "text/plain".to_owned(),
-                    bytes: vec![b'e'; MAX_RUNTIME_INLINE_OUTPUT_BYTES + 1],
+                    bytes: b"bounded stderr\n".to_vec(),
                 },
             ],
             journal: Arc::new(Mutex::new(Vec::new())),
@@ -2192,6 +2192,7 @@ fn durable_tool_stream_candidates_preserve_large_stdout_and_stderr_separately() 
     assert_eq!(retained.len(), 2);
     assert_eq!(retained[0].0.kind, RuntimeArtifactKind::StandardOutput);
     assert_eq!(retained[1].0.kind, RuntimeArtifactKind::StandardError);
+    assert_eq!(retained[1].1, b"bounded stderr\n");
     assert_ne!(retained[0].0.payload_sha256, retained[1].0.payload_sha256);
 }
 

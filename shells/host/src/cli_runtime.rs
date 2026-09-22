@@ -15,10 +15,12 @@ use agentmage_kernel_engine::{
     },
     runtime_artifact::{MAX_RUNTIME_ARTIFACT_BYTES, MAX_RUNTIME_ARTIFACTS_PER_CHECKPOINT},
     runtime_coordinator::{
-        verify_runtime_approval_challenge, verify_runtime_outcome, verify_runtime_run_request,
+        seal_runtime_run_request, verify_runtime_approval_challenge, verify_runtime_outcome,
+        verify_runtime_run_request,
     },
     runtime_event::RuntimeEventSequence,
 };
+use sha2::{Digest, Sha256};
 
 use crate::coding_client::{
     CodingApprovalPort, CodingClientError, CodingEventSink, runtime_approval_response,
@@ -163,8 +165,19 @@ pub struct InteractiveCliRuntimeResult {
     pub outcome: RuntimeOutcome,
     /// Complete verified path-free artifact references retained by the coordinator.
     pub artifacts: Vec<RuntimeArtifactRef>,
+    /// Full-payload verification summaries produced through bounded host-owned pages.
+    pub verified_artifacts: Vec<VerifiedRuntimeArtifact>,
     /// Number of canonical events independently verified and presented.
     pub presented_events: u64,
+}
+
+/// Content-free result of reading and hashing one complete retained runtime artifact.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct VerifiedRuntimeArtifact {
+    /// Exact verified path-free artifact reference.
+    pub reference: RuntimeArtifactRef,
+    /// Number of bounded pages read to verify the complete immutable payload.
+    pub page_count: u64,
 }
 
 /// Runs one interactive CLI operation through the same host-owned runtime port as native Chat.
@@ -191,7 +204,7 @@ where
         return Err(InteractiveCliRuntimeError::Request);
     }
 
-    let mut verifier = InteractiveCliRuntimeVerifier::new(request.clone());
+    let mut verifier = InteractiveCliRuntimeVerifier::new(request.clone())?;
     let mut step = match runtime.start(request.clone()) {
         Ok(step) => step,
         Err(error) => {
@@ -213,6 +226,14 @@ where
         }
 
         if let Some(outcome) = step.outcome {
+            let verified_artifacts =
+                match verify_complete_artifacts(runtime, &request, &step.artifacts) {
+                    Ok(verified) => verified,
+                    Err(error) => {
+                        best_effort_release(runtime, &request);
+                        return Err(error);
+                    }
+                };
             runtime
                 .release(&request.run_id, &request.request_sha256)
                 .map_err(|_| InteractiveCliRuntimeError::Release)?;
@@ -220,6 +241,7 @@ where
                 request,
                 outcome,
                 artifacts: step.artifacts,
+                verified_artifacts,
                 presented_events: verifier.event_count(),
             });
         }
@@ -304,6 +326,81 @@ where
     }
 }
 
+fn verify_complete_artifacts<P>(
+    runtime: &mut P,
+    request: &RuntimeRunRequest,
+    artifacts: &[RuntimeArtifactRef],
+) -> Result<Vec<VerifiedRuntimeArtifact>, InteractiveCliRuntimeError>
+where
+    P: NativeChatRuntimePort + ?Sized,
+{
+    const PAGE_BYTES: u32 = 4 * 1024;
+    let mut verified = Vec::with_capacity(artifacts.len());
+    for reference in artifacts {
+        let maximum_pages = reference.byte_size.div_ceil(u64::from(PAGE_BYTES));
+        let mut offset = 0_u64;
+        let mut page_count = 0_u64;
+        let mut digest = Sha256::new();
+        loop {
+            let page = runtime
+                .read_artifact_page(
+                    &request.run_id,
+                    &request.request_sha256,
+                    reference,
+                    offset,
+                    PAGE_BYTES,
+                )
+                .map_err(map_runtime_error)?;
+            page_count = page_count
+                .checked_add(1)
+                .ok_or(InteractiveCliRuntimeError::Evidence)?;
+            let page_len = u64::try_from(page.bytes.len())
+                .map_err(|_| InteractiveCliRuntimeError::Evidence)?;
+            let next = offset
+                .checked_add(page_len)
+                .ok_or(InteractiveCliRuntimeError::Evidence)?;
+            let page_digest: [u8; 32] = Sha256::digest(&page.bytes).into();
+            let page_sha256 = lower_hex(&page_digest);
+            if page.reference != *reference
+                || page.offset != offset
+                || page.bytes.is_empty()
+                || page.bytes.len() > PAGE_BYTES as usize
+                || page.page_sha256 != page_sha256
+                || next > reference.byte_size
+                || page_count > maximum_pages
+                || page.complete != (next == reference.byte_size)
+                || page.next_offset != (!page.complete).then_some(next)
+            {
+                return Err(InteractiveCliRuntimeError::Evidence);
+            }
+            digest.update(&page.bytes);
+            if page.complete {
+                break;
+            }
+            offset = next;
+        }
+        let payload_digest: [u8; 32] = digest.finalize().into();
+        if lower_hex(&payload_digest) != reference.payload_sha256 {
+            return Err(InteractiveCliRuntimeError::Evidence);
+        }
+        verified.push(VerifiedRuntimeArtifact {
+            reference: reference.clone(),
+            page_count,
+        });
+    }
+    Ok(verified)
+}
+
+fn lower_hex(bytes: &[u8]) -> String {
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let mut encoded = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        encoded.push(char::from(DIGITS[usize::from(byte >> 4)]));
+        encoded.push(char::from(DIGITS[usize::from(byte & 0x0f)]));
+    }
+    encoded
+}
+
 fn best_effort_release<P>(runtime: &mut P, request: &RuntimeRunRequest)
 where
     P: NativeChatRuntimePort + ?Sized,
@@ -319,10 +416,14 @@ fn verify_prepared_request(
     if !matches!(
         request.mode,
         RuntimeSessionMode::EphemeralReadOnly | RuntimeSessionMode::ControlledWrite
-    ) || request.event_cursor.is_some()
+    ) || request.event_cursor.is_some() != input.resume
         || request.model_profile.profile_id.as_str() != input.profile_id
         || request.workspace_id.as_str() != input.workspace_id
         || request.task.objective != input.prompt
+        || input
+            .engineering_session_id
+            .as_ref()
+            .is_some_and(|session_id| &request.session_id != session_id)
     {
         return Err(InteractiveCliRuntimeError::Request);
     }
@@ -332,6 +433,7 @@ fn verify_prepared_request(
 #[derive(Clone)]
 struct InteractiveCliRuntimeVerifier {
     request: RuntimeRunRequest,
+    base_request_sha256: String,
     sequence: RuntimeEventSequence,
     events: BTreeMap<String, String>,
     artifacts: BTreeMap<String, RuntimeArtifactRef>,
@@ -339,14 +441,24 @@ struct InteractiveCliRuntimeVerifier {
 }
 
 impl InteractiveCliRuntimeVerifier {
-    fn new(request: RuntimeRunRequest) -> Self {
-        Self {
+    fn new(request: RuntimeRunRequest) -> Result<Self, InteractiveCliRuntimeError> {
+        let base_request_sha256 = if request.event_cursor.is_some() {
+            let mut base = request.clone();
+            base.event_cursor = None;
+            seal_runtime_run_request(base)
+                .map_err(|_| InteractiveCliRuntimeError::Evidence)?
+                .request_sha256
+        } else {
+            request.request_sha256.clone()
+        };
+        Ok(Self {
             request,
+            base_request_sha256,
             sequence: RuntimeEventSequence::new(),
             events: BTreeMap::new(),
             artifacts: BTreeMap::new(),
             last_event: None,
-        }
+        })
     }
 
     fn accept(&mut self, step: &NativeChatRuntimeStep) -> Result<(), InteractiveCliRuntimeError> {
@@ -391,7 +503,7 @@ impl InteractiveCliRuntimeVerifier {
                 && !matches!(
                     &event.kind,
                     RuntimeEventKind::RunStarted { request_sha256 }
-                        if request_sha256 == &self.request.request_sha256
+                        if request_sha256 == &self.base_request_sha256
                 ))
         {
             return Err(InteractiveCliRuntimeError::Evidence);
@@ -1113,6 +1225,7 @@ mod tests {
 
     fn input(request: &RuntimeRunRequest) -> NativeChatPrepareInput {
         NativeChatPrepareInput {
+            resume: false,
             engineering_session_id: None,
             profile_id: request.model_profile.profile_id.as_str().to_owned(),
             expected_entry_sha256: "a".repeat(64),

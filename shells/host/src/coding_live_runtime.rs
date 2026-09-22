@@ -7,6 +7,7 @@
 use std::collections::BTreeMap;
 use std::sync::{
     Arc, Mutex,
+    atomic::{AtomicBool, Ordering},
     mpsc::{Receiver, SyncSender, TryRecvError, sync_channel},
 };
 use std::thread::{self, JoinHandle};
@@ -19,6 +20,7 @@ use agentmage_kernel_contracts::{
     RuntimeRunRequest, RuntimeSessionMode,
 };
 use agentmage_kernel_engine::{
+    runtime_artifact::{RuntimeArtifactPage, RuntimeArtifactState},
     runtime_coordinator::{
         verify_runtime_approval_challenge, verify_runtime_approval_response,
         verify_runtime_outcome, verify_runtime_run_request,
@@ -45,12 +47,139 @@ const WAIT_SLICE: Duration = Duration::from_millis(2);
 
 enum WorkerCommand {
     Advance(Option<RuntimeApprovalResponse>),
+    ReadArtifactPage {
+        reference: RuntimeArtifactRef,
+        offset: u64,
+        maximum_bytes: u32,
+    },
+    ReleaseArtifact(RuntimeArtifactRef),
     Stop,
 }
 
 struct WorkerBoundary {
     step: RuntimeCoordinatorStep,
     artifacts: Vec<RuntimeArtifactRef>,
+}
+
+enum WorkerResponse {
+    Boundary(WorkerBoundary),
+    ArtifactPage(RuntimeArtifactPage),
+    ArtifactState(RuntimeArtifactState),
+}
+
+#[derive(Default)]
+struct EventPumpState {
+    sequence: RuntimeEventSequence,
+    events: Vec<RuntimeEvent>,
+    disconnected: bool,
+    failed: bool,
+}
+
+struct EventPump {
+    state: Arc<Mutex<EventPumpState>>,
+    stop: Arc<AtomicBool>,
+    worker: Option<JoinHandle<()>>,
+}
+
+impl EventPump {
+    fn spawn(
+        subscription: RuntimeEventSubscription,
+        request: &RuntimeRunRequest,
+        initial_events: Vec<RuntimeEvent>,
+    ) -> Result<Self, RuntimeTransportError> {
+        let mut sequence = RuntimeEventSequence::new();
+        if initial_events.len() > request.limits.max_events as usize
+            || initial_events.iter().any(|event| {
+                event.run_id != request.run_id
+                    || event.session_id != request.session_id
+                    || event.task_id != request.task.task_id
+                    || event.policy_id != request.policy_id
+                    || sequence.push(event).is_err()
+            })
+        {
+            return Err(RuntimeTransportError::RuntimeEvidenceDenied);
+        }
+        let state = Arc::new(Mutex::new(EventPumpState {
+            sequence,
+            events: initial_events,
+            disconnected: false,
+            failed: false,
+        }));
+        let stop = Arc::new(AtomicBool::new(false));
+        let worker_state = Arc::clone(&state);
+        let worker_stop = Arc::clone(&stop);
+        let run_id = request.run_id.clone();
+        let session_id = request.session_id.clone();
+        let task_id = request.task.task_id.clone();
+        let policy_id = request.policy_id.clone();
+        let maximum_events = request.limits.max_events as usize;
+        let worker = thread::Builder::new()
+            .name("agentmage-coding-event-pump".to_owned())
+            .spawn(move || {
+                while !worker_stop.load(Ordering::Acquire) {
+                    match subscription.try_next() {
+                        Ok(Some(event)) => {
+                            let mut current = match worker_state.lock() {
+                                Ok(current) => current,
+                                Err(_) => return,
+                            };
+                            if event.run_id != run_id
+                                || event.session_id != session_id
+                                || event.task_id != task_id
+                                || event.policy_id != policy_id
+                                || current.events.len() >= maximum_events
+                                || current.sequence.push(&event).is_err()
+                            {
+                                current.failed = true;
+                                return;
+                            }
+                            let terminal = current.sequence.is_terminal();
+                            current.events.push(event);
+                            if terminal {
+                                return;
+                            }
+                        }
+                        Ok(None) => thread::sleep(WAIT_SLICE),
+                        Err(_) => {
+                            if let Ok(mut current) = worker_state.lock() {
+                                current.disconnected = true;
+                            }
+                            return;
+                        }
+                    }
+                }
+            })
+            .map_err(|_| RuntimeTransportError::RuntimeFailed)?;
+        Ok(Self {
+            state,
+            stop,
+            worker: Some(worker),
+        })
+    }
+
+    fn snapshot(&self) -> Result<(Vec<RuntimeEvent>, bool, bool), RuntimeTransportError> {
+        let state = self
+            .state
+            .lock()
+            .map_err(|_| RuntimeTransportError::RuntimeEvidenceDenied)?;
+        if state.failed || state.disconnected && !state.sequence.is_terminal() {
+            return Err(RuntimeTransportError::RuntimeEvidenceDenied);
+        }
+        Ok((
+            state.events.clone(),
+            state.sequence.is_terminal(),
+            state.disconnected,
+        ))
+    }
+}
+
+impl Drop for EventPump {
+    fn drop(&mut self) {
+        self.stop.store(true, Ordering::Release);
+        if let Some(worker) = self.worker.take() {
+            let _ = worker.join();
+        }
+    }
 }
 
 struct SharedCancellation {
@@ -133,12 +262,24 @@ where
         if self.prepared.len() + self.active.len() >= MAX_LIVE_RUNS {
             return Err(RuntimeTransportError::CapacityExceeded);
         }
+        if input.resume && !self.active.is_empty()
+            || input
+                .engineering_session_id
+                .as_ref()
+                .is_some_and(|session_id| {
+                    self.active
+                        .values()
+                        .any(|session| &session.request.session_id == session_id)
+                })
+        {
+            return Err(RuntimeTransportError::RequestDenied);
+        }
         let request = self.factory.prepare_runtime_request(&input)?;
         verify_runtime_run_request(&request).map_err(|_| RuntimeTransportError::RequestDenied)?;
         if !matches!(
             request.mode,
             RuntimeSessionMode::EphemeralReadOnly | RuntimeSessionMode::ControlledWrite
-        ) || request.event_cursor.is_some()
+        ) || request.event_cursor.is_some() != input.resume
             || request.model_profile.profile_id.as_str() != input.profile_id
             || request.workspace_id.as_str() != input.workspace_id
             || request.task.objective != input.prompt
@@ -205,6 +346,32 @@ where
             .cancel(request_sha256, cancellation_id, after_event_cursor)
     }
 
+    fn read_artifact_page(
+        &mut self,
+        run_id: &RuntimeRunId,
+        request_sha256: &str,
+        reference: &RuntimeArtifactRef,
+        offset: u64,
+        maximum_bytes: u32,
+    ) -> Result<RuntimeArtifactPage, RuntimeTransportError> {
+        self.active
+            .get_mut(run_id.as_str())
+            .ok_or(RuntimeTransportError::RunUnavailable)?
+            .read_artifact_page(request_sha256, reference, offset, maximum_bytes)
+    }
+
+    fn release_artifact(
+        &mut self,
+        run_id: &RuntimeRunId,
+        request_sha256: &str,
+        reference: &RuntimeArtifactRef,
+    ) -> Result<RuntimeArtifactState, RuntimeTransportError> {
+        self.active
+            .get_mut(run_id.as_str())
+            .ok_or(RuntimeTransportError::RunUnavailable)?
+            .release_artifact(request_sha256, reference)
+    }
+
     fn release(
         &mut self,
         run_id: &RuntimeRunId,
@@ -233,17 +400,16 @@ where
 struct LiveCodingSession {
     request: RuntimeRunRequest,
     commands: SyncSender<WorkerCommand>,
-    results: Receiver<Result<WorkerBoundary, CodingClientError>>,
-    subscription: RuntimeEventSubscription,
+    results: Receiver<Result<WorkerResponse, CodingClientError>>,
+    event_pump: EventPump,
     cancellation: Arc<SharedCancellation>,
     worker: Option<JoinHandle<()>>,
-    sequence: RuntimeEventSequence,
     events: Vec<RuntimeEvent>,
     artifacts: Vec<RuntimeArtifactRef>,
     pending_approval: Option<RuntimeApprovalChallenge>,
     outcome: Option<RuntimeOutcome>,
     busy: bool,
-    subscription_disconnected: bool,
+    event_stream_terminal: bool,
 }
 
 impl LiveCodingSession {
@@ -260,9 +426,11 @@ impl LiveCodingSession {
         .ok()
         .filter(|capacity| *capacity > 0)
         .ok_or(RuntimeTransportError::RequestDenied)?;
+        let initial_events = runtime.runtime_events().to_vec();
         let subscription = runtime
             .subscribe_live_events(capacity)
             .map_err(map_client_error)?;
+        let event_pump = EventPump::spawn(subscription, &request, initial_events)?;
         let cancellation = Arc::new(SharedCancellation::new());
         let worker_cancellation = Arc::clone(&cancellation);
         let (command_tx, command_rx) = sync_channel::<WorkerCommand>(1);
@@ -271,23 +439,28 @@ impl LiveCodingSession {
             .name("agentmage-coding-runtime".to_owned())
             .spawn(move || {
                 while let Ok(command) = command_rx.recv() {
-                    let WorkerCommand::Advance(response) = command else {
-                        return;
+                    let result = match command {
+                        WorkerCommand::Advance(response) => runtime
+                            .advance(response.as_ref(), Some(worker_cancellation.as_ref()))
+                            .map(|step| {
+                                WorkerResponse::Boundary(WorkerBoundary {
+                                    step,
+                                    artifacts: runtime.runtime_artifacts().to_vec(),
+                                })
+                            }),
+                        WorkerCommand::ReadArtifactPage {
+                            reference,
+                            offset,
+                            maximum_bytes,
+                        } => runtime
+                            .read_artifact_page(&reference, offset, maximum_bytes)
+                            .map(WorkerResponse::ArtifactPage),
+                        WorkerCommand::ReleaseArtifact(reference) => runtime
+                            .release_artifact(&reference)
+                            .map(WorkerResponse::ArtifactState),
+                        WorkerCommand::Stop => return,
                     };
-                    let result = runtime
-                        .advance(response.as_ref(), Some(worker_cancellation.as_ref()))
-                        .map(|step| WorkerBoundary {
-                            step,
-                            artifacts: runtime.runtime_artifacts().to_vec(),
-                        });
-                    let terminal = matches!(
-                        result,
-                        Ok(WorkerBoundary {
-                            step: RuntimeCoordinatorStep::Complete { .. },
-                            ..
-                        })
-                    );
-                    if result_tx.send(result).is_err() || terminal {
+                    if result_tx.send(result).is_err() {
                         return;
                     }
                 }
@@ -297,16 +470,15 @@ impl LiveCodingSession {
             request,
             commands: command_tx,
             results: result_rx,
-            subscription,
+            event_pump,
             cancellation,
             worker: Some(worker),
-            sequence: RuntimeEventSequence::new(),
             events: Vec::new(),
             artifacts: Vec::new(),
             pending_approval: None,
             outcome: None,
             busy: false,
-            subscription_disconnected: false,
+            event_stream_terminal: false,
         })
     }
 
@@ -393,12 +565,16 @@ impl LiveCodingSession {
     fn refresh(&mut self, wait: Duration) -> Result<(), RuntimeTransportError> {
         let deadline = Instant::now() + wait;
         loop {
-            let mut progressed = self.drain_events()?;
+            let mut progressed = self.sync_events()?;
             match self.results.try_recv() {
                 Ok(result) => {
                     progressed = true;
-                    self.accept_boundary(result.map_err(map_client_error)?)?;
-                    self.drain_events()?;
+                    let WorkerResponse::Boundary(boundary) = result.map_err(map_client_error)?
+                    else {
+                        return Err(RuntimeTransportError::RuntimeEvidenceDenied);
+                    };
+                    self.accept_boundary(boundary)?;
+                    self.sync_events()?;
                 }
                 Err(TryRecvError::Empty) => {}
                 Err(TryRecvError::Disconnected) if self.outcome.is_none() => {
@@ -406,45 +582,49 @@ impl LiveCodingSession {
                 }
                 Err(TryRecvError::Disconnected) => {}
             }
-            if self.subscription_disconnected && self.outcome.is_none() {
-                eprintln!("coding.live.subscription-disconnected");
-                return Err(RuntimeTransportError::RuntimeEvidenceDenied);
-            }
-            if progressed || Instant::now() >= deadline {
+            let boundary_visible = self.boundary_visible();
+            if progressed && boundary_visible || Instant::now() >= deadline {
                 return Ok(());
             }
             thread::sleep(WAIT_SLICE.min(deadline.saturating_duration_since(Instant::now())));
         }
     }
 
-    fn drain_events(&mut self) -> Result<bool, RuntimeTransportError> {
-        let mut progressed = false;
-        loop {
-            match self.subscription.try_next() {
-                Ok(Some(event)) => {
-                    if event.run_id != self.request.run_id
-                        || event.session_id != self.request.session_id
-                        || event.task_id != self.request.task.task_id
-                        || event.policy_id != self.request.policy_id
-                        || self.events.len() >= self.request.limits.max_events as usize
-                    {
-                        eprintln!("coding.live.event-binding-denied");
-                        return Err(RuntimeTransportError::RuntimeEvidenceDenied);
-                    }
-                    self.sequence.push(&event).map_err(|_| {
-                        eprintln!("coding.live.event-sequence-denied");
-                        RuntimeTransportError::RuntimeEvidenceDenied
-                    })?;
-                    self.events.push(event);
-                    progressed = true;
-                }
-                Ok(None) => return Ok(progressed),
-                Err(_) => {
-                    self.subscription_disconnected = true;
-                    return Ok(progressed);
-                }
-            }
+    fn sync_events(&mut self) -> Result<bool, RuntimeTransportError> {
+        let (events, terminal, _disconnected) = self.event_pump.snapshot().map_err(|error| {
+            eprintln!("coding.live.event-pump-denied");
+            error
+        })?;
+        if events.len() < self.events.len() || events[..self.events.len()] != self.events {
+            return Err(RuntimeTransportError::RuntimeEvidenceDenied);
         }
+        let progressed = events.len() > self.events.len();
+        self.events = events;
+        self.event_stream_terminal = terminal;
+        Ok(progressed)
+    }
+
+    fn boundary_visible(&self) -> bool {
+        if self.outcome.is_some() {
+            return self.event_stream_terminal;
+        }
+        let Some(challenge) = &self.pending_approval else {
+            return true;
+        };
+        matches!(
+            self.events.last(),
+            Some(RuntimeEvent {
+                kind: RuntimeEventKind::PermissionRequested {
+                    approval_id,
+                    preview_sha256,
+                    expires_at_epoch_ms,
+                    ..
+                },
+                ..
+            }) if approval_id == &challenge.approval_id
+                && preview_sha256 == &challenge.preview_sha256
+                && expires_at_epoch_ms == &challenge.expires_at_epoch_ms
+        )
     }
 
     fn accept_boundary(&mut self, boundary: WorkerBoundary) -> Result<(), RuntimeTransportError> {
@@ -476,7 +656,7 @@ impl LiveCodingSession {
         &self,
         after_event_cursor: Option<&RuntimeEventCursor>,
     ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
-        if self.outcome.is_some() != self.sequence.is_terminal()
+        if self.outcome.is_some() != self.event_stream_terminal
             || self.pending_approval.is_some() && self.outcome.is_some()
         {
             eprintln!("coding.live.terminal-binding-denied");
@@ -563,6 +743,54 @@ impl LiveCodingSession {
 
     const fn is_terminal(&self) -> bool {
         self.outcome.is_some()
+    }
+
+    fn read_artifact_page(
+        &mut self,
+        request_sha256: &str,
+        reference: &RuntimeArtifactRef,
+        offset: u64,
+        maximum_bytes: u32,
+    ) -> Result<RuntimeArtifactPage, RuntimeTransportError> {
+        self.verify_binding(request_sha256)?;
+        self.refresh(Duration::ZERO)?;
+        if !self.is_terminal() || self.busy {
+            return Err(RuntimeTransportError::RequestDenied);
+        }
+        self.commands
+            .send(WorkerCommand::ReadArtifactPage {
+                reference: reference.clone(),
+                offset,
+                maximum_bytes,
+            })
+            .map_err(|_| RuntimeTransportError::RuntimeFailed)?;
+        match self.results.recv_timeout(START_WAIT) {
+            Ok(Ok(WorkerResponse::ArtifactPage(page))) => Ok(page),
+            Ok(Ok(_)) => Err(RuntimeTransportError::RuntimeEvidenceDenied),
+            Ok(Err(error)) => Err(map_client_error(error)),
+            Err(_) => Err(RuntimeTransportError::RuntimeFailed),
+        }
+    }
+
+    fn release_artifact(
+        &mut self,
+        request_sha256: &str,
+        reference: &RuntimeArtifactRef,
+    ) -> Result<RuntimeArtifactState, RuntimeTransportError> {
+        self.verify_binding(request_sha256)?;
+        self.refresh(Duration::ZERO)?;
+        if !self.is_terminal() || self.busy {
+            return Err(RuntimeTransportError::RequestDenied);
+        }
+        self.commands
+            .send(WorkerCommand::ReleaseArtifact(reference.clone()))
+            .map_err(|_| RuntimeTransportError::RuntimeFailed)?;
+        match self.results.recv_timeout(START_WAIT) {
+            Ok(Ok(WorkerResponse::ArtifactState(state))) => Ok(state),
+            Ok(Ok(_)) => Err(RuntimeTransportError::RuntimeEvidenceDenied),
+            Ok(Err(error)) => Err(map_client_error(error)),
+            Err(_) => Err(RuntimeTransportError::RuntimeFailed),
+        }
     }
 }
 

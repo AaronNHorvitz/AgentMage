@@ -14,23 +14,24 @@ use agentmage_capability_read_only::{
     GitInspectionRequest,
 };
 use agentmage_capability_repository_map::{
-    StructuredArtifactClass, StructuredEdit, StructuredLanguage,
+    RepositoryMap, RepositoryObjectKind, StructuredArtifactClass, StructuredEdit,
+    StructuredLanguage,
 };
 use agentmage_kernel_contracts::{
     ActorId, AdapterInstanceId, AuthorityClass, BudgetLimit, BudgetResource,
-    CONTRACT_SCHEMA_VERSION, ClosedModelProposal, ContextBudget, ContractPayload, DataSensitivity,
-    DecodingProfile, EvidenceKind, ExactModelProfile, FamilyCodecIdentity, GrantTarget,
-    HardwareEnvelope, LocalEndpointIdentity, LocalTransport, ModelAdapterId, ModelArtifact,
-    ModelCancellationProbe, ModelCapability, ModelCapabilityState, ModelCodecId, ModelFinishReason,
-    ModelManifestId, ModelMessageRole, ModelModality, ModelProfileId, ModelProposalKind,
-    ModelResourceReport, ModelRole, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
-    ModelRuntimeFailure, ModelRuntimeIdentity, ModelRuntimeKind, ModelStreamId, ModelTokenUsage,
-    ModelToolCallCandidate, NetworkComponent, NetworkDestinationClass, NetworkObservation,
-    PathResolutionIntent, PlanId, PlatformArchitecture, PlatformFamily, ProposalId,
-    RepositorySnapshotId, RollbackPlan, RuntimeIsolationObservation, RuntimeRunId,
-    RuntimeRunLimits, SessionId, StopCondition, StopConditionKind, TaskId, ToolCallId,
-    ToolCatalogId, ToolId, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceAuthorizationId,
-    WorkspaceId, WorkspacePath,
+    CONTRACT_SCHEMA_VERSION, ClosedModelProposal, ContextAdmission, ContextBudget, ContextItemKind,
+    ContextSensitivity, ContractPayload, DataSensitivity, DecodingProfile, EvidenceKind,
+    ExactModelProfile, FamilyCodecIdentity, GrantTarget, HardwareEnvelope, LocalEndpointIdentity,
+    LocalTransport, ModelAdapterId, ModelArtifact, ModelCancellationProbe, ModelCapability,
+    ModelCapabilityState, ModelCodecId, ModelFinishReason, ModelManifestId, ModelMessageRole,
+    ModelModality, ModelProfileId, ModelProposalKind, ModelResourceReport, ModelRole,
+    ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure,
+    ModelRuntimeIdentity, ModelRuntimeKind, ModelStreamId, ModelTokenUsage, ModelToolCallCandidate,
+    NetworkComponent, NetworkDestinationClass, NetworkObservation, PathResolutionIntent, PlanId,
+    PlatformArchitecture, PlatformFamily, ProposalId, RepositorySnapshotId, RollbackPlan,
+    RuntimeEventCursor, RuntimeIsolationObservation, RuntimeRunId, RuntimeRunLimits, SessionId,
+    StopCondition, StopConditionKind, TaskId, ToolCallId, ToolCatalogId, ToolId, WorkPacket,
+    WorkPacketId, WorkPacketState, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
 };
 use agentmage_kernel_engine::{
     command_runner::{
@@ -41,6 +42,11 @@ use agentmage_kernel_engine::{
         LocalModelController, ModelAdmissionCatalog, ModelUsePurpose, RejectedModelOutput,
     },
     repository_safety::{OwnedWorktreeRecord, WorktreeDisposition},
+    runtime_artifact::{
+        MAX_RUNTIME_ARTIFACT_BYTES, RUNTIME_CONTINUATION_MEDIA_TYPE, RUNTIME_REQUEST_MEDIA_TYPE,
+        RuntimeArtifactReadRequest, decode_runtime_continuation_state,
+    },
+    runtime_coordinator::seal_runtime_run_request,
     runtime_loop::{RuntimeClock, RuntimeModelPort, RuntimePortFailure},
     strict_local::{
         AcquisitionExitDisposition, NetworkAttemptLedger, OfflinePreflightObservation,
@@ -74,7 +80,7 @@ use crate::{
         ControlledFileClassification, ControlledFileCreationProposal, STRUCTURED_PATCH_TOOL_ID,
         StructuredPatchProposal, controlled_create_parent_observation_sha256,
     },
-    coding_context::{CodingContextPort, CodingTokenCounter},
+    coding_context::{CodingContextPort, CodingContextSource, CodingTokenCounter},
     coding_development_activation::{
         CODING_DEVELOPMENT_ACTIVATION, CodingDevelopmentActivation, CodingDevelopmentKeyProvider,
     },
@@ -153,6 +159,8 @@ pub enum CodingDevelopmentScenario {
     FailedTestRepair,
     /// Hold one cancellable model call so actual signal propagation can be exercised.
     SlowCancel,
+    /// Pause after the first safe checkpoint for an external host-stop resume probe.
+    RestartRepair,
     /// Create the exact absent source file and validate it.
     NewFile,
     /// Repair two bounded source files before one complete validation.
@@ -170,6 +178,7 @@ impl CodingDevelopmentScenario {
             "no-op" => Some(Self::NoOp),
             "failed-test-repair" => Some(Self::FailedTestRepair),
             "slow-cancel" => Some(Self::SlowCancel),
+            "restart-repair" => Some(Self::RestartRepair),
             "new-file" => Some(Self::NewFile),
             "multi-file" => Some(Self::MultiFile),
             "false-completion" => Some(Self::FalseCompletion),
@@ -239,6 +248,7 @@ pub type CodingDevelopmentCoordinator = DurableCodingCoordinator<
 struct PreparedDevelopmentRun {
     request: agentmage_kernel_contracts::RuntimeRunRequest,
     policy: CodingRuntimePolicy,
+    skip_scripted_steps: usize,
 }
 
 /// Factory that composes the real coordinator only for one explicit disposable activation.
@@ -249,6 +259,9 @@ pub struct CodingDevelopmentRuntimeFactory {
     platform: &'static LinuxDevelopmentPlatformAdapter,
     profile: &'static CodingSessionProfile,
     workspace: &'static LinuxCodingWorkspace<'static, 'static>,
+    supporting_sources: Vec<CodingContextSource>,
+    session_id: Option<SessionId>,
+    resume_requested: bool,
     prepared: BTreeMap<String, PreparedDevelopmentRun>,
 }
 
@@ -258,6 +271,7 @@ impl CodingDevelopmentRuntimeFactory {
         activation: CodingDevelopmentActivation,
         scenario: CodingDevelopmentScenario,
         model: CodingDevelopmentModel,
+        resume_requested: bool,
     ) -> Result<Self, CodingDevelopmentRuntimeError> {
         activation
             .revalidate()
@@ -274,76 +288,8 @@ impl CodingDevelopmentRuntimeFactory {
             )
             .map_err(|_| CodingDevelopmentRuntimeError::Platform)?,
         ));
-        let workspace_id = WorkspaceId::from_raw(format!(
-            "coding-development-{}",
-            &activation.marker_sha256()[..24]
-        ));
-        let selected = select_development_linux_workspace(
-            platform,
-            activation.workspace_root(),
-            workspace_id.clone(),
-            WorkspaceAuthorizationId::from_raw("coding-development-inventory"),
-        )
-        .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
-        let management = activation.state_root().join("repository-management");
-        ensure_private_directory(&management)?;
-        let scope = LinuxRepositoryScope::verify(
-            activation.workspace_root(),
-            activation.workspace_root().join(".git"),
-            &management,
-        )
-        .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
-        let collector = LinuxRepositoryCollector::new(
-            LinuxGitArtifact::verify("/usr/bin/git")
-                .map_err(|_| CodingDevelopmentRuntimeError::Platform)?,
-        );
-        let inventory = collector
-            .collect_inventory(&scope)
-            .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
-        if inventory.entries.iter().any(|entry| {
-            !matches!(
-                entry.state,
-                LinuxRepositoryInventoryState::Tracked {
-                    staged_changed: false,
-                    conflicted: false,
-                    ..
-                }
-            )
-        }) {
-            return Err(CodingDevelopmentRuntimeError::Repository);
-        }
-        let policy = LinuxRepositoryMapPolicy::new(
-            "coding-development-map-v1",
-            vec![
-                vec![".git".to_owned()],
-                vec![".agentmage-development-workspace".to_owned()],
-            ],
-            vec![vec!["target".to_owned()]],
-            vec![vec!["vendor".to_owned()]],
-        )
-        .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
-        let repository_map =
-            build_development_linux_repository_map(platform, &selected, inventory.clone(), &policy)
-                .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
-        drop(selected);
-        let profile = Box::leak(Box::new(build_profile(
-            &activation,
-            workspace_id,
-            &inventory,
-            &repository_map,
-            scenario,
-            model,
-        )?));
-        let workspace = Box::leak(Box::new(
-            LinuxCodingWorkspace::bind_development(
-                platform,
-                profile,
-                repository_map,
-                activation.workspace_root(),
-                WorkspaceAuthorizationId::from_raw("coding-development-runtime"),
-            )
-            .map_err(|_| CodingDevelopmentRuntimeError::Repository)?,
-        ));
+        let (profile, workspace, supporting_sources) =
+            build_repository_composition(&activation, platform, scenario, model)?;
         Ok(Self {
             activation,
             scenario,
@@ -351,9 +297,320 @@ impl CodingDevelopmentRuntimeFactory {
             platform,
             profile,
             workspace,
+            supporting_sources,
+            session_id: None,
+            resume_requested,
             prepared: BTreeMap::new(),
         })
     }
+
+    fn refresh_repository_composition(&mut self) -> Result<(), CodingDevelopmentRuntimeError> {
+        let (profile, workspace, supporting_sources) = build_repository_composition(
+            &self.activation,
+            self.platform,
+            self.scenario,
+            self.model,
+        )?;
+        self.profile = profile;
+        self.workspace = workspace;
+        self.supporting_sources = supporting_sources;
+        Ok(())
+    }
+
+    fn prepare_resume_request(
+        &mut self,
+        input: &RuntimePrepareInput,
+    ) -> Result<agentmage_kernel_contracts::RuntimeRunRequest, NativeChatRuntimeError> {
+        if input.engineering_session_id.is_some()
+            || self.session_id.is_some()
+            || !self.prepared.is_empty()
+        {
+            return Err(prepare_denied("resume-state"));
+        }
+        let mut key = CodingDevelopmentKeyProvider::open(&self.activation)
+            .map_err(|_| prepare_denied("resume-key"))?;
+        let authority = open_linux_development_authority(
+            self.platform,
+            self.activation.state_root(),
+            &mut key,
+            now_epoch_ms().map_err(|_| prepare_denied("resume-time"))?,
+        )
+        .map_err(|_| prepare_denied("resume-store"))?;
+        let checkpoint = authority
+            .authority()
+            .current_session_checkpoint()
+            .map_err(|_| prepare_denied("resume-checkpoint"))?
+            .ok_or_else(|| prepare_denied("resume-checkpoint-absent"))?;
+        let binding = authority
+            .authority()
+            .current_runtime_resume_binding()
+            .map_err(|_| prepare_denied("resume-binding"))?
+            .ok_or_else(|| prepare_denied("resume-binding-absent"))?;
+        if binding.checkpoint_id != checkpoint.checkpoint_id
+            || binding.checkpoint_sha256 != checkpoint.checkpoint_sha256
+            || binding.session_id != checkpoint.session_id
+            || binding.task_id != checkpoint.task_id
+        {
+            return Err(prepare_denied("resume-binding-drift"));
+        }
+        let request_references = binding
+            .artifacts
+            .iter()
+            .filter(|reference| reference.media_type == RUNTIME_REQUEST_MEDIA_TYPE)
+            .cloned()
+            .collect::<Vec<_>>();
+        let [request_reference] = request_references.as_slice() else {
+            return Err(prepare_denied("resume-request-reference"));
+        };
+        let continuation_references = binding
+            .artifacts
+            .iter()
+            .filter(|reference| reference.media_type == RUNTIME_CONTINUATION_MEDIA_TYPE)
+            .cloned()
+            .collect::<Vec<_>>();
+        let [continuation_reference] = continuation_references.as_slice() else {
+            return Err(prepare_denied("resume-continuation-reference"));
+        };
+        let request_bytes = authority
+            .read_runtime_artifact(&RuntimeArtifactReadRequest {
+                session_id: checkpoint.session_id.clone(),
+                task_id: checkpoint.task_id.clone(),
+                policy_sha256: checkpoint.policy_sha256.clone(),
+                reference: request_reference.clone(),
+                now_epoch_ms: now_epoch_ms().map_err(|_| prepare_denied("resume-time"))?,
+                maximum_bytes: MAX_RUNTIME_ARTIFACT_BYTES,
+            })
+            .map_err(|_| prepare_denied("resume-request-read"))?;
+        let base_request: agentmage_kernel_contracts::RuntimeRunRequest =
+            serde_json::from_slice(&request_bytes)
+                .map_err(|_| prepare_denied("resume-request-decode"))?;
+        agentmage_kernel_engine::runtime_coordinator::verify_runtime_run_request(&base_request)
+            .map_err(|_| prepare_denied("resume-request-invalid"))?;
+        let continuation_bytes = authority
+            .read_runtime_artifact(&RuntimeArtifactReadRequest {
+                session_id: checkpoint.session_id.clone(),
+                task_id: checkpoint.task_id.clone(),
+                policy_sha256: checkpoint.policy_sha256.clone(),
+                reference: continuation_reference.clone(),
+                now_epoch_ms: now_epoch_ms().map_err(|_| prepare_denied("resume-time"))?,
+                maximum_bytes: MAX_RUNTIME_ARTIFACT_BYTES,
+            })
+            .map_err(|_| prepare_denied("resume-continuation-read"))?;
+        let continuation = decode_runtime_continuation_state(&continuation_bytes)
+            .map_err(|_| prepare_denied("resume-continuation-decode"))?;
+        let events = authority
+            .authority()
+            .runtime_events(&base_request.run_id)
+            .map_err(|_| prepare_denied("resume-journal"))?;
+        let last = events
+            .last()
+            .ok_or_else(|| prepare_denied("resume-journal-empty"))?;
+        if base_request.event_cursor.is_some()
+            || base_request.session_id != binding.session_id
+            || base_request.task.task_id != binding.task_id
+            || base_request.task.objective != input.prompt
+            || base_request.model_profile != *self.profile.model_profile()
+            || base_request.workspace_id != *self.profile.write_scope().workspace_id()
+            || base_request.workspace_snapshot_sha256 != self.profile.worktree().record_sha256
+            || base_request.repository_snapshot_id != *self.profile.repository_snapshot_id()
+            || base_request.repository_snapshot_sha256 != self.profile.repository_snapshot_sha256()
+            || base_request.tool_catalog_id != *self.profile.tool_catalog_id()
+            || base_request.tool_catalog_sha256 != self.profile.tool_catalog_sha256()
+            || base_request.visible_tools != self.profile.visible_tools()
+            || base_request.limits != *self.profile.limits()
+        {
+            return Err(prepare_denied("resume-profile-drift"));
+        }
+        let policy = build_coding_runtime_policy(CodingRuntimePolicyRequest {
+            actor_id: &ActorId::from_raw("coding-development-user"),
+            task_id: &base_request.task.task_id,
+            run_id: &base_request.run_id,
+            workspace: self.workspace.workspace(),
+            profile: self.profile,
+            excluded_scopes: Vec::new(),
+        })
+        .map_err(|_| prepare_denied("resume-policy"))?;
+        if base_request.policy_id != *policy.policy_id()
+            || base_request.policy_sha256 != policy.engine().policy_sha256()
+            || checkpoint.policy_id != base_request.policy_id
+            || checkpoint.policy_sha256 != base_request.policy_sha256
+        {
+            return Err(prepare_denied("resume-policy-drift"));
+        }
+        let mut request = base_request;
+        request.event_cursor = Some(RuntimeEventCursor {
+            run_id: last.run_id.clone(),
+            event_id: last.event_id.clone(),
+            sequence: last.sequence,
+            event_sha256: last.event_sha256.clone(),
+        });
+        request =
+            seal_runtime_run_request(request).map_err(|_| prepare_denied("resume-request-seal"))?;
+        self.session_id = Some(request.session_id.clone());
+        self.resume_requested = false;
+        self.prepared.insert(
+            request.run_id.as_str().to_owned(),
+            PreparedDevelopmentRun {
+                request: request.clone(),
+                policy,
+                skip_scripted_steps: usize::try_from(continuation.model_call_count)
+                    .map_err(|_| prepare_denied("resume-model-count"))?,
+            },
+        );
+        Ok(request)
+    }
+}
+
+fn build_repository_composition(
+    activation: &CodingDevelopmentActivation,
+    platform: &'static LinuxDevelopmentPlatformAdapter,
+    scenario: CodingDevelopmentScenario,
+    model: CodingDevelopmentModel,
+) -> Result<
+    (
+        &'static CodingSessionProfile,
+        &'static LinuxCodingWorkspace<'static, 'static>,
+        Vec<CodingContextSource>,
+    ),
+    CodingDevelopmentRuntimeError,
+> {
+    let workspace_id = WorkspaceId::from_raw(format!(
+        "coding-development-{}",
+        &activation.marker_sha256()[..24]
+    ));
+    let selected = select_development_linux_workspace(
+        platform,
+        activation.workspace_root(),
+        workspace_id.clone(),
+        WorkspaceAuthorizationId::from_raw("coding-development-inventory"),
+    )
+    .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
+    let management = activation.state_root().join("repository-management");
+    ensure_private_directory(&management)?;
+    let scope = LinuxRepositoryScope::verify(
+        activation.workspace_root(),
+        activation.workspace_root().join(".git"),
+        &management,
+    )
+    .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
+    let collector = LinuxRepositoryCollector::new(
+        LinuxGitArtifact::verify("/usr/bin/git")
+            .map_err(|_| CodingDevelopmentRuntimeError::Platform)?,
+    );
+    let inventory = collector
+        .collect_inventory(&scope)
+        .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
+    if inventory.entries.iter().any(|entry| {
+        !matches!(
+            entry.state,
+            LinuxRepositoryInventoryState::Tracked {
+                staged_changed: false,
+                conflicted: false,
+                ..
+            }
+        )
+    }) {
+        return Err(CodingDevelopmentRuntimeError::Repository);
+    }
+    let policy = LinuxRepositoryMapPolicy::new(
+        "coding-development-map-v1",
+        vec![
+            vec![".git".to_owned()],
+            vec![".agentmage-development-workspace".to_owned()],
+        ],
+        vec![vec!["target".to_owned()]],
+        vec![vec!["vendor".to_owned()]],
+    )
+    .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
+    let repository_map =
+        build_development_linux_repository_map(platform, &selected, inventory.clone(), &policy)
+            .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
+    let supporting_sources =
+        build_repository_context_sources(platform, &selected, &repository_map)?;
+    drop(selected);
+    let profile = Box::leak(Box::new(build_profile(
+        activation,
+        workspace_id,
+        &inventory,
+        &repository_map,
+        scenario,
+        model,
+    )?));
+    let workspace = Box::leak(Box::new(
+        LinuxCodingWorkspace::bind_development(
+            platform,
+            profile,
+            repository_map,
+            activation.workspace_root(),
+            WorkspaceAuthorizationId::from_raw("coding-development-runtime"),
+        )
+        .map_err(|_| CodingDevelopmentRuntimeError::Repository)?,
+    ));
+    Ok((profile, workspace, supporting_sources))
+}
+
+fn build_repository_context_sources(
+    platform: &LinuxDevelopmentPlatformAdapter,
+    workspace: &agentmage_platform_linux::LinuxAuthorizedWorkspace,
+    repository_map: &RepositoryMap,
+) -> Result<Vec<CodingContextSource>, CodingDevelopmentRuntimeError> {
+    const MAX_SOURCE_BYTES: usize = 64 * 1024;
+    let mut sources = Vec::new();
+    for record in &repository_map.files {
+        if !record.content_read
+            || record.object_kind != RepositoryObjectKind::RegularFile
+            || record.size_bytes == 0
+            || record.size_bytes > MAX_SOURCE_BYTES as u64
+        {
+            continue;
+        }
+        let held = resolve_development_linux_workspace_object(
+            platform,
+            workspace,
+            &record.path,
+            PathResolutionIntent::ReadFile,
+        )
+        .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
+        let bytes = held
+            .read_exact_bytes()
+            .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
+        if bytes.len() > MAX_SOURCE_BYTES || sha256(&bytes) != record.content_sha256 {
+            return Err(CodingDevelopmentRuntimeError::Repository);
+        }
+        let Ok(content) = String::from_utf8(bytes) else {
+            continue;
+        };
+        let path = record
+            .path
+            .components()
+            .iter()
+            .map(|component| component.as_str())
+            .collect::<Vec<_>>()
+            .join("/");
+        let excerpt = serde_json::to_string(&serde_json::json!({
+            "schema_version": 1,
+            "untrusted_repository_source": true,
+            "path": &path,
+            "content_sha256": &record.content_sha256,
+            "content": &content,
+        }))
+        .map_err(|_| CodingDevelopmentRuntimeError::Composition)?;
+        sources.push(
+            CodingContextSource::new(
+                format!("repository-source-{}", &sha256(path.as_bytes())[..16]),
+                ContextItemKind::Supporting,
+                ContextSensitivity::Private,
+                ContextAdmission::Eligible,
+                false,
+                format!("agentmage:workspace-file:{path}"),
+                record.content_sha256.clone(),
+                sha256(excerpt.as_bytes()),
+                excerpt,
+            )
+            .map_err(|_| CodingDevelopmentRuntimeError::Composition)?,
+        );
+    }
+    Ok(sources)
 }
 
 impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
@@ -366,7 +623,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         self.activation
             .revalidate()
             .map_err(|_| prepare_denied("activation"))?;
-        if input.engineering_session_id.is_some()
+        if input.resume != self.resume_requested
             || input.profile_id != self.model.profile_id()
             || input.expected_entry_sha256 != self.activation.marker_sha256()
             || input.workspace_id != self.profile.write_scope().workspace_id().as_str()
@@ -377,9 +634,27 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         {
             return Err(prepare_denied("input-binding"));
         }
+        if self.resume_requested {
+            return self.prepare_resume_request(input);
+        }
+        let current_session = self.session_id.clone();
+        let session_id = match (current_session, &input.engineering_session_id) {
+            (None, None) => {
+                let sequence = NEXT_RUN.fetch_add(1, Ordering::Relaxed);
+                let session_id =
+                    SessionId::from_raw(format!("coding-development-session-{sequence:016x}"));
+                self.session_id = Some(session_id.clone());
+                session_id
+            }
+            (Some(current), Some(requested)) if &current == requested => {
+                self.refresh_repository_composition()
+                    .map_err(|_| prepare_denied("follow-up-repository"))?;
+                current
+            }
+            _ => return Err(prepare_denied("session-binding")),
+        };
         let sequence = NEXT_RUN.fetch_add(1, Ordering::Relaxed);
         let run_id = RuntimeRunId::from_raw(format!("coding-development-run-{sequence:016x}"));
-        let session_id = SessionId::from_raw(format!("coding-development-session-{sequence:016x}"));
         let task_id = TaskId::from_raw(self.profile.worktree().task_id.clone());
         let policy = build_coding_runtime_policy(CodingRuntimePolicyRequest {
             actor_id: &ActorId::from_raw("coding-development-user"),
@@ -400,6 +675,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 vec![EvidenceKind::Observation],
             ),
             CodingDevelopmentScenario::FailedTestRepair
+            | CodingDevelopmentScenario::RestartRepair
             | CodingDevelopmentScenario::NewFile
             | CodingDevelopmentScenario::MultiFile
             | CodingDevelopmentScenario::FalseCompletion => (
@@ -443,6 +719,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             PreparedDevelopmentRun {
                 request: request.clone(),
                 policy,
+                skip_scripted_steps: 0,
             },
         );
         Ok(request)
@@ -462,9 +739,12 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         if prepared.request != *request {
             return Err(NativeChatRuntimeError::RequestDenied);
         }
+        let stop_after_checkpoint = self.scenario == CodingDevelopmentScenario::RestartRepair
+            && prepared.skip_scripted_steps == 0
+            && request.event_cursor.is_none();
         let model = match self.model {
             CodingDevelopmentModel::Scripted => {
-                let steps = scripted_steps(
+                let mut steps = scripted_steps(
                     self.scenario,
                     self.profile,
                     request,
@@ -473,12 +753,27 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                     self.workspace.workspace(),
                 )
                 .map_err(|_| NativeChatRuntimeError::RequestDenied)?;
+                for _ in 0..prepared.skip_scripted_steps {
+                    steps
+                        .pop_front()
+                        .ok_or(NativeChatRuntimeError::RequestDenied)?;
+                }
+                let delays_ms: VecDeque<u64> = if prepared.skip_scripted_steps > 0 {
+                    VecDeque::new()
+                } else {
+                    match self.scenario {
+                        CodingDevelopmentScenario::SlowCancel => [120_000].into_iter().collect(),
+                        CodingDevelopmentScenario::RestartRepair => {
+                            [0, 120_000].into_iter().collect()
+                        }
+                        _ => VecDeque::new(),
+                    }
+                };
                 CodingDevelopmentModelPort::Scripted(ScriptedDevelopmentModel {
                     profile: self.profile.model_profile().clone(),
                     steps,
                     calls: 0,
-                    initial_delay_ms: (self.scenario == CodingDevelopmentScenario::SlowCancel)
-                        .then_some(120_000),
+                    delays_ms,
                 })
             }
             candidate => {
@@ -488,7 +783,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         };
         let context = CodingContextPort::for_profile(
             self.profile,
-            Vec::new(),
+            self.supporting_sources.clone(),
             DevelopmentTokenCounter::new(
                 self.profile.model_profile().context.token_counter.clone(),
             ),
@@ -542,8 +837,11 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             sensitivity: DataSensitivity::Operational,
             identities: OsCodingIdentitySource,
         })
-        .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
-        compose_durable_coding_coordinator(
+        .map_err(|error| {
+            eprintln!("coding.development.compose.boundary-{error:?}");
+            NativeChatRuntimeError::RuntimeFailed
+        })?;
+        let coordinator = compose_durable_coding_coordinator(
             self.profile,
             request.clone(),
             model,
@@ -551,7 +849,15 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             boundary,
             OsRuntimeClock,
         )
-        .map_err(|_| NativeChatRuntimeError::RuntimeFailed)
+        .map_err(|error| {
+            eprintln!("coding.development.compose.coordinator-{error:?}");
+            NativeChatRuntimeError::RuntimeFailed
+        })?;
+        Ok(if stop_after_checkpoint {
+            coordinator.with_development_checkpoint_stop_probe()
+        } else {
+            coordinator
+        })
     }
 }
 
@@ -595,7 +901,9 @@ fn build_profile(
         file_ownership_sha256: repository_map.map_sha256.clone(),
         live_process_count: 0,
         resource_budget_sha256,
-        retain_until_epoch_ms: now_epoch_ms()?.saturating_add(24 * 60 * 60 * 1_000),
+        retain_until_epoch_ms: activation
+            .marker_epoch_ms()
+            .saturating_add(24 * 60 * 60 * 1_000),
         clean: true,
         recovery_retained: false,
         disposition: WorktreeDisposition::Active,
@@ -922,7 +1230,7 @@ fn scripted_steps(
         ]
         .into_iter()
         .collect()),
-        CodingDevelopmentScenario::FailedTestRepair => {
+        CodingDevelopmentScenario::FailedTestRepair | CodingDevelopmentScenario::RestartRepair => {
             let validation_template = profile
                 .validations()
                 .templates
@@ -1258,7 +1566,7 @@ pub struct ScriptedDevelopmentModel {
     profile: ExactModelProfile,
     steps: VecDeque<ScriptedDevelopmentStep>,
     calls: u32,
-    initial_delay_ms: Option<u64>,
+    delays_ms: VecDeque<u64>,
 }
 
 type NativeDevelopmentRuntime = LinuxNativeModelAdapter<LlamaServerDriver>;
@@ -1665,7 +1973,7 @@ impl RuntimeModelPort for ScriptedDevelopmentModel {
         context: &agentmage_kernel_contracts::ModelContextPacket,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<ModelRunResult, RuntimePortFailure> {
-        if let Some(delay_ms) = self.initial_delay_ms.take() {
+        if let Some(delay_ms) = self.delays_ms.pop_front().filter(|delay| *delay > 0) {
             let mut remaining = delay_ms;
             while remaining > 0 {
                 if cancellation

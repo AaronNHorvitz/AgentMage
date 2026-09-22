@@ -29,6 +29,7 @@ fn main() -> Result<(), HostExit> {
                 workspace_root,
                 scenario,
                 model,
+                resume,
             ] if command == "--coding-development-host" => {
                 return coding_development_host(
                     state_root,
@@ -36,6 +37,7 @@ fn main() -> Result<(), HostExit> {
                     workspace_root,
                     scenario,
                     model,
+                    resume,
                 );
             }
             [command, root] if command == "--verify-package-candidate-root" => {
@@ -91,6 +93,7 @@ fn coding_development_host(
     workspace_root: &std::ffi::OsStr,
     scenario: &std::ffi::OsStr,
     model: &std::ffi::OsStr,
+    resume: &std::ffi::OsStr,
 ) -> Result<(), HostExit> {
     use agentmage_host::coding_development_activation::CodingDevelopmentActivation;
     use agentmage_host::coding_development_runtime::{
@@ -107,13 +110,18 @@ fn coding_development_host(
         .to_str()
         .and_then(CodingDevelopmentModel::parse)
         .ok_or(HostExit("coding.development.model-denied"))?;
+    let resume = match resume.to_str() {
+        Some("new") => false,
+        Some("resume") => true,
+        _ => return Err(HostExit("coding.development.resume-denied")),
+    };
     let activation = CodingDevelopmentActivation::validate(
         std::path::Path::new(state_root),
         std::path::Path::new(disposable_root),
         std::path::Path::new(workspace_root),
     )
     .map_err(|error| HostExit(error.code()))?;
-    let factory = CodingDevelopmentRuntimeFactory::new(activation.clone(), scenario, model)
+    let factory = CodingDevelopmentRuntimeFactory::new(activation.clone(), scenario, model, resume)
         .map_err(|error| HostExit(error.code()))?;
     let parent = linux_bootstrap::parent_process_id().map_err(|error| HostExit(error.code()))?;
     let bootstrap = linux_bootstrap::bootstrap_development_for_peer(&activation, parent)

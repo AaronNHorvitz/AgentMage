@@ -513,6 +513,7 @@ mod tests {
             crate::runtime_read_tests::completed_native_read_fixture();
         assert!(observed_result);
         let input = NativeChatPrepareInput {
+            resume: false,
             engineering_session_id: None,
             profile_id: request.model_profile.profile_id.as_str().to_owned(),
             expected_entry_sha256: "a".repeat(64),
@@ -597,6 +598,7 @@ mod tests {
         let (_, events, outcome, _) = crate::runtime_read_tests::completed_native_read_fixture();
         let (_, controlled_request) = crate::coding_run::tests::fixture_profile_and_request();
         let input = NativeChatPrepareInput {
+            resume: false,
             engineering_session_id: None,
             profile_id: controlled_request
                 .model_profile

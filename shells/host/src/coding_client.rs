@@ -8,11 +8,12 @@ use agentmage_kernel_contracts::{
     RuntimeOutcome,
 };
 use agentmage_kernel_engine::{
+    runtime_artifact::{RuntimeArtifactPage, RuntimeArtifactState},
     runtime_event::RuntimeEventSequence,
     runtime_event::RuntimeEventSubscription,
     runtime_loop::{
-        ReusableRuntimeCoordinator, RuntimeClock, RuntimeContextPort, RuntimeCoordinatorStep,
-        RuntimeModelPort, RuntimeToolBoundary, RuntimeVerifierPort,
+        ReusableRuntimeCoordinator, RuntimeArtifactAccessPort, RuntimeClock, RuntimeContextPort,
+        RuntimeCoordinatorStep, RuntimeModelPort, RuntimeToolBoundary, RuntimeVerifierPort,
     },
 };
 
@@ -76,6 +77,20 @@ pub trait LiveCodingCoordinatorPort: CodingCoordinatorPort + Send + 'static {
         &self,
         capacity: usize,
     ) -> Result<RuntimeEventSubscription, CodingClientError>;
+
+    /// Reads one bounded verified page from an artifact retained by this exact run.
+    fn read_artifact_page(
+        &mut self,
+        reference: &RuntimeArtifactRef,
+        offset: u64,
+        maximum_bytes: u32,
+    ) -> Result<RuntimeArtifactPage, CodingClientError>;
+
+    /// Releases one terminal-run artifact through the canonical lifecycle owner.
+    fn release_artifact(
+        &mut self,
+        reference: &RuntimeArtifactRef,
+    ) -> Result<RuntimeArtifactState, CodingClientError>;
 }
 
 impl<M, X, T, V, C> CodingCoordinatorPort for ReusableRuntimeCoordinator<M, X, T, V, C>
@@ -108,7 +123,7 @@ impl<M, X, T, V, C> LiveCodingCoordinatorPort for ReusableRuntimeCoordinator<M, 
 where
     M: RuntimeModelPort + Send + 'static,
     X: RuntimeContextPort + Send + 'static,
-    T: RuntimeToolBoundary + Send + 'static,
+    T: RuntimeToolBoundary + RuntimeArtifactAccessPort + Send + 'static,
     V: RuntimeVerifierPort + Send + 'static,
     C: RuntimeClock + Send + 'static,
 {
@@ -118,6 +133,24 @@ where
     ) -> Result<RuntimeEventSubscription, CodingClientError> {
         self.subscribe_events(capacity)
             .map_err(|_| CodingClientError::EventStream)
+    }
+
+    fn read_artifact_page(
+        &mut self,
+        reference: &RuntimeArtifactRef,
+        offset: u64,
+        maximum_bytes: u32,
+    ) -> Result<RuntimeArtifactPage, CodingClientError> {
+        self.read_artifact_page(reference, offset, maximum_bytes)
+            .map_err(|_| CodingClientError::Runtime)
+    }
+
+    fn release_artifact(
+        &mut self,
+        reference: &RuntimeArtifactRef,
+    ) -> Result<RuntimeArtifactState, CodingClientError> {
+        self.release_artifact(reference)
+            .map_err(|_| CodingClientError::Runtime)
     }
 }
 

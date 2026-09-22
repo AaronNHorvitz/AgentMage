@@ -82,6 +82,7 @@ pub fn run_coding_development(
         .arg(activation.workspace_root())
         .arg(&options.scenario)
         .arg(&options.model)
+        .arg(if options.resume { "resume" } else { "new" })
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::inherit())
@@ -134,45 +135,84 @@ fn run_with_child(
     let profile_id = CodingDevelopmentModel::parse(&options.model)
         .ok_or(CodingDevelopmentClientError::Activation)?
         .profile_id();
-    let result = drive_interactive_cli_runtime(
-        &mut runtime,
-        RuntimePrepareInput {
-            engineering_session_id: None,
-            profile_id: profile_id.to_owned(),
-            expected_entry_sha256: activation.marker_sha256().to_owned(),
-            workspace_id,
-            workspace_root: activation.workspace_root().to_string_lossy().into_owned(),
-            prompt: options.objective.clone(),
-        },
-        &mut approvals,
-        &mut sink,
-        &mut cancellation,
-    );
-    if let Err(error) = &result {
-        if let Some(transport) = runtime.last_error() {
-            eprintln!("{}", transport.code());
+    let mut objectives = Vec::with_capacity(options.follow_ups.len() + 1);
+    objectives.push(options.objective.as_str());
+    objectives.extend(options.follow_ups.iter().map(String::as_str));
+    let mut engineering_session_id = None;
+    let mut final_exit = ClientExitCode::Success;
+    for objective in objectives {
+        let result = drive_interactive_cli_runtime(
+            &mut runtime,
+            RuntimePrepareInput {
+                resume: options.resume,
+                engineering_session_id: engineering_session_id.clone(),
+                profile_id: profile_id.to_owned(),
+                expected_entry_sha256: activation.marker_sha256().to_owned(),
+                workspace_id: workspace_id.clone(),
+                workspace_root: activation.workspace_root().to_string_lossy().into_owned(),
+                prompt: objective.to_owned(),
+            },
+            &mut approvals,
+            &mut sink,
+            &mut cancellation,
+        );
+        if let Err(error) = &result {
+            if let Some(transport) = runtime.last_error() {
+                eprintln!("{}", transport.code());
+            }
+            eprintln!("{}", error.code());
         }
-        eprintln!("{}", error.code());
+        let result = result.map_err(|_| CodingDevelopmentClientError::Runtime)?;
+        if let Some(expected) = engineering_session_id.as_ref()
+            && expected != &result.request.session_id
+        {
+            return Err(CodingDevelopmentClientError::Runtime);
+        }
+        engineering_session_id = Some(result.request.session_id.clone());
+        for verified in &result.verified_artifacts {
+            match output {
+                CliOutputFormat::Human => println!(
+                    "artifact_verified id={} sha256={} bytes={} pages={}",
+                    verified.reference.artifact_id.as_str(),
+                    verified.reference.payload_sha256,
+                    verified.reference.byte_size,
+                    verified.page_count,
+                ),
+                CliOutputFormat::Json => println!(
+                    "{}",
+                    serde_json::json!({
+                        "type": "runtime_artifact_verified",
+                        "artifact_id": verified.reference.artifact_id.as_str(),
+                        "payload_sha256": verified.reference.payload_sha256,
+                        "byte_size": verified.reference.byte_size,
+                        "page_count": verified.page_count,
+                    })
+                ),
+            }
+        }
+        let rendered = match output {
+            CliOutputFormat::Human => {
+                render_runtime_outcome_human(&result.request, &result.outcome)
+            }
+            CliOutputFormat::Json => render_runtime_outcome_json(&result.request, &result.outcome),
+        }
+        .map_err(|_| CodingDevelopmentClientError::Presentation)?;
+        println!("{rendered}");
+        final_exit = match result.outcome.state {
+            AgentStateKind::Success | AgentStateKind::NoOp => ClientExitCode::Success,
+            AgentStateKind::Declined | AgentStateKind::Blocked => ClientExitCode::PolicyDenied,
+            AgentStateKind::Cancelled => ClientExitCode::Cancelled,
+            AgentStateKind::Exhausted => ClientExitCode::ResourceBound,
+            _ => ClientExitCode::Uncertain,
+        };
+        if final_exit != ClientExitCode::Success {
+            break;
+        }
     }
-    let result = result.map_err(|_| CodingDevelopmentClientError::Runtime);
-    let shutdown = runtime
+    runtime
         .shutdown()
-        .map_err(|_| CodingDevelopmentClientError::Transport);
-    let result = result?;
-    shutdown?;
-    let rendered = match output {
-        CliOutputFormat::Human => render_runtime_outcome_human(&result.request, &result.outcome),
-        CliOutputFormat::Json => render_runtime_outcome_json(&result.request, &result.outcome),
-    }
-    .map_err(|_| CodingDevelopmentClientError::Presentation)?;
-    println!("{rendered}");
-    Ok(match result.outcome.state {
-        AgentStateKind::Success | AgentStateKind::NoOp => ClientExitCode::Success,
-        AgentStateKind::Declined | AgentStateKind::Blocked => ClientExitCode::PolicyDenied,
-        AgentStateKind::Cancelled => ClientExitCode::Cancelled,
-        AgentStateKind::Exhausted => ClientExitCode::ResourceBound,
-        _ => ClientExitCode::Uncertain,
-    })
+        .map_err(|_| CodingDevelopmentClientError::Transport)?;
+    Ok(final_exit)
 }
 
 struct InstalledSignalCancellation {
