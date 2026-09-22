@@ -3351,9 +3351,8 @@ fn validate_runtime_resume_snapshot(
             binding: snapshot.binding.clone(),
         },
     )
-    .map_err(|error| {
+    .inspect_err(|_| {
         eprintln!("runtime.resume.publication-invalid");
-        error
     })?;
     let RuntimeEventKind::RunStarted { request_sha256 } = &events[0].kind else {
         eprintln!("runtime.resume.start-event-invalid");
