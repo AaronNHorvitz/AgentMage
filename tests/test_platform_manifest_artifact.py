@@ -1,6 +1,7 @@
 import copy
 import importlib.util
 import json
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -101,6 +102,34 @@ class PlatformManifestArtifactTests(unittest.TestCase):
             "kernel selector source boundary changed",
             MODULE.validate_contract_sources(contract, changed),
         )
+
+    def test_container_source_modes_are_deterministic_and_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "source"
+            nested = source / "nested"
+            nested.mkdir(parents=True)
+            source.chmod(0o700)
+            nested.chmod(0o700)
+            regular = nested / "regular.txt"
+            regular.write_text("regular\n", encoding="utf-8")
+            regular.chmod(0o600)
+            executable = nested / "executable.sh"
+            executable.write_text("#!/bin/sh\n", encoding="utf-8")
+            executable.chmod(0o700)
+
+            MODULE.make_container_readable(source)
+
+            self.assertEqual(source.stat().st_mode & 0o777, 0o755)
+            self.assertEqual(nested.stat().st_mode & 0o777, 0o755)
+            self.assertEqual(regular.stat().st_mode & 0o777, 0o644)
+            self.assertEqual(executable.stat().st_mode & 0o777, 0o755)
+
+            link = nested / "link"
+            link.symlink_to(regular)
+            with self.assertRaisesRegex(
+                MODULE.PlatformManifestError, "source is not regular"
+            ):
+                MODULE.make_container_readable(source)
 
     def test_report_validation_rejects_macos_or_release_overclaim(self):
         report = {
