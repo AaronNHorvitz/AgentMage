@@ -282,7 +282,18 @@ def extract_rpm(package: Path, root: Path) -> None:
 
 def extract_deb(package: Path, root: Path) -> None:
     command(["ar", "x", str(package)], cwd=root)
-    command(["tar", "-xzf", "data.tar.gz"], cwd=root)
+    command(
+        [
+            "tar",
+            "--extract",
+            "--gzip",
+            "--file",
+            "data.tar.gz",
+            "--no-same-owner",
+            "--same-permissions",
+        ],
+        cwd=root,
+    )
 
 
 def verify_extracted_candidates(

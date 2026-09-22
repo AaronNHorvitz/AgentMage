@@ -6,11 +6,38 @@ import copy
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from scripts import package_lifecycle as lifecycle
 
 
 class PackageLifecycleTests(unittest.TestCase):
+    def test_deb_extraction_preserves_manifest_permissions_under_restrictive_umask(
+        self,
+    ) -> None:
+        package = Path("/tmp/agentmage-test.deb")
+        root = Path("/tmp/agentmage-test-root")
+        with mock.patch.object(lifecycle, "command") as command:
+            lifecycle.extract_deb(package, root)
+        self.assertEqual(
+            command.call_args_list,
+            [
+                mock.call(["ar", "x", str(package)], cwd=root),
+                mock.call(
+                    [
+                        "tar",
+                        "--extract",
+                        "--gzip",
+                        "--file",
+                        "data.tar.gz",
+                        "--no-same-owner",
+                        "--same-permissions",
+                    ],
+                    cwd=root,
+                ),
+            ],
+        )
+
     def test_inference_descriptor_binds_the_inactive_runtime_profile(self) -> None:
         self.assertEqual(
             lifecycle.EXPECTED_INFERENCE_DESCRIPTOR["native_runtime_package"],

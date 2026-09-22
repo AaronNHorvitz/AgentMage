@@ -34,6 +34,7 @@ EXPECTED_IMPORTS = {
         "kernel-contracts",
         "kernel-engine",
         "platform-linux",
+        "platform-linux-native-inference",
         "platform-macos",
     },
     "shell-vscode": {"kernel-contracts"},
