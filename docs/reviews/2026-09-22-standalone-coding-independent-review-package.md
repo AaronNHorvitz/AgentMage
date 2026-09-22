@@ -10,14 +10,21 @@ identity, review date, exact target commit, methods, findings and final disposit
 
 ## Immutable review target
 
-- Target commit: `ee220b71cb4786f6955e6336f2067ecdb4c2b087`.
+- Target commit: `93f9b1cf409ad3fd3a46ef38707fe1c0d439fd91`.
 - Baseline commit: `c365d44d73d44c8d13d6810e557882134b8251d0`.
 - Branch at preparation: `demo/fedora-local-docs`.
 - Scope authority: Decisions 0054, 0061, 0062, 0063, 0064, 0065 and 0066.
 - Implementation commits, oldest first:
   `ab76d781`, `452a789a`, `f8dd4e79`, `ea16322f`, `86823491`, `fe898a96`,
   `0dcd13d0`, `4fc23603`, `d6863f7d`, `690e5e43`, `e30e9ffb`, `03c01ded`,
-  `fabe3897`, `5ccc77e3` and `ee220b71`.
+  `fabe3897`, `5ccc77e3`, `ee220b71` and `93f9b1cf`.
+
+The executable campaigns were run from `5ccc77e3`. The pinned review target also contains the
+behavior-equivalent error-observation correction in `ee220b71` and the strict-lint correction in
+`93f9b1cf`: borrow cleanup, `map_err` to `inspect_err` replacements that preserve returned errors,
+bounded inline-enum annotations, and strict-local source-policy enrollment. The full host test and
+strict product-lint gates pass on the pinned target. Evidence-only renewal commits after this target
+are not part of the connected-source review target.
 
 Review the exact target, not a moving worktree. The implementation record is
 [`coding-harness-implementation-2026-09-22.md`](../verification/coding-harness-implementation-2026-09-22.md).

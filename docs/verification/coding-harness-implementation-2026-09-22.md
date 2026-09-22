@@ -2,7 +2,7 @@
 
 ## Scope and source identity
 
-- Source candidate: `ee220b71cb4786f6955e6336f2067ecdb4c2b087`.
+- Source candidate: `93f9b1cf409ad3fd3a46ef38707fe1c0d439fd91`.
 - Planned baseline: `c365d44d73d44c8d13d6810e557882134b8251d0`.
 - Scope: Tasks 48.2.4, 48.2.5, 48.2.6 and 50.2.4 only, plus their necessary
   prerequisites.
@@ -73,8 +73,10 @@ retry above passed without changing a runtime threshold. An earlier platform-lau
 retained the rejected Cargo hard-link assumption and its successful correction in the
 `2026-09-22-effect-boundary-smoke` and `2026-09-22-effect-boundary-smoke-retry` run directories.
 These actual-process campaigns were built from `5ccc77e3f420cc833ed1e51268a39e3fa3ee08e5`.
-The later source candidate differs only by replacing an error-observing `map_err` with
-behavior-equivalent `inspect_err`; strict kernel Clippy passes at the source candidate.
+The later source candidate adds behavior-equivalent error observation using `inspect_err`, borrow
+cleanup, bounded inline-enum Clippy annotations and strict-local source-policy enrollment. It does
+not change the executed request, effect or state-transition semantics. Strict workspace Clippy and
+the full host all-target test suite pass at the source candidate.
 
 Safe restart `/tmp/am-resume-4` resumed the same canonical run/session after the injected
 post-checkpoint stop, completed the repair and did not replay the earlier validation. Drift case
