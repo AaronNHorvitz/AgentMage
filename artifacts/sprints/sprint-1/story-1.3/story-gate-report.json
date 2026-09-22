@@ -118,12 +118,12 @@
       {
         "byte_length": 7731,
         "path": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
-        "sha256": "33f2604d92ad9d2f211efb059ff6f2650dcc8f0561b94cf51db7480aa7161f2c"
+        "sha256": "2623e5f7c226e9e76c5c65c851747ced6cf64d0b2f177d1a313389e37c160283"
       },
       {
-        "byte_length": 10332,
+        "byte_length": 10018,
         "path": "artifacts/sprints/sprint-1/story-1.3/rv50-applicable-results.log",
-        "sha256": "ec2023b0268b53be87944acf391aeb31590f042ab3056c1422015149daaa1eee"
+        "sha256": "426f68e562ba7cd15fabf659a7f9cc8a7cdeed83737765b785d0bb0c84164964"
       },
       {
         "byte_length": 4491,
@@ -205,8 +205,8 @@
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "f03e510277ac141b893cff3d08b8ef939b9d2f6d",
-    "reviewed_tree": "1931ce1de4dd1d87af9a32e08b63c63bb5c89030",
+    "reviewed_commit": "5c089f22cb4b478a7245e263baea2fdc44810a03",
+    "reviewed_tree": "6592c4f58d65a5764353a93ee2d532bc9f17748a",
     "reviewer_id": "agentmage-story-1.3-independent-gate-v1"
   },
   "installed_product_claim": "none",
@@ -231,15 +231,15 @@
   "platform_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "f03e510277ac141b893cff3d08b8ef939b9d2f6d",
-  "reviewed_tree": "1931ce1de4dd1d87af9a32e08b63c63bb5c89030",
+  "reviewed_commit": "5c089f22cb4b478a7245e263baea2fdc44810a03",
+  "reviewed_tree": "6592c4f58d65a5764353a93ee2d532bc9f17748a",
   "rv50": {
     "blocked_external_tuple_count": 5,
     "evidence_substitution_permitted": false,
     "later_runtime_scenario_count": 4,
     "protocol_complete": false,
     "protocol_id": "RV-50",
-    "report_sha256": "27572a584e2cc3e08706573868401d41afe6152248b580ed6388219142389694",
+    "report_sha256": "2147049046ea3c725cc3a59eaf316753c920e015c36f47f428bc5b6627e864b6",
     "status": "partial-local-contract-evidence"
   },
   "schema_version": 1,
