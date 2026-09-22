@@ -3,8 +3,8 @@
     {
       "acceptance_test_id": "AT-ARCH-001",
       "criterion_id": "4.AC1",
-      "declared_edge_count": 18,
-      "observed_product_edge_count": 14,
+      "declared_edge_count": 19,
+      "observed_product_edge_count": 15,
       "product_wide_acceptance_claim": "none",
       "prohibited_observed_edge_count": 0,
       "runtime_boundary_trace_count": 5,
@@ -51,7 +51,7 @@
     "reviewed_artifacts": [
       {
         "path": "architecture/dependency-rules.json",
-        "sha256": "21235f069ba67f3eb1412a379197e336f7bd71490eb4789b96fb224bfb6b1040"
+        "sha256": "b8d7045ff966e7d551ac50e5bfb39cc613d81997009e2505121a38da840d45d1"
       },
       {
         "path": "kernel/engine/src/authority.rs",
@@ -82,8 +82,8 @@
         "sha256": "cc0bc1645c81e4835191d91beca51eb67797123b870bee575fcd948d4685782d"
       }
     ],
-    "reviewed_commit": "9613571bf5e84f4a7010c368c8805b277c934c26",
-    "reviewed_tree": "d44e1dd6167bf747c66015a999ecd3ac9522d257",
+    "reviewed_commit": "f4bfacfa8da53b5d4f69e904d06020e8f3408e61",
+    "reviewed_tree": "b38538cd6c487ae4135789f702e10ff400afce2e",
     "reviewer_id": "agentmage-sprint-4-independent-gate-v1"
   },
   "macos": {
@@ -95,8 +95,8 @@
   "positive_authority_path_claim": "none",
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "9613571bf5e84f4a7010c368c8805b277c934c26",
-  "reviewed_tree": "d44e1dd6167bf747c66015a999ecd3ac9522d257",
+  "reviewed_commit": "f4bfacfa8da53b5d4f69e904d06020e8f3408e61",
+  "reviewed_tree": "b38538cd6c487ae4135789f702e10ff400afce2e",
   "schema_version": 1,
   "sprint_id": 4,
   "status": "blocked-macos",
