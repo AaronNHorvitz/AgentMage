@@ -5,7 +5,7 @@
       "files": [
         {
           "path": "Cargo.toml",
-          "sha256": "5afd98c00697e9c6974495e4a9568ae42f46ec0acb1eb603641b1ec7bb5f5ea1"
+          "sha256": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc"
         },
         {
           "path": "architecture/module-inventory.json",
@@ -37,7 +37,7 @@
         },
         {
           "path": "shells/host/Cargo.toml",
-          "sha256": "23e076624d2c6be50259f00e59449f48544fdc39c6c471c7468f85438a66ef17"
+          "sha256": "91da28076b9b935bbde267111d424c80cff334149ecfe67be2d5c8db32bd9a7d"
         },
         {
           "path": "shells/vscode/package.json",
@@ -51,7 +51,7 @@
       "files": [
         {
           "path": "architecture/dependency-rules.json",
-          "sha256": "21235f069ba67f3eb1412a379197e336f7bd71490eb4789b96fb224bfb6b1040"
+          "sha256": "b8d7045ff966e7d551ac50e5bfb39cc613d81997009e2505121a38da840d45d1"
         },
         {
           "path": "architecture/language-build-matrix.json",
@@ -73,7 +73,7 @@
       "files": [
         {
           "path": "Cargo.lock",
-          "sha256": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9"
+          "sha256": "7c2c11b7d4955e51f451979d05012ccec8859b82b8d87b3f9c224488e727b498"
         },
         {
           "path": "package-lock.json",
@@ -85,15 +85,15 @@
         },
         {
           "path": "supply-chain/dependency-hashes.sha256",
-          "sha256": "f48f80c625df3be14e01510e299ce5428cb79f992d6c276bf3d72c7b6b25bfe7"
+          "sha256": "202228269833f87023e9cb332e38c8ef822a44d9334e53d01bd06d334c6933cb"
         },
         {
           "path": "supply-chain/dependency-provenance.json",
-          "sha256": "7f90dd558cc7d8c5ba9da6f3f9356e0d3ed6465f59826c127d4d24c4b381ac68"
+          "sha256": "f8d10ae2ef67ba0cf9b26094f5803ef0a671031d0c2bca265786ee4e0183b4aa"
         },
         {
           "path": "supply-chain/sbom.cdx.json",
-          "sha256": "0c7f2f54834168060db819fefa631ba12780c281e530ce1c6fa1deca8a1a7e8b"
+          "sha256": "8e3713dc570c629537bb9c04d279674bf3483734750913d3c8981b56b4f5f967"
         }
       ],
       "task_id": "1.1.2.3"
