@@ -186,7 +186,7 @@ where
         &self,
         packet: &mut ModelContextPacket,
     ) -> Result<(), RuntimePortFailure> {
-        self.bind_token_count(packet)
+        self.bind_dispatch_context(packet)
             .map(|_| ())
             .map_err(map_model_error)
     }

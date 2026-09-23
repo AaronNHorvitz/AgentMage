@@ -487,6 +487,38 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         Err(ModelRuntimeGateError::TokenCountMismatch)
     }
 
+    /// Binds the exact context against the full admitted output reserve and safety margin.
+    /// Source selectors use this without generating output; dispatch independently rechecks.
+    pub fn bind_dispatch_context(
+        &self,
+        packet: &mut ModelContextPacket,
+    ) -> Result<TokenCountResult, ModelRuntimeGateError> {
+        let served = self.serving_capabilities()?;
+        let count = self.bind_token_count(packet)?;
+        if count.tokens
+            > self
+                .usable_input_capacity(&served, self.admitted.profile.decoding.max_output_tokens)?
+        {
+            return Err(ModelRuntimeGateError::DispatchCapacityExceeded);
+        }
+        Ok(count)
+    }
+
+    fn usable_input_capacity(
+        &self,
+        served: &ModelServingCapabilities,
+        output_reserve: u32,
+    ) -> Result<u32, ModelRuntimeGateError> {
+        self.admitted
+            .profile
+            .context
+            .max_context_tokens
+            .min(served.context_capacity_tokens)
+            .checked_sub(output_reserve)
+            .and_then(|remaining| remaining.checked_sub(self.safety_margin_tokens))
+            .ok_or(ModelRuntimeGateError::DispatchCapacityExceeded)
+    }
+
     /// Renders once, counts with the effective tokenizer, and binds current serving capacity.
     pub fn prepare(
         &self,
@@ -514,10 +546,7 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         }
         let approved = self.admitted.profile.context.max_context_tokens;
         let effective = approved.min(served.context_capacity_tokens);
-        let usable_input = effective
-            .checked_sub(request.max_output_tokens)
-            .and_then(|remaining| remaining.checked_sub(self.safety_margin_tokens))
-            .ok_or(ModelRuntimeGateError::DispatchCapacityExceeded)?;
+        let usable_input = self.usable_input_capacity(&served, request.max_output_tokens)?;
         if count.tokens > usable_input {
             return Err(ModelRuntimeGateError::DispatchCapacityExceeded);
         }
@@ -1911,6 +1940,66 @@ mod tests {
         );
         assert!(controller.unload().expect("unload").empty);
         assert_eq!(controller.health(), Err(ModelRuntimeGateError::NotLoaded));
+    }
+
+    #[test]
+    fn context_binding_and_dispatch_share_the_retained_muse_safety_margin() {
+        let raw = include_bytes!("../fixtures/coding-context-safety-margin-20260923.json");
+        assert_eq!(
+            super::sha256_hex(raw),
+            "8eb00a9b68f17a47a38653d85d11118e1f3432dfd5c02897d24c64e7318d0245"
+        );
+        let fixture: serde_json::Value = serde_json::from_slice(raw).unwrap();
+        let capacity = fixture["effective_capacity_tokens"].as_u64().unwrap() as u32;
+        let reserve = fixture["total_output_reserve_tokens"].as_u64().unwrap() as u32;
+        let margin = fixture["safety_margin_tokens"].as_u64().unwrap() as u32;
+        let usable = fixture["usable_input_tokens"].as_u64().unwrap() as u32;
+        let rejected = fixture["rendered_prompt_tokens"].as_u64().unwrap() as u32;
+        assert_eq!(usable, capacity - reserve - margin);
+        assert!(rejected + reserve <= capacity);
+        assert!(rejected > usable);
+        for input in [usable, usable + 1, rejected] {
+            let mut profile = profile();
+            profile.context.max_context_tokens = capacity;
+            profile.decoding.max_output_tokens = reserve;
+            let admitted = ModelAdmissionCatalog::new(vec![profile.clone()])
+                .unwrap()
+                .admit(&profile, ModelUsePurpose::ContractTest)
+                .unwrap();
+            let runtime = FakeRuntime::new(&profile);
+            runtime.counted_tokens.set(input);
+            let generation_calls = Rc::clone(&runtime.generation_calls);
+            let stream_calls = Rc::clone(&runtime.stream_calls);
+            let mut controller = LocalModelController::new(
+                runtime,
+                ClosedJsonFamilyCodec::new(profile.codec.clone()),
+                admitted,
+                margin,
+            )
+            .unwrap();
+            controller.load().unwrap();
+            let mut context = packet(&profile);
+            let bound = controller
+                .bind_dispatch_context(&mut context)
+                .map(|count| count.tokens);
+            let expected = if input <= usable {
+                Ok(input)
+            } else {
+                Err(ModelRuntimeGateError::DispatchCapacityExceeded)
+            };
+            assert_eq!(bound, expected);
+            assert_eq!(context.input_tokens, input);
+            let mut request = request(&profile);
+            request.max_output_tokens = reserve;
+            assert_eq!(
+                controller
+                    .prepare(&request, &context)
+                    .map(|p| p.preflight().rendered_prompt_tokens),
+                expected
+            );
+            assert_eq!(generation_calls.get(), 0);
+            assert_eq!(stream_calls.get(), 0);
+        }
     }
 
     #[test]

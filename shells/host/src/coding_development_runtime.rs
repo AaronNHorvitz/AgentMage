@@ -2207,8 +2207,8 @@ impl RuntimeModelPort for CodingDevelopmentModelPort {
     ) -> Result<(), RuntimePortFailure> {
         let result = match self {
             Self::Scripted(_) => return Ok(()),
-            Self::Muse { controller, .. } => controller.bind_token_count(packet),
-            Self::GptOss { controller, .. } => controller.bind_token_count(packet),
+            Self::Muse { controller, .. } => controller.bind_dispatch_context(packet),
+            Self::GptOss { controller, .. } => controller.bind_dispatch_context(packet),
         };
         result.map(|_| ()).map_err(|error| {
             if error == agentmage_kernel_engine::model_runtime::ModelRuntimeGateError::DispatchCapacityExceeded {

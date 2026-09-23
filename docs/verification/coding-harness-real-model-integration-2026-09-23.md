@@ -147,6 +147,31 @@ generation-budget, context-capacity, permission or verifier substitution was use
 
 ## Verification so far
 
+The safety-margin correction passes 1045 kernel tests (seven ignored), 303 host
+tests (eight ignored), 15 binary tests, strict all-target Clippy, binary build,
+effect/strict-local audits and Markdown checks. Its native campaign is pending;
+these component checks do not turn either failed campaign into a pass.
+
+At `8d625866`, Muse repair repetition 1 passed all 13 diagnostic checks: six
+turns/five effects, genuine failed validation, exact rename, complete passing
+validation, diff/status and verifier `SUCCESS`; 368.798 seconds, 21 full verified
+artifacts, unchanged binaries and 17958 MiB GPU peak with no guard error.
+Repetition 2 completed seven effects but failed at final preflight after 411.578
+seconds. The initial reflow fix missed the controller's existing 256-token safety
+margin: 28645 input exceeds the true usable input 28416. Decision 0073's follow-up
+shares the controller-owned reservation calculation between selection and dispatch;
+the guard was not lowered. This campaign remains unsuccessful, one pass/one failure.
+Both raw chains and the exact failed-count/fit/one-over regression are retained.
+
+The same source's matrix-4 all 16 cases, resume-3 safe/drift and daily-core-4
+checks passed independently. Daily-core retained 26 distinct one-session runs,
+156 verified artifacts and a clean worktree in 384.558 seconds, contention refusal
+in 0.002466 seconds and cancellation in 0.870317 seconds. Report SHA-256 values:
+
+- Matrix: `ee8ec5354bcba87b6c7f158bc3d7f974965fcfea300c4f9f87731a58ef3a70c7`.
+- Resume: `154c724c6152a2c969d74dfff31472a4676b5cf0b8b4f4cd064ddf50ee96fc4a`.
+- Daily core: `2fd3c2fc8f2d1475d6ce780bf4433c69ef13d0fbdcc3ddbc4e948cecfe7f7455`.
+
 Decision 0073 verification passes: 1044 kernel tests (seven ignored), 303 host
 library tests (eight ignored), 15 host-binary tests, strict all-target host/kernel
 Clippy, binary build, nine wrapper/collector tests and effect/strict-local audits.

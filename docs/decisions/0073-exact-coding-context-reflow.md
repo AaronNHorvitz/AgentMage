@@ -50,3 +50,20 @@ generation. Dispatch independently recounts and enforces the original capacity
 and served-profile guards. No new execution loop, store, smaller model, reduced
 context, higher generation budget or evidence-binding change is introduced.
 The failed tuple cannot qualify; a changed tuple requires a fresh full campaign.
+
+## Follow-up correction: preserve the controller's safety margin
+
+At `8d625866`, fresh repair repetition 1 passed, but repetition 2 reached all
+seven native effects and failed final preflight with 28645 input tokens.
+The first reflow implementation reserved output but missed the controller's
+existing non-spendable 256-token margin: usable input is 28416, not 28672.
+The unchanged dispatch guard correctly refused it; both attempts remain retained.
+
+The controller now owns one shared usable-input calculation for source-selection
+binding and final dispatch: minimum of approved and actually served capacity,
+minus full output reserve and existing safety margin. The host does not copy a
+256 constant or guess headroom. Exact binding revalidates serving identity and
+returns capacity pressure to the same bounded source selector. Regression pins
+the actual failed measurement, exact fit and one token over, with zero generation.
+Fixture `kernel/engine/fixtures/coding-context-safety-margin-20260923.json` SHA-256:
+`8eb00a9b68f17a47a38653d85d11118e1f3432dfd5c02897d24c64e7318d0245`.

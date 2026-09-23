@@ -1,0 +1,11 @@
+{
+  "source_commit": "8d6258662b294c7eadb3cde2dc7a673b9a27c171",
+  "run": "2026-09-23-campaign4-muse-repair-2",
+  "stderr_sha256": "c8c8296f74a66e4ff76bb047345382692e4e9d3a559939830b93dcdb05a28309",
+  "preceding_rendered_prompt_sha256": "ee5c6fef4106f428a7ea2f4c99765d2f18a7d465794999044436906f6cd7633c",
+  "rendered_prompt_tokens": 28645,
+  "effective_capacity_tokens": 32768,
+  "total_output_reserve_tokens": 4096,
+  "safety_margin_tokens": 256,
+  "usable_input_tokens": 28416
+}
