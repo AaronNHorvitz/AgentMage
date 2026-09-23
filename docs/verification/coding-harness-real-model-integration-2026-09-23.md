@@ -318,3 +318,47 @@ This is scripted restart evidence, not model qualification or independent review
 Native collection additionally binds each prompt/response to its exact requested
 model run and checks correction feedback occurs after the rejection event.
 No SBOM or historical evidence renewal has run during this source batch.
+
+## Decision 0074 executable and native checkpoint
+
+At source `f75e8fcf4f1424c74b86ea570432dc42e3b18cb4`, tree
+`bf84308eac70ccd4ea074441a6d16797d6901f23`, matrix8 finished with all 19 cases
+and checks passing (report
+`f3b2a9b5501828af11145e61e97b56b0599df5f6c3e1fba06cd4484717a655c4`).
+The unchanged binary identities are CLI `2452782a...52e135`, host
+`955bbbf...51afed` and read worker `91b16c4b...9ecf658`; full hashes are retained
+in every command result and the pinned private review draft.
+
+Muse campaign6 multi-file1 completed a genuine two-test failure, native bounded
+renames in `src/calc.py` and `src/subtract.py`, complete two-test pass, current
+diff/status and verifier `SUCCESS`: 7 turns, 6 effects, 25 verified artifacts,
+409.440 seconds, no protocol/tool rejections and all 13 collector checks passing.
+The only changes were `broken_add` to `add` and `broken_subtract` to `subtract`.
+Collector SHA-256:
+`08d1f179ca88fdf50b4174aa29a6d31fbd602aac1446519160769b55190cbb7c`.
+Peak sampled GPU was 17953 MiB, scope memory peak 5369495552 bytes, guards passed
+and all binaries remained unchanged. Raw prompts/responses and exact profiles
+were copied to its durable `candidate-records`. This is one native multi-file
+success, not eight-of-eight qualification or production admission.
+
+Resume5 passed same-run/session recovery with five new effects and no redispatch,
+plus drift refusal preserving the synthetic human edit (report
+`83ed3c14aaeadee369c994f440e0c664a2f6ba07e12f3901663262d16da8f94c`).
+Daily-core6 passed three setups, disk/output pressure, writer contention and
+cancellation (0.002461-second refusal, 0.838748-second cancellation), and 26 no-op
+runs in one session with 156 verified artifacts and a clean worktree in 383.780
+seconds (900-second threshold). Its report is
+`4964518429967a5f9bfd569bea2f001c48c8223428eae11a852374970c7b60a3`.
+Separate bounded non-GPU daily/restart checks overlapped the native run; retain
+that fact when interpreting latency. These do not assert the aggregate daily gate.
+
+A subsequent contract check found the published runtime-event JSON schema still
+allowed only the older read-projection rejection. The actual matrix8
+`arguments_invalid` event failed that schema; changing only its reason in memory
+to the older variant passed. The schema now exactly matches both native enum
+variants. Regressions reject unknown reasons, authority-bearing fields and absent
+rejection hashes. All 87 planning/model/catalog tests, canonical schema fixtures,
+and validation of that unchanged actual event pass. This changes no binary or
+model budget, but the next native campaign uses a fresh source pin; previous
+evidence is retained without mixing runs into qualification. Independent review
+and final batched provenance renewal remain pending.

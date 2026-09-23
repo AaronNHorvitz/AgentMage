@@ -64,6 +64,12 @@ continuation. Resume restores accounting and checks those event bindings without
 replaying failed output or consumed grants. Missing new continuation fields fail
 closed; no silent historical migration.
 
+The published runtime-event schema's closed rejection-reason enum must match the
+two native variants: `read_projection_unavailable` and `arguments_invalid`.
+Neither authority/effect failures nor arbitrary new reasons become admissible.
+Schema regressions cover both positive variants and unknown/authority-bearing
+fields, and validate the actual executable argument-rejection event.
+
 Context labels rejection feedback separately from receipts and retained evidence,
 keeps the latest rejection essential, and does not inject raw private reasoning as
 instructions. The model must submit a new strictly valid proposal. Completion

@@ -244,7 +244,7 @@
           "properties": {
             "event": { "const": "tool_rejected" },
             "tool_call_id": { "$ref": "#/$defs/identifier" },
-            "reason": { "const": "read_projection_unavailable" },
+            "reason": { "enum": ["read_projection_unavailable", "arguments_invalid"] },
             "rejection_sha256": { "$ref": "#/$defs/sha256" }
           }
         },

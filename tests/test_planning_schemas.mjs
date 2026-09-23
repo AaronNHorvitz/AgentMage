@@ -1054,6 +1054,31 @@ test("runtime events reject inline sensitive content and invented token events",
   }
 });
 
+test("pre-effect rejection events admit only the two registered closed reasons", () => {
+  const source = JSON.parse(fs.readFileSync(
+    path.join(ROOT, "schemas/runtime/examples/runtime-event.valid.json"), "utf8",
+  ));
+  source.persistence = "correctness";
+  source.kind = {
+    event: "tool_rejected", tool_call_id: "scripted-invalid-git-pathspecs",
+    reason: "arguments_invalid", rejection_sha256: "a".repeat(64),
+  };
+  for (const reason of ["read_projection_unavailable", "arguments_invalid"]) {
+    source.kind.reason = reason;
+    assert.equal(validateRuntimeRecord("runtime-event", source, runtimeValidators).valid, true);
+  }
+  for (const reason of ["permission_denied", "preimage_drift", "effect_failed", "unknown", ""]) {
+    source.kind.reason = reason;
+    assert.equal(validateRuntimeRecord("runtime-event", source, runtimeValidators).valid, false);
+  }
+  source.kind.reason = "arguments_invalid";
+  source.kind.authority_granted = true;
+  assert.equal(validateRuntimeRecord("runtime-event", source, runtimeValidators).valid, false);
+  delete source.kind.authority_granted;
+  delete source.kind.rejection_sha256;
+  assert.equal(validateRuntimeRecord("runtime-event", source, runtimeValidators).valid, false);
+});
+
 test("artifact and workflow projection event families remain closed", () => {
   const source = JSON.parse(
     fs.readFileSync(
