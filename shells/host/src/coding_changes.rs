@@ -41,7 +41,7 @@ pub const CONTROLLED_CREATE_INPUT_SCHEMA_ID: &str = "agentmage.code.create-file.
 pub const CONTROLLED_CHANGE_OUTPUT_SCHEMA_ID: &str = "agentmage.code.write-result";
 
 /// Canonical closed JSON Schema for one exact-preimage structured patch proposal.
-pub const STRUCTURED_PATCH_INPUT_SCHEMA_JSON: &str = r##"{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"agentmage.code.patch-file.input","type":"object","additionalProperties":false,"required":["schema_version","change_id","path","expected_preimage_sha256","intent_sha256","change_plan_sha256","language","artifact_class","edits","additional_review_hooks","generated","allow_generated"],"properties":{"schema_version":{"const":1},"change_id":{"$ref":"#/$defs/id"},"path":{"$ref":"#/$defs/path"},"expected_preimage_sha256":{"$ref":"#/$defs/sha"},"intent_sha256":{"$ref":"#/$defs/sha"},"change_plan_sha256":{"$ref":"#/$defs/sha"},"language":{"enum":["rust","python","type_script","tsx","java_script","swift","go","shell","sql","plain_text"]},"artifact_class":{"enum":["code","configuration","test","documentation","migration","generated_output"]},"edits":{"type":"array","minItems":1,"maxItems":256,"items":{"type":"object"}},"additional_review_hooks":{"type":"array","maxItems":256,"items":{"enum":["interface","dependency","migration","security","performance","accessibility","compatibility"]}},"generated":{"type":"boolean"},"allow_generated":{"type":"boolean"}},"$defs":{"id":{"type":"string","pattern":"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},"sha":{"type":"string","pattern":"^[0-9a-f]{64}$"},"path":{"type":"array","minItems":1,"maxItems":64,"items":{"type":"string","minLength":1,"maxLength":255}}}}"##;
+pub const STRUCTURED_PATCH_INPUT_SCHEMA_JSON: &str = r##"{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"agentmage.code.patch-file.input","type":"object","additionalProperties":false,"required":["schema_version","change_id","path","expected_preimage_sha256","intent_sha256","change_plan_sha256","language","artifact_class","edits","additional_review_hooks","generated","allow_generated"],"properties":{"schema_version":{"const":1},"change_id":{"$ref":"#/$defs/id"},"path":{"$ref":"#/$defs/path"},"expected_preimage_sha256":{"$ref":"#/$defs/sha"},"intent_sha256":{"$ref":"#/$defs/sha"},"change_plan_sha256":{"$ref":"#/$defs/sha"},"language":{"enum":["rust","python","type_script","tsx","java_script","swift","go","shell","sql","plain_text"]},"artifact_class":{"enum":["code","configuration","test","documentation","migration","generated_output"]},"edits":{"type":"array","minItems":1,"maxItems":256,"items":{"oneOf":[{"type":"object","additionalProperties":false,"required":["kind","edit_id","old","replacement"],"properties":{"kind":{"const":"rename_identifier"},"edit_id":{"$ref":"#/$defs/id"},"old":{"type":"string"},"replacement":{"type":"string"}}},{"type":"object","additionalProperties":false,"required":["kind","edit_id","start_byte","end_byte","expected_node_sha256","replacement"],"properties":{"kind":{"const":"replace_syntax_node"},"edit_id":{"$ref":"#/$defs/id"},"start_byte":{"type":"integer","minimum":0},"end_byte":{"type":"integer","minimum":0},"expected_node_sha256":{"$ref":"#/$defs/sha"},"replacement":{"type":"string"}}},{"type":"object","additionalProperties":false,"required":["kind","edit_id","at_byte","statement"],"properties":{"kind":{"const":"insert_import"},"edit_id":{"$ref":"#/$defs/id"},"at_byte":{"type":"integer","minimum":0},"statement":{"type":"string"}}},{"type":"object","additionalProperties":false,"required":["kind","edit_id","expected","replacement"],"properties":{"kind":{"const":"replace_exact_text"},"edit_id":{"$ref":"#/$defs/id"},"expected":{"type":"string"},"replacement":{"type":"string"}}},{"type":"object","additionalProperties":false,"required":["kind","edit_id"],"properties":{"kind":{"const":"normalize_terminal_newline"},"edit_id":{"$ref":"#/$defs/id"}}}]}},"additional_review_hooks":{"type":"array","maxItems":256,"items":{"enum":["interface","dependency","migration","security","performance","accessibility","compatibility"]}},"generated":{"type":"boolean"},"allow_generated":{"type":"boolean"}},"$defs":{"id":{"type":"string","pattern":"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},"sha":{"type":"string","pattern":"^[0-9a-f]{64}$"},"path":{"type":"array","minItems":1,"maxItems":64,"items":{"type":"string","minLength":1,"maxLength":255}}}}"##;
 
 /// Canonical closed JSON Schema for one controlled absent-file creation proposal.
 pub const CONTROLLED_CREATE_INPUT_SCHEMA_JSON: &str = r##"{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"agentmage.code.create-file.input","type":"object","additionalProperties":false,"required":["schema_version","creation_id","path","content","mode","classification","intent_sha256","change_plan_sha256","expected_parent_sha256"],"properties":{"schema_version":{"const":1},"creation_id":{"$ref":"#/$defs/id"},"path":{"$ref":"#/$defs/path"},"content":{"type":"string","maxLength":4194304},"mode":{"enum":[384,416,420,448,480,493]},"classification":{"enum":["source_code","documentation","configuration","data","generated"]},"intent_sha256":{"$ref":"#/$defs/sha"},"change_plan_sha256":{"$ref":"#/$defs/sha"},"expected_parent_sha256":{"$ref":"#/$defs/sha"}},"$defs":{"id":{"type":"string","pattern":"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},"sha":{"type":"string","pattern":"^[0-9a-f]{64}$"},"path":{"type":"array","minItems":1,"maxItems":64,"items":{"type":"string","minLength":1,"maxLength":255}}}}"##;
@@ -562,6 +562,60 @@ mod tests {
             vec![vec!["src".to_owned()], vec!["tests".to_owned()]],
         )
         .expect("write scope")
+    }
+
+    #[test]
+    fn published_edit_variants_match_the_closed_native_parser() {
+        let schema: serde_json::Value =
+            serde_json::from_str(STRUCTURED_PATCH_INPUT_SCHEMA_JSON).unwrap();
+        let variants = schema["properties"]["edits"]["items"]["oneOf"]
+            .as_array()
+            .unwrap();
+        let edits = [
+            json!({"kind":"rename_identifier","edit_id":"edit-1","old":"broken_add","replacement":"add"}),
+            json!({"kind":"replace_syntax_node","edit_id":"edit-2","start_byte":0,"end_byte":3,"expected_node_sha256":"a".repeat(64),"replacement":"add"}),
+            json!({"kind":"insert_import","edit_id":"edit-3","at_byte":0,"statement":"import math\n"}),
+            json!({"kind":"replace_exact_text","edit_id":"edit-4","expected":"old","replacement":"new"}),
+            json!({"kind":"normalize_terminal_newline","edit_id":"edit-5"}),
+        ];
+        assert_eq!(variants.len(), edits.len());
+        for edit in edits {
+            let typed: StructuredEdit = serde_json::from_value(edit.clone()).unwrap();
+            assert_eq!(serde_json::to_value(typed).unwrap(), edit);
+            let variant = variants
+                .iter()
+                .find(|v| v["properties"]["kind"]["const"] == edit["kind"])
+                .unwrap();
+            assert_eq!(variant["additionalProperties"], false);
+            let actual = edit
+                .as_object()
+                .unwrap()
+                .keys()
+                .map(String::as_str)
+                .collect::<std::collections::BTreeSet<_>>();
+            let published = variant["properties"]
+                .as_object()
+                .unwrap()
+                .keys()
+                .map(String::as_str)
+                .collect::<std::collections::BTreeSet<_>>();
+            let required = variant["required"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|v| v.as_str().unwrap())
+                .collect::<std::collections::BTreeSet<_>>();
+            assert_eq!(actual, published);
+            assert_eq!(actual, required);
+            let mut unknown = edit.clone();
+            unknown["invented_authority"] = json!(true);
+            assert!(serde_json::from_value::<StructuredEdit>(unknown).is_err());
+            for key in actual {
+                let mut missing = edit.clone();
+                missing.as_object_mut().unwrap().remove(key);
+                assert!(serde_json::from_value::<StructuredEdit>(missing).is_err());
+            }
+        }
     }
 
     fn patch() -> StructuredPatchProposal {

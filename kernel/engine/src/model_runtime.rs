@@ -280,6 +280,12 @@ impl PreparedModelRequest {
     pub const fn request(&self) -> &ModelRunRequest {
         &self.request
     }
+
+    /// Returns the immutable rendered bytes for consented, bounded diagnostic retention.
+    #[must_use]
+    pub fn rendered_context(&self) -> &[u8] {
+        &self.context.bytes
+    }
 }
 
 /// Complete model result plus the exact response bytes validated by the controller.

@@ -9,6 +9,7 @@ use agentmage_kernel_contracts::{
     LocalEndpointIdentity, LocalTransport, NetworkComponent, NetworkEndpointError,
 };
 
+mod codec_json;
 mod docker_guard;
 mod docker_guard_service;
 mod docker_http_observer;

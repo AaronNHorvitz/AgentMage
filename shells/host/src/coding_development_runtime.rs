@@ -863,10 +863,13 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                     delays_ms,
                 })
             }
-            candidate => {
-                load_candidate_model(candidate, self.profile, self.activation.state_root())
-                    .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?
-            }
+            candidate => load_candidate_model(
+                candidate,
+                self.profile,
+                self.activation.state_root(),
+                prepared.record_session,
+            )
+            .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?,
         };
         let mut context = CodingContextPort::for_profile(
             self.profile,
@@ -2082,6 +2085,8 @@ pub enum CodingDevelopmentModelPort {
         controller: MuseDevelopmentController,
         /// Private raw rejection retention root.
         rejection_root: PathBuf,
+        /// Explicit user consent to retain exact native model exchanges.
+        record_session: bool,
     },
     /// Native GPT-OSS Harmony candidate controller.
     GptOss {
@@ -2089,6 +2094,8 @@ pub enum CodingDevelopmentModelPort {
         controller: GptOssDevelopmentController,
         /// Private raw rejection retention root.
         rejection_root: PathBuf,
+        /// Explicit user consent to retain exact native model exchanges.
+        record_session: bool,
     },
 }
 
@@ -2112,11 +2119,27 @@ impl RuntimeModelPort for CodingDevelopmentModelPort {
             Self::Muse {
                 controller,
                 rejection_root,
-            } => run_native_candidate(controller, rejection_root, request, context, cancellation),
+                record_session,
+            } => run_native_candidate(
+                controller,
+                rejection_root,
+                *record_session,
+                request,
+                context,
+                cancellation,
+            ),
             Self::GptOss {
                 controller,
                 rejection_root,
-            } => run_native_candidate(controller, rejection_root, request, context, cancellation),
+                record_session,
+            } => run_native_candidate(
+                controller,
+                rejection_root,
+                *record_session,
+                request,
+                context,
+                cancellation,
+            ),
         }
     }
 }
@@ -2124,6 +2147,7 @@ impl RuntimeModelPort for CodingDevelopmentModelPort {
 fn run_native_candidate<R, C>(
     controller: &mut LocalModelController<R, C>,
     rejection_root: &Path,
+    record_session: bool,
     request: &ModelRunRequest,
     context: &agentmage_kernel_contracts::ModelContextPacket,
     cancellation: Option<&dyn ModelCancellationProbe>,
@@ -2151,7 +2175,22 @@ where
             eprintln!("coding.development.candidate.preflight.{}", error.code());
             RuntimePortFailure::Invalid
         })?;
-    controller.dispatch(prepared, cancellation).map_err(|error| {
+    if record_session {
+        let metadata = serde_json::to_vec(&serde_json::json!({
+            "schema_version": 1, "kind": "rendered-prompt", "request": request,
+            "profile": controller.exact_profile(), "preflight": prepared.preflight(),
+        }))
+        .map_err(|_| RuntimePortFailure::Invalid)?;
+        let identity = sha256(format!("prompt:{}", request.model_run_id.as_str()).as_bytes());
+        retain_rejected_development_output(
+            rejection_root,
+            &identity[..24],
+            prepared.rendered_context(),
+            &metadata,
+        )
+        .map_err(|_| RuntimePortFailure::Unavailable)?;
+    }
+    let output = controller.dispatch_with_output(prepared, cancellation).map_err(|error| {
         if let Some(rejected) = controller.take_rejected_output() {
             if let Err(retention_error) = retain_rejected_candidate(rejection_root, &rejected) {
                 eprintln!("coding.development.candidate.rejection-retention.{retention_error}");
@@ -2168,7 +2207,22 @@ where
             eprintln!("coding.development.candidate.dispatch.{}", error.code());
             RuntimePortFailure::Unavailable
         }
-    })
+    })?;
+    if record_session {
+        let metadata = serde_json::to_vec(&serde_json::json!({
+            "schema_version": 1, "kind": "model-response", "result": &output.result,
+        }))
+        .map_err(|_| RuntimePortFailure::Invalid)?;
+        let identity = sha256(format!("response:{}", request.model_run_id.as_str()).as_bytes());
+        retain_rejected_development_output(
+            rejection_root,
+            &identity[..24],
+            &output.response_bytes,
+            &metadata,
+        )
+        .map_err(|_| RuntimePortFailure::Unavailable)?;
+    }
+    Ok(output.result)
 }
 
 fn retain_rejected_candidate(
@@ -2198,6 +2252,7 @@ fn load_candidate_model(
     model: CodingDevelopmentModel,
     session_profile: &CodingSessionProfile,
     state_root: &Path,
+    record_session: bool,
 ) -> Result<CodingDevelopmentModelPort, CodingDevelopmentRuntimeError> {
     let expected_profile = session_profile.model_profile();
     if !model.is_candidate() || expected_profile.profile_id.as_str() != model.profile_id() {
@@ -2279,8 +2334,19 @@ fn load_candidate_model(
         })?;
     match model {
         CodingDevelopmentModel::Muse => {
-            let codec =
-                MuseAtemFamilyCodec::new(expected_profile.codec.clone()).map_err(|error| {
+            let codec = MuseAtemFamilyCodec::new(expected_profile.codec.clone())
+                .and_then(|codec| {
+                    codec.with_native_contracts(
+                        session_profile
+                            .registry()
+                            .list_tools()
+                            .into_iter()
+                            .cloned()
+                            .collect(),
+                        crate::coding_verifier::coding_completion_schema(),
+                    )
+                })
+                .map_err(|error| {
                     eprintln!("coding.development.candidate.muse-codec.{}", error.code);
                     CodingDevelopmentRuntimeError::Profile
                 })?;
@@ -2293,19 +2359,29 @@ fn load_candidate_model(
             Ok(CodingDevelopmentModelPort::Muse {
                 controller,
                 rejection_root,
+                record_session,
             })
         }
         CodingDevelopmentModel::GptOss => {
+            let schemas =
+                crate::coding_tools::model_visible_coding_tools(session_profile.registry())
+                    .map_err(|_| CodingDevelopmentRuntimeError::Profile)?
+                    .into_iter()
+                    .map(|tool| (tool.definition, tool.input_schema))
+                    .collect();
             let codec = GptOssHarmonyFamilyCodec::new(expected_profile.codec.clone())
                 .and_then(|codec| {
-                    codec.with_native_tools(
-                        session_profile
-                            .registry()
-                            .list_tools()
-                            .into_iter()
-                            .cloned()
-                            .collect(),
-                    )
+                    codec
+                        .with_native_tools(
+                            session_profile
+                                .registry()
+                                .list_tools()
+                                .into_iter()
+                                .cloned()
+                                .collect(),
+                        )?
+                        .with_native_parameter_schemas(schemas)?
+                        .with_completion_schema(crate::coding_verifier::coding_completion_schema())
                 })
                 .map_err(|error| {
                     eprintln!("coding.development.candidate.gpt-oss-codec.{}", error.code);
@@ -2320,6 +2396,7 @@ fn load_candidate_model(
             Ok(CodingDevelopmentModelPort::GptOss {
                 controller,
                 rejection_root,
+                record_session,
             })
         }
         CodingDevelopmentModel::Scripted => Err(CodingDevelopmentRuntimeError::Profile),

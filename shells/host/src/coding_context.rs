@@ -347,6 +347,7 @@ where
         );
         let user_bytes = serde_json::to_string(&CodingUserContext {
             schema_version: 1,
+            objective_sha256: sha256(request.task.objective.as_bytes()),
             task: &request.task,
             work_packet: &request.work_packet,
         })
@@ -404,7 +405,32 @@ where
         }
         for (index, result) in tool_results.iter().enumerate() {
             let bytes = to_canonical_json(result).map_err(|_| RuntimePortFailure::Invalid)?;
-            let content = String::from_utf8(bytes).map_err(|_| RuntimePortFailure::Invalid)?;
+            let result_sha256 = sha256(&bytes);
+            let mut projection =
+                serde_json::to_value(result).map_err(|_| RuntimePortFailure::Invalid)?;
+            if let Some(output) = &result.output {
+                if output.sha256 != sha256(&output.bytes) {
+                    return Err(RuntimePortFailure::Invalid);
+                }
+                // The stored contract remains byte-exact. The model gets verified UTF-8
+                // instead of a decimal byte array, with the same schema and content hash.
+                let content =
+                    std::str::from_utf8(&output.bytes).map_err(|_| RuntimePortFailure::Invalid)?;
+                let content = if output.media_type == "application/json" {
+                    serde_json::from_str(content).map_err(|_| RuntimePortFailure::Invalid)?
+                } else {
+                    serde_json::Value::String(content.to_owned())
+                };
+                projection["output"] = serde_json::json!({
+                    "schema": output.schema, "media_type": output.media_type,
+                    "sha256": output.sha256, "content": content,
+                });
+            }
+            let content = serde_json::to_string(&serde_json::json!({
+                "untrusted_tool_observation": true, "result_sha256": result_sha256,
+                "result": projection,
+            }))
+            .map_err(|_| RuntimePortFailure::Invalid)?;
             let digest = sha256(content.as_bytes());
             let source = internal_source(
                 format!("coding-tool-result-{index}"),
@@ -508,6 +534,7 @@ struct CodingSystemContract<'a> {
 #[derive(Serialize)]
 struct CodingUserContext<'a> {
     schema_version: u16,
+    objective_sha256: String,
     task: &'a agentmage_kernel_contracts::Task,
     work_packet: &'a agentmage_kernel_contracts::WorkPacket,
 }
@@ -759,6 +786,125 @@ mod tests {
             !packet.messages.iter().any(|message| {
                 String::from_utf8_lossy(&message.content.bytes).contains(canary)
             })
+        );
+    }
+
+    #[test]
+    fn gpt_native_parameter_projection_covers_every_visible_closed_schema() {
+        use agentmage_platform_linux_inference::GptOssHarmonyFamilyCodec;
+        let session = CodingSessionProfile::build(input()).unwrap();
+        let catalog: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../model-profiles/exact-profile-catalog.json"
+        ))
+        .unwrap();
+        let profile: agentmage_kernel_contracts::ExactModelProfile = serde_json::from_value(
+            catalog["profiles"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|p| p["family"] == "gpt_oss")
+                .unwrap()
+                .clone(),
+        )
+        .unwrap();
+        let tools = model_visible_coding_tools(session.registry()).unwrap();
+        for tool in &tools {
+            GptOssHarmonyFamilyCodec::new(profile.codec.clone())
+                .unwrap()
+                .with_native_tools(vec![tool.definition.clone()])
+                .unwrap()
+                .with_native_parameter_schemas(vec![(
+                    tool.definition.clone(),
+                    tool.input_schema.clone(),
+                )])
+                .unwrap_or_else(|error| {
+                    panic!(
+                        "{}: {} schema {}",
+                        tool.definition.tool_id.as_str(),
+                        error.code,
+                        tool.input_schema
+                    )
+                });
+        }
+        GptOssHarmonyFamilyCodec::new(profile.codec)
+            .unwrap()
+            .with_native_tools(tools.iter().map(|tool| tool.definition.clone()).collect())
+            .unwrap()
+            .with_native_parameter_schemas(
+                tools
+                    .into_iter()
+                    .map(|tool| (tool.definition, tool.input_schema))
+                    .collect(),
+            )
+            .unwrap();
+    }
+
+    #[test]
+    fn native_context_projects_verified_observations_without_changing_stored_contracts() {
+        let profile = CodingSessionProfile::build(input()).unwrap();
+        let mut context =
+            CodingContextPort::for_profile(&profile, vec![], FixtureCounter("fixture-counter-v1"))
+                .unwrap();
+        let request = request(&profile);
+        let mut result = tool_result();
+        result.output.as_mut().unwrap().media_type = "application/json".to_owned();
+        let original = to_canonical_json(&result).unwrap();
+        let packet = context
+            .build_context(
+                &request,
+                ContextPacketId::from_raw("projection"),
+                2,
+                std::slice::from_ref(&result),
+                &[],
+            )
+            .unwrap();
+        let observation: serde_json::Value = serde_json::from_slice(
+            &packet
+                .messages
+                .iter()
+                .find(|message| message.role == ModelMessageRole::Tool)
+                .unwrap()
+                .content
+                .bytes,
+        )
+        .unwrap();
+        assert_eq!(observation["untrusted_tool_observation"], true);
+        assert_eq!(observation["result_sha256"], sha256(&original));
+        assert_eq!(
+            observation["result"]["output"]["sha256"],
+            result.output.as_ref().unwrap().sha256
+        );
+        assert_eq!(
+            observation["result"]["output"]["content"],
+            serde_json::json!({"matches":1})
+        );
+        assert!(observation["result"]["output"].get("bytes").is_none());
+        assert_eq!(to_canonical_json(&result).unwrap(), original);
+        let user: serde_json::Value = serde_json::from_slice(
+            &packet
+                .messages
+                .iter()
+                .find(|message| message.role == ModelMessageRole::User)
+                .unwrap()
+                .content
+                .bytes,
+        )
+        .unwrap();
+        assert_eq!(
+            user["objective_sha256"],
+            sha256(request.task.objective.as_bytes())
+        );
+        let mut corrupt = result;
+        corrupt.output.as_mut().unwrap().bytes.push(b' ');
+        assert_eq!(
+            context.build_context(
+                &request,
+                ContextPacketId::from_raw("corrupt"),
+                2,
+                &[corrupt],
+                &[]
+            ),
+            Err(RuntimePortFailure::Invalid)
         );
     }
 

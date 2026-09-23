@@ -29,6 +29,13 @@ function sha256(relativePath) {
   return crypto.createHash("sha256").update(fs.readFileSync(path.join(ROOT, relativePath))).digest("hex");
 }
 
+function codecSha256(relativePath) {
+  const inputs = [relativePath, "platforms/linux-inference/src/codec_json.rs"];
+  return crypto.createHash("sha256").update(JSON.stringify(
+    inputs.map((source) => ({ path: source, sha256: sha256(source) })),
+  )).digest("hex");
+}
+
 function fakeProfile(family) {
   const label = family === "muse" ? "Muse" : "Gemma";
   return {
@@ -124,7 +131,7 @@ function museProfile(mode) {
     runtime_support_sha256: sha256(
       "model-profiles/candidates/muse-glimmer-30b-text-8k/runtime-support.json",
     ),
-    codec_sha256: sha256("platforms/linux-inference/src/muse_atem_codec.rs"),
+    codec_sha256: codecSha256("platforms/linux-inference/src/muse_atem_codec.rs"),
     decoding: diagnostic
       ? { sampler_order: ["greedy"], temperature: 0, top_p: 1, top_k: 1, seed: 42 }
       : { sampler_order: ["top_k", "top_p", "temperature"], temperature: 1, top_p: 0.95, top_k: 64, seed: 0 },
@@ -157,7 +164,7 @@ function museProfile(mode) {
     codec: {
       codec_id: "muse-glimmer-atem-closed-proposal-v1",
       codec_version: "1.0.0",
-      codec_sha256: sha256("platforms/linux-inference/src/muse_atem_codec.rs"),
+      codec_sha256: codecSha256("platforms/linux-inference/src/muse_atem_codec.rs"),
       tokenizer: "meta-models/Muse-Glimmer-30B tokenizer",
       tokenizer_sha256: "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d",
       template: "meta-models/Muse-Glimmer-30B ATEM chat template",
@@ -248,7 +255,7 @@ function codingDevelopmentProfile(family) {
     profile_id: profileId,
     preparation_profile_sha256: preparationProfileSha256,
     preparation_evidence_sha256: preparationEvidenceSha256,
-    codec_sha256: sha256(codecPath),
+    codec_sha256: codecSha256(codecPath),
     context_tokens: 32768,
     output_tokens: 4096,
     reasoning: "medium",
@@ -309,7 +316,7 @@ function codingDevelopmentProfile(family) {
         ? "muse-glimmer-atem-reasoning-medium-closed-proposal-v1"
         : "gpt-oss-harmony-closed-proposal-v1",
       codec_version: "1.0.0",
-      codec_sha256: sha256(codecPath),
+      codec_sha256: codecSha256(codecPath),
       tokenizer: muse
         ? "meta-models/Muse-Glimmer-30B tokenizer"
         : "gpt-oss-20b MXFP4 GGUF embedded tokenizer",

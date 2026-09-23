@@ -1,0 +1,29 @@
+ to=self<|message|>We need to observe genuine failing validation, repair bounded Python fixture through native tools, rerun full validation, inspect current diff and Git status, then submit verifier-supported completion.
+
+We have tools. Need to read file src/calc.py, it's broken_add defined but not add. Validation expects add. So validation fails.
+
+We need to repair src/calc.py to define add perhaps correctly.
+
+First we need to observe failing validation. Run validation template.
+
+From context, validation template: validation-unit uses command template fixture.python-validation with spec_sha256 da0b7a3b1... command /usr/bin/python3.14 tests/run_validation.py . We can use agentmage.validation.run-template with validation_attempt_id?, validation_id? The validation_id is "validation-unit". template_sha256 is 4eb9de45b96a4bc21d41357d74d71df8b3a8530e4021008e3e55dfaff2e04a49.
+
+Need validation_attempt_id pattern ^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$. Let's pick validation_attempt_1.
+
+First evidence: inspect change history? Might want to see current diff. Use agentmage.git.inspect with operation status? Or diff.
+
+We need to inspect current diff and Git status. Let's do agentmage.git.inspect.
+
+But first, run validation to see failure.
+
+Tool agentmage.validation.run-template requires schema_version const 1, template_sha256, validation_attempt_id, validation_id.
+
+We have template_sha256 from context: 4eb9de45b96a4bc21d41357d74d71df8b3a8530e4021008e3e55dfaff2e04a49
+
+validation_id = "validation-unit"
+
+validation_attempt_id = e.g., "attempt-1"
+
+Run validation.
+
+<|start|>assistant to=agentmage.validation.run-template<|message|>{"schema_version":1,"template_sha256":"4eb9de45b96a4bc21d41357d74d71df8b3a8530e4021008e3e55dfaff2e04a49","validation_attempt_id":"attempt-1","validation_id":"validation-unit"}
