@@ -40,7 +40,7 @@
     {
       "byte_length": 2213,
       "path": "artifacts/sprints/sprint-5/story-5.2/story-ac1-deterministic-disposition-results.log",
-      "sha256": "333a0ceff85cec6dba64073f0be4c6071e226cf6f108478a2e986332e5558e7c"
+      "sha256": "c014736e0689e2b4e6f126f1ee3b0635696b013f0aa7630d6027de7dfd436ed3"
     }
   ],
   "commands": [
@@ -70,9 +70,9 @@
       "sha256": "ac16659bab43ca0b0981d9f123d67d2d79abfdb43962a5602ef88bac286cf913"
     },
     {
-      "byte_length": 52216,
+      "byte_length": 53712,
       "path": "kernel/engine/src/tooling.rs",
-      "sha256": "67f0bc19387bfdb3f40cd8e5cdb959e4de2d6e7827a109ff1f28bb1e0c4be7ba"
+      "sha256": "39d34741c5edb2ef1da442438393a7323d6e211a4023be6876756f0b0e4d59f6"
     },
     {
       "byte_length": 26088,
@@ -82,12 +82,12 @@
     {
       "byte_length": 8029,
       "path": "artifacts/sprints/sprint-5/story-5.2/effect-class-taxonomy-report.json",
-      "sha256": "2d3cf55a42b1c5cf05a3ef5f8dcda70b8b56155245b97731a6a867a396e03f2d"
+      "sha256": "d5560042f147dd479ba669cee2d277e447cdc662772a6adeff56d43397d468c9"
     },
     {
-      "byte_length": 11274,
+      "byte_length": 11275,
       "path": "artifacts/sprints/sprint-5/story-5.2/effect-class-taxonomy-results.log",
-      "sha256": "dc9a408f9021a31b6b6f2e726476a827857015269663092848ebf5860a92c122"
+      "sha256": "9faaa834c95d8c9e36e41d89104c3e9fe2a366478b2573972b31f4a38af4eb91"
     },
     {
       "byte_length": 6993,
@@ -102,7 +102,7 @@
     {
       "byte_length": 8937,
       "path": "artifacts/sprints/sprint-5/story-5.2/policy-verification-report.json",
-      "sha256": "f548d200c5a3b8dbf4c9fb91033abad8a35c980ba5226d5755dbf7cae5c279a8"
+      "sha256": "e216e878a57683be83779a92600936d400e7b14fd131436ae34494d501cc8686"
     }
   ],
   "schema_version": 1,

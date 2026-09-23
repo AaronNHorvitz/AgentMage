@@ -6,9 +6,9 @@
       "sha256": "ac16659bab43ca0b0981d9f123d67d2d79abfdb43962a5602ef88bac286cf913"
     },
     {
-      "byte_length": 52216,
+      "byte_length": 53712,
       "path": "kernel/engine/src/tooling.rs",
-      "sha256": "67f0bc19387bfdb3f40cd8e5cdb959e4de2d6e7827a109ff1f28bb1e0c4be7ba"
+      "sha256": "39d34741c5edb2ef1da442438393a7323d6e211a4023be6876756f0b0e4d59f6"
     },
     {
       "byte_length": 10397,
@@ -21,9 +21,9 @@
       "sha256": "3a861a7b6bfd14f1ad7d71dbd3e73afb36f6f7e850f744ee64535fcee791f4cd"
     },
     {
-      "byte_length": 11274,
+      "byte_length": 11275,
       "path": "artifacts/sprints/sprint-5/story-5.2/effect-class-taxonomy-results.log",
-      "sha256": "dc9a408f9021a31b6b6f2e726476a827857015269663092848ebf5860a92c122"
+      "sha256": "9faaa834c95d8c9e36e41d89104c3e9fe2a366478b2573972b31f4a38af4eb91"
     }
   ],
   "commands": [

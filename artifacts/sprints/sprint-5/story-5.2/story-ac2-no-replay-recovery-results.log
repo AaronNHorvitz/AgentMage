@@ -1,5 +1,5 @@
 $ cargo test -p agentmage-kernel-engine --test retry_admission story_5_2_prior_effect_recovery_never_replays_authority_or_unsafe_effect -- --exact
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running tests/retry_admission.rs (target/debug/deps/retry_admission-62d14a6aec0f9677)
 
 running 1 test

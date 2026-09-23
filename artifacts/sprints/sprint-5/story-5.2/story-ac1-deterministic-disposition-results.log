@@ -1,5 +1,5 @@
 $ cargo test -p agentmage-kernel-contracts story_5_2_every_registered_operation_failure_pair_has_one_model_independent_disposition
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_contracts-6eb6c44b4ce1fddc)
 
 running 1 test

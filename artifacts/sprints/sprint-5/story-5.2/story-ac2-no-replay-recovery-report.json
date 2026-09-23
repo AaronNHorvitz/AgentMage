@@ -61,7 +61,7 @@
     {
       "byte_length": 1450,
       "path": "artifacts/sprints/sprint-5/story-5.2/story-ac2-no-replay-recovery-results.log",
-      "sha256": "0de244172b97c526b7ca461a6225d8f45ccded527281fbc8bcff0d0d597b1416"
+      "sha256": "9753e75ded0706457e35129ca6fa6e1191663ed66c20595ee48979c4683d08a0"
     }
   ],
   "commands": [
@@ -114,7 +114,7 @@
     {
       "byte_length": 8937,
       "path": "artifacts/sprints/sprint-5/story-5.2/policy-verification-report.json",
-      "sha256": "f548d200c5a3b8dbf4c9fb91033abad8a35c980ba5226d5755dbf7cae5c279a8"
+      "sha256": "e216e878a57683be83779a92600936d400e7b14fd131436ae34494d501cc8686"
     }
   ],
   "schema_version": 1,

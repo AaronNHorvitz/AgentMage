@@ -40,9 +40,9 @@
       "sha256": "0b293eb781f205bdd8dab972dd4f42ed6b9473e2abd812e87eebdb775ee5dc82"
     },
     {
-      "byte_length": 992,
+      "byte_length": 993,
       "path": "artifacts/sprints/sprint-5/story-5.2/story-ac3-bounded-termination-results.log",
-      "sha256": "7ad07b9fefbd1b8a7b754350e0e7bf4d1dbc56cd0fbf6930a2542cf1064d15ab"
+      "sha256": "c18b13a0e1735c0fbd528e8c8e9eee32a428a0d53f0d29774a920860ebaa711c"
     }
   ],
   "commands": [
@@ -93,7 +93,7 @@
     {
       "byte_length": 8937,
       "path": "artifacts/sprints/sprint-5/story-5.2/policy-verification-report.json",
-      "sha256": "f548d200c5a3b8dbf4c9fb91033abad8a35c980ba5226d5755dbf7cae5c279a8"
+      "sha256": "e216e878a57683be83779a92600936d400e7b14fd131436ae34494d501cc8686"
     }
   ],
   "schema_version": 1,
