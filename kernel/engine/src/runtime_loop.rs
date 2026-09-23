@@ -1259,12 +1259,16 @@ where
         {
             let context_bytes =
                 to_canonical_json(&context).map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
-            self.resources
+            if self
+                .resources
                 .admit_artifact(
                     u64::try_from(context_bytes.len())
                         .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?,
                 )
-                .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+                .is_err()
+            {
+                return self.finish_budget_exhaustion(&turn_id);
+            }
             self.publish_artifact_bytes(
                 &context_bytes,
                 RUNTIME_CONTEXT_PACKET_MEDIA_TYPE,
@@ -1331,6 +1335,22 @@ where
             )?;
             return self.finish_model_failure(&turn_id, RuntimePortFailure::Invalid);
         }
+        // Account the completed inference even if retaining its result exhausts
+        // the artifact allowance. No proposal may be acted on without its
+        // required record, and recording pressure is not a malformed boundary.
+        let model_memory = result
+            .resources
+            .resident_memory_bytes
+            .checked_add(result.resources.accelerator_memory_bytes);
+        let model_resource_exhausted = model_memory
+            .is_none_or(|bytes| self.resources.observe_memory_peak(bytes).is_err())
+            || self
+                .resources
+                .consume(
+                    BudgetResource::ElapsedMilliseconds,
+                    result.resources.elapsed_ms,
+                )
+                .is_err();
         if self
             .artifact
             .as_ref()
@@ -1338,12 +1358,24 @@ where
         {
             let result_bytes =
                 to_canonical_json(&result).map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
-            self.resources
+            if self
+                .resources
                 .admit_artifact(
                     u64::try_from(result_bytes.len())
                         .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?,
                 )
-                .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+                .is_err()
+            {
+                self.emit(
+                    RuntimeEventKind::ModelFailed {
+                        model_run_id,
+                        failure_code: "runtime.budget.exhausted".to_owned(),
+                    },
+                    Some(&turn_id),
+                    None,
+                )?;
+                return self.finish_budget_exhaustion(&turn_id);
+            }
             self.publish_artifact_bytes(
                 &result_bytes,
                 RUNTIME_MODEL_RESULT_MEDIA_TYPE,
@@ -1354,19 +1386,7 @@ where
                 false,
             )?;
         }
-        let model_memory = result
-            .resources
-            .resident_memory_bytes
-            .checked_add(result.resources.accelerator_memory_bytes);
-        if model_memory.is_none_or(|bytes| self.resources.observe_memory_peak(bytes).is_err())
-            || self
-                .resources
-                .consume(
-                    BudgetResource::ElapsedMilliseconds,
-                    result.resources.elapsed_ms,
-                )
-                .is_err()
-        {
+        if model_resource_exhausted {
             self.emit(
                 RuntimeEventKind::ModelFailed {
                     model_run_id,

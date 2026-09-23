@@ -526,3 +526,61 @@ still rejects the retained wrong body. Initial missing-helper-import and SHA
 formatting mistakes in the new tests were retained, corrected and rerun; they
 were not product failures. The preceding exact-payload test independently
 reproduced the product's `tool-channel-invalid` defect before the correction.
+
+## Campaign11 and recorded-artifact integration defect
+
+At `99cc4e1630ea1e658a815e82893f650fe736c884`, Muse repair1 and new-file1
+passed all 13 native collector checks in 454.238481 and 386.442055 seconds.
+Both observed genuine failed validation before editing, then complete passing
+validation and native diff/status. Repair changed only `broken_add` to `add`;
+new-file created the authorized `src/calc.py`, with the exact creation receipt
+and postimage supporting the untracked file that ordinary Git diff omits.
+New-file retained one correct absent-file read refusal, then continued within
+the existing bound. There were no protocol rejections in either successful run.
+
+The next multi-file case failed after 492.799490 seconds, exit 5, despite nine
+completed native effects and both repaired modules passing complete validation.
+The final model completion frame was valid. The coordinator could not retain its
+required record 34 because its derived count allowance was only 33. This local
+accounting defect, not model capability, caused `InvalidBoundaryResult` and no
+terminal outcome. The failed collector SHA-256 is
+`732261e4f1323a45458e3f879feef497604bc388b3597822e8379cb401bbe35c`.
+The driver stopped without running stable1 or repetition2; campaign11 is not
+qualified. All raw responses, rejections, logs and exact identities are retained
+in `runs/2026-09-23-campaign11-muse-{repair,new-file,multi-file}-1` under the
+private coding-state directory.
+
+GPT-OSS campaign11 new-file1 separately failed in 189.074241 seconds,
+`EXHAUSTED`, one premature creation and no validation. A search proposal had a
+duplicate JSON key; after the existing bounded correction, a validation proposal
+had duplicate Harmony channel markers. Both refusals are correct and retained.
+No additional decoder defect was found in those exact bytes. Its failed collector
+SHA-256 is `f1b7b36ddc59dbf47f179b888a53fd59eb94ea8aa52a15830754e291bde8c5d2`.
+This case is not repeated unchanged or converted into a success. Other distinct
+cases and the eventual final source tuple require separate dispositions.
+
+Decision 0078 corrects mandatory-record accounting, retaining the fixed
+1024-record and 64 MiB ceilings and all model/resource/authority bounds. A ledger
+regression with the observed sizes and the actual scripted nine-tool CLI/host
+case both reproduced the prior failure; logs have the `artifact-count-before`
+and `artifact-count-scripted-before` prefixes. Recording pressure now closes
+canonically as `EXHAUSTED`, without acting on an unretained model proposal.
+Completed inference resources are still accounted. The initial pressure-test
+field-name typo and unrecognized diagnostic-code test failure are retained;
+the correction uses the existing closed budget-exhausted event code, not a
+weakened event validator. Neither regression nor the two earlier native
+successes closes the repeated-model or independent-review gates.
+
+After the correction, the same actual scripted inspection/repair sequence
+completed `SUCCESS`: 10 turns, 9 native effects, 34 fully verified artifacts,
+both tests passing and only the two intended identifier changes in the final
+diff. The before/after comparison passes all seven strengthened checks only
+for the corrected run; report SHA-256
+`7abf665e7d75d961ee6e93185a3b722b682e49fd4d6445e8d9842108f34835a2`.
+Focused count, overflow and pressure tests pass. Full verification passed
+1053 kernel tests (7 ignored), 308 host library tests (8 ignored), 15 host
+binary tests and 14 Python wrapper/collector tests, strict Clippy, boundary,
+build/dependency-class audits, formatting and touched Markdown checks.
+All ran in the required RAM-limited scopes with one Cargo job. The independent
+scripted run overlapped non-GPU unit tests; timing is not a benchmark. No
+SBOM or historical evidence regeneration has yet occurred in this source batch.

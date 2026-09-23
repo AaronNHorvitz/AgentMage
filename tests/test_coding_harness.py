@@ -12,6 +12,33 @@ from scripts import coding_harness_acceptance
 
 
 class CodingHarnessTests(unittest.TestCase):
+    def test_multifile_regression_requires_nine_tools_and_recording_beyond_old_limit(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary) / "fixture"
+            logs = Path(temporary) / "logs"
+            logs.mkdir()
+            (logs / "result.json").write_text(json.dumps({"scenario": "multi-file"}))
+            (logs / "stdout.jsonl").write_text("")
+            (logs / "stderr.log").write_text("")
+            outcome = {"state": "SUCCESS", "tool_call_count": 9}
+            records = [{"type": "runtime_artifact_verified", "artifact_id": f"a-{index}"}
+                       for index in range(35)]
+            rows = [*records, outcome]
+            with mock.patch.object(coding_harness_acceptance, "git_status", return_value=[
+                    " M src/calc.py", " M src/subtract.py"]), \
+                    mock.patch.object(coding_harness_acceptance, "rows", return_value=rows), \
+                    mock.patch.object(coding_harness_acceptance.subprocess, "run",
+                                      return_value=subprocess.CompletedProcess([], 0)):
+                self.assertTrue(coding_harness_acceptance.verify_case(
+                    "multi-file", base, logs, 0)["passed"])
+                del rows[:2]
+                self.assertFalse(coding_harness_acceptance.verify_case(
+                    "multi-file", base, logs, 0)["passed"])
+                rows[:0] = records[:2]
+                outcome["tool_call_count"] = 6
+                self.assertFalse(coding_harness_acceptance.verify_case(
+                    "multi-file", base, logs, 0)["passed"])
+
     def test_native_command_failure_artifact_must_belong_to_exact_command_turn(self):
         self.assertEqual(len(set(coding_harness_acceptance.CASE_ROOTS.values())),
                          len(coding_harness_acceptance.CASE_ROOTS))

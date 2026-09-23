@@ -110,11 +110,17 @@ impl RuntimeHardeningLimits {
             .checked_mul(MAX_RUNTIME_EVENT_ENVELOPE_BYTES)
             .ok_or(RuntimeHardeningError::InvalidLimits)?
             .min(MAX_RUNTIME_CLIENT_QUEUE_BYTES);
+        // Recording requires a context, a model result and a safe-boundary
+        // continuation per turn (including rejected-proposal turns). Preserve
+        // the existing per-tool payload allowance, plus the initial request and
+        // final answer. Extra tool streams share this bounded allowance; neither
+        // the fixed count cap nor the separately bound disk budget is enlarged.
         let artifact_count = request
             .limits
-            .max_tool_calls
-            .checked_add(request.limits.max_turns)
-            .and_then(|value| value.checked_add(1))
+            .max_turns
+            .checked_mul(3)
+            .and_then(|value| value.checked_add(request.limits.max_tool_calls))
+            .and_then(|value| value.checked_add(2))
             .ok_or(RuntimeHardeningError::InvalidLimits)?
             .clamp(1, MAX_RUNTIME_ARTIFACT_COUNT);
         let artifact_bytes = budgets

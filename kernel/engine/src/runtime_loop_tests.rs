@@ -3831,6 +3831,159 @@ fn story_50_2_subscription_capacity_is_bounded_by_count_and_bytes() {
 }
 
 #[test]
+fn recorded_context_and_result_pressure_close_without_effects_or_false_success() {
+    for available_records in [0, 1] {
+        let profile = profile("recorded-artifact-pressure");
+        let registry = registry_for_operation(GrantOperation::WorkspaceRead);
+        let mut request = request(profile.clone(), &registry);
+        request.mode = RuntimeSessionMode::DurableReadOnly;
+        request.request_sha256 = "0".repeat(64);
+        let request = seal_runtime_run_request(request).expect("recorded request seals");
+        let journal = Arc::new(Mutex::new(Vec::new()));
+        let artifacts = Arc::new(Mutex::new(Vec::new()));
+        let executions = Arc::new(AtomicUsize::new(0));
+        let mut coordinator = ReusableRuntimeCoordinator::new_with_persistence(
+            request,
+            FakeModel::new(profile, [ModelScript::Tool]),
+            FakeContext,
+            registry,
+            FakeToolBoundary {
+                script: PermissionScript::Allow,
+                executions: Arc::clone(&executions),
+                emit_evidence: true,
+                outcome: OperationOutcome::Succeeded,
+                state_change: StateChange::NotChanged,
+                tool_output_bytes: 0,
+                tool_output_kind: None,
+                artifact_candidates: Vec::new(),
+                journal: Arc::clone(&journal),
+                journal_flushes: Arc::new(AtomicUsize::new(0)),
+                artifacts: Arc::clone(&artifacts),
+                checkpoint: Arc::new(Mutex::new(None)),
+            },
+            FakeVerifier {
+                verifier_id: VerifierId::from_raw("verifier-artifact-pressure"),
+                source: VerifierSource::DeterministicPostcondition,
+            },
+            FakeClock { now: 6_000 },
+        )
+        .expect("recorded coordinator builds");
+        coordinator
+            .artifact
+            .as_mut()
+            .expect("artifact hooks")
+            .retain_model_exchanges = |_| true;
+        // Occupy the count allowance without exhausting bytes needed for the
+        // canonical terminal events. Test both before and after real dispatch.
+        let count_limit = coordinator.resources.limits().artifact_count;
+        for _ in 0..count_limit - available_records {
+            coordinator
+                .resources
+                .admit_artifact(1)
+                .expect("prior count use");
+        }
+        let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+            .run_until_boundary(None, None)
+            .expect("pressure has a terminal outcome")
+        else {
+            panic!("recording pressure cannot ask for tool authority");
+        };
+        assert_eq!(outcome.state, AgentStateKind::Exhausted);
+        assert_eq!(outcome.unresolved_codes, ["runtime.budget.exhausted"]);
+        assert_eq!(outcome.model_call_count, available_records);
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert_eq!(
+            artifacts.lock().expect("records").len(),
+            available_records as usize
+        );
+        assert_eq!(coordinator.resources.snapshot().artifact_count, count_limit);
+        if available_records == 1 {
+            let usage = coordinator.resources.durable_usage();
+            assert_eq!(usage.elapsed_ms, 1);
+            assert_eq!(usage.peak_memory_bytes, 1);
+            assert!(coordinator.events().iter().any(|event| matches!(
+                &event.kind, RuntimeEventKind::ModelFailed { failure_code, .. }
+                    if failure_code == "runtime.budget.exhausted"
+            )));
+        }
+        assert_eq!(*journal.lock().expect("journal"), coordinator.events());
+        assert_valid_terminal_stream(&coordinator);
+    }
+}
+
+#[test]
+fn recorded_nine_tool_coding_run_has_room_for_required_artifacts() {
+    let mut request = controlled_write_hardening_request();
+    request.limits.max_turns = 16;
+    request.limits.max_tool_calls = 16;
+    request.limits.max_model_calls = 16;
+    request.limits.max_context_refreshes = 16;
+    request.limits.max_output_bytes = 4 * 1024 * 1024;
+    let budgets = request
+        .work_packet
+        .budgets
+        .iter()
+        .map(|budget| {
+            (
+                budget.resource,
+                required_budget_minimum(&request, budget.resource),
+            )
+        })
+        .collect::<Vec<_>>();
+    for (budget, (_, minimum)) in request.work_packet.budgets.iter_mut().zip(budgets) {
+        budget.limit = if budget.resource == BudgetResource::DiskBytes {
+            64 * 1024 * 1024
+        } else {
+            minimum
+        };
+    }
+    let mut ledger = RuntimeResourceLedger::new(&request).expect("recorded coding limits");
+    assert_eq!(ledger.limits().artifact_count, 66);
+    assert_eq!(ledger.limits().artifact_bytes, 64 * 1024 * 1024);
+    // Actual Muse campaign11 multi-file sequence: request; nine pairs of
+    // context/model records and checkpoints; two validation outputs; two change
+    // records; then final context/result and room for an artifact-backed answer.
+    let mandatory_sizes = [
+        11_309, 172_106, 2_593, 235, 14_685, 188_903, 2_807, 20_666, 198_565, 2_784, 26_913,
+        208_484, 2_799, 33_202, 218_452, 3_923, 929, 40_849, 229_178, 3_972, 938, 48_521, 239_920,
+        2_592, 190, 61_552, 241_495, 2_400, 70_483, 247_274, 2_393,
+    ];
+    for bytes in mandatory_sizes {
+        ledger
+            .admit_artifact(bytes)
+            .expect("retained actual artifact");
+    }
+    // Exact bytes of these pending records do not determine a count limit.
+    ledger.admit_artifact(1).expect("ninth tool checkpoint");
+    ledger.admit_artifact(1).expect("final context");
+    ledger.admit_artifact(1).expect("final model result");
+    ledger.admit_artifact(1).expect("rendered completion");
+    assert_eq!(ledger.snapshot().artifact_count, 35);
+}
+
+#[test]
+fn recorded_artifact_allowance_keeps_fixed_caps_and_checked_arithmetic() {
+    let mut request = controlled_write_hardening_request();
+    request.mode = RuntimeSessionMode::DurableReadOnly;
+    request.limits.max_turns = 1024;
+    request.limits.max_tool_calls = 1024;
+    let limits = RuntimeHardeningLimits::from_request(&request).expect("capped allowance");
+    assert_eq!(limits.artifact_count, 1024);
+    assert_eq!(limits.artifact_bytes, 64 * 1024 * 1024);
+    request.limits.max_turns = u32::MAX;
+    assert_eq!(
+        RuntimeHardeningLimits::from_request(&request),
+        Err(RuntimeHardeningError::InvalidLimits)
+    );
+    request.limits.max_turns = 1;
+    request.limits.max_tool_calls = u32::MAX;
+    assert_eq!(
+        RuntimeHardeningLimits::from_request(&request),
+        Err(RuntimeHardeningError::InvalidLimits)
+    );
+}
+
+#[test]
 fn story_50_2_event_and_artifact_overage_is_non_mutating() {
     let mut event_request = controlled_write_hardening_request();
     event_request.limits.max_events = 2;

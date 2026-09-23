@@ -178,6 +178,10 @@ def verify_case(case: str, base: Path, log_dir: Path, exit_code: int) -> dict:
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
         )
         checks["complete-validation"] = validation.returncode == 0
+        checks["recorded-nine-tool-regression"] = observed_outcome.get("tool_call_count") == 9
+        checks["mandatory-records-beyond-old-count-limit"] = sum(
+            row.get("type") == "runtime_artifact_verified" for row in observed_rows
+        ) > 33
     elif case == "rollback":
         checks["exact-preimage-restored"] = (workspace / "src/calc.py").read_text() == (
             "def add(left, right):\n    return left + right\n"
@@ -207,7 +211,9 @@ def run_case(case: str, work_root: Path, log_root: Path) -> dict:
     log_dir = log_root / case
     coding_harness.setup(base, fixture)
     objective = f"Actual-process acceptance case: {case}."
-    exit_code = coding_harness.start(base, scenario, objective, approve, stale, log_dir)
+    exit_code = coding_harness.start(
+        base, scenario, objective, approve, stale, log_dir, record_session=case == "multi-file",
+    )
     return verify_case(case, base, log_dir, exit_code)
 
 

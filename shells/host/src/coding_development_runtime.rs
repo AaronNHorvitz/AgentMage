@@ -1923,6 +1923,24 @@ fn scripted_steps(
             .collect())
         }
         CodingDevelopmentScenario::MultiFile => {
+            let inspect = |call_id: &str, file: &str, kind: ReadOnlyToolKind, encoding| {
+                tool_candidate(
+                    profile,
+                    kind.id(),
+                    READ_ONLY_TOOL_VERSION,
+                    call_id,
+                    &ReadOnlyRequest {
+                        schema_version: 1,
+                        paths: vec![vec!["src".to_owned(), file.to_owned()]],
+                        query: None,
+                        byte_offset: None,
+                        byte_count: None,
+                        encoding,
+                        limits: ReadOnlyLimits::default(),
+                        call_depth: 0,
+                    },
+                )
+            };
             let validation_template = profile
                 .validations()
                 .templates
@@ -1972,6 +1990,26 @@ fn scripted_steps(
             };
             Ok([
                 ScriptedDevelopmentStep::Tool(validation("scripted-multi-failing")?),
+                // Preserve the real Muse campaign11 inspection path: with
+                // recording it needs more than the old 33-artifact estimate.
+                ScriptedDevelopmentStep::Tool(inspect(
+                    "scripted-multi-hash-subtract",
+                    "subtract.py",
+                    ReadOnlyToolKind::HashFile,
+                    ReadOnlyEncoding::Binary,
+                )?),
+                ScriptedDevelopmentStep::Tool(inspect(
+                    "scripted-multi-read-add",
+                    "calc.py",
+                    ReadOnlyToolKind::ReadText,
+                    ReadOnlyEncoding::Utf8,
+                )?),
+                ScriptedDevelopmentStep::Tool(inspect(
+                    "scripted-multi-read-subtract",
+                    "subtract.py",
+                    ReadOnlyToolKind::ReadText,
+                    ReadOnlyEncoding::Utf8,
+                )?),
                 ScriptedDevelopmentStep::Tool(patch(
                     "scripted-multi-add",
                     "calc.py",

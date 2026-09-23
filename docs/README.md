@@ -24,6 +24,7 @@ The immediate workstream is the standalone coding harness:
 - [Native command exact-call binding](decisions/0075-native-command-exact-call-binding.md)
 - [Native Git schema fidelity](decisions/0076-native-git-schema-fidelity.md)
 - [Harmony JSON format delimiter](decisions/0077-harmony-json-format-delimiter.md)
+- [Recorded runtime artifact accounting](decisions/0078-recorded-runtime-artifact-accounting.md)
 - [Real-model coding integration progress](verification/coding-harness-real-model-integration-2026-09-23.md)
 - [Prospective repeated native campaign](verification/coding-harness-native-campaign-2026-09-23.md)
 - [Standalone coding development harness](guides/standalone-coding-development.md)
