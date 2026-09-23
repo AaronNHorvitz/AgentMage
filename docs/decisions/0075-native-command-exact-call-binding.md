@@ -45,11 +45,18 @@ No model, context, generation, resource or correction budget changes.
 Regression coverage includes compact sorted and pretty JSON approved in that
 exact form, and refusal when equivalent JSON is reordered after approval, with
 zero executor launches. The existing wrong-operation-plan kernel regression
-must continue to refuse. An explicitly scripted `native-command-repair` scenario
-submits sorted native-style arguments, then follows the existing failed-test,
-inspection, repair, passing-validation and diff/status chain. Its assessor binds
-the genuine command failure output to the command turn and CLI-verified full
-artifact, not a fabricated event outcome or generic validation claim.
+must continue to refuse. An explicitly scripted `native-command-failure` scenario
+submits the exact retained Muse argument bytes. The generic nonzero command must
+terminate with `runtime.tool.failed`, a receipt and verified full failure output,
+without validation evidence or a subsequent write. Its assessor binds the failure
+output to the command turn and CLI-verified full artifact. Separate targeted
+validation cases prove the ordinary failed-test/inspection/repair/pass/diff chain.
+
+The first added matrix case incorrectly expected a generic failed command to
+continue into repair. Matrix9 correctly terminated it; its failed assessment is
+retained. Inspection of `finish_tool_non_success` and `validation_outcome` confirms
+the existing owner distinction. Correct only the diagnostic expectation, not
+generic failure semantics, targeted-validation ownership or model pass criteria.
 
 Run the connected CLI/host regression and the separate real-model campaigns;
 scripted success does not qualify either model. All admission, independent-review,

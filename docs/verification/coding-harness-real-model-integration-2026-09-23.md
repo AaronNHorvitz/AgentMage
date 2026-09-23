@@ -409,3 +409,26 @@ strict-local source audits, touched-document lint and diff checks pass. The firs
 new Python assessor fixture omitted its raw-log files and failed; that log is
 retained, the fixture is corrected, and the rerun passes. The actual-process
 matrix and native campaign must now run against the new committed tuple.
+
+At `7b1953d544c6f37cd11bb2c809db8b0aaa8564b7`, matrix9 passed all 19 existing
+cases. Its new generic-command case returned a real failed-command receipt and
+full stdout, not the former `Uncertain`, but the assessor incorrectly expected
+repair to continue. Generic failed commands are terminal under the existing
+coordinator; only the validation owner turns assertion failures into repairable
+observations. The failed report remains retained. The diagnostic is corrected to
+`native-command-failure`, requiring exactly one failed effect, original Muse
+argument digest, verified failure stdout, clean tree and no validation evidence.
+No runtime failure semantics or native campaign thresholds change.
+
+On the same source, Muse campaign8 new-file1 passed all 13 native collector checks
+in 352.499 seconds: complete one-test failure, controlled absent-file creation,
+complete one-test pass, status/diff and verifier `SUCCESS`, 6 turns, 5 effects,
+20 artifacts and no rejections. GPU peak 17953 MiB, memory peak 687923200 bytes,
+resource guard passed, all binaries unchanged. Collector SHA-256:
+`19b061e6d926a4f369d25fea0da0e289202fe52b16715ccc7521972ccd7c4c8b`.
+Created `src/calc.py` is `def add(a, b):` followed by `return a + b`, postimage
+`ba1a531f581d2e6094e978ed6f7aca7a8d92eeb62c6e7ad73ee692f7f18bc772`.
+It is untracked, so ordinary Git diff is empty: creation payload/postimage and
+status provide the native evidence; the supplemental read-only no-index diff
+shows the two added lines. Raw logs are retained at private
+`runs/2026-09-23-campaign8-muse-new-file-1`, not combined with another tuple.

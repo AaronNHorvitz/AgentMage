@@ -19,17 +19,18 @@ class CodingHarnessTests(unittest.TestCase):
             base = Path(temporary) / "fixture"
             workspace = base / "disposable/worktree"
             (workspace / "src").mkdir(parents=True)
-            (workspace / "src/calc.py").write_text("def add(left, right):\n    return left + right\n")
+            (workspace / "src/calc.py").write_text("def broken_add(left, right):\n    return left + right\n")
             logs = Path(temporary) / "logs"
             logs.mkdir()
-            (logs / "result.json").write_text(json.dumps({"scenario": "native-command-repair"}))
+            (logs / "result.json").write_text(json.dumps({"scenario": "native-command-failure"}))
             (logs / "stdout.jsonl").write_text("")
             (logs / "stderr.log").write_text("")
-            calls = ["scripted-native-ordered-command", "scripted-validation-failing",
-                     "scripted-inspect-preimage", "scripted-repair-patch", "scripted-validation-passing",
-                     "scripted-git-diff", "scripted-git-status"]
-            rows = [{"turn_id": f"turn-{index}", "kind": {"event": "tool_completed", "tool_call_id": call}}
-                    for index, call in enumerate(calls)]
+            rows = [{"turn_id": "turn-0", "kind": {
+                "event": "tool_failed", "tool_call_id": "scripted-native-ordered-command",
+                "failure_code": "runtime.tool.failed", "receipt_id": "receipt-command"}},
+                {"turn_id": "turn-0", "kind": {"event": "tool_requested",
+                 "tool_call_id": "scripted-native-ordered-command",
+                 "arguments_sha256": "87565c772c7ae8b4c39bfe07ac130422afadac4bb90b44e3ceaccc73a0aad922"}}]
             failed = (json.dumps({
                 "schema_version": 1, "status": "assertion_failed", "passed": 0, "failed": 1,
                 "skipped": 0, "duration_ms": 1, "failed_names": ["fixture::add"], "artifact_ids": [],
@@ -39,18 +40,19 @@ class CodingHarnessTests(unittest.TestCase):
             verified = {"type": "runtime_artifact_verified", "artifact_id": "failure",
                         "payload_sha256": coding_harness_acceptance.hashlib.sha256(failed).hexdigest(),
                         "byte_size": len(failed)}
-            rows.extend([artifact, verified, {"state": "SUCCESS", "turn_count": 8}])
-            with mock.patch.object(coding_harness_acceptance, "git_status", return_value=[" M src/calc.py"]), \
+            rows.extend([artifact, verified, {"state": "FAILED", "turn_count": 1,
+                                             "evidence": [], "unresolved_codes": ["runtime.tool.failed"]}])
+            with mock.patch.object(coding_harness_acceptance, "git_status", return_value=[]), \
                     mock.patch.object(coding_harness_acceptance, "rows", return_value=rows):
                 self.assertTrue(coding_harness_acceptance.verify_case(
-                    "native-command-repair", base, logs, 0)["passed"])
+                    "native-command-failure", base, logs, 8)["passed"])
                 artifact["turn_id"] = "turn-1"
                 self.assertFalse(coding_harness_acceptance.verify_case(
-                    "native-command-repair", base, logs, 0)["passed"])
+                    "native-command-failure", base, logs, 8)["passed"])
                 artifact["turn_id"] = "turn-0"
                 verified["payload_sha256"] = "0" * 64
                 self.assertFalse(coding_harness_acceptance.verify_case(
-                    "native-command-repair", base, logs, 0)["passed"])
+                    "native-command-failure", base, logs, 8)["passed"])
 
     def test_acceptance_retains_prelaunch_failure_without_outcome(self):
         with tempfile.TemporaryDirectory() as temporary:

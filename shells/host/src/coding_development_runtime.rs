@@ -167,8 +167,8 @@ pub enum CodingDevelopmentScenario {
     NoOp,
     /// Observe a genuine failing test, repair one identifier, rerun, and verify.
     FailedTestRepair,
-    /// Execute native-ordered command arguments, then require separate validation repair evidence.
-    NativeCommandRepair,
+    /// Execute native-ordered command arguments and retain the genuine nonzero failure.
+    NativeCommandFailure,
     /// Hold one cancellable model call so actual signal propagation can be exercised.
     SlowCancel,
     /// Pause after the first safe checkpoint for an external host-stop resume probe.
@@ -203,7 +203,7 @@ impl CodingDevelopmentScenario {
         match value {
             "no-op" => Some(Self::NoOp),
             "failed-test-repair" => Some(Self::FailedTestRepair),
-            "native-command-repair" => Some(Self::NativeCommandRepair),
+            "native-command-failure" => Some(Self::NativeCommandFailure),
             "slow-cancel" => Some(Self::SlowCancel),
             "restart-repair" => Some(Self::RestartRepair),
             "protocol-correction" => Some(Self::ProtocolCorrection),
@@ -832,7 +832,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 vec![EvidenceKind::Observation],
             ),
             CodingDevelopmentScenario::FailedTestRepair
-            | CodingDevelopmentScenario::NativeCommandRepair
+            | CodingDevelopmentScenario::NativeCommandFailure
             | CodingDevelopmentScenario::RestartRepair
             | CodingDevelopmentScenario::ProtocolCorrection
             | CodingDevelopmentScenario::ArgumentsCorrection
@@ -1702,15 +1702,7 @@ fn scripted_steps(
         .map_err(|_| CodingDevelopmentRuntimeError::Composition)
     };
     match scenario {
-        CodingDevelopmentScenario::NativeCommandRepair => {
-            let mut steps = scripted_steps(
-                CodingDevelopmentScenario::FailedTestRepair,
-                profile,
-                request,
-                workspace_root,
-                platform,
-                workspace,
-            )?;
+        CodingDevelopmentScenario::NativeCommandFailure => {
             let command = profile
                 .commands()
                 .commands()
@@ -1721,14 +1713,15 @@ fn scripted_steps(
             // not CommandRequest's internal struct order (campaign7 regression).
             let arguments = serde_json::to_value(CommandRequest::new("attempt-001", command))
                 .map_err(|_| CodingDevelopmentRuntimeError::Composition)?;
-            steps.push_front(ScriptedDevelopmentStep::Tool(tool_candidate(
+            Ok([ScriptedDevelopmentStep::Tool(tool_candidate(
                 profile,
                 crate::coding_tools::BOUNDED_COMMAND_TOOL_ID,
                 crate::coding_tools::BOUNDED_COMMAND_TOOL_VERSION,
                 "scripted-native-ordered-command",
                 &arguments,
-            )?));
-            Ok(steps)
+            )?)]
+            .into_iter()
+            .collect())
         }
         CodingDevelopmentScenario::ProtocolCorrection
         | CodingDevelopmentScenario::ArgumentsCorrection

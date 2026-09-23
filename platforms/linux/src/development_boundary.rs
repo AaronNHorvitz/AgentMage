@@ -253,7 +253,7 @@ fn development_scenario_valid(scenario: &str) -> bool {
         scenario,
         "no-op"
             | "failed-test-repair"
-            | "native-command-repair"
+            | "native-command-failure"
             | "slow-cancel"
             | "restart-repair"
             | "protocol-correction"
@@ -332,7 +332,7 @@ mod tests {
     #[test]
     fn correction_scenarios_are_explicit_closed_development_operations() {
         for scenario in [
-            "native-command-repair",
+            "native-command-failure",
             "protocol-correction",
             "arguments-correction",
             "repeated-protocol-rejection",

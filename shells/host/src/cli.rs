@@ -391,7 +391,7 @@ fn parse_coding_development(
         scenario.as_str(),
         "no-op"
             | "failed-test-repair"
-            | "native-command-repair"
+            | "native-command-failure"
             | "slow-cancel"
             | "restart-repair"
             | "protocol-correction"
@@ -1045,7 +1045,7 @@ Usage: agentmage [--json] [--surface interactive-cli|json|sdk|acp] COMMAND\n\
 Commands:\n\
   code\n\
   code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
-       --scenario no-op|failed-test-repair|native-command-repair|slow-cancel|restart-repair|protocol-correction|arguments-correction|repeated-protocol-rejection|restart-protocol-correction|new-file|multi-file|rollback|false-completion|overflow|disk-pressure|output-pressure\n\
+       --scenario no-op|failed-test-repair|native-command-failure|slow-cancel|restart-repair|protocol-correction|arguments-correction|repeated-protocol-rejection|restart-protocol-correction|new-file|multi-file|rollback|false-completion|overflow|disk-pressure|output-pressure\n\
        --objective TEXT [--follow-up TEXT]... [--resume|--record-session] [--artifact-release-probe-before-follow-ups] [--approve-this-run] [--stale-approval-probe|--replay-approval-probe|--expired-cursor-probe|--artifact-integrity-probe] [--slow-subscriber-probe]\n\
        [--preauthorize-workspace-reads] [--preauthorize-path RELATIVE_PATH]... [--preauthorize-command ID@VERSION@SHA256]...\n\
        [--preauthorization-budget N --preauthorization-minutes N] [--revoke-preauthorization-before-follow-ups]\n\
@@ -1389,7 +1389,7 @@ mod tests {
     #[test]
     fn correction_diagnostic_scenarios_reach_the_existing_development_host() {
         for scenario in [
-            "native-command-repair",
+            "native-command-failure",
             "protocol-correction",
             "arguments-correction",
             "repeated-protocol-rejection",

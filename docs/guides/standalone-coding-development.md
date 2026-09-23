@@ -93,9 +93,10 @@ restricted to this development client and corrupts one response digest so the re
 can be tested before an effect.
 
 The correction scenarios also cover one protocol or argument rejection followed by bounded
-repair, and exhaustion on a second malformed frame. `native-command-repair` exercises native
-JSON key ordering through the registered generic command, then requires separate targeted
-validation and repair evidence. These scripted regressions cannot qualify a real model.
+repair, and exhaustion on a second malformed frame. `native-command-failure` exercises native
+JSON key ordering through the registered generic command and requires a truthful terminal
+failure with a receipt and full output, not validation evidence. The separate targeted-validation
+cases prove repair. These scripted regressions cannot qualify a real model.
 
 Run all twenty declared actual-process cases with short disposable roots and a fresh create-only log root:
 
