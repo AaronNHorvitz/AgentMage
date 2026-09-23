@@ -2201,6 +2201,24 @@ impl RuntimeModelPort for CodingDevelopmentModelPort {
         }
     }
 
+    fn bind_context_tokens(
+        &self,
+        packet: &mut agentmage_kernel_contracts::ModelContextPacket,
+    ) -> Result<(), RuntimePortFailure> {
+        let result = match self {
+            Self::Scripted(_) => return Ok(()),
+            Self::Muse { controller, .. } => controller.bind_token_count(packet),
+            Self::GptOss { controller, .. } => controller.bind_token_count(packet),
+        };
+        result.map(|_| ()).map_err(|error| {
+            if error == agentmage_kernel_engine::model_runtime::ModelRuntimeGateError::DispatchCapacityExceeded {
+                RuntimePortFailure::ResourceExhausted
+            } else {
+                RuntimePortFailure::Invalid
+            }
+        })
+    }
+
     fn run_model(
         &mut self,
         request: &ModelRunRequest,
@@ -2249,9 +2267,8 @@ where
     R: agentmage_kernel_contracts::LocalModelRuntime,
     C: agentmage_kernel_contracts::ModelFamilyCodec,
 {
-    // The context composer uses a conservative planning count for source allocation. The native
-    // controller replaces it with the pinned tokenizer's count over the exact family rendering
-    // before capacity admission and dispatch; no approximate count reaches llama.cpp.
+    // The context owner has already selected sources against exact native rendering.
+    // Rebind independently at dispatch; no approximate count reaches llama.cpp.
     let mut exact_context = context.clone();
     controller
         .bind_token_count(&mut exact_context)
@@ -2862,7 +2879,7 @@ fn cancelled_model_result(
     }
 }
 
-/// Conservative context-allocation counter; native candidates are exactly recounted at dispatch.
+/// Approximate planning counter; native rendering is exactly bound during source selection.
 pub struct DevelopmentTokenCounter {
     counter_id: String,
 }

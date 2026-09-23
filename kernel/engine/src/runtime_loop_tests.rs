@@ -135,6 +135,8 @@ struct FakeModel {
     profile: ExactModelProfile,
     scripts: VecDeque<ModelScript>,
     calls: u32,
+    token_bindings: AtomicUsize,
+    token_binding_failure: Option<RuntimePortFailure>,
 }
 
 impl FakeModel {
@@ -143,6 +145,8 @@ impl FakeModel {
             profile,
             scripts: scripts.into_iter().collect(),
             calls: 0,
+            token_bindings: AtomicUsize::new(0),
+            token_binding_failure: None,
         }
     }
 }
@@ -150,6 +154,14 @@ impl FakeModel {
 impl RuntimeModelPort for FakeModel {
     fn exact_profile(&self) -> &ExactModelProfile {
         &self.profile
+    }
+
+    fn bind_context_tokens(
+        &self,
+        _packet: &mut ModelContextPacket,
+    ) -> Result<(), RuntimePortFailure> {
+        self.token_bindings.fetch_add(1, Ordering::SeqCst);
+        self.token_binding_failure.map_or(Ok(()), Err)
     }
 
     fn run_model(
@@ -2897,6 +2909,28 @@ fn story_23_4_malformed_model_result_fails_closed_with_terminal_evidence() {
         RuntimeEventKind::ModelFailed { failure_code, .. }
             if failure_code == "runtime.model.result_invalid"
     )));
+    assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn context_token_binding_precedes_model_dispatch_and_effects() {
+    let (mut coordinator, executions) = coordinator(
+        [ModelScript::Tool, ModelScript::Completion],
+        PermissionScript::Allow,
+        true,
+    );
+    coordinator.model.token_binding_failure = Some(RuntimePortFailure::Invalid);
+    let RuntimeCoordinatorStep::Complete { outcome } =
+        coordinator.run_until_boundary(None, None).unwrap()
+    else {
+        panic!("invalid token binding must terminate before model or approval");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Failed);
+    assert_eq!(outcome.unresolved_codes, ["runtime.context.failed"]);
+    assert_eq!(outcome.model_call_count, 0);
+    assert_eq!(coordinator.model.calls, 0);
+    assert_eq!(coordinator.model.token_bindings.load(Ordering::SeqCst), 1);
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
     assert_valid_terminal_stream(&coordinator);
 }
 

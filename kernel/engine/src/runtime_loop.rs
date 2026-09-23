@@ -123,12 +123,46 @@ pub trait RuntimeContextPort {
         tool_results: &[ToolResult],
         evidence: &[EvidenceReference],
     ) -> Result<ModelContextPacket, RuntimePortFailure>;
+
+    /// Composes with an inert exact-token binding callback, never inference or effects.
+    /// Context owners may reselect bounded sources; default owners retain their packet.
+    #[allow(clippy::too_many_arguments)]
+    fn build_context_with_token_binding(
+        &mut self,
+        request: &RuntimeRunRequest,
+        context_packet_id: ContextPacketId,
+        turn: u32,
+        completed_tool_calls: &[ToolCall],
+        tool_results: &[ToolResult],
+        evidence: &[EvidenceReference],
+        bind_tokens: &dyn Fn(&mut ModelContextPacket) -> Result<(), RuntimePortFailure>,
+    ) -> Result<ModelContextPacket, RuntimePortFailure> {
+        let mut packet = self.build_context(
+            request,
+            context_packet_id,
+            turn,
+            completed_tool_calls,
+            tool_results,
+            evidence,
+        )?;
+        bind_tokens(&mut packet)?;
+        Ok(packet)
+    }
 }
 
 /// Candidate-neutral model controller used by the reusable coordinator.
 pub trait RuntimeModelPort {
     /// Returns the exact profile already admitted by the model controller.
     fn exact_profile(&self) -> &ExactModelProfile;
+
+    /// Binds exact rendered tokens before context retention; no generation or authority.
+    /// Ports with already-exact context accounting need no additional binding.
+    fn bind_context_tokens(
+        &self,
+        _packet: &mut ModelContextPacket,
+    ) -> Result<(), RuntimePortFailure> {
+        Ok(())
+    }
 
     /// Executes one bounded request and returns only a validated inert result.
     fn run_model(
@@ -146,6 +180,15 @@ where
 {
     fn exact_profile(&self) -> &ExactModelProfile {
         self.exact_profile()
+    }
+
+    fn bind_context_tokens(
+        &self,
+        packet: &mut ModelContextPacket,
+    ) -> Result<(), RuntimePortFailure> {
+        self.bind_token_count(packet)
+            .map(|_| ())
+            .map_err(map_model_error)
     }
 
     fn run_model(
@@ -1165,13 +1208,14 @@ where
         self.context
             .observe_tool_rejections(&self.rejected_tool_calls)
             .map_err(RuntimeLoopError::Dependency)?;
-        let context = match self.context.build_context(
+        let context = match self.context.build_context_with_token_binding(
             &self.request,
             context_packet_id,
             self.turn_count,
             &self.completed_tool_calls,
             &self.tool_results,
             &self.evidence,
+            &|packet| self.model.bind_context_tokens(packet),
         ) {
             Ok(context) if valid_context_packet(&context, &self.request) => context,
             _ => {

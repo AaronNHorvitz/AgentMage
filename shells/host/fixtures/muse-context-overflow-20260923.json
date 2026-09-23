@@ -1,0 +1,98 @@
+{
+  "capacity": 32768,
+  "failed_next_input_tokens": 28792,
+  "observation": {
+    "completed_call": {
+      "arguments": {
+        "byte_count": null,
+        "byte_offset": null,
+        "call_depth": 0,
+        "encoding": "utf8",
+        "limits": {
+          "depth": 16,
+          "files": 128,
+          "input_bytes": 4194304,
+          "matches": 256,
+          "output_bytes": 1048576
+        },
+        "paths": [
+          [
+            "src",
+            "calc.py"
+          ]
+        ],
+        "query": null,
+        "schema_version": 1
+      },
+      "arguments_schema": {
+        "schema_id": "agentmage.workspace.read-only.input",
+        "schema_sha256": "78e9c77529836f988b4495ce8a2315997f67a0fc07c1ba8dfb7e83a17f994820",
+        "schema_version": 1
+      },
+      "arguments_sha256": "467ac272fe8c7103879a4bb5d957c9c3d18242e7c3ae84952e491f911f9615a7",
+      "call_sha256": "23b4f184810ff968bb8c8589f11a5202d36856bf0db50e74fd1892d1a61baa7d",
+      "tool_call_id": "model-tool-call:b8d3922a4ba045f5b544d229fb3a4315d20f6b67280f194689b12310a5e4b0b7",
+      "tool_id": "agentmage.workspace.read-file",
+      "tool_version": "1.0.0"
+    },
+    "result": {
+      "correlation_id": "correlation:97d9aaf5c28af52f88795dd79af9c620",
+      "elapsed_ms": 0,
+      "error": null,
+      "evidence": [
+        {
+          "content_sha256": "e75ee7a1b5da7b3bbd950ffbdb4be3fdfaf14287bd92d66bd916fc12f9298280",
+          "evidence_id": "evidence-f3feb92dcd6f8a2f13b068f683fcf672",
+          "fragment": null,
+          "kind": "tool_output",
+          "object_id": "model-tool-call:b8d3922a4ba045f5b544d229fb3a4315d20f6b67280f194689b12310a5e4b0b7",
+          "observed_revision": "coding-development-snapshot-0ede6853b7516e2e",
+          "schema_version": 2,
+          "source_id": "native:agentmage.workspace.read-file@1.0.0"
+        }
+      ],
+      "outcome": "succeeded",
+      "output": {
+        "content": {
+          "items": [
+            {
+              "byte_end": 53,
+              "byte_start": 0,
+              "content": "def broken_add(left, right):\n    return left + right\n",
+              "file_sha256": "aca809d27a82d641ebd68549b100a91cb40db964cbdd6e1efaeda70b79a73666",
+              "kind": "text",
+              "path": [
+                "src",
+                "calc.py"
+              ]
+            }
+          ],
+          "observed_bytes": 53,
+          "observed_files": 1,
+          "outcome": "succeeded",
+          "output_bytes": 220,
+          "result_sha256": "e75ee7a1b5da7b3bbd950ffbdb4be3fdfaf14287bd92d66bd916fc12f9298280",
+          "schema_version": 1,
+          "tool": "agentmage.workspace.read-file",
+          "truncated": false
+        },
+        "media_type": "application/json",
+        "schema": {
+          "schema_id": "agentmage.workspace.read-only.output",
+          "schema_sha256": "8edaf3dd318958706289d14bdbe7cc5599190d021412a917918d5c4265405c1c",
+          "schema_version": 1
+        },
+        "sha256": "fd7b1f9eee66df20f227684eb6188c6d28da4a5167259ba7ac0ed6ad4d8f4b55"
+      },
+      "schema_version": 2,
+      "state_change": "not_changed",
+      "tool_call_id": "model-tool-call:b8d3922a4ba045f5b544d229fb3a4315d20f6b67280f194689b12310a5e4b0b7",
+      "validation_issues": []
+    },
+    "result_sha256": "0ec5ecf435c4f97bcde885f222e5fa734dd430b118f747d8a09e193832727e40",
+    "untrusted_tool_observation": true
+  },
+  "output_reserve": 4096,
+  "source_prompt_sha256": "d7f9920b79e48325a8712faff373186f413b31e06e4d3285d361d36749535588",
+  "source_prompt_tokens": 27309
+}

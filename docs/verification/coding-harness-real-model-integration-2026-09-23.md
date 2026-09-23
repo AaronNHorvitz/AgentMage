@@ -147,6 +147,48 @@ generation-budget, context-capacity, permission or verifier substitution was use
 
 ## Verification so far
 
+Decision 0073 verification passes: 1044 kernel tests (seven ignored), 303 host
+library tests (eight ignored), 15 host-binary tests, strict all-target host/kernel
+Clippy, binary build, nine wrapper/collector tests and effect/strict-local audits.
+Actual scripted regression `context-reflow-scripted` completes `SUCCESS` through
+seven turns/six tools with the exact expected identifier diff, full failed/read/
+patch/passing/diff/status chain and unchanged binaries. These are implementation
+checks, not a substitute for the next native run. No SBOM renewal ran mid-batch.
+
+At `2b54674a`, two fresh Muse new-file repetitions passed every diagnostic check:
+actual failed validation, exact create, complete passing validation, status/diff
+and verifier `SUCCESS`. Repetition 1 took 419.472 seconds (seven turns, six
+proposals, one pre-effect rejected read, five completed effects); repetition 2
+took 382.953 seconds (six turns, five effects). GPU peaks were 17958 and 17807 MiB,
+guards passed and binaries stayed fixed. Both raw chains remain retained.
+The new file is untracked, so native Git diff is empty; its exact created content
+and receipt-bound postimage are retained, with a separately labeled post-run
+unified diff for the first repetition. No post-run artifact is mislabeled native.
+
+The same tuple's repair repetition 1 then failed after 389.899 seconds and seven
+native effects, despite a correct edit and passing rerun: exact final context
+28792 plus 4096 reserved output exceeds 32768. This campaign is unsuccessful
+(two passes, one failure), not a qualified tuple. The preceding raw prompt and
+an extracted observation are pinned by
+[Decision 0073](../decisions/0073-exact-coding-context-reflow.md).
+Its bounded exact-measurement/re-selection fix uses the existing context owner;
+the native correction and a new complete campaign still require verification.
+
+Current-source scripted results at `2b54674a` were inspected separately:
+
+- `matrix-3`: all 16 cases and every check pass; report SHA-256
+  `a634b5b36c12af4e426a6a5e95342001cbb7a0c0c07e2ff3a7aa1a93cdeb4351`.
+- `resume-2`: safe same-run/session resume, five new effects without redispatch;
+  worktree drift refuses before effects and retains the human comment. Report
+  `d4b611618fbe623358ebf0331995b71bb2c0bcca9f83ef0bdd4b221c446fff31`.
+- `daily-core-3`: 3/3 setup, disk/output pressure, contention refusal in 0.002032
+  seconds, cancellation in 0.829875 seconds, 26 distinct runs in one session,
+  156 verified artifacts and clean worktree in 388.636 seconds. Report
+  `7cd962980b6e6b81d327facafb8eb25b4c68df1c40dc4cb650c8c63d4d59e2f3`.
+  This explicitly scoped core report invokes unchanged local daily checks;
+  it does not recycle historical first-call-only model failure assumptions or
+  claim the aggregate daily/model/independent-review gate.
+
 At the feedback checkpoint, 17 codec tests, 37 runtime-loop tests, four continuation
 tests, 297 host library tests (8 environment-dependent ignores), 15 host-binary tests
 and strict Clippy passed. Subsequent identity/creation changes passed the exact

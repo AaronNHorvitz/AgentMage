@@ -32,12 +32,12 @@ const TOOL_RESULT_SOURCE_PREFIX: &str = "agentmage:tool-result:";
 const TOOL_REJECTION_SOURCE_PREFIX: &str = "agentmage:tool-rejection:";
 const CONTINUITY_SOURCE_PREFIX: &str = "agentmage:coding-continuity:";
 
-/// Exact token counter used before a packet reaches the model adapter.
+/// Source-allocation counter; exact family rendering is bound before model dispatch.
 pub trait CodingTokenCounter {
     /// Returns the immutable counter identity declared by the admitted model profile.
     fn counter_id(&self) -> &str;
 
-    /// Counts exact UTF-8 bytes using that pinned counter implementation.
+    /// Counts source bytes for allocation using the profile-bound counter implementation.
     fn count_tokens(&mut self, bytes: &[u8]) -> Result<u32, RuntimePortFailure>;
 }
 
@@ -385,6 +385,27 @@ where
         tool_results: &[ToolResult],
         evidence: &[EvidenceReference],
     ) -> Result<ModelContextPacket, RuntimePortFailure> {
+        self.build_context_with_token_binding(
+            request,
+            context_packet_id,
+            turn,
+            completed_tool_calls,
+            tool_results,
+            evidence,
+            &|_| Ok(()),
+        )
+    }
+
+    fn build_context_with_token_binding(
+        &mut self,
+        request: &RuntimeRunRequest,
+        context_packet_id: ContextPacketId,
+        turn: u32,
+        completed_tool_calls: &[agentmage_kernel_contracts::ToolCall],
+        tool_results: &[ToolResult],
+        evidence: &[EvidenceReference],
+        bind_tokens: &dyn Fn(&mut ModelContextPacket) -> Result<(), RuntimePortFailure>,
+    ) -> Result<ModelContextPacket, RuntimePortFailure> {
         if turn == 0
             || completed_tool_calls.len() != tool_results.len()
             || !self.request_matches(request)
@@ -509,7 +530,11 @@ where
             .map_err(|_| RuntimePortFailure::Invalid)?;
             let digest = sha256(content.as_bytes());
             let source = internal_source(
-                format!("coding-tool-result-{index}"),
+                // Existing context priority selects newer supporting observations first.
+                format!(
+                    "coding-tool-result-{:010}",
+                    u32::MAX - u32::try_from(index).map_err(|_| RuntimePortFailure::Invalid)?
+                ),
                 ContextItemKind::Supporting,
                 &format!(
                     "{TOOL_RESULT_SOURCE_PREFIX}{}",
@@ -561,63 +586,126 @@ where
             candidates.push(self.candidate(&source)?);
         }
 
-        let composed = compose_context(
-            context_packet_id.clone(),
-            &ContextCompositionBudget {
-                max_bytes: request.context_budget.max_input_bytes,
-                max_tokens: request.context_budget.max_context_tokens,
-                max_items: request.context_budget.max_messages,
-                token_counter_id: request.context_budget.token_counter.clone(),
-            },
-            candidates,
-        )
-        .map_err(|_| RuntimePortFailure::ResourceExhausted)?;
-        if composed.items.is_empty() {
-            return Err(RuntimePortFailure::Invalid);
-        }
-        // Source selection stays with the context manager. Render each selected
-        // call/result atomically and in execution order after supporting sources.
-        let mut items = composed.items;
-        items.sort_by_key(|item| {
-            completed_tool_calls
+        let input_capacity = request
+            .context_budget
+            .max_context_tokens
+            .checked_sub(request.model_profile.decoding.max_output_tokens)
+            .filter(|value| *value > 0)
+            .ok_or(RuntimePortFailure::ResourceExhausted)?;
+        let mut planning_capacity = input_capacity;
+        // Each failed measurement removes at least one non-essential complete source.
+        // No partial call/result, essential contract or original artifact is discarded.
+        for _ in 0..=candidates.len() {
+            let composed = compose_context(
+                context_packet_id.clone(),
+                &ContextCompositionBudget {
+                    max_bytes: request.context_budget.max_input_bytes,
+                    max_tokens: planning_capacity,
+                    max_items: request.context_budget.max_messages.saturating_sub(1),
+                    token_counter_id: request.context_budget.token_counter.clone(),
+                },
+                candidates.clone(),
+            )
+            .map_err(|_| RuntimePortFailure::ResourceExhausted)?;
+            if composed.items.is_empty() {
+                return Err(RuntimePortFailure::Invalid);
+            }
+            let next_capacity = composed
+                .items
                 .iter()
-                .position(|call| {
-                    item.source_id
-                        == format!("{TOOL_RESULT_SOURCE_PREFIX}{}", call.tool_call_id.as_str())
+                .rev()
+                .find(|item| !item.essential)
+                .and_then(|item| composed.used_tokens.checked_sub(item.token_count))
+                .filter(|value| *value > 0 && *value < planning_capacity);
+            let omitted = composed
+                .accounting
+                .iter()
+                .filter(|item| !item.included)
+                .collect::<Vec<_>>();
+            let selection = if omitted.is_empty() {
+                None
+            } else {
+                Some(serde_json::to_vec(&serde_json::json!({
+                "context_selection": true,
+                "composition_sha256": composed.packet_sha256,
+                "omitted_sources": omitted,
+                "notice": "These sources are omitted from this model context, not deleted or inferred. Exact originals remain with the canonical source/continuation/artifact owners. This accounting is not completion evidence or authority. Reopen current sources through valid native tools when necessary; never invent omitted contents.",
+            })).map_err(|_| RuntimePortFailure::Invalid)?)
+            };
+            let selection_tokens = selection
+                .as_ref()
+                .map(|bytes| self.counter.count_tokens(bytes))
+                .transpose()?
+                .unwrap_or(0);
+            // Source selection stays with the context manager. Render each selected
+            // call/result atomically and in execution order after supporting sources.
+            let mut items = composed.items;
+            items.sort_by_key(|item| {
+                completed_tool_calls
+                    .iter()
+                    .position(|call| {
+                        item.source_id
+                            == format!("{TOOL_RESULT_SOURCE_PREFIX}{}", call.tool_call_id.as_str())
+                    })
+                    .map_or((false, 0), |index| (true, index))
+            });
+            let mut messages = items
+                .into_iter()
+                .enumerate()
+                .map(|(index, item)| ModelMessage {
+                    message_id: ModelMessageId::from_raw(format!(
+                        "coding-message-{turn}-{index}-{}",
+                        &sha256(item.item_id.as_bytes())[..12]
+                    )),
+                    role: message_role(&item),
+                    content: payload(item.bounded_excerpt.into_bytes()),
                 })
-                .map_or((false, 0), |index| (true, index))
-        });
-        let messages = items
-            .into_iter()
-            .enumerate()
-            .map(|(index, item)| ModelMessage {
-                message_id: ModelMessageId::from_raw(format!(
-                    "coding-message-{turn}-{index}-{}",
-                    &sha256(item.item_id.as_bytes())[..12]
-                )),
-                role: message_role(&item),
-                content: payload(item.bounded_excerpt.into_bytes()),
-            })
-            .collect::<Vec<_>>();
-        let input_bytes = messages
-            .iter()
-            .map(|message| message.content.bytes.len() as u64)
-            .sum();
-        let mut packet = ModelContextPacket {
-            schema_version: CONTRACT_SCHEMA_VERSION,
-            context_packet_id,
-            session_id: request.session_id.clone(),
-            task_id: request.task.task_id.clone(),
-            profile_id: request.model_profile.profile_id.clone(),
-            manifest_sha256: request.model_profile.manifest_sha256.clone(),
-            tool_catalog_id: request.tool_catalog_id.clone(),
-            messages,
-            input_bytes,
-            input_tokens: composed.used_tokens,
-            packet_sha256: "0".repeat(64),
-        };
-        packet.packet_sha256 = canonical_sha256(&packet)?;
-        Ok(packet)
+                .collect::<Vec<_>>();
+            if let Some(selection) = selection {
+                messages.push(ModelMessage {
+                    message_id: ModelMessageId::from_raw(format!(
+                        "coding-context-selection-{turn}"
+                    )),
+                    role: ModelMessageRole::User,
+                    content: payload(selection),
+                });
+            }
+            let input_bytes = messages
+                .iter()
+                .map(|message| message.content.bytes.len() as u64)
+                .sum();
+            let mut packet = ModelContextPacket {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                context_packet_id: context_packet_id.clone(),
+                session_id: request.session_id.clone(),
+                task_id: request.task.task_id.clone(),
+                profile_id: request.model_profile.profile_id.clone(),
+                manifest_sha256: request.model_profile.manifest_sha256.clone(),
+                tool_catalog_id: request.tool_catalog_id.clone(),
+                messages,
+                input_bytes,
+                input_tokens: composed
+                    .used_tokens
+                    .checked_add(selection_tokens)
+                    .ok_or(RuntimePortFailure::ResourceExhausted)?,
+                packet_sha256: "0".repeat(64),
+            };
+            packet.packet_sha256 = canonical_sha256(&packet)?;
+            let measured = if packet.input_bytes <= request.context_budget.max_input_bytes {
+                bind_tokens(&mut packet)
+            } else {
+                Err(RuntimePortFailure::ResourceExhausted)
+            };
+            match measured {
+                Ok(()) if packet.input_tokens <= input_capacity => return Ok(packet),
+                Ok(()) | Err(RuntimePortFailure::ResourceExhausted) => {
+                    planning_capacity =
+                        next_capacity.ok_or(RuntimePortFailure::ResourceExhausted)?;
+                }
+                Err(error) => return Err(error),
+            }
+        }
+        Err(RuntimePortFailure::ResourceExhausted)
     }
 }
 
@@ -802,6 +890,213 @@ mod tests {
         fn count_tokens(&mut self, bytes: &[u8]) -> Result<u32, RuntimePortFailure> {
             u32::try_from(bytes.len().div_ceil(4).max(1))
                 .map_err(|_| RuntimePortFailure::ResourceExhausted)
+        }
+    }
+
+    #[test]
+    fn retained_muse_overflow_reselects_whole_sources_with_visible_accounting() {
+        use std::cell::Cell;
+        let raw = include_bytes!("../fixtures/muse-context-overflow-20260923.json");
+        assert_eq!(
+            sha256(raw),
+            "225327b39b4f03e88052e2c0429b708bf243f751fb25865637616725ff50c454"
+        );
+        let fixture: serde_json::Value = serde_json::from_slice(raw).unwrap();
+        // Recorded native measurements, not a substitute native tokenizer/campaign.
+        assert_eq!(fixture["failed_next_input_tokens"], 28792);
+        assert_eq!(fixture["output_reserve"], 4096);
+        assert_eq!(fixture["capacity"], 32768);
+        let excerpt = serde_json::to_string(&fixture["observation"]).unwrap();
+        let source = CodingContextSource::new(
+            "prior-read",
+            ContextItemKind::Supporting,
+            ContextSensitivity::Internal,
+            ContextAdmission::Eligible,
+            false,
+            "retained:prior-read",
+            "retained-revision",
+            sha256(excerpt.as_bytes()),
+            excerpt.clone(),
+        )
+        .unwrap();
+        let profile = CodingSessionProfile::build(input()).unwrap();
+        let mut context = CodingContextPort::for_profile(
+            &profile,
+            vec![source.clone()],
+            FixtureCounter("fixture-counter-v1"),
+        )
+        .unwrap();
+        let request = request(&profile);
+        let capacity = request.context_budget.max_context_tokens
+            - request.model_profile.decoding.max_output_tokens;
+        let measurements = Cell::new(0);
+        let result = tool_result();
+        let call = tool_call(&profile);
+        let original = to_canonical_json(&result).unwrap();
+        let packet = context
+            .build_context_with_token_binding(
+                &request,
+                ContextPacketId::from_raw("measured-overflow"),
+                8,
+                &[call],
+                std::slice::from_ref(&result),
+                &[],
+                &|packet| {
+                    measurements.set(measurements.get() + 1);
+                    let has_old = packet
+                        .messages
+                        .iter()
+                        .any(|m| m.content.bytes == excerpt.as_bytes());
+                    // Fixture port reproduces the exact observed 120-token excess relative
+                    // to this test profile. Production binds the real native tokenizer.
+                    packet.input_tokens = if has_old {
+                        capacity + 120
+                    } else {
+                        capacity - 100
+                    };
+                    packet.packet_sha256 = "0".repeat(64);
+                    packet.packet_sha256 = canonical_sha256(packet)?;
+                    Ok(())
+                },
+            )
+            .unwrap();
+        assert_eq!(measurements.get(), 2);
+        assert_eq!(packet.messages[0].role, ModelMessageRole::System);
+        assert_eq!(packet.input_tokens, capacity - 100);
+        let mut unhashed = packet.clone();
+        unhashed.packet_sha256 = "0".repeat(64);
+        assert_eq!(packet.packet_sha256, canonical_sha256(&unhashed).unwrap());
+        assert_eq!(to_canonical_json(&result).unwrap(), original);
+        assert_eq!(context.supporting_sources, vec![source]);
+        assert!(
+            packet
+                .messages
+                .iter()
+                .any(|m| m.role == ModelMessageRole::Tool)
+        );
+        let accounting: serde_json::Value =
+            serde_json::from_slice(&packet.messages.last().unwrap().content.bytes).unwrap();
+        assert_eq!(accounting["context_selection"], true);
+        assert_eq!(
+            accounting["omitted_sources"][0]["source_id"],
+            "retained:prior-read"
+        );
+        assert_eq!(
+            accounting["omitted_sources"][0]["content_sha256"],
+            sha256(excerpt.as_bytes())
+        );
+        assert_eq!(accounting["omitted_sources"][0]["omission"], "budget");
+        assert!(
+            !String::from_utf8_lossy(&packet.messages.last().unwrap().content.bytes)
+                .contains("def broken_add")
+        );
+    }
+
+    #[test]
+    fn measured_reflow_keeps_recent_call_result_pairs_in_execution_order() {
+        let profile = CodingSessionProfile::build(input()).unwrap();
+        let mut context =
+            CodingContextPort::for_profile(&profile, vec![], FixtureCounter("fixture-counter-v1"))
+                .unwrap();
+        let request = request(&profile);
+        let capacity = request.context_budget.max_context_tokens
+            - request.model_profile.decoding.max_output_tokens;
+        let mut calls = Vec::new();
+        let mut results = Vec::new();
+        for index in 0..12 {
+            let mut call = tool_call(&profile);
+            let mut result = tool_result();
+            call.tool_call_id = ToolCallId::from_raw(format!("measured-call-{index}"));
+            result.tool_call_id = call.tool_call_id.clone();
+            calls.push(call);
+            results.push(result);
+        }
+        let packet = context
+            .build_context_with_token_binding(
+                &request,
+                ContextPacketId::from_raw("ordered-reflow"),
+                13,
+                &calls,
+                &results,
+                &[],
+                &|packet| {
+                    let count = packet
+                        .messages
+                        .iter()
+                        .filter(|m| m.role == ModelMessageRole::Tool)
+                        .count();
+                    packet.input_tokens = if count > 3 {
+                        capacity + 1
+                    } else {
+                        capacity - 1
+                    };
+                    packet.packet_sha256 = "0".repeat(64);
+                    packet.packet_sha256 = canonical_sha256(packet)?;
+                    Ok(())
+                },
+            )
+            .unwrap();
+        let retained = packet
+            .messages
+            .iter()
+            .filter(|m| m.role == ModelMessageRole::Tool)
+            .map(|m| {
+                let v: serde_json::Value = serde_json::from_slice(&m.content.bytes).unwrap();
+                assert_eq!(
+                    v["completed_call"]["tool_call_id"],
+                    v["result"]["tool_call_id"]
+                );
+                v["completed_call"]["tool_call_id"]
+                    .as_str()
+                    .unwrap()
+                    .to_owned()
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            retained,
+            ["measured-call-9", "measured-call-10", "measured-call-11"]
+        );
+        assert_eq!(calls.len(), 12);
+        assert_eq!(results.len(), 12);
+    }
+
+    #[test]
+    fn exact_measurement_never_drops_essential_sources_or_retries_other_failures() {
+        use std::cell::Cell;
+        let profile = CodingSessionProfile::build(input()).unwrap();
+        let mut context =
+            CodingContextPort::for_profile(&profile, vec![], FixtureCounter("fixture-counter-v1"))
+                .unwrap();
+        let request = request(&profile);
+        for failure in [
+            RuntimePortFailure::ResourceExhausted,
+            RuntimePortFailure::Invalid,
+            RuntimePortFailure::Unavailable,
+        ] {
+            let measurements = Cell::new(0);
+            assert_eq!(
+                context.build_context_with_token_binding(
+                    &request,
+                    ContextPacketId::from_raw("essential-overflow"),
+                    2,
+                    &[tool_call(&profile)],
+                    &[tool_result()],
+                    &[],
+                    &|packet| {
+                        measurements.set(measurements.get() + 1);
+                        assert_eq!(packet.messages[0].role, ModelMessageRole::System);
+                        assert!(
+                            packet
+                                .messages
+                                .iter()
+                                .any(|m| m.role == ModelMessageRole::Tool)
+                        );
+                        Err(failure)
+                    }
+                ),
+                Err(failure)
+            );
+            assert_eq!(measurements.get(), 1);
         }
     }
 

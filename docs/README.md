@@ -19,6 +19,7 @@ The immediate workstream is the standalone coding harness:
 - [Coding development identity prerequisites](decisions/0070-coding-development-identity-prerequisites.md)
 - [Native channel token preservation](decisions/0071-native-channel-token-preservation.md)
 - [Bounded pre-effect read rejection](decisions/0072-bounded-pre-effect-read-rejection.md)
+- [Exact coding context reflow](decisions/0073-exact-coding-context-reflow.md)
 - [Real-model coding integration progress](verification/coding-harness-real-model-integration-2026-09-23.md)
 - [Prospective repeated native campaign](verification/coding-harness-native-campaign-2026-09-23.md)
 - [Standalone coding development harness](guides/standalone-coding-development.md)
