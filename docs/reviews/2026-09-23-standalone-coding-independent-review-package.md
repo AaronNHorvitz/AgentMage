@@ -20,6 +20,9 @@ package's connected-source target, not its historical evidence or findings.
 The native and current scripted campaigns used this clean source target and
 the exact three binary hashes in the [results record](../verification/coding-harness-campaign13-results-2026-09-23.md).
 Later documentation/evidence-only commits are not new native qualification.
+The [renewal record](../verification/coding-harness-evidence-renewal-2026-09-23.md)
+also identifies the root inventory-test correction and the separate negative
+demo-status correction under Decision 0080; neither changes runtime source.
 Review the immutable target, not a moving worktree. Do not rebuild binaries
 mid-campaign, normalize rejected bytes or replay an effect from a checkpoint.
 

@@ -143,7 +143,7 @@ independent review. The old daily aggregate expects the original first-call
 codec failures; it is not presented as a current aggregate gate. Full unit,
 negative-fixture, Clippy and boundary verification is retained in the repair
 record. The one applicable source-batch SBOM/evidence renewal follows these
-completed source changes; its disposition is recorded separately.
+completed source changes; its [disposition is recorded separately](coding-harness-evidence-renewal-2026-09-23.md).
 
 The SBOM and current requirements checks passed in the renewal. The first full
 documentation attempt correctly failed on nine stale SBOM/provenance/hash
