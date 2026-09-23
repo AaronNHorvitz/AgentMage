@@ -227,7 +227,10 @@ def run_commands() -> list[dict[str, Any]]:
                 cwd=ROOT,
                 check=False,
                 capture_output=True,
-                timeout=1800,
+                # Full documentation validation includes nested offline Cargo
+                # suites and exceeded 30 minutes during the coding batch. This
+                # bounds evidence collection, not product acceptance timing.
+                timeout=2700 if identifier == "documentation-gate" else 1800,
             )
             code, output = result.returncode, result.stdout + result.stderr
         blocking_skip_count = None

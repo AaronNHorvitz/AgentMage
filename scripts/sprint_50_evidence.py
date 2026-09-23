@@ -244,7 +244,10 @@ def run_commands() -> list[dict[str, Any]]:
         else:
             result = subprocess.run(
                 (executable, *argv[1:]), cwd=ROOT, check=False,
-                capture_output=True, timeout=1800,
+                capture_output=True,
+                # Match the bounded full-documentation collection window in
+                # Sprint 48; product/model performance limits are unchanged.
+                timeout=2700 if identifier == "documentation-gate" else 1800,
             )
             code, output = result.returncode, result.stdout + result.stderr
         blocking_skip_count = None

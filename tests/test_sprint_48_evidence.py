@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import copy
+import subprocess
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from scripts import sprint_48_evidence as evidence
@@ -31,6 +33,47 @@ def report() -> dict[str, object]:
 
 
 class Sprint48EvidenceTests(unittest.TestCase):
+    def test_only_full_documentation_has_the_longer_finite_collection_deadline(self) -> None:
+        completed = subprocess.CompletedProcess(
+            ["fixture"], 0,
+            stdout=b"test result: ok. 1 passed; 0 failed; 0 ignored;",
+            stderr=b"",
+        )
+        with (
+            patch.object(
+                evidence.shutil, "which", side_effect=lambda name: f"/fixture/{name}"
+            ),
+            patch.object(evidence.subprocess, "run", return_value=completed) as run,
+        ):
+            records = evidence.run_commands()
+        self.assertEqual(len(records), len(evidence.COMMANDS))
+        self.assertEqual(run.call_count, len(evidence.COMMANDS))
+        for (identifier, argv), call in zip(
+            evidence.COMMANDS, run.call_args_list, strict=True
+        ):
+            self.assertEqual(call.args[0], (f"/fixture/{argv[0]}", *argv[1:]))
+            self.assertEqual(
+                call.kwargs["timeout"],
+                2700 if identifier == "documentation-gate" else 1800,
+            )
+            self.assertTrue(call.kwargs["capture_output"])
+
+    def test_collection_timeout_cannot_write_a_passing_report(self) -> None:
+        with (
+            patch.object(
+                evidence, "parse_args",
+                return_value=SimpleNamespace(write=True, source_revision="c" * 40),
+            ),
+            patch.object(
+                evidence, "run_commands",
+                side_effect=subprocess.TimeoutExpired(("npm", "run", "docs:check"), 2700),
+            ),
+            patch.object(evidence, "OUTPUT") as output,
+        ):
+            with self.assertRaises(subprocess.TimeoutExpired):
+                evidence.main()
+        output.write_text.assert_not_called()
+
     def validate(self, value: dict[str, object]) -> list[str]:
         with patch.object(evidence, "git_file", return_value=b"source"):
             return evidence.validate_report(value, verify_ancestry=False)

@@ -2,7 +2,8 @@
 
 Status: applicable evidence renewal in progress; native campaigns finished.
 Authority: Decision 0054 and the owner's scoped continuation. Routine renewal,
-automated pin updates and the exact inventory-test correction below are
+automated pin updates, the exact inventory-test correction and the bounded
+collector-deadline adjustment below are
 **Accepted under owner delegation, 2026-09-20**. They do not supply independent
 review, model admission, supported-platform acceptance or release approval.
 
@@ -62,6 +63,18 @@ its contract tests use the existing read-only, unprivileged, networkless,
   and 129 production. No component was added during renewal and no validator,
   classification rule, negative test or hash coverage was relaxed. The original
   failed test and subsequent 25-test pass are retained.
+- The first Sprint 48 collector attempt found the Story 1.3 automatic pin stale
+  after the RV-50 renewal. Its exact two changed inputs were inspected, the pin
+  was renewed and all eight gate tests passed. The failed attempt remains intact.
+- The next attempt passed the complete schema gate and reached the final
+  platform aggregate, but the collector's 1,800-second full-documentation deadline
+  expired while tests were still progressing. No assertion failure was reported;
+  partial stdout/stderr and the timeout are retained. The owned scope subsequently
+  reported inactive/dead. Only the full-documentation collection deadline is now
+  2,700 seconds; every other command keeps 1,800 seconds. The command inventory,
+  required outcomes, hash bindings, product performance thresholds, model budgets
+  and systemd resource caps are unchanged. Regression tests require this exact
+  finite deadline selection and prove a timeout cannot write a passing report.
 
 Completed checks include requirements/current applicability, contract boundaries,
 planning, activation refusal, policy, storage, configuration and unaffected
