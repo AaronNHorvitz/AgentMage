@@ -65,11 +65,15 @@ its contract tests use the existing read-only, unprivileged, networkless,
 
 Completed checks include requirements/current applicability, contract boundaries,
 planning, activation refusal, policy, storage, configuration and unaffected
-schema/documentation-tail checks. Configuration Story 3.1 and Sprint 3 aggregates
-pass with their existing blockers. Platform-contract renewal and its eleven
-tests pass without support promotion. Dispatcher and platform aggregate renewal,
-the complete documentation gate and applicable Sprint 48/50 reports are still
-running or pending; this record does not mark them passed in advance.
+schema/documentation-tail checks. All affected prerequisite aggregates now pass
+with their existing blockers: Story 4.1's eight tests, Sprint 4's seven tests,
+Story 7.1's five tests and Sprint 7's four tests passed after renewal. The ten
+dispatcher/security tests and eleven platform-contract/security tests also pass.
+Markdown lint, 138 Mermaid blocks, 522-document validation and all policy
+invariants passed. The automated Sprint 50 runtime-contract review binds the
+native source pin, with all six checks true and no independent-human-review claim.
+The complete documentation gate and applicable Sprint 48/50 local reports remain
+pending; this record does not mark them passed in advance.
 
 ## Retention and review boundary
 
