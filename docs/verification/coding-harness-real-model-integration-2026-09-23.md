@@ -47,6 +47,8 @@ Starting checkout: `b0445064edc68e3e4a0e7dca77d4b3fd9c3ebcf2` on
 | `a13fd15e` | Exact native call/result feedback and durable continuation binding |
 | `eca3f405` | Development runtime identity, creation observations and run provenance |
 | `cf727b39` | Lossless repeated-schema factoring and exact capacity diagnostics |
+| `5574c43a` | Native template bodies and read-only evidence collector; first complete Muse repair |
+| `bca18d22` | Paired-feedback rollback fixture correction and prospective campaign protocol |
 
 No supply-chain or historical evidence regeneration has run during this source
 batch. Local source checkpoints are not independently reviewed gate closures.
@@ -74,6 +76,7 @@ original failed runs are not overwritten or promoted to successes.
 | `muse-native-5` | Genuine failed validation, then reasoning-only context echo; exit 8, 246.471 seconds |
 | `gpt-native-6` | Native hash, then duplicate commentary headers and duplicate JSON key; exit 8, 186.214 seconds |
 | `muse-native-6` | First complete real-model diagnostic: verifier `SUCCESS`, 6 turns/5 tools, 367.589 seconds |
+| `campaign-muse-new-file-1` | Genuine failed validation, then multi-part reasoning framing rejected; exit 8, 260.892 seconds |
 
 Muse native-3 changed only `def broken_add` to `def add` in `src/calc.py`.
 Its last prompt used 27836 tokens, output 583 tokens, and peak sampled total GPU
@@ -113,6 +116,13 @@ tokens; sampled GPU peak was 17958 MiB, the guard passed, and all three binaries
 stayed unchanged. This is the first complete diagnostic success, not repeated
 campaign qualification. Every earlier failure remains retained.
 
+The first new-file campaign attempt from `bca18d22` remains unsuccessful. It
+produced multiple reasoning frames followed by a directory proposal with invalid
+UTF-8 encoding. [Decision 0071](../decisions/0071-native-channel-token-preservation.md)
+records the missing raw-completion special-token output setting, bounded
+multi-part reasoning parsing and operation-specific read-tool guidance. The
+invalid encoding is preserved for native rejection, not silently repaired.
+
 All attempts preserve the pinned b10423 Vulkan runtime, single slot, four threads,
 two-core quota, low priority, 45-minute limit, memory bounds and GPU guard. No model,
 generation-budget, context-capacity, permission or verifier substitution was used.
@@ -131,6 +141,10 @@ Actual-process scripted regressions passed:
   native read, approved patch, passing validation, diff/status and verifier success.
 - `native-create-observation-regression`: controlled new-file creation and verifier
   success; five turns/four tools, 36.168 seconds, all three binary identities unchanged.
+- `matrix-2` at `bca18d22`: all 16 actual-process cases passed, including normal
+  rollback and concurrent-human-edit conflict refusal. `matrix-1` failed because
+  its scripted rollback consumer still read the older observation shape; that
+  failure and the paired-shape regression are retained.
 
 These are executable-scripted results, not real-model success. The final source-bound
 16-case matrix, restart/drift, daily/pressure/soak and repeated native-model campaigns

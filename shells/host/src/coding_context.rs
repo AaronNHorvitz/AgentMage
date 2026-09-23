@@ -909,13 +909,12 @@ mod tests {
         }
         let mut invalid_hash = usage["agentmage.workspace.hash-file"].clone();
         invalid_hash["encoding"] = serde_json::json!("utf8");
-        assert!(
-            validate_read_only_request(
-                ReadOnlyToolKind::HashFile,
-                &serde_json::to_vec(&invalid_hash).unwrap()
-            )
-            .is_err()
-        );
+        for kind in [ReadOnlyToolKind::HashFile, ReadOnlyToolKind::ListDirectory] {
+            assert!(
+                validate_read_only_request(kind, &serde_json::to_vec(&invalid_hash).unwrap())
+                    .is_err()
+            );
+        }
     }
 
     #[test]

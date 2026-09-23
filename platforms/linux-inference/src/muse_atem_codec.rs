@@ -125,13 +125,19 @@ impl MuseAtemFamilyCodec {
             .enumerate()
             .filter_map(|(index, value)| (value == prefix).then_some(index))
             .collect::<Vec<_>>();
-        let tail = match starts.as_slice() {
-            [] => response,
-            [index] if response.starts_with(b" to=self<|message|>") => {
-                &response[index + prefix.len()..]
+        if starts.len() > 64 {
+            return Err(failure("model.muse-codec.native-channel-invalid"));
+        }
+        let mut tail = response;
+        let mut consumed = 0;
+        for index in starts {
+            let reasoning = &response[consumed..index];
+            if !reasoning.starts_with(b" to=self<|message|>") {
+                return Err(failure("model.muse-codec.native-channel-invalid"));
             }
-            _ => return Err(failure("model.muse-codec.native-channel-invalid")),
-        };
+            consumed = index + prefix.len();
+            tail = &response[consumed..];
+        }
         let tail = tail
             .strip_prefix(b" to=")
             .ok_or_else(|| failure("model.muse-codec.native-channel-invalid"))?;
@@ -143,7 +149,10 @@ impl MuseAtemFamilyCodec {
         let recipient = std::str::from_utf8(&tail[..split])
             .map_err(|_| failure("model.muse-codec.native-channel-invalid"))?;
         let body = &tail[split + delimiter.len()..];
-        let body = body.strip_suffix(EOT_SUFFIX).unwrap_or(body);
+        let body = body
+            .strip_suffix(EOT_SUFFIX)
+            .or_else(|| body.strip_suffix(b"<|end_of_text|>"))
+            .unwrap_or(body);
         let canonical = if body.starts_with(b"<atem:function_calls>") {
             let schema = self
                 .native_schemas
@@ -760,6 +769,48 @@ mod tests {
         assert_eq!(call.tool_id, tool.tool_id);
         assert_eq!(call.arguments.schema, tool.input_schema);
         assert_eq!(call.arguments.sha256, sha256(&call.arguments.bytes));
+        let multipart = include_str!("../fixtures/muse-multipart-reasoning-20260923.txt")
+            .trim_end_matches('\n');
+        assert_eq!(
+            sha256(multipart.as_bytes()),
+            "da04cfb65be8c52959421dec64560447904a71c74639e74e1867b3520b6065f2"
+        );
+        let mut directory = tool.clone();
+        directory.tool_id = ToolId::from_raw("agentmage.workspace.list-directory");
+        let read_schema = serde_json::json!({"type":"object", "properties": {
+            "schema_version":{"type":"integer"}, "paths":{"type":"array"},
+            "query":{"type":["string","null"]}, "byte_offset":{"type":["integer","null"]},
+            "byte_count":{"type":["integer","null"]}, "encoding":{"type":"string"},
+            "call_depth":{"type":"integer"}, "limits":{"type":"object"}
+        }});
+        let multi_codec = MuseAtemFamilyCodec::new(profile.codec.clone())
+            .unwrap()
+            .with_native_contracts(vec![directory.clone()], tool.output_schema.clone())
+            .unwrap()
+            .with_native_parameter_schemas(vec![(directory, read_schema)])
+            .unwrap();
+        let special = multipart.replace("<|start|>assistant", "<|eom|><|start|>assistant");
+        for framed in [
+            multipart.to_owned(),
+            special.clone(),
+            format!("{special}<|end_of_text|>"),
+        ] {
+            let decoded = multi_codec
+                .decode_proposal(&profile, &request(&profile), framed.as_bytes())
+                .unwrap();
+            let arguments: serde_json::Value =
+                serde_json::from_slice(&decoded.tool_call.unwrap().arguments.bytes).unwrap();
+            // Invalid operation-specific encoding survives unchanged for the
+            // native validator to reject; framing correction is not arg repair.
+            assert_eq!(arguments["encoding"], "utf8");
+            assert_eq!(arguments["paths"], serde_json::json!([["src"]]));
+        }
+        let two_actions = special.replacen("to=self", "to=agentmage.workspace.list-directory", 1);
+        assert!(
+            multi_codec
+                .decode_proposal(&profile, &request(&profile), two_actions.as_bytes())
+                .is_err()
+        );
         let mut history = packet(&profile);
         history
             .messages

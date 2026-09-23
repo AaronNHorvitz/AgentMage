@@ -1021,7 +1021,13 @@ fn launch_arguments(
         "--offline".to_owned(),
     ];
     if profile.codec.reasoning_enabled {
-        arguments.extend(["--reasoning".to_owned(), "auto".to_owned()]);
+        // Raw /completion does not install chat-route preserved_tokens. The
+        // family codec needs every sampled channel delimiter, including eom.
+        arguments.extend([
+            "--reasoning".to_owned(),
+            "auto".to_owned(),
+            "--special".to_owned(),
+        ]);
     }
     if let Some(kwargs) = &launch.chat_template_kwargs_json {
         arguments.extend(["--chat-template-kwargs".to_owned(), kwargs.clone()]);
@@ -2667,6 +2673,7 @@ mod tests {
             assert!(arguments.iter().any(|value| value == required));
         }
         assert_eq!(launch.context_tokens(), profile.context.max_context_tokens);
+        assert!(!arguments.iter().any(|value| value == "--special"));
 
         let development = LlamaServerLaunchProfile::new(
             32_768,
@@ -2690,6 +2697,7 @@ mod tests {
             "32768"
         );
         assert!(derived.iter().any(|value| value == "--reasoning"));
+        assert!(derived.iter().any(|value| value == "--special"));
         assert!(
             derived
                 .iter()

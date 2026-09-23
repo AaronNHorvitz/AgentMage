@@ -97,21 +97,35 @@ impl ReadOnlyToolKind {
 
     const fn description(self) -> &'static str {
         match self {
-            Self::ListDirectory => "Lists bounded direct children of one exact approved directory",
+            Self::ListDirectory => {
+                "Lists bounded direct children of one exact approved directory. Requires encoding=binary, query=null, byte_offset=null and byte_count=null."
+            }
             Self::DirectoryTree => {
-                "Builds a bounded deterministic tree beneath one exact approved directory"
+                "Builds a bounded deterministic tree beneath one exact approved directory. Requires encoding=binary, query=null, byte_offset=null and byte_count=null."
             }
-            Self::ReadText => "Reads one exact approved workspace file as bounded UTF-8 text",
-            Self::ReadMultiple => "Reads bounded UTF-8 ranges from exact approved workspace files",
+            Self::ReadText => {
+                "Reads one exact approved workspace file as bounded UTF-8 text. Requires encoding=utf8 and query=null; optional byte_offset/byte_count bound the range."
+            }
+            Self::ReadMultiple => {
+                "Reads bounded UTF-8 ranges from exact approved workspace files. Requires encoding=utf8 and query=null; optional byte_offset/byte_count bound the ranges."
+            }
             Self::SearchFilenames => {
-                "Searches bounded approved relative filenames in deterministic order"
+                "Searches bounded approved relative filenames in deterministic order. Requires encoding=binary, a nonempty query, byte_offset=null and byte_count=null."
             }
-            Self::SearchText => "Searches bounded approved UTF-8 content in deterministic order",
-            Self::Metadata => "Returns content-free metadata for exact approved workspace objects",
-            Self::HashFile => "Computes SHA-256 for one exact approved regular file",
-            Self::HashTree => "Computes SHA-256 for one canonical bounded approved tree projection",
+            Self::SearchText => {
+                "Searches bounded approved UTF-8 content in deterministic order. Requires encoding=utf8 and a nonempty query."
+            }
+            Self::Metadata => {
+                "Returns content-free metadata for exact approved workspace objects. Requires encoding=binary, query=null, byte_offset=null and byte_count=null."
+            }
+            Self::HashFile => {
+                "Computes SHA-256 for one exact approved regular file. Requires encoding=binary, query=null, byte_offset=null and byte_count=null."
+            }
+            Self::HashTree => {
+                "Computes SHA-256 for one canonical bounded approved tree projection. Requires encoding=binary, query=null, byte_offset=null and byte_count=null."
+            }
             Self::BinaryMetadata => {
-                "Returns size, digest, and format hint for one approved binary file"
+                "Returns size, digest, and format hint for one approved binary file. Requires encoding=binary, query=null, byte_offset=null and byte_count=null."
             }
         }
     }
