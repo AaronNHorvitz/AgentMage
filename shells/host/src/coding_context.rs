@@ -1,6 +1,6 @@
 //! Bounded model-context composition for the shared local coding runtime.
 
-use std::fmt::Write;
+use std::{collections::BTreeMap, fmt::Write};
 
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, CheckedContextSummary, ContextAdmission, ContextItemCandidate,
@@ -20,7 +20,7 @@ use sha2::{Digest, Sha256};
 
 use crate::{
     coding_session::{CodingSessionProfile, MVP_PROHIBITED_CAPABILITIES},
-    coding_tools::{CodingModelToolContract, model_visible_coding_tools},
+    coding_tools::model_visible_coding_tools,
     coding_verifier::{CODING_COMPLETION_INPUT_SCHEMA_JSON, coding_completion_schema},
 };
 
@@ -217,8 +217,20 @@ where
         }
         let tools = model_visible_coding_tools(profile.registry())
             .map_err(|_| CodingContextError::InvalidSource)?;
+        // Several native operations share one exact schema. Preserve every
+        // definition and complete schema, but serialize each schema only once.
+        let mut input_schemas = BTreeMap::new();
+        for tool in &tools {
+            let digest = tool.definition.input_schema.schema_sha256.as_str();
+            if input_schemas
+                .insert(digest, &tool.input_schema)
+                .is_some_and(|previous| previous != &tool.input_schema)
+            {
+                return Err(CodingContextError::InvalidSource);
+            }
+        }
         let system_contract = serde_json::to_string(&CodingSystemContract {
-            schema_version: 1,
+            schema_version: 2,
             profile_id: profile.profile_id(),
             profile_sha256: profile.profile_sha256(),
             immutable_base_commit: profile.immutable_base_commit(),
@@ -226,7 +238,9 @@ where
             repository_snapshot_sha256: profile.repository_snapshot_sha256(),
             tool_catalog_id: profile.tool_catalog_id().as_str(),
             tool_catalog_sha256: profile.tool_catalog_sha256(),
-            tools: &tools,
+            tools: tools.iter().map(|tool| &tool.definition).collect(),
+            input_schemas,
+            tool_schema_lookup: "For each tools entry, its input_schema.schema_sha256 indexes the complete JSON Schema in input_schemas. Every original schema and exact definition is retained; shared schemas are written once, not omitted. Native validators remain authoritative.",
             commands: profile.commands().commands(),
             validations: profile.validations(),
             completion_schema: coding_completion_schema(),
@@ -565,7 +579,9 @@ struct CodingSystemContract<'a> {
     repository_snapshot_sha256: &'a str,
     tool_catalog_id: &'a str,
     tool_catalog_sha256: &'a str,
-    tools: &'a [CodingModelToolContract],
+    tools: Vec<&'a agentmage_kernel_contracts::ToolDefinition>,
+    input_schemas: BTreeMap<&'a str, &'a serde_json::Value>,
+    tool_schema_lookup: &'static str,
     commands: Vec<&'a agentmage_kernel_engine::command_runner::CommandSpec>,
     validations: &'a agentmage_kernel_engine::validation_template::ValidationTemplateRegistry,
     completion_schema: agentmage_kernel_contracts::SchemaReference,
@@ -778,6 +794,20 @@ mod tests {
         assert!(!system.contains(hostile));
         let system: serde_json::Value = serde_json::from_str(&system).expect("system json");
         assert_eq!(system["tools"].as_array().map(Vec::len), Some(24));
+        let original = model_visible_coding_tools(profile.registry()).unwrap();
+        assert!(system["input_schemas"].as_object().unwrap().len() < original.len());
+        for (definition, original) in system["tools"].as_array().unwrap().iter().zip(&original) {
+            assert_eq!(
+                *definition,
+                serde_json::to_value(&original.definition).unwrap()
+            );
+            let digest = &original.definition.input_schema.schema_sha256;
+            assert_eq!(system["input_schemas"][digest], original.input_schema);
+        }
+        let expanded_bytes = serde_json::to_vec(&original).unwrap().len();
+        let factored_bytes = serde_json::to_vec(&system["tools"]).unwrap().len()
+            + serde_json::to_vec(&system["input_schemas"]).unwrap().len();
+        assert!(factored_bytes < expanded_bytes);
         assert_eq!(system["effective_guidance"]["grants_authority"], false);
         assert_eq!(system["effective_guidance"]["adds_tools"], false);
         assert_eq!(system["effective_guidance"]["declares_completion"], false);

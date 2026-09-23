@@ -17,6 +17,7 @@ The immediate workstream is the standalone coding harness:
 - [Development read worker composition](decisions/0068-development-read-worker-composition.md)
 - [Native coding tool feedback](decisions/0069-native-coding-tool-feedback.md)
 - [Coding development identity prerequisites](decisions/0070-coding-development-identity-prerequisites.md)
+- [Real-model coding integration progress](verification/coding-harness-real-model-integration-2026-09-23.md)
 - [Standalone coding development harness](guides/standalone-coding-development.md)
 - [Implementation verification](verification/coding-harness-implementation-2026-09-22.md)
 - [Independent-review package](reviews/2026-09-22-standalone-coding-independent-review-package.md)

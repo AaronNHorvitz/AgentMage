@@ -2247,7 +2247,11 @@ where
     let prepared = controller
         .prepare(request, &exact_context)
         .map_err(|error| {
-            eprintln!("coding.development.candidate.preflight.{}", error.code());
+            eprintln!(
+                "coding.development.candidate.preflight.{} rendered_tokens={} output_reserve={} profile_capacity={}",
+                error.code(), exact_context.input_tokens, request.max_output_tokens,
+                controller.exact_profile().context.max_context_tokens,
+            );
             RuntimePortFailure::Invalid
         })?;
     if record_session {

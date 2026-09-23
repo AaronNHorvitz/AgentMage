@@ -48,6 +48,14 @@ an outside-owner blocker. Failed payloads remain evidence and regression inputs.
    No output/context limit, sampler, production activation or application
    permission is changed by this decision. Actual binaries and real models must
    independently demonstrate the coding campaign before qualification.
+6. Muse native-4 exercised an additional real read and hit the unchanged 32K
+   preflight limit before finalization. The host contract repeated identical read
+   and artifact schemas for each operation. Factor those complete schemas into
+   one digest-keyed map while retaining every frozen tool definition and schema
+   reference. Regression reconstructs every original definition/schema exactly.
+   This is lossless serialization, not context reduction, evidence omission,
+   weaker binding or a raised capacity/output limit. Exact token preflight remains
+   mandatory and failures report the input, output reserve and profile capacity.
 
 ## Verification boundary
 
