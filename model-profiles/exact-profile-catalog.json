@@ -73,7 +73,7 @@
       "schema_version": 2,
       "profile_id": "deterministic-fake-muse-v1",
       "manifest_id": "deterministic-fake-muse-manifest-v1",
-      "manifest_sha256": "41b62d11ab2f6542e32fe009ff27f5cf60f696e60265c31d030f3630ce682e58",
+      "manifest_sha256": "b2da6de4dacfafac01aa002852f528e1a508b28917486e0fbc371baf18ee4ae1",
       "display_name": "Deterministic fake Muse contract profile",
       "family": "deterministic_fake_muse",
       "publisher_control": "AgentMage test fixture",
@@ -111,7 +111,7 @@
         "kind": "deterministic_fake",
         "contract_version": 1,
         "runtime_build": "agentmage-kernel-engine-test-fixture",
-        "runtime_sha256": "41b62d11ab2f6542e32fe009ff27f5cf60f696e60265c31d030f3630ce682e58",
+        "runtime_sha256": "b2da6de4dacfafac01aa002852f528e1a508b28917486e0fbc371baf18ee4ae1",
         "platform": "deterministic_fake",
         "architecture": "x86_64"
       },
@@ -170,7 +170,7 @@
       "schema_version": 2,
       "profile_id": "deterministic-fake-gemma-v1",
       "manifest_id": "deterministic-fake-gemma-manifest-v1",
-      "manifest_sha256": "41b62d11ab2f6542e32fe009ff27f5cf60f696e60265c31d030f3630ce682e58",
+      "manifest_sha256": "b2da6de4dacfafac01aa002852f528e1a508b28917486e0fbc371baf18ee4ae1",
       "display_name": "Deterministic fake Gemma contract profile",
       "family": "deterministic_fake_gemma",
       "publisher_control": "AgentMage test fixture",
@@ -208,7 +208,7 @@
         "kind": "deterministic_fake",
         "contract_version": 1,
         "runtime_build": "agentmage-kernel-engine-test-fixture",
-        "runtime_sha256": "41b62d11ab2f6542e32fe009ff27f5cf60f696e60265c31d030f3630ce682e58",
+        "runtime_sha256": "b2da6de4dacfafac01aa002852f528e1a508b28917486e0fbc371baf18ee4ae1",
         "platform": "deterministic_fake",
         "architecture": "x86_64"
       },
@@ -267,7 +267,7 @@
       "schema_version": 2,
       "profile_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora-first-party-quality",
       "manifest_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora-first-party-quality-manifest-v1",
-      "manifest_sha256": "b7b7689bec171ad725cb1cb847606ce162e29afbae7891283f0fe7fe227e04a2",
+      "manifest_sha256": "947859c6179b26abd63f268ae9475b6ea2c6b37e531b855449e02fc91e0e56d0",
       "display_name": "Muse Glimmer 30B Q4_K_M text 8k Fedora first-party-quality",
       "family": "muse_glimmer",
       "publisher_control": "Meta",
@@ -290,7 +290,7 @@
       "codec": {
         "codec_id": "muse-glimmer-atem-closed-proposal-v1",
         "codec_version": "1.0.0",
-        "codec_sha256": "249d83a65d763095f8d447ee60b57a02e5824e63913b7d8db51cb676f3807e4d",
+        "codec_sha256": "5b90a4e7b1bd539c7608ea8b7032b3319ade278a3118dc16edef949559866e1e",
         "tokenizer": "meta-models/Muse-Glimmer-30B tokenizer",
         "tokenizer_sha256": "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d",
         "template": "meta-models/Muse-Glimmer-30B ATEM chat template",
@@ -393,7 +393,7 @@
       "schema_version": 2,
       "profile_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora-diagnostic-repeatability",
       "manifest_id": "muse-glimmer-30b-q4-k-m-text-8k-fedora-diagnostic-repeatability-manifest-v1",
-      "manifest_sha256": "94acd94301811ec34e8b9a6f91ada476d5176f68bddb892686f30f411d1b7b77",
+      "manifest_sha256": "63ed7087c6714dcdda41b8c66c773735080586be151b3a0cd457be5da74636da",
       "display_name": "Muse Glimmer 30B Q4_K_M text 8k Fedora diagnostic-repeatability",
       "family": "muse_glimmer",
       "publisher_control": "Meta",
@@ -416,7 +416,7 @@
       "codec": {
         "codec_id": "muse-glimmer-atem-closed-proposal-v1",
         "codec_version": "1.0.0",
-        "codec_sha256": "249d83a65d763095f8d447ee60b57a02e5824e63913b7d8db51cb676f3807e4d",
+        "codec_sha256": "5b90a4e7b1bd539c7608ea8b7032b3319ade278a3118dc16edef949559866e1e",
         "tokenizer": "meta-models/Muse-Glimmer-30B tokenizer",
         "tokenizer_sha256": "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d",
         "template": "meta-models/Muse-Glimmer-30B ATEM chat template",
@@ -517,7 +517,7 @@
       "schema_version": 2,
       "profile_id": "muse-glimmer-30b-q4-k-m-text-32k-fedora-coding-development",
       "manifest_id": "muse-glimmer-30b-q4-k-m-text-32k-fedora-coding-development-manifest-v1",
-      "manifest_sha256": "2556c6dbf1464e4189a03556707b4488f5213bbb734784c9cbb9cba7832bbdd9",
+      "manifest_sha256": "8a8ee8efc1738f30d143f94f753e6079808e05dc3127df28a965676d7edfd24b",
       "display_name": "Muse Glimmer 30B Q4_K_M text 32k Fedora coding development",
       "family": "muse_glimmer",
       "publisher_control": "Meta",
@@ -540,7 +540,7 @@
       "codec": {
         "codec_id": "muse-glimmer-atem-reasoning-medium-closed-proposal-v1",
         "codec_version": "1.0.0",
-        "codec_sha256": "249d83a65d763095f8d447ee60b57a02e5824e63913b7d8db51cb676f3807e4d",
+        "codec_sha256": "5b90a4e7b1bd539c7608ea8b7032b3319ade278a3118dc16edef949559866e1e",
         "tokenizer": "meta-models/Muse-Glimmer-30B tokenizer",
         "tokenizer_sha256": "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d",
         "template": "meta-models/Muse-Glimmer-30B ATEM chat template",
@@ -601,9 +601,9 @@
           "evaluation_profile": null,
           "result_sha256": null,
           "limitations": [
-            "coding-campaign-not-run",
-            "product-transport-not-demonstrated",
-            "repeated-run-admission-not-evaluated"
+            "coding-campaign-not-qualified",
+            "production-activation-not-qualified",
+            "repeated-run-admission-not-qualified"
           ]
         },
         {
@@ -612,9 +612,9 @@
           "evaluation_profile": null,
           "result_sha256": null,
           "limitations": [
-            "coding-campaign-not-run",
-            "product-transport-not-demonstrated",
-            "repeated-run-admission-not-evaluated"
+            "coding-campaign-not-qualified",
+            "production-activation-not-qualified",
+            "repeated-run-admission-not-qualified"
           ]
         },
         {
@@ -623,9 +623,9 @@
           "evaluation_profile": null,
           "result_sha256": null,
           "limitations": [
-            "coding-campaign-not-run",
-            "product-transport-not-demonstrated",
-            "repeated-run-admission-not-evaluated"
+            "coding-campaign-not-qualified",
+            "production-activation-not-qualified",
+            "repeated-run-admission-not-qualified"
           ]
         }
       ],
@@ -638,7 +638,7 @@
       "schema_version": 2,
       "profile_id": "gpt-oss-20b-mxfp4-text-32k-fedora-coding-development",
       "manifest_id": "gpt-oss-20b-mxfp4-text-32k-fedora-coding-development-manifest-v1",
-      "manifest_sha256": "220062f0ff41c64a7263f7763462712278eaba12cf41269e22898d8292d5258d",
+      "manifest_sha256": "d9069c843edb0ab3b455f8b201d98cd390093001d6ad1b6439a902ed2f08cebd",
       "display_name": "OpenAI gpt-oss-20b MXFP4 ggml-org text 32k Fedora coding development",
       "family": "gpt_oss",
       "publisher_control": "OpenAI; GGUF conversion published by ggml-org",
@@ -661,7 +661,7 @@
       "codec": {
         "codec_id": "gpt-oss-harmony-closed-proposal-v1",
         "codec_version": "1.0.0",
-        "codec_sha256": "b6ef5815d689cec0d3ce8352ab2071154ebc20b181a55fbc82f936840167d8b7",
+        "codec_sha256": "2d2bb1c2a5d70adba8f3dfadddc32c89cee933283a8d418680528387219baeaf",
         "tokenizer": "gpt-oss-20b MXFP4 GGUF embedded tokenizer",
         "tokenizer_sha256": "27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901",
         "template": "openai/gpt-oss-20b Harmony chat template at 6cee5e81",
@@ -722,9 +722,9 @@
           "evaluation_profile": null,
           "result_sha256": null,
           "limitations": [
-            "coding-campaign-not-run",
-            "product-transport-not-demonstrated",
-            "repeated-run-admission-not-evaluated",
+            "coding-campaign-not-qualified",
+            "production-activation-not-qualified",
+            "repeated-run-admission-not-qualified",
             "conversion-equivalence-not-established"
           ]
         },
@@ -734,9 +734,9 @@
           "evaluation_profile": null,
           "result_sha256": null,
           "limitations": [
-            "coding-campaign-not-run",
-            "product-transport-not-demonstrated",
-            "repeated-run-admission-not-evaluated",
+            "coding-campaign-not-qualified",
+            "production-activation-not-qualified",
+            "repeated-run-admission-not-qualified",
             "conversion-equivalence-not-established"
           ]
         },
@@ -746,9 +746,9 @@
           "evaluation_profile": null,
           "result_sha256": null,
           "limitations": [
-            "coding-campaign-not-run",
-            "product-transport-not-demonstrated",
-            "repeated-run-admission-not-evaluated",
+            "coding-campaign-not-qualified",
+            "production-activation-not-qualified",
+            "repeated-run-admission-not-qualified",
             "conversion-equivalence-not-established"
           ]
         }

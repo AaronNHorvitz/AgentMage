@@ -51,6 +51,12 @@ impl Tool for RegisteredGitInspectionTool {
         validate_git_inspection_request(arguments)
             .map_or_else(|error| vec![git_validation_issue(error)], |_| Vec::new())
     }
+
+    fn argument_rejection_is_correctable(&self, arguments: &[u8]) -> bool {
+        // This parser has no policy, workspace inventory, intent/preimage or grant inputs.
+        // Live repository/path authorization still occurs later and remains terminal.
+        validate_git_inspection_request(arguments).is_err()
+    }
 }
 
 impl Tool for RegisteredReadOnlyTool {
@@ -394,10 +400,33 @@ mod tests {
         malformed.arguments.bytes = br#"{"schema_version":1}"#.to_vec();
         malformed.arguments.sha256 = sha256(&malformed.arguments.bytes);
         assert!(registry.validate_arguments(&malformed).is_err());
+        assert!(!registry.argument_rejection_is_correctable(&malformed));
         assert_eq!(
             malformed.arguments.schema.schema_id.as_str(),
             READ_ONLY_INPUT_SCHEMA_ID
         );
+        let git = registry
+            .get_tool(
+                &ToolId::from_raw(GIT_INSPECTION_TOOL_ID),
+                GIT_INSPECTION_TOOL_VERSION,
+            )
+            .unwrap();
+        malformed.tool_id = git.tool_id.clone();
+        malformed.tool_version = git.tool_version.clone();
+        malformed.arguments.schema = git.input_schema.clone();
+        malformed.arguments.bytes = br#"{"max_output_bytes":4194304,"max_records":100,"object_id":null,"operation":"status","pathspecs":["src"],"revision":null,"schema_version":1}"#.to_vec();
+        malformed.arguments.sha256 = sha256(&malformed.arguments.bytes);
+        assert!(registry.validate_argument_envelope(&malformed).is_ok());
+        assert!(registry.validate_arguments(&malformed).is_err());
+        assert!(registry.argument_rejection_is_correctable(&malformed));
+        let mut bad_digest = malformed.clone();
+        bad_digest.arguments.sha256 = "0".repeat(64);
+        assert!(!registry.argument_rejection_is_correctable(&bad_digest));
+        let mut bad_schema = malformed.clone();
+        bad_schema.arguments.schema.schema_sha256 = "0".repeat(64);
+        assert!(!registry.argument_rejection_is_correctable(&bad_schema));
+        malformed.tool_version = "9.0.0".to_owned();
+        assert!(!registry.argument_rejection_is_correctable(&malformed));
     }
 
     #[test]

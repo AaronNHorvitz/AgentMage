@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 import stat
@@ -7,9 +8,26 @@ import unittest
 from unittest import mock
 
 from scripts import coding_harness
+from scripts import coding_harness_acceptance
 
 
 class CodingHarnessTests(unittest.TestCase):
+    def test_acceptance_retains_prelaunch_failure_without_outcome(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary) / "fixture"
+            with mock.patch.object(coding_harness, "binary", return_value=Path("/bin/true")):
+                coding_harness.setup(base)
+            logs = Path(temporary) / "logs"
+            logs.mkdir()
+            (logs / "stdout.jsonl").write_text("")
+            (logs / "stderr.log").write_text("client.protocol.value_invalid\n")
+            (logs / "result.json").write_text(json.dumps({"scenario": "protocol-correction"}))
+            report = coding_harness_acceptance.verify_case("protocol-correction", base, logs, 2)
+            self.assertFalse(report["passed"])
+            self.assertFalse(report["checks"]["exit"])
+            self.assertFalse(report["checks"]["terminal"])
+            self.assertEqual(report["event_count"], 0)
+
     def test_implementation_identity_pins_source_and_all_three_binaries(self):
         with mock.patch.object(coding_harness, "binary", return_value=Path("/usr/bin/true")):
             identity = coding_harness.implementation_identity()

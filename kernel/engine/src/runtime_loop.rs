@@ -100,6 +100,18 @@ pub trait RuntimeClock {
 
 /// Context builder for one exact request and its currently verified observations.
 pub trait RuntimeContextPort {
+    /// Receives verified complete protocol rejections, separate from proposals and evidence.
+    fn observe_model_rejections(
+        &mut self,
+        rejections: &[ModelRunResult],
+    ) -> Result<(), RuntimePortFailure> {
+        if rejections.is_empty() {
+            Ok(())
+        } else {
+            Err(RuntimePortFailure::Invalid)
+        }
+    }
+
     /// Receives coordinator-owned pre-effect rejections, separate from tool receipts/evidence.
     /// Context implementations must explicitly support these observations or fail closed.
     fn observe_tool_rejections(
@@ -677,6 +689,7 @@ where
     tool_results: Vec<ToolResult>,
     completed_tool_calls: Vec<ToolCall>,
     rejected_tool_calls: Vec<RuntimeToolRejection>,
+    rejected_model_results: Vec<ModelRunResult>,
     evidence: Vec<EvidenceReference>,
     receipt_ids: Vec<ReceiptId>,
     artifact_references: Vec<RuntimeArtifactRef>,
@@ -917,6 +930,7 @@ where
             tool_results: Vec::new(),
             completed_tool_calls: Vec::new(),
             rejected_tool_calls: Vec::new(),
+            rejected_model_results: Vec::new(),
             evidence,
             receipt_ids: Vec::new(),
             artifact_references: Vec::new(),
@@ -1206,6 +1220,9 @@ where
             u64::from(self.context_refresh_count),
         ));
         self.context
+            .observe_model_rejections(&self.rejected_model_results)
+            .map_err(RuntimeLoopError::Dependency)?;
+        self.context
             .observe_tool_rejections(&self.rejected_tool_calls)
             .map_err(RuntimeLoopError::Dependency)?;
         let context = match self.context.build_context_with_token_binding(
@@ -1412,6 +1429,21 @@ where
                     None,
                 )?;
                 self.finish_model_failure(&turn_id, RuntimePortFailure::ResourceExhausted)
+            }
+            ModelRunTerminalState::Rejected if correctable_model_rejection(&result) => {
+                self.emit(
+                    RuntimeEventKind::ModelFailed {
+                        model_run_id,
+                        failure_code: "runtime.model.protocol_rejected".to_owned(),
+                    },
+                    Some(&turn_id),
+                    None,
+                )?;
+                if self.resources.record_parser_failure().is_err() {
+                    return self.finish_budget_exhaustion(&turn_id);
+                }
+                self.rejected_model_results.push(result);
+                self.finish_rejected_turn(&turn_id, result_sha256)
             }
             ModelRunTerminalState::AdvisoryText
             | ModelRunTerminalState::Failed
@@ -1661,11 +1693,17 @@ where
         };
         let definition = self
             .registry
-            .validate_arguments(&call)
+            .validate_argument_envelope(&call)
             .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?
             .clone();
+        let arguments_valid = self.registry.validate_arguments(&call).is_ok();
+        if !arguments_valid && !self.registry.argument_rejection_is_correctable(&call) {
+            return Err(RuntimeLoopError::InvalidBoundaryResult);
+        }
         let process_attempts = u64::from(
-            definition.required_grant.operation.operation() == GrantOperation::CommandExecute,
+            arguments_valid
+                && definition.required_grant.operation.operation()
+                    == GrantOperation::CommandExecute,
         );
         if self
             .resources
@@ -1682,9 +1720,12 @@ where
         {
             return self.finish_budget_exhaustion(&turn_id);
         }
-        let receipt = ToolDispatcher::new(&self.registry).dispatch(ProposalOrigin::Model, &call);
-        if receipt.disposition != PreGrantDispatchDisposition::GrantRequired {
-            return Err(RuntimeLoopError::InvalidBoundaryResult);
+        if arguments_valid {
+            let receipt =
+                ToolDispatcher::new(&self.registry).dispatch(ProposalOrigin::Model, &call);
+            if receipt.disposition != PreGrantDispatchDisposition::GrantRequired {
+                return Err(RuntimeLoopError::InvalidBoundaryResult);
+            }
         }
         let attempt = match self.attempt_guard.record_attempt(&call, 0) {
             Ok(attempt) => attempt,
@@ -1735,6 +1776,14 @@ where
         self.state
             .transition(AgentStateKind::Approval)
             .map_err(|_| RuntimeLoopError::State)?;
+        if !arguments_valid {
+            return self.reject_tool_proposal(
+                call,
+                turn_id,
+                operation_id,
+                RuntimeToolRejectionReason::ArgumentsInvalid,
+            );
+        }
         let now = self
             .clock
             .now_epoch_ms()
@@ -1843,12 +1892,24 @@ where
         {
             return Err(RuntimeLoopError::InvalidBoundaryResult);
         }
+        self.reject_tool_proposal(
+            call,
+            turn_id,
+            operation_id,
+            RuntimeToolRejectionReason::ReadProjectionUnavailable,
+        )
+    }
+
+    fn reject_tool_proposal(
+        &mut self,
+        call: ToolCall,
+        turn_id: RuntimeTurnId,
+        operation_id: RuntimeOperationId,
+        reason: RuntimeToolRejectionReason,
+    ) -> Result<(), RuntimeLoopError> {
         // Never invent a successful/failed tool receipt for something that did not launch.
         // The ordinary tool/turn/repeated-call/no-progress budgets already count this call.
-        let rejection = RuntimeToolRejection {
-            call,
-            reason: RuntimeToolRejectionReason::ReadProjectionUnavailable,
-        };
+        let rejection = RuntimeToolRejection { call, reason };
         let rejection_sha256 = sha256(
             &serde_json::to_vec(&rejection).map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?,
         );
@@ -1861,12 +1922,25 @@ where
             Some(&turn_id),
             Some(&operation_id),
         )?;
+        if reason == RuntimeToolRejectionReason::ArgumentsInvalid
+            && self.resources.record_parser_failure().is_err()
+        {
+            return self.finish_budget_exhaustion(&turn_id);
+        }
         self.rejected_tool_calls.push(rejection);
+        self.finish_rejected_turn(&turn_id, rejection_sha256)
+    }
+
+    fn finish_rejected_turn(
+        &mut self,
+        turn_id: &RuntimeTurnId,
+        rejection_sha256: String,
+    ) -> Result<(), RuntimeLoopError> {
         self.no_progress_turns += 1;
         self.state
             .transition(AgentStateKind::Checkpoint)
             .map_err(|_| RuntimeLoopError::State)?;
-        self.close_turn(&turn_id, rejection_sha256)?;
+        self.close_turn(turn_id, rejection_sha256)?;
         if self.no_progress_turns >= self.request.limits.max_no_progress_turns {
             self.transition_terminal(AgentStateKind::Stalled)?;
             self.finish_terminal(
@@ -2405,6 +2479,7 @@ where
             tool_results: self.tool_results.clone(),
             completed_tool_calls: self.completed_tool_calls.clone(),
             rejected_tool_calls: self.rejected_tool_calls.clone(),
+            rejected_model_results: self.rejected_model_results.clone(),
             evidence: self.evidence.clone(),
             receipt_ids: self.receipt_ids.clone(),
             artifacts: self.artifact_references.clone(),
@@ -2627,6 +2702,7 @@ where
         self.tool_results = snapshot.continuation.tool_results;
         self.completed_tool_calls = snapshot.continuation.completed_tool_calls;
         self.rejected_tool_calls = snapshot.continuation.rejected_tool_calls;
+        self.rejected_model_results = snapshot.continuation.rejected_model_results;
         self.evidence = snapshot.continuation.evidence;
         self.receipt_ids = snapshot.continuation.receipt_ids;
         self.artifact_references = restored_artifacts;
@@ -3520,6 +3596,80 @@ fn validate_runtime_resume_snapshot(
     {
         return Err(RuntimeLoopError::InvalidBoundaryResult);
     }
+    let model_rejection_events = events
+        .iter()
+        .filter(|event| {
+            matches!(
+                &event.kind, RuntimeEventKind::ModelFailed { failure_code, .. }
+                    if failure_code == "runtime.model.protocol_rejected"
+            )
+        })
+        .collect::<Vec<_>>();
+    if model_rejection_events.len() != snapshot.continuation.rejected_model_results.len() {
+        return Err(RuntimeLoopError::InvalidBoundaryResult);
+    }
+    for (event, result) in model_rejection_events
+        .iter()
+        .zip(&snapshot.continuation.rejected_model_results)
+    {
+        let RuntimeEventKind::ModelFailed { model_run_id, .. } = &event.kind else {
+            return Err(RuntimeLoopError::InvalidBoundaryResult);
+        };
+        let model_requests = events
+            .iter()
+            .filter_map(|item| match &item.kind {
+                RuntimeEventKind::ModelRequested {
+                    model_run_id,
+                    request_sha256,
+                } => Some((model_run_id, request_sha256)),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        let Some((index, (_, request_digest))) = model_requests
+            .iter()
+            .enumerate()
+            .find(|(_, (id, _))| *id == model_run_id)
+        else {
+            return Err(RuntimeLoopError::InvalidBoundaryResult);
+        };
+        let expected = ModelRunRequest {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            model_run_id: ModelRunId::from_raw(derived_id(
+                "model-run",
+                request.run_id.as_str(),
+                index as u64 + 1,
+            )),
+            correlation_id: CorrelationId::from_raw(derived_id(
+                "correlation",
+                request.run_id.as_str(),
+                0,
+            )),
+            context_packet_id: ContextPacketId::from_raw(derived_id(
+                "context",
+                request.run_id.as_str(),
+                index as u64 + 1,
+            )),
+            profile_id: request.model_profile.profile_id.clone(),
+            manifest_sha256: request.model_profile.manifest_sha256.clone(),
+            adapter_id: request.model_profile.runtime.adapter_id.clone(),
+            decoding_profile_id: request.model_profile.decoding.profile_id.clone(),
+            max_output_tokens: request.model_profile.decoding.max_output_tokens,
+            timeout_ms: request.limits.max_elapsed_ms,
+        };
+        let result_digest = contract_sha256(result)?;
+        if result.model_run_id != *model_run_id
+            || !valid_model_result(result, &expected)
+            || contract_sha256(&expected)? != **request_digest
+            || !events.iter().any(|closed| {
+                closed.turn_id == event.turn_id
+                    && closed.sequence > event.sequence
+                    && matches!(&closed.kind, RuntimeEventKind::TurnCompleted { outcome_sha256 }
+                    if *outcome_sha256 == result_digest)
+            })
+        {
+            return Err(RuntimeLoopError::InvalidBoundaryResult);
+        }
+    }
     let RuntimeEventKind::RunStarted { request_sha256 } = &events[0].kind else {
         eprintln!("runtime.resume.start-event-invalid");
         return Err(RuntimeLoopError::InvalidBoundaryResult);
@@ -3751,6 +3901,21 @@ fn valid_context_packet(packet: &ModelContextPacket, request: &RuntimeRunRequest
     let mut preimage = packet.clone();
     preimage.packet_sha256 = ZERO_SHA256.to_owned();
     contract_sha256(&preimage).is_ok_and(|digest| digest == packet.packet_sha256)
+}
+
+/// Recognizes only complete, explicitly classified non-authoritative protocol rejections.
+/// Exact request/result identity and resource checks are additionally mandatory at dispatch.
+#[must_use]
+pub fn correctable_model_rejection(result: &ModelRunResult) -> bool {
+    result.terminal_state == ModelRunTerminalState::Rejected
+        && result.finish_reason.is_complete()
+        && result.proposal.is_none()
+        && result.failure.as_ref().is_some_and(|failure| {
+            failure.code == "runtime.model.protocol_rejected"
+                && failure.retryable_after_correction
+                && !failure.dependency_recovery_required
+                && failure.contract_error.is_none()
+        })
 }
 
 fn valid_model_result(result: &ModelRunResult, request: &ModelRunRequest) -> bool {

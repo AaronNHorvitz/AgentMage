@@ -1998,6 +1998,7 @@ pub(crate) fn is_approved_runtime_model_failure(value: &str) -> bool {
             | "runtime.model.timed_out"
             | "runtime.model.resource_exhausted"
             | "runtime.model.no_typed_proposal"
+            | "runtime.model.protocol_rejected"
             | "runtime.model.incomplete.output_token_limit"
             | "runtime.model.incomplete.context_truncation"
             | "runtime.model.incomplete.reasoning_exhausted"

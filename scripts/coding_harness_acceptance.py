@@ -33,6 +33,9 @@ EXPECTED = {
     "stale-approval": ("failed-test-repair", "repair", True, True, 5, None),
     "overflow": ("overflow", "repair", True, False, 7, "EXHAUSTED"),
     "false-completion": ("false-completion", "repair", True, False, 8, "FAILED"),
+    "protocol-correction": ("protocol-correction", "repair", True, False, 0, "SUCCESS"),
+    "arguments-correction": ("arguments-correction", "repair", True, False, 0, "SUCCESS"),
+    "repeated-protocol-rejection": ("repeated-protocol-rejection", "repair", True, False, 7, "EXHAUSTED"),
 }
 CASE_ROOTS = {case: f"c{index:02d}" for index, case in enumerate(EXPECTED, start=1)}
 CASE_ROOTS["cancel"] = "c10"
@@ -43,6 +46,9 @@ CASE_ROOTS.update({
     "approval-cancel-race": "c14",
     "artifact-integrity": "c15",
     "rollback-conflict": "c16",
+    "protocol-correction": "c17",
+    "arguments-correction": "c18",
+    "repeated-protocol-rejection": "c19",
 })
 
 
@@ -72,7 +78,7 @@ def git_status(workspace: Path) -> list[str]:
 
 
 def expected_status(case: str) -> list[str]:
-    if case == "patch-test-revision":
+    if case in {"patch-test-revision", "protocol-correction", "arguments-correction"}:
         return [" M src/calc.py"]
     if case == "new-file":
         return ["?? src/calc.py"]
@@ -85,7 +91,7 @@ def verify_case(case: str, base: Path, log_dir: Path, exit_code: int) -> dict:
     scenario, _, _, stale, expected_exit, terminal = EXPECTED[case]
     workspace = coding_harness.paths(base)[2]
     observed_rows = rows(log_dir)
-    observed_outcome = observed_rows[-1] if terminal is not None else None
+    observed_outcome = observed_rows[-1] if observed_rows and terminal is not None else {}
     status = git_status(workspace)
     checks = {
         "exit": exit_code == expected_exit,
@@ -93,6 +99,30 @@ def verify_case(case: str, base: Path, log_dir: Path, exit_code: int) -> dict:
         "terminal": terminal is None or observed_outcome.get("state") == terminal,
         "scenario": json.loads((log_dir / "result.json").read_text())["scenario"] == scenario,
     }
+    if case in {"protocol-correction", "arguments-correction", "repeated-protocol-rejection"}:
+        rejections = [row for row in observed_rows if (
+            row.get("kind", {}).get("event") == "model_failed" and
+            row["kind"].get("failure_code") == "runtime.model.protocol_rejected") or (
+            row.get("kind", {}).get("event") == "tool_rejected" and
+            row["kind"].get("reason") == "arguments_invalid")]
+        checks["exact-rejection-count"] = len(rejections) == (2 if case == "repeated-protocol-rejection" else 1)
+        rejected_turns = {row["turn_id"] for row in rejections}
+        checks["no-rejection-authority-or-effects"] = not any(
+            row.get("turn_id") in rejected_turns and row.get("kind", {}).get("event") in {
+                "permission_requested", "permission_decided", "tool_started", "tool_completed",
+            } for row in observed_rows)
+        tools = [row["kind"]["tool_call_id"] for row in observed_rows
+                 if row.get("kind", {}).get("event") == "tool_completed"]
+        checks["bounded-tools"] = tools == ([] if case == "repeated-protocol-rejection" else [
+            "scripted-validation-failing", "scripted-inspect-preimage", "scripted-repair-patch",
+            "scripted-validation-passing", "scripted-git-diff", "scripted-git-status",
+        ])
+        checks["bounded-turns"] = observed_outcome.get("turn_count") == (
+            2 if case == "repeated-protocol-rejection" else 8)
+        if case != "repeated-protocol-rejection":
+            checks["verified-artifacts"] = any(row.get("type") == "runtime_artifact_verified" for row in observed_rows)
+            checks["exact-repair"] = (workspace / "src/calc.py").read_text() == (
+                "def add(left, right):\n    return left + right\n")
     if case == "patch-test-revision":
         checks["native-read-worker"] = any(
             row.get("kind", {}).get("event") == "tool_completed"
@@ -124,7 +154,7 @@ def verify_case(case: str, base: Path, log_dir: Path, exit_code: int) -> dict:
         "scenario": scenario,
         "exit_code": exit_code,
         "terminal": terminal,
-        "event_count": len(observed_rows) - (1 if terminal is not None else 0),
+        "event_count": len(observed_rows) - (1 if "state" in observed_outcome else 0),
         "worktree_status": status,
         "checks": checks,
         "passed": passed,

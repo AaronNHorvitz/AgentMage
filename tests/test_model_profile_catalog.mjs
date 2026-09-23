@@ -55,7 +55,9 @@ test("32k coding candidates preserve exact family boundaries without enabling ad
     assert.equal(profile.capabilities.every((capability) => capability.state === "blocked"), true);
     assert.equal(
       profile.capabilities.every((capability) =>
-        capability.limitations.includes("coding-campaign-not-run")),
+        capability.limitations.includes("coding-campaign-not-qualified") &&
+        capability.limitations.includes("production-activation-not-qualified") &&
+        capability.limitations.includes("repeated-run-admission-not-qualified")),
       true,
     );
   }

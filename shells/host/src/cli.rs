@@ -393,6 +393,10 @@ fn parse_coding_development(
             | "failed-test-repair"
             | "slow-cancel"
             | "restart-repair"
+            | "protocol-correction"
+            | "arguments-correction"
+            | "repeated-protocol-rejection"
+            | "restart-protocol-correction"
             | "new-file"
             | "multi-file"
             | "rollback"
@@ -1040,7 +1044,7 @@ Usage: agentmage [--json] [--surface interactive-cli|json|sdk|acp] COMMAND\n\
 Commands:\n\
   code\n\
   code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
-       --scenario no-op|failed-test-repair|slow-cancel|restart-repair|new-file|multi-file|rollback|false-completion|overflow|disk-pressure|output-pressure\n\
+       --scenario no-op|failed-test-repair|slow-cancel|restart-repair|protocol-correction|arguments-correction|repeated-protocol-rejection|restart-protocol-correction|new-file|multi-file|rollback|false-completion|overflow|disk-pressure|output-pressure\n\
        --objective TEXT [--follow-up TEXT]... [--resume|--record-session] [--artifact-release-probe-before-follow-ups] [--approve-this-run] [--stale-approval-probe|--replay-approval-probe|--expired-cursor-probe|--artifact-integrity-probe] [--slow-subscriber-probe]\n\
        [--preauthorize-workspace-reads] [--preauthorize-path RELATIVE_PATH]... [--preauthorize-command ID@VERSION@SHA256]...\n\
        [--preauthorization-budget N --preauthorization-minutes N] [--revoke-preauthorization-before-follow-ups]\n\
@@ -1379,6 +1383,35 @@ mod tests {
         assert!(!command_help().contains("http"));
         assert!(!shell_completion(CompletionShell::Fish).contains("exec"));
         assert!(parse_cli_arguments(&strings(&["--surface", "json", "code"])).is_err());
+    }
+
+    #[test]
+    fn correction_diagnostic_scenarios_reach_the_existing_development_host() {
+        for scenario in [
+            "protocol-correction",
+            "arguments-correction",
+            "repeated-protocol-rejection",
+            "restart-protocol-correction",
+        ] {
+            let parsed = parse_cli_arguments(&strings(&[
+                "code",
+                "--development",
+                "--state-root",
+                "/tmp/state",
+                "--disposable-root",
+                "/tmp/disposable",
+                "--workspace-root",
+                "/tmp/disposable/worktree",
+                "--scenario",
+                scenario,
+                "--objective",
+                "Exercise bounded rejection correction.",
+            ]));
+            assert!(matches!(parsed, Ok(CliInvocation::Code {
+                development: Some(CodingDevelopmentCliOptions { scenario: parsed_scenario, .. }), ..
+            }) if parsed_scenario == scenario));
+            assert!(command_help().contains(scenario));
+        }
     }
 
     #[test]

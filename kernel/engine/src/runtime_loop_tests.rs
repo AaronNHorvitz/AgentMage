@@ -127,6 +127,8 @@ enum ModelScript {
     LargeCompletion,
     Tool,
     ToolAt(u32),
+    InvalidArguments,
+    ProtocolRejected(ModelFinishReason),
     Malformed,
     Failure(RuntimePortFailure),
 }
@@ -179,11 +181,13 @@ impl RuntimeModelPort for FakeModel {
             return Err(failure);
         }
         let (kind, payload, tool_call) = match script {
-            ModelScript::Completion | ModelScript::Malformed => (
-                ModelProposalKind::CompletionCandidate,
-                Some(payload("runtime.answer", b"verified fixture answer")),
-                None,
-            ),
+            ModelScript::Completion | ModelScript::Malformed | ModelScript::ProtocolRejected(_) => {
+                (
+                    ModelProposalKind::CompletionCandidate,
+                    Some(payload("runtime.answer", b"verified fixture answer")),
+                    None,
+                )
+            }
             ModelScript::LargeCompletion => (
                 ModelProposalKind::CompletionCandidate,
                 Some(payload(
@@ -192,7 +196,7 @@ impl RuntimeModelPort for FakeModel {
                 )),
                 None,
             ),
-            ModelScript::Tool | ModelScript::ToolAt(_) => (
+            ModelScript::Tool | ModelScript::ToolAt(_) | ModelScript::InvalidArguments => (
                 ModelProposalKind::ToolCall,
                 None,
                 Some(ModelToolCallCandidate {
@@ -206,6 +210,7 @@ impl RuntimeModelPort for FakeModel {
                         "fixture.input",
                         match script {
                             ModelScript::Tool => br#"{"path":"fixture.txt"}"#.to_vec(),
+                            ModelScript::InvalidArguments => br#"{"path":false}"#.to_vec(),
                             ModelScript::ToolAt(index) => {
                                 format!(r#"{{"path":"fixture-{index}.txt"}}"#).into_bytes()
                             }
@@ -238,7 +243,7 @@ impl RuntimeModelPort for FakeModel {
         if matches!(script, ModelScript::Malformed) {
             proposal.proposal_sha256 = "f".repeat(64);
         }
-        Ok(ModelRunResult {
+        let mut result = ModelRunResult {
             schema_version: CONTRACT_SCHEMA_VERSION,
             model_run_id: request.model_run_id.clone(),
             stream_id: ModelStreamId::from_raw(format!("stream-{}", self.calls)),
@@ -268,7 +273,19 @@ impl RuntimeModelPort for FakeModel {
                 output_tokens: 1,
                 elapsed_ms: 1,
             },
-        })
+        };
+        if let ModelScript::ProtocolRejected(reason) = script {
+            result.terminal_state = ModelRunTerminalState::Rejected;
+            result.finish_reason = reason;
+            result.proposal = None;
+            result.failure = Some(agentmage_kernel_contracts::ModelRuntimeFailure {
+                code: "runtime.model.protocol_rejected".to_owned(),
+                retryable_after_correction: true,
+                dependency_recovery_required: false,
+                contract_error: None,
+            });
+        }
+        Ok(result)
     }
 }
 
@@ -536,6 +553,12 @@ fn pressure_temporary_directory() -> std::path::PathBuf {
 struct FakeContext;
 
 impl RuntimeContextPort for FakeContext {
+    fn observe_model_rejections(
+        &mut self,
+        _rejections: &[ModelRunResult],
+    ) -> Result<(), RuntimePortFailure> {
+        Ok(())
+    }
     fn observe_tool_rejections(
         &mut self,
         _rejections: &[agentmage_kernel_contracts::RuntimeToolRejection],
@@ -1100,6 +1123,26 @@ impl Tool for FixtureTool {
     fn definition(&self) -> &ToolDefinition {
         &self.definition
     }
+
+    fn argument_rejection_is_correctable(&self, _arguments: &[u8]) -> bool {
+        true // This fixture's validator checks only the path field's JSON type.
+    }
+    fn validate_arguments(
+        &self,
+        arguments: &[u8],
+    ) -> Vec<agentmage_kernel_contracts::ValidationIssue> {
+        let value: serde_json::Value = serde_json::from_slice(arguments).unwrap();
+        if value.get("path").is_some_and(serde_json::Value::is_string) {
+            Vec::new()
+        } else {
+            vec![agentmage_kernel_contracts::ValidationIssue {
+                code: "fixture.path.invalid".to_owned(),
+                severity: agentmage_kernel_contracts::ValidationSeverity::Error,
+                field_path: vec!["path".to_owned()],
+                message: "Expected path string".to_owned(),
+            }]
+        }
+    }
 }
 
 fn registry_for_operation(operation: GrantOperation) -> ToolRegistry {
@@ -1654,6 +1697,142 @@ fn coding_read_rejection_is_retained_without_authority_effect_or_evidence() {
 }
 
 #[test]
+fn coding_model_protocol_rejection_is_counted_then_corrected_without_authority() {
+    let (mut coordinator, executions) = coordinator(
+        [
+            ModelScript::ProtocolRejected(ModelFinishReason::EndOfSequence),
+            ModelScript::Completion,
+        ],
+        PermissionScript::Allow,
+        true,
+    );
+    let RuntimeCoordinatorStep::Complete { outcome } =
+        coordinator.run_until_boundary(None, None).unwrap()
+    else {
+        panic!("complete")
+    };
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    assert_eq!(outcome.turn_count, 2);
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    assert_eq!(coordinator.rejected_model_results.len(), 1);
+    assert_eq!(
+        coordinator.resources.durable_usage().parser_failure_count,
+        1
+    );
+    assert!(coordinator.receipt_ids.is_empty());
+    assert!(coordinator.tool_results.is_empty());
+    assert!(!coordinator.events().iter().any(|event| matches!(
+        event.kind,
+        RuntimeEventKind::ToolRequested { .. } | RuntimeEventKind::PermissionRequested { .. }
+    )));
+    assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn coding_argument_rejection_precedes_permission_and_preserves_attempt_accounting() {
+    let (mut coordinator, executions) = coordinator(
+        [
+            ModelScript::InvalidArguments,
+            ModelScript::Tool,
+            ModelScript::Completion,
+        ],
+        PermissionScript::Allow,
+        true,
+    );
+    let RuntimeCoordinatorStep::Complete { outcome } =
+        coordinator.run_until_boundary(None, None).unwrap()
+    else {
+        panic!("complete")
+    };
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    assert_eq!(outcome.tool_call_count, 2);
+    assert_eq!(coordinator.rejected_tool_calls.len(), 1);
+    assert_eq!(
+        coordinator.rejected_tool_calls[0].reason,
+        agentmage_kernel_contracts::RuntimeToolRejectionReason::ArgumentsInvalid
+    );
+    assert_eq!(
+        coordinator.resources.durable_usage().parser_failure_count,
+        1
+    );
+    let rejected_turn = coordinator
+        .events()
+        .iter()
+        .find(|event| matches!(event.kind, RuntimeEventKind::ToolRejected { .. }))
+        .unwrap()
+        .turn_id
+        .clone();
+    assert!(
+        !coordinator
+            .events()
+            .iter()
+            .any(|event| event.turn_id == rejected_turn
+                && matches!(
+                    event.kind,
+                    RuntimeEventKind::PermissionRequested { .. }
+                        | RuntimeEventKind::ToolStarted { .. }
+                        | RuntimeEventKind::ToolCompleted { .. }
+                ))
+    );
+    assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn coding_second_parser_rejection_exhausts_without_dispatch_or_budget_increase() {
+    for scripts in [
+        [ModelScript::InvalidArguments, ModelScript::InvalidArguments],
+        [
+            ModelScript::ProtocolRejected(ModelFinishReason::EndOfSequence),
+            ModelScript::ProtocolRejected(ModelFinishReason::EndOfSequence),
+        ],
+        [
+            ModelScript::ProtocolRejected(ModelFinishReason::EndOfSequence),
+            ModelScript::InvalidArguments,
+        ],
+    ] {
+        let (mut coordinator, executions) = coordinator(scripts, PermissionScript::Allow, true);
+        let RuntimeCoordinatorStep::Complete { outcome } =
+            coordinator.run_until_boundary(None, None).unwrap()
+        else {
+            panic!("complete")
+        };
+        assert_eq!(outcome.state, AgentStateKind::Exhausted);
+        assert_eq!(outcome.turn_count, 2);
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert_eq!(
+            coordinator.resources.durable_usage().parser_failure_count,
+            1
+        );
+        assert_valid_terminal_stream(&coordinator);
+    }
+}
+
+#[test]
+fn coding_incomplete_model_output_cannot_enter_protocol_recovery() {
+    for reason in [
+        ModelFinishReason::OutputTokenLimit,
+        ModelFinishReason::ContextTruncation,
+        ModelFinishReason::Unknown,
+    ] {
+        let (mut coordinator, executions) = coordinator(
+            [ModelScript::ProtocolRejected(reason)],
+            PermissionScript::Allow,
+            true,
+        );
+        let RuntimeCoordinatorStep::Complete { outcome } =
+            coordinator.run_until_boundary(None, None).unwrap()
+        else {
+            panic!("complete")
+        };
+        assert_eq!(outcome.state, AgentStateKind::Failed);
+        assert!(coordinator.rejected_model_results.is_empty());
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert_valid_terminal_stream(&coordinator);
+    }
+}
+
+#[test]
 fn coding_write_cannot_use_read_rejection_recovery() {
     let (mut coordinator, executions) = coordinator_for_mode_and_operation(
         RuntimeSessionMode::ControlledWrite,
@@ -1734,6 +1913,83 @@ fn coding_read_rejection_resumes_from_canonical_checkpoint_without_replay() {
         1
     );
     assert_valid_terminal_stream(&resumed);
+}
+
+#[test]
+fn coding_parser_rejection_resume_preserves_failure_budget_and_never_replays() {
+    for first_script in [
+        ModelScript::InvalidArguments,
+        ModelScript::ProtocolRejected(ModelFinishReason::EndOfSequence),
+    ] {
+        for second_rejection in [false, true] {
+            let (initial, executions) = coordinator([first_script], PermissionScript::Allow, true);
+            let mut request = initial.request.clone();
+            request.mode = RuntimeSessionMode::DurableReadOnly;
+            request.request_sha256 = "0".repeat(64);
+            let request = seal_runtime_run_request(request).unwrap();
+            let mut first = ReusableRuntimeCoordinator::new_with_durable_state(
+                request.clone(),
+                initial.model,
+                initial.context,
+                initial.registry,
+                initial.tool_boundary,
+                initial.verifier,
+                initial.clock,
+            )
+            .unwrap();
+            first.start().unwrap();
+            first.run_turn(None).unwrap();
+            assert_eq!(executions.load(Ordering::SeqCst), 0);
+            assert_eq!(first.resources.durable_usage().parser_failure_count, 1);
+            let prior_events = first.events().to_vec();
+            let retained = first.rejected_model_results.clone();
+            let mut resumed_request = request;
+            resumed_request.event_cursor =
+                Some(runtime_event_cursor(first.events().last().unwrap()));
+            resumed_request.request_sha256 = "0".repeat(64);
+            let resumed_request = seal_runtime_run_request(resumed_request).unwrap();
+            let scripts = if second_rejection {
+                vec![ModelScript::InvalidArguments]
+            } else {
+                vec![ModelScript::ToolAt(2), ModelScript::Completion]
+            };
+            let mut resumed = ReusableRuntimeCoordinator::new_with_durable_state(
+                resumed_request,
+                FakeModel::new(first.model.profile.clone(), scripts),
+                FakeContext,
+                first.registry,
+                first.tool_boundary,
+                first.verifier,
+                FakeClock { now: 6_000 },
+            )
+            .unwrap();
+            resumed.model.calls = 1;
+            assert_eq!(resumed.rejected_model_results, retained);
+            assert_eq!(resumed.resources.durable_usage().parser_failure_count, 1);
+            let RuntimeCoordinatorStep::Complete { outcome } =
+                resumed.run_until_boundary(None, None).unwrap()
+            else {
+                panic!("complete")
+            };
+            assert_eq!(
+                outcome.state,
+                if second_rejection {
+                    AgentStateKind::Exhausted
+                } else {
+                    AgentStateKind::Success
+                }
+            );
+            assert_eq!(
+                executions.load(Ordering::SeqCst),
+                usize::from(!second_rejection)
+            );
+            assert_eq!(
+                &resumed.events()[..prior_events.len()],
+                prior_events.as_slice()
+            );
+            assert_valid_terminal_stream(&resumed);
+        }
+    }
 }
 
 #[test]

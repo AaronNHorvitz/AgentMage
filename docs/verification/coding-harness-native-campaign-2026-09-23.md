@@ -70,3 +70,19 @@ cases. Never combine favorable attempts from different tuples into eight passes.
 Independent review of the connected implementation is still mandatory. The
 implementing session cannot sign Task 50.2.4.7, `M-HARNESS-DAILY`, production
 model admission, supported-platform or release completion.
+
+## Prospective Decision 0074 correction accounting
+
+Before its first native campaign, Decision 0074 enables one explicitly recorded
+protocol/argument correction through the existing next-turn path and existing
+one-parser-failure budget. Rejected bytes/arguments stay invalid and never count
+as tools or evidence. A second parser rejection exhausts the run; all ordinary
+limits and eight-of-eight same-tuple case criteria above remain unchanged.
+
+The collector now checks a complete rejected response's original validated
+resource/usage result, exact raw digest, canonical result bytes, matching failure
+and turn-closure events, absence of proposal/permission/effects in that turn,
+and exact later host-labelled feedback. It reports rejection counts separately.
+An unbound/hidden rejection cannot pass. The terminal verifier, full artifacts,
+real failed-test/edit/passing-test order and resource checks remain mandatory.
+No old failed run is reclassified; the changed implementation starts a new campaign.

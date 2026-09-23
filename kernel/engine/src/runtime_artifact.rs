@@ -2371,6 +2371,16 @@ fn validate_runtime_continuation_state(
         || continuation.tool_call_count as usize != continuation.tool_attempts.len()
         || continuation.tool_results.len() > MAX_RUNTIME_CONTINUATION_RESULTS
         || continuation.rejected_tool_calls.len() > MAX_RUNTIME_CONTINUATION_RESULTS
+        || continuation.rejected_model_results.len() > 1
+        || continuation.rejected_model_results.iter().any(|result| {
+            !crate::runtime_loop::correctable_model_rejection(result)
+                || result.schema_version != CONTRACT_SCHEMA_VERSION
+                || !valid_identifier(result.model_run_id.as_str())
+                || !valid_identifier(result.stream_id.as_str())
+                || !valid_identifier(result.correlation_id.as_str())
+                || !valid_sha256(&result.response_sha256)
+                || result.fragment_count == 0
+        })
         || continuation.receipt_ids.len() != continuation.tool_results.len()
         || continuation.no_progress_turns > continuation.turn_count
         || !valid_continuation_resources(continuation)
@@ -2405,7 +2415,12 @@ fn valid_continuation_resources(continuation: &RuntimeContinuationState) -> bool
         && artifact_bytes == Some(resources.artifact_bytes)
         && resources.disk_bytes >= resources.artifact_bytes
         && resources.denial_count == 0
-        && resources.parser_failure_count == 0
+        && resources.parser_failure_count as usize
+            == continuation.rejected_model_results.len()
+                + continuation.rejected_tool_calls.iter().filter(|rejection| {
+                    rejection.reason == agentmage_kernel_contracts::RuntimeToolRejectionReason::ArgumentsInvalid
+                }).count()
+        && resources.parser_failure_count <= 1
         && resources.retry_count == 0
 }
 
@@ -3165,6 +3180,7 @@ mod tests {
             tool_results: Vec::new(),
             completed_tool_calls: Vec::new(),
             rejected_tool_calls: Vec::new(),
+            rejected_model_results: Vec::new(),
             evidence: Vec::new(),
             receipt_ids: Vec::new(),
             artifacts: Vec::new(),

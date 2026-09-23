@@ -709,6 +709,18 @@ mod tests {
             .expect("valid Git request");
         assert!(validate_git_inspection_request(&valid).is_ok());
 
+        // Exact decoded arguments from Muse's retained stable-fixture rejection.
+        // Raw model SHA: 7b13b9b5e6e47857a1c68ba393c4227bcf29b39dd857a6f65147746a6f013ed5.
+        let retained = br#"{"max_output_bytes":4194304,"max_records":100,"object_id":null,"operation":"status","pathspecs":["src"],"revision":null,"schema_version":1}"#;
+        assert_eq!(
+            super::sha256_hex(retained),
+            "10c24a71c44da6bd5e34aae12563c28ab947b16ea4a6cb485226436e36719bb0"
+        );
+        assert_eq!(
+            validate_git_inspection_request(retained),
+            Err(super::GitInspectionError::InvalidRequest)
+        );
+
         let duplicate = br#"{"schema_version":1,"schema_version":1,"operation":"status","revision":null,"object_id":null,"pathspecs":[],"max_records":100,"max_output_bytes":1024}"#;
         let unknown = br#"{"schema_version":1,"operation":"status","revision":null,"object_id":null,"pathspecs":[],"max_records":100,"max_output_bytes":1024,"command":"reset --hard"}"#;
         let unsafe_revision = br#"{"schema_version":1,"operation":"show","revision":"--exec-path=/tmp","object_id":null,"pathspecs":[],"max_records":100,"max_output_bytes":1024}"#;

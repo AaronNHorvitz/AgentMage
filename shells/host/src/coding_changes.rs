@@ -765,6 +765,10 @@ mod tests {
 
         let mut outside = patch();
         outside.path = vec!["Cargo.toml".to_owned()];
+        assert!(!tools.argument_rejection_is_correctable(&call(
+            &patch_definition,
+            serde_json::to_vec(&outside).unwrap(),
+        )));
         assert!(
             tools
                 .validate_arguments(&call(

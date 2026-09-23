@@ -300,6 +300,8 @@ pub struct VerifiedModelOutput {
 /// Bounded untrusted response retained after an exact family codec rejects it.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RejectedModelOutput {
+    /// Identity, complete stream, digest and usage-validated rejected run; contains no proposal.
+    pub result: ModelRunResult,
     /// Exact run that produced the bytes.
     pub model_run_id: agentmage_kernel_contracts::ModelRunId,
     /// Digest of the complete rejected response.
@@ -703,7 +705,14 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
                 {
                     Ok(decoded) => decoded,
                     Err(error) => {
+                        if result.proposal.is_some() || result.failure.is_some() {
+                            return Err(ModelRuntimeGateError::ResultMismatch);
+                        }
+                        result.terminal_state = ModelRunTerminalState::Rejected;
+                        result.failure = Some(error.clone());
+                        validate_result(&self.admitted.profile, &request, &result)?;
                         self.rejected_output = Some(RejectedModelOutput {
+                            result: result.clone(),
                             model_run_id: request.model_run_id.clone(),
                             response_sha256: result.response_sha256.clone(),
                             codec_failure_code: error.code,

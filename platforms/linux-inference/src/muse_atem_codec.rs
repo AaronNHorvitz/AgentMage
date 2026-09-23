@@ -904,6 +904,20 @@ mod tests {
                 .code,
             "model.muse-codec.native-json-invalid"
         );
+        let missing_wrapper = include_str!("../fixtures/muse-missing-atem-wrapper-20260923.txt")
+            .trim_end_matches('\n')
+            .as_bytes();
+        assert_eq!(
+            sha256(missing_wrapper),
+            "84d1777465aba476dec9197b202007aa7bacab510877218d104d1e82d858ae4e"
+        );
+        assert_eq!(
+            codec
+                .decode_proposal(&profile, &request(&profile), missing_wrapper)
+                .unwrap_err()
+                .code,
+            "model.muse-codec.native-json-invalid"
+        );
         let unsorted = b" to=agentmage.validation.run-template<|message|>{ \"validation_id\": \"unit\", \"schema_version\": 1 }";
         assert_eq!(
             codec

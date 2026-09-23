@@ -32,6 +32,12 @@ pub trait Tool: Send + Sync {
     fn validate_arguments(&self, _arguments: &[u8]) -> Vec<ValidationIssue> {
         Vec::new()
     }
+
+    /// Explicit owner opt-in for syntax-only rejection feedback, never policy or scope denial.
+    /// The default keeps every validator refusal terminal. This does not admit arguments.
+    fn argument_rejection_is_correctable(&self, _arguments: &[u8]) -> bool {
+        false
+    }
 }
 
 /// Typed reason a definition or call cannot pass the tool registry.
@@ -175,8 +181,9 @@ impl ToolRegistry {
             .retain(|_, registered| retain(&registered.definition));
     }
 
-    /// Validates a call against its exact frozen definition and schema identity.
-    pub fn validate_arguments(
+    /// Validates only the closed envelope and exact frozen identity, never arguments or authority.
+    /// Callers must still use `validate_arguments` before permission evaluation or dispatch.
+    pub fn validate_argument_envelope(
         &self,
         call: &ToolCall,
     ) -> Result<&ToolDefinition, ToolRegistryError> {
@@ -193,17 +200,43 @@ impl ToolRegistry {
                 "Tool arguments do not use the registered input schema",
             ));
         }
-        if issues.is_empty() {
-            issues.extend(
-                registered
-                    .implementation
-                    .validate_arguments(&call.arguments.bytes),
-            );
-        }
         if !issues.is_empty() {
             return Err(ToolRegistryError::InvalidCall { issues });
         }
         Ok(definition)
+    }
+
+    /// Validates a call against its exact frozen definition, schema and argument validator.
+    pub fn validate_arguments(
+        &self,
+        call: &ToolCall,
+    ) -> Result<&ToolDefinition, ToolRegistryError> {
+        let definition = self.validate_argument_envelope(call)?;
+        let registered = self
+            .tools
+            .get(&(call.tool_id.clone(), call.tool_version.clone()))
+            .ok_or(ToolRegistryError::NotRegistered)?;
+        let issues = registered
+            .implementation
+            .validate_arguments(&call.arguments.bytes);
+        if !issues.is_empty() {
+            return Err(ToolRegistryError::InvalidCall { issues });
+        }
+        Ok(definition)
+    }
+
+    /// Checks exact envelope binding and the registered owner's narrow correction opt-in.
+    #[must_use]
+    pub fn argument_rejection_is_correctable(&self, call: &ToolCall) -> bool {
+        self.validate_argument_envelope(call).is_ok()
+            && self
+                .tools
+                .get(&(call.tool_id.clone(), call.tool_version.clone()))
+                .is_some_and(|registered| {
+                    registered
+                        .implementation
+                        .argument_rejection_is_correctable(&call.arguments.bytes)
+                })
     }
 }
 

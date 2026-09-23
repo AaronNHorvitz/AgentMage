@@ -20,11 +20,23 @@ python3 -m scripts.coding_harness setup --root /tmp/agentmage-coding-1
 python3 -m scripts.coding_harness diagnose --root /tmp/agentmage-coding-1
 ```
 
+If a combined test/link build exhausts this scope, retain the failed attempt and
+run packages sequentially with `-j 1`; do not raise the memory cap. This occurred
+during the Decision 0074 all-target regression build.
+
 `setup` refuses an existing target. It creates owner-only state and disposable roots, an ordinary
 private Git repository on `agentmage/tasks/coding-fixture`, an exact path-bound activation marker,
 and a genuine failing Python validation. Use a short root because Linux filesystem Unix sockets
 have a bounded path; `diagnose` reports `transport_path=false` before launch when the worst-case
 host socket would not fit.
+
+Decision 0074 adds explicitly scripted `protocol-correction`,
+`arguments-correction` and `repeated-protocol-rejection` regression scenarios.
+The first two reject a proposal before any authority, then exercise the ordinary
+failed-test repair; the third must exhaust the existing parser budget. These
+are executable boundary fixtures, not native model qualification. Real native
+correction retains strict rejected bytes, reports the failure, and uses one
+new budgeted model turn. No parser, tool argument or permission is repaired.
 
 The diagnosis separates these classes:
 

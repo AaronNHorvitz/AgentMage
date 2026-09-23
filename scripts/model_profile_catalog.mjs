@@ -261,9 +261,9 @@ function codingDevelopmentProfile(family) {
     reasoning: "medium",
   });
   const commonLimitations = [
-    "coding-campaign-not-run",
-    "product-transport-not-demonstrated",
-    "repeated-run-admission-not-evaluated",
+    "coding-campaign-not-qualified",
+    "production-activation-not-qualified",
+    "repeated-run-admission-not-qualified",
   ];
   const conversionLimitations = muse
     ? commonLimitations

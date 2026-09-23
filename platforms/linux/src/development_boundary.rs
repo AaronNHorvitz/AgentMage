@@ -59,20 +59,8 @@ impl LinuxDevelopmentHostProcess {
         model: &str,
         resume: bool,
     ) -> Result<Self, LinuxDevelopmentBoundaryError> {
-        if !matches!(
-            scenario,
-            "no-op"
-                | "failed-test-repair"
-                | "slow-cancel"
-                | "restart-repair"
-                | "new-file"
-                | "multi-file"
-                | "rollback"
-                | "false-completion"
-                | "overflow"
-                | "disk-pressure"
-                | "output-pressure"
-        ) || !matches!(model, "scripted" | "muse" | "gpt-oss")
+        if !development_scenario_valid(scenario)
+            || !matches!(model, "scripted" | "muse" | "gpt-oss")
             || [state_root, disposable_root, workspace_root]
                 .iter()
                 .any(|path| !path.is_absolute())
@@ -260,6 +248,27 @@ fn write_private_new(path: &Path, bytes: &[u8]) -> Result<(), LinuxDevelopmentBo
     Ok(())
 }
 
+fn development_scenario_valid(scenario: &str) -> bool {
+    matches!(
+        scenario,
+        "no-op"
+            | "failed-test-repair"
+            | "slow-cancel"
+            | "restart-repair"
+            | "protocol-correction"
+            | "arguments-correction"
+            | "repeated-protocol-rejection"
+            | "restart-protocol-correction"
+            | "new-file"
+            | "multi-file"
+            | "rollback"
+            | "false-completion"
+            | "overflow"
+            | "disk-pressure"
+            | "output-pressure"
+    )
+}
+
 const fn development_error(
     kind: LinuxDevelopmentBoundaryErrorKind,
 ) -> LinuxDevelopmentBoundaryError {
@@ -317,6 +326,21 @@ mod tests {
         );
         assert_eq!(fs::read(raw).expect("original remains"), b"raw-response");
         fs::remove_dir_all(fixture).expect("fixture cleanup");
+    }
+
+    #[test]
+    fn correction_scenarios_are_explicit_closed_development_operations() {
+        for scenario in [
+            "protocol-correction",
+            "arguments-correction",
+            "repeated-protocol-rejection",
+            "restart-protocol-correction",
+        ] {
+            assert!(super::development_scenario_valid(scenario));
+        }
+        for scenario in ["arbitrary", "protocol-correction;sh", "", " correction"] {
+            assert!(!super::development_scenario_valid(scenario));
+        }
     }
 
     #[test]

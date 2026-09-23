@@ -300,6 +300,8 @@ pub struct RuntimeToolRejection {
 pub enum RuntimeToolRejectionReason {
     /// No exact object is selectable from the frozen read projection.
     ReadProjectionUnavailable,
+    /// The closed exact-bound envelope passed, but its registered argument validator refused.
+    ArgumentsInvalid,
 }
 
 /// Canonical interface-neutral coordinator state retained only at a safe continuation boundary.
@@ -342,6 +344,8 @@ pub struct RuntimeContinuationState {
     pub completed_tool_calls: Vec<crate::ToolCall>,
     /// Rejected pre-effect proposals, never receipts or verifier evidence.
     pub rejected_tool_calls: Vec<RuntimeToolRejection>,
+    /// Complete verified model results rejected by the protocol decoder; never proposals/evidence.
+    pub rejected_model_results: Vec<crate::ModelRunResult>,
     /// Ordered tool results required to reconstruct the next bounded context.
     pub tool_results: Vec<ToolResult>,
     /// Current grounded evidence in stable identity order.

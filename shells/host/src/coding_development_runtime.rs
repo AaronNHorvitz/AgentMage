@@ -170,6 +170,14 @@ pub enum CodingDevelopmentScenario {
     SlowCancel,
     /// Pause after the first safe checkpoint for an external host-stop resume probe.
     RestartRepair,
+    /// Reject one complete protocol frame, then perform the ordinary scripted repair.
+    ProtocolCorrection,
+    /// Reject registered arguments before permission, then perform the scripted repair.
+    ArgumentsCorrection,
+    /// Reject two complete frames and prove the existing parser budget exhausts.
+    RepeatedProtocolRejection,
+    /// Stop at the protocol-rejection checkpoint and resume without repeating it.
+    RestartProtocolCorrection,
     /// Create the exact absent source file and validate it.
     NewFile,
     /// Repair two bounded source files before one complete validation.
@@ -194,6 +202,10 @@ impl CodingDevelopmentScenario {
             "failed-test-repair" => Some(Self::FailedTestRepair),
             "slow-cancel" => Some(Self::SlowCancel),
             "restart-repair" => Some(Self::RestartRepair),
+            "protocol-correction" => Some(Self::ProtocolCorrection),
+            "arguments-correction" => Some(Self::ArgumentsCorrection),
+            "repeated-protocol-rejection" => Some(Self::RepeatedProtocolRejection),
+            "restart-protocol-correction" => Some(Self::RestartProtocolCorrection),
             "new-file" => Some(Self::NewFile),
             "multi-file" => Some(Self::MultiFile),
             "rollback" => Some(Self::Rollback),
@@ -817,6 +829,10 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             ),
             CodingDevelopmentScenario::FailedTestRepair
             | CodingDevelopmentScenario::RestartRepair
+            | CodingDevelopmentScenario::ProtocolCorrection
+            | CodingDevelopmentScenario::ArgumentsCorrection
+            | CodingDevelopmentScenario::RepeatedProtocolRejection
+            | CodingDevelopmentScenario::RestartProtocolCorrection
             | CodingDevelopmentScenario::NewFile
             | CodingDevelopmentScenario::MultiFile
             | CodingDevelopmentScenario::Rollback
@@ -897,8 +913,11 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         if prepared.request != *request {
             return Err(NativeChatRuntimeError::RequestDenied);
         }
-        let stop_after_checkpoint = self.scenario == CodingDevelopmentScenario::RestartRepair
-            && prepared.skip_scripted_steps == 0
+        let stop_after_checkpoint = matches!(
+            self.scenario,
+            CodingDevelopmentScenario::RestartRepair
+                | CodingDevelopmentScenario::RestartProtocolCorrection
+        ) && prepared.skip_scripted_steps == 0
             && request.event_cursor.is_none();
         let model = match self.model {
             CodingDevelopmentModel::Scripted => {
@@ -1678,6 +1697,34 @@ fn scripted_steps(
         .map_err(|_| CodingDevelopmentRuntimeError::Composition)
     };
     match scenario {
+        CodingDevelopmentScenario::ProtocolCorrection
+        | CodingDevelopmentScenario::ArgumentsCorrection
+        | CodingDevelopmentScenario::RepeatedProtocolRejection
+        | CodingDevelopmentScenario::RestartProtocolCorrection => {
+            let mut steps = scripted_steps(
+                CodingDevelopmentScenario::FailedTestRepair,
+                profile,
+                request,
+                workspace_root,
+                platform,
+                workspace,
+            )?;
+            if scenario == CodingDevelopmentScenario::ArgumentsCorrection {
+                steps.push_front(ScriptedDevelopmentStep::Tool(tool_candidate(
+                    profile, GIT_INSPECTION_TOOL_ID, GIT_INSPECTION_TOOL_VERSION,
+                    "scripted-invalid-git-pathspecs", &serde_json::json!({
+                        "schema_version":1,"operation":"status","pathspecs":["src"],
+                        "revision":null,"object_id":null,"max_records":100,"max_output_bytes":4194304,
+                    }),
+                )?));
+            } else {
+                steps.push_front(ScriptedDevelopmentStep::ProtocolRejected);
+                if scenario == CodingDevelopmentScenario::RepeatedProtocolRejection {
+                    steps.push_front(ScriptedDevelopmentStep::ProtocolRejected);
+                }
+            }
+            Ok(steps)
+        }
         CodingDevelopmentScenario::NoOp
         | CodingDevelopmentScenario::SlowCancel
         | CodingDevelopmentScenario::Overflow
@@ -2145,6 +2192,7 @@ fn development_work_packet(
 }
 
 enum ScriptedDevelopmentStep {
+    ProtocolRejected,
     Tool(ModelToolCallCandidate),
     RollbackFromHistory {
         definition: ToolDefinition,
@@ -2304,27 +2352,55 @@ where
         )
         .map_err(|_| RuntimePortFailure::Unavailable)?;
     }
-    let output = controller.dispatch_with_output(prepared, cancellation).map_err(|error| {
-        if let Some(rejected) = controller.take_rejected_output() {
-            if let Err(retention_error) = retain_rejected_candidate(rejection_root, &rejected) {
+    let output = match controller.dispatch_with_output(prepared, cancellation) {
+        Ok(output) => output,
+        Err(error) => {
+            eprintln!("coding.development.candidate.dispatch.{}", error.code());
+            let Some(mut rejected) = controller.take_rejected_output() else {
+                return Err(RuntimePortFailure::Unavailable);
+            };
+            retain_rejected_candidate(rejection_root, &rejected).map_err(|retention_error| {
                 eprintln!("coding.development.candidate.rejection-retention.{retention_error}");
-            } else {
-                eprintln!(
-                    "coding.development.candidate.rejection-retained:codec={}:sha256={}:bytes={}",
-                    rejected.codec_failure_code,
-                    rejected.response_sha256,
-                    rejected.response_bytes.len()
-                );
+                RuntimePortFailure::Unavailable
+            })?;
+            eprintln!(
+                "coding.development.candidate.rejection-retained:codec={}:sha256={}:bytes={}",
+                rejected.codec_failure_code,
+                rejected.response_sha256,
+                rejected.response_bytes.len()
+            );
+            if error
+                != agentmage_kernel_engine::model_runtime::ModelRuntimeGateError::ProposalInvalid
+                || !correctable_native_protocol_code(&rejected.codec_failure_code)
+                || !rejected.result.finish_reason.is_complete()
+                || rejected.result.proposal.is_some()
+                || rejected.result.terminal_state != ModelRunTerminalState::Rejected
+                || rejected.result.response_sha256 != rejected.response_sha256
+                || rejected.result.failure.as_ref().is_none_or(|failure| {
+                    failure.code != rejected.codec_failure_code
+                        || failure.dependency_recovery_required
+                        || failure.contract_error.is_some()
+                })
+            {
+                return Err(RuntimePortFailure::Unavailable);
+            }
+            rejected.result.failure = Some(agentmage_kernel_contracts::ModelRuntimeFailure {
+                code: "runtime.model.protocol_rejected".to_owned(),
+                retryable_after_correction: true,
+                dependency_recovery_required: false,
+                contract_error: None,
+            });
+            agentmage_kernel_engine::model_runtime::VerifiedModelOutput {
+                result: rejected.result,
+                response_bytes: rejected.response_bytes,
             }
         }
-        {
-            eprintln!("coding.development.candidate.dispatch.{}", error.code());
-            RuntimePortFailure::Unavailable
-        }
-    })?;
+    };
     if record_session {
         let metadata = serde_json::to_vec(&serde_json::json!({
             "schema_version": 1, "kind": "model-response", "result": &output.result,
+            "canonical_result": serde_json::to_string(&output.result).map_err(|_| RuntimePortFailure::Invalid)?,
+            "result_sha256": runtime_sha256(&output.result)?,
         }))
         .map_err(|_| RuntimePortFailure::Invalid)?;
         let identity = sha256(format!("response:{}", request.model_run_id.as_str()).as_bytes());
@@ -2339,6 +2415,18 @@ where
     Ok(output.result)
 }
 
+fn correctable_native_protocol_code(code: &str) -> bool {
+    matches!(
+        code,
+        "model.muse-codec.native-channel-invalid"
+            | "model.muse-codec.native-json-invalid"
+            | "model.muse-codec.final-channel-invalid"
+            | "model.gpt-oss-codec.tool-channel-invalid"
+            | "model.gpt-oss-codec.tool-arguments-invalid"
+            | "model.gpt-oss-codec.final-channel-invalid"
+    )
+}
+
 fn retain_rejected_candidate(
     rejection_root: &Path,
     rejected: &RejectedModelOutput,
@@ -2350,6 +2438,7 @@ fn retain_rejected_candidate(
         "response_sha256": rejected.response_sha256,
         "response_bytes": rejected.response_bytes.len(),
         "codec_failure_code": rejected.codec_failure_code,
+        "validated_result": rejected.result,
         "disposition": "untrusted-codec-rejected-no-authority"
     }))
     .map_err(|_| "metadata-invalid")?;
@@ -2696,6 +2785,21 @@ impl RuntimeModelPort for ScriptedDevelopmentModel {
             .checked_add(1)
             .ok_or(RuntimePortFailure::ResourceExhausted)?;
         let (kind, payload, tool_call) = match step {
+            ScriptedDevelopmentStep::ProtocolRejected => {
+                let mut result = cancelled_model_result(request, context.input_tokens, 1);
+                result.terminal_state = ModelRunTerminalState::Rejected;
+                result.finish_reason = ModelFinishReason::EndOfSequence;
+                result.response_sha256 = sha256(b"explicit-scripted-malformed-native-frame");
+                result.usage.generated_output_tokens = 1;
+                result.resources.output_tokens = 1;
+                result.failure = Some(agentmage_kernel_contracts::ModelRuntimeFailure {
+                    code: "runtime.model.protocol_rejected".to_owned(),
+                    retryable_after_correction: true,
+                    dependency_recovery_required: false,
+                    contract_error: None,
+                });
+                return Ok(result);
+            }
             ScriptedDevelopmentStep::Tool(call) => (ModelProposalKind::ToolCall, None, Some(call)),
             ScriptedDevelopmentStep::RollbackFromHistory {
                 definition,
@@ -2985,6 +3089,31 @@ fn now_epoch_ms() -> Result<u64, CodingDevelopmentRuntimeError> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn correction_allowlist_never_recovers_identity_capacity_truncation_or_unknown_errors() {
+        for code in [
+            "model.muse-codec.native-json-invalid",
+            "model.gpt-oss-codec.tool-channel-invalid",
+        ] {
+            assert!(super::correctable_native_protocol_code(code));
+        }
+        for code in [
+            "model.muse-codec.request-mismatch",
+            "model.muse-codec.proposal-mismatch",
+            "model.muse-codec.final-channel-incomplete",
+            "model.muse-codec.response-oversized",
+            "model.muse-codec.native-tool-unknown",
+            "model.gpt-oss-codec.identity-mismatch",
+            "model.gpt-oss-codec.proposal-preimage-invalid",
+            "model.gpt-oss-codec.context-invalid",
+            "model.gpt-oss-codec.response-size",
+            "model.gpt-oss-codec.final-channel-incomplete",
+            "model.gpt-oss-codec.tool-unknown",
+            "future.codec.failure",
+        ] {
+            assert!(!super::correctable_native_protocol_code(code), "{code}");
+        }
+    }
     use super::*;
 
     #[test]

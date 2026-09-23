@@ -248,7 +248,73 @@ Actual-process scripted regressions passed:
   count assertions and the resume fixture's reused call ID were corrected; no
   production guard was relaxed to pass those tests.
 
-These are executable-scripted results, not real-model success. The final source-bound
-16-case matrix, restart/drift, daily/pressure/soak and repeated native-model campaigns
-remain to be rerun. Independent review requires a fresh external reviewer of a new
-pinned package; the earlier package does not review these changes.
+These are executable-scripted results, not real-model success. Independent review
+requires a fresh external reviewer of a new pinned package; the earlier package
+does not review these changes.
+
+## Current-source diagnostics and bounded correction
+
+At `bc2d53dbe3beddf646105f2dff28eb43dc6dc4fb`, the exact controller safety
+reservation was shared by selection and dispatch. The actual matrix5 passed all
+16 cases (report `a524ca485b454e81eb8860c13faf1a50d4c05c8a64dcde7846b90c8ca8dbcac5`).
+Resume4 passed safe restart without redispatch and human-edit drift refusal
+(`5f97033dfba66b2c0f223006ae983b7a01385707aa301c0acf4972f7434162aa`).
+Daily-core5 passed every declared local check, including 26 no-op runs in one
+session, 156 verified artifacts and a 383.976-second soak
+(`3341432e32c98bca588dfe65fc987020943ad4ce2bc54e70fff248b5d81a7326`).
+The separate core report does not claim the aggregate daily/model/review gate.
+
+Muse campaign5 repair1 completed genuine failed validation, native syntax repair,
+complete passing validation, diff/status and verifier `SUCCESS`: 6 turns, 5 effects,
+402.561 seconds, 21 verified artifacts, all 13 diagnostic checks passed. Its only
+diff is `broken_add` to `add`; the initial verified repository projection supplied
+inspection and preimage evidence. Peak sampled GPU was 17958 MiB; guard passed.
+
+Muse multi-file1 failed before effects because its otherwise correct ATEM call
+omitted the opening wrapper; 249.530 seconds, peak 17722 MiB. The exact pinned
+9992-byte upstream template hash `cfc67e5f...e678` was re-observed and requires
+that wrapper. Stable1 failed on flat Git pathspecs, rejected by the unchanged
+registered schema before permission; 237.198 seconds, peak 17706 MiB. GPT's
+distinct new-file1 recovered from an unavailable read and created the authorized
+file, then emitted the invalid duplicate Harmony channel delimiter; 190.238 seconds,
+peak 13765 MiB. It also failed to run validation before creation, independently
+missing the campaign's failed-test ordering requirement. All binaries remained
+unchanged, all resource guards passed, raw failures and failed reports remain
+retained. Neither candidate passed this campaign; favorable runs are not combined.
+
+[Decision 0074](../decisions/0074-bounded-model-proposal-correction.md) addresses
+the pre-effect feedback gap without accepting malformed output. Complete verified
+native syntax rejections and explicitly opted-in argument-parser refusals can
+consume the existing one-parser-failure allowance and return a labelled observation
+to the next coordinator turn. Only the stateless Git parser opts in initially;
+scope-checking write validators, identities, permission and effect failures remain
+terminal. Canonical continuation, exact event binding and resource accounting
+survive restart. A second parser rejection exhausts; no budgets increase.
+
+The exact failing frames and Git arguments are negative regressions. Verification
+passes: 1050 kernel tests (7 existing ignores), 305 host library tests (8 ignores)
+and 15 binary tests, 105 inference and 26 read-only tests, plus focused CLI/Linux
+launch regressions, 12 Python collector/wrapper tests and five catalog tests.
+Strict Clippy, effect/strict-local audits, formatting and bounded binary build pass.
+A combined four-package test build was OOM-killed under the unchanged scope;
+the failed log is retained, and sequential one-job verification replaces it.
+
+Executable probes caught missing diagnostic scenario names in the CLI and Linux
+launch boundary's separate closed lists. Both are now explicit and tested; failed
+`protocol-resume-1/2` and `matrix-6/7` remain retained. The acceptance assessor now
+records empty-output prelaunch failures instead of crashing. Matrix8 is running
+the expanded 19 cases; its protocol correction already reached `SUCCESS` with
+8 turns and 6 native effects. Full matrix and new native campaign remain pending.
+
+`protocol-resume-3` recovered the canonical rejected turn/checkpoint before the
+next model request, then executed the six fresh repair effects and reached
+`SUCCESS` with verified full artifacts and unchanged binaries. Its original
+assessor incorrectly required the fast rejection in the first client's polled
+output. That failed report (`6f687e44...ab69`) is retained; a read-only reassessment
+of the exact canonical replay passed all 15 checks, including no authority in the
+rejected turn, no redispatch and same run/session (report
+`c6359e408f2b73743d20e16aa7277a410d71988a89240f70c8754e8cdc967b58`).
+This is scripted restart evidence, not model qualification or independent review.
+Native collection additionally binds each prompt/response to its exact requested
+model run and checks correction feedback occurs after the rejection event.
+No SBOM or historical evidence renewal has run during this source batch.

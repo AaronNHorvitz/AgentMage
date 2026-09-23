@@ -30,6 +30,7 @@ const SYSTEM_SOURCE_ID: &str = "agentmage:coding-system-contract";
 const USER_SOURCE_ID: &str = "agentmage:runtime-request";
 const TOOL_RESULT_SOURCE_PREFIX: &str = "agentmage:tool-result:";
 const TOOL_REJECTION_SOURCE_PREFIX: &str = "agentmage:tool-rejection:";
+const MODEL_REJECTION_SOURCE_PREFIX: &str = "agentmage:model-rejection:";
 const CONTINUITY_SOURCE_PREFIX: &str = "agentmage:coding-continuity:";
 
 /// Source-allocation counter; exact family rendering is bound before model dispatch.
@@ -137,6 +138,7 @@ impl CodingContextSource {
             || !valid_sha256(&source.content_sha256)
             || source.source_id.starts_with(TOOL_RESULT_SOURCE_PREFIX)
             || source.source_id.starts_with(TOOL_REJECTION_SOURCE_PREFIX)
+            || source.source_id.starts_with(MODEL_REJECTION_SOURCE_PREFIX)
             || source.source_id == SYSTEM_SOURCE_ID
             || source.source_id == USER_SOURCE_ID
         {
@@ -201,6 +203,7 @@ where
     tool_definitions: Vec<agentmage_kernel_contracts::ToolDefinition>,
     supporting_sources: Vec<CodingContextSource>,
     rejected_tool_calls: Vec<agentmage_kernel_contracts::RuntimeToolRejection>,
+    rejected_model_results: Vec<agentmage_kernel_contracts::ModelRunResult>,
     continuity: Option<CodingContextContinuityInput>,
     counter: C,
 }
@@ -285,6 +288,7 @@ where
             tool_definitions: tools.into_iter().map(|tool| tool.definition).collect(),
             supporting_sources,
             rejected_tool_calls: Vec::new(),
+            rejected_model_results: Vec::new(),
             continuity: None,
             counter,
         })
@@ -353,6 +357,21 @@ impl<C> RuntimeContextPort for CodingContextPort<C>
 where
     C: CodingTokenCounter,
 {
+    fn observe_model_rejections(
+        &mut self,
+        rejections: &[agentmage_kernel_contracts::ModelRunResult],
+    ) -> Result<(), RuntimePortFailure> {
+        if rejections.len() > 1
+            || rejections.iter().any(|result| {
+                !agentmage_kernel_engine::runtime_loop::correctable_model_rejection(result)
+            })
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        self.rejected_model_results = rejections.to_vec();
+        Ok(())
+    }
+
     fn observe_tool_rejections(
         &mut self,
         rejections: &[agentmage_kernel_contracts::RuntimeToolRejection],
@@ -365,8 +384,9 @@ where
                     definition.tool_id == call.tool_id
                         && definition.tool_version == call.tool_version
                         && definition.input_schema == call.arguments.schema
-                        && definition.required_grant.operation.operation()
-                            == agentmage_kernel_contracts::GrantOperation::WorkspaceRead
+                        && (rejection.reason == agentmage_kernel_contracts::RuntimeToolRejectionReason::ArgumentsInvalid
+                            || definition.required_grant.operation.operation()
+                                == agentmage_kernel_contracts::GrantOperation::WorkspaceRead)
                 })
             {
                 return Err(RuntimePortFailure::Invalid);
@@ -548,6 +568,12 @@ where
         }
         for (index, rejection) in self.rejected_tool_calls.clone().iter().enumerate() {
             let call = &rejection.call;
+            let guidance = match rejection.reason {
+                agentmage_kernel_contracts::RuntimeToolRejectionReason::ReadProjectionUnavailable =>
+                    "This read is not selectable from the frozen repository inventory (missing, excluded, or wrong object kind). No approval, grant, worker, receipt or completion evidence exists for this proposal. It does not prove filesystem absence. Inspect the supplied inventory and authorized parent observation; choose a different valid native operation. Do not repeat this read or infer authority to read excluded content.",
+                agentmage_kernel_contracts::RuntimeToolRejectionReason::ArgumentsInvalid =>
+                    "The exact registered tool rejected these argument values before any approval, grant or effect. They are not a tool result or completion evidence. Read the full published parameter schema and invocation rules; submit a corrected new proposal. Preserve nested component-array paths (Git pathspecs is an array of component arrays), required fields, types and operation-specific constraints. Do not repeat the invalid arguments. A second parser rejection exhausts this run.",
+            };
             let content = serde_json::to_string(&serde_json::json!({
                 "pre_effect_proposal_rejection": true,
                 "rejection_sha256": sha256(&serde_json::to_vec(rejection).map_err(|_| RuntimePortFailure::Invalid)?),
@@ -555,7 +581,7 @@ where
                 "arguments": serde_json::from_slice::<serde_json::Value>(&call.arguments.bytes).map_err(|_| RuntimePortFailure::Invalid)?,
                 "reason": rejection.reason,
                 "effect_occurred": false,
-                "guidance": "This read is not selectable from the frozen repository inventory (missing, excluded, or wrong object kind). No approval, grant, worker, receipt or completion evidence exists for this proposal. It does not prove filesystem absence. Inspect the supplied inventory and authorized parent observation; choose a different valid native operation. Do not repeat this read or infer authority to read excluded content.",
+                "guidance": guidance,
             })).map_err(|_| RuntimePortFailure::Invalid)?;
             let digest = sha256(content.as_bytes());
             let source = internal_source(
@@ -568,6 +594,41 @@ where
                 &digest,
                 content,
                 index + 1 == self.rejected_tool_calls.len(),
+            );
+            candidates.push(self.candidate(&source)?);
+        }
+        for (index, rejection) in self.rejected_model_results.clone().iter().enumerate() {
+            let syntax = match request.model_profile.family.as_str() {
+                "muse_glimmer" => {
+                    "ATEM requires the outer <atem:function_calls> wrapper around exactly one named invoke and its parameters; use the exact tool recipient. Use to=user only for the verifier's completion-candidate JSON."
+                }
+                "gpt_oss" => {
+                    "Harmony requires exactly one channel separator per header: assistant to=functions.NAME followed by commentary json and the message delimiter. Never add a second channel separator before the JSON format. Use final only for the verifier's completion-candidate JSON."
+                }
+                _ => {
+                    "Use the exact native framing and parameter schemas published in the system contract."
+                }
+            };
+            let content = serde_json::to_string(&serde_json::json!({
+                "model_protocol_rejection": true,
+                "model_run_id": rejection.model_run_id,
+                "response_sha256": rejection.response_sha256,
+                "result_sha256": sha256(&serde_json::to_vec(rejection).map_err(|_| RuntimePortFailure::Invalid)?),
+                "effect_occurred": false,
+                "guidance": "Your previous complete response failed strict native protocol decoding. It supplied no valid proposal, tool result, grant or completion evidence. Submit one new complete frame using the published native syntax, with valid unique-key arguments. Do not echo the prompt or treat this notice as evidence. A second parser rejection exhausts this run.",
+                "native_syntax": syntax,
+            })).map_err(|_| RuntimePortFailure::Invalid)?;
+            let digest = sha256(content.as_bytes());
+            let source = internal_source(
+                format!("coding-model-rejection-{index}"),
+                ContextItemKind::Supporting,
+                &format!(
+                    "{MODEL_REJECTION_SOURCE_PREFIX}{}",
+                    rejection.model_run_id.as_str()
+                ),
+                &digest,
+                content,
+                index + 1 == self.rejected_model_results.len(),
             );
             candidates.push(self.candidate(&source)?);
         }
@@ -1416,6 +1477,87 @@ mod tests {
                 &[]
             ),
             Err(RuntimePortFailure::Invalid)
+        );
+    }
+
+    #[test]
+    fn model_rejection_is_an_essential_user_observation_never_tool_feedback() {
+        let profile = CodingSessionProfile::build(input()).unwrap();
+        let mut context =
+            CodingContextPort::for_profile(&profile, vec![], FixtureCounter("fixture-counter-v1"))
+                .unwrap();
+        let model = profile.model_profile();
+        let rejection: agentmage_kernel_contracts::ModelRunResult = serde_json::from_value(serde_json::json!({
+            "schema_version": CONTRACT_SCHEMA_VERSION, "model_run_id":"rejected-run",
+            "stream_id":"rejected-stream", "correlation_id":"rejected-correlation",
+            "terminal_state":"rejected", "finish_reason":"end_of_sequence",
+            "fragment_count":1,"response_sha256":"a".repeat(64),"proposal":null,
+            "failure":{"code":"runtime.model.protocol_rejected","retryable_after_correction":true,
+                "dependency_recovery_required":false,"contract_error":null},
+            "usage":{"rendered_prompt_tokens":1,"cached_input_tokens":null,"evaluated_input_tokens":null,
+                "generated_output_tokens":1,"reasoning_output_tokens":null,
+                "output_token_reserve":model.decoding.max_output_tokens,"remaining_capacity_tokens":null},
+            "resources":{"adapter_id":model.runtime.adapter_id,"profile_id":model.profile_id,
+                "model_run_id":"rejected-run","resident_memory_bytes":1,"accelerator_memory_bytes":0,
+                "input_tokens":1,"output_tokens":1,"elapsed_ms":1}
+        })).unwrap();
+        context
+            .observe_model_rejections(std::slice::from_ref(&rejection))
+            .unwrap();
+        let packet = context
+            .build_context(
+                &request(&profile),
+                ContextPacketId::from_raw("rejected-context"),
+                2,
+                &[],
+                &[],
+                &[],
+            )
+            .unwrap();
+        assert!(
+            !packet
+                .messages
+                .iter()
+                .any(|message| message.role == ModelMessageRole::Tool)
+        );
+        let message = packet
+            .messages
+            .iter()
+            .find(|message| {
+                String::from_utf8_lossy(&message.content.bytes).contains("model_protocol_rejection")
+            })
+            .unwrap();
+        assert_eq!(message.role, ModelMessageRole::User);
+        let notice: serde_json::Value = serde_json::from_slice(&message.content.bytes).unwrap();
+        assert_eq!(notice["effect_occurred"], false);
+        assert_eq!(notice["response_sha256"], rejection.response_sha256);
+        assert!(notice.get("receipt_id").is_none());
+        assert!(notice.get("result").is_none());
+        assert!(
+            notice["guidance"]
+                .as_str()
+                .unwrap()
+                .contains("second parser rejection")
+        );
+        let mut invalid = rejection;
+        invalid.finish_reason = agentmage_kernel_contracts::ModelFinishReason::OutputTokenLimit;
+        assert_eq!(
+            context.observe_model_rejections(&[invalid]),
+            Err(RuntimePortFailure::Invalid)
+        );
+        assert!(
+            CodingContextSource::new(
+                "forged-rejection",
+                ContextItemKind::Supporting,
+                ContextSensitivity::Internal,
+                ContextAdmission::Eligible,
+                true,
+                format!("{MODEL_REJECTION_SOURCE_PREFIX}forged"),
+                "revision",
+                "a".repeat(64),
+                "{}"
+            )
+            .is_err()
         );
     }
 

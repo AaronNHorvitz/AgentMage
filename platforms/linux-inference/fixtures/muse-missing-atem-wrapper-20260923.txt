@@ -1,0 +1,46 @@
+ to=self<|message|>{"objective_sha256":"4156d34353aa43a51fff0fdc280bb7967105a1079c7c389644ced8dc218ce3ec","schema_version":1,"task":{"acceptance_criteria":["The exact synthetic validation passes after the bounded repair"],"constraints":["Disposable synthetic repository only","No network, publication, package installation, or commit"],"objective":"First run registered validation to observe the genuine failing test. Inspect the Python sources and repair both failing modules through native tools, rerun full validation, inspect current diff and Git status, then submit verifier-supported completion.","schema_version":2,"session_id":"coding-development-session-67e4b803a7e3d08353822d8922f8f25f","status":"ready","task_id":"coding-development-task-be0b13ea4dbd24fc"},"work_packet":{"acceptance_checks":["The exact synthetic validation passes after the bounded repair"],"authoritative_evidence":[],"budgets":[{"limit":16,"resource":"plan_steps"},{"limit":2,"resource":"tool_call_depth"},{"limit":16,"resource":"model_calls"},{"limit":16,"resource":"tool_calls"},{"limit":8388608,"resource":"input_bytes"},{"limit":4194304,"resource":"output_bytes"},{"limit":2700000,"resource":"elapsed_milliseconds"},{"limit":68719476736,"resource":"memory_bytes"},{"limit":67108864,"resource":"disk_bytes"},{"limit":32,"resource":"process_count"}],"completion_evidence":[],"disposition":null,"expected_output":"One verifier-backed coding outcome","last_verification_date":"2026-09-21","mutable_files":["src/calc.py","src/subtract.py"],"next_action":null,"next_review":null,"objective":"First run registered validation to observe the genuine failing test. Inspect the Python sources and repair both failing modules through native tools, rerun full validation, inspect current diff and Git status, then submit verifier-supported completion.","owner":"local-user","plan_id":"coding-plan-0001","protected_files":[".git","tests/run_validation.py"],"reason":"Exercise the real coordinator in an explicitly disposable fixture","required_capability_class":"local-write","required_evidence":["validation"],"revision":1,"rollback":{"description":"Restore only exact preimage bytes through a fresh grant","reversible":true},"schema_version":2,"sensitivity":"ephemeral","state":"active","status_reason":null,"stop_conditions":[{"description":"Stop for AcceptanceSatisfied","kind":"acceptance_satisfied"},{"description":"Stop for UserDecisionRequired","kind":"user_decision_required"},{"description":"Stop for PolicyDenied","kind":"policy_denied"},{"description":"Stop for Error","kind":"error"},{"description":"Stop for Cancelled","kind":"cancelled"},{"description":"Stop for BudgetExhausted","kind":"budget_exhausted"},{"description":"Stop for UncertainResult","kind":"uncertain_result"}],"superseding_work":null,"task_id":"coding-development-task-be0b13ea4dbd24fc","validation_issues":[],"work_packet_id":"packet-coding-development-task-be0b13ea4dbd24fc"}}}
+
+We need to run registered validation to observe failing test. Validation template? From work_packet, validation_id validation-unit, template_sha256? The templates listed: template_sha256 for validation-unit is a85969e3cbce1b61f67730411d13ad7ac6d86257a0e577153cd0e3d1392475e8 . Need to run validation.run-template with validation_attempt_id, validation_id, template_sha256.
+
+First run validation. Let's call agentmage.validation.run-template.
+
+Parameters: schema_version 1, validation_attempt_id (pattern), validation_id, template_sha256.
+
+validation_id = "validation-unit"
+template_sha256 = "a85969e3cbce1b61f67730411d13ad7ac6d86257a0e577153cd0e3d1392475e8"
+validation_attempt_id need pick.
+
+We should also inspect sources. We already have content: src/calc.py defines broken_add, not add. src/subtract.py defines broken_subtract, not subtract.
+
+Validation script imports from src.calc import add and src.subtract import subtract. So they will fail ImportError. Indeed failed names fixture::add etc.
+
+Need to repair both modules through native tools. Likely rename_identifier? The files have def broken_add(left,right): return left + right. Needs to be def add(...). Similarly subtract.
+
+We can patch file using agentmage.code.patch-file. Need expected_preimage_sha256 from current file evidence. We have content_sha256 provided: for calc.py content_sha256 aca809d27a82d641ebd68549b100a91cb40db964cbdd6e1efaeda70b79a73666 . For subtract.py 68b11369706b8f14882c3f925504d24ec964c306d466069e374377c9abfe17f9.
+
+We need intent_sha256 and change_plan_sha256 from edit_bindings? The work plan has change_plan_sha256: aeb8a1eecd81fa6e4521ced4bdc4b000a929c84aa61a1fe768ada58c53410d17 and intent_sha256 de43d0fb062fe10cc2d693ea0976c7810570f0a78f8786a48a4c8e465b2f9d41.
+
+Also need language = python, artifact_class = code? For patch-file, artifact_class enum: code, configuration, test, documentation, migration, generated_output. Use code.
+
+edits: need structured edits. Python requires rename_identifier or replace_syntax_node or insert_import. rename_identifier can rename broken_add to add, and broken_subtract to subtract.
+
+We need change_id, path components, expected_preimage_sha256, intent_sha256, change_plan_sha256, language, artifact_class, edits, additional_review_hooks [], generated false, allow_generated false? optional.
+
+We need to provide edits array with edit_id, kind rename_identifier, old, replacement.
+
+For calc.py: old = "broken_add", replacement = "add"
+For subtract.py: old = "broken_subtract", replacement = "subtract"
+
+Path is ["src","calc.py"] and ["src","subtract.py"]
+
+We need to first run validation to observe failure, then patch.
+
+Let's first run validation.
+
+<|eom|><|start|>assistant to=agentmage.validation.run-template<|message|><atem:invoke name="agentmage.validation.run-template">
+<atem:parameter name="schema_version">1</atem:parameter>
+<atem:parameter name="validation_attempt_id">val-attempt-0001</atem:parameter>
+<atem:parameter name="validation_id">validation-unit</atem:parameter>
+<atem:parameter name="template_sha256">a85969e3cbce1b61f67730411d13ad7ac6d86257a0e577153cd0e3d1392475e8</atem:parameter>
+</atem:invoke>
+</atem:function_calls>

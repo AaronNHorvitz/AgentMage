@@ -830,6 +830,20 @@ mod tests {
         let codec = GptOssHarmonyFamilyCodec::new(identity())
             .and_then(|codec| codec.with_native_tools(vec![native_tool()]))
             .expect("codec with native tool catalog");
+        let retained = include_str!("../fixtures/gpt-oss-duplicate-channel-new-file-20260923.txt")
+            .trim_end_matches('\n')
+            .as_bytes();
+        assert_eq!(
+            sha256(retained),
+            "638fd1d7f9f93be065b668f0c97a7bd47ed8c65716ce82c2c324974905906ee0"
+        );
+        assert_eq!(
+            codec
+                .decode_proposal(&profile, &request(&profile), retained)
+                .unwrap_err()
+                .code,
+            "model.gpt-oss-codec.tool-channel-invalid"
+        );
         let prefix = b"<|channel|>analysis<|message|>inspect<|end|><|start|>assistant<|channel|>commentary to=fixture.read code<|message|>";
         let response = [prefix.as_slice(), br#"{"path":"calc.py"}"#].concat();
         let proposal = codec

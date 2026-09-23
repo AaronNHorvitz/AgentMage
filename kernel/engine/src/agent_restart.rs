@@ -762,8 +762,8 @@ mod tests {
             }
         }
 
-        assert_eq!(edge_index, 53);
-        assert_eq!(before_interruptions, 53);
-        assert_eq!(after_interruptions, 53);
+        assert_eq!(edge_index, 54);
+        assert_eq!(before_interruptions, 54);
+        assert_eq!(after_interruptions, 54);
     }
 }
