@@ -12,6 +12,46 @@ from scripts import coding_harness_acceptance
 
 
 class CodingHarnessTests(unittest.TestCase):
+    def test_native_command_failure_artifact_must_belong_to_exact_command_turn(self):
+        self.assertEqual(len(set(coding_harness_acceptance.CASE_ROOTS.values())),
+                         len(coding_harness_acceptance.CASE_ROOTS))
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary) / "fixture"
+            workspace = base / "disposable/worktree"
+            (workspace / "src").mkdir(parents=True)
+            (workspace / "src/calc.py").write_text("def add(left, right):\n    return left + right\n")
+            logs = Path(temporary) / "logs"
+            logs.mkdir()
+            (logs / "result.json").write_text(json.dumps({"scenario": "native-command-repair"}))
+            (logs / "stdout.jsonl").write_text("")
+            (logs / "stderr.log").write_text("")
+            calls = ["scripted-native-ordered-command", "scripted-validation-failing",
+                     "scripted-inspect-preimage", "scripted-repair-patch", "scripted-validation-passing",
+                     "scripted-git-diff", "scripted-git-status"]
+            rows = [{"turn_id": f"turn-{index}", "kind": {"event": "tool_completed", "tool_call_id": call}}
+                    for index, call in enumerate(calls)]
+            failed = (json.dumps({
+                "schema_version": 1, "status": "assertion_failed", "passed": 0, "failed": 1,
+                "skipped": 0, "duration_ms": 1, "failed_names": ["fixture::add"], "artifact_ids": [],
+                "retry_count": 0, "initial_failure_sha256": None,
+            }, sort_keys=True) + "\n").encode()
+            artifact = {"turn_id": "turn-0", "kind": {"event": "artifact_created", "artifact_id": "failure"}}
+            verified = {"type": "runtime_artifact_verified", "artifact_id": "failure",
+                        "payload_sha256": coding_harness_acceptance.hashlib.sha256(failed).hexdigest(),
+                        "byte_size": len(failed)}
+            rows.extend([artifact, verified, {"state": "SUCCESS", "turn_count": 8}])
+            with mock.patch.object(coding_harness_acceptance, "git_status", return_value=[" M src/calc.py"]), \
+                    mock.patch.object(coding_harness_acceptance, "rows", return_value=rows):
+                self.assertTrue(coding_harness_acceptance.verify_case(
+                    "native-command-repair", base, logs, 0)["passed"])
+                artifact["turn_id"] = "turn-1"
+                self.assertFalse(coding_harness_acceptance.verify_case(
+                    "native-command-repair", base, logs, 0)["passed"])
+                artifact["turn_id"] = "turn-0"
+                verified["payload_sha256"] = "0" * 64
+                self.assertFalse(coding_harness_acceptance.verify_case(
+                    "native-command-repair", base, logs, 0)["passed"])
+
     def test_acceptance_retains_prelaunch_failure_without_outcome(self):
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary) / "fixture"

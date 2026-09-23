@@ -36,7 +36,8 @@ use agentmage_kernel_contracts::{
 };
 use agentmage_kernel_engine::{
     command_runner::{
-        CommandBounds, CommandRegistry, CommandRisk, CommandSpec, CommandWorkingDirectory,
+        CommandBounds, CommandRegistry, CommandRequest, CommandRisk, CommandSpec,
+        CommandWorkingDirectory,
     },
     instruction_provenance::build_instruction_ledger,
     model_runtime::{
@@ -166,6 +167,8 @@ pub enum CodingDevelopmentScenario {
     NoOp,
     /// Observe a genuine failing test, repair one identifier, rerun, and verify.
     FailedTestRepair,
+    /// Execute native-ordered command arguments, then require separate validation repair evidence.
+    NativeCommandRepair,
     /// Hold one cancellable model call so actual signal propagation can be exercised.
     SlowCancel,
     /// Pause after the first safe checkpoint for an external host-stop resume probe.
@@ -200,6 +203,7 @@ impl CodingDevelopmentScenario {
         match value {
             "no-op" => Some(Self::NoOp),
             "failed-test-repair" => Some(Self::FailedTestRepair),
+            "native-command-repair" => Some(Self::NativeCommandRepair),
             "slow-cancel" => Some(Self::SlowCancel),
             "restart-repair" => Some(Self::RestartRepair),
             "protocol-correction" => Some(Self::ProtocolCorrection),
@@ -828,6 +832,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 vec![EvidenceKind::Observation],
             ),
             CodingDevelopmentScenario::FailedTestRepair
+            | CodingDevelopmentScenario::NativeCommandRepair
             | CodingDevelopmentScenario::RestartRepair
             | CodingDevelopmentScenario::ProtocolCorrection
             | CodingDevelopmentScenario::ArgumentsCorrection
@@ -1697,6 +1702,34 @@ fn scripted_steps(
         .map_err(|_| CodingDevelopmentRuntimeError::Composition)
     };
     match scenario {
+        CodingDevelopmentScenario::NativeCommandRepair => {
+            let mut steps = scripted_steps(
+                CodingDevelopmentScenario::FailedTestRepair,
+                profile,
+                request,
+                workspace_root,
+                platform,
+                workspace,
+            )?;
+            let command = profile
+                .commands()
+                .commands()
+                .into_iter()
+                .next()
+                .ok_or(CodingDevelopmentRuntimeError::Composition)?;
+            // Value serialization matches the native codec's sorted argument keys,
+            // not CommandRequest's internal struct order (campaign7 regression).
+            let arguments = serde_json::to_value(CommandRequest::new("attempt-001", command))
+                .map_err(|_| CodingDevelopmentRuntimeError::Composition)?;
+            steps.push_front(ScriptedDevelopmentStep::Tool(tool_candidate(
+                profile,
+                crate::coding_tools::BOUNDED_COMMAND_TOOL_ID,
+                crate::coding_tools::BOUNDED_COMMAND_TOOL_VERSION,
+                "scripted-native-ordered-command",
+                &arguments,
+            )?));
+            Ok(steps)
+        }
         CodingDevelopmentScenario::ProtocolCorrection
         | CodingDevelopmentScenario::ArgumentsCorrection
         | CodingDevelopmentScenario::RepeatedProtocolRejection

@@ -362,3 +362,50 @@ and validation of that unchanged actual event pass. This changes no binary or
 model budget, but the next native campaign uses a fresh source pin; previous
 evidence is retained without mixing runs into qualification. Independent review
 and final batched provenance renewal remain pending.
+
+## Campaign7 findings and native command correction
+
+At `ef4a05d823ea0987229e2ab389867b15bb4f8282`, Muse multi-file1 and repair1
+completed the required real failed-test/correction/passing-test/diff/status chain
+and verifier `SUCCESS`. All 13 collector checks passed separately: multi-file
+419.515 seconds, 7 turns, 6 effects and 25 artifacts (collector
+`ba0c2dc24f70deaf147751cacf56754c11c01dc81f0329668cb342ab29b95e52`);
+repair 434.764 seconds, 8 turns, 7 effects and 27 artifacts (collector
+`c8e794f6067a8f635c241afca1abb49846726ab82c40bb8c33ce057411eade76`).
+Neither had a rejection; both resource guards passed at 17953 MiB sampled GPU.
+
+GPT repair1 ended `EXHAUSTED` after one native hash-file inspection and two
+complete invalid duplicate-channel Harmony frames, including after the bounded
+correction notice. No validation or patch executed. Raw hashes are
+`631e274338af3a78325c3b6dc805aa94ca1ca108bc79910d57e0aad883ca665a`
+and `91248e91de40704338448206847ea3ab94a288009f19820b15526bd7161f8b24`.
+Elapsed 192.276 seconds, resource guard passed at 13761 MiB; collector remains
+failed (`25760bd3b084af368a065450a2ed9f7adcd320a6250a2fce3229db78921de831`).
+The exact retained upstream template (`a4c9919c...c8146`) confirms the existing
+single-channel `commentary json` header; removing `json` is not justified.
+The model's omitted required field and nested path also conflict with the full
+published schema. No blanket model-incapability claim follows from this case.
+
+Muse new-file1 then exposed the integration defect in Decision 0075: a valid
+registered command was approved but the wrong Direct driver compared reserialized
+internal bytes against the original approved native JSON. The run failed in
+279.091 seconds with `Dependency(Uncertain)`, unchanged worktree and a passing
+17954 MiB resource guard. Both valid native responses and the earlier safe
+unavailable-directory rejection remain retained. The command key-order host
+regression reproduces the failure before the fix. Campaign7 is unsuccessful;
+subsequent source changes require a new campaign, not combining favorable runs.
+
+The correction uses the existing exact registered-wrapper binding and preserves
+the generic-command versus targeted-validation distinction. Sorted/pretty JSON
+passes only when those exact bytes were approved; reordering after approval is
+still denied with no launch. Raw logs for all four attempts are under private
+`runs/2026-09-23-campaign7-*`; no prior report is overwritten or reclassified.
+
+Decision 0075 focused verification passes: 308 host library tests (8 ignored),
+15 host binary tests, seven kernel command-owner tests including wrong-plan
+refusal, three Linux development-boundary tests, and 13 wrapper/collector tests.
+Strict host/Linux Clippy, rebuilt binaries, formatting, effect mediation and
+strict-local source audits, touched-document lint and diff checks pass. The first
+new Python assessor fixture omitted its raw-log files and failed; that log is
+retained, the fixture is corrected, and the rerun passes. The actual-process
+matrix and native campaign must now run against the new committed tuple.

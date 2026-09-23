@@ -36,6 +36,7 @@ EXPECTED = {
     "protocol-correction": ("protocol-correction", "repair", True, False, 0, "SUCCESS"),
     "arguments-correction": ("arguments-correction", "repair", True, False, 0, "SUCCESS"),
     "repeated-protocol-rejection": ("repeated-protocol-rejection", "repair", True, False, 7, "EXHAUSTED"),
+    "native-command-repair": ("native-command-repair", "repair", True, False, 0, "SUCCESS"),
 }
 CASE_ROOTS = {case: f"c{index:02d}" for index, case in enumerate(EXPECTED, start=1)}
 CASE_ROOTS["cancel"] = "c10"
@@ -49,6 +50,7 @@ CASE_ROOTS.update({
     "protocol-correction": "c17",
     "arguments-correction": "c18",
     "repeated-protocol-rejection": "c19",
+    "native-command-repair": "c20",
 })
 
 
@@ -78,7 +80,7 @@ def git_status(workspace: Path) -> list[str]:
 
 
 def expected_status(case: str) -> list[str]:
-    if case in {"patch-test-revision", "protocol-correction", "arguments-correction"}:
+    if case in {"patch-test-revision", "protocol-correction", "arguments-correction", "native-command-repair"}:
         return [" M src/calc.py"]
     if case == "new-file":
         return ["?? src/calc.py"]
@@ -123,6 +125,34 @@ def verify_case(case: str, base: Path, log_dir: Path, exit_code: int) -> dict:
             checks["verified-artifacts"] = any(row.get("type") == "runtime_artifact_verified" for row in observed_rows)
             checks["exact-repair"] = (workspace / "src/calc.py").read_text() == (
                 "def add(left, right):\n    return left + right\n")
+    if case == "native-command-repair":
+        tools = [row["kind"] for row in observed_rows
+                 if row.get("kind", {}).get("event") == "tool_completed"]
+        checks["exact-tool-order"] = [tool["tool_call_id"] for tool in tools] == [
+            "scripted-native-ordered-command", "scripted-validation-failing",
+            "scripted-inspect-preimage", "scripted-repair-patch", "scripted-validation-passing",
+            "scripted-git-diff", "scripted-git-status",
+        ]
+        command_turns = {row["turn_id"] for row in observed_rows
+                         if row.get("kind", {}).get("event") == "tool_completed"
+                         and row["kind"].get("tool_call_id") == "scripted-native-ordered-command"}
+        command_artifacts = {row["kind"]["artifact_id"] for row in observed_rows
+                             if row.get("turn_id") in command_turns
+                             and row.get("kind", {}).get("event") == "artifact_created"}
+        failed_output = (json.dumps({
+            "schema_version": 1, "status": "assertion_failed", "passed": 0,
+            "failed": 1, "skipped": 0, "duration_ms": 1, "failed_names": ["fixture::add"],
+            "artifact_ids": [], "retry_count": 0, "initial_failure_sha256": None,
+        }, sort_keys=True) + "\n").encode()
+        checks["generic-command-failure-output-verified"] = any(
+            row.get("type") == "runtime_artifact_verified"
+            and row.get("artifact_id") in command_artifacts
+            and row.get("payload_sha256") == hashlib.sha256(failed_output).hexdigest()
+            and row.get("byte_size") == len(failed_output) for row in observed_rows)
+        checks["bounded-turns"] = observed_outcome.get("turn_count") == 8
+        checks["verified-artifacts"] = any(row.get("type") == "runtime_artifact_verified" for row in observed_rows)
+        checks["exact-repair"] = (workspace / "src/calc.py").read_text() == (
+            "def add(left, right):\n    return left + right\n")
     if case == "patch-test-revision":
         checks["native-read-worker"] = any(
             row.get("kind", {}).get("event") == "tool_completed"

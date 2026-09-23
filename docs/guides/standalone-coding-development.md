@@ -92,7 +92,12 @@ acceptance; it is not a performance simulation or model result. `--stale-approva
 restricted to this development client and corrupts one response digest so the real host rejection
 can be tested before an effect.
 
-Run all sixteen actual-process cases with short disposable roots and a fresh create-only log root:
+The correction scenarios also cover one protocol or argument rejection followed by bounded
+repair, and exhaustion on a second malformed frame. `native-command-repair` exercises native
+JSON key ordering through the registered generic command, then requires separate targeted
+validation and repair evidence. These scripted regressions cannot qualify a real model.
+
+Run all twenty declared actual-process cases with short disposable roots and a fresh create-only log root:
 
 ```bash
 systemd-run --user --scope --quiet \

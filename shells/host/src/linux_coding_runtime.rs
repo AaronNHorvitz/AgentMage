@@ -1611,6 +1611,7 @@ where
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let policy = issued.generic_authority()?.1.policy.clone();
         let transaction = self.authority_transaction(call, &issued)?;
+        let operation_plan_sha256 = issued.prepared.operation().plan_sha256().to_owned();
         let (operation, binding, write_draft, workspace) = issued.prepared.into_parts();
         let prepared = match operation.prepared() {
             PreparedNativeCodingCall::Command { prepared } => prepared.as_ref().clone(),
@@ -1627,12 +1628,22 @@ where
             request.task.task_id.clone(),
             call.correlation_id.clone(),
         );
+        // Preparation resolves the registered command from a parsed request; its
+        // internal struct serialization need not equal the approved native JSON.
+        // Bind the original call and trusted plan, never a reserialized substitute.
+        let wrapper = RegisteredCommandWrapperBinding::new(call, operation_plan_sha256)
+            .map_err(|_| RuntimePortFailure::Invalid)?;
         let executor = self
             .command_executor
             .take()
             .ok_or(RuntimePortFailure::Unavailable)?;
-        let mut driver =
-            CommandEffectDriver::new(executor, workspace, prepared.clone(), cancellation);
+        let mut driver = CommandEffectDriver::new_registered_wrapper(
+            executor,
+            workspace,
+            prepared.clone(),
+            cancellation,
+            wrapper,
+        );
         let receipt_result = self.execute_effect_authority(
             self.workspace.profile().registry(),
             &policy,
@@ -8008,6 +8019,94 @@ mod tests {
                 .expect("unknown path uses ordinary approval"),
             RuntimePermissionEvaluation::Ask { .. }
         ));
+    }
+
+    #[test]
+    fn story_48_2_native_command_json_order_preserves_exact_approved_call() {
+        // Muse campaign7 new-file1 emitted alphabetically ordered JSON through the
+        // common codec. Re-serializing CommandRequest uses struct field order instead.
+        // Both are valid requests, but only the original bytes were approved.
+        for pretty in [false, true] {
+            let mut fixture = fixture();
+            configure_bounded_command(&mut fixture);
+            let original = fixture.call.arguments.bytes.clone();
+            let value: serde_json::Value = serde_json::from_slice(&original).expect("request JSON");
+            let arguments = if pretty {
+                serde_json::to_vec_pretty(&value).expect("pretty model JSON")
+            } else {
+                serde_json::to_vec(&value).expect("canonical model JSON")
+            };
+            assert_ne!(arguments, original);
+            assert!(arguments.starts_with(if pretty {
+                b"{\n  \"command_attempt_id\""
+            } else {
+                b"{\"command_attempt_id\""
+            }));
+            fixture.call.arguments.sha256 = sha256(&arguments);
+            fixture.call.arguments.bytes = arguments;
+            let allowed = approve(&mut fixture, 1_000);
+            let execution = fixture
+                .boundary
+                .execute(
+                    &fixture.request,
+                    &allowed,
+                    &fixture.definition,
+                    &fixture.call,
+                    None,
+                )
+                .expect("exact approved native command executes irrespective of JSON field order");
+            assert_eq!(execution.result.outcome, OperationOutcome::Succeeded);
+            assert!(
+                execution
+                    .result
+                    .evidence
+                    .iter()
+                    .all(|item| item.kind != EvidenceKind::Validation)
+            );
+            assert_eq!(
+                fixture
+                    .boundary
+                    .command_executor
+                    .as_ref()
+                    .expect("executor")
+                    .launches,
+                1
+            );
+        }
+    }
+
+    #[test]
+    fn story_48_2_native_command_reserialization_after_approval_remains_denied() {
+        let mut fixture = fixture();
+        configure_bounded_command(&mut fixture);
+        let allowed = approve(&mut fixture, 1_000);
+        let value: serde_json::Value =
+            serde_json::from_slice(&fixture.call.arguments.bytes).expect("approved request JSON");
+        let changed = serde_json::to_vec(&value).expect("reordered JSON");
+        assert_ne!(changed, fixture.call.arguments.bytes);
+        fixture.call.arguments.sha256 = sha256(&changed);
+        fixture.call.arguments.bytes = changed;
+        assert!(
+            fixture
+                .boundary
+                .execute(
+                    &fixture.request,
+                    &allowed,
+                    &fixture.definition,
+                    &fixture.call,
+                    None,
+                )
+                .is_err()
+        );
+        assert_eq!(
+            fixture
+                .boundary
+                .command_executor
+                .as_ref()
+                .expect("executor")
+                .launches,
+            0
+        );
     }
 
     #[test]
