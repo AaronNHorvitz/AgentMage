@@ -27,14 +27,17 @@
 ## Immediate Coding-Harness Priority
 
 [Decision 0061](docs/decisions/0061-standalone-coding-harness-critical-path.md)
-makes the standalone coding workflow the immediate workstream. Tasks 48.2.4,
-48.2.5 and 48.2.6 add the missing executable integration; Task 50.2.4 defines
-daily-use reliability after the MVP. Existing completed component work remains
-credited. None of these additions is implemented by this planning revision.
-The worker is stopped; follow the
-[restart handoff](docs/verification/coding-harness-replan-2026-09-21.md)
-only after an explicit operator restart. The older desktop-demo queue is not
-the next-work instruction for this workstream.
+makes the standalone coding workflow the immediate workstream. The owner
+explicitly restarted implementation for Tasks 48.2.4, 48.2.5, 48.2.6 and 50.2.4
+and their necessary prerequisites. The disposable Linux CLI/host composition
+and executable-scripted acceptance are implemented; real-model integration and
+the separate repeated candidate campaigns remain in progress. See the
+[implementation record](docs/verification/coding-harness-implementation-2026-09-22.md)
+and [real-model corrections](docs/verification/coding-harness-real-model-integration-2026-09-23.md).
+Local integration defects are implementation work, not external model-owner
+blockers. Exact admission, independent review and milestone gates remain open;
+production qualification below is unchanged. Honor any new operator stop marker.
+The older desktop-demo queue is not the next-work instruction for this workstream.
 
 ## Current Implementation Truth
 

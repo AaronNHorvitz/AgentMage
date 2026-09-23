@@ -3,6 +3,8 @@
 Status: implementation and native-model diagnostics in progress. No coding-model,
 platform, release or `M-HARNESS-DAILY` qualification is claimed by this record.
 Authority: Decisions 0054/0061/0062 and the owner's explicit continuation.
+The [prospective native campaign](coding-harness-native-campaign-2026-09-23.md)
+declares the repeated-case criteria and preserves development versus admission scope.
 
 ## Corrected integration defects
 
@@ -71,6 +73,7 @@ original failed runs are not overwritten or promoted to successes.
 | `muse-native-4` | Seven native tools completed; 32K preflight refused final request after an additional real read; exit 8 |
 | `muse-native-5` | Genuine failed validation, then reasoning-only context echo; exit 8, 246.471 seconds |
 | `gpt-native-6` | Native hash, then duplicate commentary headers and duplicate JSON key; exit 8, 186.214 seconds |
+| `muse-native-6` | First complete real-model diagnostic: verifier `SUCCESS`, 6 turns/5 tools, 367.589 seconds |
 
 Muse native-3 changed only `def broken_add` to `def add` in `src/calc.py`.
 Its last prompt used 27836 tokens, output 583 tokens, and peak sampled total GPU
@@ -100,6 +103,15 @@ hashes, chronological native feedback, failed-test/edit/passing-test ordering,
 diff/status inspection, verifier outcomes, CLI-verified artifacts, binary pins
 and resource observations. Its report is diagnostic evidence only, not independent
 review, production admission or campaign qualification.
+
+Muse native-6 ran from `5574c43a`. Its exact native chain was registered failed
+validation (one failed), a syntax rename from `broken_add` to `add`, fresh complete
+validation (one passed), Git diff and status, then verifier-backed `SUCCESS`.
+The actual diff contains only that identifier rename. All collector checks pass;
+the CLI verified 21 full artifacts. Its final request used 26035 input/281 output
+tokens; sampled GPU peak was 17958 MiB, the guard passed, and all three binaries
+stayed unchanged. This is the first complete diagnostic success, not repeated
+campaign qualification. Every earlier failure remains retained.
 
 All attempts preserve the pinned b10423 Vulkan runtime, single slot, four threads,
 two-core quota, low priority, 45-minute limit, memory bounds and GPU guard. No model,

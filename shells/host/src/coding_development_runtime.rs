@@ -31,7 +31,7 @@ use agentmage_kernel_contracts::{
     PlatformArchitecture, PlatformFamily, ProposalId, RepositorySnapshotId, RollbackPlan,
     RuntimeEventCursor, RuntimeEventKind, RuntimeIsolationObservation, RuntimeRunId,
     RuntimeRunLimits, SessionId, StopCondition, StopConditionKind, TaskId, ToolCallId,
-    ToolCatalogId, ToolDefinition, ToolId, ToolResult, WorkPacket, WorkPacketId, WorkPacketState,
+    ToolCatalogId, ToolDefinition, ToolId, WorkPacket, WorkPacketId, WorkPacketState,
     WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
 };
 use agentmage_kernel_engine::{
@@ -2739,15 +2739,14 @@ fn rollback_from_history_candidate(
         .iter()
         .rev()
         .filter(|message| message.role == ModelMessageRole::Tool)
-        .filter_map(|message| serde_json::from_slice::<ToolResult>(&message.content.bytes).ok())
-        .filter_map(|result| result.output)
-        .find(|output| output.schema.schema_id.as_str() == CHANGE_HISTORY_OUTPUT_SCHEMA_ID)
+        .filter_map(|message| {
+            (message.content.sha256 == sha256(&message.content.bytes))
+                .then(|| serde_json::from_slice::<serde_json::Value>(&message.content.bytes).ok())
+                .flatten()
+        })
+        .find(|value| value["completed_call"]["tool_id"] == CHANGE_HISTORY_TOOL_ID)
         .ok_or(RuntimePortFailure::Invalid)?;
-    if history.sha256 != sha256(&history.bytes) {
-        return Err(RuntimePortFailure::Invalid);
-    }
-    let history: ChangeHistoryOutput =
-        serde_json::from_slice(&history.bytes).map_err(|_| RuntimePortFailure::Invalid)?;
+    let history = projected_change_history(&history)?;
     let source = history
         .records
         .last()
@@ -2772,6 +2771,34 @@ fn rollback_from_history_candidate(
             bytes,
         },
     })
+}
+
+// Scripted fixture consumption follows the same readable, paired observation
+// shape used by native models. It remains an untrusted proposal; the history
+// owner and exact rollback effect boundary still validate the retained source.
+fn projected_change_history(
+    value: &serde_json::Value,
+) -> Result<ChangeHistoryOutput, RuntimePortFailure> {
+    let call = &value["completed_call"];
+    let result = &value["result"];
+    let output = &result["output"];
+    if value["untrusted_tool_observation"] != true
+        || call["tool_id"] != CHANGE_HISTORY_TOOL_ID
+        || call["tool_version"] != CODING_HISTORY_TOOL_VERSION
+        || call["tool_call_id"].as_str().is_none_or(str::is_empty)
+        || call["tool_call_id"] != result["tool_call_id"]
+        || output["schema"]["schema_id"] != CHANGE_HISTORY_OUTPUT_SCHEMA_ID
+        || output["media_type"] != "application/json"
+    {
+        return Err(RuntimePortFailure::Invalid);
+    }
+    let history: ChangeHistoryOutput = serde_json::from_value(output["content"].clone())
+        .map_err(|_| RuntimePortFailure::Invalid)?;
+    let bytes = serde_json::to_vec(&history).map_err(|_| RuntimePortFailure::Invalid)?;
+    if output["sha256"] != sha256(&bytes) {
+        return Err(RuntimePortFailure::Invalid);
+    }
+    Ok(history)
 }
 
 fn cancelled_model_result(
@@ -2919,4 +2946,43 @@ fn now_epoch_ms() -> Result<u64, CodingDevelopmentRuntimeError> {
         .and_then(|duration| u64::try_from(duration.as_millis()).ok())
         .filter(|value| *value > 0)
         .ok_or(CodingDevelopmentRuntimeError::State)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn scripted_rollback_reads_paired_history_without_accepting_identity_or_digest_drift() {
+        let history = ChangeHistoryOutput {
+            schema_version: 1,
+            records: vec![],
+            result_sha256: "a".repeat(64),
+        };
+        let bytes = serde_json::to_vec(&history).unwrap();
+        let observation = serde_json::json!({
+            "untrusted_tool_observation": true,
+            "completed_call": {"tool_id": CHANGE_HISTORY_TOOL_ID, "tool_version": CODING_HISTORY_TOOL_VERSION, "tool_call_id":"history-call"},
+            "result": {"tool_call_id":"history-call", "output": {
+                "schema":{"schema_id": CHANGE_HISTORY_OUTPUT_SCHEMA_ID}, "media_type":"application/json",
+                "content":history, "sha256":sha256(&bytes)
+            }}
+        });
+        assert_eq!(projected_change_history(&observation).unwrap(), history);
+        for pointer in [
+            "/completed_call/tool_id",
+            "/completed_call/tool_version",
+            "/result/tool_call_id",
+            "/result/output/schema/schema_id",
+            "/result/output/sha256",
+            "/result/output/media_type",
+        ] {
+            let mut wrong = observation.clone();
+            *wrong.pointer_mut(pointer).unwrap() = serde_json::json!("foreign");
+            assert!(projected_change_history(&wrong).is_err(), "{pointer}");
+        }
+        let mut wrong = observation;
+        wrong["result"]["output"]["content"]["records"] = serde_json::json!([{}]);
+        assert!(projected_change_history(&wrong).is_err());
+    }
 }
