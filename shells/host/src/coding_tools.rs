@@ -556,6 +556,29 @@ mod tests {
                 .is_ok()
         );
 
+        // The real GPT-OSS response has valid Harmony format metadata but
+        // invalid native arguments. Decoding the frame must never repair these.
+        let raw = include_str!(
+            "../../../platforms/linux-inference/fixtures/gpt-oss-constrain-no-space-20260923.txt"
+        )
+        .trim_end_matches('\n');
+        assert_eq!(
+            sha256_hex(raw.as_bytes()),
+            "c17d3ae52c88d0a0d6597fb6df3af7a7e2a2b29252643ab3cfd2f361469cb42b"
+        );
+        let arguments = raw
+            .rsplit_once("<|message|>")
+            .unwrap()
+            .1
+            .strip_suffix("<|call|>")
+            .unwrap();
+        assert!(serde_json::from_str::<TargetedValidationRequest>(arguments).is_err());
+        assert!(
+            tools
+                .validate_arguments(&call(&definition, arguments.as_bytes().to_vec()))
+                .is_err()
+        );
+
         let mut stale = request;
         stale.template_sha256 = "e".repeat(64);
         assert!(

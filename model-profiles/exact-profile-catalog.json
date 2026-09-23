@@ -638,7 +638,7 @@
       "schema_version": 2,
       "profile_id": "gpt-oss-20b-mxfp4-text-32k-fedora-coding-development",
       "manifest_id": "gpt-oss-20b-mxfp4-text-32k-fedora-coding-development-manifest-v1",
-      "manifest_sha256": "d9069c843edb0ab3b455f8b201d98cd390093001d6ad1b6439a902ed2f08cebd",
+      "manifest_sha256": "25cec5c16a57a39ffea34d1d59bc0c734330b281ba8722e8154e9b7001e930a7",
       "display_name": "OpenAI gpt-oss-20b MXFP4 ggml-org text 32k Fedora coding development",
       "family": "gpt_oss",
       "publisher_control": "OpenAI; GGUF conversion published by ggml-org",
@@ -661,7 +661,7 @@
       "codec": {
         "codec_id": "gpt-oss-harmony-closed-proposal-v1",
         "codec_version": "1.0.0",
-        "codec_sha256": "2d2bb1c2a5d70adba8f3dfadddc32c89cee933283a8d418680528387219baeaf",
+        "codec_sha256": "0075b160905e7bc0234bcd9bf1ab87e1d3df1325b545186928b83de077ab76b8",
         "tokenizer": "gpt-oss-20b MXFP4 GGUF embedded tokenizer",
         "tokenizer_sha256": "27cd6c432c7672cb812a92f611cf3ba7bbc35928262bb1e1253ff4ee6ae35901",
         "template": "openai/gpt-oss-20b Harmony chat template at 6cee5e81",

@@ -474,3 +474,55 @@ Clippy, build, formatting and boundary audits pass. A mistyped nonexistent Cargo
 test target failed after the schema tests; that log is retained and the correct
 read-only all-target suite passes. Updated status/diff examples are checked by
 the actual native validator, not only JSON Schema.
+
+## Campaign10 and JSON-format delimiter correction
+
+At `ba1158e824a71c29993041b21d781fc99a7b5166`, matrix11 passed all 20 cases
+(report `e4c89cd637f1d5c406ada68267a5703b073a2fe6953974c10113fe5b7a66d631`).
+Resume6 and protocol-resume4 passed every inspected check, including canonical
+same-run recovery, no rejected-turn effects/replay and preserved drift refusal.
+Their report hashes are `10aa4d4bb221dc65d2716a2ee8b2dc4022c9e21a0d2dae53083945bef1216c8a`
+and `97a2c37178f1358dd5302d362d3845acf55a7997bb277048a48effe165763e17`.
+Daily-core8 passed setup3, disk/output pressure, contention and 26-run soak with
+156 verified artifacts, one session and a clean tree. Refusal took 0.003212 seconds,
+cancellation 0.852410 seconds, and soak 395.842975 seconds, within unchanged bounds.
+Report: `8e493814d4e47c820ff78c9371d5ff02c890a4cbf7d6f1b3db8e9284926e6c0f`.
+These are executable-scripted checks, not aggregate daily-use qualification.
+
+Muse campaign10 stable1 passed `NO_OP` in 308.639470 seconds with native status,
+diff and complete validation, no edits/rejections and 13 full verified artifacts.
+Collector: `2e45564c6f3aceceb09be9c210cf9cdc0e2c54e9149fae1fcc397703c7f9be11`.
+Repair1 passed `SUCCESS` in 397.342688 seconds: genuine failed validation, native
+identifier rename in `src/calc.py`, fresh complete passing validation, diff/status,
+21 full verified artifacts and zero rejections. The inspected diff changes only
+`broken_add` to `add`; tests remain unchanged. Collector:
+`137aa82734ca501029d977dc76a49cb18c7a6cc2cf5c5b6c48af47bc01854033`.
+Both pass all 13 collector checks and resource guards, peak sampled GPU 17953 MiB.
+Two successful cases do not satisfy the eight-case same-tuple campaign.
+
+GPT-OSS campaign10 new-file1 failed `EXHAUSTED` in 186.046665 seconds. It created
+the file before the requested failing validation, then produced two rejected
+responses and no validation. Nine full artifacts and all resource observations
+were retained; peak sampled GPU 13761 MiB, no guard error, unchanged binaries.
+Collector: `aee362a00abba273a18750afa2c11d3cd13d2c38d02000da7f5f293a2c7c4b2a`.
+The first response's valid unspaced Harmony JSON-format delimiter exposed the
+Decision 0077 decoder gap; its wrong arguments still require native rejection.
+The second response's duplicate channel remains malformed. Exact raw-payload
+regression reproduces the old rejection before correction. No output/context
+or resource limit was implicated. The failed attempt is not reclassified.
+
+All logs are retained under the corresponding private `2026-09-23-*` run folders.
+Non-GPU actual-process checks overlapped parts of these native diagnostics in
+separate bounded scopes; timings are not uncontended benchmarks. No active run
+was changed by the subsequent delimiter correction. Exact codec/catalog bindings
+must be renewed before the next separately pinned campaign. The single applicable
+SBOM/evidence pass remains deferred until all source changes finish.
+
+Decision 0077 verification passes 106 Linux-inference library tests and nine
+native-process tests, 308 host library tests (8 ignored), 15 host binary tests,
+13 model-schema/catalog tests, strict Clippy, binary build, boundary/source audits,
+formatting and touched Markdown checks. The exact native validation regression
+still rejects the retained wrong body. Initial missing-helper-import and SHA
+formatting mistakes in the new tests were retained, corrected and rerun; they
+were not product failures. The preceding exact-payload test independently
+reproduced the product's `tool-channel-invalid` defect before the correction.

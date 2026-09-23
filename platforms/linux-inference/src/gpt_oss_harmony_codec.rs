@@ -357,7 +357,13 @@ impl GptOssHarmonyFamilyCodec {
             .ok_or_else(|| failure("model.gpt-oss-codec.tool-channel-invalid"))?;
         let header = std::str::from_utf8(&frame[..arguments_start])
             .map_err(|_| failure("model.gpt-oss-codec.tool-channel-invalid"))?;
-        let header = header.strip_suffix(" <|constrain|>json").unwrap_or(header);
+        // Harmony's format delimiter is a token, not a whitespace-separated
+        // word. Both documented renderings permit exactly this JSON suffix.
+        // Do not trim arbitrary metadata or repair duplicate channel markers.
+        let header = header
+            .strip_suffix(" <|constrain|>json")
+            .or_else(|| header.strip_suffix("<|constrain|>json"))
+            .unwrap_or(header);
         let tool_id = if let Some(recipient) = header.strip_prefix(" to=") {
             recipient
                 .strip_suffix("<|channel|>commentary json")
@@ -936,6 +942,9 @@ mod tests {
         for header in [
             " to=functions.fixture.read<|channel|>commentary json<|message|>",
             "<|channel|>commentary to=functions.fixture.read <|constrain|>json<|message|>",
+            "<|channel|>commentary to=functions.fixture.read<|constrain|>json<|message|>",
+            " to=functions.fixture.read<|channel|>commentary<|constrain|>json<|message|>",
+            " to=functions.fixture.read<|channel|>commentary <|constrain|>json<|message|>",
             "<|channel|>analysis<|message|>inspect<|end|><|start|>assistant to=functions.fixture.read<|channel|>commentary<|message|>",
         ] {
             let response = format!("{header}{{ \"z\": 1, \"path\": \"calc.py\" }}<|call|>");
@@ -960,6 +969,10 @@ mod tests {
             b" to=functions.fixture.read<|channel|>commentary json<|message|>={}<|call|>",
             b" to=functions.fixture.read<|channel|>commentary json<|message|>{}<|call|>extra",
             b" to=functions.fixture.read<|channel|>analysis<|message|>{}<|call|>",
+            b"<|channel|>commentary to=functions.fixture.read<|constrain|>xml<|message|>{}<|call|>",
+            b"<|channel|>commentary to=functions.fixture.read<|constrain|>json<|constrain|>json<|message|>{}<|call|>",
+            b"<|channel|>commentary to=functions.fixture.read<|channel|>commentary<|constrain|>json<|message|>{}<|call|>",
+            b"<|channel|>commentary to=functions.fixture.read<|constrain|>json trailing<|message|>{}<|call|>",
         ] {
             assert!(
                 codec
@@ -967,6 +980,48 @@ mod tests {
                     .is_err()
             );
         }
+    }
+
+    #[test]
+    fn retained_no_space_format_header_preserves_invalid_validation_arguments() {
+        let raw = include_str!("../fixtures/gpt-oss-constrain-no-space-20260923.txt")
+            .trim_end_matches('\n')
+            .as_bytes();
+        assert_eq!(
+            sha256(raw),
+            "c17d3ae52c88d0a0d6597fb6df3af7a7e2a2b29252643ab3cfd2f361469cb42b"
+        );
+        let mut tool = native_tool();
+        tool.tool_id = ToolId::from_raw("agentmage.validation.run-template");
+        let codec = GptOssHarmonyFamilyCodec::new(identity())
+            .unwrap()
+            .with_native_tools(vec![tool.clone()])
+            .unwrap()
+            .with_native_parameter_schemas(vec![(
+                tool.clone(),
+                serde_json::json!({"type":"object"}),
+            )])
+            .unwrap();
+        let proposal = codec
+            .decode_proposal(&profile(), &request(&profile()), raw)
+            .expect("documented no-space constrain delimiter is valid Harmony");
+        let call = proposal.tool_call.unwrap();
+        assert_eq!(call.tool_id, tool.tool_id);
+        assert_eq!(call.arguments.schema, tool.input_schema);
+        let original = super::harmony_action_frame(raw).unwrap();
+        let body = std::str::from_utf8(original)
+            .unwrap()
+            .split_once("<|message|>")
+            .unwrap()
+            .1
+            .strip_suffix("<|call|>")
+            .unwrap();
+        let original: serde_json::Value = serde_json::from_str(body).unwrap();
+        let decoded: serde_json::Value = serde_json::from_slice(&call.arguments.bytes).unwrap();
+        assert_eq!(decoded, original);
+        assert!(decoded.get("command").is_some());
+        assert!(decoded.get("template_sha256").is_none());
+        // No argument repair: the closed native validator must still reject this call.
     }
 
     #[test]
