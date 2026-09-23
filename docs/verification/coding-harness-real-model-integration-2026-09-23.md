@@ -44,6 +44,7 @@ Starting checkout: `b0445064edc68e3e4a0e7dca77d4b3fd9c3ebcf2` on
 | `0c7df648` | Operation-specific invocation guidance and ATEM parameters |
 | `a13fd15e` | Exact native call/result feedback and durable continuation binding |
 | `eca3f405` | Development runtime identity, creation observations and run provenance |
+| `cf727b39` | Lossless repeated-schema factoring and exact capacity diagnostics |
 
 No supply-chain or historical evidence regeneration has run during this source
 batch. Local source checkpoints are not independently reviewed gate closures.
@@ -68,6 +69,8 @@ original failed runs are not overwritten or promoted to successes.
 | `muse-native-2` | Genuine failing validation succeeded as feedback; next response was reasoning-only context echo |
 | `muse-native-3` | Six native tools completed, including failed test, syntax repair, passing test and diff/status; finalization failed |
 | `muse-native-4` | Seven native tools completed; 32K preflight refused final request after an additional real read; exit 8 |
+| `muse-native-5` | Genuine failed validation, then reasoning-only context echo; exit 8, 246.471 seconds |
+| `gpt-native-6` | Native hash, then duplicate commentary headers and duplicate JSON key; exit 8, 186.214 seconds |
 
 Muse native-3 changed only `def broken_add` to `def add` in `src/calc.py`.
 Its last prompt used 27836 tokens, output 583 tokens, and peak sampled total GPU
@@ -79,8 +82,24 @@ Muse native-4 ran from `eca3f405`, completed validation, hash, read, patch, pass
 validation, diff and status, and preserved all three binary identities. It exited
 8 after 438.820 seconds when the next exact context exceeded the unchanged input
 capacity with its output reserve. The host contract repeated identical schemas
-for multiple tools. Lossless digest-keyed schema factoring is now under test;
+for multiple tools. Lossless digest-keyed schema factoring passed regression;
 every definition and complete schema remains reconstructable and hash-bound.
+
+Muse native-5's prompts used 13102 and 15222 input tokens. Its reasoning-only
+echo was not a capacity failure. GPT native-6's malformed tool proposal remains
+rejected; neither duplicate channel metadata nor duplicate fields are repaired.
+Both preserved all binary identities and passed their resource guards. Negative
+fixtures bind the full raw response hashes. Subsequent presentation corrections
+use ordinary native message bodies, Muse's named function-schema block and
+Harmony's pinned JSON call-history header. Stored packets and source/evidence
+bindings are unchanged; the relocated Muse schema map must exactly equal the
+native schemas before duplicate presentation is removed.
+
+`scripts/coding_harness_model_evidence.py` cross-checks retained prompt/result
+hashes, chronological native feedback, failed-test/edit/passing-test ordering,
+diff/status inspection, verifier outcomes, CLI-verified artifacts, binary pins
+and resource observations. Its report is diagnostic evidence only, not independent
+review, production admission or campaign qualification.
 
 All attempts preserve the pinned b10423 Vulkan runtime, single slot, four threads,
 two-core quota, low priority, 45-minute limit, memory bounds and GPU guard. No model,

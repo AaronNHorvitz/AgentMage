@@ -223,7 +223,7 @@ impl ModelFamilyCodec for GptOssHarmonyFamilyCodec {
                         let alias = crate::codec_json::tool_alias(tool.tool_id.as_str());
                         bytes.extend_from_slice(b"<|start|>assistant to=functions.");
                         bytes.extend_from_slice(alias.as_bytes());
-                        bytes.extend_from_slice(b"<|channel|>commentary<|message|>");
+                        bytes.extend_from_slice(b"<|channel|>commentary json<|message|>");
                         bytes.extend_from_slice(&escape_template_delimiters(
                             arguments.to_string().as_bytes(),
                         ));
@@ -417,6 +417,11 @@ fn encode_message(
 ) -> Result<Vec<u8>, ModelRuntimeFailure> {
     let content = std::str::from_utf8(&message.content.bytes)
         .map_err(|_| failure("model.gpt-oss-codec.context-invalid"))?;
+    if native {
+        let content = serde_json::from_str(content)
+            .unwrap_or_else(|_| serde_json::Value::String(content.to_owned()));
+        return Ok(escape_template_delimiters(content.to_string().as_bytes()));
+    }
     let encoded = serde_json::to_vec(&CompactMessage {
         message_id: message.message_id.as_str(),
         role: message.role,
@@ -751,8 +756,9 @@ mod tests {
             .push(crate::codec_json::observation_fixture(&tool));
         let encoded = codec.encode_context(&profile, &packet).unwrap();
         let text = std::str::from_utf8(&encoded.bytes).unwrap();
-        assert!(text.contains("<|start|>assistant to=functions.fixture_read<|channel|>commentary<|message|>{\"path\":[\"src\",\"fixture.py\"],\"schema_version\":1}<|call|><|start|>functions.fixture_read to=assistant"));
+        assert!(text.contains("<|start|>assistant to=functions.fixture_read<|channel|>commentary json<|message|>{\"path\":[\"src\",\"fixture.py\"],\"schema_version\":1}<|call|><|start|>functions.fixture_read to=assistant"));
         assert!(!text.contains("functions.agentmage_native"));
+        assert!(!text.contains("\"message_id\":"));
         let message = packet.messages.last_mut().unwrap();
         let mut wrong: serde_json::Value = serde_json::from_slice(&message.content.bytes).unwrap();
         wrong["completed_call"]["tool_id"] = serde_json::json!("unknown.tool");
@@ -851,6 +857,24 @@ mod tests {
 
     #[test]
     fn retained_malformed_final_is_not_reinterpreted_as_valid_completion() {
+        let malformed = include_str!("../fixtures/gpt-oss-duplicate-channel-20260923.txt")
+            .trim_end_matches('\n')
+            .as_bytes();
+        assert_eq!(
+            sha256(malformed),
+            "4bd69d382ce0d47651df69c55e0a8e9a9111aafb42e63b3e67ea8de7939b1f77"
+        );
+        let native = GptOssHarmonyFamilyCodec::new(identity())
+            .unwrap()
+            .with_native_tools(vec![native_tool()])
+            .unwrap();
+        assert_eq!(
+            native
+                .decode_proposal(&profile(), &request(&profile()), malformed)
+                .unwrap_err()
+                .code,
+            "model.gpt-oss-codec.tool-channel-invalid"
+        );
         let raw = include_str!("../fixtures/gpt-oss-coding-rejection-20260922.txt")
             .trim_end_matches('\n')
             .as_bytes();

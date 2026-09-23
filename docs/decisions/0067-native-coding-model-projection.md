@@ -56,6 +56,16 @@ an outside-owner blocker. Failed payloads remain evidence and regression inputs.
    This is lossless serialization, not context reduction, evidence omission,
    weaker binding or a raised capacity/output limit. Exact token preflight remains
    mandatory and failures report the input, output reserve and profile capacity.
+7. Muse native-5 produced only a reasoning-channel context echo; GPT native-6
+   emitted duplicate channel and JSON fields. Preserve both as negative raw
+   regressions. The native message bodies now contain their actual content,
+   rather than an extra message-envelope JSON object. Muse renders its pinned
+   template's named function/description/parameter-schema block; the duplicate
+   digest-keyed map is removed from that rendered body only after exact equality
+   with those schemas is checked. The original context packets, all source
+   bindings and stored artifacts remain unchanged. Harmony historical calls
+   include the template's `commentary json` header. None of these presentation
+   corrections accepts the malformed replies or claims to prove model quality.
 
 ## Verification boundary
 

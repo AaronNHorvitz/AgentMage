@@ -308,9 +308,27 @@ impl ModelFamilyCodec for MuseAtemFamilyCodec {
         );
         bytes.extend_from_slice(b"\nFrozen tool catalog: ");
         bytes.extend_from_slice(packet.tool_catalog_id.as_str().as_bytes());
-        bytes.extend_from_slice(
-            b". Exact tool and result schemas appear only in the canonical message payloads below.",
-        );
+        bytes.extend_from_slice(if self.native_tools.is_empty() {
+            b". Exact tool and result schemas appear only in the canonical message payloads below."
+        } else {
+            b". Exact tool and result schemas follow in the native definitions and host coding contract."
+        });
+        if !self.native_schemas.is_empty() {
+            // Match the pinned template's function-schema presentation. These
+            // are the same host-checked schemas, not model-invented definitions.
+            bytes.extend_from_slice(b"\n// Tool metadata\n{\"name\":\"agentmage\",\"description\":\"Exact native coding tools\"}\n// Function schemas\n");
+            for (tool, schema) in &self.native_schemas {
+                let function = serde_json::json!({
+                    "name": tool.tool_id.as_str(),
+                    "description": tool.description,
+                    "parameters": schema,
+                });
+                bytes.extend_from_slice(&escape_template_delimiters(
+                    function.to_string().as_bytes(),
+                ));
+                bytes.push(b'\n');
+            }
+        }
         bytes.extend_from_slice(b"<|eot|>");
         for message in &packet.messages {
             if !valid_identifier(message.message_id.as_str()) || !valid_payload(&message.content) {
@@ -351,7 +369,32 @@ impl ModelFamilyCodec for MuseAtemFamilyCodec {
             bytes.extend_from_slice(b"<|start|>");
             bytes.extend_from_slice(role_name(message.role).as_bytes());
             bytes.extend_from_slice(b"<|message|>");
-            bytes.extend_from_slice(&encode_message(message, !self.native_tools.is_empty())?);
+            if !self.native_schemas.is_empty()
+                && message.role == agentmage_kernel_contracts::ModelMessageRole::System
+            {
+                let mut content: serde_json::Value = serde_json::from_slice(&message.content.bytes)
+                    .map_err(|_| failure("model.muse-codec.context-invalid"))?;
+                // Complete schemas already appear above in native template form.
+                // The original packet and its source hashes stay byte-exact.
+                if let Some(object) = content.as_object_mut()
+                    && let Some(schemas) = object.get("input_schemas")
+                {
+                    let expected = self
+                        .native_schemas
+                        .iter()
+                        .map(|(tool, schema)| (tool.input_schema.schema_sha256.as_str(), schema))
+                        .collect::<std::collections::BTreeMap<_, _>>();
+                    if serde_json::to_value(expected).ok().as_ref() != Some(schemas) {
+                        return Err(failure("model.muse-codec.native-contracts-invalid"));
+                    }
+                    object.remove("input_schemas");
+                    object.remove("tool_schema_lookup");
+                }
+                bytes
+                    .extend_from_slice(&escape_template_delimiters(content.to_string().as_bytes()));
+            } else {
+                bytes.extend_from_slice(&encode_message(message, !self.native_tools.is_empty())?);
+            }
             bytes.extend_from_slice(b"<|eot|>");
         }
         bytes.extend_from_slice(b"<|start|>assistant");
@@ -437,6 +480,11 @@ fn encode_message(
 ) -> Result<Vec<u8>, ModelRuntimeFailure> {
     let content = std::str::from_utf8(&message.content.bytes)
         .map_err(|_| failure("model.muse-codec.context-invalid"))?;
+    if native {
+        let content = serde_json::from_str(content)
+            .unwrap_or_else(|_| serde_json::Value::String(content.to_owned()));
+        return Ok(escape_template_delimiters(content.to_string().as_bytes()));
+    }
     let encoded = serde_json::to_vec(&CompactMessage {
         message_id: message.message_id.as_str(),
         role: message.role,
@@ -726,6 +774,48 @@ mod tests {
         );
         assert!(text.contains("<|start|>tool agentmage.validation.run-template<|message|><tool_output name=\"agentmage.validation.run-template\">"));
         assert!(!text.contains("<|start|>tool<|message|>"));
+        assert!(!text.contains("\"message_id\":"));
+        let echo = include_str!("../fixtures/muse-reasoning-echo-20260923.txt")
+            .trim_end_matches('\n')
+            .as_bytes();
+        assert_eq!(
+            sha256(echo),
+            "e2abd17aa655eda409fedf8d2ef4cadf3885b0a444da8af3bb676f81eb1b43be"
+        );
+        assert_eq!(
+            codec
+                .decode_proposal(&profile, &request(&profile), echo)
+                .unwrap_err()
+                .code,
+            "model.muse-codec.native-tool-unknown"
+        );
+        let schema = serde_json::json!({"type":"object", "properties": {
+            "schema_version":{"const":1}, "path":{"type":"array", "items":{"type":"string"}}
+        }, "required":["schema_version", "path"], "additionalProperties":false});
+        let native = codec
+            .clone()
+            .with_native_parameter_schemas(vec![(tool.clone(), schema.clone())])
+            .unwrap();
+        let mut definitions = std::collections::BTreeMap::new();
+        definitions.insert(tool.input_schema.schema_sha256.clone(), schema.clone());
+        let content = serde_json::json!({"input_schemas":definitions,"tool_schema_lookup":"exact map", "keep":"bound"});
+        let system = &mut history.messages[0];
+        system.role = agentmage_kernel_contracts::ModelMessageRole::System;
+        system.content.bytes = serde_json::to_vec(&content).unwrap();
+        system.content.sha256 = sha256(&system.content.bytes);
+        let original = history.clone();
+        let encoded = native.encode_context(&profile, &history).unwrap();
+        let text = std::str::from_utf8(&encoded.bytes).unwrap();
+        assert!(text.contains(&format!("\"parameters\":{schema}")));
+        assert!(!text.contains("\"input_schemas\":"));
+        assert!(text.contains("\"keep\":\"bound\""));
+        assert_eq!(history, original);
+        let system = &mut history.messages[0];
+        let mut wrong = content;
+        wrong["input_schemas"][&tool.input_schema.schema_sha256] = serde_json::json!({});
+        system.content.bytes = serde_json::to_vec(&wrong).unwrap();
+        system.content.sha256 = sha256(&system.content.bytes);
+        assert!(native.encode_context(&profile, &history).is_err());
         let malformed = include_str!("../fixtures/muse-coding-rejection-20260923.txt")
             .trim_end_matches('\n')
             .as_bytes();
