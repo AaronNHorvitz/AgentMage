@@ -1117,6 +1117,7 @@ impl RuntimeVerifierPort for FakeVerifier {
 
 struct FixtureTool {
     definition: ToolDefinition,
+    correctable: bool,
 }
 
 impl Tool for FixtureTool {
@@ -1125,7 +1126,7 @@ impl Tool for FixtureTool {
     }
 
     fn argument_rejection_is_correctable(&self, _arguments: &[u8]) -> bool {
-        true // This fixture's validator checks only the path field's JSON type.
+        self.correctable // This fixture's validator checks only the path field's JSON type.
     }
     fn validate_arguments(
         &self,
@@ -1149,6 +1150,7 @@ fn registry_for_operation(operation: GrantOperation) -> ToolRegistry {
     let mut registry = ToolRegistry::new();
     registry
         .register_tool(Box::new(FixtureTool {
+            correctable: true,
             definition: ToolDefinition {
                 schema_version: CONTRACT_SCHEMA_VERSION,
                 tool_id: ToolId::from_raw("fixture.read"),
@@ -1776,6 +1778,66 @@ fn coding_argument_rejection_precedes_permission_and_preserves_attempt_accountin
                 ))
     );
     assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn coding_noncorrectable_argument_rejection_closes_without_authority() {
+    for prior_rejection in [false, true] {
+        let mut scripts = Vec::new();
+        if prior_rejection {
+            scripts.push(ModelScript::ProtocolRejected(
+                ModelFinishReason::EndOfSequence,
+            ));
+        }
+        scripts.push(ModelScript::InvalidArguments);
+        scripts.push(ModelScript::Tool); // Must never reach a new proposal after terminal refusal.
+        let (mut coordinator, executions) = coordinator(scripts, PermissionScript::Allow, true);
+        let definition = coordinator.registry.list_tools()[0].clone();
+        let mut registry = ToolRegistry::new();
+        registry
+            .register_tool(Box::new(FixtureTool {
+                definition,
+                correctable: false,
+            }))
+            .unwrap();
+        coordinator.registry = registry;
+        let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+            .run_until_boundary(None, None)
+            .expect("canonical refusal")
+        else {
+            panic!("complete")
+        };
+        assert_eq!(
+            outcome.state,
+            if prior_rejection {
+                AgentStateKind::Exhausted
+            } else {
+                AgentStateKind::Failed
+            }
+        );
+        assert_eq!(outcome.tool_call_count, 1);
+        assert_eq!(outcome.turn_count, if prior_rejection { 2 } else { 1 });
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert_eq!(
+            coordinator.resources.durable_usage().parser_failure_count,
+            1
+        );
+        assert!(
+            coordinator
+                .events()
+                .iter()
+                .any(|event| matches!(event.kind, RuntimeEventKind::ToolRejected { .. }))
+        );
+        assert!(!coordinator.events().iter().any(|event| matches!(
+            event.kind,
+            RuntimeEventKind::PermissionRequested { .. }
+                | RuntimeEventKind::PermissionDecided { .. }
+                | RuntimeEventKind::ToolStarted { .. }
+                | RuntimeEventKind::ToolCompleted { .. }
+        )));
+        assert!(coordinator.receipt_ids.is_empty());
+        assert_valid_terminal_stream(&coordinator);
+    }
 }
 
 #[test]

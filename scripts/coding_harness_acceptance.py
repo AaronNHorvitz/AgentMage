@@ -37,6 +37,8 @@ EXPECTED = {
     "arguments-correction": ("arguments-correction", "repair", True, False, 0, "SUCCESS"),
     "repeated-protocol-rejection": ("repeated-protocol-rejection", "repair", True, False, 7, "EXHAUSTED"),
     "native-command-failure": ("native-command-failure", "repair", True, False, 8, "FAILED"),
+    "read-arguments-correction": ("read-arguments-correction", "repair", True, False, 0, "SUCCESS"),
+    "read-arguments-denied": ("read-arguments-denied", "repair", True, False, 8, "FAILED"),
 }
 CASE_ROOTS = {case: f"c{index:02d}" for index, case in enumerate(EXPECTED, start=1)}
 CASE_ROOTS["cancel"] = "c10"
@@ -51,6 +53,8 @@ CASE_ROOTS.update({
     "arguments-correction": "c18",
     "repeated-protocol-rejection": "c19",
     "native-command-failure": "c20",
+    "read-arguments-correction": "c21",
+    "read-arguments-denied": "c22",
 })
 
 
@@ -80,7 +84,7 @@ def git_status(workspace: Path) -> list[str]:
 
 
 def expected_status(case: str) -> list[str]:
-    if case in {"patch-test-revision", "protocol-correction", "arguments-correction"}:
+    if case in {"patch-test-revision", "protocol-correction", "arguments-correction", "read-arguments-correction"}:
         return [" M src/calc.py"]
     if case == "new-file":
         return ["?? src/calc.py"]
@@ -101,7 +105,8 @@ def verify_case(case: str, base: Path, log_dir: Path, exit_code: int) -> dict:
         "terminal": terminal is None or observed_outcome.get("state") == terminal,
         "scenario": json.loads((log_dir / "result.json").read_text())["scenario"] == scenario,
     }
-    if case in {"protocol-correction", "arguments-correction", "repeated-protocol-rejection"}:
+    if case in {"protocol-correction", "arguments-correction", "repeated-protocol-rejection",
+                "read-arguments-correction", "read-arguments-denied"}:
         rejections = [row for row in observed_rows if (
             row.get("kind", {}).get("event") == "model_failed" and
             row["kind"].get("failure_code") == "runtime.model.protocol_rejected") or (
@@ -115,13 +120,23 @@ def verify_case(case: str, base: Path, log_dir: Path, exit_code: int) -> dict:
             } for row in observed_rows)
         tools = [row["kind"]["tool_call_id"] for row in observed_rows
                  if row.get("kind", {}).get("event") == "tool_completed"]
-        checks["bounded-tools"] = tools == ([] if case == "repeated-protocol-rejection" else [
+        terminal_rejection = case in {"repeated-protocol-rejection", "read-arguments-denied"}
+        checks["bounded-tools"] = tools == ([] if terminal_rejection else [
             "scripted-validation-failing", "scripted-inspect-preimage", "scripted-repair-patch",
             "scripted-validation-passing", "scripted-git-diff", "scripted-git-status",
         ])
         checks["bounded-turns"] = observed_outcome.get("turn_count") == (
-            2 if case == "repeated-protocol-rejection" else 8)
-        if case != "repeated-protocol-rejection":
+            1 if case == "read-arguments-denied" else 2 if case == "repeated-protocol-rejection" else 8)
+        if case == "read-arguments-correction":
+            checks["retained-muse-read-arguments"] = any(
+                row.get("kind", {}).get("event") == "tool_requested"
+                and row["kind"].get("tool_call_id") == "scripted-invalid-read-paths"
+                and row["kind"].get("arguments_sha256") ==
+                "aa960a422a134655e7cc9eeebc922e74d9d10883d3fdc1e5721693c9544b5028"
+                for row in observed_rows)
+        if case == "read-arguments-denied":
+            checks["terminal-rejection-code"] = observed_outcome.get("unresolved_codes") == ["runtime.proposal.invalid"]
+        if not terminal_rejection:
             checks["verified-artifacts"] = any(row.get("type") == "runtime_artifact_verified" for row in observed_rows)
             checks["exact-repair"] = (workspace / "src/calc.py").read_text() == (
                 "def add(left, right):\n    return left + right\n")

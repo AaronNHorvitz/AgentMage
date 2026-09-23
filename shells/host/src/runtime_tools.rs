@@ -1,9 +1,10 @@
 //! Native capability registration for the shared runtime tool dispatcher.
 
 use agentmage_capability_read_only::{
-    ArtifactDispatchError, ArtifactToolKind, GitInspectionError, ReadOnlyToolKind,
-    artifact_tool_definition, git_inspection_tool_definition, read_only_tool_definition,
-    validate_artifact_request, validate_git_inspection_request, validate_read_only_request,
+    ArtifactDispatchError, ArtifactToolKind, GitInspectionError, ReadOnlyRequestError,
+    ReadOnlyToolKind, artifact_tool_definition, git_inspection_tool_definition,
+    read_only_tool_definition, validate_artifact_request, validate_git_inspection_request,
+    validate_read_only_request,
 };
 use agentmage_kernel_contracts::{ToolDefinition, ValidationIssue, ValidationSeverity};
 use agentmage_kernel_engine::{
@@ -75,6 +76,15 @@ impl Tool for RegisteredReadOnlyTool {
                 }]
             },
             |_| Vec::new(),
+        )
+    }
+
+    fn argument_rejection_is_correctable(&self, arguments: &[u8]) -> bool {
+        // Only the stateless closed-shape parser opts in. Path, hard-bound, version
+        // and selected-operation denials remain terminal; no live authority is consulted here.
+        matches!(
+            validate_read_only_request(self.kind, arguments),
+            Err(ReadOnlyRequestError::Malformed)
         )
     }
 }
@@ -400,7 +410,7 @@ mod tests {
         malformed.arguments.bytes = br#"{"schema_version":1}"#.to_vec();
         malformed.arguments.sha256 = sha256(&malformed.arguments.bytes);
         assert!(registry.validate_arguments(&malformed).is_err());
-        assert!(!registry.argument_rejection_is_correctable(&malformed));
+        assert!(registry.argument_rejection_is_correctable(&malformed));
         assert_eq!(
             malformed.arguments.schema.schema_id.as_str(),
             READ_ONLY_INPUT_SCHEMA_ID
@@ -427,6 +437,80 @@ mod tests {
         assert!(!registry.argument_rejection_is_correctable(&bad_schema));
         malformed.tool_version = "9.0.0".to_owned();
         assert!(!registry.argument_rejection_is_correctable(&malformed));
+    }
+
+    #[test]
+    fn coding_retained_muse_read_shape_is_correctable_but_denials_are_not() {
+        let registry = read_only_runtime_registry().unwrap();
+        let definition = registry
+            .get_tool(
+                &ToolId::from_raw(ReadOnlyToolKind::ListDirectory.id()),
+                READ_ONLY_TOOL_VERSION,
+            )
+            .unwrap();
+        let bytes = include_str!("../fixtures/muse-flat-read-paths-20260923.json")
+            .trim_end()
+            .as_bytes()
+            .to_vec();
+        assert_eq!(
+            sha256(&bytes),
+            "aa960a422a134655e7cc9eeebc922e74d9d10883d3fdc1e5721693c9544b5028"
+        );
+        let mut call = ToolCall {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            tool_call_id: ToolCallId::from_raw("retained-muse-flat-read"),
+            correlation_id: CorrelationId::from_raw("correlation-0001"),
+            action_id: ActionId::from_raw("action-0001"),
+            tool_id: definition.tool_id.clone(),
+            tool_version: definition.tool_version.clone(),
+            arguments: ContractPayload {
+                schema: definition.input_schema.clone(),
+                media_type: "application/json".to_owned(),
+                sha256: sha256(&bytes),
+                bytes,
+            },
+        };
+        assert!(registry.validate_argument_envelope(&call).is_ok());
+        assert!(registry.validate_arguments(&call).is_err());
+        assert!(registry.argument_rejection_is_correctable(&call));
+        let mut request: serde_json::Value = serde_json::from_slice(&call.arguments.bytes).unwrap();
+        request["paths"] = serde_json::json!([["src"]]);
+        call.arguments.bytes = serde_json::to_vec(&request).unwrap();
+        call.arguments.sha256 = sha256(&call.arguments.bytes);
+        assert!(registry.validate_arguments(&call).is_ok());
+        assert!(!registry.argument_rejection_is_correctable(&call));
+        for (field, value) in [
+            ("paths", serde_json::json!([[".."]])),
+            (
+                "limits",
+                serde_json::json!({"depth":16,"files":128,"input_bytes":4194304,"matches":256,"output_bytes":2097153}),
+            ),
+            ("call_depth", serde_json::json!(9)),
+            ("schema_version", serde_json::json!(2)),
+        ] {
+            let mut denied = request.clone();
+            denied[field] = value;
+            call.arguments.bytes = serde_json::to_vec(&denied).unwrap();
+            call.arguments.sha256 = sha256(&call.arguments.bytes);
+            assert!(registry.validate_arguments(&call).is_err());
+            assert!(
+                !registry.argument_rejection_is_correctable(&call),
+                "{field}"
+            );
+        }
+        call.arguments.bytes = bytes_from_retained_read();
+        call.arguments.sha256 = "0".repeat(64);
+        assert!(!registry.argument_rejection_is_correctable(&call));
+        call.arguments.sha256 = sha256(&call.arguments.bytes);
+        call.arguments.schema.schema_sha256 = "0".repeat(64);
+        assert!(!registry.argument_rejection_is_correctable(&call));
+    }
+
+    fn bytes_from_retained_read() -> Vec<u8> {
+        include_str!("../fixtures/muse-flat-read-paths-20260923.json")
+            .trim_end()
+            .as_bytes()
+            .to_vec()
     }
 
     #[test]

@@ -1717,9 +1717,6 @@ where
             .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?
             .clone();
         let arguments_valid = self.registry.validate_arguments(&call).is_ok();
-        if !arguments_valid && !self.registry.argument_rejection_is_correctable(&call) {
-            return Err(RuntimeLoopError::InvalidBoundaryResult);
-        }
         let process_attempts = u64::from(
             arguments_valid
                 && definition.required_grant.operation.operation()
@@ -1947,7 +1944,20 @@ where
         {
             return self.finish_budget_exhaustion(&turn_id);
         }
+        let terminal_rejection = reason == RuntimeToolRejectionReason::ArgumentsInvalid
+            && !self
+                .registry
+                .argument_rejection_is_correctable(&rejection.call);
         self.rejected_tool_calls.push(rejection);
+        if terminal_rejection {
+            self.transition_terminal(AgentStateKind::Failed)?;
+            self.close_turn(&turn_id, rejection_sha256)?;
+            return self.finish_terminal(
+                AgentStateKind::Failed,
+                vec!["runtime.proposal.invalid".to_owned()],
+                None,
+            );
+        }
         self.finish_rejected_turn(&turn_id, rejection_sha256)
     }
 

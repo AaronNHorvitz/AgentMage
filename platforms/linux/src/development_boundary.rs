@@ -258,6 +258,8 @@ fn development_scenario_valid(scenario: &str) -> bool {
             | "restart-repair"
             | "protocol-correction"
             | "arguments-correction"
+            | "read-arguments-correction"
+            | "read-arguments-denied"
             | "repeated-protocol-rejection"
             | "restart-protocol-correction"
             | "new-file"
@@ -335,6 +337,8 @@ mod tests {
             "native-command-failure",
             "protocol-correction",
             "arguments-correction",
+            "read-arguments-correction",
+            "read-arguments-denied",
             "repeated-protocol-rejection",
             "restart-protocol-correction",
         ] {

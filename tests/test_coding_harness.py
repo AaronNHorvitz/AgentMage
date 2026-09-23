@@ -12,6 +12,48 @@ from scripts import coding_harness_acceptance
 
 
 class CodingHarnessTests(unittest.TestCase):
+    def test_read_rejection_requires_exact_bytes_no_authority_and_terminal_denial(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary) / "fixture"
+            workspace = base / "disposable/worktree"
+            (workspace / "src").mkdir(parents=True)
+            (workspace / "src/calc.py").write_text("def add(left, right):\n    return left + right\n")
+            logs = Path(temporary) / "logs"
+            logs.mkdir()
+            (logs / "stdout.jsonl").write_text("")
+            (logs / "stderr.log").write_text("")
+            requested = {"turn_id": "rejected", "kind": {"event": "tool_requested",
+                "tool_call_id": "scripted-invalid-read-paths",
+                "arguments_sha256": "aa960a422a134655e7cc9eeebc922e74d9d10883d3fdc1e5721693c9544b5028"}}
+            rejected = {"turn_id": "rejected", "kind": {"event": "tool_rejected", "reason": "arguments_invalid"}}
+            effects = [{"turn_id": f"turn-{index}", "kind": {"event": "tool_completed", "tool_call_id": tool}}
+                for index, tool in enumerate([
+                    "scripted-validation-failing", "scripted-inspect-preimage", "scripted-repair-patch",
+                    "scripted-validation-passing", "scripted-git-diff", "scripted-git-status"])]
+            observed = [requested, rejected, *effects, {"type": "runtime_artifact_verified"},
+                        {"state": "SUCCESS", "turn_count": 8}]
+            (logs / "result.json").write_text(json.dumps({"scenario": "read-arguments-correction"}))
+            with mock.patch.object(coding_harness_acceptance, "git_status", return_value=[" M src/calc.py"]), \
+                    mock.patch.object(coding_harness_acceptance, "rows", return_value=observed):
+                verify = lambda: coding_harness_acceptance.verify_case("read-arguments-correction", base, logs, 0)
+                self.assertTrue(verify()["passed"])
+                requested["kind"]["arguments_sha256"] = "0" * 64
+                self.assertFalse(verify()["checks"]["retained-muse-read-arguments"])
+                observed.insert(2, {"turn_id": "rejected", "kind": {"event": "permission_requested"}})
+                self.assertFalse(verify()["checks"]["no-rejection-authority-or-effects"])
+            observed[:] = [requested, rejected, {"state": "FAILED", "turn_count": 1,
+                                                "unresolved_codes": ["runtime.proposal.invalid"]}]
+            (logs / "result.json").write_text(json.dumps({"scenario": "read-arguments-denied"}))
+            with mock.patch.object(coding_harness_acceptance, "git_status", return_value=[]), \
+                    mock.patch.object(coding_harness_acceptance, "rows", return_value=observed):
+                verify = lambda: coding_harness_acceptance.verify_case("read-arguments-denied", base, logs, 8)
+                self.assertTrue(verify()["passed"])
+                observed.insert(2, effects[0])
+                self.assertFalse(verify()["checks"]["bounded-tools"])
+                observed.pop(2)
+                observed[-1]["unresolved_codes"] = []
+                self.assertFalse(verify()["checks"]["terminal-rejection-code"])
+
     def test_multifile_regression_requires_nine_tools_and_recording_beyond_old_limit(self):
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary) / "fixture"

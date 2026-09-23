@@ -584,3 +584,71 @@ build/dependency-class audits, formatting and touched Markdown checks.
 All ran in the required RAM-limited scopes with one Cargo job. The independent
 scripted run overlapped non-GPU unit tests; timing is not a benchmark. No
 SBOM or historical evidence regeneration has yet occurred in this source batch.
+
+## Campaign12 and native read argument rejection
+
+At `d8557c993838ba54a85dba7a364a9495b6d92496`, Muse completed repair1,
+new-file1, multi-file1, stable1 and repair2, each passing all 13 native collector
+checks. Durations were 389.150034, 401.457703, 421.745444, 323.942696 and
+395.938949 seconds. The mutation cases observed genuine failing validation
+before changing only the intended source files, then complete passing validation
+and native Git diff/status. Stable1 returned `NO_OP`, with passing validation
+and no edits. New-file1 retained a malformed unquoted JSON path rejection and
+successfully used the existing bounded correction. Full artifacts, raw responses,
+unchanged test files and the new file's receipt/postimage were inspected.
+
+New-file2 then failed after 253.401843 seconds, exit 5, one completed genuinely
+failed validation, no edit and no terminal outcome. The second model proposal
+was a valid ATEM frame containing invalid native read arguments: flat
+`paths:["src"]`. Its native parser correctly rejected that shape, but the
+coordinator returned `InvalidBoundaryResult` instead of closing the rejection.
+The driver stopped; multi-file2 and stable2 were not started. Five successes
+do not constitute the required eight-of-eight campaign. No results are combined
+across source pins, and this failure remains a failure.
+
+Raw response SHA-256
+`67383cce1d575c78d9597090e981fbd0c1c076e2f0b4265cd0e81018979e993c`
+and failed collector SHA-256
+`b05d6d957ab5a247254150850e454f6638a06979bd01063c6dd01d4901c35231`
+are retained in private `runs/2026-09-23-campaign12-muse-new-file-2`, alongside
+all five successes. The failing response used 20314 input and 879 output tokens,
+ending at EOS. GPU peaked at 17954 MiB with its guard passing. No model, context,
+output or resource limit needs increasing for this integration defect.
+
+Decision 0079 opts only the stateless read parser's `Malformed` category into
+the existing one-correction allowance. Path, limit, version and operation denials
+remain terminal. Other owners do not gain opt-in. Non-correctable registered
+argument rejections now emit canonical rejection/terminal events, with no
+permission request, worker or invented receipt. An already-consumed parser
+allowance exhausts the run. Native validators and completion checks are unchanged.
+
+The kernel test reproduced the pre-fix `InvalidBoundaryResult`; the host test
+reproduced the missing opt-in using the exact retained argument SHA-256
+`aa960a422a134655e7cc9eeebc922e74d9d10883d3fdc1e5721693c9544b5028`.
+The first host test accidentally used request version 1 for a version-2 tool
+envelope; that test-setup failure was corrected and retained. Initial actual
+scripted attempts were refused before launch because the new fixture labels
+were not yet registered in both closed CLI/platform allowlists. These are not
+coordinator reproductions or successful workflow evidence. The original native
+failure and the focused kernel test provide that reproduction.
+
+After explicit fixture registration, actual CLI/host correction finished
+`SUCCESS`: eight turns, one refused proposal, six native effects, genuine failed
+test then exact `broken_add` to `add` repair, passing validation and diff/status.
+All 12 checks passed, including exact failed argument bytes and no authority on
+the rejected turn; collector SHA-256
+`f4bf480e453af82ceeae45d3594cc12e1cfc2bed20083ac688af4c030447b7c2`.
+The companion path-traversal denial finished `FAILED`, exit 8, one turn, no
+effects or edits; all nine checks passed, collector SHA-256
+`ac3d227c63ab3ea3928c3b825248947ce6d24f75f1fabda2e021e8df1b85abb9`.
+Logs use the private `2026-09-23-read-arguments-*` prefixes, including every
+failed setup. These scripted regressions do not qualify either model.
+
+Verification passed 1054 kernel library tests (7 ignored), 309 host library
+tests (8 ignored), 15 host binary tests, three focused Linux launch-boundary
+tests and 15 Python wrapper/collector tests. Strict Clippy, effect/build/dependency
+audits, exact-profile catalog validation, formatting and touched Markdown checks
+passed. Builds/tests ran in the required memory-limited scopes with one Cargo
+job. The full expanded executable matrix and fresh native campaigns follow this
+source checkpoint; SBOM/evidence regeneration remains deferred until the batch
+has no further source changes.

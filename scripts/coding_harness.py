@@ -648,6 +648,7 @@ def parser() -> argparse.ArgumentParser:
             "no-op", "failed-test-repair", "slow-cancel", "new-file", "multi-file", "rollback",
             "false-completion", "overflow", "disk-pressure", "output-pressure",
             "protocol-correction", "arguments-correction", "repeated-protocol-rejection",
+            "read-arguments-correction", "read-arguments-denied",
             "native-command-failure",
         ),
         required=True,

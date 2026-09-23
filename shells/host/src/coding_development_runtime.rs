@@ -177,6 +177,10 @@ pub enum CodingDevelopmentScenario {
     ProtocolCorrection,
     /// Reject registered arguments before permission, then perform the scripted repair.
     ArgumentsCorrection,
+    /// Reject the exact retained Muse flat read paths, then perform the scripted repair.
+    ReadArgumentsCorrection,
+    /// Reject a canonical read-path denial terminally, with no correction or authority.
+    ReadArgumentsDenied,
     /// Reject two complete frames and prove the existing parser budget exhausts.
     RepeatedProtocolRejection,
     /// Stop at the protocol-rejection checkpoint and resume without repeating it.
@@ -208,6 +212,8 @@ impl CodingDevelopmentScenario {
             "restart-repair" => Some(Self::RestartRepair),
             "protocol-correction" => Some(Self::ProtocolCorrection),
             "arguments-correction" => Some(Self::ArgumentsCorrection),
+            "read-arguments-correction" => Some(Self::ReadArgumentsCorrection),
+            "read-arguments-denied" => Some(Self::ReadArgumentsDenied),
             "repeated-protocol-rejection" => Some(Self::RepeatedProtocolRejection),
             "restart-protocol-correction" => Some(Self::RestartProtocolCorrection),
             "new-file" => Some(Self::NewFile),
@@ -836,6 +842,8 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             | CodingDevelopmentScenario::RestartRepair
             | CodingDevelopmentScenario::ProtocolCorrection
             | CodingDevelopmentScenario::ArgumentsCorrection
+            | CodingDevelopmentScenario::ReadArgumentsCorrection
+            | CodingDevelopmentScenario::ReadArgumentsDenied
             | CodingDevelopmentScenario::RepeatedProtocolRejection
             | CodingDevelopmentScenario::RestartProtocolCorrection
             | CodingDevelopmentScenario::NewFile
@@ -1725,6 +1733,8 @@ fn scripted_steps(
         }
         CodingDevelopmentScenario::ProtocolCorrection
         | CodingDevelopmentScenario::ArgumentsCorrection
+        | CodingDevelopmentScenario::ReadArgumentsCorrection
+        | CodingDevelopmentScenario::ReadArgumentsDenied
         | CodingDevelopmentScenario::RepeatedProtocolRejection
         | CodingDevelopmentScenario::RestartProtocolCorrection => {
             let mut steps = scripted_steps(
@@ -1735,7 +1745,26 @@ fn scripted_steps(
                 platform,
                 workspace,
             )?;
-            if scenario == CodingDevelopmentScenario::ArgumentsCorrection {
+            if matches!(
+                scenario,
+                CodingDevelopmentScenario::ReadArgumentsCorrection
+                    | CodingDevelopmentScenario::ReadArgumentsDenied
+            ) {
+                let mut arguments: serde_json::Value = serde_json::from_str(include_str!(
+                    "../fixtures/muse-flat-read-paths-20260923.json"
+                ))
+                .map_err(|_| CodingDevelopmentRuntimeError::Composition)?;
+                if scenario == CodingDevelopmentScenario::ReadArgumentsDenied {
+                    arguments["paths"] = serde_json::json!([[".."]]);
+                }
+                steps.push_front(ScriptedDevelopmentStep::Tool(tool_candidate(
+                    profile,
+                    ReadOnlyToolKind::ListDirectory.id(),
+                    READ_ONLY_TOOL_VERSION,
+                    "scripted-invalid-read-paths",
+                    &arguments,
+                )?));
+            } else if scenario == CodingDevelopmentScenario::ArgumentsCorrection {
                 steps.push_front(ScriptedDevelopmentStep::Tool(tool_candidate(
                     profile, GIT_INSPECTION_TOOL_ID, GIT_INSPECTION_TOOL_VERSION,
                     "scripted-invalid-git-pathspecs", &serde_json::json!({
