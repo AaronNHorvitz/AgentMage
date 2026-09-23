@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "record_type": "sprint_50_local_evidence",
-  "source_revision": "f7833c158af84930514086402c86fa03c8073342",
+  "source_revision": "65f9fe93e384736df096782201c45a411a9e0258",
   "source_sha256": {
     "capabilities/knowledge/src/coding_skills.rs": "c79f19862fd17b0a7a7a4ffbf384d3d616a165a9e98148f72bee6d05fab7e529",
-    "capabilities/knowledge/src/lib.rs": "b8483de79ff876d31911b527d1de8438a581cb536b2220893f2d82d30e6e08d2",
+    "capabilities/knowledge/src/lib.rs": "c7d70a715690a9ff2e310a5ddc52118b35dbaf5ec75c3e37fea778f30ab08c9f",
     "capabilities/knowledge/examples/coding_skill_pack.rs": "62e2149d360965b17de364891a7ae150faa99521e99d061c8bec573bd74f7be4",
     "capabilities/knowledge/tests/sprint_50_coding_corpus.rs": "9231c4ec237d147fcc1273621b99581650646fe62c8d1f4701974ddff7410d8e",
     "artifacts/sprints/sprint-50/coding-skill-pack.json": "a955298c904b478c3f798b87dcc727f81ff4fa83135edf32f59fa27a73ccd96b",
@@ -12,25 +12,25 @@
     "scripts/coding_skill_contract.py": "c93abb21f4e0a3c36cee42941f1c7c42cf020e84768a28ec8efdc40d2f2c76b3",
     "tests/test_coding_skill_contract.py": "13e5bac9dfe5a9e0037e0441fe02797c920f674d2907222e26d3805efa251a68",
     "docs/architecture/coding-skills-and-release-boundary.md": "48fc8ca00fcd0fa12281deafbcfb5e4734ce0bd35c524ccd60f5976f2d13bfde",
-    "docs/guides/bounded-coding-workflows.md": "842484a1555e28c5b882bba86c950e4846a2253b614831cef2008861f6170dec",
+    "docs/guides/bounded-coding-workflows.md": "acfbd556053d53aee2198c0526dd92e8c6eb90db88d8b33b3f02b0fa0d364f0f",
     "docs/guides/skills.md": "11e69a8c8081b2d00401168b00d067bcbd883c6822d19a3e16d51ffb060e1040",
-    "release/v0.4-coding-pack-manifest.json": "3b4b7c549e2f04e4a147e1d52849998c13492c87b7fc7065883a9a9e836d4f68",
+    "release/v0.4-coding-pack-manifest.json": "a5d80265a83333dc60f0fe286e41e879df566e71a5e3bc8851a2ebbf1c658fc7",
     "scripts/v0_4_coding_release_gate.py": "66b98977b9130a244924a14a15425c8ea17e750ed9f6a79a78fa5e69d7365986",
     "tests/test_v0_4_coding_release_gate.py": "a5cc2145d9a88b110fe376d5008b35f8163476e8b4a7858ad99fae33e6205f29",
-    "artifacts/sprints/sprint-50/v0.4-release-readiness.json": "b7a87e7ff309d9406fcfdea2db051190190cbddf76587f56369f2a876bd1ab91",
+    "artifacts/sprints/sprint-50/v0.4-release-readiness.json": "adb2a66196d6cca634de6a4a5a4bd1662dcc695a243ed43d0c5e51e2186b6cdb",
     "docs/release/v0.4-coding-acceptance-and-recovery-bundle.md": "8b123b061d2edcc9be222d18720512c4788d859c71e478ca39f1752c87d8d12b",
     "docs/release/v0.4-capability-matrix.md": "ce4c293765b0311f56901a6b23b8bb5f4bb73fc70ec80c2770f3112067bef7f2",
     "docs/release/release-notes-v0.4.0-draft.md": "ec7bc3ac41cfdb0b1aa9af98de0aafcd81364e54b9072f23f354c8c866f00c6e",
     "docs/verification/sprint-50-local-results.md": "616ec49280fcc452a2c9a6f3ddbbd2e10a425a7679b2e355f6c38012103dc9fd",
-    "shells/host/src/coding_client.rs": "5794af19e7fb3d7cc8ef7c7bf446621ab01f0683a628b165383232ceb03761b3",
+    "shells/host/src/coding_client.rs": "f374649ad0e38ed338f835ffb9a1b8445b32c293aad57378e3c41f7b56e3ad11",
     "shells/host/src/coding_harness.rs": "5091dec8b12c1152b707c5a604ae9b5ef9cb649809c59272139a11c0b4c891cb",
-    "shells/host/src/runtime_parity_tests.rs": "e695944f11b5aea0f814637835700821674256309d152443f8fc711891e1b657",
-    "scripts/sprint_50_evidence.py": "f231a8857e0e42053cfd22ddc7cda941157bad5a438b43a0245bda56e231c73c",
-    "tests/test_sprint_50_evidence.py": "d5e70878094cd14f85d1134664c1d662fbede22bda42082d49c98c9c6f2946f1"
+    "shells/host/src/runtime_parity_tests.rs": "792bf5308d7a9bb40d92d8a9320129fb279e28798b107023b4722d184f727861",
+    "scripts/sprint_50_evidence.py": "d2cbe1d967d8320f64cb5e56c2efeabe2f46eff8d402458d243a440936e9adbb",
+    "tests/test_sprint_50_evidence.py": "3f8d436a805be6f7320e4f735c9fe389c8647e5fe8eb56e643e76958d9572cad"
   },
   "environment": {
     "system": "Linux",
-    "release": "7.1.10-200.fc44.x86_64",
+    "release": "7.2.5-200.fc44.x86_64",
     "machine": "x86_64",
     "python": "3.14.7",
     "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
@@ -51,7 +51,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "d749c1ab4ac33ded4fc70bf1e5a650ba14765d7c08ceb95e8f9710910faf3680",
+      "output_sha256": "773ab4e602445b0251bc7bbe09fb5cb50f69708088d14a774878f69c30ae5e78",
       "blocking_skip_count": 0
     },
     {
@@ -66,7 +66,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "b2a83c8d4155284215c51402e80eb29cc10f5cb5215aba0574c37bb035dd21f9",
+      "output_sha256": "67ca18dd603ef7ba62a8aab1044ced94afc57775e121aff48bd3965ea02fa22b",
       "blocking_skip_count": 0
     },
     {
@@ -78,7 +78,7 @@
         "tests.test_coding_skill_contract"
       ],
       "exit_code": 0,
-      "output_sha256": "800346069b7c77896a63bf9caf4716560e8342f5599a74f58ff8b74006e44266",
+      "output_sha256": "3a172c55de7c4fc985c2eec12502fa584b176585174d269e7bf8844dda63959f",
       "blocking_skip_count": 0
     },
     {
@@ -93,7 +93,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "f640fcaea983bdf191975451793d4469d353ac3bf566c01f7fc4295c76df878e",
+      "output_sha256": "234753438d83a6abd16077dbe039a900a52bbafeeacab1d9f1be52ef975ce99a",
       "blocking_skip_count": 0
     },
     {
@@ -108,7 +108,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "5cbdaa11236e6a5ff8cd64024358e6eb857245382ee37a689b693225961d272d",
+      "output_sha256": "e74b55b54267f479f9b92977d960be24c25c5441b4173c15ed3aadebe6817286",
       "blocking_skip_count": 0
     },
     {
@@ -123,7 +123,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "5d33281fc83ae53510c49586a7aaf7a8ea737d8ae68c40b1e3dec79e356db1d7",
+      "output_sha256": "1b9912ccaa521fb0934be9c8d5f8560a9a46042a08b0749e92d9cfda1f5301c2",
       "blocking_skip_count": 0
     },
     {
@@ -138,7 +138,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "7493dbdfcb8a8aeabdcf3cba2c4438d4a6a8675c00ed304e93b257b71659b007",
+      "output_sha256": "9cbf534762a02cb39931eac37f9ed1134f6ef6f3122c3ca213d87f57a7f29fad",
       "blocking_skip_count": 0
     },
     {
@@ -153,7 +153,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "3560c08c61f946840f33a2d3d8d94dc17f82a265bbd0f250f524c8161f584b9b",
+      "output_sha256": "881e0777d1f14fe391d8ffbcc4d2590474d6c999aedfc6eb34d7dc6a5dd79f4f",
       "blocking_skip_count": 0
     },
     {
@@ -168,7 +168,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "c95d2689a7d08b1c7a57a6e60d07f50d20cfd146a6868c57e3da2eaf89f7459f",
+      "output_sha256": "5048703eed0d48d087781daef43da559440adf2344dea13272fe46e87bfb79ac",
       "blocking_skip_count": 0
     },
     {
@@ -183,7 +183,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "a22b351ffb321511618b4e620a7a563067ee7b03587e75229bfd3eda9fa3eef2",
+      "output_sha256": "0954799e7864aa847cc4d0fbdc08260a83549911eb03bae735feed65f10d1d52",
       "blocking_skip_count": 0
     },
     {
@@ -198,7 +198,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "69cad1ed080deb71f6a011f7653a590ec3e897cbc445a7856d52e7f64b89621d",
+      "output_sha256": "68acc1bb26761d794760e31789f7f5b7a83d182883f0063d062a5ecb286df192",
       "blocking_skip_count": 0
     },
     {
@@ -244,7 +244,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "cc21e0df7e49917c1345485214ad23e74376a4435bae0eb75af65138f768ee66",
+      "output_sha256": "ab2fa31b0ac2e770d1786bd73dbd38f9e2b18b2afc71609aee91ef90f734d9a4",
       "blocking_skip_count": null
     },
     {
@@ -277,7 +277,7 @@
         "tests.test_sprint_50_evidence"
       ],
       "exit_code": 0,
-      "output_sha256": "5d8a174d448d59185fd227bcbab9c964e39b10a9c2e28965972cfb0c833dd854",
+      "output_sha256": "37d8a0769d6c800296764c21f8e08feca52d770d400afabe65713604062cf749",
       "blocking_skip_count": null
     }
   ],
