@@ -83,12 +83,12 @@
       {
         "byte_length": 6732,
         "path": "artifacts/sprints/sprint-5/story-5.2/story-gate-report.json",
-        "sha256": "d12bf0b4ee5f3d03ddb778e5c4bef197de3de50367affb4538b34b5ce4db5b2c"
+        "sha256": "af966d2e68b97b0d2fd0369baacf5c98160675e244b8b259ad3789a9e3f0804c"
       },
       {
         "byte_length": 15004,
         "path": "scripts/story_5_2_gate.py",
-        "sha256": "c18ddaafcd0aff4e7dffd5ee03c390395a1345502a2f33a70abf82d7bd1cd35e"
+        "sha256": "26f1d976f161373bdc0ce69b55f21c81c3eb70fe64669e973422aca782bef1e9"
       },
       {
         "byte_length": 4307,
@@ -113,16 +113,16 @@
       {
         "byte_length": 4542,
         "path": "artifacts/sprints/sprint-5/story-5.2/story-ac1-deterministic-disposition-report.json",
-        "sha256": "1085c336e70887aa4787b26278a1a77f850823ad6408af33082d2ff03dd1fbbd"
+        "sha256": "27349b810ad4a90b6ea4d384d4505a2a2454f6577188a79a4b52de6d5a6d0136"
       },
       {
         "byte_length": 4771,
         "path": "artifacts/sprints/sprint-5/story-5.2/story-ac2-no-replay-recovery-report.json",
-        "sha256": "d64fbb07cf9c5d08cf5d19c3af7ffc7aee2bc36933c2220949b18dba31a24ead"
+        "sha256": "60b11e65454b0129efacb690d434b7ac69229cdaba73677225495bc262012a39"
       }
     ],
-    "reviewed_commit": "3e96adb2fd40bac8d60a254b8a383c70a0dc7eae",
-    "reviewed_tree": "b743e44117aa220be4f57fb66473441cd375702c",
+    "reviewed_commit": "a8e60637e3105c50eab7c0a8df74c6fec29979c4",
+    "reviewed_tree": "56b19bd8cee613b952e70e2494114dd6335220c8",
     "reviewer_id": "agentmage-sprint-5-independent-gate-v2"
   },
   "installed_product_claim": "none",
@@ -135,8 +135,8 @@
   "product_acceptance_claim": "none",
   "product_requirement_completion_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "3e96adb2fd40bac8d60a254b8a383c70a0dc7eae",
-  "reviewed_tree": "b743e44117aa220be4f57fb66473441cd375702c",
+  "reviewed_commit": "a8e60637e3105c50eab7c0a8df74c6fec29979c4",
+  "reviewed_tree": "56b19bd8cee613b952e70e2494114dd6335220c8",
   "schema_version": 2,
   "sprint_id": 5,
   "status": "blocked-open-dependencies-and-platform",

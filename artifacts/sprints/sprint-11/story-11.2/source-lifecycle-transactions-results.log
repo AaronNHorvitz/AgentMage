@@ -6,7 +6,7 @@ running 2 tests
 test source_lifecycle::tests::stale_revision_and_active_hold_roll_back_without_runtime_reference_drift ... ok
 test source_lifecycle::tests::refresh_hold_expiry_delete_and_collection_are_atomic_and_reference_safe ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 1043 filtered out; finished in 0.16s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 1059 filtered out; finished in 0.18s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -122,7 +122,7 @@ $ cargo test -p agentmage-kernel-engine runtime_artifact::tests::publication_ded
 running 1 test
 test runtime_artifact::tests::publication_deduplicates_without_broadening_owner_or_reference_state ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1044 filtered out; finished in 0.10s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1060 filtered out; finished in 0.09s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -238,7 +238,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::version_one_up
 running 1 test
 test operational_store::tests::version_one_upgrades_through_eighteen_with_exact_history ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1044 filtered out; finished in 0.07s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1060 filtered out; finished in 0.08s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -354,7 +354,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_r
 running 1 test
 test operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1044 filtered out; finished in 27.83s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1060 filtered out; finished in 27.78s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
