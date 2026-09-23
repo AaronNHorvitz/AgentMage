@@ -1,6 +1,6 @@
 # Coding Harness Evidence Renewal — 2026-09-23
 
-Status: applicable evidence renewal in progress; native campaigns finished.
+Status: applicable local evidence renewal complete; external gates remain open.
 Authority: Decision 0054 and the owner's scoped continuation. Routine renewal,
 automated pin updates, the exact inventory-test correction and the bounded
 collector-deadline adjustment below are
@@ -102,8 +102,31 @@ and every captured command stream/digest were inspected and verified. Its report
 binds `be002e26b79ef68a2b6cbf1897d9abd9a733fbc3`, SHA-256
 `d1e9033456b8858aaf5fce74d388f48ef76fcbee465e054b93f0ad52195b44f5`.
 The broader Sprint 48 disposition remains `BLOCKED`, with no production,
-independent-review, platform or release promotion. Sprint 50's local report
-remains pending; this record does not mark it passed in advance.
+independent-review, platform or release promotion.
+
+Sprint 50's seventeen declared commands also passed, with zero focused skips.
+Its full documentation command passed in 1836.706 seconds. The report binds
+`65f9fe93e384736df096782201c45a411a9e0258`, SHA-256
+`4c21ecd771953f50a9176eb3be2afc41756cd500155ec087ff51477f2c0df688`.
+Its 24 source inputs and all command streams were verified; its broader sprint
+status remains `BLOCKED`, and release and independent-review claims remain false.
+The renewed Sprint 48 automated boundary review binds
+`1947c6b9c241fbf1aa7f4c248d12030ae306ad7a`, passed all six checks and its unit
+test, and explicitly records no independent human review.
+
+The final read-only audit checked all thirty command identities, exit codes,
+stdout/stderr hashes, report digests, focused skip counts and current/pinned
+source bindings. It also confirmed no runtime source change since `ad28b5ca`.
+The private report is `runs/2026-09-23-batched-coding-final-audit.json`, SHA-256
+`c02146aeae2cfd1a43a1d87b6c1d37687f8b4bb497b6f68d1f1da0adef7635f7`;
+its read-only script `verify_batched_coding_evidence_20260923.py` is
+`63babc7b7eef6adfaa5ca8a8e0463c5f6c23ff31dc968c9cdfaf80e87ca9bdee`.
+This is an implementer verification, not an independent review.
+
+The final evidence checkpoint is `064c9b12148859f8ae01e72568021e849bd69512`,
+tree `b8583b3ccb5233e504d5d4ff10c9c7c00a2619bf`. Both collectors' scopes are
+inactive/dead; no contract container remains running. All task model jobs were
+already finished. No unrelated process was terminated.
 
 ## Retention and review boundary
 
@@ -113,8 +136,8 @@ Raw renewal logs are under the authorized private root
 are retained alongside successful retries; none is rewritten as an earlier pass.
 The private `retain_evidence_generator_20260923.py` wrapper copies declared
 commands' captured stdout/stderr and records command, return code, elapsed time
-and digests. It invokes the committed repository generators as-is and returns their exact
-process results; it does not bypass validation or synthesize a pass. Its identity
+and digests. It invokes the committed repository generators as-is and returns
+their exact process results; it does not bypass validation or synthesize a pass. Its identity
 and the generator identity are recorded per run. Text-mode captures are explicitly
 identified as UTF-8 re-encodings; byte-mode captures remain exact bytes.
 

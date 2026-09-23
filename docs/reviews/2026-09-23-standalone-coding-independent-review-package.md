@@ -7,22 +7,27 @@ package's connected-source target, not its historical evidence or findings.
 
 ## Immutable source target
 
-- Commit: `ad28b5ca7862a483bb4b9bf74c199d5f994ae43f`.
-- Tree: `c4a49365b09ac2ef146b102bc557989dd37f41ca`.
+- Integrated source/evidence review commit: `064c9b12148859f8ae01e72568021e849bd69512`.
+- Review tree: `b8583b3ccb5233e504d5d4ff10c9c7c00a2619bf`.
+- Native campaign commit: `ad28b5ca7862a483bb4b9bf74c199d5f994ae43f`.
+- Native campaign tree: `c4a49365b09ac2ef146b102bc557989dd37f41ca`.
 - Baseline: `c365d44d73d44c8d13d6810e557882134b8251d0`.
 - Branch: `demo/fedora-local-docs`.
 - Scope: Tasks 48.2.4, 48.2.5, 48.2.6, 50.2.4 and necessary prerequisites.
 - Authority: Decisions 0054, 0061, 0062 and accepted development Decisions
-  0063–0079; no production permission or independent-review waiver.
-- Exact 74 local implementation/preparation/evidence commits:
-  [commit list](2026-09-23-coding-implementation-commits.txt).
+  0063–0080; no production permission or independent-review waiver.
+- Exact 92 local commits through the review target: the first 74
+  [implementation/preparation/evidence commits](2026-09-23-coding-implementation-commits.txt)
+  and the subsequent 18 [evidence-maintenance commits](2026-09-23-coding-evidence-commits.txt).
 
-The native and current scripted campaigns used this clean source target and
+The native and current scripted campaigns used the clean `ad28b5ca` target and
 the exact three binary hashes in the [results record](../verification/coding-harness-campaign13-results-2026-09-23.md).
-Later documentation/evidence-only commits are not new native qualification.
+Comparison against the integrated review target finds no changes under `kernel`,
+`capabilities`, `platforms` or `shells`. Later maintenance is not new native qualification.
 The [renewal record](../verification/coding-harness-evidence-renewal-2026-09-23.md)
-also identifies the root inventory-test correction and the separate negative
-demo-status correction under Decision 0080; neither changes runtime source.
+identifies the root inventory-test correction, finite documentation-collector
+deadline and tests, automatic pins, non-releasing manifest renewal and separate
+negative demo-status correction under Decision 0080; none changes runtime source.
 Review the immutable target, not a moving worktree. Do not rebuild binaries
 mid-campaign, normalize rejected bytes or replay an effect from a checkpoint.
 
@@ -37,6 +42,15 @@ Muse passed eight of eight real-model development cases on one exact tuple;
 GPT-OSS did not qualify. Neither result enables a production profile.
 Matrix13's 22 cases, resume8, protocol-resume6 and daily-core10 passed separately.
 No independent review or aggregate daily milestone is claimed.
+
+The final Sprint 48 and Sprint 50 component reports passed all thirteen and
+seventeen declared commands respectively, including separate complete
+documentation runs. Every exact raw stream and source binding was checked in
+the private `runs/2026-09-23-batched-coding-final-audit.json` report, digest
+`c02146aeae2cfd1a43a1d87b6c1d37687f8b4bb497b6f68d1f1da0adef7635f7`.
+These component renewals and gate-owned automated reviews do not close either
+broader sprint, admit a model or satisfy this independent review. Failed and
+deliberately interrupted collector attempts remain disclosed in the renewal record.
 
 Raw prompts/responses, rejection records, chronological events, exact commands,
 collectors, resources, full-artifact verification, final diffs and failures are
@@ -87,6 +101,10 @@ durable evidence. Retain all findings, including these questions:
 12. Do the campaign collector and report accurately distinguish component,
     executable-scripted, native-development, admitted-model, platform and release
     claims? No cherry-picking, favorable cross-pin aggregation or hidden retries.
+13. Do the later evidence corrections preserve the full input inventories and
+    negative tests? Check the exact dependency count, collection-only deadline,
+    stale-demo withdrawal, unchanged release prohibitions, automatic pin scope
+    and the retained failed/interrupted attempts against the final raw audit.
 
 Key implementation locations include `shells/host/src/cli.rs`,
 `shells/host/src/coding_development_runtime.rs`, `shells/host/src/runtime_tools.rs`,

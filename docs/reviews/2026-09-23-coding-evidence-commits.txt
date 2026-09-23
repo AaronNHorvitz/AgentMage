@@ -1,0 +1,18 @@
+67010ae6b361ada7f15f948a2b32b7f330f293b1 docs(coding): retain Muse campaign success and separate GPT disposition
+0fb9404ad87cbcfb19355dafab1c46e6f4154625 chore(evidence): renew batch provenance and withdraw stale demo acceptance
+8e8b6e0e7b8db1bb1dc11a21046b0dac605d6967 chore(evidence): renew coding-affected policy evidence as one batch
+a8e60637e3105c50eab7c0a8df74c6fec29979c4 chore(evidence): renew automated Story 5.2 pin for coding batch
+b23db013f871fc34a6ddba07dc30f2cb6c035c7e Renew affected storage evidence and automated Sprint 5 pin
+be2f1a57d37d601f5beef0fdea044cd8cfa0692f Renew storage review pin and runtime caller-parity evidence
+e43d609cf817640431fa4c063d7e3ac30f43d422 Renew configuration evidence and exact cancellation dependency counts
+9864aae1bd71d66be958d86f9f24aa3573c2370e Renew platform contract evidence for the coding source batch
+a7d64942c396a6263855a24a749fc0b98b6278db Renew automated Story 7.1 pin after contract evidence batch
+05b485f1622a85b2d98ee5c6a6266b2cccd091e5 Renew automated Sprint 7 aggregate pin without support promotion
+32e5fd4cdf0cf0d1bb3ab338ac8488e07fb8c2bb Document source-bound coding renewal and remaining external gates
+d446e05904fd7bb9a12ac1ab99a1b264c3f11d32 Renew dispatcher evidence and automated runtime boundary references
+98910af9f90a2cebdce54dcc86d8d519c60ea29a Complete prerequisite aggregate renewal for coding evidence
+b7964ea2e8afceb32039c27aa3ce3f0b14d2c59f Renew automated record gate pin after caller-parity evidence
+be002e26b79ef68a2b6cbf1897d9abd9a733fbc3 Bound full documentation collection separately from runtime acceptance
+1947c6b9c241fbf1aa7f4c248d12030ae306ad7a Retain verified CLI evidence and renew non-releasing coding manifest
+65f9fe93e384736df096782201c45a411a9e0258 Renew automated CLI boundary review against verified local evidence
+064c9b12148859f8ae01e72568021e849bd69512 Retain verified coding evidence with raw-stream and source audit
