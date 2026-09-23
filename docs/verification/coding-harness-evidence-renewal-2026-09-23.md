@@ -18,9 +18,10 @@ development cases. GPT-OSS did not qualify; its failures remain separate.
 No unchanged failing native case was rerun to manufacture qualification.
 
 No Cargo workspace-member source changed after this pin. Later commits renew
-documentation, evidence and automated gate references. One root Python test's
-dependency-count expectations were corrected as explained below; it does not
-alter either runtime binary or the native campaign's source identity.
+documentation, evidence and automated gate references, correct one root Python
+test's dependency counts and bound full-documentation collection separately.
+Those changes are explained below; they do not alter either runtime binary or
+the native campaign's source identity.
 
 ## Single provenance batch
 
@@ -75,6 +76,16 @@ its contract tests use the existing read-only, unprivileged, networkless,
   required outcomes, hash bindings, product performance thresholds, model budgets
   and systemd resource caps are unchanged. Regression tests require this exact
   finite deadline selection and prove a timeout cannot write a passing report.
+- Sprint 50's first collector attempt rejected five stale source hashes in the
+  existing non-releasing v0.4 manifest. Only those hashes and the readiness
+  report's manifest digest were renewed with the existing generator; all three
+  gate tests then passed. No source inventory, blocker, release prohibition or
+  gate criterion changed. After the failure was known, the implementer terminated
+  only the verified owned `validate_docs.py` child to avoid repeating the already
+  completed full documentation check in an unsuccessful collection. Its partial
+  stdout/stderr and exit 143 are retained explicitly as an intervention, not a
+  documentation pass. The collector refused to write a passing report and its
+  scope subsequently became inactive/dead. The retry uses a fresh log directory.
 
 Completed checks include requirements/current applicability, contract boundaries,
 planning, activation refusal, policy, storage, configuration and unaffected
@@ -85,8 +96,14 @@ dispatcher/security tests and eleven platform-contract/security tests also pass.
 Markdown lint, 138 Mermaid blocks, 522-document validation and all policy
 invariants passed. The automated Sprint 50 runtime-contract review binds the
 native source pin, with all six checks true and no independent-human-review claim.
-The complete documentation gate and applicable Sprint 48/50 local reports remain
-pending; this record does not mark them passed in advance.
+Sprint 48's complete documentation command passed in 1842.168 seconds. All
+thirteen declared commands passed, with zero focused skips; all 24 source inputs
+and every captured command stream/digest were inspected and verified. Its report
+binds `be002e26b79ef68a2b6cbf1897d9abd9a733fbc3`, SHA-256
+`d1e9033456b8858aaf5fce74d388f48ef76fcbee465e054b93f0ad52195b44f5`.
+The broader Sprint 48 disposition remains `BLOCKED`, with no production,
+independent-review, platform or release promotion. Sprint 50's local report
+remains pending; this record does not mark it passed in advance.
 
 ## Retention and review boundary
 
@@ -96,7 +113,7 @@ Raw renewal logs are under the authorized private root
 are retained alongside successful retries; none is rewritten as an earlier pass.
 The private `retain_evidence_generator_20260923.py` wrapper copies declared
 commands' captured stdout/stderr and records command, return code, elapsed time
-and digests. It invokes unchanged repository generators and returns their exact
+and digests. It invokes the committed repository generators as-is and returns their exact
 process results; it does not bypass validation or synthesize a pass. Its identity
 and the generator identity are recorded per run. Text-mode captures are explicitly
 identified as UTF-8 re-encodings; byte-mode captures remain exact bytes.

@@ -72,7 +72,7 @@
     },
     {
       "path": "docs/guides/bounded-coding-workflows.md",
-      "sha256": "842484a1555e28c5b882bba86c950e4846a2253b614831cef2008861f6170dec"
+      "sha256": "acfbd556053d53aee2198c0526dd92e8c6eb90db88d8b33b3f02b0fa0d364f0f"
     },
     {
       "path": "docs/verification/sprint-45-coding-corpus.json",
@@ -84,7 +84,7 @@
     },
     {
       "path": "kernel/engine/src/filesystem_control.rs",
-      "sha256": "e1a862bf6994e777aefe5008d61fd8f18c1fd61c68ab07d8ba4178b6e3073673"
+      "sha256": "ce1a874f6d80ba6fe4edc527ad2c36c98a884c362c3e89066b13a8fad80bdd48"
     },
     {
       "path": "kernel/engine/src/instruction_provenance.rs",
@@ -112,11 +112,11 @@
     },
     {
       "path": "shells/host/src/cli.rs",
-      "sha256": "ff5bce423a9478a66941ffa4875ff6ef41dcd66efb33fb775b83ae6793135aa2"
+      "sha256": "5269dcfb114055bacf015414320cd9ae6caeae1d29d67cdc86d94a6fe09ce208"
     },
     {
       "path": "shells/host/src/coding_client.rs",
-      "sha256": "5794af19e7fb3d7cc8ef7c7bf446621ab01f0683a628b165383232ceb03761b3"
+      "sha256": "f374649ad0e38ed338f835ffb9a1b8445b32c293aad57378e3c41f7b56e3ad11"
     },
     {
       "path": "shells/host/src/coding_harness.rs",
@@ -128,7 +128,7 @@
     },
     {
       "path": "shells/host/src/runtime_parity_tests.rs",
-      "sha256": "e695944f11b5aea0f814637835700821674256309d152443f8fc711891e1b657"
+      "sha256": "792bf5308d7a9bb40d92d8a9320129fb279e28798b107023b4722d184f727861"
     }
   ],
   "source_level_cross_interface_parity": true,
