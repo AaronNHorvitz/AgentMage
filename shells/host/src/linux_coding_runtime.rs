@@ -1515,10 +1515,14 @@ where
             .map_err(|_| RuntimePortFailure::Uncertain)?;
         let Some(worker_result) = worker_result else {
             debug_assert!(worker_error.is_some());
+            if let Some(error) = worker_error {
+                eprintln!("coding.read-worker.{}", error.kind().code());
+            }
             let execution = failed_read_projection(&receipt, call, "runtime.tool.worker-failed");
             return self.finish_effect_execution(execution, event_context, pending);
         };
         if worker_error.is_some() || !worker_result.success() {
+            eprintln!("coding.read-worker.non-success:{:?}", worker_result);
             let execution = failed_read_projection(&receipt, call, "runtime.tool.worker-failed");
             return self.finish_effect_execution(execution, event_context, pending);
         }
@@ -1528,6 +1532,7 @@ where
         {
             Some(result) => result,
             None => {
+                eprintln!("coding.read-worker.output-invalid:{:?}", worker_result);
                 let execution =
                     failed_read_projection(&receipt, call, "runtime.tool.output-invalid");
                 return self.finish_effect_execution(execution, event_context, pending);

@@ -2,11 +2,17 @@
 
 | Field | Value |
 |---|---|
-| Status | Accepted design under Decision 0061; installed coding workflow not implemented or qualified |
+| Status | Accepted design under Decision 0061; disposable Linux development path implemented; real-model qualification in progress; production activation remains closed |
 | Source baseline | AgentMage `6f90f81cbeaa930674a2f98e8ee27bfd8814a59b` |
 | Reference | OpenCode `e059ac5918f3e2c798de029b9df4cede617466ed`, inspected source only |
 | Product authority | PRD Section 40 |
 | Execution owners | Tasks 48.2.4-48.2.6 and 50.2.4; existing host, kernel, model and platform owners |
+
+The source-baseline gaps below describe the original design inventory. The
+[implementation record](../verification/coding-harness-implementation-2026-09-22.md)
+records the connected, executable-scripted development path. Real-model
+integration follows [Decision 0067](../decisions/0067-native-coding-model-projection.md);
+neither scripted success nor codec tests qualify a coding model or release.
 
 ## 1. Product Contract
 

@@ -14,6 +14,7 @@ The immediate workstream is the standalone coding harness:
 - [Coding daily-use verification thresholds](decisions/0065-coding-daily-use-verification-thresholds.md)
 - [Development effect ownership](decisions/0066-development-effect-ownership.md)
 - [Native coding model projection](decisions/0067-native-coding-model-projection.md)
+- [Development read worker composition](decisions/0068-development-read-worker-composition.md)
 - [Standalone coding development harness](guides/standalone-coding-development.md)
 - [Implementation verification](verification/coding-harness-implementation-2026-09-22.md)
 - [Independent-review package](reviews/2026-09-22-standalone-coding-independent-review-package.md)

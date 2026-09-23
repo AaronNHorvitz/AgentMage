@@ -9,7 +9,8 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use agentmage_capability_read_only::{
     GIT_INSPECTION_TOOL_ID, GIT_INSPECTION_TOOL_VERSION, GitInspectionOperation,
-    GitInspectionRequest,
+    GitInspectionRequest, READ_ONLY_TOOL_VERSION, ReadOnlyEncoding, ReadOnlyLimits,
+    ReadOnlyRequest, ReadOnlyToolKind,
 };
 use agentmage_capability_repository_map::{
     RepositoryMap, RepositoryObjectKind, StructuredArtifactClass, StructuredEdit,
@@ -911,13 +912,9 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
         let git_executor = LinuxBoundedRepositoryInspectionExecutor::new(git_manifest)
             .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
-        let sandbox_manifest = LinuxSandboxManifest::verify(
-            "/usr/bin/systemd-run",
-            "/usr/bin/bwrap",
-            "/usr/bin/true",
-            &[],
-        )
-        .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
+        let sandbox_manifest =
+            LinuxSandboxManifest::verify_development_read_only_worker(self.platform)
+                .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
         let sandbox = LinuxSandboxRunner::new(sandbox_manifest, LinuxSandboxLimits::default())
             .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
         let boundary = LinuxCodingRuntimeBoundary::new(LinuxCodingRuntimeBoundaryInput {
@@ -1673,6 +1670,14 @@ fn scripted_steps(
             )?;
             Ok([
                 ScriptedDevelopmentStep::Tool(validation("scripted-validation-failing")?),
+                ScriptedDevelopmentStep::Tool(tool_candidate(
+                    profile, ReadOnlyToolKind::ReadText.id(), READ_ONLY_TOOL_VERSION,
+                    "scripted-inspect-preimage", &ReadOnlyRequest {
+                        schema_version: 1, paths: vec![vec!["src".to_owned(), "calc.py".to_owned()]],
+                        query: None, byte_offset: None, byte_count: None,
+                        encoding: ReadOnlyEncoding::Utf8, limits: ReadOnlyLimits::default(), call_depth: 0,
+                    },
+                )?),
                 ScriptedDevelopmentStep::Tool(patch),
                 ScriptedDevelopmentStep::Tool(validation("scripted-validation-passing")?),
                 ScriptedDevelopmentStep::Tool(git_diff),

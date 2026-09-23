@@ -358,6 +358,7 @@ def diagnose(base: Path) -> dict:
     )
     checks["agentmage_binary"] = str(binary("agentmage"))
     checks["host_binary"] = str(binary("agentmage-host"))
+    checks["read_worker_binary"] = str(binary("agentmage-read-only-worker"))
     record = read_run_record(state)
     state_key_present = (state / "operational-store-development-v1.key").exists()
     process_running = bool(record and exact_running_process(record, base))

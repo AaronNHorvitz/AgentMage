@@ -94,6 +94,11 @@ def verify_case(case: str, base: Path, log_dir: Path, exit_code: int) -> dict:
         "scenario": json.loads((log_dir / "result.json").read_text())["scenario"] == scenario,
     }
     if case == "patch-test-revision":
+        checks["native-read-worker"] = any(
+            row.get("kind", {}).get("event") == "tool_completed"
+            and row["kind"].get("tool_call_id") == "scripted-inspect-preimage"
+            for row in observed_rows
+        )
         checks["revision"] = (workspace / "src/calc.py").read_text() == (
             "def add(left, right):\n    return left + right\n"
         )

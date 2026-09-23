@@ -13,7 +13,8 @@ Start only when at least 16 GiB RAM is available. Build with no more than four C
 ```bash
 systemd-run --user --scope --quiet \
   -p MemoryHigh=5G -p MemoryMax=6G -p MemorySwapMax=512M \
-  env CARGO_BUILD_JOBS=4 cargo build -p agentmage-host --bins --locked
+  env CARGO_BUILD_JOBS=4 cargo build -p agentmage-host \
+    -p agentmage-capability-read-only --bins --locked
 
 python3 -m scripts.coding_harness setup --root /tmp/agentmage-coding-1
 python3 -m scripts.coding_harness diagnose --root /tmp/agentmage-coding-1

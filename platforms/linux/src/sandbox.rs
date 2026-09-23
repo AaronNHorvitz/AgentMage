@@ -318,6 +318,7 @@ struct VerifiedArtifact {
     guest_path: Option<PathBuf>,
     launch_path: Option<PathBuf>,
     sha256: [u8; 32],
+    sealed_snapshot: bool,
 }
 
 struct ProjectionMount<'descriptor> {
@@ -353,24 +354,74 @@ impl LinuxSandboxManifest {
         worker: impl AsRef<Path>,
         runtime_files: &[LinuxWorkerRuntimeFile],
     ) -> Result<Self, LinuxSandboxError> {
+        let worker_guest_path =
+            Path::new(WORKER_GUEST_ROOT).join(verified_worker_name(worker.as_ref())?);
+        let worker = verify_artifact(worker.as_ref(), Some(&worker_guest_path), false)?;
+        Self::with_verified_worker(
+            systemd_run.as_ref(),
+            bubblewrap.as_ref(),
+            worker,
+            runtime_files,
+        )
+    }
+
+    /// Pins the exact sibling read worker for the separate disposable development activation.
+    /// Production `verify` still requires a root-owned executable and root-owned ancestry.
+    pub fn verify_development_read_only_worker(
+        _platform: &crate::LinuxDevelopmentPlatformAdapter,
+    ) -> Result<Self, LinuxSandboxError> {
+        let current = std::env::current_exe()
+            .and_then(std::fs::canonicalize)
+            .map_err(|_| error(LinuxSandboxErrorKind::InvalidManifest))?;
+        if current.file_name().and_then(|name| name.to_str()) != Some("agentmage-host") {
+            return Err(error(LinuxSandboxErrorKind::InvalidManifest));
+        }
+        let worker =
+            development_worker_artifact(&current.with_file_name("agentmage-read-only-worker"))?;
+        let runtime_files = ["libgcc_s.so.1", "libc.so.6", "ld-linux-x86-64.so.2"]
+            .into_iter()
+            .map(|name| {
+                let host = std::fs::canonicalize(Path::new("/usr/lib64").join(name))
+                    .map_err(|_| error(LinuxSandboxErrorKind::InvalidManifest))?;
+                Ok(LinuxWorkerRuntimeFile::new(
+                    host,
+                    Path::new("/lib64").join(name),
+                ))
+            })
+            .collect::<Result<Vec<_>, LinuxSandboxError>>()?;
+        Self::with_verified_worker(
+            Path::new("/usr/bin/systemd-run"),
+            Path::new("/usr/bin/bwrap"),
+            worker,
+            &runtime_files,
+        )
+    }
+
+    fn with_verified_worker(
+        systemd_run: &Path,
+        bubblewrap: &Path,
+        worker: VerifiedArtifact,
+        runtime_files: &[LinuxWorkerRuntimeFile],
+    ) -> Result<Self, LinuxSandboxError> {
         if runtime_files.len() > MAX_RUNTIME_FILES {
             return Err(error(LinuxSandboxErrorKind::InvalidManifest));
         }
-        let worker_guest_path =
-            Path::new(WORKER_GUEST_ROOT).join(verified_worker_name(worker.as_ref())?);
-        let systemd_run = verify_artifact(systemd_run.as_ref(), None, true)?;
+        let worker_guest_path = worker
+            .guest_path
+            .as_ref()
+            .ok_or_else(|| error(LinuxSandboxErrorKind::InvalidManifest))?;
+        let systemd_run = verify_artifact(systemd_run, None, true)?;
         let systemctl_path = std::fs::canonicalize(SYSTEMCTL)
             .map_err(|_| error(LinuxSandboxErrorKind::InvalidManifest))?;
         let systemctl = verify_artifact(&systemctl_path, None, true)?;
         let path_executor_path = std::fs::canonicalize(PATH_EXECUTOR)
             .map_err(|_| error(LinuxSandboxErrorKind::InvalidManifest))?;
         let path_executor = verify_artifact(&path_executor_path, None, true)?;
-        let bubblewrap = verify_artifact(bubblewrap.as_ref(), None, true)?;
-        let worker = verify_artifact(worker.as_ref(), Some(&worker_guest_path), false)?;
+        let bubblewrap = verify_artifact(bubblewrap, None, true)?;
         let mut verified_runtime = Vec::with_capacity(runtime_files.len());
         for runtime in runtime_files {
             if !valid_runtime_guest_path(&runtime.guest_path)
-                || runtime.guest_path == worker_guest_path
+                || &runtime.guest_path == worker_guest_path
                 || verified_runtime.iter().any(|artifact: &VerifiedArtifact| {
                     artifact.guest_path.as_deref() == Some(runtime.guest_path.as_path())
                 })
@@ -725,9 +776,15 @@ impl LinuxSandboxRunner {
                 .arg(projection.guest_path);
         }
         let worker_descriptor = projections.len() + 3;
-        command
-            .arg("--ro-bind-fd")
-            .arg(worker_descriptor.to_string());
+        if self.manifest.worker.sealed_snapshot {
+            // Bubblewrap resolves --ro-bind-fd sources with realpath, which cannot
+            // resolve a sealed memfd's deleted pseudo-path. Copy the immutable
+            // descriptor into an executable read-only mount instead.
+            command.args(["--perms", "0500", "--ro-bind-data"]);
+        } else {
+            command.arg("--ro-bind-fd");
+        }
+        command.arg(worker_descriptor.to_string());
         command.arg(
             self.manifest
                 .worker
@@ -1183,6 +1240,77 @@ fn verify_artifact(
         guest_path: guest_path.map(Path::to_path_buf),
         launch_path: launch_by_path.then(|| path.to_path_buf()),
         sha256,
+        sealed_snapshot: false,
+    })
+}
+
+fn development_worker_artifact(path: &Path) -> Result<VerifiedArtifact, LinuxSandboxError> {
+    use std::os::unix::fs::MetadataExt;
+    let invalid = || error(LinuxSandboxErrorKind::InvalidManifest);
+    if path.file_name().and_then(|name| name.to_str()) != Some("agentmage-read-only-worker")
+        || std::fs::canonicalize(path).map_err(|_| invalid())? != path
+    {
+        return Err(invalid());
+    }
+    let mut ancestor = PathBuf::from("/");
+    for component in path.components().skip(1) {
+        let Component::Normal(component) = component else {
+            return Err(invalid());
+        };
+        ancestor.push(component);
+        let metadata = std::fs::symlink_metadata(&ancestor).map_err(|_| invalid())?;
+        let root_sticky_directory =
+            metadata.uid() == 0 && metadata.is_dir() && metadata.mode() & 0o1000 != 0;
+        if metadata.file_type().is_symlink()
+            || (metadata.uid() != 0 && metadata.uid() != getuid().as_raw())
+            || (metadata.mode() & 0o022 != 0 && !root_sticky_directory)
+        {
+            return Err(invalid());
+        }
+    }
+    let descriptor = open(
+        path,
+        OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::CLOEXEC | OFlags::NONBLOCK,
+        Mode::empty(),
+    )
+    .map_err(|_| invalid())?;
+    let before = fstat(&descriptor).map_err(|_| invalid())?;
+    if FileType::from_raw_mode(before.st_mode) != FileType::RegularFile
+        || before.st_uid != getuid().as_raw()
+        || before.st_mode & 0o111 == 0
+        || before.st_size <= 0
+        || before.st_size > 256 * 1024 * 1024
+    {
+        return Err(invalid());
+    }
+    let bytes = descriptor_bytes(&descriptor, 256 * 1024 * 1024)?;
+    let sha256: [u8; 32] = Sha256::digest(&bytes).into();
+    let after = fstat(&descriptor).map_err(|_| invalid())?;
+    if before.st_size != after.st_size
+        || before.st_mode != after.st_mode
+        || before.st_mtime != after.st_mtime
+        || before.st_mtime_nsec != after.st_mtime_nsec
+        || before.st_ctime != after.st_ctime
+        || before.st_ctime_nsec != after.st_ctime_nsec
+        || hash_descriptor(&descriptor, after.st_size)? != sha256
+    {
+        return Err(invalid());
+    }
+    // An owner-writable build artifact is not a production trust root. Hold an
+    // immutable sealed snapshot, never execute the mutable pathname in the worker.
+    let snapshot = projection_descriptor(
+        "agentmage-development-read-worker",
+        LinuxSandboxErrorKind::InvalidManifest,
+    )?;
+    write_all_projection(&snapshot, &bytes, LinuxSandboxErrorKind::InvalidManifest)?;
+    rustix::fs::fchmod(&snapshot, Mode::from_raw_mode(0o500)).map_err(|_| invalid())?;
+    seal_projection(&snapshot, LinuxSandboxErrorKind::InvalidManifest)?;
+    Ok(VerifiedArtifact {
+        descriptor: snapshot,
+        guest_path: Some(Path::new(WORKER_GUEST_ROOT).join("agentmage-read-only-worker")),
+        launch_path: None,
+        sha256,
+        sealed_snapshot: true,
     })
 }
 
@@ -1619,6 +1747,37 @@ mod tests {
                 Some(LinuxWorkerRuntimeFile::new(canonical, candidate))
             })
             .collect()
+    }
+
+    #[test]
+    fn development_read_worker_is_sealed_without_weakening_production_trust() {
+        use std::os::unix::fs::{PermissionsExt, symlink};
+        let root = temp_directory("development-worker");
+        fs::set_permissions(&root, fs::Permissions::from_mode(0o700)).unwrap();
+        let worker = root.join("agentmage-read-only-worker");
+        fs::write(&worker, b"original development bytes").unwrap();
+        fs::set_permissions(&worker, fs::Permissions::from_mode(0o700)).unwrap();
+        let held = super::development_worker_artifact(&worker).unwrap();
+        fs::write(&worker, b"changed after verification").unwrap();
+        assert_eq!(
+            descriptor_bytes(&held.descriptor),
+            b"original development bytes"
+        );
+        assert!(rustix::io::write(&held.descriptor, b"mutate").is_err());
+        assert!(
+            super::verify_artifact(
+                &worker,
+                Some(Path::new("/app/agentmage-read-only-worker")),
+                false
+            )
+            .is_err()
+        );
+        fs::set_permissions(&worker, fs::Permissions::from_mode(0o722)).unwrap();
+        assert!(super::development_worker_artifact(&worker).is_err());
+        fs::remove_file(&worker).unwrap();
+        symlink("/usr/bin/true", &worker).unwrap();
+        assert!(super::development_worker_artifact(&worker).is_err());
+        fs::remove_dir_all(root).unwrap();
     }
 
     fn runner_for(executable: &str, limits: LinuxSandboxLimits) -> LinuxSandboxRunner {
