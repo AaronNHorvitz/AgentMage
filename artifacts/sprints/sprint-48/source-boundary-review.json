@@ -27,15 +27,15 @@
     "SR-TST-001",
     "SR-TST-004"
   ],
-  "source_revision": "7d26e5e0dc16ce71afd7bd2074e2709f3eb385ae",
+  "source_revision": "1947c6b9c241fbf1aa7f4c248d12030ae306ad7a",
   "source_sha256": {
-    "artifacts/sprints/sprint-48/local-evidence-report.json": "29070122f28d534df9f14adfa411b1653440e1c60d2c057ca86f500bf78f26ba",
+    "artifacts/sprints/sprint-48/local-evidence-report.json": "d1e9033456b8858aaf5fce74d388f48ef76fcbee465e054b93f0ad52195b44f5",
     "docs/verification/sprint-48-headless-corpus.json": "2df455d9144dc8073e66adb3e95ded91f8e28f9a8fb8ef40b741c029b796ad60",
     "docs/verification/sprint-48-local-results.md": "95697fac487f513f6b5109c0835cc6991ea505f93336cf60fbf4874de6ca8fa0",
-    "scripts/sprint_48_evidence.py": "68b9543f0c4233ccaaabcabe924210975b8155fc1dc3d75d48d1e675740671d0",
-    "shells/host/src/bin/agent.rs": "37f972874dcb36d6f29f73d4aa8a6c6bdc98c85216070b8b71fa42b6baa1681d",
-    "shells/host/src/cli.rs": "ff5bce423a9478a66941ffa4875ff6ef41dcd66efb33fb775b83ae6793135aa2",
-    "shells/host/src/headless.rs": "ef4d55c79413b4e17e497e78ca1d379b2bf847fa05cb36d6d1d334f8e1081eb5"
+    "scripts/sprint_48_evidence.py": "621d28f0fe8d1b0ce2eeb81c5aaf845f0eb2806ab5a944d81bca6273fcd5f9fa",
+    "shells/host/src/bin/agent.rs": "706caa6c5b8d95df4040a2e132de9c36b55869235d6828bb0f58bf6e64866a9e",
+    "shells/host/src/cli.rs": "5269dcfb114055bacf015414320cd9ae6caeae1d29d67cdc86d94a6fe09ce208",
+    "shells/host/src/headless.rs": "f5f8f7c85ddc910e62c8050a91d146b47efb89786783a9974e62f44e421f60f6"
   },
   "status": "PASS_LOCAL_BOUNDARY_REVIEW"
 }
