@@ -1,6 +1,10 @@
 # Native Coding Campaign Protocol — 2026-09-23
 
 Status: prospective development-evaluation protocol; no model qualified.
+Execution result: Muse campaign13 passed all eight cases on one unchanged tuple;
+GPT-OSS did not qualify. See the separate
+[results record](coding-harness-campaign13-results-2026-09-23.md). The criteria
+below were fixed prospectively and are not changed by those results.
 Authority: Decisions 0054/0061/0062 and the owner's real-model continuation.
 The private progress log declared this four-case/two-repetition protocol before
 the first complete real-model diagnostic success. This document makes it reviewable.

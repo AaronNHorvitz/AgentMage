@@ -1,0 +1,406 @@
+{
+  "campaign": 13,
+  "cases": [
+    {
+      "case": "repair",
+      "checks": {
+        "binaries-unchanged": true,
+        "current-diff-status": true,
+        "exact-profile": true,
+        "failed-test-repair": true,
+        "feedback": true,
+        "filesystem": true,
+        "full-artifacts": true,
+        "native-candidate": true,
+        "native-responses": true,
+        "passing-native-validation": true,
+        "recording-consent": true,
+        "resource-guard": true,
+        "terminal-verifier": true
+      },
+      "collector_sha256": "1565a70f5127854b0db6ef3a7149d95a8efb81e7c6f219ad3034eb74e08e942f",
+      "elapsed_seconds": 410.61608743300894,
+      "log_directory": "/var/home/aaronnhorvitz/.local/state/agentmage-codex-coding/runs/2026-09-23-campaign13-muse-repair-1",
+      "passed": true,
+      "protocol_rejection_count": 0,
+      "repetition": 1,
+      "terminal": "SUCCESS",
+      "tool_rejections": [],
+      "verified_artifact_count": 24
+    },
+    {
+      "case": "new-file",
+      "checks": {
+        "binaries-unchanged": true,
+        "current-diff-status": true,
+        "exact-profile": true,
+        "failed-test-repair": true,
+        "feedback": true,
+        "filesystem": true,
+        "full-artifacts": true,
+        "native-candidate": true,
+        "native-responses": true,
+        "passing-native-validation": true,
+        "recording-consent": true,
+        "resource-guard": true,
+        "terminal-verifier": true
+      },
+      "collector_sha256": "8bc5bfa1b8e82ba3813c778e5f6ea2d50508c2cfb88a408a3ec49c18b327eb61",
+      "elapsed_seconds": 412.19796968001174,
+      "log_directory": "/var/home/aaronnhorvitz/.local/state/agentmage-codex-coding/runs/2026-09-23-campaign13-muse-new-file-1",
+      "passed": true,
+      "protocol_rejection_count": 0,
+      "repetition": 1,
+      "terminal": "SUCCESS",
+      "tool_rejections": [
+        {
+          "event": "tool_rejected",
+          "reason": "read_projection_unavailable",
+          "rejection_sha256": "462b993b6207c76063cde95b9a748db5e1af3d2eb482665c28daf1f09065d805",
+          "tool_call_id": "model-tool-call:3a6065b476cade4d49bebec24bebe0651abbc62506729ce84f7470cc191f768e"
+        }
+      ],
+      "verified_artifact_count": 23
+    },
+    {
+      "case": "multi-file",
+      "checks": {
+        "binaries-unchanged": true,
+        "current-diff-status": true,
+        "exact-profile": true,
+        "failed-test-repair": true,
+        "feedback": true,
+        "filesystem": true,
+        "full-artifacts": true,
+        "native-candidate": true,
+        "native-responses": true,
+        "passing-native-validation": true,
+        "recording-consent": true,
+        "resource-guard": true,
+        "terminal-verifier": true
+      },
+      "collector_sha256": "c76d5b499e62932bdc4f8f6a50c5127c4f347cc9bb2bf26f22476d8ef46208c2",
+      "elapsed_seconds": 408.56459501502104,
+      "log_directory": "/var/home/aaronnhorvitz/.local/state/agentmage-codex-coding/runs/2026-09-23-campaign13-muse-multi-file-1",
+      "passed": true,
+      "protocol_rejection_count": 0,
+      "repetition": 1,
+      "terminal": "SUCCESS",
+      "tool_rejections": [],
+      "verified_artifact_count": 25
+    },
+    {
+      "case": "stable",
+      "checks": {
+        "binaries-unchanged": true,
+        "current-diff-status": true,
+        "exact-profile": true,
+        "failed-test-repair": true,
+        "feedback": true,
+        "filesystem": true,
+        "full-artifacts": true,
+        "native-candidate": true,
+        "native-responses": true,
+        "passing-native-validation": true,
+        "recording-consent": true,
+        "resource-guard": true,
+        "terminal-verifier": true
+      },
+      "collector_sha256": "32cfc2f6d1f1988c5137a46fe841c82550aee53d10d8d4810272d04b578a2b47",
+      "elapsed_seconds": 308.5294514000125,
+      "log_directory": "/var/home/aaronnhorvitz/.local/state/agentmage-codex-coding/runs/2026-09-23-campaign13-muse-stable-1",
+      "passed": true,
+      "protocol_rejection_count": 0,
+      "repetition": 1,
+      "terminal": "NO_OP",
+      "tool_rejections": [],
+      "verified_artifact_count": 13
+    },
+    {
+      "case": "repair",
+      "checks": {
+        "binaries-unchanged": true,
+        "current-diff-status": true,
+        "exact-profile": true,
+        "failed-test-repair": true,
+        "feedback": true,
+        "filesystem": true,
+        "full-artifacts": true,
+        "native-candidate": true,
+        "native-responses": true,
+        "passing-native-validation": true,
+        "recording-consent": true,
+        "resource-guard": true,
+        "terminal-verifier": true
+      },
+      "collector_sha256": "c3133a9721b9c44239397109a202db9bb0e4789fa1e7ff2e01f2dda38b9f115e",
+      "elapsed_seconds": 408.3403376269853,
+      "log_directory": "/var/home/aaronnhorvitz/.local/state/agentmage-codex-coding/runs/2026-09-23-campaign13-muse-repair-2",
+      "passed": true,
+      "protocol_rejection_count": 0,
+      "repetition": 2,
+      "terminal": "SUCCESS",
+      "tool_rejections": [],
+      "verified_artifact_count": 24
+    },
+    {
+      "case": "new-file",
+      "checks": {
+        "binaries-unchanged": true,
+        "current-diff-status": true,
+        "exact-profile": true,
+        "failed-test-repair": true,
+        "feedback": true,
+        "filesystem": true,
+        "full-artifacts": true,
+        "native-candidate": true,
+        "native-responses": true,
+        "passing-native-validation": true,
+        "recording-consent": true,
+        "resource-guard": true,
+        "terminal-verifier": true
+      },
+      "collector_sha256": "10be1dfa0281b48b70cc41cacf40a9aa3230175576602315274abf9be1522f5d",
+      "elapsed_seconds": 403.1816946629842,
+      "log_directory": "/var/home/aaronnhorvitz/.local/state/agentmage-codex-coding/runs/2026-09-23-campaign13-muse-new-file-2",
+      "passed": true,
+      "protocol_rejection_count": 0,
+      "repetition": 2,
+      "terminal": "SUCCESS",
+      "tool_rejections": [
+        {
+          "event": "tool_rejected",
+          "reason": "read_projection_unavailable",
+          "rejection_sha256": "bda9df6744f35c9563578f51bd1397a2bddc95c17be6ed0a25c6a8c880dc3fa2",
+          "tool_call_id": "model-tool-call:546a27c282a9da5799378fdc5cbd539407546355e2c274199017ff9d8eaef3f2"
+        }
+      ],
+      "verified_artifact_count": 23
+    },
+    {
+      "case": "multi-file",
+      "checks": {
+        "binaries-unchanged": true,
+        "current-diff-status": true,
+        "exact-profile": true,
+        "failed-test-repair": true,
+        "feedback": true,
+        "filesystem": true,
+        "full-artifacts": true,
+        "native-candidate": true,
+        "native-responses": true,
+        "passing-native-validation": true,
+        "recording-consent": true,
+        "resource-guard": true,
+        "terminal-verifier": true
+      },
+      "collector_sha256": "4d30e3d5f78eaddaee9aabc7e3810eab880b1aabb630d1820feecacef416088d",
+      "elapsed_seconds": 539.8297205969866,
+      "log_directory": "/var/home/aaronnhorvitz/.local/state/agentmage-codex-coding/runs/2026-09-23-campaign13-muse-multi-file-2",
+      "passed": true,
+      "protocol_rejection_count": 0,
+      "repetition": 2,
+      "terminal": "SUCCESS",
+      "tool_rejections": [],
+      "verified_artifact_count": 37
+    },
+    {
+      "case": "stable",
+      "checks": {
+        "binaries-unchanged": true,
+        "current-diff-status": true,
+        "exact-profile": true,
+        "failed-test-repair": true,
+        "feedback": true,
+        "filesystem": true,
+        "full-artifacts": true,
+        "native-candidate": true,
+        "native-responses": true,
+        "passing-native-validation": true,
+        "recording-consent": true,
+        "resource-guard": true,
+        "terminal-verifier": true
+      },
+      "collector_sha256": "f6c7893f8ac0b1b20d483e125edcdea83f44cc2e70e256ad652402c74e0c836f",
+      "elapsed_seconds": 318.1569589099963,
+      "log_directory": "/var/home/aaronnhorvitz/.local/state/agentmage-codex-coding/runs/2026-09-23-campaign13-muse-stable-2",
+      "passed": true,
+      "protocol_rejection_count": 0,
+      "repetition": 2,
+      "terminal": "NO_OP",
+      "tool_rejections": [],
+      "verified_artifact_count": 13
+    }
+  ],
+  "checks": {
+    "all-case-checks-pass": true,
+    "eight-cases-recomputed": true,
+    "no-candidate-substitution": true,
+    "one-exact-model-profile": true,
+    "one-source-binary-wrapper-tuple": true
+  },
+  "driver": {
+    "bytes": 4155,
+    "path": "/var/home/aaronnhorvitz/.local/state/agentmage-codex-coding/native_campaign_summary_20260923.py",
+    "sha256": "18cbf61300ecafc6d4f9240bcb768597141fb0bd8d7bf688ec6147feca81279c"
+  },
+  "historical_failures": "Retained separately; never reclassified or mixed across source tuples.",
+  "implementation": {
+    "binaries": [
+      {
+        "bytes": 277386224,
+        "path": "/var/home/aaronnhorvitz/dev/01_repos/AgentMage/target/debug/agentmage",
+        "sha256": "7e1185bf2197a30cbf7665c18c8335c6d07a87ad5260c22581fb5115f672e42a"
+      },
+      {
+        "bytes": 323202744,
+        "path": "/var/home/aaronnhorvitz/dev/01_repos/AgentMage/target/debug/agentmage-host",
+        "sha256": "935c0404504a3e946a3a2ebe9d15ea7b85ef43a7ee12e2635a60732dcc367799"
+      },
+      {
+        "bytes": 13804288,
+        "path": "/var/home/aaronnhorvitz/dev/01_repos/AgentMage/target/debug/agentmage-read-only-worker",
+        "sha256": "7cbcf459492012491a27607225ddc5c778c589b81956a462441d3ed4c9dec077"
+      }
+    ],
+    "head_commit": "ad28b5ca7862a483bb4b9bf74c199d5f994ae43f",
+    "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktree_status": "",
+    "wrapper": {
+      "bytes": 29234,
+      "path": "/var/home/aaronnhorvitz/dev/01_repos/AgentMage/scripts/coding_harness.py",
+      "sha256": "38590b031cc6bed5c12d3c86bb923d383a006b2a6a00d6ea3653342b6982537d"
+    }
+  },
+  "model": "muse",
+  "passed": true,
+  "profile": {
+    "artifact": {
+      "artifact_id": "meta-muse-glimmer-30b-kquant-17gb-q4-k-m",
+      "bytes": 16756683904,
+      "format": "GGUF",
+      "publisher": "Meta",
+      "sha256": "4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e",
+      "source_revision": "43c7eadd41352a299ea8e0a36b3157978dd63596"
+    },
+    "automatic_fallback": false,
+    "capabilities": [
+      {
+        "evaluation_profile": null,
+        "limitations": [
+          "coding-campaign-not-qualified",
+          "production-activation-not-qualified",
+          "repeated-run-admission-not-qualified"
+        ],
+        "result_sha256": null,
+        "role": "dialogue",
+        "state": "blocked"
+      },
+      {
+        "evaluation_profile": null,
+        "limitations": [
+          "coding-campaign-not-qualified",
+          "production-activation-not-qualified",
+          "repeated-run-admission-not-qualified"
+        ],
+        "result_sha256": null,
+        "role": "coding_planner",
+        "state": "blocked"
+      },
+      {
+        "evaluation_profile": null,
+        "limitations": [
+          "coding-campaign-not-qualified",
+          "production-activation-not-qualified",
+          "repeated-run-admission-not-qualified"
+        ],
+        "result_sha256": null,
+        "role": "tool_selection",
+        "state": "blocked"
+      }
+    ],
+    "codec": {
+      "codec_id": "muse-glimmer-atem-reasoning-medium-closed-proposal-v1",
+      "codec_sha256": "5b90a4e7b1bd539c7608ea8b7032b3319ade278a3118dc16edef949559866e1e",
+      "codec_version": "1.0.0",
+      "end_tokens": [
+        200001,
+        200008
+      ],
+      "reasoning_enabled": true,
+      "template": "meta-models/Muse-Glimmer-30B ATEM chat template",
+      "template_sha256": "cfc67e5f349f37690dfd31ed1f18bc4442a9dd32fe39a648f993cb4eb3cae678",
+      "tokenizer": "meta-models/Muse-Glimmer-30B tokenizer",
+      "tokenizer_sha256": "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d",
+      "tool_protocol_version": "atem-reasoning-medium-closed-proposal-v1"
+    },
+    "context": {
+      "max_context_tokens": 32768,
+      "max_input_bytes": 524288,
+      "max_messages": 4096,
+      "token_counter": "llama.cpp b10423 Muse tokenizer",
+      "token_counter_sha256": "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d"
+    },
+    "decoding": {
+      "max_output_tokens": 4096,
+      "profile_id": "coding-development-muse-medium-32k-v1",
+      "repeat_penalty": 1.0,
+      "sampler_order": [
+        "greedy"
+      ],
+      "seed": 42,
+      "temperature": 0.0,
+      "top_k": 1,
+      "top_p": 1.0
+    },
+    "display_name": "Muse Glimmer 30B Q4_K_M text 32k Fedora coding development",
+    "enabled": false,
+    "family": "muse_glimmer",
+    "hardware": [
+      {
+        "accelerator": "NVIDIA Vulkan",
+        "architecture": "x86_64",
+        "driver_constraint": "NVIDIA 615.71.09 coding re-evaluation tuple; changes require re-evaluation",
+        "minimum_accelerator_memory_bytes": 22020096000,
+        "minimum_system_memory_bytes": 17179869184,
+        "platform": "fedora"
+      }
+    ],
+    "license_spdx": "Apache-2.0",
+    "license_terms_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "lifecycle": "candidate",
+    "lineage": [
+      "meta-models/Muse-Glimmer-30B@a4e59da52a7bc87ae7251dd5545c0dd437c44b68",
+      "meta-models/Muse-Glimmer-30B-GGUF@43c7eadd41352a299ea8e0a36b3157978dd63596",
+      "Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf"
+    ],
+    "manifest_id": "muse-glimmer-30b-q4-k-m-text-32k-fedora-coding-development-manifest-v1",
+    "manifest_sha256": "8a8ee8efc1738f30d143f94f753e6079808e05dc3127df28a965676d7edfd24b",
+    "modalities": [
+      "text"
+    ],
+    "policy_sha256": "528076ef9be354e5a463221811a0bf4bf735a50be0b3a73df91097d7e83594c7",
+    "profile_id": "muse-glimmer-30b-q4-k-m-text-32k-fedora-coding-development",
+    "publisher_control": "Meta",
+    "quantization": "Q4_K_M first-party 17GB GGUF",
+    "runtime": {
+      "adapter_id": "linux-native-llama-cpp-b10423-vulkan-x86_64",
+      "architecture": "x86_64",
+      "contract_version": 1,
+      "kind": "native_llama_cpp",
+      "platform": "fedora",
+      "runtime_build": "llama.cpp-b10423-a94d563ed801d1da1b8c2432946de07d0231bb3d",
+      "runtime_sha256": "3b1194ef38f4b02b6329d698e29532435a5a7c3567c84b8bb822459ca0893286"
+    },
+    "schema_version": 2,
+    "transformations": []
+  },
+  "scope": "bounded-development-campaign-only; not production model admission or independent review",
+  "scope_resources": {
+    "cpu.max": "max 100000",
+    "memory.high": "5368709120",
+    "memory.max": "6442450944",
+    "memory.peak": "17612800",
+    "memory.swap.max": "536870912"
+  }
+}

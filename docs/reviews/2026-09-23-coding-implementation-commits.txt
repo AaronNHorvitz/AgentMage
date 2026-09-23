@@ -1,0 +1,74 @@
+ab76d781b8e7e8a6497535be227ba34640c53634 feat(models): prepare bounded coding candidates
+452a789a13a1872383e8318b19546642137ac6ad feat(coding): bind 32k development model profiles
+f8dd4e79ca3fb26773a37731157e4e3eb842dd7b feat(coding): launch authenticated development harness
+ea16322f4cc232ababdaa1c839aceeef6bd0a2d8 feat(coding): service live control during execution
+868234916b99f2491b0d9249a2e9366f1736962e test(coding): exercise executable acceptance matrix
+fe898a96bbea44d025b986997bd030136e178d1e fix(coding): reject replay and approval races
+0dcd13d04c61d2325504b344a13d493788ea2c26 feat(coding): evaluate exact native model candidates
+4fc23603235c8fde0f1393d82e33b5880fcabf79 feat(coding): resume durable verified sessions
+d6863f7d0ead786b754801a34f961dcde1a65346 feat(coding): harden live interaction reporting
+690e5e438e40e8f2aca6bdc39e1945b45a69a5c7 feat(coding): preauthorize exact session operations
+e30e9ffb9c09fd064c4829069cc2352fef71fbcb feat(coding): retain checked session continuity
+03c01dedeccf11d51e2b062fcb28f9564a9ef658 feat(coding): retain exact rollback history
+fabe3897e7b57ccddb846d87a0bd1c96d8168089 feat(coding): verify bounded daily-use reliability
+b0f88801d9b615150eea5c7f5dfab23231dbdbbf docs(coding): retain source-pinned verification
+18da1573c0ea2fa0373b35192bf062794739ffb8 docs(coding): prepare pinned independent review
+5ccc77e3f420cc833ed1e51268a39e3fa3ee08e5 fix(coding): preserve native effect ownership
+d93eca4a2451733c0edecad235fd130d609c7063 docs(coding): retarget independent review
+ee220b71b21235d6ac7bdf01409adfbc3d64a270 fix(runtime): observe resume validation errors
+ebe74f39a5ecf96988c7433c3d22bbc4322e81b6 docs(coding): pin final review source
+f11ebc04cb090ac1358d6fe66d744bfc05a96e3f renew story 11.2 storage evidence
+bc3fd27e6a7a03896a2f3786bdef24458766390c renew story 11.2 review pin
+f03e510277ac141b893cff3d08b8ef939b9d2f6d renew story 1.3 runtime evidence
+e2af8b56c88f5b87e6588a7c66a8250b9147d747 renew story 1.3 review pin
+e6b05813cab7556d421e82a921f037bc82841502 renew story 2.2 fuzz evidence
+1814cf806bc26ea758ded3856224db89dcecfb29 renew story 3.1 configuration evidence
+f2314035b6aa0ff86c47aa345734f468def29e6b renew story 4.1 kernel architecture evidence
+f4bfacfa8da53b5d4f69e904d06020e8f3408e61 renew story 4.1 review pin
+c666a1da7fac9250f1abc4389bf741ecaf1fdf9e renew sprint 4 review pin
+dc99587fa1940516aaf32de88ac4373df9cb47bc fix(packaging): preserve deb candidate permissions
+1709912f764f752cff7de523a7607746788b20d8 renew supply-chain and demo evidence
+b1ab32328e8e2ded1c2b5d656242235139c1c2ab fix(evidence): normalize inference candidate mode
+86efc123745505e165c33f603b74383916d11e9d renew contract and package boundary evidence
+93f9b1cf409ad3fd3a46ef38707fe1c0d439fd91 fix(coding): satisfy strict product lint
+040898df4a65ee9d88e194b67f18f59eb246d8f5 renew final supply-chain evidence
+d037a5144a19493d02f91f6575476ba761a55596 renew clean Linux build evidence
+cfb5c376cae4936d72fa77d54cac35dd64def013 renew story 1.1 source evidence
+0382b2b3b5168b9ac6708c43065816676b7cc2c3 renew final story 11.2 evidence
+04e0c0289abc76ac50f5817446926558d2902363 renew final story 11.2 review pin
+5c089f22cb4b478a7245e263baea2fdc44810a03 renew final story 1.3 runtime evidence
+55a8c8849bd3f89b71e207e042799977d69027d5 renew final story 1.3 review pin
+fb055f637edb816acba6bb3e43162af5f28bc945 renew final story 3.1 configuration evidence
+283871c3846bab5538fdfea54fdfc7fbe56eae3a renew final story 4.1 kernel evidence
+360d814bbb19ff3114cf514cba0a7c326888e0bc renew final contract evidence index
+f0c5ba524372ca8537640f5fd18aeaa0050cb783 fix(evidence): normalize conformance archive modes
+6b19c1325a507b7b13fc25a422a2fbc8c950532b renew story 6.1 path evidence
+3d3ce29c55b5b50c95410e1204642288d0536272 renew story 6.1 review and security evidence
+8f43920fbbc69c8e8a3a8f87275dce655fea7f46 renew story 6.1 review pin
+18d1799fe1706c3a473c49e5fe93dc67d1f45fe9 renew sprint 6 review pin
+f16b085e2990def088d1d21e1079c848975afa69 Normalize platform contract archive modes
+c0a8809992855725b855808e34e514a6f18745d2 Renew Story 7 platform contract evidence
+2a766fa858adabea9cd61a7a40869f4f62035cf8 Renew Story 7 security evidence
+90ed7bf72a6aa12201fc2ac1f1352cf4e58b137e Renew Story 7 review pin
+45e2298bd90103e321ad5f5b1d183cac5b189344 Renew Sprint 7 review pin
+b0445064edc68e3e4a0e7dca77d4b3fd9c3ebcf2 Retarget standalone coding review package
+9c530aff372f764396ac3b49e14ea0d04b827219 fix(coding): bind native model proposals and readable contracts
+f0986e8597518faf8ca02f78f1093e312460efc4 fix(coding): launch the confined native read worker
+0c7df648a0b3ffca387daf7f9b355b3d364a6ae5 fix(coding): expose native invocation rules and ATEM parameters
+a13fd15e22ad659a6a3e60692caa4b7dea6a7a3e fix(coding): preserve exact native tool feedback across turns
+eca3f405ceb198d2e01e2764703a554b44f0b381 fix(coding): bind development runtime and creation observations
+cf727b39e9453d6c1a537e5214e7af3869a1841c fix(coding): factor repeated model schemas without losing bindings
+5574c43ac0241cf3c3203acde5d8dd8ba070271a fix(coding): align native template bodies and retain live evidence
+bca18d2221b437e798e1862ce355ea6602cf0049 fix(coding): keep rollback fixtures aligned with paired feedback
+b7fbf289d7f6e736663bdae3ef32c57e9dc3658e fix(coding): preserve native channel tokens and explicit read constraints
+2b54674a84178d07ab1e1880bf19f5ce074984cb fix(coding): retain bounded pre-effect read rejection feedback
+8d6258662b294c7eadb3cde2dc7a673b9a27c171 fix(coding): select context against exact native tokens
+bc2d53dbe3beddf646105f2dff28eb43dc6dc4fb fix(coding): preserve native context safety reserve
+f75e8fcf4f1424c74b86ea570432dc42e3b18cb4 feat(coding): bound rejected proposal correction in canonical runs
+ef4a05d823ea0987229e2ab389867b15bb4f8282 fix(coding): align published rejection schema with native contract
+7b1953d544c6f37cd11bb2c809db8b0aaa8564b7 fix(coding): bind native commands to exact approved JSON and plan
+22e5c44e7256f51f2f263f0bb8aebc296f54d710 test(coding): preserve terminal generic-command failure semantics
+ba1158e824a71c29993041b21d781fc99a7b5166 fix(coding): disclose native Git argument constraints to models
+99cc4e1630ea1e658a815e82893f650fe736c884 fix(model): parse exact Harmony JSON format delimiter without a space
+d8557c993838ba54a85dba7a364a9495b6d92496 fix(runtime): account mandatory coding records and close recording pressure
+ad28b5ca7862a483bb4b9bf74c199d5f994ae43f fix(runtime): close native argument rejections and bound read correction

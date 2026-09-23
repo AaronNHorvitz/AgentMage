@@ -30,8 +30,11 @@
 makes the standalone coding workflow the immediate workstream. The owner
 explicitly restarted implementation for Tasks 48.2.4, 48.2.5, 48.2.6 and 50.2.4
 and their necessary prerequisites. The disposable Linux CLI/host composition
-and executable-scripted acceptance are implemented; real-model integration and
-the separate repeated candidate campaigns remain in progress. See the
+and executable-scripted acceptance are implemented. Following the real-model
+integration corrections, the exact Muse 32K development profile passed its repeated
+native campaign. GPT-OSS's separately retained attempts did not qualify. These
+are bounded development results, not production admission or milestone closure.
+See the [campaign results](docs/verification/coding-harness-campaign13-results-2026-09-23.md),
 [implementation record](docs/verification/coding-harness-implementation-2026-09-22.md)
 and [real-model corrections](docs/verification/coding-harness-real-model-integration-2026-09-23.md).
 Local integration defects are implementation work, not external model-owner

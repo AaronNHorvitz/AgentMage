@@ -98,7 +98,12 @@ JSON key ordering through the registered generic command and requires a truthful
 failure with a receipt and full output, not validation evidence. The separate targeted-validation
 cases prove repair. These scripted regressions cannot qualify a real model.
 
-Run all twenty declared actual-process cases with short disposable roots and a fresh create-only log root:
+Decision 0079 adds `read-arguments-correction` and `read-arguments-denied`:
+the exact retained malformed read shape gets at most the existing one correction,
+while a denied traversal closes without an effect. Neither case relaxes the
+native read validator or grants authority to rejected arguments.
+
+Run all twenty-two declared actual-process cases with short disposable roots and a fresh create-only log root:
 
 ```bash
 systemd-run --user --scope --quiet \
@@ -130,6 +135,11 @@ systemd-run --user --scope --quiet \
     --gpt-oss-log-dir "$HOME/.local/state/agentmage-codex-coding/runs/gpt-oss-1"
 ```
 
+This legacy aggregate specifically checks the original first-call codec refusals;
+do not feed it successful or differently rejected campaigns and claim a current
+daily gate. The separately retained current daily-core, recovery, scripted matrix
+and native campaign reports are described in the
+[current results](../verification/coding-harness-campaign13-results-2026-09-23.md).
 The daily report can pass candidate *failure handling* while both candidates remain
 `not-qualified`. It supports executable Python only through the exact registered
 `fixture.python-validation@1.0.0` command. It does not supply independent review,
@@ -147,3 +157,34 @@ only executable-path evidence. Model qualification requires the separate repeate
 gpt-oss-20b campaigns through these same binaries and their exact admitted profiles. A strict
 codec, runtime, resource, tool-use, or quality failure remains a separate rejected disposition and
 is never replaced by the scripted fixture or a direct model-server probe.
+
+## Real-model development result
+
+At source `ad28b5ca7862a483bb4b9bf74c199d5f994ae43f`, the exact Muse 32K
+development profile passed all eight prospective native coding cases. GPT-OSS's
+separate retained attempts did not qualify. This is bounded development evidence,
+not production admission, platform support or independent review. See the
+[source-bound results](../verification/coding-harness-campaign13-results-2026-09-23.md)
+before interpreting a diagnostic success.
+
+For a new authorized Muse repair diagnostic, use a fresh short root and the
+existing native selector; do not attach directly to a model server:
+
+```bash
+python3 -m scripts.coding_harness setup --root /tmp/am-native-review-1 --fixture repair
+systemd-run --user --scope --quiet \
+  -p MemoryHigh=5G -p MemoryMax=6G -p MemorySwapMax=512M \
+  -p CPUQuota=200% -p RuntimeMaxSec=2700 \
+  nice -n 10 python3 -m scripts.coding_harness start \
+    --root /tmp/am-native-review-1 --model muse --scenario failed-test-repair \
+    --objective 'First run registered validation to observe the failing test. Inspect and repair the fixture through native tools, rerun complete validation, inspect current diff and status, then submit verifier-supported completion.' \
+    --approve-this-run --record-session \
+    --log-dir "$HOME/.local/state/agentmage-codex-coding/runs/native-review-1"
+```
+
+Check stop markers and at least 16 GiB available RAM before starting. Retain the
+existing one-slot/four-thread/start-VRAM/sampled-GPU guards and packaged runtime.
+Startup includes full artifact integrity verification and can take several
+minutes in the debug host. `--record-session` is explicit retention consent;
+raw records and verified artifacts remain private and do not authorize effects.
+One diagnostic is not a new repeated campaign or admission decision.

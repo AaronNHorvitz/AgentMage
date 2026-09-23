@@ -1,7 +1,10 @@
 # Coding Harness Real-Model Integration — 2026-09-23
 
-Status: implementation and native-model diagnostics in progress. No coding-model,
-platform, release or `M-HARNESS-DAILY` qualification is claimed by this record.
+Status: integration corrections implemented; Muse passed the eight-case bounded
+development campaign at `ad28b5ca`; GPT-OSS remains not qualified. The
+[source-bound results](coding-harness-campaign13-results-2026-09-23.md) retain both
+dispositions. No production model admission, platform, release, independent
+review or `M-HARNESS-DAILY` qualification is claimed by this record.
 Authority: Decisions 0054/0061/0062 and the owner's explicit continuation.
 The [prospective native campaign](coding-harness-native-campaign-2026-09-23.md)
 declares the repeated-case criteria and preserves development versus admission scope.

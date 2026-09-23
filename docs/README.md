@@ -27,6 +27,8 @@ The immediate workstream is the standalone coding harness:
 - [Recorded runtime artifact accounting](decisions/0078-recorded-runtime-artifact-accounting.md)
 - [Read argument rejection boundary](decisions/0079-read-argument-rejection-boundary.md)
 - [Real-model coding integration progress](verification/coding-harness-real-model-integration-2026-09-23.md)
+- [Source-bound native coding campaign results](verification/coding-harness-campaign13-results-2026-09-23.md)
+- [Pinned standalone coding external-review package](reviews/2026-09-23-standalone-coding-independent-review-package.md)
 - [Prospective repeated native campaign](verification/coding-harness-native-campaign-2026-09-23.md)
 - [Standalone coding development harness](guides/standalone-coding-development.md)
 - [Implementation verification](verification/coding-harness-implementation-2026-09-22.md)
