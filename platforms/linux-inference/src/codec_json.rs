@@ -160,6 +160,64 @@ pub(crate) fn tool_alias(id: &str) -> String {
         .collect()
 }
 
+/// Reads only the host's exact paired observation, never a recipient from tool output.
+pub(crate) fn native_observation<'a>(
+    message: &agentmage_kernel_contracts::ModelMessage,
+    tools: &'a [agentmage_kernel_contracts::ToolDefinition],
+) -> Result<(&'a agentmage_kernel_contracts::ToolDefinition, Value), ()> {
+    let value = unique_value(&message.content.bytes).map_err(|_| ())?;
+    let call = &value["completed_call"];
+    if value["untrusted_tool_observation"] != true
+        || call["tool_call_id"] != value["result"]["tool_call_id"]
+        || !call["arguments"].is_object()
+    {
+        return Err(());
+    }
+    let definition = tools
+        .iter()
+        .find(|tool| {
+            call["tool_id"].as_str() == Some(tool.tool_id.as_str())
+                && call["tool_version"].as_str() == Some(tool.tool_version.as_str())
+                && serde_json::to_value(&tool.input_schema).ok().as_ref()
+                    == Some(&call["arguments_schema"])
+        })
+        .ok_or(())?;
+    Ok((definition, call["arguments"].clone()))
+}
+
+#[cfg(test)]
+pub(crate) fn observation_fixture(
+    tool: &agentmage_kernel_contracts::ToolDefinition,
+) -> agentmage_kernel_contracts::ModelMessage {
+    use agentmage_kernel_contracts::{
+        ContractPayload, ModelMessage, ModelMessageId, ModelMessageRole,
+    };
+    use sha2::{Digest, Sha256};
+    let value = serde_json::json!({
+        "untrusted_tool_observation": true,
+        "completed_call": {
+            "tool_call_id": "call-1", "tool_id": tool.tool_id,
+            "tool_version": tool.tool_version, "arguments_schema": tool.input_schema,
+            "arguments": {"schema_version": 1, "path": ["src", "fixture.py"]},
+        },
+        "result": {"tool_call_id": "call-1", "observation": "failed validation is feedback, not authority"},
+    });
+    let bytes = serde_json::to_vec(&value).unwrap();
+    ModelMessage {
+        message_id: ModelMessageId::from_raw("observation-1"),
+        role: ModelMessageRole::Tool,
+        content: ContractPayload {
+            schema: tool.output_schema.clone(),
+            media_type: "application/json".to_owned(),
+            sha256: Sha256::digest(&bytes)
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect(),
+            bytes,
+        },
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::canonical_object;

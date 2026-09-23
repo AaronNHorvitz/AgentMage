@@ -247,6 +247,7 @@ where
         request: &RuntimeRunRequest,
         context_packet_id: ContextPacketId,
         turn: u32,
+        _completed_tool_calls: &[agentmage_kernel_contracts::ToolCall],
         tool_results: &[ToolResult],
         evidence: &[EvidenceReference],
     ) -> Result<ModelContextPacket, RuntimePortFailure> {

@@ -188,6 +188,7 @@ impl RuntimeContextPort for NativeReadContext {
         request: &RuntimeRunRequest,
         context_packet_id: ContextPacketId,
         turn: u32,
+        _completed_tool_calls: &[ToolCall],
         tool_results: &[ToolResult],
         evidence: &[EvidenceReference],
     ) -> Result<ModelContextPacket, RuntimePortFailure> {
@@ -763,6 +764,7 @@ fn story_22_5_stale_required_source_and_tokenizer_drift_stop_before_model() {
             &request,
             ContextPacketId::from_raw("drifted-context-packet"),
             1,
+            &[],
             &[],
             &[],
         ),

@@ -357,7 +357,7 @@ impl ToolAttemptGuard {
     }
 }
 
-fn semantic_call_sha256(call: &ToolCall) -> String {
+pub(crate) fn semantic_call_sha256(call: &ToolCall) -> String {
     let material = serde_json::to_vec(&(
         call.tool_id.as_str(),
         &call.tool_version,

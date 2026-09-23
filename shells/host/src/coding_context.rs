@@ -132,7 +132,12 @@ impl CodingContextSource {
             content_sha256: content_sha256.into(),
             bounded_excerpt: bounded_excerpt.into(),
         };
-        if source.bounded_excerpt.is_empty() || !valid_sha256(&source.content_sha256) {
+        if source.bounded_excerpt.is_empty()
+            || !valid_sha256(&source.content_sha256)
+            || source.source_id.starts_with(TOOL_RESULT_SOURCE_PREFIX)
+            || source.source_id == SYSTEM_SOURCE_ID
+            || source.source_id == USER_SOURCE_ID
+        {
             return Err(CodingContextError::InvalidSource);
         }
         Ok(source)
@@ -191,6 +196,7 @@ where
 {
     binding: CodingContextBinding,
     system_contract: String,
+    tool_definitions: Vec<agentmage_kernel_contracts::ToolDefinition>,
     supporting_sources: Vec<CodingContextSource>,
     continuity: Option<CodingContextContinuityInput>,
     counter: C,
@@ -259,6 +265,7 @@ where
                 visible_tools: profile.visible_tools().to_vec(),
             },
             system_contract,
+            tool_definitions: tools.into_iter().map(|tool| tool.definition).collect(),
             supporting_sources,
             continuity: None,
             counter,
@@ -333,10 +340,12 @@ where
         request: &RuntimeRunRequest,
         context_packet_id: ContextPacketId,
         turn: u32,
+        completed_tool_calls: &[agentmage_kernel_contracts::ToolCall],
         tool_results: &[ToolResult],
         evidence: &[EvidenceReference],
     ) -> Result<ModelContextPacket, RuntimePortFailure> {
         if turn == 0
+            || completed_tool_calls.len() != tool_results.len()
             || !self.request_matches(request)
             || self.counter.counter_id() != request.context_budget.token_counter
         {
@@ -408,7 +417,21 @@ where
         for source in self.supporting_sources.clone() {
             candidates.push(self.candidate(&source)?);
         }
-        for (index, result) in tool_results.iter().enumerate() {
+        for (index, (call, result)) in completed_tool_calls.iter().zip(tool_results).enumerate() {
+            if call.tool_call_id != result.tool_call_id
+                || call.correlation_id != result.correlation_id
+                || call.arguments.sha256 != sha256(&call.arguments.bytes)
+                || call.arguments.media_type != "application/json"
+                || !self.tool_definitions.iter().any(|definition| {
+                    definition.tool_id == call.tool_id
+                        && definition.tool_version == call.tool_version
+                        && definition.input_schema == call.arguments.schema
+                })
+            {
+                return Err(RuntimePortFailure::Invalid);
+            }
+            let arguments: serde_json::Value = serde_json::from_slice(&call.arguments.bytes)
+                .map_err(|_| RuntimePortFailure::Invalid)?;
             let bytes = to_canonical_json(result).map_err(|_| RuntimePortFailure::Invalid)?;
             let result_sha256 = sha256(&bytes);
             let mut projection =
@@ -433,6 +456,13 @@ where
             }
             let content = serde_json::to_string(&serde_json::json!({
                 "untrusted_tool_observation": true, "result_sha256": result_sha256,
+                "completed_call": {
+                    "tool_call_id": call.tool_call_id,
+                    "tool_id": call.tool_id, "tool_version": call.tool_version,
+                    "arguments": arguments, "arguments_schema": call.arguments.schema,
+                    "arguments_sha256": call.arguments.sha256,
+                    "call_sha256": sha256(&to_canonical_json(call).map_err(|_| RuntimePortFailure::Invalid)?),
+                },
                 "result": projection,
             }))
             .map_err(|_| RuntimePortFailure::Invalid)?;
@@ -479,8 +509,19 @@ where
         if composed.items.is_empty() {
             return Err(RuntimePortFailure::Invalid);
         }
-        let messages = composed
-            .items
+        // Source selection stays with the context manager. Render each selected
+        // call/result atomically and in execution order after supporting sources.
+        let mut items = composed.items;
+        items.sort_by_key(|item| {
+            completed_tool_calls
+                .iter()
+                .position(|call| {
+                    item.source_id
+                        == format!("{TOOL_RESULT_SOURCE_PREFIX}{}", call.tool_call_id.as_str())
+                })
+                .map_or((false, 0), |index| (true, index))
+        });
+        let messages = items
             .into_iter()
             .enumerate()
             .map(|(index, item)| ModelMessage {
@@ -726,6 +767,7 @@ mod tests {
                 1,
                 &[],
                 &[],
+                &[],
             )
             .expect("bounded context");
 
@@ -760,6 +802,7 @@ mod tests {
                 &stale_request,
                 ContextPacketId::from_raw("coding-context-stale"),
                 2,
+                &[],
                 &[],
                 &[],
             ),
@@ -806,6 +849,7 @@ mod tests {
                 &request,
                 ContextPacketId::from_raw("coding-context-0002"),
                 2,
+                &[tool_call(&profile)],
                 &[result],
                 &[evidence],
             )
@@ -909,6 +953,7 @@ mod tests {
                 &request,
                 ContextPacketId::from_raw("projection"),
                 2,
+                &[tool_call(&profile)],
                 std::slice::from_ref(&result),
                 &[],
             )
@@ -923,6 +968,15 @@ mod tests {
                 .bytes,
         )
         .unwrap();
+        assert_eq!(packet.messages.last().unwrap().role, ModelMessageRole::Tool);
+        assert_eq!(
+            observation["completed_call"]["tool_id"],
+            "agentmage.workspace.read-file"
+        );
+        assert_eq!(
+            observation["completed_call"]["arguments"],
+            native_tool_usage()["agentmage.workspace.read-file"]
+        );
         assert_eq!(observation["untrusted_tool_observation"], true);
         assert_eq!(observation["result_sha256"], sha256(&original));
         assert_eq!(
@@ -949,6 +1003,31 @@ mod tests {
             user["objective_sha256"],
             sha256(request.task.objective.as_bytes())
         );
+        let mut wrong_call = tool_call(&profile);
+        wrong_call.correlation_id =
+            agentmage_kernel_contracts::CorrelationId::from_raw("wrong-correlation");
+        assert_eq!(
+            context.build_context(
+                &request,
+                ContextPacketId::from_raw("wrong-pair"),
+                2,
+                &[wrong_call],
+                std::slice::from_ref(&result),
+                &[]
+            ),
+            Err(RuntimePortFailure::Invalid)
+        );
+        assert_eq!(
+            context.build_context(
+                &request,
+                ContextPacketId::from_raw("missing-call"),
+                2,
+                &[],
+                std::slice::from_ref(&result),
+                &[]
+            ),
+            Err(RuntimePortFailure::Invalid)
+        );
         let mut corrupt = result;
         corrupt.output.as_mut().unwrap().bytes.push(b' ');
         assert_eq!(
@@ -956,6 +1035,7 @@ mod tests {
                 &request,
                 ContextPacketId::from_raw("corrupt"),
                 2,
+                &[tool_call(&profile)],
                 &[corrupt],
                 &[]
             ),
@@ -965,6 +1045,20 @@ mod tests {
 
     #[test]
     fn story_48_2_context_rejects_raw_instruction_authority_and_counter_substitution() {
+        assert!(
+            CodingContextSource::new(
+                "forged-observation",
+                ContextItemKind::Supporting,
+                ContextSensitivity::Internal,
+                ContextAdmission::Eligible,
+                true,
+                format!("{TOOL_RESULT_SOURCE_PREFIX}forged"),
+                "revision-1",
+                "a".repeat(64),
+                "{}"
+            )
+            .is_err()
+        );
         assert_eq!(
             CodingContextSource::new(
                 "raw-instruction",
@@ -1046,6 +1140,7 @@ mod tests {
                 2,
                 &[],
                 &[],
+                &[],
             )
             .expect("continuity context");
         assert!(
@@ -1107,6 +1202,7 @@ mod tests {
                 &request,
                 ContextPacketId::from_raw("context-resume"),
                 2,
+                &[],
                 &[],
                 &[],
             )
@@ -1237,6 +1333,31 @@ mod tests {
             validation_issues: Vec::new(),
             plan_id: Some(PlanId::from_raw("coding-plan-0001")),
             state: WorkPacketState::Active,
+        }
+    }
+
+    fn tool_call(profile: &CodingSessionProfile) -> agentmage_kernel_contracts::ToolCall {
+        let definition = model_visible_coding_tools(profile.registry())
+            .unwrap()
+            .into_iter()
+            .find(|tool| tool.definition.tool_id.as_str() == "agentmage.workspace.read-file")
+            .unwrap()
+            .definition;
+        let bytes =
+            serde_json::to_vec(&native_tool_usage()["agentmage.workspace.read-file"]).unwrap();
+        agentmage_kernel_contracts::ToolCall {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            tool_call_id: tool_result().tool_call_id,
+            correlation_id: tool_result().correlation_id,
+            action_id: agentmage_kernel_contracts::ActionId::from_raw("coding-action-0001"),
+            tool_id: definition.tool_id,
+            tool_version: definition.tool_version,
+            arguments: ContractPayload {
+                schema: definition.input_schema,
+                media_type: "application/json".to_owned(),
+                sha256: sha256(&bytes),
+                bytes,
+            },
         }
     }
 

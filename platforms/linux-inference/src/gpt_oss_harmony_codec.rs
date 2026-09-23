@@ -214,7 +214,26 @@ impl ModelFamilyCodec for GptOssHarmonyFamilyCodec {
                     bytes.extend_from_slice(END_SUFFIX);
                 }
                 ModelMessageRole::Tool => {
-                    bytes.extend_from_slice(b"<|start|>functions.agentmage_native to=assistant<|channel|>commentary<|message|>");
+                    if self.completion_schema.is_some() {
+                        let (tool, arguments) =
+                            crate::codec_json::native_observation(message, &self.native_tools)
+                                .map_err(|_| {
+                                    failure("model.gpt-oss-codec.tool-observation-invalid")
+                                })?;
+                        let alias = crate::codec_json::tool_alias(tool.tool_id.as_str());
+                        bytes.extend_from_slice(b"<|start|>assistant to=functions.");
+                        bytes.extend_from_slice(alias.as_bytes());
+                        bytes.extend_from_slice(b"<|channel|>commentary<|message|>");
+                        bytes.extend_from_slice(&escape_template_delimiters(
+                            arguments.to_string().as_bytes(),
+                        ));
+                        bytes.extend_from_slice(CALL_SUFFIX);
+                        bytes.extend_from_slice(b"<|start|>functions.");
+                        bytes.extend_from_slice(alias.as_bytes());
+                        bytes.extend_from_slice(b" to=assistant<|channel|>commentary<|message|>");
+                    } else {
+                        bytes.extend_from_slice(b"<|start|>functions.agentmage_native to=assistant<|channel|>commentary<|message|>");
+                    }
                     bytes.extend_from_slice(&encoded);
                     bytes.extend_from_slice(END_SUFFIX);
                 }
@@ -714,6 +733,35 @@ mod tests {
         assert!(!text.contains("\"bytes\":["));
         assert!(text.ends_with("<|start|>assistant"));
         assert!(!text.contains("Bearer "));
+    }
+
+    #[test]
+    fn native_harmony_feedback_is_paired_with_the_exact_completed_call() {
+        let profile = profile();
+        let tool = native_tool();
+        let codec = GptOssHarmonyFamilyCodec::new(identity())
+            .unwrap()
+            .with_native_tools(vec![tool.clone()])
+            .unwrap()
+            .with_completion_schema(tool.output_schema.clone())
+            .unwrap();
+        let mut packet = packet(&profile);
+        packet
+            .messages
+            .push(crate::codec_json::observation_fixture(&tool));
+        let encoded = codec.encode_context(&profile, &packet).unwrap();
+        let text = std::str::from_utf8(&encoded.bytes).unwrap();
+        assert!(text.contains("<|start|>assistant to=functions.fixture_read<|channel|>commentary<|message|>{\"path\":[\"src\",\"fixture.py\"],\"schema_version\":1}<|call|><|start|>functions.fixture_read to=assistant"));
+        assert!(!text.contains("functions.agentmage_native"));
+        let message = packet.messages.last_mut().unwrap();
+        let mut wrong: serde_json::Value = serde_json::from_slice(&message.content.bytes).unwrap();
+        wrong["completed_call"]["tool_id"] = serde_json::json!("unknown.tool");
+        message.content.bytes = serde_json::to_vec(&wrong).unwrap();
+        message.content.sha256 = sha256(&message.content.bytes);
+        assert_eq!(
+            codec.encode_context(&profile, &packet).unwrap_err().code,
+            "model.gpt-oss-codec.tool-observation-invalid"
+        );
     }
 
     #[test]

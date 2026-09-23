@@ -319,6 +319,8 @@ pub struct RuntimeContinuationState {
     pub resources: RuntimeResourceUsage,
     /// Ordered content-free repeated-call guard state.
     pub tool_attempts: Vec<RuntimeToolAttemptState>,
+    /// Exact ordered calls paired with completed results for native model feedback.
+    pub completed_tool_calls: Vec<crate::ToolCall>,
     /// Ordered tool results required to reconstruct the next bounded context.
     pub tool_results: Vec<ToolResult>,
     /// Current grounded evidence in stable identity order.

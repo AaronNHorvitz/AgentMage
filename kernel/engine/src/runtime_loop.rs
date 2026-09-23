@@ -103,6 +103,7 @@ pub trait RuntimeContextPort {
         request: &RuntimeRunRequest,
         context_packet_id: ContextPacketId,
         turn: u32,
+        completed_tool_calls: &[ToolCall],
         tool_results: &[ToolResult],
         evidence: &[EvidenceReference],
     ) -> Result<ModelContextPacket, RuntimePortFailure>;
@@ -615,6 +616,7 @@ where
     attempt_guard: ToolAttemptGuard,
     events: Vec<RuntimeEvent>,
     tool_results: Vec<ToolResult>,
+    completed_tool_calls: Vec<ToolCall>,
     evidence: Vec<EvidenceReference>,
     receipt_ids: Vec<ReceiptId>,
     artifact_references: Vec<RuntimeArtifactRef>,
@@ -853,6 +855,7 @@ where
             attempt_guard,
             events: Vec::new(),
             tool_results: Vec::new(),
+            completed_tool_calls: Vec::new(),
             evidence,
             receipt_ids: Vec::new(),
             artifact_references: Vec::new(),
@@ -1145,6 +1148,7 @@ where
             &self.request,
             context_packet_id,
             self.turn_count,
+            &self.completed_tool_calls,
             &self.tool_results,
             &self.evidence,
         ) {
@@ -2120,7 +2124,7 @@ where
                 if !terminal_event_emitted {
                     self.emit(
                         RuntimeEventKind::ToolCompleted {
-                            tool_call_id: call.tool_call_id,
+                            tool_call_id: call.tool_call_id.clone(),
                             receipt_id: execution.receipt_id.clone(),
                             result_sha256,
                         },
@@ -2142,6 +2146,7 @@ where
                     left.evidence_id.as_str().cmp(right.evidence_id.as_str())
                 });
                 self.tool_results.push(execution.result);
+                self.completed_tool_calls.push(call);
                 self.state
                     .transition(AgentStateKind::Verification)
                     .map_err(|_| RuntimeLoopError::State)?;
@@ -2265,6 +2270,7 @@ where
             resources: self.resources.durable_usage(),
             tool_attempts: self.tool_attempts.clone(),
             tool_results: self.tool_results.clone(),
+            completed_tool_calls: self.completed_tool_calls.clone(),
             evidence: self.evidence.clone(),
             receipt_ids: self.receipt_ids.clone(),
             artifacts: self.artifact_references.clone(),
@@ -2485,6 +2491,7 @@ where
         self.attempt_guard = restored_guard;
         self.resources = restored_resources;
         self.tool_results = snapshot.continuation.tool_results;
+        self.completed_tool_calls = snapshot.continuation.completed_tool_calls;
         self.evidence = snapshot.continuation.evidence;
         self.receipt_ids = snapshot.continuation.receipt_ids;
         self.artifact_references = restored_artifacts;

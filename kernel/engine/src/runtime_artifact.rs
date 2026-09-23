@@ -2366,6 +2366,7 @@ fn validate_runtime_continuation_state(
         || continuation.model_call_count != continuation.turn_count
         || continuation.context_refresh_count != continuation.turn_count
         || continuation.tool_call_count as usize != continuation.tool_results.len()
+        || continuation.completed_tool_calls.len() != continuation.tool_results.len()
         || continuation.tool_call_count as usize != continuation.tool_attempts.len()
         || continuation.tool_results.len() > MAX_RUNTIME_CONTINUATION_RESULTS
         || continuation.receipt_ids.len() != continuation.tool_results.len()
@@ -2373,6 +2374,7 @@ fn validate_runtime_continuation_state(
         || !valid_continuation_resources(continuation)
         || !valid_continuation_tool_results(&continuation.tool_results)
         || !valid_continuation_tool_attempts(&continuation.tool_attempts)
+        || !valid_continuation_call_pairs(continuation)
         || !continuation
             .tool_results
             .iter()
@@ -2454,6 +2456,30 @@ fn valid_continuation_tool_results(results: &[agentmage_kernel_contracts::ToolRe
             && valid_sorted_evidence(&result.evidence)
             && call_ids.insert(result.tool_call_id.as_str())
     })
+}
+
+fn valid_continuation_call_pairs(continuation: &RuntimeContinuationState) -> bool {
+    continuation
+        .completed_tool_calls
+        .iter()
+        .zip(&continuation.tool_results)
+        .zip(&continuation.tool_attempts)
+        .all(|((call, result), attempt)| {
+            call.schema_version == CONTRACT_SCHEMA_VERSION
+                && call.tool_call_id == result.tool_call_id
+                && call.correlation_id == result.correlation_id
+                && valid_identifier(call.action_id.as_str())
+                && valid_identifier(call.tool_id.as_str())
+                && valid_identifier(&call.tool_version)
+                && valid_identifier(call.arguments.schema.schema_id.as_str())
+                && call.arguments.schema.schema_version > 0
+                && valid_sha256(&call.arguments.schema.schema_sha256)
+                && valid_media_type(&call.arguments.media_type)
+                && !call.arguments.bytes.is_empty()
+                && call.arguments.bytes.len() as u64 <= MAX_RUNTIME_ARTIFACT_BYTES
+                && call.arguments.sha256 == sha256(&call.arguments.bytes)
+                && crate::tooling::semantic_call_sha256(call) == attempt.semantic_sha256
+        })
 }
 
 fn valid_continuation_tool_attempts(
@@ -3092,6 +3118,7 @@ mod tests {
             },
             tool_attempts: Vec::new(),
             tool_results: Vec::new(),
+            completed_tool_calls: Vec::new(),
             evidence: Vec::new(),
             receipt_ids: Vec::new(),
             artifacts: Vec::new(),
@@ -3528,6 +3555,25 @@ mod tests {
         let output_bytes = vec![b'x'; agentmage_kernel_contracts::MAX_CONTRACT_JSON_BYTES + 1];
         let tool_call_id = agentmage_kernel_contracts::ToolCallId::from_raw("call-large-1");
         continuation.tool_call_count = 1;
+        let call = agentmage_kernel_contracts::ToolCall {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            tool_call_id: tool_call_id.clone(),
+            correlation_id: CorrelationId::from_raw("correlation-large-1"),
+            action_id: agentmage_kernel_contracts::ActionId::from_raw("action-large-1"),
+            tool_id: agentmage_kernel_contracts::ToolId::from_raw("fixture.read"),
+            tool_version: "1.0.0".to_owned(),
+            arguments: agentmage_kernel_contracts::ContractPayload {
+                schema: agentmage_kernel_contracts::SchemaReference {
+                    schema_id: agentmage_kernel_contracts::SchemaId::from_raw("fixture.input"),
+                    schema_version: 1,
+                    schema_sha256: digest('a'),
+                },
+                media_type: "application/json".to_owned(),
+                bytes: b"{}".to_vec(),
+                sha256: super::sha256(b"{}"),
+            },
+        };
+        continuation.completed_tool_calls = vec![call.clone()];
         continuation.resources.tool_calls = 1;
         continuation.resources.output_bytes = output_bytes
             .len()
@@ -3537,7 +3583,7 @@ mod tests {
             schema_version: CONTRACT_SCHEMA_VERSION,
             sequence: 1,
             tool_call_id: tool_call_id.clone(),
-            semantic_sha256: digest('e'),
+            semantic_sha256: crate::tooling::semantic_call_sha256(&call),
             occurrence: 1,
             call_depth: 0,
         }];
@@ -3566,6 +3612,29 @@ mod tests {
             "receipt-large-1",
         )];
         continuation.continuation_sha256 = digest('0');
+        let mut mismatched_call = continuation.clone();
+        mismatched_call.completed_tool_calls[0].tool_id =
+            agentmage_kernel_contracts::ToolId::from_raw("other.tool");
+        assert_eq!(
+            seal_runtime_continuation_state(mismatched_call),
+            Err(RuntimeArtifactError::InvalidContinuation)
+        );
+        let mut mismatched_result = continuation.clone();
+        mismatched_result.completed_tool_calls[0].correlation_id =
+            CorrelationId::from_raw("other-correlation");
+        assert_eq!(
+            seal_runtime_continuation_state(mismatched_result),
+            Err(RuntimeArtifactError::InvalidContinuation)
+        );
+        let mut corrupted_arguments = continuation.clone();
+        corrupted_arguments.completed_tool_calls[0]
+            .arguments
+            .bytes
+            .push(b' ');
+        assert_eq!(
+            seal_runtime_continuation_state(corrupted_arguments),
+            Err(RuntimeArtifactError::InvalidContinuation)
+        );
         let continuation =
             seal_runtime_continuation_state(continuation).expect("large continuation seals");
         let encoded = encode_runtime_continuation_state(&continuation)

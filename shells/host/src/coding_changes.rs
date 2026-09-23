@@ -358,7 +358,7 @@ pub fn structured_patch_tool_definition() -> ToolDefinition {
     controlled_change_definition(
         STRUCTURED_PATCH_TOOL_ID,
         "Apply structured patch",
-        "Binds ordered structured edits to one exact held preimage in an owned worktree",
+        "Binds ordered structured edits to one exact held preimage in an owned worktree. Python, Rust, TypeScript, TSX, JavaScript and Swift require syntax edits: rename_identifier (old and replacement), replace_syntax_node (exact node range and hash), or insert_import. replace_exact_text is allowed only for Go, shell, SQL and plain_text; it is rejected for Python. Copy intent_sha256 and change_plan_sha256 from edit_bindings and expected_preimage_sha256 from current file evidence. Never calculate hashes or use a text fallback for a syntax language.",
         STRUCTURED_PATCH_INPUT_SCHEMA_ID,
         STRUCTURED_PATCH_INPUT_SCHEMA_JSON,
     )
@@ -616,6 +616,27 @@ mod tests {
                 assert!(serde_json::from_value::<StructuredEdit>(missing).is_err());
             }
         }
+    }
+
+    #[test]
+    fn retained_gpt_python_text_fallback_remains_rejected() {
+        // Actual native-5 proposal, 2026-09-23. A valid Harmony frame must not
+        // authorize a fallback operation that the Python planner forbids.
+        let bytes = br#"{"additional_review_hooks":[],"allow_generated":false,"artifact_class":"code","change_id":"change1","change_plan_sha256":"792e8175302c695a54b6f241ebf5e08c83dce9f2bf12a365dfd587dac138c0cf","edits":[{"edit_id":"edit1","expected":"def broken_add(left, right):\n    return left + right\n","kind":"replace_exact_text","replacement":"def add(left, right):\n    return left + right\n"}],"expected_preimage_sha256":"aca809d27a82d641ebd68549b100a91cb40db964cbdd6e1efaeda70b79a73666","generated":false,"intent_sha256":"1a9c52addcb454e84a2d0d21168ae8cc011cf9c5d9746dc85e198288a2b879c9","language":"python","path":["src","calc.py"],"schema_version":1}"#;
+        assert_eq!(
+            sha256_hex(bytes),
+            "bdb0ba2bfd224bce39fc48915f732143828ffb960be4b2af1cc35c6085748c52"
+        );
+        assert!(validate_patch_bytes(&scope(), bytes).is_err());
+        let mut syntax: serde_json::Value = serde_json::from_slice(bytes).unwrap();
+        syntax["edits"] = json!([{
+            "edit_id":"edit1", "kind":"rename_identifier",
+            "old":"broken_add", "replacement":"add"
+        }]);
+        validate_patch_bytes(&scope(), &serde_json::to_vec(&syntax).unwrap()).unwrap();
+        let description = structured_patch_tool_definition().description;
+        assert!(description.contains("it is rejected for Python"));
+        assert!(description.contains("edit_bindings"));
     }
 
     fn patch() -> StructuredPatchProposal {

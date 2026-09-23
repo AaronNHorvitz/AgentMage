@@ -316,6 +316,38 @@ impl ModelFamilyCodec for MuseAtemFamilyCodec {
             if !valid_identifier(message.message_id.as_str()) || !valid_payload(&message.content) {
                 return Err(failure("model.muse-codec.context-invalid"));
             }
+            if !self.native_tools.is_empty()
+                && message.role == agentmage_kernel_contracts::ModelMessageRole::Tool
+            {
+                let (tool, arguments) =
+                    crate::codec_json::native_observation(message, &self.native_tools)
+                        .map_err(|_| failure("model.muse-codec.tool-observation-invalid"))?;
+                let name = tool.tool_id.as_str();
+                bytes.extend_from_slice(format!("<|start|>assistant to={name}<|message|><atem:function_calls>\n<atem:invoke name=\"{name}\">\n").as_bytes());
+                for (key, value) in arguments.as_object().expect("checked object") {
+                    if !valid_identifier(key) {
+                        return Err(failure("model.muse-codec.tool-observation-invalid"));
+                    }
+                    let rendered = if let Some(text) = value.as_str() {
+                        if text.contains("<|")
+                            || text.contains("<atem:")
+                            || text.contains("</atem:")
+                        {
+                            return Err(failure("model.muse-codec.tool-observation-invalid"));
+                        }
+                        text.as_bytes().to_vec()
+                    } else {
+                        escape_template_delimiters(value.to_string().as_bytes())
+                    };
+                    bytes.extend_from_slice(format!("<atem:parameter name=\"{key}\">").as_bytes());
+                    bytes.extend_from_slice(&rendered);
+                    bytes.extend_from_slice(b"</atem:parameter>\n");
+                }
+                bytes.extend_from_slice(format!("</atem:invoke>\n</atem:function_calls><|eot|><|start|>tool {name}<|message|><tool_output name=\"{name}\">\n").as_bytes());
+                bytes.extend_from_slice(&encode_message(message, true)?);
+                bytes.extend_from_slice(b"\n</tool_output><|eot|>");
+                continue;
+            }
             bytes.extend_from_slice(b"<|start|>");
             bytes.extend_from_slice(role_name(message.role).as_bytes());
             bytes.extend_from_slice(b"<|message|>");
@@ -680,6 +712,20 @@ mod tests {
         assert_eq!(call.tool_id, tool.tool_id);
         assert_eq!(call.arguments.schema, tool.input_schema);
         assert_eq!(call.arguments.sha256, sha256(&call.arguments.bytes));
+        let mut history = packet(&profile);
+        history
+            .messages
+            .push(crate::codec_json::observation_fixture(&tool));
+        let encoded = codec.encode_context(&profile, &history).unwrap();
+        let text = std::str::from_utf8(&encoded.bytes).unwrap();
+        assert!(text.contains("<|start|>assistant to=agentmage.validation.run-template<|message|><atem:function_calls>"));
+        assert!(
+            text.contains(
+                "<atem:parameter name=\"path\">[\"src\",\"fixture.py\"]</atem:parameter>"
+            )
+        );
+        assert!(text.contains("<|start|>tool agentmage.validation.run-template<|message|><tool_output name=\"agentmage.validation.run-template\">"));
+        assert!(!text.contains("<|start|>tool<|message|>"));
         let malformed = include_str!("../fixtures/muse-coding-rejection-20260923.txt")
             .trim_end_matches('\n')
             .as_bytes();

@@ -529,6 +529,7 @@ impl RuntimeContextPort for FakeContext {
         request: &RuntimeRunRequest,
         context_packet_id: ContextPacketId,
         turn: u32,
+        _completed_tool_calls: &[ToolCall],
         _tool_results: &[ToolResult],
         _evidence: &[EvidenceReference],
     ) -> Result<ModelContextPacket, RuntimePortFailure> {
