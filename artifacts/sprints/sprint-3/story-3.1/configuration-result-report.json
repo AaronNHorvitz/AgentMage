@@ -161,7 +161,7 @@
     },
     {
       "path": "tests/test_planning_schemas.mjs",
-      "sha256": "9ca263d7a1ad2a3b6c31e95b78872a6b11689770d43a1715e56e500f96f653b5"
+      "sha256": "ea9b411f33ba85e76513320ed697de0e215f9d8c2ce60e9eb03847c09fe23792"
     },
     {
       "path": "scripts/configuration_result_evidence.py",
