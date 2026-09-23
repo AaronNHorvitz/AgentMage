@@ -1,7 +1,76 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import Ajv2020 from "ajv/dist/2020.js";
+
+function nativeGitValidator() {
+  const source = readFileSync(new URL("../capabilities/read-only/src/git.rs", import.meta.url), "utf8");
+  const match = source.match(/pub const GIT_INSPECTION_INPUT_SCHEMA_JSON: &str = r#"([\s\S]*?)"#;/);
+  assert.ok(match, "use the exact schema published by the native tool owner");
+  return new Ajv2020({ allErrors: true, strict: true }).compile(JSON.parse(match[1]));
+}
+
+function gitRequest(operation = "status") {
+  return { schema_version: 1, operation, revision: null, object_id: null,
+    pathspecs: [], max_records: 1000, max_output_bytes: 4194304 };
+}
+
+test("native Git schema rejects the exact retained Muse status failures", () => {
+  const validate = nativeGitValidator();
+  const retained = [
+    ['{"max_output_bytes":4194304,"max_records":1000,"object_id":null,"operation":"status","pathspecs":[["."]],"revision":null,"schema_version":1}',
+      "139004858d8a258c64870090adc33df6208f0a3c7f775945d726258b4ab28953"],
+    ['{"max_output_bytes":1,"max_records":1,"object_id":null,"operation":"status","pathspecs":[["."]],"revision":null,"schema_version":1}',
+      "9039f96ca7972cef22ef259d7bde07ba5204ad01b7db2bb18fa6324c296ef6a0"],
+  ];
+  for (const [raw, hash] of retained) {
+    assert.equal(createHash("sha256").update(raw).digest("hex"), hash);
+    const value = JSON.parse(raw);
+    assert.equal(validate(value), false);
+    value.pathspecs = [["src"]];
+    assert.equal(validate(value), false, "status never admits a nonempty path selection");
+    value.pathspecs = [];
+    assert.equal(validate(value), true, JSON.stringify(validate.errors));
+  }
+});
+
+test("native Git schema discloses each owner's operation-specific shape", () => {
+  const validate = nativeGitValidator();
+  const operations = ["status", "current_branch", "upstream", "branch_list", "log", "diff",
+    "staged_diff", "show", "worktree_list", "object", "ref", "dirty_tree", "untracked_files"];
+  for (const operation of operations) {
+    const value = gitRequest(operation);
+    if (["show", "ref"].includes(operation)) value.revision = "HEAD";
+    if (operation === "object") value.object_id = "a".repeat(40);
+    assert.equal(validate(value), true, JSON.stringify(validate.errors));
+    const paths = { ...value, pathspecs: [["src", "calc.py"]] };
+    assert.equal(validate(paths), ["diff", "staged_diff", "show"].includes(operation));
+    const revision = { ...value, revision: value.revision === null ? "HEAD" : null };
+    assert.equal(validate(revision), operation === "log");
+    const object = { ...value, object_id: value.object_id === null ? "a".repeat(40) : null };
+    assert.equal(validate(object), false);
+  }
+});
+
+test("native Git schema keeps canonical path and revision refusals explicit", () => {
+  const validate = nativeGitValidator();
+  for (const component of ["", ".", "..", "*", "**", "src/x", "src\\x", "a:b", "x.", "x ",
+    "%2e", "%2F", "%5c", "a\u0000b", "a\nb", "a\u200bb", "a\u2215b"]) {
+    assert.equal(validate({ ...gitRequest("diff"), pathspecs: [[component]] }), false, component);
+  }
+  for (const component of ["src", "café.rs", "literal*name", "a b.txt", ".gitignore"]) {
+    assert.equal(validate({ ...gitRequest("diff"), pathspecs: [[component]] }), true, component);
+  }
+  for (const revision of ["", "-HEAD", ".HEAD", "HEAD.", "a/", "a..b", "a//b", "a.lock", "HEAD@{1}", "HEAD\n"]) {
+    assert.equal(validate({ ...gitRequest("show"), revision }), false, revision);
+  }
+  assert.equal(validate({ ...gitRequest("show"), revision: "refs/heads/feature-a" }), true);
+  assert.equal(validate({ ...gitRequest("object"), object_id: "A".repeat(64) }), true);
+  assert.equal(validate({ ...gitRequest("object"), object_id: "a".repeat(40) + "\n" }), false);
+  assert.equal(validate({ ...gitRequest(), command: "reset --hard" }), false);
+});
 
 import {
   MODEL_SCHEMAS,

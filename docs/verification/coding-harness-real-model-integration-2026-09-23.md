@@ -432,3 +432,45 @@ It is untracked, so ordinary Git diff is empty: creation payload/postimage and
 status provide the native evidence; the supplemental read-only no-index diff
 shows the two added lines. Raw logs are retained at private
 `runs/2026-09-23-campaign8-muse-new-file-1`, not combined with another tuple.
+
+## Decision 0076: Git argument disclosure
+
+At `22e5c44e7256f51f2f263f0bb8aebc296f54d710`, matrix10 passed all 20 cases
+and every check, including the corrected generic-command terminal failure
+regression using Muse's original exact argument digest. Report SHA-256:
+`5c6ba4ef1a8a9cc583c080a9487804c2d25607807410ba1f7ea66bd0b3c3e818`.
+Daily-core7 also passed: three setups, disk/output pressure, writer refusal in
+0.002787 seconds, cancellation in 0.838288 seconds, and 26 clean no-op runs in one
+session with 156 verified artifacts in 380.857 seconds (900-second ceiling).
+Report `942c43feacb15732443c153aaa51d389c6a3ff484696e618946aecbec2e6078b`.
+These are local scripted checks, not an aggregate daily gate. The matrix and
+early daily checks overlapped the native attempt in separate bounded scopes;
+source and binaries remained unchanged throughout these runs.
+
+Muse campaign9 stable1 failed in 316.668 seconds, exit7 `EXHAUSTED`: one native
+complete passing validation, followed by two pre-effect invalid Git-status
+proposals. Both used `pathspecs:[["."]]`; the second changed only numeric limits.
+No source changed, all full artifacts and raw records were retained, and resource
+guards passed (17953 MiB sampled GPU, 657551360-byte memory peak). Collector
+remains failed: `bef20bafe0def9a01de958665d0e276539039d469a6a7fe96ca300ce8e25d9d9`.
+Raw response hashes:
+`08f88f09b940ef2778f0f4362c92c9f3b5ebbaa55e7bc04642b33636500b4df4`
+and `f417263b1654068216bb7c89c1ff1eaf8a69b338449abb52d5e62baa0968e7ec`.
+
+The existing native owner requires empty pathspecs for status (not just canonical
+components), but the published schema omitted this operation-specific rule and
+accepted both rejected requests in the retained before-fix AJV check. Decision
+0076 exposes the existing operation/path/revision/object constraints and supplies
+native-validated status/diff examples. The native validator and one-rejection
+budget stay unchanged. This is a local integration correction, not an external
+model blocker. Verification and a fresh source-pinned campaign follow; no prior
+result is reclassified and no SBOM renewal has yet run during this source batch.
+
+Decision 0076 regression passes the exact two rejected argument hashes in both
+the unchanged native owner and tightened published schema. All 90 planning/model/
+catalog schema tests, 27 read-only capability tests, 308 host library tests
+(8 ignored), 15 host binary tests and 13 wrapper/collector tests pass. Strict
+Clippy, build, formatting and boundary audits pass. A mistyped nonexistent Cargo
+test target failed after the schema tests; that log is retained and the correct
+read-only all-target suite passes. Updated status/diff examples are checked by
+the actual native validator, not only JSON Schema.

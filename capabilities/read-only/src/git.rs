@@ -28,7 +28,49 @@ pub const GIT_INSPECTION_INPUT_SCHEMA_ID: &str = "agentmage.git.inspect.input";
 pub const GIT_INSPECTION_OUTPUT_SCHEMA_ID: &str = "agentmage.git.inspect.output";
 
 /// Canonical closed JSON Schema for one bounded Git inspection request.
-pub const GIT_INSPECTION_INPUT_SCHEMA_JSON: &str = r#"{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"agentmage.git.inspect.input","type":"object","additionalProperties":false,"required":["schema_version","operation","revision","object_id","pathspecs","max_records","max_output_bytes"],"properties":{"schema_version":{"const":1},"operation":{"enum":["status","current_branch","upstream","branch_list","log","diff","staged_diff","show","worktree_list","object","ref","dirty_tree","untracked_files"]},"revision":{"type":["string","null"],"maxLength":256},"object_id":{"type":["string","null"],"pattern":"^(?:[0-9A-Fa-f]{40}|[0-9A-Fa-f]{64})$"},"pathspecs":{"type":"array","maxItems":256,"items":{"type":"array","minItems":1,"maxItems":256,"items":{"type":"string","minLength":1,"maxLength":255}}},"max_records":{"type":"integer","minimum":1,"maximum":1000},"max_output_bytes":{"type":"integer","minimum":1,"maximum":4194304}}}"#;
+pub const GIT_INSPECTION_INPUT_SCHEMA_JSON: &str = r#"{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"agentmage.git.inspect.input",
+  "type":"object","additionalProperties":false,
+  "required":["schema_version","operation","revision","object_id","pathspecs","max_records","max_output_bytes"],
+  "properties":{
+    "schema_version":{"const":1},
+    "operation":{"enum":["status","current_branch","upstream","branch_list","log","diff","staged_diff","show","worktree_list","object","ref","dirty_tree","untracked_files"]},
+    "revision":{
+      "type":["string","null"],"maxLength":256,
+      "pattern":"^(?![-.])(?!.*\\.\\.)(?!.*//)(?!.*(?:/|\\.|\\.lock)$)[A-Za-z0-9/._@-]+(?![\\s\\S])",
+      "description":"Required for show/ref, optional for log, null otherwise. Exact bounded ASCII ref; no option prefix, traversal, reflog expression or shell syntax."
+    },
+    "object_id":{
+      "type":["string","null"],"pattern":"^(?:[0-9A-Fa-f]{40}|[0-9A-Fa-f]{64})(?![\\s\\S])",
+      "description":"Required only for object; null for every other operation."
+    },
+    "pathspecs":{
+      "type":"array","maxItems":256,
+      "description":"Use [] for the whole held worktree. Only diff/staged_diff/show accept nonempty paths. Status and every other operation require []. Never use [[\".\"]] for the root.",
+      "items":{
+        "type":"array","minItems":1,"maxItems":256,
+        "items":{
+          "type":"string","minLength":1,"maxLength":255,
+          "description":"One literal canonical component, at most 255 UTF-8 bytes, already NFC and NFKC normalized. Native canonical-path validation remains mandatory.",
+          "not":{"anyOf":[
+            {"enum":[".","..","*","**"]},
+            {"pattern":"[/\\\\:\\u0000-\\u001f\\u007f-\\u009f\\u200b-\\u200f\\u202a-\\u202e\\u2060-\\u2069\\ufeff\\u2044\\u2215\\u29f8\\uff0f\\uff3c]"},
+            {"pattern":"(?:%2[eEfF]|%5[cC]|[. ]$)"}
+          ]}
+        }
+      }
+    },
+    "max_records":{"type":"integer","minimum":1,"maximum":1000},
+    "max_output_bytes":{"type":"integer","minimum":1,"maximum":4194304}
+  },
+  "allOf":[
+    {"if":{"properties":{"operation":{"enum":["show","ref"]}}},"then":{"properties":{"revision":{"type":"string"}}}},
+    {"if":{"properties":{"operation":{"enum":["show","ref","log"]}}},"else":{"properties":{"revision":{"type":"null"}}}},
+    {"if":{"properties":{"operation":{"const":"object"}}},"then":{"properties":{"object_id":{"type":"string"}}},"else":{"properties":{"object_id":{"type":"null"}}}},
+    {"if":{"properties":{"operation":{"enum":["diff","staged_diff","show"]}}},"else":{"properties":{"pathspecs":{"type":"array","maxItems":0}}}}
+  ]
+}"#;
 
 /// Canonical closed JSON Schema for one bounded Git inspection result.
 pub const GIT_INSPECTION_OUTPUT_SCHEMA_JSON: &str = r#"{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"agentmage.git.inspect.output","type":"object","additionalProperties":false,"required":["schema_version","operation","repository_sha256","worktree_sha256","revision","outcome","records","observed_bytes","truncated","dirty","freshness_sha256","result_sha256"],"properties":{"schema_version":{"const":1},"operation":{"enum":["status","current_branch","upstream","branch_list","log","diff","staged_diff","show","worktree_list","object","ref","dirty_tree","untracked_files"]},"repository_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},"worktree_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},"revision":{"type":["string","null"]},"outcome":{"enum":["succeeded","no_result","truncated","failed"]},"records":{"type":"array","maxItems":1000,"items":{"type":"object","additionalProperties":false,"required":["sequence","record_kind","escaped_text","raw_sha256"],"properties":{"sequence":{"type":"integer","minimum":1},"record_kind":{"type":"string"},"escaped_text":{"type":"string"},"raw_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"}}}},"observed_bytes":{"type":"integer","minimum":0,"maximum":4194304},"truncated":{"type":"boolean"},"dirty":{"type":["boolean","null"]},"freshness_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},"result_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"}}}"#;
@@ -730,6 +772,26 @@ mod tests {
             unsafe_revision.as_slice(),
         ] {
             assert!(validate_git_inspection_request(invalid).is_err());
+        }
+    }
+
+    #[test]
+    fn retained_native_status_pathspec_failures_remain_invalid_after_schema_disclosure() {
+        // Actual Muse campaign9 stable1 arguments, before and after one rejection notice.
+        let retained = [
+            (br#"{"max_output_bytes":4194304,"max_records":1000,"object_id":null,"operation":"status","pathspecs":[["."]],"revision":null,"schema_version":1}"#.as_slice(),
+             "139004858d8a258c64870090adc33df6208f0a3c7f775945d726258b4ab28953"),
+            (br#"{"max_output_bytes":1,"max_records":1,"object_id":null,"operation":"status","pathspecs":[["."]],"revision":null,"schema_version":1}"#.as_slice(),
+             "9039f96ca7972cef22ef259d7bde07ba5204ad01b7db2bb18fa6324c296ef6a0"),
+        ];
+        for (bytes, digest) in retained {
+            assert_eq!(super::sha256_hex(bytes), digest);
+            assert!(validate_git_inspection_request(bytes).is_err());
+            let mut value: serde_json::Value = serde_json::from_slice(bytes).unwrap();
+            value["pathspecs"] = serde_json::json!([["src"]]);
+            assert!(validate_git_inspection_request(&serde_json::to_vec(&value).unwrap()).is_err());
+            value["pathspecs"] = serde_json::json!([]);
+            assert!(validate_git_inspection_request(&serde_json::to_vec(&value).unwrap()).is_ok());
         }
     }
 

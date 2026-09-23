@@ -818,12 +818,27 @@ fn native_tool_usage() -> serde_json::Value {
     };
     let read_example = serde_json::to_value(&read).expect("closed read example serializes");
     read.encoding = ReadOnlyEncoding::Binary;
+    let git_status = agentmage_capability_read_only::GitInspectionRequest {
+        schema_version: 1,
+        operation: agentmage_capability_read_only::GitInspectionOperation::Status,
+        revision: None,
+        object_id: None,
+        pathspecs: Vec::new(),
+        max_records: 1_000,
+        max_output_bytes: 4 * 1024 * 1024,
+    };
+    let git_diff = agentmage_capability_read_only::GitInspectionRequest {
+        operation: agentmage_capability_read_only::GitInspectionOperation::Diff,
+        ..git_status.clone()
+    };
     serde_json::json!({
         "examples_are_shapes_only": "Replace the example path with the actual authorized target; do not execute an example path.",
         "read_paths": "paths is an array of component arrays: [[src, example.py]], never a slash string or a flat component array. Every required nullable field must be supplied explicitly.",
         "read_encoding": "read-file/read-multiple/search-text require utf8. hash-file/hash-tree/directory/search-filenames/binary-metadata require binary. Non-search calls require query:null. Non-text calls require byte_offset:null and byte_count:null.",
         "agentmage.workspace.read-file": read_example,
         "agentmage.workspace.hash-file": read,
+        "git_inspection": "Call agentmage.git.inspect. All operations except diff/staged_diff/show require pathspecs:[], not [[\".\"]] or a directory; this includes status/dirty_tree/untracked_files. Only diff/staged_diff/show may select canonical component arrays; [] selects the whole held worktree. revision is required for show/ref, optional for log, null otherwise; object_id is required only for object and null otherwise. Inspect status as well as diff: ordinary diff omits untracked new files, whose creation receipt binds the postimage.",
+        "agentmage.git.inspect": {"status": git_status, "diff": git_diff},
         "edit_bindings": "Copy intent_sha256 and change_plan_sha256 exactly from edit_bindings above. Copy expected_preimage_sha256 from current repository/file evidence. Do not guess or fabricate hashes.",
         "structured_edits": "Python/Rust/TypeScript/TSX/JavaScript/Swift require syntax operations (rename_identifier, replace_syntax_node, insert_import). replace_exact_text is only for Go/shell/SQL/plain_text. For an identifier rename use rename_identifier with old and replacement; no syntax-node hash is needed.",
         "validation": "Use agentmage.validation.run-template with validation_id and template_sha256 from validations.templates, not command spec_sha256. Use a new validation_attempt_id on every execution. A failing test is real feedback, not completion.",
@@ -1322,6 +1337,14 @@ mod tests {
                 validate_read_only_request(kind, &serde_json::to_vec(&invalid_hash).unwrap())
                     .is_err()
             );
+        }
+        for operation in ["status", "diff"] {
+            let example = &usage["agentmage.git.inspect"][operation];
+            agentmage_capability_read_only::validate_git_inspection_request(
+                &serde_json::to_vec(example).unwrap(),
+            )
+            .unwrap();
+            assert_eq!(example["pathspecs"], serde_json::json!([]));
         }
     }
 
