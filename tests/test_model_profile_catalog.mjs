@@ -32,6 +32,7 @@ test("real Muse quality and diagnostic tuples remain separate and disabled", () 
     assert.equal(profile.modalities.length, 1);
     assert.equal(profile.modalities[0], "text");
     assert.equal(profile.context.max_context_tokens, 8192);
+    assert.equal(profile.runtime.runtime_build, "llama.cpp b10423 a94d563ed801d1da1b8c2432946de07d0231bb3d");
     assert.equal(profile.capabilities.every((capability) => capability.state === "blocked"), true);
   }
 });
@@ -45,6 +46,9 @@ test("32k coding candidates preserve exact family boundaries without enabling ad
   for (const profile of profiles) {
     assert.equal(profile.context.max_context_tokens, 32768);
     assert.equal(profile.decoding.max_output_tokens, 4096);
+    assert.equal(profile.runtime.runtime_build, "llama.cpp-b10423-a94d563ed801d1da1b8c2432946de07d0231bb3d");
+    assert.match(profile.runtime.runtime_build, /^[A-Za-z0-9._:-]+$/);
+    assert.equal(profile.runtime.runtime_sha256, "3b1194ef38f4b02b6329d698e29532435a5a7c3567c84b8bb822459ca0893286");
     assert.equal(profile.codec.reasoning_enabled, true);
     assert.equal(profile.enabled, false);
     assert.equal(profile.automatic_fallback, false);

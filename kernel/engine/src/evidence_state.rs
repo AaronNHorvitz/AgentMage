@@ -741,6 +741,37 @@ mod tests {
     }
 
     #[test]
+    fn coding_runtime_build_identity_preserves_the_strict_answer_evidence_contract() {
+        // Muse native-3 completed six real tools and supplied a final candidate.
+        // The old development profile's display-style build label was not a
+        // valid evidence identifier. Keep the validator; correct that profile.
+        let mut observed = manifest();
+        observed.runtime.runtime_build =
+            "llama.cpp b10423 a94d563ed801d1da1b8c2432946de07d0231bb3d".to_owned();
+        let make = |manifest| {
+            assigner()
+                .assign_inferred(
+                    "assignment-inferred",
+                    claim("claim-inferred", "subject-inferred"),
+                    vec![source("evidence-citation", "subject-source")],
+                    ModelRunId::from_raw("run-exact"),
+                    manifest,
+                    SHA.to_owned(),
+                )
+                .map(|_| ())
+        };
+        assert_eq!(
+            make(observed.clone()),
+            Err(EvidenceStateAssignmentError::InvalidInferredProvenance)
+        );
+        let runtime_digest = observed.runtime.runtime_sha256.clone();
+        observed.runtime.runtime_build =
+            "llama.cpp-b10423-a94d563ed801d1da1b8c2432946de07d0231bb3d".to_owned();
+        assert!(make(observed.clone()).is_ok());
+        assert_eq!(observed.runtime.runtime_sha256, runtime_digest);
+    }
+
+    #[test]
     fn inferred_requires_citations_and_exact_model_runtime_manifest() {
         for mutate in 0..4 {
             let mut citations = vec![source("evidence-citation", "subject-source")];

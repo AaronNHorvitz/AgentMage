@@ -10,6 +10,15 @@ from scripts import coding_harness
 
 
 class CodingHarnessTests(unittest.TestCase):
+    def test_implementation_identity_pins_source_and_all_three_binaries(self):
+        with mock.patch.object(coding_harness, "binary", return_value=Path("/usr/bin/true")):
+            identity = coding_harness.implementation_identity()
+        self.assertEqual(len(identity["head_commit"]), 40)
+        self.assertEqual(len(identity["binaries"]), 3)
+        self.assertTrue(all(len(item["sha256"]) == 64 and item["bytes"] > 0 for item in identity["binaries"]))
+        self.assertEqual(len(identity["tracked_diff_sha256"]), 64)
+        self.assertEqual(identity["wrapper"]["path"], str(Path(coding_harness.__file__).resolve()))
+
     def test_setup_creates_one_private_clean_path_bound_fixture(self):
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary) / "fixture"

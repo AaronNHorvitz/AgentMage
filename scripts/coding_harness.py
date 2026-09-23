@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -30,6 +31,38 @@ MODEL_LAB_LOCK = Path.home() / ".local/state/agentmage-model-lab/gpu.lock"
 
 class HarnessError(RuntimeError):
     """One content-minimized operator error."""
+
+
+def file_identity(path: Path) -> dict:
+    """Measure a stable regular file; this diagnostic does not admit an executable."""
+    with path.open("rb") as stream:
+        before = os.fstat(stream.fileno())
+        if not stat.S_ISREG(before.st_mode):
+            raise HarnessError("coding.harness.identity-not-regular")
+        digest = hashlib.file_digest(stream, "sha256").hexdigest()
+        after = os.fstat(stream.fileno())
+    fields = ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns")
+    if any(getattr(before, field) != getattr(after, field) for field in fields):
+        raise HarnessError("coding.harness.identity-changed")
+    return {"path": str(path), "bytes": after.st_size, "sha256": digest}
+
+
+def implementation_identity() -> dict:
+    def git(*arguments: str) -> bytes:
+        return subprocess.run(
+            ["git", "--no-optional-locks", *arguments], cwd=ROOT,
+            check=True, capture_output=True, timeout=30,
+        ).stdout
+
+    return {
+        "head_commit": git("rev-parse", "HEAD").decode("ascii").strip(),
+        "worktree_status": git("status", "--porcelain=v1", "--untracked-files=all").decode("utf-8"),
+        "tracked_diff_sha256": hashlib.sha256(git("diff", "HEAD", "--binary", "--no-ext-diff")).hexdigest(),
+        "binaries": [file_identity(binary(name)) for name in (
+            "agentmage", "agentmage-host", "agentmage-read-only-worker",
+        )],
+        "wrapper": file_identity(Path(__file__).resolve()),
+    }
 
 
 def scope_resources() -> dict[str, str]:
@@ -455,6 +488,9 @@ def start(
     opened = []
     process = None
     record_path = state / RUN_RECORD
+    started_at_epoch_ms = time.time_ns() // 1_000_000
+    started_monotonic = time.monotonic()
+    implementation = implementation_identity() if log_dir is not None else None
     try:
         if log_dir is not None:
             log_dir = log_dir.resolve(strict=False)
@@ -515,8 +551,18 @@ def start(
             else:
                 exit_code = process.returncode
         if log_dir is not None:
+            final_binaries = [file_identity(binary(name)) for name in (
+                "agentmage", "agentmage-host", "agentmage-read-only-worker",
+            )]
             result = {
                 "schema_version": 1, "exit_code": exit_code, "scenario": scenario,
+                "started_at_epoch_ms": started_at_epoch_ms,
+                "finished_at_epoch_ms": time.time_ns() // 1_000_000,
+                "elapsed_seconds": time.monotonic() - started_monotonic,
+                "command": command,
+                "implementation": implementation,
+                "final_binaries": final_binaries,
+                "binary_identity_unchanged": implementation["binaries"] == final_binaries,
                 "model": model,
                 "objective": objective, "approved_for_this_run": approve,
                 "stale_approval_probe": stale_approval_probe,

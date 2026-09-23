@@ -107,6 +107,8 @@ where
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<RuntimeCoordinatorStep, CodingClientError> {
         self.run_until_boundary(response, cancellation)
+            // RuntimeLoopError is a closed, Copy enum with no payload text.
+            .inspect_err(|error| eprintln!("coding.coordinator.failed:{error:?}"))
             .map_err(|_| CodingClientError::Runtime)
     }
 

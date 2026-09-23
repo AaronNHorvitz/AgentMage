@@ -556,7 +556,7 @@
         "adapter_id": "linux-native-llama-cpp-b10423-vulkan-x86_64",
         "kind": "native_llama_cpp",
         "contract_version": 1,
-        "runtime_build": "llama.cpp b10423 a94d563ed801d1da1b8c2432946de07d0231bb3d",
+        "runtime_build": "llama.cpp-b10423-a94d563ed801d1da1b8c2432946de07d0231bb3d",
         "runtime_sha256": "3b1194ef38f4b02b6329d698e29532435a5a7c3567c84b8bb822459ca0893286",
         "platform": "fedora",
         "architecture": "x86_64"
@@ -677,7 +677,7 @@
         "adapter_id": "linux-native-llama-cpp-b10423-vulkan-x86_64",
         "kind": "native_llama_cpp",
         "contract_version": 1,
-        "runtime_build": "llama.cpp b10423 a94d563ed801d1da1b8c2432946de07d0231bb3d",
+        "runtime_build": "llama.cpp-b10423-a94d563ed801d1da1b8c2432946de07d0231bb3d",
         "runtime_sha256": "3b1194ef38f4b02b6329d698e29532435a5a7c3567c84b8bb822459ca0893286",
         "platform": "fedora",
         "architecture": "x86_64"

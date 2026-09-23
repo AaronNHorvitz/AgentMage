@@ -556,7 +556,7 @@ fn build_repository_composition(
     let repository_map =
         build_development_linux_repository_map(platform, &selected, inventory.clone(), &policy)
             .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
-    let supporting_sources =
+    let mut supporting_sources =
         build_repository_context_sources(platform, &selected, &repository_map)?;
     drop(selected);
     let profile = Box::leak(Box::new(build_profile(
@@ -577,7 +577,77 @@ fn build_repository_composition(
         )
         .map_err(|_| CodingDevelopmentRuntimeError::Repository)?,
     ));
+    // Creation needs the platform's parent identity, not a model-invented tree
+    // hash. Observe only the already authorized writable roots. The effect
+    // boundary still rebinds the parent/siblings and refuses any later drift.
+    supporting_sources.extend(build_creation_parent_sources(
+        platform,
+        profile,
+        workspace.workspace(),
+    )?);
     Ok((profile, workspace, supporting_sources))
+}
+
+fn build_creation_parent_sources(
+    platform: &LinuxDevelopmentPlatformAdapter,
+    profile: &CodingSessionProfile,
+    workspace: &agentmage_platform_linux::LinuxAuthorizedWorkspace,
+) -> Result<Vec<CodingContextSource>, CodingDevelopmentRuntimeError> {
+    let mut sources = Vec::new();
+    for components in profile.write_scope().writable_roots() {
+        let (target, siblings) = if components.is_empty() {
+            (
+                GrantTarget::held_workspace_root(workspace)
+                    .map_err(|_| CodingDevelopmentRuntimeError::Repository)?,
+                workspace
+                    .observe_root_names(4_096, 1024 * 1024)
+                    .map_err(|_| CodingDevelopmentRuntimeError::Repository)?,
+            )
+        } else {
+            let path = WorkspacePath::new(
+                profile.write_scope().workspace_id().clone(),
+                components.iter().cloned(),
+            )
+            .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
+            let held = resolve_development_linux_workspace_object(
+                platform,
+                workspace,
+                &path,
+                PathResolutionIntent::ReadDirectory,
+            )
+            .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
+            (
+                GrantTarget::held_object(&held)
+                    .map_err(|_| CodingDevelopmentRuntimeError::Repository)?,
+                held.observe_directory_names(4_096, 1024 * 1024)
+                    .map_err(|_| CodingDevelopmentRuntimeError::Repository)?,
+            )
+        };
+        let parent_sha256 = controlled_create_parent_observation_sha256(&target, &siblings)
+            .map_err(|_| CodingDevelopmentRuntimeError::Composition)?;
+        let content = serde_json::to_string(&serde_json::json!({
+            "schema_version": 1, "parent_path": components,
+            "observed_sibling_names": siblings,
+            "expected_parent_sha256": parent_sha256,
+            "use": "Source-bound initial parent observation for controlled create-file. Copy this hash only for a direct child of this parent. It is not authority. A changed parent, sibling set, or existing destination is rejected at the native effect boundary.",
+        })).map_err(|_| CodingDevelopmentRuntimeError::Composition)?;
+        let digest = sha256(content.as_bytes());
+        sources.push(
+            CodingContextSource::new(
+                format!("creation-parent-{}", &digest[..16]),
+                ContextItemKind::Supporting,
+                ContextSensitivity::Private,
+                ContextAdmission::Eligible,
+                true,
+                format!("agentmage:creation-parent:{}", components.join("/")),
+                parent_sha256,
+                digest,
+                content,
+            )
+            .map_err(|_| CodingDevelopmentRuntimeError::Composition)?,
+        );
+    }
+    Ok(sources)
 }
 
 fn build_repository_context_sources(
