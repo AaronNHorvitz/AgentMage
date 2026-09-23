@@ -293,6 +293,7 @@ struct StreamBinding {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum ToolPhase {
     Requested,
+    Rejected,
     Started,
     Completed,
     Failed,
@@ -300,6 +301,7 @@ enum ToolPhase {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct ToolState {
+    approval_requested: bool,
     phase: ToolPhase,
     operation_id: String,
     attempt_id: Option<String>,
@@ -466,10 +468,12 @@ impl RuntimeEventSequence {
             RuntimeEventKind::TurnCompleted { .. } => {
                 self.require_active_turn(event)?;
                 if self.active_model_run_id.is_some()
-                    || self
-                        .tools
-                        .values()
-                        .any(|tool| !matches!(tool.phase, ToolPhase::Completed | ToolPhase::Failed))
+                    || self.tools.values().any(|tool| {
+                        !matches!(
+                            tool.phase,
+                            ToolPhase::Completed | ToolPhase::Failed | ToolPhase::Rejected
+                        )
+                    })
                     || self.tools.values().any(|tool| {
                         tool.attempt_id.is_some()
                             && (tool.observation_id.is_none() || !tool.verification_observed)
@@ -536,6 +540,7 @@ impl RuntimeEventSequence {
                 self.tools.insert(
                     tool_call_id.as_str().to_owned(),
                     ToolState {
+                        approval_requested: false,
                         phase: ToolPhase::Requested,
                         operation_id,
                         attempt_id: None,
@@ -545,6 +550,21 @@ impl RuntimeEventSequence {
                         retry_decided: false,
                     },
                 );
+                Ok(())
+            }
+            RuntimeEventKind::ToolRejected { tool_call_id, .. } => {
+                self.require_active_turn(event)?;
+                let operation_id = required_operation(event)?;
+                let Some(tool) = self.tools.get_mut(tool_call_id.as_str()) else {
+                    return Err(RuntimeEventError::IllegalTransition);
+                };
+                if tool.phase != ToolPhase::Requested
+                    || tool.operation_id != operation_id
+                    || tool.approval_requested
+                {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                tool.phase = ToolPhase::Rejected;
                 Ok(())
             }
             RuntimeEventKind::ToolStarted { tool_call_id, .. } => {
@@ -602,6 +622,12 @@ impl RuntimeEventSequence {
                 }
                 self.permissions
                     .insert(approval_id.as_str().to_owned(), operation_id);
+                for tool in self.tools.values_mut().filter(|tool| {
+                    Some(tool.operation_id.as_str())
+                        == event.operation_id.as_ref().map(|id| id.as_str())
+                }) {
+                    tool.approval_requested = true;
+                }
                 Ok(())
             }
             RuntimeEventKind::PermissionDecided {
@@ -1621,6 +1647,7 @@ pub const fn runtime_event_persistence(kind: &RuntimeEventKind) -> RuntimeEventP
         | RuntimeEventKind::ToolStarted { .. }
         | RuntimeEventKind::ToolCompleted { .. }
         | RuntimeEventKind::ToolFailed { .. }
+        | RuntimeEventKind::ToolRejected { .. }
         | RuntimeEventKind::RouteSelected { .. }
         | RuntimeEventKind::ProposalObserved { .. }
         | RuntimeEventKind::PermissionRequested { .. }
@@ -1687,6 +1714,11 @@ fn valid_kind(kind: &RuntimeEventKind) -> bool {
             tool_call_id,
             arguments_sha256,
         } => valid_identifier(tool_call_id.as_str()) && valid_sha256(arguments_sha256),
+        RuntimeEventKind::ToolRejected {
+            tool_call_id,
+            rejection_sha256,
+            ..
+        } => valid_identifier(tool_call_id.as_str()) && valid_sha256(rejection_sha256),
         RuntimeEventKind::ToolStarted {
             tool_call_id,
             authority_sha256,
@@ -2646,6 +2678,7 @@ mod tests {
             RuntimeEventKind::RouteSelected { .. } => "route_selected",
             RuntimeEventKind::ProposalObserved { .. } => "proposal_observed",
             RuntimeEventKind::ToolRequested { .. } => "tool_requested",
+            RuntimeEventKind::ToolRejected { .. } => "tool_rejected",
             RuntimeEventKind::ToolStarted { .. } => "tool_started",
             RuntimeEventKind::ToolCompleted { .. } => "tool_completed",
             RuntimeEventKind::ToolFailed { .. } => "tool_failed",
@@ -2789,6 +2822,54 @@ mod tests {
             events.last().unwrap().event_sha256
         );
         assert!(sequence.is_terminal());
+    }
+
+    #[test]
+    fn pre_effect_rejection_cannot_follow_approval_or_become_a_worker_launch() {
+        let events = valid_sequence();
+        let requested = events
+            .iter()
+            .position(|event| matches!(event.kind, RuntimeEventKind::ToolRequested { .. }))
+            .unwrap();
+        let RuntimeEventKind::ToolRequested { tool_call_id, .. } = &events[requested].kind else {
+            unreachable!()
+        };
+        for (index, expected) in [
+            (requested, true),
+            (requested + 1, false),
+            (requested + 2, false),
+        ] {
+            let prior = &events[index];
+            let mut fixture = FixtureStream {
+                next_sequence: prior.sequence + 1,
+                previous_sha256: prior.event_sha256.clone(),
+                causation_event_id: Some(prior.event_id.clone()),
+                occurred_at_epoch_ms: prior.occurred_at_epoch_ms + 1,
+            };
+            let mut sequence = RuntimeEventSequence::new();
+            for event in &events[..=index] {
+                sequence.push(event).unwrap();
+            }
+            let rejected = fixture.event(RuntimeEventKind::ToolRejected {
+                tool_call_id: tool_call_id.clone(), reason: agentmage_kernel_contracts::RuntimeToolRejectionReason::ReadProjectionUnavailable,
+                rejection_sha256: hash('a'),
+            }, prior.turn_id.as_ref().map(|id| id.as_str()), prior.operation_id.as_ref().map(|id| id.as_str()));
+            assert_eq!(sequence.push(&rejected).is_ok(), expected);
+            if expected {
+                let started = fixture.event(
+                    RuntimeEventKind::ToolStarted {
+                        tool_call_id: tool_call_id.clone(),
+                        authority_sha256: hash('b'),
+                    },
+                    prior.turn_id.as_ref().map(|id| id.as_str()),
+                    prior.operation_id.as_ref().map(|id| id.as_str()),
+                );
+                assert_eq!(
+                    sequence.push(&started),
+                    Err(RuntimeEventError::IllegalTransition)
+                );
+            }
+        }
     }
 
     #[test]

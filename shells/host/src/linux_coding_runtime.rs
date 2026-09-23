@@ -734,9 +734,12 @@ where
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Unavailable)?;
         let workspace: &'workspace LinuxCodingWorkspace<'session, 'platform> = self.workspace;
-        let prepared = workspace
-            .prepare(call)
-            .map_err(|_| RuntimePortFailure::Invalid)?;
+        let prepared = workspace.prepare(call).map_err(|error| match error {
+            crate::linux_coding::LinuxCodingBindingError::ReadProjectionUnavailable => {
+                RuntimePortFailure::ReadProjectionUnavailable
+            }
+            _ => RuntimePortFailure::Invalid,
+        })?;
         verify_rollback_source(
             &self.authority,
             request,
@@ -7785,6 +7788,50 @@ mod tests {
         assert!(fixture.boundary.pending.is_empty());
         assert_eq!(fixture.boundary.issued.len(), 1);
         assert!(fixture.boundary.authority.authority().receipts().is_empty());
+    }
+
+    #[test]
+    fn retained_muse_missing_read_is_rejected_before_authority_and_not_path_absence_evidence() {
+        let mut fixture = fixture();
+        // Exact decoded Muse new-file arguments, not a substituted scripted reply.
+        fixture.call.arguments.bytes = br#"{"byte_count":null,"byte_offset":null,"call_depth":0,"encoding":"utf8","limits":{"depth":16,"files":128,"input_bytes":4194304,"matches":256,"output_bytes":1048576},"paths":[["src","calc.py"]],"query":null,"schema_version":1}"#.to_vec();
+        fixture.call.arguments.sha256 = sha256(&fixture.call.arguments.bytes);
+        assert!(
+            fixture
+                .boundary
+                .workspace
+                .profile()
+                .registry()
+                .validate_arguments(&fixture.call)
+                .is_ok()
+        );
+        assert_eq!(
+            fixture.boundary.evaluate(
+                &fixture.request,
+                &fixture.operation_id,
+                &fixture.definition,
+                &fixture.call,
+                1_000
+            ),
+            Err(RuntimePortFailure::ReadProjectionUnavailable)
+        );
+        assert!(fixture.boundary.pending.is_empty());
+        assert!(fixture.boundary.issued.is_empty());
+        assert!(fixture.boundary.authority.authority().receipts().is_empty());
+        // Invalid schema/encoding is not recoverable as this narrow condition.
+        fixture.call.arguments.bytes =
+            br#"{"schema_version":1,"paths":[["src","calc.py"]]}"#.to_vec();
+        fixture.call.arguments.sha256 = sha256(&fixture.call.arguments.bytes);
+        assert_eq!(
+            fixture.boundary.evaluate(
+                &fixture.request,
+                &fixture.operation_id,
+                &fixture.definition,
+                &fixture.call,
+                1_000
+            ),
+            Err(RuntimePortFailure::Invalid)
+        );
     }
 
     #[test]

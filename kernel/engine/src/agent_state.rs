@@ -192,6 +192,7 @@ pub const fn legal_transition(from: AgentStateKind, to: AgentStateKind) -> bool 
         State::Approval => matches!(
             to,
             State::Execution
+                | State::Checkpoint
                 | State::Blocked
                 | State::Declined
                 | State::Exhausted
@@ -304,7 +305,7 @@ mod tests {
             .filter(|(from, to)| legal_transition(*from, *to))
             .count();
         assert_eq!(STATES.len() * STATES.len(), 289);
-        assert_eq!(admitted, 52);
+        assert_eq!(admitted, 53); // Decision 0072: pre-effect rejection checkpoints.
     }
 
     #[test]
@@ -438,9 +439,9 @@ mod tests {
             }
         }
 
-        assert_eq!(legal_edges, 52);
-        assert_eq!(illegal_edges, 237);
-        assert_eq!(ordinary_admissions, 48);
+        assert_eq!(legal_edges, 53);
+        assert_eq!(illegal_edges, 236);
+        assert_eq!(ordinary_admissions, 49);
         assert_eq!(verifier_gated, 34);
         assert_eq!(STATES.iter().filter(|state| state.is_terminal()).count(), 9);
     }

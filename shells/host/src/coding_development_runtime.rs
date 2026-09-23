@@ -1818,6 +1818,24 @@ fn scripted_steps(
                 },
             )?;
             Ok([
+                // Regression for the actual Muse new-file proposal: it must be
+                // rejected before grant/effect, retained, then permit a new turn.
+                ScriptedDevelopmentStep::Tool(tool_candidate(
+                    profile,
+                    ReadOnlyToolKind::ReadText.id(),
+                    READ_ONLY_TOOL_VERSION,
+                    "scripted-read-absent-target",
+                    &ReadOnlyRequest {
+                        schema_version: 1,
+                        paths: vec![vec!["src".to_owned(), "calc.py".to_owned()]],
+                        query: None,
+                        byte_offset: None,
+                        byte_count: None,
+                        encoding: ReadOnlyEncoding::Utf8,
+                        limits: ReadOnlyLimits::default(),
+                        call_depth: 0,
+                    },
+                )?),
                 ScriptedDevelopmentStep::Tool(create),
                 ScriptedDevelopmentStep::Tool(validation),
                 ScriptedDevelopmentStep::Tool(git_diff),

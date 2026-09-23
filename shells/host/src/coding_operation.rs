@@ -12,7 +12,9 @@ use crate::{
     coding_dispatch::{
         NativeCodingCallPreparer, NativeCodingDispatchError, PreparedNativeCodingCall,
     },
-    coding_projection::{CodingProjectionObject, CodingRepositoryProjection},
+    coding_projection::{
+        CodingProjectionError, CodingProjectionObject, CodingRepositoryProjection,
+    },
     coding_session::CodingSessionProfile,
 };
 
@@ -92,6 +94,8 @@ impl PreparedNativeCodingOperation {
 /// Stable content-free refusal while binding one call to trusted workspace material.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum NativeCodingOperationError {
+    /// A structurally valid read does not select an object in the frozen inventory.
+    ReadProjectionUnavailable,
     /// The call or provider-specific plan failed the immutable native catalog.
     DispatchDenied,
     /// The repository map could not select the requested exact object projection.
@@ -105,6 +109,9 @@ impl NativeCodingOperationError {
     #[must_use]
     pub const fn code(self) -> &'static str {
         match self {
+            Self::ReadProjectionUnavailable => {
+                "runtime.coding-operation.read-projection-unavailable"
+            }
             Self::DispatchDenied => "runtime.coding-operation.dispatch-denied",
             Self::ProjectionDenied => "runtime.coding-operation.projection-denied",
             Self::InvariantDenied => "runtime.coding-operation.invariant-denied",
@@ -182,7 +189,12 @@ fn target_for(
         PreparedNativeCodingCall::ReadOnly { kind, request } => {
             let selected = projection
                 .select(*kind, request)
-                .map_err(|_| NativeCodingOperationError::ProjectionDenied)?;
+                .map_err(|error| match error {
+                    CodingProjectionError::ObjectDenied => {
+                        NativeCodingOperationError::ReadProjectionUnavailable
+                    }
+                    _ => NativeCodingOperationError::ProjectionDenied,
+                })?;
             Ok((
                 OperationBinding::new(GrantOperation::WorkspaceRead),
                 NativeCodingTargetPlan::ReadProjection {

@@ -787,8 +787,31 @@ mod tests {
             .unwrap()
             .with_native_contracts(vec![directory.clone()], tool.output_schema.clone())
             .unwrap()
-            .with_native_parameter_schemas(vec![(directory, read_schema)])
+            .with_native_parameter_schemas(vec![(directory, read_schema.clone())])
             .unwrap();
+        let missing =
+            include_str!("../fixtures/muse-missing-read-20260923.txt").trim_end_matches('\n');
+        assert_eq!(
+            sha256(missing.as_bytes()),
+            "a9a7e9b2110117856029230a65dab7bae3a722ddbe9f09a93bf2e7c0879a1161"
+        );
+        let mut read = tool.clone();
+        read.tool_id = ToolId::from_raw("agentmage.workspace.read-file");
+        let read_codec = MuseAtemFamilyCodec::new(profile.codec.clone())
+            .unwrap()
+            .with_native_contracts(vec![read.clone()], tool.output_schema.clone())
+            .unwrap()
+            .with_native_parameter_schemas(vec![(read, read_schema)])
+            .unwrap();
+        let missing_call = read_codec
+            .decode_proposal(&profile, &request(&profile), missing.as_bytes())
+            .unwrap()
+            .tool_call
+            .unwrap();
+        let args: serde_json::Value =
+            serde_json::from_slice(&missing_call.arguments.bytes).unwrap();
+        assert_eq!(args["paths"], serde_json::json!([["src", "calc.py"]]));
+        assert_eq!(args["encoding"], "utf8");
         let special = multipart.replace("<|start|>assistant", "<|eom|><|start|>assistant");
         for framed in [
             multipart.to_owned(),

@@ -857,6 +857,23 @@ mod tests {
 
     #[test]
     fn retained_malformed_final_is_not_reinterpreted_as_valid_completion() {
+        let extra_separator = include_str!("../fixtures/gpt-oss-format-separator-20260923.txt")
+            .trim_end_matches('\n');
+        assert_eq!(
+            sha256(extra_separator.as_bytes()),
+            "df1678399d92dc7f3c705a5da3b4ce986ca84b86627dabc702da442cf920b366"
+        );
+        let separator_codec = GptOssHarmonyFamilyCodec::new(identity())
+            .unwrap()
+            .with_native_tools(vec![native_tool()])
+            .unwrap();
+        assert_eq!(
+            separator_codec
+                .decode_proposal(&profile(), &request(&profile()), extra_separator.as_bytes())
+                .unwrap_err()
+                .code,
+            "model.gpt-oss-codec.tool-channel-invalid"
+        );
         let malformed = include_str!("../fixtures/gpt-oss-duplicate-channel-20260923.txt")
             .trim_end_matches('\n')
             .as_bytes();

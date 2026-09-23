@@ -524,6 +524,12 @@ fn pressure_temporary_directory() -> std::path::PathBuf {
 struct FakeContext;
 
 impl RuntimeContextPort for FakeContext {
+    fn observe_tool_rejections(
+        &mut self,
+        _rejections: &[agentmage_kernel_contracts::RuntimeToolRejection],
+    ) -> Result<(), RuntimePortFailure> {
+        Ok(())
+    }
     fn build_context(
         &mut self,
         request: &RuntimeRunRequest,
@@ -574,6 +580,7 @@ impl RuntimeClock for FakeClock {
 
 #[derive(Clone, Copy)]
 enum PermissionScript {
+    RejectRead,
     Allow,
     Ask,
     Expired,
@@ -671,6 +678,9 @@ impl RuntimeToolBoundary for FakeToolBoundary {
         _call: &ToolCall,
         now_epoch_ms: u64,
     ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
+        if matches!(self.script, PermissionScript::RejectRead) {
+            return Err(RuntimePortFailure::ReadProjectionUnavailable);
+        }
         Ok(self.evaluation(None, None, now_epoch_ms))
     }
 
@@ -1593,6 +1603,125 @@ fn story_48_2_controlled_write_mode_uses_the_same_ephemeral_coordinator_boundary
     assert_eq!(outcome.state, AgentStateKind::Success);
     assert_eq!(executions.load(Ordering::SeqCst), 0);
     assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn coding_read_rejection_is_retained_without_authority_effect_or_evidence() {
+    let (mut coordinator, executions) = coordinator(
+        [ModelScript::Tool, ModelScript::Tool],
+        PermissionScript::RejectRead,
+        true,
+    );
+    let RuntimeCoordinatorStep::Complete { outcome } =
+        coordinator.run_until_boundary(None, None).unwrap()
+    else {
+        panic!("bounded rejection must terminate");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Stalled);
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    assert_eq!(coordinator.rejected_tool_calls.len(), 2);
+    assert_eq!(coordinator.tool_call_count, 2);
+    assert!(coordinator.receipt_ids.is_empty());
+    assert!(coordinator.tool_results.is_empty());
+    assert!(!coordinator.events().iter().any(|event| matches!(
+        event.kind,
+        RuntimeEventKind::PermissionRequested { .. }
+            | RuntimeEventKind::PermissionDecided { .. }
+            | RuntimeEventKind::ToolStarted { .. }
+            | RuntimeEventKind::ToolCompleted { .. }
+    )));
+    assert_eq!(
+        coordinator
+            .events()
+            .iter()
+            .filter(|event| matches!(event.kind, RuntimeEventKind::ToolRejected { .. }))
+            .count(),
+        2
+    );
+    assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn coding_write_cannot_use_read_rejection_recovery() {
+    let (mut coordinator, executions) = coordinator_for_mode_and_operation(
+        RuntimeSessionMode::ControlledWrite,
+        GrantOperation::WorkspaceWrite,
+        [ModelScript::Tool],
+        PermissionScript::RejectRead,
+        true,
+    )
+    .unwrap();
+    assert_eq!(
+        coordinator.run_until_boundary(None, None),
+        Err(RuntimeLoopError::InvalidBoundaryResult)
+    );
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    assert!(coordinator.rejected_tool_calls.is_empty());
+}
+
+#[test]
+fn coding_read_rejection_resumes_from_canonical_checkpoint_without_replay() {
+    let (initial, executions) =
+        coordinator([ModelScript::Tool], PermissionScript::RejectRead, true);
+    let mut request = initial.request.clone();
+    request.mode = RuntimeSessionMode::DurableReadOnly;
+    request.request_sha256 = "0".repeat(64);
+    let request = seal_runtime_run_request(request).unwrap();
+    let mut first = ReusableRuntimeCoordinator::new_with_durable_state(
+        request.clone(),
+        initial.model,
+        initial.context,
+        initial.registry,
+        initial.tool_boundary,
+        initial.verifier,
+        initial.clock,
+    )
+    .unwrap();
+    first.start().unwrap();
+    first.run_turn(None).unwrap();
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    assert_eq!(first.rejected_tool_calls.len(), 1);
+    assert!(first.receipt_ids.is_empty());
+    let retained = first.rejected_tool_calls.clone();
+    let mut resumed_request = request;
+    resumed_request.event_cursor = Some(runtime_event_cursor(first.events().last().unwrap()));
+    resumed_request.request_sha256 = "0".repeat(64);
+    let resumed_request = seal_runtime_run_request(resumed_request).unwrap();
+    first.tool_boundary.script = PermissionScript::Allow;
+    let mut resumed = ReusableRuntimeCoordinator::new_with_durable_state(
+        resumed_request,
+        FakeModel::new(
+            first.model.profile.clone(),
+            [ModelScript::ToolAt(2), ModelScript::Completion],
+        ),
+        FakeContext,
+        first.registry,
+        first.tool_boundary,
+        first.verifier,
+        FakeClock { now: 6_000 },
+    )
+    .unwrap();
+    assert_eq!(resumed.rejected_tool_calls, retained);
+    // The test model's counter is its ID factory; never reuse the rejected call ID.
+    resumed.model.calls = 1;
+    let RuntimeCoordinatorStep::Complete { outcome } =
+        resumed.run_until_boundary(None, None).unwrap()
+    else {
+        panic!("resume completes");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Success, "{outcome:?}");
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    assert_eq!(outcome.tool_call_count, 2);
+    assert_eq!(resumed.receipt_ids.len(), 1);
+    assert_eq!(
+        resumed
+            .events()
+            .iter()
+            .filter(|event| matches!(event.kind, RuntimeEventKind::ToolRejected { .. }))
+            .count(),
+        1
+    );
+    assert_valid_terminal_stream(&resumed);
 }
 
 #[test]

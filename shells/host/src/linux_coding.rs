@@ -40,6 +40,8 @@ use crate::{
 /// Stable content-free refusal while binding a coding profile to Linux descriptors.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LinuxCodingBindingError {
+    /// A valid read has no selectable object in the exact frozen inventory.
+    ReadProjectionUnavailable,
     /// The actual directory does not equal the profile's owned-worktree identity.
     WorktreeDenied,
     /// The repository map does not equal the profile's frozen repository snapshot.
@@ -55,6 +57,7 @@ impl LinuxCodingBindingError {
     #[must_use]
     pub const fn code(self) -> &'static str {
         match self {
+            Self::ReadProjectionUnavailable => "runtime.linux-coding.read-projection-unavailable",
             Self::WorktreeDenied => "runtime.linux-coding.worktree-denied",
             Self::ProjectionDenied => "runtime.linux-coding.projection-denied",
             Self::OperationDenied => "runtime.linux-coding.operation-denied",
@@ -362,7 +365,12 @@ impl<'session, 'platform> LinuxCodingWorkspace<'session, 'platform> {
             .map_err(|_| LinuxCodingBindingError::WorktreeDenied)?;
         let operation = NativeCodingOperationPlanner::new(self.profile, &self.projection)
             .prepare(call)
-            .map_err(|_| LinuxCodingBindingError::OperationDenied)?;
+            .map_err(|error| match error {
+                crate::coding_operation::NativeCodingOperationError::ReadProjectionUnavailable => {
+                    LinuxCodingBindingError::ReadProjectionUnavailable
+                }
+                _ => LinuxCodingBindingError::OperationDenied,
+            })?;
         let binding = bind_target(
             &self.workspace,
             operation.target(),

@@ -123,6 +123,24 @@ records the missing raw-completion special-token output setting, bounded
 multi-part reasoning parsing and operation-specific read-tool guidance. The
 invalid encoding is preserved for native rejection, not silently repaired.
 
+The next new-file attempt at `b7fbf289` failed exit 5 after 238.410 seconds:
+registered failed validation, then a valid native read of the absent target.
+The frozen read projection refused it before any read approval or effect, but
+the host aborted instead of retaining useful pre-effect feedback. Raw SHA
+`a9a7e9b2110117856029230a65dab7bae3a722ddbe9f09a93bf2e7c0879a1161` is a
+regression; [Decision 0072](../decisions/0072-bounded-pre-effect-read-rejection.md)
+records the bounded continuation correction without broadening read access.
+
+GPT native-7 at the same source completed a native hash read then failed exit 8
+on an extra Harmony channel separator before format metadata. It ran 170.858
+seconds, preserved all binary identities and passed the resource guard with
+13753 MiB sampled peak total GPU use. Raw SHA
+`df1678399d92dc7f3c705a5da3b4ce986ca84b86627dabc702da442cf920b366` remains a
+negative decoder fixture. The accepted history rendering matches the retained
+pinned upstream template; no decoder relaxation or generation-limit change is
+justified by this malformed header alone. This is another unsuccessful attempt,
+not a claim about general model capability.
+
 All attempts preserve the pinned b10423 Vulkan runtime, single slot, four threads,
 two-core quota, low priority, 45-minute limit, memory bounds and GPU guard. No model,
 generation-budget, context-capacity, permission or verifier substitution was used.
@@ -145,6 +163,23 @@ Actual-process scripted regressions passed:
   rollback and concurrent-human-edit conflict refusal. `matrix-1` failed because
   its scripted rollback consumer still read the older observation shape; that
   failure and the paired-shape regression are retained.
+- `resume-1` at `b7fbf289`: same canonical run/session resumed to verifier success
+  with five new effects and no replayed effect; worktree drift refused before
+  effects and preserved the synthetic human comment. The original observer
+  mistakenly counted identical canonical event replay as redispatch. Its failed
+  report is preserved (SHA `4fe8d2f7e7405ec8290790976b49c0d9113c0a2fc07a43dd61a96d3378f9a851`)
+  alongside the passing read-only reassessment and both exact assessor scripts.
+- `rejected-read-create-1`: actual CLI/host emitted `tool_rejected` at sequence 8
+  with no approval/effect, then created the file with a fresh grant, validated,
+  inspected diff/status and reached verifier `SUCCESS` (6 turns, 5 proposed calls,
+  4 completed effects). All binaries unchanged; 29.592 seconds. A first invocation
+  omitted mandatory `--objective` and exited 2 before host launch; its corrected
+  invocation used the same still-clean private setup. This is scripted regression
+  evidence only. Decision 0072 checks passed: kernel 1043/7 ignored, host 300/8
+  ignored plus 15 binary, inference 105, strict Clippy, binary build, five catalog
+  tests, schema fixtures and changed-document Markdown lint. Initial exact graph
+  count assertions and the resume fixture's reused call ID were corrected; no
+  production guard was relaxed to pass those tests.
 
 These are executable-scripted results, not real-model success. The final source-bound
 16-case matrix, restart/drift, daily/pressure/soak and repeated native-model campaigns

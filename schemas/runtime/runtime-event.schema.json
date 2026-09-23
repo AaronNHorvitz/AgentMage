@@ -240,6 +240,17 @@
         {
           "type": "object",
           "additionalProperties": false,
+          "required": ["event", "tool_call_id", "reason", "rejection_sha256"],
+          "properties": {
+            "event": { "const": "tool_rejected" },
+            "tool_call_id": { "$ref": "#/$defs/identifier" },
+            "reason": { "const": "read_projection_unavailable" },
+            "rejection_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
           "required": ["event", "tool_call_id", "authority_sha256"],
           "properties": {
             "event": { "const": "tool_started" },

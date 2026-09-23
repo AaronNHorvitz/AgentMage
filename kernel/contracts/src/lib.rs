@@ -229,7 +229,8 @@ pub use runtime_artifact::{
     RuntimeArtifactCleanupState, RuntimeArtifactIntegrityState, RuntimeArtifactKind,
     RuntimeArtifactLifecycleState, RuntimeArtifactManifest, RuntimeArtifactOperatorView,
     RuntimeArtifactPreview, RuntimeArtifactRef, RuntimeContinuationState, RuntimeResourceUsage,
-    RuntimeResumeBinding, RuntimeToolAttemptState,
+    RuntimeResumeBinding, RuntimeToolAttemptState, RuntimeToolRejection,
+    RuntimeToolRejectionReason,
 };
 pub use runtime_event::{
     RuntimeEvent, RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,

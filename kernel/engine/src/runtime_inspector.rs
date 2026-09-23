@@ -315,6 +315,7 @@ fn inspector_fact(event: &RuntimeEvent) -> InspectorFact {
             (InspectorFactKind::Approval, approval_id.as_str())
         }
         RuntimeEventKind::ToolRequested { tool_call_id, .. }
+        | RuntimeEventKind::ToolRejected { tool_call_id, .. }
         | RuntimeEventKind::ToolStarted { tool_call_id, .. }
         | RuntimeEventKind::ToolCompleted { tool_call_id, .. }
         | RuntimeEventKind::ToolFailed { tool_call_id, .. } => {

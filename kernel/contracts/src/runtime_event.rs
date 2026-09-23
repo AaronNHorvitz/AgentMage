@@ -152,6 +152,15 @@ pub enum RuntimeEventKind {
         /// Digest of the validated arguments.
         arguments_sha256: String,
     },
+    /// A validated proposal was rejected before any approval, grant or worker launch.
+    ToolRejected {
+        /// Exact requested call identity.
+        tool_call_id: ToolCallId,
+        /// Closed pre-effect rejection reason; not an effect failure or policy override.
+        reason: crate::RuntimeToolRejectionReason,
+        /// Digest of the retained call and rejection reason.
+        rejection_sha256: String,
+    },
     /// A separately authorized tool worker crossed its launch boundary.
     ToolStarted {
         /// Exact tool-call identity.

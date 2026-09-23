@@ -980,6 +980,7 @@ const fn runtime_event_label(kind: &RuntimeEventKind) -> &'static str {
         RuntimeEventKind::RouteSelected { .. } => "route_selected",
         RuntimeEventKind::ProposalObserved { .. } => "proposal_observed",
         RuntimeEventKind::ToolRequested { .. } => "tool_requested",
+        RuntimeEventKind::ToolRejected { .. } => "tool_rejected",
         RuntimeEventKind::ToolStarted { .. } => "tool_started",
         RuntimeEventKind::ToolCompleted { .. } => "tool_completed",
         RuntimeEventKind::ToolFailed { .. } => "tool_failed",

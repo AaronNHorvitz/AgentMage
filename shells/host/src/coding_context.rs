@@ -29,6 +29,7 @@ const CONTEXT_ITEM_SCHEMA: &[u8] = br#"{"type":"string"}"#;
 const SYSTEM_SOURCE_ID: &str = "agentmage:coding-system-contract";
 const USER_SOURCE_ID: &str = "agentmage:runtime-request";
 const TOOL_RESULT_SOURCE_PREFIX: &str = "agentmage:tool-result:";
+const TOOL_REJECTION_SOURCE_PREFIX: &str = "agentmage:tool-rejection:";
 const CONTINUITY_SOURCE_PREFIX: &str = "agentmage:coding-continuity:";
 
 /// Exact token counter used before a packet reaches the model adapter.
@@ -135,6 +136,7 @@ impl CodingContextSource {
         if source.bounded_excerpt.is_empty()
             || !valid_sha256(&source.content_sha256)
             || source.source_id.starts_with(TOOL_RESULT_SOURCE_PREFIX)
+            || source.source_id.starts_with(TOOL_REJECTION_SOURCE_PREFIX)
             || source.source_id == SYSTEM_SOURCE_ID
             || source.source_id == USER_SOURCE_ID
         {
@@ -198,6 +200,7 @@ where
     system_contract: String,
     tool_definitions: Vec<agentmage_kernel_contracts::ToolDefinition>,
     supporting_sources: Vec<CodingContextSource>,
+    rejected_tool_calls: Vec<agentmage_kernel_contracts::RuntimeToolRejection>,
     continuity: Option<CodingContextContinuityInput>,
     counter: C,
 }
@@ -281,6 +284,7 @@ where
             system_contract,
             tool_definitions: tools.into_iter().map(|tool| tool.definition).collect(),
             supporting_sources,
+            rejected_tool_calls: Vec::new(),
             continuity: None,
             counter,
         })
@@ -349,6 +353,29 @@ impl<C> RuntimeContextPort for CodingContextPort<C>
 where
     C: CodingTokenCounter,
 {
+    fn observe_tool_rejections(
+        &mut self,
+        rejections: &[agentmage_kernel_contracts::RuntimeToolRejection],
+    ) -> Result<(), RuntimePortFailure> {
+        for rejection in rejections {
+            let call = &rejection.call;
+            if call.arguments.sha256 != sha256(&call.arguments.bytes)
+                || call.arguments.media_type != "application/json"
+                || !self.tool_definitions.iter().any(|definition| {
+                    definition.tool_id == call.tool_id
+                        && definition.tool_version == call.tool_version
+                        && definition.input_schema == call.arguments.schema
+                        && definition.required_grant.operation.operation()
+                            == agentmage_kernel_contracts::GrantOperation::WorkspaceRead
+                })
+            {
+                return Err(RuntimePortFailure::Invalid);
+            }
+        }
+        self.rejected_tool_calls = rejections.to_vec();
+        Ok(())
+    }
+
     fn build_context(
         &mut self,
         request: &RuntimeRunRequest,
@@ -491,6 +518,31 @@ where
                 &digest,
                 content,
                 index + 1 == tool_results.len(),
+            );
+            candidates.push(self.candidate(&source)?);
+        }
+        for (index, rejection) in self.rejected_tool_calls.clone().iter().enumerate() {
+            let call = &rejection.call;
+            let content = serde_json::to_string(&serde_json::json!({
+                "pre_effect_proposal_rejection": true,
+                "rejection_sha256": sha256(&serde_json::to_vec(rejection).map_err(|_| RuntimePortFailure::Invalid)?),
+                "tool_call_id": call.tool_call_id, "tool_id": call.tool_id,
+                "arguments": serde_json::from_slice::<serde_json::Value>(&call.arguments.bytes).map_err(|_| RuntimePortFailure::Invalid)?,
+                "reason": rejection.reason,
+                "effect_occurred": false,
+                "guidance": "This read is not selectable from the frozen repository inventory (missing, excluded, or wrong object kind). No approval, grant, worker, receipt or completion evidence exists for this proposal. It does not prove filesystem absence. Inspect the supplied inventory and authorized parent observation; choose a different valid native operation. Do not repeat this read or infer authority to read excluded content.",
+            })).map_err(|_| RuntimePortFailure::Invalid)?;
+            let digest = sha256(content.as_bytes());
+            let source = internal_source(
+                format!("coding-tool-rejection-{index}"),
+                ContextItemKind::Supporting,
+                &format!(
+                    "{TOOL_REJECTION_SOURCE_PREFIX}{}",
+                    call.tool_call_id.as_str()
+                ),
+                &digest,
+                content,
+                index + 1 == self.rejected_tool_calls.len(),
             );
             candidates.push(self.candidate(&source)?);
         }
@@ -1068,6 +1120,57 @@ mod tests {
                 &[corrupt],
                 &[]
             ),
+            Err(RuntimePortFailure::Invalid)
+        );
+    }
+
+    #[test]
+    fn pre_effect_rejections_are_host_observations_not_tool_results_or_evidence() {
+        let profile = CodingSessionProfile::build(input()).unwrap();
+        let mut context =
+            CodingContextPort::for_profile(&profile, vec![], FixtureCounter("fixture-counter-v1"))
+                .unwrap();
+        let rejection = agentmage_kernel_contracts::RuntimeToolRejection {
+            call: tool_call(&profile),
+            reason:
+                agentmage_kernel_contracts::RuntimeToolRejectionReason::ReadProjectionUnavailable,
+        };
+        context
+            .observe_tool_rejections(std::slice::from_ref(&rejection))
+            .unwrap();
+        let packet = context
+            .build_context(
+                &request(&profile),
+                ContextPacketId::from_raw("rejection"),
+                2,
+                &[],
+                &[],
+                &[],
+            )
+            .unwrap();
+        assert!(
+            !packet
+                .messages
+                .iter()
+                .any(|message| message.role == ModelMessageRole::Tool)
+        );
+        let projected = packet
+            .messages
+            .iter()
+            .find(|message| {
+                String::from_utf8_lossy(&message.content.bytes)
+                    .contains("pre_effect_proposal_rejection")
+            })
+            .unwrap();
+        assert_eq!(projected.role, ModelMessageRole::User);
+        let value: serde_json::Value = serde_json::from_slice(&projected.content.bytes).unwrap();
+        assert_eq!(value["effect_occurred"], false);
+        assert!(value.get("result").is_none());
+        assert!(value.get("receipt_id").is_none());
+        let mut corrupt = rejection;
+        corrupt.call.arguments.sha256 = "0".repeat(64);
+        assert_eq!(
+            context.observe_tool_rejections(&[corrupt]),
             Err(RuntimePortFailure::Invalid)
         );
     }

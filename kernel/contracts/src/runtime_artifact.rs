@@ -283,6 +283,25 @@ pub struct RuntimeResourceUsage {
     pub retry_count: u32,
 }
 
+/// A structurally valid call rejected before an approval, grant or effect existed.
+/// This is not a tool result, filesystem absence proof, or completion evidence.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeToolRejection {
+    /// Exact call counted by the coordinator's existing attempt guard.
+    pub call: crate::ToolCall,
+    /// Closed reason supplied by the trusted pre-effect boundary.
+    pub reason: RuntimeToolRejectionReason,
+}
+
+/// Recoverable proposal conditions; policy denials and effect failures are not included.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RuntimeToolRejectionReason {
+    /// No exact object is selectable from the frozen read projection.
+    ReadProjectionUnavailable,
+}
+
 /// Canonical interface-neutral coordinator state retained only at a safe continuation boundary.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -321,6 +340,8 @@ pub struct RuntimeContinuationState {
     pub tool_attempts: Vec<RuntimeToolAttemptState>,
     /// Exact ordered calls paired with completed results for native model feedback.
     pub completed_tool_calls: Vec<crate::ToolCall>,
+    /// Rejected pre-effect proposals, never receipts or verifier evidence.
+    pub rejected_tool_calls: Vec<RuntimeToolRejection>,
     /// Ordered tool results required to reconstruct the next bounded context.
     pub tool_results: Vec<ToolResult>,
     /// Current grounded evidence in stable identity order.
