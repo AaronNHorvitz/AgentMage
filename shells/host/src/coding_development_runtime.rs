@@ -2339,17 +2339,25 @@ fn load_candidate_model(
         })?;
     match model {
         CodingDevelopmentModel::Muse => {
+            let schemas =
+                crate::coding_tools::model_visible_coding_tools(session_profile.registry())
+                    .map_err(|_| CodingDevelopmentRuntimeError::Profile)?
+                    .into_iter()
+                    .map(|tool| (tool.definition, tool.input_schema))
+                    .collect();
             let codec = MuseAtemFamilyCodec::new(expected_profile.codec.clone())
                 .and_then(|codec| {
-                    codec.with_native_contracts(
-                        session_profile
-                            .registry()
-                            .list_tools()
-                            .into_iter()
-                            .cloned()
-                            .collect(),
-                        crate::coding_verifier::coding_completion_schema(),
-                    )
+                    codec
+                        .with_native_contracts(
+                            session_profile
+                                .registry()
+                                .list_tools()
+                                .into_iter()
+                                .cloned()
+                                .collect(),
+                            crate::coding_verifier::coding_completion_schema(),
+                        )?
+                        .with_native_parameter_schemas(schemas)
                 })
                 .map_err(|error| {
                     eprintln!("coding.development.candidate.muse-codec.{}", error.code);

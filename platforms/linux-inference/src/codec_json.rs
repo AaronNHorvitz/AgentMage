@@ -62,13 +62,18 @@ impl<'de> Deserialize<'de> for UniqueValue {
 }
 
 pub(crate) fn canonical_object(bytes: &[u8]) -> Result<Vec<u8>, serde_json::Error> {
-    let UniqueValue(value) = serde_json::from_slice(bytes)?;
+    let value = unique_value(bytes)?;
     if !value.is_object() {
         return Err(<serde_json::Error as de::Error>::custom(
             "expected JSON object",
         ));
     }
     serde_json::to_vec(&value)
+}
+
+pub(crate) fn unique_value(bytes: &[u8]) -> Result<Value, serde_json::Error> {
+    let UniqueValue(value) = serde_json::from_slice(bytes)?;
+    Ok(value)
 }
 
 /// Presentation-only types; native JSON schemas and validators remain authoritative.

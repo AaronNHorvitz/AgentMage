@@ -227,6 +227,11 @@ where
             completion_schema_json: serde_json::from_str(CODING_COMPLETION_INPUT_SCHEMA_JSON)
                 .map_err(|_| CodingContextError::InvalidSource)?,
             change_plan: profile.change_plan(),
+            edit_bindings: serde_json::json!({
+                "intent_sha256": profile.change_plan().intent_sha256(),
+                "change_plan_sha256": profile.change_plan().plan_sha256(),
+            }),
+            tool_usage: native_tool_usage(),
             effective_guidance: profile.effective_guidance(),
             coding_guidance: profile.coding_guidance(),
             prohibited_capabilities: &MVP_PROHIBITED_CAPABILITIES,
@@ -525,6 +530,8 @@ struct CodingSystemContract<'a> {
     completion_schema: agentmage_kernel_contracts::SchemaReference,
     completion_schema_json: serde_json::Value,
     change_plan: &'a crate::coding_plan::CodingPlanBinding,
+    edit_bindings: serde_json::Value,
+    tool_usage: serde_json::Value,
     effective_guidance: &'a agentmage_kernel_engine::instruction_provenance::EffectiveGuidance,
     coding_guidance: &'a crate::coding_guidance::CodingGuidancePolicy,
     prohibited_capabilities: &'a [&'static str],
@@ -537,6 +544,33 @@ struct CodingUserContext<'a> {
     objective_sha256: String,
     task: &'a agentmage_kernel_contracts::Task,
     work_packet: &'a agentmage_kernel_contracts::WorkPacket,
+}
+
+fn native_tool_usage() -> serde_json::Value {
+    use agentmage_capability_read_only::{ReadOnlyEncoding, ReadOnlyLimits, ReadOnlyRequest};
+    let mut read = ReadOnlyRequest {
+        schema_version: 1,
+        paths: vec![vec!["src".to_owned(), "example.py".to_owned()]],
+        query: None,
+        byte_offset: None,
+        byte_count: None,
+        encoding: ReadOnlyEncoding::Utf8,
+        limits: ReadOnlyLimits::default(),
+        call_depth: 0,
+    };
+    let read_example = serde_json::to_value(&read).expect("closed read example serializes");
+    read.encoding = ReadOnlyEncoding::Binary;
+    serde_json::json!({
+        "examples_are_shapes_only": "Replace the example path with the actual authorized target; do not execute an example path.",
+        "read_paths": "paths is an array of component arrays: [[src, example.py]], never a slash string or a flat component array. Every required nullable field must be supplied explicitly.",
+        "read_encoding": "read-file/read-multiple/search-text require utf8. hash-file/hash-tree/directory/search-filenames/binary-metadata require binary. Non-search calls require query:null. Non-text calls require byte_offset:null and byte_count:null.",
+        "agentmage.workspace.read-file": read_example,
+        "agentmage.workspace.hash-file": read,
+        "edit_bindings": "Copy intent_sha256 and change_plan_sha256 exactly from edit_bindings above. Copy expected_preimage_sha256 from current repository/file evidence. Do not guess or fabricate hashes.",
+        "structured_edits": "Python/Rust/TypeScript/TSX/JavaScript/Swift require syntax operations (rename_identifier, replace_syntax_node, insert_import). replace_exact_text is only for Go/shell/SQL/plain_text. For an identifier rename use rename_identifier with old and replacement; no syntax-node hash is needed.",
+        "validation": "Use agentmage.validation.run-template with validation_id and template_sha256 from validations.templates, not command spec_sha256. Use a new validation_attempt_id on every execution. A failing test is real feedback, not completion.",
+        "finish": "After the last write, run the required registered validation and inspect current Git diff and status. Then emit completion_schema_json with the supplied objective_sha256. Tools, grants and verifier checks are strict; validate the full argument shape before proposing it.",
+    })
 }
 
 #[derive(Serialize)]
@@ -786,6 +820,27 @@ mod tests {
             !packet.messages.iter().any(|message| {
                 String::from_utf8_lossy(&message.content.bytes).contains(canary)
             })
+        );
+    }
+
+    #[test]
+    fn model_visible_usage_examples_obey_operation_specific_native_rules() {
+        use agentmage_capability_read_only::{ReadOnlyToolKind, validate_read_only_request};
+        let usage = native_tool_usage();
+        for (name, kind) in [
+            ("agentmage.workspace.read-file", ReadOnlyToolKind::ReadText),
+            ("agentmage.workspace.hash-file", ReadOnlyToolKind::HashFile),
+        ] {
+            validate_read_only_request(kind, &serde_json::to_vec(&usage[name]).unwrap()).unwrap();
+        }
+        let mut invalid_hash = usage["agentmage.workspace.hash-file"].clone();
+        invalid_hash["encoding"] = serde_json::json!("utf8");
+        assert!(
+            validate_read_only_request(
+                ReadOnlyToolKind::HashFile,
+                &serde_json::to_vec(&invalid_hash).unwrap()
+            )
+            .is_err()
         );
     }
 

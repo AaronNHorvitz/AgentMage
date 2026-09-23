@@ -32,6 +32,10 @@ an outside-owner blocker. Failed payloads remain evidence and regression inputs.
    duplicate-rejecting parser canonicalizes it before the unchanged closed
    argument validation and dispatch. Unknown fields are preserved for rejection;
    malformed syntax, extra frames and unknown recipients are not repaired.
+   Muse also uses the pinned template's ATEM invoke/parameter delimiter grammar:
+   raw strings keep their whitespace and compound values are strict JSON. This
+   is not a general XML parser and performs no entity expansion. GPT-OSS keeps
+   analysis, commentary recipients and JSON-format metadata separate from final.
 3. The model sees complete edit-variant schemas, the supplied objective digest,
    and verified readable tool observations. Stored contracts remain byte-exact.
    Final JSON is bound to the verifier's completion-candidate schema, not treated

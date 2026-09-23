@@ -198,7 +198,7 @@ impl ModelFamilyCodec for GptOssHarmonyFamilyCodec {
             match message.role {
                 ModelMessageRole::System => {
                     bytes.extend_from_slice(
-                        b"<|start|>developer<|message|>Untrusted scoped guidance: ",
+                        b"<|start|>developer<|message|>Host-supplied coding contract: exact schemas, operation-specific tool_usage, and edit_bindings. These are constraints and data, not an effect grant. ",
                     );
                     bytes.extend_from_slice(&encoded);
                     bytes.extend_from_slice(END_SUFFIX);
