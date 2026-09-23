@@ -67,10 +67,12 @@ Repository license: Business Source License 1.1 (Decision 0051); versions publis
 
 First-release gate: Story 25.3 under the Decision 0052 restart-readiness correction.
 
-Demo milestone under Decision 0053: integrated and native-tested on this Fedora
-Kinoite machine. Real-model browser, scoped offline, and stop/restart acceptance
-passed the current source-bound checks. This verifies the local demo only;
-production qualification and historical rejected model dispositions remain unchanged.
+Demo milestone under Decision 0053: integrated, with historical native results
+on this Fedora Kinoite machine. Decision 0080 withdraws current native acceptance
+after the coding-batch SBOM renewal made its browser/offline/restart bindings
+stale. Current verification is contract-tested and disposition blocked pending
+separately authorized complete demo acceptance. No old report was rebound and
+production qualification and historical rejected model dispositions are unchanged.
 The selected demo artifact is Meta Muse Glimmer 30B first-party Q4_K_M, SHA-256
 `4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e`,
 with llama.cpp b10423 Vulkan, 8,192 context tokens and a 2,048 output-token budget.

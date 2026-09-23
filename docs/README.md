@@ -26,6 +26,7 @@ The immediate workstream is the standalone coding harness:
 - [Harmony JSON format delimiter](decisions/0077-harmony-json-format-delimiter.md)
 - [Recorded runtime artifact accounting](decisions/0078-recorded-runtime-artifact-accounting.md)
 - [Read argument rejection boundary](decisions/0079-read-argument-rejection-boundary.md)
+- [Stale demo acceptance disposition](decisions/0080-stale-demo-acceptance-disposition.md)
 - [Real-model coding integration progress](verification/coding-harness-real-model-integration-2026-09-23.md)
 - [Source-bound native coding campaign results](verification/coding-harness-campaign13-results-2026-09-23.md)
 - [Pinned standalone coding external-review package](reviews/2026-09-23-standalone-coding-independent-review-package.md)

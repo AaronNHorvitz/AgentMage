@@ -647,10 +647,10 @@
       "decision_id": "ADR-0053",
       "scope": "Owner-delegated Fedora Kinoite localhost desktop document QA demo; separate from production qualification",
       "lifecycle_status": "integrated",
-      "verification_status": "native-tested",
-      "disposition_status": "active",
+      "verification_status": "contract-tested",
+      "disposition_status": "blocked",
       "support_status": "unsupported-pre-release",
-      "acceptance_status": "verified-local-demo",
+      "acceptance_status": "pending-real-browser-offline-restart",
       "platform_id": "fedora-x86_64",
       "model_configuration_path": "demo/model.json",
       "model_sha256": "4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e",
@@ -669,6 +669,10 @@
         {
           "kind": "accepted-decision",
           "path": "docs/decisions/0053-owner-delegated-linux-desktop-demo.md"
+        },
+        {
+          "kind": "blocker",
+          "path": "docs/decisions/0080-stale-demo-acceptance-disposition.md"
         },
         {
           "kind": "implementation",

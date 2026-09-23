@@ -145,6 +145,13 @@ negative-fixture, Clippy and boundary verification is retained in the repair
 record. The one applicable source-batch SBOM/evidence renewal follows these
 completed source changes; its disposition is recorded separately.
 
+The SBOM and current requirements checks passed in the renewal. The first full
+documentation attempt correctly failed on nine stale SBOM/provenance/hash
+bindings in three older demo acceptance reports. Decision 0080 withdraws that
+current demo claim using the existing pending status, preserving all historical
+reports and unchanged native-evidence checks. No desktop/demo run is performed
+or counted as passed; its complete reacceptance remains outside this scope.
+
 ## Failure retention and remaining gates
 
 The private read-only inventory

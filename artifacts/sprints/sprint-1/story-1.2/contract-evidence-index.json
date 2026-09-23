@@ -24,11 +24,11 @@
         },
         {
           "path": "architecture/status-model.json",
-          "sha256": "1077338baac248654bbbfc3f45342b02b07ad40b90d9433c4d5485f65cb00ebc"
+          "sha256": "9c37e01faa324ffed3823e2d628b151f61b953dceae8423226fd6625d5b3d4d3"
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "ae8a89e34373dd953ca4366fbb8fdb7e37f14b1662cdca262faffad02f536110"
+          "sha256": "03bea19938dccf8b9f9abb98e08541c4dac323dadbcc2513d14924a5cbc14ea6"
         }
       ]
     },
@@ -41,11 +41,11 @@
         },
         {
           "path": "supply-chain/dependency-provenance.json",
-          "sha256": "f8d10ae2ef67ba0cf9b26094f5803ef0a671031d0c2bca265786ee4e0183b4aa"
+          "sha256": "31ba9f19e339676750fb1f6ffe61ec2061bc53be89c5d37ee0af0fb83723fb1a"
         },
         {
           "path": "supply-chain/sbom.cdx.json",
-          "sha256": "8e3713dc570c629537bb9c04d279674bf3483734750913d3c8981b56b4f5f967"
+          "sha256": "3db9cd92330fb89647df17e84d6ab51c41d949956702568120a4e065ee82bd38"
         }
       ]
     },
@@ -88,7 +88,7 @@
       "artifacts": [
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-          "sha256": "e18ce52cd7229725f7d47b9f7007b25e4cb6e6fc79f75e2139bddc822a260fbb"
+          "sha256": "433544e961aab6b43ebb939111cf6e52e39b6b3bcf8cf1fd6d19fcfc0316ff73"
         }
       ]
     },
@@ -101,7 +101,7 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/security-evidence-map.json",
-          "sha256": "4d989737adead7ad10da34565b06f39b38cc633352085a61a6e806e37262a24e"
+          "sha256": "30553903efecc53e3a00e8117b56b79913040e598253cbd44a60eb0e32f4c83e"
         }
       ]
     },
@@ -132,7 +132,7 @@
     "data_class": "synthetic-local-contract-tests-only",
     "artifact": {
       "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-      "sha256": "e18ce52cd7229725f7d47b9f7007b25e4cb6e6fc79f75e2139bddc822a260fbb"
+      "sha256": "433544e961aab6b43ebb939111cf6e52e39b6b3bcf8cf1fd6d19fcfc0316ff73"
     },
     "required_markers": [
       "Validated 37 Engineering Runtime schemas and 6 reused contracts.",

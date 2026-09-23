@@ -46,7 +46,7 @@
   "sources": [
     {
       "path": "TASKS.md",
-      "sha256": "fdb0d0e10ecf8c14e51fa2af71d504950f27c461fdadfe13dcb14a920872d916"
+      "sha256": "102a8fc89a66b4f9f77f4145f3e32dab633328751d759e3e152bc79737ed280f"
     },
     {
       "path": "architecture/dependency-rules.json",
@@ -66,7 +66,7 @@
     },
     {
       "path": "architecture/status-model.json",
-      "sha256": "1077338baac248654bbbfc3f45342b02b07ad40b90d9433c4d5485f65cb00ebc"
+      "sha256": "9c37e01faa324ffed3823e2d628b151f61b953dceae8423226fd6625d5b3d4d3"
     },
     {
       "path": "architecture/dependency-dispositions.json",
