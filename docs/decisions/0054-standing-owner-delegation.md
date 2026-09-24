@@ -1,5 +1,9 @@
 # Decision 0054: Standing Owner Delegation of Repository Decisions
 
+Editorial privacy correction (2026-09-24): a private consumer's name is replaced with a
+generic host description. Historical outcomes and grants are unchanged. This edited document
+is not a fresh test receipt; any hash-bound use must be revalidated before acceptance.
+
 | Field | Value |
 |---|---|
 | Status | Accepted under owner delegation, 2026-09-20 |
@@ -37,7 +41,7 @@ The owner instructed on 2026-09-20:
 > not. No spending, accounts, credentials, publishing, releases or merges to a
 > default branch. No force-push. No weakening of tests, thresholds or evidence
 > bindings. No licence or trademark choices. Nothing outside this repository.
-> USTE, CodingMage and AgentMagik stay off limits. Never treat your own work as
+> USTE, CodingMage and the host application stay off limits. Never treat your own work as
 > the independent review.
 
 ## Decision
@@ -74,7 +78,7 @@ by any record accepted under it:
 - weakening any test, threshold, or evidence binding;
 - licence or trademark choices;
 - any action outside this repository, including the USTE, CodingMage, and
-  AgentMagik repositories, their processes, and their scopes;
+  the host application repositories, their processes, and their scopes;
 - treating the agent's own work as the independent review required by a story
   gate.
 

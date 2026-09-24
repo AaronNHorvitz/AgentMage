@@ -1,5 +1,47 @@
 # AgentMage - Story-Based Sprint Plan
 
+## Current Delivery Amendment (2026-09-24)
+
+[The 48-capability roadmap](CAPABILITY-ROADMAP.md) and
+[the implementation amendment](IMPLEMENTATION-AMENDMENT.md) define the current
+Rust-first delivery direction and ownership. TASKS.md remains the only completion ledger.
+This is accepted implementation scope, not evidence that the capabilities already work.
+Existing security, independent-review, licensing and release gates remain in force.
+
+### Capability Work Packages
+
+These crosswalk packages extend, rather than replace or renumber, existing tasks. All start
+open. Reconcile existing source/evidence, split into bounded subtasks here, then implement
+in dependency order. Catalogue priority P0 precedes P1/P2; a grouped package cannot pull a
+later capability ahead of an unblocked P0 dependency. Checked historical rows are not proof
+of the new acceptance criteria. Detailed proof requirements are in the linked amendment.
+
+| Status | Package | Capability mapping | Dependencies | Deliverable and acceptance |
+| --- | --- | --- | --- | --- |
+| [ ] | AMR-01 | CAP-02,03,06,09,10,11,25,30,46 | Existing 48.2.4-48.2.6, 50.2.4 source and evidence | Reconcile executable coding path, transport/doctor errors, pinned two-model profiles and residual defects. Test real disposable-repo edits, shell exit handling, recovery and source drift. Separate eight-case Muse evidence from broader qualification. |
+| [ ] | AMR-02 | CAP-05,23,24,33,34,36 | AMR-01 authority and process contracts | Implement bounded task/network/resource grants, shared inference leases, egress mediation and secret canaries. Denied destinations and concurrent admission fail closed; cancel releases only owned resources. |
+| [ ] | AMR-03 | CAP-17,18,19,20,21 | AMR-01, AMR-02 | Implement quick search and multi-query deep research through the real runtime. Retain cited evidence, limits and resumable reports; prove a version-specific research-to-patch workflow with the actual qualified local model and a configured provider. |
+| [ ] | AMR-04 | CAP-08,12,13,16,28,35,39 | AMR-01; AMR-02 for effects | Complete versioned CLI/SDK/editor and host-facing contracts, selective changes, honest rollback, background lifecycle and context inspection. Test detach/reconnect, stale requests, concurrent edits and process cleanup. |
+| [ ] | AMR-05 | CAP-07,22,26,29,31,42,44,47 | AMR-02, AMR-04; optional adapters independently qualified | Add explicit hybrid routing, offline docs, language intelligence, source-backed memory, recipes, audit and governed plugins. Test no-cloud mode, per-scope isolation, revocation and redacted manual exports. |
+| [ ] | AMR-06 | CAP-14,15,27,32,37,38,40,41,43 | AMR-04; pinned producer/consumer contracts | Implement only runtime adapters needed by later controlled delivery, team, knowledge and workflow features. Coordinator remains the publication owner in coordinated campaigns; do not duplicate scheduling or enterprise identity. |
+| [ ] | AMR-07 | CAP-45,46,48 | AMR-01 through AMR-04 for P0; applicable release gates | Publish accurate Linux installation/evaluation instructions and exact limitations; require independent review and clean-environment evidence. Reconcile package license metadata only under an explicit license decision. |
+
+#### First bounded implementation milestones
+
+These component rows do not close their parent package, model admission, independent review,
+or release gates. Evidence from the previous source pin remains historical evidence.
+
+| Status | Row | Dependencies | Bounded implementation and verification |
+| --- | --- | --- | --- |
+| [ ] | AMR-01.1 | Prior coding source and retained campaign | Reconcile exact source/binary/model identities, current doctor behavior and all changed planning/privacy evidence bindings; preserve original receipts and distinguish freshness from historical validity. |
+| [ ] | AMR-01.2 | AMR-01.1 | Recheck registered command exits, fail/repair, recovery and drift against the next implementation pin; publish residual defects and external admission/review prerequisites without promoting historical gates. |
+| [ ] | AMR-02.1 | AMR-01.1 source reconciliation | Enforce one native inference lease across host instances before process launch; deny unsafe lock objects/concurrency, retain ownership through cleanup, and verify release/reacquisition without signalling unrelated processes. |
+| [ ] | AMR-02.2 | AMR-01 authority contracts | Freeze and implement bounded research policy, exact disclosure/query binding, offline/ask/task-authorized modes, destination and secret refusal, checked budget consumption and cancellation; no policy object alone grants a network effect. |
+| [ ] | AMR-02.3 | AMR-02.2 | Compose mediated HTTPS/DNS/redirect checks into the existing effect/approval owner; prove private-address, rebinding, proxy, secret and injection canaries before enabling outbound tools. |
+| [ ] | AMR-03.1 | AMR-02.2 | Implement bounded quick/deep research plans and source-backed reports using existing public citation contracts and canonical artifact ownership; cancellation, interruption and freshness remain explicit. |
+| [ ] | AMR-03.2 | AMR-02.3, AMR-03.1 | Connect configured provider and native tools through the existing coordinator; execute deterministic adversarial matrix, then a separately pinned real-provider/local-model research-to-patch campaign. Missing provider/admission is not replaced with a fixture success. |
+
+
 | Field                                                                   | Value                                                                                                                                                                                              |
 | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Status                                                                  | Pre-alpha scaffold; Decision 0045 mandates the Verified Chat, full Engineering Runtime, gateway, capability, and Team paths; broad gates remain open until integrated and external evidence exists |

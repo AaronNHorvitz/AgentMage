@@ -1,5 +1,9 @@
 # Restart Readiness Run — 2026-09-06
 
+Editorial privacy correction (2026-09-24): a private consumer's name is replaced with a
+generic host description. Historical outcomes and grants are unchanged. This edited document
+is not a fresh test receipt; any hash-bound use must be revalidated before acceptance.
+
 Attended continuation from [`first-ga-run-2026-09-05.md`](first-ga-run-2026-09-05.md).
 The starting state is branch `build/agentmage-ga` at
 `b62eb543ad4f2de39da529a1ab0e24e54efbb891`, matching the September 6 audit,
@@ -1009,7 +1013,7 @@ This checkpoint covers the first block of work under the standing owner delegati
 "Accepted under owner delegation, 2026-09-20". The delegation also replaced the shared-machine
 rule: this session no longer waits for another repository's Cargo work and starts a build
 whenever `free -h` reports at least 16 GB available, keeping the scope caps and using up to four
-Cargo jobs. USTE, CodingMage and AgentMagik were not read, written, or signalled at any point.
+Cargo jobs. USTE, CodingMage and the host application were not read, written, or signalled at any point.
 
 ### The rustup blocker is resolved — Decision 0055
 
@@ -1542,7 +1546,7 @@ delegation, 2026-09-20" and cite 0054. Decisions 0055 through 0060 were all take
 **Retained prohibitions, unchanged by the delegation.** No spending, accounts, credentials,
 publishing, releases, or merges to a default branch. No force-push. No weakening of tests,
 thresholds or evidence bindings. No licence or trademark choices. Nothing outside this repository;
-USTE, CodingMage and AgentMagik are off limits. **Never supply an independent review and never tick
+USTE, CodingMage and the host application are off limits. **Never supply an independent review and never tick
 an approval that belongs to a reviewer or the owner.**
 
 **Owner rule added 2026-09-21: do not close a row on a generator's summary alone.** Verify the

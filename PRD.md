@@ -1,5 +1,15 @@
 # AgentMage - Product Requirements Document
 
+## Current Delivery Amendment (2026-09-24)
+
+[The 48-capability roadmap](CAPABILITY-ROADMAP.md) and
+[the implementation amendment](IMPLEMENTATION-AMENDMENT.md) define the current
+Rust-first delivery direction and ownership. TASKS.md remains the only completion ledger.
+This is accepted implementation scope, not evidence that the capabilities already work.
+Existing security, independent-review, licensing and release gates remain in force.
+
+Finish and reconcile the standalone coding harness (48.2.4-48.2.6 and 50.2.4), then implement the P0 regular-search and bounded deep-research vertical slice. Continue through dependency-ready P0/P1 runtime work before P2. Existing independent acceptance stays open.
+
 | | |
 |---|---|
 | **Product** | AgentMage - a portable, local-first AI agent |
@@ -1471,7 +1481,7 @@ A Linux user starts `agentmage code`, selects an approved local repository and
 qualified local model, requests a change, inspects progress and proposed effects,
 controls authority, sees tests and corrections, and receives a verified result.
 The session can explore, search, plan, patch, create bounded files, run approved
-checks and inspect Git state without CodingMage, USTE, AgentMagik, OpenCode,
+checks and inspect Git state without CodingMage, USTE, the host application, OpenCode,
 MCP or an online account. Those systems can add interfaces, delegation or
 retrieval later; they do not supply a missing core coding capability.
 

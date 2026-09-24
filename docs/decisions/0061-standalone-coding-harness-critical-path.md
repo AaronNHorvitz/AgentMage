@@ -1,5 +1,9 @@
 # Decision 0061: Standalone Coding Harness as the Immediate Critical Path
 
+Editorial privacy correction (2026-09-24): a private consumer's name is replaced with a
+generic host description. Historical outcomes and grants are unchanged. This edited document
+is not a fresh test receipt; any hash-bound use must be revalidated before acceptance.
+
 | Field | Value |
 |---|---|
 | Status | Accepted under owner delegation, 2026-09-20 |
@@ -44,7 +48,7 @@ for the earlier explicitly ephemeral milestone.
 ## Decision
 
 1. AgentMage owns a complete single-agent coding workflow. CodingMage, USTE,
-   AgentMagik, OpenCode, a cloud account, MCP and multi-agent orchestration are
+   the host application, OpenCode, a cloud account, MCP and multi-agent orchestration are
    not prerequisites for its first working Linux coding session.
 2. Adopt the connected session, prompt/tool feedback, event, approval,
    cancellation, diff-inspection and continuation patterns examined in OpenCode

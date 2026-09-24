@@ -1,5 +1,9 @@
 # AgentMage Coding Implementation Brief
 
+Current execution direction: read [the 2026-09-24 implementation amendment](../../IMPLEMENTATION-AMENDMENT.md)
+and [the capability catalogue](../../CAPABILITY-ROADMAP.md). Their accepted sequencing
+supersedes the older narrow assignment below; ownership and safety boundaries remain binding.
+
 ## Owner Instruction and Scope
 
 The owner explicitly requested a fresh Codex tmux session with authority to make
@@ -10,7 +14,7 @@ implementation decisions and finish the standalone coding work. Running
 Implement and verify exactly Tasks **48.2.4, 48.2.5, 48.2.6 and 50.2.4**, plus
 their necessary prerequisites. This is not the entire numeric range between
 those tasks. Do not resume the old `start 76.2.1.1` instruction, desktop work,
-other roadmap projects, or work in AgentMagik, CodingMage or USTE.
+other roadmap projects, or work in the host application, CodingMage or USTE.
 
 Start implementation after reading the existing code and contracts. Do not stop
 after a plan, a document update, a first passing test, or a progress report.

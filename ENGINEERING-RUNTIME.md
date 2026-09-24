@@ -415,4 +415,4 @@ Team and release requirements remain intact and are not MVP prerequisites.
 
 The [architecture and acceptance matrix](docs/architecture/standalone-coding-harness.md)
 define the precise factory, transport, lifecycle, context and safety obligations.
-No OpenCode, CodingMage, USTE or AgentMagik dependency is needed to satisfy them.
+No OpenCode, CodingMage, USTE or host-application dependency is needed to satisfy them.

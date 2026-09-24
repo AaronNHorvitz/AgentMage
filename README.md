@@ -1,11 +1,25 @@
 # AgentMage
 
+## Current Delivery Amendment (2026-09-24)
+
+[The 48-capability roadmap](CAPABILITY-ROADMAP.md) and
+[the implementation amendment](IMPLEMENTATION-AMENDMENT.md) define the current
+Rust-first delivery direction and ownership. TASKS.md remains the only completion ledger.
+This is accepted implementation scope, not evidence that the capabilities already work.
+Existing security, independent-review, licensing and release gates remain in force.
+
+Finish and reconcile the standalone coding harness (48.2.4-48.2.6 and 50.2.4), then implement the P0 regular-search and bounded deep-research vertical slice. Continue through dependency-ready P0/P1 runtime work before P2. Existing independent acceptance stays open.
+
 **Current development priority:** the standalone Linux coding harness under
 [Decision 0061](docs/decisions/0061-standalone-coding-harness-critical-path.md).
 The [architecture](docs/architecture/standalone-coding-harness.md) adopts
 OpenCode's connected workflow patterns within AgentMage's existing Rust runtime.
-`agentmage code` is still unavailable; this planning revision does not implement
-the executable workflow. Other stack services are not prerequisites.
+The bounded development path now has real Muse coding evidence: eight cases passed on
+the recorded profile. Production transport, broad model admission and independent
+acceptance remain separate open gates. See the
+[development guide](docs/guides/standalone-coding-development.md) and
+[exact campaign results](docs/verification/coding-harness-campaign13-results-2026-09-23.md).
+Other stack services are not prerequisites; GPT-OSS is not qualified on its tested profile.
 
 **AgentMage is being built as a universal, cross-platform, local-first agent harness for coding, software delivery, research, productivity, and automation, with explicit user control over every consequential action.**
 

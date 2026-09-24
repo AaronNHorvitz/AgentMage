@@ -1,5 +1,9 @@
 # Standalone Coding Harness
 
+Current execution direction: read [the 2026-09-24 implementation amendment](../../IMPLEMENTATION-AMENDMENT.md)
+and [the capability catalogue](../../CAPABILITY-ROADMAP.md). Their accepted sequencing
+supersedes the older narrow assignment below; ownership and safety boundaries remain binding.
+
 | Field | Value |
 |---|---|
 | Status | Accepted design under Decision 0061; disposable Linux development path implemented; real-model qualification in progress; production activation remains closed |
@@ -22,7 +26,7 @@ testing, failure correction and verified reporting. A user launches
 sees what is happening, controls consequential actions and receives inspectable
 results. The first implementation is Linux and strict-local.
 
-The full stack enhances this experience later. AgentMagik supplies another user
+The full stack enhances this experience later. A host application supplies another user
 interface; CodingMage can supply separately qualified delegation and review;
 USTE can supply source-backed derived retrieval. None supplies missing execution
 authority, the primary coding loop, or a prerequisite database for the first
@@ -56,7 +60,7 @@ identified component benefits and dependency/license review is complete.
 ```mermaid
 flowchart TB
     CLI["agentmage code: terminal client"] --> IPC["Authenticated local control and event transport"]
-    UI["Later AgentMagik and editor clients"] -.-> IPC
+    UI["Later host applications and editor clients"] -.-> IPC
     IPC --> HOST["Rust host: lifecycle and composition"]
     HOST --> RUN["Existing reusable runtime coordinator"]
     RUN --> CTX["Existing context manager and source manifests"]
@@ -229,7 +233,7 @@ coding; operational state remains in AgentMage's existing canonical store.
 | B: interactive control | Live events, exact approvals, responsive cancel/cleanup, follow-ups, diffs and report | Durable crash resume |
 | C: `M-HARNESS-MVP` | A/B plus actual binary scripted fixtures and exact-model coding acceptance; existing stale/adversarial/absence groups | Story/sprint/release closure |
 | D: `M-HARNESS-DAILY` | Durable continuation, context safety, full output inspection, safe rollback, bounded preauthorization, setup/soak and independent review | All languages/providers/platforms or full GA |
-| E: optional ecosystem | Separately qualified AgentMagik, CodingMage, USTE, MCP/ACP and remote adapters | Authority delegation to those clients or models |
+| E: optional ecosystem | Separately qualified host applications, CodingMage, USTE, MCP/ACP and remote adapters | Authority delegation to those clients or models |
 
 All stage-specific prerequisites are recorded on the new sub-task rows. Contract
 and scripted-provider work can continue while exact model/trust qualification is

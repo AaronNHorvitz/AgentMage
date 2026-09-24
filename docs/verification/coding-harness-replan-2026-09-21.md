@@ -1,5 +1,9 @@
 # Coding Harness Replan and Restart Handoff
 
+Editorial privacy correction (2026-09-24): a private consumer's name is replaced with a
+generic host description. Historical outcomes and grants are unchanged. This edited document
+is not a fresh test receipt; any hash-bound use must be revalidated before acceptance.
+
 ## Operator State
 
 The owner requested stopping AgentMage and revising the architecture around a
@@ -9,7 +13,7 @@ background polling shells were terminated; their process IDs were checked gone,
 and the tmux session was closed. The session history remains in Claude's normal
 local records. The stop marker is `~/.local/share/agentmage-run/STOP-CLAUDE`.
 
-AgentMagik, CodingMage and USTE workers were left running. No other project was
+The host application, CodingMage and USTE workers were left running. No other project was
 edited. Do not automatically recreate AgentMage's session or remove its marker.
 An operator restart is required before implementation resumes.
 
@@ -128,7 +132,7 @@ contract fixtures are not native-platform or installed-product qualification.
 ### Final State
 
 The AgentMage tmux session remains absent and its stop marker remains present.
-AgentMagik, CodingMage and USTE sessions were left untouched. The initial handoff
+The host application, CodingMage and USTE sessions were left untouched. The initial handoff
 was local and uncommitted. The owner subsequently authorized committing and
 pushing this revision to `origin/demo/fedora-local-docs`. Publication does not
 authorize restarting the worker. Runtime implementation starts only after an
