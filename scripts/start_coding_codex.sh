@@ -12,7 +12,7 @@ test -r "$brief"
 cd -- "$repo"
 
 branch="$(git symbolic-ref --quiet --short HEAD)"
-if [[ "$branch" != "demo/fedora-local-docs" ]]; then
+if [[ "$branch" != "main" ]]; then
     printf 'Refusing unexpected branch: %s\n' "$branch" >&2
     exit 1
 fi

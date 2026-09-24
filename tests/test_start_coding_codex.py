@@ -34,7 +34,7 @@ class CodingCodexLauncherTests(unittest.TestCase):
         self.stop.write_text("Operator stopped the previous worker.\n", encoding="utf-8")
         self.bin = root / "bin"
         self.bin.mkdir()
-        self.stub("git", '#!/bin/sh\nprintf "%s\\n" "${TEST_BRANCH:-demo/fedora-local-docs}"\n')
+        self.stub("git", '#!/bin/sh\nprintf "%s\\n" "${TEST_BRANCH:-main}"\n')
         self.stub("tmux", '#!/bin/sh\nexit "${TEST_OLD_SESSION_STATUS:-1}"\n')
         self.stub(
             "codex",
@@ -88,7 +88,7 @@ class CodingCodexLauncherTests(unittest.TestCase):
         self.assertTrue(marker.exists())
 
     def test_unexpected_branch_is_refused(self):
-        self.assert_refused(self.run_launcher(TEST_BRANCH="main"))
+        self.assert_refused(self.run_launcher(TEST_BRANCH="demo/fedora-local-docs"))
 
     def test_old_claude_session_is_not_restarted_or_killed(self):
         self.assert_refused(self.run_launcher(TEST_OLD_SESSION_STATUS="0"))
