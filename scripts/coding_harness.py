@@ -54,15 +54,69 @@ def implementation_identity() -> dict:
             check=True, capture_output=True, timeout=30,
         ).stdout
 
+    untracked = untracked_file_identities(ROOT)
     return {
         "head_commit": git("rev-parse", "HEAD").decode("ascii").strip(),
         "worktree_status": git("status", "--porcelain=v1", "--untracked-files=all").decode("utf-8"),
         "tracked_diff_sha256": hashlib.sha256(git("diff", "HEAD", "--binary", "--no-ext-diff")).hexdigest(),
+        # Git's tracked diff omits new Rust modules. Retain their exact bytes'
+        # identities too; a filename-only dirty status cannot bind new source.
+        "untracked_files": untracked,
+        "untracked_files_sha256": hashlib.sha256(json.dumps(
+            untracked, sort_keys=True, separators=(",", ":"), ensure_ascii=True,
+        ).encode("ascii")).hexdigest(),
         "binaries": [file_identity(binary(name)) for name in (
             "agentmage", "agentmage-host", "agentmage-read-only-worker",
         )],
         "wrapper": file_identity(Path(__file__).resolve()),
     }
+
+
+def untracked_file_identities(root: Path) -> list[dict]:
+    """Bound dirty diagnostic inputs without following aliases or reading content into logs.
+
+    This supplements, never replaces, HEAD, the complete tracked diff and binary hashes.
+    Ignored build/model/private outputs are outside Git's implementation inventory.
+    It is not an atomic source snapshot or a substitute for a pinned clean campaign.
+    """
+    paths = subprocess.run(
+        ["git", "--no-optional-locks", "ls-files", "--others", "--exclude-standard", "-z"],
+        cwd=root, check=True, capture_output=True, timeout=30,
+    ).stdout.split(b"\0")
+    names = sorted(os.fsdecode(path) for path in paths if path)
+    if len(names) > 4096:
+        raise HarnessError("coding.harness.source-inventory-limit")
+    identities = []
+    total = 0
+    for name in names:
+        relative = Path(name)
+        if relative.is_absolute() or any(part in {".", ".."} for part in relative.parts):
+            raise HarnessError("coding.harness.source-inventory-path")
+        path = root / relative
+        if any(root.joinpath(*relative.parts[:end]).is_symlink()
+               for end in range(1, len(relative.parts) + 1)):
+            raise HarnessError("coding.harness.source-inventory-alias")
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        with os.fdopen(descriptor, "rb") as stream:
+            before = os.fstat(stream.fileno())
+            if not stat.S_ISREG(before.st_mode):
+                raise HarnessError("coding.harness.identity-not-regular")
+            remaining = min(16 * 1024 * 1024, 64 * 1024 * 1024 - total)
+            if before.st_size > remaining:
+                raise HarnessError("coding.harness.source-inventory-limit")
+            content = stream.read(remaining + 1)
+            after = os.fstat(stream.fileno())
+        if len(content) > remaining:
+            raise HarnessError("coding.harness.source-inventory-limit")
+        fields = ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns")
+        if len(content) != before.st_size or any(
+            getattr(before, field) != getattr(after, field) for field in fields
+        ):
+            raise HarnessError("coding.harness.identity-changed")
+        total += len(content)
+        identities.append({"path": name, "bytes": len(content),
+                           "sha256": hashlib.sha256(content).hexdigest()})
+    return identities
 
 
 def scope_resources() -> dict[str, str]:

@@ -12,6 +12,50 @@ from scripts import coding_harness_acceptance
 
 
 class CodingHarnessTests(unittest.TestCase):
+    def test_untracked_source_inventory_binds_new_bytes_and_ignores_build_outputs(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            subprocess.run(["git", "init", "--quiet", str(root)], check=True)
+            (root / ".gitignore").write_text("target/\n")
+            (root / "tracked.rs").write_text("tracked\n")
+            subprocess.run(["git", "add", ".gitignore", "tracked.rs"], cwd=root, check=True)
+            (root / "target").mkdir()
+            (root / "target/binary").write_text("ignored\n")
+            source = root / "new module.rs"
+            source.write_text("first\n")
+            first = coding_harness.untracked_file_identities(root)
+            self.assertEqual([row["path"] for row in first], ["new module.rs"])
+            self.assertEqual(first[0]["bytes"], 6)
+            source.write_text("other\n")
+            second = coding_harness.untracked_file_identities(root)
+            self.assertNotEqual(first[0]["sha256"], second[0]["sha256"])
+            self.assertEqual(first[0]["path"], second[0]["path"])
+
+    def test_untracked_source_inventory_refuses_aliases_special_files_and_large_inputs(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            root.mkdir()
+            subprocess.run(["git", "init", "--quiet", str(root)], check=True)
+            outside = Path(temporary) / "private"
+            outside.write_text("not a source input\n")
+            path = root / "new.rs"
+            path.symlink_to(outside)
+            with self.assertRaisesRegex(coding_harness.HarnessError, "source-inventory-alias"):
+                coding_harness.untracked_file_identities(root)
+            path.unlink()
+            os.mkfifo(path)
+            # Git omits a FIFO that already exists. Simulate a regular enumerated
+            # source replaced by a FIFO before the held-file observation.
+            listed = subprocess.CompletedProcess([], 0, stdout=b"new.rs\0")
+            with mock.patch.object(coding_harness.subprocess, "run", return_value=listed):
+                with self.assertRaisesRegex(coding_harness.HarnessError, "identity-not-regular"):
+                    coding_harness.untracked_file_identities(root)
+            path.unlink()
+            with path.open("wb") as stream:
+                stream.truncate(16 * 1024 * 1024 + 1)
+            with self.assertRaisesRegex(coding_harness.HarnessError, "source-inventory-limit"):
+                coding_harness.untracked_file_identities(root)
+
     def test_read_rejection_requires_exact_bytes_no_authority_and_terminal_denial(self):
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary) / "fixture"
@@ -146,6 +190,11 @@ class CodingHarnessTests(unittest.TestCase):
         self.assertEqual(len(identity["binaries"]), 3)
         self.assertTrue(all(len(item["sha256"]) == 64 and item["bytes"] > 0 for item in identity["binaries"]))
         self.assertEqual(len(identity["tracked_diff_sha256"]), 64)
+        self.assertEqual(identity["untracked_files_sha256"], coding_harness.hashlib.sha256(
+            json.dumps(identity["untracked_files"], sort_keys=True, separators=(",", ":"),
+                       ensure_ascii=True).encode("ascii")).hexdigest())
+        self.assertTrue(all(not Path(row["path"]).is_absolute()
+                            and len(row["sha256"]) == 64 for row in identity["untracked_files"]))
         self.assertEqual(identity["wrapper"]["path"], str(Path(coding_harness.__file__).resolve()))
 
     def test_setup_creates_one_private_clean_path_bound_fixture(self):
