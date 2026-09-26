@@ -16,7 +16,7 @@
   },
   "external_network_used": false,
   "limitations": [
-    "This artifact proves the current encrypted schema and migration chain; typed production writes for every normalized domain table and full domain restart reconstruction remain later work.",
+    "This artifact verifies the historical schema-v3 subset against the named current-source tests; it does not prove complete coverage of later schemas, research families, production domain writes or restart reconstruction.",
     "The historical operational-schema-v2 artifact remains immutable and describes only its original source revision.",
     "Cross-process crash injection, live platform key services, cross-platform execution, packaging, and release acceptance remain later gates."
   ],
@@ -75,12 +75,12 @@
     ]
   },
   "schema_version": 1,
-  "source_revision": "c12759b3a731ae287547627f82ed8413c333e006",
+  "source_revision": "911d9477095a939bc1204cf999aece520b23ff91",
   "sources": [
     {
-      "bytes": 16389,
+      "bytes": 16604,
       "path": "docs/architecture/durable-authority-store.md",
-      "sha256": "e93363505c820941810e2006971f66b152707e753b729a0f117915a7721b4e6e"
+      "sha256": "7340f634d6bf887c02f23329c01e28606157216712071f166f22ddef340a23a9"
     },
     {
       "bytes": 5474,
@@ -93,19 +93,19 @@
       "sha256": "7bbac20f36ed80a1b07bea98641d98c3f894500a11dc7ef7193a1eb29cbc40b6"
     },
     {
-      "bytes": 154064,
+      "bytes": 470849,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "b10e0acdeb74086840c05943553acd101649e13483d3529b76297ccde2836255"
+      "sha256": "8fa6f5f328d93f413fc8d34c9f916fc99141224efb6e0444abfc6700ffd69081"
     },
     {
-      "bytes": 11874,
+      "bytes": 12168,
       "path": "scripts/operational_schema_v3_evidence.py",
-      "sha256": "1fcdb86a27a8ef5da2ca4e15d2d76835a70f7d0d34af2b98b736919a27ad2561"
+      "sha256": "f469105ad22e293ed771c08a9999458a94c2f2009d6374b882aca1d5441e8403"
     },
     {
-      "bytes": 4112,
+      "bytes": 5428,
       "path": "tests/test_operational_schema_v3_evidence.py",
-      "sha256": "282e1182061e045ffb01477177d2acf9b08a396f2f4ce63380cadc4090361aff"
+      "sha256": "1e9df0e39a5547c5a19accef889affb4104273a33edab1b859c23cc3e29385cc"
     }
   ],
   "status": "pass-versioned-schema-and-migration-chain",
@@ -116,13 +116,13 @@
     {
       "command_id": "8bc5e8635f51ef1995b5f3e693d844a4d92df5362eaa088ed55c2f91691bab37",
       "exit_code": 0,
-      "expected_marker_sha256": "8cead6160380e03c0fabe5245ea639d5f485364d8ea63dd7658bdc19e8a51a03",
+      "expected_marker_sha256": "ca96d420363625ace01887c0dfefa81b072c47c567b9c690ec8e4bb3f1c1369a",
       "status": "pass"
     },
     {
       "command_id": "f8f6d91598b96ddb2ea33994c732947394d3f4956966c145e17bef615b849199",
       "exit_code": 0,
-      "expected_marker_sha256": "426dde504c766e3887109a6c6eb584da7e5eaf7e3113d492c2deffc4ba56dca9",
+      "expected_marker_sha256": "d0859b134719bd0fef0b7ae593ff39d3f342d966d003b4ef1562e375bbc26d10",
       "status": "pass"
     },
     {

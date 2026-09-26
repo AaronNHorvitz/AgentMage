@@ -168,9 +168,18 @@ explicitly limits its claim to the historical schema-v3 subset. Two new regressi
 cover missing-marker/nonzero-exit refusal and the exact success marker; all seven schema
 checker tests passed. This is a developer-checker correction, not a lowered acceptance
 threshold or runtime change. No evidence binding was removed, and no second SBOM write ran.
-Schema-v3 evidence regeneration and the Story 4.1 mapping remain pending their new source pin;
-the failed run is not reclassified as a pass. Other historical aggregate dispositions above
-remain unchanged.
+The separately retained raw-output diagnostic subsequently exited 0 with 46 passing tests
+and the original one ignored test. Its log SHA-256 is
+`ad5753c1005af3eec89814f9bf8e6da76a4f51031008c9d4ea96dc5152285728`.
+The pinned remainder then exited 0 against
+`911d9477095a939bc1204cf999aece520b23ff91`: schema-v3 regeneration, its seven checker
+tests, Story 4.1 security mapping, its seven tests and supply-chain validation passed.
+The complete driver log SHA-256 is
+`ff0a0872ce6d9601f9727a57906ee436324bbde3cc04be42090521a5243ec69f`.
+Runtime source remained unchanged throughout both checks. The security map still records
+zero complete requirements and a false story gate; schema-v3 retains its historical subset
+limitation. The failed run is not reclassified as a pass. Story 11.2 and other historical
+aggregate dispositions above remain unchanged. No second SBOM write or gate promotion ran.
 
 ## Remaining integration and acceptance
 
