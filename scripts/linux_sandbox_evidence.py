@@ -38,12 +38,14 @@ SOURCE_PATHS = (
     "platforms/linux/src/lib.rs",
     "platforms/linux/src/platform.rs",
     "platforms/linux/src/sandbox.rs",
+    "platforms/linux/src/sandbox_supervision.rs",
     "platforms/linux/src/security_controls.rs",
     "platforms/linux/src/secret_service.rs",
     "scripts/linux_sandbox_evidence.py",
     "tests/test_linux_sandbox_evidence.py",
 )
 SANDBOX_TESTS = (
+    "guarded_native_abi_attempt_returns_eperm_and_lane_is_reusable",
     "bounded_scratch_cannot_escape_into_the_held_object_or_host_workspace",
     "directory_projection_never_contains_excluded_or_nested_workspace_content",
     "directory_worker_receives_only_the_bounded_exclusion_safe_projection",
@@ -126,7 +128,7 @@ CONTROLS = {
     "scratch": "private-tmpfs-16777216-bytes",
     "environment": ["LANG=C", "PATH=/app", "PWD=/workspace"],
     "privileges": "bubblewrap-no-new-privileges-private-devices-cap-drop-all",
-    "seccomp": "agentmage.linux.worker.deny.v1-kernel-mode-filter",
+    "seccomp": "agentmage.linux.worker.deny.v2-kernel-mode-filter",
     "cgroup": [
         "CPUQuota",
         "MemoryMax",
@@ -138,6 +140,7 @@ CONTROLS = {
     "secret_service": "fixed-attributes-pipe-only-zeroized-bounded-watchdog-client",
 }
 ATTACKS = (
+    "syscall_abi_alias",
     "ambient_home",
     "ambient_system_and_runtime_roots",
     "directory_exclusion_bypass",

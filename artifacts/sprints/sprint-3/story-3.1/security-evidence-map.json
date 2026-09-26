@@ -33,12 +33,12 @@
     {
       "bytes": 489812,
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "e91762966bcf372d17525097554bd3f0e4e50335867b34b4f45d63f98e570be5"
+      "sha256": "e46fc7585cb71e22dfcb897aa31fa3ea557c080f6c103735aa769338378075fc"
     },
     {
       "bytes": 997,
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "f808c086469d0936b3bd60960e2514cb40a786d80f1113271732e9f842ae5584"
+      "sha256": "c515398dc66f9aa621e136d4f72901ecd1eb7363a2bbffaa22ab905f0c7b8523"
     },
     {
       "bytes": 866684,
@@ -73,7 +73,7 @@
     {
       "bytes": 9914,
       "path": "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
-      "sha256": "8c20f00ea3b9b6e606d3818e376ffd9a2eb70b87490b86df9da84f1994b8fc13"
+      "sha256": "a07827b59ea748a26203d63def0823e3809fb3b8900a28acd6c611c62c83fa63"
     },
     {
       "bytes": 5436,
@@ -93,7 +93,7 @@
     {
       "bytes": 17136,
       "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
-      "sha256": "48c3e4bb4dc2b77b21bc6395f78401e8467ac0be43cd23760507dab871241087"
+      "sha256": "c5ab72b5e62ddae481fbea295b20f9047aafe73c6c531d41a56b523180a132fb"
     },
     {
       "bytes": 2320,

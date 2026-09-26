@@ -25,6 +25,9 @@ use crate::agent_state::AgentStateController;
 use crate::agent_verifier::{VerifierContext, VerifierRegistry};
 use crate::context_management::verify_checkpoint;
 use crate::model_runtime::{LocalModelController, ModelRuntimeGateError};
+use crate::propagation::{
+    BorrowedEffectCancellation, CancellationObservationError, EffectCancellationObservation,
+};
 use crate::runtime_answer::compose_inferred_runtime_answer;
 use crate::runtime_artifact::{
     MAX_RUNTIME_ARTIFACT_PREVIEW_BYTES, RUNTIME_CONTEXT_PACKET_MEDIA_TYPE,
@@ -1681,7 +1684,10 @@ where
         proposal: ClosedModelProposal,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<(), RuntimeLoopError> {
-        let required_events = if self.checkpoint.is_some() { 9 } else { 7 };
+        // Reserve both acknowledgement events BEFORE admitting an effect. The
+        // existing request ceiling stays unchanged; cancellation cannot borrow
+        // terminal space after its canonical receipt has already committed.
+        let required_events = if self.checkpoint.is_some() { 11 } else { 9 };
         if self.tool_call_count >= self.request.limits.max_tool_calls
             || self.remaining_events() < required_events
         {
@@ -2163,6 +2169,7 @@ where
                         turn_id,
                         operation_id,
                         true,
+                        cancellation,
                     )
                 } else {
                     self.emit(
@@ -2177,7 +2184,15 @@ where
                         .tool_boundary
                         .execute(&self.request, &evaluation, &definition, &call, cancellation)
                         .map_err(RuntimeLoopError::Dependency)?;
-                    self.complete_tool(execution, definition, call, turn_id, operation_id, false)
+                    self.complete_tool(
+                        execution,
+                        definition,
+                        call,
+                        turn_id,
+                        operation_id,
+                        false,
+                        cancellation,
+                    )
                 }
             }
         }
@@ -2316,6 +2331,7 @@ where
         )
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn complete_tool(
         &mut self,
         execution: RuntimeToolExecution,
@@ -2324,6 +2340,7 @@ where
         turn_id: RuntimeTurnId,
         operation_id: RuntimeOperationId,
         terminal_event_emitted: bool,
+        cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<(), RuntimeLoopError> {
         if !valid_tool_execution(&execution, &definition, &call, &self.request) {
             return Err(RuntimeLoopError::InvalidBoundaryResult);
@@ -2428,6 +2445,7 @@ where
                 "runtime.tool.denied_after_launch",
                 terminal_event_emitted,
                 output_exhausted,
+                cancellation,
             ),
             OperationOutcome::Cancelled => self.finish_tool_non_success(
                 execution,
@@ -2438,6 +2456,7 @@ where
                 "runtime.tool.cancelled",
                 terminal_event_emitted,
                 output_exhausted,
+                cancellation,
             ),
             OperationOutcome::TimedOut => self.finish_tool_non_success(
                 execution,
@@ -2448,6 +2467,7 @@ where
                 "runtime.tool.timed_out",
                 terminal_event_emitted,
                 output_exhausted,
+                cancellation,
             ),
             OperationOutcome::Failed => self.finish_tool_non_success(
                 execution,
@@ -2458,6 +2478,7 @@ where
                 "runtime.tool.failed",
                 terminal_event_emitted,
                 output_exhausted,
+                cancellation,
             ),
             OperationOutcome::Uncertain => self.finish_tool_non_success(
                 execution,
@@ -2468,6 +2489,7 @@ where
                 "runtime.tool.uncertain",
                 terminal_event_emitted,
                 output_exhausted,
+                cancellation,
             ),
         }
     }
@@ -2756,7 +2778,43 @@ where
         code: &str,
         terminal_event_emitted: bool,
         output_exhausted: bool,
+        cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<(), RuntimeLoopError> {
+        // A cancelled receipt is not itself a cancellation identity. Only the
+        // existing owner can supply the original, valid task-scoped signal.
+        // Missing/unavailable/malformed observations preserve the receipt but
+        // terminate Failed; never invent acknowledgement or clean completion.
+        let observed = if terminal == AgentStateKind::Cancelled {
+            Some(
+                cancellation
+                    .ok_or(RuntimePortFailure::Unavailable)
+                    .and_then(|source| {
+                        BorrowedEffectCancellation::new(
+                            source,
+                            self.request.task.task_id.clone(),
+                            self.correlation_id.clone(),
+                        )
+                        .observe_effect_cancellation()
+                        .map_err(|error| match error {
+                            CancellationObservationError::Unavailable => {
+                                RuntimePortFailure::Unavailable
+                            }
+                            CancellationObservationError::InvalidSignal
+                            | CancellationObservationError::ScopeMismatch => {
+                                RuntimePortFailure::Invalid
+                            }
+                        })?
+                        .ok_or(RuntimePortFailure::Unavailable)
+                    }),
+            )
+        } else {
+            None
+        };
+        let terminal = if observed.as_ref().is_some_and(Result::is_err) {
+            AgentStateKind::Failed
+        } else {
+            terminal
+        };
         if !terminal_event_emitted {
             self.emit(
                 RuntimeEventKind::ToolFailed {
@@ -2772,6 +2830,28 @@ where
         self.transition_terminal(terminal)?;
         self.close_turn(&turn_id, execution.receipt_sha256)?;
         let mut unresolved_codes = vec![code.to_owned()];
+        match observed {
+            Some(Ok(signal)) => {
+                // CancellationObserved clears the active event turn. Publish the
+                // receipt and TurnCompleted FIRST, then the original signal ID.
+                self.emit(
+                    RuntimeEventKind::CancellationRequested {
+                        cancellation_id: signal.cancellation_id.clone(),
+                    },
+                    None,
+                    None,
+                )?;
+                self.emit(
+                    RuntimeEventKind::CancellationObserved {
+                        cancellation_id: signal.cancellation_id,
+                    },
+                    None,
+                    None,
+                )?;
+            }
+            Some(Err(error)) => unresolved_codes.push(error.code().to_owned()),
+            None => {}
+        }
         if output_exhausted {
             unresolved_codes.push("runtime.budget.exhausted".to_owned());
         }
@@ -4069,6 +4149,14 @@ fn valid_tool_execution(
             result.outcome,
             result.state_change,
         )
+        // An uncertain read cannot produce trusted source bytes or completion
+        // evidence. Stateful write reports retain their separate verifier path.
+        && (definition.required_grant.operation.operation() != GrantOperation::WorkspaceRead
+            || result.state_change != StateChange::Uncertain
+            || (result.output.is_none()
+                && result.evidence.is_empty()
+                && execution.result_output_kind.is_none()
+                && execution.artifact_candidates.is_empty()))
         && match (&result.output, execution.result_output_kind) {
             (None, None) => true,
             (Some(_), Some(kind)) => kind != RuntimeArtifactKind::ModelOutput,
@@ -4127,19 +4215,22 @@ fn runtime_tool_terminal_event(
 
 fn catalog_allowed_for_mode(mode: RuntimeSessionMode, registry: &ToolRegistry) -> bool {
     registry.list_tools().iter().all(|definition| {
-        let operation = definition.required_grant.operation.operation();
-        match mode {
-            RuntimeSessionMode::EphemeralReadOnly | RuntimeSessionMode::DurableReadOnly => {
-                operation == GrantOperation::WorkspaceRead
-            }
-            RuntimeSessionMode::ControlledWrite => matches!(
-                operation,
-                GrantOperation::WorkspaceRead
-                    | GrantOperation::WorkspaceWrite
-                    | GrantOperation::CommandExecute
-            ),
-        }
+        operation_allowed_for_mode(mode, definition.required_grant.operation.operation())
     })
+}
+
+fn operation_allowed_for_mode(mode: RuntimeSessionMode, operation: GrantOperation) -> bool {
+    match mode {
+        RuntimeSessionMode::EphemeralReadOnly | RuntimeSessionMode::DurableReadOnly => {
+            operation == GrantOperation::WorkspaceRead
+        }
+        RuntimeSessionMode::ControlledWrite => matches!(
+            operation,
+            GrantOperation::WorkspaceRead
+                | GrantOperation::WorkspaceWrite
+                | GrantOperation::CommandExecute
+        ),
+    }
 }
 
 fn valid_runtime_state_change(
@@ -4148,6 +4239,9 @@ fn valid_runtime_state_change(
     outcome: OperationOutcome,
     state_change: StateChange,
 ) -> bool {
+    if !operation_allowed_for_mode(mode, operation) {
+        return false;
+    }
     match (mode, operation, outcome, state_change) {
         (
             RuntimeSessionMode::ControlledWrite,
@@ -4155,12 +4249,7 @@ fn valid_runtime_state_change(
             OperationOutcome::Succeeded,
             StateChange::Changed,
         )
-        | (
-            RuntimeSessionMode::ControlledWrite,
-            _,
-            OperationOutcome::Uncertain,
-            StateChange::Uncertain,
-        ) => true,
+        | (_, _, OperationOutcome::Uncertain, StateChange::Uncertain) => true,
         (_, _, OperationOutcome::Succeeded, StateChange::NotChanged) => {
             operation != GrantOperation::WorkspaceWrite
         }

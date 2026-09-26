@@ -23,6 +23,7 @@ CONFIGURATION = Path("kernel/engine/src/configuration.rs")
 LINUX_LIB = Path("platforms/linux/src/lib.rs")
 LINUX_CONFIGURATION = Path("platforms/linux/src/configuration_store.rs")
 LINUX_SANDBOX = Path("platforms/linux/src/sandbox.rs")
+LINUX_SANDBOX_SUPERVISION = Path("platforms/linux/src/sandbox_supervision.rs")
 LINUX_SECRETS = Path("platforms/linux/src/secret_service.rs")
 LINUX_IPC = Path("platforms/linux/src/ipc.rs")
 
@@ -223,6 +224,26 @@ def validate_effect_boundary(
             failures.append(f"raw Linux configuration effect is public: {name}")
     if _public_function(linux_sandbox, "run"):
         failures.append("raw Linux sandbox execution is public")
+    supervision = _production_source(_read(LINUX_SANDBOX_SUPERVISION, root, replacements))
+    # One parent-only execution entry and one passive state observation, neither
+    # exported as another process/ownership API. Reject all additional visibility.
+    private_supervision = supervision
+    for parent_entry in ("run", "admission_snapshot"):
+        declaration = f"pub(super) fn {parent_entry}("
+        if private_supervision.count(declaration) != 1:
+            failures.append("Linux sandbox supervisor exceeds its private parent-only boundary")
+        private_supervision = private_supervision.replace(declaration, f"fn {parent_entry}(", 1)
+    if re.search(r"(?m)^\s*pub(?:\([^)]*\))?\s+", private_supervision):
+        failures.append("Linux sandbox supervisor exceeds its private parent-only boundary")
+    if re.search(r"(?m)^\s*pub(?:\([^)]*\))?\s+mod\s+supervision\b", linux_sandbox):
+        failures.append("Linux sandbox supervisor module must remain private")
+    for path, source in ((LINUX_SANDBOX, _production_source(linux_sandbox)), (LINUX_SANDBOX_SUPERVISION, supervision)):
+        # Thread joins take no arguments. Path and string joins are ordinary
+        # bounded data operations; they must not be mistaken for process waits.
+        blocking_wait = re.search(r"\.(?:wait|wait_with_output|status|output)\s*\(", source)
+        thread_join = re.search(r"\.join\s*\((?:\s|/\*.*?\*/|//[^\n]*\n)*\)", source, re.DOTALL)
+        if blocking_wait or thread_join:
+            failures.append(f"unbounded blocking worker/control wait reintroduced: {path}")
     for name in ("probe", "store", "lookup", "clear"):
         if _public_function(linux_secrets, name):
             failures.append(f"raw Linux Secret Service effect is public: {name}")

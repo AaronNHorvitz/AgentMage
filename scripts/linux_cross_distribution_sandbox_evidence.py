@@ -44,11 +44,13 @@ SOURCE_PATHS = (
     "package.json",
     "platforms/linux/Cargo.toml",
     "platforms/linux/src/sandbox.rs",
+    "platforms/linux/src/sandbox_supervision.rs",
     "release/control-test/Containerfile.ubuntu",
     "scripts/linux_cross_distribution_sandbox_evidence.py",
     "tests/test_linux_cross_distribution_sandbox_evidence.py",
 )
 LIVE_TESTS = (
+    "guarded_native_abi_attempt_returns_eperm_and_lane_is_reusable",
     "bounded_scratch_cannot_escape_into_the_held_object_or_host_workspace",
     "directory_worker_receives_only_the_bounded_exclusion_safe_projection",
     "foreign_workspace_identity_never_starts_a_worker",
@@ -62,6 +64,7 @@ LIVE_TESTS = (
     "worker_receives_only_the_fixed_environment_and_no_network",
 )
 ATTACK_TESTS = {
+    "syscall_abi_alias": "guarded_native_abi_attempt_returns_eperm_and_lane_is_reusable",
     "ambient_home": "worker_has_no_ambient_host_paths_devices_or_processes",
     "device": "worker_has_no_ambient_host_paths_devices_or_processes",
     "environment": "worker_receives_only_the_fixed_environment_and_no_network",
@@ -82,7 +85,7 @@ EXPECTED_CONTROLS = {
     ],
     "network": "new-network-namespace-plus-address-family-and-seccomp-denial",
     "privileges": "no-new-privileges-private-devices-cap-drop-all",
-    "seccomp": "agentmage.linux.worker.deny.v1-kernel-mode-filter",
+    "seccomp": "agentmage.linux.worker.deny.v2-kernel-mode-filter",
     "workspace": "single-descriptor-projected-read-only-object",
 }
 LIMITATIONS = (

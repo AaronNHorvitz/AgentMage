@@ -59,6 +59,7 @@ SOURCE_PATHS = (
     "platforms/linux/src/ipc.rs",
     "platforms/linux/src/platform.rs",
     "platforms/linux/src/sandbox.rs",
+    "platforms/linux/src/sandbox_supervision.rs",
     "platforms/linux/src/security_controls.rs",
     "platforms/linux/src/secret_service.rs",
     "scripts/linux_native_ubuntu_control_evidence.py",
@@ -80,6 +81,7 @@ BOOTSTRAP_PACKAGES = (
     "util-linux",
 )
 LIVE_SANDBOX_TESTS = (
+    "guarded_native_abi_attempt_returns_eperm_and_lane_is_reusable",
     "bounded_scratch_cannot_escape_into_the_held_object_or_host_workspace",
     "directory_worker_receives_only_the_bounded_exclusion_safe_projection",
     "foreign_workspace_identity_never_starts_a_worker",
@@ -131,6 +133,7 @@ STARTUP_CONTROL_IDS = (
     "network-isolation",
 )
 ATTACK_TESTS = {
+    "syscall_abi_alias": "guarded_native_abi_attempt_returns_eperm_and_lane_is_reusable",
     "ambient_home": "worker_has_no_ambient_host_paths_devices_or_processes",
     "device": "worker_has_no_ambient_host_paths_devices_or_processes",
     "environment": "worker_receives_only_the_fixed_environment_and_no_network",
@@ -1401,7 +1404,7 @@ def run_native_acceptance(
                 "syscall_trace": {
                     "no_new_privileges": 1,
                     "seccomp_mode": 2,
-                    "policy_id": "agentmage.linux.worker.deny.v1",
+                    "policy_id": "agentmage.linux.worker.deny.v2",
                     "observation_test":
                     "worker_kernel_status_confirms_no_new_privileges_and_seccomp",
                 },
@@ -1654,7 +1657,7 @@ def validate_report(value: Any) -> list[str]:
         if execution.get("syscall_trace") != {
             "no_new_privileges": 1,
             "seccomp_mode": 2,
-            "policy_id": "agentmage.linux.worker.deny.v1",
+            "policy_id": "agentmage.linux.worker.deny.v2",
             "observation_test":
             "worker_kernel_status_confirms_no_new_privileges_and_seccomp",
         }:
@@ -1691,7 +1694,7 @@ def validate_report(value: Any) -> list[str]:
     if value.get("summary") != {
         "native_ubuntu_kernel_controls_verified": True,
         "physical_host_certification": False,
-        "test_count": 30,
+        "test_count": 31,
         "attack_class_count": len(ATTACK_TESTS),
         "parity_dimensions_unblocked": 3,
         "cleanup_complete": True,

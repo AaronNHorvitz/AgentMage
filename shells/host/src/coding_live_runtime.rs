@@ -215,7 +215,10 @@ impl SharedCancellation {
 impl ModelCancellationProbe for SharedCancellation {
     fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
         self.signal
-            .lock()
+            // The same passive view is polled inside bounded native effects.
+            // Contention/poison is unavailable control, never permission to
+            // continue uncancelled or to wait outside the effect deadline.
+            .try_lock()
             .map(|signal| signal.clone())
             .map_err(|_| ModelRuntimeFailure {
                 code: "coding.live.cancellation-unavailable".to_owned(),
@@ -897,5 +900,70 @@ const fn map_client_error(error: CodingClientError) -> RuntimeTransportError {
         CodingClientError::EventStream
         | CodingClientError::Approval
         | CodingClientError::Presentation => RuntimeTransportError::RuntimeEvidenceDenied,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use agentmage_kernel_contracts::{CONTRACT_SCHEMA_VERSION, CorrelationId, TaskId};
+
+    fn signal() -> CancellationSignal {
+        CancellationSignal {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            cancellation_id: CancellationId::from_raw("live-owner-cancel"),
+            correlation_id: CorrelationId::from_raw("live-owner-correlation"),
+            task_id: TaskId::from_raw("live-owner-task"),
+            reason: CancellationReason::UserRequested,
+            requested_by: BoundaryKind::Shell,
+        }
+    }
+
+    fn unavailable(error: ModelRuntimeFailure) {
+        assert_eq!(error.code, "coding.live.cancellation-unavailable");
+        assert!(!error.retryable_after_correction);
+        assert!(error.dependency_recovery_required);
+        assert!(error.contract_error.is_none());
+    }
+
+    #[test]
+    fn passive_live_cancellation_preserves_first_exact_signal() {
+        let owner = SharedCancellation::new();
+        assert!(owner.observe().unwrap().is_none());
+        owner.request(signal()).unwrap();
+        owner.request(signal()).unwrap();
+        let mut conflicting = signal();
+        conflicting.cancellation_id = CancellationId::from_raw("live-owner-other");
+        assert!(matches!(
+            owner.request(conflicting),
+            Err(RuntimeTransportError::RequestDenied)
+        ));
+        assert_eq!(owner.observe().unwrap(), Some(signal()));
+    }
+
+    #[test]
+    fn passive_live_cancellation_busy_owner_is_not_an_uncancelled_observation() {
+        let owner = SharedCancellation::new();
+        {
+            let mut held = owner.signal.lock().unwrap();
+            *held = Some(signal());
+            unavailable(owner.observe().unwrap_err());
+        }
+        assert_eq!(owner.observe().unwrap(), Some(signal()));
+    }
+
+    #[test]
+    fn passive_live_cancellation_poison_remains_unavailable() {
+        let owner = SharedCancellation::new();
+        let panic = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let mut held = owner.signal.lock().unwrap();
+            *held = Some(signal());
+            panic!("synthetic cancellation owner poison");
+        }));
+        assert!(panic.is_err());
+        unavailable(owner.observe().unwrap_err());
+        unavailable(owner.observe().unwrap_err());
+        assert!(owner.signal.is_poisoned());
+        assert!(owner.request(signal()).is_err());
     }
 }

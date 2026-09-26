@@ -2,14 +2,11 @@
 
 use std::ffi::OsString;
 use std::fmt;
-use std::io::{Read, Write};
 use std::os::fd::AsRawFd;
 use std::path::{Component, Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::thread;
-use std::time::{Duration, Instant};
 
 use agentmage_kernel_contracts::{
     GrantOperation, GrantTarget, HeldWorkspaceObject, OperationOutcome, PathResolutionIntent,
@@ -18,6 +15,9 @@ use agentmage_kernel_contracts::{
 };
 use agentmage_kernel_engine::authority_transaction::{
     EffectAuthorization, EffectDriver, EffectLaunch, EffectResult,
+};
+use agentmage_kernel_engine::propagation::{
+    EffectCancellationObservation, ScopedEffectCancellation,
 };
 use rustix::fd::OwnedFd;
 use rustix::fs::{
@@ -32,6 +32,9 @@ use sha2::{Digest, Sha256};
 
 use crate::LinuxHeldObject;
 
+#[path = "sandbox_supervision.rs"]
+mod supervision;
+
 const MAX_RUNTIME_FILES: usize = 16;
 const MAX_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
 const MAX_DIRECTORY_ENTRIES: usize = 4_096;
@@ -43,7 +46,7 @@ const MAX_READ_ONLY_SNAPSHOT_BYTES: usize = 128 * 1024 * 1024;
 const WORKER_GUEST_ROOT: &str = "/app";
 const PATH_EXECUTOR: &str = "/usr/bin/env";
 const SYSTEMCTL: &str = "/usr/bin/systemctl";
-const SECCOMP_POLICY_ID: &str = "agentmage.linux.worker.deny.v1";
+const SECCOMP_POLICY_ID: &str = "agentmage.linux.worker.deny.v2";
 const DENIED_SYSCALLS: &[&str] = &[
     "accept",
     "accept4",
@@ -134,6 +137,10 @@ pub enum LinuxSandboxErrorKind {
     ExecutionFailed,
     /// Worker output exceeded its declared bound.
     OutputLimitExceeded,
+    /// The owner could not confirm all launched resources were cleaned up.
+    CleanupUncertain,
+    /// Passive control could not be read or did not match consumed authority.
+    CancellationUnavailable,
 }
 
 impl LinuxSandboxErrorKind {
@@ -152,6 +159,8 @@ impl LinuxSandboxErrorKind {
             Self::IsolationUnavailable => "linux.sandbox.isolation.unavailable",
             Self::ExecutionFailed => "linux.sandbox.execution.failed",
             Self::OutputLimitExceeded => "linux.sandbox.output.exceeded",
+            Self::CleanupUncertain => "linux.sandbox.cleanup.uncertain",
+            Self::CancellationUnavailable => "linux.sandbox.cancellation.unavailable",
         }
     }
 }
@@ -230,6 +239,18 @@ impl LinuxSandboxLimits {
             runtime_seconds,
             output_bytes,
         })
+    }
+
+    fn start_timeout_properties(self) -> [String; 2] {
+        // systemd 259.9 rejects transient JobTimeoutUSec (its setter falls
+        // through). Running-job and service-start limits remain supported.
+        // Neither bounds a job still waiting in the manager queue: the parent
+        // deadline, withheld filter and uncertain-cleanup quarantine remain
+        // mandatory. Do not mistake this for crash/late-start cleanup proof.
+        [
+            format!("--property=JobRunningTimeoutSec={}s", self.runtime_seconds),
+            format!("--property=TimeoutStartSec={}s", self.runtime_seconds),
+        ]
     }
 }
 
@@ -462,7 +483,7 @@ impl fmt::Debug for LinuxSandboxManifest {
 /// Runs one fresh, offline Bubblewrap worker under a user cgroup.
 #[derive(Debug)]
 pub struct LinuxSandboxRunner {
-    manifest: LinuxSandboxManifest,
+    manifest: Arc<LinuxSandboxManifest>,
     limits: LinuxSandboxLimits,
     seccomp_bpf: Vec<u8>,
 }
@@ -474,7 +495,8 @@ pub struct LinuxSandboxCancellation {
 }
 
 impl LinuxSandboxCancellation {
-    /// Requests cancellation. The supervisor confirms whole-unit teardown before returning.
+    /// Requests cancellation. Success requires verified whole-unit teardown;
+    /// an uncertain cleanup error retains ownership and refuses another launch.
     pub fn cancel(&self) {
         self.cancelled.store(true, Ordering::SeqCst);
     }
@@ -482,6 +504,30 @@ impl LinuxSandboxCancellation {
     fn is_cancelled(&self) -> bool {
         self.cancelled.load(Ordering::SeqCst)
     }
+}
+
+// Passive observation in the existing supervisor, not another owner or loop.
+// Legacy flags stay supported. Live views are bound to the consumed permit.
+enum SandboxCancellation<'attempt> {
+    Local(&'attempt LinuxSandboxCancellation),
+    Bound(ScopedEffectCancellation<'attempt>),
+}
+
+impl SandboxCancellation<'_> {
+    fn is_cancelled(&self) -> Result<bool, LinuxSandboxError> {
+        match self {
+            Self::Local(cancellation) => Ok(cancellation.is_cancelled()),
+            Self::Bound(observation) => observation
+                .observe_effect_cancellation()
+                .map(|signal| signal.is_some())
+                .map_err(|_| error(LinuxSandboxErrorKind::CancellationUnavailable)),
+        }
+    }
+}
+
+enum ReadCancellation<'source> {
+    Local(LinuxSandboxCancellation),
+    Observed(&'source dyn EffectCancellationObservation),
 }
 
 /// Opaque sealed request and workspace projection for one read-only tool worker.
@@ -580,7 +626,7 @@ impl LinuxSandboxRunner {
     ) -> Result<Self, LinuxSandboxError> {
         let seccomp_bpf = compile_seccomp_policy()?;
         Ok(Self {
-            manifest,
+            manifest: Arc::new(manifest),
             limits,
             seccomp_bpf,
         })
@@ -657,6 +703,19 @@ impl LinuxSandboxRunner {
         arguments: &[OsString],
         cancellation: &LinuxSandboxCancellation,
     ) -> Result<LinuxSandboxResult, LinuxSandboxError> {
+        self.run_projection_arguments_with_observation(
+            projections,
+            arguments,
+            &SandboxCancellation::Local(cancellation),
+        )
+    }
+
+    fn run_projection_arguments_with_observation(
+        &self,
+        projections: &[ProjectionMount<'_>],
+        arguments: &[OsString],
+        cancellation: &SandboxCancellation<'_>,
+    ) -> Result<LinuxSandboxResult, LinuxSandboxError> {
         if projections.is_empty()
             || projections.len() > 8
             || projections
@@ -665,6 +724,25 @@ impl LinuxSandboxRunner {
         {
             return Err(error(LinuxSandboxErrorKind::InvalidManifest));
         }
+        // Retain THESE exact descriptors before constructing asynchronous OpenFile
+        // references. Duplicating after command construction would retain wrong FDs.
+        let owned_projections = projections
+            .iter()
+            .map(|projection| {
+                projection
+                    .descriptor
+                    .try_clone()
+                    .map_err(|_| error(LinuxSandboxErrorKind::InvalidManifest))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let projections = projections
+            .iter()
+            .zip(&owned_projections)
+            .map(|(original, descriptor)| ProjectionMount {
+                descriptor,
+                guest_path: original.guest_path,
+            })
+            .collect::<Vec<_>>();
         let parent_pid = std::process::id();
         let descriptor_source =
             |descriptor: &OwnedFd| format!("/proc/{parent_pid}/fd/{}", descriptor.as_raw_fd());
@@ -675,12 +753,6 @@ impl LinuxSandboxRunner {
         let systemd_command = self
             .manifest
             .systemd_run
-            .launch_path
-            .as_deref()
-            .ok_or_else(|| error(LinuxSandboxErrorKind::InvalidManifest))?;
-        let systemctl_command = self
-            .manifest
-            .systemctl
             .launch_path
             .as_deref()
             .ok_or_else(|| error(LinuxSandboxErrorKind::InvalidManifest))?;
@@ -710,6 +782,13 @@ impl LinuxSandboxRunner {
             .arg("--quiet")
             .arg("--pipe")
             .arg(format!("--unit={unit}"))
+            .arg("--property=Type=exec")
+            .arg("--property=ExitType=cgroup")
+            .arg("--property=Restart=no")
+            .arg("--property=KillMode=control-group")
+            .arg("--property=TimeoutStopSec=1s")
+            .arg("--property=SendSIGKILL=yes")
+            .args(self.limits.start_timeout_properties())
             .arg("--property=RestrictSUIDSGID=yes")
             .arg("--property=LockPersonality=yes")
             .arg("--property=RestrictAddressFamilies=AF_UNIX AF_NETLINK")
@@ -812,89 +891,15 @@ impl LinuxSandboxRunner {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
-        let mut child = command
-            .spawn()
-            .map_err(|_| error(LinuxSandboxErrorKind::IsolationUnavailable))?;
-        let mut stdin = child
-            .stdin
-            .take()
-            .ok_or_else(|| error(LinuxSandboxErrorKind::IsolationUnavailable))?;
-        if stdin.write_all(&self.seccomp_bpf).is_err() {
-            let _ = child.kill();
-            let _ = child.wait();
-            return Err(error(LinuxSandboxErrorKind::IsolationUnavailable));
-        }
-        drop(stdin);
-        let stdout = child
-            .stdout
-            .take()
-            .ok_or_else(|| error(LinuxSandboxErrorKind::ExecutionFailed))?;
-        let stderr = child
-            .stderr
-            .take()
-            .ok_or_else(|| error(LinuxSandboxErrorKind::ExecutionFailed))?;
-        let output_limit = self.limits.output_bytes;
-        let stdout_reader = thread::spawn(move || read_bounded(stdout, output_limit));
-        let stderr_reader = thread::spawn(move || read_bounded(stderr, output_limit));
-        let started = Instant::now();
-        let deadline = Duration::from_secs(u64::from(self.limits.runtime_seconds));
-        let (forced_outcome, status) = loop {
-            if let Some(status) = child
-                .try_wait()
-                .map_err(|_| error(LinuxSandboxErrorKind::ExecutionFailed))?
-            {
-                break (None, status);
-            }
-            let forced_outcome = if cancellation.is_cancelled() {
-                Some(OperationOutcome::Cancelled)
-            } else if started.elapsed() >= deadline {
-                Some(OperationOutcome::TimedOut)
-            } else {
-                None
-            };
-            if let Some(outcome) = forced_outcome {
-                let stop_status = Command::new(systemctl_command)
-                    .env_clear()
-                    .env("XDG_RUNTIME_DIR", &runtime_directory)
-                    .env("DBUS_SESSION_BUS_ADDRESS", &session_bus)
-                    .args(["--user", "stop", unit.as_str()])
-                    .stdin(Stdio::null())
-                    .stdout(Stdio::null())
-                    .stderr(Stdio::null())
-                    .status()
-                    .map_err(|_| error(LinuxSandboxErrorKind::ExecutionFailed))?;
-                if !stop_status.success() {
-                    let _ = child.kill();
-                    let _ = child.wait();
-                    return Err(error(LinuxSandboxErrorKind::ExecutionFailed));
-                }
-                let status = child
-                    .wait()
-                    .map_err(|_| error(LinuxSandboxErrorKind::ExecutionFailed))?;
-                break (Some(outcome), status);
-            }
-            thread::sleep(Duration::from_millis(10));
-        };
-        let stdout = stdout_reader
-            .join()
-            .map_err(|_| error(LinuxSandboxErrorKind::ExecutionFailed))??;
-        let stderr = stderr_reader
-            .join()
-            .map_err(|_| error(LinuxSandboxErrorKind::ExecutionFailed))??;
-        if stdout.exceeded || stderr.exceeded {
-            return Err(error(LinuxSandboxErrorKind::OutputLimitExceeded));
-        }
-        Ok(LinuxSandboxResult {
-            outcome: forced_outcome.unwrap_or(if status.success() {
-                OperationOutcome::Succeeded
-            } else {
-                OperationOutcome::Failed
-            }),
-            stdout_sha256: digest_bytes(&stdout.retained),
-            stderr_sha256: stderr.digest,
-            stderr_bytes: stderr.total,
-            stdout: stdout.retained,
-        })
+        supervision::run(
+            command,
+            Arc::clone(&self.manifest),
+            owned_projections,
+            unit,
+            self.limits,
+            &self.seccomp_bpf,
+            cancellation,
+        )
     }
 
     fn run_read_only_tool_with_cancellation(
@@ -902,12 +907,20 @@ impl LinuxSandboxRunner {
         input: &LinuxReadOnlyToolInput,
         cancellation: &LinuxSandboxCancellation,
     ) -> Result<LinuxSandboxResult, LinuxSandboxError> {
+        self.run_read_only_tool_with_observation(input, &SandboxCancellation::Local(cancellation))
+    }
+
+    fn run_read_only_tool_with_observation(
+        &self,
+        input: &LinuxReadOnlyToolInput,
+        cancellation: &SandboxCancellation<'_>,
+    ) -> Result<LinuxSandboxResult, LinuxSandboxError> {
         for object in &input.held {
             object
                 .revalidate()
                 .map_err(|_| error(LinuxSandboxErrorKind::StaleObject))?;
         }
-        self.run_projection_arguments_with_cancellation(
+        self.run_projection_arguments_with_observation(
             &[
                 ProjectionMount {
                     descriptor: &input.request,
@@ -927,9 +940,20 @@ impl LinuxSandboxRunner {
     }
 
     /// Returns the fixed seccomp policy identity used by every worker.
+    ///
+    /// This identity does not prove that an attempt has run or admission is free.
     #[must_use]
     pub const fn seccomp_policy_id(&self) -> &'static str {
         SECCOMP_POLICY_ID
+    }
+
+    /// Observes this process's existing supervisor without blocking or reserving it.
+    ///
+    /// Advisory only: this neither revalidates launch artifacts nor grants an
+    /// effect, proves cross-process cleanup, or clears quarantine. The actual
+    /// execution path independently checks and acquires the owner atomically.
+    pub fn admission_snapshot(&self) -> Result<(), LinuxSandboxError> {
+        supervision::admission_snapshot()
     }
 }
 
@@ -1027,11 +1051,7 @@ impl EffectDriver for LinuxSandboxEffectDriver {
                 EffectLaunch::completed(effect_result)
             }
             Err(error) => {
-                let effect_result = EffectResult::from_redacted_material(
-                    OperationOutcome::Failed,
-                    error.kind().code().as_bytes(),
-                    StateChange::NotChanged,
-                );
+                let effect_result = sandbox_error_effect(&error);
                 self.error = Some(error);
                 EffectLaunch::completed(effect_result)
             }
@@ -1040,15 +1060,15 @@ impl EffectDriver for LinuxSandboxEffectDriver {
 }
 
 /// Linux read-only tool worker callable only with one consumed exact grant.
-pub struct LinuxReadOnlyToolEffectDriver {
+pub struct LinuxReadOnlyToolEffectDriver<'source> {
     runner: LinuxSandboxRunner,
     input: LinuxReadOnlyToolInput,
     result: Option<LinuxSandboxResult>,
     error: Option<LinuxSandboxError>,
-    cancellation: LinuxSandboxCancellation,
+    cancellation: ReadCancellation<'source>,
 }
 
-impl LinuxReadOnlyToolEffectDriver {
+impl<'source> LinuxReadOnlyToolEffectDriver<'source> {
     /// Creates an inert driver over sealed input and continuously held objects.
     #[must_use]
     pub fn new(runner: LinuxSandboxRunner, input: LinuxReadOnlyToolInput) -> Self {
@@ -1057,7 +1077,7 @@ impl LinuxReadOnlyToolEffectDriver {
             input,
             result: None,
             error: None,
-            cancellation: LinuxSandboxCancellation::default(),
+            cancellation: ReadCancellation::Local(LinuxSandboxCancellation::default()),
         }
     }
 
@@ -1073,7 +1093,24 @@ impl LinuxReadOnlyToolEffectDriver {
             input,
             result: None,
             error: None,
-            cancellation,
+            cancellation: ReadCancellation::Local(cancellation),
+        }
+    }
+
+    /// Borrows the existing live control owner without polling, granting or launching.
+    /// Every worker poll is bound to consumed task/correlation inside execute().
+    #[must_use]
+    pub const fn new_observed(
+        runner: LinuxSandboxRunner,
+        input: LinuxReadOnlyToolInput,
+        cancellation: &'source dyn EffectCancellationObservation,
+    ) -> Self {
+        Self {
+            runner,
+            input,
+            result: None,
+            error: None,
+            cancellation: ReadCancellation::Observed(cancellation),
         }
     }
 
@@ -1094,7 +1131,7 @@ impl LinuxReadOnlyToolEffectDriver {
     }
 }
 
-impl fmt::Debug for LinuxReadOnlyToolEffectDriver {
+impl fmt::Debug for LinuxReadOnlyToolEffectDriver<'_> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("LinuxReadOnlyToolEffectDriver")
@@ -1105,7 +1142,7 @@ impl fmt::Debug for LinuxReadOnlyToolEffectDriver {
     }
 }
 
-impl EffectDriver for LinuxReadOnlyToolEffectDriver {
+impl EffectDriver for LinuxReadOnlyToolEffectDriver<'_> {
     fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
         if authorization.operation().operation() != GrantOperation::WorkspaceRead
             || authorization.call().tool_id.as_str() != self.input.tool_id
@@ -1114,10 +1151,23 @@ impl EffectDriver for LinuxReadOnlyToolEffectDriver {
         {
             return EffectLaunch::failed();
         }
-        match self
-            .runner
-            .run_read_only_tool_with_cancellation(&self.input, &self.cancellation)
-        {
+        let result = match &self.cancellation {
+            ReadCancellation::Local(cancellation) => self
+                .runner
+                .run_read_only_tool_with_cancellation(&self.input, cancellation),
+            ReadCancellation::Observed(observation) => {
+                let scoped = ScopedEffectCancellation::new(
+                    *observation,
+                    authorization.task_id(),
+                    &authorization.call().correlation_id,
+                );
+                self.runner.run_read_only_tool_with_observation(
+                    &self.input,
+                    &SandboxCancellation::Bound(scoped),
+                )
+            }
+        };
+        match result {
             Ok(result) => {
                 let effect = EffectResult::from_redacted_material(
                     result.outcome(),
@@ -1128,11 +1178,7 @@ impl EffectDriver for LinuxReadOnlyToolEffectDriver {
                 EffectLaunch::completed(effect)
             }
             Err(error) => {
-                let effect = EffectResult::from_redacted_material(
-                    OperationOutcome::Failed,
-                    error.kind().code().as_bytes(),
-                    StateChange::NotChanged,
-                );
+                let effect = sandbox_error_effect(&error);
                 self.error = Some(error);
                 EffectLaunch::completed(effect)
             }
@@ -1140,38 +1186,13 @@ impl EffectDriver for LinuxReadOnlyToolEffectDriver {
     }
 }
 
-struct BoundedRead {
-    retained: Vec<u8>,
-    digest: [u8; 32],
-    total: usize,
-    exceeded: bool,
-}
-
-fn read_bounded(mut input: impl Read, limit: usize) -> Result<BoundedRead, LinuxSandboxError> {
-    let mut retained = Vec::with_capacity(limit.min(HASH_BUFFER_BYTES));
-    let mut digest = Sha256::new();
-    let mut total = 0_usize;
-    let mut buffer = [0_u8; HASH_BUFFER_BYTES];
-    loop {
-        let count = input
-            .read(&mut buffer)
-            .map_err(|_| error(LinuxSandboxErrorKind::ExecutionFailed))?;
-        if count == 0 {
-            break;
-        }
-        digest.update(&buffer[..count]);
-        total = total.saturating_add(count);
-        if retained.len() < limit {
-            let remaining = limit - retained.len();
-            retained.extend_from_slice(&buffer[..count.min(remaining)]);
-        }
-    }
-    Ok(BoundedRead {
-        retained,
-        digest: digest.finalize().into(),
-        total,
-        exceeded: total > limit,
-    })
+fn sandbox_error_effect(error: &LinuxSandboxError) -> EffectResult {
+    let (outcome, state_change) = if error.kind() == LinuxSandboxErrorKind::CleanupUncertain {
+        (OperationOutcome::Uncertain, StateChange::Uncertain)
+    } else {
+        (OperationOutcome::Failed, StateChange::NotChanged)
+    };
+    EffectResult::from_redacted_material(outcome, error.kind().code().as_bytes(), state_change)
 }
 
 pub(crate) fn compile_seccomp_policy() -> Result<Vec<u8>, LinuxSandboxError> {
@@ -1191,7 +1212,81 @@ pub(crate) fn compile_seccomp_policy() -> Result<Vec<u8>, LinuxSandboxError> {
     let program = filters
         .remove("worker")
         .ok_or_else(|| error(LinuxSandboxErrorKind::SeccompUnavailable))?;
-    serialize_bpf(&program)
+    serialize_native_bpf(&program, arch)
+}
+
+fn serialize_native_bpf(
+    program: &BpfProgram,
+    arch: TargetArch,
+) -> Result<Vec<u8>, LinuxSandboxError> {
+    // Linux classic-seccomp instruction maximum, distinct from our 4096-BYTE
+    // atomic pipe ceiling. Leave the compiler's existing strict maximum intact.
+    let extra = if arch == TargetArch::x86_64 { 3 } else { 0 };
+    let count = program
+        .len()
+        .checked_add(extra)
+        .ok_or_else(|| error(LinuxSandboxErrorKind::SeccompUnavailable))?;
+    if program.is_empty() || count >= 4096 {
+        return Err(error(LinuxSandboxErrorKind::SeccompUnavailable));
+    }
+    let mut guarded = Vec::with_capacity(count);
+    if arch == TargetArch::x86_64 {
+        // x32 shares AUDIT_ARCH_X86_64 with native x86-64, but sets bit 30
+        // in nr. A denylist over native syscall numbers alone does not match it.
+        // Insert a native-number guard AFTER the exact pinned architecture check.
+        // Keep foreign-architecture termination; aliases return the same EPERM
+        // as ordinary denied native calls, without deliberately triggering a core.
+        let architecture_check = [
+            seccompiler::sock_filter {
+                code: 0x20,
+                jt: 0,
+                jf: 0,
+                k: 4,
+            },
+            seccompiler::sock_filter {
+                code: 0x15,
+                jt: 1,
+                jf: 0,
+                k: 0xc000_003e,
+            },
+            seccompiler::sock_filter {
+                code: 0x06,
+                jt: 0,
+                jf: 0,
+                k: 0x8000_0000,
+            },
+        ];
+        if program.get(..3) != Some(architecture_check.as_slice()) {
+            return Err(error(LinuxSandboxErrorKind::SeccompUnavailable));
+        }
+        guarded.extend(architecture_check);
+        guarded.extend([
+            seccompiler::sock_filter {
+                code: 0x20,
+                jt: 0,
+                jf: 0,
+                k: 0,
+            },
+            seccompiler::sock_filter {
+                code: 0x35,
+                jt: 0,
+                jf: 1,
+                k: 0x4000_0000,
+            },
+            seccompiler::sock_filter {
+                code: 0x06,
+                jt: 0,
+                jf: 0,
+                k: 0x0005_0001,
+            },
+        ]);
+        // The exact architecture branch still skips only its original kill.
+        // Remaining compiler-relative jumps keep their original destinations.
+        guarded.extend(program[3..].iter().cloned());
+    } else {
+        guarded.extend(program.iter().cloned());
+    }
+    serialize_bpf(&guarded)
 }
 
 fn serialize_bpf(program: &BpfProgram) -> Result<Vec<u8>, LinuxSandboxError> {
@@ -1618,7 +1713,7 @@ fn random_unit_name() -> Result<String, LinuxSandboxError> {
     let mut random = [0_u8; 12];
     getrandom(&mut random, GetRandomFlags::empty())
         .map_err(|_| error(LinuxSandboxErrorKind::IsolationUnavailable))?;
-    Ok(format!("agentmage-worker-{}", hex_digest(&random)))
+    Ok(format!("agentmage-worker-{}.service", hex_digest(&random)))
 }
 
 fn digest_bytes(bytes: &[u8]) -> [u8; 32] {
@@ -1648,6 +1743,7 @@ mod tests {
     use std::thread;
     use std::time::{Duration, Instant};
 
+    use super::{serialize_bpf, serialize_native_bpf};
     use agentmage_kernel_contracts::{
         AdapterInstanceId, GrantTarget, HeldWorkspaceObject, OperationOutcome,
         PathResolutionIntent, PlatformPathAdapter, WorkspaceAuthorizationId, WorkspaceId,
@@ -1655,6 +1751,7 @@ mod tests {
     };
     use rustix::fs::{SealFlags, fcntl_get_seals};
     use rustix::io::{pread, write};
+    use seccompiler::{BpfProgram, TargetArch, compile_from_json};
 
     use super::{
         LinuxReadOnlyToolInput, LinuxSandboxCancellation, LinuxSandboxError, LinuxSandboxErrorKind,
@@ -1666,6 +1763,97 @@ mod tests {
         DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxPathAdapter,
         authorize_workspace_root,
     };
+
+    #[test]
+    fn passive_read_cancellation_preserves_legacy_flag_without_a_new_owner() {
+        let flag = LinuxSandboxCancellation::default();
+        let view = super::SandboxCancellation::Local(&flag);
+        assert_eq!(view.is_cancelled(), Ok(false));
+        flag.cancel();
+        assert_eq!(view.is_cancelled(), Ok(true));
+    }
+
+    #[test]
+    fn passive_read_cancellation_rechecks_scope_and_refuses_observer_failures() {
+        use agentmage_kernel_contracts::{
+            BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason,
+            CancellationSignal, CorrelationId, TaskId,
+        };
+        use agentmage_kernel_engine::propagation::{
+            CancellationObservationError, EffectCancellationObservation, ScopedEffectCancellation,
+        };
+        struct Source(
+            std::sync::Mutex<Result<Option<CancellationSignal>, CancellationObservationError>>,
+        );
+        impl EffectCancellationObservation for Source {
+            fn observe_effect_cancellation(
+                &self,
+            ) -> Result<Option<CancellationSignal>, CancellationObservationError> {
+                self.0.lock().unwrap().clone()
+            }
+        }
+        let task = TaskId::from_raw("task-read-consumed");
+        let correlation = CorrelationId::from_raw("correlation-read-consumed");
+        let signal = CancellationSignal {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            cancellation_id: CancellationId::from_raw("cancel-read"),
+            task_id: task.clone(),
+            correlation_id: correlation.clone(),
+            reason: CancellationReason::UserRequested,
+            requested_by: BoundaryKind::Shell,
+        };
+        let source = Source(std::sync::Mutex::new(Ok(None)));
+        let view = super::SandboxCancellation::Bound(ScopedEffectCancellation::new(
+            &source,
+            &task,
+            &correlation,
+        ));
+        assert_eq!(view.is_cancelled(), Ok(false));
+        *source.0.lock().unwrap() = Ok(Some(signal.clone()));
+        assert_eq!(view.is_cancelled(), Ok(true));
+
+        // Separate attempts: a production observer error exits into cleanup.
+        // Resetting/retrying the same failed observation is not admissible.
+        for case in 0..5 {
+            let source = Source(std::sync::Mutex::new(Ok(None)));
+            let view = super::SandboxCancellation::Bound(ScopedEffectCancellation::new(
+                &source,
+                &task,
+                &correlation,
+            ));
+            assert_eq!(view.is_cancelled(), Ok(false));
+            let mut bad = signal.clone();
+            let next = match case {
+                0 => {
+                    bad.task_id = TaskId::from_raw("other-task");
+                    Ok(Some(bad))
+                }
+                1 => {
+                    bad.correlation_id = CorrelationId::from_raw("other-correlation");
+                    Ok(Some(bad))
+                }
+                2 => {
+                    bad.requested_by = BoundaryKind::Model;
+                    Ok(Some(bad))
+                }
+                3 => {
+                    bad.schema_version += 1;
+                    Ok(Some(bad))
+                }
+                _ => Err(CancellationObservationError::Unavailable),
+            };
+            *source.0.lock().unwrap() = next;
+            let failure = view.is_cancelled().unwrap_err();
+            assert_eq!(
+                failure.kind(),
+                LinuxSandboxErrorKind::CancellationUnavailable
+            );
+            assert_eq!(
+                failure.kind().code(),
+                "linux.sandbox.cancellation.unavailable"
+            );
+        }
+    }
 
     fn temp_directory(label: &str) -> PathBuf {
         let root = std::env::temp_dir().join(format!(
@@ -1905,10 +2093,560 @@ mod tests {
     }
 
     #[test]
+    fn unknown_cleanup_is_an_uncertain_effect_not_an_ordinary_read_failure() {
+        for kind in [
+            LinuxSandboxErrorKind::InvalidManifest,
+            LinuxSandboxErrorKind::WorkspaceMismatch,
+            LinuxSandboxErrorKind::TargetMismatch,
+            LinuxSandboxErrorKind::StaleObject,
+            LinuxSandboxErrorKind::FileProjectionFailed,
+            LinuxSandboxErrorKind::DirectoryProjectionFailed,
+            LinuxSandboxErrorKind::InvalidLimit,
+            LinuxSandboxErrorKind::SeccompUnavailable,
+            LinuxSandboxErrorKind::IsolationUnavailable,
+            LinuxSandboxErrorKind::ExecutionFailed,
+            LinuxSandboxErrorKind::OutputLimitExceeded,
+            LinuxSandboxErrorKind::CleanupUncertain,
+        ] {
+            let result = super::sandbox_error_effect(&super::error(kind));
+            let uncertain = kind == LinuxSandboxErrorKind::CleanupUncertain;
+            assert_eq!(
+                result.outcome(),
+                if uncertain {
+                    OperationOutcome::Uncertain
+                } else {
+                    OperationOutcome::Failed
+                }
+            );
+            assert_eq!(
+                result.state_change(),
+                if uncertain {
+                    agentmage_kernel_contracts::StateChange::Uncertain
+                } else {
+                    agentmage_kernel_contracts::StateChange::NotChanged
+                }
+            );
+            assert_eq!(result.result_sha256().len(), 64);
+            assert!(!result.result_sha256().contains(kind.code()));
+        }
+    }
+
+    const ABI_TEST_ALLOW: u32 = 0x7fff_0000;
+    const ABI_TEST_KILL: u32 = 0x8000_0000;
+    const ABI_TEST_EPERM: u32 = 0x0005_0001;
+
+    // Test-only evaluator for the exact forward-only instruction subset emitted
+    // by this denylist compiler. Unknown instructions/loads, escape or non-return
+    // panic instead of silently simulating success. Not a production interpreter,
+    // kernel execution, or platform qualification.
+    fn evaluate_abi_filter(bytes: &[u8], nr: u32, arch: u32) -> u32 {
+        assert!(!bytes.is_empty() && bytes.len().is_multiple_of(8));
+        let mut pc = 0_usize;
+        let mut accumulator = 0_u32;
+        for _ in 0..bytes.len() / 8 {
+            let instruction = bytes
+                .get(pc * 8..pc * 8 + 8)
+                .expect("in-bounds instruction");
+            let code = u16::from_ne_bytes(instruction[0..2].try_into().unwrap());
+            let value = u32::from_ne_bytes(instruction[4..8].try_into().unwrap());
+            let branch = |condition| {
+                usize::from(if condition {
+                    instruction[2]
+                } else {
+                    instruction[3]
+                })
+            };
+            let skip = match code {
+                0x20 => {
+                    accumulator = match value {
+                        0 => nr,
+                        4 => arch,
+                        _ => panic!("unexpected load"),
+                    };
+                    0
+                }
+                0x05 => usize::try_from(value).unwrap(),
+                0x15 => branch(accumulator == value),
+                0x25 => branch(accumulator > value),
+                0x35 => branch(accumulator >= value),
+                0x06 => return value,
+                _ => panic!("unsupported test instruction"),
+            };
+            pc = pc.checked_add(skip + 1).unwrap();
+        }
+        panic!("filter did not return within its instruction bound");
+    }
+
+    fn abi_compiler_fixture(arch: TargetArch) -> BpfProgram {
+        let source = br#"{"worker":{"mismatch_action":"allow","match_action":{"errno":1},"filter":[{"syscall":"socket"},{"syscall":"connect"},{"syscall":"ptrace"}]}}"#;
+        compile_from_json(source.as_slice(), arch)
+            .unwrap()
+            .remove("worker")
+            .unwrap()
+    }
+
+    #[test]
+    fn denylist_alias_gap_is_retained_as_a_regression_without_running_a_syscall() {
+        let original = abi_compiler_fixture(TargetArch::x86_64);
+        let original_bytes = serialize_bpf(&original).unwrap();
+        let guarded = serialize_native_bpf(&original, TargetArch::x86_64).unwrap();
+        let audit_arch = 0xc000_003e;
+        for nr in [41, 42, 101] {
+            assert_eq!(
+                evaluate_abi_filter(&original_bytes, nr, audit_arch),
+                ABI_TEST_EPERM
+            );
+            assert_eq!(
+                evaluate_abi_filter(&guarded, nr, audit_arch),
+                ABI_TEST_EPERM
+            );
+            // Document the pinned compiler behavior rather than claim it has
+            // executed a prohibited syscall on the installed kernel.
+            assert_eq!(
+                evaluate_abi_filter(&original_bytes, nr | 0x4000_0000, audit_arch),
+                ABI_TEST_ALLOW
+            );
+            assert_eq!(
+                evaluate_abi_filter(&guarded, nr | 0x4000_0000, audit_arch),
+                ABI_TEST_EPERM
+            );
+        }
+        for nr in [
+            0x4000_0000,
+            0x4000_0001,
+            0x4000_0209,
+            0x7fff_ffff,
+            0x8000_0000,
+            u32::MAX,
+        ] {
+            assert_eq!(
+                evaluate_abi_filter(&guarded, nr, audit_arch),
+                ABI_TEST_EPERM
+            );
+        }
+        for nr in [0, 1, 39, 60] {
+            assert_eq!(
+                evaluate_abi_filter(&original_bytes, nr, audit_arch),
+                ABI_TEST_ALLOW
+            );
+            assert_eq!(
+                evaluate_abi_filter(&guarded, nr, audit_arch),
+                ABI_TEST_ALLOW
+            );
+        }
+        for wrong_arch in [0, 0x4000_0003, 0xc000_00b7, 0xc000_00f3] {
+            assert_eq!(evaluate_abi_filter(&guarded, 39, wrong_arch), ABI_TEST_KILL);
+            assert_eq!(
+                evaluate_abi_filter(&guarded, 0x4000_0027, wrong_arch),
+                ABI_TEST_KILL
+            );
+        }
+        assert_eq!(&guarded[..24], &original_bytes[..24]);
+        assert_eq!(&guarded[48..], &original_bytes[24..]);
+    }
+
+    #[test]
+    fn other_compiler_architectures_are_unchanged_not_newly_qualified() {
+        for (arch, audit_arch, socket) in [
+            (TargetArch::aarch64, 0xc000_00b7, 198),
+            (TargetArch::riscv64, 0xc000_00f3, 198),
+        ] {
+            let original = abi_compiler_fixture(arch);
+            let original_bytes = serialize_bpf(&original).unwrap();
+            let guarded = serialize_native_bpf(&original, arch).unwrap();
+            assert_eq!(guarded, original_bytes);
+            assert_eq!(
+                evaluate_abi_filter(&guarded, socket, audit_arch),
+                ABI_TEST_EPERM
+            );
+            assert_eq!(
+                evaluate_abi_filter(&guarded, socket, 0xc000_003e),
+                ABI_TEST_KILL
+            );
+        }
+    }
+
+    #[test]
+    fn guard_rejects_empty_or_overlong_program_before_serialization() {
+        assert!(serialize_native_bpf(&Vec::new(), TargetArch::x86_64).is_err());
+        let instruction = seccompiler::sock_filter {
+            code: 0x06,
+            jt: 0,
+            jf: 0,
+            k: ABI_TEST_ALLOW,
+        };
+        assert!(serialize_native_bpf(&vec![instruction.clone()], TargetArch::x86_64).is_err());
+        assert!(
+            serialize_native_bpf(&vec![instruction.clone(); 4093], TargetArch::x86_64).is_err()
+        );
+        assert!(serialize_native_bpf(&vec![instruction; 4096], TargetArch::aarch64).is_err());
+    }
+
+    #[test]
+    #[cfg(target_arch = "x86_64")]
+    fn compiled_offline_policy_binds_native_alias_refusal_to_v2_identity() {
+        let policy = compile_seccomp_policy().unwrap();
+        assert_eq!(super::SECCOMP_POLICY_ID, "agentmage.linux.worker.deny.v2");
+        for number in [41, 42, 101] {
+            assert_eq!(
+                evaluate_abi_filter(&policy, number, 0xc000_003e),
+                ABI_TEST_EPERM
+            );
+            assert_eq!(
+                evaluate_abi_filter(&policy, number | 0x4000_0000, 0xc000_003e),
+                ABI_TEST_EPERM
+            );
+        }
+        assert_eq!(
+            evaluate_abi_filter(&policy, 39, 0xc000_003e),
+            ABI_TEST_ALLOW
+        );
+        assert_eq!(
+            evaluate_abi_filter(&policy, 39 | 0x4000_0000, 0xc000_003e),
+            ABI_TEST_EPERM
+        );
+        assert_eq!(evaluate_abi_filter(&policy, 39, 0x4000_0003), ABI_TEST_KILL);
+    }
+
+    #[cfg(target_arch = "x86_64")]
+    fn native_abi_probe_bytes(x32: bool) -> Vec<u8> {
+        // A synthetic native ELF64 fixture, not a downloaded/foreign executable.
+        // It attempts only getpid, writes one marker, then exits. No runtime library,
+        // filesystem, socket, child, environment or repository access is requested.
+        // Only exact EPERM yields D; a PID or kernel ENOSYS yields P. This distinguishes
+        // rejection without assuming x32 kernel support or provoking a core dump.
+        const BASE: u64 = 0x0040_0000;
+        const ENTRY: usize = 64 + 56;
+        let mut code = vec![0xb8]; // mov eax, getpid syscall number
+        code.extend_from_slice(&(39_u32 | if x32 { 0x4000_0000 } else { 0 }).to_le_bytes());
+        code.extend_from_slice(&[
+            0x0f, 0x05, // syscall
+            0xbf, 1, 0, 0, 0, // mov edi, stdout
+            0x48, 0x8d, 0x35, 30, 0, 0, 0, // lea rsi, [rip + P marker]
+            0x48, 0x83, 0xf8, 0xff, // cmp rax, -EPERM
+            0x75, 3, // jne write marker P
+            0x48, 0xff, 0xc6, // inc rsi: marker D
+            0xb8, 1, 0, 0, 0, // mov eax, SYS_write
+            0xba, 1, 0, 0, 0, // mov edx, 1
+            0x0f, 0x05, // syscall
+            0xb8, 60, 0, 0, 0, // mov eax, SYS_exit
+            0x31, 0xff, // xor edi, edi
+            0x0f, 0x05, // syscall
+            b'P', b'D',
+        ]);
+        assert_eq!(code.len(), 51);
+        let length = u64::try_from(ENTRY + code.len()).unwrap();
+        let mut elf = vec![0; ENTRY];
+        elf[..7].copy_from_slice(b"\x7fELF\x02\x01\x01");
+        elf[16..18].copy_from_slice(&2_u16.to_le_bytes()); // ET_EXEC
+        elf[18..20].copy_from_slice(&62_u16.to_le_bytes()); // EM_X86_64
+        elf[20..24].copy_from_slice(&1_u32.to_le_bytes());
+        elf[24..32].copy_from_slice(&(BASE + ENTRY as u64).to_le_bytes());
+        elf[32..40].copy_from_slice(&64_u64.to_le_bytes()); // program-header offset
+        elf[52..54].copy_from_slice(&64_u16.to_le_bytes()); // ELF header bytes
+        elf[54..56].copy_from_slice(&56_u16.to_le_bytes()); // program-header bytes
+        elf[56..58].copy_from_slice(&1_u16.to_le_bytes());
+        elf[64..68].copy_from_slice(&1_u32.to_le_bytes()); // PT_LOAD
+        elf[68..72].copy_from_slice(&5_u32.to_le_bytes()); // read/execute, never write
+        elf[80..88].copy_from_slice(&BASE.to_le_bytes());
+        elf[88..96].copy_from_slice(&BASE.to_le_bytes());
+        elf[96..104].copy_from_slice(&length.to_le_bytes());
+        elf[104..112].copy_from_slice(&length.to_le_bytes());
+        elf[112..120].copy_from_slice(&4096_u64.to_le_bytes());
+        elf.extend(code);
+        elf
+    }
+
+    #[test]
+    #[cfg(target_arch = "x86_64")]
+    fn abi_probe_fixture_changes_only_the_syscall_alias_bit() {
+        let native = native_abi_probe_bytes(false);
+        let alias = native_abi_probe_bytes(true);
+        assert_eq!(native.len(), 171);
+        assert_eq!(native.len(), alias.len());
+        let changed: Vec<_> = native
+            .iter()
+            .zip(&alias)
+            .enumerate()
+            .filter_map(|(index, (left, right))| (left != right).then_some(index))
+            .collect();
+        assert_eq!(changed, [124]);
+        assert_eq!(native[124], 0);
+        assert_eq!(alias[124], 0x40);
+        assert_eq!(&native[169..], b"PD");
+    }
+
+    #[test]
+    #[cfg(target_arch = "x86_64")]
+    #[ignore = "native isolation fixture; exact owned units and sealed test bytes only"]
+    fn guarded_native_abi_attempt_returns_eperm_and_lane_is_reusable() {
+        use std::os::unix::fs::PermissionsExt;
+        let root = temp_directory("native-abi-fixture");
+        fs::set_permissions(&root, fs::Permissions::from_mode(0o700)).unwrap();
+        fs::write(root.join("allowed.txt"), b"fixture-only input\n").unwrap();
+        let workspace = authorize(&root);
+        let held = hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile);
+        let fixture = root.join("agentmage-read-only-worker");
+        for x32 in [false, true, false] {
+            let bytes = native_abi_probe_bytes(x32);
+            fs::write(&fixture, &bytes).unwrap();
+            fs::set_permissions(&fixture, fs::Permissions::from_mode(0o700)).unwrap();
+            // Existing internal development snapshot validation; no new production
+            // trust exception, application worker claim or executable path bypass.
+            let artifact = super::development_worker_artifact(&fixture).unwrap();
+            assert_eq!(descriptor_bytes(&artifact.descriptor), bytes);
+            assert!(
+                super::verify_artifact(
+                    &fixture,
+                    Some(Path::new("/app/agentmage-read-only-worker")),
+                    false
+                )
+                .is_err()
+            );
+            let manifest = LinuxSandboxManifest::with_verified_worker(
+                &fs::canonicalize("/usr/bin/systemd-run").unwrap(),
+                &fs::canonicalize("/usr/bin/bwrap").unwrap(),
+                artifact,
+                &[],
+            )
+            .unwrap();
+            let limits = LinuxSandboxLimits::new(256 * 1024 * 1024, 16, 100, 4, 128).unwrap();
+            let runner = LinuxSandboxRunner::new(manifest, limits).unwrap();
+            eprintln!(
+                "native-abi-fixture-only x32={x32} sha256={}",
+                super::hex_digest(&super::digest_bytes(&bytes))
+            );
+            let result = run_held_arguments(&runner, &held, &[])
+                .expect("probe ended with verified exact owned cleanup");
+            assert_eq!(result.outcome(), OperationOutcome::Succeeded);
+            assert_eq!(
+                result.stdout(),
+                if x32 { b"D" } else { b"P" },
+                "only EPERM proves alias refusal"
+            );
+        }
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
     fn policy_compiles_to_nonempty_classic_bpf() {
         let policy = compile_seccomp_policy().expect("compiled policy");
         assert!(!policy.is_empty());
         assert_eq!(policy.len() % 8, 0);
+    }
+
+    #[test]
+    fn native_start_limits_use_supported_running_job_property_without_budget_growth() {
+        for seconds in [1, 15, 300] {
+            let limits = LinuxSandboxLimits::new(256 * 1024 * 1024, 16, 100, seconds, 1024)
+                .expect("existing admitted limits");
+            assert_eq!(
+                limits.start_timeout_properties(),
+                [
+                    format!("--property=JobRunningTimeoutSec={seconds}s"),
+                    format!("--property=TimeoutStartSec={seconds}s"),
+                ]
+            );
+            assert_eq!(limits.runtime_seconds, seconds);
+        }
+    }
+
+    #[test]
+    #[ignore = "requires native systemd-user, cgroup2 and Bubblewrap; exact owned units only"]
+    fn bounded_supervisor_native_read_cancel_timeout_pressure_and_reuse() {
+        let root = temp_directory("bounded-supervisor");
+        fs::write(root.join("allowed.txt"), b"bounded native read\n").unwrap();
+        let workspace = authorize(&root);
+        let held = hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile);
+        let read = || {
+            let result = run_held_arguments(&runner(), &held, &["/input/object".into()])
+                .expect("bounded native read and verified owned cleanup");
+            assert_eq!(result.outcome(), OperationOutcome::Succeeded);
+            assert_eq!(result.stdout(), b"bounded native read\n");
+        };
+        read();
+        // A cancellation already observed before spawn is a known no-launch
+        // cancellation, not an execution failure or uncertain descendant cleanup.
+        let cancelled = LinuxSandboxCancellation::default();
+        cancelled.cancel();
+        let projection = file_projection(&held).unwrap();
+        let result = runner()
+            .run_projection_arguments_with_cancellation(
+                &[super::ProjectionMount {
+                    descriptor: &projection,
+                    guest_path: "/input/object",
+                }],
+                &["/input/object".into()],
+                &cancelled,
+            )
+            .unwrap();
+        assert_eq!(result.outcome(), OperationOutcome::Cancelled);
+        assert!(result.stdout().is_empty());
+        read();
+        // Shell builtins only, no extra worker mounts, services, network or
+        // process inventories. The same sealed input still crosses the boundary.
+        for (cancel, leader_exits) in [(false, false), (true, false), (false, true)] {
+            let seconds = if cancel { 4 } else { 1 };
+            let limits =
+                LinuxSandboxLimits::new(256 * 1024 * 1024, 16, 100, seconds, 1024).unwrap();
+            let runner = runner_for("/usr/bin/sh", limits);
+            let projection = file_projection(&held).unwrap();
+            let cancellation = LinuxSandboxCancellation::default();
+            let token = cancellation.clone();
+            let controller = cancel.then(|| {
+                thread::spawn(move || {
+                    thread::sleep(Duration::from_secs(1));
+                    token.cancel();
+                })
+            });
+            let program = if leader_exits {
+                // Establish actual descendant entry before the leader exits.
+                // Bubblewrap's lifetime binding may clean it up immediately;
+                // the owner must independently prove the held cgroup empty.
+                "printf ready; (printf child-ready; printf entered > /tmp/leader-child-ready; while :; do :; done) & while [ ! -e /tmp/leader-child-ready ]; do :; done; exit 0"
+            } else {
+                "printf ready; while :; do :; done"
+            };
+            let started = Instant::now();
+            let result = runner.run_projection_arguments_with_cancellation(
+                &[super::ProjectionMount {
+                    descriptor: &projection,
+                    guest_path: "/input/object",
+                }],
+                &["-c".into(), program.into()],
+                &cancellation,
+            );
+            if let Some(controller) = controller {
+                controller.join().unwrap();
+            }
+            let result = result.expect("bounded terminal outcome with exact owned cleanup");
+            assert!(started.elapsed() < Duration::from_secs(8));
+            assert_eq!(
+                result.outcome(),
+                if cancel {
+                    OperationOutcome::Cancelled
+                } else if leader_exits {
+                    OperationOutcome::Succeeded
+                } else {
+                    OperationOutcome::TimedOut
+                }
+            );
+            assert!(
+                result.stdout().starts_with(b"ready"),
+                "worker executed before interruption"
+            );
+            if leader_exits {
+                assert_eq!(result.stdout(), b"readychild-ready");
+            }
+            read(); // unknown cleanup would retain the slot and refuse this launch
+        }
+        let limits = LinuxSandboxLimits::new(256 * 1024 * 1024, 16, 100, 3, 128).unwrap();
+        let pressure = run_held_arguments(&runner_for("/usr/bin/yes", limits), &held, &[])
+            .expect_err("overflow must never be a truncated successful read");
+        assert_eq!(pressure.kind(), LinuxSandboxErrorKind::OutputLimitExceeded);
+        read();
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    #[ignore = "requires native systemd-user, cgroup2 and Bubblewrap; exact owned units only"]
+    fn borrowed_control_native_cancel_and_observer_failure_clean_up_and_reuse() {
+        use agentmage_kernel_contracts::{
+            BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason,
+            CancellationSignal, CorrelationId, ModelCancellationProbe, ModelRuntimeFailure, TaskId,
+        };
+        use agentmage_kernel_engine::propagation::{
+            BorrowedEffectCancellation, ScopedEffectCancellation,
+        };
+        struct TimedProbe {
+            started: Instant,
+            terminal: Result<Option<CancellationSignal>, ModelRuntimeFailure>,
+        }
+        impl ModelCancellationProbe for TimedProbe {
+            fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
+                if self.started.elapsed() < Duration::from_secs(1) {
+                    Ok(None)
+                } else {
+                    self.terminal.clone()
+                }
+            }
+        }
+        // Native supervisor/borrowed control proof. Scope identities below are
+        // fixture identities, NOT evidence of consumed production authority.
+        let root = temp_directory("borrowed-native-cancel");
+        fs::write(root.join("allowed.txt"), b"borrowed native reuse\n").unwrap();
+        let workspace = authorize(&root);
+        let held = hold(&workspace, "allowed.txt", PathResolutionIntent::ReadFile);
+        let task = TaskId::from_raw("task-native-borrowed");
+        let correlation = CorrelationId::from_raw("correlation-native-borrowed");
+        for case in 0..3 {
+            let mut signal = CancellationSignal {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                cancellation_id: CancellationId::from_raw("cancel-native-borrowed"),
+                correlation_id: correlation.clone(),
+                task_id: task.clone(),
+                reason: CancellationReason::UserRequested,
+                requested_by: BoundaryKind::Shell,
+            };
+            if case == 1 {
+                signal.task_id = TaskId::from_raw("other-native-task");
+            }
+            let terminal = if case == 2 {
+                Err(ModelRuntimeFailure {
+                    code: "private-observer-failure".to_owned(),
+                    retryable_after_correction: false,
+                    dependency_recovery_required: true,
+                    contract_error: None,
+                })
+            } else {
+                Ok(Some(signal))
+            };
+            let limits = LinuxSandboxLimits::new(256 * 1024 * 1024, 16, 100, 4, 1024).unwrap();
+            let runner = runner_for("/usr/bin/sh", limits);
+            let projection = file_projection(&held).unwrap();
+            let probe = TimedProbe {
+                started: Instant::now(),
+                terminal,
+            };
+            let borrowed =
+                BorrowedEffectCancellation::new(&probe, task.clone(), correlation.clone());
+            let scoped = ScopedEffectCancellation::new(&borrowed, &task, &correlation);
+            let result = runner.run_projection_arguments_with_observation(
+                &[super::ProjectionMount {
+                    descriptor: &projection,
+                    guest_path: "/input/object",
+                }],
+                &[
+                    "-c".into(),
+                    "printf borrowed-ready; while :; do :; done".into(),
+                ],
+                &super::SandboxCancellation::Bound(scoped),
+            );
+            assert!(probe.started.elapsed() < Duration::from_secs(8));
+            if case == 0 {
+                let result = result.expect("known native cancellation and held-cgroup cleanup");
+                assert_eq!(result.outcome(), OperationOutcome::Cancelled);
+                assert_eq!(
+                    result.stdout(),
+                    b"borrowed-ready",
+                    "actual body entry precedes cancellation"
+                );
+            } else {
+                assert_eq!(
+                    result
+                        .expect_err("late observer failure must not continue or claim cancellation")
+                        .kind(),
+                    LinuxSandboxErrorKind::CancellationUnavailable,
+                );
+                // Failed results expose no stdout. Do not infer body entry from
+                // the one-second timer for these observer-failure cases.
+            }
+            let result = run_held_arguments(&self::runner(), &held, &["/input/object".into()])
+                .expect("unknown cleanup would quarantine and refuse reuse");
+            assert_eq!(result.outcome(), OperationOutcome::Succeeded);
+            assert_eq!(result.stdout(), b"borrowed native reuse\n");
+        }
+        fs::remove_dir_all(root).unwrap();
     }
 
     #[test]

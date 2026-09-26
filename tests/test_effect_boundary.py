@@ -21,6 +21,34 @@ class EffectBoundaryTests(unittest.TestCase):
         failures = validate_effect_boundary(overrides={relative: source})
         self.assertIn("raw Linux sandbox execution is public", failures)
 
+    def test_sandbox_supervisor_is_not_a_public_or_crate_wide_process_api(self) -> None:
+        path = Path("platforms/linux/src/sandbox_supervision.rs")
+        source = self.source(str(path))
+        for entry in ("run", "admission_snapshot"):
+            for visibility in ("pub", "pub(crate)"):
+                changed = source.replace(f"pub(super) fn {entry}(", f"{visibility} fn {entry}(", 1)
+                self.assertNotEqual(source, changed)
+                self.assertIn("Linux sandbox supervisor exceeds its private parent-only boundary", validate_effect_boundary(overrides={path: changed}))
+        invented = "pub(super) fn unrelated_process_entry() {}\n" + source
+        self.assertIn("Linux sandbox supervisor exceeds its private parent-only boundary", validate_effect_boundary(overrides={path: invented}))
+        parent = Path("platforms/linux/src/sandbox.rs")
+        changed = self.source(str(parent)).replace("mod supervision;", "pub mod supervision;", 1)
+        self.assertIn("Linux sandbox supervisor module must remain private", validate_effect_boundary(overrides={parent: changed}))
+
+    def test_sandbox_supervision_cannot_regain_unbounded_waits(self) -> None:
+        for path in (Path("platforms/linux/src/sandbox.rs"), Path("platforms/linux/src/sandbox_supervision.rs")):
+            original = self.source(str(path))
+            for call in ("child.wait()", "child.wait_with_output()", "command.status()", "command.output()", "reader.join()", "reader.join(\n)", "reader.join(/* owner */)", "reader.join(// owner\n)"):
+                changed = f"fn unbounded() {{ {call}; }}\n" + original
+                self.assertIn(f"unbounded blocking worker/control wait reintroduced: {path}", validate_effect_boundary(overrides={path: changed}))
+
+    def test_path_and_string_joins_are_not_blocking_thread_joins(self) -> None:
+        for path in (Path("platforms/linux/src/sandbox.rs"), Path("platforms/linux/src/sandbox_supervision.rs")):
+            original = self.source(str(path))
+            for call in ('Path::new("/app").join("worker")', 'names.join(",")', 'root.join(\n "worker"\n)'):
+                changed = f"fn bounded_data() {{ {call}; }}\n" + original
+                self.assertNotIn(f"unbounded blocking worker/control wait reintroduced: {path}", validate_effect_boundary(overrides={path: changed}))
+
     def test_public_configuration_effect_is_rejected(self) -> None:
         relative = Path("platforms/linux/src/configuration_store.rs")
         source = self.source(str(relative)).replace(

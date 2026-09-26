@@ -5,7 +5,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::version_ninete
 running 1 test
 test operational_store::tests::version_nineteen_schema_matches_fixture_snapshot_and_is_relational ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1141 filtered out; finished in 0.08s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1160 filtered out; finished in 0.08s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -121,7 +121,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::source_materia
 running 1 test
 test operational_store::tests::source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1141 filtered out; finished in 0.09s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1160 filtered out; finished in 0.09s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -237,7 +237,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::version_one_up
 running 1 test
 test operational_store::tests::version_one_upgrades_through_nineteen_with_exact_history ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1141 filtered out; finished in 0.08s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1160 filtered out; finished in 0.08s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -353,7 +353,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_r
 running 1 test
 test operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1141 filtered out; finished in 29.14s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1160 filtered out; finished in 30.02s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 

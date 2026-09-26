@@ -623,6 +623,8 @@ enum PermissionScript {
     FailToolStartPublication,
     FailToolTerminalPublication,
     FailRunTerminalPublication,
+    FailCancellationRequestedPublication,
+    FailCancellationObservedPublication,
     FailTerminalFlush,
 }
 
@@ -810,6 +812,12 @@ impl RuntimeJournalPort for FakeToolBoundary {
             ) | (
                 PermissionScript::FailRunTerminalPublication,
                 RuntimeEventKind::RunTerminal { .. }
+            ) | (
+                PermissionScript::FailCancellationRequestedPublication,
+                RuntimeEventKind::CancellationRequested { .. }
+            ) | (
+                PermissionScript::FailCancellationObservedPublication,
+                RuntimeEventKind::CancellationObserved { .. }
             )
         );
         if injected_failure {
@@ -3330,6 +3338,513 @@ fn story_23_3_profile_failure_after_tool_receipt_never_switches_or_replays() {
             1
         );
         assert_valid_terminal_stream(&coordinator);
+    }
+}
+
+#[test]
+fn uncertain_read_closes_all_admitted_modes_without_output_or_hidden_retry() {
+    // Scripted component/journal fixture, not a native cleanup or model proof.
+    for mode in [
+        RuntimeSessionMode::EphemeralReadOnly,
+        RuntimeSessionMode::DurableReadOnly,
+        RuntimeSessionMode::ControlledWrite,
+    ] {
+        let (initial, executions) = coordinator([ModelScript::Tool], PermissionScript::Allow, true);
+        let mut request = initial.request.clone();
+        request.mode = mode;
+        request.request_sha256 = "0".repeat(64);
+        let request = seal_runtime_run_request(request).unwrap();
+        let mut coordinator = if mode == RuntimeSessionMode::DurableReadOnly {
+            ReusableRuntimeCoordinator::new_with_durable_state(
+                request,
+                initial.model,
+                initial.context,
+                initial.registry,
+                initial.tool_boundary,
+                initial.verifier,
+                initial.clock,
+            )
+        } else {
+            ReusableRuntimeCoordinator::new(
+                request,
+                initial.model,
+                initial.context,
+                initial.registry,
+                initial.tool_boundary,
+                initial.verifier,
+                initial.clock,
+            )
+        }
+        .unwrap();
+        coordinator.tool_boundary.outcome = OperationOutcome::Uncertain;
+        let RuntimeCoordinatorStep::Complete { outcome } =
+            coordinator.run_until_boundary(None, None).unwrap()
+        else {
+            panic!("uncertain read must terminate");
+        };
+        assert_eq!(outcome.state, AgentStateKind::Uncertain);
+        assert_eq!(
+            outcome.unresolved_codes,
+            ["runtime.tool.uncertain".to_owned()]
+        );
+        assert_eq!(outcome.tool_call_count, 1);
+        assert_eq!(outcome.model_call_count, 1);
+        assert_eq!(outcome.receipt_ids.len(), 1);
+        assert!(coordinator.tool_results.is_empty());
+        assert!(coordinator.completed_tool_calls.is_empty());
+        // Durable startup retains the exact base request independently of this
+        // failed effect. No receipt-bound output artifact may be published.
+        let expected_metadata = usize::from(mode == RuntimeSessionMode::DurableReadOnly);
+        assert_eq!(coordinator.artifact_references.len(), expected_metadata);
+        let artifacts = coordinator.tool_boundary.artifacts.lock().unwrap();
+        assert_eq!(artifacts.len(), expected_metadata);
+        assert!(
+            artifacts
+                .iter()
+                .all(|(manifest, _)| manifest.receipt_id.is_none()
+                    && manifest.producer_operation_id.is_none()
+                    && manifest.media_type == super::RUNTIME_REQUEST_MEDIA_TYPE)
+        );
+        drop(artifacts);
+        let events = coordinator.events().to_vec();
+        assert_eq!(
+            events
+                .iter()
+                .filter(|event| matches!(event.kind, RuntimeEventKind::ToolCompleted { .. }))
+                .count(),
+            0
+        );
+        assert_eq!(
+            events
+                .iter()
+                .filter(|event| matches!(
+                    &event.kind,
+                    RuntimeEventKind::ToolFailed { receipt_id: Some(id), failure_code, .. }
+                        if id == &outcome.receipt_ids[0] && failure_code == "runtime.tool.uncertain"
+                ))
+                .count(),
+            1
+        );
+        assert_valid_terminal_stream(&coordinator);
+        if mode == RuntimeSessionMode::DurableReadOnly {
+            assert_eq!(*coordinator.tool_boundary.journal.lock().unwrap(), events);
+        }
+        assert_eq!(
+            coordinator.run_until_boundary(None, None).unwrap(),
+            RuntimeCoordinatorStep::Complete { outcome }
+        );
+        assert_eq!(coordinator.events(), events);
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+    }
+}
+
+#[test]
+fn uncertain_state_does_not_admit_read_only_effects_or_known_terminal_mismatches() {
+    for mode in [
+        RuntimeSessionMode::EphemeralReadOnly,
+        RuntimeSessionMode::DurableReadOnly,
+    ] {
+        for operation in [
+            GrantOperation::WorkspaceWrite,
+            GrantOperation::CommandExecute,
+            GrantOperation::NetworkAccess,
+        ] {
+            assert!(!super::valid_runtime_state_change(
+                mode,
+                operation,
+                OperationOutcome::Uncertain,
+                StateChange::Uncertain
+            ));
+            assert!(!super::catalog_allowed_for_mode(
+                mode,
+                &registry_for_operation(operation)
+            ));
+        }
+        for (outcome, state_change) in [
+            (OperationOutcome::Succeeded, StateChange::Uncertain),
+            (OperationOutcome::Uncertain, StateChange::NotChanged),
+            (OperationOutcome::Uncertain, StateChange::Changed),
+            (OperationOutcome::Succeeded, StateChange::Changed),
+            (OperationOutcome::Denied, StateChange::Uncertain),
+            (OperationOutcome::Failed, StateChange::Uncertain),
+        ] {
+            assert!(!super::valid_runtime_state_change(
+                mode,
+                GrantOperation::WorkspaceRead,
+                outcome,
+                state_change
+            ));
+        }
+    }
+}
+
+#[test]
+fn uncertain_read_boundary_rejects_output_artifacts_and_identity_drift() {
+    let (mut coordinator, _) = coordinator([ModelScript::Tool], PermissionScript::Allow, true);
+    coordinator.tool_boundary.outcome = OperationOutcome::Uncertain;
+    let definition = coordinator.registry.list_tools()[0].clone();
+    let call = ToolCall {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        tool_call_id: agentmage_kernel_contracts::ToolCallId::from_raw("uncertain-read-call"),
+        correlation_id: CorrelationId::from_raw("uncertain-read-correlation"),
+        action_id: runtime_action_id(&coordinator.request.run_id, 1),
+        tool_id: definition.tool_id.clone(),
+        tool_version: definition.tool_version.clone(),
+        arguments: payload("fixture.input", br#"{"path":"fixture.txt"}"#),
+    };
+    let permission = coordinator.tool_boundary.evaluation(None, None, 1_000);
+    let execution = coordinator
+        .tool_boundary
+        .execute(&coordinator.request, &permission, &definition, &call, None)
+        .unwrap();
+    let valid = |value: &RuntimeToolExecution| {
+        super::valid_tool_execution(value, &definition, &call, &coordinator.request)
+    };
+    assert!(valid(&execution));
+    for mutation in 0..7 {
+        let mut forged = execution.clone();
+        match mutation {
+            0 => {
+                forged.result.output = Some(payload("fixture.output", b"unverified bytes"));
+                forged.result_output_kind = Some(RuntimeArtifactKind::Report);
+            }
+            1 => forged
+                .result
+                .evidence
+                .push(evidence("unverified-read", EvidenceKind::ToolOutput)),
+            2 => forged
+                .artifact_candidates
+                .push(RuntimeToolArtifactCandidate {
+                    kind: RuntimeArtifactKind::Report,
+                    media_type: "text/plain".to_owned(),
+                    bytes: b"unverified artifact".to_vec(),
+                }),
+            3 => forged.result.correlation_id = CorrelationId::from_raw("different-correlation"),
+            4 => {
+                forged.result.tool_call_id =
+                    agentmage_kernel_contracts::ToolCallId::from_raw("different-call")
+            }
+            5 => forged.receipt_sha256 = "invalid".to_owned(),
+            6 => forged.result.schema_version = CONTRACT_SCHEMA_VERSION + 1,
+            _ => unreachable!(),
+        }
+        assert!(!valid(&forged), "mutation {mutation}");
+    }
+}
+
+struct AfterToolCancellationProbe {
+    executions: Arc<AtomicUsize>,
+    observation: Result<Option<CancellationSignal>, ModelRuntimeFailure>,
+}
+
+impl agentmage_kernel_contracts::ModelCancellationProbe for AfterToolCancellationProbe {
+    fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
+        if self.executions.load(Ordering::SeqCst) == 0 {
+            Ok(None)
+        } else {
+            self.observation.clone()
+        }
+    }
+}
+
+fn cancelled_tool_fixture(
+    mode: RuntimeSessionMode,
+    maximum_events: Option<u32>,
+) -> (
+    FixtureCoordinator,
+    Arc<AtomicUsize>,
+    AfterToolCancellationProbe,
+) {
+    let (initial, executions) = coordinator([ModelScript::Tool], PermissionScript::Allow, true);
+    let mut request = initial.request.clone();
+    request.mode = mode;
+    if let Some(maximum) = maximum_events {
+        request.limits.max_events = maximum;
+    }
+    request.request_sha256 = "0".repeat(64);
+    let request = seal_runtime_run_request(request).unwrap();
+    let mut runtime = if mode == RuntimeSessionMode::DurableReadOnly {
+        ReusableRuntimeCoordinator::new_with_durable_state(
+            request,
+            initial.model,
+            initial.context,
+            initial.registry,
+            initial.tool_boundary,
+            initial.verifier,
+            initial.clock,
+        )
+    } else {
+        ReusableRuntimeCoordinator::new(
+            request,
+            initial.model,
+            initial.context,
+            initial.registry,
+            initial.tool_boundary,
+            initial.verifier,
+            initial.clock,
+        )
+    }
+    .unwrap();
+    runtime.tool_boundary.outcome = OperationOutcome::Cancelled;
+    let signal = CancellationSignal {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        cancellation_id: CancellationId::from_raw("original-tool-cancellation"),
+        task_id: runtime.request.task.task_id.clone(),
+        correlation_id: runtime.correlation_id.clone(),
+        reason: CancellationReason::UserRequested,
+        requested_by: BoundaryKind::Shell,
+    };
+    let probe = AfterToolCancellationProbe {
+        executions: Arc::clone(&executions),
+        observation: Ok(Some(signal)),
+    };
+    (runtime, executions, probe)
+}
+
+#[test]
+fn cancelled_tool_receipt_and_turn_precede_original_signal_acknowledgement() {
+    // Component-only fake execution/journal, not native body-entry or SQLCipher proof.
+    for mode in [
+        RuntimeSessionMode::EphemeralReadOnly,
+        RuntimeSessionMode::DurableReadOnly,
+        RuntimeSessionMode::ControlledWrite,
+    ] {
+        let (mut runtime, executions, probe) = cancelled_tool_fixture(mode, None);
+        let RuntimeCoordinatorStep::Complete { outcome } =
+            runtime.run_until_boundary(None, Some(&probe)).unwrap()
+        else {
+            panic!("cancelled receipt must terminate");
+        };
+        assert_eq!(outcome.state, AgentStateKind::Cancelled);
+        assert_eq!(
+            outcome.unresolved_codes,
+            ["runtime.tool.cancelled".to_owned()]
+        );
+        assert_eq!(outcome.receipt_ids.len(), 1);
+        assert_eq!(outcome.tool_call_count, 1);
+        assert_eq!(outcome.model_call_count, 1);
+        assert!(runtime.tool_results.is_empty());
+        let expected_metadata = usize::from(mode == RuntimeSessionMode::DurableReadOnly);
+        assert_eq!(runtime.artifact_references.len(), expected_metadata);
+        let artifacts = runtime.tool_boundary.artifacts.lock().unwrap();
+        assert_eq!(artifacts.len(), expected_metadata);
+        assert!(
+            artifacts
+                .iter()
+                .all(|(manifest, _)| manifest.receipt_id.is_none()
+                    && manifest.producer_operation_id.is_none()
+                    && manifest.media_type == super::RUNTIME_REQUEST_MEDIA_TYPE)
+        );
+        drop(artifacts);
+        let events = runtime.events().to_vec();
+        let tail = &events[events.len() - 5..];
+        assert!(matches!(&tail[0].kind, RuntimeEventKind::ToolFailed {
+            receipt_id: Some(id), failure_code, ..
+        } if id == &outcome.receipt_ids[0] && failure_code == "runtime.tool.cancelled"));
+        assert!(matches!(
+            &tail[1].kind,
+            RuntimeEventKind::TurnCompleted { .. }
+        ));
+        assert!(
+            matches!(&tail[2].kind, RuntimeEventKind::CancellationRequested {
+            cancellation_id,
+        } if cancellation_id.as_str() == "original-tool-cancellation")
+        );
+        assert!(
+            matches!(&tail[3].kind, RuntimeEventKind::CancellationObserved {
+            cancellation_id,
+        } if cancellation_id.as_str() == "original-tool-cancellation")
+        );
+        assert!(matches!(
+            &tail[4].kind,
+            RuntimeEventKind::RunTerminal { .. }
+        ));
+        assert_valid_terminal_stream(&runtime);
+        if mode == RuntimeSessionMode::DurableReadOnly {
+            assert_eq!(*runtime.tool_boundary.journal.lock().unwrap(), events);
+        }
+        assert_eq!(
+            runtime.run_until_boundary(None, Some(&probe)).unwrap(),
+            RuntimeCoordinatorStep::Complete { outcome }
+        );
+        assert_eq!(runtime.events(), events);
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+    }
+}
+
+#[test]
+fn cancelled_tool_missing_or_invalid_signal_keeps_receipt_without_fabricated_ack() {
+    for mutation in 0..9 {
+        let (mut runtime, executions, mut probe) =
+            cancelled_tool_fixture(RuntimeSessionMode::DurableReadOnly, None);
+        match mutation {
+            0 => {}
+            1 => probe.observation = Ok(None),
+            2 => {
+                probe.observation = Err(ModelRuntimeFailure {
+                    code: "private-source-canary".to_owned(),
+                    retryable_after_correction: false,
+                    dependency_recovery_required: true,
+                    contract_error: None,
+                })
+            }
+            _ => {
+                let signal = probe.observation.as_mut().unwrap().as_mut().unwrap();
+                match mutation {
+                    3 => signal.task_id = TaskId::from_raw("foreign-task"),
+                    4 => signal.correlation_id = CorrelationId::from_raw("foreign-correlation"),
+                    5 => signal.schema_version += 1,
+                    6 => signal.requested_by = BoundaryKind::Model,
+                    7 => signal.cancellation_id = CancellationId::from_raw(""),
+                    8 => signal.cancellation_id = CancellationId::from_raw("x".repeat(129)),
+                    _ => unreachable!(),
+                }
+            }
+        }
+        let input = if mutation == 0 {
+            None
+        } else {
+            Some(&probe as &dyn agentmage_kernel_contracts::ModelCancellationProbe)
+        };
+        let RuntimeCoordinatorStep::Complete { outcome } =
+            runtime.run_until_boundary(None, input).unwrap()
+        else {
+            panic!("missing original signal is failed, never invented cancellation");
+        };
+        assert_eq!(outcome.state, AgentStateKind::Failed, "mutation {mutation}");
+        let expected = if mutation < 3 {
+            "runtime.port.unavailable"
+        } else {
+            "runtime.port.invalid"
+        };
+        assert_eq!(
+            outcome.unresolved_codes,
+            [expected.to_owned(), "runtime.tool.cancelled".to_owned()]
+        );
+        assert_eq!(outcome.receipt_ids.len(), 1);
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+        assert!(runtime.events().iter().any(|event| matches!(
+            &event.kind, RuntimeEventKind::ToolFailed { receipt_id: Some(id), .. }
+                if id == &outcome.receipt_ids[0]
+        )));
+        assert!(!runtime.events().iter().any(|event| matches!(
+            event.kind,
+            RuntimeEventKind::CancellationRequested { .. }
+                | RuntimeEventKind::CancellationObserved { .. }
+        )));
+        assert!(
+            !String::from_utf8(to_canonical_json(&outcome).unwrap())
+                .unwrap()
+                .contains("private-source-canary")
+        );
+        assert_valid_terminal_stream(&runtime);
+    }
+}
+
+#[test]
+fn tool_cancellation_ack_failure_never_discards_receipt_or_claims_terminal() {
+    for fault in [
+        PermissionScript::FailCancellationRequestedPublication,
+        PermissionScript::FailCancellationObservedPublication,
+    ] {
+        let (mut runtime, executions, probe) =
+            cancelled_tool_fixture(RuntimeSessionMode::DurableReadOnly, None);
+        runtime.tool_boundary.script = fault;
+        assert_eq!(
+            runtime.run_until_boundary(None, Some(&probe)),
+            Err(RuntimeLoopError::Dependency(RuntimePortFailure::Uncertain))
+        );
+        assert!(runtime.outcome().is_none());
+        assert_eq!(runtime.receipt_ids.len(), 1);
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+        let journal = runtime.tool_boundary.journal.lock().unwrap();
+        assert!(journal.iter().any(|event| matches!(
+            event.kind,
+            RuntimeEventKind::ToolFailed {
+                receipt_id: Some(_),
+                ..
+            }
+        )));
+        assert!(
+            journal
+                .iter()
+                .any(|event| matches!(event.kind, RuntimeEventKind::TurnCompleted { .. }))
+        );
+        assert!(
+            !journal
+                .iter()
+                .any(|event| matches!(event.kind, RuntimeEventKind::RunTerminal { .. }))
+        );
+        let mut sequence = RuntimeEventSequence::new();
+        for event in journal.iter() {
+            sequence.push(event).unwrap();
+        }
+    }
+}
+
+#[test]
+fn tool_cancellation_event_budget_is_reserved_before_effect_admission() {
+    let (mut baseline, _, probe) =
+        cancelled_tool_fixture(RuntimeSessionMode::EphemeralReadOnly, None);
+    baseline.run_until_boundary(None, Some(&probe)).unwrap();
+    let before_proposal = baseline
+        .events()
+        .iter()
+        .position(|event| matches!(event.kind, RuntimeEventKind::ToolRequested { .. }))
+        .unwrap() as u32;
+    for (remaining, expected, count) in [
+        (9, AgentStateKind::Cancelled, 1),
+        (8, AgentStateKind::Exhausted, 0),
+    ] {
+        let (mut runtime, executions, probe) = cancelled_tool_fixture(
+            RuntimeSessionMode::EphemeralReadOnly,
+            Some(before_proposal + remaining),
+        );
+        let RuntimeCoordinatorStep::Complete { outcome } =
+            runtime.run_until_boundary(None, Some(&probe)).unwrap()
+        else {
+            panic!("bounded terminal expected");
+        };
+        assert_eq!(outcome.state, expected);
+        assert_eq!(executions.load(Ordering::SeqCst), count);
+        assert!(runtime.events().len() <= runtime.request.limits.max_events as usize);
+        assert_valid_terminal_stream(&runtime);
+    }
+}
+
+#[test]
+fn uncertain_cleanup_and_late_success_are_not_rewritten_as_clean_cancellation() {
+    for effect_outcome in [OperationOutcome::Uncertain, OperationOutcome::Succeeded] {
+        let (mut runtime, executions, probe) =
+            cancelled_tool_fixture(RuntimeSessionMode::DurableReadOnly, None);
+        runtime.tool_boundary.outcome = effect_outcome;
+        let RuntimeCoordinatorStep::Complete { outcome } =
+            runtime.run_until_boundary(None, Some(&probe)).unwrap()
+        else {
+            panic!("terminal expected");
+        };
+        assert_eq!(outcome.receipt_ids.len(), 1);
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+        assert_valid_terminal_stream(&runtime);
+        if effect_outcome == OperationOutcome::Uncertain {
+            assert_eq!(outcome.state, AgentStateKind::Uncertain);
+            assert!(
+                !runtime.events().iter().any(|event| matches!(
+                    event.kind,
+                    RuntimeEventKind::CancellationObserved { .. }
+                ))
+            );
+        } else {
+            assert_eq!(outcome.state, AgentStateKind::Cancelled);
+            assert_eq!(runtime.completed_tool_calls.len(), 1);
+            assert_eq!(runtime.tool_results[0].outcome, OperationOutcome::Succeeded);
+            assert!(
+                runtime
+                    .events()
+                    .iter()
+                    .any(|event| matches!(event.kind, RuntimeEventKind::ToolCompleted { .. }))
+            );
+        }
     }
 }
 

@@ -27,10 +27,25 @@ fn run() -> Result<(), transport::WorkerError> {
     }
     // The sandbox uses stdin to install seccomp. The request is instead an exact
     // sealed descriptor projected read-only at this fixed path, never a workspace.
+    let bytes = read_request(std::path::Path::new("/input/request"))?;
+    let now = transport::epoch_ms()?;
+    let packet = PublicGetWorkerPacket::decode_worker_packet(&bytes, now)
+        .map_err(|_| transport::WorkerError::Input)?;
+    let response = transport::execute(&packet)?;
+    std::io::stdout()
+        .lock()
+        .write_all(response.frame())
+        .map_err(|_| transport::WorkerError::Output)
+}
+
+fn read_request(path: &std::path::Path) -> Result<Vec<u8>, transport::WorkerError> {
     let input = std::fs::File::from(
         rustix::fs::open(
-            "/input/request",
-            rustix::fs::OFlags::RDONLY | rustix::fs::OFlags::NOFOLLOW | rustix::fs::OFlags::CLOEXEC,
+            path,
+            rustix::fs::OFlags::RDONLY
+                | rustix::fs::OFlags::NOFOLLOW
+                | rustix::fs::OFlags::CLOEXEC
+                | rustix::fs::OFlags::NONBLOCK,
             rustix::fs::Mode::empty(),
         )
         .map_err(|_| transport::WorkerError::Input)?,
@@ -46,14 +61,10 @@ fn run() -> Result<(), transport::WorkerError> {
         .take(16 * 1024 + 1)
         .read_to_end(&mut bytes)
         .map_err(|_| transport::WorkerError::Input)?;
-    let now = transport::epoch_ms()?;
-    let packet = PublicGetWorkerPacket::decode_worker_packet(&bytes, now)
-        .map_err(|_| transport::WorkerError::Input)?;
-    let response = transport::execute(&packet)?;
-    std::io::stdout()
-        .lock()
-        .write_all(response.frame())
-        .map_err(|_| transport::WorkerError::Output)
+    if bytes.len() as u64 != metadata.len() || bytes.len() > 16 * 1024 {
+        return Err(transport::WorkerError::Input);
+    }
+    Ok(bytes)
 }
 
 fn main() -> ExitCode {
@@ -96,6 +107,45 @@ mod tests {
 
     fn valid() -> Vec<(OsString, OsString)> {
         vec![("LANG".into(), "C".into()), ("PWD".into(), "/input".into())]
+    }
+
+    #[test]
+    fn fixed_request_reader_denies_fifo_symlink_directory_empty_and_oversize() {
+        use std::os::unix::fs::symlink;
+        use std::time::{Instant, SystemTime, UNIX_EPOCH};
+        let root = std::env::temp_dir().join(format!(
+            "agentmage-worker-input-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos(),
+        ));
+        std::fs::create_dir(&root).unwrap();
+        let file = root.join("request");
+        std::fs::write(&file, b"bounded request").unwrap();
+        assert_eq!(super::read_request(&file).unwrap(), b"bounded request");
+        assert!(super::read_request(&root).is_err());
+        let link = root.join("link");
+        symlink(&file, &link).unwrap();
+        assert!(super::read_request(&link).is_err());
+        let fifo = root.join("fifo");
+        rustix::fs::mknodat(
+            rustix::fs::CWD,
+            &fifo,
+            rustix::fs::FileType::Fifo,
+            rustix::fs::Mode::RUSR | rustix::fs::Mode::WUSR,
+            0,
+        )
+        .unwrap();
+        let started = Instant::now();
+        assert!(super::read_request(&fifo).is_err());
+        assert!(started.elapsed() < std::time::Duration::from_secs(1));
+        std::fs::write(&file, []).unwrap();
+        assert!(super::read_request(&file).is_err());
+        std::fs::write(&file, vec![b'x'; 16 * 1024 + 1]).unwrap();
+        assert!(super::read_request(&file).is_err());
+        std::fs::remove_dir_all(root).unwrap();
     }
 
     #[test]

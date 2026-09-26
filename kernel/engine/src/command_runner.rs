@@ -75,6 +75,8 @@ pub enum CommandError {
     AuthorityMismatch,
     /// The platform returned a malformed or over-limit result.
     InvalidPlatformResult,
+    /// The platform could not prove that the launched command and descendants ended.
+    CleanupUncertain,
     /// A terminal command receipt could not be sealed.
     ReceiptFailure,
 }
@@ -90,6 +92,7 @@ impl CommandError {
             Self::RequestMismatch => "command.request.mismatch",
             Self::AuthorityMismatch => "command.authority.mismatch",
             Self::InvalidPlatformResult => "command.result.invalid",
+            Self::CleanupUncertain => "command.cleanup.uncertain",
             Self::ReceiptFailure => "command.receipt.failed",
         }
     }
@@ -624,10 +627,7 @@ pub fn verify_command_receipt(prepared: &PreparedCommand, receipt: &CommandRecei
             usage.peak_memory_bytes <= prepared.command.bounds.memory_bytes
                 && usage.peak_task_count <= prepared.command.bounds.task_count
         })
-        && (!matches!(
-            receipt.termination,
-            CommandTermination::Cancelled | CommandTermination::TimedOut
-        ) || receipt.descendants_terminated)
+        && receipt.descendants_terminated
         && valid_identifier(&receipt.authority_transaction_id)
         && valid_identifier(&receipt.operation_attempt_id)
         && valid_identifier(&receipt.platform_code)
@@ -866,6 +866,13 @@ where
             )
         };
 
+        // A command completion receipt requires known cleanup for EVERY exit,
+        // including exit zero. Keep uncertain launch accounting in the canonical
+        // authority receipt; do not manufacture a completed command/test receipt.
+        if !platform.descendants_terminated {
+            self.error = Some(CommandError::CleanupUncertain);
+            return uncertain_command_effect(CommandError::CleanupUncertain);
+        }
         let output = CommandCapturedOutput {
             stdout: platform.stdout.clone(),
             stderr: platform.stderr.clone(),
@@ -883,10 +890,20 @@ where
             }
             Err(error) => {
                 self.error = Some(error);
-                EffectLaunch::failed()
+                // Authority was already consumed and the executor was entered.
+                // Invalid post-launch evidence cannot establish NotChanged.
+                uncertain_command_effect(error)
             }
         }
     }
+}
+
+fn uncertain_command_effect(error: CommandError) -> EffectLaunch {
+    EffectLaunch::completed(EffectResult::from_redacted_material(
+        OperationOutcome::Uncertain,
+        error.code().as_bytes(),
+        StateChange::Uncertain,
+    ))
 }
 
 fn seal_receipt(
@@ -1003,11 +1020,7 @@ fn validate_platform_result(
                 || usage.peak_task_count > bounds.task_count
         })
         || !valid_identifier(&result.platform_code)
-        || (!result.descendants_terminated
-            && matches!(
-                result.termination,
-                CommandTermination::Cancelled | CommandTermination::TimedOut
-            ))
+        || !result.descendants_terminated
         || (result.termination == CommandTermination::Exited && result.exit_code.is_none())
         || (result.termination != CommandTermination::Exited && result.exit_code.is_some())
     {
@@ -1488,6 +1501,123 @@ mod tests {
     }
 
     #[test]
+    fn unverified_command_cleanup_never_seals_a_completion_or_releases_consumed_authority() {
+        for (termination, exit_code) in [
+            (CommandTermination::Exited, Some(0)),
+            (CommandTermination::Exited, Some(1)),
+            (CommandTermination::Cancelled, None),
+            (CommandTermination::TimedOut, None),
+            (CommandTermination::OutputLimit, None),
+            (CommandTermination::LaunchFailed, None),
+        ] {
+            let mut fixture = authority_fixture();
+            let grant_id = fixture.grant.grant_id.clone();
+            let cancellation = CancellationToken::root(
+                BoundaryKind::Tool,
+                fixture.grant.task_id.clone(),
+                fixture.call.correlation_id.clone(),
+            );
+            let mut platform = successful_platform_result();
+            platform.termination = termination;
+            platform.exit_code = exit_code;
+            platform.descendants_terminated = false;
+            assert!(
+                super::validate_platform_result(&fixture.prepared.command.bounds, &platform)
+                    .is_err()
+            );
+            let executor = FakeExecutor {
+                launches: 0,
+                result: Some(platform),
+            };
+            let mut driver =
+                CommandEffectDriver::new(executor, &fixture.held, fixture.prepared, cancellation);
+            let request = AuthorityTransactionRequest::new(
+                AuthorityTransactionId::from_raw("transaction-command-unknown"),
+                OperationAttemptId::from_raw("attempt-command-unknown"),
+                fixture.approval_id,
+                fixture.grant.grant_id,
+                fixture.call,
+                fixture.context,
+                4_000,
+                "1970-01-01T00:00:04Z",
+            )
+            .unwrap();
+            let mut coordinator = AuthorityTransactionCoordinator::new();
+            let receipt = coordinator
+                .execute_effect(
+                    &fixture.registry,
+                    &mut fixture.issuer,
+                    &fixture.policy,
+                    request,
+                    &mut driver,
+                )
+                .unwrap();
+            assert_eq!(receipt.outcome, OperationOutcome::Uncertain);
+            assert!(
+                coordinator
+                    .current(&receipt.authority_transaction_id)
+                    .unwrap()
+                    .uncertain_effect
+            );
+            assert_eq!(
+                fixture.issuer.current(&grant_id).unwrap().status,
+                agentmage_kernel_contracts::GrantStatus::Uncertain
+            );
+            assert!(driver.take_receipt().is_none());
+            assert!(driver.take_output().is_none());
+            assert_eq!(driver.take_error(), Some(CommandError::CleanupUncertain));
+            assert_eq!(driver.into_executor().launches, 1);
+        }
+    }
+
+    #[test]
+    fn invalid_post_launch_command_evidence_is_canonical_uncertainty() {
+        let mut fixture = authority_fixture();
+        let cancellation = CancellationToken::root(
+            BoundaryKind::Tool,
+            fixture.grant.task_id.clone(),
+            fixture.call.correlation_id.clone(),
+        );
+        let mut platform = successful_platform_result();
+        platform.stdout_sha256 = "0".repeat(64);
+        let executor = FakeExecutor {
+            launches: 0,
+            result: Some(platform),
+        };
+        let mut driver =
+            CommandEffectDriver::new(executor, &fixture.held, fixture.prepared, cancellation);
+        let request = AuthorityTransactionRequest::new(
+            AuthorityTransactionId::from_raw("transaction-command-malformed"),
+            OperationAttemptId::from_raw("attempt-command-malformed"),
+            fixture.approval_id,
+            fixture.grant.grant_id,
+            fixture.call,
+            fixture.context,
+            4_000,
+            "1970-01-01T00:00:04Z",
+        )
+        .unwrap();
+        let mut coordinator = AuthorityTransactionCoordinator::new();
+        let receipt = coordinator
+            .execute_effect(
+                &fixture.registry,
+                &mut fixture.issuer,
+                &fixture.policy,
+                request,
+                &mut driver,
+            )
+            .unwrap();
+        assert_eq!(receipt.outcome, OperationOutcome::Uncertain);
+        assert!(driver.take_receipt().is_none());
+        assert!(driver.take_output().is_none());
+        assert_eq!(
+            driver.take_error(),
+            Some(CommandError::InvalidPlatformResult)
+        );
+        assert_eq!(driver.into_executor().launches, 1);
+    }
+
+    #[test]
     fn consumed_exact_grant_is_required_before_one_executor_launch_and_receipt() {
         let mut fixture = authority_fixture();
         let cancellation = CancellationToken::root(
@@ -1545,6 +1675,12 @@ mod tests {
             &driver.prepared,
             &command_receipt
         ));
+        // Even a correctly rehashed exit-zero receipt must prove cleanup.
+        let mut unclean = command_receipt.clone();
+        unclean.descendants_terminated = false;
+        unclean.receipt_sha256 = "0".repeat(64);
+        unclean.receipt_sha256 = super::canonical_sha256(&unclean).unwrap();
+        assert!(!super::verify_command_receipt(&driver.prepared, &unclean));
         for sequence in 0_u8..9 {
             let mut changed = command_receipt.clone();
             match sequence {

@@ -9,6 +9,16 @@ from scripts import linux_cross_distribution_sandbox_evidence as evidence
 
 
 class CrossDistributionSandboxEvidenceTests(unittest.TestCase):
+    def test_prior_policy_report_cannot_certify_native_alias_guard(self) -> None:
+        report = self.valid_report()
+        report["controls"]["seccomp"] = "agentmage.linux.worker.deny.v1-kernel-mode-filter"
+        self.assertIn("cross-distribution sandbox controls changed", evidence.validate_report(report))
+        self.assertIn("platforms/linux/src/sandbox_supervision.rs", evidence.SOURCE_PATHS)
+        self.assertIn(
+            "guarded_native_abi_attempt_returns_eperm_and_lane_is_reusable",
+            evidence.LIVE_TESTS,
+        )
+
     def valid_report(self) -> dict:
         tests = [{"test": name, "status": "pass"} for name in evidence.LIVE_TESTS]
         return {

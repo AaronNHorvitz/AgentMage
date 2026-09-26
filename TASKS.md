@@ -31,6 +31,12 @@ of the new acceptance criteria. Detailed proof requirements are in the linked am
 These component rows do not close their parent package, model admission, independent review,
 or release gates. Evidence from the previous source pin remains historical evidence.
 
+The [bounded native supervision and read-cancellation record](docs/verification/native-supervision-and-read-cancellation-2026-09-26.md)
+records current component, native-process and 22-case executable-scripted checks for
+AMR-01 and AMR-02 prerequisites. Continuous live CLI effect cancellation, crash-safe
+worker ownership, connected research and new-source model qualification remain open;
+these results do not close any package or acceptance gate below.
+
 | Status | Row | Dependencies | Bounded implementation and verification |
 | --- | --- | --- | --- |
 | [ ] | AMR-01.1 | Prior coding source and retained campaign | Reconcile exact source/binary/model identities, current doctor behavior and all changed planning/privacy evidence bindings; preserve original receipts and distinguish freshness from historical validity. |

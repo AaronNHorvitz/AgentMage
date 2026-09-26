@@ -136,7 +136,7 @@ class NativeUbuntuControlEvidenceTests(unittest.TestCase):
                 "syscall_trace": {
                     "no_new_privileges": 1,
                     "seccomp_mode": 2,
-                    "policy_id": "agentmage.linux.worker.deny.v1",
+                    "policy_id": "agentmage.linux.worker.deny.v2",
                     "observation_test":
                     "worker_kernel_status_confirms_no_new_privileges_and_seccomp",
                 },
@@ -166,7 +166,7 @@ class NativeUbuntuControlEvidenceTests(unittest.TestCase):
             "summary": {
                 "native_ubuntu_kernel_controls_verified": True,
                 "physical_host_certification": False,
-                "test_count": 30,
+                "test_count": 31,
                 "attack_class_count": len(evidence.ATTACK_TESTS),
                 "parity_dimensions_unblocked": 3,
                 "cleanup_complete": True,
@@ -176,6 +176,16 @@ class NativeUbuntuControlEvidenceTests(unittest.TestCase):
             "release_claim": "none",
             "limitations": list(evidence.LIMITATIONS),
         }
+
+    def test_prior_policy_report_cannot_certify_native_alias_guard(self) -> None:
+        report = self.valid_report()
+        report["execution"]["syscall_trace"]["policy_id"] = "agentmage.linux.worker.deny.v1"
+        self.assertIn("native Ubuntu syscall trace changed", evidence.validate_report(report))
+        self.assertIn("platforms/linux/src/sandbox_supervision.rs", evidence.SOURCE_PATHS)
+        self.assertIn(
+            "guarded_native_abi_attempt_returns_eperm_and_lane_is_reusable",
+            evidence.LIVE_SANDBOX_TESTS,
+        )
 
     def test_exact_native_kernel_report_is_valid(self) -> None:
         self.assertEqual(evidence.validate_report(self.valid_report()), [])

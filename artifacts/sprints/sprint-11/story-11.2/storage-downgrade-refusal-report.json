@@ -28,7 +28,7 @@
     {
       "byte_length": 10586,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-results.log",
-      "sha256": "5e1790ae4bff6b1df3483a7856969445692ac8885c95388ac265b57f6bac615a"
+      "sha256": "8f949a5c6f70f8f31d026b616f843a0b74b12a20f5b1d559c9aa85e1dc3ed551"
     }
   ],
   "canonical_store": "operational-store",

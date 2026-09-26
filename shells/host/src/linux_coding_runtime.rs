@@ -41,7 +41,7 @@ use agentmage_kernel_engine::{
     },
     persistence::detect_secret_classes,
     policy::PolicyEvaluationContext,
-    propagation::CancellationToken,
+    propagation::{BorrowedEffectCancellation, CancellationToken, EffectCancellationObservation},
     repository_inspection::{
         BoundedRepositoryInspectionExecutor, PreparedRepositoryInspection,
         RepositoryInspectionEffectDriver, RepositoryInspectionOperation,
@@ -1402,12 +1402,31 @@ where
         {
             return Err(RuntimePortFailure::Invalid);
         }
-        if cancellation
-            .map(|probe| probe.observe())
+        let cancellation = cancellation.map(|source| {
+            BorrowedEffectCancellation::new(
+                source,
+                request.task.task_id.clone(),
+                call.correlation_id.clone(),
+            )
+        });
+        let cancelled = cancellation
+            .as_ref()
+            .map(EffectCancellationObservation::observe_effect_cancellation)
             .transpose()
             .map_err(|_| RuntimePortFailure::Unavailable)?
             .flatten()
-            .is_some()
+            .is_some();
+        // Reads carry the same sticky observation through exact consumption to
+        // the driver, which closes a cancelled receipt before spawning. Leaving
+        // a valid approved read as a port error here would skip canonical
+        // cancellation acknowledgement and leave its grant reusable. Other
+        // effect kinds retain their existing preflight refusal until their
+        // native lifecycle accepts this borrowed control owner.
+        if cancelled
+            && !matches!(
+                issued.prepared.operation().prepared(),
+                PreparedNativeCodingCall::ReadOnly { .. }
+            )
         {
             return Err(RuntimePortFailure::Cancelled);
         }
@@ -1427,9 +1446,16 @@ where
             .map_err(|_| RuntimePortFailure::Unavailable)?;
         let issued = self.issued.remove(key).ok_or(RuntimePortFailure::Invalid)?;
         match issued.prepared.operation().prepared() {
-            PreparedNativeCodingCall::ReadOnly { .. } => {
-                self.execute_prepared_read(request, definition, call, issued, event_context)
-            }
+            PreparedNativeCodingCall::ReadOnly { .. } => self.execute_prepared_read(
+                request,
+                definition,
+                call,
+                issued,
+                event_context,
+                cancellation
+                    .as_ref()
+                    .map(|view| view as &dyn EffectCancellationObservation),
+            ),
             PreparedNativeCodingCall::GitInspection { .. } => {
                 self.execute_prepared_git(request, definition, call, issued, event_context)
             }
@@ -1479,6 +1505,7 @@ where
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
         event_context: Option<RuntimeEffectEventContext<'_>>,
+        cancellation: Option<&dyn EffectCancellationObservation>,
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let policy = issued.generic_authority()?.1.policy.clone();
         let transaction = self.authority_transaction(call, &issued)?;
@@ -1501,7 +1528,12 @@ where
         )
         .map_err(|_| RuntimePortFailure::Invalid)?;
         let runner = self.sandbox.take().ok_or(RuntimePortFailure::Unavailable)?;
-        let mut driver = LinuxReadOnlyToolEffectDriver::new(runner, worker_input);
+        let mut driver = match cancellation {
+            Some(observation) => {
+                LinuxReadOnlyToolEffectDriver::new_observed(runner, worker_input, observation)
+            }
+            None => LinuxReadOnlyToolEffectDriver::new(runner, worker_input),
+        };
         let receipt_result = self.execute_effect_authority(
             self.workspace.profile().registry(),
             &policy,
@@ -1658,6 +1690,10 @@ where
         self.authority
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Uncertain)?;
+        if receipt.outcome == OperationOutcome::Uncertain {
+            let execution = uncertain_command_projection(&receipt, call)?;
+            return self.finish_effect_execution(execution, event_context, pending);
+        }
         let command_receipt = command_receipt.ok_or(RuntimePortFailure::Uncertain)?;
         let output = output.ok_or(RuntimePortFailure::Uncertain)?;
         if !verify_command_receipt(&prepared, &command_receipt) {
@@ -1722,6 +1758,13 @@ where
         self.authority
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Uncertain)?;
+        if receipt.outcome == OperationOutcome::Uncertain {
+            // Even exit zero is not a Git report if descendants or platform
+            // evidence are unverified. Publish the canonical terminal event,
+            // with no parsed output, observation or completion artifact.
+            let execution = failed_read_projection(&receipt, call, "runtime.tool.git-uncertain");
+            return self.finish_effect_execution(execution, event_context, pending);
+        }
         let platform = platform.ok_or(RuntimePortFailure::Uncertain)?;
         let outcome = repository_inspection_outcome(&platform);
         if !matches!(
@@ -2012,6 +2055,10 @@ where
         self.authority
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Uncertain)?;
+        if receipt.outcome == OperationOutcome::Uncertain {
+            let execution = uncertain_command_projection(&receipt, call)?;
+            return self.finish_effect_execution(execution, event_context, pending);
+        }
         let command_receipt = command_receipt.ok_or(RuntimePortFailure::Uncertain)?;
         let output = output.ok_or(RuntimePortFailure::Uncertain)?;
         if !verify_command_receipt(&prepared, &command_receipt)
@@ -3263,11 +3310,50 @@ where
     }
 }
 
+fn uncertain_command_projection(
+    receipt: &agentmage_kernel_contracts::Receipt,
+    call: &ToolCall,
+) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+    if receipt.outcome != OperationOutcome::Uncertain {
+        return Err(RuntimePortFailure::Invalid);
+    }
+    Ok(RuntimeToolExecution {
+        receipt_id: receipt.receipt_id.clone(),
+        receipt_sha256: receipt.receipt_sha256.clone(),
+        result: ToolResult {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            tool_call_id: call.tool_call_id.clone(),
+            correlation_id: call.correlation_id.clone(),
+            outcome: OperationOutcome::Uncertain,
+            output: None,
+            validation_issues: vec![ValidationIssue {
+                code: "runtime.tool.command-uncertain".to_owned(),
+                severity: ValidationSeverity::Error,
+                field_path: Vec::new(),
+                message: "The command did not produce verified terminal evidence".to_owned(),
+            }],
+            evidence: Vec::new(),
+            error: None,
+            elapsed_ms: 0,
+            state_change: StateChange::Uncertain,
+        },
+        result_output_kind: None,
+        artifact_candidates: Vec::new(),
+    })
+}
+
 fn failed_read_projection(
     receipt: &agentmage_kernel_contracts::Receipt,
     call: &ToolCall,
     code: &str,
 ) -> RuntimeToolExecution {
+    // Projection refusal cannot erase a canonical cancellation, timeout or
+    // uncertain cleanup. Only rejected successful output becomes ordinary failure.
+    let (outcome, state_change) = match receipt.outcome {
+        OperationOutcome::Succeeded => (OperationOutcome::Failed, StateChange::NotChanged),
+        OperationOutcome::Uncertain => (OperationOutcome::Uncertain, StateChange::Uncertain),
+        other => (other, StateChange::NotChanged),
+    };
     RuntimeToolExecution {
         receipt_id: receipt.receipt_id.clone(),
         receipt_sha256: receipt.receipt_sha256.clone(),
@@ -3275,7 +3361,7 @@ fn failed_read_projection(
             schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
             tool_call_id: call.tool_call_id.clone(),
             correlation_id: call.correlation_id.clone(),
-            outcome: OperationOutcome::Failed,
+            outcome,
             output: None,
             validation_issues: vec![ValidationIssue {
                 code: code.to_owned(),
@@ -3287,7 +3373,7 @@ fn failed_read_projection(
             evidence: Vec::new(),
             error: None,
             elapsed_ms: 0,
-            state_change: StateChange::NotChanged,
+            state_change,
         },
         result_output_kind: None,
         artifact_candidates: Vec::new(),
@@ -4395,6 +4481,97 @@ mod tests {
     }
 
     #[test]
+    fn failed_read_projection_preserves_canonical_terminal_dispositions() {
+        // Synthetic mapping inputs, not a claim of signed/canonical receipts or
+        // actual worker cleanup. Exercise the whole emitted ToolResult here.
+        let call = ToolCall {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            tool_call_id: ToolCallId::from_raw("call-read-projection"),
+            correlation_id: CorrelationId::from_raw("correlation-read-projection"),
+            action_id: ActionId::from_raw("action-read-projection"),
+            tool_id: ToolId::from_raw("read.text"),
+            tool_version: "1.0.0".into(),
+            arguments: ContractPayload {
+                schema: agentmage_kernel_contracts::SchemaReference {
+                    schema_id: agentmage_kernel_contracts::SchemaId::from_raw(
+                        "read-projection-fixture",
+                    ),
+                    schema_version: 1,
+                    schema_sha256: "1".repeat(64),
+                },
+                media_type: "application/json".into(),
+                bytes: b"{}".to_vec(),
+                sha256: sha256(b"{}"),
+            },
+        };
+        for outcome in [
+            OperationOutcome::Succeeded,
+            OperationOutcome::Failed,
+            OperationOutcome::Denied,
+            OperationOutcome::Cancelled,
+            OperationOutcome::TimedOut,
+            OperationOutcome::Uncertain,
+        ] {
+            let receipt = agentmage_kernel_contracts::Receipt {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                receipt_id: ReceiptId::from_raw("receipt-read-projection"),
+                sequence: 1,
+                correlation_id: call.correlation_id.clone(),
+                authority_transaction_id: AuthorityTransactionId::from_raw(
+                    "transaction-read-projection",
+                ),
+                operation_attempt_id: OperationAttemptId::from_raw("attempt-read-projection"),
+                approval_id: ApprovalId::from_raw("approval-read-projection"),
+                grant_id: GrantId::from_raw("grant-read-projection"),
+                session_id: SessionId::from_raw("session-read-projection"),
+                task_id: TaskId::from_raw("task-read-projection"),
+                action_id: call.action_id.clone(),
+                tool_call_id: Some(call.tool_call_id.clone()),
+                operation: agentmage_kernel_contracts::OperationBinding::new(
+                    agentmage_kernel_contracts::GrantOperation::WorkspaceRead,
+                ),
+                outcome,
+                operation_sha256: "2".repeat(64),
+                evidence: Vec::new(),
+                error: None,
+                previous_receipt_sha256: "0".repeat(64),
+                receipt_sha256: "3".repeat(64),
+                occurred_at: "2026-09-26T00:00:00Z".into(),
+            };
+            let execution = failed_read_projection(&receipt, &call, "runtime.tool.worker-failed");
+            assert_eq!(
+                execution.result.outcome,
+                if outcome == OperationOutcome::Succeeded {
+                    OperationOutcome::Failed
+                } else {
+                    outcome
+                }
+            );
+            assert_eq!(
+                execution.result.state_change,
+                if outcome == OperationOutcome::Uncertain {
+                    StateChange::Uncertain
+                } else {
+                    StateChange::NotChanged
+                }
+            );
+            assert_eq!(execution.receipt_id, receipt.receipt_id);
+            assert_eq!(execution.receipt_sha256, receipt.receipt_sha256);
+            assert_eq!(execution.result.tool_call_id, call.tool_call_id);
+            assert_eq!(execution.result.correlation_id, call.correlation_id);
+            assert!(execution.result.output.is_none());
+            assert!(execution.result.evidence.is_empty());
+            assert!(execution.artifact_candidates.is_empty());
+            assert!(execution.result_output_kind.is_none());
+            assert_eq!(execution.result.validation_issues.len(), 1);
+            assert_eq!(
+                execution.result.validation_issues[0].code,
+                "runtime.tool.worker-failed"
+            );
+        }
+    }
+
+    #[test]
     fn read_output_secret_classes_are_withheld_before_model_projection() {
         let ordinary = projected_read_result("ordinary repository text\n");
         assert!(!read_result_contains_sensitive_text(&ordinary));
@@ -4456,6 +4633,12 @@ mod tests {
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
 
     struct TempRoot(PathBuf);
+
+    impl From<PathBuf> for TempRoot {
+        fn from(path: PathBuf) -> Self {
+            Self(path)
+        }
+    }
 
     impl Deref for TempRoot {
         type Target = PathBuf;
@@ -4703,6 +4886,7 @@ mod tests {
         stdout: Vec<u8>,
         stderr: Vec<u8>,
         exit_code: i32,
+        descendants_terminated: bool,
         shared_launches: Option<Arc<AtomicUsize>>,
     }
 
@@ -4713,6 +4897,7 @@ mod tests {
                 stdout: b"command-ok\n".to_vec(),
                 stderr: Vec::new(),
                 exit_code: 0,
+                descendants_terminated: true,
                 shared_launches: None,
             }
         }
@@ -4747,7 +4932,7 @@ mod tests {
                 stderr,
                 elapsed_ms: 2,
                 resource_usage: None,
-                descendants_terminated: true,
+                descendants_terminated: self.descendants_terminated,
                 platform_code: "fixture.command.exited".to_owned(),
             }
         }
@@ -4756,6 +4941,9 @@ mod tests {
     struct FakeGitExecutor {
         launches: usize,
         stdout: Vec<u8>,
+        descendants_terminated: bool,
+        corrupt_stdout_digest: bool,
+        terminal_override: Option<(RepositoryInspectionTermination, Option<i32>)>,
         shared_launches: Option<Arc<AtomicUsize>>,
         durable_launch_record: Option<PathBuf>,
     }
@@ -4765,6 +4953,9 @@ mod tests {
             Self {
                 launches: 0,
                 stdout: b"# branch.head main\0? src/new.rs\0".to_vec(),
+                descendants_terminated: true,
+                corrupt_stdout_digest: false,
+                terminal_override: None,
                 shared_launches: None,
                 durable_launch_record: None,
             }
@@ -4774,28 +4965,24 @@ mod tests {
     impl FakeGitExecutor {
         fn clean() -> Self {
             Self {
-                launches: 0,
                 stdout: b"# branch.head main\0".to_vec(),
-                shared_launches: None,
-                durable_launch_record: None,
+                ..Self::default()
             }
         }
 
         fn clean_with_counter(shared_launches: Arc<AtomicUsize>) -> Self {
             Self {
-                launches: 0,
                 stdout: b"# branch.head main\0".to_vec(),
                 shared_launches: Some(shared_launches),
-                durable_launch_record: None,
+                ..Self::default()
             }
         }
 
         fn clean_with_durable_counter(path: PathBuf) -> Self {
             Self {
-                launches: 0,
                 stdout: b"# branch.head main\0".to_vec(),
-                shared_launches: None,
                 durable_launch_record: Some(path),
+                ..Self::default()
             }
         }
     }
@@ -4831,16 +5018,23 @@ mod tests {
             assert!(!cancellation.is_cancelled());
             assert_eq!(permit.prepared().arguments()[9], "status");
             let stdout = self.stdout.clone();
+            let (termination, exit_code) = self
+                .terminal_override
+                .unwrap_or((RepositoryInspectionTermination::Exited, Some(0)));
             RepositoryInspectionPlatformResult {
-                termination: RepositoryInspectionTermination::Exited,
-                exit_code: Some(0),
-                stdout_sha256: sha256(&stdout),
+                termination,
+                exit_code,
+                stdout_sha256: if self.corrupt_stdout_digest {
+                    "0".repeat(64)
+                } else {
+                    sha256(&stdout)
+                },
                 stdout_bytes: stdout.len() as u64,
                 stdout,
                 stderr_sha256: sha256(&[]),
                 stderr_bytes: 0,
                 elapsed_ms: 3,
-                descendants_terminated: true,
+                descendants_terminated: self.descendants_terminated,
                 platform_code: "fixture.git.exited".to_owned(),
             }
         }
@@ -4902,7 +5096,7 @@ mod tests {
     }
 
     fn fixture_with_git_and_checkpoint_clock_at<G>(
-        root: PathBuf,
+        root: impl Into<TempRoot>,
         initialize: bool,
         now_epoch_ms: u64,
         git_executor: G,
@@ -4911,6 +5105,7 @@ mod tests {
     where
         G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
     {
+        let root = root.into();
         let worktree_root = root.join("worktree");
         let state_root = root.join("state");
         if initialize {
@@ -5035,7 +5230,7 @@ mod tests {
         })
         .expect("coding runtime boundary");
         Fixture {
-            root: TempRoot(root),
+            root,
             request,
             definition,
             call,
@@ -8338,6 +8533,408 @@ mod tests {
         );
     }
 
+    // Deterministic boundary-timing probe, not a native worker-entry witness.
+    struct ReadCancellationProbe {
+        quiet_polls: usize,
+        polls: AtomicUsize,
+        terminal:
+            Result<Option<CancellationSignal>, agentmage_kernel_contracts::ModelRuntimeFailure>,
+    }
+
+    impl ModelCancellationProbe for ReadCancellationProbe {
+        fn observe(
+            &self,
+        ) -> Result<Option<CancellationSignal>, agentmage_kernel_contracts::ModelRuntimeFailure>
+        {
+            if self.polls.fetch_add(1, Ordering::SeqCst) < self.quiet_polls {
+                Ok(None)
+            } else {
+                self.terminal.clone()
+            }
+        }
+    }
+
+    fn read_cancel_signal(task_id: TaskId, correlation_id: CorrelationId) -> CancellationSignal {
+        CancellationSignal {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            cancellation_id: CancellationId::from_raw("cancel-read-consumed-grant"),
+            correlation_id,
+            task_id,
+            reason: CancellationReason::UserRequested,
+            requested_by: BoundaryKind::Shell,
+        }
+    }
+
+    #[test]
+    fn read_cancellation_after_consumption_retains_exact_receipt_and_reopens() {
+        // Real canonical SQLCipher/authority and Linux driver, deliberately
+        // cancelled before spawn. The bash test manifest is not a read worker.
+        for case in 0..6 {
+            let mut fixture = fixture();
+            let allowed = approve(&mut fixture, 4_000);
+            let RuntimePermissionEvaluation::Allow { ref grant_id, .. } = allowed else {
+                panic!("exact read grant required");
+            };
+            let grant_id = grant_id.clone();
+            let mut signal = read_cancel_signal(
+                fixture.request.task.task_id.clone(),
+                fixture.call.correlation_id.clone(),
+            );
+            let terminal = match case {
+                0 => Ok(Some(signal)),
+                1 => {
+                    signal.task_id = TaskId::from_raw("other-task");
+                    Ok(Some(signal))
+                }
+                2 => {
+                    signal.correlation_id = CorrelationId::from_raw("other-correlation");
+                    Ok(Some(signal))
+                }
+                3 => {
+                    signal.schema_version += 1;
+                    Ok(Some(signal))
+                }
+                4 => {
+                    signal.requested_by = BoundaryKind::Model;
+                    Ok(Some(signal))
+                }
+                _ => Err(agentmage_kernel_contracts::ModelRuntimeFailure {
+                    code: "private-cancellation-source-detail".to_owned(),
+                    retryable_after_correction: false,
+                    dependency_recovery_required: true,
+                    contract_error: None,
+                }),
+            };
+            // First poll is host preflight; the next is after the exact
+            // consumed-permit check, before the supervisor can spawn anything.
+            let probe = ReadCancellationProbe {
+                quiet_polls: 1,
+                polls: AtomicUsize::new(0),
+                terminal,
+            };
+            let execution = fixture
+                .boundary
+                .execute(
+                    &fixture.request,
+                    &allowed,
+                    &fixture.definition,
+                    &fixture.call,
+                    Some(&probe),
+                )
+                .unwrap();
+            let expected = if case == 0 {
+                OperationOutcome::Cancelled
+            } else {
+                OperationOutcome::Failed
+            };
+            assert_eq!(probe.polls.load(Ordering::SeqCst), 2);
+            assert_eq!(execution.result.outcome, expected);
+            assert_eq!(execution.result.state_change, StateChange::NotChanged);
+            assert_eq!(execution.result.tool_call_id, fixture.call.tool_call_id);
+            assert_eq!(execution.result.correlation_id, fixture.call.correlation_id);
+            assert!(execution.result.output.is_none());
+            assert!(execution.result.evidence.is_empty());
+            assert!(execution.artifact_candidates.is_empty());
+            assert!(execution.result_output_kind.is_none());
+            assert!(fixture.boundary.issued.is_empty());
+            let authority = fixture.boundary.authority.authority();
+            assert_eq!(authority.receipts().len(), 1);
+            let receipt = authority.receipts()[0].clone();
+            assert_eq!(receipt.receipt_id, execution.receipt_id);
+            assert_eq!(receipt.receipt_sha256, execution.receipt_sha256);
+            assert_eq!(receipt.grant_id, grant_id);
+            assert_eq!(receipt.task_id, fixture.request.task.task_id);
+            assert_eq!(
+                receipt.tool_call_id.as_ref(),
+                Some(&fixture.call.tool_call_id)
+            );
+            assert_eq!(receipt.outcome, expected);
+            assert_eq!(
+                authority.current_grant(&grant_id).unwrap().status,
+                GrantStatus::Consumed
+            );
+            assert!(
+                !authority
+                    .current_transaction(&receipt.authority_transaction_id)
+                    .unwrap()
+                    .uncertain_effect
+            );
+            assert_eq!(
+                fixture.boundary.execute(
+                    &fixture.request,
+                    &allowed,
+                    &fixture.definition,
+                    &fixture.call,
+                    None,
+                ),
+                Err(RuntimePortFailure::Invalid)
+            );
+            let Fixture {
+                root,
+                boundary,
+                request,
+                definition,
+                call,
+                ..
+            } = fixture;
+            drop(boundary);
+            let mut reopened = fixture_with_git_and_checkpoint_clock_at(
+                root,
+                false,
+                90_000,
+                FakeGitExecutor::clean(),
+                None,
+            );
+            let authority = reopened.boundary.authority.authority();
+            assert_eq!(authority.receipts(), std::slice::from_ref(&receipt));
+            assert_eq!(
+                authority.current_grant(&grant_id).unwrap().status,
+                GrantStatus::Consumed
+            );
+            assert!(
+                !authority
+                    .current_transaction(&receipt.authority_transaction_id)
+                    .unwrap()
+                    .uncertain_effect
+            );
+            assert!(reopened.boundary.issued.is_empty());
+            assert_eq!(
+                reopened
+                    .boundary
+                    .execute(&request, &allowed, &definition, &call, None,),
+                Err(RuntimePortFailure::Invalid)
+            );
+        }
+    }
+
+    #[test]
+    fn read_precancel_receipt_precedes_original_acknowledgements_on_reopen() {
+        // Scripted proposal + timed probe, real host/authority/store composition.
+        // This does not claim native body entry, a model campaign or atomicity
+        // across the separately committed start, receipt and acknowledgement.
+        for quiet_polls in [1, 2] {
+            let fixture = fixture();
+            let profile = fixture.profile_for_test();
+            let model = ScriptedCodingModel {
+                profile: profile.model_profile().clone(),
+                steps: [ScriptedCodingStep::Tool(scripted_call(&fixture.call))]
+                    .into_iter()
+                    .collect(),
+                calls: 0,
+            };
+            let context =
+                CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter).unwrap();
+            let Fixture {
+                root,
+                request,
+                boundary,
+                ..
+            } = fixture;
+            let admitted_request = request.clone();
+            let mut coordinator = compose_durable_coding_coordinator(
+                profile,
+                request,
+                model,
+                context,
+                boundary,
+                FixtureClock(60_000),
+            )
+            .unwrap();
+            let RuntimeCoordinatorStep::AwaitingApproval { challenge } =
+                coordinator.run_until_boundary(None, None).unwrap()
+            else {
+                panic!("read must await exact approval");
+            };
+            let signal = read_cancel_signal(
+                admitted_request.task.task_id.clone(),
+                coordinator.events()[0].correlation_id.clone(),
+            );
+            // The coordinator's pending-approval poll is clear. Signal either at
+            // host preflight or in the consumed-grant read driver, both pre-spawn.
+            let probe = ReadCancellationProbe {
+                quiet_polls,
+                polls: AtomicUsize::new(0),
+                terminal: Ok(Some(signal.clone())),
+            };
+            let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+                .run_until_boundary(
+                    Some(&response(&challenge, RuntimeApprovalDisposition::Allow)),
+                    Some(&probe),
+                )
+                .unwrap()
+            else {
+                panic!("consumed read cancellation must terminate");
+            };
+            assert_eq!(probe.polls.load(Ordering::SeqCst), quiet_polls + 2);
+            assert_eq!(outcome.state, AgentStateKind::Cancelled);
+            assert_eq!(outcome.tool_call_count, 1);
+            assert_eq!(outcome.model_call_count, 1);
+            assert_eq!(outcome.receipt_ids.len(), 1);
+            verify_runtime_outcome(&outcome, &admitted_request).unwrap();
+            let events = coordinator.events().to_vec();
+            assert!(
+                !events
+                    .iter()
+                    .any(|event| matches!(event.kind, RuntimeEventKind::ToolCompleted { .. }))
+            );
+            let terminal_position = events.iter().position(|event| matches!(
+            &event.kind,
+            RuntimeEventKind::ToolFailed { receipt_id: Some(receipt_id), failure_code, .. }
+                if *receipt_id == outcome.receipt_ids[0] && failure_code == "runtime.tool.cancelled"
+        )).unwrap();
+            assert!(matches!(
+                events[terminal_position + 1].kind,
+                RuntimeEventKind::TurnCompleted { .. }
+            ));
+            for (offset, observed) in [(2, false), (3, true)] {
+                let event = &events[terminal_position + offset];
+                let id = match &event.kind {
+                    RuntimeEventKind::CancellationRequested { cancellation_id } if !observed => {
+                        cancellation_id
+                    }
+                    RuntimeEventKind::CancellationObserved { cancellation_id } if observed => {
+                        cancellation_id
+                    }
+                    _ => panic!("original cancellation acknowledgements must follow receipt/turn"),
+                };
+                assert_eq!(id, &signal.cancellation_id);
+                assert!(event.turn_id.is_none());
+                assert!(event.operation_id.is_none());
+            }
+            assert!(matches!(
+                events.last().unwrap().kind,
+                RuntimeEventKind::RunTerminal {
+                    state: AgentStateKind::Cancelled,
+                    ..
+                }
+            ));
+            assert_eq!(
+                coordinator.run_until_boundary(None, None).unwrap(),
+                RuntimeCoordinatorStep::Complete {
+                    outcome: outcome.clone()
+                }
+            );
+            assert_eq!(coordinator.events(), events);
+            drop(coordinator);
+
+            let reopened = fixture_with_git_and_checkpoint_clock_at(
+                root,
+                false,
+                90_000,
+                FakeGitExecutor::clean(),
+                None,
+            );
+            let authority = reopened.boundary.authority.authority();
+            assert_eq!(authority.receipts().len(), 1);
+            let receipt = &authority.receipts()[0];
+            assert_eq!(receipt.outcome, OperationOutcome::Cancelled);
+            assert_eq!(receipt.receipt_id, outcome.receipt_ids[0]);
+            assert_eq!(
+                authority.current_grant(&receipt.grant_id).unwrap().status,
+                GrantStatus::Consumed
+            );
+            assert!(
+                !authority
+                    .current_transaction(&receipt.authority_transaction_id)
+                    .unwrap()
+                    .uncertain_effect
+            );
+            assert!(matches!(&events[terminal_position + 1].kind,
+            RuntimeEventKind::TurnCompleted { outcome_sha256 } if outcome_sha256 == &receipt.receipt_sha256));
+            assert_eq!(
+                authority.runtime_events(&admitted_request.run_id).unwrap(),
+                events
+            );
+            assert!(reopened.boundary.issued.is_empty());
+        }
+    }
+
+    #[test]
+    fn uncertain_command_and_validation_never_publish_completion_artifacts_or_replay() {
+        for validation in [false, true] {
+            let mut fixture = fixture();
+            if validation {
+                configure_targeted_validation(&mut fixture);
+            } else {
+                configure_bounded_command(&mut fixture);
+            }
+            fixture
+                .boundary
+                .command_executor
+                .as_mut()
+                .unwrap()
+                .descendants_terminated = false;
+            let evaluation = fixture
+                .boundary
+                .evaluate(
+                    &fixture.request,
+                    &fixture.operation_id,
+                    &fixture.definition,
+                    &fixture.call,
+                    4_000,
+                )
+                .unwrap();
+            let challenge = challenge(&fixture, &evaluation);
+            let allowed = fixture
+                .boundary
+                .resolve(
+                    &fixture.request,
+                    &challenge,
+                    &response(&challenge, RuntimeApprovalDisposition::Allow),
+                    &fixture.definition,
+                    &fixture.call,
+                    4_001,
+                )
+                .unwrap();
+            let execution = fixture
+                .boundary
+                .execute(
+                    &fixture.request,
+                    &allowed,
+                    &fixture.definition,
+                    &fixture.call,
+                    None,
+                )
+                .unwrap();
+            assert_eq!(execution.result.outcome, OperationOutcome::Uncertain);
+            assert_eq!(execution.result.state_change, StateChange::Uncertain);
+            assert!(execution.result.output.is_none());
+            assert!(execution.result.evidence.is_empty());
+            assert!(execution.artifact_candidates.is_empty());
+            assert!(execution.result_output_kind.is_none());
+            let receipts = fixture.boundary.authority.authority().receipts();
+            assert_eq!(receipts.len(), 1);
+            assert_eq!(receipts[0].outcome, OperationOutcome::Uncertain);
+            assert_eq!(receipts[0].receipt_id, execution.receipt_id);
+            assert_eq!(receipts[0].receipt_sha256, execution.receipt_sha256);
+            assert!(
+                fixture
+                    .boundary
+                    .authority
+                    .authority()
+                    .current_transaction(&receipts[0].authority_transaction_id)
+                    .unwrap()
+                    .uncertain_effect
+            );
+            assert!(
+                fixture
+                    .boundary
+                    .execute(
+                        &fixture.request,
+                        &allowed,
+                        &fixture.definition,
+                        &fixture.call,
+                        None
+                    )
+                    .is_err()
+            );
+            assert_eq!(
+                fixture.boundary.command_executor.as_ref().unwrap().launches,
+                1
+            );
+        }
+    }
+
     #[test]
     fn story_48_2_linux_runtime_executes_one_exact_bounded_command_after_approval() {
         let mut fixture = fixture();
@@ -8442,6 +9039,306 @@ mod tests {
             1
         );
         assert_eq!(fixture.boundary.authority.authority().receipts().len(), 1);
+    }
+
+    #[test]
+    fn uncertain_command_event_is_atomically_published_and_reopens() {
+        for validation in [false, true] {
+            let mut fixture = fixture();
+            if validation {
+                configure_targeted_validation(&mut fixture);
+            } else {
+                configure_bounded_command(&mut fixture);
+            }
+            let launches = Arc::new(AtomicUsize::new(0));
+            let executor = fixture.boundary.command_executor.as_mut().unwrap();
+            executor.descendants_terminated = false;
+            executor.shared_launches = Some(Arc::clone(&launches));
+            let call = scripted_call(&fixture.call);
+            let profile = fixture.profile_for_test();
+            let model = ScriptedCodingModel {
+                profile: profile.model_profile().clone(),
+                steps: [ScriptedCodingStep::Tool(call)].into_iter().collect(),
+                calls: 0,
+            };
+            let context =
+                CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter).unwrap();
+            let Fixture {
+                root,
+                request,
+                boundary,
+                ..
+            } = fixture;
+            let admitted_request = request.clone();
+            let mut coordinator = compose_durable_coding_coordinator(
+                profile,
+                request,
+                model,
+                context,
+                boundary,
+                FixtureClock(60_000),
+            )
+            .unwrap();
+            let mut next_response = None;
+            let outcome = loop {
+                match coordinator
+                    .run_until_boundary(next_response.as_ref(), None)
+                    .unwrap()
+                {
+                    RuntimeCoordinatorStep::AwaitingApproval { challenge } => {
+                        next_response =
+                            Some(response(&challenge, RuntimeApprovalDisposition::Allow));
+                    }
+                    RuntimeCoordinatorStep::Complete { outcome } => break outcome,
+                }
+            };
+            assert_eq!(outcome.state, AgentStateKind::Uncertain, "{outcome:#?}");
+            assert_eq!(outcome.tool_call_count, 1);
+            assert_eq!(outcome.model_call_count, 1);
+            assert_eq!(outcome.receipt_ids.len(), 1);
+            verify_runtime_outcome(&outcome, &admitted_request).unwrap();
+            let events = coordinator.events().to_vec();
+            assert_eq!(
+                events
+                    .iter()
+                    .filter(|event| matches!(event.kind, RuntimeEventKind::ToolCompleted { .. }))
+                    .count(),
+                0
+            );
+            assert_eq!(
+                events
+                    .iter()
+                    .filter(|event| matches!(
+                        &event.kind,
+                        RuntimeEventKind::ToolFailed { receipt_id: Some(_), failure_code, .. }
+                            if failure_code == "runtime.tool.uncertain"
+                    ))
+                    .count(),
+                1
+            );
+            drop(coordinator);
+
+            let reopened = fixture_with_git_and_checkpoint_clock_at(
+                root,
+                false,
+                90_000,
+                FakeGitExecutor::clean(),
+                None,
+            );
+            let authority = reopened.boundary.authority.authority();
+            let receipt = &authority.receipts()[0];
+            assert_eq!(authority.receipts().len(), 1);
+            assert_eq!(receipt.outcome, OperationOutcome::Uncertain);
+            assert_eq!(outcome.receipt_ids[0], receipt.receipt_id);
+            assert!(
+                authority
+                    .current_transaction(&receipt.authority_transaction_id)
+                    .unwrap()
+                    .uncertain_effect
+            );
+            assert_eq!(
+                authority.runtime_events(&admitted_request.run_id).unwrap(),
+                events
+            );
+            assert_eq!(launches.load(Ordering::SeqCst), 1);
+            assert_eq!(
+                reopened
+                    .boundary
+                    .command_executor
+                    .as_ref()
+                    .unwrap()
+                    .launches,
+                0
+            );
+        }
+    }
+
+    #[test]
+    fn uncertain_git_never_publishes_observations_or_replays_consumed_authority() {
+        // Labelled component executor: this is NOT a native Git/cleanup test.
+        for (termination, exit_code) in [
+            (RepositoryInspectionTermination::Exited, Some(0)),
+            (RepositoryInspectionTermination::Exited, Some(1)),
+            (RepositoryInspectionTermination::Cancelled, None),
+            (RepositoryInspectionTermination::TimedOut, None),
+            (RepositoryInspectionTermination::OutputLimit, None),
+            (RepositoryInspectionTermination::LaunchFailed, None),
+        ] {
+            for malformed in [false, true] {
+                let mut fixture = fixture_with_git(FakeGitExecutor {
+                    descendants_terminated: malformed,
+                    corrupt_stdout_digest: malformed,
+                    terminal_override: Some((termination, exit_code)),
+                    ..FakeGitExecutor::default()
+                });
+                configure_git_status(&mut fixture);
+                let evaluation = fixture
+                    .boundary
+                    .evaluate(
+                        &fixture.request,
+                        &fixture.operation_id,
+                        &fixture.definition,
+                        &fixture.call,
+                        4_000,
+                    )
+                    .unwrap();
+                let challenge = challenge(&fixture, &evaluation);
+                let allowed = fixture
+                    .boundary
+                    .resolve(
+                        &fixture.request,
+                        &challenge,
+                        &response(&challenge, RuntimeApprovalDisposition::Allow),
+                        &fixture.definition,
+                        &fixture.call,
+                        4_001,
+                    )
+                    .unwrap();
+                let execution = fixture
+                    .boundary
+                    .execute(
+                        &fixture.request,
+                        &allowed,
+                        &fixture.definition,
+                        &fixture.call,
+                        None,
+                    )
+                    .unwrap();
+                assert_eq!(execution.result.outcome, OperationOutcome::Uncertain);
+                assert_eq!(execution.result.state_change, StateChange::Uncertain);
+                assert!(execution.result.output.is_none());
+                assert!(execution.result.evidence.is_empty());
+                assert!(execution.artifact_candidates.is_empty());
+                assert!(execution.result_output_kind.is_none());
+                let authority = fixture.boundary.authority.authority();
+                assert_eq!(authority.receipts().len(), 1);
+                let receipt = &authority.receipts()[0];
+                assert_eq!(receipt.outcome, OperationOutcome::Uncertain);
+                assert_eq!(receipt.receipt_id, execution.receipt_id);
+                assert_eq!(receipt.receipt_sha256, execution.receipt_sha256);
+                assert!(
+                    authority
+                        .current_transaction(&receipt.authority_transaction_id)
+                        .unwrap()
+                        .uncertain_effect
+                );
+                assert!(
+                    fixture
+                        .boundary
+                        .execute(
+                            &fixture.request,
+                            &allowed,
+                            &fixture.definition,
+                            &fixture.call,
+                            None
+                        )
+                        .is_err()
+                );
+                assert_eq!(fixture.boundary.git_executor.as_ref().unwrap().launches, 1);
+            }
+        }
+    }
+
+    #[test]
+    fn uncertain_git_event_is_atomically_published_and_reopens() {
+        // Labelled scripted/fake component proof; no native/model qualification.
+        for malformed in [false, true] {
+            let launches = Arc::new(AtomicUsize::new(0));
+            let mut fixture = fixture_with_git(FakeGitExecutor {
+                descendants_terminated: malformed,
+                corrupt_stdout_digest: malformed,
+                shared_launches: Some(Arc::clone(&launches)),
+                ..FakeGitExecutor::default()
+            });
+            configure_git_status(&mut fixture);
+            let call = scripted_call(&fixture.call);
+            let profile = fixture.profile_for_test();
+            let model = ScriptedCodingModel {
+                profile: profile.model_profile().clone(),
+                steps: [ScriptedCodingStep::Tool(call)].into_iter().collect(),
+                calls: 0,
+            };
+            let context =
+                CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter).unwrap();
+            let Fixture {
+                root,
+                request,
+                boundary,
+                ..
+            } = fixture;
+            let admitted_request = request.clone();
+            let mut coordinator = compose_durable_coding_coordinator(
+                profile,
+                request,
+                model,
+                context,
+                boundary,
+                FixtureClock(60_000),
+            )
+            .unwrap();
+            let mut next_response = None;
+            let outcome = loop {
+                match coordinator
+                    .run_until_boundary(next_response.as_ref(), None)
+                    .unwrap()
+                {
+                    RuntimeCoordinatorStep::AwaitingApproval { challenge } => {
+                        next_response =
+                            Some(response(&challenge, RuntimeApprovalDisposition::Allow));
+                    }
+                    RuntimeCoordinatorStep::Complete { outcome } => break outcome,
+                }
+            };
+            assert_eq!(outcome.state, AgentStateKind::Uncertain, "{outcome:#?}");
+            assert_eq!(outcome.tool_call_count, 1);
+            assert_eq!(outcome.model_call_count, 1);
+            assert_eq!(outcome.receipt_ids.len(), 1);
+            verify_runtime_outcome(&outcome, &admitted_request).unwrap();
+            let events = coordinator.events().to_vec();
+            assert_eq!(
+                events
+                    .iter()
+                    .filter(|event| matches!(event.kind, RuntimeEventKind::ToolCompleted { .. }))
+                    .count(),
+                0
+            );
+            assert_eq!(
+                events
+                    .iter()
+                    .filter(|event| matches!(
+                        &event.kind,
+                        RuntimeEventKind::ToolFailed { receipt_id: Some(_), failure_code, .. }
+                            if failure_code == "runtime.tool.uncertain"
+                    ))
+                    .count(),
+                1
+            );
+            drop(coordinator);
+            let reopened = fixture_with_git_and_checkpoint_clock_at(
+                root,
+                false,
+                90_000,
+                FakeGitExecutor::clean(),
+                None,
+            );
+            let authority = reopened.boundary.authority.authority();
+            assert_eq!(authority.receipts().len(), 1);
+            let receipt = &authority.receipts()[0];
+            assert_eq!(receipt.outcome, OperationOutcome::Uncertain);
+            assert_eq!(outcome.receipt_ids[0], receipt.receipt_id);
+            assert!(
+                authority
+                    .current_transaction(&receipt.authority_transaction_id)
+                    .unwrap()
+                    .uncertain_effect
+            );
+            assert_eq!(
+                authority.runtime_events(&admitted_request.run_id).unwrap(),
+                events
+            );
+            assert_eq!(launches.load(Ordering::SeqCst), 1);
+            assert_eq!(reopened.boundary.git_executor.as_ref().unwrap().launches, 0);
+        }
     }
 
     #[test]

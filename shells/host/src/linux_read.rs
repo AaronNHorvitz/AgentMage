@@ -961,18 +961,10 @@ where
                 DiagnosticState::Healthy,
                 "diagnostic.offline.enforced",
             ),
-            diagnostic(
-                DiagnosticComponent::SandboxHelper,
-                if self.sandbox.is_some() {
-                    DiagnosticState::Healthy
-                } else {
-                    DiagnosticState::Unavailable
-                },
-                if self.sandbox.is_some() {
-                    "diagnostic.sandbox.verified"
-                } else {
-                    "diagnostic.sandbox.unavailable"
-                },
+            sandbox_diagnostic(
+                self.sandbox
+                    .as_ref()
+                    .map(|sandbox| sandbox.admission_snapshot().map_err(|error| error.kind())),
             ),
             diagnostic(
                 DiagnosticComponent::Capabilities,
@@ -2060,6 +2052,27 @@ fn request_id(request: &HostRequest) -> &str {
     }
 }
 
+fn sandbox_diagnostic(
+    admission: Option<Result<(), agentmage_platform_linux::LinuxSandboxErrorKind>>,
+) -> DiagnosticObservation {
+    use agentmage_platform_linux::LinuxSandboxErrorKind;
+    let (state, code) = match admission {
+        Some(Ok(())) => (DiagnosticState::Healthy, "diagnostic.sandbox.configured"),
+        Some(Err(LinuxSandboxErrorKind::CleanupUncertain)) => (
+            DiagnosticState::Unavailable,
+            "diagnostic.sandbox.cleanup-unresolved",
+        ),
+        Some(Err(LinuxSandboxErrorKind::ExecutionFailed)) => {
+            (DiagnosticState::Degraded, "diagnostic.sandbox.busy")
+        }
+        None | Some(Err(_)) => (
+            DiagnosticState::Unavailable,
+            "diagnostic.sandbox.unavailable",
+        ),
+    };
+    diagnostic(DiagnosticComponent::SandboxHelper, state, code)
+}
+
 fn diagnostic(
     component: DiagnosticComponent,
     state: DiagnosticState,
@@ -2797,6 +2810,54 @@ mod tests {
         let mut records = Vec::new();
         visit(root, root, &mut records);
         records
+    }
+
+    #[test]
+    fn doctor_sandbox_observation_does_not_turn_busy_or_uncertain_owner_into_health() {
+        use agentmage_kernel_contracts::{DiagnosticComponent, DiagnosticState};
+        use agentmage_kernel_engine::diagnostics::build_doctor_report;
+        use agentmage_platform_linux::LinuxSandboxErrorKind;
+        for (admission, expected_state, code) in [
+            (
+                None,
+                DiagnosticState::Unavailable,
+                "diagnostic.sandbox.unavailable",
+            ),
+            (
+                Some(Ok(())),
+                DiagnosticState::Healthy,
+                "diagnostic.sandbox.configured",
+            ),
+            (
+                Some(Err(LinuxSandboxErrorKind::CleanupUncertain)),
+                DiagnosticState::Unavailable,
+                "diagnostic.sandbox.cleanup-unresolved",
+            ),
+            (
+                Some(Err(LinuxSandboxErrorKind::ExecutionFailed)),
+                DiagnosticState::Degraded,
+                "diagnostic.sandbox.busy",
+            ),
+            (
+                Some(Err(LinuxSandboxErrorKind::InvalidManifest)),
+                DiagnosticState::Unavailable,
+                "diagnostic.sandbox.unavailable",
+            ),
+        ] {
+            let observation = super::sandbox_diagnostic(admission);
+            assert_eq!(observation.component, DiagnosticComponent::SandboxHelper);
+            assert_eq!(observation.state, expected_state);
+            assert_eq!(observation.reason_code, code);
+            assert!(observation.identity_sha256.is_none());
+            let report = build_doctor_report(vec![observation]).unwrap();
+            let item = report
+                .items
+                .iter()
+                .find(|item| item.component == DiagnosticComponent::SandboxHelper)
+                .unwrap();
+            assert_eq!(item.state, expected_state);
+            assert_eq!(item.reason_code, code);
+        }
     }
 
     #[test]

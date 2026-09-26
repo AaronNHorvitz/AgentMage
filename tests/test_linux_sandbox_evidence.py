@@ -21,8 +21,8 @@ class LinuxSandboxEvidenceTests(unittest.TestCase):
                 "stale_held_file_fails_before_any_worker_process_can_start",
             ),
         )
-        self.assertEqual(len(evidence.SANDBOX_TESTS), 17)
-        self.assertEqual(len(evidence.SANDBOX_LIVE_TESTS), 11)
+        self.assertEqual(len(evidence.SANDBOX_TESTS), 18)
+        self.assertEqual(len(evidence.SANDBOX_LIVE_TESTS), 12)
         self.assertEqual(len(evidence.IPC_TESTS), 8)
         self.assertEqual(len(evidence.SECRET_SERVICE_TESTS), 4)
         self.assertEqual(len(evidence.SECRET_SERVICE_LIVE_TESTS), 3)
@@ -30,10 +30,20 @@ class LinuxSandboxEvidenceTests(unittest.TestCase):
         self.assertEqual(len(evidence.STARTUP_MAPPING_TESTS), 2)
         self.assertEqual(len(evidence.KERNEL_STARTUP_TESTS), 1)
         self.assertEqual(len(evidence.STARTUP_LIVE_TESTS), 1)
-        self.assertEqual(len(evidence.ATTACKS), 16)
+        self.assertEqual(len(evidence.ATTACKS), 17)
         self.assertEqual(
             tuple(evidence.TOOLS),
             ("bubblewrap", "path-executor", "secret-tool", "systemd-run"),
+        )
+
+    def test_prior_policy_report_cannot_certify_native_alias_guard(self) -> None:
+        report = self.valid_report()
+        report["controls"]["seccomp"] = "agentmage.linux.worker.deny.v1-kernel-mode-filter"
+        self.assertTrue(evidence.validate_report(report))
+        self.assertIn("platforms/linux/src/sandbox_supervision.rs", evidence.SOURCE_PATHS)
+        self.assertIn(
+            "guarded_native_abi_attempt_returns_eperm_and_lane_is_reusable",
+            evidence.SANDBOX_LIVE_TESTS,
         )
 
     def valid_report(self) -> dict:

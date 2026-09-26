@@ -512,7 +512,15 @@ where
         };
         if validate_platform_result(&platform).is_err() {
             self.error = Some(RepositoryInspectionError::InvalidPlatformResult);
-            return EffectLaunch::failed();
+            // The executor was entered with consumed authority. Malformed
+            // post-launch evidence cannot prove that no effect remains.
+            return EffectLaunch::completed(EffectResult::from_redacted_material(
+                OperationOutcome::Uncertain,
+                RepositoryInspectionError::InvalidPlatformResult
+                    .code()
+                    .as_bytes(),
+                StateChange::Uncertain,
+            ));
         }
         let outcome = platform_outcome(&platform);
         let state_change = if platform.descendants_terminated {
