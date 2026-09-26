@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "record_type": "sprint_82_local_evidence",
-  "source_revision": "5d917e24af3ec60119b8ed98d61f2c1078e12ada",
+  "source_revision": "e26180125aad3b08f7b0a87e1d76d4c39734ac38",
   "source_sha256": {
     "Cargo.toml": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc",
     "Cargo.lock": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd",
@@ -16,9 +16,9 @@
     "docs/verification/sprint-82-public-research-corpus.json": "84deba2298014d7bad6ae395cd94084e8b8b2dd558eb0588d866e39d13d7f78e",
     "scripts/public_research_contract.py": "b0319109663ae5ce03b9924bfd6f8898f16f26109e9bafad45c045abb26f8430",
     "tests/test_public_research_contract.py": "3446b22caa4e6c66e707e5f64b7ef5e225e907b79cfb4b8346036841b4ec2d86",
-    "supply-chain/dependency-hashes.sha256": "f808c086469d0936b3bd60960e2514cb40a786d80f1113271732e9f842ae5584",
-    "supply-chain/dependency-provenance.json": "e91762966bcf372d17525097554bd3f0e4e50335867b34b4f45d63f98e570be5",
-    "supply-chain/sbom.cdx.json": "014ba43decb01e188f25cf30a3c96aa25ee0e6d67071800f5d62cbe195393a32",
+    "supply-chain/dependency-hashes.sha256": "c515398dc66f9aa621e136d4f72901ecd1eb7363a2bbffaa22ab905f0c7b8523",
+    "supply-chain/dependency-provenance.json": "e46fc7585cb71e22dfcb897aa31fa3ea557c080f6c103735aa769338378075fc",
+    "supply-chain/sbom.cdx.json": "9d6ae90969f1d639aadd612bcb9a207601e0d7cbaeb12f7b5c4d624eb6cbaccd",
     "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
     "scripts/sprint_82_evidence.py": "a7da5abf0859988c8e1988c2ba224d1b350782374f04e670560d03ca77a141c6",
     "tests/test_sprint_82_evidence.py": "b5ecf4872f037d3d1c8c0e36359cae0cc2e6547a50b49224ec5fd8a6d6a05d32"
@@ -45,7 +45,7 @@
         "--lib"
       ],
       "exit_code": 0,
-      "output_sha256": "8287c0397f1f88878db85d3ed6e3219ead91648466bfa59043573c610da88cb5",
+      "output_sha256": "3beb71356f6250ebce614954962f4816e87b48af3f6b3a5cc43be460aa0375ff",
       "blocking_skip_count": 0
     },
     {
@@ -71,7 +71,7 @@
         "--lib"
       ],
       "exit_code": 0,
-      "output_sha256": "5af212bfab77d91697dfc68781d27b2722255ee5b2f7a9dbd10d8a357bfe8771",
+      "output_sha256": "92ef0a1c1a8ad605b9e909c2cf4f7623fd85effe0070272d9a1c9c6ab8e84185",
       "blocking_skip_count": 0
     },
     {
@@ -83,7 +83,7 @@
         "schemas:test"
       ],
       "exit_code": 0,
-      "output_sha256": "b33c29c7f6133796a828e384d1ebf71bbf00c651acd12bbae81c8a29a7e2a12a",
+      "output_sha256": "53c8f3edd2addbe715900a74e22e5b59a0863be813e1c1468fa515f8eaad88eb",
       "blocking_skip_count": null
     },
     {

@@ -31,7 +31,7 @@
   ],
   "private_user_data_used": false,
   "schema_version": 1,
-  "source_revision": "ead0845b68c1b5c006454de4f45132348f155d99",
+  "source_revision": "e26180125aad3b08f7b0a87e1d76d4c39734ac38",
   "sources": [
     {
       "bytes": 2428,
@@ -44,9 +44,9 @@
       "sha256": "c8cc0af7aa697ba6fb0ef0be8bafc8c2100c910169ee6f9fa2a2807ba48243c5"
     },
     {
-      "bytes": 3654,
+      "bytes": 13551,
       "path": "kernel/contracts/src/lib.rs",
-      "sha256": "905318e31b1dbc3886d147d0e30e1e2201f7f69fa16902c10345b098f8d40918"
+      "sha256": "17d5582ba709e3daafafbf5331548c005a52e0d89acaf2ec3da8e73e0cbd0bc5"
     },
     {
       "bytes": 26634,
@@ -54,14 +54,14 @@
       "sha256": "d9386d9720610abb4a2f0222843f51f2b6fd29eca63fc30b50f6d298d21cb65d"
     },
     {
-      "bytes": 20481,
+      "bytes": 38716,
       "path": "kernel/engine/src/propagation.rs",
-      "sha256": "ae4525a7a25175ac079f828deb34dbc3b34578b07c17de3e26edc60fbfe48747"
+      "sha256": "2903b9c5597c0023cafdaee69eb2eba041a0a9638a68ca3b5b645a98c30a0785"
     },
     {
-      "bytes": 2297,
+      "bytes": 18656,
       "path": "kernel/engine/src/lib.rs",
-      "sha256": "6a1cb5dcb2908c75893368c9eb41c840bfd18c08581b85edef871487b67f8566"
+      "sha256": "01ff4323fcd0b534505bcda260c4bc952940d4c990895e0bc4f567a8675c4edb"
     },
     {
       "bytes": 9984,
