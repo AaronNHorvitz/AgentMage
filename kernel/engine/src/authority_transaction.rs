@@ -6,7 +6,7 @@ use agentmage_kernel_contracts::{
     ApprovalId, AuthorityTransactionId, AuthorityTransactionRecord, AuthorityTransactionState,
     ContractError, ErrorCategory, ErrorId, GrantId, GrantPreimage, GrantSideEffect, GrantTarget,
     HeldWorkspaceObject, HeldWorkspaceRoot, OperationAttemptId, OperationBinding, OperationOutcome,
-    Receipt, ReceiptId, RetryDisposition, StateChange, ToolCall, to_canonical_json,
+    Receipt, ReceiptId, RetryDisposition, StateChange, TaskId, ToolCall, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -149,12 +149,14 @@ pub struct EffectAuthorization<'transaction> {
     transaction_id: &'transaction AuthorityTransactionId,
     attempt_id: &'transaction OperationAttemptId,
     consumed_grant_sha256: &'transaction str,
+    task_id: &'transaction TaskId,
     operation: OperationBinding,
     call: &'transaction ToolCall,
     targets: &'transaction [GrantTarget],
     excluded_targets: &'transaction [GrantTarget],
     preimages: &'transaction [GrantPreimage],
     expected_side_effects: &'transaction [GrantSideEffect],
+    network_scope: Option<&'transaction str>,
 }
 
 impl EffectAuthorization<'_> {
@@ -174,6 +176,13 @@ impl EffectAuthorization<'_> {
     #[must_use]
     pub const fn consumed_grant_sha256(&self) -> &str {
         self.consumed_grant_sha256
+    }
+
+    /// Returns the exact task that passed policy and consumed this operation grant.
+    /// A worker packet's task binding must match this owner, not a caller assertion.
+    #[must_use]
+    pub const fn task_id(&self) -> &TaskId {
+        self.task_id
     }
 
     /// Returns the one canonical operation authorized for this attempt.
@@ -204,6 +213,19 @@ impl EffectAuthorization<'_> {
     #[must_use]
     pub const fn expected_side_effects(&self) -> &[GrantSideEffect] {
         self.expected_side_effects
+    }
+
+    /// Returns the exact scope that passed network policy for this consumed attempt.
+    /// A network driver must match this to its independently prepared destination;
+    /// the scope is not permission for arbitrary requests at other destinations.
+    /// Non-network operations never carry outbound authority through this accessor.
+    #[must_use]
+    pub fn network_scope(&self) -> Option<&str> {
+        if self.operation.operation() == agentmage_kernel_contracts::GrantOperation::NetworkAccess {
+            self.network_scope
+        } else {
+            None
+        }
     }
 
     /// Reports whether this one-target permit exactly names a continuously held object.
@@ -658,12 +680,14 @@ impl AuthorityTransactionCoordinator {
             transaction_id: &request.transaction_id,
             attempt_id: &request.attempt_id,
             consumed_grant_sha256: &consumed.consumed_grant_sha256,
+            task_id: &request.context.task_id,
             operation: definition.required_grant.operation,
             call: &request.call,
             targets: &targets,
             excluded_targets: &excluded_targets,
             preimages: &preimages,
             expected_side_effects: &expected_side_effects,
+            network_scope: request.context.network_scope.as_deref(),
         };
         let launched = driver.execute(authorization);
         if fault == Some(FaultPoint::WorkerReturned) {
@@ -1280,7 +1304,8 @@ mod tests {
             OperationalStoreError, OperationalStoreKeyError, OperationalStoreKeyProvider,
         },
         policy::{
-            PolicyEngine, PolicyEvaluationContext, StrictLocalReadOnlyScope, ToolPolicyBinding,
+            PolicyDocument, PolicyEngine, PolicyEvaluationContext, ScopeRules,
+            StrictLocalReadOnlyScope, ToolPolicyBinding,
         },
         test_target::{preimage, scope, target},
         tooling::{Tool, ToolRegistry},
@@ -1424,11 +1449,15 @@ mod tests {
         launches: usize,
         launch: Option<EffectLaunch>,
         observed_attempt: Option<String>,
+        observed_network_scope: Option<String>,
+        observed_task_id: Option<TaskId>,
     }
 
     impl EffectDriver for FakeDriver {
         fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
             self.launches += 1;
+            self.observed_network_scope = authorization.network_scope().map(str::to_owned);
+            self.observed_task_id = Some(authorization.task_id().clone());
             self.observed_attempt = Some(format!(
                 "{}:{}:{}:{}:{}",
                 authorization.transaction_id().as_str(),
@@ -1538,7 +1567,15 @@ mod tests {
     }
 
     fn fixture() -> Fixture {
-        let operation = OperationBinding::new(GrantOperation::WorkspaceRead);
+        fixture_with_network_scope(None)
+    }
+
+    fn fixture_with_network_scope(network_scope: Option<&str>) -> Fixture {
+        let operation = OperationBinding::new(if network_scope.is_some() {
+            GrantOperation::NetworkAccess
+        } else {
+            GrantOperation::WorkspaceRead
+        });
         let tool_id = ToolId::from_raw("fixture.read");
         let mut registry = ToolRegistry::new();
         registry
@@ -1565,7 +1602,7 @@ mod tests {
         let task_id = TaskId::from_raw("task-0001");
         let action_id = ActionId::from_raw("action-0001");
         let operation_target = target(&["src", "fixture.txt"]);
-        let policy = PolicyEngine::strict_local_read_only(StrictLocalReadOnlyScope {
+        let read_scope = StrictLocalReadOnlyScope {
             revision: 1,
             actors: BTreeSet::from([actor_id.clone()]),
             tasks: BTreeSet::from([task_id.clone()]),
@@ -1575,7 +1612,37 @@ mod tests {
                 tool_version: "1.0.0".to_owned(),
             }]),
             targets: BTreeSet::from([operation_target.clone()]),
-        })
+        };
+        let policy = if let Some(network_scope) = network_scope {
+            fn rules<T: Ord>(allowed: BTreeSet<T>) -> ScopeRules<T> {
+                ScopeRules {
+                    allowed,
+                    denied: BTreeSet::new(),
+                }
+            }
+            // Both tasks are policy-admissible in this fixture. The cross-task
+            // test must reject the exact grant mismatch, not only a missing
+            // policy allowlist entry for the other task.
+            let mut network_tasks = read_scope.tasks;
+            network_tasks.insert(TaskId::from_raw("task-other"));
+            PolicyEngine::new(PolicyDocument {
+                schema_version: 1,
+                revision: read_scope.revision,
+                actors: rules(read_scope.actors),
+                tasks: rules(network_tasks),
+                actions: rules(read_scope.actions),
+                tools: rules(read_scope.tools),
+                operations: rules(BTreeSet::from([operation])),
+                targets: rules(read_scope.targets),
+                denied_argument_sha256s: BTreeSet::new(),
+                denied_preimage_sha256s: BTreeSet::new(),
+                network_scopes: rules(BTreeSet::from([network_scope.to_owned()])),
+                credential_scopes: ScopeRules::deny_all(),
+                publication_scopes: ScopeRules::deny_all(),
+            })
+        } else {
+            PolicyEngine::strict_local_read_only(read_scope)
+        }
         .expect("policy must build");
         let approval_id = ApprovalId::from_raw("approval-0001");
         let mut issuer = GrantIssuer::new();
@@ -1652,7 +1719,7 @@ mod tests {
             expected_side_effects: grant.expected_side_effects.clone(),
             preview_sha256: grant.preview_sha256.clone(),
             now_epoch_ms: 3_000,
-            network_scope: None,
+            network_scope: network_scope.map(str::to_owned),
             credential_scope: None,
             publication_scope: None,
         };
@@ -1869,6 +1936,66 @@ mod tests {
     }
 
     #[test]
+    fn network_permit_preserves_exact_evaluated_scope_and_denies_context_drift() {
+        let expected = "https:docs.example.com:443";
+        for proposed in [Some(expected), None, Some("https:other.example.com:443")] {
+            let mut fixture = fixture_with_network_scope(Some(expected));
+            fixture.context.network_scope = proposed.map(str::to_owned);
+            let mut driver = FakeDriver {
+                launch: Some(EffectLaunch::completed(success())),
+                ..FakeDriver::default()
+            };
+            let owned_request = request(&fixture);
+            let receipt = AuthorityTransactionCoordinator::new()
+                .execute_effect(
+                    &fixture.registry,
+                    &mut fixture.issuer,
+                    &fixture.policy,
+                    owned_request,
+                    &mut driver,
+                )
+                .expect("terminal exact scope disposition");
+            if proposed == Some(expected) {
+                assert_eq!(receipt.outcome, OperationOutcome::Succeeded);
+                assert_eq!(driver.launches, 1);
+                assert_eq!(driver.observed_network_scope.as_deref(), Some(expected));
+                assert_eq!(
+                    driver.observed_task_id.as_ref(),
+                    Some(&fixture.context.task_id)
+                );
+            } else {
+                assert_eq!(receipt.outcome, OperationOutcome::Denied);
+                assert_eq!(driver.launches, 0);
+                assert_eq!(driver.observed_network_scope, None);
+            }
+        }
+    }
+
+    #[test]
+    fn research_worker_task_binding_cannot_borrow_another_tasks_network_grant() {
+        let mut fixture = fixture_with_network_scope(Some("https:docs.example.com:443"));
+        fixture.context.task_id = TaskId::from_raw("task-other");
+        let mut driver = FakeDriver {
+            launch: Some(EffectLaunch::completed(success())),
+            ..FakeDriver::default()
+        };
+        let owned_request = request(&fixture);
+        let receipt = AuthorityTransactionCoordinator::new()
+            .execute_effect(
+                &fixture.registry,
+                &mut fixture.issuer,
+                &fixture.policy,
+                owned_request,
+                &mut driver,
+            )
+            .expect("terminal cross-task refusal");
+        assert_eq!(receipt.outcome, OperationOutcome::Denied);
+        assert_eq!(driver.launches, 0);
+        assert_eq!(driver.observed_task_id, None);
+        assert_eq!(driver.observed_network_scope, None);
+    }
+
+    #[test]
     fn exact_success_uses_fixed_order_and_binds_receipt_to_every_identity() {
         let mut fixture = fixture();
         let mut coordinator = AuthorityTransactionCoordinator::new();
@@ -1903,6 +2030,11 @@ mod tests {
         assert_eq!(receipt.grant_id, fixture.grant.grant_id);
         assert_eq!(receipt.operation, fixture.grant.operation);
         assert_eq!(driver.launches, 1);
+        assert_eq!(driver.observed_network_scope, None);
+        assert_eq!(
+            driver.observed_task_id.as_ref(),
+            Some(&fixture.context.task_id)
+        );
         assert_eq!(states(&coordinator, &fixture.transaction_id).len(), 6);
     }
 

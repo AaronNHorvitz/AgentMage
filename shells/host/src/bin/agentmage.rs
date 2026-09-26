@@ -43,7 +43,12 @@ fn main() -> ExitCode {
                 ExitCode::from(error.exit_code().process_code())
             }
         },
-        CliInvocation::Code { output, .. } | CliInvocation::Execute { output, .. } => {
+        CliInvocation::Code { output, .. } => {
+            let error = ThinClientError::CodingActivationUnavailable;
+            eprintln!("{}", render_cli_error(error, output));
+            ExitCode::from(error.exit_code().process_code())
+        }
+        CliInvocation::Execute { output, .. } => {
             let error = ThinClientError::TransportFailed;
             eprintln!("{}", render_cli_error(error, output));
             ExitCode::from(unavailable_exit_code().process_code())

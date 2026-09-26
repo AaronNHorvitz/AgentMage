@@ -87,7 +87,15 @@ class Sprint48CliBinaryTests(unittest.TestCase):
         code_result = self.run_agentmage("code")
         self.assertEqual(code_result.returncode, 5)
         self.assertEqual(code_result.stdout, "")
-        self.assertEqual(code_result.stderr, "client.transport.failed\n")
+        self.assertEqual(code_result.stderr, "coding.activation.unavailable\n")
+        for run in (self.run_agent, self.run_agentmage):
+            result = run("--json", "code")
+            self.assertEqual(result.returncode, 5)
+            self.assertEqual(result.stdout, "")
+            self.assertEqual(json.loads(result.stderr), {
+                "code": "coding.activation.unavailable", "exit_code": 5,
+                "kind": "error", "schema_version": 1,
+            })
 
     def test_headless_human_output_and_invalid_input_fail_without_fallback(self) -> None:
         headless_human = self.run_agent("--surface", "json", "diagnostics")

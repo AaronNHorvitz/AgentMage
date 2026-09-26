@@ -27,6 +27,8 @@ use sha2::{Digest, Sha256};
 use zeroize::{Zeroize, Zeroizing};
 
 use crate::NativeModelDriver;
+use crate::native_inference_lease::NativeInferenceLease;
+use crate::native_resource_admission::NativeDevelopmentResourcePolicy;
 
 const MAX_HTTP_RESPONSE_BYTES: usize = 32 * 1024 * 1024;
 const MAX_HEALTH_RESPONSE_BYTES: usize = 4 * 1024;
@@ -134,6 +136,7 @@ pub struct LlamaServerDriverConfig {
     identity: ModelRuntimeIdentity,
     startup_timeout: Duration,
     launch: LlamaServerLaunchProfile,
+    development_resource_policy: Option<NativeDevelopmentResourcePolicy>,
 }
 
 /// Resource and family-template controls bound into one exact llama-server launch.
@@ -221,6 +224,7 @@ impl LlamaServerDriverConfig {
             identity,
             startup_timeout,
             launch: LlamaServerLaunchProfile::new(8_192, 4, 256, 128, "f16", "f16", None)?,
+            development_resource_policy: None,
         })
     }
 
@@ -228,6 +232,17 @@ impl LlamaServerDriverConfig {
     #[must_use]
     pub fn with_launch_profile(mut self, launch: LlamaServerLaunchProfile) -> Self {
         self.launch = launch;
+        self
+    }
+
+    /// Requires the existing prepared development resource bounds at actual launch.
+    /// This opt-in does not activate a model or alter the legacy demo's defaults.
+    #[must_use]
+    pub fn with_development_resource_policy(
+        mut self,
+        policy: NativeDevelopmentResourcePolicy,
+    ) -> Self {
+        self.development_resource_policy = Some(policy);
         self
     }
 }
@@ -298,6 +313,7 @@ fn valid_sha256(value: &str) -> bool {
 }
 
 struct LoadedRuntime {
+    _lease: NativeInferenceLease,
     profile_id: ModelProfileId,
     manifest_sha256: String,
     artifact_sha256: String,
@@ -503,7 +519,7 @@ impl LlamaServerDriver {
     }
 
     fn stop_loaded(&mut self) -> Result<(ModelProfileId, u64), ModelRuntimeFailure> {
-        let Some(mut loaded) = self.loaded.take() else {
+        let Some(loaded) = self.loaded.as_mut() else {
             return Err(failure("model.llama-driver.not-loaded", false));
         };
         let started = Instant::now();
@@ -512,16 +528,24 @@ impl LlamaServerDriver {
             .child
             .wait()
             .map_err(|_| failure("model.llama-driver.process-reap-failed", true))?;
-        if loaded.runtime_pid != 0 {
-            let deadline = Instant::now() + Duration::from_secs(2);
-            while Path::new(&format!("/proc/{}", loaded.runtime_pid)).exists()
-                && Instant::now() < deadline
-            {
-                thread::sleep(Duration::from_millis(10));
-            }
-            if Path::new(&format!("/proc/{}", loaded.runtime_pid)).exists() {
-                return Err(failure("model.llama-driver.descendant-reap-failed", true));
-            }
+        if loaded.runtime_pid == 0 {
+            // Startup did not establish the exact owned runtime descendant. Reaping
+            // its launcher alone is not evidence that inference has stopped. Keep
+            // the lease until the enclosing owner exits and its supervisor checks
+            // cleanup; never report this uncertain startup as a released slot.
+            return Err(failure(
+                "model.llama-driver.startup-cleanup-uncertain",
+                true,
+            ));
+        }
+        let deadline = Instant::now() + Duration::from_secs(2);
+        while Path::new(&format!("/proc/{}", loaded.runtime_pid)).exists()
+            && Instant::now() < deadline
+        {
+            thread::sleep(Duration::from_millis(10));
+        }
+        if Path::new(&format!("/proc/{}", loaded.runtime_pid)).exists() {
+            return Err(failure("model.llama-driver.descendant-reap-failed", true));
         }
         if self.config.socket_path.exists() {
             fs::remove_file(&self.config.socket_path)
@@ -533,24 +557,24 @@ impl LlamaServerDriver {
                 .map_err(|_| failure("model.llama-driver.api-key-cleanup-failed", true))?;
         }
         let elapsed = started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64;
-        Ok((loaded.profile_id, elapsed))
+        let profile_id = loaded.profile_id.clone();
+        // Keep the shared lease on every cleanup error, until cleanup can be retried.
+        drop(self.loaded.take());
+        Ok((profile_id, elapsed))
     }
 }
 
 impl Drop for LlamaServerDriver {
     fn drop(&mut self) {
-        if let Some(loaded) = self.loaded.as_mut() {
-            let _ = loaded.child.kill();
-            let _ = loaded.child.wait();
-        }
-        if self.loaded.is_some() && self.config.socket_path.exists() {
-            let _ = fs::remove_file(&self.config.socket_path);
-        }
         if self.loaded.is_some()
-            && let Ok(path) = api_key_path(&self.config.socket_path)
-            && path.exists()
+            && self.stop_loaded().is_err()
+            && let Some(loaded) = self.loaded.take()
         {
-            let _ = fs::remove_file(path);
+            // A destructor cannot return an uncertain-cleanup receipt. Do not
+            // advertise a free slot: retain this one descriptor until the owner
+            // process exits. The supervisor and outer campaign cleanup guard are
+            // still responsible for process death; no foreign process is signalled.
+            loaded._lease.retain_until_process_exit();
         }
     }
 }
@@ -566,6 +590,9 @@ impl NativeModelDriver for LlamaServerDriver {
             || profile.modalities != [agentmage_kernel_contracts::ModelModality::Text]
         {
             return Err(failure("model.llama-driver.profile-invalid", false));
+        }
+        if let Some(policy) = &self.config.development_resource_policy {
+            policy.verify_scope_before_manifest()?;
         }
         self.verify_runtime_tree()?;
         self.verify_model(profile)?;
@@ -598,6 +625,26 @@ impl NativeModelDriver for LlamaServerDriver {
             return Err(failure("model.llama-driver.socket-exists", false));
         }
         self.verify_sandbox_dependencies()?;
+        let lease = NativeInferenceLease::acquire()?;
+        if let Some(policy) = &self.config.development_resource_policy {
+            if self.config.launch.context_tokens != 32_768
+                || profile.decoding.max_output_tokens != 4_096
+                || self.config.launch.threads != 4
+                || self.config.launch.batch_tokens != 256
+                || self.config.launch.microbatch_tokens != 128
+                || self.config.launch.cache_type_k != "q8_0"
+                || self.config.launch.cache_type_v != "q8_0"
+            {
+                return Err(failure(
+                    "model.native-resource.launch-profile-mismatch",
+                    false,
+                ));
+            }
+            let observation = policy.verify_before_launch()?;
+            // Numbers and the whole preparation-manifest digest only: no paths,
+            // prompts, credentials, peer identities or arbitrary utility output.
+            eprintln!("model.native-resource.preflight:{observation}");
+        }
         self.load_generation = self
             .load_generation
             .checked_add(1)
@@ -636,6 +683,7 @@ impl NativeModelDriver for LlamaServerDriver {
             }
         };
         self.loaded = Some(LoadedRuntime {
+            _lease: lease,
             profile_id: profile.profile_id.clone(),
             manifest_sha256: profile.manifest_sha256.clone(),
             artifact_sha256: profile.artifact.sha256.clone(),
@@ -672,6 +720,12 @@ impl NativeModelDriver for LlamaServerDriver {
                 .child
                 .id();
             let runtime_pid = exact_runtime_descendant(supervisor_pid)?;
+            // Retain the known descendant even if the subsequent sandbox check
+            // fails, so cleanup can verify its disappearance before releasing.
+            self.loaded
+                .as_mut()
+                .expect("loaded state retained")
+                .runtime_pid = runtime_pid;
             verify_live_sandbox(runtime_pid, &self.config.socket_path)?;
             Ok(runtime_pid)
         })();
@@ -2360,6 +2414,136 @@ mod tests {
         fn drop(&mut self) {
             let _ = fs::remove_dir_all(&self.0);
         }
+    }
+
+    // Only a short-lived CPU child is used here. This exercises actual driver
+    // cleanup and lease lifetime, not runtime/model admission or GPU launch.
+    fn driver_with_cpu_child(directory: &TestDirectory) -> super::LlamaServerDriver {
+        let profile = exact_profile();
+        let config = super::LlamaServerDriverConfig::new(
+            directory.0.join("runtime"),
+            directory.0.join("model.gguf"),
+            directory.0.join("llama-server.sock"),
+            profile.runtime.clone(),
+            Duration::from_secs(1),
+        )
+        .unwrap();
+        fs::set_permissions(&directory.0, fs::Permissions::from_mode(0o700)).unwrap();
+        let lease = crate::native_inference_lease::NativeInferenceLease::acquire_for_test(
+            &directory.0.canonicalize().unwrap(),
+        )
+        .unwrap();
+        let child = std::process::Command::new("/usr/bin/true")
+            .env_clear()
+            .spawn()
+            .unwrap();
+        let runtime_pid = child.id();
+        let mut driver = super::LlamaServerDriver::new(config);
+        driver.loaded = Some(super::LoadedRuntime {
+            _lease: lease,
+            profile_id: profile.profile_id,
+            manifest_sha256: profile.manifest_sha256,
+            artifact_sha256: profile.artifact.sha256,
+            tokenizer_sha256: profile.codec.tokenizer_sha256,
+            template_sha256: profile.codec.template_sha256,
+            codec_sha256: profile.codec.codec_sha256,
+            reasoning_supported: profile.codec.reasoning_enabled,
+            context_capacity_tokens: profile.context.max_context_tokens,
+            launch_configuration_sha256: "a".repeat(64),
+            load_generation: 1,
+            capability_observed_at_ms: 0,
+            token_counter: profile.context.token_counter,
+            token_counter_sha256: profile.context.token_counter_sha256,
+            decoding: profile.decoding,
+            launch_arguments: Vec::new(),
+            api_key: zeroize::Zeroizing::new("synthetic-test-key".into()),
+            child,
+            runtime_pid,
+            loaded_at: std::time::Instant::now(),
+            input_tokens: 0,
+            output_tokens: 0,
+        });
+        driver
+    }
+
+    #[test]
+    fn prepared_resource_policy_does_not_change_legacy_eight_k_defaults() {
+        let directory = TestDirectory::new();
+        let config = super::LlamaServerDriverConfig::new(
+            directory.0.join("runtime"),
+            directory.0.join("model.gguf"),
+            directory.0.join("llama-server.sock"),
+            exact_profile().runtime,
+            Duration::from_secs(1),
+        )
+        .unwrap();
+        assert_eq!(config.launch.context_tokens, 8_192);
+        assert_eq!(config.launch.cache_type_k, "f16");
+        assert_eq!(config.launch.cache_type_v, "f16");
+        assert!(config.development_resource_policy.is_none());
+        let policy = crate::NativeDevelopmentResourcePolicy::from_preparation_manifest(
+            include_bytes!("../../../model-profiles/development/coding-model-lab.json"),
+        )
+        .unwrap();
+        let config = config.with_development_resource_policy(policy);
+        assert!(config.development_resource_policy.is_some());
+        // Adding restrictions does not silently change the launch profile.
+        assert_eq!(config.launch.context_tokens, 8_192);
+    }
+
+    #[test]
+    fn native_inference_lease_cleanup_error_preserves_owner_until_successful_retry() {
+        let directory = TestDirectory::new();
+        let mut driver = driver_with_cpu_child(&directory);
+        // A directory cannot be removed as the owned socket; no unrelated target
+        // is touched. Cleanup must retain both loaded state and the exact lease.
+        fs::create_dir(&driver.config.socket_path).unwrap();
+        assert_eq!(
+            driver.stop_loaded().unwrap_err().code,
+            "model.llama-driver.socket-cleanup-failed"
+        );
+        assert!(driver.loaded.is_some());
+        assert_eq!(
+            crate::native_inference_lease::NativeInferenceLease::acquire_for_test(
+                &directory.0.canonicalize().unwrap()
+            )
+            .err()
+            .unwrap()
+            .code,
+            "model.native-lease.busy"
+        );
+        fs::remove_dir(&driver.config.socket_path).unwrap();
+        driver.stop_loaded().unwrap();
+        assert!(driver.loaded.is_none());
+        assert!(
+            crate::native_inference_lease::NativeInferenceLease::acquire_for_test(
+                &directory.0.canonicalize().unwrap()
+            )
+            .is_ok()
+        );
+    }
+
+    #[test]
+    fn native_inference_lease_unknown_startup_is_not_claimed_clean() {
+        let directory = TestDirectory::new();
+        let mut driver = driver_with_cpu_child(&directory);
+        let known_child = driver.loaded.as_ref().unwrap().runtime_pid;
+        driver.loaded.as_mut().unwrap().runtime_pid = 0;
+        assert_eq!(
+            driver.stop_loaded().unwrap_err().code,
+            "model.llama-driver.startup-cleanup-uncertain"
+        );
+        assert!(driver.loaded.is_some());
+        assert!(
+            crate::native_inference_lease::NativeInferenceLease::acquire_for_test(
+                &directory.0.canonicalize().unwrap()
+            )
+            .is_err()
+        );
+        // Test-only restoration of the known CPU child lets this fixture verify
+        // normal cleanup without leaking its descriptor into the shared runner.
+        driver.loaded.as_mut().unwrap().runtime_pid = known_child;
+        driver.stop_loaded().unwrap();
     }
 
     fn exchange<T>(

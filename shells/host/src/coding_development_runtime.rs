@@ -70,7 +70,7 @@ use agentmage_platform_linux::{
 };
 use agentmage_platform_linux_inference::{
     GptOssHarmonyFamilyCodec, LinuxNativeModelAdapter, LlamaServerDriver, LlamaServerDriverConfig,
-    LlamaServerLaunchProfile, MuseAtemFamilyCodec,
+    LlamaServerLaunchProfile, MuseAtemFamilyCodec, NativeDevelopmentResourcePolicy,
 };
 use sha2::{Digest, Sha256};
 
@@ -2594,6 +2594,16 @@ fn load_candidate_model(
         eprintln!("coding.development.candidate.launch-profile.{}", error.code);
         CodingDevelopmentRuntimeError::Profile
     })?;
+    let resource_policy = NativeDevelopmentResourcePolicy::from_preparation_manifest(
+        include_bytes!("../../../model-profiles/development/coding-model-lab.json"),
+    )
+    .map_err(|error| {
+        eprintln!(
+            "coding.development.candidate.resource-profile.{}",
+            error.code
+        );
+        CodingDevelopmentRuntimeError::Profile
+    })?;
     let driver = LlamaServerDriver::new(
         LlamaServerDriverConfig::new(
             runtime_root,
@@ -2606,7 +2616,8 @@ fn load_candidate_model(
             eprintln!("coding.development.candidate.driver-config.{}", error.code);
             CodingDevelopmentRuntimeError::Profile
         })?
-        .with_launch_profile(launch),
+        .with_launch_profile(launch)
+        .with_development_resource_policy(resource_policy),
     );
     let isolation = RuntimeIsolationObservation {
         adapter_id: expected_profile.runtime.adapter_id.clone(),

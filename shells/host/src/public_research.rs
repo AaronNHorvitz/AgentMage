@@ -1,7 +1,9 @@
 //! Bounded public-search preparation and claim-level citation verification.
 
 use std::collections::BTreeSet;
+use std::fmt;
 
+use agentmage_kernel_engine::research_budget::{public_dns_name, public_query_sha256};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -26,12 +28,13 @@ pub enum PublicSourceType {
 }
 
 /// Exact public-search request handed to a separately owned network provider.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PublicSearchRequest {
     /// Stable request identity.
     pub request_id: String,
-    /// User-approved public query.
+    /// Exact proposed public query. Preparation does not prove disclosure approval;
+    /// the existing authority owner must independently establish that approval.
     pub query: String,
     /// Sorted optional domain allowlist.
     pub domains: Vec<String>,
@@ -43,6 +46,18 @@ pub struct PublicSearchRequest {
     pub max_results: u16,
     /// Maximum aggregate response bytes.
     pub max_total_bytes: u64,
+}
+
+impl fmt::Debug for PublicSearchRequest {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("PublicSearchRequest")
+            .field("query_bytes", &self.query.len())
+            .field("domain_count", &self.domains.len())
+            .field("max_results", &self.max_results)
+            .field("max_total_bytes", &self.max_total_bytes)
+            .finish_non_exhaustive()
+    }
 }
 
 /// Untrusted result returned by the separately owned public-search provider.
@@ -106,12 +121,28 @@ pub enum PublicResearchError {
     SourceDenied,
     /// A result exceeds byte, count, or quotation bounds.
     LimitExceeded,
+    /// Query contains detected secret material and cannot be disclosed.
+    SecretDenied,
 }
 
 /// Validates one request without performing a network action.
 pub fn prepare_public_search(
     request: PublicSearchRequest,
 ) -> Result<PublicSearchRequest, PublicResearchError> {
+    validate_public_search(&request)?;
+    Ok(request)
+}
+
+pub(crate) fn validate_public_search(
+    request: &PublicSearchRequest,
+) -> Result<(), PublicResearchError> {
+    match public_query_sha256(&request.query) {
+        Ok(_) => {}
+        Err(agentmage_kernel_engine::research_budget::ResearchBudgetError::Secret) => {
+            return Err(PublicResearchError::SecretDenied);
+        }
+        Err(_) => return Err(PublicResearchError::InvalidRequest),
+    }
     if !valid_id(&request.request_id)
         || request.query.trim().is_empty()
         || request.query.len() > MAX_QUERY_BYTES
@@ -127,7 +158,7 @@ pub fn prepare_public_search(
     {
         return Err(PublicResearchError::InvalidRequest);
     }
-    Ok(request)
+    Ok(())
 }
 
 /// Verifies and authority-ranks provider results into content-minimized citations.
@@ -136,14 +167,30 @@ pub fn verify_public_results(
     candidates: Vec<PublicSearchCandidate>,
     now_epoch_ms: u64,
 ) -> Result<Vec<PublicCitation>, PublicResearchError> {
-    prepare_public_search(request.clone())?;
+    validate_public_search(request)?;
     if now_epoch_ms == 0 || candidates.len() > request.max_results as usize {
         return Err(PublicResearchError::LimitExceeded);
     }
+    // Metadata and JSON escaping also occupy retained bytes. Counting only excerpts
+    // lets an untrusted title/URL/publisher bypass the aggregate ceiling.
     let total = candidates.iter().try_fold(0_u64, |sum, candidate| {
-        sum.checked_add(candidate.excerpt.len() as u64)
+        [
+            candidate.result_id.len(),
+            candidate.title.len(),
+            candidate.direct_url.len(),
+            candidate.publisher.len(),
+            candidate.excerpt.len(),
+        ]
+        .into_iter()
+        .try_fold(sum, |sum, bytes| sum.checked_add(bytes as u64))
     });
     if total.is_none_or(|bytes| bytes > request.max_total_bytes) {
+        return Err(PublicResearchError::LimitExceeded);
+    }
+    let encoded_bytes = serde_json::to_vec(&candidates)
+        .map_err(|_| PublicResearchError::LimitExceeded)?
+        .len() as u64;
+    if encoded_bytes > request.max_total_bytes {
         return Err(PublicResearchError::LimitExceeded);
     }
     let mut identities = BTreeSet::new();
@@ -157,6 +204,9 @@ pub fn verify_public_results(
             || !allowed_url(&candidate.direct_url, &request.domains)
             || candidate.accessed_at_epoch_ms == 0
             || candidate.accessed_at_epoch_ms > now_epoch_ms
+            || candidate.published_at_epoch_ms.is_some_and(|published| {
+                published == 0 || published > candidate.accessed_at_epoch_ms
+            })
             || candidate.excerpt.is_empty()
         {
             return Err(PublicResearchError::SourceDenied);
@@ -196,23 +246,19 @@ fn allowed_url(url: &str, domains: &[String]) -> bool {
         return false;
     };
     let host = rest.split(['/', '?', '#']).next().unwrap_or_default();
-    !host.is_empty()
+    // Deliberately restricted lexical prefilter, not a DNS/TLS/SSRF attestation.
+    // The future mediated transport must parse and validate every resolved hop.
+    public_dns_name(host)
         && !url.contains('@')
-        && !url.bytes().any(|byte| byte.is_ascii_control())
-        && (domains.is_empty()
-            || domains
-                .iter()
-                .any(|domain| host == domain || host.ends_with(&format!(".{domain}"))))
+        && !url.contains('\\')
+        && !url
+            .chars()
+            .any(|character| character.is_control() || character.is_whitespace())
+        && (domains.is_empty() || domains.iter().any(|domain| host == domain))
 }
 
 fn valid_domain(value: &str) -> bool {
-    !value.is_empty()
-        && value.len() <= 253
-        && !value.starts_with('.')
-        && !value.ends_with('.')
-        && value
-            .bytes()
-            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-'))
+    public_dns_name(value)
 }
 
 fn valid_id(value: &str) -> bool {
@@ -238,11 +284,67 @@ fn sha256(bytes: &[u8]) -> String {
 mod tests {
     use super::*;
 
+    #[test]
+    fn secrets_and_hidden_metadata_do_not_bypass_bounds() {
+        let query = request();
+        let diagnostic = format!("{query:?}");
+        assert!(!diagnostic.contains(&query.query));
+        assert!(!diagnostic.contains(&query.request_id));
+        let mut secret = request();
+        secret.query = format!("search Bearer {}", "x".repeat(32));
+        assert_eq!(
+            prepare_public_search(secret),
+            Err(PublicResearchError::SecretDenied)
+        );
+        let mut value = candidate(PublicSourceType::PrimaryDocumentation, "metadata");
+        value.title = "x".repeat(4097);
+        assert_eq!(
+            verify_public_results(&request(), vec![value], 1000),
+            Err(PublicResearchError::LimitExceeded)
+        );
+        let mut value = candidate(PublicSourceType::PrimaryDocumentation, "escaping");
+        value.excerpt = "\"".repeat(2200);
+        assert_eq!(
+            verify_public_results(&request(), vec![value], 1000),
+            Err(PublicResearchError::LimitExceeded)
+        );
+    }
+
+    #[test]
+    fn public_url_prefilter_is_exact_and_rejects_ambiguous_hosts() {
+        for url in [
+            "https://127.0.0.1/x",
+            "https://localhost/x",
+            "https://example.gov@evil.com/x",
+            "https://example.gov\\@evil.com",
+            "https://example.gov:443/x",
+            "https://example.gov./x",
+            "https://sub.example.gov/x",
+            "https://example.gov/a b",
+        ] {
+            assert!(!allowed_url(url, &["example.gov".into()]), "{url}");
+        }
+        assert!(allowed_url(
+            "https://example.gov/path?q=public",
+            &["example.gov".into()]
+        ));
+    }
+
+    #[test]
+    fn publication_after_access_cannot_be_admitted_as_current_evidence() {
+        let mut value = candidate(PublicSourceType::PrimaryDocumentation, "future");
+        value.published_at_epoch_ms = Some(value.accessed_at_epoch_ms + 1);
+        assert_eq!(
+            verify_public_results(&request(), vec![value], 3_000_000),
+            Err(PublicResearchError::SourceDenied)
+        );
+    }
+
     fn request() -> PublicSearchRequest {
         PublicSearchRequest {
             request_id: "research-1".to_owned(),
             query: "bounded evidence".to_owned(),
-            domains: vec!["example.gov".to_owned()],
+            domains: vec!["docs.example.gov".to_owned()],
             recency_days: 30,
             source_types: vec![
                 PublicSourceType::PrimaryDocumentation,

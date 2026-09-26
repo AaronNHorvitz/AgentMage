@@ -26,8 +26,12 @@ mod model_install_lifecycle;
 mod model_install_verifier;
 mod model_installer_process;
 mod muse_atem_codec;
+mod native_inference_lease;
 mod native_model_adapter;
+mod native_resource_admission;
 mod native_runtime;
+
+pub use native_resource_admission::NativeDevelopmentResourcePolicy;
 
 pub use docker_guard::{
     DOCKER_GUARD_PROFILE_SHA256, DOCKER_GUARD_PROFILE_SHA256_HEX, DockerEndpointCallerClass,

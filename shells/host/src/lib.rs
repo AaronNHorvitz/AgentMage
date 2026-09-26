@@ -116,6 +116,8 @@ pub mod runtime_ipc;
 pub mod protocol;
 /// Bounded public-search preparation and claim-level citation verification.
 pub mod public_research;
+/// Inert bounded research plans, never outbound authority or a second runtime.
+pub mod research_plan;
 
 /// Native capability registration for the shared runtime tool dispatcher.
 pub mod runtime_tools;

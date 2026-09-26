@@ -231,6 +231,12 @@ pub mod repository_cache;
 pub mod repository_inspection;
 /// Content-minimized repository state, exact Git plans, and owned-worktree lifecycle.
 pub mod repository_safety;
+/// Bounded public research disclosure, destinations and single-owner accounting.
+pub mod research_budget;
+/// Closed authority-free packets for the separately mediated public GET worker.
+pub mod research_fetch;
+/// Bounded inert worker response framing, separate from transport provenance.
+pub mod research_response;
 /// Deterministic compilation of all prerequisites for one genuinely fresh attempt.
 pub mod retry_admission;
 /// Integrity-protected review packets and authority-free logical commit plans.

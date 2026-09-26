@@ -73,6 +73,27 @@ class StrictLocalSourceAuditTests(unittest.TestCase):
             failures,
         )
 
+    def test_research_address_classification_does_not_admit_socket_or_dns_effects(self) -> None:
+        path = "kernel/engine/src/research_budget.rs"
+        self.assertIn(path, self.sources)
+        self.assertIn("use std::net::IpAddr;", self.sources[path])
+        for injected in (
+            "use std::net::TcpStream;",
+            "use std::net::TcpListener;",
+            "use std::net::UdpSocket;",
+            "use std::net::ToSocketAddrs;",
+            "use ureq::Agent;",
+        ):
+            with self.subTest(injected=injected):
+                sources = dict(self.sources)
+                # Place the mutation before the test-only section so a production
+                # network API cannot inherit the address-value exception.
+                sources[path] = injected + "\n" + sources[path]
+                self.assertIn(
+                    f"rust-network-client-api found outside its closed allowlist: {path}",
+                    audit.scan_sources(self.policy, sources),
+                )
+
     def test_vscode_manifest_network_surfaces_are_closed(self) -> None:
         manifest = json.loads(
             (audit.ROOT / "shells/vscode/package.json").read_text(encoding="utf-8")

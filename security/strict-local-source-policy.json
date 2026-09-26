@@ -370,6 +370,7 @@
       "allowed_paths": [
         "capabilities/knowledge/src/connected_connector.rs",
         "kernel/contracts/src/network.rs",
+        "kernel/engine/src/research_budget.rs",
         "platforms/linux-inference/src/docker_guard.rs",
         "platforms/linux-inference/src/docker_guard_service.rs",
         "platforms/linux-inference/src/docker_preflight.rs",

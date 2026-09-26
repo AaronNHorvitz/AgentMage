@@ -1,10 +1,23 @@
 # Standalone Coding Development Harness
 
+The explicit prepared 32K candidate path now repeats its RAM, VRAM and current cgroup-v2
+memory/CPU preflight in Rust, inside the native inference lease and before launch. It uses
+the existing preparation limits and exact platform-observer hash; missing or unbounded
+observations refuse startup. This does not replace the supervised campaign wrapper,
+sampled GPU guard, low priority, deadline or separate model admission. The legacy 8K demo
+does not inherit this development configuration. CPU component and executable-scripted
+verification passed for this AMR increment; a native campaign exercising the changed launch
+path still requires a new scheduled GPU phase. Earlier Muse evidence retains its original pin.
+
 This is the explicit disposable Linux development activation accepted by Decision 0063. It runs
 the actual `agentmage` CLI and ordinary `agentmage-host` process through authenticated private IPC,
 the shared coordinator, native tools, exact grants, Linux confinement, and the deterministic
 verifier. It does not activate production transport or qualify the scripted fixture as a coding
 model.
+
+An unactivated `agentmage code` returns exit 5 with `coding.activation.unavailable`:
+no connection was attempted. A real connection failure remains a transport diagnostic.
+This distinction does not enable production activation or select a model automatically.
 
 ## Build and setup
 

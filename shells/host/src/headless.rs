@@ -99,6 +99,8 @@ pub enum ThinClientError {
     ReplayDenied,
     /// The transport closed, failed, or returned an invalid stream.
     TransportFailed,
+    /// No admitted product coding activation was selected; transport was not attempted.
+    CodingActivationUnavailable,
     /// Cancellation was observed before a terminal verified event.
     Cancelled,
 }
@@ -115,6 +117,7 @@ impl ThinClientError {
             Self::AuthorityDenied => "client.authority.denied",
             Self::ReplayDenied => "client.replay.denied",
             Self::TransportFailed => "client.transport.failed",
+            Self::CodingActivationUnavailable => "coding.activation.unavailable",
             Self::Cancelled => "client.cancelled",
         }
     }
@@ -127,7 +130,9 @@ impl ThinClientError {
             Self::Malformed | Self::InvalidValue => ClientExitCode::InvalidInput,
             Self::VersionMismatch => ClientExitCode::ProtocolMismatch,
             Self::AuthorityDenied | Self::ReplayDenied => ClientExitCode::AuthorityDenied,
-            Self::TransportFailed => ClientExitCode::ServiceUnavailable,
+            Self::TransportFailed | Self::CodingActivationUnavailable => {
+                ClientExitCode::ServiceUnavailable
+            }
             Self::Cancelled => ClientExitCode::Cancelled,
         }
     }
