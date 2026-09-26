@@ -15,6 +15,7 @@ ENGINE = Path("kernel/engine/src/authority_transaction.rs")
 COMMAND_RUNNER = Path("kernel/engine/src/command_runner.rs")
 REPOSITORY_SAFETY = Path("kernel/engine/src/repository_safety.rs")
 REPOSITORY_INSPECTION = Path("kernel/engine/src/repository_inspection.rs")
+RESEARCH_EFFECT_BINDING = Path("kernel/engine/src/research_effect_binding.rs")
 LOCAL_COMMIT = Path("kernel/engine/src/local_commit.rs")
 OPERATIONAL_STORE = Path("kernel/engine/src/operational_store.rs")
 CONFIGURATION = Path("kernel/engine/src/configuration.rs")
@@ -28,6 +29,7 @@ PERMIT_USERS = {
     ENGINE,
     COMMAND_RUNNER,
     REPOSITORY_INSPECTION,
+    RESEARCH_EFFECT_BINDING,
     REPOSITORY_SAFETY,
     LOCAL_COMMIT,
     LINUX_CONFIGURATION,

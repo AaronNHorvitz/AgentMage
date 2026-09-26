@@ -11,6 +11,11 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts import research_dependency_closure as research_closure
+
 CLASSES_PATH = ROOT / "architecture" / "dependency-classes.json"
 CARGO_MANIFESTS = (
     "capabilities/knowledge/Cargo.toml",
@@ -134,6 +139,15 @@ def validate_classes(record: Any, root: Path = ROOT) -> list[str]:
     development = record.get("development")
     packaging = record.get("platform_packaging")
     optional = record.get("optional_later_capabilities")
+    if record.get("public_research_worker") != {
+        "decision_id": "ADR-0084",
+        "cargo_packages": ["ureq@3.4.2", "url@2.5.8"],
+        "feature": "agentmage-platform-linux/public-research-worker",
+        "included_in_default_build": False,
+        "included_in_release": False,
+        "runtime_admitted": False,
+    }:
+        failures.append("isolated research worker dependency class changed")
     if not all(isinstance(item, dict) for item in (production, development, packaging, optional)):
         return [*failures, "every dependency class must be an object"]
 
@@ -207,6 +221,11 @@ def validate_classes(record: Any, root: Path = ROOT) -> list[str]:
         production_dependencies, development_dependencies, build_dependencies = (
             _cargo_dependency_sections(manifest)
         )
+        if relative == research_closure.MANIFEST_PATH:
+            failures.extend(research_closure.validate_topology(manifest))
+            # Remove exactly the separately inventoried optional class. The topology
+            # checker above rejects nonoptional, default, dev/build and target aliases.
+            production_dependencies -= set(research_closure.DEPENDENCIES)
         cargo_production.update(production_dependencies)
         if relative == "shells/host/Cargo.toml":
             if development_dependencies != {"agentmage-platform-linux", "lopdf"}:

@@ -13,6 +13,21 @@ The separate Rust research-budget restriction set freezes quick/deep limits unde
 replay, cancellation and exhausted budgets. Neither component contacts a provider or grants
 network authority; live research remains open pending the mediated effect composition.
 
+An optional Rust worker now implements the public HTTPS transport component under
+Decision 0084. It uses the pinned URL/HTTP/TLS libraries, complete public-address checks,
+numeric-address connections with the original TLS hostname, explicit same-origin redirects,
+and bounded plaintext/ciphertext reads. It has no proxy, cookie, credential, decompression,
+connection-pool or automatic-redirect path. Retrieved instructions remain inert bytes.
+
+The `agentmage-platform-linux/public-research-worker` feature is absent from the default
+production dependency graph and is not enabled by the host. Its exact connected graph is
+separately inventoried, while complete manifest, lockfile and SBOM checks remain in force.
+The worker expects a sealed request projection and native confinement; it is not a supported
+standalone fetch command. The consumed-permit binding is a separate kernel check, not a
+substitute for durable budget reservations or admitted native launch. Parser fixtures do not
+establish real TLS, process cleanup, live provider or model qualification. See the
+[component verification record](../verification/research-worker-component-2026-09-26.md).
+
 Verified results prefer primary documentation, original research, and authoritative records ahead
 of secondary analysis. Every claim-level citation retains its title, direct URL, publisher,
 publication time when known, access point, excerpt digest, freshness result, and a 25-word quotation

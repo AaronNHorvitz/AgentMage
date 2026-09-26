@@ -100,3 +100,20 @@ Library evaluation includes ureq's documented
 [custom transport and resolver](https://docs.rs/ureq/3.4.2/ureq/struct.Agent.html#method.with_parts).
 The final selected dependency versions and enabled features belong in the exact
 manifest/lock inventories and tests, not in an assumption of compatibility with HTTP.
+
+## First component implementation, 2026-09-26
+
+Status: **Accepted under owner delegation, 2026-09-20**. Authority: Decision 0054,
+within the unchanged scope of this decision. Pin `ureq` 3.4.2 (defaults disabled,
+`rustls`) and `url` 2.5.8 (defaults disabled, `std`) in the optional binary's closed
+dependency class. Preserve distinct default and connected normal/build feature
+contexts and the full lock/archive/license catalog. No dependency download or
+repository license change is involved in this increment.
+
+Use fixed `/input/request` sealed read-only input rather than stdin because the
+existing native sandbox uses stdin to install seccomp. Retain the original worker
+deadline for all hops, count informational headers against the header ceiling, and
+bound TLS ciphertext separately from plaintext/body accounting. These choices do
+not admit the worker or change the ordinary offline runner. The
+[component record](../verification/research-worker-component-2026-09-26.md) separates
+parser fixtures from the remaining native/TLS/provider/model gates.

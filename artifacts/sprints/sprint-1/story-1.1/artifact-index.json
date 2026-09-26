@@ -25,7 +25,7 @@
         },
         {
           "path": "platforms/linux/Cargo.toml",
-          "sha256": "a6ed075a2e40f2120402cb2db636e3029b4e2f2f4070b3e2d64be93c9c0c796a"
+          "sha256": "b8aec95285d2de67b37729fa5b52a3983cccb426f0cdc1d3a1a7c40c5e2b2c23"
         },
         {
           "path": "platforms/macos/Package.swift",
@@ -73,7 +73,7 @@
       "files": [
         {
           "path": "Cargo.lock",
-          "sha256": "7c2c11b7d4955e51f451979d05012ccec8859b82b8d87b3f9c224488e727b498"
+          "sha256": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd"
         },
         {
           "path": "package-lock.json",
@@ -85,15 +85,15 @@
         },
         {
           "path": "supply-chain/dependency-hashes.sha256",
-          "sha256": "202228269833f87023e9cb332e38c8ef822a44d9334e53d01bd06d334c6933cb"
+          "sha256": "8862395362b6fbde7673d064743e91d15d7426ffdf7a2c908d3c1a138d8e4b8f"
         },
         {
           "path": "supply-chain/dependency-provenance.json",
-          "sha256": "f8d10ae2ef67ba0cf9b26094f5803ef0a671031d0c2bca265786ee4e0183b4aa"
+          "sha256": "d3c0b505b172a50d9feae85e86ab459b796b23d101442282e3b0354962771e3e"
         },
         {
           "path": "supply-chain/sbom.cdx.json",
-          "sha256": "8e3713dc570c629537bb9c04d279674bf3483734750913d3c8981b56b4f5f967"
+          "sha256": "605e35a5b10e0cd4740a94923646bf605f0b2938e9e839f41e3f8084328e56bb"
         }
       ],
       "task_id": "1.1.2.3"

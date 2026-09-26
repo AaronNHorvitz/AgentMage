@@ -13,6 +13,11 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts import research_dependency_closure as research_closure
+
 POLICY_PATH = ROOT / "security" / "strict-local-source-policy.json"
 SOURCE_SUFFIXES = {".css", ".html", ".js", ".json", ".mjs", ".rs", ".ts"}
 URI = re.compile(r"(?:https?|wss?)://[^\s\"'<>`)\\]+", re.IGNORECASE)
@@ -413,8 +418,15 @@ def audit(policy: dict[str, Any], sources: dict[str, str]) -> list[str]:
     failures.extend(audit_cargo_manifests(policy))
     denied_rust = set(policy["denied_rust_packages"])
     observed_rust = cargo_runtime_packages()
-    observed_rust_names = {identity.rsplit("@", 1)[0] for identity in observed_rust}
-    if denied_rust & observed_rust_names:
+    # The whole lock remains exact below. Only the one reviewed opt-in closure can
+    # contain its pinned HTTP package; the actual default normal/build graph must
+    # still contain none of the denied packages. A failed/missing graph is denial.
+    research_policy = json.loads((ROOT / research_closure.POLICY_PATH).read_text())
+    failures.extend(research_closure.check(ROOT, policy=research_policy))
+    failures.extend(research_closure.validate_worker_sources(sources))
+    default_names = {entry["package"].split("@", 1)[0] for entry in research_policy["default"]}
+    unapproved_names = {identity.rsplit("@", 1)[0] for identity in observed_rust - {"ureq@3.4.2"}}
+    if denied_rust & (default_names | unapproved_names):
         failures.append("denied network-capable Rust dependency is present")
     if observed_rust != set(policy["approved_cargo_packages"]):
         failures.append("reviewed Cargo package closure changed")
@@ -427,7 +439,8 @@ def main() -> int:
     try:
         policy = load_policy()
         failures = audit(policy, source_map(policy))
-    except (OSError, UnicodeError, json.JSONDecodeError, tomllib.TOMLDecodeError, StrictLocalSourceAuditError) as failure:
+    except (OSError, UnicodeError, json.JSONDecodeError, tomllib.TOMLDecodeError,
+            StrictLocalSourceAuditError, research_closure.ResearchClosureError) as failure:
         print(f"strict-local source audit failed: {failure}", file=sys.stderr)
         return 1
     if failures:

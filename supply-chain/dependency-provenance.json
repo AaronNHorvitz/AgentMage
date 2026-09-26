@@ -167,7 +167,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "a1ec3ad289ec4cba7bd083305e998a58ec84349088c7630a9db3853abb307295"
+          "content": "b5f275dedc770340f49b71c7eb2a44774b2f073a5f62f45141abae1590af44be"
         }
       ],
       "integrity": null,
@@ -207,7 +207,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "b5a44607c09260080f00c44fe7f597c7c95249225c09b0aebac580f37b50b5f5"
+          "content": "5ec4679ae9cd749f190a263da2c578e061ee3275721731c2159ccba1149f1011"
         }
       ],
       "integrity": null,
@@ -279,6 +279,26 @@
         "url": "https://crates.io/crates/aho-corasick/1.1.5"
       },
       "version": "1.1.5"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:base64@0.23.1",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "ac07cdecf99051d9a5238b80f35af32cdeba5b336e55d957b318b50137e18da5"
+        }
+      ],
+      "integrity": "sha256:ac07cdecf99051d9a5238b80f35af32cdeba5b336e55d957b318b50137e18da5",
+      "license": "MIT OR Apache-2.0",
+      "name": "base64",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/base64/0.23.1"
+      },
+      "version": "0.23.1"
     },
     {
       "classification": "production",
@@ -359,6 +379,26 @@
         "url": "https://crates.io/crates/block-padding/0.4.2"
       },
       "version": "0.4.2"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:bytes@1.12.1",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
+        }
+      ],
+      "integrity": "sha256:fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04",
+      "license": "MIT",
+      "name": "bytes",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/bytes/1.12.1"
+      },
+      "version": "1.12.1"
     },
     {
       "classification": "production",
@@ -742,6 +782,26 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:displaydoc@0.2.7",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "c6232dd377dcc64799954cbd3a9bb882e9cdc1308ccd87b1c098f1fb2eaf82a8"
+        }
+      ],
+      "integrity": "sha256:c6232dd377dcc64799954cbd3a9bb882e9cdc1308ccd87b1c098f1fb2eaf82a8",
+      "license": "MIT OR Apache-2.0",
+      "name": "displaydoc",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/displaydoc/0.2.7"
+      },
+      "version": "0.2.7"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:ecb@0.2.0",
       "ecosystem": "cargo",
       "hashes": [
@@ -962,6 +1022,26 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:form_urlencoded@1.2.2",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "cb4cb245038516f5f85277875cdaa4f7d2c9a0fa0468de06ed190163b1581fcf"
+        }
+      ],
+      "integrity": "sha256:cb4cb245038516f5f85277875cdaa4f7d2c9a0fa0468de06ed190163b1581fcf",
+      "license": "MIT OR Apache-2.0",
+      "name": "form_urlencoded",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/form_urlencoded/1.2.2"
+      },
+      "version": "1.2.2"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:generic-array@0.14.7",
       "ecosystem": "cargo",
       "hashes": [
@@ -979,6 +1059,26 @@
         "url": "https://crates.io/crates/generic-array/0.14.7"
       },
       "version": "0.14.7"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:getrandom@0.2.17",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "ff2abc00be7fca6ebc474524697ae276ad847ad0a6b3faa4bcb027e9a4614ad0"
+        }
+      ],
+      "integrity": "sha256:ff2abc00be7fca6ebc474524697ae276ad847ad0a6b3faa4bcb027e9a4614ad0",
+      "license": "MIT OR Apache-2.0",
+      "name": "getrandom",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/getrandom/0.2.17"
+      },
+      "version": "0.2.17"
     },
     {
       "classification": "production",
@@ -1062,6 +1162,46 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:http@1.5.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "918d3568bebf352712bc2ef3d46a8bcf1a75b373be6539de198e9105cbbf9ce0"
+        }
+      ],
+      "integrity": "sha256:918d3568bebf352712bc2ef3d46a8bcf1a75b373be6539de198e9105cbbf9ce0",
+      "license": "MIT OR Apache-2.0",
+      "name": "http",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/http/1.5.0"
+      },
+      "version": "1.5.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:httparse@1.10.1",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
+        }
+      ],
+      "integrity": "sha256:6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87",
+      "license": "MIT OR Apache-2.0",
+      "name": "httparse",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/httparse/1.10.1"
+      },
+      "version": "1.10.1"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:hybrid-array@0.4.14",
       "ecosystem": "cargo",
       "hashes": [
@@ -1079,6 +1219,186 @@
         "url": "https://crates.io/crates/hybrid-array/0.4.14"
       },
       "version": "0.4.14"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:icu_collections@2.3.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "fa68d21081c4a05d5a901a1c62add574c77048b6a1c67be3b50ce0b60d4ca513"
+        }
+      ],
+      "integrity": "sha256:fa68d21081c4a05d5a901a1c62add574c77048b6a1c67be3b50ce0b60d4ca513",
+      "license": "Unicode-3.0",
+      "name": "icu_collections",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/icu_collections/2.3.0"
+      },
+      "version": "2.3.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:icu_locale_core@2.3.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "d56e28588da92eee5c3201a6eff33fabdd49b62269c8938d4ff050ce4d900deb"
+        }
+      ],
+      "integrity": "sha256:d56e28588da92eee5c3201a6eff33fabdd49b62269c8938d4ff050ce4d900deb",
+      "license": "Unicode-3.0",
+      "name": "icu_locale_core",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/icu_locale_core/2.3.0"
+      },
+      "version": "2.3.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:icu_normalizer@2.3.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "12f9cf5f235641ed274641dd81c3f28d870e276763d0797aeeab72317b1c646f"
+        }
+      ],
+      "integrity": "sha256:12f9cf5f235641ed274641dd81c3f28d870e276763d0797aeeab72317b1c646f",
+      "license": "Unicode-3.0",
+      "name": "icu_normalizer",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/icu_normalizer/2.3.0"
+      },
+      "version": "2.3.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:icu_normalizer_data@2.3.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "1563da1ed3e0b3bf3d74c9b85917ac9c56464d2f57242270c09c9e752f8021a0"
+        }
+      ],
+      "integrity": "sha256:1563da1ed3e0b3bf3d74c9b85917ac9c56464d2f57242270c09c9e752f8021a0",
+      "license": "Unicode-3.0",
+      "name": "icu_normalizer_data",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/icu_normalizer_data/2.3.0"
+      },
+      "version": "2.3.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:icu_properties@2.3.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "7e7ca276ad3145661a65914e6daf131ca5120cd3dcee8f8f3214b8875184a148"
+        }
+      ],
+      "integrity": "sha256:7e7ca276ad3145661a65914e6daf131ca5120cd3dcee8f8f3214b8875184a148",
+      "license": "Unicode-3.0",
+      "name": "icu_properties",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/icu_properties/2.3.0"
+      },
+      "version": "2.3.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:icu_properties_data@2.3.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "e590f038c1464a96894fd6d10127e90a8be4509f56ff7ecef851b15cee0b7caa"
+        }
+      ],
+      "integrity": "sha256:e590f038c1464a96894fd6d10127e90a8be4509f56ff7ecef851b15cee0b7caa",
+      "license": "Unicode-3.0",
+      "name": "icu_properties_data",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/icu_properties_data/2.3.0"
+      },
+      "version": "2.3.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:icu_provider@2.3.1",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "d27bbb9d3abbefac45d55f647c9de1d44aafcd1186eb91879afef17c396c3e73"
+        }
+      ],
+      "integrity": "sha256:d27bbb9d3abbefac45d55f647c9de1d44aafcd1186eb91879afef17c396c3e73",
+      "license": "Unicode-3.0",
+      "name": "icu_provider",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/icu_provider/2.3.1"
+      },
+      "version": "2.3.1"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:idna@1.1.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "3b0875f23caa03898994f6ddc501886a45c7d3d62d04d2d90788d47be1b1e4de"
+        }
+      ],
+      "integrity": "sha256:3b0875f23caa03898994f6ddc501886a45c7d3d62d04d2d90788d47be1b1e4de",
+      "license": "MIT OR Apache-2.0",
+      "name": "idna",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/idna/1.1.0"
+      },
+      "version": "1.1.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:idna_adapter@1.2.2",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "cb68373c0d6620ef8105e855e7745e18b0d00d3bdb07fb532e434244cdb9a714"
+        }
+      ],
+      "integrity": "sha256:cb68373c0d6620ef8105e855e7745e18b0d00d3bdb07fb532e434244cdb9a714",
+      "license": "Apache-2.0 OR MIT",
+      "name": "idna_adapter",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/idna_adapter/1.2.2"
+      },
+      "version": "1.2.2"
     },
     {
       "classification": "production",
@@ -1202,6 +1522,26 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:litemap@0.8.3",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "47d9d19d1d6efa0109d2f65ff4c85cddd50bd572e5a00127ab10987290bcefae"
+        }
+      ],
+      "integrity": "sha256:47d9d19d1d6efa0109d2f65ff4c85cddd50bd572e5a00127ab10987290bcefae",
+      "license": "Unicode-3.0",
+      "name": "litemap",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/litemap/0.8.3"
+      },
+      "version": "0.8.3"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:log@0.4.33",
       "ecosystem": "cargo",
       "hashes": [
@@ -1322,6 +1662,46 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:once_cell@1.21.4",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
+        }
+      ],
+      "integrity": "sha256:9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50",
+      "license": "MIT OR Apache-2.0",
+      "name": "once_cell",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/once_cell/1.21.4"
+      },
+      "version": "1.21.4"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:percent-encoding@2.3.2",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
+        }
+      ],
+      "integrity": "sha256:9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220",
+      "license": "MIT OR Apache-2.0",
+      "name": "percent-encoding",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/percent-encoding/2.3.2"
+      },
+      "version": "2.3.2"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:pkg-config@0.3.33",
       "ecosystem": "cargo",
       "hashes": [
@@ -1359,6 +1739,26 @@
         "url": "https://crates.io/crates/poly1305/0.9.1"
       },
       "version": "0.9.1"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:potential_utf@0.1.6",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "d83eb9bc6d8e5cf568e7a1101d60ee05e81ed50ea106026f3d18deeb046d7661"
+        }
+      ],
+      "integrity": "sha256:d83eb9bc6d8e5cf568e7a1101d60ee05e81ed50ea106026f3d18deeb046d7661",
+      "license": "Unicode-3.0",
+      "name": "potential_utf",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/potential_utf/0.1.6"
+      },
+      "version": "0.1.6"
     },
     {
       "classification": "production",
@@ -1562,6 +1962,26 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:ring@0.17.14",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "a4689e6c2294d81e88dc6261c768b63bc4fcdb852be6d1352498b114f61383b7"
+        }
+      ],
+      "integrity": "sha256:a4689e6c2294d81e88dc6261c768b63bc4fcdb852be6d1352498b114f61383b7",
+      "license": "Apache-2.0 AND ISC",
+      "name": "ring",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/ring/0.17.14"
+      },
+      "version": "0.17.14"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:rusqlite@0.40.2",
       "ecosystem": "cargo",
       "hashes": [
@@ -1619,6 +2039,66 @@
         "url": "https://crates.io/crates/rustix/1.1.4"
       },
       "version": "1.1.4"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:rustls-pki-types@1.15.1",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "2f4925028c7eb5d1fcdaf196971378ed9d2c1c4efc7dc5d011256f76c99c0a96"
+        }
+      ],
+      "integrity": "sha256:2f4925028c7eb5d1fcdaf196971378ed9d2c1c4efc7dc5d011256f76c99c0a96",
+      "license": "MIT OR Apache-2.0",
+      "name": "rustls-pki-types",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/rustls-pki-types/1.15.1"
+      },
+      "version": "1.15.1"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:rustls-webpki@0.103.15",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "f3c3cf1d8b1e7d4927e2d154c3fcb02979afb9939629c62cd9048d4f07b60ac2"
+        }
+      ],
+      "integrity": "sha256:f3c3cf1d8b1e7d4927e2d154c3fcb02979afb9939629c62cd9048d4f07b60ac2",
+      "license": "ISC",
+      "name": "rustls-webpki",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/rustls-webpki/0.103.15"
+      },
+      "version": "0.103.15"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:rustls@0.23.45",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "0d41d731c7d2f962d1ccc364cec258de3c0e93b38c2fb3ba97ac74513048d634"
+        }
+      ],
+      "integrity": "sha256:0d41d731c7d2f962d1ccc364cec258de3c0e93b38c2fb3ba97ac74513048d634",
+      "license": "Apache-2.0 OR ISC OR MIT",
+      "name": "rustls",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/rustls/0.23.45"
+      },
+      "version": "0.23.45"
     },
     {
       "classification": "production",
@@ -1902,6 +2382,26 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:stable_deref_trait@1.2.1",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
+        }
+      ],
+      "integrity": "sha256:6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596",
+      "license": "MIT OR Apache-2.0",
+      "name": "stable_deref_trait",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/stable_deref_trait/1.2.1"
+      },
+      "version": "1.2.1"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:streaming-iterator@0.1.9",
       "ecosystem": "cargo",
       "hashes": [
@@ -2002,6 +2502,26 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:synstructure@0.14.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "901704edd0dfe137f1987838ee4f259e4e063c31371bdb423f7ae38ec6f77f02"
+        }
+      ],
+      "integrity": "sha256:901704edd0dfe137f1987838ee4f259e4e063c31371bdb423f7ae38ec6f77f02",
+      "license": "MIT",
+      "name": "synstructure",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/synstructure/0.14.0"
+      },
+      "version": "0.14.0"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:thiserror-impl@2.0.20",
       "ecosystem": "cargo",
       "hashes": [
@@ -2039,6 +2559,26 @@
         "url": "https://crates.io/crates/thiserror/2.0.20"
       },
       "version": "2.0.20"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:tinystr@0.8.4",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "b1e27c91459209c2986af3dcf603a5a74a4368754ce37414f59acc971167f643"
+        }
+      ],
+      "integrity": "sha256:b1e27c91459209c2986af3dcf603a5a74a4368754ce37414f59acc971167f643",
+      "license": "Unicode-3.0",
+      "name": "tinystr",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/tinystr/0.8.4"
+      },
+      "version": "0.8.4"
     },
     {
       "classification": "production",
@@ -2362,6 +2902,126 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:untrusted@0.9.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
+        }
+      ],
+      "integrity": "sha256:8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1",
+      "license": "ISC",
+      "name": "untrusted",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/untrusted/0.9.0"
+      },
+      "version": "0.9.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:ureq-proto@0.6.4",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "f86fd172ccca569e458f61b6bdd6220965a9ef36e672a6852953b51a0e1583be"
+        }
+      ],
+      "integrity": "sha256:f86fd172ccca569e458f61b6bdd6220965a9ef36e672a6852953b51a0e1583be",
+      "license": "MIT OR Apache-2.0",
+      "name": "ureq-proto",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/ureq-proto/0.6.4"
+      },
+      "version": "0.6.4"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:ureq@3.4.2",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "9a7ac20be9b7726e0bbdbf974c059676d9acb1cd414961f570a4e8231cacd7fc"
+        }
+      ],
+      "integrity": "sha256:9a7ac20be9b7726e0bbdbf974c059676d9acb1cd414961f570a4e8231cacd7fc",
+      "license": "MIT OR Apache-2.0",
+      "name": "ureq",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/ureq/3.4.2"
+      },
+      "version": "3.4.2"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:url@2.5.8",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "ff67a8a4397373c3ef660812acab3268222035010ab8680ec4215f38ba3d0eed"
+        }
+      ],
+      "integrity": "sha256:ff67a8a4397373c3ef660812acab3268222035010ab8680ec4215f38ba3d0eed",
+      "license": "MIT OR Apache-2.0",
+      "name": "url",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/url/2.5.8"
+      },
+      "version": "2.5.8"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:utf8-zero@0.8.1",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "b8c0a043c9540bae7c578c88f91dda8bd82e59ae27c21baca69c8b191aaf5a6e"
+        }
+      ],
+      "integrity": "sha256:b8c0a043c9540bae7c578c88f91dda8bd82e59ae27c21baca69c8b191aaf5a6e",
+      "license": "MIT OR Apache-2.0",
+      "name": "utf8-zero",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/utf8-zero/0.8.1"
+      },
+      "version": "0.8.1"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:utf8_iter@1.0.4",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
+        }
+      ],
+      "integrity": "sha256:b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be",
+      "license": "Apache-2.0 OR MIT",
+      "name": "utf8_iter",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/utf8_iter/1.0.4"
+      },
+      "version": "1.0.4"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:vcpkg@0.2.15",
       "ecosystem": "cargo",
       "hashes": [
@@ -2399,6 +3059,46 @@
         "url": "https://crates.io/crates/version_check/0.9.5"
       },
       "version": "0.9.5"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:wasi@0.11.1+wasi-snapshot-preview1",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "ccf3ec651a847eb01de73ccad15eb7d99f80485de043efb2f370cd654f4ea44b"
+        }
+      ],
+      "integrity": "sha256:ccf3ec651a847eb01de73ccad15eb7d99f80485de043efb2f370cd654f4ea44b",
+      "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "name": "wasi",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/wasi/0.11.1%2Bwasi-snapshot-preview1"
+      },
+      "version": "0.11.1+wasi-snapshot-preview1"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:webpki-roots@1.0.9",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "7dcd9d09a39985f5344844e66b0c530a33843579125f23e21e9f0f220850f22a"
+        }
+      ],
+      "integrity": "sha256:7dcd9d09a39985f5344844e66b0c530a33843579125f23e21e9f0f220850f22a",
+      "license": "CDLA-Permissive-2.0",
+      "name": "webpki-roots",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/webpki-roots/1.0.9"
+      },
+      "version": "1.0.9"
     },
     {
       "classification": "production",
@@ -2442,6 +3142,26 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:windows-sys@0.52.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "282be5f36a8ce781fad8c8ae18fa3f9beff57ec1b52cb3de0789201425d9a33d"
+        }
+      ],
+      "integrity": "sha256:282be5f36a8ce781fad8c8ae18fa3f9beff57ec1b52cb3de0789201425d9a33d",
+      "license": "MIT OR Apache-2.0",
+      "name": "windows-sys",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/windows-sys/0.52.0"
+      },
+      "version": "0.52.0"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:windows-sys@0.61.2",
       "ecosystem": "cargo",
       "hashes": [
@@ -2462,6 +3182,286 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:windows-targets@0.52.6",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "9b724f72796e036ab90c1021d4780d4d3d648aca59e491e6b98e725b84e99973"
+        }
+      ],
+      "integrity": "sha256:9b724f72796e036ab90c1021d4780d4d3d648aca59e491e6b98e725b84e99973",
+      "license": "MIT OR Apache-2.0",
+      "name": "windows-targets",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/windows-targets/0.52.6"
+      },
+      "version": "0.52.6"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:windows_aarch64_gnullvm@0.52.6",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "32a4622180e7a0ec044bb555404c800bc9fd9ec262ec147edd5989ccd0c02cd3"
+        }
+      ],
+      "integrity": "sha256:32a4622180e7a0ec044bb555404c800bc9fd9ec262ec147edd5989ccd0c02cd3",
+      "license": "MIT OR Apache-2.0",
+      "name": "windows_aarch64_gnullvm",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/windows_aarch64_gnullvm/0.52.6"
+      },
+      "version": "0.52.6"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:windows_aarch64_msvc@0.52.6",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "09ec2a7bb152e2252b53fa7803150007879548bc709c039df7627cabbd05d469"
+        }
+      ],
+      "integrity": "sha256:09ec2a7bb152e2252b53fa7803150007879548bc709c039df7627cabbd05d469",
+      "license": "MIT OR Apache-2.0",
+      "name": "windows_aarch64_msvc",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/windows_aarch64_msvc/0.52.6"
+      },
+      "version": "0.52.6"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:windows_i686_gnu@0.52.6",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "8e9b5ad5ab802e97eb8e295ac6720e509ee4c243f69d781394014ebfe8bbfa0b"
+        }
+      ],
+      "integrity": "sha256:8e9b5ad5ab802e97eb8e295ac6720e509ee4c243f69d781394014ebfe8bbfa0b",
+      "license": "MIT OR Apache-2.0",
+      "name": "windows_i686_gnu",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/windows_i686_gnu/0.52.6"
+      },
+      "version": "0.52.6"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:windows_i686_gnullvm@0.52.6",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "0eee52d38c090b3caa76c563b86c3a4bd71ef1a819287c19d586d7334ae8ed66"
+        }
+      ],
+      "integrity": "sha256:0eee52d38c090b3caa76c563b86c3a4bd71ef1a819287c19d586d7334ae8ed66",
+      "license": "MIT OR Apache-2.0",
+      "name": "windows_i686_gnullvm",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/windows_i686_gnullvm/0.52.6"
+      },
+      "version": "0.52.6"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:windows_i686_msvc@0.52.6",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "240948bc05c5e7c6dabba28bf89d89ffce3e303022809e73deaefe4f6ec56c66"
+        }
+      ],
+      "integrity": "sha256:240948bc05c5e7c6dabba28bf89d89ffce3e303022809e73deaefe4f6ec56c66",
+      "license": "MIT OR Apache-2.0",
+      "name": "windows_i686_msvc",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/windows_i686_msvc/0.52.6"
+      },
+      "version": "0.52.6"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:windows_x86_64_gnu@0.52.6",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "147a5c80aabfbf0c7d901cb5895d1de30ef2907eb21fbbab29ca94c5b08b1a78"
+        }
+      ],
+      "integrity": "sha256:147a5c80aabfbf0c7d901cb5895d1de30ef2907eb21fbbab29ca94c5b08b1a78",
+      "license": "MIT OR Apache-2.0",
+      "name": "windows_x86_64_gnu",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/windows_x86_64_gnu/0.52.6"
+      },
+      "version": "0.52.6"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:windows_x86_64_gnullvm@0.52.6",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "24d5b23dc417412679681396f2b49f3de8c1473deb516bd34410872eff51ed0d"
+        }
+      ],
+      "integrity": "sha256:24d5b23dc417412679681396f2b49f3de8c1473deb516bd34410872eff51ed0d",
+      "license": "MIT OR Apache-2.0",
+      "name": "windows_x86_64_gnullvm",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/windows_x86_64_gnullvm/0.52.6"
+      },
+      "version": "0.52.6"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:windows_x86_64_msvc@0.52.6",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
+        }
+      ],
+      "integrity": "sha256:589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec",
+      "license": "MIT OR Apache-2.0",
+      "name": "windows_x86_64_msvc",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/windows_x86_64_msvc/0.52.6"
+      },
+      "version": "0.52.6"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:writeable@0.6.4",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "3ad82d2a33cdc9674dc7465672f271e096168fcdbe0f799d9e6db8c5892679dc"
+        }
+      ],
+      "integrity": "sha256:3ad82d2a33cdc9674dc7465672f271e096168fcdbe0f799d9e6db8c5892679dc",
+      "license": "Unicode-3.0",
+      "name": "writeable",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/writeable/0.6.4"
+      },
+      "version": "0.6.4"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:yoke-derive@0.8.3",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "33811428bee40dbceb6d545e95754741d17a6aef9a4849f0fd62e2ba4f412a78"
+        }
+      ],
+      "integrity": "sha256:33811428bee40dbceb6d545e95754741d17a6aef9a4849f0fd62e2ba4f412a78",
+      "license": "Unicode-3.0",
+      "name": "yoke-derive",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/yoke-derive/0.8.3"
+      },
+      "version": "0.8.3"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:yoke@0.8.3",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "709fe23a0424b6a435d82152b1bd3fdfb0833487d5fa90d05d42762a9891fef5"
+        }
+      ],
+      "integrity": "sha256:709fe23a0424b6a435d82152b1bd3fdfb0833487d5fa90d05d42762a9891fef5",
+      "license": "Unicode-3.0",
+      "name": "yoke",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/yoke/0.8.3"
+      },
+      "version": "0.8.3"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:zerofrom-derive@0.1.8",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "f75b4683f6c7f45248d4d64056a24298c6281e0993356d7d1b4a1a962ef10d4a"
+        }
+      ],
+      "integrity": "sha256:f75b4683f6c7f45248d4d64056a24298c6281e0993356d7d1b4a1a962ef10d4a",
+      "license": "Unicode-3.0",
+      "name": "zerofrom-derive",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/zerofrom-derive/0.1.8"
+      },
+      "version": "0.1.8"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:zerofrom@0.1.8",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "0ec05a11813ea801ff6d75110ad09cd0824ddba17dfe17128ea0d5f68e6c5272"
+        }
+      ],
+      "integrity": "sha256:0ec05a11813ea801ff6d75110ad09cd0824ddba17dfe17128ea0d5f68e6c5272",
+      "license": "Unicode-3.0",
+      "name": "zerofrom",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/zerofrom/0.1.8"
+      },
+      "version": "0.1.8"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:zeroize@1.9.0",
       "ecosystem": "cargo",
       "hashes": [
@@ -2479,6 +3479,66 @@
         "url": "https://crates.io/crates/zeroize/1.9.0"
       },
       "version": "1.9.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:zerotrie@0.2.5",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "4ea269c3bd32f0a32c321907a2ae912ba6f4649bb0fc764a15627e99a7095a3f"
+        }
+      ],
+      "integrity": "sha256:4ea269c3bd32f0a32c321907a2ae912ba6f4649bb0fc764a15627e99a7095a3f",
+      "license": "Unicode-3.0",
+      "name": "zerotrie",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/zerotrie/0.2.5"
+      },
+      "version": "0.2.5"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:zerovec-derive@0.11.6",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "34df6fc39dbd26ddc9c10e6a2984476e13acce22e64e4487636ef494369225da"
+        }
+      ],
+      "integrity": "sha256:34df6fc39dbd26ddc9c10e6a2984476e13acce22e64e4487636ef494369225da",
+      "license": "Unicode-3.0",
+      "name": "zerovec-derive",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/zerovec-derive/0.11.6"
+      },
+      "version": "0.11.6"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:zerovec@0.11.8",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "bb0464e17806c1d976d5cba29399c7f08e516e279e2ba493f63123b5fca67dd8"
+        }
+      ],
+      "integrity": "sha256:bb0464e17806c1d976d5cba29399c7f08e516e279e2ba493f63123b5fca67dd8",
+      "license": "Unicode-3.0",
+      "name": "zerovec",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/zerovec/0.11.8"
+      },
+      "version": "0.11.8"
     },
     {
       "classification": "production",
@@ -10127,6 +11187,8 @@
         "cargo:serde_json@1.0.151",
         "cargo:sha1@0.10.6",
         "cargo:sha2@0.11.0",
+        "cargo:ureq@3.4.2",
+        "cargo:url@2.5.8",
         "cargo:zeroize@1.9.0"
       ]
     },
@@ -10153,6 +11215,10 @@
       ]
     },
     {
+      "component_id": "cargo:base64@0.23.1",
+      "depends_on": []
+    },
+    {
       "component_id": "cargo:bitflags@2.13.1",
       "depends_on": []
     },
@@ -10173,6 +11239,10 @@
       "depends_on": [
         "cargo:hybrid-array@0.4.14"
       ]
+    },
+    {
+      "component_id": "cargo:bytes@1.12.1",
+      "depends_on": []
     },
     {
       "component_id": "cargo:cbc@0.2.1",
@@ -10306,6 +11376,14 @@
       ]
     },
     {
+      "component_id": "cargo:displaydoc@0.2.7",
+      "depends_on": [
+        "cargo:proc-macro2@1.0.107",
+        "cargo:quote@1.0.47",
+        "cargo:syn@3.0.3"
+      ]
+    },
+    {
       "component_id": "cargo:ecb@0.2.0",
       "depends_on": [
         "cargo:cipher@0.5.2"
@@ -10370,10 +11448,24 @@
       ]
     },
     {
+      "component_id": "cargo:form_urlencoded@1.2.2",
+      "depends_on": [
+        "cargo:percent-encoding@2.3.2"
+      ]
+    },
+    {
       "component_id": "cargo:generic-array@0.14.7",
       "depends_on": [
         "cargo:typenum@1.20.1",
         "cargo:version_check@0.9.5"
+      ]
+    },
+    {
+      "component_id": "cargo:getrandom@0.2.17",
+      "depends_on": [
+        "cargo:cfg-if@1.0.4",
+        "cargo:libc@0.2.189",
+        "cargo:wasi@0.11.1+wasi-snapshot-preview1"
       ]
     },
     {
@@ -10402,9 +11494,99 @@
       ]
     },
     {
+      "component_id": "cargo:http@1.5.0",
+      "depends_on": [
+        "cargo:bytes@1.12.1",
+        "cargo:itoa@1.0.18"
+      ]
+    },
+    {
+      "component_id": "cargo:httparse@1.10.1",
+      "depends_on": []
+    },
+    {
       "component_id": "cargo:hybrid-array@0.4.14",
       "depends_on": [
         "cargo:typenum@1.20.1"
+      ]
+    },
+    {
+      "component_id": "cargo:icu_collections@2.3.0",
+      "depends_on": [
+        "cargo:displaydoc@0.2.7",
+        "cargo:potential_utf@0.1.6",
+        "cargo:utf8_iter@1.0.4",
+        "cargo:yoke@0.8.3",
+        "cargo:zerofrom@0.1.8",
+        "cargo:zerovec@0.11.8"
+      ]
+    },
+    {
+      "component_id": "cargo:icu_locale_core@2.3.0",
+      "depends_on": [
+        "cargo:displaydoc@0.2.7",
+        "cargo:litemap@0.8.3",
+        "cargo:tinystr@0.8.4",
+        "cargo:writeable@0.6.4",
+        "cargo:zerovec@0.11.8"
+      ]
+    },
+    {
+      "component_id": "cargo:icu_normalizer@2.3.0",
+      "depends_on": [
+        "cargo:icu_collections@2.3.0",
+        "cargo:icu_normalizer_data@2.3.0",
+        "cargo:icu_properties@2.3.0",
+        "cargo:icu_provider@2.3.1",
+        "cargo:smallvec@1.15.2",
+        "cargo:zerovec@0.11.8"
+      ]
+    },
+    {
+      "component_id": "cargo:icu_normalizer_data@2.3.0",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:icu_properties@2.3.0",
+      "depends_on": [
+        "cargo:displaydoc@0.2.7",
+        "cargo:icu_collections@2.3.0",
+        "cargo:icu_locale_core@2.3.0",
+        "cargo:icu_properties_data@2.3.0",
+        "cargo:icu_provider@2.3.1",
+        "cargo:zerotrie@0.2.5",
+        "cargo:zerovec@0.11.8"
+      ]
+    },
+    {
+      "component_id": "cargo:icu_properties_data@2.3.0",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:icu_provider@2.3.1",
+      "depends_on": [
+        "cargo:displaydoc@0.2.7",
+        "cargo:icu_locale_core@2.3.0",
+        "cargo:writeable@0.6.4",
+        "cargo:yoke@0.8.3",
+        "cargo:zerofrom@0.1.8",
+        "cargo:zerotrie@0.2.5",
+        "cargo:zerovec@0.11.8"
+      ]
+    },
+    {
+      "component_id": "cargo:idna@1.1.0",
+      "depends_on": [
+        "cargo:idna_adapter@1.2.2",
+        "cargo:smallvec@1.15.2",
+        "cargo:utf8_iter@1.0.4"
+      ]
+    },
+    {
+      "component_id": "cargo:idna_adapter@1.2.2",
+      "depends_on": [
+        "cargo:icu_normalizer@2.3.0",
+        "cargo:icu_properties@2.3.0"
       ]
     },
     {
@@ -10439,6 +11621,10 @@
     },
     {
       "component_id": "cargo:linux-raw-sys@0.12.1",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:litemap@0.8.3",
       "depends_on": []
     },
     {
@@ -10493,6 +11679,14 @@
       ]
     },
     {
+      "component_id": "cargo:once_cell@1.21.4",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:percent-encoding@2.3.2",
+      "depends_on": []
+    },
+    {
       "component_id": "cargo:pkg-config@0.3.33",
       "depends_on": []
     },
@@ -10501,6 +11695,12 @@
       "depends_on": [
         "cargo:cpufeatures@0.3.0",
         "cargo:universal-hash@0.6.1"
+      ]
+    },
+    {
+      "component_id": "cargo:potential_utf@0.1.6",
+      "depends_on": [
+        "cargo:zerovec@0.11.8"
       ]
     },
     {
@@ -10563,6 +11763,17 @@
       ]
     },
     {
+      "component_id": "cargo:ring@0.17.14",
+      "depends_on": [
+        "cargo:cc@1.4.2",
+        "cargo:cfg-if@1.0.4",
+        "cargo:getrandom@0.2.17",
+        "cargo:libc@0.2.189",
+        "cargo:untrusted@0.9.0",
+        "cargo:windows-sys@0.52.0"
+      ]
+    },
+    {
       "component_id": "cargo:rusqlite@0.40.2",
       "depends_on": [
         "cargo:bitflags@2.13.1",
@@ -10586,6 +11797,32 @@
         "cargo:libc@0.2.189",
         "cargo:linux-raw-sys@0.12.1",
         "cargo:windows-sys@0.61.2"
+      ]
+    },
+    {
+      "component_id": "cargo:rustls-pki-types@1.15.1",
+      "depends_on": [
+        "cargo:zeroize@1.9.0"
+      ]
+    },
+    {
+      "component_id": "cargo:rustls-webpki@0.103.15",
+      "depends_on": [
+        "cargo:ring@0.17.14",
+        "cargo:rustls-pki-types@1.15.1",
+        "cargo:untrusted@0.9.0"
+      ]
+    },
+    {
+      "component_id": "cargo:rustls@0.23.45",
+      "depends_on": [
+        "cargo:log@0.4.33",
+        "cargo:once_cell@1.21.4",
+        "cargo:ring@0.17.14",
+        "cargo:rustls-pki-types@1.15.1",
+        "cargo:rustls-webpki@0.103.15",
+        "cargo:subtle@2.6.1",
+        "cargo:zeroize@1.9.0"
       ]
     },
     {
@@ -10679,6 +11916,10 @@
       "depends_on": []
     },
     {
+      "component_id": "cargo:stable_deref_trait@1.2.1",
+      "depends_on": []
+    },
+    {
       "component_id": "cargo:streaming-iterator@0.1.9",
       "depends_on": []
     },
@@ -10711,6 +11952,14 @@
       ]
     },
     {
+      "component_id": "cargo:synstructure@0.14.0",
+      "depends_on": [
+        "cargo:proc-macro2@1.0.107",
+        "cargo:quote@1.0.47",
+        "cargo:syn@3.0.3"
+      ]
+    },
+    {
       "component_id": "cargo:thiserror-impl@2.0.20",
       "depends_on": [
         "cargo:proc-macro2@1.0.107",
@@ -10722,6 +11971,13 @@
       "component_id": "cargo:thiserror@2.0.20",
       "depends_on": [
         "cargo:thiserror-impl@2.0.20"
+      ]
+    },
+    {
+      "component_id": "cargo:tinystr@0.8.4",
+      "depends_on": [
+        "cargo:displaydoc@0.2.7",
+        "cargo:zerovec@0.11.8"
       ]
     },
     {
@@ -10818,12 +12074,65 @@
       ]
     },
     {
+      "component_id": "cargo:untrusted@0.9.0",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:ureq-proto@0.6.4",
+      "depends_on": [
+        "cargo:base64@0.23.1",
+        "cargo:http@1.5.0",
+        "cargo:httparse@1.10.1",
+        "cargo:log@0.4.33"
+      ]
+    },
+    {
+      "component_id": "cargo:ureq@3.4.2",
+      "depends_on": [
+        "cargo:base64@0.23.1",
+        "cargo:log@0.4.33",
+        "cargo:percent-encoding@2.3.2",
+        "cargo:rustls-pki-types@1.15.1",
+        "cargo:rustls@0.23.45",
+        "cargo:ureq-proto@0.6.4",
+        "cargo:utf8-zero@0.8.1",
+        "cargo:webpki-roots@1.0.9"
+      ]
+    },
+    {
+      "component_id": "cargo:url@2.5.8",
+      "depends_on": [
+        "cargo:form_urlencoded@1.2.2",
+        "cargo:idna@1.1.0",
+        "cargo:percent-encoding@2.3.2",
+        "cargo:serde@1.0.229"
+      ]
+    },
+    {
+      "component_id": "cargo:utf8-zero@0.8.1",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:utf8_iter@1.0.4",
+      "depends_on": []
+    },
+    {
       "component_id": "cargo:vcpkg@0.2.15",
       "depends_on": []
     },
     {
       "component_id": "cargo:version_check@0.9.5",
       "depends_on": []
+    },
+    {
+      "component_id": "cargo:wasi@0.11.1+wasi-snapshot-preview1",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:webpki-roots@1.0.9",
+      "depends_on": [
+        "cargo:rustls-pki-types@1.15.1"
+      ]
     },
     {
       "component_id": "cargo:weezl@0.2.1",
@@ -10834,14 +12143,125 @@
       "depends_on": []
     },
     {
+      "component_id": "cargo:windows-sys@0.52.0",
+      "depends_on": [
+        "cargo:windows-targets@0.52.6"
+      ]
+    },
+    {
       "component_id": "cargo:windows-sys@0.61.2",
       "depends_on": [
         "cargo:windows-link@0.2.1"
       ]
     },
     {
+      "component_id": "cargo:windows-targets@0.52.6",
+      "depends_on": [
+        "cargo:windows_aarch64_gnullvm@0.52.6",
+        "cargo:windows_aarch64_msvc@0.52.6",
+        "cargo:windows_i686_gnu@0.52.6",
+        "cargo:windows_i686_gnullvm@0.52.6",
+        "cargo:windows_i686_msvc@0.52.6",
+        "cargo:windows_x86_64_gnu@0.52.6",
+        "cargo:windows_x86_64_gnullvm@0.52.6",
+        "cargo:windows_x86_64_msvc@0.52.6"
+      ]
+    },
+    {
+      "component_id": "cargo:windows_aarch64_gnullvm@0.52.6",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:windows_aarch64_msvc@0.52.6",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:windows_i686_gnu@0.52.6",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:windows_i686_gnullvm@0.52.6",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:windows_i686_msvc@0.52.6",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:windows_x86_64_gnu@0.52.6",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:windows_x86_64_gnullvm@0.52.6",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:windows_x86_64_msvc@0.52.6",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:writeable@0.6.4",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:yoke-derive@0.8.3",
+      "depends_on": [
+        "cargo:proc-macro2@1.0.107",
+        "cargo:quote@1.0.47",
+        "cargo:syn@3.0.3",
+        "cargo:synstructure@0.14.0"
+      ]
+    },
+    {
+      "component_id": "cargo:yoke@0.8.3",
+      "depends_on": [
+        "cargo:stable_deref_trait@1.2.1",
+        "cargo:yoke-derive@0.8.3",
+        "cargo:zerofrom@0.1.8"
+      ]
+    },
+    {
+      "component_id": "cargo:zerofrom-derive@0.1.8",
+      "depends_on": [
+        "cargo:proc-macro2@1.0.107",
+        "cargo:quote@1.0.47",
+        "cargo:syn@3.0.3",
+        "cargo:synstructure@0.14.0"
+      ]
+    },
+    {
+      "component_id": "cargo:zerofrom@0.1.8",
+      "depends_on": [
+        "cargo:zerofrom-derive@0.1.8"
+      ]
+    },
+    {
       "component_id": "cargo:zeroize@1.9.0",
       "depends_on": []
+    },
+    {
+      "component_id": "cargo:zerotrie@0.2.5",
+      "depends_on": [
+        "cargo:displaydoc@0.2.7",
+        "cargo:yoke@0.8.3",
+        "cargo:zerofrom@0.1.8"
+      ]
+    },
+    {
+      "component_id": "cargo:zerovec-derive@0.11.6",
+      "depends_on": [
+        "cargo:proc-macro2@1.0.107",
+        "cargo:quote@1.0.47",
+        "cargo:syn@3.0.3"
+      ]
+    },
+    {
+      "component_id": "cargo:zerovec@0.11.8",
+      "depends_on": [
+        "cargo:yoke@0.8.3",
+        "cargo:zerofrom@0.1.8",
+        "cargo:zerovec-derive@0.11.6"
+      ]
     },
     {
       "component_id": "cargo:zip@8.6.0",
@@ -13169,7 +14589,7 @@
   ],
   "document_id": "agentmage-dependency-provenance",
   "generated_from": {
-    "Cargo.lock": "7c2c11b7d4955e51f451979d05012ccec8859b82b8d87b3f9c224488e727b498",
+    "Cargo.lock": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd",
     "Cargo.toml": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc",
     "package-lock.json": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
     "package.json": "5c25127ac887fe48cbb8a87da6dac32d6c2e2c77efacf28ee02f0411c4f7a74c",
@@ -13177,7 +14597,7 @@
     "platforms/macos/Package.swift": "180ad855bcc16e5c395ed3490b8f1d7be5fa552e20ecaac551220cdfe1d72948",
     "rust-toolchain.toml": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310",
     "shells/vscode/package.json": "62533387ddcdd384963564af25c7675dc2991fd47e1b7c0a068252e67251112e",
-    "supply-chain/cargo-external-catalog.json": "c9e4d98123be1059994e54f34f6ffd59c79a2b0fa3a84885c41a815b0ac81c07"
+    "supply-chain/cargo-external-catalog.json": "708f2ea6ff273d76d81fee07213fc91d4a173392d1776f64ebfa969c467b42ff"
   },
   "platform_status": {
     "macos": "blocked-macos",

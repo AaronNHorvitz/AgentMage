@@ -76,19 +76,19 @@
       "sha256": "4815ad718ae80772788afeced27b08d31ee8ae8ad0c279f19de931f10dcf9fb5"
     },
     {
-      "bytes": 36509,
+      "bytes": 37346,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json",
-      "sha256": "8c26fa22228e084b5441da6b6db0435e2b00148b808f9eff95281275216480ae"
+      "sha256": "124a19cf9bc6d1fa8ccc9c0cbc97b55dfdbff8f705e53606e3e99bfbfe884d94"
     },
     {
       "bytes": 4896,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json",
-      "sha256": "d303df230bf7c1348e58de567c087e3a0316263099319a4f8e52e6866c39d4cb"
+      "sha256": "c1b926c4ed271c3ec81030e1b3b1f32c6f5391a18dc4af0890bca77755e75ea5"
     },
     {
       "bytes": 4406,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-boundary-integration-report.json",
-      "sha256": "6a02bf18de8db5363fabe44032f061dede12b1d79fefeeac3ace54450cb2b2c0"
+      "sha256": "bb3283a9664fda08df6b9c088706a5265dbe931b15d0af304604d50baede39d6"
     },
     {
       "bytes": 17394,
@@ -111,14 +111,14 @@
       "sha256": "6390c268bf2b58e0030487c90084b9ba4986f0fb8a5e50b7dff7497f2adb31f7"
     },
     {
-      "bytes": 7932,
+      "bytes": 8440,
       "path": "scripts/kernel_dispatch_security.py",
-      "sha256": "ced7c803ba9d7311160e0103f143245186451fed97ca53d01dcc37ed53325c7f"
+      "sha256": "7c2d579fdddc4846083da24165d88a56e0363ea96e3c8f94e1c2f228917a6f98"
     },
     {
-      "bytes": 8581,
+      "bytes": 9001,
       "path": "scripts/kernel_boundary_integration.py",
-      "sha256": "538282dffbee309412267a019fd14c8515cc74a0a831c65d25ae72b156198849"
+      "sha256": "4b3f2ef593448964e57e878cc5944e077df93572b00bd80aecef12557d9489b2"
     },
     {
       "bytes": 16818,
@@ -146,14 +146,14 @@
       "sha256": "39ceb5f23442d6b674bfc2446fd33701883847a7dea161b3d01e0f20b71ae7dd"
     },
     {
-      "bytes": 1389,
+      "bytes": 2382,
       "path": "tests/test_kernel_dispatch_security.py",
-      "sha256": "158ee96b773436c76ca36b870baf9edef37f4beb227363cd30d4ad12db323006"
+      "sha256": "3b9b5ec725534489f26d9645c8546e6ae253fba2158d1f0379cb04093ab900ba"
     },
     {
-      "bytes": 1421,
+      "bytes": 2414,
       "path": "tests/test_kernel_boundary_integration.py",
-      "sha256": "4f545441cfa9e47e27e7e5973529b5163b2c7baee2607529fb388117ce34d775"
+      "sha256": "1ec8a81f4a66cb4b90798ee5ecc07ece2b8c7d3108337ed758136b05736ef143"
     },
     {
       "bytes": 4927,
@@ -258,7 +258,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "e43d609cf817640431fa4c063d7e3ac30f43d422",
+  "source_revision": "6b582ced7179d6d2c71deffe39744de0c8b6c17d",
   "status": "pass-linux-security-mapping",
   "story_id": "4.1",
   "summary": {

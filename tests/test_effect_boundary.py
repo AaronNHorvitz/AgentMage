@@ -133,6 +133,19 @@ class EffectBoundaryTests(unittest.TestCase):
             failures,
         )
 
+    def test_research_binding_does_not_admit_neighboring_packet_consumers(self) -> None:
+        binding = "kernel/engine/src/research_effect_binding.rs"
+        self.assertIn("EffectAuthorization", self.source(binding))
+        self.assertNotIn(
+            f"unregistered effect-authorization consumer: {binding}",
+            validate_effect_boundary(),
+        )
+        packet = Path("kernel/engine/src/research_fetch.rs")
+        failures = validate_effect_boundary(
+            overrides={packet: self.source(str(packet)) + "\n// EffectAuthorization\n"}
+        )
+        self.assertIn(f"unregistered effect-authorization consumer: {packet}", failures)
+
     def test_repository_safety_is_a_registered_permit_consumer(self) -> None:
         failures = validate_effect_boundary()
 

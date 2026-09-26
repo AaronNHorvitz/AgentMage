@@ -154,16 +154,16 @@
       "all_versions_present": true,
       "classifications": {
         "development": 371,
-        "production": 129
+        "production": 182
       },
-      "component_count": 500,
+      "component_count": 553,
       "ecosystems": {
-        "cargo": 127,
+        "cargo": 180,
         "npm": 370,
         "npm-workspace": 2,
         "swift-workspace": 1
       },
-      "identity_set_sha256": "8094e281c644b38e2b681bd5eb5ed8e43c15f3e4cffb58b0792315e57bbded1a",
+      "identity_set_sha256": "b96d43f78fdc02fd117fe9676859b0eab3d516229abb633b5bdb1170586a9c10",
       "source": "supply-chain/dependency-provenance.json"
     },
     "product_runtimes": []
@@ -360,11 +360,11 @@
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "f8bf59beb7fced8724093fb442e4a25820cd48347350439b8dea1af6fe02d6c6"
+      "sha256": "d3c0b505b172a50d9feae85e86ab459b796b23d101442282e3b0354962771e3e"
     },
     {
       "path": "architecture/dependency-classes.json",
-      "sha256": "384da74ee8dbd809b1bb7d4fd647d95d3a717fa37ae6d5afdad7e2bb5728ab61"
+      "sha256": "5386255c3d667b4e65d8343098647ae91ccb627b2a8fe25a07936ca5ff40dc65"
     },
     {
       "path": "architecture/optional-component-inventory.json",
@@ -396,11 +396,11 @@
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "39d35350bbf88d3073852be182b059adbd118a92673e294a2a13245d08f5de39"
+      "sha256": "605e35a5b10e0cd4740a94923646bf605f0b2938e9e839f41e3f8084328e56bb"
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "00ad852bc554f530434677f772dae46d5d1f04ffea8b48256a38ea4710205f6a"
+      "sha256": "8862395362b6fbde7673d064743e91d15d7426ffdf7a2c908d3c1a138d8e4b8f"
     },
     {
       "path": "scripts/component_inventory.py",
@@ -408,16 +408,16 @@
     },
     {
       "path": "tests/test_component_inventory.py",
-      "sha256": "c871a8345e11d79fa088dacb1593b355a56a162ebcba9fc0db086c1e8b93ed1b"
+      "sha256": "12757ff847d9e6820d1d39c02c05f42819e0e718d7b54332affd6ccae3621844"
     }
   ],
   "status": "pass-shared-linux-versioned-hashed-component-inventory",
   "summary": {
     "approved_build_environment_count": 2,
     "approved_build_executable_count": 16,
-    "approved_component_count": 518,
+    "approved_component_count": 571,
     "approved_optional_dependency_count": 0,
-    "approved_package_count": 500,
+    "approved_package_count": 553,
     "approved_product_runtime_count": 0,
     "approved_records_missing_hash_count": 0,
     "approved_records_missing_version_count": 0,

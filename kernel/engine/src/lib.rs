@@ -233,6 +233,8 @@ pub mod repository_inspection;
 pub mod repository_safety;
 /// Bounded public research disclosure, destinations and single-owner accounting.
 pub mod research_budget;
+/// Exact independently prepared public-GET restrictions on a consumed effect permit.
+pub mod research_effect_binding;
 /// Closed authority-free packets for the separately mediated public GET worker.
 pub mod research_fetch;
 /// Bounded inert worker response framing, separate from transport provenance.

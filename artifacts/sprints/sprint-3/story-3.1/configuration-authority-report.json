@@ -157,7 +157,7 @@
     },
     {
       "path": "Cargo.lock",
-      "sha256": "7c2c11b7d4955e51f451979d05012ccec8859b82b8d87b3f9c224488e727b498"
+      "sha256": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd"
     },
     {
       "path": "kernel/engine/Cargo.toml",
@@ -165,7 +165,7 @@
     },
     {
       "path": "kernel/engine/src/lib.rs",
-      "sha256": "93dce378bff00a8887467cdfaf816996da963a4f5e13cbed24e8b71b558eca47"
+      "sha256": "e8a12511dc87582f9e22cdc53951351c918a3f7547aba09f457f5d05a624b7da"
     },
     {
       "path": "kernel/engine/src/configuration.rs",

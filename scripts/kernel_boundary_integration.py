@@ -23,6 +23,7 @@ REPORT_PATH = (
     / "kernel-boundary-integration-report.json"
 )
 MARKER = "AGENTMAGE_BOUNDARY_TRACES="
+TEST_NAME = "success_and_every_failure_class_preserve_boundary_context"
 SOURCE_PATHS = (
     "Cargo.lock",
     "kernel/contracts/src/boundary.rs",
@@ -87,7 +88,7 @@ def run_boundary_trace(root: Path = ROOT) -> list[dict[str, Any]]:
             "--test",
             "boundary_workflow",
             "--locked",
-            "success_and_every_failure_class_preserve_boundary_context",
+            TEST_NAME,
             "--",
             "--exact",
             "--nocapture",
@@ -98,9 +99,17 @@ def run_boundary_trace(root: Path = ROOT) -> list[dict[str, Any]]:
         text=True,
         env=environment,
     )
-    lines = [line for line in result.stdout.splitlines() if line.startswith(MARKER)]
+    return decode_boundary_trace(result.stdout)
+
+
+def decode_boundary_trace(stdout: str) -> list[dict[str, Any]]:
+    # The required single-thread libtest formatter prefixes uncaptured output.
+    prefix = f"test {TEST_NAME} ... "
+    lines = [line.removeprefix(prefix) for line in stdout.splitlines() if MARKER in line]
     if len(lines) != 1:
         raise BoundaryIntegrationError("Rust test emitted an invalid boundary trace count")
+    if not lines[0].startswith(MARKER) or lines[0].count(MARKER) != 1:
+        raise BoundaryIntegrationError("Rust test emitted invalid boundary trace framing")
     traces = json.loads(lines[0][len(MARKER) :])
     if not isinstance(traces, list) or not all(isinstance(item, dict) for item in traces):
         raise BoundaryIntegrationError("Rust boundary trace must be an object array")

@@ -29,6 +29,14 @@ pub struct PublicGetTarget {
     pub query: Vec<(String, String)>,
 }
 
+impl PublicGetTarget {
+    /// Rechecks the closed disclosure syntax and secret ceiling without I/O.
+    /// A transport must also parse URLs, validate DNS/peers/TLS and consume authority.
+    pub fn validate(&self) -> Result<(), ResearchFetchError> {
+        validate_target(self)
+    }
+}
+
 /// Descriptive per-operation limits, not task accounting or an approval.
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

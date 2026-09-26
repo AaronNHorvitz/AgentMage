@@ -150,6 +150,22 @@ class StrictLocalSourceAuditTests(unittest.TestCase):
             failures = audit.audit(self.policy, self.sources)
         self.assertIn("reviewed Cargo package closure changed", failures)
 
+    def test_research_worker_does_not_globally_admit_another_http_package(self) -> None:
+        changed = set(self.policy["approved_cargo_packages"]) | {"reqwest@0.12.0"}
+        with mock.patch.object(audit, "cargo_runtime_packages", return_value=changed):
+            failures = audit.audit(self.policy, self.sources)
+        self.assertIn("denied network-capable Rust dependency is present", failures)
+        self.assertIn("reviewed Cargo package closure changed", failures)
+
+    def test_research_transport_module_cannot_enter_default_library(self) -> None:
+        changed = dict(self.sources)
+        path = "platforms/linux/src/lib.rs"
+        changed[path] += "\nmod public_research_transport;\n"
+        self.assertIn(
+            f"research worker module referenced outside its binary: {path}",
+            audit.audit(self.policy, changed),
+        )
+
     def test_cargo_manifest_features_and_build_scripts_require_review(self) -> None:
         changed = {
             "platforms/linux/Cargo.toml": (

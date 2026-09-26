@@ -502,6 +502,30 @@
         "condition": "all",
         "dependency_kind": "product",
         "lock": {
+          "checksum": "9a7ac20be9b7726e0bbdbf974c059676d9acb1cd414961f570a4e8231cacd7fc",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "3.4.2"
+        },
+        "manifest": "platforms/linux/Cargo.toml",
+        "source": "platform-linux",
+        "target": "ureq"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "ff67a8a4397373c3ef660812acab3268222035010ab8680ec4215f38ba3d0eed",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "2.5.8"
+        },
+        "manifest": "platforms/linux/Cargo.toml",
+        "source": "platform-linux",
+        "target": "url"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
           "checksum": "e13c156562582aa81c60cb29407084cdb54c4164760106ab78e6c5b0858cf64e",
           "source": "registry+https://github.com/rust-lang/crates.io-index",
           "version": "1.9.0"
@@ -739,8 +763,8 @@
         "target": "lopdf"
       }
     ],
-    "direct_cargo_count": 60,
-    "locked_external_cargo_package_count": 112,
+    "direct_cargo_count": 62,
+    "locked_external_cargo_package_count": 163,
     "swift_external": [],
     "vscode_development": [
       "@eslint/js",
@@ -985,7 +1009,7 @@
   "source_records": [
     {
       "path": "Cargo.lock",
-      "sha256": "7c2c11b7d4955e51f451979d05012ccec8859b82b8d87b3f9c224488e727b498"
+      "sha256": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd"
     },
     {
       "path": "Cargo.toml",
@@ -1029,7 +1053,7 @@
     },
     {
       "path": "platforms/linux/Cargo.toml",
-      "sha256": "a6ed075a2e40f2120402cb2db636e3029b4e2f2f4070b3e2d64be93c9c0c796a"
+      "sha256": "b8aec95285d2de67b37729fa5b52a3983cccb426f0cdc1d3a1a7c40c5e2b2c23"
     },
     {
       "path": "platforms/linux-inference/Cargo.toml",
@@ -1068,7 +1092,7 @@
       "sha256": "7546d14d8ec5b014cd0c8ce541f603e0208ac6cb237b6b29a6d56d7f1a45b490"
     }
   ],
-  "source_revision": "fb055f637edb816acba6bb3e43162af5f28bc945",
+  "source_revision": "6b582ced7179d6d2c71deffe39744de0c8b6c17d",
   "status": "pass-linux-architecture",
   "task_id": "4.1.2.4"
 }

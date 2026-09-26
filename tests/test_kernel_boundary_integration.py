@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import copy
+import json
 import unittest
 
 from scripts.kernel_boundary_integration import (
     EXPECTED_CASES,
+    MARKER,
+    TEST_NAME,
     build_report,
+    decode_boundary_trace,
     run_boundary_trace,
     trace_failures,
     validate_report,
@@ -16,6 +20,25 @@ class KernelBoundaryIntegrationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.traces = run_boundary_trace()
+
+    def test_actual_trace_with_single_thread_libtest_prefix(self) -> None:
+        payload = MARKER + json.dumps(self.traces)
+        for framed in (payload, f"test {TEST_NAME} ... {payload}"):
+            with self.subTest(framed=framed[:100]):
+                self.assertEqual(
+                    decode_boundary_trace(f"running 1 test\n{framed}\nok\n"), self.traces
+                )
+
+    def test_missing_duplicate_unexpected_prefix_and_malformed_traces_fail(self) -> None:
+        payload = MARKER + json.dumps(self.traces)
+        for stdout in (
+            "running 0 tests\n", payload + "\n" + payload,
+            payload + payload, "test another_test ... " + payload,
+            "arbitrary " + payload, MARKER + "{", MARKER + "{}", MARKER + "[1]",
+        ):
+            with self.subTest(stdout=stdout[:100]):
+                with self.assertRaises(ValueError):
+                    decode_boundary_trace(stdout)
 
     def test_rust_trace_has_the_exact_closed_outcome_set(self) -> None:
         self.assertEqual(

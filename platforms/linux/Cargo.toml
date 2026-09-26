@@ -10,6 +10,12 @@ publish.workspace = true
 
 [features]
 test-support = []
+public-research-worker = ["dep:ureq", "dep:url"]
+
+[[bin]]
+name = "agentmage-public-research-worker"
+path = "src/bin/agentmage-public-research-worker.rs"
+required-features = ["public-research-worker"]
 
 [dependencies]
 agentmage-kernel-contracts.workspace = true
@@ -22,6 +28,8 @@ serde_json.workspace = true
 sha1.workspace = true
 sha2.workspace = true
 zeroize.workspace = true
+ureq = { version = "=3.4.2", default-features = false, features = ["rustls"], optional = true }
+url = { version = "=2.5.8", default-features = false, features = ["std"], optional = true }
 
 [dev-dependencies]
 serde.workspace = true

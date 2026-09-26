@@ -23,6 +23,7 @@ REPORT_PATH = (
     / "kernel-dispatch-security-report.json"
 )
 MARKER = "AGENTMAGE_DISPATCH_TRACES="
+TEST_NAME = "tooling::tests::every_proposal_origin_has_an_exact_zero_execution_receipt"
 SOURCE_PATHS = (
     "Cargo.lock",
     "Cargo.toml",
@@ -80,7 +81,7 @@ def run_dispatch_trace(root: Path = ROOT) -> list[dict[str, Any]]:
             "-p",
             "agentmage-kernel-engine",
             "--locked",
-            "tooling::tests::every_proposal_origin_has_an_exact_zero_execution_receipt",
+            TEST_NAME,
             "--",
             "--exact",
             "--nocapture",
@@ -91,9 +92,18 @@ def run_dispatch_trace(root: Path = ROOT) -> list[dict[str, Any]]:
         text=True,
         env=environment,
     )
-    lines = [line for line in result.stdout.splitlines() if line.startswith(MARKER)]
+    return decode_dispatch_trace(result.stdout)
+
+
+def decode_dispatch_trace(stdout: str) -> list[dict[str, Any]]:
+    # libtest's single-thread pretty formatter writes this prefix without a newline.
+    # Accept only that exact framing, not arbitrary text preceding a trace marker.
+    prefix = f"test {TEST_NAME} ... "
+    lines = [line.removeprefix(prefix) for line in stdout.splitlines() if MARKER in line]
     if len(lines) != 1:
         raise DispatchSecurityError("Rust test emitted an invalid dispatcher trace count")
+    if not lines[0].startswith(MARKER) or lines[0].count(MARKER) != 1:
+        raise DispatchSecurityError("Rust test emitted invalid dispatcher trace framing")
     traces = json.loads(lines[0][len(MARKER) :])
     if not isinstance(traces, list) or not all(isinstance(item, dict) for item in traces):
         raise DispatchSecurityError("Rust dispatcher trace must be an object array")

@@ -88,5 +88,16 @@
     "enabled": false,
     "included_in_default_build": false,
     "included_in_release": false
+  },
+  "public_research_worker": {
+    "decision_id": "ADR-0084",
+    "cargo_packages": [
+      "ureq@3.4.2",
+      "url@2.5.8"
+    ],
+    "feature": "agentmage-platform-linux/public-research-worker",
+    "included_in_default_build": false,
+    "included_in_release": false,
+    "runtime_admitted": false
   }
 }
