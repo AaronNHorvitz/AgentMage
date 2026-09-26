@@ -36,7 +36,7 @@ COMMANDS: Final = (
         "test",
         "-p",
         "agentmage-kernel-engine",
-        "operational_store::tests::version_eighteen_schema_matches_fixture_snapshot_and_is_relational",
+        "operational_store::tests::version_nineteen_schema_matches_fixture_snapshot_and_is_relational",
         "--locked",
     ),
     (
@@ -52,7 +52,7 @@ COMMANDS: Final = (
         "test",
         "-p",
         "agentmage-kernel-engine",
-        "operational_store::tests::version_one_upgrades_through_eighteen_with_exact_history",
+        "operational_store::tests::version_one_upgrades_through_nineteen_with_exact_history",
         "--locked",
     ),
     (
@@ -77,9 +77,9 @@ COMMANDS: Final = (
     ),
 )
 MARKERS: Final = (
-    "version_eighteen_schema_matches_fixture_snapshot_and_is_relational ... ok",
+    "version_nineteen_schema_matches_fixture_snapshot_and_is_relational ... ok",
     "source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store ... ok",
-    "version_one_upgrades_through_eighteen_with_exact_history ... ok",
+    "version_one_upgrades_through_nineteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok",
 )
 TRUTH: Final = {
@@ -110,10 +110,10 @@ def expected_report() -> dict[str, Any]:
         "record_type": "agentmage-source-materialization-schema-evidence",
         "story_id": "11.2",
         "task_id": "11.2.1.1",
-        "generated_on": "2026-08-30",
+        "generated_on": "2026-09-26",
         "status": "pass-local-structural-schema",
         "materialization_migration_version": 12,
-        "current_operational_store_schema_version": 18,
+        "current_operational_store_schema_version": 19,
         "normalized_tables": list(TABLES),
         "payload_authority": {
             "migration": "0007-runtime-artifacts.sql",
@@ -140,6 +140,9 @@ def expected_report() -> dict[str, Any]:
             artifact("kernel/engine/migrations/operational-store/0007-runtime-artifacts.sql"),
             artifact("kernel/engine/migrations/operational-store/0012-source-artifact-materializations.sql"),
             artifact("kernel/engine/src/operational_store.rs"),
+            artifact("kernel/engine/fixtures/operational-store/schema-19.json"),
+            artifact("kernel/engine/migrations/operational-store/0019-research-budgets.sql"),
+            artifact("kernel/engine/src/research_journal.rs"),
             artifact("docs/verification/story-11-2-source-materialization-schema-evidence.md"),
             artifact("scripts/source_materialization_schema_evidence.py"),
             artifact("tests/test_source_materialization_schema_evidence.py"),

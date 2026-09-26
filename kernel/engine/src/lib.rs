@@ -215,6 +215,8 @@ pub mod productivity_workflow;
 pub mod profile_workflows;
 /// Cancellation trees and lossless typed failure propagation.
 pub mod propagation;
+/// Shared inert public-search and citation contracts, also exported by the host.
+pub mod public_research;
 /// Bounded concise reasoning records and deterministic verification gates.
 pub mod reasoning;
 /// Continuous content reclassification before successive trust boundaries.
@@ -237,6 +239,10 @@ pub mod research_budget;
 pub mod research_effect_binding;
 /// Closed authority-free packets for the separately mediated public GET worker.
 pub mod research_fetch;
+/// Durable bounded research accounting through the existing encrypted store owner.
+pub mod research_journal;
+/// Shared closed research-plan preparation for the host and canonical budget owner.
+pub mod research_plan;
 /// Bounded inert worker response framing, separate from transport provenance.
 pub mod research_response;
 /// Deterministic compilation of all prerequisites for one genuinely fresh attempt.

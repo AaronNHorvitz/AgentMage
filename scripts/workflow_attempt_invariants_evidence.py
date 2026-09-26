@@ -33,7 +33,7 @@ COMMANDS: Final = (
         "test",
         "-p",
         "agentmage-kernel-engine",
-        "operational_store::tests::version_one_upgrades_through_eighteen_with_exact_history",
+        "operational_store::tests::version_one_upgrades_through_nineteen_with_exact_history",
         "--locked",
     ),
     (
@@ -59,7 +59,7 @@ COMMANDS: Final = (
 )
 MARKERS: Final = (
     "workflow_attempt_chain_receipt_and_uncertainty_invariants_fail_closed ... ok",
-    "version_one_upgrades_through_eighteen_with_exact_history ... ok",
+    "version_one_upgrades_through_nineteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok",
 )
 UNIQUE_INDEXES: Final = (
@@ -104,9 +104,9 @@ def expected_report() -> dict[str, Any]:
         "record_type": "agentmage-workflow-attempt-invariants-evidence",
         "story_id": "11.2",
         "task_id": "11.2.2.2",
-        "generated_on": "2026-08-30",
+        "generated_on": "2026-09-26",
         "status": "pass-local-storage-invariants",
-        "operational_store_schema_version": 17,
+        "operational_store_schema_version": 19,
         "unique_indexes": list(UNIQUE_INDEXES),
         "append_only_triggers": list(TRIGGERS),
         "invariant_contract": {
@@ -125,6 +125,10 @@ def expected_report() -> dict[str, Any]:
         "artifacts": [
             artifact("kernel/engine/migrations/operational-store/0016-workflow-attempt-invariants.sql"),
             artifact("kernel/engine/src/operational_store.rs"),
+            artifact("kernel/engine/fixtures/operational-store/schema-18.json"),
+            artifact("kernel/engine/fixtures/operational-store/schema-19.json"),
+            artifact("kernel/engine/migrations/operational-store/0019-research-budgets.sql"),
+            artifact("kernel/engine/src/research_journal.rs"),
             artifact("docs/verification/story-11-2-workflow-attempt-invariants-evidence.md"),
             artifact("scripts/workflow_attempt_invariants_evidence.py"),
             artifact("tests/test_workflow_attempt_invariants_evidence.py"),
@@ -209,6 +213,7 @@ def main() -> int:
             return 1
         failures = validate_migration(MIGRATION_PATH.read_text(encoding="utf-8")) + validate_raw(raw)
         if failures:
+            sys.stderr.write(raw)
             for failure in failures:
                 print(f"workflow-attempt evidence build failed: {failure}", file=sys.stderr)
             return 1

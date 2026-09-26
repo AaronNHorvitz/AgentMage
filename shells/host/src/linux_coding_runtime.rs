@@ -3807,7 +3807,20 @@ where
 }
 
 fn map_journal_failure(error: DurableAuthorityError) -> RuntimePortFailure {
+    use agentmage_kernel_engine::research_budget::ResearchBudgetError;
+    use agentmage_kernel_engine::research_journal::ResearchJournalError;
     match error {
+        DurableAuthorityError::ResearchJournal(
+            ResearchJournalError::Storage | ResearchJournalError::Integrity,
+        ) => RuntimePortFailure::Uncertain,
+        DurableAuthorityError::ResearchJournal(
+            ResearchJournalError::JournalExhausted
+            | ResearchJournalError::Budget(ResearchBudgetError::Exhausted),
+        ) => RuntimePortFailure::ResourceExhausted,
+        DurableAuthorityError::ResearchJournal(ResearchJournalError::Budget(
+            ResearchBudgetError::Cancelled,
+        )) => RuntimePortFailure::Cancelled,
+        DurableAuthorityError::ResearchJournal(_) => RuntimePortFailure::Invalid,
         DurableAuthorityError::RuntimeJournal(RuntimeJournalError::QueueSaturated) => {
             RuntimePortFailure::ResourceExhausted
         }
@@ -4219,6 +4232,47 @@ fn hex(bytes: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn research_journal_failures_preserve_uncertainty_cancellation_and_limits() {
+        use agentmage_kernel_engine::research_budget::ResearchBudgetError;
+        use agentmage_kernel_engine::research_journal::ResearchJournalError;
+        for (error, expected) in [
+            (ResearchJournalError::Storage, RuntimePortFailure::Uncertain),
+            (
+                ResearchJournalError::Integrity,
+                RuntimePortFailure::Uncertain,
+            ),
+            (
+                ResearchJournalError::JournalExhausted,
+                RuntimePortFailure::ResourceExhausted,
+            ),
+            (
+                ResearchJournalError::Budget(ResearchBudgetError::Exhausted),
+                RuntimePortFailure::ResourceExhausted,
+            ),
+            (
+                ResearchJournalError::Budget(ResearchBudgetError::Cancelled),
+                RuntimePortFailure::Cancelled,
+            ),
+            (ResearchJournalError::Binding, RuntimePortFailure::Invalid),
+            (ResearchJournalError::Plan, RuntimePortFailure::Invalid),
+            (
+                ResearchJournalError::AlreadyExists,
+                RuntimePortFailure::Invalid,
+            ),
+            (ResearchJournalError::NotFound, RuntimePortFailure::Invalid),
+            (
+                ResearchJournalError::Budget(ResearchBudgetError::Binding),
+                RuntimePortFailure::Invalid,
+            ),
+        ] {
+            assert_eq!(
+                map_journal_failure(DurableAuthorityError::ResearchJournal(error)),
+                expected
+            );
+        }
+    }
+
     use std::collections::VecDeque;
     use std::fs;
     use std::io::Write as _;

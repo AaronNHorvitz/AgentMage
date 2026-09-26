@@ -81,7 +81,7 @@ use crate::write_transaction::{
     execute_write_transaction_with_checkpoint,
 };
 
-const SCHEMA_VERSION: i64 = 18;
+const SCHEMA_VERSION: i64 = 19;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
 const MAX_DERIVED_EXPORT_RECORDS: usize = 100_000;
@@ -182,6 +182,8 @@ const MIGRATION_17_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0017-workflow-checkpoints.sql");
 const MIGRATION_18_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0018-attempt-recovery.sql");
+const MIGRATION_19_SCHEMA_SQL: &str =
+    include_str!("../migrations/operational-store/0019-research-budgets.sql");
 
 /// Closed record families governed by the canonical retention engine.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -756,6 +758,8 @@ impl OperationalStore {
             return Err(OperationalStoreError::StorageRejected);
         }
         verify_integrity(&self.connection)?;
+        crate::research_journal::verify_all(self)
+            .map_err(|_| OperationalStoreError::IntegrityFailure)?;
         let canonical_state_sha256: String = self
             .connection
             .query_row(
@@ -1052,6 +1056,8 @@ impl OperationalStore {
         verify_integrity(&self.connection)?;
         verify_runtime_journal(self).map_err(|_| OperationalStoreError::IntegrityFailure)?;
         verify_runtime_artifacts(self).map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        crate::research_journal::verify_all(self)
+            .map_err(|_| OperationalStoreError::IntegrityFailure)?;
         crate::engineering_persistence::verify_all(self)
             .map_err(|_| OperationalStoreError::IntegrityFailure)?;
         verify_workflow_checkpoints(self)?;
@@ -1663,9 +1669,100 @@ pub enum DurableAuthorityError {
     RuntimeArtifact(RuntimeArtifactStoreError),
     /// Answer-ledger or receipt-integrity persistence failed.
     Evidence(EvidenceStoreError),
+    /// Canonical research plan or conservative task-budget accounting was refused.
+    ResearchJournal(crate::research_journal::ResearchJournalError),
 }
 
 impl DurableAuthorityRuntime {
+    /// Projects original research accounting without resetting time, consuming a
+    /// revision or claiming that a retained plan or request is currently admitted.
+    pub fn research_budget_state(
+        &mut self,
+        context: &crate::research_journal::ResearchBudgetContext,
+    ) -> Result<crate::research_journal::ResearchBudgetState, DurableAuthorityError> {
+        self.ensure_usable()?;
+        let result = {
+            let store = self.lock_store()?;
+            crate::research_journal::state(&store, context)
+        };
+        self.research_result(result)
+    }
+
+    /// Persists one immutable task research budget only after full canonical plan verification.
+    /// This neither approves a disclosure nor issues a network grant.
+    pub fn open_research_budget<S: RuntimeArtifactPayloadStore>(
+        &mut self,
+        payloads: &S,
+        context: &crate::research_journal::ResearchBudgetContext,
+        plan: &agentmage_kernel_contracts::RuntimeArtifactRef,
+        scope: &crate::research_budget::ResearchScope,
+        now_epoch_ms: u64,
+    ) -> Result<(), DurableAuthorityError> {
+        self.ensure_usable()?;
+        let result = {
+            let mut store = self.lock_store()?;
+            crate::research_journal::open_budget(
+                &mut store,
+                payloads,
+                context,
+                plan,
+                scope,
+                now_epoch_ms,
+            )
+        };
+        self.research_result(result)
+    }
+
+    /// Commits worst-case task accounting before returning a single-use reservation.
+    /// Registered tool/provider composition supplies query versus visit, not a model label.
+    pub fn reserve_research_request<S: RuntimeArtifactPayloadStore>(
+        &mut self,
+        payloads: &S,
+        context: &crate::research_journal::ResearchBudgetContext,
+        prepared: &crate::research_fetch::PreparedPublicGet,
+        purpose: crate::research_budget::ResearchOperation<'_>,
+        now_epoch_ms: u64,
+    ) -> Result<crate::research_journal::DurableResearchReservation, DurableAuthorityError> {
+        self.ensure_usable()?;
+        let result = {
+            let mut store = self.lock_store()?;
+            crate::research_journal::reserve(
+                &mut store,
+                payloads,
+                context,
+                prepared,
+                purpose,
+                now_epoch_ms,
+            )
+        };
+        self.research_result(result)
+    }
+
+    /// Makes task-budget cancellation durable without claiming an external effect was undone.
+    pub fn cancel_research_budget(
+        &mut self,
+        context: &crate::research_journal::ResearchBudgetContext,
+    ) -> Result<(), DurableAuthorityError> {
+        self.ensure_usable()?;
+        let result = {
+            let mut store = self.lock_store()?;
+            crate::research_journal::cancel(&mut store, context)
+        };
+        self.research_result(result)
+    }
+
+    fn research_result<T>(
+        &mut self,
+        result: Result<T, crate::research_journal::ResearchJournalError>,
+    ) -> Result<T, DurableAuthorityError> {
+        result.map_err(|error| {
+            if error.poisons_runtime() {
+                self.poisoned = true;
+            }
+            DurableAuthorityError::ResearchJournal(error)
+        })
+    }
+
     /// Opens canonical state and resolves every interrupted transaction before use.
     pub fn open<P: OperationalStoreKeyProvider>(
         path: &Path,
@@ -3415,7 +3512,7 @@ fn open_connection(path: &Path, key: &[u8]) -> Result<Connection, OperationalSto
              PRAGMA synchronous = FULL;
              PRAGMA wal_autocheckpoint = 1;",
         )
-        .map_err(|_| OperationalStoreError::OpenFailed)?;
+        .map_err(classify_open_error)?;
     Ok(connection)
 }
 
@@ -3883,6 +3980,27 @@ fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
             )
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
+            .pragma_update(None, "user_version", 18_i64)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        version = 18;
+    }
+    if version == 18 {
+        let transaction = connection
+            .unchecked_transaction()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute_batch(MIGRATION_19_SCHEMA_SQL)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (19, ?1)",
+                [sha256_hex(MIGRATION_19_SCHEMA_SQL.as_bytes())],
+            )
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
             .pragma_update(None, "user_version", SCHEMA_VERSION)
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
@@ -3921,6 +4039,7 @@ fn verify_schema_history(connection: &Connection) -> Result<(), OperationalStore
             (16, sha256_hex(MIGRATION_16_SCHEMA_SQL.as_bytes())),
             (17, sha256_hex(MIGRATION_17_SCHEMA_SQL.as_bytes())),
             (18, sha256_hex(MIGRATION_18_SCHEMA_SQL.as_bytes())),
+            (19, sha256_hex(MIGRATION_19_SCHEMA_SQL.as_bytes())),
         ]
     {
         return Err(OperationalStoreError::MigrationFailed);
@@ -5771,6 +5890,18 @@ struct DerivedExportQuery {
 
 const DERIVED_EXPORT_QUERIES: &[DerivedExportQuery] = &[
     DerivedExportQuery {
+        family: "research_budget_roots",
+        sql: "SELECT task_id, 0, root_sha256 FROM research_budget_roots",
+    },
+    DerivedExportQuery {
+        family: "research_budget_revisions",
+        sql: "SELECT task_id, revision, record_sha256 FROM research_budget_revisions",
+    },
+    DerivedExportQuery {
+        family: "research_budget_heads",
+        sql: "SELECT task_id, revision, record_sha256 FROM research_budget_heads",
+    },
+    DerivedExportQuery {
         family: "actions",
         sql: "SELECT action_id, 0, record_sha256 FROM actions",
     },
@@ -6267,6 +6398,10 @@ fn hex_digest(value: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
+    mod research_migration_tests {
+        include!("research_migration_tests.rs");
+    }
+
     use std::collections::{BTreeMap, BTreeSet};
     use std::env;
     use std::fs::{self, File, OpenOptions};
@@ -7096,11 +7231,11 @@ mod tests {
         let backup = directory.join("authority.backup.db");
         let store = OperationalStore::open(&path, &observation(), &mut TestKey([8; 32]))
             .expect("first writer");
-        assert!(matches!(
+        assert_eq!(
             OperationalStore::open(&path, &observation(), &mut TestKey([8; 32]))
                 .expect_err("second writer must fail"),
-            OperationalStoreError::OpenFailed | OperationalStoreError::ConcurrentWriter
-        ));
+            OperationalStoreError::ConcurrentWriter
+        );
         let backup_receipt = store
             .backup(&backup, &observation(), &mut TestKey([9; 32]))
             .expect("encrypted backup");
@@ -8409,13 +8544,13 @@ mod tests {
     }
 
     #[test]
-    fn version_eighteen_schema_matches_fixture_snapshot_and_is_relational() {
+    fn version_nineteen_schema_matches_fixture_snapshot_and_is_relational() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         let store = OperationalStore::open(&path, &observation(), &mut TestKey([14; 32]))
-            .expect("version eighteen store");
+            .expect("version nineteen store");
         let fixture: serde_json::Value =
-            serde_json::from_str(include_str!("../fixtures/operational-store/schema-18.json"))
+            serde_json::from_str(include_str!("../fixtures/operational-store/schema-19.json"))
                 .expect("schema fixture parses");
         assert_eq!(fixture["schema_version"].as_i64(), Some(SCHEMA_VERSION));
         let tables: Vec<String> = store
@@ -10144,7 +10279,7 @@ mod tests {
     }
 
     #[test]
-    fn version_one_upgrades_through_eighteen_with_exact_history() {
+    fn version_one_upgrades_through_nineteen_with_exact_history() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         create_version_one_store(&path, &[15; 32]);
@@ -10165,7 +10300,7 @@ mod tests {
             })
             .expect("migration history");
         let fixture: serde_json::Value =
-            serde_json::from_str(include_str!("../fixtures/operational-store/schema-18.json"))
+            serde_json::from_str(include_str!("../fixtures/operational-store/schema-19.json"))
                 .expect("schema fixture parses");
         let fixture_history = fixture["migrations"]
             .as_array()

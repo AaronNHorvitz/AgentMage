@@ -45,7 +45,7 @@
       "sha256": "3b9b5ec725534489f26d9645c8546e6ae253fba2158d1f0379cb04093ab900ba"
     }
   ],
-  "source_revision": "6b582ced7179d6d2c71deffe39744de0c8b6c17d",
+  "source_revision": "5b731b36d646aa22baa78f310544ea6ebce668e3",
   "status": "pass-linux-zero-execution",
   "task_id": "4.1.3.3",
   "test_id": "S-004-ST01",

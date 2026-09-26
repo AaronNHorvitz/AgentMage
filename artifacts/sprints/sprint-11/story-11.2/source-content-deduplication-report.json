@@ -11,14 +11,34 @@
       "sha256": "7ec4613d128bb70d1be686cff7216f328b1968a6f5032ba9e83d92c2d3481c5e"
     },
     {
-      "byte_length": 175751,
+      "byte_length": 175838,
       "path": "kernel/engine/src/runtime_artifact.rs",
-      "sha256": "63c953247a8f9e0af2104b1a93021e40707cabe84eb05a3e8f8400216ae5edeb"
+      "sha256": "d286f3056da741cdbc9383297d2749e9967223702a6baafa09b322edbe6d6410"
     },
     {
-      "byte_length": 465603,
+      "byte_length": 470849,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "4d4a795347f49eb879f184a10eabdb896d89110dba423cef1b7057e94c07c08b"
+      "sha256": "8fa6f5f328d93f413fc8d34c9f916fc99141224efb6e0444abfc6700ffd69081"
+    },
+    {
+      "byte_length": 4166,
+      "path": "kernel/engine/fixtures/operational-store/schema-18.json",
+      "sha256": "2dbc40858820316bb0bb6e08ae61bddaf25287c2cdd820a33f7624f9b16d4ea6"
+    },
+    {
+      "byte_length": 4698,
+      "path": "kernel/engine/fixtures/operational-store/schema-19.json",
+      "sha256": "2ec027b073227b9e097b324e07cdb144e473496f2f9a9081cb6dd8c39cbc9464"
+    },
+    {
+      "byte_length": 2335,
+      "path": "kernel/engine/migrations/operational-store/0019-research-budgets.sql",
+      "sha256": "03800068d00ea422acc3702e48bb3cae4c736f104680bb57767ce0b8b1fb6db3"
+    },
+    {
+      "byte_length": 26318,
+      "path": "kernel/engine/src/research_journal.rs",
+      "sha256": "85b16d35155631e3963be0d9572f84476a43ec759bb8dddc88bd0a051f5dd2a3"
     },
     {
       "byte_length": 1697,
@@ -26,25 +46,25 @@
       "sha256": "ccdbe1e44487558f2bb0748982d72a2e62e2f763706077b08f5b13267deebe6f"
     },
     {
-      "byte_length": 8702,
+      "byte_length": 9055,
       "path": "scripts/source_content_deduplication_evidence.py",
-      "sha256": "6eda1a063ebe4eb6b9a18268c1636acbaa69721ff4541065955400cc0537a2da"
+      "sha256": "3c709cb4ee26ce5a169ec88ccd34c84d23a8ce6ea086797655cb45b36bf589f3"
     },
     {
-      "byte_length": 1957,
+      "byte_length": 4470,
       "path": "tests/test_source_content_deduplication_evidence.py",
-      "sha256": "2ffca9424845b654bbd49fea4b4e3ca961add91fc50ad74a2e4d9c48a7836025"
+      "sha256": "fc1bfce1a752415f89f9a2ac34ceb49c60add81d92a2b7bb6437d9241ed80de4"
     },
     {
-      "byte_length": 18179,
+      "byte_length": 17958,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-results.log",
-      "sha256": "17bbe3a2e74c69d59c28153b40c30a101a4571482e7f3e89589ca6ccd269286e"
+      "sha256": "7f57258175a03150132a85c456287e0a1857cefe1dd5213cca77de224c744875"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine runtime_artifact::tests::publication_deduplicates_without_broadening_owner_or_reference_state --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::source_content_deduplication_preserves_every_logical_identity --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_eighteen_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_nineteen_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
@@ -62,8 +82,8 @@
       "retention"
     ]
   },
-  "generated_on": "2026-08-30",
-  "operational_store_schema_version": 17,
+  "generated_on": "2026-09-26",
+  "operational_store_schema_version": 19,
   "physical_payload_authority": {
     "artifact_table": "runtime_artifacts",
     "migration": "0007-runtime-artifacts.sql",
@@ -88,7 +108,7 @@
   "required_markers": [
     "publication_deduplicates_without_broadening_owner_or_reference_state ... ok",
     "source_content_deduplication_preserves_every_logical_identity ... ok",
-    "version_one_upgrades_through_eighteen_with_exact_history ... ok",
+    "version_one_upgrades_through_nineteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

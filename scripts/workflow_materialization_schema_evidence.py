@@ -47,7 +47,7 @@ COMMANDS: Final = (
         "test",
         "-p",
         "agentmage-kernel-engine",
-        "operational_store::tests::version_one_upgrades_through_eighteen_with_exact_history",
+        "operational_store::tests::version_one_upgrades_through_nineteen_with_exact_history",
         "--locked",
     ),
     (
@@ -73,7 +73,7 @@ COMMANDS: Final = (
 )
 MARKERS: Final = (
     "workflow_materializations_bind_existing_run_session_event_and_receipt_authorities ... ok",
-    "version_one_upgrades_through_eighteen_with_exact_history ... ok",
+    "version_one_upgrades_through_nineteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok",
 )
 TRUTH: Final = {
@@ -104,10 +104,10 @@ def expected_report() -> dict[str, Any]:
         "record_type": "agentmage-workflow-materialization-schema-evidence",
         "story_id": "11.2",
         "task_id": "11.2.2.1",
-        "generated_on": "2026-08-30",
+        "generated_on": "2026-09-26",
         "status": "pass-local-structural-schema",
         "materialization_migration_version": 15,
-        "current_operational_store_schema_version": 18,
+        "current_operational_store_schema_version": 19,
         "normalized_tables": list(TABLES),
         "existing_authorities": {
             "metadata_store": "operational-store",
@@ -135,6 +135,9 @@ def expected_report() -> dict[str, Any]:
             artifact("kernel/engine/migrations/operational-store/0006-runtime-journal.sql"),
             artifact("kernel/engine/migrations/operational-store/0015-workflow-materializations.sql"),
             artifact("kernel/engine/src/operational_store.rs"),
+            artifact("kernel/engine/fixtures/operational-store/schema-19.json"),
+            artifact("kernel/engine/migrations/operational-store/0019-research-budgets.sql"),
+            artifact("kernel/engine/src/research_journal.rs"),
             artifact("docs/verification/story-11-2-workflow-materialization-schema-evidence.md"),
             artifact("scripts/workflow_materialization_schema_evidence.py"),
             artifact("tests/test_workflow_materialization_schema_evidence.py"),

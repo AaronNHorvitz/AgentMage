@@ -17,16 +17,20 @@ EVIDENCE_DIR: Final = ROOT / "artifacts/sprints/sprint-11/story-11.2"
 RAW_PATH: Final = EVIDENCE_DIR / "storage-migration-compatibility-results.log"
 REPORT_PATH: Final = EVIDENCE_DIR / "storage-migration-compatibility-report.json"
 SOURCE_PATH: Final = ROOT / "kernel/engine/src/operational_store.rs"
-FIXTURE_PATH: Final = ROOT / "kernel/engine/fixtures/operational-store/schema-18.json"
+FIXTURE_PATH: Final = ROOT / "kernel/engine/fixtures/operational-store/schema-19.json"
 COMMANDS: Final = (
     (
         "cargo", "test", "-p", "agentmage-kernel-engine",
-        "operational_store::tests::version_eighteen_schema_matches_fixture_snapshot_and_is_relational",
+        "operational_store::tests::research_migration_tests", "--locked",
+    ),
+    (
+        "cargo", "test", "-p", "agentmage-kernel-engine",
+        "operational_store::tests::version_nineteen_schema_matches_fixture_snapshot_and_is_relational",
         "--locked",
     ),
     (
         "cargo", "test", "-p", "agentmage-kernel-engine",
-        "operational_store::tests::version_one_upgrades_through_eighteen_with_exact_history",
+        "operational_store::tests::version_one_upgrades_through_nineteen_with_exact_history",
         "--locked",
     ),
     (
@@ -57,8 +61,10 @@ COMMANDS: Final = (
     ),
 )
 MARKERS: Final = (
-    "version_eighteen_schema_matches_fixture_snapshot_and_is_relational ... ok",
-    "version_one_upgrades_through_eighteen_with_exact_history ... ok",
+    "version_eighteen_upgrades_without_losing_existing_records ... ok",
+    "failed_version_nineteen_migration_rolls_back_tables_history_and_version ... ok",
+    "version_nineteen_schema_matches_fixture_snapshot_and_is_relational ... ok",
+    "version_one_upgrades_through_nineteen_with_exact_history ... ok",
     "failed_version_two_migration_rolls_back_without_partial_schema ... ok",
     "failed_version_three_migration_rolls_back_all_alterations ... ok",
     "future_schema_and_page_corruption_are_refused ... ok",
@@ -67,8 +73,8 @@ MARKERS: Final = (
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok",
 )
 SOURCE_MARKERS: Final = (
-    "const SCHEMA_VERSION: i64 = 18;",
-    "../fixtures/operational-store/schema-18.json",
+    "const SCHEMA_VERSION: i64 = 19;",
+    "../fixtures/operational-store/schema-19.json",
     "fn verify_schema_history(connection: &Connection)",
     "fn failed_version_three_migration_rolls_back_all_alterations()",
     "fn failed_version_two_migration_rolls_back_without_partial_schema()",
@@ -96,6 +102,7 @@ MIGRATION_SHA256: Final = (
     "3f2730d0f49d60ce70bf8bb9f8980e32bae74f31ece544e3d99a839918d20c0d",
     "24a591be13fd7fd97531ca99a494979f66ffd6bdf2d12536eb9619177395797d",
     "563d3643a23b63bee80a40aee12c8cf5fb7f017b52d4f9f95d6ac65bacf26630",
+    "03800068d00ea422acc3702e48bb3cae4c736f104680bb57767ce0b8b1fb6db3",
 )
 TRUTH: Final = {
     "synthetic_data_only": True,
@@ -129,16 +136,20 @@ def expected_report() -> dict[str, Any]:
         "record_type": "agentmage-storage-migration-compatibility-evidence",
         "story_id": "11.2",
         "task_id": "11.2.3.1",
-        "generated_on": "2026-08-30",
+        "generated_on": "2026-09-26",
         "status": "pass-local-migration-compatibility",
         "canonical_store": "operational-store",
-        "operational_schema_version": 18,
-        "migration_count": 18,
+        "operational_schema_version": 19,
+        "migration_count": 19,
         "commands": [" ".join(command) for command in COMMANDS],
         "required_markers": list(MARKERS),
         "artifacts": [
             artifact("kernel/engine/src/operational_store.rs"),
             artifact("kernel/engine/fixtures/operational-store/schema-18.json"),
+            artifact("kernel/engine/fixtures/operational-store/schema-19.json"),
+            artifact("kernel/engine/migrations/operational-store/0019-research-budgets.sql"),
+            artifact("kernel/engine/src/research_journal.rs"),
+            artifact("kernel/engine/src/research_migration_tests.rs"),
             artifact("docs/verification/story-11-2-storage-migration-compatibility-evidence.md"),
             artifact("scripts/storage_migration_compatibility_evidence.py"),
             artifact("tests/test_storage_migration_compatibility_evidence.py"),
@@ -161,8 +172,8 @@ def validate_fixture(value: Any) -> list[str]:
     if not isinstance(value, dict) or value.get("record_type") != "agentmage-operational-store-schema-fixture":
         failures.append("fixture record type is not exact")
         return failures
-    if value.get("schema_version") != 18:
-        failures.append("fixture schema version is not 18")
+    if value.get("schema_version") != 19:
+        failures.append("fixture schema version is not 19")
     migrations = value.get("migrations")
     expected = [
         {"version": index, "sha256": digest}

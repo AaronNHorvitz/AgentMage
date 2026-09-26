@@ -117,3 +117,28 @@ bound TLS ciphertext separately from plaintext/body accounting. These choices do
 not admit the worker or change the ordinary offline runner. The
 [component record](../verification/research-worker-component-2026-09-26.md) separates
 parser fixtures from the remaining native/TLS/provider/model gates.
+
+## Durable reservation implementation unit
+
+Status: **Accepted under owner delegation, 2026-09-20**. Authority: Decision 0054,
+within AMR-03.1.1 and this decision's unchanged security boundary. Store research budget
+roots, bounded append-only revisions and their current head in the existing encrypted
+operational store, with normal hash-bound schema migration and integrity/recovery checks.
+Do not introduce a separate database, runtime event sequence or artifact owner. Retain
+the full prepared plan through the existing report-artifact path and recheck its complete
+payload, ownership and lifecycle before admitting an attempt.
+
+At most 128 accounting revisions may belong to one task budget; reaching this additional
+ceiling denies further attempts rather than resetting accounting. Original start/deadline,
+trusted clock high-water, spent operations and terminal cancellation/expiry survive reopen.
+Quota refusals which change accounting must commit that change before returning. A failed
+durable commit cannot issue a native reservation proof. Such a proof is single-use and
+only an additional restriction: the exact consumed grant, native admission/confinement and
+verified owned cleanup remain separately mandatory. These choices do not activate research
+tools or close any component, model, independent-review or release gate.
+
+Move the existing pure research-plan/search/citation schemas and validators into the
+kernel's shared contract implementation, retaining host compatibility exports. This lets
+the canonical owner decode the exact full prepared plan using the same implementation,
+without a reverse kernel-to-host dependency, duplicate validator or opaque hash-only plan.
+Transport stays in the separately inventoried Linux worker; these shared types perform no I/O.

@@ -2761,6 +2761,10 @@ fn sha256(bytes: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
+    mod research_journal_tests {
+        include!("research_journal_tests.rs");
+    }
+
     use std::collections::BTreeMap;
     use std::fs;
     use std::io::{Cursor, Read};

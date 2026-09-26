@@ -11,9 +11,24 @@
       "sha256": "4caabc1a09d7cdedc69ffb231d03a467d9c5dd1aa0f706d917682c17f8aaf223"
     },
     {
-      "byte_length": 465603,
+      "byte_length": 470849,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "4d4a795347f49eb879f184a10eabdb896d89110dba423cef1b7057e94c07c08b"
+      "sha256": "8fa6f5f328d93f413fc8d34c9f916fc99141224efb6e0444abfc6700ffd69081"
+    },
+    {
+      "byte_length": 4698,
+      "path": "kernel/engine/fixtures/operational-store/schema-19.json",
+      "sha256": "2ec027b073227b9e097b324e07cdb144e473496f2f9a9081cb6dd8c39cbc9464"
+    },
+    {
+      "byte_length": 2335,
+      "path": "kernel/engine/migrations/operational-store/0019-research-budgets.sql",
+      "sha256": "03800068d00ea422acc3702e48bb3cae4c736f104680bb57767ce0b8b1fb6db3"
+    },
+    {
+      "byte_length": 26318,
+      "path": "kernel/engine/src/research_journal.rs",
+      "sha256": "85b16d35155631e3963be0d9572f84476a43ec759bb8dddc88bd0a051f5dd2a3"
     },
     {
       "byte_length": 2103,
@@ -21,9 +36,9 @@
       "sha256": "bed95f4b316d35e7f9ec48544dc02a34b43fb718ca1bb7c93cfb3f065d36e6fb"
     },
     {
-      "byte_length": 9320,
+      "byte_length": 9558,
       "path": "scripts/workflow_materialization_schema_evidence.py",
-      "sha256": "69f2bee90a1db8843483169f2518e57fe5b3c4de474ff923d9cf60edd84bdf47"
+      "sha256": "96ec9078546ebe5f3911081b87ab5b5725491e256c038e49c7c3ec97b029d76b"
     },
     {
       "byte_length": 2494,
@@ -33,16 +48,16 @@
     {
       "byte_length": 13542,
       "path": "artifacts/sprints/sprint-11/story-11.2/workflow-materialization-schema-results.log",
-      "sha256": "16da63a7c214fe9f35184e6d91df3cc7a4261ebd8d0042783029d9680cb4bbb6"
+      "sha256": "5403191413daa8a1a5a58c715939578c65621ce0582d2527a21dca9ece37d694"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine operational_store::tests::workflow_materializations_bind_existing_run_session_event_and_receipt_authorities --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_eighteen_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_nineteen_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
-  "current_operational_store_schema_version": 18,
+  "current_operational_store_schema_version": 19,
   "existing_authorities": {
     "event_table": "runtime_events",
     "metadata_store": "operational-store",
@@ -52,7 +67,7 @@
     "run_table": "runtime_runs",
     "session_table": "sessions"
   },
-  "generated_on": "2026-08-30",
+  "generated_on": "2026-09-26",
   "materialization_migration_version": 15,
   "normalized_tables": [
     "workflow_plan_step_policies",
@@ -82,7 +97,7 @@
   "record_type": "agentmage-workflow-materialization-schema-evidence",
   "required_markers": [
     "workflow_materializations_bind_existing_run_session_event_and_receipt_authorities ... ok",
-    "version_one_upgrades_through_eighteen_with_exact_history ... ok",
+    "version_one_upgrades_through_nineteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

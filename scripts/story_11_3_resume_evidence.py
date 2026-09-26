@@ -47,7 +47,7 @@ SOURCE_MARKERS: Final = {
         '"workflow.resume.effect_uncertain"',
     ),
     "kernel/engine/src/operational_store.rs": (
-        "const SCHEMA_VERSION: i64 = 18;",
+        "const SCHEMA_VERSION: i64 = 19;",
         "fn persist_workflow_checkpoint(",
         "fn verify_workflow_checkpoints(",
         "fn workflow_checkpoint_reopens_exactly_and_tamper_blocks_restart()",
@@ -71,6 +71,9 @@ SOURCE_MARKERS: Final = {
 }
 RETAINED_PATHS: Final = tuple(SOURCE_MARKERS) + (
     "kernel/engine/fixtures/operational-store/schema-18.json",
+    "kernel/engine/fixtures/operational-store/schema-19.json",
+    "kernel/engine/migrations/operational-store/0019-research-budgets.sql",
+    "kernel/engine/src/research_journal.rs",
     "docs/verification/story-11-3-durable-resume.md",
     "scripts/story_11_3_resume_evidence.py",
     "tests/test_story_11_3_resume_evidence.py",
@@ -110,7 +113,7 @@ def expected_report() -> dict[str, Any]:
         "record_type": "agentmage-story-11-3-durable-resume-evidence",
         "story_id": "11.3",
         "protocol_id": "RV-52",
-        "generated_on": "2026-08-31",
+        "generated_on": "2026-09-26",
         "status": "PASS_LOCAL_DURABLE_RESUME_SCOPE",
         "commands": [" ".join(command) for command in COMMANDS],
         "required_markers": list(MARKERS),

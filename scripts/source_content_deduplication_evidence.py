@@ -30,7 +30,7 @@ COMMANDS: Final = (
     ),
     (
         "cargo", "test", "-p", "agentmage-kernel-engine",
-        "operational_store::tests::version_one_upgrades_through_eighteen_with_exact_history",
+        "operational_store::tests::version_one_upgrades_through_nineteen_with_exact_history",
         "--locked",
     ),
     (
@@ -46,7 +46,7 @@ COMMANDS: Final = (
 MARKERS: Final = (
     "publication_deduplicates_without_broadening_owner_or_reference_state ... ok",
     "source_content_deduplication_preserves_every_logical_identity ... ok",
-    "version_one_upgrades_through_eighteen_with_exact_history ... ok",
+    "version_one_upgrades_through_nineteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok",
 )
 REQUIRED_MIGRATION_FRAGMENTS: Final = (
@@ -92,9 +92,9 @@ def expected_report() -> dict[str, Any]:
         "record_type": "agentmage-source-content-deduplication-evidence",
         "story_id": "11.2",
         "task_id": "11.2.1.2",
-        "generated_on": "2026-08-30",
+        "generated_on": "2026-09-26",
         "status": "pass-local-content-deduplication",
-        "operational_store_schema_version": 17,
+        "operational_store_schema_version": 19,
         "physical_payload_authority": {
             "migration": "0007-runtime-artifacts.sql",
             "payload_table": "runtime_payloads",
@@ -118,6 +118,10 @@ def expected_report() -> dict[str, Any]:
             artifact("kernel/engine/migrations/operational-store/0013-source-content-deduplication.sql"),
             artifact("kernel/engine/src/runtime_artifact.rs"),
             artifact("kernel/engine/src/operational_store.rs"),
+            artifact("kernel/engine/fixtures/operational-store/schema-18.json"),
+            artifact("kernel/engine/fixtures/operational-store/schema-19.json"),
+            artifact("kernel/engine/migrations/operational-store/0019-research-budgets.sql"),
+            artifact("kernel/engine/src/research_journal.rs"),
             artifact("docs/verification/story-11-2-source-content-deduplication-evidence.md"),
             artifact("scripts/source_content_deduplication_evidence.py"),
             artifact("tests/test_source_content_deduplication_evidence.py"),
@@ -193,6 +197,7 @@ def main() -> int:
             return 1
         failures = validate_migration(MIGRATION_PATH.read_text(encoding="utf-8")) + validate_raw(raw)
         if failures:
+            sys.stderr.write(raw)
             for failure in failures:
                 print(f"source-content-deduplication evidence build failed: {failure}", file=sys.stderr)
             return 1

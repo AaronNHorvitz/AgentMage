@@ -28,6 +28,14 @@ substitute for durable budget reservations or admitted native launch. Parser fix
 establish real TLS, process cleanup, live provider or model qualification. See the
 [component verification record](../verification/research-worker-component-2026-09-26.md).
 
+Canonical research accounting now has a bounded encrypted-store component: full retained
+plans, original deadlines, spent attempts and terminal cancellation survive reopen. Failed
+attempts are not refunded. Read-only progress inspection cannot reset or consume the budget.
+A retained reservation is not a grant or a fresh native-dispatch proof; the host still does
+not enable research execution. See the separate
+[durability record](../verification/research-durability-component-2026-09-26.md) for actual
+tests, failures and remaining native/provider integration.
+
 Verified results prefer primary documentation, original research, and authoritative records ahead
 of secondary analysis. Every claim-level citation retains its title, direct URL, publisher,
 publication time when known, access point, excerpt digest, freshness result, and a 25-word quotation

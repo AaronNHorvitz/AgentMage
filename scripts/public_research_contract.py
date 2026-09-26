@@ -6,7 +6,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "shells/host/src/public_research.rs"
+SOURCE = ROOT / "kernel/engine/src/public_research.rs"
+HOST_SOURCE = ROOT / "shells/host/src/public_research.rs"
 CORPUS = ROOT / "docs/verification/sprint-82-public-research-corpus.json"
 GUIDE = ROOT / "docs/guides/public-research.md"
 REQUIRED = (
@@ -27,9 +28,12 @@ EXPECTED = {"query": 5, "domain": 5, "source": 5, "citation": 5, "limit": 5, "au
 def validate() -> list[str]:
     failures: list[str] = []
     source = SOURCE.read_text(encoding="utf-8")
-    production = source.split("#[cfg(test)]", 1)[0]
+    host = HOST_SOURCE.read_text(encoding="utf-8").split("#[cfg(test)]", 1)[0]
+    production = source.split("#[cfg(test)]", 1)[0] + "\n" + host
     corpus = json.loads(CORPUS.read_text(encoding="utf-8"))
     guide = GUIDE.read_text(encoding="utf-8")
+    if "pub use agentmage_kernel_engine::public_research::{" not in host:
+        failures.append("host public research compatibility boundary absent")
     for token in REQUIRED:
         if token not in production:
             failures.append(f"public research boundary absent: {token}")

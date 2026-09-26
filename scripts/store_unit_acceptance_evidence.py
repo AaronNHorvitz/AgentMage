@@ -38,8 +38,8 @@ EXPECTED_TESTS: Final = (
     "json_lines_export_rejects_occupied_or_ineligible_destinations_without_change",
     "schema_constraints_and_atomic_rollback_reject_partial_authority",
     "required_writer_and_database_configuration_is_verified",
-    "version_eighteen_schema_matches_fixture_snapshot_and_is_relational",
-    "version_one_upgrades_through_eighteen_with_exact_history",
+    "version_nineteen_schema_matches_fixture_snapshot_and_is_relational",
+    "version_one_upgrades_through_nineteen_with_exact_history",
     "version_two_retention_rows_upgrade_to_three_with_initial_event",
     "failed_version_three_migration_rolls_back_all_alterations",
     "failed_version_two_migration_rolls_back_without_partial_schema",
@@ -64,7 +64,7 @@ STORE_FRAGMENTS: Final = (
     "fn verify_integrity(",
 )
 COMMAND_SPECS: Final = (
-    (("cargo", "test", "-p", "agentmage-kernel-engine", "operational_store", "--locked"), "23 passed; 0 failed"),
+    (("cargo", "test", "-p", "agentmage-kernel-engine", "operational_store", "--locked"), "46 passed; 0 failed"),
     (("cargo", "clippy", "-p", "agentmage-kernel-engine", "--all-targets", "--locked", "--", "-D", "warnings"), "Finished `dev` profile"),
     (("python3", "-m", "unittest", "tests.test_store_unit_acceptance_evidence"), "Ran 4 tests"),
     (("npm", "run", "docs:lint"), "Summary: 0 issues in 0 files"),

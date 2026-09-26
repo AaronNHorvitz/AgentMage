@@ -120,6 +120,7 @@ pub enum ResearchBudgetError {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ResearchScope {
     task_id: String,
+    depth: ResearchDepth,
     network: ResearchNetworkMode,
     limits: ResearchLimits,
     domains: BTreeSet<String>,
@@ -127,7 +128,64 @@ pub struct ResearchScope {
     policy_sha256: String,
 }
 
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ResearchScopeSnapshot {
+    schema_version: u16,
+    task_id: String,
+    depth: ResearchDepth,
+    network: ResearchNetworkMode,
+    limits: ResearchLimits,
+    domains: Vec<String>,
+    query_sha256: Vec<String>,
+    policy_sha256: String,
+}
+
 impl ResearchScope {
+    /// Canonical-owner metadata only. Full disclosed plan bytes remain in the
+    /// existing artifact store; query digests cannot replace that full plan.
+    pub(crate) fn snapshot(&self) -> Result<Vec<u8>, ResearchBudgetError> {
+        serde_json::to_vec(&ResearchScopeSnapshot {
+            schema_version: 1,
+            task_id: self.task_id.clone(),
+            depth: self.depth,
+            network: self.network,
+            limits: self.limits.clone(),
+            domains: self.domains.iter().cloned().collect(),
+            query_sha256: self.query_sha256.iter().cloned().collect(),
+            policy_sha256: self.policy_sha256.clone(),
+        })
+        .map_err(|_| ResearchBudgetError::Invalid)
+    }
+
+    /// Revalidates stored restrictions and recomputes their exact content binding.
+    /// This is not a user approval, grant or native-worker admission.
+    pub(crate) fn restore(bytes: &[u8]) -> Result<Self, ResearchBudgetError> {
+        if bytes.is_empty() || bytes.len() > 16 * 1024 {
+            return Err(ResearchBudgetError::Invalid);
+        }
+        let wire: ResearchScopeSnapshot =
+            serde_json::from_slice(bytes).map_err(|_| ResearchBudgetError::Invalid)?;
+        if wire.schema_version != 1
+            || wire.domains.windows(2).any(|pair| pair[0] >= pair[1])
+            || wire.query_sha256.windows(2).any(|pair| pair[0] >= pair[1])
+        {
+            return Err(ResearchBudgetError::Invalid);
+        }
+        let restored = Self::from_query_hashes(
+            wire.task_id,
+            wire.depth,
+            wire.network,
+            wire.limits,
+            wire.domains.into_iter().collect(),
+            wire.query_sha256.into_iter().collect(),
+        )?;
+        if restored.policy_sha256 != wire.policy_sha256 {
+            return Err(ResearchBudgetError::Binding);
+        }
+        Ok(restored)
+    }
+
     /// Exact owning task, not an authority token.
     #[must_use]
     pub fn task_id(&self) -> &str {
@@ -178,6 +236,33 @@ impl ResearchScope {
         if query_sha256.len() != disclosed_queries.len() {
             return Err(ResearchBudgetError::Invalid);
         }
+        Self::from_query_hashes(task_id, depth, network, limits, domains, query_sha256)
+    }
+
+    fn from_query_hashes(
+        task_id: String,
+        depth: ResearchDepth,
+        network: ResearchNetworkMode,
+        limits: ResearchLimits,
+        domains: BTreeSet<String>,
+        query_sha256: BTreeSet<String>,
+    ) -> Result<Self, ResearchBudgetError> {
+        if !valid_id(&task_id)
+            || !limits.validate(depth)
+            || domains.is_empty()
+            || domains.len() > usize::from(limits.domains)
+            || domains.iter().any(|domain| !public_dns_name(domain))
+            || query_sha256.is_empty()
+            || query_sha256.len() > usize::from(limits.queries)
+            || query_sha256.iter().any(|value| {
+                value.len() != 64
+                    || value
+                        .bytes()
+                        .any(|byte| !byte.is_ascii_digit() && !(b'a'..=b'f').contains(&byte))
+            })
+        {
+            return Err(ResearchBudgetError::Invalid);
+        }
         let encoded = serde_json::to_vec(&(
             1u16,
             &task_id,
@@ -190,6 +275,7 @@ impl ResearchScope {
         .map_err(|_| ResearchBudgetError::Invalid)?;
         Ok(Self {
             task_id,
+            depth,
             network,
             limits,
             domains,
@@ -277,7 +363,152 @@ pub struct ResearchBudget {
     deadline_exhausted: bool,
 }
 
+/// Descriptive counters from canonical accounting, never execution authority.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ResearchBudgetProgress {
+    /// Original task start; resume cannot replace it.
+    pub started_epoch_ms: u64,
+    /// Highest nonterminal trusted clock observation already retained.
+    pub last_epoch_ms: u64,
+    /// Queries already reserved, including failed or uncertain attempts.
+    pub queries: u16,
+    /// Source visits already reserved, including failed or uncertain attempts.
+    pub visits: u16,
+    /// Worst-case bytes already reserved, never refunded on failure.
+    pub reserved_bytes: u64,
+    /// Sticky task cancellation, independent of an external effect outcome.
+    pub cancelled: bool,
+    /// Sticky observed deadline expiry or clock rollback.
+    pub deadline_exhausted: bool,
+}
+
+// Kept separate from the live restriction object. Only the canonical owner may
+// recover a previously committed snapshot; decoding bytes never issues authority.
+// Vec preserves duplicate/order errors that BTreeSet deserialization would erase.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ResearchBudgetSnapshot {
+    schema_version: u16,
+    task_id: String,
+    policy_sha256: String,
+    started_epoch_ms: u64,
+    last_epoch_ms: u64,
+    queries: u16,
+    visits: u16,
+    reserved_bytes: u64,
+    operation_ids: Vec<String>,
+    cancelled: bool,
+    deadline_exhausted: bool,
+}
+
 impl ResearchBudget {
+    pub(crate) const fn progress(&self) -> ResearchBudgetProgress {
+        ResearchBudgetProgress {
+            started_epoch_ms: self.started_epoch_ms,
+            last_epoch_ms: self.last_epoch_ms,
+            queries: self.queries,
+            visits: self.visits,
+            reserved_bytes: self.reserved_bytes,
+            cancelled: self.cancelled,
+            deadline_exhausted: self.deadline_exhausted,
+        }
+    }
+
+    pub(crate) fn reservation_count(&self) -> usize {
+        self.operation_ids.len()
+    }
+
+    pub(crate) fn contains_operation(&self, operation_id: &str) -> bool {
+        self.operation_ids.contains(operation_id)
+    }
+
+    pub(crate) const fn is_cancelled(&self) -> bool {
+        self.cancelled
+    }
+
+    /// Original trusted start used to reconstruct the same per-operation deadline.
+    pub(crate) const fn started_epoch_ms(&self) -> u64 {
+        self.started_epoch_ms
+    }
+
+    /// Recovers restrictions only from bytes verified by the canonical owner.
+    /// The owner must additionally verify the original plan, complete revision
+    /// chain and current head. This never grants permission or resets a clock.
+    pub(crate) fn restore(
+        scope: &ResearchScope,
+        bytes: &[u8],
+    ) -> Result<Self, ResearchBudgetError> {
+        if bytes.is_empty() || bytes.len() > 8 * 1024 {
+            return Err(ResearchBudgetError::Invalid);
+        }
+        let snapshot: ResearchBudgetSnapshot =
+            serde_json::from_slice(bytes).map_err(|_| ResearchBudgetError::Invalid)?;
+        let deadline = snapshot
+            .started_epoch_ms
+            .checked_add(scope.limits.elapsed_ms)
+            .ok_or(ResearchBudgetError::Invalid)?;
+        let count = usize::from(snapshot.queries) + usize::from(snapshot.visits);
+        if snapshot.schema_version != 1
+            || snapshot.task_id != scope.task_id
+            || snapshot.policy_sha256 != scope.policy_sha256
+            || snapshot.started_epoch_ms == 0
+            || snapshot.last_epoch_ms < snapshot.started_epoch_ms
+            || snapshot.last_epoch_ms >= deadline
+            || snapshot.queries > scope.limits.queries
+            || snapshot.visits > scope.limits.visits
+            || snapshot.reserved_bytes > scope.limits.downloaded_bytes
+            || snapshot.reserved_bytes < count as u64
+            || (count == 0 && snapshot.reserved_bytes != 0)
+            || (scope.network == ResearchNetworkMode::Offline && count != 0)
+            || snapshot.operation_ids.len() != count
+            || snapshot.operation_ids.iter().any(|id| !valid_id(id))
+            || snapshot
+                .operation_ids
+                .windows(2)
+                .any(|pair| pair[0] >= pair[1])
+        {
+            return Err(ResearchBudgetError::Invalid);
+        }
+        Ok(Self {
+            schema_version: snapshot.schema_version,
+            task_id: snapshot.task_id,
+            policy_sha256: snapshot.policy_sha256,
+            started_epoch_ms: snapshot.started_epoch_ms,
+            last_epoch_ms: snapshot.last_epoch_ms,
+            queries: snapshot.queries,
+            visits: snapshot.visits,
+            reserved_bytes: snapshot.reserved_bytes,
+            operation_ids: snapshot.operation_ids.into_iter().collect(),
+            cancelled: snapshot.cancelled,
+            deadline_exhausted: snapshot.deadline_exhausted,
+        })
+    }
+
+    /// Verifies an append-only accounting transition, not an execution result.
+    /// Both states must first pass `restore` against the same original scope.
+    pub(crate) fn check_successor(&self, next: &Self) -> Result<(), ResearchBudgetError> {
+        let count = self.operation_ids.len();
+        let next_count = next.operation_ids.len();
+        if self.task_id != next.task_id
+            || self.policy_sha256 != next.policy_sha256
+            || self.started_epoch_ms != next.started_epoch_ms
+            || self.last_epoch_ms > next.last_epoch_ms
+            || self.queries > next.queries
+            || self.visits > next.visits
+            || self.reserved_bytes > next.reserved_bytes
+            || !self.operation_ids.is_subset(&next.operation_ids)
+            || (self.cancelled && !next.cancelled)
+            || (self.deadline_exhausted && !next.deadline_exhausted)
+            || next_count > count + 1
+            || ((self.cancelled || self.deadline_exhausted) && next_count != count)
+            || (next_count == count && self.reserved_bytes != next.reserved_bytes)
+            || (next_count > count && self.reserved_bytes == next.reserved_bytes)
+        {
+            return Err(ResearchBudgetError::Binding);
+        }
+        Ok(())
+    }
+
     /// Opens fresh task accounting without dispatching anything.
     pub fn new(scope: &ResearchScope, started_epoch_ms: u64) -> Result<Self, ResearchBudgetError> {
         if started_epoch_ms == 0
@@ -454,6 +685,229 @@ fn digest(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn restored_scope_retains_exact_restrictions_without_raw_disclosures() {
+        for mode in [
+            ResearchNetworkMode::Offline,
+            ResearchNetworkMode::Ask,
+            ResearchNetworkMode::TaskAuthorized,
+        ] {
+            let original = scope(mode);
+            let bytes = original.snapshot().unwrap();
+            assert!(
+                !std::str::from_utf8(&bytes)
+                    .unwrap()
+                    .contains("public Rust documentation")
+            );
+            assert_eq!(ResearchScope::restore(&bytes).unwrap(), original);
+            let original_wire: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+            for (key, value) in [
+                ("schema_version", serde_json::json!(2)),
+                ("task_id", serde_json::json!("another-task")),
+                ("depth", serde_json::json!("deep")),
+                ("domains", serde_json::json!(["other.example.com"])),
+                (
+                    "domains",
+                    serde_json::json!(["docs.example.com", "docs.example.com"]),
+                ),
+                ("query_sha256", serde_json::json!(["A".repeat(64)])),
+                ("query_sha256", serde_json::json!(["1".repeat(64)])),
+                (
+                    "query_sha256",
+                    serde_json::json!(["1".repeat(64), "1".repeat(64)]),
+                ),
+                ("policy_sha256", serde_json::json!("f".repeat(64))),
+                ("approval", serde_json::json!(true)),
+            ] {
+                let mut changed = original_wire.clone();
+                changed[key] = value;
+                assert!(
+                    ResearchScope::restore(&serde_json::to_vec(&changed).unwrap()).is_err(),
+                    "{key}"
+                );
+            }
+            let mut changed = original_wire;
+            changed["limits"]["visits"] = serde_json::json!(4);
+            assert!(ResearchScope::restore(&serde_json::to_vec(&changed).unwrap()).is_err());
+            let duplicate =
+                std::str::from_utf8(&bytes)
+                    .unwrap()
+                    .replacen('{', "{\"schema_version\":1,", 1);
+            assert!(ResearchScope::restore(duplicate.as_bytes()).is_err());
+        }
+        assert!(ResearchScope::restore(&vec![b' '; 16385]).is_err());
+    }
+
+    fn restore(scope: &ResearchScope, budget: &ResearchBudget) -> ResearchBudget {
+        ResearchBudget::restore(scope, &serde_json::to_vec(budget).unwrap()).unwrap()
+    }
+
+    #[test]
+    fn recovery_preserves_failed_quota_clock_and_consumed_attempts() {
+        let scope = scope(ResearchNetworkMode::Ask);
+        let mut original = ResearchBudget::new(&scope, 100).unwrap();
+        original
+            .reserve(&scope, "op-1", ResearchOperation::Visit, 100, 101)
+            .unwrap();
+        assert_eq!(
+            original.reserve(&scope, "op-2", ResearchOperation::Visit, u64::MAX, 200),
+            Err(ResearchBudgetError::Exhausted)
+        );
+        let mut recovered = restore(&scope, &original);
+        assert_eq!(recovered.last_epoch_ms, 200);
+        assert_eq!(recovered.reserved_bytes, 100);
+        assert_eq!(
+            recovered.reserve(&scope, "op-1", ResearchOperation::Visit, 1, 200),
+            Err(ResearchBudgetError::Binding)
+        );
+        assert_eq!(
+            recovered.reserve(&scope, "op-2", ResearchOperation::Visit, 1, 199),
+            Err(ResearchBudgetError::Exhausted)
+        );
+        assert!(recovered.deadline_exhausted);
+    }
+
+    #[test]
+    fn recovered_cancellation_and_expiry_never_reopen() {
+        let scope = scope(ResearchNetworkMode::Ask);
+        for cancel in [false, true] {
+            let mut budget = ResearchBudget::new(&scope, 100).unwrap();
+            budget
+                .reserve(&scope, "op-1", ResearchOperation::Visit, 100, 101)
+                .unwrap();
+            if cancel {
+                budget.cancel();
+            } else {
+                assert_eq!(
+                    budget.reserve(&scope, "op-2", ResearchOperation::Visit, 1, 60_100),
+                    Err(ResearchBudgetError::Exhausted)
+                );
+            }
+            let mut recovered = restore(&scope, &budget);
+            assert_eq!(
+                recovered.reserve(&scope, "op-2", ResearchOperation::Visit, 1, 102),
+                Err(if cancel {
+                    ResearchBudgetError::Cancelled
+                } else {
+                    ResearchBudgetError::Exhausted
+                })
+            );
+            assert_eq!(recovered.reserved_bytes, 100);
+        }
+        let budget = ResearchBudget::new(&scope, 100).unwrap();
+        let mut recovered = restore(&scope, &budget);
+        assert_eq!(
+            recovered.reserve(&scope, "op-1", ResearchOperation::Visit, 1, 60_100),
+            Err(ResearchBudgetError::Exhausted)
+        );
+    }
+
+    #[test]
+    fn snapshot_schema_binding_counters_and_complete_identity_set_are_closed() {
+        let scope = scope(ResearchNetworkMode::Ask);
+        let mut budget = ResearchBudget::new(&scope, 100).unwrap();
+        budget
+            .reserve(&scope, "op-1", ResearchOperation::Visit, 10, 101)
+            .unwrap();
+        let original = serde_json::to_value(&budget).unwrap();
+        for (key, value) in [
+            ("schema_version", serde_json::json!(2)),
+            ("task_id", serde_json::json!("another-task")),
+            ("policy_sha256", serde_json::json!("f".repeat(64))),
+            ("started_epoch_ms", serde_json::json!(0)),
+            ("started_epoch_ms", serde_json::json!(u64::MAX)),
+            ("last_epoch_ms", serde_json::json!(99)),
+            ("last_epoch_ms", serde_json::json!(60_100)),
+            ("queries", serde_json::json!(2)),
+            ("visits", serde_json::json!(6)),
+            ("reserved_bytes", serde_json::json!(0)),
+            ("reserved_bytes", serde_json::json!(u64::MAX)),
+            ("operation_ids", serde_json::json!([])),
+            ("operation_ids", serde_json::json!(["op-1", "op-1"])),
+            ("operation_ids", serde_json::json!(["../bad-id"])),
+            ("approve", serde_json::json!(true)),
+        ] {
+            let mut value_copy = original.clone();
+            value_copy[key] = value;
+            assert!(
+                ResearchBudget::restore(&scope, &serde_json::to_vec(&value_copy).unwrap()).is_err(),
+                "{key}"
+            );
+        }
+        for key in original.as_object().unwrap().keys() {
+            let mut value = original.clone();
+            value.as_object_mut().unwrap().remove(key);
+            assert!(
+                ResearchBudget::restore(&scope, &serde_json::to_vec(&value).unwrap()).is_err(),
+                "{key}"
+            );
+        }
+        let bytes = serde_json::to_string(&budget).unwrap();
+        let duplicated = bytes.replacen('{', "{\"schema_version\":1,", 1);
+        for bytes in [vec![], vec![b' '; 8193], duplicated.into_bytes()] {
+            assert!(ResearchBudget::restore(&scope, &bytes).is_err());
+        }
+        budget
+            .reserve(&scope, "op-2", ResearchOperation::Visit, 10, 102)
+            .unwrap();
+        let mut unsorted = serde_json::to_value(&budget).unwrap();
+        unsorted["operation_ids"] = serde_json::json!(["op-2", "op-1"]);
+        assert!(ResearchBudget::restore(&scope, &serde_json::to_vec(&unsorted).unwrap()).is_err());
+    }
+
+    #[test]
+    fn snapshot_rejects_reserved_bytes_without_an_operation_and_offline_consumption() {
+        let offline = scope(ResearchNetworkMode::Offline);
+        let mut value = serde_json::to_value(ResearchBudget::new(&offline, 100).unwrap()).unwrap();
+        value["reserved_bytes"] = serde_json::json!(1);
+        assert!(ResearchBudget::restore(&offline, &serde_json::to_vec(&value).unwrap()).is_err());
+        value["visits"] = serde_json::json!(1);
+        value["operation_ids"] = serde_json::json!(["op-1"]);
+        assert!(ResearchBudget::restore(&offline, &serde_json::to_vec(&value).unwrap()).is_err());
+    }
+
+    #[test]
+    fn successor_refuses_refunds_reset_replaced_ids_and_cleared_terminal_flags() {
+        let scope = scope(ResearchNetworkMode::Ask);
+        let initial = ResearchBudget::new(&scope, 100).unwrap();
+        let mut reserved = restore(&scope, &initial);
+        reserved
+            .reserve(&scope, "op-1", ResearchOperation::Visit, 100, 101)
+            .unwrap();
+        assert!(initial.check_successor(&reserved).is_ok());
+        assert!(reserved.check_successor(&initial).is_err());
+        let mut later = restore(&scope, &reserved);
+        later
+            .reserve(&scope, "op-2", ResearchOperation::Visit, 100, 102)
+            .unwrap();
+        assert!(reserved.check_successor(&later).is_ok());
+        assert!(initial.check_successor(&later).is_err());
+        for (key, value) in [
+            ("started_epoch_ms", serde_json::json!(101)),
+            ("last_epoch_ms", serde_json::json!(100)),
+            ("reserved_bytes", serde_json::json!(99)),
+            ("reserved_bytes", serde_json::json!(101)),
+            ("operation_ids", serde_json::json!(["op-changed"])),
+        ] {
+            let mut changed = serde_json::to_value(&reserved).unwrap();
+            changed[key] = value;
+            let recovered =
+                ResearchBudget::restore(&scope, &serde_json::to_vec(&changed).unwrap()).unwrap();
+            assert!(reserved.check_successor(&recovered).is_err(), "{key}");
+        }
+        let mut terminal = restore(&scope, &reserved);
+        terminal.cancel();
+        assert!(reserved.check_successor(&terminal).is_ok());
+        assert!(terminal.check_successor(&reserved).is_err());
+        assert!(terminal.check_successor(&later).is_err());
+        terminal.cancelled = false;
+        terminal.deadline_exhausted = true;
+        assert!(terminal.check_successor(&reserved).is_err());
+        later.deadline_exhausted = true;
+        assert!(terminal.check_successor(&later).is_err());
+    }
+
     fn scope(mode: ResearchNetworkMode) -> ResearchScope {
         ResearchScope::new(
             "task-1".into(),

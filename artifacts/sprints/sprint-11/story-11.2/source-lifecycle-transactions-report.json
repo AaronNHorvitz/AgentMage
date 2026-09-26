@@ -11,9 +11,9 @@
       "sha256": "78146e92fda7e4f463cab1c751455d99ce7ff95de2bce5829fe768092f671fe7"
     },
     {
-      "byte_length": 175751,
+      "byte_length": 175838,
       "path": "kernel/engine/src/runtime_artifact.rs",
-      "sha256": "63c953247a8f9e0af2104b1a93021e40707cabe84eb05a3e8f8400216ae5edeb"
+      "sha256": "d286f3056da741cdbc9383297d2749e9967223702a6baafa09b322edbe6d6410"
     },
     {
       "byte_length": 69345,
@@ -21,9 +21,29 @@
       "sha256": "b34c1c3b248cd91aef81c955e06cc49b2793bdf8816c6b34ef722eee28955b31"
     },
     {
-      "byte_length": 465603,
+      "byte_length": 470849,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "4d4a795347f49eb879f184a10eabdb896d89110dba423cef1b7057e94c07c08b"
+      "sha256": "8fa6f5f328d93f413fc8d34c9f916fc99141224efb6e0444abfc6700ffd69081"
+    },
+    {
+      "byte_length": 4166,
+      "path": "kernel/engine/fixtures/operational-store/schema-18.json",
+      "sha256": "2dbc40858820316bb0bb6e08ae61bddaf25287c2cdd820a33f7624f9b16d4ea6"
+    },
+    {
+      "byte_length": 4698,
+      "path": "kernel/engine/fixtures/operational-store/schema-19.json",
+      "sha256": "2ec027b073227b9e097b324e07cdb144e473496f2f9a9081cb6dd8c39cbc9464"
+    },
+    {
+      "byte_length": 2335,
+      "path": "kernel/engine/migrations/operational-store/0019-research-budgets.sql",
+      "sha256": "03800068d00ea422acc3702e48bb3cae4c736f104680bb57767ce0b8b1fb6db3"
+    },
+    {
+      "byte_length": 26318,
+      "path": "kernel/engine/src/research_journal.rs",
+      "sha256": "85b16d35155631e3963be0d9572f84476a43ec759bb8dddc88bd0a051f5dd2a3"
     },
     {
       "byte_length": 2828,
@@ -31,9 +51,9 @@
       "sha256": "b5e3574c6d4000543796edf8700dbc937b58499043db6ee39cf8b1dfa59db8e0"
     },
     {
-      "byte_length": 9950,
+      "byte_length": 10303,
       "path": "scripts/source_lifecycle_transactions_evidence.py",
-      "sha256": "6a76ade903530eef2d142fc42174ed7b6767688b135c982d4facc0b470ed2263"
+      "sha256": "093ba53269244d3b0384ba7ae4b996d9a3af5e495cdc30e2ac43aa60b5fc52e7"
     },
     {
       "byte_length": 2373,
@@ -43,18 +63,18 @@
     {
       "byte_length": 18014,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-results.log",
-      "sha256": "dc1704274df69907d6ae5632e38bd74d57d10fb77b56363d0d9549e00ecccf14"
+      "sha256": "908fd401e28222648a72b3600bba13d88de6d69d7dda831aacc61d96846866cf"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine source_lifecycle::tests --locked",
     "cargo test -p agentmage-kernel-engine runtime_artifact::tests::publication_deduplicates_without_broadening_owner_or_reference_state --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_eighteen_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_nineteen_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
-  "generated_on": "2026-08-30",
-  "operational_store_schema_version": 17,
+  "generated_on": "2026-09-26",
+  "operational_store_schema_version": 19,
   "physical_payload_authority": {
     "artifact_table": "runtime_artifacts",
     "migration": "0007-runtime-artifacts.sql",
@@ -81,7 +101,7 @@
     "refresh_hold_expiry_delete_and_collection_are_atomic_and_reference_safe ... ok",
     "stale_revision_and_active_hold_roll_back_without_runtime_reference_drift ... ok",
     "publication_deduplicates_without_broadening_owner_or_reference_state ... ok",
-    "version_one_upgrades_through_eighteen_with_exact_history ... ok",
+    "version_one_upgrades_through_nineteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,
