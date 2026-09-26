@@ -1,12 +1,36 @@
 """Mutation tests for current operational-schema v3 evidence."""
 
 import copy
+import contextlib
+import io
+import subprocess
 import unittest
+from unittest import mock
 
 from scripts import operational_schema_v3_evidence as evidence
 
 
 class OperationalSchemaV3EvidenceTests(unittest.TestCase):
+    def test_failed_command_or_missing_marker_retains_output_and_refuses_report(self) -> None:
+        for exit_code, stdout in [(0, "46 passed; 0 failed\n"), (1, "20 passed; 0 failed\n")]:
+            with self.subTest(exit_code=exit_code):
+                result = subprocess.CompletedProcess(["cargo"], exit_code, stdout, "retained stderr\n")
+                captured = io.StringIO()
+                with (
+                    mock.patch.object(evidence.subprocess, "run", return_value=result),
+                    contextlib.redirect_stderr(captured),
+                    self.assertRaises(evidence.EvidenceError),
+                ):
+                    evidence.run_checked(("cargo",), "20 passed; 0 failed")
+                self.assertEqual(captured.getvalue(), stdout + result.stderr)
+
+    def test_success_requires_exact_current_command_marker(self) -> None:
+        arguments, marker = evidence.COMMAND_SPECS[0]
+        self.assertEqual(marker, "46 passed; 0 failed")
+        result = subprocess.CompletedProcess(arguments, 0, marker, "")
+        with mock.patch.object(evidence.subprocess, "run", return_value=result):
+            self.assertEqual(evidence.run_checked(arguments, marker), evidence.command_record(arguments, marker))
+
     def valid(self) -> dict:
         return {
             "artifact_id": "encrypted-operational-schema-v3",

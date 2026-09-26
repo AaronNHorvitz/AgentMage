@@ -146,6 +146,32 @@ operational-schema evidence need the new committed source pin; the Story 4.1 map
 receives its truthful pin after that checkpoint. These are pending follow-on checks, not
 current approvals. No aggregate evidence-freshness, model or release claim is made.
 
+### Post-commit source-pin reconciliation
+
+The durability source checkpoint is `e457d19d000f1b0f7ac3cfd67bc04b5904e1ba5d`.
+The post-pin driver renewed Sprint 82 and store-unit reports against that exact revision;
+their three and four checker tests passed. Sprint 82 remains blocked for broader acceptance,
+with no live search/model execution claimed. Store-unit verification ran its exact current
+Cargo command and required the `46 passed; 0 failed` marker; its pre-existing ignored test
+remains separately disclosed in the broad results above.
+
+The driver then exited 1 at the schema-v3 checker, which still required the historical
+`20 passed; 0 failed` marker for the same command. Its old wrapper did not emit captured
+subprocess output on rejection, so the retained failure log contains the wrapper diagnostic,
+not complete raw Cargo output. The log SHA-256 is
+`1e8c4d494925b7b1d801222825454277ce813ac8bfe46a093979ef27516dd9de`.
+The preceding successful store-unit step supports the count mismatch diagnosis; a separate
+raw-output command check was queued without changing any Rust input.
+
+The checker now requires all 46 current store tests, retains stdout/stderr on rejection and
+explicitly limits its claim to the historical schema-v3 subset. Two new regression tests
+cover missing-marker/nonzero-exit refusal and the exact success marker; all seven schema
+checker tests passed. This is a developer-checker correction, not a lowered acceptance
+threshold or runtime change. No evidence binding was removed, and no second SBOM write ran.
+Schema-v3 evidence regeneration and the Story 4.1 mapping remain pending their new source pin;
+the failed run is not reclassified as a pass. Other historical aggregate dispositions above
+remain unchanged.
+
 ## Remaining integration and acceptance
 
 An opaque reservation proves spent accounting, not permission, current cancellation state

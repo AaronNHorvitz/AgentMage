@@ -1,27 +1,31 @@
 {
   "schema_version": 1,
   "record_type": "sprint_82_local_evidence",
-  "source_revision": "3a414dd5e32b2e7e91d3c9945aaf660a3148433b",
+  "source_revision": "e457d19d000f1b0f7ac3cfd67bc04b5904e1ba5d",
   "source_sha256": {
-    "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
-    "Cargo.lock": "78637196918e670cfa616bb062ca4675daf4038666e0bf6c81a131b273ee1ff9",
-    "shells/host/Cargo.toml": "b6ad82e6be880f63c24d47a0341748261f2bd747d7a851264b81ab24beacf713",
-    "shells/host/src/lib.rs": "5b1ee425c976150c3c7781271d241a84d13ca62b6965ff0555c28ddc00eff853",
-    "shells/host/src/public_research.rs": "c1ed85bf64894180066da79757bd0d3e4f66adaf2edb9d42513711da848e2ea3",
-    "docs/guides/public-research.md": "f78640510bc636e7e5bfc994c688e11b564c6a16eefdfe033787b0ac88ab08b3",
+    "Cargo.toml": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc",
+    "Cargo.lock": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd",
+    "shells/host/Cargo.toml": "91da28076b9b935bbde267111d424c80cff334149ecfe67be2d5c8db32bd9a7d",
+    "shells/host/src/lib.rs": "059d5d1baa3a7c02d998147e538329a7d386f56c405f2bd0abcc83840391f795",
+    "shells/host/src/public_research.rs": "132b025bd3f73c14b5b3453d53bad5a49e7960e9438814771cd9517eb6fd98d1",
+    "docs/guides/public-research.md": "ad3cf51dda32c69bbb1741249bb64ab41d0d28a15c102c68865d62ad6ecfefa7",
+    "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
+    "kernel/engine/src/lib.rs": "09a98821d77d5441552d8b5c4e24a55d0a21721320c665c4d6041e5b611666c3",
+    "kernel/engine/src/public_research.rs": "d25c7115a4775b23416ab477b496675cc1a93abc16afddd10721970411c9da75",
+    "kernel/engine/src/research_budget.rs": "42cd16185735624efb6b2fb8087eb44256525377b46ccecdb469d7710e87d76f",
     "docs/verification/sprint-82-public-research-corpus.json": "84deba2298014d7bad6ae395cd94084e8b8b2dd558eb0588d866e39d13d7f78e",
-    "scripts/public_research_contract.py": "f7fcf30658079d4dbb6dbae6156093c42a7263ab26185cece2aefd9400f77586",
-    "tests/test_public_research_contract.py": "0f286ce33f8b24502ee78bf43f70aefcdb3ee4a1675ad0d35811c3f885495be2",
-    "supply-chain/dependency-hashes.sha256": "d6039f580a4736368291fffd40d1b663260ec6d1bc3e1651019abdd015df5bb3",
-    "supply-chain/dependency-provenance.json": "2e1c11445ba16fb58e99385e19a5ce72b0001d914e554472708720ce69ae7e1f",
-    "supply-chain/sbom.cdx.json": "f6842601bb23745fa6c59d0774eef5d5449baec374d0f1f40696063d4ac70cbb",
+    "scripts/public_research_contract.py": "b0319109663ae5ce03b9924bfd6f8898f16f26109e9bafad45c045abb26f8430",
+    "tests/test_public_research_contract.py": "3446b22caa4e6c66e707e5f64b7ef5e225e907b79cfb4b8346036841b4ec2d86",
+    "supply-chain/dependency-hashes.sha256": "a0b728376976a82a814ce174a91b31cba1650a9a75d4e83d104cb75bc6ec76b9",
+    "supply-chain/dependency-provenance.json": "adefa28d6505d5531c3da9ee9dc0a634d71020922118aacc8208abce852d515d",
+    "supply-chain/sbom.cdx.json": "a3b09b0a5396fad1504e3b2aa857cea4b4ecfa6a6d05223d0ab1e78472a698d5",
     "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
-    "scripts/sprint_82_evidence.py": "d4afec34a0bc11996bd2c84b615243a0b182c4d6d7e891806f1330551247e13c",
+    "scripts/sprint_82_evidence.py": "a7da5abf0859988c8e1988c2ba224d1b350782374f04e670560d03ca77a141c6",
     "tests/test_sprint_82_evidence.py": "b5ecf4872f037d3d1c8c0e36359cae0cc2e6547a50b49224ec5fd8a6d6a05d32"
   },
   "environment": {
     "system": "Linux",
-    "release": "7.1.10-200.fc44.x86_64",
+    "release": "7.2.5-200.fc44.x86_64",
     "machine": "x86_64",
     "python": "3.14.7",
     "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
@@ -36,12 +40,12 @@
         "cargo",
         "test",
         "-p",
-        "agentmage-host",
+        "agentmage-kernel-engine",
         "public_research::tests",
         "--lib"
       ],
       "exit_code": 0,
-      "output_sha256": "d844ef7a28de666ac5941f03fe79cd2859bef70cf7b0e2ec745f04aa6906d038",
+      "output_sha256": "320d03fad578b0c11a7018684eb7af8bc136149d5a71b21b78cdb5daea9a8612",
       "blocking_skip_count": 0
     },
     {
@@ -53,7 +57,21 @@
         "tests.test_public_research_contract"
       ],
       "exit_code": 0,
-      "output_sha256": "a6707d4eff38012da33ddc34bc6dc076a3b17151cfc9aef223c8790cbe64c3da",
+      "output_sha256": "921b60a7fd52e978fbb551cacd29df2d6708879400278e1fcc70fceeb0c6f8e0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "public-research-host-compatibility",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "public_research::tests",
+        "--lib"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6e835071f0914da2ad7d2b093dfbaae873eb1a16ad16428bbe2fa8a0475e3beb",
       "blocking_skip_count": 0
     },
     {
@@ -65,7 +83,7 @@
         "schemas:test"
       ],
       "exit_code": 0,
-      "output_sha256": "b15bc9739b9ab8d5fe66fe56c4093b912ef56c81f8ecd20c5fa27498866dc940",
+      "output_sha256": "0a4019773bb2c690a4ece21432274fbf5ae1cbc3e068a3fee0face62f0706c8a",
       "blocking_skip_count": null
     },
     {
@@ -117,7 +135,7 @@
   ],
   "implemented_contracts": {
     "source_type_count": 4,
-    "focused_rust_test_count": 4,
+    "focused_rust_test_count": 8,
     "corpus_case_count": 30,
     "quotation_word_limit": 25,
     "network_executor_count": 0,
@@ -127,7 +145,7 @@
   "verification_evidence": {
     "focused_local_contracts": true,
     "focused_blocking_skip_count": 0,
-    "rust_test_count": 4,
+    "rust_test_count": 8,
     "corpus_case_count": 30,
     "citation_content_minimized": true,
     "live_public_search_executed": false,

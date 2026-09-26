@@ -9,6 +9,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from typing import Any, Final
@@ -27,8 +28,8 @@ SOURCE_PATHS: Final = (
     "tests/test_operational_schema_v3_evidence.py",
 )
 COMMAND_SPECS: Final = (
-    (("cargo", "test", "-p", "agentmage-kernel-engine", "operational_store", "--locked"), "20 passed; 0 failed"),
-    (("python3", "-m", "unittest", "tests.test_operational_schema_v3_evidence"), "Ran 5 tests"),
+    (("cargo", "test", "-p", "agentmage-kernel-engine", "operational_store", "--locked"), "46 passed; 0 failed"),
+    (("python3", "-m", "unittest", "tests.test_operational_schema_v3_evidence"), "Ran 7 tests"),
     (("npm", "run", "product:lint"), "Structural effect mediation boundary validated."),
     (("npm", "run", "docs:lint"), "Summary: 0 issues in 0 files"),
 )
@@ -74,7 +75,7 @@ CLAIMS: Final = {
     "release_support": False,
 }
 LIMITATIONS: Final = [
-    "This artifact proves the current encrypted schema and migration chain; typed production writes for every normalized domain table and full domain restart reconstruction remain later work.",
+    "This artifact verifies the historical schema-v3 subset against the named current-source tests; it does not prove complete coverage of later schemas, research families, production domain writes or restart reconstruction.",
     "The historical operational-schema-v2 artifact remains immutable and describes only its original source revision.",
     "Cross-process crash injection, live platform key services, cross-platform execution, packaging, and release acceptance remain later gates.",
 ]
@@ -171,6 +172,10 @@ def run_checked(arguments: tuple[str, ...], marker: str) -> dict[str, Any]:
         timeout=300, check=False, env={**os.environ, "LANG": "C", "LC_ALL": "C"},
     )
     if result.returncode or marker not in result.stdout + result.stderr:
+        # The enclosing private verification log must retain the actual rejection,
+        # not only our wrapper diagnostic. A rejected command never emits a report.
+        sys.stderr.write(result.stdout)
+        sys.stderr.write(result.stderr)
         raise EvidenceError(f"verification command failed: {Path(arguments[0]).name}")
     return command_record(arguments, marker)
 
