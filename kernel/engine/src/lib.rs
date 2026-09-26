@@ -235,6 +235,8 @@ pub mod repository_inspection;
 pub mod repository_safety;
 /// Bounded public research disclosure, destinations and single-owner accounting.
 pub mod research_budget;
+/// Canonical freshness bridge for separately admitted native research effects.
+pub mod research_dispatch;
 /// Exact independently prepared public-GET restrictions on a consumed effect permit.
 pub mod research_effect_binding;
 /// Closed authority-free packets for the separately mediated public GET worker.

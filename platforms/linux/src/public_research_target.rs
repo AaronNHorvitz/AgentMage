@@ -15,6 +15,15 @@ pub(crate) enum TargetError {
     Destination,
 }
 
+/// Uses an absolute resolver name without changing the approved HTTP/TLS origin.
+pub(crate) fn absolute_dns_name(target: &PublicGetTarget) -> Result<String, TargetError> {
+    target.validate().map_err(|_| TargetError::Invalid)?;
+    // ndots:0 prefers the exact name but does not disable search after NXDOMAIN.
+    // A trailing root dot makes ONLY the DNS lookup absolute, preventing implicit
+    // suffixes derived from ambient resolver configuration or the UTS hostname.
+    Ok(format!("{}.", target.domain))
+}
+
 /// Structured fields are unencoded. Encode them exactly once with the URL library.
 pub(crate) fn request_url(target: &PublicGetTarget) -> Result<Url, TargetError> {
     target.validate().map_err(|_| TargetError::Invalid)?;
@@ -202,5 +211,45 @@ mod tests {
         }
         // Even duplicate overflow is refused, never silently truncated at sixteen.
         assert!(public_destinations(std::iter::repeat_n(public, 17)).is_err());
+    }
+}
+
+#[cfg(test)]
+mod absolute_dns_tests {
+    use super::*;
+
+    #[test]
+    fn dns_lookup_is_absolute_but_http_and_tls_origin_remain_exact() {
+        let target = PublicGetTarget {
+            domain: "docs.example.com".into(),
+            path: "/api".into(),
+            query: vec![("q".into(), "public query".into())],
+        };
+        assert_eq!(absolute_dns_name(&target).unwrap(), "docs.example.com.");
+        assert_eq!(
+            request_url(&target).unwrap().host_str(),
+            Some("docs.example.com")
+        );
+        assert_eq!(target.domain, "docs.example.com");
+    }
+
+    #[test]
+    fn absolute_dns_form_does_not_relax_input_or_add_lookup_destinations() {
+        for domain in [
+            "docs.example.com.",
+            "Docs.example.com",
+            "docs..example.com",
+            "localhost",
+            "docs.local",
+            "127.0.0.1",
+            "docs.example.com/private",
+        ] {
+            let target = PublicGetTarget {
+                domain: domain.into(),
+                path: "/api".into(),
+                query: vec![],
+            };
+            assert!(absolute_dns_name(&target).is_err());
+        }
     }
 }

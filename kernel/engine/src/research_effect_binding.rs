@@ -132,6 +132,8 @@ impl PublicGetEffectBinding {
         let packet = self.packet();
         if now_epoch_ms < packet.prepared_at_epoch_ms()
             || now_epoch_ms >= packet.deadline_epoch_ms()
+            || !authorization.grant_live_at(now_epoch_ms)
+            || packet.deadline_epoch_ms() > authorization.grant_expires_at_epoch_ms()
         {
             return Err(ResearchEffectBindingError::Deadline);
         }
@@ -425,18 +427,46 @@ mod tests {
     }
 
     fn exercise_with_cancellation(
-        mut driver: Driver,
+        driver: Driver,
         operation: GrantOperation,
         network: &str,
         details: &str,
         expired: bool,
         cancelled: bool,
     ) -> Driver {
+        exercise_with_exact_authority(
+            driver,
+            operation,
+            network,
+            details,
+            cancelled,
+            GrantTimingFixture {
+                call: call(),
+                consumed_at: if expired { 31000 } else { 3000 },
+                expires_at: 30000,
+            },
+        )
+    }
+
+    struct GrantTimingFixture {
+        call: ToolCall,
+        consumed_at: u64,
+        expires_at: u64,
+    }
+
+    fn exercise_with_exact_authority(
+        mut driver: Driver,
+        operation: GrantOperation,
+        network: &str,
+        details: &str,
+        cancelled: bool,
+        timing: GrantTimingFixture,
+    ) -> Driver {
         let mut definition = definition();
         let operation = OperationBinding::new(operation);
         definition.declared_effects = vec![operation];
         definition.required_grant.operation = operation;
-        let call = call();
+        let call = timing.call;
         let root = root();
         let target = GrantTarget::held_workspace_root(&root).unwrap();
         let actor = ActorId::from_raw("actor-0001");
@@ -505,7 +535,7 @@ mod tests {
                     }],
                     rollback_description: "External disclosure cannot be undone".into(),
                     issued_at_epoch_ms: 2000,
-                    expires_at_epoch_ms: 30000,
+                    expires_at_epoch_ms: timing.expires_at,
                     nonce: GrantNonce::from_raw("nonce-operation-0001"),
                     preview_sha256: "3".repeat(64),
                     policy_sha256: policy.policy_sha256().into(),
@@ -534,7 +564,7 @@ mod tests {
             preimages: grant.preimages.clone(),
             expected_side_effects: grant.expected_side_effects.clone(),
             preview_sha256: grant.preview_sha256.clone(),
-            now_epoch_ms: if expired { 31000 } else { 3000 },
+            now_epoch_ms: timing.consumed_at,
             // Let a valid non-network grant reach the binding's operation check.
             // Attaching a network scope to it would instead be denied earlier by
             // policy, leaving that independent driver restriction unexercised.
@@ -688,5 +718,141 @@ mod tests {
             true,
         );
         assert_eq!((driver.checked, driver.accepted), (0, 0));
+    }
+
+    #[test]
+    fn valid_launch_clock_cannot_extend_the_exact_consumed_grant_deadline() {
+        for now in [3000, 3499, 3500, 3999] {
+            let mut driver = driver();
+            driver.now = now;
+            assert_eq!(driver.binding.packet().deadline_epoch_ms(), 4000);
+            let details = driver.binding.packet().sha256().to_owned();
+            let driver = exercise_with_exact_authority(
+                driver,
+                GrantOperation::NetworkAccess,
+                "https:docs.example.com:443",
+                &details,
+                false,
+                GrantTimingFixture {
+                    call: call(),
+                    consumed_at: 3000,
+                    expires_at: 3500,
+                },
+            );
+            assert_eq!((driver.checked, driver.accepted), (1, 0), "launch {now}");
+            assert_eq!(driver.error, Some(ResearchEffectBindingError::Deadline));
+        }
+    }
+
+    #[test]
+    fn equal_packet_and_grant_expiry_is_exclusive_and_consumption_clock_is_monotonic() {
+        for (consumed_at, now, accepted) in [
+            (3000, 3000, true),
+            (3000, 3999, true),
+            (3000, 4000, false),
+            (3100, 3099, false),
+            (3100, 3100, true),
+        ] {
+            let mut driver = driver();
+            driver.now = now;
+            let details = driver.binding.packet().sha256().to_owned();
+            let driver = exercise_with_exact_authority(
+                driver,
+                GrantOperation::NetworkAccess,
+                "https:docs.example.com:443",
+                &details,
+                false,
+                GrantTimingFixture {
+                    call: call(),
+                    consumed_at,
+                    expires_at: 4000,
+                },
+            );
+            assert_eq!(
+                (driver.checked, driver.accepted),
+                (1, usize::from(accepted))
+            );
+            assert_eq!(
+                driver.error,
+                (!accepted).then_some(ResearchEffectBindingError::Deadline)
+            );
+        }
+        let driver = driver();
+        let details = driver.binding.packet().sha256().to_owned();
+        let driver = exercise_with_exact_authority(
+            driver,
+            GrantOperation::NetworkAccess,
+            "https:docs.example.com:443",
+            &details,
+            false,
+            GrantTimingFixture {
+                call: call(),
+                consumed_at: 4000,
+                expires_at: 4000,
+            },
+        );
+        assert_eq!((driver.checked, driver.accepted), (0, 0));
+    }
+
+    #[test]
+    fn shorter_packet_is_prepared_before_approval_not_rewritten_after_consumption() {
+        for now in [3000, 3499, 3500] {
+            let original = packet("task-0001");
+            let mut request = original.packet().request().clone();
+            request.timeout_ms = 500;
+            let scope = ResearchScope::new(
+                "task-0001".into(),
+                ResearchDepth::Quick,
+                ResearchNetworkMode::Ask,
+                ResearchLimits::ceiling(ResearchDepth::Quick),
+                BTreeSet::from(["docs.example.com".into()]),
+                &["public query".into()],
+            )
+            .unwrap();
+            let prepared = PreparedPublicGet::prepare(&scope, request, 1000, 3000).unwrap();
+            assert_eq!(prepared.packet().deadline_epoch_ms(), 3500);
+            let mut approved_call = call();
+            approved_call.arguments.bytes =
+                serde_json::to_vec(prepared.packet().request()).unwrap();
+            approved_call.arguments.sha256 = digest(&approved_call.arguments.bytes);
+            let binding = PublicGetEffectBinding::prepare(
+                &definition(),
+                approved_call.clone(),
+                &root(),
+                prepared,
+            )
+            .unwrap();
+            let original_packet = binding.packet().sha256().to_owned();
+            let driver = Driver {
+                binding,
+                root: root(),
+                now,
+                checked: 0,
+                accepted: 0,
+                error: None,
+            };
+            let driver = exercise_with_exact_authority(
+                driver,
+                GrantOperation::NetworkAccess,
+                "https:docs.example.com:443",
+                &original_packet,
+                false,
+                GrantTimingFixture {
+                    call: approved_call.clone(),
+                    consumed_at: 3000,
+                    expires_at: 3500,
+                },
+            );
+            assert_eq!(
+                (driver.checked, driver.accepted),
+                (1, usize::from(now < 3500))
+            );
+            assert_eq!(
+                driver.error,
+                (now >= 3500).then_some(ResearchEffectBindingError::Deadline)
+            );
+            assert_eq!(driver.binding.call, approved_call);
+            assert_eq!(driver.binding.packet().sha256(), original_packet);
+        }
     }
 }

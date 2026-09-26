@@ -111,6 +111,51 @@ impl AuthorityTransactionRequest {
     pub(crate) const fn transaction_id(&self) -> &AuthorityTransactionId {
         &self.transaction_id
     }
+
+    pub(crate) const fn research_call(&self) -> &ToolCall {
+        &self.call
+    }
+
+    pub(crate) const fn occurred_at_epoch_ms(&self) -> u64 {
+        self.occurred_at_epoch_ms
+    }
+
+    pub(crate) fn matches_research_start(
+        &self,
+        issuer: &crate::grants::GrantIssuer,
+        context: &crate::research_journal::ResearchBudgetContext,
+        packet: &crate::research_fetch::PublicGetWorkerPacket,
+        event: &agentmage_kernel_contracts::RuntimeEvent,
+    ) -> bool {
+        let Some(grant) = issuer.current(&self.grant_id) else {
+            return false;
+        };
+        let Some(issued_sha256) = issuer.revision_hash(&self.grant_id, grant.revision) else {
+            return false;
+        };
+        // Generic native effects put the pre-consumption issued grant's canonical
+        // hash in ToolStarted, not the later consumed revision or a transaction hash.
+        grant.status == agentmage_kernel_contracts::GrantStatus::Issued
+            && grant.approval_id.as_ref() == Some(&self.approval_id)
+            && grant.operation.operation()
+                == agentmage_kernel_contracts::GrantOperation::NetworkAccess
+            && self.context.session_id == context.session_id
+            && self.context.task_id == context.task_id
+            && self.context.task_id.as_str() == packet.task_id()
+            && self.context.now_epoch_ms == self.occurred_at_epoch_ms
+            && self.context.argument_sha256 == self.call.arguments.sha256
+            && self.occurred_at_epoch_ms == event.occurred_at_epoch_ms
+            && event.run_id == context.run_id
+            && event.session_id == context.session_id
+            && event.task_id == context.task_id
+            && event.correlation_id == self.call.correlation_id
+            && event.operation_id.is_some()
+            && event.turn_id.is_some()
+            && self.call.tool_call_id.as_str() == packet.request().operation_id
+            && matches!(&event.kind,
+                agentmage_kernel_contracts::RuntimeEventKind::ToolStarted { tool_call_id, authority_sha256 }
+                    if tool_call_id == &self.call.tool_call_id && authority_sha256 == issued_sha256)
+    }
 }
 
 /// Kernel-issued proof that one exact grant has been consumed for one attempt.
@@ -149,6 +194,9 @@ pub struct EffectAuthorization<'transaction> {
     transaction_id: &'transaction AuthorityTransactionId,
     attempt_id: &'transaction OperationAttemptId,
     consumed_grant_sha256: &'transaction str,
+    grant_issued_at_epoch_ms: u64,
+    grant_expires_at_epoch_ms: u64,
+    consumed_at_epoch_ms: u64,
     task_id: &'transaction TaskId,
     operation: OperationBinding,
     call: &'transaction ToolCall,
@@ -160,6 +208,21 @@ pub struct EffectAuthorization<'transaction> {
 }
 
 impl EffectAuthorization<'_> {
+    /// Original exclusive expiry of the exact grant consumed for this attempt.
+    #[must_use]
+    pub const fn grant_expires_at_epoch_ms(&self) -> u64 {
+        self.grant_expires_at_epoch_ms
+    }
+
+    /// Checks the consumed grant's original lifetime without issuing, extending
+    /// or re-consuming authority. Exact effect binding is independently required.
+    #[must_use]
+    pub const fn grant_live_at(&self, now_epoch_ms: u64) -> bool {
+        now_epoch_ms >= self.grant_issued_at_epoch_ms
+            && now_epoch_ms >= self.consumed_at_epoch_ms
+            && now_epoch_ms < self.grant_expires_at_epoch_ms
+    }
+
     /// Returns the exact authority-transaction identity.
     #[must_use]
     pub const fn transaction_id(&self) -> &AuthorityTransactionId {
@@ -610,6 +673,8 @@ impl AuthorityTransactionCoordinator {
         let excluded_targets = grant.excluded_targets.clone();
         let preimages = grant.preimages.clone();
         let expected_side_effects = grant.expected_side_effects.clone();
+        let grant_issued_at_epoch_ms = grant.issued_at_epoch_ms;
+        let grant_expires_at_epoch_ms = grant.expires_at_epoch_ms;
 
         let consumed =
             match issuer.consume_for_execution(&request.grant_id, policy, &request.context) {
@@ -680,6 +745,9 @@ impl AuthorityTransactionCoordinator {
             transaction_id: &request.transaction_id,
             attempt_id: &request.attempt_id,
             consumed_grant_sha256: &consumed.consumed_grant_sha256,
+            grant_issued_at_epoch_ms,
+            grant_expires_at_epoch_ms,
+            consumed_at_epoch_ms: consumed.consumed_at_epoch_ms,
             task_id: &request.context.task_id,
             operation: definition.required_grant.operation,
             call: &request.call,
@@ -1445,6 +1513,89 @@ mod tests {
     }
 
     #[derive(Default)]
+    struct GrantLifetimeDriver {
+        calls: usize,
+        expiry: u64,
+        live: Vec<(u64, bool)>,
+    }
+
+    impl EffectDriver for GrantLifetimeDriver {
+        fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
+            self.calls += 1;
+            self.expiry = authorization.grant_expires_at_epoch_ms();
+            self.live = [1999, 2000, 2999, 3000, 3001, 29_999, 30_000]
+                .into_iter()
+                .map(|now| (now, authorization.grant_live_at(now)))
+                .collect();
+            EffectLaunch::completed(EffectResult::from_redacted_material(
+                OperationOutcome::Succeeded,
+                b"synthetic-exact-consumed-lifetime",
+                StateChange::NotChanged,
+            ))
+        }
+    }
+
+    #[test]
+    fn permit_lifetime_uses_exact_consumption_clock_not_display_event_timestamp() {
+        let mut fixture = fixture_with_network_scope(Some("https:docs.example.com:443"));
+        let request = request(&fixture);
+        assert_eq!(request.context.now_epoch_ms, 3000);
+        assert_eq!(request.occurred_at_epoch_ms, 4000);
+        assert_eq!(fixture.grant.issued_at_epoch_ms, 2000);
+        assert_eq!(fixture.grant.expires_at_epoch_ms, 30_000);
+        let mut driver = GrantLifetimeDriver::default();
+        let mut coordinator = AuthorityTransactionCoordinator::new();
+        let receipt = coordinator
+            .execute_effect(
+                &fixture.registry,
+                &mut fixture.issuer,
+                &fixture.policy,
+                request,
+                &mut driver,
+            )
+            .unwrap();
+        assert_eq!(receipt.outcome, OperationOutcome::Succeeded);
+        assert_eq!(driver.calls, 1);
+        assert_eq!(driver.expiry, fixture.grant.expires_at_epoch_ms);
+        assert_eq!(
+            driver.live,
+            [
+                (1999, false),
+                (2000, false),
+                (2999, false),
+                (3000, true),
+                (3001, true),
+                (29_999, true),
+                (30_000, false),
+            ]
+        );
+        // The new research preflight independently requires request/event clock
+        // equality. This older coordinator fixture intentionally distinguishes the
+        // stored consumption instant from an unrelated event-display timestamp.
+    }
+
+    #[test]
+    fn permit_lifetime_accessors_do_not_make_expired_authority_reach_a_driver() {
+        let mut fixture = fixture_with_network_scope(Some("https:docs.example.com:443"));
+        let mut request = request(&fixture);
+        request.context.now_epoch_ms = fixture.grant.expires_at_epoch_ms;
+        request.occurred_at_epoch_ms = fixture.grant.expires_at_epoch_ms;
+        let mut driver = GrantLifetimeDriver::default();
+        let receipt = AuthorityTransactionCoordinator::new()
+            .execute_effect(
+                &fixture.registry,
+                &mut fixture.issuer,
+                &fixture.policy,
+                request,
+                &mut driver,
+            )
+            .unwrap();
+        assert_eq!(receipt.outcome, OperationOutcome::Denied);
+        assert_eq!(driver.calls, 0);
+        assert!(driver.live.is_empty());
+    }
+
+    #[derive(Default)]
     struct FakeDriver {
         launches: usize,
         launch: Option<EffectLaunch>,
@@ -1748,6 +1899,194 @@ mod tests {
             occurred_at_epoch_ms: 4_000,
             occurred_at: "1970-01-01T00:00:04Z".to_owned(),
         }
+    }
+
+    // These are isolated actual request/start operand checks. Full canonical-owner
+    // and native binding/admission tests remain independently required.
+    fn research_start_operands(
+        fixture: &Fixture,
+    ) -> (
+        AuthorityTransactionRequest,
+        crate::research_journal::ResearchBudgetContext,
+        crate::research_fetch::PreparedPublicGet,
+        RuntimeEvent,
+    ) {
+        use crate::research_budget::{
+            ResearchDepth, ResearchLimits, ResearchNetworkMode, ResearchScope,
+        };
+        use crate::research_fetch::{PreparedPublicGet, PublicGetDraft, PublicGetTarget};
+        let mut stream = EffectEventStream::new();
+        let _prefix = stream.prefix();
+        let event = stream.event(RuntimeEventKind::ToolStarted {
+            tool_call_id: fixture.call.tool_call_id.clone(),
+            authority_sha256: fixture
+                .issuer
+                .revision_hash(&fixture.grant.grant_id, fixture.grant.revision)
+                .unwrap()
+                .to_owned(),
+        });
+        let context = crate::research_journal::ResearchBudgetContext {
+            session_id: fixture.context.session_id.clone(),
+            task_id: fixture.context.task_id.clone(),
+            run_id: event.run_id.clone(),
+            policy_sha256: fixture.policy.policy_sha256().to_owned(),
+        };
+        let scope = ResearchScope::new(
+            context.task_id.as_str().to_owned(),
+            ResearchDepth::Quick,
+            ResearchNetworkMode::Ask,
+            ResearchLimits::ceiling(ResearchDepth::Quick),
+            BTreeSet::from(["docs.example.com".to_owned()]),
+            &["public query".to_owned()],
+        )
+        .unwrap();
+        let packet = PreparedPublicGet::prepare(
+            &scope,
+            PublicGetDraft {
+                schema_version: 1,
+                operation_id: fixture.call.tool_call_id.as_str().to_owned(),
+                target: PublicGetTarget {
+                    domain: "docs.example.com".to_owned(),
+                    path: "/api".to_owned(),
+                    query: vec![("q".to_owned(), "public query".to_owned())],
+                },
+                maximum_response_bytes: 1024,
+                redirect_limit: 0,
+                timeout_ms: 1000,
+            },
+            1000,
+            event.occurred_at_epoch_ms,
+        )
+        .unwrap();
+        let mut request = request(fixture);
+        request.context.now_epoch_ms = event.occurred_at_epoch_ms;
+        request.occurred_at_epoch_ms = event.occurred_at_epoch_ms;
+        // The generic fixture intentionally still uses its own {} arguments/grant
+        // details. Exact packet/call/side-effect matching is a separate native binding
+        // prerequisite, not something this isolated request/start predicate proves.
+        (request, context, packet, event)
+    }
+
+    #[test]
+    fn research_start_binds_distinct_runtime_operation_and_call_without_equating_them() {
+        let fixture = fixture_with_network_scope(Some("https:docs.example.com:443"));
+        let (request, context, prepared, event) = research_start_operands(&fixture);
+        assert_ne!(
+            event.operation_id.as_ref().unwrap().as_str(),
+            request.call.tool_call_id.as_str()
+        );
+        assert!(request.matches_research_start(
+            &fixture.issuer,
+            &context,
+            prepared.packet(),
+            &event
+        ));
+        assert_eq!(
+            prepared.packet().request().operation_id,
+            request.call.tool_call_id.as_str()
+        );
+    }
+
+    #[test]
+    fn research_start_rejects_actual_transaction_and_event_binding_substitutions() {
+        let fixture = fixture_with_network_scope(Some("https:docs.example.com:443"));
+        for mutation in 0..16 {
+            let (mut request, mut context, prepared, mut event) = research_start_operands(&fixture);
+            match mutation {
+                0 => request.context.session_id = SessionId::from_raw("foreign-session"),
+                1 => request.context.task_id = TaskId::from_raw("foreign-task"),
+                2 => context.run_id = RuntimeRunId::from_raw("foreign-run"),
+                3 => event.session_id = SessionId::from_raw("foreign-session"),
+                4 => event.task_id = TaskId::from_raw("foreign-task"),
+                5 => event.correlation_id = CorrelationId::from_raw("foreign-correlation"),
+                6 => event.operation_id = None,
+                7 => event.turn_id = None,
+                8 => request.context.argument_sha256 = "9".repeat(64),
+                9 => request.context.now_epoch_ms += 1,
+                10 => event.occurred_at_epoch_ms += 1,
+                11 => request.approval_id = ApprovalId::from_raw("foreign-approval"),
+                12 => request.grant_id = GrantId::from_raw("foreign-grant"),
+                13 => {
+                    event.kind = RuntimeEventKind::ToolStarted {
+                        tool_call_id: request.call.tool_call_id.clone(),
+                        authority_sha256: "9".repeat(64),
+                    }
+                }
+                14 => {
+                    event.kind = RuntimeEventKind::ToolStarted {
+                        tool_call_id: ToolCallId::from_raw("foreign-call"),
+                        authority_sha256: fixture
+                            .issuer
+                            .revision_hash(&fixture.grant.grant_id, fixture.grant.revision)
+                            .unwrap()
+                            .to_owned(),
+                    }
+                }
+                15 => {
+                    event.kind = RuntimeEventKind::ToolRequested {
+                        tool_call_id: request.call.tool_call_id.clone(),
+                        arguments_sha256: request.call.arguments.sha256.clone(),
+                    }
+                }
+                _ => unreachable!(),
+            }
+            assert!(
+                !request.matches_research_start(
+                    &fixture.issuer,
+                    &context,
+                    prepared.packet(),
+                    &event
+                ),
+                "mutation {mutation}"
+            );
+        }
+        let offline = fixture_with_network_scope(None);
+        let (request, context, prepared, event) = research_start_operands(&offline);
+        assert!(!request.matches_research_start(
+            &offline.issuer,
+            &context,
+            prepared.packet(),
+            &event
+        ));
+    }
+
+    #[test]
+    fn research_start_requires_current_issued_hash_not_a_later_consumed_revision() {
+        let mut fixture = fixture_with_network_scope(Some("https:docs.example.com:443"));
+        let (request, context, prepared, event) = research_start_operands(&fixture);
+        let issued_sha256 = fixture
+            .issuer
+            .revision_hash(&fixture.grant.grant_id, fixture.grant.revision)
+            .unwrap()
+            .to_owned();
+        assert!(request.matches_research_start(
+            &fixture.issuer,
+            &context,
+            prepared.packet(),
+            &event
+        ));
+        let consumed = fixture
+            .issuer
+            .consume_for_execution(&fixture.grant.grant_id, &fixture.policy, &request.context)
+            .unwrap();
+        assert_ne!(consumed.consumed_grant_sha256, issued_sha256);
+        assert!(!request.matches_research_start(
+            &fixture.issuer,
+            &context,
+            prepared.packet(),
+            &event
+        ));
+        let mut rewritten = event;
+        rewritten.kind = RuntimeEventKind::ToolStarted {
+            tool_call_id: request.call.tool_call_id.clone(),
+            authority_sha256: consumed.consumed_grant_sha256,
+        };
+        assert!(!request.matches_research_start(
+            &fixture.issuer,
+            &context,
+            prepared.packet(),
+            &rewritten
+        ));
     }
 
     fn success() -> EffectResult {

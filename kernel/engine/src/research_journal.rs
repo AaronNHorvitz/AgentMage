@@ -4,7 +4,8 @@
 //! passed to the separately admitted native driver, alongside an exact consumed grant.
 
 use agentmage_kernel_contracts::{
-    RuntimeArtifactKind, RuntimeArtifactRef, RuntimeEventKind, RuntimeRunId, SessionId, TaskId,
+    RuntimeArtifactKind, RuntimeArtifactRef, RuntimeEvent, RuntimeEventKind, RuntimeRunId,
+    SessionId, TaskId,
 };
 use rusqlite::{OptionalExtension, TransactionBehavior, params};
 use serde::{Deserialize, Serialize};
@@ -440,6 +441,128 @@ pub(crate) fn verify_all(store: &OperationalStore) -> Result<(), ResearchJournal
             &TaskId::from_raw(task.map_err(|_| ResearchJournalError::Storage)?),
         )?;
         verify_plan_metadata(store, &retained.root).map_err(|_| ResearchJournalError::Integrity)?;
+    }
+    Ok(())
+}
+
+pub(crate) fn consume_fresh_reservation<S: RuntimeArtifactPayloadStore>(
+    store: &mut OperationalStore,
+    payloads: &S,
+    context: &ResearchBudgetContext,
+    prepared: &PreparedPublicGet,
+    reservation: DurableResearchReservation,
+    now_epoch_ms: u64,
+) -> Result<crate::research_dispatch::FreshResearchDispatch, ResearchJournalError> {
+    let mut retained = load(store, &context.task_id)?;
+    let packet = prepared.packet();
+    if !context_matches(&retained.root, context)
+        || !reservation.matches_packet(packet)
+        || retained.head_sha256 != reservation.reservation_sha256
+    {
+        return Err(ResearchJournalError::Binding);
+    }
+    if retained.revision >= MAX_REVISIONS - 1 {
+        // Even an earlier valid reservation cannot execute after a full journal
+        // prevented recording cancellation. Never call that cancellation persisted.
+        return Err(ResearchJournalError::JournalExhausted);
+    }
+    let before = encode(&retained.budget, 8192)?;
+    let clock = retained.budget.observe_clock(&retained.scope, now_epoch_ms);
+    let clock_changed = before != encode(&retained.budget, 8192)?;
+    if clock_changed {
+        // Clock rollback/expiry is retained even when refusing; no second operation
+        // is spent here, no budget is refunded, no original deadline is reset.
+        append(store, &retained, RevisionKind::Restricted, "", "")?;
+    }
+    clock.map_err(ResearchJournalError::Budget)?;
+    if clock_changed && retained.revision + 1 >= MAX_REVISIONS - 1 {
+        // Preserve at least one append for cancellation after successful preflight.
+        // The observation is committed but no dispatch proof escapes at capacity.
+        return Err(ResearchJournalError::JournalExhausted);
+    }
+    verify_live_plan(store, payloads, &retained.root, now_epoch_ms)?;
+    let reconstructed = PreparedPublicGet::prepare(
+        &retained.scope,
+        packet.request().clone(),
+        retained.budget.started_epoch_ms(),
+        packet.prepared_at_epoch_ms(),
+    )
+    .map_err(|_| ResearchJournalError::Binding)?;
+    if reconstructed.packet().sha256() != packet.sha256()
+        || now_epoch_ms < packet.prepared_at_epoch_ms()
+        || now_epoch_ms >= packet.deadline_epoch_ms()
+    {
+        return Err(ResearchJournalError::Binding);
+    }
+    Ok(crate::research_dispatch::FreshResearchDispatch {
+        task_id: context.task_id.as_str().to_owned(),
+        operation_id: packet.request().operation_id.clone(),
+        request_sha256: packet.sha256().to_owned(),
+        reservation_sha256: reservation.reservation_sha256,
+        checked_at_epoch_ms: now_epoch_ms,
+    })
+}
+
+pub(crate) fn verify_requested_operation(
+    store: &OperationalStore,
+    context: &ResearchBudgetContext,
+    started: &RuntimeEvent,
+    call: &agentmage_kernel_contracts::ToolCall,
+) -> Result<(), ResearchJournalError> {
+    // load_run_events decodes rows but does not itself verify sequence hashes.
+    // Check the complete canonical chain BEFORE interpreting requested mappings.
+    current_cursor(store, &context.run_id)
+        .map_err(|_| ResearchJournalError::Integrity)?
+        .ok_or(ResearchJournalError::Binding)?;
+    let events =
+        load_run_events(store, &context.run_id).map_err(|_| ResearchJournalError::Integrity)?;
+    let operation = started
+        .operation_id
+        .as_ref()
+        .ok_or(ResearchJournalError::Binding)?;
+    let mut matched = false;
+    for event in &events {
+        // Run-level cancellation has no tool operation identity. Check it before
+        // filtering by operation: the separate budget cancellation append may not
+        // have happened yet, but the already durable request must prevent launch.
+        if matches!(
+            event.kind,
+            RuntimeEventKind::CancellationRequested { .. }
+                | RuntimeEventKind::CancellationObserved { .. }
+        ) {
+            return Err(ResearchJournalError::Budget(ResearchBudgetError::Cancelled));
+        }
+        if event.operation_id.as_ref() != Some(operation) {
+            continue;
+        }
+        match &event.kind {
+            RuntimeEventKind::ToolRequested {
+                tool_call_id,
+                arguments_sha256,
+            } => {
+                if matched
+                    || tool_call_id != &call.tool_call_id
+                    || arguments_sha256 != &call.arguments.sha256
+                    || event.turn_id != started.turn_id
+                    || event.correlation_id != call.correlation_id
+                {
+                    return Err(ResearchJournalError::Binding);
+                }
+                matched = true;
+            }
+            RuntimeEventKind::ToolStarted { .. }
+            | RuntimeEventKind::ToolCompleted { .. }
+            | RuntimeEventKind::ToolFailed { .. }
+            | RuntimeEventKind::ToolRejected { .. } => {
+                // A spent runtime operation cannot be repurposed even if someone
+                // retained another accounting proof or supplied a fresh transaction.
+                return Err(ResearchJournalError::Binding);
+            }
+            _ => {}
+        }
+    }
+    if !matched {
+        return Err(ResearchJournalError::Binding);
     }
     Ok(())
 }

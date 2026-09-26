@@ -13,10 +13,7 @@ use std::process::ExitCode;
 use agentmage_kernel_engine::research_fetch::PublicGetWorkerPacket;
 
 fn run() -> Result<(), transport::WorkerError> {
-    if std::env::args_os().count() != 1
-        || std::env::vars_os()
-            .any(|(key, _)| !["LANG", "LC_ALL", "TZ"].contains(&key.to_string_lossy().as_ref()))
-    {
+    if std::env::args_os().count() != 1 || !environment_is_admitted(std::env::vars_os()) {
         return Err(transport::WorkerError::Environment);
     }
     // Defense in depth, not proof of the exact sandbox. The independently admitted
@@ -66,6 +63,89 @@ fn main() -> ExitCode {
             // Never format a URL, library error, query, environment or response body.
             eprintln!("{}", error.code());
             ExitCode::from(5)
+        }
+    }
+}
+
+fn environment_is_admitted(
+    values: impl IntoIterator<Item = (std::ffi::OsString, std::ffi::OsString)>,
+) -> bool {
+    let mut seen = std::collections::BTreeSet::new();
+    for (key, value) in values {
+        // Bubblewrap 0.12.0 sets PWD after --clearenv. It must be the fixed guest
+        // working directory, never an ambient host path. Optional locale/timezone
+        // values are also fixed, not arbitrary environment strings or secret input.
+        let accepted = match key.to_str() {
+            Some("LANG" | "LC_ALL") => value == "C",
+            Some("TZ") => value == "UTC",
+            Some("PWD") => value == "/input",
+            _ => false,
+        };
+        if !accepted || !seen.insert(key) {
+            return false;
+        }
+    }
+    seen.contains(std::ffi::OsStr::new("LANG")) && seen.contains(std::ffi::OsStr::new("PWD"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::environment_is_admitted;
+    use std::ffi::OsString;
+    use std::os::unix::ffi::OsStringExt;
+
+    fn valid() -> Vec<(OsString, OsString)> {
+        vec![("LANG".into(), "C".into()), ("PWD".into(), "/input".into())]
+    }
+
+    #[test]
+    fn exact_bubblewrap_environment_is_admitted_without_host_variables() {
+        assert!(environment_is_admitted(valid()));
+        let mut canonical = valid();
+        canonical.extend([("LC_ALL".into(), "C".into()), ("TZ".into(), "UTC".into())]);
+        assert!(environment_is_admitted(canonical));
+    }
+
+    #[test]
+    fn missing_duplicated_noncanonical_or_non_unicode_environment_is_denied() {
+        for index in 0..2 {
+            let mut missing = valid();
+            missing.remove(index);
+            assert!(!environment_is_admitted(missing));
+        }
+        for (key, value) in [
+            ("LANG", "C"), // duplicate, even when both values are identical
+            ("PWD", "/input"),
+            ("PWD", "/workspace"),
+            ("PWD", "/input/.."),
+            ("PATH", "/app"),
+            ("HOME", "/tmp"),
+            ("HTTPS_PROXY", "https://proxy.example.com"),
+            ("SSL_CERT_FILE", "/input/roots"),
+            ("LC_ALL", "en_US.UTF-8"),
+            ("TZ", ":/input/zone"),
+        ] {
+            let mut bad = valid();
+            bad.push((key.into(), value.into()));
+            assert!(!environment_is_admitted(bad));
+        }
+        for bytes in [vec![b'L', 0xff], vec![0xff]] {
+            let mut bad = valid();
+            bad.push((OsString::from_vec(bytes.clone()), "C".into()));
+            assert!(!environment_is_admitted(bad));
+            let mut bad = valid();
+            bad[0].1 = OsString::from_vec(bytes);
+            assert!(!environment_is_admitted(bad));
+        }
+        for replacement in ["", "C.UTF-8", "private-canary"] {
+            let mut bad = valid();
+            bad[0].1 = replacement.into();
+            assert!(!environment_is_admitted(bad));
+        }
+        for replacement in ["", "/", "/input/", "/input/../input", "/workspace"] {
+            let mut bad = valid();
+            bad[1].1 = replacement.into();
+            assert!(!environment_is_admitted(bad));
         }
     }
 }

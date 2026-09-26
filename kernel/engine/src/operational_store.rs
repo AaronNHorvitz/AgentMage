@@ -3003,6 +3003,59 @@ impl DurableAuthorityRuntime {
         }
     }
 
+    /// Begins one research effect through the existing coordinator only after
+    /// its spent reservation and full plan are freshly verified under the same
+    /// store lock. The driver separately requires the exact consumed grant.
+    #[allow(clippy::too_many_arguments)]
+    pub fn begin_research_effect_with_runtime_event<S, D>(
+        &mut self,
+        registry: &ToolRegistry,
+        policy: &PolicyEngine,
+        request: AuthorityTransactionRequest,
+        driver: &mut D,
+        started_event: RuntimeEvent,
+        payloads: &S,
+        context: &crate::research_journal::ResearchBudgetContext,
+        prepared: &crate::research_fetch::PreparedPublicGet,
+        reservation: crate::research_journal::DurableResearchReservation,
+    ) -> Result<(Receipt, PendingRuntimeEffectCommit), DurableAuthorityError>
+    where
+        S: RuntimeArtifactPayloadStore,
+        D: crate::research_dispatch::ResearchEffectDriver,
+    {
+        let mut adapter = crate::research_dispatch::ResearchDispatchAdapter::new(driver);
+        self.begin_effect_with_preflight(
+            registry,
+            policy,
+            request,
+            &mut adapter,
+            started_event,
+            |store, issuer, request, started, adapter| {
+                use crate::research_journal::ResearchJournalError;
+                if policy.policy_sha256() != context.policy_sha256
+                    || !request.matches_research_start(issuer, context, prepared.packet(), started)
+                {
+                    return Err(ResearchJournalError::Binding);
+                }
+                crate::research_journal::verify_requested_operation(
+                    store,
+                    context,
+                    started,
+                    request.research_call(),
+                )?;
+                let fresh = crate::research_journal::consume_fresh_reservation(
+                    store,
+                    payloads,
+                    context,
+                    prepared,
+                    reservation,
+                    request.occurred_at_epoch_ms(),
+                )?;
+                adapter.arm_once(fresh)
+            },
+        )
+    }
+
     /// Begins one effect and leaves its terminal snapshot pending one exact receipt event.
     pub fn begin_effect_with_runtime_event<D: EffectDriver>(
         &mut self,
@@ -3012,6 +3065,37 @@ impl DurableAuthorityRuntime {
         driver: &mut D,
         started_event: RuntimeEvent,
     ) -> Result<(Receipt, PendingRuntimeEffectCommit), DurableAuthorityError> {
+        self.begin_effect_with_preflight(
+            registry,
+            policy,
+            request,
+            driver,
+            started_event,
+            |_, _, _, _, _| Ok(()),
+        )
+    }
+
+    // The only private shared entry: no public caller can supply a bypassing preflight.
+    #[allow(clippy::too_many_arguments)]
+    fn begin_effect_with_preflight<D, F>(
+        &mut self,
+        registry: &ToolRegistry,
+        policy: &PolicyEngine,
+        request: AuthorityTransactionRequest,
+        driver: &mut D,
+        started_event: RuntimeEvent,
+        preflight: F,
+    ) -> Result<(Receipt, PendingRuntimeEffectCommit), DurableAuthorityError>
+    where
+        D: EffectDriver,
+        F: FnOnce(
+            &mut OperationalStore,
+            &GrantIssuer,
+            &AuthorityTransactionRequest,
+            &RuntimeEvent,
+            &mut D,
+        ) -> Result<(), crate::research_journal::ResearchJournalError>,
+    {
         self.ensure_usable()?;
         self.flush_runtime_events()?;
         let transaction_id = request.transaction_id().clone();
@@ -3019,6 +3103,14 @@ impl DurableAuthorityRuntime {
         let mut started_committed = false;
         let result = {
             let mut store = lock_shared_store(&shared_store)?;
+            if let Err(error) =
+                preflight(&mut store, &self.issuer, &request, &started_event, driver)
+            {
+                if error.poisons_runtime() {
+                    self.poisoned = true;
+                }
+                return Err(DurableAuthorityError::ResearchJournal(error));
+            }
             self.coordinator.execute_with_checkpoint(
                 registry,
                 &mut self.issuer,

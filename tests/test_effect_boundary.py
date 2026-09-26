@@ -146,6 +146,46 @@ class EffectBoundaryTests(unittest.TestCase):
         )
         self.assertIn(f"unregistered effect-authorization consumer: {packet}", failures)
 
+    def test_research_dispatch_is_exactly_registered_not_a_module_exemption(self) -> None:
+        dispatch = Path("kernel/engine/src/research_dispatch.rs")
+        self.assertIn("EffectAuthorization", self.source(str(dispatch)))
+        self.assertNotIn(f"unregistered effect-authorization consumer: {dispatch}", validate_effect_boundary())
+        journal = Path("kernel/engine/src/research_journal.rs")
+        failures = validate_effect_boundary(overrides={journal: self.source(str(journal)) + "\n// EffectAuthorization\n"})
+        self.assertIn(f"unregistered effect-authorization consumer: {journal}", failures)
+
+    def test_research_proof_field_clone_and_public_constructor_are_rejected(self) -> None:
+        path = Path("kernel/engine/src/research_dispatch.rs")
+        original = self.source(str(path))
+        cases = (
+            (original.replace("    material: &'a FreshResearchDispatch,", "    pub material: &'a FreshResearchDispatch,", 1),
+             "research dispatch proof fields must remain private"),
+            (original.replace("pub struct ResearchDispatch<'a>", "#[derive(Clone)]\npub struct ResearchDispatch<'a>", 1),
+             "research dispatch proof must not be duplicable or serializable"),
+            (original + "\npub fn forged() -> ResearchDispatch<'static> { todo!() }\n",
+             "research dispatch proof exposes a public constructor"),
+            (original.replace("pub(crate) struct FreshResearchDispatch", "pub struct FreshResearchDispatch", 1),
+             "research dispatch owner material exceeds crate visibility"),
+        )
+        for changed, diagnostic in cases:
+            self.assertNotEqual(changed, original)
+            self.assertIn(diagnostic, validate_effect_boundary(overrides={path: changed}))
+
+    def test_research_preflight_cannot_become_a_public_bypass_callback(self) -> None:
+        path = Path("kernel/engine/src/operational_store.rs")
+        original = self.source(str(path))
+        for visibility in ("pub", "pub(crate)", "pub(super)"):
+            changed = original.replace(
+                "    fn begin_effect_with_preflight<D, F>(",
+                f"    {visibility} fn begin_effect_with_preflight<D, F>(",
+                1,
+            )
+            self.assertNotEqual(changed, original)
+            self.assertIn(
+                "research preflight callback must remain owner-private",
+                validate_effect_boundary(overrides={path: changed}),
+            )
+
     def test_repository_safety_is_a_registered_permit_consumer(self) -> None:
         failures = validate_effect_boundary()
 

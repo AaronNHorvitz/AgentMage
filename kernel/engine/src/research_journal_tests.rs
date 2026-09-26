@@ -10,12 +10,975 @@ use crate::research_journal::{ResearchBudgetContext, ResearchJournalError};
 use crate::research_plan::{PreparedResearchPlan, ResearchPlanDraft};
 use std::collections::BTreeSet;
 
+fn freshness_fixture() -> (
+    std::path::PathBuf,
+    OperationalStore,
+    FakePayloadStore,
+    PreparedResearchPlan,
+    PreparedPublicGet,
+    crate::research_journal::DurableResearchReservation,
+) {
+    let directory = temporary_directory();
+    let path = directory.join("authority.db");
+    let (mut runtime, payloads, plan) = initialized(&path);
+    let prepared = packet(&plan, "fresh-attempt-1", 101, 512);
+    let reservation = runtime
+        .reserve_research_request(
+            &payloads,
+            &context(),
+            &prepared,
+            ResearchOperation::Visit,
+            101,
+        )
+        .unwrap();
+    drop(runtime);
+    let store = OperationalStore::open(&path, &observation(), &mut TestKey).unwrap();
+    (directory, store, payloads, plan, prepared, reservation)
+}
+
+#[test]
+fn fresh_dispatch_observation_preserves_spending_and_original_reservation_identity() {
+    for now in [101, 102] {
+        let (directory, mut store, payloads, _plan, prepared, reservation) = freshness_fixture();
+        let original_sha256 = reservation.reservation_sha256().to_owned();
+        let before = crate::research_journal::state(&store, &context()).unwrap();
+        let fresh = crate::research_journal::consume_fresh_reservation(
+            &mut store,
+            &payloads,
+            &context(),
+            &prepared,
+            reservation,
+            now,
+        )
+        .unwrap();
+        let after = crate::research_journal::state(&store, &context()).unwrap();
+        assert_eq!(fresh.reservation_sha256, original_sha256);
+        assert_eq!(fresh.request_sha256, prepared.packet().sha256());
+        assert_eq!(fresh.checked_at_epoch_ms, now);
+        assert_eq!(after.progress.started_epoch_ms, 100);
+        assert_eq!(after.progress.last_epoch_ms, now);
+        assert_eq!(after.progress.visits, before.progress.visits);
+        assert_eq!(after.progress.visits, 1);
+        assert_eq!(after.progress.queries, before.progress.queries);
+        assert_eq!(after.progress.reserved_bytes, 512);
+        assert_eq!(after.revision, before.revision + u16::from(now > 101));
+        assert_eq!(after.head_sha256 == original_sha256, now == 101);
+        // A newly verified observation cannot refund/replay the original attempt.
+        assert_eq!(
+            crate::research_journal::reserve(
+                &mut store,
+                &payloads,
+                &context(),
+                &prepared,
+                ResearchOperation::Visit,
+                now,
+            )
+            .err(),
+            Some(ResearchJournalError::Budget(ResearchBudgetError::Binding))
+        );
+        drop(store);
+        fs::remove_dir_all(directory).unwrap();
+    }
+}
+
+#[test]
+fn fresh_dispatch_rejects_each_context_or_packet_substitution_before_clock_mutation() {
+    for mutation in 0..6 {
+        let (directory, mut store, payloads, plan, prepared, reservation) = freshness_fixture();
+        let before = crate::research_journal::state(&store, &context()).unwrap();
+        let mut supplied_context = context();
+        let mut supplied_packet = prepared;
+        match mutation {
+            0 => supplied_context.session_id = SessionId::from_raw("other-session"),
+            1 => supplied_context.task_id = TaskId::from_raw("other-task"),
+            2 => supplied_context.run_id = RuntimeRunId::from_raw("other-run"),
+            3 => supplied_context.policy_sha256 = digest('c'),
+            4 => supplied_packet = packet(&plan, "other-call", 101, 512),
+            5 => supplied_packet = packet(&plan, "fresh-attempt-1", 101, 513),
+            _ => unreachable!(),
+        }
+        let failure = crate::research_journal::consume_fresh_reservation(
+            &mut store,
+            &payloads,
+            &supplied_context,
+            &supplied_packet,
+            reservation,
+            102,
+        )
+        .err();
+        assert_eq!(
+            failure,
+            Some(if mutation == 1 {
+                ResearchJournalError::NotFound
+            } else {
+                ResearchJournalError::Binding
+            }),
+            "mutation {mutation}",
+        );
+        let after = crate::research_journal::state(&store, &context()).unwrap();
+        assert_eq!(after.head_sha256, before.head_sha256);
+        assert_eq!(after.progress, before.progress);
+        drop(store);
+        fs::remove_dir_all(directory).unwrap();
+    }
+}
+
+#[test]
+fn intervening_reservation_or_cancel_invalidates_old_dispatch_proof() {
+    for cancel in [false, true] {
+        let (directory, mut store, payloads, plan, prepared, reservation) = freshness_fixture();
+        if cancel {
+            crate::research_journal::cancel(&mut store, &context()).unwrap();
+        } else {
+            crate::research_journal::reserve(
+                &mut store,
+                &payloads,
+                &context(),
+                &packet(&plan, "fresh-attempt-2", 102, 1),
+                ResearchOperation::Visit,
+                102,
+            )
+            .unwrap();
+        }
+        let before = crate::research_journal::state(&store, &context()).unwrap();
+        assert_eq!(
+            crate::research_journal::consume_fresh_reservation(
+                &mut store,
+                &payloads,
+                &context(),
+                &prepared,
+                reservation,
+                103,
+            )
+            .err(),
+            Some(ResearchJournalError::Binding)
+        );
+        let after = crate::research_journal::state(&store, &context()).unwrap();
+        assert_eq!(after.head_sha256, before.head_sha256);
+        assert_eq!(after.progress.cancelled, cancel);
+        drop(store);
+        fs::remove_dir_all(directory).unwrap();
+    }
+}
+
+#[test]
+fn fresh_dispatch_clock_rollback_or_budget_expiry_is_durable_and_terminal() {
+    for now in [100, 60_100] {
+        let (directory, mut store, payloads, plan, prepared, reservation) = freshness_fixture();
+        assert_eq!(
+            crate::research_journal::consume_fresh_reservation(
+                &mut store,
+                &payloads,
+                &context(),
+                &prepared,
+                reservation,
+                now,
+            )
+            .err(),
+            Some(ResearchJournalError::Budget(ResearchBudgetError::Exhausted))
+        );
+        let state = crate::research_journal::state(&store, &context()).unwrap();
+        assert!(state.progress.deadline_exhausted);
+        assert_eq!(state.progress.reserved_bytes, 512);
+        assert_eq!(state.revision, 2);
+        drop(store);
+        let path = directory.join("authority.db");
+        let mut reopened = OperationalStore::open(&path, &observation(), &mut TestKey).unwrap();
+        assert_eq!(
+            crate::research_journal::reserve(
+                &mut reopened,
+                &payloads,
+                &context(),
+                &packet(&plan, "new-after-clock-failure", 102, 1),
+                ResearchOperation::Visit,
+                102,
+            )
+            .err(),
+            Some(ResearchJournalError::Budget(ResearchBudgetError::Exhausted))
+        );
+        drop(reopened);
+        fs::remove_dir_all(directory).unwrap();
+    }
+}
+
+#[test]
+fn packet_expiry_and_disappeared_plan_do_not_return_fresh_material_or_refund() {
+    for missing_payload in [false, true] {
+        let (directory, mut store, mut payloads, _plan, prepared, reservation) =
+            freshness_fixture();
+        if missing_payload {
+            payloads.objects.clear();
+        }
+        let now = if missing_payload {
+            102
+        } else {
+            prepared.packet().deadline_epoch_ms()
+        };
+        assert_eq!(
+            crate::research_journal::consume_fresh_reservation(
+                &mut store,
+                &payloads,
+                &context(),
+                &prepared,
+                reservation,
+                now,
+            )
+            .err(),
+            Some(if missing_payload {
+                ResearchJournalError::Plan
+            } else {
+                ResearchJournalError::Binding
+            })
+        );
+        let state = crate::research_journal::state(&store, &context()).unwrap();
+        assert_eq!(state.progress.visits, 1);
+        assert_eq!(state.progress.reserved_bytes, 512);
+        assert_eq!(state.progress.last_epoch_ms, now);
+        drop(store);
+        fs::remove_dir_all(directory).unwrap();
+    }
+}
+
+#[test]
+fn failed_freshness_append_is_atomic_and_cannot_return_dispatch_material() {
+    let (directory, mut store, payloads, _plan, prepared, reservation) = freshness_fixture();
+    let before = crate::research_journal::state(&store, &context()).unwrap();
+    store
+        .connection
+        .execute_batch(
+            "CREATE TRIGGER synthetic_freshness_failure BEFORE INSERT ON research_budget_revisions
+         BEGIN SELECT RAISE(ABORT, 'synthetic.failure'); END;",
+        )
+        .unwrap();
+    assert_eq!(
+        crate::research_journal::consume_fresh_reservation(
+            &mut store,
+            &payloads,
+            &context(),
+            &prepared,
+            reservation,
+            102,
+        )
+        .err(),
+        Some(ResearchJournalError::Storage)
+    );
+    let after = crate::research_journal::state(&store, &context()).unwrap();
+    assert_eq!(after.head_sha256, before.head_sha256);
+    assert_eq!(after.progress, before.progress);
+    // Runtime poisoning and zero driver calls must ALSO be tested via the public
+    // owner entry; this direct canonical-function fixture cannot establish either.
+    drop(store);
+    fs::remove_dir_all(directory).unwrap();
+}
+
+#[test]
+fn fresh_dispatch_preserves_cancel_capacity_and_refuses_a_full_journal() {
+    for advance_clock in [false, true] {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let (mut runtime, payloads, plan) = initialized(&path);
+        runtime
+            .reserve_research_request(
+                &payloads,
+                &context(),
+                &search_packet(&plan, "quota-query-1", 101),
+                ResearchOperation::Query("public Rust documentation"),
+                101,
+            )
+            .unwrap();
+        // Real conservative quota refusals advance the trusted high-water. Do not
+        // forge counters/head hashes or disable journal-integrity triggers.
+        for index in 2..126 {
+            assert_eq!(
+                runtime
+                    .reserve_research_request(
+                        &payloads,
+                        &context(),
+                        &search_packet(&plan, &format!("quota-refused-{index}"), 100 + index),
+                        ResearchOperation::Query("public Rust documentation"),
+                        100 + index,
+                    )
+                    .err(),
+                Some(DurableAuthorityError::ResearchJournal(
+                    ResearchJournalError::Budget(ResearchBudgetError::Exhausted)
+                ))
+            );
+        }
+        let prepared = packet(&plan, "fresh-at-capacity", 226, 1);
+        let reservation = runtime
+            .reserve_research_request(
+                &payloads,
+                &context(),
+                &prepared,
+                ResearchOperation::Visit,
+                226,
+            )
+            .unwrap();
+        drop(runtime);
+        let mut store = OperationalStore::open(&path, &observation(), &mut TestKey).unwrap();
+        assert_eq!(
+            crate::research_journal::state(&store, &context())
+                .unwrap()
+                .revision,
+            126
+        );
+        let fresh = crate::research_journal::consume_fresh_reservation(
+            &mut store,
+            &payloads,
+            &context(),
+            &prepared,
+            reservation,
+            226 + u64::from(advance_clock),
+        );
+        if advance_clock {
+            assert_eq!(fresh.err(), Some(ResearchJournalError::JournalExhausted));
+            assert_eq!(
+                crate::research_journal::cancel(&mut store, &context()),
+                Err(ResearchJournalError::JournalExhausted)
+            );
+            assert!(
+                !crate::research_journal::state(&store, &context())
+                    .unwrap()
+                    .progress
+                    .cancelled
+            );
+        } else {
+            assert!(fresh.is_ok());
+            crate::research_journal::cancel(&mut store, &context()).unwrap();
+            assert!(
+                crate::research_journal::state(&store, &context())
+                    .unwrap()
+                    .progress
+                    .cancelled
+            );
+        }
+        assert_eq!(
+            crate::research_journal::state(&store, &context())
+                .unwrap()
+                .revision,
+            127
+        );
+        drop(store);
+        fs::remove_dir_all(directory).unwrap();
+    }
+}
+
 fn context() -> ResearchBudgetContext {
     ResearchBudgetContext {
         session_id: SessionId::from_raw("session-1"),
         task_id: TaskId::from_raw("task-1"),
         run_id: RuntimeRunId::from_raw("run-1"),
         policy_sha256: digest('b'),
+    }
+}
+
+// Public-owner tests reuse the canonical SQLCipher/artifact fixtures. The recording
+// driver is synthetic; packet/held-root native binding is tested independently.
+mod dispatch_owner {
+    use super::*;
+    use crate::authority_transaction::AuthorityTransactionRequest;
+    use crate::grants::{DerivedOperationGrantRequest, SessionReadGrantRequest};
+    use crate::policy::{
+        PolicyDocument, PolicyEngine, PolicyEvaluationContext, ScopeRules, ToolPolicyBinding,
+    };
+    use crate::research_dispatch::tests::RecordingResearchDriver;
+    use crate::research_journal::DurableResearchReservation;
+    use crate::test_target::{preimage, scope, target};
+    use crate::tooling::{Tool, ToolRegistry};
+    use agentmage_kernel_contracts::*;
+
+    struct FixtureTool(ToolDefinition);
+    impl Tool for FixtureTool {
+        fn definition(&self) -> &ToolDefinition {
+            &self.0
+        }
+    }
+    struct Fixture {
+        directory: std::path::PathBuf,
+        runtime: DurableAuthorityRuntime,
+        payloads: FakePayloadStore,
+        registry: ToolRegistry,
+        policy: PolicyEngine,
+        context: ResearchBudgetContext,
+        plan: PreparedResearchPlan,
+        prepared: PreparedPublicGet,
+        reservation: DurableResearchReservation,
+        request: AuthorityTransactionRequest,
+        started: RuntimeEvent,
+        grant_id: GrantId,
+        transaction_id: AuthorityTransactionId,
+    }
+    fn rules<T: Ord>(one: T) -> ScopeRules<T> {
+        ScopeRules {
+            allowed: BTreeSet::from([one]),
+            denied: BTreeSet::new(),
+        }
+    }
+    fn next_event(prior: &RuntimeEvent, kind: RuntimeEventKind, now: u64) -> RuntimeEvent {
+        let mut event = prior.clone();
+        event.event_id = RuntimeEventId::from_raw(format!("research-owner-{}", prior.sequence + 1));
+        event.sequence += 1;
+        event.occurred_at_epoch_ms = now;
+        event.previous_event_sha256 = prior.event_sha256.clone();
+        event.causation_event_id = Some(prior.event_id.clone());
+        event.payload_reference = None;
+        event.turn_id = Some(RuntimeTurnId::from_raw("research-turn-1"));
+        event.operation_id = if matches!(kind, RuntimeEventKind::TurnStarted) {
+            None
+        } else {
+            Some(RuntimeOperationId::from_raw(
+                "runtime-operation-distinct-from-call",
+            ))
+        };
+        event.persistence = crate::runtime_event::runtime_event_persistence(&kind);
+        event.kind = kind;
+        seal_runtime_event(event).unwrap()
+    }
+    fn fixture() -> Fixture {
+        let directory = temporary_directory();
+        let mut runtime = runtime_with_run(&directory.join("authority.db"));
+        let mut payloads = FakePayloadStore::default();
+        let plan = plan();
+        let prepared = packet(&plan, "dispatch-call-1", 101, 512);
+        let operation = OperationBinding::new(GrantOperation::NetworkAccess);
+        let actor = ActorId::from_raw("actor-1");
+        let action = ActionId::from_raw("action-1");
+        let tool_id = ToolId::from_raw("research.fixture");
+        let exact_target = target(&["fixture.txt"]);
+        let mut context = context();
+        let policy = PolicyEngine::new(PolicyDocument {
+            schema_version: 1,
+            revision: 1,
+            actors: rules(actor.clone()),
+            tasks: rules(context.task_id.clone()),
+            actions: rules(action.clone()),
+            tools: rules(ToolPolicyBinding {
+                tool_id: tool_id.clone(),
+                tool_version: "1.0.0".into(),
+            }),
+            operations: rules(operation),
+            targets: rules(exact_target.clone()),
+            denied_argument_sha256s: BTreeSet::new(),
+            denied_preimage_sha256s: BTreeSet::new(),
+            network_scopes: rules("https:docs.example.com:443".into()),
+            credential_scopes: ScopeRules::deny_all(),
+            publication_scopes: ScopeRules::deny_all(),
+        })
+        .unwrap();
+        context.policy_sha256 = policy.policy_sha256().into();
+        let schema = SchemaReference {
+            schema_id: SchemaId::from_raw("research-fixture"),
+            schema_version: 1,
+            schema_sha256: digest('1'),
+        };
+        let bytes = serde_json::to_vec(prepared.packet().request()).unwrap();
+        let call = ToolCall {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            tool_call_id: ToolCallId::from_raw("dispatch-call-1"),
+            correlation_id: CorrelationId::from_raw("correlation-1"),
+            action_id: action.clone(),
+            tool_id: tool_id.clone(),
+            tool_version: "1.0.0".into(),
+            arguments: ContractPayload {
+                schema: schema.clone(),
+                media_type: "application/json".into(),
+                sha256: super::super::super::sha256(&bytes),
+                bytes,
+            },
+        };
+        let mut registry = ToolRegistry::new();
+        registry
+            .register_tool(Box::new(FixtureTool(ToolDefinition {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                tool_id: tool_id.clone(),
+                tool_version: "1.0.0".into(),
+                display_name: "Synthetic research".into(),
+                description: "No native network".into(),
+                input_schema: schema.clone(),
+                output_schema: schema,
+                risk_level: ToolRiskLevel::Moderate,
+                declared_effects: vec![operation],
+                required_grant: RequiredGrantTemplate {
+                    operation,
+                    target_scope: "exact-fixture".into(),
+                    single_use: true,
+                },
+                timeout_ms: 1000,
+            })))
+            .unwrap();
+        let parent = runtime
+            .issue_session_read(SessionReadGrantRequest {
+                grant_id: GrantId::from_raw("dispatch-parent-1"),
+                actor_id: actor.clone(),
+                session_id: context.session_id.clone(),
+                task_id: context.task_id.clone(),
+                targets: vec![scope(&[])],
+                excluded_targets: vec![],
+                sensitivity: DataSensitivity::Ephemeral,
+                issued_at_epoch_ms: 1,
+                expires_at_epoch_ms: 10_000,
+                nonce: GrantNonce::from_raw("dispatch-parent-nonce"),
+                maximum_derived_operations: 1,
+                preview_sha256: digest('2'),
+                policy_sha256: context.policy_sha256.clone(),
+            })
+            .unwrap();
+        let approval = ApprovalId::from_raw("dispatch-approval-1");
+        let grant = runtime
+            .derive_operation(
+                &parent.grant_id,
+                DerivedOperationGrantRequest {
+                    grant_id: GrantId::from_raw("dispatch-grant-1"),
+                    approval_id: approval.clone(),
+                    action_id: action.clone(),
+                    action_kind: ActionKind::DeterministicTool,
+                    operation,
+                    tool_id: tool_id.clone(),
+                    tool_version: "1.0.0".into(),
+                    targets: vec![exact_target.clone()],
+                    argument_sha256: call.arguments.sha256.clone(),
+                    preimages: vec![preimage(0, &exact_target)],
+                    expected_side_effects: vec![GrantSideEffect {
+                        operation,
+                        target_indexes: vec![0],
+                        details_sha256: prepared.packet().sha256().into(),
+                    }],
+                    rollback_description: "Synthetic observer only".into(),
+                    issued_at_epoch_ms: 100,
+                    expires_at_epoch_ms: 2000,
+                    nonce: GrantNonce::from_raw("dispatch-child-nonce"),
+                    preview_sha256: digest('3'),
+                    policy_sha256: context.policy_sha256.clone(),
+                },
+            )
+            .unwrap();
+        let reference = publish_plan_under_policy(
+            &mut runtime,
+            &mut payloads,
+            &serde_json::to_vec(plan.draft()).unwrap(),
+            true,
+            &context.policy_sha256,
+        );
+        runtime
+            .open_research_budget(&payloads, &context, &reference, plan.scope(), 100)
+            .unwrap();
+        let reservation = runtime
+            .reserve_research_request(
+                &payloads,
+                &context,
+                &prepared,
+                ResearchOperation::Visit,
+                101,
+            )
+            .unwrap();
+        let prior = runtime
+            .runtime_events(&context.run_id)
+            .unwrap()
+            .pop()
+            .unwrap();
+        let turn = next_event(&prior, RuntimeEventKind::TurnStarted, 101);
+        runtime.record_runtime_event(turn.clone()).unwrap();
+        let requested = next_event(
+            &turn,
+            RuntimeEventKind::ToolRequested {
+                tool_call_id: call.tool_call_id.clone(),
+                arguments_sha256: call.arguments.sha256.clone(),
+            },
+            102,
+        );
+        let queued = runtime.record_runtime_event(requested.clone()).unwrap();
+        assert_eq!(queued.queued_events, 2);
+        let started = next_event(
+            &requested,
+            RuntimeEventKind::ToolStarted {
+                tool_call_id: call.tool_call_id.clone(),
+                authority_sha256: super::super::super::sha256(&to_canonical_json(&grant).unwrap()),
+            },
+            103,
+        );
+        let transaction_id = AuthorityTransactionId::from_raw("dispatch-transaction-1");
+        let request = AuthorityTransactionRequest::new(
+            transaction_id.clone(),
+            OperationAttemptId::from_raw("dispatch-attempt-1"),
+            approval,
+            grant.grant_id.clone(),
+            call.clone(),
+            PolicyEvaluationContext {
+                actor_id: actor,
+                session_id: context.session_id.clone(),
+                task_id: context.task_id.clone(),
+                action_id: action,
+                action_kind: ActionKind::DeterministicTool,
+                tool_id,
+                tool_version: "1.0.0".into(),
+                targets: grant.targets.clone(),
+                argument_sha256: call.arguments.sha256,
+                preimages: grant.preimages.clone(),
+                expected_side_effects: grant.expected_side_effects.clone(),
+                preview_sha256: grant.preview_sha256.clone(),
+                now_epoch_ms: 103,
+                network_scope: Some("https:docs.example.com:443".into()),
+                credential_scope: None,
+                publication_scope: None,
+            },
+            103,
+            "1970-01-01T00:00:00.103Z",
+        )
+        .unwrap();
+        Fixture {
+            directory,
+            runtime,
+            payloads,
+            registry,
+            policy,
+            context,
+            plan,
+            prepared,
+            reservation,
+            request,
+            started,
+            grant_id: grant.grant_id,
+            transaction_id,
+        }
+    }
+
+    #[test]
+    fn research_owner_dispatch_commits_exact_start_and_terminal_without_replay_on_reopen() {
+        let mut fixture = fixture();
+        let original_reservation = fixture.reservation.reservation_sha256().to_owned();
+        let mut driver = RecordingResearchDriver {
+            packet: fixture.prepared.packet(),
+            now: 103,
+            calls: 0,
+            reservation: None,
+        };
+        let (receipt, pending) = fixture
+            .runtime
+            .begin_research_effect_with_runtime_event(
+                &fixture.registry,
+                &fixture.policy,
+                fixture.request.clone(),
+                &mut driver,
+                fixture.started.clone(),
+                &fixture.payloads,
+                &fixture.context,
+                &fixture.prepared,
+                fixture.reservation,
+            )
+            .unwrap();
+        assert_eq!(driver.calls, 1);
+        assert_eq!(
+            driver.reservation.as_deref(),
+            Some(original_reservation.as_str())
+        );
+        assert_eq!(receipt.outcome, OperationOutcome::Succeeded);
+        assert_eq!(
+            fixture
+                .runtime
+                .current_grant(&fixture.grant_id)
+                .unwrap()
+                .status,
+            GrantStatus::Consumed
+        );
+        let terminal = next_event(
+            &fixture.started,
+            RuntimeEventKind::ToolCompleted {
+                tool_call_id: ToolCallId::from_raw("dispatch-call-1"),
+                receipt_id: receipt.receipt_id.clone(),
+                result_sha256: digest('6'),
+            },
+            104,
+        );
+        fixture
+            .runtime
+            .finish_effect_with_runtime_event(pending, terminal.clone())
+            .unwrap();
+        assert_eq!(
+            fixture
+                .runtime
+                .runtime_events(&fixture.context.run_id)
+                .unwrap()
+                .last(),
+            Some(&terminal)
+        );
+        let state = fixture
+            .runtime
+            .research_budget_state(&fixture.context)
+            .unwrap();
+        assert_eq!(state.progress.visits, 1);
+        assert_eq!(state.progress.reserved_bytes, 512);
+        assert_eq!(state.progress.last_epoch_ms, 103);
+        drop(fixture.runtime);
+        let mut reopened = DurableAuthorityRuntime::open(
+            &fixture.directory.join("authority.db"),
+            &observation(),
+            &mut TestKey,
+            105,
+        )
+        .unwrap();
+        assert_eq!(reopened.receipts(), [receipt]);
+        assert_eq!(
+            reopened
+                .current_transaction(&fixture.transaction_id)
+                .unwrap()
+                .state,
+            AuthorityTransactionState::Terminal
+        );
+        assert!(
+            reopened
+                .reserve_research_request(
+                    &fixture.payloads,
+                    &fixture.context,
+                    &fixture.prepared,
+                    ResearchOperation::Visit,
+                    105
+                )
+                .is_err()
+        );
+        assert_eq!(driver.calls, 1);
+        drop(reopened);
+        fs::remove_dir_all(fixture.directory).unwrap();
+    }
+
+    #[test]
+    fn research_owner_refuses_stale_cancelled_missing_and_substituted_inputs_before_driver() {
+        for mutation in 0..8 {
+            let mut fixture = fixture();
+            match mutation {
+                0 => fixture
+                    .runtime
+                    .cancel_research_budget(&fixture.context)
+                    .unwrap(),
+                1 => {
+                    fixture
+                        .runtime
+                        .reserve_research_request(
+                            &fixture.payloads,
+                            &fixture.context,
+                            &packet(&fixture.plan, "newer-call", 102, 1),
+                            ResearchOperation::Visit,
+                            102,
+                        )
+                        .unwrap();
+                }
+                2 => fixture.payloads.objects.clear(),
+                3 => {
+                    fixture.started.correlation_id = CorrelationId::from_raw("foreign-correlation")
+                }
+                4 => {
+                    fixture.started.operation_id =
+                        Some(RuntimeOperationId::from_raw("unrequested-operation"))
+                }
+                5 => fixture.started.turn_id = Some(RuntimeTurnId::from_raw("unrequested-turn")),
+                6 => fixture.context.policy_sha256 = digest('f'),
+                7 => fixture.started.occurred_at_epoch_ms += 1,
+                _ => unreachable!(),
+            }
+            let mut driver = RecordingResearchDriver {
+                packet: fixture.prepared.packet(),
+                now: 103,
+                calls: 0,
+                reservation: None,
+            };
+            assert!(
+                matches!(
+                    fixture.runtime.begin_research_effect_with_runtime_event(
+                        &fixture.registry,
+                        &fixture.policy,
+                        fixture.request,
+                        &mut driver,
+                        fixture.started,
+                        &fixture.payloads,
+                        &fixture.context,
+                        &fixture.prepared,
+                        fixture.reservation,
+                    ),
+                    Err(DurableAuthorityError::ResearchJournal(_))
+                ),
+                "mutation {mutation}"
+            );
+            assert_eq!(driver.calls, 0);
+            assert_eq!(
+                fixture
+                    .runtime
+                    .current_grant(&fixture.grant_id)
+                    .unwrap()
+                    .status,
+                GrantStatus::Issued
+            );
+            assert!(
+                fixture
+                    .runtime
+                    .current_transaction(&fixture.transaction_id)
+                    .is_none()
+            );
+            drop(fixture.runtime);
+            fs::remove_dir_all(fixture.directory).unwrap();
+        }
+    }
+
+    #[test]
+    fn research_owner_run_cancellation_denies_before_budget_cancel_and_after_reopen() {
+        for observed in [false, true] {
+            for reopen in [false, true] {
+                let mut fixture = fixture();
+                fixture.runtime.flush_runtime_events().unwrap();
+                let prior = fixture
+                    .runtime
+                    .runtime_events(&fixture.context.run_id)
+                    .unwrap()
+                    .pop()
+                    .unwrap();
+                let cancellation_id = CancellationId::from_raw("dispatch-cancellation-1");
+                let mut cancelled = next_event(
+                    &prior,
+                    RuntimeEventKind::CancellationRequested {
+                        cancellation_id: cancellation_id.clone(),
+                    },
+                    102,
+                );
+                cancelled.turn_id = None;
+                cancelled.operation_id = None;
+                cancelled = seal_runtime_event(cancelled).unwrap();
+                fixture
+                    .runtime
+                    .record_runtime_event(cancelled.clone())
+                    .unwrap();
+                if observed {
+                    cancelled = next_event(
+                        &cancelled,
+                        RuntimeEventKind::CancellationObserved { cancellation_id },
+                        102,
+                    );
+                    cancelled.turn_id = None;
+                    cancelled.operation_id = None;
+                    cancelled = seal_runtime_event(cancelled).unwrap();
+                    fixture
+                        .runtime
+                        .record_runtime_event(cancelled.clone())
+                        .unwrap();
+                }
+                fixture.started = next_event(&cancelled, fixture.started.kind.clone(), 103);
+                if reopen {
+                    drop(fixture.runtime);
+                    fixture.runtime = DurableAuthorityRuntime::open(
+                        &fixture.directory.join("authority.db"),
+                        &observation(),
+                        &mut TestKey,
+                        103,
+                    )
+                    .unwrap();
+                }
+                // The cancellation is in the existing event owner, not yet in the
+                // separate conservative accounting projection. Neither can override it.
+                assert!(
+                    !fixture
+                        .runtime
+                        .research_budget_state(&fixture.context)
+                        .unwrap()
+                        .progress
+                        .cancelled
+                );
+                let mut driver = RecordingResearchDriver {
+                    packet: fixture.prepared.packet(),
+                    now: 103,
+                    calls: 0,
+                    reservation: None,
+                };
+                assert_eq!(
+                    fixture
+                        .runtime
+                        .begin_research_effect_with_runtime_event(
+                            &fixture.registry,
+                            &fixture.policy,
+                            fixture.request,
+                            &mut driver,
+                            fixture.started,
+                            &fixture.payloads,
+                            &fixture.context,
+                            &fixture.prepared,
+                            fixture.reservation,
+                        )
+                        .err(),
+                    Some(DurableAuthorityError::ResearchJournal(
+                        ResearchJournalError::Budget(ResearchBudgetError::Cancelled)
+                    ))
+                );
+                assert_eq!(driver.calls, 0);
+                assert_eq!(
+                    fixture
+                        .runtime
+                        .current_grant(&fixture.grant_id)
+                        .unwrap()
+                        .status,
+                    GrantStatus::Issued
+                );
+                assert!(
+                    fixture
+                        .runtime
+                        .current_transaction(&fixture.transaction_id)
+                        .is_none()
+                );
+                drop(fixture.runtime);
+                fs::remove_dir_all(fixture.directory).unwrap();
+            }
+        }
+    }
+
+    #[test]
+    fn research_owner_failed_preflight_append_poisons_without_launch_or_grant_consumption() {
+        let mut fixture = fixture();
+        // Preserve the two buffered progress events before deliberately reopening
+        // for fault injection. The positive dispatch test instead exercises the
+        // owner's mandatory flush at entry.
+        assert_eq!(fixture.runtime.flush_runtime_events().unwrap(), 2);
+        drop(fixture.runtime);
+        let path = fixture.directory.join("authority.db");
+        let store = OperationalStore::open(&path, &observation(), &mut TestKey).unwrap();
+        store.connection.execute_batch("CREATE TRIGGER synthetic_dispatch_failure BEFORE INSERT ON research_budget_revisions BEGIN SELECT RAISE(ABORT, 'synthetic.failure'); END;").unwrap();
+        drop(store);
+        fixture.runtime =
+            DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey, 103).unwrap();
+        let mut driver = RecordingResearchDriver {
+            packet: fixture.prepared.packet(),
+            now: 103,
+            calls: 0,
+            reservation: None,
+        };
+        assert_eq!(
+            fixture
+                .runtime
+                .begin_research_effect_with_runtime_event(
+                    &fixture.registry,
+                    &fixture.policy,
+                    fixture.request,
+                    &mut driver,
+                    fixture.started,
+                    &fixture.payloads,
+                    &fixture.context,
+                    &fixture.prepared,
+                    fixture.reservation,
+                )
+                .err(),
+            Some(DurableAuthorityError::ResearchJournal(
+                ResearchJournalError::Storage
+            ))
+        );
+        assert_eq!(driver.calls, 0);
+        assert_eq!(
+            fixture
+                .runtime
+                .current_grant(&fixture.grant_id)
+                .unwrap()
+                .status,
+            GrantStatus::Issued
+        );
+        assert_eq!(
+            fixture.runtime.cancel_research_budget(&fixture.context),
+            Err(DurableAuthorityError::Poisoned)
+        );
+        drop(fixture.runtime);
+        fs::remove_dir_all(fixture.directory).unwrap();
     }
 }
 
@@ -49,7 +1012,18 @@ fn publish_plan(
     bytes: &[u8],
     emit: bool,
 ) -> agentmage_kernel_contracts::RuntimeArtifactRef {
+    publish_plan_under_policy(runtime, payloads, bytes, emit, &context().policy_sha256)
+}
+
+fn publish_plan_under_policy(
+    runtime: &mut DurableAuthorityRuntime,
+    payloads: &mut FakePayloadStore,
+    bytes: &[u8],
+    emit: bool,
+    policy_sha256: &str,
+) -> agentmage_kernel_contracts::RuntimeArtifactRef {
     let mut candidate = manifest_with_id("research-plan-1");
+    candidate.policy_sha256 = policy_sha256.to_owned();
     candidate.kind = RuntimeArtifactKind::Report;
     candidate.media_type = "application/json".into();
     candidate.payload_sha256 = super::super::sha256(bytes);

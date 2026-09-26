@@ -21,7 +21,7 @@ use ureq::unversioned::transport::{
     TransportAdapter,
 };
 
-use crate::target::{public_destinations, redirect_target, request_url};
+use crate::target::{absolute_dns_name, public_destinations, redirect_target, request_url};
 
 const MAX_HEADERS: u64 = 16 * 1024;
 const MAX_FRAMING: u64 = 64 * 1024;
@@ -413,7 +413,8 @@ fn public_get(
     let url = request_url(target).map_err(|_| WorkerError::Destination)?;
     // Synchronous NSS resolution remains inside this killable worker. No detached
     // DNS thread, truncation, secondary resolver or ambient proxy is used.
-    let answers = (target.domain.as_str(), 443)
+    let dns_name = absolute_dns_name(target).map_err(|_| WorkerError::Destination)?;
+    let answers = (dns_name.as_str(), 443)
         .to_socket_addrs()
         .map_err(|_| WorkerError::Destination)?;
     let addresses = public_destinations(answers).map_err(|_| WorkerError::Destination)?;

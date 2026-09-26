@@ -16,6 +16,7 @@ COMMAND_RUNNER = Path("kernel/engine/src/command_runner.rs")
 REPOSITORY_SAFETY = Path("kernel/engine/src/repository_safety.rs")
 REPOSITORY_INSPECTION = Path("kernel/engine/src/repository_inspection.rs")
 RESEARCH_EFFECT_BINDING = Path("kernel/engine/src/research_effect_binding.rs")
+RESEARCH_DISPATCH = Path("kernel/engine/src/research_dispatch.rs")
 LOCAL_COMMIT = Path("kernel/engine/src/local_commit.rs")
 OPERATIONAL_STORE = Path("kernel/engine/src/operational_store.rs")
 CONFIGURATION = Path("kernel/engine/src/configuration.rs")
@@ -30,6 +31,7 @@ PERMIT_USERS = {
     COMMAND_RUNNER,
     REPOSITORY_INSPECTION,
     RESEARCH_EFFECT_BINDING,
+    RESEARCH_DISPATCH,
     REPOSITORY_SAFETY,
     LOCAL_COMMIT,
     LINUX_CONFIGURATION,
@@ -152,6 +154,7 @@ def validate_effect_boundary(
     failures: list[str] = []
     engine = _read(ENGINE, root, replacements)
     operational_store = _read(OPERATIONAL_STORE, root, replacements)
+    research_dispatch = _read(RESEARCH_DISPATCH, root, replacements)
     configuration = _read(CONFIGURATION, root, replacements)
     linux_lib = _read(LINUX_LIB, root, replacements)
     linux_configuration = _read(LINUX_CONFIGURATION, root, replacements)
@@ -177,6 +180,30 @@ def validate_effect_boundary(
         failures.append("effect authorization has a prohibited trait implementation")
     if re.search(r"EffectAuthorization[^\n]*::new\s*\(", engine.replace("let _ = EffectAuthorization::new();", "")):
         failures.append("effect authorization exposes a constructor")
+    research_proof = re.search(
+        r"pub struct ResearchDispatch<'a>\s*\{(?P<body>.*?)\n\}",
+        research_dispatch,
+        re.DOTALL,
+    )
+    if research_proof is None or re.search(r"(?m)^\s*pub(?:\([^)]*\))?\s+", research_proof.group("body")):
+        failures.append("research dispatch proof fields must remain private")
+    if research_proof is not None:
+        prefix = research_dispatch[max(0, research_proof.start() - 160):research_proof.start()]
+        if re.search(r"derive\([^)]*\b(Clone|Copy|Serialize|Deserialize)\b", prefix):
+            failures.append("research dispatch proof must not be duplicable or serializable")
+    if re.search(r"impl\s+(Clone|Copy|serde::Serialize|serde::Deserialize).*ResearchDispatch", research_dispatch):
+        failures.append("research dispatch proof has a prohibited trait implementation")
+    if re.search(r"(?m)^pub\s+struct\s+(FreshResearchDispatch|ResearchDispatchAdapter)\b", research_dispatch):
+        failures.append("research dispatch owner material exceeds crate visibility")
+    if re.search(
+        r"\bpub\s+(?:const\s+)?fn\s+\w+\s*(?:<[^{};]*>)?\s*\([^{};]*\)\s*->[^{};]*(?:ResearchDispatch|FreshResearchDispatch)",
+        research_dispatch,
+    ):
+        failures.append("research dispatch proof exposes a public constructor")
+    if not re.search(r"impl\s*<D:\s*ResearchEffectDriver>\s+EffectDriver\s+for\s+ResearchDispatchAdapter", research_dispatch):
+        failures.append("research dispatch must bridge the existing effect coordinator")
+    if re.search(r"(?m)^\s*pub(?:\([^)]*\))?\s+fn\s+begin_effect_with_preflight\s*(?:<|\()", operational_store):
+        failures.append("research preflight callback must remain owner-private")
     if not re.search(
         r"fn\s+execute\s*\(\s*&mut\s+self,\s*authorization:\s*EffectAuthorization<'_>\s*\)",
         engine,

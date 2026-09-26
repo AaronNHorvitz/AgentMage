@@ -533,6 +533,31 @@ impl ResearchBudget {
         })
     }
 
+    // A trusted clock observation may restrict an already spent attempt without
+    // reserving a second operation, refunding bytes or resetting its original start.
+    pub(crate) fn observe_clock(
+        &mut self,
+        scope: &ResearchScope,
+        now_epoch_ms: u64,
+    ) -> Result<(), ResearchBudgetError> {
+        if self.cancelled {
+            return Err(ResearchBudgetError::Cancelled);
+        }
+        if self.task_id != scope.task_id || self.policy_sha256 != scope.policy_sha256 {
+            return Err(ResearchBudgetError::Binding);
+        }
+        scope.network_requirement()?;
+        if self.deadline_exhausted
+            || now_epoch_ms < self.last_epoch_ms
+            || now_epoch_ms.saturating_sub(self.started_epoch_ms) >= scope.limits.elapsed_ms
+        {
+            self.deadline_exhausted = true;
+            return Err(ResearchBudgetError::Exhausted);
+        }
+        self.last_epoch_ms = now_epoch_ms;
+        Ok(())
+    }
+
     /// Atomically reserves worst-case bytes before the existing owner dispatches.
     /// Failed/rejected/uncertain effects do not refund or erase this reservation.
     /// Trusted clock observations advance even on a quota refusal; observed expiry
@@ -555,17 +580,7 @@ impl ResearchBudget {
         {
             return Err(ResearchBudgetError::Binding);
         }
-        scope.network_requirement()?;
-        if self.deadline_exhausted
-            || now_epoch_ms < self.last_epoch_ms
-            || now_epoch_ms.saturating_sub(self.started_epoch_ms) >= scope.limits.elapsed_ms
-        {
-            // Expiry or clock rollback is terminal. A subsequent older wall-clock
-            // observation must not revive a budget after expiration was observed.
-            self.deadline_exhausted = true;
-            return Err(ResearchBudgetError::Exhausted);
-        }
-        self.last_epoch_ms = now_epoch_ms;
+        self.observe_clock(scope, now_epoch_ms)?;
         let (queries, visits) = match operation {
             ResearchOperation::Query(query) => {
                 if !scope.query_sha256.contains(&public_query_sha256(query)?) {

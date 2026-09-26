@@ -16,9 +16,9 @@
       "sha256": "d286f3056da741cdbc9383297d2749e9967223702a6baafa09b322edbe6d6410"
     },
     {
-      "byte_length": 470849,
+      "byte_length": 474296,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "8fa6f5f328d93f413fc8d34c9f916fc99141224efb6e0444abfc6700ffd69081"
+      "sha256": "c63e5a1651d55053be042a0d79b9effdd568049dea2e9cb7da8e138e9a67cda6"
     },
     {
       "byte_length": 4166,
@@ -36,9 +36,9 @@
       "sha256": "03800068d00ea422acc3702e48bb3cae4c736f104680bb57767ce0b8b1fb6db3"
     },
     {
-      "byte_length": 26318,
+      "byte_length": 31565,
       "path": "kernel/engine/src/research_journal.rs",
-      "sha256": "85b16d35155631e3963be0d9572f84476a43ec759bb8dddc88bd0a051f5dd2a3"
+      "sha256": "8d1f44a30101d8cd2c49c540d07bfd6e9cc36d003ff051a5bd11cee9b10d7463"
     },
     {
       "byte_length": 1697,
@@ -58,7 +58,7 @@
     {
       "byte_length": 17958,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-results.log",
-      "sha256": "7f57258175a03150132a85c456287e0a1857cefe1dd5213cca77de224c744875"
+      "sha256": "abd63a9d5bd072c1f24fbf3a66ddfb5910951be83b4d66d27b31993f3cc44ea5"
     }
   ],
   "commands": [

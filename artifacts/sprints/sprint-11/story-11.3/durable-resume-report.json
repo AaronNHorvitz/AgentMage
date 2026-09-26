@@ -6,9 +6,9 @@
       "sha256": "a6404b5ab64ce63297f92eaa608e9182f7c522d20a0a745233ca61f13ecaeda0"
     },
     {
-      "byte_length": 470849,
+      "byte_length": 474296,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "8fa6f5f328d93f413fc8d34c9f916fc99141224efb6e0444abfc6700ffd69081"
+      "sha256": "c63e5a1651d55053be042a0d79b9effdd568049dea2e9cb7da8e138e9a67cda6"
     },
     {
       "byte_length": 1417,
@@ -26,9 +26,9 @@
       "sha256": "3588470c9ed56647802638f766c16418b9f61a8d7ea82a422371c56063b3d464"
     },
     {
-      "byte_length": 109201,
+      "byte_length": 123542,
       "path": "kernel/engine/src/authority_transaction.rs",
-      "sha256": "2d278c5ecdb518828a53b1afe41a6ce889e31f297f226b39d1af550aeb5be112"
+      "sha256": "ccaa4351bc65d246e33f58f934655dbc3ca2c6d43a687706c6ffd0b2d916a02a"
     },
     {
       "byte_length": 4166,
@@ -46,9 +46,9 @@
       "sha256": "03800068d00ea422acc3702e48bb3cae4c736f104680bb57767ce0b8b1fb6db3"
     },
     {
-      "byte_length": 26318,
+      "byte_length": 31565,
       "path": "kernel/engine/src/research_journal.rs",
-      "sha256": "85b16d35155631e3963be0d9572f84476a43ec759bb8dddc88bd0a051f5dd2a3"
+      "sha256": "8d1f44a30101d8cd2c49c540d07bfd6e9cc36d003ff051a5bd11cee9b10d7463"
     },
     {
       "byte_length": 2047,
@@ -68,7 +68,7 @@
     {
       "byte_length": 27013,
       "path": "artifacts/sprints/sprint-11/story-11.3/durable-resume-results.log",
-      "sha256": "41d464f850023c5948b1d731ace213a19b9fc16ce48549a81c1bb41d09dc5828"
+      "sha256": "676306d5e2d8c60f1b0a6cf6f56dab536cb8137c64722f356c8402de0dda9154"
     }
   ],
   "commands": [

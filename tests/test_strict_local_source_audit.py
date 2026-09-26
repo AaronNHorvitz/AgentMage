@@ -271,6 +271,20 @@ class StrictLocalSourceAuditTests(unittest.TestCase):
         matches = audit.URI.findall(r'\"https://example.invalid/schema\"')
         self.assertEqual(matches, ["https://example.invalid/schema"])
 
+    def test_worker_environment_canaries_are_test_only_not_a_production_exception(self) -> None:
+        path = "platforms/linux/src/bin/agentmage-public-research-worker.rs"
+        source = self.sources[path]
+        self.assertIn("#[cfg(test)]\nmod tests {", source)
+        self.assertIn("HTTPS_PROXY", source)
+        self.assertNotIn("HTTPS_PROXY", audit.production_source(path, source))
+        for prefix, diagnostic in (
+            ('const PROXY: &str = "HTTPS_PROXY";\n', "ambient-proxy-or-dns-override found outside its closed allowlist"),
+            ('const URI: &str = "https://proxy.example.com";\n', "undeclared external URI in product source"),
+        ):
+            changed = dict(self.sources)
+            changed[path] = prefix + source
+            self.assertIn(f"{diagnostic}: {path}", audit.scan_sources(self.policy, changed))
+
     def test_uri_allowance_is_exact_and_staleness_is_a_failure(self) -> None:
         sources = dict(self.sources)
         path = "capabilities/read-only/src/catalog.rs"

@@ -1,9 +1,9 @@
 {
   "artifacts": [
     {
-      "byte_length": 470849,
+      "byte_length": 474296,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "8fa6f5f328d93f413fc8d34c9f916fc99141224efb6e0444abfc6700ffd69081"
+      "sha256": "c63e5a1651d55053be042a0d79b9effdd568049dea2e9cb7da8e138e9a67cda6"
     },
     {
       "byte_length": 4166,
@@ -21,9 +21,9 @@
       "sha256": "03800068d00ea422acc3702e48bb3cae4c736f104680bb57767ce0b8b1fb6db3"
     },
     {
-      "byte_length": 26318,
+      "byte_length": 31565,
       "path": "kernel/engine/src/research_journal.rs",
-      "sha256": "85b16d35155631e3963be0d9572f84476a43ec759bb8dddc88bd0a051f5dd2a3"
+      "sha256": "8d1f44a30101d8cd2c49c540d07bfd6e9cc36d003ff051a5bd11cee9b10d7463"
     },
     {
       "byte_length": 4804,
@@ -48,7 +48,7 @@
     {
       "byte_length": 35850,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-results.log",
-      "sha256": "c63990063191a3eac9e995d1cd6ac3469797a6974bbf0458d3e3822ea2a70ab4"
+      "sha256": "0506716081317dc057b334e18265c443711dd895c21b6cd9fece1ca75e50d6c8"
     }
   ],
   "canonical_store": "operational-store",
