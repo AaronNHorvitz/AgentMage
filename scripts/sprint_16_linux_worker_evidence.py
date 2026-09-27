@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -46,6 +47,8 @@ SOURCE_PATHS: Final = (
 )
 SHA256: Final = promoted.SHA256
 REVISION: Final = promoted.REVISION
+MAX_SOURCE_FILES: Final = 20_000
+MAX_SOURCE_BYTES: Final = 256 * 1024 * 1024
 VERIFIED_OPERATIONS: Final = [
     "agentmage.workspace.list-directory",
     "agentmage.workspace.directory-tree",
@@ -82,16 +85,95 @@ class WorkerEvidenceError(ValueError):
     """Raised when installed-worker VM evidence cannot be produced."""
 
 
+def git_source(revision: str, path: str) -> bytes:
+    """Read a committed blob, never a working-tree substitute."""
+    if REVISION.fullmatch(revision) is None:
+        raise WorkerEvidenceError("installed worker source revision invalid")
+    return subprocess.run(
+        ["git", "show", f"{revision}:{path}"], cwd=ROOT, check=True,
+        capture_output=True, timeout=30,
+    ).stdout
+
+
+def complete_source_closure(revision: str) -> dict[str, Any]:
+    """Bind every committed file, including previously omitted Rust child modules.
+
+    No archive extraction, paths chosen by the artifact, or dependency traversal.
+    This deliberately conservative whole-tree closure also invalidates reuse after
+    a documentation change. Identical trees at different commits remain equivalent;
+    a future narrower equivalence policy would require explicit reviewed proof.
+    The original fourteen whole-file bindings are retained independently.
+    """
+    if REVISION.fullmatch(revision) is None:
+        raise WorkerEvidenceError("installed worker source revision invalid")
+    kind = subprocess.run(
+        ["git", "cat-file", "-t", revision], cwd=ROOT, check=True,
+        capture_output=True, timeout=30,
+    ).stdout
+    if kind != b"commit\n":
+        raise WorkerEvidenceError("installed worker source is not a commit")
+    inventory = subprocess.run(
+        ["git", "ls-tree", "-r", "-l", "-z", "--full-tree", revision],
+        cwd=ROOT, check=True, capture_output=True, timeout=30,
+    ).stdout
+    entries = []
+    total = 0
+    seen = set()
+    for line in inventory.split(b"\0"):
+        if not line:
+            continue
+        metadata, path = line.split(b"\t", 1)
+        mode, kind, oid, size_text = metadata.split()
+        size = int(size_text)
+        if (kind != b"blob" or mode not in (b"100644", b"100755", b"120000")
+                or re.fullmatch(rb"[0-9a-f]{40}", oid) is None
+                or not path or path in seen or size < 0):
+            raise WorkerEvidenceError("installed worker source inventory invalid")
+        total += size
+        seen.add(path)
+        entries.append((path, mode, oid, size))
+        if len(entries) > MAX_SOURCE_FILES or total > MAX_SOURCE_BYTES:
+            raise WorkerEvidenceError("installed worker source closure exceeds bound")
+    if not entries:
+        raise WorkerEvidenceError("installed worker source closure empty")
+    entries.sort()
+    # Advertised immutable blob sizes bound the batch before requesting contents.
+    blobs = subprocess.run(
+        ["git", "cat-file", "--batch"], cwd=ROOT, check=True,
+        input=b"".join(oid + b"\n" for _, _, oid, _ in entries),
+        capture_output=True, timeout=60,
+    ).stdout
+    if len(blobs) > total + len(entries) * 128:
+        raise WorkerEvidenceError("installed worker source batch exceeds bound")
+    digest = hashlib.sha256(b"agentmage-installed-worker-complete-source-v1\0")
+    offset = 0
+    for path, mode, oid, size in entries:
+        end = blobs.find(b"\n", offset)
+        if end < 0 or blobs[offset:end] != oid + b" blob " + str(size).encode():
+            raise WorkerEvidenceError("installed worker source batch identity drifted")
+        offset = end + 1
+        content = memoryview(blobs)[offset:offset + size]
+        offset += size
+        if len(content) != size or blobs[offset:offset + 1] != b"\n":
+            raise WorkerEvidenceError("installed worker source batch truncated")
+        offset += 1
+        digest.update(len(path).to_bytes(8, "big"))
+        digest.update(path)
+        digest.update(mode)
+        digest.update(size.to_bytes(8, "big"))
+        digest.update(hashlib.sha256(content).digest())
+    if offset != len(blobs):
+        raise WorkerEvidenceError("installed worker source batch has trailing bytes")
+    return {
+        "schema_version": 1, "scope": "complete-committed-source-tree",
+        "file_count": len(entries), "total_bytes": total, "sha256": digest.hexdigest(),
+    }
+
+
 def source_records(revision: str) -> list[dict[str, Any]]:
     records = []
     for path in SOURCE_PATHS:
-        content = subprocess.run(
-            ["git", "show", f"{revision}:{path}"],
-            cwd=ROOT,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=True,
-        ).stdout
+        content = git_source(revision, path)
         records.append(
             {
                 "path": path,
@@ -304,7 +386,7 @@ def build_report(
     targets: list[dict[str, Any]],
 ) -> dict[str, Any]:
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "record_type": "sprint-16-installed-linux-worker-matrix",
         "task_ids": ["16.1.1.5", "16.1.2.3", "16.1.3.3", "16.1.3.4"],
         "source_revision": revision,
@@ -326,6 +408,7 @@ def build_report(
         "repository_credentials_injected": False,
         "release_claim": False,
         "sources": source_records(revision),
+        "complete_source_closure": complete_source_closure(revision),
     }
 
 
@@ -334,7 +417,8 @@ def validate_report(value: Any) -> list[str]:
     if not isinstance(value, dict):
         return ["installed worker matrix must be an object"]
     if (
-        value.get("schema_version") != 1
+        type(value.get("schema_version")) is not int
+        or value.get("schema_version") not in (1, 2)
         or value.get("record_type") != "sprint-16-installed-linux-worker-matrix"
         or value.get("task_ids")
         != ["16.1.1.5", "16.1.2.3", "16.1.3.3", "16.1.3.4"]
@@ -444,13 +528,52 @@ def validate_report(value: Any) -> list[str]:
         or [item.get("path") for item in sources] != list(SOURCE_PATHS)
         or any(
             SHA256.fullmatch(str(item.get("sha256", ""))) is None
-            or not isinstance(item.get("bytes"), int)
+            or type(item.get("bytes")) is not int
             or item.get("bytes", 0) <= 0
             for item in sources
         )
     ):
         failures.append("installed worker source closure drifted")
+    if value.get("schema_version") == 2:
+        closure = value.get("complete_source_closure", {})
+        if (not isinstance(closure, dict)
+                or set(closure) != {"schema_version", "scope", "file_count", "total_bytes", "sha256"}
+                or type(closure.get("schema_version")) is not int
+                or closure.get("schema_version") != 1
+                or closure.get("scope") != "complete-committed-source-tree"
+                or type(closure.get("file_count")) is not int
+                or not 0 < closure.get("file_count", 0) <= MAX_SOURCE_FILES
+                or type(closure.get("total_bytes")) is not int
+                or not 0 <= closure.get("total_bytes", -1) <= MAX_SOURCE_BYTES
+                or SHA256.fullmatch(str(closure.get("sha256", ""))) is None):
+            failures.append("installed worker complete source closure malformed")
     return failures
+
+
+def validate_current_source(value: Any, revision: str) -> list[str]:
+    """Require actual matrix validity and complete native-source equivalence.
+
+    Legacy reports remain historically inspectable through validate_report, but
+    their incomplete source inventory cannot qualify a current local report.
+    """
+    try:
+        failures = validate_report(value)
+        if failures:
+            return failures
+        if value.get("schema_version") != 2:
+            return ["installed worker legacy closure is historical, not current"]
+        native_revision = value["source_revision"]
+        if value["sources"] != source_records(native_revision):
+            return ["installed worker committed source digests drifted"]
+        expected = complete_source_closure(native_revision)
+        if value.get("complete_source_closure") != expected:
+            return ["installed worker complete source closure drifted"]
+        if complete_source_closure(revision) != expected:
+            return ["installed worker source is not equivalent to local source"]
+    except (OSError, ValueError, TypeError, KeyError, AttributeError,
+            subprocess.SubprocessError):
+        return ["installed worker current source proof unavailable or malformed"]
+    return []
 
 
 def execute(revision_value: str) -> dict[str, Any]:
@@ -464,7 +587,7 @@ def execute(revision_value: str) -> dict[str, Any]:
             for target in docker_vm.TARGETS
         ]
     report = build_report(revision, tools, targets)
-    failures = validate_report(report)
+    failures = validate_current_source(report, revision)
     if failures:
         raise WorkerEvidenceError("; ".join(failures))
     write_atomic(REPORT_PATH, report)
@@ -487,14 +610,15 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--source-revision", default="HEAD")
+    parser.add_argument("--current-source", help="exact commit requiring native-source equivalence")
     parser.add_argument(
         "--diagnostic-target",
         choices=tuple(target.target_id for target in docker_vm.TARGETS),
     )
     arguments = parser.parse_args()
     try:
-        if arguments.write and arguments.diagnostic_target:
-            raise WorkerEvidenceError("write and diagnostic modes are mutually exclusive")
+        if sum(bool(mode) for mode in (arguments.write, arguments.diagnostic_target, arguments.current_source)) > 1:
+            raise WorkerEvidenceError("write, diagnostic and current-source modes are mutually exclusive")
         if arguments.diagnostic_target:
             execute_diagnostic_target(
                 arguments.source_revision, arguments.diagnostic_target
@@ -505,7 +629,8 @@ def main() -> int:
             report = execute(arguments.source_revision)
         else:
             report = json.loads(REPORT_PATH.read_text(encoding="utf-8"))
-        failures = validate_report(report)
+        failures = (validate_current_source(report, arguments.current_source)
+                    if arguments.current_source else validate_report(report))
     except (OSError, ValueError, json.JSONDecodeError, subprocess.SubprocessError) as error:
         print(f"Sprint 16 installed worker evidence failed: {error}", file=sys.stderr)
         return 1
@@ -513,7 +638,9 @@ def main() -> int:
         print(f"Sprint 16 installed worker evidence failed: {failure}", file=sys.stderr)
     if failures:
         return 1
-    print("Sprint 16 installed Linux worker matrix passed")
+    print("Sprint 16 installed Linux worker matrix validated; "
+          + ("complete current-source proof passed" if arguments.current_source or arguments.write
+             else "historical inspection only, not current-source acceptance"))
     return 0
 
 

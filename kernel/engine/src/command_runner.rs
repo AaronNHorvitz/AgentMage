@@ -11,7 +11,9 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::authority_transaction::{EffectAuthorization, EffectDriver, EffectLaunch, EffectResult};
-use crate::propagation::CancellationToken;
+use crate::propagation::{
+    CancellationToken, EffectCancellationObservation, ScopedEffectCancellation,
+};
 
 const COMMAND_SCHEMA_VERSION: u16 = 1;
 const MAX_COMMANDS: usize = 64;
@@ -77,6 +79,10 @@ pub enum CommandError {
     InvalidPlatformResult,
     /// The platform could not prove that the launched command and descendants ended.
     CleanupUncertain,
+    /// Existing cancellation control was invalid or unavailable; no valid signal is invented.
+    CancellationUnavailable,
+    /// The native attempt failed without complete output, after verified cleanup.
+    ExecutionFailed,
     /// A terminal command receipt could not be sealed.
     ReceiptFailure,
 }
@@ -93,6 +99,8 @@ impl CommandError {
             Self::AuthorityMismatch => "command.authority.mismatch",
             Self::InvalidPlatformResult => "command.result.invalid",
             Self::CleanupUncertain => "command.cleanup.uncertain",
+            Self::CancellationUnavailable => "command.cancellation.unavailable",
+            Self::ExecutionFailed => "command.execution.failed",
             Self::ReceiptFailure => "command.receipt.failed",
         }
     }
@@ -661,6 +669,18 @@ impl fmt::Debug for CommandLaunchPermit<'_> {
 }
 
 /// Trusted platform executor whose launch requires a kernel-created permit.
+/// Native failures are not synthetic command receipts or serialized termination variants.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CommandExecutionFailure {
+    /// Failed passive control observation; all owned native work is confirmed ended.
+    CancellationUnavailable,
+    /// Failed native execution/output observation; all owned native work is confirmed ended.
+    ExecutionFailed,
+    /// Ownership or cleanup cannot be proved. This takes precedence over other failures.
+    CleanupUncertain,
+}
+
+/// Trusted platform executor whose launch requires a kernel-created permit.
 pub trait BoundedCommandExecutor {
     /// Platform-owned held workspace-root type accepted by this executor.
     type WorkingDirectory: HeldWorkspaceRoot;
@@ -670,8 +690,8 @@ pub trait BoundedCommandExecutor {
         &mut self,
         permit: CommandLaunchPermit<'_>,
         working_directory: &Self::WorkingDirectory,
-        cancellation: &CancellationToken,
-    ) -> CommandPlatformResult;
+        cancellation: &dyn EffectCancellationObservation,
+    ) -> Result<CommandPlatformResult, CommandExecutionFailure>;
 }
 
 /// Exact outer tool-call binding for a registered command used by a trusted wrapper.
@@ -729,25 +749,25 @@ enum CommandAuthorityBinding {
 }
 
 /// Inert command driver crossing the effect boundary only with consumed authority.
-pub struct CommandEffectDriver<E, H> {
+pub struct CommandEffectDriver<E, H, C = CancellationToken> {
     executor: E,
     held_working_directory: H,
     prepared: PreparedCommand,
     authority_binding: CommandAuthorityBinding,
-    cancellation: CancellationToken,
+    cancellation: C,
     receipt: Option<CommandReceipt>,
     output: Option<CommandCapturedOutput>,
     error: Option<CommandError>,
 }
 
-impl<E, H> CommandEffectDriver<E, H> {
+impl<E, H, C> CommandEffectDriver<E, H, C> {
     /// Creates an inert driver; construction does not execute or grant authority.
     #[must_use]
     pub const fn new(
         executor: E,
         held_working_directory: H,
         prepared: PreparedCommand,
-        cancellation: CancellationToken,
+        cancellation: C,
     ) -> Self {
         Self {
             executor,
@@ -767,7 +787,7 @@ impl<E, H> CommandEffectDriver<E, H> {
         executor: E,
         held_working_directory: H,
         prepared: PreparedCommand,
-        cancellation: CancellationToken,
+        cancellation: C,
         binding: RegisteredCommandWrapperBinding,
     ) -> Self {
         Self {
@@ -804,7 +824,7 @@ impl<E, H> CommandEffectDriver<E, H> {
     }
 }
 
-impl<E, H> fmt::Debug for CommandEffectDriver<E, H> {
+impl<E, H, C> fmt::Debug for CommandEffectDriver<E, H, C> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("CommandEffectDriver")
@@ -816,10 +836,11 @@ impl<E, H> fmt::Debug for CommandEffectDriver<E, H> {
     }
 }
 
-impl<E, H> EffectDriver for CommandEffectDriver<E, H>
+impl<E, H, C> EffectDriver for CommandEffectDriver<E, H, C>
 where
     E: BoundedCommandExecutor,
     H: Borrow<E::WorkingDirectory>,
+    C: EffectCancellationObservation,
 {
     fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
         let call = authorization.call();
@@ -840,7 +861,19 @@ where
             return EffectLaunch::failed();
         }
 
-        let platform = if self.cancellation.is_cancelled() {
+        let scoped = ScopedEffectCancellation::new(
+            &self.cancellation,
+            authorization.task_id(),
+            &call.correlation_id,
+        );
+        let cancelled = match scoped.observe_effect_cancellation() {
+            Ok(signal) => signal.is_some(),
+            Err(_) => {
+                self.error = Some(CommandError::CancellationUnavailable);
+                return failed_command_effect(CommandError::CancellationUnavailable);
+            }
+        };
+        let platform = if cancelled {
             CommandPlatformResult {
                 termination: CommandTermination::Cancelled,
                 exit_code: None,
@@ -857,13 +890,30 @@ where
                 platform_code: "command.cancelled.before_launch".to_owned(),
             }
         } else {
-            self.executor.execute(
+            match self.executor.execute(
                 CommandLaunchPermit {
                     command: &self.prepared.command,
                 },
                 held_working_directory,
-                &self.cancellation,
-            )
+                &scoped,
+            ) {
+                Ok(result) => result,
+                Err(failure) => {
+                    let error = match failure {
+                        CommandExecutionFailure::CancellationUnavailable => {
+                            CommandError::CancellationUnavailable
+                        }
+                        CommandExecutionFailure::ExecutionFailed => CommandError::ExecutionFailed,
+                        CommandExecutionFailure::CleanupUncertain => CommandError::CleanupUncertain,
+                    };
+                    self.error = Some(error);
+                    return if failure == CommandExecutionFailure::CleanupUncertain {
+                        uncertain_command_effect(error)
+                    } else {
+                        failed_command_effect(error)
+                    };
+                }
+            }
         };
 
         // A command completion receipt requires known cleanup for EVERY exit,
@@ -896,6 +946,16 @@ where
             }
         }
     }
+}
+
+fn failed_command_effect(error: CommandError) -> EffectLaunch {
+    // Only before native launch or after the trusted executor proved owned cleanup.
+    // The registered command's held workspace is read-only; no output is retained.
+    EffectLaunch::completed(EffectResult::from_redacted_material(
+        OperationOutcome::Failed,
+        error.code().as_bytes(),
+        StateChange::NotChanged,
+    ))
 }
 
 fn uncertain_command_effect(error: CommandError) -> EffectLaunch {
@@ -1285,12 +1345,12 @@ mod tests {
             &mut self,
             permit: CommandLaunchPermit<'_>,
             working_directory: &Self::WorkingDirectory,
-            _cancellation: &CancellationToken,
-        ) -> CommandPlatformResult {
+            _cancellation: &dyn crate::propagation::EffectCancellationObservation,
+        ) -> Result<CommandPlatformResult, super::CommandExecutionFailure> {
             assert_eq!(permit.command().template_id, "fixture.printf");
             assert_eq!(working_directory.workspace_id.as_str(), "workspace-0001");
             self.launches += 1;
-            self.result.take().expect("one fake result")
+            Ok(self.result.take().expect("one fake result"))
         }
     }
 
@@ -1497,6 +1557,161 @@ mod tests {
             }),
             descendants_terminated: true,
             platform_code: "fixture.command.exited".to_owned(),
+        }
+    }
+
+    #[test]
+    fn command_observer_failures_bind_consumed_scope_and_never_fabricate_output() {
+        use crate::propagation::{CancellationObservationError, EffectCancellationObservation};
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        struct Probe {
+            calls: AtomicUsize,
+            late: bool,
+            signal: Option<CancellationSignal>,
+        }
+        impl EffectCancellationObservation for Probe {
+            fn observe_effect_cancellation(
+                &self,
+            ) -> Result<Option<CancellationSignal>, CancellationObservationError> {
+                if self.late && self.calls.fetch_add(1, Ordering::SeqCst) == 0 {
+                    return Ok(None);
+                }
+                self.signal
+                    .clone()
+                    .map(Some)
+                    .ok_or(CancellationObservationError::Unavailable)
+            }
+        }
+        struct FailingExecutor {
+            launches: usize,
+            uncertain: bool,
+        }
+        impl BoundedCommandExecutor for FailingExecutor {
+            type WorkingDirectory = SyntheticHeldRoot;
+            fn execute(
+                &mut self,
+                _permit: CommandLaunchPermit<'_>,
+                _root: &SyntheticHeldRoot,
+                cancellation: &dyn EffectCancellationObservation,
+            ) -> Result<CommandPlatformResult, super::CommandExecutionFailure> {
+                self.launches += 1;
+                assert!(
+                    cancellation.observe_effect_cancellation().is_err(),
+                    "late observations must remain bound to consumed scope"
+                );
+                Err(if self.uncertain {
+                    super::CommandExecutionFailure::CleanupUncertain
+                } else {
+                    super::CommandExecutionFailure::CancellationUnavailable
+                })
+            }
+        }
+        for late in [false, true] {
+            for uncertain in [false, true] {
+                for defect in 0..6 {
+                    let mut fixture = authority_fixture();
+                    let grant = fixture.grant.grant_id.clone();
+                    let mut signal = CancellationSignal {
+                        schema_version: CONTRACT_SCHEMA_VERSION,
+                        cancellation_id: CancellationId::from_raw("cancel-command-observer"),
+                        correlation_id: fixture.call.correlation_id.clone(),
+                        task_id: fixture.grant.task_id.clone(),
+                        reason: CancellationReason::UserRequested,
+                        requested_by: BoundaryKind::Shell,
+                    };
+                    match defect {
+                        0 => signal.schema_version += 1,
+                        1 => signal.task_id = TaskId::from_raw("foreign-task"),
+                        2 => signal.correlation_id = CorrelationId::from_raw("foreign-correlation"),
+                        3 => signal.requested_by = BoundaryKind::Model,
+                        4 => signal.cancellation_id = CancellationId::from_raw(""),
+                        5 => {}
+                        _ => unreachable!(),
+                    }
+                    let probe = Probe {
+                        calls: AtomicUsize::new(0),
+                        late,
+                        signal: (defect != 5).then_some(signal),
+                    };
+                    let executor = FailingExecutor {
+                        launches: 0,
+                        uncertain,
+                    };
+                    let mut driver =
+                        CommandEffectDriver::new(executor, &fixture.held, fixture.prepared, &probe);
+                    let request = AuthorityTransactionRequest::new(
+                        AuthorityTransactionId::from_raw("transaction-command-observer"),
+                        OperationAttemptId::from_raw("attempt-command-observer"),
+                        fixture.approval_id,
+                        fixture.grant.grant_id,
+                        fixture.call,
+                        fixture.context,
+                        4_000,
+                        "1970-01-01T00:00:04Z",
+                    )
+                    .unwrap();
+                    let mut coordinator = AuthorityTransactionCoordinator::new();
+                    let receipt = coordinator
+                        .execute_effect(
+                            &fixture.registry,
+                            &mut fixture.issuer,
+                            &fixture.policy,
+                            request.clone(),
+                            &mut driver,
+                        )
+                        .unwrap();
+                    let is_uncertain = late && uncertain;
+                    assert_eq!(
+                        receipt.outcome,
+                        if is_uncertain {
+                            OperationOutcome::Uncertain
+                        } else {
+                            OperationOutcome::Failed
+                        }
+                    );
+                    assert_eq!(
+                        coordinator
+                            .current(&receipt.authority_transaction_id)
+                            .unwrap()
+                            .uncertain_effect,
+                        is_uncertain
+                    );
+                    let consumed = fixture.issuer.current(&grant).unwrap();
+                    assert_eq!(
+                        consumed.status,
+                        if is_uncertain {
+                            agentmage_kernel_contracts::GrantStatus::Uncertain
+                        } else {
+                            agentmage_kernel_contracts::GrantStatus::Consumed
+                        }
+                    );
+                    assert_eq!(consumed.use_count, consumed.use_limit);
+                    assert!(driver.take_receipt().is_none());
+                    assert!(driver.take_output().is_none());
+                    assert_eq!(
+                        driver.take_error(),
+                        Some(if is_uncertain {
+                            CommandError::CleanupUncertain
+                        } else {
+                            CommandError::CancellationUnavailable
+                        })
+                    );
+                    // Reusing consumed authority cannot call the executor again.
+                    assert!(
+                        coordinator
+                            .execute_effect(
+                                &fixture.registry,
+                                &mut fixture.issuer,
+                                &fixture.policy,
+                                request,
+                                &mut driver,
+                            )
+                            .is_err()
+                    );
+                    assert_eq!(driver.into_executor().launches, usize::from(late));
+                }
+            }
         }
     }
 

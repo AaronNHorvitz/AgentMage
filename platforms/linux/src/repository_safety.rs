@@ -9,14 +9,16 @@ use std::os::unix::ffi::OsStrExt as _;
 use std::os::unix::fs::MetadataExt as _;
 use std::path::{Component, Path, PathBuf};
 use std::process::{Child, Command, ExitStatus, Stdio};
+use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
 use agentmage_kernel_contracts::OperationOutcome;
-use agentmage_kernel_engine::propagation::CancellationToken;
+use agentmage_kernel_engine::propagation::{CancellationToken, EffectCancellationObservation};
 use agentmage_kernel_engine::repository_inspection::{
-    BoundedRepositoryInspectionExecutor, RepositoryInspectionLaunchPermit,
-    RepositoryInspectionPlatformResult, RepositoryInspectionTermination,
+    BoundedRepositoryInspectionExecutor, RepositoryInspectionExecutionFailure,
+    RepositoryInspectionLaunchPermit, RepositoryInspectionPlatformResult,
+    RepositoryInspectionTermination,
 };
 use agentmage_kernel_engine::repository_safety::{
     BoundedRepositoryExecutor, GitInvocationKind, HardenedGitInvocation, RepositoryLaunchPermit,
@@ -24,11 +26,8 @@ use agentmage_kernel_engine::repository_safety::{
     RepositoryPreservationManifest,
 };
 use rustix::fd::OwnedFd;
-use rustix::fs::{
-    FileType, MemfdFlags, Mode, OFlags, SealFlags, SeekFrom, fchmod, fcntl_add_seals, fstat,
-    memfd_create, open, seek,
-};
-use rustix::io::{pread, write as rustix_write};
+use rustix::fs::{FileType, Mode, OFlags, fchmod, fstat, open};
+use rustix::io::pread;
 use rustix::process::getuid;
 use rustix::rand::{GetRandomFlags, getrandom};
 use sha2::{Digest, Sha256};
@@ -42,7 +41,6 @@ const MAX_METADATA_ENTRIES: usize = 16_384;
 const PROCESS_TIMEOUT: Duration = Duration::from_secs(30);
 const INSPECTION_PROCESS_TIMEOUT: Duration = Duration::from_secs(15);
 const POLL_INTERVAL: Duration = Duration::from_millis(10);
-const INSPECTION_UNIT_GRACE: Duration = Duration::from_secs(3);
 const GUEST_GIT_EXECUTABLE: &str = "/app/git";
 
 /// Stable failure class at the Linux repository boundary.
@@ -144,6 +142,11 @@ pub struct LinuxRepositoryInspectionManifest {
 }
 
 impl LinuxRepositoryInspectionManifest {
+    pub(crate) fn control_path(&self) -> Result<&Path, LinuxRepositoryError> {
+        revalidate_git_artifact(&self.systemctl)?;
+        Ok(&self.systemctl.launch_path)
+    }
+
     /// Verifies and holds the exact systemd, Bubblewrap, and Git executables.
     pub fn verify(
         systemd_run: impl AsRef<Path>,
@@ -625,8 +628,8 @@ fn read_inventory_output(
 /// Pinned offline executor for one kernel-validated read-only Git inspection.
 #[derive(Debug)]
 pub struct LinuxBoundedRepositoryInspectionExecutor {
-    manifest: LinuxRepositoryInspectionManifest,
-    seccomp_descriptor: OwnedFd,
+    manifest: Arc<LinuxRepositoryInspectionManifest>,
+    seccomp_bpf: Vec<u8>,
 }
 
 impl LinuxBoundedRepositoryInspectionExecutor {
@@ -635,8 +638,8 @@ impl LinuxBoundedRepositoryInspectionExecutor {
         let seccomp = compile_seccomp_policy()
             .map_err(|_| error(LinuxRepositoryErrorKind::InvalidGitArtifact))?;
         Ok(Self {
-            manifest,
-            seccomp_descriptor: sealed_inspection_seccomp(&seccomp)?,
+            manifest: Arc::new(manifest),
+            seccomp_bpf: seccomp,
         })
     }
 
@@ -644,8 +647,14 @@ impl LinuxBoundedRepositoryInspectionExecutor {
         &self,
         prepared: &agentmage_kernel_engine::repository_inspection::PreparedRepositoryInspection,
         working_directory: &crate::LinuxAuthorizedWorkspace,
-        cancellation: &CancellationToken,
-    ) -> RepositoryInspectionPlatformResult {
+        cancellation: &dyn EffectCancellationObservation,
+    ) -> Result<RepositoryInspectionPlatformResult, RepositoryInspectionExecutionFailure> {
+        let started = Instant::now();
+        let deadline = started
+            .checked_add(INSPECTION_PROCESS_TIMEOUT)
+            .ok_or(RepositoryInspectionExecutionFailure::ExecutionFailed)?;
+        crate::sandbox::supervision::admission_snapshot()
+            .map_err(inspection_supervision_failure)?;
         if revalidate_git_artifact(&self.manifest.systemd_run).is_err()
             || revalidate_git_artifact(&self.manifest.systemctl).is_err()
             || revalidate_git_artifact(&self.manifest.bubblewrap).is_err()
@@ -667,10 +676,9 @@ impl LinuxBoundedRepositoryInspectionExecutor {
             "/proc/{parent_pid}/fd/{}",
             self.manifest.git.descriptor.as_raw_fd()
         );
-        let seccomp_descriptor = format!(
-            "/proc/{parent_pid}/fd/{}",
-            self.seccomp_descriptor.as_raw_fd()
-        );
+        let filter_pipe = crate::sandbox::supervision::FilterPipe::new()
+            .map_err(inspection_supervision_failure)?;
+        let seccomp_descriptor = format!("/proc/{parent_pid}/fd/{}", filter_pipe.read_descriptor());
         let worktree_descriptor = format!("/proc/{parent_pid}/fd/{}", root.as_raw_fd());
         let runtime_directory = format!("/run/user/{}", getuid().as_raw());
         let session_bus = format!("unix:path={runtime_directory}/bus");
@@ -697,6 +705,9 @@ impl LinuxBoundedRepositoryInspectionExecutor {
             .arg("--property=TasksMax=16")
             .arg("--property=CPUQuota=100%")
             .arg("--property=RuntimeMaxSec=16s")
+            .arg("--property=Restart=no")
+            .arg("--property=JobRunningTimeoutSec=15s")
+            .arg("--property=TimeoutStartSec=15s")
             .arg("--property=KillMode=control-group")
             .arg("--property=SendSIGKILL=yes")
             .arg("--property=TimeoutStopSec=2s")
@@ -756,151 +767,81 @@ impl LinuxBoundedRepositoryInspectionExecutor {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
-        let started = Instant::now();
-        let Ok(mut child) = command.spawn() else {
-            return failed_inspection("linux.git-inspection.launch.failed");
-        };
-        let Some(stdout) = child.stdout.take() else {
-            let cleanup = terminate_inspection_unit(
-                &self.manifest,
-                &unit,
-                &runtime_directory,
-                &session_bus,
-                &mut child,
-            );
-            return failed_inspection_with_cleanup(
-                "linux.git-inspection.stdout.failed",
-                cleanup,
-                started.elapsed(),
-            );
-        };
-        let Some(stderr) = child.stderr.take() else {
-            let cleanup = terminate_inspection_unit(
-                &self.manifest,
-                &unit,
-                &runtime_directory,
-                &session_bus,
-                &mut child,
-            );
-            return failed_inspection_with_cleanup(
-                "linux.git-inspection.stderr.failed",
-                cleanup,
-                started.elapsed(),
-            );
-        };
-        let stdout_reader = thread::spawn(move || read_inspection_output(stdout));
-        let stderr_reader = thread::spawn(move || read_inspection_output(stderr));
-        let deadline = started + INSPECTION_PROCESS_TIMEOUT;
-        let (mut termination, mut exit_code, mut cleanup_verified, platform_code) = loop {
-            match child.try_wait() {
-                Ok(Some(status)) => {
-                    let cleanup = cleanup_inspection_unit(
-                        &self.manifest,
-                        &unit,
-                        &runtime_directory,
-                        &session_bus,
-                    );
-                    let Some(code) = status.code() else {
-                        break (
-                            RepositoryInspectionTermination::LaunchFailed,
-                            None,
-                            cleanup,
-                            "linux.git-inspection.signal",
-                        );
-                    };
-                    break (
-                        RepositoryInspectionTermination::Exited,
-                        Some(code),
-                        cleanup,
-                        "linux.git-inspection.exited",
-                    );
-                }
-                Ok(None) if cancellation.is_cancelled() => {
-                    let cleanup = terminate_inspection_unit(
-                        &self.manifest,
-                        &unit,
-                        &runtime_directory,
-                        &session_bus,
-                        &mut child,
-                    );
-                    break (
-                        RepositoryInspectionTermination::Cancelled,
-                        None,
-                        cleanup,
-                        "linux.git-inspection.cancelled",
-                    );
-                }
-                Ok(None) if Instant::now() >= deadline => {
-                    let cleanup = terminate_inspection_unit(
-                        &self.manifest,
-                        &unit,
-                        &runtime_directory,
-                        &session_bus,
-                        &mut child,
-                    );
-                    break (
-                        RepositoryInspectionTermination::TimedOut,
-                        None,
-                        cleanup,
-                        "linux.git-inspection.timed-out",
-                    );
-                }
-                Ok(None) => thread::sleep(POLL_INTERVAL),
-                Err(_) => {
-                    let cleanup = terminate_inspection_unit(
-                        &self.manifest,
-                        &unit,
-                        &runtime_directory,
-                        &session_bus,
-                        &mut child,
-                    );
-                    break (
-                        RepositoryInspectionTermination::LaunchFailed,
-                        None,
-                        cleanup,
-                        "linux.git-inspection.wait.failed",
-                    );
-                }
-            }
-        };
-        let Ok(stdout) = stdout_reader.join().unwrap_or(Err(())) else {
-            return failed_inspection_with_cleanup(
-                "linux.git-inspection.stdout.read-failed",
-                cleanup_verified,
-                started.elapsed(),
-            );
-        };
-        let Ok(stderr) = stderr_reader.join().unwrap_or(Err(())) else {
-            return failed_inspection_with_cleanup(
-                "linux.git-inspection.stderr.read-failed",
-                cleanup_verified,
-                started.elapsed(),
-            );
-        };
-        let mut platform_code = platform_code;
-        if stdout.exceeded || stderr.exceeded {
-            termination = RepositoryInspectionTermination::OutputLimit;
-            exit_code = None;
-            platform_code = "linux.git-inspection.output-limit";
+        let result = crate::sandbox::supervision::run_owned(
+            command,
+            crate::sandbox::supervision::Launch {
+                owner: crate::sandbox::supervision::LaunchOwner::Git(self.manifest.clone()),
+                projections: vec![root],
+                unit,
+                deadline,
+                stdout_limit: MAX_OBSERVATION_BYTES,
+                stderr_limit: MAX_OBSERVATION_BYTES,
+                filter_pipe: Some(filter_pipe),
+            },
+            &self.seccomp_bpf,
+            &crate::sandbox::SandboxCancellation::Observed(cancellation),
+        )
+        .map_err(inspection_supervision_failure)?;
+        if !result.output_complete {
+            return Err(RepositoryInspectionExecutionFailure::ExecutionFailed);
         }
         if working_directory.revalidate().is_err() {
-            termination = RepositoryInspectionTermination::LaunchFailed;
-            exit_code = None;
-            cleanup_verified = false;
-            platform_code = "linux.git-inspection.root.changed";
+            return Err(RepositoryInspectionExecutionFailure::CleanupUncertain);
         }
-        RepositoryInspectionPlatformResult {
+        let termination = match result.outcome {
+            Ok(OperationOutcome::Cancelled) => RepositoryInspectionTermination::Cancelled,
+            Ok(OperationOutcome::TimedOut) => RepositoryInspectionTermination::TimedOut,
+            Ok(OperationOutcome::Succeeded | OperationOutcome::Failed) => {
+                if result.status.as_ref().and_then(ExitStatus::code).is_none() {
+                    return Err(RepositoryInspectionExecutionFailure::ExecutionFailed);
+                }
+                RepositoryInspectionTermination::Exited
+            }
+            Err(error)
+                if error.kind() == crate::sandbox::LinuxSandboxErrorKind::OutputLimitExceeded =>
+            {
+                RepositoryInspectionTermination::OutputLimit
+            }
+            Err(error) => return Err(inspection_supervision_failure(error)),
+            _ => return Err(RepositoryInspectionExecutionFailure::ExecutionFailed),
+        };
+        Ok(RepositoryInspectionPlatformResult {
             termination,
-            exit_code,
-            stdout_sha256: hash(&stdout.retained),
-            stdout_bytes: stdout.retained.len() as u64,
-            stdout: stdout.retained,
-            stderr_sha256: hash(&stderr.retained),
-            stderr_bytes: stderr.retained.len() as u64,
+            exit_code: if termination == RepositoryInspectionTermination::Exited {
+                result.status.as_ref().and_then(ExitStatus::code)
+            } else {
+                None
+            },
+            stdout_sha256: hash(&result.stdout.retained),
+            stdout_bytes: result.stdout.retained.len() as u64,
+            stdout: result.stdout.retained,
+            stderr_sha256: hash(&result.stderr.retained),
+            stderr_bytes: result.stderr.retained.len() as u64,
             elapsed_ms: elapsed_millis(started.elapsed()),
-            descendants_terminated: cleanup_verified,
-            platform_code: platform_code.to_owned(),
+            descendants_terminated: true,
+            platform_code: match termination {
+                RepositoryInspectionTermination::Exited => "linux.git-inspection.exited",
+                RepositoryInspectionTermination::Cancelled => "linux.git-inspection.cancelled",
+                RepositoryInspectionTermination::TimedOut => "linux.git-inspection.timed-out",
+                RepositoryInspectionTermination::OutputLimit => "linux.git-inspection.output-limit",
+                _ => "linux.git-inspection.failed",
+            }
+            .to_owned(),
+        })
+    }
+}
+
+fn inspection_supervision_failure(
+    error: crate::sandbox::LinuxSandboxError,
+) -> RepositoryInspectionExecutionFailure {
+    match error.kind() {
+        crate::sandbox::LinuxSandboxErrorKind::CleanupUncertain => {
+            RepositoryInspectionExecutionFailure::CleanupUncertain
         }
+        crate::sandbox::LinuxSandboxErrorKind::CancellationUnavailable => {
+            RepositoryInspectionExecutionFailure::CancellationUnavailable
+        }
+        _ => RepositoryInspectionExecutionFailure::ExecutionFailed,
     }
 }
 
@@ -911,67 +852,10 @@ impl BoundedRepositoryInspectionExecutor for LinuxBoundedRepositoryInspectionExe
         &mut self,
         permit: RepositoryInspectionLaunchPermit<'_>,
         working_directory: &Self::WorkingDirectory,
-        cancellation: &CancellationToken,
-    ) -> RepositoryInspectionPlatformResult {
+        cancellation: &dyn EffectCancellationObservation,
+    ) -> Result<RepositoryInspectionPlatformResult, RepositoryInspectionExecutionFailure> {
         self.run(permit.prepared(), working_directory, cancellation)
     }
-}
-
-struct InspectionOutput {
-    retained: Vec<u8>,
-    exceeded: bool,
-}
-
-fn read_inspection_output(mut input: impl Read) -> Result<InspectionOutput, ()> {
-    let mut retained = Vec::with_capacity(MAX_OBSERVATION_BYTES);
-    let mut buffer = [0_u8; HASH_BUFFER_BYTES];
-    loop {
-        let count = input.read(&mut buffer).map_err(|_| ())?;
-        if count == 0 {
-            break;
-        }
-        if retained.len().saturating_add(count) > MAX_OBSERVATION_BYTES {
-            let remaining = MAX_OBSERVATION_BYTES.saturating_sub(retained.len());
-            retained.extend_from_slice(&buffer[..remaining]);
-            return Ok(InspectionOutput {
-                retained,
-                exceeded: true,
-            });
-        }
-        retained.extend_from_slice(&buffer[..count]);
-    }
-    Ok(InspectionOutput {
-        retained,
-        exceeded: false,
-    })
-}
-
-fn sealed_inspection_seccomp(bytes: &[u8]) -> Result<OwnedFd, LinuxRepositoryError> {
-    if bytes.is_empty() {
-        return Err(error(LinuxRepositoryErrorKind::InvalidGitArtifact));
-    }
-    let descriptor = memfd_create(
-        "agentmage-git-seccomp",
-        MemfdFlags::CLOEXEC | MemfdFlags::ALLOW_SEALING,
-    )
-    .map_err(|_| error(LinuxRepositoryErrorKind::InvalidGitArtifact))?;
-    let mut remaining = bytes;
-    while !remaining.is_empty() {
-        let count = rustix_write(&descriptor, remaining)
-            .map_err(|_| error(LinuxRepositoryErrorKind::InvalidGitArtifact))?;
-        if count == 0 {
-            return Err(error(LinuxRepositoryErrorKind::InvalidGitArtifact));
-        }
-        remaining = &remaining[count..];
-    }
-    seek(&descriptor, SeekFrom::Start(0))
-        .map_err(|_| error(LinuxRepositoryErrorKind::InvalidGitArtifact))?;
-    fcntl_add_seals(
-        &descriptor,
-        SealFlags::SEAL | SealFlags::SHRINK | SealFlags::GROW | SealFlags::WRITE,
-    )
-    .map_err(|_| error(LinuxRepositoryErrorKind::InvalidGitArtifact))?;
-    Ok(descriptor)
 }
 
 fn add_inspection_runtime_mounts(command: &mut Command) {
@@ -992,112 +876,10 @@ fn random_inspection_unit() -> Result<String, LinuxRepositoryError> {
     Ok(format!("agentmage-git-inspection-{}", hex(&random)))
 }
 
-fn terminate_inspection_unit(
-    manifest: &LinuxRepositoryInspectionManifest,
-    unit: &str,
-    runtime_directory: &str,
-    session_bus: &str,
-    child: &mut Child,
-) -> bool {
-    let _ = inspection_systemctl(
-        manifest,
-        runtime_directory,
-        session_bus,
-        ["kill", "--signal=KILL", "--kill-whom=all", unit],
-    );
-    let _ = inspection_systemctl(
-        manifest,
-        runtime_directory,
-        session_bus,
-        ["stop", unit, "--no-block", "--no-ask-password"],
-    );
-    let deadline = Instant::now() + INSPECTION_UNIT_GRACE;
-    let waited = loop {
-        match child.try_wait() {
-            Ok(Some(_)) => break true,
-            Ok(None) if Instant::now() < deadline => thread::sleep(POLL_INTERVAL),
-            Ok(None) | Err(_) => {
-                let _ = child.kill();
-                break child.wait().is_ok();
-            }
-        }
-    };
-    let inactive = inspection_unit_is_inactive(manifest, unit, runtime_directory, session_bus);
-    let _ = cleanup_inspection_unit(manifest, unit, runtime_directory, session_bus);
-    waited && inactive
-}
-
-fn cleanup_inspection_unit(
-    manifest: &LinuxRepositoryInspectionManifest,
-    unit: &str,
-    runtime_directory: &str,
-    session_bus: &str,
-) -> bool {
-    let inactive = inspection_unit_is_inactive(manifest, unit, runtime_directory, session_bus);
-    let _ = inspection_systemctl(
-        manifest,
-        runtime_directory,
-        session_bus,
-        ["reset-failed", unit, "--no-ask-password"],
-    );
-    inactive
-}
-
-fn inspection_unit_is_inactive(
-    manifest: &LinuxRepositoryInspectionManifest,
-    unit: &str,
-    runtime_directory: &str,
-    session_bus: &str,
-) -> bool {
-    if revalidate_git_artifact(&manifest.systemctl).is_err() {
-        return false;
-    }
-    Command::new(&manifest.systemctl.launch_path)
-        .env_clear()
-        .env("XDG_RUNTIME_DIR", runtime_directory)
-        .env("DBUS_SESSION_BUS_ADDRESS", session_bus)
-        .args(["--user", "is-active", "--quiet", unit])
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()
-        .ok()
-        .and_then(|status| status.code())
-        .is_some_and(|code| matches!(code, 3 | 4))
-}
-
-fn inspection_systemctl<const N: usize>(
-    manifest: &LinuxRepositoryInspectionManifest,
-    runtime_directory: &str,
-    session_bus: &str,
-    arguments: [&str; N],
-) -> bool {
-    if revalidate_git_artifact(&manifest.systemctl).is_err() {
-        return false;
-    }
-    Command::new(&manifest.systemctl.launch_path)
-        .env_clear()
-        .env("XDG_RUNTIME_DIR", runtime_directory)
-        .env("DBUS_SESSION_BUS_ADDRESS", session_bus)
-        .arg("--user")
-        .args(arguments)
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()
-        .is_ok_and(|status| status.success())
-}
-
-fn failed_inspection(code: &str) -> RepositoryInspectionPlatformResult {
-    failed_inspection_with_cleanup(code, true, Duration::ZERO)
-}
-
-fn failed_inspection_with_cleanup(
+fn failed_inspection(
     code: &str,
-    cleanup_verified: bool,
-    elapsed: Duration,
-) -> RepositoryInspectionPlatformResult {
-    RepositoryInspectionPlatformResult {
+) -> Result<RepositoryInspectionPlatformResult, RepositoryInspectionExecutionFailure> {
+    Ok(RepositoryInspectionPlatformResult {
         termination: RepositoryInspectionTermination::LaunchFailed,
         exit_code: None,
         stdout: Vec::new(),
@@ -1105,10 +887,10 @@ fn failed_inspection_with_cleanup(
         stdout_bytes: 0,
         stderr_sha256: hash(&[]),
         stderr_bytes: 0,
-        elapsed_ms: elapsed_millis(elapsed),
-        descendants_terminated: cleanup_verified,
+        elapsed_ms: 0,
+        descendants_terminated: true,
         platform_code: code.to_owned(),
-    }
+    })
 }
 
 fn elapsed_millis(elapsed: Duration) -> u64 {
@@ -2148,11 +1930,13 @@ mod tests {
                 hash(format!("operation-{index}").as_bytes()),
             )
             .expect("Git inspection prepares");
-            let result = executor.run(
-                &prepared,
-                &workspace,
-                &cancellation(&format!("live-git-inspection-{index}")),
-            );
+            let result = executor
+                .run(
+                    &prepared,
+                    &workspace,
+                    &cancellation(&format!("live-git-inspection-{index}")),
+                )
+                .expect("owned inspection produces a complete result");
 
             assert_eq!(
                 result.termination,
@@ -2394,11 +2178,13 @@ mod tests {
                 hash(format!("hostile-operation-{index}").as_bytes()),
             )
             .expect("hostile Git inspection prepares");
-            let result = executor.run(
-                &prepared,
-                &workspace,
-                &cancellation(&format!("hostile-git-{index}")),
-            );
+            let result = executor
+                .run(
+                    &prepared,
+                    &workspace,
+                    &cancellation(&format!("hostile-git-{index}")),
+                )
+                .expect("owned hostile inspection produces a complete result");
             assert_eq!(
                 result.termination,
                 RepositoryInspectionTermination::Exited,

@@ -180,6 +180,20 @@ mod tests {
     }
 
     fn run_cli(bundle: &Path, base: &Path, cancel_read: bool) -> (ExitStatus, Vec<RuntimeEvent>) {
+        run_cli_scenario(
+            bundle,
+            base,
+            "failed-test-repair",
+            cancel_read.then_some(READ_CALL),
+        )
+    }
+
+    fn run_cli_scenario(
+        bundle: &Path,
+        base: &Path,
+        scenario: &str,
+        cancel_call: Option<&str>,
+    ) -> (ExitStatus, Vec<RuntimeEvent>) {
         let stdout = base.join("stdout.jsonl");
         let stderr = base.join("stderr.log");
         let mut cli = OwnedCli(
@@ -192,7 +206,7 @@ mod tests {
                 .arg(base.join("disposable/worktree"))
                 .args([
                     "--scenario",
-                    "failed-test-repair",
+                    scenario,
                     "--model",
                     "scripted",
                     "--objective",
@@ -211,11 +225,11 @@ mod tests {
         let status = loop {
             let observed = events(&bounded_log(&stdout));
             let _ = bounded_log(&stderr);
-            if cancel_read
+            if cancel_call.is_some()
                 && read_started.is_none()
                 && observed.iter().any(|event| {
                     matches!(&event.kind, RuntimeEventKind::ToolStarted { tool_call_id, .. }
-                if tool_call_id.as_str() == READ_CALL)
+                if Some(tool_call_id.as_str()) == cancel_call)
                 })
             {
                 read_started = Some(Instant::now());
@@ -236,7 +250,7 @@ mod tests {
             thread::sleep(Duration::from_millis(20));
         };
         println!("diagnostic-cli-status={status} cancellation-sent={cancellation_sent}");
-        assert_eq!(cancellation_sent, cancel_read);
+        assert_eq!(cancellation_sent, cancel_call.is_some());
         let bytes = bounded_log(&stdout);
         assert!(bytes.ends_with(b"\n"));
         let events = events(&bytes);
@@ -246,6 +260,264 @@ mod tests {
         }
         assert!(sequence.is_terminal());
         (status, events)
+    }
+
+    #[test]
+    #[ignore = "requires capped native Linux lane, current CLI/host/worker binaries, and fresh private root"]
+    fn actual_cli_native_command_and_validation_cancel_reopen_and_reuse() {
+        use agentmage_kernel_engine::command_runner::{CommandReceipt, CommandTermination};
+        use agentmage_kernel_engine::validation_result::{ValidationReceipt, ValidationStatus};
+
+        let root = PathBuf::from(std::env::var_os("AGENTMAGE_NATIVE_CANCELLATION_ROOT").unwrap());
+        assert!(root.is_absolute() && !root.exists());
+        fs::DirBuilder::new().mode(0o700).create(&root).unwrap();
+        assert_eq!(root.canonicalize().unwrap(), root);
+        let repo = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap();
+        let bundle = root.join("native-bin");
+        fs::DirBuilder::new().mode(0o700).create(&bundle).unwrap();
+        for name in ["agentmage", "agentmage-host", "agentmage-read-only-worker"] {
+            let identity = copy_binary(&repo.join("target/debug").join(name), &bundle.join(name));
+            println!("diagnostic-binary={name} sha256={identity}");
+        }
+        let marker = b"native-command-body-entered\n";
+        for (kind, scenario, call) in [
+            (
+                "command",
+                "native-command-failure",
+                "scripted-native-ordered-command",
+            ),
+            (
+                "validation",
+                "failed-test-repair",
+                "scripted-validation-failing",
+            ),
+        ] {
+            let base = root.join(kind);
+            fixture_setup(repo, &base);
+            let source_path = base.join("disposable/worktree/src/calc.py");
+            let preimage = fs::read(&source_path).unwrap();
+            // Synthetic registered test body, installed BEFORE profile sealing and
+            // exact approval. No alternate executable, product bypass or model.
+            let validation_path = base.join("disposable/worktree/tests/run_validation.py");
+            let script = b"import sys, time\nprint('native-command-body-entered', file=sys.stderr, flush=True)\ntime.sleep(60)\n";
+            fs::write(&validation_path, script).unwrap();
+            let (status, observed) = run_cli_scenario(&bundle, &base, scenario, Some(call));
+            assert_eq!(status.code(), Some(6), "kind={kind}");
+            assert_eq!(fs::read(&source_path).unwrap(), preimage);
+            assert_eq!(fs::read(&validation_path).unwrap(), script);
+            let start = observed
+                .iter()
+                .position(|event| {
+                    matches!(&event.kind,
+                RuntimeEventKind::ToolStarted { tool_call_id, .. } if tool_call_id.as_str() == call)
+                })
+                .unwrap();
+            let failed = observed
+                .iter()
+                .position(|event| {
+                    matches!(&event.kind,
+                RuntimeEventKind::ToolFailed { tool_call_id, .. } if tool_call_id.as_str() == call)
+                })
+                .unwrap();
+            assert!(start < failed);
+            assert!(!observed[start..].iter().any(|event| matches!(&event.kind,
+                RuntimeEventKind::ToolCompleted { tool_call_id, .. } if tool_call_id.as_str() == call)));
+            let closed = observed
+                .iter()
+                .position(|event| matches!(&event.kind, RuntimeEventKind::TurnCompleted { .. }))
+                .unwrap();
+            let requested = observed
+                .iter()
+                .position(|event| {
+                    matches!(&event.kind, RuntimeEventKind::CancellationRequested { .. })
+                })
+                .unwrap();
+            let acknowledged = observed
+                .iter()
+                .position(|event| {
+                    matches!(&event.kind, RuntimeEventKind::CancellationObserved { .. })
+                })
+                .unwrap();
+            assert!(failed < closed && closed < requested && requested < acknowledged);
+            assert!(matches!(
+                observed.last().unwrap().kind,
+                RuntimeEventKind::RunTerminal {
+                    state: AgentStateKind::Cancelled,
+                    ..
+                }
+            ));
+            let activation = CodingDevelopmentActivation::validate(
+                &base.join("state"),
+                &base.join("disposable"),
+                &base.join("disposable/worktree"),
+            )
+            .unwrap();
+            let platform = LinuxDevelopmentPlatformAdapter::activate(
+                CODING_DEVELOPMENT_ACTIVATION,
+                activation.marker_sha256().to_owned(),
+                AdapterInstanceId::from_raw(format!(
+                    "coding-development-{}",
+                    &activation.marker_sha256()[..24]
+                )),
+            )
+            .unwrap();
+            let mut baseline = None;
+            for _ in 0..2 {
+                let mut key = CodingDevelopmentKeyProvider::open(&activation).unwrap();
+                let runtime = open_linux_development_authority(
+                    &platform,
+                    activation.state_root(),
+                    &mut key,
+                    now_ms(),
+                )
+                .unwrap();
+                let owner = runtime.authority();
+                assert_eq!(owner.runtime_events(&observed[0].run_id).unwrap(), observed);
+                let selected = owner
+                    .receipts()
+                    .iter()
+                    .filter(|receipt| {
+                        receipt
+                            .tool_call_id
+                            .as_ref()
+                            .is_some_and(|id| id.as_str() == call)
+                    })
+                    .collect::<Vec<_>>();
+                let [receipt] = selected.as_slice() else {
+                    panic!("one consumed command receipt required");
+                };
+                let transaction = owner
+                    .current_transaction(&receipt.authority_transaction_id)
+                    .unwrap();
+                let grant = owner.current_grant(&receipt.grant_id).unwrap();
+                assert_eq!(
+                    receipt.operation.operation(),
+                    GrantOperation::CommandExecute
+                );
+                assert_eq!(receipt.outcome, OperationOutcome::Cancelled);
+                assert_eq!(transaction.state, AuthorityTransactionState::Terminal);
+                assert_eq!(transaction.outcome, Some(OperationOutcome::Cancelled));
+                assert!(!transaction.uncertain_effect);
+                assert_eq!(grant.status, GrantStatus::Consumed);
+                assert_eq!(grant.use_count, grant.use_limit);
+                assert_eq!(transaction.grant_id, grant.grant_id);
+                assert_eq!(transaction.session_id, receipt.session_id);
+                assert_eq!(transaction.task_id, receipt.task_id);
+                assert_eq!(transaction.correlation_id, receipt.correlation_id);
+                assert_eq!(transaction.approval_id, receipt.approval_id);
+                assert_eq!(transaction.operation, receipt.operation);
+                assert_eq!(transaction.tool_call_id.as_str(), call);
+                assert_eq!(transaction.receipt_id.as_ref(), Some(&receipt.receipt_id));
+                assert_eq!(
+                    transaction.receipt_sha256.as_ref(),
+                    Some(&receipt.receipt_sha256)
+                );
+                assert_eq!(
+                    transaction.consumed_grant_sha256.as_ref(),
+                    Some(&digest(
+                        &agentmage_kernel_contracts::to_canonical_json(grant).unwrap()
+                    ))
+                );
+                let mut body_proven = false;
+                let mut receipt_proven = false;
+                for event in &observed[start..requested] {
+                    let RuntimeEventKind::ArtifactCreated {
+                        artifact_id,
+                        manifest_sha256,
+                    } = &event.kind
+                    else {
+                        continue;
+                    };
+                    let payload = event.payload_reference.as_ref().unwrap();
+                    let bytes = runtime
+                        .read_runtime_artifact(&RuntimeArtifactReadRequest {
+                            session_id: receipt.session_id.clone(),
+                            task_id: receipt.task_id.clone(),
+                            policy_sha256: grant.policy_sha256.clone(),
+                            now_epoch_ms: now_ms(),
+                            maximum_bytes: MAX_LOG_BYTES,
+                            reference: RuntimeArtifactRef {
+                                schema_version: CONTRACT_SCHEMA_VERSION,
+                                artifact_id: artifact_id.clone(),
+                                manifest_sha256: manifest_sha256.clone(),
+                                payload_sha256: payload.sha256.clone(),
+                                byte_size: payload.byte_size,
+                                media_type: payload.media_type.clone(),
+                            },
+                        })
+                        .unwrap();
+                    assert_eq!(digest(&bytes), payload.sha256);
+                    if bytes == marker {
+                        body_proven = true;
+                    }
+                    if kind == "command" {
+                        if let Ok(command) = serde_json::from_slice::<CommandReceipt>(&bytes) {
+                            assert_eq!(command.termination, CommandTermination::Cancelled);
+                            assert_eq!(command.outcome, OperationOutcome::Cancelled);
+                            assert_eq!(command.exit_code, None);
+                            assert_eq!(command.stderr_sha256, digest(marker));
+                            assert_eq!(command.stderr_total_bytes, marker.len() as u64);
+                            assert_eq!(
+                                transaction.result_sha256.as_ref(),
+                                Some(&digest(command.receipt_sha256.as_bytes()))
+                            );
+                            receipt_proven = true;
+                        }
+                    } else if let Ok(validation) =
+                        serde_json::from_slice::<ValidationReceipt>(&bytes)
+                    {
+                        assert_eq!(validation.status, ValidationStatus::Cancelled);
+                        assert_eq!(validation.termination, CommandTermination::Cancelled);
+                        assert_eq!(validation.operation_outcome, OperationOutcome::Cancelled);
+                        assert_eq!(validation.exit_code, None);
+                        assert!(validation.descendants_terminated);
+                        assert_eq!(validation.stderr_sha256, digest(marker));
+                        assert_eq!(validation.stderr_total_bytes, marker.len() as u64);
+                        assert_eq!(
+                            transaction.result_sha256.as_ref(),
+                            Some(&digest(validation.command_receipt_sha256.as_bytes()))
+                        );
+                        receipt_proven = true;
+                    }
+                }
+                assert!(
+                    body_proven && receipt_proven,
+                    "complete canonical artifacts must prove native body and cancellation: {kind}"
+                );
+                assert!(
+                    matches!(&observed[failed].kind, RuntimeEventKind::ToolFailed { receipt_id: Some(id), .. } if id == &receipt.receipt_id)
+                );
+                let current = ((*receipt).clone(), transaction.clone(), grant.clone());
+                if let Some(expected) = &baseline {
+                    assert_eq!(&current, expected);
+                }
+                baseline = Some(current);
+            }
+            println!(
+                "continuous-native-{kind}-cancel=pass canonical-reopens=2 model=scripted body-entry=proven"
+            );
+        }
+        let reuse = root.join("reuse");
+        fixture_setup(repo, &reuse);
+        let (status, observed) = run_cli(&bundle, &reuse, false);
+        assert_eq!(status.code(), Some(0));
+        assert!(matches!(
+            observed.last().unwrap().kind,
+            RuntimeEventKind::RunTerminal {
+                state: AgentStateKind::Success,
+                ..
+            }
+        ));
+        assert_eq!(
+            fs::read(reuse.join("disposable/worktree/src/calc.py")).unwrap(),
+            b"def add(left, right):\n    return left + right\n"
+        );
+        println!("fresh-host-native-command-validation-reuse=pass model-qualification=false");
+        // Preserve every diagnostic bundle, canonical store, raw log and repository.
     }
 
     #[test]

@@ -45,6 +45,7 @@ SOURCE_PATHS = (
     "platforms/linux/Cargo.toml",
     "platforms/linux/src/sandbox.rs",
     "platforms/linux/src/sandbox_supervision.rs",
+    "platforms/linux/src/sandbox_supervision/resource_usage.rs",
     "release/control-test/Containerfile.ubuntu",
     "scripts/linux_cross_distribution_sandbox_evidence.py",
     "tests/test_linux_cross_distribution_sandbox_evidence.py",

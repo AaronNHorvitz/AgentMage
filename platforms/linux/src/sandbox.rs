@@ -33,7 +33,7 @@ use sha2::{Digest, Sha256};
 use crate::LinuxHeldObject;
 
 #[path = "sandbox_supervision.rs"]
-mod supervision;
+pub(crate) mod supervision;
 
 const MAX_RUNTIME_FILES: usize = 16;
 const MAX_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
@@ -508,9 +508,10 @@ impl LinuxSandboxCancellation {
 
 // Passive observation in the existing supervisor, not another owner or loop.
 // Legacy flags stay supported. Live views are bound to the consumed permit.
-enum SandboxCancellation<'attempt> {
+pub(crate) enum SandboxCancellation<'attempt> {
     Local(&'attempt LinuxSandboxCancellation),
     Bound(ScopedEffectCancellation<'attempt>),
+    Observed(&'attempt dyn EffectCancellationObservation),
 }
 
 impl SandboxCancellation<'_> {
@@ -518,6 +519,10 @@ impl SandboxCancellation<'_> {
         match self {
             Self::Local(cancellation) => Ok(cancellation.is_cancelled()),
             Self::Bound(observation) => observation
+                .observe_effect_cancellation()
+                .map(|signal| signal.is_some())
+                .map_err(|_| error(LinuxSandboxErrorKind::CancellationUnavailable)),
+            Self::Observed(observation) => observation
                 .observe_effect_cancellation()
                 .map(|signal| signal.is_some())
                 .map_err(|_| error(LinuxSandboxErrorKind::CancellationUnavailable)),

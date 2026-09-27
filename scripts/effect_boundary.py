@@ -6,6 +6,7 @@ from __future__ import annotations
 import re
 import sys
 import tomllib
+from collections import Counter
 from pathlib import Path
 
 
@@ -24,6 +25,35 @@ LINUX_LIB = Path("platforms/linux/src/lib.rs")
 LINUX_CONFIGURATION = Path("platforms/linux/src/configuration_store.rs")
 LINUX_SANDBOX = Path("platforms/linux/src/sandbox.rs")
 LINUX_SANDBOX_SUPERVISION = Path("platforms/linux/src/sandbox_supervision.rs")
+LINUX_SANDBOX_ACCOUNTING = Path("platforms/linux/src/sandbox_supervision/resource_usage.rs")
+LINUX_SUPERVISION_USERS = {LINUX_SANDBOX, LINUX_SANDBOX_SUPERVISION,
+                         Path("platforms/linux/src/command_runner.rs"),
+                         Path("platforms/linux/src/repository_safety.rs")}
+
+# Exact internal interface for the existing three native owners, not a public
+# process API. New entries require a deliberate boundary review and regressions.
+SUPERVISION_DECLARATIONS = (
+    "pub(crate) enum LaunchOwner {", "pub(crate) struct Launch {",
+    "pub owner: LaunchOwner,", "pub projections: Vec<OwnedFd>,", "pub unit: String,",
+    "pub deadline: Instant,", "pub stdout_limit: usize,", "pub stderr_limit: usize,",
+    "pub filter_pipe: Option<FilterPipe>,", "pub(crate) struct FilterPipe {",
+    "pub(crate) fn new() -> Result<Self, LinuxSandboxError> {",
+    "pub(crate) fn read_descriptor(&self) -> RawFd {",
+    "pub(crate) struct CapturedStream {", "pub retained: Vec<u8>,",
+    "pub sha256: [u8; 32],", "pub total: usize,", "pub(crate) struct SupervisedResult {",
+    "pub outcome: Result<OperationOutcome, LinuxSandboxError>,",
+    "pub status: Option<ExitStatus>,", "pub stdout: CapturedStream,", "pub stderr: CapturedStream,",
+    "pub resources: Option<agentmage_kernel_engine::command_runner::CommandResourceUsage>,",
+    "pub output_complete: bool,",
+    "pub(crate) fn admission_snapshot() -> Result<(), LinuxSandboxError> {",
+    "pub(super) fn run(", "pub(crate) fn run_owned(",
+)
+ACCOUNTING_DECLARATIONS = (
+    "pub(super) fn sample(directory: &OwnedFd) -> Option<CommandResourceUsage> {",
+    "pub(super) struct Observation {",
+    "pub(super) fn merge(&mut self, sample: Option<CommandResourceUsage>) {",
+    "pub(super) fn finish(self) -> Option<CommandResourceUsage> {",
+)
 LINUX_SECRETS = Path("platforms/linux/src/secret_service.rs")
 LINUX_IPC = Path("platforms/linux/src/ipc.rs")
 
@@ -225,19 +255,29 @@ def validate_effect_boundary(
     if _public_function(linux_sandbox, "run"):
         failures.append("raw Linux sandbox execution is public")
     supervision = _production_source(_read(LINUX_SANDBOX_SUPERVISION, root, replacements))
-    # One parent-only execution entry and one passive state observation, neither
-    # exported as another process/ownership API. Reject all additional visibility.
-    private_supervision = supervision
-    for parent_entry in ("run", "admission_snapshot"):
-        declaration = f"pub(super) fn {parent_entry}("
-        if private_supervision.count(declaration) != 1:
-            failures.append("Linux sandbox supervisor exceeds its private parent-only boundary")
-        private_supervision = private_supervision.replace(declaration, f"fn {parent_entry}(", 1)
-    if re.search(r"(?m)^\s*pub(?:\([^)]*\))?\s+", private_supervision):
-        failures.append("Linux sandbox supervisor exceeds its private parent-only boundary")
-    if re.search(r"(?m)^\s*pub(?:\([^)]*\))?\s+mod\s+supervision\b", linux_sandbox):
-        failures.append("Linux sandbox supervisor module must remain private")
-    for path, source in ((LINUX_SANDBOX, _production_source(linux_sandbox)), (LINUX_SANDBOX_SUPERVISION, supervision)):
+    accounting = _production_source(_read(LINUX_SANDBOX_ACCOUNTING, root, replacements))
+    for source, declarations, label in (
+        (supervision, SUPERVISION_DECLARATIONS, "supervisor"),
+        (accounting, ACCOUNTING_DECLARATIONS, "accounting"),
+    ):
+        public_lines = [line.strip() for line in source.splitlines()
+                        if re.match(r"\s*pub(?:\([^)]*\))?\s+", line)]
+        if Counter(public_lines) != Counter(declarations):
+            failures.append(f"Linux sandbox {label} exceeds its closed internal boundary")
+    owners = re.search(r"pub\(crate\) enum LaunchOwner\s*\{([^}]+)\}", supervision)
+    if owners is None or " ".join(owners[1].split()) != (
+        "Read(Arc<LinuxSandboxManifest>), "
+        "Command(Arc<crate::command_runner::LinuxCommandManifest>), "
+        "Git(Arc<crate::repository_safety::LinuxRepositoryInspectionManifest>),"
+    ):
+        failures.append("Linux sandbox supervisor owner set is not closed")
+    if supervision.count("static OWNED_ATTEMPT: Mutex<Option<Attempt>>") != 1:
+        failures.append("Linux sandbox supervisor must retain its single attempt owner")
+    if re.findall(r"(?m)^\s*pub(?:\([^)]*\))?\s+mod\s+supervision\s*;", linux_sandbox) != ["pub(crate) mod supervision;"]:
+        failures.append("Linux sandbox supervisor module must remain crate-internal")
+    if re.search(r"\b(?:Command|TcpStream|UnixStream)::|\bstd::process\b|\bthread::spawn\b", accounting):
+        failures.append("Linux sandbox accounting cannot own processes or sockets")
+    for path, source in ((LINUX_SANDBOX, _production_source(linux_sandbox)), (LINUX_SANDBOX_SUPERVISION, supervision), (LINUX_SANDBOX_ACCOUNTING, accounting)):
         # Thread joins take no arguments. Path and string joins are ordinary
         # bounded data operations; they must not be mistaken for process waits.
         blocking_wait = re.search(r"\.(?:wait|wait_with_output|status|output)\s*\(", source)
@@ -275,6 +315,10 @@ def validate_effect_boundary(
         source = _read(relative, root, replacements)
         if "EffectAuthorization" in source and relative not in PERMIT_USERS:
             failures.append(f"unregistered effect-authorization consumer: {relative}")
+        production = _production_source(source)
+        if (re.search(r"\bsupervision\s*(?:::|[;{])|\bsandbox_supervision\b", production)
+                and relative not in LINUX_SUPERVISION_USERS):
+            failures.append(f"unregistered native supervisor consumer: {relative}")
 
     for base in (Path("shells"), Path("capabilities")):
         for path in sorted((root / base).rglob("*.rs")):

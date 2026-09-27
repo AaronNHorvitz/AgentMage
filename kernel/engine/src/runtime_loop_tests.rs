@@ -764,13 +764,14 @@ impl RuntimeToolBoundary for FakeToolBoundary {
         } else {
             Vec::new()
         };
-        let output = (self.outcome == OperationOutcome::Succeeded).then(|| {
-            if self.tool_output_bytes > 0 {
-                vec![b't'; self.tool_output_bytes]
-            } else {
-                b"fixture contents".to_vec()
-            }
-        });
+        let output = (self.outcome == OperationOutcome::Succeeded || self.tool_output_bytes > 0)
+            .then(|| {
+                if self.tool_output_bytes > 0 {
+                    vec![b't'; self.tool_output_bytes]
+                } else {
+                    b"fixture contents".to_vec()
+                }
+            });
         let result = ToolResult {
             schema_version: CONTRACT_SCHEMA_VERSION,
             tool_call_id: call.tool_call_id.clone(),
@@ -3708,6 +3709,117 @@ fn cancelled_tool_fixture(
         observation: Ok(Some(signal)),
     };
     (runtime, executions, probe)
+}
+
+#[test]
+fn non_success_small_output_is_durable_audit_not_success_evidence() {
+    for result in [
+        OperationOutcome::Cancelled,
+        OperationOutcome::TimedOut,
+        OperationOutcome::Failed,
+        OperationOutcome::Denied,
+    ] {
+        let (mut runtime, executions, mut probe) =
+            cancelled_tool_fixture(RuntimeSessionMode::DurableReadOnly, None);
+        runtime.tool_boundary.outcome = result;
+        runtime.tool_boundary.tool_output_bytes = 16;
+        runtime.tool_boundary.tool_output_kind = Some(RuntimeArtifactKind::Report);
+        if result != OperationOutcome::Cancelled {
+            probe.observation = Ok(None);
+        }
+        let RuntimeCoordinatorStep::Complete { outcome } =
+            runtime.run_until_boundary(None, Some(&probe)).unwrap()
+        else {
+            panic!("non-success must terminate");
+        };
+        assert_ne!(outcome.state, AgentStateKind::Success);
+        assert!(outcome.evidence.is_empty());
+        assert!(outcome.output.is_none());
+        assert!(runtime.tool_results.is_empty());
+        assert_eq!(outcome.receipt_ids.len(), 1);
+        let retained = runtime.tool_boundary.artifacts.lock().unwrap();
+        let bound = retained
+            .iter()
+            .filter(|(manifest, _)| manifest.receipt_id.is_some())
+            .collect::<Vec<_>>();
+        let [(manifest, bytes)] = bound.as_slice() else {
+            panic!("one receipt-bound audit artifact");
+        };
+        assert_eq!(bytes, &vec![b't'; 16]);
+        assert_eq!(manifest.payload_sha256, sha256(bytes));
+        assert_eq!(manifest.receipt_id.as_ref(), Some(&outcome.receipt_ids[0]));
+        assert_eq!(manifest.kind, RuntimeArtifactKind::Report);
+        assert!(manifest.producer_operation_id.is_some());
+        assert!(manifest.producer_turn_id.is_some());
+        let artifact = runtime.events().iter().position(|event| matches!(&event.kind,
+            RuntimeEventKind::ArtifactCreated { artifact_id, .. } if artifact_id == &manifest.artifact_id)).unwrap();
+        let failed = runtime
+            .events()
+            .iter()
+            .position(|event| matches!(&event.kind, RuntimeEventKind::ToolFailed { .. }))
+            .unwrap();
+        let closed = runtime
+            .events()
+            .iter()
+            .position(|event| matches!(&event.kind, RuntimeEventKind::TurnCompleted { .. }))
+            .unwrap();
+        assert!(failed < artifact && artifact < closed);
+        drop(retained);
+        let events = runtime.events().to_vec();
+        assert_eq!(
+            runtime.run_until_boundary(None, Some(&probe)).unwrap(),
+            RuntimeCoordinatorStep::Complete { outcome }
+        );
+        assert_eq!(runtime.events(), events);
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+        assert_valid_terminal_stream(&runtime);
+    }
+}
+
+#[test]
+fn cancelled_audit_metadata_cannot_bypass_remaining_output_budget() {
+    let (mut runtime, executions, probe) =
+        cancelled_tool_fixture(RuntimeSessionMode::DurableReadOnly, None);
+    runtime.tool_boundary.tool_output_bytes = 16;
+    runtime.tool_boundary.tool_output_kind = Some(RuntimeArtifactKind::Report);
+    let output_budget = runtime
+        .request
+        .work_packet
+        .budgets
+        .iter()
+        .find(|budget| budget.resource == BudgetResource::OutputBytes)
+        .unwrap()
+        .limit;
+    runtime
+        .resources
+        .consume(BudgetResource::OutputBytes, output_budget - 15)
+        .unwrap();
+    let RuntimeCoordinatorStep::Complete { outcome } =
+        runtime.run_until_boundary(None, Some(&probe)).unwrap()
+    else {
+        panic!("cancelled receipt must terminate even when audit budget is exhausted");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Cancelled);
+    assert!(
+        outcome
+            .unresolved_codes
+            .iter()
+            .any(|code| code == "runtime.budget.exhausted")
+    );
+    assert_eq!(outcome.receipt_ids.len(), 1);
+    assert!(outcome.evidence.is_empty());
+    assert!(outcome.output.is_none());
+    assert!(
+        runtime
+            .tool_boundary
+            .artifacts
+            .lock()
+            .unwrap()
+            .iter()
+            .all(|(manifest, _)| manifest.receipt_id.is_none())
+    );
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    assert_valid_terminal_stream(&runtime);
 }
 
 #[test]

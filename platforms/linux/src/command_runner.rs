@@ -3,26 +3,22 @@
 use std::collections::BTreeMap;
 use std::fmt;
 use std::fs;
-use std::io::Read;
 use std::os::fd::{AsRawFd, RawFd};
 use std::os::unix::fs::MetadataExt as _;
 use std::os::unix::process::ExitStatusExt as _;
 use std::path::{Component, Path, PathBuf};
-use std::process::{Child, Command, ExitStatus, Stdio};
-use std::thread;
+use std::process::{Command, ExitStatus, Stdio};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use agentmage_kernel_engine::command_runner::{
-    BoundedCommandExecutor, CommandLaunchPermit, CommandPlatformResult, CommandRegistry,
-    CommandResourceUsage, CommandSpec, CommandTermination, CommandWorkingDirectory,
+    BoundedCommandExecutor, CommandExecutionFailure, CommandLaunchPermit, CommandPlatformResult,
+    CommandRegistry, CommandSpec, CommandTermination, CommandWorkingDirectory,
 };
-use agentmage_kernel_engine::propagation::CancellationToken;
+use agentmage_kernel_engine::propagation::EffectCancellationObservation;
 use rustix::fd::OwnedFd;
-use rustix::fs::{
-    FileType, MemfdFlags, Mode, OFlags, SealFlags, SeekFrom, fcntl_add_seals, fstat, memfd_create,
-    open, seek,
-};
-use rustix::io::{pread, write};
+use rustix::fs::{FileType, Mode, OFlags, fstat, open};
+use rustix::io::pread;
 use rustix::process::getuid;
 use rustix::rand::{GetRandomFlags, getrandom};
 use sha2::{Digest, Sha256};
@@ -31,15 +27,13 @@ use crate::{LinuxAuthorizedWorkspace, sandbox::compile_seccomp_policy};
 
 const MAX_ARTIFACT_BYTES: u64 = 256 * 1024 * 1024;
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
-const POLL_INTERVAL: Duration = Duration::from_millis(10);
-const TERMINATION_GRACE: Duration = Duration::from_secs(3);
 const GUEST_EXECUTABLE: &str = "/app/command";
 /// systemd passes `OpenFile=` descriptors to the unit from this number upward,
 /// in the exact order the properties are declared.
 const LISTEN_FDS_START: u32 = 3;
 /// Holds the verified command executable.
 const COMMAND_DESCRIPTOR: u32 = LISTEN_FDS_START;
-/// Holds the sealed seccomp policy.
+/// Separate withheld filter; consumed by Bubblewrap, not the command's stdin.
 const SECCOMP_DESCRIPTOR: u32 = LISTEN_FDS_START + 1;
 /// Holds the reopened owned worktree; absent for empty scratch.
 const WORKTREE_DESCRIPTOR: u32 = LISTEN_FDS_START + 2;
@@ -119,6 +113,11 @@ pub struct LinuxCommandManifest {
 }
 
 impl LinuxCommandManifest {
+    pub(crate) fn control_path(&self) -> Result<&Path, LinuxCommandRunnerError> {
+        revalidate(&self.systemctl)?;
+        Ok(&self.systemctl.launch_path)
+    }
+
     /// Verifies every fixed launcher and every executable in one frozen registry.
     pub fn verify(
         systemd_run: impl AsRef<Path>,
@@ -173,8 +172,8 @@ impl fmt::Debug for LinuxCommandManifest {
 /// Linux implementation of the nonforgeable bounded-command executor.
 #[derive(Debug)]
 pub struct LinuxBoundedCommandExecutor {
-    manifest: LinuxCommandManifest,
-    seccomp_descriptor: OwnedFd,
+    manifest: Arc<LinuxCommandManifest>,
+    seccomp_bpf: Vec<u8>,
 }
 
 impl LinuxBoundedCommandExecutor {
@@ -182,10 +181,9 @@ impl LinuxBoundedCommandExecutor {
     pub fn new(manifest: LinuxCommandManifest) -> Result<Self, LinuxCommandRunnerError> {
         let seccomp_bpf = compile_seccomp_policy()
             .map_err(|_| error(LinuxCommandRunnerErrorKind::SeccompUnavailable))?;
-        let seccomp_descriptor = sealed_seccomp_descriptor(&seccomp_bpf)?;
         Ok(Self {
-            manifest,
-            seccomp_descriptor,
+            manifest: Arc::new(manifest),
+            seccomp_bpf,
         })
     }
 
@@ -193,8 +191,13 @@ impl LinuxBoundedCommandExecutor {
         &self,
         command: &CommandSpec,
         held_working_directory: &LinuxAuthorizedWorkspace,
-        cancellation: &CancellationToken,
-    ) -> CommandPlatformResult {
+        cancellation: &dyn EffectCancellationObservation,
+    ) -> Result<CommandPlatformResult, CommandExecutionFailure> {
+        let started = Instant::now();
+        let deadline = started
+            .checked_add(Duration::from_millis(command.bounds.timeout_ms))
+            .ok_or(CommandExecutionFailure::ExecutionFailed)?;
+        crate::sandbox::supervision::admission_snapshot().map_err(supervision_failure)?;
         let Some(artifact) = self.manifest.commands.get(&(
             command.template_id.clone(),
             command.template_version.clone(),
@@ -233,10 +236,12 @@ impl LinuxBoundedCommandExecutor {
                 Some(descriptor)
             }
         };
+        let filter_pipe =
+            crate::sandbox::supervision::FilterPipe::new().map_err(supervision_failure)?;
         let open_files = open_file_properties(
             parent_pid,
             artifact.descriptor.as_raw_fd(),
-            self.seccomp_descriptor.as_raw_fd(),
+            filter_pipe.read_descriptor(),
             held_worktree.as_ref().map(AsRawFd::as_raw_fd),
         );
         let command_descriptor_argument = COMMAND_DESCRIPTOR.to_string();
@@ -266,6 +271,11 @@ impl LinuxBoundedCommandExecutor {
             .arg("--property=RestrictAddressFamilies=AF_UNIX AF_NETLINK")
             .arg("--property=MemorySwapMax=0")
             .arg("--property=KillMode=control-group")
+            .arg("--property=Restart=no")
+            .arg(format!(
+                "--property=JobRunningTimeoutSec={timeout_seconds}s"
+            ))
+            .arg(format!("--property=TimeoutStartSec={timeout_seconds}s"))
             .arg("--property=SendSIGKILL=yes")
             .arg("--property=TimeoutStopSec=2s")
             .arg(format!(
@@ -342,206 +352,87 @@ impl LinuxBoundedCommandExecutor {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
-        let started = Instant::now();
-        let Ok(mut child) = process.spawn() else {
-            return failed("linux.command.isolation.start");
-        };
-        let Some(stdout) = child.stdout.take() else {
-            terminate_unit(
-                &self.manifest,
-                &unit,
-                &runtime_directory,
-                &session_bus,
-                &mut child,
-            );
-            return failed("linux.command.stdout.pipe");
-        };
-        let Some(stderr) = child.stderr.take() else {
-            terminate_unit(
-                &self.manifest,
-                &unit,
-                &runtime_directory,
-                &session_bus,
-                &mut child,
-            );
-            return failed("linux.command.stderr.pipe");
-        };
-        let stdout_limit = command.bounds.stdout_bytes;
-        let stderr_limit = command.bounds.stderr_bytes;
-        let stdout_reader = thread::spawn(move || read_bounded(stdout, stdout_limit));
-        let stderr_reader = thread::spawn(move || read_bounded(stderr, stderr_limit));
-        let deadline = started + Duration::from_millis(command.bounds.timeout_ms);
-        let mut resource_observation = ResourceObservation::default();
-        let (termination, status, cleanup_verified, platform_code) = loop {
-            resource_observation.merge(observe_unit_resources(
-                &self.manifest,
-                &unit,
-                &runtime_directory,
-                &session_bus,
-            ));
-            match child.try_wait() {
-                Ok(Some(status)) => {
-                    let cleanup =
-                        cleanup_unit(&self.manifest, &unit, &runtime_directory, &session_bus);
-                    break (
-                        CommandTermination::Exited,
-                        Some(status),
-                        cleanup,
-                        "linux.command.exited",
-                    );
-                }
-                Ok(None) if cancellation.is_cancelled() => {
-                    let cleanup = terminate_unit(
-                        &self.manifest,
-                        &unit,
-                        &runtime_directory,
-                        &session_bus,
-                        &mut child,
-                    );
-                    break (
-                        CommandTermination::Cancelled,
-                        None,
-                        cleanup,
-                        "linux.command.cancelled",
-                    );
-                }
-                Ok(None) if Instant::now() >= deadline => {
-                    let cleanup = terminate_unit(
-                        &self.manifest,
-                        &unit,
-                        &runtime_directory,
-                        &session_bus,
-                        &mut child,
-                    );
-                    break (
-                        CommandTermination::TimedOut,
-                        None,
-                        cleanup,
-                        "linux.command.timed_out",
-                    );
-                }
-                Ok(None) => thread::sleep(POLL_INTERVAL),
-                Err(_) => {
-                    let cleanup = terminate_unit(
-                        &self.manifest,
-                        &unit,
-                        &runtime_directory,
-                        &session_bus,
-                        &mut child,
-                    );
-                    break (
-                        CommandTermination::LaunchFailed,
-                        None,
-                        cleanup,
-                        "linux.command.wait.failed",
-                    );
-                }
-            }
-        };
-
-        // The service manager, not this process, opens every `OpenFile=` path, and it
-        // does so asynchronously while starting the unit. Releasing the held worktree
-        // before the unit has finished would let the descriptor number be reused.
-        drop(held_worktree);
-        let Ok(stdout) = stdout_reader.join().unwrap_or(Err(())) else {
-            return failed("linux.command.stdout.read");
-        };
-        let Ok(stderr) = stderr_reader.join().unwrap_or(Err(())) else {
-            return failed("linux.command.stderr.read");
-        };
-        let termination = if stdout.exceeded || stderr.exceeded {
-            CommandTermination::OutputLimit
-        } else {
-            termination
-        };
-        CommandPlatformResult {
-            termination,
-            exit_code: (termination == CommandTermination::Exited)
-                .then(|| status.as_ref().and_then(ExitStatus::code))
-                .flatten(),
-            signal: status.as_ref().and_then(|status| status.signal()),
-            stdout: stdout.retained,
-            stdout_sha256: stdout.sha256,
-            stdout_total_bytes: stdout.total,
-            stderr: stderr.retained,
-            stderr_sha256: stderr.sha256,
-            stderr_total_bytes: stderr.total,
-            elapsed_ms: u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX),
-            resource_usage: resource_observation.finish(),
-            descendants_terminated: cleanup_verified,
-            platform_code: platform_code.to_owned(),
+        let result = crate::sandbox::supervision::run_owned(
+            process,
+            crate::sandbox::supervision::Launch {
+                owner: crate::sandbox::supervision::LaunchOwner::Command(self.manifest.clone()),
+                projections: held_worktree.into_iter().collect(),
+                unit,
+                deadline,
+                stdout_limit: command.bounds.stdout_bytes as usize,
+                stderr_limit: command.bounds.stderr_bytes as usize,
+                filter_pipe: Some(filter_pipe),
+            },
+            &self.seccomp_bpf,
+            &crate::sandbox::SandboxCancellation::Observed(cancellation),
+        )
+        .map_err(supervision_failure)?;
+        if !result.output_complete {
+            return Err(CommandExecutionFailure::ExecutionFailed);
         }
-    }
-}
-
-#[derive(Default)]
-struct ResourceObservation {
-    cpu_time_ns: u64,
-    peak_memory_bytes: u64,
-    peak_task_count: u32,
-    observed: bool,
-}
-
-impl ResourceObservation {
-    fn merge(&mut self, observation: Option<CommandResourceUsage>) {
-        let Some(observation) = observation else {
-            return;
+        let termination = match result.outcome {
+            Ok(agentmage_kernel_contracts::OperationOutcome::Cancelled) => {
+                CommandTermination::Cancelled
+            }
+            Ok(agentmage_kernel_contracts::OperationOutcome::TimedOut) => {
+                CommandTermination::TimedOut
+            }
+            Ok(
+                agentmage_kernel_contracts::OperationOutcome::Succeeded
+                | agentmage_kernel_contracts::OperationOutcome::Failed,
+            ) => {
+                if result.status.as_ref().and_then(ExitStatus::code).is_none() {
+                    return Err(CommandExecutionFailure::ExecutionFailed);
+                }
+                CommandTermination::Exited
+            }
+            Err(error)
+                if error.kind() == crate::sandbox::LinuxSandboxErrorKind::OutputLimitExceeded =>
+            {
+                CommandTermination::OutputLimit
+            }
+            Err(error) => return Err(supervision_failure(error)),
+            _ => return Err(CommandExecutionFailure::ExecutionFailed),
         };
-        self.observed = true;
-        self.cpu_time_ns = self.cpu_time_ns.max(observation.cpu_time_ns);
-        self.peak_memory_bytes = self.peak_memory_bytes.max(observation.peak_memory_bytes);
-        self.peak_task_count = self.peak_task_count.max(observation.peak_task_count);
-    }
-
-    fn finish(self) -> Option<CommandResourceUsage> {
-        self.observed.then_some(CommandResourceUsage {
-            cpu_time_ns: self.cpu_time_ns,
-            peak_memory_bytes: self.peak_memory_bytes,
-            peak_task_count: self.peak_task_count,
+        Ok(CommandPlatformResult {
+            termination,
+            exit_code: if termination == CommandTermination::Exited {
+                result.status.as_ref().and_then(ExitStatus::code)
+            } else {
+                None
+            },
+            signal: result.status.as_ref().and_then(|status| status.signal()),
+            stdout: result.stdout.retained,
+            stdout_sha256: hex(&result.stdout.sha256),
+            stdout_total_bytes: result.stdout.total as u64,
+            stderr: result.stderr.retained,
+            stderr_sha256: hex(&result.stderr.sha256),
+            stderr_total_bytes: result.stderr.total as u64,
+            elapsed_ms: u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX),
+            resource_usage: result.resources,
+            descendants_terminated: true,
+            platform_code: match termination {
+                CommandTermination::Exited => "linux.command.exited",
+                CommandTermination::Cancelled => "linux.command.cancelled",
+                CommandTermination::TimedOut => "linux.command.timed_out",
+                CommandTermination::OutputLimit => "linux.command.output_limit",
+                _ => "linux.command.failed",
+            }
+            .to_owned(),
         })
     }
 }
 
-fn observe_unit_resources(
-    manifest: &LinuxCommandManifest,
-    unit: &str,
-    runtime_directory: &str,
-    session_bus: &str,
-) -> Option<CommandResourceUsage> {
-    if revalidate(&manifest.systemctl).is_err() {
-        return None;
+fn supervision_failure(error: crate::sandbox::LinuxSandboxError) -> CommandExecutionFailure {
+    match error.kind() {
+        crate::sandbox::LinuxSandboxErrorKind::CleanupUncertain => {
+            CommandExecutionFailure::CleanupUncertain
+        }
+        crate::sandbox::LinuxSandboxErrorKind::CancellationUnavailable => {
+            CommandExecutionFailure::CancellationUnavailable
+        }
+        _ => CommandExecutionFailure::ExecutionFailed,
     }
-    let result = Command::new(&manifest.systemctl.launch_path)
-        .env_clear()
-        .env("XDG_RUNTIME_DIR", runtime_directory)
-        .env("DBUS_SESSION_BUS_ADDRESS", session_bus)
-        .args([
-            "--user",
-            "show",
-            unit,
-            "--no-pager",
-            "--property=CPUUsageNSec",
-            "--property=MemoryPeak",
-            "--property=TasksCurrent",
-        ])
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::null())
-        .output()
-        .ok()?;
-    if !result.status.success() {
-        return None;
-    }
-    let output = std::str::from_utf8(&result.stdout).ok()?;
-    let properties = output
-        .lines()
-        .filter_map(|line| line.split_once('='))
-        .collect::<BTreeMap<_, _>>();
-    Some(CommandResourceUsage {
-        cpu_time_ns: properties.get("CPUUsageNSec")?.parse().ok()?,
-        peak_memory_bytes: properties.get("MemoryPeak")?.parse().ok()?,
-        peak_task_count: properties.get("TasksCurrent")?.parse().ok()?,
-    })
 }
 
 impl BoundedCommandExecutor for LinuxBoundedCommandExecutor {
@@ -551,154 +442,30 @@ impl BoundedCommandExecutor for LinuxBoundedCommandExecutor {
         &mut self,
         permit: CommandLaunchPermit<'_>,
         working_directory: &Self::WorkingDirectory,
-        cancellation: &CancellationToken,
-    ) -> CommandPlatformResult {
+        cancellation: &dyn EffectCancellationObservation,
+    ) -> Result<CommandPlatformResult, CommandExecutionFailure> {
         self.run(permit.command(), working_directory, cancellation)
     }
 }
-
-struct BoundedRead {
-    retained: Vec<u8>,
-    sha256: String,
-    total: u64,
-    exceeded: bool,
-}
-
-fn read_bounded(mut input: impl Read, limit: u64) -> Result<BoundedRead, ()> {
-    let capacity = usize::try_from(limit.min(HASH_BUFFER_BYTES as u64)).map_err(|_| ())?;
-    let mut retained = Vec::with_capacity(capacity);
-    let mut digest = Sha256::new();
-    let mut total = 0_u64;
-    let mut buffer = [0_u8; HASH_BUFFER_BYTES];
-    loop {
-        let count = input.read(&mut buffer).map_err(|_| ())?;
-        if count == 0 {
-            break;
-        }
-        digest.update(&buffer[..count]);
-        total = total.saturating_add(count as u64);
-        if (retained.len() as u64) < limit {
-            let remaining = usize::try_from(limit - retained.len() as u64).map_err(|_| ())?;
-            retained.extend_from_slice(&buffer[..count.min(remaining)]);
-        }
-    }
-    Ok(BoundedRead {
-        exceeded: total > limit,
-        retained,
-        sha256: hex(&digest.finalize()),
-        total,
-    })
-}
-
-fn terminate_unit(
-    manifest: &LinuxCommandManifest,
-    unit: &str,
-    runtime_directory: &str,
-    session_bus: &str,
-    child: &mut Child,
-) -> bool {
-    let _ = systemctl(
-        manifest,
-        runtime_directory,
-        session_bus,
-        ["kill", "--signal=KILL", "--kill-whom=all", unit],
-    );
-    let _ = systemctl(
-        manifest,
-        runtime_directory,
-        session_bus,
-        ["stop", unit, "--no-block", "--no-ask-password"],
-    );
-    let deadline = Instant::now() + TERMINATION_GRACE;
-    let waited = loop {
-        match child.try_wait() {
-            Ok(Some(_)) => break true,
-            Ok(None) if Instant::now() < deadline => thread::sleep(POLL_INTERVAL),
-            Ok(None) | Err(_) => {
-                let _ = child.kill();
-                break child.wait().is_ok();
-            }
-        }
-    };
-    let inactive = unit_is_inactive(manifest, unit, runtime_directory, session_bus);
-    let _ = cleanup_unit(manifest, unit, runtime_directory, session_bus);
-    waited && inactive
-}
-
-fn cleanup_unit(
-    manifest: &LinuxCommandManifest,
-    unit: &str,
-    runtime_directory: &str,
-    session_bus: &str,
-) -> bool {
-    let inactive = unit_is_inactive(manifest, unit, runtime_directory, session_bus);
-    let _ = systemctl(
-        manifest,
-        runtime_directory,
-        session_bus,
-        ["reset-failed", unit, "--no-ask-password"],
-    );
-    inactive
-}
-
-fn unit_is_inactive(
-    manifest: &LinuxCommandManifest,
-    unit: &str,
-    runtime_directory: &str,
-    session_bus: &str,
-) -> bool {
-    if revalidate(&manifest.systemctl).is_err() {
-        return false;
-    }
-    Command::new(&manifest.systemctl.launch_path)
-        .env_clear()
-        .env("XDG_RUNTIME_DIR", runtime_directory)
-        .env("DBUS_SESSION_BUS_ADDRESS", session_bus)
-        .args(["--user", "is-active", "--quiet", unit])
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()
-        .ok()
-        .and_then(|status| status.code())
-        .is_some_and(|code| matches!(code, 3 | 4))
-}
-
-fn systemctl<const N: usize>(
-    manifest: &LinuxCommandManifest,
-    runtime_directory: &str,
-    session_bus: &str,
-    arguments: [&str; N],
-) -> bool {
-    if revalidate(&manifest.systemctl).is_err() {
-        return false;
-    }
-    Command::new(&manifest.systemctl.launch_path)
-        .env_clear()
-        .env("XDG_RUNTIME_DIR", runtime_directory)
-        .env("DBUS_SESSION_BUS_ADDRESS", session_bus)
-        .arg("--user")
-        .args(arguments)
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()
-        .is_ok_and(|status| status.success())
-}
-
 /// Builds the `OpenFile=` properties in the exact order systemd numbers them,
-/// so guest descriptors always match [`COMMAND_DESCRIPTOR`], [`SECCOMP_DESCRIPTOR`],
-/// and [`WORKTREE_DESCRIPTOR`].
+/// so guest descriptors match command, filter and optional worktree.
+/// Filter bytes are withheld until ownership is witnessed; command stdin is EOF.
 fn open_file_properties(
     parent_pid: u32,
     command_descriptor: RawFd,
     seccomp_descriptor: RawFd,
     worktree_descriptor: Option<RawFd>,
 ) -> Vec<String> {
-    let mut properties = vec![
-        open_file_property(parent_pid, command_descriptor, "command"),
-        open_file_property(parent_pid, seccomp_descriptor, "seccomp"),
-    ];
+    let mut properties = vec![open_file_property(
+        parent_pid,
+        command_descriptor,
+        "command",
+    )];
+    properties.push(open_file_property(
+        parent_pid,
+        seccomp_descriptor,
+        "seccomp",
+    ));
     properties.extend(
         worktree_descriptor
             .map(|descriptor| open_file_property(parent_pid, descriptor, "worktree")),
@@ -708,34 +475,6 @@ fn open_file_properties(
 
 fn open_file_property(parent_pid: u32, descriptor: RawFd, name: &str) -> String {
     format!("--property=OpenFile=/proc/{parent_pid}/fd/{descriptor}:{name}:read-only")
-}
-
-fn sealed_seccomp_descriptor(bytes: &[u8]) -> Result<OwnedFd, LinuxCommandRunnerError> {
-    if bytes.is_empty() {
-        return Err(error(LinuxCommandRunnerErrorKind::SeccompUnavailable));
-    }
-    let descriptor = memfd_create(
-        "agentmage-command-seccomp",
-        MemfdFlags::CLOEXEC | MemfdFlags::ALLOW_SEALING,
-    )
-    .map_err(|_| error(LinuxCommandRunnerErrorKind::SeccompUnavailable))?;
-    let mut remaining = bytes;
-    while !remaining.is_empty() {
-        let count = write(&descriptor, remaining)
-            .map_err(|_| error(LinuxCommandRunnerErrorKind::SeccompUnavailable))?;
-        if count == 0 {
-            return Err(error(LinuxCommandRunnerErrorKind::SeccompUnavailable));
-        }
-        remaining = &remaining[count..];
-    }
-    seek(&descriptor, SeekFrom::Start(0))
-        .map_err(|_| error(LinuxCommandRunnerErrorKind::SeccompUnavailable))?;
-    fcntl_add_seals(
-        &descriptor,
-        SealFlags::SEAL | SealFlags::SHRINK | SealFlags::GROW | SealFlags::WRITE,
-    )
-    .map_err(|_| error(LinuxCommandRunnerErrorKind::SeccompUnavailable))?;
-    Ok(descriptor)
 }
 
 fn add_runtime_mounts(command: &mut Command) {
@@ -870,8 +609,8 @@ fn report_generated_unit(unit: &str) {
 #[cfg(not(test))]
 const fn report_generated_unit(_unit: &str) {}
 
-fn failed(code: &str) -> CommandPlatformResult {
-    CommandPlatformResult {
+fn failed(code: &str) -> Result<CommandPlatformResult, CommandExecutionFailure> {
+    Ok(CommandPlatformResult {
         termination: CommandTermination::LaunchFailed,
         exit_code: None,
         signal: None,
@@ -885,7 +624,7 @@ fn failed(code: &str) -> CommandPlatformResult {
         resource_usage: None,
         descendants_terminated: true,
         platform_code: code.to_owned(),
-    }
+    })
 }
 
 fn error(kind: LinuxCommandRunnerErrorKind) -> LinuxCommandRunnerError {
@@ -913,7 +652,8 @@ mod tests {
     use std::thread;
     use std::time::{Duration, Instant};
 
-    use super::{POLL_INTERVAL, TERMINATION_GRACE};
+    const POLL_INTERVAL: Duration = Duration::from_millis(10);
+    const TERMINATION_GRACE: Duration = Duration::from_secs(3);
 
     use agentmage_kernel_contracts::{
         AdapterInstanceId, BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId,
@@ -1160,7 +900,9 @@ mod tests {
         });
         println!("{DRIVER_READY_MARKER}");
         std::io::stdout().flush().expect("driver flushes readiness");
-        let _ = executor.run(&command, &held, &cancellation);
+        let _ = executor
+            .run(&command, &held, &cancellation)
+            .expect("owned command produces a complete result");
         println!("agentmage-parent-crash-driver-completed");
     }
 
@@ -1402,7 +1144,9 @@ mod tests {
             .expect("manifest");
             let executor = LinuxBoundedCommandExecutor::new(manifest).expect("executor");
             let (_temporary, held) = held_worktree();
-            let result = executor.run(&command, &held, &worktree_token("task-minimum"));
+            let result = executor
+                .run(&command, &held, &worktree_token("task-minimum"))
+                .expect("owned command produces a complete result");
             assert_eq!(
                 result.termination,
                 CommandTermination::LaunchFailed,
@@ -1421,7 +1165,7 @@ mod tests {
             scratch,
             vec![
                 "--property=OpenFile=/proc/4242/fd/7:command:read-only".to_owned(),
-                "--property=OpenFile=/proc/4242/fd/9:seccomp:read-only".to_owned(),
+                "--property=OpenFile=/proc/4242/fd/9:seccomp:read-only".to_owned()
             ]
         );
 
@@ -1540,12 +1284,117 @@ mod tests {
             CorrelationId::from_raw("correlation-linux-command-0001"),
         );
         let (_temporary, held) = held_worktree();
-        let result = executor.run(&command, &held, &cancellation);
+        let result = executor
+            .run(&command, &held, &cancellation)
+            .expect("owned command produces a complete result");
         assert_eq!(result.termination, CommandTermination::Exited);
         assert_eq!(result.exit_code, Some(0), "{result:?}");
         assert_eq!(result.stdout, b"agentmage-live-ok");
         assert_eq!(result.stdout_total_bytes, 17);
         assert!(result.stderr_total_bytes <= command.bounds.stderr_bytes);
+    }
+
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
+    fn live_borrowed_command_cancel_and_observer_failure_release_owned_slot() {
+        use agentmage_kernel_contracts::{ModelCancellationProbe, ModelRuntimeFailure};
+        use agentmage_kernel_engine::command_runner::CommandExecutionFailure;
+        use agentmage_kernel_engine::propagation::{
+            BorrowedEffectCancellation, ScopedEffectCancellation,
+        };
+
+        struct TimedProbe {
+            started: Instant,
+            terminal: Result<Option<CancellationSignal>, ModelRuntimeFailure>,
+        }
+        impl ModelCancellationProbe for TimedProbe {
+            fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
+                if self.started.elapsed() < Duration::from_secs(1) {
+                    Ok(None)
+                } else {
+                    self.terminal.clone()
+                }
+            }
+        }
+        let executable = fs::canonicalize("/usr/bin/python3").unwrap();
+        let (temporary, held) = held_worktree();
+        fs::write(temporary.0.join("owned-worktree/observe.py"),
+            b"import sys, time\nprint('command-body-entered', flush=True)\nprint('command-error-entered', file=sys.stderr, flush=True)\ntime.sleep(30)\n").unwrap();
+        let (command, executor) = owned_worktree_fixture(
+            "fixture.borrowed-command",
+            executable.to_str().unwrap(),
+            vec!["-I".into(), "-B".into(), "observe.py".into()],
+            CommandRisk::Low,
+        );
+        let (healthy, healthy_executor) = scratch_fixture(
+            "fixture.borrowed-reuse",
+            "/usr/bin/printf",
+            vec!["fresh-native-command".into()],
+            CommandRisk::Low,
+        );
+        let task = TaskId::from_raw("task-native-command-observer");
+        let correlation = CorrelationId::from_raw("correlation-native-command-observer");
+        for case in 0..3 {
+            let mut signal = CancellationSignal {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                cancellation_id: CancellationId::from_raw("cancel-native-command-observer"),
+                correlation_id: correlation.clone(),
+                task_id: task.clone(),
+                reason: CancellationReason::UserRequested,
+                requested_by: BoundaryKind::Shell,
+            };
+            if case == 1 {
+                signal.task_id = TaskId::from_raw("other-native-command-task");
+            }
+            let probe = TimedProbe {
+                started: Instant::now(),
+                terminal: if case == 2 {
+                    Err(ModelRuntimeFailure {
+                        code: "fixture-observer-unavailable".into(),
+                        retryable_after_correction: false,
+                        dependency_recovery_required: true,
+                        contract_error: None,
+                    })
+                } else {
+                    Ok(Some(signal))
+                },
+            };
+            let borrowed =
+                BorrowedEffectCancellation::new(&probe, task.clone(), correlation.clone());
+            let scoped = ScopedEffectCancellation::new(&borrowed, &task, &correlation);
+            let result = executor.run(&command, &held, &scoped);
+            assert!(probe.started.elapsed() < Duration::from_secs(8));
+            if case == 0 {
+                let result = result.expect("native cancellation with complete cleanup/output");
+                assert_eq!(result.termination, CommandTermination::Cancelled);
+                assert!(result.descendants_terminated);
+                assert_eq!(
+                    result.stdout, b"command-body-entered\n",
+                    "body entry, not timer inference"
+                );
+                assert_eq!(result.stderr, b"command-error-entered\n");
+                assert_eq!(
+                    result.stdout_sha256,
+                    super::hex(&sha2::Sha256::digest(&result.stdout))
+                );
+                assert_eq!(
+                    result.stderr_sha256,
+                    super::hex(&sha2::Sha256::digest(&result.stderr))
+                );
+            } else {
+                assert_eq!(
+                    result.unwrap_err(),
+                    CommandExecutionFailure::CancellationUnavailable
+                );
+                // No output receipt on invalid/unavailable control; no body-entry claim.
+            }
+            let reuse = healthy_executor
+                .run(&healthy, &held, &worktree_token("observer-reuse"))
+                .expect("uncertain cleanup would quarantine the shared slot");
+            assert_eq!(reuse.termination, CommandTermination::Exited);
+            assert_eq!(reuse.exit_code, Some(0));
+            assert_eq!(reuse.stdout, b"fresh-native-command");
+        }
     }
 
     #[test]
@@ -1587,7 +1436,9 @@ mod tests {
             CorrelationId::from_raw("correlation-linux-timeout-0001"),
         );
         let (_timed_temporary, timed_held) = held_worktree();
-        let timed_result = timed_executor.run(&timed, &timed_held, &timed_token);
+        let timed_result = timed_executor
+            .run(&timed, &timed_held, &timed_token)
+            .expect("owned command produces a complete result");
         assert_eq!(timed_result.termination, CommandTermination::TimedOut);
         assert!(timed_result.descendants_terminated);
         let timed_usage = timed_result.resource_usage.expect("timed resource usage");
@@ -1625,8 +1476,9 @@ mod tests {
                 .expect("cancellation")
         });
         let (_cancelled_temporary, cancelled_held) = held_worktree();
-        let cancelled_result =
-            cancelled_executor.run(&cancelled, &cancelled_held, &cancelled_token);
+        let cancelled_result = cancelled_executor
+            .run(&cancelled, &cancelled_held, &cancelled_token)
+            .expect("owned command produces a complete result");
         signaler.join().expect("signaler");
         assert_eq!(cancelled_result.termination, CommandTermination::Cancelled);
         assert!(cancelled_result.descendants_terminated);
@@ -1677,7 +1529,9 @@ mod tests {
             CorrelationId::from_raw("correlation-linux-descendants-0001"),
         );
         let (_temporary, held) = held_worktree();
-        let result = executor.run(&command, &held, &cancellation);
+        let result = executor
+            .run(&command, &held, &cancellation)
+            .expect("owned command produces a complete result");
         assert_eq!(
             result.termination,
             CommandTermination::TimedOut,
@@ -1781,7 +1635,9 @@ mod tests {
             "host environment is unexpectedly empty"
         );
         let (_temporary, held) = held_worktree();
-        let result = executor.run(&command, &held, &worktree_token("environment-0001"));
+        let result = executor
+            .run(&command, &held, &worktree_token("environment-0001"))
+            .expect("owned command produces a complete result");
         assert_eq!(result.termination, CommandTermination::Exited, "{result:?}");
         assert_eq!(result.exit_code, Some(0), "{result:?}");
         let observed = String::from_utf8(result.stdout.clone()).expect("UTF-8 environment");
@@ -1814,7 +1670,9 @@ mod tests {
             CommandRisk::Moderate,
         );
         let (_temporary, held) = held_worktree();
-        let result = executor.run(&command, &held, &worktree_token("second-program-0001"));
+        let result = executor
+            .run(&command, &held, &worktree_token("second-program-0001"))
+            .expect("owned command produces a complete result");
         assert_eq!(result.termination, CommandTermination::Exited, "{result:?}");
         assert_eq!(result.exit_code, Some(127), "{result:?}");
         let stderr = String::from_utf8_lossy(&result.stderr);
@@ -1863,7 +1721,9 @@ mod tests {
         .expect("manifest");
         let executor = LinuxBoundedCommandExecutor::new(manifest).expect("executor");
         let (_temporary, held) = held_worktree();
-        let result = executor.run(&command, &held, &worktree_token("output-ceiling-0001"));
+        let result = executor
+            .run(&command, &held, &worktree_token("output-ceiling-0001"))
+            .expect("owned command produces a complete result");
         assert_eq!(
             result.termination,
             CommandTermination::OutputLimit,
@@ -1924,7 +1784,9 @@ mod tests {
         .expect("manifest");
         let executor = LinuxBoundedCommandExecutor::new(manifest).expect("executor");
         let (_temporary, held) = held_worktree();
-        let result = executor.run(&command, &held, &worktree_token("maximum-limits-0001"));
+        let result = executor
+            .run(&command, &held, &worktree_token("maximum-limits-0001"))
+            .expect("owned command produces a complete result");
         assert_eq!(result.termination, CommandTermination::Exited, "{result:?}");
         assert_eq!(result.exit_code, Some(0), "{result:?}");
         assert_eq!(result.stdout, b"agentmage-maximum", "{result:?}");
@@ -1980,7 +1842,9 @@ mod tests {
         .expect("manifest");
         let executor = LinuxBoundedCommandExecutor::new(manifest).expect("executor");
         let (_temporary, held) = held_worktree();
-        let result = executor.run(&command, &held, &worktree_token("minimum-timeout-0001"));
+        let result = executor
+            .run(&command, &held, &worktree_token("minimum-timeout-0001"))
+            .expect("owned command produces a complete result");
         assert_eq!(
             result.termination,
             CommandTermination::TimedOut,
@@ -2008,7 +1872,9 @@ mod tests {
             CommandRisk::Low,
         );
         let (_temporary, held) = held_worktree();
-        let result = executor.run(&command, &held, &worktree_token("root-enumeration-0001"));
+        let result = executor
+            .run(&command, &held, &worktree_token("root-enumeration-0001"))
+            .expect("owned command produces a complete result");
         assert_eq!(result.termination, CommandTermination::Exited, "{result:?}");
         assert_eq!(result.exit_code, Some(0), "{result:?}");
         let listing = String::from_utf8(result.stdout.clone()).expect("UTF-8 root listing");
@@ -2044,7 +1910,9 @@ mod tests {
             CommandRisk::Moderate,
         );
         let (_temporary, held) = held_worktree();
-        let written = write_executor.run(&write_command, &held, &worktree_token("scratch-write"));
+        let written = write_executor
+            .run(&write_command, &held, &worktree_token("scratch-write"))
+            .expect("owned command produces a complete result");
         assert_eq!(
             written.termination,
             CommandTermination::Exited,
@@ -2060,7 +1928,9 @@ mod tests {
             vec!["-A".to_owned()],
             CommandRisk::Low,
         );
-        let listed = list_executor.run(&list_command, &held, &worktree_token("scratch-list"));
+        let listed = list_executor
+            .run(&list_command, &held, &worktree_token("scratch-list"))
+            .expect("owned command produces a complete result");
         assert_eq!(listed.termination, CommandTermination::Exited, "{listed:?}");
         assert_eq!(listed.exit_code, Some(0), "{listed:?}");
         assert!(listed.stdout.is_empty(), "{listed:?}");
@@ -2078,7 +1948,9 @@ mod tests {
             CommandRisk::Low,
         );
         let (_temporary, held) = held_worktree();
-        let result = executor.run(&command, &held, &worktree_token("marker-0001"));
+        let result = executor
+            .run(&command, &held, &worktree_token("marker-0001"))
+            .expect("owned command produces a complete result");
         assert_eq!(result.termination, CommandTermination::Exited, "{result:?}");
         assert_eq!(result.exit_code, Some(0), "{result:?}");
         assert_eq!(result.stdout, b"agentmage", "{result:?}");
@@ -2097,7 +1969,9 @@ mod tests {
             vec!["marker.txt".to_owned()],
             CommandRisk::Low,
         );
-        let marker = marker_executor.run(&marker_command, &held, &worktree_token("denial-read"));
+        let marker = marker_executor
+            .run(&marker_command, &held, &worktree_token("denial-read"))
+            .expect("owned command produces a complete result");
         assert_eq!(marker.termination, CommandTermination::Exited, "{marker:?}");
         assert_eq!(marker.exit_code, Some(0), "{marker:?}");
         assert_eq!(marker.stdout, b"agentmage", "{marker:?}");
@@ -2110,7 +1984,9 @@ mod tests {
             vec!["forbidden.txt".to_owned()],
             CommandRisk::Moderate,
         );
-        let result = write_executor.run(&write_command, &held, &worktree_token("denial-write"));
+        let result = write_executor
+            .run(&write_command, &held, &worktree_token("denial-write"))
+            .expect("owned command produces a complete result");
         assert_eq!(result.termination, CommandTermination::Exited, "{result:?}");
         assert_ne!(result.exit_code, Some(0), "{result:?}");
         let stderr = String::from_utf8_lossy(&result.stderr);
@@ -2130,7 +2006,9 @@ mod tests {
             CommandRisk::Low,
         );
         let (_temporary, held) = held_worktree();
-        let result = executor.run(&command, &held, &worktree_token("descriptors-0001"));
+        let result = executor
+            .run(&command, &held, &worktree_token("descriptors-0001"))
+            .expect("owned command produces a complete result");
         assert_eq!(result.termination, CommandTermination::Exited, "{result:?}");
         assert_eq!(result.exit_code, Some(0), "{result:?}");
         let listing = String::from_utf8(result.stdout.clone()).expect("UTF-8 guest listing");
@@ -2150,9 +2028,20 @@ mod tests {
         );
         let (temporary, held) = held_worktree();
         let root = temporary.0.join("owned-worktree");
-        fs::set_permissions(&root, fs::Permissions::from_mode(0o700))
+        // The private launcher may already use umask 077. Mutate an observed
+        // permission bit instead of assuming create_dir produced mode 0755.
+        let before = fs::metadata(&root).unwrap().permissions().mode() & 0o777;
+        let changed = before ^ 0o010;
+        assert_ne!(before, changed);
+        fs::set_permissions(&root, fs::Permissions::from_mode(changed))
             .expect("worktree mode changes");
-        let result = executor.run(&command, &held, &worktree_token("identity-0001"));
+        assert_eq!(
+            fs::metadata(&root).unwrap().permissions().mode() & 0o777,
+            changed
+        );
+        let result = executor
+            .run(&command, &held, &worktree_token("identity-0001"))
+            .expect("owned command produces a complete result");
         assert_eq!(
             result.termination,
             CommandTermination::LaunchFailed,
@@ -2232,7 +2121,9 @@ mod tests {
             CorrelationId::from_raw("correlation-linux-descriptors-0001"),
         );
         let (_worktree_temporary, held) = held_worktree();
-        let result = executor.run(&command, &held, &cancellation);
+        let result = executor
+            .run(&command, &held, &cancellation)
+            .expect("owned command produces a complete result");
         assert_eq!(result.termination, CommandTermination::Exited, "{result:?}");
         assert_eq!(result.exit_code, Some(0), "{result:?}");
 

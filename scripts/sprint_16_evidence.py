@@ -205,9 +205,13 @@ def installed_worker_summary(value: Any, encoded: bytes) -> dict[str, Any]:
     }
 
 
-def load_installed_worker_summary() -> dict[str, Any]:
+def load_installed_worker_summary(source_revision: str) -> dict[str, Any]:
     encoded = INSTALLED_WORKER_OUTPUT.read_bytes()
-    return installed_worker_summary(json.loads(encoded), encoded)
+    value = json.loads(encoded)
+    failures = worker_evidence.validate_current_source(value, source_revision)
+    if failures:
+        raise ValueError("; ".join(failures))
+    return installed_worker_summary(value, encoded)
 
 
 def build_report(
@@ -349,9 +353,22 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     if verification.get("model_context_disclosure_redaction") is not True:
         failures.append("model-context disclosure evidence drift")
     if verify_current and REVISION.fullmatch(revision):
+        try:
+            if installed_worker != load_installed_worker_summary(revision):
+                failures.append("installed worker artifact identity or summary drift")
+        except (OSError, ValueError, TypeError, KeyError, AttributeError,
+                subprocess.SubprocessError):
+            failures.append("installed worker current artifact proof unavailable or malformed")
+        if set(report.get("source_sha256", {})) != set(SOURCE_PATHS):
+            failures.append("source inventory drift")
         for path in SOURCE_PATHS:
             digest = str(report.get("source_sha256", {}).get(path, ""))
-            if not SHA256.fullmatch(digest) or digest != sha256_bytes(git_file(revision, path)):
+            try:
+                expected = sha256_bytes(git_file(revision, path))
+            except (ValueError, OSError, subprocess.SubprocessError):
+                failures.append(f"source unavailable: {path}")
+                continue
+            if not SHA256.fullmatch(digest) or digest != expected:
                 failures.append(f"source digest drift: {path}")
     return failures
 
@@ -369,7 +386,19 @@ def main() -> int:
             capture_output=True,
             text=True,
         ).stdout.strip()
-        report = build_report(revision, run_commands(), load_installed_worker_summary())
+        # Refuse stale native evidence before executing the expensive local checks.
+        try:
+            installed_worker = load_installed_worker_summary(revision)
+        except (OSError, ValueError, TypeError, KeyError, AttributeError,
+                subprocess.SubprocessError) as error:
+            print(f"installed worker current evidence refused: {error}")
+            return 1
+        report = build_report(revision, run_commands(), installed_worker)
+        failures = validate_report(report)
+        if failures:
+            for failure in failures:
+                print(failure)
+            return 1
         OUTPUT.parent.mkdir(parents=True, exist_ok=True)
         OUTPUT.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     else:

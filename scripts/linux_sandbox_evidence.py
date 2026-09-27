@@ -39,6 +39,7 @@ SOURCE_PATHS = (
     "platforms/linux/src/platform.rs",
     "platforms/linux/src/sandbox.rs",
     "platforms/linux/src/sandbox_supervision.rs",
+    "platforms/linux/src/sandbox_supervision/resource_usage.rs",
     "platforms/linux/src/security_controls.rs",
     "platforms/linux/src/secret_service.rs",
     "scripts/linux_sandbox_evidence.py",

@@ -36,9 +36,14 @@ retains its point-in-time component, native-process and executable-scripted chec
 The subsequent [durable tool-start and terminal publication record](docs/verification/durable-tool-start-publication-2026-09-26.md)
 records continuous actual-CLI native-read cancellation, exact consumed authority,
 canonical reopens, fresh-host scripted repair and a reproduced terminal-channel
-ordering correction for AMR-01/AMR-02 prerequisites. Command/Git/validation live
-cancellation, crash-safe worker ownership, connected research and broader model
-qualification remain open. Neither record closes a package or acceptance gate below.
+ordering correction for AMR-01/AMR-02 prerequisites. The subsequent
+[native command-control record](docs/verification/native-command-control-2026-09-27.md)
+adds shared command/Git supervision and actual-CLI command/validation cancellation,
+canonical reopens and fresh-host repair, including a reproduced missing cancelled
+metadata artifact correction. Native Git body-entry cancellation, crash-safe worker
+ownership, connected research and broader model qualification remain open. These
+records close no package or acceptance gate below; their exact pins and explicit
+historical/freshness dispositions are not blanket reacceptance of older evidence.
 
 The [hybrid resource-admission correction](docs/verification/native-hybrid-resource-admission-2026-09-27.md)
 retains a new pre-inference Muse refusal, its reproduced cgroup-parser defect and

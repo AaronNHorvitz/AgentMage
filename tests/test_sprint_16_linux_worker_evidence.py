@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import copy
+from pathlib import Path
+import subprocess
+import tempfile
 import unittest
+from unittest.mock import patch
 
 from scripts import sprint_16_linux_worker_evidence as evidence
 
@@ -102,6 +106,131 @@ def report() -> dict[str, object]:
 
 
 class Sprint16LinuxWorkerEvidenceTests(unittest.TestCase):
+    @staticmethod
+    def current_report() -> dict[str, object]:
+        value = report()
+        value["schema_version"] = 2
+        value["complete_source_closure"] = {
+            "schema_version": 1, "scope": "complete-committed-source-tree",
+            "file_count": 50, "total_bytes": 1000, "sha256": "5" * 64,
+        }
+        return value
+
+    def validate_current(self, value: dict[str, object]) -> list[str]:
+        with (
+            patch.object(evidence, "source_records", return_value=report()["sources"]),
+            patch.object(evidence, "complete_source_closure",
+                         return_value=self.current_report()["complete_source_closure"]),
+        ):
+            return evidence.validate_current_source(value, "c" * 40)
+
+    def test_identical_complete_source_at_different_commits_is_eligible(self) -> None:
+        self.assertEqual(self.validate_current(self.current_report()), [])
+
+    def test_legacy_matrix_is_historical_not_current(self) -> None:
+        self.assertEqual(evidence.validate_report(report()), [])
+        self.assertIn("historical", self.validate_current(report())[0])
+
+    def test_schema_versions_require_integer_not_python_equal_boolean_or_float(self) -> None:
+        for version in (True, 1.0, 2.0, "2", None):
+            with self.subTest(outer=version):
+                value = self.current_report()
+                value["schema_version"] = version
+                self.assertTrue(evidence.validate_report(value))
+                self.assertTrue(self.validate_current(value))
+        for version in (True, 1.0, "1", None):
+            with self.subTest(closure=version):
+                value = self.current_report()
+                value["complete_source_closure"]["schema_version"] = version
+                self.assertTrue(evidence.validate_report(value))
+                self.assertTrue(self.validate_current(value))
+
+    def test_missing_forged_duplicate_and_incomplete_closures_fail(self) -> None:
+        mutations = (
+            lambda value: value.pop("complete_source_closure"),
+            lambda value: value["complete_source_closure"].update({"sha256": "6" * 64}),
+            lambda value: value["complete_source_closure"].update({"file_count": True}),
+            lambda value: value["complete_source_closure"].update({"scope": "fourteen-files"}),
+            lambda value: value["complete_source_closure"].update({"extra": True}),
+            lambda value: value["sources"].append(value["sources"][0]),
+            lambda value: value["sources"][0].update({"sha256": "9" * 64}),
+            lambda value: value["sources"][0].update({"bytes": 20}),
+            lambda value: value["sources"][0].update({"bytes": True}),
+            lambda value: value["targets"][0]["guest_result"].update({"status": "failed"}),
+        )
+        for mutate in mutations:
+            with self.subTest(mutation=mutate):
+                value = self.current_report()
+                mutate(value)
+                self.assertTrue(self.validate_current(value))
+
+    def test_changed_or_unavailable_committed_source_fails(self) -> None:
+        expected = self.current_report()["complete_source_closure"]
+        changed = dict(expected, sha256="6" * 64)
+        with patch.object(evidence, "source_records", return_value=report()["sources"]):
+            with patch.object(evidence, "complete_source_closure", side_effect=[expected, changed]):
+                self.assertIn("not equivalent", evidence.validate_current_source(self.current_report(), "c" * 40)[0])
+            with patch.object(evidence, "complete_source_closure", side_effect=ValueError("missing commit")):
+                self.assertTrue(evidence.validate_current_source(self.current_report(), "c" * 40))
+
+    def test_real_git_closure_covers_child_modules_modes_and_docs(self) -> None:
+        # Synthetic developer fixture only: no installed guest or platform claim.
+        with tempfile.TemporaryDirectory(prefix="agentmage-source-closure-") as directory:
+            root = Path(directory)
+            def git(*args: str) -> str:
+                return subprocess.run(
+                    ["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", *args],
+                    cwd=root, check=True, capture_output=True, text=True, timeout=10,
+                ).stdout.strip()
+            git("init", "--quiet")
+            child = root / "platforms/linux/src/sandbox_supervision.rs"
+            child.parent.mkdir(parents=True)
+            child.write_bytes(b"pub fn child() {}\n")
+            (child.parent / "sandbox.rs").write_bytes(b"mod sandbox_supervision;\n")
+            git("add", ".")
+            git("commit", "--quiet", "-m", "fixture")
+            first = git("rev-parse", "HEAD")
+            with patch.object(evidence, "ROOT", root):
+                original = evidence.complete_source_closure(first)
+                git("commit", "--quiet", "--allow-empty", "-m", "same tree")
+                self.assertEqual(original, evidence.complete_source_closure(git("rev-parse", "HEAD")))
+                child.write_bytes(b"pub fn changed_child() {}\n")
+                git("add", ".")
+                git("commit", "--quiet", "-m", "child changed, parent unchanged")
+                updated = evidence.complete_source_closure(git("rev-parse", "HEAD"))
+                self.assertNotEqual(original["sha256"], updated["sha256"])
+                child.chmod(0o755)
+                git("add", ".")
+                git("commit", "--quiet", "-m", "mode changed")
+                mode = evidence.complete_source_closure(git("rev-parse", "HEAD"))
+                self.assertNotEqual(updated["sha256"], mode["sha256"])
+                (root / "README.md").write_bytes(b"Conservative whole-tree policy.\n")
+                git("add", ".")
+                git("commit", "--quiet", "-m", "docs changed")
+                self.assertNotEqual(mode, evidence.complete_source_closure(git("rev-parse", "HEAD")))
+                self.assertEqual(original, evidence.complete_source_closure(first))
+                with patch.object(evidence, "MAX_SOURCE_BYTES", 1):
+                    with self.assertRaisesRegex(ValueError, "exceeds bound"):
+                        evidence.complete_source_closure(first)
+                with self.assertRaises(subprocess.CalledProcessError):
+                    evidence.complete_source_closure("0" * 40)
+
+    def test_batch_integrity_refuses_truncation_identity_and_trailing_bytes(self) -> None:
+        def output(data: bytes) -> subprocess.CompletedProcess:
+            return subprocess.CompletedProcess([], 0, stdout=data)
+        oid = b"a" * 40
+        inventory = b"100644 blob " + oid + b"       3\tfile.rs\0"
+        correct = oid + b" blob 3\nabc\n"
+        for batch in (correct[:-1], correct + b"extra", correct.replace(b" blob 3", b" blob 2")):
+            with self.subTest(batch=batch), patch.object(
+                evidence.subprocess, "run", side_effect=[output(b"commit\n"), output(inventory), output(batch)]
+            ):
+                with self.assertRaises(ValueError):
+                    evidence.complete_source_closure("b" * 40)
+        with patch.object(evidence.subprocess, "run", side_effect=[output(b"commit\n"), output(inventory * 2)]):
+            with self.assertRaisesRegex(ValueError, "inventory invalid"):
+                evidence.complete_source_closure("b" * 40)
+
     def test_exact_operation_matrix_report_is_valid(self) -> None:
         self.assertEqual(evidence.validate_report(report()), [])
 

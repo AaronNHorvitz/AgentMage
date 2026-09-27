@@ -290,8 +290,8 @@ pub struct RuntimeToolExecution {
     /// contract while preventing the coordinator from inferring artifact meaning from a tool name,
     /// grant operation, media type, or payload text.
     pub result_output_kind: Option<RuntimeArtifactKind>,
-    /// Separately captured outputs that become immutable artifacts when they exceed the inline
-    /// ceiling, such as command standard output and standard error.
+    /// Separately captured outputs retained as complete immutable artifacts in durable runtimes,
+    /// including small command standard output and standard error.
     pub artifact_candidates: Vec<RuntimeToolArtifactCandidate>,
 }
 
@@ -2383,15 +2383,32 @@ where
             execution.result.output.clone(),
             execution.result_output_kind,
         ) {
-            output_exhausted = self
-                .route_runtime_output(
+            output_exhausted = if execution.result.outcome == OperationOutcome::Succeeded {
+                self.route_runtime_output(
                     payload,
                     artifact_kind,
                     &turn_id,
                     Some(&operation_id),
                     Some(&execution.receipt_id),
                 )?
-                .is_none();
+                .is_none()
+            } else {
+                // Non-success metadata is not kept in the successful tool-result
+                // continuation. An inline value would otherwise be discarded on
+                // cancellation/timeout/failure. Retain its exact, already-validated
+                // bytes through the existing artifact owner and unchanged budgets;
+                // this audit artifact is never successful completion evidence.
+                !self.route_runtime_artifact_candidate(
+                    &RuntimeToolArtifactCandidate {
+                        kind: artifact_kind,
+                        media_type: payload.media_type,
+                        bytes: payload.bytes,
+                    },
+                    &turn_id,
+                    &operation_id,
+                    &execution.receipt_id,
+                )?
+            };
         }
         for candidate in &execution.artifact_candidates {
             if !self.route_runtime_artifact_candidate(

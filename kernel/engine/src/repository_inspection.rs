@@ -11,7 +11,9 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use crate::authority_transaction::{EffectAuthorization, EffectDriver, EffectLaunch, EffectResult};
-use crate::propagation::CancellationToken;
+use crate::propagation::{
+    CancellationToken, EffectCancellationObservation, ScopedEffectCancellation,
+};
 
 const INSPECTION_SCHEMA_VERSION: u16 = 1;
 const MAX_GIT_RECORDS: u32 = 1_000;
@@ -29,6 +31,12 @@ pub enum RepositoryInspectionError {
     AuthorityMismatch,
     /// The platform returned malformed, inconsistent, or over-limit evidence.
     InvalidPlatformResult,
+    /// Passive cancellation control was invalid or unavailable.
+    CancellationUnavailable,
+    /// Execution failed without a complete result, after confirmed owned cleanup.
+    ExecutionFailed,
+    /// Native ownership or cleanup cannot be proved.
+    CleanupUncertain,
 }
 
 impl RepositoryInspectionError {
@@ -39,6 +47,9 @@ impl RepositoryInspectionError {
             Self::InvalidPlan => "repository.inspection.plan.invalid",
             Self::AuthorityMismatch => "repository.inspection.authority.mismatch",
             Self::InvalidPlatformResult => "repository.inspection.platform.invalid",
+            Self::CancellationUnavailable => "repository.inspection.cancellation.unavailable",
+            Self::ExecutionFailed => "repository.inspection.execution.failed",
+            Self::CleanupUncertain => "repository.inspection.cleanup.uncertain",
         }
     }
 }
@@ -395,6 +406,18 @@ impl fmt::Debug for RepositoryInspectionLaunchPermit<'_> {
 }
 
 /// Trusted platform executor whose launch requires a kernel-created permit.
+/// Closed native failure channel; never serialized as a fabricated Git result.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RepositoryInspectionExecutionFailure {
+    /// Passive control failed; all owned native work is confirmed ended.
+    CancellationUnavailable,
+    /// Native execution/output failed; all owned native work is confirmed ended.
+    ExecutionFailed,
+    /// Ownership or cleanup is unresolved. This takes precedence over other failures.
+    CleanupUncertain,
+}
+
+/// Trusted platform executor whose launch requires a kernel-created permit.
 pub trait BoundedRepositoryInspectionExecutor {
     /// Platform-owned held workspace-root type accepted by this executor.
     type WorkingDirectory: HeldWorkspaceRoot;
@@ -404,28 +427,28 @@ pub trait BoundedRepositoryInspectionExecutor {
         &mut self,
         permit: RepositoryInspectionLaunchPermit<'_>,
         working_directory: &Self::WorkingDirectory,
-        cancellation: &CancellationToken,
-    ) -> RepositoryInspectionPlatformResult;
+        cancellation: &dyn EffectCancellationObservation,
+    ) -> Result<RepositoryInspectionPlatformResult, RepositoryInspectionExecutionFailure>;
 }
 
 /// Inert repository-inspection driver crossing the effect boundary once.
-pub struct RepositoryInspectionEffectDriver<E, H> {
+pub struct RepositoryInspectionEffectDriver<E, H, C = CancellationToken> {
     executor: E,
     held_working_directory: H,
     prepared: PreparedRepositoryInspection,
-    cancellation: CancellationToken,
+    cancellation: C,
     result: Option<RepositoryInspectionPlatformResult>,
     error: Option<RepositoryInspectionError>,
 }
 
-impl<E, H> RepositoryInspectionEffectDriver<E, H> {
+impl<E, H, C> RepositoryInspectionEffectDriver<E, H, C> {
     /// Creates an inert driver without launching Git or granting authority.
     #[must_use]
     pub const fn new(
         executor: E,
         held_working_directory: H,
         prepared: PreparedRepositoryInspection,
-        cancellation: CancellationToken,
+        cancellation: C,
     ) -> Self {
         Self {
             executor,
@@ -454,7 +477,7 @@ impl<E, H> RepositoryInspectionEffectDriver<E, H> {
     }
 }
 
-impl<E, H> fmt::Debug for RepositoryInspectionEffectDriver<E, H> {
+impl<E, H, C> fmt::Debug for RepositoryInspectionEffectDriver<E, H, C> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("RepositoryInspectionEffectDriver")
@@ -465,10 +488,11 @@ impl<E, H> fmt::Debug for RepositoryInspectionEffectDriver<E, H> {
     }
 }
 
-impl<E, H> EffectDriver for RepositoryInspectionEffectDriver<E, H>
+impl<E, H, C> EffectDriver for RepositoryInspectionEffectDriver<E, H, C>
 where
     E: BoundedRepositoryInspectionExecutor,
     H: Borrow<E::WorkingDirectory>,
+    C: EffectCancellationObservation,
 {
     fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
         let held = self.held_working_directory.borrow();
@@ -488,7 +512,22 @@ where
             return EffectLaunch::failed();
         }
 
-        let platform = if self.cancellation.is_cancelled() {
+        let scoped = ScopedEffectCancellation::new(
+            &self.cancellation,
+            authorization.task_id(),
+            &call.correlation_id,
+        );
+        let cancelled = match scoped.observe_effect_cancellation() {
+            Ok(signal) => signal.is_some(),
+            Err(_) => {
+                self.error = Some(RepositoryInspectionError::CancellationUnavailable);
+                return inspection_execution_failure(
+                    RepositoryInspectionError::CancellationUnavailable,
+                    false,
+                );
+            }
+        };
+        let platform = if cancelled {
             RepositoryInspectionPlatformResult {
                 termination: RepositoryInspectionTermination::Cancelled,
                 exit_code: None,
@@ -502,13 +541,33 @@ where
                 platform_code: "repository.inspection.cancelled.before-launch".to_owned(),
             }
         } else {
-            self.executor.execute(
+            match self.executor.execute(
                 RepositoryInspectionLaunchPermit {
                     prepared: &self.prepared,
                 },
                 held,
-                &self.cancellation,
-            )
+                &scoped,
+            ) {
+                Ok(result) => result,
+                Err(failure) => {
+                    let error = match failure {
+                        RepositoryInspectionExecutionFailure::CancellationUnavailable => {
+                            RepositoryInspectionError::CancellationUnavailable
+                        }
+                        RepositoryInspectionExecutionFailure::ExecutionFailed => {
+                            RepositoryInspectionError::ExecutionFailed
+                        }
+                        RepositoryInspectionExecutionFailure::CleanupUncertain => {
+                            RepositoryInspectionError::CleanupUncertain
+                        }
+                    };
+                    self.error = Some(error);
+                    return inspection_execution_failure(
+                        error,
+                        failure == RepositoryInspectionExecutionFailure::CleanupUncertain,
+                    );
+                }
+            }
         };
         if validate_platform_result(&platform).is_err() {
             self.error = Some(RepositoryInspectionError::InvalidPlatformResult);
@@ -536,6 +595,24 @@ where
         self.result = Some(platform);
         EffectLaunch::completed(effect)
     }
+}
+
+fn inspection_execution_failure(error: RepositoryInspectionError, uncertain: bool) -> EffectLaunch {
+    // No Git result/output is retained. A known-cleanup offline read failure
+    // cannot be promoted to success; unknown ownership cannot claim NotChanged.
+    EffectLaunch::completed(EffectResult::from_redacted_material(
+        if uncertain {
+            OperationOutcome::Uncertain
+        } else {
+            OperationOutcome::Failed
+        },
+        error.code().as_bytes(),
+        if uncertain {
+            StateChange::Uncertain
+        } else {
+            StateChange::NotChanged
+        },
+    ))
 }
 
 fn validate_request(

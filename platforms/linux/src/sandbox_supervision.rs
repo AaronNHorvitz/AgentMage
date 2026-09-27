@@ -11,11 +11,121 @@ use rustix::fs::{Mode, OFlags, fcntl_getfl, fcntl_setfl, fstat, fstatfs, open, o
 use rustix::io::pread;
 use rustix::process::getuid;
 use sha2::{Digest, Sha256};
-use std::io::{Read, Write};
-use std::os::fd::AsFd;
+use std::io::{PipeReader, PipeWriter, Read, Write};
+use std::os::fd::{AsFd, AsRawFd, BorrowedFd, RawFd};
+use std::path::Path;
 use std::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command, ExitStatus, Stdio};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
+
+#[path = "sandbox_supervision/resource_usage.rs"]
+mod resource_usage;
+
+// Closed owner set; callers cannot inject a control path or another process owner.
+pub(crate) enum LaunchOwner {
+    Read(Arc<LinuxSandboxManifest>),
+    Command(Arc<crate::command_runner::LinuxCommandManifest>),
+    Git(Arc<crate::repository_safety::LinuxRepositoryInspectionManifest>),
+}
+
+impl LaunchOwner {
+    fn control_path(&self) -> Result<&Path, LinuxSandboxError> {
+        match self {
+            Self::Read(manifest) => {
+                revalidate_launch_artifact(&manifest.systemctl)?;
+                manifest
+                    .systemctl
+                    .launch_path
+                    .as_deref()
+                    .ok_or_else(failure)
+            }
+            Self::Command(manifest) => manifest.control_path().map_err(|_| failure()),
+            Self::Git(manifest) => manifest.control_path().map_err(|_| failure()),
+        }
+    }
+
+    fn accepts(&self, unit: &str, projections: usize) -> bool {
+        let (prefix, cardinality) = match self {
+            Self::Read(_) => ("agentmage-worker-", (1..=8).contains(&projections)),
+            Self::Command(_) => ("agentmage-command-", projections <= 1),
+            Self::Git(_) => ("agentmage-git-inspection-", projections == 1),
+        };
+        cardinality && unit_name_with_prefix(unit, prefix)
+    }
+}
+
+pub(crate) struct Launch {
+    pub owner: LaunchOwner,
+    pub projections: Vec<OwnedFd>,
+    pub unit: String,
+    pub deadline: Instant,
+    pub stdout_limit: usize,
+    pub stderr_limit: usize,
+    pub filter_pipe: Option<FilterPipe>,
+}
+
+// Separate from stdin: Bubblewrap consumes/closes its seccomp descriptor.
+// Keep this pipe's read end with the exact attempt until known cleanup.
+pub(crate) struct FilterPipe {
+    reader: PipeReader,
+    writer: PipeWriter,
+}
+
+impl FilterPipe {
+    pub(crate) fn new() -> Result<Self, LinuxSandboxError> {
+        let (reader, writer) = std::io::pipe().map_err(|_| failure())?;
+        Ok(Self { reader, writer })
+    }
+
+    pub(crate) fn read_descriptor(&self) -> RawFd {
+        self.reader.as_raw_fd()
+    }
+}
+
+enum PolicyWriter {
+    Stdin(ChildStdin),
+    Pipe(PipeWriter),
+}
+
+impl AsFd for PolicyWriter {
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        match self {
+            Self::Stdin(writer) => writer.as_fd(),
+            Self::Pipe(writer) => writer.as_fd(),
+        }
+    }
+}
+
+impl Write for PolicyWriter {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        match self {
+            Self::Stdin(writer) => writer.write(bytes),
+            Self::Pipe(writer) => writer.write(bytes),
+        }
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        match self {
+            Self::Stdin(writer) => writer.flush(),
+            Self::Pipe(writer) => writer.flush(),
+        }
+    }
+}
+
+pub(crate) struct CapturedStream {
+    pub retained: Vec<u8>,
+    pub sha256: [u8; 32],
+    pub total: usize,
+}
+
+pub(crate) struct SupervisedResult {
+    pub outcome: Result<OperationOutcome, LinuxSandboxError>,
+    pub status: Option<ExitStatus>,
+    pub stdout: CapturedStream,
+    pub stderr: CapturedStream,
+    pub resources: Option<agentmage_kernel_engine::command_runner::CommandResourceUsage>,
+    // EOF after forcibly killing a forwarding launcher is not complete output.
+    pub output_complete: bool,
+}
 
 const CONTROL_TIME: Duration = Duration::from_millis(500);
 const REAP_TIME: Duration = Duration::from_millis(500);
@@ -31,7 +141,7 @@ const ATOMIC_FILTER_BYTES: usize = 4096;
 // A poisoned or unresolved owner refuses subsequent admission; no detached reaper.
 static OWNED_ATTEMPT: Mutex<Option<Attempt>> = Mutex::new(None);
 
-pub(super) fn admission_snapshot() -> Result<(), LinuxSandboxError> {
+pub(crate) fn admission_snapshot() -> Result<(), LinuxSandboxError> {
     admission_snapshot_of(&OWNED_ATTEMPT)
 }
 
@@ -58,6 +168,7 @@ struct Capture<R> {
     reader: R,
     eof: bool,
     exceeded: bool,
+    failed: bool,
     limit: usize,
     retained: Vec<u8>,
     digest: Sha256,
@@ -74,6 +185,7 @@ impl<R: Read + AsFd> Capture<R> {
             reader,
             eof: false,
             exceeded: false,
+            failed: false,
             limit,
             retained: Vec::new(),
             digest: Sha256::new(),
@@ -82,7 +194,22 @@ impl<R: Read + AsFd> Capture<R> {
     }
 
     fn poll(&mut self) -> Result<(), LinuxSandboxError> {
-        if self.exceeded {
+        self.poll_with_overflow_policy(false)
+    }
+
+    // Only after the enclosing owner has initiated bounded termination. This
+    // method does not establish cleanup or successful output. It preserves full
+    // observed-stream accounting for command receipts while retaining the same
+    // byte ceiling and per-poll fairness; EOF must still be proved separately.
+    fn drain_after_termination(&mut self) -> Result<(), LinuxSandboxError> {
+        self.poll_with_overflow_policy(true)
+    }
+
+    fn poll_with_overflow_policy(&mut self, draining: bool) -> Result<(), LinuxSandboxError> {
+        if self.failed {
+            return Err(failure());
+        }
+        if self.exceeded && !draining {
             return Err(error(LinuxSandboxErrorKind::OutputLimitExceeded));
         }
         if self.eof {
@@ -96,18 +223,27 @@ impl<R: Read + AsFd> Capture<R> {
                     return Ok(());
                 }
                 Ok(count) => {
-                    self.total = self.total.checked_add(count).ok_or_else(failure)?;
+                    let Some(total) = self.total.checked_add(count) else {
+                        self.failed = true;
+                        return Err(failure());
+                    };
+                    self.total = total;
                     self.digest.update(&bytes[..count]);
                     let keep = count.min(self.limit.saturating_sub(self.retained.len()));
                     self.retained.extend_from_slice(&bytes[..keep]);
                     if self.total > self.limit {
                         self.exceeded = true;
-                        return Err(error(LinuxSandboxErrorKind::OutputLimitExceeded));
+                        if !draining {
+                            return Err(error(LinuxSandboxErrorKind::OutputLimitExceeded));
+                        }
                     }
                 }
                 Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => return Ok(()),
                 Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
-                Err(_) => return Err(failure()),
+                Err(_) => {
+                    self.failed = true;
+                    return Err(failure());
+                }
             }
         }
         Ok(())
@@ -340,37 +476,46 @@ fn same_running_generation(first: &Observation, second: &Observation) -> bool {
 }
 
 struct Attempt {
-    manifest: Arc<LinuxSandboxManifest>,
+    manifest: LaunchOwner,
     _projections: Vec<OwnedFd>,
     unit: String,
     child: Option<Child>,
     status: Option<ExitStatus>,
     stdout: Option<Capture<ChildStdout>>,
     stderr: Option<Capture<ChildStderr>>,
-    filter: Option<WithheldFilter<ChildStdin>>,
+    filter: Option<WithheldFilter<PolicyWriter>>,
+    filter_reader: Option<PipeReader>,
     control: Option<Control>,
     invocation: Option<String>,
     group: Option<OwnedGroup>,
     clean: bool,
+    launcher_killed: bool,
+    resources: resource_usage::Observation,
     #[cfg(test)]
     last_observation: Option<Vec<u8>>,
 }
 
 impl Attempt {
-    fn initialize(&mut self, limit: usize) -> Result<(), LinuxSandboxError> {
+    fn initialize(
+        &mut self,
+        stdout_limit: usize,
+        stderr_limit: usize,
+    ) -> Result<(), LinuxSandboxError> {
         let child = self.child.as_mut().ok_or_else(failure)?;
-        self.filter = Some(WithheldFilter {
-            writer: Some(child.stdin.take().ok_or_else(failure)?),
-            state: FilterState::Withheld,
-        });
+        if self.filter_reader.is_none() {
+            self.filter = Some(WithheldFilter {
+                writer: Some(PolicyWriter::Stdin(child.stdin.take().ok_or_else(failure)?)),
+                state: FilterState::Withheld,
+            });
+        }
         self.filter.as_ref().ok_or_else(failure)?.initialize()?;
         self.stdout = Some(Capture::new(
             child.stdout.take().ok_or_else(failure)?,
-            limit,
+            stdout_limit,
         )?);
         self.stderr = Some(Capture::new(
             child.stderr.take().ok_or_else(failure)?,
-            limit,
+            stderr_limit,
         )?);
         Ok(())
     }
@@ -396,10 +541,8 @@ impl Attempt {
         if Instant::now() >= deadline {
             return Ok(None);
         }
-        let artifact = &self.manifest.systemctl;
-        revalidate_launch_artifact(artifact)?;
         let runtime = format!("/run/user/{}", getuid().as_raw());
-        let mut command = Command::new(artifact.launch_path.as_ref().ok_or_else(failure)?);
+        let mut command = Command::new(self.manifest.control_path()?);
         command
             .env_clear()
             .env("XDG_RUNTIME_DIR", &runtime)
@@ -541,6 +684,10 @@ impl Attempt {
                 self.invocation = Some(observed.invocation.clone());
                 self.group = Some(group);
             }
+            if let Some(group) = &self.group {
+                self.resources
+                    .merge(resource_usage::sample(&group.directory));
+            }
             if self.invocation.is_some() {
                 if cancellation.is_cancelled()? {
                     return Ok(OperationOutcome::Cancelled);
@@ -613,18 +760,31 @@ impl Attempt {
             let _ = self.group.as_ref().ok_or_else(failure)?.kill_owned();
         }
         while Instant::now() < deadline {
+            // Bounded, fair drains prevent the forwarding launcher stalling on
+            // a full pipe. A read failure cannot establish complete output.
+            if let Some(stdout) = self.stdout.as_mut() {
+                let _ = stdout.drain_after_termination();
+            }
+            if let Some(stderr) = self.stderr.as_mut() {
+                let _ = stderr.drain_after_termination();
+            }
             self.reap()?;
             let observed = self.observe(deadline)?.ok_or_else(failure)?;
             if self.status.is_none()
                 && matches!(observed.stage, UnitStage::Absent | UnitStage::Terminal)
                 && self.group.as_ref().ok_or_else(failure)?.empty()?
+                && Instant::now() >= deadline - REAP_TIME
             {
                 // The exact worker is gone, but a stalled launcher is still ours.
                 // Kill/reap that direct child without claiming its EOF was cleanup.
+                self.launcher_killed = true;
                 let _ = self.child.as_mut().ok_or_else(failure)?.kill();
                 self.reap()?;
             }
-            if self.complete(&observed)? && self.control.is_none() {
+            if self.complete(&observed)?
+                && self.control.is_none()
+                && (self.streams_complete() || Instant::now() >= deadline - REAP_TIME)
+            {
                 self.clean = true;
                 return Ok(());
             }
@@ -633,10 +793,22 @@ impl Attempt {
         // Retain all ownership on unknown cleanup. Never block in Child::wait.
         Err(failure())
     }
+
+    fn streams_complete(&self) -> bool {
+        !self.launcher_killed
+            && self
+                .stdout
+                .as_ref()
+                .is_some_and(|stream| stream.eof && !stream.failed)
+            && self
+                .stderr
+                .as_ref()
+                .is_some_and(|stream| stream.eof && !stream.failed)
+    }
 }
 
 pub(super) fn run(
-    mut command: Command,
+    command: Command,
     manifest: Arc<LinuxSandboxManifest>,
     projections: Vec<OwnedFd>,
     unit: String,
@@ -644,9 +816,58 @@ pub(super) fn run(
     policy: &[u8],
     cancellation: &SandboxCancellation<'_>,
 ) -> Result<LinuxSandboxResult, LinuxSandboxError> {
-    if !unit_name(&unit)
-        || projections.is_empty()
-        || projections.len() > 8
+    let result = run_owned(
+        command,
+        Launch {
+            owner: LaunchOwner::Read(manifest),
+            projections,
+            unit,
+            deadline: Instant::now()
+                .checked_add(Duration::from_secs(u64::from(limits.runtime_seconds)))
+                .ok_or_else(failure)?,
+            stdout_limit: limits.output_bytes,
+            stderr_limit: limits.output_bytes,
+            filter_pipe: None,
+        },
+        policy,
+        cancellation,
+    )?;
+    let outcome = result.outcome?;
+    if !matches!(
+        outcome,
+        OperationOutcome::Cancelled | OperationOutcome::TimedOut
+    ) && !result.output_complete
+    {
+        return Err(failure());
+    }
+    Ok(LinuxSandboxResult {
+        outcome,
+        stdout_sha256: digest_bytes(&result.stdout.retained),
+        stdout: result.stdout.retained,
+        stderr_sha256: result.stderr.sha256,
+        stderr_bytes: result.stderr.total,
+    })
+}
+
+pub(crate) fn run_owned(
+    mut command: Command,
+    launch: Launch,
+    policy: &[u8],
+    cancellation: &SandboxCancellation<'_>,
+) -> Result<SupervisedResult, LinuxSandboxError> {
+    let Launch {
+        owner,
+        projections,
+        unit,
+        deadline,
+        stdout_limit,
+        stderr_limit,
+        filter_pipe,
+    } = launch;
+    if !owner.accepts(&unit, projections.len())
+        || (matches!(owner, LaunchOwner::Read(_)) != filter_pipe.is_none())
+        || !(1..=super::MAX_OUTPUT_BYTES).contains(&stdout_limit)
+        || !(1..=super::MAX_OUTPUT_BYTES).contains(&stderr_limit)
         || policy.is_empty()
         || policy.len() > ATOMIC_FILTER_BYTES
         || !policy.len().is_multiple_of(8)
@@ -657,32 +878,53 @@ pub(super) fn run(
     if slot.is_some() {
         return Err(failure());
     }
-    let deadline = Instant::now()
-        .checked_add(Duration::from_secs(u64::from(limits.runtime_seconds)))
-        .ok_or_else(failure)?;
     // Precancellation launches nothing and leaves the lane reusable.
-    if cancellation.is_cancelled()? {
-        return Ok(LinuxSandboxResult {
-            outcome: OperationOutcome::Cancelled,
-            stdout: Vec::new(),
-            stdout_sha256: digest_bytes(&[]),
-            stderr_sha256: digest_bytes(&[]),
-            stderr_bytes: 0,
+    let cancelled = cancellation.is_cancelled()?;
+    if cancelled || Instant::now() >= deadline {
+        let empty = || CapturedStream {
+            retained: Vec::new(),
+            sha256: digest_bytes(&[]),
+            total: 0,
+        };
+        return Ok(SupervisedResult {
+            outcome: Ok(if cancelled {
+                OperationOutcome::Cancelled
+            } else {
+                OperationOutcome::TimedOut
+            }),
+            status: None,
+            stdout: empty(),
+            stderr: empty(),
+            resources: None,
+            output_complete: true,
         });
     }
+    let (filter_reader, filter) = match filter_pipe {
+        Some(FilterPipe { reader, writer }) => (
+            Some(reader),
+            Some(WithheldFilter {
+                writer: Some(PolicyWriter::Pipe(writer)),
+                state: FilterState::Withheld,
+            }),
+        ),
+        None => (None, None),
+    };
     *slot = Some(Attempt {
-        manifest,
+        manifest: owner,
         _projections: projections,
         unit,
         child: None,
         status: None,
         stdout: None,
         stderr: None,
-        filter: None,
+        filter,
+        filter_reader,
         control: None,
         invocation: None,
         group: None,
         clean: false,
+        launcher_killed: false,
+        resources: resource_usage::Observation::default(),
         #[cfg(test)]
         last_observation: None,
     });
@@ -697,7 +939,7 @@ pub(super) fn run(
         }
     }
     let outcome = attempt
-        .initialize(limits.output_bytes)
+        .initialize(stdout_limit, stderr_limit)
         .and_then(|()| attempt.execute(policy, deadline, cancellation));
     #[cfg(test)]
     if !matches!(outcome, Ok(OperationOutcome::Succeeded)) {
@@ -728,23 +970,24 @@ pub(super) fn run(
     #[cfg(test)]
     eprintln!("native-owned-cleanup=verified unit={}", attempt.unit);
     let finished = slot.take().ok_or_else(failure)?;
-    let outcome = outcome?;
+    let output_complete = finished.streams_complete();
     let stdout = finished.stdout.ok_or_else(failure)?;
     let stderr = finished.stderr.ok_or_else(failure)?;
-    // Forced cancellation/timeout intentionally has no successful output artifact.
-    if !matches!(
+    Ok(SupervisedResult {
         outcome,
-        OperationOutcome::Cancelled | OperationOutcome::TimedOut
-    ) && (!stdout.eof || !stderr.eof)
-    {
-        return Err(failure());
-    }
-    Ok(LinuxSandboxResult {
-        outcome,
-        stdout_sha256: digest_bytes(&stdout.retained),
-        stdout: stdout.retained,
-        stderr_sha256: stderr.digest.finalize().into(),
-        stderr_bytes: stderr.total,
+        status: finished.status,
+        stdout: CapturedStream {
+            retained: stdout.retained,
+            sha256: stdout.digest.finalize().into(),
+            total: stdout.total,
+        },
+        stderr: CapturedStream {
+            retained: stderr.retained,
+            sha256: stderr.digest.finalize().into(),
+            total: stderr.total,
+        },
+        resources: finished.resources.finish(),
+        output_complete,
     })
 }
 
@@ -802,8 +1045,18 @@ fn decimal(value: &str, allow_zero: bool) -> Result<u32, UnitObservationError> {
 }
 
 fn unit_name(value: &str) -> bool {
+    [
+        "agentmage-worker-",
+        "agentmage-command-",
+        "agentmage-git-inspection-",
+    ]
+    .into_iter()
+    .any(|prefix| unit_name_with_prefix(value, prefix))
+}
+
+fn unit_name_with_prefix(value: &str, prefix: &str) -> bool {
     value
-        .strip_prefix("agentmage-worker-")
+        .strip_prefix(prefix)
         .and_then(|tail| tail.strip_suffix(".service"))
         .is_some_and(|nonce| {
             nonce.len() == 24
@@ -974,6 +1227,79 @@ mod tests {
                     "ControlGroup=/user.slice/user-1000.slice/user@1000.service/app.slice/{UNIT}\n"
                 ),
             )
+    }
+
+    #[test]
+    #[ignore = "requires verified native Linux launcher artifacts; does not launch any process"]
+    fn closed_owners_reject_cross_variant_names_and_projection_cardinalities() {
+        use agentmage_kernel_engine::command_runner::{
+            CommandBounds, CommandRegistry, CommandRisk, CommandSpec, CommandWorkingDirectory,
+        };
+        let command_spec = CommandSpec::seal(
+            "fixture.owner-shape",
+            "1.0.0",
+            "/usr/bin/printf",
+            super::super::hex_digest(&Sha256::digest(std::fs::read("/usr/bin/printf").unwrap())),
+            vec!["fixture".into()],
+            CommandWorkingDirectory::EmptyScratch,
+            std::collections::BTreeMap::new(),
+            CommandRisk::Low,
+            CommandBounds::new(5000, 1024, 1024, 64 * 1024 * 1024, 8, 100).unwrap(),
+        )
+        .unwrap();
+        let read = LaunchOwner::Read(Arc::new(
+            LinuxSandboxManifest::verify(
+                "/usr/bin/systemd-run",
+                "/usr/bin/bwrap",
+                "/usr/bin/cat",
+                &[],
+            )
+            .unwrap(),
+        ));
+        let command = LaunchOwner::Command(Arc::new(
+            crate::command_runner::LinuxCommandManifest::verify(
+                "/usr/bin/systemd-run",
+                "/usr/bin/systemctl",
+                "/usr/bin/bwrap",
+                &CommandRegistry::build(vec![command_spec]).unwrap(),
+            )
+            .unwrap(),
+        ));
+        let git = LaunchOwner::Git(Arc::new(
+            crate::repository_safety::LinuxRepositoryInspectionManifest::verify(
+                "/usr/bin/systemd-run",
+                "/usr/bin/systemctl",
+                "/usr/bin/bwrap",
+                "/usr/bin/git",
+            )
+            .unwrap(),
+        ));
+        let names = [
+            UNIT,
+            "agentmage-command-0123456789abcdef01234567.service",
+            "agentmage-git-inspection-0123456789abcdef01234567.service",
+        ];
+        for (index, owner) in [read, command, git].into_iter().enumerate() {
+            for (other, name) in names.iter().enumerate() {
+                for count in [0, 1, 2, 8, 9, usize::MAX] {
+                    let count_valid = match index {
+                        0 => (1..=8).contains(&count),
+                        1 => count <= 1,
+                        _ => count == 1,
+                    };
+                    assert_eq!(owner.accepts(name, count), index == other && count_valid);
+                }
+            }
+            for name in [
+                names[index].to_uppercase(),
+                format!("{}x", names[index]),
+                names[index].replace("0123456789abcdef01234567", "0123456789abcdef0123456"),
+                names[index].replace("0123456789abcdef01234567", "0123456789abcdef0123456g"),
+            ] {
+                assert!(!owner.accepts(&name, 1));
+            }
+            assert!(owner.control_path().unwrap().is_absolute());
+        }
     }
 
     #[test]
@@ -1237,6 +1563,99 @@ mod tests {
     }
 
     #[test]
+    fn pipe_failure_is_sticky_and_later_eof_cannot_prove_complete_output() {
+        struct ErrorThenEof(UnixStream, usize);
+        impl AsFd for ErrorThenEof {
+            fn as_fd(&self) -> BorrowedFd<'_> {
+                self.0.as_fd()
+            }
+        }
+        impl Read for ErrorThenEof {
+            fn read(&mut self, _bytes: &mut [u8]) -> std::io::Result<usize> {
+                self.1 += 1;
+                if self.1 == 1 {
+                    Err(ErrorKind::Other.into())
+                } else {
+                    Ok(0)
+                }
+            }
+        }
+        let (reader, _peer) = UnixStream::pair().unwrap();
+        let mut capture = Capture::new(ErrorThenEof(reader, 0), 4).unwrap();
+        assert!(capture.drain_after_termination().is_err());
+        assert!(capture.poll().is_err());
+        assert!(capture.drain_after_termination().is_err());
+        assert!(capture.failed);
+        assert!(!capture.eof);
+        assert_eq!(capture.reader.1, 1);
+    }
+
+    #[test]
+    fn stopped_output_drains_to_eof_without_relaxing_limit_or_hashing_only_prefix() {
+        let (reader, mut writer) = UnixStream::pair().unwrap();
+        let mut capture = Capture::new(reader, 4).unwrap();
+        writer.write_all(b"12345").unwrap();
+        assert_eq!(
+            capture.poll().unwrap_err().kind(),
+            LinuxSandboxErrorKind::OutputLimitExceeded
+        );
+        assert_eq!(capture.retained, b"1234");
+        assert_eq!(capture.total, 5);
+        assert!(!capture.eof);
+        writer.write_all(b"678").unwrap();
+        drop(writer);
+        capture.drain_after_termination().unwrap();
+        assert!(capture.eof && capture.exceeded);
+        assert_eq!(capture.retained, b"1234");
+        assert_eq!(capture.total, 8);
+        assert_eq!(
+            <[u8; 32]>::from(capture.digest.clone().finalize()),
+            digest_bytes(b"12345678")
+        );
+        assert_ne!(
+            <[u8; 32]>::from(capture.digest.clone().finalize()),
+            digest_bytes(&capture.retained)
+        );
+        // Draining never converts the original overflow into a successful read.
+        assert_eq!(
+            capture.poll().unwrap_err().kind(),
+            LinuxSandboxErrorKind::OutputLimitExceeded
+        );
+        capture.drain_after_termination().unwrap();
+        assert_eq!(capture.total, 8);
+    }
+
+    #[test]
+    fn post_termination_drain_without_eof_is_bounded_and_never_complete() {
+        for interrupted in [false, true] {
+            let (descriptor, _peer) = UnixStream::pair().unwrap();
+            let calls = Arc::new(AtomicUsize::new(0));
+            let mut capture = Capture::new(
+                Endless {
+                    descriptor,
+                    calls: calls.clone(),
+                    interrupted,
+                },
+                4,
+            )
+            .unwrap();
+            capture.drain_after_termination().unwrap();
+            assert_eq!(calls.load(Ordering::SeqCst), PIPE_POLLS);
+            assert!(!capture.eof);
+            assert_eq!(capture.exceeded, !interrupted);
+            assert_eq!(capture.retained.len(), if interrupted { 0 } else { 4 });
+            assert_eq!(
+                capture.total,
+                if interrupted {
+                    0
+                } else {
+                    PIPE_POLLS * PIPE_CHUNK
+                }
+            );
+        }
+    }
+
+    #[test]
     fn cleanup_requires_complete_closed_cgroup_population_observation() {
         assert!(parse_group_empty(b"populated 0\nfrozen 0\n").unwrap());
         assert!(parse_group_empty(b"frozen 1\npopulated 0\n").unwrap());
@@ -1283,6 +1702,56 @@ mod tests {
             );
             assert!(!capture.eof);
         }
+    }
+
+    #[test]
+    fn separate_filter_pipe_withholds_bytes_and_eof_until_atomic_release() {
+        use rustix::io::{FdFlags, fcntl_getfd};
+
+        let pipe = FilterPipe::new().unwrap();
+        assert_eq!(pipe.read_descriptor(), pipe.reader.as_raw_fd());
+        assert!(
+            fcntl_getfd(&pipe.reader)
+                .unwrap()
+                .contains(FdFlags::CLOEXEC)
+        );
+        assert!(
+            fcntl_getfd(&pipe.writer)
+                .unwrap()
+                .contains(FdFlags::CLOEXEC)
+        );
+        let FilterPipe { reader, writer } = pipe;
+        let mut capture = Capture::new(reader, ATOMIC_FILTER_BYTES).unwrap();
+        let mut filter = WithheldFilter {
+            writer: Some(PolicyWriter::Pipe(writer)),
+            state: FilterState::Withheld,
+        };
+        filter.initialize().unwrap();
+        for _ in 0..3 {
+            capture.poll().unwrap();
+            assert_eq!(capture.total, 0);
+            assert!(!capture.eof, "withholding must neither transmit nor close");
+        }
+        let policy = [0x5a; ATOMIC_FILTER_BYTES];
+        assert!(filter.release(&policy).unwrap());
+        assert!(filter.writer.is_none());
+        capture.poll().unwrap();
+        assert!(capture.eof);
+        assert_eq!(capture.retained, policy);
+        assert_eq!(capture.total, policy.len());
+        assert_eq!(
+            <[u8; 32]>::from(capture.digest.clone().finalize()),
+            digest_bytes(&policy)
+        );
+        assert!(filter.release(&policy).unwrap());
+        capture.poll().unwrap();
+        assert_eq!(capture.total, policy.len(), "release is not replayed");
+        // The read descriptor is still held after writer EOF, as it is in Attempt.
+        assert!(
+            fcntl_getfd(&capture.reader)
+                .unwrap()
+                .contains(FdFlags::CLOEXEC)
+        );
     }
 
     #[test]

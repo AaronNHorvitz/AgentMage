@@ -46,6 +46,13 @@ class LinuxSandboxEvidenceTests(unittest.TestCase):
             evidence.SANDBOX_LIVE_TESTS,
         )
 
+    def test_current_report_must_bind_the_complete_supervisor_child(self) -> None:
+        child = "platforms/linux/src/sandbox_supervision/resource_usage.rs"
+        self.assertIn(child, evidence.SOURCE_PATHS)
+        report = self.valid_report()
+        report["sources"] = [item for item in report["sources"] if item["path"] != child]
+        self.assertTrue(evidence.validate_report(report))
+
     def valid_report(self) -> dict:
         return {
             "schema_version": 1,

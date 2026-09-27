@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import copy
+import json
+from pathlib import Path
+import tempfile
 import unittest
 from unittest.mock import patch
 
 from scripts import sprint_16_evidence as evidence
+from tests import test_sprint_16_linux_worker_evidence as worker_tests
 
 
 def commands() -> list[dict[str, object]]:
@@ -32,6 +36,62 @@ def report() -> dict[str, object]:
 
 
 class Sprint16EvidenceTests(unittest.TestCase):
+    def test_current_report_requires_exact_artifact_and_summary(self) -> None:
+        native = worker_tests.Sprint16LinuxWorkerEvidenceTests.current_report()
+        encoded = json.dumps(native).encode()
+        value = report()
+        value["implemented_contracts"]["installed_linux_worker_operation_matrix"] = evidence.installed_worker_summary(native, encoded)
+        with tempfile.TemporaryDirectory(prefix="agentmage-local-evidence-") as directory:
+            artifact = Path(directory) / "installed.json"
+            artifact.write_bytes(encoded)
+            with (
+                patch.object(evidence, "INSTALLED_WORKER_OUTPUT", artifact),
+                patch.object(evidence, "git_file", return_value=b"source"),
+                patch.object(evidence.worker_evidence, "source_records", return_value=native["sources"]),
+                patch.object(evidence.worker_evidence, "complete_source_closure", return_value=native["complete_source_closure"]),
+            ):
+                self.assertEqual(evidence.validate_report(value), [])
+                changed = copy.deepcopy(value)
+                changed["implemented_contracts"]["installed_linux_worker_operation_matrix"]["artifact_sha256"] = "f" * 64
+                self.assertIn("installed worker artifact identity or summary drift", evidence.validate_report(changed))
+                changed = copy.deepcopy(value)
+                changed["source_sha256"].pop(next(iter(changed["source_sha256"])))
+                self.assertIn("source inventory drift", evidence.validate_report(changed))
+                with patch.object(evidence, "git_file", side_effect=ValueError("missing commit")):
+                    self.assertTrue(evidence.validate_report(value))
+                artifact.write_bytes(b"not json")
+                self.assertTrue(evidence.validate_report(value))
+                artifact.write_bytes(json.dumps(dict(native, complete_ten_tool_matrix=False)).encode())
+                self.assertTrue(evidence.validate_report(value))
+
+    def test_writer_refuses_stale_native_evidence_before_tests_or_overwrite(self) -> None:
+        with (
+            patch("sys.argv", ["sprint_16_evidence.py", "--write"]),
+            patch.object(evidence.subprocess, "run") as revision,
+            patch.object(evidence, "load_installed_worker_summary", side_effect=ValueError("historical")),
+            patch.object(evidence, "run_commands") as run,
+        ):
+            revision.return_value.stdout = "b" * 40
+            self.assertEqual(evidence.main(), 1)
+            run.assert_not_called()
+
+    def test_current_report_cannot_borrow_an_absent_installed_worker_artifact(self) -> None:
+        # Valid local-source bytes and syntactically valid installed-summary
+        # claims do not prove that their native source/evidence artifact exists.
+        # This is a deterministic developer-gate test, not native qualification.
+        value = report()
+        with tempfile.TemporaryDirectory(prefix="agentmage-sprint16-freshness-") as directory:
+            missing = Path(directory) / "absent-installed-worker.json"
+            self.assertFalse(missing.exists())
+            with (
+                patch.object(evidence, "INSTALLED_WORKER_OUTPUT", missing),
+                patch.object(evidence, "git_file", return_value=b"source"),
+            ):
+                self.assertTrue(
+                    evidence.validate_report(value, verify_current=True),
+                    "current local/platform claims require their exact installed evidence",
+                )
+
     def test_local_contracts_pass_without_platform_or_release_overclaim(self) -> None:
         value = report()
         self.assertEqual(evidence.validate_report(value, verify_current=False), [])

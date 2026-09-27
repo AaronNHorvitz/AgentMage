@@ -21,19 +21,40 @@ class EffectBoundaryTests(unittest.TestCase):
         failures = validate_effect_boundary(overrides={relative: source})
         self.assertIn("raw Linux sandbox execution is public", failures)
 
-    def test_sandbox_supervisor_is_not_a_public_or_crate_wide_process_api(self) -> None:
+    def test_sandbox_supervisor_has_only_the_closed_internal_interface(self) -> None:
         path = Path("platforms/linux/src/sandbox_supervision.rs")
         source = self.source(str(path))
-        for entry in ("run", "admission_snapshot"):
-            for visibility in ("pub", "pub(crate)"):
-                changed = source.replace(f"pub(super) fn {entry}(", f"{visibility} fn {entry}(", 1)
+        for entry, original_visibility in (("run", "pub(super)"), ("admission_snapshot", "pub(crate)"), ("run_owned", "pub(crate)")):
+            for visibility in ("pub", "pub(in crate)"):
+                changed = source.replace(f"{original_visibility} fn {entry}(", f"{visibility} fn {entry}(", 1)
                 self.assertNotEqual(source, changed)
-                self.assertIn("Linux sandbox supervisor exceeds its private parent-only boundary", validate_effect_boundary(overrides={path: changed}))
+                self.assertIn("Linux sandbox supervisor exceeds its closed internal boundary", validate_effect_boundary(overrides={path: changed}))
         invented = "pub(super) fn unrelated_process_entry() {}\n" + source
-        self.assertIn("Linux sandbox supervisor exceeds its private parent-only boundary", validate_effect_boundary(overrides={path: invented}))
+        self.assertIn("Linux sandbox supervisor exceeds its closed internal boundary", validate_effect_boundary(overrides={path: invented}))
         parent = Path("platforms/linux/src/sandbox.rs")
-        changed = self.source(str(parent)).replace("mod supervision;", "pub mod supervision;", 1)
-        self.assertIn("Linux sandbox supervisor module must remain private", validate_effect_boundary(overrides={parent: changed}))
+        changed = self.source(str(parent)).replace("pub(crate) mod supervision;", "pub mod supervision;", 1)
+        self.assertIn("Linux sandbox supervisor module must remain crate-internal", validate_effect_boundary(overrides={parent: changed}))
+
+    def test_supervisor_owners_consumers_and_accounting_are_closed(self) -> None:
+        path = Path("platforms/linux/src/sandbox_supervision.rs")
+        original = self.source(str(path))
+        for changed in (original.replace("pub owner: LaunchOwner,", "pub owner: String,", 1),
+                        "pub use crate::unrelated;\n" + original):
+            self.assertIn("Linux sandbox supervisor exceeds its closed internal boundary", validate_effect_boundary(overrides={path: changed}))
+        changed = original.replace("Read(Arc<LinuxSandboxManifest>),", "Read(Arc<LinuxSandboxManifest>),\n    Arbitrary(String),", 1)
+        self.assertIn("Linux sandbox supervisor owner set is not closed", validate_effect_boundary(overrides={path: changed}))
+        changed = original.replace("static OWNED_ATTEMPT:", "static SECOND_OWNER:", 1)
+        self.assertIn("Linux sandbox supervisor must retain its single attempt owner", validate_effect_boundary(overrides={path: changed}))
+        caller = Path("platforms/linux/src/lib.rs")
+        changed = "pub use sandbox::supervision::run_owned;\n" + self.source(str(caller))
+        self.assertIn(f"unregistered native supervisor consumer: {caller}", validate_effect_boundary(overrides={caller: changed}))
+        helper = Path("platforms/linux/src/sandbox_supervision/resource_usage.rs")
+        source = self.source(str(helper))
+        for changed in (source.replace("pub(super) fn sample", "pub(crate) fn sample", 1),
+                        "pub(super) fn launch() {}\n" + source):
+            self.assertIn("Linux sandbox accounting exceeds its closed internal boundary", validate_effect_boundary(overrides={helper: changed}))
+        changed = "fn launch() { Command::new(\"unused\"); }\n" + source
+        self.assertIn("Linux sandbox accounting cannot own processes or sockets", validate_effect_boundary(overrides={helper: changed}))
 
     def test_sandbox_supervision_cannot_regain_unbounded_waits(self) -> None:
         for path in (Path("platforms/linux/src/sandbox.rs"), Path("platforms/linux/src/sandbox_supervision.rs")):
