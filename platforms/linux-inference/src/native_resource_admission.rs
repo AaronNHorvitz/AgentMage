@@ -202,28 +202,68 @@ fn available_ram(text: &str) -> Result<u64, ModelRuntimeFailure> {
 }
 
 fn cgroup_path(text: &str) -> Result<String, ModelRuntimeFailure> {
-    let lines = text.lines().collect::<Vec<_>>();
-    if lines.len() != 1 {
-        return Err(failure("scope-unavailable"));
-    }
-    let path = lines[0]
-        .strip_prefix("0::")
-        .ok_or_else(|| failure("scope-unavailable"))?;
-    if path == "/"
-        || !path.starts_with('/')
-        || path.contains('\0')
-        || path
-            .split('/')
-            .skip(1)
-            .any(|part| part.is_empty() || part == "." || part == "..")
-        || Path::new(path)
-            .components()
-            .skip(1)
-            .any(|part| !matches!(part, Component::Normal(_)))
+    // A hybrid host may also list legacy hierarchies (for example net_cls).
+    // Only the unique 0:: entry identifies the v2 CPU/memory scope. Never use a
+    // legacy path as a fallback or infer resource limits from its presence.
+    if text.len() > 4096
+        || text
+            .bytes()
+            .any(|byte| byte.is_ascii_control() && byte != b'\n')
     {
         return Err(failure("scope-unavailable"));
     }
-    Ok(path.into())
+    let mut unified = None;
+    let mut hierarchies = std::collections::BTreeSet::new();
+    let mut controllers = std::collections::BTreeSet::new();
+    for line in text.lines() {
+        let mut fields = line.splitn(3, ':');
+        let hierarchy = fields.next().unwrap_or_default();
+        let names = fields.next().ok_or_else(|| failure("scope-unavailable"))?;
+        let path = fields.next().ok_or_else(|| failure("scope-unavailable"))?;
+        if hierarchy.is_empty()
+            || !hierarchy.bytes().all(|byte| byte.is_ascii_digit())
+            || hierarchy.len() > 1 && hierarchy.starts_with('0')
+            || hierarchy.parse::<u32>().is_err()
+            || !hierarchies.insert(hierarchy)
+            || !valid_cgroup_path(path)
+        {
+            return Err(failure("scope-unavailable"));
+        }
+        if hierarchy == "0" {
+            if !names.is_empty() || path == "/" || unified.replace(path).is_some() {
+                return Err(failure("scope-unavailable"));
+            }
+        } else {
+            for name in names.split(',') {
+                let label = name.strip_prefix("name=").unwrap_or(name);
+                if label.is_empty()
+                    || !label.bytes().all(|byte| {
+                        byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-' | b'.')
+                    })
+                    || !controllers.insert(name)
+                {
+                    return Err(failure("scope-unavailable"));
+                }
+            }
+        }
+    }
+    unified
+        .map(str::to_owned)
+        .ok_or_else(|| failure("scope-unavailable"))
+}
+
+fn valid_cgroup_path(path: &str) -> bool {
+    path == "/"
+        || (path.starts_with('/')
+            && !path.ends_with(" (deleted)")
+            && !path
+                .split('/')
+                .skip(1)
+                .any(|part| part.is_empty() || part == "." || part == "..")
+            && !Path::new(path)
+                .components()
+                .skip(1)
+                .any(|part| !matches!(part, Component::Normal(_))))
 }
 
 fn cpu_max(text: &str) -> Result<(u64, u64), ModelRuntimeFailure> {
@@ -447,6 +487,63 @@ mod tests {
                 .is_err()
             );
         }
+    }
+
+    #[test]
+    fn hybrid_membership_selects_the_unique_unified_resource_scope() {
+        // Retained native campaign14 refused before model launch on this shape.
+        // The legacy network classifier is not the CPU/memory resource scope.
+        assert_eq!(
+            cgroup_path("1:net_cls:/\n0::/user.slice/own.scope\n").unwrap(),
+            "/user.slice/own.scope"
+        );
+        assert_eq!(
+            cgroup_path("0::/user.slice/own.scope\n1:net_cls,net_prio:/\n2:name=systemd:/legacy\n")
+                .unwrap(),
+            "/user.slice/own.scope"
+        );
+    }
+
+    #[test]
+    fn hybrid_membership_never_substitutes_legacy_or_ambiguous_scopes() {
+        for text in [
+            "1:net_cls:/\n",
+            "1:net_cls:/\n0::/\n",
+            "1:net_cls:/\n0::/own\n0::/other\n",
+            "1:net_cls:/\n0::/own\n0::/own\n",
+            "1:net_cls:/\n0:memory:/own\n",
+            "1:net_cls:/\n00::/own\n",
+            "1:net_cls:/\n0::/own/../escape\n",
+            "1:net_cls:/\n0::/own (deleted)\n",
+            "1:net_cls:/\n0::/own//alias\n",
+            "1:net_cls:/\n0::/own\0hidden\n",
+            "1:net_cls:/\n0::relative\n",
+            "junk\n0::/own\n",
+            "1::/\n0::/own\n",
+            "1:net_cls,:/\n0::/own\n",
+            "1:name=:/\n0::/own\n",
+            "1:net_cls:/\n1:net_prio:/\n0::/own\n",
+            "1:net_cls:/\n2:net_cls:/\n0::/own\n",
+            "-1:net_cls:/\n0::/own\n",
+            "4294967296:net_cls:/\n0::/own\n",
+            "1:net_cls:relative\n0::/own\n",
+            "1:net_cls:/\n\n0::/own\n",
+            "1:net_cls:/\r\n0::/own\n",
+        ] {
+            assert!(cgroup_path(text).is_err(), "accepted {text:?}");
+        }
+        assert!(cgroup_path(&format!("0::/{}", "x".repeat(4096))).is_err());
+    }
+
+    #[test]
+    #[ignore = "native CPU-only scope diagnostic; requires the owner's exact capped scope"]
+    fn native_scope_preflight_keeps_resource_limits_without_inference() {
+        let policy = NativeDevelopmentResourcePolicy::from_preparation_manifest(include_bytes!(
+            "../../../model-profiles/development/coding-model-lab.json"
+        ))
+        .unwrap();
+        // No GPU observer, model, lease, network request or worker is launched.
+        policy.verify_scope_before_manifest().unwrap();
     }
 
     #[test]

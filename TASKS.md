@@ -40,6 +40,11 @@ ordering correction for AMR-01/AMR-02 prerequisites. Command/Git/validation live
 cancellation, crash-safe worker ownership, connected research and new-source model
 qualification remain open. Neither record closes a package or acceptance gate below.
 
+The [hybrid resource-admission correction](docs/verification/native-hybrid-resource-admission-2026-09-27.md)
+retains a new pre-inference Muse refusal, its reproduced cgroup-parser defect and
+bounded verification. New-source model qualification and the correction work unit's
+single evidence/SBOM pass remain open; historical reports are not current acceptance.
+
 | Status | Row | Dependencies | Bounded implementation and verification |
 | --- | --- | --- | --- |
 | [ ] | AMR-01.1 | Prior coding source and retained campaign | Reconcile exact source/binary/model identities, current doctor behavior and all changed planning/privacy evidence bindings; preserve original receipts and distinguish freshness from historical validity. |

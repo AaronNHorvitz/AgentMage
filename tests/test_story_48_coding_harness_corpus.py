@@ -120,7 +120,12 @@ class Story48CodingHarnessCorpusTests(unittest.TestCase):
                 if prerequisite is None:
                     self.assertIsInstance(evidence, str)
                     self.assertRegex(evidence, r"^[a-z][a-z0-9_]{2,255}$")
-                    self.assertRegex(rust_sources, rf"\bfn\s+{re.escape(evidence)}\s*\(")
+                    # Retain the exact function-presence assertion without dumping
+                    # every repository source file when one reference is stale.
+                    self.assertIsNotNone(
+                        re.search(rf"\bfn\s+{re.escape(evidence)}\s*\(", rust_sources),
+                        f"{group['id']}/{case['id']}: missing Rust test {evidence}",
+                    )
                 else:
                     blocked.append((group["id"], case["id"], prerequisite, evidence))
         self.assertEqual(

@@ -38,7 +38,7 @@
         {
           "id": "failed-test-before-revision",
           "expected": "truthful_failure",
-          "evidence_test": "s_048_mvp_e2e_failed_validation_is_never_reported_as_success",
+          "evidence_test": "s_048_mvp_e2e_failed_validation_requires_a_repair_before_success",
           "prerequisite": null
         },
         {
@@ -73,7 +73,7 @@
         {
           "id": "workspace",
           "expected": "denied_without_effect",
-          "evidence_test": "story_48_2_projection_binds_map_worktree_commit_and_workspace",
+          "evidence_test": "story_48_2_projection_binds_complete_map_commit_and_workspace",
           "prerequisite": null
         },
         {
@@ -216,7 +216,7 @@
         {
           "id": "failed-validation-forgery",
           "expected": "truthful_non_success",
-          "evidence_test": "s_048_mvp_e2e_failed_validation_is_never_reported_as_success",
+          "evidence_test": "s_048_mvp_e2e_failed_validation_requires_a_repair_before_success",
           "prerequisite": null
         }
       ]
