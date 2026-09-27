@@ -78,11 +78,10 @@ not promote either accepted plan to an implementation claim.
 
 ## Uncompleted acceptance
 
-At the source checkpoint, the one-time full SBOM and affected evidence regeneration
-are queued for the shared build reservation. The source is frozen and its manifest
-matches. Six changed Markdown files passed targeted lint. This checkpoint does not
-claim that inherited evidence has been renewed; the batch continuation must retain
-its executed results and freshness dispositions separately.
+The source checkpoint is `50f0dbb9728a68657c404f0f00cd53feef5e192a`. The actual
+rebuilt CLI/host recheck at that source again exited 5 before tools, with an empty
+event stream and a clean fixture. Its binary identities and invocation receipt are
+retained in the component manifest. No source changed during evidence renewal.
 
 The actual coding CLI/host launch remains separately documented in the
 [restart reconciliation](lane-reconciliation-2026-09-27.md) and
@@ -95,3 +94,35 @@ campaign, manual user test, independent acceptance or release is claimed here.
 Native adversarial acceptance for the current worker, canonical report publication
 and consumption, configured provider composition, research-to-patch execution and
 their independent gates remain open. No task checkbox or production status changes.
+
+## Batch evidence renewal
+
+The reserved core driver exited zero after exactly one full SBOM write. It passed
+547-document lint, runtime schema checks, 186 Python regressions and the affected
+architecture, contract, component, configuration and security-map builders. The
+reserved storage continuation exited zero after executing its migration, lifecycle,
+atomicity, crash, resume, security and local acceptance checks, plus 82 builder
+regressions. Counts overlap other checks and are not a unique-case total. Exact
+driver log identities are in the component manifest.
+
+The publication scan caught one private repository path in a generated Cargo
+transcript. Its complete original is retained privately; the public transcript
+replaces only that exact root with `<repo>`. Reverse substitution verified that
+every other byte is unchanged. The manifest records both digests and the single
+replacement. The transcript validator and dependent whole-file bindings were
+renewed, with 20 targeted regressions passing. No result, error, input set or gate
+was removed. The SBOM was not rewritten.
+
+Inspection found unchanged acceptance, limitation and platform-status fields.
+The builders retain fixed historical `generated_on` values; this renewal's actual
+execution is identified by the source and log records here. The precommit direct
+inventory examined 751 JSON artifacts and 704 named whole-file bindings to changed
+inputs: 105 current, three newly stale and 596 previously stale or historical.
+It excludes transitive, unnamed and 1,602 line-span bindings. This is not a global
+freshness claim. Historical native/model/platform records retain their original
+pins and are not current acceptance of this increment.
+
+The three newly stale bindings are in the Story 11.2 automated gate. Its immutable
+review pin must advance to the commit containing these renewed evidence inputs,
+then its gate and tests must run under AGENTS section 7. That routine automation
+does not provide independent model review or satisfy a human-only gate.

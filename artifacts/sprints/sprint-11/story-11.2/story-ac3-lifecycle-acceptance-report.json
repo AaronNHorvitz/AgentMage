@@ -63,9 +63,9 @@
   ],
   "retained_evidence": [
     {
-      "byte_length": 465603,
+      "byte_length": 478326,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "4d4a795347f49eb879f184a10eabdb896d89110dba423cef1b7057e94c07c08b"
+      "sha256": "31b0edc05b30a48a503026d0d412b15564bce7ce38acf4ba7cf4dfc1207d8ee7"
     },
     {
       "byte_length": 69345,
@@ -73,34 +73,34 @@
       "sha256": "b34c1c3b248cd91aef81c955e06cc49b2793bdf8816c6b34ef722eee28955b31"
     },
     {
-      "byte_length": 175751,
+      "byte_length": 175838,
       "path": "kernel/engine/src/runtime_artifact.rs",
-      "sha256": "63c953247a8f9e0af2104b1a93021e40707cabe84eb05a3e8f8400216ae5edeb"
+      "sha256": "d286f3056da741cdbc9383297d2749e9967223702a6baafa09b322edbe6d6410"
     },
     {
       "byte_length": 3953,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-report.json",
-      "sha256": "a61760362b859cccab85afe192e17aa23511cd0bca0e8a487f7e8a3eabe7792f"
+      "sha256": "a8745a4a5c6eafb1ea1b426c2e5d031879e4c550772a91ca919aac01e40d7b03"
     },
     {
       "byte_length": 31234,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-results.log",
-      "sha256": "5eca82416de8f8f97edfc56b900b4fe0c75a92d8129d12c07e253af0687e1cb2"
+      "sha256": "44e861aeac9599788a7ac1de277d77afe03e26574623119325d9025a47135b8c"
     },
     {
-      "byte_length": 4457,
+      "byte_length": 5238,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-report.json",
-      "sha256": "e3ebfb6e63c92e540d8a4bfaf5e159478f7f547c050d13a71df7cfe79bd5e844"
+      "sha256": "722d8bead9b56fe188b19fe8cf6574ede738da99c6accc583d9f4ed55591c5c0"
     },
     {
       "byte_length": 18014,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-results.log",
-      "sha256": "dc1704274df69907d6ae5632e38bd74d57d10fb77b56363d0d9549e00ecccf14"
+      "sha256": "0c6f0ebe042b24f5e2fe9b7092fd9b01160c97d64dce42561852efbd82d59c11"
     },
     {
       "byte_length": 6455,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
-      "sha256": "4de5ce845119b8c74082176d4f2c8843caa139da56c607a231564685bc87e8d9"
+      "sha256": "bc25a0d85a805380253459b317a8dfd084f17ad0af29e9b56b4ac8555edf3a54"
     },
     {
       "byte_length": 455,

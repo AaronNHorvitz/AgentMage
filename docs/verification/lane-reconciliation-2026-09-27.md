@@ -32,6 +32,21 @@ and `CONNECTED_REMAINDER_COMPLETE` marker are absent. The recorded
 `CONNECTED_REMAINDER_EXIT=0` followed by termination does not establish acceptance.
 No aggregate report has been reconstructed or represented as an original receipt.
 
+All 21 retained case results identify the scripted model and the same three initial
+and final binary identities. Their implementation records agree on base
+`09c41852c7f9275bdfc2177bbde9bc6599a2b758`, tracked diff, untracked fixture and
+wrapper identity. Reconstructing the two tracked native-fixture changes from commit
+`3e6a0fdb` exactly reproduces their recorded diff digest
+`2242801820591f08fb86d153bf11c47404f4e696eff750927feb9e55277c8002`.
+The subsequently committed fixture matches the recorded untracked-file digest
+`e929966a4f2c0fc15468500616137c11200d947603712ca8e568445f7e1dab8e`.
+The wrapper digest matches the initial restart source. This reconciles the retained
+identities; it does not supply the missing last case, aggregate acceptance or a
+reproducible-build claim.
+The case `result.json` files are invocation receipts, not the acceptance-check
+records. The acceptance driver keeps those checks in memory until it writes the
+final aggregate, so 21 retained invocations must not be reported as 21 passing cases.
+
 ## Current lane observations
 
 The pinned dependency cache initially lacked `hkdf`, so the first offline research
@@ -45,6 +60,13 @@ tools. The native Git trust boundary requires root-owned executable/path objects
 the lane presents those objects with an unmapped ownership identity. Separately,
 the user-systemd bus is unavailable. Neither requirement was disabled or replaced.
 The source fixture stayed clean. No live-model process was launched.
+
+The rebuilt CLI/host was rechecked at `50f0dbb9728a68657c404f0f00cd53feef5e192a`
+with only the reconciliation documentation changed. It again exited 5 before tools,
+with an empty event stream, unchanged invocation binary hashes and a clean disposable
+fixture. The [component manifest](research-report-component-2026-09-27.json) retains
+its exact binary and result identities. This is a reproduced prerequisite refusal,
+not a successful edit/test/repair or denial/cancellation workflow.
 
 The developer doctor previously reported confinement available based only on four
 files existing. Its corrected diagnostic checks native executable/path prerequisites

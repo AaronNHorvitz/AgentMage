@@ -213,5 +213,91 @@
       "exit_code": 101,
       "disposition": "Engine and worker tests passed; host exhaustive error match was incomplete."
     }
+  ],
+  "actual_cli_recheck": {
+    "source_commit": "50f0dbb9728a68657c404f0f00cd53feef5e192a",
+    "source_changes_at_launch": "documentation-only reconciliation update",
+    "model": "scripted",
+    "scenario": "failed-test-repair",
+    "exit_code": 5,
+    "binary_identity_unchanged": true,
+    "result_sha256": "1a1f8a4de42c8075e2969e6e94930588f97be76022d4748e13a956eaf8515f14",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "def96c0d9cee8753420ea28a16fd4b8abd1f25270bd8b251383d228ea433ff3f",
+    "binaries": [
+      {
+        "name": "agentmage",
+        "bytes": 280305776,
+        "sha256": "12635580450f5c511c0cbf5a921dade382a854f34db7fdd529d9eccdb68f62de"
+      },
+      {
+        "name": "agentmage-host",
+        "bytes": 326905496,
+        "sha256": "6d58897a2e4bbd4080bb6d32a24b693fee63ab55ec98d4fbbff427e6b77bad55"
+      },
+      {
+        "name": "agentmage-read-only-worker",
+        "bytes": 13798352,
+        "sha256": "04e87c0925acbc25dbf1f8de82ce37fa6811d257c43a80f00844cc89a3275e7c"
+      }
+    ],
+    "disposition": "native platform prerequisite refusal before tools; empty event stream; fixture remained clean; not successful coding workflow"
+  },
+  "evidence_renewal": {
+    "source_commit": "50f0dbb9728a68657c404f0f00cd53feef5e192a",
+    "sbom_write_count": 1,
+    "core": {
+      "exit_code": 0,
+      "log_name": "research-report-evidence-20260927.log",
+      "log_sha256": "91d8817bd7dc082a9331e0614124100b3f90683b55e7b977f82a7376d731706b",
+      "full_markdown_file_count": 547,
+      "python_regression_count": 186,
+      "status": "core-builders-and-their-checks-passed"
+    },
+    "storage_and_resume": {
+      "status": "component-security-and-local-acceptance-builders-passed",
+      "exit_code": 0,
+      "log_name": "research-report-storage-evidence-20260927.log",
+      "log_sha256": "8317461aa675a3d737888c951d7a749a0a4a0291ac7f9f04dc1b5d1466a66ddb",
+      "builder_regression_count": 82
+    },
+    "freshness_scope": "Direct named whole-file bindings to changed inputs; no transitive/global acceptance claim.",
+    "redaction_checks": {
+      "exit_code": 0,
+      "log_name": "research-report-redaction-checks-20260927.log",
+      "log_sha256": "cf691b2a32d43c484e19b04c8f4fed6463144269c498d5489885742b0d7ff92c",
+      "builder_regression_count": 20,
+      "scope": "Validate redacted transcript, refresh its storage security and local AC1/AC3 dependent bindings; no Rust or native result regenerated."
+    },
+    "precommit_direct_inventory": {
+      "json_files_parsed": 751,
+      "binding_count": 704,
+      "dispositions": {
+        "current-direct-binding": 105,
+        "newly-stale": 3,
+        "previously-stale-or-historical": 596
+      },
+      "excluded_line_span_binding_count": 1602,
+      "newly_stale_artifacts": [
+        "artifacts/sprints/sprint-11/story-11.2/story-gate-report.json"
+      ]
+    },
+    "automated_story_review": "Story 11.2 requires the evidence commit before routine reviewed-commit/tree advancement; not human or model independent acceptance.",
+    "final_checks": {
+      "exit_code": 0,
+      "log_name": "research-report-final-checks-20260927.log",
+      "log_sha256": "c0bae1140f0a464c539692e61824da926dbf78bc1da10f0c036e3b2aa3c8bbbf",
+      "scope": "Full Markdown lint, all renewed artifact validators, status and architecture validators, unchanged source hashes and whitespace checks; Story 11.2 pin advancement follows the evidence commit."
+    }
+  },
+  "transcript_redactions": [
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-results.log",
+      "original_private_log_name": "storage-downgrade-refusal-unredacted-20260927.log",
+      "original_private_sha256": "6b05316d72d8ac6cc29cd96757fab896e545df2dde204ec9a9824aae7de0db49",
+      "published_sha256": "770691b11d99e4ac5c55021adc83f94682a35ebeb66b30efc4e2dbc0d0eb273e",
+      "replacement_count": 1,
+      "transformation": "Replace exact private repository root with <repo>; all other bytes unchanged."
+    }
   ]
 }

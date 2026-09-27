@@ -39,7 +39,7 @@
     {
       "byte_length": 4865,
       "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-results.log",
-      "sha256": "3ece93c62e4413c5927d3fd2c81b245068ddc31a05b86d087c40c887e33bd2f9"
+      "sha256": "1dc7adacec75b89ba1893adf3a99893f37f211cbaa649827962e755902aee8a6"
     }
   ],
   "commands": [
@@ -103,14 +103,14 @@
   ],
   "retained_evidence": [
     {
-      "byte_length": 168386,
+      "byte_length": 175217,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "c429c91e8045bd212e8a5c029017feb1dd2136dbf7079d78bf92c826858d4cdd"
+      "sha256": "d94cc4520a4bb3ae32e3dcbb484a88ddb6671724807b0bba988b5b5b279c4e67"
     },
     {
-      "byte_length": 162764,
+      "byte_length": 192254,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "b00e70aa608a87037545c5d288d7c5e658782f38483ecc2b30ea2401f217f2a3"
+      "sha256": "ba4b59beb6e2c46a77ee81957d428087655e596ac6793efabe38321a7fe8cf5a"
     },
     {
       "byte_length": 69345,
@@ -138,24 +138,24 @@
       "sha256": "3f2730d0f49d60ce70bf8bb9f8980e32bae74f31ece544e3d99a839918d20c0d"
     },
     {
-      "byte_length": 4457,
+      "byte_length": 5238,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-report.json",
-      "sha256": "e3ebfb6e63c92e540d8a4bfaf5e159478f7f547c050d13a71df7cfe79bd5e844"
+      "sha256": "722d8bead9b56fe188b19fe8cf6574ede738da99c6accc583d9f4ed55591c5c0"
     },
     {
       "byte_length": 18014,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-results.log",
-      "sha256": "dc1704274df69907d6ae5632e38bd74d57d10fb77b56363d0d9549e00ecccf14"
+      "sha256": "0c6f0ebe042b24f5e2fe9b7092fd9b01160c97d64dce42561852efbd82d59c11"
     },
     {
-      "byte_length": 3639,
+      "byte_length": 4419,
       "path": "artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-report.json",
-      "sha256": "d0083983152056da573a2de89ef9e6a218e70fdec0565ab52205bdd9aea221ae"
+      "sha256": "d119fdfb39fcac6ce7ec410e011f7b6543842e676c55a2b20e81d023a253234a"
     },
     {
       "byte_length": 13518,
       "path": "artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-results.log",
-      "sha256": "afc76ab5f3693cc57fba841a81b49cd22db8138bba1cd43f33d6f45a0cfa57e2"
+      "sha256": "02c0e31b5b4f1521f463a42f5dd61eda5ba93090f4b8c733000f2724d4ef2a7e"
     }
   ],
   "schema_version": 1,
