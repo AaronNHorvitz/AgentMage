@@ -1,9 +1,15 @@
 # Story 11.2 storage migration compatibility evidence
 
 Sub-task 11.2.3.1 is locally complete for the canonical SQLCipher operational store. The retained
-schema-16 fixture independently pins the ordered hashes for all sixteen forward migrations and the
+schema-20 fixture independently pins the ordered hashes for all twenty forward migrations and the
 closed table inventory. Fresh-store and version-one upgrade tests compare the live database to that
-fixture.
+fixture. Historical fixtures and migration bytes remain unchanged.
+
+Decision 0087 adds an atomic compatibility epoch without changing the tables. An actual encrypted
+version-19 fixture preserves its records and full history; corrupt history is refused before
+advancement, and a failed version-20 transaction remains retryable at version 19. Restoring a
+version-19 backup is refused without changing its bytes or creating a candidate. The retained-draft
+reader-ceiling probe is separate component evidence, not execution of an installed older binary.
 
 Focused tests also prove that failed version-two and version-three migrations roll back their schema
 and history changes; the seeded subprocess campaign interrupts the migration boundary before and

@@ -25,16 +25,18 @@ class SourceContentDeduplicationEvidenceTests(unittest.TestCase):
         for module in (deduplication, lifecycle, attempts):
             with self.subTest(module=module.__name__):
                 source = (module.ROOT / "kernel/engine/src/operational_store.rs").read_text()
-                upgrade = "version_one_upgrades_through_nineteen_with_exact_history"
+                upgrade = "version_one_upgrades_through_twenty_with_exact_history"
                 self.assertIn(f"fn {upgrade}()", source)
                 self.assertTrue(any(f"operational_store::tests::{upgrade}" in command for command in module.COMMANDS))
                 self.assertIn(f"{upgrade} ... ok", module.MARKERS)
                 report = module.expected_report()
-                self.assertEqual(report["operational_store_schema_version"], 19)
+                self.assertEqual(report["operational_store_schema_version"], 20)
                 paths = {item["path"] for item in report["artifacts"]}
                 self.assertTrue({
                     "kernel/engine/fixtures/operational-store/schema-18.json",
                     "kernel/engine/fixtures/operational-store/schema-19.json",
+                    "kernel/engine/fixtures/operational-store/schema-20.json",
+                    "kernel/engine/migrations/operational-store/0020-research-draft-readers.sql",
                     "kernel/engine/migrations/operational-store/0019-research-budgets.sql",
                     "kernel/engine/src/research_journal.rs",
                 } <= paths)

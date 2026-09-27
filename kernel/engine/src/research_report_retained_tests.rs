@@ -346,3 +346,27 @@ fn retained_report_publication_checks_sources_before_creating_any_artifact() {
         s.close();
     }
 }
+
+#[test]
+fn retained_report_store_refuses_version_nineteen_reader_without_changing_bytes() {
+    let mut s = stored("located-frame");
+    let publication = retain_with_event(&mut s);
+    assert!(read(&mut s, &publication.reference, 202).is_ok());
+    let before_budget = s.runtime.research_budget_state(&s.context).unwrap();
+    let Stored { directory, runtime, payloads, registry, context, bundle, frame, native } = s;
+    drop(runtime);
+    let path = directory.join("authority.db");
+    let encrypted = fs::read(&path).unwrap();
+    // This invokes the real early-open path with the preceding reader ceiling;
+    // it is a component probe, not execution of an installed older binary.
+    assert_eq!(crate::operational_store::probe_version_nineteen_reader(&path, &[31; 32]),
+        Err(crate::operational_store::OperationalStoreError::MigrationFailed));
+    assert_eq!(fs::read(&path).unwrap(), encrypted);
+    let runtime = DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey, 203).unwrap();
+    let mut s = Stored { directory, runtime, payloads, registry, context, bundle, frame, native };
+    assert!(read(&mut s, &publication.reference, 204).is_ok());
+    assert_eq!(s.runtime.research_budget_state(&s.context).unwrap().head_sha256, before_budget.head_sha256);
+    assert_eq!(s.runtime.receipts().len(), 1);
+    assert_no_generic_content(&s, &publication.reference);
+    s.close();
+}

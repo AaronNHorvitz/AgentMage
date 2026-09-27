@@ -81,7 +81,7 @@ use crate::write_transaction::{
     execute_write_transaction_with_checkpoint,
 };
 
-const SCHEMA_VERSION: i64 = 19;
+const SCHEMA_VERSION: i64 = 20;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
 const MAX_DERIVED_EXPORT_RECORDS: usize = 100_000;
@@ -184,6 +184,8 @@ const MIGRATION_18_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0018-attempt-recovery.sql");
 const MIGRATION_19_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0019-research-budgets.sql");
+const MIGRATION_20_SCHEMA_SQL: &str =
+    include_str!("../migrations/operational-store/0020-research-draft-readers.sql");
 
 /// Closed record families governed by the canonical retention engine.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -3677,6 +3679,15 @@ fn open_keyed(path: &Path, key: &[u8]) -> Result<OperationalStore, OperationalSt
 
 fn open_current_keyed(path: &Path, key: &[u8]) -> Result<OperationalStore, OperationalStoreError> {
     let connection = open_connection_for_supported_schema(path, key, SCHEMA_VERSION)?;
+    // Reject older backups before the writer claim can change journal metadata.
+    // Recheck below while holding the lock, since another writer may have run
+    // between this read and our claim.
+    let retained_version: i64 = connection
+        .pragma_query_value(None, "user_version", |row| row.get(0))
+        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    if retained_version != SCHEMA_VERSION {
+        return Err(OperationalStoreError::IntegrityFailure);
+    }
     claim_exclusive_writer(&connection)?;
     verify_runtime_configuration(&connection)?;
     let version: i64 = connection
@@ -3709,6 +3720,16 @@ fn open_connection_for_supported_schema(
         return Err(OperationalStoreError::MigrationFailed);
     }
     Ok(connection)
+}
+
+// Test-only access to the actual early-open boundary with the preceding reader
+// ceiling. It does not simulate an old executable or expose a production API.
+#[cfg(test)]
+pub(crate) fn probe_version_nineteen_reader(
+    path: &Path,
+    key: &[u8],
+) -> Result<(), OperationalStoreError> {
+    open_connection_for_supported_schema(path, key, 19).map(drop)
 }
 
 fn open_connection(path: &Path, key: &[u8]) -> Result<Connection, OperationalStoreError> {
@@ -4241,6 +4262,30 @@ fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
             )
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
+            .pragma_update(None, "user_version", 19_i64)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        version = 19;
+    }
+    if version == 19 {
+        // Changed read semantics require an older-reader barrier even without
+        // new tables. Never commit that epoch over a corrupt source history.
+        verify_schema_history_through(connection, 19)?;
+        let transaction = connection
+            .unchecked_transaction()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute_batch(MIGRATION_20_SCHEMA_SQL)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (20, ?1)",
+                [sha256_hex(MIGRATION_20_SCHEMA_SQL.as_bytes())],
+            )
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
             .pragma_update(None, "user_version", SCHEMA_VERSION)
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
@@ -4251,6 +4296,16 @@ fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
 }
 
 fn verify_schema_history(connection: &Connection) -> Result<(), OperationalStoreError> {
+    verify_schema_history_through(connection, SCHEMA_VERSION)
+}
+
+fn verify_schema_history_through(
+    connection: &Connection,
+    version: i64,
+) -> Result<(), OperationalStoreError> {
+    if !(1..=SCHEMA_VERSION).contains(&version) {
+        return Err(OperationalStoreError::MigrationFailed);
+    }
     let rows: Vec<(i64, String)> = connection
         .prepare("SELECT version, migration_sha256 FROM schema_history ORDER BY version")
         .and_then(|mut statement| {
@@ -4259,29 +4314,29 @@ fn verify_schema_history(connection: &Connection) -> Result<(), OperationalStore
                 .collect()
         })
         .map_err(|_| OperationalStoreError::MigrationFailed)?;
-    if rows
-        != [
-            (1, sha256_hex(MIGRATION_1_SCHEMA_SQL.as_bytes())),
-            (2, sha256_hex(MIGRATION_2_SCHEMA_SQL.as_bytes())),
-            (3, sha256_hex(MIGRATION_3_SCHEMA_SQL.as_bytes())),
-            (4, sha256_hex(MIGRATION_4_SCHEMA_SQL.as_bytes())),
-            (5, sha256_hex(MIGRATION_5_SCHEMA_SQL.as_bytes())),
-            (6, sha256_hex(MIGRATION_6_SCHEMA_SQL.as_bytes())),
-            (7, sha256_hex(MIGRATION_7_SCHEMA_SQL.as_bytes())),
-            (8, sha256_hex(MIGRATION_8_SCHEMA_SQL.as_bytes())),
-            (9, sha256_hex(MIGRATION_9_SCHEMA_SQL.as_bytes())),
-            (10, sha256_hex(MIGRATION_10_SCHEMA_SQL.as_bytes())),
-            (11, sha256_hex(MIGRATION_11_SCHEMA_SQL.as_bytes())),
-            (12, sha256_hex(MIGRATION_12_SCHEMA_SQL.as_bytes())),
-            (13, sha256_hex(MIGRATION_13_SCHEMA_SQL.as_bytes())),
-            (14, sha256_hex(MIGRATION_14_SCHEMA_SQL.as_bytes())),
-            (15, sha256_hex(MIGRATION_15_SCHEMA_SQL.as_bytes())),
-            (16, sha256_hex(MIGRATION_16_SCHEMA_SQL.as_bytes())),
-            (17, sha256_hex(MIGRATION_17_SCHEMA_SQL.as_bytes())),
-            (18, sha256_hex(MIGRATION_18_SCHEMA_SQL.as_bytes())),
-            (19, sha256_hex(MIGRATION_19_SCHEMA_SQL.as_bytes())),
-        ]
-    {
+    let expected = [
+        (1, sha256_hex(MIGRATION_1_SCHEMA_SQL.as_bytes())),
+        (2, sha256_hex(MIGRATION_2_SCHEMA_SQL.as_bytes())),
+        (3, sha256_hex(MIGRATION_3_SCHEMA_SQL.as_bytes())),
+        (4, sha256_hex(MIGRATION_4_SCHEMA_SQL.as_bytes())),
+        (5, sha256_hex(MIGRATION_5_SCHEMA_SQL.as_bytes())),
+        (6, sha256_hex(MIGRATION_6_SCHEMA_SQL.as_bytes())),
+        (7, sha256_hex(MIGRATION_7_SCHEMA_SQL.as_bytes())),
+        (8, sha256_hex(MIGRATION_8_SCHEMA_SQL.as_bytes())),
+        (9, sha256_hex(MIGRATION_9_SCHEMA_SQL.as_bytes())),
+        (10, sha256_hex(MIGRATION_10_SCHEMA_SQL.as_bytes())),
+        (11, sha256_hex(MIGRATION_11_SCHEMA_SQL.as_bytes())),
+        (12, sha256_hex(MIGRATION_12_SCHEMA_SQL.as_bytes())),
+        (13, sha256_hex(MIGRATION_13_SCHEMA_SQL.as_bytes())),
+        (14, sha256_hex(MIGRATION_14_SCHEMA_SQL.as_bytes())),
+        (15, sha256_hex(MIGRATION_15_SCHEMA_SQL.as_bytes())),
+        (16, sha256_hex(MIGRATION_16_SCHEMA_SQL.as_bytes())),
+        (17, sha256_hex(MIGRATION_17_SCHEMA_SQL.as_bytes())),
+        (18, sha256_hex(MIGRATION_18_SCHEMA_SQL.as_bytes())),
+        (19, sha256_hex(MIGRATION_19_SCHEMA_SQL.as_bytes())),
+        (20, sha256_hex(MIGRATION_20_SCHEMA_SQL.as_bytes())),
+    ];
+    if Some(rows.as_slice()) != expected.get(..version as usize) {
         return Err(OperationalStoreError::MigrationFailed);
     }
     Ok(())
@@ -8784,13 +8839,13 @@ mod tests {
     }
 
     #[test]
-    fn version_nineteen_schema_matches_fixture_snapshot_and_is_relational() {
+    fn version_twenty_schema_matches_fixture_snapshot_and_is_relational() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         let store = OperationalStore::open(&path, &observation(), &mut TestKey([14; 32]))
-            .expect("version nineteen store");
+            .expect("version twenty store");
         let fixture: serde_json::Value =
-            serde_json::from_str(include_str!("../fixtures/operational-store/schema-19.json"))
+            serde_json::from_str(include_str!("../fixtures/operational-store/schema-20.json"))
                 .expect("schema fixture parses");
         assert_eq!(fixture["schema_version"].as_i64(), Some(SCHEMA_VERSION));
         let tables: Vec<String> = store
@@ -10519,7 +10574,7 @@ mod tests {
     }
 
     #[test]
-    fn version_one_upgrades_through_nineteen_with_exact_history() {
+    fn version_one_upgrades_through_twenty_with_exact_history() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         create_version_one_store(&path, &[15; 32]);
@@ -10540,7 +10595,7 @@ mod tests {
             })
             .expect("migration history");
         let fixture: serde_json::Value =
-            serde_json::from_str(include_str!("../fixtures/operational-store/schema-19.json"))
+            serde_json::from_str(include_str!("../fixtures/operational-store/schema-20.json"))
                 .expect("schema fixture parses");
         let fixture_history = fixture["migrations"]
             .as_array()

@@ -63,7 +63,7 @@ fn version_eighteen_upgrades_without_losing_existing_records() {
         .connection
         .pragma_query_value(None, "user_version", |row| row.get(0))
         .unwrap();
-    assert_eq!(version, 19);
+    assert_eq!(version, super::super::SCHEMA_VERSION);
     let record: Vec<u8> = store
         .connection
         .query_row(
@@ -119,4 +119,8 @@ fn failed_version_nineteen_migration_rolls_back_tables_history_and_version() {
     assert_eq!((version, history, created, records), (18, 18, 0, 1));
     drop(connection);
     fs::remove_dir_all(directory).unwrap();
+}
+
+mod reader_compatibility {
+    include!("research_reader_migration_tests.rs");
 }

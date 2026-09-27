@@ -9,6 +9,9 @@ from scripts.storage_migration_compatibility_evidence import (
     MIGRATION_SHA256,
     SOURCE_MARKERS,
     SOURCE_PATH,
+    READER_TEST_PATH,
+    READER_TEST_MARKERS,
+    validate_reader_tests,
     expected_report,
     validate_fixture,
     validate_raw,
@@ -30,6 +33,12 @@ class StorageMigrationCompatibilityEvidenceTests(unittest.TestCase):
         for marker in SOURCE_MARKERS:
             self.assertTrue(validate_source(source.replace(marker, "REMOVED")), marker)
 
+    def test_reader_compatibility_test_definitions_are_required(self) -> None:
+        source = READER_TEST_PATH.read_text()
+        self.assertEqual(validate_reader_tests(source), [])
+        for marker in READER_TEST_MARKERS:
+            self.assertTrue(validate_reader_tests(source.replace(marker, "REMOVED")), marker)
+
     def test_fixture_version_order_hashes_and_tables_are_closed(self) -> None:
         fixture = json.loads(FIXTURE_PATH.read_text())
         mutations = []
@@ -47,7 +56,7 @@ class StorageMigrationCompatibilityEvidenceTests(unittest.TestCase):
         mutations.append(changed)
         for mutation in mutations:
             self.assertTrue(validate_fixture(mutation))
-        self.assertEqual(len(MIGRATION_SHA256), 19)
+        self.assertEqual(len(MIGRATION_SHA256), 20)
 
     def test_follow_on_or_product_completion_overclaim_is_rejected(self) -> None:
         for field in (
