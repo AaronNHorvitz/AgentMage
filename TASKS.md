@@ -76,6 +76,15 @@ and 22 fresh executable-scripted cases. It enables no outbound tool. Native DNS/
 adversarial qualification, canonical retrieval and real-model research remain open;
 its additive audit input bindings do not reaccept historical evidence or close these rows.
 
+The [restart reconciliation](docs/verification/lane-reconciliation-2026-09-27.md)
+records the interrupted preceding CLI matrix, the current lane's native launch
+refusal and corrected prerequisite diagnosis. The source-linked report increment
+is governed by [Decision 0085](docs/decisions/0085-canonical-research-report-projection.md).
+Its [component verification](docs/verification/research-report-component-2026-09-27.md)
+records executed source checks; native and integrated research acceptance remain open.
+It preserves old response frames and canonical authority; component verification
+cannot close native/provider/model, independent-review or release acceptance.
+
 | Status | Row | Dependencies | Bounded implementation and verification |
 | --- | --- | --- | --- |
 | [ ] | AMR-01.1 | Prior coding source and retained campaign | Reconcile exact source/binary/model identities, current doctor behavior and all changed planning/privacy evidence bindings; preserve original receipts and distinguish freshness from historical validity. |

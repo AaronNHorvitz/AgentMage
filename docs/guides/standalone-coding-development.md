@@ -56,7 +56,9 @@ The diagnosis separates these classes:
 - `agentmage_binary` and `host_binary`: implementation/build availability.
 - `activation`, private-root fields, `git_branch`, and `git_clean`: activation and workspace trust.
 - `transport_path`: private IPC path viability.
-- `confinement`: exact local Bubblewrap, systemd, and Git prerequisites.
+- `confinement` and `confinement_prerequisites`: native executable trust and bounded
+  user-manager reachability checks. File presence alone is insufficient; these diagnostic
+  observations do not establish native confinement or admission.
 - `profile_id` and `qualification`: scripted fixture identity and its deliberately limited
   `executable-scripted-only` status.
 - `state_key`: whether the separate development SQLCipher key has been created.

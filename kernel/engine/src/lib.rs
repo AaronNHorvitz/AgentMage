@@ -245,6 +245,8 @@ pub mod research_fetch;
 pub mod research_journal;
 /// Shared closed research-plan preparation for the host and canonical budget owner.
 pub mod research_plan;
+/// Fresh canonical source checks and bounded reports, never workflow completion.
+pub mod research_report;
 /// Bounded inert worker response framing, separate from transport provenance.
 pub mod research_response;
 /// Exact full-frame and redacted native-result consistency, not producer attestation.

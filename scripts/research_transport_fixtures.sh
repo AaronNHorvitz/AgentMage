@@ -47,7 +47,7 @@ if [[ "${1:-}" == --namespace ]]; then
   cleanup_fixture() {
     research_status=$?
     trap - EXIT TERM INT
-    if jobs -pr | rg -q "^${research_server_pid}$"; then kill -TERM "$research_server_pid"; fi
+    if jobs -pr | grep -q "^${research_server_pid}$"; then kill -TERM "$research_server_pid"; fi
     wait "$research_server_pid" || true
     printf 'RESEARCH_TLS_FIXTURE_OWNED_SERVER_REAPED=1\n'
     exit "$research_status"
@@ -55,14 +55,14 @@ if [[ "${1:-}" == --namespace ]]; then
   trap cleanup_fixture EXIT
   trap 'exit 130' TERM INT
   for research_attempt in {1..50}; do
-    if rg -q '^ACCEPT' server.log; then break; fi
-    if ! jobs -pr | rg -q "^${research_server_pid}$"; then
+    if grep -q '^ACCEPT' server.log; then break; fi
+    if ! jobs -pr | grep -q "^${research_server_pid}$"; then
       printf 'Owned TLS server exited before readiness\n' >&2
       exit 1
     fi
     sleep 0.02
   done
-  rg -q '^ACCEPT' server.log
+  grep -q '^ACCEPT' server.log
   env -i LANG=C RUST_TEST_THREADS=1 \
     AGENTMAGE_TEST_OUTER_net="$research_outer_net" AGENTMAGE_TEST_OUTER_mnt="$research_outer_mnt" \
     AGENTMAGE_TEST_TLS_FIXTURE="$research_tls" HTTPS_PROXY=http://127.0.0.1:3128 \

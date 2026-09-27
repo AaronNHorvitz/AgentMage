@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "record_type": "research-report-component-observations",
+  "date": "2026-09-27",
+  "base_commit": "eef257aadc077a259b676e0b24232013162ac997",
+  "status": "executed-component-checks-not-workflow-acceptance",
+  "source_inputs": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc"
+    },
+    {
+      "path": "docs/decisions/0085-canonical-research-report-projection.md",
+      "sha256": "a668b4cc96a8b95fd3b4a019f192b2dddd4bd5f26cd4cdf249aa0bdf260b9f07"
+    },
+    {
+      "path": "kernel/engine/Cargo.toml",
+      "sha256": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8"
+    },
+    {
+      "path": "kernel/engine/src/authority_transaction.rs",
+      "sha256": "ba4319939bc4e57d6357e80d217dd872cd8c790447a1d185265736acdb9a2852"
+    },
+    {
+      "path": "kernel/engine/src/grants.rs",
+      "sha256": "dd09da4069425ae0bbd4db527a1b472cf936d71e5247eceee60c41d035286291"
+    },
+    {
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "6092289ab03003313964b7484ceb2de50d6275ec363356fd47105c11a86316a1"
+    },
+    {
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "31b0edc05b30a48a503026d0d412b15564bce7ce38acf4ba7cf4dfc1207d8ee7"
+    },
+    {
+      "path": "kernel/engine/src/persistence.rs",
+      "sha256": "fb537c04df0d687af10e36eea98834910f8760877858266bb1f54cb1ca28d540"
+    },
+    {
+      "path": "kernel/engine/src/research_budget.rs",
+      "sha256": "886e19b42db37de5f817aa6b32dd5a41ee7068f7d2a3d2a2a92921cee1f4fb8d"
+    },
+    {
+      "path": "kernel/engine/src/research_dispatch.rs",
+      "sha256": "e0d454da4fe7f620fbcfb121258e5b2c0f8d11c91f10a05327c2a2681daa160d"
+    },
+    {
+      "path": "kernel/engine/src/research_effect_binding.rs",
+      "sha256": "c69d7e8d64d5b4212583c71814fdd77897810a6f5ccf4776ec2f02ab82848151"
+    },
+    {
+      "path": "kernel/engine/src/research_fetch.rs",
+      "sha256": "ea858dab7bd0e294e767b234738aea5d6368db517d503736f77ac06307435b78"
+    },
+    {
+      "path": "kernel/engine/src/research_journal.rs",
+      "sha256": "2d25b4c5182535bbcf3506187d3ed566f74efc5452c96b5cfbedf9ea7478ac7e"
+    },
+    {
+      "path": "kernel/engine/src/research_journal_tests.rs",
+      "sha256": "b4f756e9e8301d4c592d2af8b9dee4b4aa13010a4ba4308b178dd0f1f21d4b7f"
+    },
+    {
+      "path": "kernel/engine/src/research_migration_tests.rs",
+      "sha256": "10c90c15d1219fe52cd47f5c40b513ec13f9e8fd77b31744ac9fe8b068bfb9ab"
+    },
+    {
+      "path": "kernel/engine/src/research_plan.rs",
+      "sha256": "fa746331fab47375e8b268caf4b7eeaa7ce0d0eed7a52d91d9b4b5d7b2c54393"
+    },
+    {
+      "path": "kernel/engine/src/research_report.rs",
+      "sha256": "bfd24e277c32a02472eef6985b066361fb16a73bdc5de5be23e521c545b1b5c3"
+    },
+    {
+      "path": "kernel/engine/src/research_report_shape.rs",
+      "sha256": "3c8ba4910b6ba26f804ec7a50ab4ebd0635ac02514ef03dc13ca1024b62a1385"
+    },
+    {
+      "path": "kernel/engine/src/research_report_span.rs",
+      "sha256": "6841b68ac46061d54b7cebf2ef7ec3b9f89d3c8641aa34ce94bb4eeb534615ed"
+    },
+    {
+      "path": "kernel/engine/src/research_report_tests.rs",
+      "sha256": "877c98323366001c8bdf4c4196b6a274fd848762130ad982efde6fc9d36ee75d"
+    },
+    {
+      "path": "kernel/engine/src/research_response.rs",
+      "sha256": "ae450405693b923554da9e9a52b01c207f199364e0b83265bf09b85f8ba2991b"
+    },
+    {
+      "path": "kernel/engine/src/research_result_binding.rs",
+      "sha256": "ada04f036bc9311f05412d1d433aeae18d1fcbc8d0f9539475d97db9219cb84d"
+    },
+    {
+      "path": "kernel/engine/src/research_retrieval.rs",
+      "sha256": "a41b713e4347b76509a2f6538ea82b0f2c84770de4b3c7d8b8f286a4b99dce18"
+    },
+    {
+      "path": "kernel/engine/src/research_retrieval_tests.rs",
+      "sha256": "801929e13a41641d11e56cc3a14b1ee31ca1570a1f7868f64aeccc96f1027d98"
+    },
+    {
+      "path": "kernel/engine/src/runtime_artifact.rs",
+      "sha256": "d286f3056da741cdbc9383297d2749e9967223702a6baafa09b322edbe6d6410"
+    },
+    {
+      "path": "kernel/engine/src/runtime_journal.rs",
+      "sha256": "3588470c9ed56647802638f766c16418b9f61a8d7ea82a422371c56063b3d464"
+    },
+    {
+      "path": "kernel/engine/src/web_research_safety.rs",
+      "sha256": "543a49d74e5260a06fec46ddea8cf2946fceed973073d5f02d33fced98dce76c"
+    },
+    {
+      "path": "platforms/linux/Cargo.toml",
+      "sha256": "b8aec95285d2de67b37729fa5b52a3983cccb426f0cdc1d3a1a7c40c5e2b2c23"
+    },
+    {
+      "path": "platforms/linux/src/public_research_target.rs",
+      "sha256": "4a834424ed789f173cb9ac15f5546308afaf792bceaaedb5c867f0e3539c983e"
+    },
+    {
+      "path": "platforms/linux/src/public_research_transport.rs",
+      "sha256": "41e1c177853b350ba1244cbfe1f2ab953e54b8749d9f628e57d5dfcb472867c0"
+    },
+    {
+      "path": "scripts/coding_harness.py",
+      "sha256": "ad2278426f5a9ed69217c8eb0a0e4fe9c4f598feeb208d4fe39603dcaf8655f7"
+    },
+    {
+      "path": "scripts/research_transport_fixtures.sh",
+      "sha256": "ce75ac9958b3d5b8758f84d605f62b4066c1b50aa1829a3dc9b779c45fb5db50"
+    },
+    {
+      "path": "security/strict-local-source-policy.json",
+      "sha256": "31487dcdedd1a6a9b8b591b423ad24343865611ec6d475a138b615d012301aa2"
+    },
+    {
+      "path": "shells/host/src/linux_coding_runtime.rs",
+      "sha256": "5af338be49f4a458ad29264cd5a8f61227a6d057f5d7258282010607f60c7fe0"
+    },
+    {
+      "path": "tests/test_coding_harness.py",
+      "sha256": "8c5f92ad5edfceeb5f732f0a47a765b35470a6ede6465de8baf512cb022c05a9"
+    }
+  ],
+  "private_logs": [
+    {
+      "name": "research-report-final-source-20260927.log",
+      "sha256": "ee02655765e028aa6e081892ada3ee7226d746b31a0651df819cf1c802c34d82",
+      "exit_code": 0,
+      "scope": "Final source: engine library/documentation, host regression, optional worker, both Clippy closures and formatting."
+    },
+    {
+      "name": "research-report-integration-20260927.log",
+      "sha256": "a4434e9c58bfc017405df7d773de53147b430716da32364a853c5772693fbf9f",
+      "exit_code": 0,
+      "scope": "Host regression, both Clippy closures, 90 Python tests, source/effect/dependency audits."
+    },
+    {
+      "name": "research-transport-v2-20260927.log",
+      "sha256": "349009953336e7a681fcec846cebb95b507a96690f4889d27d61150542e910cd",
+      "exit_code": 0,
+      "scope": "Isolated DNS/connection and synthetic-CA TLS fixture; before final test-only frozen frame digest assertion."
+    },
+    {
+      "name": "research-report-binaries-20260927.log",
+      "sha256": "0ed3ea8b7cf04732da5908d4bb582fb92affc00e60c428ab41e78067342e7f75",
+      "exit_code": 0,
+      "scope": "Current development CLI, host and read-only worker build."
+    }
+  ],
+  "limits": [
+    "This record does not claim transitive evidence freshness or independent acceptance.",
+    "Namespace fixture inputs precede a test-only frozen v1 frame digest assertion; production transport and helper unchanged.",
+    "Raw logs and their private paths are not published.",
+    "Native workflow, configured provider, model, manual-user, platform and release acceptance remain open."
+  ],
+  "retained_failed_attempts": [
+    {
+      "name": "research-baseline-20260927.log",
+      "sha256": "ed714d152675294575512274d38f5033ad7f4744139c302fb42fc5005d4e23d3",
+      "exit_code": 101,
+      "disposition": "Offline dependency unavailable before compilation."
+    },
+    {
+      "name": "research-report-first-20260927.log",
+      "sha256": "fbff22c6a0dcef52d3d93f59645049a53c724e70a01601a24b9877040bee8b62",
+      "exit_code": 101,
+      "disposition": "Digest formatting compile error."
+    },
+    {
+      "name": "research-report-second-20260927.log",
+      "sha256": "ead6b1714d2aea7041c49acff98538743a574c270abe8e2ebb343f7ea1503128",
+      "exit_code": 101,
+      "disposition": "New frame compatibility expectation used different JSON object order."
+    },
+    {
+      "name": "research-report-focused-20260927.log",
+      "sha256": "3ab667ae6cb5b51ec8ae590d0b72d4c092781b1d6b9042e88ea078d786be7eb7",
+      "exit_code": 1,
+      "disposition": "Focused Rust tests passed; source inventory rejected two undeclared inert URI templates."
+    },
+    {
+      "name": "research-report-regression-20260927.log",
+      "sha256": "aeea16a7b5d5cb75df7fc9ef154b164eaab4d9dbb9e8b9442a632aaf00bccc84",
+      "exit_code": 101,
+      "disposition": "Engine and worker tests passed; host exhaustive error match was incomplete."
+    }
+  ]
+}

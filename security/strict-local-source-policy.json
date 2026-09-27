@@ -91,6 +91,12 @@
     "kernel/engine/src/repository_safety.rs": [
       "https://{host}/{repository}.git"
     ],
+    "kernel/engine/src/research_response.rs": [
+      "https://{}{}"
+    ],
+    "kernel/engine/src/research_retrieval_tests.rs": [
+      "https://{}{}"
+    ],
     "platforms/linux/src/public_research_target.rs": [
       "https://{}{}"
     ],

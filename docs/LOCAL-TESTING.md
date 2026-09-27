@@ -1,15 +1,75 @@
-# AgentMage local Linux demo
+# AgentMage local Linux testing
 
-This Fedora Kinoite demo is separate from production preview/full-GA qualification.
+## Standalone coding workflow
+
+The coding workflow uses the actual `agentmage` CLI, `agentmage-host`, native tools,
+protected operation approvals and verifier in a disposable repository. Read the
+[development guide](guides/standalone-coding-development.md) for the complete
+interface and the [restart reconciliation](verification/lane-reconciliation-2026-09-27.md)
+for current results and blockers. The document demonstration below is a separate workflow.
+
+In the configured implementation lane, build through its shared reservation:
+
+```sh
+bash /tools/build-slot env CARGO_BUILD_JOBS=1 cargo build --locked --offline \
+  -p agentmage-host -p agentmage-capability-read-only --bins
+python3 -m scripts.coding_harness setup --root /lane/state/coding-demo-1
+python3 -m scripts.coding_harness diagnose --root /lane/state/coding-demo-1
+```
+
+Use a fresh, short, private root for each campaign. These commands require the
+pinned Rust toolchain and locked dependencies to be available. Outside this lane,
+use the operator's configured build reservation and private scratch directory.
+The doctor distinguishes executable trust and user-manager availability from
+binary presence. `confinement_prerequisites.scope=prerequisites-only` is a
+preflight observation; native Rust owners still verify confinement at dispatch.
+`lifecycle=ready` means no recorded session is running, not platform admission.
+
+When the exact native prerequisites are available, the scripted fail/repair
+workflow is:
+
+```sh
+bash /tools/build-slot python3 -m scripts.coding_harness start \
+  --root /lane/state/coding-demo-1 --scenario failed-test-repair \
+  --objective 'Repair the failing synthetic add test and rerun validation.' \
+  --approve-this-run --log-dir /lane/state/logs/coding-demo-1
+python3 -m scripts.coding_harness status --root /lane/state/coding-demo-1
+```
+
+Omit `--approve-this-run` to inspect and answer each exact protected challenge.
+Use `python3 -m scripts.coding_harness stop --root /lane/state/coding-demo-1`
+from another terminal to request cancellation of that session. Preserve its
+result and streams; a stop request alone does not prove cleanup.
+
+**Current lane result:** setup and diagnosis ran; the actual scripted CLI/host
+launch returned exit 5 before tools because native prerequisites are unavailable.
+The lane does not expose root-trusted native executables or a user-systemd bus.
+The corrected doctor reports this refusal. Do not alter confinement to run the demo.
+A successful edit/test/correction, denial/cancellation matrix and real-model demo
+have not been reproduced in this lane. Historical Muse coding results and the
+interrupted scripted run are documented separately in the reconciliation record.
+
+Real-model runs additionally require the exact admitted development profile and
+its unchanged memory, CPU, GPU and confinement requirements. In this lane any GPU
+command must be nested under `bash /tools/build-slot bash /tools/gpu-slot queue-run
+agentmage SECONDS ...` with `SECONDS` at most 3600 and owned cleanup inside the
+reservation. Current missing native prerequisites preclude such a run; do not
+launch inference just to rediscover them. No model download or host installation
+is part of these instructions.
+
+## Separate document demonstration
+
+The following historical Fedora Kinoite document demo requires its recorded native host
+prerequisites and the current operator resource reservation. Its commands are not verified
+in the implementation lane. This demo is separate from production preview/full-GA qualification.
 It uses the real AgentMage Rust host and canonical knowledge retrieval/rendering,
 with a protected localhost browser shell and a locally running Muse model.
 
 ## Launch and stop on this computer
 
-From the repository:
+On the separately qualified native host, from the repository:
 
 ```sh
-cd /var/home/aaronnhorvitz/dev/01_repos/AgentMage
 python3 scripts/demo.py start
 ```
 

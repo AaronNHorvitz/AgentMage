@@ -4,6 +4,7 @@ from pathlib import Path
 import stat
 import subprocess
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest import mock
 
@@ -12,6 +13,67 @@ from scripts import coding_harness_acceptance
 
 
 class CodingHarnessTests(unittest.TestCase):
+    def test_diagnosis_does_not_admit_present_but_untrusted_native_files(self):
+        metadata = SimpleNamespace(st_uid=65534, st_mode=stat.S_IFREG | 0o755, st_size=1)
+        with mock.patch.object(Path, "lstat", return_value=metadata), \
+                mock.patch.object(coding_harness.subprocess, "run") as run:
+            diagnosis = coding_harness.confinement_diagnosis()
+        self.assertFalse(diagnosis["ready"])
+        self.assertEqual(diagnosis["scope"], "prerequisites-only")
+        self.assertEqual(set(diagnosis["native_executables"].values()), {"untrusted-path"})
+        self.assertEqual(diagnosis["user_manager"], "not-probed-untrusted-systemctl")
+        run.assert_not_called()
+
+    def test_native_diagnostic_rejects_alias_writable_missing_and_nonexecutables(self):
+        def metadata(path):
+            return SimpleNamespace(st_uid=0, st_size=1,
+                                   st_mode=(stat.S_IFREG if path.name == "git" else stat.S_IFDIR) | 0o755)
+
+        path = Path("/usr/bin/git")
+        for bad_part, mode, size, expected in [
+            ("usr", stat.S_IFLNK | 0o755, 1, "untrusted-path"),
+            ("bin", stat.S_IFDIR | 0o777, 1, "untrusted-path"),
+            ("git", stat.S_IFREG | 0o644, 1, "not-executable"),
+            ("git", stat.S_IFIFO | 0o755, 1, "not-executable"),
+            ("git", stat.S_IFREG | 0o755, 0, "not-executable"),
+        ]:
+            def observe(candidate):
+                result = metadata(candidate)
+                if candidate.name == bad_part:
+                    result.st_mode, result.st_size = mode, size
+                return result
+            with self.subTest(part=bad_part, mode=mode), mock.patch.object(Path, "lstat", observe):
+                self.assertEqual(coding_harness.native_executable_prerequisite(path), expected)
+        with mock.patch.object(Path, "lstat", side_effect=FileNotFoundError):
+            self.assertEqual(coding_harness.native_executable_prerequisite(path), "unavailable")
+        with mock.patch.object(Path, "lstat", metadata):
+            self.assertEqual(coding_harness.native_executable_prerequisite(path), "available")
+
+    def test_diagnosis_reports_missing_or_timed_out_manager_without_exposing_output(self):
+        for observed, expected in [
+            (subprocess.CompletedProcess([], 1), "unavailable"),
+            (subprocess.TimeoutExpired("systemctl", 3), "timeout"),
+            (OSError("private failure text"), "unavailable"),
+            (subprocess.CompletedProcess([], 0), "available"),
+        ]:
+            with mock.patch.object(coding_harness, "native_executable_prerequisite", return_value="available"), \
+                    mock.patch.object(coding_harness.subprocess, "run") as run:
+                if isinstance(observed, Exception):
+                    run.side_effect = observed
+                else:
+                    run.return_value = observed
+                diagnosis = coding_harness.confinement_diagnosis()
+                self.assertEqual(diagnosis["user_manager"], expected)
+                self.assertEqual(diagnosis["ready"], expected == "available")
+                self.assertNotIn("private failure", json.dumps(diagnosis))
+                self.assertEqual(run.call_args.kwargs["timeout"], 3)
+                self.assertEqual(run.call_args.kwargs["stdout"], subprocess.DEVNULL)
+                self.assertEqual(run.call_args.kwargs["stderr"], subprocess.DEVNULL)
+                self.assertEqual(run.call_args.kwargs["env"], {
+                    "LANG": "C", "XDG_RUNTIME_DIR": f"/run/user/{os.getuid()}",
+                    "DBUS_SESSION_BUS_ADDRESS": f"unix:path=/run/user/{os.getuid()}/bus",
+                })
+
     def test_untracked_source_inventory_binds_new_bytes_and_ignores_build_outputs(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

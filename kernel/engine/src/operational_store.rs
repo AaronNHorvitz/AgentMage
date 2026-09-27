@@ -1673,9 +1673,40 @@ pub enum DurableAuthorityError {
     ResearchJournal(crate::research_journal::ResearchJournalError),
     /// Full canonical research retrieval failed closed.
     ResearchRetrieval(crate::research_retrieval::ResearchRetrievalError),
+    /// Fresh source-linked report could not be assembled through canonical owners.
+    ResearchReport(crate::research_report::ResearchReportError),
 }
 
 impl DurableAuthorityRuntime {
+    /// Rechecks complete source bundles under this existing owner's store lock.
+    /// A previously returned source/report never substitutes for current lifecycle.
+    pub fn read_research_report<S: RuntimeArtifactPayloadStore>(
+        &mut self,
+        payloads: &S,
+        registry: &ToolRegistry,
+        request: &crate::research_report::ResearchReportReadRequest<'_>,
+    ) -> Result<crate::research_report::CanonicalResearchReport, DurableAuthorityError> {
+        self.ensure_usable()?;
+        self.flush_runtime_events()?;
+        let result = {
+            let store = self.lock_store()?;
+            crate::research_report::read(
+                &store,
+                payloads,
+                &self.coordinator,
+                &self.issuer,
+                registry,
+                request,
+            )
+        };
+        result.map_err(|error| {
+            if error.poisons_runtime() {
+                self.poisoned = true;
+            }
+            DurableAuthorityError::ResearchReport(error)
+        })
+    }
+
     /// Reads complete research bytes only after matching actual canonical owners.
     /// Expected native identities MUST come from independently admitted composition.
     pub fn read_public_get_source<S: RuntimeArtifactPayloadStore>(

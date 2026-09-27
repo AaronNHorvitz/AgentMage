@@ -460,6 +460,7 @@ fn complete_request(
     let original_domain = target.domain.clone();
     let mut remaining_bytes = packet.request().maximum_response_bytes;
     let mut hops = Vec::new();
+    let mut worker_reported_urls = Vec::new();
     loop {
         remaining(deadline).map_err(|_| WorkerError::Deadline)?;
         let url = request_url(&target).map_err(|_| WorkerError::Destination)?;
@@ -510,6 +511,9 @@ fn complete_request(
         }
         remaining_bytes -= body_bytes;
         remaining(deadline).map_err(|_| WorkerError::Deadline)?;
+        // Capture the existing pinned URL library's exact outgoing spelling,
+        // never a provider string or a second encoder in a report consumer.
+        worker_reported_urls.push(url.as_str().to_owned());
         hops.push(PublicGetHop {
             target,
             status,
@@ -534,8 +538,14 @@ fn complete_request(
                 .map(|b| format!("{b:02x}"))
                 .collect(),
         };
-        return PublicGetResponse::encode(packet, observation, &body, completed)
-            .map_err(|_| WorkerError::Response);
+        return PublicGetResponse::encode_located(
+            packet,
+            observation,
+            worker_reported_urls,
+            &body,
+            completed,
+        )
+        .map_err(|_| WorkerError::Response);
     }
 }
 
@@ -637,6 +647,14 @@ mod tests {
     }
 
     fn packet(maximum_response_bytes: u64, redirect_limit: u8) -> PreparedPublicGet {
+        packet_with_query(maximum_response_bytes, redirect_limit, vec![])
+    }
+
+    fn packet_with_query(
+        maximum_response_bytes: u64,
+        redirect_limit: u8,
+        query: Vec<(String, String)>,
+    ) -> PreparedPublicGet {
         let scope = ResearchScope::new(
             "research-task".into(),
             ResearchDepth::Quick,
@@ -654,7 +672,7 @@ mod tests {
                 target: PublicGetTarget {
                     domain: "docs.example.com".into(),
                     path: "/api".into(),
-                    query: vec![],
+                    query,
                 },
                 maximum_response_bytes,
                 redirect_limit,
@@ -716,6 +734,13 @@ mod tests {
         assert_eq!(response.observation().hops[0].body_bytes, 3);
         assert_eq!(response.observation().hops[1].body_bytes, 5);
         assert_eq!(
+            response.worker_reported_urls().unwrap(),
+            [
+                "https://docs.example.com/api",
+                "https://docs.example.com/v2"
+            ]
+        );
+        assert_eq!(
             response.observation().request_sha256,
             packet.packet().sha256()
         );
@@ -749,6 +774,43 @@ mod tests {
         let (result, attempts) = completed_fixture(packet.packet(), &[reply.clone(), reply], 1200);
         assert_eq!(result.err(), Some(WorkerError::Limit));
         assert_eq!(attempts.len(), 2);
+    }
+
+    #[test]
+    fn reported_hop_urls_use_the_same_library_encoding_as_actual_requests() {
+        // This uses the existing synthetic HTTP/TLS fixture, not native or real
+        // TLS evidence. It checks the production request loop's exact capture.
+        let packet = packet_with_query(8, 1, vec![("q".into(), "version 2 & format=JSON".into())]);
+        let replies = vec![
+            b"HTTP/1.1 302 Found\r\nLocation: /v2?q=next+%26+page\r\nContent-Length: 3\r\n\r\nold"
+                .to_vec(),
+            b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 5\r\n\r\nhello"
+                .to_vec(),
+        ];
+        let (result, attempts) = completed_fixture(packet.packet(), &replies, 1200);
+        let response = result.unwrap();
+        assert_eq!(attempts, [("/api".into(), 8), ("/v2".into(), 5)]);
+        assert_eq!(
+            response.worker_reported_urls().unwrap(),
+            [
+                "https://docs.example.com/api?q=version+2+%26+format%3DJSON",
+                "https://docs.example.com/v2?q=next+%26+page",
+            ]
+        );
+        assert_eq!(
+            response.observation().hops[0].target.query[0].1,
+            "version 2 & format=JSON"
+        );
+        assert_eq!(
+            response.observation().hops[1].target.query[0].1,
+            "next & page"
+        );
+        let decoded = PublicGetResponse::decode(packet.packet(), response.frame(), 1200).unwrap();
+        assert_eq!(
+            decoded.worker_reported_urls(),
+            response.worker_reported_urls()
+        );
+        assert_eq!(decoded.body(), b"hello");
     }
 
     #[test]

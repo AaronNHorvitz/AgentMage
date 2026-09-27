@@ -409,6 +409,54 @@ def exact_running_process(record: dict, base: Path) -> bool:
     return executable == expected and owns_arguments and b"--development" in arguments
 
 
+def native_executable_prerequisite(path: Path) -> str:
+    """Diagnostic only: native Rust owners still hold and verify exact launch objects."""
+    try:
+        # Match the native root-owned path prerequisite without following aliases.
+        for component in (*reversed(path.parents[:-1]), path):
+            info = component.lstat()
+            if info.st_uid != 0 or info.st_mode & 0o022 or stat.S_ISLNK(info.st_mode):
+                return "untrusted-path"
+        if not stat.S_ISREG(info.st_mode) or not info.st_mode & 0o111 or info.st_size <= 0:
+            return "not-executable"
+    except OSError:
+        return "unavailable"
+    return "available"
+
+
+def confinement_diagnosis() -> dict:
+    """Report necessary launch prerequisites, never platform or confinement admission."""
+    executables = {
+        name: native_executable_prerequisite(Path("/usr/bin") / name)
+        for name in ("bwrap", "systemd-run", "systemctl", "git")
+    }
+    manager = "not-probed-untrusted-systemctl"
+    if executables["systemctl"] == "available":
+        try:
+            probe = subprocess.run(
+                ["/usr/bin/systemctl", "--user", "--no-pager", "show",
+                 "--property=Version", "--value"],
+                stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL, timeout=3, check=False,
+                # Match the native supervisor's fixed local bus. Do not inherit
+                # an ambient remote bus address or control-program overrides.
+                env={"LANG": "C", "XDG_RUNTIME_DIR": f"/run/user/{os.getuid()}",
+                     "DBUS_SESSION_BUS_ADDRESS": f"unix:path=/run/user/{os.getuid()}/bus"},
+            )
+            manager = "available" if probe.returncode == 0 else "unavailable"
+        except subprocess.TimeoutExpired:
+            manager = "timeout"
+        except OSError:
+            manager = "unavailable"
+    return {
+        "scope": "prerequisites-only",
+        "native_executables": executables,
+        "user_manager": manager,
+        "ready": all(value == "available" for value in executables.values())
+        and manager == "available",
+    }
+
+
 def diagnose(base: Path) -> dict:
     base = base.resolve(strict=True)
     state, disposable, workspace = paths(base)
@@ -435,9 +483,8 @@ def diagnose(base: Path) -> dict:
     checks["git_clean"] = not run_git(
         workspace, "status", "--porcelain=v1", "--untracked-files=all", capture=True
     ).stdout
-    checks["confinement"] = all(Path(path).is_file() for path in (
-        "/usr/bin/bwrap", "/usr/bin/systemd-run", "/usr/bin/systemctl", "/usr/bin/git"
-    ))
+    checks["confinement_prerequisites"] = confinement_diagnosis()
+    checks["confinement"] = checks["confinement_prerequisites"]["ready"]
     # The host suffix includes a 10-digit PID, separators, a 20-digit start time, and `.sock`.
     checks["transport_path"] = (
         len(os.fsencode(state)) + 1 + len("coding-development-4294967295-18446744073709551615.sock")

@@ -12,7 +12,7 @@
     },
     {
       "path": "RUNTIME-BOUNDARIES.md",
-      "sha256": "f4600d5b6bf42f46d82d41b51a07afc40e791fc62879756807a85c3634cde97b"
+      "sha256": "45b897f25bf06765f07067de582d3157f05e659aa93c153284adfb6f3d839f22"
     },
     {
       "path": "architecture/runtime-ownership.json",

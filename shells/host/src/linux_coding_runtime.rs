@@ -3998,7 +3998,19 @@ where
 fn map_journal_failure(error: DurableAuthorityError) -> RuntimePortFailure {
     use agentmage_kernel_engine::research_budget::ResearchBudgetError;
     use agentmage_kernel_engine::research_journal::ResearchJournalError;
+    use agentmage_kernel_engine::research_report::{ResearchReportError, ResearchReportShapeError};
     match error {
+        DurableAuthorityError::ResearchReport(ResearchReportError::Source(error)) => {
+            map_journal_failure(DurableAuthorityError::ResearchRetrieval(error))
+        }
+        DurableAuthorityError::ResearchReport(ResearchReportError::Accounting(error)) => {
+            map_journal_failure(DurableAuthorityError::ResearchJournal(error))
+        }
+        DurableAuthorityError::ResearchReport(
+            ResearchReportError::Limit
+            | ResearchReportError::Shape(ResearchReportShapeError::Limit),
+        ) => RuntimePortFailure::ResourceExhausted,
+        DurableAuthorityError::ResearchReport(_) => RuntimePortFailure::Invalid,
         DurableAuthorityError::ResearchRetrieval(
             agentmage_kernel_engine::research_retrieval::ResearchRetrievalError::Limit,
         ) => RuntimePortFailure::ResourceExhausted,
@@ -4428,6 +4440,39 @@ fn hex(bytes: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn report_wrapping_preserves_source_and_accounting_failure_dispositions() {
+        use agentmage_kernel_engine::research_journal::ResearchJournalError;
+        use agentmage_kernel_engine::research_report::ResearchReportError;
+        use agentmage_kernel_engine::research_retrieval::ResearchRetrievalError;
+        for cause in [
+            ResearchRetrievalError::Integrity,
+            ResearchRetrievalError::Limit,
+            ResearchRetrievalError::Binding,
+            ResearchRetrievalError::Artifact,
+        ] {
+            assert_eq!(
+                map_journal_failure(DurableAuthorityError::ResearchReport(
+                    ResearchReportError::Source(cause)
+                )),
+                map_journal_failure(DurableAuthorityError::ResearchRetrieval(cause)),
+            );
+        }
+        for cause in [
+            ResearchJournalError::Storage,
+            ResearchJournalError::Integrity,
+            ResearchJournalError::JournalExhausted,
+            ResearchJournalError::Binding,
+        ] {
+            assert_eq!(
+                map_journal_failure(DurableAuthorityError::ResearchReport(
+                    ResearchReportError::Accounting(cause)
+                )),
+                map_journal_failure(DurableAuthorityError::ResearchJournal(cause)),
+            );
+        }
+    }
+
     #[test]
     fn research_retrieval_integrity_faults_remain_uncertain_and_other_refusals_invalid() {
         use agentmage_kernel_engine::research_retrieval::ResearchRetrievalError;
