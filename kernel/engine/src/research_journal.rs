@@ -228,11 +228,6 @@ fn verify_live_plan<S: RuntimeArtifactPayloadStore>(
     root: &BudgetRoot,
     now_epoch_ms: u64,
 ) -> Result<(), ResearchJournalError> {
-    verify_plan_metadata(store, root)?;
-    // Verify the canonical sequence before consulting its plan-publication event.
-    current_cursor(store, &root.origin_run_id)
-        .map_err(|_| ResearchJournalError::Integrity)?
-        .ok_or(ResearchJournalError::Plan)?;
     let terminal: bool = store.connection.query_row(
         "SELECT terminal FROM runtime_runs WHERE run_id = ?1 AND session_id = ?2 AND task_id = ?3",
         params![root.origin_run_id.as_str(), root.session_id.as_str(), root.task_id.as_str()],
@@ -241,6 +236,21 @@ fn verify_live_plan<S: RuntimeArtifactPayloadStore>(
     if terminal {
         return Err(ResearchJournalError::Plan);
     }
+    verify_retained_plan(store, payloads, root, now_epoch_ms)
+}
+
+// Historical consumption is read-only. A completed run may still have retained
+// source bytes, but cannot use this path to obtain a fresh dispatch proof.
+fn verify_retained_plan<S: RuntimeArtifactPayloadStore>(
+    store: &OperationalStore,
+    payloads: &S,
+    root: &BudgetRoot,
+    now_epoch_ms: u64,
+) -> Result<(), ResearchJournalError> {
+    verify_plan_metadata(store, root)?;
+    current_cursor(store, &root.origin_run_id)
+        .map_err(|_| ResearchJournalError::Integrity)?
+        .ok_or(ResearchJournalError::Plan)?;
     let events =
         load_run_events(store, &root.origin_run_id).map_err(|_| ResearchJournalError::Integrity)?;
     if !events.iter().any(|event| matches!(&event.kind,
@@ -276,6 +286,52 @@ fn verify_live_plan<S: RuntimeArtifactPayloadStore>(
         return Err(ResearchJournalError::Binding);
     }
     Ok(())
+}
+
+/// Verifies historical accounting without updating clocks, refunding budget or
+/// yielding dispatch material. The caller separately verifies actual completion.
+pub(crate) fn verify_retained_reservation<S: RuntimeArtifactPayloadStore>(
+    store: &OperationalStore,
+    payloads: &S,
+    context: &ResearchBudgetContext,
+    packet: &PublicGetWorkerPacket,
+    reservation_sha256: &str,
+    now_epoch_ms: u64,
+) -> Result<(), ResearchJournalError> {
+    // Verify the entire bounded chain, not just a caller-named revision or head.
+    let retained = load(store, &context.task_id)?;
+    if !context_matches(&retained.root, context)
+        || context.task_id.as_str() != packet.task_id()
+        || !valid_digest(reservation_sha256)
+        || now_epoch_ms < retained.budget.progress().last_epoch_ms
+    {
+        return Err(ResearchJournalError::Binding);
+    }
+    let bytes = store.connection.query_row(
+        "SELECT record_json FROM research_budget_revisions WHERE task_id = ?1 AND record_sha256 = ?2",
+        params![context.task_id.as_str(), reservation_sha256],
+        |row| row.get::<_, Vec<u8>>(0),
+    ).optional().map_err(|_| ResearchJournalError::Storage)?
+        .ok_or(ResearchJournalError::Binding)?;
+    let revision: BudgetRevision = decode(&bytes, MAX_REVISION_BYTES)?;
+    if revision.kind != RevisionKind::Reserved
+        || revision.operation_id != packet.request().operation_id
+        || revision.request_sha256 != packet.sha256()
+        || digest(&bytes) != reservation_sha256
+    {
+        return Err(ResearchJournalError::Binding);
+    }
+    let prepared = PreparedPublicGet::prepare(
+        &retained.scope,
+        packet.request().clone(),
+        retained.budget.started_epoch_ms(),
+        packet.prepared_at_epoch_ms(),
+    )
+    .map_err(|_| ResearchJournalError::Binding)?;
+    if prepared.packet().bytes() != packet.bytes() {
+        return Err(ResearchJournalError::Binding);
+    }
+    verify_retained_plan(store, payloads, &retained.root, now_epoch_ms)
 }
 
 pub(crate) fn open_budget<S: RuntimeArtifactPayloadStore>(

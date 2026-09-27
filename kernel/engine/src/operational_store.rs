@@ -1671,9 +1671,40 @@ pub enum DurableAuthorityError {
     Evidence(EvidenceStoreError),
     /// Canonical research plan or conservative task-budget accounting was refused.
     ResearchJournal(crate::research_journal::ResearchJournalError),
+    /// Full canonical research retrieval failed closed.
+    ResearchRetrieval(crate::research_retrieval::ResearchRetrievalError),
 }
 
 impl DurableAuthorityRuntime {
+    /// Reads complete research bytes only after matching actual canonical owners.
+    /// Expected native identities MUST come from independently admitted composition.
+    pub fn read_public_get_source<S: RuntimeArtifactPayloadStore>(
+        &mut self,
+        payloads: &S,
+        registry: &ToolRegistry,
+        request: &crate::research_retrieval::PublicGetReadRequest<'_>,
+    ) -> Result<crate::research_retrieval::CanonicalPublicGetSource, DurableAuthorityError> {
+        self.ensure_usable()?;
+        self.flush_runtime_events()?;
+        let result = {
+            let store = self.lock_store()?;
+            crate::research_retrieval::read(
+                &store,
+                payloads,
+                &self.coordinator,
+                &self.issuer,
+                registry,
+                request,
+            )
+        };
+        result.map_err(|error| {
+            if error == crate::research_retrieval::ResearchRetrievalError::Integrity {
+                self.poisoned = true;
+            }
+            DurableAuthorityError::ResearchRetrieval(error)
+        })
+    }
+
     /// Projects original research accounting without resetting time, consuming a
     /// revision or claiming that a retained plan or request is currently admitted.
     pub fn research_budget_state(

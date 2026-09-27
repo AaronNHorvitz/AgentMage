@@ -63,6 +63,13 @@ exercise real resolution, pinned connections and bounded responses with syntheti
 TLS trust. They do not admit the connected worker, enable a provider, establish canonical
 retrieval or qualify a model. No AMR checkbox changes follow from these diagnostics.
 
+The [canonical research-source component record](docs/verification/research-retrieval-component-2026-09-27.md)
+adds full-artifact reads through the existing authority, journal and payload owners,
+with exact receipt/reservation/native bindings, lifecycle and clock checks, bounded
+history, no replay and 22 fresh actual-CLI scripted cases. Synthetic source fixtures
+do not prove connected retrieval or model research. Provider/report integration and
+independent acceptance remain open; this checkpoint closes no AMR row.
+
 The [inactive research native-boundary increment](docs/verification/research-native-boundary-2026-09-27.md)
 records dual-proof dispatch, native confinement/refusal/cleanup tests, durable no-replay
 and 22 fresh executable-scripted cases. It enables no outbound tool. Native DNS/TLS

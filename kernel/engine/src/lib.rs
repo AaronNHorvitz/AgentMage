@@ -249,6 +249,8 @@ pub mod research_plan;
 pub mod research_response;
 /// Exact full-frame and redacted native-result consistency, not producer attestation.
 pub mod research_result_binding;
+/// Canonical full-source consumption, not provider metadata or native admission.
+pub mod research_retrieval;
 /// Deterministic compilation of all prerequisites for one genuinely fresh attempt.
 pub mod retry_admission;
 /// Integrity-protected review packets and authority-free logical commit plans.

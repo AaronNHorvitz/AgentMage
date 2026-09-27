@@ -143,6 +143,34 @@ pub(crate) mod tests {
     use crate::authority_transaction::EffectResult;
     use agentmage_kernel_contracts::{OperationOutcome, StateChange};
 
+    // Canonical retrieval fixture only. Keep proof-consuming test helpers inside
+    // this already registered boundary; never exempt test filenames from the audit.
+    pub(crate) struct BoundResultResearchDriver<'a> {
+        pub(crate) packet: &'a PublicGetWorkerPacket,
+        pub(crate) binding: &'a crate::research_result_binding::PublicGetResultBinding,
+        pub(crate) reservation: &'a str,
+        pub(crate) outcome: OperationOutcome,
+    }
+    impl ResearchEffectDriver for BoundResultResearchDriver<'_> {
+        fn execute_research(
+            &mut self,
+            authorization: EffectAuthorization<'_>,
+            dispatch: ResearchDispatch<'_>,
+        ) -> EffectLaunch {
+            assert_eq!(
+                authorization.operation().operation(),
+                GrantOperation::NetworkAccess
+            );
+            assert!(dispatch.matches_packet_at(self.packet, 103));
+            assert_eq!(dispatch.reservation_sha256(), self.reservation);
+            EffectLaunch::completed(EffectResult::from_redacted_material(
+                self.outcome,
+                self.binding.redacted_material(),
+                StateChange::Changed,
+            ))
+        }
+    }
+
     // Shared only with canonical-store tests: a synthetic observer, never native I/O.
     pub(crate) struct RecordingResearchDriver<'a> {
         pub(crate) packet: &'a PublicGetWorkerPacket,

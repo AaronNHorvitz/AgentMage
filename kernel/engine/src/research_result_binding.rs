@@ -184,6 +184,12 @@ impl PublicGetResultBinding {
     pub const fn native_identity(&self) -> &PublicGetNativeIdentity {
         &self.wire.native
     }
+
+    /// Parent interval to compare with canonical ToolStarted/ToolCompleted times.
+    #[must_use]
+    pub const fn parent_interval(&self) -> PublicGetParentInterval {
+        self.wire.parent
+    }
 }
 
 fn valid_digest(value: &str) -> bool {

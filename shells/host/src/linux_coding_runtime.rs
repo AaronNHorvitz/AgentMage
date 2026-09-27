@@ -3999,6 +3999,13 @@ fn map_journal_failure(error: DurableAuthorityError) -> RuntimePortFailure {
     use agentmage_kernel_engine::research_budget::ResearchBudgetError;
     use agentmage_kernel_engine::research_journal::ResearchJournalError;
     match error {
+        DurableAuthorityError::ResearchRetrieval(
+            agentmage_kernel_engine::research_retrieval::ResearchRetrievalError::Limit,
+        ) => RuntimePortFailure::ResourceExhausted,
+        DurableAuthorityError::ResearchRetrieval(
+            agentmage_kernel_engine::research_retrieval::ResearchRetrievalError::Integrity,
+        ) => RuntimePortFailure::Uncertain,
+        DurableAuthorityError::ResearchRetrieval(_) => RuntimePortFailure::Invalid,
         DurableAuthorityError::ResearchJournal(
             ResearchJournalError::Storage | ResearchJournalError::Integrity,
         ) => RuntimePortFailure::Uncertain,
@@ -4421,6 +4428,35 @@ fn hex(bytes: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn research_retrieval_integrity_faults_remain_uncertain_and_other_refusals_invalid() {
+        use agentmage_kernel_engine::research_retrieval::ResearchRetrievalError;
+        for (error, expected) in [
+            (
+                ResearchRetrievalError::Limit,
+                RuntimePortFailure::ResourceExhausted,
+            ),
+            (
+                ResearchRetrievalError::Integrity,
+                RuntimePortFailure::Uncertain,
+            ),
+            (
+                ResearchRetrievalError::Artifact,
+                RuntimePortFailure::Invalid,
+            ),
+            (
+                ResearchRetrievalError::Authority,
+                RuntimePortFailure::Invalid,
+            ),
+            (ResearchRetrievalError::Binding, RuntimePortFailure::Invalid),
+        ] {
+            assert_eq!(
+                map_journal_failure(DurableAuthorityError::ResearchRetrieval(error)),
+                expected
+            );
+        }
+    }
+
     #[test]
     fn research_journal_failures_preserve_uncertainty_cancellation_and_limits() {
         use agentmage_kernel_engine::research_budget::ResearchBudgetError;

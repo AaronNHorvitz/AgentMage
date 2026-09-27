@@ -372,9 +372,111 @@ fn context() -> ResearchBudgetContext {
     }
 }
 
+#[test]
+fn historical_reservation_read_verifies_original_revision_without_refund_or_refresh() {
+    let (directory, mut store, payloads, plan, prepared, reservation) = freshness_fixture();
+    let original = reservation.reservation_sha256().to_owned();
+    let later = packet(&plan, "history-later", 201, 512);
+    crate::research_journal::reserve(
+        &mut store,
+        &payloads,
+        &context(),
+        &later,
+        ResearchOperation::Visit,
+        201,
+    )
+    .unwrap();
+    crate::research_journal::cancel(&mut store, &context()).unwrap();
+    let before = crate::research_journal::state(&store, &context()).unwrap();
+    assert_ne!(before.head_sha256, original);
+    crate::research_journal::verify_retained_reservation(
+        &store,
+        &payloads,
+        &context(),
+        prepared.packet(),
+        &original,
+        2000,
+    )
+    .unwrap();
+    let after = crate::research_journal::state(&store, &context()).unwrap();
+    assert_eq!(after.head_sha256, before.head_sha256);
+    assert_eq!(after.revision, before.revision);
+    assert_eq!(after.progress, before.progress);
+    assert!(after.progress.cancelled);
+    // A restricted/cancelled head cannot replace the original Reserved revision.
+    assert!(
+        crate::research_journal::verify_retained_reservation(
+            &store,
+            &payloads,
+            &context(),
+            prepared.packet(),
+            &after.head_sha256,
+            2000
+        )
+        .is_err()
+    );
+    assert!(
+        crate::research_journal::consume_fresh_reservation(
+            &mut store,
+            &payloads,
+            &context(),
+            &prepared,
+            reservation,
+            2000
+        )
+        .is_err()
+    );
+    drop(store);
+    fs::remove_dir_all(directory).unwrap();
+}
+
+#[test]
+fn historical_reservation_rechecks_full_plan_and_complete_history_not_only_named_hash() {
+    for mutation in 0..5 {
+        let (directory, store, mut payloads, _plan, prepared, reservation) = freshness_fixture();
+        let mut expected = context();
+        let plan = crate::research_journal::state(&store, &expected)
+            .unwrap()
+            .plan;
+        match mutation {
+            0 => {
+                payloads.objects.remove(&plan.payload_sha256);
+            }
+            1 => {
+                payloads
+                    .objects
+                    .get_mut(&plan.payload_sha256)
+                    .unwrap()
+                    .push(b'x');
+            }
+            2 => {
+                store.connection.execute_batch("DROP TRIGGER research_budget_revision_update_forbidden; UPDATE research_budget_revisions SET record_json = CAST('{}' AS BLOB) WHERE revision = 0;").unwrap();
+            }
+            3 => expected.policy_sha256 = digest('d'),
+            _ => {}
+        }
+        assert!(
+            crate::research_journal::verify_retained_reservation(
+                &store,
+                &payloads,
+                &expected,
+                prepared.packet(),
+                reservation.reservation_sha256(),
+                if mutation == 4 { 100 } else { 2000 }
+            )
+            .is_err()
+        );
+        drop(store);
+        fs::remove_dir_all(directory).unwrap();
+    }
+}
+
 // Public-owner tests reuse the canonical SQLCipher/artifact fixtures. The recording
 // driver is synthetic; packet/held-root native binding is tested independently.
 mod dispatch_owner {
+    mod retrieval {
+        include!("research_retrieval_tests.rs");
+    }
     use super::*;
     use crate::authority_transaction::AuthorityTransactionRequest;
     use crate::grants::{DerivedOperationGrantRequest, SessionReadGrantRequest};
