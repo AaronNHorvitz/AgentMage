@@ -179,6 +179,29 @@ source and dependency artifacts. Its six retained test failures remain open at t
 source checkpoint. Other historical platform/model/review records are not silently
 reaccepted or promoted. No source binding or acceptance threshold was removed.
 
+### Committed-source renewal follow-up
+
+Source checkpoint `ae395badd950f5893c90cdb82ef5a89927a85705` pins the boundary above.
+The eight-command Story 22.1 canary campaign and its three report tests passed at
+that revision. Its retained report binds both new audit-helper inputs; no runtime,
+model or independent acceptance follows from a synthetic privacy canary campaign.
+
+The subsequent runtime campaign's first command passed all 18 engine tests, then
+its evidence reader failed with `runtime.story23.performance_count`: serial libtest
+placed the metric after its test heading rather than at column zero. The private
+trace wrapper preserved that complete output; log SHA-256:
+`eca5f8ccc3efede707b5a5207f684c1ac8f9a1b0f9a0c9d0f4d7789f50530036`.
+An earlier private trace-wrapper import-path error occurred before any campaign
+command; it was corrected without changing the repository's campaign invocation.
+
+The reader now accepts that exact known heading and still rejects unrelated prefixes,
+duplicate/hidden markers, malformed or trailing JSON and over-budget metrics. Eight
+focused parser/canary tests passed, including the retained serial timings and unchanged
+250,000-microsecond scenario ceiling. Regression log SHA-256:
+`cce723355126c96333359e0414d3dbe76dda6f70987501971757560666380fde`.
+The runtime campaign remainder still requires a fresh committed reader pin and actual
+execution. This developer-only correction changes neither Rust behavior nor the SBOM.
+
 ## Still open
 
 Native adversarial DNS/private or mixed answers, rebinding, proxy, TLS-host mismatch,

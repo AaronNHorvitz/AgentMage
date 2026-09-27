@@ -251,12 +251,18 @@ def parse_test_result(output: str, minimum_passed: int) -> dict[str, int]:
 
 
 def parse_performance(output: str) -> dict[str, Any]:
+    # libtest --nocapture with one test thread writes this exact test heading
+    # before the metric on the same line. Admit only that known framing, not
+    # an arbitrary prefix or a second metric hidden elsewhere in the trace.
+    heading = (
+        "test runtime_loop::tests::story_23_4_ephemeral_runtime_profile_is_bounded ... "
+    )
     records = [
         line.removeprefix(PERFORMANCE_PREFIX)
-        for line in output.splitlines()
+        for line in (value.removeprefix(heading) for value in output.splitlines())
         if line.startswith(PERFORMANCE_PREFIX)
     ]
-    if len(records) != 1:
+    if len(records) != 1 or output.count(PERFORMANCE_PREFIX) != 1:
         raise RuntimeEvidenceError("runtime.story23.performance_count")
     try:
         metrics = json.loads(records[0])

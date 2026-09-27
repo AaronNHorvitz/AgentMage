@@ -52,6 +52,30 @@ def scenario(
 
 
 class Story234RuntimeEvidenceTests(unittest.TestCase):
+    def test_actual_single_threaded_libtest_metric_keeps_exact_limits(self) -> None:
+        # Retained 2026-09-27 campaign: all 18 tests passed, but column-zero
+        # extraction rejected this actual serial --nocapture output framing.
+        heading = "test runtime_loop::tests::story_23_4_ephemeral_runtime_profile_is_bounded ... "
+        metrics = valid_performance()
+        for name, elapsed in (("cancellation", 598), ("direct", 2077), ("maximum", 5687),
+                              ("nominal", 4626), ("over_limit", 4871)):
+            metrics[name]["elapsed_us"] = elapsed
+        record = PERFORMANCE_PREFIX + json.dumps(metrics, separators=(",", ":"))
+        trace = heading + record + "\nok\ntest result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 1155 filtered out; finished in 0.14s\n"
+        self.assertEqual(parse_performance(trace), metrics)
+        for invalid in (
+            "unrelated " + record,
+            heading.replace("ephemeral_runtime_profile", "another_profile") + record,
+            trace + record,
+            trace + "unrelated " + PERFORMANCE_PREFIX,
+            heading + record + " trailing data",
+        ):
+            with self.assertRaises(RuntimeEvidenceError):
+                parse_performance(invalid)
+        metrics["maximum"]["elapsed_us"] = 250_001
+        with self.assertRaises(RuntimeEvidenceError):
+            parse_performance(heading + PERFORMANCE_PREFIX + json.dumps(metrics))
+
     def test_closed_performance_record_accepts_only_expected_results(self) -> None:
         metrics = valid_performance()
         self.assertEqual(performance_failures(metrics), [])
