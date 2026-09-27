@@ -65,6 +65,9 @@ impl CodingDevelopmentClientError {
     pub const fn exit_code(self) -> ClientExitCode {
         match self {
             Self::Activation => ClientExitCode::AuthorityDenied,
+            Self::HostBoundary(LinuxDevelopmentBoundaryErrorKind::StartupCancelled) => {
+                ClientExitCode::Cancelled
+            }
             Self::Transport | Self::HostBoundary(_) | Self::Runtime => {
                 ClientExitCode::ServiceUnavailable
             }
@@ -90,6 +93,8 @@ pub fn run_coding_development(
         &options.workspace_root,
     )
     .map_err(|_| CodingDevelopmentClientError::Activation)?;
+    let mut cancellation = InstalledSignalCancellation::install()?;
+    cancellation.check_startup()?;
     let mut child = LinuxDevelopmentHostProcess::launch(
         activation.state_root(),
         activation.disposable_root(),
@@ -99,9 +104,12 @@ pub fn run_coding_development(
         options.resume,
     )
     .map_err(CodingDevelopmentClientError::from)?;
-    let result = run_with_child(&activation, options, output, &mut child);
+    let result = run_with_child(&activation, options, output, &mut child, &mut cancellation);
     if result.is_err() {
-        let _ = child.terminate();
+        child
+            .terminate_and_reap()
+            .map_err(CodingDevelopmentClientError::from)?;
+        return result;
     }
     let success = child
         .wait_success()
@@ -117,10 +125,12 @@ fn run_with_child(
     options: &CodingDevelopmentCliOptions,
     output: CliOutputFormat,
     child: &mut LinuxDevelopmentHostProcess,
+    cancellation: &mut InstalledSignalCancellation,
 ) -> Result<ClientExitCode, CodingDevelopmentClientError> {
     let envelope = child
-        .read_launch_envelope()
+        .read_launch_envelope_cancellable(&cancellation.requested)
         .map_err(CodingDevelopmentClientError::from)?;
+    cancellation.check_startup()?;
     let session = envelope
         .connect_development()
         .map_err(|_| CodingDevelopmentClientError::Transport)?;
@@ -140,7 +150,7 @@ fn run_with_child(
         delay_ms: options.approval_delay_ms,
     };
     let mut sink = TerminalEventSink { output };
-    let mut cancellation = InstalledSignalCancellation::install()?;
+    cancellation.check_startup()?;
     let workspace_id = format!("coding-development-{}", &activation.marker_sha256()[..24]);
     let preauthorization = direct_session_preauthorization(options, &workspace_id)?;
     let profile_id = CodingDevelopmentModel::parse(&options.model)
@@ -151,6 +161,7 @@ fn run_with_child(
     objectives.extend(options.follow_ups.iter().map(String::as_str));
     let mut engineering_session_id = None;
     let mut final_exit = ClientExitCode::Success;
+    cancellation.check_startup()?;
     for (objective_index, objective) in objectives.into_iter().enumerate() {
         let result = drive_interactive_cli_runtime(
             &mut runtime,
@@ -168,7 +179,7 @@ fn run_with_child(
             },
             &mut approvals,
             &mut sink,
-            &mut cancellation,
+            cancellation,
         );
         if let Err(error) = &result {
             if let Some(transport) = runtime.last_error() {
@@ -393,19 +404,47 @@ fn direct_session_preauthorization(
 struct InstalledSignalCancellation {
     requested: Arc<AtomicBool>,
     sequence: u64,
+    registrations: [signal_hook::SigId; 2],
 }
 
 impl InstalledSignalCancellation {
     fn install() -> Result<Self, CodingDevelopmentClientError> {
         let requested = Arc::new(AtomicBool::new(false));
-        signal_hook::flag::register(signal_hook::consts::SIGINT, Arc::clone(&requested))
-            .map_err(|_| CodingDevelopmentClientError::Transport)?;
-        signal_hook::flag::register(signal_hook::consts::SIGTERM, Arc::clone(&requested))
-            .map_err(|_| CodingDevelopmentClientError::Transport)?;
+        let interrupt =
+            signal_hook::flag::register(signal_hook::consts::SIGINT, Arc::clone(&requested))
+                .map_err(|_| CodingDevelopmentClientError::Transport)?;
+        let terminate =
+            match signal_hook::flag::register(signal_hook::consts::SIGTERM, Arc::clone(&requested))
+            {
+                Ok(registration) => registration,
+                Err(_) => {
+                    signal_hook::low_level::unregister(interrupt);
+                    return Err(CodingDevelopmentClientError::Transport);
+                }
+            };
         Ok(Self {
             requested,
             sequence: 0,
+            registrations: [interrupt, terminate],
         })
+    }
+
+    fn check_startup(&self) -> Result<(), CodingDevelopmentClientError> {
+        if self.requested.load(Ordering::Acquire) {
+            Err(CodingDevelopmentClientError::HostBoundary(
+                LinuxDevelopmentBoundaryErrorKind::StartupCancelled,
+            ))
+        } else {
+            Ok(())
+        }
+    }
+}
+
+impl Drop for InstalledSignalCancellation {
+    fn drop(&mut self) {
+        for registration in self.registrations {
+            signal_hook::low_level::unregister(registration);
+        }
     }
 }
 
