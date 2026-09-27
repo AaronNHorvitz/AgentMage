@@ -355,6 +355,20 @@ impl LinuxPublicResearchRunner {
         })
     }
 
+    /// Exact prepared producer pins, captured independently before dispatch.
+    /// These identify this inert runner; they do not grant an effect or qualify
+    /// the worker. Expected read-time pins must not be learned from a response.
+    /// ```compile_fail
+    /// use agentmage_platform_linux::LinuxPublicResearchRunner;
+    /// fn change(runner: &LinuxPublicResearchRunner) {
+    ///     runner.native_identity().worker_sha256.clear();
+    /// }
+    /// ```
+    #[must_use]
+    pub const fn native_identity(&self) -> &PublicGetNativeIdentity {
+        &self.identity
+    }
+
     fn run(
         &self,
         packet: &PublicGetWorkerPacket,
@@ -711,6 +725,18 @@ impl ResearchEffectDriver for LinuxPublicResearchEffectDriver<'_> {
             Ok(result) => result,
             Err(error) => return self.refused(OperationOutcome::Failed, error.kind().code(), true),
         };
+        // Diagnostic test output only, never raw response content. Accounting is
+        // the existing supervisor's sampled observation, not a new sampler or
+        // an assertion that unavailable data means zero usage.
+        #[cfg(test)]
+        eprintln!(
+            "research-native-measurement elapsed_ms={} stdout_bytes={} stderr_bytes={} output_complete={} resources={:?}",
+            monotonic_started.elapsed().as_millis(),
+            result.stdout.total,
+            result.stderr.total,
+            result.output_complete,
+            result.resources
+        );
         let outcome = match result.outcome {
             Ok(outcome) => outcome,
             Err(error) => return self.refused(OperationOutcome::Failed, error.kind().code(), true),
