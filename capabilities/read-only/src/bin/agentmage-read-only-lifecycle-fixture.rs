@@ -67,6 +67,12 @@ fn main() -> Result<(), FixtureExit> {
 }
 
 fn lifecycle_mode(name: &str) -> Option<(&str, &str)> {
+    // The explicit development activation admits only this exact sibling name.
+    // This binary itself is feature-gated and copied ONLY into a labelled private
+    // diagnostic bundle; never replace the ordinary worker or change admission.
+    if name == "agentmage-read-only-worker" {
+        return Some(("cancel", "during"));
+    }
     let mode = name.strip_prefix("agentmage-lifecycle-")?;
     let (termination, phase) = mode.split_once('-')?;
     matches!(termination, "cancel" | "timeout" | "kill" | "crash")
@@ -95,5 +101,44 @@ struct FixtureExit;
 impl std::fmt::Debug for FixtureExit {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter.write_str("read_only.lifecycle_fixture.failed")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::lifecycle_mode;
+
+    #[test]
+    fn canonical_development_fixture_has_one_fixed_partial_output_mode() {
+        assert_eq!(
+            lifecycle_mode("agentmage-read-only-worker"),
+            Some(("cancel", "during"))
+        );
+        for name in [
+            "agentmage-read-only-worker.exe",
+            "worker",
+            "agentmage-read-only-worker-crash",
+            "agentmage-read-only-worker ",
+        ] {
+            assert_eq!(lifecycle_mode(name), None);
+        }
+    }
+
+    #[test]
+    fn exact_legacy_lifecycle_matrix_remains_closed() {
+        for termination in ["cancel", "timeout", "kill", "crash"] {
+            for phase in ["before", "during", "after"] {
+                let name = format!("agentmage-lifecycle-{termination}-{phase}");
+                assert_eq!(lifecycle_mode(&name), Some((termination, phase)));
+            }
+        }
+        for name in [
+            "agentmage-lifecycle-cancel",
+            "agentmage-lifecycle-other-during",
+            "agentmage-lifecycle-cancel-later",
+            "agentmage-lifecycle-cancel-during-extra",
+        ] {
+            assert_eq!(lifecycle_mode(name), None);
+        }
     }
 }

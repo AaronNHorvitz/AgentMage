@@ -356,6 +356,7 @@ struct IssuedCodingOperation<'workspace> {
 
 struct RuntimeEffectEventContext<'builder> {
     started_event: RuntimeEvent,
+    observe_started: &'builder mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimePortFailure>,
     build_terminal_event:
         &'builder mut dyn FnMut(&RuntimeToolExecution) -> Result<RuntimeEvent, RuntimePortFailure>,
 }
@@ -1504,7 +1505,7 @@ where
         definition: &ToolDefinition,
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
-        event_context: Option<RuntimeEffectEventContext<'_>>,
+        mut event_context: Option<RuntimeEffectEventContext<'_>>,
         cancellation: Option<&dyn EffectCancellationObservation>,
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let policy = issued.generic_authority()?.1.policy.clone();
@@ -1539,7 +1540,7 @@ where
             &policy,
             transaction,
             &mut driver,
-            event_context.as_ref(),
+            event_context.as_mut(),
         );
         let worker_result = driver.take_result();
         let worker_error = driver.take_error();
@@ -1639,7 +1640,7 @@ where
         definition: &ToolDefinition,
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
-        event_context: Option<RuntimeEffectEventContext<'_>>,
+        mut event_context: Option<RuntimeEffectEventContext<'_>>,
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let policy = issued.generic_authority()?.1.policy.clone();
         let transaction = self.authority_transaction(call, &issued)?;
@@ -1681,7 +1682,7 @@ where
             &policy,
             transaction,
             &mut driver,
-            event_context.as_ref(),
+            event_context.as_mut(),
         );
         let command_receipt = driver.take_receipt();
         let output = driver.take_output();
@@ -1710,7 +1711,7 @@ where
         definition: &ToolDefinition,
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
-        event_context: Option<RuntimeEffectEventContext<'_>>,
+        mut event_context: Option<RuntimeEffectEventContext<'_>>,
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let policy = issued.generic_authority()?.1.policy.clone();
         let transaction = self.authority_transaction(call, &issued)?;
@@ -1750,7 +1751,7 @@ where
             &policy,
             transaction,
             &mut driver,
-            event_context.as_ref(),
+            event_context.as_mut(),
         );
         let platform = driver.take_result();
         self.git_executor = Some(driver.into_executor());
@@ -1824,7 +1825,7 @@ where
         definition: &ToolDefinition,
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
-        event_context: Option<RuntimeEffectEventContext<'_>>,
+        mut event_context: Option<RuntimeEffectEventContext<'_>>,
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let policy = issued.generic_authority()?.1.policy.clone();
         let transaction = self.authority_transaction(call, &issued)?;
@@ -1904,7 +1905,7 @@ where
             &policy,
             transaction,
             &mut driver,
-            event_context.as_ref(),
+            event_context.as_mut(),
         )?;
         let evidence = vec![EvidenceReference {
             schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
@@ -1997,7 +1998,7 @@ where
         definition: &ToolDefinition,
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
-        event_context: Option<RuntimeEffectEventContext<'_>>,
+        mut event_context: Option<RuntimeEffectEventContext<'_>>,
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let (generic_approval, approved) = issued.generic_authority()?;
         let approval_sha256 = generic_approval.confirmation_sha256.clone();
@@ -2046,7 +2047,7 @@ where
             &policy,
             transaction,
             &mut driver,
-            event_context.as_ref(),
+            event_context.as_mut(),
         );
         let command_receipt = driver.take_receipt();
         let output = driver.take_output();
@@ -2219,7 +2220,7 @@ where
         definition: &ToolDefinition,
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
-        event_context: Option<RuntimeEffectEventContext<'_>>,
+        mut event_context: Option<RuntimeEffectEventContext<'_>>,
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let IssuedCodingOperation {
             authority:
@@ -2311,7 +2312,7 @@ where
                 &serde_json::to_vec(checkpoint).map_err(|_| RuntimePortFailure::Invalid)?,
             )?;
         }
-        let (result, pending) = if let Some(context) = event_context.as_ref() {
+        let (result, pending) = if let Some(context) = event_context.as_mut() {
             let (result, pending) = self
                 .authority
                 .authority_mut()
@@ -2324,6 +2325,9 @@ where
                     context.started_event.clone(),
                     &before_checkpoint,
                     &consumed_checkpoint,
+                    &mut |event| {
+                        (context.observe_started)(event).map_err(|_| RuntimeJournalError::Integrity)
+                    },
                 )
                 .map_err(map_journal_failure)?;
             (result, Some(pending))
@@ -2437,7 +2441,7 @@ where
         definition: &ToolDefinition,
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
-        event_context: Option<RuntimeEffectEventContext<'_>>,
+        mut event_context: Option<RuntimeEffectEventContext<'_>>,
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let IssuedCodingOperation {
             authority: IssuedCodingAuthority::FilesystemWrite { approval, plan, .. },
@@ -2508,7 +2512,7 @@ where
                 &serde_json::to_vec(checkpoint).map_err(|_| RuntimePortFailure::Invalid)?,
             )?;
         }
-        let (result, pending) = if let Some(context) = event_context.as_ref() {
+        let (result, pending) = if let Some(context) = event_context.as_mut() {
             let (result, pending) = self
                 .authority
                 .authority_mut()
@@ -2521,6 +2525,9 @@ where
                     context.started_event.clone(),
                     &before_checkpoint,
                     &consumed_checkpoint,
+                    &mut |event| {
+                        (context.observe_started)(event).map_err(|_| RuntimeJournalError::Integrity)
+                    },
                 )
                 .map_err(map_journal_failure)?;
             (result, Some(pending))
@@ -2674,7 +2681,7 @@ where
         policy: &agentmage_kernel_engine::policy::PolicyEngine,
         transaction: AuthorityTransactionRequest,
         driver: &mut D,
-        event_context: Option<&RuntimeEffectEventContext<'_>>,
+        event_context: Option<&mut RuntimeEffectEventContext<'_>>,
     ) -> Result<
         (
             agentmage_kernel_contracts::Receipt,
@@ -2691,6 +2698,9 @@ where
                     transaction,
                     driver,
                     context.started_event.clone(),
+                    &mut |event| {
+                        (context.observe_started)(event).map_err(|_| RuntimeJournalError::Integrity)
+                    },
                 )
                 .map_err(map_journal_failure)
                 .map(|(receipt, pending)| (receipt, Some(pending)))
@@ -3627,6 +3637,7 @@ where
         call: &ToolCall,
         cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
         started_event: RuntimeEvent,
+        observe_started: &mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimePortFailure>,
         build_terminal_event: &mut dyn FnMut(
             &RuntimeToolExecution,
         ) -> Result<RuntimeEvent, RuntimePortFailure>,
@@ -3639,6 +3650,7 @@ where
             cancellation,
             Some(RuntimeEffectEventContext {
                 started_event,
+                observe_started,
                 build_terminal_event,
             }),
         )?;

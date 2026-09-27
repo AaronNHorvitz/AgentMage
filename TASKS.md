@@ -32,10 +32,13 @@ These component rows do not close their parent package, model admission, indepen
 or release gates. Evidence from the previous source pin remains historical evidence.
 
 The [bounded native supervision and read-cancellation record](docs/verification/native-supervision-and-read-cancellation-2026-09-26.md)
-records current component, native-process and 22-case executable-scripted checks for
-AMR-01 and AMR-02 prerequisites. Continuous live CLI effect cancellation, crash-safe
-worker ownership, connected research and new-source model qualification remain open;
-these results do not close any package or acceptance gate below.
+retains its point-in-time component, native-process and executable-scripted checks.
+The subsequent [durable tool-start and terminal publication record](docs/verification/durable-tool-start-publication-2026-09-26.md)
+records continuous actual-CLI native-read cancellation, exact consumed authority,
+canonical reopens, fresh-host scripted repair and a reproduced terminal-channel
+ordering correction for AMR-01/AMR-02 prerequisites. Command/Git/validation live
+cancellation, crash-safe worker ownership, connected research and new-source model
+qualification remain open. Neither record closes a package or acceptance gate below.
 
 | Status | Row | Dependencies | Bounded implementation and verification |
 | --- | --- | --- | --- |

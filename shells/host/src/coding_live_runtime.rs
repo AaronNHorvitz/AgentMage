@@ -626,8 +626,13 @@ impl LiveCodingSession {
                 Err(TryRecvError::Disconnected) => {}
             }
             let boundary_visible = self.boundary_visible();
-            if progressed && boundary_visible
-                || Instant::now() >= deadline && (self.busy || boundary_visible)
+            // Event and worker-result channels may arrive in either order. A
+            // busy worker is not permission to present an unmatched terminal.
+            // Keep the original bounded visibility deadline and project guard.
+            let terminal_pair_visible = self.event_stream_terminal == self.outcome.is_some();
+            if terminal_pair_visible
+                && (progressed && boundary_visible
+                    || Instant::now() >= deadline && (self.busy || boundary_visible))
             {
                 return Ok(());
             }
@@ -917,6 +922,128 @@ mod tests {
             reason: CancellationReason::UserRequested,
             requested_by: BoundaryKind::Shell,
         }
+    }
+
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    fn terminal_pair_fixture(
+        terminal_event: bool,
+    ) -> (
+        LiveCodingSession,
+        SyncSender<Result<WorkerResponse, CodingClientError>>,
+        RuntimeOutcome,
+    ) {
+        let (request, mut events, outcome, observed_result) =
+            crate::runtime_read_tests::completed_native_read_fixture();
+        assert!(observed_result);
+        assert!(
+            !events
+                .iter()
+                .any(|event| matches!(event.kind, RuntimeEventKind::ArtifactCreated { .. })),
+            "this bounded fixture has no omitted artifact references"
+        );
+        assert!(matches!(
+            events.last().unwrap().kind,
+            RuntimeEventKind::RunTerminal { .. }
+        ));
+        if !terminal_event {
+            events.pop();
+        }
+        let mut sequence = RuntimeEventSequence::new();
+        for event in &events {
+            sequence.push(event).unwrap();
+        }
+        assert_eq!(sequence.is_terminal(), terminal_event);
+        let (commands, _command_rx) = sync_channel(1);
+        let (result_tx, results) = sync_channel(1);
+        let session = LiveCodingSession {
+            request,
+            commands,
+            results,
+            event_pump: EventPump {
+                state: Arc::new(Mutex::new(EventPumpState {
+                    sequence,
+                    events,
+                    disconnected: false,
+                    failed: false,
+                })),
+                stop: Arc::new(AtomicBool::new(false)),
+                worker: None,
+            },
+            slow_subscriber_probe: None,
+            slow_subscriber_verified: false,
+            cancellation: Arc::new(SharedCancellation::new()),
+            worker: None,
+            events: Vec::new(),
+            latest_presented_cursor: None,
+            artifacts: Vec::new(),
+            pending_approval: None,
+            outcome: None,
+            busy: true,
+            event_stream_terminal: false,
+        };
+        (session, result_tx, outcome)
+    }
+
+    #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    fn terminal_event_without_worker_outcome_cannot_escape_refresh_as_presentable() {
+        let (mut session, result_tx, _outcome) = terminal_pair_fixture(true);
+        // Keep the channel OPEN and deliberately withhold the outcome. This
+        // deterministically represents the event-pump/worker-response ordering,
+        // without timing sleeps or malformed event/request fixtures.
+        assert_eq!(
+            session.refresh(Duration::ZERO),
+            Err(RuntimeTransportError::RuntimeEvidenceDenied)
+        );
+        assert!(session.busy && session.event_stream_terminal && session.outcome.is_none());
+        assert!(matches!(
+            session.project(None, true),
+            Err(RuntimeTransportError::RuntimeEvidenceDenied)
+        ));
+        drop(result_tx);
+    }
+
+    #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    fn worker_outcome_without_terminal_event_keeps_existing_bounded_refusal() {
+        let (mut session, result_tx, outcome) = terminal_pair_fixture(false);
+        result_tx
+            .send(Ok(WorkerResponse::Boundary(WorkerBoundary {
+                step: RuntimeCoordinatorStep::Complete { outcome },
+                artifacts: Vec::new(),
+            })))
+            .unwrap();
+        assert_eq!(
+            session.refresh(Duration::ZERO),
+            Err(RuntimeTransportError::RuntimeEvidenceDenied)
+        );
+        assert!(!session.busy && !session.event_stream_terminal && session.outcome.is_some());
+        assert!(matches!(
+            session.project(None, true),
+            Err(RuntimeTransportError::RuntimeEvidenceDenied)
+        ));
+    }
+
+    #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    fn matching_terminal_event_and_verified_worker_outcome_are_presented_together() {
+        let (mut session, result_tx, outcome) = terminal_pair_fixture(true);
+        result_tx
+            .send(Ok(WorkerResponse::Boundary(WorkerBoundary {
+                step: RuntimeCoordinatorStep::Complete {
+                    outcome: outcome.clone(),
+                },
+                artifacts: Vec::new(),
+            })))
+            .unwrap();
+        session.refresh(Duration::ZERO).unwrap();
+        assert!(!session.busy && session.event_stream_terminal);
+        let step = session.project(None, true).unwrap();
+        assert_eq!(step.outcome, Some(outcome));
+        assert!(matches!(
+            step.events.last().unwrap().kind,
+            RuntimeEventKind::RunTerminal { .. }
+        ));
     }
 
     fn unavailable(error: ModelRuntimeFailure) {

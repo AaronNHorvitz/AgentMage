@@ -2880,6 +2880,7 @@ mod tests {
                 transaction_request,
                 &mut driver,
                 started_event.clone(),
+                &mut |_| Ok(()),
             )
             .expect("effect begins with atomic start event");
         let terminal_event = stream.event(RuntimeEventKind::ToolCompleted {
@@ -2929,6 +2930,122 @@ mod tests {
     }
 
     #[test]
+    fn committed_start_observation_precedes_body_and_refusal_cannot_launch_or_reuse() {
+        struct ObservedDriver<'a> {
+            observed: &'a std::cell::Cell<bool>,
+            launches: usize,
+        }
+        impl EffectDriver for ObservedDriver<'_> {
+            fn execute(&mut self, _authorization: EffectAuthorization<'_>) -> EffectLaunch {
+                assert!(self.observed.get(), "durable start observed before body");
+                self.launches += 1;
+                EffectLaunch::completed(success())
+            }
+        }
+        for reject in [false, true] {
+            let fixture = fixture();
+            let directory = store_directory();
+            let path = directory.join("authority.db");
+            let observation = store_observation();
+            let key = [28; 32];
+            let mut store =
+                OperationalStore::open(&path, &observation, &mut TestStoreKey(key)).unwrap();
+            store
+                .persist_authority(&fixture.issuer, &AuthorityTransactionCoordinator::new())
+                .unwrap();
+            drop(store);
+            let mut runtime =
+                DurableAuthorityRuntime::open(&path, &observation, &mut TestStoreKey(key), 7_000)
+                    .unwrap();
+            let mut stream = EffectEventStream::new();
+            let prefix = stream.prefix();
+            for event in &prefix {
+                runtime.record_runtime_event(event.clone()).unwrap();
+            }
+            let started = stream.event(RuntimeEventKind::ToolStarted {
+                tool_call_id: fixture.call.tool_call_id.clone(),
+                authority_sha256: "7".repeat(64),
+            });
+            let observed = std::cell::Cell::new(false);
+            let mut driver = ObservedDriver {
+                observed: &observed,
+                launches: 0,
+            };
+            let result = runtime.begin_effect_with_runtime_event(
+                &fixture.registry,
+                &fixture.policy,
+                request(&fixture),
+                &mut driver,
+                started.clone(),
+                &mut |event| {
+                    assert_eq!(event, &started);
+                    assert!(!observed.replace(true), "exactly one notification");
+                    if reject {
+                        Err(crate::runtime_journal::RuntimeJournalError::Integrity)
+                    } else {
+                        Ok(())
+                    }
+                },
+            );
+            assert!(observed.get());
+            assert_eq!(driver.launches, usize::from(!reject));
+            if reject {
+                assert!(result.is_err());
+                assert!(matches!(
+                    runtime.execute_effect(
+                        &fixture.registry,
+                        &fixture.policy,
+                        request(&fixture),
+                        &mut driver
+                    ),
+                    Err(DurableAuthorityError::Poisoned)
+                ));
+                assert_eq!(driver.launches, 0);
+            } else {
+                let (receipt, pending) = result.unwrap();
+                let terminal = stream.event(RuntimeEventKind::ToolCompleted {
+                    tool_call_id: fixture.call.tool_call_id.clone(),
+                    receipt_id: receipt.receipt_id,
+                    result_sha256: "6".repeat(64),
+                });
+                runtime
+                    .finish_effect_with_runtime_event(pending, terminal)
+                    .unwrap();
+            }
+            drop(runtime);
+            let reopened =
+                DurableAuthorityRuntime::open(&path, &observation, &mut TestStoreKey(key), 8_000)
+                    .unwrap();
+            let history = reopened
+                .runtime_events(&RuntimeRunId::from_raw("effect-run-1"))
+                .unwrap();
+            assert_eq!(history.iter().filter(|event| event == &&started).count(), 1);
+            assert_eq!(
+                reopened
+                    .current_grant(&fixture.grant.grant_id)
+                    .unwrap()
+                    .status,
+                if reject {
+                    GrantStatus::Uncertain
+                } else {
+                    GrantStatus::Consumed
+                }
+            );
+            assert_eq!(reopened.receipts().len(), 1);
+            if reject {
+                assert_ne!(reopened.receipts()[0].outcome, OperationOutcome::Succeeded);
+                assert!(
+                    !history
+                        .iter()
+                        .any(|event| matches!(event.kind, RuntimeEventKind::ToolCompleted { .. }))
+                );
+            }
+            drop(reopened);
+            fs::remove_dir_all(directory).unwrap();
+        }
+    }
+
+    #[test]
     fn rejected_terminal_event_requires_recovery_without_a_false_completion_event() {
         let fixture = fixture();
         let transaction_request = request(&fixture);
@@ -2968,6 +3085,7 @@ mod tests {
                 transaction_request,
                 &mut driver,
                 started_event.clone(),
+                &mut |_| Ok(()),
             )
             .expect("effect begins with atomic start event");
         let mut invalid_terminal = stream.event(RuntimeEventKind::ToolCompleted {

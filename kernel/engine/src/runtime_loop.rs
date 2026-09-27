@@ -372,6 +372,8 @@ pub trait RuntimeCorrectnessTransactionPort {
     ) -> Result<(RuntimePermissionEvaluation, RuntimeEvent), RuntimePortFailure>;
 
     /// Executes once and co-publishes the start and terminal receipt events.
+    /// Notify the observer exactly once AFTER the start event and consumed authority
+    /// are durably committed, BEFORE native execution. Observation grants no authority.
     fn execute_with_correctness_events(
         &mut self,
         request: &RuntimeRunRequest,
@@ -380,6 +382,7 @@ pub trait RuntimeCorrectnessTransactionPort {
         call: &ToolCall,
         cancellation: Option<&dyn ModelCancellationProbe>,
         started_event: RuntimeEvent,
+        observe_started: &mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimePortFailure>,
         build_terminal_event: &mut dyn FnMut(
             &RuntimeToolExecution,
         ) -> Result<RuntimeEvent, RuntimePortFailure>,
@@ -652,6 +655,7 @@ struct RuntimeCorrectnessHooks<T> {
         &ToolCall,
         Option<&dyn ModelCancellationProbe>,
         RuntimeEvent,
+        &'a mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimePortFailure>,
         &'a mut dyn FnMut(&RuntimeToolExecution) -> Result<RuntimeEvent, RuntimePortFailure>,
     ) -> Result<RuntimeToolCorrectnessCommit, RuntimePortFailure>,
     checkpoint: for<'a, 'b> fn(
@@ -2116,6 +2120,26 @@ where
                         &mut resources,
                     )
                     .map_err(RuntimeLoopError::Dependency)?;
+                    let resources_at_start = resources.clone();
+                    let publisher = &self.publisher;
+                    let events = &mut self.events;
+                    let current_resources = &mut self.resources;
+                    let mut start_observed = false;
+                    let mut observation_invalid = false;
+                    let mut observe_started = |event: &RuntimeEvent| {
+                        if start_observed || event != &started_event {
+                            observation_invalid = true;
+                            return Err(RuntimePortFailure::Invalid);
+                        }
+                        publisher.publish(event.clone()).map_err(|_| {
+                            observation_invalid = true;
+                            RuntimePortFailure::Unavailable
+                        })?;
+                        events.push(event.clone());
+                        *current_resources = resources_at_start.clone();
+                        start_observed = true;
+                        Ok(())
+                    };
                     let mut built_terminal = None;
                     let clock = &mut self.clock;
                     let mut build_terminal = |execution: &RuntimeToolExecution| {
@@ -2148,20 +2172,28 @@ where
                         &call,
                         cancellation,
                         started_event.clone(),
+                        &mut observe_started,
                         &mut build_terminal,
                     )
                     .map_err(RuntimeLoopError::Dependency)?;
-                    if commit.events
-                        != [
-                            started_event,
-                            built_terminal
-                                .clone()
-                                .ok_or(RuntimeLoopError::InvalidBoundaryResult)?,
-                        ]
+                    if !start_observed
+                        || observation_invalid
+                        || commit.events
+                            != [
+                                started_event,
+                                built_terminal
+                                    .clone()
+                                    .ok_or(RuntimeLoopError::InvalidBoundaryResult)?,
+                            ]
                     {
                         return Err(RuntimeLoopError::InvalidBoundaryResult);
                     }
-                    self.accept_committed_events(commit.events, resources)?;
+                    // The start is already visible from its durable commit. Only
+                    // the exact terminal successor may now enter the same stream.
+                    self.accept_committed_events(
+                        commit.events.into_iter().skip(1).collect(),
+                        resources,
+                    )?;
                     self.complete_tool(
                         commit.execution,
                         definition,
@@ -3443,6 +3475,7 @@ fn execute_with_correctness_events<T: RuntimeCorrectnessTransactionPort>(
     call: &ToolCall,
     cancellation: Option<&dyn ModelCancellationProbe>,
     started_event: RuntimeEvent,
+    observe_started: &mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimePortFailure>,
     build_terminal_event: &mut dyn FnMut(
         &RuntimeToolExecution,
     ) -> Result<RuntimeEvent, RuntimePortFailure>,
@@ -3454,6 +3487,7 @@ fn execute_with_correctness_events<T: RuntimeCorrectnessTransactionPort>(
         call,
         cancellation,
         started_event,
+        observe_started,
         build_terminal_event,
     )
 }

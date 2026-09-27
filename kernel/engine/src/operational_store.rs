@@ -2698,6 +2698,7 @@ impl DurableAuthorityRuntime {
     }
 
     /// Executes one controlled write with its start event in the authority-consumption commit.
+    /// Notifies only after that commit; failed observation prevents native execution.
     #[allow(clippy::too_many_arguments)]
     pub fn begin_controlled_write_with_runtime_event<D: AtomicWriteDriver>(
         &mut self,
@@ -2709,6 +2710,7 @@ impl DurableAuthorityRuntime {
         started_event: RuntimeEvent,
         before_checkpoint: &WriteAwareCheckpoint,
         consumed_checkpoint: &WriteAwareCheckpoint,
+        observe_started: &mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimeJournalError>,
     ) -> Result<(WriteTransactionResult, PendingSpecializedEffectCommit), DurableAuthorityError>
     {
         self.ensure_usable()?;
@@ -2722,6 +2724,7 @@ impl DurableAuthorityRuntime {
         self.checkpoint_write_transaction(std::slice::from_ref(before_checkpoint))?;
         let operation_id = request.transaction_id.clone();
         let mut store_error = None;
+        let mut observation_error = None;
         let mut started_committed = false;
         let result = {
             let shared_store = Arc::clone(&self.store);
@@ -2745,12 +2748,20 @@ impl DurableAuthorityRuntime {
                             std::slice::from_ref(consumed_checkpoint),
                         )
                     };
-                    persisted
-                        .map(|()| started_committed = true)
-                        .map_err(|error| store_error = Some(error))
+                    persisted.map_err(|error| store_error = Some(error))?;
+                    if !started_committed {
+                        started_committed = true;
+                        observe_started(&started_event)
+                            .map_err(|error| observation_error = Some(error))?;
+                    }
+                    Ok(())
                 },
             )
         };
+        if let Some(error) = observation_error {
+            self.poisoned = true;
+            return Err(DurableAuthorityError::RuntimeJournal(error));
+        }
         if let Some(error) = store_error {
             self.poisoned = true;
             return Err(DurableAuthorityError::Store(error));
@@ -2835,6 +2846,7 @@ impl DurableAuthorityRuntime {
     }
 
     /// Executes one filesystem effect with its start event in the authority-consumption commit.
+    /// Notifies only after that commit; failed observation prevents native execution.
     #[allow(clippy::too_many_arguments)]
     pub fn begin_controlled_filesystem_with_runtime_event<D: ControlledFilesystemDriver>(
         &mut self,
@@ -2846,6 +2858,7 @@ impl DurableAuthorityRuntime {
         started_event: RuntimeEvent,
         before_checkpoint: &WriteAwareCheckpoint,
         consumed_checkpoint: &WriteAwareCheckpoint,
+        observe_started: &mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimeJournalError>,
     ) -> Result<(FilesystemTransactionResult, PendingSpecializedEffectCommit), DurableAuthorityError>
     {
         self.ensure_usable()?;
@@ -2859,6 +2872,7 @@ impl DurableAuthorityRuntime {
         self.checkpoint_write_transaction(std::slice::from_ref(before_checkpoint))?;
         let operation_id = request.transaction_id.clone();
         let mut store_error = None;
+        let mut observation_error = None;
         let mut started_committed = false;
         let result = {
             let shared_store = Arc::clone(&self.store);
@@ -2882,12 +2896,20 @@ impl DurableAuthorityRuntime {
                             std::slice::from_ref(consumed_checkpoint),
                         )
                     };
-                    persisted
-                        .map(|()| started_committed = true)
-                        .map_err(|error| store_error = Some(error))
+                    persisted.map_err(|error| store_error = Some(error))?;
+                    if !started_committed {
+                        started_committed = true;
+                        observe_started(&started_event)
+                            .map_err(|error| observation_error = Some(error))?;
+                    }
+                    Ok(())
                 },
             )
         };
+        if let Some(error) = observation_error {
+            self.poisoned = true;
+            return Err(DurableAuthorityError::RuntimeJournal(error));
+        }
         if let Some(error) = store_error {
             self.poisoned = true;
             return Err(DurableAuthorityError::Store(error));
@@ -3030,6 +3052,7 @@ impl DurableAuthorityRuntime {
             request,
             &mut adapter,
             started_event,
+            &mut |_| Ok(()),
             |store, issuer, request, started, adapter| {
                 use crate::research_journal::ResearchJournalError;
                 if policy.policy_sha256() != context.policy_sha256
@@ -3057,6 +3080,8 @@ impl DurableAuthorityRuntime {
     }
 
     /// Begins one effect and leaves its terminal snapshot pending one exact receipt event.
+    /// The observer sees only the exact durably committed start, before driver execution.
+    #[allow(clippy::too_many_arguments)]
     pub fn begin_effect_with_runtime_event<D: EffectDriver>(
         &mut self,
         registry: &ToolRegistry,
@@ -3064,6 +3089,7 @@ impl DurableAuthorityRuntime {
         request: AuthorityTransactionRequest,
         driver: &mut D,
         started_event: RuntimeEvent,
+        observe_started: &mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimeJournalError>,
     ) -> Result<(Receipt, PendingRuntimeEffectCommit), DurableAuthorityError> {
         self.begin_effect_with_preflight(
             registry,
@@ -3071,6 +3097,7 @@ impl DurableAuthorityRuntime {
             request,
             driver,
             started_event,
+            observe_started,
             |_, _, _, _, _| Ok(()),
         )
     }
@@ -3084,6 +3111,7 @@ impl DurableAuthorityRuntime {
         request: AuthorityTransactionRequest,
         driver: &mut D,
         started_event: RuntimeEvent,
+        observe_started: &mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimeJournalError>,
         preflight: F,
     ) -> Result<(Receipt, PendingRuntimeEffectCommit), DurableAuthorityError>
     where
@@ -3135,13 +3163,13 @@ impl DurableAuthorityRuntime {
                     } else {
                         store.persist_authority(issuer, coordinator)
                     };
-                    persisted
-                        .map(|()| {
-                            if state == AuthorityTransactionState::LaunchCommitted {
-                                started_committed = true;
-                            }
-                        })
-                        .map_err(|_| AuthorityTransactionError::PersistenceFailure)
+                    persisted.map_err(|_| AuthorityTransactionError::PersistenceFailure)?;
+                    if state == AuthorityTransactionState::LaunchCommitted && !started_committed {
+                        started_committed = true;
+                        observe_started(&started_event)
+                            .map_err(|_| AuthorityTransactionError::PersistenceFailure)?;
+                    }
+                    Ok(())
                 },
             )
         };

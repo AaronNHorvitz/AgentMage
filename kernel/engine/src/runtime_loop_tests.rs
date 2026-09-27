@@ -489,6 +489,7 @@ impl RuntimeCorrectnessTransactionPort for PressureJournalBoundary {
         _call: &ToolCall,
         _cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
         _started_event: RuntimeEvent,
+        _observe_started: &mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimePortFailure>,
         _build_terminal_event: &mut dyn FnMut(
             &RuntimeToolExecution,
         ) -> Result<RuntimeEvent, RuntimePortFailure>,
@@ -626,6 +627,10 @@ enum PermissionScript {
     FailCancellationRequestedPublication,
     FailCancellationObservedPublication,
     FailTerminalFlush,
+    CheckLiveStart,
+    SkipStartObservation,
+    DuplicateStartObservation,
+    ForeignStartObservation,
 }
 
 type PublishedArtifacts = Arc<Mutex<Vec<(RuntimeArtifactManifest, Vec<u8>)>>>;
@@ -739,8 +744,17 @@ impl RuntimeToolBoundary for FakeToolBoundary {
         _evaluation: &RuntimePermissionEvaluation,
         _definition: &ToolDefinition,
         call: &ToolCall,
-        _cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
+        cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
     ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        if matches!(self.script, PermissionScript::CheckLiveStart) {
+            assert!(
+                cancellation
+                    .expect("live observer probe")
+                    .observe()
+                    .unwrap()
+                    .is_none()
+            );
+        }
         let execution = self.executions.fetch_add(1, Ordering::SeqCst) + 1;
         let evidence = if self.emit_evidence && self.outcome == OperationOutcome::Succeeded {
             vec![evidence(
@@ -924,11 +938,27 @@ impl RuntimeCorrectnessTransactionPort for FakeToolBoundary {
         call: &ToolCall,
         cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
         started_event: RuntimeEvent,
+        observe_started: &mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimePortFailure>,
         build_terminal_event: &mut dyn FnMut(
             &RuntimeToolExecution,
         ) -> Result<RuntimeEvent, RuntimePortFailure>,
     ) -> Result<RuntimeToolCorrectnessCommit, RuntimePortFailure> {
         self.append_runtime_event(&started_event)?;
+        match self.script {
+            PermissionScript::SkipStartObservation => {}
+            PermissionScript::DuplicateStartObservation => {
+                observe_started(&started_event)?;
+                // Deliberately broken trusted fixture ignores the second refusal.
+                assert!(observe_started(&started_event).is_err());
+            }
+            PermissionScript::ForeignStartObservation => {
+                let mut other = started_event.clone();
+                other.event_sha256 = "0".repeat(64);
+                assert!(observe_started(&other).is_err());
+                observe_started(&started_event)?;
+            }
+            _ => observe_started(&started_event)?,
+        }
         let execution = <Self as RuntimeToolBoundary>::execute(
             self,
             request,
@@ -2381,6 +2411,85 @@ fn durable_mode_persists_ordered_session_events_before_terminal_return() {
         coordinator.events()
     );
     assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn durable_start_is_live_after_commit_before_body_and_is_not_published_twice() {
+    struct ObserveStart {
+        subscription: Mutex<crate::runtime_event::RuntimeEventSubscription>,
+        journal: Arc<Mutex<Vec<RuntimeEvent>>>,
+        executions: Arc<AtomicUsize>,
+        seen: AtomicUsize,
+    }
+    impl agentmage_kernel_contracts::ModelCancellationProbe for ObserveStart {
+        fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
+            let subscription = self.subscription.lock().unwrap();
+            while let Some(event) = subscription.try_next().unwrap() {
+                if matches!(event.kind, RuntimeEventKind::ToolStarted { .. }) {
+                    assert_eq!(
+                        self.executions.load(Ordering::SeqCst),
+                        0,
+                        "must arrive before tool body"
+                    );
+                    assert_eq!(
+                        self.seen.fetch_add(1, Ordering::SeqCst),
+                        0,
+                        "one exact start"
+                    );
+                    assert!(
+                        self.journal.lock().unwrap().contains(&event),
+                        "durable before live"
+                    );
+                }
+            }
+            Ok(None)
+        }
+    }
+    let (mut coordinator, executions) = durable_fault_coordinator(
+        [ModelScript::Tool, ModelScript::Completion],
+        PermissionScript::CheckLiveStart,
+    );
+    let probe = ObserveStart {
+        subscription: Mutex::new(coordinator.subscribe_events(128).unwrap()),
+        journal: Arc::clone(&coordinator.tool_boundary.journal),
+        executions: Arc::clone(&executions),
+        seen: AtomicUsize::new(0),
+    };
+    coordinator.run_until_boundary(None, Some(&probe)).unwrap();
+    agentmage_kernel_contracts::ModelCancellationProbe::observe(&probe).unwrap();
+    assert_eq!(probe.seen.load(Ordering::SeqCst), 1);
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    assert_eq!(*probe.journal.lock().unwrap(), coordinator.events());
+    assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn durable_start_observation_cannot_be_omitted_duplicated_or_substituted() {
+    for script in [
+        PermissionScript::SkipStartObservation,
+        PermissionScript::DuplicateStartObservation,
+        PermissionScript::ForeignStartObservation,
+    ] {
+        let (mut coordinator, _) = durable_fault_coordinator([ModelScript::Tool], script);
+        assert_eq!(
+            coordinator.run_until_boundary(None, None),
+            Err(RuntimeLoopError::InvalidBoundaryResult)
+        );
+        assert!(!coordinator.events().iter().any(|event| matches!(
+            event.kind,
+            RuntimeEventKind::ToolCompleted { .. }
+                | RuntimeEventKind::ToolFailed { .. }
+                | RuntimeEventKind::RunTerminal { .. }
+        )));
+        assert!(
+            coordinator
+                .events()
+                .iter()
+                .filter(|event| matches!(event.kind, RuntimeEventKind::ToolStarted { .. }))
+                .count()
+                <= 1
+        );
+    }
 }
 
 #[test]
