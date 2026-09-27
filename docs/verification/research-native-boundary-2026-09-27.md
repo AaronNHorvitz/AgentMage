@@ -207,7 +207,27 @@ ceiling; peak command RSS was 51,136 KiB against 1,048,576 KiB. These are synthe
 current-host measurements, not end-user performance or real-model qualification.
 Successful runtime renewal log SHA-256:
 `396baf224729c30991b4ff96fdca811f9c82c35ffb43bc6b3a44c39c24d77667`.
-Downstream automated boundary/security/index renewal remains separate.
+Runtime evidence was committed as `91c32b76f1f962808b215325db3e983b4d125355`, then
+the twelve-check automated coordinator report and six regression tests passed at
+that pin. Its output was committed as `d30239986c485cab780510e19bc11584a12d27c0` so
+the security campaign could bind actual immutable dependency bytes. All eight security
+commands passed, including 24 Rust tests and both strict Clippy runs, followed by four
+security-report tests. Security renewal log SHA-256:
+`10fcbe9deecc9be7f17890fd4b6983a62dd59ed4cd40767fbd23428e5085cb49`.
+
+The refreshed index, all 23 tests across the five affected canary/runtime/review/security/
+index suites, and the supply-chain check then passed. This resolves the six reported
+pin/input-set failures through actual campaigns and committed dependencies, not changed
+thresholds. Closure log SHA-256:
+`fdbfe76c4cb750574ccab97a01ee37d2de6be07fc366b5dbf7e87e3a61163be0`.
+No additional SBOM write occurred. Other historical groups in the source-checkpoint
+inventory remain historical; this is not a transitive freshness claim.
+
+The legacy security-map field `independent_review_complete` denotes its gate-owned
+automated coordinator check only, as its limitations specify. It does **not** mean
+independent human review or acceptance under `50.2.4.7`. The index still marks story,
+sprint and release completion false. A separate pinned review package is prepared,
+not dispatched or approved; the implementing agent has not signed independent review.
 
 ## Still open
 
