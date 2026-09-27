@@ -183,3 +183,19 @@ campaign was rerun. Actual-CLI native Git body-entry cancellation, crash-safe
 cross-host worker ownership, connected research/provider/model qualification,
 independent review, human acceptance, Task 50.2.4.7, M-HARNESS-DAILY, supported
 platform and release gates remain open. No AMR checkbox or license state changes.
+
+## Committed-source renewal remainder
+
+Checkpoint `c16884163206ebacfa8885d3f7416e684c44eb7c` contains the inspected
+source and single SBOM renewal. Sprint 82's seven registered checks subsequently
+ran against that clean committed source, each with exit 0 and zero focused
+blocking skips. Its three unit tests, report and supply-chain validators passed;
+the outer remainder returned 0. Retained log SHA-256:
+`9b7b5b3c787a4787a5439e42607dd431e48e1424559c44af06fa3a2ca6d14b26`.
+The [renewed local report](../../artifacts/sprints/sprint-82/local-evidence-report.json)
+has SHA-256 `b715f0872a2cb7524ba2069194030dc562a32834c902cb6274dc2e0f5e71f568`.
+Only source revision, three supply-chain hashes and three command-output digests
+changed. `BLOCKED`, no live public search, no privacy review and no release
+approval remain unchanged. This finishes the scoped committed-blob remainder,
+not the fourteen historical source/native/review bindings or independent review.
+No second SBOM write or historical native/platform reacceptance occurred.
