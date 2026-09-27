@@ -11,9 +11,9 @@
       "sha256": "78146e92fda7e4f463cab1c751455d99ce7ff95de2bce5829fe768092f671fe7"
     },
     {
-      "byte_length": 175838,
+      "byte_length": 179926,
       "path": "kernel/engine/src/runtime_artifact.rs",
-      "sha256": "d286f3056da741cdbc9383297d2749e9967223702a6baafa09b322edbe6d6410"
+      "sha256": "cc6ee1ad0438fb9ed93663fc0326742bf2435f77eb259f540730a60761f1c8c8"
     },
     {
       "byte_length": 69345,
@@ -21,9 +21,9 @@
       "sha256": "b34c1c3b248cd91aef81c955e06cc49b2793bdf8816c6b34ef722eee28955b31"
     },
     {
-      "byte_length": 478326,
+      "byte_length": 480445,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "31b0edc05b30a48a503026d0d412b15564bce7ce38acf4ba7cf4dfc1207d8ee7"
+      "sha256": "c983536148cf8e69f6b4934f0bbf3e8e7a699bf817d05cd210372ace65f14992"
     },
     {
       "byte_length": 4166,
@@ -63,7 +63,7 @@
     {
       "byte_length": 18014,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-results.log",
-      "sha256": "0c6f0ebe042b24f5e2fe9b7092fd9b01160c97d64dce42561852efbd82d59c11"
+      "sha256": "37639f6d7fca24714c620d219299f04da7c7b24a31f217104318f997ae947e3f"
     }
   ],
   "commands": [

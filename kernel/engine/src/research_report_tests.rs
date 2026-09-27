@@ -1,4 +1,7 @@
 // Synthetic canonical store/authority cases. No native or model qualification.
+#[path = "research_report_retained_tests.rs"]
+mod retained_tests;
+
 use super::*;
 use crate::research_report::{
     CanonicalResearchReport, ResearchReportClaimDraft, ResearchReportConflictDraft,

@@ -117,6 +117,18 @@ fn publication_event(
 // Negative mutations are independently sealed full objects. A self-consistent
 // description must still fail when it differs from actual canonical lineage.
 fn stored(mutation: &str) -> Stored {
+    let artifact = |name: &str, bytes: &[u8], context: &ResearchBudgetContext,
+                    started: &RuntimeEvent, receipt: &Receipt, now: u64| {
+        let mut manifest = artifact(name, bytes, context, started, receipt, now);
+        if mutation == "expiring-bundle" {
+            manifest.retention.kind = RuntimeEventRetentionKind::UntilExpiration;
+            manifest.retention.expires_at_epoch_ms = Some(300);
+        }
+        if mutation == "restricted-source" && name == "source-frame" {
+            manifest.sensitivity = ContextSensitivity::Restricted;
+        }
+        seal_runtime_artifact_manifest(manifest).unwrap()
+    };
     let mut f = fixture();
     let mut call = f.request.research_call().clone();
     let reservation = f.reservation.reservation_sha256().to_owned();

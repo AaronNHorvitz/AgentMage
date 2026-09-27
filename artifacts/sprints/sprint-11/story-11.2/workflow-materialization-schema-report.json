@@ -11,9 +11,9 @@
       "sha256": "4caabc1a09d7cdedc69ffb231d03a467d9c5dd1aa0f706d917682c17f8aaf223"
     },
     {
-      "byte_length": 478326,
+      "byte_length": 480445,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "31b0edc05b30a48a503026d0d412b15564bce7ce38acf4ba7cf4dfc1207d8ee7"
+      "sha256": "c983536148cf8e69f6b4934f0bbf3e8e7a699bf817d05cd210372ace65f14992"
     },
     {
       "byte_length": 4698,
@@ -48,7 +48,7 @@
     {
       "byte_length": 13542,
       "path": "artifacts/sprints/sprint-11/story-11.2/workflow-materialization-schema-results.log",
-      "sha256": "9ae22a68b4acee2134db775daa2c96ec46e9cb770827a72903124abf82340e82"
+      "sha256": "2234f117638aa1f7207da900e2098d2189b9d68f8fa510e50e43598954d1f426"
     }
   ],
   "commands": [

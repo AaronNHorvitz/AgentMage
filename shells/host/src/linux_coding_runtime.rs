@@ -4006,6 +4006,9 @@ fn map_journal_failure(error: DurableAuthorityError) -> RuntimePortFailure {
         DurableAuthorityError::ResearchReport(ResearchReportError::Accounting(error)) => {
             map_journal_failure(DurableAuthorityError::ResearchJournal(error))
         }
+        DurableAuthorityError::ResearchReport(ResearchReportError::Artifact(error)) => {
+            map_journal_failure(DurableAuthorityError::RuntimeArtifact(error))
+        }
         DurableAuthorityError::ResearchReport(
             ResearchReportError::Limit
             | ResearchReportError::Shape(ResearchReportShapeError::Limit),
@@ -4445,6 +4448,22 @@ mod tests {
         use agentmage_kernel_engine::research_journal::ResearchJournalError;
         use agentmage_kernel_engine::research_report::ResearchReportError;
         use agentmage_kernel_engine::research_retrieval::ResearchRetrievalError;
+        use agentmage_kernel_engine::runtime_artifact::{
+            RuntimeArtifactPayloadError, RuntimeArtifactStoreError,
+        };
+        for cause in [
+            RuntimeArtifactStoreError::Storage,
+            RuntimeArtifactStoreError::Integrity,
+            RuntimeArtifactStoreError::NotAuthorized,
+            RuntimeArtifactStoreError::Payload(RuntimeArtifactPayloadError::ResourceLimit),
+        ] {
+            assert_eq!(
+                map_journal_failure(DurableAuthorityError::ResearchReport(
+                    ResearchReportError::Artifact(cause)
+                )),
+                map_journal_failure(DurableAuthorityError::RuntimeArtifact(cause)),
+            );
+        }
         for cause in [
             ResearchRetrievalError::Integrity,
             ResearchRetrievalError::Limit,

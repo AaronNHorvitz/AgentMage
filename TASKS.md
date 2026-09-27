@@ -85,6 +85,13 @@ records executed source checks; native and integrated research acceptance remain
 It preserves old response frames and canonical authority; component verification
 cannot close native/provider/model, independent-review or release acceptance.
 
+The retained-draft continuation follows
+[Decision 0086](docs/decisions/0086-retained-research-drafts.md): restricted artifact
+publication and fresh reconstruction reuse the canonical owners. Generic raw/page
+reads cannot replace source checks. Its
+[component record](docs/verification/research-retained-report-component-2026-09-27.md)
+keeps verification and integration limits separate; AMR-03.1.2 remains open.
+
 | Status | Row | Dependencies | Bounded implementation and verification |
 | --- | --- | --- | --- |
 | [ ] | AMR-01.1 | Prior coding source and retained campaign | Reconcile exact source/binary/model identities, current doctor behavior and all changed planning/privacy evidence bindings; preserve original receipts and distinguish freshness from historical validity. |

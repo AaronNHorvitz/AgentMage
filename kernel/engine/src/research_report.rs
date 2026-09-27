@@ -20,10 +20,15 @@ use crate::research_retrieval::{self, PublicGetReadRequest, ResearchRetrievalErr
 use crate::runtime_artifact::RuntimeArtifactPayloadStore;
 use crate::tooling::ToolRegistry;
 
+#[path = "research_report_retained.rs"]
+mod retained;
 #[path = "research_report_shape.rs"]
 mod shape;
 #[path = "research_report_span.rs"]
 mod span;
+
+pub use retained::{ResearchReportPublicationRequest, RetainedResearchReportReadRequest};
+pub(crate) use retained::{publish_draft, read_retained};
 
 pub use shape::{
     ResearchReportClaimDraft, ResearchReportConflictDraft, ResearchReportDraft,
@@ -69,6 +74,8 @@ pub struct ResearchReportSource {
     worker_reported_url: Option<String>,
     body_sha256: String,
     retrieved_at_epoch_ms: u64,
+    #[serde(skip)]
+    retained_artifacts: Vec<RuntimeArtifactRef>,
 }
 
 impl ResearchReportSource {
@@ -140,8 +147,9 @@ impl CanonicalResearchReport {
         &self.draft
     }
 
-    /// Bounded inert JSON for ordinary artifact publication; raw bodies stay private.
-    /// Future use must recheck the original source bundles through the canonical owner.
+    /// Bounded inert display JSON; raw bodies stay private. This is not a retained
+    /// draft or reusable evidence. Persist drafts through the dedicated canonical
+    /// path so future use rechecks original source bundles and their lifecycle.
     pub fn encode(&self) -> Result<Vec<u8>, ResearchReportError> {
         let bytes = serde_json::to_vec(self).map_err(|_| ResearchReportError::Binding)?;
         if bytes.len() > MAX_REPORT_BYTES {
@@ -160,6 +168,8 @@ pub enum ResearchReportError {
     Source(ResearchRetrievalError),
     /// Failed original canonical accounting verification.
     Accounting(ResearchJournalError),
+    /// Retained draft publication or lifecycle refused by the existing artifact owner.
+    Artifact(crate::runtime_artifact::RuntimeArtifactStoreError),
     /// Excerpt identity or exact UTF-8 range differs, or a receipt is duplicated.
     Binding,
     /// Source, report or aggregate quotation ceiling exceeded.
@@ -172,6 +182,7 @@ impl ResearchReportError {
     pub(crate) const fn poisons_runtime(self) -> bool {
         matches!(self, Self::Source(ResearchRetrievalError::Integrity))
             || matches!(self, Self::Accounting(error) if error.poisons_runtime())
+            || matches!(self, Self::Artifact(error) if error.poisons_runtime())
     }
 }
 
@@ -256,6 +267,7 @@ pub(crate) fn read<S: RuntimeArtifactPayloadStore>(
                 .cloned(),
             body_sha256: observed.body_sha256.clone(),
             retrieved_at_epoch_ms: observed.completed_epoch_ms,
+            retained_artifacts: source.retained_artifacts().to_vec(),
         });
     }
     let deadline = accounting

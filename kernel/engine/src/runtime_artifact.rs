@@ -34,6 +34,9 @@ pub const RUNTIME_CONTEXT_PACKET_MEDIA_TYPE: &str =
 /// Exact media type for one accepted model-boundary result retained before interpretation.
 pub const RUNTIME_MODEL_RESULT_MEDIA_TYPE: &str =
     "application/vnd.agentmage.runtime-model-result+json";
+/// Retained untrusted research draft; content reads require fresh source checking.
+pub const RESEARCH_REPORT_DRAFT_MEDIA_TYPE: &str =
+    "application/vnd.agentmage.research-report-draft+json";
 const MAX_RUNTIME_CONTINUATION_RESULTS: usize = 1_024;
 const MAX_RUNTIME_CONTINUATION_TRANSITIONS: usize = 4_096;
 
@@ -528,6 +531,57 @@ pub(crate) fn publish_runtime_artifact<S: RuntimeArtifactPayloadStore>(
     manifest: RuntimeArtifactManifest,
     source: &mut dyn Read,
 ) -> Result<RuntimeArtifactPublication, RuntimeArtifactStoreError> {
+    if manifest.media_type == RESEARCH_REPORT_DRAFT_MEDIA_TYPE
+        || has_research_draft_payload(store, &manifest.payload_sha256)?
+    {
+        return Err(RuntimeArtifactStoreError::NotAuthorized);
+    }
+    publish_artifact_bytes(store, payloads, manifest, source)
+}
+
+// Only the canonical report owner may use this entry after fresh source checks.
+pub(crate) fn publish_research_draft<S: RuntimeArtifactPayloadStore>(
+    store: &mut OperationalStore,
+    payloads: &mut S,
+    manifest: RuntimeArtifactManifest,
+    bytes: &[u8],
+) -> Result<RuntimeArtifactPublication, RuntimeArtifactStoreError> {
+    let aliases: bool = store
+        .connection
+        .query_row(
+            "SELECT EXISTS(SELECT 1 FROM runtime_artifacts
+         WHERE payload_sha256 = ?1 AND media_type <> ?2)",
+            params![&manifest.payload_sha256, RESEARCH_REPORT_DRAFT_MEDIA_TYPE],
+            |row| row.get(0),
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    if manifest.media_type != RESEARCH_REPORT_DRAFT_MEDIA_TYPE || aliases {
+        return Err(RuntimeArtifactStoreError::NotAuthorized);
+    }
+    publish_artifact_bytes(store, payloads, manifest, &mut std::io::Cursor::new(bytes))
+}
+
+fn has_research_draft_payload(
+    store: &OperationalStore,
+    payload_sha256: &str,
+) -> Result<bool, RuntimeArtifactStoreError> {
+    store
+        .connection
+        .query_row(
+            "SELECT EXISTS(SELECT 1 FROM runtime_artifacts
+         WHERE payload_sha256 = ?1 AND media_type = ?2)",
+            params![payload_sha256, RESEARCH_REPORT_DRAFT_MEDIA_TYPE],
+            |row| row.get(0),
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Storage)
+}
+
+fn publish_artifact_bytes<S: RuntimeArtifactPayloadStore>(
+    store: &mut OperationalStore,
+    payloads: &mut S,
+    manifest: RuntimeArtifactManifest,
+    source: &mut dyn Read,
+) -> Result<RuntimeArtifactPublication, RuntimeArtifactStoreError> {
     verify_runtime_artifact_manifest(&manifest)?;
     verify_manifest_producer(&store.connection, &manifest)?;
     let expected = payload_observation(&manifest);
@@ -809,6 +863,32 @@ pub(crate) fn read_runtime_artifact<S: RuntimeArtifactPayloadStore>(
     payloads: &S,
     request: &RuntimeArtifactReadRequest,
 ) -> Result<Vec<u8>, RuntimeArtifactStoreError> {
+    if request.reference.media_type == RESEARCH_REPORT_DRAFT_MEDIA_TYPE
+        || has_research_draft_payload(store, &request.reference.payload_sha256)?
+    {
+        return Err(RuntimeArtifactStoreError::NotAuthorized);
+    }
+    read_artifact_bytes(store, payloads, request)
+}
+
+// Bytes remain internal until the canonical report owner has freshly checked
+// every source and publication. This entry grants no reusable read authority.
+pub(crate) fn read_research_draft<S: RuntimeArtifactPayloadStore>(
+    store: &OperationalStore,
+    payloads: &S,
+    request: &RuntimeArtifactReadRequest,
+) -> Result<Vec<u8>, RuntimeArtifactStoreError> {
+    if request.reference.media_type != RESEARCH_REPORT_DRAFT_MEDIA_TYPE {
+        return Err(RuntimeArtifactStoreError::NotAuthorized);
+    }
+    read_artifact_bytes(store, payloads, request)
+}
+
+fn read_artifact_bytes<S: RuntimeArtifactPayloadStore>(
+    store: &OperationalStore,
+    payloads: &S,
+    request: &RuntimeArtifactReadRequest,
+) -> Result<Vec<u8>, RuntimeArtifactStoreError> {
     let manifest = authorize_runtime_artifact_read(
         store,
         &request.session_id,
@@ -839,6 +919,11 @@ pub(crate) fn read_runtime_artifact_page<S: RuntimeArtifactPayloadStore>(
     payloads: &S,
     request: &RuntimeArtifactPageRequest,
 ) -> Result<RuntimeArtifactPage, RuntimeArtifactStoreError> {
+    if request.reference.media_type == RESEARCH_REPORT_DRAFT_MEDIA_TYPE
+        || has_research_draft_payload(store, &request.reference.payload_sha256)?
+    {
+        return Err(RuntimeArtifactStoreError::NotAuthorized);
+    }
     let manifest = authorize_runtime_artifact_read(
         store,
         &request.session_id,
@@ -2627,6 +2712,20 @@ fn validate_manifest_fields(
         || manifest.integrity != RuntimeArtifactIntegrityState::Verified
         || !valid_retention(manifest)
         || !valid_kind_media(manifest.kind, &manifest.media_type)
+        || manifest.media_type == RESEARCH_REPORT_DRAFT_MEDIA_TYPE
+            && (manifest.kind != RuntimeArtifactKind::Report
+                || manifest.byte_size > 128 * 1024
+                || manifest.preview.is_some()
+                || manifest.receipt_id.is_some()
+                || manifest.producer_operation_id.is_some()
+                || !matches!(
+                    manifest.sensitivity,
+                    ContextSensitivity::Private | ContextSensitivity::Restricted
+                )
+                || !matches!(
+                    manifest.retention.kind,
+                    RuntimeEventRetentionKind::Session | RuntimeEventRetentionKind::UntilExpiration
+                ))
         || manifest.preview.as_ref().is_some_and(|preview| {
             preview.text.is_empty()
                 || preview.text.len() > MAX_RUNTIME_ARTIFACT_PREVIEW_BYTES

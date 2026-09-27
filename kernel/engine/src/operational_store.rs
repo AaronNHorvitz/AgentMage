@@ -1678,6 +1678,64 @@ pub enum DurableAuthorityError {
 }
 
 impl DurableAuthorityRuntime {
+    /// Retains only an untrusted draft after fresh canonical source checking.
+    /// The existing journal must record its exact ArtifactCreated event before reads.
+    pub fn publish_research_report_draft<S: RuntimeArtifactPayloadStore>(
+        &mut self,
+        payloads: &mut S,
+        registry: &ToolRegistry,
+        request: &crate::research_report::ResearchReportPublicationRequest<'_>,
+    ) -> Result<RuntimeArtifactPublication, DurableAuthorityError> {
+        self.ensure_usable()?;
+        self.flush_runtime_events()?;
+        let result = {
+            let mut store = self.lock_store()?;
+            crate::research_report::publish_draft(
+                &mut store,
+                payloads,
+                &self.coordinator,
+                &self.issuer,
+                registry,
+                request,
+            )
+        };
+        result.map_err(|error| {
+            if error.poisons_runtime() {
+                self.poisoned = true;
+            }
+            DurableAuthorityError::ResearchReport(error)
+        })
+    }
+
+    /// Reconstructs a retained draft through current source and lifecycle checks.
+    /// Stored checked reports and generic artifact pages cannot replace this read.
+    pub fn read_retained_research_report<S: RuntimeArtifactPayloadStore>(
+        &mut self,
+        payloads: &S,
+        registry: &ToolRegistry,
+        request: &crate::research_report::RetainedResearchReportReadRequest<'_>,
+    ) -> Result<crate::research_report::CanonicalResearchReport, DurableAuthorityError> {
+        self.ensure_usable()?;
+        self.flush_runtime_events()?;
+        let result = {
+            let store = self.lock_store()?;
+            crate::research_report::read_retained(
+                &store,
+                payloads,
+                &self.coordinator,
+                &self.issuer,
+                registry,
+                request,
+            )
+        };
+        result.map_err(|error| {
+            if error.poisons_runtime() {
+                self.poisoned = true;
+            }
+            DurableAuthorityError::ResearchReport(error)
+        })
+    }
+
     /// Rechecks complete source bundles under this existing owner's store lock.
     /// A previously returned source/report never substitutes for current lifecycle.
     pub fn read_research_report<S: RuntimeArtifactPayloadStore>(

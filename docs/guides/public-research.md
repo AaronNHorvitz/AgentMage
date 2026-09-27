@@ -36,6 +36,22 @@ not enable research execution. See the separate
 [durability record](../verification/research-durability-component-2026-09-26.md) for actual
 tests, failures and remaining native/provider integration.
 
+The source-linked report component checks exact full source bundles through the
+existing authority, journal and artifact owners. Observations prove excerpt
+presence; model interpretations retain their limitations. Conflicts, unanswered
+questions, cancellation and original deadline expiry remain explicit. A serialized
+checked report is a point-in-time display, not reusable evidence.
+
+Retained drafts use the restricted artifact format in
+[Decision 0086](../decisions/0086-retained-research-drafts.md). The canonical owner
+rechecks sources before publication and reconstruction. Generic complete/page
+reads, previews and ordinary-media aliases cannot expose draft bytes. Retention
+must agree with every source member and cannot extend its deadline or lower its
+sensitivity. Mixed retention classes and user holds are refused by this component.
+The exact publication event must exist before reconstruction; an interrupted
+publication stays unreadable. This component enables no host/provider research.
+See the [retained-draft verification record](../verification/research-retained-report-component-2026-09-27.md).
+
 Verified results prefer primary documentation, original research, and authoritative records ahead
 of secondary analysis. Every claim-level citation retains its title, direct URL, publisher,
 publication time when known, access point, excerpt digest, freshness result, and a 25-word quotation

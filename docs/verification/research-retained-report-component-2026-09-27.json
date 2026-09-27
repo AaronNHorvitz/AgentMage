@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "record_type": "research-retained-draft-component-observations",
+  "date": "2026-09-27",
+  "base_commit": "0df8695a8bf49bef92db1c0e98cb02903a700eca",
+  "status": "executed-component-checks-not-workflow-or-downgrade-acceptance",
+  "source_inputs": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc"
+    },
+    {
+      "path": "docs/decisions/0085-canonical-research-report-projection.md",
+      "sha256": "a668b4cc96a8b95fd3b4a019f192b2dddd4bd5f26cd4cdf249aa0bdf260b9f07"
+    },
+    {
+      "path": "docs/decisions/0086-retained-research-drafts.md",
+      "sha256": "87de13e19075cee4bfdca33d003aa69ceb081e11e6bfdcc9f1336a668c7390d2"
+    },
+    {
+      "path": "kernel/contracts/src/context.rs",
+      "sha256": "3fdc7d7f3a0b7b9c0b23bc6c5056bd9720f2d4729839546bdae8015aaf859a97"
+    },
+    {
+      "path": "kernel/contracts/src/runtime_artifact.rs",
+      "sha256": "f4e07606661ee1193eac26d4ad730f9d8348259a927343e3bce4f916482234e4"
+    },
+    {
+      "path": "kernel/contracts/src/runtime_event.rs",
+      "sha256": "22183f4affec1a6792bbd7c2bb93465842d7319885d42a555ae93cf72c551bf4"
+    },
+    {
+      "path": "kernel/engine/Cargo.toml",
+      "sha256": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8"
+    },
+    {
+      "path": "kernel/engine/src/authority_transaction.rs",
+      "sha256": "ba4319939bc4e57d6357e80d217dd872cd8c790447a1d185265736acdb9a2852"
+    },
+    {
+      "path": "kernel/engine/src/grants.rs",
+      "sha256": "dd09da4069425ae0bbd4db527a1b472cf936d71e5247eceee60c41d035286291"
+    },
+    {
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "6092289ab03003313964b7484ceb2de50d6275ec363356fd47105c11a86316a1"
+    },
+    {
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "c983536148cf8e69f6b4934f0bbf3e8e7a699bf817d05cd210372ace65f14992"
+    },
+    {
+      "path": "kernel/engine/src/persistence.rs",
+      "sha256": "fb537c04df0d687af10e36eea98834910f8760877858266bb1f54cb1ca28d540"
+    },
+    {
+      "path": "kernel/engine/src/research_budget.rs",
+      "sha256": "886e19b42db37de5f817aa6b32dd5a41ee7068f7d2a3d2a2a92921cee1f4fb8d"
+    },
+    {
+      "path": "kernel/engine/src/research_dispatch.rs",
+      "sha256": "e0d454da4fe7f620fbcfb121258e5b2c0f8d11c91f10a05327c2a2681daa160d"
+    },
+    {
+      "path": "kernel/engine/src/research_effect_binding.rs",
+      "sha256": "c69d7e8d64d5b4212583c71814fdd77897810a6f5ccf4776ec2f02ab82848151"
+    },
+    {
+      "path": "kernel/engine/src/research_fetch.rs",
+      "sha256": "ea858dab7bd0e294e767b234738aea5d6368db517d503736f77ac06307435b78"
+    },
+    {
+      "path": "kernel/engine/src/research_journal.rs",
+      "sha256": "2d25b4c5182535bbcf3506187d3ed566f74efc5452c96b5cfbedf9ea7478ac7e"
+    },
+    {
+      "path": "kernel/engine/src/research_journal_tests.rs",
+      "sha256": "b4f756e9e8301d4c592d2af8b9dee4b4aa13010a4ba4308b178dd0f1f21d4b7f"
+    },
+    {
+      "path": "kernel/engine/src/research_migration_tests.rs",
+      "sha256": "10c90c15d1219fe52cd47f5c40b513ec13f9e8fd77b31744ac9fe8b068bfb9ab"
+    },
+    {
+      "path": "kernel/engine/src/research_plan.rs",
+      "sha256": "fa746331fab47375e8b268caf4b7eeaa7ce0d0eed7a52d91d9b4b5d7b2c54393"
+    },
+    {
+      "path": "kernel/engine/src/research_report.rs",
+      "sha256": "eff9b8aec0a490004142abfd5eb4209999d9c1c2aa07f439ef35ed4d61f1d925"
+    },
+    {
+      "path": "kernel/engine/src/research_report_retained.rs",
+      "sha256": "e80267cfff64e777ffc3860ec698dce1bfc2474fba2d14de600ef73bf3bbcab4"
+    },
+    {
+      "path": "kernel/engine/src/research_report_retained_tests.rs",
+      "sha256": "b5ef83b84409de8457c5da046d7c9141e76f520bba19972a0d2f651ed5419602"
+    },
+    {
+      "path": "kernel/engine/src/research_report_shape.rs",
+      "sha256": "3c8ba4910b6ba26f804ec7a50ab4ebd0635ac02514ef03dc13ca1024b62a1385"
+    },
+    {
+      "path": "kernel/engine/src/research_report_span.rs",
+      "sha256": "6841b68ac46061d54b7cebf2ef7ec3b9f89d3c8641aa34ce94bb4eeb534615ed"
+    },
+    {
+      "path": "kernel/engine/src/research_report_tests.rs",
+      "sha256": "242cb1738206091c38f92f3166a74e0de1f83c074202ee20dda36fa97a2e36fe"
+    },
+    {
+      "path": "kernel/engine/src/research_response.rs",
+      "sha256": "ae450405693b923554da9e9a52b01c207f199364e0b83265bf09b85f8ba2991b"
+    },
+    {
+      "path": "kernel/engine/src/research_result_binding.rs",
+      "sha256": "ada04f036bc9311f05412d1d433aeae18d1fcbc8d0f9539475d97db9219cb84d"
+    },
+    {
+      "path": "kernel/engine/src/research_retrieval.rs",
+      "sha256": "de21f92c7a793ac99d8afdc1bd08a25860cf1f35affbef4cd21e441835c0bffa"
+    },
+    {
+      "path": "kernel/engine/src/research_retrieval_tests.rs",
+      "sha256": "bf4e57f91e441bf47c544f6f60579cf70b8c62ea68c36efaf5c42b8c93d4ce7e"
+    },
+    {
+      "path": "kernel/engine/src/runtime_artifact.rs",
+      "sha256": "cc6ee1ad0438fb9ed93663fc0326742bf2435f77eb259f540730a60761f1c8c8"
+    },
+    {
+      "path": "kernel/engine/src/runtime_journal.rs",
+      "sha256": "3588470c9ed56647802638f766c16418b9f61a8d7ea82a422371c56063b3d464"
+    },
+    {
+      "path": "kernel/engine/src/web_research_safety.rs",
+      "sha256": "543a49d74e5260a06fec46ddea8cf2946fceed973073d5f02d33fced98dce76c"
+    },
+    {
+      "path": "platforms/linux/Cargo.toml",
+      "sha256": "b8aec95285d2de67b37729fa5b52a3983cccb426f0cdc1d3a1a7c40c5e2b2c23"
+    },
+    {
+      "path": "platforms/linux/src/public_research_target.rs",
+      "sha256": "4a834424ed789f173cb9ac15f5546308afaf792bceaaedb5c867f0e3539c983e"
+    },
+    {
+      "path": "platforms/linux/src/public_research_transport.rs",
+      "sha256": "41e1c177853b350ba1244cbfe1f2ab953e54b8749d9f628e57d5dfcb472867c0"
+    },
+    {
+      "path": "scripts/coding_harness.py",
+      "sha256": "ad2278426f5a9ed69217c8eb0a0e4fe9c4f598feeb208d4fe39603dcaf8655f7"
+    },
+    {
+      "path": "scripts/research_transport_fixtures.sh",
+      "sha256": "ce75ac9958b3d5b8758f84d605f62b4066c1b50aa1829a3dc9b779c45fb5db50"
+    },
+    {
+      "path": "security/strict-local-source-policy.json",
+      "sha256": "31487dcdedd1a6a9b8b591b423ad24343865611ec6d475a138b615d012301aa2"
+    },
+    {
+      "path": "shells/host/src/linux_coding_runtime.rs",
+      "sha256": "ef6d07c5e522bb2fab6ef23bcf4f682ba6504d775b0eeeeea3c0e57d9390e5ae"
+    },
+    {
+      "path": "tests/test_coding_harness.py",
+      "sha256": "8c5f92ad5edfceeb5f732f0a47a765b35470a6ede6465de8baf512cb022c05a9"
+    }
+  ],
+  "checks": [
+    {
+      "log_name": "research-retained-focused-3-20260927.log",
+      "sha256": "b106add9d8cea28e145fb2504ed9bea57e11e274c7afd7af753ebf3847c1daf1",
+      "exit_code": 0,
+      "scope": "Ten focused retained-report tests; before adding the final pre-publication refusal test."
+    },
+    {
+      "log_name": "research-retained-source-checks-20260927.log",
+      "sha256": "4a7e48bd26f67dc85b543db76ab49450e16a2092361f43eff819686e05bc7df3",
+      "exit_code": 0,
+      "scope": "Final source:1211engine library passed,7ignored;13documentation tests;1host mapping;workspace/all-targets Clippy warnings denied;strict-local and module audits;format/diff/source hashes."
+    },
+    {
+      "log_name": "research-retained-integration-20260927.log",
+      "sha256": "7bdcb09fa45cdf6afd0774d339df408d40fd13acae56e017f226d0f77ed9bbcc",
+      "exit_code": 0,
+      "scope": "Optional public-research-worker all-targets Clippy warnings denied;effect/dependency audits;53Python boundary/ownership regressions;source hashes unchanged."
+    }
+  ],
+  "retained_failures": [
+    {
+      "log_name": "research-retained-focused-20260927.log",
+      "sha256": "9d362b11af767c8503f7fc723d71d31d95b037a68b0f9849390c3d6e3381ee02",
+      "exit_code": 101,
+      "scope": "Test tried to call a private store helper. Replaced with the existing shared test-owner handle; no production visibility change."
+    },
+    {
+      "log_name": "research-retained-focused-2-20260927.log",
+      "sha256": "2730f251323115152cad51b8c65701937e9ed1c3f50a671a98704f343a39491a",
+      "exit_code": 101,
+      "scope": "2passed/8failed at journal turn binding; fixture corrected to actual recorded turn, without changing journal authority."
+    }
+  ],
+  "evidence_renewal": {
+    "status": "bounded-renewal-passed-automated-pin-follows-commit",
+    "sbom_write_count": 1,
+    "core": {
+      "exit_code": 0,
+      "log_name": "research-retained-evidence-20260927.log",
+      "sha256": "174b451f922c98d7fe6ccf165a194a9b654cd5e03c96583d855ce3da225d3337",
+      "markdown_file_count": 549,
+      "python_regression_count": 186
+    },
+    "freshness_scope": "Direct named whole-file bindings only; excludes transitive, unnamed, untracked input paths and line-span bindings.",
+    "historical_records_preserved": [
+      {
+        "path": "artifacts/sprints/sprint-22/story-22.1/current-product-canary-sweep.json",
+        "disposition": "Already stale at base 0df8695a: operational_store.rs differed; original sweep is not acceptance of this new surface."
+      },
+      {
+        "path": "artifacts/sprints/sprint-82/local-evidence-report.json",
+        "disposition": "Already stale at base 0df8695a: engine lib/research_budget and all three supply-chain inputs differed; original source revision retained."
+      },
+      {
+        "path": "docs/verification/research-report-component-2026-09-27.json",
+        "disposition": "Previous source50f component observation; exact original source/log pins remain historical, not current retained-draft qualification."
+      }
+    ],
+    "storage_and_resume": {
+      "exit_code": 0,
+      "log_name": "research-retained-storage-20260927.log",
+      "sha256": "bc8888729cc858375f725be60d9deb543d156cbcf639dd1ac3344f8eb35d66de",
+      "builder_regression_count": 82
+    },
+    "transcript_privacy": {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-results.log",
+      "replacement_count": 0
+    },
+    "precommit_direct_inventory": {
+      "json_files_parsed": 752,
+      "binding_count": 583,
+      "dispositions": {
+        "current-direct-binding": 83,
+        "newly-stale": 26,
+        "previously-stale-or-historical": 474
+      },
+      "excluded_line_span_binding_count": 1602
+    },
+    "final_checks": {
+      "exit_code": 0,
+      "log_name": "research-retained-final-checks-20260927.log",
+      "sha256": "139515bf3b83e8cd1104ff3b60d49d12b2247ba3b304b0205a222ab83cc45bf8",
+      "scope": "Full Markdown lint,32 artifact/status/architecture/supply-chain validators, unchanged source manifest and whitespace; Story11.2 reviewed pin follows commit."
+    }
+  },
+  "acceptance": {
+    "component": "source-tests-passed",
+    "executable_scripted": "not-executed-for-this-increment; earlier actual CLI refused native prerequisites",
+    "native_transport": "not-qualified",
+    "real_model": "not-executed",
+    "manual_user": "not-performed",
+    "independent_review": "not-performed-for-this-increment",
+    "release": "not-approved",
+    "downgrade_compatibility": "open: store-version barrier required before integration because older generic Report readers do not know the restricted media"
+  },
+  "limitations": [
+    "Generic artifact APIs refuse the reserved format; trusted composition must not relabel arbitrary derived text.",
+    "Only session or matching explicit-expiration source retention is supported; mixed classes and user holds are refused.",
+    "Physical collection remains the existing artifact lifecycle; no new deletion guarantee.",
+    "No host/provider activation, new model admission, task checkbox or production status promotion.",
+    "Older-reader refusal for this retained format is not implemented in this source batch; no integration or admission until the compatibility follow-up passes."
+  ]
+}

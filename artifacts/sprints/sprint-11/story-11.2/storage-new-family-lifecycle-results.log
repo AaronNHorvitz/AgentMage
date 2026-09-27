@@ -5,7 +5,7 @@ $ cargo test -p agentmage-kernel-engine every_source_and_workflow_family_has_a_c
 running 1 test
 test operational_store::tests::every_source_and_workflow_family_has_a_content_free_derived_export ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1206 filtered out; finished in 0.16s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1217 filtered out; finished in 0.12s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -122,7 +122,7 @@ running 2 tests
 test operational_store::tests::source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store ... ok
 test operational_store::tests::workflow_materializations_bind_existing_run_session_event_and_receipt_authorities ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 1205 filtered out; finished in 0.28s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 1216 filtered out; finished in 0.26s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -238,7 +238,7 @@ $ cargo test -p agentmage-kernel-engine refresh_hold_expiry_delete_and_collectio
 running 1 test
 test source_lifecycle::tests::refresh_hold_expiry_delete_and_collection_are_atomic_and_reference_safe ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1206 filtered out; finished in 0.21s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1217 filtered out; finished in 0.20s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -354,7 +354,7 @@ $ cargo test -p agentmage-kernel-engine exclusive_writer_and_encrypted_backup_ar
 running 1 test
 test operational_store::tests::exclusive_writer_and_encrypted_backup_are_verified ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1206 filtered out; finished in 0.23s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1217 filtered out; finished in 0.20s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -470,7 +470,7 @@ $ cargo test -p agentmage-kernel-engine encrypted_backup_restores_only_to_a_veri
 running 1 test
 test operational_store::tests::encrypted_backup_restores_only_to_a_verified_fresh_candidate ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1206 filtered out; finished in 0.29s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1217 filtered out; finished in 0.28s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -586,7 +586,7 @@ $ cargo test -p agentmage-kernel-engine whole_store_cryptographic_erasure_consum
 running 1 test
 test operational_store::tests::whole_store_cryptographic_erasure_consumes_key_scope_without_overwrite_claim ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1206 filtered out; finished in 0.28s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1217 filtered out; finished in 0.24s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -702,7 +702,7 @@ $ cargo test -p agentmage-kernel-engine synthetic_canary_is_absent_from_encrypte
 running 1 test
 test operational_store::tests::synthetic_canary_is_absent_from_encrypted_and_derived_artifacts ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1206 filtered out; finished in 0.26s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1217 filtered out; finished in 0.25s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 

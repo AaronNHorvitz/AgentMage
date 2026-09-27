@@ -116,6 +116,7 @@ pub struct CanonicalPublicGetSource {
     bundle: RuntimeArtifactRef,
     receipt_id: ReceiptId,
     binding: PublicGetResultBinding,
+    retained_artifacts: Vec<RuntimeArtifactRef>,
 }
 
 impl std::fmt::Debug for CanonicalPublicGetSource {
@@ -130,6 +131,11 @@ impl std::fmt::Debug for CanonicalPublicGetSource {
 }
 
 impl CanonicalPublicGetSource {
+    // Exact six objects already verified by this read, for derived retention checks.
+    pub(crate) fn retained_artifacts(&self) -> &[RuntimeArtifactRef] {
+        &self.retained_artifacts
+    }
+
     /// Full inert response verified at this read; later reads must recheck lifecycle.
     #[must_use]
     pub const fn response(&self) -> &crate::research_response::PublicGetResponse {
@@ -359,10 +365,14 @@ pub(crate) fn read<S: RuntimeArtifactPayloadStore>(
         bundle: request.bundle.clone(),
         receipt_id: receipt.receipt_id.clone(),
         binding,
+        retained_artifacts: refs
+            .iter()
+            .map(|(reference, _)| (*reference).clone())
+            .collect(),
     })
 }
 
-fn verify_history_budget(
+pub(crate) fn verify_history_budget(
     store: &OperationalStore,
     run_id: &RuntimeRunId,
 ) -> Result<(), ResearchRetrievalError> {
