@@ -37,13 +37,15 @@ The subsequent [durable tool-start and terminal publication record](docs/verific
 records continuous actual-CLI native-read cancellation, exact consumed authority,
 canonical reopens, fresh-host scripted repair and a reproduced terminal-channel
 ordering correction for AMR-01/AMR-02 prerequisites. Command/Git/validation live
-cancellation, crash-safe worker ownership, connected research and new-source model
+cancellation, crash-safe worker ownership, connected research and broader model
 qualification remain open. Neither record closes a package or acceptance gate below.
 
 The [hybrid resource-admission correction](docs/verification/native-hybrid-resource-admission-2026-09-27.md)
 retains a new pre-inference Muse refusal, its reproduced cgroup-parser defect and
-bounded verification. New-source model qualification and the correction work unit's
-single evidence/SBOM pass remain open; historical reports are not current acceptance.
+bounded verification. The subsequent [eight-case Muse recheck](docs/verification/coding-harness-campaign15-results-2026-09-27.md)
+pins repeated development success at `b4417f47`, including the retained refusals,
+unchanged limits and still-open production/independent gates. Evidence-renewal
+dispositions are recorded alongside those results; historical reports are not current acceptance.
 
 | Status | Row | Dependencies | Bounded implementation and verification |
 | --- | --- | --- | --- |

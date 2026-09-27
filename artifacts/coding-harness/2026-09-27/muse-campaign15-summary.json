@@ -1,0 +1,882 @@
+{
+  "binaries_sha256": {
+    "agentmage": "f074bf9a20fca6217febfa1d390ae4323f51fb5b9074c83211fa861e5152a389",
+    "agentmage-host": "db36c5739d2daeb9328ef237885f6fd63db1160d8cdf77724b97f810f1204fa3",
+    "agentmage-read-only-worker": "7cbcf459492012491a27607225ddc5c778c589b81956a462441d3ed4c9dec077"
+  },
+  "campaign": 15,
+  "campaign_driver_sha256": "61aafd0772908bd843e53195dfd90cee2cc54e5d01c195ada9601ede54ac0497",
+  "cases": [
+    {
+      "candidate_resources": {
+        "baseline_gpu_free_mib": 22285,
+        "baseline_gpu_used_mib": 1876,
+        "peak_total_gpu_used_mib_sampled": 18508,
+        "resource_guard_error": null,
+        "scope_resources": {
+          "cpu.max": "200000 100000",
+          "memory.high": "5368709120",
+          "memory.max": "6442450944",
+          "memory.peak": "5369688064",
+          "memory.swap.max": "536870912"
+        }
+      },
+      "case": "repair",
+      "checks": {
+        "binaries-unchanged": true,
+        "current-diff-status": true,
+        "exact-profile": true,
+        "failed-test-repair": true,
+        "feedback": true,
+        "filesystem": true,
+        "full-artifacts": true,
+        "native-candidate": true,
+        "native-responses": true,
+        "passing-native-validation": true,
+        "recording-consent": true,
+        "resource-guard": true,
+        "terminal-verifier": true
+      },
+      "collector_sha256": "c7d4e32115d163c54ace9dc1875b5a3607858263db039393cfe9949241f46d70",
+      "diff_sha256": "10a72e3259dd636f12721966007c4c21e3640bc56f87acfcaaea36d3aec16685",
+      "driver_record_sha256": "0294dc4be6f877e8ee6658ed05f0047d470065bbe48dd1bd3d70ba58df22f4ce",
+      "elapsed_seconds": 415.7027455060743,
+      "final_changed_files": [
+        {
+          "bytes": 46,
+          "path": "src/calc.py",
+          "postimage_sha256": "63098273a7aaa630762d6f145dfcf9c61c8c9b290c6ebeb2a05fea5854ccb476",
+          "receipt_sha256": "8f24954525b627f1ff4a60f2287617bf308f4c8d1af271c0596cb3bee2618345",
+          "tool": "agentmage.code.patch-file"
+        }
+      ],
+      "finish_reasons": {
+        "end_of_sequence": 7
+      },
+      "git_diff_scope": "tracked working-tree changes only; untracked creations bound separately",
+      "maximum_input_tokens": 28089,
+      "maximum_output_tokens": 990,
+      "objective_sha256": "d71f323827df3596dbcb5987a74cdeb261408f59774c8ecda9f4d95ebcc749f7",
+      "outer_log_sha256": "ba9d75c8cff6c218b2ceb0c49fad3bff8e60cbe3b5b67d08bb85cd2ee2028d84",
+      "passed": true,
+      "protocol_rejection_count": 0,
+      "raw_logs": {
+        "result.json": "34472dd3b2002a82c0aa7cfd54e677f881cbf30d750eee9a9029973da6f0ced3",
+        "stderr.log": "42478f1db1ae6ab64a86280501d9dab01c870c28edaa3dba436a1be52d7f40bb",
+        "stdout.jsonl": "e5d2740ae29f8fbd8656ca32242484f05f50d44a6ed6dcbd57e94a70e9e35515"
+      },
+      "record_pair_count": 14,
+      "repetition": 1,
+      "terminal": "SUCCESS",
+      "tool_failures": [],
+      "tool_order": [
+        "agentmage.validation.run-template",
+        "agentmage.workspace.read-file",
+        "agentmage.code.patch-file",
+        "agentmage.validation.run-template",
+        "agentmage.git.inspect",
+        "agentmage.git.inspect"
+      ],
+      "tool_rejections": [],
+      "unique_verified_artifact_ids": 24,
+      "validation_receipts": [
+        {
+          "coverage": "complete",
+          "exit_code": 1,
+          "failed": 1,
+          "index": 0,
+          "passed": 0,
+          "receipt_sha256": "8d46203e1cd35b7022fea399a3b941d4e85e271e96588ea50ddcabe363f58223",
+          "status": "assertion_failed"
+        },
+        {
+          "coverage": "complete",
+          "exit_code": 0,
+          "failed": 0,
+          "index": 3,
+          "passed": 1,
+          "receipt_sha256": "45a43e7c230aa06b386edddafd8b3ad5a1c12e94c6247e89696714e1d83d1956",
+          "status": "passed"
+        }
+      ],
+      "verified_artifact_count": 24
+    },
+    {
+      "candidate_resources": {
+        "baseline_gpu_free_mib": 22285,
+        "baseline_gpu_used_mib": 1876,
+        "peak_total_gpu_used_mib_sampled": 18367,
+        "resource_guard_error": null,
+        "scope_resources": {
+          "cpu.max": "200000 100000",
+          "memory.high": "5368709120",
+          "memory.max": "6442450944",
+          "memory.peak": "5369745408",
+          "memory.swap.max": "536870912"
+        }
+      },
+      "case": "new-file",
+      "checks": {
+        "binaries-unchanged": true,
+        "current-diff-status": true,
+        "exact-profile": true,
+        "failed-test-repair": true,
+        "feedback": true,
+        "filesystem": true,
+        "full-artifacts": true,
+        "native-candidate": true,
+        "native-responses": true,
+        "passing-native-validation": true,
+        "recording-consent": true,
+        "resource-guard": true,
+        "terminal-verifier": true
+      },
+      "collector_sha256": "c9e8c82d17c78eae80adb5f1115b041a50f862e83c8a68d83bd87cae70a112d4",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "driver_record_sha256": "f376f2a14dca6a2eb5aea9ce6dbb91d50b6f0de06d3e693f4b7b6446ea8429cd",
+      "elapsed_seconds": 414.58384539198596,
+      "final_changed_files": [
+        {
+          "bytes": 32,
+          "path": "src/calc.py",
+          "postimage_sha256": "ba1a531f581d2e6094e978ed6f7aca7a8d92eeb62c6e7ad73ee692f7f18bc772",
+          "receipt_sha256": "8c769f7b7dd5ff87690e0431677b373f570ce2ae9127a7c9e92679a06efcafea",
+          "tool": "agentmage.code.create-file"
+        }
+      ],
+      "finish_reasons": {
+        "end_of_sequence": 7
+      },
+      "git_diff_scope": "tracked working-tree changes only; untracked creations bound separately",
+      "maximum_input_tokens": 26338,
+      "maximum_output_tokens": 1326,
+      "objective_sha256": "b0118be2da75cd28704b62c8840cbaad4353c6a209a40b53fe7e9056600c5dc2",
+      "outer_log_sha256": "ba9d75c8cff6c218b2ceb0c49fad3bff8e60cbe3b5b67d08bb85cd2ee2028d84",
+      "passed": true,
+      "protocol_rejection_count": 0,
+      "raw_logs": {
+        "result.json": "47708a23e4d98a73f6a8b09387b0dd3260914081a1757900c098132de5d1603e",
+        "stderr.log": "f41f3dd8c4a1f9cce49028efa7c71627fc57a2b043f10da01872c0dc44a935ae",
+        "stdout.jsonl": "3cd875c32f86aabb597dabb550acc33aedae3e0065851f417d441c9bc7159466"
+      },
+      "record_pair_count": 14,
+      "repetition": 1,
+      "terminal": "SUCCESS",
+      "tool_failures": [],
+      "tool_order": [
+        "agentmage.validation.run-template",
+        "agentmage.code.create-file",
+        "agentmage.validation.run-template",
+        "agentmage.git.inspect",
+        "agentmage.git.inspect"
+      ],
+      "tool_rejections": [
+        {
+          "event": "tool_rejected",
+          "reason": "read_projection_unavailable",
+          "rejection_sha256": "ecb60048befde8e756d1ab69ea20899a19e4de964fc1cf04f37df1f0f2a1865d",
+          "tool_call_id": "model-tool-call:42d17ec82fb5602b97a9f87a53d812e3542fc29039303fc48cc267b45429ffcd"
+        }
+      ],
+      "unique_verified_artifact_ids": 23,
+      "validation_receipts": [
+        {
+          "coverage": "complete",
+          "exit_code": 1,
+          "failed": 1,
+          "index": 0,
+          "passed": 0,
+          "receipt_sha256": "0981eb87c5dfc2673387215ac8300fdbe6ca23ceb02509649bafbc3eafa51f4d",
+          "status": "assertion_failed"
+        },
+        {
+          "coverage": "complete",
+          "exit_code": 0,
+          "failed": 0,
+          "index": 2,
+          "passed": 1,
+          "receipt_sha256": "965dd4d1f058c24de1cc86807e1e38609912ba6d9251e105ff91d4634f74b25e",
+          "status": "passed"
+        }
+      ],
+      "verified_artifact_count": 23
+    },
+    {
+      "candidate_resources": {
+        "baseline_gpu_free_mib": 22285,
+        "baseline_gpu_used_mib": 1876,
+        "peak_total_gpu_used_mib_sampled": 18532,
+        "resource_guard_error": null,
+        "scope_resources": {
+          "cpu.max": "200000 100000",
+          "memory.high": "5368709120",
+          "memory.max": "6442450944",
+          "memory.peak": "5369794560",
+          "memory.swap.max": "536870912"
+        }
+      },
+      "case": "multi-file",
+      "checks": {
+        "binaries-unchanged": true,
+        "current-diff-status": true,
+        "exact-profile": true,
+        "failed-test-repair": true,
+        "feedback": true,
+        "filesystem": true,
+        "full-artifacts": true,
+        "native-candidate": true,
+        "native-responses": true,
+        "passing-native-validation": true,
+        "recording-consent": true,
+        "resource-guard": true,
+        "terminal-verifier": true
+      },
+      "collector_sha256": "e607d0e31a1c7f52fa25b1ad2c3278293eccba3f60df70f21f042614440a0ffa",
+      "diff_sha256": "dc53f7f29e4546a04acad7c69a0dce90da2277f9eb5ae5efabe9a81293fa4d69",
+      "driver_record_sha256": "f36790cb8f1bbdf2b72a921d22b47fdfc41af39234c54f5c01afeb73bbedc050",
+      "elapsed_seconds": 410.4582150110509,
+      "final_changed_files": [
+        {
+          "bytes": 46,
+          "path": "src/calc.py",
+          "postimage_sha256": "63098273a7aaa630762d6f145dfcf9c61c8c9b290c6ebeb2a05fea5854ccb476",
+          "receipt_sha256": "1889bdb890aa5c05c18040226466ed65a8a0bc6f3f7eced6d312e3eb183a14b3",
+          "tool": "agentmage.code.patch-file"
+        },
+        {
+          "bytes": 51,
+          "path": "src/subtract.py",
+          "postimage_sha256": "de79571535569ebe6ad5505a35b9ccbaf00ab036c9561b9e4b93cab06b37fc78",
+          "receipt_sha256": "4a88d4b0cccb1b3096e941e8c45b6d48aa46424eaad0d4f3cc57e02ec2c51842",
+          "tool": "agentmage.code.patch-file"
+        }
+      ],
+      "finish_reasons": {
+        "end_of_sequence": 7
+      },
+      "git_diff_scope": "tracked working-tree changes only; untracked creations bound separately",
+      "maximum_input_tokens": 27594,
+      "maximum_output_tokens": 1064,
+      "objective_sha256": "4156d34353aa43a51fff0fdc280bb7967105a1079c7c389644ced8dc218ce3ec",
+      "outer_log_sha256": "ba9d75c8cff6c218b2ceb0c49fad3bff8e60cbe3b5b67d08bb85cd2ee2028d84",
+      "passed": true,
+      "protocol_rejection_count": 0,
+      "raw_logs": {
+        "result.json": "e768d4e3e7d6858e3faf94e5366b4d76a3343753590384bd19ef0b3c881d9632",
+        "stderr.log": "c66d7d90427d631e3585b0c4eeb41d1bf12b0c9a8f8333e971e704721bb6ecc9",
+        "stdout.jsonl": "e52e807c5d442d2ea1a616a51590f86e2fbea6fc65f7c951c904f0511a4e994b"
+      },
+      "record_pair_count": 14,
+      "repetition": 1,
+      "terminal": "SUCCESS",
+      "tool_failures": [],
+      "tool_order": [
+        "agentmage.validation.run-template",
+        "agentmage.code.patch-file",
+        "agentmage.code.patch-file",
+        "agentmage.validation.run-template",
+        "agentmage.git.inspect",
+        "agentmage.git.inspect"
+      ],
+      "tool_rejections": [],
+      "unique_verified_artifact_ids": 25,
+      "validation_receipts": [
+        {
+          "coverage": "complete",
+          "exit_code": 1,
+          "failed": 2,
+          "index": 0,
+          "passed": 0,
+          "receipt_sha256": "65d40e5ac100d9a81f6b5adfbe1a94cb20d4d3183614cf04edf2f2809a56256e",
+          "status": "assertion_failed"
+        },
+        {
+          "coverage": "complete",
+          "exit_code": 0,
+          "failed": 0,
+          "index": 3,
+          "passed": 2,
+          "receipt_sha256": "2787d50702e5ff3be3db664439e325e31777a8396936e76d7eebbc098460478f",
+          "status": "passed"
+        }
+      ],
+      "verified_artifact_count": 25
+    },
+    {
+      "candidate_resources": {
+        "baseline_gpu_free_mib": 22277,
+        "baseline_gpu_used_mib": 1884,
+        "peak_total_gpu_used_mib_sampled": 18348,
+        "resource_guard_error": null,
+        "scope_resources": {
+          "cpu.max": "200000 100000",
+          "memory.high": "5368709120",
+          "memory.max": "6442450944",
+          "memory.peak": "5369794560",
+          "memory.swap.max": "536870912"
+        }
+      },
+      "case": "stable",
+      "checks": {
+        "binaries-unchanged": true,
+        "current-diff-status": true,
+        "exact-profile": true,
+        "failed-test-repair": true,
+        "feedback": true,
+        "filesystem": true,
+        "full-artifacts": true,
+        "native-candidate": true,
+        "native-responses": true,
+        "passing-native-validation": true,
+        "recording-consent": true,
+        "resource-guard": true,
+        "terminal-verifier": true
+      },
+      "collector_sha256": "311b624c8e4de2a3d9d5b5b0137b4b90bc9e3ad7f5de3ba7d13995c99e1b7934",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "driver_record_sha256": "eab6aaf23525ae403227384f8eda93acd4f5a8c5b1cb3fcb42d30a17d3ce3de9",
+      "elapsed_seconds": 331.9615694669774,
+      "final_changed_files": [],
+      "finish_reasons": {
+        "end_of_sequence": 4
+      },
+      "git_diff_scope": "tracked working-tree changes only; untracked creations bound separately",
+      "maximum_input_tokens": 22911,
+      "maximum_output_tokens": 993,
+      "objective_sha256": "3be6b81b576d99b7ee590618181c737a5dcfbcd0ddd894d7a3234a586e91a8a2",
+      "outer_log_sha256": "ba9d75c8cff6c218b2ceb0c49fad3bff8e60cbe3b5b67d08bb85cd2ee2028d84",
+      "passed": true,
+      "protocol_rejection_count": 0,
+      "raw_logs": {
+        "result.json": "680c168bf3a3a90cf8e087ebe5280e523e9b11c3d4773549340cbe96ca2c2260",
+        "stderr.log": "c426c538d3423e6646e3a00aa5d6439fef12b19fb3cf58b350d4423f961044d3",
+        "stdout.jsonl": "1d6ef0aa681ee282358aec473bd932cbda1ef78a271e230508c7a2ef4aa23f04"
+      },
+      "record_pair_count": 8,
+      "repetition": 1,
+      "terminal": "NO_OP",
+      "tool_failures": [],
+      "tool_order": [
+        "agentmage.git.inspect",
+        "agentmage.validation.run-template",
+        "agentmage.git.inspect"
+      ],
+      "tool_rejections": [],
+      "unique_verified_artifact_ids": 13,
+      "validation_receipts": [
+        {
+          "coverage": "complete",
+          "exit_code": 0,
+          "failed": 0,
+          "index": 1,
+          "passed": 1,
+          "receipt_sha256": "de6ebefc70ee9585cd999f0b5a359ff7e9cf73dbef6e3590d21979ff38d84969",
+          "status": "passed"
+        }
+      ],
+      "verified_artifact_count": 13
+    },
+    {
+      "candidate_resources": {
+        "baseline_gpu_free_mib": 22293,
+        "baseline_gpu_used_mib": 1868,
+        "peak_total_gpu_used_mib_sampled": 18334,
+        "resource_guard_error": null,
+        "scope_resources": {
+          "cpu.max": "200000 100000",
+          "memory.high": "5368709120",
+          "memory.max": "6442450944",
+          "memory.peak": "5369479168",
+          "memory.swap.max": "536870912"
+        }
+      },
+      "case": "repair",
+      "checks": {
+        "binaries-unchanged": true,
+        "current-diff-status": true,
+        "exact-profile": true,
+        "failed-test-repair": true,
+        "feedback": true,
+        "filesystem": true,
+        "full-artifacts": true,
+        "native-candidate": true,
+        "native-responses": true,
+        "passing-native-validation": true,
+        "recording-consent": true,
+        "resource-guard": true,
+        "terminal-verifier": true
+      },
+      "collector_sha256": "1cf1b236f5982b040c069195feb2aa065c9ffc52482c83500f8e4679f2d0c112",
+      "diff_sha256": "10a72e3259dd636f12721966007c4c21e3640bc56f87acfcaaea36d3aec16685",
+      "driver_record_sha256": "2644a32db563a5979244478a89b5d144318fbac20d27d7665f1ea04c11424e31",
+      "elapsed_seconds": 414.4483186710859,
+      "final_changed_files": [
+        {
+          "bytes": 46,
+          "path": "src/calc.py",
+          "postimage_sha256": "63098273a7aaa630762d6f145dfcf9c61c8c9b290c6ebeb2a05fea5854ccb476",
+          "receipt_sha256": "fd82d54440276055242e3698295af38460c8584a2e186f66f6254acac2ea2401",
+          "tool": "agentmage.code.patch-file"
+        }
+      ],
+      "finish_reasons": {
+        "end_of_sequence": 7
+      },
+      "git_diff_scope": "tracked working-tree changes only; untracked creations bound separately",
+      "maximum_input_tokens": 28148,
+      "maximum_output_tokens": 945,
+      "objective_sha256": "d71f323827df3596dbcb5987a74cdeb261408f59774c8ecda9f4d95ebcc749f7",
+      "outer_log_sha256": "6d7cadea045418f0339ff852aa8a674540cb7068731a74b06ef0265d14ca5369",
+      "passed": true,
+      "protocol_rejection_count": 0,
+      "raw_logs": {
+        "result.json": "cdafa3655ee24357a69900764bd97194c8fecd125977a2287d8c5d282fa1089f",
+        "stderr.log": "744bc1b1e8ac3b9cc0181140738a6afdf7cd911502ca97d2e0f254d7f17af4c6",
+        "stdout.jsonl": "e84c91e45e5e6e39195d39b9dff8d7eecf274bdd250354f82d90727ec866c37f"
+      },
+      "record_pair_count": 14,
+      "repetition": 2,
+      "terminal": "SUCCESS",
+      "tool_failures": [],
+      "tool_order": [
+        "agentmage.validation.run-template",
+        "agentmage.workspace.read-file",
+        "agentmage.code.patch-file",
+        "agentmage.validation.run-template",
+        "agentmage.git.inspect",
+        "agentmage.git.inspect"
+      ],
+      "tool_rejections": [],
+      "unique_verified_artifact_ids": 24,
+      "validation_receipts": [
+        {
+          "coverage": "complete",
+          "exit_code": 1,
+          "failed": 1,
+          "index": 0,
+          "passed": 0,
+          "receipt_sha256": "fa26e46ea1fa79dde33555a088541e887890c356e5c4f3ffc237c1b1dc197b53",
+          "status": "assertion_failed"
+        },
+        {
+          "coverage": "complete",
+          "exit_code": 0,
+          "failed": 0,
+          "index": 3,
+          "passed": 1,
+          "receipt_sha256": "f260fb9d9390bd2dabc1bf01adc24b57898addd9ffc4320441fba96f2547392e",
+          "status": "passed"
+        }
+      ],
+      "verified_artifact_count": 24
+    },
+    {
+      "candidate_resources": {
+        "baseline_gpu_free_mib": 22297,
+        "baseline_gpu_used_mib": 1864,
+        "peak_total_gpu_used_mib_sampled": 18329,
+        "resource_guard_error": null,
+        "scope_resources": {
+          "cpu.max": "200000 100000",
+          "memory.high": "5368709120",
+          "memory.max": "6442450944",
+          "memory.peak": "5369786368",
+          "memory.swap.max": "536870912"
+        }
+      },
+      "case": "new-file",
+      "checks": {
+        "binaries-unchanged": true,
+        "current-diff-status": true,
+        "exact-profile": true,
+        "failed-test-repair": true,
+        "feedback": true,
+        "filesystem": true,
+        "full-artifacts": true,
+        "native-candidate": true,
+        "native-responses": true,
+        "passing-native-validation": true,
+        "recording-consent": true,
+        "resource-guard": true,
+        "terminal-verifier": true
+      },
+      "collector_sha256": "da5cb6d50e2003670e5523d2c5918e6b606405b7e7987fca0e49ea19ee307d63",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "driver_record_sha256": "38f8f8b6cefcd7ab83d241c4ccbaba7cc420cafe9d536de109885fa7506674f6",
+      "elapsed_seconds": 422.51387160201557,
+      "final_changed_files": [
+        {
+          "bytes": 32,
+          "path": "src/calc.py",
+          "postimage_sha256": "ba1a531f581d2e6094e978ed6f7aca7a8d92eeb62c6e7ad73ee692f7f18bc772",
+          "receipt_sha256": "4f813eae19c013771fe0bdd385a14c7e9200e3d9bf2a32cd641215259a64e6fe",
+          "tool": "agentmage.code.create-file"
+        }
+      ],
+      "finish_reasons": {
+        "end_of_sequence": 7
+      },
+      "git_diff_scope": "tracked working-tree changes only; untracked creations bound separately",
+      "maximum_input_tokens": 26366,
+      "maximum_output_tokens": 1437,
+      "objective_sha256": "b0118be2da75cd28704b62c8840cbaad4353c6a209a40b53fe7e9056600c5dc2",
+      "outer_log_sha256": "6d7cadea045418f0339ff852aa8a674540cb7068731a74b06ef0265d14ca5369",
+      "passed": true,
+      "protocol_rejection_count": 0,
+      "raw_logs": {
+        "result.json": "87b0186fdb076a82a15dd4811d7c91331ba60c22c218329c462748bb7b75bb83",
+        "stderr.log": "ff2a1555810df88ad83d6129e1cad0f33107a615280d72f84009f388ec9f5700",
+        "stdout.jsonl": "6422a19fd88d775a6cf05f34bf5ea55eafcddab72fef80d9d18940025cc56fed"
+      },
+      "record_pair_count": 14,
+      "repetition": 2,
+      "terminal": "SUCCESS",
+      "tool_failures": [],
+      "tool_order": [
+        "agentmage.validation.run-template",
+        "agentmage.code.create-file",
+        "agentmage.validation.run-template",
+        "agentmage.git.inspect",
+        "agentmage.git.inspect"
+      ],
+      "tool_rejections": [
+        {
+          "event": "tool_rejected",
+          "reason": "read_projection_unavailable",
+          "rejection_sha256": "33122ce0d959b3af397907e85a93eecd10456d7950c4026987defacb7ff8b311",
+          "tool_call_id": "model-tool-call:56391d1f059ae4a50197210c9470d19728b1105c84a306f89d6dea428d124bf5"
+        }
+      ],
+      "unique_verified_artifact_ids": 23,
+      "validation_receipts": [
+        {
+          "coverage": "complete",
+          "exit_code": 1,
+          "failed": 1,
+          "index": 0,
+          "passed": 0,
+          "receipt_sha256": "cfe7682d4f4e1be94671238c7acf4106cfd2d588b7d6bda859af84a6fe877008",
+          "status": "assertion_failed"
+        },
+        {
+          "coverage": "complete",
+          "exit_code": 0,
+          "failed": 0,
+          "index": 2,
+          "passed": 1,
+          "receipt_sha256": "c8238c97613f9f69509bf9996c940edf8d378a7bf29079e30df6ebe0940f8b89",
+          "status": "passed"
+        }
+      ],
+      "verified_artifact_count": 23
+    },
+    {
+      "candidate_resources": {
+        "baseline_gpu_free_mib": 22297,
+        "baseline_gpu_used_mib": 1864,
+        "peak_total_gpu_used_mib_sampled": 18334,
+        "resource_guard_error": null,
+        "scope_resources": {
+          "cpu.max": "200000 100000",
+          "memory.high": "5368709120",
+          "memory.max": "6442450944",
+          "memory.peak": "5369786368",
+          "memory.swap.max": "536870912"
+        }
+      },
+      "case": "multi-file",
+      "checks": {
+        "binaries-unchanged": true,
+        "current-diff-status": true,
+        "exact-profile": true,
+        "failed-test-repair": true,
+        "feedback": true,
+        "filesystem": true,
+        "full-artifacts": true,
+        "native-candidate": true,
+        "native-responses": true,
+        "passing-native-validation": true,
+        "recording-consent": true,
+        "resource-guard": true,
+        "terminal-verifier": true
+      },
+      "collector_sha256": "204a3735a8d91dbfc586b5f51afa37444f16faa99833a45fb5148b5806fb772f",
+      "diff_sha256": "dc53f7f29e4546a04acad7c69a0dce90da2277f9eb5ae5efabe9a81293fa4d69",
+      "driver_record_sha256": "4a54be36b0f2c356c6b7824c930419d10528c81a1a5966f6a5d698fbae984f8b",
+      "elapsed_seconds": 431.6362093760399,
+      "final_changed_files": [
+        {
+          "bytes": 46,
+          "path": "src/calc.py",
+          "postimage_sha256": "63098273a7aaa630762d6f145dfcf9c61c8c9b290c6ebeb2a05fea5854ccb476",
+          "receipt_sha256": "1f217fbc08df35898e17d44a7e2879bb6866eb088a39a73fe569bf14020b0c6f",
+          "tool": "agentmage.code.patch-file"
+        },
+        {
+          "bytes": 51,
+          "path": "src/subtract.py",
+          "postimage_sha256": "de79571535569ebe6ad5505a35b9ccbaf00ab036c9561b9e4b93cab06b37fc78",
+          "receipt_sha256": "9f8221a24219cd31bcfef388dedfab40f2d147936df408abb4b99826e38bb8c4",
+          "tool": "agentmage.code.patch-file"
+        }
+      ],
+      "finish_reasons": {
+        "end_of_sequence": 7
+      },
+      "git_diff_scope": "tracked working-tree changes only; untracked creations bound separately",
+      "maximum_input_tokens": 27527,
+      "maximum_output_tokens": 1405,
+      "objective_sha256": "4156d34353aa43a51fff0fdc280bb7967105a1079c7c389644ced8dc218ce3ec",
+      "outer_log_sha256": "6d7cadea045418f0339ff852aa8a674540cb7068731a74b06ef0265d14ca5369",
+      "passed": true,
+      "protocol_rejection_count": 0,
+      "raw_logs": {
+        "result.json": "b3beb552480131c9fb6cb7c3f1ec7297df8b0c69bf79e1856b8cfdda0d4f46f8",
+        "stderr.log": "eab09e3a166ae217b6ecff77fbd16b45e551fbaa6d2786b1440687d221506251",
+        "stdout.jsonl": "87ecfc92e4a3307e2b1085570b0c18d70f7e9ed0ce6ea8378b6885858e0ab09d"
+      },
+      "record_pair_count": 14,
+      "repetition": 2,
+      "terminal": "SUCCESS",
+      "tool_failures": [],
+      "tool_order": [
+        "agentmage.validation.run-template",
+        "agentmage.code.patch-file",
+        "agentmage.code.patch-file",
+        "agentmage.validation.run-template",
+        "agentmage.git.inspect",
+        "agentmage.git.inspect"
+      ],
+      "tool_rejections": [],
+      "unique_verified_artifact_ids": 25,
+      "validation_receipts": [
+        {
+          "coverage": "complete",
+          "exit_code": 1,
+          "failed": 2,
+          "index": 0,
+          "passed": 0,
+          "receipt_sha256": "8b88fb40bdd04750985c25700b808303635842a3a94b552530feb56734a8b853",
+          "status": "assertion_failed"
+        },
+        {
+          "coverage": "complete",
+          "exit_code": 0,
+          "failed": 0,
+          "index": 3,
+          "passed": 2,
+          "receipt_sha256": "a9378944d1b94d9803b1f5df100650c400243314764453b32b778c72b33a3854",
+          "status": "passed"
+        }
+      ],
+      "verified_artifact_count": 25
+    },
+    {
+      "candidate_resources": {
+        "baseline_gpu_free_mib": 22297,
+        "baseline_gpu_used_mib": 1864,
+        "peak_total_gpu_used_mib_sampled": 18522,
+        "resource_guard_error": null,
+        "scope_resources": {
+          "cpu.max": "200000 100000",
+          "memory.high": "5368709120",
+          "memory.max": "6442450944",
+          "memory.peak": "5369806848",
+          "memory.swap.max": "536870912"
+        }
+      },
+      "case": "stable",
+      "checks": {
+        "binaries-unchanged": true,
+        "current-diff-status": true,
+        "exact-profile": true,
+        "failed-test-repair": true,
+        "feedback": true,
+        "filesystem": true,
+        "full-artifacts": true,
+        "native-candidate": true,
+        "native-responses": true,
+        "passing-native-validation": true,
+        "recording-consent": true,
+        "resource-guard": true,
+        "terminal-verifier": true
+      },
+      "collector_sha256": "3e31697c04551c4a1d268d523e63ee995ae23e3385f03ad53df75def6107912c",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "driver_record_sha256": "ba235b620bbfa89726d8f1ce4bf9079561bb626fecda10426f66c8d992e0162d",
+      "elapsed_seconds": 328.77683569700457,
+      "final_changed_files": [],
+      "finish_reasons": {
+        "end_of_sequence": 4
+      },
+      "git_diff_scope": "tracked working-tree changes only; untracked creations bound separately",
+      "maximum_input_tokens": 22863,
+      "maximum_output_tokens": 914,
+      "objective_sha256": "3be6b81b576d99b7ee590618181c737a5dcfbcd0ddd894d7a3234a586e91a8a2",
+      "outer_log_sha256": "6d7cadea045418f0339ff852aa8a674540cb7068731a74b06ef0265d14ca5369",
+      "passed": true,
+      "protocol_rejection_count": 0,
+      "raw_logs": {
+        "result.json": "bc35a10b9cc86c85f76e648596f76fec0317e0b8cd36effe04f2ae0bf83374d4",
+        "stderr.log": "95f7b6dcd080e5ba137a43a2961e301a0f95ba667a4c17ee13a8248c374e441f",
+        "stdout.jsonl": "102c5eeca4cfd3609db93912d8d8c9dbb2cb06fcec355feff2c6c868c5cd31e5"
+      },
+      "record_pair_count": 8,
+      "repetition": 2,
+      "terminal": "NO_OP",
+      "tool_failures": [],
+      "tool_order": [
+        "agentmage.git.inspect",
+        "agentmage.git.inspect",
+        "agentmage.validation.run-template"
+      ],
+      "tool_rejections": [],
+      "unique_verified_artifact_ids": 13,
+      "validation_receipts": [
+        {
+          "coverage": "complete",
+          "exit_code": 0,
+          "failed": 0,
+          "index": 2,
+          "passed": 1,
+          "receipt_sha256": "2b810613c93b92c9a1ca8460103f64aa4039fd4d9dd286366b9b4fa1b1e4a70f",
+          "status": "passed"
+        }
+      ],
+      "verified_artifact_count": 13
+    }
+  ],
+  "cases_inspected": 8,
+  "cleanup_disposition": "caller must separately retain numerical supervised exits; no inference from model output",
+  "eight_case_development_campaign_passed": true,
+  "independent_review_performed": false,
+  "model": "muse",
+  "production_model_admission": false,
+  "profile": {
+    "artifact": {
+      "artifact_id": "meta-muse-glimmer-30b-kquant-17gb-q4-k-m",
+      "bytes": 16756683904,
+      "format": "GGUF",
+      "publisher": "Meta",
+      "sha256": "4cc57c0f51040a226e5a72cc47b7613f7772950e460a665f7083de89f183f60e",
+      "source_revision": "43c7eadd41352a299ea8e0a36b3157978dd63596"
+    },
+    "automatic_fallback": false,
+    "capabilities": [
+      {
+        "evaluation_profile": null,
+        "limitations": [
+          "coding-campaign-not-qualified",
+          "production-activation-not-qualified",
+          "repeated-run-admission-not-qualified"
+        ],
+        "result_sha256": null,
+        "role": "dialogue",
+        "state": "blocked"
+      },
+      {
+        "evaluation_profile": null,
+        "limitations": [
+          "coding-campaign-not-qualified",
+          "production-activation-not-qualified",
+          "repeated-run-admission-not-qualified"
+        ],
+        "result_sha256": null,
+        "role": "coding_planner",
+        "state": "blocked"
+      },
+      {
+        "evaluation_profile": null,
+        "limitations": [
+          "coding-campaign-not-qualified",
+          "production-activation-not-qualified",
+          "repeated-run-admission-not-qualified"
+        ],
+        "result_sha256": null,
+        "role": "tool_selection",
+        "state": "blocked"
+      }
+    ],
+    "codec": {
+      "codec_id": "muse-glimmer-atem-reasoning-medium-closed-proposal-v1",
+      "codec_sha256": "5b90a4e7b1bd539c7608ea8b7032b3319ade278a3118dc16edef949559866e1e",
+      "codec_version": "1.0.0",
+      "end_tokens": [
+        200001,
+        200008
+      ],
+      "reasoning_enabled": true,
+      "template": "meta-models/Muse-Glimmer-30B ATEM chat template",
+      "template_sha256": "cfc67e5f349f37690dfd31ed1f18bc4442a9dd32fe39a648f993cb4eb3cae678",
+      "tokenizer": "meta-models/Muse-Glimmer-30B tokenizer",
+      "tokenizer_sha256": "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d",
+      "tool_protocol_version": "atem-reasoning-medium-closed-proposal-v1"
+    },
+    "context": {
+      "max_context_tokens": 32768,
+      "max_input_bytes": 524288,
+      "max_messages": 4096,
+      "token_counter": "llama.cpp b10423 Muse tokenizer",
+      "token_counter_sha256": "c9dbee66967b58f31a7c27f723c3760da3526ccd0427578e8905b0abb0031c4d"
+    },
+    "decoding": {
+      "max_output_tokens": 4096,
+      "profile_id": "coding-development-muse-medium-32k-v1",
+      "repeat_penalty": 1.0,
+      "sampler_order": [
+        "greedy"
+      ],
+      "seed": 42,
+      "temperature": 0.0,
+      "top_k": 1,
+      "top_p": 1.0
+    },
+    "display_name": "Muse Glimmer 30B Q4_K_M text 32k Fedora coding development",
+    "enabled": false,
+    "family": "muse_glimmer",
+    "hardware": [
+      {
+        "accelerator": "NVIDIA Vulkan",
+        "architecture": "x86_64",
+        "driver_constraint": "NVIDIA 615.71.09 coding re-evaluation tuple; changes require re-evaluation",
+        "minimum_accelerator_memory_bytes": 22020096000,
+        "minimum_system_memory_bytes": 17179869184,
+        "platform": "fedora"
+      }
+    ],
+    "license_spdx": "Apache-2.0",
+    "license_terms_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "lifecycle": "candidate",
+    "lineage": [
+      "meta-models/Muse-Glimmer-30B@a4e59da52a7bc87ae7251dd5545c0dd437c44b68",
+      "meta-models/Muse-Glimmer-30B-GGUF@43c7eadd41352a299ea8e0a36b3157978dd63596",
+      "Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf"
+    ],
+    "manifest_id": "muse-glimmer-30b-q4-k-m-text-32k-fedora-coding-development-manifest-v1",
+    "manifest_sha256": "8a8ee8efc1738f30d143f94f753e6079808e05dc3127df28a965676d7edfd24b",
+    "modalities": [
+      "text"
+    ],
+    "policy_sha256": "528076ef9be354e5a463221811a0bf4bf735a50be0b3a73df91097d7e83594c7",
+    "profile_id": "muse-glimmer-30b-q4-k-m-text-32k-fedora-coding-development",
+    "publisher_control": "Meta",
+    "quantization": "Q4_K_M first-party 17GB GGUF",
+    "runtime": {
+      "adapter_id": "linux-native-llama-cpp-b10423-vulkan-x86_64",
+      "architecture": "x86_64",
+      "contract_version": 1,
+      "kind": "native_llama_cpp",
+      "platform": "fedora",
+      "runtime_build": "llama.cpp-b10423-a94d563ed801d1da1b8c2432946de07d0231bb3d",
+      "runtime_sha256": "3b1194ef38f4b02b6329d698e29532435a5a7c3567c84b8bb822459ca0893286"
+    },
+    "schema_version": 2,
+    "transformations": []
+  },
+  "release_approval": false,
+  "repetitions_inspected": 2,
+  "schema_version": 1,
+  "scope": "inspected native development evidence; not production admission or independent review",
+  "source_commit": "b4417f474a1ab4406de18c3e45a9ca61692a7743",
+  "supervised_scope_wrapper_sha256": "99d7eb955a7727313a8dd88e9b326808ceb86a2b959e70b8f4c584ce137c2c0b"
+}

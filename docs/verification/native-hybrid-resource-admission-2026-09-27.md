@@ -1,7 +1,8 @@
 # Native Hybrid Resource Admission — 2026-09-27
 
-Status: verified bounded admission-parser correction; new-source real-model
-qualification remains open. Scope: AMR-01 and AMR-02.4 prerequisites.
+Status: verified bounded admission-parser correction; the subsequent source-pinned
+Muse campaign passed eight development cases, as recorded below. Production model
+admission and independent qualification remain open. Scope: AMR-01 and AMR-02.4 prerequisites.
 Engineering decision status: Accepted under owner delegation, 2026-09-20.
 Authority: Decision 0054. No independent review or acceptance is asserted.
 
@@ -96,14 +97,15 @@ Executed CLI, host and read-worker SHA-256 values, respectively:
 
 ## Freshness and remaining gates
 
-This coherent correction is checkpointed before a changed, clean-pin native
-campaign. The current admission/coding correction work unit remains open for that
-feedback. Its single SBOM/evidence regeneration is deferred until the unit's source
-changes finish, rather than repeating a historical cascade per discovered defect.
-The existing SBOM remains historical and stale for the changed inference source;
-no current-freshness or G-DOD-11 acceptance is claimed. This debt must be resolved
-or explicitly dispositioned before closing the work unit, not silently carried
-into unrelated implementation. Historical reports are not rewritten as new proof.
+The coherent correction was checkpointed before a changed, clean-pin native
+campaign. At `b4417f47`, its work unit stayed open for that feedback, with the
+single SBOM/evidence regeneration deferred until source corrections finished.
+That checkpoint's SBOM was historical and stale for the changed inference source;
+it did not claim current freshness or G-DOD-11 acceptance. This avoided repeating
+a historical cascade per discovered defect without weakening any binding.
+The subsequent campaign record below carries the unit's renewal disposition;
+this debt must not be silently carried into unrelated implementation. Historical
+reports are not rewritten as new proof.
 
 Muse's earlier eight cases remain bounded evidence at their original source pin.
 GPT-OSS remains separately unqualified; its unchanged malformed-response campaign
@@ -112,3 +114,12 @@ repairs, full artifacts, verifier outcomes and cleanup under the scheduled guard
 Independent review, human acceptance, command/Git lifecycle work, connected
 research, supported-platform and release gates remain open. No AMR row or
 `M-HARNESS-DAILY` milestone is closed here.
+
+## Subsequent exact-source model check
+
+[Campaign 15](coding-harness-campaign15-results-2026-09-27.md) subsequently passed
+all eight Muse cases at clean `b4417f474a1ab4406de18c3e45a9ca61692a7743`, using the
+unchanged profile, generation budget and limits. Both supervised passes exited 0
+after their cleanup checks. The retained failure above remains a failure; this
+new result is bounded development evidence, not production activation or review.
+The linked record carries the correction unit's evidence-renewal disposition.
