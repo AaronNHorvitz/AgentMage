@@ -4,7 +4,7 @@
   "date": "2026-09-27",
   "base_commit": "373236da510bc3e402b3aa1c43ec5c3f5d9526c5",
   "source_commit": "4e0159e42d15ae5e5ff07c84592613a995375626",
-  "status": "verified-component-and-evidence;automated-pin-pending",
+  "status": "verified-component-and-bounded-evidence-renewal",
   "source_inputs": [
     {
       "path": "Cargo.lock",
@@ -294,7 +294,7 @@
     }
   ],
   "evidence_renewal": {
-    "status": "core-storage-final-passed;automated-pin-pending",
+    "status": "bounded-renewal-and-automated-pin-passed",
     "sbom_write_count": 1,
     "core": {
       "log_name": "research-reader-epoch-evidence-20260927.log",
@@ -335,6 +335,17 @@
       "candidate_file_count": 68,
       "private_path_matches": 0,
       "hostname_token_matches": "Unchanged public platform identifiers; no host-identity record introduced."
+    },
+    "automated_story_gate": {
+      "log_name": "research-reader-epoch-story-gate-20260927.log",
+      "sha256": "604fe5a8119e871aef28d5f9a934fc264ef0e10c9103f221c1045d70c64b9e1a",
+      "exit_code": 0,
+      "python_regression_count": 8,
+      "reviewed_commit": "6b661c2a7b8bfecc40b26468b60b33db58aeec31",
+      "reviewed_tree": "51c94d2d605ae137713a57e3607ff2f6ab54f823",
+      "reviewed_paths": "unchanged",
+      "gate_status": "blocked",
+      "independent_or_human_review": false
     }
   },
   "acceptance": {

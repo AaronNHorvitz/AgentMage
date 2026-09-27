@@ -57,10 +57,12 @@ evidence pass completed with 551 Markdown files and 197 Python regressions.
 Storage, security and resume builders ran their actual checks and passed 83 Python
 regressions. Counts overlap other source checks. All 34 final validators, full
 Markdown lint and frozen-input checks passed. The routine Story 11.2 automated pin
-renewal remains pending at this evidence checkpoint.
+advanced to evidence commit `6b661c2a7b8bfecc40b26468b60b33db58aeec31`.
+Its build, check and eight regressions passed with unchanged reviewed paths and
+blocked status. This is automated metadata renewal, not independent or human review.
 
 The direct binding inventory excludes transitive, unnamed and line-span bindings.
-Apart from the pending automated pin, newly stale inputs occur only in the earlier
+After the automated pin renewal, newly stale inputs occur only in the earlier
 report and retained-draft component records. Their original source pins and test
 observations remain historical; they are not rebound to this implementation.
 Existing builders retain some historical generation dates; current execution is
