@@ -123,3 +123,19 @@ research and broader admission remain open. A pinned package is prepared for
 fresh independent review, not approved by this implementing session. Human
 acceptance, Task 50.2.4.7, M-HARNESS-DAILY, platform and release gates remain open.
 No AMR checkbox or licensing state changes with this record.
+
+## Committed-source renewal remainder
+
+Checkpoint `ef90abc4526f9f096638211620cce61a837c748f` contains the inspected
+campaign summary and single SBOM renewal. The Sprint 82 builder subsequently
+executed its seven registered checks against that clean committed source, with
+exit 0 for each and zero focused blocking skips. Its three unit tests, report
+validator and supply-chain validation also passed; the outer job returned 0.
+The retained remainder log has SHA-256
+`daf2274d28fcf1d2e4819a072612eb80659553742c3d81372bb706b5cb5255a2`.
+The renewed [local report](../../artifacts/sprints/sprint-82/local-evidence-report.json)
+has SHA-256 `fa9cc624e60d5112a43d91c4f27867004fd53a4187446511f2bddc4da99a7efa`.
+Only its source revision, three supply-chain bindings and three command-output
+digests changed. `BLOCKED`, no live public search, no privacy review and no release
+approval remain unchanged. This finishes the scoped committed-blob remainder;
+no second SBOM write or historical native/platform reacceptance was performed.
