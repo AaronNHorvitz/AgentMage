@@ -209,7 +209,7 @@
     }
   ],
   "evidence_renewal": {
-    "status": "bounded-renewal-passed-automated-pin-follows-commit",
+    "status": "bounded-renewal-and-automated-pin-passed",
     "sbom_write_count": 1,
     "core": {
       "exit_code": 0,
@@ -258,6 +258,31 @@
       "log_name": "research-retained-final-checks-20260927.log",
       "sha256": "139515bf3b83e8cd1104ff3b60d49d12b2247ba3b304b0205a222ab83cc45bf8",
       "scope": "Full Markdown lint,32 artifact/status/architecture/supply-chain validators, unchanged source manifest and whitespace; Story11.2 reviewed pin follows commit."
+    },
+    "automated_story_review": {
+      "reviewed_commit": "8edc0f4b6c01ae98156d411c156bc011814248d7",
+      "reviewed_tree": "10aece5164a4cf7460a1c11ae76fb90efbb07226",
+      "exit_code": 0,
+      "log_name": "research-retained-story-gate-20260927.log",
+      "sha256": "604fe5a8119e871aef28d5f9a934fc264ef0e10c9103f221c1045d70c64b9e1a",
+      "builder_regression_count": 8,
+      "status": "blocked-open-dependencies-and-platform-integration",
+      "scope": "Routine AGENTS section7 automation; unchanged reviewed paths, no human/model independent acceptance or new draft downgrade qualification."
+    },
+    "post_gate_direct_inventory": {
+      "json_files_parsed": 752,
+      "binding_count": 586,
+      "dispositions": {
+        "current-direct-binding": 103,
+        "newly-stale": 9,
+        "previously-stale-or-historical": 474
+      },
+      "excluded_line_span_binding_count": 1602,
+      "newly_stale_artifacts": [
+        "artifacts/sprints/sprint-22/story-22.1/current-product-canary-sweep.json",
+        "artifacts/sprints/sprint-82/local-evidence-report.json",
+        "docs/verification/research-report-component-2026-09-27.json"
+      ]
     }
   },
   "acceptance": {

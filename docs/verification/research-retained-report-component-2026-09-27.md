@@ -53,9 +53,11 @@ passed. Exact input and private log digests are in the
 All heavy checks used the shared build reservation, with one Cargo job, single-threaded
 tests and locked offline dependencies. No dependency, license or model changed.
 The core and storage evidence drivers passed after exactly one SBOM write for this
-source batch. All 32 final validators and full Markdown lint passed. The automated review pin
-follows the evidence commit. These results establish neither native workflow nor
-downgrade acceptance.
+source batch. All 32 final validators and full Markdown lint passed. After source and evidence
+commit `8edc0f4b6c01ae98156d411c156bc011814248d7`, Story 11.2 automated review
+advanced to that exact commit and tree. Its build, check and eight regressions
+passed with the original reviewed paths and blocked status. This is routine
+automation, not independent or human review, native workflow or downgrade acceptance.
 
 ## Open acceptance
 
@@ -87,8 +89,8 @@ acceptance threshold or platform limitation was removed. The downgrade transcrip
 contained no private repository root in this run; no bytes were redacted.
 
 The direct binding inventory excludes transitive, unnamed, untracked input paths
-and line-span bindings. Story 11.2 still needs its routine pin advanced after the
-evidence commit. Three other affected records retain their historical pins: the
+and line-span bindings. After the routine Story 11.2 renewal, newly stale bindings
+remain only in three records explicitly retained at historical pins: the
 prior report component belongs to source `50f0dbb9`; the canary sweep was already
 stale at this batch's base because its operational-store input differed; Sprint 82
 already differed on engine and supply-chain inputs. These are not current acceptance
