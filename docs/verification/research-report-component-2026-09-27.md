@@ -122,7 +122,13 @@ It excludes transitive, unnamed and 1,602 line-span bindings. This is not a glob
 freshness claim. Historical native/model/platform records retain their original
 pins and are not current acceptance of this increment.
 
-The three newly stale bindings are in the Story 11.2 automated gate. Its immutable
-review pin must advance to the commit containing these renewed evidence inputs,
-then its gate and tests must run under AGENTS section 7. That routine automation
-does not provide independent model review or satisfy a human-only gate.
+The three newly stale bindings were in the Story 11.2 automated gate. After the
+evidence commit `f05da1718f6baa9cac36c7b5a4706f7bf615fd04`, its immutable review
+pin advanced to that commit and tree under AGENTS section 7. The reserved gate
+build, validation, eight regressions and unchanged-SBOM check passed. Its path
+set, dependency blockers and blocked story status remain unchanged. This routine
+automation does not provide independent model review or satisfy a human-only gate.
+
+The final direct inventory has 121 current and 583 previously stale or historical
+bindings, with no newly stale binding in its bounded scope. Its exclusions remain
+unchanged. This does not establish freshness of the whole historical evidence tree.

@@ -282,12 +282,30 @@
         "artifacts/sprints/sprint-11/story-11.2/story-gate-report.json"
       ]
     },
-    "automated_story_review": "Story 11.2 requires the evidence commit before routine reviewed-commit/tree advancement; not human or model independent acceptance.",
+    "automated_story_review": {
+      "scope": "Routine AGENTS section 7 pin renewal; not human or model independent acceptance.",
+      "reviewed_commit": "f05da1718f6baa9cac36c7b5a4706f7bf615fd04",
+      "reviewed_tree": "28a168d13555b8738292c8e3c73e047db6f66385",
+      "exit_code": 0,
+      "builder_regression_count": 8,
+      "log_name": "research-report-story-gate-20260927.log",
+      "log_sha256": "d9b718b47f5b36e1e7690e1d3aeb057992360622abe11a1646f9b22c6314a732",
+      "status": "blocked-open-dependencies-and-platform-integration"
+    },
     "final_checks": {
       "exit_code": 0,
       "log_name": "research-report-final-checks-20260927.log",
       "log_sha256": "c0bae1140f0a464c539692e61824da926dbf78bc1da10f0c036e3b2aa3c8bbbf",
       "scope": "Full Markdown lint, all renewed artifact validators, status and architecture validators, unchanged source hashes and whitespace checks; Story 11.2 pin advancement follows the evidence commit."
+    },
+    "post_gate_direct_inventory": {
+      "binding_count": 704,
+      "dispositions": {
+        "current-direct-binding": 121,
+        "previously-stale-or-historical": 583
+      },
+      "excluded_line_span_binding_count": 1602,
+      "newly_stale_binding_count": 0
     }
   },
   "transcript_redactions": [
