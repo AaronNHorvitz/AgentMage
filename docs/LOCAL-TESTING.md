@@ -40,6 +40,10 @@ Omit `--approve-this-run` to inspect and answer each exact protected challenge.
 Use `python3 -m scripts.coding_harness stop --root /lane/state/coding-demo-1`
 from another terminal to request cancellation of that session. Preserve its
 result and streams; a stop request alone does not prove cleanup.
+Cancellation requires Linux process descriptors and an exact recorded process identity.
+If diagnosis reports `reserved`, `stale-record` or an invalid legacy record, preserve that
+root and use a fresh disposable root. The wrapper never adopts or automatically removes
+an uncertain record. See the development guide for lifecycle and cleanup limitations.
 
 **Current lane result:** setup and diagnosis ran; the actual scripted CLI/host
 launch returned exit 5 before tools because native prerequisites are unavailable.

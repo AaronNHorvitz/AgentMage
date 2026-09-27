@@ -6,11 +6,13 @@ it does not activate a production model, relax AgentMage policy, or claim qualif
 from __future__ import annotations
 
 import argparse
+from contextlib import ExitStack
 import fcntl
 import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import signal
 import stat
 import subprocess
@@ -24,6 +26,7 @@ BRANCH = "agentmage/tasks/coding-fixture"
 MARKER = ".agentmage-development-workspace"
 RUN_RECORD = "coding-harness-run.json"
 MAX_RECORD_BYTES = 16 * 1024
+RUN_RECORD_VERSION = 2
 MAX_LINUX_SOCKET_PATH_BYTES = 107
 MODEL_LAB_PROFILE = ROOT / "model-profiles/development/coding-model-lab.json"
 MODEL_LAB_LOCK = Path.home() / ".local/state/agentmage-model-lab/gpu.lock"
@@ -374,39 +377,202 @@ def expected_marker(workspace: Path) -> str:
     return f"activation=coding-development-v1\nworkspace={workspace}\n"
 
 
+def run_record_bytes(descriptor: int) -> bytes:
+    before = os.fstat(descriptor)
+    if (not stat.S_ISREG(before.st_mode) or before.st_uid != os.getuid()
+            or before.st_mode & 0o077 or before.st_nlink != 1
+            or not 0 <= before.st_size <= MAX_RECORD_BYTES):
+        raise HarnessError("coding.harness.run-record-denied")
+    content = os.pread(descriptor, MAX_RECORD_BYTES + 1, 0)
+    after = os.fstat(descriptor)
+    fields = ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns", "st_mode", "st_nlink", "st_uid")
+    if len(content) != before.st_size or any(
+        getattr(before, field) != getattr(after, field) for field in fields
+    ):
+        raise HarnessError("coding.harness.run-record-changed")
+    return content
+
+
+def valid_run_record(value: object) -> bool:
+    if not isinstance(value, dict) or set(value) != {
+        "schema_version", "pid", "base", "binary", "started_at_epoch_ms", "process_identity",
+    }:
+        return False
+    if type(value["schema_version"]) is not int or value["schema_version"] != RUN_RECORD_VERSION:
+        return False
+    if any(not isinstance(value[name], str) or not value[name].startswith("/")
+           or "\0" in value[name] for name in ("base", "binary")):
+        return False
+    if type(value["started_at_epoch_ms"]) is not int or value["started_at_epoch_ms"] <= 0:
+        return False
+    identity = value["process_identity"]
+    if value["pid"] is None:
+        return identity is None
+    return (
+        type(value["pid"]) is int and 1 < value["pid"] <= 2**31 - 1
+        and isinstance(identity, dict) and set(identity) == {"start_ticks", "uid", "boot_id"}
+        and type(identity["start_ticks"]) is int and identity["start_ticks"] > 0
+        and type(identity["uid"]) is int and identity["uid"] == os.getuid()
+        and isinstance(identity["boot_id"], str)
+        and re.fullmatch(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", identity["boot_id"]) is not None
+    )
+
+
 def read_run_record(state: Path) -> dict | None:
-    record = state / RUN_RECORD
     try:
-        info = record.lstat()
+        descriptor = os.open(state / RUN_RECORD, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     except FileNotFoundError:
         return None
-    if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
-        raise HarnessError("coding.harness.run-record-denied")
-    if info.st_size <= 0 or info.st_size > MAX_RECORD_BYTES:
-        raise HarnessError("coding.harness.run-record-denied")
-    value = json.loads(record.read_text(encoding="utf-8"))
-    if set(value) != {"pid", "base", "binary", "started_at_epoch_ms"}:
-        raise HarnessError("coding.harness.run-record-denied")
-    return value
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_SH | fcntl.LOCK_NB)
+        content = run_record_bytes(descriptor)
+
+        def closed_object(pairs: list) -> dict:
+            result = dict(pairs)
+            if len(result) != len(pairs):
+                raise HarnessError("coding.harness.run-record-denied")
+            return result
+
+        value = json.loads(content, object_pairs_hook=closed_object)
+        if not valid_run_record(value):
+            raise HarnessError("coding.harness.run-record-denied")
+        return value
+    except (ValueError, UnicodeError, BlockingIOError) as error:
+        raise HarnessError("coding.harness.run-record-denied") from error
+    finally:
+        os.close(descriptor)
+
+
+class RunRecordReservation:
+    """One invocation's held record; never adopts an existing reservation."""
+
+    def __init__(self, state: Path, base: Path, executable: Path):
+        self.directory = os.open(state, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        self.descriptor = None
+        self.expected = b""
+        try:
+            info = os.fstat(self.directory)
+            if info.st_uid != os.getuid() or info.st_mode & 0o077:
+                raise HarnessError("coding.harness.run-directory-denied")
+            self.descriptor = os.open(
+                RUN_RECORD, os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                0o600, dir_fd=self.directory,
+            )
+            self.record = {
+                "schema_version": RUN_RECORD_VERSION, "pid": None,
+                "base": str(base), "binary": str(executable),
+                "started_at_epoch_ms": time.time_ns() // 1_000_000,
+                "process_identity": None,
+            }
+            self.publish()
+        except BaseException:
+            # An incomplete publication is preserved for inspection. It cannot
+            # be mistaken for a completed child record or silently adopted.
+            if self.descriptor is not None:
+                os.close(self.descriptor)
+            os.close(self.directory)
+            raise
+
+    def check_owned(self) -> None:
+        held = os.fstat(self.descriptor)
+        current = os.stat(RUN_RECORD, dir_fd=self.directory, follow_symlinks=False)
+        if ((held.st_dev, held.st_ino) != (current.st_dev, current.st_ino)
+                or run_record_bytes(self.descriptor) != self.expected):
+            raise HarnessError("coding.harness.run-record-ownership-lost")
+
+    def lock_for_update(self) -> None:
+        deadline = time.monotonic() + 1
+        while True:
+            try:
+                fcntl.flock(self.descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                return
+            except BlockingIOError:
+                if time.monotonic() >= deadline:
+                    raise HarnessError("coding.harness.run-record-busy") from None
+                time.sleep(0.01)
+
+    def publish(self) -> None:
+        content = (json.dumps(self.record, sort_keys=True) + "\n").encode("utf-8")
+        if not valid_run_record(self.record) or len(content) > MAX_RECORD_BYTES:
+            raise HarnessError("coding.harness.run-record-denied")
+        self.lock_for_update()
+        try:
+            self.check_owned()
+            offset = 0
+            while offset < len(content):
+                written = os.pwrite(self.descriptor, content[offset:], offset)
+                if written <= 0:
+                    raise HarnessError("coding.harness.run-record-write-failed")
+                offset += written
+            os.ftruncate(self.descriptor, len(content))
+            os.fsync(self.descriptor)
+            self.expected = content
+            self.check_owned()
+        finally:
+            fcntl.flock(self.descriptor, fcntl.LOCK_UN)
+
+    def identify(self, process: subprocess.Popen) -> None:
+        try:
+            identity = linux_process_identity(process.pid)
+        except (OSError, ValueError, IndexError, HarnessError):
+            # A fast child may already have exited before its /proc observation.
+            # Reap our own child, retaining its actual exit and streams normally.
+            if process.poll() is not None:
+                return
+            raise HarnessError("coding.harness.child-identity-unavailable") from None
+        self.record.update(pid=process.pid, process_identity=identity)
+        self.publish()
+
+    def close(self, *, child_reaped: bool = True) -> None:
+        try:
+            if not child_reaped:
+                raise HarnessError("coding.harness.child-cleanup-incomplete")
+            self.lock_for_update()
+            self.check_owned()
+            os.unlink(RUN_RECORD, dir_fd=self.directory)
+            os.fsync(self.directory)
+        finally:
+            try:
+                os.close(self.descriptor)
+            finally:
+                os.close(self.directory)
+
+
+def linux_process_identity(pid: int) -> dict:
+    process = Path("/proc") / str(pid)
+    # comm may contain spaces and parentheses; fields after its final ')' start
+    # at field 3 (state). Start time is field 22, hence index 19 here.
+    fields = (process / "stat").read_text().rsplit(") ", 1)[1].split()
+    if fields[0] in {"Z", "X", "x"}:
+        raise HarnessError("coding.harness.process-exited")
+    return {
+        "start_ticks": int(fields[19]), "uid": process.stat().st_uid,
+        "boot_id": Path("/proc/sys/kernel/random/boot_id").read_text().strip(),
+    }
 
 
 def exact_running_process(record: dict, base: Path) -> bool:
     pid = record.get("pid")
-    if not isinstance(pid, int) or pid <= 1 or record.get("base") != str(base):
+    if not valid_run_record(record) or pid is None or record["base"] != str(base):
         return False
     process = Path("/proc") / str(pid)
     try:
+        before = linux_process_identity(pid)
         executable = (process / "exe").resolve(strict=True)
         arguments = (process / "cmdline").read_bytes().split(b"\0")
-    except (FileNotFoundError, PermissionError, ProcessLookupError):
+        after = linux_process_identity(pid)
+    except (OSError, ValueError, IndexError, HarnessError):
         return False
-    expected = Path(record.get("binary", ""))
-    encoded_base = os.fsencode(base)
-    owns_arguments = any(
-        argument == encoded_base or argument.startswith(encoded_base + b"/")
-        for argument in arguments
+    expected = Path(record["binary"])
+    roots = zip((b"--state-root", b"--disposable-root", b"--workspace-root"), paths(base))
+    owns_arguments = all(
+        arguments.count(flag) == 1
+        and arguments.index(flag) + 1 < len(arguments)
+        and arguments[arguments.index(flag) + 1] == os.fsencode(path)
+        for flag, path in roots
     )
-    return executable == expected and owns_arguments and b"--development" in arguments
+    return (before == after == record["process_identity"] and executable == expected
+            and owns_arguments and arguments.count(b"--development") == 1)
 
 
 def native_executable_prerequisite(path: Path) -> str:
@@ -499,6 +665,8 @@ def diagnose(base: Path) -> dict:
     checks["lifecycle"] = (
         "running" if process_running and state_key_present
         else "starting" if process_running
+        else "reserved" if record and record["pid"] is None
+        else "stale-record" if record
         else "ready"
     )
     checks["state_key"] = "present" if state_key_present else "not-created"
@@ -586,13 +754,15 @@ def start(
     resource_guard = None
     stdout_target = None
     stderr_target = None
-    opened = []
+    opened = ExitStack()
     process = None
-    record_path = state / RUN_RECORD
+    reservation = None
+    result = None
     started_at_epoch_ms = time.time_ns() // 1_000_000
     started_monotonic = time.monotonic()
     implementation = implementation_identity() if log_dir is not None else None
     try:
+        reservation = RunRecordReservation(state, base, executable)
         if log_dir is not None:
             log_dir = log_dir.resolve(strict=False)
             if log_dir.exists() or log_dir.is_symlink():
@@ -606,7 +776,7 @@ def start(
                 ),
                 "wb",
             )
-            opened.append(stdout_target)
+            opened.enter_context(stdout_target)
             stderr_target = os.fdopen(
                 os.open(
                     log_dir / "stderr.log",
@@ -615,22 +785,10 @@ def start(
                 ),
                 "wb",
             )
-            opened.append(stderr_target)
+            opened.enter_context(stderr_target)
         resource_guard = CandidateResourceGuard.acquire() if model != "scripted" else None
         process = subprocess.Popen(command, stdin=None, stdout=stdout_target, stderr=stderr_target)
-        private_file(
-            record_path,
-            json.dumps(
-                {
-                    "pid": process.pid,
-                    "base": str(base),
-                    "binary": str(executable),
-                    "started_at_epoch_ms": time.time_ns() // 1_000_000,
-                },
-                sort_keys=True,
-            )
-            + "\n",
-        )
+        reservation.identify(process)
         if resource_guard is None:
             exit_code = process.wait()
         else:
@@ -682,29 +840,33 @@ def start(
             }
             if resource_guard is not None:
                 result["candidate_resources"] = resource_guard.report()
-            private_file(log_dir / "result.json", json.dumps(result, sort_keys=True) + "\n")
-            print(json.dumps({"exit_code": exit_code, "log_dir": str(log_dir)}, sort_keys=True))
-        return exit_code
     finally:
-        if process is not None and process.poll() is None:
-            process.send_signal(signal.SIGINT)
-            try:
-                process.wait(timeout=30)
-            except subprocess.TimeoutExpired:
-                process.terminate()
-                try:
-                    process.wait(timeout=10)
-                except subprocess.TimeoutExpired:
-                    process.kill()
-                    process.wait(timeout=10)
-        for target in opened:
-            target.close()
         try:
-            record_path.unlink()
-        except FileNotFoundError:
-            pass
-        if resource_guard is not None:
-            resource_guard.close()
+            if process is not None and process.poll() is None:
+                process.send_signal(signal.SIGINT)
+                try:
+                    process.wait(timeout=30)
+                except subprocess.TimeoutExpired:
+                    process.terminate()
+                    try:
+                        process.wait(timeout=10)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait(timeout=10)
+        finally:
+            try:
+                opened.close()
+            finally:
+                try:
+                    if reservation is not None:
+                        reservation.close(child_reaped=process is None or process.poll() is not None)
+                finally:
+                    if resource_guard is not None:
+                        resource_guard.close()
+    if result is not None:
+        private_file(log_dir / "result.json", json.dumps(result, sort_keys=True) + "\n")
+        print(json.dumps({"exit_code": exit_code, "log_dir": str(log_dir)}, sort_keys=True))
+    return exit_code
 
 
 def stop(base: Path) -> None:
@@ -713,11 +875,22 @@ def stop(base: Path) -> None:
     record = read_run_record(state)
     if (
         record is None
-        or not exact_running_process(record, base)
+        or record["pid"] is None
         or not (state / "operational-store-development-v1.key").is_file()
     ):
         raise HarnessError("coding.harness.not-running")
-    os.kill(record["pid"], signal.SIGINT)
+    if not hasattr(os, "pidfd_open") or not hasattr(signal, "pidfd_send_signal"):
+        raise HarnessError("coding.harness.process-descriptor-unavailable")
+    try:
+        descriptor = os.pidfd_open(record["pid"])
+    except OSError as error:
+        raise HarnessError("coding.harness.process-descriptor-unavailable") from error
+    try:
+        if not exact_running_process(record, base) or read_run_record(state) != record:
+            raise HarnessError("coding.harness.not-running")
+        signal.pidfd_send_signal(descriptor, signal.SIGINT)
+    finally:
+        os.close(descriptor)
     print("coding.harness.cancellation-requested")
 
 

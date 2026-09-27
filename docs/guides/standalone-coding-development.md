@@ -88,10 +88,22 @@ python3 -m scripts.coding_harness status --root /tmp/agentmage-coding-1
 python3 -m scripts.coding_harness stop --root /tmp/agentmage-coding-1
 ```
 
-`stop` refuses `ready` and `starting` states. Once runtime preparation has installed the signal
-handler and created the isolated key, it validates `/proc` executable and argument identity before
-sending SIGINT. The runtime must then emit cancellation-requested and cancellation-observed events
-and a truthful terminal result. A cancellation request alone is not completion.
+`stop` requires an identified running child and the isolated runtime key. It opens a Linux
+process descriptor, then checks boot ID, UID, kernel start ticks, executable, each exact root
+argument and the current run record before sending SIGINT through that descriptor. Unsupported
+process descriptors or uncertain identity refuse cancellation. The runtime must then emit
+cancellation-requested and cancellation-observed events and a truthful terminal result.
+A cancellation request alone is not completion.
+
+The wrapper reserves its private run record before launch and removes only its own unchanged
+record after reaping its child. `reserved` means a reservation has no identified child yet;
+`stale-record` means the recorded child no longer matches. Neither state allows another start.
+Legacy, malformed or replaced records remain untouched; use a fresh disposable root while
+preserving the previous root for inspection. Brief reader contention is retried for at most
+one second during publication or cleanup. Failed or uncertain cleanup suppresses `result.json`
+instead of publishing a successful wrapper result. These cooperative checks do not defend
+against another process with the same UID rewriting private state; native admission remains
+authoritative. See [Decision 0089](../decisions/0089-development-harness-process-ownership.md).
 
 The `no-op` scenario performs verified Git inspection without source mutation. `new-file` uses the
 controlled-create boundary against an absent path, and `multi-file` proves two separately approved

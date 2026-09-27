@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "record_type": "coding-developer-wrapper-ownership-observations",
+  "date": "2026-09-27",
+  "base_commit": "42c1a3b08692ea8e14af6bd8ee5edadfac801c21",
+  "status": "component-verified;no-workflow-or-model-qualification",
+  "bindings_scope": "Exact changed wrapper and direct existing test, guide, model-profile and authority inputs. No transitive or whole-project freshness claim.",
+  "inputs": [
+    {
+      "path": "TASKS.md",
+      "sha256": "beeb04f62a96844174c7d875b50e055ef7032ced61d18ed3ec5e969615e38340"
+    },
+    {
+      "path": "architecture/status-model.json",
+      "sha256": "9c37e01faa324ffed3823e2d628b151f61b953dceae8423226fd6625d5b3d4d3"
+    },
+    {
+      "path": "docs/LOCAL-TESTING.md",
+      "sha256": "1eb54154d6d61abb7ac4173562603e4ee575d1b9c1b61661ec82754ad0ced6fa"
+    },
+    {
+      "path": "docs/decisions/0054-standing-owner-delegation.md",
+      "sha256": "c3c0b6300c47f5c7a203901ebca642c0e91807988e775932d7c99477e64aff6d"
+    },
+    {
+      "path": "docs/decisions/0061-standalone-coding-harness-critical-path.md",
+      "sha256": "7ae98fe774c5c88eeb2c07da350d7adf76d4e4c421ae5f212d20060a6948b1a9"
+    },
+    {
+      "path": "docs/decisions/0063-disposable-coding-development-activation.md",
+      "sha256": "304aea35dcf207f2eba66512889fe139788b8081f4e0b57b9484636c92112ed9"
+    },
+    {
+      "path": "docs/decisions/0070-coding-development-identity-prerequisites.md",
+      "sha256": "e5e28a7782723ea730e9ba11d2c7cd1bb5d9eb6eec5fbd5c4436616167e34a5e"
+    },
+    {
+      "path": "docs/decisions/0089-development-harness-process-ownership.md",
+      "sha256": "1e0090746168f73df7bd19f043a36993fac5e7e5579da8672515a9e95f511b1f"
+    },
+    {
+      "path": "docs/guides/standalone-coding-development.md",
+      "sha256": "646fef70cb7217783602f4df4694607711db7ba251b7ed315c8cf6f575890b09"
+    },
+    {
+      "path": "docs/verification/coding-harness-ownership-2026-09-27.md",
+      "sha256": "a11df8d463665f35c0180a66e71b4f19150efa54712cac3f3ed1b131402ddcb4"
+    },
+    {
+      "path": "fixtures/runtime/v1/coding-harness-mvp.json",
+      "sha256": "587d038f69c93d8ca7102ee34bc8c523030342e0cb7f86969f3dd02589f29e33"
+    },
+    {
+      "path": "model-profiles/development/coding-model-lab.json",
+      "sha256": "047e839b4a9c6ca632dbba89296266a6ce806adb583f7e617e95ea55ff04c785"
+    },
+    {
+      "path": "requirements/context-safety-registration.json",
+      "sha256": "3b8276f37403337586a5cdef8b468c170ed7c78d14aad65835b76288ec12ad4d"
+    },
+    {
+      "path": "scripts/coding_harness.py",
+      "sha256": "111c4ef587a76f0a70fb8a968c6448718481c3679eed905371ce31e263a826f0"
+    },
+    {
+      "path": "scripts/coding_harness_acceptance.py",
+      "sha256": "0ca8b2f10feb0c12a8d4ab76c6741b5bd430d38842f8b76640960c2f017c7951"
+    },
+    {
+      "path": "scripts/coding_harness_model_evidence.py",
+      "sha256": "47f4d90fa9d433b1e54ed7dda4f50c6b906ae155d6bec5baadb4c73816a79720"
+    },
+    {
+      "path": "scripts/context_safety_registration.py",
+      "sha256": "1fefd6eb0d3d5b4fead666624e5ff23e5c74a249c116d57fd26be1a7ebdf665d"
+    },
+    {
+      "path": "scripts/remaining_plan_blocker_audit.py",
+      "sha256": "7757046ab880218f0684bb16028a7415cd3a450b489a4068ed97bf5da9b22b79"
+    },
+    {
+      "path": "scripts/status_model.py",
+      "sha256": "5293454dda7dc54ec21008a85bbfc0cdee366706d8a0e91b93f164ff18b5ac8c"
+    },
+    {
+      "path": "scripts/supply_chain.py",
+      "sha256": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6"
+    },
+    {
+      "path": "scripts/task_graph.py",
+      "sha256": "897829d84ada8e965101b38cd1763a23501fa45081c152d803ea74f2a8713f7b"
+    },
+    {
+      "path": "tests/test_amendment_work_selection.py",
+      "sha256": "179430cb90b4df9f5601a1258ba189e5ac50d05b691b248323a115611e4e8078"
+    },
+    {
+      "path": "tests/test_coding_harness.py",
+      "sha256": "8c5f92ad5edfceeb5f732f0a47a765b35470a6ede6465de8baf512cb022c05a9"
+    },
+    {
+      "path": "tests/test_coding_harness_model_evidence.py",
+      "sha256": "dbd0408bec23d83645cd323863c01c4a6b4bfe1727cc13bd0d653fa44465af0b"
+    },
+    {
+      "path": "tests/test_coding_harness_ownership.py",
+      "sha256": "57c9d89110a9fd4c22b51b75d14f54ea18b75b21be584d1227940b0f851d618f"
+    },
+    {
+      "path": "tests/test_context_safety_registration.py",
+      "sha256": "63e49d40935ed94af146c4cbc2a423be03f57590e90c273f41212be9b251d462"
+    },
+    {
+      "path": "tests/test_remaining_plan_blocker_audit.py",
+      "sha256": "04497ba56432ac722b7eccde0243b5a35c830d827ab6e179503bb5fbd36d44e8"
+    },
+    {
+      "path": "tests/test_story_48_coding_harness_corpus.py",
+      "sha256": "1a5f107f6f470f7a113c0ce49555f52aa412e0c313ee221269cd741427f6baeb"
+    }
+  ],
+  "checks": [
+    {
+      "log_name": "harness-ownership-focused-20260927.log",
+      "sha256": "b1e8ffd56bd04a4f95a96327d3c4a7c1d29ae9e2998acdb8bd6355f13fcdda16",
+      "exit_code": 1,
+      "scope": "18 tests:17 passed,1 fixture-mock failure; unchanged retained failure"
+    },
+    {
+      "log_name": "harness-ownership-regression-20260927.log",
+      "sha256": "5ee596c7a12c278da3cd55cf6ded14d27b694412280f0ec31b1db7b41e0df078",
+      "exit_code": 0,
+      "scope": "41 wrapper/model-evidence/corpus tests including owned synthetic Linux child"
+    },
+    {
+      "log_name": "harness-ownership-regression-final-20260927.log",
+      "sha256": "4a730ac3191caf4f4b6f302af3014377dbf94cad5acfb2b819a0daa0bb6ebe74",
+      "exit_code": 0,
+      "scope": "43 tests including20 ownership cases and real owned-child process descriptor cancellation"
+    },
+    {
+      "log_name": "harness-ownership-checks-20260927.log",
+      "sha256": "5655071f38db0a5b085e95c510248072a589abd98ddf4f526fad1fd418ce4195",
+      "exit_code": 0,
+      "scope": "33 planning tests; context/task/status/supply-chain validators;3 changed Markdown files;5 frozen source hashes;diff whitespace"
+    }
+  ],
+  "original_reproduction": {
+    "log_name": "harness-run-record-repro-20260927.json",
+    "sha256": "bd7b6ec54fe5c4b913ba81dae16b24a00337059ccc8bbf18636051d2488735f1",
+    "child_launch_count": 0,
+    "competing_record_preserved": false,
+    "scope": "mocked preflight/binary observation;no CLI or host"
+  },
+  "synthetic_process_check": {
+    "process": "test-owned Python child",
+    "signal": "SIGINT through real Linux pidfd",
+    "expected_and_observed_exit": 73,
+    "agentmage_cli_launched": false,
+    "native_runtime_key": "synthetic test file",
+    "qualification": false
+  },
+  "binding_inventory": {
+    "log_name": "harness-bindings-before-evidence.json",
+    "sha256": "30d39bdeefe9fcd1f13aa7f308979dc3421eba5f4d643941045fc2cf697bbe09",
+    "newly_stale_direct_bindings": 3,
+    "disposition": "Earlier research component reports retain their original tested source pins and unchanged input sets; wrapper input is now historical. No blanket current-evidence claim."
+  },
+  "acceptance": {
+    "scripted_cli_workflow": "blocked-native-prerequisites;not-rerun",
+    "real_model": "not-run;historical qualification not advanced",
+    "manual_user": "open",
+    "independent_review": "pending-exact-commit-request",
+    "release": "not-approved"
+  },
+  "limitations": [
+    "Cooperative private developer-state ownership, not protection from an adversarial same-UID process.",
+    "Native Rust admission and confinement unchanged.",
+    "Legacy, malformed or uncertain records are preserved; use a fresh disposable root.",
+    "Cleanup uncertainty suppresses result.json; retained streams are not a qualification receipt.",
+    "No GPU/model process, new dependency, SBOM write or host installation."
+  ]
+}
