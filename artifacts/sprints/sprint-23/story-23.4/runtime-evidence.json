@@ -4,14 +4,14 @@
     {
       "argv_sha256": "b26bfb863a1251b307c473309b2fa69a8ddccbeb10b4b37bb83f2f2a1e19196f",
       "command_id": "engine-session-matrix",
-      "elapsed_ms": 180,
+      "elapsed_ms": 175,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 41736,
+      "peak_rss_kib": 41744,
       "test_result": {
         "failed": 0,
-        "filtered_out": 1155,
+        "filtered_out": 1212,
         "ignored": 0,
         "measured": 0,
         "passed": 18
@@ -20,14 +20,14 @@
     {
       "argv_sha256": "d25c1a35db190c5821af496f6e3cc07b1ba96ddb12ec19c8b6a21d7bc7325ee1",
       "command_id": "native-read-matrix",
-      "elapsed_ms": 147,
+      "elapsed_ms": 95,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 51136,
+      "peak_rss_kib": 50192,
       "test_result": {
         "failed": 0,
-        "filtered_out": 325,
+        "filtered_out": 327,
         "ignored": 0,
         "measured": 0,
         "passed": 6
@@ -36,14 +36,14 @@
     {
       "argv_sha256": "dfe8124eee6fbf3abfde662ff05627ee295973fb06018fc558fa4c1ff65ae353",
       "command_id": "native-chat-transport",
-      "elapsed_ms": 376,
+      "elapsed_ms": 349,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50200,
+      "peak_rss_kib": 50708,
       "test_result": {
         "failed": 0,
-        "filtered_out": 328,
+        "filtered_out": 330,
         "ignored": 0,
         "measured": 0,
         "passed": 3
@@ -52,14 +52,14 @@
     {
       "argv_sha256": "6bd11bbd4996b6e78ff6e621938b77f2c0a339f3b44af3f4d2c09976540d6891",
       "command_id": "three-client-parity",
-      "elapsed_ms": 375,
+      "elapsed_ms": 344,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50836,
+      "peak_rss_kib": 50460,
       "test_result": {
         "failed": 0,
-        "filtered_out": 330,
+        "filtered_out": 332,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -68,14 +68,14 @@
     {
       "argv_sha256": "dcbd95278f6e59895a67a6092b1c2ffc167a47b68d41b501a1dcc0acf578656f",
       "command_id": "client-confusion-bypass",
-      "elapsed_ms": 77,
+      "elapsed_ms": 84,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50968,
+      "peak_rss_kib": 50952,
       "test_result": {
         "failed": 0,
-        "filtered_out": 330,
+        "filtered_out": 332,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -84,14 +84,14 @@
     {
       "argv_sha256": "52f0dcaa22117142bfade3bdb039d530e2264557b36bbc50db671925b010c307",
       "command_id": "workflow-authority-bypass",
-      "elapsed_ms": 336,
+      "elapsed_ms": 316,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50952,
+      "peak_rss_kib": 50424,
       "test_result": {
         "failed": 0,
-        "filtered_out": 330,
+        "filtered_out": 332,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -100,21 +100,21 @@
     {
       "argv_sha256": "47cdc321aaa5c7c4ed9eed236a4c8f7fcf3cee3ea5f1542a8e3304e1832cac09",
       "command_id": "dependency-direction",
-      "elapsed_ms": 20,
+      "elapsed_ms": 19,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 12592,
+      "peak_rss_kib": 12524,
       "test_result": null
     },
     {
       "argv_sha256": "1ba5e4e0d2b5860ae9e4b0ed786fc45413e659b7c435186b2ad8dc781a2c4045",
       "command_id": "effect-mediation",
-      "elapsed_ms": 2105,
+      "elapsed_ms": 2161,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 41364,
+      "peak_rss_kib": 41360,
       "test_result": null
     }
   ],
@@ -154,7 +154,7 @@
   "manual_fuzzing_executed": false,
   "performance": {
     "cancellation": {
-      "elapsed_us": 611,
+      "elapsed_us": 590,
       "event_count": 4,
       "model_calls": 0,
       "output_bytes": 0,
@@ -163,7 +163,7 @@
       "turns": 0
     },
     "direct": {
-      "elapsed_us": 1321,
+      "elapsed_us": 2036,
       "event_count": 6,
       "model_calls": 1,
       "output_bytes": 23,
@@ -172,7 +172,7 @@
       "turns": 1
     },
     "maximum": {
-      "elapsed_us": 5172,
+      "elapsed_us": 5062,
       "event_count": 33,
       "model_calls": 4,
       "output_bytes": 23,
@@ -182,7 +182,7 @@
     },
     "maximum_scenario_us": 250000,
     "nominal": {
-      "elapsed_us": 2696,
+      "elapsed_us": 2565,
       "event_count": 15,
       "model_calls": 2,
       "output_bytes": 23,
@@ -191,7 +191,7 @@
       "turns": 2
     },
     "over_limit": {
-      "elapsed_us": 4867,
+      "elapsed_us": 4713,
       "event_count": 33,
       "model_calls": 4,
       "output_bytes": 0,
@@ -208,10 +208,10 @@
     "redactions": [
       "repository-root"
     ],
-    "sha256": "f98b3d0899b04abb2f9c2bfc6b91b56d02b7e1252343bfa24aeff5b24b0bf35c"
+    "sha256": "866c1b709fae8934a849a8e58935814f5e653c70dd4aba200f1f522d5afb1dc7"
   },
   "schema_version": 1,
-  "source_revision": "893a2376dc2178ee1805473fd3b489539e309258",
+  "source_revision": "aef901c5d9ca37fcbdaf80c8197a2b83a9f482f8",
   "sources": [
     {
       "bytes": 12824,
@@ -224,14 +224,14 @@
       "sha256": "7e5c25aa0bd7fc52afe67e27997a2f7969a71e64adf3d71b649fac9eafe65b2e"
     },
     {
-      "bytes": 175217,
+      "bytes": 178876,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "d94cc4520a4bb3ae32e3dcbb484a88ddb6671724807b0bba988b5b5b279c4e67"
+      "sha256": "8d30519a311a51679d5c363a48f023cfa32e46f7bfeb59182c3cf5f1ee1ac9d4"
     },
     {
-      "bytes": 192254,
+      "bytes": 207302,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "ba4b59beb6e2c46a77ee81957d428087655e596ac6793efabe38321a7fe8cf5a"
+      "sha256": "74e9de545b5e482971265adc160c5720b70f30a703046a7bc7e455ccedaf56ff"
     },
     {
       "bytes": 9963,

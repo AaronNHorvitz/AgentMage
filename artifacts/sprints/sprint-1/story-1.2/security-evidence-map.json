@@ -27,7 +27,7 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-          "sha256": "b795dedb53928244a87ce42d520af5d7594ef165333b50ea6e035a53f306bcdd"
+          "sha256": "e25b22373868768f8c57ca3ca34d8b7e231380a557bf4a14d5266d965641d6c3"
         }
       ],
       "protocol_complete": false
@@ -100,7 +100,7 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-          "sha256": "b795dedb53928244a87ce42d520af5d7594ef165333b50ea6e035a53f306bcdd"
+          "sha256": "e25b22373868768f8c57ca3ca34d8b7e231380a557bf4a14d5266d965641d6c3"
         }
       ],
       "protocol_complete": false
@@ -127,7 +127,7 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-          "sha256": "b795dedb53928244a87ce42d520af5d7594ef165333b50ea6e035a53f306bcdd"
+          "sha256": "e25b22373868768f8c57ca3ca34d8b7e231380a557bf4a14d5266d965641d6c3"
         }
       ],
       "protocol_complete": false
