@@ -1,0 +1,352 @@
+{
+  "schema_version": 1,
+  "record_type": "current-linux-executable-startup-observation",
+  "date": "2026-09-27",
+  "source_commit": "72549cf5486705dddc67357a12a639c6fb1a5968",
+  "source_tree": "78fb612635051de95ca2bbc6d0911f3fd34f6a63",
+  "source_worktree_clean_at_launch": true,
+  "status": "actual-startup-failed-native-admission;no-completed-coding-workflow",
+  "binaries": {
+    "agentmage": {
+      "sha256": "0b3e8813f93b1f06823415b12455b93f48b8753c079b67ba8f449c7624449d48",
+      "bytes": 280387320
+    },
+    "agentmage-host": {
+      "sha256": "af56eb48271b0c01b98e8053ea8eae13df220923bff7d9a644f10040adc79b5d",
+      "bytes": 327084136
+    },
+    "agentmage-read-only-worker": {
+      "sha256": "04e87c0925acbc25dbf1f8de82ce37fa6811d257c43a80f00844cc89a3275e7c",
+      "bytes": 13798352
+    }
+  },
+  "binary_identity_unchanged": true,
+  "inputs": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "2cc5ff6cf90af231d188666a1cae40c474972826b4d30cfbdf5886c137376e90"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc"
+    },
+    {
+      "path": "IP-POLICY.md",
+      "sha256": "bc387fa1363feacbd7551a398c2596affbb3625aa01dc1a86d9e25b013a9bec9"
+    },
+    {
+      "path": "TASKS.md",
+      "sha256": "beeb04f62a96844174c7d875b50e055ef7032ced61d18ed3ec5e969615e38340"
+    },
+    {
+      "path": "architecture/status-model.json",
+      "sha256": "9c37e01faa324ffed3823e2d628b151f61b953dceae8423226fd6625d5b3d4d3"
+    },
+    {
+      "path": "docs/LOCAL-TESTING.md",
+      "sha256": "7f69f261b2c9077f6520ab021424fe8e6c2d741c4293c121d279234044369982"
+    },
+    {
+      "path": "docs/decisions/0063-disposable-coding-development-activation.md",
+      "sha256": "304aea35dcf207f2eba66512889fe139788b8081f4e0b57b9484636c92112ed9"
+    },
+    {
+      "path": "docs/decisions/0070-coding-development-identity-prerequisites.md",
+      "sha256": "e5e28a7782723ea730e9ba11d2c7cd1bb5d9eb6eec5fbd5c4436616167e34a5e"
+    },
+    {
+      "path": "docs/decisions/0089-development-harness-process-ownership.md",
+      "sha256": "1e0090746168f73df7bd19f043a36993fac5e7e5579da8672515a9e95f511b1f"
+    },
+    {
+      "path": "docs/decisions/0090-runtime-correctness-callback-consistency.md",
+      "sha256": "86a6e0ca75e2c590995c28a3135cd30c14ee9d2757e5f6b23e9f3f101457360d"
+    },
+    {
+      "path": "docs/decisions/0091-failed-runtime-advancement-reconciliation.md",
+      "sha256": "9220fdb6b1ebe3ef7afcd77bf3f6ab088218a700260c281af75989b33541c0db"
+    },
+    {
+      "path": "docs/guides/standalone-coding-development.md",
+      "sha256": "646fef70cb7217783602f4df4694607711db7ba251b7ed315c8cf6f575890b09"
+    },
+    {
+      "path": "docs/verification/linux-current-startup-2026-09-27.md",
+      "sha256": "a3a7a119e985968115bd6a8745952ec8bc980b00401d11869763d26f1432d433"
+    },
+    {
+      "path": "fixtures/runtime/v1/coding-harness-mvp.json",
+      "sha256": "587d038f69c93d8ca7102ee34bc8c523030342e0cb7f86969f3dd02589f29e33"
+    },
+    {
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "sha256": "616d3d38385b9cd66466257b1c0dced4284a3fccf857d53d3f8d67af1135d63c"
+    },
+    {
+      "path": "kernel/engine/src/runtime_loop_tests.rs",
+      "sha256": "2b1841fa4869b51ea9c20af0f7d0433d1e141d6cf942013cf063b0ec8a5d212d"
+    },
+    {
+      "path": "model-profiles/development/coding-model-lab.json",
+      "sha256": "047e839b4a9c6ca632dbba89296266a6ce806adb583f7e617e95ea55ff04c785"
+    },
+    {
+      "path": "scripts/coding_harness.py",
+      "sha256": "111c4ef587a76f0a70fb8a968c6448718481c3679eed905371ce31e263a826f0"
+    },
+    {
+      "path": "shells/host/src/cli.rs",
+      "sha256": "5269dcfb114055bacf015414320cd9ae6caeae1d29d67cdc86d94a6fe09ce208"
+    },
+    {
+      "path": "shells/host/src/linux_coding_runtime.rs",
+      "sha256": "ef6d07c5e522bb2fab6ef23bcf4f682ba6504d775b0eeeeea3c0e57d9390e5ae"
+    },
+    {
+      "path": "supply-chain/dependency-hashes.sha256",
+      "sha256": "29d949512a2a6dc55ed9659ff9812796f6f8752590e483e5098d62f76232e9bc"
+    },
+    {
+      "path": "supply-chain/dependency-provenance.json",
+      "sha256": "f6356fe363dae726b033857c6b3015ac8e2140613ea831d16cf65313cc545518"
+    },
+    {
+      "path": "supply-chain/sbom.cdx.json",
+      "sha256": "9c5a972fa2edc4912b1a9a0d6e32211d43aa1d5e374defdfd2ae490d0c127888"
+    },
+    {
+      "path": "tests/test_coding_harness.py",
+      "sha256": "8c5f92ad5edfceeb5f732f0a47a765b35470a6ede6465de8baf512cb022c05a9"
+    },
+    {
+      "path": "tests/test_coding_harness_ownership.py",
+      "sha256": "57c9d89110a9fd4c22b51b75d14f54ea18b75b21be584d1227940b0f851d618f"
+    }
+  ],
+  "private_results": [
+    {
+      "name": "clean-diagnose.json",
+      "bytes": 327,
+      "sha256": "754e0ed9a9725e8b7f6b6aa8a0509a9bece43b96a28535fb241a39e1fd8985b3"
+    },
+    {
+      "name": "clean-diagnose.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "clean-diagnose.stdout",
+      "bytes": 983,
+      "sha256": "488f9cd04b6a425033bc5a586db62174f35da0cdc38c7414bd18e7154ec2d539"
+    },
+    {
+      "name": "clean-setup.json",
+      "bytes": 324,
+      "sha256": "cfe093706a9ca3ec900d378d17e84ff5c5a1c183fa9da1e52898bc58dfe8d558"
+    },
+    {
+      "name": "clean-setup.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "clean-setup.stdout",
+      "bytes": 1321,
+      "sha256": "45c35de317a2b7e19c263c558c568da1397614b86b288726ab7492e69e390bb9"
+    },
+    {
+      "name": "clean-start.json",
+      "bytes": 569,
+      "sha256": "68938c0fb0e99ca73ae37916d932f0293e23583a1b2ecb6f1740d3fdcc10c9d6"
+    },
+    {
+      "name": "clean-start.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "clean-start.stdout",
+      "bytes": 96,
+      "sha256": "e771571a36492baefead84ab7434b987d388c0f84c094438c403ef095d4cc467"
+    },
+    {
+      "name": "clean-status.json",
+      "bytes": 325,
+      "sha256": "7a6cb6f7380e37eebbc08c2078c7b478bdfc4cefc18dbf6c6fe8f04f512ad07a"
+    },
+    {
+      "name": "clean-status.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "clean-status.stdout",
+      "bytes": 983,
+      "sha256": "488f9cd04b6a425033bc5a586db62174f35da0cdc38c7414bd18e7154ec2d539"
+    },
+    {
+      "name": "cli-help.json",
+      "bytes": 302,
+      "sha256": "db1e9e2b12ac24b189111043f600e25c4e77b2f5e8e2f7bd5d563be60365f655"
+    },
+    {
+      "name": "cli-help.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "cli-help.stdout",
+      "bytes": 2025,
+      "sha256": "fa24ac9df48bacc6344a1ddb2a06353be9e94bd46fbaadb2c1ef3ef8234f254a"
+    },
+    {
+      "name": "coding-clean/result.json",
+      "bytes": 2738,
+      "sha256": "d7d92325d0e80ca8df198a865890382a57d04a00c6c66e11ca220e400a5061a3"
+    },
+    {
+      "name": "coding-clean/stderr.log",
+      "bytes": 85,
+      "sha256": "def96c0d9cee8753420ea28a16fd4b8abd1f25270bd8b251383d228ea433ff3f"
+    },
+    {
+      "name": "coding-clean/stdout.jsonl",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "dirty-setup.json",
+      "bytes": 324,
+      "sha256": "db554ec298ab40a49bae6b7fc38806ec43523124233b00a4abdace13b480fe74"
+    },
+    {
+      "name": "dirty-setup.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "dirty-setup.stdout",
+      "bytes": 1321,
+      "sha256": "4ee40c47e23149dbb443d0fa242ed4fe87ee5b52c74ba823107c63b96c22fc0f"
+    },
+    {
+      "name": "dirty-start.json",
+      "bytes": 569,
+      "sha256": "3f659dbf477228fe50b0a1c42a5c997afcdca94c2d817bcb4d323237004b0752"
+    },
+    {
+      "name": "dirty-start.stderr",
+      "bytes": 34,
+      "sha256": "b8eceb9a16ea90483c01a7f4600ca201ce46a4dd829b7b825b054e0565cacc0a"
+    },
+    {
+      "name": "dirty-start.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "dirty-status.json",
+      "bytes": 325,
+      "sha256": "4e1b17fc55b7178fe9caa4ddeb8da3e49fdea57c5564cbedd98cfa02c2f2ef72"
+    },
+    {
+      "name": "dirty-status.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "dirty-status.stdout",
+      "bytes": 984,
+      "sha256": "cc4733c907ee218839d345b5e3e9b87144b92a647e4324b8c048b2218452c97a"
+    },
+    {
+      "name": "observation.json",
+      "bytes": 8995,
+      "sha256": "7ce1e75b6c74e58e3913c1069b505ee12420335c4c46a756a3264fa635da06a0"
+    },
+    {
+      "name": "linux-current-binaries-20260927.log",
+      "bytes": 334,
+      "sha256": "f6185d3212af3b9f2b968ab2020408816676a3c7d0525064cea738bd502c12ee"
+    },
+    {
+      "name": "linux-current-observation-20260927.log",
+      "bytes": 246,
+      "sha256": "1ab9a165e237c47c983f80f028b4c8930f5b312b4b49b0c41f6541e3d7a7af82"
+    },
+    {
+      "name": "linux-current-documentation-20260927.log",
+      "bytes": 316,
+      "sha256": "5942e026edf44a8eef2862dea45318e9c801d4a48aa3b2c8b995eceb1da32121",
+      "exit_code": 0
+    }
+  ],
+  "checks": {
+    "build_exit": 0,
+    "actual_cli_help_exit": 0,
+    "clean_setup_diagnose_status_exit": 0,
+    "clean_scripted_start_exit": 5,
+    "clean_stdout_bytes": 0,
+    "clean_error_codes": [
+      "coding.development.platform-failed",
+      "coding.development.client.transport-failed"
+    ],
+    "clean_files_and_git_preserved": true,
+    "clean_snapshot_sha256": "782a37748e9a01f592a24ad786aaea1806423c50819692eaaad39cdd4ee7116d",
+    "clean_state_entries": [
+      "repository-management"
+    ],
+    "clean_lifecycle": "ready",
+    "operational_key": "not-created",
+    "dirty_wrapper_start_exit": 1,
+    "dirty_refusal_code": "coding.harness.start-state-denied",
+    "dirty_staged_unstaged_untracked_preserved": true,
+    "dirty_snapshot_sha256": "b56236790e5b4ce2c5077cfc75730b3cf5ae5eb3a50b7852e4e672380f8a449e",
+    "dirty_state_entries": [],
+    "dirty_run_log_created": false,
+    "source_and_binary_identity_verified": true,
+    "documentation_supply_chain_status_diff": "pass"
+  },
+  "prerequisites": {
+    "native_executables": {
+      "bwrap": "untrusted-path",
+      "git": "untrusted-path",
+      "systemctl": "untrusted-path",
+      "systemd-run": "untrusted-path"
+    },
+    "ready": false,
+    "scope": "prerequisites-only",
+    "user_manager": "not-probed-untrusted-systemctl"
+  },
+  "acceptance": {
+    "executable_scripted": "startup exercised; failed before tools",
+    "authorized_edit_test_failure_correction": "not reached",
+    "protected_denial_and_active_cancellation": "not reached",
+    "preexisting_work": "preserved on wrapper refusal; successful editing with existing work not qualified",
+    "real_model": "not run",
+    "manual_user": "not performed",
+    "independent_review": "requested for implementation; no PASS received",
+    "supported_platform": "not qualified by this observation",
+    "release": "not approved"
+  },
+  "limitations": [
+    "The doctor reports prerequisites only and did not execute the untrusted systemctl path.",
+    "The user-systemd bus is unavailable by lane configuration, not a successful probe in this run.",
+    "Actual CLI/host admission failure cannot substitute for a completed repair, denial or cancellation workflow.",
+    "No model, GPU, host installation, new dependency, service change or confinement bypass was used.",
+    "Only documentation changed after the clean source/binary observation; no SBOM regeneration was needed."
+  ],
+  "changed_documentation_bindings": {
+    "scope": "Direct LOCAL-TESTING.md bindings only; no transitive/global freshness assertion",
+    "prior_observation_records_now_historical_for_the_changed_guide": [
+      "docs/verification/coding-harness-ownership-2026-09-27.json",
+      "docs/verification/runtime-advancement-reconciliation-2026-09-27.json",
+      "docs/verification/runtime-callback-consistency-2026-09-27.json"
+    ],
+    "original_input_sets_and_source_pins_preserved": true
+  }
+}

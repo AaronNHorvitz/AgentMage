@@ -47,6 +47,10 @@ an uncertain record. See the development guide for lifecycle and cleanup limitat
 
 **Current lane result:** setup and diagnosis ran; the actual scripted CLI/host
 launch returned exit 5 before tools because native prerequisites are unavailable.
+The [current-binary observation](verification/linux-current-startup-2026-09-27.md)
+retains the rebuilt source revision, binary hashes and startup results. The clean
+fixture was unchanged. A separate fixture with staged, unstaged and untracked work
+was refused by the wrapper before launch, with its file bytes and Git state preserved.
 The lane does not expose root-trusted native executables or a user-systemd bus.
 The corrected doctor reports this refusal. Do not alter confinement to run the demo.
 A successful edit/test/correction, denial/cancellation matrix and real-model demo
