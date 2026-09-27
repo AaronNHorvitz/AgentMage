@@ -1085,6 +1085,8 @@ where
     }
 
     /// Runs until a protected approval or canonical terminal outcome is reached.
+    /// An advancement error requires canonical reconciliation before another call;
+    /// rejected approval input leaves the current challenge intact.
     pub fn run_until_boundary(
         &mut self,
         response: Option<&RuntimeApprovalResponse>,
@@ -1093,6 +1095,36 @@ where
         if self.correctness_reconciliation_required {
             return Err(RuntimeLoopError::InvalidBoundaryResult);
         }
+        // Client input rejection has no authority and must not consume the current
+        // challenge. Once advancement begins, any error may follow a committed
+        // effect, event or artifact: only canonical recovery can reconcile it.
+        let response = match response {
+            Some(response) => {
+                let pending = self.pending.as_ref().filter(|_| self.outcome.is_none());
+                let pending = pending.ok_or(RuntimeLoopError::Contract(
+                    RuntimeCoordinatorError::ApprovalDenied,
+                ))?;
+                let now = self
+                    .clock
+                    .now_epoch_ms()
+                    .map_err(RuntimeLoopError::Dependency)?;
+                verify_runtime_approval_response(&pending.challenge, response, now)?;
+                Some((response, now))
+            }
+            None => None,
+        };
+        let result = self.advance_until_boundary(response, cancellation);
+        if result.is_err() {
+            self.correctness_reconciliation_required = true;
+        }
+        result
+    }
+
+    fn advance_until_boundary(
+        &mut self,
+        response: Option<(&RuntimeApprovalResponse, u64)>,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+    ) -> Result<RuntimeCoordinatorStep, RuntimeLoopError> {
         if let Some(outcome) = &self.outcome {
             if response.is_some() {
                 return Err(RuntimeLoopError::Contract(
@@ -1118,7 +1150,7 @@ where
                     outcome: self.outcome.clone().expect("cancellation is terminal"),
                 });
             }
-            let Some(response) = response else {
+            let Some((response, now_epoch_ms)) = response else {
                 return Ok(RuntimeCoordinatorStep::AwaitingApproval {
                     challenge: self
                         .pending
@@ -1128,7 +1160,7 @@ where
                         .clone(),
                 });
             };
-            self.resume_pending(response, cancellation)?;
+            self.resume_pending(response, cancellation, now_epoch_ms)?;
         } else if response.is_some() {
             return Err(RuntimeLoopError::Contract(
                 RuntimeCoordinatorError::ApprovalDenied,
@@ -2260,13 +2292,9 @@ where
         &mut self,
         response: &RuntimeApprovalResponse,
         cancellation: Option<&dyn ModelCancellationProbe>,
+        now: u64,
     ) -> Result<(), RuntimeLoopError> {
         let pending = self.pending.take().expect("pending checked by caller");
-        let now = self
-            .clock
-            .now_epoch_ms()
-            .map_err(RuntimeLoopError::Dependency)?;
-        verify_runtime_approval_response(&pending.challenge, response, now)?;
         let mut permission_decision_emitted = false;
         let evaluation = if let Some(resolve) = self.correctness.as_ref().map(|hooks| hooks.resolve)
         {

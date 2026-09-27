@@ -73,7 +73,7 @@ Reproduce the focused source checks with:
 
 ```sh
 bash /tools/build-slot env CARGO_BUILD_JOBS=1 RUST_TEST_THREADS=1 \
-  cargo test --locked --offline -p agentmage-kernel-engine --lib runtime_loop_tests
+  cargo test --locked --offline -p agentmage-kernel-engine --lib runtime_loop::tests::
 bash /tools/build-slot env CARGO_BUILD_JOBS=1 \
   cargo clippy --locked --offline --workspace --all-targets -- -D warnings
 ```
