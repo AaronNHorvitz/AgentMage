@@ -247,6 +247,8 @@ pub mod research_journal;
 pub mod research_plan;
 /// Bounded inert worker response framing, separate from transport provenance.
 pub mod research_response;
+/// Exact full-frame and redacted native-result consistency, not producer attestation.
+pub mod research_result_binding;
 /// Deterministic compilation of all prerequisites for one genuinely fresh attempt.
 pub mod retry_admission;
 /// Integrity-protected review packets and authority-free logical commit plans.

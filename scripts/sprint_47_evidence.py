@@ -51,6 +51,8 @@ SOURCE_PATHS: Final = (
     "docs/verification/sprint-47-security-corpus.json",
     "tests/test_sprint_47_security_corpus.py",
     "scripts/effect_boundary.py",
+    "scripts/rust_source_audit.py",
+    "tests/test_rust_source_audit.py",
     "tests/test_effect_boundary.py",
     "docs/architecture/local-review-and-commit-boundary.md",
     "docs/guides/reviewing-and-creating-local-commits.md",

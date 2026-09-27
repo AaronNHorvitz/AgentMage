@@ -36,6 +36,8 @@ SOURCE_PATHS: Final = (
     "platforms/linux/src/sandbox.rs",
     "scripts/inference_client_isolation_evidence.py",
     "scripts/strict_local_source_audit.py",
+    "scripts/rust_source_audit.py",
+    "tests/test_rust_source_audit.py",
     "security/strict-local-source-policy.json",
     "shells/vscode/src/host_bootstrap.ts",
     "shells/vscode/src/host_bridge.ts",

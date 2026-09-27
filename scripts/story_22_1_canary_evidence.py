@@ -43,6 +43,8 @@ SOURCE_PATHS: Final = (
     "kernel/engine/src/runtime_loop_tests.rs",
     "platforms/linux/src/runtime_artifact_store.rs",
     "scripts/strict_local_source_audit.py",
+    "scripts/rust_source_audit.py",
+    "tests/test_rust_source_audit.py",
     "scripts/story_22_1_canary_evidence.py",
     "tests/test_story_22_1_canary_evidence.py",
 )

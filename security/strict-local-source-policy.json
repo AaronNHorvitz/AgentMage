@@ -434,7 +434,8 @@
         "platforms/linux-inference/src/docker_topology_collector.rs",
         "platforms/linux/src/inventory.rs",
         "platforms/linux/src/public_research_target.rs",
-        "platforms/linux/src/public_research_transport.rs"
+        "platforms/linux/src/public_research_transport.rs",
+        "platforms/linux/src/research_resolver.rs"
       ],
       "id": "rust-standard-internet-address-api",
       "pattern": "std::net(?:::|\\s|;)"
@@ -443,7 +444,8 @@
       "allowed_paths": [
         "platforms/linux-inference/src/docker_guard_service.rs",
         "platforms/linux-inference/src/docker_http_observer.rs",
-        "platforms/linux/src/ipc.rs"
+        "platforms/linux/src/ipc.rs",
+        "platforms/linux/src/research_seccomp.rs"
       ],
       "id": "rustix-socket-api",
       "pattern": "rustix::net::"

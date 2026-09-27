@@ -26,6 +26,8 @@ pub(crate) enum LaunchOwner {
     Read(Arc<LinuxSandboxManifest>),
     Command(Arc<crate::command_runner::LinuxCommandManifest>),
     Git(Arc<crate::repository_safety::LinuxRepositoryInspectionManifest>),
+    #[cfg(feature = "public-research-worker")]
+    Research(Arc<super::research::LinuxPublicResearchManifest>),
 }
 
 impl LaunchOwner {
@@ -41,6 +43,8 @@ impl LaunchOwner {
             }
             Self::Command(manifest) => manifest.control_path().map_err(|_| failure()),
             Self::Git(manifest) => manifest.control_path().map_err(|_| failure()),
+            #[cfg(feature = "public-research-worker")]
+            Self::Research(manifest) => manifest.control_path(),
         }
     }
 
@@ -49,6 +53,8 @@ impl LaunchOwner {
             Self::Read(_) => ("agentmage-worker-", (1..=8).contains(&projections)),
             Self::Command(_) => ("agentmage-command-", projections <= 1),
             Self::Git(_) => ("agentmage-git-inspection-", projections == 1),
+            #[cfg(feature = "public-research-worker")]
+            Self::Research(_) => ("agentmage-research-", projections == 3),
         };
         cardinality && unit_name_with_prefix(unit, prefix)
     }
@@ -1049,6 +1055,8 @@ fn unit_name(value: &str) -> bool {
         "agentmage-worker-",
         "agentmage-command-",
         "agentmage-git-inspection-",
+        #[cfg(feature = "public-research-worker")]
+        "agentmage-research-",
     ]
     .into_iter()
     .any(|prefix| unit_name_with_prefix(value, prefix))
@@ -1205,6 +1213,26 @@ mod tests {
     use super::*;
 
     const UNIT: &str = "agentmage-worker-0123456789abcdef01234567.service";
+
+    #[test]
+    fn research_unit_observation_requires_the_optional_closed_owner_and_exact_nonce() {
+        let unit = UNIT.replace("agentmage-worker-", "agentmage-research-");
+        let properties = running().replace(UNIT, &unit);
+        assert_eq!(
+            parse_unit_observation(&unit, properties.as_bytes()).is_ok(),
+            cfg!(feature = "public-research-worker")
+        );
+        for bad in [
+            "agentmage-research-*.service",
+            "agentmage-research-0123456789abcdef0123456.service",
+            "agentmage-research-0123456789abcdef012345678.service",
+            "agentmage-research-0123456789abcdef0123456G.service",
+            "agentmage-research-0123456789abcdef01234567.scope",
+        ] {
+            assert!(!unit_name(bad), "{bad}");
+        }
+        assert!(parse_unit_observation(&unit, running().as_bytes()).is_err());
+    }
     fn absent() -> String {
         format!(
             "Id={UNIT}\nLoadState=not-found\nActiveState=inactive\nSubState=dead\nJob=\nTransient=no\nInvocationID=\nMainPID=0\nControlPID=0\nResult=success\nControlGroup=\n"

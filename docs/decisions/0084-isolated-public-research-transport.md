@@ -142,3 +142,18 @@ kernel's shared contract implementation, retaining host compatibility exports. T
 the canonical owner decode the exact full prepared plan using the same implementation,
 without a reverse kernel-to-host dependency, duplicate validator or opaque hash-only plan.
 Transport stays in the separately inventoried Linux worker; these shared types perform no I/O.
+
+## Inactive native-boundary implementation unit
+
+Status: **Accepted under owner delegation, 2026-09-20**. Authority: Decision 0054.
+The separate optional profile reuses the existing closed supervisor and requires both
+consumed authority and fresh durable dispatch. Preserve root-only executable/runtime
+trust; admit only fixed root-delegated systemd resolver data through a distinct held-file
+check. Project minimal resolver/NSS inputs, never workspace or canonical state.
+
+The syscall profile restricts client socket arguments, not destination IP/domain. No
+systemd IP-property or unsupported kernel-filter claim substitutes for the pinned Rust
+transport's destination/DNS/peer/TLS checks. Keep network disclosure uncertainty distinct
+from native cancellation or cleanup. Result consistency alone cannot attest to a producer
+or canonical retrieval. The [bounded evidence](../verification/research-native-boundary-2026-09-27.md)
+records native refusal/cleanup and the still-open outbound, retrieval and model gates.

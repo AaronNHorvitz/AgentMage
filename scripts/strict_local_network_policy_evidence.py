@@ -34,6 +34,8 @@ SOURCE_PATHS: Final = (
     "security/strict-local-source-policy.json",
     "scripts/strict_local_network_policy_evidence.py",
     "scripts/strict_local_source_audit.py",
+    "scripts/rust_source_audit.py",
+    "tests/test_rust_source_audit.py",
     "tests/test_strict_local_network_policy_evidence.py",
     "tests/test_strict_local_source_audit.py",
 )

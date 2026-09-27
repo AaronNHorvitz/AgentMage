@@ -32,6 +32,8 @@ SOURCE_PATHS: Final = (
     "release/xtask/Cargo.toml",
     "scripts/hidden_network_surface_evidence.py",
     "scripts/strict_local_source_audit.py",
+    "scripts/rust_source_audit.py",
+    "tests/test_rust_source_audit.py",
     "security/strict-local-source-policy.json",
     "shells/host/Cargo.toml",
     "shells/vscode/package.json",

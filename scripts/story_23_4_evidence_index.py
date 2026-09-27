@@ -43,6 +43,8 @@ EVIDENCE_PATHS: Final = (
     "kernel/engine/src/runtime_loop_tests.rs",
     "scripts/dependency_rules.py",
     "scripts/effect_boundary.py",
+    "scripts/rust_source_audit.py",
+    "tests/test_rust_source_audit.py",
     "scripts/runtime_coordinator_boundary_review.py",
     "scripts/story_23_4_evidence_index.py",
     "scripts/story_23_4_runtime_evidence.py",

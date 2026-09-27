@@ -34,6 +34,8 @@ SOURCE_PATHS: Final = (
     "scripts/hostile_network_injection_evidence.py",
     "scripts/hostile_network_injection_gate.py",
     "scripts/strict_local_source_audit.py",
+    "scripts/rust_source_audit.py",
+    "tests/test_rust_source_audit.py",
     "security/strict-local-source-policy.json",
     "shells/vscode/package.json",
     "tests/test_hostile_network_injection_evidence.py",

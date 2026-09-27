@@ -62,6 +62,8 @@ SOURCE_PATHS: Final = (
     "shells/host/src/runtime_read_tests.rs",
     "scripts/dependency_rules.py",
     "scripts/effect_boundary.py",
+    "scripts/rust_source_audit.py",
+    "tests/test_rust_source_audit.py",
     "scripts/runtime_coordinator_boundary_review.py",
     "scripts/story_23_4_runtime_evidence.py",
     "scripts/story_23_4_security_evidence.py",

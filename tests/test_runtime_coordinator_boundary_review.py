@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import re
 import subprocess
 import unittest
 from pathlib import Path
@@ -43,6 +44,28 @@ def worktree_sources() -> dict[str, str]:
 
 
 class RuntimeCoordinatorBoundaryReviewTests(unittest.TestCase):
+    def test_model_dispatch_keeps_exact_origin_registry_and_call_across_line_wrapping(self) -> None:
+        sources = worktree_sources()
+        dispatch = "ToolDispatcher::new(&self.registry).dispatch(ProposalOrigin::Model, &call);"
+        assignment = r"let\s+receipt\s*=\s*" + re.escape(dispatch)
+        self.assertEqual(len(re.findall(assignment, sources[RUNTIME_LOOP])), 1)
+        for spacing in (" ", "\n                "):
+            changed = dict(sources)
+            changed[RUNTIME_LOOP] = re.sub(
+                assignment, "let receipt =" + spacing + dispatch, sources[RUNTIME_LOOP],
+            )
+            checks = {item["check_id"]: item["passed"] for item in review_checks(changed)}
+            self.assertTrue(checks["model-proposal-is-inert"])
+        for invalid in (
+            dispatch.replace("ProposalOrigin::Model", "ProposalOrigin::User"),
+            dispatch.replace("&self.registry", "&another_registry"),
+            dispatch.replace("&call", "&another_call"),
+        ):
+            changed = dict(sources)
+            changed[RUNTIME_LOOP] = changed[RUNTIME_LOOP].replace(dispatch, invalid)
+            checks = {item["check_id"]: item["passed"] for item in review_checks(changed)}
+            self.assertFalse(checks["model-proposal-is-inert"])
+
     def test_current_committed_boundary_passes_every_automated_check(self) -> None:
         checks = review_checks(worktree_sources())
         self.assertEqual([item["check_id"] for item in checks], list(EXPECTED_CHECK_IDS))

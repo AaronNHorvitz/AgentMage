@@ -61,6 +61,8 @@ SOURCE_PATHS: Final = (
     RUNTIME_LOG,
     "scripts/dependency_rules.py",
     "scripts/effect_boundary.py",
+    "scripts/rust_source_audit.py",
+    "tests/test_rust_source_audit.py",
     "scripts/runtime_coordinator_boundary_review.py",
     "tests/test_runtime_coordinator_boundary_review.py",
 )
@@ -215,9 +217,12 @@ def review_checks(sources: dict[str, str]) -> list[dict[str, Any]]:
             "pub trait RuntimeModelPort",
             "Result<ModelRunResult, RuntimePortFailure>",
             "ModelProposalKind::ToolCall",
-            "let receipt = ToolDispatcher::new(&self.registry).dispatch",
         )
-    )
+    ) and re.search(
+        r"let\s+receipt\s*=\s*ToolDispatcher::new\(&self\.registry\)"
+        r"\.dispatch\(ProposalOrigin::Model,\s*&call\);",
+        runtime_loop,
+    ) is not None
     grant_gated = all(
         marker in runtime_loop
         for marker in (

@@ -58,6 +58,12 @@ the shared native-supervisor changes. Both repetitions used unchanged source,
 binaries and limits. This adds no production admission or independent acceptance;
 the older campaigns remain historical and GPT-OSS's separate disposition is unchanged.
 
+The [inactive research native-boundary increment](docs/verification/research-native-boundary-2026-09-27.md)
+records dual-proof dispatch, native confinement/refusal/cleanup tests, durable no-replay
+and 22 fresh executable-scripted cases. It enables no outbound tool. Native DNS/TLS
+adversarial qualification, canonical retrieval and real-model research remain open;
+its additive audit input bindings do not reaccept historical evidence or close these rows.
+
 | Status | Row | Dependencies | Bounded implementation and verification |
 | --- | --- | --- | --- |
 | [ ] | AMR-01.1 | Prior coding source and retained campaign | Reconcile exact source/binary/model identities, current doctor behavior and all changed planning/privacy evidence bindings; preserve original receipts and distinguish freshness from historical validity. |

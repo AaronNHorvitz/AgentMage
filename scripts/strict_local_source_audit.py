@@ -21,6 +21,16 @@ from scripts import research_dependency_closure as research_closure
 POLICY_PATH = ROOT / "security" / "strict-local-source-policy.json"
 SOURCE_SUFFIXES = {".css", ".html", ".js", ".json", ".mjs", ".rs", ".ts"}
 URI = re.compile(r"(?:https?|wss?)://[^\s\"'<>`)\\]+", re.IGNORECASE)
+# These exact helper imports expose only value types/constants, not network I/O.
+# Their path allowances below never admit another import from either namespace.
+RESEARCH_VALUE_IMPORTS = {
+    "platforms/linux/src/research_resolver.rs": (
+        "use std::net::IpAddr;", "std", "net",
+    ),
+    "platforms/linux/src/research_seccomp.rs": (
+        "use rustix::net::{AddressFamily, SocketFlags, SocketType, ipproto};", "rustix", "net",
+    ),
+}
 TOP_LEVEL_KEYS = {
     "allowed_external_uris",
     "allowed_first_party_build_scripts",
@@ -225,14 +235,15 @@ def source_map(policy: dict[str, Any]) -> dict[str, str]:
 
 
 def production_source(path: str, content: str) -> str:
-    """Exclude one terminal Rust unit-test module from product-source scans."""
+    """Exclude exact test modules without hiding trailing production items."""
 
     if not path.endswith(".rs"):
         return content
-    test_modules = list(
-        re.finditer(r"(?m)^#\[cfg\(test\)\]\s*\nmod\s+tests\s*\{", content)
-    )
-    return content[: test_modules[-1].start()] if test_modules else content
+    try:
+        from scripts.rust_source_audit import production_source as rust_production_source
+    except ModuleNotFoundError:
+        from rust_source_audit import production_source as rust_production_source
+    return rust_production_source(content)
 
 
 def scan_sources(policy: dict[str, Any], sources: dict[str, str]) -> list[str]:
@@ -241,6 +252,14 @@ def scan_sources(policy: dict[str, Any], sources: dict[str, str]) -> list[str]:
     observed_allowed: dict[str, set[str]] = {path: set() for path in allowed_uris}
     for path, content in sorted(sources.items()):
         product_content = production_source(path, content)
+        if path in RESEARCH_VALUE_IMPORTS:
+            declaration, package, module = RESEARCH_VALUE_IMPORTS[path]
+            remainder = product_content.replace(declaration, "", 1)
+            if (product_content.count(declaration) != 1
+                    or re.search(rf"\b{package}\s*::\s*{module}\b", remainder)
+                    or re.search(rf"\buse\s+{package}\s*::\s*\{{[^;]*\b{module}\b", remainder)
+                    or re.search(rf"\buse\s+{package}\s*(?:as\b|;)|\bextern\s+crate\s+{package}\b", remainder)):
+                failures.append(f"research value-only network import expanded: {path}")
         for match in URI.finditer(product_content):
             uri = match.group(0)
             if uri not in allowed_uris.get(path, []):

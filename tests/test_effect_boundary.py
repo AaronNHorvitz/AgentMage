@@ -235,6 +235,31 @@ class EffectBoundaryTests(unittest.TestCase):
                 validate_effect_boundary(overrides={path: changed}),
             )
 
+    def test_research_native_driver_stays_feature_gated_private_and_dual_proof(self) -> None:
+        path = Path("platforms/linux/src/research_sandbox.rs")
+        original = self.source(str(path))
+        for changed, diagnostic in (
+            (original.replace("    fn run(", "    pub(crate) fn run(", 1),
+             "raw Linux research execution must remain module-private"),
+            (original + "\nimpl EffectDriver for LinuxPublicResearchEffectDriver<'_> {}\n",
+             "Linux research driver cannot bypass the dual-proof interface"),
+            (original.replace("dispatch: ResearchDispatch<'_>", "dispatch: String", 1),
+             "Linux research driver must consume both existing proofs"),
+        ):
+            self.assertNotEqual(original, changed)
+            self.assertIn(diagnostic, validate_effect_boundary(overrides={path: changed}))
+        parent = Path("platforms/linux/src/sandbox.rs")
+        source = self.source(str(parent))
+        guarded = '#[cfg(feature = "public-research-worker")]\n#[path = "research_sandbox.rs"]'
+        changed = source.replace(guarded, '#[path = "research_sandbox.rs"]', 1)
+        self.assertNotEqual(source, changed)
+        self.assertIn("Linux research adapter must remain feature-gated and crate-internal", validate_effect_boundary(overrides={parent: changed}))
+        for sibling in (Path("platforms/linux/src/research_resolver.rs"), Path("platforms/linux/src/research_seccomp.rs")):
+            changed = "// EffectAuthorization\nfn bypass() { supervision::run_owned(); }\n" + self.source(str(sibling))
+            failures = validate_effect_boundary(overrides={sibling: changed})
+            self.assertIn(f"unregistered effect-authorization consumer: {sibling}", failures)
+            self.assertIn(f"unregistered native supervisor consumer: {sibling}", failures)
+
     def test_repository_safety_is_a_registered_permit_consumer(self) -> None:
         failures = validate_effect_boundary()
 

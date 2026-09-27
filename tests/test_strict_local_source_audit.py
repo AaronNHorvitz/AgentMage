@@ -94,6 +94,42 @@ class StrictLocalSourceAuditTests(unittest.TestCase):
                     audit.scan_sources(self.policy, sources),
                 )
 
+    def test_research_resolver_and_filter_only_admit_the_exact_value_import(self) -> None:
+        for path, (declaration, package, module) in audit.RESEARCH_VALUE_IMPORTS.items():
+            original = self.sources[path]
+            self.assertIn(declaration, original)
+            mutations = [
+                original.replace(declaration, "", 1),
+                declaration + "\n" + original,
+                f"use {package}::{module} as hidden;\n" + original,
+                f"use {package}::{{{module} as hidden}};\n" + original,
+                f"use {package} as hidden;\n" + original,
+                f"extern crate {package} as hidden;\n" + original,
+                f"fn extra() {{ {package}::{module}::socket(); }}\n" + original,
+            ]
+            for changed in mutations:
+                with self.subTest(path=path, mutation=changed[:100]):
+                    self.assertNotEqual(changed, original)
+                    sources = dict(self.sources)
+                    sources[path] = changed
+                    self.assertIn(f"research value-only network import expanded: {path}", audit.scan_sources(self.policy, sources))
+            sources = dict(self.sources)
+            sources[path] = "use std::net::TcpStream;\n" + original
+            self.assertIn(f"rust-network-client-api found outside its closed allowlist: {path}", audit.scan_sources(self.policy, sources))
+        sources = dict(self.sources)
+        path = "platforms/linux/src/research_sandbox.rs"
+        sources[path] = "use rustix::net::socket;\n" + sources[path]
+        self.assertIn(f"rustix-socket-api found outside its closed allowlist: {path}", audit.scan_sources(self.policy, sources))
+
+    def test_production_network_after_test_module_is_still_audited(self) -> None:
+        path = "platforms/linux/src/research_sandbox.rs"
+        sources = dict(self.sources)
+        sources[path] += "\nfn bypass() { rustix::net::socket(); }\n"
+        self.assertIn(
+            f"rustix-socket-api found outside its closed allowlist: {path}",
+            audit.scan_sources(self.policy, sources),
+        )
+
     def test_vscode_manifest_network_surfaces_are_closed(self) -> None:
         manifest = json.loads(
             (audit.ROOT / "shells/vscode/package.json").read_text(encoding="utf-8")

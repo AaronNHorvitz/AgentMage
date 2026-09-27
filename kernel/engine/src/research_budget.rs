@@ -963,7 +963,7 @@ mod tests {
             format!("lookup Bearer {}", "q".repeat(32)),
             format!("lookup ghp_{}", "a".repeat(32)),
             "https://user:password@example.com".into(),
-            "-----BEGIN PRIVATE KEY-----".into(),
+            concat!("-----BEGIN ", "PRIVATE KEY-----").into(),
         ] {
             assert_eq!(
                 public_query_sha256(&query),

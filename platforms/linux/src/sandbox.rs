@@ -35,6 +35,16 @@ use crate::LinuxHeldObject;
 #[path = "sandbox_supervision.rs"]
 pub(crate) mod supervision;
 
+#[cfg(feature = "public-research-worker")]
+#[path = "research_sandbox.rs"]
+pub(crate) mod research;
+#[cfg(feature = "public-research-worker")]
+#[path = "research_resolver.rs"]
+mod research_resolver;
+#[cfg(feature = "public-research-worker")]
+#[path = "research_seccomp.rs"]
+mod research_seccomp;
+
 const MAX_RUNTIME_FILES: usize = 16;
 const MAX_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
 const MAX_DIRECTORY_ENTRIES: usize = 4_096;
@@ -1345,9 +1355,33 @@ fn verify_artifact(
 }
 
 fn development_worker_artifact(path: &Path) -> Result<VerifiedArtifact, LinuxSandboxError> {
+    development_worker_artifact_kind(path, DevelopmentWorkerKind::ReadOnly)
+}
+
+// Closed development mapping, not a caller-selected executable name or trust root.
+enum DevelopmentWorkerKind {
+    ReadOnly,
+    #[cfg(feature = "public-research-worker")]
+    PublicResearch,
+}
+
+impl DevelopmentWorkerKind {
+    const fn name(&self) -> &'static str {
+        match self {
+            Self::ReadOnly => "agentmage-read-only-worker",
+            #[cfg(feature = "public-research-worker")]
+            Self::PublicResearch => "agentmage-public-research-worker",
+        }
+    }
+}
+
+fn development_worker_artifact_kind(
+    path: &Path,
+    kind: DevelopmentWorkerKind,
+) -> Result<VerifiedArtifact, LinuxSandboxError> {
     use std::os::unix::fs::MetadataExt;
     let invalid = || error(LinuxSandboxErrorKind::InvalidManifest);
-    if path.file_name().and_then(|name| name.to_str()) != Some("agentmage-read-only-worker")
+    if path.file_name().and_then(|name| name.to_str()) != Some(kind.name())
         || std::fs::canonicalize(path).map_err(|_| invalid())? != path
     {
         return Err(invalid());
@@ -1398,16 +1432,13 @@ fn development_worker_artifact(path: &Path) -> Result<VerifiedArtifact, LinuxSan
     }
     // An owner-writable build artifact is not a production trust root. Hold an
     // immutable sealed snapshot, never execute the mutable pathname in the worker.
-    let snapshot = projection_descriptor(
-        "agentmage-development-read-worker",
-        LinuxSandboxErrorKind::InvalidManifest,
-    )?;
+    let snapshot = projection_descriptor(kind.name(), LinuxSandboxErrorKind::InvalidManifest)?;
     write_all_projection(&snapshot, &bytes, LinuxSandboxErrorKind::InvalidManifest)?;
     rustix::fs::fchmod(&snapshot, Mode::from_raw_mode(0o500)).map_err(|_| invalid())?;
     seal_projection(&snapshot, LinuxSandboxErrorKind::InvalidManifest)?;
     Ok(VerifiedArtifact {
         descriptor: snapshot,
-        guest_path: Some(Path::new(WORKER_GUEST_ROOT).join("agentmage-read-only-worker")),
+        guest_path: Some(Path::new(WORKER_GUEST_ROOT).join(kind.name())),
         launch_path: None,
         sha256,
         sealed_snapshot: true,

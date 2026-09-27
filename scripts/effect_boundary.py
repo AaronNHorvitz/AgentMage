@@ -9,6 +9,10 @@ import tomllib
 from collections import Counter
 from pathlib import Path
 
+try:
+    from scripts.rust_source_audit import production_source as _production_source
+except ModuleNotFoundError:
+    from rust_source_audit import production_source as _production_source
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -24,13 +28,14 @@ CONFIGURATION = Path("kernel/engine/src/configuration.rs")
 LINUX_LIB = Path("platforms/linux/src/lib.rs")
 LINUX_CONFIGURATION = Path("platforms/linux/src/configuration_store.rs")
 LINUX_SANDBOX = Path("platforms/linux/src/sandbox.rs")
+LINUX_RESEARCH = Path("platforms/linux/src/research_sandbox.rs")
 LINUX_SANDBOX_SUPERVISION = Path("platforms/linux/src/sandbox_supervision.rs")
 LINUX_SANDBOX_ACCOUNTING = Path("platforms/linux/src/sandbox_supervision/resource_usage.rs")
-LINUX_SUPERVISION_USERS = {LINUX_SANDBOX, LINUX_SANDBOX_SUPERVISION,
+LINUX_SUPERVISION_USERS = {LINUX_SANDBOX, LINUX_SANDBOX_SUPERVISION, LINUX_RESEARCH,
                          Path("platforms/linux/src/command_runner.rs"),
                          Path("platforms/linux/src/repository_safety.rs")}
 
-# Exact internal interface for the existing three native owners, not a public
+# Exact internal interface for the closed native owners, not a public
 # process API. New entries require a deliberate boundary review and regressions.
 SUPERVISION_DECLARATIONS = (
     "pub(crate) enum LaunchOwner {", "pub(crate) struct Launch {",
@@ -67,6 +72,7 @@ PERMIT_USERS = {
     LOCAL_COMMIT,
     LINUX_CONFIGURATION,
     LINUX_SANDBOX,
+    LINUX_RESEARCH,
     LINUX_SECRETS,
 }
 
@@ -138,15 +144,6 @@ def _public_function(source: str, name: str) -> bool:
     return re.search(rf"(?m)^\s*pub\s+(?:const\s+)?fn\s+{re.escape(name)}\s*\(", source) is not None
 
 
-def _production_source(source: str) -> str:
-    """Exclude an end-of-file Rust unit-test module from product-effect scans."""
-
-    test_modules = list(
-        re.finditer(r"(?m)^#\[cfg\(test\)\]\s*\nmod\s+tests\s*\{", source)
-    )
-    return source[: test_modules[-1].start()] if test_modules else source
-
-
 def _verified_test_only_binaries(
     root: Path,
     overrides: dict[Path, str],
@@ -190,6 +187,7 @@ def validate_effect_boundary(
     linux_lib = _read(LINUX_LIB, root, replacements)
     linux_configuration = _read(LINUX_CONFIGURATION, root, replacements)
     linux_sandbox = _read(LINUX_SANDBOX, root, replacements)
+    linux_research = _production_source(_read(LINUX_RESEARCH, root, replacements))
     linux_secrets = _read(LINUX_SECRETS, root, replacements)
     linux_ipc = _read(LINUX_IPC, root, replacements)
     test_only_binaries = _verified_test_only_binaries(root, replacements)
@@ -254,6 +252,17 @@ def validate_effect_boundary(
             failures.append(f"raw Linux configuration effect is public: {name}")
     if _public_function(linux_sandbox, "run"):
         failures.append("raw Linux sandbox execution is public")
+    if re.search(r"(?m)^\s*pub(?:\([^)]*\))?\s+fn\s+run\s*\(", linux_research):
+        failures.append("raw Linux research execution must remain module-private")
+    if ('#[cfg(feature = "public-research-worker")]\n#[path = "research_sandbox.rs"]\npub(crate) mod research;'
+            not in linux_sandbox):
+        failures.append("Linux research adapter must remain feature-gated and crate-internal")
+    if ('#[cfg(feature = "public-research-worker")]\npub use sandbox::research::{' not in linux_lib):
+        failures.append("Linux research exports must remain feature-gated")
+    if re.search(r"impl\s+(?:[^\s]+::)?EffectDriver\s+for\s+LinuxPublicResearchEffectDriver", linux_research):
+        failures.append("Linux research driver cannot bypass the dual-proof interface")
+    if not re.search(r"fn\s+execute_research\s*\(\s*&mut\s+self,\s*authorization:\s*EffectAuthorization<'_>,\s*dispatch:\s*ResearchDispatch<'_>,?\s*\)", linux_research):
+        failures.append("Linux research driver must consume both existing proofs")
     supervision = _production_source(_read(LINUX_SANDBOX_SUPERVISION, root, replacements))
     accounting = _production_source(_read(LINUX_SANDBOX_ACCOUNTING, root, replacements))
     for source, declarations, label in (
@@ -269,6 +278,8 @@ def validate_effect_boundary(
         "Read(Arc<LinuxSandboxManifest>), "
         "Command(Arc<crate::command_runner::LinuxCommandManifest>), "
         "Git(Arc<crate::repository_safety::LinuxRepositoryInspectionManifest>),"
+        ' #[cfg(feature = "public-research-worker")] '
+        "Research(Arc<super::research::LinuxPublicResearchManifest>),"
     ):
         failures.append("Linux sandbox supervisor owner set is not closed")
     if supervision.count("static OWNED_ATTEMPT: Mutex<Option<Attempt>>") != 1:
@@ -277,7 +288,7 @@ def validate_effect_boundary(
         failures.append("Linux sandbox supervisor module must remain crate-internal")
     if re.search(r"\b(?:Command|TcpStream|UnixStream)::|\bstd::process\b|\bthread::spawn\b", accounting):
         failures.append("Linux sandbox accounting cannot own processes or sockets")
-    for path, source in ((LINUX_SANDBOX, _production_source(linux_sandbox)), (LINUX_SANDBOX_SUPERVISION, supervision), (LINUX_SANDBOX_ACCOUNTING, accounting)):
+    for path, source in ((LINUX_SANDBOX, _production_source(linux_sandbox)), (LINUX_SANDBOX_SUPERVISION, supervision), (LINUX_SANDBOX_ACCOUNTING, accounting), (LINUX_RESEARCH, linux_research)):
         # Thread joins take no arguments. Path and string joins are ordinary
         # bounded data operations; they must not be mistaken for process waits.
         blocking_wait = re.search(r"\.(?:wait|wait_with_output|status|output)\s*\(", source)

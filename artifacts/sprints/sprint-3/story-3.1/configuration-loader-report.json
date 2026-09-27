@@ -108,7 +108,7 @@
     },
     {
       "path": "kernel/engine/src/lib.rs",
-      "sha256": "01ff4323fcd0b534505bcda260c4bc952940d4c990895e0bc4f567a8675c4edb"
+      "sha256": "622b84ed78835cb90a5b8e188c434459038e5290c46b843e6ccc2f415098237e"
     },
     {
       "path": "kernel/engine/src/configuration.rs",

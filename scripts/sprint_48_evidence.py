@@ -39,6 +39,8 @@ SOURCE_PATHS: Final = (
     "tests/test_sprint_48_headless_corpus.py",
     "tests/test_sprint_48_cli_binary.py",
     "scripts/effect_boundary.py",
+    "scripts/rust_source_audit.py",
+    "tests/test_rust_source_audit.py",
     "tests/test_effect_boundary.py",
     "docs/architecture/thin-client-boundary.md",
     "docs/guides/local-command-line-interface.md",

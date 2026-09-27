@@ -89,6 +89,11 @@ pub use repository_safety::{
     LinuxRepositoryInspectionManifest, LinuxRepositoryScope, linux_repository_path_sha256,
 };
 pub use runtime_artifact_store::{LinuxRuntimeArtifactPayloadStore, LinuxRuntimeArtifactStaged};
+#[cfg(feature = "public-research-worker")]
+pub use sandbox::research::{
+    LinuxPublicResearchEffectDriver, LinuxPublicResearchFailure, LinuxPublicResearchManifest,
+    LinuxPublicResearchRunner,
+};
 pub use sandbox::{
     LinuxReadOnlyToolEffectDriver, LinuxReadOnlyToolInput, LinuxSandboxCancellation,
     LinuxSandboxEffectDriver, LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits,
