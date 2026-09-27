@@ -1,0 +1,476 @@
+{
+  "schema_version": 1,
+  "record_type": "runtime-failed-advancement-component-observations",
+  "date": "2026-09-27",
+  "base_commit": "fa7955880007b1a678cec9f21d8512730710a9f4",
+  "source_commit": "a13ea8a943d225a3e1ee16140a566a6d0c1de161",
+  "campaign_inputs_commit": "bb6f6d1468653fb624ccdae91635918fe4c0ab2e",
+  "automated_boundary_inputs_commit": "cebd7944d0b6beb385c8cc24bf81b346c592078a",
+  "status": "component-verified;full-host-suite-failed;native-workflow-unqualified",
+  "inputs": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "2cc5ff6cf90af231d188666a1cae40c474972826b4d30cfbdf5886c137376e90"
+    },
+    {
+      "path": "IP-POLICY.md",
+      "sha256": "bc387fa1363feacbd7551a398c2596affbb3625aa01dc1a86d9e25b013a9bec9"
+    },
+    {
+      "path": "TASKS.md",
+      "sha256": "beeb04f62a96844174c7d875b50e055ef7032ced61d18ed3ec5e969615e38340"
+    },
+    {
+      "path": "architecture/status-model.json",
+      "sha256": "9c37e01faa324ffed3823e2d628b151f61b953dceae8423226fd6625d5b3d4d3"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.1/artifact-index.json",
+      "sha256": "488e132dadd75df86a736894a155ba1226a46759319eb0a9f0304ff88f63203f"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.1/security-evidence-map.json",
+      "sha256": "2494e485e1b361c015c3ae88eb628d8b9d60ce46345ed23e15bfb2d31d1930d7"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.2/contract-evidence-index.json",
+      "sha256": "9679059c1766eacf4e8fa227100447017370f098376b43d6de4f9468978b7403"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
+      "sha256": "b3ed48a2ffea076b39d0f3e9903ab81b58eee469a5c1ba158bb33a76f3da53f6"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.2/security-evidence-map.json",
+      "sha256": "d1c7e10b5b3c16b3abc01e334d3cb9440d564b0472edc3b4d325111fa2691ee9"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+      "sha256": "1b35d90727b713d0a020219bbba41c8fecfa9881c9090d8a6f0cf35606e5e9c9"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-results.log",
+      "sha256": "fcc7bb8b043bafb2c8ee8e459add5dbf4d23d7e4eae0ce2d3d7b7810934788b9"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-gate-report.json",
+      "sha256": "93c20e4b044e4eeae3d2f3adaaab4713cb41742c049d4e148c056ca1cbc5bdd3"
+    },
+    {
+      "path": "artifacts/sprints/sprint-22/story-22.1/current-product-canary-sweep.json",
+      "sha256": "dfec47c5394bc98f3230d8c1d3b99052c8cfb410e5c4fb084a223be02811baba"
+    },
+    {
+      "path": "artifacts/sprints/sprint-22/story-22.1/current-product-canary-sweep.log",
+      "sha256": "a74376071ebef153b6d5dd3136882b9fcd95f5791b5d758677ab10517f1cd1bd"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
+      "sha256": "dc11a3294d8301538978efba80917f580187cd1ff0326d66011cb9a6c441598c"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/evidence-index.json",
+      "sha256": "6b2f68278aff7650aae9bafe033f84164449c8129d7b8fdadcf031658e53b72b"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
+      "sha256": "f659ca3d7623cfcf70a4f310e2a7010a2dd8e352c1b59b51d248d2aa42b59777"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
+      "sha256": "ccdcc1af22261323bdf482e0c374408899cefd4f3b4f775f2d391c8e9c16ded5"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence-map.json",
+      "sha256": "922eadae96ea970c96fa428c1ecf9dc536cc5fdc508c6a0b6ab45f19a0b9fbac"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence.log",
+      "sha256": "2f9ae7478ecf7d6c5b034749248d991fce7d17f5c916fa3884a1cfd9df90853c"
+    },
+    {
+      "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
+      "sha256": "aae87b99e6d5caf1d9f71d5e94a9241df9482d943f91861eb7b19ece1adadacf"
+    },
+    {
+      "path": "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
+      "sha256": "ccabfdf0df29aed9c26fe22c27ec8ecf2f0628bc13504af80b9c63c8178fca3e"
+    },
+    {
+      "path": "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+      "sha256": "2d4f4d307f856d501cd58dd9dc5bf7b9f360a6dbc06a39bde2fe6b33c435c242"
+    },
+    {
+      "path": "docs/LOCAL-TESTING.md",
+      "sha256": "1eb54154d6d61abb7ac4173562603e4ee575d1b9c1b61661ec82754ad0ced6fa"
+    },
+    {
+      "path": "docs/decisions/0054-standing-owner-delegation.md",
+      "sha256": "c3c0b6300c47f5c7a203901ebca642c0e91807988e775932d7c99477e64aff6d"
+    },
+    {
+      "path": "docs/decisions/0061-standalone-coding-harness-critical-path.md",
+      "sha256": "7ae98fe774c5c88eeb2c07da350d7adf76d4e4c421ae5f212d20060a6948b1a9"
+    },
+    {
+      "path": "docs/decisions/0081-rust-capability-roadmap-and-staged-delivery.md",
+      "sha256": "37e0c7fabf2bdca2dd86cb2f58e82e64d47066c1b66ade030edf4e84e3cbcb9f"
+    },
+    {
+      "path": "docs/decisions/0090-runtime-correctness-callback-consistency.md",
+      "sha256": "86a6e0ca75e2c590995c28a3135cd30c14ee9d2757e5f6b23e9f3f101457360d"
+    },
+    {
+      "path": "docs/decisions/0091-failed-runtime-advancement-reconciliation.md",
+      "sha256": "9220fdb6b1ebe3ef7afcd77bf3f6ab088218a700260c281af75989b33541c0db"
+    },
+    {
+      "path": "docs/verification/runtime-advancement-reconciliation-2026-09-27.md",
+      "sha256": "e60fb017a4170cd8f27dae400f93678ec18e365fc39c080fffee47abed7f8a19"
+    },
+    {
+      "path": "docs/verification/runtime-callback-consistency-2026-09-27.json",
+      "sha256": "76316a70eb55f6ad1037a8eb718ce39a3eec7c3fd2743d7bfdf4d6b21ea68115"
+    },
+    {
+      "path": "docs/verification/runtime-callback-consistency-2026-09-27.md",
+      "sha256": "a430cd9746abb0d95b5423bfbc552e59a3ea997fb976fe6f0ef25fde315bdc58"
+    },
+    {
+      "path": "kernel/contracts/src/runtime_event.rs",
+      "sha256": "22183f4affec1a6792bbd7c2bb93465842d7319885d42a555ae93cf72c551bf4"
+    },
+    {
+      "path": "kernel/contracts/src/runtime_run.rs",
+      "sha256": "54edc6322b2990de63209641ed3911d244cf862c81060e8155044d0af5ddd813"
+    },
+    {
+      "path": "kernel/engine/src/runtime_artifact.rs",
+      "sha256": "cc6ee1ad0438fb9ed93663fc0326742bf2435f77eb259f540730a60761f1c8c8"
+    },
+    {
+      "path": "kernel/engine/src/runtime_coordinator.rs",
+      "sha256": "7e5c25aa0bd7fc52afe67e27997a2f7969a71e64adf3d71b649fac9eafe65b2e"
+    },
+    {
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "sha256": "616d3d38385b9cd66466257b1c0dced4284a3fccf857d53d3f8d67af1135d63c"
+    },
+    {
+      "path": "kernel/engine/src/runtime_loop_tests.rs",
+      "sha256": "2b1841fa4869b51ea9c20af0f7d0433d1e141d6cf942013cf063b0ec8a5d212d"
+    },
+    {
+      "path": "scripts/runtime_coordinator_boundary_review.py",
+      "sha256": "8fba1cbfe818ad7d3f50ae9c69ebe23c3c04566fb23c7fac5083c786f25d73cb"
+    },
+    {
+      "path": "scripts/story_11_2_ac2_evidence.py",
+      "sha256": "37c75a441a109a69e9828966c1154d7521b1bf51c2fd54c36296de04bc8f5ff2"
+    },
+    {
+      "path": "scripts/story_11_2_gate.py",
+      "sha256": "6bdfec9ae7bcb72397c275739089db9e16bdd78bfd6a6a9647c6f7be4847c522"
+    },
+    {
+      "path": "scripts/story_22_1_canary_evidence.py",
+      "sha256": "44ec93b993cd349802825826fb913626c16d9b82ac92c585e68a0cb4e2c91cbf"
+    },
+    {
+      "path": "scripts/story_23_4_evidence_index.py",
+      "sha256": "8cfac0b19432a5138017a401dccd521b361626e83258872946de7a61f62f8d88"
+    },
+    {
+      "path": "scripts/story_23_4_runtime_evidence.py",
+      "sha256": "d7533e9fe2dd62a82dc910de31a8cdb6f77830d7a76a4c58681baca3f3b5ea82"
+    },
+    {
+      "path": "scripts/story_23_4_security_evidence.py",
+      "sha256": "113a59bc3c016ba72ece1073d53eb02f7df5906f23baa6f3463320cab2a3cd0a"
+    },
+    {
+      "path": "scripts/supply_chain.py",
+      "sha256": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6"
+    },
+    {
+      "path": "shells/host/src/linux_coding_runtime.rs",
+      "sha256": "ef6d07c5e522bb2fab6ef23bcf4f682ba6504d775b0eeeeea3c0e57d9390e5ae"
+    },
+    {
+      "path": "shells/host/src/linux_read.rs",
+      "sha256": "da45f97c08ee6fa01d93c39318599281211bdc54729f6bc0bab3c3d371b724a8"
+    },
+    {
+      "path": "shells/host/src/linux_repository_map.rs",
+      "sha256": "8f410724c83ca5ce188fa91c97a01140ded2372b53873d5a875fc90f622c591a"
+    },
+    {
+      "path": "supply-chain/dependency-hashes.sha256",
+      "sha256": "29d949512a2a6dc55ed9659ff9812796f6f8752590e483e5098d62f76232e9bc"
+    },
+    {
+      "path": "supply-chain/dependency-provenance.json",
+      "sha256": "f6356fe363dae726b033857c6b3015ac8e2140613ea831d16cf65313cc545518"
+    },
+    {
+      "path": "supply-chain/sbom.cdx.json",
+      "sha256": "9c5a972fa2edc4912b1a9a0d6e32211d43aa1d5e374defdfd2ae490d0c127888"
+    },
+    {
+      "path": "tests/test_runtime_coordinator_boundary_review.py",
+      "sha256": "07fd254e3ddf32ebf60008f14bfd21cf2eb1e3164e5d22970567aeafed991287"
+    },
+    {
+      "path": "tests/test_story_11_2_ac2_evidence.py",
+      "sha256": "235d0225833481060798c4993e60172245b5f0c1ac90d9015b040ed5f2422a04"
+    },
+    {
+      "path": "tests/test_story_11_2_gate.py",
+      "sha256": "2295e32739e644c00f65f746c88214e7399e3f62208c89bbe2e4bdb9269a13bc"
+    },
+    {
+      "path": "tests/test_story_22_1_canary_evidence.py",
+      "sha256": "0aec421735605077f38c148c71ab002a8cd3b535a47f8016f46b60c2dc3b7a6e"
+    },
+    {
+      "path": "tests/test_story_23_4_evidence_index.py",
+      "sha256": "d01873d266f15359ba18d027d6be004fd135a9fd715373044de0a21fc5223134"
+    },
+    {
+      "path": "tests/test_story_23_4_runtime_evidence.py",
+      "sha256": "4d4a4286c9bd780318742c74bdfb27a3c5264650ec48a0722aad94afd6168c3a"
+    },
+    {
+      "path": "tests/test_story_23_4_security_evidence.py",
+      "sha256": "020046eed376d925ee55a002a8811118a68eac805c763848b3606bf0920ae124"
+    },
+    {
+      "path": "tests/test_supply_chain.py",
+      "sha256": "29593e31bb43f33beb064efb5b7b366ae5a0f964c2544b4bfb5e5b365e9026ae"
+    }
+  ],
+  "private_logs": [
+    {
+      "filename": "runtime-uncertain-cancellation-repro-20260927.log",
+      "sha256": "386179740c378c6401fcf55c241b49bb13c5049e967dddd5bb68ae4e934fed97",
+      "bytes": 1747,
+      "exit_code": 101,
+      "disposition": "expected failing defect reproduction",
+      "rust_summaries": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1230 filtered out; finished in 0.01s"
+      ],
+      "python_summaries": []
+    },
+    {
+      "filename": "runtime-uncertain-cancellation-fixed-20260927.log",
+      "sha256": "15291e8d59c5f3e8c79bdce3926b84690f362ff3f0f895911a93c58600acd86a",
+      "bytes": 1878,
+      "exit_code": 0,
+      "disposition": "focused corrected reproduction",
+      "rust_summaries": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1230 filtered out; finished in 0.01s"
+      ],
+      "python_summaries": []
+    },
+    {
+      "filename": "runtime-advancement-regression-20260927.log",
+      "sha256": "3899340a178cdbfb511bd22e046536b20879a4f6511fa294c64d78b1659be9e4",
+      "bytes": 647,
+      "exit_code": 101,
+      "disposition": "new test helper failed compilation; no verification",
+      "rust_summaries": [],
+      "python_summaries": []
+    },
+    {
+      "filename": "runtime-advancement-regression-final-20260927.log",
+      "sha256": "f574b66faefcf5907270414f89a4c7400c8272b3b7af3a06a269238a9ebad464",
+      "bytes": 447,
+      "exit_code": 0,
+      "disposition": "zero tests selected; not verification",
+      "rust_summaries": [
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1233 filtered out; finished in 0.00s"
+      ],
+      "python_summaries": []
+    },
+    {
+      "filename": "runtime-advancement-loop-20260927.log",
+      "sha256": "260b947826d89adc9b5294ef2f52a875cce0011b3369f1f0100ff4eb49b62b2b",
+      "bytes": 8815,
+      "exit_code": 0,
+      "disposition": "72 tests actually executed",
+      "rust_summaries": [
+        "test result: ok. 72 passed; 0 failed; 0 ignored; 0 measured; 1161 filtered out; finished in 2.33s"
+      ],
+      "python_summaries": []
+    },
+    {
+      "filename": "runtime-advancement-source-20260927.log",
+      "sha256": "e30272d828fb372701b09d8f4ef05657df18b8fba4dea3840c8bf9b068d5ad2f",
+      "bytes": 195502,
+      "exit_code": 101,
+      "disposition": "full host failed; engine and separately continued remainder passed",
+      "rust_summaries": [
+        "test result: ok. 1226 passed; 0 failed; 7 ignored; 0 measured; 0 filtered out; finished in 125.26s",
+        "test result: FAILED. 275 passed; 50 failed; 8 ignored; 0 measured; 0 filtered out; finished in 41.26s",
+        "test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.40s"
+      ],
+      "python_summaries": []
+    },
+    {
+      "filename": "runtime-advancement-source-docs-20260927.log",
+      "sha256": "8f859d0798ecd3a35d090e481fd27e055842d2bbb7bdff42422372b57cab39ff",
+      "bytes": 302,
+      "exit_code": 0,
+      "disposition": "two changed Markdown files passed",
+      "rust_summaries": [],
+      "python_summaries": []
+    },
+    {
+      "filename": "runtime-advancement-evidence-core-20260927.log",
+      "sha256": "2abb63c0eec7fa1ce040c622a29685d6616df0f36b8490c1d3c8c3d7a539ebf4",
+      "bytes": 11039,
+      "exit_code": 0,
+      "disposition": "one SBOM write; actual source campaigns and 200 Python tests passed",
+      "rust_summaries": [],
+      "python_summaries": [
+        "Ran 43 tests in 0.511s",
+        "Ran 8 tests in 0.002s",
+        "Ran 15 tests in 0.003s",
+        "Ran 13 tests in 0.001s",
+        "Ran 33 tests in 0.544s",
+        "Ran 8 tests in 0.016s",
+        "Ran 7 tests in 0.040s",
+        "Ran 12 tests in 0.025s",
+        "Ran 7 tests in 7.048s",
+        "Ran 5 tests in 0.003s",
+        "Ran 7 tests in 0.004s",
+        "Ran 5 tests in 0.003s",
+        "Ran 7 tests in 0.017s",
+        "Ran 5 tests in 0.003s",
+        "Ran 5 tests in 0.003s",
+        "Ran 6 tests in 5.231s",
+        "Ran 5 tests in 0.012s",
+        "Ran 3 tests in 0.086s",
+        "Ran 6 tests in 0.023s"
+      ]
+    },
+    {
+      "filename": "runtime-advancement-derived-20260927.log",
+      "sha256": "f032c3df80e317487a40f125cb4459cb844fda9883c8b75bf86e2878507feb13",
+      "bytes": 509,
+      "exit_code": 0,
+      "disposition": "automated boundary and blocked gate validated; 14 tests passed",
+      "rust_summaries": [],
+      "python_summaries": [
+        "Ran 6 tests in 0.528s",
+        "Ran 8 tests in 0.237s"
+      ]
+    },
+    {
+      "filename": "runtime-advancement-security-20260927.log",
+      "sha256": "94520ac8a49b259239b1300b984860628b717c45334b9513c128e410982b9079",
+      "bytes": 362,
+      "exit_code": 0,
+      "disposition": "security/index validated; 8 tests passed",
+      "rust_summaries": [],
+      "python_summaries": [
+        "Ran 4 tests in 0.153s",
+        "Ran 4 tests in 0.023s"
+      ]
+    },
+    {
+      "filename": "runtime-advancement-final-20260927.log",
+      "bytes": 600,
+      "sha256": "da266586c17c7924d8cc94115e06ec5d6564d245f403081b5ffc46103c0da26b",
+      "exit_code": 0,
+      "disposition": "final exact-source validators, frozen hashes and new report Markdown passed"
+    }
+  ],
+  "checks": {
+    "original_regression": {
+      "passed": 0,
+      "failed": 1,
+      "exit_code": 101,
+      "expected_failure": true
+    },
+    "initial_expanded_compile": "failed; retained; qualified trait correction",
+    "incorrect_filter": {
+      "passed": 0,
+      "failed": 0,
+      "filtered": 1233,
+      "exit_code": 0,
+      "verification": false
+    },
+    "runtime_loop": {
+      "passed": 72,
+      "failed": 0,
+      "ignored": 0
+    },
+    "publication_failure_combinations": 126,
+    "malformed_approval_inputs_then_valid_response": 5,
+    "engine_library": {
+      "passed": 1226,
+      "failed": 0,
+      "ignored": 7
+    },
+    "host_library": {
+      "passed": 275,
+      "failed": 50,
+      "ignored": 8
+    },
+    "full_source_command_exit_code": 101,
+    "engine_documentation": {
+      "passed": 13,
+      "failed": 0,
+      "ignored": 0
+    },
+    "workspace_all_target_clippy": "pass-warnings-denied",
+    "source_module_status_context_format_and_frozen_hashes": "pass",
+    "core_and_runtime_evidence_python_tests": 200,
+    "automated_boundary_and_gate_tests": 14,
+    "security_and_index_tests": 8,
+    "sbom_write_count": 1,
+    "final_validators": "pass"
+  },
+  "host_failure_comparison": {
+    "same_50_test_names_and_causes_as_previous_batch": true,
+    "classification": {
+      "sandbox_manifest_direct": 48,
+      "sandbox_manifest_child_assertion": 1,
+      "git_artifact": 1,
+      "coordinator_callback_failure": 0
+    },
+    "comparison_sha256": "23edf75c36a82b116d2d116798709e829a12ad82fdd5caf61de4354bb4f304c5",
+    "previous_observation_record": "docs/verification/runtime-callback-consistency-2026-09-27.json"
+  },
+  "direct_binding_inventory": {
+    "scope": "Tracked changed-file direct path/SHA observations relative to base; not transitive or whole-project freshness",
+    "dispositions": {
+      "current-direct-binding": 46,
+      "previously-stale-or-historical": 379,
+      "newly-stale": 26
+    },
+    "newly_changed_historical_record": "docs/verification/runtime-callback-consistency-2026-09-27.json",
+    "historical_disposition": "Prior Decision 0090 run record preserves original source pins and full input sets; its 26 changed bindings are historical, not current acceptance. No stale current campaign/gate direct binding remains in this inventory.",
+    "inventory_sha256": "4454095e46865289cf63d039d267de904337b1b6ac65b8ffbdd91b2fdcd29dc6"
+  },
+  "acceptance": {
+    "scripted_components": "verified with retained full host failure",
+    "executable_scripted_workflow": "blocked at native prerequisites; no successful current-lane workflow",
+    "real_model": "not run; previous observations retain historical source/profile scope",
+    "manual_user": "not performed",
+    "independent_review": "requested; no PASS received",
+    "human_only_gates": "open",
+    "release": "not approved",
+    "research_provider": "not activated"
+  },
+  "limitations": [
+    "Fault matrix uses deterministic in-memory boundary fixtures, not native or model qualification.",
+    "A failed advancement cannot decide whether an effect or publication committed; canonical recovery retains that responsibility.",
+    "The full source command exited 101; passing remainder checks do not erase host failures.",
+    "Private logs are retained outside Git and identified by exact hashes.",
+    "Automated source-boundary and pin-renewal reports do not satisfy independent or human acceptance.",
+    "Prior observation manifests remain bound to their tested source, not silently upgraded to current evidence.",
+    "No GPU process, model download, host installation or release was performed."
+  ]
+}
