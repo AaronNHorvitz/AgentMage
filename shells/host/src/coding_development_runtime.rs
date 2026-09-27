@@ -61,10 +61,12 @@ use agentmage_kernel_engine::{
 };
 use agentmage_platform_linux::{
     LinuxBoundedCommandExecutor, LinuxBoundedRepositoryInspectionExecutor, LinuxCommandManifest,
-    LinuxDevelopmentPlatformAdapter, LinuxGitArtifact, LinuxRepositoryCollector,
+    LinuxCommandRunnerError, LinuxCommandRunnerErrorKind, LinuxDevelopmentBoundaryError,
+    LinuxDevelopmentBoundaryErrorKind, LinuxDevelopmentPlatformAdapter, LinuxGitArtifact,
+    LinuxRepositoryCollector, LinuxRepositoryError, LinuxRepositoryErrorKind,
     LinuxRepositoryInspectionManifest, LinuxRepositoryInventoryState, LinuxRepositoryScope,
-    LinuxSandboxLimits, LinuxSandboxManifest, LinuxSandboxRunner,
-    ensure_private_development_directory, linux_repository_path_sha256,
+    LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits, LinuxSandboxManifest,
+    LinuxSandboxRunner, ensure_private_development_directory, linux_repository_path_sha256,
     open_linux_development_authority, resolve_development_linux_workspace_object,
     retain_rejected_development_output, select_development_linux_workspace,
 };
@@ -247,6 +249,14 @@ pub enum CodingDevelopmentRuntimeError {
     Composition,
     /// Required exact local process artifacts were absent or changed.
     Platform,
+    /// The native repository owner rejected an artifact, path or observation.
+    NativeRepository(LinuxRepositoryErrorKind),
+    /// The native command owner rejected its manifest or isolation prerequisites.
+    NativeCommand(LinuxCommandRunnerErrorKind),
+    /// The native read owner rejected its manifest or isolation prerequisites.
+    NativeSandbox(LinuxSandboxErrorKind),
+    /// The native development state boundary rejected a private directory.
+    NativeDevelopment(LinuxDevelopmentBoundaryErrorKind),
     /// The isolated development state/key boundary was unavailable.
     State,
 }
@@ -264,8 +274,45 @@ impl CodingDevelopmentRuntimeError {
             Self::Plan => "coding.development.plan-failed",
             Self::Composition => "coding.development.composition-failed",
             Self::Platform => "coding.development.platform-failed",
+            Self::NativeRepository(kind) => kind.code(),
+            Self::NativeCommand(kind) => kind.code(),
+            Self::NativeSandbox(kind) => kind.code(),
+            Self::NativeDevelopment(kind) => kind.code(),
             Self::State => "coding.development.state-failed",
         }
+    }
+}
+
+impl CodingDevelopmentRuntimeError {
+    // The existing IPC failure stays closed. Local stderr preserves the native
+    // source category; it never copies child output or a caller-controlled value.
+    fn report_composition_failure(self) -> NativeChatRuntimeError {
+        eprintln!("{}", self.code());
+        NativeChatRuntimeError::RuntimeFailed
+    }
+}
+
+impl From<LinuxRepositoryError> for CodingDevelopmentRuntimeError {
+    fn from(error: LinuxRepositoryError) -> Self {
+        Self::NativeRepository(error.kind())
+    }
+}
+
+impl From<LinuxCommandRunnerError> for CodingDevelopmentRuntimeError {
+    fn from(error: LinuxCommandRunnerError) -> Self {
+        Self::NativeCommand(error.kind())
+    }
+}
+
+impl From<LinuxSandboxError> for CodingDevelopmentRuntimeError {
+    fn from(error: LinuxSandboxError) -> Self {
+        Self::NativeSandbox(error.kind())
+    }
+}
+
+impl From<LinuxDevelopmentBoundaryError> for CodingDevelopmentRuntimeError {
+    fn from(error: LinuxDevelopmentBoundaryError) -> Self {
+        Self::NativeDevelopment(error.kind())
     }
 }
 
@@ -539,20 +586,19 @@ fn build_repository_composition(
     .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
     let management = activation.state_root().join("repository-management");
     ensure_private_development_directory(&management)
-        .map_err(|_| CodingDevelopmentRuntimeError::State)?;
+        .map_err(CodingDevelopmentRuntimeError::from)?;
     let scope = LinuxRepositoryScope::verify(
         activation.workspace_root(),
         activation.workspace_root().join(".git"),
         &management,
     )
-    .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
+    .map_err(CodingDevelopmentRuntimeError::from)?;
     let collector = LinuxRepositoryCollector::new(
-        LinuxGitArtifact::verify("/usr/bin/git")
-            .map_err(|_| CodingDevelopmentRuntimeError::Platform)?,
+        LinuxGitArtifact::verify("/usr/bin/git").map_err(CodingDevelopmentRuntimeError::from)?,
     );
     let inventory = collector
         .collect_inventory(&scope)
-        .map_err(|_| CodingDevelopmentRuntimeError::Repository)?;
+        .map_err(CodingDevelopmentRuntimeError::from)?;
     if inventory.entries.iter().any(|entry| {
         !matches!(
             entry.state,
@@ -1002,23 +1048,29 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             "/usr/bin/bwrap",
             self.profile.commands(),
         )
-        .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
+        .map_err(CodingDevelopmentRuntimeError::from)
+        .map_err(CodingDevelopmentRuntimeError::report_composition_failure)?;
         let command_executor = LinuxBoundedCommandExecutor::new(command_manifest)
-            .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
+            .map_err(CodingDevelopmentRuntimeError::from)
+            .map_err(CodingDevelopmentRuntimeError::report_composition_failure)?;
         let git_manifest = LinuxRepositoryInspectionManifest::verify(
             "/usr/bin/systemd-run",
             "/usr/bin/systemctl",
             "/usr/bin/bwrap",
             "/usr/bin/git",
         )
-        .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
+        .map_err(CodingDevelopmentRuntimeError::from)
+        .map_err(CodingDevelopmentRuntimeError::report_composition_failure)?;
         let git_executor = LinuxBoundedRepositoryInspectionExecutor::new(git_manifest)
-            .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
+            .map_err(CodingDevelopmentRuntimeError::from)
+            .map_err(CodingDevelopmentRuntimeError::report_composition_failure)?;
         let sandbox_manifest =
             LinuxSandboxManifest::verify_development_read_only_worker(self.platform)
-                .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
+                .map_err(CodingDevelopmentRuntimeError::from)
+                .map_err(CodingDevelopmentRuntimeError::report_composition_failure)?;
         let sandbox = LinuxSandboxRunner::new(sandbox_manifest, LinuxSandboxLimits::default())
-            .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
+            .map_err(CodingDevelopmentRuntimeError::from)
+            .map_err(CodingDevelopmentRuntimeError::report_composition_failure)?;
         let boundary = LinuxCodingRuntimeBoundary::new(LinuxCodingRuntimeBoundaryInput {
             workspace: self.workspace,
             authority,
@@ -1387,7 +1439,7 @@ fn build_profile(
         record_sha256: "0".repeat(64),
     })
     .map_err(|_| CodingDevelopmentRuntimeError::Worktree)?;
-    let command = validation_command().map_err(|_| CodingDevelopmentRuntimeError::Validation)?;
+    let command = validation_command()?;
     let commands = CommandRegistry::build(vec![command.clone()])
         .map_err(|_| CodingDevelopmentRuntimeError::Validation)?;
     let validation = seal_validation_template(ValidationTemplateInput {
@@ -3193,6 +3245,74 @@ fn now_epoch_ms() -> Result<u64, CodingDevelopmentRuntimeError> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn native_setup_refusals_retain_their_categories_without_private_inputs() {
+        use super::*;
+        let private_input = Path::new("synthetic-private-path-canary");
+        let artifact = LinuxGitArtifact::verify(private_input)
+            .map_err(CodingDevelopmentRuntimeError::from)
+            .expect_err("untrusted artifact rejected without execution");
+        assert_eq!(
+            artifact,
+            CodingDevelopmentRuntimeError::NativeRepository(
+                LinuxRepositoryErrorKind::InvalidGitArtifact
+            )
+        );
+        assert_eq!(artifact.code(), "linux.repository.git_artifact.invalid");
+        let scope = LinuxRepositoryScope::verify(private_input, private_input, private_input)
+            .map_err(CodingDevelopmentRuntimeError::from)
+            .expect_err("relative repository rejected");
+        assert_eq!(scope.code(), "linux.repository.path.invalid");
+        let directory = ensure_private_development_directory(private_input)
+            .map_err(CodingDevelopmentRuntimeError::from)
+            .expect_err("relative state rejected before creation");
+        assert_eq!(directory.code(), "linux.development.directory.unsafe");
+        assert!(!private_input.exists());
+        for error in [artifact, scope, directory] {
+            assert!(!format!("{error:?} {}", error.code()).contains("canary"));
+        }
+    }
+
+    #[test]
+    fn native_tool_composition_refusals_keep_local_codes_and_closed_ipc_failure() {
+        use super::*;
+        let command = CommandSpec::seal(
+            "fixture.diagnostic",
+            "1.0.0",
+            "/synthetic-private-command-canary",
+            "0".repeat(64),
+            vec!["synthetic-private-argument-canary".to_owned()],
+            CommandWorkingDirectory::EmptyScratch,
+            BTreeMap::new(),
+            CommandRisk::Low,
+            CommandBounds::new(1000, 1024, 1024, 64 * 1024 * 1024, 8, 100).unwrap(),
+        )
+        .unwrap();
+        let registry = CommandRegistry::build(vec![command]).unwrap();
+        let command_error =
+            LinuxCommandManifest::verify("relative", "relative", "relative", &registry)
+                .map_err(CodingDevelopmentRuntimeError::from)
+                .expect_err("no native command admitted");
+        let git_error = LinuxRepositoryInspectionManifest::verify(
+            "relative", "relative", "relative", "relative",
+        )
+        .map_err(CodingDevelopmentRuntimeError::from)
+        .expect_err("no native Git admitted");
+        let read_error = LinuxSandboxManifest::verify("relative", "relative", "relative", &[])
+            .map_err(CodingDevelopmentRuntimeError::from)
+            .expect_err("no native read admitted");
+        assert_eq!(command_error.code(), "linux.command.manifest.invalid");
+        assert_eq!(git_error.code(), "linux.repository.git_artifact.invalid");
+        assert_eq!(read_error.code(), "linux.sandbox.manifest.invalid");
+        for error in [command_error, git_error, read_error] {
+            assert!(!format!("{error:?} {}", error.code()).contains("canary"));
+            assert_eq!(
+                error.report_composition_failure(),
+                NativeChatRuntimeError::RuntimeFailed
+            );
+        }
+    }
+
     #[test]
     fn correction_allowlist_never_recovers_identity_capacity_truncation_or_unknown_errors() {
         for code in [

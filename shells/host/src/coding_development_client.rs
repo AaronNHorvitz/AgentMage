@@ -10,7 +10,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use agentmage_kernel_contracts::{
     AgentStateKind, RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeEvent,
 };
-use agentmage_platform_linux::LinuxDevelopmentHostProcess;
+use agentmage_platform_linux::{
+    LinuxDevelopmentBoundaryError, LinuxDevelopmentBoundaryErrorKind, LinuxDevelopmentHostProcess,
+};
 
 use crate::cli::{
     CliOutputFormat, CodingDevelopmentCliOptions, render_runtime_approval_human,
@@ -37,6 +39,8 @@ pub enum CodingDevelopmentClientError {
     Activation,
     /// The exact sibling host could not be launched or authenticated.
     Transport,
+    /// The native development host launch, transfer or cleanup failed closed.
+    HostBoundary(LinuxDevelopmentBoundaryErrorKind),
     /// The shared runtime or its returned evidence failed closed.
     Runtime,
     /// Terminal output could not be verified or rendered.
@@ -50,6 +54,7 @@ impl CodingDevelopmentClientError {
         match self {
             Self::Activation => "coding.development.client.activation-denied",
             Self::Transport => "coding.development.client.transport-failed",
+            Self::HostBoundary(kind) => kind.code(),
             Self::Runtime => "coding.development.client.runtime-failed",
             Self::Presentation => "coding.development.client.presentation-failed",
         }
@@ -60,9 +65,17 @@ impl CodingDevelopmentClientError {
     pub const fn exit_code(self) -> ClientExitCode {
         match self {
             Self::Activation => ClientExitCode::AuthorityDenied,
-            Self::Transport | Self::Runtime => ClientExitCode::ServiceUnavailable,
+            Self::Transport | Self::HostBoundary(_) | Self::Runtime => {
+                ClientExitCode::ServiceUnavailable
+            }
             Self::Presentation => ClientExitCode::ProtocolMismatch,
         }
+    }
+}
+
+impl From<LinuxDevelopmentBoundaryError> for CodingDevelopmentClientError {
+    fn from(error: LinuxDevelopmentBoundaryError) -> Self {
+        Self::HostBoundary(error.kind())
     }
 }
 
@@ -85,14 +98,14 @@ pub fn run_coding_development(
         &options.model,
         options.resume,
     )
-    .map_err(|_| CodingDevelopmentClientError::Transport)?;
+    .map_err(CodingDevelopmentClientError::from)?;
     let result = run_with_child(&activation, options, output, &mut child);
     if result.is_err() {
         let _ = child.terminate();
     }
     let success = child
         .wait_success()
-        .map_err(|_| CodingDevelopmentClientError::Transport)?;
+        .map_err(CodingDevelopmentClientError::from)?;
     if !success && result.is_ok() {
         return Err(CodingDevelopmentClientError::Transport);
     }
@@ -107,7 +120,7 @@ fn run_with_child(
 ) -> Result<ClientExitCode, CodingDevelopmentClientError> {
     let envelope = child
         .read_launch_envelope()
-        .map_err(|_| CodingDevelopmentClientError::Transport)?;
+        .map_err(CodingDevelopmentClientError::from)?;
     let session = envelope
         .connect_development()
         .map_err(|_| CodingDevelopmentClientError::Transport)?;
@@ -471,5 +484,34 @@ impl CodingApprovalPort for TerminalApprovals {
         } else {
             RuntimeApprovalDisposition::Deny
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn host_launch_refusal_is_preserved_without_relabeling_as_transport() {
+        let error = LinuxDevelopmentHostProcess::launch(
+            std::path::Path::new("/synthetic-private-state-canary"),
+            std::path::Path::new("/synthetic-private-disposable-canary"),
+            std::path::Path::new("/synthetic-private-workspace-canary"),
+            "unregistered-scenario",
+            "scripted",
+            false,
+        )
+        .map_err(CodingDevelopmentClientError::from)
+        .err()
+        .expect("closed input refuses before launch");
+        assert_eq!(
+            error,
+            CodingDevelopmentClientError::HostBoundary(
+                LinuxDevelopmentBoundaryErrorKind::InvalidInput
+            )
+        );
+        assert_eq!(error.code(), "linux.development.input.invalid");
+        assert_eq!(error.exit_code(), ClientExitCode::ServiceUnavailable);
+        assert!(!format!("{error:?} {}", error.code()).contains("canary"));
     }
 }

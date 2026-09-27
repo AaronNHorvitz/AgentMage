@@ -30,6 +30,22 @@ pub enum LinuxDevelopmentBoundaryErrorKind {
     RetentionFailed,
 }
 
+impl LinuxDevelopmentBoundaryErrorKind {
+    /// Returns a stable code without paths, process identities or child output.
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::InvalidInput => "linux.development.input.invalid",
+            Self::UnsafeExecutable => "linux.development.host-executable.unsafe",
+            Self::LaunchFailed => "linux.development.host-launch.failed",
+            Self::TransferFailed => "linux.development.launch-envelope.failed",
+            Self::ProcessControlFailed => "linux.development.process-control.failed",
+            Self::UnsafeDirectory => "linux.development.directory.unsafe",
+            Self::RetentionFailed => "linux.development.retention.failed",
+        }
+    }
+}
+
 /// Content-free Linux development boundary error.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct LinuxDevelopmentBoundaryError {
