@@ -47,15 +47,29 @@ an uncertain record. See the development guide for lifecycle and cleanup limitat
 
 **Current lane result:** setup and diagnosis ran; the actual scripted CLI/host
 launch returned exit 5 before tools because native prerequisites are unavailable.
-The [current-binary observation](verification/linux-current-startup-2026-09-27.md)
-retains the rebuilt source revision, binary hashes and startup results. The clean
-fixture was unchanged. A separate fixture with staged, unstaged and untracked work
+The [native diagnostic verification](verification/native-development-diagnostics-2026-09-27.md)
+retains the latest rebuilt source revision, binary hashes and startup results;
+the [preceding observation](verification/linux-current-startup-2026-09-27.md)
+keeps its original source pin. The clean fixture was unchanged. A separate fixture with staged, unstaged and untracked work
 was refused by the wrapper before launch, with its file bytes and Git state preserved.
 The lane does not expose root-trusted native executables or a user-systemd bus.
 The corrected doctor reports this refusal. Do not alter confinement to run the demo.
 A successful edit/test/correction, denial/cancellation matrix and real-model demo
 have not been reproduced in this lane. Historical Muse coding results and the
 interrupted scripted run are documented separately in the reconciliation record.
+
+Startup stderr preserves content-free native causes. In this lane,
+`linux.repository.git_artifact.invalid` precedes `linux.development.launch-envelope.failed`:
+the native Git executable was refused before the host could serve IPC. An envelope
+failure alone does not establish an authentication failure. Keep the complete local
+stderr and consult the prerequisite diagnosis.
+
+| Startup code | Meaning and next step |
+| --- | --- |
+| `linux.development.host-executable.unsafe` | The exact sibling host is missing, aliased or unsafe. Rebuild the CLI and host together and inspect their local placement. |
+| `linux.development.host-launch.failed` | The operating system could not spawn the sibling host. Retain the failure and verify the executable format and environment. |
+| `linux.development.launch-envelope.failed` | No valid one-use launch envelope was received. Inspect any preceding host diagnostic. |
+| `linux.command.manifest.invalid` / `linux.sandbox.manifest.invalid` | Native tool composition rejected its exact prerequisites. Check native trust and confinement; do not bypass them. |
 
 Real-model runs additionally require the exact admitted development profile and
 its unchanged memory, CPU, GPU and confinement requirements. In this lane any GPU

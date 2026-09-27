@@ -127,7 +127,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "cfb9aa571af4ac63e27c91b25459754c0933365bfc95cf918a4df2eecc17311b"
+          "content": "cab01f73188725b9ceaf3a0a9f1a672a3af0071541cd7ccb0c3306e75f4cc197"
         }
       ],
       "integrity": null,
@@ -207,7 +207,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "16eabb12baee77be1e093d2f993e530850b43064965157e60f8b83458647c538"
+          "content": "dbb8def2c74512fabdd21cde4c99fc9710f7ec737febf42509d1f94d0d7907a8"
         }
       ],
       "integrity": null,
