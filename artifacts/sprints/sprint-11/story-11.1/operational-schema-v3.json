@@ -75,7 +75,7 @@
     ]
   },
   "schema_version": 1,
-  "source_revision": "ac55cb59db3057f95a82d66a93d21719d81d115d",
+  "source_revision": "4e0159e42d15ae5e5ff07c84592613a995375626",
   "sources": [
     {
       "bytes": 16604,
@@ -93,19 +93,39 @@
       "sha256": "7bbac20f36ed80a1b07bea98641d98c3f894500a11dc7ef7193a1eb29cbc40b6"
     },
     {
-      "bytes": 475911,
+      "bytes": 482826,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "a9cd204e6358ed36653cbcf0d4f7fb96fd3f79de0dea0a8bf7aff3593285c1bc"
+      "sha256": "fadd31e0edc0e8907ec3744fae63c4439dd4455d803827df7a46351346632c72"
     },
     {
-      "bytes": 12168,
+      "bytes": 4912,
+      "path": "kernel/engine/src/research_migration_tests.rs",
+      "sha256": "86d30819c17b02544b93aadd53810feb7a89c7e4f79add3c55fab01e1e03c88a"
+    },
+    {
+      "bytes": 6950,
+      "path": "kernel/engine/src/research_reader_migration_tests.rs",
+      "sha256": "2405f99bc526c7f4df62ba80880655b09cfedf243b52990ddccc9fb71e8e5e62"
+    },
+    {
+      "bytes": 4815,
+      "path": "kernel/engine/fixtures/operational-store/schema-20.json",
+      "sha256": "18207f406cbb6c7c08748a9ed87ad6fd1665b70d043da5e24f26926b6cdb37bf"
+    },
+    {
+      "bytes": 250,
+      "path": "kernel/engine/migrations/operational-store/0020-research-draft-readers.sql",
+      "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
+    },
+    {
+      "bytes": 12424,
       "path": "scripts/operational_schema_v3_evidence.py",
-      "sha256": "f469105ad22e293ed771c08a9999458a94c2f2009d6374b882aca1d5441e8403"
+      "sha256": "aa485d64a0803897d2e0e03d348c55e08ca03b1ee37fe62d2660acad41a0ea87"
     },
     {
       "bytes": 5428,
       "path": "tests/test_operational_schema_v3_evidence.py",
-      "sha256": "1e9df0e39a5547c5a19accef889affb4104273a33edab1b859c23cc3e29385cc"
+      "sha256": "dee01552571ed6c20b85058cade6b7889d15cebd5fcaf25ec3d9a25071d57b14"
     }
   ],
   "status": "pass-versioned-schema-and-migration-chain",
@@ -116,7 +136,7 @@
     {
       "command_id": "8bc5e8635f51ef1995b5f3e693d844a4d92df5362eaa088ed55c2f91691bab37",
       "exit_code": 0,
-      "expected_marker_sha256": "ca96d420363625ace01887c0dfefa81b072c47c567b9c690ec8e4bb3f1c1369a",
+      "expected_marker_sha256": "3ec17dea7033198d9579d036849e884a9d9097771edbdc1715956b7938d2c94f",
       "status": "pass"
     },
     {

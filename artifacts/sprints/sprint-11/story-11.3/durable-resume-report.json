@@ -6,9 +6,9 @@
       "sha256": "a6404b5ab64ce63297f92eaa608e9182f7c522d20a0a745233ca61f13ecaeda0"
     },
     {
-      "byte_length": 480445,
+      "byte_length": 482826,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "c983536148cf8e69f6b4934f0bbf3e8e7a699bf817d05cd210372ace65f14992"
+      "sha256": "fadd31e0edc0e8907ec3744fae63c4439dd4455d803827df7a46351346632c72"
     },
     {
       "byte_length": 1417,
@@ -41,6 +41,16 @@
       "sha256": "2ec027b073227b9e097b324e07cdb144e473496f2f9a9081cb6dd8c39cbc9464"
     },
     {
+      "byte_length": 4815,
+      "path": "kernel/engine/fixtures/operational-store/schema-20.json",
+      "sha256": "18207f406cbb6c7c08748a9ed87ad6fd1665b70d043da5e24f26926b6cdb37bf"
+    },
+    {
+      "byte_length": 250,
+      "path": "kernel/engine/migrations/operational-store/0020-research-draft-readers.sql",
+      "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
+    },
+    {
       "byte_length": 2335,
       "path": "kernel/engine/migrations/operational-store/0019-research-budgets.sql",
       "sha256": "03800068d00ea422acc3702e48bb3cae4c736f104680bb57767ce0b8b1fb6db3"
@@ -56,9 +66,9 @@
       "sha256": "7415c156e7aefc61c5a2a782f5cd0e9cc8195d05b0b4ffc368ca36c9ce8d69c1"
     },
     {
-      "byte_length": 9628,
+      "byte_length": 9773,
       "path": "scripts/story_11_3_resume_evidence.py",
-      "sha256": "372e93031c9958b8a55a053c81410b3db3c730565652eca99130ced280d6d2c0"
+      "sha256": "325f71551681318d032b0164293a6233736c3e1c01e151f1a873f647a08bdb22"
     },
     {
       "byte_length": 1827,
@@ -68,7 +78,7 @@
     {
       "byte_length": 27013,
       "path": "artifacts/sprints/sprint-11/story-11.3/durable-resume-results.log",
-      "sha256": "543506474b24f0919628818deaecb80804ae8f58e4ffa8aecf086b607843315c"
+      "sha256": "c7ea03d35a6ca7128b5e4bf052f3631c22c16e9042a0c8ccb601413f89b18585"
     }
   ],
   "commands": [

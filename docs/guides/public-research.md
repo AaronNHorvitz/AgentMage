@@ -51,6 +51,10 @@ sensitivity. Mixed retention classes and user holds are refused by this componen
 The exact publication event must exist before reconstruction; an interrupted
 publication stays unreadable. This component enables no host/provider research.
 See the [retained-draft verification record](../verification/research-retained-report-component-2026-09-27.md).
+The [compatibility follow-up](../verification/research-reader-compatibility-2026-09-27.md)
+advances the canonical store to version 20 so earlier reader ceilings refuse it
+before claiming a writer. Exact-current restore refuses older backups without
+changing their bytes; this component does not provide installed downgrade support.
 
 Verified results prefer primary documentation, original research, and authoritative records ahead
 of secondary analysis. Every claim-level citation retains its title, direct URL, publisher,

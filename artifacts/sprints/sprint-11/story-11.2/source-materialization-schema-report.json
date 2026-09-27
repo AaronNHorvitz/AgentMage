@@ -11,14 +11,24 @@
       "sha256": "5821bc16e3f91dd88faadba445f663a00794c402c0472940380062c5a5051f4e"
     },
     {
-      "byte_length": 480445,
+      "byte_length": 482826,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "c983536148cf8e69f6b4934f0bbf3e8e7a699bf817d05cd210372ace65f14992"
+      "sha256": "fadd31e0edc0e8907ec3744fae63c4439dd4455d803827df7a46351346632c72"
     },
     {
       "byte_length": 4698,
       "path": "kernel/engine/fixtures/operational-store/schema-19.json",
       "sha256": "2ec027b073227b9e097b324e07cdb144e473496f2f9a9081cb6dd8c39cbc9464"
+    },
+    {
+      "byte_length": 4815,
+      "path": "kernel/engine/fixtures/operational-store/schema-20.json",
+      "sha256": "18207f406cbb6c7c08748a9ed87ad6fd1665b70d043da5e24f26926b6cdb37bf"
+    },
+    {
+      "byte_length": 250,
+      "path": "kernel/engine/migrations/operational-store/0020-research-draft-readers.sql",
+      "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
     },
     {
       "byte_length": 2335,
@@ -36,9 +46,9 @@
       "sha256": "f04af91a9de2762dca16359bd8a7f78c72e1c5aa5e3599f0f515540031ff2f44"
     },
     {
-      "byte_length": 8934,
+      "byte_length": 9107,
       "path": "scripts/source_materialization_schema_evidence.py",
-      "sha256": "97daf2624654b29b64d32881ae8debfa332f0a65eb7007b3f81a3735a5b207b7"
+      "sha256": "758ceb1b8ca09e09ec760e0bb1adf098610df241723373e99e436b2401538dd6"
     },
     {
       "byte_length": 2258,
@@ -46,19 +56,19 @@
       "sha256": "f1ed002bd3a2d443c886fc71afc506cdbdef47d8863623e7a955b497bcdf4a21"
     },
     {
-      "byte_length": 17998,
+      "byte_length": 17990,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-results.log",
-      "sha256": "507d61f11ec897fcded328f57d2bcb8ed219a8bea46ab8fcc559d735b88dd05e"
+      "sha256": "cf55f75e8f7670072ba39f63674aea833f4c912b3c2bdc519ba3ecc178f9938d"
     }
   ],
   "commands": [
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_nineteen_schema_matches_fixture_snapshot_and_is_relational --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_twenty_schema_matches_fixture_snapshot_and_is_relational --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_nineteen_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
-  "current_operational_store_schema_version": 19,
+  "current_operational_store_schema_version": 20,
   "generated_on": "2026-09-26",
   "materialization_migration_version": 12,
   "normalized_tables": [
@@ -94,9 +104,9 @@
   },
   "record_type": "agentmage-source-materialization-schema-evidence",
   "required_markers": [
-    "version_nineteen_schema_matches_fixture_snapshot_and_is_relational ... ok",
+    "version_twenty_schema_matches_fixture_snapshot_and_is_relational ... ok",
     "source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store ... ok",
-    "version_one_upgrades_through_nineteen_with_exact_history ... ok",
+    "version_one_upgrades_through_twenty_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

@@ -92,6 +92,11 @@ reads cannot replace source checks. Its
 [component record](docs/verification/research-retained-report-component-2026-09-27.md)
 keeps verification and integration limits separate; AMR-03.1.2 remains open.
 
+The [reader compatibility increment](docs/verification/research-reader-compatibility-2026-09-27.md)
+adds the Decision 0087 store-version barrier and byte-preserving old-backup refusal.
+Its component checks do not establish installed rollback, native workflow or
+independent acceptance. Earlier component records retain their original source pins.
+
 | Status | Row | Dependencies | Bounded implementation and verification |
 | --- | --- | --- | --- |
 | [ ] | AMR-01.1 | Prior coding source and retained campaign | Reconcile exact source/binary/model identities, current doctor behavior and all changed planning/privacy evidence bindings; preserve original receipts and distinguish freshness from historical validity. |

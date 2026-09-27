@@ -1,0 +1,358 @@
+{
+  "schema_version": 1,
+  "record_type": "research-draft-reader-compatibility-observations",
+  "date": "2026-09-27",
+  "base_commit": "373236da510bc3e402b3aa1c43ec5c3f5d9526c5",
+  "source_commit": "4e0159e42d15ae5e5ff07c84592613a995375626",
+  "status": "verified-component-and-evidence;automated-pin-pending",
+  "source_inputs": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc"
+    },
+    {
+      "path": "docs/decisions/0085-canonical-research-report-projection.md",
+      "sha256": "a668b4cc96a8b95fd3b4a019f192b2dddd4bd5f26cd4cdf249aa0bdf260b9f07"
+    },
+    {
+      "path": "docs/decisions/0086-retained-research-drafts.md",
+      "sha256": "87de13e19075cee4bfdca33d003aa69ceb081e11e6bfdcc9f1336a668c7390d2"
+    },
+    {
+      "path": "docs/decisions/0087-research-draft-reader-version-barrier.md",
+      "sha256": "4fe13fbdc8b6917d4b48c58f8c58481c8fe7dbf4831770abf34112ade8fc9029"
+    },
+    {
+      "path": "docs/verification/s-011-ut01-store-unit-results.md",
+      "sha256": "caa5feb54f26c4d8eab5379190b085d1f18ff63d796665833f50fa250a80b3f4"
+    },
+    {
+      "path": "docs/verification/story-11-2-storage-migration-compatibility-evidence.md",
+      "sha256": "8d5ad574018b072d044ede4d2fe50c1bfc2856b8be7291ca5b63bf81fb970ccd"
+    },
+    {
+      "path": "kernel/contracts/src/context.rs",
+      "sha256": "3fdc7d7f3a0b7b9c0b23bc6c5056bd9720f2d4729839546bdae8015aaf859a97"
+    },
+    {
+      "path": "kernel/contracts/src/runtime_artifact.rs",
+      "sha256": "f4e07606661ee1193eac26d4ad730f9d8348259a927343e3bce4f916482234e4"
+    },
+    {
+      "path": "kernel/contracts/src/runtime_event.rs",
+      "sha256": "22183f4affec1a6792bbd7c2bb93465842d7319885d42a555ae93cf72c551bf4"
+    },
+    {
+      "path": "kernel/engine/Cargo.toml",
+      "sha256": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8"
+    },
+    {
+      "path": "kernel/engine/fixtures/operational-store/schema-20.json",
+      "sha256": "18207f406cbb6c7c08748a9ed87ad6fd1665b70d043da5e24f26926b6cdb37bf"
+    },
+    {
+      "path": "kernel/engine/migrations/operational-store/0020-research-draft-readers.sql",
+      "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
+    },
+    {
+      "path": "kernel/engine/src/authority_transaction.rs",
+      "sha256": "ba4319939bc4e57d6357e80d217dd872cd8c790447a1d185265736acdb9a2852"
+    },
+    {
+      "path": "kernel/engine/src/grants.rs",
+      "sha256": "dd09da4069425ae0bbd4db527a1b472cf936d71e5247eceee60c41d035286291"
+    },
+    {
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "6092289ab03003313964b7484ceb2de50d6275ec363356fd47105c11a86316a1"
+    },
+    {
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "fadd31e0edc0e8907ec3744fae63c4439dd4455d803827df7a46351346632c72"
+    },
+    {
+      "path": "kernel/engine/src/persistence.rs",
+      "sha256": "fb537c04df0d687af10e36eea98834910f8760877858266bb1f54cb1ca28d540"
+    },
+    {
+      "path": "kernel/engine/src/research_budget.rs",
+      "sha256": "886e19b42db37de5f817aa6b32dd5a41ee7068f7d2a3d2a2a92921cee1f4fb8d"
+    },
+    {
+      "path": "kernel/engine/src/research_dispatch.rs",
+      "sha256": "e0d454da4fe7f620fbcfb121258e5b2c0f8d11c91f10a05327c2a2681daa160d"
+    },
+    {
+      "path": "kernel/engine/src/research_effect_binding.rs",
+      "sha256": "c69d7e8d64d5b4212583c71814fdd77897810a6f5ccf4776ec2f02ab82848151"
+    },
+    {
+      "path": "kernel/engine/src/research_fetch.rs",
+      "sha256": "ea858dab7bd0e294e767b234738aea5d6368db517d503736f77ac06307435b78"
+    },
+    {
+      "path": "kernel/engine/src/research_journal.rs",
+      "sha256": "2d25b4c5182535bbcf3506187d3ed566f74efc5452c96b5cfbedf9ea7478ac7e"
+    },
+    {
+      "path": "kernel/engine/src/research_journal_tests.rs",
+      "sha256": "b4f756e9e8301d4c592d2af8b9dee4b4aa13010a4ba4308b178dd0f1f21d4b7f"
+    },
+    {
+      "path": "kernel/engine/src/research_migration_tests.rs",
+      "sha256": "86d30819c17b02544b93aadd53810feb7a89c7e4f79add3c55fab01e1e03c88a"
+    },
+    {
+      "path": "kernel/engine/src/research_plan.rs",
+      "sha256": "fa746331fab47375e8b268caf4b7eeaa7ce0d0eed7a52d91d9b4b5d7b2c54393"
+    },
+    {
+      "path": "kernel/engine/src/research_reader_migration_tests.rs",
+      "sha256": "2405f99bc526c7f4df62ba80880655b09cfedf243b52990ddccc9fb71e8e5e62"
+    },
+    {
+      "path": "kernel/engine/src/research_report.rs",
+      "sha256": "eff9b8aec0a490004142abfd5eb4209999d9c1c2aa07f439ef35ed4d61f1d925"
+    },
+    {
+      "path": "kernel/engine/src/research_report_retained.rs",
+      "sha256": "e80267cfff64e777ffc3860ec698dce1bfc2474fba2d14de600ef73bf3bbcab4"
+    },
+    {
+      "path": "kernel/engine/src/research_report_retained_tests.rs",
+      "sha256": "70b241051ebf830f93e45153600e9a5a70a06cbd6f7ef102f20266b1316eee5b"
+    },
+    {
+      "path": "kernel/engine/src/research_report_shape.rs",
+      "sha256": "3c8ba4910b6ba26f804ec7a50ab4ebd0635ac02514ef03dc13ca1024b62a1385"
+    },
+    {
+      "path": "kernel/engine/src/research_report_span.rs",
+      "sha256": "6841b68ac46061d54b7cebf2ef7ec3b9f89d3c8641aa34ce94bb4eeb534615ed"
+    },
+    {
+      "path": "kernel/engine/src/research_report_tests.rs",
+      "sha256": "242cb1738206091c38f92f3166a74e0de1f83c074202ee20dda36fa97a2e36fe"
+    },
+    {
+      "path": "kernel/engine/src/research_response.rs",
+      "sha256": "ae450405693b923554da9e9a52b01c207f199364e0b83265bf09b85f8ba2991b"
+    },
+    {
+      "path": "kernel/engine/src/research_result_binding.rs",
+      "sha256": "ada04f036bc9311f05412d1d433aeae18d1fcbc8d0f9539475d97db9219cb84d"
+    },
+    {
+      "path": "kernel/engine/src/research_retrieval.rs",
+      "sha256": "de21f92c7a793ac99d8afdc1bd08a25860cf1f35affbef4cd21e441835c0bffa"
+    },
+    {
+      "path": "kernel/engine/src/research_retrieval_tests.rs",
+      "sha256": "bf4e57f91e441bf47c544f6f60579cf70b8c62ea68c36efaf5c42b8c93d4ce7e"
+    },
+    {
+      "path": "kernel/engine/src/runtime_artifact.rs",
+      "sha256": "cc6ee1ad0438fb9ed93663fc0326742bf2435f77eb259f540730a60761f1c8c8"
+    },
+    {
+      "path": "kernel/engine/src/runtime_journal.rs",
+      "sha256": "3588470c9ed56647802638f766c16418b9f61a8d7ea82a422371c56063b3d464"
+    },
+    {
+      "path": "kernel/engine/src/web_research_safety.rs",
+      "sha256": "543a49d74e5260a06fec46ddea8cf2946fceed973073d5f02d33fced98dce76c"
+    },
+    {
+      "path": "platforms/linux/Cargo.toml",
+      "sha256": "b8aec95285d2de67b37729fa5b52a3983cccb426f0cdc1d3a1a7c40c5e2b2c23"
+    },
+    {
+      "path": "platforms/linux/src/public_research_target.rs",
+      "sha256": "4a834424ed789f173cb9ac15f5546308afaf792bceaaedb5c867f0e3539c983e"
+    },
+    {
+      "path": "platforms/linux/src/public_research_transport.rs",
+      "sha256": "41e1c177853b350ba1244cbfe1f2ab953e54b8749d9f628e57d5dfcb472867c0"
+    },
+    {
+      "path": "scripts/coding_harness.py",
+      "sha256": "ad2278426f5a9ed69217c8eb0a0e4fe9c4f598feeb208d4fe39603dcaf8655f7"
+    },
+    {
+      "path": "scripts/operational_schema_v3_evidence.py",
+      "sha256": "aa485d64a0803897d2e0e03d348c55e08ca03b1ee37fe62d2660acad41a0ea87"
+    },
+    {
+      "path": "scripts/research_transport_fixtures.sh",
+      "sha256": "ce75ac9958b3d5b8758f84d605f62b4066c1b50aa1829a3dc9b779c45fb5db50"
+    },
+    {
+      "path": "scripts/source_content_deduplication_evidence.py",
+      "sha256": "15cc751e43c53ed88ab0abc76d52d4c811ff18d96f3bd2d950e344b9af480b49"
+    },
+    {
+      "path": "scripts/source_lifecycle_transactions_evidence.py",
+      "sha256": "4823d99eb675c64fd5626c9ffd69a8314127f741f675ea850af5ba565680f6ff"
+    },
+    {
+      "path": "scripts/source_materialization_schema_evidence.py",
+      "sha256": "758ceb1b8ca09e09ec760e0bb1adf098610df241723373e99e436b2401538dd6"
+    },
+    {
+      "path": "scripts/storage_migration_compatibility_evidence.py",
+      "sha256": "bfe40b5057106f1401a4d337384a6b884498b0bd03eac45b4f0a474208bb94ab"
+    },
+    {
+      "path": "scripts/store_unit_acceptance_evidence.py",
+      "sha256": "0c828605cbad9157a19ad18fac926147e2dd10732a11b807e6b0484151f119d3"
+    },
+    {
+      "path": "scripts/story_11_3_resume_evidence.py",
+      "sha256": "325f71551681318d032b0164293a6233736c3e1c01e151f1a873f647a08bdb22"
+    },
+    {
+      "path": "scripts/workflow_attempt_invariants_evidence.py",
+      "sha256": "4ca3942d4b6747b4e26fc9238ff85d7b61f899e5734aad1fe111b8cf53020a1e"
+    },
+    {
+      "path": "scripts/workflow_materialization_schema_evidence.py",
+      "sha256": "7f29aaffeb77454f3b2b398d748949a754e5d9197854d035f9334e95f1174125"
+    },
+    {
+      "path": "security/strict-local-source-policy.json",
+      "sha256": "31487dcdedd1a6a9b8b591b423ad24343865611ec6d475a138b615d012301aa2"
+    },
+    {
+      "path": "shells/host/src/linux_coding_runtime.rs",
+      "sha256": "ef6d07c5e522bb2fab6ef23bcf4f682ba6504d775b0eeeeea3c0e57d9390e5ae"
+    },
+    {
+      "path": "tests/test_coding_harness.py",
+      "sha256": "8c5f92ad5edfceeb5f732f0a47a765b35470a6ede6465de8baf512cb022c05a9"
+    },
+    {
+      "path": "tests/test_operational_schema_v3_evidence.py",
+      "sha256": "dee01552571ed6c20b85058cade6b7889d15cebd5fcaf25ec3d9a25071d57b14"
+    },
+    {
+      "path": "tests/test_source_content_deduplication_evidence.py",
+      "sha256": "6b4618fd2718ef19e87c297db36518a7ad3949ed5df7183b5df3d33bc69797e8"
+    },
+    {
+      "path": "tests/test_storage_migration_compatibility_evidence.py",
+      "sha256": "782bb274ad3eb3334a40ec29756043580127ccd8f6bd6131934eafe003d50679"
+    }
+  ],
+  "checks": [
+    {
+      "log_name": "research-reader-epoch-focused-20260927.log",
+      "sha256": "a1b4e3cd20b7fc216aa820b6223856644b5cbfa47f0f6e51eb5aa3b986b29456",
+      "exit_code": 0,
+      "scope": "Initial four reader/migration component tests, before old-backup regression."
+    },
+    {
+      "log_name": "research-reader-epoch-source-final-20260927.log",
+      "sha256": "46aca5285942dfde26cce7ff6d4647b848c46fb84551d910f9ae39861213b416",
+      "exit_code": 0,
+      "scope": "Final source: backup regression1;engine1216 passed/7ignored;storage50 passed/1ignored;docs13;host mapping1;workspace all-targets Clippy warnings denied;source/module/fmt/diff/frozen inputs."
+    },
+    {
+      "log_name": "research-reader-epoch-python-final-20260927.log",
+      "sha256": "fc5e096a1efefe730c864f8271e453325f07bebd9491d3500b685dcf26011f67",
+      "exit_code": 0,
+      "scope": "49 evidence-builder regression tests."
+    },
+    {
+      "log_name": "research-reader-epoch-docs-source-20260927.log",
+      "sha256": "6e47cfd3236e097ca87817d837081eff90af99142692a5c60d4dfe347ef9c4a2",
+      "exit_code": 0,
+      "scope": "Three changed source documents linted, zero issues."
+    }
+  ],
+  "retained_failures": [
+    {
+      "log_name": "research-reader-epoch-storage-checks-20260927.log",
+      "sha256": "328d6d282a3304cbea846f61ef839e08344f74fd5e163fcd1f5098f8fdda0c76",
+      "exit_code": 1,
+      "scope": "Storage49 passed/1ignored;Python48 ran/1failed: test markers checked in wrong source file."
+    },
+    {
+      "log_name": "research-reader-epoch-python-20260927.log",
+      "sha256": "d6c2aff738b6134bbe401bfd9003bc1166fe57bd89305ad7c9825e8e3b047abf",
+      "exit_code": 1,
+      "scope": "Python49 ran/1failed: exact current command-count assertion needed renewal."
+    },
+    {
+      "log_name": "research-reader-epoch-source-20260927.log",
+      "sha256": "358678c8fa5287b79a0516d4d24922f09d8b8e1c0a9b859fc6971831e7d1e5e9",
+      "exit_code": 101,
+      "scope": "Engine1215 passed/1failed/7ignored: old-backup bytes changed before refusal; fixed pre-writer exact-version check, retained locked recheck."
+    }
+  ],
+  "evidence_renewal": {
+    "status": "core-storage-final-passed;automated-pin-pending",
+    "sbom_write_count": 1,
+    "core": {
+      "log_name": "research-reader-epoch-evidence-20260927.log",
+      "sha256": "9f69d59f9376919971ae87a9162bd2f6f630aba5f3eee02f88e0f65a5ed9ec17",
+      "exit_code": 0,
+      "markdown_file_count": 551,
+      "python_regression_count": 197
+    },
+    "storage": {
+      "log_name": "research-reader-epoch-storage-evidence-20260927.log",
+      "sha256": "de02b0e94e6728462abae7ddbcac51e4b778b67d44a3cd30abfde96dd410be04",
+      "exit_code": 0,
+      "python_regression_count": 83
+    },
+    "freshness_scope": "Direct named whole-file bindings only; excludes transitive, unnamed, untracked input paths and line-span bindings.",
+    "historical_records_preserved": [
+      {
+        "path": "docs/verification/research-report-component-2026-09-27.json",
+        "disposition": "Original source50f0dbb9 observations retained; newly changed migration-test input is not repinned."
+      },
+      {
+        "path": "docs/verification/research-retained-report-component-2026-09-27.json",
+        "disposition": "Original source8edc0f4b observations retained; changed store and migration/retained tests are not repinned."
+      }
+    ],
+    "transcript_privacy": {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-results.log",
+      "replacement_count": 0
+    },
+    "final": {
+      "log_name": "research-reader-epoch-final-checks-20260927.log",
+      "sha256": "939151ae7da0204eeacd2391e882e636da09658bee59ac4ab904c1d422a490e7",
+      "exit_code": 0,
+      "validator_count": 34,
+      "markdown_file_count": 551
+    },
+    "privacy_check": {
+      "candidate_file_count": 68,
+      "private_path_matches": 0,
+      "hostname_token_matches": "Unchanged public platform identifiers; no host-identity record introduced."
+    }
+  },
+  "acceptance": {
+    "component": "source-tests-passed",
+    "old_reader": "actual-component-ceiling-probe;not-old-executable",
+    "installed_update_rollback": "not-qualified",
+    "executable_scripted": "not-executed-for-this-increment;historical-CLI-native-prerequisite-refusal",
+    "native_transport": "not-qualified",
+    "real_model": "not-executed",
+    "manual_user": "not-performed",
+    "independent_review": "requested-at-source-commit;no-pass-received",
+    "release": "not-approved"
+  },
+  "limitations": [
+    "Synthetic disposable stores only; no host user-data migration.",
+    "No host/provider activation, model admission or task/status promotion.",
+    "Restore rejects old backups; no automatic conversion or installed downgrade support.",
+    "Historical component records retain original pins; no global evidence freshness claim."
+  ],
+  "source_commit_scope": "Production source, tests and evidence-builder changes are committed at this revision; reporting documentation follows in the evidence commit."
+}
