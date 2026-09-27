@@ -1,5 +1,9 @@
 # Decision 0048: Hardened Standalone Desktop Product and First Buyer
 
+Editorial IP correction (2026-09-27): references to other products are replaced with
+AgentMage's own terms under [IP-POLICY.md](../../IP-POLICY.md). The decision's outcome is
+unchanged. Any hash-bound use of this document must be revalidated before acceptance.
+
 | Field | Value |
 |---|---|
 | Status | Accepted product-scope decision |
@@ -20,14 +24,10 @@ rows, "notariz" in 12, "standalone" in 5, "onboarding" in 1, and "system tray",
 "end user" appears in 6. The product the plan builds is a developer tool with a
 hardened core.
 
-The same day, OpenClaw released version 2026.8.1 with hardware-detected local
-model recommendation, managed `llama.cpp` setup, subscription and API-key
-detection, a browser-first interface, and shared cloud sessions, built by 933
-contributors across more than 16,000 pull requests on a project with roughly
-247,000 GitHub stars. Its maintainers state publicly that a user who cannot
-operate a command line cannot use it safely; an independent security team found
-a third-party skill performing data exfiltration and prompt injection without
-user awareness. The unoccupied position is therefore not easier local models. It
+Local AI tools increasingly offer hardware-detected model recommendation, managed local
+inference setup, browser-first interfaces and cloud-connected sessions, but they generally
+assume a user who can operate a command line and judge the safety of third-party extensions.
+The unoccupied position is therefore not easier local models. It
 is an agent a non-technical person can install and trust because it is
 structurally unable to act without evidence, hold a credential beyond one
 operation, write without approval, or send data off the machine.

@@ -16,8 +16,8 @@ Finish and reconcile the standalone coding harness (48.2.4-48.2.6 and 50.2.4), t
 
 **Current development priority:** the standalone Linux coding harness under
 [Decision 0061](docs/decisions/0061-standalone-coding-harness-critical-path.md).
-The [architecture](docs/architecture/standalone-coding-harness.md) adopts
-OpenCode's connected workflow patterns within AgentMage's existing Rust runtime.
+The [architecture](docs/architecture/standalone-coding-harness.md) specifies the
+connected workflow in AgentMage's own terms within its existing Rust runtime.
 The bounded development path now has real Muse coding evidence: eight cases passed on
 the recorded profile. Production transport, broad model admission and independent
 acceptance remain separate open gates. See the

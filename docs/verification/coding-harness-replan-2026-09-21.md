@@ -1,5 +1,9 @@
 # Coding Harness Replan and Restart Handoff
 
+Editorial IP correction (2026-09-27): references to another product are replaced with
+AgentMage's own terms under [IP-POLICY.md](../../IP-POLICY.md). Recorded outcomes are unchanged; any
+hash-bound use of this document must be revalidated.
+
 Editorial privacy correction (2026-09-24): a private consumer's name is replaced with a
 generic host description. Historical outcomes and grants are unchanged. This edited document
 is not a fresh test receipt; any hash-bound use must be revalidated before acceptance.
@@ -21,7 +25,6 @@ An operator restart is required before implementation resumes.
 
 - Repository branch: `demo/fedora-local-docs`.
 - Clean pre-edit revision: `6f90f81cbeaa930674a2f98e8ee27bfd8814a59b`.
-- OpenCode source reference: `e059ac5918f3e2c798de029b9df4cede617466ed`.
 - This batch changes design, product requirements, execution tasks, priority
   selection and associated planning validation, not the product runtime.
 - No upstream engine is vendored or installed. No model is downloaded,
@@ -53,7 +56,7 @@ document-QA demo. Scripted-provider integration can proceed before real-model
 qualification, but its report must label that distinction.
 
 Do not resume desktop-shell Story 76.2 merely because the previous worker's
-handoff selected it. Do not launch a competing OpenCode backend. Preserve the
+handoff selected it. Do not launch an external agent backend. Preserve the
 existing coordinator, native dispatcher, kernel authorization and canonical
 stores. Other stack projects remain outside this workstream.
 

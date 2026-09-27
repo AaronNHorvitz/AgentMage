@@ -1,8 +1,8 @@
 # AgentMage Engineering Runtime
 
 Decision 0061 adds the [standalone coding delivery contract](docs/architecture/standalone-coding-harness.md).
-The existing Rust runtime remains the execution authority; OpenCode contributes
-workflow design references, not an embedded service or replacement engine.
+The existing Rust runtime remains the execution authority. The workflow is specified in
+AgentMage's own terms, with no embedded external service or replacement engine.
 
 | Field                 | Value                                                                                         |
 | --------------------- | --------------------------------------------------------------------------------------------- |
@@ -415,4 +415,4 @@ Team and release requirements remain intact and are not MVP prerequisites.
 
 The [architecture and acceptance matrix](docs/architecture/standalone-coding-harness.md)
 define the precise factory, transport, lifecycle, context and safety obligations.
-No OpenCode, CodingMage, USTE or host-application dependency is needed to satisfy them.
+No CodingMage, USTE, host-application or external agent dependency is needed to satisfy them.

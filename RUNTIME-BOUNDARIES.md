@@ -542,7 +542,7 @@ The Linux coding connection uses the existing private IPC and stable peer
 identity contract. A control/event adapter is not platform activation; package,
 trust, confinement and exact model checks still precede effects. Development
 trust, if needed, is separately accepted and cannot qualify production. No
-OpenCode server or ambient shell path is introduced.
+external agent server or ambient shell path is introduced.
 
 Control servicing and cancellation remain available while inference or tools
 block. Bounded progress may coalesce; ordered approval, effect, observation and

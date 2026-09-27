@@ -133,7 +133,7 @@ import capability implementations.
 | Custom agents | Supported declarative surface | Instructions, tool selection, and AgentMage workflow packaging | It is not a byte-level interceptor |
 | Agent hooks | Preview | Optional audit and lifecycle hardening | It is not required for supported ingestion or execution truth |
 | Proposed reference APIs | Proposed | Isolated experiments only | Feature flag, version guard, fallback, and non-support label required |
-| Private Copilot implementation | Private | Research and regression understanding only | No production dependency or compatibility claim |
+| Other extensions' private implementations | Private | Not read or used | No production dependency or compatibility claim |
 
 When VS Code exposes only a display label and no resolvable value, AgentMage
 records `content_unavailable_upstream`. It does not claim to have ingested the

@@ -1481,15 +1481,15 @@ A Linux user starts `agentmage code`, selects an approved local repository and
 qualified local model, requests a change, inspects progress and proposed effects,
 controls authority, sees tests and corrections, and receives a verified result.
 The session can explore, search, plan, patch, create bounded files, run approved
-checks and inspect Git state without CodingMage, USTE, the host application, OpenCode,
+checks and inspect Git state without CodingMage, USTE, the host application,
 MCP or an online account. Those systems can add interfaces, delegation or
 retrieval later; they do not supply a missing core coding capability.
 
 ### Required Architecture
 
 - One Rust-owned runtime and existing native tool dispatcher serve the terminal
-  and subsequent clients. Adopt OpenCode's connected workflow patterns, not a
-  second execution engine or an asserted compatible protocol.
+  and subsequent clients. Deliver the connected workflow in AgentMage's own design,
+  not a second execution engine or an asserted compatible protocol.
 - The actual executable connects to an authenticated host with a real factory,
   qualified model, confined workers, bounded context and deterministic verifier.
   Hardcoded unavailable responses and replay-only factories cannot satisfy this.

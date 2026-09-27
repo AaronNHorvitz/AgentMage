@@ -1,5 +1,9 @@
 # Decision 0027: Muse-First Model-Neutral Runtime and Evaluation
 
+Editorial IP correction (2026-09-27): references to other products are replaced with
+AgentMage's own terms under [IP-POLICY.md](../../IP-POLICY.md). The decision's outcome is
+unchanged. Any hash-bound use of this document must be revalidated before acceptance.
+
 | Field | Value |
 |---|---|
 | Status | Accepted scope and architecture refinement |
@@ -20,14 +24,11 @@ record that truth, while the still-incomplete Sprint 13 plan continued to assume
 that an approved E4B profile would be loaded. The assumption and the current
 evidence can no longer both govern future implementation.
 
-The clean-room research assessment at
-[`docs/research/2026-08-12-clean-room-muse-glimmer-agent-harness-assessment.md`](../research/2026-08-12-clean-room-muse-glimmer-agent-harness-assessment.md)
-finds that Claude Code is not an end-to-end deterministic system. Its publicly
-documented architecture combines a probabilistic language-model loop and
+Research into dependable coding-agent design found that such agents are not end-to-end
+deterministic systems. The dependable pattern combines a probabilistic language-model loop and
 probabilistic semantic classifiers with deterministic permission rules, typed
 tool boundaries, sandboxing, budgets, and outcome-oriented verification.
-AgentMage can independently implement the public architectural pattern without
-using leaked proprietary source.
+AgentMage implements that pattern independently, in its own terms.
 
 Meta Muse Glimmer is a promising first-party local coding and tool-use candidate
 for the Fedora development workstation, but it has not passed AgentMage model,

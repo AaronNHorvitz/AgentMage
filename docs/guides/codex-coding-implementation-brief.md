@@ -41,8 +41,8 @@ confinement, verifier ownership or evidence checks to make a demonstration pass.
 
 Inspect the actual CLI entry point, host startup, runtime factory, transport,
 Linux effect/inference boundaries, family codecs, canonical stores and tests.
-Use OpenCode's documented workflow lessons through the accepted architecture;
-do not embed its engine or introduce a second execution loop or store.
+Follow the accepted architecture and IP-POLICY.md: do not consult other coding agents'
+source or documentation, embed another engine, or introduce a second execution loop or store.
 
 ## Starting State
 

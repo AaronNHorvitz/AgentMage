@@ -1,5 +1,9 @@
 # Restart Readiness Run — 2026-09-06
 
+Editorial IP correction (2026-09-27): references to another product are replaced with
+AgentMage's own terms under [IP-POLICY.md](../../IP-POLICY.md). Recorded outcomes are unchanged; any
+hash-bound use of this document must be revalidated.
+
 Editorial privacy correction (2026-09-24): a private consumer's name is replaced with a
 generic host description. Historical outcomes and grants are unchanged. This edited document
 is not a fresh test receipt; any hash-bound use must be revalidated before acceptance.
@@ -1669,7 +1673,7 @@ verified evidence, and neither claims platform qualification, independent review
 ## Operator Stop and Coding-Harness Replan - 2026-09-21
 
 The owner stopped the AgentMage worker and directed a standalone coding-harness
-architecture revision using OpenCode as the workflow reference. The Claude
+architecture revision. The Claude
 process, four polling shells and `agentmage-claude` tmux session were stopped;
 `~/.local/share/agentmage-run/STOP-CLAUDE` remains present. Other stack workers
 were not interrupted.

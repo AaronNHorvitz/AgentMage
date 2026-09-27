@@ -1,9 +1,9 @@
 # Bounded Coding Workflows
 
 The [Decision 0061 delivery architecture](../architecture/standalone-coding-harness.md)
-now makes this workflow the immediate implementation priority. It adopts
-OpenCode's connected interaction patterns without embedding OpenCode or requiring
-the other stack services. Tasks 48.2.4-48.2.6 own the executable MVP; Task 50.2.4
+now makes this workflow the immediate implementation priority. It specifies
+the connected interaction workflow in AgentMage's own terms, without embedding another
+agent engine or requiring the other stack services. Tasks 48.2.4-48.2.6 own the executable MVP; Task 50.2.4
 owns subsequent daily reliability. These are open work, not launchable features.
 
 ## Current Availability

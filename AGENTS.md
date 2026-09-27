@@ -178,7 +178,7 @@ Preserve every authority, evidence, release and independent-review boundary.
 Do not continue the stale `start 76.2.1.1` instruction or restart an agent while
 the operator stop marker remains in effect. Do not mark a component test as an
 executable workflow, or a document-QA model as a qualified coding model. Native
-tools stay native; no embedded OpenCode engine or dependency on other stack
+tools stay native; no embedded external agent engine or dependency on other stack
 projects is introduced. Other project repositories and workers remain untouched.
 
 Decision 0062 and `docs/guides/coding-model-lab.md` prepare Muse Glimmer and

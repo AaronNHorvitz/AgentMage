@@ -39,7 +39,7 @@
       "before_snapshot": "pre-0027",
       "document": "docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md",
       "id": "ADR-0027",
-      "source_sha256": "dd0d1c98597cee8d7c2c1956336da8c97f75c9bca347eefb3051c2738afe43db",
+      "source_sha256": "75767371873d32121ed21797485768eff74ea5fe76977506680820ca25f5c9ba",
       "status": "accepted",
       "superseded_normative_hashes": [
         "32f0d8ef319bc3f2c6599a17facc8312842c1c042d977c0800e21b6b2b1551f6",

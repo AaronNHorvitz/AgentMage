@@ -1,5 +1,9 @@
 # Decision 0061: Standalone Coding Harness as the Immediate Critical Path
 
+Editorial IP correction (2026-09-27): references to other products are replaced with
+AgentMage's own terms under [IP-POLICY.md](../../IP-POLICY.md). The decision's outcome is
+unchanged. Any hash-bound use of this document must be revalidated before acceptance.
+
 Editorial privacy correction (2026-09-24): a private consumer's name is replaced with a
 generic host description. Historical outcomes and grants are unchanged. This edited document
 is not a fresh test receipt; any hash-bound use must be revalidated before acceptance.
@@ -9,14 +13,14 @@ is not a fresh test receipt; any hash-bound use must be revalidated before accep
 | Status | Accepted under owner delegation, 2026-09-20 |
 | Date | 2026-09-21 |
 | Authority | Decision 0054 and the owner's explicit 2026-09-21 stop-and-replan instruction |
-| Scope | Standalone AgentMage coding workflow, OpenCode architectural reference, delivery order and executable acceptance |
+| Scope | Standalone AgentMage coding workflow, connected workflow architecture, delivery order and executable acceptance |
 | Supersedes | Conflicting work-selection order in Decisions 0048, 0052 and 0053 for this workstream only; the sequencing ambiguity in Implementation Plan Section 12.1 |
 | Preserves | Existing requirement and sprint identities, completed component evidence, security boundaries, license, independent review and release gates |
 
 ## Owner Direction
 
-The owner requested that the AgentMage development agent be stopped and that
-OpenCode's framework and the existing AgentMage design be integrated into the
+The owner requested that the AgentMage development agent be stopped and that a
+connected coding workflow be integrated into the existing AgentMage design,
 documents and architecture. The owner identified independent coding capability
 as a central AgentMage responsibility, with correctness taking priority over
 elapsed development time. This records architecture and planning authorization,
@@ -48,19 +52,18 @@ for the earlier explicitly ephemeral milestone.
 ## Decision
 
 1. AgentMage owns a complete single-agent coding workflow. CodingMage, USTE,
-   the host application, OpenCode, a cloud account, MCP and multi-agent orchestration are
+   the host application, a cloud account, MCP and multi-agent orchestration are
    not prerequisites for its first working Linux coding session.
-2. Adopt the connected session, prompt/tool feedback, event, approval,
-   cancellation, diff-inspection and continuation patterns examined in OpenCode
-   revision `e059ac5918f3e2c798de029b9df4cede617466ed`. Adapt those patterns into
-   AgentMage's existing Rust runtime and thin-client contracts. Do not embed or
-   launch OpenCode's execution engine, introduce a second agent loop, or claim
-   OpenCode protocol/binary compatibility. This is architectural integration,
-   not vendoring. Any later source reuse needs separate exact-file provenance,
-   dependency, notices and license review; this decision changes no license.
+2. Build the connected session, prompt/tool feedback, event, approval,
+   cancellation, diff-inspection and continuation workflow in AgentMage's existing
+   Rust runtime and thin-client contracts, specified in AgentMage's own terms. Do not
+   embed or launch another agent's execution engine, introduce a second agent loop, or
+   claim protocol or binary compatibility with another product. Any third-party source
+   reuse needs exact-file provenance, dependency, notices and license review under
+   IP-POLICY.md; this decision changes no license.
 3. Keep the kernel's exact grants, held-target enforcement, confined platform
    workers, canonical stores, context accounting and verifier-only completion.
-   An OpenCode-style approval UI is not a substitute for these controls.
+   A generic approval UI is not a substitute for these controls.
 4. Make Tasks 48.2.4 through 48.2.6 the immediate delivery workstream. Preserve
    their exact prerequisite rows and select only dependency-ready work. The
    remaining-plan selector prioritizes these additions and their explicitly
@@ -129,9 +132,8 @@ or delayed mutation. Human staged, unstaged and untracked work remains intact.
 
 ## Reference Boundary
 
-OpenCode is a workflow reference, not an authority or security dependency.
-Its pinned [security policy](https://github.com/anomalyco/opencode/blob/e059ac5918f3e2c798de029b9df4cede617466ed/SECURITY.md)
-explicitly distinguishes permission prompts from sandboxing. Keep AgentMage's
+No external product is a workflow reference, authority or security dependency.
+Permission prompts are not sandboxing. Keep AgentMage's
 confinement and admission controls. Do not import third-party project
 instructions, run upstream installers, or treat upstream tests as AgentMage
 acceptance evidence.

@@ -1,5 +1,9 @@
 # Standalone Coding Harness Independent Review Package — 2026-09-22
 
+Editorial IP correction (2026-09-27): references to another product are replaced with
+AgentMage's own terms under [IP-POLICY.md](../../IP-POLICY.md). Recorded outcomes are unchanged; any
+hash-bound use of this document must be revalidated.
+
 ## Review status
 
 `READY FOR EXTERNAL REVIEW — NOT INDEPENDENTLY REVIEWED`
@@ -36,7 +40,7 @@ The external reviewer should trace at least these questions from CLI input throu
 1. Does development activation remain distinct from signed production activation, bind the exact
    workspace/profile/peer/process and keep the scripted provider unavailable to production?
 2. Is there exactly one coordinator, native tool dispatcher, authority owner, journal, artifact
-   store and execution loop, with no embedded OpenCode engine or MCP substitution for native tools?
+   store and execution loop, with no embedded external agent engine or MCP substitution for native tools?
 3. Do private IPC framing, peer authentication, cursor rules, duplicate submission handling and
    shutdown prevent replay, confused deputies and foreign-workspace effects?
 4. Are Muse ATEM and GPT-OSS Harmony explicit family codecs behind the common model boundary, with

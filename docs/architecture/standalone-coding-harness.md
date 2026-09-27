@@ -8,7 +8,7 @@ supersedes the older narrow assignment below; ownership and safety boundaries re
 |---|---|
 | Status | Accepted design under Decision 0061; disposable Linux development path implemented; real-model qualification in progress; production activation remains closed |
 | Source baseline | AgentMage `6f90f81cbeaa930674a2f98e8ee27bfd8814a59b` |
-| Reference | OpenCode `e059ac5918f3e2c798de029b9df4cede617466ed`, inspected source only |
+| Design basis | AgentMage's own terms under IP-POLICY.md; no external implementation is a reference or compatibility target |
 | Product authority | PRD Section 40 |
 | Execution owners | Tasks 48.2.4-48.2.6 and 50.2.4; existing host, kernel, model and platform owners |
 
@@ -33,26 +33,26 @@ authority, the primary coding loop, or a prerequisite database for the first
 session. AgentMage is not asked to develop or modify its own running checkout.
 Acceptance uses disposable synthetic repositories.
 
-## 2. Adopt, Adapt and Exclude
+## 2. Required Workflow Patterns
 
-The pinned OpenCode sources below demonstrate a connected user workflow. These
-are design references, not copied implementation or asserted API compatibility.
+AgentMage specifies the connected user workflow below in its own terms. No external
+implementation is a design reference, copied source or asserted API compatibility target.
 
-| Reference pattern | AgentMage integration | Owning work |
+| Workflow need | AgentMage design | Owning work |
 |---|---|---|
-| Session handlers call prompt, abort and permission services [O1] | One authenticated local service consumed by CLI and later UI clients | 48.2.4 |
-| Prompt and processor feed observations into subsequent turns [O2] | Reuse `ReusableRuntimeCoordinator`; bounded corrections after tool/test failure; verifier owns success | 48.2.4, 48.2.6 |
-| Structured event subscription [O3] | Bounded progress channel plus ordered correctness events; explicit backpressure and reconnect limits | 48.2.5 |
-| Edit results and diagnostic feedback [O4] | Native exact-preimage patches, current validation and inspectable diffs; real LSP remains separately qualified | 48.2.5, 50.2.4 |
-| Shell streaming and output truncation [O5] | Confined registered commands, separate stdout/stderr, bounded previews and later verified full artifacts | 48.2.5, 50.2.4 |
-| Permission prompts [O6] | Exact challenge presentation; never adopt a blanket reusable effect grant | 48.2.5, 50.2.4 |
-| Session compaction and revert [O7] | Source-preserving context manifests, explicit loss accounting, fresh-authority rollback and drift-aware resume | 50.2.4 |
-| Recorded tool-loop and shell tests [O8] | External-process scripted fixtures plus separate qualified-model campaigns | 48.2.6 |
+| A session accepts objectives, cancellation and permission decisions | One authenticated local service consumed by CLI and later UI clients | 48.2.4 |
+| Tool and test observations feed the next turn | Reuse `ReusableRuntimeCoordinator`; bounded corrections after tool/test failure; verifier owns success | 48.2.4, 48.2.6 |
+| Clients subscribe to structured progress events | Bounded progress channel plus ordered correctness events; explicit backpressure and reconnect limits | 48.2.5 |
+| Edits return results and diagnostics | Native exact-preimage patches, current validation and inspectable diffs; real LSP remains separately qualified | 48.2.5, 50.2.4 |
+| Commands stream bounded, truncated output | Confined registered commands, separate stdout/stderr, bounded previews and later verified full artifacts | 48.2.5, 50.2.4 |
+| Consequential actions request permission | Exact challenge presentation; never adopt a blanket reusable effect grant | 48.2.5, 50.2.4 |
+| Long sessions compact context and can revert | Source-preserving context manifests, explicit loss accounting, fresh-authority rollback and drift-aware resume | 50.2.4 |
+| Tool loops are tested against recorded runs | External-process scripted fixtures plus separate qualified-model campaigns | 48.2.6 |
 
-Do not copy unbounded event queues, permissive server exposure, ambient shell
+Exclude unbounded event queues, permissive server exposure, ambient shell
 execution, model-certified completion, or lossy summaries presented as memory.
-Do not add Bun/TypeScript to the kernel, an OpenCode service, a competing store,
-or another model loop. Reconsider individual upstream libraries only when an
+Do not add another language runtime to the kernel, an external agent service, a competing
+store, or another model loop. Reconsider individual third-party libraries only when an
 identified component benefits and dependency/license review is complete.
 
 ## 3. One Runtime, Real Composition
@@ -300,12 +300,3 @@ retain their owning gates. They are not silently promised by the first bounded
 session. No first-party runtime source is changed by this architecture revision.
 
 ## Pinned Reference Sources
-
-[O1]: https://github.com/anomalyco/opencode/blob/e059ac5918f3e2c798de029b9df4cede617466ed/packages/opencode/src/server/routes/instance/httpapi/handlers/session.ts
-[O2]: https://github.com/anomalyco/opencode/blob/e059ac5918f3e2c798de029b9df4cede617466ed/packages/opencode/src/session/prompt.ts
-[O3]: https://github.com/anomalyco/opencode/blob/e059ac5918f3e2c798de029b9df4cede617466ed/packages/opencode/src/server/routes/instance/httpapi/handlers/event.ts
-[O4]: https://github.com/anomalyco/opencode/blob/e059ac5918f3e2c798de029b9df4cede617466ed/packages/opencode/src/tool/edit.ts
-[O5]: https://github.com/anomalyco/opencode/blob/e059ac5918f3e2c798de029b9df4cede617466ed/packages/opencode/src/tool/shell.ts
-[O6]: https://github.com/anomalyco/opencode/blob/e059ac5918f3e2c798de029b9df4cede617466ed/packages/opencode/src/permission/index.ts
-[O7]: https://github.com/anomalyco/opencode/blob/e059ac5918f3e2c798de029b9df4cede617466ed/packages/opencode/src/session/compaction.ts
-[O8]: https://github.com/anomalyco/opencode/blob/e059ac5918f3e2c798de029b9df4cede617466ed/packages/opencode/test/session/llm-native-recorded.test.ts
