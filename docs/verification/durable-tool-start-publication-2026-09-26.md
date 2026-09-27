@@ -185,6 +185,25 @@ Previously stale native/platform/aggregate evidence remains historical, includin
 the previously recorded whole-store coverage and independent acceptance gaps.
 There is no second SBOM write for the committed-source remainder of this batch.
 
+### Committed-source follow-on
+
+The follow-on completed with exit 0 against source commit
+`ac55cb59db3057f95a82d66a93d21719d81d115d`, without source edits or a second SBOM
+write. The schema-v3 and store-unit builders reran their named bounded checks;
+their seven and four Python tests passed. Story 4.1 security mapping and seven tests,
+the automated Sprint 50 contract review and its test, and Sprint 82 local evidence
+and three tests passed. Unchanged agent-progress evidence, supply-chain validation
+and the eight source pins also passed. Follow-on log SHA-256:
+`b618373ff38e6c033ee74a50e0e4f11b78a946471e56cdf14bbb0bacf65c4372`.
+
+The five resulting reports were inspected: changes are source revisions, hashes
+and two source byte lengths, not widened acceptance claims. Store coverage remains
+the named subset, Story 4.1 retains partial/product-incomplete status, Sprint 50
+explicitly records no independent human review, and Sprint 82 remains blocked with
+live research, native security and privacy review incomplete. Sprint 16 local and
+installed matrices remain historical; neither is renewed by these checks. The
+prior inventory above remains a point-in-time result, not a transitive freshness gate.
+
 ## Remaining work and gates
 
 Command, Git and validation native cancellation/lifecycle work, preparation/sealing
