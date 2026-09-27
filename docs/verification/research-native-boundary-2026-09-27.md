@@ -199,8 +199,15 @@ duplicate/hidden markers, malformed or trailing JSON and over-budget metrics. Ei
 focused parser/canary tests passed, including the retained serial timings and unchanged
 250,000-microsecond scenario ceiling. Regression log SHA-256:
 `cce723355126c96333359e0414d3dbe76dda6f70987501971757560666380fde`.
-The runtime campaign remainder still requires a fresh committed reader pin and actual
-execution. This developer-only correction changes neither Rust behavior nor the SBOM.
+That correction is pinned at `893a2376dc2178ee1805473fd3b489539e309258` and changes
+neither Rust behavior nor the SBOM. The subsequent eight-command runtime campaign
+passed all 30 selected Rust tests, dependency/effect checks and six report/parser tests.
+The largest recorded scenario was 5,172 microseconds against the unchanged 250,000
+ceiling; peak command RSS was 51,136 KiB against 1,048,576 KiB. These are synthetic
+current-host measurements, not end-user performance or real-model qualification.
+Successful runtime renewal log SHA-256:
+`396baf224729c30991b4ff96fdca811f9c82c35ffb43bc6b3a44c39c24d77667`.
+Downstream automated boundary/security/index renewal remains separate.
 
 ## Still open
 
