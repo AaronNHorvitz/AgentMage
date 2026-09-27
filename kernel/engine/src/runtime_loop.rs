@@ -713,6 +713,7 @@ where
     context_refresh_count: u32,
     no_progress_turns: u32,
     stop_after_next_checkpoint: bool,
+    correctness_reconciliation_required: bool,
 }
 
 impl<M, X, T, V, C> ReusableRuntimeCoordinator<M, X, T, V, C>
@@ -954,6 +955,7 @@ where
             context_refresh_count: 0,
             no_progress_turns: 0,
             stop_after_next_checkpoint: false,
+            correctness_reconciliation_required: false,
         };
         if coordinator.request.event_cursor.is_some() {
             coordinator.restore_runtime_checkpoint()?;
@@ -1088,6 +1090,9 @@ where
         response: Option<&RuntimeApprovalResponse>,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<RuntimeCoordinatorStep, RuntimeLoopError> {
+        if self.correctness_reconciliation_required {
+            return Err(RuntimeLoopError::InvalidBoundaryResult);
+        }
         if let Some(outcome) = &self.outcome {
             if response.is_some() {
                 return Err(RuntimeLoopError::Contract(
@@ -1824,8 +1829,11 @@ where
             let prior = self.events.last().cloned();
             let mut resources = self.resources.clone();
             let mut built = None;
+            let mut build_attempts = 0_u8;
+            let mut observed_evaluation = None;
             let mut build_event = |evaluation: &RuntimePermissionEvaluation| {
-                if built.is_some() {
+                build_attempts = build_attempts.saturating_add(1);
+                if build_attempts != 1 {
                     return Err(RuntimePortFailure::Invalid);
                 }
                 let challenge = permission_challenge(
@@ -1853,6 +1861,7 @@ where
                     true,
                     &mut resources,
                 )?;
+                observed_evaluation = Some(evaluation.clone());
                 built = Some(event.clone());
                 Ok(event)
             };
@@ -1869,11 +1878,16 @@ where
                 evaluated,
                 Err(RuntimePortFailure::ReadProjectionUnavailable)
             ) && built.is_none()
+                && build_attempts == 0
             {
                 return self.reject_read_projection(call, turn_id, operation_id);
             }
             let (evaluation, event) = evaluated.map_err(RuntimeLoopError::Dependency)?;
-            if built.as_ref() != Some(&event) {
+            if build_attempts != 1
+                || observed_evaluation.as_ref() != Some(&evaluation)
+                || built.as_ref() != Some(&event)
+            {
+                self.correctness_reconciliation_required = true;
                 return Err(RuntimeLoopError::InvalidBoundaryResult);
             }
             self.accept_committed_events(vec![event], resources)?;
@@ -2141,9 +2155,12 @@ where
                         Ok(())
                     };
                     let mut built_terminal = None;
+                    let mut build_attempts = 0_u8;
+                    let mut observed_execution = None;
                     let clock = &mut self.clock;
                     let mut build_terminal = |execution: &RuntimeToolExecution| {
-                        if built_terminal.is_some()
+                        build_attempts = build_attempts.saturating_add(1);
+                        if build_attempts != 1
                             || !valid_tool_execution(execution, &definition, &call, &request)
                         {
                             return Err(RuntimePortFailure::Invalid);
@@ -2161,6 +2178,10 @@ where
                             true,
                             &mut resources,
                         )?;
+                        observed_execution = Some(
+                            tool_execution_observation(execution)
+                                .map_err(|_| RuntimePortFailure::Invalid)?,
+                        );
                         built_terminal = Some(event.clone());
                         Ok(event)
                     };
@@ -2178,6 +2199,10 @@ where
                     .map_err(RuntimeLoopError::Dependency)?;
                     if !start_observed
                         || observation_invalid
+                        || build_attempts != 1
+                        || !valid_tool_execution(&commit.execution, &definition, &call, &request)
+                        || observed_execution.as_ref()
+                            != Some(&tool_execution_observation(&commit.execution)?)
                         || commit.events
                             != [
                                 started_event,
@@ -2186,6 +2211,7 @@ where
                                     .ok_or(RuntimeLoopError::InvalidBoundaryResult)?,
                             ]
                     {
+                        self.correctness_reconciliation_required = true;
                         return Err(RuntimeLoopError::InvalidBoundaryResult);
                     }
                     // The start is already visible from its durable commit. Only
@@ -2249,8 +2275,11 @@ where
             let prior = self.events.last().cloned();
             let mut resources = self.resources.clone();
             let mut built = None;
+            let mut build_attempts = 0_u8;
+            let mut observed_evaluation = None;
             let mut build_event = |evaluation: &RuntimePermissionEvaluation| {
-                if built.is_some() {
+                build_attempts = build_attempts.saturating_add(1);
+                if build_attempts != 1 {
                     return Err(RuntimePortFailure::Invalid);
                 }
                 let kind = match evaluation {
@@ -2290,6 +2319,7 @@ where
                     true,
                     &mut resources,
                 )?;
+                observed_evaluation = Some(evaluation.clone());
                 built = Some(event.clone());
                 Ok(event)
             };
@@ -2304,7 +2334,11 @@ where
                 &mut build_event,
             )
             .map_err(RuntimeLoopError::Dependency)?;
-            if built.as_ref() != Some(&event) {
+            if build_attempts != 1
+                || observed_evaluation.as_ref() != Some(&evaluation)
+                || built.as_ref() != Some(&event)
+            {
+                self.correctness_reconciliation_required = true;
                 return Err(RuntimeLoopError::InvalidBoundaryResult);
             }
             self.accept_committed_events(vec![event], resources)?;
@@ -2640,8 +2674,11 @@ where
             let prior = self.events.last().cloned();
             let mut resources = self.resources.clone();
             let mut built = None;
+            let mut build_attempts = 0_u8;
+            let mut observed_publication = None;
             let mut build_event = |publication: &RuntimeCheckpointPublication| {
-                if built.is_some() {
+                build_attempts = build_attempts.saturating_add(1);
+                if build_attempts != 1 {
                     return Err(RuntimePortFailure::Invalid);
                 }
                 let event = prepare_runtime_event(
@@ -2658,12 +2695,17 @@ where
                     true,
                     &mut resources,
                 )?;
+                observed_publication = Some(publication.clone());
                 built = Some(event.clone());
                 Ok(event)
             };
             let (publication, event) = checkpoint(&mut self.tool_boundary, input, &mut build_event)
                 .map_err(RuntimeLoopError::Dependency)?;
-            if built.as_ref() != Some(&event) {
+            if build_attempts != 1
+                || observed_publication.as_ref() != Some(&publication)
+                || built.as_ref() != Some(&event)
+            {
+                self.correctness_reconciliation_required = true;
                 return Err(RuntimeLoopError::InvalidBoundaryResult);
             }
             (publication, Some(event), Some(resources))
@@ -4232,6 +4274,47 @@ fn valid_tool_execution(
                 && evidence.observed_revision.as_deref()
                     == Some(request.repository_snapshot_id.as_str())
         })
+}
+
+// Only after valid_tool_execution has bounded the value. Keep complete content
+// identity across the callback without cloning captured output buffers. These
+// observations are private and ephemeral, not another persisted evidence format.
+#[derive(PartialEq, Eq)]
+struct ToolExecutionObservation {
+    receipt_id: ReceiptId,
+    receipt_sha256: String,
+    result_sha256: String,
+    output_kind: Option<RuntimeArtifactKind>,
+    artifacts: Vec<ToolArtifactObservation>,
+}
+
+#[derive(PartialEq, Eq)]
+struct ToolArtifactObservation {
+    kind: RuntimeArtifactKind,
+    media_type: String,
+    byte_size: usize,
+    sha256: String,
+}
+
+fn tool_execution_observation(
+    execution: &RuntimeToolExecution,
+) -> Result<ToolExecutionObservation, RuntimeLoopError> {
+    Ok(ToolExecutionObservation {
+        receipt_id: execution.receipt_id.clone(),
+        receipt_sha256: execution.receipt_sha256.clone(),
+        result_sha256: contract_sha256(&execution.result)?,
+        output_kind: execution.result_output_kind,
+        artifacts: execution
+            .artifact_candidates
+            .iter()
+            .map(|candidate| ToolArtifactObservation {
+                kind: candidate.kind,
+                media_type: candidate.media_type.clone(),
+                byte_size: candidate.bytes.len(),
+                sha256: sha256(&candidate.bytes),
+            })
+            .collect(),
+    })
 }
 
 fn runtime_tool_terminal_event(

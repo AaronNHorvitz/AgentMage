@@ -631,6 +631,18 @@ enum PermissionScript {
     SkipStartObservation,
     DuplicateStartObservation,
     ForeignStartObservation,
+    SubstituteTerminalResult(u8),
+    RepeatTerminalBuilder,
+    SubstituteEvaluation,
+    RepeatEvaluationBuilder,
+    SubstituteResolution,
+    RepeatResolutionBuilder,
+    SubstituteCheckpoint,
+    RepeatCheckpointBuilder,
+    OmitEvaluationBuilder,
+    OmitResolutionBuilder,
+    OmitTerminalBuilder,
+    OmitCheckpointBuilder,
 }
 
 type PublishedArtifacts = Arc<Mutex<Vec<(RuntimeArtifactManifest, Vec<u8>)>>>;
@@ -678,7 +690,15 @@ impl FakeToolBoundary {
                 authority_sha256: sha256(b"expired authority"),
             };
         }
-        if challenge.is_none() && matches!(self.script, PermissionScript::Ask) {
+        if challenge.is_none()
+            && matches!(
+                self.script,
+                PermissionScript::Ask
+                    | PermissionScript::SubstituteResolution
+                    | PermissionScript::RepeatResolutionBuilder
+                    | PermissionScript::OmitResolutionBuilder
+            )
+        {
             return RuntimePermissionEvaluation::Ask {
                 approval_id,
                 grant_id: GrantId::from_raw("grant-0001"),
@@ -892,7 +912,7 @@ impl RuntimeCorrectnessTransactionPort for FakeToolBoundary {
             &RuntimePermissionEvaluation,
         ) -> Result<RuntimeEvent, RuntimePortFailure>,
     ) -> Result<(RuntimePermissionEvaluation, RuntimeEvent), RuntimePortFailure> {
-        let evaluation = <Self as RuntimeToolBoundary>::evaluate(
+        let mut evaluation = <Self as RuntimeToolBoundary>::evaluate(
             self,
             request,
             operation_id,
@@ -900,8 +920,26 @@ impl RuntimeCorrectnessTransactionPort for FakeToolBoundary {
             call,
             now_epoch_ms,
         )?;
+        if matches!(self.script, PermissionScript::OmitEvaluationBuilder) {
+            return Ok((
+                evaluation,
+                self.journal.lock().unwrap().last().unwrap().clone(),
+            ));
+        }
         let event = build_event(&evaluation)?;
         self.append_runtime_event(&event)?;
+        if matches!(self.script, PermissionScript::RepeatEvaluationBuilder) {
+            assert!(build_event(&evaluation).is_err());
+        }
+        if matches!(self.script, PermissionScript::SubstituteEvaluation) {
+            let RuntimePermissionEvaluation::Allow {
+                authority_sha256, ..
+            } = &mut evaluation
+            else {
+                unreachable!();
+            };
+            *authority_sha256 = sha256(b"substituted evaluation authority");
+        }
         Ok((evaluation, event))
     }
 
@@ -917,7 +955,7 @@ impl RuntimeCorrectnessTransactionPort for FakeToolBoundary {
             &RuntimePermissionEvaluation,
         ) -> Result<RuntimeEvent, RuntimePortFailure>,
     ) -> Result<(RuntimePermissionEvaluation, RuntimeEvent), RuntimePortFailure> {
-        let evaluation = <Self as RuntimeToolBoundary>::resolve(
+        let mut evaluation = <Self as RuntimeToolBoundary>::resolve(
             self,
             request,
             challenge,
@@ -926,8 +964,26 @@ impl RuntimeCorrectnessTransactionPort for FakeToolBoundary {
             call,
             now_epoch_ms,
         )?;
+        if matches!(self.script, PermissionScript::OmitResolutionBuilder) {
+            return Ok((
+                evaluation,
+                self.journal.lock().unwrap().last().unwrap().clone(),
+            ));
+        }
         let event = build_event(&evaluation)?;
         self.append_runtime_event(&event)?;
+        if matches!(self.script, PermissionScript::RepeatResolutionBuilder) {
+            assert!(build_event(&evaluation).is_err());
+        }
+        if matches!(self.script, PermissionScript::SubstituteResolution) {
+            let RuntimePermissionEvaluation::Allow {
+                authority_sha256, ..
+            } = &mut evaluation
+            else {
+                unreachable!();
+            };
+            *authority_sha256 = sha256(b"substituted resolution authority");
+        }
         Ok((evaluation, event))
     }
 
@@ -960,7 +1016,7 @@ impl RuntimeCorrectnessTransactionPort for FakeToolBoundary {
             }
             _ => observe_started(&started_event)?,
         }
-        let execution = <Self as RuntimeToolBoundary>::execute(
+        let mut execution = <Self as RuntimeToolBoundary>::execute(
             self,
             request,
             evaluation,
@@ -968,8 +1024,50 @@ impl RuntimeCorrectnessTransactionPort for FakeToolBoundary {
             call,
             cancellation,
         )?;
+        if matches!(self.script, PermissionScript::OmitTerminalBuilder) {
+            return Ok(RuntimeToolCorrectnessCommit {
+                execution,
+                events: vec![started_event],
+            });
+        }
         let terminal = build_terminal_event(&execution)?;
         self.append_runtime_event(&terminal)?;
+        if matches!(self.script, PermissionScript::RepeatTerminalBuilder) {
+            assert!(build_terminal_event(&execution).is_err());
+        }
+        if let PermissionScript::SubstituteTerminalResult(mutation) = self.script {
+            match mutation {
+                0 => execution.result.elapsed_ms += 1,
+                1 => execution.receipt_id = ReceiptId::from_raw("substituted-receipt"),
+                2 => execution.receipt_sha256 = sha256(b"substituted receipt bytes"),
+                3 => execution.result_output_kind = Some(RuntimeArtifactKind::StandardError),
+                4 => execution
+                    .artifact_candidates
+                    .push(RuntimeToolArtifactCandidate {
+                        kind: RuntimeArtifactKind::Report,
+                        media_type: "text/plain".into(),
+                        bytes: b"unobserved candidate".to_vec(),
+                    }),
+                5 => execution.artifact_candidates[0].bytes[0] ^= 1,
+                6 => execution.artifact_candidates.swap(0, 1),
+                7 => execution.artifact_candidates[0].kind = RuntimeArtifactKind::StandardError,
+                8 => {
+                    execution.artifact_candidates[0].media_type = "application/octet-stream".into()
+                }
+                9 => {
+                    let output = execution.result.output.as_mut().unwrap();
+                    output.bytes[0] ^= 1;
+                    output.sha256 = sha256(&output.bytes);
+                }
+                10 => execution.result.evidence[0].content_sha256 = sha256(b"other evidence"),
+                _ => unreachable!(),
+            }
+            // The mutation is independently well-formed; ordinary shape checking
+            // must not accidentally account for this callback-consistency test.
+            assert!(super::valid_tool_execution(
+                &execution, definition, call, request
+            ));
+        }
         Ok(RuntimeToolCorrectnessCommit {
             execution,
             events: vec![started_event, terminal],
@@ -983,9 +1081,45 @@ impl RuntimeCorrectnessTransactionPort for FakeToolBoundary {
             &RuntimeCheckpointPublication,
         ) -> Result<RuntimeEvent, RuntimePortFailure>,
     ) -> Result<(RuntimeCheckpointPublication, RuntimeEvent), RuntimePortFailure> {
-        let publication = self.commit_runtime_checkpoint(input)?;
+        let validation = (
+            input.request,
+            input.continuation,
+            input.continuation_artifact,
+            input.event_cursor,
+            input.artifacts,
+        );
+        let mut publication = self.commit_runtime_checkpoint(input)?;
+        if matches!(self.script, PermissionScript::OmitCheckpointBuilder) {
+            return Ok((
+                publication,
+                self.journal.lock().unwrap().last().unwrap().clone(),
+            ));
+        }
         let event = build_event(&publication)?;
         self.append_runtime_event(&event)?;
+        if matches!(self.script, PermissionScript::RepeatCheckpointBuilder) {
+            assert!(build_event(&publication).is_err());
+        }
+        if matches!(self.script, PermissionScript::SubstituteCheckpoint) {
+            publication.checkpoint.next_action_sha256 = sha256(b"different next action");
+            publication.checkpoint = finalize_checkpoint(publication.checkpoint)
+                .map_err(|_| RuntimePortFailure::Invalid)?;
+            publication.binding.checkpoint_sha256 =
+                publication.checkpoint.checkpoint_sha256.clone();
+            publication.binding = seal_runtime_resume_binding(publication.binding)
+                .map_err(|_| RuntimePortFailure::Invalid)?;
+            assert!(
+                super::validate_runtime_checkpoint_publication(
+                    validation.0,
+                    validation.1,
+                    validation.2,
+                    validation.3,
+                    validation.4,
+                    &publication,
+                )
+                .is_ok()
+            );
+        }
         Ok((publication, event))
     }
 }
@@ -2491,6 +2625,247 @@ fn durable_start_observation_cannot_be_omitted_duplicated_or_substituted() {
                 <= 1
         );
     }
+}
+
+#[test]
+fn durable_terminal_execution_cannot_differ_from_event_builder_input() {
+    let (mut coordinator, executions) = durable_fault_coordinator(
+        [ModelScript::Tool, ModelScript::Completion],
+        PermissionScript::SubstituteTerminalResult(0),
+    );
+    assert_eq!(
+        coordinator.run_until_boundary(None, None),
+        Err(RuntimeLoopError::InvalidBoundaryResult)
+    );
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    assert!(coordinator.tool_results.is_empty());
+    assert!(coordinator.receipt_ids.is_empty());
+}
+
+fn callback_fixture(script: PermissionScript) -> (FixtureCoordinator, Arc<AtomicUsize>) {
+    let (initial, executions) =
+        durable_fault_coordinator([ModelScript::Tool, ModelScript::Completion], script);
+    let runtime = ReusableRuntimeCoordinator::new_with_durable_state(
+        initial.request,
+        initial.model,
+        initial.context,
+        initial.registry,
+        initial.tool_boundary,
+        initial.verifier,
+        initial.clock,
+    )
+    .unwrap();
+    (runtime, executions)
+}
+
+fn assert_callback_failure_stays_latched(
+    runtime: &mut FixtureCoordinator,
+    executions: &AtomicUsize,
+) {
+    let events = runtime.events().to_vec();
+    let resources = runtime.resource_snapshot().clone();
+    let model_calls = runtime.model_call_count;
+    let effects = executions.load(Ordering::SeqCst);
+    assert!(runtime.outcome.is_none());
+    assert_eq!(
+        runtime.run_until_boundary(None, None),
+        Err(RuntimeLoopError::InvalidBoundaryResult)
+    );
+    assert_eq!(runtime.events(), events);
+    assert_eq!(runtime.resource_snapshot(), &resources);
+    assert_eq!(runtime.model_call_count, model_calls);
+    assert_eq!(executions.load(Ordering::SeqCst), effects);
+}
+
+#[test]
+fn durable_callback_rejects_all_terminal_value_substitutions_before_publication() {
+    for outcome in [
+        OperationOutcome::Succeeded,
+        OperationOutcome::Failed,
+        OperationOutcome::Cancelled,
+        OperationOutcome::TimedOut,
+        OperationOutcome::Denied,
+        OperationOutcome::Uncertain,
+    ] {
+        let mutations = if outcome == OperationOutcome::Succeeded {
+            11
+        } else {
+            3
+        };
+        for mutation in 0..mutations {
+            let (mut runtime, executions) =
+                callback_fixture(PermissionScript::SubstituteTerminalResult(mutation));
+            runtime.tool_boundary.outcome = outcome;
+            if outcome == OperationOutcome::Succeeded {
+                runtime.tool_boundary.artifact_candidates =
+                    [b"first".as_slice(), b"second".as_slice()]
+                        .into_iter()
+                        .map(|bytes| RuntimeToolArtifactCandidate {
+                            kind: RuntimeArtifactKind::Report,
+                            media_type: "text/plain".into(),
+                            bytes: bytes.to_vec(),
+                        })
+                        .collect();
+            }
+            assert_eq!(
+                runtime.run_until_boundary(None, None),
+                Err(RuntimeLoopError::InvalidBoundaryResult),
+                "{outcome:?}, mutation {mutation}"
+            );
+            assert_eq!(executions.load(Ordering::SeqCst), 1);
+            assert!(runtime.tool_results.is_empty());
+            assert!(runtime.completed_tool_calls.is_empty());
+            assert!(runtime.receipt_ids.is_empty());
+            assert!(
+                runtime
+                    .tool_boundary
+                    .artifacts
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .all(|(manifest, _)| manifest.receipt_id.is_none())
+            );
+            assert!(!runtime.events().iter().any(|event| matches!(
+                event.kind,
+                RuntimeEventKind::ToolCompleted { .. }
+                    | RuntimeEventKind::ToolFailed { .. }
+                    | RuntimeEventKind::RunTerminal { .. }
+            )));
+            // The trusted fixture has committed its original terminal observation;
+            // refusal cannot erase that history or invent a successful rollback.
+            assert!(
+                runtime
+                    .tool_boundary
+                    .journal
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .any(|event| matches!(
+                        event.kind,
+                        RuntimeEventKind::ToolCompleted { .. }
+                            | RuntimeEventKind::ToolFailed { .. }
+                    ))
+            );
+            assert_callback_failure_stays_latched(&mut runtime, &executions);
+        }
+    }
+}
+
+#[test]
+fn durable_callback_rejects_changed_evaluation_and_ignored_duplicate() {
+    for script in [
+        PermissionScript::SubstituteEvaluation,
+        PermissionScript::RepeatEvaluationBuilder,
+        PermissionScript::OmitEvaluationBuilder,
+    ] {
+        let (mut runtime, executions) = callback_fixture(script);
+        assert_eq!(
+            runtime.run_until_boundary(None, None),
+            Err(RuntimeLoopError::InvalidBoundaryResult)
+        );
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert!(!runtime.events().iter().any(|event| matches!(
+            event.kind,
+            RuntimeEventKind::PermissionRequested { .. } | RuntimeEventKind::ToolStarted { .. }
+        )));
+        assert_callback_failure_stays_latched(&mut runtime, &executions);
+    }
+}
+
+#[test]
+fn durable_callback_rejects_changed_protected_resolution_and_ignored_duplicate() {
+    for script in [
+        PermissionScript::SubstituteResolution,
+        PermissionScript::RepeatResolutionBuilder,
+        PermissionScript::OmitResolutionBuilder,
+    ] {
+        let (mut runtime, executions) = callback_fixture(script);
+        let RuntimeCoordinatorStep::AwaitingApproval { challenge } =
+            runtime.run_until_boundary(None, None).unwrap()
+        else {
+            panic!("protected approval required");
+        };
+        let response = RuntimeApprovalResponse {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            run_id: challenge.run_id.clone(),
+            approval_id: challenge.approval_id.clone(),
+            disposition: RuntimeApprovalDisposition::Allow,
+            challenge_sha256: challenge.challenge_sha256.clone(),
+            grant_id: Some(GrantId::from_raw("grant-0001")),
+        };
+        assert_eq!(
+            runtime.run_until_boundary(Some(&response), None),
+            Err(RuntimeLoopError::InvalidBoundaryResult)
+        );
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert!(!runtime.events().iter().any(|event| matches!(
+            event.kind,
+            RuntimeEventKind::PermissionDecided { .. } | RuntimeEventKind::ToolStarted { .. }
+        )));
+        assert_callback_failure_stays_latched(&mut runtime, &executions);
+    }
+}
+
+#[test]
+fn durable_callback_rejects_ignored_duplicate_terminal_builder() {
+    for script in [
+        PermissionScript::RepeatTerminalBuilder,
+        PermissionScript::OmitTerminalBuilder,
+    ] {
+        let (mut runtime, executions) = callback_fixture(script);
+        assert_eq!(
+            runtime.run_until_boundary(None, None),
+            Err(RuntimeLoopError::InvalidBoundaryResult)
+        );
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+        assert!(runtime.tool_results.is_empty());
+        assert!(runtime.receipt_ids.is_empty());
+        assert_callback_failure_stays_latched(&mut runtime, &executions);
+    }
+}
+
+#[test]
+fn durable_callback_rejects_changed_checkpoint_and_ignored_duplicate() {
+    for script in [
+        PermissionScript::SubstituteCheckpoint,
+        PermissionScript::RepeatCheckpointBuilder,
+        PermissionScript::OmitCheckpointBuilder,
+    ] {
+        let (mut runtime, executions) = callback_fixture(script);
+        assert_eq!(
+            runtime.run_until_boundary(None, None),
+            Err(RuntimeLoopError::InvalidBoundaryResult)
+        );
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+        assert!(!runtime.events().iter().any(|event| matches!(
+            event.kind,
+            RuntimeEventKind::CheckpointCommitted { .. } | RuntimeEventKind::RunTerminal { .. }
+        )));
+        assert_callback_failure_stays_latched(&mut runtime, &executions);
+    }
+}
+
+#[test]
+fn durable_callback_valid_publications_keep_complete_artifacts_and_success() {
+    let (mut runtime, executions) = callback_fixture(PermissionScript::Allow);
+    runtime.tool_boundary.artifact_candidates = vec![RuntimeToolArtifactCandidate {
+        kind: RuntimeArtifactKind::StandardOutput,
+        media_type: "text/plain".into(),
+        bytes: b"original captured output".to_vec(),
+    }];
+    let RuntimeCoordinatorStep::Complete { outcome } =
+        runtime.run_until_boundary(None, None).unwrap()
+    else {
+        panic!("fixture should complete");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    let artifacts = runtime.tool_boundary.artifacts.lock().unwrap();
+    assert!(artifacts.iter().any(|(manifest, bytes)| manifest.kind
+        == RuntimeArtifactKind::StandardOutput
+        && bytes == b"original captured output"));
+    drop(artifacts);
+    assert_valid_terminal_stream(&runtime);
 }
 
 #[test]
