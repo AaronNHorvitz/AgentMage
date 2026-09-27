@@ -52,6 +52,12 @@ pins repeated development success at `b4417f47`, including the retained refusals
 unchanged limits and still-open production/independent gates. Evidence-renewal
 dispositions are recorded alongside those results; historical reports are not current acceptance.
 
+The [command-control eight-case Muse recheck](docs/verification/coding-harness-campaign16-results-2026-09-27.md)
+retains 182 verified artifacts and bounded development success at `b232aa2b` after
+the shared native-supervisor changes. Both repetitions used unchanged source,
+binaries and limits. This adds no production admission or independent acceptance;
+the older campaigns remain historical and GPT-OSS's separate disposition is unchanged.
+
 | Status | Row | Dependencies | Bounded implementation and verification |
 | --- | --- | --- | --- |
 | [ ] | AMR-01.1 | Prior coding source and retained campaign | Reconcile exact source/binary/model identities, current doctor behavior and all changed planning/privacy evidence bindings; preserve original receipts and distinguish freshness from historical validity. |
