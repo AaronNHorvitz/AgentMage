@@ -74,49 +74,49 @@
   ],
   "manual_fuzzing_executed": false,
   "release_approved": false,
-  "report_sha256": "511d4664723709bd65a20e1e3b24d0355f53000945a30d8a6af3e4521e52583c",
+  "report_sha256": "eee9a9490f7ff1a586e88aed34f70a4b51f6bb05c734ae0df363b2c1efcb8d2a",
   "schema_version": 1,
-  "source_revision": "5d2a03285dbe6d2b7c86482a6ec8c35815a175aa",
+  "source_revision": "91c32b76f1f962808b215325db3e983b4d125355",
   "sources": [
     {
-      "bytes": 142221,
+      "bytes": 175217,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "91ec216eaa831293a6330134f33b7e9c5590408adfda0275392bd0ce8c78b227"
+      "sha256": "d94cc4520a4bb3ae32e3dcbb484a88ddb6671724807b0bba988b5b5b279c4e67"
     },
     {
-      "bytes": 7481,
+      "bytes": 9963,
       "path": "shells/host/src/coding_client.rs",
-      "sha256": "5794af19e7fb3d7cc8ef7c7bf446621ab01f0683a628b165383232ceb03761b3"
+      "sha256": "f374649ad0e38ed338f835ffb9a1b8445b32c293aad57378e3c41f7b56e3ad11"
     },
     {
-      "bytes": 43765,
+      "bytes": 56678,
       "path": "shells/host/src/cli_runtime.rs",
-      "sha256": "929131ddeda90e7a32a018f692199a8f0c2310a3f7e1dcd1a26882669c77cb8f"
+      "sha256": "899d5d57b4676eba3bd5b31e2dadf11e12aea5128fa1a5bcbc6194a385148188"
     },
     {
-      "bytes": 39918,
+      "bytes": 42610,
       "path": "shells/host/src/native_chat_runtime.rs",
-      "sha256": "4d950b3123a820902d82776e69b9f0c529f0377c01452c81e8bc36945c7ec0e0"
+      "sha256": "4f173f57e54b42c06759898675eb392151f1b83367fe8a171498fad67e060f18"
     },
     {
-      "bytes": 22624,
+      "bytes": 26833,
       "path": "shells/host/src/runtime_parity_tests.rs",
-      "sha256": "e695944f11b5aea0f814637835700821674256309d152443f8fc711891e1b657"
+      "sha256": "792bf5308d7a9bb40d92d8a9320129fb279e28798b107023b4722d184f727861"
     },
     {
-      "bytes": 64018,
+      "bytes": 64569,
       "path": "shells/host/src/runtime_read_tests.rs",
-      "sha256": "308892cd00c60add332bca89bf71231292d8672a076444b44db77584348feaad"
+      "sha256": "cab60223ac2bf496c2951801cf0936e0a16c13ea6c20074108b6372e51007659"
     },
     {
-      "bytes": 60309,
+      "bytes": 63466,
       "path": "shells/vscode/src/provider.ts",
-      "sha256": "9c0824496c1e8e62e2fc7e98506c8568af927af75719331c5bdbe0b33f89a14e"
+      "sha256": "e50b2950c7ffce2bead54d0a9b43c3a33d99a7795adeaedc411e59182d7a0a17"
     },
     {
-      "bytes": 44694,
+      "bytes": 45092,
       "path": "shells/vscode/src/runtime_transport.ts",
-      "sha256": "2e88de28536f4bda0202a780e64074e67f69dc38a08c1d984bd3083b5e640b4a"
+      "sha256": "b54c672fd6ffea2ccb90af9c74ca563065e99da426e254fe70fa2958b80bd9ac"
     },
     {
       "bytes": 681,
@@ -129,9 +129,9 @@
       "sha256": "0779ae133a0b654cbd5686ffbde501f72ed333b271592467af87bba02379d25e"
     },
     {
-      "bytes": 4817,
+      "bytes": 4903,
       "path": "architecture/dependency-rules.json",
-      "sha256": "21235f069ba67f3eb1412a379197e336f7bd71490eb4789b96fb224bfb6b1040"
+      "sha256": "b8d7045ff966e7d551ac50e5bfb39cc613d81997009e2505121a38da840d45d1"
     },
     {
       "bytes": 6487,
@@ -139,39 +139,49 @@
       "sha256": "0fe5e51673cdcef3b99a993b4a93f65a2cd8019579efd3c15aacab565dd38bd0"
     },
     {
-      "bytes": 13195,
+      "bytes": 13573,
       "path": "docs/architecture/reusable-runtime-coordinator.md",
-      "sha256": "f3135d52082124ba32297095dd2f3f5776dd97f5d43b0fb1ed472eb68a47a46a"
+      "sha256": "f1feb16e93f73c39e4ee0f566e737028e7bef2c4813e4382dfad0caa16825996"
     },
     {
-      "bytes": 9026,
+      "bytes": 9451,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "3d0cc82dd531e818fcd4d63b9800d74040cde90bf08b6a33adea57a125c1b144"
+      "sha256": "f71f043ef0dd02a7959ca084248f6bbe8de0bbb9fd5685f4510acfea5595f939"
     },
     {
-      "bytes": 5890,
+      "bytes": 5999,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "4f600b8ad884fabbe858b51db7e1165d8c7d3a07ad0b7278905caeced4c8188b"
+      "sha256": "f98b3d0899b04abb2f9c2bfc6b91b56d02b7e1252343bfa24aeff5b24b0bf35c"
     },
     {
-      "bytes": 10787,
+      "bytes": 10830,
       "path": "scripts/dependency_rules.py",
-      "sha256": "bd2e2da00089b5ea3c550dd067090926b3795b037814ad7dfe341bf31e2eceba"
+      "sha256": "a18ba41ff7f07cb74624a4a041427a4e1cafd4b1966d5f85cb816e57a6d6f937"
     },
     {
-      "bytes": 10906,
+      "bytes": 18619,
       "path": "scripts/effect_boundary.py",
-      "sha256": "004f62ae1f660e791e6032b766b7b7906d8933ca985010894ff478ebcefa7dc4"
+      "sha256": "799d423fa9e9b90799fac26f6936de6d27875566034239210f131cc23be20093"
     },
     {
-      "bytes": 16105,
+      "bytes": 3296,
+      "path": "scripts/rust_source_audit.py",
+      "sha256": "ce8616140ffad32f0304064f9f01b951cbb865de2a2b6bcdc87adc314ca2458c"
+    },
+    {
+      "bytes": 4794,
+      "path": "tests/test_rust_source_audit.py",
+      "sha256": "b0b0954012c1d8657f1b40a7f41676295f2ad792d0c908f05bf5be072f8b1829"
+    },
+    {
+      "bytes": 16289,
       "path": "scripts/runtime_coordinator_boundary_review.py",
-      "sha256": "7f992c505977a40470824abf7fdad6bf4254d352f64c1469fd8c9305ddf96d64"
+      "sha256": "8fba1cbfe818ad7d3f50ae9c69ebe23c3c04566fb23c7fac5083c786f25d73cb"
     },
     {
-      "bytes": 3818,
+      "bytes": 5116,
       "path": "tests/test_runtime_coordinator_boundary_review.py",
-      "sha256": "c344f7b213801c6aa15acdb0e59e026e9c1af7bd5e1ecf000d55c14fea961dce"
+      "sha256": "07fd254e3ddf32ebf60008f14bfd21cf2eb1e3164e5d22970567aeafed991287"
     }
   ],
   "status": "pass-independent-automated-source-boundary-review",
