@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "record_type": "amendment-work-selection-observations",
+  "date": "2026-09-27",
+  "base_commit": "50776dd127c9ee65b5f3fc8aaf07f5d01793ccc4",
+  "status": "planning-tool-verified;no-runtime-acceptance",
+  "bindings_scope": "Changed files and direct selector, authority and test inputs; transitive checks remain with the existing validators.",
+  "inputs": [
+    {
+      "path": "CAPABILITY-ROADMAP.md",
+      "sha256": "d96395aafad55191cacea4bcc71f0ce529c4dace641bbdd86ae0a373869aadd9"
+    },
+    {
+      "path": "IMPLEMENTATION-AMENDMENT.md",
+      "sha256": "da6d977eccacdd78abaffb30b8a7df4c8ea201250d7ee2c665ec3bd1f5ce9aa8"
+    },
+    {
+      "path": "TASKS.md",
+      "sha256": "beeb04f62a96844174c7d875b50e055ef7032ced61d18ed3ec5e969615e38340"
+    },
+    {
+      "path": "architecture/release-applicability.json",
+      "sha256": "1a1f9583f80731ce08d48139ae3bebbee6195372fdb131c5b02f7f45503d7778"
+    },
+    {
+      "path": "architecture/status-model.json",
+      "sha256": "9c37e01faa324ffed3823e2d628b151f61b953dceae8423226fd6625d5b3d4d3"
+    },
+    {
+      "path": "docs/decisions/0061-standalone-coding-harness-critical-path.md",
+      "sha256": "7ae98fe774c5c88eeb2c07da350d7adf76d4e4c421ae5f212d20060a6948b1a9"
+    },
+    {
+      "path": "docs/decisions/0081-rust-capability-roadmap-and-staged-delivery.md",
+      "sha256": "37e0c7fabf2bdca2dd86cb2f58e82e64d47066c1b66ade030edf4e84e3cbcb9f"
+    },
+    {
+      "path": "docs/decisions/0083-main-first-development-publication.md",
+      "sha256": "d804c436d40e6362091813b7c7fe8483a8f9a131f21b1c5e4586617859a03eb0"
+    },
+    {
+      "path": "docs/decisions/0088-amendment-coverage-in-work-selection.md",
+      "sha256": "161c5e400e40e28b39b2346bee46fb7261b19f140ee3cf3339dfb0a6da6db9e8"
+    },
+    {
+      "path": "docs/verification/remaining-plan-blocker-audit.json",
+      "sha256": "19614b1a6d189429bb6bf28d7faa4093b8c41b2b090b18ac7f1a764078dadc3c"
+    },
+    {
+      "path": "requirements/context-safety-registration.json",
+      "sha256": "3b8276f37403337586a5cdef8b468c170ed7c78d14aad65835b76288ec12ad4d"
+    },
+    {
+      "path": "scripts/context_safety_registration.py",
+      "sha256": "1fefd6eb0d3d5b4fead666624e5ff23e5c74a249c116d57fd26be1a7ebdf665d"
+    },
+    {
+      "path": "scripts/planning_scope.py",
+      "sha256": "6c4d78db3eaec3c91907dd1f6659394bc32af3deda7a0abc3b31127c5b416472"
+    },
+    {
+      "path": "scripts/remaining_plan_blocker_audit.py",
+      "sha256": "7757046ab880218f0684bb16028a7415cd3a450b489a4068ed97bf5da9b22b79"
+    },
+    {
+      "path": "scripts/task_graph.py",
+      "sha256": "897829d84ada8e965101b38cd1763a23501fa45081c152d803ea74f2a8713f7b"
+    },
+    {
+      "path": "tests/test_amendment_work_selection.py",
+      "sha256": "179430cb90b4df9f5601a1258ba189e5ac50d05b691b248323a115611e4e8078"
+    },
+    {
+      "path": "tests/test_context_safety_registration.py",
+      "sha256": "63e49d40935ed94af146c4cbc2a423be03f57590e90c273f41212be9b251d462"
+    },
+    {
+      "path": "tests/test_planning_scope.py",
+      "sha256": "8a27cd8c8cce03badfb11874bba26562f4dd0b9d69dee4c8b83b9642f2b1c6b1"
+    },
+    {
+      "path": "tests/test_remaining_plan_blocker_audit.py",
+      "sha256": "04497ba56432ac722b7eccde0243b5a35c830d827ab6e179503bb5fbd36d44e8"
+    },
+    {
+      "path": "tests/test_task_graph.py",
+      "sha256": "0daf29f417c70468bcf78ab7a0a7db9f5f59c99007ef419c42fa83c689e5773c"
+    }
+  ],
+  "checks": [
+    {
+      "log_name": "amendment-selection-focused-final-20260927.log",
+      "sha256": "53f15f9017099b4a7e4c318bc8336e89ea343e2f6e41bb73b5e7fad96bdbbbfc",
+      "exit_code": 0,
+      "scope": "27 focused tests after table boundary and malformed fixture corrections."
+    },
+    {
+      "log_name": "amendment-selection-final-2-20260927.log",
+      "sha256": "0653067b3b035d75f5271d995c553ab3278aae1ab59dd2dd1b6d697f30486097",
+      "exit_code": 0,
+      "scope": "51 planning tests plus task graph, context registration, status, supply-chain and552Markdown after title normalization; before final completion-ledger test refinement."
+    },
+    {
+      "log_name": "amendment-selection-final-3-20260927.log",
+      "sha256": "b0bb04f923ba0dcaed2499f381a4f304c9c995714f7f5810d6741f7e3456e98f",
+      "exit_code": 0,
+      "scope": "Final52 planning tests, task graph/context/status/supply-chain,552Markdown, frozen hashes and whitespace."
+    },
+    {
+      "log_name": "amendment-selection-register-20260927.log",
+      "sha256": "864663e104783951d48458ffd55d61af991f276c5219796f2178dec6a983ab86",
+      "exit_code": 0,
+      "scope": "One derived-register generation followed by read-only check."
+    }
+  ],
+  "retained_failures": [
+    {
+      "log_name": "amendment-selection-focused-20260927.log",
+      "sha256": "3e35bc1430d421fdeea82d8c34aa2244256b7ac7a8a0ecdd51be29de642008cf",
+      "exit_code": 1,
+      "scope": "27 tests: malformed fixture was valid text; AMR description reclassified preceding legacy row."
+    },
+    {
+      "log_name": "amendment-selection-final-20260927.log",
+      "sha256": "78f4dba753135f53526bdb815d15f386719692405e333f98e4fc53d08147ba29",
+      "exit_code": 1,
+      "scope": "51 tests: existing0081/0083 title/filename mismatches; validator retained and only titles normalized."
+    }
+  ],
+  "preservation": {
+    "tasks_sha256": "beeb04f62a96844174c7d875b50e055ef7032ced61d18ed3ec5e969615e38340",
+    "legacy_exact_row_count": 1602,
+    "amendment_table_rows": 20,
+    "classification_counts": {
+      "dependency": 1065,
+      "external": 163,
+      "local": 66,
+      "unknown": 328
+    },
+    "next_action": "48.2.4.1",
+    "decision_body_preservation": [
+      "0081",
+      "0083"
+    ]
+  },
+  "runtime_changes": false,
+  "sbom_write_count": 0,
+  "acceptance": {
+    "planning_tool": "verified",
+    "native_workflow": "not-executed;previous-lane-prerequisite-refusal",
+    "real_model": "not-executed",
+    "manual_user": "not-performed",
+    "independent_review": "open",
+    "release": "not-approved"
+  }
+}

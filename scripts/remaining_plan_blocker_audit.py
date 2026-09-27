@@ -24,6 +24,20 @@ CONTEXT_SAFETY_REGISTRATION = ROOT / "requirements" / "context-safety-registrati
 CODING_PRIORITY_DECISION = (
     ROOT / "docs" / "decisions" / "0061-standalone-coding-harness-critical-path.md"
 )
+AMENDMENT_AUTHORITIES = (
+    "IMPLEMENTATION-AMENDMENT.md",
+    "CAPABILITY-ROADMAP.md",
+    "docs/decisions/0081-rust-capability-roadmap-and-staged-delivery.md",
+    "docs/decisions/0088-amendment-coverage-in-work-selection.md",
+)
+AMR_ID = re.compile(r"AMR-(?:0[1-9]|[1-9][0-9])(?:\.[1-9][0-9]*)*")
+AMR_REFERENCE = re.compile(r"AMR-[A-Za-z0-9_.-]+")
+EXPECTED_AMR_IDS = frozenset({
+    "AMR-01", "AMR-02", "AMR-03", "AMR-04", "AMR-05", "AMR-06", "AMR-07",
+    "AMR-01.1", "AMR-01.2", "AMR-02.1", "AMR-02.2", "AMR-02.3",
+    "AMR-02.3.1", "AMR-02.3.2", "AMR-02.4", "AMR-03.1", "AMR-03.1.1",
+    "AMR-03.1.2", "AMR-03.1.3", "AMR-03.2",
+})
 ROW = re.compile(
     r"^(?P<indent>\s*)(?:(?P<heading>#{2,4})\s+|(?:-\s+))"
     r"\[(?P<state>[ xX])\]\s+(?P<body>.*)$"
@@ -102,7 +116,7 @@ def _owner(row_id: str, kind: str) -> str:
     return row_id.lower()
 
 
-def _row_records(text: str) -> list[dict[str, Any]]:
+def _row_records(text: str, table_boundaries: tuple[int, ...] = ()) -> list[dict[str, Any]]:
     lines = text.splitlines()
     matches: list[tuple[int, re.Match[str]]] = []
     for index, line in enumerate(lines):
@@ -112,6 +126,7 @@ def _row_records(text: str) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     for position, (start, match) in enumerate(matches):
         end = matches[position + 1][0] if position + 1 < len(matches) else len(lines)
+        end = min((boundary for boundary in table_boundaries if start < boundary < end), default=end)
         paragraph = "\n".join(lines[start:end]).rstrip()
         body = match.group("body")
         kind = _kind(body)
@@ -163,6 +178,60 @@ def _row_records(text: str) -> list[dict[str, Any]]:
         )
         record["dependency_text"] = record["source_text"] + "\n\n" + status_text
     return records
+
+
+def _amr_records(text: str) -> list[dict[str, Any]]:
+    """Inventory closed table rows without interpreting prose as gate approval."""
+    records: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        if not line.lstrip().startswith("|"):
+            continue
+        cells = [cell.strip() for cell in re.split(r"(?<!\\)\|", line.strip())]
+        if len(cells) < 3 or not cells[2].startswith("AMR-"):
+            continue
+        if cells[0] or cells[-1] or len(cells) not in (6, 7):
+            raise ValueError(f"malformed AMR table row at line {line_number}")
+        cells = cells[1:-1]
+        state, row_id = cells[:2]
+        package = "." not in row_id
+        if (
+            state not in ("[ ]", "[x]", "[X]")
+            or AMR_ID.fullmatch(row_id) is None
+            or len(cells) != (5 if package else 4)
+            or any(not cell for cell in cells)
+        ):
+            raise ValueError(f"invalid AMR identity, state or columns at line {line_number}")
+        if row_id in seen:
+            raise ValueError(f"duplicate AMR identity: {row_id}")
+        seen.add(row_id)
+        dependency_text = cells[-2]
+        references = sorted(set(AMR_REFERENCE.findall(dependency_text)))
+        if any(AMR_ID.fullmatch(reference) is None for reference in references):
+            raise ValueError(f"malformed AMR dependency at line {line_number}")
+        records.append({
+            "row_id": row_id,
+            "line": line_number,
+            "end_line": line_number,
+            "checked": state.lower() == "[x]",
+            "kind": "amendment-package" if package else "amendment-component",
+            "text": cells[-1],
+            "source_text": line,
+            "source_sha256": hashlib.sha256(line.encode()).hexdigest(),
+            "story_id": None,
+            "dependency_text": dependency_text,
+            "dependency_reference_ids": references,
+        })
+    return records
+
+
+def _selection_key(row: dict[str, Any]) -> tuple[int, tuple[int, ...], int]:
+    identity = row["row_id"]
+    amendment_order = (
+        tuple(int(part) for part in identity.removeprefix("AMR-").split("."))
+        if identity.startswith("AMR-") else ()
+    )
+    return row["critical_path_rank"], amendment_order, row["line"]
 
 
 def _structural_dependencies(
@@ -265,6 +334,8 @@ def _paths(
 
 
 def _critical_rank(record: dict[str, Any]) -> tuple[int, int]:
+    if record["row_id"].startswith("AMR-"):
+        return -4, record["line"]
     story = record.get("story_id")
     if record["row_id"].startswith(("13.1.4", "13.1.5", "13.1.6")):
         return 10, record["line"]
@@ -313,7 +384,9 @@ def _coding_dependency_ranks(graph: dict[str, list[str]]) -> dict[str, int]:
 def build_from_text(
     text: str, registered_graph: dict[str, list[str]] | None = None
 ) -> dict[str, Any]:
-    records = _row_records(text)
+    amendment_records = _amr_records(text)
+    legacy_records = _row_records(text, tuple(row["line"] - 1 for row in amendment_records))
+    records = sorted(legacy_records + amendment_records, key=lambda row: row["line"])
     known = {record["row_id"] for record in records}
     open_records = [record for record in records if not record["checked"]]
     open_ids = {record["row_id"] for record in open_records}
@@ -321,6 +394,14 @@ def build_from_text(
     graph: dict[str, list[str]] = {}
     unresolved_by_id: dict[str, list[str]] = {}
     for record in open_records:
+        if record["kind"].startswith("amendment-"):
+            # These may name a source contract rather than a whole-package gate.
+            # Keep the prose and references below; do not invent resolved edges.
+            graph[record["row_id"]] = []
+            unresolved_by_id[record["row_id"]] = sorted(
+                set(record["dependency_reference_ids"]) - known
+            )
+            continue
         dependency_record = record
         if _coding_task_id(record["row_id"]) is not None:
             # Decision 0061 gives these new rows explicit, inline prerequisites.
@@ -343,13 +424,20 @@ def build_from_text(
             key: value.strip().strip("`").rstrip(".")
             for key, value in FIELD.findall(source)
         }
+        if record["kind"].startswith("amendment-"):
+            # Descriptive examples do not appoint an owner or execution venue.
+            fields = {}
         unresolved = unresolved_by_id[record["row_id"]]
         dependencies = graph[record["row_id"]]
         structural = record["kind"] in {
             "foundational-epic", "epic", "sprint", "story", "task",
             "story-acceptance", "sprint-acceptance", "universal-control",
         }
-        if structural and dependencies:
+        if record["kind"].startswith("amendment-"):
+            classification = "unknown"
+            action = "assess the exact source, native, model or owner prerequisites in the retained dependency text"
+            venue = "unassessed"
+        elif structural and dependencies:
             classification = "dependency"
             action = "satisfy the exact prerequisite rows before evaluating this row"
             venue = "dependency-defined"
@@ -401,6 +489,13 @@ def build_from_text(
                 ),
             }
         )
+        if record["kind"].startswith("amendment-"):
+            rows[-1]["amendment_assessment"] = {
+                "dependency_text": record["dependency_text"],
+                "referenced_row_ids": record["dependency_reference_ids"],
+                "completion_gate_edges_resolved": False,
+                "execution_authorized": False,
+            }
 
     executable = sorted(
         (
@@ -410,19 +505,18 @@ def build_from_text(
             and not row["prerequisite_row_ids"]
             and not row["unresolved_reference_ids"]
         ),
-        key=lambda row: (row["critical_path_rank"], row["line"]),
+        key=_selection_key,
     )
     counts = Counter(row["classification"] for row in rows)
     assessments = sorted(
         (row for row in rows if row["classification"] == "unknown"),
-        key=lambda row: (row["critical_path_rank"], row["line"]),
+        key=_selection_key,
     )
     first_local = executable[0] if executable else None
     first_unknown = assessments[0] if assessments else None
     if first_unknown is not None and (
         first_local is None
-        or (first_unknown["critical_path_rank"], first_unknown["line"])
-        < (first_local["critical_path_rank"], first_local["line"])
+        or _selection_key(first_unknown) < _selection_key(first_local)
     ):
         next_action_kind = "assess-unknown"
         next_action_row_id = first_unknown["row_id"]
@@ -436,13 +530,21 @@ def build_from_text(
         next_action_row_id = None
         ready_for_unattended_execution = False
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "decision_id": "ADR-0052",
         "dependency_path_policy": (
             "one deterministic transitive witness per direct prerequisite; "
             "cycle-terminated; maximum 64 nodes"
         ),
         "tasks_sha256": hashlib.sha256(text.encode()).hexdigest(),
+        "coverage": {
+            "legacy_checkbox_rows": len(legacy_records),
+            "legacy_open_rows": sum(not row["checked"] for row in legacy_records),
+            "amendment_table_rows": len(amendment_records),
+            "amendment_open_rows": sum(not row["checked"] for row in amendment_records),
+            "amendment_row_ids": sorted(row["row_id"] for row in amendment_records),
+            "amendment_classification_policy": "assessment required; reference recognition is not gate resolution",
+        },
         "unchecked_row_count": len(rows),
         "classification_counts": {
             key: counts.get(key, 0)
@@ -464,6 +566,12 @@ def build() -> bytes:
     value = build_from_text(
         TASKS.read_text(encoding="utf-8"), registered_dependencies(registration)
     )
+    if set(value["coverage"]["amendment_row_ids"]) != EXPECTED_AMR_IDS:
+        raise ValueError("accepted AMR row inventory is missing or changed; reconcile its authority before selection")
+    value["amendment_authorities"] = [
+        {"path": path, "sha256": hashlib.sha256((ROOT / path).read_bytes()).hexdigest()}
+        for path in AMENDMENT_AUTHORITIES
+    ]
     value["priority_amendment"] = {
         "decision_id": "ADR-0061",
         "path": CODING_PRIORITY_DECISION.relative_to(ROOT).as_posix(),
@@ -502,7 +610,9 @@ def main() -> int:
         f"{counts['local']} local, {counts['dependency']} dependency, "
         f"{counts['external']} external, {counts['unknown']} unknown; "
         f"next={value['next_action_kind']}:{value['next_action_row_id']}; "
-        f"unattended_ready={str(value['ready_for_unattended_execution']).lower()}"
+        f"unattended_ready={str(value['ready_for_unattended_execution']).lower()}; "
+        f"AMR_assessment={value['coverage']['amendment_open_rows']}/"
+        f"{value['coverage']['amendment_table_rows']}"
     )
     return 0
 
