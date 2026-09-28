@@ -24,6 +24,10 @@ The doctor distinguishes executable trust and user-manager availability from
 binary presence. `confinement_prerequisites.scope=prerequisites-only` is a
 preflight observation; native Rust owners still verify confinement at dispatch.
 `lifecycle=ready` means no recorded session is running, not platform admission.
+The wrapper's schema 2 diagnosis names the fixture as `fixture_profile_id` and reports
+`model_request` separately. A requested selection comes only from an exactly owned
+process's arguments; absent or ambiguous observations remain unavailable. Serving and
+qualification remain unobserved and unassessed, including when the lifecycle is running.
 
 When the exact native prerequisites are available, the scripted fail/repair
 workflow is:

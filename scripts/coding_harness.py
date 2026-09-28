@@ -27,6 +27,8 @@ MARKER = ".agentmage-development-workspace"
 RUN_RECORD = "coding-harness-run.json"
 MAX_RECORD_BYTES = 16 * 1024
 RUN_RECORD_VERSION = 2
+DIAGNOSIS_VERSION = 2
+MODEL_CHOICES = ("scripted", "muse", "gpt-oss")
 MAX_LINUX_SOCKET_PATH_BYTES = 107
 MODEL_LAB_PROFILE = ROOT / "model-profiles/development/coding-model-lab.json"
 MODEL_LAB_LOCK = Path.home() / ".local/state/agentmage-model-lab/gpu.lock"
@@ -551,10 +553,11 @@ def linux_process_identity(pid: int) -> dict:
     }
 
 
-def exact_running_process(record: dict, base: Path) -> bool:
+def _owned_process_arguments(record: dict, base: Path) -> list[bytes] | None:
+    """Observe arguments only while the existing exact process identity matches."""
     pid = record.get("pid")
     if not valid_run_record(record) or pid is None or record["base"] != str(base):
-        return False
+        return None
     process = Path("/proc") / str(pid)
     try:
         before = linux_process_identity(pid)
@@ -562,7 +565,7 @@ def exact_running_process(record: dict, base: Path) -> bool:
         arguments = (process / "cmdline").read_bytes().split(b"\0")
         after = linux_process_identity(pid)
     except (OSError, ValueError, IndexError, HarnessError):
-        return False
+        return None
     expected = Path(record["binary"])
     roots = zip((b"--state-root", b"--disposable-root", b"--workspace-root"), paths(base))
     owns_arguments = all(
@@ -571,8 +574,33 @@ def exact_running_process(record: dict, base: Path) -> bool:
         and arguments[arguments.index(flag) + 1] == os.fsencode(path)
         for flag, path in roots
     )
-    return (before == after == record["process_identity"] and executable == expected
-            and owns_arguments and arguments.count(b"--development") == 1)
+    if (before == after == record["process_identity"] and executable == expected
+            and owns_arguments and arguments.count(b"--development") == 1):
+        return arguments
+    return None
+
+
+def exact_running_process(record: dict, base: Path) -> bool:
+    return _owned_process_arguments(record, base) is not None
+
+
+def _model_request_diagnosis(arguments: list[bytes] | None) -> dict:
+    """A process argument is requested intent, never serving or qualification proof."""
+    result = {"selection": None, "observation": "unavailable",
+              "serving": "not-observed", "qualification": "not-assessed"}
+    if arguments is None:
+        return result
+    if arguments.count(b"--model") != 1 or any(
+        value.startswith(b"--model=") for value in arguments
+    ):
+        return result
+    position = arguments.index(b"--model") + 1
+    if position < len(arguments) and arguments[position] in {
+        choice.encode("ascii") for choice in MODEL_CHOICES
+    }:
+        result.update(selection=arguments[position].decode("ascii"),
+                      observation="owned-process-arguments")
+    return result
 
 
 def native_executable_prerequisite(path: Path) -> str:
@@ -627,9 +655,9 @@ def diagnose(base: Path) -> dict:
     base = base.resolve(strict=True)
     state, disposable, workspace = paths(base)
     checks: dict[str, object] = {
-        "schema_version": 1,
-        "profile_id": PROFILE,
-        "qualification": "executable-scripted-only",
+        "schema_version": DIAGNOSIS_VERSION,
+        "scope": "development-diagnostics-only",
+        "fixture_profile_id": PROFILE,
         "base": str(base),
     }
     for label, directory in (("state", state), ("disposable", disposable), ("workspace", workspace)):
@@ -661,7 +689,9 @@ def diagnose(base: Path) -> dict:
     checks["read_worker_binary"] = str(binary("agentmage-read-only-worker"))
     record = read_run_record(state)
     state_key_present = (state / "operational-store-development-v1.key").exists()
-    process_running = bool(record and exact_running_process(record, base))
+    arguments = _owned_process_arguments(record, base) if record else None
+    process_running = arguments is not None
+    checks["model_request"] = _model_request_diagnosis(arguments)
     checks["lifecycle"] = (
         "running" if process_running and state_key_present
         else "starting" if process_running
@@ -929,7 +959,7 @@ def parser() -> argparse.ArgumentParser:
     )
     start_command.add_argument("--objective", required=True)
     start_command.add_argument("--follow-up", action="append", default=[])
-    start_command.add_argument("--model", choices=("scripted", "muse", "gpt-oss"), default="scripted")
+    start_command.add_argument("--model", choices=MODEL_CHOICES, default="scripted")
     start_command.add_argument("--approve-this-run", action="store_true")
     start_command.add_argument("--stale-approval-probe", action="store_true")
     start_command.add_argument("--replay-approval-probe", action="store_true")

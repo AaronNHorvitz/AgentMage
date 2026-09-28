@@ -299,9 +299,9 @@ class HarnessOwnershipTests(unittest.TestCase):
                 self.assertEqual(harness.diagnose(base)["lifecycle"], "reserved")
                 owner.record.update(pid=12345, process_identity=IDENTITY)
                 owner.publish()
-                with mock.patch.object(harness, "exact_running_process", return_value=False):
+                with mock.patch.object(harness, "_owned_process_arguments", return_value=None):
                     self.assertEqual(harness.diagnose(base)["lifecycle"], "stale-record")
-                with mock.patch.object(harness, "exact_running_process", return_value=True):
+                with mock.patch.object(harness, "_owned_process_arguments", return_value=[b"fixture"]):
                     self.assertEqual(harness.diagnose(base)["lifecycle"], "starting")
                     harness.private_file(base / "state/operational-store-development-v1.key", "fixture")
                     self.assertEqual(harness.diagnose(base)["lifecycle"], "running")

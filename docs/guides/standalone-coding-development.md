@@ -51,7 +51,7 @@ are executable boundary fixtures, not native model qualification. Real native
 correction retains strict rejected bytes, reports the failure, and uses one
 new budgeted model turn. No parser, tool argument or permission is repaired.
 
-The diagnosis separates these classes:
+The wrapper's diagnosis JSON uses schema version 2 and separates these classes:
 
 - `agentmage_binary` and `host_binary`: implementation/build availability.
 - `activation`, private-root fields, `git_branch`, and `git_clean`: activation and workspace trust.
@@ -59,10 +59,21 @@ The diagnosis separates these classes:
 - `confinement` and `confinement_prerequisites`: native executable trust and bounded
   user-manager reachability checks. File presence alone is insufficient; these diagnostic
   observations do not establish native confinement or admission.
-- `profile_id` and `qualification`: scripted fixture identity and its deliberately limited
-  `executable-scripted-only` status.
+- `fixture_profile_id`: the synthetic fixture identity, independent of model selection.
+- `model_request`: a closed requested selection observed in an exactly owned process's
+  arguments. `selection` remains null when the process is absent, stale or unidentified,
+  or its model arguments are missing, conflicting or unrecognized. Raw arguments are
+  never included. `serving=not-observed` and `qualification=not-assessed` remain explicit.
 - `state_key`: whether the separate development SQLCipher key has been created.
-- `lifecycle`: `ready`, `starting`, or `running` for the exact recorded process identity.
+- `lifecycle`: `ready`, `reserved`, `starting`, `running` or `stale-record` for the
+  exact recorded process identity.
+
+Diagnosis schema 2 replaces the former top-level `profile_id` and `qualification`
+fixture labels with `fixture_profile_id` and `scope=development-diagnostics-only`.
+Consumers should read model intent from `model_request` and obtain actual serving or
+qualification evidence separately. Lifecycle values are unchanged. The private run
+record remains schema 2; diagnosis performs no migration, adoption or record rewrite.
+The process observation describes one instant and grants no authority.
 
 ## Start, status, and stop
 

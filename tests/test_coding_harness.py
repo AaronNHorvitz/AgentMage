@@ -268,7 +268,11 @@ class CodingHarnessTests(unittest.TestCase):
             self.assertTrue(result["activation"])
             self.assertTrue(result["git_clean"])
             self.assertEqual(result["git_branch"], f"refs/heads/{coding_harness.BRANCH}")
-            self.assertEqual(result["qualification"], "executable-scripted-only")
+            self.assertEqual(result["schema_version"], 2)
+            self.assertEqual(result["fixture_profile_id"], coding_harness.PROFILE)
+            self.assertEqual(result["scope"], "development-diagnostics-only")
+            self.assertIsNone(result["model_request"]["selection"])
+            self.assertEqual(result["model_request"]["qualification"], "not-assessed")
             for path in (base, base / "state", base / "disposable", workspace):
                 self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o700)
             self.assertEqual(stat.S_IMODE((workspace / coding_harness.MARKER).stat().st_mode), 0o600)
