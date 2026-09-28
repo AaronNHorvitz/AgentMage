@@ -79,7 +79,7 @@
     },
     {
       "path": "platforms/linux/Cargo.toml",
-      "sha256": "b8aec95285d2de67b37729fa5b52a3983cccb426f0cdc1d3a1a7c40c5e2b2c23"
+      "sha256": "770a44da1ec3531d78bce11d1a19e36b02d3284ea78ac92d666015bd7666aa65"
     },
     {
       "path": "platforms/linux/src/configuration_store.rs",
