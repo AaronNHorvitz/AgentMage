@@ -204,6 +204,16 @@ need shared run cancellation and remaining-time control; these transport bounds 
 satisfy that wider gate. See
 [Decision 0100](../decisions/0100-native-model-socket-exchange-deadlines.md).
 
+Coordinator phase admission uses the original run budget. Each model request binds
+the positive time remaining when constructed; later turns and approval responses
+do not renew that budget. Context/token callbacks, returned model proposals,
+authority resolution and successful verification are checked before further work.
+An expired pending approval ends without launching its tool when the coordinator
+next advances, including a coordinator poll. Client status projection alone does
+not drive this check, and there is no autonomous expiry timer. These cooperative
+checks do not interrupt a blocking port or establish native process cleanup. See
+[Decision 0101](../decisions/0101-runtime-phase-deadline-admission.md).
+
 Log directories are create-only and mode `0700`; `stdout.jsonl`, `stderr.log`, and `result.json`
 are mode `0600`. Preserve failed and rejected runs alongside successful ones. A scripted success is
 only executable-path evidence. Model qualification requires the separate repeated Muse Glimmer and

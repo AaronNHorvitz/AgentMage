@@ -5671,3 +5671,874 @@ fn prepared_fixture_context(
     )
     .expect("durable prepared context composes")
 }
+
+mod run_phase_deadline_tests {
+    use super::super::bind_recovered_model_timeout;
+    use super::*;
+    use agentmage_kernel_contracts::{ModelCancellationProbe, RuntimeApprovalChallenge};
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum DelayAt {
+        None,
+        Context,
+        Binding,
+        Model,
+        Permission,
+        Resolution,
+        Tool,
+        Verification,
+    }
+
+    #[derive(Clone)]
+    struct PhaseClock {
+        now: Arc<AtomicU64>,
+        delay_at: DelayAt,
+        cancel_on_delay: Arc<AtomicBool>,
+        cancellation: Arc<PressureCancellationProbe>,
+    }
+
+    impl PhaseClock {
+        fn delay(&self, phase: DelayAt) {
+            if self.delay_at == phase {
+                if self.cancel_on_delay.load(Ordering::SeqCst) {
+                    self.cancellation.requested.store(true, Ordering::SeqCst);
+                } else {
+                    self.now.fetch_add(2_000, Ordering::SeqCst);
+                }
+            }
+        }
+    }
+
+    impl RuntimeClock for PhaseClock {
+        fn now_epoch_ms(&mut self) -> Result<u64, RuntimePortFailure> {
+            Ok(self.now.fetch_add(1, Ordering::SeqCst) + 1)
+        }
+    }
+
+    struct PhaseModel {
+        inner: FakeModel,
+        clock: PhaseClock,
+        timeouts: Vec<u64>,
+        requests: Vec<ModelRunRequest>,
+    }
+
+    impl RuntimeModelPort for PhaseModel {
+        fn exact_profile(&self) -> &ExactModelProfile {
+            self.inner.exact_profile()
+        }
+
+        fn bind_context_tokens(
+            &self,
+            packet: &mut ModelContextPacket,
+        ) -> Result<(), RuntimePortFailure> {
+            let result = self.inner.bind_context_tokens(packet);
+            self.clock.delay(DelayAt::Binding);
+            result
+        }
+
+        fn run_model(
+            &mut self,
+            request: &ModelRunRequest,
+            context: &ModelContextPacket,
+            cancellation: Option<&dyn ModelCancellationProbe>,
+        ) -> Result<ModelRunResult, RuntimePortFailure> {
+            self.timeouts.push(request.timeout_ms);
+            self.requests.push(request.clone());
+            let result = self.inner.run_model(request, context, cancellation);
+            self.clock.delay(DelayAt::Model);
+            result
+        }
+    }
+
+    struct PhaseContext(PhaseClock);
+
+    impl RuntimeContextPort for PhaseContext {
+        fn build_context(
+            &mut self,
+            request: &RuntimeRunRequest,
+            id: ContextPacketId,
+            turn: u32,
+            calls: &[ToolCall],
+            results: &[ToolResult],
+            evidence: &[EvidenceReference],
+        ) -> Result<ModelContextPacket, RuntimePortFailure> {
+            let result = FakeContext.build_context(request, id, turn, calls, results, evidence);
+            self.0.delay(DelayAt::Context);
+            result
+        }
+    }
+
+    struct PhaseBoundary {
+        inner: FakeToolBoundary,
+        clock: PhaseClock,
+        evaluations: usize,
+    }
+
+    impl RuntimeToolBoundary for PhaseBoundary {
+        fn evaluate(
+            &mut self,
+            request: &RuntimeRunRequest,
+            operation: &RuntimeOperationId,
+            definition: &ToolDefinition,
+            call: &ToolCall,
+            now: u64,
+        ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
+            self.evaluations += 1;
+            let result = self
+                .inner
+                .evaluate(request, operation, definition, call, now);
+            self.clock.delay(DelayAt::Permission);
+            result
+        }
+
+        fn resolve(
+            &mut self,
+            request: &RuntimeRunRequest,
+            challenge: &RuntimeApprovalChallenge,
+            response: &RuntimeApprovalResponse,
+            definition: &ToolDefinition,
+            call: &ToolCall,
+            now: u64,
+        ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
+            let result = self
+                .inner
+                .resolve(request, challenge, response, definition, call, now);
+            self.clock.delay(DelayAt::Resolution);
+            result
+        }
+
+        fn execute(
+            &mut self,
+            request: &RuntimeRunRequest,
+            evaluation: &RuntimePermissionEvaluation,
+            definition: &ToolDefinition,
+            call: &ToolCall,
+            cancellation: Option<&dyn ModelCancellationProbe>,
+        ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+            let result = self
+                .inner
+                .execute(request, evaluation, definition, call, cancellation);
+            self.clock.delay(DelayAt::Tool);
+            result
+        }
+    }
+
+    struct PhaseVerifier {
+        inner: FakeVerifier,
+        clock: PhaseClock,
+        calls: usize,
+    }
+
+    impl RuntimeVerifierPort for PhaseVerifier {
+        fn verifier_id(&self) -> &VerifierId {
+            self.inner.verifier_id()
+        }
+
+        fn verify(
+            &mut self,
+            input: RuntimeVerificationInput<'_>,
+        ) -> Result<VerifierCandidate, RuntimePortFailure> {
+            self.calls += 1;
+            let result = self.inner.verify(input);
+            self.clock.delay(DelayAt::Verification);
+            result
+        }
+    }
+
+    type PhaseCoordinator = ReusableRuntimeCoordinator<
+        PhaseModel,
+        PhaseContext,
+        PhaseBoundary,
+        PhaseVerifier,
+        PhaseClock,
+    >;
+
+    fn phase_fixture(
+        delay_at: DelayAt,
+        scripts: &[ModelScript],
+    ) -> (PhaseCoordinator, Arc<AtomicUsize>) {
+        phase_fixture_with_permission(delay_at, scripts, PermissionScript::Allow)
+    }
+
+    fn phase_fixture_with_permission(
+        delay_at: DelayAt,
+        scripts: &[ModelScript],
+        permission: PermissionScript,
+    ) -> (PhaseCoordinator, Arc<AtomicUsize>) {
+        let (base, executions) = coordinator_with_request_mutation(
+            RuntimeSessionMode::EphemeralReadOnly,
+            GrantOperation::WorkspaceRead,
+            scripts.iter().copied(),
+            permission,
+            true,
+            |request| request.limits.max_elapsed_ms = 500,
+        )
+        .unwrap();
+        let clock = PhaseClock {
+            now: Arc::new(AtomicU64::new(1_000)),
+            delay_at,
+            cancel_on_delay: Arc::new(AtomicBool::new(false)),
+            cancellation: Arc::new(PressureCancellationProbe {
+                requested: AtomicBool::new(false),
+                signal: CancellationSignal {
+                    schema_version: CONTRACT_SCHEMA_VERSION,
+                    cancellation_id: CancellationId::from_raw("phase-cancellation"),
+                    correlation_id: base.correlation_id.clone(),
+                    task_id: base.request.task.task_id.clone(),
+                    reason: CancellationReason::UserRequested,
+                    requested_by: BoundaryKind::Shell,
+                },
+            }),
+        };
+        let coordinator = ReusableRuntimeCoordinator::new(
+            base.request,
+            PhaseModel {
+                inner: base.model,
+                clock: clock.clone(),
+                timeouts: Vec::new(),
+                requests: Vec::new(),
+            },
+            PhaseContext(clock.clone()),
+            base.registry,
+            PhaseBoundary {
+                inner: base.tool_boundary,
+                clock: clock.clone(),
+                evaluations: 0,
+            },
+            PhaseVerifier {
+                inner: base.verifier,
+                clock: clock.clone(),
+                calls: 0,
+            },
+            clock,
+        )
+        .unwrap();
+        (coordinator, executions)
+    }
+
+    fn assert_exhausted(coordinator: &PhaseCoordinator) {
+        let outcome = coordinator
+            .outcome()
+            .expect("deadline must produce a terminal outcome");
+        assert_eq!(outcome.state, AgentStateKind::Exhausted);
+        assert!(outcome.output.is_none());
+        assert_valid_terminal_stream(coordinator);
+    }
+
+    #[test]
+    fn run_deadline_model_requests_receive_only_decreasing_remaining_time() {
+        let (mut coordinator, executions) =
+            phase_fixture(DelayAt::None, &[ModelScript::Tool, ModelScript::Completion]);
+        coordinator.run_until_boundary(None, None).unwrap();
+        assert_eq!(
+            coordinator.outcome().unwrap().state,
+            AgentStateKind::Success
+        );
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+        assert_eq!(coordinator.model.timeouts.len(), 2);
+        assert!(
+            coordinator.model.timeouts[0] < 500,
+            "context time must reduce the first inference budget"
+        );
+        assert!(
+            coordinator.model.timeouts[1] < coordinator.model.timeouts[0],
+            "a later call cannot renew the run budget"
+        );
+        for request in &coordinator.model.requests {
+            let event = coordinator
+                .events()
+                .iter()
+                .find(|event| {
+                    matches!(
+                        &event.kind,
+                        RuntimeEventKind::ModelRequested { model_run_id, request_sha256 }
+                            if model_run_id == &request.model_run_id
+                                && request_sha256 == &contract_sha256(request).unwrap()
+                    )
+                })
+                .expect("the actual dispatched request has its exact published digest");
+            assert_eq!(
+                request.timeout_ms,
+                500 - (event.occurred_at_epoch_ms - coordinator.events()[0].occurred_at_epoch_ms)
+            );
+        }
+        assert_valid_terminal_stream(&coordinator);
+    }
+
+    #[test]
+    fn run_deadline_recovery_accepts_only_exact_current_or_legacy_request_digest() {
+        let (mut coordinator, _) = phase_fixture(DelayAt::None, &[ModelScript::Completion]);
+        coordinator.run_until_boundary(None, None).unwrap();
+        let actual = &coordinator.model.requests[0];
+        let started = coordinator.events()[0].occurred_at_epoch_ms;
+        let requested = coordinator
+            .events()
+            .iter()
+            .find(|event| matches!(event.kind, RuntimeEventKind::ModelRequested { .. }))
+            .unwrap()
+            .occurred_at_epoch_ms;
+        assert!(actual.timeout_ms < 500 && actual.timeout_ms > 1);
+        for timeout in [
+            0,
+            1,
+            actual.timeout_ms - 1,
+            actual.timeout_ms,
+            actual.timeout_ms + 1,
+            499,
+            500,
+            501,
+            u64::MAX,
+        ] {
+            let mut recorded = actual.clone();
+            recorded.timeout_ms = timeout;
+            let digest = contract_sha256(&recorded).unwrap();
+            let mut expected = actual.clone();
+            let result =
+                bind_recovered_model_timeout(&mut expected, 500, started, requested, &digest);
+            assert_eq!(
+                result.is_ok(),
+                timeout == actual.timeout_ms || timeout == 500,
+                "timeout={timeout}"
+            );
+            if result.is_ok() {
+                assert_eq!(expected, recorded);
+            }
+        }
+        for timeout in [actual.timeout_ms, 500] {
+            let mut foreign = actual.clone();
+            foreign.timeout_ms = timeout;
+            foreign.context_packet_id = ContextPacketId::from_raw("foreign-context");
+            assert!(
+                bind_recovered_model_timeout(
+                    &mut actual.clone(),
+                    500,
+                    started,
+                    requested,
+                    &contract_sha256(&foreign).unwrap()
+                )
+                .is_err()
+            );
+        }
+        assert!(
+            bind_recovered_model_timeout(
+                &mut actual.clone(),
+                500,
+                requested + 1,
+                requested,
+                &contract_sha256(actual).unwrap()
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn run_deadline_checkpoint_resume_keeps_original_start_and_cannot_dispatch_after_expiry() {
+        let (initial, executions) = coordinator_with_request_mutation(
+            RuntimeSessionMode::EphemeralReadOnly,
+            GrantOperation::WorkspaceRead,
+            [ModelScript::ProtocolRejected(
+                ModelFinishReason::EndOfSequence,
+            )],
+            PermissionScript::Allow,
+            true,
+            |request| request.limits.max_elapsed_ms = 500,
+        )
+        .unwrap();
+        let mut request = initial.request;
+        request.mode = RuntimeSessionMode::DurableReadOnly;
+        request.request_sha256 = "0".repeat(64);
+        let mut first = ReusableRuntimeCoordinator::new_with_durable_state(
+            seal_runtime_run_request(request).unwrap(),
+            initial.model,
+            initial.context,
+            initial.registry,
+            initial.tool_boundary,
+            initial.verifier,
+            initial.clock,
+        )
+        .unwrap();
+        first.start().unwrap();
+        first.run_turn(None).unwrap();
+        let history = first.events().to_vec();
+        assert_eq!(first.rejected_model_results.len(), 1);
+        let mut request = first.request.clone();
+        request.event_cursor = Some(runtime_event_cursor(history.last().unwrap()));
+        request.request_sha256 = "0".repeat(64);
+        let mut resumed = ReusableRuntimeCoordinator::new_with_durable_state(
+            seal_runtime_run_request(request).unwrap(),
+            FakeModel::new(first.model.profile, [ModelScript::Tool]),
+            first.context,
+            first.registry,
+            first.tool_boundary,
+            first.verifier,
+            FakeClock { now: 2_000 },
+        )
+        .unwrap();
+        resumed.run_until_boundary(None, None).unwrap();
+        assert_eq!(resumed.outcome().unwrap().state, AgentStateKind::Exhausted);
+        assert_eq!(resumed.model.calls, 0);
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert_eq!(&resumed.events()[..history.len()], history.as_slice());
+        assert_valid_terminal_stream(&resumed);
+    }
+
+    #[test]
+    fn run_deadline_expired_context_never_binds_or_dispatches_model() {
+        let (mut coordinator, executions) =
+            phase_fixture(DelayAt::Context, &[ModelScript::Completion]);
+        coordinator.run_until_boundary(None, None).unwrap();
+        assert_eq!(
+            coordinator
+                .model
+                .inner
+                .token_bindings
+                .load(Ordering::SeqCst),
+            0
+        );
+        assert_eq!(coordinator.model.inner.calls, 0);
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert_exhausted(&coordinator);
+    }
+
+    #[test]
+    fn run_deadline_late_completion_cannot_enter_verifier_or_succeed() {
+        let (mut coordinator, executions) =
+            phase_fixture(DelayAt::Model, &[ModelScript::Completion]);
+        coordinator.run_until_boundary(None, None).unwrap();
+        assert_eq!(coordinator.verifier.calls, 0);
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert_exhausted(&coordinator);
+    }
+
+    #[test]
+    fn run_deadline_late_tool_proposal_never_enters_authority_evaluation() {
+        let (mut coordinator, executions) = phase_fixture(DelayAt::Model, &[ModelScript::Tool]);
+        coordinator.run_until_boundary(None, None).unwrap();
+        assert_eq!(coordinator.tool_boundary.evaluations, 0);
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert_exhausted(&coordinator);
+    }
+
+    #[test]
+    fn run_deadline_permission_evaluation_cannot_spend_time_then_launch() {
+        let (mut coordinator, executions) =
+            phase_fixture(DelayAt::Permission, &[ModelScript::Tool]);
+        coordinator.run_until_boundary(None, None).unwrap();
+        assert_eq!(coordinator.tool_boundary.evaluations, 1);
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert!(
+            !coordinator
+                .events()
+                .iter()
+                .any(|e| matches!(e.kind, RuntimeEventKind::ToolStarted { .. }))
+        );
+        assert_exhausted(&coordinator);
+    }
+
+    #[test]
+    fn run_deadline_verifier_result_after_expiry_is_not_success() {
+        let (mut coordinator, executions) =
+            phase_fixture(DelayAt::Verification, &[ModelScript::Completion]);
+        coordinator.run_until_boundary(None, None).unwrap();
+        assert_eq!(coordinator.verifier.calls, 1);
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert_exhausted(&coordinator);
+    }
+
+    fn pending_fixture(durable: bool) -> (FixtureCoordinator, Arc<AtomicUsize>) {
+        let (base, executions) = coordinator_with_request_mutation(
+            RuntimeSessionMode::EphemeralReadOnly,
+            GrantOperation::WorkspaceRead,
+            [ModelScript::Tool, ModelScript::Completion],
+            PermissionScript::Ask,
+            true,
+            |request| request.limits.max_elapsed_ms = 500,
+        )
+        .unwrap();
+        if !durable {
+            return (base, executions);
+        }
+        let mut request = base.request;
+        request.mode = RuntimeSessionMode::DurableReadOnly;
+        request.request_sha256 = "0".repeat(64);
+        let request = seal_runtime_run_request(request).unwrap();
+        let coordinator = ReusableRuntimeCoordinator::new_with_journal(
+            request,
+            base.model,
+            base.context,
+            base.registry,
+            base.tool_boundary,
+            base.verifier,
+            base.clock,
+        )
+        .unwrap();
+        (coordinator, executions)
+    }
+
+    #[test]
+    fn run_deadline_pending_poll_terminates_after_original_budget() {
+        for durable in [false, true] {
+            let (mut coordinator, executions) = pending_fixture(durable);
+            assert!(matches!(
+                coordinator.run_until_boundary(None, None).unwrap(),
+                RuntimeCoordinatorStep::AwaitingApproval { .. }
+            ));
+            coordinator.clock.now = 2_000;
+            assert!(
+                matches!(
+                    coordinator.run_until_boundary(None, None).unwrap(),
+                    RuntimeCoordinatorStep::Complete { .. }
+                ),
+                "durable={durable}"
+            );
+            assert_eq!(
+                coordinator.outcome().unwrap().state,
+                AgentStateKind::Exhausted
+            );
+            assert_eq!(executions.load(Ordering::SeqCst), 0);
+            assert!(coordinator.pending.is_none());
+            assert_valid_terminal_stream(&coordinator);
+        }
+    }
+
+    #[test]
+    fn run_deadline_valid_allow_after_run_expiry_never_executes() {
+        for durable in [false, true] {
+            let (mut coordinator, executions) = pending_fixture(durable);
+            let RuntimeCoordinatorStep::AwaitingApproval { challenge } =
+                coordinator.run_until_boundary(None, None).unwrap()
+            else {
+                panic!("expected exact challenge");
+            };
+            coordinator.clock.now = 2_000;
+            assert!(
+                challenge.expires_at_epoch_ms > 2_000,
+                "run expires before approval authority"
+            );
+            let response = RuntimeApprovalResponse {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                run_id: challenge.run_id,
+                approval_id: challenge.approval_id,
+                disposition: RuntimeApprovalDisposition::Allow,
+                challenge_sha256: challenge.challenge_sha256,
+                grant_id: Some(GrantId::from_raw("grant-0001")),
+            };
+            coordinator
+                .run_until_boundary(Some(&response), None)
+                .unwrap();
+            assert_eq!(executions.load(Ordering::SeqCst), 0, "durable={durable}");
+            assert_eq!(
+                coordinator.outcome().unwrap().state,
+                AgentStateKind::Exhausted
+            );
+            assert!(!coordinator.events().iter().any(|e| matches!(
+                e.kind,
+                RuntimeEventKind::PermissionDecided { .. } | RuntimeEventKind::ToolStarted { .. }
+            )));
+            assert_valid_terminal_stream(&coordinator);
+        }
+    }
+
+    #[test]
+    fn run_deadline_expiring_during_token_binding_never_dispatches_model() {
+        let (mut coordinator, executions) =
+            phase_fixture(DelayAt::Binding, &[ModelScript::Completion]);
+        coordinator.run_until_boundary(None, None).unwrap();
+        assert_eq!(
+            coordinator
+                .model
+                .inner
+                .token_bindings
+                .load(Ordering::SeqCst),
+            1
+        );
+        assert_eq!(coordinator.model.inner.calls, 0);
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert_exhausted(&coordinator);
+    }
+
+    fn exact_allow(challenge: &RuntimeApprovalChallenge) -> RuntimeApprovalResponse {
+        RuntimeApprovalResponse {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            run_id: challenge.run_id.clone(),
+            approval_id: challenge.approval_id.clone(),
+            disposition: RuntimeApprovalDisposition::Allow,
+            challenge_sha256: challenge.challenge_sha256.clone(),
+            grant_id: Some(GrantId::from_raw("grant-0001")),
+        }
+    }
+
+    #[test]
+    fn run_deadline_resolution_that_consumes_remaining_time_cannot_launch() {
+        let (mut coordinator, executions) = phase_fixture_with_permission(
+            DelayAt::Resolution,
+            &[ModelScript::Tool],
+            PermissionScript::Ask,
+        );
+        let RuntimeCoordinatorStep::AwaitingApproval { challenge } =
+            coordinator.run_until_boundary(None, None).unwrap()
+        else {
+            panic!("approval must precede resolution");
+        };
+        coordinator
+            .run_until_boundary(Some(&exact_allow(&challenge)), None)
+            .unwrap();
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert_exhausted(&coordinator);
+        assert!(
+            !coordinator
+                .events()
+                .iter()
+                .any(|e| matches!(e.kind, RuntimeEventKind::ToolStarted { .. }))
+        );
+    }
+
+    #[test]
+    fn run_deadline_phase_cancellation_stops_before_further_work() {
+        for phase in [
+            DelayAt::Context,
+            DelayAt::Binding,
+            DelayAt::Model,
+            DelayAt::Permission,
+            DelayAt::Verification,
+        ] {
+            let scripts = if phase == DelayAt::Permission {
+                vec![ModelScript::Tool]
+            } else {
+                vec![ModelScript::Completion]
+            };
+            let (mut coordinator, executions) = phase_fixture(phase, &scripts);
+            coordinator
+                .clock
+                .cancel_on_delay
+                .store(true, Ordering::SeqCst);
+            let cancellation = Arc::clone(&coordinator.clock.cancellation);
+            coordinator
+                .run_until_boundary(None, Some(cancellation.as_ref()))
+                .unwrap_or_else(|error| panic!("phase={phase:?}: {error:?}"));
+            assert_eq!(
+                coordinator.outcome().unwrap().state,
+                AgentStateKind::Cancelled
+            );
+            assert_eq!(executions.load(Ordering::SeqCst), 0);
+            if matches!(phase, DelayAt::Context | DelayAt::Binding) {
+                assert_eq!(coordinator.model.inner.calls, 0);
+            }
+            if phase == DelayAt::Model {
+                assert!(coordinator.events().iter().any(|event| matches!(
+                    &event.kind,
+                    RuntimeEventKind::ModelFailed { failure_code, .. }
+                        if failure_code == "runtime.model.cancelled"
+                )));
+            }
+            assert!(
+                !coordinator
+                    .events()
+                    .iter()
+                    .any(|e| matches!(e.kind, RuntimeEventKind::ToolStarted { .. }))
+            );
+            assert_valid_terminal_stream(&coordinator);
+        }
+    }
+
+    struct OneShotPhaseProbe {
+        inner: Arc<PressureCancellationProbe>,
+        delivered: AtomicUsize,
+    }
+
+    impl ModelCancellationProbe for OneShotPhaseProbe {
+        fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
+            Ok(self.inner.requested.swap(false, Ordering::SeqCst).then(|| {
+                self.delivered.fetch_add(1, Ordering::SeqCst);
+                self.inner.signal.clone()
+            }))
+        }
+    }
+
+    #[test]
+    fn run_deadline_token_callback_keeps_the_original_one_shot_signal() {
+        for phase in [DelayAt::Context, DelayAt::Binding] {
+            let (mut coordinator, executions) = phase_fixture(phase, &[ModelScript::Completion]);
+            coordinator
+                .clock
+                .cancel_on_delay
+                .store(true, Ordering::SeqCst);
+            let cancellation = OneShotPhaseProbe {
+                inner: Arc::clone(&coordinator.clock.cancellation),
+                delivered: AtomicUsize::new(0),
+            };
+            coordinator
+                .run_until_boundary(None, Some(&cancellation))
+                .unwrap();
+            assert_eq!(cancellation.delivered.load(Ordering::SeqCst), 1);
+            assert_eq!(
+                coordinator.outcome().unwrap().state,
+                AgentStateKind::Cancelled
+            );
+            assert_eq!(coordinator.model.inner.calls, 0);
+            assert_eq!(executions.load(Ordering::SeqCst), 0);
+            let observed: Vec<_> = coordinator
+                .events()
+                .iter()
+                .filter_map(|e| {
+                    if let RuntimeEventKind::CancellationObserved { cancellation_id } = &e.kind {
+                        Some(cancellation_id)
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            assert_eq!(observed, [&cancellation.inner.signal.cancellation_id]);
+            assert_valid_terminal_stream(&coordinator);
+        }
+    }
+
+    struct InvalidPhaseProbe {
+        inner: Arc<PressureCancellationProbe>,
+        foreign_identity: bool,
+    }
+
+    impl ModelCancellationProbe for InvalidPhaseProbe {
+        fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
+            if !self.inner.requested.load(Ordering::SeqCst) {
+                return Ok(None);
+            }
+            if self.foreign_identity {
+                let mut signal = self.inner.signal.clone();
+                signal.task_id = TaskId::from_raw("foreign-task");
+                Ok(Some(signal))
+            } else {
+                Err(ModelRuntimeFailure {
+                    code: "fixture.phase-probe-unavailable".to_owned(),
+                    retryable_after_correction: false,
+                    dependency_recovery_required: true,
+                    contract_error: None,
+                })
+            }
+        }
+    }
+
+    #[test]
+    fn run_deadline_foreign_or_failed_probe_cannot_become_cancellation_or_resume() {
+        for foreign_identity in [false, true] {
+            for phase in [DelayAt::Context, DelayAt::Model] {
+                let (mut coordinator, executions) =
+                    phase_fixture(phase, &[ModelScript::Completion]);
+                coordinator
+                    .clock
+                    .cancel_on_delay
+                    .store(true, Ordering::SeqCst);
+                let cancellation = InvalidPhaseProbe {
+                    inner: Arc::clone(&coordinator.clock.cancellation),
+                    foreign_identity,
+                };
+                assert!(
+                    coordinator
+                        .run_until_boundary(None, Some(&cancellation))
+                        .is_err()
+                );
+                assert!(coordinator.outcome().is_none());
+                assert!(!coordinator.events().iter().any(|e| matches!(
+                    e.kind,
+                    RuntimeEventKind::CancellationRequested { .. }
+                        | RuntimeEventKind::CancellationObserved { .. }
+                )));
+                assert_eq!(coordinator.verifier.calls, 0);
+                assert_eq!(executions.load(Ordering::SeqCst), 0);
+                let calls = coordinator.model.inner.calls;
+                assert_eq!(
+                    coordinator.run_until_boundary(None, None),
+                    Err(RuntimeLoopError::InvalidBoundaryResult)
+                );
+                assert_eq!(coordinator.model.inner.calls, calls);
+            }
+        }
+    }
+
+    #[test]
+    fn run_deadline_expired_pending_invalid_response_preserves_challenge() {
+        let (mut coordinator, executions) = pending_fixture(true);
+        let RuntimeCoordinatorStep::AwaitingApproval { challenge } =
+            coordinator.run_until_boundary(None, None).unwrap()
+        else {
+            panic!("pending");
+        };
+        coordinator.clock.now = 2_000;
+        let mut invalid = exact_allow(&challenge);
+        invalid.challenge_sha256 = "0".repeat(64);
+        assert!(
+            coordinator
+                .run_until_boundary(Some(&invalid), None)
+                .is_err()
+        );
+        assert_eq!(coordinator.pending.as_ref().unwrap().challenge, challenge);
+        assert!(!coordinator.correctness_reconciliation_required);
+        coordinator.run_until_boundary(None, None).unwrap();
+        assert_eq!(
+            coordinator.outcome().unwrap().state,
+            AgentStateKind::Exhausted
+        );
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert_valid_terminal_stream(&coordinator);
+    }
+
+    #[test]
+    fn run_deadline_late_tool_keeps_its_real_receipt_before_exhaustion() {
+        let (mut coordinator, executions) =
+            phase_fixture(DelayAt::Tool, &[ModelScript::Tool, ModelScript::Completion]);
+        coordinator.run_until_boundary(None, None).unwrap();
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+        assert_eq!(coordinator.model.inner.calls, 1);
+        assert_eq!(coordinator.outcome().unwrap().receipt_ids.len(), 1);
+        assert_eq!(coordinator.completed_tool_calls.len(), 1);
+        assert_eq!(coordinator.tool_results.len(), 1);
+        assert!(
+            coordinator
+                .events()
+                .iter()
+                .any(|e| matches!(e.kind, RuntimeEventKind::ToolCompleted { .. }))
+        );
+        assert_exhausted(&coordinator);
+    }
+
+    #[test]
+    fn run_deadline_clock_regression_between_pending_polls_fails_closed() {
+        for durable in [false, true] {
+            let (mut coordinator, executions) = pending_fixture(durable);
+            assert!(matches!(
+                coordinator.run_until_boundary(None, None).unwrap(),
+                RuntimeCoordinatorStep::AwaitingApproval { .. }
+            ));
+            coordinator.clock.now = 1_100;
+            assert!(matches!(
+                coordinator.run_until_boundary(None, None).unwrap(),
+                RuntimeCoordinatorStep::AwaitingApproval { .. }
+            ));
+            // Still after every published event and before the run deadline,
+            // but before the previous trusted-clock observation.
+            assert!(coordinator.events().last().unwrap().occurred_at_epoch_ms < 1_050);
+            coordinator.clock.now = 1_050;
+            assert!(coordinator.run_until_boundary(None, None).is_err());
+            assert!(coordinator.outcome().is_none());
+            assert_eq!(executions.load(Ordering::SeqCst), 0);
+            assert_eq!(
+                coordinator.run_until_boundary(None, None),
+                Err(RuntimeLoopError::InvalidBoundaryResult)
+            );
+        }
+    }
+
+    #[test]
+    fn run_deadline_ordinary_verifier_success_remains_available() {
+        let (mut coordinator, executions) =
+            phase_fixture(DelayAt::None, &[ModelScript::Completion]);
+        coordinator.run_until_boundary(None, None).unwrap();
+        assert_eq!(
+            coordinator.outcome().unwrap().state,
+            AgentStateKind::Success
+        );
+        assert_eq!(coordinator.verifier.calls, 1);
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert_valid_terminal_stream(&coordinator);
+    }
+}

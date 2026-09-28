@@ -1,6 +1,6 @@
 //! Interface-independent reusable runtime coordinator.
 
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 use std::collections::BTreeSet;
 
 mod artifact_preparation;
@@ -103,6 +103,119 @@ impl RuntimePortFailure {
 pub trait RuntimeClock {
     /// Returns a positive Unix epoch timestamp in milliseconds.
     fn now_epoch_ms(&mut self) -> Result<u64, RuntimePortFailure>;
+}
+
+/// A latched observation, never a synthesized cancellation or tool result.
+enum RuntimePhaseStop {
+    Cancelled(CancellationSignal),
+    Exhausted,
+    Failed(RuntimeLoopError),
+}
+
+impl RuntimePhaseStop {
+    fn port_failure(&self) -> RuntimePortFailure {
+        match self {
+            Self::Cancelled(_) => RuntimePortFailure::Cancelled,
+            Self::Exhausted => RuntimePortFailure::TimedOut,
+            Self::Failed(RuntimeLoopError::Dependency(error)) => *error,
+            Self::Failed(_) => RuntimePortFailure::Invalid,
+        }
+    }
+
+    fn model_failure_code(&self) -> &'static str {
+        match self {
+            Self::Cancelled(_) => "runtime.model.cancelled",
+            Self::Exhausted => "runtime.budget.exhausted",
+            Self::Failed(_) => self.port_failure().code(),
+        }
+    }
+}
+
+/// Borrows the existing clock only while a synchronous phase or callback runs.
+/// Ports remain cooperative; this does not preempt an in-flight call.
+struct RuntimePhaseControl<'a, C> {
+    clock: RefCell<&'a mut C>,
+    request: &'a RuntimeRunRequest,
+    correlation_id: &'a CorrelationId,
+    started_at: u64,
+    last_observed_at: &'a Cell<u64>,
+    cancellation: Option<&'a dyn ModelCancellationProbe>,
+    stop: RefCell<Option<RuntimePhaseStop>>,
+}
+
+impl<'a, C: RuntimeClock> RuntimePhaseControl<'a, C> {
+    fn new(
+        clock: &'a mut C,
+        request: &'a RuntimeRunRequest,
+        correlation_id: &'a CorrelationId,
+        started_at: u64,
+        last_event_at: u64,
+        last_observed_at: &'a Cell<u64>,
+        cancellation: Option<&'a dyn ModelCancellationProbe>,
+    ) -> Self {
+        last_observed_at.set(last_observed_at.get().max(last_event_at).max(started_at));
+        Self {
+            clock: RefCell::new(clock),
+            request,
+            correlation_id,
+            started_at,
+            last_observed_at,
+            cancellation,
+            stop: RefCell::new(None),
+        }
+    }
+
+    fn observe(&self) -> Result<u64, RuntimePhaseStop> {
+        if let Some(signal) =
+            observe_cancellation(self.cancellation).map_err(RuntimePhaseStop::Failed)?
+        {
+            if signal.schema_version != CONTRACT_SCHEMA_VERSION
+                || signal.task_id != self.request.task.task_id
+                || &signal.correlation_id != self.correlation_id
+            {
+                return Err(RuntimePhaseStop::Failed(
+                    RuntimeLoopError::InvalidBoundaryResult,
+                ));
+            }
+            return Err(RuntimePhaseStop::Cancelled(signal));
+        }
+        let now = self
+            .clock
+            .borrow_mut()
+            .now_epoch_ms()
+            .map_err(|error| RuntimePhaseStop::Failed(RuntimeLoopError::Dependency(error)))?;
+        if self.started_at == 0 || now < self.last_observed_at.get() {
+            return Err(RuntimePhaseStop::Failed(
+                RuntimeLoopError::InvalidBoundaryResult,
+            ));
+        }
+        self.last_observed_at.set(now);
+        let remaining = self
+            .request
+            .limits
+            .max_elapsed_ms
+            .saturating_sub(now - self.started_at);
+        if remaining == 0 {
+            Err(RuntimePhaseStop::Exhausted)
+        } else {
+            Ok(remaining)
+        }
+    }
+
+    fn check(&self) -> Result<u64, RuntimePortFailure> {
+        if let Some(stop) = self.stop.borrow().as_ref() {
+            return Err(stop.port_failure());
+        }
+        self.observe().map_err(|stop| {
+            let failure = stop.port_failure();
+            *self.stop.borrow_mut() = Some(stop);
+            failure
+        })
+    }
+
+    fn into_stop(self) -> Option<RuntimePhaseStop> {
+        self.stop.into_inner()
+    }
 }
 
 /// Context builder for one exact request and its currently verified observations.
@@ -749,6 +862,7 @@ where
     active_turn: Option<RuntimeTurnId>,
     correlation_id: agentmage_kernel_contracts::CorrelationId,
     started_at_epoch_ms: Option<u64>,
+    last_phase_observed_at: Cell<u64>,
     turn_count: u32,
     model_call_count: u32,
     tool_call_count: u32,
@@ -991,6 +1105,7 @@ where
             active_turn: None,
             correlation_id,
             started_at_epoch_ms: None,
+            last_phase_observed_at: Cell::new(0),
             turn_count: 0,
             model_call_count: 0,
             tool_call_count: 0,
@@ -1186,10 +1301,9 @@ where
             self.start()?;
         }
         if self.pending.is_some() {
-            if let Some(signal) = observe_cancellation(cancellation)? {
-                self.cancel(signal)?;
+            if self.stop_before_phase(cancellation, true)? {
                 return Ok(RuntimeCoordinatorStep::Complete {
-                    outcome: self.outcome.clone().expect("cancellation is terminal"),
+                    outcome: self.outcome.clone().expect("phase stop is terminal"),
                 });
             }
             let Some((response, now_epoch_ms)) = response else {
@@ -1311,15 +1425,43 @@ where
         self.context
             .observe_tool_rejections(&self.rejected_tool_calls)
             .map_err(RuntimeLoopError::Dependency)?;
-        let context = match self.context.build_context_with_token_binding(
-            &self.request,
-            context_packet_id,
-            self.turn_count,
-            &self.completed_tool_calls,
-            &self.tool_results,
-            &self.evidence,
-            &|packet| self.model.bind_context_tokens(packet),
-        ) {
+        let (context, stop) = {
+            let control = RuntimePhaseControl::new(
+                &mut self.clock,
+                &self.request,
+                &self.correlation_id,
+                self.started_at_epoch_ms
+                    .ok_or(RuntimeLoopError::InvalidBoundaryResult)?,
+                self.events
+                    .last()
+                    .map_or(0, |event| event.occurred_at_epoch_ms),
+                &self.last_phase_observed_at,
+                cancellation,
+            );
+            let context = control.check().and_then(|_| {
+                self.context.build_context_with_token_binding(
+                    &self.request,
+                    context_packet_id,
+                    self.turn_count,
+                    &self.completed_tool_calls,
+                    &self.tool_results,
+                    &self.evidence,
+                    &|packet| {
+                        control.check()?;
+                        self.model.bind_context_tokens(packet)?;
+                        control.check().map(|_| ())
+                    },
+                )
+            });
+            if context.is_ok() {
+                let _ = control.check();
+            }
+            (context, control.into_stop())
+        };
+        if let Some(stop) = stop {
+            return self.finish_phase_stop(stop, false);
+        }
+        let context = match context {
             Ok(context) if valid_context_packet(&context, &self.request) => context,
             _ => {
                 self.transition_terminal(AgentStateKind::Failed)?;
@@ -1366,6 +1508,18 @@ where
             )?;
         }
 
+        let timeout_ms = match self.observe_phase(cancellation) {
+            Ok(remaining) => remaining,
+            Err(stop) => return self.finish_phase_stop(stop, false),
+        };
+        // Bind the request's construction time into its canonical event so a
+        // durable recovery can reconstruct the exact remaining-time digest.
+        let requested_at = self
+            .started_at_epoch_ms
+            .and_then(|started| {
+                started.checked_add(self.request.limits.max_elapsed_ms - timeout_ms)
+            })
+            .ok_or(RuntimeLoopError::InvalidBoundaryResult)?;
         self.resources
             .consume(BudgetResource::ModelCalls, 1)
             .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
@@ -1385,10 +1539,11 @@ where
             adapter_id: self.request.model_profile.runtime.adapter_id.clone(),
             decoding_profile_id: self.request.model_profile.decoding.profile_id.clone(),
             max_output_tokens: self.request.model_profile.decoding.max_output_tokens,
-            timeout_ms: self.request.limits.max_elapsed_ms,
+            timeout_ms,
         };
         let request_sha256 = contract_sha256(&model_request)?;
-        self.emit(
+        self.emit_at(
+            requested_at,
             RuntimeEventKind::ModelRequested {
                 model_run_id: model_run_id.clone(),
                 request_sha256,
@@ -1396,6 +1551,17 @@ where
             Some(&turn_id),
             None,
         )?;
+        if let Err(stop) = self.observe_phase(cancellation) {
+            self.emit(
+                RuntimeEventKind::ModelFailed {
+                    model_run_id,
+                    failure_code: stop.model_failure_code().to_owned(),
+                },
+                Some(&turn_id),
+                None,
+            )?;
+            return self.finish_phase_stop(stop, false);
+        }
         let result = match self.model.run_model(&model_request, &context, cancellation) {
             Ok(result) => result,
             Err(error) => {
@@ -1482,6 +1648,19 @@ where
                 None,
             )?;
             return self.finish_model_failure(&turn_id, RuntimePortFailure::ResourceExhausted);
+        }
+        if result.terminal_state == ModelRunTerminalState::Proposed
+            && let Err(stop) = self.observe_phase(cancellation)
+        {
+            self.emit(
+                RuntimeEventKind::ModelFailed {
+                    model_run_id,
+                    failure_code: stop.model_failure_code().to_owned(),
+                },
+                Some(&turn_id),
+                None,
+            )?;
+            return self.finish_phase_stop(stop, false);
         }
         let result_sha256 = contract_sha256(&result)?;
         let response_sha256 = result.response_sha256.clone();
@@ -1613,7 +1792,7 @@ where
 
         match proposal.kind {
             ModelProposalKind::Text | ModelProposalKind::CompletionCandidate => {
-                self.verify_completion(turn_id, proposal, response_sha256)
+                self.verify_completion(turn_id, proposal, response_sha256, cancellation)
             }
             ModelProposalKind::ToolCall => self.propose_tool(turn_id, proposal, cancellation),
             ModelProposalKind::EvidenceRequest
@@ -1653,7 +1832,11 @@ where
         turn_id: RuntimeTurnId,
         proposal: ClosedModelProposal,
         response_sha256: String,
+        cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<(), RuntimeLoopError> {
+        if self.stop_before_phase(cancellation, false)? {
+            return Ok(());
+        }
         let Some(payload) = proposal.payload.clone() else {
             return self.finish_invalid_proposal(&turn_id);
         };
@@ -1716,6 +1899,9 @@ where
                 );
             }
         };
+        if self.stop_before_phase(cancellation, false)? {
+            return Ok(());
+        }
         for item in candidate
             .postconditions
             .iter()
@@ -1752,6 +1938,9 @@ where
         else {
             return self.finish_budget_exhaustion(&turn_id);
         };
+        if self.stop_before_phase(cancellation, false)? {
+            return Ok(());
+        }
         self.state
             .complete(&completion)
             .map_err(|_| RuntimeLoopError::State)?;
@@ -1767,6 +1956,9 @@ where
         proposal: ClosedModelProposal,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<(), RuntimeLoopError> {
+        if self.stop_before_phase(cancellation, false)? {
+            return Ok(());
+        }
         // Reserve both acknowledgement events BEFORE admitting an effect. The
         // existing request ceiling stays unchanged; cancellation cannot borrow
         // terminal space after its canonical receipt has already committed.
@@ -1889,6 +2081,9 @@ where
                 operation_id,
                 RuntimeToolRejectionReason::ArgumentsInvalid,
             );
+        }
+        if self.stop_before_phase(cancellation, true)? {
+            return Ok(());
         }
         let now = self
             .clock
@@ -2101,6 +2296,13 @@ where
         if !valid_permission_evaluation(&evaluation, now_epoch_ms) {
             return Err(RuntimeLoopError::InvalidBoundaryResult);
         }
+        // A known refusal stays a refusal. A usable decision cannot authorize
+        // another phase after the original run has stopped.
+        if !matches!(evaluation, RuntimePermissionEvaluation::Deny { .. })
+            && self.stop_before_phase(cancellation, true)?
+        {
+            return Ok(());
+        }
         let challenge = permission_challenge(
             &self.request,
             &turn_id,
@@ -2180,6 +2382,9 @@ where
                         Some(&turn_id),
                         Some(&operation_id),
                     )?;
+                }
+                if self.stop_before_phase(cancellation, true)? {
+                    return Ok(());
                 }
                 self.state
                     .transition(AgentStateKind::Execution)
@@ -3450,14 +3655,82 @@ where
     }
 
     fn elapsed_limit_reached(&mut self) -> Result<bool, RuntimeLoopError> {
-        let now = self
-            .clock
-            .now_epoch_ms()
-            .map_err(RuntimeLoopError::Dependency)?;
-        let started = self
-            .started_at_epoch_ms
-            .ok_or(RuntimeLoopError::InvalidBoundaryResult)?;
-        Ok(now.saturating_sub(started) >= self.request.limits.max_elapsed_ms)
+        match self.observe_phase(None) {
+            Ok(_) => Ok(false),
+            Err(RuntimePhaseStop::Exhausted) => Ok(true),
+            Err(RuntimePhaseStop::Failed(error)) => Err(error),
+            Err(RuntimePhaseStop::Cancelled(_)) => Err(RuntimeLoopError::InvalidBoundaryResult),
+        }
+    }
+
+    fn observe_phase(
+        &mut self,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+    ) -> Result<u64, RuntimePhaseStop> {
+        let started = self.started_at_epoch_ms.ok_or(RuntimePhaseStop::Failed(
+            RuntimeLoopError::InvalidBoundaryResult,
+        ))?;
+        let control = RuntimePhaseControl::new(
+            &mut self.clock,
+            &self.request,
+            &self.correlation_id,
+            started,
+            self.events
+                .last()
+                .map_or(0, |event| event.occurred_at_epoch_ms),
+            &self.last_phase_observed_at,
+            cancellation,
+        );
+        control.observe()
+    }
+
+    fn stop_before_phase(
+        &mut self,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+        tool_requested_but_unstarted: bool,
+    ) -> Result<bool, RuntimeLoopError> {
+        match self.observe_phase(cancellation) {
+            Ok(_) => Ok(false),
+            Err(stop) => {
+                self.finish_phase_stop(stop, tool_requested_but_unstarted)?;
+                Ok(true)
+            }
+        }
+    }
+
+    fn finish_phase_stop(
+        &mut self,
+        stop: RuntimePhaseStop,
+        tool_requested_but_unstarted: bool,
+    ) -> Result<(), RuntimeLoopError> {
+        match stop {
+            RuntimePhaseStop::Failed(error) => Err(error),
+            RuntimePhaseStop::Cancelled(signal) => self.cancel(signal),
+            RuntimePhaseStop::Exhausted => {
+                if !tool_requested_but_unstarted && let Some(turn_id) = self.active_turn.clone() {
+                    return self.finish_budget_exhaustion(&turn_id);
+                }
+                if tool_requested_but_unstarted
+                    && (self.active_turn.is_none()
+                        || !matches!(
+                            self.state.current(),
+                            AgentStateKind::Approval | AgentStateKind::Execution
+                        ))
+                {
+                    return Err(RuntimeLoopError::InvalidBoundaryResult);
+                }
+                // The sequence admits this terminal only for an exact unstarted
+                // operation. Do not fabricate a denial, receipt or turn completion.
+                self.transition_terminal(AgentStateKind::Exhausted)?;
+                self.pending = None;
+                self.active_turn = None;
+                self.finish_terminal(
+                    AgentStateKind::Exhausted,
+                    vec!["runtime.budget.exhausted".to_owned()],
+                    None,
+                )
+            }
+        }
     }
 }
 
@@ -3875,18 +4148,18 @@ fn validate_runtime_resume_snapshot(
                 RuntimeEventKind::ModelRequested {
                     model_run_id,
                     request_sha256,
-                } => Some((model_run_id, request_sha256)),
+                } => Some((item, model_run_id, request_sha256)),
                 _ => None,
             })
             .collect::<Vec<_>>();
-        let Some((index, (_, request_digest))) = model_requests
+        let Some((index, (requested_event, _, request_digest))) = model_requests
             .iter()
             .enumerate()
-            .find(|(_, (id, _))| *id == model_run_id)
+            .find(|(_, (_, id, _))| *id == model_run_id)
         else {
             return Err(RuntimeLoopError::InvalidBoundaryResult);
         };
-        let expected = ModelRunRequest {
+        let mut expected = ModelRunRequest {
             schema_version: CONTRACT_SCHEMA_VERSION,
             model_run_id: ModelRunId::from_raw(derived_id(
                 "model-run",
@@ -3910,6 +4183,13 @@ fn validate_runtime_resume_snapshot(
             max_output_tokens: request.model_profile.decoding.max_output_tokens,
             timeout_ms: request.limits.max_elapsed_ms,
         };
+        bind_recovered_model_timeout(
+            &mut expected,
+            request.limits.max_elapsed_ms,
+            events[0].occurred_at_epoch_ms,
+            requested_event.occurred_at_epoch_ms,
+            request_digest,
+        )?;
         let result_digest = contract_sha256(result)?;
         if result.model_run_id != *model_run_id
             || !valid_model_result(result, &expected)
@@ -3995,6 +4275,31 @@ fn validate_runtime_resume_snapshot(
         }
     }
     Ok(())
+}
+
+fn bind_recovered_model_timeout(
+    expected: &mut ModelRunRequest,
+    original_budget_ms: u64,
+    run_started_at: u64,
+    model_requested_at: u64,
+    request_digest: &str,
+) -> Result<(), RuntimeLoopError> {
+    let elapsed = model_requested_at
+        .checked_sub(run_started_at)
+        .ok_or(RuntimeLoopError::InvalidBoundaryResult)?;
+    expected.timeout_ms = original_budget_ms.saturating_sub(elapsed);
+    if expected.timeout_ms > 0 && contract_sha256(expected)? == request_digest {
+        return Ok(());
+    }
+    // Older journals bind the original full timeout. Accept only that exact
+    // historical request digest; never infer an arbitrary duration or renew
+    // the run start used to admit subsequent work.
+    expected.timeout_ms = original_budget_ms;
+    if expected.timeout_ms > 0 && contract_sha256(expected)? == request_digest {
+        Ok(())
+    } else {
+        Err(RuntimeLoopError::InvalidBoundaryResult)
+    }
 }
 
 fn runtime_artifact_preview(bytes: &[u8]) -> Option<RuntimeArtifactPreview> {

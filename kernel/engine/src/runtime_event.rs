@@ -949,12 +949,36 @@ impl RuntimeEventSequence {
             }
             RuntimeEventKind::Progress { .. } | RuntimeEventKind::Metric { .. } => Ok(()),
             RuntimeEventKind::RunTerminal { state, .. } => {
+                // A run can expire while an exact tool request awaits admission.
+                // Preserve its request/decision history without inventing a deny,
+                // cancellation, receipt or completed turn. A started operation
+                // remains ineligible: its real terminal observation is required.
+                let exhausted_before_start = *state == AgentStateKind::Exhausted
+                    && self.active_turn_id.is_some()
+                    && self.active_model_run_id.is_none()
+                    && self.active_route_id.is_none()
+                    && self.model_completed_in_turn
+                    && self.tools.len() == 1
+                    && self.tools.values().all(|tool| {
+                        tool.phase == ToolPhase::Requested
+                            && tool.attempt_id.is_none()
+                            && tool.observation_id.is_none()
+                            && !tool.effect_observed
+                            && !tool.verification_observed
+                            && !tool.retry_decided
+                            && self.permissions.len() <= 1
+                            && self
+                                .permissions
+                                .values()
+                                .all(|operation| operation == &tool.operation_id)
+                    });
                 if !state.is_terminal()
-                    || self.active_turn_id.is_some()
-                    || self.active_model_run_id.is_some()
-                    || self.active_route_id.is_some()
-                    || !self.tools.is_empty()
-                    || !self.permissions.is_empty()
+                    || (!exhausted_before_start
+                        && (self.active_turn_id.is_some()
+                            || self.active_model_run_id.is_some()
+                            || self.active_route_id.is_some()
+                            || !self.tools.is_empty()
+                            || !self.permissions.is_empty()))
                     || (*state == AgentStateKind::Cancelled && !self.cancellation_observed)
                     || (matches!(state, AgentStateKind::Success | AgentStateKind::NoOp)
                         && (self.terminal_diagnostic_id.is_some()
@@ -963,6 +987,12 @@ impl RuntimeEventSequence {
                             })))
                 {
                     return Err(RuntimeEventError::IllegalTransition);
+                }
+                if exhausted_before_start {
+                    self.active_turn_id = None;
+                    self.model_completed_in_turn = false;
+                    self.tools.clear();
+                    self.permissions.clear();
                 }
                 self.terminal = true;
                 Ok(())
@@ -2870,6 +2900,113 @@ mod tests {
                     Err(RuntimeEventError::IllegalTransition)
                 );
             }
+        }
+    }
+
+    #[test]
+    fn run_deadline_exhaustion_closes_only_the_single_unstarted_operation() {
+        let events = valid_sequence();
+        for index in 1..10 {
+            for state in [
+                AgentStateKind::Success,
+                AgentStateKind::NoOp,
+                AgentStateKind::Failed,
+                AgentStateKind::Cancelled,
+                AgentStateKind::Declined,
+                AgentStateKind::Blocked,
+                AgentStateKind::Stalled,
+                AgentStateKind::Uncertain,
+                AgentStateKind::Exhausted,
+            ] {
+                let prior = &events[index];
+                let mut fixtures = FixtureStream {
+                    next_sequence: prior.sequence + 1,
+                    previous_sha256: prior.event_sha256.clone(),
+                    causation_event_id: Some(prior.event_id.clone()),
+                    occurred_at_epoch_ms: prior.occurred_at_epoch_ms + 1,
+                };
+                let mut sequence = RuntimeEventSequence::new();
+                for event in &events[..=index] {
+                    sequence.push(event).unwrap();
+                }
+                let terminal = fixtures.event(
+                    RuntimeEventKind::RunTerminal {
+                        state,
+                        outcome_sha256: hash('d'),
+                    },
+                    None,
+                    None,
+                );
+                let expected = state == AgentStateKind::Exhausted && (4..=6).contains(&index);
+                assert_eq!(
+                    sequence.push(&terminal).is_ok(),
+                    expected,
+                    "index={index}, state={state:?}"
+                );
+                assert_eq!(sequence.is_terminal(), expected);
+                if expected {
+                    let delayed_start = fixtures.event(
+                        RuntimeEventKind::ToolStarted {
+                            tool_call_id: ToolCallId::from_raw("tool-call-0001"),
+                            authority_sha256: hash('7'),
+                        },
+                        Some("turn-0001"),
+                        Some("operation-0001"),
+                    );
+                    assert!(sequence.push(&delayed_start).is_err());
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn run_deadline_exhaustion_cannot_hide_an_extra_operation_or_active_route() {
+        for extra_route in [false, true] {
+            let events = valid_sequence();
+            let prior = &events[4];
+            let mut fixtures = FixtureStream {
+                next_sequence: prior.sequence + 1,
+                previous_sha256: prior.event_sha256.clone(),
+                causation_event_id: Some(prior.event_id.clone()),
+                occurred_at_epoch_ms: prior.occurred_at_epoch_ms + 1,
+            };
+            let mut sequence = RuntimeEventSequence::new();
+            for event in &events[..=4] {
+                sequence.push(event).unwrap();
+            }
+            // These states are reached through valid preceding events, not by
+            // mutating the verifier's private state to manufacture a refusal.
+            let extra = if extra_route {
+                RuntimeEventKind::RouteSelected {
+                    route_decision_id: "route-extra".to_owned(),
+                    endpoint_class: agentmage_kernel_contracts::EndpointClass::StrictLocal,
+                    decision_sha256: hash('a'),
+                }
+            } else {
+                RuntimeEventKind::ToolRequested {
+                    tool_call_id: ToolCallId::from_raw("tool-call-extra"),
+                    arguments_sha256: hash('a'),
+                }
+            };
+            let extra = fixtures.event(
+                extra,
+                Some("turn-0001"),
+                (!extra_route).then_some("operation-extra"),
+            );
+            sequence.push(&extra).unwrap();
+            let terminal = fixtures.event(
+                RuntimeEventKind::RunTerminal {
+                    state: AgentStateKind::Exhausted,
+                    outcome_sha256: hash('d'),
+                },
+                None,
+                None,
+            );
+            assert_eq!(
+                sequence.push(&terminal),
+                Err(RuntimeEventError::IllegalTransition)
+            );
+            assert!(!sequence.is_terminal());
         }
     }
 
