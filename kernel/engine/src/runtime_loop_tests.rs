@@ -6541,4 +6541,450 @@ mod run_phase_deadline_tests {
         assert_eq!(executions.load(Ordering::SeqCst), 0);
         assert_valid_terminal_stream(&coordinator);
     }
+    mod controlled_preparation_tests {
+        use super::*;
+        use crate::runtime_loop::RuntimeModelOperationFailure;
+        use agentmage_kernel_contracts::{ModelOperationControl, ModelOperationStop};
+        use std::cell::{Cell, RefCell};
+
+        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        enum Stage {
+            Prepare,
+            Binding,
+            Dispatch,
+            None,
+        }
+        #[derive(Clone, Copy, Debug)]
+        enum Interruption {
+            Expire,
+            Cancel,
+            ForeignCancel,
+            CleanupUncertain,
+            Dependency,
+            SpoofCancel,
+            WrongStop,
+            LateExpire,
+            LateCancel,
+        }
+
+        struct ControlledModel {
+            inner: PhaseModel,
+            stage: Stage,
+            interruption: Interruption,
+            prepared: Cell<bool>,
+            preparations: usize,
+            bindings: Cell<usize>,
+            dispatches: usize,
+            remaining: RefCell<Vec<u64>>,
+        }
+
+        impl ControlledModel {
+            fn observe(
+                &self,
+                stage: Stage,
+                control: &dyn ModelOperationControl,
+            ) -> Result<(), RuntimeModelOperationFailure> {
+                self.remaining.borrow_mut().push(
+                    control
+                        .remaining_ms()
+                        .map_err(RuntimeModelOperationFailure::Stopped)?
+                        .get(),
+                );
+                if stage != self.stage {
+                    return Ok(());
+                }
+                match self.interruption {
+                    Interruption::LateExpire | Interruption::LateCancel => return Ok(()),
+                    Interruption::Expire => {
+                        self.inner.clock.now.fetch_add(2_000, Ordering::SeqCst);
+                    }
+                    Interruption::Cancel
+                    | Interruption::ForeignCancel
+                    | Interruption::CleanupUncertain
+                    | Interruption::Dependency
+                    | Interruption::WrongStop => {
+                        self.inner
+                            .clock
+                            .cancellation
+                            .requested
+                            .store(true, Ordering::SeqCst);
+                    }
+                    Interruption::SpoofCancel => {
+                        return Err(RuntimeModelOperationFailure::Stopped(
+                            ModelOperationStop::Cancelled,
+                        ));
+                    }
+                }
+                let observed = control
+                    .remaining_ms()
+                    .map(|_| ())
+                    .map_err(RuntimeModelOperationFailure::Stopped);
+                match self.interruption {
+                    Interruption::CleanupUncertain => {
+                        assert!(observed.is_err());
+                        Err(RuntimePortFailure::Uncertain.into())
+                    }
+                    Interruption::Dependency => {
+                        assert!(observed.is_err());
+                        Err(RuntimePortFailure::Unavailable.into())
+                    }
+                    Interruption::WrongStop => {
+                        assert!(observed.is_err());
+                        Err(RuntimeModelOperationFailure::Stopped(
+                            ModelOperationStop::TimedOut,
+                        ))
+                    }
+                    _ => observed,
+                }
+            }
+        }
+
+        impl RuntimeModelPort for ControlledModel {
+            fn exact_profile(&self) -> &ExactModelProfile {
+                self.inner.exact_profile()
+            }
+            fn bind_context_tokens(
+                &self,
+                _: &mut ModelContextPacket,
+            ) -> Result<(), RuntimePortFailure> {
+                panic!("controlled coordinator must not call legacy token binding")
+            }
+            fn run_model(
+                &mut self,
+                _: &ModelRunRequest,
+                _: &ModelContextPacket,
+                _: Option<&dyn ModelCancellationProbe>,
+            ) -> Result<ModelRunResult, RuntimePortFailure> {
+                panic!("controlled coordinator must not call legacy dispatch")
+            }
+            fn prepare_model_controlled(
+                &mut self,
+                control: &dyn ModelOperationControl,
+            ) -> Result<(), RuntimeModelOperationFailure> {
+                self.preparations += 1;
+                self.observe(Stage::Prepare, control)?;
+                self.prepared.set(true);
+                Ok(())
+            }
+            fn bind_context_tokens_controlled(
+                &self,
+                packet: &mut ModelContextPacket,
+                control: &dyn ModelOperationControl,
+            ) -> Result<(), RuntimeModelOperationFailure> {
+                assert!(
+                    self.prepared.get(),
+                    "preparation must precede exact token binding"
+                );
+                self.bindings.set(self.bindings.get() + 1);
+                self.observe(Stage::Binding, control)?;
+                self.inner.bind_context_tokens(packet).map_err(Into::into)
+            }
+            fn run_model_controlled(
+                &mut self,
+                request: &ModelRunRequest,
+                context: &ModelContextPacket,
+                cancellation: Option<&dyn ModelCancellationProbe>,
+                control: &dyn ModelOperationControl,
+            ) -> Result<ModelRunResult, RuntimeModelOperationFailure> {
+                self.dispatches += 1;
+                self.observe(Stage::Dispatch, control)?;
+                let result = self
+                    .inner
+                    .run_model(request, context, cancellation)
+                    .map_err(RuntimeModelOperationFailure::Port)?;
+                match self.interruption {
+                    Interruption::LateExpire => {
+                        self.inner.clock.now.fetch_add(2_000, Ordering::SeqCst);
+                    }
+                    Interruption::LateCancel => {
+                        self.inner
+                            .clock
+                            .cancellation
+                            .requested
+                            .store(true, Ordering::SeqCst);
+                    }
+                    _ => return Ok(result),
+                }
+                assert!(control.remaining_ms().is_err());
+                Ok(result)
+            }
+        }
+
+        type ControlledCoordinator = ReusableRuntimeCoordinator<
+            ControlledModel,
+            PhaseContext,
+            PhaseBoundary,
+            PhaseVerifier,
+            PhaseClock,
+        >;
+        fn fixture(
+            stage: Stage,
+            interruption: Interruption,
+        ) -> (ControlledCoordinator, Arc<AtomicUsize>) {
+            let (mut base, effects) =
+                phase_fixture(DelayAt::None, &[ModelScript::Tool, ModelScript::Completion]);
+            if matches!(interruption, Interruption::ForeignCancel) {
+                let mut signal = base.clock.cancellation.signal.clone();
+                signal.task_id = TaskId::from_raw("foreign-controlled-preparation-task");
+                let probe = Arc::new(PressureCancellationProbe {
+                    requested: AtomicBool::new(false),
+                    signal,
+                });
+                base.clock.cancellation = Arc::clone(&probe);
+                base.model.clock.cancellation = probe;
+            }
+            let model = ControlledModel {
+                inner: base.model,
+                stage,
+                interruption,
+                prepared: Cell::new(false),
+                preparations: 0,
+                bindings: Cell::new(0),
+                dispatches: 0,
+                remaining: RefCell::new(Vec::new()),
+            };
+            (
+                ReusableRuntimeCoordinator::new(
+                    base.request,
+                    model,
+                    base.context,
+                    base.registry,
+                    base.tool_boundary,
+                    base.verifier,
+                    base.clock,
+                )
+                .unwrap(),
+                effects,
+            )
+        }
+
+        #[test]
+        fn controlled_preparation_stops_each_phase_before_generation_or_effect() {
+            for stage in [Stage::Prepare, Stage::Binding, Stage::Dispatch] {
+                for (interruption, expected) in [
+                    (Interruption::Expire, AgentStateKind::Exhausted),
+                    (Interruption::Cancel, AgentStateKind::Cancelled),
+                ] {
+                    let (mut coordinator, effects) = fixture(stage, interruption);
+                    let cancellation = Arc::clone(&coordinator.clock.cancellation);
+                    coordinator
+                        .run_until_boundary(None, Some(cancellation.as_ref()))
+                        .unwrap();
+                    assert_eq!(
+                        coordinator.outcome().unwrap().state,
+                        expected,
+                        "{stage:?} {interruption:?}"
+                    );
+                    assert_eq!(coordinator.model.preparations, 1);
+                    assert_eq!(coordinator.model.inner.inner.calls, 0);
+                    assert_eq!(effects.load(Ordering::SeqCst), 0);
+                    assert_eq!(coordinator.verifier.calls, 0);
+                    if stage == Stage::Prepare {
+                        assert_eq!(coordinator.model.bindings.get(), 0);
+                    }
+                    if stage != Stage::Dispatch {
+                        assert_eq!(coordinator.model.dispatches, 0);
+                    }
+                    assert_eq!(
+                        coordinator
+                            .events()
+                            .iter()
+                            .filter(|event| matches!(
+                                event.kind,
+                                RuntimeEventKind::ModelRequested { .. }
+                            ))
+                            .count(),
+                        usize::from(stage == Stage::Dispatch)
+                    );
+                    assert_valid_terminal_stream(&coordinator);
+                    let events = coordinator.events().to_vec();
+                    assert!(
+                        coordinator
+                            .run_until_boundary(None, Some(cancellation.as_ref()))
+                            .is_ok()
+                    );
+                    assert_eq!(coordinator.events(), events);
+                    assert_eq!(coordinator.model.preparations, 1);
+                }
+            }
+        }
+
+        #[test]
+        fn controlled_preparation_preserves_dependency_and_cleanup_failure_over_cancellation() {
+            for stage in [Stage::Prepare, Stage::Binding, Stage::Dispatch] {
+                for interruption in [Interruption::CleanupUncertain, Interruption::Dependency] {
+                    let (mut coordinator, effects) = fixture(stage, interruption);
+                    let cancellation = Arc::clone(&coordinator.clock.cancellation);
+                    coordinator
+                        .run_until_boundary(None, Some(cancellation.as_ref()))
+                        .unwrap();
+                    assert_eq!(coordinator.outcome().unwrap().state, AgentStateKind::Failed);
+                    let code = if matches!(interruption, Interruption::CleanupUncertain) {
+                        RuntimePortFailure::Uncertain.code()
+                    } else {
+                        RuntimePortFailure::Unavailable.code()
+                    };
+                    assert!(
+                        coordinator
+                            .outcome()
+                            .unwrap()
+                            .unresolved_codes
+                            .iter()
+                            .any(|item| item == code)
+                    );
+                    assert!(!coordinator.events().iter().any(|event| matches!(
+                        event.kind,
+                        RuntimeEventKind::CancellationObserved { .. }
+                    )));
+                    assert_eq!(coordinator.model.inner.inner.calls, 0);
+                    assert_eq!(effects.load(Ordering::SeqCst), 0);
+                    assert_valid_terminal_stream(&coordinator);
+                }
+            }
+        }
+
+        #[test]
+        fn controlled_preparation_refuses_foreign_or_invented_stop_evidence() {
+            for stage in [Stage::Prepare, Stage::Binding, Stage::Dispatch] {
+                for interruption in [
+                    Interruption::ForeignCancel,
+                    Interruption::SpoofCancel,
+                    Interruption::WrongStop,
+                ] {
+                    let (mut coordinator, effects) = fixture(stage, interruption);
+                    let cancellation = Arc::clone(&coordinator.clock.cancellation);
+                    let result = coordinator.run_until_boundary(None, Some(cancellation.as_ref()));
+                    if matches!(interruption, Interruption::ForeignCancel) {
+                        assert!(result.is_err());
+                        assert!(coordinator.outcome().is_none());
+                    } else {
+                        result.unwrap();
+                        assert_eq!(coordinator.outcome().unwrap().state, AgentStateKind::Failed);
+                        assert_valid_terminal_stream(&coordinator);
+                    }
+                    assert!(!coordinator.events().iter().any(|event| matches!(
+                        event.kind,
+                        RuntimeEventKind::CancellationObserved { .. }
+                    )));
+                    assert_eq!(coordinator.model.inner.inner.calls, 0);
+                    assert_eq!(effects.load(Ordering::SeqCst), 0);
+                }
+            }
+        }
+
+        #[test]
+        fn controlled_preparation_success_keeps_one_original_run_budget_and_request_digests() {
+            let (mut coordinator, effects) = fixture(Stage::None, Interruption::Expire);
+            coordinator.run_until_boundary(None, None).unwrap();
+            assert_eq!(
+                coordinator.outcome().unwrap().state,
+                AgentStateKind::Success
+            );
+            assert_eq!(coordinator.model.preparations, 2);
+            assert_eq!(coordinator.model.inner.inner.calls, 2);
+            assert_eq!(effects.load(Ordering::SeqCst), 1);
+            let remaining = coordinator.model.remaining.borrow();
+            assert!(remaining.windows(2).all(|pair| pair[0] > pair[1]));
+            for request in &coordinator.model.inner.requests {
+                assert!(coordinator.events().iter().any(|event| matches!(&event.kind,
+                    RuntimeEventKind::ModelRequested { request_sha256, .. } if request_sha256 == &contract_sha256(request).unwrap())));
+            }
+            assert_valid_terminal_stream(&coordinator);
+        }
+        #[test]
+        fn controlled_preparation_retains_the_exact_one_shot_signal_at_every_phase() {
+            for stage in [Stage::Prepare, Stage::Binding, Stage::Dispatch] {
+                let (mut coordinator, effects) = fixture(stage, Interruption::Cancel);
+                let cancellation = OneShotPhaseProbe {
+                    inner: Arc::clone(&coordinator.clock.cancellation),
+                    delivered: AtomicUsize::new(0),
+                };
+                coordinator
+                    .run_until_boundary(None, Some(&cancellation))
+                    .unwrap();
+                assert_eq!(cancellation.delivered.load(Ordering::SeqCst), 1);
+                assert_eq!(
+                    coordinator.outcome().unwrap().state,
+                    AgentStateKind::Cancelled
+                );
+                let observed: Vec<_> = coordinator
+                    .events()
+                    .iter()
+                    .filter_map(|event| match &event.kind {
+                        RuntimeEventKind::CancellationObserved { cancellation_id } => {
+                            Some(cancellation_id)
+                        }
+                        _ => None,
+                    })
+                    .collect();
+                assert_eq!(observed, [&cancellation.inner.signal.cancellation_id]);
+                assert_eq!(coordinator.model.inner.inner.calls, 0);
+                assert_eq!(effects.load(Ordering::SeqCst), 0);
+                assert_valid_terminal_stream(&coordinator);
+            }
+        }
+
+        #[test]
+        fn controlled_preparation_failed_probe_remains_failure_without_cancellation_evidence() {
+            for stage in [Stage::Prepare, Stage::Binding, Stage::Dispatch] {
+                let (mut coordinator, effects) = fixture(stage, Interruption::Cancel);
+                let cancellation = InvalidPhaseProbe {
+                    inner: Arc::clone(&coordinator.clock.cancellation),
+                    foreign_identity: false,
+                };
+                assert_eq!(
+                    coordinator.run_until_boundary(None, Some(&cancellation)),
+                    Err(RuntimeLoopError::Dependency(
+                        RuntimePortFailure::Unavailable
+                    ))
+                );
+                assert!(coordinator.outcome().is_none());
+                assert_eq!(coordinator.model.inner.inner.calls, 0);
+                assert_eq!(effects.load(Ordering::SeqCst), 0);
+                assert!(!coordinator.events().iter().any(|event| matches!(
+                    event.kind,
+                    RuntimeEventKind::CancellationRequested { .. }
+                        | RuntimeEventKind::CancellationObserved { .. }
+                )));
+                let preparations = coordinator.model.preparations;
+                assert!(
+                    coordinator
+                        .run_until_boundary(None, Some(&cancellation))
+                        .is_err()
+                );
+                assert_eq!(coordinator.model.preparations, preparations);
+            }
+        }
+
+        #[test]
+        fn controlled_dispatch_retains_accounting_before_latched_stop_and_no_effect() {
+            for (interruption, expected) in [
+                (Interruption::LateExpire, AgentStateKind::Exhausted),
+                (Interruption::LateCancel, AgentStateKind::Cancelled),
+            ] {
+                let (mut coordinator, effects) = fixture(Stage::Dispatch, interruption);
+                let cancellation = OneShotPhaseProbe {
+                    inner: Arc::clone(&coordinator.clock.cancellation),
+                    delivered: AtomicUsize::new(0),
+                };
+                coordinator
+                    .run_until_boundary(None, Some(&cancellation))
+                    .unwrap();
+                assert_eq!(coordinator.outcome().unwrap().state, expected);
+                assert_eq!(coordinator.outcome().unwrap().model_call_count, 1);
+                assert_eq!(coordinator.model.inner.inner.calls, 1);
+                assert_eq!(coordinator.resources.durable_usage().model_calls, 1);
+                assert!(coordinator.resources.durable_usage().elapsed_ms > 0);
+                assert!(coordinator.resources.durable_usage().peak_memory_bytes > 0);
+                assert_eq!(effects.load(Ordering::SeqCst), 0);
+                assert_eq!(coordinator.tool_boundary.evaluations, 0);
+                assert_eq!(coordinator.verifier.calls, 0);
+                assert_eq!(
+                    cancellation.delivered.load(Ordering::SeqCst),
+                    usize::from(matches!(interruption, Interruption::LateCancel))
+                );
+                assert_valid_terminal_stream(&coordinator);
+            }
+        }
+    }
 }

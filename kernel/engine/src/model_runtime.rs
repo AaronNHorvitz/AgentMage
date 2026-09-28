@@ -6,10 +6,10 @@ use agentmage_kernel_contracts::{
     CorrelationId, ExactModelProfile, LocalModelRuntime, ModelCancellationProbe,
     ModelCapabilityState, ModelContextPacket, ModelDispatchPreflight, ModelFamilyCodec,
     ModelFinishReason, ModelHealth, ModelHealthState, ModelLifecycleState, ModelLoadReceipt,
-    ModelManifestObservation, ModelModality, ModelProfileId, ModelResourceReport, ModelRunRequest,
-    ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity,
-    ModelServingCachePolicy, ModelServingCapabilities, ModelStreamSink, ModelUnloadReceipt,
-    StreamedModelFragment, TaskId, TokenCountResult,
+    ModelManifestObservation, ModelModality, ModelOperationControl, ModelOperationStop,
+    ModelProfileId, ModelResourceReport, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
+    ModelRuntimeFailure, ModelRuntimeIdentity, ModelServingCachePolicy, ModelServingCapabilities,
+    ModelStreamSink, ModelUnloadReceipt, StreamedModelFragment, TaskId, TokenCountResult,
 };
 use sha2::{Digest, Sha256};
 
@@ -88,6 +88,12 @@ pub enum ModelRuntimeGateError {
     UsageMismatch,
     /// Terminal result does not match the exact run or stream.
     ResultMismatch,
+    /// The borrowed run owner stopped this cooperative operation.
+    OperationStopped(ModelOperationStop),
+    /// Native cleanup could not establish empty process and file ownership.
+    CleanupUncertain,
+    /// This controller already attempted controlled loading.
+    PreparationAlreadyAttempted,
     /// Runtime returned a typed non-success.
     RuntimeFailure,
 }
@@ -120,6 +126,9 @@ impl ModelRuntimeGateError {
             Self::ProposalInvalid => "model.runtime.proposal-invalid",
             Self::UsageMismatch => "model.runtime.usage-mismatch",
             Self::ResultMismatch => "model.runtime.result-mismatch",
+            Self::OperationStopped(stop) => stop.code(),
+            Self::CleanupUncertain => "model.operation.cleanup-uncertain",
+            Self::PreparationAlreadyAttempted => "model.operation.preparation-already-attempted",
             Self::RuntimeFailure => "model.runtime.failed",
         }
     }
@@ -251,6 +260,8 @@ pub struct LocalModelController<R: LocalModelRuntime, C: ModelFamilyCodec> {
     codec: C,
     admitted: AdmittedModelProfile,
     loaded: bool,
+    controlled_load_attempted: bool,
+    controlled_preparation_failed: bool,
     served_capabilities: Option<ModelServingCapabilities>,
     safety_margin_tokens: u32,
     rejected_output: Option<RejectedModelOutput>,
@@ -312,6 +323,96 @@ pub struct RejectedModelOutput {
     pub response_bytes: Vec<u8>,
 }
 
+fn check_model_operation(
+    control: Option<&dyn ModelOperationControl>,
+) -> Result<(), ModelRuntimeGateError> {
+    if let Some(control) = control {
+        control
+            .remaining_ms()
+            .map_err(ModelRuntimeGateError::OperationStopped)?;
+    }
+    Ok(())
+}
+
+fn controlled_runtime_error(
+    error: ModelRuntimeFailure,
+    fallback: ModelRuntimeGateError,
+) -> ModelRuntimeGateError {
+    if error.code == "model.operation.cleanup-uncertain" {
+        ModelRuntimeGateError::CleanupUncertain
+    } else if let Some(stop) = ModelOperationStop::from_failure(&error) {
+        ModelRuntimeGateError::OperationStopped(stop)
+    } else {
+        fallback
+    }
+}
+
+struct RuntimeObservation<'a, R> {
+    runtime: &'a R,
+    control: Option<&'a dyn ModelOperationControl>,
+}
+
+impl<R: LocalModelRuntime> RuntimeObservation<'_, R> {
+    fn verify_manifest(
+        &self,
+        profile: &ExactModelProfile,
+    ) -> Result<ModelManifestObservation, ModelRuntimeFailure> {
+        if let Some(control) = self.control {
+            control.remaining_ms()?;
+        }
+        let result = match self.control {
+            Some(control) => self.runtime.verify_manifest_controlled(profile, control),
+            None => self.runtime.verify_manifest(profile),
+        }?;
+        if let Some(control) = self.control {
+            control.remaining_ms()?;
+        }
+        Ok(result)
+    }
+    fn health(&self) -> Result<ModelHealth, ModelRuntimeFailure> {
+        if let Some(control) = self.control {
+            control.remaining_ms()?;
+        }
+        let result = match self.control {
+            Some(control) => self.runtime.health_controlled(control),
+            None => Ok(self.runtime.health()),
+        }?;
+        if let Some(control) = self.control {
+            control.remaining_ms()?;
+        }
+        Ok(result)
+    }
+    fn serving_capabilities(&self) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+        if let Some(control) = self.control {
+            control.remaining_ms()?;
+        }
+        let result = match self.control {
+            Some(control) => self.runtime.serving_capabilities_controlled(control),
+            None => self.runtime.serving_capabilities(),
+        }?;
+        if let Some(control) = self.control {
+            control.remaining_ms()?;
+        }
+        Ok(result)
+    }
+    fn count_tokens(
+        &self,
+        context: &agentmage_kernel_contracts::EncodedModelContext,
+    ) -> Result<TokenCountResult, ModelRuntimeFailure> {
+        if let Some(control) = self.control {
+            control.remaining_ms()?;
+        }
+        let result = match self.control {
+            Some(control) => self.runtime.count_tokens_controlled(context, control),
+            None => self.runtime.count_tokens(context),
+        }?;
+        if let Some(control) = self.control {
+            control.remaining_ms()?;
+        }
+        Ok(result)
+    }
+}
+
 impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
     /// Binds one admitted profile to one exact runtime identity.
     pub fn new(
@@ -335,6 +436,8 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             codec,
             admitted,
             loaded: false,
+            controlled_load_attempted: false,
+            controlled_preparation_failed: false,
             served_capabilities: None,
             safety_margin_tokens,
             rejected_output: None,
@@ -360,42 +463,138 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
 
     /// Verifies and loads the exact selected tuple.
     pub fn load(&mut self) -> Result<ModelLoadReceipt, ModelRuntimeGateError> {
+        self.load_using(None)
+    }
+
+    /// Runs `load` with cooperative control from the existing run owner.
+    pub fn load_controlled(
+        &mut self,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelLoadReceipt, ModelRuntimeGateError> {
+        if self.controlled_load_attempted || self.controlled_preparation_failed {
+            return Err(ModelRuntimeGateError::PreparationAlreadyAttempted);
+        }
+        self.controlled_load_attempted = true;
+        self.load_using(Some(control))
+    }
+
+    fn load_using(
+        &mut self,
+        control: Option<&dyn ModelOperationControl>,
+    ) -> Result<ModelLoadReceipt, ModelRuntimeGateError> {
+        check_model_operation(control)?;
         if self.loaded {
             return Err(ModelRuntimeGateError::AlreadyLoaded);
         }
-        let observation = self
-            .runtime
-            .verify_manifest(&self.admitted.profile)
-            .map_err(|_| ModelRuntimeGateError::RuntimeFailure)?;
+        let observation = RuntimeObservation {
+            runtime: &self.runtime,
+            control,
+        }
+        .verify_manifest(&self.admitted.profile)
+        .map_err(|error| controlled_runtime_error(error, ModelRuntimeGateError::RuntimeFailure))?;
         validate_manifest_observation(&self.admitted.profile, &observation)?;
-        let receipt = self
-            .runtime
-            .load(&self.admitted.profile)
-            .map_err(|_| ModelRuntimeGateError::RuntimeFailure)?;
-        validate_load_receipt(&self.admitted.profile, &receipt)?;
+        let receipt = match control {
+            Some(control) => self
+                .runtime
+                .load_controlled(&self.admitted.profile, control),
+            None => self.runtime.load(&self.admitted.profile),
+        }
+        .map_err(|error| controlled_runtime_error(error, ModelRuntimeGateError::RuntimeFailure))?;
+        let validation = validate_load_receipt(&self.admitted.profile, &receipt)
+            .and_then(|()| check_model_operation(control));
+        if let Err(error) = validation {
+            if control.is_some() {
+                self.cleanup_failed_preparation()?;
+            }
+            return Err(error);
+        }
         self.served_capabilities = Some(receipt.served_capabilities.clone());
         self.loaded = true;
         Ok(receipt)
     }
 
+    /// Prepares an unloaded controller once; later turns retain the same exact loaded tuple.
+    pub fn ensure_prepared_controlled(
+        &mut self,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelServingCapabilities, ModelRuntimeGateError> {
+        if self.controlled_preparation_failed {
+            return Err(ModelRuntimeGateError::PreparationAlreadyAttempted);
+        }
+        let preparation = (|| {
+            check_model_operation(Some(control))?;
+            if !self.loaded {
+                self.load_controlled(control)?;
+            }
+            self.serving_capabilities_controlled(control)
+        })();
+        if preparation.is_err() {
+            self.controlled_preparation_failed = true;
+        }
+        preparation
+    }
+
+    fn cleanup_failed_preparation(&mut self) -> Result<(), ModelRuntimeGateError> {
+        let receipt = self
+            .runtime
+            .unload(&self.admitted.profile.profile_id)
+            .map_err(|_| ModelRuntimeGateError::CleanupUncertain)?;
+        if receipt.profile_id != self.admitted.profile.profile_id
+            || receipt.adapter_id != self.admitted.profile.runtime.adapter_id
+            || !receipt.empty
+        {
+            return Err(ModelRuntimeGateError::CleanupUncertain);
+        }
+        self.loaded = false;
+        self.served_capabilities = None;
+        Ok(())
+    }
+
     /// Returns health only when it remains bound to the exact loaded tuple.
     pub fn health(&self) -> Result<ModelHealth, ModelRuntimeGateError> {
+        self.health_using(None)
+    }
+
+    /// Runs `health` with cooperative control from the existing run owner.
+    pub fn health_controlled(
+        &self,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelHealth, ModelRuntimeGateError> {
+        self.health_using(Some(control))
+    }
+
+    fn health_using(
+        &self,
+        control: Option<&dyn ModelOperationControl>,
+    ) -> Result<ModelHealth, ModelRuntimeGateError> {
+        check_model_operation(control)?;
         if !self.loaded {
             return Err(ModelRuntimeGateError::NotLoaded);
         }
-        let health = self.runtime.health();
+        let health = RuntimeObservation {
+            runtime: &self.runtime,
+            control,
+        }
+        .health()
+        .map_err(|error| controlled_runtime_error(error, ModelRuntimeGateError::RuntimeFailure))?;
         if health.adapter_id != self.admitted.profile.runtime.adapter_id
             || health.profile_id.as_ref() != Some(&self.admitted.profile.profile_id)
             || health.state != ModelHealthState::Ready
         {
             return Err(ModelRuntimeGateError::RuntimeMismatch);
         }
-        let current = self.runtime.serving_capabilities().map_err(|error| {
-            if error.code == "model.served-capability.missing" {
+        let current = RuntimeObservation {
+            runtime: &self.runtime,
+            control,
+        }
+        .serving_capabilities()
+        .map_err(|error| {
+            let fallback = if error.code == "model.served-capability.missing" {
                 ModelRuntimeGateError::ServedCapabilityMissing
             } else {
                 ModelRuntimeGateError::ServedCapabilityDrift
-            }
+            };
+            controlled_runtime_error(error, fallback)
         })?;
         validate_served_capabilities(&self.admitted.profile, &current)?;
         if self.served_capabilities.as_ref() != Some(&current) {
@@ -406,7 +605,23 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
 
     /// Returns the current effective served-capability binding after revalidation.
     pub fn serving_capabilities(&self) -> Result<ModelServingCapabilities, ModelRuntimeGateError> {
-        self.health()?;
+        self.serving_capabilities_using(None)
+    }
+
+    /// Runs `serving_capabilities` with cooperative control from the existing run owner.
+    pub fn serving_capabilities_controlled(
+        &self,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelServingCapabilities, ModelRuntimeGateError> {
+        self.serving_capabilities_using(Some(control))
+    }
+
+    fn serving_capabilities_using(
+        &self,
+        control: Option<&dyn ModelOperationControl>,
+    ) -> Result<ModelServingCapabilities, ModelRuntimeGateError> {
+        check_model_operation(control)?;
+        self.health_using(control)?;
         self.served_capabilities
             .clone()
             .ok_or(ModelRuntimeGateError::ServedCapabilityMissing)
@@ -417,15 +632,35 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         &self,
         packet: &ModelContextPacket,
     ) -> Result<TokenCountResult, ModelRuntimeGateError> {
+        self.count_tokens_using(packet, None)
+    }
+
+    /// Runs `count_tokens` with cooperative control from the existing run owner.
+    pub fn count_tokens_controlled(
+        &self,
+        packet: &ModelContextPacket,
+        control: &dyn ModelOperationControl,
+    ) -> Result<TokenCountResult, ModelRuntimeGateError> {
+        self.count_tokens_using(packet, Some(control))
+    }
+
+    fn count_tokens_using(
+        &self,
+        packet: &ModelContextPacket,
+        control: Option<&dyn ModelOperationControl>,
+    ) -> Result<TokenCountResult, ModelRuntimeGateError> {
+        check_model_operation(control)?;
         self.validate_packet(packet)?;
         let context = self
             .codec
             .encode_context(&self.admitted.profile, packet)
             .map_err(|_| ModelRuntimeGateError::RequestMismatch)?;
-        let result = self
-            .runtime
-            .count_tokens(&context)
-            .map_err(|_| ModelRuntimeGateError::RuntimeFailure)?;
+        let result = RuntimeObservation {
+            runtime: &self.runtime,
+            control,
+        }
+        .count_tokens(&context)
+        .map_err(|error| controlled_runtime_error(error, ModelRuntimeGateError::RuntimeFailure))?;
         if result.profile_id != self.admitted.profile.profile_id
             || result.context_packet_id != packet.context_packet_id
             || result.packet_sha256 != context.sha256
@@ -446,6 +681,24 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         &self,
         packet: &mut ModelContextPacket,
     ) -> Result<TokenCountResult, ModelRuntimeGateError> {
+        self.bind_token_count_using(packet, None)
+    }
+
+    /// Runs `bind_token_count` with cooperative control from the existing run owner.
+    pub fn bind_token_count_controlled(
+        &self,
+        packet: &mut ModelContextPacket,
+        control: &dyn ModelOperationControl,
+    ) -> Result<TokenCountResult, ModelRuntimeGateError> {
+        self.bind_token_count_using(packet, Some(control))
+    }
+
+    fn bind_token_count_using(
+        &self,
+        packet: &mut ModelContextPacket,
+        control: Option<&dyn ModelOperationControl>,
+    ) -> Result<TokenCountResult, ModelRuntimeGateError> {
+        check_model_operation(control)?;
         if !self.loaded {
             return Err(ModelRuntimeGateError::NotLoaded);
         }
@@ -461,15 +714,20 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         }
         packet.input_tokens = 1;
         for _ in 0..4 {
+            check_model_operation(control)?;
             packet.packet_sha256 = model_packet_digest(packet)?;
             let context = self
                 .codec
                 .encode_context(&self.admitted.profile, packet)
                 .map_err(|_| ModelRuntimeGateError::RequestMismatch)?;
-            let result = self
-                .runtime
-                .count_tokens(&context)
-                .map_err(|_| ModelRuntimeGateError::RuntimeFailure)?;
+            let result = RuntimeObservation {
+                runtime: &self.runtime,
+                control,
+            }
+            .count_tokens(&context)
+            .map_err(|error| {
+                controlled_runtime_error(error, ModelRuntimeGateError::RuntimeFailure)
+            })?;
             if result.profile_id != self.admitted.profile.profile_id
                 || result.context_packet_id != packet.context_packet_id
                 || result.packet_sha256 != context.sha256
@@ -495,8 +753,26 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         &self,
         packet: &mut ModelContextPacket,
     ) -> Result<TokenCountResult, ModelRuntimeGateError> {
-        let served = self.serving_capabilities()?;
-        let count = self.bind_token_count(packet)?;
+        self.bind_dispatch_context_using(packet, None)
+    }
+
+    /// Runs `bind_dispatch_context` with cooperative control from the existing run owner.
+    pub fn bind_dispatch_context_controlled(
+        &self,
+        packet: &mut ModelContextPacket,
+        control: &dyn ModelOperationControl,
+    ) -> Result<TokenCountResult, ModelRuntimeGateError> {
+        self.bind_dispatch_context_using(packet, Some(control))
+    }
+
+    fn bind_dispatch_context_using(
+        &self,
+        packet: &mut ModelContextPacket,
+        control: Option<&dyn ModelOperationControl>,
+    ) -> Result<TokenCountResult, ModelRuntimeGateError> {
+        check_model_operation(control)?;
+        let served = self.serving_capabilities_using(control)?;
+        let count = self.bind_token_count_using(packet, control)?;
         if count.tokens
             > self
                 .usable_input_capacity(&served, self.admitted.profile.decoding.max_output_tokens)?
@@ -527,17 +803,39 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         request: &ModelRunRequest,
         packet: &ModelContextPacket,
     ) -> Result<PreparedModelRequest, ModelRuntimeGateError> {
-        let served = self.serving_capabilities()?;
+        self.prepare_using(request, packet, None)
+    }
+
+    /// Runs `prepare` with cooperative control from the existing run owner.
+    pub fn prepare_controlled(
+        &self,
+        request: &ModelRunRequest,
+        packet: &ModelContextPacket,
+        control: &dyn ModelOperationControl,
+    ) -> Result<PreparedModelRequest, ModelRuntimeGateError> {
+        self.prepare_using(request, packet, Some(control))
+    }
+
+    fn prepare_using(
+        &self,
+        request: &ModelRunRequest,
+        packet: &ModelContextPacket,
+        control: Option<&dyn ModelOperationControl>,
+    ) -> Result<PreparedModelRequest, ModelRuntimeGateError> {
+        check_model_operation(control)?;
+        let served = self.serving_capabilities_using(control)?;
         self.validate_packet(packet)?;
         self.validate_request(request, packet)?;
         let context = self
             .codec
             .encode_context(&self.admitted.profile, packet)
             .map_err(|_| ModelRuntimeGateError::RequestMismatch)?;
-        let count = self
-            .runtime
-            .count_tokens(&context)
-            .map_err(|_| ModelRuntimeGateError::RuntimeFailure)?;
+        let count = RuntimeObservation {
+            runtime: &self.runtime,
+            control,
+        }
+        .count_tokens(&context)
+        .map_err(|error| controlled_runtime_error(error, ModelRuntimeGateError::RuntimeFailure))?;
         if count.profile_id != self.admitted.profile.profile_id
             || count.context_packet_id != packet.context_packet_id
             || count.packet_sha256 != context.sha256
@@ -636,6 +934,26 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         prepared: PreparedModelRequest,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<VerifiedModelOutput, ModelRuntimeGateError> {
+        self.dispatch_with_output_using(prepared, cancellation, None)
+    }
+
+    /// Runs `dispatch_with_output` with cooperative control from the existing run owner.
+    pub fn dispatch_with_output_controlled(
+        &mut self,
+        prepared: PreparedModelRequest,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+        control: &dyn ModelOperationControl,
+    ) -> Result<VerifiedModelOutput, ModelRuntimeGateError> {
+        self.dispatch_with_output_using(prepared, cancellation, Some(control))
+    }
+
+    fn dispatch_with_output_using(
+        &mut self,
+        prepared: PreparedModelRequest,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+        control: Option<&dyn ModelOperationControl>,
+    ) -> Result<VerifiedModelOutput, ModelRuntimeGateError> {
+        check_model_operation(control)?;
         self.rejected_output = None;
         let PreparedModelRequest {
             request,
@@ -644,10 +962,14 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             task_id,
         } = prepared;
         validate_prepared_request(&self.admitted.profile, &request, &context, &preflight)?;
-        let current = self
-            .runtime
-            .serving_capabilities()
-            .map_err(|_| ModelRuntimeGateError::PreparedRequestStale)?;
+        let current = RuntimeObservation {
+            runtime: &self.runtime,
+            control,
+        }
+        .serving_capabilities()
+        .map_err(|error| {
+            controlled_runtime_error(error, ModelRuntimeGateError::PreparedRequestStale)
+        })?;
         if validate_served_capabilities(&self.admitted.profile, &current).is_err()
             || self.served_capabilities.as_ref() != Some(&current)
             || !preflight_matches_serving(&preflight, &current)
@@ -660,24 +982,33 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             correlation_id: &request.correlation_id,
         });
         let mut capture = StreamCapture::new(&request);
-        let mut result = self
-            .runtime
-            .stream(
+        check_model_operation(control)?;
+        let probe = bound_cancellation
+            .as_ref()
+            .map(|probe| probe as &dyn ModelCancellationProbe);
+        let mut result = match control {
+            Some(control) => self.runtime.stream_controlled(
                 &request,
                 &context,
                 &preflight,
-                bound_cancellation
-                    .as_ref()
-                    .map(|probe| probe as &dyn ModelCancellationProbe),
+                probe,
                 &mut capture,
-            )
-            .map_err(|error| match error.code.as_str() {
+                control,
+            ),
+            None => self
+                .runtime
+                .stream(&request, &context, &preflight, probe, &mut capture),
+        }
+        .map_err(|error| {
+            let fallback = match error.code.as_str() {
                 "model.prepared-request.token-drift" => ModelRuntimeGateError::DispatchTokenDrift,
                 "model.prepared-request.stale-binding" => {
                     ModelRuntimeGateError::PreparedRequestStale
                 }
                 _ => ModelRuntimeGateError::RuntimeFailure,
-            })?;
+            };
+            controlled_runtime_error(error, fallback)
+        })?;
         capture.finish(&result)?;
         if result.response_sha256 != sha256_hex(&capture.bytes) {
             return Err(ModelRuntimeGateError::ResultMismatch);
@@ -2747,6 +3078,384 @@ mod tests {
         for code in codes {
             assert!(code.code().starts_with("model."));
             assert!(!code.code().contains('/'));
+        }
+    }
+    mod controlled_preparation_tests {
+        use super::*;
+        use agentmage_kernel_contracts::{
+            ModelDispatchPreflight, ModelOperationControl, ModelOperationStop,
+        };
+        use std::cell::RefCell;
+
+        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        enum Stage {
+            Manifest,
+            Load,
+            Health,
+            Capabilities,
+            Count,
+            Stream,
+        }
+
+        #[derive(Clone)]
+        struct Control(Rc<Cell<Option<ModelOperationStop>>>);
+        impl ModelOperationControl for Control {
+            fn remaining_ms(&self) -> Result<std::num::NonZeroU64, ModelOperationStop> {
+                self.0
+                    .get()
+                    .map_or_else(|| Ok(std::num::NonZeroU64::new(100).unwrap()), Err)
+            }
+        }
+
+        struct ControlledRuntime {
+            inner: FakeRuntime,
+            control: Control,
+            stop_after: Cell<Option<Stage>>,
+            stages: RefCell<Vec<Stage>>,
+            unloads: Cell<usize>,
+            cleanup_fails: bool,
+        }
+        impl ControlledRuntime {
+            fn before(
+                &self,
+                stage: Stage,
+                control: &dyn ModelOperationControl,
+            ) -> Result<(), ModelRuntimeFailure> {
+                control.remaining_ms()?;
+                self.stages.borrow_mut().push(stage);
+                Ok(())
+            }
+            fn after(&self, stage: Stage) {
+                if self.stop_after.get() == Some(stage) {
+                    self.control.0.set(Some(ModelOperationStop::TimedOut));
+                }
+            }
+        }
+        impl LocalModelRuntime for ControlledRuntime {
+            fn identity(&self) -> &ModelRuntimeIdentity {
+                self.inner.identity()
+            }
+            fn verify_manifest(
+                &self,
+                _: &ExactModelProfile,
+            ) -> Result<ModelManifestObservation, ModelRuntimeFailure> {
+                panic!("legacy manifest")
+            }
+            fn load(
+                &mut self,
+                _: &ExactModelProfile,
+            ) -> Result<ModelLoadReceipt, ModelRuntimeFailure> {
+                panic!("legacy load")
+            }
+            fn health(&self) -> ModelHealth {
+                panic!("legacy health")
+            }
+            fn serving_capabilities(
+                &self,
+            ) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+                panic!("legacy capabilities")
+            }
+            fn count_tokens(
+                &self,
+                _: &EncodedModelContext,
+            ) -> Result<TokenCountResult, ModelRuntimeFailure> {
+                panic!("legacy count")
+            }
+            fn stream(
+                &mut self,
+                _: &ModelRunRequest,
+                _: &EncodedModelContext,
+                _: &ModelDispatchPreflight,
+                _: Option<&dyn ModelCancellationProbe>,
+                _: &mut dyn ModelStreamSink,
+            ) -> Result<ModelRunResult, ModelRuntimeFailure> {
+                panic!("legacy stream")
+            }
+            fn resources(&self) -> Result<ModelResourceReport, ModelRuntimeFailure> {
+                self.inner.resources()
+            }
+            fn unload(
+                &mut self,
+                profile: &ModelProfileId,
+            ) -> Result<ModelUnloadReceipt, ModelRuntimeFailure> {
+                self.unloads.set(self.unloads.get() + 1);
+                if self.cleanup_fails {
+                    return Err(ModelOperationStop::Unavailable.into());
+                }
+                self.inner.unload(profile)
+            }
+            fn verify_manifest_controlled(
+                &self,
+                profile: &ExactModelProfile,
+                control: &dyn ModelOperationControl,
+            ) -> Result<ModelManifestObservation, ModelRuntimeFailure> {
+                self.before(Stage::Manifest, control)?;
+                let result = self.inner.verify_manifest(profile);
+                self.after(Stage::Manifest);
+                result
+            }
+            fn load_controlled(
+                &mut self,
+                profile: &ExactModelProfile,
+                control: &dyn ModelOperationControl,
+            ) -> Result<ModelLoadReceipt, ModelRuntimeFailure> {
+                self.before(Stage::Load, control)?;
+                let result = self.inner.load(profile);
+                self.after(Stage::Load);
+                result
+            }
+            fn health_controlled(
+                &self,
+                control: &dyn ModelOperationControl,
+            ) -> Result<ModelHealth, ModelRuntimeFailure> {
+                self.before(Stage::Health, control)?;
+                let result = self.inner.health();
+                self.after(Stage::Health);
+                Ok(result)
+            }
+            fn serving_capabilities_controlled(
+                &self,
+                control: &dyn ModelOperationControl,
+            ) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+                self.before(Stage::Capabilities, control)?;
+                let result = self.inner.serving_capabilities();
+                self.after(Stage::Capabilities);
+                result
+            }
+            fn count_tokens_controlled(
+                &self,
+                context: &EncodedModelContext,
+                control: &dyn ModelOperationControl,
+            ) -> Result<TokenCountResult, ModelRuntimeFailure> {
+                self.before(Stage::Count, control)?;
+                let result = self.inner.count_tokens(context);
+                self.after(Stage::Count);
+                result
+            }
+            fn stream_controlled(
+                &mut self,
+                request: &ModelRunRequest,
+                context: &EncodedModelContext,
+                preflight: &ModelDispatchPreflight,
+                cancellation: Option<&dyn ModelCancellationProbe>,
+                sink: &mut dyn ModelStreamSink,
+                control: &dyn ModelOperationControl,
+            ) -> Result<ModelRunResult, ModelRuntimeFailure> {
+                self.before(Stage::Stream, control)?;
+                let result = self
+                    .inner
+                    .stream(request, context, preflight, cancellation, sink);
+                self.after(Stage::Stream);
+                result
+            }
+        }
+        fn fixture() -> (
+            LocalModelController<ControlledRuntime, ClosedJsonFamilyCodec>,
+            Control,
+        ) {
+            let profile = profile();
+            let admitted = ModelAdmissionCatalog::new(vec![profile.clone()])
+                .unwrap()
+                .admit(&profile, ModelUsePurpose::ContractTest)
+                .unwrap();
+            let control = Control(Rc::new(Cell::new(None)));
+            let runtime = ControlledRuntime {
+                inner: FakeRuntime::new(&profile),
+                control: control.clone(),
+                stop_after: Cell::new(None),
+                stages: RefCell::new(Vec::new()),
+                unloads: Cell::new(0),
+                cleanup_fails: false,
+            };
+            (
+                LocalModelController::new(
+                    runtime,
+                    ClosedJsonFamilyCodec::new(profile.codec.clone()),
+                    admitted,
+                    1,
+                )
+                .unwrap(),
+                control,
+            )
+        }
+
+        #[test]
+        fn controlled_native_contract_defaults_refuse_without_legacy_load_or_generation() {
+            let profile = profile();
+            let mut runtime = FakeRuntime::new(&profile);
+            let control = Control(Rc::new(Cell::new(None)));
+            assert_eq!(
+                runtime
+                    .verify_manifest_controlled(&profile, &control)
+                    .unwrap_err()
+                    .code,
+                "model.operation.control-unsupported"
+            );
+            assert_eq!(
+                runtime
+                    .load_controlled(&profile, &control)
+                    .unwrap_err()
+                    .code,
+                "model.operation.control-unsupported"
+            );
+            assert_eq!(
+                runtime.health_controlled(&control).unwrap_err().code,
+                "model.operation.control-unsupported"
+            );
+            assert_eq!(
+                runtime
+                    .serving_capabilities_controlled(&control)
+                    .unwrap_err()
+                    .code,
+                "model.operation.control-unsupported"
+            );
+            assert_eq!(runtime.load_generation, 0);
+            assert!(runtime.loaded.is_none());
+            assert_eq!(runtime.stream_calls.get(), 0);
+        }
+
+        #[test]
+        fn controlled_loading_consumes_failed_attempt_and_stops_before_later_work() {
+            for stage in [Stage::Manifest, Stage::Load] {
+                let (mut controller, control) = fixture();
+                controller.runtime.stop_after.set(Some(stage));
+                assert_eq!(
+                    controller.ensure_prepared_controlled(&control),
+                    Err(ModelRuntimeGateError::OperationStopped(
+                        ModelOperationStop::TimedOut
+                    ))
+                );
+                let stages = controller.runtime.stages.borrow().clone();
+                assert_eq!(stages.last(), Some(&stage));
+                assert_eq!(
+                    controller.runtime.unloads.get(),
+                    usize::from(stage == Stage::Load)
+                );
+                assert!(!controller.loaded);
+                assert!(controller.runtime.inner.loaded.is_none());
+                control.0.set(None);
+                assert_eq!(
+                    controller.ensure_prepared_controlled(&control),
+                    Err(ModelRuntimeGateError::PreparationAlreadyAttempted)
+                );
+                assert_eq!(*controller.runtime.stages.borrow(), stages);
+            }
+        }
+
+        #[test]
+        fn controlled_load_cleanup_uncertainty_overrides_observed_expiry() {
+            let (mut controller, control) = fixture();
+            controller.runtime.stop_after.set(Some(Stage::Load));
+            controller.runtime.cleanup_fails = true;
+            assert_eq!(
+                controller.ensure_prepared_controlled(&control),
+                Err(ModelRuntimeGateError::CleanupUncertain)
+            );
+            assert_eq!(controller.runtime.unloads.get(), 1);
+            assert!(controller.runtime.inner.loaded.is_some());
+            control.0.set(None);
+            assert_eq!(
+                controller.ensure_prepared_controlled(&control),
+                Err(ModelRuntimeGateError::PreparationAlreadyAttempted)
+            );
+            assert_eq!(controller.runtime.inner.load_generation, 1);
+        }
+
+        #[test]
+        fn controlled_preflight_never_generates_after_health_capability_or_token_stop() {
+            for stage in [Stage::Health, Stage::Capabilities, Stage::Count] {
+                let (mut controller, control) = fixture();
+                controller.ensure_prepared_controlled(&control).unwrap();
+                controller.runtime.stages.borrow_mut().clear();
+                controller.runtime.stop_after.set(Some(stage));
+                let profile = controller.exact_profile().clone();
+                assert_eq!(
+                    controller
+                        .prepare_controlled(&request(&profile), &packet(&profile), &control)
+                        .unwrap_err(),
+                    ModelRuntimeGateError::OperationStopped(ModelOperationStop::TimedOut)
+                );
+                assert_eq!(controller.runtime.stages.borrow().last(), Some(&stage));
+                assert_eq!(controller.runtime.inner.stream_calls.get(), 0);
+                assert_eq!(controller.runtime.inner.generation_calls.get(), 0);
+            }
+        }
+
+        #[test]
+        fn controlled_token_binding_and_dispatch_keep_one_loaded_tuple_and_request() {
+            let (mut controller, control) = fixture();
+            controller.ensure_prepared_controlled(&control).unwrap();
+            controller.ensure_prepared_controlled(&control).unwrap();
+            assert_eq!(controller.runtime.inner.load_generation, 1);
+            let profile = controller.exact_profile().clone();
+            let mut packet = packet(&profile);
+            packet.input_tokens = 77;
+            controller
+                .bind_dispatch_context_controlled(&mut packet, &control)
+                .unwrap();
+            assert_eq!(packet.input_tokens, 1);
+            let request = request(&profile);
+            let prepared = controller
+                .prepare_controlled(&request, &packet, &control)
+                .unwrap();
+            assert_eq!(prepared.request(), &request);
+            let output = controller
+                .dispatch_with_output_controlled(prepared, None, &control)
+                .unwrap();
+            assert_eq!(
+                output.result.terminal_state,
+                ModelRunTerminalState::Proposed
+            );
+            assert_eq!(output.result.model_run_id, request.model_run_id);
+            assert_eq!(controller.runtime.inner.generation_calls.get(), 1);
+            assert_eq!(controller.runtime.inner.load_generation, 1);
+        }
+
+        #[test]
+        fn controlled_dispatch_expiry_preserves_the_completed_stream_observation() {
+            let (mut controller, control) = fixture();
+            controller.ensure_prepared_controlled(&control).unwrap();
+            let profile = controller.exact_profile().clone();
+            let prepared = controller
+                .prepare_controlled(&request(&profile), &packet(&profile), &control)
+                .unwrap();
+            controller.runtime.stop_after.set(Some(Stage::Stream));
+            let output = controller
+                .dispatch_with_output_controlled(prepared, None, &control)
+                .unwrap();
+            assert_eq!(control.0.get(), Some(ModelOperationStop::TimedOut));
+            assert_eq!(
+                output.result.terminal_state,
+                ModelRunTerminalState::Proposed
+            );
+            assert!(output.result.fragment_count > 0);
+            assert!(!output.response_bytes.is_empty());
+            assert_eq!(controller.runtime.inner.generation_calls.get(), 1);
+        }
+        #[test]
+        fn controlled_preparation_never_retries_a_stopped_or_failed_readiness_attempt() {
+            for stage in [None, Some(Stage::Health), Some(Stage::Capabilities)] {
+                let (mut controller, control) = fixture();
+                if stage.is_none() {
+                    control.0.set(Some(ModelOperationStop::Cancelled));
+                }
+                controller.runtime.stop_after.set(stage);
+                assert!(controller.ensure_prepared_controlled(&control).is_err());
+                let before = controller.runtime.stages.borrow().clone();
+                let loads = controller.runtime.inner.load_generation;
+                control.0.set(None);
+                controller.runtime.stop_after.set(None);
+                assert_eq!(
+                    controller.load_controlled(&control),
+                    Err(ModelRuntimeGateError::PreparationAlreadyAttempted)
+                );
+                assert_eq!(
+                    controller.ensure_prepared_controlled(&control),
+                    Err(ModelRuntimeGateError::PreparationAlreadyAttempted)
+                );
+                assert_eq!(*controller.runtime.stages.borrow(), before);
+                assert_eq!(controller.runtime.inner.load_generation, loads);
+            }
         }
     }
 }

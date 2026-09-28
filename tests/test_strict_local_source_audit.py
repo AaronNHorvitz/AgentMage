@@ -16,6 +16,30 @@ class StrictLocalSourceAuditTests(unittest.TestCase):
         cls.policy = audit.load_policy()
         cls.sources = audit.source_map(cls.policy)
 
+    def test_native_operation_control_cannot_be_removed_from_the_pinned_helper(self) -> None:
+        original = audit.production_source(
+            audit.MODEL_SOCKET_PATH, self.sources[audit.MODEL_SOCKET_PATH]
+        )
+        span = audit.model_socket_span(original)
+        self.assertIsNotNone(span)
+        start, end = span
+        helper = original[start:end]
+        mutations = (
+            ("self.control = control;", "self.control = None;"),
+            ("control.remaining_ms()", "Ok::<_, ModelOperationStop>(std::num::NonZeroU64::new(1).unwrap())"),
+        )
+        for before, after in mutations:
+            with self.subTest(before=before):
+                self.assertIn(before, helper)
+                changed = original[:start] + helper.replace(before, after, 1) + original[end:]
+                self.assertIsNone(audit.model_socket_span(changed))
+                sources = dict(self.sources)
+                sources[audit.MODEL_SOCKET_PATH] = changed
+                self.assertIn(
+                    f"pinned native Unix exchange changed or expanded: {audit.MODEL_SOCKET_PATH}",
+                    audit.scan_sources(self.policy, sources),
+                )
+
     def test_current_source_closure_passes(self) -> None:
         self.assertEqual(audit.audit(self.policy, self.sources), [])
 

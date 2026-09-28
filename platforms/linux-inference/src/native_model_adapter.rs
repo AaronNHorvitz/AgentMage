@@ -3,10 +3,10 @@
 use agentmage_kernel_contracts::{
     EncodedModelContext, ExactModelProfile, LocalModelRuntime, ModelCancellationProbe,
     ModelDispatchPreflight, ModelHealth, ModelHealthState, ModelLoadReceipt,
-    ModelManifestObservation, ModelProfileId, ModelResourceReport, ModelRunRequest, ModelRunResult,
-    ModelRuntimeFailure, ModelRuntimeIdentity, ModelRuntimeKind, ModelServingCapabilities,
-    ModelStreamSink, ModelUnloadReceipt, PlatformArchitecture, PlatformFamily,
-    RuntimeIsolationObservation, TokenCountResult,
+    ModelManifestObservation, ModelOperationControl, ModelProfileId, ModelResourceReport,
+    ModelRunRequest, ModelRunResult, ModelRuntimeFailure, ModelRuntimeIdentity, ModelRuntimeKind,
+    ModelServingCapabilities, ModelStreamSink, ModelUnloadReceipt, PlatformArchitecture,
+    PlatformFamily, RuntimeIsolationObservation, TokenCountResult,
 };
 
 /// Driver operations available behind the Linux runtime adapter.
@@ -57,6 +57,98 @@ pub trait NativeModelDriver {
 
     /// Returns content-free resource accounting.
     fn resources(&self) -> Result<ModelResourceReport, ModelRuntimeFailure>;
+    /// Runs `verify_manifest` with borrowed run control; unsupported adapters refuse before work.
+    fn verify_manifest_controlled(
+        &self,
+        _profile: &ExactModelProfile,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelManifestObservation, ModelRuntimeFailure> {
+        control.remaining_ms()?;
+        Err(ModelRuntimeFailure {
+            code: "model.operation.control-unsupported".to_owned(),
+            retryable_after_correction: false,
+            dependency_recovery_required: false,
+            contract_error: None,
+        })
+    }
+
+    /// Runs `load` with borrowed run control; unsupported adapters refuse before work.
+    fn load_controlled(
+        &mut self,
+        _profile: &ExactModelProfile,
+        _isolation: &RuntimeIsolationObservation,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelLoadReceipt, ModelRuntimeFailure> {
+        control.remaining_ms()?;
+        Err(ModelRuntimeFailure {
+            code: "model.operation.control-unsupported".to_owned(),
+            retryable_after_correction: false,
+            dependency_recovery_required: false,
+            contract_error: None,
+        })
+    }
+
+    /// Runs `health` with borrowed run control; unsupported adapters refuse before work.
+    fn health_controlled(
+        &self,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelHealth, ModelRuntimeFailure> {
+        control.remaining_ms()?;
+        Err(ModelRuntimeFailure {
+            code: "model.operation.control-unsupported".to_owned(),
+            retryable_after_correction: false,
+            dependency_recovery_required: false,
+            contract_error: None,
+        })
+    }
+
+    /// Runs `serving_capabilities` with borrowed run control; unsupported adapters refuse before work.
+    fn serving_capabilities_controlled(
+        &self,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+        control.remaining_ms()?;
+        Err(ModelRuntimeFailure {
+            code: "model.operation.control-unsupported".to_owned(),
+            retryable_after_correction: false,
+            dependency_recovery_required: false,
+            contract_error: None,
+        })
+    }
+
+    /// Runs `count_tokens` with borrowed run control; unsupported adapters refuse before work.
+    fn count_tokens_controlled(
+        &self,
+        _context: &EncodedModelContext,
+        control: &dyn ModelOperationControl,
+    ) -> Result<TokenCountResult, ModelRuntimeFailure> {
+        control.remaining_ms()?;
+        Err(ModelRuntimeFailure {
+            code: "model.operation.control-unsupported".to_owned(),
+            retryable_after_correction: false,
+            dependency_recovery_required: false,
+            contract_error: None,
+        })
+    }
+
+    /// Runs `stream` with borrowed run control; unsupported adapters refuse before work.
+    fn stream_controlled(
+        &mut self,
+        _request: &ModelRunRequest,
+        _context: &EncodedModelContext,
+        _preflight: &ModelDispatchPreflight,
+        _cancellation: Option<&dyn ModelCancellationProbe>,
+        _sink: &mut dyn ModelStreamSink,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelRunResult, ModelRuntimeFailure> {
+        control.remaining_ms()?;
+        Err(ModelRuntimeFailure {
+            code: "model.operation.control-unsupported".to_owned(),
+            retryable_after_correction: false,
+            dependency_recovery_required: false,
+            contract_error: None,
+        })
+    }
 }
 
 /// One Linux native runtime bound to a pre-observed zero-authority boundary.
@@ -145,19 +237,29 @@ impl<D: NativeModelDriver> LinuxNativeModelAdapter<D> {
     }
 }
 
-impl<D: NativeModelDriver> LocalModelRuntime for LinuxNativeModelAdapter<D> {
-    fn identity(&self) -> &ModelRuntimeIdentity {
-        &self.identity
+fn check_operation_control(
+    control: Option<&dyn ModelOperationControl>,
+) -> Result<(), ModelRuntimeFailure> {
+    if let Some(control) = control {
+        control.remaining_ms()?;
     }
+    Ok(())
+}
 
-    fn verify_manifest(
+impl<D: NativeModelDriver> LinuxNativeModelAdapter<D> {
+    fn verify_manifest_using(
         &self,
         profile: &ExactModelProfile,
+        control: Option<&dyn ModelOperationControl>,
     ) -> Result<ModelManifestObservation, ModelRuntimeFailure> {
+        check_operation_control(control)?;
         if !self.exact_profile(profile) || self.loaded.is_some() {
             return Err(failure("model.linux-adapter.profile-invalid"));
         }
-        let observation = self.driver.verify_manifest(profile)?;
+        let observation = match control {
+            Some(control) => self.driver.verify_manifest_controlled(profile, control)?,
+            None => self.driver.verify_manifest(profile)?,
+        };
         if observation.profile_id != profile.profile_id
             || observation.manifest_sha256 != profile.manifest_sha256
             || observation.artifact_sha256 != profile.artifact.sha256
@@ -168,19 +270,27 @@ impl<D: NativeModelDriver> LocalModelRuntime for LinuxNativeModelAdapter<D> {
         {
             return Err(failure("model.linux-adapter.manifest-drift"));
         }
+        check_operation_control(control)?;
         Ok(observation)
     }
 
-    fn load(
+    fn load_using(
         &mut self,
         profile: &ExactModelProfile,
+        control: Option<&dyn ModelOperationControl>,
     ) -> Result<ModelLoadReceipt, ModelRuntimeFailure> {
+        check_operation_control(control)?;
         if self.loaded.is_some() {
             return Err(failure("model.linux-adapter.already-loaded"));
         }
-        let observation = self.verify_manifest(profile)?;
+        let observation = self.verify_manifest_using(profile, control)?;
         self.verified = Some((observation.profile_id, observation.manifest_sha256));
-        let receipt = self.driver.load(profile, &self.isolation)?;
+        let receipt = match control {
+            Some(control) => self
+                .driver
+                .load_controlled(profile, &self.isolation, control)?,
+            None => self.driver.load(profile, &self.isolation)?,
+        };
         if receipt.profile_id != profile.profile_id
             || receipt.manifest_sha256 != profile.manifest_sha256
             || receipt.adapter_id != self.identity.adapter_id
@@ -188,11 +298,142 @@ impl<D: NativeModelDriver> LocalModelRuntime for LinuxNativeModelAdapter<D> {
             || !self.exact_serving_capabilities(profile, &receipt.served_capabilities)
         {
             self.verified = None;
-            let _ = self.driver.unload(&profile.profile_id);
+            if control.is_some() {
+                self.cleanup_failed_load(profile)?;
+            } else {
+                let _ = self.driver.unload(&profile.profile_id);
+            }
             return Err(failure("model.linux-adapter.load-receipt-drift"));
+        }
+        if let Err(stop) = check_operation_control(control) {
+            self.verified = None;
+            self.cleanup_failed_load(profile)?;
+            return Err(stop);
         }
         self.loaded = Some(profile.profile_id.clone());
         Ok(receipt)
+    }
+
+    fn cleanup_failed_load(
+        &mut self,
+        profile: &ExactModelProfile,
+    ) -> Result<(), ModelRuntimeFailure> {
+        let receipt = self
+            .driver
+            .unload(&profile.profile_id)
+            .map_err(|_| failure("model.operation.cleanup-uncertain"))?;
+        if receipt.profile_id != profile.profile_id
+            || receipt.adapter_id != self.identity.adapter_id
+            || !receipt.empty
+        {
+            return Err(failure("model.operation.cleanup-uncertain"));
+        }
+        Ok(())
+    }
+
+    fn serving_capabilities_using(
+        &self,
+        control: Option<&dyn ModelOperationControl>,
+    ) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+        check_operation_control(control)?;
+        let profile_id = self
+            .loaded
+            .as_ref()
+            .ok_or_else(|| failure("model.served-capability.missing"))?;
+        let served = match control {
+            Some(control) => self.driver.serving_capabilities_controlled(control)?,
+            None => self.driver.serving_capabilities()?,
+        };
+        if served.adapter_id != self.identity.adapter_id || served.profile_id != *profile_id {
+            return Err(failure("model.served-capability.drift"));
+        }
+        check_operation_control(control)?;
+        Ok(served)
+    }
+
+    fn count_tokens_using(
+        &self,
+        context: &EncodedModelContext,
+        control: Option<&dyn ModelOperationControl>,
+    ) -> Result<TokenCountResult, ModelRuntimeFailure> {
+        check_operation_control(control)?;
+        self.loaded_profile(&context.profile_id)?;
+        let result = match control {
+            Some(control) => self.driver.count_tokens_controlled(context, control)?,
+            None => self.driver.count_tokens(context)?,
+        };
+        check_operation_control(control)?;
+        Ok(result)
+    }
+
+    fn stream_using(
+        &mut self,
+        request: &ModelRunRequest,
+        context: &EncodedModelContext,
+        preflight: &ModelDispatchPreflight,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+        sink: &mut dyn ModelStreamSink,
+        control: Option<&dyn ModelOperationControl>,
+    ) -> Result<ModelRunResult, ModelRuntimeFailure> {
+        check_operation_control(control)?;
+        self.loaded_profile(&request.profile_id)?;
+        if request.profile_id != context.profile_id
+            || request.context_packet_id != context.context_packet_id
+            || request.adapter_id != self.identity.adapter_id
+            || self.verified.as_ref()
+                != Some(&(request.profile_id.clone(), request.manifest_sha256.clone()))
+        {
+            return Err(failure("model.linux-adapter.request-drift"));
+        }
+        match control {
+            Some(control) => self.driver.stream_controlled(
+                request,
+                context,
+                preflight,
+                cancellation,
+                sink,
+                control,
+            ),
+            None => self
+                .driver
+                .stream(request, context, preflight, cancellation, sink),
+        }
+    }
+}
+
+impl<D: NativeModelDriver> LocalModelRuntime for LinuxNativeModelAdapter<D> {
+    fn identity(&self) -> &ModelRuntimeIdentity {
+        &self.identity
+    }
+
+    fn verify_manifest(
+        &self,
+        profile: &ExactModelProfile,
+    ) -> Result<ModelManifestObservation, ModelRuntimeFailure> {
+        self.verify_manifest_using(profile, None)
+    }
+
+    fn verify_manifest_controlled(
+        &self,
+        profile: &ExactModelProfile,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelManifestObservation, ModelRuntimeFailure> {
+        self.verify_manifest_using(profile, Some(control))
+    }
+
+    fn load(
+        &mut self,
+        profile: &ExactModelProfile,
+    ) -> Result<ModelLoadReceipt, ModelRuntimeFailure> {
+        self.load_using(profile, None)
+    }
+
+    fn load_controlled(
+        &mut self,
+        profile: &ExactModelProfile,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelLoadReceipt, ModelRuntimeFailure> {
+        self.load_using(profile, Some(control))
     }
 
     fn unload(
@@ -242,24 +483,63 @@ impl<D: NativeModelDriver> LocalModelRuntime for LinuxNativeModelAdapter<D> {
         }
     }
 
+    fn health_controlled(
+        &self,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelHealth, ModelRuntimeFailure> {
+        control.remaining_ms()?;
+        let health = self.driver.health_controlled(control)?;
+        let capabilities_valid = if self.loaded.is_some() {
+            let served = self.driver.serving_capabilities_controlled(control)?;
+            served.adapter_id == self.identity.adapter_id
+                && health.profile_id.as_ref() == Some(&served.profile_id)
+                && valid_sha256(&served.observation_sha256)
+        } else {
+            true
+        };
+        control.remaining_ms()?;
+        let valid = health.adapter_id == self.identity.adapter_id
+            && health.profile_id == self.loaded
+            && ((self.loaded.is_some() && health.state == ModelHealthState::Ready)
+                || (self.loaded.is_none() && health.state == ModelHealthState::Unloaded))
+            && capabilities_valid;
+        Ok(if valid {
+            health
+        } else {
+            ModelHealth {
+                adapter_id: self.identity.adapter_id.clone(),
+                profile_id: self.loaded.clone(),
+                state: ModelHealthState::Failed,
+                reason_code: "model.linux-adapter.health-drift".to_owned(),
+                observed_at_ms: health.observed_at_ms,
+            }
+        })
+    }
+
     fn serving_capabilities(&self) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
-        let profile_id = self
-            .loaded
-            .as_ref()
-            .ok_or_else(|| failure("model.served-capability.missing"))?;
-        let served = self.driver.serving_capabilities()?;
-        if served.adapter_id != self.identity.adapter_id || served.profile_id != *profile_id {
-            return Err(failure("model.served-capability.drift"));
-        }
-        Ok(served)
+        self.serving_capabilities_using(None)
+    }
+
+    fn serving_capabilities_controlled(
+        &self,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+        self.serving_capabilities_using(Some(control))
     }
 
     fn count_tokens(
         &self,
         context: &EncodedModelContext,
     ) -> Result<TokenCountResult, ModelRuntimeFailure> {
-        self.loaded_profile(&context.profile_id)?;
-        self.driver.count_tokens(context)
+        self.count_tokens_using(context, None)
+    }
+
+    fn count_tokens_controlled(
+        &self,
+        context: &EncodedModelContext,
+        control: &dyn ModelOperationControl,
+    ) -> Result<TokenCountResult, ModelRuntimeFailure> {
+        self.count_tokens_using(context, Some(control))
     }
 
     fn stream(
@@ -270,17 +550,26 @@ impl<D: NativeModelDriver> LocalModelRuntime for LinuxNativeModelAdapter<D> {
         cancellation: Option<&dyn ModelCancellationProbe>,
         sink: &mut dyn ModelStreamSink,
     ) -> Result<ModelRunResult, ModelRuntimeFailure> {
-        self.loaded_profile(&request.profile_id)?;
-        if request.profile_id != context.profile_id
-            || request.context_packet_id != context.context_packet_id
-            || request.adapter_id != self.identity.adapter_id
-            || self.verified.as_ref()
-                != Some(&(request.profile_id.clone(), request.manifest_sha256.clone()))
-        {
-            return Err(failure("model.linux-adapter.request-drift"));
-        }
-        self.driver
-            .stream(request, context, preflight, cancellation, sink)
+        self.stream_using(request, context, preflight, cancellation, sink, None)
+    }
+
+    fn stream_controlled(
+        &mut self,
+        request: &ModelRunRequest,
+        context: &EncodedModelContext,
+        preflight: &ModelDispatchPreflight,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+        sink: &mut dyn ModelStreamSink,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelRunResult, ModelRuntimeFailure> {
+        self.stream_using(
+            request,
+            context,
+            preflight,
+            cancellation,
+            sink,
+            Some(control),
+        )
     }
 
     fn resources(&self) -> Result<ModelResourceReport, ModelRuntimeFailure> {
@@ -307,7 +596,7 @@ fn failure(code: &str) -> ModelRuntimeFailure {
     ModelRuntimeFailure {
         code: code.to_owned(),
         retryable_after_correction: false,
-        dependency_recovery_required: false,
+        dependency_recovery_required: code == "model.operation.cleanup-uncertain",
         contract_error: None,
     }
 }
@@ -585,5 +874,245 @@ mod tests {
             "model.linux-adapter.load-receipt-drift"
         );
         assert_eq!(adapter.health().state, ModelHealthState::Unloaded);
+    }
+    mod controlled_preparation_tests {
+        use super::*;
+        use agentmage_kernel_contracts::{ModelOperationControl, ModelOperationStop};
+        use std::cell::Cell;
+        use std::rc::Rc;
+
+        #[derive(Clone)]
+        struct Control(Rc<Cell<bool>>);
+        impl ModelOperationControl for Control {
+            fn remaining_ms(&self) -> Result<std::num::NonZeroU64, ModelOperationStop> {
+                if self.0.get() {
+                    Err(ModelOperationStop::Cancelled)
+                } else {
+                    Ok(std::num::NonZeroU64::new(100).unwrap())
+                }
+            }
+        }
+        struct ControlledDriver {
+            inner: FakeDriver,
+            control: Control,
+            cancel_after_load: bool,
+            cleanup_fails: bool,
+            cleanup_receipt_mutation: u8,
+            loads: usize,
+            unloads: usize,
+        }
+        impl NativeModelDriver for ControlledDriver {
+            fn verify_manifest(
+                &self,
+                _: &ExactModelProfile,
+            ) -> Result<ModelManifestObservation, ModelRuntimeFailure> {
+                panic!("legacy manifest")
+            }
+            fn load(
+                &mut self,
+                _: &ExactModelProfile,
+                _: &RuntimeIsolationObservation,
+            ) -> Result<ModelLoadReceipt, ModelRuntimeFailure> {
+                panic!("legacy load")
+            }
+            fn health(&self) -> ModelHealth {
+                panic!("legacy health")
+            }
+            fn serving_capabilities(
+                &self,
+            ) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+                panic!("legacy capabilities")
+            }
+            fn count_tokens(
+                &self,
+                _: &EncodedModelContext,
+            ) -> Result<TokenCountResult, ModelRuntimeFailure> {
+                panic!("legacy tokens")
+            }
+            fn stream(
+                &mut self,
+                _: &agentmage_kernel_contracts::ModelRunRequest,
+                _: &EncodedModelContext,
+                _: &agentmage_kernel_contracts::ModelDispatchPreflight,
+                _: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
+                _: &mut dyn ModelStreamSink,
+            ) -> Result<agentmage_kernel_contracts::ModelRunResult, ModelRuntimeFailure>
+            {
+                panic!("legacy stream")
+            }
+            fn resources(&self) -> Result<ModelResourceReport, ModelRuntimeFailure> {
+                self.inner.resources()
+            }
+            fn unload(
+                &mut self,
+                profile: &ModelProfileId,
+            ) -> Result<ModelUnloadReceipt, ModelRuntimeFailure> {
+                self.unloads += 1;
+                if self.cleanup_fails {
+                    Err(failure("fixture.cleanup-uncertain"))
+                } else {
+                    let mut receipt = self.inner.unload(profile)?;
+                    match self.cleanup_receipt_mutation {
+                        1 => receipt.empty = false,
+                        2 => {
+                            receipt.profile_id = ModelProfileId::from_raw("foreign-cleanup-profile")
+                        }
+                        3 => {
+                            receipt.adapter_id =
+                                agentmage_kernel_contracts::ModelAdapterId::from_raw(
+                                    "foreign-cleanup-adapter",
+                                )
+                        }
+                        _ => {}
+                    }
+                    Ok(receipt)
+                }
+            }
+            fn verify_manifest_controlled(
+                &self,
+                profile: &ExactModelProfile,
+                control: &dyn ModelOperationControl,
+            ) -> Result<ModelManifestObservation, ModelRuntimeFailure> {
+                control.remaining_ms()?;
+                self.inner.verify_manifest(profile)
+            }
+            fn load_controlled(
+                &mut self,
+                profile: &ExactModelProfile,
+                isolation: &RuntimeIsolationObservation,
+                control: &dyn ModelOperationControl,
+            ) -> Result<ModelLoadReceipt, ModelRuntimeFailure> {
+                control.remaining_ms()?;
+                self.loads += 1;
+                let result = self.inner.load(profile, isolation);
+                if self.cancel_after_load {
+                    self.control.0.set(true);
+                }
+                result
+            }
+            fn health_controlled(
+                &self,
+                control: &dyn ModelOperationControl,
+            ) -> Result<ModelHealth, ModelRuntimeFailure> {
+                control.remaining_ms()?;
+                Ok(self.inner.health())
+            }
+            fn serving_capabilities_controlled(
+                &self,
+                control: &dyn ModelOperationControl,
+            ) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+                control.remaining_ms()?;
+                self.inner.serving_capabilities()
+            }
+        }
+        fn fixture(
+            drift: bool,
+            cancel: bool,
+            cleanup_fails: bool,
+        ) -> (LinuxNativeModelAdapter<ControlledDriver>, Control) {
+            let profile = profile();
+            let control = Control(Rc::new(Cell::new(false)));
+            let driver = ControlledDriver {
+                inner: FakeDriver {
+                    profile: profile.clone(),
+                    loaded: false,
+                    drift_manifest: false,
+                    drift_served: drift,
+                },
+                control: control.clone(),
+                cancel_after_load: cancel,
+                cleanup_fails,
+                cleanup_receipt_mutation: 0,
+                loads: 0,
+                unloads: 0,
+            };
+            (
+                LinuxNativeModelAdapter::new(profile.runtime.clone(), isolation(&profile), driver)
+                    .unwrap(),
+                control,
+            )
+        }
+
+        #[test]
+        fn native_adapter_controlled_defaults_never_fall_through_to_legacy_driver_load() {
+            let mut adapter = adapter(false);
+            let control = Control(Rc::new(Cell::new(false)));
+            assert_eq!(
+                adapter
+                    .verify_manifest_controlled(&profile(), &control)
+                    .unwrap_err()
+                    .code,
+                "model.operation.control-unsupported"
+            );
+            assert_eq!(
+                adapter
+                    .load_controlled(&profile(), &control)
+                    .unwrap_err()
+                    .code,
+                "model.operation.control-unsupported"
+            );
+            assert!(!adapter.driver.loaded);
+            assert!(adapter.loaded.is_none());
+        }
+
+        #[test]
+        fn native_adapter_controlled_load_keeps_exact_receipt_and_serving_checks() {
+            let (mut adapter, control) = fixture(false, false, false);
+            let receipt = adapter.load_controlled(&profile(), &control).unwrap();
+            assert_eq!(receipt.isolation, isolation(&profile()));
+            assert_eq!(
+                adapter.health_controlled(&control).unwrap().state,
+                ModelHealthState::Ready
+            );
+            assert_eq!(
+                adapter.serving_capabilities_controlled(&control).unwrap(),
+                receipt.served_capabilities
+            );
+            assert_eq!(adapter.driver.loads, 1);
+            assert!(adapter.unload(&profile().profile_id).unwrap().empty);
+        }
+
+        #[test]
+        fn native_adapter_cancelled_or_invalid_load_preserves_cleanup_priority() {
+            for drift in [false, true] {
+                for cleanup_fails in [false, true] {
+                    let (mut adapter, control) = fixture(drift, !drift, cleanup_fails);
+                    let error = adapter.load_controlled(&profile(), &control).unwrap_err();
+                    let expected = if cleanup_fails {
+                        "model.operation.cleanup-uncertain"
+                    } else if drift {
+                        "model.linux-adapter.load-receipt-drift"
+                    } else {
+                        "model.operation.cancelled"
+                    };
+                    assert_eq!(error.code, expected);
+                    assert_eq!(adapter.driver.loads, 1);
+                    assert_eq!(adapter.driver.unloads, 1);
+                    assert_eq!(adapter.driver.inner.loaded, cleanup_fails);
+                    assert!(adapter.loaded.is_none());
+                    assert!(adapter.verified.is_none());
+                }
+            }
+        }
+        #[test]
+        fn native_adapter_failed_load_requires_an_exact_empty_unload_receipt() {
+            for drift in [false, true] {
+                for mutation in 1..=3 {
+                    let (mut adapter, control) = fixture(drift, !drift, false);
+                    adapter.driver.cleanup_receipt_mutation = mutation;
+                    let error = adapter.load_controlled(&profile(), &control).unwrap_err();
+                    assert_eq!(
+                        error.code, "model.operation.cleanup-uncertain",
+                        "drift={drift} mutation={mutation}"
+                    );
+                    assert!(error.dependency_recovery_required);
+                    assert!(!error.retryable_after_correction);
+                    assert_eq!(adapter.driver.loads, 1);
+                    assert_eq!(adapter.driver.unloads, 1);
+                    assert!(adapter.loaded.is_none());
+                    assert!(adapter.verified.is_none());
+                }
+            }
+        }
     }
 }

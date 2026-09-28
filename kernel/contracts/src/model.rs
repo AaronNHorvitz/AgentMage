@@ -563,6 +563,63 @@ impl ModelCancellationProbe for CancellationSignal {
     }
 }
 
+/// Cooperative control borrowed from the existing run owner for one synchronous operation.
+/// It conveys no profile selection, workspace, process ownership or effect authority.
+pub trait ModelOperationControl {
+    /// Observes the original run's positive remaining time or a latched stop.
+    /// Implementations must not renew the run budget between observations.
+    fn remaining_ms(&self) -> Result<std::num::NonZeroU64, ModelOperationStop>;
+}
+
+/// A control observation, not proof of process exit or cancellation acknowledgement.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ModelOperationStop {
+    /// The run owner observed its exact cancellation signal.
+    Cancelled,
+    /// The original operation budget expired.
+    TimedOut,
+    /// The control observation failed.
+    Unavailable,
+    /// The control identity or clock is invalid.
+    Invalid,
+}
+
+impl ModelOperationStop {
+    /// Returns the closed diagnostic used by native adapter observations.
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::Cancelled => "model.operation.cancelled",
+            Self::TimedOut => "model.operation.timed-out",
+            Self::Unavailable => "model.operation.unavailable",
+            Self::Invalid => "model.operation.invalid",
+        }
+    }
+
+    /// Classifies only these control diagnostics; this grants no cancellation authority.
+    #[must_use]
+    pub fn from_failure(failure: &ModelRuntimeFailure) -> Option<Self> {
+        match failure.code.as_str() {
+            "model.operation.cancelled" => Some(Self::Cancelled),
+            "model.operation.timed-out" => Some(Self::TimedOut),
+            "model.operation.unavailable" => Some(Self::Unavailable),
+            "model.operation.invalid" => Some(Self::Invalid),
+            _ => None,
+        }
+    }
+}
+
+impl From<ModelOperationStop> for ModelRuntimeFailure {
+    fn from(stop: ModelOperationStop) -> Self {
+        Self {
+            code: stop.code().to_owned(),
+            retryable_after_correction: false,
+            dependency_recovery_required: matches!(stop, ModelOperationStop::Unavailable),
+            contract_error: None,
+        }
+    }
+}
+
 /// Candidate-neutral local runtime contract implemented by every adapter.
 ///
 /// This interface carries no workspace handle, tool implementation, grant,
@@ -615,6 +672,97 @@ pub trait LocalModelRuntime {
 
     /// Reports content-free bounded resource accounting.
     fn resources(&self) -> Result<ModelResourceReport, ModelRuntimeFailure>;
+    /// Runs `verify_manifest` with borrowed run control; unsupported adapters refuse before work.
+    fn verify_manifest_controlled(
+        &self,
+        _profile: &ExactModelProfile,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelManifestObservation, ModelRuntimeFailure> {
+        control.remaining_ms()?;
+        Err(ModelRuntimeFailure {
+            code: "model.operation.control-unsupported".to_owned(),
+            retryable_after_correction: false,
+            dependency_recovery_required: false,
+            contract_error: None,
+        })
+    }
+
+    /// Runs `load` with borrowed run control; unsupported adapters refuse before work.
+    fn load_controlled(
+        &mut self,
+        _profile: &ExactModelProfile,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelLoadReceipt, ModelRuntimeFailure> {
+        control.remaining_ms()?;
+        Err(ModelRuntimeFailure {
+            code: "model.operation.control-unsupported".to_owned(),
+            retryable_after_correction: false,
+            dependency_recovery_required: false,
+            contract_error: None,
+        })
+    }
+
+    /// Runs `health` with borrowed run control; unsupported adapters refuse before work.
+    fn health_controlled(
+        &self,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelHealth, ModelRuntimeFailure> {
+        control.remaining_ms()?;
+        Err(ModelRuntimeFailure {
+            code: "model.operation.control-unsupported".to_owned(),
+            retryable_after_correction: false,
+            dependency_recovery_required: false,
+            contract_error: None,
+        })
+    }
+
+    /// Runs `serving_capabilities` with borrowed run control; unsupported adapters refuse before work.
+    fn serving_capabilities_controlled(
+        &self,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+        control.remaining_ms()?;
+        Err(ModelRuntimeFailure {
+            code: "model.operation.control-unsupported".to_owned(),
+            retryable_after_correction: false,
+            dependency_recovery_required: false,
+            contract_error: None,
+        })
+    }
+
+    /// Runs `count_tokens` with borrowed run control; unsupported adapters refuse before work.
+    fn count_tokens_controlled(
+        &self,
+        _context: &EncodedModelContext,
+        control: &dyn ModelOperationControl,
+    ) -> Result<TokenCountResult, ModelRuntimeFailure> {
+        control.remaining_ms()?;
+        Err(ModelRuntimeFailure {
+            code: "model.operation.control-unsupported".to_owned(),
+            retryable_after_correction: false,
+            dependency_recovery_required: false,
+            contract_error: None,
+        })
+    }
+
+    /// Runs `stream` with borrowed run control; unsupported adapters refuse before work.
+    fn stream_controlled(
+        &mut self,
+        _request: &ModelRunRequest,
+        _context: &EncodedModelContext,
+        _preflight: &ModelDispatchPreflight,
+        _cancellation: Option<&dyn ModelCancellationProbe>,
+        _sink: &mut dyn ModelStreamSink,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelRunResult, ModelRuntimeFailure> {
+        control.remaining_ms()?;
+        Err(ModelRuntimeFailure {
+            code: "model.operation.control-unsupported".to_owned(),
+            retryable_after_correction: false,
+            dependency_recovery_required: false,
+            contract_error: None,
+        })
+    }
 }
 
 /// Exact inert bytes produced by one family codec for one context packet.

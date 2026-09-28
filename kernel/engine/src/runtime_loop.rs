@@ -10,12 +10,13 @@ use agentmage_kernel_contracts::{
     ActionId, AgentProposal, AgentStateKind, ApprovalId, BudgetResource, CONTRACT_SCHEMA_VERSION,
     CancellationSignal, ClosedModelProposal, ContextPacketId, CorrelationId, EvidenceReference,
     ExactModelProfile, GrantId, GrantOperation, LocalModelRuntime, ModelCancellationProbe,
-    ModelContextPacket, ModelFamilyCodec, ModelProposalKind, ModelRunId, ModelRunRequest,
-    ModelRunResult, ModelRunTerminalState, OperationOutcome, PostconditionId, ReceiptId,
-    RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalPresentation,
-    RuntimeApprovalResponse, RuntimeArtifactId, RuntimeArtifactIntegrityState, RuntimeArtifactKind,
-    RuntimeArtifactManifest, RuntimeArtifactPreview, RuntimeArtifactRef, RuntimeContinuationState,
-    RuntimeEvent, RuntimeEventCursor, RuntimeEventId, RuntimeEventKind, RuntimeEventRetention,
+    ModelContextPacket, ModelFamilyCodec, ModelOperationControl, ModelOperationStop,
+    ModelProposalKind, ModelRunId, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
+    OperationOutcome, PostconditionId, ReceiptId, RuntimeApprovalChallenge,
+    RuntimeApprovalDisposition, RuntimeApprovalPresentation, RuntimeApprovalResponse,
+    RuntimeArtifactId, RuntimeArtifactIntegrityState, RuntimeArtifactKind, RuntimeArtifactManifest,
+    RuntimeArtifactPreview, RuntimeArtifactRef, RuntimeContinuationState, RuntimeEvent,
+    RuntimeEventCursor, RuntimeEventId, RuntimeEventKind, RuntimeEventRetention,
     RuntimeEventRetentionKind, RuntimeOperationId, RuntimeOutcome, RuntimeOutput,
     RuntimePayloadReference, RuntimePermissionDisposition, RuntimeResumeBinding, RuntimeRunRequest,
     RuntimeSessionMode, RuntimeToolAttemptState, RuntimeToolReference, RuntimeToolRejection,
@@ -282,6 +283,69 @@ pub trait RuntimeContextPort {
     }
 }
 
+/// Distinguishes a cooperative stop from a dependency failure during model preparation.
+/// A stop label alone never acknowledges cancellation; the coordinator retains its signal.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RuntimeModelOperationFailure {
+    /// The borrowed control stopped this operation.
+    Stopped(ModelOperationStop),
+    /// A dependency failed, including uncertain native cleanup.
+    Port(RuntimePortFailure),
+}
+
+impl From<ModelRuntimeGateError> for RuntimeModelOperationFailure {
+    fn from(error: ModelRuntimeGateError) -> Self {
+        match error {
+            ModelRuntimeGateError::OperationStopped(stop) => Self::Stopped(stop),
+            other => Self::Port(map_model_error(other)),
+        }
+    }
+}
+
+impl From<RuntimePortFailure> for RuntimeModelOperationFailure {
+    fn from(error: RuntimePortFailure) -> Self {
+        Self::Port(error)
+    }
+}
+
+fn operation_stop(failure: RuntimePortFailure) -> ModelOperationStop {
+    match failure {
+        RuntimePortFailure::Cancelled => ModelOperationStop::Cancelled,
+        RuntimePortFailure::TimedOut => ModelOperationStop::TimedOut,
+        RuntimePortFailure::Unavailable => ModelOperationStop::Unavailable,
+        _ => ModelOperationStop::Invalid,
+    }
+}
+
+impl<C: RuntimeClock> ModelOperationControl for RuntimePhaseControl<'_, C> {
+    fn remaining_ms(&self) -> Result<std::num::NonZeroU64, ModelOperationStop> {
+        std::num::NonZeroU64::new(self.check().map_err(operation_stop)?)
+            .ok_or(ModelOperationStop::Invalid)
+    }
+}
+
+impl<C: RuntimeClock> RuntimePhaseControl<'_, C> {
+    fn classify_model_failure(
+        &self,
+        error: RuntimeModelOperationFailure,
+        dependency: &Cell<Option<RuntimePortFailure>>,
+    ) -> RuntimePortFailure {
+        let failure = match error {
+            RuntimeModelOperationFailure::Port(failure) => failure,
+            RuntimeModelOperationFailure::Stopped(label) => {
+                if let Some(stop) = self.stop.borrow().as_ref()
+                    && operation_stop(stop.port_failure()) == label
+                {
+                    return stop.port_failure();
+                }
+                RuntimePortFailure::Invalid
+            }
+        };
+        dependency.set(Some(failure));
+        failure
+    }
+}
+
 /// Candidate-neutral model controller used by the reusable coordinator.
 pub trait RuntimeModelPort {
     /// Returns the exact profile already admitted by the model controller.
@@ -303,6 +367,49 @@ pub trait RuntimeModelPort {
         context: &ModelContextPacket,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<ModelRunResult, RuntimePortFailure>;
+    /// Prepares the selected model before token binding on the existing runtime worker.
+    /// Already-prepared or synthetic ports need no load operation.
+    fn prepare_model_controlled(
+        &mut self,
+        control: &dyn ModelOperationControl,
+    ) -> Result<(), RuntimeModelOperationFailure> {
+        control
+            .remaining_ms()
+            .map_err(RuntimeModelOperationFailure::Stopped)?;
+        Ok(())
+    }
+
+    /// Binds context under run control; native ports override with controlled token operations.
+    fn bind_context_tokens_controlled(
+        &self,
+        packet: &mut ModelContextPacket,
+        control: &dyn ModelOperationControl,
+    ) -> Result<(), RuntimeModelOperationFailure> {
+        control
+            .remaining_ms()
+            .map_err(RuntimeModelOperationFailure::Stopped)?;
+        self.bind_context_tokens(packet)
+            .map_err(RuntimeModelOperationFailure::Port)?;
+        control
+            .remaining_ms()
+            .map_err(RuntimeModelOperationFailure::Stopped)?;
+        Ok(())
+    }
+
+    /// Dispatches under run control without changing the immutable published request.
+    fn run_model_controlled(
+        &mut self,
+        request: &ModelRunRequest,
+        context: &ModelContextPacket,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelRunResult, RuntimeModelOperationFailure> {
+        control
+            .remaining_ms()
+            .map_err(RuntimeModelOperationFailure::Stopped)?;
+        self.run_model(request, context, cancellation)
+            .map_err(RuntimeModelOperationFailure::Port)
+    }
 }
 
 impl<R, C> RuntimeModelPort for LocalModelController<R, C>
@@ -332,6 +439,37 @@ where
         let prepared = self.prepare(request, context).map_err(map_model_error)?;
         self.dispatch(prepared, cancellation)
             .map_err(map_model_error)
+    }
+    fn prepare_model_controlled(
+        &mut self,
+        control: &dyn ModelOperationControl,
+    ) -> Result<(), RuntimeModelOperationFailure> {
+        self.ensure_prepared_controlled(control)
+            .map(|_| ())
+            .map_err(Into::into)
+    }
+
+    fn bind_context_tokens_controlled(
+        &self,
+        packet: &mut ModelContextPacket,
+        control: &dyn ModelOperationControl,
+    ) -> Result<(), RuntimeModelOperationFailure> {
+        self.bind_dispatch_context_controlled(packet, control)
+            .map(|_| ())
+            .map_err(Into::into)
+    }
+
+    fn run_model_controlled(
+        &mut self,
+        request: &ModelRunRequest,
+        context: &ModelContextPacket,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelRunResult, RuntimeModelOperationFailure> {
+        let prepared = self.prepare_controlled(request, context, control)?;
+        self.dispatch_with_output_controlled(prepared, cancellation, control)
+            .map(|output| output.result)
+            .map_err(Into::into)
     }
 }
 
@@ -1425,7 +1563,7 @@ where
         self.context
             .observe_tool_rejections(&self.rejected_tool_calls)
             .map_err(RuntimeLoopError::Dependency)?;
-        let (context, stop) = {
+        let (context, stop, dependency) = {
             let control = RuntimePhaseControl::new(
                 &mut self.clock,
                 &self.request,
@@ -1438,7 +1576,12 @@ where
                 &self.last_phase_observed_at,
                 cancellation,
             );
+            let dependency = Cell::new(None);
             let context = control.check().and_then(|_| {
+                self.model
+                    .prepare_model_controlled(&control)
+                    .map_err(|error| control.classify_model_failure(error, &dependency))?;
+                control.check()?;
                 self.context.build_context_with_token_binding(
                     &self.request,
                     context_packet_id,
@@ -1448,7 +1591,9 @@ where
                     &self.evidence,
                     &|packet| {
                         control.check()?;
-                        self.model.bind_context_tokens(packet)?;
+                        self.model
+                            .bind_context_tokens_controlled(packet, &control)
+                            .map_err(|error| control.classify_model_failure(error, &dependency))?;
                         control.check().map(|_| ())
                     },
                 )
@@ -1456,9 +1601,19 @@ where
             if context.is_ok() {
                 let _ = control.check();
             }
-            (context, control.into_stop())
+            (context, control.into_stop(), dependency.get())
         };
+        if let Some(error) = dependency
+            && (error == RuntimePortFailure::Uncertain || stop.is_some())
+        {
+            return self.finish_model_failure(&turn_id, error);
+        }
         if let Some(stop) = stop {
+            if let Err(error) = context
+                && error != stop.port_failure()
+            {
+                return self.finish_model_failure(&turn_id, error);
+            }
             return self.finish_phase_stop(stop, false);
         }
         let context = match context {
@@ -1562,9 +1717,42 @@ where
             )?;
             return self.finish_phase_stop(stop, false);
         }
-        let result = match self.model.run_model(&model_request, &context, cancellation) {
+        let (result, mut dispatch_stop, dependency) = {
+            let control = RuntimePhaseControl::new(
+                &mut self.clock,
+                &self.request,
+                &self.correlation_id,
+                self.started_at_epoch_ms
+                    .ok_or(RuntimeLoopError::InvalidBoundaryResult)?,
+                self.events
+                    .last()
+                    .map_or(0, |event| event.occurred_at_epoch_ms),
+                &self.last_phase_observed_at,
+                cancellation,
+            );
+            let dependency = Cell::new(None);
+            let result = self
+                .model
+                .run_model_controlled(&model_request, &context, cancellation, &control)
+                .map_err(|error| control.classify_model_failure(error, &dependency));
+            (result, control.into_stop(), dependency.get())
+        };
+        let result = match result {
             Ok(result) => result,
             Err(error) => {
+                if dependency.is_none()
+                    && let Some(stop) = dispatch_stop.take()
+                {
+                    self.emit(
+                        RuntimeEventKind::ModelFailed {
+                            model_run_id,
+                            failure_code: stop.model_failure_code().to_owned(),
+                        },
+                        Some(&turn_id),
+                        None,
+                    )?;
+                    return self.finish_phase_stop(stop, false);
+                }
                 self.emit(
                     RuntimeEventKind::ModelFailed {
                         model_run_id,
@@ -1649,18 +1837,30 @@ where
             )?;
             return self.finish_model_failure(&turn_id, RuntimePortFailure::ResourceExhausted);
         }
-        if result.terminal_state == ModelRunTerminalState::Proposed
-            && let Err(stop) = self.observe_phase(cancellation)
-        {
-            self.emit(
-                RuntimeEventKind::ModelFailed {
-                    model_run_id,
-                    failure_code: stop.model_failure_code().to_owned(),
-                },
-                Some(&turn_id),
-                None,
-            )?;
-            return self.finish_phase_stop(stop, false);
+        if matches!(
+            result.terminal_state,
+            ModelRunTerminalState::Proposed
+                | ModelRunTerminalState::Cancelled
+                | ModelRunTerminalState::TimedOut
+        ) {
+            let stop = dispatch_stop.take().or_else(|| {
+                if result.terminal_state == ModelRunTerminalState::Proposed {
+                    self.observe_phase(cancellation).err()
+                } else {
+                    None
+                }
+            });
+            if let Some(stop) = stop {
+                self.emit(
+                    RuntimeEventKind::ModelFailed {
+                        model_run_id,
+                        failure_code: stop.model_failure_code().to_owned(),
+                    },
+                    Some(&turn_id),
+                    None,
+                )?;
+                return self.finish_phase_stop(stop, false);
+            }
         }
         let result_sha256 = contract_sha256(&result)?;
         let response_sha256 = result.response_sha256.clone();
@@ -1715,7 +1915,9 @@ where
                 )?;
                 self.finish_model_failure(&turn_id, RuntimePortFailure::ResourceExhausted)
             }
-            ModelRunTerminalState::Rejected if correctable_model_rejection(&result) => {
+            ModelRunTerminalState::Rejected
+                if correctable_model_rejection(&result) && dispatch_stop.is_none() =>
+            {
                 self.emit(
                     RuntimeEventKind::ModelFailed {
                         model_run_id,
@@ -4775,9 +4977,16 @@ fn observe_cancellation(
 
 fn map_model_error(error: ModelRuntimeGateError) -> RuntimePortFailure {
     match error {
-        ModelRuntimeGateError::NotLoaded | ModelRuntimeGateError::RuntimeFailure => {
-            RuntimePortFailure::Unavailable
-        }
+        ModelRuntimeGateError::CleanupUncertain => RuntimePortFailure::Uncertain,
+        ModelRuntimeGateError::OperationStopped(stop) => match stop {
+            ModelOperationStop::Cancelled => RuntimePortFailure::Cancelled,
+            ModelOperationStop::TimedOut => RuntimePortFailure::TimedOut,
+            ModelOperationStop::Unavailable => RuntimePortFailure::Unavailable,
+            ModelOperationStop::Invalid => RuntimePortFailure::Invalid,
+        },
+        ModelRuntimeGateError::PreparationAlreadyAttempted
+        | ModelRuntimeGateError::NotLoaded
+        | ModelRuntimeGateError::RuntimeFailure => RuntimePortFailure::Unavailable,
         ModelRuntimeGateError::DispatchCapacityExceeded => RuntimePortFailure::ResourceExhausted,
         ModelRuntimeGateError::ProfileInvalid
         | ModelRuntimeGateError::ProfileNotRegistered

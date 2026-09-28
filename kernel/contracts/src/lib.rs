@@ -183,12 +183,12 @@ pub use model::{
     ModelCancellationProbe, ModelCapability, ModelCapabilityState, ModelClientSchemas,
     ModelContextPacket, ModelDispatchPreflight, ModelFamilyCodec, ModelFinishReason, ModelHealth,
     ModelHealthState, ModelLifecycleState, ModelLoadReceipt, ModelManifestObservation,
-    ModelMessage, ModelMessageRole, ModelModality, ModelProposalKind, ModelProposalWireCandidate,
-    ModelResourceReport, ModelRole, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
-    ModelRuntimeFailure, ModelRuntimeIdentity, ModelRuntimeKind, ModelServingCachePolicy,
-    ModelServingCapabilities, ModelStreamSink, ModelTokenUsage, ModelToolCallCandidate,
-    ModelToolCallWireCandidate, ModelTransformation, ModelUnloadReceipt,
-    RuntimeIsolationObservation, StreamedModelFragment, TokenCountResult,
+    ModelMessage, ModelMessageRole, ModelModality, ModelOperationControl, ModelOperationStop,
+    ModelProposalKind, ModelProposalWireCandidate, ModelResourceReport, ModelRole, ModelRunRequest,
+    ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity,
+    ModelRuntimeKind, ModelServingCachePolicy, ModelServingCapabilities, ModelStreamSink,
+    ModelTokenUsage, ModelToolCallCandidate, ModelToolCallWireCandidate, ModelTransformation,
+    ModelUnloadReceipt, RuntimeIsolationObservation, StreamedModelFragment, TokenCountResult,
 };
 pub use model_discovery::{
     ModelActivationState, ModelCompatibilityState, ModelPickerCapability, ModelPickerDisposition,

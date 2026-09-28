@@ -193,15 +193,14 @@ Once an exact prepared request enters host composition, its start attempt is con
 including when startup fails. Repeating that request is refused. Malformed or substituted
 requests leave the valid preparation intact. A new preparation does not clear uncertain
 cleanup or authorize replay of earlier effects. Preserve the original startup failure;
-an unavailable best-effort release does not replace it. See
+an unavailable best-effort request release does not replace it. See
 [Decision 0099](../decisions/0099-failed-start-request-consumption.md).
 
 Native model socket requests share one deadline across connection, upload and response.
 Completion uploads also observe the existing cancellation signal. Full connection queues
 are refused without transport retries. Socket closure does not establish model-process
-cleanup. Factory-level model loading, endpoint preparation and aggregate preflight still
-need shared run cancellation and remaining-time control; these transport bounds do not
-satisfy that wider gate. See
+cleanup. These transport bounds are combined with the controlled preparation path
+below; they do not independently prove native cancellation or admission. See
 [Decision 0100](../decisions/0100-native-model-socket-exchange-deadlines.md).
 
 Coordinator phase admission uses the original run budget. Each model request binds
@@ -213,6 +212,22 @@ next advances, including a coordinator poll. Client status projection alone does
 not drive this check, and there is no autonomous expiry timer. These cooperative
 checks do not interrupt a blocking port or establish native process cleanup. See
 [Decision 0101](../decisions/0101-runtime-phase-deadline-admission.md).
+
+Native candidate construction leaves loading to the existing runtime worker, before
+exact token binding. Controlled preparation shares the original run clock and
+cancellation through manifest hashing, startup readiness, serving observations,
+token binding and dispatch preflight. A failed preparation cannot be retried on
+the same controller. Unsupported native control methods refuse before legacy work.
+Previously published requests and their digests remain unchanged.
+
+Startup or endpoint limits may shorten that run budget. Checks surround the existing
+resource observer and other blocking operations; they do not preempt system calls.
+A run cancellation does not acknowledge model unload. If attempted startup cleanup
+cannot prove runtime and namespace exit, its uncertainty takes precedence over the
+original stop, and the existing lease remains quarantined. This differs from the
+best-effort request release described above. Component checks do not establish a
+positive native workflow, current model qualification or independent acceptance. See
+[Decision 0102](../decisions/0102-controlled-native-model-preparation.md).
 
 Log directories are create-only and mode `0700`; `stdout.jsonl`, `stderr.log`, and `result.json`
 are mode `0600`. Preserve failed and rejected runs alongside successful ones. A scripted success is

@@ -1,5 +1,6 @@
 //! Executable development-only composition of the real coding coordinator and Linux boundaries.
 
+use agentmage_kernel_engine::runtime_loop::RuntimeModelOperationFailure;
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt::Write as _;
 use std::fs;
@@ -24,10 +25,10 @@ use agentmage_kernel_contracts::{
     FamilyCodecIdentity, GrantTarget, HardwareEnvelope, LocalEndpointIdentity, LocalTransport,
     ModelAdapterId, ModelArtifact, ModelCancellationProbe, ModelCapability, ModelCapabilityState,
     ModelCodecId, ModelFinishReason, ModelManifestId, ModelMessageRole, ModelModality,
-    ModelProfileId, ModelProposalKind, ModelResourceReport, ModelRole, ModelRunRequest,
-    ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity,
-    ModelRuntimeKind, ModelStreamId, ModelTokenUsage, ModelToolCallCandidate, NetworkComponent,
-    NetworkDestinationClass, NetworkObservation, PathResolutionIntent, PlanId,
+    ModelOperationControl, ModelProfileId, ModelProposalKind, ModelResourceReport, ModelRole,
+    ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure,
+    ModelRuntimeIdentity, ModelRuntimeKind, ModelStreamId, ModelTokenUsage, ModelToolCallCandidate,
+    NetworkComponent, NetworkDestinationClass, NetworkObservation, PathResolutionIntent, PlanId,
     PlatformArchitecture, PlatformFamily, ProposalId, RepositorySnapshotId, RollbackPlan,
     RuntimeEventCursor, RuntimeEventKind, RuntimeIsolationObservation, RuntimeRunId,
     RuntimeRunLimits, SessionId, StopCondition, StopConditionKind, TaskId, ToolCallId,
@@ -1012,7 +1013,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                     delays_ms,
                 })
             }
-            candidate => load_candidate_model(
+            candidate => construct_candidate_model(
                 candidate,
                 self.profile,
                 self.activation.state_root(),
@@ -2446,6 +2447,73 @@ impl RuntimeModelPort for CodingDevelopmentModelPort {
             ),
         }
     }
+    fn prepare_model_controlled(
+        &mut self,
+        control: &dyn ModelOperationControl,
+    ) -> Result<(), RuntimeModelOperationFailure> {
+        match self {
+            Self::Scripted(model) => model.prepare_model_controlled(control),
+            Self::Muse { controller, .. } => prepare_and_verify_candidate(controller, control),
+            Self::GptOss { controller, .. } => prepare_and_verify_candidate(controller, control),
+        }
+    }
+
+    fn bind_context_tokens_controlled(
+        &self,
+        packet: &mut agentmage_kernel_contracts::ModelContextPacket,
+        control: &dyn ModelOperationControl,
+    ) -> Result<(), RuntimeModelOperationFailure> {
+        let result = match self {
+            Self::Scripted(model) => return model.bind_context_tokens_controlled(packet, control),
+            Self::Muse { controller, .. } => {
+                controller.bind_dispatch_context_controlled(packet, control)
+            }
+            Self::GptOss { controller, .. } => {
+                controller.bind_dispatch_context_controlled(packet, control)
+            }
+        };
+        result.map(|_| ()).map_err(Into::into)
+    }
+
+    fn run_model_controlled(
+        &mut self,
+        request: &ModelRunRequest,
+        context: &agentmage_kernel_contracts::ModelContextPacket,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelRunResult, RuntimeModelOperationFailure> {
+        match self {
+            Self::Scripted(model) => {
+                model.run_model_controlled(request, context, cancellation, control)
+            }
+            Self::Muse {
+                controller,
+                rejection_root,
+                record_session,
+            } => run_native_candidate_using(
+                controller,
+                rejection_root,
+                *record_session,
+                request,
+                context,
+                cancellation,
+                Some(control),
+            ),
+            Self::GptOss {
+                controller,
+                rejection_root,
+                record_session,
+            } => run_native_candidate_using(
+                controller,
+                rejection_root,
+                *record_session,
+                request,
+                context,
+                cancellation,
+                Some(control),
+            ),
+        }
+    }
 }
 
 fn run_native_candidate<R, C>(
@@ -2460,27 +2528,63 @@ where
     R: agentmage_kernel_contracts::LocalModelRuntime,
     C: agentmage_kernel_contracts::ModelFamilyCodec,
 {
+    run_native_candidate_using(
+        controller,
+        rejection_root,
+        record_session,
+        request,
+        context,
+        cancellation,
+        None,
+    )
+    .map_err(|error| match error {
+        RuntimeModelOperationFailure::Port(failure) => failure,
+        RuntimeModelOperationFailure::Stopped(_) => RuntimePortFailure::Invalid,
+    })
+}
+
+fn run_native_candidate_using<R, C>(
+    controller: &mut LocalModelController<R, C>,
+    rejection_root: &Path,
+    record_session: bool,
+    request: &ModelRunRequest,
+    context: &agentmage_kernel_contracts::ModelContextPacket,
+    cancellation: Option<&dyn ModelCancellationProbe>,
+    control: Option<&dyn ModelOperationControl>,
+) -> Result<ModelRunResult, RuntimeModelOperationFailure>
+where
+    R: agentmage_kernel_contracts::LocalModelRuntime,
+    C: agentmage_kernel_contracts::ModelFamilyCodec,
+{
     // The context owner has already selected sources against exact native rendering.
     // Rebind independently at dispatch; no approximate count reaches llama.cpp.
     let mut exact_context = context.clone();
-    controller
-        .bind_token_count(&mut exact_context)
-        .map_err(|error| {
-            eprintln!(
-                "coding.development.candidate.context-binding.{}",
-                error.code()
-            );
-            RuntimePortFailure::Invalid
-        })?;
-    let prepared = controller
-        .prepare(request, &exact_context)
+    match control {
+        Some(control) => controller.bind_token_count_controlled(&mut exact_context, control),
+        None => controller.bind_token_count(&mut exact_context),
+    }
+    .map_err(|error| {
+        eprintln!(
+            "coding.development.candidate.context-binding.{}",
+            error.code()
+        );
+        if control.is_some() {
+            RuntimeModelOperationFailure::from(error)
+        } else {
+            RuntimePortFailure::Invalid.into()
+        }
+    })?;
+    let prepared = match control {
+        Some(control) => controller.prepare_controlled(request, &exact_context, control),
+        None => controller.prepare(request, &exact_context),
+    }
         .map_err(|error| {
             eprintln!(
                 "coding.development.candidate.preflight.{} rendered_tokens={} output_reserve={} profile_capacity={}",
                 error.code(), exact_context.input_tokens, request.max_output_tokens,
                 controller.exact_profile().context.max_context_tokens,
             );
-            RuntimePortFailure::Invalid
+            if control.is_some() { RuntimeModelOperationFailure::from(error) } else { RuntimePortFailure::Invalid.into() }
         })?;
     if record_session {
         let metadata = serde_json::to_vec(&serde_json::json!({
@@ -2497,12 +2601,22 @@ where
         )
         .map_err(|_| RuntimePortFailure::Unavailable)?;
     }
-    let output = match controller.dispatch_with_output(prepared, cancellation) {
+    let dispatch = match control {
+        Some(control) => {
+            controller.dispatch_with_output_controlled(prepared, cancellation, control)
+        }
+        None => controller.dispatch_with_output(prepared, cancellation),
+    };
+    let output = match dispatch {
         Ok(output) => output,
         Err(error) => {
             eprintln!("coding.development.candidate.dispatch.{}", error.code());
             let Some(mut rejected) = controller.take_rejected_output() else {
-                return Err(RuntimePortFailure::Unavailable);
+                return Err(if control.is_some() {
+                    error.into()
+                } else {
+                    RuntimePortFailure::Unavailable.into()
+                });
             };
             retain_rejected_candidate(rejection_root, &rejected).map_err(|retention_error| {
                 eprintln!("coding.development.candidate.rejection-retention.{retention_error}");
@@ -2527,7 +2641,7 @@ where
                         || failure.contract_error.is_some()
                 })
             {
-                return Err(RuntimePortFailure::Unavailable);
+                return Err(RuntimePortFailure::Unavailable.into());
             }
             rejected.result.failure = Some(agentmage_kernel_contracts::ModelRuntimeFailure {
                 code: "runtime.model.protocol_rejected".to_owned(),
@@ -2596,7 +2710,7 @@ fn retain_rejected_candidate(
     .map_err(|_| "retention-failed")
 }
 
-fn load_candidate_model(
+fn construct_candidate_model(
     model: CodingDevelopmentModel,
     session_profile: &CodingSessionProfile,
     state_root: &Path,
@@ -2717,12 +2831,11 @@ fn load_candidate_model(
                     eprintln!("coding.development.candidate.muse-codec.{}", error.code);
                     CodingDevelopmentRuntimeError::Profile
                 })?;
-            let mut controller =
+            let controller =
                 LocalModelController::new(runtime, codec, admitted, 256).map_err(|error| {
                     eprintln!("coding.development.candidate.controller.{}", error.code());
                     CodingDevelopmentRuntimeError::Profile
                 })?;
-            load_and_verify_candidate(&mut controller)?;
             Ok(CodingDevelopmentModelPort::Muse {
                 controller,
                 rejection_root,
@@ -2754,12 +2867,11 @@ fn load_candidate_model(
                     eprintln!("coding.development.candidate.gpt-oss-codec.{}", error.code);
                     CodingDevelopmentRuntimeError::Profile
                 })?;
-            let mut controller =
+            let controller =
                 LocalModelController::new(runtime, codec, admitted, 256).map_err(|error| {
                     eprintln!("coding.development.candidate.controller.{}", error.code());
                     CodingDevelopmentRuntimeError::Profile
                 })?;
-            load_and_verify_candidate(&mut controller)?;
             Ok(CodingDevelopmentModelPort::GptOss {
                 controller,
                 rejection_root,
@@ -2770,24 +2882,23 @@ fn load_candidate_model(
     }
 }
 
-fn load_and_verify_candidate<R, C>(
+fn prepare_and_verify_candidate<R, C>(
     controller: &mut LocalModelController<R, C>,
-) -> Result<(), CodingDevelopmentRuntimeError>
+    control: &dyn ModelOperationControl,
+) -> Result<(), RuntimeModelOperationFailure>
 where
     R: agentmage_kernel_contracts::LocalModelRuntime,
     C: agentmage_kernel_contracts::ModelFamilyCodec,
 {
-    controller.load().map_err(|error| {
-        eprintln!("coding.development.candidate.load.{}", error.code());
-        CodingDevelopmentRuntimeError::Platform
-    })?;
-    let served = controller.serving_capabilities().map_err(|error| {
-        eprintln!("coding.development.candidate.capabilities.{}", error.code());
-        CodingDevelopmentRuntimeError::Platform
-    })?;
+    let served = controller
+        .ensure_prepared_controlled(control)
+        .map_err(|error| {
+            eprintln!("coding.development.candidate.preparation.{}", error.code());
+            RuntimeModelOperationFailure::from(error)
+        })?;
     if served.context_capacity_tokens != 32_768 || served.parallel_slots != 1 {
         eprintln!("coding.development.candidate.served-profile-denied");
-        return Err(CodingDevelopmentRuntimeError::Profile);
+        return Err(RuntimePortFailure::Invalid.into());
     }
     Ok(())
 }

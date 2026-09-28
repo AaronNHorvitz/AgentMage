@@ -15,10 +15,10 @@ use std::time::{Duration, Instant};
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, DecodingProfile, EncodedModelContext, ExactModelProfile,
     ModelCancellationProbe, ModelDispatchPreflight, ModelFinishReason, ModelHealth,
-    ModelHealthState, ModelLoadReceipt, ModelManifestObservation, ModelProfileId,
-    ModelResourceReport, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
-    ModelRuntimeFailure, ModelRuntimeIdentity, ModelServingCachePolicy, ModelServingCapabilities,
-    ModelStreamId, ModelStreamSink, ModelTokenUsage, ModelUnloadReceipt,
+    ModelHealthState, ModelLoadReceipt, ModelManifestObservation, ModelOperationControl,
+    ModelOperationStop, ModelProfileId, ModelResourceReport, ModelRunRequest, ModelRunResult,
+    ModelRunTerminalState, ModelRuntimeFailure, ModelRuntimeIdentity, ModelServingCachePolicy,
+    ModelServingCapabilities, ModelStreamId, ModelStreamSink, ModelTokenUsage, ModelUnloadReceipt,
     RuntimeIsolationObservation, StreamedModelFragment, TokenCountResult,
 };
 use serde_json::{Value, json};
@@ -40,7 +40,8 @@ mod socket_exchange {
     use std::time::{Duration, Instant};
 
     use agentmage_kernel_contracts::{
-        ModelCancellationProbe, ModelRunRequest, ModelRuntimeFailure,
+        ModelCancellationProbe, ModelOperationControl, ModelOperationStop, ModelRunRequest,
+        ModelRuntimeFailure,
     };
     use rustix::event::{PollFd, PollFlags, Timespec, poll};
     use rustix::net::{
@@ -52,6 +53,7 @@ mod socket_exchange {
     pub(super) struct SocketExchange<'a> {
         deadline: Instant,
         cancellation: Option<(&'a dyn ModelCancellationProbe, &'a ModelRunRequest)>,
+        control: Option<&'a dyn ModelOperationControl>,
     }
 
     impl<'a> SocketExchange<'a> {
@@ -64,10 +66,26 @@ mod socket_exchange {
                     .checked_add(timeout)
                     .ok_or_else(|| failure("model.llama-driver.deadline-invalid", false))?,
                 cancellation,
+                control: None,
             })
         }
 
+        pub(super) fn with_control(
+            mut self,
+            control: Option<&'a dyn ModelOperationControl>,
+        ) -> Self {
+            self.control = control;
+            self
+        }
+
         pub(super) fn check_stop(&self) -> Result<(), StreamReadError> {
+            if let Some(control) = self.control {
+                control.remaining_ms().map_err(|stop| match stop {
+                    ModelOperationStop::Cancelled => StreamReadError::Cancelled,
+                    ModelOperationStop::TimedOut => StreamReadError::TimedOut,
+                    _ => StreamReadError::Failed(stop.into()),
+                })?;
+            }
             if Instant::now() >= self.deadline {
                 return Err(StreamReadError::TimedOut);
             }
@@ -499,6 +517,66 @@ pub struct LlamaServerDriver {
     load_generation: u64,
 }
 
+fn check_operation_control(
+    control: Option<&dyn ModelOperationControl>,
+) -> Result<(), ModelRuntimeFailure> {
+    if let Some(control) = control {
+        control.remaining_ms()?;
+    }
+    Ok(())
+}
+
+fn controlled_timeout(
+    control: Option<&dyn ModelOperationControl>,
+    ceiling_ms: u64,
+) -> Result<Duration, ModelRuntimeFailure> {
+    let remaining = match control {
+        Some(control) => control.remaining_ms()?.get().min(ceiling_ms),
+        None => ceiling_ms,
+    };
+    if remaining == 0 {
+        return Err(ModelOperationStop::TimedOut.into());
+    }
+    Ok(Duration::from_millis(remaining))
+}
+
+struct StartupControl<'a> {
+    deadline: Instant,
+    outer: Option<&'a dyn ModelOperationControl>,
+}
+
+impl ModelOperationControl for StartupControl<'_> {
+    fn remaining_ms(&self) -> Result<std::num::NonZeroU64, ModelOperationStop> {
+        let outer = match self.outer {
+            Some(control) => control.remaining_ms()?.get(),
+            None => u64::MAX,
+        };
+        let local = self
+            .deadline
+            .saturating_duration_since(Instant::now())
+            .as_millis()
+            .min(u128::from(u64::MAX)) as u64;
+        std::num::NonZeroU64::new(outer.min(local)).ok_or(ModelOperationStop::TimedOut)
+    }
+}
+
+impl StartupControl<'_> {
+    fn check(&self) -> Result<std::num::NonZeroU64, ModelRuntimeFailure> {
+        self.remaining_ms().map_err(|stop| {
+            if let Some(outer) = self.outer
+                && let Err(original) = outer.remaining_ms()
+            {
+                return original.into();
+            }
+            if stop == ModelOperationStop::TimedOut {
+                failure("model.llama-driver.startup-timeout", true)
+            } else {
+                stop.into()
+            }
+        })
+    }
+}
+
 impl LlamaServerDriver {
     /// Creates an unloaded driver without touching the runtime or model store.
     #[must_use]
@@ -511,12 +589,22 @@ impl LlamaServerDriver {
         }
     }
 
-    fn verify_runtime_tree(&self) -> Result<(), ModelRuntimeFailure> {
+    fn verify_runtime_tree(
+        &self,
+        control: Option<&dyn ModelOperationControl>,
+    ) -> Result<(), ModelRuntimeFailure> {
+        check_operation_control(control)?;
         exact_directory(&self.config.runtime_root, 0o555)?;
         for (relative, bytes, digest) in RUNTIME_FILES {
-            exact_file(&self.config.runtime_root.join(relative), *bytes, digest)?;
+            exact_file_controlled(
+                &self.config.runtime_root.join(relative),
+                *bytes,
+                digest,
+                control,
+            )?;
         }
         for (relative, target) in RUNTIME_LINKS {
+            check_operation_control(control)?;
             let path = self.config.runtime_root.join(relative);
             let metadata = fs::symlink_metadata(&path)
                 .map_err(|_| failure("model.llama-driver.runtime-link-missing", false))?;
@@ -526,22 +614,33 @@ impl LlamaServerDriver {
                 return Err(failure("model.llama-driver.runtime-link-drift", false));
             }
         }
+        check_operation_control(control)?;
         Ok(())
     }
 
-    fn verify_sandbox_dependencies(&self) -> Result<(), ModelRuntimeFailure> {
-        exact_root_owned_file(Path::new(BWRAP_PATH), BWRAP_SHA256)?;
-        exact_root_owned_file(Path::new(NVIDIA_SMI_PATH), NVIDIA_SMI_SHA256)?;
+    fn verify_sandbox_dependencies(
+        &self,
+        control: Option<&dyn ModelOperationControl>,
+    ) -> Result<(), ModelRuntimeFailure> {
+        check_operation_control(control)?;
+        exact_root_owned_file_controlled(Path::new(BWRAP_PATH), BWRAP_SHA256, control)?;
+        exact_root_owned_file_controlled(Path::new(NVIDIA_SMI_PATH), NVIDIA_SMI_SHA256, control)?;
         for path in SANDBOX_READ_ONLY_DIRECTORIES {
             exact_root_owned_directory(Path::new(path))?;
         }
         for path in SANDBOX_DEVICE_PATHS {
             exact_root_owned_device_or_directory(Path::new(path))?;
         }
+        check_operation_control(control)?;
         Ok(())
     }
 
-    fn verify_model(&self, profile: &ExactModelProfile) -> Result<(), ModelRuntimeFailure> {
+    fn verify_model(
+        &self,
+        profile: &ExactModelProfile,
+        control: Option<&dyn ModelOperationControl>,
+    ) -> Result<(), ModelRuntimeFailure> {
+        check_operation_control(control)?;
         let metadata = fs::symlink_metadata(&self.config.model_path)
             .map_err(|_| failure("model.llama-driver.file-unavailable", false))?;
         if !metadata.is_file()
@@ -576,7 +675,7 @@ impl LlamaServerDriver {
         {
             return Ok(());
         }
-        if sha256_file(&self.config.model_path)? != profile.artifact.sha256 {
+        if sha256_file_controlled(&self.config.model_path, control)? != profile.artifact.sha256 {
             *self.verified_model.borrow_mut() = None;
             return Err(failure("model.llama-driver.file-identity", false));
         }
@@ -597,6 +696,7 @@ impl LlamaServerDriver {
             artifact_sha256: profile.artifact.sha256.clone(),
             snapshot: after,
         });
+        check_operation_control(control)?;
         Ok(())
     }
 
@@ -611,18 +711,43 @@ impl LlamaServerDriver {
         Ok(loaded)
     }
 
-    fn client(&self) -> Result<UnixHttpClient, ModelRuntimeFailure> {
-        let loaded = self.active_loaded()?;
-        loaded.files.verify_connection()?;
-        Ok(UnixHttpClient::new(
-            self.config.socket_path.clone(),
-            loaded.files.key().to_owned(),
-        ))
+    #[cfg(test)]
+    fn client(&self) -> Result<UnixHttpClient<'_>, ModelRuntimeFailure> {
+        self.client_controlled(None)
     }
 
+    fn client_controlled<'a>(
+        &self,
+        control: Option<&'a dyn ModelOperationControl>,
+    ) -> Result<UnixHttpClient<'a>, ModelRuntimeFailure> {
+        check_operation_control(control)?;
+        let loaded = self.active_loaded()?;
+        loaded.files.verify_connection()?;
+        let mut client = UnixHttpClient::new(
+            self.config.socket_path.clone(),
+            loaded.files.key().to_owned(),
+        );
+        client.control = control;
+        Ok(client)
+    }
+
+    #[cfg(test)]
     fn wait_until_ready(&mut self) -> Result<(), ModelRuntimeFailure> {
-        let deadline = Instant::now() + self.config.startup_timeout;
+        self.wait_until_ready_controlled(None)
+    }
+
+    fn wait_until_ready_controlled(
+        &mut self,
+        control: Option<&dyn ModelOperationControl>,
+    ) -> Result<(), ModelRuntimeFailure> {
+        let startup = StartupControl {
+            deadline: Instant::now()
+                .checked_add(self.config.startup_timeout)
+                .ok_or_else(|| failure("model.llama-driver.deadline-invalid", false))?,
+            outer: control,
+        };
         loop {
+            startup.check()?;
             if self
                 .loaded
                 .as_mut()
@@ -634,13 +759,30 @@ impl LlamaServerDriver {
             {
                 return Err(failure("model.llama-driver.process-exited", true));
             }
-            if self.client()?.health().is_ok() {
+            let ready = self.client_controlled(Some(&startup))?.health();
+            let remaining = startup.check()?;
+            if ready.is_ok() {
                 return Ok(());
             }
-            if Instant::now() >= deadline {
-                return Err(failure("model.llama-driver.startup-timeout", true));
+            if let Err(error) = ready
+                && ModelOperationStop::from_failure(&error).is_some()
+            {
+                return Err(error);
             }
-            thread::sleep(Duration::from_millis(100));
+            thread::sleep(Duration::from_millis(remaining.get().min(100)));
+        }
+    }
+
+    fn failed_startup(&mut self, original: ModelRuntimeFailure) -> ModelRuntimeFailure {
+        match self.stop_loaded() {
+            Ok(_) => original,
+            Err(cleanup) => {
+                eprintln!(
+                    "model.operation.startup-failed:{} cleanup:{}",
+                    original.code, cleanup.code
+                );
+                failure("model.operation.cleanup-uncertain", true)
+            }
         }
     }
 
@@ -738,11 +880,13 @@ impl Drop for LlamaServerDriver {
     }
 }
 
-impl NativeModelDriver for LlamaServerDriver {
-    fn verify_manifest(
+impl LlamaServerDriver {
+    fn verify_manifest_using(
         &self,
         profile: &ExactModelProfile,
+        control: Option<&dyn ModelOperationControl>,
     ) -> Result<ModelManifestObservation, ModelRuntimeFailure> {
+        check_operation_control(control)?;
         if self.loaded.is_some()
             || profile.runtime != self.config.identity
             || profile.context.max_context_tokens != self.config.launch.context_tokens
@@ -753,8 +897,9 @@ impl NativeModelDriver for LlamaServerDriver {
         if let Some(policy) = &self.config.development_resource_policy {
             policy.verify_scope_before_manifest()?;
         }
-        self.verify_runtime_tree()?;
-        self.verify_model(profile)?;
+        self.verify_runtime_tree(control)?;
+        self.verify_model(profile, control)?;
+        check_operation_control(control)?;
         Ok(ModelManifestObservation {
             profile_id: profile.profile_id.clone(),
             manifest_sha256: profile.manifest_sha256.clone(),
@@ -766,20 +911,22 @@ impl NativeModelDriver for LlamaServerDriver {
         })
     }
 
-    fn load(
+    fn load_using(
         &mut self,
         profile: &ExactModelProfile,
         isolation: &RuntimeIsolationObservation,
+        control: Option<&dyn ModelOperationControl>,
     ) -> Result<ModelLoadReceipt, ModelRuntimeFailure> {
+        check_operation_control(control)?;
         let started = Instant::now();
-        self.verify_manifest(profile)?;
+        self.verify_manifest_using(profile, control)?;
         let socket_parent = self
             .config
             .socket_path
             .parent()
             .ok_or_else(|| failure("model.llama-driver.socket-parent-invalid", false))?;
         exact_directory(socket_parent, 0o700)?;
-        self.verify_sandbox_dependencies()?;
+        self.verify_sandbox_dependencies(control)?;
         let mut lease = NativeInferenceLease::acquire()?;
         if let Some(policy) = &self.config.development_resource_policy {
             if self.config.launch.context_tokens != 32_768
@@ -800,6 +947,7 @@ impl NativeModelDriver for LlamaServerDriver {
             // prompts, credentials, peer identities or arbitrary utility output.
             eprintln!("model.native-resource.preflight:{observation}");
         }
+        check_operation_control(control)?;
         self.load_generation = self
             .load_generation
             .checked_add(1)
@@ -831,10 +979,11 @@ impl NativeModelDriver for LlamaServerDriver {
             .stdout(Stdio::null())
             .stderr(Stdio::null());
         files.verify_key()?;
+        check_operation_control(control)?;
         lease.arm()?;
         let child = command
             .spawn()
-            .map_err(|_| failure("model.llama-driver.process-start-failed", true))?;
+            .map_err(|_| failure("model.operation.cleanup-uncertain", true))?;
         self.loaded = Some(LoadedRuntime {
             _lease: lease,
             profile_id: profile.profile_id.clone(),
@@ -862,11 +1011,11 @@ impl NativeModelDriver for LlamaServerDriver {
             input_tokens: 0,
             output_tokens: 0,
         });
-        if let Err(error) = self.wait_until_ready() {
-            let _ = self.stop_loaded();
-            return Err(error);
+        if let Err(error) = self.wait_until_ready_controlled(control) {
+            return Err(self.failed_startup(error));
         }
         let finalized = (|| {
+            check_operation_control(control)?;
             let loaded = self.loaded.as_mut().expect("loaded state retained");
             let owner = RuntimeOwner::capture(&mut loaded.child)?;
             let runtime_pid = owner.pid();
@@ -885,8 +1034,7 @@ impl NativeModelDriver for LlamaServerDriver {
         let runtime_pid = match finalized {
             Ok(runtime_pid) => runtime_pid,
             Err(error) => {
-                let _ = self.stop_loaded();
-                return Err(error);
+                return Err(self.failed_startup(error));
             }
         };
         let loaded = self.loaded.as_mut().expect("loaded state retained");
@@ -896,13 +1044,15 @@ impl NativeModelDriver for LlamaServerDriver {
             .elapsed()
             .as_millis()
             .min(u128::from(u64::MAX)) as u64;
-        let served_capabilities = match self.serving_capabilities() {
+        let served_capabilities = match self.serving_capabilities_using(control) {
             Ok(capabilities) => capabilities,
             Err(error) => {
-                let _ = self.stop_loaded();
-                return Err(error);
+                return Err(self.failed_startup(error));
             }
         };
+        if let Err(error) = check_operation_control(control) {
+            return Err(self.failed_startup(error));
+        }
         Ok(ModelLoadReceipt {
             profile_id: profile.profile_id.clone(),
             manifest_sha256: profile.manifest_sha256.clone(),
@@ -913,65 +1063,24 @@ impl NativeModelDriver for LlamaServerDriver {
         })
     }
 
-    fn unload(
-        &mut self,
-        profile_id: &ModelProfileId,
-    ) -> Result<ModelUnloadReceipt, ModelRuntimeFailure> {
-        if self.loaded.as_ref().map(|loaded| &loaded.profile_id) != Some(profile_id) {
-            return Err(failure("model.llama-driver.profile-mismatch", false));
-        }
-        let (unloaded, elapsed_ms) = self.stop_loaded()?;
-        Ok(ModelUnloadReceipt {
-            profile_id: unloaded,
-            adapter_id: self.config.identity.adapter_id.clone(),
-            empty: true,
-            elapsed_ms,
-        })
-    }
-
-    fn health(&self) -> ModelHealth {
-        let (profile_id, state, reason) = match self.loaded.as_ref() {
-            None => (
-                None,
-                ModelHealthState::Unloaded,
-                "model.llama-driver.unloaded",
-            ),
-            Some(loaded) if loaded.cleanup_deadline.is_some() || loaded.cleanup_uncertain => (
-                Some(loaded.profile_id.clone()),
-                ModelHealthState::Failed,
-                "model.llama-driver.cleanup-in-progress",
-            ),
-            Some(loaded) if self.client().and_then(|client| client.health()).is_ok() => (
-                Some(loaded.profile_id.clone()),
-                ModelHealthState::Ready,
-                "model.llama-driver.ready",
-            ),
-            Some(loaded) => (
-                Some(loaded.profile_id.clone()),
-                ModelHealthState::Failed,
-                "model.llama-driver.health-failed",
-            ),
-        };
-        ModelHealth {
-            adapter_id: self.config.identity.adapter_id.clone(),
-            profile_id,
-            state,
-            reason_code: reason.to_owned(),
-            observed_at_ms: self
-                .loaded
-                .as_ref()
-                .map_or(0, |loaded| loaded.loaded_at.elapsed().as_millis() as u64),
-        }
-    }
-
-    fn serving_capabilities(&self) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+    fn serving_capabilities_using(
+        &self,
+        control: Option<&dyn ModelOperationControl>,
+    ) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+        check_operation_control(control)?;
         let loaded = self.active_loaded()?;
         let owner = loaded
             .runtime_owner
             .as_ref()
             .ok_or_else(|| failure("model.served-capability.missing", false))?;
         owner.verify_live()?;
-        if loaded.runtime_pid != owner.pid() || self.client()?.health().is_err() {
+        if loaded.runtime_pid != owner.pid() {
+            return Err(failure("model.served-capability.drift", false));
+        }
+        if let Err(error) = self.client_controlled(control)?.health() {
+            if ModelOperationStop::from_failure(&error).is_some() {
+                return Err(error);
+            }
             return Err(failure("model.served-capability.drift", false));
         }
         verify_runtime_command_line(loaded.runtime_pid, &loaded.launch_arguments)?;
@@ -979,7 +1088,7 @@ impl NativeModelDriver for LlamaServerDriver {
         if process_generation != owner.generation() {
             return Err(failure("model.served-capability.drift", false));
         }
-        let properties = self.client()?.serving_properties()?;
+        let properties = self.client_controlled(control)?.serving_properties()?;
         owner.verify_live()?;
         if properties.parallel_slots != 1 {
             return Err(failure("model.served-capability.drift", false));
@@ -1014,10 +1123,12 @@ impl NativeModelDriver for LlamaServerDriver {
         Ok(observation)
     }
 
-    fn count_tokens(
+    fn count_tokens_using(
         &self,
         context: &EncodedModelContext,
+        control: Option<&dyn ModelOperationControl>,
     ) -> Result<TokenCountResult, ModelRuntimeFailure> {
+        check_operation_control(control)?;
         let loaded = self.active_loaded()?;
         if loaded.profile_id != context.profile_id {
             return Err(failure(
@@ -1025,7 +1136,9 @@ impl NativeModelDriver for LlamaServerDriver {
                 false,
             ));
         }
-        let tokens = self.client()?.token_count(&context.bytes)?;
+        let tokens = self
+            .client_controlled(control)?
+            .token_count(&context.bytes)?;
         Ok(TokenCountResult {
             profile_id: context.profile_id.clone(),
             context_packet_id: context.context_packet_id.clone(),
@@ -1035,14 +1148,17 @@ impl NativeModelDriver for LlamaServerDriver {
         })
     }
 
-    fn stream(
+    fn stream_using(
         &mut self,
         request: &ModelRunRequest,
         context: &EncodedModelContext,
         preflight: &ModelDispatchPreflight,
         cancellation: Option<&dyn ModelCancellationProbe>,
         sink: &mut dyn ModelStreamSink,
+        control: Option<&dyn ModelOperationControl>,
     ) -> Result<ModelRunResult, ModelRuntimeFailure> {
+        check_operation_control(control)?;
+        let started = Instant::now();
         let loaded = self.active_loaded()?;
         if loaded.profile_id != request.profile_id
             || loaded.profile_id != context.profile_id
@@ -1051,7 +1167,7 @@ impl NativeModelDriver for LlamaServerDriver {
         {
             return Err(failure("model.llama-driver.request-mismatch", false));
         }
-        let current = self.serving_capabilities()?;
+        let current = self.serving_capabilities_using(control)?;
         if preflight.schema_version != CONTRACT_SCHEMA_VERSION
             || !valid_sha256(&preflight.context_manifest_sha256)
             || !valid_sha256(&preflight.orchestration_plan_sha256)
@@ -1077,8 +1193,7 @@ impl NativeModelDriver for LlamaServerDriver {
         {
             return Err(failure("model.prepared-request.stale-binding", false));
         }
-        let started = Instant::now();
-        let client = self.client()?;
+        let client = self.client_controlled(control)?;
         let properties = client.serving_properties()?;
         if properties.parallel_slots != 1 {
             return Err(failure("model.served-capability.drift", false));
@@ -1152,6 +1267,176 @@ impl NativeModelDriver for LlamaServerDriver {
                 elapsed_ms: started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64,
             },
         })
+    }
+
+    fn health_using(
+        &self,
+        control: Option<&dyn ModelOperationControl>,
+    ) -> Result<ModelHealth, ModelRuntimeFailure> {
+        check_operation_control(control)?;
+        let (profile_id, state, reason) = match self.loaded.as_ref() {
+            None => (
+                None,
+                ModelHealthState::Unloaded,
+                "model.llama-driver.unloaded",
+            ),
+            Some(loaded) if loaded.cleanup_deadline.is_some() || loaded.cleanup_uncertain => (
+                Some(loaded.profile_id.clone()),
+                ModelHealthState::Failed,
+                "model.llama-driver.cleanup-in-progress",
+            ),
+            Some(loaded)
+                if self
+                    .client_controlled(control)
+                    .and_then(|client| client.health())
+                    .is_ok() =>
+            {
+                (
+                    Some(loaded.profile_id.clone()),
+                    ModelHealthState::Ready,
+                    "model.llama-driver.ready",
+                )
+            }
+            Some(loaded) => (
+                Some(loaded.profile_id.clone()),
+                ModelHealthState::Failed,
+                "model.llama-driver.health-failed",
+            ),
+        };
+        check_operation_control(control)?;
+        Ok(ModelHealth {
+            adapter_id: self.config.identity.adapter_id.clone(),
+            profile_id,
+            state,
+            reason_code: reason.to_owned(),
+            observed_at_ms: self
+                .loaded
+                .as_ref()
+                .map_or(0, |loaded| loaded.loaded_at.elapsed().as_millis() as u64),
+        })
+    }
+}
+
+impl NativeModelDriver for LlamaServerDriver {
+    fn verify_manifest(
+        &self,
+        profile: &ExactModelProfile,
+    ) -> Result<ModelManifestObservation, ModelRuntimeFailure> {
+        self.verify_manifest_using(profile, None)
+    }
+
+    fn verify_manifest_controlled(
+        &self,
+        profile: &ExactModelProfile,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelManifestObservation, ModelRuntimeFailure> {
+        self.verify_manifest_using(profile, Some(control))
+    }
+
+    fn load(
+        &mut self,
+        profile: &ExactModelProfile,
+        isolation: &RuntimeIsolationObservation,
+    ) -> Result<ModelLoadReceipt, ModelRuntimeFailure> {
+        self.load_using(profile, isolation, None)
+    }
+
+    fn load_controlled(
+        &mut self,
+        profile: &ExactModelProfile,
+        isolation: &RuntimeIsolationObservation,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelLoadReceipt, ModelRuntimeFailure> {
+        self.load_using(profile, isolation, Some(control))
+    }
+
+    fn unload(
+        &mut self,
+        profile_id: &ModelProfileId,
+    ) -> Result<ModelUnloadReceipt, ModelRuntimeFailure> {
+        if self.loaded.as_ref().map(|loaded| &loaded.profile_id) != Some(profile_id) {
+            return Err(failure("model.llama-driver.profile-mismatch", false));
+        }
+        let (unloaded, elapsed_ms) = self.stop_loaded()?;
+        Ok(ModelUnloadReceipt {
+            profile_id: unloaded,
+            adapter_id: self.config.identity.adapter_id.clone(),
+            empty: true,
+            elapsed_ms,
+        })
+    }
+
+    fn health(&self) -> ModelHealth {
+        self.health_using(None).unwrap_or_else(|_| ModelHealth {
+            adapter_id: self.config.identity.adapter_id.clone(),
+            profile_id: self.loaded.as_ref().map(|loaded| loaded.profile_id.clone()),
+            state: ModelHealthState::Failed,
+            reason_code: "model.llama-driver.health-failed".to_owned(),
+            observed_at_ms: 0,
+        })
+    }
+
+    fn health_controlled(
+        &self,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelHealth, ModelRuntimeFailure> {
+        self.health_using(Some(control))
+    }
+
+    fn serving_capabilities(&self) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+        self.serving_capabilities_using(None)
+    }
+
+    fn serving_capabilities_controlled(
+        &self,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
+        self.serving_capabilities_using(Some(control))
+    }
+
+    fn count_tokens(
+        &self,
+        context: &EncodedModelContext,
+    ) -> Result<TokenCountResult, ModelRuntimeFailure> {
+        self.count_tokens_using(context, None)
+    }
+
+    fn count_tokens_controlled(
+        &self,
+        context: &EncodedModelContext,
+        control: &dyn ModelOperationControl,
+    ) -> Result<TokenCountResult, ModelRuntimeFailure> {
+        self.count_tokens_using(context, Some(control))
+    }
+
+    fn stream(
+        &mut self,
+        request: &ModelRunRequest,
+        context: &EncodedModelContext,
+        preflight: &ModelDispatchPreflight,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+        sink: &mut dyn ModelStreamSink,
+    ) -> Result<ModelRunResult, ModelRuntimeFailure> {
+        self.stream_using(request, context, preflight, cancellation, sink, None)
+    }
+
+    fn stream_controlled(
+        &mut self,
+        request: &ModelRunRequest,
+        context: &EncodedModelContext,
+        preflight: &ModelDispatchPreflight,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+        sink: &mut dyn ModelStreamSink,
+        control: &dyn ModelOperationControl,
+    ) -> Result<ModelRunResult, ModelRuntimeFailure> {
+        self.stream_using(
+            request,
+            context,
+            preflight,
+            cancellation,
+            sink,
+            Some(control),
+        )
     }
 
     fn resources(&self) -> Result<ModelResourceReport, ModelRuntimeFailure> {
@@ -1372,14 +1657,16 @@ struct ServingProperties {
     parallel_slots: u32,
 }
 
-struct UnixHttpClient {
+struct UnixHttpClient<'a> {
+    control: Option<&'a dyn ModelOperationControl>,
     socket_path: PathBuf,
     api_key: Zeroizing<String>,
 }
 
-impl UnixHttpClient {
+impl<'a> UnixHttpClient<'a> {
     fn new(socket_path: PathBuf, api_key: String) -> Self {
         Self {
+            control: None,
             socket_path,
             api_key: Zeroizing::new(api_key),
         }
@@ -1443,9 +1730,10 @@ impl UnixHttpClient {
             stream_id,
         } = invocation;
         let exchange = SocketExchange::new(
-            Duration::from_millis(request.timeout_ms.min(3_600_000)),
+            controlled_timeout(self.control, request.timeout_ms.min(3_600_000))?,
             cancellation.map(|probe| (probe, request)),
-        )?;
+        )?
+        .with_control(self.control);
         let prompt = std::str::from_utf8(context)
             .map_err(|_| failure("model.llama-driver.context-not-utf8", false))?;
         let body = serde_json::to_vec(&json!({
@@ -1510,8 +1798,11 @@ impl UnixHttpClient {
         maximum: usize,
         timeout_ms: u64,
     ) -> Result<Vec<u8>, ModelRuntimeFailure> {
-        let exchange =
-            SocketExchange::new(Duration::from_millis(timeout_ms.clamp(1, 3_600_000)), None)?;
+        let exchange = SocketExchange::new(
+            controlled_timeout(self.control, timeout_ms.clamp(1, 3_600_000))?,
+            None,
+        )?
+        .with_control(self.control);
         let payload = body.unwrap_or_default();
         let header = format!(
             "{} {} HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer {}\r\nContent-Type: application/json\r\nConnection: close\r\nContent-Length: {}\r\n\r\n",
@@ -1550,10 +1841,20 @@ impl UnixHttpClient {
             exchange.check_stop()?;
             Ok(body)
         };
-        operation().map_err(|error| match error {
-            StreamReadError::TimedOut => failure("model.llama-driver.http-timeout", true),
-            StreamReadError::Cancelled => failure("model.llama-driver.cancelled", false),
-            StreamReadError::Failed(error) => error,
+        operation().map_err(|error| {
+            if matches!(
+                error,
+                StreamReadError::TimedOut | StreamReadError::Cancelled
+            ) && let Some(control) = self.control
+                && let Err(stop) = control.remaining_ms()
+            {
+                return stop.into();
+            }
+            match error {
+                StreamReadError::TimedOut => failure("model.llama-driver.http-timeout", true),
+                StreamReadError::Cancelled => failure("model.llama-driver.cancelled", false),
+                StreamReadError::Failed(error) => error,
+            }
         })
     }
 }
@@ -2155,7 +2456,12 @@ fn parse_http_response(response: &[u8]) -> Result<Vec<u8>, ModelRuntimeFailure> 
     Ok(body.to_vec())
 }
 
-fn exact_root_owned_file(path: &Path, digest: &str) -> Result<(), ModelRuntimeFailure> {
+fn exact_root_owned_file_controlled(
+    path: &Path,
+    digest: &str,
+    control: Option<&dyn ModelOperationControl>,
+) -> Result<(), ModelRuntimeFailure> {
+    check_operation_control(control)?;
     let metadata = fs::symlink_metadata(path)
         .map_err(|_| failure("model.llama-driver.sandbox-file-unavailable", false))?;
     if !metadata.is_file()
@@ -2163,7 +2469,7 @@ fn exact_root_owned_file(path: &Path, digest: &str) -> Result<(), ModelRuntimeFa
         || metadata.uid() != 0
         || metadata.nlink() != 1
         || metadata.mode() & 0o022 != 0
-        || sha256_file(path)? != digest
+        || sha256_file_controlled(path, control)? != digest
     {
         return Err(failure("model.llama-driver.sandbox-file-identity", false));
     }
@@ -2367,26 +2673,37 @@ fn exact_directory(path: &Path, mode: u32) -> Result<fs::Metadata, ModelRuntimeF
     Ok(metadata)
 }
 
-fn exact_file(path: &Path, bytes: u64, digest: &str) -> Result<(), ModelRuntimeFailure> {
+fn exact_file_controlled(
+    path: &Path,
+    bytes: u64,
+    digest: &str,
+    control: Option<&dyn ModelOperationControl>,
+) -> Result<(), ModelRuntimeFailure> {
+    check_operation_control(control)?;
     let metadata = fs::symlink_metadata(path)
         .map_err(|_| failure("model.llama-driver.file-unavailable", false))?;
     if !metadata.is_file()
         || metadata.file_type().is_symlink()
         || metadata.nlink() != 1
         || metadata.len() != bytes
-        || sha256_file(path)? != digest
+        || sha256_file_controlled(path, control)? != digest
     {
         return Err(failure("model.llama-driver.file-identity", false));
     }
     Ok(())
 }
 
-fn sha256_file(path: &Path) -> Result<String, ModelRuntimeFailure> {
+fn sha256_file_controlled(
+    path: &Path,
+    control: Option<&dyn ModelOperationControl>,
+) -> Result<String, ModelRuntimeFailure> {
+    check_operation_control(control)?;
     let mut stream =
         fs::File::open(path).map_err(|_| failure("model.llama-driver.file-unavailable", false))?;
     let mut digest = Sha256::new();
     let mut buffer = vec![0_u8; 4 * 1024 * 1024];
     loop {
+        check_operation_control(control)?;
         let count = stream
             .read(&mut buffer)
             .map_err(|_| failure("model.llama-driver.file-read-failed", false))?;
@@ -2512,8 +2829,9 @@ mod tests {
     use agentmage_kernel_contracts::{
         BoundaryKind, CancellationId, CancellationReason, CancellationSignal, ContextPacketId,
         CorrelationId, DecodingProfile, ExactModelProfile, ModelAdapterId, ModelCancellationProbe,
-        ModelFinishReason, ModelProfileId, ModelRunId, ModelRunRequest, ModelRunTerminalState,
-        ModelRuntimeFailure, ModelStreamId, ModelStreamSink, StreamedModelFragment, TaskId,
+        ModelFinishReason, ModelOperationControl, ModelOperationStop, ModelProfileId, ModelRunId,
+        ModelRunRequest, ModelRunTerminalState, ModelRuntimeFailure, ModelStreamId,
+        ModelStreamSink, StreamedModelFragment, TaskId,
     };
     use serde_json::{Value, json};
 
@@ -4036,6 +4354,348 @@ mod tests {
                 listener.accept().unwrap_err().kind(),
                 std::io::ErrorKind::WouldBlock
             );
+        }
+    }
+    fn driver_with_listening_cpu_child(
+        directory: &TestDirectory,
+    ) -> (super::LlamaServerDriver, UnixListener) {
+        let profile = exact_profile();
+        let config = super::LlamaServerDriverConfig::new(
+            directory.0.join("runtime"),
+            directory.0.join("model.gguf"),
+            directory.0.join("llama-server.sock"),
+            profile.runtime.clone(),
+            Duration::from_secs(1),
+        )
+        .unwrap();
+        fs::set_permissions(&directory.0, fs::Permissions::from_mode(0o700)).unwrap();
+        let mut lease = crate::native_inference_lease::NativeInferenceLease::acquire_for_test(
+            &directory.0.canonicalize().unwrap(),
+        )
+        .unwrap();
+        let mut files = super::RuntimeFiles::create(&config.socket_path).unwrap();
+        let listener = UnixListener::bind(&config.socket_path).unwrap();
+        files.capture_socket().unwrap();
+        lease.arm().unwrap();
+        let child = std::process::Command::new("/usr/bin/sleep")
+            .arg("30")
+            .env_clear()
+            .spawn()
+            .unwrap();
+        let runtime_pid = child.id();
+        let runtime_owner = Some(super::RuntimeOwner::cpu_fixture(&child).unwrap());
+        let mut driver = super::LlamaServerDriver::new(config);
+        driver.loaded = Some(super::LoadedRuntime {
+            _lease: lease,
+            profile_id: profile.profile_id,
+            manifest_sha256: profile.manifest_sha256,
+            artifact_sha256: profile.artifact.sha256,
+            tokenizer_sha256: profile.codec.tokenizer_sha256,
+            template_sha256: profile.codec.template_sha256,
+            codec_sha256: profile.codec.codec_sha256,
+            reasoning_supported: profile.codec.reasoning_enabled,
+            context_capacity_tokens: profile.context.max_context_tokens,
+            launch_configuration_sha256: "a".repeat(64),
+            load_generation: 1,
+            capability_observed_at_ms: 0,
+            token_counter: profile.context.token_counter,
+            token_counter_sha256: profile.context.token_counter_sha256,
+            decoding: profile.decoding,
+            launch_arguments: Vec::new(),
+            files,
+            child,
+            runtime_pid,
+            runtime_owner,
+            cleanup_deadline: None,
+            cleanup_uncertain: false,
+            loaded_at: std::time::Instant::now(),
+            input_tokens: 0,
+            output_tokens: 0,
+        });
+        (driver, listener)
+    }
+    use std::time::Instant;
+
+    #[test]
+    fn readiness_refuses_a_healthy_reply_after_its_original_startup_deadline() {
+        let directory = TestDirectory::new();
+        let (mut driver, listener) = driver_with_listening_cpu_child(&directory);
+        driver.config.startup_timeout = Duration::from_millis(10);
+        listener.set_nonblocking(true).unwrap();
+        let peer = thread::spawn(move || {
+            let until = Instant::now() + Duration::from_secs(2);
+            loop {
+                match listener.accept() {
+                    Ok((mut socket, _)) => {
+                        use std::io::{Read, Write};
+                        socket
+                            .set_read_timeout(Some(Duration::from_secs(1)))
+                            .unwrap();
+                        let mut request = [0; 4096];
+                        let _ = socket.read(&mut request);
+                        thread::sleep(Duration::from_millis(60));
+                        let _ = socket.write_all(
+                            b"HTTP/1.1 200 OK\r\nContent-Length: 15\r\n\r\n{\"status\":\"ok\"}",
+                        );
+                        break;
+                    }
+                    Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+                        if Instant::now() >= until {
+                            break;
+                        }
+                        thread::sleep(Duration::from_millis(1));
+                    }
+                    Err(error) => panic!("fixture socket failed: {error}"),
+                }
+            }
+        });
+        let result = driver.wait_until_ready();
+        peer.join().unwrap();
+        driver
+            .stop_loaded()
+            .expect("CPU fixture owner exits and releases its lease");
+        assert_eq!(
+            result.unwrap_err().code,
+            "model.llama-driver.startup-timeout"
+        );
+    }
+    mod controlled_preparation_tests {
+        use super::super::{ModelRuntimeFailure, sha256_file_controlled};
+        use super::*;
+        use crate::NativeModelDriver;
+        use std::cell::Cell;
+        use std::sync::{Arc, atomic::AtomicBool};
+
+        struct StepControl {
+            calls: Cell<usize>,
+            stop_at: usize,
+            stop: ModelOperationStop,
+        }
+        impl ModelOperationControl for StepControl {
+            fn remaining_ms(&self) -> Result<std::num::NonZeroU64, ModelOperationStop> {
+                self.calls.set(self.calls.get() + 1);
+                if self.calls.get() >= self.stop_at {
+                    Err(self.stop)
+                } else {
+                    Ok(std::num::NonZeroU64::new(1_000).unwrap())
+                }
+            }
+        }
+        struct CancelControl(Arc<AtomicBool>);
+        impl ModelOperationControl for CancelControl {
+            fn remaining_ms(&self) -> Result<std::num::NonZeroU64, ModelOperationStop> {
+                if self.0.load(Ordering::SeqCst) {
+                    Err(ModelOperationStop::Cancelled)
+                } else {
+                    Ok(std::num::NonZeroU64::new(1_000).unwrap())
+                }
+            }
+        }
+        struct DeadlineControl(Instant);
+        impl ModelOperationControl for DeadlineControl {
+            fn remaining_ms(&self) -> Result<std::num::NonZeroU64, ModelOperationStop> {
+                let millis = self.0.saturating_duration_since(Instant::now()).as_millis() as u64;
+                std::num::NonZeroU64::new(millis).ok_or(ModelOperationStop::TimedOut)
+            }
+        }
+
+        #[test]
+        fn controlled_manifest_and_load_refuse_before_missing_native_paths_or_process_effects() {
+            for stop in [
+                ModelOperationStop::Cancelled,
+                ModelOperationStop::TimedOut,
+                ModelOperationStop::Unavailable,
+                ModelOperationStop::Invalid,
+            ] {
+                let directory = TestDirectory::new();
+                let profile = exact_profile();
+                let config = super::super::LlamaServerDriverConfig::new(
+                    directory.0.join("absent-runtime"),
+                    directory.0.join("absent-model"),
+                    directory.0.join("llama-server.sock"),
+                    profile.runtime.clone(),
+                    Duration::from_secs(1),
+                )
+                .unwrap();
+                let mut driver = super::super::LlamaServerDriver::new(config);
+                let control = StepControl {
+                    calls: Cell::new(0),
+                    stop_at: 1,
+                    stop,
+                };
+                assert_eq!(
+                    driver
+                        .verify_manifest_controlled(&profile, &control)
+                        .unwrap_err()
+                        .code,
+                    stop.code()
+                );
+                let isolation = agentmage_kernel_contracts::RuntimeIsolationObservation {
+                    adapter_id: profile.runtime.adapter_id.clone(),
+                    profile_id: profile.profile_id.clone(),
+                    network_available: false,
+                    workspace_available: false,
+                    authority_material_available: false,
+                    credential_material_available: false,
+                    observation_sha256: "a".repeat(64),
+                };
+                assert_eq!(
+                    driver
+                        .load_controlled(&profile, &isolation, &control)
+                        .unwrap_err()
+                        .code,
+                    stop.code()
+                );
+                assert!(driver.loaded.is_none());
+                assert_eq!(driver.load_generation, 0);
+                assert_eq!(fs::read_dir(&directory.0).unwrap().count(), 0);
+            }
+        }
+
+        #[test]
+        fn controlled_hashing_stops_between_original_bounded_chunks() {
+            let directory = TestDirectory::new();
+            let path = directory.0.join("hash-input");
+            let bytes = vec![b'x'; 8 * 1024 * 1024];
+            fs::write(&path, &bytes).unwrap();
+            let control = StepControl {
+                calls: Cell::new(0),
+                stop_at: 3,
+                stop: ModelOperationStop::Cancelled,
+            };
+            assert_eq!(
+                sha256_file_controlled(&path, Some(&control))
+                    .unwrap_err()
+                    .code,
+                ModelOperationStop::Cancelled.code()
+            );
+            assert_eq!(control.calls.get(), 3);
+            assert_eq!(fs::read(&path).unwrap(), bytes);
+            assert_eq!(
+                sha256_file_controlled(&path, None).unwrap(),
+                super::super::sha256(&bytes)
+            );
+        }
+
+        #[test]
+        fn controlled_readiness_cancellation_interrupts_an_in_flight_health_exchange() {
+            let directory = TestDirectory::new();
+            let (mut driver, listener) = driver_with_listening_cpu_child(&directory);
+            let requested = Arc::new(AtomicBool::new(false));
+            let peer_requested = Arc::clone(&requested);
+            listener.set_nonblocking(true).unwrap();
+            let peer = thread::spawn(move || {
+                let until = Instant::now() + Duration::from_secs(2);
+                let (mut socket, _) = loop {
+                    match listener.accept() {
+                        Ok(connection) => break connection,
+                        Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+                            assert!(Instant::now() < until, "fixture saw no health connection");
+                            thread::sleep(Duration::from_millis(1));
+                        }
+                        Err(error) => panic!("fixture accept failed: {error}"),
+                    }
+                };
+                socket
+                    .set_read_timeout(Some(Duration::from_secs(2)))
+                    .unwrap();
+                let mut request = [0; 4096];
+                assert!(socket.read(&mut request).unwrap() > 0);
+                peer_requested.store(true, Ordering::SeqCst);
+                assert_eq!(
+                    socket.read(&mut request).unwrap(),
+                    0,
+                    "cancelled exchange closes its exact connection"
+                );
+            });
+            let result = driver.wait_until_ready_controlled(Some(&CancelControl(requested)));
+            peer.join().unwrap();
+            driver.stop_loaded().unwrap();
+            assert_eq!(
+                result.unwrap_err().code,
+                ModelOperationStop::Cancelled.code()
+            );
+        }
+
+        #[test]
+        fn controlled_token_exchange_cannot_renew_the_original_operation_deadline() {
+            let directory = TestDirectory::new();
+            let socket = directory.0.join("llama-server.sock");
+            let listener = UnixListener::bind(&socket).unwrap();
+            listener.set_nonblocking(true).unwrap();
+            let peer = thread::spawn(move || {
+                let until = Instant::now() + Duration::from_secs(2);
+                loop {
+                    match listener.accept() {
+                        Ok((mut socket, _)) => {
+                            socket
+                                .set_read_timeout(Some(Duration::from_secs(1)))
+                                .unwrap();
+                            let mut request = [0; 4096];
+                            let _ = socket.read(&mut request);
+                            thread::sleep(Duration::from_millis(100));
+                            let _ = socket.write_all(
+                                b"HTTP/1.1 200 OK\r\nContent-Length: 16\r\n\r\n{\"tokens\":[1,2]}",
+                            );
+                            return;
+                        }
+                        Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+                            if Instant::now() >= until {
+                                return;
+                            }
+                            thread::sleep(Duration::from_millis(1));
+                        }
+                        Err(error) => panic!("fixture accept failed: {error}"),
+                    }
+                }
+            });
+            let control = DeadlineControl(Instant::now() + Duration::from_millis(30));
+            let mut client = UnixHttpClient::new(socket, "test-api-key".to_owned());
+            client.control = Some(&control);
+            let result = client.token_count(b"one exact inert packet");
+            peer.join().unwrap();
+            assert_eq!(
+                result.unwrap_err().code,
+                ModelOperationStop::TimedOut.code()
+            );
+        }
+
+        #[test]
+        fn controlled_startup_keeps_uncertain_namespace_cleanup_over_cancellation() {
+            let directory = TestDirectory::new();
+            let mut driver = driver_with_cpu_child(&directory);
+            let owner = driver.loaded.as_mut().unwrap().runtime_owner.take();
+            let result = driver.failed_startup(ModelOperationStop::Cancelled.into());
+            assert_eq!(result.code, "model.operation.cleanup-uncertain");
+            let loaded = driver.loaded.as_mut().unwrap();
+            assert!(
+                loaded.child.try_wait().unwrap().is_some(),
+                "owned CPU child was reaped"
+            );
+            assert!(loaded.cleanup_uncertain);
+            assert!(driver.stop_loaded().is_err());
+            assert!(
+                crate::native_inference_lease::NativeInferenceLease::acquire_for_test(
+                    &directory.0.canonicalize().unwrap()
+                )
+                .is_err()
+            );
+            drop(owner);
+        }
+
+        #[test]
+        fn controlled_startup_preserves_stop_after_proved_cpu_fixture_cleanup() {
+            let directory = TestDirectory::new();
+            let mut driver = driver_with_cpu_child(&directory);
+            let result: ModelRuntimeFailure =
+                driver.failed_startup(ModelOperationStop::Cancelled.into());
+            assert_eq!(result.code, ModelOperationStop::Cancelled.code());
+            assert!(driver.loaded.is_none());
+            let lease = crate::native_inference_lease::NativeInferenceLease::acquire_for_test(
+                &directory.0.canonicalize().unwrap(),
+            )
+            .unwrap();
+            drop(lease);
         }
     }
 }

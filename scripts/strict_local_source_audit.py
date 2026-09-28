@@ -32,10 +32,10 @@ RESEARCH_VALUE_IMPORTS = {
         "use rustix::net::{AddressFamily, SocketFlags, SocketType, ipproto};", "rustix", "net",
     ),
 }
-# Decision 0100 admits this complete private AF_UNIX exchange implementation,
+# Decisions 0100/0102 admit this complete private AF_UNIX exchange implementation,
 # not its file or the rustix namespace. Any helper edit requires a new review/pin.
 MODEL_SOCKET_PATH = "platforms/linux-inference/src/llama_server_driver.rs"
-MODEL_SOCKET_SHA256 = "565f2ec98abff63db58b5ad2153ff914c171ae9be9f0a3a551d719e422978eea"
+MODEL_SOCKET_SHA256 = "c8a5e98d45b73f7c9071871a9dcacca6b345c85c3bd93002ec374335289be2b6"
 MODEL_SOCKET_IMPORT = "use socket_exchange::SocketExchange;"
 TOP_LEVEL_KEYS = {
     "allowed_external_uris",
