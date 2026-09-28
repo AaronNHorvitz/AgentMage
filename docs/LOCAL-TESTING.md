@@ -47,8 +47,9 @@ an uncertain record. See the development guide for lifecycle and cleanup limitat
 
 **Current lane result:** setup and diagnosis ran; the actual scripted CLI/host
 launch returned exit 5 before tools because native prerequisites are unavailable.
-The [inference cleanup verification](verification/native-inference-cleanup-2026-09-27.md)
+The [artifact preparation verification](verification/runtime-artifact-preparation-2026-09-27.md)
 retains the latest rebuilt source revision, binary hashes and startup results;
+the [inference cleanup verification](verification/native-inference-cleanup-2026-09-27.md),
 the [confirmation verification](verification/development-confirmation-2026-09-27.md),
 the [development lifecycle verification](verification/development-host-lifecycle-2026-09-27.md),
 the [native diagnostic verification](verification/native-development-diagnostics-2026-09-27.md) and
