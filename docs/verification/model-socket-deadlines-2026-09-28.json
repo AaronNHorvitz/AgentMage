@@ -1,0 +1,2261 @@
+{
+  "schema_version": 1,
+  "record_type": "native-model-socket-deadline-observations",
+  "date": "2026-09-28",
+  "base_commit": "439e8078d0409a3d563e829f52d9e96dfe7bce41",
+  "source_commit": "5afe3a2ba716c74cf1d5894eb71da1f92da8c0ad",
+  "source_tree": "dacb3309ae4a6aba0b6400cb1dfc2ff117c201e5",
+  "report_commit": "025909e8cbb45e2751cc1d886186271b1db127a7",
+  "status": "socket-and-audit-regressions-passed;full-host-and-full-markdown-failed;native-workflow-unqualified",
+  "inputs": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "2cc5ff6cf90af231d188666a1cae40c474972826b4d30cfbdf5886c137376e90"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc"
+    },
+    {
+      "path": "IP-POLICY.md",
+      "sha256": "bc387fa1363feacbd7551a398c2596affbb3625aa01dc1a86d9e25b013a9bec9"
+    },
+    {
+      "path": "TASKS.md",
+      "sha256": "beeb04f62a96844174c7d875b50e055ef7032ced61d18ed3ec5e969615e38340"
+    },
+    {
+      "path": "architecture/dependency-rules.json",
+      "sha256": "b8d7045ff966e7d551ac50e5bfb39cc613d81997009e2505121a38da840d45d1"
+    },
+    {
+      "path": "architecture/status-model.json",
+      "sha256": "9c37e01faa324ffed3823e2d628b151f61b953dceae8423226fd6625d5b3d4d3"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.1/artifact-index.json",
+      "sha256": "61ae63d8aad9887caded142f2bfbd334e2581d86886893a5161dcd524a87fafc"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.1/security-evidence-map.json",
+      "sha256": "b7ad48882ca9c1e0af1daf1efd1725f311d19f50a4da87a0b66385c3721880fb"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.2/contract-evidence-index.json",
+      "sha256": "cc1ac1faca0eefdec7cb1270218a74bef2bb02a9ccc9189a6410afd2106e693f"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
+      "sha256": "d2f2a9e0450574de7aa84d2a9dd5b60240dcdbbe09065f79f5b7729d4ae5255b"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.2/security-evidence-map.json",
+      "sha256": "65e919a79101a79aaa52fc8554333d7aedaad8e2bc1b5acb5e8662adaeae91e0"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.1/operational-schema-v3.json",
+      "sha256": "63ad72c6ceb37bb68f2c3050b61b3e830029cdf4b2ee9d94adf4797b57bc7186"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.1/s-011-ut01.json",
+      "sha256": "b0e2f8668af3dab5b5e2ff1acbabd6ae93524326aa0cf3adb37f3a3c87728698"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-report.json",
+      "sha256": "022e16d1a18a9acdbb5fd6211f0455a69bb6c989d6f0cb86d50d3923f3f9ee5e"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-results.log",
+      "sha256": "a5b2b0616c31494b37d6569ce07c381da74cf9a5691054c0548ba20f98397942"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-report.json",
+      "sha256": "eedb4f207e3529fce78b61bf3e9078d885a52b6337892d579f7c066c98742d7e"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-results.log",
+      "sha256": "9d1dd79c0bf62c510cd05d5fa091c752317ef99f897e4cb65a15ca612785e02e"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-report.json",
+      "sha256": "fdef8369cf35172fd4d90cb737d054bbccab08fe15e2675d179f4045a6d82166"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-results.log",
+      "sha256": "17136ef53766b90c1a31f6bbb78c04cfabd214a03491b625bbc30766b1e6e18e"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-report.json",
+      "sha256": "3d3c12d457bc22c8077d5e826cd33534fc77e4d1e0f2b7b5a6c448cf9d1a43ad"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-results.log",
+      "sha256": "8aaec98a86461cde769555098ad6d9f9fa029fbfbe3fc23dc9795b246cdcc9db"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-exact-state-report.json",
+      "sha256": "04242a9e7b3c5633bd4e3bb0c06ad958000549cc0b5e6035fab28f25115403d6"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-exact-state-results.log",
+      "sha256": "c5f91d1f5877e916aa2f88f1b13c04866c51d6ad1fe3a8e126986b39b7d6d98e"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-report.json",
+      "sha256": "5294302b0c83a28315962dbbe7ea0c46cdca43be6502f5ac05e072e94c307d5c"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-results.log",
+      "sha256": "9568e0656613b8e72c1db37fc5cd7bc014ca997627c7f3aab93eba6139ecb7f3"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-report.json",
+      "sha256": "92cb70df8c25235d62eecd66cfbde35ed31ea728c95343ae5e888ca9c44b4352"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-results.log",
+      "sha256": "f0b9c05486dc187d63ac4216a9f6bb80832ec62883ff78f8f1ef17395278bca0"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-report.json",
+      "sha256": "aa2ce85e95d6d9e43a5a5d773a1febd1c687bcc1d492bfc241bdf18dad1c7ceb"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-results.log",
+      "sha256": "4bf378e57c90876718fe7780012bc3f8191095d85200ad7afac3f1cde4dc8737"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "sha256": "016adbb0f591db856809fd16845c35dc67895a95ea90b630dd9134cc4cb41ed8"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "sha256": "ae4eb892a0335ff9fac5a162357a7cb8cd730c413f25b97e4064c3cf925ef164"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+      "sha256": "c6451c9c26f0a250fa2b363ac479c673e02c99e196ce82ac95f2e88b62e9ec4d"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-results.log",
+      "sha256": "bbeca1396e95696fb0b9dfbc92eaa185dce454683c651dfcbc94fa7c1013cac0"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "sha256": "b908e38429f95ecc6c4b915ffb82c7215cf0074bd1d8093f259df13019abde85"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-gate-report.json",
+      "sha256": "fbbf489aed00f971db10c4b1036d01b76ed984949d9a2e01da6d39f5ed13fbf3"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-atomic-publication-report.json",
+      "sha256": "54bb54c51cca2467faf435a1709ee246c0dc1633e8f21d17d8d1b06498fcd5a6"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-atomic-publication-results.log",
+      "sha256": "848b81aa881ed1a4943e1b3a462ffc51a7533d98cfb7b5e631689f0405c86bd0"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-report.json",
+      "sha256": "43032d871d4b6aa87cd809e7948545eabcfd2de7b74a0710004fc3c9f1bdb58d"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-results.log",
+      "sha256": "1e5c8b6c8a140bcab4d3a9e4a58409c2aa458d07dbf2884798d552027bd3983e"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-materialization-schema-report.json",
+      "sha256": "bba7bdc18756ecf6af31afb9db4cbb200b46e6d838d285bb9af03422d766c511"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-materialization-schema-results.log",
+      "sha256": "66332040dc09af2967b7425976e1b91dec06e9a4e7881547e090f677c38da855"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.3/durable-resume-report.json",
+      "sha256": "3427bc4e228a042bb71e598b6648dbd1dc5d8a7d1f764cd7e6e8af6fecee9beb"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.3/durable-resume-results.log",
+      "sha256": "f61b2e44e676621638c78ef3769bfc000bf090dbfa886283f8ac1746db7783f7"
+    },
+    {
+      "path": "artifacts/sprints/sprint-22/story-22.1/current-product-canary-sweep.json",
+      "sha256": "039b6f4e6edd27f5e18446525628773c3ce93c603d39f5d9edc30a23b9b6f92c"
+    },
+    {
+      "path": "artifacts/sprints/sprint-22/story-22.1/current-product-canary-sweep.log",
+      "sha256": "8f328383f391231d2b7dcade2eff25a899be5f10c03c3e42c7570e637f0f3201"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
+      "sha256": "bb6be6f947457084f10baed972e6914d7f3360effc3846858f3bef57703383d5"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/evidence-index.json",
+      "sha256": "5a97c0d3b4115afdb99dc1d14e85026a80e895a151c7dc649d619b78ffc3d816"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
+      "sha256": "8a1d82d5b6cec31ce0394610420baf84136afc3516d6c51e0c9de34058137bb2"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
+      "sha256": "ef7c654f8b0cb3b4d75579888cf6ea2f62ca5e6b40196315514bd5dea0c53eef"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence-map.json",
+      "sha256": "60a219f9b664c67a1eb90f1719b09603a15997f8a5c9c2753f1fea6de2e3819b"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence.log",
+      "sha256": "8cca4f18fc798008e73b0a9abae6bbcc8603eb3a59be55b9d7eb9e927aa9323e"
+    },
+    {
+      "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
+      "sha256": "e86c0017d7b74922260cc0f9dcdfa9551a9318715992b6fecbc50fc01e6c6921"
+    },
+    {
+      "path": "artifacts/sprints/sprint-3/story-3.1/configuration-authority-mutation-report.json",
+      "sha256": "f8ad30f61055204ce209bfc5bd5530cd91add9806b35104ac1beb5b151a34279"
+    },
+    {
+      "path": "artifacts/sprints/sprint-3/story-3.1/configuration-loader-report.json",
+      "sha256": "1e707433b3edd16cfe5e3862a2eddd31ce7e12e04f9d7c454415b67c7a22b099"
+    },
+    {
+      "path": "artifacts/sprints/sprint-3/story-3.1/configuration-migration-recovery-report.json",
+      "sha256": "f29dd31dde8af871c34445a1260dd9173286707ec48a2459d2e63897cec935b0"
+    },
+    {
+      "path": "artifacts/sprints/sprint-3/story-3.1/configuration-result-report.json",
+      "sha256": "18fa467c0e6d83407434450e9f798d7b4bd45a74c08ca91e1e03c34a7b067ad0"
+    },
+    {
+      "path": "artifacts/sprints/sprint-3/story-3.1/configuration-schema-failure-report.json",
+      "sha256": "b3d361c7ee1f018372bc33e5b76f9bf554a1645af897d3258a84b875969e90cc"
+    },
+    {
+      "path": "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
+      "sha256": "395db3468495871d32bb63b111c047317488b40a805d0570ff69df6f815e5ec8"
+    },
+    {
+      "path": "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+      "sha256": "cea9a6e4c9d1de6d473d17bd4a4bf5d4ec8947bb751af747d9d7e626f380f3e1"
+    },
+    {
+      "path": "artifacts/sprints/sprint-4/sprint-gate-report.json",
+      "sha256": "cce1d101543f13e882cb49db7e33db0e4150b94f1a6c1544fa65d3f718ad19b8"
+    },
+    {
+      "path": "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json",
+      "sha256": "d475dd3694086b424a988f4080ba32b3e5287446e0b0cec05dc29e0cdf58f0a4"
+    },
+    {
+      "path": "artifacts/sprints/sprint-4/story-4.1/security-evidence-map.json",
+      "sha256": "6922de1ce232ba5c45dbdd487668e33b456acdd7dcd823d1c03055e04da1ae0b"
+    },
+    {
+      "path": "artifacts/sprints/sprint-4/story-4.1/story-gate-report.json",
+      "sha256": "3243b660eb0cdc7c96b82b0fea26341f574404562eec696f4ef39668ca012827"
+    },
+    {
+      "path": "docs/LOCAL-TESTING.md",
+      "sha256": "18ae6f755385109abcc4803c70602cfb87d67779db412bea8c6862ec8367dabd"
+    },
+    {
+      "path": "docs/architecture/canonical-research-source.md",
+      "sha256": "d7c8801fab24d24f77f2b1c97e6b65ecba1de814f8869b4707a76664356c56d3"
+    },
+    {
+      "path": "docs/architecture/kernel-contract-reference.md",
+      "sha256": "8e0a601fef40e4b2f90dd281418a1e5f5c9717b64d88c5088fb6a39f4af42bdf"
+    },
+    {
+      "path": "docs/architecture/reusable-runtime-coordinator.md",
+      "sha256": "034237dbf30bbc33ea2a1dac5f9d04127e5f1e0e1358c186f025310afb662181"
+    },
+    {
+      "path": "docs/decisions/0054-standing-owner-delegation.md",
+      "sha256": "c3c0b6300c47f5c7a203901ebca642c0e91807988e775932d7c99477e64aff6d"
+    },
+    {
+      "path": "docs/decisions/0061-standalone-coding-harness-critical-path.md",
+      "sha256": "7ae98fe774c5c88eeb2c07da350d7adf76d4e4c421ae5f212d20060a6948b1a9"
+    },
+    {
+      "path": "docs/decisions/0063-disposable-coding-development-activation.md",
+      "sha256": "304aea35dcf207f2eba66512889fe139788b8081f4e0b57b9484636c92112ed9"
+    },
+    {
+      "path": "docs/decisions/0070-coding-development-identity-prerequisites.md",
+      "sha256": "e5e28a7782723ea730e9ba11d2c7cd1bb5d9eb6eec5fbd5c4436616167e34a5e"
+    },
+    {
+      "path": "docs/decisions/0081-rust-capability-roadmap-and-staged-delivery.md",
+      "sha256": "37e0c7fabf2bdca2dd86cb2f58e82e64d47066c1b66ade030edf4e84e3cbcb9f"
+    },
+    {
+      "path": "docs/decisions/0089-development-harness-process-ownership.md",
+      "sha256": "1e0090746168f73df7bd19f043a36993fac5e7e5579da8672515a9e95f511b1f"
+    },
+    {
+      "path": "docs/decisions/0090-runtime-correctness-callback-consistency.md",
+      "sha256": "86a6e0ca75e2c590995c28a3135cd30c14ee9d2757e5f6b23e9f3f101457360d"
+    },
+    {
+      "path": "docs/decisions/0091-failed-runtime-advancement-reconciliation.md",
+      "sha256": "9220fdb6b1ebe3ef7afcd77bf3f6ab088218a700260c281af75989b33541c0db"
+    },
+    {
+      "path": "docs/decisions/0092-native-development-failure-diagnostics.md",
+      "sha256": "fee2254f441324e43937d20cdf1f663c1744afed278caf54b217fc9566aaca0b"
+    },
+    {
+      "path": "docs/decisions/0093-bounded-development-host-lifecycle.md",
+      "sha256": "143fea9fc9b291d755978109c10777e44a34af961d9e0bab3f037f47fe8c0bdc"
+    },
+    {
+      "path": "docs/decisions/0094-bounded-cancellable-development-confirmations.md",
+      "sha256": "929adad4be01c0b31cb81ab3ef45b1006cb82a5621c10ab7aa71394158edd25d"
+    },
+    {
+      "path": "docs/decisions/0095-native-inference-cleanup-ownership.md",
+      "sha256": "6e975d33d0f8398856c4da48e3795d262c783fff25f7a916a2a97ff1ff8dff02"
+    },
+    {
+      "path": "docs/decisions/0096-runtime-artifact-preparation.md",
+      "sha256": "34841443146f4328e8bf98ed75f3a2f996192e0117b5cbeaadef8b4c000029be"
+    },
+    {
+      "path": "docs/decisions/0097-research-completion-normalization.md",
+      "sha256": "984b3e027d61694cf0a9c80a94b203276cc5701b387e38231730021ea03f495a"
+    },
+    {
+      "path": "docs/decisions/0098-development-model-request-diagnostics.md",
+      "sha256": "bcd9b2e0ccfd493e226886734d0034e861b697c9f13c01acfb4343ea61fe759a"
+    },
+    {
+      "path": "docs/decisions/0099-failed-start-request-consumption.md",
+      "sha256": "7ecfe45f1ef1da8ca62f5422e2c6b6f02a233ea980b7ebc029dcc27276041e40"
+    },
+    {
+      "path": "docs/decisions/0100-native-model-socket-exchange-deadlines.md",
+      "sha256": "ecf329175ee1a17de3da26282c7cd107079ca3f4deb83312c4a6b567799d8f79"
+    },
+    {
+      "path": "docs/guides/standalone-coding-development.md",
+      "sha256": "8aa3d5b5089a061776718925c6a6634e030ea0a6d2defab490cd4a1672b5d2b3"
+    },
+    {
+      "path": "docs/verification/development-confirmation-2026-09-27.json",
+      "sha256": "756edd01e3143c43eee83b642d992ef7f0cc00a681ce15ace4871369b71316ed"
+    },
+    {
+      "path": "docs/verification/development-confirmation-2026-09-27.md",
+      "sha256": "2a274e83a62fe95276d697735aafea11e1eeb0f11681858f136a3db362b50cb5"
+    },
+    {
+      "path": "docs/verification/development-host-lifecycle-2026-09-27.json",
+      "sha256": "806ac478cb6ddf3488f1d8741ceec78ce3c2b515b6093359b9fa78702e6e54e1"
+    },
+    {
+      "path": "docs/verification/development-host-lifecycle-2026-09-27.md",
+      "sha256": "db1e2d7e9abaf343274c9b02cdff55bd763f82d4de71372e7a6daeaaa09c53bf"
+    },
+    {
+      "path": "docs/verification/failed-start-consumption-2026-09-28.json",
+      "sha256": "ab21c2537f65bf6d1186ed8ca586c187e752cbcc95f4054265166d9c5620d054"
+    },
+    {
+      "path": "docs/verification/failed-start-consumption-2026-09-28.md",
+      "sha256": "67005612d41d9cf18e7e6ef15b1674d37b2fa1c87cf6cd4d4ed8a7265db8f089"
+    },
+    {
+      "path": "docs/verification/harness-model-diagnostics-2026-09-28.json",
+      "sha256": "21aba8523f097756b457c7f3b5c7a0617c944be3ecfea3cad2b43950988fb7b5"
+    },
+    {
+      "path": "docs/verification/harness-model-diagnostics-2026-09-28.md",
+      "sha256": "aa1ed9851152ebed1d5e7c43e8c9a9b863a0e908818cf6cc8bed35d9e08cbcf2"
+    },
+    {
+      "path": "docs/verification/linux-current-startup-2026-09-27.md",
+      "sha256": "a3a7a119e985968115bd6a8745952ec8bc980b00401d11869763d26f1432d433"
+    },
+    {
+      "path": "docs/verification/model-socket-deadlines-2026-09-28.md",
+      "sha256": "237ba321fa00f2f4f813786a356a9a0866d11a8ddcdadfabc555aac824a050fc"
+    },
+    {
+      "path": "docs/verification/native-development-diagnostics-2026-09-27.json",
+      "sha256": "e306c8b631b825c8bee2f3b5f56f359dc14d2dcf56e96cfab1cdbfafe5994a78"
+    },
+    {
+      "path": "docs/verification/native-development-diagnostics-2026-09-27.md",
+      "sha256": "38f0c6f5e34889584ff47af81f5cdafc2c894989b136096257b565fd82c73487"
+    },
+    {
+      "path": "docs/verification/native-inference-cleanup-2026-09-27.json",
+      "sha256": "744a792f67d7b1f728140c2e94036c74bbb15e707b1e79c03e710e76c9f181a8"
+    },
+    {
+      "path": "docs/verification/native-inference-cleanup-2026-09-27.md",
+      "sha256": "91601dcccf0dc52ec0261fa526c687f68d575b61d821d360fc2898fce07484fd"
+    },
+    {
+      "path": "docs/verification/research-completion-2026-09-28.json",
+      "sha256": "9c632d3b907b33674793bb3e738d4ee686fb6b3a66f37df7368c3832541c0bb9"
+    },
+    {
+      "path": "docs/verification/research-completion-2026-09-28.md",
+      "sha256": "d982e8f0297039c8e799d5827f566078d20a5cdcc9c0d71499eb7fda23d39ea7"
+    },
+    {
+      "path": "docs/verification/runtime-advancement-reconciliation-2026-09-27.md",
+      "sha256": "e60fb017a4170cd8f27dae400f93678ec18e365fc39c080fffee47abed7f8a19"
+    },
+    {
+      "path": "docs/verification/runtime-artifact-preparation-2026-09-27.json",
+      "sha256": "40d3a7af723accd6ef28ba4a4de0c0a35895ba8c1587652772b9a6a91bb21231"
+    },
+    {
+      "path": "docs/verification/runtime-artifact-preparation-2026-09-27.md",
+      "sha256": "0bf1a09d00d0e303f6551cfe5144cd9836fcc10019d5cf6de08f88b5f421007e"
+    },
+    {
+      "path": "docs/verification/runtime-callback-consistency-2026-09-27.json",
+      "sha256": "76316a70eb55f6ad1037a8eb718ce39a3eec7c3fd2743d7bfdf4d6b21ea68115"
+    },
+    {
+      "path": "docs/verification/runtime-callback-consistency-2026-09-27.md",
+      "sha256": "a430cd9746abb0d95b5423bfbc552e59a3ea997fb976fe6f0ef25fde315bdc58"
+    },
+    {
+      "path": "fixtures/contracts/compatibility-v2.json",
+      "sha256": "0a164d82193461dda96c1f7106e2767162c538fc17dfa503bccf16689e853d94"
+    },
+    {
+      "path": "fixtures/contracts/compatibility.json",
+      "sha256": "10c7787727fdfcdde05d60d5bee026541e9140c39d75dd55639c741761ceb8ee"
+    },
+    {
+      "path": "fixtures/contracts/compatibility/v2/task.v0.unsupported.json",
+      "sha256": "51649163f16b321da8daa6e6c721c20ed6d7606219f45ab34aed8fcfe123d496"
+    },
+    {
+      "path": "fixtures/contracts/compatibility/v2/task.v1.unsupported.json",
+      "sha256": "d1bc39b9357fc520a094ff982935ad2790cc82de7a58935ab8178c456f06fd10"
+    },
+    {
+      "path": "fixtures/contracts/compatibility/v2/task.v2.duplicate-field.json",
+      "sha256": "86316c79982cc169fb4c3c7965b9349a765fa303630c8cb19e7afd1493fce98d"
+    },
+    {
+      "path": "fixtures/contracts/compatibility/v2/task.v2.malformed.json",
+      "sha256": "8b19d5f9fca07f7ee779feacf6fdbc14edf3fc07be6610710df0ff58e8065aee"
+    },
+    {
+      "path": "fixtures/contracts/compatibility/v2/task.v2.missing-field.json",
+      "sha256": "50b0314305aa170f894d3a2b22cafabd9976f785143871159d7ae5898b0b01a2"
+    },
+    {
+      "path": "fixtures/contracts/compatibility/v2/task.v2.trailing-value.json",
+      "sha256": "94858152045d74ff648538ba2c0f448bcbdc5bcc6c53040349f0c04626198bb1"
+    },
+    {
+      "path": "fixtures/contracts/compatibility/v2/task.v2.unknown-field.json",
+      "sha256": "9152eee9cd7654c94ff13b47eba7da75521293ea23f5296cfab3f4f594a7f80a"
+    },
+    {
+      "path": "fixtures/contracts/compatibility/v2/task.v3.unsupported.json",
+      "sha256": "b60107db2109729d75ba9a9094b7107279bad92dc997cd9e8613fceff44d287d"
+    },
+    {
+      "path": "fixtures/contracts/fixture_verifier.rs",
+      "sha256": "f8297732dc9e5a7103a2d0ec457823af99e8b296c007765d29aa5368ecc3de84"
+    },
+    {
+      "path": "fixtures/contracts/v1/manifest.json",
+      "sha256": "9716abdff573a33a15b25b6c8a5edcf9271861828033f854e7bc0e58b177f1ec"
+    },
+    {
+      "path": "fixtures/contracts/v2/manifest.json",
+      "sha256": "cc0bc1645c81e4835191d91beca51eb67797123b870bee575fcd948d4685782d"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/action.json",
+      "sha256": "9b4ae76722f2e00d1161a717340610c71ff29c12b7b1457014f5ba36509abb6d"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/approval_request.json",
+      "sha256": "8536a11f37672be464ae40bce9d80556180ed466e82238d922c9213e9ca04e83"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/boundary_failure.json",
+      "sha256": "1256e98beb31d06001519918d639e8a0304e8603d1208408a94afab414dd0a4b"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/cancellation_signal.json",
+      "sha256": "ce339f77cee7fc4671dbb692838f969f6fa5d072f051b59eed972b0768e7b5c0"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/capability_grant.json",
+      "sha256": "f536fbbdf98ad4a8371da9b72bf94398bd6879fa1e910f18ba16ddabcd720ab9"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/contract_error.json",
+      "sha256": "84381adc049ba51fb7ea081c7f26c0094da0ea891094ee893368ed9a32d2a759"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/evidence_reference.json",
+      "sha256": "9321eb3c443425708b34ef54be9b471dccbd56f1f30c79d88c63d57c907342de"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/plan.json",
+      "sha256": "9cd9bcd306c9bfd5032e27413080a49920a7a7327005f405bf53e2e891c7a6a9"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/prompt.json",
+      "sha256": "beb314613ce4af211ac79014da31502e433e18549ee805cc1f18a27011cb6271"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/receipt.json",
+      "sha256": "405647726497376e75022abeee97c249154a5ab3fd17646d841137014436268d"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/task.json",
+      "sha256": "6e647188ddee409985f2a1e94c3b5ed42b3fc0078d008aad5425cd007a9f6826"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/tool_call.json",
+      "sha256": "c54f6c55c365eea54c10574a1b2f679d403166ce3a759f303674f9a77b96859c"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/tool_definition.json",
+      "sha256": "e496db0b45d6750ae41280726de0064fc7fc3180ebabec309a4ce374c7fca72d"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/tool_result.json",
+      "sha256": "7ec986ab4d1425543e5b12c87ce297f80391b23788893d9ba1f9eb81f4c7cafc"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/work_packet.json",
+      "sha256": "cbbd6021cc9d19c8f000d0628bd18b714fdb72389bb6fac9b1e289363cc6f48e"
+    },
+    {
+      "path": "fixtures/runtime/v1/coding-harness-mvp.json",
+      "sha256": "587d038f69c93d8ca7102ee34bc8c523030342e0cb7f86969f3dd02589f29e33"
+    },
+    {
+      "path": "kernel/contracts/src/runtime_event.rs",
+      "sha256": "22183f4affec1a6792bbd7c2bb93465842d7319885d42a555ae93cf72c551bf4"
+    },
+    {
+      "path": "kernel/contracts/src/runtime_run.rs",
+      "sha256": "54edc6322b2990de63209641ed3911d244cf862c81060e8155044d0af5ddd813"
+    },
+    {
+      "path": "kernel/engine/src/authority.rs",
+      "sha256": "c8d75e190006004d76da34a0835a99e3b9074265bea9eba5d5cc388ff22ceb09"
+    },
+    {
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "a5645d06971f3c83176395fff4c782523ab084fdbd14276009f3c770d00689af"
+    },
+    {
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "2ff94b9983a3db38a40c7232b8c67a0fc47252450d871eaaabca58c183af5890"
+    },
+    {
+      "path": "kernel/engine/src/propagation.rs",
+      "sha256": "2903b9c5597c0023cafdaee69eb2eba041a0a9638a68ca3b5b645a98c30a0785"
+    },
+    {
+      "path": "kernel/engine/src/research_completion.rs",
+      "sha256": "8fd687e6a23ac7b313f18db8e1b6c4db16aaca81dba5559b4db0081701f9d9cd"
+    },
+    {
+      "path": "kernel/engine/src/research_completion_tests.rs",
+      "sha256": "75964b53a56617785d7ec39731e89a4f6688c79dad3d63a9311968ecca1814ef"
+    },
+    {
+      "path": "kernel/engine/src/research_dispatch.rs",
+      "sha256": "da3831497a113d5de7fade97e2b3be311a00cdee37db05f57f9048dbeac10ec8"
+    },
+    {
+      "path": "kernel/engine/src/research_effect_binding.rs",
+      "sha256": "2b6f5d31d8770ea1f6984ccff798222a35954917560c1e427487036e3171efe7"
+    },
+    {
+      "path": "kernel/engine/src/research_journal_tests.rs",
+      "sha256": "b4ea9c161f090b161331cba2c71ac2df06ace9a3d40cf5af0015cbd5f909b390"
+    },
+    {
+      "path": "kernel/engine/src/research_retrieval.rs",
+      "sha256": "5d790177b6484e12ab27a8e9f143b412e9f5ce781b03541ab286528eb6ff3e05"
+    },
+    {
+      "path": "kernel/engine/src/research_retrieval_tests.rs",
+      "sha256": "d88a6d2f1be7135d7f27e7b843cd182648b25cad78e7d8023b9f331bac9973e8"
+    },
+    {
+      "path": "kernel/engine/src/research_start_observer_tests.rs",
+      "sha256": "56b72975d138c5ad58553a101316964907c734545e1aac470d3a25689c678f62"
+    },
+    {
+      "path": "kernel/engine/src/runtime_artifact.rs",
+      "sha256": "cc6ee1ad0438fb9ed93663fc0326742bf2435f77eb259f540730a60761f1c8c8"
+    },
+    {
+      "path": "kernel/engine/src/runtime_coordinator.rs",
+      "sha256": "7e5c25aa0bd7fc52afe67e27997a2f7969a71e64adf3d71b649fac9eafe65b2e"
+    },
+    {
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "sha256": "95bd6b898625e40ad84fa13ab588a42ed9e77993d26df700228e66a5d33f55b7"
+    },
+    {
+      "path": "kernel/engine/src/runtime_loop/artifact_preparation.rs",
+      "sha256": "927799cc0abee91289ad650072941a59d20a456dfb2e289a5a17b754e85e66fc"
+    },
+    {
+      "path": "kernel/engine/src/runtime_loop_artifact_preparation_tests.rs",
+      "sha256": "76c052a6265dfd0acbf33367b2d297cfe7ced195f1484c54d0ef2b0ef6575712"
+    },
+    {
+      "path": "kernel/engine/src/runtime_loop_tests.rs",
+      "sha256": "b4282513c61eb64976196413024f154d10bb30a5139ca29a31c113c8d3d1eb4b"
+    },
+    {
+      "path": "kernel/engine/src/tooling.rs",
+      "sha256": "39d34741c5edb2ef1da442438393a7323d6e211a4023be6876756f0b0e4d59f6"
+    },
+    {
+      "path": "kernel/engine/tests/boundary_workflow.rs",
+      "sha256": "bf07e50196d5299001422877830ca4f05903db8560b901bace7e664d546b3955"
+    },
+    {
+      "path": "model-profiles/development/coding-model-lab.json",
+      "sha256": "047e839b4a9c6ca632dbba89296266a6ce806adb583f7e617e95ea55ff04c785"
+    },
+    {
+      "path": "platforms/linux-inference/Cargo.toml",
+      "sha256": "553a09a02cc388188a2eece7ccb1b9001a25c1f36695e8311d8779036bb3a227"
+    },
+    {
+      "path": "platforms/linux-inference/src/lib.rs",
+      "sha256": "555f58a30f6e59a68298330a134532322a7e3ff1995aaf8df6ed3940c30ed107"
+    },
+    {
+      "path": "platforms/linux-inference/src/llama_server_driver.rs",
+      "sha256": "50a8916056bb11b5ed271970167ec49e3c222bb360f16985252b7aed0974218e"
+    },
+    {
+      "path": "platforms/linux-inference/src/llama_server_driver/owned_files.rs",
+      "sha256": "dd316b19a2ff005a1220aed2413b588362efb18264ea2ba3e1a1dc9e5644e25a"
+    },
+    {
+      "path": "platforms/linux-inference/src/llama_server_driver/owned_process.rs",
+      "sha256": "9d1d1c72959b76ba4b112a04807cbe7d8cb949334416af833cb02940829edba0"
+    },
+    {
+      "path": "platforms/linux-inference/src/native_inference_lease.rs",
+      "sha256": "1ceab9619f0fd350e41ae45e02d517e9191bf5c96bd392e7938cd211b388902b"
+    },
+    {
+      "path": "platforms/linux-inference/src/native_model_adapter.rs",
+      "sha256": "bcc8774f3aab24f9941d0b3f6690ad7a7e2d0992c35e323a2c72b931c8816d61"
+    },
+    {
+      "path": "platforms/linux-inference/src/native_resource_admission.rs",
+      "sha256": "3f56221af184ef330e7de202e2685c6c3eb5b2351e52b2bbeb65bfde170c012a"
+    },
+    {
+      "path": "platforms/linux/Cargo.toml",
+      "sha256": "770a44da1ec3531d78bce11d1a19e36b02d3284ea78ac92d666015bd7666aa65"
+    },
+    {
+      "path": "platforms/linux/src/command_runner.rs",
+      "sha256": "f80b7800e229228553dbbcd0853900d8f24fddd5982cd89f5bdb63c01cc2476f"
+    },
+    {
+      "path": "platforms/linux/src/development_boundary.rs",
+      "sha256": "48d9472b62ce34c7ffc6654a5b4cf4701470136accdf82d17435eb75a5b4abdc"
+    },
+    {
+      "path": "platforms/linux/src/development_boundary/confirmation.rs",
+      "sha256": "0e350cef2e613c4604fc1a960c0f2068595194b82f9eda2f8b1e214b6fb987d2"
+    },
+    {
+      "path": "platforms/linux/src/ipc.rs",
+      "sha256": "976a6b4d6bf6bb1edd801884bf2106b8494a9df02ca998fe291c54119a060272"
+    },
+    {
+      "path": "platforms/linux/src/lib.rs",
+      "sha256": "2e6e7c223adb4e0a64f7fa2106a69d7f31e7b1b78236fa86e3a71d85af6692a3"
+    },
+    {
+      "path": "platforms/linux/src/repository_safety.rs",
+      "sha256": "d62cb91c3f043a0adb3d93a0ad57c70a019c186b287b12513f3c8cd1187a6cbf"
+    },
+    {
+      "path": "platforms/linux/src/sandbox.rs",
+      "sha256": "5524ca5fa3c2f9918eb06c58c0ab15ff6049bdfa0e5a8aef95442ba1a7824db1"
+    },
+    {
+      "path": "scripts/coding_harness.py",
+      "sha256": "3f7f4e3d8c53fc7140324261ef0b501a2882fc2a570b6922b1ff4ff2a5b216eb"
+    },
+    {
+      "path": "scripts/component_inventory.py",
+      "sha256": "108e6eda80fb6e8097c2db9e40b7c1201bbadefffc6d386efb72851a39575d74"
+    },
+    {
+      "path": "scripts/configuration_authority_mutation_evidence.py",
+      "sha256": "15f65d7585d983db9b05581ac3eae5bed380e3460f2bb13a0a810261f0b34938"
+    },
+    {
+      "path": "scripts/configuration_loader_evidence.py",
+      "sha256": "48f5a8151bbdc0b6aca16080b69d236eaa547f7f8000cf574746be4f0644a664"
+    },
+    {
+      "path": "scripts/configuration_migration_recovery_evidence.py",
+      "sha256": "47ad4fbb49b92579690e88e125a9640f59fc68d28e4a320ac37236aba8334796"
+    },
+    {
+      "path": "scripts/configuration_result_evidence.py",
+      "sha256": "67df8af0b3c3b3c91d0402a870fe9fd94007d72795bf366215e376aafb49579d"
+    },
+    {
+      "path": "scripts/configuration_schema_failure_evidence.py",
+      "sha256": "eda8b2fa6b9a1384d7642c04302935586533ae9ddbd05af31af02f80b559fe74"
+    },
+    {
+      "path": "scripts/configuration_startup_evidence.py",
+      "sha256": "100cb2aa68cd39b57ef5fb4666789f07a66c6c59309b66e27da873106b141da8"
+    },
+    {
+      "path": "scripts/contract_evidence_index.py",
+      "sha256": "0fdd6986a58bbed1fe8b554c6c15735b202be7750d7976dc2311795acc97b42c"
+    },
+    {
+      "path": "scripts/kernel_architecture_report.py",
+      "sha256": "6390c268bf2b58e0030487c90084b9ba4986f0fb8a5e50b7dff7497f2adb31f7"
+    },
+    {
+      "path": "scripts/linux_docker_prerequisite_evidence.py",
+      "sha256": "b64d29cc479871c58e3e712c100043fe9a2fe0ad46967744b9e1ffc01a275582"
+    },
+    {
+      "path": "scripts/linux_inference_boundary_evidence.py",
+      "sha256": "43b1051641451828ff2602d75c022313e42389e919456f1e22922048e4ecd8a1"
+    },
+    {
+      "path": "scripts/linux_native_runtime_evidence.py",
+      "sha256": "0be849b8cc85b685d10187bc9be6422ec02c276e344da5b2517fffac30f8d7cd"
+    },
+    {
+      "path": "scripts/research_dependency_closure.py",
+      "sha256": "c090cd4d73b6129f2962ecce865205ba77cfa16bfebff786f07593b49f8ec0a5"
+    },
+    {
+      "path": "scripts/runtime_coordinator_boundary_review.py",
+      "sha256": "c55ee01c7941c55f15286151ed1cc4c363bcaba69ea2b3427f6970127ea15e18"
+    },
+    {
+      "path": "scripts/sprint_4_gate.py",
+      "sha256": "154e2ebbc77381b6fd492a98f4234524c4f89117a2cac0a30701ba41d44ba06e"
+    },
+    {
+      "path": "scripts/story_11_2_ac2_evidence.py",
+      "sha256": "37c75a441a109a69e9828966c1154d7521b1bf51c2fd54c36296de04bc8f5ff2"
+    },
+    {
+      "path": "scripts/story_11_2_gate.py",
+      "sha256": "2e3d24b5eae046a3aa184a48690bda7a01d5eef674e71bdd4d87a832a27c1924"
+    },
+    {
+      "path": "scripts/story_1_1_artifacts.py",
+      "sha256": "724bc4d28adee71af08d3750e2653e2f77b7aab35ec33fc1657a1f4c31ae8b71"
+    },
+    {
+      "path": "scripts/story_1_1_security_evidence.py",
+      "sha256": "f07d35e89dffb65931c19d85a9360b9b818e9eff767bff6b486f4f889c6c270a"
+    },
+    {
+      "path": "scripts/story_22_1_canary_evidence.py",
+      "sha256": "44ec93b993cd349802825826fb913626c16d9b82ac92c585e68a0cb4e2c91cbf"
+    },
+    {
+      "path": "scripts/story_23_4_evidence_index.py",
+      "sha256": "a0a4f579d7083e2510106c0a2f494d3e64055dfda45961147bff1e75312fc0de"
+    },
+    {
+      "path": "scripts/story_23_4_runtime_evidence.py",
+      "sha256": "dafef8e5a584a263c09ff02be8da9f8fc886fb53e28641668368d6cfaac0a1a0"
+    },
+    {
+      "path": "scripts/story_23_4_security_evidence.py",
+      "sha256": "4a9e56b6318ee97f55bc55db0a0dd43d6c4b3da9852eb55bf9306087ac5963e1"
+    },
+    {
+      "path": "scripts/story_3_1_security_evidence.py",
+      "sha256": "6d03fbe67e55c27c0aa2808b78bf26e1fcea6203fa0dc1e223e7c8ff22d2e056"
+    },
+    {
+      "path": "scripts/story_4_1_gate.py",
+      "sha256": "f26ad8bd0ac0c64a5f6e251adcb46fda065793af5ae6ef6a04424e3a0e99b8be"
+    },
+    {
+      "path": "scripts/story_4_1_security_evidence.py",
+      "sha256": "159d50c38a03a230b478209971dc2cea38adc832c2347d3f0f550926838054e2"
+    },
+    {
+      "path": "scripts/strict_local_source_audit.py",
+      "sha256": "eda7958a8fa800d2ca98fdcf8a84a2f3381c25e01e7b837d752b3690fe826244"
+    },
+    {
+      "path": "scripts/supply_chain.py",
+      "sha256": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6"
+    },
+    {
+      "path": "security/public-research-dependency-policy.json",
+      "sha256": "74233d83de8186974e6b610fc6996de1b9140c3736d24ad7a1c8479c41b6dbcb"
+    },
+    {
+      "path": "security/strict-local-source-policy.json",
+      "sha256": "2822e81ef008f50c93687d7b319fb4f3060d5af1a8e876a159023a9ed807800d"
+    },
+    {
+      "path": "shells/host/src/cli.rs",
+      "sha256": "5269dcfb114055bacf015414320cd9ae6caeae1d29d67cdc86d94a6fe09ce208"
+    },
+    {
+      "path": "shells/host/src/cli_runtime.rs",
+      "sha256": "482e05bec6714799d00244e471bf7b6983507f392b32d4ef9226dc435c8036c6"
+    },
+    {
+      "path": "shells/host/src/coding_development_activation.rs",
+      "sha256": "b99f1bf64cf3ff4435cf58894dac029b687ee4afd1f234c9a956de519f70b756"
+    },
+    {
+      "path": "shells/host/src/coding_development_client.rs",
+      "sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d"
+    },
+    {
+      "path": "shells/host/src/coding_development_runtime.rs",
+      "sha256": "1993bef0b8054270d00453f0627711a003b697c06ab1a69e3d129488ba147cac"
+    },
+    {
+      "path": "shells/host/src/coding_live_runtime.rs",
+      "sha256": "0cf72e9eea1ff9d92f59e6f33f6e2fcb137e101150815b7ed9ca857f2aa14244"
+    },
+    {
+      "path": "shells/host/src/headless.rs",
+      "sha256": "9437a13398dc59a8babf7f9f14b60a4ba43c830c277614e90a3dfea1f89be318"
+    },
+    {
+      "path": "shells/host/src/lib.rs",
+      "sha256": "4d347f16885cadf6bd43ebc098890bd6ea28b10aa42f973b10a2bf103f1ea466"
+    },
+    {
+      "path": "shells/host/src/linux_coding_runtime.rs",
+      "sha256": "4fe12c43ed684bbdca60d54778b61a0a05971f65247e290cf6b589d1d9b4b81d"
+    },
+    {
+      "path": "shells/host/src/linux_read.rs",
+      "sha256": "da45f97c08ee6fa01d93c39318599281211bdc54729f6bc0bab3c3d371b724a8"
+    },
+    {
+      "path": "shells/host/src/linux_repository_map.rs",
+      "sha256": "8f410724c83ca5ce188fa91c97a01140ded2372b53873d5a875fc90f622c591a"
+    },
+    {
+      "path": "shells/host/src/main.rs",
+      "sha256": "4db40d47496382e47b7fb71cab42f2a8185e8ee863eeab47e3a6e998a8b1b4c3"
+    },
+    {
+      "path": "shells/host/src/native_chat_runtime.rs",
+      "sha256": "d38898441c4bd39320fa9929ae94441bed85bc4b0d25e382241172d0ef81586d"
+    },
+    {
+      "path": "shells/host/src/runtime_start_tests.rs",
+      "sha256": "b70cd9fc54c1ebf2ef9bcdcb44b19ae0869095061e2aaaf5e0a38a44aa5b4e0a"
+    },
+    {
+      "path": "supply-chain/dependency-hashes.sha256",
+      "sha256": "c1c8a66e526c3551c4e1c7b4af7683aea1068accf2479e38ae590b55b84bbeb0"
+    },
+    {
+      "path": "supply-chain/dependency-provenance.json",
+      "sha256": "8c0b3d438ca269dce164d38cab292669a0263620ab3b756a366d18190865758c"
+    },
+    {
+      "path": "supply-chain/sbom.cdx.json",
+      "sha256": "2484fc8cb23a5940ff6a41d0ace2422ba3e546a0da9b32ff7bbe7fe6ee20939b"
+    },
+    {
+      "path": "tests/test_coding_harness.py",
+      "sha256": "87e1e79aa7eeee76a4cc48a86bc8bca7e2cb3b2559839a32e6c9c56375c713be"
+    },
+    {
+      "path": "tests/test_coding_harness_model_diagnostics.py",
+      "sha256": "33247a099c00ce191309949f52623d9154b9a5b9a66aea4ef35373e01f57d9a4"
+    },
+    {
+      "path": "tests/test_coding_harness_ownership.py",
+      "sha256": "e78148d140ac91a5cca10a536c771dc416cf836f2c05543be834908f1eaffe2b"
+    },
+    {
+      "path": "tests/test_component_inventory.py",
+      "sha256": "12757ff847d9e6820d1d39c02c05f42819e0e718d7b54332affd6ccae3621844"
+    },
+    {
+      "path": "tests/test_configuration_authority_mutation_evidence.py",
+      "sha256": "c01df0b5420ed690f89f591fbe0d2bd1ba43f427c938f465693020a125df0bd5"
+    },
+    {
+      "path": "tests/test_configuration_loader_evidence.py",
+      "sha256": "e9c80e7fbc57cf5f140ef9ab5df440e5126c0940828d845094cb11a7ea3d644a"
+    },
+    {
+      "path": "tests/test_configuration_migration_recovery_evidence.py",
+      "sha256": "ae38736de2b2ab222fc32a6b8555c7529db9f94c723bba537946ce1e588bf955"
+    },
+    {
+      "path": "tests/test_configuration_result_evidence.py",
+      "sha256": "6859d6ef33f0b24fec3984b421ad653dc7d7bad36624880f1a8fa8e5d94a7f0f"
+    },
+    {
+      "path": "tests/test_configuration_schema_failure_evidence.py",
+      "sha256": "9153a6c56e03173b5744043d29ff3c303526de740dff4c8302eafac8e6f65c71"
+    },
+    {
+      "path": "tests/test_configuration_startup_evidence.py",
+      "sha256": "693dda9812499528ea0f8739bd93b2884bb5c5a51abe639bf0c58776ed85dc69"
+    },
+    {
+      "path": "tests/test_contract_evidence_index.py",
+      "sha256": "198e4c3255c914d696fd7d2bdd0a8de55aa01bbec5eba83eb754e57754c22d75"
+    },
+    {
+      "path": "tests/test_kernel_architecture_report.py",
+      "sha256": "39ceb5f23442d6b674bfc2446fd33701883847a7dea161b3d01e0f20b71ae7dd"
+    },
+    {
+      "path": "tests/test_research_dependency_closure.py",
+      "sha256": "734e9f07d8a6cecd9c73df5785d57fdfe663ccce7230951c7a3bb5807c58d4b8"
+    },
+    {
+      "path": "tests/test_runtime_coordinator_boundary_review.py",
+      "sha256": "dc7315ba386862ec1198687425243f282758ceb0835536037e4292c3ded57140"
+    },
+    {
+      "path": "tests/test_sprint_4_gate.py",
+      "sha256": "ae63304af83c78168669c6574553853a51f563e99e4866c1c1f2152845832f4a"
+    },
+    {
+      "path": "tests/test_story_11_2_ac2_evidence.py",
+      "sha256": "235d0225833481060798c4993e60172245b5f0c1ac90d9015b040ed5f2422a04"
+    },
+    {
+      "path": "tests/test_story_11_2_gate.py",
+      "sha256": "2295e32739e644c00f65f746c88214e7399e3f62208c89bbe2e4bdb9269a13bc"
+    },
+    {
+      "path": "tests/test_story_1_1_artifacts.py",
+      "sha256": "19c6fe84d73abc27f443e8e31e6adbfce07f3f486e3b9b473c3e362b3c51b96e"
+    },
+    {
+      "path": "tests/test_story_1_1_security_evidence.py",
+      "sha256": "20eb9f6dd06d06a75c72c2fa5fea7dd07e24f77842cd32af2e3f2c49231be6dc"
+    },
+    {
+      "path": "tests/test_story_22_1_canary_evidence.py",
+      "sha256": "0aec421735605077f38c148c71ab002a8cd3b535a47f8016f46b60c2dc3b7a6e"
+    },
+    {
+      "path": "tests/test_story_23_4_evidence_index.py",
+      "sha256": "9cb411d1e9cd349364359c0b93b8a7f19e783e7ca892affebe79e282025e06ac"
+    },
+    {
+      "path": "tests/test_story_23_4_runtime_evidence.py",
+      "sha256": "e1d8ea2784f9567dcafbb9667e06279566a1700649483f74d839e28779b80296"
+    },
+    {
+      "path": "tests/test_story_23_4_security_evidence.py",
+      "sha256": "020046eed376d925ee55a002a8811118a68eac805c763848b3606bf0920ae124"
+    },
+    {
+      "path": "tests/test_story_3_1_security_evidence.py",
+      "sha256": "f9d223878166c92dc21fc4e50e7cc1dfaa68bf3241db5a367e6cc8ea97f2ed19"
+    },
+    {
+      "path": "tests/test_story_4_1_gate.py",
+      "sha256": "3fdaf660edf77d007b592894d14c712ed0823954f96535c1e130d8871c419e00"
+    },
+    {
+      "path": "tests/test_story_4_1_security_evidence.py",
+      "sha256": "2f150d60966fb9c78e23de71116c962c26bce411001a09f7c19ab87844b07f67"
+    },
+    {
+      "path": "tests/test_strict_local_source_audit.py",
+      "sha256": "ff8f43bd89d6cd2e0f4b7624bbfb464d68d9f01959be824a386f22b2b88723ea"
+    },
+    {
+      "path": "tests/test_supply_chain.py",
+      "sha256": "29593e31bb43f33beb064efb5b7b366ae5a0f964c2544b4bfb5e5b365e9026ae"
+    }
+  ],
+  "executed_source_inputs": [
+    {
+      "path": "docs/decisions/0100-native-model-socket-exchange-deadlines.md",
+      "sha256": "ecf329175ee1a17de3da26282c7cd107079ca3f4deb83312c4a6b567799d8f79"
+    },
+    {
+      "path": "docs/guides/standalone-coding-development.md",
+      "sha256": "8aa3d5b5089a061776718925c6a6634e030ea0a6d2defab490cd4a1672b5d2b3"
+    },
+    {
+      "path": "platforms/linux-inference/src/llama_server_driver.rs",
+      "sha256": "50a8916056bb11b5ed271970167ec49e3c222bb360f16985252b7aed0974218e"
+    },
+    {
+      "path": "scripts/strict_local_source_audit.py",
+      "sha256": "eda7958a8fa800d2ca98fdcf8a84a2f3381c25e01e7b837d752b3690fe826244"
+    },
+    {
+      "path": "tests/test_strict_local_source_audit.py",
+      "sha256": "ff8f43bd89d6cd2e0f4b7624bbfb464d68d9f01959be824a386f22b2b88723ea"
+    }
+  ],
+  "pre_fix_inputs": [
+    {
+      "path": "platforms/linux-inference/src/llama_server_driver.rs",
+      "sha256": "19478465bb7ef3b735457b4c0a6315d574caaef44cb9667f2ecdb7f91b031565"
+    },
+    {
+      "path": "platforms/linux-inference/src/llama_server_driver/tests/transport_budget_tests.rs",
+      "sha256": "7f9ef66bea5a8c4bbd50080b1982e13cfcd3cf883c1908621c41639add2117ff"
+    }
+  ],
+  "private_evidence": [
+    {
+      "label": "checks/model-transport-budget-audit-1.log",
+      "sha256": "fc39ebb858a57c5ba29f9bb26905cb15fe5b6d20231d514f10cfe89ef0810e1c",
+      "bytes": 131
+    },
+    {
+      "label": "checks/model-transport-budget-audit-2.log",
+      "sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710",
+      "bytes": 69
+    },
+    {
+      "label": "checks/model-transport-budget-audit-3.log",
+      "sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0",
+      "bytes": 34
+    },
+    {
+      "label": "checks/model-transport-budget-audit-4.log",
+      "sha256": "0a618397c689cb97bdec0479f65fef49c91478cb5de8eff4eadb583a7d00281b",
+      "bytes": 48
+    },
+    {
+      "label": "checks/model-transport-budget-audit-5.log",
+      "sha256": "daa5e38071639f5601ab3b00691221b20d7ad0f8fb8e168d964c0b965c143626",
+      "bytes": 35
+    },
+    {
+      "label": "checks/model-transport-budget-audit-6.log",
+      "sha256": "699c138e49a6d2fd7bd660d28f643ebefde551d69d2e540c3a7b717b9e0e5f71",
+      "bytes": 31
+    },
+    {
+      "label": "checks/model-transport-budget-audit-7.log",
+      "sha256": "ff1a07ff12be45ca69ae781cba78b24a0db543cec34edbccae6ea76540ee8b0d",
+      "bytes": 1386
+    },
+    {
+      "label": "checks/model-transport-budget-docs-1.log",
+      "sha256": "331139768d16954310aa82efd275a0a36c4e5e4191f7026379d3169ea5fd5f19",
+      "bytes": 639
+    },
+    {
+      "label": "checks/model-transport-budget-docs-2.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-1.log",
+      "sha256": "12645548fe90713f2a9ac0e73cb8e70ca6759c0c19ad2be18e8519c70ff3f860",
+      "bytes": 168
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-10.log",
+      "sha256": "fc523972b6a1714a1d54810e5e0468e39c4bd3e3d5232a86ffd2e808fc829bd9",
+      "bytes": 111
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-11.log",
+      "sha256": "f253aac66972f434f7ae0f1c81879a85da4620a4f1c5cc7738a640e4b28492a8",
+      "bytes": 61
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-12.log",
+      "sha256": "f305cc2e7a26405feedfed7d1f3207507e546f55a8b880b692b39145439f2ba6",
+      "bytes": 105
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-13.log",
+      "sha256": "635a7a089caf4f25d2e772a819fb5d83c083bf266914373128419caea0dbe78f",
+      "bytes": 51
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-14.log",
+      "sha256": "bd8b6e98c3fde35b63ab6d268fdd3a11412f774f5efed5e707ad2bef28c91f16",
+      "bytes": 105
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-15.log",
+      "sha256": "0cd2aa4156909f95f43fc90f612df6209e475456b9fc49a528576ae94ff610aa",
+      "bytes": 74
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-16.log",
+      "sha256": "5e977e815202097c8680e994c7fad2bf3167e0c1d17e34c46c8b953580b68e66",
+      "bytes": 104
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-17.log",
+      "sha256": "a31c813afcfee033b10bfd8534145ee2ac195eddff97aa56fbd68a588b4c3028",
+      "bytes": 49
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-18.log",
+      "sha256": "a34c94076d75e7d13ca8d21e178fd2226625010139599823873c7cdbd4b77465",
+      "bytes": 101
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-19.log",
+      "sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "bytes": 33
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-2.log",
+      "sha256": "69a30dad852cd925e966214512c7243abd568914da15da577f73ec7a4c22d80f",
+      "bytes": 229
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-20.log",
+      "sha256": "f662cfd8d2c1464ccefe24b1dbc7d47cf8b80f5b4d88beca1f38858c097ca48d",
+      "bytes": 41
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-21.log",
+      "sha256": "12e5f18700dcee14ba8872ea560140559231e000e4b25901ace92189f4c0e293",
+      "bytes": 45
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-22.log",
+      "sha256": "526e462db58d01ff614f4ab4a2d3d48872d64cf4ecc8783acfd4e6b2566c7b70",
+      "bytes": 42
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-23.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-24.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-3.log",
+      "sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "bytes": 33
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-4.log",
+      "sha256": "54c1348f9b30d49034f6f5824469e25e0985fbaf86369b74f7c1f83a5625ee3c",
+      "bytes": 110
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-5.log",
+      "sha256": "6ddd04e6060dd8158475e3b5fdf90fe3c4b34164f84f00a1644878af50a98fea",
+      "bytes": 37
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-6.log",
+      "sha256": "274f6bac38cd9c543013527ca3004ec792d15edc09b5a81dc5a505bd86dbbc90",
+      "bytes": 106
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-7.log",
+      "sha256": "04bdfd167bbbe669073900a46f4091d33d4d3a817a465699ea8502567598fb3c",
+      "bytes": 74
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-8.log",
+      "sha256": "4784c448796f80cab2b7625b9fd54f88cd35bbe61c44536e88108801b85243f3",
+      "bytes": 105
+    },
+    {
+      "label": "checks/model-transport-budget-evidence-9.log",
+      "sha256": "d64a13683ec5874fafecbdc8621edda9fcf5798c2b1b9fcb6b7e6535af020932",
+      "bytes": 68
+    },
+    {
+      "label": "checks/model-transport-budget-final-docs-1.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "checks/model-transport-budget-final-docs-2.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "checks/model-transport-budget-final-docs-cli-1.log",
+      "sha256": "84ff2dd3c4d1df821f9e80d66f8c24b2c2a4f84813a85290be98487d13ca0af1",
+      "bytes": 198
+    },
+    {
+      "label": "checks/model-transport-budget-final-docs-cli-2.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "checks/model-transport-budget-first-1.log",
+      "sha256": "f9e98856accd6e8e5b50cab4334b49455876fe59bff1cac0f3f49c018fe15b82",
+      "bytes": 5158
+    },
+    {
+      "label": "checks/model-transport-budget-fixed-1.log",
+      "sha256": "5b323f68c984ccc87bf5344e2c46e72d9a881eef9642956920c1eb321ad91754",
+      "bytes": 882
+    },
+    {
+      "label": "checks/model-transport-budget-recheck-1.log",
+      "sha256": "aa4610b364d23c3cd0129bcc7666b41e8702944c88c9673f64beffa9f9878a04",
+      "bytes": 1686
+    },
+    {
+      "label": "checks/model-transport-budget-recheck-2.log",
+      "sha256": "4d1efa2f2e3c5d925f77bdedbd536729237715a5c09101756fa9dc7b3c48b5eb",
+      "bytes": 15155
+    },
+    {
+      "label": "checks/model-transport-budget-recheck-3.log",
+      "sha256": "f2d5659f81cd1503c4244610fcaaeb5c503a5eb79ef027d3435e2921f4c48faf",
+      "bytes": 202
+    },
+    {
+      "label": "checks/model-transport-budget-recheck-4.log",
+      "sha256": "b0c1676616ef7fdb5dfc999abd981bb84f50f5fa45989896b59086b276307f0d",
+      "bytes": 60589
+    },
+    {
+      "label": "checks/model-transport-budget-recheck-5.log",
+      "sha256": "a9661902573757d98510160a45aeb539146686627f0c97083a70935debae6a14",
+      "bytes": 298
+    },
+    {
+      "label": "checks/model-transport-budget-recheck-6.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "checks/model-transport-budget-recheck-7.log",
+      "sha256": "5fc598cb665a9cb15b754793c1217df9546cfccf679c39974f13ca8f5562ef68",
+      "bytes": 141
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-apply.py",
+      "sha256": "0346965a9a081284b24cfdece5ab4c3a3e9aa1a281e1606b8d83e44f7a1ab4cf",
+      "bytes": 6482
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-audit-evidence.py",
+      "sha256": "5d69704f30a4080c218475b3dbbb6eea0d21775c4c5a4f0458f76f72e994d09b",
+      "bytes": 6017
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-audit-plan.json",
+      "sha256": "95c96650c1492bdff14550578ee570ddf21052b020ca22b463ac51a9171c8832",
+      "bytes": 1617
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-audit-results.json",
+      "sha256": "28c443f3baed6e5a91b1587565842e27bdbfd55e1683c7498572abd080d1659e",
+      "bytes": 2000
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-audit-terminal.json",
+      "sha256": "5b5a7c3b3733bc18a77bcc71fd82410acb85418db85fe926c586bea23e9f957a",
+      "bytes": 415
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-bindings-after-core.json",
+      "sha256": "d812f0fccf3c710b3832ef4bb5624c07d66ea0de08dad003cba732e0dbe22c07",
+      "bytes": 267888
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-bindings-audit-source.json",
+      "sha256": "01007f58af96ace7141a2781fea11730db82c999fe1571f8976435e83f68f9f2",
+      "bytes": 23496
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-bindings-final.json",
+      "sha256": "6ab2e71b38476eda0991060bff47ae5d74e61b3ff5452385e6b4c5a66354d95a",
+      "bytes": 274100
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-bindings-recheck.json",
+      "sha256": "7aaecfa9b47297fc1d75911bc217be3399f4ab8a5a73eb2b3bbdd9c5ab5b2f55",
+      "bytes": 13143
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-build-manifest.py",
+      "sha256": "94e1f57b90ac3cb667e92f3c3e6881bc72cdae69cfa2f93b2c8c831cc01d3fe9",
+      "bytes": 10934
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-check-driver.py",
+      "sha256": "1d47deb4694b63804c219158a26ee52389c04e3651d17fb8fd6d4772c60f1eb6",
+      "bytes": 1587
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-docs-plan.json",
+      "sha256": "a0d6fad3585a927763b260135d03ddb3eddf7b9d1c7d9498c16cfbb3d2e87f8e",
+      "bytes": 1319
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-docs-results.json",
+      "sha256": "50d898a811c5aa7a9c0e893e908ef26cefed06520916eb75b9ff6913424ce503",
+      "bytes": 561
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-evidence-assessment.md",
+      "sha256": "3a5c08984a01766fd4c6f1a39c2bb49ee7656fb47109885000b8a2dd443fe638",
+      "bytes": 2375
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-evidence-audit.json",
+      "sha256": "d58006a002035e57c335468f92447d0d5921d8b71a60e48a900f89392809e04a",
+      "bytes": 7635
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-evidence-commit-message.txt",
+      "sha256": "e40cae4b20c5430b792eee4d1e63a973a8e0b657a7ec1d8745c09a4a36745969",
+      "bytes": 429
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-evidence-plan.json",
+      "sha256": "915a933a6bbef362bc60a81a6d821950929721bad0fedf4c79a07448c3b76fe0",
+      "bytes": 3564
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-evidence-results.json",
+      "sha256": "5a6dd5aa7c8cbf2f52d655888562ee9a8507a0de837eea99de4c4ef39a6c59b2",
+      "bytes": 7445
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-evidence-staging-audit.json",
+      "sha256": "6657ab46f49def39638a26ee3b6e94492e8d94e876158f7eba9cba96e136a8f3",
+      "bytes": 2336
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-evidence-terminal.json",
+      "sha256": "8b18e68bc4a59d9391f841d9d21c879a88cd17182d64f710b5a41b2132f2a559",
+      "bytes": 292
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-final-docs-cli-plan.json",
+      "sha256": "e00e734806df5131aaccaf2079b6533df0de7fe9b71be8cbf5977746ec58d05a",
+      "bytes": 1574
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-final-docs-cli-results.json",
+      "sha256": "ad30d9795a7453e8f7800c59752b596c27bcba7e2fc7346bd91dec71d7092a24",
+      "bytes": 661
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-final-docs-plan.json",
+      "sha256": "255ce573c3f91f44027a6f74245d1abc7c2958f63b49060a00cfb08828553db3",
+      "bytes": 1591
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-final-docs-results.json",
+      "sha256": "8be04c47a30af78fa0db298343dee8ccab971a43df86f99d7e8535a473e9299a",
+      "bytes": 670
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-final-docs-terminal.json",
+      "sha256": "d297ed1e8aa01718e3b89b6f9e98503c684ddd617a8d105c84eaa727296a8b09",
+      "bytes": 323
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-first-audit.json",
+      "sha256": "20ec1484207d8c38ef56149b152396ed59c53f61edabcab74aaf99a99a5059f0",
+      "bytes": 1547
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-first-check-driver.py",
+      "sha256": "dc1552d562fc0dabc642601d139fe047e0db809ae06b247343a9666a3c1ac057",
+      "bytes": 1387
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-first-plan.json",
+      "sha256": "750e514783b523e4ab4e86197b012f478a87be0851899b3be10c611747cff932",
+      "bytes": 595
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-first-results.json",
+      "sha256": "c5a8aafba12c1b90f87ca44c50f85d7865b32f2c2722462ae036f01f4e379ef1",
+      "bytes": 427
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-fixed-plan.json",
+      "sha256": "6e68c85d50848f21aed63a9e4363614d0bce17c40ee60624936caf5666d673e6",
+      "bytes": 2271
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-fixed-results.json",
+      "sha256": "7b64f6d23de644392c846d0819cc6818ebbe894198f65e37d87a2835cc0f09d5",
+      "bytes": 428
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-fixed-terminal.json",
+      "sha256": "fd24450ef55146d45cd3f9a8ae9067ddefdffc413142c94246eec2fcbc396c5e",
+      "bytes": 322
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-fixture-rewrite.py",
+      "sha256": "1593bdb0270b6d7144cad2edebc72b69ceef2661c0ed30f5fd9a31300ac18689",
+      "bytes": 4208
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-host-classification.json",
+      "sha256": "886bb2cf775d2115d4d5eb7ee33f814d90135caa31108c24fbbd9bfa6a4dc226",
+      "bytes": 11153
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-inline-tests.py",
+      "sha256": "f23c544d4808353d237e58e2910d7ebb34c88921305eeebe0d0b6cf5bcc6f840",
+      "bytes": 502
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-next-startup-assessment.md",
+      "sha256": "cd1e3235634c17ee237903c5e728c56ec30ac2ec47950012522bdc8621e2d24b",
+      "bytes": 3294
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-observation.py",
+      "sha256": "fa4cc4a712a0635787a34cdbfa8e9ee2a1fc12c2eb413b72336c6ec56136cfda",
+      "bytes": 7810
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-payload-progress-strengthening.md",
+      "sha256": "5ed0ea74bfbbbed92015c19a33de91ccb638ec23a1db686a0105a543e0b80946",
+      "bytes": 1600
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-payload-strengthening.json",
+      "sha256": "811867ec73151b669cea15875d674bb6aaa49ca5655a51d807da925d7156a29a",
+      "bytes": 370
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-plan.json",
+      "sha256": "4f1cc6c578d70af4390f833e1f47a0d08dd5575df46c984ce9139c94d96883e8",
+      "bytes": 1389
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-previous-review-request.md",
+      "sha256": "b4f131e772cdefb6b0eb68500780e89cd21468ed0135ba8aa62e536230bbf184",
+      "bytes": 4284
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-recheck-plan.json",
+      "sha256": "2af93be3d2a3989dc6885567be60d29c7efbd4952ccd22ddef2d655d680d7575",
+      "bytes": 2531
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-recheck-results.json",
+      "sha256": "ecc88d724b80acea8f3d3d39532bec7cbf9bfb396acb45cc83e08d6eb5e98bdf",
+      "bytes": 2578
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-recheck-scope-audit.json",
+      "sha256": "a7de1ae57e9a1abea6fd377f2f0be77ea64b73dfd2fb8077516e76333792568d",
+      "bytes": 982
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-recheck-terminal.json",
+      "sha256": "9c44e92d8d566f5e3535011e1f24081c388f40b7166387fd0b69363d3e70354d",
+      "bytes": 344
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-source-commit-message.txt",
+      "sha256": "1d5d5566e37a4ac42de3608d1fbb89eb6cd37b8e55469c60f22e188c7679e213",
+      "bytes": 723
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-source-review-request.md",
+      "sha256": "d19587cd0909663e187f9b05cb4e1c8a12925841ee95858f6a5f247f2c9c58c0",
+      "bytes": 2581
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-source-staging-audit.json",
+      "sha256": "8aaedc8f369a246cd79ef531880771ee821f21f9bf3970ca5a10cc24ef029de0",
+      "bytes": 903
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-startup-design-notes.md",
+      "sha256": "e095e0b6af309d43aa45010a99f29d1c25512b7251d3f7289229ecfe6b75b293",
+      "bytes": 3191
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-strengthen-payload-progress.py",
+      "sha256": "c365cce423a8d7fd1336ee8063fcf7823abcee0dc6d5cafbd45e5ea0c6c99549",
+      "bytes": 2245
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-strengthen-upload.py",
+      "sha256": "1cd24e0817f40be369820fdf56a5eeee505c19e2edf503e923f78d54bed9815f",
+      "bytes": 1209
+    },
+    {
+      "label": "driver-or-source/model-transport-budget-validate-manifest.py",
+      "sha256": "4bf14b34c8e1cce41549bc774e4ea069116398c0f01b36c9430afebae95d0ad3",
+      "bytes": 4521
+    },
+    {
+      "label": "driver-or-source/inspect-batch-bindings.py",
+      "sha256": "7c92f98ff72a92acf7ab97e4b6b17450ba7c308b46315e4e9cb926f6d0256b49",
+      "bytes": 3353
+    },
+    {
+      "label": "startup/clean-diagnose.json",
+      "sha256": "55fff3f0b9d52641c1514bb3ccebbde6645cf0c8d991deb9928fe7faff610217",
+      "bytes": 328
+    },
+    {
+      "label": "startup/clean-diagnose.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/clean-diagnose.stdout",
+      "sha256": "6c4a54bf19f8c3c2fadaede7ac8551a01c13adca5c3cb659372428415ca88b68",
+      "bytes": 1116
+    },
+    {
+      "label": "startup/clean-setup.json",
+      "sha256": "621bcc01327b041d7797d86db0445af76f74e2ff8005d904cbc021c707ab83e6",
+      "bytes": 325
+    },
+    {
+      "label": "startup/clean-setup.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/clean-setup.stdout",
+      "sha256": "76a3ae758e3e4c997846ea9032acaf33f48e063f37a01fd9f80f634e41082dd3",
+      "bytes": 1455
+    },
+    {
+      "label": "startup/clean-start.json",
+      "sha256": "577a4ccf8466e0544cc7e6c24adb206674ac5481b46b565afd47d0695d0d9a60",
+      "bytes": 610
+    },
+    {
+      "label": "startup/clean-start.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/clean-start.stdout",
+      "sha256": "ec019c88e3c6665fe88acf4647005b1c0b516c5e84a5b60249b51b8adb01a6c6",
+      "bytes": 105
+    },
+    {
+      "label": "startup/clean-status.json",
+      "sha256": "52a0015a33a4505befeff6fe61f7e3dc73782b149de704d5351bfb2e75513134",
+      "bytes": 326
+    },
+    {
+      "label": "startup/clean-status.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/clean-status.stdout",
+      "sha256": "6c4a54bf19f8c3c2fadaede7ac8551a01c13adca5c3cb659372428415ca88b68",
+      "bytes": 1116
+    },
+    {
+      "label": "startup/clean-stop-idle.json",
+      "sha256": "a30b943e95f1c1140ee5230be9332cbe9d6d9735c627f75bcb99d22d78181cab",
+      "bytes": 324
+    },
+    {
+      "label": "startup/clean-stop-idle.stderr",
+      "sha256": "188d43ca618786ab002175dc60720aadf35d344273de3607629d8fdbeb7d871b",
+      "bytes": 27
+    },
+    {
+      "label": "startup/clean-stop-idle.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/cli-help.json",
+      "sha256": "db1e9e2b12ac24b189111043f600e25c4e77b2f5e8e2f7bd5d563be60365f655",
+      "bytes": 302
+    },
+    {
+      "label": "startup/cli-help.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/cli-help.stdout",
+      "sha256": "fa24ac9df48bacc6344a1ddb2a06353be9e94bd46fbaadb2c1ef3ef8234f254a",
+      "bytes": 2025
+    },
+    {
+      "label": "startup/coding-clean/result.json",
+      "sha256": "ba9af05ff593eed8043d7c1d5856b209bf294190e81bd4ecff76e3075d9c4b69",
+      "bytes": 2741
+    },
+    {
+      "label": "startup/coding-clean/stderr.log",
+      "sha256": "5579101cf478cccc486cea8aa897284fb6c252c158c45681e41415d34fb03c79",
+      "bytes": 86
+    },
+    {
+      "label": "startup/coding-clean/stdout.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/dirty-setup.json",
+      "sha256": "58463b68ac88db1563a132a5132b60935aca307db2e6ff001a981cb18865161a",
+      "bytes": 325
+    },
+    {
+      "label": "startup/dirty-setup.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/dirty-setup.stdout",
+      "sha256": "692b8e5c9354ce9ae0563eabb6b20788bb2e8db390fc745f60884324a3613b08",
+      "bytes": 1455
+    },
+    {
+      "label": "startup/dirty-start.json",
+      "sha256": "a7504d250727b600d9f08bac5c9969d1d670c93a47f68ab7b4385f532a5b2445",
+      "bytes": 610
+    },
+    {
+      "label": "startup/dirty-start.stderr",
+      "sha256": "b8eceb9a16ea90483c01a7f4600ca201ce46a4dd829b7b825b054e0565cacc0a",
+      "bytes": 34
+    },
+    {
+      "label": "startup/dirty-start.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/dirty-status.json",
+      "sha256": "97120ac964173ed4baf147a11936e2571fc8bb4644e52ebf3e0d8206217203c4",
+      "bytes": 326
+    },
+    {
+      "label": "startup/dirty-status.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/dirty-status.stdout",
+      "sha256": "8a1ec0719f82934a257dbb178d101d7866a4e49055312719f693b5599220b5f5",
+      "bytes": 1117
+    },
+    {
+      "label": "startup/observation.json",
+      "sha256": "2e3b548f3afff9fd5866a2c14465c8b0a2ccb4ef19945a31db98b030d2a16a31",
+      "bytes": 9576
+    },
+    {
+      "label": "first-source/platforms/linux-inference/src/llama_server_driver/tests/transport_budget_tests.rs",
+      "sha256": "7f9ef66bea5a8c4bbd50080b1982e13cfcd3cf883c1908621c41639add2117ff",
+      "bytes": 7096
+    },
+    {
+      "label": "first-source/platforms/linux-inference/src/llama_server_driver.rs",
+      "sha256": "19478465bb7ef3b735457b4c0a6315d574caaef44cb9667f2ecdb7f91b031565",
+      "bytes": 134602
+    },
+    {
+      "label": "fixed-source/docs/decisions/0100-native-model-socket-exchange-deadlines.md",
+      "sha256": "952b7a1c71cbaffa6c7628ed751008a3b4357acac8ef22b30ad8948378aadd3f",
+      "bytes": 4318
+    },
+    {
+      "label": "fixed-source/docs/guides/standalone-coding-development.md",
+      "sha256": "8aa3d5b5089a061776718925c6a6634e030ea0a6d2defab490cd4a1672b5d2b3",
+      "bytes": 14828
+    },
+    {
+      "label": "fixed-source/platforms/linux-inference/src/llama_server_driver.rs",
+      "sha256": "6b8a7ba6f079d582f16840d598703ef106b0ba7bd0347d965fc17e13c9f981d6",
+      "bytes": 157413
+    },
+    {
+      "label": "recheck-source/docs/decisions/0100-native-model-socket-exchange-deadlines.md",
+      "sha256": "952b7a1c71cbaffa6c7628ed751008a3b4357acac8ef22b30ad8948378aadd3f",
+      "bytes": 4318
+    },
+    {
+      "label": "recheck-source/docs/guides/standalone-coding-development.md",
+      "sha256": "8aa3d5b5089a061776718925c6a6634e030ea0a6d2defab490cd4a1672b5d2b3",
+      "bytes": 14828
+    },
+    {
+      "label": "recheck-source/platforms/linux-inference/src/llama_server_driver.rs",
+      "sha256": "50a8916056bb11b5ed271970167ec49e3c222bb360f16985252b7aed0974218e",
+      "bytes": 157611
+    },
+    {
+      "label": "audit-source/docs/decisions/0100-native-model-socket-exchange-deadlines.md",
+      "sha256": "ecf329175ee1a17de3da26282c7cd107079ca3f4deb83312c4a6b567799d8f79",
+      "bytes": 5645
+    },
+    {
+      "label": "audit-source/docs/guides/standalone-coding-development.md",
+      "sha256": "8aa3d5b5089a061776718925c6a6634e030ea0a6d2defab490cd4a1672b5d2b3",
+      "bytes": 14828
+    },
+    {
+      "label": "audit-source/platforms/linux-inference/src/llama_server_driver.rs",
+      "sha256": "50a8916056bb11b5ed271970167ec49e3c222bb360f16985252b7aed0974218e",
+      "bytes": 157611
+    },
+    {
+      "label": "audit-source/scripts/strict_local_source_audit.py",
+      "sha256": "eda7958a8fa800d2ca98fdcf8a84a2f3381c25e01e7b837d752b3690fe826244",
+      "bytes": 24208
+    },
+    {
+      "label": "audit-source/tests/test_strict_local_source_audit.py",
+      "sha256": "ff8f43bd89d6cd2e0f4b7624bbfb464d68d9f01959be824a386f22b2b88723ea",
+      "bytes": 22147
+    }
+  ],
+  "source_snapshot_method": "Retain each executed pre-fix, compile-failed, corrected Rust and final audit phase separately. Exact final Rust bytes match the corrected Rust run; all five final source files match the audit snapshot and committed blobs. Actual CLI observations ran at a clean source commit.",
+  "phases": [
+    {
+      "phase": "first",
+      "plan_label": "driver-or-source/model-transport-budget-first-plan.json",
+      "plan_sha256": "750e514783b523e4ab4e86197b012f478a87be0851899b3be10c611747cff932",
+      "results_label": "driver-or-source/model-transport-budget-first-results.json",
+      "results_sha256": "c5a8aafba12c1b90f87ca44c50f85d7865b32f2c2722462ae036f01f4e379ef1",
+      "executed_commands": 1,
+      "planned_commands": 1,
+      "exit_codes": [
+        101
+      ]
+    },
+    {
+      "phase": "fixed",
+      "plan_label": "driver-or-source/model-transport-budget-fixed-plan.json",
+      "plan_sha256": "6e68c85d50848f21aed63a9e4363614d0bce17c40ee60624936caf5666d673e6",
+      "results_label": "driver-or-source/model-transport-budget-fixed-results.json",
+      "results_sha256": "7b64f6d23de644392c846d0819cc6818ebbe894198f65e37d87a2835cc0f09d5",
+      "executed_commands": 1,
+      "planned_commands": 13,
+      "exit_codes": [
+        101
+      ]
+    },
+    {
+      "phase": "recheck",
+      "plan_label": "driver-or-source/model-transport-budget-recheck-plan.json",
+      "plan_sha256": "2af93be3d2a3989dc6885567be60d29c7efbd4952ccd22ddef2d655d680d7575",
+      "results_label": "driver-or-source/model-transport-budget-recheck-results.json",
+      "results_sha256": "ecc88d724b80acea8f3d3d39532bec7cbf9bfb396acb45cc83e08d6eb5e98bdf",
+      "executed_commands": 7,
+      "planned_commands": 13,
+      "exit_codes": [
+        0,
+        0,
+        0,
+        101,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "phase": "audit",
+      "plan_label": "driver-or-source/model-transport-budget-audit-plan.json",
+      "plan_sha256": "95c96650c1492bdff14550578ee570ddf21052b020ca22b463ac51a9171c8832",
+      "results_label": "driver-or-source/model-transport-budget-audit-results.json",
+      "results_sha256": "28c443f3baed6e5a91b1587565842e27bdbfd55e1683c7498572abd080d1659e",
+      "executed_commands": 7,
+      "planned_commands": 8,
+      "exit_codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "phase": "docs",
+      "plan_label": "driver-or-source/model-transport-budget-docs-plan.json",
+      "plan_sha256": "a0d6fad3585a927763b260135d03ddb3eddf7b9d1c7d9498c16cfbb3d2e87f8e",
+      "results_label": "driver-or-source/model-transport-budget-docs-results.json",
+      "results_sha256": "50d898a811c5aa7a9c0e893e908ef26cefed06520916eb75b9ff6913424ce503",
+      "executed_commands": 2,
+      "planned_commands": 2,
+      "exit_codes": [
+        0,
+        0
+      ]
+    },
+    {
+      "phase": "evidence",
+      "plan_label": "driver-or-source/model-transport-budget-evidence-plan.json",
+      "plan_sha256": "915a933a6bbef362bc60a81a6d821950929721bad0fedf4c79a07448c3b76fe0",
+      "results_label": "driver-or-source/model-transport-budget-evidence-results.json",
+      "results_sha256": "5a6dd5aa7c8cbf2f52d655888562ee9a8507a0de837eea99de4c4ef39a6c59b2",
+      "executed_commands": 24,
+      "planned_commands": 24,
+      "exit_codes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "phase": "final-docs",
+      "plan_label": "driver-or-source/model-transport-budget-final-docs-plan.json",
+      "plan_sha256": "255ce573c3f91f44027a6f74245d1abc7c2958f63b49060a00cfb08828553db3",
+      "results_label": "driver-or-source/model-transport-budget-final-docs-results.json",
+      "results_sha256": "8be04c47a30af78fa0db298343dee8ccab971a43df86f99d7e8535a473e9299a",
+      "executed_commands": 2,
+      "planned_commands": 2,
+      "exit_codes": [
+        0,
+        0
+      ]
+    },
+    {
+      "phase": "final-docs-cli",
+      "plan_label": "driver-or-source/model-transport-budget-final-docs-cli-plan.json",
+      "plan_sha256": "e00e734806df5131aaccaf2079b6533df0de7fe9b71be8cbf5977746ec58d05a",
+      "results_label": "driver-or-source/model-transport-budget-final-docs-cli-results.json",
+      "results_sha256": "ad30d9795a7453e8f7800c59752b596c27bcba7e2fc7346bd91dec71d7092a24",
+      "executed_commands": 2,
+      "planned_commands": 2,
+      "exit_codes": [
+        0,
+        0
+      ]
+    }
+  ],
+  "binaries": {
+    "agentmage": {
+      "sha256": "8b7e8fff4d4365a3fbea309e313c325f8a7afeb6c5210d124dcba5badd9fe93f",
+      "bytes": 281311240
+    },
+    "agentmage-host": {
+      "sha256": "d8e80b8d28f985e66d7e15f0b511b85636c152e68bf4fe5e086413b7028b6766",
+      "bytes": 328202200
+    },
+    "agentmage-read-only-worker": {
+      "sha256": "04e87c0925acbc25dbf1f8de82ce37fa6811d257c43a80f00844cc89a3275e7c",
+      "bytes": 13798352
+    }
+  },
+  "binary_identities_unchanged_within_observation": true,
+  "cases": [
+    {
+      "case": "clean",
+      "exit_code": 5,
+      "preserved": true,
+      "snapshot_sha256": "151fc83f7a031c9a8c6fe1d43b63ce87e7e26fc804975768aef6f9b5b70779ea",
+      "native_tool_or_model_executed": false
+    },
+    {
+      "case": "dirty",
+      "exit_code": 1,
+      "preserved": true,
+      "snapshot_sha256": "1e821aeb65c9ef71afc2358c457c93bef24640fa3b179794c1ac6dbabbd50765",
+      "native_tool_or_model_executed": false
+    }
+  ],
+  "checks": {
+    "pre_fix": {
+      "exit_code": 101,
+      "passed": 1,
+      "failed": 6,
+      "ignored": 0,
+      "filtered_out": 137,
+      "failures": [
+        "llama_server_driver::tests::transport_budget_tests::transport_budget_cancellation_interrupts_completion_upload_once",
+        "llama_server_driver::tests::transport_budget_tests::transport_budget_deadline_interrupts_completion_upload_once",
+        "llama_server_driver::tests::transport_budget_tests::transport_budget_deadline_interrupts_token_request_upload",
+        "llama_server_driver::tests::transport_budget_tests::transport_budget_full_connection_queue_never_waits_for_accept",
+        "llama_server_driver::tests::transport_budget_tests::transport_budget_silent_response_has_a_deadline_failure",
+        "llama_server_driver::tests::transport_budget_tests::transport_budget_slow_response_cannot_renew_the_deadline"
+      ],
+      "queue_wait_ms": 250.435503,
+      "production_unchanged_except_test_module_declaration": true
+    },
+    "first_fixed": {
+      "exit_code": 101,
+      "error": "E0432",
+      "tests_executed": false
+    },
+    "focused": {
+      "passed": 10,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 137
+    },
+    "full_inference": {
+      "passed": 143,
+      "failed": 0,
+      "ignored": 4,
+      "filtered_out": 0
+    },
+    "full_host": {
+      "passed": 292,
+      "failed": 50,
+      "ignored": 8,
+      "filtered_out": 0,
+      "exit_code": 101
+    },
+    "failed_host_tests": [
+      {
+        "test": "linux_coding_runtime::tests::command_git_validation_observers_preserve_consumption_failure_and_reopen",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::durable_coding_run_persists_continuation_artifact_and_checkpoint",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::read_cancellation_after_consumption_retains_exact_receipt_and_reopens",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::read_precancel_receipt_precedes_original_acknowledgements_on_reopen",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::retained_muse_missing_read_is_rejected_before_authority_and_not_path_absence_evidence",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::s_048_mvp_e2e_controlled_create_test_git_and_verify_path",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::s_048_mvp_e2e_denial_and_user_cancellation_start_no_effect",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::s_048_mvp_e2e_failed_validation_requires_a_repair_before_success",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::s_048_mvp_e2e_repository_exploration_finishes_as_verified_no_op",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_22_1_long_native_session_blocks_drift_and_preserves_exact_history",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_22_2_linux_generated_file_is_published_and_checkpoint_bound",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_22_2_linux_restart_recovers_large_terminal_model_artifact",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_22_2_linux_restart_rejects_lost_continuation_without_replaying_the_tool",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_22_2_linux_restart_restores_checkpoint_without_replaying_the_tool",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_22_2_linux_restart_restores_large_command_and_test_artifacts_without_replay",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_39_1_native_write_checkpoint_process_matrix_recovers_without_replay",
+        "reason": "assertion `left == right` failed: ",
+        "cause": "child exits101 at same InvalidManifest fixture prerequisite before intended crash93; parent assertion is downstream"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_48_2_fake_model_completes_real_git_patch_test_git_and_verify_path",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_applies_one_exact_structured_patch",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_asks_then_derives_one_exact_operation_grant",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_creates_one_exact_absent_file",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_denial_and_create_collision_are_inert",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_executes_one_exact_bounded_command_after_approval",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_executes_one_kernel_checked_git_inspection",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_normalizes_targeted_validation_after_one_granted_command",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_persists_stale_patch_invalidation_without_overwrite",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_rejects_substitution_staleness_and_unbudgeted_actions",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_user_denial_is_inert_and_non_replayable",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_48_2_native_command_json_order_preserves_exact_approved_call",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_48_2_native_command_reserialization_after_approval_remains_denied",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_50_2_and_sprint_95_child_caller_use_the_real_no_op_runtime_path",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_50_2_exact_path_preauthorization_uses_kernel_write_grant_and_unknown_path_asks",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_50_2_exact_registered_command_preauthorization_uses_fresh_grant",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_50_2_session_preauthorization_issues_fresh_grants_and_exhausts_exact_budget",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_50_2_session_preauthorization_revocation_and_expiry_fail_closed",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::story_50_2_workflow_caller_waits_for_user_and_denial_starts_no_effect",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::uncertain_command_and_validation_never_publish_completion_artifacts_or_replay",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::uncertain_command_event_is_atomically_published_and_reopens",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::uncertain_git_event_is_atomically_published_and_reopens",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_coding_runtime::tests::uncertain_git_never_publishes_observations_or_replays_consumed_authority",
+        "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_read::tests::absent_read_and_tool_approvals_do_not_require_a_clock_sample",
+        "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_read::tests::authenticated_host_frontier_review_renders_once_and_never_delivers",
+        "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_read::tests::diagnostic_export_preview_and_approval_use_the_authenticated_workflow",
+        "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_read::tests::doctor_uses_the_same_workflow_and_reports_unproved_components_unavailable",
+        "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_read::tests::generic_tool_preview_binds_every_exact_object_and_cancels_without_receipt",
+        "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_read::tests::generic_tool_preview_rejects_duplicate_unscoped_and_wrong_kind_projections",
+        "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_read::tests::handoff_source_drift_and_missing_acknowledgment_fail_closed",
+        "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_read::tests::handoff_transport_requires_current_review_and_never_delivers",
+        "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_read::tests::model_picker_transport_is_unavailable_until_verified_and_never_falls_back",
+        "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_read::tests::shared_runtime_is_unavailable_until_explicitly_composed_and_then_host_framed",
+        "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+      },
+      {
+        "test": "linux_repository_map::tests::live_projection_is_git_aware_policy_aware_and_non_following",
+        "reason": "Git verifies: LinuxRepositoryError { kind: InvalidGitArtifact }"
+      }
+    ],
+    "exact_prior_host_failure_names_and_causes": true,
+    "full_linux": "not-rerun;19 prior failures retained",
+    "clippy_inference_and_host_all_targets": "passed",
+    "formatting": "passed",
+    "original_source_audit": "failed: new rustix socket API outside closed allowlist",
+    "corrected_source_audit": "passed: exact complete private Unix helper pin; general allowlist unchanged",
+    "audit_python_tests": 31,
+    "other_source_audits": "dependency/effect/module/status passed",
+    "full_markdown": {
+      "exit_code": 1,
+      "issues": 5,
+      "files_with_issues": 1,
+      "scope": "ignored generated target/doc font-license Markdown; no license or configured gate changes"
+    },
+    "maintained_markdown": {
+      "exit_code": 0,
+      "files": 577,
+      "additional_exclusion": "target; original full gate failure retained"
+    },
+    "first_final_doc_attempt": "library module exited0 with empty output; no Markdown verification established",
+    "corrected_final_doc_cli": {
+      "exit_code": 0,
+      "files": 2
+    },
+    "sbom_writes": 1,
+    "only_sbom_component_changed": "agentmage-platform-linux-inference",
+    "foundation_and_canary_python_tests": 61,
+    "canary_campaign_commands": 8,
+    "canary_campaign_rust_tests": 7,
+    "canary_coverage_rows": 8,
+    "coordinator_reports": "unchanged; runtime/boundary/security/index passed four read-only checks; source pins retained",
+    "existing_evidence_index_summary": {
+      "complete_count": 16,
+      "mapping_count": 17,
+      "open_count": 0,
+      "partial_count": 1,
+      "release_approved": false,
+      "sprint_complete": false,
+      "story_complete": false
+    },
+    "direct_bindings_before_new_manifest": {
+      "current-direct-binding": 22,
+      "newly-stale": 36,
+      "previously-stale-or-historical": 504
+    },
+    "historical_records_preserved": [
+      "docs/verification/development-confirmation-2026-09-27.json",
+      "docs/verification/failed-start-consumption-2026-09-28.json",
+      "docs/verification/harness-model-diagnostics-2026-09-28.json",
+      "docs/verification/native-inference-cleanup-2026-09-27.json",
+      "docs/verification/research-completion-2026-09-28.json",
+      "docs/verification/runtime-artifact-preparation-2026-09-27.json"
+    ],
+    "binding_inventory_scope": "named whole-file bindings to tracked changed batch inputs; excludes untracked, transitive, unnamed and line-span bindings; no acceptance conclusion"
+  },
+  "observation_started_at_utc": "2026-09-28T15:05:47.150157+00:00",
+  "observation_finished_at_utc": "2026-09-28T15:05:48.749448+00:00",
+  "idle_stop_exit_code": 1,
+  "acceptance": {
+    "socket_components": "passed",
+    "source_audit_components": "passed",
+    "full_host_suite": "failed",
+    "full_markdown_invocation": "failed",
+    "actual_cli_host": "native-git-prerequisite-refusal-observed",
+    "scripted_native_coding_workflow": "not-reached",
+    "protected_denial": "not-reached",
+    "active_cancellation": "not-reached",
+    "real_model": "not-run",
+    "manual_user": "not-run",
+    "independent_reviewer": "pending",
+    "release": "not-authorized"
+  },
+  "limitations": [
+    "Unix socket fixtures exercise no real model and qualify no native coding workflow.",
+    "Whole startup, token binding, endpoint preparation and aggregate preflight still need shared run time and cancellation; factory loading remains synchronous.",
+    "Cooperative deadlines do not preempt encoding, parsing or kernel-stalled syscalls.",
+    "Socket EOF and closure do not prove model-process or namespace cleanup; lease quarantine remains.",
+    "The lexical developer audit supplements compilation and native confinement; it grants no runtime authority.",
+    "Actual CLI refusals establish preservation before admitted work, not coexistence during effects.",
+    "Native executable trust and user-systemd prerequisites remain unavailable; confinement was not bypassed.",
+    "Complete historical input sets and original tested revisions remain; no global, transitive or line-span freshness claim.",
+    "No task, independent, human-only, platform, model or release gate closes."
+  ]
+}

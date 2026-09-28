@@ -34,7 +34,7 @@ workflow is:
 
 ```sh
 bash /tools/build-slot python3 -m scripts.coding_harness start \
-  --root /lane/state/coding-demo-1 --scenario failed-test-repair \
+  --root /lane/state/coding-demo-1 --model scripted --scenario failed-test-repair \
   --objective 'Repair the failing synthetic add test and rerun validation.' \
   --approve-this-run --log-dir /lane/state/logs/coding-demo-1
 python3 -m scripts.coding_harness status --root /lane/state/coding-demo-1
@@ -51,8 +51,9 @@ an uncertain record. See the development guide for lifecycle and cleanup limitat
 
 **Current lane result:** setup and diagnosis ran; the actual scripted CLI/host
 launch returned exit 5 before tools because native prerequisites are unavailable.
-The [failed-start verification](verification/failed-start-consumption-2026-09-28.md)
-retains the latest host source, rebuilt binary identities and startup results;
+The [socket deadline verification](verification/model-socket-deadlines-2026-09-28.md)
+retains the latest source, rebuilt binary identities and startup results;
+the [failed-start verification](verification/failed-start-consumption-2026-09-28.md),
 the [model request diagnostic verification](verification/harness-model-diagnostics-2026-09-28.md),
 the [research completion verification](verification/research-completion-2026-09-28.md),
 the [artifact preparation verification](verification/runtime-artifact-preparation-2026-09-27.md),
