@@ -39,7 +39,7 @@
     {
       "byte_length": 4865,
       "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-results.log",
-      "sha256": "bbeca1396e95696fb0b9dfbc92eaa185dce454683c651dfcbc94fa7c1013cac0"
+      "sha256": "a2a766300647bc9d216d0950a5b38fa46bbe60a77038618c554c3acbbe6b7774"
     }
   ],
   "commands": [
@@ -103,14 +103,14 @@
   ],
   "retained_evidence": [
     {
-      "byte_length": 180466,
+      "byte_length": 191531,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "95bd6b898625e40ad84fa13ab588a42ed9e77993d26df700228e66a5d33f55b7"
+      "sha256": "cfaa135d513b6c1757ff5a19882a7f0cb06a06ecaa43c30c1708e86a3b2c4756"
     },
     {
-      "byte_length": 220703,
+      "byte_length": 253021,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "b4282513c61eb64976196413024f154d10bb30a5139ca29a31c113c8d3d1eb4b"
+      "sha256": "20c012f9ed0839da2061ff33da9851df2c594bdff2ea81aa79adff60d4e56958"
     },
     {
       "byte_length": 69345,
