@@ -78,7 +78,7 @@
     {
       "bytes": 37346,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json",
-      "sha256": "60782bab1e20e68f991257380577c6afaf2d29157859b2da6edfdecd626da6d1"
+      "sha256": "d475dd3694086b424a988f4080ba32b3e5287446e0b0cec05dc29e0cdf58f0a4"
     },
     {
       "bytes": 4896,
@@ -258,7 +258,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "68fa41577fe217043abc890e879ed562a8661673",
+  "source_revision": "81457a097032a48585bcd69c27a899a57db3f4e6",
   "status": "pass-linux-security-mapping",
   "story_id": "4.1",
   "summary": {

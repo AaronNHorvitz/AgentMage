@@ -63,9 +63,9 @@
   ],
   "retained_evidence": [
     {
-      "byte_length": 482826,
+      "byte_length": 484170,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "fadd31e0edc0e8907ec3744fae63c4439dd4455d803827df7a46351346632c72"
+      "sha256": "2ff94b9983a3db38a40c7232b8c67a0fc47252450d871eaaabca58c183af5890"
     },
     {
       "byte_length": 69345,
@@ -80,27 +80,27 @@
     {
       "byte_length": 3953,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-report.json",
-      "sha256": "fc14b47ecb341b180285d251772291b7d7c10ecbf69f6f7319311babdab4ac70"
+      "sha256": "aa2ce85e95d6d9e43a5a5d773a1febd1c687bcc1d492bfc241bdf18dad1c7ceb"
     },
     {
       "byte_length": 31234,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-results.log",
-      "sha256": "3340333e3d914b1575fd35dd27e0d00cc3aec96b926d6ed0388b2dd1541f5173"
+      "sha256": "4bf378e57c90876718fe7780012bc3f8191095d85200ad7afac3f1cde4dc8737"
     },
     {
       "byte_length": 5644,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-report.json",
-      "sha256": "ef5501388d18d0e9b2004bb245d5f746fbdb0b41ce469c36b3a4516cd9091ed7"
+      "sha256": "eedb4f207e3529fce78b61bf3e9078d885a52b6337892d579f7c066c98742d7e"
     },
     {
       "byte_length": 18010,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-results.log",
-      "sha256": "44a2798c85a3e9802968c51e115e2a3efd37cb931e64583917801d5b55ba9bc5"
+      "sha256": "9d1dd79c0bf62c510cd05d5fa091c752317ef99f897e4cb65a15ca612785e02e"
     },
     {
       "byte_length": 6455,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
-      "sha256": "d73dabd9eade0890a8666b35c0ef526b483f0b3e8dc15981d77b9db99581500f"
+      "sha256": "016adbb0f591db856809fd16845c35dc67895a95ea90b630dd9134cc4cb41ed8"
     },
     {
       "byte_length": 455,

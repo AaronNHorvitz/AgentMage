@@ -75,7 +75,7 @@
     ]
   },
   "schema_version": 1,
-  "source_revision": "4e0159e42d15ae5e5ff07c84592613a995375626",
+  "source_revision": "81457a097032a48585bcd69c27a899a57db3f4e6",
   "sources": [
     {
       "bytes": 16604,
@@ -93,9 +93,9 @@
       "sha256": "7bbac20f36ed80a1b07bea98641d98c3f894500a11dc7ef7193a1eb29cbc40b6"
     },
     {
-      "bytes": 482826,
+      "bytes": 484170,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "fadd31e0edc0e8907ec3744fae63c4439dd4455d803827df7a46351346632c72"
+      "sha256": "2ff94b9983a3db38a40c7232b8c67a0fc47252450d871eaaabca58c183af5890"
     },
     {
       "bytes": 4912,

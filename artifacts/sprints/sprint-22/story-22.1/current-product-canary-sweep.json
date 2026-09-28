@@ -3,7 +3,7 @@
   "commands": [
     {
       "command_id": "6147400fb3af627c2fe95ac302b598f86454145964d69b8fe78fee7600f8cb28",
-      "elapsed_ms": 73,
+      "elapsed_ms": 72,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "context-admission",
@@ -11,7 +11,7 @@
     },
     {
       "command_id": "5e565890568892ad049a51415396b0640f96f2c1128570e8d1ef659f42a85f12",
-      "elapsed_ms": 57,
+      "elapsed_ms": 49,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "persistence-policy",
@@ -19,7 +19,7 @@
     },
     {
       "command_id": "90774bc47105a422d76a6c89ce3311073fe7c59046a92a6dc4ad2141e110e1ec",
-      "elapsed_ms": 341,
+      "elapsed_ms": 314,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "encrypted-store-export",
@@ -27,7 +27,7 @@
     },
     {
       "command_id": "b31f43f832074fcea18c54b1d516795db859469549ea42080a56133d3df50cc2",
-      "elapsed_ms": 54,
+      "elapsed_ms": 50,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "runtime-projections",
@@ -35,7 +35,7 @@
     },
     {
       "command_id": "097bb636caa2450918164a00a0f65b6bf7f7974edd913b4443e94092b3adba4d",
-      "elapsed_ms": 206,
+      "elapsed_ms": 192,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "runtime-artifacts",
@@ -43,7 +43,7 @@
     },
     {
       "command_id": "039d53ce1e540bf7e08bc90d21db4fb8638272c6e5cbcc4bef0f48ae21e71943",
-      "elapsed_ms": 55,
+      "elapsed_ms": 52,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "runtime-model-tool-events",
@@ -51,7 +51,7 @@
     },
     {
       "command_id": "9d01542265a1ffd3d0a08de8f89f062e93d01990c9f3e61b03e79bc1fb9c9755",
-      "elapsed_ms": 61,
+      "elapsed_ms": 74,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "native-encrypted-payloads",
@@ -59,7 +59,7 @@
     },
     {
       "command_id": "6c1a95258b657afcf0ec844de7801c3201df63aad821576097181e4eb1b8920d",
-      "elapsed_ms": 2802,
+      "elapsed_ms": 2764,
       "exit_code": 0,
       "expected_marker": "zero undeclared network paths",
       "id": "strict-local-telemetry",
@@ -109,10 +109,10 @@
     "redactions": [
       "repository-root"
     ],
-    "sha256": "f902d1375ed950363381d49bf0381375cb1b2ddefb7564b234c51faa04932fd1"
+    "sha256": "93d087f0b0dd24353d7ee615459d28ca6cf79ef342b42dc01059d11c901b5d78"
   },
   "schema_version": 1,
-  "source_revision": "68fa41577fe217043abc890e879ed562a8661673",
+  "source_revision": "81457a097032a48585bcd69c27a899a57db3f4e6",
   "sources": [
     {
       "bytes": 43165,
@@ -125,9 +125,9 @@
       "sha256": "fb537c04df0d687af10e36eea98834910f8760877858266bb1f54cb1ca28d540"
     },
     {
-      "bytes": 482826,
+      "bytes": 484170,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "fadd31e0edc0e8907ec3744fae63c4439dd4455d803827df7a46351346632c72"
+      "sha256": "2ff94b9983a3db38a40c7232b8c67a0fc47252450d871eaaabca58c183af5890"
     },
     {
       "bytes": 60943,
