@@ -2,16 +2,32 @@
   "artifact_id": "story-23.4-source-runtime-campaign",
   "commands": [
     {
-      "argv_sha256": "b26bfb863a1251b307c473309b2fa69a8ddccbeb10b4b37bb83f2f2a1e19196f",
-      "command_id": "engine-session-matrix",
-      "elapsed_ms": 182,
+      "argv_sha256": "b3bf1a712beea095c7e1f3eaa345c7a01cb714dd183ea72e6eb67820381cb92b",
+      "command_id": "prepared-artifact-matrix",
+      "elapsed_ms": 444,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 42432,
+      "peak_rss_kib": 41628,
       "test_result": {
         "failed": 0,
-        "filtered_out": 1215,
+        "filtered_out": 1233,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 11
+      }
+    },
+    {
+      "argv_sha256": "b26bfb863a1251b307c473309b2fa69a8ddccbeb10b4b37bb83f2f2a1e19196f",
+      "command_id": "engine-session-matrix",
+      "elapsed_ms": 204,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 1048576,
+      "peak_rss_kib": 41824,
+      "test_result": {
+        "failed": 0,
+        "filtered_out": 1226,
         "ignored": 0,
         "measured": 0,
         "passed": 18
@@ -20,11 +36,11 @@
     {
       "argv_sha256": "d25c1a35db190c5821af496f6e3cc07b1ba96ddb12ec19c8b6a21d7bc7325ee1",
       "command_id": "native-read-matrix",
-      "elapsed_ms": 121,
+      "elapsed_ms": 122,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50736,
+      "peak_rss_kib": 50664,
       "test_result": {
         "failed": 0,
         "filtered_out": 334,
@@ -36,11 +52,11 @@
     {
       "argv_sha256": "dfe8124eee6fbf3abfde662ff05627ee295973fb06018fc558fa4c1ff65ae353",
       "command_id": "native-chat-transport",
-      "elapsed_ms": 357,
+      "elapsed_ms": 349,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50968,
+      "peak_rss_kib": 50104,
       "test_result": {
         "failed": 0,
         "filtered_out": 337,
@@ -52,11 +68,11 @@
     {
       "argv_sha256": "6bd11bbd4996b6e78ff6e621938b77f2c0a339f3b44af3f4d2c09976540d6891",
       "command_id": "three-client-parity",
-      "elapsed_ms": 340,
+      "elapsed_ms": 345,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50464,
+      "peak_rss_kib": 50656,
       "test_result": {
         "failed": 0,
         "filtered_out": 339,
@@ -68,11 +84,11 @@
     {
       "argv_sha256": "dcbd95278f6e59895a67a6092b1c2ffc167a47b68d41b501a1dcc0acf578656f",
       "command_id": "client-confusion-bypass",
-      "elapsed_ms": 77,
+      "elapsed_ms": 78,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50392,
+      "peak_rss_kib": 51060,
       "test_result": {
         "failed": 0,
         "filtered_out": 339,
@@ -84,11 +100,11 @@
     {
       "argv_sha256": "52f0dcaa22117142bfade3bdb039d530e2264557b36bbc50db671925b010c307",
       "command_id": "workflow-authority-bypass",
-      "elapsed_ms": 312,
+      "elapsed_ms": 325,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50628,
+      "peak_rss_kib": 50620,
       "test_result": {
         "failed": 0,
         "filtered_out": 339,
@@ -100,21 +116,21 @@
     {
       "argv_sha256": "47cdc321aaa5c7c4ed9eed236a4c8f7fcf3cee3ea5f1542a8e3304e1832cac09",
       "command_id": "dependency-direction",
-      "elapsed_ms": 19,
+      "elapsed_ms": 22,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 12524,
+      "peak_rss_kib": 11984,
       "test_result": null
     },
     {
       "argv_sha256": "1ba5e4e0d2b5860ae9e4b0ed786fc45413e659b7c435186b2ad8dc781a2c4045",
       "command_id": "effect-mediation",
-      "elapsed_ms": 2186,
+      "elapsed_ms": 2187,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 40364,
+      "peak_rss_kib": 41556,
       "test_result": null
     }
   ],
@@ -133,6 +149,7 @@
     "native_chat_replay_and_cancellation": true,
     "no_progress": true,
     "one_native_read": true,
+    "prepared_artifact_identity_and_publication": true,
     "read_only_git": true,
     "repeated_call": true,
     "search": true,
@@ -144,6 +161,7 @@
   },
   "external_network_used": false,
   "limitations": [
+    "Prepared artifact identity, accounting and failure cases use synthetic coordinator fixtures; no native research tool, provider or model is activated or qualified.",
     "The campaign uses deterministic fake-model fixtures and does not claim an installed admitted model or production native Chat runtime factory.",
     "The performance values describe current-host Linux source fixtures and are not supported-platform, release, or end-user latency guarantees.",
     "The optional durable journal, artifact, and checkpoint costs remain measured by their owning Story 21.2, Story 22, and Story 50.2 campaigns.",
@@ -154,7 +172,7 @@
   "manual_fuzzing_executed": false,
   "performance": {
     "cancellation": {
-      "elapsed_us": 590,
+      "elapsed_us": 600,
       "event_count": 4,
       "model_calls": 0,
       "output_bytes": 0,
@@ -163,7 +181,7 @@
       "turns": 0
     },
     "direct": {
-      "elapsed_us": 1317,
+      "elapsed_us": 2234,
       "event_count": 6,
       "model_calls": 1,
       "output_bytes": 23,
@@ -172,7 +190,7 @@
       "turns": 1
     },
     "maximum": {
-      "elapsed_us": 5064,
+      "elapsed_us": 5334,
       "event_count": 33,
       "model_calls": 4,
       "output_bytes": 23,
@@ -182,7 +200,7 @@
     },
     "maximum_scenario_us": 250000,
     "nominal": {
-      "elapsed_us": 2579,
+      "elapsed_us": 4486,
       "event_count": 15,
       "model_calls": 2,
       "output_bytes": 23,
@@ -191,7 +209,7 @@
       "turns": 2
     },
     "over_limit": {
-      "elapsed_us": 4760,
+      "elapsed_us": 4817,
       "event_count": 33,
       "model_calls": 4,
       "output_bytes": 0,
@@ -203,15 +221,15 @@
   },
   "private_user_data_used": false,
   "raw_trace": {
-    "bytes": 5999,
+    "bytes": 7800,
     "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
     "redactions": [
       "repository-root"
     ],
-    "sha256": "53cea2dd97b3cc527405c7d922e1f31be975008252aa7e6a1e2bfdb065fd42a8"
+    "sha256": "c55fee6b417e15d1414f0b9d40db8fd96bad08104745192465b8d592fb7ada76"
   },
   "schema_version": 1,
-  "source_revision": "a34bb62379c9350b68bf3eea47886e6c9c3c4262",
+  "source_revision": "00efcbee0a9e5410457782b62ed7d63c1a9795fc",
   "sources": [
     {
       "bytes": 12824,
@@ -224,14 +242,29 @@
       "sha256": "7e5c25aa0bd7fc52afe67e27997a2f7969a71e64adf3d71b649fac9eafe65b2e"
     },
     {
-      "bytes": 180188,
+      "bytes": 180466,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "616d3d38385b9cd66466257b1c0dced4284a3fccf857d53d3f8d67af1135d63c"
+      "sha256": "95bd6b898625e40ad84fa13ab588a42ed9e77993d26df700228e66a5d33f55b7"
     },
     {
-      "bytes": 218672,
+      "bytes": 12024,
+      "path": "kernel/engine/src/runtime_loop/artifact_preparation.rs",
+      "sha256": "927799cc0abee91289ad650072941a59d20a456dfb2e289a5a17b754e85e66fc"
+    },
+    {
+      "bytes": 23111,
+      "path": "kernel/engine/src/runtime_loop_artifact_preparation_tests.rs",
+      "sha256": "d0dc7040ebf310b6d6608e3123870b7f7101b4dc6b328ef69951da10d8a76295"
+    },
+    {
+      "bytes": 425916,
+      "path": "shells/host/src/linux_coding_runtime.rs",
+      "sha256": "4fe12c43ed684bbdca60d54778b61a0a05971f65247e290cf6b589d1d9b4b81d"
+    },
+    {
+      "bytes": 220703,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "2b1841fa4869b51ea9c20af0f7d0433d1e141d6cf942013cf063b0ec8a5d212d"
+      "sha256": "b4282513c61eb64976196413024f154d10bb30a5139ca29a31c113c8d3d1eb4b"
     },
     {
       "bytes": 9963,
@@ -284,14 +317,14 @@
       "sha256": "b0b0954012c1d8657f1b40a7f41676295f2ad792d0c908f05bf5be072f8b1829"
     },
     {
-      "bytes": 20004,
+      "bytes": 20658,
       "path": "scripts/story_23_4_runtime_evidence.py",
-      "sha256": "d7533e9fe2dd62a82dc910de31a8cdb6f77830d7a76a4c58681baca3f3b5ea82"
+      "sha256": "4e3618639d30232cf6972909feeed9328ae60cbdbdf37a632b1ad18d3ee3e205"
     },
     {
-      "bytes": 5491,
+      "bytes": 5807,
       "path": "tests/test_story_23_4_runtime_evidence.py",
-      "sha256": "4d4a4286c9bd780318742c74bdfb27a3c5264650ec48a0722aad94afd6168c3a"
+      "sha256": "73730971b921d0209b0d06427564f2252c71ed45761e01e1b1caf756eef5e048"
     }
   ],
   "status": "pass-current-linux-source-runtime",

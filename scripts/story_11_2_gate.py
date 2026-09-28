@@ -18,8 +18,8 @@ ROOT: Final = Path(__file__).resolve().parents[1]
 EVIDENCE_DIR: Final = ROOT / "artifacts/sprints/sprint-11/story-11.2"
 REPORT_PATH: Final = EVIDENCE_DIR / "story-gate-report.json"
 RAW_PATH: Final = EVIDENCE_DIR / "story-gate-results.log"
-REVIEWED_COMMIT: Final = "bb6f6d1468653fb624ccdae91635918fe4c0ab2e"
-REVIEWED_TREE: Final = "9c136e6ffb197c40aa4fe21776edea498aed6980"
+REVIEWED_COMMIT: Final = "00efcbee0a9e5410457782b62ed7d63c1a9795fc"
+REVIEWED_TREE: Final = "cf56839ae8ec386325e99192e2b6ce30b6a41598"
 VALIDATOR_COMMANDS: Final = (
     ("python3", "scripts/story_11_2_ac1_evidence.py"),
     ("python3", "scripts/story_11_2_ac2_evidence.py"),
@@ -39,6 +39,7 @@ REVIEWED_PATHS: Final = (
     "kernel/engine/src/operational_store.rs",
     "kernel/engine/src/runtime_artifact.rs",
     "kernel/engine/src/runtime_loop.rs",
+    "kernel/engine/src/runtime_loop/artifact_preparation.rs",
     "kernel/engine/src/source_lifecycle.rs",
     "artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-report.json",
     "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-report.json",

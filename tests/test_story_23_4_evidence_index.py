@@ -10,6 +10,7 @@ from scripts.story_23_4_evidence_index import (
     EVIDENCE_PATHS,
     MAPPINGS,
     REPORT_PATH,
+    build_index,
     check_index,
     safe_relative_path,
     task_anchors,
@@ -51,6 +52,33 @@ class Story234EvidenceIndexTests(unittest.TestCase):
         self.assertTrue(all(safe_relative_path(path) for path in EVIDENCE_PATHS))
         root = Path(__file__).resolve().parents[1]
         self.assertTrue(all((root / path).is_file() for path in EVIDENCE_PATHS))
+
+    def test_prepared_artifact_inputs_are_directly_bound_to_exact_bytes(self) -> None:
+        source_root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for relative in (*EVIDENCE_PATHS, "TASKS.md"):
+                target = root / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes((source_root / relative).read_bytes())
+            index = build_index("a" * 40, root)
+            self.assertEqual(validate_index(index, root), [])
+            for relative in (
+                "kernel/engine/src/runtime_loop/artifact_preparation.rs",
+                "kernel/engine/src/runtime_loop_artifact_preparation_tests.rs",
+                "shells/host/src/linux_coding_runtime.rs",
+            ):
+                with self.subTest(path=relative):
+                    self.assertIn(relative, EVIDENCE_PATHS)
+                    path = root / relative
+                    original = path.read_bytes()
+                    path.write_bytes(original + b"\n// Changed input after evidence capture.\n")
+                    self.assertEqual(
+                        validate_index(index, root),
+                        ["Story 23.4 evidence index differs from exact inputs"],
+                    )
+                    path.write_bytes(original)
+                    self.assertEqual(validate_index(index, root), [])
 
     @unittest.skipUnless(REPORT_PATH.is_file(), "retained index follows task reconciliation")
     def test_current_index_is_exact_and_hash_bound(self) -> None:

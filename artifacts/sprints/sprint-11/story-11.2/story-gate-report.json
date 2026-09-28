@@ -80,9 +80,14 @@
         "sha256": "cc6ee1ad0438fb9ed93663fc0326742bf2435f77eb259f540730a60761f1c8c8"
       },
       {
-        "byte_length": 180188,
+        "byte_length": 180466,
         "path": "kernel/engine/src/runtime_loop.rs",
-        "sha256": "616d3d38385b9cd66466257b1c0dced4284a3fccf857d53d3f8d67af1135d63c"
+        "sha256": "95bd6b898625e40ad84fa13ab588a42ed9e77993d26df700228e66a5d33f55b7"
+      },
+      {
+        "byte_length": 12024,
+        "path": "kernel/engine/src/runtime_loop/artifact_preparation.rs",
+        "sha256": "927799cc0abee91289ad650072941a59d20a456dfb2e289a5a17b754e85e66fc"
       },
       {
         "byte_length": 69345,
@@ -157,7 +162,7 @@
       {
         "byte_length": 6030,
         "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
-        "sha256": "1b35d90727b713d0a020219bbba41c8fecfa9881c9090d8a6f0cf35606e5e9c9"
+        "sha256": "cb20ec31e4fd7b9eb86f70e05f74750034dfd7d9546ac063f854a2ec53cd60eb"
       },
       {
         "byte_length": 5225,
@@ -169,16 +174,16 @@
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "bb6f6d1468653fb624ccdae91635918fe4c0ab2e",
-    "reviewed_tree": "9c136e6ffb197c40aa4fe21776edea498aed6980",
+    "reviewed_commit": "00efcbee0a9e5410457782b62ed7d63c1a9795fc",
+    "reviewed_tree": "cf56839ae8ec386325e99192e2b6ce30b6a41598",
     "reviewer_id": "agentmage-story-11.2-independent-gate-v1"
   },
   "installed_product_claim": "none",
   "platform_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "bb6f6d1468653fb624ccdae91635918fe4c0ab2e",
-  "reviewed_tree": "9c136e6ffb197c40aa4fe21776edea498aed6980",
+  "reviewed_commit": "00efcbee0a9e5410457782b62ed7d63c1a9795fc",
+  "reviewed_tree": "cf56839ae8ec386325e99192e2b6ce30b6a41598",
   "schema_version": 1,
   "sprint_completion_claim": false,
   "status": "blocked-open-dependencies-and-platform-integration",
