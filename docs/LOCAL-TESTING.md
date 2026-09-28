@@ -47,10 +47,11 @@ an uncertain record. See the development guide for lifecycle and cleanup limitat
 
 **Current lane result:** setup and diagnosis ran; the actual scripted CLI/host
 launch returned exit 5 before tools because native prerequisites are unavailable.
-The [native diagnostic verification](verification/native-development-diagnostics-2026-09-27.md)
+The [development lifecycle verification](verification/development-host-lifecycle-2026-09-27.md)
 retains the latest rebuilt source revision, binary hashes and startup results;
+the [native diagnostic verification](verification/native-development-diagnostics-2026-09-27.md) and
 the [preceding observation](verification/linux-current-startup-2026-09-27.md)
-keeps its original source pin. The clean fixture was unchanged. A separate fixture with staged, unstaged and untracked work
+keep their original source pins. The clean fixture was unchanged. A separate fixture with staged, unstaged and untracked work
 was refused by the wrapper before launch, with its file bytes and Git state preserved.
 The lane does not expose root-trusted native executables or a user-systemd bus.
 The corrected doctor reports this refusal. Do not alter confinement to run the demo.
@@ -69,7 +70,17 @@ stderr and consult the prerequisite diagnosis.
 | `linux.development.host-executable.unsafe` | The exact sibling host is missing, aliased or unsafe. Rebuild the CLI and host together and inspect their local placement. |
 | `linux.development.host-launch.failed` | The operating system could not spawn the sibling host. Retain the failure and verify the executable format and environment. |
 | `linux.development.launch-envelope.failed` | No valid one-use launch envelope was received. Inspect any preceding host diagnostic. |
+| `linux.development.launch-envelope.timed-out` | The original 120-second startup deadline expired. Retain the host diagnostics; fragments do not renew the deadline. |
+| `linux.development.startup.cancelled` | SIGINT or SIGTERM cancelled startup; exit 6 follows verified direct-child reaping. This is not a native-tool cancellation result. |
+| `linux.development.host-exit.timed-out` | The host missed its ten-second graceful exit deadline. Forced or late exit does not become success. |
+| `linux.development.owner.unavailable` / `linux.development.cleanup.uncertain` | An existing or uncertain direct host owner prevents replacement within this calling process. Preserve the failure and inspect owned processes before retrying. |
 | `linux.command.manifest.invalid` / `linux.sandbox.manifest.invalid` | Native tool composition rejected its exact prerequisites. Check native trust and confinement; do not bypass them. |
+
+Startup stop handlers are installed before host spawn. Error and destructor cleanup
+allow three seconds for directly owned child termination and reaping. These cooperative
+bounds cannot preempt kernel-stalled syscalls, and direct-host cleanup does not prove
+native/model descendants stopped. Actual CLI tests with a synthetic incomplete-envelope
+host verified timeout, SIGINT and SIGTERM cleanup; they do not qualify native coding.
 
 Real-model runs additionally require the exact admitted development profile and
 its unchanged memory, CPU, GPU and confinement requirements. In this lane any GPU

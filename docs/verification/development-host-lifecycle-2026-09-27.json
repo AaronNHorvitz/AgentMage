@@ -1,0 +1,1512 @@
+{
+  "schema_version": 1,
+  "record_type": "development-host-lifecycle-bounded-observations",
+  "date": "2026-09-27",
+  "base_commit": "2a22c86d414c1c47d98b553564158e91b801920b",
+  "source_commit": "0d3a1cbf8f2e48ee0efe0b280611b1ce84e1675a",
+  "source_tree": "262897af706c055b60a9fe7a4e535a040a986110",
+  "source_worktree_clean_at_executable_run": true,
+  "status": "component-and-startup-checks-passed;full-suites-failed;native-coding-workflow-unqualified",
+  "inputs": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "2cc5ff6cf90af231d188666a1cae40c474972826b4d30cfbdf5886c137376e90"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc"
+    },
+    {
+      "path": "IP-POLICY.md",
+      "sha256": "bc387fa1363feacbd7551a398c2596affbb3625aa01dc1a86d9e25b013a9bec9"
+    },
+    {
+      "path": "TASKS.md",
+      "sha256": "beeb04f62a96844174c7d875b50e055ef7032ced61d18ed3ec5e969615e38340"
+    },
+    {
+      "path": "architecture/status-model.json",
+      "sha256": "9c37e01faa324ffed3823e2d628b151f61b953dceae8423226fd6625d5b3d4d3"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.1/artifact-index.json",
+      "sha256": "e8f541287867c736fffdfb389a56583e58916471f5a71fa2112fb8c9f59a90d7"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.1/security-evidence-map.json",
+      "sha256": "fd0862f21e437338e5273c6d6b1b112e0a3966a2e229143ba3d725b44a457d53"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.2/contract-evidence-index.json",
+      "sha256": "ca959daa5ff3271acd2e54aa95060b6b209f303b13165563852bdec881d015e1"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
+      "sha256": "45d6f800ed39b29d40efbd079512923b0ba734b64e87f06770e5ab891f8c0eb4"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.2/security-evidence-map.json",
+      "sha256": "b98fa0ee567917531f770c5962a8b6b7fe0de0200883a5989374b915796c2d24"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+      "sha256": "1b35d90727b713d0a020219bbba41c8fecfa9881c9090d8a6f0cf35606e5e9c9"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-results.log",
+      "sha256": "fcc7bb8b043bafb2c8ee8e459add5dbf4d23d7e4eae0ce2d3d7b7810934788b9"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-gate-report.json",
+      "sha256": "93c20e4b044e4eeae3d2f3adaaab4713cb41742c049d4e148c056ca1cbc5bdd3"
+    },
+    {
+      "path": "artifacts/sprints/sprint-22/story-22.1/current-product-canary-sweep.json",
+      "sha256": "dfec47c5394bc98f3230d8c1d3b99052c8cfb410e5c4fb084a223be02811baba"
+    },
+    {
+      "path": "artifacts/sprints/sprint-22/story-22.1/current-product-canary-sweep.log",
+      "sha256": "a74376071ebef153b6d5dd3136882b9fcd95f5791b5d758677ab10517f1cd1bd"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
+      "sha256": "dc11a3294d8301538978efba80917f580187cd1ff0326d66011cb9a6c441598c"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/evidence-index.json",
+      "sha256": "6b2f68278aff7650aae9bafe033f84164449c8129d7b8fdadcf031658e53b72b"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
+      "sha256": "f659ca3d7623cfcf70a4f310e2a7010a2dd8e352c1b59b51d248d2aa42b59777"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
+      "sha256": "ccdcc1af22261323bdf482e0c374408899cefd4f3b4f775f2d391c8e9c16ded5"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence-map.json",
+      "sha256": "922eadae96ea970c96fa428c1ecf9dc536cc5fdc508c6a0b6ab45f19a0b9fbac"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence.log",
+      "sha256": "2f9ae7478ecf7d6c5b034749248d991fce7d17f5c916fa3884a1cfd9df90853c"
+    },
+    {
+      "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
+      "sha256": "fdb395f052520934e75d69a5c64c526d4887dc5d98dab184e4013c351cef399b"
+    },
+    {
+      "path": "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
+      "sha256": "302c4077a3a0f0db48468a63e515cf95470ce5571db731cbcfd3b62c29788897"
+    },
+    {
+      "path": "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+      "sha256": "c7cea3a12693635174c1965e6d02b973c0dfcf62b67c22c0600f4cae6f50b03d"
+    },
+    {
+      "path": "docs/LOCAL-TESTING.md",
+      "sha256": "a617c8f93bcdabafb5a4c356e67b23efa3689d2e838728dec222538c686cc1cb"
+    },
+    {
+      "path": "docs/decisions/0054-standing-owner-delegation.md",
+      "sha256": "c3c0b6300c47f5c7a203901ebca642c0e91807988e775932d7c99477e64aff6d"
+    },
+    {
+      "path": "docs/decisions/0061-standalone-coding-harness-critical-path.md",
+      "sha256": "7ae98fe774c5c88eeb2c07da350d7adf76d4e4c421ae5f212d20060a6948b1a9"
+    },
+    {
+      "path": "docs/decisions/0063-disposable-coding-development-activation.md",
+      "sha256": "304aea35dcf207f2eba66512889fe139788b8081f4e0b57b9484636c92112ed9"
+    },
+    {
+      "path": "docs/decisions/0070-coding-development-identity-prerequisites.md",
+      "sha256": "e5e28a7782723ea730e9ba11d2c7cd1bb5d9eb6eec5fbd5c4436616167e34a5e"
+    },
+    {
+      "path": "docs/decisions/0081-rust-capability-roadmap-and-staged-delivery.md",
+      "sha256": "37e0c7fabf2bdca2dd86cb2f58e82e64d47066c1b66ade030edf4e84e3cbcb9f"
+    },
+    {
+      "path": "docs/decisions/0089-development-harness-process-ownership.md",
+      "sha256": "1e0090746168f73df7bd19f043a36993fac5e7e5579da8672515a9e95f511b1f"
+    },
+    {
+      "path": "docs/decisions/0090-runtime-correctness-callback-consistency.md",
+      "sha256": "86a6e0ca75e2c590995c28a3135cd30c14ee9d2757e5f6b23e9f3f101457360d"
+    },
+    {
+      "path": "docs/decisions/0091-failed-runtime-advancement-reconciliation.md",
+      "sha256": "9220fdb6b1ebe3ef7afcd77bf3f6ab088218a700260c281af75989b33541c0db"
+    },
+    {
+      "path": "docs/decisions/0092-native-development-failure-diagnostics.md",
+      "sha256": "fee2254f441324e43937d20cdf1f663c1744afed278caf54b217fc9566aaca0b"
+    },
+    {
+      "path": "docs/decisions/0093-bounded-development-host-lifecycle.md",
+      "sha256": "143fea9fc9b291d755978109c10777e44a34af961d9e0bab3f037f47fe8c0bdc"
+    },
+    {
+      "path": "docs/guides/standalone-coding-development.md",
+      "sha256": "646fef70cb7217783602f4df4694607711db7ba251b7ed315c8cf6f575890b09"
+    },
+    {
+      "path": "docs/verification/development-host-lifecycle-2026-09-27.md",
+      "sha256": "db1e2d7e9abaf343274c9b02cdff55bd763f82d4de71372e7a6daeaaa09c53bf"
+    },
+    {
+      "path": "docs/verification/linux-current-startup-2026-09-27.md",
+      "sha256": "a3a7a119e985968115bd6a8745952ec8bc980b00401d11869763d26f1432d433"
+    },
+    {
+      "path": "docs/verification/native-development-diagnostics-2026-09-27.json",
+      "sha256": "e306c8b631b825c8bee2f3b5f56f359dc14d2dcf56e96cfab1cdbfafe5994a78"
+    },
+    {
+      "path": "docs/verification/native-development-diagnostics-2026-09-27.md",
+      "sha256": "38f0c6f5e34889584ff47af81f5cdafc2c894989b136096257b565fd82c73487"
+    },
+    {
+      "path": "docs/verification/runtime-advancement-reconciliation-2026-09-27.md",
+      "sha256": "e60fb017a4170cd8f27dae400f93678ec18e365fc39c080fffee47abed7f8a19"
+    },
+    {
+      "path": "docs/verification/runtime-callback-consistency-2026-09-27.json",
+      "sha256": "76316a70eb55f6ad1037a8eb718ce39a3eec7c3fd2743d7bfdf4d6b21ea68115"
+    },
+    {
+      "path": "docs/verification/runtime-callback-consistency-2026-09-27.md",
+      "sha256": "a430cd9746abb0d95b5423bfbc552e59a3ea997fb976fe6f0ef25fde315bdc58"
+    },
+    {
+      "path": "fixtures/runtime/v1/coding-harness-mvp.json",
+      "sha256": "587d038f69c93d8ca7102ee34bc8c523030342e0cb7f86969f3dd02589f29e33"
+    },
+    {
+      "path": "kernel/contracts/src/runtime_event.rs",
+      "sha256": "22183f4affec1a6792bbd7c2bb93465842d7319885d42a555ae93cf72c551bf4"
+    },
+    {
+      "path": "kernel/contracts/src/runtime_run.rs",
+      "sha256": "54edc6322b2990de63209641ed3911d244cf862c81060e8155044d0af5ddd813"
+    },
+    {
+      "path": "kernel/engine/src/runtime_artifact.rs",
+      "sha256": "cc6ee1ad0438fb9ed93663fc0326742bf2435f77eb259f540730a60761f1c8c8"
+    },
+    {
+      "path": "kernel/engine/src/runtime_coordinator.rs",
+      "sha256": "7e5c25aa0bd7fc52afe67e27997a2f7969a71e64adf3d71b649fac9eafe65b2e"
+    },
+    {
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "sha256": "616d3d38385b9cd66466257b1c0dced4284a3fccf857d53d3f8d67af1135d63c"
+    },
+    {
+      "path": "kernel/engine/src/runtime_loop_tests.rs",
+      "sha256": "2b1841fa4869b51ea9c20af0f7d0433d1e141d6cf942013cf063b0ec8a5d212d"
+    },
+    {
+      "path": "model-profiles/development/coding-model-lab.json",
+      "sha256": "047e839b4a9c6ca632dbba89296266a6ce806adb583f7e617e95ea55ff04c785"
+    },
+    {
+      "path": "platforms/linux/src/command_runner.rs",
+      "sha256": "f80b7800e229228553dbbcd0853900d8f24fddd5982cd89f5bdb63c01cc2476f"
+    },
+    {
+      "path": "platforms/linux/src/development_boundary.rs",
+      "sha256": "8170aef6ab3384d655f6552a03fcf4c6e17b16d110e3aa2bc114b5d571a25883"
+    },
+    {
+      "path": "platforms/linux/src/ipc.rs",
+      "sha256": "976a6b4d6bf6bb1edd801884bf2106b8494a9df02ca998fe291c54119a060272"
+    },
+    {
+      "path": "platforms/linux/src/repository_safety.rs",
+      "sha256": "d62cb91c3f043a0adb3d93a0ad57c70a019c186b287b12513f3c8cd1187a6cbf"
+    },
+    {
+      "path": "platforms/linux/src/sandbox.rs",
+      "sha256": "5524ca5fa3c2f9918eb06c58c0ab15ff6049bdfa0e5a8aef95442ba1a7824db1"
+    },
+    {
+      "path": "scripts/coding_harness.py",
+      "sha256": "111c4ef587a76f0a70fb8a968c6448718481c3679eed905371ce31e263a826f0"
+    },
+    {
+      "path": "scripts/component_inventory.py",
+      "sha256": "108e6eda80fb6e8097c2db9e40b7c1201bbadefffc6d386efb72851a39575d74"
+    },
+    {
+      "path": "scripts/configuration_authority_mutation_evidence.py",
+      "sha256": "15f65d7585d983db9b05581ac3eae5bed380e3460f2bb13a0a810261f0b34938"
+    },
+    {
+      "path": "scripts/configuration_loader_evidence.py",
+      "sha256": "48f5a8151bbdc0b6aca16080b69d236eaa547f7f8000cf574746be4f0644a664"
+    },
+    {
+      "path": "scripts/configuration_migration_recovery_evidence.py",
+      "sha256": "47ad4fbb49b92579690e88e125a9640f59fc68d28e4a320ac37236aba8334796"
+    },
+    {
+      "path": "scripts/configuration_result_evidence.py",
+      "sha256": "67df8af0b3c3b3c91d0402a870fe9fd94007d72795bf366215e376aafb49579d"
+    },
+    {
+      "path": "scripts/configuration_schema_failure_evidence.py",
+      "sha256": "eda8b2fa6b9a1384d7642c04302935586533ae9ddbd05af31af02f80b559fe74"
+    },
+    {
+      "path": "scripts/configuration_startup_evidence.py",
+      "sha256": "100cb2aa68cd39b57ef5fb4666789f07a66c6c59309b66e27da873106b141da8"
+    },
+    {
+      "path": "scripts/contract_evidence_index.py",
+      "sha256": "0fdd6986a58bbed1fe8b554c6c15735b202be7750d7976dc2311795acc97b42c"
+    },
+    {
+      "path": "scripts/runtime_coordinator_boundary_review.py",
+      "sha256": "8fba1cbfe818ad7d3f50ae9c69ebe23c3c04566fb23c7fac5083c786f25d73cb"
+    },
+    {
+      "path": "scripts/story_11_2_ac2_evidence.py",
+      "sha256": "37c75a441a109a69e9828966c1154d7521b1bf51c2fd54c36296de04bc8f5ff2"
+    },
+    {
+      "path": "scripts/story_11_2_gate.py",
+      "sha256": "6bdfec9ae7bcb72397c275739089db9e16bdd78bfd6a6a9647c6f7be4847c522"
+    },
+    {
+      "path": "scripts/story_1_1_artifacts.py",
+      "sha256": "724bc4d28adee71af08d3750e2653e2f77b7aab35ec33fc1657a1f4c31ae8b71"
+    },
+    {
+      "path": "scripts/story_1_1_security_evidence.py",
+      "sha256": "f07d35e89dffb65931c19d85a9360b9b818e9eff767bff6b486f4f889c6c270a"
+    },
+    {
+      "path": "scripts/story_22_1_canary_evidence.py",
+      "sha256": "44ec93b993cd349802825826fb913626c16d9b82ac92c585e68a0cb4e2c91cbf"
+    },
+    {
+      "path": "scripts/story_23_4_evidence_index.py",
+      "sha256": "8cfac0b19432a5138017a401dccd521b361626e83258872946de7a61f62f8d88"
+    },
+    {
+      "path": "scripts/story_23_4_runtime_evidence.py",
+      "sha256": "d7533e9fe2dd62a82dc910de31a8cdb6f77830d7a76a4c58681baca3f3b5ea82"
+    },
+    {
+      "path": "scripts/story_23_4_security_evidence.py",
+      "sha256": "113a59bc3c016ba72ece1073d53eb02f7df5906f23baa6f3463320cab2a3cd0a"
+    },
+    {
+      "path": "scripts/story_3_1_security_evidence.py",
+      "sha256": "6d03fbe67e55c27c0aa2808b78bf26e1fcea6203fa0dc1e223e7c8ff22d2e056"
+    },
+    {
+      "path": "scripts/supply_chain.py",
+      "sha256": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6"
+    },
+    {
+      "path": "shells/host/src/cli.rs",
+      "sha256": "5269dcfb114055bacf015414320cd9ae6caeae1d29d67cdc86d94a6fe09ce208"
+    },
+    {
+      "path": "shells/host/src/coding_development_activation.rs",
+      "sha256": "b99f1bf64cf3ff4435cf58894dac029b687ee4afd1f234c9a956de519f70b756"
+    },
+    {
+      "path": "shells/host/src/coding_development_client.rs",
+      "sha256": "1c498a6baf7fdd288ab6a79e859adaacc82f3bdac80a77a097bc0771991167ba"
+    },
+    {
+      "path": "shells/host/src/coding_development_runtime.rs",
+      "sha256": "1993bef0b8054270d00453f0627711a003b697c06ab1a69e3d129488ba147cac"
+    },
+    {
+      "path": "shells/host/src/headless.rs",
+      "sha256": "9437a13398dc59a8babf7f9f14b60a4ba43c830c277614e90a3dfea1f89be318"
+    },
+    {
+      "path": "shells/host/src/linux_coding_runtime.rs",
+      "sha256": "ef6d07c5e522bb2fab6ef23bcf4f682ba6504d775b0eeeeea3c0e57d9390e5ae"
+    },
+    {
+      "path": "shells/host/src/linux_read.rs",
+      "sha256": "da45f97c08ee6fa01d93c39318599281211bdc54729f6bc0bab3c3d371b724a8"
+    },
+    {
+      "path": "shells/host/src/linux_repository_map.rs",
+      "sha256": "8f410724c83ca5ce188fa91c97a01140ded2372b53873d5a875fc90f622c591a"
+    },
+    {
+      "path": "shells/host/src/main.rs",
+      "sha256": "4db40d47496382e47b7fb71cab42f2a8185e8ee863eeab47e3a6e998a8b1b4c3"
+    },
+    {
+      "path": "supply-chain/dependency-hashes.sha256",
+      "sha256": "a33aa5d4e6e6da9c18cb342ea45c5ba08b6e8b9794783a9ddbba28c58bc7c9af"
+    },
+    {
+      "path": "supply-chain/dependency-provenance.json",
+      "sha256": "6a3ad25c39752092a8f191ecf38e074374f6be337542b55f54bcaa1c36442f77"
+    },
+    {
+      "path": "supply-chain/sbom.cdx.json",
+      "sha256": "8b99124f1ad9631a063a463bc197944c9f270d8377b60adaaa7fd5c430c0984c"
+    },
+    {
+      "path": "tests/test_coding_harness.py",
+      "sha256": "8c5f92ad5edfceeb5f732f0a47a765b35470a6ede6465de8baf512cb022c05a9"
+    },
+    {
+      "path": "tests/test_coding_harness_ownership.py",
+      "sha256": "57c9d89110a9fd4c22b51b75d14f54ea18b75b21be584d1227940b0f851d618f"
+    },
+    {
+      "path": "tests/test_component_inventory.py",
+      "sha256": "12757ff847d9e6820d1d39c02c05f42819e0e718d7b54332affd6ccae3621844"
+    },
+    {
+      "path": "tests/test_configuration_authority_mutation_evidence.py",
+      "sha256": "c01df0b5420ed690f89f591fbe0d2bd1ba43f427c938f465693020a125df0bd5"
+    },
+    {
+      "path": "tests/test_configuration_loader_evidence.py",
+      "sha256": "e9c80e7fbc57cf5f140ef9ab5df440e5126c0940828d845094cb11a7ea3d644a"
+    },
+    {
+      "path": "tests/test_configuration_migration_recovery_evidence.py",
+      "sha256": "ae38736de2b2ab222fc32a6b8555c7529db9f94c723bba537946ce1e588bf955"
+    },
+    {
+      "path": "tests/test_configuration_result_evidence.py",
+      "sha256": "6859d6ef33f0b24fec3984b421ad653dc7d7bad36624880f1a8fa8e5d94a7f0f"
+    },
+    {
+      "path": "tests/test_configuration_schema_failure_evidence.py",
+      "sha256": "9153a6c56e03173b5744043d29ff3c303526de740dff4c8302eafac8e6f65c71"
+    },
+    {
+      "path": "tests/test_configuration_startup_evidence.py",
+      "sha256": "693dda9812499528ea0f8739bd93b2884bb5c5a51abe639bf0c58776ed85dc69"
+    },
+    {
+      "path": "tests/test_contract_evidence_index.py",
+      "sha256": "198e4c3255c914d696fd7d2bdd0a8de55aa01bbec5eba83eb754e57754c22d75"
+    },
+    {
+      "path": "tests/test_runtime_coordinator_boundary_review.py",
+      "sha256": "07fd254e3ddf32ebf60008f14bfd21cf2eb1e3164e5d22970567aeafed991287"
+    },
+    {
+      "path": "tests/test_story_11_2_ac2_evidence.py",
+      "sha256": "235d0225833481060798c4993e60172245b5f0c1ac90d9015b040ed5f2422a04"
+    },
+    {
+      "path": "tests/test_story_11_2_gate.py",
+      "sha256": "2295e32739e644c00f65f746c88214e7399e3f62208c89bbe2e4bdb9269a13bc"
+    },
+    {
+      "path": "tests/test_story_1_1_artifacts.py",
+      "sha256": "19c6fe84d73abc27f443e8e31e6adbfce07f3f486e3b9b473c3e362b3c51b96e"
+    },
+    {
+      "path": "tests/test_story_1_1_security_evidence.py",
+      "sha256": "20eb9f6dd06d06a75c72c2fa5fea7dd07e24f77842cd32af2e3f2c49231be6dc"
+    },
+    {
+      "path": "tests/test_story_22_1_canary_evidence.py",
+      "sha256": "0aec421735605077f38c148c71ab002a8cd3b535a47f8016f46b60c2dc3b7a6e"
+    },
+    {
+      "path": "tests/test_story_23_4_evidence_index.py",
+      "sha256": "d01873d266f15359ba18d027d6be004fd135a9fd715373044de0a21fc5223134"
+    },
+    {
+      "path": "tests/test_story_23_4_runtime_evidence.py",
+      "sha256": "4d4a4286c9bd780318742c74bdfb27a3c5264650ec48a0722aad94afd6168c3a"
+    },
+    {
+      "path": "tests/test_story_23_4_security_evidence.py",
+      "sha256": "020046eed376d925ee55a002a8811118a68eac805c763848b3606bf0920ae124"
+    },
+    {
+      "path": "tests/test_story_3_1_security_evidence.py",
+      "sha256": "f9d223878166c92dc21fc4e50e7cc1dfaa68bf3241db5a367e6cc8ea97f2ed19"
+    },
+    {
+      "path": "tests/test_supply_chain.py",
+      "sha256": "29593e31bb43f33beb064efb5b7b366ae5a0f964c2544b4bfb5e5b365e9026ae"
+    }
+  ],
+  "private_evidence": [
+    {
+      "label": "startup/clean-diagnose.json",
+      "sha256": "79078e5af3ce18ecf6c3ba27f9576647c36780aa52233fbc89ac8ead859fdd3d",
+      "bytes": 328
+    },
+    {
+      "label": "startup/clean-diagnose.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/clean-diagnose.stdout",
+      "sha256": "0d9907da0ebaa0a5ca41277e200a80f464c1a8312e1f53a666a1f735ca406f92",
+      "bytes": 984
+    },
+    {
+      "label": "startup/clean-setup.json",
+      "sha256": "0f7e673fe89a976f9e4a1266d720b96295f845f2023561a886bade476d747e7c",
+      "bytes": 325
+    },
+    {
+      "label": "startup/clean-setup.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/clean-setup.stdout",
+      "sha256": "c0166d130a542088c1b1c0d683b33221ae60dab2ecbc4b6c872636898f124a43",
+      "bytes": 1323
+    },
+    {
+      "label": "startup/clean-start.json",
+      "sha256": "cb0af51ea96ba0a6200a2e8a783481326266b72e288d7c70cfa3c30f6c115e20",
+      "bytes": 578
+    },
+    {
+      "label": "startup/clean-start.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/clean-start.stdout",
+      "sha256": "d432e3e2287fdd2c6d153e7f81683fd949f5de2ddbc66bcd9945b44ac84893e2",
+      "bytes": 104
+    },
+    {
+      "label": "startup/clean-state-postcheck.json",
+      "sha256": "971c2e471a47efcb3b3aae245a1a50830f4614ae51f567ee6977625e9f2aca5b",
+      "bytes": 228
+    },
+    {
+      "label": "startup/clean-status.json",
+      "sha256": "aac288489b7b7b95ffb076f6822497929cecbcf1e55468507d6643f1d9adc8bd",
+      "bytes": 326
+    },
+    {
+      "label": "startup/clean-status.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/clean-status.stdout",
+      "sha256": "0d9907da0ebaa0a5ca41277e200a80f464c1a8312e1f53a666a1f735ca406f92",
+      "bytes": 984
+    },
+    {
+      "label": "startup/cli-help.json",
+      "sha256": "db1e9e2b12ac24b189111043f600e25c4e77b2f5e8e2f7bd5d563be60365f655",
+      "bytes": 302
+    },
+    {
+      "label": "startup/cli-help.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/cli-help.stdout",
+      "sha256": "fa24ac9df48bacc6344a1ddb2a06353be9e94bd46fbaadb2c1ef3ef8234f254a",
+      "bytes": 2025
+    },
+    {
+      "label": "startup/coding-clean/result.json",
+      "sha256": "dca5da3cb557c7a4360c4b0de485e27e32f0c7881295dd327fdebc367712827f",
+      "bytes": 2741
+    },
+    {
+      "label": "startup/coding-clean/stderr.log",
+      "sha256": "5579101cf478cccc486cea8aa897284fb6c252c158c45681e41415d34fb03c79",
+      "bytes": 86
+    },
+    {
+      "label": "startup/coding-clean/stdout.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/dirty-setup.json",
+      "sha256": "4de694e02044fd1c40efdd6b1168cb4622720c86415462a56b579f772f81a49e",
+      "bytes": 325
+    },
+    {
+      "label": "startup/dirty-setup.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/dirty-setup.stdout",
+      "sha256": "b1790e83f57e1fcdd1a36b55b761a4bdd1bcb144d439c9991fe213d0f2b04aae",
+      "bytes": 1323
+    },
+    {
+      "label": "startup/dirty-start.json",
+      "sha256": "be80444c09ef9ac58e872a6b6e566bf984ce142bd3b152afdf197b304a7ca773",
+      "bytes": 578
+    },
+    {
+      "label": "startup/dirty-start.stderr",
+      "sha256": "b8eceb9a16ea90483c01a7f4600ca201ce46a4dd829b7b825b054e0565cacc0a",
+      "bytes": 34
+    },
+    {
+      "label": "startup/dirty-start.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/dirty-status.json",
+      "sha256": "70fee4f179130429790e01976312f107e308eb4ea97d8322005dc7530efa4dac",
+      "bytes": 326
+    },
+    {
+      "label": "startup/dirty-status.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/dirty-status.stdout",
+      "sha256": "8ba557321e2986ddca1c5a7355551f3de080205b74998ddc170d6e543c906487",
+      "bytes": 985
+    },
+    {
+      "label": "startup/observation.json",
+      "sha256": "cdd56800ee04aa0af43106ba4f6b6579239552476c6976969bf837f332b40bac",
+      "bytes": 35354
+    },
+    {
+      "label": "startup/partial-envelope-timeout-setup.json",
+      "sha256": "68224ffabcd9e4e2de54fc8a5c7c11285332f8d0708758dfd60f4652eec647f3",
+      "bytes": 325
+    },
+    {
+      "label": "startup/partial-envelope-timeout-setup.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/partial-envelope-timeout-setup.stdout",
+      "sha256": "d59e5de46ecb1e502251506d913140b77c59c7a4fa4eed332bdb788da1c1a9d9",
+      "bytes": 1323
+    },
+    {
+      "label": "startup/partial-envelope-timeout.json",
+      "sha256": "daf90672318fe5cf10272e4f22bd87135b356f799ed593b8c7eb4910e039884a",
+      "bytes": 4180
+    },
+    {
+      "label": "startup/partial-envelope-timeout.stderr",
+      "sha256": "84ab4f6fa8b69c6feb1d5dc26d622a9b8f2a62fa2aa2677c1fecc54857f322b7",
+      "bytes": 44
+    },
+    {
+      "label": "startup/partial-envelope-timeout.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/sibling-invalid-format-setup.json",
+      "sha256": "ba8b77e1251d5ebd9fe2c5a8234e7c1aabcf6115b3d3c2407a2561bc29e1a28f",
+      "bytes": 325
+    },
+    {
+      "label": "startup/sibling-invalid-format-setup.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/sibling-invalid-format-setup.stdout",
+      "sha256": "b922d79681d5beeeb4b872e88941c46f20c6727ca21903e67662923f6b65a6b9",
+      "bytes": 1323
+    },
+    {
+      "label": "startup/sibling-invalid-format-start.json",
+      "sha256": "d21abb4c6c3f8f5e9865efa2582c9c0b4e145971cc0f6af87e85142473dad9d8",
+      "bytes": 741
+    },
+    {
+      "label": "startup/sibling-invalid-format-start.stderr",
+      "sha256": "5d40c33ddd68b8934cc2494005b71400abcd8ffb1498378973b448aa942ee83a",
+      "bytes": 37
+    },
+    {
+      "label": "startup/sibling-invalid-format-start.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/sibling-missing-setup.json",
+      "sha256": "86bf304175aa483c16b1ad8e8c9170fcd1036f3ecd927ef33ee92f02611f49c3",
+      "bytes": 325
+    },
+    {
+      "label": "startup/sibling-missing-setup.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/sibling-missing-setup.stdout",
+      "sha256": "15477313418c21cb439a31487b4e88445f94d1c5a53291d36b2d7b2132df1fe0",
+      "bytes": 1323
+    },
+    {
+      "label": "startup/sibling-missing-start.json",
+      "sha256": "59de9ef94a4224cc9fbcfb9242c148128faa75da58c2f17766791b67d6aeb7d5",
+      "bytes": 734
+    },
+    {
+      "label": "startup/sibling-missing-start.stderr",
+      "sha256": "586675574ab5a2e4b87a73503fdba07cc38fa388d67fd4d8689052ed7f6e81f2",
+      "bytes": 41
+    },
+    {
+      "label": "startup/sibling-missing-start.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/sibling-nonexecutable-setup.json",
+      "sha256": "b09588ab29dadc732f09e13998c337d32469c3f777b9e63bd046edcc77ecb33a",
+      "bytes": 325
+    },
+    {
+      "label": "startup/sibling-nonexecutable-setup.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/sibling-nonexecutable-setup.stdout",
+      "sha256": "3bda466206a1d4337da742e3758456a8f7a619fcc28f1191c86d44b27050164d",
+      "bytes": 1323
+    },
+    {
+      "label": "startup/sibling-nonexecutable-start.json",
+      "sha256": "96ab454a9ff3a96a0ac9141246270cf93e403e5bda1f4cccd4975728384e8384",
+      "bytes": 740
+    },
+    {
+      "label": "startup/sibling-nonexecutable-start.stderr",
+      "sha256": "586675574ab5a2e4b87a73503fdba07cc38fa388d67fd4d8689052ed7f6e81f2",
+      "bytes": 41
+    },
+    {
+      "label": "startup/sibling-nonexecutable-start.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/sibling-symlink-setup.json",
+      "sha256": "646f1e873e3b1a96be1cd2e040a19f566ce0490fcf84e67a77ebce6297158b24",
+      "bytes": 325
+    },
+    {
+      "label": "startup/sibling-symlink-setup.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/sibling-symlink-setup.stdout",
+      "sha256": "e3cd3bec1e93a66c3d2c1d1f99882464f4ea2e06158709fec0156cbd7c666593",
+      "bytes": 1323
+    },
+    {
+      "label": "startup/sibling-symlink-start.json",
+      "sha256": "9c2447551eaaae96cc43603f7ae150fddef400ea65019ee442d7b315abc78621",
+      "bytes": 734
+    },
+    {
+      "label": "startup/sibling-symlink-start.stderr",
+      "sha256": "586675574ab5a2e4b87a73503fdba07cc38fa388d67fd4d8689052ed7f6e81f2",
+      "bytes": 41
+    },
+    {
+      "label": "startup/sibling-symlink-start.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/startup-sigint-setup.json",
+      "sha256": "7de22977e5d5ed625ee1950b75fffac22b17b8abc83032d2209cf9b8888c03ce",
+      "bytes": 325
+    },
+    {
+      "label": "startup/startup-sigint-setup.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/startup-sigint-setup.stdout",
+      "sha256": "84ae086882ecbe3c9abcffd7b40affaa3c3859b84644af113b3d5818519324a4",
+      "bytes": 1323
+    },
+    {
+      "label": "startup/startup-sigint.json",
+      "sha256": "8caa317f003cd274ef02791bd8f8be800a279f0bc3a6dcbd19c1ab93c1d48151",
+      "bytes": 4165
+    },
+    {
+      "label": "startup/startup-sigint.stderr",
+      "sha256": "d98edcdd8d1d8d4481f7b08ef1fbb7a2c91f05ae4333d81684ad854e35ac3063",
+      "bytes": 36
+    },
+    {
+      "label": "startup/startup-sigint.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/startup-sigterm-setup.json",
+      "sha256": "18e4785e4421033f1b28002462256d638b1d13930d1654ed9bf500e744b40876",
+      "bytes": 325
+    },
+    {
+      "label": "startup/startup-sigterm-setup.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/startup-sigterm-setup.stdout",
+      "sha256": "e609106da2eb3729411cf8fc71d0a4cb4d0e498125462979b131ebf3471c5034",
+      "bytes": 1323
+    },
+    {
+      "label": "startup/startup-sigterm.json",
+      "sha256": "61750e6e3909e85e4cda2e118d92def100286417a41a8d7c09934e66993269e3",
+      "bytes": 4169
+    },
+    {
+      "label": "startup/startup-sigterm.stderr",
+      "sha256": "d98edcdd8d1d8d4481f7b08ef1fbb7a2c91f05ae4333d81684ad854e35ac3063",
+      "bytes": 36
+    },
+    {
+      "label": "startup/startup-sigterm.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "baseline-failed-observer/partial-envelope-setup.json",
+      "sha256": "b3dd3f585f317cd92a45f74e004c8b0d16e298f1a058c81bbb151812d64bf759",
+      "bytes": 325
+    },
+    {
+      "label": "baseline-failed-observer/partial-envelope-setup.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "baseline-failed-observer/partial-envelope-setup.stdout",
+      "sha256": "05d265f1550ad404896bbd8cacca4debbeb55145e9fd2b0ee0bc0045e248d98f",
+      "bytes": 1323
+    },
+    {
+      "label": "baseline-failed-observer/partial-envelope.json",
+      "sha256": "1651674c9465a1027f34ff0020f297352ece53043f99844736a5e74693c01bf4",
+      "bytes": 4322
+    },
+    {
+      "label": "baseline-failed-observer/partial-envelope.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "baseline-failed-observer/partial-envelope.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "baseline-corrected-observer/partial-envelope-setup.json",
+      "sha256": "81e84211400397e60650dade4d54530a7f26cdc0e2b2d8390ecdab1b07daa164",
+      "bytes": 325
+    },
+    {
+      "label": "baseline-corrected-observer/partial-envelope-setup.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "baseline-corrected-observer/partial-envelope-setup.stdout",
+      "sha256": "91c40d7867c8639e3efc0e18c98011b7a68c0178a752a013bc26ad54aff7e29f",
+      "bytes": 1323
+    },
+    {
+      "label": "baseline-corrected-observer/partial-envelope.json",
+      "sha256": "7e604c09f6f9db2ab9bbdfef52c68a370da08d6e2315d67d6716271848eedf30",
+      "bytes": 4358
+    },
+    {
+      "label": "baseline-corrected-observer/partial-envelope.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "baseline-corrected-observer/partial-envelope.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "checks/development-lifecycle-binaries-20260927.log",
+      "sha256": "def0d91e0a7e8800901116f6ba06bb34b724ec2d6ad0ed9df77427e97c413206",
+      "bytes": 279
+    },
+    {
+      "label": "checks/development-lifecycle-binary-evidence-20260927.log",
+      "sha256": "8684774bfa11807c3594cb270f5be1ef972194b07e55af9e6668f365e66e660f",
+      "bytes": 11746
+    },
+    {
+      "label": "checks/development-lifecycle-cancel-baseline-20260927.log",
+      "sha256": "27128120b336b5dde8737d438b673a470ef56b1329c63d4e0cc518550a74fc60",
+      "bytes": 1822
+    },
+    {
+      "label": "checks/development-lifecycle-cancel-baseline-retry-20260927.log",
+      "sha256": "b4c30a417605dc68d85ce703f887dc1887676b117cadbad3bb5677b8298a3b47",
+      "bytes": 156
+    },
+    {
+      "label": "checks/development-lifecycle-evidence-core-20260927.log",
+      "sha256": "c319bd81cd9ed9de2ee43971138c3bb36741f0da75552f10c9062b7fe93337d2",
+      "bytes": 10682
+    },
+    {
+      "label": "checks/development-lifecycle-final-20260927.log",
+      "sha256": "f28c4c86ad4c35f96e705054e07a43229cfc6ba32d4b8568a6d52477e106c950",
+      "bytes": 289
+    },
+    {
+      "label": "checks/development-lifecycle-final-source-20260927.log",
+      "sha256": "b9844b006ee4b3d614c66e8494dc548981528260975f9eb9df623aa076a576ce",
+      "bytes": 96059
+    },
+    {
+      "label": "checks/development-lifecycle-focused-20260927.log",
+      "sha256": "923cafd43d7085e3185963ee531dc20bb059f6eb80f19c253adba939d6735394",
+      "bytes": 2026
+    },
+    {
+      "label": "checks/development-lifecycle-observation-20260927.log",
+      "sha256": "16b45f1c0d5e5e99c62794274e935ceefa2ed03e482dd8521318446e44e43ac5",
+      "bytes": 752
+    },
+    {
+      "label": "checks/development-lifecycle-remainder-20260927.log",
+      "sha256": "6bd0b8c9a5e25b6994d54be122449b81f821f2978ef96320337e68835b8397c2",
+      "bytes": 60211
+    },
+    {
+      "label": "checks/development-lifecycle-source-20260927.log",
+      "sha256": "3372fc23dc1fef2e1bd347906f55a7325364eac13f0d06819d154eb042312523",
+      "bytes": 35709
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-binary-evidence-checks.sh",
+      "sha256": "f009f1fe3b103aef3671c2bccc3a9ecb3949cc3a8ba7e10edc61efadb1a973b4",
+      "bytes": 1206
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-bindings-after-core.json",
+      "sha256": "bbd75b54978b948845539950dba79db228f365d20f592f1e6e7bbdc751ebec3d",
+      "bytes": 196811
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-bindings-final.json",
+      "sha256": "3b655774ca76b57b3a925ae45d3da956b3c3544acbcd3534836ab9ca8db0f568",
+      "bytes": 207973
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-cancel-baseline-retry.py",
+      "sha256": "075577ab78929d4cb4601c6a0fda64bec7f0767dedb62609b038a70e48f51fd4",
+      "bytes": 9502
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-cancel-baseline.py",
+      "sha256": "3fb8fa6e7d008435921cd6fd1e9f3d4d34716ebb61491ff2787de56d93889d3d",
+      "bytes": 9477
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-classify-host.py",
+      "sha256": "637a9918bc168ce0b28b2d799f8a7286ae6834daceb760a32874c110fbf0ab71",
+      "bytes": 1395
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-evidence-batch.sh",
+      "sha256": "b76c42b11812ee9d34281b67c529adb014e794268bd108f347ca3a7a17871dfe",
+      "bytes": 2143
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-final-checks.sh",
+      "sha256": "da0497a2c2c45edcb462fcbdd0224fedcddef4d0ec89ab7081c3616081a46894",
+      "bytes": 698
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-final-failures.json",
+      "sha256": "73a4e7b9ba291761aa97b24aad73fccec952e3541a6d40ba986ce29081c5c561",
+      "bytes": 14070
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-final-privacy.json",
+      "sha256": "56fd1c245b35e82e69cffe8a23c469f58c951fa78ba6bb31ba70b4ddc62fb149",
+      "bytes": 1041
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-final-source-checks.sh",
+      "sha256": "b821d222eda88567e31c11ae199746856fd5dc5d7580c1cf8ab9470990908ad1",
+      "bytes": 1218
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-host-failures.json",
+      "sha256": "812f31a0bcdbd8a4112cb9ad29d00da6bba11bb9e5d6d51ed133f451c6e617e0",
+      "bytes": 11207
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-initial-source.sha256",
+      "sha256": "295aca7f88dbc45f537993a8bdd9105a6748b009c238abe86d3197e386114524",
+      "bytes": 345
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-linux-failures.json",
+      "sha256": "0ca2cac425b5cf759f254d8bcc1845863fb293aaf83f684a75b8bb60a0e027a0",
+      "bytes": 3267
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-manifest.py",
+      "sha256": "29d8b4592b2dd57f4c771e341cef63e85beaea751cc0edc2c160487bc9c30f92",
+      "bytes": 6429
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-observation.py",
+      "sha256": "3b317cc1d97b54757d15e890cd10a1a1b5e71210ebe9258242e0602941326887",
+      "bytes": 15042
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-partial-host.rs",
+      "sha256": "5131c621bcfad0db67364f480739656e4e20c1c84de5d9154a86383a5ac8fb46",
+      "bytes": 1661
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-remainder-checks.sh",
+      "sha256": "edfacbcb4f2653384670345709e0b001689c2fc0c476f99267d8d276bfc8ad22",
+      "bytes": 986
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-source-checks.sh",
+      "sha256": "14bb78b54e0959cd70f4f91b01272295eac32732beb172dadadb9d0180c30c3d",
+      "bytes": 1053
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-source-final.sha256",
+      "sha256": "24886cc05104b24bea6dc9ac6a873975c5f598f3d472953d865db319952f7dbe",
+      "bytes": 345
+    },
+    {
+      "label": "driver-or-source/development-lifecycle-source-privacy.json",
+      "sha256": "c65dc191516870a4568792c9e25835bc2ca772e0bb3f9e840164c4ab075c1817",
+      "bytes": 338
+    }
+  ],
+  "binaries": {
+    "agentmage": {
+      "sha256": "f5979f8b691df51b0bd668795a183a4fb8818097e5e21900c4f2843fe9627619",
+      "bytes": 280532416
+    },
+    "agentmage-host": {
+      "sha256": "b0c9a61b9945bc289032f51b4b832aedf07b39a94b6b81576a6cf444ec183c17",
+      "bytes": 327187656
+    },
+    "agentmage-read-only-worker": {
+      "sha256": "04e87c0925acbc25dbf1f8de82ce37fa6811d257c43a80f00844cc89a3275e7c",
+      "bytes": 13798352
+    }
+  },
+  "binary_identities_unchanged": true,
+  "budgets_seconds": {
+    "startup_original_deadline": 120,
+    "graceful_direct_child_exit": 10,
+    "termination_and_reaping": 3
+  },
+  "baseline": {
+    "source_commit": "eadfbbb299f047f8c6839036b432c2626181cc57",
+    "cli_sha256": "ca513f5dc96938e1ff4e772ec8ea6f49df9ba96e11e4bdc1169a89c32b29c4df",
+    "exit_code": -2,
+    "elapsed_seconds": 0.15669866600001114,
+    "synthetic_child_alive_after_cli_exit_observed": true,
+    "child_exited_only_after_test_lifeline_closed": true,
+    "preserved": true,
+    "first_observer_attempt": "failed-after-130s-waiting-for-inherited-stderr-eof;raw-failure-retained"
+  },
+  "cases": [
+    {
+      "case": "clean",
+      "exit_code": 5,
+      "preserved": true,
+      "snapshot_sha256": "4f244b7d8a87170c07bf6339a6b6234389b7e167918f4662e99364d1643e0cac",
+      "state_entries": [
+        "repository-management"
+      ],
+      "tool_or_model_executed": false
+    },
+    {
+      "case": "dirty",
+      "exit_code": 1,
+      "preserved": true,
+      "snapshot_sha256": "544949f5cb859e87a67101521117acbb5fb5a45ba3c2b60c2d724e3aa9140eed",
+      "state_entries": [],
+      "tool_or_model_executed": false
+    },
+    {
+      "case": "synthetic-sibling-missing",
+      "exit_code": 5,
+      "diagnostic_code": "linux.development.host-executable.unsafe",
+      "preserved": true,
+      "state_entries": [],
+      "event_bytes": 0,
+      "real_host_workflow": false
+    },
+    {
+      "case": "synthetic-sibling-nonexecutable",
+      "exit_code": 5,
+      "diagnostic_code": "linux.development.host-executable.unsafe",
+      "preserved": true,
+      "state_entries": [],
+      "event_bytes": 0,
+      "real_host_workflow": false
+    },
+    {
+      "case": "synthetic-sibling-symlink",
+      "exit_code": 5,
+      "diagnostic_code": "linux.development.host-executable.unsafe",
+      "preserved": true,
+      "state_entries": [],
+      "event_bytes": 0,
+      "real_host_workflow": false
+    },
+    {
+      "case": "synthetic-sibling-invalid-format",
+      "exit_code": 5,
+      "diagnostic_code": "linux.development.host-launch.failed",
+      "preserved": true,
+      "state_entries": [],
+      "event_bytes": 0,
+      "real_host_workflow": false
+    },
+    {
+      "case": "partial-envelope-timeout",
+      "exit_code": 5,
+      "elapsed_seconds": 120.06030019600075,
+      "signal": null,
+      "fixture_source_sha256": "5131c621bcfad0db67364f480739656e4e20c1c84de5d9154a86383a5ac8fb46",
+      "fixture_binary_sha256": "5d1956a64135fea4dbefb3a6be614b1c63fa03ae4857311d1a1a89af83d8e104",
+      "fixture_exit_verified_while_lifeline_open": true,
+      "fixture_exit_observed_after_cleanup": true,
+      "interventions": [],
+      "preserved": true,
+      "state_files": [],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "84ab4f6fa8b69c6feb1d5dc26d622a9b8f2a62fa2aa2677c1fecc54857f322b7",
+      "tool_or_model_executed": false,
+      "real_host": false
+    },
+    {
+      "case": "startup-sigint",
+      "exit_code": 6,
+      "elapsed_seconds": 0.04041375499946298,
+      "signal": "SIGINT",
+      "fixture_source_sha256": "5131c621bcfad0db67364f480739656e4e20c1c84de5d9154a86383a5ac8fb46",
+      "fixture_binary_sha256": "5d1956a64135fea4dbefb3a6be614b1c63fa03ae4857311d1a1a89af83d8e104",
+      "fixture_exit_verified_while_lifeline_open": true,
+      "fixture_exit_observed_after_cleanup": true,
+      "interventions": [],
+      "preserved": true,
+      "state_files": [],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "d98edcdd8d1d8d4481f7b08ef1fbb7a2c91f05ae4333d81684ad854e35ac3063",
+      "tool_or_model_executed": false,
+      "real_host": false
+    },
+    {
+      "case": "startup-sigterm",
+      "exit_code": 6,
+      "elapsed_seconds": 0.039372154999000486,
+      "signal": "SIGTERM",
+      "fixture_source_sha256": "5131c621bcfad0db67364f480739656e4e20c1c84de5d9154a86383a5ac8fb46",
+      "fixture_binary_sha256": "5d1956a64135fea4dbefb3a6be614b1c63fa03ae4857311d1a1a89af83d8e104",
+      "fixture_exit_verified_while_lifeline_open": true,
+      "fixture_exit_observed_after_cleanup": true,
+      "interventions": [],
+      "preserved": true,
+      "state_files": [],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "d98edcdd8d1d8d4481f7b08ef1fbb7a2c91f05ae4333d81684ad854e35ac3063",
+      "tool_or_model_executed": false,
+      "real_host": false
+    }
+  ],
+  "initial_source_before_cancellation_changes": [
+    {
+      "path": "platforms/linux/src/development_boundary.rs",
+      "sha256": "9d93b269a2e6c69411f7b82527d619b8c3ca97940a310642e23600db3cfced9b"
+    },
+    {
+      "path": "shells/host/src/coding_development_client.rs",
+      "sha256": "a3f3f3c2da86c23c127c833ca38d4df1341037cabb25a6ebab00318b6849b977"
+    },
+    {
+      "path": "docs/decisions/0093-bounded-development-host-lifecycle.md",
+      "sha256": "719a6e5da55fe93fefda2f16a8c3af88a56d68c9a961334acc2ed7aa276c8a11"
+    }
+  ],
+  "checks": {
+    "initial_focused_lifecycle_tests_passed": 14,
+    "initial_linux": {
+      "passed": 173,
+      "failed": 19,
+      "ignored": 51
+    },
+    "initial_host": {
+      "passed": 278,
+      "failed": 50,
+      "ignored": 8
+    },
+    "final": {
+      "source_log_sha256": "b9844b006ee4b3d614c66e8494dc548981528260975f9eb9df623aa076a576ce",
+      "linux": {
+        "passed": 175,
+        "failed": 19,
+        "ignored": 51,
+        "elapsed_seconds": 50.71
+      },
+      "host": {
+        "passed": 278,
+        "failed": 50,
+        "ignored": 8,
+        "elapsed_seconds": 41.32
+      },
+      "exact_prior_failures": true,
+      "tests": [
+        {
+          "test": "command_runner::tests::manifest_binds_every_registered_executable_digest",
+          "reason": "InvalidManifest"
+        },
+        {
+          "test": "command_runner::tests::task_ceilings_below_the_linux_minimum_fail_before_launch",
+          "reason": "InvalidManifest"
+        },
+        {
+          "test": "local_commit::tests::native_candidate_tree_uses_only_owned_index_and_preserves_user_state",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "local_commit::tests::native_signed_commit_verifies_exact_content_and_only_updates_task_branch",
+          "reason": "ArtifactDenied"
+        },
+        {
+          "test": "repository_safety::tests::compare_and_swap_updates_only_one_unchecked_branch_and_stale_old_fails",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::concurrent_user_changes_survive_worktree_removal_and_cleanup",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::exact_worktree_lifecycle_preserves_active_checkout",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::interrupted_branch_fast_forward_preserves_every_user_artifact",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::interrupted_worktree_create_preserves_every_user_artifact",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::manifest_is_minimized_stable_and_detects_untracked_and_hazards",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::network_clone_fetch_and_unmapped_tokens_never_launch_locally",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::repository_inventory_cancellation_fails_before_git_launch",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::repository_inventory_preserves_exact_git_states_and_nonregular_hints",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::worktree_lifecycle_preserves_a_detached_active_checkout",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::worktree_lifecycle_preserves_a_dirty_active_checkout",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::worktree_removal_fails_closed_when_the_owned_directory_is_missing",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::worktree_removal_fails_closed_when_the_owned_directory_is_renamed",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "secret_service::tests::secret_bytes_never_enter_process_arguments_or_environment",
+          "reason": "InvalidManifest"
+        },
+        {
+          "test": "secret_service::tests::substituted_secret_client_digest_fails_before_service_contact",
+          "reason": "InvalidManifest"
+        },
+        {
+          "test": "linux_coding_runtime::tests::command_git_validation_observers_preserve_consumption_failure_and_reopen",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::durable_coding_run_persists_continuation_artifact_and_checkpoint",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::read_cancellation_after_consumption_retains_exact_receipt_and_reopens",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::read_precancel_receipt_precedes_original_acknowledgements_on_reopen",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::retained_muse_missing_read_is_rejected_before_authority_and_not_path_absence_evidence",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::s_048_mvp_e2e_controlled_create_test_git_and_verify_path",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::s_048_mvp_e2e_denial_and_user_cancellation_start_no_effect",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::s_048_mvp_e2e_failed_validation_requires_a_repair_before_success",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::s_048_mvp_e2e_repository_exploration_finishes_as_verified_no_op",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_22_1_long_native_session_blocks_drift_and_preserves_exact_history",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_22_2_linux_generated_file_is_published_and_checkpoint_bound",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_22_2_linux_restart_recovers_large_terminal_model_artifact",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_22_2_linux_restart_rejects_lost_continuation_without_replaying_the_tool",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_22_2_linux_restart_restores_checkpoint_without_replaying_the_tool",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_22_2_linux_restart_restores_large_command_and_test_artifacts_without_replay",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_39_1_native_write_checkpoint_process_matrix_recovers_without_replay",
+          "reason": "assertion `left == right` failed: ",
+          "cause": "child exits101 at same InvalidManifest fixture prerequisite before intended crash93; parent assertion is downstream"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_fake_model_completes_real_git_patch_test_git_and_verify_path",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_applies_one_exact_structured_patch",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_asks_then_derives_one_exact_operation_grant",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_creates_one_exact_absent_file",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_denial_and_create_collision_are_inert",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_executes_one_exact_bounded_command_after_approval",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_executes_one_kernel_checked_git_inspection",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_normalizes_targeted_validation_after_one_granted_command",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_persists_stale_patch_invalidation_without_overwrite",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_rejects_substitution_staleness_and_unbudgeted_actions",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_user_denial_is_inert_and_non_replayable",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_native_command_json_order_preserves_exact_approved_call",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_native_command_reserialization_after_approval_remains_denied",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_50_2_and_sprint_95_child_caller_use_the_real_no_op_runtime_path",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_50_2_exact_path_preauthorization_uses_kernel_write_grant_and_unknown_path_asks",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_50_2_exact_registered_command_preauthorization_uses_fresh_grant",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_50_2_session_preauthorization_issues_fresh_grants_and_exhausts_exact_budget",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_50_2_session_preauthorization_revocation_and_expiry_fail_closed",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_50_2_workflow_caller_waits_for_user_and_denial_starts_no_effect",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::uncertain_command_and_validation_never_publish_completion_artifacts_or_replay",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::uncertain_command_event_is_atomically_published_and_reopens",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::uncertain_git_event_is_atomically_published_and_reopens",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::uncertain_git_never_publishes_observations_or_replays_consumed_authority",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::absent_read_and_tool_approvals_do_not_require_a_clock_sample",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::authenticated_host_frontier_review_renders_once_and_never_delivers",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::diagnostic_export_preview_and_approval_use_the_authenticated_workflow",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::doctor_uses_the_same_workflow_and_reports_unproved_components_unavailable",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::generic_tool_preview_binds_every_exact_object_and_cancels_without_receipt",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::generic_tool_preview_rejects_duplicate_unscoped_and_wrong_kind_projections",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::handoff_source_drift_and_missing_acknowledgment_fail_closed",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::handoff_transport_requires_current_review_and_never_delivers",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::model_picker_transport_is_unavailable_until_verified_and_never_falls_back",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::shared_runtime_is_unavailable_until_explicitly_composed_and_then_host_framed",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_repository_map::tests::live_projection_is_git_aware_policy_aware_and_non_following",
+          "reason": "Git verifies: LinuxRepositoryError { kind: InvalidGitArtifact }"
+        }
+      ],
+      "lifecycle_component_tests_passed": 16,
+      "lifecycle_helper_ignored": 1,
+      "clippy_and_source_audits": "passed"
+    },
+    "python_evidence_tests": 186,
+    "sbom_writes": 1,
+    "unchanged_runtime_report_pins": "validated-without-renewal"
+  },
+  "acceptance": {
+    "startup_timeout_and_pre_envelope_signals": "observed-with-actual-cli-and-synthetic-host",
+    "real_host_startup": "native-git-prerequisite-refusal-observed",
+    "scripted_coding_workflow": "not-reached",
+    "real_model": "not-run",
+    "manual_user": "not-run",
+    "independent_reviewer": "pending",
+    "release": "not-authorized"
+  },
+  "limitations": [
+    "Cooperative deadlines do not preempt kernel-stalled filesystem/spawn/process syscalls.",
+    "Direct host cleanup does not prove native/model descendant cleanup or cross-host recovery.",
+    "Synthetic-host startup tests are not native tool, model or active runtime cancellation qualification.",
+    "Initial full suites predate cancellation edits; final full suites were rerun and remain failed.",
+    "Pre-existing staged/unstaged/untracked work was preserved on refusal, not during a successful edit.",
+    "No GPU/model, successful native edit/test/repair, native denial or active runtime cancellation was reached.",
+    "Original historical evidence pins and full input bindings remain; no global freshness claim."
+  ]
+}
