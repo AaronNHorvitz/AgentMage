@@ -327,12 +327,14 @@ where
             return Err(RuntimeTransportError::RequestDenied);
         }
         let slow_subscriber_probe = prepared.slow_subscriber_probe;
+        // A later composition or subscription failure cannot authorize another
+        // attempt with this request. Invalid requests above leave it untouched.
+        self.prepared.remove(&key);
         let coordinator = self.factory.compose_runtime(&request)?;
         let mut session = LiveCodingSession::spawn(request, coordinator, slow_subscriber_probe)
             .inspect_err(|_| {
                 eprintln!("coding.live.spawn-denied");
             })?;
-        self.prepared.remove(&key);
         let step = session.start().inspect_err(|_| {
             eprintln!("coding.live.start-denied");
         })?;

@@ -145,8 +145,10 @@ where
         if prepared != &request || self.active.contains_key(&key) {
             return Err(NativeChatRuntimeError::RequestDenied);
         }
-        let coordinator = self.factory.compose_runtime(&request)?;
+        // Composition can perform startup work before failing. Consume only the
+        // verified exact request, and never make that attempt available again.
         self.prepared.remove(&key);
+        let coordinator = self.factory.compose_runtime(&request)?;
         let mut session = CoordinatorNativeChatSession::new(request, coordinator)?;
         let step = session.start()?;
         self.active.insert(key, session);

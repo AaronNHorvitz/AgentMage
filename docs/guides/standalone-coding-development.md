@@ -189,6 +189,13 @@ Invalid marker contents, permissions, workspace identity, Git state, profile ide
 identity, cursor, approval, or confinement fail closed. The wrapper never resets, cleans, stashes,
 commits, deletes, or overwrites a working tree. Use a newly named root for another campaign.
 
+Once an exact prepared request enters host composition, its start attempt is consumed,
+including when startup fails. Repeating that request is refused. Malformed or substituted
+requests leave the valid preparation intact. A new preparation does not clear uncertain
+cleanup or authorize replay of earlier effects. Preserve the original startup failure;
+an unavailable best-effort release does not replace it. See
+[Decision 0099](../decisions/0099-failed-start-request-consumption.md).
+
 Log directories are create-only and mode `0700`; `stdout.jsonl`, `stderr.log`, and `result.json`
 are mode `0600`. Preserve failed and rejected runs alongside successful ones. A scripted success is
 only executable-path evidence. Model qualification requires the separate repeated Muse Glimmer and
