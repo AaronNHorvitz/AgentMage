@@ -74,9 +74,9 @@
   ],
   "manual_fuzzing_executed": false,
   "release_approved": false,
-  "report_sha256": "80fd18be73832d73df7942cc09dc315b0378ab1f06636520284bca3d9b7c39b1",
+  "report_sha256": "bf68dbb979ff72f91927bc850ab75c5dedee492b6a0ac53090ac6fe537997df1",
   "schema_version": 1,
-  "source_revision": "274127adc1828d99614972b6e67718709445527b",
+  "source_revision": "2efd2ec027a492cd4e9d9ebc3e577782f0b73c65",
   "sources": [
     {
       "bytes": 180466,
@@ -89,9 +89,9 @@
       "sha256": "927799cc0abee91289ad650072941a59d20a456dfb2e289a5a17b754e85e66fc"
     },
     {
-      "bytes": 23111,
+      "bytes": 25106,
       "path": "kernel/engine/src/runtime_loop_artifact_preparation_tests.rs",
-      "sha256": "d0dc7040ebf310b6d6608e3123870b7f7101b4dc6b328ef69951da10d8a76295"
+      "sha256": "76c052a6265dfd0acbf33367b2d297cfe7ced195f1484c54d0ef2b0ef6575712"
     },
     {
       "bytes": 425916,
@@ -159,14 +159,14 @@
       "sha256": "034237dbf30bbc33ea2a1dac5f9d04127e5f1e0e1358c186f025310afb662181"
     },
     {
-      "bytes": 10683,
+      "bytes": 10743,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "c3a0598fd27090077039ad8c48841926b3b97c2a433f73d0173f728ab8820aaf"
+      "sha256": "409671bb2a7b5305641028aa34c0bdf76b4d62b63aa5ea3e270ae5dd6faa60a1"
     },
     {
-      "bytes": 7800,
+      "bytes": 7935,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "c55fee6b417e15d1414f0b9d40db8fd96bad08104745192465b8d592fb7ada76"
+      "sha256": "d4239e04b369cc3d6c9e41d4f13f72249da25d189ef51b794e522ae25f062a7c"
     },
     {
       "bytes": 10830,
