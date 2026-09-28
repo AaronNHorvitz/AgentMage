@@ -2,10 +2,10 @@
 
 use std::cell::RefCell;
 use std::ffi::OsString;
-use std::fs::{self, OpenOptions};
+use std::fs;
 use std::io::{ErrorKind, Read, Write};
 use std::os::unix::ffi::OsStrExt;
-use std::os::unix::fs::{FileTypeExt, MetadataExt, OpenOptionsExt, PermissionsExt};
+use std::os::unix::fs::{FileTypeExt, MetadataExt};
 use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
@@ -21,14 +21,21 @@ use agentmage_kernel_contracts::{
     ModelStreamId, ModelStreamSink, ModelTokenUsage, ModelUnloadReceipt,
     RuntimeIsolationObservation, StreamedModelFragment, TokenCountResult,
 };
-use rustix::rand::{GetRandomFlags, getrandom};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use zeroize::{Zeroize, Zeroizing};
+use zeroize::Zeroizing;
 
 use crate::NativeModelDriver;
 use crate::native_inference_lease::NativeInferenceLease;
 use crate::native_resource_admission::NativeDevelopmentResourcePolicy;
+
+mod owned_files;
+mod owned_process;
+use owned_files::RuntimeFiles;
+use owned_process::RuntimeOwner;
+
+const MODEL_CLEANUP_TIME: Duration = Duration::from_secs(3);
+const MODEL_CLEANUP_POLL: Duration = Duration::from_millis(10);
 
 const MAX_HTTP_RESPONSE_BYTES: usize = 32 * 1024 * 1024;
 const MAX_HEALTH_RESPONSE_BYTES: usize = 4 * 1024;
@@ -252,58 +259,6 @@ fn valid_socket_path(path: &Path) -> bool {
         && path.file_name().and_then(|name| name.to_str()) == Some("llama-server.sock")
 }
 
-fn api_key_path(socket_path: &Path) -> Result<PathBuf, ModelRuntimeFailure> {
-    socket_path
-        .parent()
-        .map(|parent| parent.join(API_KEY_FILE_NAME))
-        .ok_or_else(|| failure("model.llama-driver.socket-parent-invalid", false))
-}
-
-fn create_api_key(path: &Path) -> Result<Zeroizing<String>, ModelRuntimeFailure> {
-    let mut random = [0_u8; 32];
-    if getrandom(&mut random, GetRandomFlags::empty()) != Ok(random.len()) {
-        random.zeroize();
-        return Err(failure("model.llama-driver.api-key-random-failed", true));
-    }
-    let key = Zeroizing::new(
-        random
-            .iter()
-            .map(|byte| format!("{byte:02x}"))
-            .collect::<String>(),
-    );
-    random.zeroize();
-    let opened = OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .mode(0o600)
-        .open(path);
-    let mut file = match opened {
-        Ok(file) => file,
-        Err(_) => return Err(failure("model.llama-driver.api-key-create-failed", false)),
-    };
-    if file
-        .write_all(key.as_bytes())
-        .and_then(|()| file.write_all(b"\n"))
-        .and_then(|()| file.sync_all())
-        .is_err()
-    {
-        let _ = fs::remove_file(path);
-        return Err(failure("model.llama-driver.api-key-write-failed", true));
-    }
-    let metadata = fs::symlink_metadata(path)
-        .map_err(|_| failure("model.llama-driver.api-key-identity-failed", true))?;
-    if !metadata.is_file()
-        || metadata.file_type().is_symlink()
-        || metadata.uid() != rustix::process::getuid().as_raw()
-        || metadata.mode() & 0o777 != 0o600
-        || metadata.nlink() != 1
-    {
-        let _ = fs::remove_file(path);
-        return Err(failure("model.llama-driver.api-key-identity-failed", false));
-    }
-    Ok(key)
-}
-
 fn valid_sha256(value: &str) -> bool {
     value.len() == 64
         && value
@@ -329,9 +284,12 @@ struct LoadedRuntime {
     token_counter_sha256: String,
     decoding: DecodingProfile,
     launch_arguments: Vec<String>,
-    api_key: Zeroizing<String>,
+    files: RuntimeFiles,
     child: Child,
     runtime_pid: u32,
+    runtime_owner: Option<RuntimeOwner>,
+    cleanup_deadline: Option<Instant>,
+    cleanup_uncertain: bool,
     loaded_at: Instant,
     input_tokens: u32,
     output_tokens: u32,
@@ -487,14 +445,24 @@ impl LlamaServerDriver {
         Ok(())
     }
 
-    fn client(&self) -> UnixHttpClient {
-        let api_key = self
+    fn active_loaded(&self) -> Result<&LoadedRuntime, ModelRuntimeFailure> {
+        let loaded = self
             .loaded
             .as_ref()
-            .expect("client is available only for a loaded runtime")
-            .api_key
-            .to_string();
-        UnixHttpClient::new(self.config.socket_path.clone(), api_key)
+            .ok_or_else(|| failure("model.llama-driver.not-loaded", false))?;
+        if loaded.cleanup_deadline.is_some() || loaded.cleanup_uncertain {
+            return Err(failure("model.llama-driver.cleanup-in-progress", true));
+        }
+        Ok(loaded)
+    }
+
+    fn client(&self) -> Result<UnixHttpClient, ModelRuntimeFailure> {
+        let loaded = self.active_loaded()?;
+        loaded.files.verify_connection()?;
+        Ok(UnixHttpClient::new(
+            self.config.socket_path.clone(),
+            loaded.files.key().to_owned(),
+        ))
     }
 
     fn wait_until_ready(&mut self) -> Result<(), ModelRuntimeFailure> {
@@ -503,12 +471,15 @@ impl LlamaServerDriver {
             if self
                 .loaded
                 .as_mut()
-                .and_then(|loaded| loaded.child.try_wait().ok().flatten())
+                .expect("startup retains owned child")
+                .child
+                .try_wait()
+                .map_err(|_| failure("model.llama-driver.process-reap-failed", true))?
                 .is_some()
             {
                 return Err(failure("model.llama-driver.process-exited", true));
             }
-            if self.client().health().is_ok() {
+            if self.client()?.health().is_ok() {
                 return Ok(());
             }
             if Instant::now() >= deadline {
@@ -519,46 +490,78 @@ impl LlamaServerDriver {
     }
 
     fn stop_loaded(&mut self) -> Result<(ModelProfileId, u64), ModelRuntimeFailure> {
-        let Some(loaded) = self.loaded.as_mut() else {
-            return Err(failure("model.llama-driver.not-loaded", false));
-        };
+        let loaded = self
+            .loaded
+            .as_mut()
+            .ok_or_else(|| failure("model.llama-driver.not-loaded", false))?;
         let started = Instant::now();
-        let _ = loaded.child.kill();
-        loaded
-            .child
-            .wait()
-            .map_err(|_| failure("model.llama-driver.process-reap-failed", true))?;
-        if loaded.runtime_pid == 0 {
-            // Startup did not establish the exact owned runtime descendant. Reaping
-            // its launcher alone is not evidence that inference has stopped. Keep
-            // the lease until the enclosing owner exits and its supervisor checks
-            // cleanup; never report this uncertain startup as a released slot.
-            return Err(failure(
-                "model.llama-driver.startup-cleanup-uncertain",
-                true,
-            ));
+        let deadline = *loaded
+            .cleanup_deadline
+            .get_or_insert(started + MODEL_CLEANUP_TIME);
+        if loaded.cleanup_uncertain {
+            // Reap an already-exited direct child if possible, but never signal
+            // after lost wait ownership or convert a failed attempt to success.
+            let _ = loaded.child.try_wait();
+            return Err(failure("model.llama-driver.cleanup-uncertain", true));
         }
-        let deadline = Instant::now() + Duration::from_secs(2);
-        while Path::new(&format!("/proc/{}", loaded.runtime_pid)).exists()
-            && Instant::now() < deadline
-        {
-            thread::sleep(Duration::from_millis(10));
-        }
-        if Path::new(&format!("/proc/{}", loaded.runtime_pid)).exists() {
-            return Err(failure("model.llama-driver.descendant-reap-failed", true));
-        }
-        if self.config.socket_path.exists() {
-            fs::remove_file(&self.config.socket_path)
-                .map_err(|_| failure("model.llama-driver.socket-cleanup-failed", true))?;
-        }
-        let api_key_path = api_key_path(&self.config.socket_path)?;
-        if api_key_path.exists() {
-            fs::remove_file(api_key_path)
-                .map_err(|_| failure("model.llama-driver.api-key-cleanup-failed", true))?;
+        let cleanup = (|| {
+            if loaded
+                .child
+                .try_wait()
+                .map_err(|_| failure("model.llama-driver.process-reap-failed", true))?
+                .is_none()
+                && loaded.child.kill().is_err()
+                && loaded
+                    .child
+                    .try_wait()
+                    .map_err(|_| failure("model.llama-driver.process-reap-failed", true))?
+                    .is_none()
+            {
+                return Err(failure(
+                    "model.llama-driver.process-termination-failed",
+                    true,
+                ));
+            }
+            loop {
+                if Instant::now() >= deadline {
+                    return Err(failure("model.llama-driver.cleanup-timed-out", true));
+                }
+                let reaped = loaded
+                    .child
+                    .try_wait()
+                    .map_err(|_| failure("model.llama-driver.process-reap-failed", true))?
+                    .is_some();
+                let exited = match &loaded.runtime_owner {
+                    Some(owner) => owner.exited()?,
+                    None if reaped => {
+                        return Err(failure(
+                            "model.llama-driver.startup-cleanup-uncertain",
+                            true,
+                        ));
+                    }
+                    None => false,
+                };
+                if Instant::now() >= deadline {
+                    return Err(failure("model.llama-driver.cleanup-timed-out", true));
+                }
+                if reaped && exited {
+                    break;
+                }
+                thread::sleep(
+                    MODEL_CLEANUP_POLL.min(deadline.saturating_duration_since(Instant::now())),
+                );
+            }
+            // Namespace and direct-child exit precede every file/lease mutation.
+            loaded.files.cleanup()?;
+            loaded._lease.finish_owned_cleanup()?;
+            Ok(())
+        })();
+        if let Err(error) = cleanup {
+            loaded.cleanup_uncertain = true;
+            return Err(error);
         }
         let elapsed = started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64;
         let profile_id = loaded.profile_id.clone();
-        // Keep the shared lease on every cleanup error, until cleanup can be retried.
         drop(self.loaded.take());
         Ok((profile_id, elapsed))
     }
@@ -570,11 +573,12 @@ impl Drop for LlamaServerDriver {
             && self.stop_loaded().is_err()
             && let Some(loaded) = self.loaded.take()
         {
-            // A destructor cannot return an uncertain-cleanup receipt. Do not
-            // advertise a free slot: retain this one descriptor until the owner
-            // process exits. The supervisor and outer campaign cleanup guard are
-            // still responsible for process death; no foreign process is signalled.
+            // At most the one uncertain inference owner remains retained. Its
+            // synchronized marker also refuses new hosts after this process exits.
+            // Dropping private-file handles removes no paths and zeroizes the key.
             loaded._lease.retain_until_process_exit();
+            std::mem::forget(loaded.child);
+            std::mem::forget(loaded.runtime_owner);
         }
     }
 }
@@ -620,12 +624,8 @@ impl NativeModelDriver for LlamaServerDriver {
             .parent()
             .ok_or_else(|| failure("model.llama-driver.socket-parent-invalid", false))?;
         exact_directory(socket_parent, 0o700)?;
-        let api_key_path = api_key_path(&self.config.socket_path)?;
-        if self.config.socket_path.exists() || api_key_path.exists() {
-            return Err(failure("model.llama-driver.socket-exists", false));
-        }
         self.verify_sandbox_dependencies()?;
-        let lease = NativeInferenceLease::acquire()?;
+        let mut lease = NativeInferenceLease::acquire()?;
         if let Some(policy) = &self.config.development_resource_policy {
             if self.config.launch.context_tokens != 32_768
                 || profile.decoding.max_output_tokens != 4_096
@@ -655,7 +655,7 @@ impl NativeModelDriver for LlamaServerDriver {
             profile,
             &self.config.launch,
         );
-        let api_key = create_api_key(&api_key_path)?;
+        let files = RuntimeFiles::create(&self.config.socket_path)?;
         let launch_configuration_sha256 = sha256(
             serde_json::to_string(&effective_launch)
                 .map_err(|_| failure("model.llama-driver.configuration-invalid", false))?
@@ -675,13 +675,11 @@ impl NativeModelDriver for LlamaServerDriver {
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null());
-        let child = match command.spawn() {
-            Ok(child) => child,
-            Err(_) => {
-                let _ = fs::remove_file(&api_key_path);
-                return Err(failure("model.llama-driver.process-start-failed", true));
-            }
-        };
+        files.verify_key()?;
+        lease.arm()?;
+        let child = command
+            .spawn()
+            .map_err(|_| failure("model.llama-driver.process-start-failed", true))?;
         self.loaded = Some(LoadedRuntime {
             _lease: lease,
             profile_id: profile.profile_id.clone(),
@@ -699,9 +697,12 @@ impl NativeModelDriver for LlamaServerDriver {
             token_counter_sha256: profile.context.token_counter_sha256.clone(),
             decoding: profile.decoding.clone(),
             launch_arguments: effective_launch,
-            api_key,
+            files,
             child,
             runtime_pid: 0,
+            runtime_owner: None,
+            cleanup_deadline: None,
+            cleanup_uncertain: false,
             loaded_at: Instant::now(),
             input_tokens: 0,
             output_tokens: 0,
@@ -711,22 +712,19 @@ impl NativeModelDriver for LlamaServerDriver {
             return Err(error);
         }
         let finalized = (|| {
-            fs::set_permissions(&self.config.socket_path, fs::Permissions::from_mode(0o600))
-                .map_err(|_| failure("model.llama-driver.socket-mode-failed", true))?;
-            let supervisor_pid = self
-                .loaded
-                .as_ref()
-                .expect("loaded state retained")
-                .child
-                .id();
-            let runtime_pid = exact_runtime_descendant(supervisor_pid)?;
-            // Retain the known descendant even if the subsequent sandbox check
-            // fails, so cleanup can verify its disappearance before releasing.
-            self.loaded
-                .as_mut()
-                .expect("loaded state retained")
-                .runtime_pid = runtime_pid;
+            let loaded = self.loaded.as_mut().expect("loaded state retained");
+            let owner = RuntimeOwner::capture(&mut loaded.child)?;
+            let runtime_pid = owner.pid();
+            // Retain cleanup ownership even if later socket/sandbox checks fail.
+            loaded.runtime_pid = runtime_pid;
+            loaded.runtime_owner = Some(owner);
+            loaded.files.capture_socket()?;
             verify_live_sandbox(runtime_pid, &self.config.socket_path)?;
+            loaded
+                .runtime_owner
+                .as_ref()
+                .expect("owner retained")
+                .verify_live()?;
             Ok(runtime_pid)
         })();
         let runtime_pid = match finalized {
@@ -743,7 +741,13 @@ impl NativeModelDriver for LlamaServerDriver {
             .elapsed()
             .as_millis()
             .min(u128::from(u64::MAX)) as u64;
-        let served_capabilities = self.serving_capabilities()?;
+        let served_capabilities = match self.serving_capabilities() {
+            Ok(capabilities) => capabilities,
+            Err(error) => {
+                let _ = self.stop_loaded();
+                return Err(error);
+            }
+        };
         Ok(ModelLoadReceipt {
             profile_id: profile.profile_id.clone(),
             manifest_sha256: profile.manifest_sha256.clone(),
@@ -777,7 +781,12 @@ impl NativeModelDriver for LlamaServerDriver {
                 ModelHealthState::Unloaded,
                 "model.llama-driver.unloaded",
             ),
-            Some(loaded) if self.client().health().is_ok() => (
+            Some(loaded) if loaded.cleanup_deadline.is_some() || loaded.cleanup_uncertain => (
+                Some(loaded.profile_id.clone()),
+                ModelHealthState::Failed,
+                "model.llama-driver.cleanup-in-progress",
+            ),
+            Some(loaded) if self.client().and_then(|client| client.health()).is_ok() => (
                 Some(loaded.profile_id.clone()),
                 ModelHealthState::Ready,
                 "model.llama-driver.ready",
@@ -801,16 +810,22 @@ impl NativeModelDriver for LlamaServerDriver {
     }
 
     fn serving_capabilities(&self) -> Result<ModelServingCapabilities, ModelRuntimeFailure> {
-        let loaded = self
-            .loaded
+        let loaded = self.active_loaded()?;
+        let owner = loaded
+            .runtime_owner
             .as_ref()
             .ok_or_else(|| failure("model.served-capability.missing", false))?;
-        if loaded.runtime_pid == 0 || self.client().health().is_err() {
+        owner.verify_live()?;
+        if loaded.runtime_pid != owner.pid() || self.client()?.health().is_err() {
             return Err(failure("model.served-capability.drift", false));
         }
         verify_runtime_command_line(loaded.runtime_pid, &loaded.launch_arguments)?;
         let process_generation = process_start_generation(loaded.runtime_pid)?;
-        let properties = self.client().serving_properties()?;
+        if process_generation != owner.generation() {
+            return Err(failure("model.served-capability.drift", false));
+        }
+        let properties = self.client()?.serving_properties()?;
+        owner.verify_live()?;
         if properties.parallel_slots != 1 {
             return Err(failure("model.served-capability.drift", false));
         }
@@ -848,17 +863,14 @@ impl NativeModelDriver for LlamaServerDriver {
         &self,
         context: &EncodedModelContext,
     ) -> Result<TokenCountResult, ModelRuntimeFailure> {
-        let loaded = self
-            .loaded
-            .as_ref()
-            .ok_or_else(|| failure("model.llama-driver.not-loaded", false))?;
+        let loaded = self.active_loaded()?;
         if loaded.profile_id != context.profile_id {
             return Err(failure(
                 "model.llama-driver.context-profile-mismatch",
                 false,
             ));
         }
-        let tokens = self.client().token_count(&context.bytes)?;
+        let tokens = self.client()?.token_count(&context.bytes)?;
         Ok(TokenCountResult {
             profile_id: context.profile_id.clone(),
             context_packet_id: context.context_packet_id.clone(),
@@ -876,10 +888,7 @@ impl NativeModelDriver for LlamaServerDriver {
         cancellation: Option<&dyn ModelCancellationProbe>,
         sink: &mut dyn ModelStreamSink,
     ) -> Result<ModelRunResult, ModelRuntimeFailure> {
-        let loaded = self
-            .loaded
-            .as_ref()
-            .ok_or_else(|| failure("model.llama-driver.not-loaded", false))?;
+        let loaded = self.active_loaded()?;
         if loaded.profile_id != request.profile_id
             || loaded.profile_id != context.profile_id
             || loaded.manifest_sha256 != request.manifest_sha256
@@ -914,7 +923,7 @@ impl NativeModelDriver for LlamaServerDriver {
             return Err(failure("model.prepared-request.stale-binding", false));
         }
         let started = Instant::now();
-        let client = self.client();
+        let client = self.client()?;
         let properties = client.serving_properties()?;
         if properties.parallel_slots != 1 {
             return Err(failure("model.served-capability.drift", false));
@@ -991,10 +1000,7 @@ impl NativeModelDriver for LlamaServerDriver {
     }
 
     fn resources(&self) -> Result<ModelResourceReport, ModelRuntimeFailure> {
-        let loaded = self
-            .loaded
-            .as_ref()
-            .ok_or_else(|| failure("model.llama-driver.not-loaded", false))?;
+        let loaded = self.active_loaded()?;
         let accelerator_memory_bytes = accelerator_memory_bytes(loaded.runtime_pid)?;
         Ok(ModelResourceReport {
             adapter_id: self.config.identity.adapter_id.clone(),
@@ -2381,9 +2387,9 @@ mod tests {
         CONTRACT_SCHEMA_VERSION, CompletionInvocation, Endpoint, FileSnapshot, GUEST_API_KEY_PATH,
         GUEST_MODEL_PATH, GUEST_RUNTIME_ROOT, GUEST_SOCKET_PATH, GUEST_SOCKET_ROOT,
         LlamaServerLaunchProfile, SANDBOX_DEVICE_PATHS, SANDBOX_READ_ONLY_DIRECTORIES,
-        UnixHttpClient, create_api_key, exact_directory, launch_arguments,
-        parse_accelerator_memory, parse_http_response, parse_serving_properties, plain_text,
-        process_start_generation, sandbox_arguments, valid_socket_path,
+        UnixHttpClient, exact_directory, launch_arguments, parse_accelerator_memory,
+        parse_http_response, parse_serving_properties, plain_text, process_start_generation,
+        sandbox_arguments, valid_socket_path,
     };
 
     static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
@@ -2429,15 +2435,22 @@ mod tests {
         )
         .unwrap();
         fs::set_permissions(&directory.0, fs::Permissions::from_mode(0o700)).unwrap();
-        let lease = crate::native_inference_lease::NativeInferenceLease::acquire_for_test(
+        let mut lease = crate::native_inference_lease::NativeInferenceLease::acquire_for_test(
             &directory.0.canonicalize().unwrap(),
         )
         .unwrap();
-        let child = std::process::Command::new("/usr/bin/true")
+        let mut files = super::RuntimeFiles::create(&config.socket_path).unwrap();
+        let listener = UnixListener::bind(&config.socket_path).unwrap();
+        files.capture_socket().unwrap();
+        drop(listener);
+        lease.arm().unwrap();
+        let child = std::process::Command::new("/usr/bin/sleep")
+            .arg("30")
             .env_clear()
             .spawn()
             .unwrap();
         let runtime_pid = child.id();
+        let runtime_owner = Some(super::RuntimeOwner::cpu_fixture(&child).unwrap());
         let mut driver = super::LlamaServerDriver::new(config);
         driver.loaded = Some(super::LoadedRuntime {
             _lease: lease,
@@ -2456,9 +2469,12 @@ mod tests {
             token_counter_sha256: profile.context.token_counter_sha256,
             decoding: profile.decoding,
             launch_arguments: Vec::new(),
-            api_key: zeroize::Zeroizing::new("synthetic-test-key".into()),
+            files,
             child,
             runtime_pid,
+            runtime_owner,
+            cleanup_deadline: None,
+            cleanup_uncertain: false,
             loaded_at: std::time::Instant::now(),
             input_tokens: 0,
             output_tokens: 0,
@@ -2492,29 +2508,52 @@ mod tests {
     }
 
     #[test]
-    fn native_inference_lease_cleanup_error_preserves_owner_until_successful_retry() {
+    fn native_cleanup_preserves_an_unowned_socket_path() {
         let directory = TestDirectory::new();
         let mut driver = driver_with_cpu_child(&directory);
-        // A directory cannot be removed as the owned socket; no unrelated target
-        // is touched. Cleanup must retain both loaded state and the exact lease.
-        fs::create_dir(&driver.config.socket_path).unwrap();
+        fs::remove_file(&driver.config.socket_path).unwrap();
+        fs::write(&driver.config.socket_path, b"pre-existing sentinel").unwrap();
+        let result = driver.stop_loaded();
         assert_eq!(
-            driver.stop_loaded().unwrap_err().code,
-            "model.llama-driver.socket-cleanup-failed"
+            result.unwrap_err().code,
+            "model.llama-driver.private-file-identity"
+        );
+        assert_eq!(
+            fs::read(&driver.config.socket_path).unwrap(),
+            b"pre-existing sentinel"
         );
         assert!(driver.loaded.is_some());
         assert_eq!(
+            driver.stop_loaded().unwrap_err().code,
+            "model.llama-driver.cleanup-uncertain"
+        );
+        assert!(
+            driver
+                .loaded
+                .as_mut()
+                .unwrap()
+                .child
+                .try_wait()
+                .unwrap()
+                .is_some()
+        );
+        assert!(
             crate::native_inference_lease::NativeInferenceLease::acquire_for_test(
                 &directory.0.canonicalize().unwrap()
             )
-            .err()
-            .unwrap()
-            .code,
-            "model.native-lease.busy"
+            .is_err()
         );
-        fs::remove_dir(&driver.config.socket_path).unwrap();
-        driver.stop_loaded().unwrap();
+    }
+
+    #[test]
+    fn native_cleanup_verified_cpu_fixture_releases_exact_files_and_lease() {
+        let directory = TestDirectory::new();
+        let mut driver = driver_with_cpu_child(&directory);
+        let profile = driver.loaded.as_ref().unwrap().profile_id.clone();
+        assert_eq!(driver.stop_loaded().unwrap().0, profile);
         assert!(driver.loaded.is_none());
+        assert!(!driver.config.socket_path.exists());
+        assert!(!directory.0.join(super::API_KEY_FILE_NAME).exists());
         assert!(
             crate::native_inference_lease::NativeInferenceLease::acquire_for_test(
                 &directory.0.canonicalize().unwrap()
@@ -2524,26 +2563,131 @@ mod tests {
     }
 
     #[test]
-    fn native_inference_lease_unknown_startup_is_not_claimed_clean() {
+    fn native_cleanup_unknown_startup_keeps_serving_and_admission_closed() {
+        use crate::NativeModelDriver;
         let directory = TestDirectory::new();
         let mut driver = driver_with_cpu_child(&directory);
-        let known_child = driver.loaded.as_ref().unwrap().runtime_pid;
-        driver.loaded.as_mut().unwrap().runtime_pid = 0;
+        driver.loaded.as_mut().unwrap().runtime_owner = None;
+        let before = fs::read(directory.0.join(super::API_KEY_FILE_NAME)).unwrap();
         assert_eq!(
             driver.stop_loaded().unwrap_err().code,
             "model.llama-driver.startup-cleanup-uncertain"
         );
-        assert!(driver.loaded.is_some());
+        assert_eq!(
+            driver.health().state,
+            agentmage_kernel_contracts::ModelHealthState::Failed
+        );
+        assert_eq!(
+            driver.serving_capabilities().unwrap_err().code,
+            "model.llama-driver.cleanup-in-progress"
+        );
+        assert_eq!(
+            driver.resources().unwrap_err().code,
+            "model.llama-driver.cleanup-in-progress"
+        );
+        assert_eq!(
+            driver.client().err().unwrap().code,
+            "model.llama-driver.cleanup-in-progress"
+        );
+        assert_eq!(
+            driver.stop_loaded().unwrap_err().code,
+            "model.llama-driver.cleanup-uncertain"
+        );
+        assert_eq!(
+            fs::read(directory.0.join(super::API_KEY_FILE_NAME)).unwrap(),
+            before
+        );
+        assert!(
+            driver
+                .loaded
+                .as_mut()
+                .unwrap()
+                .child
+                .try_wait()
+                .unwrap()
+                .is_some()
+        );
+    }
+
+    struct CpuCleanupFixture(std::process::Child);
+    impl CpuCleanupFixture {
+        fn new() -> Self {
+            Self(
+                std::process::Command::new("/usr/bin/sleep")
+                    .arg("30")
+                    .env_clear()
+                    .spawn()
+                    .unwrap(),
+            )
+        }
+        fn reap(&mut self) {
+            let _ = self.0.kill();
+            let deadline = std::time::Instant::now() + Duration::from_secs(2);
+            while std::time::Instant::now() < deadline {
+                if self.0.try_wait().unwrap().is_some() {
+                    return;
+                }
+                thread::sleep(Duration::from_millis(5));
+            }
+            panic!("CPU test fixture cleanup was not observed");
+        }
+    }
+    impl Drop for CpuCleanupFixture {
+        fn drop(&mut self) {
+            self.reap();
+        }
+    }
+
+    #[test]
+    fn native_cleanup_original_deadline_and_late_exit_never_release_the_slot() {
+        let directory = TestDirectory::new();
+        let mut driver = driver_with_cpu_child(&directory);
+        let mut namespace_fixture = CpuCleanupFixture::new();
+        let loaded = driver.loaded.as_mut().unwrap();
+        // Explicit CPU descriptor substitution exercises the wait logic only;
+        // it does not assert that this sibling fixture is an isolated namespace.
+        loaded.runtime_owner =
+            Some(super::RuntimeOwner::cpu_fixture(&namespace_fixture.0).unwrap());
+        let deadline = std::time::Instant::now() + Duration::from_millis(30);
+        loaded.cleanup_deadline = Some(deadline);
+        let before = fs::read(directory.0.join(super::API_KEY_FILE_NAME)).unwrap();
+        let started = std::time::Instant::now();
+        assert_eq!(
+            driver.stop_loaded().unwrap_err().code,
+            "model.llama-driver.cleanup-timed-out"
+        );
+        assert!(started.elapsed() < Duration::from_secs(1));
+        assert!(namespace_fixture.0.try_wait().unwrap().is_none());
+        assert_eq!(
+            driver.loaded.as_ref().unwrap().cleanup_deadline,
+            Some(deadline)
+        );
+        assert!(
+            driver
+                .loaded
+                .as_mut()
+                .unwrap()
+                .child
+                .try_wait()
+                .unwrap()
+                .is_some()
+        );
+        assert_eq!(
+            fs::read(directory.0.join(super::API_KEY_FILE_NAME)).unwrap(),
+            before
+        );
+        // Only after observing the timeout and untouched peer do test cleanup.
+        namespace_fixture.reap();
+        assert_eq!(
+            driver.stop_loaded().unwrap_err().code,
+            "model.llama-driver.cleanup-uncertain"
+        );
         assert!(
             crate::native_inference_lease::NativeInferenceLease::acquire_for_test(
                 &directory.0.canonicalize().unwrap()
             )
             .is_err()
         );
-        // Test-only restoration of the known CPU child lets this fixture verify
-        // normal cleanup without leaking its descriptor into the shared runner.
-        driver.loaded.as_mut().unwrap().runtime_pid = known_child;
-        driver.stop_loaded().unwrap();
     }
 
     fn exchange<T>(
@@ -2763,36 +2907,40 @@ mod tests {
 
     #[test]
     fn ephemeral_api_key_is_private_random_and_never_part_of_launch_arguments() {
-        let directory = TestDirectory::new();
-        let first_path = directory.0.join("first.key");
-        let second_path = directory.0.join("second.key");
-        let first = create_api_key(&first_path).expect("first key");
-        let second = create_api_key(&second_path).expect("second key");
+        let first_directory = TestDirectory::new();
+        let second_directory = TestDirectory::new();
+        for directory in [&first_directory, &second_directory] {
+            fs::set_permissions(&directory.0, fs::Permissions::from_mode(0o700)).unwrap();
+        }
+        let first_files =
+            super::RuntimeFiles::create(&first_directory.0.join("llama-server.sock")).unwrap();
+        let second_files =
+            super::RuntimeFiles::create(&second_directory.0.join("llama-server.sock")).unwrap();
+        let first = first_files.key();
         assert_eq!(first.len(), 64);
         assert!(first.bytes().all(|byte| byte.is_ascii_hexdigit()));
-        assert_ne!(*first, *second);
+        assert_ne!(first, second_files.key());
+        let first_path = first_directory.0.join(super::API_KEY_FILE_NAME);
         assert_eq!(
             fs::metadata(&first_path).unwrap().permissions().mode() & 0o777,
             0o600
         );
         assert_eq!(
             fs::read_to_string(&first_path).unwrap(),
-            format!("{}\n", first.as_str())
+            format!("{first}\n")
         );
-
         let arguments = launch_arguments(
             GUEST_MODEL_PATH,
             GUEST_SOCKET_PATH,
             &exact_profile(),
-            &LlamaServerLaunchProfile::new(8_192, 4, 256, 128, "f16", "f16", None)
-                .expect("launch profile"),
+            &LlamaServerLaunchProfile::new(8_192, 4, 256, 128, "f16", "f16", None).unwrap(),
         );
-        let key_option = arguments
+        let option = arguments
             .iter()
             .position(|argument| argument == "--api-key-file")
-            .expect("API key file option");
-        assert_eq!(arguments[key_option + 1], GUEST_API_KEY_PATH);
-        assert!(!arguments.iter().any(|argument| argument == first.as_str()));
+            .unwrap();
+        assert_eq!(arguments[option + 1], GUEST_API_KEY_PATH);
+        assert!(!arguments.iter().any(|argument| argument == first));
     }
 
     #[test]
