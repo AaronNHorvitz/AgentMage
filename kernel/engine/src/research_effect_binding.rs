@@ -56,55 +56,10 @@ impl PublicGetEffectBinding {
         root: &impl HeldWorkspaceRoot,
         prepared: PreparedPublicGet,
     ) -> Result<Self, ResearchEffectBindingError> {
-        let operation =
-            agentmage_kernel_contracts::OperationBinding::new(GrantOperation::NetworkAccess);
-        if call.schema_version != CONTRACT_SCHEMA_VERSION
-            || definition.schema_version != CONTRACT_SCHEMA_VERSION
-            || definition.tool_id != call.tool_id
-            || definition.tool_version != call.tool_version
-            || definition.input_schema != call.arguments.schema
-            || definition.input_schema.schema_version != 1
-            || definition.declared_effects != [operation]
-            || definition.required_grant.operation != operation
-            || !definition.required_grant.single_use
-            || call.arguments.media_type != "application/json"
-            || call.arguments.bytes.is_empty()
-            || call.arguments.bytes.len() > MAX_ARGUMENT_BYTES
-            || digest(&call.arguments.bytes) != call.arguments.sha256
-            || call.tool_call_id.as_str() != prepared.packet().request().operation_id
-            || definition.timeout_ms < prepared.packet().request().timeout_ms
-            || [
-                call.tool_call_id.as_str(),
-                call.correlation_id.as_str(),
-                call.action_id.as_str(),
-                call.tool_id.as_str(),
-                call.arguments.schema.schema_id.as_str(),
-            ]
-            .iter()
-            .any(|id| id.is_empty() || id.len() > 128)
-            || call.tool_version.is_empty()
-            || call.tool_version.len() > 32
-            || call.arguments.schema.schema_sha256.len() != 64
-        {
-            return Err(ResearchEffectBindingError::Call);
-        }
-        let draft: PublicGetDraft = serde_json::from_slice(&call.arguments.bytes)
-            .map_err(|_| ResearchEffectBindingError::Call)?;
-        // Preserve the original approved native JSON, like the existing registered
-        // command wrapper. Struct field order must not replace that exact identity.
-        // Closed decoding establishes semantic equality to the independently prepared
-        // packet; full ToolCall equality below still binds every original byte.
-        if &draft != prepared.packet().request()
-            || to_canonical_json(&call)
-                .map_err(|_| ResearchEffectBindingError::Call)?
-                .len()
-                > MAX_CALL_BYTES
-        {
-            return Err(ResearchEffectBindingError::Call);
-        }
+        validate_call(definition, &call, prepared.packet())?;
         let root = GrantTarget::held_workspace_root(root)
             .map_err(|_| ResearchEffectBindingError::Authority)?;
-        let network_scope = format!("https:{}:443", draft.target.domain);
+        let network_scope = format!("https:{}:443", prepared.packet().request().target.domain);
         Ok(Self {
             call,
             root,
@@ -153,6 +108,62 @@ impl PublicGetEffectBinding {
         }
         Ok(())
     }
+}
+
+// Shared by pre-effect restriction preparation and post-effect normalization.
+// This is consistency only; neither caller gains authority from these descriptions.
+pub(crate) fn validate_call(
+    definition: &ToolDefinition,
+    call: &ToolCall,
+    packet: &PublicGetWorkerPacket,
+) -> Result<(), ResearchEffectBindingError> {
+    let operation =
+        agentmage_kernel_contracts::OperationBinding::new(GrantOperation::NetworkAccess);
+    if call.schema_version != CONTRACT_SCHEMA_VERSION
+        || definition.schema_version != CONTRACT_SCHEMA_VERSION
+        || definition.tool_id != call.tool_id
+        || definition.tool_version != call.tool_version
+        || definition.input_schema != call.arguments.schema
+        || definition.input_schema.schema_version != 1
+        || definition.declared_effects != [operation]
+        || definition.required_grant.operation != operation
+        || !definition.required_grant.single_use
+        || call.arguments.media_type != "application/json"
+        || call.arguments.bytes.is_empty()
+        || call.arguments.bytes.len() > MAX_ARGUMENT_BYTES
+        || digest(&call.arguments.bytes) != call.arguments.sha256
+        || call.tool_call_id.as_str() != packet.request().operation_id
+        || definition.timeout_ms < packet.request().timeout_ms
+        || [
+            call.tool_call_id.as_str(),
+            call.correlation_id.as_str(),
+            call.action_id.as_str(),
+            call.tool_id.as_str(),
+            call.arguments.schema.schema_id.as_str(),
+        ]
+        .iter()
+        .any(|id| id.is_empty() || id.len() > 128)
+        || call.tool_version.is_empty()
+        || call.tool_version.len() > 32
+        || call.arguments.schema.schema_sha256.len() != 64
+    {
+        return Err(ResearchEffectBindingError::Call);
+    }
+    let draft: PublicGetDraft = serde_json::from_slice(&call.arguments.bytes)
+        .map_err(|_| ResearchEffectBindingError::Call)?;
+    // Preserve the original approved native JSON, like the existing registered
+    // command wrapper. Struct field order must not replace that exact identity.
+    // Closed decoding establishes semantic equality to the independently prepared
+    // packet; full ToolCall equality below still binds every original byte.
+    if &draft != packet.request()
+        || to_canonical_json(call)
+            .map_err(|_| ResearchEffectBindingError::Call)?
+            .len()
+            > MAX_CALL_BYTES
+    {
+        return Err(ResearchEffectBindingError::Call);
+    }
+    Ok(())
 }
 
 fn digest(bytes: &[u8]) -> String {

@@ -42,7 +42,7 @@ COMMANDS: Final = (
             "cargo", "test", "-p", "agentmage-kernel-engine", "--lib", "--locked",
             "runtime_loop::tests::artifact_preparation_tests::", "--", "--nocapture",
         ),
-        11,
+        12,
     ),
     (
         "engine-session-matrix",
@@ -173,6 +173,7 @@ SOURCE_PATHS: Final = (
 
 COVERAGE: Final = {
     "prepared_artifact_identity_and_publication": True,
+    "ordinary_modes_refuse_research_network_catalog": True,
     "approval_wait_and_exact_allow": True,
     "bounded_cancellation": True,
     "budget_exhaustion": True,

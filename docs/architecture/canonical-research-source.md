@@ -47,6 +47,34 @@ ArtifactCreated events afterward, in the original run, turn and operation. A cra
 between these steps leaves an incomplete, unreadable bundle; it does not permit an
 automatic network replay or a hash-only replacement for missing source bytes.
 
+## Completion preparation
+
+Decision 0097 adds closed normalization of an already successful native result.
+It cross-checks the registered call, terminal transaction description, exact receipt,
+original packet and reservation, independently expected native identities and observed
+parent interval. The shared pre-effect call validator preserves approved JSON bytes.
+These descriptions remain untrusted as provenance until the canonical reader resolves
+and verifies the actual owners' records.
+
+The helper appends source members, the complete ToolResult and the bundle through the
+same borrowed artifact builder introduced by Decision 0096. It uses no identifier
+allocator or clock. Returned references must describe the exact complete candidates,
+with distinct identities. Sealing happens once, after every dependent reference exists;
+the exact terminal must follow the original start and verified cleanup. A successful
+network disclosure is Changed. Caller failure must propagate without effect replay,
+partial acceptance, result replacement or another sealing attempt.
+
+The research begin operation also exposes the existing durable-start observer through
+its original private preflight/checkpoint owner. The compatibility entry supplies a
+no-op observer. Observation follows durable consumption and start publication, and
+precedes the driver. Observation failure preserves spent accounting and reconciles on
+reopen without replay.
+
+No ordinary runtime mode admits NetworkAccess. The normalizer is an inactive preparation
+prerequisite; synthetic builder/store tests do not demonstrate coordinator admission,
+native transport, a provider path or real-model research. The native adversarial and
+independent review prerequisites of Decision 0084 still govern activation.
+
 ## Read-time requirements
 
 Resolve the bundle under the exact session, task and policy, then verify:

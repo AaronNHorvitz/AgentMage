@@ -235,6 +235,8 @@ pub mod repository_inspection;
 pub mod repository_safety;
 /// Bounded public research disclosure, destinations and single-owner accounting.
 pub mod research_budget;
+/// Pure full-result normalization through the existing borrowed artifact owner.
+pub mod research_completion;
 /// Canonical freshness bridge for separately admitted native research effects.
 pub mod research_dispatch;
 /// Exact independently prepared public-GET restrictions on a consumed effect permit.

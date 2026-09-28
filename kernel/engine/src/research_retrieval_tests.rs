@@ -804,3 +804,6 @@ fn canonical_source_remains_readable_after_terminal_run_and_original_request_dea
     assert_eq!(s.runtime.receipts().len(), 1);
     s.close();
 }
+
+#[path = "research_completion_tests.rs"]
+mod completion;

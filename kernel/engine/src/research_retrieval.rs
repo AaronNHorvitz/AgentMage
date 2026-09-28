@@ -20,9 +20,9 @@ use crate::runtime_artifact::{
 use crate::runtime_journal::{current_cursor, load_run_events};
 use crate::tooling::ToolRegistry;
 
-const MAX_BUNDLE: u64 = 16 * 1024;
-const MAX_CALL: u64 = 128 * 1024;
-const MAX_RESULT: u64 = 64 * 1024;
+pub(crate) const MAX_BUNDLE: u64 = 16 * 1024;
+pub(crate) const MAX_CALL: u64 = 128 * 1024;
+pub(crate) const MAX_RESULT: u64 = 64 * 1024;
 const MAX_FRAME: u64 = 4 * 1024 * 1024 + 64 * 1024 + 4;
 // A source read must not allocate an arbitrarily long run's journal. These are
 // read-work limits, not event retention limits or permission to omit history.

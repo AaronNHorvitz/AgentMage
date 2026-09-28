@@ -474,6 +474,10 @@ fn historical_reservation_rechecks_full_plan_and_complete_history_not_only_named
 // Public-owner tests reuse the canonical SQLCipher/artifact fixtures. The recording
 // driver is synthetic; packet/held-root native binding is tested independently.
 mod dispatch_owner {
+    mod start_observer {
+        include!("research_start_observer_tests.rs");
+    }
+
     mod retrieval {
         include!("research_retrieval_tests.rs");
     }
@@ -537,6 +541,10 @@ mod dispatch_owner {
         seal_runtime_event(event).unwrap()
     }
     fn fixture() -> Fixture {
+        fixture_with_argument_encoding(false)
+    }
+
+    fn fixture_with_argument_encoding(pretty: bool) -> Fixture {
         let directory = temporary_directory();
         let mut runtime = runtime_with_run(&directory.join("authority.db"));
         let mut payloads = FakePayloadStore::default();
@@ -573,7 +581,11 @@ mod dispatch_owner {
             schema_version: 1,
             schema_sha256: digest('1'),
         };
-        let bytes = serde_json::to_vec(prepared.packet().request()).unwrap();
+        let bytes = if pretty {
+            serde_json::to_vec_pretty(prepared.packet().request()).unwrap()
+        } else {
+            serde_json::to_vec(prepared.packet().request()).unwrap()
+        };
         let call = ToolCall {
             schema_version: CONTRACT_SCHEMA_VERSION,
             tool_call_id: ToolCallId::from_raw("dispatch-call-1"),

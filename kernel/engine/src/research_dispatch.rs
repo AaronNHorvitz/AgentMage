@@ -199,6 +199,26 @@ pub(crate) mod tests {
         }
     }
 
+    // Synthetic ordering probe kept in the existing audited effect-test boundary.
+    pub(crate) struct ObservedResearchDriver<'a> {
+        pub(crate) inner: RecordingResearchDriver<'a>,
+        pub(crate) observed: &'a std::cell::Cell<bool>,
+    }
+
+    impl ResearchEffectDriver for ObservedResearchDriver<'_> {
+        fn execute_research(
+            &mut self,
+            authorization: EffectAuthorization<'_>,
+            dispatch: ResearchDispatch<'_>,
+        ) -> EffectLaunch {
+            assert!(
+                self.observed.get(),
+                "driver preceded durable-start observation"
+            );
+            self.inner.execute_research(authorization, dispatch)
+        }
+    }
+
     #[test]
     fn adapter_cannot_be_rearmed_even_after_its_material_is_taken() {
         fn fresh() -> FreshResearchDispatch {

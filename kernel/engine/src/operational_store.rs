@@ -3167,6 +3167,41 @@ impl DurableAuthorityRuntime {
         S: RuntimeArtifactPayloadStore,
         D: crate::research_dispatch::ResearchEffectDriver,
     {
+        self.begin_research_effect_with_start_observer(
+            registry,
+            policy,
+            request,
+            driver,
+            started_event,
+            payloads,
+            context,
+            prepared,
+            reservation,
+            &mut |_| Ok(()),
+        )
+    }
+
+    /// Begins research through the same locked freshness and consumption owner.
+    /// Observes the exact durably committed start before invoking the driver.
+    /// Refusal retains spent accounting and requires reconciliation, never replay.
+    #[allow(clippy::too_many_arguments)]
+    pub fn begin_research_effect_with_start_observer<S, D>(
+        &mut self,
+        registry: &ToolRegistry,
+        policy: &PolicyEngine,
+        request: AuthorityTransactionRequest,
+        driver: &mut D,
+        started_event: RuntimeEvent,
+        payloads: &S,
+        context: &crate::research_journal::ResearchBudgetContext,
+        prepared: &crate::research_fetch::PreparedPublicGet,
+        reservation: crate::research_journal::DurableResearchReservation,
+        observe_started: &mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimeJournalError>,
+    ) -> Result<(Receipt, PendingRuntimeEffectCommit), DurableAuthorityError>
+    where
+        S: RuntimeArtifactPayloadStore,
+        D: crate::research_dispatch::ResearchEffectDriver,
+    {
         let mut adapter = crate::research_dispatch::ResearchDispatchAdapter::new(driver);
         self.begin_effect_with_preflight(
             registry,
@@ -3174,7 +3209,7 @@ impl DurableAuthorityRuntime {
             request,
             &mut adapter,
             started_event,
-            &mut |_| Ok(()),
+            observe_started,
             |store, issuer, request, started, adapter| {
                 use crate::research_journal::ResearchJournalError;
                 if policy.policy_sha256() != context.policy_sha256

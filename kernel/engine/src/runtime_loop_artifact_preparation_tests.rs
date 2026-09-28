@@ -1,6 +1,7 @@
 //! Synthetic coordinator fixtures, not native retrieval or model qualification.
 
 use super::*;
+use crate::runtime_loop::{operation_allowed_for_mode, valid_runtime_state_change};
 
 pub(super) fn candidate(bytes: &[u8]) -> RuntimeToolArtifactCandidate {
     RuntimeToolArtifactCandidate {
@@ -639,4 +640,59 @@ fn prepared_ordinals_precede_large_output_without_double_accounting() {
     );
     drop(artifacts);
     assert_valid_terminal_stream(&runtime);
+}
+
+#[test]
+fn research_preparation_does_not_enable_network_in_any_ordinary_runtime_mode() {
+    for mode in [
+        RuntimeSessionMode::EphemeralReadOnly,
+        RuntimeSessionMode::DurableReadOnly,
+        RuntimeSessionMode::ControlledWrite,
+    ] {
+        assert!(!operation_allowed_for_mode(
+            mode,
+            GrantOperation::NetworkAccess
+        ));
+        let (initial, executions) = callback_fixture(PermissionScript::PrepareArtifacts(0));
+        let registry = registry_for_operation(GrantOperation::NetworkAccess);
+        let mut request = request(initial.model.exact_profile().clone(), &registry);
+        request.mode = mode;
+        let request = seal_runtime_run_request(request).unwrap();
+        let admitted = if mode == RuntimeSessionMode::EphemeralReadOnly {
+            ReusableRuntimeCoordinator::new(
+                request,
+                initial.model,
+                initial.context,
+                registry,
+                initial.tool_boundary,
+                initial.verifier,
+                initial.clock,
+            )
+        } else {
+            ReusableRuntimeCoordinator::new_with_durable_state(
+                request,
+                initial.model,
+                initial.context,
+                registry,
+                initial.tool_boundary,
+                initial.verifier,
+                initial.clock,
+            )
+        };
+        assert_eq!(admitted.err(), Some(RuntimeLoopError::ToolCatalogBinding));
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+
+        for state_change in [
+            StateChange::Changed,
+            StateChange::NotChanged,
+            StateChange::Uncertain,
+        ] {
+            assert!(!valid_runtime_state_change(
+                mode,
+                GrantOperation::NetworkAccess,
+                OperationOutcome::Succeeded,
+                state_change
+            ));
+        }
+    }
 }
