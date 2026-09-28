@@ -4,7 +4,7 @@
     {
       "argv_sha256": "cc4a25de1ec491c408fa47a4f724d34dcac8cc52040cbae67f7a080b1c283b74",
       "command_id": "retained-runtime-evidence",
-      "elapsed_ms": 61,
+      "elapsed_ms": 64,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -12,7 +12,7 @@
     {
       "argv_sha256": "04097c4689903a4ef8fa630b7dd87fa756a1c0e0741d9556492342c372cb7306",
       "command_id": "coordinator-boundary-review",
-      "elapsed_ms": 166,
+      "elapsed_ms": 167,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -20,12 +20,12 @@
     {
       "argv_sha256": "b26bfb863a1251b307c473309b2fa69a8ddccbeb10b4b37bb83f2f2a1e19196f",
       "command_id": "engine-security-matrix",
-      "elapsed_ms": 196,
+      "elapsed_ms": 187,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": {
         "failed": 0,
-        "filtered_out": 1237,
+        "filtered_out": 1258,
         "ignored": 0,
         "measured": 0,
         "passed": 18
@@ -34,7 +34,7 @@
     {
       "argv_sha256": "d25c1a35db190c5821af496f6e3cc07b1ba96ddb12ec19c8b6a21d7bc7325ee1",
       "command_id": "native-read-security-matrix",
-      "elapsed_ms": 124,
+      "elapsed_ms": 110,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": {
@@ -48,7 +48,7 @@
     {
       "argv_sha256": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
       "command_id": "engine-strict-clippy",
-      "elapsed_ms": 93,
+      "elapsed_ms": 90,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -56,7 +56,7 @@
     {
       "argv_sha256": "65e69937c136fc6ddff76a8bd81a066958fed2f9858f8642f8e36f08b08ee814",
       "command_id": "host-strict-clippy",
-      "elapsed_ms": 90,
+      "elapsed_ms": 83,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -64,7 +64,7 @@
     {
       "argv_sha256": "47cdc321aaa5c7c4ed9eed236a4c8f7fcf3cee3ea5f1542a8e3304e1832cac09",
       "command_id": "dependency-direction",
-      "elapsed_ms": 22,
+      "elapsed_ms": 17,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -72,7 +72,7 @@
     {
       "argv_sha256": "1ba5e4e0d2b5860ae9e4b0ed786fc45413e659b7c435186b2ad8dc781a2c4045",
       "command_id": "effect-mediation",
-      "elapsed_ms": 2156,
+      "elapsed_ms": 2279,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -464,10 +464,10 @@
     "redactions": [
       "repository-root"
     ],
-    "sha256": "8cca4f18fc798008e73b0a9abae6bbcc8603eb3a59be55b9d7eb9e927aa9323e"
+    "sha256": "a561a8ec37839e08c0dce9a46378395f83707813947b928af465bddc6cb6a50a"
   },
   "schema_version": 1,
-  "source_revision": "e2ff05e59a47067835013da972a69f1c63a0d3ba",
+  "source_revision": "dc6653178afab31a44627ba2a828722f936172db",
   "sources": [
     {
       "bytes": 160606,
@@ -487,17 +487,17 @@
     {
       "bytes": 10743,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "8a1d82d5b6cec31ce0394610420baf84136afc3516d6c51e0c9de34058137bb2"
+      "sha256": "ebd0d9b66e65f74d2258473c1a9c7fe4a2fe2aca3e9a683cfa74e81e8cb8abd5"
     },
     {
       "bytes": 7935,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "ef7c654f8b0cb3b4d75579888cf6ea2f62ca5e6b40196315514bd5dea0c53eef"
+      "sha256": "75b767c8aa3e43bd07b68b7681550979066d0d25860f3536dc49aab27a7d1692"
     },
     {
       "bytes": 7511,
       "path": "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
-      "sha256": "bb6be6f947457084f10baed972e6914d7f3360effc3846858f3bef57703383d5"
+      "sha256": "c61caa500103e41388270c06fef569f5c6662715ad9e8ca62ece430ca0804641"
     },
     {
       "bytes": 17961,
@@ -515,14 +515,14 @@
       "sha256": "7e5c25aa0bd7fc52afe67e27997a2f7969a71e64adf3d71b649fac9eafe65b2e"
     },
     {
-      "bytes": 152437,
+      "bytes": 158499,
       "path": "kernel/engine/src/runtime_event.rs",
-      "sha256": "b6e32d6d02e8eeeb29c987ae6c757adf1d876b3875a1af522db8b19c93bb20bc"
+      "sha256": "c335d45282843159ad0cb97f22f965407112a9b0d9de6fe17677725266ef7f3d"
     },
     {
-      "bytes": 180466,
+      "bytes": 191531,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "95bd6b898625e40ad84fa13ab588a42ed9e77993d26df700228e66a5d33f55b7"
+      "sha256": "cfaa135d513b6c1757ff5a19882a7f0cb06a06ecaa43c30c1708e86a3b2c4756"
     },
     {
       "bytes": 12024,
@@ -540,9 +540,9 @@
       "sha256": "4fe12c43ed684bbdca60d54778b61a0a05971f65247e290cf6b589d1d9b4b81d"
     },
     {
-      "bytes": 220703,
+      "bytes": 253021,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "b4282513c61eb64976196413024f154d10bb30a5139ca29a31c113c8d3d1eb4b"
+      "sha256": "20c012f9ed0839da2061ff33da9851df2c594bdff2ea81aa79adff60d4e56958"
     },
     {
       "bytes": 9963,
