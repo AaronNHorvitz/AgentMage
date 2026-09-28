@@ -3,7 +3,7 @@
 use std::cell::RefCell;
 use std::ffi::OsString;
 use std::fs;
-use std::io::{ErrorKind, Read, Write};
+use std::io::Read;
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::fs::{FileTypeExt, MetadataExt};
 use std::os::unix::net::UnixStream;
@@ -31,8 +31,163 @@ use crate::native_resource_admission::NativeDevelopmentResourcePolicy;
 
 mod owned_files;
 mod owned_process;
+mod socket_exchange {
+    //! One cooperative deadline across a private native-model socket exchange.
+
+    use std::io::{ErrorKind, Read, Write};
+    use std::os::unix::net::UnixStream;
+    use std::path::Path;
+    use std::time::{Duration, Instant};
+
+    use agentmage_kernel_contracts::{
+        ModelCancellationProbe, ModelRunRequest, ModelRuntimeFailure,
+    };
+    use rustix::event::{PollFd, PollFlags, Timespec, poll};
+    use rustix::net::{
+        AddressFamily, SocketAddrUnix, SocketFlags, SocketType, connect, socket_with,
+    };
+
+    use super::{STREAM_POLL_INTERVAL, StreamReadError, cancellation_requested, failure};
+
+    pub(super) struct SocketExchange<'a> {
+        deadline: Instant,
+        cancellation: Option<(&'a dyn ModelCancellationProbe, &'a ModelRunRequest)>,
+    }
+
+    impl<'a> SocketExchange<'a> {
+        pub(super) fn new(
+            timeout: Duration,
+            cancellation: Option<(&'a dyn ModelCancellationProbe, &'a ModelRunRequest)>,
+        ) -> Result<Self, ModelRuntimeFailure> {
+            Ok(Self {
+                deadline: Instant::now()
+                    .checked_add(timeout)
+                    .ok_or_else(|| failure("model.llama-driver.deadline-invalid", false))?,
+                cancellation,
+            })
+        }
+
+        pub(super) fn check_stop(&self) -> Result<(), StreamReadError> {
+            if Instant::now() >= self.deadline {
+                return Err(StreamReadError::TimedOut);
+            }
+            if let Some((probe, request)) = self.cancellation
+                && cancellation_requested(Some(probe), request).map_err(StreamReadError::Failed)?
+            {
+                return Err(StreamReadError::Cancelled);
+            }
+            Ok(())
+        }
+
+        pub(super) fn connect(&self, path: &Path) -> Result<UnixStream, StreamReadError> {
+            self.check_stop()?;
+            let unavailable = |_| {
+                StreamReadError::Failed(failure("model.llama-driver.socket-connect-failed", true))
+            };
+            let address = SocketAddrUnix::new(path).map_err(unavailable)?;
+            let socket = socket_with(
+                AddressFamily::UNIX,
+                SocketType::STREAM,
+                SocketFlags::NONBLOCK | SocketFlags::CLOEXEC,
+                None,
+            )
+            .map_err(unavailable)?;
+            // A full local accept queue is unavailable, never a blocking connect
+            // or permission to retry an exchange. No request bytes have been sent.
+            connect(&socket, &address).map_err(unavailable)?;
+            self.check_stop()?;
+            Ok(UnixStream::from(socket))
+        }
+
+        fn wait(&self, stream: &UnixStream, readiness: PollFlags) -> Result<(), StreamReadError> {
+            loop {
+                self.check_stop()?;
+                let remaining = self.deadline.saturating_duration_since(Instant::now());
+                let slice = remaining.min(STREAM_POLL_INTERVAL);
+                let timeout = Timespec {
+                    tv_sec: 0,
+                    tv_nsec: i64::from(slice.subsec_nanos()),
+                };
+                let mut descriptors = [PollFd::new(stream, readiness)];
+                match poll(&mut descriptors, Some(&timeout)) {
+                    Ok(0) | Err(rustix::io::Errno::INTR) => continue,
+                    Ok(_) => {
+                        self.check_stop()?;
+                        // Read/write establishes EOF or the exact I/O failure;
+                        // readiness and hangup themselves are not successful I/O.
+                        return Ok(());
+                    }
+                    Err(_) => {
+                        return Err(StreamReadError::Failed(failure(
+                            "model.llama-driver.socket-poll-failed",
+                            true,
+                        )));
+                    }
+                }
+            }
+        }
+
+        pub(super) fn write_all(
+            &self,
+            stream: &mut UnixStream,
+            mut bytes: &[u8],
+        ) -> Result<(), StreamReadError> {
+            while !bytes.is_empty() {
+                self.check_stop()?;
+                match stream.write(bytes) {
+                    Ok(0) => {
+                        return Err(StreamReadError::Failed(failure(
+                            "model.llama-driver.http-write-failed",
+                            true,
+                        )));
+                    }
+                    Ok(written) => bytes = &bytes[written..],
+                    Err(error) if error.kind() == ErrorKind::Interrupted => continue,
+                    Err(error) if error.kind() == ErrorKind::WouldBlock => {
+                        self.wait(stream, PollFlags::OUT)?;
+                    }
+                    Err(_) => {
+                        return Err(StreamReadError::Failed(failure(
+                            "model.llama-driver.http-write-failed",
+                            true,
+                        )));
+                    }
+                }
+            }
+            self.check_stop()
+        }
+
+        pub(super) fn read(
+            &self,
+            stream: &mut UnixStream,
+            buffer: &mut [u8],
+        ) -> Result<usize, StreamReadError> {
+            loop {
+                self.check_stop()?;
+                match stream.read(buffer) {
+                    Ok(length) => {
+                        self.check_stop()?;
+                        return Ok(length);
+                    }
+                    Err(error) if error.kind() == ErrorKind::Interrupted => continue,
+                    Err(error) if error.kind() == ErrorKind::WouldBlock => {
+                        self.wait(stream, PollFlags::IN)?;
+                    }
+                    Err(_) => {
+                        return Err(StreamReadError::Failed(failure(
+                            "model.llama-driver.http-read-failed",
+                            true,
+                        )));
+                    }
+                }
+            }
+        }
+    }
+}
+
 use owned_files::RuntimeFiles;
 use owned_process::RuntimeOwner;
+use socket_exchange::SocketExchange;
 
 const MODEL_CLEANUP_TIME: Duration = Duration::from_secs(3);
 const MODEL_CLEANUP_POLL: Duration = Duration::from_millis(10);
@@ -1287,6 +1442,10 @@ impl UnixHttpClient {
             cancellation,
             stream_id,
         } = invocation;
+        let exchange = SocketExchange::new(
+            Duration::from_millis(request.timeout_ms.min(3_600_000)),
+            cancellation.map(|probe| (probe, request)),
+        )?;
         let prompt = std::str::from_utf8(context)
             .map_err(|_| failure("model.llama-driver.context-not-utf8", false))?;
         let body = serde_json::to_vec(&json!({
@@ -1314,33 +1473,20 @@ impl UnixHttpClient {
             family_codec_owns_response,
             sink,
         );
-        if cancellation_requested(cancellation, request)? {
-            return state.interrupted(ModelRunTerminalState::Cancelled);
-        }
-        let mut stream = UnixStream::connect(&self.socket_path)
-            .map_err(|_| failure("model.llama-driver.socket-connect-failed", true))?;
-        stream
-            .set_read_timeout(Some(STREAM_POLL_INTERVAL))
-            .and_then(|()| {
-                stream.set_write_timeout(Some(Duration::from_millis(
-                    request.timeout_ms.clamp(1, 3_600_000),
-                )))
-            })
-            .map_err(|_| failure("model.llama-driver.socket-timeout-failed", true))?;
         let header = format!(
             "POST /completion HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer {}\r\nContent-Type: application/json\r\nConnection: close\r\nContent-Length: {}\r\n\r\n",
             self.api_key.as_str(),
             body.len()
         );
-        stream
-            .write_all(header.as_bytes())
-            .and_then(|()| stream.write_all(&body))
-            .map_err(|_| failure("model.llama-driver.http-write-failed", true))?;
-        let deadline = Instant::now()
-            .checked_add(Duration::from_millis(request.timeout_ms))
-            .ok_or_else(|| failure("model.llama-driver.deadline-invalid", false))?;
-        let mut reader = PollingUnixReader::new(stream, deadline, cancellation, request);
-        match read_streaming_response(&mut reader, &mut state, request.max_output_tokens) {
+        let result = (|| {
+            let mut stream = exchange.connect(&self.socket_path)?;
+            exchange.write_all(&mut stream, header.as_bytes())?;
+            exchange.write_all(&mut stream, &body)?;
+            let mut reader = PollingUnixReader::new(stream, exchange);
+            read_streaming_response(&mut reader, &mut state, request.max_output_tokens)?;
+            reader.check_stop()
+        })();
+        match result {
             Ok(()) => state.complete(),
             Err(StreamReadError::Cancelled) => state.interrupted(ModelRunTerminalState::Cancelled),
             Err(StreamReadError::TimedOut) => state.interrupted(ModelRunTerminalState::TimedOut),
@@ -1364,13 +1510,8 @@ impl UnixHttpClient {
         maximum: usize,
         timeout_ms: u64,
     ) -> Result<Vec<u8>, ModelRuntimeFailure> {
-        let mut stream = UnixStream::connect(&self.socket_path)
-            .map_err(|_| failure("model.llama-driver.socket-connect-failed", true))?;
-        let timeout = Duration::from_millis(timeout_ms.clamp(1, 3_600_000));
-        stream
-            .set_read_timeout(Some(timeout))
-            .and_then(|()| stream.set_write_timeout(Some(timeout)))
-            .map_err(|_| failure("model.llama-driver.socket-timeout-failed", true))?;
+        let exchange =
+            SocketExchange::new(Duration::from_millis(timeout_ms.clamp(1, 3_600_000)), None)?;
         let payload = body.unwrap_or_default();
         let header = format!(
             "{} {} HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer {}\r\nContent-Type: application/json\r\nConnection: close\r\nContent-Length: {}\r\n\r\n",
@@ -1379,19 +1520,41 @@ impl UnixHttpClient {
             self.api_key.as_str(),
             payload.len()
         );
-        stream
-            .write_all(header.as_bytes())
-            .and_then(|()| stream.write_all(payload))
-            .map_err(|_| failure("model.llama-driver.http-write-failed", true))?;
-        let mut response = Vec::new();
-        stream
-            .take(u64::try_from(maximum + 1).expect("bounded response limit"))
-            .read_to_end(&mut response)
-            .map_err(|_| failure("model.llama-driver.http-read-failed", true))?;
-        if response.len() > maximum {
-            return Err(failure("model.llama-driver.http-response-oversized", false));
-        }
-        parse_http_response(&response)
+        let operation = || {
+            let mut stream = exchange.connect(&self.socket_path)?;
+            exchange.write_all(&mut stream, header.as_bytes())?;
+            exchange.write_all(&mut stream, payload)?;
+            let mut response = Vec::new();
+            let limit = maximum.checked_add(1).ok_or_else(|| {
+                StreamReadError::Failed(failure(
+                    "model.llama-driver.http-response-oversized",
+                    false,
+                ))
+            })?;
+            let mut buffer = [0_u8; 8192];
+            loop {
+                let capacity = buffer.len().min(limit - response.len());
+                let count = exchange.read(&mut stream, &mut buffer[..capacity])?;
+                if count == 0 {
+                    break;
+                }
+                response.extend_from_slice(&buffer[..count]);
+                if response.len() > maximum {
+                    return Err(StreamReadError::Failed(failure(
+                        "model.llama-driver.http-response-oversized",
+                        false,
+                    )));
+                }
+            }
+            let body = parse_http_response(&response).map_err(StreamReadError::Failed)?;
+            exchange.check_stop()?;
+            Ok(body)
+        };
+        operation().map_err(|error| match error {
+            StreamReadError::TimedOut => failure("model.llama-driver.http-timeout", true),
+            StreamReadError::Cancelled => failure("model.llama-driver.cancelled", false),
+            StreamReadError::Failed(error) => error,
+        })
     }
 }
 
@@ -1431,29 +1594,21 @@ struct PollingUnixReader<'a> {
     stream: UnixStream,
     pending: Vec<u8>,
     offset: usize,
-    deadline: Instant,
-    cancellation: Option<&'a dyn ModelCancellationProbe>,
-    request: &'a ModelRunRequest,
+    exchange: SocketExchange<'a>,
 }
 
 impl<'a> PollingUnixReader<'a> {
-    fn new(
-        stream: UnixStream,
-        deadline: Instant,
-        cancellation: Option<&'a dyn ModelCancellationProbe>,
-        request: &'a ModelRunRequest,
-    ) -> Self {
+    fn new(stream: UnixStream, exchange: SocketExchange<'a>) -> Self {
         Self {
             stream,
             pending: Vec::new(),
             offset: 0,
-            deadline,
-            cancellation,
-            request,
+            exchange,
         }
     }
 
     fn read_until(&mut self, delimiter: &[u8], maximum: usize) -> Result<Vec<u8>, StreamReadError> {
+        self.check_stop()?;
         let mut output = Vec::new();
         while !output.ends_with(delimiter) {
             if output.len() >= maximum {
@@ -1474,6 +1629,7 @@ impl<'a> PollingUnixReader<'a> {
     }
 
     fn read_exact_bytes(&mut self, length: usize) -> Result<Vec<u8>, StreamReadError> {
+        self.check_stop()?;
         let mut output = Vec::with_capacity(length);
         while output.len() < length {
             output.push(self.read_byte()?);
@@ -1482,48 +1638,26 @@ impl<'a> PollingUnixReader<'a> {
     }
 
     fn read_byte(&mut self) -> Result<u8, StreamReadError> {
-        loop {
-            if self.offset < self.pending.len() {
-                let byte = self.pending[self.offset];
-                self.offset += 1;
-                return Ok(byte);
-            }
+        if self.offset >= self.pending.len() {
             self.pending.clear();
             self.offset = 0;
-            self.check_stop()?;
             let mut buffer = [0_u8; 8192];
-            match self.stream.read(&mut buffer) {
-                Ok(0) => {
-                    return Err(StreamReadError::Failed(failure(
-                        "model.llama-driver.http-unexpected-eof",
-                        true,
-                    )));
-                }
-                Ok(length) => self.pending.extend_from_slice(&buffer[..length]),
-                Err(error)
-                    if matches!(error.kind(), ErrorKind::WouldBlock | ErrorKind::TimedOut) =>
-                {
-                    continue;
-                }
-                Err(_) => {
-                    return Err(StreamReadError::Failed(failure(
-                        "model.llama-driver.http-read-failed",
-                        true,
-                    )));
-                }
+            let length = self.exchange.read(&mut self.stream, &mut buffer)?;
+            if length == 0 {
+                return Err(StreamReadError::Failed(failure(
+                    "model.llama-driver.http-unexpected-eof",
+                    true,
+                )));
             }
+            self.pending.extend_from_slice(&buffer[..length]);
         }
+        let byte = self.pending[self.offset];
+        self.offset += 1;
+        Ok(byte)
     }
 
     fn check_stop(&self) -> Result<(), StreamReadError> {
-        if Instant::now() >= self.deadline {
-            return Err(StreamReadError::TimedOut);
-        }
-        match cancellation_requested(self.cancellation, self.request) {
-            Ok(true) => Err(StreamReadError::Cancelled),
-            Ok(false) => Ok(()),
-            Err(error) => Err(StreamReadError::Failed(error)),
-        }
+        self.exchange.check_stop()
     }
 }
 
@@ -2690,6 +2824,51 @@ mod tests {
         );
     }
 
+    fn accept_exchange(listener: &UnixListener) -> std::os::unix::net::UnixStream {
+        listener.set_nonblocking(true).unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(2);
+        loop {
+            match listener.accept() {
+                Ok((stream, _)) => return stream,
+                Err(error)
+                    if error.kind() == std::io::ErrorKind::WouldBlock
+                        && std::time::Instant::now() < deadline =>
+                {
+                    thread::sleep(Duration::from_millis(5));
+                }
+                Err(error) => panic!("fixture accept failed: {error}"),
+            }
+        }
+    }
+
+    fn read_exchange_request(stream: &mut std::os::unix::net::UnixStream) -> Vec<u8> {
+        stream
+            .set_read_timeout(Some(Duration::from_secs(2)))
+            .unwrap();
+        let mut request = Vec::new();
+        loop {
+            assert!(request.len() < 64 * 1024, "bounded fixture request");
+            let mut buffer = [0_u8; 4096];
+            let count = stream.read(&mut buffer).expect("fixture request");
+            assert!(count > 0, "complete fixture request");
+            request.extend_from_slice(&buffer[..count]);
+            if let Some(split) = request.windows(4).position(|bytes| bytes == b"\r\n\r\n") {
+                let header = std::str::from_utf8(&request[..split]).unwrap();
+                let length: usize = header
+                    .lines()
+                    .find_map(|line| line.strip_prefix("Content-Length: "))
+                    .unwrap()
+                    .parse()
+                    .unwrap();
+                assert!(length + split + 4 <= 64 * 1024, "bounded fixture payload");
+                if request.len() == split + 4 + length {
+                    return request;
+                }
+                assert!(request.len() < split + 4 + length, "single fixture request");
+            }
+        }
+    }
+
     fn exchange<T>(
         response: Vec<u8>,
         operation: impl FnOnce(&UnixHttpClient) -> T,
@@ -2698,11 +2877,9 @@ mod tests {
         let socket = directory.0.join("llama-server.sock");
         let listener = UnixListener::bind(&socket).expect("listener");
         let server = thread::spawn(move || {
-            let (mut stream, _) = listener.accept().expect("accept");
-            let mut request = vec![0_u8; 64 * 1024];
-            let count = stream.read(&mut request).expect("request");
+            let mut stream = accept_exchange(&listener);
+            let request = read_exchange_request(&mut stream);
             stream.write_all(&response).expect("response");
-            request.truncate(count);
             request
         });
         let client = UnixHttpClient::new(socket.clone(), "test-api-key".to_owned());
@@ -2720,16 +2897,14 @@ mod tests {
         let socket = directory.0.join("llama-server.sock");
         let listener = UnixListener::bind(&socket).expect("listener");
         let server = thread::spawn(move || {
-            let (mut stream, _) = listener.accept().expect("accept");
-            let mut request = vec![0_u8; 64 * 1024];
-            let count = stream.read(&mut request).expect("request");
+            let mut stream = accept_exchange(&listener);
+            let request = read_exchange_request(&mut stream);
             for (part, delay) in parts {
                 if stream.write_all(&part).is_err() {
                     break;
                 }
                 thread::sleep(delay);
             }
-            request.truncate(count);
             request
         });
         let client = UnixHttpClient::new(socket.clone(), "test-api-key".to_owned());
@@ -3389,7 +3564,30 @@ mod tests {
         let first = sse(json!({"content": "partial", "tokens": [1], "stop": false}));
         let mut initial = streaming_headers();
         initial.extend_from_slice(&chunk(&first));
-        let probe = cancellation_probe(3);
+        struct FragmentSignal(AtomicUsize);
+        impl ModelCancellationProbe for FragmentSignal {
+            fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
+                Ok((self.0.load(Ordering::SeqCst) != 0).then(|| cancellation_probe(1).signal))
+            }
+        }
+        struct FragmentSink<'a> {
+            recording: RecordingSink,
+            signal: &'a FragmentSignal,
+        }
+        impl ModelStreamSink for FragmentSink<'_> {
+            fn accept(
+                &mut self,
+                fragment: StreamedModelFragment,
+            ) -> Result<(), ModelRuntimeFailure> {
+                let output = !fragment.terminal && !fragment.bytes.is_empty();
+                self.recording.accept(fragment)?;
+                if output {
+                    self.signal.0.store(1, Ordering::SeqCst);
+                }
+                Ok(())
+            }
+        }
+        let probe = FragmentSignal(AtomicUsize::new(0));
         let ((completion, fragments), _) = exchange_parts(
             vec![
                 (initial, Duration::from_millis(150)),
@@ -3399,14 +3597,17 @@ mod tests {
                 let request = run_request();
                 let stream_id = ModelStreamId::from_raw("stream-1");
                 let decoding = test_decoding(&request);
-                let mut sink = RecordingSink::default();
+                let mut sink = FragmentSink {
+                    recording: RecordingSink::default(),
+                    signal: &probe,
+                };
                 let completion = client
                     .completion_stream(
                         completion_invocation(&request, &decoding, Some(&probe), &stream_id),
                         &mut sink,
                     )
                     .expect("cancelled completion");
-                (completion, sink.fragments)
+                (completion, sink.recording.fragments)
             },
         );
         assert_eq!(completion.terminal_state, ModelRunTerminalState::Cancelled);
@@ -3501,5 +3702,340 @@ mod tests {
             assert!(!plain_text(&value));
         }
         assert!(plain_text(b"line\nbreak"));
+    }
+
+    mod transport_budget_tests {
+        //! Actual Unix-socket fixtures, with no model, GPU or runtime qualification.
+
+        use super::*;
+        use std::sync::{Arc, atomic::AtomicBool, mpsc};
+        use std::time::Instant;
+
+        #[test]
+        fn transport_budget_slow_response_cannot_renew_the_deadline() {
+            for endpoint in [Endpoint::Health, Endpoint::Properties, Endpoint::Tokenize] {
+                let parts = response(json!({"status": "ok"}))
+                    .chunks(10)
+                    .map(|chunk| (chunk.to_vec(), Duration::from_millis(35)))
+                    .collect();
+                let (result, _) = exchange_parts(parts, |client| {
+                    client.request(endpoint, Some(b"{}"), 4096, 100)
+                });
+                assert_eq!(result.unwrap_err().code, "model.llama-driver.http-timeout");
+            }
+        }
+
+        #[test]
+        fn transport_budget_silent_response_has_a_deadline_failure() {
+            let (result, _) =
+                exchange_parts(vec![(Vec::new(), Duration::from_millis(150))], |client| {
+                    client.request(Endpoint::Health, None, 4096, 50)
+                });
+            assert_eq!(result.unwrap_err().code, "model.llama-driver.http-timeout");
+        }
+
+        struct UploadCancellation {
+            requested: Arc<AtomicBool>,
+        }
+
+        impl ModelCancellationProbe for UploadCancellation {
+            fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
+                Ok(self
+                    .requested
+                    .load(Ordering::SeqCst)
+                    .then(|| cancellation_probe(1).signal))
+            }
+        }
+
+        fn stalled_upload<T>(
+            cancel: bool,
+            operation: impl FnOnce(&UnixHttpClient, &UploadCancellation) -> T,
+        ) -> T {
+            let directory = TestDirectory::new();
+            let socket = directory.0.join("llama-server.sock");
+            let listener = UnixListener::bind(&socket).unwrap();
+            let requested = Arc::new(AtomicBool::new(false));
+            let server_requested = Arc::clone(&requested);
+            let (done_tx, done_rx) = mpsc::sync_channel(1);
+            let server = thread::spawn(move || {
+                listener.set_nonblocking(true).unwrap();
+                let deadline = Instant::now() + Duration::from_secs(2);
+                let mut stream = loop {
+                    match listener.accept() {
+                        Ok((stream, _)) => break stream,
+                        Err(error)
+                            if error.kind() == std::io::ErrorKind::WouldBlock
+                                && Instant::now() < deadline =>
+                        {
+                            thread::sleep(Duration::from_millis(5));
+                        }
+                        Err(_) => return false,
+                    }
+                };
+                stream
+                    .set_read_timeout(Some(Duration::from_secs(2)))
+                    .unwrap();
+                let mut prefix = [0; 64 * 1024];
+                if stream.read_exact(&mut prefix).is_err()
+                    || !prefix[..4096].windows(4).any(|bytes| bytes == b"\r\n\r\n")
+                {
+                    return false;
+                }
+                // Observe payload progress beyond the complete header before signaling.
+                // A probe only before write_all(payload) cannot satisfy this case.
+                // Stop reading so the remaining upload exceeds the socket buffer.
+                server_requested.store(cancel, Ordering::SeqCst);
+                // The client must return before any fixture lifeline intervenes.
+                if done_rx.recv_timeout(Duration::from_secs(1)).is_err() {
+                    return false;
+                }
+                // Drain only the buffered prefix and observe the client's EOF while
+                // this peer is still open. Closing our side cannot supply the proof.
+                let mut received = prefix.len();
+                let mut buffer = [0; 8192];
+                loop {
+                    match stream.read(&mut buffer) {
+                        Ok(0) => return true,
+                        Ok(length) if received + length < 4 * 1024 * 1024 => received += length,
+                        _ => return false,
+                    }
+                }
+            });
+            let client = UnixHttpClient::new(socket, "test-api-key".to_owned());
+            let result = operation(&client, &UploadCancellation { requested });
+            let _ = done_tx.send(());
+            assert!(
+                server.join().unwrap(),
+                "fixture must observe a partial upload and client EOF before intervention"
+            );
+            result
+        }
+
+        #[test]
+        fn transport_budget_cancellation_interrupts_completion_upload_once() {
+            let (result, fragments) = stalled_upload(true, |client, probe| {
+                let request = run_request();
+                let decoding = test_decoding(&request);
+                let stream_id = ModelStreamId::from_raw("stream-1");
+                let context = vec![b'x'; 4 * 1024 * 1024];
+                let mut invocation =
+                    completion_invocation(&request, &decoding, Some(probe), &stream_id);
+                invocation.context = &context;
+                let mut sink = RecordingSink::default();
+                let result = client.completion_stream(invocation, &mut sink);
+                (result, sink.fragments)
+            });
+            let completion = result.expect("cancelled upload has one terminal result");
+            assert_eq!(completion.terminal_state, ModelRunTerminalState::Cancelled);
+            assert!(completion.bytes.is_empty());
+            assert_eq!(completion.tokens, 0);
+            assert_eq!(completion.fragments, 1);
+            assert_eq!(fragments.len(), 1);
+            assert!(fragments[0].terminal);
+            assert!(fragments[0].bytes.is_empty());
+        }
+
+        #[test]
+        fn transport_budget_deadline_interrupts_completion_upload_once() {
+            let (result, fragments) = stalled_upload(false, |client, _| {
+                let mut request = run_request();
+                request.timeout_ms = 400;
+                let decoding = test_decoding(&request);
+                let stream_id = ModelStreamId::from_raw("stream-1");
+                let context = vec![b'x'; 4 * 1024 * 1024];
+                let mut invocation = completion_invocation(&request, &decoding, None, &stream_id);
+                invocation.context = &context;
+                let mut sink = RecordingSink::default();
+                let result = client.completion_stream(invocation, &mut sink);
+                (result, sink.fragments)
+            });
+            let completion = result.expect("expired upload has one terminal result");
+            assert_eq!(completion.terminal_state, ModelRunTerminalState::TimedOut);
+            assert!(completion.bytes.is_empty());
+            assert_eq!(completion.tokens, 0);
+            assert_eq!(completion.fragments, 1);
+            assert_eq!(fragments.len(), 1);
+            assert!(fragments[0].terminal);
+        }
+
+        #[test]
+        fn transport_budget_deadline_interrupts_token_request_upload() {
+            let result = stalled_upload(false, |client, _| {
+                client.request(
+                    Endpoint::Tokenize,
+                    Some(&vec![b'x'; 4 * 1024 * 1024]),
+                    4096,
+                    50,
+                )
+            });
+            assert_eq!(result.unwrap_err().code, "model.llama-driver.http-timeout");
+        }
+
+        #[test]
+        fn transport_budget_full_connection_queue_never_waits_for_accept() {
+            let directory = TestDirectory::new();
+            let socket = directory.0.join("llama-server.sock");
+            let listener = UnixListener::bind(&socket).unwrap();
+            rustix::net::listen(&listener, 0).unwrap();
+            // Linux permits one pending connection with a zero backlog. Keep it owned.
+            let queued = std::os::unix::net::UnixStream::connect(&socket).unwrap();
+            let server = thread::spawn(move || {
+                thread::sleep(Duration::from_millis(250));
+                let _first = listener.accept().unwrap();
+                listener.set_nonblocking(true).unwrap();
+                if let Ok((mut stream, _)) = listener.accept() {
+                    stream
+                        .set_read_timeout(Some(Duration::from_secs(1)))
+                        .unwrap();
+                    let mut request = [0; 4096];
+                    let _ = stream.read(&mut request);
+                    let _ = stream.write_all(&response(json!({"status": "ok"})));
+                }
+            });
+            let client = UnixHttpClient::new(socket, "test-api-key".to_owned());
+            let started = Instant::now();
+            let result = client.request(Endpoint::Health, None, 4096, 50);
+            let elapsed = started.elapsed();
+            server.join().unwrap();
+            drop(queued);
+            assert_eq!(
+                result.unwrap_err().code,
+                "model.llama-driver.socket-connect-failed"
+            );
+            assert!(
+                elapsed < Duration::from_millis(200),
+                "connect waited {elapsed:?}"
+            );
+        }
+
+        #[test]
+        fn transport_budget_bounded_response_still_enforces_its_byte_ceiling() {
+            let (result, _) = exchange(response(json!({"status": "ok"})), |client| {
+                client.request(Endpoint::Health, None, 32, 1000)
+            });
+            assert_eq!(
+                result.unwrap_err().code,
+                "model.llama-driver.http-response-oversized"
+            );
+        }
+
+        #[test]
+        fn transport_budget_upload_and_response_share_the_original_deadline() {
+            let directory = TestDirectory::new();
+            let socket = directory.0.join("llama-server.sock");
+            let listener = UnixListener::bind(&socket).unwrap();
+            let server = thread::spawn(move || {
+                let mut stream = accept_exchange(&listener);
+                stream
+                    .set_read_timeout(Some(Duration::from_secs(2)))
+                    .unwrap();
+                let mut header = Vec::new();
+                while !header.ends_with(b"\r\n\r\n") && header.len() < 4096 {
+                    let mut byte = [0];
+                    stream.read_exact(&mut byte).unwrap();
+                    header.push(byte[0]);
+                }
+                let header = String::from_utf8(header).unwrap();
+                let length: usize = header
+                    .lines()
+                    .find_map(|line| line.strip_prefix("Content-Length: "))
+                    .unwrap()
+                    .parse()
+                    .unwrap();
+                thread::sleep(Duration::from_millis(200));
+                let mut payload = vec![0; length];
+                let uploaded = stream.read_exact(&mut payload).is_ok();
+                thread::sleep(Duration::from_millis(200));
+                let _ = stream.write_all(&response(json!({"tokens": [1]})));
+                uploaded
+            });
+            let client = UnixHttpClient::new(socket, "test-api-key".to_owned());
+            let result = client.request(
+                Endpoint::Tokenize,
+                Some(&vec![b'x'; 1024 * 1024]),
+                4096,
+                300,
+            );
+            let uploaded = server.join().unwrap();
+            assert!(
+                uploaded,
+                "fixture must finish upload before the original deadline"
+            );
+            assert_eq!(result.unwrap_err().code, "model.llama-driver.http-timeout");
+        }
+
+        #[test]
+        fn transport_budget_precancel_and_foreign_cancel_never_connect() {
+            let directory = TestDirectory::new();
+            let socket = directory.0.join("llama-server.sock");
+            let listener = UnixListener::bind(&socket).unwrap();
+            listener.set_nonblocking(true).unwrap();
+            let client = UnixHttpClient::new(socket, "test-api-key".to_owned());
+            let request = run_request();
+            let decoding = test_decoding(&request);
+            let stream_id = ModelStreamId::from_raw("stream-1");
+            let mut signal = cancellation_probe(1).signal;
+            let mut sink = RecordingSink::default();
+            let completion = client
+                .completion_stream(
+                    completion_invocation(&request, &decoding, Some(&signal), &stream_id),
+                    &mut sink,
+                )
+                .unwrap();
+            assert_eq!(completion.terminal_state, ModelRunTerminalState::Cancelled);
+            assert_eq!(sink.fragments.len(), 1);
+            assert!(sink.fragments[0].terminal);
+            assert_eq!(
+                listener.accept().unwrap_err().kind(),
+                std::io::ErrorKind::WouldBlock
+            );
+            signal.correlation_id = CorrelationId::from_raw("different-correlation");
+            let mut sink = RecordingSink::default();
+            let error = client
+                .completion_stream(
+                    completion_invocation(&request, &decoding, Some(&signal), &stream_id),
+                    &mut sink,
+                )
+                .err()
+                .unwrap();
+            assert_eq!(error.code, "model.llama-driver.cancellation-mismatch");
+            assert!(sink.fragments.is_empty());
+            assert_eq!(
+                listener.accept().unwrap_err().kind(),
+                std::io::ErrorKind::WouldBlock
+            );
+        }
+
+        #[test]
+        fn transport_budget_failed_probe_never_connects_or_fabricates_cancellation() {
+            struct FailedProbe;
+            impl ModelCancellationProbe for FailedProbe {
+                fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
+                    Err(super::super::failure("test.probe.failed", false))
+                }
+            }
+            let directory = TestDirectory::new();
+            let socket = directory.0.join("llama-server.sock");
+            let listener = UnixListener::bind(&socket).unwrap();
+            listener.set_nonblocking(true).unwrap();
+            let client = UnixHttpClient::new(socket, "test-api-key".to_owned());
+            let request = run_request();
+            let decoding = test_decoding(&request);
+            let stream_id = ModelStreamId::from_raw("stream-1");
+            let mut sink = RecordingSink::default();
+            let error = client
+                .completion_stream(
+                    completion_invocation(&request, &decoding, Some(&FailedProbe), &stream_id),
+                    &mut sink,
+                )
+                .err()
+                .unwrap();
+            assert_eq!(error.code, "test.probe.failed");
+            assert!(sink.fragments.is_empty());
+            assert_eq!(
+                listener.accept().unwrap_err().kind(),
+                std::io::ErrorKind::WouldBlock
+            );
+        }
     }
 }

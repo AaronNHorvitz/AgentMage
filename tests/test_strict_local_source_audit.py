@@ -343,5 +343,114 @@ class StrictLocalSourceAuditTests(unittest.TestCase):
         )
 
 
+class NativeModelSocketAuditTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.policy = audit.load_policy()
+        cls.original = (audit.ROOT / audit.MODEL_SOCKET_PATH).read_text(encoding="utf-8")
+        cls.product = audit.production_source(audit.MODEL_SOCKET_PATH, cls.original)
+        start = cls.product.index("mod socket_exchange {")
+        end = cls.product.index("\n}\n\nuse owned_files", start) + 2
+        cls.helper = cls.product[start:end]
+
+    def assert_rejected(self, changed: str) -> None:
+        self.assertNotEqual(changed, self.product)
+        product = audit.production_source(audit.MODEL_SOCKET_PATH, changed)
+        self.assertIsNone(audit.model_socket_span(product))
+        self.assertIn(
+            f"pinned native Unix exchange changed or expanded: {audit.MODEL_SOCKET_PATH}",
+            audit.scan_sources(self.policy, {audit.MODEL_SOCKET_PATH: changed}),
+        )
+
+    def test_exact_private_helper_has_no_file_wide_socket_allowance(self) -> None:
+        span = audit.model_socket_span(self.product)
+        self.assertIsNotNone(span)
+        self.assertEqual(self.product[slice(*span)], self.helper)
+        rule = next(rule for rule in self.policy["symbol_rules"] if rule["id"] == "rustix-socket-api")
+        self.assertNotIn(audit.MODEL_SOCKET_PATH, rule["allowed_paths"])
+        self.assertIsNotNone(audit.model_socket_span("// { ignored }\n" + self.product))
+
+    def test_helper_pin_rejects_socket_authority_and_control_changes(self) -> None:
+        for before, after in (
+            ("AddressFamily::UNIX", "AddressFamily::INET"),
+            ("AddressFamily::UNIX", "AddressFamily::INET6"),
+            ("SocketType::STREAM", "SocketType::DGRAM"),
+            ("SocketType::STREAM", "SocketType::RAW"),
+            ("SocketFlags::NONBLOCK | SocketFlags::CLOEXEC", "SocketFlags::CLOEXEC"),
+            ("SocketFlags::NONBLOCK | SocketFlags::CLOEXEC", "SocketFlags::NONBLOCK"),
+            ("SocketAddrUnix::new(path)", "SocketAddrUnix::new(other_path)"),
+            ("self.check_stop()?;", "// removed stop check"),
+            ("use rustix::event", "use rustix::net::socket;\n    use rustix::event"),
+            ("connect(&socket, &address)", "connect(&socket, &other_address)"),
+            ("pub(super) struct SocketExchange", "pub struct SocketExchange"),
+        ):
+            with self.subTest(after=after):
+                changed = self.helper.replace(before, after, 1)
+                self.assertNotEqual(changed, self.helper)
+                self.assert_rejected(self.product.replace(self.helper, changed, 1))
+
+    def test_namespace_cannot_expand_through_aliases_or_extra_calls(self) -> None:
+        for injected in (
+            "use rustix::net::socket;",
+            "use ::rustix :: net :: socket;",
+            "use rustix::{net as hidden};",
+            "use ::rustix::{self as hidden};",
+            "use rustix as hidden;",
+            "extern crate rustix as hidden;",
+            "use crate::llama_server_driver::socket_exchange as hidden;",
+            "use socket_exchange::*;",
+            "use socket_exchange::{SocketExchange as Hidden};",
+            "fn extra() { rustix::net::socket(); }",
+            "fn extra() { rustix /* comment */ :: net :: socket(); }",
+            "use r#rustix::net::socket;",
+            "use rustix::io::Errno;",
+        ):
+            with self.subTest(injected=injected):
+                self.assert_rejected(injected + "\n" + self.product)
+                # The existing test exclusion must retain production appended
+                # after the actual test module, too.
+                self.assert_rejected(self.original + "\n" + injected + "\n")
+
+    def test_module_and_import_must_be_unique_private_top_level_code(self) -> None:
+        for changed in (
+            self.product.replace(self.helper, "", 1),
+            self.helper + "\n" + self.product,
+            self.product.replace(self.helper, "mod nested {\n" + self.helper + "\n}", 1),
+            self.product.replace(self.helper, "macro_call!(\n" + self.helper + "\n);", 1),
+            self.product.replace(self.helper, "/*\n" + self.helper + "\n*/", 1),
+            self.product.replace(self.helper, 'const TEXT: &str = r###"\n' + self.helper + '\n"###;', 1),
+            self.product.replace("mod socket_exchange {", "pub mod socket_exchange {", 1),
+            self.product.replace("mod socket_exchange {", "pub\nmod socket_exchange {", 1),
+            self.product.replace("mod socket_exchange {", "pub(crate)\nmod socket_exchange {", 1),
+            self.product.replace(audit.MODEL_SOCKET_IMPORT, "", 1),
+            self.product.replace(audit.MODEL_SOCKET_IMPORT, "// " + audit.MODEL_SOCKET_IMPORT, 1),
+            self.product.replace(audit.MODEL_SOCKET_IMPORT, "pub\n" + audit.MODEL_SOCKET_IMPORT, 1),
+            self.product.replace(audit.MODEL_SOCKET_IMPORT, "mod nested {\n" + audit.MODEL_SOCKET_IMPORT + "\n}", 1),
+            audit.MODEL_SOCKET_IMPORT + "\n" + self.product,
+            self.product + "\n/* unterminated",
+            self.product + "\n}",
+            self.product + "\nfn incomplete() {",
+        ):
+            with self.subTest(changed=changed[:80]):
+                self.assert_rejected(changed)
+
+    def test_pin_cannot_move_to_another_file_or_hide_other_network_detectors(self) -> None:
+        foreign = "platforms/linux-inference/src/injected.rs"
+        failures = audit.scan_sources(self.policy, {foreign: self.helper})
+        self.assertIn(f"rustix-socket-api found outside its closed allowlist: {foreign}", failures)
+        self.assertIn(f"pinned native Unix exchange is absent: {audit.MODEL_SOCKET_PATH}", failures)
+        for injected, diagnostic in (
+            ("use std::net::TcpStream;", "rust-network-client-api found outside its closed allowlist"),
+            ('const URI: &str = "https://example.invalid";', "undeclared external URI in product source"),
+        ):
+            with self.subTest(injected=injected):
+                changed = injected + "\n" + self.product
+                self.assertIsNotNone(audit.model_socket_span(changed))
+                self.assertIn(
+                    f"{diagnostic}: {audit.MODEL_SOCKET_PATH}",
+                    audit.scan_sources(self.policy, {audit.MODEL_SOCKET_PATH: changed}),
+                )
+
+
 if __name__ == "__main__":
     unittest.main()

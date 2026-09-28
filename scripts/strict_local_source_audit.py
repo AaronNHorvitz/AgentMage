@@ -17,6 +17,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts import research_dependency_closure as research_closure
+from scripts.rust_source_audit import _code_mask
 
 POLICY_PATH = ROOT / "security" / "strict-local-source-policy.json"
 SOURCE_SUFFIXES = {".css", ".html", ".js", ".json", ".mjs", ".rs", ".ts"}
@@ -31,6 +32,11 @@ RESEARCH_VALUE_IMPORTS = {
         "use rustix::net::{AddressFamily, SocketFlags, SocketType, ipproto};", "rustix", "net",
     ),
 }
+# Decision 0100 admits this complete private AF_UNIX exchange implementation,
+# not its file or the rustix namespace. Any helper edit requires a new review/pin.
+MODEL_SOCKET_PATH = "platforms/linux-inference/src/llama_server_driver.rs"
+MODEL_SOCKET_SHA256 = "565f2ec98abff63db58b5ad2153ff914c171ae9be9f0a3a551d719e422978eea"
+MODEL_SOCKET_IMPORT = "use socket_exchange::SocketExchange;"
 TOP_LEVEL_KEYS = {
     "allowed_external_uris",
     "allowed_first_party_build_scripts",
@@ -246,12 +252,68 @@ def production_source(path: str, content: str) -> str:
     return rust_production_source(content)
 
 
+def model_socket_span(content: str) -> tuple[int, int] | None:
+    """Recognize one pinned top-level private helper and its sole private import.
+
+    This conservative lexical check supplements the compiler and native boundary;
+    it is not a Rust parser or a grant of runtime network authority.
+    """
+    mask = _code_mask(content)
+    if mask is None:
+        return None
+    modules = list(re.finditer(r"(?m)^mod socket_exchange \{", mask))
+    imports = list(re.finditer(r"(?m)^use socket_exchange::SocketExchange;$", mask))
+    if len(modules) != 1 or len(imports) != 1:
+        return None
+    module, imported = modules[0], imports[0]
+    for declaration in (module, imported):
+        prefix = mask[:declaration.start()].rstrip()
+        if prefix and prefix[-1] not in ";}":
+            return None
+    # Establish actual top-level positions, not matching text in a nested module,
+    # macro argument, comment or string. Reject malformed surrounding delimiters.
+    stack: list[str] = []
+    closing = {"}": "{", "]": "[", ")": "("}
+    end = None
+    for index, char in enumerate(mask):
+        if index in (module.start(), imported.start()) and stack:
+            return None
+        if char in "{[(":
+            stack.append(char)
+        elif char in closing:
+            if not stack or stack.pop() != closing[char]:
+                return None
+            if index >= module.end() and end is None and not stack:
+                end = index + 1
+    if stack or end is None:
+        return None
+    if hashlib.sha256(content[module.start():end].encode("utf-8")).hexdigest() != MODEL_SOCKET_SHA256:
+        return None
+    if content[imported.start():imported.end()] != MODEL_SOCKET_IMPORT:
+        return None
+    remainder = list(mask)
+    for start, stop in ((module.start(), end), (imported.start(), imported.end())):
+        remainder[start:stop] = " " * (stop - start)
+    # Includes grouped/root aliases, extern crate and spaced paths. No other
+    # production use of either namespace is admitted, even outside net APIs.
+    if re.search(r"\b(?:rustix|socket_exchange)\b", "".join(remainder)):
+        return None
+    return module.start(), end
+
+
 def scan_sources(policy: dict[str, Any], sources: dict[str, str]) -> list[str]:
     failures: list[str] = []
     allowed_uris = policy["allowed_external_uris"]
     observed_allowed: dict[str, set[str]] = {path: set() for path in allowed_uris}
+    if MODEL_SOCKET_PATH not in sources:
+        failures.append(f"pinned native Unix exchange is absent: {MODEL_SOCKET_PATH}")
     for path, content in sorted(sources.items()):
         product_content = production_source(path, content)
+        socket_span = None
+        if path == MODEL_SOCKET_PATH:
+            socket_span = model_socket_span(product_content)
+            if socket_span is None:
+                failures.append(f"pinned native Unix exchange changed or expanded: {path}")
         if path in RESEARCH_VALUE_IMPORTS:
             declaration, package, module = RESEARCH_VALUE_IMPORTS[path]
             remainder = product_content.replace(declaration, "", 1)
@@ -267,8 +329,14 @@ def scan_sources(policy: dict[str, Any], sources: dict[str, str]) -> list[str]:
             else:
                 observed_allowed[path].add(uri)
         for rule in policy["symbol_rules"]:
-            if re.search(rule["pattern"], product_content) and path not in rule["allowed_paths"]:
+            if path in rule["allowed_paths"]:
+                continue
+            for match in re.finditer(rule["pattern"], product_content):
+                if (rule["id"] == "rustix-socket-api" and socket_span is not None
+                        and socket_span[0] <= match.start() < match.end() <= socket_span[1]):
+                    continue
                 failures.append(f"{rule['id']} found outside its closed allowlist: {path}")
+                break
     for path, expected in allowed_uris.items():
         if path not in sources:
             failures.append(f"URI allowance path is outside the source closure: {path}")

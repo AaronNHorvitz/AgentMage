@@ -196,6 +196,14 @@ cleanup or authorize replay of earlier effects. Preserve the original startup fa
 an unavailable best-effort release does not replace it. See
 [Decision 0099](../decisions/0099-failed-start-request-consumption.md).
 
+Native model socket requests share one deadline across connection, upload and response.
+Completion uploads also observe the existing cancellation signal. Full connection queues
+are refused without transport retries. Socket closure does not establish model-process
+cleanup. Factory-level model loading, endpoint preparation and aggregate preflight still
+need shared run cancellation and remaining-time control; these transport bounds do not
+satisfy that wider gate. See
+[Decision 0100](../decisions/0100-native-model-socket-exchange-deadlines.md).
+
 Log directories are create-only and mode `0700`; `stdout.jsonl`, `stderr.log`, and `result.json`
 are mode `0600`. Preserve failed and rejected runs alongside successful ones. A scripted success is
 only executable-path evidence. Model qualification requires the separate repeated Muse Glimmer and
