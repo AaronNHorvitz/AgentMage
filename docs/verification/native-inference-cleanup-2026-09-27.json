@@ -1,0 +1,1592 @@
+{
+  "schema_version": 1,
+  "record_type": "native-inference-cleanup-component-observations",
+  "date": "2026-09-27",
+  "base_commit": "d66865fc36dffda923d37e3af457b39e1eef678b",
+  "source_commit": "0ce9a3d4ea12dd9eedbc1b54edad00a68cef71f3",
+  "source_tree": "02b3d02f6700cb39006f7440bd961bb86dc2e653",
+  "source_worktree_clean_at_executable_run": true,
+  "status": "component-and-refusal-checks-passed;full-linux-host-suites-failed;native-inference-cleanup-unqualified",
+  "inputs": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "2cc5ff6cf90af231d188666a1cae40c474972826b4d30cfbdf5886c137376e90"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc"
+    },
+    {
+      "path": "IP-POLICY.md",
+      "sha256": "bc387fa1363feacbd7551a398c2596affbb3625aa01dc1a86d9e25b013a9bec9"
+    },
+    {
+      "path": "TASKS.md",
+      "sha256": "beeb04f62a96844174c7d875b50e055ef7032ced61d18ed3ec5e969615e38340"
+    },
+    {
+      "path": "architecture/dependency-rules.json",
+      "sha256": "b8d7045ff966e7d551ac50e5bfb39cc613d81997009e2505121a38da840d45d1"
+    },
+    {
+      "path": "architecture/status-model.json",
+      "sha256": "9c37e01faa324ffed3823e2d628b151f61b953dceae8423226fd6625d5b3d4d3"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.1/artifact-index.json",
+      "sha256": "0a37032eb708f9ef3c94d5485b90954a7985df1652e09b925003df3527d5fb90"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.1/security-evidence-map.json",
+      "sha256": "8f391130d31647e50332783d5b8235acd20ccc1ac7d53ad9a6c151e07d4d5654"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.2/contract-evidence-index.json",
+      "sha256": "508351a3065b5821c16e567f35759d6670873324db3ae5e1f6601fdf4b4dbb7a"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
+      "sha256": "f6a2336061f49c7029841b57d165dcc81f18dc83837bcbe03650bbafcede0f54"
+    },
+    {
+      "path": "artifacts/sprints/sprint-1/story-1.2/security-evidence-map.json",
+      "sha256": "5e24cec8fcb581e96ba7393008ac34563c74d0dc81002c20dc118ade3046485c"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+      "sha256": "1b35d90727b713d0a020219bbba41c8fecfa9881c9090d8a6f0cf35606e5e9c9"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-results.log",
+      "sha256": "fcc7bb8b043bafb2c8ee8e459add5dbf4d23d7e4eae0ce2d3d7b7810934788b9"
+    },
+    {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-gate-report.json",
+      "sha256": "93c20e4b044e4eeae3d2f3adaaab4713cb41742c049d4e148c056ca1cbc5bdd3"
+    },
+    {
+      "path": "artifacts/sprints/sprint-22/story-22.1/current-product-canary-sweep.json",
+      "sha256": "dfec47c5394bc98f3230d8c1d3b99052c8cfb410e5c4fb084a223be02811baba"
+    },
+    {
+      "path": "artifacts/sprints/sprint-22/story-22.1/current-product-canary-sweep.log",
+      "sha256": "a74376071ebef153b6d5dd3136882b9fcd95f5791b5d758677ab10517f1cd1bd"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
+      "sha256": "b2fcae871daf45ed8e7ac8dfedd09bc31adb7017ea9f1c8ac39e7c5243e73ac8"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/evidence-index.json",
+      "sha256": "c7f0332e56f979e28fb608f617bd1554f72168ab33e69ddcf572576501d8698d"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
+      "sha256": "238023fa4d9c0ec40e942cfebe934de14f7157c81121e9ee9502cb184378c7e5"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
+      "sha256": "53cea2dd97b3cc527405c7d922e1f31be975008252aa7e6a1e2bfdb065fd42a8"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence-map.json",
+      "sha256": "8bd27be0e98f77a78d592cab54cc6aa4aaa427e47aa4545b9aeb7c23951aac4e"
+    },
+    {
+      "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence.log",
+      "sha256": "a1f31560f1d23a275e49cccec5ae9522c44e28265b9ba51a380cf43055510162"
+    },
+    {
+      "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
+      "sha256": "5cf2fd3e603a7c7e7b0f8173451ccfbf76aea1247e3092ee9eba0586465e2319"
+    },
+    {
+      "path": "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
+      "sha256": "c8d01833323d050bbd6ed402cffaca96328b110c7f3f1b20e37f26ce2db19cb1"
+    },
+    {
+      "path": "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+      "sha256": "4c66ddafd2f2a834d5b2f61cad3abe1d8fa5e33e60de195b827148ccd8fd9654"
+    },
+    {
+      "path": "artifacts/sprints/sprint-4/sprint-gate-report.json",
+      "sha256": "cce1d101543f13e882cb49db7e33db0e4150b94f1a6c1544fa65d3f718ad19b8"
+    },
+    {
+      "path": "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json",
+      "sha256": "1731f24085885e14577eb0273949a9f4edafef01d070cd9e98181c3a70986e42"
+    },
+    {
+      "path": "artifacts/sprints/sprint-4/story-4.1/security-evidence-map.json",
+      "sha256": "df7bd6ad5eb9e548f2f41114808e3a58f865e2156f7d882514d1f994d8304d5b"
+    },
+    {
+      "path": "artifacts/sprints/sprint-4/story-4.1/story-gate-report.json",
+      "sha256": "3243b660eb0cdc7c96b82b0fea26341f574404562eec696f4ef39668ca012827"
+    },
+    {
+      "path": "docs/LOCAL-TESTING.md",
+      "sha256": "f1bb212f45738d5ff722e7fc89a1d264a1cf0dd8171cd2dd4667df684b141a3c"
+    },
+    {
+      "path": "docs/architecture/kernel-contract-reference.md",
+      "sha256": "8e0a601fef40e4b2f90dd281418a1e5f5c9717b64d88c5088fb6a39f4af42bdf"
+    },
+    {
+      "path": "docs/decisions/0054-standing-owner-delegation.md",
+      "sha256": "c3c0b6300c47f5c7a203901ebca642c0e91807988e775932d7c99477e64aff6d"
+    },
+    {
+      "path": "docs/decisions/0061-standalone-coding-harness-critical-path.md",
+      "sha256": "7ae98fe774c5c88eeb2c07da350d7adf76d4e4c421ae5f212d20060a6948b1a9"
+    },
+    {
+      "path": "docs/decisions/0063-disposable-coding-development-activation.md",
+      "sha256": "304aea35dcf207f2eba66512889fe139788b8081f4e0b57b9484636c92112ed9"
+    },
+    {
+      "path": "docs/decisions/0070-coding-development-identity-prerequisites.md",
+      "sha256": "e5e28a7782723ea730e9ba11d2c7cd1bb5d9eb6eec5fbd5c4436616167e34a5e"
+    },
+    {
+      "path": "docs/decisions/0081-rust-capability-roadmap-and-staged-delivery.md",
+      "sha256": "37e0c7fabf2bdca2dd86cb2f58e82e64d47066c1b66ade030edf4e84e3cbcb9f"
+    },
+    {
+      "path": "docs/decisions/0089-development-harness-process-ownership.md",
+      "sha256": "1e0090746168f73df7bd19f043a36993fac5e7e5579da8672515a9e95f511b1f"
+    },
+    {
+      "path": "docs/decisions/0090-runtime-correctness-callback-consistency.md",
+      "sha256": "86a6e0ca75e2c590995c28a3135cd30c14ee9d2757e5f6b23e9f3f101457360d"
+    },
+    {
+      "path": "docs/decisions/0091-failed-runtime-advancement-reconciliation.md",
+      "sha256": "9220fdb6b1ebe3ef7afcd77bf3f6ab088218a700260c281af75989b33541c0db"
+    },
+    {
+      "path": "docs/decisions/0092-native-development-failure-diagnostics.md",
+      "sha256": "fee2254f441324e43937d20cdf1f663c1744afed278caf54b217fc9566aaca0b"
+    },
+    {
+      "path": "docs/decisions/0093-bounded-development-host-lifecycle.md",
+      "sha256": "143fea9fc9b291d755978109c10777e44a34af961d9e0bab3f037f47fe8c0bdc"
+    },
+    {
+      "path": "docs/decisions/0094-bounded-cancellable-development-confirmations.md",
+      "sha256": "929adad4be01c0b31cb81ab3ef45b1006cb82a5621c10ab7aa71394158edd25d"
+    },
+    {
+      "path": "docs/decisions/0095-native-inference-cleanup-ownership.md",
+      "sha256": "6e975d33d0f8398856c4da48e3795d262c783fff25f7a916a2a97ff1ff8dff02"
+    },
+    {
+      "path": "docs/guides/standalone-coding-development.md",
+      "sha256": "646fef70cb7217783602f4df4694607711db7ba251b7ed315c8cf6f575890b09"
+    },
+    {
+      "path": "docs/verification/development-confirmation-2026-09-27.json",
+      "sha256": "756edd01e3143c43eee83b642d992ef7f0cc00a681ce15ace4871369b71316ed"
+    },
+    {
+      "path": "docs/verification/development-confirmation-2026-09-27.md",
+      "sha256": "2a274e83a62fe95276d697735aafea11e1eeb0f11681858f136a3db362b50cb5"
+    },
+    {
+      "path": "docs/verification/development-host-lifecycle-2026-09-27.json",
+      "sha256": "806ac478cb6ddf3488f1d8741ceec78ce3c2b515b6093359b9fa78702e6e54e1"
+    },
+    {
+      "path": "docs/verification/development-host-lifecycle-2026-09-27.md",
+      "sha256": "db1e2d7e9abaf343274c9b02cdff55bd763f82d4de71372e7a6daeaaa09c53bf"
+    },
+    {
+      "path": "docs/verification/linux-current-startup-2026-09-27.md",
+      "sha256": "a3a7a119e985968115bd6a8745952ec8bc980b00401d11869763d26f1432d433"
+    },
+    {
+      "path": "docs/verification/native-development-diagnostics-2026-09-27.json",
+      "sha256": "e306c8b631b825c8bee2f3b5f56f359dc14d2dcf56e96cfab1cdbfafe5994a78"
+    },
+    {
+      "path": "docs/verification/native-development-diagnostics-2026-09-27.md",
+      "sha256": "38f0c6f5e34889584ff47af81f5cdafc2c894989b136096257b565fd82c73487"
+    },
+    {
+      "path": "docs/verification/native-inference-cleanup-2026-09-27.md",
+      "sha256": "91601dcccf0dc52ec0261fa526c687f68d575b61d821d360fc2898fce07484fd"
+    },
+    {
+      "path": "docs/verification/runtime-advancement-reconciliation-2026-09-27.md",
+      "sha256": "e60fb017a4170cd8f27dae400f93678ec18e365fc39c080fffee47abed7f8a19"
+    },
+    {
+      "path": "docs/verification/runtime-callback-consistency-2026-09-27.json",
+      "sha256": "76316a70eb55f6ad1037a8eb718ce39a3eec7c3fd2743d7bfdf4d6b21ea68115"
+    },
+    {
+      "path": "docs/verification/runtime-callback-consistency-2026-09-27.md",
+      "sha256": "a430cd9746abb0d95b5423bfbc552e59a3ea997fb976fe6f0ef25fde315bdc58"
+    },
+    {
+      "path": "fixtures/contracts/compatibility-v2.json",
+      "sha256": "0a164d82193461dda96c1f7106e2767162c538fc17dfa503bccf16689e853d94"
+    },
+    {
+      "path": "fixtures/contracts/compatibility.json",
+      "sha256": "10c7787727fdfcdde05d60d5bee026541e9140c39d75dd55639c741761ceb8ee"
+    },
+    {
+      "path": "fixtures/contracts/compatibility/v2/task.v0.unsupported.json",
+      "sha256": "51649163f16b321da8daa6e6c721c20ed6d7606219f45ab34aed8fcfe123d496"
+    },
+    {
+      "path": "fixtures/contracts/compatibility/v2/task.v1.unsupported.json",
+      "sha256": "d1bc39b9357fc520a094ff982935ad2790cc82de7a58935ab8178c456f06fd10"
+    },
+    {
+      "path": "fixtures/contracts/compatibility/v2/task.v2.duplicate-field.json",
+      "sha256": "86316c79982cc169fb4c3c7965b9349a765fa303630c8cb19e7afd1493fce98d"
+    },
+    {
+      "path": "fixtures/contracts/compatibility/v2/task.v2.malformed.json",
+      "sha256": "8b19d5f9fca07f7ee779feacf6fdbc14edf3fc07be6610710df0ff58e8065aee"
+    },
+    {
+      "path": "fixtures/contracts/compatibility/v2/task.v2.missing-field.json",
+      "sha256": "50b0314305aa170f894d3a2b22cafabd9976f785143871159d7ae5898b0b01a2"
+    },
+    {
+      "path": "fixtures/contracts/compatibility/v2/task.v2.trailing-value.json",
+      "sha256": "94858152045d74ff648538ba2c0f448bcbdc5bcc6c53040349f0c04626198bb1"
+    },
+    {
+      "path": "fixtures/contracts/compatibility/v2/task.v2.unknown-field.json",
+      "sha256": "9152eee9cd7654c94ff13b47eba7da75521293ea23f5296cfab3f4f594a7f80a"
+    },
+    {
+      "path": "fixtures/contracts/compatibility/v2/task.v3.unsupported.json",
+      "sha256": "b60107db2109729d75ba9a9094b7107279bad92dc997cd9e8613fceff44d287d"
+    },
+    {
+      "path": "fixtures/contracts/fixture_verifier.rs",
+      "sha256": "f8297732dc9e5a7103a2d0ec457823af99e8b296c007765d29aa5368ecc3de84"
+    },
+    {
+      "path": "fixtures/contracts/v1/manifest.json",
+      "sha256": "9716abdff573a33a15b25b6c8a5edcf9271861828033f854e7bc0e58b177f1ec"
+    },
+    {
+      "path": "fixtures/contracts/v2/manifest.json",
+      "sha256": "cc0bc1645c81e4835191d91beca51eb67797123b870bee575fcd948d4685782d"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/action.json",
+      "sha256": "9b4ae76722f2e00d1161a717340610c71ff29c12b7b1457014f5ba36509abb6d"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/approval_request.json",
+      "sha256": "8536a11f37672be464ae40bce9d80556180ed466e82238d922c9213e9ca04e83"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/boundary_failure.json",
+      "sha256": "1256e98beb31d06001519918d639e8a0304e8603d1208408a94afab414dd0a4b"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/cancellation_signal.json",
+      "sha256": "ce339f77cee7fc4671dbb692838f969f6fa5d072f051b59eed972b0768e7b5c0"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/capability_grant.json",
+      "sha256": "f536fbbdf98ad4a8371da9b72bf94398bd6879fa1e910f18ba16ddabcd720ab9"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/contract_error.json",
+      "sha256": "84381adc049ba51fb7ea081c7f26c0094da0ea891094ee893368ed9a32d2a759"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/evidence_reference.json",
+      "sha256": "9321eb3c443425708b34ef54be9b471dccbd56f1f30c79d88c63d57c907342de"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/plan.json",
+      "sha256": "9cd9bcd306c9bfd5032e27413080a49920a7a7327005f405bf53e2e891c7a6a9"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/prompt.json",
+      "sha256": "beb314613ce4af211ac79014da31502e433e18549ee805cc1f18a27011cb6271"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/receipt.json",
+      "sha256": "405647726497376e75022abeee97c249154a5ab3fd17646d841137014436268d"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/task.json",
+      "sha256": "6e647188ddee409985f2a1e94c3b5ed42b3fc0078d008aad5425cd007a9f6826"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/tool_call.json",
+      "sha256": "c54f6c55c365eea54c10574a1b2f679d403166ce3a759f303674f9a77b96859c"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/tool_definition.json",
+      "sha256": "e496db0b45d6750ae41280726de0064fc7fc3180ebabec309a4ce374c7fca72d"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/tool_result.json",
+      "sha256": "7ec986ab4d1425543e5b12c87ce297f80391b23788893d9ba1f9eb81f4c7cafc"
+    },
+    {
+      "path": "fixtures/contracts/v2/valid/work_packet.json",
+      "sha256": "cbbd6021cc9d19c8f000d0628bd18b714fdb72389bb6fac9b1e289363cc6f48e"
+    },
+    {
+      "path": "fixtures/runtime/v1/coding-harness-mvp.json",
+      "sha256": "587d038f69c93d8ca7102ee34bc8c523030342e0cb7f86969f3dd02589f29e33"
+    },
+    {
+      "path": "kernel/contracts/src/runtime_event.rs",
+      "sha256": "22183f4affec1a6792bbd7c2bb93465842d7319885d42a555ae93cf72c551bf4"
+    },
+    {
+      "path": "kernel/contracts/src/runtime_run.rs",
+      "sha256": "54edc6322b2990de63209641ed3911d244cf862c81060e8155044d0af5ddd813"
+    },
+    {
+      "path": "kernel/engine/src/authority.rs",
+      "sha256": "c8d75e190006004d76da34a0835a99e3b9074265bea9eba5d5cc388ff22ceb09"
+    },
+    {
+      "path": "kernel/engine/src/propagation.rs",
+      "sha256": "2903b9c5597c0023cafdaee69eb2eba041a0a9638a68ca3b5b645a98c30a0785"
+    },
+    {
+      "path": "kernel/engine/src/runtime_artifact.rs",
+      "sha256": "cc6ee1ad0438fb9ed93663fc0326742bf2435f77eb259f540730a60761f1c8c8"
+    },
+    {
+      "path": "kernel/engine/src/runtime_coordinator.rs",
+      "sha256": "7e5c25aa0bd7fc52afe67e27997a2f7969a71e64adf3d71b649fac9eafe65b2e"
+    },
+    {
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "sha256": "616d3d38385b9cd66466257b1c0dced4284a3fccf857d53d3f8d67af1135d63c"
+    },
+    {
+      "path": "kernel/engine/src/runtime_loop_tests.rs",
+      "sha256": "2b1841fa4869b51ea9c20af0f7d0433d1e141d6cf942013cf063b0ec8a5d212d"
+    },
+    {
+      "path": "kernel/engine/src/tooling.rs",
+      "sha256": "39d34741c5edb2ef1da442438393a7323d6e211a4023be6876756f0b0e4d59f6"
+    },
+    {
+      "path": "kernel/engine/tests/boundary_workflow.rs",
+      "sha256": "bf07e50196d5299001422877830ca4f05903db8560b901bace7e664d546b3955"
+    },
+    {
+      "path": "model-profiles/development/coding-model-lab.json",
+      "sha256": "047e839b4a9c6ca632dbba89296266a6ce806adb583f7e617e95ea55ff04c785"
+    },
+    {
+      "path": "platforms/linux-inference/Cargo.toml",
+      "sha256": "553a09a02cc388188a2eece7ccb1b9001a25c1f36695e8311d8779036bb3a227"
+    },
+    {
+      "path": "platforms/linux-inference/src/lib.rs",
+      "sha256": "555f58a30f6e59a68298330a134532322a7e3ff1995aaf8df6ed3940c30ed107"
+    },
+    {
+      "path": "platforms/linux-inference/src/llama_server_driver.rs",
+      "sha256": "e8496da903af7ac3c97c134e2c4f56e1a3354d37f7b4c5f5391bdfbad8885825"
+    },
+    {
+      "path": "platforms/linux-inference/src/llama_server_driver/owned_files.rs",
+      "sha256": "dd316b19a2ff005a1220aed2413b588362efb18264ea2ba3e1a1dc9e5644e25a"
+    },
+    {
+      "path": "platforms/linux-inference/src/llama_server_driver/owned_process.rs",
+      "sha256": "9d1d1c72959b76ba4b112a04807cbe7d8cb949334416af833cb02940829edba0"
+    },
+    {
+      "path": "platforms/linux-inference/src/native_inference_lease.rs",
+      "sha256": "1ceab9619f0fd350e41ae45e02d517e9191bf5c96bd392e7938cd211b388902b"
+    },
+    {
+      "path": "platforms/linux-inference/src/native_model_adapter.rs",
+      "sha256": "bcc8774f3aab24f9941d0b3f6690ad7a7e2d0992c35e323a2c72b931c8816d61"
+    },
+    {
+      "path": "platforms/linux-inference/src/native_resource_admission.rs",
+      "sha256": "3f56221af184ef330e7de202e2685c6c3eb5b2351e52b2bbeb65bfde170c012a"
+    },
+    {
+      "path": "platforms/linux/Cargo.toml",
+      "sha256": "770a44da1ec3531d78bce11d1a19e36b02d3284ea78ac92d666015bd7666aa65"
+    },
+    {
+      "path": "platforms/linux/src/command_runner.rs",
+      "sha256": "f80b7800e229228553dbbcd0853900d8f24fddd5982cd89f5bdb63c01cc2476f"
+    },
+    {
+      "path": "platforms/linux/src/development_boundary.rs",
+      "sha256": "48d9472b62ce34c7ffc6654a5b4cf4701470136accdf82d17435eb75a5b4abdc"
+    },
+    {
+      "path": "platforms/linux/src/development_boundary/confirmation.rs",
+      "sha256": "0e350cef2e613c4604fc1a960c0f2068595194b82f9eda2f8b1e214b6fb987d2"
+    },
+    {
+      "path": "platforms/linux/src/ipc.rs",
+      "sha256": "976a6b4d6bf6bb1edd801884bf2106b8494a9df02ca998fe291c54119a060272"
+    },
+    {
+      "path": "platforms/linux/src/lib.rs",
+      "sha256": "2e6e7c223adb4e0a64f7fa2106a69d7f31e7b1b78236fa86e3a71d85af6692a3"
+    },
+    {
+      "path": "platforms/linux/src/repository_safety.rs",
+      "sha256": "d62cb91c3f043a0adb3d93a0ad57c70a019c186b287b12513f3c8cd1187a6cbf"
+    },
+    {
+      "path": "platforms/linux/src/sandbox.rs",
+      "sha256": "5524ca5fa3c2f9918eb06c58c0ab15ff6049bdfa0e5a8aef95442ba1a7824db1"
+    },
+    {
+      "path": "scripts/coding_harness.py",
+      "sha256": "111c4ef587a76f0a70fb8a968c6448718481c3679eed905371ce31e263a826f0"
+    },
+    {
+      "path": "scripts/component_inventory.py",
+      "sha256": "108e6eda80fb6e8097c2db9e40b7c1201bbadefffc6d386efb72851a39575d74"
+    },
+    {
+      "path": "scripts/configuration_authority_mutation_evidence.py",
+      "sha256": "15f65d7585d983db9b05581ac3eae5bed380e3460f2bb13a0a810261f0b34938"
+    },
+    {
+      "path": "scripts/configuration_loader_evidence.py",
+      "sha256": "48f5a8151bbdc0b6aca16080b69d236eaa547f7f8000cf574746be4f0644a664"
+    },
+    {
+      "path": "scripts/configuration_migration_recovery_evidence.py",
+      "sha256": "47ad4fbb49b92579690e88e125a9640f59fc68d28e4a320ac37236aba8334796"
+    },
+    {
+      "path": "scripts/configuration_result_evidence.py",
+      "sha256": "67df8af0b3c3b3c91d0402a870fe9fd94007d72795bf366215e376aafb49579d"
+    },
+    {
+      "path": "scripts/configuration_schema_failure_evidence.py",
+      "sha256": "eda8b2fa6b9a1384d7642c04302935586533ae9ddbd05af31af02f80b559fe74"
+    },
+    {
+      "path": "scripts/configuration_startup_evidence.py",
+      "sha256": "100cb2aa68cd39b57ef5fb4666789f07a66c6c59309b66e27da873106b141da8"
+    },
+    {
+      "path": "scripts/contract_evidence_index.py",
+      "sha256": "0fdd6986a58bbed1fe8b554c6c15735b202be7750d7976dc2311795acc97b42c"
+    },
+    {
+      "path": "scripts/kernel_architecture_report.py",
+      "sha256": "6390c268bf2b58e0030487c90084b9ba4986f0fb8a5e50b7dff7497f2adb31f7"
+    },
+    {
+      "path": "scripts/linux_docker_prerequisite_evidence.py",
+      "sha256": "b64d29cc479871c58e3e712c100043fe9a2fe0ad46967744b9e1ffc01a275582"
+    },
+    {
+      "path": "scripts/linux_inference_boundary_evidence.py",
+      "sha256": "43b1051641451828ff2602d75c022313e42389e919456f1e22922048e4ecd8a1"
+    },
+    {
+      "path": "scripts/linux_native_runtime_evidence.py",
+      "sha256": "0be849b8cc85b685d10187bc9be6422ec02c276e344da5b2517fffac30f8d7cd"
+    },
+    {
+      "path": "scripts/research_dependency_closure.py",
+      "sha256": "c090cd4d73b6129f2962ecce865205ba77cfa16bfebff786f07593b49f8ec0a5"
+    },
+    {
+      "path": "scripts/runtime_coordinator_boundary_review.py",
+      "sha256": "8fba1cbfe818ad7d3f50ae9c69ebe23c3c04566fb23c7fac5083c786f25d73cb"
+    },
+    {
+      "path": "scripts/sprint_4_gate.py",
+      "sha256": "154e2ebbc77381b6fd492a98f4234524c4f89117a2cac0a30701ba41d44ba06e"
+    },
+    {
+      "path": "scripts/story_11_2_ac2_evidence.py",
+      "sha256": "37c75a441a109a69e9828966c1154d7521b1bf51c2fd54c36296de04bc8f5ff2"
+    },
+    {
+      "path": "scripts/story_11_2_gate.py",
+      "sha256": "6bdfec9ae7bcb72397c275739089db9e16bdd78bfd6a6a9647c6f7be4847c522"
+    },
+    {
+      "path": "scripts/story_1_1_artifacts.py",
+      "sha256": "724bc4d28adee71af08d3750e2653e2f77b7aab35ec33fc1657a1f4c31ae8b71"
+    },
+    {
+      "path": "scripts/story_1_1_security_evidence.py",
+      "sha256": "f07d35e89dffb65931c19d85a9360b9b818e9eff767bff6b486f4f889c6c270a"
+    },
+    {
+      "path": "scripts/story_22_1_canary_evidence.py",
+      "sha256": "44ec93b993cd349802825826fb913626c16d9b82ac92c585e68a0cb4e2c91cbf"
+    },
+    {
+      "path": "scripts/story_23_4_evidence_index.py",
+      "sha256": "8cfac0b19432a5138017a401dccd521b361626e83258872946de7a61f62f8d88"
+    },
+    {
+      "path": "scripts/story_23_4_runtime_evidence.py",
+      "sha256": "d7533e9fe2dd62a82dc910de31a8cdb6f77830d7a76a4c58681baca3f3b5ea82"
+    },
+    {
+      "path": "scripts/story_23_4_security_evidence.py",
+      "sha256": "113a59bc3c016ba72ece1073d53eb02f7df5906f23baa6f3463320cab2a3cd0a"
+    },
+    {
+      "path": "scripts/story_3_1_security_evidence.py",
+      "sha256": "6d03fbe67e55c27c0aa2808b78bf26e1fcea6203fa0dc1e223e7c8ff22d2e056"
+    },
+    {
+      "path": "scripts/story_4_1_gate.py",
+      "sha256": "f26ad8bd0ac0c64a5f6e251adcb46fda065793af5ae6ef6a04424e3a0e99b8be"
+    },
+    {
+      "path": "scripts/story_4_1_security_evidence.py",
+      "sha256": "159d50c38a03a230b478209971dc2cea38adc832c2347d3f0f550926838054e2"
+    },
+    {
+      "path": "scripts/strict_local_source_audit.py",
+      "sha256": "7692e201dafbaef3f7ce5e645170af1f8f7d318ad51cfe8bf92c775098efd4e8"
+    },
+    {
+      "path": "scripts/supply_chain.py",
+      "sha256": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6"
+    },
+    {
+      "path": "security/public-research-dependency-policy.json",
+      "sha256": "74233d83de8186974e6b610fc6996de1b9140c3736d24ad7a1c8479c41b6dbcb"
+    },
+    {
+      "path": "security/strict-local-source-policy.json",
+      "sha256": "2822e81ef008f50c93687d7b319fb4f3060d5af1a8e876a159023a9ed807800d"
+    },
+    {
+      "path": "shells/host/src/cli.rs",
+      "sha256": "5269dcfb114055bacf015414320cd9ae6caeae1d29d67cdc86d94a6fe09ce208"
+    },
+    {
+      "path": "shells/host/src/cli_runtime.rs",
+      "sha256": "482e05bec6714799d00244e471bf7b6983507f392b32d4ef9226dc435c8036c6"
+    },
+    {
+      "path": "shells/host/src/coding_development_activation.rs",
+      "sha256": "b99f1bf64cf3ff4435cf58894dac029b687ee4afd1f234c9a956de519f70b756"
+    },
+    {
+      "path": "shells/host/src/coding_development_client.rs",
+      "sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d"
+    },
+    {
+      "path": "shells/host/src/coding_development_runtime.rs",
+      "sha256": "1993bef0b8054270d00453f0627711a003b697c06ab1a69e3d129488ba147cac"
+    },
+    {
+      "path": "shells/host/src/headless.rs",
+      "sha256": "9437a13398dc59a8babf7f9f14b60a4ba43c830c277614e90a3dfea1f89be318"
+    },
+    {
+      "path": "shells/host/src/linux_coding_runtime.rs",
+      "sha256": "ef6d07c5e522bb2fab6ef23bcf4f682ba6504d775b0eeeeea3c0e57d9390e5ae"
+    },
+    {
+      "path": "shells/host/src/linux_read.rs",
+      "sha256": "da45f97c08ee6fa01d93c39318599281211bdc54729f6bc0bab3c3d371b724a8"
+    },
+    {
+      "path": "shells/host/src/linux_repository_map.rs",
+      "sha256": "8f410724c83ca5ce188fa91c97a01140ded2372b53873d5a875fc90f622c591a"
+    },
+    {
+      "path": "shells/host/src/main.rs",
+      "sha256": "4db40d47496382e47b7fb71cab42f2a8185e8ee863eeab47e3a6e998a8b1b4c3"
+    },
+    {
+      "path": "supply-chain/dependency-hashes.sha256",
+      "sha256": "3b14f4439ca7693d7eea3f52ad5a01c8700cdc93a7987c690fe08360bf13f410"
+    },
+    {
+      "path": "supply-chain/dependency-provenance.json",
+      "sha256": "89c7e0b78b427395b54ae6f2cf35f7de3b0707975d6d0950863effd1c26fbd8e"
+    },
+    {
+      "path": "supply-chain/sbom.cdx.json",
+      "sha256": "4a2fa9d1e93b1c6b18617345c4bec89ee0151b434bfdb5f4d1732ffa16cfece4"
+    },
+    {
+      "path": "tests/test_coding_harness.py",
+      "sha256": "8c5f92ad5edfceeb5f732f0a47a765b35470a6ede6465de8baf512cb022c05a9"
+    },
+    {
+      "path": "tests/test_coding_harness_ownership.py",
+      "sha256": "57c9d89110a9fd4c22b51b75d14f54ea18b75b21be584d1227940b0f851d618f"
+    },
+    {
+      "path": "tests/test_component_inventory.py",
+      "sha256": "12757ff847d9e6820d1d39c02c05f42819e0e718d7b54332affd6ccae3621844"
+    },
+    {
+      "path": "tests/test_configuration_authority_mutation_evidence.py",
+      "sha256": "c01df0b5420ed690f89f591fbe0d2bd1ba43f427c938f465693020a125df0bd5"
+    },
+    {
+      "path": "tests/test_configuration_loader_evidence.py",
+      "sha256": "e9c80e7fbc57cf5f140ef9ab5df440e5126c0940828d845094cb11a7ea3d644a"
+    },
+    {
+      "path": "tests/test_configuration_migration_recovery_evidence.py",
+      "sha256": "ae38736de2b2ab222fc32a6b8555c7529db9f94c723bba537946ce1e588bf955"
+    },
+    {
+      "path": "tests/test_configuration_result_evidence.py",
+      "sha256": "6859d6ef33f0b24fec3984b421ad653dc7d7bad36624880f1a8fa8e5d94a7f0f"
+    },
+    {
+      "path": "tests/test_configuration_schema_failure_evidence.py",
+      "sha256": "9153a6c56e03173b5744043d29ff3c303526de740dff4c8302eafac8e6f65c71"
+    },
+    {
+      "path": "tests/test_configuration_startup_evidence.py",
+      "sha256": "693dda9812499528ea0f8739bd93b2884bb5c5a51abe639bf0c58776ed85dc69"
+    },
+    {
+      "path": "tests/test_contract_evidence_index.py",
+      "sha256": "198e4c3255c914d696fd7d2bdd0a8de55aa01bbec5eba83eb754e57754c22d75"
+    },
+    {
+      "path": "tests/test_kernel_architecture_report.py",
+      "sha256": "39ceb5f23442d6b674bfc2446fd33701883847a7dea161b3d01e0f20b71ae7dd"
+    },
+    {
+      "path": "tests/test_research_dependency_closure.py",
+      "sha256": "734e9f07d8a6cecd9c73df5785d57fdfe663ccce7230951c7a3bb5807c58d4b8"
+    },
+    {
+      "path": "tests/test_runtime_coordinator_boundary_review.py",
+      "sha256": "07fd254e3ddf32ebf60008f14bfd21cf2eb1e3164e5d22970567aeafed991287"
+    },
+    {
+      "path": "tests/test_sprint_4_gate.py",
+      "sha256": "ae63304af83c78168669c6574553853a51f563e99e4866c1c1f2152845832f4a"
+    },
+    {
+      "path": "tests/test_story_11_2_ac2_evidence.py",
+      "sha256": "235d0225833481060798c4993e60172245b5f0c1ac90d9015b040ed5f2422a04"
+    },
+    {
+      "path": "tests/test_story_11_2_gate.py",
+      "sha256": "2295e32739e644c00f65f746c88214e7399e3f62208c89bbe2e4bdb9269a13bc"
+    },
+    {
+      "path": "tests/test_story_1_1_artifacts.py",
+      "sha256": "19c6fe84d73abc27f443e8e31e6adbfce07f3f486e3b9b473c3e362b3c51b96e"
+    },
+    {
+      "path": "tests/test_story_1_1_security_evidence.py",
+      "sha256": "20eb9f6dd06d06a75c72c2fa5fea7dd07e24f77842cd32af2e3f2c49231be6dc"
+    },
+    {
+      "path": "tests/test_story_22_1_canary_evidence.py",
+      "sha256": "0aec421735605077f38c148c71ab002a8cd3b535a47f8016f46b60c2dc3b7a6e"
+    },
+    {
+      "path": "tests/test_story_23_4_evidence_index.py",
+      "sha256": "d01873d266f15359ba18d027d6be004fd135a9fd715373044de0a21fc5223134"
+    },
+    {
+      "path": "tests/test_story_23_4_runtime_evidence.py",
+      "sha256": "4d4a4286c9bd780318742c74bdfb27a3c5264650ec48a0722aad94afd6168c3a"
+    },
+    {
+      "path": "tests/test_story_23_4_security_evidence.py",
+      "sha256": "020046eed376d925ee55a002a8811118a68eac805c763848b3606bf0920ae124"
+    },
+    {
+      "path": "tests/test_story_3_1_security_evidence.py",
+      "sha256": "f9d223878166c92dc21fc4e50e7cc1dfaa68bf3241db5a367e6cc8ea97f2ed19"
+    },
+    {
+      "path": "tests/test_story_4_1_gate.py",
+      "sha256": "3fdaf660edf77d007b592894d14c712ed0823954f96535c1e130d8871c419e00"
+    },
+    {
+      "path": "tests/test_story_4_1_security_evidence.py",
+      "sha256": "2f150d60966fb9c78e23de71116c962c26bce411001a09f7c19ab87844b07f67"
+    },
+    {
+      "path": "tests/test_strict_local_source_audit.py",
+      "sha256": "c1b193c7824697df65f14b31d6be71394f50c63290651dec5184474052b4cf0e"
+    },
+    {
+      "path": "tests/test_supply_chain.py",
+      "sha256": "29593e31bb43f33beb064efb5b7b366ae5a0f964c2544b4bfb5e5b365e9026ae"
+    }
+  ],
+  "private_evidence": [
+    {
+      "label": "checks/native-cleanup-binaries-20260927.log",
+      "sha256": "010e13d4b86b9cc7c3410189c30e726936091495c3fe9a045a463672e9504631",
+      "bytes": 169
+    },
+    {
+      "label": "checks/native-cleanup-binary-evidence-20260927.log",
+      "sha256": "f495a460fa4596036428d556c2561eee9f96d91fc95bc314bdf563d1df3023d5",
+      "bytes": 1822
+    },
+    {
+      "label": "checks/native-cleanup-evidence-core-20260927.log",
+      "sha256": "82aa17ce8ca26c3ec9343e32e956af4f6722be4d216045d6e4ef74bfce103f8e",
+      "bytes": 1417
+    },
+    {
+      "label": "checks/native-cleanup-evidence-core-retry-20260927.log",
+      "sha256": "64915081d8724788715be5192583a38f6c51720ff57a1ed948eaeee6ad43023b",
+      "bytes": 11340
+    },
+    {
+      "label": "checks/native-cleanup-final-doc-checks-20260927.log",
+      "sha256": "77313c489fc62a34347301dfac9087d33a23d9e069881d2be3dc68b3f8b12e5d",
+      "bytes": 355
+    },
+    {
+      "label": "checks/native-cleanup-final-source-20260927.log",
+      "sha256": "f5be2eceb19645607d951a2a17fc17633a5373f36c5525621bd10605b9acb10e",
+      "bytes": 111543
+    },
+    {
+      "label": "checks/native-cleanup-focused-20260927.log",
+      "sha256": "61df83134f589c82fb4a72811fc4d463c0b5af867640184dee4b0a09e262892b",
+      "bytes": 14151
+    },
+    {
+      "label": "checks/native-cleanup-observation-20260927.log",
+      "sha256": "b4dd8f15b6b6efe235bf3d321e1c52d6aa7e1b8a985cbe642ed7ef6815997065",
+      "bytes": 198
+    },
+    {
+      "label": "checks/native-cleanup-reproduction-20260927.log",
+      "sha256": "8eacde9e1101aeeb58ae3d305c8f1af0554a6ee6b6a14cd804ed26e9c783e1f8",
+      "bytes": 1119
+    },
+    {
+      "label": "driver-or-source/native-cleanup-binary-evidence-checks.sh",
+      "sha256": "e067b02944e020b5d286fb359b87ac71af29c5fdef95c138f113d511093e7412",
+      "bytes": 1018
+    },
+    {
+      "label": "driver-or-source/native-cleanup-bindings-after-core.json",
+      "sha256": "f0c8cf06c01bdb08a561361a8e8fa47c7d1d99890827d7e6a9b2d0778f22d7b7",
+      "bytes": 229784
+    },
+    {
+      "label": "driver-or-source/native-cleanup-bindings-before-evidence.json",
+      "sha256": "8f1f27d774e0e38de36fc77efdec1332f4e2a4239b1525c6c37aeabe2ffffc99",
+      "bytes": 18028
+    },
+    {
+      "label": "driver-or-source/native-cleanup-bindings-final.json",
+      "sha256": "f0c8cf06c01bdb08a561361a8e8fa47c7d1d99890827d7e6a9b2d0778f22d7b7",
+      "bytes": 229784
+    },
+    {
+      "label": "driver-or-source/native-cleanup-classify-final.py",
+      "sha256": "fb89b2e8be434f0c62d56fb9d3a1933032b28093cb22f1cd1f8fd22ac9a88680",
+      "bytes": 2470
+    },
+    {
+      "label": "driver-or-source/native-cleanup-evidence-batch.sh",
+      "sha256": "469c1aa3302e15f95706071c28965da4b6f3e4ed29a8f46c791ee9944cbab7e4",
+      "bytes": 2498
+    },
+    {
+      "label": "driver-or-source/native-cleanup-feature-verification.json",
+      "sha256": "064580d9a916f650088a72b0754289d40a963240a75ccb88ccc1c70514cb0fe2",
+      "bytes": 149
+    },
+    {
+      "label": "driver-or-source/native-cleanup-final-checks.sh",
+      "sha256": "22214a19cc51b42e4624e6ba0da20a8e0f412b2ecf80c08380912d72f20a3d81",
+      "bytes": 1433
+    },
+    {
+      "label": "driver-or-source/native-cleanup-final-doc-checks.sh",
+      "sha256": "0769fbe63af35318f159095d00ad067dcac7fdd5e24198f0af2a8b5428bef0d5",
+      "bytes": 829
+    },
+    {
+      "label": "driver-or-source/native-cleanup-final-failures.json",
+      "sha256": "d2e8081a0bd1c450c2a2d95415fc98cd3bc4397ee4cff6816b72a3b196abcba1",
+      "bytes": 14938
+    },
+    {
+      "label": "driver-or-source/native-cleanup-final-source.json",
+      "sha256": "342163f1cf32d7e1b051a783350d29e85fc5aed2f33475df99905d3a5dcce5b2",
+      "bytes": 1115
+    },
+    {
+      "label": "driver-or-source/native-cleanup-first-source.json",
+      "sha256": "70ee1b04c1f23e4d141220b0b8a6cb8f7b1da4da4e95ccf0fb1484be88fbbe20",
+      "bytes": 969
+    },
+    {
+      "label": "driver-or-source/native-cleanup-first.sha256",
+      "sha256": "7d3c718964d078e3f4a05270e793dcec5f4c1b682a8480901da0a610e3bf1b4c",
+      "bytes": 732
+    },
+    {
+      "label": "driver-or-source/native-cleanup-focused.sh",
+      "sha256": "54c2587dbe6c1765a0801d36747288d36de7f07c1027489b477875467b596643",
+      "bytes": 559
+    },
+    {
+      "label": "driver-or-source/native-cleanup-historical-packages.json",
+      "sha256": "e118d88bf4903cf1557d26909bcf75daff2273a623aa8a37d895041b7a654a24",
+      "bytes": 1991
+    },
+    {
+      "label": "driver-or-source/native-cleanup-intermediate-checks.json",
+      "sha256": "8d56f9228c9ffc9f4ecfa2ca8574caa9c43c3e4e3ba41b5b660a218ec068d7e9",
+      "bytes": 403
+    },
+    {
+      "label": "driver-or-source/native-cleanup-manifest-binding.json",
+      "sha256": "291bb0e8545616c14c10ecbf6a7984a1c46d4ccc7cad371980265962585403ca",
+      "bytes": 374
+    },
+    {
+      "label": "driver-or-source/native-cleanup-manifest.py",
+      "sha256": "4972132e7bf4a1878c5778f6d910d0acdddba8568593bd5bafa1690138b1d693",
+      "bytes": 5939
+    },
+    {
+      "label": "driver-or-source/native-cleanup-observation.py",
+      "sha256": "9eb6fc2f891ae78e4e40c8e49a3adb1c464c62f7ce775fd9be198ed26449b3f8",
+      "bytes": 6710
+    },
+    {
+      "label": "driver-or-source/native-cleanup-privacy-check.json",
+      "sha256": "40d3d70ef6ba1ad43bf8cf9dc031d6bc8ab1874160773eb2774d021f661f78d9",
+      "bytes": 6684
+    },
+    {
+      "label": "driver-or-source/native-cleanup-reproduction-source.json",
+      "sha256": "fa4358766cd6b663ea83f901c89b8a08c3b596f5602c44a57ea5c591eba7c451",
+      "bytes": 298
+    },
+    {
+      "label": "driver-or-source/native-cleanup-reproduction.sh",
+      "sha256": "4f9cd49a1a4a2adbbdbf4d0ec181d1deb9865a8c9e3413913db991ff4811a9a7",
+      "bytes": 584
+    },
+    {
+      "label": "driver-or-source/native-cleanup-reproduction.sha256",
+      "sha256": "28abad7eb0b351ea5368192714a5b9a5529216d96b1f0b545a949273cacd9a5a",
+      "bytes": 119
+    },
+    {
+      "label": "driver-or-source/native-cleanup-rewrite-driver.py",
+      "sha256": "bfba08de8e598fbaf207a16a2057a4077b5c5f8bf4b85990e044419c593ce91d",
+      "bytes": 9105
+    },
+    {
+      "label": "driver-or-source/native-cleanup-rustdoc-relocation.json",
+      "sha256": "6a71bc4647b046a2b079e5825587d184aa0906ee24d744d5ef47ab01cc7e7b9b",
+      "bytes": 472980
+    },
+    {
+      "label": "driver-or-source/native-cleanup-source-final.sha256",
+      "sha256": "767a3635249f8ad09c5a78396ef0dd0da209c348cc1e2ac8ba8a3e40ff7ebe7e",
+      "bytes": 839
+    },
+    {
+      "label": "driver-or-source/native-cleanup-source-privacy.json",
+      "sha256": "18de59b0d8fe50eff6c95d02259006963b13e10f7b70216b1686875b58700539",
+      "bytes": 528
+    },
+    {
+      "label": "driver-or-source/native-cleanup-validate-manifest.py",
+      "sha256": "8bf82ba77c17327012c5b23a084ade743234efebb7551e9b1780132d0d97a1f9",
+      "bytes": 2872
+    },
+    {
+      "label": "startup/clean-diagnose.json",
+      "sha256": "1cb7435e723efb5cd0ad1134f3aee654632f6da91cea692b06267c777117c100",
+      "bytes": 328
+    },
+    {
+      "label": "startup/clean-diagnose.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/clean-diagnose.stdout",
+      "sha256": "5ba01583b2fa421150326b2a09d3c59484198765bac327cbb9d34b1eebd639e3",
+      "bytes": 984
+    },
+    {
+      "label": "startup/clean-setup.json",
+      "sha256": "500c170b6709752f5256996b4a6bbf09cf6e1daac07e4e69f832f66b33eb14d5",
+      "bytes": 325
+    },
+    {
+      "label": "startup/clean-setup.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/clean-setup.stdout",
+      "sha256": "cc1a9d20528f81735d466ae7119305898effd4d15230190a342b3b52e8b1c392",
+      "bytes": 1323
+    },
+    {
+      "label": "startup/clean-start.json",
+      "sha256": "169283db6e4738c361306f667b7afdd284dc3e88f357b22fb44c89fe4f6af4de",
+      "bytes": 571
+    },
+    {
+      "label": "startup/clean-start.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/clean-start.stdout",
+      "sha256": "ec771dcedfc90bf9a46347f6120a10cd8123d14802bfc14e363f213b319813c2",
+      "bytes": 97
+    },
+    {
+      "label": "startup/clean-status.json",
+      "sha256": "e5399235080048d6ef85584f6f56f0b6e5d9ac5c536f133d8f200d00657bad6e",
+      "bytes": 326
+    },
+    {
+      "label": "startup/clean-status.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/clean-status.stdout",
+      "sha256": "5ba01583b2fa421150326b2a09d3c59484198765bac327cbb9d34b1eebd639e3",
+      "bytes": 984
+    },
+    {
+      "label": "startup/cli-help.json",
+      "sha256": "db1e9e2b12ac24b189111043f600e25c4e77b2f5e8e2f7bd5d563be60365f655",
+      "bytes": 302
+    },
+    {
+      "label": "startup/cli-help.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/cli-help.stdout",
+      "sha256": "fa24ac9df48bacc6344a1ddb2a06353be9e94bd46fbaadb2c1ef3ef8234f254a",
+      "bytes": 2025
+    },
+    {
+      "label": "startup/coding-clean/result.json",
+      "sha256": "1cccf92592f400795e12fe57c01ff69ad2f7fe668f2d8147759ff0eb1621497e",
+      "bytes": 2741
+    },
+    {
+      "label": "startup/coding-clean/stderr.log",
+      "sha256": "5579101cf478cccc486cea8aa897284fb6c252c158c45681e41415d34fb03c79",
+      "bytes": 86
+    },
+    {
+      "label": "startup/coding-clean/stdout.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/dirty-setup.json",
+      "sha256": "8536c79f5039cfdfdb13eaa13fcd9d153bf999cc53e0964c3c505b4abb87ead7",
+      "bytes": 325
+    },
+    {
+      "label": "startup/dirty-setup.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/dirty-setup.stdout",
+      "sha256": "d88703d42af18fbe8084205a1ae264f4f36b887fe048fc27c2b461eba15d2917",
+      "bytes": 1323
+    },
+    {
+      "label": "startup/dirty-start.json",
+      "sha256": "c69741e3dfc86f108239c6da932c9963bc8215cb01e63fbbf8fbf75b8ff3a53d",
+      "bytes": 571
+    },
+    {
+      "label": "startup/dirty-start.stderr",
+      "sha256": "b8eceb9a16ea90483c01a7f4600ca201ce46a4dd829b7b825b054e0565cacc0a",
+      "bytes": 34
+    },
+    {
+      "label": "startup/dirty-start.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/dirty-status.json",
+      "sha256": "0b888517154b2cc6b05a96e4e6df3ac0a0baff5888f027271c922d63a8b1f2d8",
+      "bytes": 326
+    },
+    {
+      "label": "startup/dirty-status.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "label": "startup/dirty-status.stdout",
+      "sha256": "2b90eda639c4008725b51d928aaf0b9ccc1b11ea8ee2c7929ce86ed0787857c2",
+      "bytes": 985
+    },
+    {
+      "label": "startup/observation.json",
+      "sha256": "46f2b087032f2d8d5f7d23f4bee661c8551a1334c461ddcb83318839aed7e4b2",
+      "bytes": 9183
+    },
+    {
+      "label": "reproduction-source/platforms/linux-inference/src/llama_server_driver.rs",
+      "sha256": "ae5dccb5fdd52de7ba241b7e0dd9e30ccc16233e3362fde3262886bc432b8ad4",
+      "bytes": 130370
+    },
+    {
+      "label": "first-source/docs/decisions/0095-native-inference-cleanup-ownership.md",
+      "sha256": "b003cee39f5fdf1a40b1c632a0cceabd0092e1534f11a840ec2658f7e45473b5",
+      "bytes": 6017
+    },
+    {
+      "label": "first-source/platforms/linux-inference/Cargo.toml",
+      "sha256": "553a09a02cc388188a2eece7ccb1b9001a25c1f36695e8311d8779036bb3a227",
+      "bytes": 848
+    },
+    {
+      "label": "first-source/platforms/linux-inference/src/llama_server_driver/owned_files.rs",
+      "sha256": "dd316b19a2ff005a1220aed2413b588362efb18264ea2ba3e1a1dc9e5644e25a",
+      "bytes": 17021
+    },
+    {
+      "label": "first-source/platforms/linux-inference/src/llama_server_driver/owned_process.rs",
+      "sha256": "2111087389d9f65a3b11463a10099ded520c98953b04521b670ffefeb2e768a1",
+      "bytes": 6485
+    },
+    {
+      "label": "first-source/platforms/linux-inference/src/llama_server_driver.rs",
+      "sha256": "e8496da903af7ac3c97c134e2c4f56e1a3354d37f7b4c5f5391bdfbad8885825",
+      "bytes": 134569
+    },
+    {
+      "label": "first-source/platforms/linux-inference/src/native_inference_lease.rs",
+      "sha256": "1ceab9619f0fd350e41ae45e02d517e9191bf5c96bd392e7938cd211b388902b",
+      "bytes": 18013
+    },
+    {
+      "label": "final-source/docs/decisions/0095-native-inference-cleanup-ownership.md",
+      "sha256": "6e975d33d0f8398856c4da48e3795d262c783fff25f7a916a2a97ff1ff8dff02",
+      "bytes": 6563
+    },
+    {
+      "label": "final-source/platforms/linux-inference/Cargo.toml",
+      "sha256": "553a09a02cc388188a2eece7ccb1b9001a25c1f36695e8311d8779036bb3a227",
+      "bytes": 848
+    },
+    {
+      "label": "final-source/platforms/linux-inference/src/llama_server_driver/owned_files.rs",
+      "sha256": "dd316b19a2ff005a1220aed2413b588362efb18264ea2ba3e1a1dc9e5644e25a",
+      "bytes": 17021
+    },
+    {
+      "label": "final-source/platforms/linux-inference/src/llama_server_driver/owned_process.rs",
+      "sha256": "9d1d1c72959b76ba4b112a04807cbe7d8cb949334416af833cb02940829edba0",
+      "bytes": 9497
+    },
+    {
+      "label": "final-source/platforms/linux-inference/src/llama_server_driver.rs",
+      "sha256": "e8496da903af7ac3c97c134e2c4f56e1a3354d37f7b4c5f5391bdfbad8885825",
+      "bytes": 134569
+    },
+    {
+      "label": "final-source/platforms/linux-inference/src/native_inference_lease.rs",
+      "sha256": "1ceab9619f0fd350e41ae45e02d517e9191bf5c96bd392e7938cd211b388902b",
+      "bytes": 18013
+    },
+    {
+      "label": "final-source/security/strict-local-source-policy.json",
+      "sha256": "2822e81ef008f50c93687d7b319fb4f3060d5af1a8e876a159023a9ed807800d",
+      "bytes": 22503
+    }
+  ],
+  "binaries": {
+    "agentmage": {
+      "sha256": "af5f95cb6deccb546cad71b3a2c311f2f0911a0c7e53ce2fdc3d637b133d21a2",
+      "bytes": 280857152
+    },
+    "agentmage-host": {
+      "sha256": "4f3aefca45054d33dc45b869c0aae3a97a862dc9d8a9ec619706cee670a71015",
+      "bytes": 327615912
+    },
+    "agentmage-read-only-worker": {
+      "sha256": "04e87c0925acbc25dbf1f8de82ce37fa6811d257c43a80f00844cc89a3275e7c",
+      "bytes": 13798352
+    }
+  },
+  "binary_identities_unchanged": true,
+  "cleanup_limits": {
+    "original_process_cleanup_deadline_seconds": 3,
+    "poll_interval_ms": 10,
+    "persistent_lease_marker_bytes": 64
+  },
+  "reproduction": {
+    "kind": "unowned-socket-path-cleanup-reported-success",
+    "outcome": "failed",
+    "passed": 0,
+    "failed": 1,
+    "filtered_out": 124,
+    "changed_source_snapshot": {
+      "base_commit": "d66865fc36dffda923d37e3af457b39e1eef678b",
+      "inputs": [
+        {
+          "path": "platforms/linux-inference/src/llama_server_driver.rs",
+          "sha256": "ae5dccb5fdd52de7ba241b7e0dd9e30ccc16233e3362fde3262886bc432b8ad4"
+        }
+      ],
+      "complete_changed_source_bytes_retained": true
+    },
+    "fixed_preservation_regression": "passed"
+  },
+  "checks": {
+    "final_source": {
+      "inference": {
+        "passed": 133,
+        "failed": 0,
+        "ignored": 4,
+        "elapsed_seconds": 0.94
+      },
+      "source_log_sha256": "f5be2eceb19645607d951a2a17fc17633a5373f36c5525621bd10605b9acb10e",
+      "prior_classification_sha256": "31dbe5be383d3f8b14892552af7973c333e31738f79795ffacb023e2989f7aec",
+      "linux": {
+        "passed": 183,
+        "failed": 19,
+        "ignored": 51,
+        "elapsed_seconds": 51.85
+      },
+      "host": {
+        "passed": 282,
+        "failed": 50,
+        "ignored": 8,
+        "elapsed_seconds": 41.75
+      },
+      "exact_prior_failures": true,
+      "tests": [
+        {
+          "test": "command_runner::tests::manifest_binds_every_registered_executable_digest",
+          "reason": "InvalidManifest"
+        },
+        {
+          "test": "command_runner::tests::task_ceilings_below_the_linux_minimum_fail_before_launch",
+          "reason": "InvalidManifest"
+        },
+        {
+          "test": "local_commit::tests::native_candidate_tree_uses_only_owned_index_and_preserves_user_state",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "local_commit::tests::native_signed_commit_verifies_exact_content_and_only_updates_task_branch",
+          "reason": "ArtifactDenied"
+        },
+        {
+          "test": "repository_safety::tests::compare_and_swap_updates_only_one_unchecked_branch_and_stale_old_fails",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::concurrent_user_changes_survive_worktree_removal_and_cleanup",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::exact_worktree_lifecycle_preserves_active_checkout",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::interrupted_branch_fast_forward_preserves_every_user_artifact",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::interrupted_worktree_create_preserves_every_user_artifact",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::manifest_is_minimized_stable_and_detects_untracked_and_hazards",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::network_clone_fetch_and_unmapped_tokens_never_launch_locally",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::repository_inventory_cancellation_fails_before_git_launch",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::repository_inventory_preserves_exact_git_states_and_nonregular_hints",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::worktree_lifecycle_preserves_a_detached_active_checkout",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::worktree_lifecycle_preserves_a_dirty_active_checkout",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::worktree_removal_fails_closed_when_the_owned_directory_is_missing",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "repository_safety::tests::worktree_removal_fails_closed_when_the_owned_directory_is_renamed",
+          "reason": "InvalidGitArtifact"
+        },
+        {
+          "test": "secret_service::tests::secret_bytes_never_enter_process_arguments_or_environment",
+          "reason": "InvalidManifest"
+        },
+        {
+          "test": "secret_service::tests::substituted_secret_client_digest_fails_before_service_contact",
+          "reason": "InvalidManifest"
+        },
+        {
+          "test": "linux_coding_runtime::tests::command_git_validation_observers_preserve_consumption_failure_and_reopen",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::durable_coding_run_persists_continuation_artifact_and_checkpoint",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::read_cancellation_after_consumption_retains_exact_receipt_and_reopens",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::read_precancel_receipt_precedes_original_acknowledgements_on_reopen",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::retained_muse_missing_read_is_rejected_before_authority_and_not_path_absence_evidence",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::s_048_mvp_e2e_controlled_create_test_git_and_verify_path",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::s_048_mvp_e2e_denial_and_user_cancellation_start_no_effect",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::s_048_mvp_e2e_failed_validation_requires_a_repair_before_success",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::s_048_mvp_e2e_repository_exploration_finishes_as_verified_no_op",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_22_1_long_native_session_blocks_drift_and_preserves_exact_history",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_22_2_linux_generated_file_is_published_and_checkpoint_bound",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_22_2_linux_restart_recovers_large_terminal_model_artifact",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_22_2_linux_restart_rejects_lost_continuation_without_replaying_the_tool",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_22_2_linux_restart_restores_checkpoint_without_replaying_the_tool",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_22_2_linux_restart_restores_large_command_and_test_artifacts_without_replay",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_39_1_native_write_checkpoint_process_matrix_recovers_without_replay",
+          "reason": "assertion `left == right` failed: ",
+          "cause": "child exits101 at same InvalidManifest fixture prerequisite before intended crash93; parent assertion is downstream"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_fake_model_completes_real_git_patch_test_git_and_verify_path",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_applies_one_exact_structured_patch",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_asks_then_derives_one_exact_operation_grant",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_creates_one_exact_absent_file",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_denial_and_create_collision_are_inert",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_executes_one_exact_bounded_command_after_approval",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_executes_one_kernel_checked_git_inspection",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_normalizes_targeted_validation_after_one_granted_command",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_persists_stale_patch_invalidation_without_overwrite",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_rejects_substitution_staleness_and_unbudgeted_actions",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_linux_runtime_user_denial_is_inert_and_non_replayable",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_native_command_json_order_preserves_exact_approved_call",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_48_2_native_command_reserialization_after_approval_remains_denied",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_50_2_and_sprint_95_child_caller_use_the_real_no_op_runtime_path",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_50_2_exact_path_preauthorization_uses_kernel_write_grant_and_unknown_path_asks",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_50_2_exact_registered_command_preauthorization_uses_fresh_grant",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_50_2_session_preauthorization_issues_fresh_grants_and_exhausts_exact_budget",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_50_2_session_preauthorization_revocation_and_expiry_fail_closed",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::story_50_2_workflow_caller_waits_for_user_and_denial_starts_no_effect",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::uncertain_command_and_validation_never_publish_completion_artifacts_or_replay",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::uncertain_command_event_is_atomically_published_and_reopens",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::uncertain_git_event_is_atomically_published_and_reopens",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_coding_runtime::tests::uncertain_git_never_publishes_observations_or_replays_consumed_authority",
+          "reason": "test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::absent_read_and_tool_approvals_do_not_require_a_clock_sample",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::authenticated_host_frontier_review_renders_once_and_never_delivers",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::diagnostic_export_preview_and_approval_use_the_authenticated_workflow",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::doctor_uses_the_same_workflow_and_reports_unproved_components_unavailable",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::generic_tool_preview_binds_every_exact_object_and_cancels_without_receipt",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::generic_tool_preview_rejects_duplicate_unscoped_and_wrong_kind_projections",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::handoff_source_drift_and_missing_acknowledgment_fail_closed",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::handoff_transport_requires_current_review_and_never_delivers",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::model_picker_transport_is_unavailable_until_verified_and_never_falls_back",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_read::tests::shared_runtime_is_unavailable_until_explicitly_composed_and_then_host_framed",
+          "reason": "verified worker manifest: LinuxSandboxError { kind: InvalidManifest }"
+        },
+        {
+          "test": "linux_repository_map::tests::live_projection_is_git_aware_policy_aware_and_non_following",
+          "reason": "Git verifies: LinuxRepositoryError { kind: InvalidGitArtifact }"
+        }
+      ],
+      "confirmation_pipe_tests_passed": [
+        "closed_words_require_a_complete_line_and_preserve_whitespace_semantics",
+        "consecutive_prompts_consume_only_their_own_line_and_leave_flags_unchanged",
+        "eof_never_confirms_an_approving_fragment",
+        "idle_and_partial_open_pipes_cancel_before_test_cleanup_closes_the_writer",
+        "invalid_utf8_is_a_content_free_failure",
+        "limit_requires_the_newline_and_never_accepts_an_overlong_approving_prefix",
+        "pending_cancellation_consumes_no_input_and_never_clears_the_flag",
+        "write_only_input_is_rejected_before_waiting_for_peer_cleanup"
+      ],
+      "real_terminal_port_scripted_driver_cancellation_test": "passed-interactive-and-delayed-preauthorized-variants",
+      "clippy_and_source_audits": "passed",
+      "full_suites": "failed"
+    },
+    "initial_inference_suite": {
+      "passed": 131,
+      "failed": 0,
+      "ignored": 4
+    },
+    "source_audit_python_tests": 27,
+    "core_python_tests": 196,
+    "schema_tests": 52,
+    "sbom_writes": 1,
+    "feature_inventory": {
+      "default": {
+        "unchanged_complete_contexts": 126
+      },
+      "connected": {
+        "unchanged_complete_contexts": 168
+      },
+      "lock_unchanged": true
+    }
+  },
+  "cases": [
+    {
+      "case": "clean",
+      "exit_code": 5,
+      "preserved": true,
+      "snapshot_sha256": "fa642f9603adc77fc66275ba181976663cfa4419093eacbdb24ca542a385c916",
+      "state_entries": [
+        "repository-management"
+      ],
+      "native_tool_or_model_executed": false
+    },
+    {
+      "case": "dirty",
+      "exit_code": 1,
+      "preserved": true,
+      "snapshot_sha256": "78f1173a799cf6ad1e89c4c217a619721768bc03382686bae355f7eade04dcec",
+      "state_entries": [],
+      "native_tool_or_model_executed": false
+    }
+  ],
+  "historical_package_dispositions": [
+    {
+      "artifact": "artifacts/sprints/sprint-9/story-9.1/linux-native-inference-boundary.json",
+      "source_revision": "b1ab32328e8e2ded1c2b5d656242235139c1c2ab",
+      "status": "pass-fedora-package-boundary",
+      "host": {
+        "architecture": "x86_64",
+        "distribution": "fedora",
+        "version": "44"
+      },
+      "disposition": "Retain historical package execution at original source. The explicit inference Cargo event feature changes its current whole-file binding. This lane cannot substitute component tests for that native Fedora package execution; no current package/native workflow qualification is claimed."
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-9/story-9.2/linux-docker-production-prerequisites.json",
+      "source_revision": "a3266796d4efba7ce35c31f251359f7b5f147d03",
+      "status": "pass-packaged-prerequisites-no-live-docker",
+      "host": {
+        "architecture": "x86_64",
+        "distribution": "fedora",
+        "docker_cli_available": false,
+        "live_collector_executed": false,
+        "version": "44"
+      },
+      "disposition": "Retain historical package execution at original source. The explicit inference Cargo event feature changes its current whole-file binding. This lane cannot substitute component tests for that native Fedora package execution; no current package/native workflow qualification is claimed."
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-9/story-9.2/linux-native-runtime-package.json",
+      "source_revision": "f74feb4443e0be16156324a7a050f92cae7db6dd",
+      "status": "pass-fedora-native-package-boundary",
+      "host": {
+        "architecture": "x86_64",
+        "distribution": "fedora",
+        "version": "44"
+      },
+      "disposition": "Retain historical package execution at original source. The explicit inference Cargo event feature changes its current whole-file binding. This lane cannot substitute component tests for that native Fedora package execution; no current package/native workflow qualification is claimed."
+    }
+  ],
+  "acceptance": {
+    "cpu_process_descriptor_and_private_file_components": "passed",
+    "actual_cli_host": "native-git-prerequisite-refusal-observed",
+    "scripted_native_coding_workflow": "not-reached",
+    "native_model_namespace_cleanup": "not-exercised",
+    "real_model": "not-run",
+    "manual_user": "not-run",
+    "independent_reviewer": "pending",
+    "release": "not-authorized"
+  },
+  "limitations": [
+    "CPU descriptor-pair fixtures do not admit or qualify an actual isolated model namespace.",
+    "Cooperative process polling cannot preempt kernel-stalled syscalls.",
+    "Private file identity checks are not atomic against an arbitrary concurrent same-UID adversary.",
+    "The marker coordinates participating hosts; it is not effect authority, a GPU quota, or a recovery receipt.",
+    "Runtime-directory recreation, logout, reboot or manual deletion is not proved cleanup; no automatic reset is supplied.",
+    "The older empty-lock protocol cannot retroactively prove cleanup after an unobserved crash.",
+    "Full Linux and host suites remain failed on unavailable native prerequisites; no exclusions or thresholds were weakened.",
+    "Actual executable refusal preserved existing work without qualifying successful editing, denial, or active cancellation.",
+    "Historical source and package observations retain original full bindings; no global or transitive freshness claim."
+  ]
+}

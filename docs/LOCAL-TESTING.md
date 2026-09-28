@@ -47,8 +47,9 @@ an uncertain record. See the development guide for lifecycle and cleanup limitat
 
 **Current lane result:** setup and diagnosis ran; the actual scripted CLI/host
 launch returned exit 5 before tools because native prerequisites are unavailable.
-The [confirmation verification](verification/development-confirmation-2026-09-27.md)
+The [inference cleanup verification](verification/native-inference-cleanup-2026-09-27.md)
 retains the latest rebuilt source revision, binary hashes and startup results;
+the [confirmation verification](verification/development-confirmation-2026-09-27.md),
 the [development lifecycle verification](verification/development-host-lifecycle-2026-09-27.md),
 the [native diagnostic verification](verification/native-development-diagnostics-2026-09-27.md) and
 the [preceding observation](verification/linux-current-startup-2026-09-27.md)
@@ -101,6 +102,15 @@ agentmage SECONDS ...` with `SECONDS` at most 3600 and owned cleanup inside the
 reservation. Current missing native prerequisites preclude such a run; do not
 launch inference just to rediscover them. No model download or host installation
 is part of these instructions.
+
+The native inference driver arms its existing private lease before possible model
+spawn. Only that live owner clears the reservation after verified process and file
+cleanup. An uncertain or abandoned reservation refuses later admission; it is not
+a stale lock to delete. Preserve the state and obtain external reconciliation.
+There is no automatic reset, and a reboot or recreated runtime directory does not
+prove cleanup. CPU component checks cover bounded cleanup and preservation; actual
+isolated model cleanup remains unverified in this lane. See the inference cleanup
+verification for the exact source and remaining limitations.
 
 ## Separate document demonstration
 
