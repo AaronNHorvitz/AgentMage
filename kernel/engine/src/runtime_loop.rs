@@ -1,6 +1,10 @@
 //! Interface-independent reusable runtime coordinator.
 
+use std::cell::Cell;
 use std::collections::BTreeSet;
+
+mod artifact_preparation;
+use artifact_preparation::{PreparedToolArtifact, ToolCompletionBuilder};
 
 use agentmage_kernel_contracts::{
     ActionId, AgentProposal, AgentStateKind, ApprovalId, BudgetResource, CONTRACT_SCHEMA_VERSION,
@@ -338,6 +342,46 @@ pub struct RuntimeToolCorrectnessCommit {
     pub events: Vec<RuntimeEvent>,
 }
 
+/// Borrowed pure preparation inside one existing correctness transaction.
+///
+/// References describe prospective immutable artifacts. They carry no persistence,
+/// effect or native admission authority. The coordinator alone owns their ordinals,
+/// observed terminal time, budgets and eventual publication.
+pub trait RuntimeToolTerminalBuilder {
+    /// Appends complete candidates in final execution order after the durable start
+    /// observation. Dependent candidates may use references from an earlier append.
+    /// Any refusal poisons this completion; callers must not retry or ignore it.
+    fn prepare_artifacts(
+        &mut self,
+        receipt_id: &ReceiptId,
+        receipt_sha256: &str,
+        candidates: &[RuntimeToolArtifactCandidate],
+    ) -> Result<Vec<RuntimeArtifactRef>, RuntimePortFailure> {
+        let _ = (receipt_id, receipt_sha256, candidates);
+        Err(RuntimePortFailure::Invalid)
+    }
+
+    /// Seals exactly one terminal event from the complete final execution.
+    fn build_terminal_event(
+        &mut self,
+        execution: &RuntimeToolExecution,
+    ) -> Result<RuntimeEvent, RuntimePortFailure>;
+}
+
+// Existing pure event-builder adapters do not acquire artifact ownership merely
+// by implementing FnMut. The coordinator supplies its explicit owning builder.
+impl<F> RuntimeToolTerminalBuilder for F
+where
+    F: FnMut(&RuntimeToolExecution) -> Result<RuntimeEvent, RuntimePortFailure>,
+{
+    fn build_terminal_event(
+        &mut self,
+        execution: &RuntimeToolExecution,
+    ) -> Result<RuntimeEvent, RuntimePortFailure> {
+        self(execution)
+    }
+}
+
 /// Durable authority/event transaction boundary implemented by a trusted runtime host.
 ///
 /// Event builders have no persistence authority. They only seal the coordinator's next exact
@@ -383,9 +427,7 @@ pub trait RuntimeCorrectnessTransactionPort {
         cancellation: Option<&dyn ModelCancellationProbe>,
         started_event: RuntimeEvent,
         observe_started: &mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimePortFailure>,
-        build_terminal_event: &mut dyn FnMut(
-            &RuntimeToolExecution,
-        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+        build_terminal_event: &mut dyn RuntimeToolTerminalBuilder,
     ) -> Result<RuntimeToolCorrectnessCommit, RuntimePortFailure>;
 
     /// Commits one safe checkpoint and its exact journal marker in the same transaction.
@@ -656,7 +698,7 @@ struct RuntimeCorrectnessHooks<T> {
         Option<&dyn ModelCancellationProbe>,
         RuntimeEvent,
         &'a mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimePortFailure>,
-        &'a mut dyn FnMut(&RuntimeToolExecution) -> Result<RuntimeEvent, RuntimePortFailure>,
+        &'a mut dyn RuntimeToolTerminalBuilder,
     ) -> Result<RuntimeToolCorrectnessCommit, RuntimePortFailure>,
     checkpoint: for<'a, 'b> fn(
         &mut T,
@@ -2170,10 +2212,10 @@ where
                     let publisher = &self.publisher;
                     let events = &mut self.events;
                     let current_resources = &mut self.resources;
-                    let mut start_observed = false;
+                    let start_observed = Cell::new(false);
                     let mut observation_invalid = false;
                     let mut observe_started = |event: &RuntimeEvent| {
-                        if start_observed || event != &started_event {
+                        if start_observed.get() || event != &started_event {
                             observation_invalid = true;
                             return Err(RuntimePortFailure::Invalid);
                         }
@@ -2183,40 +2225,20 @@ where
                         })?;
                         events.push(event.clone());
                         *current_resources = resources_at_start.clone();
-                        start_observed = true;
+                        start_observed.set(true);
                         Ok(())
                     };
-                    let mut built_terminal = None;
-                    let mut build_attempts = 0_u8;
-                    let mut observed_execution = None;
-                    let clock = &mut self.clock;
-                    let mut build_terminal = |execution: &RuntimeToolExecution| {
-                        build_attempts = build_attempts.saturating_add(1);
-                        if build_attempts != 1
-                            || !valid_tool_execution(execution, &definition, &call, &request)
-                        {
-                            return Err(RuntimePortFailure::Invalid);
-                        }
-                        let terminal_at_epoch_ms = clock.now_epoch_ms()?;
-                        let kind = runtime_tool_terminal_event(execution, &call)?;
-                        let event = prepare_runtime_event(
-                            &request,
-                            &correlation_id,
-                            Some(&started_event),
-                            terminal_at_epoch_ms,
-                            kind,
-                            Some(&turn_id),
-                            Some(&operation_id),
-                            true,
-                            &mut resources,
-                        )?;
-                        observed_execution = Some(
-                            tool_execution_observation(execution)
-                                .map_err(|_| RuntimePortFailure::Invalid)?,
-                        );
-                        built_terminal = Some(event.clone());
-                        Ok(event)
-                    };
+                    let mut build_terminal = ToolCompletionBuilder::new(
+                        &request,
+                        &definition,
+                        &call,
+                        &started_event,
+                        &start_observed,
+                        &mut self.clock,
+                        resources,
+                        self.artifact_references.len() as u64,
+                        self.artifact.is_some(),
+                    );
                     let commit = execute(
                         &mut self.tool_boundary,
                         &self.request,
@@ -2229,23 +2251,14 @@ where
                         &mut build_terminal,
                     )
                     .map_err(RuntimeLoopError::Dependency)?;
-                    if !start_observed
+                    if !start_observed.get()
                         || observation_invalid
-                        || build_attempts != 1
-                        || !valid_tool_execution(&commit.execution, &definition, &call, &request)
-                        || observed_execution.as_ref()
-                            != Some(&tool_execution_observation(&commit.execution)?)
-                        || commit.events
-                            != [
-                                started_event,
-                                built_terminal
-                                    .clone()
-                                    .ok_or(RuntimeLoopError::InvalidBoundaryResult)?,
-                            ]
+                        || !build_terminal.matches_return(&commit)
                     {
                         self.correctness_reconciliation_required = true;
                         return Err(RuntimeLoopError::InvalidBoundaryResult);
                     }
+                    let (resources, prepared_artifacts) = build_terminal.into_parts();
                     // The start is already visible from its durable commit. Only
                     // the exact terminal successor may now enter the same stream.
                     self.accept_committed_events(
@@ -2259,6 +2272,7 @@ where
                         turn_id,
                         operation_id,
                         true,
+                        prepared_artifacts,
                         cancellation,
                     )
                 } else {
@@ -2281,6 +2295,7 @@ where
                         turn_id,
                         operation_id,
                         false,
+                        None,
                         cancellation,
                     )
                 }
@@ -2434,10 +2449,19 @@ where
         turn_id: RuntimeTurnId,
         operation_id: RuntimeOperationId,
         terminal_event_emitted: bool,
+        prepared_artifacts: Option<Vec<PreparedToolArtifact>>,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<(), RuntimeLoopError> {
         if !valid_tool_execution(&execution, &definition, &call, &self.request) {
             return Err(RuntimeLoopError::InvalidBoundaryResult);
+        }
+        if let Some(prepared) = &prepared_artifacts {
+            if !terminal_event_emitted || prepared.len() != execution.artifact_candidates.len() {
+                return Err(RuntimeLoopError::InvalidBoundaryResult);
+            }
+            for (artifact, candidate) in prepared.iter().zip(&execution.artifact_candidates) {
+                self.publish_sealed_artifact(artifact.manifest.clone(), &candidate.bytes)?;
+            }
         }
         let prior_evidence = self.evidence.len();
         let mut output_exhausted = false;
@@ -2472,15 +2496,17 @@ where
                 )?
             };
         }
-        for candidate in &execution.artifact_candidates {
-            if !self.route_runtime_artifact_candidate(
-                candidate,
-                &turn_id,
-                &operation_id,
-                &execution.receipt_id,
-            )? {
-                output_exhausted = true;
-                break;
+        if prepared_artifacts.is_none() {
+            for candidate in &execution.artifact_candidates {
+                if !self.route_runtime_artifact_candidate(
+                    candidate,
+                    &turn_id,
+                    &operation_id,
+                    &execution.receipt_id,
+                )? {
+                    output_exhausted = true;
+                    break;
+                }
             }
         }
         match execution.result.outcome {
@@ -3350,48 +3376,47 @@ where
         receipt_id: Option<&ReceiptId>,
         retain_preview: bool,
     ) -> Result<RuntimeArtifactRef, RuntimeLoopError> {
+        let created_at_epoch_ms = self
+            .clock
+            .now_epoch_ms()
+            .map_err(RuntimeLoopError::Dependency)?;
+        let manifest = artifact_preparation::prepare_artifact_manifest(
+            &self.request,
+            self.artifact_references.len() as u64 + 1,
+            created_at_epoch_ms,
+            bytes,
+            media_type,
+            kind,
+            turn_id,
+            operation_id,
+            receipt_id,
+            retain_preview,
+        )
+        .map_err(RuntimeLoopError::Dependency)?;
+        self.publish_sealed_artifact(manifest, bytes)
+    }
+
+    fn publish_sealed_artifact(
+        &mut self,
+        manifest: RuntimeArtifactManifest,
+        bytes: &[u8],
+    ) -> Result<RuntimeArtifactRef, RuntimeLoopError> {
         let publish = self
             .artifact
             .as_ref()
             .ok_or(RuntimeLoopError::UnsupportedMode)?
             .publish;
-        let created_at_epoch_ms = self
-            .clock
-            .now_epoch_ms()
-            .map_err(RuntimeLoopError::Dependency)?;
         let artifact_id = RuntimeArtifactId::from_raw(derived_id(
             "artifact",
             self.request.run_id.as_str(),
             self.artifact_references.len() as u64 + 1,
         ));
-        let manifest = seal_runtime_artifact_manifest(RuntimeArtifactManifest {
-            schema_version: CONTRACT_SCHEMA_VERSION,
-            artifact_id: artifact_id.clone(),
-            kind,
-            payload_sha256: sha256(bytes),
-            byte_size: bytes.len() as u64,
-            media_type: media_type.to_owned(),
-            sensitivity: runtime_sensitivity(&self.request),
-            retention: RuntimeEventRetention {
-                kind: RuntimeEventRetentionKind::Session,
-                expires_at_epoch_ms: None,
-            },
-            session_id: self.request.session_id.clone(),
-            task_id: self.request.task.task_id.clone(),
-            producer_run_id: self.request.run_id.clone(),
-            producer_turn_id: turn_id.cloned(),
-            producer_operation_id: operation_id.cloned(),
-            receipt_id: receipt_id.cloned(),
-            policy_id: self.request.policy_id.clone(),
-            policy_sha256: self.request.policy_sha256.clone(),
-            created_at_epoch_ms,
-            integrity: RuntimeArtifactIntegrityState::Verified,
-            preview: retain_preview
-                .then(|| runtime_artifact_preview(bytes))
-                .flatten(),
-            manifest_sha256: ZERO_SHA256.to_owned(),
-        })
-        .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        if manifest.artifact_id != artifact_id
+            || manifest.payload_sha256 != sha256(bytes)
+            || manifest.byte_size != bytes.len() as u64
+        {
+            return Err(RuntimeLoopError::InvalidBoundaryResult);
+        }
         let expected =
             runtime_artifact_ref(&manifest).map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
         let reference = publish(&mut self.tool_boundary, manifest.clone(), bytes)
@@ -3404,13 +3429,13 @@ where
         let payload_reference = runtime_payload_reference(&manifest)
             .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
         self.emit_at_with_payload(
-            created_at_epoch_ms,
+            manifest.created_at_epoch_ms,
             RuntimeEventKind::ArtifactCreated {
                 artifact_id,
                 manifest_sha256: manifest.manifest_sha256,
             },
-            turn_id,
-            operation_id,
+            manifest.producer_turn_id.as_ref(),
+            manifest.producer_operation_id.as_ref(),
             Some(payload_reference.clone()),
         )?;
         self.artifact_references.push(reference.clone());
@@ -3563,9 +3588,7 @@ fn execute_with_correctness_events<T: RuntimeCorrectnessTransactionPort>(
     cancellation: Option<&dyn ModelCancellationProbe>,
     started_event: RuntimeEvent,
     observe_started: &mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimePortFailure>,
-    build_terminal_event: &mut dyn FnMut(
-        &RuntimeToolExecution,
-    ) -> Result<RuntimeEvent, RuntimePortFailure>,
+    build_terminal_event: &mut dyn RuntimeToolTerminalBuilder,
 ) -> Result<RuntimeToolCorrectnessCommit, RuntimePortFailure> {
     port.execute_with_correctness_events(
         request,

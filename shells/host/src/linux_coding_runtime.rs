@@ -61,7 +61,7 @@ use agentmage_kernel_engine::{
         RuntimeCheckpointPort, RuntimeCheckpointPublication, RuntimeCorrectnessTransactionPort,
         RuntimeJournalPort, RuntimePermissionEvaluation, RuntimePortFailure, RuntimeResumeSnapshot,
         RuntimeToolArtifactCandidate, RuntimeToolBoundary, RuntimeToolCorrectnessCommit,
-        RuntimeToolExecution,
+        RuntimeToolExecution, RuntimeToolTerminalBuilder,
     },
     validation_result::{
         ValidationObservation, ValidationOutputClassification, ValidationReceipt, ValidationStatus,
@@ -357,8 +357,7 @@ struct IssuedCodingOperation<'workspace> {
 struct RuntimeEffectEventContext<'builder> {
     started_event: RuntimeEvent,
     observe_started: &'builder mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimePortFailure>,
-    build_terminal_event:
-        &'builder mut dyn FnMut(&RuntimeToolExecution) -> Result<RuntimeEvent, RuntimePortFailure>,
+    build_terminal_event: &'builder mut dyn RuntimeToolTerminalBuilder,
 }
 
 type PermissionEventBuilder<'a> =
@@ -2773,7 +2772,9 @@ where
         match (event_context, pending) {
             (None, None) => Ok((execution, Vec::new())),
             (Some(context), Some(pending)) => {
-                let terminal = (context.build_terminal_event)(&execution)?;
+                let terminal = context
+                    .build_terminal_event
+                    .build_terminal_event(&execution)?;
                 #[cfg(test)]
                 story_22_1_crash_at("before-tool-terminal-commit");
                 let events = self
@@ -2817,7 +2818,9 @@ where
                 Ok((execution, Vec::new()))
             }
             (Some(context), Some(pending)) => {
-                let terminal = (context.build_terminal_event)(&execution)?;
+                let terminal = context
+                    .build_terminal_event
+                    .build_terminal_event(&execution)?;
                 require_safe_write_boundary(
                     WritePrivacyBoundary::Log,
                     "write_terminal_event",
@@ -3729,9 +3732,7 @@ where
         cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
         started_event: RuntimeEvent,
         observe_started: &mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimePortFailure>,
-        build_terminal_event: &mut dyn FnMut(
-            &RuntimeToolExecution,
-        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+        build_terminal_event: &mut dyn RuntimeToolTerminalBuilder,
     ) -> Result<RuntimeToolCorrectnessCommit, RuntimePortFailure> {
         let (execution, events) = self.execute_call(
             request,

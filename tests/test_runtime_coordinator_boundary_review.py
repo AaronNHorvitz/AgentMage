@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from scripts.runtime_coordinator_boundary_review import (
+    ARTIFACT_PREPARATION,
     CODING_CLIENT,
     EXPECTED_CHECK_IDS,
     LIMITATIONS,
@@ -86,6 +87,26 @@ class RuntimeCoordinatorBoundaryReviewTests(unittest.TestCase):
             changed[path] += addition
             checks = {item["check_id"]: item["passed"] for item in review_checks(changed)}
             self.assertFalse(checks[check_id], check_id)
+
+    def test_preparation_child_cannot_hide_a_forbidden_owner_or_transport(self) -> None:
+        sources = worktree_sources()
+        self.assertIn(ARTIFACT_PREPARATION, SOURCE_PATHS)
+        mutations = (
+            ("use std::process::Command;", "coordinator-no-direct-native-effect"),
+            ("use std::fs;", "coordinator-no-direct-native-effect"),
+            ("use std::net;", "coordinator-no-direct-native-effect"),
+            ("use crate::operational_store::OperationalStore;", "coordinator-no-direct-storage"),
+            ("use crate::mcp_registry::McpRegistry;", "coordinator-no-mcp-shortcut"),
+            ("struct RuntimeHostResponse;", "coordinator-transport-independent"),
+            ("struct CodingClient;", "coordinator-client-independent"),
+            ("struct CapabilityGrant;", "tool-dispatch-is-grant-gated"),
+        )
+        for addition, check_id in mutations:
+            with self.subTest(check_id=check_id, addition=addition):
+                changed = dict(sources)
+                changed[ARTIFACT_PREPARATION] += "\n" + addition + "\n"
+                checks = {item["check_id"]: item["passed"] for item in review_checks(changed)}
+                self.assertFalse(checks[check_id], check_id)
 
     @unittest.skipUnless(SCRIPT_COMMITTED, "report source is committed before seal testing")
     def test_report_seal_and_every_overclaim_are_rejected(self) -> None:

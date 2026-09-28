@@ -183,6 +183,34 @@ command, process, or client-specific execution branch.
 | Artifacts | Story 22.2 artifact lifecycle | Optional `RuntimeArtifactPort` | No |
 | Resume | Story 22.1 checkpoint and binding | Optional `RuntimeCheckpointPort` | No |
 | Client presentation | Native Chat or terminal adapter | `CodingCoordinatorPort` and event sink | No |
+
+### Preparing artifact references before terminal sealing
+
+Under [Decision 0096](../decisions/0096-runtime-artifact-preparation.md), the existing
+correctness transaction receives a borrowed `RuntimeToolTerminalBuilder`. After
+the durable start observation, a trusted host can prepare complete artifact
+candidates before constructing a result that names their exact references. The
+builder uses the coordinator's existing ordinal sequence and resource ledger.
+Each append must retain the same receipt, fit the original output/artifact/disk
+budgets and keep the complete candidate count within its existing ceiling.
+
+The first preparation samples the trusted terminal observation time. Prepared
+manifests and the terminal event share that observed instant; publication occurs
+later. Sealing checks all candidate bytes, kinds, media types and receipt identity
+against the final execution. Preparation errors and late or repeated sealing are
+sticky. The existing callback/result comparison and failed-advancement barrier
+remain in force.
+
+Only after the exact terminal commit does the coordinator publish these candidates,
+in order, through `RuntimeArtifactPort`, then route the ordinary result output.
+There is no new store, allocator, effect permit or multi-artifact atomicity claim.
+A publication or event failure can leave a partial bundle and requires reconciliation;
+it cannot replay the effect. Unprepared operations retain their output order.
+
+This is a component prerequisite. Ordinary host tools do not yet use preparation
+to construct a research bundle, and every ordinary mode still refuses network
+operations. Native transport, provider/model, independent and release acceptance
+remain separate.
 | Workflow attachment | Story 50.2 caller-neutral port | Same coordinator | No |
 
 ## Interface Boundary

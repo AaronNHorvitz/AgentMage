@@ -33,9 +33,9 @@ use super::{
     RuntimeContextPort, RuntimeCoordinatorStep, RuntimeCorrectnessTransactionPort,
     RuntimeJournalPort, RuntimeLoopError, RuntimeModelPort, RuntimePermissionEvaluation,
     RuntimePortFailure, RuntimeResumeSnapshot, RuntimeToolArtifactCandidate, RuntimeToolBoundary,
-    RuntimeToolCorrectnessCommit, RuntimeToolExecution, RuntimeVerificationInput,
-    RuntimeVerifierPort, derived_id, incomplete_model_failure_code, runtime_action_id,
-    runtime_event_cursor, runtime_tool_references,
+    RuntimeToolCorrectnessCommit, RuntimeToolExecution, RuntimeToolTerminalBuilder,
+    RuntimeVerificationInput, RuntimeVerifierPort, derived_id, incomplete_model_failure_code,
+    runtime_action_id, runtime_event_cursor, runtime_tool_references,
 };
 
 use crate::context_management::finalize_checkpoint;
@@ -72,6 +72,9 @@ use crate::source_preparation::{
 #[cfg(feature = "source-preparation")]
 use crate::source_runtime_context::PreparedSourceRuntimeContext;
 use crate::tooling::{Tool, ToolRegistry};
+
+#[path = "runtime_loop_artifact_preparation_tests.rs"]
+mod artifact_preparation_tests;
 
 const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const SNAPSHOT: &str = "snapshot-0001";
@@ -490,9 +493,7 @@ impl RuntimeCorrectnessTransactionPort for PressureJournalBoundary {
         _cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
         _started_event: RuntimeEvent,
         _observe_started: &mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimePortFailure>,
-        _build_terminal_event: &mut dyn FnMut(
-            &RuntimeToolExecution,
-        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+        _build_terminal_event: &mut dyn RuntimeToolTerminalBuilder,
     ) -> Result<RuntimeToolCorrectnessCommit, RuntimePortFailure> {
         Err(RuntimePortFailure::Unavailable)
     }
@@ -633,6 +634,7 @@ enum PermissionScript {
     ForeignStartObservation,
     SubstituteTerminalResult(u8),
     RepeatTerminalBuilder,
+    PrepareArtifacts(u8),
     SubstituteEvaluation,
     RepeatEvaluationBuilder,
     SubstituteResolution,
@@ -875,6 +877,17 @@ impl RuntimeToolBoundary for FakeToolBoundary {
 impl RuntimeJournalPort for FakeToolBoundary {
     fn append_runtime_event(&mut self, event: &RuntimeEvent) -> Result<(), RuntimePortFailure> {
         let fault = match self.script {
+            PermissionScript::PrepareArtifacts(21)
+                if matches!(event.kind, RuntimeEventKind::ArtifactCreated { .. })
+                    && self
+                        .artifacts
+                        .lock()
+                        .unwrap()
+                        .last()
+                        .is_some_and(|(manifest, _)| manifest.receipt_id.is_some()) =>
+            {
+                Some((RuntimePortFailure::Uncertain, false))
+            }
             PermissionScript::PublicationFault(point, error, after)
                 if point.matches(&event.kind) =>
             {
@@ -1067,11 +1080,20 @@ impl RuntimeCorrectnessTransactionPort for FakeToolBoundary {
         cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
         started_event: RuntimeEvent,
         observe_started: &mut dyn FnMut(&RuntimeEvent) -> Result<(), RuntimePortFailure>,
-        build_terminal_event: &mut dyn FnMut(
-            &RuntimeToolExecution,
-        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+        build_terminal_event: &mut dyn RuntimeToolTerminalBuilder,
     ) -> Result<RuntimeToolCorrectnessCommit, RuntimePortFailure> {
         self.append_runtime_event(&started_event)?;
+        if matches!(self.script, PermissionScript::PrepareArtifacts(12)) {
+            assert!(
+                build_terminal_event
+                    .prepare_artifacts(
+                        &ReceiptId::from_raw("receipt-1"),
+                        SHA,
+                        &[artifact_preparation_tests::candidate(b"before start")],
+                    )
+                    .is_err()
+            );
+        }
         match self.script {
             PermissionScript::SkipStartObservation => {}
             PermissionScript::DuplicateStartObservation => {
@@ -1101,10 +1123,28 @@ impl RuntimeCorrectnessTransactionPort for FakeToolBoundary {
                 events: vec![started_event],
             });
         }
-        let terminal = build_terminal_event(&execution)?;
+        if let PermissionScript::PrepareArtifacts(mutation) = self.script {
+            artifact_preparation_tests::prepare(build_terminal_event, &mut execution, mutation)?;
+        }
+        let terminal = build_terminal_event.build_terminal_event(&execution)?;
+        if matches!(self.script, PermissionScript::PrepareArtifacts(10)) {
+            assert!(
+                build_terminal_event
+                    .prepare_artifacts(
+                        &execution.receipt_id,
+                        &execution.receipt_sha256,
+                        &[artifact_preparation_tests::candidate(b"late")],
+                    )
+                    .is_err()
+            );
+        }
         self.append_runtime_event(&terminal)?;
         if matches!(self.script, PermissionScript::RepeatTerminalBuilder) {
-            assert!(build_terminal_event(&execution).is_err());
+            assert!(
+                build_terminal_event
+                    .build_terminal_event(&execution)
+                    .is_err()
+            );
         }
         if let PermissionScript::SubstituteTerminalResult(mutation) = self.script {
             match mutation {
@@ -1202,6 +1242,17 @@ impl RuntimeArtifactPort for FakeToolBoundary {
         payload: &[u8],
     ) -> Result<RuntimeArtifactRef, RuntimePortFailure> {
         let fault = match self.script {
+            PermissionScript::PrepareArtifacts(20)
+                if manifest.receipt_id.is_some()
+                    && self
+                        .artifacts
+                        .lock()
+                        .unwrap()
+                        .iter()
+                        .any(|(m, _)| m.receipt_id.is_some()) =>
+            {
+                Some((RuntimePortFailure::Uncertain, false))
+            }
             PermissionScript::PublicationFault(PublicationPoint::Artifact, error, after)
                 if manifest.receipt_id.is_some() =>
             {

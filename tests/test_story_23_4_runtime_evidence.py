@@ -120,10 +120,15 @@ class Story234RuntimeEvidenceTests(unittest.TestCase):
             )
 
     def test_campaign_shape_is_closed_and_bounded(self) -> None:
-        self.assertEqual(len(COMMANDS), 8)
-        self.assertEqual(len({command_id for command_id, _, _ in COMMANDS}), 8)
-        self.assertEqual(len(COVERAGE), 22)
+        self.assertEqual(len(COMMANDS), 9)
+        self.assertEqual(len({command_id for command_id, _, _ in COMMANDS}), 9)
+        self.assertEqual(len(COVERAGE), 23)
         self.assertTrue(all(COVERAGE.values()))
+        prepared = [(arguments, count) for name, arguments, count in COMMANDS
+                    if name == "prepared-artifact-matrix"]
+        self.assertEqual(len(prepared), 1)
+        self.assertEqual(prepared[0][1], 11)
+        self.assertIn("runtime_loop::tests::artifact_preparation_tests::", prepared[0][0])
         self.assertEqual(MAXIMUM_COMMAND_ELAPSED_MS, 120_000)
         self.assertEqual(MAXIMUM_COMMAND_RSS_KIB, 1_048_576)
 

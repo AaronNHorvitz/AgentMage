@@ -26,6 +26,8 @@ SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
 ZERO_SHA256: Final = "0" * 64
 
 RUNTIME_LOOP: Final = "kernel/engine/src/runtime_loop.rs"
+ARTIFACT_PREPARATION: Final = "kernel/engine/src/runtime_loop/artifact_preparation.rs"
+RUNTIME_IMPLEMENTATION: Final = (RUNTIME_LOOP, ARTIFACT_PREPARATION)
 CODING_CLIENT: Final = "shells/host/src/coding_client.rs"
 CLI_CLIENT: Final = "shells/host/src/cli_runtime.rs"
 NATIVE_CHAT: Final = "shells/host/src/native_chat_runtime.rs"
@@ -45,6 +47,9 @@ RUNTIME_LOG: Final = "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.lo
 
 SOURCE_PATHS: Final = (
     RUNTIME_LOOP,
+    ARTIFACT_PREPARATION,
+    "kernel/engine/src/runtime_loop_artifact_preparation_tests.rs",
+    "shells/host/src/linux_coding_runtime.rs",
     CODING_CLIENT,
     CLI_CLIENT,
     NATIVE_CHAT,
@@ -152,7 +157,9 @@ def committed_sources(revision: str) -> dict[str, str]:
 
 
 def review_checks(sources: dict[str, str]) -> list[dict[str, Any]]:
-    runtime_loop = sources[RUNTIME_LOOP]
+    # Moving pure coordinator code into a child module must not narrow any
+    # existing no-client, no-transport, no-effect or no-storage check.
+    runtime_loop = "\n".join(sources[path] for path in RUNTIME_IMPLEMENTATION)
     coding_client = sources[CODING_CLIENT]
     cli_client = sources[CLI_CLIENT]
     native_chat = sources[NATIVE_CHAT]

@@ -37,6 +37,14 @@ MAXIMUM_COMMAND_RSS_KIB: Final = 1_048_576
 
 COMMANDS: Final = (
     (
+        "prepared-artifact-matrix",
+        (
+            "cargo", "test", "-p", "agentmage-kernel-engine", "--lib", "--locked",
+            "runtime_loop::tests::artifact_preparation_tests::", "--", "--nocapture",
+        ),
+        11,
+    ),
+    (
         "engine-session-matrix",
         (
             "cargo",
@@ -145,6 +153,9 @@ SOURCE_PATHS: Final = (
     "kernel/contracts/src/runtime_run.rs",
     "kernel/engine/src/runtime_coordinator.rs",
     "kernel/engine/src/runtime_loop.rs",
+    "kernel/engine/src/runtime_loop/artifact_preparation.rs",
+    "kernel/engine/src/runtime_loop_artifact_preparation_tests.rs",
+    "shells/host/src/linux_coding_runtime.rs",
     "kernel/engine/src/runtime_loop_tests.rs",
     "shells/host/src/coding_client.rs",
     "shells/host/src/cli_runtime.rs",
@@ -161,6 +172,7 @@ SOURCE_PATHS: Final = (
 )
 
 COVERAGE: Final = {
+    "prepared_artifact_identity_and_publication": True,
     "approval_wait_and_exact_allow": True,
     "bounded_cancellation": True,
     "budget_exhaustion": True,
@@ -186,6 +198,7 @@ COVERAGE: Final = {
 }
 
 LIMITATIONS: Final = (
+    "Prepared artifact identity, accounting and failure cases use synthetic coordinator fixtures; no native research tool, provider or model is activated or qualified.",
     "The campaign uses deterministic fake-model fixtures and does not claim an installed admitted model or production native Chat runtime factory.",
     "The performance values describe current-host Linux source fixtures and are not supported-platform, release, or end-user latency guarantees.",
     "The optional durable journal, artifact, and checkpoint costs remain measured by their owning Story 21.2, Story 22, and Story 50.2 campaigns.",
