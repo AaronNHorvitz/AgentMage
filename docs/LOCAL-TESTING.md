@@ -47,8 +47,9 @@ an uncertain record. See the development guide for lifecycle and cleanup limitat
 
 **Current lane result:** setup and diagnosis ran; the actual scripted CLI/host
 launch returned exit 5 before tools because native prerequisites are unavailable.
-The [development lifecycle verification](verification/development-host-lifecycle-2026-09-27.md)
+The [confirmation verification](verification/development-confirmation-2026-09-27.md)
 retains the latest rebuilt source revision, binary hashes and startup results;
+the [development lifecycle verification](verification/development-host-lifecycle-2026-09-27.md),
 the [native diagnostic verification](verification/native-development-diagnostics-2026-09-27.md) and
 the [preceding observation](verification/linux-current-startup-2026-09-27.md)
 keep their original source pins. The clean fixture was unchanged. A separate fixture with staged, unstaged and untracked work
@@ -81,6 +82,17 @@ allow three seconds for directly owned child termination and reaping. These coop
 bounds cannot preempt kernel-stalled syscalls, and direct-host cleanup does not prove
 native/model descendants stopped. Actual CLI tests with a synthetic incomplete-envelope
 host verified timeout, SIGINT and SIGTERM cleanup; they do not qualify native coding.
+
+At a protected operation prompt, type `yes` and press Enter to confirm the displayed
+operation. Session preauthorization requires `preauthorize` and Enter. Each answer
+must fit within 256 UTF-8 bytes including its newline; EOF without a newline never
+confirms. Invalid encoding, excessive input or descriptor errors fail closed.
+Use the dedicated CLI as the sole stdin reader. Its bounded readiness polling and
+optional approval delay observe the existing cancellation flag without changing
+terminal settings or descriptor flags. Component checks show cancellation takes
+precedence over sending an approval response; native prompt cancellation remains
+unverified in this lane. See the confirmation verification for the cooperative
+read limitation and separate results.
 
 Real-model runs additionally require the exact admitted development profile and
 its unchanged memory, CPU, GPU and confinement requirements. In this lane any GPU
