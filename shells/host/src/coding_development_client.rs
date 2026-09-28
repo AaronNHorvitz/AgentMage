@@ -1,17 +1,17 @@
 //! Executable CLI client for the explicitly activated disposable coding harness.
 
-use std::io::{self, BufRead};
 use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
 };
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use agentmage_kernel_contracts::{
     AgentStateKind, RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeEvent,
 };
 use agentmage_platform_linux::{
-    LinuxDevelopmentBoundaryError, LinuxDevelopmentBoundaryErrorKind, LinuxDevelopmentHostProcess,
+    LinuxDevelopmentBoundaryError, LinuxDevelopmentBoundaryErrorKind, LinuxDevelopmentConfirmation,
+    LinuxDevelopmentConfirmationKind, LinuxDevelopmentHostProcess, read_development_confirmation,
 };
 
 use crate::cli::{
@@ -39,7 +39,7 @@ pub enum CodingDevelopmentClientError {
     Activation,
     /// The exact sibling host could not be launched or authenticated.
     Transport,
-    /// The native development host launch, transfer or cleanup failed closed.
+    /// The native development boundary failed closed.
     HostBoundary(LinuxDevelopmentBoundaryErrorKind),
     /// The shared runtime or its returned evidence failed closed.
     Runtime,
@@ -67,6 +67,9 @@ impl CodingDevelopmentClientError {
             Self::Activation => ClientExitCode::AuthorityDenied,
             Self::HostBoundary(LinuxDevelopmentBoundaryErrorKind::StartupCancelled) => {
                 ClientExitCode::Cancelled
+            }
+            Self::HostBoundary(LinuxDevelopmentBoundaryErrorKind::ConfirmationInputFailed) => {
+                ClientExitCode::ProtocolMismatch
             }
             Self::Transport | Self::HostBoundary(_) | Self::Runtime => {
                 ClientExitCode::ServiceUnavailable
@@ -148,11 +151,13 @@ fn run_with_child(
         output,
         preauthorized: options.approve_this_run,
         delay_ms: options.approval_delay_ms,
+        cancellation: Arc::clone(&cancellation.requested),
     };
     let mut sink = TerminalEventSink { output };
     cancellation.check_startup()?;
     let workspace_id = format!("coding-development-{}", &activation.marker_sha256()[..24]);
-    let preauthorization = direct_session_preauthorization(options, &workspace_id)?;
+    let preauthorization =
+        direct_session_preauthorization(options, &workspace_id, &cancellation.requested)?;
     let profile_id = CodingDevelopmentModel::parse(&options.model)
         .ok_or(CodingDevelopmentClientError::Activation)?
         .profile_id();
@@ -286,6 +291,7 @@ fn run_with_child(
 fn direct_session_preauthorization(
     options: &CodingDevelopmentCliOptions,
     workspace_id: &str,
+    cancellation: &AtomicBool,
 ) -> Result<Option<RuntimeSessionPreauthorization>, CodingDevelopmentClientError> {
     let requested = options.preauthorize_workspace_reads
         || !options.preauthorized_paths.is_empty()
@@ -383,13 +389,21 @@ fn direct_session_preauthorization(
         serde_json::to_string(&contract).map_err(|_| CodingDevelopmentClientError::Presentation)?;
     eprintln!("session_preauthorization_proposed {rendered}");
     eprint!("Type preauthorize to approve this exact bounded session contract: ");
-    let mut line = String::new();
-    io::stdin()
-        .lock()
-        .read_line(&mut line)
-        .map_err(|_| CodingDevelopmentClientError::Presentation)?;
-    if line.trim() != "preauthorize" {
-        return Err(CodingDevelopmentClientError::Runtime);
+    match read_development_confirmation(
+        LinuxDevelopmentConfirmationKind::SessionPreauthorization,
+        cancellation,
+    )
+    .map_err(CodingDevelopmentClientError::from)?
+    {
+        LinuxDevelopmentConfirmation::Confirmed => {}
+        LinuxDevelopmentConfirmation::Declined => {
+            return Err(CodingDevelopmentClientError::Runtime);
+        }
+        LinuxDevelopmentConfirmation::Cancelled => {
+            return Err(CodingDevelopmentClientError::HostBoundary(
+                LinuxDevelopmentBoundaryErrorKind::StartupCancelled,
+            ));
+        }
     }
     eprintln!(
         "session_preauthorization_accepted id={} digest={} expires={} budget={}",
@@ -491,6 +505,43 @@ struct TerminalApprovals {
     output: CliOutputFormat,
     preauthorized: bool,
     delay_ms: u64,
+    cancellation: Arc<AtomicBool>,
+}
+
+/// Supplies the real private terminal port to the synthetic interactive-driver tests.
+#[cfg(all(test, feature = "source-artifacts", feature = "workflow-supervisor"))]
+pub(crate) fn terminal_approval_for_test(
+    preauthorized: bool,
+    cancellation: Arc<AtomicBool>,
+) -> impl CodingApprovalPort {
+    TerminalApprovals {
+        output: CliOutputFormat::Json,
+        preauthorized,
+        delay_ms: if preauthorized { 10_000 } else { 0 },
+        cancellation,
+    }
+}
+
+fn wait_for_approval_delay(
+    delay_ms: u64,
+    cancellation: &AtomicBool,
+) -> Result<bool, CodingClientError> {
+    if delay_ms > 10_000 {
+        return Err(CodingClientError::Approval);
+    }
+    let deadline = Instant::now()
+        .checked_add(Duration::from_millis(delay_ms))
+        .ok_or(CodingClientError::Approval)?;
+    loop {
+        if cancellation.load(Ordering::Acquire) {
+            return Ok(false);
+        }
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        if remaining.is_zero() {
+            return Ok(true);
+        }
+        std::thread::sleep(remaining.min(Duration::from_millis(25)));
+    }
 }
 
 impl CodingApprovalPort for TerminalApprovals {
@@ -502,10 +553,15 @@ impl CodingApprovalPort for TerminalApprovals {
             render_runtime_approval_human(challenge).map_err(|_| CodingClientError::Approval)?;
         if self.preauthorized {
             eprintln!("preauthorized_for_this_run {rendered}");
-            if self.delay_ms > 0 {
-                std::thread::sleep(std::time::Duration::from_millis(self.delay_ms));
-            }
-            return Ok(RuntimeApprovalDisposition::Allow);
+            return Ok(
+                if wait_for_approval_delay(self.delay_ms, &self.cancellation)? {
+                    RuntimeApprovalDisposition::Allow
+                } else {
+                    // The interactive driver polls this unconsumed flag before
+                    // transmitting any approval response, so canonical cancel wins.
+                    RuntimeApprovalDisposition::Deny
+                },
+            );
         }
         if self.output == CliOutputFormat::Json {
             eprintln!("approval_required {rendered}");
@@ -513,22 +569,100 @@ impl CodingApprovalPort for TerminalApprovals {
             eprintln!("{rendered}");
         }
         eprint!("Approve this exact operation? Type yes to allow: ");
-        let mut line = String::new();
-        io::stdin()
-            .lock()
-            .read_line(&mut line)
-            .map_err(|_| CodingClientError::Approval)?;
-        Ok(if line.trim() == "yes" {
-            RuntimeApprovalDisposition::Allow
-        } else {
-            RuntimeApprovalDisposition::Deny
-        })
+        match read_development_confirmation(
+            LinuxDevelopmentConfirmationKind::OperationApproval,
+            &self.cancellation,
+        )
+        .map_err(|_| CodingClientError::Approval)?
+        {
+            LinuxDevelopmentConfirmation::Confirmed => Ok(RuntimeApprovalDisposition::Allow),
+            LinuxDevelopmentConfirmation::Declined | LinuxDevelopmentConfirmation::Cancelled => {
+                // Cancellation remains pending for the existing driver's next
+                // poll; this value must not be sent ahead of that cancel.
+                Ok(RuntimeApprovalDisposition::Deny)
+            }
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn preauthorization_cancellation_remains_unconsumed_and_returns_cancelled_exit() {
+        let arguments = [
+            "code",
+            "--development",
+            "--state-root",
+            "/synthetic-state",
+            "--disposable-root",
+            "/synthetic-disposable",
+            "--workspace-root",
+            "/synthetic-disposable/worktree",
+            "--scenario",
+            "failed-test-repair",
+            "--model",
+            "scripted",
+            "--objective",
+            "Synthetic input component test.",
+            "--preauthorize-workspace-reads",
+            "--preauthorization-budget",
+            "1",
+            "--preauthorization-minutes",
+            "1",
+        ]
+        .map(str::to_owned);
+        let crate::cli::CliInvocation::Code {
+            development: Some(options),
+            ..
+        } = crate::cli::parse_cli_arguments(&arguments).unwrap()
+        else {
+            panic!("explicit development options");
+        };
+        let requested = AtomicBool::new(true);
+        let error = direct_session_preauthorization(&options, "synthetic-workspace", &requested)
+            .expect_err("pending stop must not wait on stdin or confirm a contract");
+        assert_eq!(
+            error,
+            CodingDevelopmentClientError::HostBoundary(
+                LinuxDevelopmentBoundaryErrorKind::StartupCancelled
+            )
+        );
+        assert_eq!(error.exit_code(), ClientExitCode::Cancelled);
+        assert!(requested.load(Ordering::Acquire));
+    }
+
+    #[test]
+    fn approval_delay_enforces_its_existing_ceiling_and_preserves_pending_cancellation() {
+        assert_eq!(
+            wait_for_approval_delay(0, &AtomicBool::new(false)),
+            Ok(true)
+        );
+        assert_eq!(
+            wait_for_approval_delay(10_001, &AtomicBool::new(false)),
+            Err(CodingClientError::Approval)
+        );
+        let requested = AtomicBool::new(true);
+        assert_eq!(wait_for_approval_delay(10_000, &requested), Ok(false));
+        assert!(requested.load(Ordering::Acquire));
+    }
+
+    #[test]
+    fn approval_delay_observes_a_later_stop_before_the_full_delay() {
+        let requested = Arc::new(AtomicBool::new(false));
+        let signal = Arc::clone(&requested);
+        let writer = std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(20));
+            signal.store(true, Ordering::Release);
+        });
+        let started = Instant::now();
+        let result = wait_for_approval_delay(10_000, &requested);
+        writer.join().unwrap();
+        assert_eq!(result, Ok(false));
+        assert!(started.elapsed() < Duration::from_secs(2));
+        assert!(requested.load(Ordering::Acquire));
+    }
 
     #[test]
     fn host_launch_refusal_is_preserved_without_relabeling_as_transport() {

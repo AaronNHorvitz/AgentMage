@@ -520,6 +520,7 @@
       "package": "rustix@1.1.4",
       "features": [
         "alloc",
+        "event",
         "fs",
         "net",
         "process",
@@ -1453,6 +1454,7 @@
       "package": "rustix@1.1.4",
       "features": [
         "alloc",
+        "event",
         "fs",
         "net",
         "process",

@@ -122,7 +122,7 @@
     "kernel/contracts/Cargo.toml": "41b9192d56af6e360f2a77d065b823af009cc30ad04fdcb96c08f22cfc6fd6c8",
     "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
     "platforms/linux-inference/Cargo.toml": "a4143fefbaa1ababfb26bc7701ef7c3fe9919a1122abbc98a0ae2841858d73b9",
-    "platforms/linux/Cargo.toml": "b8aec95285d2de67b37729fa5b52a3983cccb426f0cdc1d3a1a7c40c5e2b2c23",
+    "platforms/linux/Cargo.toml": "770a44da1ec3531d78bce11d1a19e36b02d3284ea78ac92d666015bd7666aa65",
     "platforms/windows/Cargo.toml": "7546d14d8ec5b014cd0c8ce541f603e0208ac6cb237b6b29a6d56d7f1a45b490",
     "release/xtask/Cargo.toml": "dd6e61c5561f24a35f8f802579f2c8374c15e77d76cd72a882dc104cff954a40",
     "shells/host/Cargo.toml": "91da28076b9b935bbde267111d424c80cff334149ecfe67be2d5c8db32bd9a7d"

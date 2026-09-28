@@ -17,6 +17,12 @@ use rustix::fs::{OFlags, fcntl_getfl, fcntl_setfl};
 
 use crate::ipc::LinuxLaunchEnvelope;
 
+#[path = "development_boundary/confirmation.rs"]
+mod confirmation;
+pub use confirmation::{
+    LinuxDevelopmentConfirmation, LinuxDevelopmentConfirmationKind, read_development_confirmation,
+};
+
 const MAX_DEVELOPMENT_HOST_BYTES: u64 = 512 * 1024 * 1024;
 const STARTUP_TIME: Duration = Duration::from_secs(120);
 const EXIT_TIME: Duration = Duration::from_secs(10);
@@ -33,6 +39,8 @@ static HOST_SLOT: LazyLock<Arc<AtomicU8>> =
 pub enum LinuxDevelopmentBoundaryErrorKind {
     /// A caller supplied a value outside the closed development contract.
     InvalidInput,
+    /// The bounded local confirmation input was malformed or unavailable.
+    ConfirmationInputFailed,
     /// The exact sibling host executable was absent, linked, or unsafe.
     UnsafeExecutable,
     /// The sibling host could not be launched.
@@ -63,6 +71,7 @@ impl LinuxDevelopmentBoundaryErrorKind {
     pub const fn code(self) -> &'static str {
         match self {
             Self::InvalidInput => "linux.development.input.invalid",
+            Self::ConfirmationInputFailed => "linux.development.confirmation-input.failed",
             Self::UnsafeExecutable => "linux.development.host-executable.unsafe",
             Self::LaunchFailed => "linux.development.host-launch.failed",
             Self::OwnerUnavailable => "linux.development.owner.unavailable",

@@ -827,6 +827,8 @@ mod tests {
         advance: Option<NativeChatRuntimeStep>,
         cancel: Option<NativeChatRuntimeStep>,
         released: usize,
+        advances: usize,
+        cancellations: usize,
     }
 
     impl NativeChatRuntimePort for ScriptedPort {
@@ -859,6 +861,7 @@ mod tests {
             after_event_cursor: Option<&RuntimeEventCursor>,
             response: Option<&agentmage_kernel_contracts::RuntimeApprovalResponse>,
         ) -> Result<NativeChatRuntimeStep, NativeChatRuntimeError> {
+            self.advances += 1;
             verify_call(&self.request, run_id, request_sha256, after_event_cursor)?;
             let challenge = self.start.as_ref().and_then(|step| step.approval.as_ref());
             if challenge.is_some() || response.is_none() {
@@ -876,6 +879,7 @@ mod tests {
             _cancellation_id: CancellationId,
             after_event_cursor: Option<&RuntimeEventCursor>,
         ) -> Result<NativeChatRuntimeStep, NativeChatRuntimeError> {
+            self.cancellations += 1;
             verify_call(&self.request, run_id, request_sha256, after_event_cursor)?;
             self.cancel
                 .take()
@@ -972,6 +976,8 @@ mod tests {
             advance: None,
             cancel: None,
             released: 0,
+            advances: 0,
+            cancellations: 0,
         };
         let mut sink = RecordingSink::default();
         let result = drive_interactive_cli_runtime(
@@ -1003,6 +1009,8 @@ mod tests {
             advance: Some(fixture.denied.clone()),
             cancel: None,
             released: 0,
+            advances: 0,
+            cancellations: 0,
         };
         let mut denied_sink = RecordingSink::default();
         let denied = drive_interactive_cli_runtime(
@@ -1023,6 +1031,8 @@ mod tests {
             advance: None,
             cancel: Some(fixture.cancelled),
             released: 0,
+            advances: 0,
+            cancellations: 0,
         };
         let mut cancelled_sink = RecordingSink::default();
         let cancelled = drive_interactive_cli_runtime(
@@ -1039,6 +1049,108 @@ mod tests {
 
     #[test]
     #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    fn cancellation_during_approval_precedes_every_approval_response() {
+        use std::sync::{
+            Arc,
+            atomic::{AtomicBool, Ordering},
+        };
+
+        // Synthetic transport/event fixture exercising the real interactive
+        // driver. This is not a native tool or model qualification run.
+        struct StopDuringApproval<A> {
+            actual: A,
+            requested: Arc<AtomicBool>,
+            decisions: usize,
+        }
+        impl<A: CodingApprovalPort> CodingApprovalPort for StopDuringApproval<A> {
+            fn decide(
+                &mut self,
+                challenge: &RuntimeApprovalChallenge,
+            ) -> Result<RuntimeApprovalDisposition, CodingClientError> {
+                self.decisions += 1;
+                self.requested.store(true, Ordering::Release);
+                self.actual.decide(challenge)
+            }
+        }
+        struct ObserveStop {
+            requested: Arc<AtomicBool>,
+            delivered: usize,
+        }
+        impl InteractiveCliCancellationPort for ObserveStop {
+            fn poll(
+                &mut self,
+                _: &RuntimeRunRequest,
+            ) -> Result<Option<CancellationId>, InteractiveCliRuntimeError> {
+                if self.requested.swap(false, Ordering::AcqRel) {
+                    self.delivered += 1;
+                    Ok(Some(CancellationId::from_raw("cli-cancellation-0001")))
+                } else {
+                    Ok(None)
+                }
+            }
+        }
+
+        for preauthorized in [false, true] {
+            let (request, _, _, _) = crate::runtime_read_tests::completed_native_read_fixture();
+            let fixture = approval_fixture(&request);
+            let input = input(&request);
+            let mut port = ScriptedPort {
+                input: input.clone(),
+                request,
+                start: Some(fixture.awaiting),
+                advance: Some(fixture.denied),
+                cancel: Some(fixture.cancelled),
+                released: 0,
+                advances: 0,
+                cancellations: 0,
+            };
+            let requested = Arc::new(AtomicBool::new(false));
+            let mut approvals = StopDuringApproval {
+                actual: crate::coding_development_client::terminal_approval_for_test(
+                    preauthorized,
+                    Arc::clone(&requested),
+                ),
+                requested: Arc::clone(&requested),
+                decisions: 0,
+            };
+            let mut cancellation = ObserveStop {
+                requested,
+                delivered: 0,
+            };
+            let mut sink = RecordingSink::default();
+            let result = drive_interactive_cli_runtime(
+                &mut port,
+                input,
+                &mut approvals,
+                &mut sink,
+                &mut cancellation,
+            )
+            .expect("pending stop is sent through the canonical cancellation port");
+            assert_eq!(result.outcome.state, AgentStateKind::Cancelled);
+            assert_eq!(approvals.decisions, 1);
+            assert_eq!(cancellation.delivered, 1);
+            assert_eq!(port.advances, 0);
+            assert_eq!(port.cancellations, 1);
+            assert!(
+                port.advance.is_some(),
+                "the denial response must never be advanced"
+            );
+            assert!(
+                port.cancel.is_none(),
+                "exactly one cancellation step was consumed"
+            );
+            assert_eq!(port.released, 1);
+            assert!(
+                !sink
+                    .0
+                    .iter()
+                    .any(|event| matches!(event.kind, RuntimeEventKind::PermissionDecided { .. }))
+            );
+        }
+    }
+
+    #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
     fn request_event_artifact_and_outcome_substitution_fail_before_success() {
         let (request, events, outcome, _) =
             crate::runtime_read_tests::completed_native_read_fixture();
@@ -1051,6 +1163,8 @@ mod tests {
             advance: None,
             cancel: None,
             released: 0,
+            advances: 0,
+            cancellations: 0,
         };
         request_port.input.profile_id = "substituted-profile".to_owned();
         let substituted_input = request_port.input.clone();
@@ -1161,6 +1275,8 @@ mod tests {
             advance: None,
             cancel: None,
             released: 0,
+            advances: 0,
+            cancellations: 0,
         };
 
         assert_eq!(
@@ -1209,6 +1325,8 @@ mod tests {
             advance: None,
             cancel: None,
             released: 0,
+            advances: 0,
+            cancellations: 0,
         };
         let mut sink = RecordingSink::default();
         assert_eq!(
