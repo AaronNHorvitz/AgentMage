@@ -165,11 +165,11 @@
     },
     {
       "path": "scripts/configuration_result_evidence.py",
-      "sha256": "67df8af0b3c3b3c91d0402a870fe9fd94007d72795bf366215e376aafb49579d"
+      "sha256": "03b46323130d5dcedd8b6535127e1344cd71726e7ef479936d2f0ad5be82c1f5"
     },
     {
       "path": "tests/test_configuration_result_evidence.py",
-      "sha256": "6859d6ef33f0b24fec3984b421ad653dc7d7bad36624880f1a8fa8e5d94a7f0f"
+      "sha256": "a788ea021dc5b94a7ae81aab4254d3dbda7e877fadc1db6827b6e5fe2d7ff973"
     }
   ],
   "status": "pass-shared-linux-configuration-result-binding",
