@@ -172,7 +172,7 @@
     "SR-TST-006"
   ],
   "schema_version": 1,
-  "source_revision": "4e0acaaef044b2154df4291ddddae36e9babe129",
+  "source_revision": "75c0339b049cb68dd7ab211d56e71119692bdb87",
   "sources": [
     {
       "bytes": 3627,
@@ -180,9 +180,9 @@
       "sha256": "c9354144a472f5af1c1311032daf8a3133a1f44bb503ea418499a29e4f158ffc"
     },
     {
-      "bytes": 136944,
+      "bytes": 160606,
       "path": "SECURITY-REVIEW.md",
-      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44"
+      "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
     },
     {
       "bytes": 14075,
@@ -190,14 +190,14 @@
       "sha256": "d32193d49f8ef669e5c70ebab7c9b0fa1fb1c6fb9908b51acadead85b012d58d"
     },
     {
-      "bytes": 3825,
+      "bytes": 3822,
       "path": "tests/test_story_12_1_security_evidence.py",
-      "sha256": "3195eacd7f39d64c09e2492b1f616dea3eaced125c2b03a628bd76a649be7882"
+      "sha256": "c8d5104aee3640d94d274a0a81f9a352fde7e96a0d917d3c03d43b321d8b43e4"
     },
     {
-      "bytes": 3844,
+      "bytes": 3846,
       "path": "artifacts/sprints/sprint-12/story-12.1/agent-progress.json",
-      "sha256": "5a75b55faf65d83d4b4e4e0fbdefcbbae7d9dbce2796193c29957bc060841962"
+      "sha256": "036100bfdfab030ce1c2b17570349f4d9df2b6f9ebd47899fb0d873abdf71a27"
     },
     {
       "bytes": 3866,
@@ -245,9 +245,9 @@
       "sha256": "6c7cdb8335b74ce209e1fe3bbbbb9de71dd9144d69b17e00015dd056e1315e01"
     },
     {
-      "bytes": 4135,
+      "bytes": 4207,
       "path": "artifacts/sprints/sprint-12/story-12.1/runtime-schemas.json",
-      "sha256": "2dd190387d88038d517cf474464f266630effa7ea308a268de4047e9edbf6bbb"
+      "sha256": "eb89a88e35a7f2185ba86ecd629582b52c7b10f712f770a7c4e5415e662f673c"
     },
     {
       "bytes": 3559,
@@ -257,7 +257,7 @@
     {
       "bytes": 3953,
       "path": "artifacts/sprints/sprint-12/story-12.1/session-environment.json",
-      "sha256": "169de34406fa87a401c2f84a60d01860d6a5223ff6b9cc9193eb62e15460139f"
+      "sha256": "89710b7c9c46ccf42d108c9e3668fb70aa39b8716b259a361668894aaeaf9ebc"
     },
     {
       "bytes": 3739,

@@ -17,14 +17,14 @@
       "sha256": "14065ad8cd9627547d52f3bcc582f4c296f912e06cba64f1bb1eb1fa346531d7"
     },
     {
-      "byte_length": 2905,
+      "byte_length": 4188,
       "path": "docs/architecture/model-context-orchestration-profiles.md",
-      "sha256": "9b1f2dd289a5c350b09214acc7cc16d9d556887152389d6fe8cb4229baf9c007"
+      "sha256": "711344eb68bfe894a5454ad2d59d29943e1257cdbc03e324c2ab26820c071aa6"
     },
     {
-      "byte_length": 8516,
+      "byte_length": 8810,
       "path": "scripts/story_13_4_context_profile_evidence.py",
-      "sha256": "50ab943e1e8f8a111213fa74883229ef3fd17e697a2807ea0592c97d5fe377d7"
+      "sha256": "feb7505c12090d9b0961bb00e53a88feaf23065424736bfbcd045b7a30615d6d"
     },
     {
       "byte_length": 11470,
@@ -32,9 +32,9 @@
       "sha256": "11ef923670136f158bddb69785ba1bd118def58d3ed86a1d875a6a6a2c914f27"
     },
     {
-      "byte_length": 3685,
+      "byte_length": 4206,
       "path": "tests/test_story_13_4_context_profile_evidence.py",
-      "sha256": "23936d7677dc3b474739a9bb76f42eede5f414af783dbe6a1f8fc2f86691ae7b"
+      "sha256": "122fdbd92ca3c32152e0e21b1af3d8207f43f3f3d96528bab2b48c5a286254e3"
     },
     {
       "byte_length": 3069,
@@ -42,9 +42,9 @@
       "sha256": "eb39b73b83644de6b8a0d31a00eb3b53160bcd92fef01d96a29215d3916d7be4"
     },
     {
-      "byte_length": 8180,
+      "byte_length": 37708,
       "path": "artifacts/sprints/sprint-13/local-evidence-report.json",
-      "sha256": "b6bd298963cd7d7245bfd6abfd7fb05a659a4540ae66cc97ae5747785584dc9d"
+      "sha256": "0094d0c8a9653eb3018b4376ed617012c5af564f6c717b91b3621d683b92e0df"
     },
     {
       "byte_length": 79539,
@@ -77,9 +77,9 @@
       "sha256": "590a3ee8ad35610666bb0b1af3fa64326fc33ff99846071516648bc1eeb49ee3"
     },
     {
-      "byte_length": 5669,
+      "byte_length": 5456,
       "path": "artifacts/sprints/sprint-13/story-13.4/context-profile-results.log",
-      "sha256": "32a05c64158a0772503466fa799733cf9fe49ec796af330b42277c6618f8fbe2"
+      "sha256": "1d5f25e77132e2ddd8216064ff553ff55a9b6b249cb4759d5ba216056e89b567"
     }
   ],
   "commands": [
