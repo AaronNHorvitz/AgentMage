@@ -27,7 +27,7 @@
       ],
       "exit_code": 0,
       "id": "model-contracts",
-      "output_sha256": "2adcb26b45669b08b6fe2630eb9373c1dcb32239acf12fd390e7d98c93719e7e",
+      "output_sha256": "5db6ce68fc16860fe6c6d7f4d81b4dc3b8adb53b61b06476de842a0bc9551c0b",
       "story_id": "13.1"
     },
     {
@@ -40,7 +40,7 @@
       ],
       "exit_code": 0,
       "id": "model-engine",
-      "output_sha256": "f21cb7e6e151c92868f4dee3b9a506caabcaa153daaa33a93e2c7cf07aca0953",
+      "output_sha256": "5055ece64d1e9c14472c14e24ffe94fab4a87e85e0988003fab5b7addd98f677",
       "story_id": "13.1"
     },
     {
@@ -53,7 +53,7 @@
       ],
       "exit_code": 0,
       "id": "linux-native-adapter",
-      "output_sha256": "87d3d886d1c55bcdf2516349655a02a9aca1e963af34e9da3ea68b12df7ca3bf",
+      "output_sha256": "c1fcc99ae5cef9a8e7f5c7c3a15821c5ea565260671a864c752e5fe51a06a765",
       "story_id": "13.1"
     },
     {
@@ -65,7 +65,7 @@
       ],
       "exit_code": 0,
       "id": "model-json-contracts",
-      "output_sha256": "79101755a23ba221cff615060056510a78a8e7c5cf739562def5d337731ef934",
+      "output_sha256": "60e69279f11b6f4d44d92d238264848664eaa7748848687cd85946cb009b704d",
       "story_id": "13.1"
     },
     {
@@ -84,7 +84,7 @@
       ],
       "exit_code": 0,
       "id": "model-policy-evidence",
-      "output_sha256": "b3b6c5e209cd66bb12bbea5ba7becc5904431ada6aa2b322b1b8aea0b39d8abf",
+      "output_sha256": "31aa7b93cc83a9a8580d8f678e6db90672d26add480e21e321dac773fbc7e4f1",
       "story_id": "13.2"
     }
   ],
@@ -92,14 +92,14 @@
     "artifacts/sprints/sprint-13/story-13.1/finish-usage-report.json": "f4902131f2ca3322bc424a9af280a795769d44be499345997b2929c56041bfa3",
     "artifacts/sprints/sprint-13/story-13.1/muse-native-adapter-contract-v2.json": "9c4980f2167f052c4da1a063f470bb1d5852b616247d3b6dc507910eddedaf19",
     "artifacts/sprints/sprint-13/story-13.2/linux-cross-adapter-parity.json": "6733691ce2a645dec00fc7dfec22403d82d1daf00bf1970d69b8ff3752ce1503",
-    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "08fa1dfd5beb8088dd8141e2f088554d438258faa2bcd6c48ab12bb545d3bf9e",
+    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "42afbd394291a520dd47049a4d3dc660f642b134f40eb9e8a2e7d23eb9c8f024",
     "artifacts/sprints/sprint-13/story-13.3/muse-live-install.json": "91826d99f497a212ab32f87176a5b034a8b7e1fe510c9a12a05d95fc38a8dd18",
     "artifacts/sprints/sprint-13/story-13.3/muse-profile-evaluation.json": "88f560db0a1486f39a1004a0cd88e699948d194bf9221ee6e1a6d037c2e5b670",
     "artifacts/sprints/sprint-13/story-13.3/muse-sandbox-inference.json": "07260b4b60bc5d19d986fdea9bea807b3aa9e0cc543e0ce3a145a3c56a0bd547",
     "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-report.json": "cf1decc04946dcf35fe0f1858559d272cf80e55b02979fb93f24ef825a6241b4",
     "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json": "571913bbf14d520847118a6988edecef0950be0118ea8392dfca33718bf76a75",
     "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json": "1230b416221d7e28b3ff038a3b9bd8eca972220eb1549763b4b0d68b1416ed69",
-    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "0de87849065583dcb49cf9b00ee03f1b4981bc57d27799cb0e15f0e4c0f0ae7e"
+    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "5a83cc80130d247fbf0487730e327f8e7a764926a42129006fc7df9d18e692d2"
   },
   "evidence_state": {
     "adapter_contract": "CONTRACT-PASS-LIVE-BLOCKED",
@@ -175,7 +175,7 @@
       "SR-MGM-004"
     ]
   },
-  "source_revision": "af1ac5e8a944e4bbe9d12b350481d9bea828b236",
+  "source_revision": "fc4ff664201d241a822b4904c5b10da5715f0f5f",
   "source_sha256": {
     "kernel/contracts/src/agent.rs": "c8cc0af7aa697ba6fb0ef0be8bafc8c2100c910169ee6f9fa2a2807ba48243c5",
     "kernel/contracts/src/agent_proposal.rs": "cd77cca5b9a6c6fd64c54053e9bdae5233cf50942c111c52fefba0945998519f",
@@ -427,7 +427,8 @@
     "kernel/engine/src/workflow_terminal.rs": "41d76ee842328b768d4cf8680e1ac72952ca792aa8e904827f1bb3fc32236e90",
     "kernel/engine/src/workflow_termination.rs": "3a3c922ac81df779506d7ad85c07d3cd849f8fcbac1c765ca6da14d2dd6457e1",
     "kernel/engine/src/workflow_verifier.rs": "6187389d17470552a35d774977ba581219ac30f0786d6ec5dea773aa6360d124",
-    "kernel/engine/src/write_approval.rs": "51b8147a2d5266219874ae4a86ccff33043a07b714233d9cd49220c7525b7272",
+    "kernel/engine/src/write_approval.rs": "b87b6f0d2bb892d2e3a56fc825e81b304ee9a73df9b983355beb50336023711b",
+    "kernel/engine/src/write_approval/selective.rs": "0de6b75b28d73868f6b363e617f21c51beefac809709842b700e427fc9ebaf60",
     "kernel/engine/src/write_recovery.rs": "043810f5062cfeca75d69b5ea8ad9f22f22ea200e182c86ae0594f99e983d8bd",
     "kernel/engine/src/write_transaction.rs": "37bfa344dc49b9e79aa7921b0c3b12241a1166cef0216395a56e280841d3dd03",
     "model-profiles/exact-profile-catalog.json": "46cda59530001e361e3dd551c5f4b8e1f914bf47669b765c3717a076655ba7f2",

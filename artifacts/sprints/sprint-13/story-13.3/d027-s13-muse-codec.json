@@ -43,7 +43,7 @@
       ],
       "exit_code": 0,
       "id": "muse-edge-codec",
-      "output_sha256": "c9dc68fb42b8bb5ca7d4b809d59f92a88774c15bc382785b9b4c8c43c4672a78"
+      "output_sha256": "8f88043dc87925254939933f7b96ec515e4d7fe58e5120b2fe664f45a50b07ae"
     },
     {
       "argv": [
@@ -56,7 +56,7 @@
       ],
       "exit_code": 0,
       "id": "native-transport-diagnostics",
-      "output_sha256": "6455db138f2a04400b77545ac980952354147afb1ce7c510a27d29359abd3363"
+      "output_sha256": "e7dc315e37e54b87db14e2e5ccc8fa137482cc8cbdfe8d6232487a2192da46bb"
     },
     {
       "argv": [
@@ -69,7 +69,7 @@
       ],
       "exit_code": 0,
       "id": "generic-codec",
-      "output_sha256": "c215aee8d60c41933b4e4359bf939939e440141bc89a46a41967c0bd13b04b82"
+      "output_sha256": "3ac1ed8f2ba95aa8c44154749fe1aa8f869bc750298a57429dff81b561b251b3"
     },
     {
       "argv": [
@@ -82,7 +82,7 @@
       ],
       "exit_code": 0,
       "id": "bounded-response",
-      "output_sha256": "24a12c1a231df7ed339177bc2b169245a74e995adb42e299ee23a4f101764212"
+      "output_sha256": "97a15349596ba392733b30e62ad8488e61e1b3914617ab41b02b0bf36b09b879"
     },
     {
       "argv": [
@@ -95,7 +95,7 @@
       ],
       "exit_code": 0,
       "id": "fake-family-parity",
-      "output_sha256": "df7a076f459463a0337b15a08645b962535e27d73541d6ab06e8dce9d0af81f3"
+      "output_sha256": "25ba2e966ff91e211ddc93ac834b494bf91798fb9dbe7e7022b60689a05927dd"
     }
   ],
   "diagnostics": [
@@ -235,7 +235,7 @@
   "production_kernel_family_references": [],
   "record_type": "d027_s13_muse_codec_evidence",
   "schema_version": 3,
-  "source_revision": "af1ac5e8a944e4bbe9d12b350481d9bea828b236",
+  "source_revision": "fc4ff664201d241a822b4904c5b10da5715f0f5f",
   "source_sha256": {
     "kernel/contracts/src/model.rs": "1a19f680cc1468be94930632e4a67ba50f0c16eaf47802ae7ecd65df2ca1695c",
     "kernel/engine/src/accounting_provider.rs": "f0292afed85e4dc1d617061de010622b913749caed5e4620503634c29ef485f4",
@@ -443,7 +443,8 @@
     "kernel/engine/src/workflow_terminal.rs": "41d76ee842328b768d4cf8680e1ac72952ca792aa8e904827f1bb3fc32236e90",
     "kernel/engine/src/workflow_termination.rs": "3a3c922ac81df779506d7ad85c07d3cd849f8fcbac1c765ca6da14d2dd6457e1",
     "kernel/engine/src/workflow_verifier.rs": "6187389d17470552a35d774977ba581219ac30f0786d6ec5dea773aa6360d124",
-    "kernel/engine/src/write_approval.rs": "51b8147a2d5266219874ae4a86ccff33043a07b714233d9cd49220c7525b7272",
+    "kernel/engine/src/write_approval.rs": "b87b6f0d2bb892d2e3a56fc825e81b304ee9a73df9b983355beb50336023711b",
+    "kernel/engine/src/write_approval/selective.rs": "0de6b75b28d73868f6b363e617f21c51beefac809709842b700e427fc9ebaf60",
     "kernel/engine/src/write_recovery.rs": "043810f5062cfeca75d69b5ea8ad9f22f22ea200e182c86ae0594f99e983d8bd",
     "kernel/engine/src/write_transaction.rs": "37bfa344dc49b9e79aa7921b0c3b12241a1166cef0216395a56e280841d3dd03",
     "platforms/linux-inference/src/llama_server_driver.rs": "65f3a4c735736b2b1b700a0264ae2c8f61af1eb28b0bf54a7dee5587eb8efbd0",
