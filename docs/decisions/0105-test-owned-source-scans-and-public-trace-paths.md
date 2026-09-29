@@ -5,7 +5,7 @@
 | Status | Accepted under owner delegation, 2026-09-29 |
 | Date | 2026-09-29 |
 | Authority | Decisions 0054, 0061, 0081 and 0104; current owner restart |
-| Scope | Sprint 13 family-neutrality evidence and the Story 13.4 dispatch-preflight producer |
+| Scope | Sprint 13 family-neutrality evidence and the Story 13.4 dispatch-preflight and context-profile producers |
 
 ## Findings
 
@@ -19,11 +19,12 @@ Two model-family neutrality scanners kept only the text before the first
 - Its non-recursive glob never read `kernel/engine/src/runtime_loop/artifact_preparation.rs`,
   a production module. The Sprint 13 report also bound none of the scanned files.
 
-The Story 13.4 dispatch-preflight producer wrote raw Cargo output to its public log.
-When compilation ran, that output included absolute crate paths under the private
-checkout. The committed log already contains such lines. Earlier committed logs from
-other producers contain the same kind of path. They are hash-bound historical records
-and stay unchanged here, pending an owner decision.
+The Story 13.4 dispatch-preflight and context-profile producers wrote raw Cargo
+output to their public logs. When compilation ran, that output included absolute
+crate paths under the private checkout. Both committed logs already contain such
+lines. Earlier committed logs from other producers contain the same kind of path.
+They are hash-bound historical records and stay unchanged here, pending an owner
+decision.
 
 ## Decision
 
@@ -45,16 +46,17 @@ bind each scanned file as a whole-file source input. The Sprint 13 report hashes
 at the recorded revision and refuses a scan whose working bytes differ. Its schema
 becomes version 2, and the codec report becomes version 3.
 
-The dispatch-preflight producer replaces the checkout root with `<repository-root>`.
-Its validator refuses any remaining checkout or home-directory path. It does not guess
-other redactions.
+Both Story 13.4 producers replace the checkout root with `<repository-root>` through
+a shared `evidence_core.py` helper. Their validators refuse any remaining checkout or
+home-directory path; they do not guess other redactions. Other producers adopt the
+helper when they are next regenerated.
 
 ## Verification boundary
 
 Unit tests cover ownership acceptance, production precedence, default module paths,
 comments, strings, other `cfg` forms, every ambiguity class, trailing production,
 path redaction and refusal. The corrected scans report no production family reference
-in 253 kernel files. The committed Sprint 13, codec and dispatch-preflight artifacts
-remain stale until the next evidence pass regenerates them. The current dispatch log
-now fails its checker for the private path it contains. No task, model or release gate
+in 253 kernel files. The committed Sprint 13, codec and Story 13.4 artifacts remain
+stale until the next evidence pass regenerates them. The current Story 13.4 logs now
+fail their checkers for the private path they contain. No task, model or release gate
 closes here.

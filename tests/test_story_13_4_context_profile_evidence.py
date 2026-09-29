@@ -27,6 +27,15 @@ class Story134ContextProfileEvidenceTests(unittest.TestCase):
         for marker in MARKERS:
             self.assertTrue(validate_raw(valid.replace(marker, "")), marker)
 
+    def test_private_host_paths_are_refused(self) -> None:
+        from scripts.story_13_4_context_profile_evidence import ROOT
+
+        valid = "\n".join(MARKERS)
+        leaked = f"   Compiling agentmage-kernel-engine v0.0.0 ({ROOT}/kernel/engine)"
+        self.assertIn("raw results contain a private host path", validate_raw(valid + "\n" + leaked))
+        redacted = "   Compiling agentmage-kernel-engine v0.0.0 (<repository-root>/kernel/engine)"
+        self.assertEqual(validate_raw(valid + "\n" + redacted), [])
+
     def test_external_profile_and_release_overclaims_are_rejected(self) -> None:
         for field in (
             "live_admitted_profile_corpus_complete",

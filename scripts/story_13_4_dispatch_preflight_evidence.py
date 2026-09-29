@@ -12,6 +12,11 @@ import sys
 from pathlib import Path
 from typing import Any, Final
 
+try:
+    from scripts.evidence_core import contains_private_path, redact_checkout_root
+except ModuleNotFoundError:  # Direct execution places scripts/ rather than the repository on sys.path.
+    from evidence_core import contains_private_path, redact_checkout_root
+
 ROOT: Final = Path(__file__).resolve().parents[1]
 EVIDENCE_DIR: Final = ROOT / "artifacts/sprints/sprint-13/story-13.4"
 RAW_PATH: Final = EVIDENCE_DIR / "dispatch-preflight-results.log"
@@ -66,17 +71,6 @@ CTX_DISPATCH: Final = (
 )
 SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
 REVISION: Final = re.compile(r"^[0-9a-f]{40}$")
-# Compiler output names crate paths under the private checkout. The public log
-# keeps only this placeholder; any other home-directory path refuses publication.
-ROOT_PLACEHOLDER: Final = "<repository-root>"
-
-
-def private_prefixes() -> tuple[str, ...]:
-    home = str(Path.home())
-    aliases = {str(ROOT), home}
-    if home.startswith("/var/home/"):
-        aliases.add(home.removeprefix("/var"))
-    return tuple(sorted(aliases, key=len, reverse=True))
 
 
 def sha256_bytes(value: bytes) -> str:
@@ -102,7 +96,7 @@ def capture() -> tuple[str, int]:
     chunks = []
     for command in COMMANDS:
         result = subprocess.run(command, cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False, timeout=900)
-        chunks.append(f"$ {' '.join(command)}\n{result.stdout.replace(str(ROOT), ROOT_PLACEHOLDER)}")
+        chunks.append(f"$ {' '.join(command)}\n{redact_checkout_root(result.stdout, ROOT)}")
         if result.returncode != 0:
             return "\n".join(chunks).rstrip() + "\n", result.returncode
     return "\n".join(chunks).rstrip() + "\n", 0
@@ -113,7 +107,9 @@ def validate_raw(value: str) -> list[str]:
     for prohibited in ("test result: FAILED", "error: could not compile", "panicked at"):
         if prohibited in value:
             failures.append(f"dispatch-preflight results contain prohibited marker: {prohibited}")
-    if any(prefix in value for prefix in private_prefixes()):
+    # Compiler output names crate paths under the private checkout; only the
+    # placeholder may be published, and any other home path refuses publication.
+    if contains_private_path(value, ROOT):
         failures.append("dispatch-preflight results contain a private host path")
     return failures
 

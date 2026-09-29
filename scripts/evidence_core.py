@@ -233,3 +233,28 @@ def redacted_diagnostic(code: str, *, subject: str | None = None) -> dict[str, s
     if subject is not None:
         result["subject"] = subject
     return result
+
+
+CHECKOUT_PLACEHOLDER: Final = "<repository-root>"
+
+
+def private_path_prefixes(root: Path) -> tuple[str, ...]:
+    """Return the checkout and home-directory spellings a public trace must not hold."""
+
+    home = str(Path.home())
+    prefixes = {str(root), home}
+    if home.startswith("/var/home/"):
+        prefixes.add(home.removeprefix("/var"))
+    return tuple(sorted(prefixes, key=len, reverse=True))
+
+
+def redact_checkout_root(text: str, root: Path) -> str:
+    """Replace only the exact checkout root; other private paths remain visible to checks."""
+
+    return text.replace(str(root), CHECKOUT_PLACEHOLDER)
+
+
+def contains_private_path(text: str, root: Path) -> bool:
+    """Return whether public trace text still names the checkout or a home directory."""
+
+    return any(prefix in text for prefix in private_path_prefixes(root))

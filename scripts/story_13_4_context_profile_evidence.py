@@ -12,10 +12,12 @@ from pathlib import Path
 from typing import Any, Final
 
 try:
+    from scripts.evidence_core import contains_private_path, redact_checkout_root
     from scripts.story_13_4_profile_campaign import OUTPUT_PATH as CAMPAIGN_PATH
     from scripts.story_13_4_profile_campaign import check as check_campaign
     from scripts.story_13_4_profile_campaign import write as write_campaign
 except ModuleNotFoundError:  # Direct execution places scripts/ rather than the repository on sys.path.
+    from evidence_core import contains_private_path, redact_checkout_root
     from story_13_4_profile_campaign import OUTPUT_PATH as CAMPAIGN_PATH
     from story_13_4_profile_campaign import check as check_campaign
     from story_13_4_profile_campaign import write as write_campaign
@@ -141,6 +143,8 @@ def validate_raw(value: str) -> list[str]:
     for prohibited in ("test result: FAILED", "not ok", "error: could not compile", "warning:"):
         if prohibited in value:
             failures.append(f"raw results contain prohibited marker: {prohibited}")
+    if contains_private_path(value, ROOT):
+        failures.append("raw results contain a private host path")
     return failures
 
 
@@ -152,7 +156,7 @@ def capture() -> tuple[str, int]:
     chunks = []
     for command in COMMANDS:
         result = subprocess.run(command, cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
-        chunks.append(f"$ {' '.join(command)}\n{result.stdout}")
+        chunks.append(f"$ {' '.join(command)}\n{redact_checkout_root(result.stdout, ROOT)}")
         if result.returncode != 0:
             return "\n".join(chunks), result.returncode
     return "\n".join(chunks), 0

@@ -13,8 +13,10 @@ from scripts.evidence_core import (
     atomic_write,
     bounded_read,
     canonical_json_bytes,
+    contains_private_path,
     git_blob,
     git_source_identity,
+    redact_checkout_root,
     sha256_bytes,
 )
 
@@ -83,6 +85,20 @@ class EvidenceCoreTests(unittest.TestCase):
             self.assertEqual(original, b"historical\n")
             self.assertEqual(sha256_bytes(original), sha256_bytes(b"historical\n"))
             self.assertNotEqual(original, (root / "input.txt").read_bytes())
+
+
+    def test_checkout_root_is_redacted_and_other_home_paths_remain_detectable(self) -> None:
+        root = Path("/srv/checkout/AgentMage")
+        home = str(Path.home())
+        text = f"Compiling engine ({root}/kernel/engine)\nregistry {home}/.cargo/registry\n"
+        redacted = redact_checkout_root(text, root)
+        self.assertNotIn(str(root), redacted)
+        self.assertIn("(<repository-root>/kernel/engine)", redacted)
+        self.assertTrue(contains_private_path(redacted, root))
+        self.assertFalse(contains_private_path("Compiling engine (<repository-root>/x)", root))
+        self.assertTrue(contains_private_path(f"{root}/x", root))
+        if home.startswith("/var/home/"):
+            self.assertTrue(contains_private_path(home.removeprefix("/var") + "/x", root))
 
 
 if __name__ == "__main__":
