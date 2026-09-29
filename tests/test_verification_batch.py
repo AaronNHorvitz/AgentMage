@@ -90,11 +90,11 @@ class VerificationBatchTests(unittest.TestCase):
         results = private / "stage-results.json"
         plan.write_text(json.dumps({
             "name": "fixture-core", "source_revision": revision,
-            "scope": f"Stage run from {self.repo}", "commands": [["python3", "-c", "pass"]],
+            "scope": f"Stage run from {self.repo}", "commands": [["python3", f"{self.repo}/x.py"]],
             "sources": {"src/a.txt": digest("new\n")},
         }))
         results.write_text(json.dumps([{
-            "index": 1, "command": ["python3", "-c", "pass"], "exit_code": 0, "seconds": 0.5,
+            "index": 1, "command": ["python3", f"{self.repo}/x.py"], "exit_code": 0, "seconds": 0.5,
             "log": str(log), "sha256": hashlib.sha256(log.read_bytes()).hexdigest(),
         }]))
         return plan, results
@@ -107,12 +107,15 @@ class VerificationBatchTests(unittest.TestCase):
         destination = self.repo / "docs/logs"
         with mock.patch.object(batch, "private_names", return_value=["fixtureuser"]):
             stage = batch.retain(plan, results, destination, [(str(state), "<state>")])
+        self.assertEqual(stage["allowed_public_name_count"], 0)
         retained = (destination / "fixture-core" / "01.log").read_text()
         self.assertEqual(
             retained,
             "Compiling crate (<repo>/src)\nwrote <state>/scratch/x\ntest result: ok. 3 passed; 0 failed; 1 ignored;\n",
         )
         self.assertEqual(stage["scope"], "Stage run from <repo>")
+        self.assertEqual(stage["planned_commands"], [["python3", "<repo>/x.py"]])
+        self.assertEqual(stage["results"][0]["argv"], ["python3", "<repo>/x.py"])
         self.assertEqual(stage["results"][0]["log_sha256"], digest(retained))
         self.assertEqual(batch.load_stage(destination / "fixture-core"), stage)
         with self.assertRaises(batch.RecordError):
@@ -122,6 +125,26 @@ class VerificationBatchTests(unittest.TestCase):
             with self.assertRaises(batch.RecordError):
                 batch.retain(plan, results, self.repo / "docs/other", [])
         self.assertFalse((self.repo / "docs/other").exists())
+        # A public host name is allowed only explicitly; the user name never is.
+        with mock.patch.object(batch.socket, "gethostname", return_value="publicdistro"), \
+                mock.patch.object(batch.getpass, "getuser", return_value="fixtureuser"):
+            self.assertEqual(batch.private_names(), ["fixtureuser", "publicdistro"])
+            self.assertEqual(batch.private_names(("publicdistro",)), ["fixtureuser"])
+            with self.assertRaises(batch.RecordError):
+                batch.private_names(("fixtureuser",))
+        # Attachments are redacted, bound and verified like logs.
+        observation = self.repo.parent / "observation.json"
+        observation.write_text(json.dumps({"root": f"{state}/c1", "exit_code": 5}))
+        plan, results = self.stage_files(head, "attached\n")
+        with mock.patch.object(batch, "private_names", return_value=["fixtureuser"]):
+            stage = batch.retain(plan, results, self.repo / "docs/attached",
+                                 [(str(state), "<state>")], (), (observation,))
+        attached = self.repo / "docs/attached/fixture-core/attachments/observation.json"
+        self.assertEqual(json.loads(attached.read_text())["root"], "<state>/c1")
+        self.assertEqual(stage["attachments"][0]["sha256"], digest(attached.read_text()))
+        attached.write_text("{}")
+        with self.assertRaises(batch.RecordError):
+            batch.load_stage(self.repo / "docs/attached/fixture-core")
         plan, results = self.stage_files(head, "original\n")
         Path(json.loads(results.read_text())[0]["log"]).write_text("changed afterwards\n")
         with self.assertRaises(batch.RecordError):

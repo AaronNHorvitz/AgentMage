@@ -11,7 +11,9 @@ can regenerate it and compare bytes:
 - `retain` copies one private evidence stage into the repository. It replaces
   the checkout root, home directory, temporary directory and any declared
   private roots with placeholders, then refuses the copy if the user or host
-  name remains.
+  name remains. A name that is also public vocabulary, such as a distribution's
+  default host name, is allowed only when named explicitly, and the stage
+  records how many names were allowed, never the names.
 - `record` builds a record from a committed specification, the commit range,
   the retained stages and a committed inventory. With `--check` it compares the
   result with the committed record instead of writing it.
@@ -177,9 +179,13 @@ def private_roots(extra: Iterable[tuple[str, str]]) -> list[tuple[str, str]]:
                   key=lambda item: -len(item[0]))
 
 
-def private_names() -> list[str]:
+def private_names(allowed: Iterable[str] = ()) -> list[str]:
     names = {getpass.getuser(), socket.gethostname(), socket.gethostname().split(".")[0]}
-    return sorted(name for name in names if len(name) >= 3 and name != "localhost")
+    if getpass.getuser() in set(allowed):
+        raise RecordError("the user name cannot be allowed")
+    return sorted(
+        name for name in names - set(allowed) if len(name) >= 3 and name != "localhost"
+    )
 
 
 def redact(text: str, roots: list[tuple[str, str]], names: list[str]) -> str:
@@ -192,7 +198,8 @@ def redact(text: str, roots: list[tuple[str, str]], names: list[str]) -> str:
 
 
 def retain(plan_path: Path, results_path: Path, destination: Path,
-           extra: list[tuple[str, str]]) -> dict[str, Any]:
+           extra: list[tuple[str, str]], allowed_public_names: tuple[str, ...] = (),
+           attachments: tuple[Path, ...] = ()) -> dict[str, Any]:
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     results = json.loads(results_path.read_text(encoding="utf-8"))
     name = plan["name"]
@@ -205,7 +212,7 @@ def retain(plan_path: Path, results_path: Path, destination: Path,
     if target.exists():
         raise RecordError(f"stage already retained: {target}")
     roots = private_roots(extra)
-    names = private_names()
+    names = private_names(allowed_public_names)
     retained = []
     staged: list[tuple[str, str]] = []
     for index, row in enumerate(results, start=1):
@@ -219,25 +226,41 @@ def retain(plan_path: Path, results_path: Path, destination: Path,
         staged.append((log_name, text))
         retained.append({
             "index": index,
-            "argv": row["command"],
+            "argv": [redact(part, roots, names) for part in row["command"]],
             "exit_code": row["exit_code"],
             "seconds": row["seconds"],
             "log": log_name,
             "log_sha256": sha256_bytes(text.encode("utf-8")),
             "private_log_sha256": row["sha256"],
         })
+    attached = []
+    for path in attachments:
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", path.name) or any(
+            path.name == row["name"] for row in attached
+        ):
+            raise RecordError(f"attachment name is invalid or repeated: {path.name}")
+        raw = path.read_bytes()
+        text = redact(raw.decode("utf-8"), roots, names)
+        staged.append((f"attachments/{path.name}", text))
+        attached.append({"name": path.name, "sha256": sha256_bytes(text.encode("utf-8")),
+                         "private_sha256": sha256_bytes(raw)})
     stage = {
         "schema_version": 1,
         "stage": name,
         "source_revision": plan["source_revision"],
         "scope": redact(plan["scope"], roots, names),
-        "planned_commands": plan["commands"],
+        "planned_commands": [[redact(part, roots, names) for part in command]
+                             for command in plan["commands"]],
         "continue_after_failure_indexes": plan.get("continue_after_failure_indexes", []),
         "sources": plan["sources"],
+        # Count only: naming an allowed host name here would disclose it.
+        "allowed_public_name_count": len(set(allowed_public_names)),
+        "attachments": attached,
         "results": retained,
     }
     target.mkdir(parents=True)
     for log_name, text in staged:
+        (target / log_name).parent.mkdir(parents=True, exist_ok=True)
         (target / log_name).write_text(text, encoding="utf-8")
     (target / "stage.json").write_text(json.dumps(stage, indent=2) + "\n", encoding="utf-8")
     return stage
@@ -252,6 +275,10 @@ def load_stage(directory: Path) -> dict[str, Any]:
         log = directory / row["log"]
         if sha256_bytes(log.read_bytes()) != row["log_sha256"]:
             raise RecordError(f"retained log digest differs: {log}")
+    for row in stage.get("attachments", []):
+        attachment = directory / "attachments" / row["name"]
+        if sha256_bytes(attachment.read_bytes()) != row["sha256"]:
+            raise RecordError(f"retained attachment digest differs: {attachment}")
     return stage
 
 
@@ -347,6 +374,8 @@ def main(argv: list[str] | None = None) -> int:
     keep.add_argument("--results", type=Path, required=True)
     keep.add_argument("--destination", type=Path, required=True)
     keep.add_argument("--redact", action="append", default=[], metavar="PATH=LABEL")
+    keep.add_argument("--allow-public-name", action="append", default=[], metavar="NAME")
+    keep.add_argument("--attach", action="append", default=[], type=Path, metavar="FILE")
     rec = commands.add_parser("record")
     rec.add_argument("--spec", type=Path, required=True)
     target = rec.add_mutually_exclusive_group(required=True)
@@ -371,7 +400,8 @@ def main(argv: list[str] | None = None) -> int:
                 if not separator or not os.path.isabs(path) or not re.fullmatch(r"<[a-z-]+>", label):
                     parser.error(f"invalid --redact value: {item}")
                 extra.append((path, label))
-            stage = retain(args.plan, args.results, args.destination, extra)
+            stage = retain(args.plan, args.results, args.destination, extra,
+                           tuple(args.allow_public_name), tuple(args.attach))
             print(json.dumps({"stage": stage["stage"], "logs": len(stage["results"])}))
         else:
             record = build_record(args.spec.resolve())

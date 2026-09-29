@@ -51,8 +51,10 @@ an uncertain record. See the development guide for lifecycle and cleanup limitat
 
 **Current lane result:** setup and diagnosis ran; the actual scripted CLI/host
 launch returned exit 5 before tools because native prerequisites are unavailable.
-The [coding recoverability verification](verification/coding-recoverability-2026-09-29.md)
-retains the latest source, rebuilt binary identities and startup results;
+The [review-fix and runtime component verification](verification/review-fixes-and-runtime-components-2026-09-29.md)
+retains the latest source, rebuilt binary identities and startup results, with its logs
+under `artifacts/verification-logs/`; the
+[coding recoverability verification](verification/coding-recoverability-2026-09-29.md),
 the [selective hunk change verification](verification/selective-hunk-changes-2026-09-29.md),
 the [research disclosure-binding verification](verification/research-disclosure-binding-2026-09-29.md),
 the [preparation review-fix verification](verification/preparation-review-fixes-2026-09-29.md),
