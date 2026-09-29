@@ -51,8 +51,9 @@ an uncertain record. See the development guide for lifecycle and cleanup limitat
 
 **Current lane result:** setup and diagnosis ran; the actual scripted CLI/host
 launch returned exit 5 before tools because native prerequisites are unavailable.
-The [runtime phase deadline verification](verification/runtime-phase-deadlines-2026-09-28.md)
-retains the latest source, rebuilt binary identities and startup results;
+The [controlled preparation verification](verification/controlled-native-preparation-2026-09-28.md)
+retains the latest source, rebuilt binary identities, startup results and open evidence refreshes;
+the [runtime phase deadline verification](verification/runtime-phase-deadlines-2026-09-28.md),
 the [socket deadline verification](verification/model-socket-deadlines-2026-09-28.md),
 the [failed-start verification](verification/failed-start-consumption-2026-09-28.md),
 the [model request diagnostic verification](verification/harness-model-diagnostics-2026-09-28.md),
