@@ -51,8 +51,9 @@ an uncertain record. See the development guide for lifecycle and cleanup limitat
 
 **Current lane result:** setup and diagnosis ran; the actual scripted CLI/host
 launch returned exit 5 before tools because native prerequisites are unavailable.
-The [controlled preparation verification](verification/controlled-native-preparation-2026-09-28.md)
-retains the latest source, rebuilt binary identities, startup results and open evidence refreshes;
+The [preparation review-fix verification](verification/preparation-review-fixes-2026-09-29.md)
+retains the latest source, rebuilt binary identities, startup results and evidence refreshes;
+the [controlled preparation verification](verification/controlled-native-preparation-2026-09-28.md),
 the [runtime phase deadline verification](verification/runtime-phase-deadlines-2026-09-28.md),
 the [socket deadline verification](verification/model-socket-deadlines-2026-09-28.md),
 the [failed-start verification](verification/failed-start-consumption-2026-09-28.md),
@@ -122,6 +123,47 @@ There is no automatic reset, and a reboot or recreated runtime directory does no
 prove cleanup. CPU component checks cover bounded cleanup and preservation; actual
 isolated model cleanup remains unverified in this lane. See the inference cleanup
 verification for the exact source and remaining limitations.
+
+### Running the coding demo on your own Linux host
+
+The implementation lane cannot run the positive workflow: its user namespace does
+not map real root, so `/usr/bin/git`, `bwrap`, `systemctl` and `systemd-run` appear
+owned by an unmapped user and fail the root-owned executable check, and it has no
+user systemd manager. A normal Fedora login session on the development machine has
+both. These commands have not been run positively at the current revision; the
+last positive scripted matrix is historical (see the native command-control record).
+
+From the repository root, as your normal user, with the pinned toolchain available:
+
+```sh
+cargo build --locked --offline -p agentmage-host -p agentmage-capability-read-only --bins
+demo="$XDG_RUNTIME_DIR/am-demo-1"   # fresh, short, private; must not exist yet
+python3 -m scripts.coding_harness setup --root "$demo"
+python3 -m scripts.coding_harness diagnose --root "$demo"
+```
+
+`diagnose` must report `confinement_prerequisites.ready: true` before a start. Then run
+the failed-test repair scenario and answer each protected prompt yourself:
+
+```sh
+python3 -m scripts.coding_harness start --root "$demo" --model scripted \
+  --scenario failed-test-repair \
+  --objective 'Repair the failing synthetic add test and rerun validation.' \
+  --log-dir "$demo-logs"
+```
+
+- Apply: type `yes` and Enter at each prompt; the run should show the failing test,
+  the exact patch, the rerun and a verified terminal report.
+- Deny: in a fresh root, answer anything other than `yes`; no file may change.
+- Cancel: in a fresh root, run `python3 -m scripts.coding_harness stop --root "$demo"`
+  from a second terminal while a prompt or command is active.
+- Preservation: add a staged, unstaged or untracked file in `$demo/disposable/worktree`
+  before `start`; the wrapper must refuse and leave every byte and the Git index unchanged.
+
+Inspect `git -C "$demo/disposable/worktree" diff`, `status` and the log directory after
+each run. Keep failed and refused runs. A scripted run proves the executable path
+only; it is not model qualification. Real-model runs additionally need the exact
+admitted development profile and its resource and confinement checks.
 
 ## Separate document demonstration
 
