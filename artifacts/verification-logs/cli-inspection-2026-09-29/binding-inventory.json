@@ -1,0 +1,437 @@
+{
+  "schema_version": 2,
+  "record_type": "agentmage-direct-binding-inventory",
+  "scope": "direct whole-file hash records naming paths changed between the revisions; not transitive or line-span",
+  "base_commit": "b95795acf1d90f58856da23e2845f98ab7ce8c4f",
+  "head_commit": "64a49f439efe719fb9f3f12a1a82f1ad495ca91b",
+  "changed_paths": [
+    "TASKS.md",
+    "artifacts/sprints/sprint-1/story-1.1/artifact-index.json",
+    "artifacts/sprints/sprint-1/story-1.1/security-evidence-map.json",
+    "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
+    "artifacts/sprints/sprint-1/story-1.2/contract-evidence-index.json",
+    "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
+    "artifacts/sprints/sprint-1/story-1.2/security-evidence-map.json",
+    "artifacts/sprints/sprint-11/story-11.1/security-evidence-map.json",
+    "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+    "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+    "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+    "artifacts/sprints/sprint-11/story-11.2/story-gate-report.json",
+    "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
+    "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
+    "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+    "artifacts/stabilization/frozen-scope-breadth-report.json",
+    "docs/LOCAL-TESTING.md",
+    "docs/decisions/0112-hunk-review-and-run-progress-in-the-cli.md",
+    "docs/verification/remaining-plan-blocker-audit.json",
+    "scripts/remaining_plan_blocker_audit.py",
+    "scripts/story_11_2_gate.py",
+    "shells/host/src/coding_change_review.rs",
+    "shells/host/src/coding_development_client.rs",
+    "shells/host/src/lib.rs",
+    "supply-chain/dependency-hashes.sha256",
+    "supply-chain/dependency-provenance.json",
+    "supply-chain/sbom.cdx.json",
+    "tests/test_amendment_work_selection.py"
+  ],
+  "counts": {
+    "current": 32,
+    "newly-stale": 15,
+    "previously-stale-or-historical": 2293
+  },
+  "newly_stale_artifacts": [
+    "artifacts/verification-logs/review-fixes-and-runtime-components-2026-09-29/batch5-core-remainder/stage.json",
+    "artifacts/verification-logs/review-fixes-and-runtime-components-2026-09-29/batch5-core/stage.json",
+    "artifacts/verification-logs/review-fixes-and-runtime-components-2026-09-29/batch5-gate/stage.json",
+    "artifacts/verification-logs/review-fixes-and-runtime-components-2026-09-29/batch5-source-checks/stage.json",
+    "docs/verification/controlled-native-preparation-2026-09-28.json",
+    "docs/verification/development-confirmation-2026-09-27.json",
+    "docs/verification/failed-start-consumption-2026-09-28.json",
+    "docs/verification/harness-model-diagnostics-2026-09-28.json",
+    "docs/verification/model-socket-deadlines-2026-09-28.json",
+    "docs/verification/native-inference-cleanup-2026-09-27.json",
+    "docs/verification/research-completion-2026-09-28.json",
+    "docs/verification/runtime-artifact-preparation-2026-09-27.json",
+    "docs/verification/runtime-phase-deadlines-2026-09-28.json"
+  ],
+  "bindings": [
+    {
+      "artifact": "artifacts/sprints/sprint-1/story-1.1/artifact-index.json",
+      "input": "supply-chain/dependency-hashes.sha256",
+      "retained_sha256": "af6da1101f8b44ddae27ecc4e2f1e3b92d546237eff286f72170e60ee67ac9bd",
+      "base_sha256": "c527147c445d2946e744a48ccd026efaae6e873d649a7d374de479ada5787f43",
+      "head_sha256": "af6da1101f8b44ddae27ecc4e2f1e3b92d546237eff286f72170e60ee67ac9bd",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-1/story-1.1/artifact-index.json",
+      "input": "supply-chain/dependency-provenance.json",
+      "retained_sha256": "4fb905d18548d4383cb57a010496d76097b0321c2ccf39363cba58efac794c38",
+      "base_sha256": "07bb2df3372326e61077f766186f7738e03536d94379bf6ac8475af6242dc4c2",
+      "head_sha256": "4fb905d18548d4383cb57a010496d76097b0321c2ccf39363cba58efac794c38",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-1/story-1.1/artifact-index.json",
+      "input": "supply-chain/sbom.cdx.json",
+      "retained_sha256": "6235bc6abe7da3a80d725c8c921c1bdaf929cecd54fa1d217962cd0a95938cad",
+      "base_sha256": "f2dffd7a1cf06f560f2a595144f56df2e0afab9473060c82675d1a6e7532639f",
+      "head_sha256": "6235bc6abe7da3a80d725c8c921c1bdaf929cecd54fa1d217962cd0a95938cad",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-1/story-1.1/security-evidence-map.json",
+      "input": "artifacts/sprints/sprint-1/story-1.1/artifact-index.json",
+      "retained_sha256": "470083e5057db3b03cec191c02790b108a06d11741e2dd54c856a8d13e6c3e9a",
+      "base_sha256": "751409aa17c57616b50f945cfbce336b8f4443c55531480ccc883c03a83129ea",
+      "head_sha256": "470083e5057db3b03cec191c02790b108a06d11741e2dd54c856a8d13e6c3e9a",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-1/story-1.1/security-evidence-map.json",
+      "input": "supply-chain/dependency-hashes.sha256",
+      "retained_sha256": "af6da1101f8b44ddae27ecc4e2f1e3b92d546237eff286f72170e60ee67ac9bd",
+      "base_sha256": "c527147c445d2946e744a48ccd026efaae6e873d649a7d374de479ada5787f43",
+      "head_sha256": "af6da1101f8b44ddae27ecc4e2f1e3b92d546237eff286f72170e60ee67ac9bd",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-1/story-1.1/security-evidence-map.json",
+      "input": "supply-chain/dependency-provenance.json",
+      "retained_sha256": "4fb905d18548d4383cb57a010496d76097b0321c2ccf39363cba58efac794c38",
+      "base_sha256": "07bb2df3372326e61077f766186f7738e03536d94379bf6ac8475af6242dc4c2",
+      "head_sha256": "4fb905d18548d4383cb57a010496d76097b0321c2ccf39363cba58efac794c38",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-1/story-1.1/security-evidence-map.json",
+      "input": "supply-chain/sbom.cdx.json",
+      "retained_sha256": "6235bc6abe7da3a80d725c8c921c1bdaf929cecd54fa1d217962cd0a95938cad",
+      "base_sha256": "f2dffd7a1cf06f560f2a595144f56df2e0afab9473060c82675d1a6e7532639f",
+      "head_sha256": "6235bc6abe7da3a80d725c8c921c1bdaf929cecd54fa1d217962cd0a95938cad",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
+      "input": "TASKS.md",
+      "retained_sha256": "fc724d97d40f9b2007b881fcf03b512cd523d3d37565f9b6dc73ed2f8c4e2225",
+      "base_sha256": "ad92efa98aca9364ff428689a9e5d314d6fd456cd29b73c25ca0ac583e15a6c7",
+      "head_sha256": "fc724d97d40f9b2007b881fcf03b512cd523d3d37565f9b6dc73ed2f8c4e2225",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-1/story-1.2/contract-evidence-index.json",
+      "input": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
+      "retained_sha256": "386c4592aa9099c6edf9600f15519d86c10d4eed6283715eecea8396cd4a0e7b",
+      "base_sha256": "4e177d2f3cfbefca5918a77cbe80d2f1f849fd7b3fd0c03c366e22df361d36a3",
+      "head_sha256": "386c4592aa9099c6edf9600f15519d86c10d4eed6283715eecea8396cd4a0e7b",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-1/story-1.2/contract-evidence-index.json",
+      "input": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
+      "retained_sha256": "ab66815db94e217951d69e8014acc01a32abd9f3e5953608509f3579c3462c1d",
+      "base_sha256": "3a0e06f5b29bb71a388a9812472878d5ddc4a9e471ee90185fa8c84654f7330a",
+      "head_sha256": "ab66815db94e217951d69e8014acc01a32abd9f3e5953608509f3579c3462c1d",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-1/story-1.2/contract-evidence-index.json",
+      "input": "artifacts/sprints/sprint-1/story-1.2/security-evidence-map.json",
+      "retained_sha256": "bf16c84411509a2265e2e6005b904be89b03e1f632f8e24db55908df06987a47",
+      "base_sha256": "ba88cf7b52a3718a37a249482cd453a19fbc82820a55d1cf1e5bff9961621c72",
+      "head_sha256": "bf16c84411509a2265e2e6005b904be89b03e1f632f8e24db55908df06987a47",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-1/story-1.2/contract-evidence-index.json",
+      "input": "supply-chain/dependency-provenance.json",
+      "retained_sha256": "4fb905d18548d4383cb57a010496d76097b0321c2ccf39363cba58efac794c38",
+      "base_sha256": "07bb2df3372326e61077f766186f7738e03536d94379bf6ac8475af6242dc4c2",
+      "head_sha256": "4fb905d18548d4383cb57a010496d76097b0321c2ccf39363cba58efac794c38",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-1/story-1.2/contract-evidence-index.json",
+      "input": "supply-chain/sbom.cdx.json",
+      "retained_sha256": "6235bc6abe7da3a80d725c8c921c1bdaf929cecd54fa1d217962cd0a95938cad",
+      "base_sha256": "f2dffd7a1cf06f560f2a595144f56df2e0afab9473060c82675d1a6e7532639f",
+      "head_sha256": "6235bc6abe7da3a80d725c8c921c1bdaf929cecd54fa1d217962cd0a95938cad",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-1/story-1.2/security-evidence-map.json",
+      "input": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
+      "retained_sha256": "386c4592aa9099c6edf9600f15519d86c10d4eed6283715eecea8396cd4a0e7b",
+      "base_sha256": "4e177d2f3cfbefca5918a77cbe80d2f1f849fd7b3fd0c03c366e22df361d36a3",
+      "head_sha256": "386c4592aa9099c6edf9600f15519d86c10d4eed6283715eecea8396cd4a0e7b",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-1/story-1.2/security-evidence-map.json",
+      "input": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
+      "retained_sha256": "ab66815db94e217951d69e8014acc01a32abd9f3e5953608509f3579c3462c1d",
+      "base_sha256": "3a0e06f5b29bb71a388a9812472878d5ddc4a9e471ee90185fa8c84654f7330a",
+      "head_sha256": "ab66815db94e217951d69e8014acc01a32abd9f3e5953608509f3579c3462c1d",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-11/story-11.1/security-evidence-map.json",
+      "input": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
+      "retained_sha256": "dc682c79082a1f88c5240bcec557a4e346e60dac3ab16e7c7073fc57e72f14cb",
+      "base_sha256": "8e228c3e0f0fef047b512534d10474e43061792ce32593edf99dee4348a461b2",
+      "head_sha256": "dc682c79082a1f88c5240bcec557a4e346e60dac3ab16e7c7073fc57e72f14cb",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "input": "artifacts/sprints/sprint-11/story-11.1/security-evidence-map.json",
+      "retained_sha256": "46a6fb8f13bfd3fd6b100731bbfe7b1476256213b87b1f38f9b52de6324f7039",
+      "base_sha256": "d69a87f8688e5ae299a6b2fe428d4e648551213a640f099e6f16a8e7a3ff1161",
+      "head_sha256": "46a6fb8f13bfd3fd6b100731bbfe7b1476256213b87b1f38f9b52de6324f7039",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "input": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "retained_sha256": "4dbf318800bbe117d7f9bd34e5e9a38c5c02160734852e69b4976271c3fe6ea1",
+      "base_sha256": "2f2790732d4d3d08b691a90234857458bd1138cfeb5314489bfb436ed8c0a86c",
+      "head_sha256": "4dbf318800bbe117d7f9bd34e5e9a38c5c02160734852e69b4976271c3fe6ea1",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "input": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "retained_sha256": "4dbf318800bbe117d7f9bd34e5e9a38c5c02160734852e69b4976271c3fe6ea1",
+      "base_sha256": "2f2790732d4d3d08b691a90234857458bd1138cfeb5314489bfb436ed8c0a86c",
+      "head_sha256": "4dbf318800bbe117d7f9bd34e5e9a38c5c02160734852e69b4976271c3fe6ea1",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-11/story-11.2/story-gate-report.json",
+      "input": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "retained_sha256": "4dbf318800bbe117d7f9bd34e5e9a38c5c02160734852e69b4976271c3fe6ea1",
+      "base_sha256": "2f2790732d4d3d08b691a90234857458bd1138cfeb5314489bfb436ed8c0a86c",
+      "head_sha256": "4dbf318800bbe117d7f9bd34e5e9a38c5c02160734852e69b4976271c3fe6ea1",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-11/story-11.2/story-gate-report.json",
+      "input": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "retained_sha256": "b005b026d2ab1004dde660c9ce0b883273ad904eef2d56f3689d697d85d298c7",
+      "base_sha256": "80fe75b5a10d58740d33ed1a34d92c8a2378801736532f88ce700e48a59022f8",
+      "head_sha256": "b005b026d2ab1004dde660c9ce0b883273ad904eef2d56f3689d697d85d298c7",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-11/story-11.2/story-gate-report.json",
+      "input": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "retained_sha256": "3176c135e0966e2b879fad04712a0e66a3a35cb58b134279980c57f48c44e894",
+      "base_sha256": "2f8b509e47ecdbf9727b184957832b8404d970a4c74dbb440e2edd368d3051e2",
+      "head_sha256": "3176c135e0966e2b879fad04712a0e66a3a35cb58b134279980c57f48c44e894",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
+      "input": "supply-chain/dependency-hashes.sha256",
+      "retained_sha256": "af6da1101f8b44ddae27ecc4e2f1e3b92d546237eff286f72170e60ee67ac9bd",
+      "base_sha256": "c527147c445d2946e744a48ccd026efaae6e873d649a7d374de479ada5787f43",
+      "head_sha256": "af6da1101f8b44ddae27ecc4e2f1e3b92d546237eff286f72170e60ee67ac9bd",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
+      "input": "supply-chain/dependency-provenance.json",
+      "retained_sha256": "4fb905d18548d4383cb57a010496d76097b0321c2ccf39363cba58efac794c38",
+      "base_sha256": "07bb2df3372326e61077f766186f7738e03536d94379bf6ac8475af6242dc4c2",
+      "head_sha256": "4fb905d18548d4383cb57a010496d76097b0321c2ccf39363cba58efac794c38",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
+      "input": "supply-chain/sbom.cdx.json",
+      "retained_sha256": "6235bc6abe7da3a80d725c8c921c1bdaf929cecd54fa1d217962cd0a95938cad",
+      "base_sha256": "f2dffd7a1cf06f560f2a595144f56df2e0afab9473060c82675d1a6e7532639f",
+      "head_sha256": "6235bc6abe7da3a80d725c8c921c1bdaf929cecd54fa1d217962cd0a95938cad",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
+      "input": "supply-chain/dependency-provenance.json",
+      "retained_sha256": "4fb905d18548d4383cb57a010496d76097b0321c2ccf39363cba58efac794c38",
+      "base_sha256": "07bb2df3372326e61077f766186f7738e03536d94379bf6ac8475af6242dc4c2",
+      "head_sha256": "4fb905d18548d4383cb57a010496d76097b0321c2ccf39363cba58efac794c38",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+      "input": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
+      "retained_sha256": "dc682c79082a1f88c5240bcec557a4e346e60dac3ab16e7c7073fc57e72f14cb",
+      "base_sha256": "8e228c3e0f0fef047b512534d10474e43061792ce32593edf99dee4348a461b2",
+      "head_sha256": "dc682c79082a1f88c5240bcec557a4e346e60dac3ab16e7c7073fc57e72f14cb",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+      "input": "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
+      "retained_sha256": "311f06dab2714725618301145da20f5649d19004029b7d1fe325e75ebb636af5",
+      "base_sha256": "dbf04b78ea5a65305ede7123b8a235486c3353337c319f25b8a0cfc0674e912c",
+      "head_sha256": "311f06dab2714725618301145da20f5649d19004029b7d1fe325e75ebb636af5",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+      "input": "supply-chain/dependency-hashes.sha256",
+      "retained_sha256": "af6da1101f8b44ddae27ecc4e2f1e3b92d546237eff286f72170e60ee67ac9bd",
+      "base_sha256": "c527147c445d2946e744a48ccd026efaae6e873d649a7d374de479ada5787f43",
+      "head_sha256": "af6da1101f8b44ddae27ecc4e2f1e3b92d546237eff286f72170e60ee67ac9bd",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+      "input": "supply-chain/dependency-provenance.json",
+      "retained_sha256": "4fb905d18548d4383cb57a010496d76097b0321c2ccf39363cba58efac794c38",
+      "base_sha256": "07bb2df3372326e61077f766186f7738e03536d94379bf6ac8475af6242dc4c2",
+      "head_sha256": "4fb905d18548d4383cb57a010496d76097b0321c2ccf39363cba58efac794c38",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/stabilization/frozen-scope-breadth-report.json",
+      "input": "artifacts/sprints/sprint-11/story-11.1/security-evidence-map.json",
+      "retained_sha256": "46a6fb8f13bfd3fd6b100731bbfe7b1476256213b87b1f38f9b52de6324f7039",
+      "base_sha256": "d69a87f8688e5ae299a6b2fe428d4e648551213a640f099e6f16a8e7a3ff1161",
+      "head_sha256": "46a6fb8f13bfd3fd6b100731bbfe7b1476256213b87b1f38f9b52de6324f7039",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/stabilization/frozen-scope-breadth-report.json",
+      "input": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "retained_sha256": "4dbf318800bbe117d7f9bd34e5e9a38c5c02160734852e69b4976271c3fe6ea1",
+      "base_sha256": "2f2790732d4d3d08b691a90234857458bd1138cfeb5314489bfb436ed8c0a86c",
+      "head_sha256": "4dbf318800bbe117d7f9bd34e5e9a38c5c02160734852e69b4976271c3fe6ea1",
+      "disposition": "current"
+    },
+    {
+      "artifact": "artifacts/verification-logs/review-fixes-and-runtime-components-2026-09-29/batch5-core-remainder/stage.json",
+      "input": "scripts/remaining_plan_blocker_audit.py",
+      "retained_sha256": "25ed1e7f3119678c4291a952eaeca7424922df530e2b5c9f1c11f078f1bc7ec1",
+      "base_sha256": "25ed1e7f3119678c4291a952eaeca7424922df530e2b5c9f1c11f078f1bc7ec1",
+      "head_sha256": "e0249584f29a742caaa4633bcc4a8b8b399a7e25439c597facf62fbd86bc7122",
+      "disposition": "newly-stale"
+    },
+    {
+      "artifact": "artifacts/verification-logs/review-fixes-and-runtime-components-2026-09-29/batch5-core-remainder/stage.json",
+      "input": "tests/test_amendment_work_selection.py",
+      "retained_sha256": "55b64a5e5a844617997b834e5ba2e1b6af00a944557ea6ae92ba12dcf9bfafc9",
+      "base_sha256": "55b64a5e5a844617997b834e5ba2e1b6af00a944557ea6ae92ba12dcf9bfafc9",
+      "head_sha256": "cfce9a6bffd41e52690a466c5590f9e1725124f094621b1e0bceeeeeed9a923f",
+      "disposition": "newly-stale"
+    },
+    {
+      "artifact": "artifacts/verification-logs/review-fixes-and-runtime-components-2026-09-29/batch5-core/stage.json",
+      "input": "scripts/remaining_plan_blocker_audit.py",
+      "retained_sha256": "25ed1e7f3119678c4291a952eaeca7424922df530e2b5c9f1c11f078f1bc7ec1",
+      "base_sha256": "25ed1e7f3119678c4291a952eaeca7424922df530e2b5c9f1c11f078f1bc7ec1",
+      "head_sha256": "e0249584f29a742caaa4633bcc4a8b8b399a7e25439c597facf62fbd86bc7122",
+      "disposition": "newly-stale"
+    },
+    {
+      "artifact": "artifacts/verification-logs/review-fixes-and-runtime-components-2026-09-29/batch5-core/stage.json",
+      "input": "tests/test_amendment_work_selection.py",
+      "retained_sha256": "55b64a5e5a844617997b834e5ba2e1b6af00a944557ea6ae92ba12dcf9bfafc9",
+      "base_sha256": "55b64a5e5a844617997b834e5ba2e1b6af00a944557ea6ae92ba12dcf9bfafc9",
+      "head_sha256": "cfce9a6bffd41e52690a466c5590f9e1725124f094621b1e0bceeeeeed9a923f",
+      "disposition": "newly-stale"
+    },
+    {
+      "artifact": "artifacts/verification-logs/review-fixes-and-runtime-components-2026-09-29/batch5-gate/stage.json",
+      "input": "scripts/story_11_2_gate.py",
+      "retained_sha256": "b9804c355b7ceb7a3e940c3360ce4cdc5032e443ec865d0fe340221d1afb7968",
+      "base_sha256": "b9804c355b7ceb7a3e940c3360ce4cdc5032e443ec865d0fe340221d1afb7968",
+      "head_sha256": "e257228a3dea95ec9740681f3ce3ed9488e009e33ca166a362fc3d8b586c6ecc",
+      "disposition": "newly-stale"
+    },
+    {
+      "artifact": "artifacts/verification-logs/review-fixes-and-runtime-components-2026-09-29/batch5-source-checks/stage.json",
+      "input": "tests/test_amendment_work_selection.py",
+      "retained_sha256": "55b64a5e5a844617997b834e5ba2e1b6af00a944557ea6ae92ba12dcf9bfafc9",
+      "base_sha256": "55b64a5e5a844617997b834e5ba2e1b6af00a944557ea6ae92ba12dcf9bfafc9",
+      "head_sha256": "cfce9a6bffd41e52690a466c5590f9e1725124f094621b1e0bceeeeeed9a923f",
+      "disposition": "newly-stale"
+    },
+    {
+      "artifact": "docs/verification/controlled-native-preparation-2026-09-28.json",
+      "input": "shells/host/src/coding_development_client.rs",
+      "retained_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "base_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "head_sha256": "b3606a2ecaa902e27a8663ec7fb75d8660f3511594a27c8bd9d67f54d7ca2113",
+      "disposition": "newly-stale"
+    },
+    {
+      "artifact": "docs/verification/development-confirmation-2026-09-27.json",
+      "input": "shells/host/src/coding_development_client.rs",
+      "retained_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "base_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "head_sha256": "b3606a2ecaa902e27a8663ec7fb75d8660f3511594a27c8bd9d67f54d7ca2113",
+      "disposition": "newly-stale"
+    },
+    {
+      "artifact": "docs/verification/failed-start-consumption-2026-09-28.json",
+      "input": "shells/host/src/coding_development_client.rs",
+      "retained_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "base_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "head_sha256": "b3606a2ecaa902e27a8663ec7fb75d8660f3511594a27c8bd9d67f54d7ca2113",
+      "disposition": "newly-stale"
+    },
+    {
+      "artifact": "docs/verification/harness-model-diagnostics-2026-09-28.json",
+      "input": "shells/host/src/coding_development_client.rs",
+      "retained_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "base_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "head_sha256": "b3606a2ecaa902e27a8663ec7fb75d8660f3511594a27c8bd9d67f54d7ca2113",
+      "disposition": "newly-stale"
+    },
+    {
+      "artifact": "docs/verification/model-socket-deadlines-2026-09-28.json",
+      "input": "shells/host/src/coding_development_client.rs",
+      "retained_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "base_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "head_sha256": "b3606a2ecaa902e27a8663ec7fb75d8660f3511594a27c8bd9d67f54d7ca2113",
+      "disposition": "newly-stale"
+    },
+    {
+      "artifact": "docs/verification/native-inference-cleanup-2026-09-27.json",
+      "input": "shells/host/src/coding_development_client.rs",
+      "retained_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "base_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "head_sha256": "b3606a2ecaa902e27a8663ec7fb75d8660f3511594a27c8bd9d67f54d7ca2113",
+      "disposition": "newly-stale"
+    },
+    {
+      "artifact": "docs/verification/research-completion-2026-09-28.json",
+      "input": "shells/host/src/coding_development_client.rs",
+      "retained_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "base_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "head_sha256": "b3606a2ecaa902e27a8663ec7fb75d8660f3511594a27c8bd9d67f54d7ca2113",
+      "disposition": "newly-stale"
+    },
+    {
+      "artifact": "docs/verification/runtime-artifact-preparation-2026-09-27.json",
+      "input": "shells/host/src/coding_development_client.rs",
+      "retained_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "base_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "head_sha256": "b3606a2ecaa902e27a8663ec7fb75d8660f3511594a27c8bd9d67f54d7ca2113",
+      "disposition": "newly-stale"
+    },
+    {
+      "artifact": "docs/verification/runtime-phase-deadlines-2026-09-28.json",
+      "input": "shells/host/src/coding_development_client.rs",
+      "retained_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "base_sha256": "72aae43a275f198e9bf61559b2b34879143a0d56a45f0c0b63fa3c33037f887d",
+      "head_sha256": "b3606a2ecaa902e27a8663ec7fb75d8660f3511594a27c8bd9d67f54d7ca2113",
+      "disposition": "newly-stale"
+    }
+  ],
+  "historical_binding_count": 2293,
+  "historical_bindings_sha256": "27f27d3e4aee36671320d7eac44547d6603c56b2f1b5074b70ac13758acc76b8"
+}

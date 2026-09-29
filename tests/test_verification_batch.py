@@ -80,6 +80,12 @@ class VerificationBatchTests(unittest.TestCase):
         )
         with self.assertRaises(batch.RecordError):
             batch.inventory(head, base)
+        compact = batch.inventory(base, head, compact=True)
+        self.assertEqual(compact["schema_version"], 2)
+        self.assertEqual(compact["historical_binding_count"], 1)
+        self.assertEqual(len(compact["bindings"]), 2)
+        self.assertEqual(compact["counts"], value["counts"])
+        self.assertEqual(batch.inventory(base, head, compact=True), compact)
 
     def stage_files(self, revision: str, log_text: str) -> tuple[Path, Path]:
         private = self.repo.parent / "private"

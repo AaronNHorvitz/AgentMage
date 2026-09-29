@@ -117,8 +117,12 @@ def _bindings(document: Any, artifact: str, paths: set[str]) -> set[tuple[str, s
     return found
 
 
-def inventory(base: str, head: str) -> dict[str, Any]:
-    """Direct bindings of paths changed from `base` to `head`, read from Git."""
+def inventory(base: str, head: str, compact: bool = False) -> dict[str, Any]:
+    """Direct bindings of paths changed from `base` to `head`, read from Git.
+
+    The compact form (schema 2) lists current and newly stale bindings in full
+    and binds the historical ones by count and a digest of their canonical rows.
+    """
     base, head = resolve(base), resolve(head)
     if subprocess.run(("git", "merge-base", "--is-ancestor", base, head), cwd=ROOT).returncode:
         raise RecordError("the base is not an ancestor of the head")
@@ -154,7 +158,7 @@ def inventory(base: str, head: str) -> dict[str, Any]:
             "artifact": artifact, "input": name, "retained_sha256": digest,
             "base_sha256": prior[name], "head_sha256": current[name], "disposition": disposition,
         })
-    return {
+    value = {
         "schema_version": 1,
         "record_type": "agentmage-direct-binding-inventory",
         "scope": "direct whole-file hash records naming paths changed between the revisions; not transitive or line-span",
@@ -165,6 +169,14 @@ def inventory(base: str, head: str) -> dict[str, Any]:
         "newly_stale_artifacts": sorted({row["artifact"] for row in rows if row["disposition"] == "newly-stale"}),
         "bindings": rows,
     }
+    if compact:
+        historical = [row for row in rows if row["disposition"] == "previously-stale-or-historical"]
+        value["schema_version"] = 2
+        value["bindings"] = [row for row in rows if row not in historical]
+        value["historical_binding_count"] = len(historical)
+        value["historical_bindings_sha256"] = sha256_bytes(
+            json.dumps(historical, sort_keys=True, separators=(",", ":")).encode("utf-8"))
+    return value
 
 
 def private_roots(extra: Iterable[tuple[str, str]]) -> list[tuple[str, str]]:
@@ -327,7 +339,8 @@ def build_record(spec_path: Path) -> dict[str, Any]:
             raise RecordError(f"stage {stage['stage']} ran outside the commit range")
     inventory_path = ROOT / spec["inventory"]
     recorded = json.loads(inventory_path.read_text(encoding="utf-8"))
-    if recorded != inventory(recorded["base_commit"], recorded["head_commit"]):
+    compact = recorded.get("schema_version") == 2
+    if recorded != inventory(recorded["base_commit"], recorded["head_commit"], compact):
         raise RecordError("the committed inventory does not reproduce")
     checks = {}
     for name, relative in spec.get("check_logs", {}).items():
@@ -366,6 +379,7 @@ def main(argv: list[str] | None = None) -> int:
     inv = commands.add_parser("inventory")
     inv.add_argument("--base", required=True)
     inv.add_argument("--head", required=True)
+    inv.add_argument("--compact", action="store_true")
     output = inv.add_mutually_exclusive_group(required=True)
     output.add_argument("--output", type=Path)
     output.add_argument("--check", type=Path)
@@ -384,7 +398,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.command == "inventory":
-            value = inventory(args.base, args.head)
+            value = inventory(args.base, args.head, args.compact)
             text = json.dumps(value, indent=2) + "\n"
             if args.check:
                 if args.check.read_text(encoding="utf-8") != text:

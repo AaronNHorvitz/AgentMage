@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "stage": "batch6-observation",
+  "source_revision": "64a49f439efe719fb9f3f12a1a82f1ad495ca91b",
+  "scope": "Rebuild the actual CLI, host and read-only worker at the clean final batch 6 evidence revision and observe fresh disposable roots; native-prerequisite refusal is expected in this lane; not a positive workflow or qualification.",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "python3",
+      "<state>/batch6-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {},
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "60f1173579338f1686a517e0023ec770d07d32ab7fc1172c07557018c3e796e1",
+      "private_sha256": "be9921ca8db190c318b095a8379d8787290f016e8bb25827a991d8bac76d1e26"
+    },
+    {
+      "name": "batch6-observation.py",
+      "sha256": "14c3945b6200eca627cc225a0579f4d63bd1ed330053dd4bd807164636ea08ea",
+      "private_sha256": "5fed1ac93fb0c049253093f5eeab5230db7cf4bfb6143fdadb02905a624790bd"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 4.146,
+      "log": "01.log",
+      "log_sha256": "05b81306bdbb9315cde50b42904bd28bb3b436d2c4cbc193285f8c2921841c67",
+      "private_log_sha256": "b1fdffa68c2c7c99212e7f9fc954de3fa5a393f2daff53b5173032715421b26e"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "<state>/batch6-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 1.705,
+      "log": "02.log",
+      "log_sha256": "ad1c45cdec11df9137c3442710590b885878c0b7e86a63c12c480e67cc0fee9c",
+      "private_log_sha256": "ad1c45cdec11df9137c3442710590b885878c0b7e86a63c12c480e67cc0fee9c"
+    }
+  ]
+}

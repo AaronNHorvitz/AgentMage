@@ -1,0 +1,101 @@
+{
+  "record_type": "agentmage-cli-inspection-verification",
+  "date": "2026-09-29",
+  "base_commit": "b95795acf1d90f58856da23e2845f98ab7ce8c4f",
+  "head_commit": "64a49f439efe719fb9f3f12a1a82f1ad495ca91b",
+  "source_commit": "9194cbeea145b139ffe7c701c93c8929c4ac1c1b",
+  "retained_logs": "artifacts/verification-logs/cli-inspection-2026-09-29",
+  "stages": [
+    "batch6-source-checks",
+    "batch6-core",
+    "batch6-rebind",
+    "batch6-gate",
+    "batch6-observation"
+  ],
+  "inventory": "artifacts/verification-logs/cli-inspection-2026-09-29/binding-inventory.json",
+  "check_logs": {
+    "contracts": "batch6-source-checks/02.log",
+    "engine": "batch6-source-checks/03.log",
+    "inference": "batch6-source-checks/04.log",
+    "linux": "batch6-source-checks/05.log",
+    "host": "batch6-source-checks/06.log"
+  },
+  "fields": {
+    "decisions": [
+      "docs/decisions/0112-hunk-review-and-run-progress-in-the-cli.md"
+    ],
+    "components": {
+      "AMR-04.2.1": "shells/host/src/coding_change_review.rs; development CLI prints the review after each patch or creation challenge (shells/host/src/coding_development_client.rs)",
+      "AMR-04.8.1": "development CLI prints the kernel run progress projection on standard error after each run",
+      "AMR-04.2.2": "not implemented; the coordinator ends a run as Declined on any denial, so a selection needs a runtime-proposed derived call inside the run or a follow-up run, which requires its own decision"
+    },
+    "failure_comparison": "linux 19 and host 50 failure names and panic blocks identical to the retained private native-prerequisite baselines (host lib 304 passed)",
+    "retained_failures": [],
+    "sbom_writes": 1,
+    "sbom_components_changed": [
+      "agentmage-host"
+    ],
+    "story_11_2_pin": {
+      "from": "7000f423bfdd6fb4be6a4d0833dcd141fc0cc788",
+      "to": "7f7848560497712537474223c4778a341b4ebc3f",
+      "reviewed_paths_retained": 25,
+      "changed_reviewed_paths": [
+        {
+          "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+          "reason": "regenerated at 7f7848560497712537474223c4778a341b4ebc3f after the Sprint 11 security map re-bound the component inventory changed by the batch 6 host SBOM write"
+        },
+        {
+          "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+          "reason": "regenerated at 7f7848560497712537474223c4778a341b4ebc3f because it binds the renewed storage security report"
+        },
+        {
+          "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+          "reason": "regenerated at 7f7848560497712537474223c4778a341b4ebc3f because it binds the renewed storage security report"
+        }
+      ],
+      "authority": "AGENTS.md section 7 routine automated renewal; no external review claimed"
+    },
+    "newly_stale_disposition": "historical verification records and the batch 5 retained stage records, which pin the scripts as they were when those stages ran",
+    "cli_observation": {
+      "source_commit": "64a49f439efe719fb9f3f12a1a82f1ad495ca91b",
+      "binaries_sha256": {
+        "agentmage": "89b911b2e170ae8df017597307e52280e7c95f36d848e93672c08600535ce491",
+        "agentmage-host": "c6b1a9710830b85b57a826a590f8291947c7dfd790d8f488b7d07ec65011dafc",
+        "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+      },
+      "clean_scripted_start_exit": 5,
+      "clean_preserved": true,
+      "dirty_start_exit": 1,
+      "dirty_preserved": true,
+      "qualification": "actual-binary-native-prerequisite-refusal-only",
+      "review_and_progress_displayed": false,
+      "reason": "native prerequisites refuse the launch before any approval or run, so neither new output appears in this lane",
+      "attachment": "batch6-observation/attachments/observation.json"
+    },
+    "tool_change": "scripts/verification_batch.py gained the compact inventory format (schema 2) used here; the batch 5 full-format inventory still verifies",
+    "not_run": [
+      "AMR-04.2.2",
+      "actual-process display of the review or progress on a native host",
+      "positive native coding workflow",
+      "real model or GPU",
+      "manual user acceptance",
+      "release"
+    ],
+    "claims": {
+      "task_rows_closed": [
+        {
+          "row": "AMR-04.2.1",
+          "closed_by": "the ledger commit that follows this record",
+          "scope": "component and CLI row; actual-process display on a native host remains open"
+        },
+        {
+          "row": "AMR-04.8.1",
+          "closed_by": "the ledger commit that follows this record",
+          "scope": "component and CLI row; actual-process display on a native host remains open"
+        }
+      ],
+      "release_claim": "none",
+      "independent_review_of_this_batch": "requested; open"
+    }
+  }
+}
