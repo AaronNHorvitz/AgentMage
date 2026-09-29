@@ -158,7 +158,13 @@ python3 -m scripts.coding_harness start --root "$demo" --model scripted \
 ```
 
 - Apply: type `yes` and Enter at each prompt; the run should show the failing test,
-  the exact patch, the rerun and a verified terminal report.
+  the exact patch, the rerun and a verified terminal report. Below each write prompt the
+  CLI prints a hunk review of the change the exact arguments make to the current file
+  (Decision 0112). It says so when the file changed or the change is not reviewable.
+  Approving still allows the whole call. After each run, standard error shows the run's
+  progress: its terminal state, whether the runtime's verifier accepted it, counts
+  against the declared ceilings, and that independent review and delivery are not
+  established by the runtime.
 - Deny: in a fresh root, answer anything other than `yes`; no file may change.
 - Cancel: in a fresh root, run `python3 -m scripts.coding_harness stop --root "$demo"`
   from a second terminal while a prompt or command is active.

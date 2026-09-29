@@ -15,6 +15,8 @@ pub mod capability_package_runtime;
 pub mod code_change;
 /// Exact non-authoritative approval composition for native coding operations.
 pub mod coding_authority;
+/// Hunk review of proposed coding writes for protected approval display.
+pub mod coding_change_review;
 pub mod coding_changes;
 /// Thin presentation and approval clients for the shared coding runtime.
 pub mod coding_client;

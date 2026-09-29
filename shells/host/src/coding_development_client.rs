@@ -1,5 +1,6 @@
 //! Executable CLI client for the explicitly activated disposable coding harness.
 
+use std::path::PathBuf;
 use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
@@ -8,6 +9,10 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use agentmage_kernel_contracts::{
     AgentStateKind, RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeEvent,
+    RuntimeRunLimits, WorkspaceId,
+};
+use agentmage_kernel_engine::run_progress::{
+    MAX_PROGRESS_EVENTS, ProgressCeilings, project_run_progress, render_run_progress,
 };
 use agentmage_platform_linux::{
     LinuxDevelopmentBoundaryError, LinuxDevelopmentBoundaryErrorKind, LinuxDevelopmentConfirmation,
@@ -22,6 +27,7 @@ use crate::cli::{
 use crate::cli_runtime::{
     InteractiveCliCancellationPort, InteractiveCliRuntimeError, drive_interactive_cli_runtime,
 };
+use crate::coding_change_review::{render_change_review, review_coding_write};
 use crate::coding_client::{CodingApprovalPort, CodingClientError, CodingEventSink};
 use crate::coding_development_activation::CodingDevelopmentActivation;
 use crate::coding_development_runtime::CodingDevelopmentModel;
@@ -147,15 +153,22 @@ fn run_with_child(
     } else if options.artifact_integrity_probe {
         runtime = runtime.with_artifact_integrity_probe();
     }
+    let workspace_id = format!("coding-development-{}", &activation.marker_sha256()[..24]);
     let mut approvals = TerminalApprovals {
         output,
         preauthorized: options.approve_this_run,
         delay_ms: options.approval_delay_ms,
         cancellation: Arc::clone(&cancellation.requested),
+        review_workspace: Some(ReviewWorkspace {
+            workspace_id: WorkspaceId::from_raw(workspace_id.clone()),
+            root: activation.workspace_root().to_path_buf(),
+        }),
     };
-    let mut sink = TerminalEventSink { output };
+    let mut sink = TerminalEventSink {
+        output,
+        run_events: Vec::new(),
+    };
     cancellation.check_startup()?;
-    let workspace_id = format!("coding-development-{}", &activation.marker_sha256()[..24]);
     let preauthorization =
         direct_session_preauthorization(options, &workspace_id, &cancellation.requested)?;
     let profile_id = CodingDevelopmentModel::parse(&options.model)
@@ -230,6 +243,8 @@ fn run_with_child(
         }
         .map_err(|_| CodingDevelopmentClientError::Presentation)?;
         println!("{rendered}");
+        // Stderr keeps the machine stream's contract that the outcome is last on stdout.
+        eprint!("{}", sink.take_progress(&result.request.limits));
         final_exit = match result.outcome.state {
             AgentStateKind::Success | AgentStateKind::NoOp => ClientExitCode::Success,
             AgentStateKind::Declined | AgentStateKind::Blocked => ClientExitCode::PolicyDenied,
@@ -487,6 +502,39 @@ impl InteractiveCliCancellationPort for InstalledSignalCancellation {
 
 struct TerminalEventSink {
     output: CliOutputFormat,
+    /// Verified events of the current run, kept only to project its progress.
+    run_events: Vec<RuntimeEvent>,
+}
+
+impl TerminalEventSink {
+    /// Truthful progress of the run just presented (Decision 0110); the buffer
+    /// is then cleared for the next run.
+    fn take_progress(&mut self, limits: &RuntimeRunLimits) -> String {
+        let events = std::mem::take(&mut self.run_events);
+        let progress = project_run_progress(
+            &events,
+            ProgressCeilings {
+                turns: Some(u64::from(limits.max_turns)),
+                model_calls: Some(u64::from(limits.max_model_calls)),
+                tool_calls: Some(u64::from(limits.max_tool_calls)),
+            },
+        );
+        match (self.output, progress) {
+            (CliOutputFormat::Human, Ok(progress)) => render_run_progress(&progress),
+            (CliOutputFormat::Json, Ok(progress)) => format!(
+                "{}\n",
+                serde_json::json!({"type": "run_progress", "available": true, "progress": progress})
+            ),
+            (CliOutputFormat::Human, Err(_)) => {
+                "run progress unavailable: the presented stream is not one complete run\n"
+                    .to_owned()
+            }
+            (CliOutputFormat::Json, Err(_)) => format!(
+                "{}\n",
+                serde_json::json!({"type": "run_progress", "available": false})
+            ),
+        }
+    }
 }
 
 impl CodingEventSink for TerminalEventSink {
@@ -497,6 +545,9 @@ impl CodingEventSink for TerminalEventSink {
         }
         .map_err(|_| CodingClientError::Presentation)?;
         println!("{rendered}");
+        if self.run_events.len() < MAX_PROGRESS_EVENTS {
+            self.run_events.push(event.clone());
+        }
         Ok(())
     }
 }
@@ -506,6 +557,79 @@ struct TerminalApprovals {
     preauthorized: bool,
     delay_ms: u64,
     cancellation: Arc<AtomicBool>,
+    review_workspace: Option<ReviewWorkspace>,
+}
+
+/// Largest current file read to render a write challenge's hunk review.
+const MAX_REVIEW_READ_BYTES: u64 = 4 * 1024 * 1024;
+
+/// Disposable workspace used only to render a digest-bound hunk review
+/// (Decision 0112). It never supplies bytes to the host or to a write.
+struct ReviewWorkspace {
+    workspace_id: WorkspaceId,
+    root: PathBuf,
+}
+
+impl ReviewWorkspace {
+    fn read(&self, components: &[String]) -> Option<Vec<u8>> {
+        if components.is_empty()
+            || components.iter().any(|component| {
+                component.is_empty()
+                    || matches!(component.as_str(), "." | "..")
+                    || component.contains(['/', '\0'])
+            })
+        {
+            return None;
+        }
+        let root = self.root.canonicalize().ok()?;
+        let resolved = components
+            .iter()
+            .fold(root.clone(), |path, component| path.join(component))
+            .canonicalize()
+            .ok()?;
+        let metadata = std::fs::metadata(&resolved).ok()?;
+        if !resolved.starts_with(&root)
+            || !metadata.is_file()
+            || metadata.len() > MAX_REVIEW_READ_BYTES
+        {
+            return None;
+        }
+        std::fs::read(resolved).ok()
+    }
+
+    fn render(
+        &self,
+        challenge: &RuntimeApprovalChallenge,
+        output: CliOutputFormat,
+    ) -> Option<String> {
+        let review = review_coding_write(challenge, &self.workspace_id, &|components| {
+            self.read(components)
+        })?;
+        Some(match output {
+            CliOutputFormat::Human => render_change_review(&review),
+            CliOutputFormat::Json => {
+                let value = match &review {
+                    Ok(review) => serde_json::json!({
+                        "type": "change_review",
+                        "approval_id": challenge.approval_id.as_str(),
+                        "available": true,
+                        "path": review.path,
+                        "hunk_count": review.hunk_count,
+                        "preimage_sha256": review.preimage_sha256,
+                        "postimage_sha256": review.postimage_sha256,
+                        "rendered": review.rendered,
+                    }),
+                    Err(reason) => serde_json::json!({
+                        "type": "change_review",
+                        "approval_id": challenge.approval_id.as_str(),
+                        "available": false,
+                        "code": reason.code(),
+                    }),
+                };
+                format!("{value}\n")
+            }
+        })
+    }
 }
 
 /// Supplies the real private terminal port to the synthetic interactive-driver tests.
@@ -519,6 +643,7 @@ pub(crate) fn terminal_approval_for_test(
         preauthorized,
         delay_ms: if preauthorized { 10_000 } else { 0 },
         cancellation,
+        review_workspace: None,
     }
 }
 
@@ -551,8 +676,15 @@ impl CodingApprovalPort for TerminalApprovals {
     ) -> Result<RuntimeApprovalDisposition, CodingClientError> {
         let rendered =
             render_runtime_approval_human(challenge).map_err(|_| CodingClientError::Approval)?;
+        let review = self
+            .review_workspace
+            .as_ref()
+            .and_then(|workspace| workspace.render(challenge, self.output));
         if self.preauthorized {
             eprintln!("preauthorized_for_this_run {rendered}");
+            if let Some(review) = &review {
+                eprint!("{review}");
+            }
             return Ok(
                 if wait_for_approval_delay(self.delay_ms, &self.cancellation)? {
                     RuntimeApprovalDisposition::Allow
@@ -567,6 +699,9 @@ impl CodingApprovalPort for TerminalApprovals {
             eprintln!("approval_required {rendered}");
         } else {
             eprintln!("{rendered}");
+        }
+        if let Some(review) = &review {
+            eprint!("{review}");
         }
         eprint!("Approve this exact operation? Type yes to allow: ");
         match read_development_confirmation(
@@ -588,6 +723,98 @@ impl CodingApprovalPort for TerminalApprovals {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn run_progress_is_projected_per_run_and_never_claims_review_or_delivery() {
+        let limits = RuntimeRunLimits {
+            max_turns: 8,
+            max_model_calls: 8,
+            max_tool_calls: 16,
+            max_repeated_tool_calls: 2,
+            max_tool_call_depth: 1,
+            max_no_progress_turns: 2,
+            max_context_refreshes: 2,
+            max_events: 256,
+            max_elapsed_ms: 60_000,
+            max_output_bytes: 65_536,
+        };
+        let mut sink = TerminalEventSink {
+            output: CliOutputFormat::Human,
+            run_events: Vec::new(),
+        };
+        let text = sink.take_progress(&limits);
+        assert!(text.contains("not started"), "{text}");
+        assert!(text.contains("turns: 0 of 8 declared (0%)"), "{text}");
+        assert!(text.contains("independent review: not established by the runtime"));
+        sink.output = CliOutputFormat::Json;
+        let value: serde_json::Value =
+            serde_json::from_str(sink.take_progress(&limits).trim_end()).unwrap();
+        assert_eq!(value["type"], "run_progress");
+        assert_eq!(
+            value["progress"]["independently_reviewed_established"],
+            false
+        );
+        assert_eq!(value["progress"]["delivered_established"], false);
+        assert!(sink.run_events.is_empty());
+    }
+
+    #[test]
+    fn the_review_reader_stays_inside_the_workspace_and_renders_both_formats() {
+        let scratch =
+            std::env::temp_dir().join(format!("agentmage-review-workspace-{}", std::process::id()));
+        let root = scratch.join("worktree");
+        std::fs::create_dir_all(root.join("src")).unwrap();
+        std::fs::write(scratch.join("outside.txt"), b"outside\n").unwrap();
+        std::fs::write(root.join("src/notes.txt"), b"old text\n").unwrap();
+        std::os::unix::fs::symlink(scratch.join("outside.txt"), root.join("src/link.txt")).unwrap();
+        let workspace = ReviewWorkspace {
+            workspace_id: WorkspaceId::from_raw("coding-development-review"),
+            root: root.clone(),
+        };
+        let path = |text: &str| text.split('/').map(str::to_owned).collect::<Vec<_>>();
+        assert_eq!(
+            workspace.read(&path("src/notes.txt")),
+            Some(b"old text\n".to_vec())
+        );
+        for escaped in [
+            "src/link.txt",
+            "src/../../outside.txt",
+            "src",
+            "",
+            "src/missing.txt",
+        ] {
+            assert_eq!(workspace.read(&path(escaped)), None, "{escaped}");
+        }
+        use crate::coding_change_review::tests_support::{sha256_hex, write_challenge};
+        let arguments = serde_json::json!({
+            "schema_version": 1, "change_id": "change-1", "path": ["src", "notes.txt"],
+            "expected_preimage_sha256": sha256_hex(b"old text\n"),
+            "intent_sha256": "a".repeat(64), "change_plan_sha256": "b".repeat(64),
+            "language": "plain_text", "artifact_class": "documentation",
+            "edits": [{"kind": "replace_exact_text", "edit_id": "edit-1",
+                       "expected": "old text", "replacement": "new text"}],
+            "additional_review_hooks": [], "generated": false, "allow_generated": false
+        });
+        let challenge = write_challenge(
+            crate::coding_changes::STRUCTURED_PATCH_TOOL_ID,
+            serde_json::to_vec(&arguments).unwrap(),
+        );
+        let human = workspace
+            .render(&challenge, CliOutputFormat::Human)
+            .unwrap();
+        assert!(human.contains("-old text\n+new text\n"), "{human}");
+        let json = workspace.render(&challenge, CliOutputFormat::Json).unwrap();
+        let value: serde_json::Value = serde_json::from_str(json.trim_end()).unwrap();
+        assert_eq!(value["type"], "change_review");
+        assert_eq!(value["hunk_count"], 1);
+        std::fs::write(root.join("src/notes.txt"), b"human edit\n").unwrap();
+        let json = workspace.render(&challenge, CliOutputFormat::Json).unwrap();
+        assert!(
+            json.contains("coding.change-review.preimage-changed"),
+            "{json}"
+        );
+        std::fs::remove_dir_all(scratch).unwrap();
+    }
 
     #[test]
     fn preauthorization_cancellation_remains_unconsumed_and_returns_cancelled_exit() {
