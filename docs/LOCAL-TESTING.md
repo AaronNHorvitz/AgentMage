@@ -51,8 +51,9 @@ an uncertain record. See the development guide for lifecycle and cleanup limitat
 
 **Current lane result:** setup and diagnosis ran; the actual scripted CLI/host
 launch returned exit 5 before tools because native prerequisites are unavailable.
-The [research disclosure-binding verification](verification/research-disclosure-binding-2026-09-29.md)
+The [selective hunk change verification](verification/selective-hunk-changes-2026-09-29.md)
 retains the latest source, rebuilt binary identities and startup results;
+the [research disclosure-binding verification](verification/research-disclosure-binding-2026-09-29.md),
 the [preparation review-fix verification](verification/preparation-review-fixes-2026-09-29.md),
 the [controlled preparation verification](verification/controlled-native-preparation-2026-09-28.md),
 the [runtime phase deadline verification](verification/runtime-phase-deadlines-2026-09-28.md),
