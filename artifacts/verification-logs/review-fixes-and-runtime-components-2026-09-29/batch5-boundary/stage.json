@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "stage": "batch5-boundary",
+  "source_revision": "273a1be51f1c4e597738730da8223ebe29c28991",
+  "scope": "Story 23.4 coordinator boundary review at the committed runtime-campaign revision; unchanged producer; no SBOM write.",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/runtime_coordinator_boundary_review.py",
+      "--write",
+      "--source-revision",
+      "273a1be51f1c4e597738730da8223ebe29c28991"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_runtime_coordinator_boundary_review"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/runtime_coordinator_boundary_review.py": "c55ee01c7941c55f15286151ed1cc4c363bcaba69ea2b3427f6970127ea15e18",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "tests/test_runtime_coordinator_boundary_review.py": "dc7315ba386862ec1198687425243f282758ceb0835536037e4292c3ded57140"
+  },
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/runtime_coordinator_boundary_review.py",
+        "--write",
+        "--source-revision",
+        "273a1be51f1c4e597738730da8223ebe29c28991"
+      ],
+      "exit_code": 0,
+      "seconds": 0.193,
+      "log": "01.log",
+      "log_sha256": "12e5f18700dcee14ba8872ea560140559231e000e4b25901ace92189f4c0e293",
+      "private_log_sha256": "12e5f18700dcee14ba8872ea560140559231e000e4b25901ace92189f4c0e293"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_runtime_coordinator_boundary_review"
+      ],
+      "exit_code": 0,
+      "seconds": 0.728,
+      "log": "02.log",
+      "log_sha256": "4b26169784332483b2218350d32038b9bacb9ffe703da27463d5dae2b785e0b5",
+      "private_log_sha256": "4b26169784332483b2218350d32038b9bacb9ffe703da27463d5dae2b785e0b5"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.072,
+      "log": "03.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.003,
+      "log": "04.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

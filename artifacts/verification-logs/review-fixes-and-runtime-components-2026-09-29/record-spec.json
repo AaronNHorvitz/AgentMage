@@ -1,0 +1,204 @@
+{
+  "record_type": "agentmage-review-fixes-and-runtime-components-verification",
+  "date": "2026-09-29",
+  "base_commit": "28dd0e4435214e5e6d488912792d5986e4b4b774",
+  "head_commit": "678f35b360af40d4f84d0a2c7f816285cceeaf95",
+  "source_commit": "28398bcd3af5ff85cdd150b736b264c75efb7b1b",
+  "retained_logs": "artifacts/verification-logs/review-fixes-and-runtime-components-2026-09-29",
+  "stages": [
+    "batch5-source-checks",
+    "batch5-core",
+    "batch5-catalog",
+    "batch5-core-remainder",
+    "batch5-codec-onward",
+    "batch5-rebind",
+    "batch5-gate",
+    "batch5-boundary",
+    "batch5-security-index",
+    "batch5-observation"
+  ],
+  "inventory": "artifacts/verification-logs/review-fixes-and-runtime-components-2026-09-29/binding-inventory.json",
+  "check_logs": {
+    "contracts": "batch5-source-checks/02.log",
+    "engine": "batch5-source-checks/03.log",
+    "inference": "batch5-source-checks/04.log",
+    "linux": "batch5-source-checks/05.log",
+    "host": "batch5-source-checks/06.log"
+  },
+  "fields": {
+    "decisions": [
+      "docs/decisions/0109-review-fixes-for-component-batches.md",
+      "docs/decisions/0110-context-inspection-and-job-control.md",
+      "docs/decisions/0111-hunk-selection-through-a-derived-exact-approval.md"
+    ],
+    "review_resolved": {
+      "reviewed_commit": "28dd0e4435214e5e6d488912792d5986e4b4b774",
+      "verdict": "PASS",
+      "findings": {
+        "medium": [
+          "R1",
+          "R2"
+        ],
+        "low": [
+          "R3",
+          "R4",
+          "R5",
+          "R6",
+          "R7",
+          "R8",
+          "R9",
+          "R10",
+          "R11",
+          "R12",
+          "R13"
+        ]
+      },
+      "dispositions": {
+        "R1": "hunk display escapes what the whole-file preview escapes except tab and ASCII quotes",
+        "R2": "both records name the closed row, closing commit and component scope with a dated correction",
+        "R3": "scanner resolves path- and include-loaded children beside the file, accepts raw identifiers, and treats macro-generated modules, other path attributes and loader-dependent children as ambiguous; kernel exemption set unchanged at 14 files",
+        "R4": "codec validator requires the exact current scan set and per-revision digests",
+        "R5": "saturating context arithmetic in rendering",
+        "R6": "selection takes current bytes and refuses drift itself",
+        "R7": "CancellationObserved wording amended; displaced signal before an Exhausted terminal tested",
+        "R8": "recoverability identities, created paths and rendered length bounded; empty-session summary; authenticity requirement recorded",
+        "R9": "plans and scopes decode only from canonical bytes; committed schema 1 literal digests reproduced by the engine at 6a4359d2",
+        "R10": "visit query-field residual recorded in Decision 0106 and the AMR-03.2 row",
+        "R11": "failed load receipt keeps cleanup pending so unload can retry; legacy categories kept",
+        "R12": "scripts/verification_batch.py reproduces the inventory from Git, retains redacted stage logs and attachments, and builds this record with a check mode",
+        "R13": "review fixes and three components share one evidence pass"
+      },
+      "regressions_failed_against_unfixed_source": [
+        "R1",
+        "R3",
+        "R5",
+        "R9",
+        "R11",
+        "coding reflow constraint survival"
+      ],
+      "mutation_runs": "performed in private scratch by reverting each fix; not retained"
+    },
+    "components": {
+      "AMR-04.4": "kernel/engine/src/context_inspection.rs; coding reflow survival check in shells/host/src/coding_context.rs",
+      "AMR-04.5": "kernel/engine/src/job_control.rs",
+      "AMR-04.8": "kernel/engine/src/run_progress.rs",
+      "AMR-04.2": "design only (Decision 0111); not implemented"
+    },
+    "failure_comparison": "linux 19 and host 50 failure names and panic blocks (PID and temporary names normalized, harness backtrace note removed) are identical to the retained private native-prerequisite baselines from 2026-09-27 and Decision 0101; the baselines themselves are private and not retained here",
+    "known_preexisting_failure": "npm run requirements:current-check fails at build_contract.py because platforms/linux gained optional ureq/url for the Decision 0084 research worker without the accepted graph recording optional dependencies; unchanged and not run here",
+    "retained_failures": [
+      {
+        "stage": "batch5-core",
+        "index": 17,
+        "argv": [
+          "python3",
+          "scripts/configuration_result_evidence.py",
+          "--write"
+        ],
+        "exit_code": 1,
+        "cause": "npm schemas:test found the exact-profile catalog stale: two disabled deterministic fake profiles hash kernel/engine/src/model_runtime.rs, which the R11 fix changed",
+        "resolution": "batch5-catalog renewed only those two fake profiles' digests (enabled profiles 0; four real tuples unchanged); batch5-core-remainder then ran commands 17-38 and passed 22/22"
+      }
+    ],
+    "sbom_writes": 1,
+    "sbom_components_changed": [
+      "agentmage-host",
+      "agentmage-kernel-contracts",
+      "agentmage-kernel-engine"
+    ],
+    "story_11_2_pin": {
+      "from": "a9c4063ea6fa1486d1ecfa10795d322d0c1c1e61",
+      "to": "7000f423bfdd6fb4be6a4d0833dcd141fc0cc788",
+      "reviewed_paths_retained": 25,
+      "changed_reviewed_paths": [
+        {
+          "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+          "reason": "regenerated at 7000f423 after the Sprint 11 security map re-bound the component inventory changed by the batch 5 SBOM write"
+        },
+        {
+          "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+          "reason": "regenerated at 7000f423 because it binds the renewed storage security report"
+        },
+        {
+          "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+          "reason": "regenerated at ec0a8c6b because it binds kernel/engine/src/runtime_loop_tests.rs, which gained the R7 Exhausted displaced-cancellation case"
+        },
+        {
+          "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+          "reason": "regenerated at 7000f423 because it binds the renewed storage security report"
+        }
+      ],
+      "authority": "AGENTS.md section 7 routine automated renewal; no external review claimed"
+    },
+    "runtime_campaign": {
+      "status": "pass-current-linux-source-runtime",
+      "source_revision": "7000f423bfdd6fb4be6a4d0833dcd141fc0cc788",
+      "peak_rss_kib": [
+        12280,
+        41500,
+        41520,
+        42600,
+        49928,
+        50136,
+        50148,
+        50164,
+        50200
+      ],
+      "maximum_rss_kib": 1048576
+    },
+    "revision_pinned_review_renewed": "artifacts/sprints/sprint-50/runtime-contract-review.json at b377bf65 (automated, no human review)",
+    "cli_observation": {
+      "source_commit": "678f35b360af40d4f84d0a2c7f816285cceeaf95",
+      "binaries_sha256": {
+        "agentmage": "51ef7443c5ea71e67f037c50729676fab6fb21d52b8b14f3308bd3b2e362fcf9",
+        "agentmage-host": "95bddf793873e47e13bbdbda37cffeb3293a9829d389a75b286d243304f6a07c",
+        "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+      },
+      "clean_scripted_start_exit": 5,
+      "clean_preserved": true,
+      "clean_refusal": "linux.repository.git_artifact.invalid then linux.development.launch-envelope.failed",
+      "dirty_start_exit": 1,
+      "dirty_preserved": true,
+      "idle_stop_exit": 1,
+      "qualification": "actual-binary-native-prerequisite-refusal-only",
+      "attachment": "batch5-observation/attachments/observation.json"
+    },
+    "amr_assessment_05_07": {
+      "AMR-05": "P1; depends on AMR-02 and AMR-04. Not selected: the P0 AMR-04 integration rows (04.2, 04.6, 04.7) remain dependency-ready in source, and the amendment forbids a P1 capability displacing an unblocked P0 dependency. Partial substrates exist (manual redacted diagnostic export, strict-local route selection, runtime event journal).",
+      "AMR-06": "P1/P2; depends on AMR-04 and pinned producer/consumer contracts from the coordinator counterpart, which is external. Not selected.",
+      "AMR-07": "P0 CAP-45/46 and P1 CAP-48; depends on AMR-01 to AMR-04 for P0 and on release gates. Closing needs a native host matrix, clean-environment evidence and independent review; license metadata needs an owner license decision. LOCAL-TESTING instructions are maintained. Not closable here."
+    },
+    "not_run": [
+      "AMR-04.2 implementation",
+      "CLI or host views of the inspection, ledger or progress projection",
+      "durable persistence and IPC control of the job ledger",
+      "actual-process proof of any AMR-04 integration",
+      "positive native coding workflow",
+      "real model or GPU",
+      "manual user acceptance",
+      "release"
+    ],
+    "claims": {
+      "task_rows_closed": [
+        {
+          "row": "AMR-04.4",
+          "closed_by": "the ledger commit that follows this record",
+          "scope": "component row only; no CLI, host view, durable store or actual-process proof"
+        },
+        {
+          "row": "AMR-04.5",
+          "closed_by": "the ledger commit that follows this record",
+          "scope": "component row only; no CLI, host view, durable store or actual-process proof"
+        },
+        {
+          "row": "AMR-04.8",
+          "closed_by": "the ledger commit that follows this record",
+          "scope": "component row only; no CLI, host view, durable store or actual-process proof"
+        }
+      ],
+      "review_findings_resolved": 13,
+      "release_claim": "none",
+      "independent_review_of_this_batch": "requested; open"
+    }
+  }
+}

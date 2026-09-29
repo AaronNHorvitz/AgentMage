@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "stage": "batch5-observation",
+  "source_revision": "678f35b360af40d4f84d0a2c7f816285cceeaf95",
+  "scope": "Rebuild the actual CLI, host and read-only worker at the clean final evidence revision and observe fresh disposable roots: help, setup, diagnose, a scripted failed-test-repair start, status and idle stop on a clean fixture, and a start on a fixture with staged, unstaged and untracked work. Native-prerequisite refusal is expected in this lane; not a positive workflow or qualification.",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "python3",
+      "<state>/batch5-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {},
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "0e166291b67fad3ab8b38350baa79cea6349a9c95da088ed2ae2530f375dc27a",
+      "private_sha256": "599b31b4074388efba88458bb5d111954adeedff2fe50d4442f001fe43a5ab22"
+    },
+    {
+      "name": "batch5-observation.py",
+      "sha256": "ce285be25cdf43dcc71c8144b353bbbc937476988fc4430b42de31b665124e07",
+      "private_sha256": "d97e6e1af846424e69b52865f827a1fd61832714c6bc62f34ee9e8a4e42ceff3"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 12.248,
+      "log": "01.log",
+      "log_sha256": "d12549c34d443effa495beee85482f2a592fb87588e1142d66c5b613514d4eec",
+      "private_log_sha256": "92a7ebb3b8919125b52da7b4fc8b545282ff356a87aeea0016d64ba60cf38f52"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "<state>/batch5-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 1.643,
+      "log": "02.log",
+      "log_sha256": "c60ad9693ef5589f04b8e986e11f83789530c2168c41b2256d31b8c6b8357cb4",
+      "private_log_sha256": "c60ad9693ef5589f04b8e986e11f83789530c2168c41b2256d31b8c6b8357cb4"
+    }
+  ]
+}

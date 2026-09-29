@@ -1,0 +1,359 @@
+{
+  "schema_version": 1,
+  "stage": "batch5-source-checks",
+  "source_revision": "28398bcd3af5ff85cdd150b736b264c75efb7b1b",
+  "scope": "Full source checks at the exact batch 5 source commit before any evidence write: fmt, contracts, engine, inference, Linux and host suites (known native-prerequisite failures continue), clippy, Python units, audits, task graph, docs validation, Markdown lint and diff check.",
+  "planned_commands": [
+    [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-kernel-contracts"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-kernel-engine"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux-inference"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux",
+      "--no-fail-fast"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "--no-fail-fast"
+    ],
+    [
+      "cargo",
+      "clippy",
+      "--workspace",
+      "--all-targets",
+      "--locked",
+      "--offline",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_rust_test_ownership",
+      "tests.test_muse_codec_evidence",
+      "tests.test_evidence_core",
+      "tests.test_sprint_13_evidence",
+      "tests.test_amendment_work_selection",
+      "tests.test_remaining_plan_blocker_audit",
+      "tests.test_strict_local_source_audit",
+      "tests.test_verification_batch"
+    ],
+    [
+      "python3",
+      "scripts/strict_local_source_audit.py"
+    ],
+    [
+      "python3",
+      "scripts/effect_boundary.py"
+    ],
+    [
+      "python3",
+      "scripts/hostile_network_injection_gate.py"
+    ],
+    [
+      "python3",
+      "scripts/task_graph.py"
+    ],
+    [
+      "python3",
+      "scripts/validate_docs.py"
+    ],
+    [
+      "npm",
+      "run",
+      "docs:lint"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [
+    5,
+    6
+  ],
+  "sources": {
+    "kernel/engine/src/lib.rs": "715ec8ffb533bbdcc2e3a9b820fe12d545e2b36f05e30ceae7be35f66454ba16",
+    "scripts/effect_boundary.py": "799d423fa9e9b90799fac26f6936de6d27875566034239210f131cc23be20093",
+    "scripts/hostile_network_injection_gate.py": "2437a87078c9b7ce064de7fd120c3cc3fc0dff4562987d241156a6fca078f4ee",
+    "scripts/strict_local_source_audit.py": "07f3748f12fb5f01f867d356f0c3071b0e8ed0719b0e2b64401fa10e981f495c",
+    "scripts/task_graph.py": "897829d84ada8e965101b38cd1763a23501fa45081c152d803ea74f2a8713f7b",
+    "scripts/validate_docs.py": "73ffa14016dd89a5b7959827e12762422c6881ae0ec6465585e2901f2e2f1dfb",
+    "shells/host/src/coding_context.rs": "c780191fa717fdf0200b8db77113e0548bdc8adb9b48b90efe91c9b446fb6c7b",
+    "tests/test_amendment_work_selection.py": "55b64a5e5a844617997b834e5ba2e1b6af00a944557ea6ae92ba12dcf9bfafc9",
+    "tests/test_evidence_core.py": "20bf41f20ce5c19e3a90efcd9caa32e252f17a303cc23a2b4274df210dad150a",
+    "tests/test_muse_codec_evidence.py": "ff315ed909e1d49c48b22cdf426b0234f8e7c7797ccd850ed98c93b839aab62f",
+    "tests/test_remaining_plan_blocker_audit.py": "04497ba56432ac722b7eccde0243b5a35c830d827ab6e179503bb5fbd36d44e8",
+    "tests/test_rust_test_ownership.py": "b37e7574c94f62a8de33f77851b8d99a6084c76af9e91b8d8e8467e200a3fd32",
+    "tests/test_sprint_13_evidence.py": "88d5725da16cd3e1a794920ebbc1deac93a2fdc03a25ea0a4ba232130158a3e2",
+    "tests/test_strict_local_source_audit.py": "883671312c87b67b3d83b9b2f28e3e4a394b8c991baef424940f516749f17eca",
+    "tests/test_verification_batch.py": "0eeffa5a89be567816c076c2d719a2c538ee47bdd49bd4a491dd8938bed62dd7"
+  },
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 1.911,
+      "log": "01.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-kernel-contracts"
+      ],
+      "exit_code": 0,
+      "seconds": 1.367,
+      "log": "02.log",
+      "log_sha256": "23de49643ee927d6e1df0e6ffe08120d5d483670538a3f140b2d17390f86067f",
+      "private_log_sha256": "23de49643ee927d6e1df0e6ffe08120d5d483670538a3f140b2d17390f86067f"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine"
+      ],
+      "exit_code": 0,
+      "seconds": 82.429,
+      "log": "03.log",
+      "log_sha256": "4f04a3465ad45134884438a81d8592035dc09ba2361502f0762f04956bc5cc44",
+      "private_log_sha256": "4f04a3465ad45134884438a81d8592035dc09ba2361502f0762f04956bc5cc44"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux-inference"
+      ],
+      "exit_code": 0,
+      "seconds": 1.186,
+      "log": "04.log",
+      "log_sha256": "d07963715e00fb72686e0dee557271a6d68493f58d1029c540e6a2092fce9392",
+      "private_log_sha256": "d07963715e00fb72686e0dee557271a6d68493f58d1029c540e6a2092fce9392"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux",
+        "--no-fail-fast"
+      ],
+      "exit_code": 101,
+      "seconds": 15.721,
+      "log": "05.log",
+      "log_sha256": "c65321c19c881e1c3277fefad3bf436d42215d6b319172672e7fedda9334c875",
+      "private_log_sha256": "c65321c19c881e1c3277fefad3bf436d42215d6b319172672e7fedda9334c875"
+    },
+    {
+      "index": 6,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "--no-fail-fast"
+      ],
+      "exit_code": 101,
+      "seconds": 19.618,
+      "log": "06.log",
+      "log_sha256": "ef81d39b7ad11dbcff5af558487aeb8c9bb299fbd3619cfcb2f99ac462e4708c",
+      "private_log_sha256": "ef81d39b7ad11dbcff5af558487aeb8c9bb299fbd3619cfcb2f99ac462e4708c"
+    },
+    {
+      "index": 7,
+      "argv": [
+        "cargo",
+        "clippy",
+        "--workspace",
+        "--all-targets",
+        "--locked",
+        "--offline",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "seconds": 0.128,
+      "log": "07.log",
+      "log_sha256": "99f71393b9903dca098310bb446022a4bdee195ea9996f351a787195555210a6",
+      "private_log_sha256": "99f71393b9903dca098310bb446022a4bdee195ea9996f351a787195555210a6"
+    },
+    {
+      "index": 8,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_rust_test_ownership",
+        "tests.test_muse_codec_evidence",
+        "tests.test_evidence_core",
+        "tests.test_sprint_13_evidence",
+        "tests.test_amendment_work_selection",
+        "tests.test_remaining_plan_blocker_audit",
+        "tests.test_strict_local_source_audit",
+        "tests.test_verification_batch"
+      ],
+      "exit_code": 0,
+      "seconds": 63.391,
+      "log": "08.log",
+      "log_sha256": "14bdbf8e8d1a9139b6e8f898557a158ac89dea64a518fbcfe395a72ead0944f5",
+      "private_log_sha256": "14bdbf8e8d1a9139b6e8f898557a158ac89dea64a518fbcfe395a72ead0944f5"
+    },
+    {
+      "index": 9,
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "seconds": 2.878,
+      "log": "09.log",
+      "log_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710",
+      "private_log_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "index": 10,
+      "argv": [
+        "python3",
+        "scripts/effect_boundary.py"
+      ],
+      "exit_code": 0,
+      "seconds": 2.304,
+      "log": "10.log",
+      "log_sha256": "0a618397c689cb97bdec0479f65fef49c91478cb5de8eff4eadb583a7d00281b",
+      "private_log_sha256": "0a618397c689cb97bdec0479f65fef49c91478cb5de8eff4eadb583a7d00281b"
+    },
+    {
+      "index": 11,
+      "argv": [
+        "python3",
+        "scripts/hostile_network_injection_gate.py"
+      ],
+      "exit_code": 0,
+      "seconds": 8.613,
+      "log": "11.log",
+      "log_sha256": "1de6fd57283816a6a0fb967947ec48087406ba2eed70bacbd8f6c2480587bc6b",
+      "private_log_sha256": "1de6fd57283816a6a0fb967947ec48087406ba2eed70bacbd8f6c2480587bc6b"
+    },
+    {
+      "index": 12,
+      "argv": [
+        "python3",
+        "scripts/task_graph.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.092,
+      "log": "12.log",
+      "log_sha256": "15d8e0e14132186c2378805e2280d68427986ed9055a3aabafe08fd3c76d916a",
+      "private_log_sha256": "15d8e0e14132186c2378805e2280d68427986ed9055a3aabafe08fd3c76d916a"
+    },
+    {
+      "index": 13,
+      "argv": [
+        "python3",
+        "scripts/validate_docs.py"
+      ],
+      "exit_code": 0,
+      "seconds": 118.382,
+      "log": "13.log",
+      "log_sha256": "7856e836fac67b9dd1028a97e9b710889fe2a2b06bd1f3141dbb6e17dd4f6b1f",
+      "private_log_sha256": "7856e836fac67b9dd1028a97e9b710889fe2a2b06bd1f3141dbb6e17dd4f6b1f"
+    },
+    {
+      "index": 14,
+      "argv": [
+        "npm",
+        "run",
+        "docs:lint"
+      ],
+      "exit_code": 0,
+      "seconds": 2.859,
+      "log": "14.log",
+      "log_sha256": "9964cfe30cebc9cd3a8798035153a1ff5769ba1e44278d6c57697f0713a92743",
+      "private_log_sha256": "9964cfe30cebc9cd3a8798035153a1ff5769ba1e44278d6c57697f0713a92743"
+    },
+    {
+      "index": 15,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.003,
+      "log": "15.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

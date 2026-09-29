@@ -1,0 +1,21 @@
+✔ native Git schema rejects the exact retained Muse status failures (22.930835ms)
+✔ native Git schema discloses each owner's operation-specific shape (11.617738ms)
+✔ native Git schema keeps canonical path and revision refusals explicit (7.447023ms)
+✔ generated model schema files are current and every schema compiles (69.905049ms)
+✔ exact profile is closed, hash-bound, bounded, and has no fallback state (15.810448ms)
+✔ proposal schema requires exact nullable fields and kind-consistent tool calls (10.323314ms)
+✔ terminal claim cannot conflate success, failure, or absent evidence (17.964869ms)
+✔ all client schema references are explicit and hash-bound (8.003563ms)
+✔ catalog preserves every historical candidate record and enables nothing (36.555969ms)
+✔ real Muse quality and diagnostic tuples remain separate and disabled (23.601656ms)
+✔ 32k coding candidates preserve exact family boundaries without enabling admission (15.749159ms)
+✔ fake Muse and Gemma entries are synthetic, exact, disabled, and non-fallback (12.395733ms)
+✔ catalog rejects activation, fallback, hash drift, and historical removal (50.366567ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 217.31875

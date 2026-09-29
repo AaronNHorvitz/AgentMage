@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "stage": "batch5-catalog",
+  "source_revision": "28398bcd3af5ff85cdd150b736b264c75efb7b1b",
+  "scope": "Renew disabled synthetic catalog records whose generator hashes cover engine source changed by the R11 fix, after the retained batch5-core failure at configuration_result_evidence (npm schemas:test catalog drift); no real profile, admission or historical record change.",
+  "planned_commands": [
+    [
+      "node",
+      "scripts/model_profile_catalog.mjs",
+      "--write"
+    ],
+    [
+      "node",
+      "--test",
+      "tests/test_model_contract_schemas.mjs",
+      "tests/test_model_profile_catalog.mjs"
+    ],
+    [
+      "node",
+      "scripts/model_profile_catalog.mjs"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/model_profile_catalog.mjs": "dcd44a94edbaba498009e22902b731ace20aa62889152d7107a18832b6a75b06"
+  },
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "node",
+        "scripts/model_profile_catalog.mjs",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.069,
+      "log": "01.log",
+      "log_sha256": "8be80697d9a18229d14a4bf666d33ca83e37691a5de68a735a7b37617cff57a2",
+      "private_log_sha256": "8be80697d9a18229d14a4bf666d33ca83e37691a5de68a735a7b37617cff57a2"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_model_contract_schemas.mjs",
+        "tests/test_model_profile_catalog.mjs"
+      ],
+      "exit_code": 0,
+      "seconds": 0.237,
+      "log": "02.log",
+      "log_sha256": "7e4bc74a531df876b84c8192b04ce60bb1c33161b5fc71f18bde02352b8595ed",
+      "private_log_sha256": "7e4bc74a531df876b84c8192b04ce60bb1c33161b5fc71f18bde02352b8595ed"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "node",
+        "scripts/model_profile_catalog.mjs"
+      ],
+      "exit_code": 0,
+      "seconds": 0.071,
+      "log": "03.log",
+      "log_sha256": "b76b38d525472f678e7a10e739d83033a867e710e7b99a0f21150161f6cfc2f3",
+      "private_log_sha256": "b76b38d525472f678e7a10e739d83033a867e710e7b99a0f21150161f6cfc2f3"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.008,
+      "log": "04.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

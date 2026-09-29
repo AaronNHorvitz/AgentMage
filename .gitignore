@@ -31,6 +31,9 @@ review-evidence/
 # Reviewed public synthetic evidence is admitted one bundle at a time.
 !artifacts/
 artifacts/*
+# Redacted verification stage logs retained by scripts/verification_batch.py.
+!artifacts/verification-logs/
+!artifacts/verification-logs/**
 !artifacts/sprints/
 artifacts/sprints/*
 !artifacts/sprints/sprint-0/

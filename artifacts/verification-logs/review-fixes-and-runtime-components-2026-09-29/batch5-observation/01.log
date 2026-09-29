@@ -1,0 +1,4 @@
+   Compiling agentmage-platform-linux v0.0.0 (<repo>/platforms/linux)
+   Compiling agentmage-capability-read-only v0.0.0 (<repo>/capabilities/read-only)
+   Compiling agentmage-host v0.0.0 (<repo>/shells/host)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 12.22s
