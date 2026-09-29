@@ -156,6 +156,16 @@ def committed_sources(revision: str) -> dict[str, str]:
     }
 
 
+def function_origins(source: str, name: str) -> list[str]:
+    """Proposal classes a named method assigns, from its body up to the next method."""
+    start = re.search(rf"\n    fn {name}\(", source)
+    if start is None:
+        return []
+    end = re.search(r"\n    (?:pub(?:\([a-z]+\))? )?fn ", source[start.end():])
+    body = source[start.end():start.end() + end.start()] if end else source[start.end():]
+    return re.findall(r"origin:\s*ProposalOrigin::(\w+),", body)
+
+
 def review_checks(sources: dict[str, str]) -> list[dict[str, Any]]:
     # Moving pure coordinator code into a child module must not narrow any
     # existing no-client, no-transport, no-effect or no-storage check.
@@ -218,18 +228,30 @@ def review_checks(sources: dict[str, str]) -> list[dict[str, Any]]:
         token not in runtime_loop + coding_client + engine_manifest
         for token in ("Mcp", "MCP", "mcp_", "mcp-")
     )
-    model_proposal_inert = all(
-        marker in runtime_loop
-        for marker in (
-            "pub trait RuntimeModelPort",
-            "Result<ModelRunResult, RuntimePortFailure>",
-            "ModelProposalKind::ToolCall",
+    # A model's proposal reaches the one dispatch site under the model's
+    # proposal class. The only other class is the shell's, used once for the
+    # write the runtime derives from a person's hunk selection (Decision 0114).
+    model_proposal_inert = (
+        all(
+            marker in runtime_loop
+            for marker in (
+                "pub trait RuntimeModelPort",
+                "Result<ModelRunResult, RuntimePortFailure>",
+                "ModelProposalKind::ToolCall",
+            )
         )
-    ) and re.search(
-        r"let\s+receipt\s*=\s*ToolDispatcher::new\(&self\.registry\)"
-        r"\.dispatch\(ProposalOrigin::Model,\s*&call\);",
-        runtime_loop,
-    ) is not None
+        and len(re.findall(r"ToolDispatcher::new\(", runtime_loop)) == 1
+        and re.search(
+            r"let\s+receipt\s*=\s*ToolDispatcher::new\(&self\.registry\)"
+            r"\.dispatch\(origin,\s*&call\);",
+            runtime_loop,
+        )
+        is not None
+        and set(re.findall(r"ProposalOrigin::(\w+)", runtime_loop)) == {"Model", "Shell"}
+        and function_origins(runtime_loop, "propose_tool") == ["Model"]
+        and function_origins(runtime_loop, "request_derived_tool") == ["Shell"]
+        and len(re.findall(r"origin:\s*ProposalOrigin::\w+,", runtime_loop)) == 2
+    )
     grant_gated = all(
         marker in runtime_loop
         for marker in (

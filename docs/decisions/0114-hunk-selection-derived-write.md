@@ -73,6 +73,19 @@ yields a separately approved derived write. Four facts shaped the implementation
    The derived write's review is computed from its own arguments. It shows only the
    selected hunks and says how many of the original's hunks they are.
 
+The automated Story 23.4 coordinator boundary review checked that model proposals are
+inert by matching one literal dispatch line with the model's proposal class. The runtime
+now dispatches through one site with the proposal's class. The review therefore checks
+four things instead:
+
+- there is exactly one dispatch site;
+- the model path assigns the model's class and the derived path assigns the shell's;
+- those are the only two assignments;
+- no other proposal class appears.
+
+The check is at least as strict as before. The first boundary stage of this pass failed
+at the old check, and that failure is retained.
+
 This amends Decision 0111 in three places. There is no presentation extension. The
 runtime proposes the derived call on the person's behalf instead of the host alone.
 Drift at selection time refuses the original call instead of asking for a fresh

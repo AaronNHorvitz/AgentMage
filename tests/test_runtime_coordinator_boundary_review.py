@@ -47,7 +47,7 @@ def worktree_sources() -> dict[str, str]:
 class RuntimeCoordinatorBoundaryReviewTests(unittest.TestCase):
     def test_model_dispatch_keeps_exact_origin_registry_and_call_across_line_wrapping(self) -> None:
         sources = worktree_sources()
-        dispatch = "ToolDispatcher::new(&self.registry).dispatch(ProposalOrigin::Model, &call);"
+        dispatch = "ToolDispatcher::new(&self.registry).dispatch(origin, &call);"
         assignment = r"let\s+receipt\s*=\s*" + re.escape(dispatch)
         self.assertEqual(len(re.findall(assignment, sources[RUNTIME_LOOP])), 1)
         for spacing in (" ", "\n                "):
@@ -57,15 +57,26 @@ class RuntimeCoordinatorBoundaryReviewTests(unittest.TestCase):
             )
             checks = {item["check_id"]: item["passed"] for item in review_checks(changed)}
             self.assertTrue(checks["model-proposal-is-inert"])
-        for invalid in (
-            dispatch.replace("ProposalOrigin::Model", "ProposalOrigin::User"),
-            dispatch.replace("&self.registry", "&another_registry"),
-            dispatch.replace("&call", "&another_call"),
+        model = "origin: ProposalOrigin::Model,"
+        shell = "origin: ProposalOrigin::Shell,"
+        self.assertEqual(sources[RUNTIME_LOOP].count(model), 1)
+        self.assertEqual(sources[RUNTIME_LOOP].count(shell), 1)
+        for old, new in (
+            # A model call dispatched under another class, registry or call.
+            (dispatch, dispatch.replace("origin", "ProposalOrigin::Shell")),
+            (dispatch, dispatch.replace("&self.registry", "&another_registry")),
+            (dispatch, dispatch.replace("&call", "&another_call")),
+            # The model path claims the shell's class, or the derived path the model's.
+            (model, shell),
+            (shell, model),
+            # A second dispatch site or another proposal class.
+            (dispatch, dispatch + "\n        let other = ToolDispatcher::new(&self.registry);"),
+            (shell, "origin: ProposalOrigin::Tool,"),
         ):
             changed = dict(sources)
-            changed[RUNTIME_LOOP] = changed[RUNTIME_LOOP].replace(dispatch, invalid)
+            changed[RUNTIME_LOOP] = changed[RUNTIME_LOOP].replace(old, new, 1)
             checks = {item["check_id"]: item["passed"] for item in review_checks(changed)}
-            self.assertFalse(checks["model-proposal-is-inert"])
+            self.assertFalse(checks["model-proposal-is-inert"], new)
 
     def test_current_committed_boundary_passes_every_automated_check(self) -> None:
         checks = review_checks(worktree_sources())
