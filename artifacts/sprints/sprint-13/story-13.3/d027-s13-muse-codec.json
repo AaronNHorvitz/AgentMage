@@ -43,7 +43,7 @@
       ],
       "exit_code": 0,
       "id": "muse-edge-codec",
-      "output_sha256": "8f88043dc87925254939933f7b96ec515e4d7fe58e5120b2fe664f45a50b07ae"
+      "output_sha256": "2a211d9e25ba538c77f253f9e26ec31f12b509639d3c970996bd0e600288beef"
     },
     {
       "argv": [
@@ -56,7 +56,7 @@
       ],
       "exit_code": 0,
       "id": "native-transport-diagnostics",
-      "output_sha256": "e7dc315e37e54b87db14e2e5ccc8fa137482cc8cbdfe8d6232487a2192da46bb"
+      "output_sha256": "ecb2cc2e3c81ecc7ee842c41c87f053b206d4497258c1cc9fe16df8f56cb5da7"
     },
     {
       "argv": [
@@ -69,7 +69,7 @@
       ],
       "exit_code": 0,
       "id": "generic-codec",
-      "output_sha256": "3ac1ed8f2ba95aa8c44154749fe1aa8f869bc750298a57429dff81b561b251b3"
+      "output_sha256": "cce3e0216e00f5737e9ad19c94bcbcb22d2e2388932e9dbc495a37fdf4be866f"
     },
     {
       "argv": [
@@ -82,7 +82,7 @@
       ],
       "exit_code": 0,
       "id": "bounded-response",
-      "output_sha256": "97a15349596ba392733b30e62ad8488e61e1b3914617ab41b02b0bf36b09b879"
+      "output_sha256": "7b51f97a4b9f68470099850ddb02fa6c75c2eee1adc84403c9631bd52eed9815"
     },
     {
       "argv": [
@@ -95,7 +95,7 @@
       ],
       "exit_code": 0,
       "id": "fake-family-parity",
-      "output_sha256": "25ba2e966ff91e211ddc93ac834b494bf91798fb9dbe7e7022b60689a05927dd"
+      "output_sha256": "76277d287dc02e3b569bd8db60193b16615e90008243f763338c7f000d38da36"
     }
   ],
   "diagnostics": [
@@ -235,7 +235,7 @@
   "production_kernel_family_references": [],
   "record_type": "d027_s13_muse_codec_evidence",
   "schema_version": 3,
-  "source_revision": "fc4ff664201d241a822b4904c5b10da5715f0f5f",
+  "source_revision": "ec0a8c6be1999d48484850a63aba8321e6bc60bd",
   "source_sha256": {
     "kernel/contracts/src/model.rs": "1a19f680cc1468be94930632e4a67ba50f0c16eaf47802ae7ecd65df2ca1695c",
     "kernel/engine/src/accounting_provider.rs": "f0292afed85e4dc1d617061de010622b913749caed5e4620503634c29ef485f4",
@@ -274,6 +274,7 @@
     "kernel/engine/src/communications_teams.rs": "9acd827270b0c9928b0ee35ff86f41a72ce3e319cc4d9b2791cc96078c694825",
     "kernel/engine/src/configuration.rs": "33b6d5d1ffe78c12be86aaf2025260613cabcb23574b0e40d25fa40acb7dbf2c",
     "kernel/engine/src/connected_identity.rs": "b66dfcb79ff82be5061c198037cd5e4eb3e3436667b2af08583c66f19e37623e",
+    "kernel/engine/src/context_inspection.rs": "fcb5125d7f35bc6659372f79fe057da715843da768a8a339e9fca3035915416f",
     "kernel/engine/src/context_management.rs": "bc6a562f4573364bc82a3972aae64d93e24b976303c52ce9227018717516c077",
     "kernel/engine/src/conversation_archive.rs": "89bc61a06c8196c1a60ce9c1f97e8a9ad94903dc81a3b1ee5b85340cdba5c633",
     "kernel/engine/src/conversation_library.rs": "8f1b2446128a73b97efde001e41a879f19d8c6efbb23220a6b3bc27fe4726d33",
@@ -320,8 +321,9 @@
     "kernel/engine/src/incident_lifecycle.rs": "28f1e048d3fa806f194c07e4f0e723522dec25cfd46fbd8a80cb8f861a2a3b94",
     "kernel/engine/src/infrastructure_safety.rs": "ab99b10488d49b777db2241c55475a699f5a7437cb2dcc6d014572ef215e1940",
     "kernel/engine/src/instruction_provenance.rs": "0e88d2dd4d200450f777fc8d8b24b3ba6091ae89cadc6c919af6689205ae9c94",
+    "kernel/engine/src/job_control.rs": "3ddf95a8bed7d89d879eb02e86e2d7148d4f544652305fe99d102361ecff1b4d",
     "kernel/engine/src/job_scheduler.rs": "2209df39d416695395e160be013b15bb0874af39ff6fe8997f0127d684a1ed6c",
-    "kernel/engine/src/lib.rs": "a5645d06971f3c83176395fff4c782523ab084fdbd14276009f3c770d00689af",
+    "kernel/engine/src/lib.rs": "715ec8ffb533bbdcc2e3a9b820fe12d545e2b36f05e30ceae7be35f66454ba16",
     "kernel/engine/src/linux_mail_interop.rs": "aedca1ccb24b64b15f2622ab8f7e1b7bddc22b04eb10ddce5b64522d926f330d",
     "kernel/engine/src/local_commit.rs": "7d39cf16b543ead8e7bbd09e1219c01d15efd49fe3b7e34f7e90818bc1d5c1c6",
     "kernel/engine/src/local_continuity.rs": "245f80f8181514674bbc94a1904ee1989b5a46bef4b27ad79ec17eb2828c09a1",
@@ -339,7 +341,7 @@
     "kernel/engine/src/model_orchestration_profile.rs": "07b35ccf495e4cb2cf3ceefca449e009d5ed9d1314c3eb31a7e68dd2b38ef528",
     "kernel/engine/src/model_response.rs": "d678d842734355c398115e3638c88d57c06cf1eb2ebb218a4a02522ca0da093d",
     "kernel/engine/src/model_routing.rs": "e353c9361d831868ccfc4f021c62923163969ccee42bb482b424d027f5f44329",
-    "kernel/engine/src/model_runtime.rs": "03ff4791516b26a584573256026e9e1f751c2b07489afe4b4659131619f95e70",
+    "kernel/engine/src/model_runtime.rs": "d7d1d12eb22f7a6af53bdd02ac1d6747b800ebb986545235dad48e2d4a94c729",
     "kernel/engine/src/model_selection.rs": "43a6c7e5ef8d87689bb6157e65eaf3ab7b4a7fdc3cabd5bb9c6614bc3bb4bb8c",
     "kernel/engine/src/multi_agent.rs": "f3f049344725e93a489deeae2af0f073b53f6b0798e4b7350b0cd44516b9b34b",
     "kernel/engine/src/operational_store.rs": "71d9c28c66f34a58da99ede64a7124532c72699c781f858c30e26e4e49415654",
@@ -366,7 +368,7 @@
     "kernel/engine/src/repository_cache.rs": "e881a56cb60e44e1d79aae76d5e5a6f10aec25416bf8276ebde169aa31754796",
     "kernel/engine/src/repository_inspection.rs": "a1322582156a38b317afe5ca410294c969ab0ab4d82aeac52a5ae74a6822d982",
     "kernel/engine/src/repository_safety.rs": "5271b163889aca167cc0aca5484aed8d1e4e6d933009a02bd68dce32c700bd8f",
-    "kernel/engine/src/research_budget.rs": "4d129f8dde257504e284700126c3275680b2e3e4a4386034bd2a1f7248e69710",
+    "kernel/engine/src/research_budget.rs": "cbe2d36069cabbf6c956881a4660d1f018ee13735ced1c6d8939200f65044a2f",
     "kernel/engine/src/research_completion.rs": "8fd687e6a23ac7b313f18db8e1b6c4db16aaca81dba5559b4db0081701f9d9cd",
     "kernel/engine/src/research_completion_tests.rs": "95219e9148cecc0f743b8d847b15048e88adeaf0f960d90ea7a29e6320e96908",
     "kernel/engine/src/research_dispatch.rs": "da3831497a113d5de7fade97e2b3be311a00cdee37db05f57f9048dbeac10ec8",
@@ -375,7 +377,7 @@
     "kernel/engine/src/research_journal.rs": "9087f88f4d84359e4b9b9b9bda39a27fbe4b3911b650640fd313637c7b7c8ed4",
     "kernel/engine/src/research_journal_tests.rs": "cad2c5c8dd708d7da388bb932aa1d67a67fbc89892812a526c0597b8df414f7d",
     "kernel/engine/src/research_migration_tests.rs": "86d30819c17b02544b93aadd53810feb7a89c7e4f79add3c55fab01e1e03c88a",
-    "kernel/engine/src/research_plan.rs": "44483891b924e7f157be3ba4a4273e2c58c708fc9962bcdbd062de4100dd9a97",
+    "kernel/engine/src/research_plan.rs": "5cc307ab57d9fec23c97271bb893cf9fe9b1a84b29ebc912f48eea1dad3f3ca1",
     "kernel/engine/src/research_reader_migration_tests.rs": "2405f99bc526c7f4df62ba80880655b09cfedf243b52990ddccc9fb71e8e5e62",
     "kernel/engine/src/research_report.rs": "eff9b8aec0a490004142abfd5eb4209999d9c1c2aa07f439ef35ed4d61f1d925",
     "kernel/engine/src/research_report_retained.rs": "e80267cfff64e777ffc3860ec698dce1bfc2474fba2d14de600ef73bf3bbcab4",
@@ -391,6 +393,7 @@
     "kernel/engine/src/retry_admission.rs": "aaf8e8da33a89e8abc0c14a1a8fffe7c24e521cde7982e0aa77721488896300e",
     "kernel/engine/src/review_packet.rs": "e6987a3ca3533150f4bb296ce9b91b8ad06a1842760f9fa05da9ea95587bce00",
     "kernel/engine/src/run_control.rs": "54e43a2e1c3082b71062c734fa843d4730a7767bd05ef7f990b38f1490f5eb5a",
+    "kernel/engine/src/run_progress.rs": "19aaa1a9bf480ff08b4c8c00a56c13ac0ee498851d7f9934d66b6981149137b5",
     "kernel/engine/src/runtime_answer.rs": "98755d23179131575511c90ae811240ab5bf841136f36cf45d827abeb8bb5657",
     "kernel/engine/src/runtime_artifact.rs": "cc6ee1ad0438fb9ed93663fc0326742bf2435f77eb259f540730a60761f1c8c8",
     "kernel/engine/src/runtime_coordinator.rs": "7e5c25aa0bd7fc52afe67e27997a2f7969a71e64adf3d71b649fac9eafe65b2e",
@@ -402,7 +405,7 @@
     "kernel/engine/src/runtime_loop.rs": "ba7e2d56b0fdc0b4e123821ecb1d6713978ee4cac10673099d008d12982d0e19",
     "kernel/engine/src/runtime_loop/artifact_preparation.rs": "927799cc0abee91289ad650072941a59d20a456dfb2e289a5a17b754e85e66fc",
     "kernel/engine/src/runtime_loop_artifact_preparation_tests.rs": "76c052a6265dfd0acbf33367b2d297cfe7ced195f1484c54d0ef2b0ef6575712",
-    "kernel/engine/src/runtime_loop_tests.rs": "430ecac5432f5e6b3f5224d9ea4aaa0819457e257296f4ece7f4228672617ea4",
+    "kernel/engine/src/runtime_loop_tests.rs": "37ff91c1da1c44160ef6835462563f763c4a35ba46503bd33b0353e4bdeef086",
     "kernel/engine/src/runtime_projection.rs": "9b2a2274f3328ac8e33d1e8a493b4e374fb8a4dc7c28582b186002647b6de25d",
     "kernel/engine/src/runtime_recovery.rs": "7997cf0ccae000d132eee6b92b990a0891884887441b06ba69cf28dd8494dcb6",
     "kernel/engine/src/s012_it01.rs": "2cbf6a490063f32408dce925deca54cafdf837d440ae389629ce63f2b7490c8f",
@@ -444,15 +447,15 @@
     "kernel/engine/src/workflow_termination.rs": "3a3c922ac81df779506d7ad85c07d3cd849f8fcbac1c765ca6da14d2dd6457e1",
     "kernel/engine/src/workflow_verifier.rs": "6187389d17470552a35d774977ba581219ac30f0786d6ec5dea773aa6360d124",
     "kernel/engine/src/write_approval.rs": "b87b6f0d2bb892d2e3a56fc825e81b304ee9a73df9b983355beb50336023711b",
-    "kernel/engine/src/write_approval/selective.rs": "0de6b75b28d73868f6b363e617f21c51beefac809709842b700e427fc9ebaf60",
+    "kernel/engine/src/write_approval/selective.rs": "a59fae6076f79f1499ec492a0adcfb947400eab848d9dda601b6a6db47fbea4a",
     "kernel/engine/src/write_recovery.rs": "043810f5062cfeca75d69b5ea8ad9f22f22ea200e182c86ae0594f99e983d8bd",
     "kernel/engine/src/write_transaction.rs": "37bfa344dc49b9e79aa7921b0c3b12241a1166cef0216395a56e280841d3dd03",
     "platforms/linux-inference/src/llama_server_driver.rs": "65f3a4c735736b2b1b700a0264ae2c8f61af1eb28b0bf54a7dee5587eb8efbd0",
     "platforms/linux-inference/src/muse_atem_codec.rs": "3792f5ab95dd3b21c2706db5277e0e5365bd3a0854a0697a2c3960ef29c363af",
-    "scripts/muse_codec_evidence.py": "9994f0c191c70ef69eeb36286473450ae287b522133446932937361334290321",
+    "scripts/muse_codec_evidence.py": "954df9ed60dc6f7264d374a2374d56152240c037fbf1f8a299b2a9fe8a10c89d",
     "scripts/rust_source_audit.py": "ce8616140ffad32f0304064f9f01b951cbb865de2a2b6bcdc87adc314ca2458c",
-    "scripts/rust_test_ownership.py": "fc2944fc2dd99a61957c990d6cd291c1201b51be66cefe37895e81ed678f4302",
-    "tests/test_muse_codec_evidence.py": "659d41c5ee61999fe47808e35121260dce5c618870bfe9072d2c859a61d0ace9",
-    "tests/test_rust_test_ownership.py": "d31f16715ad3ac2096a3249c44873d89decf71281663b04217cac92d6c0f93c4"
+    "scripts/rust_test_ownership.py": "7b49cd60f9e8a78059ebb8dc7f15709fd37c747ccbac98001cde375d8506c86f",
+    "tests/test_muse_codec_evidence.py": "ff315ed909e1d49c48b22cdf426b0234f8e7c7797ccd850ed98c93b839aab62f",
+    "tests/test_rust_test_ownership.py": "b37e7574c94f62a8de33f77851b8d99a6084c76af9e91b8d8e8467e200a3fd32"
   }
 }
