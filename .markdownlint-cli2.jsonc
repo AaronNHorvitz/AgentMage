@@ -6,6 +6,9 @@
     "MD060": false
   },
   "ignores": [
-    "node_modules/**"
+    "node_modules/**",
+    // Cargo build output holds no tracked documents; rustdoc copies
+    // third-party asset licences there (Decision 0104).
+    "target/**"
   ]
 }
