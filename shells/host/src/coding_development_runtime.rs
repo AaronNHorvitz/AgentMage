@@ -2890,17 +2890,21 @@ where
     R: agentmage_kernel_contracts::LocalModelRuntime,
     C: agentmage_kernel_contracts::ModelFamilyCodec,
 {
-    let served = controller
-        .ensure_prepared_controlled(control)
+    // The controller unloads a tuple it loaded in this attempt when the served
+    // profile is denied, so the denial carries the same cleanup evidence.
+    controller
+        .ensure_prepared_controlled_where(control, |served| {
+            let exact = served.context_capacity_tokens == 32_768 && served.parallel_slots == 1;
+            if !exact {
+                eprintln!("coding.development.candidate.served-profile-denied");
+            }
+            exact
+        })
+        .map(|_| ())
         .map_err(|error| {
             eprintln!("coding.development.candidate.preparation.{}", error.code());
             RuntimeModelOperationFailure::from(error)
-        })?;
-    if served.context_capacity_tokens != 32_768 || served.parallel_slots != 1 {
-        eprintln!("coding.development.candidate.served-profile-denied");
-        return Err(RuntimePortFailure::Invalid.into());
-    }
-    Ok(())
+        })
 }
 
 fn candidate_paths(

@@ -575,6 +575,22 @@ impl StartupControl<'_> {
             }
         })
     }
+
+    /// Reports an error observed under this control through the startup mapping
+    /// when the startup or outer budget has closed; other errors are unchanged.
+    fn classify(&self, error: ModelRuntimeFailure) -> ModelRuntimeFailure {
+        self.check().err().unwrap_or(error)
+    }
+}
+
+/// An armed lease stays quarantined after a failed spawn at either entry point.
+/// Controlled calls report that uncertainty; legacy calls keep their category.
+fn spawn_failure(control: Option<&dyn ModelOperationControl>) -> ModelRuntimeFailure {
+    if control.is_some() {
+        failure("model.operation.cleanup-uncertain", true)
+    } else {
+        failure("model.llama-driver.process-start-failed", true)
+    }
 }
 
 impl LlamaServerDriver {
@@ -759,7 +775,10 @@ impl LlamaServerDriver {
             {
                 return Err(failure("model.llama-driver.process-exited", true));
             }
-            let ready = self.client_controlled(Some(&startup))?.health();
+            let ready = self
+                .client_controlled(Some(&startup))
+                .map_err(|error| startup.classify(error))?
+                .health();
             let remaining = startup.check()?;
             if ready.is_ok() {
                 return Ok(());
@@ -981,9 +1000,7 @@ impl LlamaServerDriver {
         files.verify_key()?;
         check_operation_control(control)?;
         lease.arm()?;
-        let child = command
-            .spawn()
-            .map_err(|_| failure("model.operation.cleanup-uncertain", true))?;
+        let child = command.spawn().map_err(|_| spawn_failure(control))?;
         self.loaded = Some(LoadedRuntime {
             _lease: lease,
             profile_id: profile.profile_id.clone(),
@@ -4458,6 +4475,86 @@ mod tests {
             result.unwrap_err().code,
             "model.llama-driver.startup-timeout"
         );
+    }
+
+    #[test]
+    fn readiness_client_errors_after_startup_expiry_keep_the_startup_category() {
+        struct Stopped(ModelOperationStop);
+        impl ModelOperationControl for Stopped {
+            fn remaining_ms(&self) -> Result<std::num::NonZeroU64, ModelOperationStop> {
+                Err(self.0)
+            }
+        }
+        let directory = TestDirectory::new();
+        let profile = exact_profile();
+        let driver = super::LlamaServerDriver::new(
+            super::LlamaServerDriverConfig::new(
+                directory.0.join("runtime"),
+                directory.0.join("model.gguf"),
+                directory.0.join("llama-server.sock"),
+                profile.runtime,
+                Duration::from_secs(1),
+            )
+            .unwrap(),
+        );
+        let expired = super::StartupControl {
+            deadline: Instant::now(),
+            outer: None,
+        };
+        // The raw client check reports a run-control stop for a local ceiling.
+        assert_eq!(
+            driver.client_controlled(Some(&expired)).err().unwrap().code,
+            "model.operation.timed-out"
+        );
+        assert_eq!(
+            driver
+                .client_controlled(Some(&expired))
+                .map_err(|error| expired.classify(error))
+                .err()
+                .unwrap()
+                .code,
+            "model.llama-driver.startup-timeout"
+        );
+        let cancelled = Stopped(ModelOperationStop::Cancelled);
+        let outer = super::StartupControl {
+            deadline: Instant::now(),
+            outer: Some(&cancelled),
+        };
+        assert_eq!(
+            outer
+                .classify(super::failure("model.operation.timed-out", true))
+                .code,
+            "model.operation.cancelled"
+        );
+        let open = super::StartupControl {
+            deadline: Instant::now() + Duration::from_secs(5),
+            outer: None,
+        };
+        assert_eq!(
+            driver
+                .client_controlled(Some(&open))
+                .map_err(|error| open.classify(error))
+                .err()
+                .unwrap()
+                .code,
+            "model.llama-driver.not-loaded"
+        );
+    }
+
+    #[test]
+    fn spawn_failure_keeps_the_legacy_category_and_controlled_uncertainty() {
+        struct Open;
+        impl ModelOperationControl for Open {
+            fn remaining_ms(&self) -> Result<std::num::NonZeroU64, ModelOperationStop> {
+                Ok(std::num::NonZeroU64::new(1_000).unwrap())
+            }
+        }
+        let legacy = super::spawn_failure(None);
+        assert_eq!(legacy.code, "model.llama-driver.process-start-failed");
+        assert!(legacy.dependency_recovery_required);
+        let controlled = super::spawn_failure(Some(&Open));
+        assert_eq!(controlled.code, "model.operation.cleanup-uncertain");
+        assert!(controlled.dependency_recovery_required);
     }
     mod controlled_preparation_tests {
         use super::super::{ModelRuntimeFailure, sha256_file_controlled};

@@ -1001,6 +1001,10 @@ where
     correlation_id: agentmage_kernel_contracts::CorrelationId,
     started_at_epoch_ms: Option<u64>,
     last_phase_observed_at: Cell<u64>,
+    /// The coordinator's own exact cancellation latched by a controlled model
+    /// phase. A different failure can still decide the terminal; the signal is
+    /// then journaled once before it, never as a Cancelled transition.
+    latched_cancellation: Option<CancellationSignal>,
     turn_count: u32,
     model_call_count: u32,
     tool_call_count: u32,
@@ -1244,6 +1248,7 @@ where
             correlation_id,
             started_at_epoch_ms: None,
             last_phase_observed_at: Cell::new(0),
+            latched_cancellation: None,
             turn_count: 0,
             model_call_count: 0,
             tool_call_count: 0,
@@ -1603,6 +1608,7 @@ where
             }
             (context, control.into_stop(), dependency.get())
         };
+        self.latch_phase_cancellation(stop.as_ref());
         if let Some(error) = dependency
             && (error == RuntimePortFailure::Uncertain || stop.is_some())
         {
@@ -1737,6 +1743,7 @@ where
                 .map_err(|error| control.classify_model_failure(error, &dependency));
             (result, control.into_stop(), dependency.get())
         };
+        self.latch_phase_cancellation(dispatch_stop.as_ref());
         let result = match result {
             Ok(result) => result,
             Err(error) => {
@@ -3456,6 +3463,12 @@ where
         )
     }
 
+    fn latch_phase_cancellation(&mut self, stop: Option<&RuntimePhaseStop>) {
+        if let Some(RuntimePhaseStop::Cancelled(signal)) = stop {
+            self.latched_cancellation = Some(signal.clone());
+        }
+    }
+
     fn cancel(&mut self, signal: CancellationSignal) -> Result<(), RuntimeLoopError> {
         if signal.schema_version != CONTRACT_SCHEMA_VERSION
             || signal.task_id != self.request.task.task_id
@@ -3463,6 +3476,7 @@ where
         {
             return Err(RuntimeLoopError::InvalidBoundaryResult);
         }
+        self.latched_cancellation = None;
         let turn_id = self.active_turn.clone();
         let operation_id = self
             .pending
@@ -3530,6 +3544,25 @@ where
         }
         if self.state.current() != state || !state.is_terminal() || self.active_turn.is_some() {
             return Err(RuntimeLoopError::State);
+        }
+        if let Some(signal) = self.latched_cancellation.take() {
+            // A dependency, cleanup or result failure took precedence over the
+            // coordinator's own observed signal. Record that observation after
+            // the closed turn; the terminal keeps the failure that decided it.
+            self.emit(
+                RuntimeEventKind::CancellationRequested {
+                    cancellation_id: signal.cancellation_id.clone(),
+                },
+                None,
+                None,
+            )?;
+            self.emit(
+                RuntimeEventKind::CancellationObserved {
+                    cancellation_id: signal.cancellation_id,
+                },
+                None,
+                None,
+            )?;
         }
         unresolved_codes.sort();
         unresolved_codes.dedup();

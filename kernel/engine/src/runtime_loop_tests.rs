@@ -6832,15 +6832,58 @@ mod run_phase_deadline_tests {
                             .iter()
                             .any(|item| item == code)
                     );
-                    assert!(!coordinator.events().iter().any(|event| matches!(
-                        event.kind,
-                        RuntimeEventKind::CancellationObserved { .. }
-                    )));
+                    let signal = coordinator.clock.cancellation.signal.clone();
+                    assert_displaced_cancellation_journaled(&coordinator, &signal);
                     assert_eq!(coordinator.model.inner.inner.calls, 0);
                     assert_eq!(effects.load(Ordering::SeqCst), 0);
                     assert_valid_terminal_stream(&coordinator);
                 }
             }
+        }
+
+        /// The coordinator's own signal follows the closed turn exactly once and
+        /// the failure that decided the run remains its terminal state.
+        fn assert_displaced_cancellation_journaled(
+            coordinator: &ControlledCoordinator,
+            signal: &CancellationSignal,
+        ) {
+            let events = coordinator.events();
+            let requested = events
+                .iter()
+                .position(|event| {
+                    matches!(&event.kind, RuntimeEventKind::CancellationRequested { cancellation_id }
+                        if cancellation_id == &signal.cancellation_id)
+                })
+                .expect("displaced cancellation request is journaled");
+            assert!(matches!(
+                events[requested - 1].kind,
+                RuntimeEventKind::TurnCompleted { .. }
+            ));
+            assert!(matches!(&events[requested + 1].kind,
+                RuntimeEventKind::CancellationObserved { cancellation_id }
+                    if cancellation_id == &signal.cancellation_id));
+            assert!(matches!(
+                events[requested + 2].kind,
+                RuntimeEventKind::RunTerminal {
+                    state: AgentStateKind::Failed,
+                    ..
+                }
+            ));
+            assert_eq!(requested + 3, events.len());
+            for event in &events[requested..requested + 2] {
+                assert!(event.turn_id.is_none());
+                assert!(event.operation_id.is_none());
+            }
+            assert_eq!(
+                events
+                    .iter()
+                    .filter(|event| matches!(
+                        event.kind,
+                        RuntimeEventKind::CancellationObserved { .. }
+                    ))
+                    .count(),
+                1
+            );
         }
 
         #[test]
@@ -6862,10 +6905,17 @@ mod run_phase_deadline_tests {
                         assert_eq!(coordinator.outcome().unwrap().state, AgentStateKind::Failed);
                         assert_valid_terminal_stream(&coordinator);
                     }
-                    assert!(!coordinator.events().iter().any(|event| matches!(
-                        event.kind,
-                        RuntimeEventKind::CancellationObserved { .. }
-                    )));
+                    if matches!(interruption, Interruption::WrongStop) {
+                        // The port's wrong label is refused; the coordinator's own
+                        // observed signal is still recorded, not acknowledged.
+                        let signal = coordinator.clock.cancellation.signal.clone();
+                        assert_displaced_cancellation_journaled(&coordinator, &signal);
+                    } else {
+                        assert!(!coordinator.events().iter().any(|event| matches!(
+                            event.kind,
+                            RuntimeEventKind::CancellationObserved { .. }
+                        )));
+                    }
                     assert_eq!(coordinator.model.inner.inner.calls, 0);
                     assert_eq!(effects.load(Ordering::SeqCst), 0);
                 }

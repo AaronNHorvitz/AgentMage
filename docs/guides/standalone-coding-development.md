@@ -229,6 +229,13 @@ best-effort request release described above. Component checks do not establish a
 positive native workflow, current model qualification or independent acceptance. See
 [Decision 0102](../decisions/0102-controlled-native-model-preparation.md).
 
+A preparation that loaded the model and then failed readiness, serving, control or
+the host's exact served-profile check unloads it with a validated receipt, or reports
+cleanup uncertainty. The legacy load entry point also refuses after a controlled
+attempt. If another failure ends a run after the coordinator observed its own exact
+cancellation, the journal records that signal before the failed terminal. See
+[Decision 0103](../decisions/0103-preparation-cleanup-and-displaced-cancellation.md).
+
 Log directories are create-only and mode `0700`; `stdout.jsonl`, `stderr.log`, and `result.json`
 are mode `0600`. Preserve failed and rejected runs alongside successful ones. A scripted success is
 only executable-path evidence. Model qualification requires the separate repeated Muse Glimmer and

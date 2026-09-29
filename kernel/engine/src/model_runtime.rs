@@ -462,7 +462,12 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
     }
 
     /// Verifies and loads the exact selected tuple.
+    ///
+    /// A consumed controlled attempt also closes this compatibility entry point.
     pub fn load(&mut self) -> Result<ModelLoadReceipt, ModelRuntimeGateError> {
+        if self.controlled_load_attempted || self.controlled_preparation_failed {
+            return Err(ModelRuntimeGateError::PreparationAlreadyAttempted);
+        }
         self.load_using(None)
     }
 
@@ -518,20 +523,42 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         &mut self,
         control: &dyn ModelOperationControl,
     ) -> Result<ModelServingCapabilities, ModelRuntimeGateError> {
+        self.ensure_prepared_controlled_where(control, |_| true)
+    }
+
+    /// Runs `ensure_prepared_controlled` and also requires `accept` for the served tuple.
+    ///
+    /// A failure after this call loaded the runtime, including a rejected
+    /// served tuple, unloads it with a validated receipt or reports uncertain
+    /// cleanup. The attempt stays consumed either way.
+    pub fn ensure_prepared_controlled_where(
+        &mut self,
+        control: &dyn ModelOperationControl,
+        accept: impl FnOnce(&ModelServingCapabilities) -> bool,
+    ) -> Result<ModelServingCapabilities, ModelRuntimeGateError> {
         if self.controlled_preparation_failed {
             return Err(ModelRuntimeGateError::PreparationAlreadyAttempted);
         }
+        let loaded_before = self.loaded;
         let preparation = (|| {
             check_model_operation(Some(control))?;
             if !self.loaded {
                 self.load_controlled(control)?;
             }
-            self.serving_capabilities_controlled(control)
+            let served = self.serving_capabilities_controlled(control)?;
+            if !accept(&served) {
+                return Err(ModelRuntimeGateError::ServedCapabilityProfileMismatch);
+            }
+            Ok(served)
         })();
-        if preparation.is_err() {
-            self.controlled_preparation_failed = true;
+        let Err(error) = preparation else {
+            return preparation;
+        };
+        self.controlled_preparation_failed = true;
+        if !loaded_before && self.loaded {
+            self.cleanup_failed_preparation()?;
         }
-        preparation
+        Err(error)
     }
 
     fn cleanup_failed_preparation(&mut self) -> Result<(), ModelRuntimeGateError> {
@@ -3455,7 +3482,134 @@ mod tests {
                 );
                 assert_eq!(*controller.runtime.stages.borrow(), before);
                 assert_eq!(controller.runtime.inner.load_generation, loads);
+                assert_eq!(
+                    controller.runtime.unloads.get(),
+                    usize::from(stage.is_some())
+                );
+                assert!(controller.runtime.inner.loaded.is_none());
             }
+        }
+
+        #[test]
+        fn controlled_readiness_failure_unloads_the_tuple_it_loaded() {
+            for stage in [Stage::Health, Stage::Capabilities] {
+                let (mut controller, control) = fixture();
+                controller.runtime.stop_after.set(Some(stage));
+                assert_eq!(
+                    controller.ensure_prepared_controlled(&control),
+                    Err(ModelRuntimeGateError::OperationStopped(
+                        ModelOperationStop::TimedOut
+                    ))
+                );
+                assert_eq!(controller.runtime.stages.borrow().last(), Some(&stage));
+                assert_eq!(controller.runtime.unloads.get(), 1);
+                assert!(!controller.loaded);
+                assert!(controller.served_capabilities.is_none());
+                assert!(controller.runtime.inner.loaded.is_none());
+                assert_eq!(controller.runtime.inner.load_generation, 1);
+                assert_eq!(controller.runtime.inner.generation_calls.get(), 0);
+            }
+        }
+
+        #[test]
+        fn controlled_readiness_cleanup_uncertainty_overrides_the_original_failure() {
+            for stage in [Stage::Health, Stage::Capabilities] {
+                let (mut controller, control) = fixture();
+                controller.runtime.stop_after.set(Some(stage));
+                controller.runtime.cleanup_fails = true;
+                assert_eq!(
+                    controller.ensure_prepared_controlled(&control),
+                    Err(ModelRuntimeGateError::CleanupUncertain)
+                );
+                assert_eq!(controller.runtime.unloads.get(), 1);
+                assert!(controller.runtime.inner.loaded.is_some());
+                control.0.set(None);
+                controller.runtime.stop_after.set(None);
+                assert_eq!(
+                    controller.ensure_prepared_controlled(&control),
+                    Err(ModelRuntimeGateError::PreparationAlreadyAttempted)
+                );
+                assert_eq!(controller.runtime.unloads.get(), 1);
+                assert_eq!(controller.runtime.inner.load_generation, 1);
+            }
+        }
+
+        #[test]
+        fn controlled_served_drift_or_rejected_tuple_unloads_the_tuple_it_loaded() {
+            let (mut controller, control) = fixture();
+            controller.runtime.inner.served_drift_after_load = Some(ServedDrift::Endpoint);
+            assert_eq!(
+                controller.ensure_prepared_controlled(&control),
+                Err(ModelRuntimeGateError::ServedCapabilityDrift)
+            );
+            assert_eq!(controller.runtime.unloads.get(), 1);
+            assert!(controller.runtime.inner.loaded.is_none());
+
+            let (mut controller, control) = fixture();
+            let mut observed = None;
+            assert_eq!(
+                controller.ensure_prepared_controlled_where(&control, |served| {
+                    observed = Some(served.context_capacity_tokens);
+                    false
+                }),
+                Err(ModelRuntimeGateError::ServedCapabilityProfileMismatch)
+            );
+            assert_eq!(
+                observed,
+                Some(controller.exact_profile().context.max_context_tokens)
+            );
+            assert_eq!(controller.runtime.unloads.get(), 1);
+            assert!(controller.runtime.inner.loaded.is_none());
+            assert_eq!(
+                controller.ensure_prepared_controlled(&control),
+                Err(ModelRuntimeGateError::PreparationAlreadyAttempted)
+            );
+            assert_eq!(controller.runtime.inner.load_generation, 1);
+        }
+
+        #[test]
+        fn later_turn_readiness_failure_keeps_the_earlier_tuple_without_unloading() {
+            let (mut controller, control) = fixture();
+            controller.ensure_prepared_controlled(&control).unwrap();
+            controller.runtime.stop_after.set(Some(Stage::Health));
+            assert_eq!(
+                controller.ensure_prepared_controlled(&control),
+                Err(ModelRuntimeGateError::OperationStopped(
+                    ModelOperationStop::TimedOut
+                ))
+            );
+            assert_eq!(controller.runtime.unloads.get(), 0);
+            assert!(controller.loaded);
+            assert!(controller.runtime.inner.loaded.is_some());
+            control.0.set(None);
+            controller.runtime.stop_after.set(None);
+            assert_eq!(
+                controller.ensure_prepared_controlled(&control),
+                Err(ModelRuntimeGateError::PreparationAlreadyAttempted)
+            );
+            let receipt = controller.unload().unwrap();
+            assert!(receipt.empty);
+            assert_eq!(controller.runtime.unloads.get(), 1);
+        }
+
+        #[test]
+        fn legacy_load_refuses_after_a_consumed_controlled_attempt() {
+            let (mut controller, control) = fixture();
+            controller.runtime.stop_after.set(Some(Stage::Manifest));
+            assert!(controller.ensure_prepared_controlled(&control).is_err());
+            assert_eq!(
+                controller.load(),
+                Err(ModelRuntimeGateError::PreparationAlreadyAttempted)
+            );
+
+            let (mut controller, control) = fixture();
+            controller.ensure_prepared_controlled(&control).unwrap();
+            controller.unload().unwrap();
+            assert_eq!(
+                controller.load(),
+                Err(ModelRuntimeGateError::PreparationAlreadyAttempted)
+            );
+            assert_eq!(controller.runtime.inner.load_generation, 1);
         }
     }
 }
