@@ -1,5 +1,7 @@
 //! Exact-preimage shadow changes, review previews, and bounded write grants.
 
+pub mod selective;
+
 use std::{collections::BTreeSet, fmt::Write as _};
 
 use agentmage_kernel_contracts::{
