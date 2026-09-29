@@ -48,9 +48,9 @@
         "sha256": "ac16659bab43ca0b0981d9f123d67d2d79abfdb43962a5602ef88bac286cf913"
       },
       {
-        "byte_length": 53712,
+        "byte_length": 55424,
         "path": "kernel/engine/src/tooling.rs",
-        "sha256": "39d34741c5edb2ef1da442438393a7323d6e211a4023be6876756f0b0e4d59f6"
+        "sha256": "103c01e068578388f3f0f96f3145a8990ac1c180312ea29e8bd73579b5c94be1"
       },
       {
         "byte_length": 16731,
@@ -90,7 +90,7 @@
       {
         "byte_length": 8029,
         "path": "artifacts/sprints/sprint-5/story-5.2/effect-class-taxonomy-report.json",
-        "sha256": "d5560042f147dd479ba669cee2d277e447cdc662772a6adeff56d43397d468c9"
+        "sha256": "99dcee423e85c34152f02d92a598a3e0f93890aa923bc486c2b863a3406e34ce"
       },
       {
         "byte_length": 6993,
@@ -105,38 +105,38 @@
       {
         "byte_length": 8937,
         "path": "artifacts/sprints/sprint-5/story-5.2/policy-verification-report.json",
-        "sha256": "e216e878a57683be83779a92600936d400e7b14fd131436ae34494d501cc8686"
+        "sha256": "5729d8a53d59d5e77d6dd754082ff2f7faae4b6475d4ff0eb29ae4de3f96286d"
       },
       {
         "byte_length": 4542,
         "path": "artifacts/sprints/sprint-5/story-5.2/story-ac1-deterministic-disposition-report.json",
-        "sha256": "27349b810ad4a90b6ea4d384d4505a2a2454f6577188a79a4b52de6d5a6d0136"
+        "sha256": "f05b665897cf233234c3ea60e94d66dacd186bdb4c7311886e61295b15907e9c"
       },
       {
         "byte_length": 4771,
         "path": "artifacts/sprints/sprint-5/story-5.2/story-ac2-no-replay-recovery-report.json",
-        "sha256": "60b11e65454b0129efacb690d434b7ac69229cdaba73677225495bc262012a39"
+        "sha256": "30a884db22472e9a3c8dabdab3e875687af2aeb54c6861a416a7c84432e0a7e0"
       },
       {
         "byte_length": 4086,
         "path": "artifacts/sprints/sprint-5/story-5.2/story-ac3-bounded-termination-report.json",
-        "sha256": "4d773ef4353e00b906f1631f5cd7874a2c0f229a4c41c19f1a11ada2bda75d81"
+        "sha256": "bfc22b2eea1ac9d719e183f96fb3b157fbbb371b4bbf0395e1947adf4d14f54c"
       }
     ],
     "external_human_review_status": "not-performed",
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "8e8b6e0e7b8db1bb1dc11a21046b0dac605d6967",
-    "reviewed_tree": "39bbe766421ac4e9b3adae786a2cc9fb846e5a8b",
+    "reviewed_commit": "767a48e5527c852201a2e2c12bf9d48f22ee0d0f",
+    "reviewed_tree": "2c910c24fce9734c85d47d4b373e1a3938b285f9",
     "reviewer_id": "agentmage-story-5.2-independent-gate-v1"
   },
   "installed_product_claim": "none",
   "platform_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "8e8b6e0e7b8db1bb1dc11a21046b0dac605d6967",
-  "reviewed_tree": "39bbe766421ac4e9b3adae786a2cc9fb846e5a8b",
+  "reviewed_commit": "767a48e5527c852201a2e2c12bf9d48f22ee0d0f",
+  "reviewed_tree": "2c910c24fce9734c85d47d4b373e1a3938b285f9",
   "schema_version": 1,
   "sprint_completion_claim": false,
   "status": "blocked-open-dependencies-and-platform",
