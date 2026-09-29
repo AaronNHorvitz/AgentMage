@@ -8,13 +8,21 @@
     "backup",
     "restore",
     "expiry",
-    "deletion"
+    "deletion",
+    "manifest",
+    "extraction",
+    "index",
+    "attempt",
+    "receipt",
+    "verification",
+    "recovery",
+    "session-checkpoint"
   ],
   "claims": {
-    "abrupt_subprocess_stop_count": 128,
+    "abrupt_subprocess_stop_count": 224,
     "authority_recovery_or_replay_launches": 0,
-    "boundary_family_count": 8,
-    "boundary_position_pair_count": 16,
+    "boundary_family_count": 16,
+    "boundary_position_pair_count": 32,
     "external_network_used": false,
     "hard_exit_without_unwinding": true,
     "kernel_sigkill_or_power_loss_tested": false,
@@ -23,8 +31,8 @@
     "position_count": 2,
     "release_support": false,
     "repeated_completed_durable_transitions": 0,
-    "runs_per_boundary_position_pair": 8,
-    "seed_count": 128
+    "runs_per_boundary_position_pair": 7,
+    "seed_count": 224
   },
   "external_network_used": false,
   "limitations": [
@@ -39,27 +47,27 @@
   ],
   "private_user_data_used": false,
   "schema_version": 1,
-  "source_revision": "dec780ba306f2e4f940ab3785a7af224e90b6125",
+  "source_revision": "85d437907c1cae7ffbf3cd4831a8ec2882bb3bdf",
   "sources": [
     {
-      "bytes": 4328,
+      "bytes": 5674,
       "path": "docs/verification/s-011-rt01-seeded-crash-recovery-results.md",
-      "sha256": "471d46a450054af5567ffe37d8846f523babbb6e62c2d3fc40bcc4f64f17569d"
+      "sha256": "44cfa9918c4a8e61d5e2c94a4c576c3a5e6571321c46f2e27fde7da566ed5c8a"
     },
     {
-      "bytes": 81328,
+      "bytes": 128372,
       "path": "kernel/engine/src/authority_transaction.rs",
-      "sha256": "dffa4f7c807796a17312d7445c8452251361709756ad4512a5b4003ed95fafa1"
+      "sha256": "ba4319939bc4e57d6357e80d217dd872cd8c790447a1d185265736acdb9a2852"
     },
     {
-      "bytes": 180555,
+      "bytes": 484053,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "6108fd7925d8da6803ff87d0a0bef9fe84beef3d4d7e5b3cfb868f8dcf16f86e"
+      "sha256": "71d9c28c66f34a58da99ede64a7124532c72699c781f858c30e26e4e49415654"
     },
     {
-      "bytes": 10063,
+      "bytes": 10204,
       "path": "scripts/seeded_crash_recovery_evidence.py",
-      "sha256": "ec2eda7f953b9c9a9471992663b458b568b1a6a7202223f07a6b09442eca4aa1"
+      "sha256": "a5a9d2634f4183f26313032fc19be5c3ff6f700cb8dca06fd623d0d8adcc9a4a"
     },
     {
       "bytes": 3166,
