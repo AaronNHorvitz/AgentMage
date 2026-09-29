@@ -42,6 +42,7 @@ pub mod coding_operation;
 /// Verified descriptive planning identity for bounded coding sessions.
 pub mod coding_plan;
 pub mod coding_projection;
+pub mod coding_recoverability;
 /// Exact interface-neutral runtime request framing for coding sessions.
 pub mod coding_run;
 pub mod coding_session;

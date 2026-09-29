@@ -171,7 +171,9 @@ pub fn verify_rollback_request(request: &RollbackRequest) -> Result<(), CodingHi
     Ok(())
 }
 
-fn verify_retained_change(change: &RetainedCodingChange) -> Result<(), CodingHistoryError> {
+pub(crate) fn verify_retained_change(
+    change: &RetainedCodingChange,
+) -> Result<(), CodingHistoryError> {
     verify_change_record(&change.record)?;
     let bytes =
         serde_json::to_vec(&change.record).map_err(|_| CodingHistoryError::Serialization)?;
