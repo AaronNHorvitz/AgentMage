@@ -28,6 +28,11 @@ def report() -> dict[str, object]:
         patch.object(evidence, "production_family_references", return_value=[]),
         patch.object(
             evidence,
+            "family_scan_bindings",
+            return_value={"kernel/engine/src/runtime_loop_tests.rs": "d" * 64},
+        ),
+        patch.object(
+            evidence,
             "evidence_state",
             return_value={
                 "adapter_contract": "CONTRACT-PASS-LIVE-BLOCKED",
@@ -99,11 +104,37 @@ class Sprint13EvidenceTests(unittest.TestCase):
             lambda item: item["blockers"].pop(),
             lambda item: item["summary"].update({"automatic_fallback": True}),
             lambda item: item["summary"].update({"release_approval": True}),
+            lambda item: item["source_sha256"].pop("kernel/engine/src/runtime_loop_tests.rs"),
+            lambda item: item["source_sha256"].pop(evidence.SOURCE_PATHS[0]),
+            lambda item: item["source_sha256"].update({"shells/host/src/cli.rs": "e" * 64}),
+            lambda item: item.update({"schema_version": 1}),
         )
         for mutate in mutations:
             changed = copy.deepcopy(value)
             mutate(changed)
             self.assertTrue(evidence.validate_report(changed, verify_current=False))
+
+    def test_every_scanned_file_is_bound_and_current_closure_is_exact(self) -> None:
+        value = report()
+        self.assertIn("kernel/engine/src/runtime_loop_tests.rs", value["source_sha256"])
+        self.assertTrue(set(evidence.SOURCE_PATHS) <= set(value["source_sha256"]))
+        paths = evidence.family_scan_paths()
+        self.assertIn("kernel/engine/src/runtime_loop/artifact_preparation.rs", paths)
+        self.assertIn("kernel/engine/src/runtime_loop_tests.rs", paths)
+        self.assertTrue(all(evidence.FAMILY_SCAN_PATH.fullmatch(path) for path in paths))
+        # The fixture binds one scanned file, not the current tree's complete scan set.
+        self.assertIn(
+            "Sprint 13 source closure changed",
+            evidence.validate_report(value, verify_current=True),
+        )
+
+    def test_scan_bindings_refuse_bytes_other_than_the_revision(self) -> None:
+        with patch.object(evidence, "git_file", return_value=b"not the scanned bytes"):
+            with self.assertRaisesRegex(ValueError, "differs from the source revision"):
+                evidence.family_scan_bindings("c" * 40)
+
+    def test_current_kernel_has_no_production_family_reference(self) -> None:
+        self.assertEqual(evidence.production_family_references(), [])
 
 
 if __name__ == "__main__":

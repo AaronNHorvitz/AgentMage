@@ -9,11 +9,16 @@ import json
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Final
 
 
 ROOT: Final = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts.rust_test_ownership import production_sources
 OUTPUT: Final = ROOT / "artifacts/sprints/sprint-13/local-evidence-report.json"
 SOURCE_PATHS: Final = (
     "kernel/contracts/src/model.rs",
@@ -27,9 +32,15 @@ SOURCE_PATHS: Final = (
     "model-profiles/exact-profile-catalog.json",
     "scripts/sprint_13_evidence.py",
     "scripts/sprint_13_cross_adapter_parity.py",
+    "scripts/rust_source_audit.py",
+    "scripts/rust_test_ownership.py",
     "tests/test_sprint_13_evidence.py",
     "tests/test_sprint_13_cross_adapter_parity.py",
+    "tests/test_rust_test_ownership.py",
 )
+# Every file the neutrality scan reads is also a whole-file source binding.
+FAMILY_SCAN_GLOB: Final = "kernel/*/src/**/*.rs"
+FAMILY_SCAN_PATH: Final = re.compile(r"^kernel/[a-z0-9_-]+/src/(?:[A-Za-z0-9_]+/)*[A-Za-z0-9_]+\.rs$")
 EVIDENCE_PATHS: Final = (
     "artifacts/sprints/sprint-13/story-13.1/muse-native-adapter-contract-v2.json",
     "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json",
@@ -196,10 +207,25 @@ def run_commands() -> list[dict[str, Any]]:
     return results
 
 
+def family_scan_paths() -> tuple[str, ...]:
+    return tuple(sorted(str(path.relative_to(ROOT)) for path in ROOT.glob(FAMILY_SCAN_GLOB)))
+
+
+def family_scan_bindings(source_revision: str) -> dict[str, str]:
+    """Bind each scanned file at the revision; refuse a scan of different bytes."""
+    bindings = {}
+    for path in family_scan_paths():
+        committed = git_file(source_revision, path)
+        if (ROOT / path).read_bytes() != committed:
+            raise ValueError(f"family scan input differs from the source revision: {path}")
+        bindings[path] = sha256_bytes(committed)
+    return bindings
+
+
 def production_family_references() -> list[dict[str, Any]]:
     references = []
-    for path in sorted((ROOT / "kernel").glob("*/src/*.rs")):
-        production = path.read_text(encoding="utf-8").split("#[cfg(test)]", 1)[0]
+    scanned = production_sources(ROOT / path for path in family_scan_paths())
+    for path, production in sorted(scanned.items()):
         for line_number, line in enumerate(production.splitlines(), start=1):
             for family in ("muse", "gemma"):
                 if family in line.lower():
@@ -263,13 +289,15 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
     state = evidence_state()
     command_pass = all(item["exit_code"] == 0 for item in commands)
     local_contract_pass = command_pass and not references and state == EXPECTED_EVIDENCE_STATE
+    sources = family_scan_bindings(source_revision)
+    sources.update(
+        {path: sha256_bytes(git_file(source_revision, path)) for path in SOURCE_PATHS}
+    )
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "record_type": "sprint_13_local_evidence",
         "source_revision": source_revision,
-        "source_sha256": {
-            path: sha256_bytes(git_file(source_revision, path)) for path in SOURCE_PATHS
-        },
+        "source_sha256": dict(sorted(sources.items())),
         "evidence_sha256": {path: sha256_file(ROOT / path) for path in EVIDENCE_PATHS},
         "commands": commands,
         "production_kernel_family_references": references,
@@ -380,15 +408,20 @@ def validate_report(report: Any, *, verify_current: bool = True) -> list[str]:
     }:
         return ["Sprint 13 evidence fields are not closed"]
     if (
-        report.get("schema_version") != 1
+        report.get("schema_version") != 2
         or report.get("record_type") != "sprint_13_local_evidence"
         or not REVISION.fullmatch(str(report.get("source_revision", "")))
     ):
         failures.append("Sprint 13 evidence identity changed")
     sources = report.get("source_sha256", {})
     evidence = report.get("evidence_sha256", {})
-    if set(sources) != set(SOURCE_PATHS) or any(
-        not SHA256.fullmatch(str(value)) for value in sources.values()
+    scanned = set(sources) - set(SOURCE_PATHS)
+    if (
+        not set(SOURCE_PATHS) <= set(sources)
+        or not scanned
+        or any(not FAMILY_SCAN_PATH.fullmatch(path) for path in scanned)
+        or (verify_current and set(sources) != set(SOURCE_PATHS) | set(family_scan_paths()))
+        or any(not SHA256.fullmatch(str(value)) for value in sources.values())
     ):
         failures.append("Sprint 13 source closure changed")
     if set(evidence) != set(EVIDENCE_PATHS) or any(

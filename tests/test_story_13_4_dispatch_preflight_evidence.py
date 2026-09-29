@@ -20,6 +20,30 @@ class Story134DispatchPreflightEvidenceTests(unittest.TestCase):
         for marker in evidence.MARKERS:
             self.assertTrue(evidence.validate_raw(valid.replace(marker, "")), marker)
 
+    def test_private_host_paths_are_redacted_or_refused(self) -> None:
+        valid = "\n".join(evidence.MARKERS)
+        home = str(evidence.Path.home())
+        for leaked in (
+            f"   Compiling agentmage-kernel-engine v0.0.0 ({evidence.ROOT}/kernel/engine)",
+            f"warning: {home}/.cargo/registry/src/crate/lib.rs",
+            f"{home.removeprefix('/var')}/elsewhere" if home.startswith("/var/home/") else home,
+        ):
+            self.assertIn(
+                "dispatch-preflight results contain a private host path",
+                evidence.validate_raw(valid + "\n" + leaked),
+            )
+        output = f"   Compiling agentmage-host v0.0.0 ({evidence.ROOT}/shells/host)\n"
+        with patch.object(evidence, "COMMANDS", (("true",),)), patch.object(
+            evidence.subprocess, "run"
+        ) as run:
+            run.return_value.stdout = output
+            run.return_value.returncode = 0
+            captured, returncode = evidence.capture()
+        self.assertEqual(returncode, 0)
+        self.assertNotIn(str(evidence.ROOT), captured)
+        self.assertIn("(<repository-root>/shells/host)", captured)
+        self.assertEqual(evidence.validate_raw(valid + "\n" + captured), [])
+
     def test_matrix_and_claim_limits_are_closed(self) -> None:
         value = report()
         self.assertEqual(set(value["ctx_fit"]), set(evidence.CTX_FIT))

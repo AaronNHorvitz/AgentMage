@@ -9,11 +9,16 @@ import json
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Final
 
 
 ROOT: Final = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts.rust_test_ownership import production_sources
 OUTPUT: Final = ROOT / "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json"
 REVISION: Final = re.compile(r"^[0-9a-f]{40}$")
 SOURCE_PATHS: Final = (
@@ -24,8 +29,14 @@ SOURCE_PATHS: Final = (
     "platforms/linux-inference/src/llama_server_driver.rs",
     "platforms/linux-inference/src/muse_atem_codec.rs",
     "scripts/muse_codec_evidence.py",
+    "scripts/rust_source_audit.py",
+    "scripts/rust_test_ownership.py",
     "tests/test_muse_codec_evidence.py",
+    "tests/test_rust_test_ownership.py",
 )
+# Every file the neutrality scan reads is also a whole-file source binding.
+FAMILY_SCAN_GLOB: Final = "kernel/engine/src/**/*.rs"
+FAMILY_SCAN_PATH: Final = re.compile(r"^kernel/engine/src/(?:[A-Za-z0-9_]+/)*[A-Za-z0-9_]+\.rs$")
 COMMANDS: Final = (
     (
         "muse-edge-codec",
@@ -124,11 +135,14 @@ def run_commands() -> list[dict[str, Any]]:
     return results
 
 
+def family_scan_paths() -> tuple[str, ...]:
+    return tuple(sorted(str(path.relative_to(ROOT)) for path in ROOT.glob(FAMILY_SCAN_GLOB)))
+
+
 def kernel_family_references() -> list[dict[str, Any]]:
     references: list[dict[str, Any]] = []
-    for path in sorted((ROOT / "kernel/engine/src").glob("*.rs")):
-        content = path.read_text(encoding="utf-8")
-        production = content.split("#[cfg(test)]", maxsplit=1)[0]
+    scanned = production_sources(ROOT / path for path in family_scan_paths())
+    for path, production in sorted(scanned.items()):
         for line_number, line in enumerate(production.splitlines(), start=1):
             for family in ("muse", "gemma"):
                 if family in line.lower():
@@ -161,10 +175,13 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
     )
     passed = all(check["result"] == "PASS" for check in checks)
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "record_type": "d027_s13_muse_codec_evidence",
         "source_revision": source_revision,
-        "source_sha256": {path: sha256_file(ROOT / path) for path in SOURCE_PATHS},
+        "source_sha256": {
+            path: sha256_file(ROOT / path)
+            for path in sorted({*SOURCE_PATHS, *family_scan_paths()})
+        },
         "commands": commands,
         "mutations": [
             {"id": identifier, "proving_test": test, "result": "PASS" if passed else "BLOCKED"}
@@ -201,13 +218,17 @@ def validate_report(report: dict[str, Any]) -> list[str]:
         "mutations", "diagnostics", "production_kernel_family_references", "checks", "disposition", "limitations",
     }:
         return ["codec evidence fields are not closed"]
-    if report.get("schema_version") != 2 or report.get("record_type") != "d027_s13_muse_codec_evidence":
+    if report.get("schema_version") != 3 or report.get("record_type") != "d027_s13_muse_codec_evidence":
         failures.append("codec evidence identity changed")
     if not REVISION.fullmatch(str(report.get("source_revision", ""))):
         failures.append("codec evidence revision is not exact")
     sources = report.get("source_sha256", {})
-    if set(sources) != set(SOURCE_PATHS) or any(
-        not re.fullmatch(r"[0-9a-f]{64}", str(value)) for value in sources.values()
+    scanned = set(sources) - set(SOURCE_PATHS)
+    if (
+        not set(SOURCE_PATHS) <= set(sources)
+        or not scanned
+        or any(not FAMILY_SCAN_PATH.fullmatch(path) for path in scanned)
+        or any(not re.fullmatch(r"[0-9a-f]{64}", str(value)) for value in sources.values())
     ):
         failures.append("codec source closure changed")
     commands = report.get("commands", [])
