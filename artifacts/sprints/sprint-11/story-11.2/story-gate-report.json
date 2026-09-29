@@ -152,12 +152,12 @@
       {
         "byte_length": 6455,
         "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
-        "sha256": "121f53c02a978dd9e9889b80679e5d84eb9f4ac72b2780a6217c4e8eb3843c06"
+        "sha256": "aeef91940c0f795709834b8f9e6549865d7027c0ac05834ce96b22a9f0773118"
       },
       {
         "byte_length": 3901,
         "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
-        "sha256": "18e298860840d4a8cfffa3bf1fdf62f6d073fe0d74f75ee4d875b77fe9d9157d"
+        "sha256": "68be2eac5ec82afa72ac3d1a628f5f296809366813a967f25b497b62d6b36058"
       },
       {
         "byte_length": 6030,
@@ -167,23 +167,23 @@
       {
         "byte_length": 5225,
         "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
-        "sha256": "5406ce0ba1d71a010400062336be2323770841383b127a6b6f31667c5d6adc3c"
+        "sha256": "4a1674203ccdca0fa34a3634fae7acfb67b1e9ce1c2ee051a0d3962462db8fab"
       }
     ],
     "external_human_review_status": "not-performed",
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "c6798ef49e8ea7e3c50ce7ecbb83149b23c71ea8",
-    "reviewed_tree": "fb68f457ca7e6896915ba061a175bdee55b1f805",
+    "reviewed_commit": "a9c4063ea6fa1486d1ecfa10795d322d0c1c1e61",
+    "reviewed_tree": "3c4553720c6b626c2475da5bcc7d5fc2616a0e26",
     "reviewer_id": "agentmage-story-11.2-independent-gate-v1"
   },
   "installed_product_claim": "none",
   "platform_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "c6798ef49e8ea7e3c50ce7ecbb83149b23c71ea8",
-  "reviewed_tree": "fb68f457ca7e6896915ba061a175bdee55b1f805",
+  "reviewed_commit": "a9c4063ea6fa1486d1ecfa10795d322d0c1c1e61",
+  "reviewed_tree": "3c4553720c6b626c2475da5bcc7d5fc2616a0e26",
   "schema_version": 1,
   "sprint_completion_claim": false,
   "status": "blocked-open-dependencies-and-platform-integration",
