@@ -31,7 +31,7 @@
   ],
   "private_user_data_used": false,
   "schema_version": 1,
-  "source_revision": "75c0339b049cb68dd7ab211d56e71119692bdb87",
+  "source_revision": "28398bcd3af5ff85cdd150b736b264c75efb7b1b",
   "sources": [
     {
       "bytes": 2428,
@@ -59,9 +59,9 @@
       "sha256": "2903b9c5597c0023cafdaee69eb2eba041a0a9638a68ca3b5b645a98c30a0785"
     },
     {
-      "bytes": 19103,
+      "bytes": 19384,
       "path": "kernel/engine/src/lib.rs",
-      "sha256": "a5645d06971f3c83176395fff4c782523ab084fdbd14276009f3c770d00689af"
+      "sha256": "715ec8ffb533bbdcc2e3a9b820fe12d545e2b36f05e30ceae7be35f66454ba16"
     },
     {
       "bytes": 9984,
