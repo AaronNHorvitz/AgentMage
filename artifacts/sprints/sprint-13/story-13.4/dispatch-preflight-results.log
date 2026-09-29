@@ -1,13 +1,12 @@
 $ cargo test -p agentmage-kernel-engine --locked dispatch_preflight_ -- --test-threads=1
-   Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.05s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 2 tests
 test model_runtime::tests::dispatch_preflight_accepts_exact_fit_and_refuses_one_token_over_before_stream ... ok
 test model_runtime::tests::dispatch_preflight_refuses_7000_plus_2048_against_8192_and_invalid_margin ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 1043 filtered out; finished in 0.00s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 1293 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -125,7 +124,7 @@ $ cargo test -p agentmage-kernel-engine --locked prepared_request_mutation_stale
 running 1 test
 test model_runtime::tests::prepared_request_mutation_stale_binding_and_token_drift_send_no_generation_bytes ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1044 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1294 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -243,7 +242,7 @@ $ cargo test -p agentmage-kernel-engine --locked orchestration_plan_and_tool_hea
 running 1 test
 test model_runtime::tests::orchestration_plan_and_tool_heavy_unicode_render_reconcile_once ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1044 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1294 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -355,50 +354,57 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; fini
 
 
 $ cargo test -p agentmage-host --locked model_preflight_refusals_have_closed_codes_and_recovery -- --test-threads=1
-   Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
-   Compiling agentmage-platform-linux v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/platforms/linux)
-   Compiling agentmage-host v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/shells/host)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 8.66s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_host-1b18b69b396ab8a2)
+   Compiling agentmage-kernel-engine v0.0.0 (<repository-root>/kernel/engine)
+   Compiling agentmage-platform-linux-inference v0.0.0 (<repository-root>/platforms/linux-inference)
+   Compiling agentmage-platform-linux v0.0.0 (<repository-root>/platforms/linux)
+   Compiling agentmage-host v0.0.0 (<repository-root>/shells/host)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 9.86s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-094cc34c77d48d9f)
 
 running 1 test
 test engineering_runtime::tests::model_preflight_refusals_have_closed_codes_and_recovery ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 290 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 349 filtered out; finished in 0.00s
 
-     Running unittests src/bin/agent.rs (target/debug/deps/agent-ab1780041ce75a7c)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-
-     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-00cda116f7610489)
+     Running unittests src/bin/agent.rs (target/debug/deps/agent-85460353a329bad0)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/bin/agentmage-demo-documents.rs (target/debug/deps/agentmage_demo_documents-9b789c4edb3a05ff)
+     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-6f743f9a8144c4db)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/main.rs (target/debug/deps/agentmage_host-14f48993d0eba91d)
+     Running unittests src/bin/agentmage-demo-documents.rs (target/debug/deps/agentmage_demo_documents-a93d37f4b2ffd2da)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/agentmage_host-0026d62eaf8fd61b)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.00s
 
+     Running tests/native_read_cancellation.rs (target/debug/deps/native_read_cancellation-0aad7d5ce50e2cdf)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
 
 $ cargo test -p agentmage-platform-linux-inference --locked --no-run
-   Compiling agentmage-platform-linux-inference v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/platforms/linux-inference)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.10s
-  Executable unittests src/lib.rs (target/debug/deps/agentmage_platform_linux_inference-9b8eded1ee48c32a)
-  Executable unittests src/docker_guard_main.rs (target/debug/deps/agentmage_docker_guard-e694f0eb4f1ba26d)
-  Executable unittests src/docker_topology_collector_main.rs (target/debug/deps/agentmage_docker_topology_collector-0b7fc57f4622dd2b)
-  Executable unittests src/model_installer_main.rs (target/debug/deps/agentmage_model_installer-c7e3e860f99917b1)
-  Executable unittests src/main.rs (target/debug/deps/agentmage_native_inference-ef4aae71cea88a13)
-  Executable tests/muse_live_evaluation.rs (target/debug/deps/muse_live_evaluation-afb5ed20a037e93d)
-  Executable tests/muse_live_install.rs (target/debug/deps/muse_live_install-cba0d4fcb2e1f1c9)
-  Executable tests/process_boundary.rs (target/debug/deps/process_boundary-c046b64f0f2c12ea)
+   Compiling agentmage-platform-linux-inference v0.0.0 (<repository-root>/platforms/linux-inference)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.43s
+  Executable unittests src/lib.rs (target/debug/deps/agentmage_platform_linux_inference-5fc27fd4d1c7ad24)
+  Executable unittests src/docker_guard_main.rs (target/debug/deps/agentmage_docker_guard-5cf88295e89c389e)
+  Executable unittests src/docker_topology_collector_main.rs (target/debug/deps/agentmage_docker_topology_collector-368cadba4847bd1c)
+  Executable unittests src/model_installer_main.rs (target/debug/deps/agentmage_model_installer-61b8aff495be348b)
+  Executable unittests src/main.rs (target/debug/deps/agentmage_native_inference-d77dab4a5965bc7f)
+  Executable tests/muse_live_evaluation.rs (target/debug/deps/muse_live_evaluation-429201353eb34756)
+  Executable tests/muse_live_install.rs (target/debug/deps/muse_live_install-9959d4dc325bd637)
+  Executable tests/process_boundary.rs (target/debug/deps/process_boundary-ea31f087ce072823)
