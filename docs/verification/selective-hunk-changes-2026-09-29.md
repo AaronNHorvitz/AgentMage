@@ -5,6 +5,9 @@ Date: 2026-09-29. Source: `3a3d9d540a956578f28bf93e14c2f1ea4d4b1390`.
 component, following the [AMR assessment](amr-assessment-2026-09-29.md). The
 [retained record](selective-hunk-changes-2026-09-29.json) binds the commits, stage
 commands, exit codes, log digests, inventory and CLI observation.
+Correction: the record as first committed listed commits from the preceding batch
+and digests of that batch's check logs. The corrected record lists this batch's
+commits and the digests of its own logs; no other field changed.
 
 ## Change
 

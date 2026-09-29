@@ -1,54 +1,50 @@
 {
   "schema_version": 1,
-  "record_type": "agentmage-selective-hunk-change-verification",
+  "record_type": "agentmage-coding-recoverability-verification",
   "date": "2026-09-29",
-  "base_commit": "b09796d5d33ba3a5a959409fb1dfde804a335bff",
-  "source_commit": "3a3d9d540a956578f28bf93e14c2f1ea4d4b1390",
-  "decision": "docs/decisions/0107-selective-hunk-changes.md",
-  "assessment": "docs/verification/amr-assessment-2026-09-29.md",
+  "base_commit": "70f055450cc2dcfe4b3c769fef0ece01e411989c",
+  "source_commit": "396669258eedaf6637ec1bae3fb33bca3affde15",
+  "decision": "docs/decisions/0108-coding-session-recoverability.md",
   "commits": [
     {
-      "commit": "3a3d9d540a956578f28bf93e14c2f1ea4d4b1390",
-      "subject": "Add exact hunk selection for reviewed text changes"
+      "commit": "396669258eedaf6637ec1bae3fb33bca3affde15",
+      "subject": "Declare which coding-session effects are recoverable"
     },
     {
-      "commit": "fc4ff664201d241a822b4904c5b10da5715f0f5f",
-      "subject": "Renew source-bound evidence for selective hunk changes"
+      "commit": "16bf8ab549e12009cdbb23b4a136a485bfb55693",
+      "subject": "Renew source-bound evidence for session recoverability"
     },
     {
-      "commit": "4b7182391c6da48d52d2b4aecba0ba8adee7ae86",
-      "subject": "Renew Sprint 13 and codec evidence for selective hunk changes"
+      "commit": "a9c4063ea6fa1486d1ecfa10795d322d0c1c1e61",
+      "subject": "Re-bind Sprint 11 security evidence after the recoverability SBOM write"
     },
     {
-      "commit": "c6798ef49e8ea7e3c50ce7ecbb83149b23c71ea8",
-      "subject": "Re-bind Sprint 11 security evidence after the selective-change SBOM write"
-    },
-    {
-      "commit": "acfce0f679f4c46d42ae9e947bd52fbdd317ec18",
-      "subject": "Advance automated Story 11.2 pin after selective-change renewals"
+      "commit": "08f0721ee479fa75f9d488b9ec74aa4ee1de1b51",
+      "subject": "Advance automated Story 11.2 pin after recoverability renewals"
     }
   ],
-  "gap_basis": "write previews offered only whole-file escaped before/after text and whole-change acceptance (write_approval.rs exact_diff)",
+  "gap_basis": "change records and a single-record rollback tool existed, but nothing declared which session effects are recoverable (coding_history.rs)",
   "component_checks": {
     "engine_lib": {
       "passed": 1300,
       "failed": 0,
       "ignored": 7,
-      "new_tests": 6
+      "new_tests": 0
     },
     "linux_lib": {
       "passed": 183,
       "failed": 19,
       "ignored": 51,
-      "comparison": "all 19 failure names and panic blocks identical to the retained 2026-09-27 sandbox baseline"
+      "comparison": "all 19 failure names and panic blocks identical to the retained 2026-09-27 sandbox baseline after removing the harness backtrace note, whose placement follows thread scheduling"
     },
     "host_lib": {
-      "passed": 292,
+      "passed": 297,
       "failed": 50,
       "ignored": 8,
+      "new_tests": 5,
       "comparison": "all 50 failure names and panic blocks identical to the Decision 0101 baseline"
     },
-    "clippy_workspace_all_targets": "pass",
+    "clippy_workspace_all_targets": "first run failed large_enum_variant on SessionEffect; write variant boxed; pass",
     "fmt": "pass",
     "strict_local_effect_hostile_network_audits": "pass",
     "selector_tests": "pass (28)",
@@ -56,17 +52,19 @@
     "validate_docs": "pass",
     "known_preexisting_failure": "npm run requirements:current-check fails at build_contract.py because platforms/linux gained optional ureq/url for the Decision 0084 research worker (commit 5b731b36) without the accepted graph recording optional dependencies; identical at 6a4359d2; not changed here",
     "logs_sha256": {
-      "engine": "04c3d923aa18a64ee2e60ca8aef3b6001b8659a9eeb82b592aa1f4ab6e916ead",
-      "linux": "42b6b9798a26101a6da4bbb682978d1c65519b85481aa20259712e679698e24d",
-      "host": "2de271ec412e66fe0711f7320ee22a6ff5706a929d6963c07601aae718bcff67",
-      "clippy": "f07ff85af816832294f74c70b15cb68882f57c5a87f50689326c25110cdba4dc"
+      "engine": "6dc904fdcadd851264919745163c81ab8631f2417969636ad697e6ab7de2db41",
+      "linux": "abad7fd4bc14c724477cc4c0661f2f6603af5bfaaba70698d7ed1aebccd48747",
+      "host": "96acd4afde0fe557b43bf5d12f560cd84c819b93dc3e20304fa1bf68f3844f16",
+      "host-2": "2267b28f3f34bd538ac28aa7ad0d7351ee5ac29222cceadde98c4c2164620383",
+      "clippy": "d9b101cb9ba1b3076dfa4385155bb4596a2b642c36891ad7692d35e9f964cced",
+      "clippy-2": "eb8cd14ea6921478c91fa1993628c341892f0e841d24ca74a34859a497667d05"
     }
   },
   "evidence_stages": [
     {
       "stage": "core",
-      "source_revision": "3a3d9d540a956578f28bf93e14c2f1ea4d4b1390",
-      "scope": "One SBOM write, the foundation reports, the Story 1.2 contract-boundary gate and the work selector for the selective-change batch at the exact committed revision; no input reduction, threshold or claim change.",
+      "source_revision": "396669258eedaf6637ec1bae3fb33bca3affde15",
+      "scope": "One SBOM write, foundation reports, the TASKS-bound Story 1.2 gate and index, and the work selector for the recoverability batch; no input reduction or claim change.",
       "planned_commands": 20,
       "ran": 20,
       "results": [
@@ -87,7 +85,7 @@
             "tests.test_supply_chain"
           ],
           "exit_code": 0,
-          "log_sha256": "b5ef02892c2bf46dd6ec270711f1e40fb5284881831ce4a0cf7fd8b0ccbf6719"
+          "log_sha256": "0adaa01cb11b8405b8e59db339f9cadac6fcc101639c185fdf56abdfd0b2287d"
         },
         {
           "argv": [
@@ -125,7 +123,7 @@
             "tests.test_story_1_1_security_evidence"
           ],
           "exit_code": 0,
-          "log_sha256": "0d628f37216e0a286bb4dc09c3961e6b1490ff1c53d56a39af806e9c2cc5da78"
+          "log_sha256": "4784c448796f80cab2b7625b9fd54f88cd35bbe61c44536e88108801b85243f3"
         },
         {
           "argv": [
@@ -182,7 +180,7 @@
             "tests.test_component_inventory"
           ],
           "exit_code": 0,
-          "log_sha256": "99956df695e6c824396aeede69604b037850f3eaca9f674331256c1e7fd78ebc"
+          "log_sha256": "2998afe0440c0b9247d7fdb985c37a15ff4ec38f912e522464ff3a36079074c8"
         },
         {
           "argv": [
@@ -220,7 +218,7 @@
             "tests.test_story_3_1_security_evidence"
           ],
           "exit_code": 0,
-          "log_sha256": "636fd53d0ce4ebc3176f4515844314ad774a036d72bcd83b46fa554bf0423ac2"
+          "log_sha256": "7d017c8663afa60e666e9eeebe485fe4e528a32b06677a907106dc0f20f15eb0"
         },
         {
           "argv": [
@@ -229,7 +227,7 @@
             "--write"
           ],
           "exit_code": 0,
-          "log_sha256": "11a9056069fa512787aeb7d274b2192e3e1a47c162d19df3173da7ea90800715"
+          "log_sha256": "f91f74b0a134d255ecd6ced2b115cd3c5ead5aed1e993d22bfdb768ba85cc201"
         },
         {
           "argv": [
@@ -240,115 +238,7 @@
             "tests.test_amendment_work_selection"
           ],
           "exit_code": 0,
-          "log_sha256": "06f8bb7764a319f41edd936a6c49a047c378dddcfd87400b51a26b59391e9d1c"
-        },
-        {
-          "argv": [
-            "python3",
-            "scripts/supply_chain.py"
-          ],
-          "exit_code": 0,
-          "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
-        },
-        {
-          "argv": [
-            "git",
-            "diff",
-            "--check"
-          ],
-          "exit_code": 0,
-          "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        }
-      ]
-    },
-    {
-      "stage": "codec-onward",
-      "source_revision": "fc4ff664201d241a822b4904c5b10da5715f0f5f",
-      "scope": "Codec (clean tree), early disposition, Sprint 13 aggregate and context profile for the selective-change batch; no SBOM write.",
-      "planned_commands": 10,
-      "ran": 10,
-      "results": [
-        {
-          "argv": [
-            "python3",
-            "scripts/muse_codec_evidence.py",
-            "--write",
-            "--source-revision",
-            "fc4ff664201d241a822b4904c5b10da5715f0f5f"
-          ],
-          "exit_code": 0,
-          "log_sha256": "ee3124d287be0df61d007cd156af955e50affb61d03a0b4d5d6262b378cde672"
-        },
-        {
-          "argv": [
-            "python3",
-            "-m",
-            "unittest",
-            "tests.test_muse_codec_evidence"
-          ],
-          "exit_code": 0,
-          "log_sha256": "90e8f26076a61ca95a415cd5fa17d6e94698308f592b1f312abb01d3629a150a"
-        },
-        {
-          "argv": [
-            "python3",
-            "scripts/muse_early_disposition.py",
-            "--write",
-            "--source-revision",
-            "fc4ff664201d241a822b4904c5b10da5715f0f5f"
-          ],
-          "exit_code": 0,
-          "log_sha256": "1bb05364c5bb717c54e36038673e34d01453f399f775aa76e6b2e02a716861f0"
-        },
-        {
-          "argv": [
-            "python3",
-            "-m",
-            "unittest",
-            "tests.test_muse_early_disposition"
-          ],
-          "exit_code": 0,
-          "log_sha256": "cbe4b84d897ac017db0552ccb3a31855ff0fb172bc344c967c4c4c92eb19e624"
-        },
-        {
-          "argv": [
-            "python3",
-            "scripts/sprint_13_evidence.py",
-            "--write",
-            "--source-revision",
-            "fc4ff664201d241a822b4904c5b10da5715f0f5f"
-          ],
-          "exit_code": 0,
-          "log_sha256": "80457ccc5c51f38b35dc2255d88c0fd06740d4b2948155d7313219be9eb80659"
-        },
-        {
-          "argv": [
-            "python3",
-            "-m",
-            "unittest",
-            "tests.test_sprint_13_evidence"
-          ],
-          "exit_code": 0,
-          "log_sha256": "c33144ec867ca38b9b18d690651a7dbc78fdb36440facfb868eaca376c88e7f3"
-        },
-        {
-          "argv": [
-            "python3",
-            "scripts/story_13_4_context_profile_evidence.py",
-            "--write"
-          ],
-          "exit_code": 0,
-          "log_sha256": "7023a5bb989a18088e85c0187fdf7d7c4cfbabc27bae8ef733086f002259cad0"
-        },
-        {
-          "argv": [
-            "python3",
-            "-m",
-            "unittest",
-            "tests.test_story_13_4_context_profile_evidence"
-          ],
-          "exit_code": 0,
-          "log_sha256": "eb8c88bdf6d7bffd457b38469078be30b7e97db745e82c5f24162939bad78be2"
+          "log_sha256": "c3a3d9606792a6c4d081e124c61a93f138377f4aa03fce0be24c120d6f6dcf52"
         },
         {
           "argv": [
@@ -371,8 +261,8 @@
     },
     {
       "stage": "rebind",
-      "source_revision": "4b7182391c6da48d52d2b4aecba0ba8adee7ae86",
-      "scope": "Re-bind the Sprint 11 security map to the regenerated component inventory, then the storage security, frozen-scope breadth, AC1 and AC3 reports that bind it; no SBOM write.",
+      "source_revision": "16bf8ab549e12009cdbb23b4a136a485bfb55693",
+      "scope": "Re-bind the Sprint 11 security map to the regenerated component inventory, then the storage security, frozen-scope breadth, AC1 and AC3 reports; no SBOM write.",
       "planned_commands": 13,
       "ran": 13,
       "results": [
@@ -382,7 +272,7 @@
             "scripts/sprint_11_security_evidence.py",
             "--write",
             "--source-revision",
-            "4b7182391c6da48d52d2b4aecba0ba8adee7ae86"
+            "16bf8ab549e12009cdbb23b4a136a485bfb55693"
           ],
           "exit_code": 0,
           "log_sha256": "8d469696cbc98fb27b41dd9a289ea7550b57136dc2a9632eba7483dc03a74288"
@@ -502,8 +392,8 @@
     },
     {
       "stage": "gate",
-      "source_revision": "c6798ef49e8ea7e3c50ce7ecbb83149b23c71ea8",
-      "scope": "AGENTS.md section 7 routine Story 11.2 pin to c6798ef4 (25 paths retained, 3 explained regenerated reports) and gate rebuild; no external review claimed; no SBOM write.",
+      "source_revision": "a9c4063ea6fa1486d1ecfa10795d322d0c1c1e61",
+      "scope": "AGENTS.md section 7 routine Story 11.2 pin (25 paths retained, explained regenerated reports) and gate rebuild; no external review claimed; no SBOM write.",
       "planned_commands": 5,
       "ran": 5,
       "results": [
@@ -524,7 +414,7 @@
             "tests.test_story_11_2_gate"
           ],
           "exit_code": 0,
-          "log_sha256": "c0e3d6fb9fdd9896ab939a8b04d5968fc84fae9848be4c9284a5329fe96ac463"
+          "log_sha256": "c6b9e3744d88eebb7ddbb7da2406c69f9aecf87782fad0bc1e3c19ffaffaaec7"
         },
         {
           "argv": [
@@ -557,11 +447,11 @@
   "retained_failures": [],
   "sbom_writes": 1,
   "sbom_components_changed": [
-    "agentmage-kernel-engine"
+    "agentmage-host"
   ],
   "story_11_2_pin": {
-    "from": "2e2b3c7ffe66c01303284630403c92fc3ef2214d",
-    "to": "c6798ef49e8ea7e3c50ce7ecbb83149b23c71ea8",
+    "from": "c6798ef49e8ea7e3c50ce7ecbb83149b23c71ea8",
+    "to": "a9c4063ea6fa1486d1ecfa10795d322d0c1c1e61",
     "reviewed_paths_retained": 25,
     "changed_reviewed_path_count": 3,
     "authority": "AGENTS.md section 7 routine automated renewal; no external review claimed"
@@ -569,40 +459,28 @@
   "binding_inventory": {
     "scope": "direct whole-file hash records naming paths changed since the base; not transitive or line-span",
     "counts": {
-      "previously-stale-or-historical": 2221,
-      "current": 41,
-      "newly-stale": 21
+      "previously-stale-or-historical": 2265,
+      "current": 32,
+      "newly-stale": 4
     },
     "newly_stale_artifacts": [
-      "docs/verification/amendment-work-selection-2026-09-27.json",
-      "docs/verification/coding-harness-ownership-2026-09-27.json",
       "docs/verification/controlled-native-preparation-2026-09-28.json",
-      "docs/verification/development-confirmation-2026-09-27.json",
-      "docs/verification/development-host-lifecycle-2026-09-27.json",
       "docs/verification/failed-start-consumption-2026-09-28.json",
-      "docs/verification/harness-model-diagnostics-2026-09-28.json",
-      "docs/verification/linux-current-startup-2026-09-27.json",
       "docs/verification/model-socket-deadlines-2026-09-28.json",
-      "docs/verification/native-development-diagnostics-2026-09-27.json",
-      "docs/verification/native-inference-cleanup-2026-09-27.json",
-      "docs/verification/research-completion-2026-09-28.json",
-      "docs/verification/runtime-advancement-reconciliation-2026-09-27.json",
-      "docs/verification/runtime-artifact-preparation-2026-09-27.json",
-      "docs/verification/runtime-callback-consistency-2026-09-27.json",
       "docs/verification/runtime-phase-deadlines-2026-09-28.json"
     ],
     "newly_stale_disposition": "immutable historical verification records keep their original pins"
   },
   "cli_observation": {
-    "source_commit": "acfce0f679f4c46d42ae9e947bd52fbdd317ec18",
+    "source_commit": "08f0721ee479fa75f9d488b9ec74aa4ee1de1b51",
     "binaries": {
       "agentmage": {
-        "sha256": "f580635eb2036d46c2cece564fd1c9067ea0fb7516e67d3bb62fb47767109740",
-        "bytes": 281765312
+        "sha256": "6deca47ddb3d56112d97a14bf92d24222279e7bb7c36aa890dd16caaf0573aa9",
+        "bytes": 282166392
       },
       "agentmage-host": {
-        "sha256": "2719641ee2fac019946ecde90a904b12763087efb42ed3eed631c1b9398d7695",
-        "bytes": 328945168
+        "sha256": "3fc8da6dbc1d3552c7d3965b92549333e75f8bcc7f5475edae8ef3bfd4a720c3",
+        "bytes": 329346208
       },
       "agentmage-read-only-worker": {
         "sha256": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf",
@@ -616,8 +494,9 @@
     "qualification": "actual-binary-native-prerequisite-refusal-only"
   },
   "not_run": [
-    "AMR-04.2 preview/approval/CLI binding (not implemented)",
-    "actual-process human-edit preservation with hunks",
+    "building the effect list from actual session receipts",
+    "CLI presentation of the report",
+    "actual-process rollback",
     "positive native coding workflow",
     "real model or GPU",
     "manual user acceptance",
@@ -625,7 +504,7 @@
   ],
   "claims": {
     "task_rows_closed": 0,
-    "selective_change_used_by_preview_or_cli": false,
+    "recoverability_used_by_runtime_or_cli": false,
     "release_claim": "none"
   }
 }
