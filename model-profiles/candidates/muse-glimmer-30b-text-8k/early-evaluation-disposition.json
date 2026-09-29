@@ -20,7 +20,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json",
-      "sha256": "a685fc87788ba4f95a78a3e26e5bcd4e219510c42b38557cf582e29a654140fc"
+      "sha256": "08fa1dfd5beb8088dd8141e2f088554d438258faa2bcd6c48ab12bb545d3bf9e"
     },
     {
       "path": "artifacts/sprints/sprint-13/story-13.3/muse-live-install.json",
@@ -76,5 +76,5 @@
   ],
   "record_type": "muse_early_exact_profile_disposition",
   "schema_version": 1,
-  "source_revision": "75c0339b049cb68dd7ab211d56e71119692bdb87"
+  "source_revision": "af1ac5e8a944e4bbe9d12b350481d9bea828b236"
 }
