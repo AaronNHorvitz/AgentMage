@@ -8,11 +8,11 @@ use artifact_preparation::{PreparedToolArtifact, ToolCompletionBuilder};
 
 use agentmage_kernel_contracts::{
     ActionId, AgentProposal, AgentStateKind, ApprovalId, BudgetResource, CONTRACT_SCHEMA_VERSION,
-    CancellationSignal, ClosedModelProposal, ContextPacketId, CorrelationId, EvidenceReference,
-    ExactModelProfile, GrantId, GrantOperation, LocalModelRuntime, ModelCancellationProbe,
-    ModelContextPacket, ModelFamilyCodec, ModelOperationControl, ModelOperationStop,
-    ModelProposalKind, ModelRunId, ModelRunRequest, ModelRunResult, ModelRunTerminalState,
-    OperationOutcome, PostconditionId, ReceiptId, RuntimeApprovalChallenge,
+    CancellationSignal, ClosedModelProposal, ContextPacketId, ContractPayload, CorrelationId,
+    EvidenceReference, ExactModelProfile, GrantId, GrantOperation, LocalModelRuntime,
+    ModelCancellationProbe, ModelContextPacket, ModelFamilyCodec, ModelOperationControl,
+    ModelOperationStop, ModelProposalKind, ModelRunId, ModelRunRequest, ModelRunResult,
+    ModelRunTerminalState, OperationOutcome, PostconditionId, ReceiptId, RuntimeApprovalChallenge,
     RuntimeApprovalDisposition, RuntimeApprovalPresentation, RuntimeApprovalResponse,
     RuntimeArtifactId, RuntimeArtifactIntegrityState, RuntimeArtifactKind, RuntimeArtifactManifest,
     RuntimeArtifactPreview, RuntimeArtifactRef, RuntimeContinuationState, RuntimeEvent,
@@ -21,7 +21,8 @@ use agentmage_kernel_contracts::{
     RuntimePayloadReference, RuntimePermissionDisposition, RuntimeResumeBinding, RuntimeRunRequest,
     RuntimeSessionMode, RuntimeToolAttemptState, RuntimeToolReference, RuntimeToolRejection,
     RuntimeToolRejectionReason, RuntimeTurnId, SessionCheckpoint, StateChange, ToolCall,
-    ToolDefinition, ToolResult, VerifierCandidate, VerifierId, to_canonical_json,
+    ToolCallId, ToolDefinition, ToolId, ToolResult, VerifierCandidate, VerifierId,
+    to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -517,6 +518,39 @@ pub enum RuntimePermissionEvaluation {
         /// Stable content-free denial reason.
         reason_code: String,
     },
+    /// The user declined the operation and selected part of its change (Decision 0114).
+    ///
+    /// The original call is refused exactly as a denial and never executes. The trusted
+    /// boundary derived one separate call that writes only the selection; it needs its
+    /// own evaluation, approval and grant.
+    Narrowed {
+        /// Exact approval identity the selection answered.
+        approval_id: ApprovalId,
+        /// Exact proposed grant identity retained even though no grant is issued.
+        grant_id: GrantId,
+        /// Digest of the complete protected preview.
+        preview_sha256: String,
+        /// Exclusive decision expiration.
+        expires_at_epoch_ms: u64,
+        /// Digest of the user's decision, including the exact selection.
+        decision_sha256: String,
+        /// Call derived from the selection.
+        derived: RuntimeDerivedToolCall,
+    },
+}
+
+/// One call a trusted boundary derived from a person's decision rather than a model.
+///
+/// The runtime proposes it on the person's behalf through the shell's proposal class,
+/// so only a tool registered for shells can receive it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeDerivedToolCall {
+    /// Exact registered tool identity.
+    pub tool_id: ToolId,
+    /// Exact immutable tool-contract version.
+    pub tool_version: String,
+    /// Complete schema-bound arguments.
+    pub arguments: ContractPayload,
 }
 
 /// One separately captured output eligible for runtime artifact publication.
@@ -884,6 +918,17 @@ struct PendingApproval {
     call: ToolCall,
     turn_id: RuntimeTurnId,
     operation_id: RuntimeOperationId,
+}
+
+/// One call entering the request path, with the proposal class it came from.
+struct RequestedToolCall {
+    tool_call_id: ToolCallId,
+    tool_id: ToolId,
+    tool_version: String,
+    arguments: ContractPayload,
+    origin: ProposalOrigin,
+    /// Digest that closes the turn if the request ends the run.
+    closing_sha256: String,
 }
 
 #[derive(Clone, Copy)]
@@ -1409,6 +1454,17 @@ where
                     .now_epoch_ms()
                     .map_err(RuntimeLoopError::Dependency)?;
                 verify_runtime_approval_response(&pending.challenge, response, now)?;
+                // A call derived from a selection cannot be narrowed again: one
+                // proposal yields at most one derived write (Decision 0114).
+                if response.disposition == RuntimeApprovalDisposition::Narrow
+                    && !self
+                        .registry
+                        .is_model_proposable(&pending.call.tool_id, &pending.call.tool_version)
+                {
+                    return Err(RuntimeLoopError::Contract(
+                        RuntimeCoordinatorError::ApprovalDenied,
+                    ));
+                }
                 Some((response, now))
             }
             None => None,
@@ -2168,38 +2224,115 @@ where
         if self.stop_before_phase(cancellation, false)? {
             return Ok(());
         }
-        // Reserve both acknowledgement events BEFORE admitting an effect. The
-        // existing request ceiling stays unchanged; cancellation cannot borrow
-        // terminal space after its canonical receipt has already committed.
-        let required_events = if self.checkpoint.is_some() { 11 } else { 9 };
-        if self.tool_call_count >= self.request.limits.max_tool_calls
-            || self.remaining_events() < required_events
-        {
-            self.state
-                .transition(AgentStateKind::Exhausted)
-                .map_err(|_| RuntimeLoopError::State)?;
-            self.close_turn(&turn_id, proposal.proposal_sha256)?;
-            return self.finish_terminal(
-                AgentStateKind::Exhausted,
-                vec!["runtime.tool_budget.exhausted".to_owned()],
-                None,
-            );
+        if self.tool_budget_exhausted(&turn_id, &proposal.proposal_sha256)? {
+            return Ok(());
         }
         let Some(candidate) = proposal.tool_call else {
             return self.finish_invalid_proposal(&turn_id);
         };
+        self.request_tool(
+            turn_id,
+            RequestedToolCall {
+                tool_call_id: candidate.tool_call_id,
+                tool_id: candidate.tool_id,
+                tool_version: candidate.tool_version,
+                arguments: candidate.arguments,
+                origin: ProposalOrigin::Model,
+                closing_sha256: proposal.proposal_sha256,
+            },
+            cancellation,
+        )
+    }
+
+    /// Requests the call a trusted boundary derived from a person's hunk selection
+    /// (Decision 0114). It is proposed in the same turn through the shell's
+    /// proposal class and passes the same budget, validation, evaluation, approval
+    /// and grant steps as any call.
+    fn request_derived_tool(
+        &mut self,
+        turn_id: RuntimeTurnId,
+        derived: RuntimeDerivedToolCall,
+        decision_sha256: String,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+    ) -> Result<(), RuntimeLoopError> {
+        if self.stop_before_phase(cancellation, false)? {
+            return Ok(());
+        }
+        if self.tool_budget_exhausted(&turn_id, &decision_sha256)? {
+            return Ok(());
+        }
+        let tool_call_id = ToolCallId::from_raw(derived_id(
+            "selected-call",
+            self.request.run_id.as_str(),
+            u64::from(self.tool_call_count) + 1,
+        ));
+        self.request_tool(
+            turn_id,
+            RequestedToolCall {
+                tool_call_id,
+                tool_id: derived.tool_id,
+                tool_version: derived.tool_version,
+                arguments: derived.arguments,
+                origin: ProposalOrigin::Shell,
+                closing_sha256: decision_sha256,
+            },
+            cancellation,
+        )
+    }
+
+    /// Ends the run when no further tool call fits its declared ceilings.
+    fn tool_budget_exhausted(
+        &mut self,
+        turn_id: &RuntimeTurnId,
+        closing_sha256: &str,
+    ) -> Result<bool, RuntimeLoopError> {
+        // Reserve both acknowledgement events BEFORE admitting an effect. The
+        // existing request ceiling stays unchanged; cancellation cannot borrow
+        // terminal space after its canonical receipt has already committed.
+        let required_events = if self.checkpoint.is_some() { 11 } else { 9 };
+        if self.tool_call_count < self.request.limits.max_tool_calls
+            && self.remaining_events() >= required_events
+        {
+            return Ok(false);
+        }
+        self.state
+            .transition(AgentStateKind::Exhausted)
+            .map_err(|_| RuntimeLoopError::State)?;
+        self.close_turn(turn_id, closing_sha256.to_owned())?;
+        self.finish_terminal(
+            AgentStateKind::Exhausted,
+            vec!["runtime.tool_budget.exhausted".to_owned()],
+            None,
+        )?;
+        Ok(true)
+    }
+
+    fn request_tool(
+        &mut self,
+        turn_id: RuntimeTurnId,
+        requested: RequestedToolCall,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+    ) -> Result<(), RuntimeLoopError> {
+        let RequestedToolCall {
+            tool_call_id,
+            tool_id,
+            tool_version,
+            arguments,
+            origin,
+            closing_sha256,
+        } = requested;
         self.resources
             .consume(BudgetResource::ToolCalls, 1)
             .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
         self.tool_call_count += 1;
         let call = ToolCall {
             schema_version: CONTRACT_SCHEMA_VERSION,
-            tool_call_id: candidate.tool_call_id,
+            tool_call_id,
             correlation_id: self.correlation_id.clone(),
             action_id: runtime_action_id(&self.request.run_id, self.tool_call_count),
-            tool_id: candidate.tool_id,
-            tool_version: candidate.tool_version,
-            arguments: candidate.arguments,
+            tool_id,
+            tool_version,
+            arguments,
         };
         let definition = self
             .registry
@@ -2207,6 +2340,11 @@ where
             .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?
             .clone();
         let arguments_valid = self.registry.validate_arguments(&call).is_ok();
+        // The trusted boundary built a derived call's arguments; a model's
+        // arguments may be corrected after a rejection.
+        if origin != ProposalOrigin::Model && !arguments_valid {
+            return Err(RuntimeLoopError::InvalidBoundaryResult);
+        }
         let process_attempts = u64::from(
             arguments_valid
                 && definition.required_grant.operation.operation()
@@ -2228,8 +2366,7 @@ where
             return self.finish_budget_exhaustion(&turn_id);
         }
         if arguments_valid {
-            let receipt =
-                ToolDispatcher::new(&self.registry).dispatch(ProposalOrigin::Model, &call);
+            let receipt = ToolDispatcher::new(&self.registry).dispatch(origin, &call);
             if receipt.disposition != PreGrantDispatchDisposition::GrantRequired {
                 return Err(RuntimeLoopError::InvalidBoundaryResult);
             }
@@ -2239,7 +2376,7 @@ where
             Err(error @ ToolAttemptGuardError::RepeatLimitExceeded)
             | Err(error @ ToolAttemptGuardError::CallDepthExceeded) => {
                 self.transition_terminal(AgentStateKind::Exhausted)?;
-                self.close_turn(&turn_id, proposal.proposal_sha256)?;
+                self.close_turn(&turn_id, closing_sha256)?;
                 return self.finish_terminal(
                     AgentStateKind::Exhausted,
                     vec![error.code().to_owned()],
@@ -2248,7 +2385,7 @@ where
             }
             Err(error @ ToolAttemptGuardError::DuplicateCallIdentity) => {
                 self.transition_terminal(AgentStateKind::Failed)?;
-                self.close_turn(&turn_id, proposal.proposal_sha256)?;
+                self.close_turn(&turn_id, closing_sha256)?;
                 return self.finish_terminal(
                     AgentStateKind::Failed,
                     vec![error.code().to_owned()],
@@ -2280,9 +2417,12 @@ where
             Some(&turn_id),
             Some(&operation_id),
         )?;
-        self.state
-            .transition(AgentStateKind::Approval)
-            .map_err(|_| RuntimeLoopError::State)?;
+        // A derived call follows its refused original inside the same approval phase.
+        if self.state.current() != AgentStateKind::Approval {
+            self.state
+                .transition(AgentStateKind::Approval)
+                .map_err(|_| RuntimeLoopError::State)?;
+        }
         if !arguments_valid {
             return self.reject_tool_proposal(
                 call,
@@ -2573,6 +2713,37 @@ where
                 self.close_turn(&turn_id, sha256(reason_code.as_bytes()))?;
                 self.finish_terminal(AgentStateKind::Declined, vec![reason_code.clone()], None)
             }
+            RuntimePermissionEvaluation::Narrowed {
+                approval_id,
+                decision_sha256,
+                derived,
+                ..
+            } => {
+                // Only a person's resolution of an existing request can narrow it.
+                if !resolving_existing_request {
+                    return Err(RuntimeLoopError::InvalidBoundaryResult);
+                }
+                if !permission_decision_emitted {
+                    self.emit(
+                        RuntimeEventKind::PermissionDecided {
+                            approval_id: approval_id.clone(),
+                            disposition: RuntimePermissionDisposition::Deny,
+                            grant_id: None,
+                            decision_sha256: decision_sha256.clone(),
+                        },
+                        Some(&turn_id),
+                        Some(&operation_id),
+                    )?;
+                }
+                // The original call never executes. Its refusal is not a denial of
+                // all effect, so the denial ceiling is not consumed.
+                self.request_derived_tool(
+                    turn_id,
+                    derived.clone(),
+                    decision_sha256.clone(),
+                    cancellation,
+                )
+            }
             RuntimePermissionEvaluation::Allow {
                 approval_id,
                 grant_id,
@@ -2755,6 +2926,11 @@ where
                         approval_id,
                         decision_sha256,
                         ..
+                    }
+                    | RuntimePermissionEvaluation::Narrowed {
+                        approval_id,
+                        decision_sha256,
+                        ..
                     } => RuntimeEventKind::PermissionDecided {
                         approval_id: approval_id.clone(),
                         disposition: RuntimePermissionDisposition::Deny,
@@ -2837,6 +3013,13 @@ where
             (
                 RuntimeApprovalDisposition::Deny,
                 RuntimePermissionEvaluation::Deny { approval_id, .. },
+            ) if approval_id == &pending.challenge.approval_id => {}
+            // A selection the boundary cannot honor, such as one over a changed
+            // file, refuses the original call without writing anything.
+            (
+                RuntimeApprovalDisposition::Narrow,
+                RuntimePermissionEvaluation::Narrowed { approval_id, .. }
+                | RuntimePermissionEvaluation::Deny { approval_id, .. },
             ) if approval_id == &pending.challenge.approval_id => {}
             _ => return Err(RuntimeLoopError::InvalidBoundaryResult),
         }
@@ -4612,6 +4795,13 @@ fn permission_challenge(
             preview_sha256,
             expires_at_epoch_ms,
             ..
+        }
+        | RuntimePermissionEvaluation::Narrowed {
+            approval_id,
+            grant_id,
+            preview_sha256,
+            expires_at_epoch_ms,
+            ..
         } => (approval_id, grant_id, preview_sha256, *expires_at_epoch_ms),
     };
     Ok(seal_runtime_approval_challenge(RuntimeApprovalChallenge {
@@ -4803,6 +4993,24 @@ fn valid_permission_evaluation(
             if !valid_identifier(grant_id.as_str())
                 || !valid_sha256(decision_sha256)
                 || !valid_code(reason_code)
+            {
+                return false;
+            }
+            (approval_id, preview_sha256, expires_at_epoch_ms)
+        }
+        RuntimePermissionEvaluation::Narrowed {
+            approval_id,
+            grant_id,
+            preview_sha256,
+            expires_at_epoch_ms,
+            decision_sha256,
+            derived,
+        } => {
+            if !valid_identifier(grant_id.as_str())
+                || !valid_sha256(decision_sha256)
+                || !valid_identifier(derived.tool_id.as_str())
+                || !valid_identifier(&derived.tool_version)
+                || derived.arguments.sha256 != sha256(&derived.arguments.bytes)
             {
                 return false;
             }

@@ -5,8 +5,8 @@ use std::collections::BTreeSet;
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, ContractPayload, EvidenceReference, MAX_CONTRACT_JSON_BYTES,
     ModelRuntimeKind, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
-    RuntimeApprovalResponse, RuntimeOutcome, RuntimeOutput, RuntimeRunLimits, RuntimeRunRequest,
-    RuntimeSessionMode, RuntimeToolReference, TaskStatus, WorkPacketState,
+    RuntimeApprovalResponse, RuntimeHunkSelection, RuntimeOutcome, RuntimeOutput, RuntimeRunLimits,
+    RuntimeRunRequest, RuntimeSessionMode, RuntimeToolReference, TaskStatus, WorkPacketState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -111,13 +111,43 @@ pub fn verify_runtime_approval_response(
         || match response.disposition {
             RuntimeApprovalDisposition::Allow => {
                 response.grant_id.as_ref() != Some(&challenge.proposed_grant_id)
+                    || response.selection.is_some()
             }
-            RuntimeApprovalDisposition::Deny => response.grant_id.is_some(),
+            RuntimeApprovalDisposition::Deny => {
+                response.grant_id.is_some() || response.selection.is_some()
+            }
+            RuntimeApprovalDisposition::Narrow => {
+                response.grant_id.is_some()
+                    || !response
+                        .selection
+                        .as_ref()
+                        .is_some_and(valid_hunk_selection)
+            }
         }
     {
         return Err(RuntimeCoordinatorError::ApprovalDenied);
     }
     Ok(())
+}
+
+/// Largest number of hunks one selection may accept, as in Decision 0107.
+pub const MAX_SELECTED_HUNKS: usize = crate::write_approval::selective::MAX_SELECTIVE_HUNKS;
+
+/// A selection names two digests and a sorted, unique, non-empty set of hunk
+/// identities. Whether it matches the proposal is decided by the trusted boundary.
+fn valid_hunk_selection(selection: &RuntimeHunkSelection) -> bool {
+    valid_sha256(&selection.preimage_sha256)
+        && valid_sha256(&selection.proposal_sha256)
+        && !selection.accepted_hunk_ids.is_empty()
+        && selection.accepted_hunk_ids.len() <= MAX_SELECTED_HUNKS
+        && selection
+            .accepted_hunk_ids
+            .iter()
+            .all(|hunk_id| valid_sha256(hunk_id))
+        && selection
+            .accepted_hunk_ids
+            .windows(2)
+            .all(|pair| pair[0] < pair[1])
 }
 
 /// Seals one statically valid runtime request with its canonical SHA-256 digest.
@@ -566,9 +596,10 @@ fn sha256(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        RuntimeCoordinatorError, runtime_tool_catalog_sha256, seal_runtime_approval_challenge,
-        seal_runtime_outcome, seal_runtime_run_request, sha256, verify_runtime_approval_challenge,
-        verify_runtime_approval_response, verify_runtime_outcome, verify_runtime_run_request,
+        MAX_SELECTED_HUNKS, RuntimeCoordinatorError, runtime_tool_catalog_sha256,
+        seal_runtime_approval_challenge, seal_runtime_outcome, seal_runtime_run_request, sha256,
+        verify_runtime_approval_challenge, verify_runtime_approval_response,
+        verify_runtime_outcome, verify_runtime_run_request,
     };
     use agentmage_kernel_contracts::{
         AgentStateKind, ApprovalId, AuthorityClass, BudgetLimit, BudgetResource,
@@ -576,11 +607,11 @@ mod tests {
         EvidenceReference, GrantId, GrantOperation, MaterialClaimEvidenceState, ModelRunId, PlanId,
         ReceiptId, RepositorySnapshotId, RollbackPlan, RuntimeAnswerEvidence,
         RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalPresentation,
-        RuntimeApprovalResponse, RuntimeEventCursor, RuntimeEventId, RuntimeOperationId,
-        RuntimeOutcome, RuntimeOutput, RuntimeRunId, RuntimeRunLimits, RuntimeRunRequest,
-        RuntimeSessionMode, RuntimeTurnId, SchemaId, SchemaReference, SessionId, StopCondition,
-        StopConditionKind, Task, TaskId, TaskStatus, ToolCallId, ToolCatalogId, ToolId,
-        ToolRiskLevel, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, from_json,
+        RuntimeApprovalResponse, RuntimeEventCursor, RuntimeEventId, RuntimeHunkSelection,
+        RuntimeOperationId, RuntimeOutcome, RuntimeOutput, RuntimeRunId, RuntimeRunLimits,
+        RuntimeRunRequest, RuntimeSessionMode, RuntimeTurnId, SchemaId, SchemaReference, SessionId,
+        StopCondition, StopConditionKind, Task, TaskId, TaskStatus, ToolCallId, ToolCatalogId,
+        ToolId, ToolRiskLevel, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, from_json,
         to_canonical_json,
     };
 
@@ -909,9 +940,67 @@ mod tests {
             disposition: RuntimeApprovalDisposition::Allow,
             challenge_sha256: challenge.challenge_sha256.clone(),
             grant_id: Some(challenge.proposed_grant_id.clone()),
+            selection: None,
         };
         verify_runtime_approval_response(&challenge, &response, 1_000)
             .expect("exact grant response verifies");
+
+        // A narrowing names its exact selection and no grant; no other
+        // disposition carries a selection (Decision 0114).
+        let selection = RuntimeHunkSelection {
+            preimage_sha256: "1".repeat(64),
+            proposal_sha256: "b".repeat(64),
+            accepted_hunk_ids: vec!["3".repeat(64), "4".repeat(64)],
+        };
+        let mut narrow = response.clone();
+        narrow.disposition = RuntimeApprovalDisposition::Narrow;
+        narrow.grant_id = None;
+        narrow.selection = Some(selection.clone());
+        verify_runtime_approval_response(&challenge, &narrow, 1_000)
+            .expect("an exact selection verifies");
+        let mut refused = Vec::new();
+        let mut without_selection = narrow.clone();
+        without_selection.selection = None;
+        refused.push(without_selection);
+        let mut with_grant = narrow.clone();
+        with_grant.grant_id = Some(challenge.proposed_grant_id.clone());
+        refused.push(with_grant);
+        for mutate in [
+            (|selection: &mut RuntimeHunkSelection| selection.accepted_hunk_ids.clear())
+                as fn(&mut RuntimeHunkSelection),
+            |selection| selection.accepted_hunk_ids.reverse(),
+            |selection| selection.accepted_hunk_ids.push("4".repeat(64)),
+            |selection| selection.accepted_hunk_ids[0] = "hunk-one".to_owned(),
+            |selection| selection.preimage_sha256 = "short".to_owned(),
+            |selection| selection.proposal_sha256.make_ascii_uppercase(),
+            |selection| {
+                selection.accepted_hunk_ids = (0..=MAX_SELECTED_HUNKS)
+                    .map(|index| format!("{index:064x}"))
+                    .collect();
+            },
+        ] {
+            let mut changed = narrow.clone();
+            mutate(changed.selection.as_mut().unwrap());
+            refused.push(changed);
+        }
+        for disposition in [
+            RuntimeApprovalDisposition::Allow,
+            RuntimeApprovalDisposition::Deny,
+        ] {
+            let mut selected = response.clone();
+            selected.disposition = disposition;
+            selected.grant_id = (disposition == RuntimeApprovalDisposition::Allow)
+                .then(|| challenge.proposed_grant_id.clone());
+            selected.selection = Some(selection.clone());
+            refused.push(selected);
+        }
+        for response in refused {
+            assert_eq!(
+                verify_runtime_approval_response(&challenge, &response, 1_000),
+                Err(RuntimeCoordinatorError::ApprovalDenied),
+                "{response:?}"
+            );
+        }
 
         let mut altered_presentation = challenge.clone();
         altered_presentation.presentation.target_scope = "a broader fixture scope".to_owned();

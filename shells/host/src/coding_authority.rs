@@ -1190,6 +1190,7 @@ mod tests {
             disposition: RuntimeApprovalDisposition::Allow,
             challenge_sha256: challenge.challenge_sha256.clone(),
             grant_id: Some(challenge.proposed_grant_id.clone()),
+            selection: None,
         };
         verify_coding_decision(&approval, &challenge, &response, 3_000).expect("exact response");
         let mut substituted = response.clone();

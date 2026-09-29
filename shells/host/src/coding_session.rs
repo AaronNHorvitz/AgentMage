@@ -879,7 +879,8 @@ pub(crate) mod tests {
     #[test]
     fn story_48_2_profile_binds_repository_worktree_model_offline_state_and_tools() {
         let profile = CodingSessionProfile::build(input()).expect("coding profile");
-        assert_eq!(profile.visible_tools().len(), 24);
+        // The run catalog includes the shell-only selected write (Decision 0114).
+        assert_eq!(profile.visible_tools().len(), 25);
         assert_eq!(profile.immutable_base_commit(), "1".repeat(40));
         assert_eq!(profile.worktree().disposition, WorktreeDisposition::Active);
         assert_eq!(

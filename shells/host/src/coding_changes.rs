@@ -418,7 +418,7 @@ fn validate_patch_bytes(scope: &CodingWriteScope, bytes: &[u8]) -> Result<(), Co
     validate_patch(scope, &proposal)
 }
 
-fn validate_patch(
+pub(crate) fn validate_patch(
     scope: &CodingWriteScope,
     proposal: &StructuredPatchProposal,
 ) -> Result<(), CodingChangeError> {
@@ -471,7 +471,7 @@ fn validate_create(
     Ok(())
 }
 
-fn proposal_issue(result: Result<(), CodingChangeError>) -> Vec<ValidationIssue> {
+pub(crate) fn proposal_issue(result: Result<(), CodingChangeError>) -> Vec<ValidationIssue> {
     result.map_or_else(
         |error| {
             vec![ValidationIssue {
@@ -485,7 +485,7 @@ fn proposal_issue(result: Result<(), CodingChangeError>) -> Vec<ValidationIssue>
     )
 }
 
-fn controlled_change_definition(
+pub(crate) fn controlled_change_definition(
     tool_id: &str,
     display_name: &str,
     description: &str,

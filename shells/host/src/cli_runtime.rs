@@ -23,7 +23,8 @@ use agentmage_kernel_engine::{
 use sha2::{Digest, Sha256};
 
 use crate::coding_client::{
-    CodingApprovalPort, CodingClientError, CodingEventSink, runtime_approval_response,
+    CodingApprovalPort, CodingClientError, CodingEventSink,
+    runtime_approval_response_with_selection,
 };
 use crate::runtime_transport::{
     RuntimePrepareInput as NativeChatPrepareInput, RuntimeTransportError as NativeChatRuntimeError,
@@ -267,14 +268,15 @@ where
                 }
             }
         } else if let Some(challenge) = step.approval.as_ref() {
-            let disposition = match approvals.decide(challenge) {
-                Ok(disposition) => disposition,
+            let (disposition, selection) = match approvals.decide_with_selection(challenge) {
+                Ok(decision) => decision,
                 Err(error) => {
                     best_effort_release(runtime, &request);
                     return Err(map_client_error(error));
                 }
             };
-            let response = runtime_approval_response(challenge, disposition);
+            let response =
+                runtime_approval_response_with_selection(challenge, disposition, selection);
             match cancellation.poll(&request) {
                 Ok(Some(cancellation_id)) => match runtime.cancel(
                     &request.run_id,

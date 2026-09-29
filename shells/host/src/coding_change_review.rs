@@ -4,10 +4,13 @@
 //! The review is a pure function of the challenge's exact arguments and of
 //! preimage bytes whose digest equals the preimage those arguments bind. It
 //! therefore shows exactly the change the approved call can make, whichever
-//! file the bytes were read from. It grants, selects and narrows nothing: the
-//! approval still binds the complete arguments, and the write still refuses a
-//! preimage that changed before it runs.
+//! file the bytes were read from. It grants nothing: the approval still binds
+//! the complete arguments, and the write still refuses a preimage that changed
+//! before it runs. Its hunk identities let a person answer with a selection
+//! (Decision 0114), which the host recomputes and checks; the write derived from
+//! a selection is reviewed the same way, from its own exact arguments.
 
+use std::collections::BTreeSet;
 use std::fmt::Write as _;
 
 use agentmage_capability_repository_map::{
@@ -21,6 +24,7 @@ use crate::coding_changes::{
     CONTROLLED_CREATE_TOOL_ID, ControlledFileCreationProposal, STRUCTURED_PATCH_TOOL_ID,
     StructuredPatchProposal,
 };
+use crate::coding_hunk_selection::{HUNK_SELECTION_TOOL_ID, HunkSelectionWriteProposal};
 
 /// Unchanged lines shown around each hunk.
 pub const CHANGE_REVIEW_CONTEXT_LINES: usize = 3;
@@ -66,6 +70,18 @@ impl ChangeReviewUnavailable {
     }
 }
 
+/// What a reader found at a write's target.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ReviewTarget {
+    /// Nothing exists at the path.
+    Absent,
+    /// The complete bytes of a bounded regular file.
+    Bytes(Vec<u8>),
+    /// Something exists that the reader will not read: a link, a directory,
+    /// a special or oversized file, or a path it cannot open.
+    Refused,
+}
+
 /// Hunks of one exact proposed write.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ChangeReview {
@@ -77,22 +93,31 @@ pub struct ChangeReview {
     pub postimage_sha256: String,
     /// Number of hunks.
     pub hunk_count: usize,
+    /// Hunk identities in display order; hunk `n` is `hunk_ids[n - 1]`.
+    pub hunk_ids: Vec<String>,
+    /// Whether a person may answer with a subset of these hunks.
+    pub selectable: bool,
+    /// For a write derived from a selection: accepted hunks and the refused
+    /// original change's total.
+    pub selected_from: Option<(usize, usize)>,
     /// Bounded escaped unified-style display.
     pub rendered: String,
 }
 
 /// Reviews the change a coding write challenge proposes. Returns `None` for any
-/// other tool. `read_current` returns the current bytes at workspace-relative
-/// components, or `None` when the path holds no readable regular file.
+/// other tool. `read_current` reports what exists at workspace-relative
+/// components. A patch is reviewed only over readable bytes, and a creation
+/// only where nothing exists.
 pub fn review_coding_write(
     challenge: &RuntimeApprovalChallenge,
     workspace_id: &WorkspaceId,
-    read_current: &dyn Fn(&[String]) -> Option<Vec<u8>>,
+    read_current: &dyn Fn(&[String]) -> ReviewTarget,
 ) -> Option<Result<ChangeReview, ChangeReviewUnavailable>> {
     let arguments = &challenge.presentation.arguments.bytes;
     match challenge.presentation.tool_id.as_str() {
         STRUCTURED_PATCH_TOOL_ID => Some(review_patch(arguments, workspace_id, read_current)),
         CONTROLLED_CREATE_TOOL_ID => Some(review_create(arguments, read_current)),
+        HUNK_SELECTION_TOOL_ID => Some(review_selection(arguments, workspace_id, read_current)),
         _ => None,
     }
 }
@@ -100,13 +125,63 @@ pub fn review_coding_write(
 fn review_patch(
     arguments: &[u8],
     workspace_id: &WorkspaceId,
-    read_current: &dyn Fn(&[String]) -> Option<Vec<u8>>,
+    read_current: &dyn Fn(&[String]) -> ReviewTarget,
 ) -> Result<ChangeReview, ChangeReviewUnavailable> {
     let proposal: StructuredPatchProposal =
         serde_json::from_slice(arguments).map_err(|_| ChangeReviewUnavailable::InvalidArguments)?;
+    let path = proposal.path.clone();
+    let (current, postimage) = plan_patch(proposal, workspace_id, read_current)?;
+    let mut review = hunks(path, &current, &postimage)?;
+    review.selectable = review.hunk_count > 1;
+    Ok(review)
+}
+
+/// Reviews the write derived from a selection: the original patch is planned
+/// over the bound preimage and only the accepted hunks are shown. Any digest in
+/// the arguments that the recomputation does not reproduce is refused.
+fn review_selection(
+    arguments: &[u8],
+    workspace_id: &WorkspaceId,
+    read_current: &dyn Fn(&[String]) -> ReviewTarget,
+) -> Result<ChangeReview, ChangeReviewUnavailable> {
+    let selection: HunkSelectionWriteProposal =
+        serde_json::from_slice(arguments).map_err(|_| ChangeReviewUnavailable::InvalidArguments)?;
+    if selection.original.expected_preimage_sha256 != selection.preimage_sha256 {
+        return Err(ChangeReviewUnavailable::InvalidArguments);
+    }
+    let path = selection.original.path.clone();
+    let (current, proposal) = plan_patch(selection.original.clone(), workspace_id, read_current)?;
+    let change = HunkedTextChange::new(&current, &proposal)
+        .map_err(|_| ChangeReviewUnavailable::NotReviewable)?;
+    let accepted: BTreeSet<String> = selection.accepted_hunk_ids.iter().cloned().collect();
+    let selected = change
+        .select(&current, &accepted)
+        .map_err(|_| ChangeReviewUnavailable::PlannerRefused)?;
+    if change.proposal_sha256() != selection.proposal_sha256
+        || selected.accepted_hunk_ids() != selection.accepted_hunk_ids.as_slice()
+        || selected.rejected_hunk_ids() != selection.rejected_hunk_ids.as_slice()
+        || selected.selection_sha256() != selection.selection_sha256
+        || selected.postimage_sha256() != selection.postimage_sha256
+    {
+        return Err(ChangeReviewUnavailable::PlannerRefused);
+    }
+    let mut review = hunks(path, &current, selected.postimage())?;
+    review.selected_from = Some((accepted.len(), change.hunks().len()));
+    Ok(review)
+}
+
+/// Plans one patch with the host's planner over current bytes whose digest must
+/// equal the bound preimage; returns those bytes and the complete postimage.
+fn plan_patch(
+    proposal: StructuredPatchProposal,
+    workspace_id: &WorkspaceId,
+    read_current: &dyn Fn(&[String]) -> ReviewTarget,
+) -> Result<(Vec<u8>, Vec<u8>), ChangeReviewUnavailable> {
     let path = WorkspacePath::new(workspace_id.clone(), proposal.path.iter().cloned())
         .map_err(|_| ChangeReviewUnavailable::InvalidArguments)?;
-    let current = read_current(&proposal.path).ok_or(ChangeReviewUnavailable::TargetUnavailable)?;
+    let ReviewTarget::Bytes(current) = read_current(&proposal.path) else {
+        return Err(ChangeReviewUnavailable::TargetUnavailable);
+    };
     if hex_sha256(&current) != proposal.expected_preimage_sha256 {
         return Err(ChangeReviewUnavailable::PreimageChanged);
     }
@@ -125,12 +200,12 @@ fn review_patch(
         allow_generated: proposal.allow_generated,
     })
     .map_err(|_| ChangeReviewUnavailable::PlannerRefused)?;
-    hunks(proposal.path, plan.preimage(), plan.postimage())
+    Ok((plan.preimage().to_vec(), plan.postimage().to_vec()))
 }
 
 fn review_create(
     arguments: &[u8],
-    read_current: &dyn Fn(&[String]) -> Option<Vec<u8>>,
+    read_current: &dyn Fn(&[String]) -> ReviewTarget,
 ) -> Result<ChangeReview, ChangeReviewUnavailable> {
     let proposal: ControlledFileCreationProposal =
         serde_json::from_slice(arguments).map_err(|_| ChangeReviewUnavailable::InvalidArguments)?;
@@ -141,7 +216,8 @@ fn review_create(
     {
         return Err(ChangeReviewUnavailable::InvalidArguments);
     }
-    if read_current(&proposal.path).is_some() {
+    // A link, directory, special or unreadable object is not an absent target.
+    if read_current(&proposal.path) != ReviewTarget::Absent {
         return Err(ChangeReviewUnavailable::TargetUnavailable);
     }
     hunks(proposal.path, b"", proposal.content.as_bytes())
@@ -165,6 +241,13 @@ fn hunks(
         preimage_sha256: change.preimage_sha256().to_owned(),
         postimage_sha256: change.proposal_sha256().to_owned(),
         hunk_count: change.hunks().len(),
+        hunk_ids: change
+            .hunks()
+            .iter()
+            .map(|hunk| hunk.hunk_id().to_owned())
+            .collect(),
+        selectable: false,
+        selected_from: None,
         rendered: change.render(CHANGE_REVIEW_CONTEXT_LINES),
     })
 }
@@ -176,15 +259,27 @@ pub fn render_change_review(review: &Result<ChangeReview, ChangeReviewUnavailabl
     let mut output = String::new();
     match review {
         Ok(review) => {
-            let _ = writeln!(
+            let _ = write!(
                 output,
-                "change review for {:?}: {} hunk(s), preimage {} -> postimage {}",
+                "change review for {:?}: {} hunk(s)",
                 review.path.join("/"),
                 review.hunk_count,
+            );
+            if let Some((accepted, total)) = review.selected_from {
+                let _ = write!(output, ", only the {accepted} of {total} you selected");
+            }
+            let _ = writeln!(
+                output,
+                ", preimage {} -> postimage {}",
                 &review.preimage_sha256[..12],
                 &review.postimage_sha256[..12]
             );
             output.push_str(&review.rendered);
+            if review.selectable {
+                for (index, hunk_id) in review.hunk_ids.iter().enumerate() {
+                    let _ = writeln!(output, "hunk {} = {}", index + 1, &hunk_id[..12]);
+                }
+            }
             output.push_str(
                 "this review is derived from the exact arguments; approving allows the whole call\n",
             );
@@ -293,12 +388,17 @@ pub(crate) mod tests {
         WorkspaceId::from_raw("workspace-review")
     }
 
-    fn reader(files: &[(&str, &str)]) -> impl Fn(&[String]) -> Option<Vec<u8>> {
+    fn reader(files: &[(&str, &str)]) -> impl Fn(&[String]) -> ReviewTarget {
         let files: HashMap<String, Vec<u8>> = files
             .iter()
             .map(|(path, text)| ((*path).to_owned(), text.as_bytes().to_vec()))
             .collect();
-        move |path: &[String]| files.get(&path.join("/")).cloned()
+        move |path: &[String]| {
+            files
+                .get(&path.join("/"))
+                .cloned()
+                .map_or(ReviewTarget::Absent, ReviewTarget::Bytes)
+        }
     }
 
     const BROKEN: &str =
@@ -367,6 +467,13 @@ pub(crate) mod tests {
             assert!(text.contains(expected.code()), "{text}");
             assert!(!text.contains("new text"));
         }
+        assert_eq!(
+            review_coding_write(&challenge, &workspace(), &|_: &[String]| {
+                ReviewTarget::Refused
+            })
+            .unwrap(),
+            Err(ChangeReviewUnavailable::TargetUnavailable)
+        );
         // An edit that does not apply to the bound preimage is the planner's refusal.
         let edits = vec![StructuredEdit::ReplaceExactText {
             edit_id: "edit-1".to_owned(),
@@ -394,6 +501,117 @@ pub(crate) mod tests {
         );
         let other = write_challenge("agentmage.workspace.read-file", b"{}".to_vec());
         assert!(review_coding_write(&other, &workspace(), &reader(&[])).is_none());
+    }
+
+    #[test]
+    fn a_selected_write_review_recomputes_its_selection_and_refuses_tampering() {
+        let text = "one\ntwo\nthree\nfour\nfive\nsix\nseven\neight\nnine\n";
+        let edits = vec![
+            StructuredEdit::ReplaceExactText {
+                edit_id: "edit-1".to_owned(),
+                expected: "two".to_owned(),
+                replacement: "TWO".to_owned(),
+            },
+            StructuredEdit::ReplaceExactText {
+                edit_id: "edit-2".to_owned(),
+                expected: "eight".to_owned(),
+                replacement: "EIGHT".to_owned(),
+            },
+        ];
+        let patch_arguments = serde_json::to_vec(&StructuredPatchProposal {
+            schema_version: 1,
+            change_id: "change-selection".to_owned(),
+            path: vec!["src".to_owned(), "notes.txt".to_owned()],
+            expected_preimage_sha256: hex_sha256(text.as_bytes()),
+            intent_sha256: "a".repeat(64),
+            change_plan_sha256: "b".repeat(64),
+            language: StructuredLanguage::PlainText,
+            artifact_class: StructuredArtifactClass::Documentation,
+            edits,
+            additional_review_hooks: Vec::new(),
+            generated: false,
+            allow_generated: false,
+        })
+        .unwrap();
+        let original = write_challenge(STRUCTURED_PATCH_TOOL_ID, patch_arguments.clone());
+        let files = [("src/notes.txt", text)];
+        let review = review_coding_write(&original, &workspace(), &reader(&files))
+            .unwrap()
+            .unwrap();
+        assert!(review.selectable);
+        let proposal: StructuredPatchProposal = serde_json::from_slice(&patch_arguments).unwrap();
+        let scope =
+            crate::coding_changes::CodingWriteScope::new(workspace(), vec![vec!["src".to_owned()]])
+                .unwrap();
+        let plan = crate::coding_changes::bind_structured_patch_proposal(
+            &scope,
+            proposal,
+            text.as_bytes().to_vec(),
+        )
+        .unwrap();
+        let call = agentmage_kernel_contracts::ToolCall {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            tool_call_id: original.tool_call_id.clone(),
+            correlation_id: agentmage_kernel_contracts::CorrelationId::from_raw("correlation"),
+            action_id: agentmage_kernel_contracts::ActionId::from_raw("action"),
+            tool_id: original.presentation.tool_id.clone(),
+            tool_version: original.presentation.tool_version.clone(),
+            arguments: original.presentation.arguments.clone(),
+        };
+        let derived = crate::coding_hunk_selection::derive_hunk_selection_call(
+            &call,
+            plan.preimage(),
+            plan.postimage(),
+            text.as_bytes(),
+            &agentmage_kernel_contracts::RuntimeHunkSelection {
+                preimage_sha256: review.preimage_sha256.clone(),
+                proposal_sha256: review.postimage_sha256.clone(),
+                accepted_hunk_ids: vec![review.hunk_ids[0].clone()],
+            },
+        )
+        .unwrap();
+        let selected = write_challenge(HUNK_SELECTION_TOOL_ID, derived.arguments.bytes.clone());
+        let review = review_coding_write(&selected, &workspace(), &reader(&files))
+            .unwrap()
+            .unwrap();
+        assert_eq!(review.selected_from, Some((1, 2)));
+        assert!(
+            review.rendered.contains("-two\n+TWO\n"),
+            "{}",
+            review.rendered
+        );
+        assert!(!review.rendered.contains("EIGHT"));
+        let text_review = render_change_review(&Ok(review));
+        assert!(
+            text_review.contains("only the 1 of 2 you selected"),
+            "{text_review}"
+        );
+        // Arguments whose hunk lists no longer reproduce their digests are refused.
+        let mut tampered: HunkSelectionWriteProposal =
+            serde_json::from_slice(&derived.arguments.bytes).unwrap();
+        std::mem::swap(
+            &mut tampered.accepted_hunk_ids,
+            &mut tampered.rejected_hunk_ids,
+        );
+        let tampered = write_challenge(
+            HUNK_SELECTION_TOOL_ID,
+            serde_json::to_vec(&tampered).unwrap(),
+        );
+        assert_eq!(
+            review_coding_write(&tampered, &workspace(), &reader(&files)).unwrap(),
+            Err(ChangeReviewUnavailable::PlannerRefused)
+        );
+        // So is a file a person edited after the proposal.
+        let edited = text.replace("five", "5");
+        assert_eq!(
+            review_coding_write(
+                &selected,
+                &workspace(),
+                &reader(&[("src/notes.txt", &edited)])
+            )
+            .unwrap(),
+            Err(ChangeReviewUnavailable::PreimageChanged)
+        );
     }
 
     #[test]
@@ -425,6 +643,14 @@ pub(crate) mod tests {
                 &workspace(),
                 &reader(&[("tests/test_new.py", "existing\n")])
             )
+            .unwrap(),
+            Err(ChangeReviewUnavailable::TargetUnavailable)
+        );
+        // A link, directory, special or oversized object is occupied, not absent.
+        assert_eq!(
+            review_coding_write(&challenge, &workspace(), &|_: &[String]| {
+                ReviewTarget::Refused
+            })
             .unwrap(),
             Err(ChangeReviewUnavailable::TargetUnavailable)
         );

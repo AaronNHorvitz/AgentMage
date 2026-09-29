@@ -32,7 +32,10 @@ cover these areas:
 R1. The hunk display escapes each line as the whole-file preview's `{:?}` does:
 control, format, line and paragraph separator, private-use, unassigned and non-ASCII
 space characters, a leading combining mark, and backslash. Only tab and the two ASCII
-quotes are shown as themselves. Every displayed line starts with a marker, a header or
+quotes are shown as themselves. Correction, 2026-09-29: this fix used `str`'s
+`escape_debug`, which escapes a grapheme-extending mark only at the start, so the
+claim that it matched `{:?}` was inaccurate. [Decision 0113](0113-review-fixes-for-inspection-and-job-control.md)
+(finding V2) escapes each character. Every displayed line starts with a marker, a header or
 the missing-newline note, so no content can forge a line.
 
 R2. Both records now name the row they closed, the closing commit and its

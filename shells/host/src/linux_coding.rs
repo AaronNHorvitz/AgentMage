@@ -109,6 +109,8 @@ pub enum LinuxCodingWriteDraft {
     ControlledCreate(FilesystemOperationDraft),
     /// Fresh inverse plan bound to a sealed retained change and exact current bytes.
     Rollback(StructuredFileChangePlan),
+    /// Whole-file plan writing only a person's selected hunks over exact current bytes.
+    HunkSelection(StructuredFileChangePlan),
 }
 
 impl std::fmt::Debug for LinuxCodingTargetBinding {
@@ -650,6 +652,27 @@ fn compose_write_draft(
             .map(LinuxCodingWriteDraft::Rollback)
             .map(Some)
             .map_err(|_| LinuxCodingBindingError::TargetDenied)
+        }
+        (
+            PreparedNativeCodingCall::HunkSelection { proposal },
+            NativeCodingTargetPlan::ExistingFile {
+                path,
+                expected_preimage_sha256,
+            },
+            LinuxCodingTargetBinding::ExistingFile { held, target },
+        ) if held.workspace_path() == path
+            && target.workspace_path() == Some(path)
+            && proposal.preimage_sha256 == *expected_preimage_sha256 =>
+        {
+            // Re-plans the original patch over the exact held bytes and refuses
+            // any hunk, selection or postimage that no longer matches.
+            let current = held
+                .read_exact_bytes()
+                .map_err(|_| LinuxCodingBindingError::TargetDenied)?;
+            crate::coding_hunk_selection::bind_hunk_selection_proposal(scope, proposal, current)
+                .map(LinuxCodingWriteDraft::HunkSelection)
+                .map(Some)
+                .map_err(|_| LinuxCodingBindingError::TargetDenied)
         }
         (
             PreparedNativeCodingCall::ReadOnly { .. },

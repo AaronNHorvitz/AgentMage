@@ -104,6 +104,8 @@ struct RegisteredTool {
     definition: ToolDefinition,
     effect_class: CanonicalEffectClass,
     implementation: Box<dyn Tool>,
+    /// Whether only a user-interface shell may propose calls to this tool.
+    shell_only: bool,
 }
 
 /// Exact-version registry of non-executable tool definitions and validators.
@@ -121,6 +123,17 @@ impl ToolRegistry {
 
     /// Registers one exact declarative definition.
     pub fn register_tool(&mut self, tool: Box<dyn Tool>) -> Result<(), ToolRegistryError> {
+        self.register(tool, false)
+    }
+
+    /// Registers one definition that only a user-interface shell may propose, such as
+    /// a write derived from a person's decision. It is never offered to a model, and
+    /// a model proposal of it is refused.
+    pub fn register_shell_tool(&mut self, tool: Box<dyn Tool>) -> Result<(), ToolRegistryError> {
+        self.register(tool, true)
+    }
+
+    fn register(&mut self, tool: Box<dyn Tool>, shell_only: bool) -> Result<(), ToolRegistryError> {
         let definition = tool.definition().clone();
         let issues = validate_definition(&definition);
         if !issues.is_empty() {
@@ -138,9 +151,28 @@ impl ToolRegistry {
                 definition,
                 effect_class,
                 implementation: tool,
+                shell_only,
             },
         );
         Ok(())
+    }
+
+    /// Returns whether a model may propose calls to one exact registered tool.
+    #[must_use]
+    pub fn is_model_proposable(&self, tool_id: &ToolId, tool_version: &str) -> bool {
+        self.tools
+            .get(&(tool_id.clone(), tool_version.to_owned()))
+            .is_some_and(|registered| !registered.shell_only)
+    }
+
+    /// Lists the definitions a model may propose, in stable identity and version order.
+    #[must_use]
+    pub fn list_model_tools(&self) -> Vec<&ToolDefinition> {
+        self.tools
+            .values()
+            .filter(|registered| !registered.shell_only)
+            .map(|registered| &registered.definition)
+            .collect()
     }
 
     /// Returns one exact registered definition.
@@ -422,21 +454,30 @@ impl<'registry> ToolDispatcher<'registry> {
     #[must_use]
     pub fn dispatch(&self, origin: ProposalOrigin, call: &ToolCall) -> PreGrantDispatchReceipt {
         match self.registry.validate_arguments(call) {
-            Ok(_) if origin == ProposalOrigin::UnregisteredCaller => PreGrantDispatchReceipt {
-                origin,
-                disposition: PreGrantDispatchDisposition::UnregisteredCaller,
-                result: terminal_result(
-                    call,
-                    OperationOutcome::Denied,
-                    Vec::new(),
-                    contract_error(
-                        "tool.dispatch.caller_not_registered",
-                        ErrorCategory::Policy,
-                        RetryDisposition::Never,
-                        "Tool dispatch caller is not registered",
+            // A shell-only tool is outside a model's registered proposal class.
+            Ok(_)
+                if origin == ProposalOrigin::UnregisteredCaller
+                    || (origin == ProposalOrigin::Model
+                        && !self
+                            .registry
+                            .is_model_proposable(&call.tool_id, &call.tool_version)) =>
+            {
+                PreGrantDispatchReceipt {
+                    origin,
+                    disposition: PreGrantDispatchDisposition::UnregisteredCaller,
+                    result: terminal_result(
+                        call,
+                        OperationOutcome::Denied,
+                        Vec::new(),
+                        contract_error(
+                            "tool.dispatch.caller_not_registered",
+                            ErrorCategory::Policy,
+                            RetryDisposition::Never,
+                            "Tool dispatch caller is not registered",
+                        ),
                     ),
-                ),
-            },
+                }
+            }
             Ok(_) => PreGrantDispatchReceipt {
                 origin,
                 disposition: PreGrantDispatchDisposition::GrantRequired,

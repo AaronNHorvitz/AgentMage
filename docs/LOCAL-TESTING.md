@@ -166,6 +166,12 @@ python3 -m scripts.coding_harness start --root "$demo" --model scripted \
   progress: its terminal state, whether the runtime's verifier accepted it, counts
   against the declared ceilings, and that independent review and delivery are not
   established by the runtime.
+- Select hunks: when a patch review lists two or more numbered hunks, answer
+  `select` followed by hunk numbers, for example `select 2`, instead of `yes`. The
+  whole call is refused, and the next prompt asks separately for a write of only the
+  selected hunks (Decision 0114); its review shows only those hunks. The scripted
+  failed-test repair patch has a single hunk, so it never offers this. The
+  actual-process proof on a native host is still open (AMR-04.2.3).
 - Deny: in a fresh root, answer anything other than `yes`; no file may change.
 - Cancel: in a fresh root, run `python3 -m scripts.coding_harness stop --root "$demo"`
   from a second terminal while a prompt or command is active.

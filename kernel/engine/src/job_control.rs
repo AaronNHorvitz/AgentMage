@@ -11,8 +11,17 @@
 //!
 //! Every decision and owner transition is one entry in a hash chain. A
 //! restarted owner replays the retained entries, which must reproduce the same
-//! chain, before it accepts a new request. The ledger grants no authority and
+//! chain and end at the separately retained head, before it accepts a new
+//! request. The digests are unkeyed: the chain proves the entries are
+//! consistent with each other, not who wrote them or that none are missing
+//! after the head, so the store that persists them must authenticate writers
+//! and keep the head with each append. The ledger grants no authority and
 //! performs no effect; it is the reconciled record the owner acts on.
+//!
+//! Client requests cannot exhaust the owner's capacity. The owner keeps a
+//! reserve of entries that clients cannot use, and refused requests have
+//! their own smaller bound, so a flood of stale or repeated requests leaves
+//! both accepted requests and every owner observation recordable.
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
@@ -22,6 +31,15 @@ use sha2::{Digest, Sha256};
 
 /// Largest number of retained entries for one job.
 pub const MAX_JOB_LEDGER_ENTRIES: usize = 4_096;
+/// Entries only the owner may use: enough to start a queued job and record
+/// its terminal event, the most owner observations that can follow without a
+/// client request.
+pub const OWNER_RESERVED_JOB_LEDGER_ENTRIES: usize = 2;
+/// Largest number of refused client requests retained for one job. A further
+/// refusal is answered with [`JobControlError::Full`] and neither recorded nor
+/// remembered; a refused request can never be applied later on a retry,
+/// because the revision it names can only fall further behind.
+pub const MAX_REFUSED_JOB_CONTROL_ENTRIES: usize = 1_024;
 const MAX_IDENTIFIER_BYTES: usize = 128;
 const GENESIS_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -146,8 +164,20 @@ pub enum JobControlError {
     InvalidTransition,
     /// Retained entries do not form this job's exact chain.
     Integrity,
-    /// The entry bound is reached.
+    /// The entry bound available to this request or observation is reached.
     Full,
+}
+
+/// Retained end of a chain. The store keeps it with every append, and replay
+/// refuses a chain that does not end exactly here, such as a truncated or
+/// rolled-back one.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct JobLedgerHead {
+    /// Number of retained entries.
+    pub entry_count: u64,
+    /// Digest of the last entry.
+    pub head_sha256: String,
 }
 
 /// What one entry records.
@@ -222,6 +252,7 @@ pub struct JobControlLedger {
     cancellation_requested: bool,
     entries: Vec<JobLedgerEntry>,
     requests: BTreeMap<String, (String, JobControlDecision)>,
+    refused_entries: usize,
 }
 
 impl JobControlLedger {
@@ -238,6 +269,7 @@ impl JobControlLedger {
             cancellation_requested: false,
             entries: Vec::new(),
             requests: BTreeMap::new(),
+            refused_entries: 0,
         };
         ledger.append(
             JobLedgerRecord::Created {
@@ -249,8 +281,13 @@ impl JobControlLedger {
         Ok(ledger)
     }
 
-    /// Rebuilds the ledger from retained entries, which must reproduce exactly.
-    pub fn replay(job_id: &str, entries: &[JobLedgerEntry]) -> Result<Self, JobControlError> {
+    /// Rebuilds the ledger from retained entries, which must reproduce exactly
+    /// and end at the retained head.
+    pub fn replay(
+        job_id: &str,
+        entries: &[JobLedgerEntry],
+        expected_head: &JobLedgerHead,
+    ) -> Result<Self, JobControlError> {
         let Some(JobLedgerEntry {
             record: JobLedgerRecord::Created { owner_id },
             ..
@@ -274,7 +311,7 @@ impl JobControlLedger {
                 }
             }
         }
-        if ledger.entries != entries {
+        if ledger.entries != entries || ledger.head() != *expected_head {
             return Err(JobControlError::Integrity);
         }
         Ok(ledger)
@@ -300,6 +337,9 @@ impl JobControlLedger {
                 Err(JobControlError::RequestConflict)
             };
         }
+        if self.entries.len() >= MAX_JOB_LEDGER_ENTRIES - OWNER_RESERVED_JOB_LEDGER_ENTRIES {
+            return Err(JobControlError::Full);
+        }
         let refused = |refusal| JobControlDecision::Refused {
             refusal,
             revision: self.revision,
@@ -321,7 +361,12 @@ impl JobControlLedger {
         };
         let (revision, phase) = match decision {
             JobControlDecision::Applied { revision, phase } => (revision, phase),
-            JobControlDecision::Refused { .. } => (self.revision, self.phase),
+            JobControlDecision::Refused { .. } => {
+                if self.refused_entries >= MAX_REFUSED_JOB_CONTROL_ENTRIES {
+                    return Err(JobControlError::Full);
+                }
+                (self.revision, self.phase)
+            }
         };
         self.append(
             JobLedgerRecord::Control {
@@ -332,10 +377,12 @@ impl JobControlLedger {
             revision,
             phase,
         )?;
-        if matches!(decision, JobControlDecision::Applied { .. })
-            && request.action == JobControlAction::Cancel
-        {
-            self.cancellation_requested = true;
+        match decision {
+            JobControlDecision::Applied { .. } if request.action == JobControlAction::Cancel => {
+                self.cancellation_requested = true;
+            }
+            JobControlDecision::Applied { .. } => {}
+            JobControlDecision::Refused { .. } => self.refused_entries += 1,
         }
         self.requests
             .insert(request.request_id.clone(), (request_sha256, decision));
@@ -384,6 +431,15 @@ impl JobControlLedger {
     #[must_use]
     pub fn entries(&self) -> &[JobLedgerEntry] {
         &self.entries
+    }
+
+    /// Head to retain with the entries.
+    #[must_use]
+    pub fn head(&self) -> JobLedgerHead {
+        JobLedgerHead {
+            entry_count: self.entries.len() as u64,
+            head_sha256: self.observation().head_sha256,
+        }
     }
 
     /// Owning runtime identity.
@@ -689,7 +745,9 @@ mod tests {
             .unwrap();
         let retained: Vec<JobLedgerEntry> =
             serde_json::from_str(&serde_json::to_string(ledger.entries()).unwrap()).unwrap();
-        let replayed = JobControlLedger::replay(JOB, &retained).unwrap();
+        let head: JobLedgerHead =
+            serde_json::from_str(&serde_json::to_string(&ledger.head()).unwrap()).unwrap();
+        let replayed = JobControlLedger::replay(JOB, &retained, &head).unwrap();
         assert_eq!(replayed, ledger);
         assert_eq!(replayed.observation(), ledger.observation());
         // The replayed owner still answers a retry with the original decision.
@@ -715,38 +773,172 @@ mod tests {
         duplicated.insert(3, retained[2].clone());
         for tampered in [changed_decision, dropped, reordered, duplicated, Vec::new()] {
             assert_eq!(
-                JobControlLedger::replay(JOB, &tampered).err(),
+                JobControlLedger::replay(JOB, &tampered, &head).err(),
                 Some(JobControlError::Integrity)
             );
         }
         assert_eq!(
-            JobControlLedger::replay("another-job", &retained).err(),
+            JobControlLedger::replay("another-job", &retained, &head).err(),
             Some(JobControlError::Integrity)
         );
     }
 
     #[test]
-    fn the_entry_bound_is_enforced() {
+    fn a_truncated_or_rolled_back_chain_is_refused_by_its_retained_head() {
         let mut ledger = running();
-        let mut index = 0;
-        loop {
-            let revision = ledger.observation().revision;
-            match ledger.control(&request(
-                &format!("r{index}"),
-                JobControlAction::Resume,
-                revision,
-            )) {
-                Ok(_) => index += 1,
-                Err(error) => {
-                    assert_eq!(error, JobControlError::Full);
-                    break;
-                }
-            }
+        ledger
+            .control(&request("c1", JobControlAction::Cancel, 1))
+            .unwrap();
+        let before_observation = ledger.head();
+        ledger
+            .observe_owner(JobOwnerEvent::CancellationObserved)
+            .unwrap();
+        let head = ledger.head();
+        assert_eq!(head.entry_count, 4);
+        let retained = ledger.entries().to_vec();
+        // Every prefix is a consistent chain, so only the head reveals the loss
+        // of the accepted cancellation and its observation.
+        for length in 1..retained.len() {
+            assert_eq!(
+                JobControlLedger::replay(JOB, &retained[..length], &head).err(),
+                Some(JobControlError::Integrity)
+            );
         }
-        assert_eq!(ledger.entries().len(), MAX_JOB_LEDGER_ENTRIES);
+        // A head from an earlier point does not accept the longer chain either.
         assert_eq!(
-            ledger.observe_owner(JobOwnerEvent::Completed),
+            JobControlLedger::replay(JOB, &retained, &before_observation).err(),
+            Some(JobControlError::Integrity)
+        );
+        let mut foreign_head = head.clone();
+        foreign_head.head_sha256 = "f".repeat(64);
+        assert_eq!(
+            JobControlLedger::replay(JOB, &retained, &foreign_head).err(),
+            Some(JobControlError::Integrity)
+        );
+        let replayed = JobControlLedger::replay(JOB, &retained, &head).unwrap();
+        assert_eq!(replayed.observation().phase, JobPhase::Cancelled);
+        assert!(replayed.observation().cancellation_requested);
+    }
+
+    #[test]
+    fn refused_requests_cannot_exhaust_accepted_requests_or_owner_observations() {
+        for event in [
+            JobOwnerEvent::CancellationObserved,
+            JobOwnerEvent::Completed,
+            JobOwnerEvent::Failed,
+        ] {
+            let mut ledger = running();
+            ledger
+                .control(&request("c1", JobControlAction::Cancel, 1))
+                .unwrap();
+            // A reconnect loop minting a fresh identity per stale attempt.
+            let mut refused = 0;
+            let error = loop {
+                match ledger.control(&request(
+                    &format!("stale-{refused}"),
+                    JobControlAction::Cancel,
+                    1,
+                )) {
+                    Ok(JobControlDecision::Refused { .. }) => refused += 1,
+                    Ok(applied) => panic!("stale request applied: {applied:?}"),
+                    Err(error) => break error,
+                }
+            };
+            assert_eq!(error, JobControlError::Full);
+            assert_eq!(refused, MAX_REFUSED_JOB_CONTROL_ENTRIES);
+            assert_eq!(ledger.entries().len(), 3 + MAX_REFUSED_JOB_CONTROL_ENTRIES);
+            // A recorded refusal still answers its retry; an unrecorded one
+            // is refused again rather than applied.
+            assert!(matches!(
+                ledger.control(&request("stale-0", JobControlAction::Cancel, 1)),
+                Ok(JobControlDecision::Refused {
+                    refusal: JobControlRefusal::StaleRevision,
+                    ..
+                })
+            ));
+            assert_eq!(
+                ledger.control(&request(
+                    &format!("stale-{refused}"),
+                    JobControlAction::Cancel,
+                    1
+                )),
+                Err(JobControlError::Full)
+            );
+            assert_eq!(ledger.observe_owner(event), Ok(3));
+            let replayed = JobControlLedger::replay(JOB, ledger.entries(), &ledger.head()).unwrap();
+            assert_eq!(replayed, ledger);
+        }
+
+        // A refusal flood leaves a later accepted cancellation recordable.
+        let mut ledger = running();
+        for index in 0..MAX_REFUSED_JOB_CONTROL_ENTRIES {
+            ledger
+                .control(&request(
+                    &format!("again-{index}"),
+                    JobControlAction::Resume,
+                    1,
+                ))
+                .unwrap();
+        }
+        assert_eq!(
+            ledger.control(&request("again-last", JobControlAction::Resume, 1)),
             Err(JobControlError::Full)
         );
+        assert_eq!(
+            ledger.control(&request("cancel", JobControlAction::Cancel, 1)),
+            Ok(JobControlDecision::Applied {
+                revision: 2,
+                phase: JobPhase::Cancelling,
+            })
+        );
+        assert_eq!(
+            ledger.observe_owner(JobOwnerEvent::CancellationObserved),
+            Ok(3)
+        );
+    }
+
+    #[test]
+    fn accepted_requests_stop_short_of_the_owner_reserve() {
+        // A queued job needs two owner observations to finish without any
+        // further client request; the reserve keeps both recordable.
+        let mut ledger = JobControlLedger::create(JOB, "owner-fixture").unwrap();
+        // One refusal makes the toggles below end with the job queued.
+        assert!(matches!(
+            ledger.control(&request("resume-queued", JobControlAction::Resume, 0)),
+            Ok(JobControlDecision::Refused {
+                refusal: JobControlRefusal::AlreadyInEffect,
+                ..
+            })
+        ));
+        let mut index = 0;
+        let error = loop {
+            let observation = ledger.observation();
+            let action = if observation.phase == JobPhase::Queued {
+                JobControlAction::Suspend
+            } else {
+                JobControlAction::Resume
+            };
+            match ledger.control(&request(
+                &format!("toggle-{index}"),
+                action,
+                observation.revision,
+            )) {
+                Ok(JobControlDecision::Applied { .. }) => index += 1,
+                Ok(refused) => panic!("toggle refused: {refused:?}"),
+                Err(error) => break error,
+            }
+        };
+        assert_eq!(error, JobControlError::Full);
+        assert_eq!(
+            ledger.entries().len(),
+            MAX_JOB_LEDGER_ENTRIES - OWNER_RESERVED_JOB_LEDGER_ENTRIES
+        );
+        assert_eq!(ledger.observation().phase, JobPhase::Queued);
+        assert!(ledger.observe_owner(JobOwnerEvent::Started).is_ok());
+        assert!(ledger.observe_owner(JobOwnerEvent::Failed).is_ok());
+        assert_eq!(ledger.entries().len(), MAX_JOB_LEDGER_ENTRIES);
+        assert_eq!(ledger.observation().phase, JobPhase::Failed);
+        let replayed = JobControlLedger::replay(JOB, ledger.entries(), &ledger.head()).unwrap();
+        assert_eq!(replayed.observation(), ledger.observation());
     }
 }

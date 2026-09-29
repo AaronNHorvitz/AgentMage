@@ -27,7 +27,10 @@ bytes whose digest equals the preimage those arguments bind. The CLI plans the c
 with the same structured planner the host uses and divides it into hunks under
 Decision 0107, so the review shows exactly what the approved call can write. The
 CLI reads the file only from inside its disposable workspace. It refuses to follow a
-path out of the workspace, and it never passes bytes to the host or to a write. If the
+path out of the workspace, and it never passes bytes to the host or to a write. Under
+[Decision 0113](0113-review-fixes-for-inspection-and-job-control.md) (findings V9 and
+V15), it opens each path component relative to its parent without following links,
+and it shows a creation review only when nothing exists at the target. If the
 file changed, the edits do not apply, or the change is not bounded text, the review
 says so and the person reviews the whole call. The approval still covers the
 complete arguments, and the write still refuses a changed preimage.

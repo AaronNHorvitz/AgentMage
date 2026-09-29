@@ -172,6 +172,37 @@ class RustTestOwnershipTests(unittest.TestCase):
         }
         self.assertEqual(owned(files), {"q.rs"})
 
+    def test_mod_rs_modules_are_production_references(self) -> None:
+        # A default declaration also resolves to `name/mod.rs`, so a test-only
+        # reference cannot exempt a production module in that layout.
+        files = {
+            "lib.rs": "pub mod foo;\n",
+            "foo/mod.rs": "pub mod helper;\n",
+            "foo/helper.rs": '#[cfg(test)]\n#[path = "mod.rs"]\nmod again;\n',
+        }
+        self.assertEqual(owned(files), set())
+        files = {
+            "lib.rs": "pub mod foo;\n",
+            "foo/mod.rs": 'pub fn production() {}\n#[cfg(test)]\nmod tests {\n'
+            '    include!("mod.rs");\n}\n',
+        }
+        self.assertEqual(owned(files), set())
+        # Test-only children of a mod.rs module are still exempted.
+        files = {
+            "lib.rs": "pub mod foo;\n",
+            "foo/mod.rs": "pub fn production() {}\n" + EXTERNAL.format(name="foo_tests.rs"),
+            "foo/foo_tests.rs": "fn case() {}\n",
+        }
+        self.assertEqual(owned(files), {"foo/foo_tests.rs"})
+        # The compiler refuses a module present at both default paths.
+        files = {
+            "lib.rs": "pub mod foo;\n",
+            "foo.rs": "pub fn one() {}\n",
+            "foo/mod.rs": "pub fn two() {}\n",
+        }
+        with self.assertRaises(AmbiguousReference):
+            owned(files)
+
     def test_a_file_whose_children_depend_on_its_loader_is_ambiguous(self) -> None:
         files = {
             "lib.rs": 'pub mod p;\n#[path = "p.rs"]\nmod p_again;\n',

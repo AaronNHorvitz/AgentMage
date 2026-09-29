@@ -9,14 +9,15 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use agentmage_kernel_contracts::{
     AgentStateKind, RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeEvent,
-    RuntimeRunLimits, WorkspaceId,
+    RuntimeHunkSelection, RuntimeRunLimits, WorkspaceId,
 };
 use agentmage_kernel_engine::run_progress::{
     MAX_PROGRESS_EVENTS, ProgressCeilings, project_run_progress, render_run_progress,
 };
 use agentmage_platform_linux::{
     LinuxDevelopmentBoundaryError, LinuxDevelopmentBoundaryErrorKind, LinuxDevelopmentConfirmation,
-    LinuxDevelopmentConfirmationKind, LinuxDevelopmentHostProcess, read_development_confirmation,
+    LinuxDevelopmentConfirmationKind, LinuxDevelopmentHostProcess, LinuxDevelopmentInputLine,
+    read_development_confirmation, read_development_line,
 };
 
 use crate::cli::{
@@ -27,7 +28,9 @@ use crate::cli::{
 use crate::cli_runtime::{
     InteractiveCliCancellationPort, InteractiveCliRuntimeError, drive_interactive_cli_runtime,
 };
-use crate::coding_change_review::{render_change_review, review_coding_write};
+use crate::coding_change_review::{
+    ChangeReview, ChangeReviewUnavailable, ReviewTarget, render_change_review, review_coding_write,
+};
 use crate::coding_client::{CodingApprovalPort, CodingClientError, CodingEventSink};
 use crate::coding_development_activation::CodingDevelopmentActivation;
 use crate::coding_development_runtime::CodingDevelopmentModel;
@@ -164,10 +167,7 @@ fn run_with_child(
             root: activation.workspace_root().to_path_buf(),
         }),
     };
-    let mut sink = TerminalEventSink {
-        output,
-        run_events: Vec::new(),
-    };
+    let mut sink = TerminalEventSink::new(output, MAX_PROGRESS_EVENTS);
     cancellation.check_startup()?;
     let preauthorization =
         direct_session_preauthorization(options, &workspace_id, &cancellation.requested)?;
@@ -504,21 +504,41 @@ struct TerminalEventSink {
     output: CliOutputFormat,
     /// Verified events of the current run, kept only to project its progress.
     run_events: Vec<RuntimeEvent>,
+    /// Most events kept for one run.
+    capacity: usize,
+    /// Whether an event of the current run was not kept. A prefix of a valid
+    /// stream verifies, so a truncated run is never projected.
+    overflowed: bool,
 }
 
 impl TerminalEventSink {
+    fn new(output: CliOutputFormat, capacity: usize) -> Self {
+        Self {
+            output,
+            run_events: Vec::new(),
+            capacity,
+            overflowed: false,
+        }
+    }
+
     /// Truthful progress of the run just presented (Decision 0110); the buffer
     /// is then cleared for the next run.
     fn take_progress(&mut self, limits: &RuntimeRunLimits) -> String {
         let events = std::mem::take(&mut self.run_events);
-        let progress = project_run_progress(
-            &events,
-            ProgressCeilings {
-                turns: Some(u64::from(limits.max_turns)),
-                model_calls: Some(u64::from(limits.max_model_calls)),
-                tool_calls: Some(u64::from(limits.max_tool_calls)),
-            },
-        );
+        let overflowed = std::mem::take(&mut self.overflowed);
+        let progress = if overflowed {
+            Err(())
+        } else {
+            project_run_progress(
+                &events,
+                ProgressCeilings {
+                    turns: Some(u64::from(limits.max_turns)),
+                    model_calls: Some(u64::from(limits.max_model_calls)),
+                    tool_calls: Some(u64::from(limits.max_tool_calls)),
+                },
+            )
+            .map_err(|_| ())
+        };
         match (self.output, progress) {
             (CliOutputFormat::Human, Ok(progress)) => render_run_progress(&progress),
             (CliOutputFormat::Json, Ok(progress)) => format!(
@@ -545,8 +565,10 @@ impl CodingEventSink for TerminalEventSink {
         }
         .map_err(|_| CodingClientError::Presentation)?;
         println!("{rendered}");
-        if self.run_events.len() < MAX_PROGRESS_EVENTS {
+        if self.run_events.len() < self.capacity {
             self.run_events.push(event.clone());
+        } else {
+            self.overflowed = true;
         }
         Ok(())
     }
@@ -571,50 +593,111 @@ struct ReviewWorkspace {
 }
 
 impl ReviewWorkspace {
-    fn read(&self, components: &[String]) -> Option<Vec<u8>> {
-        if components.is_empty()
-            || components.iter().any(|component| {
-                component.is_empty()
-                    || matches!(component.as_str(), "." | "..")
-                    || component.contains(['/', '\0'])
-            })
-        {
-            return None;
+    /// Opens each component relative to the held parent without following a
+    /// link, then checks and reads the opened file itself, so no path can be
+    /// swapped between the check and the read.
+    fn read(&self, components: &[String]) -> ReviewTarget {
+        use std::io::Read as _;
+
+        use rustix::fs::{FileType, Mode, OFlags, fstat, open, openat};
+        use rustix::io::Errno;
+
+        let Some((name, parents)) = components.split_last() else {
+            return ReviewTarget::Refused;
+        };
+        if components.iter().any(|component| {
+            component.is_empty()
+                || matches!(component.as_str(), "." | "..")
+                || component.contains(['/', '\0'])
+        }) {
+            return ReviewTarget::Refused;
         }
-        let root = self.root.canonicalize().ok()?;
-        let resolved = components
-            .iter()
-            .fold(root.clone(), |path, component| path.join(component))
-            .canonicalize()
-            .ok()?;
-        let metadata = std::fs::metadata(&resolved).ok()?;
-        if !resolved.starts_with(&root)
-            || !metadata.is_file()
-            || metadata.len() > MAX_REVIEW_READ_BYTES
-        {
-            return None;
+        let Ok(mut directory) = open(
+            &self.root,
+            OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
+            Mode::empty(),
+        ) else {
+            return ReviewTarget::Refused;
+        };
+        for parent in parents {
+            directory = match openat(
+                &directory,
+                parent.as_str(),
+                OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+                Mode::empty(),
+            ) {
+                Ok(next) => next,
+                Err(Errno::NOENT) => return ReviewTarget::Absent,
+                Err(_) => return ReviewTarget::Refused,
+            };
         }
-        std::fs::read(resolved).ok()
+        let file = match openat(
+            &directory,
+            name.as_str(),
+            OFlags::RDONLY | OFlags::NOFOLLOW | OFlags::NONBLOCK | OFlags::NOCTTY | OFlags::CLOEXEC,
+            Mode::empty(),
+        ) {
+            Ok(file) => file,
+            Err(Errno::NOENT) => return ReviewTarget::Absent,
+            Err(_) => return ReviewTarget::Refused,
+        };
+        let Ok(stat) = fstat(&file) else {
+            return ReviewTarget::Refused;
+        };
+        if FileType::from_raw_mode(stat.st_mode) != FileType::RegularFile
+            || u64::try_from(stat.st_size).map_or(true, |size| size > MAX_REVIEW_READ_BYTES)
+        {
+            return ReviewTarget::Refused;
+        }
+        let mut bytes = Vec::new();
+        match std::fs::File::from(file)
+            .take(MAX_REVIEW_READ_BYTES + 1)
+            .read_to_end(&mut bytes)
+        {
+            Ok(read) if read as u64 <= MAX_REVIEW_READ_BYTES => ReviewTarget::Bytes(bytes),
+            _ => ReviewTarget::Refused,
+        }
     }
 
+    fn review(
+        &self,
+        challenge: &RuntimeApprovalChallenge,
+    ) -> Option<Result<ChangeReview, ChangeReviewUnavailable>> {
+        review_coding_write(challenge, &self.workspace_id, &|components| {
+            self.read(components)
+        })
+    }
+
+    #[cfg(test)]
     fn render(
         &self,
         challenge: &RuntimeApprovalChallenge,
         output: CliOutputFormat,
     ) -> Option<String> {
-        let review = review_coding_write(challenge, &self.workspace_id, &|components| {
-            self.read(components)
-        })?;
-        Some(match output {
-            CliOutputFormat::Human => render_change_review(&review),
+        self.review(challenge)
+            .map(|review| format_review(challenge, &review, output))
+    }
+}
+
+fn format_review(
+    challenge: &RuntimeApprovalChallenge,
+    review: &Result<ChangeReview, ChangeReviewUnavailable>,
+    output: CliOutputFormat,
+) -> String {
+    {
+        match output {
+            CliOutputFormat::Human => render_change_review(review),
             CliOutputFormat::Json => {
-                let value = match &review {
+                let value = match review {
                     Ok(review) => serde_json::json!({
                         "type": "change_review",
                         "approval_id": challenge.approval_id.as_str(),
                         "available": true,
                         "path": review.path,
                         "hunk_count": review.hunk_count,
+                        "hunk_ids": review.hunk_ids,
+                        "selectable": review.selectable,
+                        "selected_from": review.selected_from,
                         "preimage_sha256": review.preimage_sha256,
                         "postimage_sha256": review.postimage_sha256,
                         "rendered": review.rendered,
@@ -628,7 +711,42 @@ impl ReviewWorkspace {
                 };
                 format!("{value}\n")
             }
-        })
+        }
+    }
+}
+
+/// Most unparsable selections before the answer counts as a refusal.
+const MAX_SELECTION_ATTEMPTS: usize = 3;
+
+/// Parses `select` followed by one-based hunk numbers, separated by spaces or
+/// commas, into sorted unique numbers naming at least one and fewer than all.
+fn parse_hunk_selection(line: &str, hunk_count: usize) -> Option<Vec<usize>> {
+    let numbers = line.strip_prefix("select")?;
+    if !numbers.starts_with([' ', ',']) {
+        return None;
+    }
+    let mut selected = std::collections::BTreeSet::new();
+    for part in numbers.split([' ', ',']).filter(|part| !part.is_empty()) {
+        let number: usize = part.parse().ok()?;
+        if number == 0 || number > hunk_count {
+            return None;
+        }
+        selected.insert(number);
+    }
+    (!selected.is_empty() && selected.len() < hunk_count).then(|| selected.into_iter().collect())
+}
+
+/// The exact selection a person's hunk numbers name in one review.
+fn hunk_selection(review: &ChangeReview, numbers: &[usize]) -> RuntimeHunkSelection {
+    let mut accepted_hunk_ids = numbers
+        .iter()
+        .map(|number| review.hunk_ids[number - 1].clone())
+        .collect::<Vec<_>>();
+    accepted_hunk_ids.sort();
+    RuntimeHunkSelection {
+        preimage_sha256: review.preimage_sha256.clone(),
+        proposal_sha256: review.postimage_sha256.clone(),
+        accepted_hunk_ids,
     }
 }
 
@@ -674,18 +792,29 @@ impl CodingApprovalPort for TerminalApprovals {
         &mut self,
         challenge: &RuntimeApprovalChallenge,
     ) -> Result<RuntimeApprovalDisposition, CodingClientError> {
+        self.decide_with_selection(challenge)
+            .map(|(disposition, _)| disposition)
+    }
+
+    fn decide_with_selection(
+        &mut self,
+        challenge: &RuntimeApprovalChallenge,
+    ) -> Result<(RuntimeApprovalDisposition, Option<RuntimeHunkSelection>), CodingClientError> {
         let rendered =
             render_runtime_approval_human(challenge).map_err(|_| CodingClientError::Approval)?;
         let review = self
             .review_workspace
             .as_ref()
-            .and_then(|workspace| workspace.render(challenge, self.output));
+            .and_then(|workspace| workspace.review(challenge));
+        let review_text = review
+            .as_ref()
+            .map(|review| format_review(challenge, review, self.output));
         if self.preauthorized {
             eprintln!("preauthorized_for_this_run {rendered}");
-            if let Some(review) = &review {
+            if let Some(review) = &review_text {
                 eprint!("{review}");
             }
-            return Ok(
+            return Ok((
                 if wait_for_approval_delay(self.delay_ms, &self.cancellation)? {
                     RuntimeApprovalDisposition::Allow
                 } else {
@@ -693,15 +822,22 @@ impl CodingApprovalPort for TerminalApprovals {
                     // transmitting any approval response, so canonical cancel wins.
                     RuntimeApprovalDisposition::Deny
                 },
-            );
+                None,
+            ));
         }
         if self.output == CliOutputFormat::Json {
             eprintln!("approval_required {rendered}");
         } else {
             eprintln!("{rendered}");
         }
-        if let Some(review) = &review {
+        if let Some(review) = &review_text {
             eprint!("{review}");
+        }
+        if let Some(Ok(review)) = review
+            .as_ref()
+            .filter(|review| review.as_ref().is_ok_and(|review| review.selectable))
+        {
+            return self.decide_selectable(review);
         }
         eprint!("Approve this exact operation? Type yes to allow: ");
         match read_development_confirmation(
@@ -710,13 +846,58 @@ impl CodingApprovalPort for TerminalApprovals {
         )
         .map_err(|_| CodingClientError::Approval)?
         {
-            LinuxDevelopmentConfirmation::Confirmed => Ok(RuntimeApprovalDisposition::Allow),
+            LinuxDevelopmentConfirmation::Confirmed => {
+                Ok((RuntimeApprovalDisposition::Allow, None))
+            }
             LinuxDevelopmentConfirmation::Declined | LinuxDevelopmentConfirmation::Cancelled => {
                 // Cancellation remains pending for the existing driver's next
                 // poll; this value must not be sent ahead of that cancel.
-                Ok(RuntimeApprovalDisposition::Deny)
+                Ok((RuntimeApprovalDisposition::Deny, None))
             }
         }
+    }
+}
+
+impl TerminalApprovals {
+    /// Asks for yes, a selection of hunks, or anything else as a refusal. A
+    /// selection refuses the whole call and asks the host for a separately
+    /// approved write of only those hunks (Decision 0114).
+    fn decide_selectable(
+        &mut self,
+        review: &ChangeReview,
+    ) -> Result<(RuntimeApprovalDisposition, Option<RuntimeHunkSelection>), CodingClientError> {
+        for _ in 0..MAX_SELECTION_ATTEMPTS {
+            eprint!(
+                "Approve this exact operation? Type yes to allow, or select and hunk numbers (for example: select 1 {}) to refuse it and request a separate write of only those hunks: ",
+                review.hunk_count
+            );
+            let line = match read_development_line(&self.cancellation)
+                .map_err(|_| CodingClientError::Approval)?
+            {
+                LinuxDevelopmentInputLine::Line(line) => line,
+                // Cancellation stays pending for the driver's next poll.
+                LinuxDevelopmentInputLine::Ended | LinuxDevelopmentInputLine::Cancelled => {
+                    return Ok((RuntimeApprovalDisposition::Deny, None));
+                }
+            };
+            if line == "yes" {
+                return Ok((RuntimeApprovalDisposition::Allow, None));
+            }
+            if !line.starts_with("select") {
+                return Ok((RuntimeApprovalDisposition::Deny, None));
+            }
+            if let Some(numbers) = parse_hunk_selection(&line, review.hunk_count) {
+                return Ok((
+                    RuntimeApprovalDisposition::Narrow,
+                    Some(hunk_selection(review, &numbers)),
+                ));
+            }
+            eprintln!(
+                "selection not accepted: name at least one and fewer than all of hunks 1 to {}",
+                review.hunk_count
+            );
+        }
+        Ok((RuntimeApprovalDisposition::Deny, None))
     }
 }
 
@@ -724,9 +905,8 @@ impl CodingApprovalPort for TerminalApprovals {
 mod tests {
     use super::*;
 
-    #[test]
-    fn run_progress_is_projected_per_run_and_never_claims_review_or_delivery() {
-        let limits = RuntimeRunLimits {
+    fn limits() -> RuntimeRunLimits {
+        RuntimeRunLimits {
             max_turns: 8,
             max_model_calls: 8,
             max_tool_calls: 16,
@@ -737,25 +917,175 @@ mod tests {
             max_events: 256,
             max_elapsed_ms: 60_000,
             max_output_bytes: 65_536,
+        }
+    }
+
+    /// A sealed two-event run: started, then ended in `state`.
+    fn sealed_run(run: &str, state: AgentStateKind) -> Vec<RuntimeEvent> {
+        use agentmage_kernel_contracts::{
+            CONTRACT_SCHEMA_VERSION, ContextSensitivity, CorrelationId, PolicyId, RuntimeEventId,
+            RuntimeEventKind, RuntimeEventRetention, RuntimeEventRetentionKind, RuntimeRunId,
+            SessionId, TaskId,
         };
-        let mut sink = TerminalEventSink {
-            output: CliOutputFormat::Human,
-            run_events: Vec::new(),
+        use agentmage_kernel_engine::runtime_event::{
+            runtime_event_persistence, seal_runtime_event,
         };
+        let zero = "0".repeat(64);
+        let mut events: Vec<RuntimeEvent> = Vec::new();
+        for (sequence, kind) in [
+            RuntimeEventKind::RunStarted {
+                request_sha256: "1".repeat(64),
+            },
+            RuntimeEventKind::RunTerminal {
+                state,
+                outcome_sha256: "2".repeat(64),
+            },
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let previous = events.last();
+            events.push(
+                seal_runtime_event(RuntimeEvent {
+                    schema_version: CONTRACT_SCHEMA_VERSION,
+                    event_id: RuntimeEventId::from_raw(format!("{run}-event-{sequence}")),
+                    run_id: RuntimeRunId::from_raw(run),
+                    session_id: SessionId::from_raw("session-cli-progress"),
+                    task_id: TaskId::from_raw("task-cli-progress"),
+                    turn_id: None,
+                    operation_id: None,
+                    correlation_id: CorrelationId::from_raw("correlation-cli-progress"),
+                    causation_event_id: previous.map(|event| event.event_id.clone()),
+                    sequence: sequence as u64,
+                    occurred_at_epoch_ms: 1_000 + sequence as u64,
+                    sensitivity: ContextSensitivity::Internal,
+                    retention: RuntimeEventRetention {
+                        kind: RuntimeEventRetentionKind::Ephemeral,
+                        expires_at_epoch_ms: None,
+                    },
+                    persistence: runtime_event_persistence(&kind),
+                    policy_id: PolicyId::from_raw("policy-cli-progress"),
+                    payload_reference: None,
+                    kind,
+                    previous_event_sha256: previous
+                        .map_or_else(|| zero.clone(), |event| event.event_sha256.clone()),
+                    event_sha256: zero.clone(),
+                })
+                .unwrap(),
+            );
+        }
+        events
+    }
+
+    fn json(text: &str) -> serde_json::Value {
+        serde_json::from_str(text.trim_end()).unwrap()
+    }
+
+    #[test]
+    fn run_progress_is_projected_per_run_and_never_claims_review_or_delivery() {
+        let limits = limits();
+        let mut sink = TerminalEventSink::new(CliOutputFormat::Human, MAX_PROGRESS_EVENTS);
         let text = sink.take_progress(&limits);
         assert!(text.contains("not started"), "{text}");
         assert!(text.contains("turns: 0 of 8 declared (0%)"), "{text}");
         assert!(text.contains("independent review: not established by the runtime"));
-        sink.output = CliOutputFormat::Json;
-        let value: serde_json::Value =
-            serde_json::from_str(sink.take_progress(&limits).trim_end()).unwrap();
-        assert_eq!(value["type"], "run_progress");
-        assert_eq!(
-            value["progress"]["independently_reviewed_established"],
-            false
+
+        // Two consecutive runs: each projection covers only its own run.
+        for output in [CliOutputFormat::Human, CliOutputFormat::Json] {
+            sink.output = output;
+            for event in sealed_run("run-first", AgentStateKind::Failed) {
+                sink.present(&event).unwrap();
+            }
+            let first = sink.take_progress(&limits);
+            assert!(sink.run_events.is_empty());
+            for event in sealed_run("run-second", AgentStateKind::Success) {
+                sink.present(&event).unwrap();
+            }
+            let second = sink.take_progress(&limits);
+            match output {
+                CliOutputFormat::Human => {
+                    assert!(
+                        first.starts_with("run: ended failed; not verified"),
+                        "{first}"
+                    );
+                    assert!(
+                        second.starts_with("run: ended; verified locally"),
+                        "{second}"
+                    );
+                    assert!(!second.contains("failed"), "{second}");
+                    assert!(second.contains("delivery: not established by the runtime"));
+                }
+                CliOutputFormat::Json => {
+                    let (first, second) = (json(&first), json(&second));
+                    assert_eq!(first["progress"]["run_id"], "run-first");
+                    assert_eq!(second["type"], "run_progress");
+                    assert_eq!(second["available"], true);
+                    assert_eq!(second["progress"]["run_id"], "run-second");
+                    assert_eq!(second["progress"]["events"], 2);
+                    assert_eq!(second["progress"]["terminal_state"], "SUCCESS");
+                    assert_eq!(
+                        second["progress"]["independently_reviewed_established"],
+                        false
+                    );
+                    assert_eq!(second["progress"]["delivered_established"], false);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn an_unverifiable_or_truncated_run_is_reported_unavailable_in_both_formats() {
+        let limits = limits();
+        let first = sealed_run("run-a", AgentStateKind::Failed);
+        let second = sealed_run("run-b", AgentStateKind::Success);
+        // Events of two runs do not form one verified stream.
+        let mixed = [first[0].clone(), second[1].clone()];
+        let mut sink = TerminalEventSink::new(CliOutputFormat::Human, MAX_PROGRESS_EVENTS);
+        for output in [CliOutputFormat::Human, CliOutputFormat::Json] {
+            sink.output = output;
+            for event in &mixed {
+                sink.present(event).unwrap();
+            }
+            let text = sink.take_progress(&limits);
+            match output {
+                CliOutputFormat::Human => assert_eq!(
+                    text,
+                    "run progress unavailable: the presented stream is not one complete run\n"
+                ),
+                CliOutputFormat::Json => {
+                    assert_eq!(
+                        json(&text),
+                        serde_json::json!({"type": "run_progress", "available": false})
+                    );
+                }
+            }
+        }
+        // A run longer than the sink keeps is never projected from its prefix,
+        // which would verify and claim the run had not ended.
+        let mut sink = TerminalEventSink::new(CliOutputFormat::Json, 1);
+        for event in &first {
+            sink.present(event).unwrap();
+        }
+        assert_eq!(sink.run_events.len(), 1);
+        assert_eq!(json(&sink.take_progress(&limits))["available"], false);
+        sink.output = CliOutputFormat::Human;
+        for event in &first {
+            sink.present(event).unwrap();
+        }
+        assert!(
+            sink.take_progress(&limits)
+                .starts_with("run progress unavailable")
         );
-        assert_eq!(value["progress"]["delivered_established"], false);
-        assert!(sink.run_events.is_empty());
+        // The mark is cleared with the buffer; a run that fits is projected.
+        let mut sink = TerminalEventSink::new(CliOutputFormat::Human, 2);
+        for event in &second {
+            sink.present(event).unwrap();
+        }
+        assert!(
+            sink.take_progress(&limits)
+                .starts_with("run: ended; verified locally")
+        );
+        assert!(!sink.overflowed);
     }
 
     #[test]
@@ -774,16 +1104,78 @@ mod tests {
         let path = |text: &str| text.split('/').map(str::to_owned).collect::<Vec<_>>();
         assert_eq!(
             workspace.read(&path("src/notes.txt")),
-            Some(b"old text\n".to_vec())
+            ReviewTarget::Bytes(b"old text\n".to_vec())
         );
-        for escaped in [
+        std::os::unix::fs::symlink(scratch.join("gone.txt"), root.join("src/dangling.txt"))
+            .unwrap();
+        std::os::unix::fs::symlink(&scratch, root.join("linked-dir")).unwrap();
+        std::fs::create_dir(root.join("src/directory.txt")).unwrap();
+        std::fs::File::create(root.join("src/large.txt"))
+            .unwrap()
+            .set_len(MAX_REVIEW_READ_BYTES + 1)
+            .unwrap();
+        rustix::fs::mknodat(
+            rustix::fs::CWD,
+            root.join("src/fifo.txt"),
+            rustix::fs::FileType::Fifo,
+            rustix::fs::Mode::from(0o600),
+            0,
+        )
+        .unwrap();
+        for refused in [
             "src/link.txt",
+            "src/dangling.txt",
+            "src/directory.txt",
+            "src/large.txt",
+            "src/fifo.txt",
+            "linked-dir/outside.txt",
+            "src/notes.txt/child.txt",
             "src/../../outside.txt",
             "src",
             "",
-            "src/missing.txt",
         ] {
-            assert_eq!(workspace.read(&path(escaped)), None, "{escaped}");
+            assert_eq!(
+                workspace.read(&path(refused)),
+                ReviewTarget::Refused,
+                "{refused}"
+            );
+        }
+        for absent in ["src/missing.txt", "missing-dir/missing.txt"] {
+            assert_eq!(
+                workspace.read(&path(absent)),
+                ReviewTarget::Absent,
+                "{absent}"
+            );
+        }
+        // A creation review is shown only where nothing exists.
+        let creation = |target: &str| {
+            let challenge = crate::coding_change_review::tests_support::write_challenge(
+                crate::coding_changes::CONTROLLED_CREATE_TOOL_ID,
+                serde_json::to_vec(&serde_json::json!({
+                    "schema_version": 1, "creation_id": "creation-1", "path": path(target),
+                    "content": "created\n", "mode": 420, "classification": "source_code",
+                    "intent_sha256": "a".repeat(64), "change_plan_sha256": "b".repeat(64),
+                    "expected_parent_sha256": "c".repeat(64)
+                }))
+                .unwrap(),
+            );
+            workspace
+                .render(&challenge, CliOutputFormat::Human)
+                .unwrap()
+        };
+        assert!(creation("src/missing.txt").contains("+created\n"));
+        for occupied in [
+            "src/link.txt",
+            "src/dangling.txt",
+            "src/directory.txt",
+            "src/large.txt",
+        ] {
+            let text = creation(occupied);
+            assert!(
+                text.contains("coding.change-review.target-unavailable"),
+                "{occupied}: {text}"
+            );
+            assert!(!text.contains("+created"), "{occupied}: {text}");
         }
         use crate::coding_change_review::tests_support::{sha256_hex, write_challenge};
         let arguments = serde_json::json!({
@@ -812,6 +1204,139 @@ mod tests {
         assert!(
             json.contains("coding.change-review.preimage-changed"),
             "{json}"
+        );
+        std::fs::remove_dir_all(scratch).unwrap();
+    }
+
+    #[test]
+    fn a_hunk_selection_names_at_least_one_and_fewer_than_all_hunks() {
+        assert_eq!(parse_hunk_selection("select 1 3", 3), Some(vec![1, 3]));
+        assert_eq!(parse_hunk_selection("select 3,1, 3", 4), Some(vec![1, 3]));
+        for refused in [
+            "select",
+            "select ",
+            "select 0",
+            "select 4",
+            "select 1 2 3",
+            "select x",
+            "select -1",
+            "selected 1",
+            "select1",
+            "yes",
+        ] {
+            assert_eq!(parse_hunk_selection(refused, 3), None, "{refused}");
+        }
+        let review = ChangeReview {
+            path: vec!["src".to_owned(), "notes.txt".to_owned()],
+            preimage_sha256: "1".repeat(64),
+            postimage_sha256: "2".repeat(64),
+            hunk_count: 3,
+            hunk_ids: vec!["c".repeat(64), "a".repeat(64), "b".repeat(64)],
+            selectable: true,
+            selected_from: None,
+            rendered: String::new(),
+        };
+        let selection = hunk_selection(&review, &[1, 3]);
+        assert_eq!(
+            selection.accepted_hunk_ids,
+            ["b".repeat(64), "c".repeat(64)]
+        );
+        assert_eq!(selection.preimage_sha256, review.preimage_sha256);
+        assert_eq!(selection.proposal_sha256, review.postimage_sha256);
+    }
+
+    #[test]
+    fn a_selectable_review_lists_its_hunks_and_the_derived_write_shows_only_the_selection() {
+        use crate::coding_change_review::tests_support::{sha256_hex, write_challenge};
+        use crate::coding_changes::{STRUCTURED_PATCH_TOOL_ID, StructuredPatchProposal};
+        let scratch = std::env::temp_dir().join(format!(
+            "agentmage-selection-workspace-{}",
+            std::process::id()
+        ));
+        let root = scratch.join("worktree");
+        std::fs::create_dir_all(root.join("src")).unwrap();
+        let text = "one\ntwo\nthree\nfour\nfive\nsix\nseven\neight\nnine\n";
+        std::fs::write(root.join("src/notes.txt"), text).unwrap();
+        let workspace = ReviewWorkspace {
+            workspace_id: WorkspaceId::from_raw("coding-development-selection"),
+            root: root.clone(),
+        };
+        let arguments = serde_json::json!({
+            "schema_version": 1, "change_id": "change-1", "path": ["src", "notes.txt"],
+            "expected_preimage_sha256": sha256_hex(text.as_bytes()),
+            "intent_sha256": "a".repeat(64), "change_plan_sha256": "b".repeat(64),
+            "language": "plain_text", "artifact_class": "documentation",
+            "edits": [{"kind": "replace_exact_text", "edit_id": "edit-1",
+                       "expected": "two", "replacement": "TWO"},
+                      {"kind": "replace_exact_text", "edit_id": "edit-2",
+                       "expected": "eight", "replacement": "EIGHT"}],
+            "additional_review_hooks": [], "generated": false, "allow_generated": false
+        });
+        let original = write_challenge(
+            STRUCTURED_PATCH_TOOL_ID,
+            serde_json::to_vec(&arguments).unwrap(),
+        );
+        let review = workspace.review(&original).unwrap().unwrap();
+        assert!(review.selectable);
+        assert_eq!(review.hunk_count, 2);
+        let human = format_review(&original, &Ok(review.clone()), CliOutputFormat::Human);
+        assert!(human.contains("hunk 1 = "), "{human}");
+        assert!(human.contains("hunk 2 = "), "{human}");
+        let json: serde_json::Value = serde_json::from_str(
+            format_review(&original, &Ok(review.clone()), CliOutputFormat::Json).trim_end(),
+        )
+        .unwrap();
+        assert_eq!(json["selectable"], true);
+        assert_eq!(json["hunk_ids"].as_array().unwrap().len(), 2);
+
+        // The host derives the write of hunk 2 from the person's selection.
+        let selection = hunk_selection(&review, &[2]);
+        let proposal: StructuredPatchProposal = serde_json::from_value(arguments).unwrap();
+        let scope = crate::coding_changes::CodingWriteScope::new(
+            WorkspaceId::from_raw("coding-development-selection"),
+            vec![vec!["src".to_owned()]],
+        )
+        .unwrap();
+        let plan = crate::coding_changes::bind_structured_patch_proposal(
+            &scope,
+            proposal,
+            text.as_bytes().to_vec(),
+        )
+        .unwrap();
+        let mut call = original.clone();
+        let derived = crate::coding_hunk_selection::derive_hunk_selection_call(
+            &agentmage_kernel_contracts::ToolCall {
+                schema_version: call.schema_version,
+                tool_call_id: call.tool_call_id.clone(),
+                correlation_id: agentmage_kernel_contracts::CorrelationId::from_raw("c"),
+                action_id: agentmage_kernel_contracts::ActionId::from_raw("a"),
+                tool_id: call.presentation.tool_id.clone(),
+                tool_version: call.presentation.tool_version.clone(),
+                arguments: call.presentation.arguments.clone(),
+            },
+            plan.preimage(),
+            plan.postimage(),
+            text.as_bytes(),
+            &selection,
+        )
+        .unwrap();
+        call.presentation.tool_id = derived.tool_id;
+        call.presentation.arguments = derived.arguments;
+        let derived_review = workspace.review(&call).unwrap().unwrap();
+        assert!(!derived_review.selectable);
+        assert_eq!(derived_review.selected_from, Some((1, 2)));
+        let text_review = format_review(&call, &Ok(derived_review), CliOutputFormat::Human);
+        assert!(
+            text_review.contains("only the 1 of 2 you selected"),
+            "{text_review}"
+        );
+        assert!(text_review.contains("-eight\n+EIGHT\n"), "{text_review}");
+        assert!(!text_review.contains("TWO"), "{text_review}");
+        // A person's later edit makes the derived review unavailable, not misleading.
+        std::fs::write(root.join("src/notes.txt"), text.replace("five", "5")).unwrap();
+        assert_eq!(
+            workspace.review(&call).unwrap(),
+            Err(ChangeReviewUnavailable::PreimageChanged)
         );
         std::fs::remove_dir_all(scratch).unwrap();
     }

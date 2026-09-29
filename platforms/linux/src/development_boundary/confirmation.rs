@@ -43,6 +43,29 @@ pub enum LinuxDevelopmentConfirmation {
     Cancelled,
 }
 
+/// One bounded complete line from the development CLI's standard input.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum LinuxDevelopmentInputLine {
+    /// A complete line, trimmed of surrounding whitespace and its terminator.
+    Line(String),
+    /// Input ended before a complete line; never an approving answer.
+    Ended,
+    /// The existing signal owner's flag is set and remains unconsumed.
+    Cancelled,
+}
+
+/// Reads one bounded complete line from the development CLI's standard input,
+/// under the same single-consumer, one-byte and cancellation rules as
+/// [`read_development_confirmation`]. The caller interprets the line; no line
+/// grants anything by itself.
+pub fn read_development_line(
+    cancellation: &AtomicBool,
+) -> Result<LinuxDevelopmentInputLine, LinuxDevelopmentBoundaryError> {
+    let stdin = std::io::stdin();
+    let _input_owner = stdin.lock();
+    read_line(&stdin, cancellation)
+}
+
 /// Reads one bounded confirmation from the development CLI's standard input.
 ///
 /// This entry point is for the dedicated CLI, whose confirmation paths are its
@@ -67,8 +90,23 @@ fn read_confirmation(
     kind: LinuxDevelopmentConfirmationKind,
     cancellation: &AtomicBool,
 ) -> Result<LinuxDevelopmentConfirmation, LinuxDevelopmentBoundaryError> {
+    Ok(match read_line(input, cancellation)? {
+        LinuxDevelopmentInputLine::Line(line) if line == kind.word() => {
+            LinuxDevelopmentConfirmation::Confirmed
+        }
+        LinuxDevelopmentInputLine::Line(_) | LinuxDevelopmentInputLine::Ended => {
+            LinuxDevelopmentConfirmation::Declined
+        }
+        LinuxDevelopmentInputLine::Cancelled => LinuxDevelopmentConfirmation::Cancelled,
+    })
+}
+
+fn read_line(
+    input: &impl AsFd,
+    cancellation: &AtomicBool,
+) -> Result<LinuxDevelopmentInputLine, LinuxDevelopmentBoundaryError> {
     if cancellation.load(Ordering::Acquire) {
-        return Ok(LinuxDevelopmentConfirmation::Cancelled);
+        return Ok(LinuxDevelopmentInputLine::Cancelled);
     }
     // A write-only pipe can wait forever for readable data while its peer stays
     // open. Refuse its access mode without changing the shared descriptor flags.
@@ -82,7 +120,7 @@ fn read_confirmation(
     let mut length = 0;
     loop {
         if cancellation.load(Ordering::Acquire) {
-            return Ok(LinuxDevelopmentConfirmation::Cancelled);
+            return Ok(LinuxDevelopmentInputLine::Cancelled);
         }
         let mut descriptors = [PollFd::new(input, PollFlags::IN)];
         match poll(&mut descriptors, Some(&INPUT_POLL_TIME)) {
@@ -91,7 +129,7 @@ fn read_confirmation(
             Err(_) => return Err(input_error()),
         }
         if cancellation.load(Ordering::Acquire) {
-            return Ok(LinuxDevelopmentConfirmation::Cancelled);
+            return Ok(LinuxDevelopmentInputLine::Cancelled);
         }
         let ready = descriptors[0].revents();
         if ready.intersects(PollFlags::ERR | PollFlags::NVAL)
@@ -102,22 +140,18 @@ fn read_confirmation(
         // One byte prevents read-ahead from consuming any future challenge's
         // answer. Polling does not change a shared open-file description's flags.
         match read(input, &mut bytes[length..length + 1]) {
-            Ok(0) => return Ok(LinuxDevelopmentConfirmation::Declined),
+            Ok(0) => return Ok(LinuxDevelopmentInputLine::Ended),
             Ok(1) => length += 1,
             Ok(_) => return Err(input_error()),
             Err(Errno::INTR | Errno::AGAIN) => continue,
             Err(_) => return Err(input_error()),
         }
         if cancellation.load(Ordering::Acquire) {
-            return Ok(LinuxDevelopmentConfirmation::Cancelled);
+            return Ok(LinuxDevelopmentInputLine::Cancelled);
         }
         if bytes[length - 1] == b'\n' {
             let line = std::str::from_utf8(&bytes[..length]).map_err(|_| input_error())?;
-            return Ok(if line.trim() == kind.word() {
-                LinuxDevelopmentConfirmation::Confirmed
-            } else {
-                LinuxDevelopmentConfirmation::Declined
-            });
+            return Ok(LinuxDevelopmentInputLine::Line(line.trim().to_owned()));
         }
         if length == bytes.len() {
             return Err(input_error());
@@ -160,6 +194,36 @@ mod tests {
         assert_eq!(
             closed_line("\u{2003}yes\u{2003}\n".as_bytes(), OperationApproval).unwrap(),
             Confirmed
+        );
+    }
+
+    #[test]
+    fn a_line_is_returned_trimmed_and_an_unterminated_fragment_is_not() {
+        for (bytes, expected) in [
+            (
+                &b"select 1 3\n"[..],
+                LinuxDevelopmentInputLine::Line("select 1 3".to_owned()),
+            ),
+            (
+                &b"  yes \r\n"[..],
+                LinuxDevelopmentInputLine::Line("yes".to_owned()),
+            ),
+            (&b"\n"[..], LinuxDevelopmentInputLine::Line(String::new())),
+            (&b"select 1"[..], LinuxDevelopmentInputLine::Ended),
+            (&b""[..], LinuxDevelopmentInputLine::Ended),
+        ] {
+            let (input, mut output) = std::io::pipe().unwrap();
+            output.write_all(bytes).unwrap();
+            drop(output);
+            assert_eq!(
+                read_line(&input, &AtomicBool::new(false)).unwrap(),
+                expected
+            );
+        }
+        let (input, _output) = std::io::pipe().unwrap();
+        assert_eq!(
+            read_line(&input, &AtomicBool::new(true)).unwrap(),
+            LinuxDevelopmentInputLine::Cancelled
         );
     }
 

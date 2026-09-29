@@ -21,6 +21,7 @@ use crate::{
         CHANGE_HISTORY_TOOL_ID, CODING_HISTORY_TOOL_VERSION, ChangeHistoryRequest,
         ROLLBACK_TOOL_ID, RollbackRequest,
     },
+    coding_hunk_selection::{HUNK_SELECTION_TOOL_ID, HunkSelectionWriteProposal},
     coding_session::CodingSessionProfile,
     coding_tools::{
         BOUNDED_COMMAND_TOOL_ID, BOUNDED_COMMAND_TOOL_VERSION, TARGETED_VALIDATION_TOOL_ID,
@@ -82,6 +83,11 @@ pub enum PreparedNativeCodingCall {
         /// Exact rollback source and fresh operation identities.
         request: RollbackRequest,
     },
+    /// A write of only the hunks a person accepted from a refused patch (Decision 0114).
+    HunkSelection {
+        /// Structurally validated original patch and exact selection.
+        proposal: HunkSelectionWriteProposal,
+    },
 }
 
 /// Stable content-free refusal while preparing one native coding call.
@@ -139,6 +145,12 @@ impl<'profile> NativeCodingCallPreparer<'profile> {
                 .profile
                 .change_plan()
                 .matches_write_proposal(&proposal.intent_sha256, &proposal.change_plan_sha256),
+            PreparedNativeCodingCall::HunkSelection { proposal } => {
+                self.profile.change_plan().matches_write_proposal(
+                    &proposal.original.intent_sha256,
+                    &proposal.original.change_plan_sha256,
+                )
+            }
             PreparedNativeCodingCall::Validation { request, .. } => self
                 .profile
                 .change_plan()
@@ -226,6 +238,12 @@ fn prepare_from_parts(
             let request = serde_json::from_slice::<RollbackRequest>(&call.arguments.bytes)
                 .map_err(|_| NativeCodingDispatchError::ProviderDenied)?;
             Ok(PreparedNativeCodingCall::Rollback { request })
+        }
+        (HUNK_SELECTION_TOOL_ID, CONTROLLED_CHANGE_TOOL_VERSION) => {
+            // The registry's closed validator already checked the selection.
+            let proposal = serde_json::from_slice(&call.arguments.bytes)
+                .map_err(|_| NativeCodingDispatchError::ProviderDenied)?;
+            Ok(PreparedNativeCodingCall::HunkSelection { proposal })
         }
         _ => Err(NativeCodingDispatchError::ToolUnavailable),
     }

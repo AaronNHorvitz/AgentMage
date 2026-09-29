@@ -762,6 +762,7 @@ mod tests {
             challenge_sha256: challenge.challenge_sha256.clone(),
             grant_id: (disposition == RuntimeApprovalDisposition::Allow)
                 .then(|| challenge.proposed_grant_id.clone()),
+            selection: None,
         }
     }
 

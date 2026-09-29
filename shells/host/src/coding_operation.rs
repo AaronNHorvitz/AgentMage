@@ -261,6 +261,19 @@ fn non_read_target(
                 StateChange::Changed,
             ))
         }
+        PreparedNativeCodingCall::HunkSelection { proposal } => {
+            let path = write_scope
+                .resolve(&proposal.original.path)
+                .map_err(|_| NativeCodingOperationError::InvariantDenied)?;
+            Ok((
+                OperationBinding::new(GrantOperation::WorkspaceWrite),
+                NativeCodingTargetPlan::ExistingFile {
+                    path,
+                    expected_preimage_sha256: proposal.preimage_sha256.clone(),
+                },
+                StateChange::Changed,
+            ))
+        }
         PreparedNativeCodingCall::Rollback { request } => {
             let path = write_scope
                 .resolve(&request.source.record.path)

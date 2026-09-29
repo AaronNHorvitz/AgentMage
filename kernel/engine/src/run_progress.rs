@@ -132,6 +132,8 @@ pub fn project_run_progress(
                 pending.remove(approval_id.as_str());
             }
             RuntimeEventKind::CancellationRequested { .. } => cancellation_requested = true,
+            // The owner stopped the run's work; no decision is awaited any more.
+            RuntimeEventKind::CancellationObserved { .. } => pending.clear(),
             RuntimeEventKind::TerminalDiagnostic {
                 safe_next_action: action,
                 ..
@@ -144,10 +146,11 @@ pub fn project_run_progress(
         RunActivity::NotStarted
     } else if terminal_state.is_some() {
         RunActivity::Ended
+    } else if cancellation_requested {
+        // A person who asked to stop is not asked for a decision again.
+        RunActivity::CancellationRequested
     } else if !pending.is_empty() {
         RunActivity::WaitingForApproval
-    } else if cancellation_requested {
-        RunActivity::CancellationRequested
     } else {
         RunActivity::Running
     };
@@ -158,7 +161,7 @@ pub fn project_run_progress(
         terminal_state,
         locally_verified: terminal_state.is_some_and(AgentStateKind::is_success),
         safe_next_action,
-        pending_approvals: if terminal_state.is_some() {
+        pending_approvals: if terminal_state.is_some() || cancellation_requested {
             0
         } else {
             pending.len() as u64
@@ -503,6 +506,123 @@ mod tests {
             progress.last_event_sha256,
             events.last().unwrap().event_sha256
         );
+    }
+
+    /// Continues a stream after the given events.
+    fn after(events: &[RuntimeEvent]) -> Stream {
+        Stream {
+            sequence: events.len() as u64,
+            previous: events.last().cloned(),
+        }
+    }
+
+    #[test]
+    fn a_cancellation_request_ends_the_wait_for_a_decision() {
+        let mut events = run(None, false);
+        let mut stream = after(&events);
+        let cancellation_id = CancellationId::from_raw("cancel-waiting");
+        events.push(stream.push(
+            RuntimeEventKind::CancellationRequested {
+                cancellation_id: cancellation_id.clone(),
+            },
+            false,
+            false,
+        ));
+        let requested = project_run_progress(&events, ProgressCeilings::default()).unwrap();
+        events.push(stream.push(
+            RuntimeEventKind::CancellationObserved { cancellation_id },
+            false,
+            false,
+        ));
+        let observed = project_run_progress(&events, ProgressCeilings::default()).unwrap();
+        for progress in [&requested, &observed] {
+            assert_eq!(progress.activity, RunActivity::CancellationRequested);
+            assert_eq!(progress.pending_approvals, 0);
+            let text = render_run_progress(progress);
+            assert!(
+                text.contains("cancellation requested; the run has not ended yet"),
+                "{text}"
+            );
+            assert!(!text.contains("waiting for your decision"), "{text}");
+        }
+        events.push(stream.push(
+            RuntimeEventKind::RunTerminal {
+                state: AgentStateKind::Cancelled,
+                outcome_sha256: hash('d'),
+            },
+            false,
+            false,
+        ));
+        let ended = project_run_progress(&events, ProgressCeilings::default()).unwrap();
+        assert_eq!(ended.activity, RunActivity::Ended);
+        assert_eq!(ended.terminal_state, Some(AgentStateKind::Cancelled));
+        assert!(!ended.locally_verified);
+        assert!(render_run_progress(&ended).contains("run: ended cancelled; not verified"));
+    }
+
+    #[test]
+    fn running_and_every_terminal_state_are_reported_as_the_stream_establishes_them() {
+        // A turn whose model call is in flight, with no decision pending.
+        let running =
+            project_run_progress(&run(None, false)[..4], ProgressCeilings::default()).unwrap();
+        assert_eq!(running.activity, RunActivity::Running);
+        assert_eq!(running.pending_approvals, 0);
+        assert!(render_run_progress(&running).starts_with("run: running\n"));
+        for (state, expected, verified) in [
+            (
+                AgentStateKind::Success,
+                "run: ended; verified locally by the runtime's verifier\n",
+                true,
+            ),
+            (
+                AgentStateKind::NoOp,
+                "run: ended; verified locally by the runtime's verifier\n",
+                true,
+            ),
+            (
+                AgentStateKind::Blocked,
+                "run: ended blocked; not verified; recorded next step InspectEvidence\n",
+                false,
+            ),
+            (
+                AgentStateKind::Declined,
+                "run: ended declined; not verified; recorded next step InspectEvidence\n",
+                false,
+            ),
+            (
+                AgentStateKind::Stalled,
+                "run: ended stalled without progress; not verified; recorded next step InspectEvidence\n",
+                false,
+            ),
+            (
+                AgentStateKind::Exhausted,
+                "run: ended at a declared resource or retry ceiling; not verified; recorded next step InspectEvidence\n",
+                false,
+            ),
+            (
+                AgentStateKind::Uncertain,
+                "run: ended with an effect that cannot be established; not verified; recorded next step InspectEvidence\n",
+                false,
+            ),
+            (
+                AgentStateKind::Failed,
+                "run: ended failed; not verified; recorded next step InspectEvidence\n",
+                false,
+            ),
+        ] {
+            let progress =
+                project_run_progress(&run(Some(state), false), ProgressCeilings::default())
+                    .unwrap();
+            assert_eq!(progress.activity, RunActivity::Ended);
+            assert_eq!(progress.terminal_state, Some(state));
+            assert_eq!(progress.locally_verified, verified, "{state:?}");
+            assert_eq!(progress.pending_approvals, 0);
+            let text = render_run_progress(&progress);
+            assert!(text.starts_with(expected), "{state:?}: {text}");
+            assert!(text.ends_with(
+                "independent review: not established by the runtime\ndelivery: not established by the runtime\n"
+            ));
+        }
     }
 
     #[test]

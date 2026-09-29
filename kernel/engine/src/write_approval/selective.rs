@@ -392,25 +392,18 @@ fn push_display_line(output: &mut String, marker: char, line: &str) {
         None => (line, false),
     };
     output.push(marker);
-    // Escape exactly as the whole-file preview's `{:?}` does, so this display is
-    // never weaker than it: control, format, line and paragraph separator,
-    // private-use, unassigned and non-ASCII space characters, a leading
-    // combining mark and backslash. Only tab and the ASCII quotes are shown as
-    // themselves; they cannot reorder, hide or break a displayed line.
-    let mut escaped = content.escape_debug();
-    while let Some(character) = escaped.next() {
-        if character != '\\' {
-            output.push(character);
-            continue;
-        }
-        match escaped.next() {
-            Some(quote @ ('\'' | '"')) => output.push(quote),
-            Some('t') => output.push('\t'),
-            Some(other) => {
-                output.push('\\');
-                output.push(other);
-            }
-            None => output.push('\\'),
+    // Escape each character as the whole-file preview's `{:?}` does at every
+    // position, so this display is never weaker than it: control, format, line
+    // and paragraph separator, private-use, unassigned and non-ASCII space
+    // characters, every grapheme-extending mark (combining marks, variation
+    // selectors, the combining grapheme joiner) and backslash. `str`'s own
+    // `escape_debug` escapes an extending mark only at the start, so it is not
+    // used. Only tab and the ASCII quotes are shown as themselves; they cannot
+    // reorder, hide or break a displayed line.
+    for character in content.chars() {
+        match character {
+            '\t' | '\'' | '"' => output.push(character),
+            other => output.extend(other.escape_debug()),
         }
     }
     output.push('\n');
@@ -774,29 +767,69 @@ mod tests {
             '\u{202e}', '\u{2066}', '\u{200b}', '\u{2028}', '\u{2029}', '\u{feff}', '\u{85}',
             '\u{7f}', '\u{9b}', '\u{a0}', '\u{e000}', '\u{1b}', '\r',
         ];
+        // Grapheme-extending marks that `str::escape_debug` leaves raw after
+        // the first position: variation selectors, the combining grapheme
+        // joiner, a Mongolian variation selector and a combining accent.
+        let extending = [
+            '\u{fe0f}',
+            '\u{fe00}',
+            '\u{34f}',
+            '\u{e0100}',
+            '\u{180b}',
+            '\u{301}',
+        ];
         let line: String = hostile.iter().collect();
-        let proposal = format!("a\n{line}\n\u{301}lead e\u{301} \\u{{202e}} 'q' \"q\"\tend\n");
+        let marks: String = extending
+            .iter()
+            .map(|character| format!("admin{character}x "))
+            .collect();
+        let proposal =
+            format!("a\n{line}\n\u{301}lead e\u{301} \\u{{202e}} 'q' \"q\"\tend\n{marks}\n");
         let change = HunkedTextChange::new(b"a\n", proposal.as_bytes()).unwrap();
         let rendered = change.render(3);
-        for character in hostile {
-            assert!(!rendered.contains(character), "{:x}", u32::from(character));
+        for character in hostile.iter().chain(&extending) {
+            assert!(
+                !rendered.contains(*character),
+                "{:x}",
+                u32::from(*character)
+            );
         }
         assert!(rendered.contains("+\\u{202e}\\u{2066}\\u{200b}\\u{2028}\\u{2029}\\u{feff}"));
         assert!(rendered.contains("\\u{85}\\u{7f}\\u{9b}\\u{a0}\\u{e000}\\u{1b}\\r\n"));
-        // A leading combining mark cannot merge with the marker; a later one is
-        // ordinary text. A literal backslash escape stays distinguishable, and
-        // tab and quotes are shown as themselves.
-        assert!(rendered.contains("+\\u{301}lead e\u{301} \\\\u{202e} 'q' \"q\"\tend\n"));
+        // Combining marks are escaped at any position. A literal backslash
+        // escape stays distinguishable, and tab and quotes are shown as
+        // themselves.
+        assert!(rendered.contains("+\\u{301}lead e\\u{301} \\\\u{202e} 'q' \"q\"\tend\n"));
+        assert!(rendered.contains("+admin\\u{fe0f}x admin\\u{fe00}x admin\\u{34f}x "));
         // Every displayed line starts with a marker, a header or the newline note.
         assert!(
             rendered
                 .lines()
                 .all(|line| line.starts_with(['@', ' ', '-', '+', '\\']))
         );
-        // The whole-file preview's `{:?}` escapes at least as much as this display.
-        let preview = format!("{proposal:?}");
-        for character in hostile {
-            assert!(!preview.contains(character));
+        // Each displayed line equals the whole-file preview's `{:?}` of that
+        // line, with only the tab and double-quote escapes undone.
+        for content in proposal.split('\n').skip(1).filter(|line| !line.is_empty()) {
+            let debug = format!("{content:?}");
+            let mut expected = String::from("+");
+            let mut characters = debug[1..debug.len() - 1].chars();
+            while let Some(character) = characters.next() {
+                if character != '\\' {
+                    expected.push(character);
+                    continue;
+                }
+                match characters.next() {
+                    Some('t') => expected.push('\t'),
+                    Some('"') => expected.push('"'),
+                    Some(other) => {
+                        expected.push('\\');
+                        expected.push(other);
+                    }
+                    None => expected.push('\\'),
+                }
+            }
+            expected.push('\n');
+            assert!(rendered.contains(&expected), "{expected:?}");
         }
     }
 

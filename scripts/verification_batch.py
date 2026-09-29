@@ -11,9 +11,14 @@ can regenerate it and compare bytes:
 - `retain` copies one private evidence stage into the repository. It replaces
   the checkout root, home directory, temporary directory and any declared
   private roots with placeholders, then refuses the copy if the user or host
-  name remains. A name that is also public vocabulary, such as a distribution's
-  default host name, is allowed only when named explicitly, and the stage
-  records how many names were allowed, never the names.
+  name remains in any written byte, in any letter case. A name that is also
+  public vocabulary, such as a distribution's default host name, is allowed
+  only when named explicitly, and the stage records how many names were
+  allowed, never the names. A schema 2 stage binds this tool among its
+  sources, and every source digest must equal the file at the stage's source
+  revision unless it is declared as changed in a named later commit that
+  contains exactly those bytes, such as a review pin that must be edited
+  before the check that validates it can run.
 - `record` builds a record from a committed specification, the commit range,
   the retained stages and a committed inventory. With `--check` it compares the
   result with the committed record instead of writing it.
@@ -39,6 +44,8 @@ ROOT = Path(__file__).resolve().parents[1]
 REVISION = re.compile(r"^[0-9a-f]{40}$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 STAGE_NAME = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
+SOURCE_PATH = re.compile(r"^[A-Za-z0-9_.@+-]+(?:/[A-Za-z0-9_.@+-]+)*$")
+TOOL = "scripts/verification_batch.py"
 TEST_RESULT = re.compile(
     r"^test result: (?:ok|FAILED)\. (?P<passed>\d+) passed; (?P<failed>\d+) failed; "
     r"(?P<ignored>\d+) ignored;",
@@ -200,24 +207,85 @@ def private_names(allowed: Iterable[str] = ()) -> list[str]:
     )
 
 
+def refuse_names(text: str, names: list[str]) -> None:
+    folded = text.casefold()
+    for name in names:
+        if name.casefold() in folded:
+            raise RecordError("a private user or host name remains after redaction")
+
+
 def redact(text: str, roots: list[tuple[str, str]], names: list[str]) -> str:
     for path, label in roots:
         text = text.replace(path, label)
-    for name in names:
-        if name in text:
-            raise RecordError("a private user or host name remains after redaction")
+    refuse_names(text, names)
     return text
+
+
+def is_source_path(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and SOURCE_PATH.fullmatch(value) is not None
+        and all(part not in (".", "..") for part in value.split("/"))
+    )
+
+
+def is_ancestor(ancestor: str, descendant: str) -> bool:
+    return subprocess.run(
+        ("git", "merge-base", "--is-ancestor", ancestor, descendant), cwd=ROOT
+    ).returncode == 0
+
+
+def verify_sources(sources: Any, revision: str, changed: Any) -> None:
+    """Every source equals its file at `revision`, or a declared later commit."""
+    if not isinstance(sources, dict) or TOOL not in sources:
+        raise RecordError(f"stage sources must include {TOOL}")
+    if not isinstance(changed, list):
+        raise RecordError("changed sources must be a list")
+    declared: dict[str, dict[str, Any]] = {}
+    for row in changed:
+        if (not isinstance(row, dict) or set(row) != {"path", "sha256", "commit"}
+                or not is_source_path(row["path"]) or row["path"] in declared
+                or not REVISION.fullmatch(str(row["commit"]))):
+            raise RecordError(f"invalid changed source declaration: {row}")
+        declared[row["path"]] = row
+    for path, digest in sources.items():
+        if not is_source_path(path) or not is_sha256(digest):
+            raise RecordError(f"stage source is not a repository path and digest: {path}")
+    committed = blobs(revision, sorted(sources))
+    for path, digest in sorted(sources.items()):
+        blob = committed[path]
+        matches = blob is not None and sha256_bytes(blob) == digest
+        row = declared.pop(path, None)
+        if matches and row is None:
+            continue
+        if matches or row is None or row["sha256"] != digest:
+            raise RecordError(f"stage source differs from its source revision: {path}")
+        commit = resolve(row["commit"])
+        later = blobs(commit, [path])[path]
+        if (commit == revision or not is_ancestor(revision, commit) or later is None
+                or sha256_bytes(later) != digest):
+            raise RecordError(f"declared change is not in the named later commit: {path}")
+    if declared:
+        raise RecordError(f"declared changes are not stage sources: {sorted(declared)}")
 
 
 def retain(plan_path: Path, results_path: Path, destination: Path,
            extra: list[tuple[str, str]], allowed_public_names: tuple[str, ...] = (),
-           attachments: tuple[Path, ...] = ()) -> dict[str, Any]:
+           attachments: tuple[Path, ...] = (),
+           changed: tuple[tuple[str, str], ...] = ()) -> dict[str, Any]:
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     results = json.loads(results_path.read_text(encoding="utf-8"))
     name = plan["name"]
     if not STAGE_NAME.fullmatch(name) or not REVISION.fullmatch(plan["source_revision"]):
         raise RecordError("stage name or source revision is invalid")
-    resolve(plan["source_revision"])
+    revision = resolve(plan["source_revision"])
+    if revision != plan["source_revision"]:
+        raise RecordError("the source revision must be a full commit name")
+    changed_sources = []
+    for path, commit in changed:
+        digest = plan["sources"].get(path) if isinstance(plan["sources"], dict) else None
+        changed_sources.append({"path": path, "sha256": digest, "commit": resolve(commit)})
+    verify_sources(plan["sources"], revision, changed_sources)
     if len(results) > len(plan["commands"]):
         raise RecordError("more results than planned commands")
     target = destination / name
@@ -230,6 +298,9 @@ def retain(plan_path: Path, results_path: Path, destination: Path,
     for index, row in enumerate(results, start=1):
         if row["index"] != index or row["command"] != plan["commands"][index - 1]:
             raise RecordError("results do not follow the plan")
+        if (type(row["exit_code"]) is not int
+                or type(row["seconds"]) not in (int, float) or row["seconds"] < 0):
+            raise RecordError("a result's exit code or duration is not a number")
         raw = Path(row["log"]).read_bytes()
         if sha256_bytes(raw) != row["sha256"]:
             raise RecordError(f"private log changed after the stage: {row['log']}")
@@ -257,32 +328,49 @@ def retain(plan_path: Path, results_path: Path, destination: Path,
         attached.append({"name": path.name, "sha256": sha256_bytes(text.encode("utf-8")),
                          "private_sha256": sha256_bytes(raw)})
     stage = {
-        "schema_version": 1,
+        "schema_version": 2,
         "stage": name,
-        "source_revision": plan["source_revision"],
+        "source_revision": revision,
         "scope": redact(plan["scope"], roots, names),
         "planned_commands": [[redact(part, roots, names) for part in command]
                              for command in plan["commands"]],
         "continue_after_failure_indexes": plan.get("continue_after_failure_indexes", []),
-        "sources": plan["sources"],
+        "sources": dict(sorted(plan["sources"].items())),
+        "changed_sources": changed_sources,
         # Count only: naming an allowed host name here would disclose it.
         "allowed_public_name_count": len(set(allowed_public_names)),
         "attachments": attached,
         "results": retained,
     }
+    stage_text = json.dumps(stage, indent=2) + "\n"
+    # Nothing is written unless every byte to be written passes the name check.
+    refuse_names(stage_text, names)
+    for _, text in staged:
+        refuse_names(text, names)
     target.mkdir(parents=True)
     for log_name, text in staged:
         (target / log_name).parent.mkdir(parents=True, exist_ok=True)
         (target / log_name).write_text(text, encoding="utf-8")
-    (target / "stage.json").write_text(json.dumps(stage, indent=2) + "\n", encoding="utf-8")
+    (target / "stage.json").write_text(stage_text, encoding="utf-8")
     return stage
 
 
 def load_stage(directory: Path) -> dict[str, Any]:
+    """Verify one retained stage.
+
+    Schema 1 stages are historical: their logs and attachments are verified,
+    their sources are not (Decision 0113). Schema 2 stages also verify every
+    source against the source revision or a declared later commit.
+    """
     stage = json.loads((directory / "stage.json").read_text(encoding="utf-8"))
-    if stage.get("schema_version") != 1 or stage.get("stage") != directory.name:
+    if stage.get("schema_version") not in (1, 2) or stage.get("stage") != directory.name:
         raise RecordError(f"stage identity differs: {directory}")
     resolve(stage["source_revision"])
+    if stage["schema_version"] == 2:
+        verify_sources(stage["sources"], stage["source_revision"], stage["changed_sources"])
+        for row in stage["results"]:
+            if type(row["exit_code"]) is not int or type(row["seconds"]) not in (int, float):
+                raise RecordError(f"retained result is not numeric: {directory}")
     for row in stage["results"]:
         log = directory / row["log"]
         if sha256_bytes(log.read_bytes()) != row["log_sha256"]:
@@ -390,6 +478,7 @@ def main(argv: list[str] | None = None) -> int:
     keep.add_argument("--redact", action="append", default=[], metavar="PATH=LABEL")
     keep.add_argument("--allow-public-name", action="append", default=[], metavar="NAME")
     keep.add_argument("--attach", action="append", default=[], type=Path, metavar="FILE")
+    keep.add_argument("--changed", action="append", default=[], metavar="PATH=COMMIT")
     rec = commands.add_parser("record")
     rec.add_argument("--spec", type=Path, required=True)
     target = rec.add_mutually_exclusive_group(required=True)
@@ -414,8 +503,14 @@ def main(argv: list[str] | None = None) -> int:
                 if not separator or not os.path.isabs(path) or not re.fullmatch(r"<[a-z-]+>", label):
                     parser.error(f"invalid --redact value: {item}")
                 extra.append((path, label))
+            changed = []
+            for item in args.changed:
+                path, separator, commit = item.partition("=")
+                if not separator or not is_source_path(path) or not commit:
+                    parser.error(f"invalid --changed value: {item}")
+                changed.append((path, commit))
             stage = retain(args.plan, args.results, args.destination, extra,
-                           tuple(args.allow_public_name), tuple(args.attach))
+                           tuple(args.allow_public_name), tuple(args.attach), tuple(changed))
             print(json.dumps({"stage": stage["stage"], "logs": len(stage["results"])}))
         else:
             record = build_record(args.spec.resolve())

@@ -44,6 +44,7 @@ class VerificationBatchTests(unittest.TestCase):
         return self.git("rev-parse", "HEAD")
 
     def two_revisions(self) -> tuple[str, str]:
+        self.write("scripts/verification_batch.py", "tool\n")
         self.write("src/a.txt", "old\n")
         self.write("evidence/bound.json", json.dumps({"inputs": {"src/a.txt": digest("old\n")}}))
         self.write("evidence/older.json", json.dumps(
@@ -97,7 +98,7 @@ class VerificationBatchTests(unittest.TestCase):
         plan.write_text(json.dumps({
             "name": "fixture-core", "source_revision": revision,
             "scope": f"Stage run from {self.repo}", "commands": [["python3", f"{self.repo}/x.py"]],
-            "sources": {"src/a.txt": digest("new\n")},
+            "sources": {"src/a.txt": digest("new\n"), batch.TOOL: digest("tool\n")},
         }))
         results.write_text(json.dumps([{
             "index": 1, "command": ["python3", f"{self.repo}/x.py"], "exit_code": 0, "seconds": 0.5,
@@ -158,6 +159,85 @@ class VerificationBatchTests(unittest.TestCase):
         (destination / "fixture-core" / "01.log").write_text("tampered\n")
         with self.assertRaises(batch.RecordError):
             batch.load_stage(destination / "fixture-core")
+
+    def rewrite_plan(self, plan: Path, **changes: object) -> None:
+        plan.write_text(json.dumps({**json.loads(plan.read_text()), **changes}))
+
+    def test_stage_sources_are_verified_against_their_revision(self) -> None:
+        _, head = self.two_revisions()
+        names = mock.patch.object(batch, "private_names", return_value=["fixtureuser"])
+        names.start()
+        self.addCleanup(names.stop)
+        # A source that differs from its revision is refused unless declared
+        # as changed in a later commit that contains exactly those bytes.
+        plan, results = self.stage_files(head, "gate\n")
+        self.rewrite_plan(plan, sources={"src/a.txt": digest("pinned\n"), batch.TOOL: digest("tool\n")})
+        with self.assertRaises(batch.RecordError):
+            batch.retain(plan, results, self.repo / "docs/undeclared", [])
+        self.write("src/a.txt", "pinned\n")
+        later = self.commit("pin")
+        with self.assertRaises(batch.RecordError):
+            batch.retain(plan, results, self.repo / "docs/wrong", [], changed=(("src/a.txt", head),))
+        with self.assertRaises(batch.RecordError):
+            batch.retain(plan, results, self.repo / "docs/extra", [],
+                         changed=(("src/a.txt", later), ("evidence/bound.json", later)))
+        stage = batch.retain(plan, results, self.repo / "docs/declared", [],
+                             changed=(("src/a.txt", later),))
+        self.assertEqual(stage["schema_version"], 2)
+        self.assertEqual(stage["changed_sources"],
+                         [{"path": "src/a.txt", "sha256": digest("pinned\n"), "commit": later}])
+        self.assertEqual(batch.load_stage(self.repo / "docs/declared/fixture-core"), stage)
+        # A retained stage whose source or declaration is altered no longer loads.
+        stage_path = self.repo / "docs/declared/fixture-core/stage.json"
+        for change in ({"changed_sources": []},
+                       {"sources": {"src/a.txt": digest("pinned\n")}},
+                       {"results": [{**stage["results"][0], "exit_code": "0"}]}):
+            with self.subTest(change=sorted(change)):
+                stage_path.write_text(json.dumps({**stage, **change}))
+                with self.assertRaises(batch.RecordError):
+                    batch.load_stage(self.repo / "docs/declared/fixture-core")
+        # A declared change is refused when the bytes match the revision itself.
+        plan, results = self.stage_files(head, "gate\n")
+        with self.assertRaises(batch.RecordError):
+            batch.retain(plan, results, self.repo / "docs/needless", [],
+                         changed=(("src/a.txt", later),))
+        # Every stage binds the tool itself.
+        self.rewrite_plan(plan, sources={"src/a.txt": digest("new\n")})
+        with self.assertRaises(batch.RecordError):
+            batch.retain(plan, results, self.repo / "docs/untooled", [])
+
+    def test_every_written_field_is_checked_and_typed_before_anything_is_written(self) -> None:
+        _, head = self.two_revisions()
+        self.write("src/FixtureUser.txt", "named\n")
+        head = self.commit("named source")
+        names = mock.patch.object(batch, "private_names", return_value=["fixtureuser"])
+        names.start()
+        self.addCleanup(names.stop)
+        # The name in any letter case, in a log or in a source key, is refused.
+        plan, results = self.stage_files(head, "user FIXTUREUSER at host\n")
+        with self.assertRaises(batch.RecordError):
+            batch.retain(plan, results, self.repo / "docs/cased", [])
+        plan, results = self.stage_files(head, "clean\n")
+        self.rewrite_plan(plan, sources={"src/a.txt": digest("new\n"), batch.TOOL: digest("tool\n"),
+                                         "src/FixtureUser.txt": digest("named\n")})
+        with self.assertRaises(batch.RecordError):
+            batch.retain(plan, results, self.repo / "docs/source-name", [])
+        # A private absolute path is never a source key.
+        self.rewrite_plan(plan, sources={f"{self.repo}/src/a.txt": digest("new\n"),
+                                         batch.TOOL: digest("tool\n")})
+        with self.assertRaises(batch.RecordError):
+            batch.retain(plan, results, self.repo / "docs/absolute", [])
+        # Exit codes and durations must be numbers, not text that could carry a name.
+        plan, results = self.stage_files(head, "clean\n")
+        row = json.loads(results.read_text())[0]
+        for change in ({"exit_code": "fixtureuser"}, {"seconds": f"{self.repo}"},
+                       {"exit_code": True}, {"seconds": -1}):
+            with self.subTest(change=sorted(change)):
+                results.write_text(json.dumps([{**row, **change}]))
+                with self.assertRaises(batch.RecordError):
+                    batch.retain(plan, results, self.repo / "docs/typed", [])
+        for refused in ("cased", "source-name", "absolute", "typed"):
+            self.assertFalse((self.repo / "docs" / refused).exists(), refused)
 
     def test_records_are_built_only_from_committed_material_and_checked(self) -> None:
         base, source = self.two_revisions()

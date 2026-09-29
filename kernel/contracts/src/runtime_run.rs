@@ -80,6 +80,26 @@ pub enum RuntimeApprovalDisposition {
     Allow,
     /// Decline the exact operation without effect.
     Deny,
+    /// Decline the exact operation and ask for a separately approved write of only the
+    /// selected hunks of its proposed text change (Decision 0114). The response carries
+    /// the selection. A peer that predates this variant refuses to decode it.
+    Narrow,
+}
+
+/// A person's exact selection of hunks from one proposed text change (Decision 0114).
+///
+/// Hunk identities are those of the kernel's selective-change contract (Decision 0107),
+/// computed over the exact preimage and proposal named here. The trusted boundary
+/// recomputes them from bytes it holds and refuses any mismatch.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeHunkSelection {
+    /// Digest of the preimage the reviewed hunks were computed from.
+    pub preimage_sha256: String,
+    /// Digest of the complete proposed postimage.
+    pub proposal_sha256: String,
+    /// Accepted hunk identities, sorted and unique; every other hunk is rejected.
+    pub accepted_hunk_ids: Vec<String>,
 }
 
 /// Complete protected, non-authoritative presentation of one proposed tool operation.
@@ -159,6 +179,10 @@ pub struct RuntimeApprovalResponse {
     /// Exact separately issued grant identity only for an allowed response.
     #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub grant_id: Option<GrantId>,
+    /// Exact hunk selection, present exactly for a `Narrow` response. It is omitted
+    /// from the encoding when absent, so every other response keeps its prior bytes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selection: Option<RuntimeHunkSelection>,
 }
 
 /// One versioned request admitted by the reusable runtime coordinator.

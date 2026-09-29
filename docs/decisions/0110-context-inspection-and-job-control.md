@@ -45,7 +45,10 @@ missing from the later accounting, and an item identity that now names different
 material. It also reports whether the token counter changed and which other sources
 were newly omitted. The coding runtime runs this check on every reflow. A dropped
 retained constraint ends the build as resource exhaustion rather than continuing
-without it, and any other violation is refused as invalid. The check does not judge a
+without it, and any other violation is refused as invalid. As amended by
+[Decision 0113](0113-review-fixes-for-inspection-and-job-control.md) (finding V3),
+the builder also refuses the first composition when it omits a retained constraint
+for budget. The check does not judge a
 later turn whose request legitimately changed.
 
 For CAP-35, a job control ledger has one owner per job. A client request names its
@@ -60,14 +63,19 @@ change. Work that never started is suspended or cancelled at once. If work finis
 before a pending request takes effect, the finished state stands and the ledger keeps
 the request. Every decision and owner event is an entry in a hash chain, and a
 restarted owner must replay the retained chain exactly. The ledger grants no authority
-and performs no effect.
+and performs no effect. As amended by
+[Decision 0113](0113-review-fixes-for-inspection-and-job-control.md) (findings V1 and
+V4), the owner keeps a reserve of entries that clients cannot use, refusals have their
+own bound, and replay must end at the retained head. The unkeyed chain proves
+consistency, not origin or completeness.
 
 For CAP-39, a run progress projection first verifies the complete event chain. It
 then reports the run as not started, running, waiting for a decision, stopping after
 a cancellation request, or ended in its exact terminal state. It says the run was
 verified locally only for a success terminal, which the runtime's verifier must
 accept. It always reports independent review and delivery as not established by the
-runtime. Turn, model-call and tool-call counts show a denominator and percentage
+runtime. Once cancellation is requested, no decision is reported as awaited
+([Decision 0113](0113-review-fixes-for-inspection-and-job-control.md), finding V6). Turn, model-call and tool-call counts show a denominator and percentage
 only when the owner supplies a declared ceiling. Otherwise the text says the total is
 unknown.
 

@@ -4,13 +4,13 @@ use std::{collections::BTreeMap, fmt::Write};
 
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, CheckedContextSummary, ComposedContextPacket, ContextAdmission,
-    ContextItemCandidate, ContextItemKind, ContextPacketId, ContextSensitivity, ContractPayload,
-    EvidenceReference, ModelContextPacket, ModelMessage, ModelMessageId, ModelMessageRole,
-    RuntimeRunRequest, RuntimeSessionMode, SchemaId, SchemaReference, SessionId, ToolResult,
-    WorkspaceId, to_canonical_json,
+    ContextItemCandidate, ContextItemKind, ContextOmissionReason, ContextPacketId,
+    ContextSensitivity, ContractPayload, EvidenceReference, ModelContextPacket, ModelMessage,
+    ModelMessageId, ModelMessageRole, RuntimeRunRequest, RuntimeSessionMode, SchemaId,
+    SchemaReference, SessionId, ToolResult, WorkspaceId, to_canonical_json,
 };
 use agentmage_kernel_engine::{
-    context_inspection::{RecompositionViolation, verify_recomposition},
+    context_inspection::{RecompositionViolation, is_retained_constraint, verify_recomposition},
     context_management::{
         ContextCompositionBudget, SummaryUseDecision, compose_context, evaluate_checked_summary,
     },
@@ -500,16 +500,23 @@ where
         for source in self.supporting_sources.clone() {
             candidates.push(self.candidate(&source)?);
         }
+        let selected_write = crate::coding_hunk_selection::hunk_selection_tool_definition();
         for (index, (call, result)) in completed_tool_calls.iter().zip(tool_results).enumerate() {
+            // The runtime proposed a selected write from a person's decision; the
+            // model never offered or made that call (Decision 0114).
+            let person_selected = call.tool_id == selected_write.tool_id
+                && call.tool_version == selected_write.tool_version
+                && call.arguments.schema == selected_write.input_schema;
             if call.tool_call_id != result.tool_call_id
                 || call.correlation_id != result.correlation_id
                 || call.arguments.sha256 != sha256(&call.arguments.bytes)
                 || call.arguments.media_type != "application/json"
-                || !self.tool_definitions.iter().any(|definition| {
-                    definition.tool_id == call.tool_id
-                        && definition.tool_version == call.tool_version
-                        && definition.input_schema == call.arguments.schema
-                })
+                || !(person_selected
+                    || self.tool_definitions.iter().any(|definition| {
+                        definition.tool_id == call.tool_id
+                            && definition.tool_version == call.tool_version
+                            && definition.input_schema == call.arguments.schema
+                    }))
             {
                 return Err(RuntimePortFailure::Invalid);
             }
@@ -537,17 +544,33 @@ where
                     "sha256": output.sha256, "content": content,
                 });
             }
-            let content = serde_json::to_string(&serde_json::json!({
-                "untrusted_tool_observation": true, "result_sha256": result_sha256,
-                "completed_call": {
-                    "tool_call_id": call.tool_call_id,
-                    "tool_id": call.tool_id, "tool_version": call.tool_version,
-                    "arguments": arguments, "arguments_schema": call.arguments.schema,
-                    "arguments_sha256": call.arguments.sha256,
-                    "call_sha256": sha256(&to_canonical_json(call).map_err(|_| RuntimePortFailure::Invalid)?),
-                },
-                "result": projection,
-            }))
+            let content = if person_selected {
+                serde_json::to_string(&serde_json::json!({
+                    "untrusted_tool_observation": true, "result_sha256": result_sha256,
+                    "person_selected_change": {
+                        "narrowed_tool_call_id": arguments["original_tool_call_id"],
+                        "path": arguments["original"]["path"],
+                        "accepted_hunk_ids": arguments["accepted_hunk_ids"],
+                        "rejected_hunk_ids": arguments["rejected_hunk_ids"],
+                        "postimage_sha256": arguments["postimage_sha256"],
+                        "derived_tool_call_id": call.tool_call_id,
+                    },
+                    "notice": "The person reviewed your proposed patch, refused it as a whole and approved only the accepted hunks. Your original call did not run. The runtime wrote only the accepted hunks as a separate approved call you did not make; rejected hunks kept the file's previous lines. Read the file again before any further edit and do not reapply rejected hunks unless the person asks.",
+                    "result": projection,
+                }))
+            } else {
+                serde_json::to_string(&serde_json::json!({
+                    "untrusted_tool_observation": true, "result_sha256": result_sha256,
+                    "completed_call": {
+                        "tool_call_id": call.tool_call_id,
+                        "tool_id": call.tool_id, "tool_version": call.tool_version,
+                        "arguments": arguments, "arguments_schema": call.arguments.schema,
+                        "arguments_sha256": call.arguments.sha256,
+                        "call_sha256": sha256(&to_canonical_json(call).map_err(|_| RuntimePortFailure::Invalid)?),
+                    },
+                    "result": projection,
+                }))
+            }
             .map_err(|_| RuntimePortFailure::Invalid)?;
             let digest = sha256(content.as_bytes());
             let source = internal_source(
@@ -672,6 +695,14 @@ where
             .map_err(|_| RuntimePortFailure::ResourceExhausted)?;
             if composed.items.is_empty() {
                 return Err(RuntimePortFailure::Invalid);
+            }
+            // No composition, the first included, may leave out a retained
+            // constraint for budget; the run stops instead of losing it (CAP-28).
+            if composed.accounting.iter().any(|item| {
+                item.omission == Some(ContextOmissionReason::Budget)
+                    && is_retained_constraint(item.kind, false)
+            }) {
+                return Err(RuntimePortFailure::ResourceExhausted);
             }
             // A reflow may omit supporting sources, never a retained constraint,
             // and every source stays accounted for the omission notice (CAP-28).
@@ -1219,6 +1250,64 @@ mod tests {
                 assert_eq!(measurements.get(), 1);
             }
         }
+    }
+
+    #[test]
+    fn a_first_composition_that_omits_a_retained_constraint_for_budget_is_refused() {
+        use std::cell::Cell;
+        let profile = CodingSessionProfile::build(input()).unwrap();
+        let request = request(&profile);
+        // Five non-essential corrections, each inside the excerpt bound, that
+        // do not all fit the planning budget of the first composition.
+        let build = |kind: ContextItemKind| {
+            let sources = (0..5)
+                .map(|index| {
+                    let text = format!("correction {index}: {}\n", "keep the name ".repeat(4_025));
+                    CodingContextSource::new(
+                        format!("user-correction-{index}"),
+                        kind,
+                        ContextSensitivity::Internal,
+                        ContextAdmission::Eligible,
+                        false,
+                        format!("session:user-correction-{index}"),
+                        "revision-1",
+                        sha256(text.as_bytes()),
+                        text,
+                    )
+                    .unwrap()
+                })
+                .collect::<Vec<_>>();
+            let mut context = CodingContextPort::for_profile(
+                &profile,
+                sources,
+                FixtureCounter("fixture-counter-v1"),
+            )
+            .unwrap();
+            let measurements = Cell::new(0);
+            let result = context.build_context_with_token_binding(
+                &request,
+                ContextPacketId::from_raw("first-composition-budget"),
+                1,
+                &[],
+                &[],
+                &[],
+                &|_packet| {
+                    measurements.set(measurements.get() + 1);
+                    Ok(())
+                },
+            );
+            (result, measurements.get())
+        };
+        let (result, measurements) = build(ContextItemKind::Correction);
+        assert_eq!(result, Err(RuntimePortFailure::ResourceExhausted));
+        assert_eq!(measurements, 0);
+        // The same sources as supporting material are omitted and cited.
+        let (result, measurements) = build(ContextItemKind::Supporting);
+        let packet = result.unwrap();
+        assert!(measurements >= 1);
+        let notice =
+            String::from_utf8_lossy(&packet.messages.last().unwrap().content.bytes).into_owned();
+        assert!(notice.contains("\"omission\":\"budget\""), "{notice}");
     }
 
     #[test]

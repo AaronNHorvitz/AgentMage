@@ -5,7 +5,7 @@ use std::fmt;
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, ModelCancellationProbe, RuntimeApprovalChallenge,
     RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEvent,
-    RuntimeOutcome,
+    RuntimeHunkSelection, RuntimeOutcome,
 };
 use agentmage_kernel_engine::{
     runtime_artifact::{RuntimeArtifactPage, RuntimeArtifactState},
@@ -163,6 +163,16 @@ pub trait CodingApprovalPort {
         &mut self,
         challenge: &RuntimeApprovalChallenge,
     ) -> Result<RuntimeApprovalDisposition, CodingClientError>;
+
+    /// Returns one decision that may narrow the challenge to selected hunks
+    /// (Decision 0114). A client that cannot compute hunks never narrows.
+    fn decide_with_selection(
+        &mut self,
+        challenge: &RuntimeApprovalChallenge,
+    ) -> Result<(RuntimeApprovalDisposition, Option<RuntimeHunkSelection>), CodingClientError> {
+        self.decide(challenge)
+            .map(|disposition| (disposition, None))
+    }
 }
 
 /// Bounded presentation boundary for already verified canonical runtime events.
@@ -219,8 +229,12 @@ where
         present_new_events(runtime, sink, &mut sequence, &mut presented)?;
         match step {
             RuntimeCoordinatorStep::AwaitingApproval { challenge } => {
-                let disposition = approvals.decide(&challenge)?;
-                response = Some(runtime_approval_response(&challenge, disposition));
+                let (disposition, selection) = approvals.decide_with_selection(&challenge)?;
+                response = Some(runtime_approval_response_with_selection(
+                    &challenge,
+                    disposition,
+                    selection,
+                ));
             }
             RuntimeCoordinatorStep::Complete { outcome } => {
                 if !sequence.is_terminal() {
@@ -266,6 +280,17 @@ pub fn runtime_approval_response(
     challenge: &RuntimeApprovalChallenge,
     disposition: RuntimeApprovalDisposition,
 ) -> RuntimeApprovalResponse {
+    runtime_approval_response_with_selection(challenge, disposition, None)
+}
+
+/// Builds one exact protected response that carries a hunk selection only when it
+/// narrows the challenge; the runtime refuses any other combination.
+#[must_use]
+pub fn runtime_approval_response_with_selection(
+    challenge: &RuntimeApprovalChallenge,
+    disposition: RuntimeApprovalDisposition,
+    selection: Option<RuntimeHunkSelection>,
+) -> RuntimeApprovalResponse {
     RuntimeApprovalResponse {
         schema_version: CONTRACT_SCHEMA_VERSION,
         run_id: challenge.run_id.clone(),
@@ -274,5 +299,6 @@ pub fn runtime_approval_response(
         challenge_sha256: challenge.challenge_sha256.clone(),
         grant_id: (disposition == RuntimeApprovalDisposition::Allow)
             .then(|| challenge.proposed_grant_id.clone()),
+        selection: selection.filter(|_| disposition == RuntimeApprovalDisposition::Narrow),
     }
 }

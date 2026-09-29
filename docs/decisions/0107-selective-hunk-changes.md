@@ -38,11 +38,13 @@ reproduces the preimage. Current bytes that differ from the reviewed preimage ar
 refused as drift, so the caller must build a fresh preview rather than overwrite a
 concurrent edit. Non-UTF-8, NUL-containing, oversized or overly complex input keeps
 whole-file review. A bounded display marks a missing final newline. As amended by
-[Decision 0109](0109-review-fixes-for-component-batches.md), it escapes exactly what
-the whole-file preview escapes, except tab and the ASCII quotes: control, format,
-line and paragraph separator, private-use, unassigned and non-ASCII space characters,
-a leading combining mark, and backslash. Selection takes the current bytes and
-refuses drift itself.
+[Decision 0109](0109-review-fixes-for-component-batches.md) and corrected by
+[Decision 0113](0113-review-fixes-for-inspection-and-job-control.md) (finding V2), it
+escapes each character as the whole-file preview's `{:?}` does at every position,
+except tab and the ASCII quotes: control, format, line and paragraph separator,
+private-use, unassigned and non-ASCII space characters, every grapheme-extending mark
+wherever it occurs, and backslash. Until the V2 fix, marks after the first position
+were shown raw. Selection takes the current bytes and refuses drift itself.
 
 Selection grants nothing. The selected postimage must pass the existing exact write
 preview, syntax, approval and grant checks, and project validation still runs.

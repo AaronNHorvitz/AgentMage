@@ -186,12 +186,22 @@ fn inspected(item: &agentmage_kernel_contracts::ContextItemAccounting) -> Inspec
 #[must_use]
 pub fn render_context_inspection(view: &ContextInspection) -> String {
     let mut output = String::new();
+    // A view has public fields, so it need not come from `inspect_context`;
+    // show a digest prefix only for a well-formed digest.
+    let digest = if view.packet_sha256.len() == 64
+        && view
+            .packet_sha256
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+    {
+        &view.packet_sha256[..12]
+    } else {
+        "(malformed)"
+    };
     let _ = writeln!(
         output,
-        "context {:?} sha256 {} counter {:?}",
-        view.context_packet_id,
-        &view.packet_sha256[..12],
-        view.token_counter_id
+        "context {:?} sha256 {digest} counter {:?}",
+        view.context_packet_id, view.token_counter_id
     );
     let _ = writeln!(
         output,
@@ -500,8 +510,18 @@ mod tests {
         let mut hostile = candidate("hostile", ContextItemKind::Supporting, false, "x");
         hostile.source_id = "source\u{202e}\u{2028}name".to_owned();
         let packet = compose(&[hostile], 10, "counter-a");
-        let text = render_context_inspection(&inspect_context(&packet).unwrap());
+        let view = inspect_context(&packet).unwrap();
+        let text = render_context_inspection(&view);
         assert!(!text.contains('\u{202e}') && !text.contains('\u{2028}'));
+        assert!(text.contains(&format!("sha256 {} ", &packet.packet_sha256[..12])));
+        // A view built by hand with a short or non-ASCII digest renders without
+        // panicking and never shows the malformed value.
+        for malformed in ["abc", "é".repeat(40).as_str(), ""] {
+            let mut forged = view.clone();
+            forged.packet_sha256 = malformed.to_owned();
+            let text = render_context_inspection(&forged);
+            assert!(text.contains("sha256 (malformed) "), "{text}");
+        }
         let many: Vec<_> = (0..1_000)
             .map(|index| {
                 let mut item = candidate(

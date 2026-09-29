@@ -59,6 +59,20 @@ class ConfigurationResultEvidenceTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             execute_gate(runner=failed)
 
+    def test_a_failed_child_command_leaves_its_output_in_the_log(self) -> None:
+        import contextlib
+        import io
+        import sys
+
+        from scripts.configuration_result_evidence import subprocess_runner
+
+        stderr = io.StringIO()
+        command = (sys.executable, "-c", "import sys; print('catalog drift: fixture'); sys.exit(3)")
+        with contextlib.redirect_stderr(stderr), self.assertRaises(RuntimeError) as raised:
+            subprocess_runner(command, Path.cwd())
+        self.assertIn("catalog drift: fixture", stderr.getvalue())
+        self.assertIn("exited 3", str(raised.exception))
+
     def test_stale_hash_and_product_or_macos_overclaim_fail_closed(self) -> None:
         report = build_report(EXPECTED_TESTS)
         stale = copy.deepcopy(report)

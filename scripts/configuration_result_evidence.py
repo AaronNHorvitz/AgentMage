@@ -9,6 +9,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 import tempfile
 from collections.abc import Callable, Sequence
 from pathlib import Path
@@ -17,6 +18,8 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-3/story-3.1/configuration-result-report.json"
+# Tail of a failing child command's output kept in the evidence log.
+FAILURE_OUTPUT_CHARACTERS = 16_384
 EXPECTED_TESTS = (
     "configuration_bound_results_are_deterministic_and_minimized",
     "configuration_bound_results_reject_invalid_identifiers_and_hashes",
@@ -117,7 +120,13 @@ def subprocess_runner(command: Sequence[str], root: Path) -> str:
         text=True,
     )
     if result.returncode != 0:
-        raise RuntimeError(f"configuration result evidence command failed: {command[0]}")
+        # Keep the failing child's own output so a retained log shows the cause.
+        output = (result.stdout + result.stderr)[-FAILURE_OUTPUT_CHARACTERS:]
+        print(output, file=sys.stderr, end="" if output.endswith("\n") else "\n")
+        raise RuntimeError(
+            f"configuration result evidence command failed: {command[0]} "
+            f"exited {result.returncode}"
+        )
     return result.stdout + result.stderr
 
 

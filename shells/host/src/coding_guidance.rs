@@ -525,7 +525,8 @@ pub(crate) mod tests {
         ]))
         .expect("narrowed profile");
 
-        assert_eq!(profile.visible_tools().len(), 23);
+        // The run catalog includes the shell-only selected write (Decision 0114).
+        assert_eq!(profile.visible_tools().len(), 24);
         assert!(
             profile
                 .registry()

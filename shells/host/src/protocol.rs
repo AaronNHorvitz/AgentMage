@@ -1568,6 +1568,7 @@ mod tests {
                 disposition: RuntimeApprovalDisposition::Deny,
                 challenge_sha256: "b".repeat(64),
                 grant_id: None,
+                selection: None,
             }),
         };
         let encoded = serde_json::to_vec(&advance).expect("advance JSON");

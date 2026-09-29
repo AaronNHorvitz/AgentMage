@@ -293,7 +293,10 @@ pub fn native_coding_runtime_registry(
 ) -> Result<ToolRegistry, CodingToolCatalogError> {
     let mut registry =
         read_only_runtime_registry().map_err(|_| CodingToolCatalogError::RegistrationDenied)?;
-    register_controlled_change_runtime_tools(&mut registry, write_scope)
+    register_controlled_change_runtime_tools(&mut registry, write_scope.clone())
+        .map_err(|_| CodingToolCatalogError::RegistrationDenied)?;
+    // Shell-only: a person's hunk selection derives it; no model is offered it.
+    crate::coding_hunk_selection::register_hunk_selection_runtime_tool(&mut registry, write_scope)
         .map_err(|_| CodingToolCatalogError::RegistrationDenied)?;
     register_coding_history_tools(&mut registry)
         .map_err(|_| CodingToolCatalogError::RegistrationDenied)?;
@@ -304,12 +307,13 @@ pub fn native_coding_runtime_registry(
 
 /// Projects the registered native catalog into inert model-visible definitions.
 ///
-/// This projection contains no implementation, dispatcher, grant, path handle, or effect API.
+/// This projection contains no implementation, dispatcher, grant, path handle, or effect API,
+/// and omits tools only a shell may propose.
 pub fn model_visible_coding_tools(
     registry: &ToolRegistry,
 ) -> Result<Vec<CodingModelToolContract>, CodingToolCatalogError> {
     registry
-        .list_tools()
+        .list_model_tools()
         .into_iter()
         .map(|definition| {
             let schema_json = coding_input_schema_json(definition.input_schema.schema_id.as_str())
@@ -634,7 +638,7 @@ mod tests {
         let definitions = registry.list_tools();
         assert_eq!(
             definitions.len(),
-            ReadOnlyToolKind::ALL.len() + ArtifactToolKind::ALL.len() + 7
+            ReadOnlyToolKind::ALL.len() + ArtifactToolKind::ALL.len() + 8
         );
 
         let ids = definitions
@@ -649,6 +653,7 @@ mod tests {
             TARGETED_VALIDATION_TOOL_ID,
             crate::coding_history::CHANGE_HISTORY_TOOL_ID,
             crate::coding_history::ROLLBACK_TOOL_ID,
+            crate::coding_hunk_selection::HUNK_SELECTION_TOOL_ID,
         ] {
             assert!(ids.contains(required), "missing {required}");
         }
@@ -687,7 +692,11 @@ mod tests {
         }));
 
         let model_tools = model_visible_coding_tools(&registry).expect("model-visible projection");
-        assert_eq!(model_tools.len(), definitions.len());
+        // Every tool except the shell-only selected write is offered to a model.
+        assert_eq!(model_tools.len(), definitions.len() - 1);
+        assert!(model_tools.iter().all(|tool| {
+            tool.definition.tool_id.as_str() != crate::coding_hunk_selection::HUNK_SELECTION_TOOL_ID
+        }));
         assert!(model_tools.iter().all(|tool| {
             tool.input_schema["$id"].as_str()
                 == Some(tool.definition.input_schema.schema_id.as_str())

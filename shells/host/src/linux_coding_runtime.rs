@@ -59,9 +59,10 @@ use agentmage_kernel_engine::{
     runtime_loop::{
         RuntimeArtifactAccessPort, RuntimeArtifactPort, RuntimeCheckpointCommit,
         RuntimeCheckpointPort, RuntimeCheckpointPublication, RuntimeCorrectnessTransactionPort,
-        RuntimeJournalPort, RuntimePermissionEvaluation, RuntimePortFailure, RuntimeResumeSnapshot,
-        RuntimeToolArtifactCandidate, RuntimeToolBoundary, RuntimeToolCorrectnessCommit,
-        RuntimeToolExecution, RuntimeToolTerminalBuilder,
+        RuntimeDerivedToolCall, RuntimeJournalPort, RuntimePermissionEvaluation,
+        RuntimePortFailure, RuntimeResumeSnapshot, RuntimeToolArtifactCandidate,
+        RuntimeToolBoundary, RuntimeToolCorrectnessCommit, RuntimeToolExecution,
+        RuntimeToolTerminalBuilder,
     },
     validation_result::{
         ValidationObservation, ValidationOutputClassification, ValidationReceipt, ValidationStatus,
@@ -103,6 +104,7 @@ use crate::{
         CODING_CHANGE_RECORD_MEDIA_TYPE, ChangeHistoryOutput, CodingChangeRecord,
         RetainedCodingChange, seal_change_record, seal_history_output, verify_change_record,
     },
+    coding_hunk_selection::{HunkSelectionError, derive_hunk_selection_call},
     linux_coding::{
         LinuxCodingTargetBinding, LinuxCodingWorkspace, LinuxCodingWriteDraft,
         PreparedLinuxCodingOperation,
@@ -228,7 +230,9 @@ fn build_pending_coding_authority(
 ) -> Result<PendingCodingAuthority, RuntimePortFailure> {
     match prepared.write_draft() {
         Some(
-            LinuxCodingWriteDraft::StructuredPatch(plan) | LinuxCodingWriteDraft::Rollback(plan),
+            LinuxCodingWriteDraft::StructuredPatch(plan)
+            | LinuxCodingWriteDraft::Rollback(plan)
+            | LinuxCodingWriteDraft::HunkSelection(plan),
         ) => {
             let LinuxCodingTargetBinding::ExistingFile { target, .. } = prepared.binding() else {
                 return Err(RuntimePortFailure::Invalid);
@@ -314,6 +318,38 @@ fn build_pending_coding_authority(
             Ok(PendingCodingAuthority::Generic(Box::new(approval)))
         }
     }
+}
+
+/// Derives the selected write for one pending structured patch, reading the
+/// held file again so a concurrent edit refuses the selection.
+fn narrowed_call(
+    pending: &PendingCodingOperation<'_>,
+    response: &RuntimeApprovalResponse,
+) -> Result<RuntimeDerivedToolCall, HunkSelectionError> {
+    let selection = response
+        .selection
+        .as_ref()
+        .ok_or(HunkSelectionError::Invalid)?;
+    let Some(LinuxCodingWriteDraft::StructuredPatch(plan)) = pending.prepared.write_draft() else {
+        return Err(HunkSelectionError::NotNarrowable);
+    };
+    let LinuxCodingTargetBinding::ExistingFile { held, .. } = pending.prepared.binding() else {
+        return Err(HunkSelectionError::NotNarrowable);
+    };
+    pending
+        .prepared
+        .revalidate()
+        .map_err(|_| HunkSelectionError::Mismatch)?;
+    let current = held
+        .read_exact_bytes()
+        .map_err(|_| HunkSelectionError::Mismatch)?;
+    derive_hunk_selection_call(
+        &pending.tool_call,
+        plan.preimage(),
+        plan.postimage(),
+        &current,
+        selection,
+    )
 }
 
 struct PendingCodingOperation<'workspace> {
@@ -598,6 +634,9 @@ impl ActiveSessionPreauthorization {
                 .writable_paths
                 .binary_search(&request.source.record.path)
                 .is_ok(),
+            // A selected write exists only because a person decided; it always
+            // asks for its own decision (Decision 0114).
+            PreparedNativeCodingCall::HunkSelection { .. } => false,
             PreparedNativeCodingCall::Command { prepared } => {
                 let command = prepared.command();
                 self.admits_command(
@@ -1128,6 +1167,43 @@ where
             return Err(RuntimePortFailure::Invalid);
         }
         let decision_sha256 = canonical_sha256(response)?;
+        if response.disposition == RuntimeApprovalDisposition::Narrow {
+            // The original call is refused either way. A selection that can be
+            // honored yields one derived write with its own approval (Decision 0114).
+            let pending = self
+                .pending
+                .remove(key)
+                .ok_or(RuntimePortFailure::Invalid)?;
+            let evaluation = match narrowed_call(&pending, response) {
+                Ok(derived) => RuntimePermissionEvaluation::Narrowed {
+                    approval_id: pending.authority.approval_id().clone(),
+                    grant_id: pending.authority.proposed_grant_id().clone(),
+                    preview_sha256: pending.authority.preview_sha256().to_owned(),
+                    expires_at_epoch_ms: pending.expires_at_epoch_ms,
+                    decision_sha256,
+                    derived,
+                },
+                Err(error) => RuntimePermissionEvaluation::Deny {
+                    approval_id: pending.authority.approval_id().clone(),
+                    grant_id: pending.authority.proposed_grant_id().clone(),
+                    preview_sha256: pending.authority.preview_sha256().to_owned(),
+                    expires_at_epoch_ms: pending.expires_at_epoch_ms,
+                    decision_sha256,
+                    reason_code: error.reason_code().to_owned(),
+                },
+            };
+            let event = if let Some(builder) = build_event.as_mut() {
+                let event = builder(&evaluation)?;
+                self.authority
+                    .authority_mut()
+                    .record_runtime_event_with_authority_snapshot(event.clone())
+                    .map_err(map_journal_failure)?;
+                Some(event)
+            } else {
+                None
+            };
+            return Ok((evaluation, event));
+        }
         if response.disposition == RuntimeApprovalDisposition::Deny {
             let pending = self
                 .pending
@@ -1502,13 +1578,15 @@ where
                     issued,
                     event_context,
                 ),
-            PreparedNativeCodingCall::Rollback { .. } => self.execute_prepared_structured_write(
-                request,
-                definition,
-                call,
-                issued,
-                event_context,
-            ),
+            PreparedNativeCodingCall::Rollback { .. }
+            | PreparedNativeCodingCall::HunkSelection { .. } => self
+                .execute_prepared_structured_write(
+                    request,
+                    definition,
+                    call,
+                    issued,
+                    event_context,
+                ),
             PreparedNativeCodingCall::ControlledCreate { .. } => self
                 .execute_prepared_controlled_create(
                     request,
@@ -2301,12 +2379,19 @@ where
                     request.source.record.artifact_class,
                     request.source.record.generated,
                 ),
+                PreparedNativeCodingCall::HunkSelection { proposal } => (
+                    proposal.original.path.clone(),
+                    proposal.original.language,
+                    proposal.original.artifact_class,
+                    proposal.original.generated,
+                ),
                 _ => return Err(RuntimePortFailure::Invalid),
             };
         let plan = match write_draft {
             Some(
                 LinuxCodingWriteDraft::StructuredPatch(plan)
-                | LinuxCodingWriteDraft::Rollback(plan),
+                | LinuxCodingWriteDraft::Rollback(plan)
+                | LinuxCodingWriteDraft::HunkSelection(plan),
             ) => plan,
             _ => return Err(RuntimePortFailure::Invalid),
         };
@@ -5675,6 +5760,7 @@ mod tests {
             challenge_sha256: challenge.challenge_sha256.clone(),
             grant_id: (disposition == RuntimeApprovalDisposition::Allow)
                 .then(|| challenge.proposed_grant_id.clone()),
+            selection: None,
         }
     }
 
@@ -10154,6 +10240,199 @@ mod tests {
                 .last()
                 .and_then(|checkpoint| checkpoint.consumed_grant_id.as_deref()),
             Some(grant_id.as_str())
+        );
+    }
+
+    /// Two separate literal edits in one Rust file, each its own hunk.
+    fn configure_two_hunk_patch<G>(fixture: &mut Fixture<G>, source: &str)
+    where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    {
+        fs::write(fixture.root.join("worktree/src/lib.rs"), source).expect("two-hunk source");
+        let intent_sha256 = fixture
+            .profile_for_test()
+            .change_plan()
+            .intent_sha256()
+            .to_owned();
+        let change_plan_sha256 = fixture
+            .profile_for_test()
+            .change_plan()
+            .plan_sha256()
+            .to_owned();
+        let literal = |needle: &str, replacement: &str, edit_id: &str| {
+            let start = (source.find(needle).expect("literal line") + 4) as u64;
+            StructuredEdit::ReplaceSyntaxNode {
+                edit_id: edit_id.to_owned(),
+                start_byte: start,
+                end_byte: start + 1,
+                expected_node_sha256: sha256(&needle.as_bytes()[4..5]),
+                replacement: replacement.to_owned(),
+            }
+        };
+        configure_runtime_call(
+            fixture,
+            STRUCTURED_PATCH_TOOL_ID,
+            "call-patch-selection",
+            &StructuredPatchProposal {
+                schema_version: 1,
+                change_id: "change-patch-selection".to_owned(),
+                path: vec!["src".to_owned(), "lib.rs".to_owned()],
+                expected_preimage_sha256: sha256(source.as_bytes()),
+                intent_sha256,
+                change_plan_sha256,
+                language: StructuredLanguage::Rust,
+                artifact_class: StructuredArtifactClass::Code,
+                edits: vec![
+                    literal("    1\n", "10", "edit-1"),
+                    literal("    2\n", "20", "edit-2"),
+                ],
+                additional_review_hooks: Vec::new(),
+                generated: false,
+                allow_generated: false,
+            },
+        );
+    }
+
+    const TWO_HUNK_SOURCE: &str = "pub fn first() -> i32 {\n    1\n}\n\npub fn keep() {}\n\npub fn second() -> i32 {\n    2\n}\n";
+
+    fn narrow_to_second_hunk<G>(
+        fixture: &mut Fixture<G>,
+        now_epoch_ms: u64,
+    ) -> RuntimePermissionEvaluation
+    where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    {
+        let evaluation = fixture
+            .boundary
+            .evaluate(
+                &fixture.request,
+                &fixture.operation_id,
+                &fixture.definition,
+                &fixture.call,
+                now_epoch_ms,
+            )
+            .expect("patch preview");
+        let challenge = challenge(fixture, &evaluation);
+        let proposal = TWO_HUNK_SOURCE
+            .replace("    1\n", "    10\n")
+            .replace("    2\n", "    20\n");
+        let change = agentmage_kernel_engine::write_approval::selective::HunkedTextChange::new(
+            TWO_HUNK_SOURCE.as_bytes(),
+            proposal.as_bytes(),
+        )
+        .expect("two hunks");
+        let mut narrow = response(&challenge, RuntimeApprovalDisposition::Narrow);
+        narrow.selection = Some(agentmage_kernel_contracts::RuntimeHunkSelection {
+            preimage_sha256: change.preimage_sha256().to_owned(),
+            proposal_sha256: change.proposal_sha256().to_owned(),
+            accepted_hunk_ids: vec![change.hunks()[1].hunk_id().to_owned()],
+        });
+        fixture
+            .boundary
+            .resolve(
+                &fixture.request,
+                &challenge,
+                &narrow,
+                &fixture.definition,
+                &fixture.call,
+                now_epoch_ms + 1,
+            )
+            .expect("selection resolves")
+    }
+
+    #[test]
+    fn story_48_2_linux_runtime_writes_only_the_selected_hunks_of_a_narrowed_patch() {
+        let mut fixture = fixture();
+        configure_two_hunk_patch(&mut fixture, TWO_HUNK_SOURCE);
+        let RuntimePermissionEvaluation::Narrowed { derived, .. } =
+            narrow_to_second_hunk(&mut fixture, 6_000)
+        else {
+            panic!("expected a derived selected write");
+        };
+        // The original patch was refused; nothing has been written yet.
+        assert_eq!(
+            fs::read(fixture.root.join("worktree/src/lib.rs")).expect("unchanged source"),
+            TWO_HUNK_SOURCE.as_bytes()
+        );
+        let definition = fixture
+            .profile_for_test()
+            .registry()
+            .get_tool(&derived.tool_id, &derived.tool_version)
+            .expect("shell-only selected write")
+            .clone();
+        fixture.call = ToolCall {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            tool_call_id: ToolCallId::from_raw("call-selected-write"),
+            correlation_id: CorrelationId::from_raw("correlation-coding-runtime"),
+            action_id: runtime_action_id(&fixture.request.run_id, 2),
+            tool_id: derived.tool_id,
+            tool_version: derived.tool_version,
+            arguments: derived.arguments,
+        };
+        fixture.definition = definition;
+        fixture.operation_id = RuntimeOperationId::from_raw("operation-selected-write");
+        let allowed = approve(&mut fixture, 7_000);
+        let execution = fixture
+            .boundary
+            .execute(
+                &fixture.request,
+                &allowed,
+                &fixture.definition,
+                &fixture.call,
+                None,
+            )
+            .expect("selected write execution");
+        assert_eq!(execution.result.outcome, OperationOutcome::Succeeded);
+        // Only the accepted hunk was written; the rejected hunk kept its line.
+        assert_eq!(
+            fs::read(fixture.root.join("worktree/src/lib.rs")).expect("selected source"),
+            TWO_HUNK_SOURCE.replace("    2\n", "    20\n").as_bytes()
+        );
+    }
+
+    #[test]
+    fn story_48_2_linux_runtime_refuses_a_selection_over_a_changed_file() {
+        let mut fixture = fixture();
+        configure_two_hunk_patch(&mut fixture, TWO_HUNK_SOURCE);
+        let evaluation = fixture
+            .boundary
+            .evaluate(
+                &fixture.request,
+                &fixture.operation_id,
+                &fixture.definition,
+                &fixture.call,
+                6_000,
+            )
+            .expect("patch preview");
+        let challenge = challenge(&fixture, &evaluation);
+        // A person edits the file while the approval is pending.
+        let edited = TWO_HUNK_SOURCE.replace("pub fn keep() {}", "pub fn keep() { /* person */ }");
+        fs::write(fixture.root.join("worktree/src/lib.rs"), &edited).expect("human edit");
+        let mut narrow = response(&challenge, RuntimeApprovalDisposition::Narrow);
+        narrow.selection = Some(agentmage_kernel_contracts::RuntimeHunkSelection {
+            preimage_sha256: sha256(TWO_HUNK_SOURCE.as_bytes()),
+            proposal_sha256: "b".repeat(64),
+            accepted_hunk_ids: vec!["c".repeat(64)],
+        });
+        let resolved = fixture
+            .boundary
+            .resolve(
+                &fixture.request,
+                &challenge,
+                &narrow,
+                &fixture.definition,
+                &fixture.call,
+                6_001,
+            )
+            .expect("selection resolves as a refusal");
+        assert!(matches!(
+            resolved,
+            RuntimePermissionEvaluation::Deny { ref reason_code, .. }
+                if reason_code.starts_with("runtime.coding.selection-")
+        ));
+        assert_eq!(
+            fs::read(fixture.root.join("worktree/src/lib.rs")).expect("edited source"),
+            edited.as_bytes()
         );
     }
 

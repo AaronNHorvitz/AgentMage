@@ -35,8 +35,8 @@ pub use configuration_store::{
 };
 pub use development_boundary::{
     LinuxDevelopmentBoundaryError, LinuxDevelopmentBoundaryErrorKind, LinuxDevelopmentConfirmation,
-    LinuxDevelopmentConfirmationKind, LinuxDevelopmentHostProcess,
-    ensure_private_development_directory, read_development_confirmation,
+    LinuxDevelopmentConfirmationKind, LinuxDevelopmentHostProcess, LinuxDevelopmentInputLine,
+    ensure_private_development_directory, read_development_confirmation, read_development_line,
     retain_rejected_development_output,
 };
 pub use filesystem_control::{LinuxControlledFilesystemDriver, LinuxFilesystemDriverLimits};

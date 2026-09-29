@@ -37,6 +37,8 @@ pub mod coding_guidance;
 /// Interface-neutral composition for the shared local coding runtime.
 pub mod coding_harness;
 pub mod coding_history;
+/// Writes derived from a person's hunk selection over a refused patch.
+pub mod coding_hunk_selection;
 #[cfg(target_os = "linux")]
 pub mod coding_live_runtime;
 /// Profile-bound authority planning for native coding calls.

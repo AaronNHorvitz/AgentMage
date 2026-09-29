@@ -620,6 +620,8 @@ enum PermissionScript {
     RejectRead,
     Allow,
     Ask,
+    /// Asks, then refuses any selection as one it cannot honor (Decision 0114).
+    NarrowRefused,
     Expired,
     FailPermissionPublication,
     FailToolStartPublication,
@@ -732,6 +734,7 @@ impl FakeToolBoundary {
             && matches!(
                 self.script,
                 PermissionScript::Ask
+                    | PermissionScript::NarrowRefused
                     | PermissionScript::SubstituteResolution
                     | PermissionScript::RepeatResolutionBuilder
                     | PermissionScript::OmitResolutionBuilder
@@ -750,10 +753,35 @@ impl FakeToolBoundary {
             };
         }
         let disposition = response.map(|value| value.disposition);
+        let proposed_grant_id = challenge.map_or_else(
+            || GrantId::from_raw("grant-0001"),
+            |value| value.proposed_grant_id.clone(),
+        );
+        if disposition == Some(RuntimeApprovalDisposition::Narrow) {
+            return if matches!(self.script, PermissionScript::NarrowRefused) {
+                RuntimePermissionEvaluation::Deny {
+                    approval_id,
+                    grant_id: proposed_grant_id,
+                    preview_sha256,
+                    expires_at_epoch_ms,
+                    decision_sha256: sha256(b"refused selection"),
+                    reason_code: "runtime.fixture.selection-refused".to_owned(),
+                }
+            } else {
+                RuntimePermissionEvaluation::Narrowed {
+                    approval_id,
+                    grant_id: proposed_grant_id,
+                    preview_sha256,
+                    expires_at_epoch_ms,
+                    decision_sha256: sha256(b"narrow decision"),
+                    derived: selected_write_call(),
+                }
+            };
+        }
         if disposition == Some(RuntimeApprovalDisposition::Deny) {
             RuntimePermissionEvaluation::Deny {
                 approval_id,
-                grant_id: GrantId::from_raw("grant-0001"),
+                grant_id: proposed_grant_id,
                 preview_sha256,
                 expires_at_epoch_ms,
                 decision_sha256: sha256(b"deny decision"),
@@ -780,11 +808,20 @@ impl RuntimeToolBoundary for FakeToolBoundary {
         _request: &RuntimeRunRequest,
         _operation_id: &RuntimeOperationId,
         _definition: &ToolDefinition,
-        _call: &ToolCall,
+        call: &ToolCall,
         now_epoch_ms: u64,
     ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
         if matches!(self.script, PermissionScript::RejectRead) {
             return Err(RuntimePortFailure::ReadProjectionUnavailable);
+        }
+        if call.tool_id.as_str() == SELECTED_WRITE_TOOL {
+            // The derived write gets its own approval and proposed grant.
+            return Ok(RuntimePermissionEvaluation::Ask {
+                approval_id: ApprovalId::from_raw("approval-selected"),
+                grant_id: GrantId::from_raw("grant-selected"),
+                preview_sha256: sha256(b"selected preview"),
+                expires_at_epoch_ms: now_epoch_ms + 10_000,
+            });
         }
         Ok(self.evaluation(None, None, now_epoch_ms))
     }
@@ -2928,6 +2965,7 @@ fn durable_callback_rejects_changed_protected_resolution_and_ignored_duplicate()
             disposition: RuntimeApprovalDisposition::Allow,
             challenge_sha256: challenge.challenge_sha256.clone(),
             grant_id: Some(GrantId::from_raw("grant-0001")),
+            selection: None,
         };
         assert_eq!(
             runtime.run_until_boundary(Some(&response), None),
@@ -3739,6 +3777,7 @@ fn story_23_4_ask_pauses_before_effect_and_exact_allow_resumes_once() {
         disposition: RuntimeApprovalDisposition::Allow,
         challenge_sha256: challenge.challenge_sha256.clone(),
         grant_id: Some(GrantId::from_raw("grant-0001")),
+        selection: None,
     };
     let RuntimeCoordinatorStep::Complete { outcome } = coordinator
         .run_until_boundary(Some(&response), None)
@@ -3771,6 +3810,7 @@ fn story_23_4_deny_closes_without_launching_the_tool() {
         disposition: RuntimeApprovalDisposition::Deny,
         challenge_sha256: challenge.challenge_sha256.clone(),
         grant_id: None,
+        selection: None,
     };
 
     let RuntimeCoordinatorStep::Complete { outcome } = coordinator
@@ -3807,6 +3847,7 @@ fn story_23_4_cancellation_wins_over_a_pending_allow_response() {
         disposition: RuntimeApprovalDisposition::Allow,
         challenge_sha256: challenge.challenge_sha256.clone(),
         grant_id: Some(GrantId::from_raw("grant-0001")),
+        selection: None,
     };
     let cancellation = CancellationSignal {
         schema_version: CONTRACT_SCHEMA_VERSION,
@@ -4753,6 +4794,7 @@ fn failed_advancement_preserves_first_error_before_and_after_owned_publication()
                         disposition: RuntimeApprovalDisposition::Allow,
                         challenge_sha256: challenge.challenge_sha256.clone(),
                         grant_id: Some(GrantId::from_raw("grant-0001")),
+                        selection: None,
                     };
                     result = runtime.run_until_boundary(Some(&response), None);
                 }
@@ -4793,6 +4835,7 @@ fn rejected_approval_input_preserves_the_pending_challenge_for_a_valid_response(
         disposition: RuntimeApprovalDisposition::Allow,
         challenge_sha256: challenge.challenge_sha256.clone(),
         grant_id: Some(GrantId::from_raw("grant-0001")),
+        selection: None,
     };
     let events = runtime.events().to_vec();
     let resources = runtime.resource_snapshot().clone();
@@ -5672,6 +5715,425 @@ fn prepared_fixture_context(
     .expect("durable prepared context composes")
 }
 
+/// Shell-only tool that receives a write derived from a person's hunk selection.
+const SELECTED_WRITE_TOOL: &str = "fixture.selected-write";
+
+fn selected_write_call() -> super::RuntimeDerivedToolCall {
+    super::RuntimeDerivedToolCall {
+        tool_id: ToolId::from_raw(SELECTED_WRITE_TOOL),
+        tool_version: "1.0.0".to_owned(),
+        arguments: payload(
+            "fixture.selected.input",
+            br#"{"path":"fixture.txt","accepted_hunk_ids":["h1"]}"#,
+        ),
+    }
+}
+
+/// A controlled-write coordinator whose registry also holds the shell-only
+/// selected-write tool (Decision 0114).
+fn narrowing_coordinator(
+    permission: PermissionScript,
+    scripts: impl IntoIterator<Item = ModelScript>,
+    mutate: impl FnOnce(&mut RuntimeRunRequest),
+) -> (FixtureCoordinator, Arc<AtomicUsize>) {
+    let profile = profile("runtime-loop-selection");
+    let mut registry = registry_for_operation(GrantOperation::WorkspaceWrite);
+    let operation = OperationBinding::new(GrantOperation::WorkspaceWrite);
+    registry
+        .register_shell_tool(Box::new(FixtureTool {
+            correctable: false,
+            definition: ToolDefinition {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                tool_id: ToolId::from_raw(SELECTED_WRITE_TOOL),
+                tool_version: "1.0.0".to_owned(),
+                display_name: "Fixture selected write".to_owned(),
+                description: "Writes only the hunks a person selected".to_owned(),
+                input_schema: schema("fixture.selected.input"),
+                output_schema: schema("fixture.output"),
+                risk_level: ToolRiskLevel::Moderate,
+                declared_effects: vec![operation],
+                required_grant: RequiredGrantTemplate {
+                    operation,
+                    target_scope: "fixture.txt".to_owned(),
+                    single_use: true,
+                },
+                timeout_ms: 1_000,
+            },
+        }))
+        .expect("shell tool registers");
+    let mut request = request(profile.clone(), &registry);
+    request.mode = RuntimeSessionMode::ControlledWrite;
+    mutate(&mut request);
+    request.request_sha256 = "0".repeat(64);
+    let request = seal_runtime_run_request(request).expect("selection request seals");
+    let executions = Arc::new(AtomicUsize::new(0));
+    let coordinator = ReusableRuntimeCoordinator::new(
+        request,
+        FakeModel::new(profile, scripts),
+        FakeContext,
+        registry,
+        FakeToolBoundary {
+            script: permission,
+            executions: Arc::clone(&executions),
+            emit_evidence: true,
+            outcome: OperationOutcome::Succeeded,
+            state_change: StateChange::Changed,
+            tool_output_bytes: 0,
+            tool_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates: Vec::new(),
+            journal: Arc::new(Mutex::new(Vec::new())),
+            journal_flushes: Arc::new(AtomicUsize::new(0)),
+            artifacts: Arc::new(Mutex::new(Vec::new())),
+            checkpoint: Arc::new(Mutex::new(None)),
+        },
+        FakeVerifier {
+            verifier_id: VerifierId::from_raw("verifier-selection"),
+            source: VerifierSource::DeterministicPostcondition,
+        },
+        FakeClock { now: 1_000 },
+    )
+    .expect("selection coordinator builds");
+    (coordinator, executions)
+}
+
+fn decide(
+    challenge: &agentmage_kernel_contracts::RuntimeApprovalChallenge,
+    disposition: RuntimeApprovalDisposition,
+) -> RuntimeApprovalResponse {
+    RuntimeApprovalResponse {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        run_id: challenge.run_id.clone(),
+        approval_id: challenge.approval_id.clone(),
+        disposition,
+        challenge_sha256: challenge.challenge_sha256.clone(),
+        grant_id: (disposition == RuntimeApprovalDisposition::Allow)
+            .then(|| challenge.proposed_grant_id.clone()),
+        selection: (disposition == RuntimeApprovalDisposition::Narrow).then(|| {
+            agentmage_kernel_contracts::RuntimeHunkSelection {
+                preimage_sha256: "1".repeat(64),
+                proposal_sha256: "2".repeat(64),
+                accepted_hunk_ids: vec!["3".repeat(64)],
+            }
+        }),
+    }
+}
+
+fn awaiting(step: RuntimeCoordinatorStep) -> agentmage_kernel_contracts::RuntimeApprovalChallenge {
+    match step {
+        RuntimeCoordinatorStep::AwaitingApproval { challenge } => challenge,
+        RuntimeCoordinatorStep::Complete { outcome } => panic!("unexpected end: {outcome:?}"),
+    }
+}
+
+/// Pauses at the original call's challenge, narrows it and returns the derived challenge.
+fn narrowed(
+    coordinator: &mut FixtureCoordinator,
+) -> (
+    agentmage_kernel_contracts::RuntimeApprovalChallenge,
+    agentmage_kernel_contracts::RuntimeApprovalChallenge,
+) {
+    let original = awaiting(coordinator.run_until_boundary(None, None).unwrap());
+    let derived = awaiting(
+        coordinator
+            .run_until_boundary(
+                Some(&decide(&original, RuntimeApprovalDisposition::Narrow)),
+                None,
+            )
+            .expect("a narrowing continues the run"),
+    );
+    (original, derived)
+}
+
+#[test]
+fn a_selection_refuses_the_original_call_and_requests_one_separately_approved_write() {
+    let (mut coordinator, executions) = narrowing_coordinator(
+        PermissionScript::Ask,
+        [ModelScript::Tool, ModelScript::Completion],
+        |_| {},
+    );
+    let (original, derived) = narrowed(&mut coordinator);
+    assert_eq!(original.presentation.tool_id.as_str(), "fixture.read");
+    assert_eq!(derived.presentation.tool_id.as_str(), SELECTED_WRITE_TOOL);
+    assert_eq!(derived.approval_id.as_str(), "approval-selected");
+    assert_ne!(derived.tool_call_id, original.tool_call_id);
+    assert_ne!(derived.operation_id, original.operation_id);
+    assert_eq!(derived.turn_id, original.turn_id);
+    assert_eq!(
+        derived.presentation.arguments,
+        selected_write_call().arguments
+    );
+    // Nothing ran: the original was refused, and the derived write awaits its own decision.
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    let kinds = coordinator
+        .events()
+        .iter()
+        .map(|event| &event.kind)
+        .collect::<Vec<_>>();
+    let decided = kinds
+        .iter()
+        .rposition(|kind| matches!(kind, RuntimeEventKind::PermissionDecided { .. }))
+        .unwrap();
+    assert_eq!(
+        kinds.len(),
+        decided + 3,
+        "the derived request is the last step"
+    );
+    assert!(matches!(
+        kinds[decided],
+        RuntimeEventKind::PermissionDecided {
+            disposition: agentmage_kernel_contracts::RuntimePermissionDisposition::Deny,
+            grant_id: None,
+            approval_id,
+            ..
+        } if approval_id == &original.approval_id
+    ));
+    assert!(matches!(
+        kinds[decided + 1],
+        RuntimeEventKind::ToolRequested { tool_call_id, .. } if tool_call_id == &derived.tool_call_id
+    ));
+    assert!(matches!(
+        kinds[decided + 2],
+        RuntimeEventKind::PermissionRequested { approval_id, .. } if approval_id == &derived.approval_id
+    ));
+    // Waiting on the derived approval is a pause, not an effect.
+    let again = awaiting(coordinator.run_until_boundary(None, None).unwrap());
+    assert_eq!(again, derived);
+
+    let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+        .run_until_boundary(
+            Some(&decide(&derived, RuntimeApprovalDisposition::Allow)),
+            None,
+        )
+        .expect("the derived write runs once")
+    else {
+        panic!("the derived write cannot pause twice");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    assert_eq!(outcome.tool_call_count, 2);
+    assert_eq!(outcome.receipt_ids.len(), 1);
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    let started = coordinator
+        .events()
+        .iter()
+        .filter_map(|event| match &event.kind {
+            RuntimeEventKind::ToolStarted { tool_call_id, .. } => Some(tool_call_id.clone()),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(started, std::slice::from_ref(&derived.tool_call_id));
+    // The refusal of the original is not a denial of all effect.
+    assert_eq!(coordinator.resources.durable_usage().denial_count, 0);
+    assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn a_derived_write_can_be_denied_or_cancelled_and_cannot_be_narrowed_again() {
+    let (mut coordinator, executions) =
+        narrowing_coordinator(PermissionScript::Ask, [ModelScript::Tool], |_| {});
+    let (_, derived) = narrowed(&mut coordinator);
+    // A second narrowing is client input the runtime refuses; the challenge stays.
+    assert!(matches!(
+        coordinator.run_until_boundary(
+            Some(&decide(&derived, RuntimeApprovalDisposition::Narrow)),
+            None
+        ),
+        Err(RuntimeLoopError::Contract(
+            crate::runtime_coordinator::RuntimeCoordinatorError::ApprovalDenied
+        ))
+    ));
+    assert_eq!(
+        awaiting(coordinator.run_until_boundary(None, None).unwrap()),
+        derived
+    );
+    let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+        .run_until_boundary(
+            Some(&decide(&derived, RuntimeApprovalDisposition::Deny)),
+            None,
+        )
+        .unwrap()
+    else {
+        panic!("a denial ends the run");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Declined);
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    assert_valid_terminal_stream(&coordinator);
+
+    let (mut coordinator, executions) =
+        narrowing_coordinator(PermissionScript::Ask, [ModelScript::Tool], |_| {});
+    let (_, derived) = narrowed(&mut coordinator);
+    let cancellation = CancellationSignal {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        cancellation_id: CancellationId::from_raw("cancellation-selection"),
+        correlation_id: CorrelationId::from_raw(derived_id(
+            "correlation",
+            coordinator.request.run_id.as_str(),
+            0,
+        )),
+        task_id: coordinator.request.task.task_id.clone(),
+        reason: CancellationReason::UserRequested,
+        requested_by: BoundaryKind::Shell,
+    };
+    let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+        .run_until_boundary(
+            Some(&decide(&derived, RuntimeApprovalDisposition::Allow)),
+            Some(&cancellation),
+        )
+        .unwrap()
+    else {
+        panic!("cancellation is terminal");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Cancelled);
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    assert!(
+        !coordinator
+            .events()
+            .iter()
+            .any(|event| matches!(event.kind, RuntimeEventKind::ToolStarted { .. }))
+    );
+    assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn replayed_stale_and_unhonored_selections_never_write() {
+    let (mut coordinator, executions) =
+        narrowing_coordinator(PermissionScript::Ask, [ModelScript::Tool], |_| {});
+    let (original, derived) = narrowed(&mut coordinator);
+    // Replaying the original selection or an allow for the refused original is refused.
+    for replay in [
+        decide(&original, RuntimeApprovalDisposition::Narrow),
+        decide(&original, RuntimeApprovalDisposition::Allow),
+    ] {
+        assert!(matches!(
+            coordinator.run_until_boundary(Some(&replay), None),
+            Err(RuntimeLoopError::Contract(
+                crate::runtime_coordinator::RuntimeCoordinatorError::ApprovalDenied
+            ))
+        ));
+    }
+    assert_eq!(
+        awaiting(coordinator.run_until_boundary(None, None).unwrap()),
+        derived
+    );
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+
+    // A selection the boundary cannot honor, for example over a changed file,
+    // refuses the original call and writes nothing.
+    let (mut coordinator, executions) =
+        narrowing_coordinator(PermissionScript::NarrowRefused, [ModelScript::Tool], |_| {});
+    let original = awaiting(coordinator.run_until_boundary(None, None).unwrap());
+    let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+        .run_until_boundary(
+            Some(&decide(&original, RuntimeApprovalDisposition::Narrow)),
+            None,
+        )
+        .unwrap()
+    else {
+        panic!("an unhonored selection ends the run");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Declined);
+    assert_eq!(
+        outcome.unresolved_codes,
+        ["runtime.fixture.selection-refused".to_owned()]
+    );
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    assert_eq!(
+        coordinator
+            .events()
+            .iter()
+            .filter(|event| matches!(event.kind, RuntimeEventKind::ToolRequested { .. }))
+            .count(),
+        1
+    );
+    assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn a_derived_write_counts_against_the_declared_tool_ceiling() {
+    let (mut coordinator, executions) =
+        narrowing_coordinator(PermissionScript::Ask, [ModelScript::Tool], |request| {
+            request.limits.max_tool_calls = 1;
+        });
+    let original = awaiting(coordinator.run_until_boundary(None, None).unwrap());
+    let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+        .run_until_boundary(
+            Some(&decide(&original, RuntimeApprovalDisposition::Narrow)),
+            None,
+        )
+        .unwrap()
+    else {
+        panic!("no second call fits the ceiling");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Exhausted);
+    assert_eq!(
+        outcome.unresolved_codes,
+        ["runtime.tool_budget.exhausted".to_owned()]
+    );
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn a_model_cannot_propose_a_shell_only_tool() {
+    let mut registry = registry_for_operation(GrantOperation::WorkspaceWrite);
+    let operation = OperationBinding::new(GrantOperation::WorkspaceWrite);
+    registry
+        .register_shell_tool(Box::new(FixtureTool {
+            correctable: false,
+            definition: ToolDefinition {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                tool_id: ToolId::from_raw(SELECTED_WRITE_TOOL),
+                tool_version: "1.0.0".to_owned(),
+                display_name: "Fixture selected write".to_owned(),
+                description: "Writes only the hunks a person selected".to_owned(),
+                input_schema: schema("fixture.selected.input"),
+                output_schema: schema("fixture.output"),
+                risk_level: ToolRiskLevel::Moderate,
+                declared_effects: vec![operation],
+                required_grant: RequiredGrantTemplate {
+                    operation,
+                    target_scope: "fixture.txt".to_owned(),
+                    single_use: true,
+                },
+                timeout_ms: 1_000,
+            },
+        }))
+        .unwrap();
+    let selected = ToolId::from_raw(SELECTED_WRITE_TOOL);
+    assert!(!registry.is_model_proposable(&selected, "1.0.0"));
+    assert!(registry.is_model_proposable(&ToolId::from_raw("fixture.read"), "1.0.0"));
+    assert_eq!(registry.list_tools().len(), 2);
+    assert_eq!(
+        registry
+            .list_model_tools()
+            .iter()
+            .map(|definition| definition.tool_id.as_str())
+            .collect::<Vec<_>>(),
+        ["fixture.read"]
+    );
+    let call = ToolCall {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        tool_call_id: agentmage_kernel_contracts::ToolCallId::from_raw("call-selected"),
+        correlation_id: CorrelationId::from_raw("correlation-selected"),
+        action_id: agentmage_kernel_contracts::ActionId::from_raw("action-selected"),
+        tool_id: selected,
+        tool_version: "1.0.0".to_owned(),
+        arguments: selected_write_call().arguments,
+    };
+    let dispatcher = crate::tooling::ToolDispatcher::new(&registry);
+    assert_eq!(
+        dispatcher
+            .dispatch(crate::tooling::ProposalOrigin::Model, &call)
+            .disposition,
+        crate::tooling::PreGrantDispatchDisposition::UnregisteredCaller
+    );
+    assert_eq!(
+        dispatcher
+            .dispatch(crate::tooling::ProposalOrigin::Shell, &call)
+            .disposition,
+        crate::tooling::PreGrantDispatchDisposition::GrantRequired
+    );
+}
+
 mod run_phase_deadline_tests {
     use super::super::bind_recovered_model_timeout;
     use super::*;
@@ -6222,6 +6684,7 @@ mod run_phase_deadline_tests {
                 disposition: RuntimeApprovalDisposition::Allow,
                 challenge_sha256: challenge.challenge_sha256,
                 grant_id: Some(GrantId::from_raw("grant-0001")),
+                selection: None,
             };
             coordinator
                 .run_until_boundary(Some(&response), None)
@@ -6265,6 +6728,7 @@ mod run_phase_deadline_tests {
             disposition: RuntimeApprovalDisposition::Allow,
             challenge_sha256: challenge.challenge_sha256.clone(),
             grant_id: Some(GrantId::from_raw("grant-0001")),
+            selection: None,
         }
     }
 

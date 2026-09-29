@@ -2819,7 +2819,7 @@ fn construct_candidate_model(
                         .with_native_contracts(
                             session_profile
                                 .registry()
-                                .list_tools()
+                                .list_model_tools()
                                 .into_iter()
                                 .cloned()
                                 .collect(),
@@ -2855,7 +2855,7 @@ fn construct_candidate_model(
                         .with_native_tools(
                             session_profile
                                 .registry()
-                                .list_tools()
+                                .list_model_tools()
                                 .into_iter()
                                 .cloned()
                                 .collect(),

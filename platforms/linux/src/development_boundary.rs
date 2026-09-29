@@ -20,7 +20,8 @@ use crate::ipc::LinuxLaunchEnvelope;
 #[path = "development_boundary/confirmation.rs"]
 mod confirmation;
 pub use confirmation::{
-    LinuxDevelopmentConfirmation, LinuxDevelopmentConfirmationKind, read_development_confirmation,
+    LinuxDevelopmentConfirmation, LinuxDevelopmentConfirmationKind, LinuxDevelopmentInputLine,
+    read_development_confirmation, read_development_line,
 };
 
 const MAX_DEVELOPMENT_HOST_BYTES: u64 = 512 * 1024 * 1024;
