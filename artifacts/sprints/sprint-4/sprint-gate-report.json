@@ -63,7 +63,7 @@
       },
       {
         "path": "kernel/engine/src/tooling.rs",
-        "sha256": "39d34741c5edb2ef1da442438393a7323d6e211a4023be6876756f0b0e4d59f6"
+        "sha256": "103c01e068578388f3f0f96f3145a8990ac1c180312ea29e8bd73579b5c94be1"
       },
       {
         "path": "kernel/engine/tests/boundary_workflow.rs",
@@ -82,8 +82,8 @@
         "sha256": "cc0bc1645c81e4835191d91beca51eb67797123b870bee575fcd948d4685782d"
       }
     ],
-    "reviewed_commit": "2d9abe6aa3f13fc8a5ca554e01e740831bb24826",
-    "reviewed_tree": "3210ca565c8194c0bec7ee303aeffbb8ab66e991",
+    "reviewed_commit": "e4713bc9f3027b602a50cfb60be32b85e25f46f9",
+    "reviewed_tree": "4973619cce6b299ab583caff77cfc93f4adeb399",
     "reviewer_id": "agentmage-sprint-4-independent-gate-v1"
   },
   "macos": {
@@ -95,8 +95,8 @@
   "positive_authority_path_claim": "none",
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "2d9abe6aa3f13fc8a5ca554e01e740831bb24826",
-  "reviewed_tree": "3210ca565c8194c0bec7ee303aeffbb8ab66e991",
+  "reviewed_commit": "e4713bc9f3027b602a50cfb60be32b85e25f46f9",
+  "reviewed_tree": "4973619cce6b299ab583caff77cfc93f4adeb399",
   "schema_version": 1,
   "sprint_id": 4,
   "status": "blocked-macos",

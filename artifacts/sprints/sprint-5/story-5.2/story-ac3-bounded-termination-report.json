@@ -42,7 +42,7 @@
     {
       "byte_length": 993,
       "path": "artifacts/sprints/sprint-5/story-5.2/story-ac3-bounded-termination-results.log",
-      "sha256": "c18b13a0e1735c0fbd528e8c8e9eee32a428a0d53f0d29774a920860ebaa711c"
+      "sha256": "5390d078bd592081e0afca9f9260dc345a829bd0951e85de545866e55a03d31d"
     }
   ],
   "commands": [
@@ -93,7 +93,7 @@
     {
       "byte_length": 8937,
       "path": "artifacts/sprints/sprint-5/story-5.2/policy-verification-report.json",
-      "sha256": "e216e878a57683be83779a92600936d400e7b14fd131436ae34494d501cc8686"
+      "sha256": "5729d8a53d59d5e77d6dd754082ff2f7faae4b6475d4ff0eb29ae4de3f96286d"
     }
   ],
   "schema_version": 1,
