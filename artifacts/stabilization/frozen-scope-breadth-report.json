@@ -26,19 +26,19 @@
       "sha256": "3ca10bd56dbbe6e404c904bede157f01c608b3460c1946ba0c8a3ffca3c39898"
     },
     {
-      "byte_length": 24662,
+      "byte_length": 24663,
       "path": "artifacts/sprints/sprint-11/story-11.1/security-evidence-map.json",
-      "sha256": "6191070b3a3908f3df86722c6c1601ca3ffb71eec17e25639e4dc736845c9377"
+      "sha256": "5fd837f486b4bb8d3a7fdf679de221c5402dbcaf1914441af0f9ebdec6196d97"
     },
     {
       "byte_length": 6455,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
-      "sha256": "d88e23ba27e3d5cb841906ea37bacf2641a2b03d22c2ab249df124b8f1503f14"
+      "sha256": "67cedbe1be951908a7d2e2be1a035e56b04a2d8cceb84d034d53a968a696ac0c"
     },
     {
-      "byte_length": 5761,
+      "byte_length": 6755,
       "path": "artifacts/sprints/sprint-11/story-11.3/durable-resume-report.json",
-      "sha256": "303231293f04760157d4512ef3c29eafc49bd10fd19429a909c510de3bfd6b6a"
+      "sha256": "dde2b189c1adf12488e049e700859002925c2e1476b4444b76bae78d902f77ef"
     }
   ],
   "criteria": [
