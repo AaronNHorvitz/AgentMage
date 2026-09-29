@@ -4,14 +4,14 @@
     {
       "argv_sha256": "b3bf1a712beea095c7e1f3eaa345c7a01cb714dd183ea72e6eb67820381cb92b",
       "command_id": "prepared-artifact-matrix",
-      "elapsed_ms": 206,
+      "elapsed_ms": 229,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
       "peak_rss_kib": 41500,
       "test_result": {
         "failed": 0,
-        "filtered_out": 1283,
+        "filtered_out": 1312,
         "ignored": 0,
         "measured": 0,
         "passed": 12
@@ -20,14 +20,14 @@
     {
       "argv_sha256": "b26bfb863a1251b307c473309b2fa69a8ddccbeb10b4b37bb83f2f2a1e19196f",
       "command_id": "engine-session-matrix",
-      "elapsed_ms": 93,
+      "elapsed_ms": 95,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 41428,
+      "peak_rss_kib": 41520,
       "test_result": {
         "failed": 0,
-        "filtered_out": 1277,
+        "filtered_out": 1306,
         "ignored": 0,
         "measured": 0,
         "passed": 18
@@ -36,14 +36,14 @@
     {
       "argv_sha256": "d25c1a35db190c5821af496f6e3cc07b1ba96ddb12ec19c8b6a21d7bc7325ee1",
       "command_id": "native-read-matrix",
-      "elapsed_ms": 95,
+      "elapsed_ms": 73,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50028,
+      "peak_rss_kib": 50148,
       "test_result": {
         "failed": 0,
-        "filtered_out": 344,
+        "filtered_out": 351,
         "ignored": 0,
         "measured": 0,
         "passed": 6
@@ -52,14 +52,14 @@
     {
       "argv_sha256": "dfe8124eee6fbf3abfde662ff05627ee295973fb06018fc558fa4c1ff65ae353",
       "command_id": "native-chat-transport",
-      "elapsed_ms": 332,
+      "elapsed_ms": 323,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50296,
+      "peak_rss_kib": 50164,
       "test_result": {
         "failed": 0,
-        "filtered_out": 347,
+        "filtered_out": 354,
         "ignored": 0,
         "measured": 0,
         "passed": 3
@@ -68,14 +68,14 @@
     {
       "argv_sha256": "6bd11bbd4996b6e78ff6e621938b77f2c0a339f3b44af3f4d2c09976540d6891",
       "command_id": "three-client-parity",
-      "elapsed_ms": 346,
+      "elapsed_ms": 355,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50440,
+      "peak_rss_kib": 50200,
       "test_result": {
         "failed": 0,
-        "filtered_out": 349,
+        "filtered_out": 356,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -84,14 +84,14 @@
     {
       "argv_sha256": "dcbd95278f6e59895a67a6092b1c2ffc167a47b68d41b501a1dcc0acf578656f",
       "command_id": "client-confusion-bypass",
-      "elapsed_ms": 78,
+      "elapsed_ms": 81,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 51044,
+      "peak_rss_kib": 50136,
       "test_result": {
         "failed": 0,
-        "filtered_out": 349,
+        "filtered_out": 356,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -100,14 +100,14 @@
     {
       "argv_sha256": "52f0dcaa22117142bfade3bdb039d530e2264557b36bbc50db671925b010c307",
       "command_id": "workflow-authority-bypass",
-      "elapsed_ms": 324,
+      "elapsed_ms": 332,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50732,
+      "peak_rss_kib": 49928,
       "test_result": {
         "failed": 0,
-        "filtered_out": 349,
+        "filtered_out": 356,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -116,21 +116,21 @@
     {
       "argv_sha256": "47cdc321aaa5c7c4ed9eed236a4c8f7fcf3cee3ea5f1542a8e3304e1832cac09",
       "command_id": "dependency-direction",
-      "elapsed_ms": 25,
+      "elapsed_ms": 20,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 12320,
+      "peak_rss_kib": 12280,
       "test_result": null
     },
     {
       "argv_sha256": "1ba5e4e0d2b5860ae9e4b0ed786fc45413e659b7c435186b2ad8dc781a2c4045",
       "command_id": "effect-mediation",
-      "elapsed_ms": 2191,
+      "elapsed_ms": 2225,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 41156,
+      "peak_rss_kib": 42600,
       "test_result": null
     }
   ],
@@ -173,7 +173,7 @@
   "manual_fuzzing_executed": false,
   "performance": {
     "cancellation": {
-      "elapsed_us": 603,
+      "elapsed_us": 613,
       "event_count": 4,
       "model_calls": 0,
       "output_bytes": 0,
@@ -182,7 +182,7 @@
       "turns": 0
     },
     "direct": {
-      "elapsed_us": 2264,
+      "elapsed_us": 1946,
       "event_count": 6,
       "model_calls": 1,
       "output_bytes": 23,
@@ -191,7 +191,7 @@
       "turns": 1
     },
     "maximum": {
-      "elapsed_us": 9058,
+      "elapsed_us": 5134,
       "event_count": 33,
       "model_calls": 4,
       "output_bytes": 23,
@@ -201,7 +201,7 @@
     },
     "maximum_scenario_us": 250000,
     "nominal": {
-      "elapsed_us": 4558,
+      "elapsed_us": 2581,
       "event_count": 15,
       "model_calls": 2,
       "output_bytes": 23,
@@ -210,7 +210,7 @@
       "turns": 2
     },
     "over_limit": {
-      "elapsed_us": 4805,
+      "elapsed_us": 4826,
       "event_count": 33,
       "model_calls": 4,
       "output_bytes": 0,
@@ -227,10 +227,10 @@
     "redactions": [
       "repository-root"
     ],
-    "sha256": "c17f67a7f9c3834eec142db38426174943050dda1c32293bacde6495b5de5fe8"
+    "sha256": "b4aa8e7b18299c5a5a67ebd691badf6ff929590755380cac509299c6ba76b89d"
   },
   "schema_version": 1,
-  "source_revision": "5ac4d14721eb6a1478f3f46ac18431e87a465913",
+  "source_revision": "7000f423bfdd6fb4be6a4d0833dcd141fc0cc788",
   "sources": [
     {
       "bytes": 12824,
@@ -263,9 +263,9 @@
       "sha256": "4fe12c43ed684bbdca60d54778b61a0a05971f65247e290cf6b589d1d9b4b81d"
     },
     {
-      "bytes": 275053,
+      "bytes": 275794,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "430ecac5432f5e6b3f5224d9ea4aaa0819457e257296f4ece7f4228672617ea4"
+      "sha256": "37ff91c1da1c44160ef6835462563f763c4a35ba46503bd33b0353e4bdeef086"
     },
     {
       "bytes": 9963,
