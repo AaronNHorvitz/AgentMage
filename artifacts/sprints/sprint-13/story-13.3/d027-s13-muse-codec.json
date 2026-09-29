@@ -43,7 +43,7 @@
       ],
       "exit_code": 0,
       "id": "muse-edge-codec",
-      "output_sha256": "2a211d9e25ba538c77f253f9e26ec31f12b509639d3c970996bd0e600288beef"
+      "output_sha256": "c43d3aedc2fddc50db9282f290ee6c902bc3b3de29bc19143f834e950f321c84"
     },
     {
       "argv": [
@@ -56,7 +56,7 @@
       ],
       "exit_code": 0,
       "id": "native-transport-diagnostics",
-      "output_sha256": "ecb2cc2e3c81ecc7ee842c41c87f053b206d4497258c1cc9fe16df8f56cb5da7"
+      "output_sha256": "55da46e59ce5e4ef39f8c5ff6a61bd8250a8ed5b5742d0d7506264e567f8ad26"
     },
     {
       "argv": [
@@ -69,7 +69,7 @@
       ],
       "exit_code": 0,
       "id": "generic-codec",
-      "output_sha256": "cce3e0216e00f5737e9ad19c94bcbcb22d2e2388932e9dbc495a37fdf4be866f"
+      "output_sha256": "91b702b8c68cd41ae2b46089280681e8813aa6aaa4e1714f0c536efb4a800750"
     },
     {
       "argv": [
@@ -82,7 +82,7 @@
       ],
       "exit_code": 0,
       "id": "bounded-response",
-      "output_sha256": "7b51f97a4b9f68470099850ddb02fa6c75c2eee1adc84403c9631bd52eed9815"
+      "output_sha256": "ce92ea10564a31bb320bd1211ab7a6682541084c7de7edcef02fe33f3b6ebc12"
     },
     {
       "argv": [
@@ -95,7 +95,7 @@
       ],
       "exit_code": 0,
       "id": "fake-family-parity",
-      "output_sha256": "76277d287dc02e3b569bd8db60193b16615e90008243f763338c7f000d38da36"
+      "output_sha256": "20535f82579bbb7e70827ee68cb1ec03c2121a467124218825f7e6e648e8dd66"
     }
   ],
   "diagnostics": [
@@ -235,7 +235,7 @@
   "production_kernel_family_references": [],
   "record_type": "d027_s13_muse_codec_evidence",
   "schema_version": 3,
-  "source_revision": "ec0a8c6be1999d48484850a63aba8321e6bc60bd",
+  "source_revision": "503d7c322a2e609080c0c0e00dd9b483703d1746",
   "source_sha256": {
     "kernel/contracts/src/model.rs": "1a19f680cc1468be94930632e4a67ba50f0c16eaf47802ae7ecd65df2ca1695c",
     "kernel/engine/src/accounting_provider.rs": "f0292afed85e4dc1d617061de010622b913749caed5e4620503634c29ef485f4",
@@ -274,7 +274,7 @@
     "kernel/engine/src/communications_teams.rs": "9acd827270b0c9928b0ee35ff86f41a72ce3e319cc4d9b2791cc96078c694825",
     "kernel/engine/src/configuration.rs": "33b6d5d1ffe78c12be86aaf2025260613cabcb23574b0e40d25fa40acb7dbf2c",
     "kernel/engine/src/connected_identity.rs": "b66dfcb79ff82be5061c198037cd5e4eb3e3436667b2af08583c66f19e37623e",
-    "kernel/engine/src/context_inspection.rs": "fcb5125d7f35bc6659372f79fe057da715843da768a8a339e9fca3035915416f",
+    "kernel/engine/src/context_inspection.rs": "5074f7ca797423796890ab17adb60322104dfcc40b0af5ac8873f2146b0541aa",
     "kernel/engine/src/context_management.rs": "bc6a562f4573364bc82a3972aae64d93e24b976303c52ce9227018717516c077",
     "kernel/engine/src/conversation_archive.rs": "89bc61a06c8196c1a60ce9c1f97e8a9ad94903dc81a3b1ee5b85340cdba5c633",
     "kernel/engine/src/conversation_library.rs": "8f1b2446128a73b97efde001e41a879f19d8c6efbb23220a6b3bc27fe4726d33",
@@ -321,7 +321,7 @@
     "kernel/engine/src/incident_lifecycle.rs": "28f1e048d3fa806f194c07e4f0e723522dec25cfd46fbd8a80cb8f861a2a3b94",
     "kernel/engine/src/infrastructure_safety.rs": "ab99b10488d49b777db2241c55475a699f5a7437cb2dcc6d014572ef215e1940",
     "kernel/engine/src/instruction_provenance.rs": "0e88d2dd4d200450f777fc8d8b24b3ba6091ae89cadc6c919af6689205ae9c94",
-    "kernel/engine/src/job_control.rs": "3ddf95a8bed7d89d879eb02e86e2d7148d4f544652305fe99d102361ecff1b4d",
+    "kernel/engine/src/job_control.rs": "31f168ee1347d75726b65dfc2b324d9c729b8c05a2dddd2e13d0172ec01df414",
     "kernel/engine/src/job_scheduler.rs": "2209df39d416695395e160be013b15bb0874af39ff6fe8997f0127d684a1ed6c",
     "kernel/engine/src/lib.rs": "715ec8ffb533bbdcc2e3a9b820fe12d545e2b36f05e30ceae7be35f66454ba16",
     "kernel/engine/src/linux_mail_interop.rs": "aedca1ccb24b64b15f2622ab8f7e1b7bddc22b04eb10ddce5b64522d926f330d",
@@ -393,19 +393,19 @@
     "kernel/engine/src/retry_admission.rs": "aaf8e8da33a89e8abc0c14a1a8fffe7c24e521cde7982e0aa77721488896300e",
     "kernel/engine/src/review_packet.rs": "e6987a3ca3533150f4bb296ce9b91b8ad06a1842760f9fa05da9ea95587bce00",
     "kernel/engine/src/run_control.rs": "54e43a2e1c3082b71062c734fa843d4730a7767bd05ef7f990b38f1490f5eb5a",
-    "kernel/engine/src/run_progress.rs": "19aaa1a9bf480ff08b4c8c00a56c13ac0ee498851d7f9934d66b6981149137b5",
+    "kernel/engine/src/run_progress.rs": "c0ef4fcc580efa0ed8973a88e976a4a76065c389ba6d372001dd18a6ebd6711a",
     "kernel/engine/src/runtime_answer.rs": "98755d23179131575511c90ae811240ab5bf841136f36cf45d827abeb8bb5657",
     "kernel/engine/src/runtime_artifact.rs": "cc6ee1ad0438fb9ed93663fc0326742bf2435f77eb259f540730a60761f1c8c8",
-    "kernel/engine/src/runtime_coordinator.rs": "7e5c25aa0bd7fc52afe67e27997a2f7969a71e64adf3d71b649fac9eafe65b2e",
+    "kernel/engine/src/runtime_coordinator.rs": "8570c1764e7293e6c3c5931fcbab612c9df26ee7ab284c8bdfbb12d22b6553a0",
     "kernel/engine/src/runtime_event.rs": "c335d45282843159ad0cb97f22f965407112a9b0d9de6fe17677725266ef7f3d",
     "kernel/engine/src/runtime_hardening.rs": "cfa81f9a78783c949bd9a7e4873b5e1fa7c377cb3383679be36f802a9b73f1f8",
     "kernel/engine/src/runtime_inspector.rs": "8f00a2b76a920baae95eff61f71be4c0ec14bf2959091167e4ddb6af9933bd4d",
     "kernel/engine/src/runtime_journal.rs": "3588470c9ed56647802638f766c16418b9f61a8d7ea82a422371c56063b3d464",
     "kernel/engine/src/runtime_lifecycle.rs": "56823d70a711ba278d8918d3cf288061b5addcfd97c6ed228c2ed184b03eb2d2",
-    "kernel/engine/src/runtime_loop.rs": "ba7e2d56b0fdc0b4e123821ecb1d6713978ee4cac10673099d008d12982d0e19",
+    "kernel/engine/src/runtime_loop.rs": "3bd9a806003c0e6fe93ca6961e885a38e1f2cbdcf55942a4dd95be7183adab45",
     "kernel/engine/src/runtime_loop/artifact_preparation.rs": "927799cc0abee91289ad650072941a59d20a456dfb2e289a5a17b754e85e66fc",
     "kernel/engine/src/runtime_loop_artifact_preparation_tests.rs": "76c052a6265dfd0acbf33367b2d297cfe7ced195f1484c54d0ef2b0ef6575712",
-    "kernel/engine/src/runtime_loop_tests.rs": "37ff91c1da1c44160ef6835462563f763c4a35ba46503bd33b0353e4bdeef086",
+    "kernel/engine/src/runtime_loop_tests.rs": "6c098c787f720fc97cc0e068c966c4561904da42dc0e74a0f6bbdb42be4a6502",
     "kernel/engine/src/runtime_projection.rs": "9b2a2274f3328ac8e33d1e8a493b4e374fb8a4dc7c28582b186002647b6de25d",
     "kernel/engine/src/runtime_recovery.rs": "7997cf0ccae000d132eee6b92b990a0891884887441b06ba69cf28dd8494dcb6",
     "kernel/engine/src/s012_it01.rs": "2cbf6a490063f32408dce925deca54cafdf837d440ae389629ce63f2b7490c8f",
@@ -426,7 +426,7 @@
     "kernel/engine/src/tool_call_repair.rs": "d44af7103ffa8aaaa1696a610e4d0a5f4ae48ed537215ef70090759d3c4f311d",
     "kernel/engine/src/tool_composition.rs": "94d2dd8c8cd9f8d3571232d117d69da8b731e365f2633f3df87ce91d8970ba20",
     "kernel/engine/src/tool_observation.rs": "2044834d0af95c9062694f18280baa7e6a8078471aaa470b1ca49fec930b56da",
-    "kernel/engine/src/tooling.rs": "39d34741c5edb2ef1da442438393a7323d6e211a4023be6876756f0b0e4d59f6",
+    "kernel/engine/src/tooling.rs": "103c01e068578388f3f0f96f3145a8990ac1c180312ea29e8bd73579b5c94be1",
     "kernel/engine/src/trusted_audit_contract.rs": "38627ca7df0caeede3277ef2b920902235cc1940fce5e73cf0cea6c87a6b8e76",
     "kernel/engine/src/update_maintenance.rs": "e476f336bb8740b956876ff4cf090afd0509429bfb86cd77706bad50c718d204",
     "kernel/engine/src/validation_result.rs": "0dc1941e818fa94064b1c7928763f3357f3e1b7052fbb9bb7cc58f4ea36d6ef9",
@@ -447,15 +447,15 @@
     "kernel/engine/src/workflow_termination.rs": "3a3c922ac81df779506d7ad85c07d3cd849f8fcbac1c765ca6da14d2dd6457e1",
     "kernel/engine/src/workflow_verifier.rs": "6187389d17470552a35d774977ba581219ac30f0786d6ec5dea773aa6360d124",
     "kernel/engine/src/write_approval.rs": "b87b6f0d2bb892d2e3a56fc825e81b304ee9a73df9b983355beb50336023711b",
-    "kernel/engine/src/write_approval/selective.rs": "a59fae6076f79f1499ec492a0adcfb947400eab848d9dda601b6a6db47fbea4a",
+    "kernel/engine/src/write_approval/selective.rs": "7055af7cd122ff4956a14416334eb7f40aa5beaaad636495264765d8d0c36944",
     "kernel/engine/src/write_recovery.rs": "043810f5062cfeca75d69b5ea8ad9f22f22ea200e182c86ae0594f99e983d8bd",
     "kernel/engine/src/write_transaction.rs": "37bfa344dc49b9e79aa7921b0c3b12241a1166cef0216395a56e280841d3dd03",
     "platforms/linux-inference/src/llama_server_driver.rs": "65f3a4c735736b2b1b700a0264ae2c8f61af1eb28b0bf54a7dee5587eb8efbd0",
     "platforms/linux-inference/src/muse_atem_codec.rs": "3792f5ab95dd3b21c2706db5277e0e5365bd3a0854a0697a2c3960ef29c363af",
     "scripts/muse_codec_evidence.py": "954df9ed60dc6f7264d374a2374d56152240c037fbf1f8a299b2a9fe8a10c89d",
     "scripts/rust_source_audit.py": "ce8616140ffad32f0304064f9f01b951cbb865de2a2b6bcdc87adc314ca2458c",
-    "scripts/rust_test_ownership.py": "7b49cd60f9e8a78059ebb8dc7f15709fd37c747ccbac98001cde375d8506c86f",
+    "scripts/rust_test_ownership.py": "74b1db6953f3a3ffeffbc44210bb689c4efa54092d78a92cce0e11f694487491",
     "tests/test_muse_codec_evidence.py": "ff315ed909e1d49c48b22cdf426b0234f8e7c7797ccd850ed98c93b839aab62f",
-    "tests/test_rust_test_ownership.py": "b37e7574c94f62a8de33f77851b8d99a6084c76af9e91b8d8e8467e200a3fd32"
+    "tests/test_rust_test_ownership.py": "3d05c65b512cebc0dd37671612073ae6cf21b89281430a846920c10e758a7cd2"
   }
 }

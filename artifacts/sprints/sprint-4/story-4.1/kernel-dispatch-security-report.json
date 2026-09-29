@@ -34,7 +34,7 @@
     },
     {
       "path": "kernel/engine/src/tooling.rs",
-      "sha256": "39d34741c5edb2ef1da442438393a7323d6e211a4023be6876756f0b0e4d59f6"
+      "sha256": "103c01e068578388f3f0f96f3145a8990ac1c180312ea29e8bd73579b5c94be1"
     },
     {
       "path": "scripts/kernel_dispatch_security.py",
@@ -45,7 +45,7 @@
       "sha256": "3b9b5ec725534489f26d9645c8546e6ae253fba2158d1f0379cb04093ab900ba"
     }
   ],
-  "source_revision": "20f5714ad6d7d236f062e2d74966b52c584d0a62",
+  "source_revision": "503d7c322a2e609080c0c0e00dd9b483703d1746",
   "status": "pass-linux-zero-execution",
   "task_id": "4.1.3.3",
   "test_id": "S-004-ST01",

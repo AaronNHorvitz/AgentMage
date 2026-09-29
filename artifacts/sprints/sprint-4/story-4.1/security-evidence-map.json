@@ -31,9 +31,9 @@
       "sha256": "2903b9c5597c0023cafdaee69eb2eba041a0a9638a68ca3b5b645a98c30a0785"
     },
     {
-      "bytes": 53712,
+      "bytes": 55424,
       "path": "kernel/engine/src/tooling.rs",
-      "sha256": "39d34741c5edb2ef1da442438393a7323d6e211a4023be6876756f0b0e4d59f6"
+      "sha256": "103c01e068578388f3f0f96f3145a8990ac1c180312ea29e8bd73579b5c94be1"
     },
     {
       "bytes": 8704,
@@ -83,7 +83,7 @@
     {
       "bytes": 4896,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json",
-      "sha256": "2d84958c6c6845e6d08878c76f45b9dd9d4233466074c90d12c92e213362b876"
+      "sha256": "3dd7c80cc9437342c832ed6fc42cc887e2b46b65a523389a183a761ca100381e"
     },
     {
       "bytes": 4406,
@@ -258,7 +258,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "81457a097032a48585bcd69c27a899a57db3f4e6",
+  "source_revision": "503d7c322a2e609080c0c0e00dd9b483703d1746",
   "status": "pass-linux-security-mapping",
   "story_id": "4.1",
   "summary": {

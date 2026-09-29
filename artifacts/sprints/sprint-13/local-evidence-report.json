@@ -27,7 +27,7 @@
       ],
       "exit_code": 0,
       "id": "model-contracts",
-      "output_sha256": "585a13fbee15cf4ae84f6711a4101a218409cce9e848b5f0126aabba0d7efa30",
+      "output_sha256": "e3ef95c3a4b5b6f04c8712fc2ba531533c1a4ad5f111f31cc092d12a6c68b0af",
       "story_id": "13.1"
     },
     {
@@ -40,7 +40,7 @@
       ],
       "exit_code": 0,
       "id": "model-engine",
-      "output_sha256": "23a4779cea6f5d27e29df66f5df54d2cdc887818ea3e894d7f320df60d141259",
+      "output_sha256": "64bf3714ee3ba6f6ef4e3e72fb40b88e7fb209c21c954f4a2b797f6ef8a5e63b",
       "story_id": "13.1"
     },
     {
@@ -53,7 +53,7 @@
       ],
       "exit_code": 0,
       "id": "linux-native-adapter",
-      "output_sha256": "297f859f100d2c1b342abfb5bcb6295cd0de554640ce9c7a3a7b69bca9e1863b",
+      "output_sha256": "2babcf5f36a600888cced96115645e09f40e4015ab57f56643fc75a5ef3f3817",
       "story_id": "13.1"
     },
     {
@@ -65,7 +65,7 @@
       ],
       "exit_code": 0,
       "id": "model-json-contracts",
-      "output_sha256": "cca86947927621e1f48e15d4273a50531c5ac2df95ab963b38f2d0412597489c",
+      "output_sha256": "f782a9e48ba6b02b7ba43534068d395975eb02d1a286a8d89d18611e3c62237e",
       "story_id": "13.1"
     },
     {
@@ -84,7 +84,7 @@
       ],
       "exit_code": 0,
       "id": "model-policy-evidence",
-      "output_sha256": "d8219b5a44972d3365828d4a4a7d720f27691802979c53c40a28748a41272062",
+      "output_sha256": "821322d69691872a31d96378160d878106e83f4b38c05facb7fe78c128b3cae5",
       "story_id": "13.2"
     }
   ],
@@ -92,14 +92,14 @@
     "artifacts/sprints/sprint-13/story-13.1/finish-usage-report.json": "f4902131f2ca3322bc424a9af280a795769d44be499345997b2929c56041bfa3",
     "artifacts/sprints/sprint-13/story-13.1/muse-native-adapter-contract-v2.json": "9c4980f2167f052c4da1a063f470bb1d5852b616247d3b6dc507910eddedaf19",
     "artifacts/sprints/sprint-13/story-13.2/linux-cross-adapter-parity.json": "6733691ce2a645dec00fc7dfec22403d82d1daf00bf1970d69b8ff3752ce1503",
-    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "952729eba30ac1b286a07e3e46bf650778337fe1770f3e6d53c62e53de4f193b",
+    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "7efb0ba6f37b9cbbc9b0449572746e7207fae1ca80933d505b7da88f0f0bdb2d",
     "artifacts/sprints/sprint-13/story-13.3/muse-live-install.json": "91826d99f497a212ab32f87176a5b034a8b7e1fe510c9a12a05d95fc38a8dd18",
     "artifacts/sprints/sprint-13/story-13.3/muse-profile-evaluation.json": "88f560db0a1486f39a1004a0cd88e699948d194bf9221ee6e1a6d037c2e5b670",
     "artifacts/sprints/sprint-13/story-13.3/muse-sandbox-inference.json": "07260b4b60bc5d19d986fdea9bea807b3aa9e0cc543e0ce3a145a3c56a0bd547",
-    "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-report.json": "b0f672a83de391dd36b0262ea64185c81161a3e75c6e2833dea585103f9adbc5",
+    "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-report.json": "56ca7fe9c65062f488b1d2c831efedb1e799384e9b4ddce4c1b79521211cb2f7",
     "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json": "571913bbf14d520847118a6988edecef0950be0118ea8392dfca33718bf76a75",
     "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json": "1230b416221d7e28b3ff038a3b9bd8eca972220eb1549763b4b0d68b1416ed69",
-    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "cbf8fc72e0848796033b31740e2330d569a8df9adf2c3fe800ed3f335bcfb1ce"
+    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "63d976d3e726f45b61c4010efb4a917c8c248ce0481bf0a1442934ef6be2a8ad"
   },
   "evidence_state": {
     "adapter_contract": "CONTRACT-PASS-LIVE-BLOCKED",
@@ -175,7 +175,7 @@
       "SR-MGM-004"
     ]
   },
-  "source_revision": "ec0a8c6be1999d48484850a63aba8321e6bc60bd",
+  "source_revision": "503d7c322a2e609080c0c0e00dd9b483703d1746",
   "source_sha256": {
     "kernel/contracts/src/agent.rs": "c8cc0af7aa697ba6fb0ef0be8bafc8c2100c910169ee6f9fa2a2807ba48243c5",
     "kernel/contracts/src/agent_proposal.rs": "cd77cca5b9a6c6fd64c54053e9bdae5233cf50942c111c52fefba0945998519f",
@@ -201,7 +201,7 @@
     "kernel/contracts/src/grant.rs": "d19d8a394eac5679f7d77260aaa61f6f4394286486962540fbdb7fba67b9e918",
     "kernel/contracts/src/handoff.rs": "230eea68dfbe59158221b006f1483591999a464e529b0e25ecac8c6213759a00",
     "kernel/contracts/src/ids.rs": "c6eab569b2f194fada6a58004c32fbee162484f56b6f6b353518b5bdd73d16c5",
-    "kernel/contracts/src/lib.rs": "6dc675f05cdb565b37bdaedee0cfb9fb1cf50396de2b1d1e96f9bf685e485d5c",
+    "kernel/contracts/src/lib.rs": "d0dbbb70af4116eec198533c47c0a58944642adad364700cb2534ec40db00a28",
     "kernel/contracts/src/mcp.rs": "3c794e37194085ea625eae4f9529f5cbe10c764d0368e5be04aa929eb36aeb9d",
     "kernel/contracts/src/meeting.rs": "19190ab0366d87ee07b5a452168a5dfd211d2e1d2570c37a1f8320056be889c2",
     "kernel/contracts/src/model.rs": "1a19f680cc1468be94930632e4a67ba50f0c16eaf47802ae7ecd65df2ca1695c",
@@ -215,7 +215,7 @@
     "kernel/contracts/src/reasoning.rs": "7c7587867f5606cec90fb10b8c617f79337c890b297f58f1faf605ec2e3a0784",
     "kernel/contracts/src/runtime_artifact.rs": "f4e07606661ee1193eac26d4ad730f9d8348259a927343e3bce4f916482234e4",
     "kernel/contracts/src/runtime_event.rs": "4f1ed48fadb8290476fc90649f48c6cf0421a3f09f73acf3b42ad4fc7a989916",
-    "kernel/contracts/src/runtime_run.rs": "54edc6322b2990de63209641ed3911d244cf862c81060e8155044d0af5ddd813",
+    "kernel/contracts/src/runtime_run.rs": "c98845af735c8529850efe4cf47707fee8e242b10c9a23fddc895db87d658ec7",
     "kernel/contracts/src/serialization.rs": "0172e822ffd4297d769d752f75a6e06e27dbf36ca239ecc80167cd4358c9b4be",
     "kernel/contracts/src/structured_source.rs": "77af2ee3ad318ca05b83db62ab722ed320d1a2a49d47edb752aafff8a1ae7370",
     "kernel/contracts/src/task.rs": "3c4fc945faa3cdc635c630cac3dd28ceb853ae361b28d2d2dc232318b4c0e0ec",
@@ -258,7 +258,7 @@
     "kernel/engine/src/communications_teams.rs": "9acd827270b0c9928b0ee35ff86f41a72ce3e319cc4d9b2791cc96078c694825",
     "kernel/engine/src/configuration.rs": "33b6d5d1ffe78c12be86aaf2025260613cabcb23574b0e40d25fa40acb7dbf2c",
     "kernel/engine/src/connected_identity.rs": "b66dfcb79ff82be5061c198037cd5e4eb3e3436667b2af08583c66f19e37623e",
-    "kernel/engine/src/context_inspection.rs": "fcb5125d7f35bc6659372f79fe057da715843da768a8a339e9fca3035915416f",
+    "kernel/engine/src/context_inspection.rs": "5074f7ca797423796890ab17adb60322104dfcc40b0af5ac8873f2146b0541aa",
     "kernel/engine/src/context_management.rs": "bc6a562f4573364bc82a3972aae64d93e24b976303c52ce9227018717516c077",
     "kernel/engine/src/conversation_archive.rs": "89bc61a06c8196c1a60ce9c1f97e8a9ad94903dc81a3b1ee5b85340cdba5c633",
     "kernel/engine/src/conversation_library.rs": "8f1b2446128a73b97efde001e41a879f19d8c6efbb23220a6b3bc27fe4726d33",
@@ -305,7 +305,7 @@
     "kernel/engine/src/incident_lifecycle.rs": "28f1e048d3fa806f194c07e4f0e723522dec25cfd46fbd8a80cb8f861a2a3b94",
     "kernel/engine/src/infrastructure_safety.rs": "ab99b10488d49b777db2241c55475a699f5a7437cb2dcc6d014572ef215e1940",
     "kernel/engine/src/instruction_provenance.rs": "0e88d2dd4d200450f777fc8d8b24b3ba6091ae89cadc6c919af6689205ae9c94",
-    "kernel/engine/src/job_control.rs": "3ddf95a8bed7d89d879eb02e86e2d7148d4f544652305fe99d102361ecff1b4d",
+    "kernel/engine/src/job_control.rs": "31f168ee1347d75726b65dfc2b324d9c729b8c05a2dddd2e13d0172ec01df414",
     "kernel/engine/src/job_scheduler.rs": "2209df39d416695395e160be013b15bb0874af39ff6fe8997f0127d684a1ed6c",
     "kernel/engine/src/lib.rs": "715ec8ffb533bbdcc2e3a9b820fe12d545e2b36f05e30ceae7be35f66454ba16",
     "kernel/engine/src/linux_mail_interop.rs": "aedca1ccb24b64b15f2622ab8f7e1b7bddc22b04eb10ddce5b64522d926f330d",
@@ -377,19 +377,19 @@
     "kernel/engine/src/retry_admission.rs": "aaf8e8da33a89e8abc0c14a1a8fffe7c24e521cde7982e0aa77721488896300e",
     "kernel/engine/src/review_packet.rs": "e6987a3ca3533150f4bb296ce9b91b8ad06a1842760f9fa05da9ea95587bce00",
     "kernel/engine/src/run_control.rs": "54e43a2e1c3082b71062c734fa843d4730a7767bd05ef7f990b38f1490f5eb5a",
-    "kernel/engine/src/run_progress.rs": "19aaa1a9bf480ff08b4c8c00a56c13ac0ee498851d7f9934d66b6981149137b5",
+    "kernel/engine/src/run_progress.rs": "c0ef4fcc580efa0ed8973a88e976a4a76065c389ba6d372001dd18a6ebd6711a",
     "kernel/engine/src/runtime_answer.rs": "98755d23179131575511c90ae811240ab5bf841136f36cf45d827abeb8bb5657",
     "kernel/engine/src/runtime_artifact.rs": "cc6ee1ad0438fb9ed93663fc0326742bf2435f77eb259f540730a60761f1c8c8",
-    "kernel/engine/src/runtime_coordinator.rs": "7e5c25aa0bd7fc52afe67e27997a2f7969a71e64adf3d71b649fac9eafe65b2e",
+    "kernel/engine/src/runtime_coordinator.rs": "8570c1764e7293e6c3c5931fcbab612c9df26ee7ab284c8bdfbb12d22b6553a0",
     "kernel/engine/src/runtime_event.rs": "c335d45282843159ad0cb97f22f965407112a9b0d9de6fe17677725266ef7f3d",
     "kernel/engine/src/runtime_hardening.rs": "cfa81f9a78783c949bd9a7e4873b5e1fa7c377cb3383679be36f802a9b73f1f8",
     "kernel/engine/src/runtime_inspector.rs": "8f00a2b76a920baae95eff61f71be4c0ec14bf2959091167e4ddb6af9933bd4d",
     "kernel/engine/src/runtime_journal.rs": "3588470c9ed56647802638f766c16418b9f61a8d7ea82a422371c56063b3d464",
     "kernel/engine/src/runtime_lifecycle.rs": "56823d70a711ba278d8918d3cf288061b5addcfd97c6ed228c2ed184b03eb2d2",
-    "kernel/engine/src/runtime_loop.rs": "ba7e2d56b0fdc0b4e123821ecb1d6713978ee4cac10673099d008d12982d0e19",
+    "kernel/engine/src/runtime_loop.rs": "3bd9a806003c0e6fe93ca6961e885a38e1f2cbdcf55942a4dd95be7183adab45",
     "kernel/engine/src/runtime_loop/artifact_preparation.rs": "927799cc0abee91289ad650072941a59d20a456dfb2e289a5a17b754e85e66fc",
     "kernel/engine/src/runtime_loop_artifact_preparation_tests.rs": "76c052a6265dfd0acbf33367b2d297cfe7ced195f1484c54d0ef2b0ef6575712",
-    "kernel/engine/src/runtime_loop_tests.rs": "37ff91c1da1c44160ef6835462563f763c4a35ba46503bd33b0353e4bdeef086",
+    "kernel/engine/src/runtime_loop_tests.rs": "6c098c787f720fc97cc0e068c966c4561904da42dc0e74a0f6bbdb42be4a6502",
     "kernel/engine/src/runtime_projection.rs": "9b2a2274f3328ac8e33d1e8a493b4e374fb8a4dc7c28582b186002647b6de25d",
     "kernel/engine/src/runtime_recovery.rs": "7997cf0ccae000d132eee6b92b990a0891884887441b06ba69cf28dd8494dcb6",
     "kernel/engine/src/s012_it01.rs": "2cbf6a490063f32408dce925deca54cafdf837d440ae389629ce63f2b7490c8f",
@@ -410,7 +410,7 @@
     "kernel/engine/src/tool_call_repair.rs": "d44af7103ffa8aaaa1696a610e4d0a5f4ae48ed537215ef70090759d3c4f311d",
     "kernel/engine/src/tool_composition.rs": "94d2dd8c8cd9f8d3571232d117d69da8b731e365f2633f3df87ce91d8970ba20",
     "kernel/engine/src/tool_observation.rs": "2044834d0af95c9062694f18280baa7e6a8078471aaa470b1ca49fec930b56da",
-    "kernel/engine/src/tooling.rs": "39d34741c5edb2ef1da442438393a7323d6e211a4023be6876756f0b0e4d59f6",
+    "kernel/engine/src/tooling.rs": "103c01e068578388f3f0f96f3145a8990ac1c180312ea29e8bd73579b5c94be1",
     "kernel/engine/src/trusted_audit_contract.rs": "38627ca7df0caeede3277ef2b920902235cc1940fce5e73cf0cea6c87a6b8e76",
     "kernel/engine/src/update_maintenance.rs": "e476f336bb8740b956876ff4cf090afd0509429bfb86cd77706bad50c718d204",
     "kernel/engine/src/validation_result.rs": "0dc1941e818fa94064b1c7928763f3357f3e1b7052fbb9bb7cc58f4ea36d6ef9",
@@ -431,7 +431,7 @@
     "kernel/engine/src/workflow_termination.rs": "3a3c922ac81df779506d7ad85c07d3cd849f8fcbac1c765ca6da14d2dd6457e1",
     "kernel/engine/src/workflow_verifier.rs": "6187389d17470552a35d774977ba581219ac30f0786d6ec5dea773aa6360d124",
     "kernel/engine/src/write_approval.rs": "b87b6f0d2bb892d2e3a56fc825e81b304ee9a73df9b983355beb50336023711b",
-    "kernel/engine/src/write_approval/selective.rs": "a59fae6076f79f1499ec492a0adcfb947400eab848d9dda601b6a6db47fbea4a",
+    "kernel/engine/src/write_approval/selective.rs": "7055af7cd122ff4956a14416334eb7f40aa5beaaad636495264765d8d0c36944",
     "kernel/engine/src/write_recovery.rs": "043810f5062cfeca75d69b5ea8ad9f22f22ea200e182c86ae0594f99e983d8bd",
     "kernel/engine/src/write_transaction.rs": "37bfa344dc49b9e79aa7921b0c3b12241a1166cef0216395a56e280841d3dd03",
     "model-profiles/exact-profile-catalog.json": "a3555259b3f30b57eca2ca1fd610de76aecde886f4ccb7d095bc611373681275",
@@ -440,10 +440,10 @@
     "platforms/linux-inference/src/native_model_adapter.rs": "853112814d7877036c609b411f26c3e6681b5111cfbf5f87c6e08a74f65dcf9b",
     "platforms/linux-inference/tests/muse_live_evaluation.rs": "535bc05c58a941a3397375f25d34af435d222d88c16d42b0a638c1a5a45b080c",
     "scripts/rust_source_audit.py": "ce8616140ffad32f0304064f9f01b951cbb865de2a2b6bcdc87adc314ca2458c",
-    "scripts/rust_test_ownership.py": "7b49cd60f9e8a78059ebb8dc7f15709fd37c747ccbac98001cde375d8506c86f",
+    "scripts/rust_test_ownership.py": "74b1db6953f3a3ffeffbc44210bb689c4efa54092d78a92cce0e11f694487491",
     "scripts/sprint_13_cross_adapter_parity.py": "e73e90243e2717f049e28ab0f72cb8817d45f2e0f4cd68fb4bc28aec07220c12",
     "scripts/sprint_13_evidence.py": "f243bc34fbc9ac0ec4da74d8965100bad2fca639ddf74d5184e2730ca41218f1",
-    "tests/test_rust_test_ownership.py": "b37e7574c94f62a8de33f77851b8d99a6084c76af9e91b8d8e8467e200a3fd32",
+    "tests/test_rust_test_ownership.py": "3d05c65b512cebc0dd37671612073ae6cf21b89281430a846920c10e758a7cd2",
     "tests/test_sprint_13_cross_adapter_parity.py": "a654425e2a7ac8fc0a48e3ed2d83fd6cd0ddc3d4111325cf916b7c533635bc50",
     "tests/test_sprint_13_evidence.py": "88d5725da16cd3e1a794920ebbc1deac93a2fdc03a25ea0a4ba232130158a3e2"
   },

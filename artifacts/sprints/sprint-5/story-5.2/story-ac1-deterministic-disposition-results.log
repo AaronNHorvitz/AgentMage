@@ -36,6 +36,12 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/runtime_approval_selection.rs (target/debug/deps/runtime_approval_selection-036a953c43db7a61)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
 $ python3 scripts/effect_class_taxonomy_evidence.py
 Task 5.2.1 effect, failure, and registration taxonomy evidence validated
 $ python3 scripts/retry_repair_policy_evidence.py
