@@ -371,7 +371,10 @@ pub enum RuntimeEventKind {
         /// Stable cancellation-tree identity.
         cancellation_id: CancellationId,
     },
-    /// Cancellation and owned-descendant cleanup were observed.
+    /// The run owner observed its own exact cancellation signal. Only a
+    /// `Cancelled` terminal establishes owned-descendant cleanup; when a
+    /// `Failed` or `Exhausted` terminal follows, its codes carry the failure
+    /// that decided the run, including any cleanup uncertainty.
     CancellationObserved {
         /// Stable cancellation-tree identity.
         cancellation_id: CancellationId,

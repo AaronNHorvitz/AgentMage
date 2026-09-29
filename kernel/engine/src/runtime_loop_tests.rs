@@ -6561,6 +6561,7 @@ mod run_phase_deadline_tests {
             ForeignCancel,
             CleanupUncertain,
             Dependency,
+            Exhausted,
             SpoofCancel,
             WrongStop,
             LateExpire,
@@ -6602,6 +6603,7 @@ mod run_phase_deadline_tests {
                     | Interruption::ForeignCancel
                     | Interruption::CleanupUncertain
                     | Interruption::Dependency
+                    | Interruption::Exhausted
                     | Interruption::WrongStop => {
                         self.inner
                             .clock
@@ -6627,6 +6629,10 @@ mod run_phase_deadline_tests {
                     Interruption::Dependency => {
                         assert!(observed.is_err());
                         Err(RuntimePortFailure::Unavailable.into())
+                    }
+                    Interruption::Exhausted => {
+                        assert!(observed.is_err());
+                        Err(RuntimePortFailure::ResourceExhausted.into())
                     }
                     Interruption::WrongStop => {
                         assert!(observed.is_err());
@@ -6812,18 +6818,30 @@ mod run_phase_deadline_tests {
         #[test]
         fn controlled_preparation_preserves_dependency_and_cleanup_failure_over_cancellation() {
             for stage in [Stage::Prepare, Stage::Binding, Stage::Dispatch] {
-                for interruption in [Interruption::CleanupUncertain, Interruption::Dependency] {
+                for (interruption, failure, state) in [
+                    (
+                        Interruption::CleanupUncertain,
+                        RuntimePortFailure::Uncertain,
+                        AgentStateKind::Failed,
+                    ),
+                    (
+                        Interruption::Dependency,
+                        RuntimePortFailure::Unavailable,
+                        AgentStateKind::Failed,
+                    ),
+                    (
+                        Interruption::Exhausted,
+                        RuntimePortFailure::ResourceExhausted,
+                        AgentStateKind::Exhausted,
+                    ),
+                ] {
                     let (mut coordinator, effects) = fixture(stage, interruption);
                     let cancellation = Arc::clone(&coordinator.clock.cancellation);
                     coordinator
                         .run_until_boundary(None, Some(cancellation.as_ref()))
                         .unwrap();
-                    assert_eq!(coordinator.outcome().unwrap().state, AgentStateKind::Failed);
-                    let code = if matches!(interruption, Interruption::CleanupUncertain) {
-                        RuntimePortFailure::Uncertain.code()
-                    } else {
-                        RuntimePortFailure::Unavailable.code()
-                    };
+                    assert_eq!(coordinator.outcome().unwrap().state, state);
+                    let code = failure.code();
                     assert!(
                         coordinator
                             .outcome()
@@ -6833,7 +6851,7 @@ mod run_phase_deadline_tests {
                             .any(|item| item == code)
                     );
                     let signal = coordinator.clock.cancellation.signal.clone();
-                    assert_displaced_cancellation_journaled(&coordinator, &signal);
+                    assert_displaced_cancellation_journaled(&coordinator, &signal, state);
                     assert_eq!(coordinator.model.inner.inner.calls, 0);
                     assert_eq!(effects.load(Ordering::SeqCst), 0);
                     assert_valid_terminal_stream(&coordinator);
@@ -6846,6 +6864,7 @@ mod run_phase_deadline_tests {
         fn assert_displaced_cancellation_journaled(
             coordinator: &ControlledCoordinator,
             signal: &CancellationSignal,
+            terminal: AgentStateKind,
         ) {
             let events = coordinator.events();
             let requested = events
@@ -6864,10 +6883,7 @@ mod run_phase_deadline_tests {
                     if cancellation_id == &signal.cancellation_id));
             assert!(matches!(
                 events[requested + 2].kind,
-                RuntimeEventKind::RunTerminal {
-                    state: AgentStateKind::Failed,
-                    ..
-                }
+                RuntimeEventKind::RunTerminal { state, .. } if state == terminal
             ));
             assert_eq!(requested + 3, events.len());
             for event in &events[requested..requested + 2] {
@@ -6909,7 +6925,11 @@ mod run_phase_deadline_tests {
                         // The port's wrong label is refused; the coordinator's own
                         // observed signal is still recorded, not acknowledged.
                         let signal = coordinator.clock.cancellation.signal.clone();
-                        assert_displaced_cancellation_journaled(&coordinator, &signal);
+                        assert_displaced_cancellation_journaled(
+                            &coordinator,
+                            &signal,
+                            AgentStateKind::Failed,
+                        );
                     } else {
                         assert!(!coordinator.events().iter().any(|event| matches!(
                             event.kind,

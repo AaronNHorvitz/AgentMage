@@ -260,6 +260,9 @@ pub struct LocalModelController<R: LocalModelRuntime, C: ModelFamilyCodec> {
     codec: C,
     admitted: AdmittedModelProfile,
     loaded: bool,
+    // The runtime returned a load receipt that failed validation and no validated
+    // unload receipt has followed; only `unload` may act on the unvalidated tuple.
+    cleanup_pending: bool,
     controlled_load_attempted: bool,
     controlled_preparation_failed: bool,
     served_capabilities: Option<ModelServingCapabilities>,
@@ -436,6 +439,7 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             codec,
             admitted,
             loaded: false,
+            cleanup_pending: false,
             controlled_load_attempted: false,
             controlled_preparation_failed: false,
             served_capabilities: None,
@@ -488,6 +492,9 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         control: Option<&dyn ModelOperationControl>,
     ) -> Result<ModelLoadReceipt, ModelRuntimeGateError> {
         check_model_operation(control)?;
+        if self.cleanup_pending {
+            return Err(ModelRuntimeGateError::CleanupUncertain);
+        }
         if self.loaded {
             return Err(ModelRuntimeGateError::AlreadyLoaded);
         }
@@ -508,6 +515,10 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         let validation = validate_load_receipt(&self.admitted.profile, &receipt)
             .and_then(|()| check_model_operation(control));
         if let Err(error) = validation {
+            // The runtime may hold the tuple now. A controlled call unloads it at
+            // once; a legacy call keeps its error category, and either way a
+            // cleanup that is not proved stays pending so `unload` can retry.
+            self.cleanup_pending = true;
             if control.is_some() {
                 self.cleanup_failed_preparation()?;
             }
@@ -573,6 +584,7 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             return Err(ModelRuntimeGateError::CleanupUncertain);
         }
         self.loaded = false;
+        self.cleanup_pending = false;
         self.served_capabilities = None;
         Ok(())
     }
@@ -1157,8 +1169,10 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
     }
 
     /// Unloads exactly the selected tuple and leaves no alternate selected profile.
+    ///
+    /// This also retries cleanup of a tuple whose load receipt failed validation.
     pub fn unload(&mut self) -> Result<ModelUnloadReceipt, ModelRuntimeGateError> {
-        if !self.loaded {
+        if !self.loaded && !self.cleanup_pending {
             return Err(ModelRuntimeGateError::NotLoaded);
         }
         let receipt = self
@@ -1172,6 +1186,7 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             return Err(ModelRuntimeGateError::ResultMismatch);
         }
         self.loaded = false;
+        self.cleanup_pending = false;
         self.served_capabilities = None;
         Ok(receipt)
     }
@@ -2940,6 +2955,22 @@ mod tests {
             )
             .expect("controller");
             assert_eq!(controller.load(), Err(expected));
+            if isolation_drift {
+                // A rejected receipt keeps its legacy category; the tuple the
+                // runtime holds stays pending until a validated unload receipt.
+                assert!(controller.runtime.loaded.is_some());
+                assert_eq!(
+                    controller.load(),
+                    Err(ModelRuntimeGateError::CleanupUncertain)
+                );
+                assert_eq!(controller.health(), Err(ModelRuntimeGateError::NotLoaded));
+                assert!(controller.unload().unwrap().empty);
+                assert!(controller.runtime.loaded.is_none());
+                assert_eq!(controller.unload(), Err(ModelRuntimeGateError::NotLoaded));
+                assert_eq!(controller.load(), Err(expected));
+            } else {
+                assert_eq!(controller.unload(), Err(ModelRuntimeGateError::NotLoaded));
+            }
         }
 
         let admitted = catalog
@@ -3386,6 +3417,15 @@ mod tests {
                 Err(ModelRuntimeGateError::PreparationAlreadyAttempted)
             );
             assert_eq!(controller.runtime.inner.load_generation, 1);
+            // The unvalidated tuple is never usable, but its owner can retry cleanup.
+            assert_eq!(controller.health(), Err(ModelRuntimeGateError::NotLoaded));
+            controller.runtime.cleanup_fails = false;
+            let receipt = controller.unload().unwrap();
+            assert!(receipt.empty);
+            assert!(controller.runtime.inner.loaded.is_none());
+            assert_eq!(controller.runtime.unloads.get(), 2);
+            assert_eq!(controller.unload(), Err(ModelRuntimeGateError::NotLoaded));
+            assert_eq!(controller.runtime.unloads.get(), 2);
         }
 
         #[test]

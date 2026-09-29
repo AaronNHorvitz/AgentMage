@@ -120,6 +120,70 @@ class RustTestOwnershipTests(unittest.TestCase):
                 with self.assertRaises(AmbiguousReference):
                     test_only_files({SRC / "lib.rs": "pub mod engine;\n", SRC / "engine.rs": engine})
 
+    def test_forms_that_can_select_a_production_file_are_ambiguous(self) -> None:
+        test_reference = EXTERNAL.format(name="shared.rs")
+        for engine in (
+            # A cfg_attr path selects the file for non-test builds.
+            '#[cfg_attr(not(test), path = "shared.rs")]\nmod real;\n' + test_reference,
+            '#[cfg_attr(\n    not(test),\n    path = "shared.rs"\n)]\nmod real;\n' + test_reference,
+            '#![cfg_attr(feature = "x", path = "shared.rs")]\n' + test_reference,
+            # A macro body can declare a file module from a fragment or a literal name.
+            "macro_rules! declare {\n    ($name:ident) => {\n        mod $name;\n    };\n}\n"
+            "declare!(shared);\n" + test_reference,
+            "macro_rules! declare {\n    () => { mod shared; };\n}\ndeclare!();\n" + test_reference,
+        ):
+            with self.subTest(engine=engine):
+                with self.assertRaises(AmbiguousReference):
+                    owned({"lib.rs": "pub mod engine;\n", "engine.rs": engine, "shared.rs": "fn muse() {}\n"})
+
+    def test_raw_identifier_declarations_are_production_references(self) -> None:
+        files = {
+            "lib.rs": "mod r#gen;\n" + EXTERNAL.format(name="gen.rs"),
+            "gen.rs": "fn muse() {}\n",
+        }
+        self.assertEqual(owned(files), set())
+        files["lib.rs"] = "#[cfg(test)]\nmod r#gen;\n"
+        self.assertEqual(owned(files), {"gen.rs"})
+
+    def test_children_of_path_loaded_and_included_files_resolve_beside_them(self) -> None:
+        # The compiler resolves `mod q;` in a `#[path]`-loaded or included file
+        # next to that file, so `q.rs` is production and never exempted.
+        for loader in ('#[path = "p.rs"]\nmod p;\n', 'include!("p.rs");\n'):
+            for owner in ("lib.rs", "engine.rs"):
+                with self.subTest(loader=loader, owner=owner):
+                    files = {
+                        "p.rs": "mod q;\n",
+                        "q.rs": "fn muse() {}\n",
+                        "engine/q.rs": "fn unrelated() {}\n",
+                        "p/q.rs": "fn unrelated() {}\n",
+                    }
+                    if owner == "lib.rs":
+                        files["lib.rs"] = loader + EXTERNAL.format(name="q.rs")
+                    else:
+                        files["lib.rs"] = "pub mod engine;\n"
+                        files["engine.rs"] = loader + EXTERNAL.format(name="q.rs")
+                    self.assertEqual(owned(files), set())
+        # A default-loaded non-mod-rs file keeps its child directory.
+        files = {
+            "lib.rs": "pub mod p;\n" + EXTERNAL.format(name="q.rs"),
+            "p.rs": "mod q;\n",
+            "p/q.rs": "fn production() {}\n",
+            "q.rs": "fn test_only() {}\n",
+        }
+        self.assertEqual(owned(files), {"q.rs"})
+
+    def test_a_file_whose_children_depend_on_its_loader_is_ambiguous(self) -> None:
+        files = {
+            "lib.rs": 'pub mod p;\n#[path = "p.rs"]\nmod p_again;\n',
+            "p.rs": "mod q;\n",
+            "q.rs": "fn muse() {}\n",
+            "p/q.rs": "fn muse() {}\n",
+        }
+        with self.assertRaises(AmbiguousReference):
+            owned(files)
+        files["p.rs"] = "fn no_children() {}\n"
+        self.assertEqual(owned(files), set())
+
     def test_ambiguity_anywhere_disables_every_whole_file_exemption(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             src = Path(directory)

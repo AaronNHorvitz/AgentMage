@@ -503,8 +503,20 @@
     "release"
   ],
   "claims": {
-    "task_rows_closed": 0,
+    "task_rows_closed": [
+      {
+        "row": "AMR-04.3",
+        "closed_by_commit": "a8e842f99c4189164635854296566175eec2d79d",
+        "scope": "component row only: the Decision 0108 host recoverability declaration; no runtime path or CLI uses it, and independent review, native workflow and release remain open"
+      }
+    ],
     "recoverability_used_by_runtime_or_cli": false,
-    "release_claim": "none"
+    "release_claim": "none",
+    "record_correction": {
+      "date": "2026-09-29",
+      "decision": "docs/decisions/0109-review-fixes-for-component-batches.md",
+      "reason": "independent review finding R2: this record stated that no task row closes while the ledger cited it as closure evidence",
+      "later_source_correction": "identities, created-file paths and the rendered length were bounded under Decision 0109 after independent review finding R8"
+    }
   }
 }

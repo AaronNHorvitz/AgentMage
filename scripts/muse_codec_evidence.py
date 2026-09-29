@@ -11,7 +11,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Callable, Final
 
 
 ROOT: Final = Path(__file__).resolve().parents[1]
@@ -211,7 +211,21 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
     }
 
 
-def validate_report(report: dict[str, Any]) -> list[str]:
+def git_file(revision: str, path: str) -> bytes:
+    process = subprocess.run(
+        ("git", "show", f"{revision}:{path}"), cwd=ROOT, check=True, capture_output=True, timeout=10
+    )
+    return process.stdout
+
+
+def validate_report(
+    report: dict[str, Any],
+    *,
+    verify_current: bool = True,
+    read_revision: Callable[[str, str], bytes] = git_file,
+) -> list[str]:
+    """Validate a codec report; `verify_current` also requires the exact current
+    scan set and every digest to equal the file at the report's revision."""
     failures: list[str] = []
     if set(report) != {
         "schema_version", "record_type", "source_revision", "source_sha256", "commands",
@@ -231,6 +245,18 @@ def validate_report(report: dict[str, Any]) -> list[str]:
         or any(not re.fullmatch(r"[0-9a-f]{64}", str(value)) for value in sources.values())
     ):
         failures.append("codec source closure changed")
+    if verify_current:
+        if set(sources) != set(SOURCE_PATHS) | set(family_scan_paths()):
+            failures.append("codec source set differs from the current scan set")
+        revision = str(report.get("source_revision", ""))
+        for path, digest in sorted(sources.items()):
+            try:
+                committed = read_revision(revision, path)
+            except (OSError, subprocess.SubprocessError):
+                failures.append(f"codec source is absent at its revision: {path}")
+                continue
+            if hashlib.sha256(committed).hexdigest() != digest:
+                failures.append(f"codec source differs from its revision: {path}")
     commands = report.get("commands", [])
     expected_commands = {identifier: list(command) for identifier, command in COMMANDS}
     if (

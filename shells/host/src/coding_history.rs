@@ -193,12 +193,7 @@ fn validate_record(record: &CodingChangeRecord) -> Result<(), CodingHistoryError
         || !valid_identifier(&record.task_id)
         || !valid_identifier(&record.producer_run_id)
         || !valid_identifier(&record.operation_id)
-        || record.path.is_empty()
-        || record.path.len() > 64
-        || record
-            .path
-            .iter()
-            .any(|part| part.is_empty() || part.len() > 255 || matches!(part.as_str(), "." | ".."))
+        || !valid_record_path(&record.path)
         || record.preimage.is_empty()
         || record.preimage.len() > 4 * 1024 * 1024
         || record.preimage_sha256 != sha256(record.preimage.as_bytes())
@@ -347,7 +342,17 @@ fn sha256(bytes: &[u8]) -> String {
     output
 }
 
-fn valid_identifier(value: &str) -> bool {
+/// Bounded canonical workspace-relative path components of a change record.
+pub(crate) fn valid_record_path(path: &[String]) -> bool {
+    !path.is_empty()
+        && path.len() <= 64
+        && path.iter().all(|part| {
+            !part.is_empty() && part.len() <= 255 && !matches!(part.as_str(), "." | "..")
+        })
+}
+
+/// Bounded single-line identity accepted in change records and derived reports.
+pub(crate) fn valid_identifier(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= 128
         && value.bytes().all(|byte| {

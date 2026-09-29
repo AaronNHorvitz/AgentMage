@@ -56,4 +56,10 @@ with pre-existing work was refused with exit 1, and both kept every byte and Git
 
 Not run: AMR-04.2, and actual-process preservation of human edits with hunk selection.
 The positive native coding workflow, any real model or GPU use, manual user acceptance
-and release were not run either. No task row or acceptance gate closes.
+and release were not run either.
+
+Correction (2026-09-29, [Decision 0109](../decisions/0109-review-fixes-for-component-batches.md)):
+this record first said that no task row closes. Commit `e24dce65` then closed the
+component row AMR-04.1 on this evidence, and that closure covers the kernel contract
+only. No acceptance gate closes. Independent review later found that the hunk display
+escaped only control characters (finding R1); Decision 0109 corrects the display.

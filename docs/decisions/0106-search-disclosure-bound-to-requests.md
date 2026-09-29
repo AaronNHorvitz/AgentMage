@@ -38,6 +38,13 @@ digests are unchanged. They record no endpoint, so the owner cannot bind their
 queries to requests. It refuses new reservations under them; a new schema 2 plan is
 required. No production composition has used schema 1 reservations.
 
+Residual, recorded under [Decision 0109](0109-review-fixes-for-component-batches.md):
+a request to another allowed domain is a visit whatever its query fields hold, so a
+site search listed as a destination could receive text that was never disclosed as a
+query. The secret detector, the domain list and per-packet approval in ask mode still
+apply. Before task-authorized issuance, the owner must refuse non-empty query fields
+on visits or require the plan to disclose them.
+
 This decision does not change the budget ceilings, the destination and DNS checks,
 the ask or task-authorized approval semantics, or any grant. It adds no provider,
 credential or network path.

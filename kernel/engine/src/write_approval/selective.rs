@@ -263,12 +263,16 @@ impl HunkedTextChange {
         }
     }
 
-    /// Builds the complete postimage from exactly the accepted hunks. Every
-    /// identity must belong to this change; unlisted hunks keep the preimage.
+    /// Builds the complete postimage from exactly the accepted hunks. `current`
+    /// must still equal the reviewed preimage, so a concurrent edit is refused
+    /// as drift before anything is selected. Every identity must belong to this
+    /// change; unlisted hunks keep the preimage.
     pub fn select(
         &self,
+        current: &[u8],
         accepted: &BTreeSet<String>,
     ) -> Result<SelectedTextChange, SelectiveChangeError> {
+        self.verify_current(current)?;
         if accepted
             .iter()
             .any(|id| !self.hunks.iter().any(|hunk| &hunk.hunk_id == id))
@@ -327,8 +331,9 @@ impl HunkedTextChange {
     }
 
     /// Bounded unified-style display with up to `context` unchanged lines around
-    /// each hunk. Control characters other than tab are escaped; a missing final
-    /// newline is marked. Output over the bound ends with a truncation marker.
+    /// each hunk. Characters are escaped as in the whole-file preview (see
+    /// `push_display_line`); a missing final newline is marked. Output over the
+    /// bound ends with a truncation marker.
     #[must_use]
     pub fn render(&self, context: usize) -> String {
         let mut output = String::new();
@@ -336,7 +341,9 @@ impl HunkedTextChange {
         for (index, hunk) in self.hunks.iter().enumerate() {
             let mut block = String::new();
             let before = hunk.old_start.saturating_sub(context).max(shown_until);
-            let after = (hunk.old_start + hunk.old_lines + context).min(self.preimage_lines.len());
+            let after = (hunk.old_start + hunk.old_lines)
+                .saturating_add(context)
+                .min(self.preimage_lines.len());
             let _ = writeln!(
                 block,
                 "@@ -{},{} +{},{} @@ hunk {}",
@@ -385,11 +392,25 @@ fn push_display_line(output: &mut String, marker: char, line: &str) {
         None => (line, false),
     };
     output.push(marker);
-    for character in content.chars() {
-        if character.is_control() && character != '\t' {
-            let _ = write!(output, "\\u{{{:x}}}", u32::from(character));
-        } else {
+    // Escape exactly as the whole-file preview's `{:?}` does, so this display is
+    // never weaker than it: control, format, line and paragraph separator,
+    // private-use, unassigned and non-ASCII space characters, a leading
+    // combining mark and backslash. Only tab and the ASCII quotes are shown as
+    // themselves; they cannot reorder, hide or break a displayed line.
+    let mut escaped = content.escape_debug();
+    while let Some(character) = escaped.next() {
+        if character != '\\' {
             output.push(character);
+            continue;
+        }
+        match escaped.next() {
+            Some(quote @ ('\'' | '"')) => output.push(quote),
+            Some('t') => output.push('\t'),
+            Some(other) => {
+                output.push('\\');
+                output.push(other);
+            }
+            None => output.push('\\'),
         }
     }
     output.push('\n');
@@ -562,14 +583,18 @@ mod tests {
         ] {
             let change = HunkedTextChange::new(preimage.as_bytes(), proposal.as_bytes()).unwrap();
             assert_eq!(preimage == proposal, change.hunks().is_empty());
-            let all = change.select(&all_ids(&change)).unwrap();
+            let all = change
+                .select(preimage.as_bytes(), &all_ids(&change))
+                .unwrap();
             assert_eq!(
                 all.postimage(),
                 proposal.as_bytes(),
                 "{preimage:?} -> {proposal:?}"
             );
             assert!(all.rejected_hunk_ids().is_empty());
-            let none = change.select(&BTreeSet::new()).unwrap();
+            let none = change
+                .select(preimage.as_bytes(), &BTreeSet::new())
+                .unwrap();
             assert_eq!(none.postimage(), preimage.as_bytes());
             assert!(none.is_unchanged());
             assert!(none.accepted_hunk_ids().is_empty());
@@ -588,7 +613,9 @@ mod tests {
         assert_eq!(change.hunks()[2].new_range(), (5, 1));
         let mut digests = BTreeSet::new();
         for mask in 0..8 {
-            let selected = change.select(&subset(&change, mask)).unwrap();
+            let selected = change
+                .select(preimage.as_bytes(), &subset(&change, mask))
+                .unwrap();
             let expected = [
                 if mask & 1 != 0 {
                     "fn a2() {}\n"
@@ -631,17 +658,17 @@ mod tests {
         assert_eq!(first.hunks()[0].old_range(), other.hunks()[0].old_range());
         assert_ne!(first.hunks()[0].hunk_id(), other.hunks()[0].hunk_id());
         assert_eq!(
-            first.select(&all_ids(&other)).err(),
+            first.select(preimage, &all_ids(&other)).err(),
             Some(SelectiveChangeError::UnknownHunk)
         );
         let forged = BTreeSet::from(["0".repeat(64)]);
         assert_eq!(
-            first.select(&forged).err(),
+            first.select(preimage, &forged).err(),
             Some(SelectiveChangeError::UnknownHunk)
         );
         assert_eq!(
-            first.select(&subset(&first, 1)).unwrap(),
-            first.select(&subset(&first, 1)).unwrap()
+            first.select(preimage, &subset(&first, 1)).unwrap(),
+            first.select(preimage, &subset(&first, 1)).unwrap()
         );
         assert!(!format!("{first:?}").contains("b\\n"));
     }
@@ -653,6 +680,20 @@ mod tests {
         assert_eq!(
             change.verify_current(b"a\nhuman edit\n"),
             Err(SelectiveChangeError::PreimageDrift)
+        );
+        // Selection itself refuses drift before any identity or postimage is used.
+        for accepted in [all_ids(&change), BTreeSet::from(["0".repeat(64)])] {
+            assert_eq!(
+                change.select(b"a\nhuman edit\n", &accepted).err(),
+                Some(SelectiveChangeError::PreimageDrift)
+            );
+        }
+        assert_eq!(
+            change
+                .select(b"a\n", &all_ids(&change))
+                .unwrap()
+                .postimage(),
+            b"b\n"
         );
         for (preimage, proposal) in [(&b"\xff\n"[..], &b"a\n"[..]), (b"a\n", b"a\0\n")] {
             assert_eq!(
@@ -728,6 +769,50 @@ mod tests {
     }
 
     #[test]
+    fn rendering_escapes_every_reordering_invisible_and_separator_character() {
+        let hostile = [
+            '\u{202e}', '\u{2066}', '\u{200b}', '\u{2028}', '\u{2029}', '\u{feff}', '\u{85}',
+            '\u{7f}', '\u{9b}', '\u{a0}', '\u{e000}', '\u{1b}', '\r',
+        ];
+        let line: String = hostile.iter().collect();
+        let proposal = format!("a\n{line}\n\u{301}lead e\u{301} \\u{{202e}} 'q' \"q\"\tend\n");
+        let change = HunkedTextChange::new(b"a\n", proposal.as_bytes()).unwrap();
+        let rendered = change.render(3);
+        for character in hostile {
+            assert!(!rendered.contains(character), "{:x}", u32::from(character));
+        }
+        assert!(rendered.contains("+\\u{202e}\\u{2066}\\u{200b}\\u{2028}\\u{2029}\\u{feff}"));
+        assert!(rendered.contains("\\u{85}\\u{7f}\\u{9b}\\u{a0}\\u{e000}\\u{1b}\\r\n"));
+        // A leading combining mark cannot merge with the marker; a later one is
+        // ordinary text. A literal backslash escape stays distinguishable, and
+        // tab and quotes are shown as themselves.
+        assert!(rendered.contains("+\\u{301}lead e\u{301} \\\\u{202e} 'q' \"q\"\tend\n"));
+        // Every displayed line starts with a marker, a header or the newline note.
+        assert!(
+            rendered
+                .lines()
+                .all(|line| line.starts_with(['@', ' ', '-', '+', '\\']))
+        );
+        // The whole-file preview's `{:?}` escapes at least as much as this display.
+        let preview = format!("{proposal:?}");
+        for character in hostile {
+            assert!(!preview.contains(character));
+        }
+    }
+
+    #[test]
+    fn rendering_accepts_any_context_value_without_overflow() {
+        let change = HunkedTextChange::new(b"1\n2\n3\n4\n", b"1\n2x\n3\n4\n").unwrap();
+        let unbounded = change.render(usize::MAX);
+        assert_eq!(unbounded, change.render(1 << 40));
+        let expected = format!(
+            "@@ -2,1 +2,1 @@ hunk {}\n 1\n-2\n+2x\n 3\n 4\n",
+            &change.hunks()[0].hunk_id()[..12]
+        );
+        assert_eq!(unbounded, expected);
+    }
+
+    #[test]
     fn randomized_pairs_round_trip_and_subsets_compose_their_ranges() {
         let mut state = 0x9e37_79b9_7f4a_7c15_u64;
         let mut next = move |bound: u64| {
@@ -757,15 +842,23 @@ mod tests {
             let (before, after) = (preimage.concat(), proposal.concat());
             let change = HunkedTextChange::new(before.as_bytes(), after.as_bytes()).unwrap();
             assert_eq!(
-                change.select(&all_ids(&change)).unwrap().postimage(),
+                change
+                    .select(before.as_bytes(), &all_ids(&change))
+                    .unwrap()
+                    .postimage(),
                 after.as_bytes()
             );
             assert_eq!(
-                change.select(&BTreeSet::new()).unwrap().postimage(),
+                change
+                    .select(before.as_bytes(), &BTreeSet::new())
+                    .unwrap()
+                    .postimage(),
                 before.as_bytes()
             );
             let mask = next(1 << change.hunks().len().min(16)) as u32;
-            let selected = change.select(&subset(&change, mask)).unwrap();
+            let selected = change
+                .select(before.as_bytes(), &subset(&change, mask))
+                .unwrap();
             let mut expected = Vec::new();
             let mut cursor = 0;
             for (index, hunk) in change.hunks().iter().enumerate() {

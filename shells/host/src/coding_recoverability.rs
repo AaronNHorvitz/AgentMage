@@ -12,12 +12,20 @@ use std::fmt::Write as _;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
-use crate::coding_history::{RetainedCodingChange, verify_retained_change};
+use crate::coding_history::{
+    RetainedCodingChange, valid_identifier, valid_record_path, verify_retained_change,
+};
 
 /// Largest number of effects assessed in one report.
 pub const MAX_RECOVERABILITY_EFFECTS: usize = 512;
+/// Largest rendered declaration; longer text ends with an explicit truncation line.
+pub const MAX_RECOVERABILITY_RENDER_BYTES: usize = 64 * 1024;
 
 /// One session effect supplied by the trusted runtime from its own receipts.
+///
+/// The seal on a write record is an unkeyed digest: it proves the record is
+/// internally consistent, not who produced it. The caller builds this list from
+/// the canonical artifact store and receipts it owns, never from client input.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SessionEffect {
     /// A retained structured write with its exact preimage.
@@ -107,7 +115,7 @@ pub enum RecoverabilityError {
     ForeignOrInvalid,
     /// An operation identity appears more than once.
     Duplicate,
-    /// Too many effects or an empty identity.
+    /// Too many effects, or an identity or path outside the record rules.
     Invalid,
 }
 
@@ -119,13 +127,23 @@ pub fn assess_recoverability(
     effects: &[SessionEffect],
     current_sha256: &dyn Fn(&[String]) -> Option<String>,
 ) -> Result<RecoverabilityReport, RecoverabilityError> {
-    if effects.len() > MAX_RECOVERABILITY_EFFECTS || session_id.is_empty() || task_id.is_empty() {
+    if effects.len() > MAX_RECOVERABILITY_EFFECTS
+        || !valid_identifier(session_id)
+        || !valid_identifier(task_id)
+    {
         return Err(RecoverabilityError::Invalid);
     }
     let mut seen = BTreeSet::new();
     let mut chains: BTreeMap<&[String], Vec<usize>> = BTreeMap::new();
     for (index, effect) in effects.iter().enumerate() {
-        if effect.operation_id().is_empty() {
+        // The same bounded single-line rule as change records, so no identity
+        // can add lines to or grow the rendered declaration.
+        if !valid_identifier(effect.operation_id()) {
+            return Err(RecoverabilityError::Invalid);
+        }
+        if let SessionEffect::Create { path, .. } = effect
+            && !valid_record_path(path)
+        {
             return Err(RecoverabilityError::Invalid);
         }
         if !seen.insert(effect.operation_id()) {
@@ -249,7 +267,9 @@ pub fn assess_recoverability(
 #[must_use]
 pub fn render_recoverability(report: &RecoverabilityReport) -> String {
     let mut output = String::new();
-    let summary = if report.fully_recoverable {
+    let summary = if report.assessments.is_empty() {
+        "no session effects were recorded; nothing needs restoring or reconciling"
+    } else if report.fully_recoverable {
         "every session change can be restored by fresh approved inverse writes, newest first"
     } else if report.requires_reconciliation {
         "some effects are external or uncertain and need your reconciliation; no reset reverses them"
@@ -257,7 +277,7 @@ pub fn render_recoverability(report: &RecoverabilityReport) -> String {
         "some changes cannot be restored by an inverse write"
     };
     let _ = writeln!(output, "recoverability: {summary}");
-    for assessment in &report.assessments {
+    for (index, assessment) in report.assessments.iter().enumerate() {
         let class = match assessment.recoverability {
             Recoverability::Recoverable => "recoverable by fresh inverse write",
             Recoverability::AlreadyReverted => "preimage already present",
@@ -267,11 +287,20 @@ pub fn render_recoverability(report: &RecoverabilityReport) -> String {
             Recoverability::NotRecoverable => "not recoverable by an admitted operation",
             Recoverability::ExternalOrUncertain => "external or uncertain: reconcile manually",
         };
-        let _ = writeln!(
-            output,
-            "- {} {} ({})",
+        let line = format!(
+            "- {} {} ({})\n",
             assessment.operation_id, class, assessment.reason_code
         );
+        if output.len() + line.len() > MAX_RECOVERABILITY_RENDER_BYTES {
+            let _ = writeln!(
+                output,
+                "... declaration truncated; {} of {} effects not shown",
+                report.assessments.len() - index,
+                report.assessments.len()
+            );
+            break;
+        }
+        output.push_str(&line);
     }
     output
 }
@@ -545,5 +574,79 @@ mod tests {
         );
         let empty = assess(&[], &files(&[])).unwrap();
         assert!(empty.fully_recoverable && !empty.requires_reconciliation);
+    }
+
+    #[test]
+    fn identities_and_paths_follow_record_rules_and_rendering_is_bounded() {
+        let forged = "c1\nrecoverability: every session change can be restored";
+        for operation_id in [forged.to_owned(), "x".repeat(129), "has space".to_owned()] {
+            for effect in [
+                SessionEffect::Command {
+                    operation_id: operation_id.clone(),
+                },
+                SessionEffect::Uncertain {
+                    operation_id: operation_id.clone(),
+                },
+                SessionEffect::Create {
+                    operation_id: operation_id.clone(),
+                    path: vec!["src".to_owned(), "new.py".to_owned()],
+                },
+            ] {
+                assert_eq!(
+                    assess(&[effect], &files(&[])).err(),
+                    Some(RecoverabilityError::Invalid)
+                );
+            }
+        }
+        for identity in [forged, "", "s p a c e"] {
+            assert_eq!(
+                assess_recoverability(identity, TASK, &[], &|_| None).err(),
+                Some(RecoverabilityError::Invalid)
+            );
+            assert_eq!(
+                assess_recoverability(SESSION, identity, &[], &|_| None).err(),
+                Some(RecoverabilityError::Invalid)
+            );
+        }
+        for path in [
+            Vec::new(),
+            vec!["src".to_owned(), "..".to_owned()],
+            vec![String::new()],
+            vec!["x".repeat(256)],
+            vec!["p".to_owned(); 65],
+        ] {
+            assert_eq!(
+                assess(
+                    &[SessionEffect::Create {
+                        operation_id: "c1".to_owned(),
+                        path,
+                    }],
+                    &files(&[])
+                )
+                .err(),
+                Some(RecoverabilityError::Invalid)
+            );
+        }
+        // No effects: a distinct summary, not a claim that changes can be restored.
+        let text = render_recoverability(&assess(&[], &files(&[])).unwrap());
+        assert!(text.contains("no session effects were recorded"));
+        assert!(!text.contains("can be restored"));
+        // The longest admitted identities at the effect bound stay within the render bound.
+        let many: Vec<_> = (0..MAX_RECOVERABILITY_EFFECTS)
+            .map(|index| SessionEffect::Uncertain {
+                operation_id: format!("{index:0>128}"),
+            })
+            .collect();
+        let text = render_recoverability(&assess(&many, &files(&[])).unwrap());
+        assert!(
+            text.len() <= MAX_RECOVERABILITY_RENDER_BYTES + 96,
+            "{}",
+            text.len()
+        );
+        assert!(text.ends_with(" effects not shown\n"));
+        assert_eq!(
+            text.lines().count() - 2,
+            text.matches("reconcile manually").count()
+        );
     }
 }

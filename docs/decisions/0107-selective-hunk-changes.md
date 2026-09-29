@@ -37,8 +37,12 @@ are refused. Accepting every hunk reproduces the proposal exactly, and accepting
 reproduces the preimage. Current bytes that differ from the reviewed preimage are
 refused as drift, so the caller must build a fresh preview rather than overwrite a
 concurrent edit. Non-UTF-8, NUL-containing, oversized or overly complex input keeps
-whole-file review. A bounded display escapes control characters other than tab and
-marks a missing final newline.
+whole-file review. A bounded display marks a missing final newline. As amended by
+[Decision 0109](0109-review-fixes-for-component-batches.md), it escapes exactly what
+the whole-file preview escapes, except tab and the ASCII quotes: control, format,
+line and paragraph separator, private-use, unassigned and non-ASCII space characters,
+a leading combining mark, and backslash. Selection takes the current bytes and
+refuses drift itself.
 
 Selection grants nothing. The selected postimage must pass the existing exact write
 preview, syntax, approval and grant checks, and project validation still runs.

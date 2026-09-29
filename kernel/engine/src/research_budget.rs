@@ -193,6 +193,10 @@ impl ResearchScope {
         if restored.policy_sha256 != wire.policy_sha256 {
             return Err(ResearchBudgetError::Binding);
         }
+        // Exactly one byte sequence restores each scope.
+        if restored.snapshot()? != bytes {
+            return Err(ResearchBudgetError::Invalid);
+        }
         Ok(restored)
     }
 

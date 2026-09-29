@@ -624,8 +624,20 @@
     "release"
   ],
   "claims": {
-    "task_rows_closed": 0,
+    "task_rows_closed": [
+      {
+        "row": "AMR-04.1",
+        "closed_by_commit": "e24dce65fac06ed19f7f8afa1b59f871177410bf",
+        "scope": "component row only: the Decision 0107 kernel selective-change contract; no preview, CLI, host or native process uses it, and independent review, native workflow and release remain open"
+      }
+    ],
     "selective_change_used_by_preview_or_cli": false,
-    "release_claim": "none"
+    "release_claim": "none",
+    "record_correction": {
+      "date": "2026-09-29",
+      "decision": "docs/decisions/0109-review-fixes-for-component-batches.md",
+      "reason": "independent review finding R2: this record stated that no task row closes while the ledger cited it as closure evidence",
+      "later_source_correction": "the hunk display escaped only control characters; Decision 0109 corrected it to the whole-file preview escape set after independent review finding R1"
+    }
   }
 }

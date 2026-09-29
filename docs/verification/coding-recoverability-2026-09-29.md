@@ -45,3 +45,9 @@ pre-existing work was refused with exit 1, and both kept every byte and Git stat
 Not run: building the effect list from actual session receipts, a CLI view of the
 report, any actual-process rollback, the positive native coding workflow, real models,
 manual user acceptance and release. Independent review remains open.
+
+Correction (2026-09-29, [Decision 0109](../decisions/0109-review-fixes-for-component-batches.md)):
+the retained JSON first said that no task row closes. Commit `a8e842f9`, which added
+this record, also closed the component row AMR-04.3 on it. That closure covers the host
+declaration only, and no acceptance gate closes. Independent review finding R8 later
+bounded its identities, created-file paths and rendered length under Decision 0109.

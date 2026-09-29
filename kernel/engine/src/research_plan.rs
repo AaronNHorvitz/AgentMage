@@ -85,11 +85,19 @@ pub enum ResearchPlanError {
 
 impl PreparedResearchPlan {
     /// Parses only a bounded closed draft, never a persisted approval or budget.
+    ///
+    /// The bytes must be the draft's canonical encoding, so exactly one byte
+    /// sequence decodes to each plan and its digest covers the input itself.
     pub fn decode(bytes: &[u8]) -> Result<Self, ResearchPlanError> {
         if bytes.is_empty() || bytes.len() > MAX_PLAN_BYTES {
             return Err(ResearchPlanError::Invalid);
         }
-        Self::prepare(serde_json::from_slice(bytes).map_err(|_| ResearchPlanError::Invalid)?)
+        let draft: ResearchPlanDraft =
+            serde_json::from_slice(bytes).map_err(|_| ResearchPlanError::Invalid)?;
+        if serde_json::to_vec(&draft).map_err(|_| ResearchPlanError::Invalid)? != bytes {
+            return Err(ResearchPlanError::Invalid);
+        }
+        Self::prepare(draft)
     }
 
     /// Validates a complete draft before presenting it for independent approval.
@@ -410,6 +418,75 @@ mod tests {
             changed.scope().policy_sha256()
         );
     }
+    /// Fixed schema 1 bytes and digests; the engine at `6a4359d2`, before
+    /// schema 2 existed, produced the same plan, policy and snapshot values.
+    const SCHEMA_ONE_PLAN: &str = r#"{"schema_version":1,"task_id":"research-task","depth":"quick","network_mode":"ask","limits":{"queries":1,"visits":5,"domains":8,"downloaded_bytes":1048576,"redirects":3,"elapsed_ms":60000,"provider_charge_microunits":0},"destination_domains":["docs.example.com","search.example.com"],"queries":[{"request_id":"query-0","query":"public package version 0","domains":["docs.example.com"],"recency_days":30,"source_types":["primary_documentation"],"max_results":5,"max_total_bytes":65536}]}"#;
+    const SCHEMA_ONE_PLAN_SHA256: &str =
+        "fe9fe9fd96f9aa06c247e6fcc6ecd48ccb86d80f9c39f66877a546ff45ab3ff9";
+    const SCHEMA_ONE_POLICY_SHA256: &str =
+        "6b28c0389aed299e560db5805013dfa804630d15d6b720cbdb6b755fc89c7cb9";
+    const SCHEMA_ONE_SCOPE: &str = r#"{"schema_version":1,"task_id":"research-task","depth":"quick","network":"ask","limits":{"queries":1,"visits":5,"domains":8,"downloaded_bytes":1048576,"redirects":3,"elapsed_ms":60000,"provider_charge_microunits":0},"domains":["docs.example.com","search.example.com"],"query_sha256":["5cb8f40a87b59bf03547d47ed9e815e8f2b851dbe640dfa83af9d012c3c511ee"],"policy_sha256":"6b28c0389aed299e560db5805013dfa804630d15d6b720cbdb6b755fc89c7cb9"}"#;
+
+    #[test]
+    fn committed_schema_one_bytes_keep_their_digests_and_scope() {
+        let plan = PreparedResearchPlan::decode(SCHEMA_ONE_PLAN.as_bytes()).unwrap();
+        assert_eq!(plan.plan_sha256(), SCHEMA_ONE_PLAN_SHA256);
+        let literal_sha256: String = Sha256::digest(SCHEMA_ONE_PLAN.as_bytes())
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect();
+        assert_eq!(literal_sha256, SCHEMA_ONE_PLAN_SHA256);
+        assert_eq!(plan.scope().policy_sha256(), SCHEMA_ONE_POLICY_SHA256);
+        assert_eq!(
+            plan.scope().snapshot().unwrap(),
+            SCHEMA_ONE_SCOPE.as_bytes()
+        );
+        assert_eq!(
+            serde_json::to_vec(&legacy_draft(ResearchDepth::Quick)).unwrap(),
+            SCHEMA_ONE_PLAN.as_bytes()
+        );
+        let restored = ResearchScope::restore(SCHEMA_ONE_SCOPE.as_bytes()).unwrap();
+        assert_eq!(restored.policy_sha256(), SCHEMA_ONE_POLICY_SHA256);
+    }
+
+    #[test]
+    fn non_canonical_plan_and_scope_bytes_are_refused() {
+        let canonical = SCHEMA_ONE_PLAN.to_owned();
+        let tail = canonical.len() - 1;
+        for variant in [
+            // An explicit null endpoint re-encodes to the canonical bytes.
+            format!("{},\"search_endpoint\":null}}", &canonical[..tail]),
+            format!("{canonical} "),
+            canonical.replacen(':', ": ", 1),
+            canonical.replacen(
+                "\"schema_version\":1,\"task_id\":\"research-task\"",
+                "\"task_id\":\"research-task\",\"schema_version\":1",
+                1,
+            ),
+        ] {
+            assert_ne!(variant, canonical);
+            assert!(serde_json::from_str::<ResearchPlanDraft>(&variant).is_ok());
+            assert_eq!(
+                PreparedResearchPlan::decode(variant.as_bytes()).err(),
+                Some(ResearchPlanError::Invalid),
+                "{variant}"
+            );
+        }
+        let scope = SCHEMA_ONE_SCOPE.to_owned();
+        let tail = scope.len() - 1;
+        for variant in [
+            format!("{},\"search_endpoint\":null}}", &scope[..tail]),
+            format!(" {scope}"),
+            scope.replacen(':', ": ", 1),
+        ] {
+            assert_eq!(
+                ResearchScope::restore(variant.as_bytes()).err(),
+                Some(ResearchBudgetError::Invalid),
+                "{variant}"
+            );
+        }
+    }
+
     #[test]
     fn schema_one_plans_keep_their_exact_bytes_and_policy_preimage() {
         let legacy = legacy_draft(ResearchDepth::Deep);

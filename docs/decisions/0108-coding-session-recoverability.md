@@ -32,6 +32,13 @@ and need user reconciliation. Foreign, tampered or duplicate records are refused
 sealed report lists recoverable writes newest first. It says the session is fully
 recoverable only when every effect is recoverable or already reverted.
 
+As amended by [Decision 0109](0109-review-fixes-for-component-batches.md), every
+identity follows the change-record identifier rule, created-file paths follow the
+record path rule, and the rendered text is capped with a distinct empty-session
+summary. A record's seal is an unkeyed digest that proves consistency, not origin.
+The integration must build the effect list from the canonical artifact store and
+receipts it owns.
+
 The component grants and performs nothing. Restoration still uses the existing
 rollback tool with fresh authority and approval, one record at a time, in the reported
 order. User-facing text describes how each effect could be reversed, if at all, and
