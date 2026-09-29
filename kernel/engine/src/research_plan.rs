@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::public_research::{PublicSearchRequest, validate_public_search};
+use crate::research_fetch::PublicSearchEndpoint;
 
 const MAX_PLAN_BYTES: usize = 64 * 1024;
 
@@ -20,7 +21,8 @@ const MAX_PLAN_BYTES: usize = 64 * 1024;
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ResearchPlanDraft {
-    /// Only schema 1 is admitted.
+    /// Schema 2 plans bind searches to `search_endpoint`. Schema 1 plans remain
+    /// readable, but the owner refuses to reserve requests under them.
     pub schema_version: u16,
     /// The existing runtime task; never a new scheduler identity.
     pub task_id: String,
@@ -34,6 +36,9 @@ pub struct ResearchPlanDraft {
     pub destination_domains: BTreeSet<String>,
     /// All proposed disclosures must be inspected before any outbound execution.
     pub queries: Vec<PublicSearchRequest>,
+    /// Exact provider request shape that carries each disclosed query (schema 2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub search_endpoint: Option<PublicSearchEndpoint>,
 }
 
 impl fmt::Debug for ResearchPlanDraft {
@@ -44,6 +49,7 @@ impl fmt::Debug for ResearchPlanDraft {
             .field("network_mode", &self.network_mode)
             .field("query_count", &self.queries.len())
             .field("destination_count", &self.destination_domains.len())
+            .field("search_endpoint", &self.search_endpoint.is_some())
             .finish_non_exhaustive()
     }
 }
@@ -89,7 +95,7 @@ impl PreparedResearchPlan {
     /// Validates a complete draft before presenting it for independent approval.
     pub fn prepare(draft: ResearchPlanDraft) -> Result<Self, ResearchPlanError> {
         let ceiling = ResearchLimits::ceiling(draft.depth);
-        if draft.schema_version != 1
+        if draft.schema_version != 1 + u16::from(draft.search_endpoint.is_some())
             || draft.task_id.len() > 128
             || draft.queries.is_empty()
             || draft.queries.len() > usize::from(draft.limits.queries)
@@ -144,12 +150,14 @@ impl PreparedResearchPlan {
                 .map(|request| request.query.clone())
                 .collect::<Vec<_>>(),
         )
-        .map_err(|error| {
-            if error == ResearchBudgetError::Secret {
-                ResearchPlanError::Secret
-            } else {
-                ResearchPlanError::Invalid
-            }
+        .and_then(|scope| match &draft.search_endpoint {
+            Some(endpoint) => scope.with_search_endpoint(endpoint.clone()),
+            None => Ok(scope),
+        })
+        .map_err(|error| match error {
+            ResearchBudgetError::Secret => ResearchPlanError::Secret,
+            ResearchBudgetError::Destination => ResearchPlanError::Scope,
+            _ => ResearchPlanError::Invalid,
         })?;
         let encoded = serde_json::to_vec(&draft).map_err(|_| ResearchPlanError::Invalid)?;
         if encoded.len() > MAX_PLAN_BYTES {
@@ -223,10 +231,25 @@ mod tests {
             Some(ResearchPlanError::Invalid)
         );
     }
+    fn endpoint() -> PublicSearchEndpoint {
+        PublicSearchEndpoint {
+            domain: "search.example.com".into(),
+            path: "/search".into(),
+            query_field: "q".into(),
+            fixed_fields: vec![("format".into(), "json".into())],
+        }
+    }
+    fn legacy_draft(depth: ResearchDepth) -> ResearchPlanDraft {
+        ResearchPlanDraft {
+            schema_version: 1,
+            search_endpoint: None,
+            ..draft(depth)
+        }
+    }
     fn draft(depth: ResearchDepth) -> ResearchPlanDraft {
         let count = if depth == ResearchDepth::Quick { 1 } else { 3 };
         ResearchPlanDraft {
-            schema_version: 1,
+            schema_version: 2,
             task_id: "research-task".into(),
             depth,
             network_mode: ResearchNetworkMode::Ask,
@@ -246,6 +269,7 @@ mod tests {
                     max_total_bytes: 64 * 1024,
                 })
                 .collect(),
+            search_endpoint: Some(endpoint()),
         }
     }
     #[test]
@@ -266,7 +290,7 @@ mod tests {
         value["approve_all"] = true.into();
         assert!(serde_json::from_value::<ResearchPlanDraft>(value).is_err());
         let mut invalid = draft(ResearchDepth::Quick);
-        invalid.schema_version = 2;
+        invalid.schema_version = 3;
         assert_eq!(
             PreparedResearchPlan::prepare(invalid).err(),
             Some(ResearchPlanError::Invalid)
@@ -325,6 +349,107 @@ mod tests {
         assert_eq!(
             plan.scope().network_requirement(),
             Err(ResearchBudgetError::Offline)
+        );
+    }
+    #[test]
+    fn search_endpoint_is_exact_disclosed_and_required_by_schema_two() {
+        let plan = PreparedResearchPlan::prepare(draft(ResearchDepth::Quick)).unwrap();
+        assert!(!format!("{plan:?}").contains("/search"));
+        let mut missing = draft(ResearchDepth::Quick);
+        missing.search_endpoint = None;
+        let mut legacy_with_endpoint = draft(ResearchDepth::Quick);
+        legacy_with_endpoint.schema_version = 1;
+        for invalid in [missing, legacy_with_endpoint] {
+            assert_eq!(
+                PreparedResearchPlan::prepare(invalid).err(),
+                Some(ResearchPlanError::Invalid)
+            );
+        }
+        type Mutation = (fn(&mut PublicSearchEndpoint), ResearchPlanError);
+        let mutations: [Mutation; 7] = [
+            (
+                |value| value.domain = "undeclared.example.com".into(),
+                ResearchPlanError::Scope,
+            ),
+            (
+                |value| value.path = "search".into(),
+                ResearchPlanError::Invalid,
+            ),
+            (
+                |value| value.path = "/a/../search".into(),
+                ResearchPlanError::Invalid,
+            ),
+            (
+                |value| value.query_field = "format".into(),
+                ResearchPlanError::Invalid,
+            ),
+            (
+                |value| value.query_field = "q=x".into(),
+                ResearchPlanError::Invalid,
+            ),
+            (
+                |value| value.fixed_fields.insert(0, ("zz".into(), "1".into())),
+                ResearchPlanError::Invalid,
+            ),
+            (
+                |value| value.fixed_fields[0].1 = format!("Bearer {}", "x".repeat(32)),
+                ResearchPlanError::Secret,
+            ),
+        ];
+        for (mutate, expected) in mutations {
+            let mut changed = draft(ResearchDepth::Quick);
+            mutate(changed.search_endpoint.as_mut().unwrap());
+            assert_eq!(PreparedResearchPlan::prepare(changed).err(), Some(expected));
+        }
+        let mut changed = draft(ResearchDepth::Quick);
+        changed.search_endpoint.as_mut().unwrap().fixed_fields[0].1 = "html".into();
+        let changed = PreparedResearchPlan::prepare(changed).unwrap();
+        assert_ne!(plan.plan_sha256(), changed.plan_sha256());
+        assert_ne!(
+            plan.scope().policy_sha256(),
+            changed.scope().policy_sha256()
+        );
+    }
+    #[test]
+    fn schema_one_plans_keep_their_exact_bytes_and_policy_preimage() {
+        let legacy = legacy_draft(ResearchDepth::Deep);
+        let bytes = serde_json::to_vec(&legacy).unwrap();
+        assert!(
+            !String::from_utf8(bytes.clone())
+                .unwrap()
+                .contains("search_endpoint")
+        );
+        let plan = PreparedResearchPlan::decode(&bytes).unwrap();
+        let snapshot = plan.scope().snapshot().unwrap();
+        let wire: serde_json::Value = serde_json::from_slice(&snapshot).unwrap();
+        assert_eq!(wire["schema_version"], 1);
+        assert!(wire.get("search_endpoint").is_none());
+        let queries = legacy
+            .queries
+            .iter()
+            .map(|request| crate::research_budget::public_query_sha256(&request.query).unwrap())
+            .collect::<BTreeSet<_>>();
+        let preimage = serde_json::to_vec(&(
+            1u16,
+            &legacy.task_id,
+            legacy.depth,
+            legacy.network_mode,
+            &legacy.limits,
+            &legacy.destination_domains,
+            &queries,
+        ))
+        .unwrap();
+        let expected: String = Sha256::digest(&preimage)
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect();
+        assert_eq!(plan.scope().policy_sha256(), expected);
+        assert_ne!(
+            plan.scope().policy_sha256(),
+            PreparedResearchPlan::prepare(draft(ResearchDepth::Deep))
+                .unwrap()
+                .scope()
+                .policy_sha256()
         );
     }
 }

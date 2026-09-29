@@ -13,7 +13,7 @@ use sha2::{Digest, Sha256};
 
 use crate::operational_store::OperationalStore;
 use crate::research_budget::{
-    ResearchBudget, ResearchBudgetError, ResearchBudgetProgress, ResearchOperation, ResearchScope,
+    ResearchBudget, ResearchBudgetError, ResearchBudgetProgress, ResearchScope,
 };
 use crate::research_fetch::{PreparedPublicGet, PublicGetWorkerPacket};
 use crate::research_plan::PreparedResearchPlan;
@@ -405,14 +405,13 @@ pub(crate) fn open_budget<S: RuntimeArtifactPayloadStore>(
     load(store, &context.task_id).map(|_| ())
 }
 
-/// Trusted tool composition determines query versus visit from its registered
-/// provider/tool mapping, never from a model-supplied accounting label.
+/// Derives query versus visit from the prepared target and the plan's exact
+/// disclosed search endpoint (Decision 0106), never from a caller label.
 pub(crate) fn reserve<S: RuntimeArtifactPayloadStore>(
     store: &mut OperationalStore,
     payloads: &S,
     context: &ResearchBudgetContext,
     prepared: &PreparedPublicGet,
-    purpose: ResearchOperation<'_>,
     now_epoch_ms: u64,
 ) -> Result<DurableResearchReservation, ResearchJournalError> {
     let mut retained = load(store, &context.task_id)?;
@@ -424,13 +423,21 @@ pub(crate) fn reserve<S: RuntimeArtifactPayloadStore>(
         return Err(ResearchJournalError::JournalExhausted);
     }
     let before = encode(&retained.budget, 8192)?;
-    let result = retained.budget.reserve(
-        &retained.scope,
-        &packet.request().operation_id,
-        purpose,
-        packet.request().maximum_response_bytes,
-        now_epoch_ms,
-    );
+    let result = match retained.scope.classify(&packet.request().target) {
+        Ok(operation) => retained.budget.reserve(
+            &retained.scope,
+            &packet.request().operation_id,
+            operation,
+            packet.request().maximum_response_bytes,
+            now_epoch_ms,
+        ),
+        // A refused shape spends nothing, but cancellation, offline mode and an
+        // observed expiry or rollback keep their priority and are still retained.
+        Err(error) => retained
+            .budget
+            .observe_clock(&retained.scope, now_epoch_ms)
+            .and(Err(error)),
+    };
     if let Err(error) = result {
         if encode(&retained.budget, 8192)? != before {
             append(store, &retained, RevisionKind::Restricted, "", "")?;

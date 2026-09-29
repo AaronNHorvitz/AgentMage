@@ -84,7 +84,6 @@ fn research_start_observer_sees_exact_durable_start_once_before_driver() {
                 &f.payloads,
                 &f.context,
                 &f.prepared,
-                ResearchOperation::Visit,
                 105
             )
             .is_err()
@@ -165,7 +164,6 @@ fn research_start_observer_failure_retains_consumption_and_reconciles_without_re
                 &f.payloads,
                 &f.context,
                 &f.prepared,
-                ResearchOperation::Visit,
                 105
             )
             .is_err()
@@ -199,7 +197,6 @@ fn research_start_observer_is_not_called_when_preflight_or_start_persistence_ref
                         &f.payloads,
                         &f.context,
                         &packet(&f.plan, "newer-call", 102, 1),
-                        ResearchOperation::Visit,
                         102,
                     )
                     .unwrap();

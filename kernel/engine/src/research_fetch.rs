@@ -2,8 +2,9 @@
 //!
 //! The existing owner must independently approve exact disclosure, persist a budget
 //! reservation and consume an effect permit before dispatch. This module has no I/O.
-//! The future worker still needs established URL/TLS parsing, complete DNS validation,
-//! pinned connections, response validation and owned process cleanup.
+//! The separate confined Linux worker owns URL/TLS parsing, complete DNS validation,
+//! pinned connections, response validation and process cleanup; its native adversarial
+//! qualification remains open.
 
 use std::collections::BTreeSet;
 use std::fmt;
@@ -34,6 +35,55 @@ impl PublicGetTarget {
     /// A transport must also parse URLs, validate DNS/peers/TLS and consume authority.
     pub fn validate(&self) -> Result<(), ResearchFetchError> {
         validate_target(self)
+    }
+}
+
+/// Exact disclosed search-request shape for one provider (Decision 0106).
+/// Every search sends exactly `fixed_fields` plus one disclosed query in
+/// `query_field`. This is not a credential, grant or provider admission.
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PublicSearchEndpoint {
+    /// Exact canonical provider DNS name; also one declared destination domain.
+    pub domain: String,
+    /// Conservative unencoded absolute path.
+    pub path: String,
+    /// Query field that carries one disclosed query verbatim.
+    pub query_field: String,
+    /// Other exact query fields, sorted by name and sent with every search.
+    pub fixed_fields: Vec<(String, String)>,
+}
+
+impl fmt::Debug for PublicSearchEndpoint {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("PublicSearchEndpoint")
+            .field("domain", &self.domain)
+            .field("fixed_field_count", &self.fixed_fields.len())
+            .finish_non_exhaustive()
+    }
+}
+
+impl PublicSearchEndpoint {
+    /// Applies the request target syntax and secret checks to the exact endpoint.
+    pub fn validate(&self) -> Result<(), ResearchFetchError> {
+        if self.fixed_fields.len() > 8
+            || self
+                .fixed_fields
+                .windows(2)
+                .any(|pair| pair[0].0 >= pair[1].0)
+        {
+            return Err(ResearchFetchError::Invalid);
+        }
+        // A placeholder value checks the query field's syntax and that it is
+        // distinct from every fixed field; disclosed queries are checked separately.
+        let mut query = self.fixed_fields.clone();
+        query.push((self.query_field.clone(), "query".to_owned()));
+        validate_target(&PublicGetTarget {
+            domain: self.domain.clone(),
+            path: self.path.clone(),
+            query,
+        })
     }
 }
 

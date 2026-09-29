@@ -422,7 +422,6 @@ fn research_completion_preserves_exact_approved_bytes_and_reads_only_after_full_
                     &f.payloads,
                     &f.context,
                     &f.prepared,
-                    ResearchOperation::Visit,
                     108
                 )
                 .is_err()
@@ -740,7 +739,6 @@ fn research_completion_refusal_reopen_preserves_known_effect_without_completion_
                 &f.payloads,
                 &f.context,
                 &f.prepared,
-                ResearchOperation::Visit,
                 108
             )
             .is_err()

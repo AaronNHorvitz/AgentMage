@@ -36,6 +36,14 @@ not enable research execution. See the separate
 [durability record](../verification/research-durability-component-2026-09-26.md) for actual
 tests, failures and remaining native/provider integration.
 
+A schema 2 plan discloses its exact search endpoint: provider domain, path, the query
+field and any fixed fields. The accounting owner derives query versus visit from each
+prepared request, not from a caller label. Only the exact endpoint shape carrying a
+disclosed query counts as a search. Other requests to the provider domain are refused,
+and requests to other allowed domains count as visits. Schema 1 plans remain readable
+but cannot reserve new requests. See
+[Decision 0106](../decisions/0106-search-disclosure-bound-to-requests.md).
+
 The source-linked report component checks exact full source bundles through the
 existing authority, journal and artifact owners. Observations prove excerpt
 presence; model interpretations retain their limitations. Conflicts, unanswered

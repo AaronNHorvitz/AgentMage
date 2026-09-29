@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::persistence::detect_secret_classes;
+use crate::research_fetch::{PublicGetTarget, PublicSearchEndpoint, ResearchFetchError};
 
 /// Closed first-increment research modes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -125,6 +126,8 @@ pub struct ResearchScope {
     limits: ResearchLimits,
     domains: BTreeSet<String>,
     query_sha256: BTreeSet<String>,
+    // Schema 2 only. Schema 1 scopes cannot bind queries to requests.
+    search_endpoint: Option<PublicSearchEndpoint>,
     policy_sha256: String,
 }
 
@@ -138,6 +141,9 @@ struct ResearchScopeSnapshot {
     limits: ResearchLimits,
     domains: Vec<String>,
     query_sha256: Vec<String>,
+    // Absent in schema 1 so its canonical bytes stay unchanged.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    search_endpoint: Option<PublicSearchEndpoint>,
     policy_sha256: String,
 }
 
@@ -146,13 +152,14 @@ impl ResearchScope {
     /// existing artifact store; query digests cannot replace that full plan.
     pub(crate) fn snapshot(&self) -> Result<Vec<u8>, ResearchBudgetError> {
         serde_json::to_vec(&ResearchScopeSnapshot {
-            schema_version: 1,
+            schema_version: self.schema_version(),
             task_id: self.task_id.clone(),
             depth: self.depth,
             network: self.network,
             limits: self.limits.clone(),
             domains: self.domains.iter().cloned().collect(),
             query_sha256: self.query_sha256.iter().cloned().collect(),
+            search_endpoint: self.search_endpoint.clone(),
             policy_sha256: self.policy_sha256.clone(),
         })
         .map_err(|_| ResearchBudgetError::Invalid)
@@ -166,13 +173,13 @@ impl ResearchScope {
         }
         let wire: ResearchScopeSnapshot =
             serde_json::from_slice(bytes).map_err(|_| ResearchBudgetError::Invalid)?;
-        if wire.schema_version != 1
+        if wire.schema_version != 1 + u16::from(wire.search_endpoint.is_some())
             || wire.domains.windows(2).any(|pair| pair[0] >= pair[1])
             || wire.query_sha256.windows(2).any(|pair| pair[0] >= pair[1])
         {
             return Err(ResearchBudgetError::Invalid);
         }
-        let restored = Self::from_query_hashes(
+        let mut restored = Self::from_query_hashes(
             wire.task_id,
             wire.depth,
             wire.network,
@@ -180,6 +187,9 @@ impl ResearchScope {
             wire.domains.into_iter().collect(),
             wire.query_sha256.into_iter().collect(),
         )?;
+        if let Some(endpoint) = wire.search_endpoint {
+            restored = restored.with_search_endpoint(endpoint)?;
+        }
         if restored.policy_sha256 != wire.policy_sha256 {
             return Err(ResearchBudgetError::Binding);
         }
@@ -263,25 +273,91 @@ impl ResearchScope {
         {
             return Err(ResearchBudgetError::Invalid);
         }
-        let encoded = serde_json::to_vec(&(
-            1u16,
-            &task_id,
-            depth,
-            network,
-            &limits,
-            &domains,
-            &query_sha256,
-        ))
-        .map_err(|_| ResearchBudgetError::Invalid)?;
-        Ok(Self {
+        let mut scope = Self {
             task_id,
             depth,
             network,
             limits,
             domains,
             query_sha256,
-            policy_sha256: digest(&encoded),
-        })
+            search_endpoint: None,
+            policy_sha256: String::new(),
+        };
+        scope.policy_sha256 = scope.policy_digest()?;
+        Ok(scope)
+    }
+
+    const fn schema_version(&self) -> u16 {
+        if self.search_endpoint.is_some() { 2 } else { 1 }
+    }
+
+    // Schema 1 keeps its original preimage; schema 2 also binds the endpoint.
+    fn policy_digest(&self) -> Result<String, ResearchBudgetError> {
+        let (task, depth, network) = (&self.task_id, self.depth, self.network);
+        let (limits, domains, queries) = (&self.limits, &self.domains, &self.query_sha256);
+        let encoded = match &self.search_endpoint {
+            None => serde_json::to_vec(&(1u16, task, depth, network, limits, domains, queries)),
+            Some(endpoint) => serde_json::to_vec(&(
+                2u16, task, depth, network, limits, domains, queries, endpoint,
+            )),
+        }
+        .map_err(|_| ResearchBudgetError::Invalid)?;
+        Ok(digest(&encoded))
+    }
+
+    /// Binds the exact disclosed search endpoint (Decision 0106), producing a
+    /// schema 2 scope. The endpoint's domain must already be a declared destination.
+    pub fn with_search_endpoint(
+        mut self,
+        endpoint: PublicSearchEndpoint,
+    ) -> Result<Self, ResearchBudgetError> {
+        if self.search_endpoint.is_some() {
+            return Err(ResearchBudgetError::Invalid);
+        }
+        endpoint.validate().map_err(|error| match error {
+            ResearchFetchError::Secret => ResearchBudgetError::Secret,
+            _ => ResearchBudgetError::Invalid,
+        })?;
+        if !self.domains.contains(&endpoint.domain) {
+            return Err(ResearchBudgetError::Destination);
+        }
+        self.search_endpoint = Some(endpoint);
+        self.policy_sha256 = self.policy_digest()?;
+        Ok(self)
+    }
+
+    /// Derives query versus visit from the exact prepared target, never from a
+    /// caller label. Only the disclosed endpoint shape carries a search query.
+    pub(crate) fn classify<'a>(
+        &self,
+        target: &'a PublicGetTarget,
+    ) -> Result<ResearchOperation<'a>, ResearchBudgetError> {
+        // A schema 1 scope cannot tell a provider search from a page visit.
+        let endpoint = self
+            .search_endpoint
+            .as_ref()
+            .ok_or(ResearchBudgetError::Invalid)?;
+        if target.domain != endpoint.domain {
+            return Ok(ResearchOperation::Visit);
+        }
+        if target.path != endpoint.path || target.query.len() != endpoint.fixed_fields.len() + 1 {
+            return Err(ResearchBudgetError::Destination);
+        }
+        let mut query = None;
+        for (name, value) in &target.query {
+            if name == &endpoint.query_field {
+                query = Some(value.as_str());
+            } else if !endpoint
+                .fixed_fields
+                .iter()
+                .any(|(fixed, expected)| fixed == name && expected == value)
+            {
+                return Err(ResearchBudgetError::Destination);
+            }
+        }
+        query
+            .map(ResearchOperation::Query)
+            .ok_or(ResearchBudgetError::Destination)
     }
 
     /// Returns a content binding, never an authorization token.
@@ -339,6 +415,7 @@ impl ResearchScope {
 }
 
 /// An exact candidate operation, still requiring independent kernel authorization.
+/// The canonical owner derives it with `ResearchScope::classify`, never from a caller.
 pub enum ResearchOperation<'a> {
     /// Exact previously disclosed query.
     Query(&'a str),
@@ -562,7 +639,7 @@ impl ResearchBudget {
     /// Failed/rejected/uncertain effects do not refund or erase this reservation.
     /// Trusted clock observations advance even on a quota refusal; observed expiry
     /// and clock rollback are terminal, not failures from which time can be reset.
-    pub fn reserve(
+    pub(crate) fn reserve(
         &mut self,
         scope: &ResearchScope,
         operation_id: &str,
@@ -933,6 +1010,139 @@ mod tests {
             &["public Rust documentation".into()],
         )
         .unwrap()
+    }
+    fn endpoint() -> PublicSearchEndpoint {
+        PublicSearchEndpoint {
+            domain: "search.example.com".into(),
+            path: "/search".into(),
+            query_field: "q".into(),
+            fixed_fields: vec![("format".into(), "json".into())],
+        }
+    }
+    fn endpoint_scope() -> ResearchScope {
+        ResearchScope::new(
+            "task-1".into(),
+            ResearchDepth::Quick,
+            ResearchNetworkMode::Ask,
+            ResearchLimits::ceiling(ResearchDepth::Quick),
+            BTreeSet::from(["docs.example.com".into(), "search.example.com".into()]),
+            &["public Rust documentation".into()],
+        )
+        .unwrap()
+        .with_search_endpoint(endpoint())
+        .unwrap()
+    }
+    fn target(domain: &str, path: &str, query: &[(&str, &str)]) -> PublicGetTarget {
+        PublicGetTarget {
+            domain: domain.into(),
+            path: path.into(),
+            query: query
+                .iter()
+                .map(|(name, value)| ((*name).to_owned(), (*value).to_owned()))
+                .collect(),
+        }
+    }
+    #[test]
+    fn schema_two_scope_snapshot_binds_the_exact_search_endpoint() {
+        let scope = endpoint_scope();
+        let bytes = scope.snapshot().unwrap();
+        let wire: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(wire["schema_version"], 2);
+        assert_eq!(wire["search_endpoint"]["path"], "/search");
+        assert_eq!(ResearchScope::restore(&bytes).unwrap(), scope);
+        assert!(!format!("{scope:?}").contains("/search"));
+        for (key, value) in [
+            ("schema_version", serde_json::json!(1)),
+            ("search_endpoint", serde_json::Value::Null),
+            ("domains", serde_json::json!(["docs.example.com"])),
+        ] {
+            let mut changed = wire.clone();
+            changed[key] = value;
+            assert!(
+                ResearchScope::restore(&serde_json::to_vec(&changed).unwrap()).is_err(),
+                "{key}"
+            );
+        }
+        let mut changed = wire.clone();
+        changed["search_endpoint"]["query_field"] = serde_json::json!("query");
+        assert_eq!(
+            ResearchScope::restore(&serde_json::to_vec(&changed).unwrap()),
+            Err(ResearchBudgetError::Binding)
+        );
+        let mut changed = wire;
+        changed.as_object_mut().unwrap().remove("search_endpoint");
+        assert!(ResearchScope::restore(&serde_json::to_vec(&changed).unwrap()).is_err());
+        assert_eq!(
+            endpoint_scope().with_search_endpoint(endpoint()),
+            Err(ResearchBudgetError::Invalid)
+        );
+        assert_eq!(
+            docs_only_scope().with_search_endpoint(endpoint()),
+            Err(ResearchBudgetError::Destination)
+        );
+        let v1 = docs_only_scope();
+        let v1_wire: serde_json::Value = serde_json::from_slice(&v1.snapshot().unwrap()).unwrap();
+        assert_eq!(v1_wire["schema_version"], 1);
+        assert!(v1_wire.get("search_endpoint").is_none());
+    }
+    fn docs_only_scope() -> ResearchScope {
+        scope(ResearchNetworkMode::Ask)
+    }
+    #[test]
+    fn classification_derives_a_query_only_from_the_exact_endpoint_shape() {
+        let scope = endpoint_scope();
+        let query = [("format", "json"), ("q", "public Rust documentation")];
+        assert!(matches!(
+            scope.classify(&target("search.example.com", "/search", &query)),
+            Ok(ResearchOperation::Query("public Rust documentation"))
+        ));
+        // Field order is not part of the disclosed shape; names are unique.
+        assert!(matches!(
+            scope.classify(&target(
+                "search.example.com",
+                "/search",
+                &[query[1], query[0]]
+            )),
+            Ok(ResearchOperation::Query(_))
+        ));
+        assert!(matches!(
+            scope.classify(&target("docs.example.com", "/search", &query)),
+            Ok(ResearchOperation::Visit)
+        ));
+        for refused in [
+            target("search.example.com", "/results", &query),
+            target("search.example.com", "/search", &query[1..]),
+            target(
+                "search.example.com",
+                "/search",
+                &[("format", "html"), query[1]],
+            ),
+            target(
+                "search.example.com",
+                "/search",
+                &[query[0], query[1], ("page", "2")],
+            ),
+            target("search.example.com", "/search", &[query[0], ("page", "2")]),
+            target("search.example.com", "/", &[]),
+        ] {
+            assert!(matches!(
+                scope.classify(&refused),
+                Err(ResearchBudgetError::Destination)
+            ));
+        }
+        // The derived query must still be one of the disclosed digests.
+        let mut budget = ResearchBudget::new(&scope, 100).unwrap();
+        let undisclosed = target("search.example.com", "/search", &[query[0], ("q", "other")]);
+        let operation = scope.classify(&undisclosed).unwrap();
+        assert_eq!(
+            budget.reserve(&scope, "op-1", operation, 1, 101),
+            Err(ResearchBudgetError::Binding)
+        );
+        let legacy = docs_only_scope();
+        assert!(matches!(
+            legacy.classify(&target("docs.example.com", "/guide", &[])),
+            Err(ResearchBudgetError::Invalid)
+        ));
     }
     #[test]
     fn offline_and_changed_disclosure_never_consume_budget() {

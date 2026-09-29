@@ -3,9 +3,9 @@
 use super::*;
 use crate::public_research::{PublicSearchRequest, PublicSourceType};
 use crate::research_budget::{
-    ResearchBudgetError, ResearchDepth, ResearchLimits, ResearchNetworkMode, ResearchOperation,
+    ResearchBudgetError, ResearchDepth, ResearchLimits, ResearchNetworkMode,
 };
-use crate::research_fetch::{PreparedPublicGet, PublicGetDraft, PublicGetTarget};
+use crate::research_fetch::{PreparedPublicGet, PublicGetDraft, PublicGetTarget, PublicSearchEndpoint};
 use crate::research_journal::{ResearchBudgetContext, ResearchJournalError};
 use crate::research_plan::{PreparedResearchPlan, ResearchPlanDraft};
 use std::collections::BTreeSet;
@@ -27,7 +27,6 @@ fn freshness_fixture() -> (
             &payloads,
             &context(),
             &prepared,
-            ResearchOperation::Visit,
             101,
         )
         .unwrap();
@@ -70,7 +69,6 @@ fn fresh_dispatch_observation_preserves_spending_and_original_reservation_identi
                 &payloads,
                 &context(),
                 &prepared,
-                ResearchOperation::Visit,
                 now,
             )
             .err(),
@@ -135,7 +133,6 @@ fn intervening_reservation_or_cancel_invalidates_old_dispatch_proof() {
                 &payloads,
                 &context(),
                 &packet(&plan, "fresh-attempt-2", 102, 1),
-                ResearchOperation::Visit,
                 102,
             )
             .unwrap();
@@ -190,7 +187,6 @@ fn fresh_dispatch_clock_rollback_or_budget_expiry_is_durable_and_terminal() {
                 &payloads,
                 &context(),
                 &packet(&plan, "new-after-clock-failure", 102, 1),
-                ResearchOperation::Visit,
                 102,
             )
             .err(),
@@ -282,7 +278,6 @@ fn fresh_dispatch_preserves_cancel_capacity_and_refuses_a_full_journal() {
                 &payloads,
                 &context(),
                 &search_packet(&plan, "quota-query-1", 101),
-                ResearchOperation::Query("public Rust documentation"),
                 101,
             )
             .unwrap();
@@ -295,7 +290,6 @@ fn fresh_dispatch_preserves_cancel_capacity_and_refuses_a_full_journal() {
                         &payloads,
                         &context(),
                         &search_packet(&plan, &format!("quota-refused-{index}"), 100 + index),
-                        ResearchOperation::Query("public Rust documentation"),
                         100 + index,
                     )
                     .err(),
@@ -310,7 +304,6 @@ fn fresh_dispatch_preserves_cancel_capacity_and_refuses_a_full_journal() {
                 &payloads,
                 &context(),
                 &prepared,
-                ResearchOperation::Visit,
                 226,
             )
             .unwrap();
@@ -382,7 +375,6 @@ fn historical_reservation_read_verifies_original_revision_without_refund_or_refr
         &payloads,
         &context(),
         &later,
-        ResearchOperation::Visit,
         201,
     )
     .unwrap();
@@ -681,7 +673,6 @@ mod dispatch_owner {
                 &payloads,
                 &context,
                 &prepared,
-                ResearchOperation::Visit,
                 101,
             )
             .unwrap();
@@ -844,7 +835,6 @@ mod dispatch_owner {
                     &fixture.payloads,
                     &fixture.context,
                     &fixture.prepared,
-                    ResearchOperation::Visit,
                     105
                 )
                 .is_err()
@@ -870,7 +860,6 @@ mod dispatch_owner {
                             &fixture.payloads,
                             &fixture.context,
                             &packet(&fixture.plan, "newer-call", 102, 1),
-                            ResearchOperation::Visit,
                             102,
                         )
                         .unwrap();
@@ -1097,8 +1086,12 @@ mod dispatch_owner {
 }
 
 fn plan() -> PreparedResearchPlan {
-    PreparedResearchPlan::prepare(ResearchPlanDraft {
-        schema_version: 1,
+    PreparedResearchPlan::prepare(plan_draft()).unwrap()
+}
+
+fn plan_draft() -> ResearchPlanDraft {
+    ResearchPlanDraft {
+        schema_version: 2,
         task_id: "task-1".into(),
         depth: ResearchDepth::Quick,
         network_mode: ResearchNetworkMode::Ask,
@@ -1116,8 +1109,13 @@ fn plan() -> PreparedResearchPlan {
             max_results: 5,
             max_total_bytes: 1024,
         }],
-    })
-    .unwrap()
+        search_endpoint: Some(PublicSearchEndpoint {
+            domain: "search.example.com".into(),
+            path: "/search".into(),
+            query_field: "q".into(),
+            fixed_fields: vec![],
+        }),
+    }
 }
 
 fn publish_plan(
@@ -1256,7 +1254,6 @@ fn original_deadline_cannot_restart_after_reopen() {
                 &payloads,
                 &context(),
                 &request,
-                ResearchOperation::Visit,
                 60_100
             )
             .err(),
@@ -1273,7 +1270,6 @@ fn original_deadline_cannot_restart_after_reopen() {
                 &payloads,
                 &context(),
                 &request,
-                ResearchOperation::Visit,
                 102
             )
             .err(),
@@ -1360,7 +1356,6 @@ fn bounded_revision_exhaustion_never_resets_accounting() {
             &payloads,
             &context(),
             &search_packet(&plan, "query-spent", 101),
-            ResearchOperation::Query("public Rust documentation"),
             101,
         )
         .unwrap();
@@ -1371,7 +1366,6 @@ fn bounded_revision_exhaustion_never_resets_accounting() {
                     &payloads,
                     &context(),
                     &search_packet(&plan, &format!("query-refused-{index}"), 100 + index),
-                    ResearchOperation::Query("public Rust documentation"),
                     100 + index
                 )
                 .err(),
@@ -1389,7 +1383,6 @@ fn bounded_revision_exhaustion_never_resets_accounting() {
                 &payloads,
                 &context(),
                 &packet(&plan, "visit-1", 228, 1),
-                ResearchOperation::Visit,
                 228
             )
             .err(),
@@ -1435,7 +1428,6 @@ fn committed_attempt_survives_reopen_without_refund_or_replay() {
             &payloads,
             &context(),
             &request,
-            ResearchOperation::Visit,
             101,
         )
         .unwrap();
@@ -1454,7 +1446,6 @@ fn committed_attempt_survives_reopen_without_refund_or_replay() {
                 &payloads,
                 &context(),
                 &request,
-                ResearchOperation::Visit,
                 102
             )
             .err(),
@@ -1467,7 +1458,6 @@ fn committed_attempt_survives_reopen_without_refund_or_replay() {
             &payloads,
             &context(),
             &packet(&plan, "attempt-2", 102, 512),
-            ResearchOperation::Visit,
             102,
         )
         .unwrap();
@@ -1485,7 +1475,6 @@ fn failed_quota_clock_and_rollback_remain_terminal_after_reopen() {
             &payloads,
             &context(),
             &search_packet(&plan, "attempt-1", 101),
-            ResearchOperation::Query("public Rust documentation"),
             101,
         )
         .unwrap();
@@ -1496,7 +1485,6 @@ fn failed_quota_clock_and_rollback_remain_terminal_after_reopen() {
                 &payloads,
                 &context(),
                 &request,
-                ResearchOperation::Query("public Rust documentation"),
                 200
             )
             .err(),
@@ -1514,7 +1502,6 @@ fn failed_quota_clock_and_rollback_remain_terminal_after_reopen() {
                 &payloads,
                 &context(),
                 &request,
-                ResearchOperation::Visit,
                 199
             )
             .err(),
@@ -1531,7 +1518,6 @@ fn failed_quota_clock_and_rollback_remain_terminal_after_reopen() {
                 &payloads,
                 &context(),
                 &request,
-                ResearchOperation::Visit,
                 201
             )
             .err(),
@@ -1567,7 +1553,6 @@ fn cancellation_and_owner_mismatch_cannot_reopen_accounting() {
                 &payloads,
                 &context(),
                 &request,
-                ResearchOperation::Visit,
                 102
             )
             .err(),
@@ -1592,7 +1577,6 @@ fn disappeared_full_plan_cannot_yield_a_reservation_proof() {
                 &payloads,
                 &context(),
                 &packet(&plan, "attempt-1", 101, 512),
-                ResearchOperation::Visit,
                 101
             )
             .err(),
@@ -1609,7 +1593,6 @@ fn disappeared_full_plan_cannot_yield_a_reservation_proof() {
                 &payloads,
                 &context(),
                 &packet(&plan, "attempt-1", 102, 512),
-                ResearchOperation::Visit,
                 102
             )
             .err(),
@@ -1639,7 +1622,6 @@ fn failed_reservation_commit_returns_no_proof_and_poisons_runtime() {
                 &payloads,
                 &context(),
                 &request,
-                ResearchOperation::Visit,
                 101
             )
             .err(),
@@ -1673,7 +1655,7 @@ fn complete_plan_decode_and_exact_restrictions_cannot_be_substituted() {
     let value: serde_json::Value = serde_json::from_slice(&original).unwrap();
     let mut cases = Vec::new();
     for (field, replacement) in [
-        ("schema_version", serde_json::json!(2)),
+        ("schema_version", serde_json::json!(3)),
         ("approval", serde_json::json!(true)),
     ] {
         let mut changed = value.clone();
@@ -1733,7 +1715,6 @@ fn corrupt_complete_plan_cannot_issue_proof_or_refund_spent_attempt() {
                 &payloads,
                 &context(),
                 &packet(&prepared, "attempt-1", 101, 512),
-                ResearchOperation::Visit,
                 101,
             )
             .err(),
@@ -1749,7 +1730,6 @@ fn corrupt_complete_plan_cannot_issue_proof_or_refund_spent_attempt() {
                 &payloads,
                 &context(),
                 &packet(&prepared, "attempt-1", 102, 512),
-                ResearchOperation::Visit,
                 102,
             )
             .err(),
@@ -1795,7 +1775,6 @@ fn released_plan_stays_released_after_restart_and_does_not_reset_budget() {
                 &payloads,
                 &context(),
                 &packet(&prepared, "attempt-1", 102, 512),
-                ResearchOperation::Visit,
                 102,
             )
             .err(),
@@ -1825,7 +1804,6 @@ fn encrypted_backup_and_fresh_restore_preserve_spent_operations_and_cancel() {
             &payloads,
             &context(),
             &packet(&prepared, "attempt-1", 101, 512),
-            ResearchOperation::Visit,
             101,
         )
         .unwrap();
@@ -1851,7 +1829,6 @@ fn encrypted_backup_and_fresh_restore_preserve_spent_operations_and_cancel() {
                 &payloads,
                 &context(),
                 &packet(&prepared, "attempt-2", 102, 512),
-                ResearchOperation::Visit,
                 102,
             )
             .err(),
@@ -1910,7 +1887,6 @@ fn resume_projection_is_original_content_free_and_does_not_consume_revisions() {
             &payloads,
             &context(),
             &packet(&prepared, "attempt-1", 101, 512),
-            ResearchOperation::Visit,
             101,
         )
         .unwrap();
@@ -1977,5 +1953,160 @@ fn derived_export_includes_all_research_families_without_raw_plan_or_identity() 
     );
     assert!(!directory.join("invalid.jsonl").exists());
     drop(store);
+    fs::remove_dir_all(directory).unwrap();
+}
+
+fn target_packet(
+    plan: &PreparedResearchPlan,
+    id: &str,
+    now: u64,
+    target: PublicGetTarget,
+) -> PreparedPublicGet {
+    PreparedPublicGet::prepare(
+        plan.scope(),
+        PublicGetDraft {
+            schema_version: 1,
+            operation_id: id.into(),
+            target,
+            maximum_response_bytes: 64,
+            redirect_limit: 0,
+            timeout_ms: 1000,
+        },
+        100,
+        now,
+    )
+    .unwrap()
+}
+
+#[test]
+fn search_accounting_is_derived_from_the_exact_disclosed_endpoint_request() {
+    let directory = temporary_directory();
+    let path = directory.join("authority.db");
+    let (mut runtime, payloads, plan) = initialized(&path);
+    let search = |query: Vec<(&str, &str)>, path: &str| PublicGetTarget {
+        domain: "search.example.com".into(),
+        path: path.into(),
+        query: query
+            .into_iter()
+            .map(|(name, value)| (name.to_owned(), value.to_owned()))
+            .collect(),
+    };
+    // Undisclosed queries, altered shapes and other provider paths spend nothing.
+    for (index, (target, refusal)) in [
+        (
+            search(vec![("q", "an undisclosed query")], "/search"),
+            ResearchBudgetError::Binding,
+        ),
+        (
+            search(vec![("q", "public Rust documentation"), ("page", "2")], "/search"),
+            ResearchBudgetError::Destination,
+        ),
+        (search(vec![("page", "2")], "/search"), ResearchBudgetError::Destination),
+        (search(vec![], "/search"), ResearchBudgetError::Destination),
+        (
+            search(vec![("q", "public Rust documentation")], "/other"),
+            ResearchBudgetError::Destination,
+        ),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let before = runtime.research_budget_state(&context()).unwrap();
+        assert_eq!(
+            runtime
+                .reserve_research_request(
+                    &payloads,
+                    &context(),
+                    &target_packet(&plan, &format!("refused-{index}"), 101, target),
+                    101,
+                )
+                .err(),
+            Some(DurableAuthorityError::ResearchJournal(
+                ResearchJournalError::Budget(refusal)
+            )),
+            "{index}"
+        );
+        // Nothing is spent. The trusted clock observation is still retained.
+        let after = runtime.research_budget_state(&context()).unwrap();
+        assert_eq!(after.progress.queries, before.progress.queries);
+        assert_eq!(after.progress.visits, before.progress.visits);
+        assert_eq!(after.progress.reserved_bytes, before.progress.reserved_bytes);
+        assert_eq!(after.progress.last_epoch_ms, 101);
+    }
+    // The exact endpoint request is a query; a disclosed query on another
+    // allowed domain is an ordinary page visit.
+    runtime
+        .reserve_research_request(&payloads, &context(), &search_packet(&plan, "query-1", 102), 102)
+        .unwrap();
+    runtime
+        .reserve_research_request(
+            &payloads,
+            &context(),
+            &target_packet(
+                &plan,
+                "visit-1",
+                103,
+                PublicGetTarget {
+                    domain: "docs.example.com".into(),
+                    path: "/search".into(),
+                    query: vec![("q".into(), "public Rust documentation".into())],
+                },
+            ),
+            103,
+        )
+        .unwrap();
+    drop(runtime);
+    let mut reopened =
+        DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey, 104).unwrap();
+    let state = reopened.research_budget_state(&context()).unwrap();
+    assert_eq!((state.progress.queries, state.progress.visits), (1, 1));
+    drop(reopened);
+    fs::remove_dir_all(directory).unwrap();
+}
+
+#[test]
+fn schema_one_plan_budgets_stay_readable_but_cannot_reserve() {
+    let directory = temporary_directory();
+    let path = directory.join("authority.db");
+    let mut runtime = runtime_with_run(&path);
+    let mut payloads = FakePayloadStore::default();
+    let mut draft = plan_draft();
+    draft.schema_version = 1;
+    draft.search_endpoint = None;
+    let legacy = PreparedResearchPlan::prepare(draft).unwrap();
+    let reference = publish_plan(
+        &mut runtime,
+        &mut payloads,
+        &serde_json::to_vec(legacy.draft()).unwrap(),
+        true,
+    );
+    runtime
+        .open_research_budget(&payloads, &context(), &reference, legacy.scope(), 100)
+        .unwrap();
+    let before = runtime.research_budget_state(&context()).unwrap();
+    for prepared in [
+        search_packet(&legacy, "legacy-query", 101),
+        packet(&legacy, "legacy-visit", 101, 64),
+    ] {
+        assert_eq!(
+            runtime
+                .reserve_research_request(&payloads, &context(), &prepared, 101)
+                .err(),
+            Some(DurableAuthorityError::ResearchJournal(
+                ResearchJournalError::Budget(ResearchBudgetError::Invalid)
+            ))
+        );
+    }
+    let after = runtime.research_budget_state(&context()).unwrap();
+    assert_eq!((after.progress.queries, after.progress.visits), (0, 0));
+    assert_eq!(after.progress.reserved_bytes, before.progress.reserved_bytes);
+    assert_eq!(after.progress.last_epoch_ms, 101);
+    drop(runtime);
+    let mut reopened =
+        DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey, 102).unwrap();
+    let reopened_state = reopened.research_budget_state(&context()).unwrap();
+    assert_eq!(reopened_state.head_sha256, after.head_sha256);
+    assert_eq!(reopened_state.scope, legacy.scope().clone());
+    drop(reopened);
     fs::remove_dir_all(directory).unwrap();
 }

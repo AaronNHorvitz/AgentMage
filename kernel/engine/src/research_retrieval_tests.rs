@@ -702,7 +702,6 @@ fn canonical_source_survives_head_advance_and_cancel_without_new_dispatch_author
             &s.payloads,
             &s.context,
             &prepared,
-            ResearchOperation::Visit,
             201,
         )
         .unwrap();
@@ -718,7 +717,6 @@ fn canonical_source_survives_head_advance_and_cancel_without_new_dispatch_author
                 &s.payloads,
                 &s.context,
                 &prepared,
-                ResearchOperation::Visit,
                 202
             )
             .is_err()
@@ -796,7 +794,6 @@ fn canonical_source_remains_readable_after_terminal_run_and_original_request_dea
                 &s.payloads,
                 &s.context,
                 &later,
-                ResearchOperation::Visit,
                 2001
             )
             .is_err()

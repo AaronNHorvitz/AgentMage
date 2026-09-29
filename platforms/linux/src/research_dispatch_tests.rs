@@ -14,7 +14,7 @@ mod dispatch_fixture {
     };
     use agentmage_kernel_engine::propagation::CancellationObservationError;
     use agentmage_kernel_engine::public_research::{PublicSearchRequest, PublicSourceType};
-    use agentmage_kernel_engine::research_budget::ResearchOperation;
+    use agentmage_kernel_engine::research_fetch::PublicSearchEndpoint;
     use agentmage_kernel_engine::research_journal::ResearchBudgetContext;
     use agentmage_kernel_engine::research_plan::{PreparedResearchPlan, ResearchPlanDraft};
     use agentmage_kernel_engine::research_retrieval::{
@@ -261,12 +261,16 @@ mod dispatch_fixture {
             policy_sha256: policy.policy_sha256().into(),
         };
         let plan = PreparedResearchPlan::prepare(ResearchPlanDraft {
-            schema_version: 1,
+            schema_version: 2,
             task_id: task.as_str().into(),
             depth: ResearchDepth::Quick,
             network_mode: ResearchNetworkMode::Ask,
             limits: ResearchLimits::ceiling(ResearchDepth::Quick),
-            destination_domains: BTreeSet::from([case.domain().into()]),
+            // The provider endpoint has its own domain; source visits use the case domain.
+            destination_domains: BTreeSet::from([
+                case.domain().into(),
+                "search.example.com".into(),
+            ]),
             queries: vec![PublicSearchRequest {
                 request_id: "native-research-query".into(),
                 query: "synthetic public query".into(),
@@ -276,6 +280,12 @@ mod dispatch_fixture {
                 max_results: 1,
                 max_total_bytes: 1024,
             }],
+            search_endpoint: Some(PublicSearchEndpoint {
+                domain: "search.example.com".into(),
+                path: "/search".into(),
+                query_field: "q".into(),
+                fixed_fields: vec![],
+            }),
         })
         .unwrap();
         let initial = seal_runtime_event(RuntimeEvent {
@@ -361,7 +371,6 @@ mod dispatch_fixture {
                 &payloads,
                 &context,
                 &prepared,
-                ResearchOperation::Visit,
                 prepared_at,
             )
             .unwrap();
@@ -683,7 +692,6 @@ mod dispatch_fixture {
                         &payloads,
                         &context,
                         &prepared,
-                        ResearchOperation::Visit,
                         case.now(0),
                     )
                     .is_err()
@@ -783,7 +791,6 @@ mod dispatch_fixture {
                     &payloads,
                     &context,
                     &prepared,
-                    ResearchOperation::Visit,
                     6000
                 )
                 .is_err()

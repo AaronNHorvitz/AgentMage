@@ -1836,26 +1836,19 @@ impl DurableAuthorityRuntime {
     }
 
     /// Commits worst-case task accounting before returning a single-use reservation.
-    /// Registered tool/provider composition supplies query versus visit, not a model label.
+    /// The owner derives query versus visit from the exact prepared target and the
+    /// plan's disclosed search endpoint; callers cannot supply that label.
     pub fn reserve_research_request<S: RuntimeArtifactPayloadStore>(
         &mut self,
         payloads: &S,
         context: &crate::research_journal::ResearchBudgetContext,
         prepared: &crate::research_fetch::PreparedPublicGet,
-        purpose: crate::research_budget::ResearchOperation<'_>,
         now_epoch_ms: u64,
     ) -> Result<crate::research_journal::DurableResearchReservation, DurableAuthorityError> {
         self.ensure_usable()?;
         let result = {
             let mut store = self.lock_store()?;
-            crate::research_journal::reserve(
-                &mut store,
-                payloads,
-                context,
-                prepared,
-                purpose,
-                now_epoch_ms,
-            )
+            crate::research_journal::reserve(&mut store, payloads, context, prepared, now_epoch_ms)
         };
         self.research_result(result)
     }
