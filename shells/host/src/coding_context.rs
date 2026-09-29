@@ -3,13 +3,14 @@
 use std::{collections::BTreeMap, fmt::Write};
 
 use agentmage_kernel_contracts::{
-    CONTRACT_SCHEMA_VERSION, CheckedContextSummary, ContextAdmission, ContextItemCandidate,
-    ContextItemKind, ContextPacketId, ContextSensitivity, ContractPayload, EvidenceReference,
-    ModelContextPacket, ModelMessage, ModelMessageId, ModelMessageRole, RuntimeRunRequest,
-    RuntimeSessionMode, SchemaId, SchemaReference, SessionId, ToolResult, WorkspaceId,
-    to_canonical_json,
+    CONTRACT_SCHEMA_VERSION, CheckedContextSummary, ComposedContextPacket, ContextAdmission,
+    ContextItemCandidate, ContextItemKind, ContextPacketId, ContextSensitivity, ContractPayload,
+    EvidenceReference, ModelContextPacket, ModelMessage, ModelMessageId, ModelMessageRole,
+    RuntimeRunRequest, RuntimeSessionMode, SchemaId, SchemaReference, SessionId, ToolResult,
+    WorkspaceId, to_canonical_json,
 };
 use agentmage_kernel_engine::{
+    context_inspection::{RecompositionViolation, verify_recomposition},
     context_management::{
         ContextCompositionBudget, SummaryUseDecision, compose_context, evaluate_checked_summary,
     },
@@ -654,6 +655,7 @@ where
             .filter(|value| *value > 0)
             .ok_or(RuntimePortFailure::ResourceExhausted)?;
         let mut planning_capacity = input_capacity;
+        let mut first_composition: Option<ComposedContextPacket> = None;
         // Each failed measurement removes at least one non-essential complete source.
         // No partial call/result, essential contract or original artifact is discarded.
         for _ in 0..=candidates.len() {
@@ -670,6 +672,23 @@ where
             .map_err(|_| RuntimePortFailure::ResourceExhausted)?;
             if composed.items.is_empty() {
                 return Err(RuntimePortFailure::Invalid);
+            }
+            // A reflow may omit supporting sources, never a retained constraint,
+            // and every source stays accounted for the omission notice (CAP-28).
+            match &first_composition {
+                None => first_composition = Some(composed.clone()),
+                Some(first) => {
+                    let report = verify_recomposition(first, &composed)
+                        .map_err(|_| RuntimePortFailure::Invalid)?;
+                    if report.findings.iter().any(|finding| {
+                        finding.violation == RecompositionViolation::ConstraintDropped
+                    }) {
+                        return Err(RuntimePortFailure::ResourceExhausted);
+                    }
+                    if !report.survives {
+                        return Err(RuntimePortFailure::Invalid);
+                    }
+                }
             }
             let next_capacity = composed
                 .items
@@ -1134,6 +1153,72 @@ mod tests {
         );
         assert_eq!(calls.len(), 12);
         assert_eq!(results.len(), 12);
+    }
+
+    #[test]
+    fn reflow_omits_supporting_sources_but_never_a_retained_constraint() {
+        use std::cell::Cell;
+        let profile = CodingSessionProfile::build(input()).unwrap();
+        let request = request(&profile);
+        let capacity = request.context_budget.max_context_tokens
+            - request.model_profile.decoding.max_output_tokens;
+        let text = "Keep the existing add helper name; do not rename it.";
+        for (kind, dropped) in [
+            (ContextItemKind::Correction, false),
+            (ContextItemKind::Supporting, true),
+        ] {
+            let source = CodingContextSource::new(
+                "user-note",
+                kind,
+                ContextSensitivity::Internal,
+                ContextAdmission::Eligible,
+                false,
+                "session:user-note",
+                "revision-1",
+                sha256(text.as_bytes()),
+                text,
+            )
+            .unwrap();
+            let mut context = CodingContextPort::for_profile(
+                &profile,
+                vec![source],
+                FixtureCounter("fixture-counter-v1"),
+            )
+            .unwrap();
+            let measurements = Cell::new(0);
+            let result = context.build_context_with_token_binding(
+                &request,
+                ContextPacketId::from_raw("constraint-reflow"),
+                1,
+                &[],
+                &[],
+                &[],
+                &|packet| {
+                    measurements.set(measurements.get() + 1);
+                    let present = packet
+                        .messages
+                        .iter()
+                        .any(|message| message.content.bytes == text.as_bytes());
+                    packet.input_tokens = if present { capacity + 1 } else { capacity - 1 };
+                    packet.packet_sha256 = "0".repeat(64);
+                    packet.packet_sha256 = canonical_sha256(packet)?;
+                    Ok(())
+                },
+            );
+            if dropped {
+                // A supporting source is omitted and cited in the selection notice.
+                let packet = result.unwrap();
+                assert_eq!(measurements.get(), 2);
+                let notice =
+                    String::from_utf8_lossy(&packet.messages.last().unwrap().content.bytes)
+                        .into_owned();
+                assert!(notice.contains("session:user-note"), "{notice}");
+            } else {
+                // A correction is a retained constraint; the run cannot silently lose it.
+                assert_eq!(result, Err(RuntimePortFailure::ResourceExhausted));
+                assert_eq!(measurements.get(), 1);
+            }
+        }
     }
 
     #[test]

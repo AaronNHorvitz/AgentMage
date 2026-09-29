@@ -67,6 +67,8 @@ pub mod communications_teams;
 /// Versioned, fail-closed configuration loading and recovery.
 pub mod configuration;
 pub mod connected_identity;
+/// Content-free context inspection and recomposition survival checks.
+pub mod context_inspection;
 /// Deterministic bounded context, checked summaries, checkpoints, and drift gates.
 pub mod context_management;
 /// Separately keyed private conversation archives and controlled lifecycle operations.
@@ -149,6 +151,8 @@ pub mod incident_lifecycle;
 pub mod infrastructure_safety;
 /// Hash-bound discovery, reading, and narrowing-only trust for untrusted instructions.
 pub mod instruction_provenance;
+/// Single-owner reconciliation of durable job control requests.
+pub mod job_control;
 /// Deterministic resumable jobs, leases, read-only schedules, notifications, and receipts.
 pub mod job_scheduler;
 pub mod linux_mail_interop;
@@ -261,6 +265,8 @@ pub mod retry_admission;
 pub mod review_packet;
 /// Stateful resource budgets and explicit sticky stop conditions.
 pub mod run_control;
+/// Truthful run progress projected from a verified runtime event stream.
+pub mod run_progress;
 /// Hash-bound evidence assignment required by successful rendered runtime answers.
 pub mod runtime_answer;
 /// Closed runtime artifact manifests, references, and resume bindings.
