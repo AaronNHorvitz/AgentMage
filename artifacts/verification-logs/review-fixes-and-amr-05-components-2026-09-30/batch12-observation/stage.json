@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "stage": "batch12-observation",
+  "source_revision": "f813ed6a76bcbd5005e9162f9c2c3aa8f872be12",
+  "scope": "Batch 12 actual Linux CLI observation at f813ed6a: rebuilt binaries, a clean scripted start and a start over pre-existing work, idle stop, pause and resume, and byte-level preservation of every workspace",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "python3",
+      "<state>/batch12-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "fb56305f781d885eef249567544f79238f532751f69bac7b5a351485ec79b0d5",
+      "private_sha256": "63249e7af2273817fa442f632775fd59eb2950d4a4078440af649b5d939e47c9"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 13.351,
+      "log": "01.log",
+      "log_sha256": "dc432a6d0c4a66cbc9edebf2454d4412447df37fc16676554588c71f7e590702",
+      "private_log_sha256": "e7cb0f6bbf8f0fcbc1e050da003669474edaf430093e1caeb549b1172d98b85d"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "<state>/batch12-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 1.82,
+      "log": "02.log",
+      "log_sha256": "f6005272d057ff548f0a552a983d5bdba74fc73065fb5db2787ce8d597276e48",
+      "private_log_sha256": "f6005272d057ff548f0a552a983d5bdba74fc73065fb5db2787ce8d597276e48"
+    }
+  ]
+}

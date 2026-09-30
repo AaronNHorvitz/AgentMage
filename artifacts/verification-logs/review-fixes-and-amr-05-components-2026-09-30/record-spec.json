@@ -1,0 +1,191 @@
+{
+ "record_type": "agentmage-review-fixes-and-amr-05-components-verification",
+ "date": "2026-09-30",
+ "base_commit": "3c69304ca39cd25dabe50f840f38e3c3f6b9df39",
+ "head_commit": "f813ed6a76bcbd5005e9162f9c2c3aa8f872be12",
+ "source_commit": "6cce0535b9999d1ec3d5525297286b500e1f3a20",
+ "retained_logs": "artifacts/verification-logs/review-fixes-and-amr-05-components-2026-09-30",
+ "stages": [
+  "batch12-source-checks",
+  "batch12-core",
+  "batch12-codec",
+  "batch12-rebind",
+  "batch12-gate",
+  "batch12-boundary",
+  "batch12-security-index",
+  "batch12-blocked-causes",
+  "batch12-observation"
+ ],
+ "inventory": "artifacts/verification-logs/review-fixes-and-amr-05-components-2026-09-30/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch12-source-checks/02.log",
+  "engine": "batch12-source-checks/03.log",
+  "repository_map": "batch12-source-checks/04.log",
+  "inference": "batch12-source-checks/05.log",
+  "knowledge": "batch12-source-checks/06.log",
+  "linux": "batch12-source-checks/07.log",
+  "host": "batch12-source-checks/08.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0123-review-fixes-for-suspension.md",
+   "docs/decisions/0124-amr-05-decomposition-and-first-components.md"
+  ],
+  "review_resolved": "independent review of 3c69304c (PASS; F1-F3 low); all three findings are addressed in 6cce0535 under Decision 0123, which amends Decision 0122 items 3 and 8",
+  "components": {
+   "review_fixes": "without the job's phase after a decision the host withdraws a suspension for an applied resumption or cancellation and never arms one (F1: shells/host/src/coding_live_runtime.rs SharedSuspension::settle); a failed control request on a suspended run whose host no longer holds it is shown as released and ends the drive (F2: shells/host/src/cli_runtime.rs ControlOutcome::Released, shells/host/src/coding_client.rs JobControlNotice::Released, shells/host/src/coding_development_client.rs run_released); tests isolate the withheld state, the rebinding decision check and the suspended wait (F3)",
+   "AMR-05.1": "kernel/engine/src/gateway_routing.rs: GatewayRoutingMode (local-only, hybrid), RoutedDataClass, HybridRouteGrant and GrantedHybridRoute with a canonical digest; a remote route is eligible only in hybrid mode under its own grant for the exact route and candidate, before expiry, for every data class sent, within the owner-counted request and input-token budget and, when replacing a failed route, only if the grant allows fallback; the receipt records the mode, data classes, grant digest and provider",
+   "AMR-05.2": "capabilities/knowledge/src/memory_lifecycle.rs (revoke, revoke_source, MemorySourceRevocation, MemorySourceRevocationReceipt), memory.rs (MemoryItemStatus::Revoked), memory_working.rs (a revoked item is never loaded, not even as history), memory_portable.rs (the revoked state survives export and import)",
+   "AMR-05.3": "shells/host/src/capability_package.rs: CapabilityRevocationList sealed and signed in its own domain, verify_capability_revocations with trusted issuer keys and rollback and fork refusal against the last accepted checkpoint, VerifiedCapabilityRevocations::never_accepted, admission refusing revoked packages, manifests and signer keys and binding the list, deactivate_revoked_entries for revoked and unchecked catalog entries",
+   "AMR-05.4": "kernel/engine/src/action_history.rs (new): a hash-chained action history of authorization, effect digest, outcome, reason code and evidence digests; identifiers that are not plain or that the shared secret detector flags are replaced without a digest; expired entries keep only their place; replay refuses tampered, reordered, truncated and foreign chains; a manual export is rescanned and writes nothing",
+   "AMR-05.5": "shells/host/src/diagnostic_export.rs: SupportBundle (doctor report, component versions, evidence digests, automatic_upload false), build_support_bundle and preview_support_bundle through the existing one-use expiring export approval"
+  },
+  "mutation_checks": "run before the source commit with private tooling, each applying one mutation and running the package filter: 33 single mutations; 32 made their expected test fail at once and one (an untrusted revocation issuer accepted) first survived because the test's untrusted case was refused by a key-digest mismatch instead; the test now isolates the trust rule and the rerun mutant fails it. They cover the F1 settlement (2), the withheld state, the released run, the rebinding check, the suspended wait, routing (7), memory revocation (5), extension revocation (7), action history (5) and support bundles (3). These runs are not retained logs",
+  "failure_comparison": "linux 188 passed, 19 failed, 51 ignored and host 373 passed, 52 failed, 10 ignored; both failure name sets are identical to the batch 11 source-check baseline; every new test passes",
+  "retained_failures": [
+   {
+    "stage": "batch12-source-checks",
+    "indexes": [
+     7,
+     8
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, identical names to the batch 11 baseline"
+   },
+   {
+    "stage": "batch12-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless Chrome in the Puppeteer cache; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   }
+  ],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch12-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the 52 native-prerequisite host failures (batch12-source-checks/08.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch12-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch12-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch12-blocked-causes/03.log) and the documentation gate as above"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-capability-knowledge",
+   "agentmage-host",
+   "agentmage-kernel-engine"
+  ],
+  "cascade": "no operational store source changed, so no Sprint 11 store wave ran; the new engine module changed the engine library root, which the six Story 3.1 configuration reports and the Story 12.1 agent progress report bind; the renewed Story 3.1 component inventory staled the Story 11.1 security map, which staled the Story 11.2 storage security and frozen-scope reports, which staled the Story 11.2 AC1 and AC3 reports, and the renewed agent progress report staled the Story 12.1 security map; because those later producers read the working tree, one rebind stage renewed them in order (batch12-rebind); the Sprint 27-34 knowledge boundary reviews are written together by their producer, so Sprints 27-30 changed only their revision and the already stale Sprints 32-34 were renewed by the same automated review; a compact inventory after every commit found no further cascade",
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "45552ff5c695bed64e7de90697fd5333adec73f5",
+    "to": "d710d443c4a254fbe9c29aa774c474d8d751f828",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 12 evidence pass for the changed sources; only bound digests changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 12 evidence pass for the changed sources; only bound digests changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+      "reason": "regenerated by the batch 12 evidence pass for the changed sources; only bound digests changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 12 evidence pass for the changed sources; only bound digests changed"
+     }
+    ]
+   }
+  ],
+  "newly_stale_disposition": "only historical records: seven retained batch 10 and batch 11 stage records, which pin inputs as they were at their revisions, and the Sprint 15, 31, 34, 50, 78, 79 and 108 local evidence reports, the Sprint 15 diagnostic canary matrix and the Story 49.2 adapter evaluation report, which were already stale through other inputs before this batch",
+  "runtime_campaign": "Story 23.4 runtime campaign peak RSS 12,584 to 50,176 KiB against a 1,048,576 KiB bound over nine commands",
+  "cli_observation": {
+   "source_commit": "f813ed6a76bcbd5005e9162f9c2c3aa8f872be12",
+   "binaries_sha256": {
+    "agentmage": "f2f4697e0d52ba7a4159c68511adb028130848cbba48aa0715d22f261d3ceefe",
+    "agentmage-host": "5c359b656e3c2bd47963e67955c86bb0507a6a364e1f6440680747a154071835",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "dirty_start_exit": 1,
+   "dirty_preserved": true,
+   "idle_stop_exit": 1,
+   "idle_pause_exit": 1,
+   "idle_resume_exit": 1,
+   "qualification": "actual-binary-native-prerequisite-refusal-only",
+   "reason": "native prerequisites refuse the launch before any run starts in this sandbox; the AMR-05 components have no CLI path yet",
+   "attachment": "batch12-observation/attachments/observation.json"
+  },
+  "not_run": [
+   "any coding host, CLI or native process path for the AMR-05 components (AMR-05.9, AMR-05.10)",
+   "a network, provider, remote route or credential",
+   "offline documentation packs, language servers and recipes (AMR-05.6 to AMR-05.8)",
+   "the development factory's in-host continuation and the suspend-resume acceptance case, which need a native Linux host",
+   "actual-process detach, reconnect and cleanup (AMR-04.6.3), declarations and context views (AMR-04.7.2, AMR-04.10) and hunk selection (AMR-04.2.3)",
+   "the native-only Linux boundary tests",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [
+    {
+     "row": "AMR-05.1",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component row: unit tests only; no host, CLI, wire or native process uses it yet"
+    },
+    {
+     "row": "AMR-05.2",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component row: unit tests only; no host, CLI, wire or native process uses it yet"
+    },
+    {
+     "row": "AMR-05.3",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component row: unit tests only; no host, CLI, wire or native process uses it yet"
+    },
+    {
+     "row": "AMR-05.4",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component row: unit tests only; no host, CLI, wire or native process uses it yet"
+    },
+    {
+     "row": "AMR-05.5",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component row: unit tests only; no host, CLI, wire or native process uses it yet"
+    }
+   ],
+   "release_claim": "none",
+   "independent_review_of_this_batch": "requested; open"
+  }
+ }
+}
