@@ -27,7 +27,7 @@
       ],
       "exit_code": 0,
       "id": "model-contracts",
-      "output_sha256": "bec0de64068498488e2141d47e47cd8452c52237ff4470ba41c8a30629ed8bb1",
+      "output_sha256": "f324382defb1aba191639bab88a870fd6987718ea5b3b929500c8371b879ee9c",
       "story_id": "13.1"
     },
     {
@@ -40,7 +40,7 @@
       ],
       "exit_code": 0,
       "id": "model-engine",
-      "output_sha256": "285dd8e37ebd6460e03f873fbfc5435604a003edc1cb3b2b228b5bb7465ef0e3",
+      "output_sha256": "b1a77ebadb8def31a93db81e9d9100cb588d995637cbb9b7daa859dc0302d303",
       "story_id": "13.1"
     },
     {
@@ -53,7 +53,7 @@
       ],
       "exit_code": 0,
       "id": "linux-native-adapter",
-      "output_sha256": "7785019620e14abd9bc3fff81c7190055e6b63b242c8f0c1f5df628a60b78578",
+      "output_sha256": "362850b8f8c67858bd63ad1e737dbb83c18364301deb4435bf8420ebda28f7ad",
       "story_id": "13.1"
     },
     {
@@ -65,7 +65,7 @@
       ],
       "exit_code": 0,
       "id": "model-json-contracts",
-      "output_sha256": "927715e999657637f5b9dafa065c9190d8b33d2959a82f0d7d5be62a38713ddf",
+      "output_sha256": "726f3aff0e9b3719e13fc1288982c8cf3526d6b89976e3089cfe1ee94dc95961",
       "story_id": "13.1"
     },
     {
@@ -84,7 +84,7 @@
       ],
       "exit_code": 0,
       "id": "model-policy-evidence",
-      "output_sha256": "d825e1e8f5d03ace29073deeed4d129abddf4fe056c9b6a40f7e1f2d2a0ef897",
+      "output_sha256": "4d8244677f510684f42a54b3ceaafedd5913dabce8d3858e5756b7b5c2d8fc0b",
       "story_id": "13.2"
     }
   ],
@@ -92,14 +92,14 @@
     "artifacts/sprints/sprint-13/story-13.1/finish-usage-report.json": "f4902131f2ca3322bc424a9af280a795769d44be499345997b2929c56041bfa3",
     "artifacts/sprints/sprint-13/story-13.1/muse-native-adapter-contract-v2.json": "9c4980f2167f052c4da1a063f470bb1d5852b616247d3b6dc507910eddedaf19",
     "artifacts/sprints/sprint-13/story-13.2/linux-cross-adapter-parity.json": "6733691ce2a645dec00fc7dfec22403d82d1daf00bf1970d69b8ff3752ce1503",
-    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "01afabf0fb83325e03683e18f7670edd4e3e29a3e0a99f7afeb2ea26c45db71e",
+    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "cb9b647e90127c6e471e00817b1ccc21f1414bc3fcbdbe43a22ff85b6f704cf3",
     "artifacts/sprints/sprint-13/story-13.3/muse-live-install.json": "91826d99f497a212ab32f87176a5b034a8b7e1fe510c9a12a05d95fc38a8dd18",
     "artifacts/sprints/sprint-13/story-13.3/muse-profile-evaluation.json": "88f560db0a1486f39a1004a0cd88e699948d194bf9221ee6e1a6d037c2e5b670",
     "artifacts/sprints/sprint-13/story-13.3/muse-sandbox-inference.json": "07260b4b60bc5d19d986fdea9bea807b3aa9e0cc543e0ce3a145a3c56a0bd547",
-    "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-report.json": "a6d01eb26695c5d46b15a9ab38b775cb4607ea411fa34619483b48fce505b1a8",
+    "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-report.json": "b37bdf28eb6c4093a8a7c9fcc25e129b1f50d0f498c8441d65e47825b878332e",
     "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json": "571913bbf14d520847118a6988edecef0950be0118ea8392dfca33718bf76a75",
     "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json": "1230b416221d7e28b3ff038a3b9bd8eca972220eb1549763b4b0d68b1416ed69",
-    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "bd91fcd6f560bba127916ecd43235f1f0463c21b54d2a9768b93dc4d991eb3fd"
+    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "089627869ff0ca501d81c4d02240a25bd70ebb90f49943d645272c0d3a19a338"
   },
   "evidence_state": {
     "adapter_contract": "CONTRACT-PASS-LIVE-BLOCKED",
@@ -175,7 +175,7 @@
       "SR-MGM-004"
     ]
   },
-  "source_revision": "839453a1c0a7301e210f0d5a254b1c5fb9fa63ed",
+  "source_revision": "abff104afc281ca455c68e680392737e0e1bc1e0",
   "source_sha256": {
     "kernel/contracts/src/agent.rs": "c8cc0af7aa697ba6fb0ef0be8bafc8c2100c910169ee6f9fa2a2807ba48243c5",
     "kernel/contracts/src/agent_proposal.rs": "cd77cca5b9a6c6fd64c54053e9bdae5233cf50942c111c52fefba0945998519f",
@@ -389,10 +389,10 @@
     "kernel/engine/src/runtime_inspector.rs": "8f00a2b76a920baae95eff61f71be4c0ec14bf2959091167e4ddb6af9933bd4d",
     "kernel/engine/src/runtime_journal.rs": "3588470c9ed56647802638f766c16418b9f61a8d7ea82a422371c56063b3d464",
     "kernel/engine/src/runtime_lifecycle.rs": "56823d70a711ba278d8918d3cf288061b5addcfd97c6ed228c2ed184b03eb2d2",
-    "kernel/engine/src/runtime_loop.rs": "a0e307933c90be1368b690b2a4565fae07c16b58512cb7bdcf9faa7dceee8b58",
+    "kernel/engine/src/runtime_loop.rs": "ac2b2f93407d23c5c27f08d111af6b360cb4a3248489b369e15253a3ce9d0de2",
     "kernel/engine/src/runtime_loop/artifact_preparation.rs": "927799cc0abee91289ad650072941a59d20a456dfb2e289a5a17b754e85e66fc",
     "kernel/engine/src/runtime_loop_artifact_preparation_tests.rs": "76c052a6265dfd0acbf33367b2d297cfe7ced195f1484c54d0ef2b0ef6575712",
-    "kernel/engine/src/runtime_loop_tests.rs": "50098f6cbf257b6b5bd14936516d56244a44b7d8675af9eba9296400463c226c",
+    "kernel/engine/src/runtime_loop_tests.rs": "fc6aa5e1e2ea7b24247aca5785b07340b2a90be7b2b435850f45c1b1348a0a99",
     "kernel/engine/src/runtime_projection.rs": "9b2a2274f3328ac8e33d1e8a493b4e374fb8a4dc7c28582b186002647b6de25d",
     "kernel/engine/src/runtime_recovery.rs": "7997cf0ccae000d132eee6b92b990a0891884887441b06ba69cf28dd8494dcb6",
     "kernel/engine/src/s012_it01.rs": "2cbf6a490063f32408dce925deca54cafdf837d440ae389629ce63f2b7490c8f",
