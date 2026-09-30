@@ -149,7 +149,7 @@
     {
       "bytes": 17136,
       "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
-      "sha256": "cd5a42396f733a42bb7b66a74f44a4fd4862981cc61058673e0cb1c1e19f80d5"
+      "sha256": "4d18a5593e9a8c6e70a749c5e71db44556f922d7394a6c148ad1c230c1bc8c4a"
     },
     {
       "bytes": 51,
@@ -471,7 +471,7 @@
   "product_requirement_completion_claim": "none",
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "cc8d5c2d558787a485bdea1d19725c1495e34639",
+  "source_revision": "28726ab4b6dc4d2fdb469928761a74b18aac8679",
   "status": "pass-story-security-mapping-with-open-product-controls",
   "summary": {
     "demonstrated_story_scope_count": 7,
