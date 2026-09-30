@@ -4913,6 +4913,41 @@ fn rejected_approval_input_preserves_the_pending_challenge_for_a_valid_response(
 }
 
 #[test]
+fn the_tool_boundary_and_context_are_readable_only_once_the_run_has_its_outcome() {
+    // Review V3 of 8fbd2bc6 (Decision 0116): nothing beside the loop reads the
+    // boundary or the context port while the run can still advance.
+    let (mut runtime, executions) = callback_fixture(PermissionScript::Ask);
+    assert!(runtime.ended_tool_boundary().is_none());
+    assert!(runtime.ended_context_port().is_none());
+    let RuntimeCoordinatorStep::AwaitingApproval { challenge } =
+        runtime.run_until_boundary(None, None).unwrap()
+    else {
+        panic!("fixture requires approval");
+    };
+    assert!(runtime.outcome().is_none());
+    assert!(runtime.ended_tool_boundary().is_none());
+    assert!(runtime.ended_context_port().is_none());
+    let response = RuntimeApprovalResponse {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        run_id: challenge.run_id.clone(),
+        approval_id: challenge.approval_id.clone(),
+        disposition: RuntimeApprovalDisposition::Allow,
+        challenge_sha256: challenge.challenge_sha256.clone(),
+        grant_id: Some(GrantId::from_raw("grant-0001")),
+        selection: None,
+    };
+    let RuntimeCoordinatorStep::Complete { .. } =
+        runtime.run_until_boundary(Some(&response), None).unwrap()
+    else {
+        panic!("the approved call completes the run");
+    };
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    assert!(runtime.outcome().is_some());
+    assert!(runtime.ended_tool_boundary().is_some());
+    assert!(runtime.ended_context_port().is_some());
+}
+
+#[test]
 fn story_23_4_publication_failure_matrix_stops_without_hidden_effect_or_retry() {
     for (fault, expected_executions) in [
         (PermissionScript::FailPermissionPublication, 0),

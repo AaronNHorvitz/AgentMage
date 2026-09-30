@@ -1034,6 +1034,9 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 .with_checked_continuity(continuity)
                 .map_err(|_| NativeChatRuntimeError::RequestDenied)?;
         }
+        if request.event_cursor.is_some() {
+            context = context.resumed_after_restart();
+        }
         let mut key = CodingDevelopmentKeyProvider::open(&self.activation)
             .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
         let authority = open_linux_development_authority(

@@ -74,8 +74,17 @@ pub fn read_development_line(
 ) -> Result<LinuxDevelopmentInputLine, LinuxDevelopmentBoundaryError> {
     let stdin = std::io::stdin();
     let _input_owner = stdin.lock();
+    read_development_line_from(&stdin, cancellation)
+}
+
+/// The general line reader over one descriptor: the general bound, and an
+/// over-long line discarded through its newline (review V4 of `8fbd2bc6`).
+fn read_development_line_from(
+    input: &impl AsFd,
+    cancellation: &AtomicBool,
+) -> Result<LinuxDevelopmentInputLine, LinuxDevelopmentBoundaryError> {
     read_line(
-        &stdin,
+        input,
         cancellation,
         MAX_DEVELOPMENT_LINE_BYTES,
         Overflow::Discard,
@@ -320,28 +329,25 @@ mod tests {
         }
         long.push(b'\n');
         long.extend_from_slice(b"select 1 2\n");
-        output.write_all(&long).unwrap();
-        let read_next = || {
-            read_line(
-                &input,
-                &AtomicBool::new(false),
-                MAX_DEVELOPMENT_LINE_BYTES,
-                Overflow::Discard,
-            )
-            .unwrap()
-        };
-        assert_eq!(read_next(), LinuxDevelopmentInputLine::TooLong);
-        assert_eq!(
-            read_next(),
-            LinuxDevelopmentInputLine::Line("select 1 2".to_owned())
-        );
-        assert_eq!(rustix::fs::fcntl_getfl(&input).unwrap(), flags);
         // The longest selection of 511 of 512 hunks fits within one line.
         let selection = (1..=511).fold(String::from("select"), |mut line, number| {
             line.push_str(&format!(" {number}"));
             line
         });
         assert!(selection.len() < MAX_DEVELOPMENT_LINE_BYTES);
+        long.extend_from_slice(selection.as_bytes());
+        long.push(b'\n');
+        output.write_all(&long).unwrap();
+        // Review V4 of 8fbd2bc6: through the public reader's own bound and
+        // overflow policy, not only the private reader's.
+        let read_next = || read_development_line_from(&input, &AtomicBool::new(false)).unwrap();
+        assert_eq!(read_next(), LinuxDevelopmentInputLine::TooLong);
+        assert_eq!(
+            read_next(),
+            LinuxDevelopmentInputLine::Line("select 1 2".to_owned())
+        );
+        assert_eq!(read_next(), LinuxDevelopmentInputLine::Line(selection));
+        assert_eq!(rustix::fs::fcntl_getfl(&input).unwrap(), flags);
         // An over-long fragment that ends without a newline never answers.
         let (input, mut output) = std::io::pipe().unwrap();
         output

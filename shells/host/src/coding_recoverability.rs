@@ -598,6 +598,26 @@ impl RunEffectRecorder {
         let effects = run_effects(&self.executed, &self.changes)?;
         assess_run_recoverability(session_id, task_id, run_id, &effects, current_sha256)
     }
+
+    /// Declares the recorded run for its exact request. A run resumed from an
+    /// event cursor was composed again after a restart, so this record holds
+    /// only what happened since and is never declared as the run (review V1 of
+    /// `8fbd2bc6`, Decision 0117).
+    pub fn declare_run(
+        &self,
+        request: &RuntimeRunRequest,
+        current_sha256: &dyn Fn(&[String]) -> Option<String>,
+    ) -> Result<RecoverabilityReport, RecoverabilityError> {
+        if request.event_cursor.is_some() {
+            return Err(RecoverabilityError::Invalid);
+        }
+        self.declare(
+            request.session_id.as_str(),
+            request.task.task_id.as_str(),
+            request.run_id.as_str(),
+            current_sha256,
+        )
+    }
 }
 
 /// A trusted effect owner that can declare the recoverability of one ended run.
@@ -1288,6 +1308,39 @@ mod tests {
         assert_eq!(
             text.lines().count() - 2,
             text.matches("reconcile manually").count()
+        );
+    }
+
+    #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    fn a_resumed_run_is_never_declared_from_its_post_restart_record() {
+        // Review V1 of 8fbd2bc6: a run resumed from an event cursor was
+        // composed again after a restart; its recorder starts empty there.
+        let (mut request, events, _, _) =
+            crate::runtime_read_tests::completed_native_read_fixture();
+        let mut recorder = RunEffectRecorder::new();
+        recorder.record_execution(ExecutedEffect {
+            operation_id: "read-after-restart".to_owned(),
+            kind: ExecutedEffectKind::NoEffect,
+            outcome: ExecutedEffectOutcome::Completed {
+                outcome: OperationOutcome::Succeeded,
+                changed: false,
+            },
+        });
+        let current = |_: &[String]| None;
+        let report = recorder.declare_run(&request, &current).unwrap();
+        assert_eq!(report.run_id.as_deref(), Some(request.run_id.as_str()));
+        assert_eq!(report.session_id, request.session_id.as_str());
+        let last = events.last().unwrap();
+        request.event_cursor = Some(agentmage_kernel_contracts::RuntimeEventCursor {
+            run_id: request.run_id.clone(),
+            event_id: last.event_id.clone(),
+            sequence: last.sequence,
+            event_sha256: last.event_sha256.clone(),
+        });
+        assert_eq!(
+            recorder.declare_run(&request, &current).err(),
+            Some(RecoverabilityError::Invalid)
         );
     }
 }

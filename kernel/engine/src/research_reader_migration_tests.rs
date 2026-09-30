@@ -55,13 +55,20 @@ fn version_nineteen_reader_epoch_preserves_tables_records_and_history() {
     drop(connection);
     let store = OperationalStore::open(&path, &observation(), &mut TestKey(key)).unwrap();
     let version: i64 = store.connection.pragma_query_value(None, "user_version", |row| row.get(0)).unwrap();
-    assert_eq!(version, 20);
-    assert_eq!(tables(&store.connection), original_tables);
+    assert_eq!(version, SCHEMA_VERSION);
+    // The reader epoch adds no table; the later job ledger migration adds
+    // only its own three (Decision 0118).
+    let mut expected_tables: Vec<String> = serde_json::from_value(original_tables).unwrap();
+    expected_tables.extend(["job_ledger_entries", "job_ledger_heads", "job_ledger_roots"].map(str::to_owned));
+    expected_tables.sort();
+    assert_eq!(tables(&store.connection), serde_json::to_value(expected_tables).unwrap());
     assert_eq!(legacy_record(&store.connection), original_record);
     let migrated = history(&store.connection);
     assert_eq!(&migrated.as_array().unwrap()[..19], original_history.as_array().unwrap());
     assert_eq!(migrated[19], serde_json::json!({"version":20,
         "sha256":sha256_hex(crate::operational_store::MIGRATION_20_SCHEMA_SQL.as_bytes())}));
+    assert_eq!(migrated[20], serde_json::json!({"version":21,
+        "sha256":sha256_hex(crate::operational_store::MIGRATION_21_SCHEMA_SQL.as_bytes())}));
     drop(store);
     drop(OperationalStore::open(&path, &observation(), &mut TestKey(key)).unwrap());
     fs::remove_dir_all(directory).unwrap();
@@ -117,7 +124,7 @@ fn failed_version_twenty_reader_epoch_keeps_version_nineteen_retryable() {
     connection.execute_batch("DROP TRIGGER reject_reader_epoch;").unwrap();
     drop(connection);
     let current = OperationalStore::open(&path, &observation(), &mut TestKey(key)).unwrap();
-    assert_eq!(history(&current.connection).as_array().unwrap().len(), 20);
+    assert_eq!(history(&current.connection).as_array().unwrap().len(), 21);
     assert_eq!(legacy_record(&current.connection), record);
     drop(current);
     fs::remove_dir_all(directory).unwrap();
@@ -143,4 +150,8 @@ fn version_nineteen_backup_refusal_preserves_source_without_creating_candidate()
         .map(|entry| entry.unwrap().path()).collect();
     assert_eq!(files, vec![backup]);
     fs::remove_dir_all(directory).unwrap();
+}
+
+mod job_ledger_migration {
+    include!("job_ledger_migration_tests.rs");
 }

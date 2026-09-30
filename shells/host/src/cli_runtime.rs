@@ -868,6 +868,7 @@ mod tests {
         released: usize,
         advances: usize,
         cancellations: usize,
+        declarations: Option<RuntimeRunDeclarations>,
     }
 
     impl NativeChatRuntimePort for ScriptedPort {
@@ -923,6 +924,22 @@ mod tests {
             self.cancel
                 .take()
                 .ok_or(NativeChatRuntimeError::RunUnavailable)
+        }
+
+        fn run_declarations(
+            &mut self,
+            run_id: &agentmage_kernel_contracts::RuntimeRunId,
+            request_sha256: &str,
+        ) -> Result<RuntimeRunDeclarations, NativeChatRuntimeError> {
+            if run_id != &self.request.run_id
+                || request_sha256 != self.request.request_sha256
+                || self.released > 0
+            {
+                return Err(NativeChatRuntimeError::RequestDenied);
+            }
+            self.declarations
+                .clone()
+                .ok_or(NativeChatRuntimeError::RequestDenied)
         }
 
         fn release(
@@ -1017,6 +1034,7 @@ mod tests {
             released: 0,
             advances: 0,
             cancellations: 0,
+            declarations: None,
         };
         let mut sink = RecordingSink::default();
         let result = drive_interactive_cli_runtime(
@@ -1037,6 +1055,79 @@ mod tests {
 
     #[test]
     #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    fn run_declarations_are_kept_only_for_this_run_and_a_report_only_when_it_verifies() {
+        // Review V3 of 8fbd2bc6: declarations naming another run are dropped
+        // whole; a report for another run, or one whose seal no longer
+        // matches, is dropped as unavailable while the context views stay.
+        let (request, events, outcome, _) =
+            crate::runtime_read_tests::completed_native_read_fixture();
+        let report_for = |run_id: &str| {
+            crate::coding_recoverability::assess_run_recoverability(
+                request.session_id.as_str(),
+                request.task.task_id.as_str(),
+                run_id,
+                &[crate::coding_recoverability::SessionEffect::Command {
+                    operation_id: "command-1".to_owned(),
+                }],
+                &|_| None,
+            )
+            .unwrap()
+        };
+        let valid = RuntimeRunDeclarations {
+            schema_version: 1,
+            run_id: request.run_id.clone(),
+            request_sha256: request.request_sha256.clone(),
+            recoverability: Some(report_for(request.run_id.as_str())),
+            context_inspections: Some(Vec::new()),
+        };
+        let mut foreign_run = valid.clone();
+        foreign_run.run_id = agentmage_kernel_contracts::RuntimeRunId::from_raw("another-run");
+        let mut foreign_request = valid.clone();
+        foreign_request.request_sha256 = "f".repeat(64);
+        let mut foreign_report = valid.clone();
+        foreign_report.recoverability = Some(report_for("another-run"));
+        let mut tampered = valid.clone();
+        let report = tampered.recoverability.as_mut().unwrap();
+        report.requires_reconciliation = !report.requires_reconciliation;
+        let without_report = RuntimeRunDeclarations {
+            recoverability: None,
+            ..valid.clone()
+        };
+        for (declarations, expected) in [
+            (Some(valid.clone()), Some(valid.clone())),
+            (Some(foreign_run), None),
+            (Some(foreign_request), None),
+            (Some(foreign_report), Some(without_report.clone())),
+            (Some(tampered), Some(without_report)),
+            (None, None),
+        ] {
+            let input = input(&request);
+            let mut port = ScriptedPort {
+                input: input.clone(),
+                request: request.clone(),
+                start: Some(step(&request, events.clone(), None, Some(outcome.clone()))),
+                advance: None,
+                cancel: None,
+                released: 0,
+                advances: 0,
+                cancellations: 0,
+                declarations,
+            };
+            let result = drive_interactive_cli_runtime(
+                &mut port,
+                input,
+                &mut PanicApproval,
+                &mut RecordingSink::default(),
+                &mut NeverCancelInteractiveCli,
+            )
+            .expect("terminal runtime completes");
+            assert_eq!(result.declarations, expected);
+            assert_eq!(port.released, 1);
+        }
+    }
+
+    #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
     fn protected_denial_and_cancellation_return_through_exact_runtime_cursor() {
         let (request, _, _, _) = crate::runtime_read_tests::completed_native_read_fixture();
         let fixture = approval_fixture(&request);
@@ -1050,6 +1141,7 @@ mod tests {
             released: 0,
             advances: 0,
             cancellations: 0,
+            declarations: None,
         };
         let mut denied_sink = RecordingSink::default();
         let denied = drive_interactive_cli_runtime(
@@ -1072,6 +1164,7 @@ mod tests {
             released: 0,
             advances: 0,
             cancellations: 0,
+            declarations: None,
         };
         let mut cancelled_sink = RecordingSink::default();
         let cancelled = drive_interactive_cli_runtime(
@@ -1142,6 +1235,7 @@ mod tests {
                 released: 0,
                 advances: 0,
                 cancellations: 0,
+                declarations: None,
             };
             let requested = Arc::new(AtomicBool::new(false));
             let mut approvals = StopDuringApproval {
@@ -1204,6 +1298,7 @@ mod tests {
             released: 0,
             advances: 0,
             cancellations: 0,
+            declarations: None,
         };
         request_port.input.profile_id = "substituted-profile".to_owned();
         let substituted_input = request_port.input.clone();
@@ -1316,6 +1411,7 @@ mod tests {
             released: 0,
             advances: 0,
             cancellations: 0,
+            declarations: None,
         };
 
         assert_eq!(
@@ -1366,6 +1462,7 @@ mod tests {
             released: 0,
             advances: 0,
             cancellations: 0,
+            declarations: None,
         };
         let mut sink = RecordingSink::default();
         assert_eq!(

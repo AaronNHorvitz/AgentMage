@@ -357,3 +357,240 @@ fn cli_start_failure_is_not_replaced_by_failed_best_effort_release() {
         assert_eq!(observed.compositions.load(Ordering::SeqCst), 1);
     }
 }
+
+/// Publishes the first event of a completed read fixture, waits for the test
+/// to open its gate, then publishes the rest and completes.
+struct GatedCoordinator {
+    publisher: agentmage_kernel_engine::runtime_event::RuntimeEventPublisher,
+    events: Vec<RuntimeEvent>,
+    outcome: Option<agentmage_kernel_contracts::RuntimeOutcome>,
+    gate: std::sync::mpsc::Receiver<()>,
+    declarations: Arc<AtomicUsize>,
+    report: crate::coding_recoverability::RecoverabilityReport,
+}
+
+impl CodingCoordinatorPort for GatedCoordinator {
+    fn advance(
+        &mut self,
+        _response: Option<&RuntimeApprovalResponse>,
+        _cancellation: Option<&dyn ModelCancellationProbe>,
+    ) -> Result<RuntimeCoordinatorStep, CodingClientError> {
+        let mut events = std::mem::take(&mut self.events).into_iter();
+        let first = events.next().ok_or(CodingClientError::Runtime)?;
+        self.publisher
+            .publish(first)
+            .map_err(|_| CodingClientError::EventStream)?;
+        self.gate.recv().map_err(|_| CodingClientError::Runtime)?;
+        for event in events {
+            self.publisher
+                .publish(event)
+                .map_err(|_| CodingClientError::EventStream)?;
+        }
+        let outcome = self.outcome.take().ok_or(CodingClientError::Runtime)?;
+        Ok(RuntimeCoordinatorStep::Complete { outcome })
+    }
+
+    fn runtime_events(&self) -> &[RuntimeEvent] {
+        &[]
+    }
+
+    fn runtime_artifacts(&self) -> &[RuntimeArtifactRef] {
+        &[]
+    }
+}
+
+impl crate::coding_live_runtime::LiveRunDeclarationPort for GatedCoordinator {
+    fn run_recoverability(
+        &self,
+        _request: &RuntimeRunRequest,
+    ) -> Option<crate::coding_recoverability::RecoverabilityReport> {
+        self.declarations.fetch_add(1, Ordering::SeqCst);
+        Some(self.report.clone())
+    }
+
+    fn run_context_inspections(
+        &self,
+    ) -> Option<Vec<agentmage_kernel_engine::context_inspection::ContextInspection>> {
+        Some(Vec::new())
+    }
+}
+
+impl LiveCodingCoordinatorPort for GatedCoordinator {
+    fn subscribe_live_events(
+        &self,
+        capacity: usize,
+    ) -> Result<RuntimeEventSubscription, CodingClientError> {
+        self.publisher
+            .subscribe(capacity)
+            .map_err(|_| CodingClientError::EventStream)
+    }
+
+    fn read_artifact_page(
+        &mut self,
+        _reference: &RuntimeArtifactRef,
+        _offset: u64,
+        _maximum_bytes: u32,
+    ) -> Result<RuntimeArtifactPage, CodingClientError> {
+        Err(CodingClientError::Runtime)
+    }
+
+    fn release_artifact(
+        &mut self,
+        _reference: &RuntimeArtifactRef,
+    ) -> Result<RuntimeArtifactState, CodingClientError> {
+        Err(CodingClientError::Runtime)
+    }
+}
+
+struct GatedFactory {
+    request: RuntimeRunRequest,
+    events: Vec<RuntimeEvent>,
+    outcome: agentmage_kernel_contracts::RuntimeOutcome,
+    gate: Option<std::sync::mpsc::Receiver<()>>,
+    declarations: Arc<AtomicUsize>,
+    report: crate::coding_recoverability::RecoverabilityReport,
+}
+
+impl NativeChatRuntimeFactory for GatedFactory {
+    type Coordinator = GatedCoordinator;
+
+    fn prepare_runtime_request(
+        &mut self,
+        _input: &RuntimePrepareInput,
+    ) -> Result<RuntimeRunRequest, RuntimeTransportError> {
+        Ok(self.request.clone())
+    }
+
+    fn compose_runtime(
+        &mut self,
+        _request: &RuntimeRunRequest,
+    ) -> Result<Self::Coordinator, RuntimeTransportError> {
+        Ok(GatedCoordinator {
+            publisher: agentmage_kernel_engine::runtime_event::RuntimeEventPublisher::new(),
+            events: self.events.clone(),
+            outcome: Some(self.outcome.clone()),
+            gate: self
+                .gate
+                .take()
+                .ok_or(RuntimeTransportError::RuntimeFailed)?,
+            declarations: Arc::clone(&self.declarations),
+            report: self.report.clone(),
+        })
+    }
+}
+
+fn last_cursor(
+    step: &crate::runtime_transport::RuntimeTransportStep,
+) -> agentmage_kernel_contracts::RuntimeEventCursor {
+    let event = step.events.last().expect("a step with events");
+    agentmage_kernel_contracts::RuntimeEventCursor {
+        run_id: event.run_id.clone(),
+        event_id: event.event_id.clone(),
+        sequence: event.sequence,
+        event_sha256: event.event_sha256.clone(),
+    }
+}
+
+#[test]
+fn the_live_service_declares_only_a_held_ended_run_that_is_not_busy() {
+    // Review V3 of 8fbd2bc6: the host service refuses declarations for an
+    // unknown run, a foreign request digest, and a run that can still advance
+    // or whose worker is busy, and returns the coordinator's own afterwards.
+    let (request, events, outcome, observed_result) =
+        crate::runtime_read_tests::completed_native_read_fixture();
+    assert!(observed_result && events.len() > 1);
+    let report = crate::coding_recoverability::assess_run_recoverability(
+        request.session_id.as_str(),
+        request.task.task_id.as_str(),
+        request.run_id.as_str(),
+        &[],
+        &|_| None,
+    )
+    .unwrap();
+    let (open_gate, gate) = std::sync::mpsc::channel();
+    let declarations = Arc::new(AtomicUsize::new(0));
+    let mut service = LiveCodingRuntimeService::new(GatedFactory {
+        request: request.clone(),
+        events,
+        outcome,
+        gate: Some(gate),
+        declarations: Arc::clone(&declarations),
+        report: report.clone(),
+    });
+    let input = RuntimePrepareInput {
+        resume: false,
+        record_session: false,
+        slow_subscriber_probe: false,
+        preauthorization: None,
+        engineering_session_id: None,
+        profile_id: request.model_profile.profile_id.as_str().to_owned(),
+        expected_entry_sha256: "a".repeat(64),
+        workspace_id: request.workspace_id.as_str().to_owned(),
+        workspace_root: "/tmp/agentmage-declaration-fixture".to_owned(),
+        prompt: request.task.objective.clone(),
+    };
+    let prepared = service.prepare(input).unwrap();
+    assert_eq!(prepared, request);
+    // Prepared but not started: nothing to declare.
+    assert_eq!(
+        service.run_declarations(&request.run_id, &request.request_sha256),
+        Err(RuntimeTransportError::RunUnavailable)
+    );
+    let mut step = service.start(request.clone()).unwrap();
+    assert!(step.outcome.is_none() && !step.events.is_empty());
+    assert_eq!(
+        service.run_declarations(
+            &RuntimeRunId::from_raw("declaration-unknown-run"),
+            &request.request_sha256
+        ),
+        Err(RuntimeTransportError::RunUnavailable)
+    );
+    assert_eq!(
+        service.run_declarations(&request.run_id, &"f".repeat(64)),
+        Err(RuntimeTransportError::RequestDenied)
+    );
+    // The worker is busy inside the run and the run has no outcome.
+    assert_eq!(
+        service.run_declarations(&request.run_id, &request.request_sha256),
+        Err(RuntimeTransportError::RequestDenied)
+    );
+    assert_eq!(declarations.load(Ordering::SeqCst), 0);
+    open_gate.send(()).unwrap();
+    for _ in 0..400 {
+        if step.outcome.is_some() {
+            break;
+        }
+        let cursor = last_cursor(&step);
+        let next = service
+            .advance(
+                &request.run_id,
+                &request.request_sha256,
+                Some(&cursor),
+                None,
+            )
+            .unwrap();
+        if !next.events.is_empty() || next.outcome.is_some() {
+            let mut events = step.events.clone();
+            events.extend(next.events.iter().cloned());
+            step = crate::runtime_transport::RuntimeTransportStep { events, ..next };
+        }
+    }
+    assert!(step.outcome.is_some());
+    let declared = service
+        .run_declarations(&request.run_id, &request.request_sha256)
+        .unwrap();
+    assert_eq!(declarations.load(Ordering::SeqCst), 1);
+    assert_eq!(declared.run_id, request.run_id);
+    assert_eq!(declared.request_sha256, request.request_sha256);
+    assert_eq!(declared.recoverability, Some(report));
+    assert_eq!(declared.context_inspections, Some(Vec::new()));
+    service
+        .release(&request.run_id, &request.request_sha256)
+        .unwrap();
+    // A released run can no longer be declared.
+    assert_eq!(
+        service.run_declarations(&request.run_id, &request.request_sha256),
+        Err(RuntimeTransportError::RunUnavailable)
+    );
+    assert_eq!(declarations.load(Ordering::SeqCst), 1);
+}

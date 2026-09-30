@@ -2,8 +2,11 @@
 //!
 //! A client may close and reopen, or a second client may attach, while a job
 //! runs. Each control request carries its own request identity and the job
-//! revision its sender observed. The owner applies a request at most once and
-//! answers a retry with the original decision. A request built on a stale
+//! revision its sender observed. The owner scopes each request identity by the
+//! authenticated client it came from, a scope the owner derives and the client
+//! never supplies, so one client cannot answer or block another's request
+//! (Decision 0118). The owner applies a request at most once and answers a
+//! retry from the same client with the original decision. A request built on a stale
 //! revision is refused, as is a transition the job's phase does not allow.
 //! Suspension and cancellation of running work are requests: the job enters
 //! `Suspending` or `Cancelling`, and only the owner's observation at a safe
@@ -44,6 +47,9 @@ pub const CANCEL_RESERVED_JOB_LEDGER_ENTRIES: usize = 1;
 /// remembered; a refused request can never be applied later on a retry,
 /// because the revision it names can only fall further behind.
 pub const MAX_REFUSED_JOB_CONTROL_ENTRIES: usize = 1_024;
+/// Entry format: version 2 records the authenticated client scope of each
+/// control request (Decision 0118). No version 1 entry was ever persisted.
+pub const JOB_LEDGER_ENTRY_SCHEMA_VERSION: u16 = 2;
 const MAX_IDENTIFIER_BYTES: usize = 128;
 const GENESIS_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -195,6 +201,8 @@ pub enum JobLedgerRecord {
     },
     /// A client control request and its decision.
     Control {
+        /// Authenticated client the owner received the request from.
+        client_scope: String,
         /// Exact request.
         request: JobControlRequest,
         /// Digest of the canonical request.
@@ -255,7 +263,8 @@ pub struct JobControlLedger {
     revision: u64,
     cancellation_requested: bool,
     entries: Vec<JobLedgerEntry>,
-    requests: BTreeMap<String, (String, JobControlDecision)>,
+    /// Recorded requests by authenticated client scope and request identity.
+    requests: BTreeMap<(String, String), (String, JobControlDecision)>,
     refused_entries: usize,
 }
 
@@ -303,9 +312,13 @@ impl JobControlLedger {
         for entry in &entries[1..] {
             match &entry.record {
                 JobLedgerRecord::Created { .. } => return Err(JobControlError::Integrity),
-                JobLedgerRecord::Control { request, .. } => {
+                JobLedgerRecord::Control {
+                    client_scope,
+                    request,
+                    ..
+                } => {
                     ledger
-                        .control(request)
+                        .control(client_scope, request)
                         .map_err(|_| JobControlError::Integrity)?;
                 }
                 JobLedgerRecord::Owner { event } => {
@@ -321,20 +334,25 @@ impl JobControlLedger {
         Ok(ledger)
     }
 
-    /// Applies one client request at most once. A retry with identical content
-    /// returns the original decision without a new entry.
+    /// Applies one client request at most once. `client_scope` names the
+    /// authenticated client the owner received it from. A retry with identical
+    /// content from the same client returns the original decision without a
+    /// new entry; the same identity from another client is its own request.
     pub fn control(
         &mut self,
+        client_scope: &str,
         request: &JobControlRequest,
     ) -> Result<JobControlDecision, JobControlError> {
         if request.schema_version != 1
             || request.job_id != self.job_id
+            || !valid_identifier(client_scope)
             || !valid_identifier(&request.request_id)
         {
             return Err(JobControlError::Invalid);
         }
         let request_sha256 = canonical_sha256(request)?;
-        if let Some((recorded, decision)) = self.requests.get(&request.request_id) {
+        let key = (client_scope.to_owned(), request.request_id.clone());
+        if let Some((recorded, decision)) = self.requests.get(&key) {
             return if *recorded == request_sha256 {
                 Ok(*decision)
             } else {
@@ -382,6 +400,7 @@ impl JobControlLedger {
         };
         self.append(
             JobLedgerRecord::Control {
+                client_scope: client_scope.to_owned(),
                 request: request.clone(),
                 request_sha256: request_sha256.clone(),
                 decision,
@@ -396,8 +415,7 @@ impl JobControlLedger {
             JobControlDecision::Applied { .. } => {}
             JobControlDecision::Refused { .. } => self.refused_entries += 1,
         }
-        self.requests
-            .insert(request.request_id.clone(), (request_sha256, decision));
+        self.requests.insert(key, (request_sha256, decision));
         Ok(decision)
     }
 
@@ -470,7 +488,7 @@ impl JobControlLedger {
             return Err(JobControlError::Full);
         }
         let mut entry = JobLedgerEntry {
-            schema_version: 1,
+            schema_version: JOB_LEDGER_ENTRY_SCHEMA_VERSION,
             job_id: self.job_id.clone(),
             sequence: self.entries.len() as u64,
             record,
@@ -562,6 +580,8 @@ mod tests {
     use super::*;
 
     const JOB: &str = "job-fixture";
+    const CLIENT: &str = "client-scope-a";
+    const CLIENT_B: &str = "client-scope-b";
 
     fn request(id: &str, action: JobControlAction, observed_revision: u64) -> JobControlRequest {
         JobControlRequest {
@@ -587,14 +607,17 @@ mod tests {
             revision: 2,
             phase: JobPhase::Cancelling,
         };
-        assert_eq!(ledger.control(&first), Ok(applied));
+        assert_eq!(ledger.control(CLIENT, &first), Ok(applied));
         let entries = ledger.entries().len();
         // A client that reconnects and retries gets the original decision.
-        assert_eq!(ledger.control(&first), Ok(applied));
+        assert_eq!(ledger.control(CLIENT, &first), Ok(applied));
         assert_eq!(ledger.entries().len(), entries);
         // A second client built its request on the older revision.
         assert_eq!(
-            ledger.control(&request("client-b-1", JobControlAction::Cancel, 1)),
+            ledger.control(
+                CLIENT_B,
+                &request("client-b-1", JobControlAction::Cancel, 1)
+            ),
             Ok(JobControlDecision::Refused {
                 refusal: JobControlRefusal::StaleRevision,
                 revision: 2,
@@ -602,7 +625,10 @@ mod tests {
             })
         );
         assert_eq!(
-            ledger.control(&request("client-b-2", JobControlAction::Cancel, 2)),
+            ledger.control(
+                CLIENT_B,
+                &request("client-b-2", JobControlAction::Cancel, 2)
+            ),
             Ok(JobControlDecision::Refused {
                 refusal: JobControlRefusal::AlreadyInEffect,
                 revision: 2,
@@ -622,7 +648,7 @@ mod tests {
         assert_eq!(observation.phase, JobPhase::Cancelled);
         assert!(observation.cancellation_requested);
         assert_eq!(
-            ledger.control(&request("client-a-2", JobControlAction::Resume, 3)),
+            ledger.control(CLIENT, &request("client-a-2", JobControlAction::Resume, 3)),
             Ok(JobControlDecision::Refused {
                 refusal: JobControlRefusal::Terminal,
                 revision: 3,
@@ -636,10 +662,74 @@ mod tests {
     }
 
     #[test]
+    fn request_identities_are_scoped_by_the_authenticated_client() {
+        // Decision 0118: the owner scopes each request identity by the client
+        // it authenticated, so one client can neither answer nor block
+        // another client's request by reusing its identity.
+        let mut ledger = running();
+        let suspend = request("r1", JobControlAction::Suspend, 1);
+        let applied = JobControlDecision::Applied {
+            revision: 2,
+            phase: JobPhase::Suspending,
+        };
+        assert_eq!(ledger.control(CLIENT, &suspend), Ok(applied));
+        // The same identity and content from another client is that client's
+        // own request, decided now, not a retry of the first.
+        assert_eq!(
+            ledger.control(CLIENT_B, &suspend),
+            Ok(JobControlDecision::Refused {
+                refusal: JobControlRefusal::StaleRevision,
+                revision: 2,
+                phase: JobPhase::Suspending,
+            })
+        );
+        assert_eq!(
+            ledger.control(CLIENT_B, &request("r1", JobControlAction::Cancel, 2)),
+            Err(JobControlError::RequestConflict)
+        );
+        let entries = ledger.entries().len();
+        assert_eq!(ledger.control(CLIENT, &suspend), Ok(applied));
+        assert_eq!(ledger.entries().len(), entries);
+        // A different request under the first client's identity still
+        // conflicts only with that client's own record.
+        assert_eq!(
+            ledger.control(CLIENT, &request("r1", JobControlAction::Cancel, 2)),
+            Err(JobControlError::RequestConflict)
+        );
+        let long = "x".repeat(129);
+        for scope in ["", "bad scope", "line\nbreak", long.as_str()] {
+            assert_eq!(
+                ledger.control(scope, &request("r2", JobControlAction::Cancel, 2)),
+                Err(JobControlError::Invalid)
+            );
+        }
+        assert_eq!(ledger.entries().len(), entries);
+        let head = ledger.head();
+        let replayed = JobControlLedger::replay(JOB, ledger.entries(), &head).unwrap();
+        assert_eq!(replayed, ledger);
+        // A recorded scope is part of the chain.
+        let mut moved = ledger.entries().to_vec();
+        let JobLedgerRecord::Control { client_scope, .. } = &mut moved[2].record else {
+            panic!("the first client's request is entry 2");
+        };
+        *client_scope = CLIENT_B.to_owned();
+        assert_eq!(
+            JobControlLedger::replay(JOB, &moved, &head).err(),
+            Some(JobControlError::Integrity)
+        );
+        assert!(
+            ledger
+                .entries()
+                .iter()
+                .all(|entry| entry.schema_version == JOB_LEDGER_ENTRY_SCHEMA_VERSION)
+        );
+    }
+
+    #[test]
     fn suspension_waits_for_a_safe_boundary_and_resume_requeues() {
         let mut ledger = running();
         assert_eq!(
-            ledger.control(&request("s1", JobControlAction::Suspend, 1)),
+            ledger.control(CLIENT, &request("s1", JobControlAction::Suspend, 1)),
             Ok(JobControlDecision::Applied {
                 revision: 2,
                 phase: JobPhase::Suspending,
@@ -647,17 +737,17 @@ mod tests {
         );
         // Withdrawing a pending suspension keeps the job running.
         assert_eq!(
-            ledger.control(&request("r1", JobControlAction::Resume, 2)),
+            ledger.control(CLIENT, &request("r1", JobControlAction::Resume, 2)),
             Ok(JobControlDecision::Applied {
                 revision: 3,
                 phase: JobPhase::Running,
             })
         );
         ledger
-            .control(&request("s2", JobControlAction::Suspend, 3))
+            .control(CLIENT, &request("s2", JobControlAction::Suspend, 3))
             .unwrap();
         assert_eq!(
-            ledger.control(&request("s3", JobControlAction::Suspend, 4)),
+            ledger.control(CLIENT, &request("s3", JobControlAction::Suspend, 4)),
             Ok(JobControlDecision::Refused {
                 refusal: JobControlRefusal::AlreadyInEffect,
                 revision: 4,
@@ -669,7 +759,7 @@ mod tests {
             Ok(5)
         );
         assert_eq!(
-            ledger.control(&request("r2", JobControlAction::Resume, 5)),
+            ledger.control(CLIENT, &request("r2", JobControlAction::Resume, 5)),
             Ok(JobControlDecision::Applied {
                 revision: 6,
                 phase: JobPhase::Queued,
@@ -684,14 +774,14 @@ mod tests {
     fn work_that_never_started_is_cancelled_or_suspended_at_once() {
         let mut ledger = JobControlLedger::create(JOB, "owner-fixture").unwrap();
         assert_eq!(
-            ledger.control(&request("s1", JobControlAction::Suspend, 0)),
+            ledger.control(CLIENT, &request("s1", JobControlAction::Suspend, 0)),
             Ok(JobControlDecision::Applied {
                 revision: 1,
                 phase: JobPhase::Suspended,
             })
         );
         assert_eq!(
-            ledger.control(&request("c1", JobControlAction::Cancel, 1)),
+            ledger.control(CLIENT, &request("c1", JobControlAction::Cancel, 1)),
             Ok(JobControlDecision::Applied {
                 revision: 2,
                 phase: JobPhase::Cancelled,
@@ -700,7 +790,7 @@ mod tests {
         // A job that finishes before its cancellation is observed stays finished.
         let mut ledger = running();
         ledger
-            .control(&request("c1", JobControlAction::Cancel, 1))
+            .control(CLIENT, &request("c1", JobControlAction::Cancel, 1))
             .unwrap();
         assert_eq!(ledger.observe_owner(JobOwnerEvent::Completed), Ok(3));
         let observation = ledger.observation();
@@ -712,11 +802,11 @@ mod tests {
     fn conflicting_foreign_and_malformed_requests_are_refused_without_entries() {
         let mut ledger = running();
         ledger
-            .control(&request("same-id", JobControlAction::Suspend, 1))
+            .control(CLIENT, &request("same-id", JobControlAction::Suspend, 1))
             .unwrap();
         let entries = ledger.entries().len();
         assert_eq!(
-            ledger.control(&request("same-id", JobControlAction::Cancel, 2)),
+            ledger.control(CLIENT, &request("same-id", JobControlAction::Cancel, 2)),
             Err(JobControlError::RequestConflict)
         );
         let mut foreign = request("other", JobControlAction::Cancel, 2);
@@ -730,7 +820,10 @@ mod tests {
             request("", JobControlAction::Cancel, 2),
             request(&"x".repeat(129), JobControlAction::Cancel, 2),
         ] {
-            assert_eq!(ledger.control(&invalid), Err(JobControlError::Invalid));
+            assert_eq!(
+                ledger.control(CLIENT, &invalid),
+                Err(JobControlError::Invalid)
+            );
         }
         assert_eq!(ledger.entries().len(), entries);
         assert_eq!(
@@ -747,10 +840,10 @@ mod tests {
     fn a_restarted_owner_replays_exactly_and_refuses_tampered_chains() {
         let mut ledger = running();
         ledger
-            .control(&request("s1", JobControlAction::Suspend, 1))
+            .control(CLIENT, &request("s1", JobControlAction::Suspend, 1))
             .unwrap();
         ledger
-            .control(&request("stale", JobControlAction::Cancel, 1))
+            .control(CLIENT, &request("stale", JobControlAction::Cancel, 1))
             .unwrap();
         ledger
             .observe_owner(JobOwnerEvent::SuspensionObserved)
@@ -765,8 +858,8 @@ mod tests {
         // The replayed owner still answers a retry with the original decision.
         let mut replayed = replayed;
         assert_eq!(
-            replayed.control(&request("s1", JobControlAction::Suspend, 1)),
-            ledger.control(&request("s1", JobControlAction::Suspend, 1))
+            replayed.control(CLIENT, &request("s1", JobControlAction::Suspend, 1)),
+            ledger.control(CLIENT, &request("s1", JobControlAction::Suspend, 1))
         );
 
         let mut changed_decision = retained.clone();
@@ -799,7 +892,7 @@ mod tests {
     fn a_truncated_or_rolled_back_chain_is_refused_by_its_retained_head() {
         let mut ledger = running();
         ledger
-            .control(&request("c1", JobControlAction::Cancel, 1))
+            .control(CLIENT, &request("c1", JobControlAction::Cancel, 1))
             .unwrap();
         let before_observation = ledger.head();
         ledger
@@ -841,16 +934,15 @@ mod tests {
         ] {
             let mut ledger = running();
             ledger
-                .control(&request("c1", JobControlAction::Cancel, 1))
+                .control(CLIENT, &request("c1", JobControlAction::Cancel, 1))
                 .unwrap();
             // A reconnect loop minting a fresh identity per stale attempt.
             let mut refused = 0;
             let error = loop {
-                match ledger.control(&request(
-                    &format!("stale-{refused}"),
-                    JobControlAction::Cancel,
-                    1,
-                )) {
+                match ledger.control(
+                    CLIENT,
+                    &request(&format!("stale-{refused}"), JobControlAction::Cancel, 1),
+                ) {
                     Ok(JobControlDecision::Refused { .. }) => refused += 1,
                     Ok(applied) => panic!("stale request applied: {applied:?}"),
                     Err(error) => break error,
@@ -862,18 +954,17 @@ mod tests {
             // A recorded refusal still answers its retry; an unrecorded one
             // is refused again rather than applied.
             assert!(matches!(
-                ledger.control(&request("stale-0", JobControlAction::Cancel, 1)),
+                ledger.control(CLIENT, &request("stale-0", JobControlAction::Cancel, 1)),
                 Ok(JobControlDecision::Refused {
                     refusal: JobControlRefusal::StaleRevision,
                     ..
                 })
             ));
             assert_eq!(
-                ledger.control(&request(
-                    &format!("stale-{refused}"),
-                    JobControlAction::Cancel,
-                    1
-                )),
+                ledger.control(
+                    CLIENT,
+                    &request(&format!("stale-{refused}"), JobControlAction::Cancel, 1)
+                ),
                 Err(JobControlError::Full)
             );
             assert_eq!(ledger.observe_owner(event), Ok(3));
@@ -885,19 +976,18 @@ mod tests {
         let mut ledger = running();
         for index in 0..MAX_REFUSED_JOB_CONTROL_ENTRIES {
             ledger
-                .control(&request(
-                    &format!("again-{index}"),
-                    JobControlAction::Resume,
-                    1,
-                ))
+                .control(
+                    CLIENT,
+                    &request(&format!("again-{index}"), JobControlAction::Resume, 1),
+                )
                 .unwrap();
         }
         assert_eq!(
-            ledger.control(&request("again-last", JobControlAction::Resume, 1)),
+            ledger.control(CLIENT, &request("again-last", JobControlAction::Resume, 1)),
             Err(JobControlError::Full)
         );
         assert_eq!(
-            ledger.control(&request("cancel", JobControlAction::Cancel, 1)),
+            ledger.control(CLIENT, &request("cancel", JobControlAction::Cancel, 1)),
             Ok(JobControlDecision::Applied {
                 revision: 2,
                 phase: JobPhase::Cancelling,
@@ -924,11 +1014,10 @@ mod tests {
             } else {
                 JobControlAction::Resume
             };
-            match ledger.control(&request(
-                &format!("toggle-{index}"),
-                action,
-                observation.revision,
-            )) {
+            match ledger.control(
+                CLIENT,
+                &request(&format!("toggle-{index}"), action, observation.revision),
+            ) {
                 Ok(JobControlDecision::Applied { .. }) => index += 1,
                 Ok(refused) => panic!("toggle refused: {refused:?}"),
                 Err(error) => break error,
@@ -963,11 +1052,10 @@ mod tests {
             } else {
                 JobControlAction::Resume
             };
-            match ledger.control(&request(
-                &format!("toggle-{index}"),
-                action,
-                observation.revision,
-            )) {
+            match ledger.control(
+                CLIENT,
+                &request(&format!("toggle-{index}"), action, observation.revision),
+            ) {
                 Ok(JobControlDecision::Applied { .. }) => index += 1,
                 Ok(refused) => panic!("toggle refused: {refused:?}"),
                 Err(error) => break error,
@@ -981,19 +1069,25 @@ mod tests {
         ));
         // A stale cancellation is a refusal and does not take the reserved entry.
         assert_eq!(
-            ledger.control(&request(
-                "cancel-stale",
-                JobControlAction::Cancel,
-                observation.revision - 1
-            )),
+            ledger.control(
+                CLIENT,
+                &request(
+                    "cancel-stale",
+                    JobControlAction::Cancel,
+                    observation.revision - 1
+                )
+            ),
             Err(JobControlError::Full)
         );
         assert!(matches!(
-            ledger.control(&request(
-                "cancel-current",
-                JobControlAction::Cancel,
-                observation.revision
-            )),
+            ledger.control(
+                CLIENT,
+                &request(
+                    "cancel-current",
+                    JobControlAction::Cancel,
+                    observation.revision
+                )
+            ),
             Ok(JobControlDecision::Applied {
                 phase: JobPhase::Cancelling,
                 ..

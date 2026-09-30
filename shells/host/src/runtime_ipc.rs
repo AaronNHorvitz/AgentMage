@@ -413,107 +413,7 @@ pub fn serve_linux_runtime_ipc<P: RuntimeTransportPort>(
             .ok()
             .filter(|request| request.version == WIRE_VERSION)
             .map(|request| request.payload);
-        let (response, shutdown) = match request {
-            Some(RuntimeIpcRequest::Prepare { input }) => match runtime.prepare(input) {
-                Ok(request) => (RuntimeIpcResponse::Prepared { request }, false),
-                Err(error) => (RuntimeIpcResponse::Error { error }, false),
-            },
-            Some(RuntimeIpcRequest::Start { request }) => match runtime.start(request) {
-                Ok(step) => (RuntimeIpcResponse::Step { step }, false),
-                Err(error) => (RuntimeIpcResponse::Error { error }, false),
-            },
-            Some(RuntimeIpcRequest::Advance {
-                run_id,
-                request_sha256,
-                after_event_cursor,
-                response,
-            }) => match runtime.advance(
-                &run_id,
-                &request_sha256,
-                after_event_cursor.as_ref(),
-                response.as_ref(),
-            ) {
-                Ok(step) => (RuntimeIpcResponse::Step { step }, false),
-                Err(error) => (RuntimeIpcResponse::Error { error }, false),
-            },
-            Some(RuntimeIpcRequest::Cancel {
-                run_id,
-                request_sha256,
-                cancellation_id,
-                after_event_cursor,
-            }) => match runtime.cancel(
-                &run_id,
-                &request_sha256,
-                cancellation_id,
-                after_event_cursor.as_ref(),
-            ) {
-                Ok(step) => (RuntimeIpcResponse::Step { step }, false),
-                Err(error) => (RuntimeIpcResponse::Error { error }, false),
-            },
-            Some(RuntimeIpcRequest::ReadArtifactPage {
-                run_id,
-                request_sha256,
-                reference,
-                offset,
-                maximum_bytes,
-            }) => match runtime.read_artifact_page(
-                &run_id,
-                &request_sha256,
-                &reference,
-                offset,
-                maximum_bytes,
-            ) {
-                Ok(page) => (RuntimeIpcResponse::ArtifactPage { page }, false),
-                Err(error) => (RuntimeIpcResponse::Error { error }, false),
-            },
-            Some(RuntimeIpcRequest::ReleaseArtifact {
-                run_id,
-                request_sha256,
-                reference,
-            }) => match runtime.release_artifact(&run_id, &request_sha256, &reference) {
-                Ok(state) => (RuntimeIpcResponse::ArtifactState { state }, false),
-                Err(error) => (RuntimeIpcResponse::Error { error }, false),
-            },
-            Some(RuntimeIpcRequest::RunDeclarations {
-                run_id,
-                request_sha256,
-            }) => match runtime.run_declarations(&run_id, &request_sha256) {
-                // An oversized answer is refused rather than ending the service.
-                Ok(declarations) if declarations_fit(&declarations) => {
-                    (RuntimeIpcResponse::RunDeclarations { declarations }, false)
-                }
-                Ok(_) => (
-                    RuntimeIpcResponse::Error {
-                        error: RuntimeTransportError::CapacityExceeded,
-                    },
-                    false,
-                ),
-                Err(error) => (RuntimeIpcResponse::Error { error }, false),
-            },
-            Some(RuntimeIpcRequest::RevokeSessionPreauthorization {
-                session_id,
-                preauthorization_sha256,
-            }) => match runtime
-                .revoke_session_preauthorization(&session_id, &preauthorization_sha256)
-            {
-                Ok(()) => (RuntimeIpcResponse::PreauthorizationRevoked, false),
-                Err(error) => (RuntimeIpcResponse::Error { error }, false),
-            },
-            Some(RuntimeIpcRequest::Release {
-                run_id,
-                request_sha256,
-            }) => match runtime.release(&run_id, &request_sha256) {
-                Ok(()) => (RuntimeIpcResponse::Released, false),
-                Err(error) => (RuntimeIpcResponse::Error { error }, false),
-            },
-            Some(RuntimeIpcRequest::Shutdown) => (RuntimeIpcResponse::Shutdown, true),
-            None => (
-                RuntimeIpcResponse::Error {
-                    error: RuntimeTransportError::RequestDenied,
-                },
-                false,
-            ),
-        };
+        let (response, shutdown) = answer(runtime, request);
         let bytes = serde_json::to_vec(&RuntimeIpcEnvelope {
             version: WIRE_VERSION,
             payload: response,
@@ -525,6 +425,115 @@ pub fn serve_linux_runtime_ipc<P: RuntimeTransportPort>(
         if shutdown {
             return Ok(());
         }
+    }
+}
+
+/// Answers one decoded request; `true` ends the service after the answer. A
+/// refused or oversized answer is an error response, never a transport failure.
+fn answer<P: RuntimeTransportPort>(
+    runtime: &mut P,
+    request: Option<RuntimeIpcRequest>,
+) -> (RuntimeIpcResponse, bool) {
+    match request {
+        Some(RuntimeIpcRequest::Prepare { input }) => match runtime.prepare(input) {
+            Ok(request) => (RuntimeIpcResponse::Prepared { request }, false),
+            Err(error) => (RuntimeIpcResponse::Error { error }, false),
+        },
+        Some(RuntimeIpcRequest::Start { request }) => match runtime.start(request) {
+            Ok(step) => (RuntimeIpcResponse::Step { step }, false),
+            Err(error) => (RuntimeIpcResponse::Error { error }, false),
+        },
+        Some(RuntimeIpcRequest::Advance {
+            run_id,
+            request_sha256,
+            after_event_cursor,
+            response,
+        }) => match runtime.advance(
+            &run_id,
+            &request_sha256,
+            after_event_cursor.as_ref(),
+            response.as_ref(),
+        ) {
+            Ok(step) => (RuntimeIpcResponse::Step { step }, false),
+            Err(error) => (RuntimeIpcResponse::Error { error }, false),
+        },
+        Some(RuntimeIpcRequest::Cancel {
+            run_id,
+            request_sha256,
+            cancellation_id,
+            after_event_cursor,
+        }) => match runtime.cancel(
+            &run_id,
+            &request_sha256,
+            cancellation_id,
+            after_event_cursor.as_ref(),
+        ) {
+            Ok(step) => (RuntimeIpcResponse::Step { step }, false),
+            Err(error) => (RuntimeIpcResponse::Error { error }, false),
+        },
+        Some(RuntimeIpcRequest::ReadArtifactPage {
+            run_id,
+            request_sha256,
+            reference,
+            offset,
+            maximum_bytes,
+        }) => match runtime.read_artifact_page(
+            &run_id,
+            &request_sha256,
+            &reference,
+            offset,
+            maximum_bytes,
+        ) {
+            Ok(page) => (RuntimeIpcResponse::ArtifactPage { page }, false),
+            Err(error) => (RuntimeIpcResponse::Error { error }, false),
+        },
+        Some(RuntimeIpcRequest::ReleaseArtifact {
+            run_id,
+            request_sha256,
+            reference,
+        }) => match runtime.release_artifact(&run_id, &request_sha256, &reference) {
+            Ok(state) => (RuntimeIpcResponse::ArtifactState { state }, false),
+            Err(error) => (RuntimeIpcResponse::Error { error }, false),
+        },
+        Some(RuntimeIpcRequest::RunDeclarations {
+            run_id,
+            request_sha256,
+        }) => match runtime.run_declarations(&run_id, &request_sha256) {
+            // An oversized answer is refused rather than ending the service.
+            Ok(declarations) if declarations_fit(&declarations) => {
+                (RuntimeIpcResponse::RunDeclarations { declarations }, false)
+            }
+            Ok(_) => (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::CapacityExceeded,
+                },
+                false,
+            ),
+            Err(error) => (RuntimeIpcResponse::Error { error }, false),
+        },
+        Some(RuntimeIpcRequest::RevokeSessionPreauthorization {
+            session_id,
+            preauthorization_sha256,
+        }) => {
+            match runtime.revoke_session_preauthorization(&session_id, &preauthorization_sha256) {
+                Ok(()) => (RuntimeIpcResponse::PreauthorizationRevoked, false),
+                Err(error) => (RuntimeIpcResponse::Error { error }, false),
+            }
+        }
+        Some(RuntimeIpcRequest::Release {
+            run_id,
+            request_sha256,
+        }) => match runtime.release(&run_id, &request_sha256) {
+            Ok(()) => (RuntimeIpcResponse::Released, false),
+            Err(error) => (RuntimeIpcResponse::Error { error }, false),
+        },
+        Some(RuntimeIpcRequest::Shutdown) => (RuntimeIpcResponse::Shutdown, true),
+        None => (
+            RuntimeIpcResponse::Error {
+                error: RuntimeTransportError::RequestDenied,
+            },
+            false,
+        ),
     }
 }
 
@@ -570,5 +579,161 @@ mod tests {
         let mut extra = serde_json::to_value(&declarations).unwrap();
         extra["complete"] = serde_json::Value::Bool(true);
         assert!(serde_json::from_value::<RuntimeRunDeclarations>(extra).is_err());
+    }
+
+    /// Answers declarations of a chosen size and counts releases.
+    struct DeclaringPort {
+        session_id_bytes: usize,
+        released: usize,
+    }
+
+    impl RuntimeTransportPort for DeclaringPort {
+        fn prepare(
+            &mut self,
+            _input: RuntimePrepareInput,
+        ) -> Result<RuntimeRunRequest, RuntimeTransportError> {
+            Err(RuntimeTransportError::RequestDenied)
+        }
+
+        fn start(
+            &mut self,
+            _request: RuntimeRunRequest,
+        ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+            Err(RuntimeTransportError::RequestDenied)
+        }
+
+        fn advance(
+            &mut self,
+            _run_id: &RuntimeRunId,
+            _request_sha256: &str,
+            _after_event_cursor: Option<&RuntimeEventCursor>,
+            _response: Option<&RuntimeApprovalResponse>,
+        ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+            Err(RuntimeTransportError::RequestDenied)
+        }
+
+        fn cancel(
+            &mut self,
+            _run_id: &RuntimeRunId,
+            _request_sha256: &str,
+            _cancellation_id: CancellationId,
+            _after_event_cursor: Option<&RuntimeEventCursor>,
+        ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+            Err(RuntimeTransportError::RequestDenied)
+        }
+
+        fn run_declarations(
+            &mut self,
+            run_id: &RuntimeRunId,
+            request_sha256: &str,
+        ) -> Result<RuntimeRunDeclarations, RuntimeTransportError> {
+            let report = crate::coding_recoverability::RecoverabilityReport {
+                schema_version: 1,
+                session_id: "s".repeat(self.session_id_bytes),
+                task_id: "task-declarations".to_owned(),
+                run_id: Some(run_id.as_str().to_owned()),
+                assessments: Vec::new(),
+                revert_order: Vec::new(),
+                fully_recoverable: true,
+                requires_reconciliation: false,
+                report_sha256: "0".repeat(64),
+            };
+            Ok(RuntimeRunDeclarations {
+                schema_version: 1,
+                run_id: run_id.clone(),
+                request_sha256: request_sha256.to_owned(),
+                recoverability: Some(report),
+                context_inspections: None,
+            })
+        }
+
+        fn release(
+            &mut self,
+            _run_id: &RuntimeRunId,
+            _request_sha256: &str,
+        ) -> Result<(), RuntimeTransportError> {
+            self.released += 1;
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn oversized_run_declarations_are_refused_and_the_service_keeps_answering() {
+        // Review V3 of 8fbd2bc6: an answer over the declaration bound is a
+        // capacity refusal, not a transport failure, and later requests are
+        // still answered.
+        let declare = || {
+            Some(RuntimeIpcRequest::RunDeclarations {
+                run_id: RuntimeRunId::from_raw("run-declarations"),
+                request_sha256: "1".repeat(64),
+            })
+        };
+        let mut port = DeclaringPort {
+            session_id_bytes: MAX_DECLARATION_BYTES,
+            released: 0,
+        };
+        assert_eq!(
+            answer(&mut port, declare()),
+            (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::CapacityExceeded,
+                },
+                false
+            )
+        );
+        assert_eq!(
+            answer(
+                &mut port,
+                Some(RuntimeIpcRequest::Release {
+                    run_id: RuntimeRunId::from_raw("run-declarations"),
+                    request_sha256: "1".repeat(64),
+                })
+            ),
+            (RuntimeIpcResponse::Released, false)
+        );
+        assert_eq!(port.released, 1);
+        // Just within the bound, the same answer crosses the wire.
+        port.session_id_bytes = 0;
+        let (RuntimeIpcResponse::RunDeclarations { declarations }, false) =
+            answer(&mut port, declare())
+        else {
+            panic!("a small declaration is answered");
+        };
+        let envelope = serde_json::to_vec(&declarations).unwrap().len();
+        port.session_id_bytes = MAX_DECLARATION_BYTES - envelope;
+        let (RuntimeIpcResponse::RunDeclarations { declarations }, false) =
+            answer(&mut port, declare())
+        else {
+            panic!("a declaration at the bound is answered");
+        };
+        assert_eq!(
+            serde_json::to_vec(&declarations).unwrap().len(),
+            MAX_DECLARATION_BYTES
+        );
+        port.session_id_bytes += 1;
+        assert!(matches!(
+            answer(&mut port, declare()),
+            (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::CapacityExceeded
+                },
+                false
+            )
+        ));
+        // A request the closed contract cannot decode is refused, not fatal;
+        // only an explicit shutdown ends the service.
+        assert_eq!(
+            answer(&mut port, None),
+            (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::RequestDenied,
+                },
+                false
+            )
+        );
+        assert_eq!(
+            answer(&mut port, Some(RuntimeIpcRequest::Shutdown)),
+            (RuntimeIpcResponse::Shutdown, true)
+        );
     }
 }

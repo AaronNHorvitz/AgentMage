@@ -153,6 +153,8 @@ pub mod infrastructure_safety;
 pub mod instruction_provenance;
 /// Single-owner reconciliation of durable job control requests.
 pub mod job_control;
+/// Durable job control ledgers in the operational store.
+pub mod job_ledger_store;
 /// Deterministic resumable jobs, leases, read-only schedules, notifications, and receipts.
 pub mod job_scheduler;
 pub mod linux_mail_interop;

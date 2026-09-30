@@ -1,5 +1,6 @@
 //! Executable CLI client for the explicitly activated disposable coding harness.
 
+use std::io::Write;
 use std::path::PathBuf;
 use std::sync::{
     Arc,
@@ -904,56 +905,150 @@ impl CodingApprovalPort for TerminalApprovals {
 }
 
 impl TerminalApprovals {
-    /// Asks for yes, a selection of hunks, or anything else as a refusal. A
-    /// selection refuses the whole call and asks the host for a separately
-    /// approved write of only those hunks (Decision 0114).
+    /// Asks on the terminal for yes, a selection of hunks, or anything else as
+    /// a refusal (Decision 0114).
     fn decide_selectable(
         &mut self,
         review: &ChangeReview,
     ) -> Result<(RuntimeApprovalDisposition, Option<RuntimeHunkSelection>), CodingClientError> {
-        for _ in 0..MAX_SELECTION_ATTEMPTS {
-            eprint!(
-                "Approve this exact operation? Type yes to allow, or select and hunk numbers (for example: select 1 {}) to refuse it and request a separate write of only those hunks: ",
-                review.hunk_count
-            );
-            let line = match read_development_line(&self.cancellation)
-                .map_err(|_| CodingClientError::Approval)?
-            {
-                LinuxDevelopmentInputLine::Line(line) => line,
-                // The reader discarded the rest of the line; ask again.
-                LinuxDevelopmentInputLine::TooLong => {
-                    eprintln!("selection not accepted: the line is too long");
-                    continue;
-                }
-                // Cancellation stays pending for the driver's next poll.
-                LinuxDevelopmentInputLine::Ended | LinuxDevelopmentInputLine::Cancelled => {
-                    return Ok((RuntimeApprovalDisposition::Deny, None));
-                }
-            };
-            if line == "yes" {
-                return Ok((RuntimeApprovalDisposition::Allow, None));
+        let cancellation = &self.cancellation;
+        decide_selection(review, &mut std::io::stderr(), &mut || {
+            read_development_line(cancellation).map_err(|_| CodingClientError::Approval)
+        })
+    }
+}
+
+/// Asks for yes, a selection of hunks, or anything else as a refusal. A
+/// selection refuses the whole call and asks the host for a separately
+/// approved write of only those hunks (Decision 0114). An over-long or
+/// unacceptable selection is answered and asked again, within a bound.
+fn decide_selection(
+    review: &ChangeReview,
+    prompts: &mut dyn Write,
+    next_line: &mut dyn FnMut() -> Result<LinuxDevelopmentInputLine, CodingClientError>,
+) -> Result<(RuntimeApprovalDisposition, Option<RuntimeHunkSelection>), CodingClientError> {
+    for _ in 0..MAX_SELECTION_ATTEMPTS {
+        let _ = write!(
+            prompts,
+            "Approve this exact operation? Type yes to allow, or select and hunk numbers (for example: select 1 {}) to refuse it and request a separate write of only those hunks: ",
+            review.hunk_count
+        );
+        let _ = prompts.flush();
+        let line = match next_line()? {
+            LinuxDevelopmentInputLine::Line(line) => line,
+            // The reader discarded the rest of the line; ask again.
+            LinuxDevelopmentInputLine::TooLong => {
+                let _ = writeln!(prompts, "selection not accepted: the line is too long");
+                continue;
             }
-            if !line.starts_with("select") {
+            // Cancellation stays pending for the driver's next poll.
+            LinuxDevelopmentInputLine::Ended | LinuxDevelopmentInputLine::Cancelled => {
                 return Ok((RuntimeApprovalDisposition::Deny, None));
             }
-            if let Some(numbers) = parse_hunk_selection(&line, review.hunk_count) {
-                return Ok((
-                    RuntimeApprovalDisposition::Narrow,
-                    Some(hunk_selection(review, &numbers)),
-                ));
-            }
-            eprintln!(
-                "selection not accepted: name at least one and fewer than all of hunks 1 to {}",
-                review.hunk_count
-            );
+        };
+        if line == "yes" {
+            return Ok((RuntimeApprovalDisposition::Allow, None));
         }
-        Ok((RuntimeApprovalDisposition::Deny, None))
+        if !line.starts_with("select") {
+            return Ok((RuntimeApprovalDisposition::Deny, None));
+        }
+        if let Some(numbers) = parse_hunk_selection(&line, review.hunk_count) {
+            return Ok((
+                RuntimeApprovalDisposition::Narrow,
+                Some(hunk_selection(review, &numbers)),
+            ));
+        }
+        let _ = writeln!(
+            prompts,
+            "selection not accepted: name at least one and fewer than all of hunks 1 to {}",
+            review.hunk_count
+        );
     }
+    Ok((RuntimeApprovalDisposition::Deny, None))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn an_overlong_selection_is_answered_and_asked_again() {
+        // Review V4 of 8fbd2bc6: through the prompt, an over-long line is
+        // not accepted, the person is asked again, and a later selection
+        // narrows the call.
+        let review = ChangeReview {
+            path: vec!["src".to_owned(), "calc.py".to_owned()],
+            preimage_sha256: "a".repeat(64),
+            postimage_sha256: "b".repeat(64),
+            hunk_count: 3,
+            hunk_ids: vec![
+                "hunk-1".to_owned(),
+                "hunk-2".to_owned(),
+                "hunk-3".to_owned(),
+            ],
+            selectable: true,
+            selected_from: None,
+            rendered: String::new(),
+        };
+        let answer = |lines: Vec<LinuxDevelopmentInputLine>| {
+            let mut lines = lines.into_iter();
+            let mut prompts = Vec::new();
+            let decision = decide_selection(&review, &mut prompts, &mut || {
+                lines.next().ok_or(CodingClientError::Approval)
+            });
+            (decision, String::from_utf8(prompts).unwrap(), lines.count())
+        };
+        let (decision, prompts, unread) = answer(vec![
+            LinuxDevelopmentInputLine::TooLong,
+            LinuxDevelopmentInputLine::Line("select 3 1".to_owned()),
+        ]);
+        assert_eq!(
+            decision.unwrap(),
+            (
+                RuntimeApprovalDisposition::Narrow,
+                Some(RuntimeHunkSelection {
+                    preimage_sha256: "a".repeat(64),
+                    proposal_sha256: "b".repeat(64),
+                    accepted_hunk_ids: vec!["hunk-1".to_owned(), "hunk-3".to_owned()],
+                })
+            )
+        );
+        assert_eq!(prompts.matches("Approve this exact operation?").count(), 2);
+        assert_eq!(
+            prompts
+                .matches("selection not accepted: the line is too long")
+                .count(),
+            1
+        );
+        assert_eq!(unread, 0);
+        // Every hunk, or a number out of range, is not a selection either.
+        let (decision, prompts, _) = answer(vec![
+            LinuxDevelopmentInputLine::Line("select 1 2 3".to_owned()),
+            LinuxDevelopmentInputLine::Line("yes".to_owned()),
+        ]);
+        assert_eq!(decision.unwrap(), (RuntimeApprovalDisposition::Allow, None));
+        assert!(prompts.contains("name at least one and fewer than all of hunks 1 to 3"));
+        // The attempts are bounded, and a bounded run of over-long lines
+        // is a refusal, never an approval.
+        let (decision, prompts, unread) = answer(vec![
+            LinuxDevelopmentInputLine::TooLong;
+            MAX_SELECTION_ATTEMPTS + 1
+        ]);
+        assert_eq!(decision.unwrap(), (RuntimeApprovalDisposition::Deny, None));
+        assert_eq!(
+            prompts.matches("Approve this exact operation?").count(),
+            MAX_SELECTION_ATTEMPTS
+        );
+        assert_eq!(unread, 1);
+        // End of input and cancellation refuse at once.
+        for ending in [
+            LinuxDevelopmentInputLine::Ended,
+            LinuxDevelopmentInputLine::Cancelled,
+        ] {
+            let (decision, _, _) = answer(vec![ending]);
+            assert_eq!(decision.unwrap(), (RuntimeApprovalDisposition::Deny, None));
+        }
+    }
 
     #[test]
     fn run_declarations_show_recoverability_and_each_context_view_or_say_unavailable() {

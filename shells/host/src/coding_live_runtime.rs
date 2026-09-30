@@ -76,6 +76,32 @@ where
     }
 }
 
+/// The declarations of one ended run. A run resumed from an event cursor was
+/// composed again after a restart, so its owners hold only what happened
+/// since; both parts are unavailable rather than partial (review V1 of
+/// `8fbd2bc6`, Decision 0117).
+fn declare_run<R: LiveRunDeclarationPort>(
+    runtime: &R,
+    request: &RuntimeRunRequest,
+) -> RuntimeRunDeclarations {
+    let resumed = request.event_cursor.is_some();
+    RuntimeRunDeclarations {
+        schema_version: 1,
+        run_id: request.run_id.clone(),
+        request_sha256: request.request_sha256.clone(),
+        recoverability: if resumed {
+            None
+        } else {
+            runtime.run_recoverability(request)
+        },
+        context_inspections: if resumed {
+            None
+        } else {
+            runtime.run_context_inspections()
+        },
+    }
+}
+
 const MAX_LIVE_RUNS: usize = 4;
 const MAX_LIVE_CURSOR_AGE_EVENTS: usize = 32;
 const CONTROL_WAIT: Duration = Duration::from_millis(25);
@@ -550,15 +576,10 @@ impl LiveCodingSession {
                         WorkerCommand::ReleaseArtifact(reference) => runtime
                             .release_artifact(&reference)
                             .map(WorkerResponse::ArtifactState),
-                        WorkerCommand::Declare => {
-                            Ok(WorkerResponse::Declarations(RuntimeRunDeclarations {
-                                schema_version: 1,
-                                run_id: worker_request.run_id.clone(),
-                                request_sha256: worker_request.request_sha256.clone(),
-                                recoverability: runtime.run_recoverability(&worker_request),
-                                context_inspections: runtime.run_context_inspections(),
-                            }))
-                        }
+                        WorkerCommand::Declare => Ok(WorkerResponse::Declarations(declare_run(
+                            &runtime,
+                            &worker_request,
+                        ))),
                         WorkerCommand::Stop => return,
                     };
                     if result_tx.send(result).is_err() {
@@ -1126,6 +1147,54 @@ mod tests {
             step.events.last().unwrap().kind,
             RuntimeEventKind::RunTerminal { .. }
         ));
+    }
+
+    struct CountingDeclarations(std::cell::Cell<usize>);
+
+    impl LiveRunDeclarationPort for CountingDeclarations {
+        fn run_recoverability(&self, request: &RuntimeRunRequest) -> Option<RecoverabilityReport> {
+            self.0.set(self.0.get() + 1);
+            crate::coding_recoverability::assess_run_recoverability(
+                request.session_id.as_str(),
+                request.task.task_id.as_str(),
+                request.run_id.as_str(),
+                &[],
+                &|_| None,
+            )
+            .ok()
+        }
+
+        fn run_context_inspections(&self) -> Option<Vec<ContextInspection>> {
+            self.0.set(self.0.get() + 1);
+            Some(Vec::new())
+        }
+    }
+
+    #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    fn a_resumed_run_declares_neither_part_whatever_its_owners_hold() {
+        // Review V1 of 8fbd2bc6: a run resumed from an event cursor was
+        // composed again after a restart, so its owners' records begin there.
+        let (mut request, events, _, _) =
+            crate::runtime_read_tests::completed_native_read_fixture();
+        let owners = CountingDeclarations(std::cell::Cell::new(0));
+        let declared = declare_run(&owners, &request);
+        assert_eq!(owners.0.get(), 2);
+        assert!(declared.recoverability.is_some());
+        assert_eq!(declared.context_inspections, Some(Vec::new()));
+        let last = events.last().unwrap();
+        request.event_cursor = Some(RuntimeEventCursor {
+            run_id: request.run_id.clone(),
+            event_id: last.event_id.clone(),
+            sequence: last.sequence,
+            event_sha256: last.event_sha256.clone(),
+        });
+        let declared = declare_run(&owners, &request);
+        assert_eq!(owners.0.get(), 2);
+        assert_eq!(declared.run_id, request.run_id);
+        assert_eq!(declared.request_sha256, request.request_sha256);
+        assert_eq!(declared.recoverability, None);
+        assert_eq!(declared.context_inspections, None);
     }
 
     fn unavailable(error: ModelRuntimeFailure) {

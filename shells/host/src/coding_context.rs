@@ -335,6 +335,15 @@ where
         })
     }
 
+    /// Marks this port as composed for a run resumed after a restart. The
+    /// contexts composed before the restart are not held here, so the run's
+    /// views are never shown as complete (review V1 of `8fbd2bc6`).
+    #[must_use]
+    pub fn resumed_after_restart(mut self) -> Self {
+        self.inspections_complete = false;
+        self
+    }
+
     /// Installs one already checked same-session continuity envelope.
     pub fn with_checked_continuity(
         mut self,
@@ -859,7 +868,12 @@ where
             };
             match measured {
                 Ok(()) if packet.input_tokens <= input_capacity => {
-                    self.record_inspection(inspection);
+                    // A resumed run's earlier contexts are not held here.
+                    if request.event_cursor.is_some() {
+                        self.inspections_complete = false;
+                    } else {
+                        self.record_inspection(inspection);
+                    }
                     return Ok(packet);
                 }
                 Ok(()) | Err(RuntimePortFailure::ResourceExhausted) => {
@@ -1788,6 +1802,66 @@ mod tests {
             assert!(!json.contains(&request.task.objective));
         }
         assert!(packets.iter().all(|packet| packet.input_tokens > 0));
+    }
+
+    #[test]
+    fn the_view_list_is_unavailable_past_its_bound_or_for_a_resumed_run() {
+        // Review V3 of 8fbd2bc6: one context past the bound makes the list
+        // unavailable rather than silently shorter.
+        let profile = CodingSessionProfile::build(input()).unwrap();
+        let request = request(&profile);
+        let mut context =
+            CodingContextPort::for_profile(&profile, vec![], FixtureCounter("fixture-counter-v1"))
+                .unwrap();
+        for index in 0..=MAX_RUN_CONTEXT_INSPECTIONS {
+            assert_eq!(
+                context.run_context_inspections().map(<[_]>::len),
+                Some(index)
+            );
+            context
+                .build_context(
+                    &request,
+                    ContextPacketId::from_raw(format!("view-{index}")),
+                    1,
+                    &[],
+                    &[],
+                    &[],
+                )
+                .unwrap();
+        }
+        assert_eq!(context.run_context_inspections(), None);
+
+        // Review V1 of 8fbd2bc6: a run resumed from an event cursor was
+        // composed again after a restart, so its views are never complete,
+        // whether or not it composes a context after the restart.
+        let fresh = || {
+            CodingContextPort::for_profile(&profile, vec![], FixtureCounter("fixture-counter-v1"))
+                .unwrap()
+        };
+        assert_eq!(
+            fresh().resumed_after_restart().run_context_inspections(),
+            None
+        );
+        let mut resumed = request.clone();
+        resumed.event_cursor = Some(agentmage_kernel_contracts::RuntimeEventCursor {
+            run_id: resumed.run_id.clone(),
+            event_id: agentmage_kernel_contracts::RuntimeEventId::from_raw("event-before-restart"),
+            sequence: 3,
+            event_sha256: "c".repeat(64),
+        });
+        let mut context = fresh();
+        assert_eq!(context.run_context_inspections(), Some(&[][..]));
+        context
+            .build_context(
+                &resumed,
+                ContextPacketId::from_raw("view-after-restart"),
+                1,
+                &[],
+                &[],
+                &[],
+            )
+            .unwrap();
+        assert_eq!(context.run_context_inspections(), None);
     }
 
     #[test]

@@ -111,6 +111,43 @@ class RuntimeCoordinatorBoundaryReviewTests(unittest.TestCase):
             checks = {item["check_id"]: item["passed"] for item in review_checks(changed)}
             self.assertFalse(checks["model-proposal-is-inert"], new)
 
+    def test_a_pattern_rebinding_or_a_reclassifying_helper_fails_the_inert_check(self) -> None:
+        # Review V2 of 8fbd2bc6: both probe mutants passed the Decision 0115
+        # check, since a helper assigned `origin =` and the rebinding was a
+        # pattern rather than `let requested`.
+        sources = worktree_sources()
+        dispatch = "let receipt = ToolDispatcher::new(&self.registry).dispatch(requested.origin, &call);"
+        helper = (
+            "\nfn reclass(mut request: RequestedToolCall) -> RequestedToolCall {\n"
+            "    request.origin = ProposalOrigin::Shell;\n    request\n}\n"
+        )
+        identity = "\nfn reclass(request: RequestedToolCall) -> RequestedToolCall {\n    request\n}\n"
+        mutants = []
+        for rebinding in (
+            "let (requested, _) = (reclass(requested), ());\n            " + dispatch,
+            "if let Some(requested) = Some(reclass(requested)) {\n                "
+            + dispatch + "\n            }",
+            "let (requested, _) = (requested, ());\n            " + dispatch,
+            "let receipt = [requested].map(|requested| ToolDispatcher::new(&self.registry)"
+            ".dispatch(requested.origin, &call))[0];\n            " + dispatch,
+        ):
+            for appended in (helper, identity):
+                mutants.append((dispatch, rebinding, appended))
+        # The reclassifying helper alone, and any other assignment of an origin.
+        mutants.append((dispatch, dispatch, helper))
+        mutants.append((dispatch, dispatch, "\nfn classify(origin: ProposalOrigin) { let origin = origin; }\n"))
+        for old, new, appended in mutants:
+            changed = dict(sources)
+            self.assertIn(old, changed[RUNTIME_LOOP])
+            changed[RUNTIME_LOOP] = changed[RUNTIME_LOOP].replace(old, new, 1) + appended
+            checks = {item["check_id"]: item["passed"] for item in review_checks(changed)}
+            self.assertFalse(checks["model-proposal-is-inert"], (new, appended))
+        # The unchanged source, and comparisons of the class, still pass.
+        compared = dict(sources)
+        compared[RUNTIME_LOOP] += "\nfn same(origin: ProposalOrigin) -> bool { origin == ProposalOrigin::Model }\n"
+        checks = {item["check_id"]: item["passed"] for item in review_checks(compared)}
+        self.assertTrue(checks["model-proposal-is-inert"])
+
     def test_current_committed_boundary_passes_every_automated_check(self) -> None:
         checks = review_checks(worktree_sources())
         self.assertEqual([item["check_id"] for item in checks], list(EXPECTED_CHECK_IDS))

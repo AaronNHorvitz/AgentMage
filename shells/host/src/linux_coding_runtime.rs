@@ -3970,12 +3970,8 @@ where
         if !self.request_matches(request) {
             return Err(RecoverabilityError::Invalid);
         }
-        self.run_effects.declare(
-            request.session_id.as_str(),
-            request.task.task_id.as_str(),
-            request.run_id.as_str(),
-            &|path| self.workspace.current_file_sha256(path),
-        )
+        self.run_effects
+            .declare_run(request, &|path| self.workspace.current_file_sha256(path))
     }
 }
 

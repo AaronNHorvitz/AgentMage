@@ -18,7 +18,8 @@ RAW_PATH: Final = EVIDENCE_DIR / "storage-migration-compatibility-results.log"
 REPORT_PATH: Final = EVIDENCE_DIR / "storage-migration-compatibility-report.json"
 SOURCE_PATH: Final = ROOT / "kernel/engine/src/operational_store.rs"
 READER_TEST_PATH: Final = ROOT / "kernel/engine/src/research_reader_migration_tests.rs"
-FIXTURE_PATH: Final = ROOT / "kernel/engine/fixtures/operational-store/schema-20.json"
+JOB_LEDGER_TEST_PATH: Final = ROOT / "kernel/engine/src/job_ledger_migration_tests.rs"
+FIXTURE_PATH: Final = ROOT / "kernel/engine/fixtures/operational-store/schema-21.json"
 COMMANDS: Final = (
     (
         "cargo", "test", "-p", "agentmage-kernel-engine",
@@ -26,12 +27,12 @@ COMMANDS: Final = (
     ),
     (
         "cargo", "test", "-p", "agentmage-kernel-engine",
-        "operational_store::tests::version_twenty_schema_matches_fixture_snapshot_and_is_relational",
+        "operational_store::tests::version_twenty_one_schema_matches_fixture_snapshot_and_is_relational",
         "--locked",
     ),
     (
         "cargo", "test", "-p", "agentmage-kernel-engine",
-        "operational_store::tests::version_one_upgrades_through_twenty_with_exact_history",
+        "operational_store::tests::version_one_upgrades_through_twenty_one_with_exact_history",
         "--locked",
     ),
     (
@@ -62,14 +63,17 @@ COMMANDS: Final = (
     ),
 )
 MARKERS: Final = (
+    "version_twenty_upgrades_to_job_ledgers_preserving_records_and_history ... ok",
+    "failed_version_twenty_one_migration_rolls_back_and_stays_retryable ... ok",
+    "version_twenty_corrupt_history_cannot_add_job_ledgers ... ok",
     "version_nineteen_backup_refusal_preserves_source_without_creating_candidate ... ok",
     "version_nineteen_reader_epoch_preserves_tables_records_and_history ... ok",
     "version_nineteen_corrupt_history_cannot_advance_reader_epoch ... ok",
     "failed_version_twenty_reader_epoch_keeps_version_nineteen_retryable ... ok",
     "version_eighteen_upgrades_without_losing_existing_records ... ok",
     "failed_version_nineteen_migration_rolls_back_tables_history_and_version ... ok",
-    "version_twenty_schema_matches_fixture_snapshot_and_is_relational ... ok",
-    "version_one_upgrades_through_twenty_with_exact_history ... ok",
+    "version_twenty_one_schema_matches_fixture_snapshot_and_is_relational ... ok",
+    "version_one_upgrades_through_twenty_one_with_exact_history ... ok",
     "failed_version_two_migration_rolls_back_without_partial_schema ... ok",
     "failed_version_three_migration_rolls_back_all_alterations ... ok",
     "future_schema_and_page_corruption_are_refused ... ok",
@@ -79,10 +83,12 @@ MARKERS: Final = (
 )
 SOURCE_MARKERS: Final = (
     "verify_schema_history_through(connection, 19)?;",
+    "verify_schema_history_through(connection, 20)?;",
     "fn verify_schema_history_through(",
     "../migrations/operational-store/0020-research-draft-readers.sql",
-    "const SCHEMA_VERSION: i64 = 20;",
-    "../fixtures/operational-store/schema-20.json",
+    "../migrations/operational-store/0021-job-control-ledgers.sql",
+    "const SCHEMA_VERSION: i64 = 21;",
+    "../fixtures/operational-store/schema-21.json",
     "fn verify_schema_history(connection: &Connection)",
     "fn failed_version_three_migration_rolls_back_all_alterations()",
     "fn failed_version_two_migration_rolls_back_without_partial_schema()",
@@ -96,6 +102,12 @@ READER_TEST_MARKERS: Final = (
     "fn version_nineteen_corrupt_history_cannot_advance_reader_epoch()",
     "fn failed_version_twenty_reader_epoch_keeps_version_nineteen_retryable()",
     "fn version_nineteen_backup_refusal_preserves_source_without_creating_candidate()",
+    "include!(\"job_ledger_migration_tests.rs\");",
+)
+JOB_LEDGER_TEST_MARKERS: Final = (
+    "fn version_twenty_upgrades_to_job_ledgers_preserving_records_and_history()",
+    "fn failed_version_twenty_one_migration_rolls_back_and_stays_retryable()",
+    "fn version_twenty_corrupt_history_cannot_add_job_ledgers()",
 )
 MIGRATION_SHA256: Final = (
     "da2acbccbe4e37e1920ce3941b68716de1a095c45bdbcfe37b39ef239cf45a7d",
@@ -118,6 +130,7 @@ MIGRATION_SHA256: Final = (
     "563d3643a23b63bee80a40aee12c8cf5fb7f017b52d4f9f95d6ac65bacf26630",
     "03800068d00ea422acc3702e48bb3cae4c736f104680bb57767ce0b8b1fb6db3",
     "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea",
+    "6f27f41680d76642fbaae8efded29934bc2ccb797c75c23d7142986d7414573d",
 )
 TRUTH: Final = {
     "synthetic_data_only": True,
@@ -151,11 +164,11 @@ def expected_report() -> dict[str, Any]:
         "record_type": "agentmage-storage-migration-compatibility-evidence",
         "story_id": "11.2",
         "task_id": "11.2.3.1",
-        "generated_on": "2026-09-27",
+        "generated_on": "2026-09-29",
         "status": "pass-local-migration-compatibility",
         "canonical_store": "operational-store",
-        "operational_schema_version": 20,
-        "migration_count": 20,
+        "operational_schema_version": 21,
+        "migration_count": 21,
         "commands": [" ".join(command) for command in COMMANDS],
         "required_markers": list(MARKERS),
         "artifacts": [
@@ -163,12 +176,17 @@ def expected_report() -> dict[str, Any]:
             artifact("kernel/engine/fixtures/operational-store/schema-18.json"),
             artifact("kernel/engine/fixtures/operational-store/schema-19.json"),
             artifact("kernel/engine/fixtures/operational-store/schema-20.json"),
+            artifact("kernel/engine/fixtures/operational-store/schema-21.json"),
             artifact("kernel/engine/migrations/operational-store/0020-research-draft-readers.sql"),
+            artifact("kernel/engine/migrations/operational-store/0021-job-control-ledgers.sql"),
+            artifact("kernel/engine/src/job_ledger_store.rs"),
             artifact("kernel/engine/migrations/operational-store/0019-research-budgets.sql"),
             artifact("kernel/engine/src/research_journal.rs"),
             artifact("kernel/engine/src/research_migration_tests.rs"),
             artifact("kernel/engine/src/research_reader_migration_tests.rs"),
+            artifact("kernel/engine/src/job_ledger_migration_tests.rs"),
             artifact("docs/decisions/0087-research-draft-reader-version-barrier.md"),
+            artifact("docs/decisions/0118-durable-job-control-ledgers.md"),
             artifact("docs/verification/story-11-2-storage-migration-compatibility-evidence.md"),
             artifact("scripts/storage_migration_compatibility_evidence.py"),
             artifact("tests/test_storage_migration_compatibility_evidence.py"),
@@ -190,13 +208,17 @@ def validate_reader_tests(value: str) -> list[str]:
     return [f"reader test source missing marker: {marker}" for marker in READER_TEST_MARKERS if marker not in value]
 
 
+def validate_job_ledger_tests(value: str) -> list[str]:
+    return [f"job ledger migration test source missing marker: {marker}" for marker in JOB_LEDGER_TEST_MARKERS if marker not in value]
+
+
 def validate_fixture(value: Any) -> list[str]:
     failures: list[str] = []
     if not isinstance(value, dict) or value.get("record_type") != "agentmage-operational-store-schema-fixture":
         failures.append("fixture record type is not exact")
         return failures
-    if value.get("schema_version") != 20:
-        failures.append("fixture schema version is not 20")
+    if value.get("schema_version") != 21:
+        failures.append("fixture schema version is not 21")
     migrations = value.get("migrations")
     expected = [
         {"version": index, "sha256": digest}
@@ -253,6 +275,7 @@ def main() -> int:
             return 1
         failures = validate_source(SOURCE_PATH.read_text(encoding="utf-8"))
         failures += validate_reader_tests(READER_TEST_PATH.read_text(encoding="utf-8"))
+        failures += validate_job_ledger_tests(JOB_LEDGER_TEST_PATH.read_text(encoding="utf-8"))
         failures += validate_fixture(json.loads(FIXTURE_PATH.read_text(encoding="utf-8")))
         failures += validate_raw(raw)
         if failures:
@@ -268,11 +291,12 @@ def main() -> int:
         report = json.loads(REPORT_PATH.read_text(encoding="utf-8"))
         source = SOURCE_PATH.read_text(encoding="utf-8")
         reader_tests = READER_TEST_PATH.read_text(encoding="utf-8")
+        job_ledger_tests = JOB_LEDGER_TEST_PATH.read_text(encoding="utf-8")
         fixture = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
         print(f"storage migration compatibility evidence validation failed: {error}", file=sys.stderr)
         return 1
-    failures = validate_source(source) + validate_reader_tests(reader_tests) + validate_fixture(fixture) + validate_raw(raw) + validate_report(report)
+    failures = validate_source(source) + validate_reader_tests(reader_tests) + validate_job_ledger_tests(job_ledger_tests) + validate_fixture(fixture) + validate_raw(raw) + validate_report(report)
     if failures:
         for failure in failures:
             print(f"storage migration compatibility evidence validation failed: {failure}", file=sys.stderr)

@@ -170,11 +170,32 @@ def function_origins(source: str, name: str) -> list[str]:
     return re.findall(r"origin:\s*ProposalOrigin::(\w+),", function_body(source, name))
 
 
+def requested_is_never_rebound(body: str) -> bool:
+    """`requested` appears only as the parameter, one destructuring and `requested.origin`.
+
+    Any other use, such as a pattern binding, a tuple, a closure parameter or
+    an argument to a helper, could replace the request before the dispatch
+    site (review V2 of `8fbd2bc6`, Decision 0117).
+    """
+    parameters = destructurings = 0
+    for match in re.finditer(r"\brequested\b", body):
+        before, after = body[:match.start()], body[match.end():]
+        if re.match(r":\s*RequestedToolCall,", after):
+            parameters += 1
+        elif re.search(r"\}\s*=\s*$", before) and after.startswith(";"):
+            destructurings += 1
+        elif re.match(r"\.origin\b(?!\s*=(?![=>]))", after) is None:
+            return False
+    return parameters == 1 and destructurings == 1
+
+
 def dispatched_origin_is_unmodified(source: str) -> bool:
     """The one dispatch site uses the request's own, never rebound, proposal class.
 
-    `request_tool` takes the request immutably, never rebinds or assigns it or
-    its class, and names the class only as `requested.origin` (Decision 0115).
+    `request_tool` takes the request immutably and names it only as its
+    parameter, one destructuring and `requested.origin`, and names the class
+    only as `requested.origin` (Decisions 0115 and 0117). Nothing in the
+    runtime loop assigns any `origin`, so no helper can reclassify a request.
     """
     body = function_body(source, "request_tool")
     return (
@@ -183,6 +204,8 @@ def dispatched_origin_is_unmodified(source: str) -> bool:
         and re.search(r"\blet\s+(?:mut\s+)?requested\b", body) is None
         and re.search(r"(?<![.\w])requested(?:\.origin)?\s*=(?!=)", body) is None
         and re.search(r"\borigin\b", body.replace("requested.origin", "")) is None
+        and requested_is_never_rebound(body)
+        and re.search(r"\borigin\s*=(?![=>])", source) is None
         and len(
             re.findall(
                 r"let\s+receipt\s*=\s*ToolDispatcher::new\(&self\.registry\)"
