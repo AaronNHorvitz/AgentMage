@@ -4,14 +4,14 @@
     {
       "argv_sha256": "b3bf1a712beea095c7e1f3eaa345c7a01cb714dd183ea72e6eb67820381cb92b",
       "command_id": "prepared-artifact-matrix",
-      "elapsed_ms": 245,
+      "elapsed_ms": 255,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 41092,
+      "peak_rss_kib": 41408,
       "test_result": {
         "failed": 0,
-        "filtered_out": 1336,
+        "filtered_out": 1339,
         "ignored": 0,
         "measured": 0,
         "passed": 12
@@ -20,14 +20,14 @@
     {
       "argv_sha256": "b26bfb863a1251b307c473309b2fa69a8ddccbeb10b4b37bb83f2f2a1e19196f",
       "command_id": "engine-session-matrix",
-      "elapsed_ms": 96,
+      "elapsed_ms": 86,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 40828,
+      "peak_rss_kib": 41636,
       "test_result": {
         "failed": 0,
-        "filtered_out": 1330,
+        "filtered_out": 1333,
         "ignored": 0,
         "measured": 0,
         "passed": 18
@@ -36,14 +36,14 @@
     {
       "argv_sha256": "d25c1a35db190c5821af496f6e3cc07b1ba96ddb12ec19c8b6a21d7bc7325ee1",
       "command_id": "native-read-matrix",
-      "elapsed_ms": 104,
+      "elapsed_ms": 107,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 49568,
+      "peak_rss_kib": 49400,
       "test_result": {
         "failed": 0,
-        "filtered_out": 392,
+        "filtered_out": 403,
         "ignored": 0,
         "measured": 0,
         "passed": 6
@@ -52,14 +52,14 @@
     {
       "argv_sha256": "dfe8124eee6fbf3abfde662ff05627ee295973fb06018fc558fa4c1ff65ae353",
       "command_id": "native-chat-transport",
-      "elapsed_ms": 333,
+      "elapsed_ms": 325,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 49772,
+      "peak_rss_kib": 49984,
       "test_result": {
         "failed": 0,
-        "filtered_out": 395,
+        "filtered_out": 406,
         "ignored": 0,
         "measured": 0,
         "passed": 3
@@ -68,14 +68,14 @@
     {
       "argv_sha256": "6bd11bbd4996b6e78ff6e621938b77f2c0a339f3b44af3f4d2c09976540d6891",
       "command_id": "three-client-parity",
-      "elapsed_ms": 346,
+      "elapsed_ms": 353,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 49388,
+      "peak_rss_kib": 49956,
       "test_result": {
         "failed": 0,
-        "filtered_out": 397,
+        "filtered_out": 408,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -84,14 +84,14 @@
     {
       "argv_sha256": "dcbd95278f6e59895a67a6092b1c2ffc167a47b68d41b501a1dcc0acf578656f",
       "command_id": "client-confusion-bypass",
-      "elapsed_ms": 79,
+      "elapsed_ms": 83,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 50208,
+      "peak_rss_kib": 49704,
       "test_result": {
         "failed": 0,
-        "filtered_out": 397,
+        "filtered_out": 408,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -100,14 +100,14 @@
     {
       "argv_sha256": "52f0dcaa22117142bfade3bdb039d530e2264557b36bbc50db671925b010c307",
       "command_id": "workflow-authority-bypass",
-      "elapsed_ms": 328,
+      "elapsed_ms": 324,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 49860,
+      "peak_rss_kib": 49512,
       "test_result": {
         "failed": 0,
-        "filtered_out": 397,
+        "filtered_out": 408,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -116,21 +116,21 @@
     {
       "argv_sha256": "47cdc321aaa5c7c4ed9eed236a4c8f7fcf3cee3ea5f1542a8e3304e1832cac09",
       "command_id": "dependency-direction",
-      "elapsed_ms": 25,
+      "elapsed_ms": 20,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 12348,
+      "peak_rss_kib": 12068,
       "test_result": null
     },
     {
       "argv_sha256": "1ba5e4e0d2b5860ae9e4b0ed786fc45413e659b7c435186b2ad8dc781a2c4045",
       "command_id": "effect-mediation",
-      "elapsed_ms": 2307,
+      "elapsed_ms": 2334,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 42704,
+      "peak_rss_kib": 42028,
       "test_result": null
     }
   ],
@@ -173,7 +173,7 @@
   "manual_fuzzing_executed": false,
   "performance": {
     "cancellation": {
-      "elapsed_us": 593,
+      "elapsed_us": 599,
       "event_count": 4,
       "model_calls": 0,
       "output_bytes": 0,
@@ -182,7 +182,7 @@
       "turns": 0
     },
     "direct": {
-      "elapsed_us": 2356,
+      "elapsed_us": 1338,
       "event_count": 6,
       "model_calls": 1,
       "output_bytes": 23,
@@ -191,7 +191,7 @@
       "turns": 1
     },
     "maximum": {
-      "elapsed_us": 6380,
+      "elapsed_us": 5495,
       "event_count": 33,
       "model_calls": 4,
       "output_bytes": 23,
@@ -201,7 +201,7 @@
     },
     "maximum_scenario_us": 250000,
     "nominal": {
-      "elapsed_us": 4663,
+      "elapsed_us": 3758,
       "event_count": 15,
       "model_calls": 2,
       "output_bytes": 23,
@@ -210,7 +210,7 @@
       "turns": 2
     },
     "over_limit": {
-      "elapsed_us": 4783,
+      "elapsed_us": 5006,
       "event_count": 33,
       "model_calls": 4,
       "output_bytes": 0,
@@ -227,10 +227,10 @@
     "redactions": [
       "repository-root"
     ],
-    "sha256": "1497d0fd5591126f4f8c0e5b9a49cdef9e051fceecd2983fec12cfc0fe960f9d"
+    "sha256": "76e1e9039f36da6db706292af9a76fb8fc60e2bc0454a8329e3448f82f99c7a5"
   },
   "schema_version": 1,
-  "source_revision": "54538d03a389599f5f4b763dcc2f0d03efb532ad",
+  "source_revision": "45552ff5c695bed64e7de90697fd5333adec73f5",
   "sources": [
     {
       "bytes": 14158,
@@ -243,9 +243,9 @@
       "sha256": "8570c1764e7293e6c3c5931fcbab612c9df26ee7ab284c8bdfbb12d22b6553a0"
     },
     {
-      "bytes": 212266,
+      "bytes": 217068,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "a0e307933c90be1368b690b2a4565fae07c16b58512cb7bdcf9faa7dceee8b58"
+      "sha256": "ac2b2f93407d23c5c27f08d111af6b360cb4a3248489b369e15253a3ce9d0de2"
     },
     {
       "bytes": 12024,
@@ -263,24 +263,24 @@
       "sha256": "73e38467caa9562e8b3982608a2f01e1735b57bf535f8de3d75fc16fcc0a32f3"
     },
     {
-      "bytes": 300017,
+      "bytes": 310866,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "50098f6cbf257b6b5bd14936516d56244a44b7d8675af9eba9296400463c226c"
+      "sha256": "fc6aa5e1e2ea7b24247aca5785b07340b2a90be7b2b435850f45c1b1348a0a99"
     },
     {
-      "bytes": 11099,
+      "bytes": 13832,
       "path": "shells/host/src/coding_client.rs",
-      "sha256": "e101e21d87bb1b7af8475b1612c11c6bb2ee633cb24ae762593a5f66b892d053"
+      "sha256": "90f2fe495b773f08f7c7a5523a0e73c698e0cba76071f265ab2c25eed462fa89"
     },
     {
-      "bytes": 81482,
+      "bytes": 113366,
       "path": "shells/host/src/cli_runtime.rs",
-      "sha256": "49502d5ced945b7733b5c7f3e328bac3cde9cbdba554cae1483d91937e0a7c71"
+      "sha256": "f758626ed4b4ad856653347f7ba5fe989098cecfd28626fc3aefd5753776ea12"
     },
     {
-      "bytes": 43217,
+      "bytes": 43793,
       "path": "shells/host/src/native_chat_runtime.rs",
-      "sha256": "4dcd7c0cb16cdf91b7711367d7ddbfef3bedc396be6aa652ff87022046542d2c"
+      "sha256": "58b0ed5aab63c312efe8b831c8ad9bb51de6612c4f53d7d476c8532e747ff835"
     },
     {
       "bytes": 26833,
