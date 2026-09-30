@@ -1,0 +1,210 @@
+{
+  "record_type": "agentmage-review-fixes-and-amr-05-codec-packs-recipes-verification",
+  "date": "2026-09-30",
+  "base_commit": "8469649dce5255800236a4daf7640596bd41a205",
+  "head_commit": "d8cc28e6b2fd7bf5530310f2bd72ea0542c13dbe",
+  "source_commit": "0363e9ee57d72868e6f85688adf3ca4136a4d4e0",
+  "retained_logs": "artifacts/verification-logs/review-fixes-and-amr-05-codec-packs-recipes-2026-09-30",
+  "stages": [
+    "batch13-source-checks",
+    "batch13-core",
+    "batch13-rebind",
+    "batch13-gate",
+    "batch13-extended",
+    "batch13-extended-rest",
+    "batch13-blocked-causes",
+    "batch13-observation"
+  ],
+  "inventory": "artifacts/verification-logs/review-fixes-and-amr-05-codec-packs-recipes-2026-09-30/binding-inventory.json",
+  "check_logs": {
+    "contracts": "batch13-source-checks/02.log",
+    "engine": "batch13-source-checks/03.log",
+    "repository_map": "batch13-source-checks/04.log",
+    "inference": "batch13-source-checks/05.log",
+    "knowledge": "batch13-source-checks/06.log",
+    "linux": "batch13-source-checks/07.log",
+    "host": "batch13-source-checks/08.log"
+  },
+  "fields": {
+    "decisions": [
+      "docs/decisions/0125-review-fixes-for-amr-05-components.md",
+      "docs/decisions/0126-offline-docs-language-server-codec-and-recipes.md"
+    ],
+    "review_resolved": "independent review of 8469649d (PASS; F1-F3 low, N1-N5 notes); F1, F2 and N1 are addressed in 0363e9ee under Decision 0125, and F3 by this evidence pass (batch13-extended and batch13-extended-rest)",
+    "components": {
+      "review_fixes": "replay refuses any kept entry that append could not have kept: an identifier that is neither the redaction marker nor a plain identifier the shared secret detector does not flag, a redaction count that differs from the markers, a malformed digest, an unsorted, duplicate or oversized evidence list, a retention deadline not after the recording time, or an effect without authorization (F1: kernel/engine/src/action_history.rs kept_entry_is_well_formed, plain_identifier); new tests isolate the named issuer key of a revocation list (shells/host/src/capability_package.rs), the export rescan, the identifier character set and the previous link of an expired place (F2); an expired place keeps only its sequence, previous link and digest (N1)",
+      "AMR-05.6": "capabilities/knowledge/src/doc_packs.rs (new): sealed, closed-parsed documentation pack manifests with license, dates, freshness window and per-file length and digest; imports only from supplied bytes with the license in the person's allow-list, an intent that names the current state (new, or a refresh of the current version), a newer version and pack and catalog bounds; freshness inspection, retention of superseded versions only, deletion by version or pack with content-free records, dates that never go backwards, and bounded fragments for the deterministic knowledge retrieval with superseded versions marked historical and secret-flagged fragments withheld and counted",
+      "AMR-05.7": "capabilities/repository-map/src/language_server_codec.rs (new): an incremental frame decoder that fails closed and stays failed on a malformed, repeated, zero-padded, unknown or oversized header; closed classification of JSON-RPC 2.0 responses, notifications and server requests with repeated keys refused; strict URI-to-workspace-path mapping under the root URI, which is never recorded; UTF-8, UTF-16 and scalar-value positions converted against the granted bytes; sealed diagnostics, references and rename previews with digests only, empty answers sealed as unavailable, cancellations as cancelled, file operations, ambiguous and overlapping edits rejected, and truncation marked partial; references and rename requests encoded at the request position; server requests answered only by a refusal",
+      "AMR-05.8": "kernel/engine/src/engineering_recipe.rs (new): sealed recipe manifests parsed closed (with an exact re-serialization check, because field attributes alone ignore extra members beside a tag without fields); typed choice, integer, path and version parameters; path-prefix scope and a file bound; prerequisites; validation kinds; a rollback boundary; kind rules for dependency updates, migrations, security repairs, documentation and tests; instantiation that binds every registered validation template of each declared kind into a plan with an exact digest and a fixed proposal marker, and a change check against the plan's scope and bound",
+      "AMR-05.9": "split into AMR-05.9.1 to AMR-05.9.5 (Decision 0126); the selector records 56 amendment rows"
+    },
+    "mutation_checks": "run before the source commit with private tooling, each applying one exact replacement and running the package filter: 85 single mutations over the review fixes (17), documentation packs (22), the codec (27) and recipes (19). 81 made their expected test fail at once. Four survived because another rule refused the mutant's case first: an oversized evidence list of identical digests also broke the ordering rule; the codec's up-front unknown-member check was duplicated by the leftover-member checks of each shape, so it was removed; the outside-root URI also named an unsupplied file; and the plan digest also covered the proposal marker. The tests now isolate each rule, and the rerun of those four plus one new mutant (the notification leftover check) were all caught. These runs are not retained logs",
+    "failure_comparison": "linux 188 passed, 19 failed, 51 ignored and host 373 passed, 52 failed, 10 ignored; both failure name sets are identical to the batch 12 source-check baseline; every new test passes",
+    "retained_failures": [
+      {
+        "stage": "batch13-source-checks",
+        "indexes": [
+          7,
+          8
+        ],
+        "cause": "the known native-prerequisite failures of the Linux and host suites, identical names to the batch 12 baseline"
+      },
+      {
+        "stage": "batch13-extended",
+        "indexes": [
+          10
+        ],
+        "cause": "the Sprint 15 report's check compares its bound Story 15.2 matrix with the current file; the matrix was renewed by this stage, and the Sprint 15 report itself stays blocked (see blocked_refreshes), so the check reports the drift truthfully; the stage stopped there and batch13-extended-rest ran the remaining checks"
+      },
+      {
+        "stage": "batch13-blocked-causes",
+        "indexes": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+      }
+    ],
+    "blocked_refreshes": [
+      {
+        "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+        "stale_since": "batch 7",
+        "blocker": "pytest is not installed (batch13-blocked-causes/01.log)"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+        "stale_since": "batch 7",
+        "blocker": "full host suite and product gate: the 52 native-prerequisite host failures (batch13-source-checks/08.log)"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+        "stale_since": "batch 7",
+        "blocker": "host handoff tests fail at native fixtures (batch13-blocked-causes/02.log) and the product gate as above"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+        "stale_since": "batch 7",
+        "blocker": "documentation gate: Mermaid cannot find its headless browser (batch13-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+        "stale_since": "batch 7",
+        "blocker": "host frontier test fails at a native fixture (batch13-blocked-causes/03.log) and the documentation gate as above"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+        "stale_since": "before batch 12 (four other inputs)",
+        "blocker": "its producer runs the full host suite (the 52 native-prerequisite failures, batch13-source-checks/08.log); review F3"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+        "stale_since": "before batch 12",
+        "blocker": "its producer runs the product gate (the workspace suites with the native-prerequisite failures, batch13-source-checks/07.log and 08.log) and the documentation gate (batch13-blocked-causes/04.log and 05.log); its check mode still validates it at its own revision (batch13-extended-rest/01.log); review F3"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+        "stale_since": "before batch 12",
+        "blocker": "its producer runs the full host suite with all features (the native-prerequisite failures, batch13-source-checks/08.log); its check mode still validates it at its own revision (batch13-extended-rest/02.log); review F3"
+      }
+    ],
+    "historical_reports": [
+      {
+        "artifact": "artifacts/sprints/sprint-78/local-evidence-report.json",
+        "revision": "4d783e1d8addcb88597405894476dc8c8c6ffbba",
+        "reason": "the record of its sprint revision: its producer restates a fixed claim of five Rust capability package tests, which no longer describes the current filter (sixteen tests after AMR-05.3 and Decision 0125), so a renewal would state something untrue; its check mode validates it at that revision (batch13-extended/09.log); review F3"
+      }
+    ],
+    "renewed_for_review_f3": [
+      "artifacts/sprints/sprint-15/story-15.2/diagnostic-canary-matrix.json",
+      "artifacts/sprints/sprint-79/local-evidence-report.json",
+      "artifacts/sprints/sprint-108/local-evidence-report.json",
+      "artifacts/sprints/sprint-49/story-49.2/adapter-evaluation-report.json"
+    ],
+    "sbom_writes": 1,
+    "sbom_components_changed": [
+      "agentmage-capability-knowledge",
+      "agentmage-capability-repository-map",
+      "agentmage-host",
+      "agentmage-kernel-engine"
+    ],
+    "cascade": "no operational store source changed, so no Sprint 11 store wave ran; the new engine module changed the engine library root, which the six Story 3.1 configuration reports and the Story 12.1 agent progress report bind, and the new codec module changed the repository-map library root, which the Sprint 45 scaffold application report binds; the renewed Story 3.1 component inventory staled the Story 11.1 security map, which staled the Story 11.2 storage security and frozen-scope reports and through them the AC1 and AC3 reports; the renewed agent progress report staled the Story 12.1 security map; the renewed engine staled the Muse codec, early disposition, Sprint 13 and Story 13.4 context profile reports; and the renewed scaffold report staled the Sprint 45 source boundary review; one ordered stage renewed them all (batch13-rebind); the host change is test-only in capability_package.rs, which no Story 23.4 input binds, so the Story 23.4 chain did not need renewal; a compact inventory after every commit found no further cascade",
+    "review_pins": [
+      {
+        "gate": "scripts/story_11_2_gate.py",
+        "from": "d710d443c4a254fbe9c29aa774c474d8d751f828",
+        "to": "1caf2f477a313bcf3fb4292e9b299c6ffce843d2",
+        "reviewed_paths_retained": 25,
+        "changed_reviewed_paths": [
+          {
+            "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+            "reason": "regenerated by the batch 13 evidence pass after the renewed Story 11.1 security map; only one bound digest changed"
+          },
+          {
+            "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+            "reason": "regenerated by the batch 13 evidence pass after the renewed storage security report; only one bound digest changed"
+          },
+          {
+            "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+            "reason": "regenerated by the batch 13 evidence pass after the renewed storage security report; only one bound digest changed"
+          }
+        ]
+      }
+    ],
+    "newly_stale_disposition": "only historical records: four retained batch 12 stage records, which pin inputs as they were at their revisions, and the Sprint 15 local evidence report, which was already stale through four other inputs at the base and stays blocked (blocked_refreshes)",
+    "runtime_campaign": "not renewed: no Story 23.4 input changed in this batch",
+    "cli_observation": {
+      "source_commit": "d8cc28e6b2fd7bf5530310f2bd72ea0542c13dbe",
+      "binaries_sha256": {
+        "agentmage": "a152ac61f3afe0a022f5b2ed4b75585ffcafca9454714467db93a7d992861f18",
+        "agentmage-host": "584d642d2b47da7177b264398dbc373b6351d7457fa5539aa07716fed70236e6",
+        "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+      },
+      "clean_scripted_start_exit": 5,
+      "clean_refusal_code": "linux.repository.git_artifact.invalid",
+      "clean_preserved": true,
+      "dirty_start_exit": 1,
+      "dirty_preserved": true,
+      "idle_stop_exit": 1,
+      "idle_pause_exit": 1,
+      "idle_resume_exit": 1,
+      "qualification": "actual-binary-native-prerequisite-refusal-only",
+      "reason": "native prerequisites refuse the launch before any run starts in this sandbox; the AMR-05 components have no CLI path yet",
+      "attachment": "batch13-observation/attachments/observation.json"
+    },
+    "not_run": [
+      "any coding host, CLI or native process path for the AMR-05 components (AMR-05.9.1 to AMR-05.9.5, AMR-05.10)",
+      "any language server process, adapter qualification or protocol conformance claim",
+      "a network, provider, remote route or credential",
+      "the actual-process AMR-04 rows (AMR-04.2.3, 04.6.3, 04.7.2, 04.9, 04.10)",
+      "the native-only Linux boundary tests",
+      "positive native coding workflow",
+      "real model or GPU",
+      "manual user acceptance",
+      "release"
+    ],
+    "claims": {
+      "task_rows_closed": [
+        {
+          "row": "AMR-05.6",
+          "closed_by": "the ledger commit that follows this record",
+          "scope": "component row: unit tests only; no host, CLI, wire or native process uses it yet"
+        },
+        {
+          "row": "AMR-05.7",
+          "closed_by": "the ledger commit that follows this record",
+          "scope": "component row: unit tests on hand-written fixtures only; no language server, host, CLI, wire or native process uses it yet"
+        },
+        {
+          "row": "AMR-05.8",
+          "closed_by": "the ledger commit that follows this record",
+          "scope": "component row: unit tests only; no host, CLI, wire or native process uses it yet"
+        }
+      ],
+      "release_claim": "none",
+      "independent_review_of_this_batch": "requested; open"
+    }
+  }
+}

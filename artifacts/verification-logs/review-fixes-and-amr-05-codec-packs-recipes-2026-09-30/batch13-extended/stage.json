@@ -1,0 +1,247 @@
+{
+  "schema_version": 2,
+  "stage": "batch13-extended",
+  "source_revision": "7397a6cd54603bafcecfaa958176a0815e75a5d1",
+  "scope": "batch 13 review F3: producers of the reports the AMR-05 component rows extend",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/sprint_15_diagnostic_canary_evidence.py",
+      "--source-revision",
+      "7397a6cd54603bafcecfaa958176a0815e75a5d1"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_sprint_15_diagnostic_canary_evidence"
+    ],
+    [
+      "python3",
+      "scripts/sprint_79_evidence.py",
+      "--write",
+      "--source-revision",
+      "7397a6cd54603bafcecfaa958176a0815e75a5d1"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_sprint_79_evidence"
+    ],
+    [
+      "python3",
+      "scripts/sprint_108_evidence.py",
+      "--write",
+      "--source-revision",
+      "7397a6cd54603bafcecfaa958176a0815e75a5d1"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_sprint_108_evidence"
+    ],
+    [
+      "python3",
+      "scripts/alternate_runtime_matrix.py",
+      "--write",
+      "--source-revision",
+      "7397a6cd54603bafcecfaa958176a0815e75a5d1"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_alternate_runtime_matrix"
+    ],
+    [
+      "python3",
+      "scripts/sprint_78_evidence.py"
+    ],
+    [
+      "python3",
+      "scripts/sprint_15_evidence.py",
+      "--check"
+    ],
+    [
+      "python3",
+      "scripts/sprint_31_evidence.py"
+    ],
+    [
+      "python3",
+      "scripts/sprint_34_evidence.py"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/alternate_runtime_matrix.py": "73915f879de85a6c6840d824938937a61c1e9a2f3a410c751d86274725a5f3cc",
+    "scripts/sprint_108_evidence.py": "baaf3a3b8e057bffaf2c1884feb0e1a124645d92639d58faac0c342428821a6c",
+    "scripts/sprint_15_diagnostic_canary_evidence.py": "60c3a354e578a29bea0a7ee9a65bcdfa1d00e48da5d0ef05afe51b77a60b2aab",
+    "scripts/sprint_15_evidence.py": "7059cb3d70895af9b083243303cc899a6c18282ec62956c0e10cb99c8e9f1ee0",
+    "scripts/sprint_31_evidence.py": "4ac024bde75da8d6051c2da52cbc061432f1e7f1b03fea49ef783abbc5429e16",
+    "scripts/sprint_34_evidence.py": "0d38905ecc698f53d44170c42879ee7d73f75de32c14d6ace0c0a113459ac056",
+    "scripts/sprint_78_evidence.py": "1e4eed0d68b07a320f71c98a81e349b53189ddbde53de89ef82b1f1faba595e2",
+    "scripts/sprint_79_evidence.py": "747e4146d760edf9bc1a82b79a5b02f289d14d656ae3ae2e4f556667a8750320",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_alternate_runtime_matrix.py": "8b56a48037301905c417d5f4facc44d21c3ded8e2abbe1bfb5840591a80d94bd",
+    "tests/test_sprint_108_evidence.py": "2f31f90abdaa08a1ded37973b82cc23e507bafe93941feb311d997b8a4215279",
+    "tests/test_sprint_15_diagnostic_canary_evidence.py": "ced962e81f8708570c0d16f454f44455bc37391c00ca51d87a4957daf2bf75be",
+    "tests/test_sprint_79_evidence.py": "7f7aa394462a040f980723389e3a4384aa861a287639eb086aa1e49d42b83a3f"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/sprint_15_diagnostic_canary_evidence.py",
+        "--source-revision",
+        "7397a6cd54603bafcecfaa958176a0815e75a5d1"
+      ],
+      "exit_code": 0,
+      "seconds": 1.951,
+      "log": "01.log",
+      "log_sha256": "2cde8e3cd5907adbde1ffcb19dd369c16931436a09c5d17b0ab240b7e0442b91",
+      "private_log_sha256": "2cde8e3cd5907adbde1ffcb19dd369c16931436a09c5d17b0ab240b7e0442b91"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_15_diagnostic_canary_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.079,
+      "log": "02.log",
+      "log_sha256": "921b60a7fd52e978fbb551cacd29df2d6708879400278e1fcc70fceeb0c6f8e0",
+      "private_log_sha256": "921b60a7fd52e978fbb551cacd29df2d6708879400278e1fcc70fceeb0c6f8e0"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/sprint_79_evidence.py",
+        "--write",
+        "--source-revision",
+        "7397a6cd54603bafcecfaa958176a0815e75a5d1"
+      ],
+      "exit_code": 0,
+      "seconds": 1.837,
+      "log": "03.log",
+      "log_sha256": "a4d7ae55c14473c7edf183b334fc2e68a90c84a705bdf6fa308ab8c281c17633",
+      "private_log_sha256": "a4d7ae55c14473c7edf183b334fc2e68a90c84a705bdf6fa308ab8c281c17633"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_79_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.081,
+      "log": "04.log",
+      "log_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "private_log_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "python3",
+        "scripts/sprint_108_evidence.py",
+        "--write",
+        "--source-revision",
+        "7397a6cd54603bafcecfaa958176a0815e75a5d1"
+      ],
+      "exit_code": 0,
+      "seconds": 0.503,
+      "log": "05.log",
+      "log_sha256": "5534a6cb4535a4fa1bb63188b514753d2944eb335700f7b3031fc9d6c127b9dc",
+      "private_log_sha256": "5534a6cb4535a4fa1bb63188b514753d2944eb335700f7b3031fc9d6c127b9dc"
+    },
+    {
+      "index": 6,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_108_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.079,
+      "log": "06.log",
+      "log_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "private_log_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
+    },
+    {
+      "index": 7,
+      "argv": [
+        "python3",
+        "scripts/alternate_runtime_matrix.py",
+        "--write",
+        "--source-revision",
+        "7397a6cd54603bafcecfaa958176a0815e75a5d1"
+      ],
+      "exit_code": 0,
+      "seconds": 0.052,
+      "log": "07.log",
+      "log_sha256": "dad1d991edfdae628ab1b646d5bdb9e8ef40b514904dc15deb05c4fb0899e729",
+      "private_log_sha256": "dad1d991edfdae628ab1b646d5bdb9e8ef40b514904dc15deb05c4fb0899e729"
+    },
+    {
+      "index": 8,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_alternate_runtime_matrix"
+      ],
+      "exit_code": 0,
+      "seconds": 0.08,
+      "log": "08.log",
+      "log_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "private_log_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
+    },
+    {
+      "index": 9,
+      "argv": [
+        "python3",
+        "scripts/sprint_78_evidence.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.086,
+      "log": "09.log",
+      "log_sha256": "06140e0e5062409592e7b28e602d010cf5e5a488394b78cae2fc91099787c215",
+      "private_log_sha256": "06140e0e5062409592e7b28e602d010cf5e5a488394b78cae2fc91099787c215"
+    },
+    {
+      "index": 10,
+      "argv": [
+        "python3",
+        "scripts/sprint_15_evidence.py",
+        "--check"
+      ],
+      "exit_code": 1,
+      "seconds": 0.066,
+      "log": "10.log",
+      "log_sha256": "96455c2bf162587c85cd1a80cb7bc8779313b7cb3fa3f0598b7113dc8c9d6a50",
+      "private_log_sha256": "96455c2bf162587c85cd1a80cb7bc8779313b7cb3fa3f0598b7113dc8c9d6a50"
+    }
+  ]
+}
