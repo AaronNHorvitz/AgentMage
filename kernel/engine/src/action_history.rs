@@ -6,8 +6,10 @@
 //! identifier that is not a plain identifier, or that the shared secret
 //! detector flags, is replaced before it is kept, so the history never holds a
 //! secret or a raw prompt. Entries form a hash chain that a restarted owner
-//! replays exactly. An entry past its retention deadline keeps only its place
-//! in the chain. A manual export is a redacted, bounded byte image that is
+//! replays exactly, refusing any kept entry that `append` could not have
+//! kept. An entry past its retention deadline keeps only its place in the
+//! chain; its deadline goes with its content, because no digest could bind it
+//! once the content is gone. A manual export is a redacted, bounded byte image that is
 //! scanned once more before it is returned; it has no path and writes nothing.
 
 use serde::Serialize;
@@ -158,8 +160,6 @@ pub enum ActionHistoryRecord {
         previous_entry_sha256: String,
         /// Digest the entry had.
         entry_sha256: String,
-        /// The deadline that passed.
-        retain_until_epoch_ms: u64,
     },
 }
 
@@ -352,7 +352,6 @@ impl ActionHistory {
                     sequence: entry.sequence,
                     previous_entry_sha256: entry.previous_entry_sha256.clone(),
                     entry_sha256: entry.entry_sha256.clone(),
-                    retain_until_epoch_ms: entry.retain_until_epoch_ms,
                 };
                 expired += 1;
             }
@@ -379,7 +378,9 @@ impl ActionHistory {
     }
 
     /// Rebuilds a history from retained positions, which must form exactly
-    /// the chain that ends at the retained head.
+    /// the chain that ends at the retained head. A kept entry must also be one
+    /// that `append` could have kept (Decision 0125): it cannot be redacted
+    /// again without changing its digest, so anything else is refused.
     pub fn replay(
         records: Vec<ActionHistoryRecord>,
         head: &ActionHistoryHead,
@@ -402,6 +403,7 @@ impl ActionHistory {
             }
             if let ActionHistoryRecord::Kept(entry) = record {
                 if entry.schema_version != SCHEMA_VERSION
+                    || !kept_entry_is_well_formed(entry)
                     || entry_digest(entry)? != entry.entry_sha256
                     || entry.recorded_at_epoch_ms < last_recorded_at_epoch_ms
                 {
@@ -492,11 +494,7 @@ fn kept_identifier(value: &str, redacted: &mut u16) -> Result<String, ActionHist
     if value.is_empty() {
         return Err(ActionHistoryError::InvalidInput);
     }
-    let plain = value.len() <= MAX_IDENTIFIER_BYTES
-        && value.bytes().all(|byte| {
-            byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'.' | b'-' | b':')
-        });
-    if plain && detect_secret_classes("action-history-field", value.as_bytes()).is_empty() {
+    if plain_identifier(value) {
         Ok(value.to_owned())
     } else {
         *redacted = redacted
@@ -504,6 +502,55 @@ fn kept_identifier(value: &str, redacted: &mut u16) -> Result<String, ActionHist
             .ok_or(ActionHistoryError::InvalidInput)?;
         Ok(REDACTED.to_owned())
     }
+}
+
+/// A bounded identifier of lowercase letters, digits, `.`, `-` and `:` that
+/// the shared secret detector does not flag.
+fn plain_identifier(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= MAX_IDENTIFIER_BYTES
+        && value.bytes().all(|byte| {
+            byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'.' | b'-' | b':')
+        })
+        && detect_secret_classes("action-history-field", value.as_bytes()).is_empty()
+}
+
+/// Whether a replayed entry holds only what `append` keeps: every identifier
+/// is the redaction marker or a plain identifier, the entry counts its
+/// markers, and every digest, bound and the authorization rule hold.
+fn kept_entry_is_well_formed(entry: &ActionHistoryEntry) -> bool {
+    let mut identifiers = vec![entry.action_id.as_str(), entry.reason_code.as_str()];
+    let authorization = match &entry.authorization {
+        ActionAuthorization::Grant {
+            grant_id,
+            grant_sha256,
+        } => {
+            identifiers.push(grant_id);
+            valid_sha256(grant_sha256)
+        }
+        ActionAuthorization::PersonDecision { decision_sha256 } => valid_sha256(decision_sha256),
+        ActionAuthorization::Unauthorized => !entry.outcome.needs_authorization(),
+    };
+    let markers = identifiers
+        .iter()
+        .filter(|value| **value == REDACTED)
+        .count();
+    authorization
+        && identifiers
+            .iter()
+            .all(|value| *value == REDACTED || plain_identifier(value))
+        && usize::from(entry.redacted_fields) == markers
+        && entry.retain_until_epoch_ms > entry.recorded_at_epoch_ms
+        && valid_sha256(&entry.effect_sha256)
+        && entry.evidence_sha256s.len() <= MAX_EVIDENCE
+        && entry
+            .evidence_sha256s
+            .iter()
+            .all(|value| valid_sha256(value))
+        && entry
+            .evidence_sha256s
+            .windows(2)
+            .all(|pair| pair[0] < pair[1])
 }
 
 fn entry_digest(entry: &ActionHistoryEntry) -> Result<String, ActionHistoryError> {
@@ -562,6 +609,8 @@ mod tests {
             concat!("s", "k-", "am-s42-canary-bbbbbbbbbbbbbbbbbbbbbbbb").to_owned(),
             "Bearer am-s42-canary-token-cccccccc".to_owned(),
             "Please summarize the private design notes in docs/secret-plan.md".to_owned(),
+            // Only the plain-identifier charset catches this one.
+            "Secret_Value_1".to_owned(),
         ]
     }
 
@@ -660,11 +709,11 @@ mod tests {
         let export = history
             .export(ActionHistoryExportRequest {
                 from_sequence: 1,
-                to_sequence: 4,
+                to_sequence: 5,
             })
             .unwrap();
-        assert_eq!(export.kept_count, 4);
-        assert_eq!(export.redacted_fields, 12);
+        assert_eq!(export.kept_count, 5);
+        assert_eq!(export.redacted_fields, 15);
         assert!(!export.write_enabled);
         let text = String::from_utf8(export.bytes.clone()).unwrap();
         let kept = format!("{:?}", history.records());
@@ -676,6 +725,122 @@ mod tests {
             }
         }
         assert_eq!(export.export_sha256, sha256_hex(&export.bytes));
+        // A redacted history replays as it was kept.
+        let replayed = ActionHistory::replay(history.records().to_vec(), &history.head()).unwrap();
+        assert_eq!(replayed, history);
+        // A plain identifier with a separator is kept as it is.
+        let kept = history.append(&draft("secret.value-1:a", 11)).unwrap();
+        assert_eq!(
+            (kept.action_id.as_str(), kept.redacted_fields),
+            ("secret.value-1:a", 0)
+        );
+    }
+
+    type EntryChange<'a> = Box<dyn Fn(&mut ActionHistoryEntry) + 'a>;
+
+    // Replaces the only entry of a one-entry chain by a changed entry with a
+    // consistent digest and head, so only the replay rules can refuse it.
+    fn replay_changed(
+        change: &dyn Fn(&mut ActionHistoryEntry),
+    ) -> Result<ActionHistory, ActionHistoryError> {
+        let mut history = ActionHistory::new();
+        history.append(&draft("write-1", 10)).unwrap();
+        let mut records = history.records().to_vec();
+        let ActionHistoryRecord::Kept(entry) = &mut records[0] else {
+            unreachable!()
+        };
+        change(entry);
+        entry.entry_sha256 = entry_digest(entry).unwrap();
+        let head = ActionHistoryHead {
+            count: 1,
+            head_sha256: entry.entry_sha256.clone(),
+        };
+        ActionHistory::replay(records, &head)
+    }
+
+    #[test]
+    fn replay_refuses_an_entry_that_append_could_not_have_kept() {
+        // Decision 0125 (review F1): the digest and head are consistent in
+        // every case; each change breaks exactly one replay rule.
+        assert!(replay_changed(&|_| {}).is_ok());
+        let canaries = canaries();
+        let long = "a".repeat(MAX_IDENTIFIER_BYTES + 1);
+        let cases: Vec<EntryChange<'_>> = vec![
+            Box::new(|entry| entry.action_id.clone_from(&canaries[3])),
+            Box::new(|entry| entry.reason_code.clone_from(&canaries[1])),
+            Box::new(|entry| entry.reason_code.clone_from(&canaries[4])),
+            Box::new(|entry| entry.action_id.clone_from(&long)),
+            Box::new(|entry| entry.action_id.clear()),
+            Box::new(|entry| {
+                entry.authorization = ActionAuthorization::Grant {
+                    grant_id: canaries[0].clone(),
+                    grant_sha256: digest('a'),
+                };
+            }),
+            Box::new(|entry| entry.redacted_fields = 1),
+            Box::new(|entry| REDACTED.clone_into(&mut entry.action_id)),
+            Box::new(|entry| entry.authorization = ActionAuthorization::Unauthorized),
+            Box::new(|entry| {
+                entry.authorization = ActionAuthorization::Grant {
+                    grant_id: "grant-write-1".to_owned(),
+                    grant_sha256: "A".repeat(64),
+                };
+            }),
+            Box::new(|entry| {
+                entry.authorization = ActionAuthorization::PersonDecision {
+                    decision_sha256: "short".to_owned(),
+                };
+            }),
+            Box::new(|entry| entry.retain_until_epoch_ms = entry.recorded_at_epoch_ms),
+            Box::new(|entry| entry.effect_sha256 = "B".repeat(64)),
+            Box::new(|entry| {
+                entry.evidence_sha256s = (0..=MAX_EVIDENCE)
+                    .map(|index| format!("{index:064x}"))
+                    .collect();
+            }),
+            Box::new(|entry| entry.evidence_sha256s = vec!["C".repeat(64)]),
+            Box::new(|entry| entry.evidence_sha256s = vec![digest('d'), digest('c')]),
+        ];
+        for change in cases {
+            assert_eq!(replay_changed(&*change), Err(ActionHistoryError::Integrity));
+        }
+        // A redacted entry that counts its markers replays.
+        assert!(
+            replay_changed(&|entry| {
+                REDACTED.clone_into(&mut entry.action_id);
+                REDACTED.clone_into(&mut entry.reason_code);
+                entry.redacted_fields = 2;
+            })
+            .is_ok()
+        );
+        // A denied action may name no authorization.
+        assert!(
+            replay_changed(&|entry| {
+                entry.authorization = ActionAuthorization::Unauthorized;
+                entry.outcome = ActionOutcome::Denied;
+            })
+            .is_ok()
+        );
+    }
+
+    #[test]
+    fn the_export_rescan_withholds_a_secret_that_reached_the_history() {
+        // Decision 0125 (review F1): append and replay both refuse such an
+        // entry, so it is built directly and the rescan is the only guard.
+        let mut history = ActionHistory::new();
+        history.append(&draft("write-1", 10)).unwrap();
+        let ActionHistoryRecord::Kept(entry) = &mut history.records[0] else {
+            unreachable!()
+        };
+        entry.action_id.clone_from(&canaries()[0]);
+        entry.entry_sha256 = entry_digest(entry).unwrap();
+        assert_eq!(
+            history.export(ActionHistoryExportRequest {
+                from_sequence: 1,
+                to_sequence: 1,
+            }),
+            Err(ActionHistoryError::SecretDetected)
+        );
     }
 
     #[test]
@@ -748,6 +913,31 @@ mod tests {
             Err(ActionHistoryError::Integrity)
         );
         assert_eq!(ActionHistory::replay(records, &head).unwrap(), history);
+    }
+
+    #[test]
+    fn an_expired_place_replaced_by_another_breaks_the_next_link() {
+        // Decision 0125 (review F2): the head binds only the last digest, so
+        // an expired middle position depends on the previous-link check.
+        let mut history = ActionHistory::new();
+        for (index, id) in ["write-1", "write-2", "write-3"].iter().enumerate() {
+            let mut value = draft(id, 10 + index as u64);
+            value.retain_until_epoch_ms = if index == 1 { 100 } else { 5_000 };
+            history.append(&value).unwrap();
+        }
+        assert_eq!(history.apply_retention(100), 1);
+        let head = history.head();
+        let mut records = history.records().to_vec();
+        assert!(ActionHistory::replay(records.clone(), &head).is_ok());
+        if let ActionHistoryRecord::Expired { entry_sha256, .. } = &mut records[1] {
+            *entry_sha256 = digest('f');
+        } else {
+            unreachable!()
+        }
+        assert_eq!(
+            ActionHistory::replay(records, &head),
+            Err(ActionHistoryError::Integrity)
+        );
     }
 
     #[test]

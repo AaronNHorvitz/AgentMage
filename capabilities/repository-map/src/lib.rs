@@ -11,6 +11,7 @@ mod grammar;
 #[cfg(test)]
 mod invariance_tests;
 mod inventory;
+mod language_server_codec;
 mod language_service;
 mod package_scaffold;
 mod parser;
@@ -63,6 +64,15 @@ pub use inventory::{
     RepositoryFileRecord, RepositoryMap, RepositoryMapError, RepositoryMapInput,
     RepositoryObjectKind, build_repository_map, verify_repository_file_record,
     verify_repository_map,
+};
+pub use language_server_codec::{
+    LanguageServerCodecContext, LanguageServerCodecError, LanguageServerFrameDecoder,
+    LanguageServerMessage, LanguageServerPositionEncoding, LanguageServerRequestId,
+    LanguageServerResponse, LanguageServerVisibleSource, decode_language_server_message,
+    encode_language_server_frame, encode_language_server_references_request,
+    encode_language_server_rename_request, encode_server_request_refusal,
+    observe_language_server_diagnostics, observe_language_server_references,
+    observe_language_server_rename,
 };
 pub use language_service::{
     LanguageServiceCapability, LanguageServiceDescriptor, LanguageServiceError,

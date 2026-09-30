@@ -967,6 +967,35 @@ mod tests {
             .err(),
             Some(CapabilityPackageError::RevocationDenied)
         );
+        // Decision 0125 (review F2): with two trusted issuers, a list signed
+        // and presented by one but naming the other's key is refused; only
+        // the named-key comparison can refuse it.
+        let second_issuer = SigningKey::from_bytes(&[7; 32]);
+        let both_trusted = BTreeSet::from([
+            hex(&Sha256::digest(issuer_key)),
+            hex(&Sha256::digest(second_issuer.verifying_key().as_bytes())),
+        ]);
+        let misnamed = seal_capability_revocations(CapabilityRevocationList {
+            issuer_public_key_sha256: hex(&Sha256::digest(
+                second_issuer.verifying_key().as_bytes(),
+            )),
+            ..list.clone()
+        })
+        .unwrap();
+        let mut signed = REVOCATION_DOMAIN.to_vec();
+        signed.extend(canonical_revocation_bytes(&misnamed).unwrap());
+        let misnamed_signature = issuer.sign(&signed).to_bytes();
+        assert_eq!(
+            verify_capability_revocations(CapabilityRevocationAdmission {
+                list: misnamed,
+                signature: &misnamed_signature,
+                issuer_public_key: &issuer_key,
+                trusted_issuer_key_sha256s: &both_trusted,
+                last_accepted: None,
+            })
+            .err(),
+            Some(CapabilityPackageError::RevocationDenied)
+        );
         // A changed entry, a wrong signature and a list naming another key
         // than the one presented are refused.
         let mut changed = list.clone();

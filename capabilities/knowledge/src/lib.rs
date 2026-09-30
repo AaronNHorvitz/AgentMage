@@ -10,6 +10,7 @@ mod coding_skills;
 mod connected_connector;
 mod connector_mutation;
 mod database_adapter;
+mod doc_packs;
 mod document_control_skills;
 mod domain;
 mod executive_skills;
@@ -114,6 +115,12 @@ pub use database_adapter::{
     DatabaseQueryLimits, DatabaseQueryRequest, DatabaseQueryResult, DatabaseQueryTemplate,
     DatabaseSourceIdentity, DatabaseSourceKind, LocalStructuredDatabase, StructuredDatabaseReceipt,
     StructuredEvidenceReviewerDecision, StructuredEvidenceRow, StructuredValue,
+};
+pub use doc_packs::{
+    DocPackCatalog, DocPackDeletion, DocPackDeletionReason, DocPackError, DocPackFile,
+    DocPackFreshness, DocPackImportIntent, DocPackIndex, DocPackManifest, DocPackMediaType,
+    DocPackPolicy, DocPackReceipt, DocPackStatus, DocPackVersion, DocPackVersionState,
+    DocPackVersionStatus, parse_doc_pack_manifest, seal_doc_pack_manifest,
 };
 pub use document_control_skills::{DocumentControlSkill, built_in_document_control_skill_pack};
 pub use domain::{

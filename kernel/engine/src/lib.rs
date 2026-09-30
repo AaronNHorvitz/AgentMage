@@ -102,6 +102,7 @@ pub mod engineering_persistence;
 /// Exact non-authoritative approvals of durable Verified Chat Plan artifacts.
 pub mod engineering_plan;
 /// Semantic validation and sealing helpers for canonical Engineering Runtime records.
+pub mod engineering_recipe;
 pub mod engineering_records;
 /// Exact-preview redacted evidence bundles derived from canonical conversation state.
 pub mod evidence_bundle;
