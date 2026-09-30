@@ -48,7 +48,10 @@ decision.
    already committed to stopping, the host records that stop first and decides
    the request afterwards. The host acts on the job's phase after each decision,
    never on a decision alone, so a retry that answers an old decision changes
-   nothing that has since moved on.
+   nothing that has since moved on. As amended by
+   [Decision 0123](0123-review-fixes-for-suspension.md) (review F1), when the
+   phase cannot be read after a decision, an applied decision may withdraw the
+   suspension but never arm one.
 4. Refusals. A run whose coordinator commits no checkpoints refuses suspension
    and resumption before the ledger, so they are not recorded. A suspended run
    cannot be released, declared or advanced, and a direct cancellation of it is
@@ -82,7 +85,10 @@ decision.
 8. Client. The shared CLI driver sends suspension and resumption as job control
    requests. They follow the same status, request and bounded stale-retry rules
    as cancellation. A host that does not take a suspension or resumption leaves
-   the run unchanged, and the driver shows that. The driver verifies that a
+   the run unchanged, and the driver shows that. A host that no longer holds a
+   suspended run after a failed continuation is shown as having released it, and
+   the driver ends ([Decision 0123](0123-review-fixes-for-suspension.md), review
+   F2). The driver verifies that a
    suspended step's boundary is the last verified event. While the run is
    suspended, the driver waits for a person's resumption or cancellation without
    asking the host again.

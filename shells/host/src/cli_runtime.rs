@@ -482,6 +482,7 @@ impl RunDriver {
                     .map_err(map_runtime_error)
             }
             ControlOutcome::Unavailable(error) => Err(map_runtime_error(error)),
+            ControlOutcome::Released => released(sink, step, JobControlAction::Cancel),
             ControlOutcome::Decided => self.advance(runtime),
         }
     }
@@ -489,7 +490,8 @@ impl RunDriver {
     /// Sends a person's suspension or resumption through the host's job
     /// ledger (Decision 0122). A host that does not take it leaves the run
     /// unchanged, which is shown; the run then continues as before. Returns the
-    /// next boundary when the host continued the run from its checkpoint.
+    /// next boundary when the host continued the run from its checkpoint, and
+    /// fails when the host released the suspended run instead.
     fn control_run<P, S>(
         &mut self,
         runtime: &mut P,
@@ -522,6 +524,7 @@ impl RunDriver {
                     .map_err(map_client_error)?;
                 Ok(None)
             }
+            ControlOutcome::Released => released(sink, step, action),
             ControlOutcome::Decided if self.verifier.request().request_sha256 != request_sha256 => {
                 self.advance(runtime).map(Some)
             }
@@ -564,6 +567,18 @@ impl RunDriver {
             let answer =
                 match runtime.control_job(&request.run_id, &request.request_sha256, &control) {
                     Ok(answer) => answer,
+                    // A suspended run the host no longer holds was released
+                    // when it could not continue the run after the ledger
+                    // decided (review F2 of `3c69304c`).
+                    Err(_)
+                        if step.suspended.is_some()
+                            && matches!(
+                                runtime.job_status(&request.run_id, &request.request_sha256),
+                                Err(NativeChatRuntimeError::RunUnavailable)
+                            ) =>
+                    {
+                        return Ok(ControlOutcome::Released);
+                    }
                     Err(error) if action != JobControlAction::Cancel => {
                         return Ok(ControlOutcome::Unavailable(error));
                     }
@@ -630,6 +645,29 @@ enum ControlOutcome {
     /// The host's first status read failed, or it refused the request before
     /// its ledger, with this error.
     Unavailable(NativeChatRuntimeError),
+    /// The host no longer holds the suspended run: it could not continue it
+    /// after the request.
+    Released,
+}
+
+/// Shows that the host released the suspended run of this step and ends the
+/// drive: nothing continues the run here, and its job keeps the phase its
+/// ledger recorded (review F2 of `3c69304c`).
+fn released<S, T>(
+    sink: &mut S,
+    step: &NativeChatRuntimeStep,
+    action: JobControlAction,
+) -> Result<T, InteractiveCliRuntimeError>
+where
+    S: CodingEventSink,
+{
+    let point = step
+        .suspended
+        .as_ref()
+        .ok_or(InteractiveCliRuntimeError::Evidence)?;
+    sink.present_job_control(JobControlNotice::Released { action, point })
+        .map_err(map_client_error)?;
+    Err(InteractiveCliRuntimeError::Runtime)
 }
 
 fn verify_complete_artifacts<P>(
@@ -2411,12 +2449,23 @@ mod tests {
         foreign_answer: bool,
         /// Name a boundary other than the one the run stopped at.
         foreign_point: bool,
+        /// Refuse the resumption of the suspended run as stale, in an answer
+        /// about its resumed request.
+        refusal_about_resumed: bool,
+        /// Fail to continue the suspended run after the ledger decided, and no
+        /// longer hold it.
+        fail_continuation: bool,
+        /// The host no longer holds the run.
+        gone: bool,
         started: bool,
         suspended: bool,
         cancel_signal: Option<CancellationId>,
         ended: bool,
         released: Vec<String>,
         advances: Vec<(String, Option<RuntimeEventCursor>)>,
+        /// Advances made when the run stopped and when it continued.
+        advances_at_suspension: Option<usize>,
+        advances_at_continuation: Option<usize>,
         controls: Vec<JobControlRequest>,
         direct_cancellations: usize,
     }
@@ -2439,12 +2488,17 @@ mod tests {
                 refuse_suspension: false,
                 foreign_answer: false,
                 foreign_point: false,
+                refusal_about_resumed: false,
+                fail_continuation: false,
+                gone: false,
                 started: false,
                 suspended: false,
                 cancel_signal: None,
                 ended: false,
                 released: Vec::new(),
                 advances: Vec::new(),
+                advances_at_suspension: None,
+                advances_at_continuation: None,
                 controls: Vec::new(),
                 direct_cancellations: 0,
             }
@@ -2550,6 +2604,7 @@ mod tests {
                 self.suspended = true;
                 self.phase = JobPhase::Suspended;
                 self.revision += 1;
+                self.advances_at_suspension = Some(self.advances.len());
                 return Ok(self.step(Vec::new(), None));
             }
             Ok(self.end())
@@ -2573,6 +2628,9 @@ mod tests {
             _run_id: &agentmage_kernel_contracts::RuntimeRunId,
             request_sha256: &str,
         ) -> Result<RuntimeJobStatus, NativeChatRuntimeError> {
+            if self.gone {
+                return Err(NativeChatRuntimeError::RunUnavailable);
+            }
             self.bound(request_sha256)?;
             if self.no_job_control {
                 return Err(NativeChatRuntimeError::JobControlUnavailable);
@@ -2586,6 +2644,9 @@ mod tests {
             request_sha256: &str,
             request: &JobControlRequest,
         ) -> Result<RuntimeJobControl, NativeChatRuntimeError> {
+            if self.gone {
+                return Err(NativeChatRuntimeError::RunUnavailable);
+            }
             self.bound(request_sha256)?;
             if self.no_job_control {
                 return Err(NativeChatRuntimeError::JobControlUnavailable);
@@ -2594,6 +2655,19 @@ mod tests {
                 return Err(NativeChatRuntimeError::RequestDenied);
             }
             self.controls.push(request.clone());
+            if self.refusal_about_resumed
+                && self.suspended
+                && request.action == JobControlAction::Resume
+            {
+                return Ok(RuntimeJobControl {
+                    decision: JobControlDecision::Refused {
+                        refusal: JobControlRefusal::StaleRevision,
+                        revision: self.revision,
+                        phase: self.phase,
+                    },
+                    status: self.status(&self.fixture.resumed()),
+                });
+            }
             let next = match (self.phase, request.action) {
                 _ if request.observed_revision != self.revision => None,
                 (JobPhase::Running, JobControlAction::Suspend) => Some(JobPhase::Suspending),
@@ -2626,8 +2700,15 @@ mod tests {
             }
             let continuing =
                 self.suspended && matches!(phase, JobPhase::Queued | JobPhase::Cancelled);
+            if continuing && self.fail_continuation {
+                // The job keeps the phase the ledger decided; the host no
+                // longer holds the run.
+                self.gone = true;
+                return Err(NativeChatRuntimeError::RuntimeFailed);
+            }
             if continuing {
                 // The host continues the run from its checkpoint.
+                self.advances_at_continuation = Some(self.advances.len());
                 self.suspended = false;
                 self.held = self.fixture.resumed();
                 if phase == JobPhase::Queued {
@@ -2651,12 +2732,15 @@ mod tests {
             request_sha256: &str,
         ) -> Result<(), NativeChatRuntimeError> {
             self.released.push(request_sha256.to_owned());
+            if self.gone {
+                return Err(NativeChatRuntimeError::RunUnavailable);
+            }
             self.bound(request_sha256)
         }
     }
 
-    /// A person who pauses the run at once and then resumes or cancels it
-    /// once it is suspended.
+    /// A person who pauses the run at once and then, after the run was seen
+    /// suspended for [`SUSPENDED_WAIT_POLLS`] polls, resumes or cancels it.
     #[cfg(all(
         target_os = "linux",
         feature = "source-artifacts",
@@ -2665,9 +2749,27 @@ mod tests {
     struct PauseThen {
         cancel: bool,
         asked_suspend: bool,
-        seen_suspended: bool,
+        /// Job control polls made while the run was suspended.
+        suspended_polls: usize,
         done: bool,
     }
+
+    /// Polls a suspended run waits for before it is resumed or cancelled.
+    #[cfg(all(
+        target_os = "linux",
+        feature = "source-artifacts",
+        feature = "workflow-supervisor"
+    ))]
+    const SUSPENDED_WAIT_POLLS: usize = 3;
+
+    /// Polls after which a person still facing a suspended run gives up, so a
+    /// driver that keeps waiting fails the test instead of hanging it.
+    #[cfg(all(
+        target_os = "linux",
+        feature = "source-artifacts",
+        feature = "workflow-supervisor"
+    ))]
+    const SUSPENDED_GIVE_UP_POLLS: usize = 40;
 
     #[cfg(all(
         target_os = "linux",
@@ -2679,7 +2781,7 @@ mod tests {
             &mut self,
             _request: &RuntimeRunRequest,
         ) -> Result<Option<CancellationId>, InteractiveCliRuntimeError> {
-            if self.cancel && self.seen_suspended && !self.done {
+            if self.cancel && self.suspended_polls >= SUSPENDED_WAIT_POLLS && !self.done {
                 self.done = true;
                 return Ok(Some(CancellationId::from_raw("cli-cancellation-suspended")));
             }
@@ -2694,9 +2796,15 @@ mod tests {
             if !std::mem::replace(&mut self.asked_suspend, true) {
                 return Ok(Some(InteractiveCliJobControl::Suspend));
             }
-            if suspended && !std::mem::replace(&mut self.seen_suspended, true) && !self.cancel {
-                self.done = true;
-                return Ok(Some(InteractiveCliJobControl::Resume));
+            if suspended {
+                self.suspended_polls += 1;
+                if self.suspended_polls > SUSPENDED_GIVE_UP_POLLS {
+                    return Err(InteractiveCliRuntimeError::Cancellation);
+                }
+                if !self.done && !self.cancel && self.suspended_polls >= SUSPENDED_WAIT_POLLS {
+                    self.done = true;
+                    return Ok(Some(InteractiveCliJobControl::Resume));
+                }
             }
             Ok(None)
         }
@@ -2736,6 +2844,9 @@ mod tests {
                 JobControlNotice::Continued(point) => {
                     format!("continued:{}", point.event_cursor.sequence)
                 }
+                JobControlNotice::Released { action, point } => {
+                    format!("released:{action:?}:{}", point.event_cursor.sequence)
+                }
             });
             Ok(())
         }
@@ -2752,22 +2863,24 @@ mod tests {
     ) -> (
         Result<InteractiveCliRuntimeResult, InteractiveCliRuntimeError>,
         NoticeSink,
+        PauseThen,
     ) {
         let request = port.fixture.request.clone();
         let mut sink = NoticeSink::default();
+        let mut person = PauseThen {
+            cancel,
+            asked_suspend: false,
+            suspended_polls: 0,
+            done: false,
+        };
         let result = drive_interactive_cli_runtime(
             port,
             input(&request),
             &mut PanicApproval,
             &mut sink,
-            &mut PauseThen {
-                cancel,
-                asked_suspend: false,
-                seen_suspended: false,
-                done: false,
-            },
+            &mut person,
         );
-        (result, sink)
+        (result, sink, person)
     }
 
     #[test]
@@ -2784,8 +2897,13 @@ mod tests {
         let request = port.fixture.request.clone();
         let resumed = port.fixture.resumed();
         let point = port.fixture.point.clone();
-        let (result, sink) = drive_suspending(&mut port, false);
+        let (result, sink, person) = drive_suspending(&mut port, false);
         let result = result.expect("the resumed run completes");
+        // Review F3 (c) of `3c69304c`: nothing advances the host while the
+        // run is suspended, however long the person takes to resume it.
+        assert_eq!(person.suspended_polls, SUSPENDED_WAIT_POLLS);
+        assert!(port.advances_at_suspension.is_some());
+        assert_eq!(port.advances_at_continuation, port.advances_at_suspension);
         let (ending, outcome) = port.fixture.ending(&resumed, None);
         assert_eq!(result.request, resumed);
         assert_eq!(result.outcome, outcome);
@@ -2857,8 +2975,11 @@ mod tests {
     fn a_cancelled_suspended_run_ends_under_the_resumed_request() {
         let mut port = SuspendingPort::new();
         let resumed = port.fixture.resumed();
-        let (result, sink) = drive_suspending(&mut port, true);
+        let (result, sink, person) = drive_suspending(&mut port, true);
         let result = result.expect("the cancelled run ends");
+        assert_eq!(person.suspended_polls, SUSPENDED_WAIT_POLLS);
+        assert!(port.advances_at_suspension.is_some());
+        assert_eq!(port.advances_at_continuation, port.advances_at_suspension);
         assert_eq!(result.request, resumed);
         assert_eq!(result.outcome.state, AgentStateKind::Cancelled);
         assert_eq!(port.direct_cancellations, 0);
@@ -2897,7 +3018,7 @@ mod tests {
             port.no_job_control = no_job_control;
             port.refuse_suspension = !no_job_control;
             let request = port.fixture.request.clone();
-            let (result, sink) = drive_suspending(&mut port, false);
+            let (result, sink, _) = drive_suspending(&mut port, false);
             let result = result.expect("the run continues and completes");
             assert_eq!(result.request, request);
             assert_eq!(result.outcome, port.fixture.ending(&request, None).1);
@@ -2925,7 +3046,7 @@ mod tests {
             let mut port = SuspendingPort::new();
             port.foreign_answer = foreign_answer;
             port.foreign_point = !foreign_answer;
-            let (result, _) = drive_suspending(&mut port, false);
+            let (result, _, _) = drive_suspending(&mut port, false);
             assert_eq!(result.err(), Some(InteractiveCliRuntimeError::Evidence));
             assert!(!port.ended);
             // A foreign boundary is refused when its step arrives, before any
@@ -2944,5 +3065,84 @@ mod tests {
                 assert_eq!(actions, [JobControlAction::Suspend]);
             }
         }
+    }
+
+    #[test]
+    #[cfg(all(
+        target_os = "linux",
+        feature = "source-artifacts",
+        feature = "workflow-supervisor"
+    ))]
+    fn a_suspended_run_the_host_released_is_never_shown_as_unchanged() {
+        // Review F2 of `3c69304c`: when the host cannot continue a suspended
+        // run after the ledger decided its resumption or cancellation, the
+        // driver shows that the host released it and ends, instead of
+        // waiting on a run that nothing holds.
+        for (cancel, action, phase) in [
+            (false, JobControlAction::Resume, JobPhase::Queued),
+            (true, JobControlAction::Cancel, JobPhase::Cancelled),
+        ] {
+            let mut port = SuspendingPort::new();
+            port.fail_continuation = true;
+            let request = port.fixture.request.clone();
+            let point = port.fixture.point.clone();
+            let (result, sink, _) = drive_suspending(&mut port, cancel);
+            assert_eq!(result.err(), Some(InteractiveCliRuntimeError::Runtime));
+            assert_eq!(
+                sink.notices,
+                [
+                    "answered:Suspend:applied:Suspending".to_owned(),
+                    format!("suspended:{}", point.event_cursor.sequence),
+                    format!("released:{action:?}:{}", point.event_cursor.sequence),
+                ]
+            );
+            assert!(port.gone);
+            assert_eq!(port.phase, phase);
+            assert_eq!(port.held, request);
+            assert!(!port.ended);
+            // Only the driver's best-effort release after a failure follows.
+            assert_eq!(port.released, std::slice::from_ref(&request.request_sha256));
+            assert_eq!(port.direct_cancellations, 0);
+            assert_eq!(
+                port.controls
+                    .iter()
+                    .map(|control| control.action)
+                    .collect::<Vec<_>>(),
+                [JobControlAction::Suspend, action]
+            );
+        }
+    }
+
+    #[test]
+    #[cfg(all(
+        target_os = "linux",
+        feature = "source-artifacts",
+        feature = "workflow-supervisor"
+    ))]
+    fn a_refused_resumption_about_the_resumed_request_never_rebinds() {
+        // Review F3 (b) of `3c69304c`: an answer that describes the resumed
+        // request rebinds the driver only for a decision that continued the
+        // run; a refusal about it is refused as evidence.
+        let mut port = SuspendingPort::new();
+        port.refusal_about_resumed = true;
+        let request = port.fixture.request.clone();
+        let (result, sink, _) = drive_suspending(&mut port, false);
+        assert_eq!(result.err(), Some(InteractiveCliRuntimeError::Evidence));
+        assert!(
+            !sink
+                .notices
+                .iter()
+                .any(|notice| notice.starts_with("continued:"))
+        );
+        assert_eq!(port.held, request);
+        assert!(port.suspended);
+        assert!(!port.ended);
+        assert_eq!(
+            port.controls
+                .iter()
+                .map(|control| control.action)
+                .collect::<Vec<_>>(),
+            [JobControlAction::Suspend, JobControlAction::Resume]
+        );
     }
 }

@@ -3,11 +3,13 @@
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
+use agentmage_kernel_contracts::WorkspaceId;
 use sha2::{Digest, Sha256};
 
 use crate::{MemoryError, MemoryId, MemoryItem, MemoryItemStatus, MemoryType};
 
 const MAX_ITEMS: usize = 100_000;
+const MAX_SOURCE_ID_BYTES: usize = 512;
 
 /// Closed explicit memory transition class.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -28,6 +30,41 @@ pub enum MemoryTransitionKind {
     Expire,
     /// Tombstone one item after an explicit deletion decision.
     Delete,
+    /// Withdraw one item, or every item citing a revoked source, after an
+    /// explicit revocation decision.
+    Revoke,
+}
+
+/// One revoked source within one workspace (Decision 0124). An item cites it
+/// when any of its evidence names this source, and this object when one is
+/// given.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MemorySourceRevocation {
+    /// The only workspace whose items the revocation reaches.
+    pub workspace_id: WorkspaceId,
+    /// Revoked evidence source identity.
+    pub source_id: String,
+    /// Optional revoked object within the source; absent revokes the source.
+    pub object_id: Option<String>,
+}
+
+/// Content-free receipt for one source revocation.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MemorySourceRevocationReceipt {
+    /// Monotonic catalog revision of the single transition.
+    pub revision: u64,
+    /// Digest of the revoked workspace, source and object identities.
+    pub source_sha256: String,
+    /// Digests of every revoked item identity, in identity order.
+    pub revoked_memory_id_sha256s: Vec<String>,
+    /// Digest of the explicit revocation decision evidence.
+    pub decision_sha256: String,
+    /// Digest of the complete ordered catalog after the transition.
+    pub catalog_sha256: String,
+    /// Fixed false automatic-decision marker.
+    pub automatic_decision: bool,
+    /// Fixed false file-write marker.
+    pub files_written: bool,
 }
 
 /// Content-free receipt for one catalog transition.
@@ -307,6 +344,95 @@ impl MemoryCatalog {
         )
     }
 
+    /// Revokes one item after an explicit decision (Decision 0124). The item
+    /// keeps its content for inspection and a later deletion, and it is never
+    /// loaded again, current or historical.
+    pub fn revoke(
+        &mut self,
+        memory_id: &MemoryId,
+        decision_sha256: String,
+        decided_at: String,
+    ) -> Result<MemoryLifecycleReceipt, MemoryError> {
+        validate_decision(&decision_sha256, &decided_at)?;
+        self.publish(
+            MemoryTransitionKind::Revoke,
+            memory_id.clone(),
+            None,
+            decision_sha256.clone(),
+            |next| {
+                let item = next.get_mut(memory_id).ok_or(MemoryError::NotFound)?;
+                if !revocable(item.status) {
+                    return Err(MemoryError::InvalidTransition);
+                }
+                item.status = MemoryItemStatus::Revoked;
+                item.decided_at = decided_at;
+                item.decision_sha256 = decision_sha256;
+                Ok(())
+            },
+        )
+    }
+
+    /// Revokes, in one transition, every revocable item of the named
+    /// workspace that cites the revoked source (Decision 0124). Items of
+    /// other workspaces are never touched. A revocation no item reaches
+    /// changes nothing and is refused as not found.
+    pub fn revoke_source(
+        &mut self,
+        source: &MemorySourceRevocation,
+        decision_sha256: String,
+        decided_at: String,
+    ) -> Result<MemorySourceRevocationReceipt, MemoryError> {
+        validate_decision(&decision_sha256, &decided_at)?;
+        let source_sha256 = source_digest(source)?;
+        let revoked = self
+            .items
+            .values()
+            .filter(|item| {
+                revocable(item.status)
+                    && item.scope.workspace_id == source.workspace_id
+                    && item.evidence.iter().any(|evidence| {
+                        evidence.source_id == source.source_id
+                            && source
+                                .object_id
+                                .as_ref()
+                                .is_none_or(|object| &evidence.object_id == object)
+                    })
+            })
+            .map(|item| item.memory_id.clone())
+            .collect::<Vec<_>>();
+        if revoked.is_empty() {
+            return Err(MemoryError::NotFound);
+        }
+        let mut next = self.items.clone();
+        for memory_id in &revoked {
+            let item = next.get_mut(memory_id).ok_or(MemoryError::NotFound)?;
+            item.status = MemoryItemStatus::Revoked;
+            item.decided_at.clone_from(&decided_at);
+            item.decision_sha256.clone_from(&decision_sha256);
+        }
+        validate_catalog(&next)?;
+        let catalog_sha256 = catalog_digest(&next)?;
+        let revision = self
+            .revision
+            .checked_add(1)
+            .ok_or(MemoryError::ResourceLimit)?;
+        self.items = next;
+        self.revision = revision;
+        self.catalog_sha256 = catalog_sha256.clone();
+        Ok(MemorySourceRevocationReceipt {
+            revision,
+            source_sha256,
+            revoked_memory_id_sha256s: revoked
+                .iter()
+                .map(|memory_id| sha256(memory_id.as_str().as_bytes()))
+                .collect(),
+            decision_sha256,
+            catalog_sha256,
+            automatic_decision: false,
+            files_written: false,
+        })
+    }
+
     /// Returns a content-free summary.
     #[must_use]
     pub fn inspect(&self) -> MemoryCatalogSummary {
@@ -539,7 +665,7 @@ fn validate_item(item: &MemoryItem) -> Result<(), MemoryError> {
         })
         || matches!(
             item.status,
-            MemoryItemStatus::Approved | MemoryItemStatus::Hold
+            MemoryItemStatus::Approved | MemoryItemStatus::Hold | MemoryItemStatus::Revoked
         ) && item.content.is_none()
         || matches!(
             item.status,
@@ -719,7 +845,44 @@ const fn status_id(value: MemoryItemStatus) -> &'static str {
         MemoryItemStatus::Expired => "expired",
         MemoryItemStatus::Hold => "hold",
         MemoryItemStatus::Deleted => "deleted",
+        MemoryItemStatus::Revoked => "revoked",
     }
+}
+
+/// Whether an item may be revoked: every item that still holds content and is
+/// not already revoked.
+const fn revocable(status: MemoryItemStatus) -> bool {
+    matches!(
+        status,
+        MemoryItemStatus::Approved
+            | MemoryItemStatus::Hold
+            | MemoryItemStatus::Expired
+            | MemoryItemStatus::Superseded
+    )
+}
+
+fn source_digest(source: &MemorySourceRevocation) -> Result<String, MemoryError> {
+    let bounded = |value: &str| {
+        !value.is_empty()
+            && value.len() <= MAX_SOURCE_ID_BYTES
+            && !value.chars().any(char::is_control)
+    };
+    if !bounded(source.workspace_id.as_str())
+        || !bounded(&source.source_id)
+        || source
+            .object_id
+            .as_deref()
+            .is_some_and(|object| !bounded(object))
+    {
+        return Err(MemoryError::InvalidInput);
+    }
+    let material = serde_json::to_vec(&(
+        source.workspace_id.as_str(),
+        source.source_id.as_str(),
+        source.object_id.as_deref(),
+    ))
+    .map_err(|_| MemoryError::ResourceLimit)?;
+    Ok(sha256(&material))
 }
 
 fn valid_sha256(value: &str) -> bool {
@@ -743,7 +906,7 @@ mod tests {
         DataSensitivity, EvidenceId, EvidenceKind, EvidenceReference, WorkspaceId,
     };
 
-    use super::{MemoryCatalog, MemoryTransitionKind};
+    use super::{MemoryCatalog, MemorySourceRevocation, MemoryTransitionKind};
     use crate::{
         MemoryCandidate, MemoryError, MemoryId, MemoryItem, MemoryItemStatus, MemoryScope,
         MemoryType, UserMemoryDecision, evaluate_memory_candidate, resolve_memory_candidate,
@@ -992,6 +1155,275 @@ mod tests {
                 .content
                 .as_deref(),
             Some("Edited text.")
+        );
+    }
+
+    fn in_workspace(mut item: MemoryItem, workspace: &str) -> MemoryItem {
+        item.scope.workspace_id = WorkspaceId::from_raw(workspace);
+        item
+    }
+
+    fn citing(mut item: MemoryItem, source: &str, object: &str) -> MemoryItem {
+        item.evidence[0].source_id = source.to_owned();
+        item.evidence[0].object_id = object.to_owned();
+        item
+    }
+
+    #[test]
+    fn a_revoked_item_keeps_its_content_leaves_the_current_set_and_can_then_be_deleted() {
+        let revoked = item("memory-revoked", "Revoked fact.", None);
+        let kept = item("memory-kept", "Kept fact.", None);
+        let revoked_id = revoked.memory_id.clone();
+        let mut catalog = MemoryCatalog::new();
+        catalog.insert(revoked).expect("insert succeeds");
+        catalog.insert(kept).expect("insert succeeds");
+        assert_eq!(catalog.inspect().current_count, 2);
+        let receipt = catalog
+            .revoke(
+                &revoked_id,
+                "c".repeat(64),
+                "2026-08-14T13:00:00Z".to_owned(),
+            )
+            .expect("revocation succeeds");
+        assert_eq!(receipt.transition, MemoryTransitionKind::Revoke);
+        assert!(!receipt.automatic_decision);
+        assert!(!receipt.files_written);
+        let item = catalog.get(&revoked_id).expect("revoked item retained");
+        assert_eq!(item.status, MemoryItemStatus::Revoked);
+        assert_eq!(item.content.as_deref(), Some("Revoked fact."));
+        assert_eq!(item.decision_sha256, "c".repeat(64));
+        assert_eq!(catalog.inspect().current_count, 1);
+        let preview = catalog.preview_markdown().expect("preview succeeds");
+        assert!(
+            preview
+                .index
+                .markdown
+                .contains("- [[memory-revoked|memory-revoked]] (revoked)")
+        );
+
+        // A revoked item is revoked once, and only an item that still holds
+        // content can be revoked.
+        let before = catalog.inspect();
+        assert_eq!(
+            catalog.revoke(
+                &revoked_id,
+                "d".repeat(64),
+                "2026-08-14T13:01:00Z".to_owned()
+            ),
+            Err(MemoryError::InvalidTransition)
+        );
+        assert_eq!(catalog.inspect(), before);
+        catalog
+            .delete(
+                &revoked_id,
+                "e".repeat(64),
+                "2026-08-14T13:02:00Z".to_owned(),
+            )
+            .expect("a revoked item can be deleted");
+        let deleted = catalog.get(&revoked_id).expect("tombstone retained");
+        assert_eq!(deleted.status, MemoryItemStatus::Deleted);
+        assert!(deleted.content.is_none());
+        assert_eq!(
+            catalog.revoke(
+                &revoked_id,
+                "f".repeat(64),
+                "2026-08-14T13:03:00Z".to_owned()
+            ),
+            Err(MemoryError::InvalidTransition)
+        );
+        let missing = MemoryId::parse("memory-missing").expect("valid identity");
+        assert_eq!(
+            catalog.revoke(&missing, "f".repeat(64), "2026-08-14T13:03:00Z".to_owned()),
+            Err(MemoryError::NotFound)
+        );
+        assert_eq!(
+            catalog.revoke(
+                &missing,
+                "not-a-digest".to_owned(),
+                "2026-08-14T13:03:00Z".to_owned()
+            ),
+            Err(MemoryError::InvalidInput)
+        );
+    }
+
+    #[test]
+    fn a_source_revocation_reaches_every_citing_item_of_its_workspace_in_one_transition() {
+        let first = citing(
+            item("memory-first", "First fact.", None),
+            "source-a",
+            "page-1",
+        );
+        let second = citing(
+            item("memory-second", "Second fact.", None),
+            "source-a",
+            "page-2",
+        );
+        let other_source = citing(
+            item("memory-other", "Other fact.", None),
+            "source-b",
+            "page-1",
+        );
+        let other_workspace = in_workspace(
+            citing(
+                item("memory-foreign", "Foreign fact.", None),
+                "source-a",
+                "page-1",
+            ),
+            "workspace-other",
+        );
+        let mut catalog = MemoryCatalog::new();
+        for value in [first, second, other_source, other_workspace] {
+            catalog.insert(value).expect("insert succeeds");
+        }
+        let id = |value: &str| MemoryId::parse(value).expect("valid identity");
+        // An expired item still cites the source and is withdrawn with it.
+        let mut expiring = citing(
+            item(
+                "memory-expired",
+                "Expired fact.",
+                Some("2026-08-15T00:00:00Z"),
+            ),
+            "source-a",
+            "page-3",
+        );
+        expiring.fact_key = Some("release.expired".to_owned());
+        catalog.insert(expiring).expect("insert succeeds");
+        catalog
+            .expire("2026-08-16T00:00:00Z".to_owned(), "c".repeat(64))
+            .expect("expiry succeeds");
+
+        // An object revocation reaches only items citing that object.
+        let before = catalog.inspect();
+        let receipt = catalog
+            .revoke_source(
+                &MemorySourceRevocation {
+                    workspace_id: WorkspaceId::from_raw("workspace-memory-lifecycle"),
+                    source_id: "source-a".to_owned(),
+                    object_id: Some("page-2".to_owned()),
+                },
+                "d".repeat(64),
+                "2026-08-16T01:00:00Z".to_owned(),
+            )
+            .expect("object revocation succeeds");
+        assert_eq!(receipt.revision, before.revision + 1);
+        assert_eq!(receipt.revoked_memory_id_sha256s.len(), 1);
+        assert_eq!(
+            catalog.get(&id("memory-second")).unwrap().status,
+            MemoryItemStatus::Revoked
+        );
+        assert_eq!(
+            catalog.get(&id("memory-first")).unwrap().status,
+            MemoryItemStatus::Approved
+        );
+
+        // A source revocation reaches every remaining citing item of the
+        // workspace at once and never another workspace or source.
+        let before = catalog.inspect();
+        let receipt = catalog
+            .revoke_source(
+                &MemorySourceRevocation {
+                    workspace_id: WorkspaceId::from_raw("workspace-memory-lifecycle"),
+                    source_id: "source-a".to_owned(),
+                    object_id: None,
+                },
+                "e".repeat(64),
+                "2026-08-16T02:00:00Z".to_owned(),
+            )
+            .expect("source revocation succeeds");
+        assert_eq!(receipt.revision, before.revision + 1);
+        assert_eq!(receipt.catalog_sha256, catalog.inspect().catalog_sha256);
+        assert_eq!(receipt.decision_sha256, "e".repeat(64));
+        assert!(!receipt.automatic_decision);
+        assert!(!receipt.files_written);
+        let mut expected = ["memory-expired", "memory-first"]
+            .iter()
+            .map(|value| super::sha256(value.as_bytes()))
+            .collect::<Vec<_>>();
+        expected.sort();
+        let mut revoked = receipt.revoked_memory_id_sha256s.clone();
+        revoked.sort();
+        assert_eq!(revoked, expected);
+        for (memory_id, status) in [
+            ("memory-first", MemoryItemStatus::Revoked),
+            ("memory-second", MemoryItemStatus::Revoked),
+            ("memory-expired", MemoryItemStatus::Revoked),
+            ("memory-other", MemoryItemStatus::Approved),
+            ("memory-foreign", MemoryItemStatus::Approved),
+        ] {
+            assert_eq!(
+                catalog.get(&id(memory_id)).unwrap().status,
+                status,
+                "{memory_id}"
+            );
+        }
+        assert_eq!(catalog.inspect().current_count, 2);
+
+        // Nothing left to reach, a foreign workspace with no citing item and
+        // malformed identities change nothing.
+        let before = catalog.inspect();
+        for (source, error) in [
+            (
+                MemorySourceRevocation {
+                    workspace_id: WorkspaceId::from_raw("workspace-memory-lifecycle"),
+                    source_id: "source-a".to_owned(),
+                    object_id: None,
+                },
+                MemoryError::NotFound,
+            ),
+            (
+                MemorySourceRevocation {
+                    workspace_id: WorkspaceId::from_raw("workspace-absent"),
+                    source_id: "source-b".to_owned(),
+                    object_id: None,
+                },
+                MemoryError::NotFound,
+            ),
+            (
+                MemorySourceRevocation {
+                    workspace_id: WorkspaceId::from_raw("workspace-memory-lifecycle"),
+                    source_id: String::new(),
+                    object_id: None,
+                },
+                MemoryError::InvalidInput,
+            ),
+            (
+                MemorySourceRevocation {
+                    workspace_id: WorkspaceId::from_raw("workspace-memory-lifecycle"),
+                    source_id: "source-b".to_owned(),
+                    object_id: Some("page\n1".to_owned()),
+                },
+                MemoryError::InvalidInput,
+            ),
+        ] {
+            assert_eq!(
+                catalog.revoke_source(&source, "f".repeat(64), "2026-08-16T03:00:00Z".to_owned()),
+                Err(error)
+            );
+            assert_eq!(catalog.inspect(), before);
+        }
+        assert_eq!(
+            catalog.revoke_source(
+                &MemorySourceRevocation {
+                    workspace_id: WorkspaceId::from_raw("workspace-memory-lifecycle"),
+                    source_id: "source-b".to_owned(),
+                    object_id: None,
+                },
+                "short".to_owned(),
+                "2026-08-16T03:00:00Z".to_owned(),
+            ),
+            Err(MemoryError::InvalidInput)
+        );
+        assert_eq!(catalog.inspect(), before);
+    }
+
+    #[test]
+    fn a_revoked_item_without_content_is_refused() {
+        let mut revoked = item("memory-empty-revoked", "Fact.", None);
+        revoked.status = MemoryItemStatus::Revoked;
+        revoked.content = None;
+        assert_eq!(
+            MemoryCatalog::new().insert(revoked),
+            Err(MemoryError::InvalidInput)
         );
     }
 }

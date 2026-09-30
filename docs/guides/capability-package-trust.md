@@ -13,6 +13,13 @@ the license and trusted signer, requires the exact dependency lock set and compa
 matches the public-key digest, and verifies an Ed25519 signature under the AgentMage capability
 package domain. Any mismatch leaves the package unadmitted.
 
+Under [Decision 0124](../decisions/0124-amr-05-decomposition-and-first-components.md) a sealed,
+signed and sequenced revocation list can revoke a package, an exact manifest or a signer key. The
+host accepts a list only from a trusted issuer key, never older than or forked from the list it
+accepted last. Admission refuses a revoked package and records the list it was checked against. The
+catalog marks every entry of a revoked package, and any active entry whose manifest was not
+supplied, inactive with the reason.
+
 Install, enable, disable, update, rollback, and uninstall produce inert previews. Each preview binds
 the exact before/after manifests, permission delta, and approval identity. Actions that can admit
 code require a verified package. No preview applies an effect.

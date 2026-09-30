@@ -18,7 +18,7 @@ flowchart LR
     L --> R["Selective scoped loading"]
     W --> X["Compaction preview"]
     X --> C
-    L --> T["Edit, supersede, correct, decay, hold, expire, delete"]
+    L --> T["Edit, supersede, correct, decay, hold, expire, revoke, delete"]
     T --> L
     L --> E["Versioned authenticated portable export"]
     E --> I["Closed-schema verified import into a new catalog"]
@@ -62,6 +62,12 @@ identity with the same scope and fact key. The original becomes `Superseded` and
 replacement. Confidence decay can only lower confidence. Holds resist policy expiry. Deletion
 removes content, tags, and links while retaining a content-free tombstone and evidence/decision
 identity. Failed transitions publish no revision.
+
+Revocation ([Decision 0124](../decisions/0124-amr-05-decomposition-and-first-components.md))
+withdraws one item, or in one transition every item of one workspace that cites a revoked source or
+source object. It never reaches another workspace. A revoked item keeps its content for inspection
+and later deletion, stops counting as current, and is never loaded, not even as history. The
+portable export carries the revoked state.
 
 ## Human-Readable Previews and Retrieval
 

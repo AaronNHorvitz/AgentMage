@@ -8,6 +8,8 @@ use std::collections::BTreeSet;
 use std::fmt::Write;
 
 const SIGNATURE_DOMAIN: &[u8] = b"agentmage.capability-package.v1\0";
+const REVOCATION_DOMAIN: &[u8] = b"agentmage.capability-revocation.v1\0";
+const MAX_REVOCATION_ENTRIES: usize = 4096;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -96,6 +98,8 @@ pub struct CapabilityPackageAdmission<'a> {
     pub trusted_signers: &'a BTreeSet<String>,
     pub observed_source_sha256: &'a str,
     pub dependency_locks: &'a [CapabilityDependency],
+    /// The revocations the host verified (Decision 0124).
+    pub revocations: &'a VerifiedCapabilityRevocations,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -112,8 +116,111 @@ pub struct CapabilityPackageVerification {
     pub provenance_verified: bool,
     pub dependency_locks_verified: bool,
     pub compatibility_verified: bool,
+    /// Digest of the revocation list the package was checked against; absent
+    /// for a host that has never accepted one (Decision 0124).
+    pub revocation_list_sha256: Option<String>,
+    /// Sequence of that list; zero when absent.
+    pub revocation_sequence: u64,
     pub admitted: bool,
     pub verification_sha256: String,
+}
+
+/// One revocation (Decision 0124).
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum CapabilityRevocationEntry {
+    /// Every version of one package.
+    Package { package_id: String },
+    /// One exact manifest.
+    Manifest { manifest_sha256: String },
+    /// Every manifest that names this signer key.
+    SignerKey { signer_public_key_sha256: String },
+}
+
+/// A signed, sequenced list of revoked packages, manifests and signer keys
+/// (Decision 0124).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CapabilityRevocationList {
+    pub schema_version: u16,
+    pub list_id: String,
+    /// Strictly increasing for each new list of this identity.
+    pub sequence: u64,
+    pub issuer_id: String,
+    pub issuer_public_key_sha256: String,
+    pub issued_at_epoch_ms: u64,
+    /// Strictly sorted and unique.
+    pub entries: Vec<CapabilityRevocationEntry>,
+    pub list_sha256: String,
+}
+
+/// The newest revocation list a host accepted. The host keeps it so that an
+/// older list, or another list with the same sequence, is refused.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CapabilityRevocationCheckpoint {
+    pub list_id: String,
+    pub sequence: u64,
+    pub list_sha256: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CapabilityRevocationAdmission<'a> {
+    pub list: CapabilityRevocationList,
+    pub signature: &'a [u8; 64],
+    pub issuer_public_key: &'a [u8; 32],
+    /// Digests of the keys trusted to issue revocation lists.
+    pub trusted_issuer_key_sha256s: &'a BTreeSet<String>,
+    pub last_accepted: Option<&'a CapabilityRevocationCheckpoint>,
+}
+
+/// Revocations whose list was verified, or the state of a host that has never
+/// accepted a list. Only this module constructs it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct VerifiedCapabilityRevocations {
+    checkpoint: Option<CapabilityRevocationCheckpoint>,
+    entries: BTreeSet<CapabilityRevocationEntry>,
+}
+
+impl VerifiedCapabilityRevocations {
+    /// The revocations of a host that has never accepted a list. A host that
+    /// has accepted one must present a list at least as new instead.
+    pub fn never_accepted(
+        last_accepted: Option<&CapabilityRevocationCheckpoint>,
+    ) -> Result<Self, CapabilityPackageError> {
+        if last_accepted.is_some() {
+            return Err(CapabilityPackageError::RevocationDenied);
+        }
+        Ok(Self {
+            checkpoint: None,
+            entries: BTreeSet::new(),
+        })
+    }
+
+    /// The checkpoint the host keeps after accepting these revocations.
+    #[must_use]
+    pub const fn checkpoint(&self) -> Option<&CapabilityRevocationCheckpoint> {
+        self.checkpoint.as_ref()
+    }
+
+    /// Whether the manifest's package, the exact manifest or its signer key is
+    /// revoked.
+    #[must_use]
+    pub fn revokes(&self, manifest: &CapabilityPackageManifest) -> bool {
+        [
+            CapabilityRevocationEntry::Package {
+                package_id: manifest.package_id.clone(),
+            },
+            CapabilityRevocationEntry::Manifest {
+                manifest_sha256: manifest.manifest_sha256.clone(),
+            },
+            CapabilityRevocationEntry::SignerKey {
+                signer_public_key_sha256: manifest.signer_public_key_sha256.clone(),
+            },
+        ]
+        .iter()
+        .any(|entry| self.entries.contains(entry))
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -165,6 +272,11 @@ pub enum CapabilityPackageError {
     CompatibilityDenied,
     ApprovalDenied,
     ScopeDenied,
+    /// A revocation list was malformed, untrusted, older than or forked from
+    /// the one the host accepted (Decision 0124).
+    RevocationDenied,
+    /// The package, the exact manifest or its signer key is revoked.
+    Revoked,
 }
 
 impl CapabilityPackageError {
@@ -180,6 +292,8 @@ impl CapabilityPackageError {
             Self::CompatibilityDenied => "capability-package.compatibility.denied",
             Self::ApprovalDenied => "capability-package.approval.denied",
             Self::ScopeDenied => "capability-package.scope.denied",
+            Self::RevocationDenied => "capability-package.revocation.denied",
+            Self::Revoked => "capability-package.revoked",
         }
     }
 }
@@ -314,6 +428,9 @@ pub fn verify_capability_package(
     {
         return Err(CapabilityPackageError::HashMismatch);
     }
+    if input.revocations.revokes(&input.manifest) {
+        return Err(CapabilityPackageError::Revoked);
+    }
     if !input.allowed_licenses.contains(&input.manifest.license) {
         return Err(CapabilityPackageError::LicenseDenied);
     }
@@ -336,11 +453,16 @@ pub fn verify_capability_package(
     signed.extend_from_slice(&bytes);
     key.verify_strict(&signed, &Signature::from_bytes(input.signature))
         .map_err(|_| CapabilityPackageError::SignatureDenied)?;
+    let checkpoint = input.revocations.checkpoint();
+    let revocation_list_sha256 = checkpoint.map(|checkpoint| checkpoint.list_sha256.clone());
+    let revocation_sequence = checkpoint.map_or(0, |checkpoint| checkpoint.sequence);
     let verification_sha256 = hex(&Sha256::digest(
         [
             input.manifest.manifest_sha256.as_bytes(),
             input.manifest.source_sha256.as_bytes(),
             input.manifest.signer_id.as_bytes(),
+            revocation_list_sha256.as_deref().unwrap_or("").as_bytes(),
+            revocation_sequence.to_string().as_bytes(),
         ]
         .concat(),
     ));
@@ -356,9 +478,120 @@ pub fn verify_capability_package(
         provenance_verified: true,
         dependency_locks_verified: true,
         compatibility_verified: true,
+        revocation_list_sha256,
+        revocation_sequence,
         admitted: true,
         verification_sha256,
     })
+}
+
+fn canonical_revocation_bytes(
+    list: &CapabilityRevocationList,
+) -> Result<Vec<u8>, CapabilityPackageError> {
+    let mut value = list.clone();
+    value.list_sha256.clear();
+    serde_json::to_vec(&value).map_err(|_| CapabilityPackageError::RevocationDenied)
+}
+
+fn valid_revocation_fields(list: &CapabilityRevocationList) -> bool {
+    list.schema_version == 1
+        && identifier(&list.list_id)
+        && list.sequence > 0
+        && identifier(&list.issuer_id)
+        && sha(&list.issuer_public_key_sha256)
+        && list.entries.len() <= MAX_REVOCATION_ENTRIES
+        && list.entries.windows(2).all(|pair| pair[0] < pair[1])
+        && list.entries.iter().all(|entry| match entry {
+            CapabilityRevocationEntry::Package { package_id } => identifier(package_id),
+            CapabilityRevocationEntry::Manifest { manifest_sha256 } => sha(manifest_sha256),
+            CapabilityRevocationEntry::SignerKey {
+                signer_public_key_sha256,
+            } => sha(signer_public_key_sha256),
+        })
+}
+
+/// Seals a revocation list's digest before its issuer signs it.
+pub fn seal_capability_revocations(
+    mut list: CapabilityRevocationList,
+) -> Result<CapabilityRevocationList, CapabilityPackageError> {
+    list.list_sha256.clear();
+    if !valid_revocation_fields(&list) {
+        return Err(CapabilityPackageError::RevocationDenied);
+    }
+    list.list_sha256 = hex(&Sha256::digest(canonical_revocation_bytes(&list)?));
+    Ok(list)
+}
+
+/// Verifies a revocation list's shape, digest, trusted issuer key and
+/// signature, and that it is not older than, or forked from, the list the
+/// host accepted last (Decision 0124).
+pub fn verify_capability_revocations(
+    input: CapabilityRevocationAdmission<'_>,
+) -> Result<VerifiedCapabilityRevocations, CapabilityPackageError> {
+    let list = input.list;
+    if !valid_revocation_fields(&list) || !sha(&list.list_sha256) {
+        return Err(CapabilityPackageError::RevocationDenied);
+    }
+    let bytes = canonical_revocation_bytes(&list)?;
+    let issuer_key_sha256 = hex(&Sha256::digest(input.issuer_public_key));
+    if hex(&Sha256::digest(&bytes)) != list.list_sha256
+        || issuer_key_sha256 != list.issuer_public_key_sha256
+        || !input
+            .trusted_issuer_key_sha256s
+            .contains(&issuer_key_sha256)
+    {
+        return Err(CapabilityPackageError::RevocationDenied);
+    }
+    let key = VerifyingKey::from_bytes(input.issuer_public_key)
+        .map_err(|_| CapabilityPackageError::RevocationDenied)?;
+    let mut signed = Vec::with_capacity(REVOCATION_DOMAIN.len() + bytes.len());
+    signed.extend_from_slice(REVOCATION_DOMAIN);
+    signed.extend_from_slice(&bytes);
+    key.verify_strict(&signed, &Signature::from_bytes(input.signature))
+        .map_err(|_| CapabilityPackageError::RevocationDenied)?;
+    if let Some(last) = input.last_accepted
+        && (last.list_id != list.list_id
+            || list.sequence < last.sequence
+            || list.sequence == last.sequence && list.list_sha256 != last.list_sha256)
+    {
+        return Err(CapabilityPackageError::RevocationDenied);
+    }
+    Ok(VerifiedCapabilityRevocations {
+        checkpoint: Some(CapabilityRevocationCheckpoint {
+            list_id: list.list_id,
+            sequence: list.sequence,
+            list_sha256: list.list_sha256,
+        }),
+        entries: list.entries.into_iter().collect(),
+    })
+}
+
+/// Deactivates every catalog entry whose package the revocations reach, and
+/// every active entry whose manifest is not supplied, so a package revoked
+/// after it was enabled stops providing capabilities (Decision 0124). Each
+/// marked entry says why. Returns the package identities of every marked
+/// entry, sorted and unique.
+pub fn deactivate_revoked_entries(
+    entries: &mut [crate::capability_package_runtime::PackageCatalogEntry],
+    manifests: &[CapabilityPackageManifest],
+    revocations: &VerifiedCapabilityRevocations,
+) -> Vec<String> {
+    let mut deactivated = BTreeSet::new();
+    for entry in entries.iter_mut() {
+        let manifest = manifests.iter().find(|manifest| {
+            manifest.package_id == entry.package_id
+                && manifest.manifest_sha256 == entry.manifest_sha256
+        });
+        let reason = match manifest {
+            Some(manifest) if revocations.revokes(manifest) => "capability-package.revoked",
+            None if entry.active => "capability-package.revocation-unchecked",
+            _ => continue,
+        };
+        entry.active = false;
+        reason.clone_into(&mut entry.activation_reason);
+        deactivated.insert(entry.package_id.clone());
+    }
+    deactivated.into_iter().collect()
 }
 
 pub fn preview_capability_lifecycle(
@@ -515,6 +748,7 @@ mod tests {
         let signature = key.sign(&signed).to_bytes();
         let allowed = BTreeSet::from(["Apache-2.0".into()]);
         let signers = BTreeSet::from(["signer-1".into()]);
+        let revocations = VerifiedCapabilityRevocations::never_accepted(None).unwrap();
         let result = verify_capability_package(CapabilityPackageAdmission {
             manifest: manifest.clone(),
             signature: &signature,
@@ -524,9 +758,12 @@ mod tests {
             trusted_signers: &signers,
             observed_source_sha256: A,
             dependency_locks: &[],
+            revocations: &revocations,
         })
         .unwrap();
         assert!(result.admitted && result.signature_verified);
+        assert_eq!(result.revocation_list_sha256, None);
+        assert_eq!(result.revocation_sequence, 0);
     }
     #[test]
     fn tampered_signature_source_license_and_compatibility_fail() {
@@ -540,6 +777,7 @@ mod tests {
         let expected_compatibility = compatibility();
         let allowed = BTreeSet::from(["Apache-2.0".into()]);
         let signers = BTreeSet::from(["signer-1".into()]);
+        let revocations = VerifiedCapabilityRevocations::never_accepted(None).unwrap();
         let base = || CapabilityPackageAdmission {
             manifest: manifest.clone(),
             signature: &signature,
@@ -549,6 +787,7 @@ mod tests {
             trusted_signers: &signers,
             observed_source_sha256: A,
             dependency_locks: &[],
+            revocations: &revocations,
         };
         let mut bad = signature;
         bad[0] ^= 1;
@@ -632,6 +871,283 @@ mod tests {
         assert_eq!(
             narrow_package_scope(&broad, &scope()),
             Err(CapabilityPackageError::ScopeDenied)
+        );
+    }
+
+    fn sign_package(key: &SigningKey, manifest: &CapabilityPackageManifest) -> [u8; 64] {
+        let mut signed = SIGNATURE_DOMAIN.to_vec();
+        signed.extend(canonical_manifest_bytes(manifest).unwrap());
+        key.sign(&signed).to_bytes()
+    }
+
+    fn revocation_list(
+        issuer: &SigningKey,
+        sequence: u64,
+        entries: Vec<CapabilityRevocationEntry>,
+    ) -> (CapabilityRevocationList, [u8; 64]) {
+        let list = seal_capability_revocations(CapabilityRevocationList {
+            schema_version: 1,
+            list_id: "local-trust".into(),
+            sequence,
+            issuer_id: "issuer-1".into(),
+            issuer_public_key_sha256: hex(&Sha256::digest(issuer.verifying_key().as_bytes())),
+            issued_at_epoch_ms: 1_000,
+            entries,
+            list_sha256: String::new(),
+        })
+        .unwrap();
+        let mut signed = REVOCATION_DOMAIN.to_vec();
+        signed.extend(canonical_revocation_bytes(&list).unwrap());
+        (list, issuer.sign(&signed).to_bytes())
+    }
+
+    #[test]
+    fn a_revocation_list_is_trusted_signed_and_never_rolled_back() {
+        // Decision 0124.
+        let issuer = SigningKey::from_bytes(&[9; 32]);
+        let issuer_key = issuer.verifying_key().to_bytes();
+        let trusted = BTreeSet::from([hex(&Sha256::digest(issuer_key))]);
+        let entries = vec![CapabilityRevocationEntry::Package {
+            package_id: "package-9".into(),
+        }];
+        let (list, signature) = revocation_list(&issuer, 2, entries.clone());
+        let admission = |list: CapabilityRevocationList,
+                         signature: &[u8; 64],
+                         last: Option<&CapabilityRevocationCheckpoint>|
+         -> Result<VerifiedCapabilityRevocations, CapabilityPackageError> {
+            verify_capability_revocations(CapabilityRevocationAdmission {
+                list,
+                signature,
+                issuer_public_key: &issuer_key,
+                trusted_issuer_key_sha256s: &trusted,
+                last_accepted: last,
+            })
+        };
+        let verified = admission(list.clone(), &signature, None).unwrap();
+        let checkpoint = verified.checkpoint().unwrap().clone();
+        assert_eq!(checkpoint.sequence, 2);
+        assert_eq!(checkpoint.list_sha256, list.list_sha256);
+        // The same list again, and a newer one, are accepted.
+        assert!(admission(list.clone(), &signature, Some(&checkpoint)).is_ok());
+        let (newer, newer_signature) = revocation_list(&issuer, 3, entries.clone());
+        assert!(admission(newer, &newer_signature, Some(&checkpoint)).is_ok());
+        // Older, forked, foreign and never-accepted states are refused.
+        let (older, older_signature) = revocation_list(&issuer, 1, entries.clone());
+        let (fork, fork_signature) = revocation_list(&issuer, 2, Vec::new());
+        let mut foreign_checkpoint = checkpoint.clone();
+        foreign_checkpoint.list_id = "other-trust".into();
+        for (list, signature, last) in [
+            (older, older_signature, Some(&checkpoint)),
+            (fork, fork_signature, Some(&checkpoint)),
+            (list.clone(), signature, Some(&foreign_checkpoint)),
+        ] {
+            assert_eq!(
+                admission(list, &signature, last).err(),
+                Some(CapabilityPackageError::RevocationDenied)
+            );
+        }
+        assert_eq!(
+            VerifiedCapabilityRevocations::never_accepted(Some(&checkpoint)).err(),
+            Some(CapabilityPackageError::RevocationDenied)
+        );
+        // A list signed by a key the host does not trust is refused, even
+        // when it is otherwise consistent.
+        let untrusted_issuer = SigningKey::from_bytes(&[5; 32]);
+        let untrusted_key = untrusted_issuer.verifying_key().to_bytes();
+        let (untrusted_list, untrusted_list_signature) =
+            revocation_list(&untrusted_issuer, 2, entries.clone());
+        assert_eq!(
+            verify_capability_revocations(CapabilityRevocationAdmission {
+                list: untrusted_list,
+                signature: &untrusted_list_signature,
+                issuer_public_key: &untrusted_key,
+                trusted_issuer_key_sha256s: &trusted,
+                last_accepted: None,
+            })
+            .err(),
+            Some(CapabilityPackageError::RevocationDenied)
+        );
+        // A changed entry, a wrong signature and a list naming another key
+        // than the one presented are refused.
+        let mut changed = list.clone();
+        changed.entries.clear();
+        let mut bad_signature = signature;
+        bad_signature[0] ^= 1;
+        let (untrusted, untrusted_signature) =
+            revocation_list(&SigningKey::from_bytes(&[5; 32]), 2, entries.clone());
+        for (list, signature) in [
+            (changed, signature),
+            (list.clone(), bad_signature),
+            (untrusted, untrusted_signature),
+        ] {
+            assert_eq!(
+                admission(list, &signature, None).err(),
+                Some(CapabilityPackageError::RevocationDenied)
+            );
+        }
+        // Unsorted, duplicate and malformed entries cannot be sealed.
+        for entries in [
+            vec![
+                CapabilityRevocationEntry::Package {
+                    package_id: "package-b".into(),
+                },
+                CapabilityRevocationEntry::Package {
+                    package_id: "package-a".into(),
+                },
+            ],
+            vec![
+                CapabilityRevocationEntry::Manifest {
+                    manifest_sha256: A.into(),
+                },
+                CapabilityRevocationEntry::Manifest {
+                    manifest_sha256: A.into(),
+                },
+            ],
+            vec![CapabilityRevocationEntry::SignerKey {
+                signer_public_key_sha256: "not-a-digest".into(),
+            }],
+        ] {
+            let mut unsealed = list.clone();
+            unsealed.entries = entries;
+            assert_eq!(
+                seal_capability_revocations(unsealed).err(),
+                Some(CapabilityPackageError::RevocationDenied)
+            );
+        }
+    }
+
+    #[test]
+    fn a_revoked_package_manifest_or_signer_key_is_never_admitted() {
+        // Decision 0124.
+        let key = SigningKey::from_bytes(&[7; 32]);
+        let manifest = manifest(&key);
+        let signature = sign_package(&key, &manifest);
+        let public_key = key.verifying_key().to_bytes();
+        let expected_compatibility = compatibility();
+        let allowed = BTreeSet::from(["Apache-2.0".into()]);
+        let signers = BTreeSet::from(["signer-1".into()]);
+        let issuer = SigningKey::from_bytes(&[9; 32]);
+        let issuer_key = issuer.verifying_key().to_bytes();
+        let trusted = BTreeSet::from([hex(&Sha256::digest(issuer_key))]);
+        let verify = |entries: Vec<CapabilityRevocationEntry>| {
+            let (list, list_signature) = revocation_list(&issuer, 4, entries);
+            let revocations = verify_capability_revocations(CapabilityRevocationAdmission {
+                list,
+                signature: &list_signature,
+                issuer_public_key: &issuer_key,
+                trusted_issuer_key_sha256s: &trusted,
+                last_accepted: None,
+            })
+            .unwrap();
+            verify_capability_package(CapabilityPackageAdmission {
+                manifest: manifest.clone(),
+                signature: &signature,
+                public_key: &public_key,
+                expected_compatibility: &expected_compatibility,
+                allowed_licenses: &allowed,
+                trusted_signers: &signers,
+                observed_source_sha256: A,
+                dependency_locks: &[],
+                revocations: &revocations,
+            })
+        };
+        for entry in [
+            CapabilityRevocationEntry::Package {
+                package_id: "package-1".into(),
+            },
+            CapabilityRevocationEntry::Manifest {
+                manifest_sha256: manifest.manifest_sha256.clone(),
+            },
+            CapabilityRevocationEntry::SignerKey {
+                signer_public_key_sha256: manifest.signer_public_key_sha256.clone(),
+            },
+        ] {
+            assert_eq!(verify(vec![entry]), Err(CapabilityPackageError::Revoked));
+        }
+        let admitted = verify(vec![CapabilityRevocationEntry::Package {
+            package_id: "package-9".into(),
+        }])
+        .unwrap();
+        assert!(admitted.admitted);
+        assert_eq!(admitted.revocation_sequence, 4);
+        assert!(admitted.revocation_list_sha256.is_some());
+        let unchecked = verify_capability_package(CapabilityPackageAdmission {
+            manifest: manifest.clone(),
+            signature: &signature,
+            public_key: &public_key,
+            expected_compatibility: &expected_compatibility,
+            allowed_licenses: &allowed,
+            trusted_signers: &signers,
+            observed_source_sha256: A,
+            dependency_locks: &[],
+            revocations: &VerifiedCapabilityRevocations::never_accepted(None).unwrap(),
+        })
+        .unwrap();
+        // The admission binds the list it was checked against.
+        assert_ne!(unchecked.verification_sha256, admitted.verification_sha256);
+    }
+
+    #[test]
+    fn a_package_revoked_after_it_was_enabled_stops_providing_capabilities() {
+        // Decision 0124.
+        use crate::capability_package_runtime::{CatalogCapabilityKind, PackageCatalogEntry};
+        let key = SigningKey::from_bytes(&[7; 32]);
+        let revoked = manifest(&key);
+        let mut kept = revoked.clone();
+        kept.package_id = "package-2".into();
+        let kept = seal_capability_manifest(kept).unwrap();
+        let entry = |capability: &str, manifest: &CapabilityPackageManifest, active: bool| {
+            PackageCatalogEntry {
+                capability_id: capability.into(),
+                kind: CatalogCapabilityKind::Tool,
+                package_id: manifest.package_id.clone(),
+                manifest_sha256: manifest.manifest_sha256.clone(),
+                active,
+                activation_reason: "enabled by the person".into(),
+            }
+        };
+        let mut unknown = kept.clone();
+        unknown.package_id = "package-3".into();
+        let unknown = seal_capability_manifest(unknown).unwrap();
+        let mut entries = vec![
+            entry("tool-1", &revoked, true),
+            entry("tool-2", &kept, true),
+            entry("tool-3", &unknown, true),
+            entry("tool-4", &unknown, false),
+        ];
+        let issuer = SigningKey::from_bytes(&[9; 32]);
+        let issuer_key = issuer.verifying_key().to_bytes();
+        let (list, signature) = revocation_list(
+            &issuer,
+            1,
+            vec![CapabilityRevocationEntry::Package {
+                package_id: "package-1".into(),
+            }],
+        );
+        let revocations = verify_capability_revocations(CapabilityRevocationAdmission {
+            list,
+            signature: &signature,
+            issuer_public_key: &issuer_key,
+            trusted_issuer_key_sha256s: &BTreeSet::from([hex(&Sha256::digest(issuer_key))]),
+            last_accepted: None,
+        })
+        .unwrap();
+        let deactivated = deactivate_revoked_entries(&mut entries, &[revoked, kept], &revocations);
+        assert_eq!(
+            deactivated,
+            ["package-1".to_owned(), "package-3".to_owned()]
+        );
+        assert_eq!(
+            entries
+                .iter()
+                .map(|entry| (entry.active, entry.activation_reason.as_str()))
+                .collect::<Vec<_>>(),
+            [
+                (false, "capability-package.revoked"),
+                (true, "enabled by the person"),
+                (false, "capability-package.revocation-unchecked"),
+                (false, "enabled by the person"),
+            ]
         );
     }
 }

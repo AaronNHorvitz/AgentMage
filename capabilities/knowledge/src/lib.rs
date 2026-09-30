@@ -193,7 +193,8 @@ pub use memory::{
 };
 pub use memory_lifecycle::{
     MemoryCatalog, MemoryCatalogSummary, MemoryLifecycleReceipt, MemoryMarkdownBundle,
-    MemoryMarkdownFile, MemoryTransitionKind,
+    MemoryMarkdownFile, MemorySourceRevocation, MemorySourceRevocationReceipt,
+    MemoryTransitionKind,
 };
 pub use memory_portable::{
     EncryptedMemoryExport, MemoryExportEntropy, MemoryPortableError, MemoryPortableKey,

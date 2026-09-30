@@ -828,6 +828,22 @@ fn render_job_control_notice(notice: JobControlNotice<'_>, output: CliOutputForm
                 ),
             )
         }
+        JobControlNotice::Released { action, point } => {
+            let mut json = boundary(point);
+            json["type"] = serde_json::Value::from("run_released");
+            json["action"] = serde_json::json!(action);
+            (
+                json,
+                format!(
+                    "job control: the host could not continue the run suspended at checkpoint \
+                     {:?} after event {} after the {} request and no longer holds it; the job \
+                     keeps the phase its ledger recorded",
+                    point.checkpoint_id.as_str(),
+                    point.event_cursor.sequence,
+                    control_words(action)
+                ),
+            )
+        }
     };
     match output {
         CliOutputFormat::Human => format!("{human}\n"),
@@ -1602,6 +1618,27 @@ mod tests {
         .unwrap();
         assert_eq!(json["type"], "job_control_not_taken");
         assert_eq!(json["action"], "resume");
+
+        // Review F2 of `3c69304c`: a run the host released is never shown as
+        // continuing unchanged.
+        let released = JobControlNotice::Released {
+            action: JobControlAction::Resume,
+            point: &point,
+        };
+        assert_eq!(
+            render_job_control_notice(released, CliOutputFormat::Human),
+            "job control: the host could not continue the run suspended at checkpoint \
+             \"checkpoint-cli\" after event 12 after the resumption request and no longer holds \
+             it; the job keeps the phase its ledger recorded\n"
+        );
+        let json: serde_json::Value = serde_json::from_str(
+            render_job_control_notice(released, CliOutputFormat::Json).trim_end(),
+        )
+        .unwrap();
+        assert_eq!(json["type"], "run_released");
+        assert_eq!(json["action"], "resume");
+        assert_eq!(json["checkpoint_id"], "checkpoint-cli");
+        assert_eq!(json["event_sequence"], 12);
     }
 
     #[test]

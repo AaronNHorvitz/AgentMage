@@ -316,7 +316,9 @@ pub fn select_memory(
             item.status,
             MemoryItemStatus::Approved | MemoryItemStatus::Hold
         );
-        if item.scope.workspace_id != query.workspace_id
+        // A revoked item is never loaded, not even as history (Decision 0124).
+        if item.status == MemoryItemStatus::Revoked
+            || item.scope.workspace_id != query.workspace_id
             || (!query.include_historical && !current)
             || query
                 .project_id
@@ -750,5 +752,45 @@ mod tests {
         query.max_context_bytes = 1_000;
         let result = select_memory(&[historical], &query).expect("selection succeeds");
         assert!(result.hits.is_empty());
+    }
+
+    #[test]
+    fn a_revoked_item_is_never_loaded_even_as_history() {
+        // Decision 0124: revocation withdraws an item from every load.
+        let revoked = durable(
+            "memory-revoked",
+            "release revoked",
+            "workspace-working",
+            "project-one",
+            MemoryItemStatus::Revoked,
+        );
+        let historical = durable(
+            "memory-historical",
+            "release historical",
+            "workspace-working",
+            "project-one",
+            MemoryItemStatus::Superseded,
+        );
+        let mut query = MemoryLoadQuery {
+            workspace_id: WorkspaceId::from_raw("workspace-working"),
+            project_id: Some("project-one".to_owned()),
+            conversation_id: None,
+            memory_types: BTreeSet::new(),
+            tags: BTreeSet::new(),
+            links: BTreeSet::new(),
+            evidence_ids: BTreeSet::from(["evidence-memory-revoked".to_owned()]),
+            relevance_terms: vec!["release".to_owned()],
+            include_historical: true,
+            max_results: 10,
+            max_context_bytes: 1_000,
+        };
+        let result = select_memory(&[revoked.clone(), historical.clone()], &query)
+            .expect("selection succeeds");
+        assert!(result.hits.is_empty());
+        assert_eq!(result.omitted_count, 0);
+        query.evidence_ids.clear();
+        let result = select_memory(&[revoked, historical], &query).expect("selection succeeds");
+        assert_eq!(result.hits.len(), 1);
+        assert_eq!(result.hits[0].memory_id.as_str(), "memory-historical");
     }
 }

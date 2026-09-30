@@ -19,5 +19,13 @@ destination authorization, accepted destination disclosure, and identical invari
 missing, stale, reordered, unauthorized, more-disclosive, unhealthy, over-quota, or control-drifted
 case blocks visibly without changing endpoint, disclosure, cost, or authority.
 
+Under [Decision 0124](../decisions/0124-amr-05-decomposition-and-first-components.md) every
+request names its routing mode and each class of data it sends. In local-only mode no remote route
+is eligible, whatever grants exist. In hybrid mode a remote route is eligible only under its own
+grant, which names the exact route, candidate and provider, the data classes it may receive, an
+expiry, a request and input-token budget counted by its owner, and whether the route may replace a
+failed one. A tampered, duplicated or empty grant fails the request. The receipt records the mode,
+the data classes sent, and the grant digest and provider of a remote selection.
+
 The gateway continues to return inert model proposals. A protocol terminal is not workflow
 completion, and a route receipt is not a capability grant or credential.

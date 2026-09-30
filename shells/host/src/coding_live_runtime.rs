@@ -384,8 +384,30 @@ impl SharedSuspension {
         Ok(())
     }
 
-    /// Returns a withheld suspension to the worker when the job's phase could
-    /// not be read after a decision.
+    /// Settles the suspension after a decision: it follows the job's phase
+    /// when that was read. Without the phase (review F1 of `3c69304c`), an
+    /// applied decision that left the job anything but suspending withdrew
+    /// the suspension, so it is withdrawn. A refusal or a failed write changed
+    /// nothing, so a withheld suspension returns to the worker. Without the
+    /// phase no decision requests a suspension, because a retry answers with
+    /// the decision its request was first given.
+    fn settle(
+        &self,
+        phase: Option<JobPhase>,
+        decision: Option<&JobControlDecision>,
+    ) -> Result<(), RuntimeTransportError> {
+        match (phase, decision) {
+            (Some(phase), _) => self.follow(phase),
+            (None, Some(JobControlDecision::Applied { phase, .. }))
+                if *phase != JobPhase::Suspending =>
+            {
+                self.follow(*phase)
+            }
+            (None, _) => self.restore(),
+        }
+    }
+
+    /// Returns a withheld suspension to the worker.
     fn restore(&self) -> Result<(), RuntimeTransportError> {
         let mut state = self
             .state
@@ -1103,11 +1125,10 @@ impl LiveCodingSession {
             .map_err(map_ledger_error);
         let status = self.replayed_job_status();
         if live && self.suspended.is_none() {
-            match &status {
-                Ok(status) => self.suspension.follow(status.job.phase)?,
-                // Without the job's phase the suspension stays as it was.
-                Err(_) => self.suspension.restore()?,
-            }
+            self.suspension.settle(
+                status.as_ref().ok().map(|status| status.job.phase),
+                decided.as_ref().ok(),
+            )?;
         }
         let decision = decided?;
         let status = status?;
@@ -2062,5 +2083,103 @@ mod tests {
         unavailable(owner.observe().unwrap_err());
         assert!(owner.signal.is_poisoned());
         assert!(owner.request(signal()).is_err());
+    }
+
+    fn suspension_state(suspension: &SharedSuspension) -> SuspensionState {
+        *suspension.state.lock().unwrap()
+    }
+
+    /// A suspension the ledger applied, which the worker may claim.
+    fn requested_suspension() -> SharedSuspension {
+        let suspension = SharedSuspension::new();
+        suspension.follow(JobPhase::Suspending).unwrap();
+        assert_eq!(suspension_state(&suspension), SuspensionState::Requested);
+        suspension
+    }
+
+    #[test]
+    fn a_withheld_suspension_is_never_claimed_and_then_follows_the_job() {
+        // Review F3 (a) of `3c69304c`: while the service decides a request
+        // that could withdraw the suspension, the worker may not stop for it.
+        let suspension = requested_suspension();
+        assert_eq!(suspension.withhold().unwrap(), SuspensionState::Requested);
+        assert_eq!(suspension_state(&suspension), SuspensionState::Withheld);
+        assert!(!suspension.suspend_at_safe_boundary());
+        assert_eq!(suspension.withhold().unwrap(), SuspensionState::Withheld);
+        assert_eq!(suspension_state(&suspension), SuspensionState::Withheld);
+        suspension.follow(JobPhase::Running).unwrap();
+        assert_eq!(suspension_state(&suspension), SuspensionState::Idle);
+        assert!(!suspension.suspend_at_safe_boundary());
+
+        // A decision that leaves the job suspending hands it back.
+        let suspension = requested_suspension();
+        suspension.withhold().unwrap();
+        suspension.follow(JobPhase::Suspending).unwrap();
+        assert_eq!(suspension_state(&suspension), SuspensionState::Requested);
+        assert!(suspension.suspend_at_safe_boundary());
+        assert!(suspension.claimed().unwrap());
+        // A claimed suspension stays claimed whatever is decided after it.
+        assert_eq!(suspension.withhold().unwrap(), SuspensionState::Claimed);
+        suspension.follow(JobPhase::Cancelling).unwrap();
+        assert!(suspension.claimed().unwrap());
+        suspension.clear().unwrap();
+        assert_eq!(suspension_state(&suspension), SuspensionState::Idle);
+
+        // Restoring returns only a withheld suspension.
+        let suspension = requested_suspension();
+        suspension.withhold().unwrap();
+        suspension.restore().unwrap();
+        assert_eq!(suspension_state(&suspension), SuspensionState::Requested);
+        let idle = SharedSuspension::new();
+        idle.restore().unwrap();
+        assert_eq!(idle.withhold().unwrap(), SuspensionState::Idle);
+        assert!(!idle.suspend_at_safe_boundary());
+    }
+
+    #[test]
+    fn without_the_job_phase_a_decision_only_withdraws_a_suspension() {
+        // Review F1 of `3c69304c`: when the phase cannot be read after a
+        // decision, an applied resumption or cancellation withdrew the
+        // suspension; a refusal or a failed write changed nothing.
+        let applied = |phase| JobControlDecision::Applied { revision: 3, phase };
+        let refused = JobControlDecision::Refused {
+            refusal: agentmage_kernel_engine::job_control::JobControlRefusal::StaleRevision,
+            revision: 2,
+            phase: JobPhase::Suspending,
+        };
+        for (decision, expected) in [
+            (Some(applied(JobPhase::Running)), SuspensionState::Idle),
+            (Some(applied(JobPhase::Cancelling)), SuspensionState::Idle),
+            (Some(refused), SuspensionState::Requested),
+            (None, SuspensionState::Requested),
+        ] {
+            let suspension = requested_suspension();
+            suspension.withhold().unwrap();
+            suspension.settle(None, decision.as_ref()).unwrap();
+            assert_eq!(suspension_state(&suspension), expected, "{decision:?}");
+            assert_eq!(
+                suspension.suspend_at_safe_boundary(),
+                expected == SuspensionState::Requested
+            );
+        }
+        // Without the phase an applied suspension, which may be a retry that
+        // answers an earlier decision, never requests one.
+        let idle = SharedSuspension::new();
+        idle.settle(None, Some(&applied(JobPhase::Suspending)))
+            .unwrap();
+        assert_eq!(suspension_state(&idle), SuspensionState::Idle);
+        // A phase that was read is followed whatever the decision says.
+        let suspension = requested_suspension();
+        suspension.withhold().unwrap();
+        suspension
+            .settle(
+                Some(JobPhase::Suspending),
+                Some(&applied(JobPhase::Running)),
+            )
+            .unwrap();
+        assert_eq!(suspension_state(&suspension), SuspensionState::Requested);
+        let idle = SharedSuspension::new();
+        idle.settle(Some(JobPhase::Suspending), None).unwrap();
+        assert_eq!(suspension_state(&idle), SuspensionState::Requested);
     }
 }

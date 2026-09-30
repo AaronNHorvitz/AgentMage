@@ -588,6 +588,7 @@ const fn status_id(value: MemoryItemStatus) -> &'static str {
         MemoryItemStatus::Expired => "expired",
         MemoryItemStatus::Hold => "hold",
         MemoryItemStatus::Deleted => "deleted",
+        MemoryItemStatus::Revoked => "revoked",
     }
 }
 
@@ -600,6 +601,7 @@ fn parse_status(value: &str) -> Result<MemoryItemStatus, MemoryPortableError> {
         "expired" => Ok(MemoryItemStatus::Expired),
         "hold" => Ok(MemoryItemStatus::Hold),
         "deleted" => Ok(MemoryItemStatus::Deleted),
+        "revoked" => Ok(MemoryItemStatus::Revoked),
         _ => Err(MemoryPortableError::InvalidCatalog),
     }
 }
@@ -698,6 +700,29 @@ mod tests {
         assert!(!receipt.machine_specific_paths_present);
         assert!(!receipt.credentials_present);
         assert!(!receipt.files_written);
+    }
+
+    #[test]
+    fn a_revoked_item_survives_export_and_import_as_revoked() {
+        // Decision 0124: a revocation is part of the portable catalog, so an
+        // import never makes a revoked item loadable again.
+        let mut source = catalog();
+        let memory_id = MemoryId::parse("memory-portable-one").expect("identity");
+        source
+            .revoke(
+                &memory_id,
+                "d".repeat(64),
+                "2026-08-18T11:00:00Z".to_owned(),
+            )
+            .expect("revocation");
+        let exported = export_memory_catalog(&source, &key(1), entropy(2, 3)).expect("export");
+        let (imported, _) = import_memory_catalog(&exported.bytes, &key(1)).expect("import");
+        assert_eq!(imported.inspect(), source.inspect());
+        assert_eq!(
+            imported.get(&memory_id).expect("item").status,
+            MemoryItemStatus::Revoked
+        );
+        assert_eq!(imported.inspect().current_count, 0);
     }
 
     #[test]

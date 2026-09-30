@@ -237,6 +237,15 @@ pub enum JobControlNotice<'a> {
     Suspended(&'a RuntimeSuspensionPoint),
     /// The run continues from this boundary through a new composition.
     Continued(&'a RuntimeSuspensionPoint),
+    /// The host no longer holds the run suspended at this boundary: it could
+    /// not continue the run after the request, and the job keeps the phase
+    /// its ledger recorded (review F2 of `3c69304c`).
+    Released {
+        /// The requested control.
+        action: JobControlAction,
+        /// The boundary the run stopped at.
+        point: &'a RuntimeSuspensionPoint,
+    },
 }
 
 /// Bounded presentation boundary for already verified canonical runtime events.

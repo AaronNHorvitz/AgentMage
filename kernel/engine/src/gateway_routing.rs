@@ -7,6 +7,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 const MAX_ROUTES: usize = 64;
+const MAX_HYBRID_GRANTS: usize = 16;
 const MAX_EVENTS: usize = 16_384;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -207,6 +208,70 @@ pub struct QualifiedGatewayRoute {
     pub cost_admitted: bool,
 }
 
+/// Closed class of data a routed model request transmits (Decision 0124).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RoutedDataClass {
+    /// The person's instructions and conversation turns.
+    Conversation,
+    /// Excerpts of workspace files.
+    WorkspaceExcerpts,
+    /// Outputs of tools and commands.
+    ToolOutputs,
+    /// Retrieved sources, documents and attachments.
+    RetrievedSources,
+    /// Loaded project memory.
+    Memory,
+}
+
+/// Whether a request may leave the local network at all (Decision 0124).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GatewayRoutingMode {
+    /// No remote route is eligible, whatever grants exist.
+    LocalOnly,
+    /// A remote route is eligible only under its own separately granted route.
+    Hybrid,
+}
+
+/// A separately granted remote route (Decision 0124). The person grants it
+/// for one exact route and candidate, names the provider, the data classes it
+/// may receive and a budget, and says whether it may replace a failed route.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct HybridRouteGrant {
+    /// Grant identity.
+    pub grant_id: String,
+    /// The exact granted route.
+    pub route_id: String,
+    /// The exact granted candidate tuple.
+    pub candidate_sha256: String,
+    /// The provider named to the person.
+    pub provider_id: String,
+    /// Every data class the route may receive.
+    pub data_classes: BTreeSet<RoutedDataClass>,
+    /// Most requests the grant admits in total.
+    pub max_requests: u32,
+    /// Most input tokens the grant admits in total.
+    pub max_input_tokens: u64,
+    /// Whether the route may serve as an explicit fallback for another route.
+    pub fallback_allowed: bool,
+    /// Exclusive expiry.
+    pub expires_at_epoch_ms: u64,
+    /// Digest of this grant with this field zeroed.
+    pub grant_sha256: String,
+}
+
+/// One grant and what its owner counted against it so far.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct GrantedHybridRoute {
+    /// The exact grant.
+    pub grant: HybridRouteGrant,
+    /// Requests already admitted under it.
+    pub used_requests: u32,
+    /// Input tokens already admitted under it.
+    pub used_input_tokens: u64,
+}
+
 /// Explicit ordered fallback policy and destination authorization.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct ExplicitFallbackPolicy {
@@ -253,6 +318,14 @@ pub struct GatewayRoutingRequest {
     pub prior_route_id: Option<String>,
     /// Explicit fallback policy; absent by default.
     pub fallback_policy: Option<ExplicitFallbackPolicy>,
+    /// Whether remote routes may be considered at all.
+    pub mode: GatewayRoutingMode,
+    /// Every data class this request transmits.
+    pub transmitted_data: BTreeSet<RoutedDataClass>,
+    /// Separately granted remote routes, at most one per route.
+    pub hybrid_routes: Vec<GrantedHybridRoute>,
+    /// Current time, for grant expiry.
+    pub now_epoch_ms: u64,
 }
 
 /// Visible audit for one considered route.
@@ -287,6 +360,14 @@ pub struct GatewayRouteReceipt {
     pub fallback_policy_sha256: Option<String>,
     /// Selected disclosure class, absent when blocked.
     pub disclosure_class: Option<CanonicalEndpointClass>,
+    /// Routing mode the request was decided under.
+    pub mode: GatewayRoutingMode,
+    /// Data classes the request transmits to the selected route.
+    pub transmitted_data: Vec<RoutedDataClass>,
+    /// Grant digest when the selected route is remote.
+    pub hybrid_grant_sha256: Option<String>,
+    /// Provider named by that grant.
+    pub provider_id: Option<String>,
     /// Stable terminal reason.
     pub reason_code: &'static str,
     /// Digest of this receipt with this field zeroed.
@@ -332,6 +413,10 @@ pub fn route_gateway(
             .ok_or(GatewayRoutingError::NoQualifiedRoute)?
     };
     let fallback_used = request.prior_route_id.is_some();
+    let grant = remote(selected.endpoint_class)
+        .then(|| granted_route(request, selected))
+        .flatten()
+        .map(|granted| &granted.grant);
     let mut receipt = GatewayRouteReceipt {
         schema_version: CONTRACT_SCHEMA_VERSION,
         request_id: request.request_id.clone(),
@@ -344,6 +429,10 @@ pub fn route_gateway(
             .as_ref()
             .map(|policy| policy.policy_sha256.clone()),
         disclosure_class: Some(selected.endpoint_class),
+        mode: request.mode,
+        transmitted_data: request.transmitted_data.iter().copied().collect(),
+        hybrid_grant_sha256: grant.map(|grant| grant.grant_sha256.clone()),
+        provider_id: grant.map(|grant| grant.provider_id.clone()),
         reason_code: if fallback_used {
             "model-gateway.route.explicit-fallback-selected"
         } else {
@@ -385,6 +474,8 @@ fn audit_route(
             && !request.disclosure_accepted)
     {
         (false, "model-gateway.route.disclosure-denied")
+    } else if remote(route.endpoint_class) {
+        audit_hybrid_grant(request, route)
     } else {
         (true, "model-gateway.route.eligible")
     };
@@ -394,6 +485,90 @@ fn audit_route(
         eligible,
         reason_code: reason,
     })
+}
+
+/// A remote route is eligible only in hybrid mode and only under its own
+/// grant for this exact route and candidate, before the grant expires, for
+/// data the grant covers, within its budget and, when replacing a failed
+/// route, only if the grant allows that (Decision 0124).
+fn audit_hybrid_grant(
+    request: &GatewayRoutingRequest,
+    route: &QualifiedGatewayRoute,
+) -> (bool, &'static str) {
+    if request.mode == GatewayRoutingMode::LocalOnly {
+        return (false, "model-gateway.route.local-only");
+    }
+    let Some(granted) = granted_route(request, route) else {
+        return (false, "model-gateway.route.grant-missing");
+    };
+    let grant = &granted.grant;
+    if grant.candidate_sha256 != route.candidate_sha256 {
+        (false, "model-gateway.route.grant-mismatch")
+    } else if request.now_epoch_ms >= grant.expires_at_epoch_ms {
+        (false, "model-gateway.route.grant-expired")
+    } else if !request.transmitted_data.is_subset(&grant.data_classes) {
+        (false, "model-gateway.route.grant-data-denied")
+    } else if granted.used_requests >= grant.max_requests
+        || granted
+            .used_input_tokens
+            .checked_add(u64::from(request.required_context_tokens))
+            .is_none_or(|total| total > grant.max_input_tokens)
+    {
+        (false, "model-gateway.route.grant-budget-exhausted")
+    } else if request.prior_route_id.is_some() && !grant.fallback_allowed {
+        (false, "model-gateway.route.grant-fallback-denied")
+    } else {
+        (true, "model-gateway.route.eligible")
+    }
+}
+
+fn granted_route<'a>(
+    request: &'a GatewayRoutingRequest,
+    route: &QualifiedGatewayRoute,
+) -> Option<&'a GrantedHybridRoute> {
+    request
+        .hybrid_routes
+        .iter()
+        .find(|granted| granted.grant.route_id == route.route_id)
+}
+
+const fn remote(value: CanonicalEndpointClass) -> bool {
+    matches!(
+        value,
+        CanonicalEndpointClass::RemotePrivate | CanonicalEndpointClass::RemoteManaged
+    )
+}
+
+/// The digest a grant carries: its canonical encoding with the digest zeroed.
+pub fn hybrid_route_grant_digest(grant: &HybridRouteGrant) -> Result<String, GatewayRoutingError> {
+    let mut candidate = grant.clone();
+    candidate.grant_sha256 = ZERO_SHA256.to_owned();
+    serde_json::to_vec(&candidate)
+        .map(|bytes| hex(&Sha256::digest(bytes)))
+        .map_err(|_| GatewayRoutingError::SerializationFailed)
+}
+
+fn validate_hybrid_routes(value: &GatewayRoutingRequest) -> Result<(), GatewayRoutingError> {
+    if value.transmitted_data.is_empty() || value.hybrid_routes.len() > MAX_HYBRID_GRANTS {
+        return Err(GatewayRoutingError::InvalidInput);
+    }
+    let mut routes = BTreeSet::new();
+    for granted in &value.hybrid_routes {
+        let grant = &granted.grant;
+        if !valid_id(&grant.grant_id)
+            || !valid_id(&grant.route_id)
+            || !valid_id(&grant.provider_id)
+            || !valid_sha256(&grant.candidate_sha256)
+            || grant.data_classes.is_empty()
+            || grant.max_requests == 0
+            || grant.max_input_tokens == 0
+            || !routes.insert(grant.route_id.as_str())
+            || hybrid_route_grant_digest(grant)? != grant.grant_sha256
+        {
+            return Err(GatewayRoutingError::InvalidInput);
+        }
+    }
+    Ok(())
 }
 
 fn select_fallback<'a>(
@@ -461,7 +636,7 @@ fn validate_request(value: &GatewayRoutingRequest) -> Result<(), GatewayRoutingE
         && valid_sha256(&value.route_policy_sha256)
         && value.required_context_tokens > 0
     {
-        Ok(())
+        validate_hybrid_routes(value)
     } else {
         Err(GatewayRoutingError::InvalidInput)
     }
@@ -593,6 +768,33 @@ mod tests {
             route_policy_sha256: hash('8'),
             prior_route_id: None,
             fallback_policy: None,
+            mode: GatewayRoutingMode::Hybrid,
+            transmitted_data: BTreeSet::from([RoutedDataClass::Conversation]),
+            hybrid_routes: Vec::new(),
+            now_epoch_ms: 1_000,
+        }
+    }
+    fn grant(route: &QualifiedGatewayRoute, fallback_allowed: bool) -> GrantedHybridRoute {
+        let mut grant = HybridRouteGrant {
+            grant_id: format!("grant-{}", route.route_id),
+            route_id: route.route_id.clone(),
+            candidate_sha256: route.candidate_sha256.clone(),
+            provider_id: "provider-example".to_owned(),
+            data_classes: BTreeSet::from([
+                RoutedDataClass::Conversation,
+                RoutedDataClass::WorkspaceExcerpts,
+            ]),
+            max_requests: 3,
+            max_input_tokens: 10_000,
+            fallback_allowed,
+            expires_at_epoch_ms: 2_000,
+            grant_sha256: String::new(),
+        };
+        grant.grant_sha256 = hybrid_route_grant_digest(&grant).unwrap();
+        GrantedHybridRoute {
+            grant,
+            used_requests: 0,
+            used_input_tokens: 0,
         }
     }
 
@@ -680,9 +882,25 @@ mod tests {
             destination_disclosure_accepted: true,
             equivalent_controls_required: true,
         });
+        // A remote destination also needs its own grant that allows fallback
+        // (Decision 0124).
+        assert_eq!(
+            route_gateway(&value, &[prior.clone(), destination.clone()]),
+            Err(GatewayRoutingError::FallbackDenied)
+        );
+        value.hybrid_routes = vec![grant(&destination, false)];
+        assert_eq!(
+            route_gateway(&value, &[prior.clone(), destination.clone()]),
+            Err(GatewayRoutingError::FallbackDenied)
+        );
+        value.hybrid_routes = vec![grant(&destination, true)];
         let receipt = route_gateway(&value, &[prior, destination]).expect("explicit fallback");
         assert!(receipt.fallback_used);
         assert_eq!(receipt.selected_route_id.as_deref(), Some("route-remote"));
+        assert_eq!(
+            receipt.hybrid_grant_sha256,
+            Some(value.hybrid_routes[0].grant.grant_sha256.clone())
+        );
     }
     #[test]
     fn story_13_6_health_quota_and_control_drift_cannot_silently_fallback() {
@@ -701,9 +919,144 @@ mod tests {
             destination_disclosure_accepted: true,
             equivalent_controls_required: true,
         });
+        value.hybrid_routes = vec![grant(&destination, true)];
         assert_eq!(
             route_gateway(&value, &[prior, destination]),
             Err(GatewayRoutingError::FallbackDenied)
+        );
+    }
+
+    #[test]
+    fn local_only_mode_routes_locally_and_never_to_a_granted_remote_route() {
+        // Decision 0124: local-only works without cloud inference, whatever
+        // grants exist.
+        let local = route("route-local", CanonicalEndpointClass::StrictLocal);
+        let remote_route = route("route-remote", CanonicalEndpointClass::RemoteManaged);
+        let mut value = request();
+        value.maximum_endpoint_class = CanonicalEndpointClass::RemoteManaged;
+        value.disclosure_accepted = true;
+        value.mode = GatewayRoutingMode::LocalOnly;
+        value.hybrid_routes = vec![grant(&remote_route, true)];
+        let receipt =
+            route_gateway(&value, &[remote_route.clone(), local.clone()]).expect("the local route");
+        assert_eq!(receipt.selected_route_id.as_deref(), Some("route-local"));
+        assert_eq!(receipt.mode, GatewayRoutingMode::LocalOnly);
+        assert_eq!(receipt.hybrid_grant_sha256, None);
+        assert_eq!(receipt.provider_id, None);
+        let audit = receipt
+            .considered_routes
+            .iter()
+            .find(|audit| audit.route_id == "route-remote")
+            .unwrap();
+        assert_eq!(audit.reason_code, "model-gateway.route.local-only");
+        // With the local route down nothing is substituted.
+        let mut down = local;
+        down.healthy = false;
+        assert_eq!(
+            route_gateway(&value, &[remote_route, down]),
+            Err(GatewayRoutingError::NoQualifiedRoute)
+        );
+    }
+
+    #[test]
+    fn a_remote_route_needs_its_own_current_grant_for_the_data_sent_within_budget() {
+        // Decision 0124.
+        let remote_route = route("route-remote", CanonicalEndpointClass::RemotePrivate);
+        let mut value = request();
+        value.maximum_endpoint_class = CanonicalEndpointClass::RemotePrivate;
+        value.disclosure_accepted = true;
+        let reason = |value: &GatewayRoutingRequest| {
+            match route_gateway(value, std::slice::from_ref(&remote_route)) {
+                Ok(receipt) => receipt.considered_routes[0].reason_code,
+                Err(GatewayRoutingError::NoQualifiedRoute) => {
+                    // Recompute the audit to name the refusal.
+                    audit_route(value, &remote_route).unwrap().reason_code
+                }
+                Err(error) => panic!("unexpected {error:?}"),
+            }
+        };
+        assert_eq!(reason(&value), "model-gateway.route.grant-missing");
+        value.hybrid_routes = vec![grant(&remote_route, false)];
+        let receipt = route_gateway(&value, std::slice::from_ref(&remote_route)).unwrap();
+        assert_eq!(receipt.selected_route_id.as_deref(), Some("route-remote"));
+        assert_eq!(receipt.provider_id.as_deref(), Some("provider-example"));
+        assert_eq!(
+            receipt.hybrid_grant_sha256,
+            Some(value.hybrid_routes[0].grant.grant_sha256.clone())
+        );
+        assert_eq!(receipt.transmitted_data, [RoutedDataClass::Conversation]);
+
+        type Change<'a> = &'a dyn Fn(&mut GatewayRoutingRequest);
+        let cases: [(Change<'_>, &str); 6] = [
+            (
+                &|value| {
+                    let mut other = remote_route.clone();
+                    other.candidate_sha256 = hash('e');
+                    value.hybrid_routes = vec![grant(&other, false)];
+                },
+                "model-gateway.route.grant-mismatch",
+            ),
+            (
+                &|value| value.now_epoch_ms = 2_000,
+                "model-gateway.route.grant-expired",
+            ),
+            (
+                &|value| {
+                    value.transmitted_data.insert(RoutedDataClass::ToolOutputs);
+                },
+                "model-gateway.route.grant-data-denied",
+            ),
+            (
+                &|value| value.hybrid_routes[0].used_requests = 3,
+                "model-gateway.route.grant-budget-exhausted",
+            ),
+            (
+                &|value| value.hybrid_routes[0].used_input_tokens = 6_000,
+                "model-gateway.route.grant-budget-exhausted",
+            ),
+            (
+                &|value| value.hybrid_routes[0].used_input_tokens = u64::MAX,
+                "model-gateway.route.grant-budget-exhausted",
+            ),
+        ];
+        for (change, expected) in cases {
+            let mut changed = value.clone();
+            change(&mut changed);
+            assert_eq!(reason(&changed), expected);
+        }
+        // The last token the budget admits is admitted.
+        let mut exact = value.clone();
+        exact.hybrid_routes[0].used_input_tokens = 5_904;
+        assert_eq!(reason(&exact), "model-gateway.route.eligible");
+    }
+
+    #[test]
+    fn a_tampered_duplicate_or_empty_grant_is_refused() {
+        let remote_route = route("route-remote", CanonicalEndpointClass::RemotePrivate);
+        let mut value = request();
+        value.maximum_endpoint_class = CanonicalEndpointClass::RemotePrivate;
+        value.disclosure_accepted = true;
+        let mut tampered = grant(&remote_route, false);
+        tampered.grant.max_requests = 1_000;
+        let mut empty = grant(&remote_route, false);
+        empty.grant.data_classes.clear();
+        empty.grant.grant_sha256 = hybrid_route_grant_digest(&empty.grant).unwrap();
+        for hybrid_routes in [
+            vec![tampered],
+            vec![grant(&remote_route, false), grant(&remote_route, true)],
+            vec![empty],
+        ] {
+            let mut changed = value.clone();
+            changed.hybrid_routes = hybrid_routes;
+            assert_eq!(
+                route_gateway(&changed, std::slice::from_ref(&remote_route)),
+                Err(GatewayRoutingError::InvalidInput)
+            );
+        }
+        value.transmitted_data.clear();
+        assert_eq!(
+            route_gateway(&value, std::slice::from_ref(&remote_route)),
+            Err(GatewayRoutingError::InvalidInput)
         );
     }
 }

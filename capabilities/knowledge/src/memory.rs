@@ -95,6 +95,10 @@ pub enum MemoryItemStatus {
     Hold,
     /// Tombstoned after an explicit deletion decision.
     Deleted,
+    /// Withdrawn after an explicit revocation of the item or of a source it
+    /// cites. Its content is kept for inspection and deletion, and it is never
+    /// loaded, current or historical.
+    Revoked,
 }
 
 /// Exact workspace, project, and conversation namespace.

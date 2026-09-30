@@ -7,6 +7,7 @@ use std::os::unix::fs::{MetadataExt, PermissionsExt};
 use std::path::{Component, Path, PathBuf};
 
 use agentmage_kernel_contracts::DoctorReport;
+use agentmage_kernel_engine::persistence::detect_secret_classes;
 use rustix::fs::{AtFlags, Mode, OFlags, linkat, openat};
 use rustix::process::getuid;
 use serde::Serialize;
@@ -16,6 +17,111 @@ const MAX_PENDING_EXPORTS: usize = 4;
 const EXPORT_LIFETIME_MS: u64 = 60_000;
 const MAX_DESTINATION_BYTES: usize = 4_096;
 const MAX_REPORT_BYTES: usize = 256 * 1024;
+const MAX_BUNDLE_VERSIONS: usize = 64;
+const MAX_BUNDLE_EVIDENCE: usize = 512;
+const MAX_BUNDLE_IDENTIFIER_BYTES: usize = 64;
+
+/// Kind of a support bundle payload (Decision 0124).
+pub const SUPPORT_BUNDLE_KIND: &str = "agentmage.support-bundle.v1";
+
+/// One component version named in a support bundle.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct SupportBundleVersion {
+    /// Component identity.
+    pub component: String,
+    /// Its version.
+    pub version: String,
+    /// Digest of the component's content, when known.
+    pub content_sha256: Option<String>,
+}
+
+/// One retained evidence record, named by kind and digest only.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+pub struct SupportBundleEvidence {
+    /// Stable record kind.
+    pub record_kind: String,
+    /// Digest of the record.
+    pub record_sha256: String,
+}
+
+/// A support bundle that a person reviews and exports by hand (Decision
+/// 0124): the local doctor report, component versions and evidence digests.
+/// It holds no content, path, prompt, credential or host identity, and it is
+/// written only where the person approves, never sent anywhere.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct SupportBundle {
+    /// Bundle schema version.
+    pub schema_version: u16,
+    /// Always [`SUPPORT_BUNDLE_KIND`].
+    pub bundle_kind: String,
+    /// The local doctor report.
+    pub doctor: DoctorReport,
+    /// Component versions, sorted by component and unique.
+    pub versions: Vec<SupportBundleVersion>,
+    /// Evidence digests, sorted and unique.
+    pub evidence: Vec<SupportBundleEvidence>,
+    /// Fixed false: nothing uploads the bundle.
+    pub automatic_upload: bool,
+}
+
+/// Builds a support bundle from closed parts, refusing any name that is not
+/// a plain identifier or that the shared secret detector flags.
+pub fn build_support_bundle(
+    doctor: DoctorReport,
+    versions: Vec<SupportBundleVersion>,
+    evidence: Vec<SupportBundleEvidence>,
+) -> Result<SupportBundle, DiagnosticExportError> {
+    let bundle = SupportBundle {
+        schema_version: 1,
+        bundle_kind: SUPPORT_BUNDLE_KIND.to_owned(),
+        doctor,
+        versions,
+        evidence,
+        automatic_upload: false,
+    };
+    validate_support_bundle(&bundle)?;
+    Ok(bundle)
+}
+
+fn validate_support_bundle(bundle: &SupportBundle) -> Result<(), DiagnosticExportError> {
+    let name = |value: &str| {
+        !value.is_empty()
+            && value.len() <= MAX_BUNDLE_IDENTIFIER_BYTES
+            && value.bytes().all(|byte| {
+                byte.is_ascii_lowercase()
+                    || byte.is_ascii_digit()
+                    || matches!(byte, b'.' | b'-' | b':' | b'+')
+            })
+            && detect_secret_classes("support-bundle-field", value.as_bytes()).is_empty()
+    };
+    if bundle.schema_version != 1
+        || bundle.bundle_kind != SUPPORT_BUNDLE_KIND
+        || bundle.automatic_upload
+        || !valid_sha256(&bundle.doctor.report_sha256)
+        || bundle.versions.len() > MAX_BUNDLE_VERSIONS
+        || bundle
+            .versions
+            .windows(2)
+            .any(|pair| pair[0].component >= pair[1].component)
+        || bundle.versions.iter().any(|version| {
+            !name(&version.component)
+                || !name(&version.version)
+                || version
+                    .content_sha256
+                    .as_deref()
+                    .is_some_and(|digest| !valid_sha256(digest))
+        })
+        || bundle.evidence.len() > MAX_BUNDLE_EVIDENCE
+        || bundle.evidence.windows(2).any(|pair| pair[0] >= pair[1])
+        || bundle
+            .evidence
+            .iter()
+            .any(|record| !name(&record.record_kind) || !valid_sha256(&record.record_sha256))
+    {
+        return Err(DiagnosticExportError::ReportDenied);
+    }
+    Ok(())
+}
 
 /// Stable failure from a diagnostic export preview or publication attempt.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -122,6 +228,51 @@ impl DiagnosticExportWorkflow {
         destination: &Path,
         now_epoch_ms: u64,
     ) -> Result<DiagnosticExportPreview, DiagnosticExportError> {
+        let payload = if valid_sha256(&report.report_sha256) {
+            pretty_payload(report)
+        } else {
+            Err(DiagnosticExportError::ReportDenied)
+        };
+        self.preview_payload(
+            preview_id,
+            payload,
+            &REPORT_FIELDS,
+            "content-free-local-diagnostic",
+            destination,
+            now_epoch_ms,
+        )
+    }
+
+    /// Creates a memory-only preview for one exact support bundle and local
+    /// destination (Decision 0124). It is published only by the same one-use
+    /// approval as a doctor report.
+    pub fn preview_support_bundle(
+        &mut self,
+        preview_id: String,
+        bundle: &SupportBundle,
+        destination: &Path,
+        now_epoch_ms: u64,
+    ) -> Result<DiagnosticExportPreview, DiagnosticExportError> {
+        let payload = validate_support_bundle(bundle).and_then(|()| pretty_payload(bundle));
+        self.preview_payload(
+            preview_id,
+            payload,
+            &SUPPORT_BUNDLE_FIELDS,
+            "content-free-local-support-bundle",
+            destination,
+            now_epoch_ms,
+        )
+    }
+
+    fn preview_payload(
+        &mut self,
+        preview_id: String,
+        payload: Result<Vec<u8>, DiagnosticExportError>,
+        fields: &[&str],
+        sensitivity: &str,
+        destination: &Path,
+        now_epoch_ms: u64,
+    ) -> Result<DiagnosticExportPreview, DiagnosticExportError> {
         self.expire(now_epoch_ms);
         if self.pending.len() >= MAX_PENDING_EXPORTS || !valid_identifier(&preview_id) {
             return Err(DiagnosticExportError::PreviewLimit);
@@ -130,13 +281,8 @@ impl DiagnosticExportWorkflow {
             return Err(DiagnosticExportError::ApprovalDenied);
         }
         let (destination, parent_identity) = inspect_destination(destination)?;
-        let mut payload =
-            serde_json::to_vec_pretty(report).map_err(|_| DiagnosticExportError::ReportDenied)?;
-        payload.push(b'\n');
-        if payload.is_empty()
-            || payload.len() > MAX_REPORT_BYTES
-            || !valid_sha256(&report.report_sha256)
-        {
+        let payload = payload?;
+        if payload.is_empty() || payload.len() > MAX_REPORT_BYTES {
             return Err(DiagnosticExportError::ReportDenied);
         }
         let destination_sha256 = sha256_hex(destination.as_os_str().as_encoded_bytes());
@@ -144,14 +290,10 @@ impl DiagnosticExportWorkflow {
         let expires_at_epoch_ms = now_epoch_ms
             .checked_add(EXPORT_LIFETIME_MS)
             .ok_or(DiagnosticExportError::ApprovalDenied)?;
-        let included_fields = vec![
-            "component".to_owned(),
-            "state".to_owned(),
-            "reason_code".to_owned(),
-            "remediation_code".to_owned(),
-            "identity_sha256".to_owned(),
-            "report_sha256".to_owned(),
-        ];
+        let included_fields = fields
+            .iter()
+            .map(|field| (*field).to_owned())
+            .collect::<Vec<_>>();
         let redactions = vec![
             "credentials".to_owned(),
             "environment".to_owned(),
@@ -160,7 +302,7 @@ impl DiagnosticExportWorkflow {
             "paths".to_owned(),
             "prompts".to_owned(),
         ];
-        let sensitivity = "content-free-local-diagnostic".to_owned();
+        let sensitivity = sensitivity.to_owned();
         let retention = "user-managed-local-file".to_owned();
         let confirmation_sha256 = sha256_serialized(&ApprovalMaterial {
             preview_id: &preview_id,
@@ -258,6 +400,36 @@ struct ApprovalMaterial<'a> {
     sensitivity: &'a str,
     retention: &'a str,
     expires_at_epoch_ms: u64,
+}
+
+/// Field families of a doctor report export.
+const REPORT_FIELDS: [&str; 6] = [
+    "component",
+    "state",
+    "reason_code",
+    "remediation_code",
+    "identity_sha256",
+    "report_sha256",
+];
+
+/// Field families of a support bundle export.
+const SUPPORT_BUNDLE_FIELDS: [&str; 9] = [
+    "component",
+    "state",
+    "reason_code",
+    "remediation_code",
+    "identity_sha256",
+    "report_sha256",
+    "component_version",
+    "content_sha256",
+    "evidence_record_sha256",
+];
+
+fn pretty_payload(value: &impl Serialize) -> Result<Vec<u8>, DiagnosticExportError> {
+    let mut payload =
+        serde_json::to_vec_pretty(value).map_err(|_| DiagnosticExportError::ReportDenied)?;
+    payload.push(b'\n');
+    Ok(payload)
 }
 
 fn inspect_destination(
@@ -406,7 +578,11 @@ mod tests {
     };
     use agentmage_kernel_engine::diagnostics::build_doctor_report;
 
-    use super::{DiagnosticExportError, DiagnosticExportWorkflow, create_unnamed_file, sha256_hex};
+    use super::{
+        DiagnosticExportError, DiagnosticExportWorkflow, SUPPORT_BUNDLE_KIND, SupportBundle,
+        SupportBundleEvidence, SupportBundleVersion, build_support_bundle, create_unnamed_file,
+        sha256_hex,
+    };
 
     static NEXT: AtomicU64 = AtomicU64::new(1);
 
@@ -616,6 +792,131 @@ mod tests {
                     .any(|part| part == canary.as_bytes())
             );
         }
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    fn versions() -> Vec<SupportBundleVersion> {
+        vec![
+            SupportBundleVersion {
+                component: "agentmage-cli".to_owned(),
+                version: "0.5.0+dev".to_owned(),
+                content_sha256: Some("a".repeat(64)),
+            },
+            SupportBundleVersion {
+                component: "agentmage-host".to_owned(),
+                version: "0.5.0".to_owned(),
+                content_sha256: None,
+            },
+        ]
+    }
+
+    fn evidence() -> Vec<SupportBundleEvidence> {
+        vec![
+            SupportBundleEvidence {
+                record_kind: "coding.run-outcome".to_owned(),
+                record_sha256: "b".repeat(64),
+            },
+            SupportBundleEvidence {
+                record_kind: "coding.run-outcome".to_owned(),
+                record_sha256: "c".repeat(64),
+            },
+        ]
+    }
+
+    #[test]
+    fn a_support_bundle_is_previewed_and_published_only_by_one_approval() {
+        // Decision 0124: the bundle is written only where the person
+        // approves, and it names versions and evidence by digest only.
+        let bundle = build_support_bundle(report(), versions(), evidence()).expect("bundle");
+        assert!(!bundle.automatic_upload);
+        let root = directory("support-bundle");
+        let destination = root.join("support.json");
+        let mut workflow = DiagnosticExportWorkflow::new();
+        let preview = workflow
+            .preview_support_bundle("bundle-0001".to_owned(), &bundle, &destination, 100)
+            .expect("preview");
+        assert!(!destination.exists());
+        assert_eq!(preview.sensitivity, "content-free-local-support-bundle");
+        assert!(
+            preview
+                .included_fields
+                .contains(&"evidence_record_sha256".to_owned())
+        );
+        assert!(preview.redactions.contains(&"prompts".to_owned()));
+        let receipt = workflow
+            .approve("bundle-0001", &preview.confirmation_sha256, 101)
+            .expect("approval");
+        let published = fs::read(&destination).expect("bundle");
+        assert_eq!(sha256_hex(&published), receipt.payload_sha256);
+        let value: serde_json::Value = serde_json::from_slice(&published).expect("json");
+        assert_eq!(value["bundle_kind"], SUPPORT_BUNDLE_KIND);
+        assert_eq!(value["automatic_upload"], false);
+        assert_eq!(value["evidence"].as_array().expect("evidence").len(), 2);
+        assert_eq!(value["doctor"]["report_sha256"], report().report_sha256);
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn a_support_bundle_with_a_secret_path_or_disorder_is_refused() {
+        let secret = concat!("gh", "p_", "AMS47CANARYaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        let provider = concat!("s", "k-", "am-s47-canary-bbbbbbbbbbbbbbbbbbbbbbbb");
+        let cases: Vec<(Vec<SupportBundleVersion>, Vec<SupportBundleEvidence>)> = vec![
+            (
+                vec![SupportBundleVersion {
+                    component: secret.to_owned(),
+                    version: "1.0.0".to_owned(),
+                    content_sha256: None,
+                }],
+                evidence(),
+            ),
+            (
+                vec![SupportBundleVersion {
+                    component: "agentmage-host".to_owned(),
+                    version: provider.to_owned(),
+                    content_sha256: None,
+                }],
+                evidence(),
+            ),
+            (
+                vec![SupportBundleVersion {
+                    component: "/home/user/agentmage".to_owned(),
+                    version: "1.0.0".to_owned(),
+                    content_sha256: None,
+                }],
+                evidence(),
+            ),
+            (versions().into_iter().rev().collect(), evidence()),
+            (
+                versions(),
+                vec![SupportBundleEvidence {
+                    record_kind: "coding.run-outcome".to_owned(),
+                    record_sha256: "not-a-digest".to_owned(),
+                }],
+            ),
+            (versions(), evidence().into_iter().rev().collect()),
+        ];
+        for (versions, evidence) in cases {
+            assert_eq!(
+                build_support_bundle(report(), versions, evidence),
+                Err(DiagnosticExportError::ReportDenied)
+            );
+        }
+        // A bundle assembled without the builder is checked again at preview.
+        let mut uploaded: SupportBundle =
+            build_support_bundle(report(), versions(), evidence()).expect("bundle");
+        uploaded.automatic_upload = true;
+        let root = directory("support-bundle-refused");
+        let mut workflow = DiagnosticExportWorkflow::new();
+        assert_eq!(
+            workflow.preview_support_bundle(
+                "bundle-0002".to_owned(),
+                &uploaded,
+                &root.join("support.json"),
+                100
+            ),
+            Err(DiagnosticExportError::ReportDenied)
+        );
+        assert_eq!(workflow.pending_count(), 0);
         fs::remove_dir_all(root).expect("cleanup");
     }
 }

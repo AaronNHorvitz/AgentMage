@@ -7,6 +7,8 @@ pub mod dependency_degradation;
 
 /// Organization-exact, non-payment accounting-provider contracts.
 pub mod accounting_provider;
+/// Auditable action history with redaction, retention and a redacted manual export.
+pub mod action_history;
 /// Exact local Actual Budget API admission, effects, recovery, and removal.
 pub mod actual_budget_adapter;
 /// Authority-reducing application of advisory classifier output.
