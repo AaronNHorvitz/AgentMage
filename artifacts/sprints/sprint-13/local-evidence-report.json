@@ -27,7 +27,7 @@
       ],
       "exit_code": 0,
       "id": "model-contracts",
-      "output_sha256": "baee7e1b2d7983e05a0ffb9e27a4db1cf0d816ca529568b5581c765b7914aba5",
+      "output_sha256": "bec0de64068498488e2141d47e47cd8452c52237ff4470ba41c8a30629ed8bb1",
       "story_id": "13.1"
     },
     {
@@ -40,7 +40,7 @@
       ],
       "exit_code": 0,
       "id": "model-engine",
-      "output_sha256": "694b5c206536bd1e3ad3dbd2f726b5a7c78dc0d616461677af532202a30d6fb1",
+      "output_sha256": "285dd8e37ebd6460e03f873fbfc5435604a003edc1cb3b2b228b5bb7465ef0e3",
       "story_id": "13.1"
     },
     {
@@ -53,7 +53,7 @@
       ],
       "exit_code": 0,
       "id": "linux-native-adapter",
-      "output_sha256": "075c0d95c17acd97aded51c0c49096368d0e201078f378c917b9a6c62d422354",
+      "output_sha256": "7785019620e14abd9bc3fff81c7190055e6b63b242c8f0c1f5df628a60b78578",
       "story_id": "13.1"
     },
     {
@@ -65,7 +65,7 @@
       ],
       "exit_code": 0,
       "id": "model-json-contracts",
-      "output_sha256": "a533d4355229a4007c0a4840f102f4cc0652819788a0a1f1a11b09aa402264d7",
+      "output_sha256": "927715e999657637f5b9dafa065c9190d8b33d2959a82f0d7d5be62a38713ddf",
       "story_id": "13.1"
     },
     {
@@ -84,7 +84,7 @@
       ],
       "exit_code": 0,
       "id": "model-policy-evidence",
-      "output_sha256": "0e6e64fd6c8f56290287e473fa25adda1eaed170044806e9f32a252885860845",
+      "output_sha256": "d825e1e8f5d03ace29073deeed4d129abddf4fe056c9b6a40f7e1f2d2a0ef897",
       "story_id": "13.2"
     }
   ],
@@ -92,14 +92,14 @@
     "artifacts/sprints/sprint-13/story-13.1/finish-usage-report.json": "f4902131f2ca3322bc424a9af280a795769d44be499345997b2929c56041bfa3",
     "artifacts/sprints/sprint-13/story-13.1/muse-native-adapter-contract-v2.json": "9c4980f2167f052c4da1a063f470bb1d5852b616247d3b6dc507910eddedaf19",
     "artifacts/sprints/sprint-13/story-13.2/linux-cross-adapter-parity.json": "6733691ce2a645dec00fc7dfec22403d82d1daf00bf1970d69b8ff3752ce1503",
-    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "362b7a7e1e5c120a1631719e5d9150947af1051160f01d9789d9ae03156acba4",
+    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "01afabf0fb83325e03683e18f7670edd4e3e29a3e0a99f7afeb2ea26c45db71e",
     "artifacts/sprints/sprint-13/story-13.3/muse-live-install.json": "91826d99f497a212ab32f87176a5b034a8b7e1fe510c9a12a05d95fc38a8dd18",
     "artifacts/sprints/sprint-13/story-13.3/muse-profile-evaluation.json": "88f560db0a1486f39a1004a0cd88e699948d194bf9221ee6e1a6d037c2e5b670",
     "artifacts/sprints/sprint-13/story-13.3/muse-sandbox-inference.json": "07260b4b60bc5d19d986fdea9bea807b3aa9e0cc543e0ce3a145a3c56a0bd547",
-    "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-report.json": "e58c842427ae8ba248e625cee3f8d3111e3efadfc977d9973d673b8f56329957",
+    "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-report.json": "a6d01eb26695c5d46b15a9ab38b775cb4607ea411fa34619483b48fce505b1a8",
     "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json": "571913bbf14d520847118a6988edecef0950be0118ea8392dfca33718bf76a75",
     "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json": "1230b416221d7e28b3ff038a3b9bd8eca972220eb1549763b4b0d68b1416ed69",
-    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "8a6b4d2ccf10ff8cf075e6ebc3a947de4f41f57eb080558eefd749bd85dba037"
+    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "bd91fcd6f560bba127916ecd43235f1f0463c21b54d2a9768b93dc4d991eb3fd"
   },
   "evidence_state": {
     "adapter_contract": "CONTRACT-PASS-LIVE-BLOCKED",
@@ -175,7 +175,7 @@
       "SR-MGM-004"
     ]
   },
-  "source_revision": "ad496786cf246b43a3294b6c48dd4f013ba1bba2",
+  "source_revision": "839453a1c0a7301e210f0d5a254b1c5fb9fa63ed",
   "source_sha256": {
     "kernel/contracts/src/agent.rs": "c8cc0af7aa697ba6fb0ef0be8bafc8c2100c910169ee6f9fa2a2807ba48243c5",
     "kernel/contracts/src/agent_proposal.rs": "cd77cca5b9a6c6fd64c54053e9bdae5233cf50942c111c52fefba0945998519f",
@@ -305,10 +305,10 @@
     "kernel/engine/src/incident_lifecycle.rs": "28f1e048d3fa806f194c07e4f0e723522dec25cfd46fbd8a80cb8f861a2a3b94",
     "kernel/engine/src/infrastructure_safety.rs": "ab99b10488d49b777db2241c55475a699f5a7437cb2dcc6d014572ef215e1940",
     "kernel/engine/src/instruction_provenance.rs": "0e88d2dd4d200450f777fc8d8b24b3ba6091ae89cadc6c919af6689205ae9c94",
-    "kernel/engine/src/job_control.rs": "dbca63c6393d50e861fc0b448b07daea9f145519f1d2a46a7d9646bff6c34149",
+    "kernel/engine/src/job_control.rs": "19a2d1e5818875f35750ac9efd6f4f0957db816df640f073806edcc29a10882e",
     "kernel/engine/src/job_ledger_migration_tests.rs": "0f2e8de3c1b0177cbd8f209d9248bcd25600beb69e7e14040f5b32e337025cd0",
-    "kernel/engine/src/job_ledger_store.rs": "779274e19e74834847fd56f5513d91bf7b30fb82b47f11249030320c2fe83d68",
-    "kernel/engine/src/job_ledger_store_tests.rs": "60330ec552c1790147ecd9c2ca00d5e8f2d18c2d1504033449aa06759b488658",
+    "kernel/engine/src/job_ledger_store.rs": "1e84d70b6c93b452893c95194cf9e5b2cbf050d4f1c877cc0c4c8eca9f118c0d",
+    "kernel/engine/src/job_ledger_store_tests.rs": "9c240f2a4894de5e8033eb274c4a0686bbed3ef0f2fb36565df50ea308eb5e05",
     "kernel/engine/src/job_scheduler.rs": "2209df39d416695395e160be013b15bb0874af39ff6fe8997f0127d684a1ed6c",
     "kernel/engine/src/lib.rs": "75dd30c4507fd767f65baa371752be1937cd13e00b2541f15aa37c8524b5a430",
     "kernel/engine/src/linux_mail_interop.rs": "aedca1ccb24b64b15f2622ab8f7e1b7bddc22b04eb10ddce5b64522d926f330d",
@@ -331,7 +331,7 @@
     "kernel/engine/src/model_runtime.rs": "d7d1d12eb22f7a6af53bdd02ac1d6747b800ebb986545235dad48e2d4a94c729",
     "kernel/engine/src/model_selection.rs": "43a6c7e5ef8d87689bb6157e65eaf3ab7b4a7fdc3cabd5bb9c6614bc3bb4bb8c",
     "kernel/engine/src/multi_agent.rs": "f3f049344725e93a489deeae2af0f073b53f6b0798e4b7350b0cd44516b9b34b",
-    "kernel/engine/src/operational_store.rs": "cacb9336af06ed8c765335e36783089c13195e6ed0bcb07a4957f590eaa03b1d",
+    "kernel/engine/src/operational_store.rs": "d1d06e9bd9490947fb35939cce8d5e0389ca924a841417371fb31faa685ad97f",
     "kernel/engine/src/persistence.rs": "fb537c04df0d687af10e36eea98834910f8760877858266bb1f54cb1ca28d540",
     "kernel/engine/src/persistent_supervisor.rs": "2422bd86db4e9e6bd7d75c6bb8924235e93de8a4eced094df2f2cf3276cf3749",
     "kernel/engine/src/personal_information_management.rs": "3eed43e4d9ddff148eeb8ff91c76bfb0adb32a063025d5b1740d974d37546fe8",

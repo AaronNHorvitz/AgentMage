@@ -43,7 +43,7 @@
       ],
       "exit_code": 0,
       "id": "muse-edge-codec",
-      "output_sha256": "73e54c6254718e7661a9be4ccc088316c9951af8e2c9f7966811895ca9a0154c"
+      "output_sha256": "24c47a43b2d91a72060f63ab7f5713ec61228cdbcca175e25a8adf9d8a4b073e"
     },
     {
       "argv": [
@@ -56,7 +56,7 @@
       ],
       "exit_code": 0,
       "id": "native-transport-diagnostics",
-      "output_sha256": "ecb2cc2e3c81ecc7ee842c41c87f053b206d4497258c1cc9fe16df8f56cb5da7"
+      "output_sha256": "aeb05391b4af383e0b72ba3926f29970a59ea454f0a5842e7ef0aee7356df10a"
     },
     {
       "argv": [
@@ -69,7 +69,7 @@
       ],
       "exit_code": 0,
       "id": "generic-codec",
-      "output_sha256": "e287325dfd20032e4c783256a7880b1301818ff1f6e55a4d6bf0ceabc688560c"
+      "output_sha256": "0aa8807eee5c6cf7e89fbf03d5df984fa1e2dfd2b23ad302ed5588dbbd6c4a08"
     },
     {
       "argv": [
@@ -82,7 +82,7 @@
       ],
       "exit_code": 0,
       "id": "bounded-response",
-      "output_sha256": "9242e0f5b0ca237358a9a0de104805668e32bfb36f2f7f3373a4e49b60c72946"
+      "output_sha256": "653f9a4996a03f195178ccd38dce4cea775424f4a244780c8f55188dda420e20"
     },
     {
       "argv": [
@@ -95,7 +95,7 @@
       ],
       "exit_code": 0,
       "id": "fake-family-parity",
-      "output_sha256": "2dae104727da1c4c931ef81053b140d8da6df547bb0ffe51c6cbffe7ce594d59"
+      "output_sha256": "0d7e737fbb2f1dfdfad383937635488417eb12317f71df0c5e9cf8ece645b8f4"
     }
   ],
   "diagnostics": [
@@ -235,7 +235,7 @@
   "production_kernel_family_references": [],
   "record_type": "d027_s13_muse_codec_evidence",
   "schema_version": 3,
-  "source_revision": "ad496786cf246b43a3294b6c48dd4f013ba1bba2",
+  "source_revision": "839453a1c0a7301e210f0d5a254b1c5fb9fa63ed",
   "source_sha256": {
     "kernel/contracts/src/model.rs": "1a19f680cc1468be94930632e4a67ba50f0c16eaf47802ae7ecd65df2ca1695c",
     "kernel/engine/src/accounting_provider.rs": "f0292afed85e4dc1d617061de010622b913749caed5e4620503634c29ef485f4",
@@ -321,10 +321,10 @@
     "kernel/engine/src/incident_lifecycle.rs": "28f1e048d3fa806f194c07e4f0e723522dec25cfd46fbd8a80cb8f861a2a3b94",
     "kernel/engine/src/infrastructure_safety.rs": "ab99b10488d49b777db2241c55475a699f5a7437cb2dcc6d014572ef215e1940",
     "kernel/engine/src/instruction_provenance.rs": "0e88d2dd4d200450f777fc8d8b24b3ba6091ae89cadc6c919af6689205ae9c94",
-    "kernel/engine/src/job_control.rs": "dbca63c6393d50e861fc0b448b07daea9f145519f1d2a46a7d9646bff6c34149",
+    "kernel/engine/src/job_control.rs": "19a2d1e5818875f35750ac9efd6f4f0957db816df640f073806edcc29a10882e",
     "kernel/engine/src/job_ledger_migration_tests.rs": "0f2e8de3c1b0177cbd8f209d9248bcd25600beb69e7e14040f5b32e337025cd0",
-    "kernel/engine/src/job_ledger_store.rs": "779274e19e74834847fd56f5513d91bf7b30fb82b47f11249030320c2fe83d68",
-    "kernel/engine/src/job_ledger_store_tests.rs": "60330ec552c1790147ecd9c2ca00d5e8f2d18c2d1504033449aa06759b488658",
+    "kernel/engine/src/job_ledger_store.rs": "1e84d70b6c93b452893c95194cf9e5b2cbf050d4f1c877cc0c4c8eca9f118c0d",
+    "kernel/engine/src/job_ledger_store_tests.rs": "9c240f2a4894de5e8033eb274c4a0686bbed3ef0f2fb36565df50ea308eb5e05",
     "kernel/engine/src/job_scheduler.rs": "2209df39d416695395e160be013b15bb0874af39ff6fe8997f0127d684a1ed6c",
     "kernel/engine/src/lib.rs": "75dd30c4507fd767f65baa371752be1937cd13e00b2541f15aa37c8524b5a430",
     "kernel/engine/src/linux_mail_interop.rs": "aedca1ccb24b64b15f2622ab8f7e1b7bddc22b04eb10ddce5b64522d926f330d",
@@ -347,7 +347,7 @@
     "kernel/engine/src/model_runtime.rs": "d7d1d12eb22f7a6af53bdd02ac1d6747b800ebb986545235dad48e2d4a94c729",
     "kernel/engine/src/model_selection.rs": "43a6c7e5ef8d87689bb6157e65eaf3ab7b4a7fdc3cabd5bb9c6614bc3bb4bb8c",
     "kernel/engine/src/multi_agent.rs": "f3f049344725e93a489deeae2af0f073b53f6b0798e4b7350b0cd44516b9b34b",
-    "kernel/engine/src/operational_store.rs": "cacb9336af06ed8c765335e36783089c13195e6ed0bcb07a4957f590eaa03b1d",
+    "kernel/engine/src/operational_store.rs": "d1d06e9bd9490947fb35939cce8d5e0389ca924a841417371fb31faa685ad97f",
     "kernel/engine/src/persistence.rs": "fb537c04df0d687af10e36eea98834910f8760877858266bb1f54cb1ca28d540",
     "kernel/engine/src/persistent_supervisor.rs": "2422bd86db4e9e6bd7d75c6bb8924235e93de8a4eced094df2f2cf3276cf3749",
     "kernel/engine/src/personal_information_management.rs": "3eed43e4d9ddff148eeb8ff91c76bfb0adb32a063025d5b1740d974d37546fe8",
