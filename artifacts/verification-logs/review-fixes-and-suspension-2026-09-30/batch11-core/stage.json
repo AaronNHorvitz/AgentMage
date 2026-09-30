@@ -1,0 +1,582 @@
+{
+  "schema_version": 2,
+  "stage": "batch11-core",
+  "source_revision": "3709eabe0ddc4ed04027e982dee9f9e204a53790",
+  "scope": "Batch 11 core evidence at 3709eabe: one SBOM write (engine, host), the foundation and contract reports for TASKS.md, the configuration startup and Story 3.1 reports, the Story 11.2 AC2 report for the runtime loop, the Story 22.1 canary sweep, the Story 13.4 dispatch preflight, the v0.4 coding pack manifest and the remaining-plan register",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/supply_chain.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_supply_chain"
+    ],
+    [
+      "python3",
+      "scripts/contract_boundary_gate.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_contract_boundary_gate"
+    ],
+    [
+      "python3",
+      "scripts/contract_evidence_index.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_contract_evidence_index"
+    ],
+    [
+      "python3",
+      "scripts/story_1_1_artifacts.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_1_1_artifacts"
+    ],
+    [
+      "python3",
+      "scripts/story_1_1_security_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_1_1_security_evidence"
+    ],
+    [
+      "python3",
+      "scripts/component_inventory.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_component_inventory"
+    ],
+    [
+      "python3",
+      "scripts/configuration_startup_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_configuration_startup_evidence"
+    ],
+    [
+      "python3",
+      "scripts/story_3_1_security_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_3_1_security_evidence"
+    ],
+    [
+      "python3",
+      "scripts/story_11_2_ac2_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_11_2_ac2_evidence"
+    ],
+    [
+      "python3",
+      "scripts/story_22_1_canary_evidence.py",
+      "--write",
+      "--source-revision",
+      "3709eabe0ddc4ed04027e982dee9f9e204a53790"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_22_1_canary_evidence"
+    ],
+    [
+      "python3",
+      "scripts/story_13_4_dispatch_preflight_evidence.py",
+      "--write",
+      "--source-revision",
+      "3709eabe0ddc4ed04027e982dee9f9e204a53790"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_13_4_dispatch_preflight_evidence"
+    ],
+    [
+      "python3",
+      "scripts/v0_4_coding_release_gate.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_v0_4_coding_release_gate"
+    ],
+    [
+      "python3",
+      "scripts/remaining_plan_blocker_audit.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_remaining_plan_blocker_audit",
+      "tests.test_amendment_work_selection"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/component_inventory.py": "108e6eda80fb6e8097c2db9e40b7c1201bbadefffc6d386efb72851a39575d74",
+    "scripts/configuration_startup_evidence.py": "100cb2aa68cd39b57ef5fb4666789f07a66c6c59309b66e27da873106b141da8",
+    "scripts/contract_boundary_gate.py": "468853a9ef2ec970a96dc6664b28f9b2f938de1b17e854104b618a8499db4b7d",
+    "scripts/contract_evidence_index.py": "0fdd6986a58bbed1fe8b554c6c15735b202be7750d7976dc2311795acc97b42c",
+    "scripts/remaining_plan_blocker_audit.py": "74327b0940e5f35b1112e19ec2a11b3e0bde9b0162db5c110d0fb5dda8f8aeca",
+    "scripts/story_11_2_ac2_evidence.py": "37c75a441a109a69e9828966c1154d7521b1bf51c2fd54c36296de04bc8f5ff2",
+    "scripts/story_13_4_dispatch_preflight_evidence.py": "740381f7d313eac95ff2252c212fd3f88639f377a16210287c0a362222d45470",
+    "scripts/story_1_1_artifacts.py": "724bc4d28adee71af08d3750e2653e2f77b7aab35ec33fc1657a1f4c31ae8b71",
+    "scripts/story_1_1_security_evidence.py": "f07d35e89dffb65931c19d85a9360b9b818e9eff767bff6b486f4f889c6c270a",
+    "scripts/story_22_1_canary_evidence.py": "44ec93b993cd349802825826fb913626c16d9b82ac92c585e68a0cb4e2c91cbf",
+    "scripts/story_3_1_security_evidence.py": "6d03fbe67e55c27c0aa2808b78bf26e1fcea6203fa0dc1e223e7c8ff22d2e056",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/v0_4_coding_release_gate.py": "66b98977b9130a244924a14a15425c8ea17e750ed9f6a79a78fa5e69d7365986",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_amendment_work_selection.py": "ae9c2e18c7f57104a68bc47d89582c72c8d0d1fe76028924eba33730fa75c0c4",
+    "tests/test_component_inventory.py": "12757ff847d9e6820d1d39c02c05f42819e0e718d7b54332affd6ccae3621844",
+    "tests/test_configuration_startup_evidence.py": "693dda9812499528ea0f8739bd93b2884bb5c5a51abe639bf0c58776ed85dc69",
+    "tests/test_contract_boundary_gate.py": "ac2f32c1503381e1f00c90035a9b718768e48a6b3250fa364b1a491d1702f53d",
+    "tests/test_contract_evidence_index.py": "198e4c3255c914d696fd7d2bdd0a8de55aa01bbec5eba83eb754e57754c22d75",
+    "tests/test_remaining_plan_blocker_audit.py": "04497ba56432ac722b7eccde0243b5a35c830d827ab6e179503bb5fbd36d44e8",
+    "tests/test_story_11_2_ac2_evidence.py": "235d0225833481060798c4993e60172245b5f0c1ac90d9015b040ed5f2422a04",
+    "tests/test_story_13_4_dispatch_preflight_evidence.py": "419045284a7c2998cc9887b7d3bcc14de9611dac1f6e84eb9f2cb22d87a03bb7",
+    "tests/test_story_1_1_artifacts.py": "19c6fe84d73abc27f443e8e31e6adbfce07f3f486e3b9b473c3e362b3c51b96e",
+    "tests/test_story_1_1_security_evidence.py": "20eb9f6dd06d06a75c72c2fa5fea7dd07e24f77842cd32af2e3f2c49231be6dc",
+    "tests/test_story_22_1_canary_evidence.py": "0aec421735605077f38c148c71ab002a8cd3b535a47f8016f46b60c2dc3b7a6e",
+    "tests/test_story_3_1_security_evidence.py": "f9d223878166c92dc21fc4e50e7cc1dfaa68bf3241db5a367e6cc8ea97f2ed19",
+    "tests/test_supply_chain.py": "29593e31bb43f33beb064efb5b7b366ae5a0f964c2544b4bfb5e5b365e9026ae",
+    "tests/test_v0_4_coding_release_gate.py": "a5cc2145d9a88b110fe376d5008b35f8163476e8b4a7858ad99fae33e6205f29"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.109,
+      "log": "01.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_supply_chain"
+      ],
+      "exit_code": 0,
+      "seconds": 0.605,
+      "log": "02.log",
+      "log_sha256": "24e96533b86da876ca8532519cf883ab2221bee8ab2de5384c548429fd8c60f6",
+      "private_log_sha256": "24e96533b86da876ca8532519cf883ab2221bee8ab2de5384c548429fd8c60f6"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/contract_boundary_gate.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.097,
+      "log": "03.log",
+      "log_sha256": "ffb0929bcd3e0c156f11d6ee3d4dcfdbdec2f9f41746916b7af56d3ea0c430a4",
+      "private_log_sha256": "ffb0929bcd3e0c156f11d6ee3d4dcfdbdec2f9f41746916b7af56d3ea0c430a4"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_contract_boundary_gate"
+      ],
+      "exit_code": 0,
+      "seconds": 0.116,
+      "log": "04.log",
+      "log_sha256": "206eb665ca5206bb208e7241b398e7bfcbe0c35bde487b33e006680598639dd8",
+      "private_log_sha256": "206eb665ca5206bb208e7241b398e7bfcbe0c35bde487b33e006680598639dd8"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "python3",
+        "scripts/contract_evidence_index.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 2.169,
+      "log": "05.log",
+      "log_sha256": "d64a13683ec5874fafecbdc8621edda9fcf5798c2b1b9fcb6b7e6535af020932",
+      "private_log_sha256": "d64a13683ec5874fafecbdc8621edda9fcf5798c2b1b9fcb6b7e6535af020932"
+    },
+    {
+      "index": 6,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_contract_evidence_index"
+      ],
+      "exit_code": 0,
+      "seconds": 0.078,
+      "log": "06.log",
+      "log_sha256": "fc523972b6a1714a1d54810e5e0468e39c4bd3e3d5232a86ffd2e808fc829bd9",
+      "private_log_sha256": "fc523972b6a1714a1d54810e5e0468e39c4bd3e3d5232a86ffd2e808fc829bd9"
+    },
+    {
+      "index": 7,
+      "argv": [
+        "python3",
+        "scripts/story_1_1_artifacts.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.038,
+      "log": "07.log",
+      "log_sha256": "6ddd04e6060dd8158475e3b5fdf90fe3c4b34164f84f00a1644878af50a98fea",
+      "private_log_sha256": "6ddd04e6060dd8158475e3b5fdf90fe3c4b34164f84f00a1644878af50a98fea"
+    },
+    {
+      "index": 8,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_1_1_artifacts"
+      ],
+      "exit_code": 0,
+      "seconds": 0.064,
+      "log": "08.log",
+      "log_sha256": "74202dc09a3347400de94f86db7081b0c92ff6270bca74570c143aa53888e576",
+      "private_log_sha256": "74202dc09a3347400de94f86db7081b0c92ff6270bca74570c143aa53888e576"
+    },
+    {
+      "index": 9,
+      "argv": [
+        "python3",
+        "scripts/story_1_1_security_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.036,
+      "log": "09.log",
+      "log_sha256": "04bdfd167bbbe669073900a46f4091d33d4d3a817a465699ea8502567598fb3c",
+      "private_log_sha256": "04bdfd167bbbe669073900a46f4091d33d4d3a817a465699ea8502567598fb3c"
+    },
+    {
+      "index": 10,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_1_1_security_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.096,
+      "log": "10.log",
+      "log_sha256": "0d628f37216e0a286bb4dc09c3961e6b1490ff1c53d56a39af806e9c2cc5da78",
+      "private_log_sha256": "0d628f37216e0a286bb4dc09c3961e6b1490ff1c53d56a39af806e9c2cc5da78"
+    },
+    {
+      "index": 11,
+      "argv": [
+        "python3",
+        "scripts/component_inventory.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 1.493,
+      "log": "11.log",
+      "log_sha256": "f253aac66972f434f7ae0f1c81879a85da4620a4f1c5cc7738a640e4b28492a8",
+      "private_log_sha256": "f253aac66972f434f7ae0f1c81879a85da4620a4f1c5cc7738a640e4b28492a8"
+    },
+    {
+      "index": 12,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_component_inventory"
+      ],
+      "exit_code": 0,
+      "seconds": 7.057,
+      "log": "12.log",
+      "log_sha256": "0412e647b995593bfa48aac7ca9d0f12acb44812422e11c899d2580b3eddb237",
+      "private_log_sha256": "0412e647b995593bfa48aac7ca9d0f12acb44812422e11c899d2580b3eddb237"
+    },
+    {
+      "index": 13,
+      "argv": [
+        "python3",
+        "scripts/configuration_startup_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 21.892,
+      "log": "13.log",
+      "log_sha256": "635a7a089caf4f25d2e772a819fb5d83c083bf266914373128419caea0dbe78f",
+      "private_log_sha256": "635a7a089caf4f25d2e772a819fb5d83c083bf266914373128419caea0dbe78f"
+    },
+    {
+      "index": 14,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_configuration_startup_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.072,
+      "log": "14.log",
+      "log_sha256": "e19a86747084065fc6026e9e5463e2291a2e56061843e8a27e0424f4fed284be",
+      "private_log_sha256": "e19a86747084065fc6026e9e5463e2291a2e56061843e8a27e0424f4fed284be"
+    },
+    {
+      "index": 15,
+      "argv": [
+        "python3",
+        "scripts/story_3_1_security_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 1.603,
+      "log": "15.log",
+      "log_sha256": "0cd2aa4156909f95f43fc90f612df6209e475456b9fc49a528576ae94ff610aa",
+      "private_log_sha256": "0cd2aa4156909f95f43fc90f612df6209e475456b9fc49a528576ae94ff610aa"
+    },
+    {
+      "index": 16,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_3_1_security_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 5.336,
+      "log": "16.log",
+      "log_sha256": "4f62ede177a021dec0e93e01ab412964631b3004b5a33ce7d2c1df9a7a91627d",
+      "private_log_sha256": "4f62ede177a021dec0e93e01ab412964631b3004b5a33ce7d2c1df9a7a91627d"
+    },
+    {
+      "index": 17,
+      "argv": [
+        "python3",
+        "scripts/story_11_2_ac2_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.315,
+      "log": "17.log",
+      "log_sha256": "d1dbbcf2d1a85681596bea7bebe16b9ea742d87ee647fd7075565bb5aa4f3a7a",
+      "private_log_sha256": "d1dbbcf2d1a85681596bea7bebe16b9ea742d87ee647fd7075565bb5aa4f3a7a"
+    },
+    {
+      "index": 18,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_11_2_ac2_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.066,
+      "log": "18.log",
+      "log_sha256": "f96363f8d8dff4c4abed7197c63606ead0bd955ea4259bdcb5fb6f47dbe53992",
+      "private_log_sha256": "f96363f8d8dff4c4abed7197c63606ead0bd955ea4259bdcb5fb6f47dbe53992"
+    },
+    {
+      "index": 19,
+      "argv": [
+        "python3",
+        "scripts/story_22_1_canary_evidence.py",
+        "--write",
+        "--source-revision",
+        "3709eabe0ddc4ed04027e982dee9f9e204a53790"
+      ],
+      "exit_code": 0,
+      "seconds": 3.967,
+      "log": "19.log",
+      "log_sha256": "a31c813afcfee033b10bfd8534145ee2ac195eddff97aa56fbd68a588b4c3028",
+      "private_log_sha256": "a31c813afcfee033b10bfd8534145ee2ac195eddff97aa56fbd68a588b4c3028"
+    },
+    {
+      "index": 20,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_22_1_canary_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.144,
+      "log": "20.log",
+      "log_sha256": "81be4c4386c780bc3fa5cf089dd68f68b767d5d727944a5e7692e6aa48301916",
+      "private_log_sha256": "81be4c4386c780bc3fa5cf089dd68f68b767d5d727944a5e7692e6aa48301916"
+    },
+    {
+      "index": 21,
+      "argv": [
+        "python3",
+        "scripts/story_13_4_dispatch_preflight_evidence.py",
+        "--write",
+        "--source-revision",
+        "3709eabe0ddc4ed04027e982dee9f9e204a53790"
+      ],
+      "exit_code": 0,
+      "seconds": 0.391,
+      "log": "21.log",
+      "log_sha256": "5668f00e99c01c89daeaca3572f978ba04fe9aca6e68236f86a34ef1f9b78412",
+      "private_log_sha256": "5668f00e99c01c89daeaca3572f978ba04fe9aca6e68236f86a34ef1f9b78412"
+    },
+    {
+      "index": 22,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_13_4_dispatch_preflight_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.081,
+      "log": "22.log",
+      "log_sha256": "d094b1bd2c8318c96097f80c50da282add5b2972970a77046de8db6c8935f6ca",
+      "private_log_sha256": "d094b1bd2c8318c96097f80c50da282add5b2972970a77046de8db6c8935f6ca"
+    },
+    {
+      "index": 23,
+      "argv": [
+        "python3",
+        "scripts/v0_4_coding_release_gate.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.03,
+      "log": "23.log",
+      "log_sha256": "9e0bec13e71fb8971225fd1525af6e535af11ccc92d20216392abe43f0e6d97f",
+      "private_log_sha256": "9e0bec13e71fb8971225fd1525af6e535af11ccc92d20216392abe43f0e6d97f"
+    },
+    {
+      "index": 24,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_v0_4_coding_release_gate"
+      ],
+      "exit_code": 0,
+      "seconds": 0.097,
+      "log": "24.log",
+      "log_sha256": "0e32cf5bb96fa1036cae2e27776843246962a6c3d05aa93be58a951c1c934bc2",
+      "private_log_sha256": "0e32cf5bb96fa1036cae2e27776843246962a6c3d05aa93be58a951c1c934bc2"
+    },
+    {
+      "index": 25,
+      "argv": [
+        "python3",
+        "scripts/remaining_plan_blocker_audit.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.731,
+      "log": "25.log",
+      "log_sha256": "268129c13b22d4efaf8430722d559516e3df62a806f92c3f22fa9564c08a8586",
+      "private_log_sha256": "268129c13b22d4efaf8430722d559516e3df62a806f92c3f22fa9564c08a8586"
+    },
+    {
+      "index": 26,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_remaining_plan_blocker_audit",
+        "tests.test_amendment_work_selection"
+      ],
+      "exit_code": 0,
+      "seconds": 1.101,
+      "log": "26.log",
+      "log_sha256": "aa4be3d7191c0fbc45eeccfeda8316b38dafd9cda3a840329677041b4a4099f0",
+      "private_log_sha256": "aa4be3d7191c0fbc45eeccfeda8316b38dafd9cda3a840329677041b4a4099f0"
+    },
+    {
+      "index": 27,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.072,
+      "log": "27.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 28,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.016,
+      "log": "28.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

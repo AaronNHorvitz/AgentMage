@@ -1,0 +1,170 @@
+{
+ "record_type": "agentmage-review-fixes-and-suspension-verification",
+ "date": "2026-09-30",
+ "base_commit": "8a3a341ea45eedcc5d2ef3cd66ee514fab3bb3db",
+ "head_commit": "2d4604dcc166e52c67425a84addea6008afd146a",
+ "source_commit": "3709eabe0ddc4ed04027e982dee9f9e204a53790",
+ "retained_logs": "artifacts/verification-logs/review-fixes-and-suspension-2026-09-30",
+ "stages": [
+  "batch11-source-checks",
+  "batch11-core",
+  "batch11-codec",
+  "batch11-rebind",
+  "batch11-rebind2",
+  "batch11-rebind3",
+  "batch11-gate",
+  "batch11-boundary",
+  "batch11-security-index",
+  "batch11-blocked-causes",
+  "batch11-observation"
+ ],
+ "inventory": "artifacts/verification-logs/review-fixes-and-suspension-2026-09-30/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch11-source-checks/02.log",
+  "engine": "batch11-source-checks/03.log",
+  "repository_map": "batch11-source-checks/04.log",
+  "inference": "batch11-source-checks/05.log",
+  "linux": "batch11-source-checks/06.log",
+  "host": "batch11-source-checks/07.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0121-review-fixes-for-host-job-control.md",
+   "docs/decisions/0122-suspension-at-safe-boundaries-and-in-host-resumption.md"
+  ],
+  "review_resolved": "independent review of 8a3a341e (PASS; F1-F2 low); both findings are addressed in 3709eabe under Decision 0121, which amends Decision 0120's view and start rule and corrects the mutation note of Decision 0119",
+  "components": {
+   "review_fixes": "an unavailable job state carries a closed reason the driver observed (not_offered, not_answered, not_described) and neither output format names a ledger (F1: shells/host/src/cli_runtime.rs JobStateUnavailable, shells/host/src/coding_development_client.rs render_job_state); each start rule stands alone: a new run creates its job and a run resumed after a restart starts a queued job, continues a running one and refuses every other phase, with a test over none, queued, running, suspended, cancelling and completed (F2: shells/host/src/coding_live_runtime.rs begin_job)",
+   "AMR-04.6.4": "kernel/engine/src/runtime_loop.rs (RuntimeSuspensionPoint, RuntimeSuspensionProbe, RuntimeSuspendableStep, run_until_boundary_or_suspension, commits_checkpoints, RuntimeLoopError::Suspended: the probe is consulted only right after a checkpoint commits and when no cancellation is observed, and a suspended coordinator refuses to advance); shells/host/src/coding_client.rs (advance_or_suspend, suspendable, JobControlNotice); shells/host/src/coding_live_runtime.rs (SharedSuspension Idle/Requested/Withheld/Claimed, finish_suspension records the owner's observation and releases the composition, continue_from_checkpoint closes the store handle and continues through the factory under the derived request with the presented history, continue_job, control_job acts on the job's phase); shells/host/src/native_chat_runtime.rs and shells/host/src/coding_development_runtime.rs (prepare_in_host_resume from the store's current checkpoint and binding); shells/host/src/runtime_transport.rs (step.suspended, resumed_run_request, is_suspension_event); shells/host/src/runtime_ipc.rs (wire 8); shells/host/src/cli_runtime.rs (suspension and resumption as job control requests, verified boundary, derived resumed request, rebinding); shells/host/src/coding_development_client.rs and shells/host/src/cli.rs (SIGUSR1/SIGUSR2, notices in both formats, --suspend-resume-probe); scripts/coding_harness.py (pause, resume) and scripts/coding_harness_acceptance.py (suspend-resume case)"
+  },
+  "mutation_checks": "run before the source commit with private tooling, each applying one mutation and running the package filter: 23 single mutations each made its expected test fail: four engine rules (no committed boundary, suspension consulted before cancellation, a suspended coordinator advancing, every coordinator treated as checkpointing), ten host rules (the worker never claiming, a withdrawn suspension kept, no withholding before a resumption or cancellation, a resumed job not started again, the store open while the continuation is prepared, the restored history unchecked, the derived request unchecked, an unclaimed stop accepted, the composition kept while suspended, suspension of a run without checkpoints), three start rules (review F2), three driver rules (an unverified boundary, a rebinding answer about another request, a host that does not take the request failing the run), the F1 reason and two wire rules. Two driver mutants first survived because one test exercised both checks; the test now isolates each and both fail it. These runs are not retained logs",
+  "failure_comparison": "linux 188 passed, 19 failed, 51 ignored and host 364 passed, 52 failed, 10 ignored; both failure name sets are identical to the batch 10 source-check baseline; every new test passes",
+  "retained_failures": [
+   {
+    "stage": "batch11-source-checks",
+    "indexes": [
+     6,
+     7
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, identical names to the batch 10 baseline"
+   },
+   {
+    "stage": "batch11-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless Chrome in the Puppeteer cache; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   }
+  ],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch11-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the 52 native-prerequisite host failures (batch11-source-checks/07.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch11-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch11-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch11-blocked-causes/03.log) and the documentation gate as above"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-host",
+   "agentmage-kernel-engine"
+  ],
+  "cascade": "no operational store source changed, so no Sprint 11 store wave ran; the renewed Story 3.1 component inventory staled the Story 11.1 security map, which staled the Story 11.2 storage security and frozen-scope reports, which staled the Story 11.2 AC1 and AC3 reports; each renewal followed the one before it (batch11-rebind, batch11-rebind2, batch11-rebind3) and a compact inventory after every commit found no further cascade",
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "54538d03a389599f5f4b763dcc2f0d03efb532ad",
+    "to": "45552ff5c695bed64e7de90697fd5333adec73f5",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "reason": "Decision 0122 (AMR-04.6.4): the coordinator consults a suspension probe only right after a checkpoint commits and when no cancellation is observed there, answers the boundary, and then refuses to advance; the existing run_until_boundary entry point is unchanged; independent review of this batch is requested separately, not claimed by this pin"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 11 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 11 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+      "reason": "regenerated by the batch 11 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 11 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+     }
+    ]
+   }
+  ],
+  "newly_stale_disposition": "only historical records: two retained batch 10 stage records, which pin inputs as they were at their revisions, fifteen dated verification records of 2026-09-27 and 2026-09-28, and the Sprint 48 local evidence and source boundary review, which were already stale through other inputs before this batch",
+  "runtime_campaign": "Story 23.4 runtime campaign peak RSS 12,068 to 49,984 KiB against a 1,048,576 KiB bound over nine commands",
+  "cli_observation": {
+   "source_commit": "2d4604dcc166e52c67425a84addea6008afd146a",
+   "binaries_sha256": {
+    "agentmage": "e8ce778d6293638c703c2778fb1eb2b6acc577851cff5d4bae05ca4684becdb2",
+    "agentmage-host": "93f6ddd5151dfd835953a1543efd0bafffe49bb5591a51f1dffb64bff7d78875",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "dirty_start_exit": 1,
+   "dirty_preserved": true,
+   "idle_pause_exit": 1,
+   "idle_resume_exit": 1,
+   "qualification": "actual-binary-native-prerequisite-refusal-only",
+   "suspension_exercised": false,
+   "reason": "native prerequisites refuse the launch before any run starts, so no run reaches a safe boundary in this sandbox",
+   "attachment": "batch11-observation/attachments/observation.json"
+  },
+  "not_run": [
+   "the development factory's in-host continuation and the suspend-resume acceptance case, which need a native Linux host",
+   "actual-process detach, reconnect and cleanup across UI closure, and resumption of a suspended job whose host ended (AMR-04.6.3)",
+   "actual-process display of run declarations and context views (AMR-04.7.2, AMR-04.10)",
+   "actual-process hunk selection on a native host (AMR-04.2.3)",
+   "the native-only Linux boundary tests",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [
+    {
+     "row": "AMR-04.6.4",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component, host-unit, wire and CLI row: the engine stop, the live host service with real encrypted stores and a stand-in durable coordinator, the IPC wire and the development CLI driver and views; the development factory's continuation and the actual-process proof run only on a native host (AMR-04.6.3)"
+    }
+   ],
+   "release_claim": "none",
+   "independent_review_of_this_batch": "requested; open"
+  }
+ }
+}

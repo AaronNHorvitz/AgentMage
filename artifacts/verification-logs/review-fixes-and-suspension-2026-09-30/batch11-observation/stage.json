@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "stage": "batch11-observation",
+  "source_revision": "2d4604dcc166e52c67425a84addea6008afd146a",
+  "scope": "Batch 11 actual Linux CLI observation at 2d4604dc: rebuilt binaries, a clean scripted start and a start over pre-existing work, idle stop, pause and resume, each with its preservation checks",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "python3",
+      "<state>/batch11-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "f4f78ee204cd6689677648e0f014ed5578a737186aa5a0bcf067a56a89eaba89",
+      "private_sha256": "ce9b982b625541d64920630981868f18dc5d3edefac5e7d021bacb176839a849"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 13.075,
+      "log": "01.log",
+      "log_sha256": "a88c600b841a289eea447939e332d2f5b4ac8d213feacd0c0caebb7cbaf37ea9",
+      "private_log_sha256": "c1b09a2916620ff68cb24af2d46da988c0730e35d72e0ea1512cd7cc17e25ebb"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "<state>/batch11-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 1.791,
+      "log": "02.log",
+      "log_sha256": "202ed1f13a53040d2665935d1fcfaf914e9f410d0e68bf3204c448291d93c8c4",
+      "private_log_sha256": "202ed1f13a53040d2665935d1fcfaf914e9f410d0e68bf3204c448291d93c8c4"
+    }
+  ]
+}

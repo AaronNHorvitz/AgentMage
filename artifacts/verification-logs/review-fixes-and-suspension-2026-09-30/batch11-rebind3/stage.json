@@ -1,0 +1,149 @@
+{
+  "schema_version": 2,
+  "stage": "batch11-rebind3",
+  "source_revision": "3aaaa19c2b3e5374e397291d1d84c78cfd83f073",
+  "scope": "Batch 11 third rebind at 3aaaa19c: the Story 11.2 AC1 and AC3 reports, which bind the renewed storage security report, and a check that the AC2 report renewed in core still holds",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/story_11_2_ac1_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_11_2_ac1_evidence"
+    ],
+    [
+      "python3",
+      "scripts/story_11_2_ac3_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_11_2_ac3_evidence"
+    ],
+    [
+      "python3",
+      "scripts/story_11_2_ac2_evidence.py"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/story_11_2_ac1_evidence.py": "d1544b736858870afbcff9d1c38a5b6a7439499a34beca95714b768e1f103c5f",
+    "scripts/story_11_2_ac2_evidence.py": "37c75a441a109a69e9828966c1154d7521b1bf51c2fd54c36296de04bc8f5ff2",
+    "scripts/story_11_2_ac3_evidence.py": "475fd84f9b4a003963db1763db3fb6c2953ae5da90d6acf9736c63f53286a8f8",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_story_11_2_ac1_evidence.py": "5da4345b69941753eac693e67a53af3a0ebf73f052ed47b16fbf9d0169073edc",
+    "tests/test_story_11_2_ac3_evidence.py": "831bf007dfcc13818ee1fb69745e77768ec2909bf8e617239e7fba2285448a6e"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/story_11_2_ac1_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.11,
+      "log": "01.log",
+      "log_sha256": "8d839bbfeaf6a2654d704f23d8ecb4628a2ea06bda23ca80d8cc647d76c71755",
+      "private_log_sha256": "8d839bbfeaf6a2654d704f23d8ecb4628a2ea06bda23ca80d8cc647d76c71755"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_11_2_ac1_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.073,
+      "log": "02.log",
+      "log_sha256": "3872f5a85da677f909ec5c55a5821758c34e2394460567a29f8043b480cc1105",
+      "private_log_sha256": "3872f5a85da677f909ec5c55a5821758c34e2394460567a29f8043b480cc1105"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/story_11_2_ac3_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.127,
+      "log": "03.log",
+      "log_sha256": "94b8ff66ca6be8495daa74b759533bdfe48fefa8e3b4680627e4f707a8b3942f",
+      "private_log_sha256": "94b8ff66ca6be8495daa74b759533bdfe48fefa8e3b4680627e4f707a8b3942f"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_11_2_ac3_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.066,
+      "log": "04.log",
+      "log_sha256": "d1aaab86fa02d87997171aeb3220b40f5e28046ec4d1674848f9ec5f589f297c",
+      "private_log_sha256": "d1aaab86fa02d87997171aeb3220b40f5e28046ec4d1674848f9ec5f589f297c"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "python3",
+        "scripts/story_11_2_ac2_evidence.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.033,
+      "log": "05.log",
+      "log_sha256": "d1dbbcf2d1a85681596bea7bebe16b9ea742d87ee647fd7075565bb5aa4f3a7a",
+      "private_log_sha256": "d1dbbcf2d1a85681596bea7bebe16b9ea742d87ee647fd7075565bb5aa4f3a7a"
+    },
+    {
+      "index": 6,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.073,
+      "log": "06.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 7,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.008,
+      "log": "07.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

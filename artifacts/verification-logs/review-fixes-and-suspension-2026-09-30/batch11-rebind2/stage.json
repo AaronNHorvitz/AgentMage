@@ -1,0 +1,132 @@
+{
+  "schema_version": 2,
+  "stage": "batch11-rebind2",
+  "source_revision": "beade3130a9ff6fb9ff2c14d1c2e2bb7f7a967de",
+  "scope": "Batch 11 second rebind at beade313: the Story 11.2 storage security report and the frozen-scope breadth report, which bind the renewed Story 11.1 security map",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/storage_security_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_storage_security_evidence"
+    ],
+    [
+      "python3",
+      "scripts/frozen_scope_breadth_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_frozen_scope_breadth_evidence"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/frozen_scope_breadth_evidence.py": "50fb370dce38cf75e96b7060e83936c9e8fcd52c4b7f9b155529522c66dfb94e",
+    "scripts/storage_security_evidence.py": "5aa9045f342057473e1a9340eae57ed3326cade4dcafd60b5a8ab3312e8bc806",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_frozen_scope_breadth_evidence.py": "362b586854a02501268a034ea2bfa37f80ddb6e6c6306f3f9508285b4be9919e",
+    "tests/test_storage_security_evidence.py": "0963e5ff3f2077d91811c69c588203c3083c2f99b35b4d1300ddedf2a423e3b9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/storage_security_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.169,
+      "log": "01.log",
+      "log_sha256": "86e970fb885d55cbf27b70a3de72c555d8acc24b370662a942ce58f1a3d546f2",
+      "private_log_sha256": "86e970fb885d55cbf27b70a3de72c555d8acc24b370662a942ce58f1a3d546f2"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_storage_security_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.054,
+      "log": "02.log",
+      "log_sha256": "0f7e4b97443e54aca647179972594d13bb587afcbf151fab8228148587ea844a",
+      "private_log_sha256": "0f7e4b97443e54aca647179972594d13bb587afcbf151fab8228148587ea844a"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/frozen_scope_breadth_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.032,
+      "log": "03.log",
+      "log_sha256": "0091f1120943a991f6d39da9abb54153340cba65c38df8441e8e42dfe3031ed6",
+      "private_log_sha256": "0091f1120943a991f6d39da9abb54153340cba65c38df8441e8e42dfe3031ed6"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_frozen_scope_breadth_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.053,
+      "log": "04.log",
+      "log_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "private_log_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.074,
+      "log": "05.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 6,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.007,
+      "log": "06.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
