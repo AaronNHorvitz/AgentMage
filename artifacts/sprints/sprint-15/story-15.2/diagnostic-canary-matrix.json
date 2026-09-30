@@ -5,32 +5,32 @@
     {
       "canary_match_count": 0,
       "command_id": "b863fcb77434e99b1116090c1dd8d41d17374adf5ad591954b410eaa33fe84f3",
-      "elapsed_ms": 88,
+      "elapsed_ms": 116,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "closed-kernel-harness",
-      "output_bytes": 2790,
-      "output_sha256": "b513929ac37fd4f32529fc77522655f6d68453c0f8ceab630261744701fc67b8"
+      "output_bytes": 4312,
+      "output_sha256": "2268916fe7c75c09747cbee1f535800df91756ab570ccc79e4477d0434d93e42"
     },
     {
       "canary_match_count": 0,
       "command_id": "61afa6fa1b5789d21277729923e9f2e59914857c565312edc6a48f1d90a19022",
-      "elapsed_ms": 78,
+      "elapsed_ms": 90,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "preview-receipt-export",
-      "output_bytes": 977,
-      "output_sha256": "66cdd1065e0ec9a625ae56bd2f6edab6583a63b3c6538533e548f02997fbe0f0"
+      "output_bytes": 1433,
+      "output_sha256": "b5a2e2d16544b4cc1c87d718ceeb2e908389e331f59fb626ada5455074cf1c46"
     },
     {
       "canary_match_count": 0,
       "command_id": "d943c2fc72dbf8ad9859155bf08a8afadd4c9cc5eaf3ed01ae1b336273463b39",
-      "elapsed_ms": 1507,
+      "elapsed_ms": 1673,
       "exit_code": 0,
       "expected_marker": "fail 0",
       "id": "authenticated-chat-and-renderer",
-      "output_bytes": 4963,
-      "output_sha256": "3e83c77c9348ea9a6b696771acffd0703c34842ef46384155ebff9ec228fc846"
+      "output_bytes": 8258,
+      "output_sha256": "31f8d52dd24536af76dda6e2ec20d4b1301d21c69000a87f6f99faa6de6ebf1d"
     }
   ],
   "coverage": {
@@ -67,10 +67,10 @@
     "Manual fuzzing remains deferred and was not executed."
   ],
   "log": {
-    "bytes": 8845,
+    "bytes": 14118,
     "path": "artifacts/sprints/sprint-15/story-15.2/diagnostic-canary-matrix.log",
     "repository_path_redacted": true,
-    "sha256": "9bf7ea5b8e055328b79209b5b47121239e1e857382e5c9e35ab6c0ffb0ae44d1"
+    "sha256": "0da3354895e404303d49d402c6bf263145f769034ffa45ae9b3b79019f388f69"
   },
   "private_user_data_used": false,
   "prohibited_source_families": [
@@ -97,7 +97,7 @@
     "receipt_disclosure_count": 0,
     "unknown_transport_fields_fail_closed": true
   },
-  "source_revision": "fa8846c5e01157657a0b2b56e171f7a2146f6f10",
+  "source_revision": "7397a6cd54603bafcecfaa958176a0815e75a5d1",
   "sources": [
     {
       "bytes": 4487,
@@ -110,34 +110,34 @@
       "sha256": "656880cedd38341360d4ee122bc611627a1b1b9b0bdcc2e4d0a2a2a211aa06f0"
     },
     {
-      "bytes": 22038,
+      "bytes": 33001,
       "path": "shells/host/src/diagnostic_export.rs",
-      "sha256": "8b838a86293ef8fdf874014c300d7887c9970f82e47eae7ba1edc39b4cbc9fcb"
+      "sha256": "76569516d76172bf15536e7b973e2219cbfea1e715f1708861731f3305e13053"
     },
     {
-      "bytes": 22483,
+      "bytes": 22898,
       "path": "shells/vscode/src/host_bridge.ts",
-      "sha256": "049efd0066de16c6dca0cc8203a9b6ff7cc3e9c43e639e9250c9406c5379efa1"
+      "sha256": "b7ea16224f2cf178af2a1d98302ce315fe81b934a19ffbd59fceaba350d63707"
     },
     {
-      "bytes": 57567,
+      "bytes": 63466,
       "path": "shells/vscode/src/provider.ts",
-      "sha256": "caa0d0aa120cdf1108c4d9bff647d9e1f7d7dcdf4f64bf3f7a2209b85e61f2a2"
+      "sha256": "e50b2950c7ffce2bead54d0a9b43c3a33d99a7795adeaedc411e59182d7a0a17"
     },
     {
-      "bytes": 21241,
+      "bytes": 21313,
       "path": "shells/vscode/test/host_bridge.test.ts",
-      "sha256": "da5eab7d02b10285a98411d439545b4a765fcd43188339212a08a09fa83bd36a"
+      "sha256": "da9bd9c6f4161fac4823e576f5ad87bcea107368b09c0bb730d07f8196140664"
     },
     {
-      "bytes": 46682,
+      "bytes": 54794,
       "path": "shells/vscode/test/provider.test.ts",
-      "sha256": "c6087e81a5eb4e08fba6e257c081c84766a87c313d5eb1972219d5f5fd2c3a4b"
+      "sha256": "116b3544edd93a3f2f9630fa17e6a7bc81da631c893c0c05a3a111de4d5c60be"
     },
     {
-      "bytes": 13293,
+      "bytes": 13312,
       "path": "scripts/sprint_15_diagnostic_canary_evidence.py",
-      "sha256": "74ba711b78ccad6fd8d5fca362be6995a87a96157f1ccb093a99225bf793a4ad"
+      "sha256": "60c3a354e578a29bea0a7ee9a65bcdfa1d00e48da5d0ef05afe51b77a60b2aab"
     },
     {
       "bytes": 2860,
@@ -145,9 +145,9 @@
       "sha256": "ced962e81f8708570c0d16f454f44455bc37391c00ca51d87a4957daf2bf75be"
     },
     {
-      "bytes": 1817,
+      "bytes": 2148,
       "path": "docs/verification/sprint-15-diagnostic-canary-matrix.md",
-      "sha256": "c402c9971e5ef9ab3c0c386634b6ba3dd7e7b660c014b213230d89a7bc13b520"
+      "sha256": "8098437b137ad4ca5fe393aaedb6d4034a5eab81239f869c6d964449345bfb79"
     }
   ],
   "status": "pass-current-linux-diagnostic-surfaces",
