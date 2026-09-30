@@ -7664,3 +7664,269 @@ mod run_phase_deadline_tests {
         }
     }
 }
+
+mod suspension_tests {
+    //! Decision 0122: a run stops for an applied suspension only at a
+    //! committed safe boundary, refuses to advance afterwards, and continues
+    //! through a new composition bound to the boundary's cursor.
+    use super::*;
+    use crate::runtime_loop::{
+        RuntimeSuspendableStep, RuntimeSuspensionProbe, runtime_event_cursor,
+    };
+    use agentmage_kernel_contracts::ModelCancellationProbe;
+
+    struct RecordingSuspension {
+        answer: bool,
+        consulted: AtomicUsize,
+    }
+
+    impl RecordingSuspension {
+        const fn new(answer: bool) -> Self {
+            Self {
+                answer,
+                consulted: AtomicUsize::new(0),
+            }
+        }
+
+        fn consulted(&self) -> usize {
+            self.consulted.load(Ordering::SeqCst)
+        }
+    }
+
+    impl RuntimeSuspensionProbe for RecordingSuspension {
+        fn suspend_at_safe_boundary(&self) -> bool {
+            self.consulted.fetch_add(1, Ordering::SeqCst);
+            self.answer
+        }
+    }
+
+    /// A durable coordinator over the shared fixture parts, with its request.
+    fn durable(
+        scripts: impl IntoIterator<Item = ModelScript>,
+        permission: PermissionScript,
+    ) -> (FixtureCoordinator, Arc<AtomicUsize>) {
+        let (initial, executions) = coordinator(scripts, permission, true);
+        let mut request = initial.request.clone();
+        request.mode = RuntimeSessionMode::DurableReadOnly;
+        request.request_sha256 = "0".repeat(64);
+        let request = seal_runtime_run_request(request).unwrap();
+        let durable = ReusableRuntimeCoordinator::new_with_durable_state(
+            request,
+            initial.model,
+            initial.context,
+            initial.registry,
+            initial.tool_boundary,
+            initial.verifier,
+            initial.clock,
+        )
+        .unwrap();
+        assert!(durable.commits_checkpoints());
+        (durable, executions)
+    }
+
+    #[test]
+    fn an_applied_suspension_stops_at_the_committed_boundary_and_resumes_from_its_cursor() {
+        let (mut first, executions) = durable(
+            [ModelScript::Tool, ModelScript::Completion],
+            PermissionScript::Allow,
+        );
+        let suspension = RecordingSuspension::new(true);
+        let RuntimeSuspendableStep::Suspended { point } = first
+            .run_until_boundary_or_suspension(None, None, Some(&suspension))
+            .unwrap()
+        else {
+            panic!("the first committed boundary stops the run");
+        };
+        // One turn ran and committed its checkpoint; nothing ran after it.
+        assert_eq!(suspension.consulted(), 1);
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+        assert_eq!(first.model.calls, 1);
+        assert!(first.outcome().is_none());
+        let last = first.events().last().unwrap();
+        assert_eq!(runtime_event_cursor(last), point.event_cursor);
+        assert!(matches!(
+            &last.kind,
+            RuntimeEventKind::CheckpointCommitted { checkpoint_id, checkpoint_sha256 }
+                if *checkpoint_id == point.checkpoint_id
+                    && *checkpoint_sha256 == point.checkpoint_sha256
+        ));
+        // The stopped coordinator refuses every further advance.
+        let stopped = first.events().to_vec();
+        assert_eq!(
+            first.run_until_boundary_or_suspension(None, None, Some(&suspension)),
+            Err(RuntimeLoopError::Suspended)
+        );
+        assert_eq!(
+            first.run_until_boundary(None, None),
+            Err(RuntimeLoopError::Suspended)
+        );
+        assert_eq!(first.events(), stopped.as_slice());
+        assert_eq!(suspension.consulted(), 1);
+
+        // A new composition bound to the boundary's cursor continues the run
+        // without repeating the effect.
+        let mut resumed_request = first.request.clone();
+        resumed_request.event_cursor = Some(point.event_cursor.clone());
+        resumed_request.request_sha256 = "0".repeat(64);
+        let resumed_request = seal_runtime_run_request(resumed_request).unwrap();
+        let mut resumed = ReusableRuntimeCoordinator::new_with_durable_state(
+            resumed_request,
+            FakeModel::new(first.model.profile.clone(), [ModelScript::Completion]),
+            FakeContext,
+            first.registry,
+            first.tool_boundary,
+            first.verifier,
+            FakeClock { now: 6_000 },
+        )
+        .unwrap();
+        resumed.model.calls = 1;
+        assert_eq!(resumed.events(), stopped.as_slice());
+        let never = RecordingSuspension::new(false);
+        let RuntimeSuspendableStep::Boundary(RuntimeCoordinatorStep::Complete { outcome }) =
+            resumed
+                .run_until_boundary_or_suspension(None, None, Some(&never))
+                .unwrap()
+        else {
+            panic!("the resumed run completes");
+        };
+        assert_eq!(outcome.state, AgentStateKind::Success, "{outcome:?}");
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+        assert_eq!(never.consulted(), 0);
+        assert_eq!(&resumed.events()[..stopped.len()], stopped.as_slice());
+        assert_valid_terminal_stream(&resumed);
+    }
+
+    #[test]
+    fn a_suspension_is_consulted_only_at_committed_boundaries() {
+        // Without checkpoint ports no boundary is committed, so an applied
+        // suspension never stops the run.
+        let (mut ephemeral, _) = coordinator(
+            [ModelScript::Tool, ModelScript::Completion],
+            PermissionScript::Allow,
+            true,
+        );
+        assert!(!ephemeral.commits_checkpoints());
+        let always = RecordingSuspension::new(true);
+        let RuntimeSuspendableStep::Boundary(RuntimeCoordinatorStep::Complete { outcome }) =
+            ephemeral
+                .run_until_boundary_or_suspension(None, None, Some(&always))
+                .unwrap()
+        else {
+            panic!("an ephemeral run completes");
+        };
+        assert_eq!(outcome.state, AgentStateKind::Success);
+        assert_eq!(always.consulted(), 0);
+
+        // A durable run consults it once per committed boundary: never before
+        // the first turn, and never after the verified completion.
+        let (mut run, _) = durable(
+            [ModelScript::Tool, ModelScript::Completion],
+            PermissionScript::Allow,
+        );
+        let never = RecordingSuspension::new(false);
+        let RuntimeSuspendableStep::Boundary(RuntimeCoordinatorStep::Complete { outcome }) = run
+            .run_until_boundary_or_suspension(None, None, Some(&never))
+            .unwrap()
+        else {
+            panic!("a durable run completes");
+        };
+        assert_eq!(outcome.state, AgentStateKind::Success);
+        let committed = run
+            .events()
+            .iter()
+            .filter(|event| matches!(event.kind, RuntimeEventKind::CheckpointCommitted { .. }))
+            .count();
+        assert_eq!(committed, 1);
+        assert_eq!(never.consulted(), committed);
+
+        // A pending approval is not a safe boundary: the run waits for the
+        // decision and stops only after the approved step commits.
+        let (mut asking, executions) = durable(
+            [ModelScript::Tool, ModelScript::Completion],
+            PermissionScript::Ask,
+        );
+        let suspension = RecordingSuspension::new(true);
+        let RuntimeSuspendableStep::Boundary(RuntimeCoordinatorStep::AwaitingApproval {
+            challenge,
+        }) = asking
+            .run_until_boundary_or_suspension(None, None, Some(&suspension))
+            .unwrap()
+        else {
+            panic!("the request waits for approval");
+        };
+        assert_eq!(suspension.consulted(), 0);
+        let response = RuntimeApprovalResponse {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            run_id: challenge.run_id.clone(),
+            approval_id: challenge.approval_id.clone(),
+            disposition: RuntimeApprovalDisposition::Allow,
+            challenge_sha256: challenge.challenge_sha256.clone(),
+            grant_id: Some(GrantId::from_raw("grant-0001")),
+            selection: None,
+        };
+        let RuntimeSuspendableStep::Suspended { point } = asking
+            .run_until_boundary_or_suspension(Some(&response), None, Some(&suspension))
+            .unwrap()
+        else {
+            panic!("the approved step's boundary stops the run");
+        };
+        assert_eq!(suspension.consulted(), 1);
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+        assert_eq!(
+            runtime_event_cursor(asking.events().last().unwrap()),
+            point.event_cursor
+        );
+    }
+
+    /// Cancels the run once the fixture journal's last event is a committed
+    /// checkpoint: the next observation is at that same boundary.
+    struct CancelAtCommittedBoundary {
+        journal: Arc<Mutex<Vec<RuntimeEvent>>>,
+        signal: CancellationSignal,
+    }
+
+    impl ModelCancellationProbe for CancelAtCommittedBoundary {
+        fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
+            let journal = self.journal.lock().unwrap();
+            Ok(matches!(
+                journal.last().map(|event| &event.kind),
+                Some(RuntimeEventKind::CheckpointCommitted { .. })
+            )
+            .then(|| self.signal.clone()))
+        }
+    }
+
+    #[test]
+    fn a_cancellation_at_the_same_boundary_wins_over_a_suspension() {
+        let (mut run, executions) = durable(
+            [ModelScript::Tool, ModelScript::Completion],
+            PermissionScript::Allow,
+        );
+        let cancellation = CancelAtCommittedBoundary {
+            journal: Arc::clone(&run.tool_boundary.journal),
+            signal: CancellationSignal {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                cancellation_id: CancellationId::from_raw("cancellation-at-boundary"),
+                correlation_id: CorrelationId::from_raw(derived_id(
+                    "correlation",
+                    run.request.run_id.as_str(),
+                    0,
+                )),
+                task_id: run.request.task.task_id.clone(),
+                reason: CancellationReason::UserRequested,
+                requested_by: BoundaryKind::Shell,
+            },
+        };
+        let suspension = RecordingSuspension::new(true);
+        let RuntimeSuspendableStep::Boundary(RuntimeCoordinatorStep::Complete { outcome }) = run
+            .run_until_boundary_or_suspension(None, Some(&cancellation), Some(&suspension))
+            .unwrap()
+        else {
+            panic!("the cancellation ends the run");
+        };
+        assert_eq!(outcome.state, AgentStateKind::Cancelled);
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+        assert_eq!(suspension.consulted(), 0);
+        assert_valid_terminal_stream(&run);
+    }
+}

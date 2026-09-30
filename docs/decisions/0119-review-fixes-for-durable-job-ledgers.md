@@ -65,10 +65,11 @@ returns at once, so a real refusal still fails the test. This is a test-only cha
 
 Engine tests use real encrypted stores. They cover the `REPLACE` refusals on all
 three ledger tables, the configuration check for recursive triggers, and both F3
-rules. Four single mutations each made exactly the expected new or extended test
+rules. Four single mutations each made exactly the expected new or extended tests
 fail:
 
-- turning recursive triggers off together with their check;
+- turning recursive triggers off together with their check (two tests: the
+  configuration test and the append-only test, as Decision 0121 records);
 - dropping only the check;
 - removing the head check (the review's S7);
 - removing the root digest check (the review's S9).

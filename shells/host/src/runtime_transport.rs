@@ -7,11 +7,14 @@ use sha2::{Digest, Sha256};
 
 use agentmage_kernel_contracts::{
     CancellationId, RuntimeApprovalChallenge, RuntimeApprovalResponse, RuntimeArtifactRef,
-    RuntimeEvent, RuntimeEventCursor, RuntimeOutcome, RuntimeRunId, RuntimeRunRequest, SessionId,
+    RuntimeEvent, RuntimeEventCursor, RuntimeEventKind, RuntimeOutcome, RuntimeRunId,
+    RuntimeRunRequest, SessionId,
 };
 use agentmage_kernel_engine::context_inspection::ContextInspection;
 use agentmage_kernel_engine::job_control::{JobControlDecision, JobControlRequest, JobObservation};
 use agentmage_kernel_engine::runtime_artifact::{RuntimeArtifactPage, RuntimeArtifactState};
+use agentmage_kernel_engine::runtime_coordinator::seal_runtime_run_request;
+use agentmage_kernel_engine::runtime_loop::RuntimeSuspensionPoint;
 
 use crate::coding_recoverability::RecoverabilityReport;
 
@@ -222,6 +225,44 @@ pub struct RuntimeTransportStep {
     pub approval: Option<RuntimeApprovalChallenge>,
     /// Canonical outcome only after terminal completion.
     pub outcome: Option<RuntimeOutcome>,
+    /// Where the run stopped, only while it is suspended at a committed safe
+    /// boundary (Decision 0122).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub suspended: Option<RuntimeSuspensionPoint>,
+}
+
+/// The request that continues `request`'s run from the checkpoint whose
+/// commit event is at `cursor` (Decision 0122): the same run and base request,
+/// bound to that cursor. Host and client derive it independently.
+pub fn resumed_run_request(
+    request: &RuntimeRunRequest,
+    cursor: &RuntimeEventCursor,
+) -> Result<RuntimeRunRequest, RuntimeTransportError> {
+    if cursor.run_id != request.run_id {
+        return Err(RuntimeTransportError::RequestDenied);
+    }
+    let mut resumed = request.clone();
+    resumed.event_cursor = Some(cursor.clone());
+    seal_runtime_run_request(resumed).map_err(|_| RuntimeTransportError::RequestDenied)
+}
+
+/// Whether `event` is the commit event of the checkpoint the run stopped at.
+pub fn is_suspension_event(event: Option<&RuntimeEvent>, point: &RuntimeSuspensionPoint) -> bool {
+    let Some(event) = event else {
+        return false;
+    };
+    event.run_id == point.event_cursor.run_id
+        && event.event_id == point.event_cursor.event_id
+        && event.sequence == point.event_cursor.sequence
+        && event.event_sha256 == point.event_cursor.event_sha256
+        && matches!(
+            &event.kind,
+            RuntimeEventKind::CheckpointCommitted {
+                checkpoint_id,
+                checkpoint_sha256,
+            } if *checkpoint_id == point.checkpoint_id
+                && *checkpoint_sha256 == point.checkpoint_sha256
+        )
 }
 
 /// Host declarations about one ended run, read before the run is released

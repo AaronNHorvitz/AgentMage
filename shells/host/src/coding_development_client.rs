@@ -14,7 +14,7 @@ use agentmage_kernel_contracts::{
 };
 use agentmage_kernel_engine::context_inspection::render_context_inspection;
 use agentmage_kernel_engine::job_control::{
-    JobControlDecision, JobControlRefusal, render_job_observation,
+    JobControlAction, JobControlDecision, JobControlRefusal, render_job_observation,
 };
 use agentmage_kernel_engine::run_progress::{
     MAX_PROGRESS_EVENTS, ProgressCeilings, project_run_progress, render_run_progress,
@@ -31,12 +31,15 @@ use crate::cli::{
     render_runtime_outcome_json,
 };
 use crate::cli_runtime::{
-    InteractiveCliCancellationPort, InteractiveCliRuntimeError, drive_interactive_cli_runtime,
+    InteractiveCliCancellationPort, InteractiveCliJobControl, InteractiveCliRuntimeError,
+    JobStateUnavailable, KeptJobControl, drive_interactive_cli_runtime,
 };
 use crate::coding_change_review::{
     ChangeReview, ChangeReviewUnavailable, ReviewTarget, render_change_review, review_coding_write,
 };
-use crate::coding_client::{CodingApprovalPort, CodingClientError, CodingEventSink};
+use crate::coding_client::{
+    CodingApprovalPort, CodingClientError, CodingEventSink, JobControlNotice,
+};
 use crate::coding_development_activation::CodingDevelopmentActivation;
 use crate::coding_development_runtime::CodingDevelopmentModel;
 use crate::coding_recoverability::render_recoverability;
@@ -46,6 +49,7 @@ use crate::runtime_transport::{
     RuntimeJobControl, RuntimeJobStatus, RuntimePreauthorizedCommand, RuntimePrepareInput,
     RuntimeRunDeclarations, RuntimeSessionPreauthorization, RuntimeTransportPort,
 };
+use agentmage_kernel_engine::runtime_loop::RuntimeSuspensionPoint;
 
 /// Stable content-free failure from the development-only CLI launcher.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -111,7 +115,8 @@ pub fn run_coding_development(
         &options.workspace_root,
     )
     .map_err(|_| CodingDevelopmentClientError::Activation)?;
-    let mut cancellation = InstalledSignalCancellation::install()?;
+    let mut cancellation = InstalledSignalCancellation::install()?
+        .with_suspend_resume_probe(options.suspend_resume_probe);
     cancellation.check_startup()?;
     let mut child = LinuxDevelopmentHostProcess::launch(
         activation.state_root(),
@@ -257,7 +262,11 @@ fn run_with_child(
         );
         eprint!(
             "{}",
-            render_job_state(result.job.as_ref(), &result.job_controls, output)
+            render_job_state(
+                result.job.as_ref().map_err(|unavailable| *unavailable),
+                &result.job_controls,
+                output
+            )
         );
         final_exit = match result.outcome.state {
             AgentStateKind::Success | AgentStateKind::NoOp => ClientExitCode::Success,
@@ -444,32 +453,81 @@ fn direct_session_preauthorization(
     Ok(Some(contract))
 }
 
+/// The development CLI's local controls: SIGINT or SIGTERM cancels the run,
+/// SIGUSR1 asks to suspend it at its next safe boundary and SIGUSR2 asks to
+/// resume it (Decision 0122). Each is a request the host decides.
 struct InstalledSignalCancellation {
     requested: Arc<AtomicBool>,
+    suspend: Arc<AtomicBool>,
+    resume: Arc<AtomicBool>,
     sequence: u64,
-    registrations: [signal_hook::SigId; 2],
+    probe: SuspendResumeProbe,
+    registrations: Vec<signal_hook::SigId>,
+}
+
+/// Development probe: one suspension at the first control point, then one
+/// resumption once the run is suspended.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SuspendResumeProbe {
+    Off,
+    Suspend,
+    AwaitSuspended,
+    Done,
+}
+
+impl SuspendResumeProbe {
+    fn next(&mut self, suspended: bool) -> Option<InteractiveCliJobControl> {
+        match *self {
+            Self::Suspend => {
+                *self = Self::AwaitSuspended;
+                Some(InteractiveCliJobControl::Suspend)
+            }
+            Self::AwaitSuspended if suspended => {
+                *self = Self::Done;
+                Some(InteractiveCliJobControl::Resume)
+            }
+            _ => None,
+        }
+    }
 }
 
 impl InstalledSignalCancellation {
     fn install() -> Result<Self, CodingDevelopmentClientError> {
         let requested = Arc::new(AtomicBool::new(false));
-        let interrupt =
-            signal_hook::flag::register(signal_hook::consts::SIGINT, Arc::clone(&requested))
-                .map_err(|_| CodingDevelopmentClientError::Transport)?;
-        let terminate =
-            match signal_hook::flag::register(signal_hook::consts::SIGTERM, Arc::clone(&requested))
-            {
-                Ok(registration) => registration,
+        let suspend = Arc::new(AtomicBool::new(false));
+        let resume = Arc::new(AtomicBool::new(false));
+        let mut registrations = Vec::with_capacity(4);
+        for (signal, flag) in [
+            (signal_hook::consts::SIGINT, &requested),
+            (signal_hook::consts::SIGTERM, &requested),
+            (signal_hook::consts::SIGUSR1, &suspend),
+            (signal_hook::consts::SIGUSR2, &resume),
+        ] {
+            match signal_hook::flag::register(signal, Arc::clone(flag)) {
+                Ok(registration) => registrations.push(registration),
                 Err(_) => {
-                    signal_hook::low_level::unregister(interrupt);
+                    for registration in registrations {
+                        signal_hook::low_level::unregister(registration);
+                    }
                     return Err(CodingDevelopmentClientError::Transport);
                 }
-            };
+            }
+        }
         Ok(Self {
             requested,
+            suspend,
+            resume,
             sequence: 0,
-            registrations: [interrupt, terminate],
+            probe: SuspendResumeProbe::Off,
+            registrations,
         })
+    }
+
+    fn with_suspend_resume_probe(mut self, enabled: bool) -> Self {
+        if enabled {
+            self.probe = SuspendResumeProbe::Suspend;
+        }
+        self
     }
 
     fn check_startup(&self) -> Result<(), CodingDevelopmentClientError> {
@@ -485,7 +543,7 @@ impl InstalledSignalCancellation {
 
 impl Drop for InstalledSignalCancellation {
     fn drop(&mut self) {
-        for registration in self.registrations {
+        for registration in self.registrations.drain(..) {
             signal_hook::low_level::unregister(registration);
         }
     }
@@ -511,6 +569,23 @@ impl InteractiveCliCancellationPort for InstalledSignalCancellation {
                 self.sequence
             ),
         )))
+    }
+
+    fn poll_job_control(
+        &mut self,
+        _request: &agentmage_kernel_contracts::RuntimeRunRequest,
+        suspended: bool,
+    ) -> Result<Option<InteractiveCliJobControl>, InteractiveCliRuntimeError> {
+        if let Some(control) = self.probe.next(suspended) {
+            return Ok(Some(control));
+        }
+        if self.suspend.swap(false, Ordering::AcqRel) {
+            return Ok(Some(InteractiveCliJobControl::Suspend));
+        }
+        if self.resume.swap(false, Ordering::AcqRel) {
+            return Ok(Some(InteractiveCliJobControl::Resume));
+        }
+        Ok(None)
     }
 }
 
@@ -610,26 +685,73 @@ fn render_run_declarations(
     rendered
 }
 
-/// Renders the host's answers to this client's job control requests and the
-/// run's reconciled job state, read before release (Decision 0120). A run
-/// whose host kept no job ledger for it is shown as unavailable.
+/// The words for a control request.
+const fn control_words(action: JobControlAction) -> &'static str {
+    match action {
+        JobControlAction::Suspend => "suspension",
+        JobControlAction::Resume => "resumption",
+        JobControlAction::Cancel => "cancellation",
+    }
+}
+
+/// One control answer for a person: the request, the decision and the job
+/// state after it.
+fn render_job_control_answer(action: JobControlAction, answer: &RuntimeJobControl) -> String {
+    let decision = match answer.decision {
+        JobControlDecision::Applied { .. } => "applied",
+        JobControlDecision::Refused { refusal, .. } => match refusal {
+            JobControlRefusal::StaleRevision => {
+                "refused: the job changed since this client observed it"
+            }
+            JobControlRefusal::AlreadyInEffect => "refused: already in effect",
+            JobControlRefusal::Terminal => "refused: the job has ended",
+            JobControlRefusal::NotAllowed => "refused: not allowed in this phase",
+        },
+    };
+    format!(
+        "{} request {decision}; {}",
+        control_words(action),
+        render_job_observation(&answer.status.job)
+    )
+}
+
+/// The job state of one ended run and each of this client's control answers,
+/// shown on standard error (Decisions 0120 and 0122). An unavailable state
+/// names only what the driver observed (review F1 of `8a3a341e`).
 fn render_job_state(
-    job: Option<&RuntimeJobStatus>,
-    controls: &[RuntimeJobControl],
+    job: Result<&RuntimeJobStatus, JobStateUnavailable>,
+    controls: &[KeptJobControl],
     output: CliOutputFormat,
 ) -> String {
+    let (reason_code, reason_text) = match job {
+        Ok(_) => (None, ""),
+        Err(JobStateUnavailable::NotOffered) => (
+            Some("not_offered"),
+            "the host offers no job state for this run",
+        ),
+        Err(JobStateUnavailable::NotAnswered) => (
+            Some("not_answered"),
+            "the host did not answer the status request",
+        ),
+        Err(JobStateUnavailable::NotDescribed) => (
+            Some("not_described"),
+            "the host's answer did not describe this run",
+        ),
+    };
     if output == CliOutputFormat::Json {
         return format!(
             "{}\n",
             serde_json::json!({
                 "type": "job_state",
-                "available": job.is_some(),
-                "job": job.map(|status| &status.job),
+                "available": job.is_ok(),
+                "reason": reason_code,
+                "job": job.ok().map(|status| &status.job),
                 "controls": controls
                     .iter()
                     .map(|control| serde_json::json!({
-                        "decision": control.decision,
-                        "job": control.status.job,
+                        "action": control.action,
+                        "decision": control.answer.decision,
+                        "job": control.answer.status.job,
                     }))
                     .collect::<Vec<_>>(),
             })
@@ -637,31 +759,80 @@ fn render_job_state(
     }
     let mut rendered = String::new();
     for control in controls {
-        let decision = match control.decision {
-            JobControlDecision::Applied { .. } => "applied",
-            JobControlDecision::Refused { refusal, .. } => match refusal {
-                JobControlRefusal::StaleRevision => {
-                    "refused: the job changed since this client observed it"
-                }
-                JobControlRefusal::AlreadyInEffect => "refused: already in effect",
-                JobControlRefusal::Terminal => "refused: the job has ended",
-                JobControlRefusal::NotAllowed => "refused: not allowed in this phase",
-            },
-        };
         rendered.push_str(&format!(
-            "job control: cancellation request {decision}; {}\n",
-            render_job_observation(&control.status.job)
+            "job control: {}\n",
+            render_job_control_answer(control.action, &control.answer)
         ));
     }
     match job {
-        Some(status) => rendered.push_str(&format!(
+        Ok(status) => rendered.push_str(&format!(
             "job state: {}\n",
             render_job_observation(&status.job)
         )),
-        None => rendered
-            .push_str("job state: unavailable; the host kept no durable job ledger for this run\n"),
+        Err(_) => rendered.push_str(&format!("job state: unavailable; {reason_text}\n")),
     }
     rendered
+}
+
+/// One job control event as it happens, for standard error (Decision 0122).
+fn render_job_control_notice(notice: JobControlNotice<'_>, output: CliOutputFormat) -> String {
+    let boundary = |point: &RuntimeSuspensionPoint| {
+        serde_json::json!({
+            "checkpoint_id": point.checkpoint_id.as_str(),
+            "checkpoint_sha256": point.checkpoint_sha256,
+            "event_sequence": point.event_cursor.sequence,
+        })
+    };
+    let (json, human) = match notice {
+        JobControlNotice::Answered { action, answer } => (
+            serde_json::json!({
+                "type": "job_control_answer",
+                "action": action,
+                "decision": answer.decision,
+                "job": answer.status.job,
+            }),
+            format!(
+                "job control answer: {}",
+                render_job_control_answer(action, answer)
+            ),
+        ),
+        JobControlNotice::NotTaken { action } => (
+            serde_json::json!({"type": "job_control_not_taken", "action": action}),
+            format!(
+                "job control: the host did not take the {} request; the run continues unchanged",
+                control_words(action)
+            ),
+        ),
+        JobControlNotice::Suspended(point) => {
+            let mut json = boundary(point);
+            json["type"] = serde_json::Value::from("run_suspended");
+            (
+                json,
+                format!(
+                    "run suspended at a safe boundary: checkpoint {:?} after event {}; \
+                     send SIGUSR2 to resume it or SIGINT to cancel it",
+                    point.checkpoint_id.as_str(),
+                    point.event_cursor.sequence
+                ),
+            )
+        }
+        JobControlNotice::Continued(point) => {
+            let mut json = boundary(point);
+            json["type"] = serde_json::Value::from("run_continued");
+            (
+                json,
+                format!(
+                    "run continues from checkpoint {:?} after event {} through a new composition",
+                    point.checkpoint_id.as_str(),
+                    point.event_cursor.sequence
+                ),
+            )
+        }
+    };
+    match output {
+        CliOutputFormat::Human => format!("{human}\n"),
+        CliOutputFormat::Json => format!("{json}\n"),
+    }
 }
 
 impl CodingEventSink for TerminalEventSink {
@@ -677,6 +848,15 @@ impl CodingEventSink for TerminalEventSink {
         } else {
             self.overflowed = true;
         }
+        Ok(())
+    }
+
+    fn present_job_control(
+        &mut self,
+        notice: JobControlNotice<'_>,
+    ) -> Result<(), CodingClientError> {
+        // Standard error keeps the machine stream's outcome last on stdout.
+        eprint!("{}", render_job_control_notice(notice, self.output));
         Ok(())
     }
 }
@@ -1198,8 +1378,10 @@ mod tests {
 
     #[test]
     fn the_job_state_and_each_control_answer_are_shown_in_both_formats() {
-        // Decision 0120: the reconciled job state is read before release and
-        // shown after each run; a run without a job ledger says so.
+        // Decisions 0120 and 0122: the reconciled job state is read before
+        // release and shown after each run with every control answer and its
+        // action; an unavailable state names only what the driver observed
+        // (review F1 of 8a3a341e).
         use agentmage_kernel_engine::job_control::{JobObservation, JobPhase};
         let status = |phase, revision, cancellation_requested| RuntimeJobStatus {
             schema_version: 1,
@@ -1214,57 +1396,226 @@ mod tests {
             },
         };
         let controls = [
-            RuntimeJobControl {
-                decision: JobControlDecision::Refused {
-                    refusal: JobControlRefusal::StaleRevision,
-                    revision: 2,
-                    phase: JobPhase::Running,
+            KeptJobControl {
+                action: JobControlAction::Suspend,
+                answer: RuntimeJobControl {
+                    decision: JobControlDecision::Applied {
+                        revision: 2,
+                        phase: JobPhase::Suspending,
+                    },
+                    status: status(JobPhase::Suspending, 2, false),
                 },
-                status: status(JobPhase::Running, 2, false),
             },
-            RuntimeJobControl {
-                decision: JobControlDecision::Applied {
-                    revision: 3,
-                    phase: JobPhase::Cancelling,
+            KeptJobControl {
+                action: JobControlAction::Resume,
+                answer: RuntimeJobControl {
+                    decision: JobControlDecision::Applied {
+                        revision: 4,
+                        phase: JobPhase::Queued,
+                    },
+                    status: status(JobPhase::Running, 5, false),
                 },
-                status: status(JobPhase::Cancelling, 3, true),
+            },
+            KeptJobControl {
+                action: JobControlAction::Cancel,
+                answer: RuntimeJobControl {
+                    decision: JobControlDecision::Refused {
+                        refusal: JobControlRefusal::StaleRevision,
+                        revision: 6,
+                        phase: JobPhase::Running,
+                    },
+                    status: status(JobPhase::Running, 6, false),
+                },
+            },
+            KeptJobControl {
+                action: JobControlAction::Cancel,
+                answer: RuntimeJobControl {
+                    decision: JobControlDecision::Applied {
+                        revision: 7,
+                        phase: JobPhase::Cancelling,
+                    },
+                    status: status(JobPhase::Cancelling, 7, true),
+                },
             },
         ];
-        let ended = status(JobPhase::Cancelled, 4, true);
-        let human = render_job_state(Some(&ended), &controls, CliOutputFormat::Human);
+        let ended = status(JobPhase::Cancelled, 8, true);
+        let human = render_job_state(Ok(&ended), &controls, CliOutputFormat::Human);
         let lines = human.lines().collect::<Vec<_>>();
-        assert_eq!(lines.len(), 3);
+        assert_eq!(lines.len(), 5);
         assert_eq!(
             lines[0],
-            "job control: cancellation request refused: the job changed since this client \
-             observed it; job \"run-cli\" revision 2: running"
+            "job control: suspension request applied; job \"run-cli\" revision 2: suspension \
+             requested; still running until a safe boundary"
         );
-        assert!(lines[1].starts_with("job control: cancellation request applied; "));
-        assert!(lines[1].contains("revision 3: cancellation requested"));
-        assert_eq!(lines[2], "job state: job \"run-cli\" revision 4: cancelled");
+        assert_eq!(
+            lines[1],
+            "job control: resumption request applied; job \"run-cli\" revision 5: running"
+        );
+        assert_eq!(
+            lines[2],
+            "job control: cancellation request refused: the job changed since this client \
+             observed it; job \"run-cli\" revision 6: running"
+        );
+        assert!(lines[3].starts_with("job control: cancellation request applied; "));
+        assert!(lines[3].contains("revision 7: cancellation requested"));
+        assert_eq!(lines[4], "job state: job \"run-cli\" revision 8: cancelled");
         let json: serde_json::Value = serde_json::from_str(
-            render_job_state(Some(&ended), &controls, CliOutputFormat::Json).trim_end(),
+            render_job_state(Ok(&ended), &controls, CliOutputFormat::Json).trim_end(),
         )
         .unwrap();
         assert_eq!(json["type"], "job_state");
         assert_eq!(json["available"], true);
+        assert!(json["reason"].is_null());
         assert_eq!(json["job"], serde_json::to_value(&ended.job).unwrap());
-        assert_eq!(json["controls"].as_array().unwrap().len(), 2);
-        assert_eq!(json["controls"][0]["decision"]["refusal"], "stale-revision");
-        assert_eq!(json["controls"][1]["decision"]["decision"], "applied");
-        assert_eq!(json["controls"][1]["job"]["phase"], "cancelling");
+        let kept = json["controls"].as_array().unwrap();
+        assert_eq!(kept.len(), 4);
+        assert_eq!(kept[0]["action"], "suspend");
+        assert_eq!(kept[1]["action"], "resume");
+        assert_eq!(kept[1]["decision"]["phase"], "queued");
+        assert_eq!(kept[1]["job"]["phase"], "running");
+        assert_eq!(kept[2]["action"], "cancel");
+        assert_eq!(kept[2]["decision"]["refusal"], "stale-revision");
+        assert_eq!(kept[3]["decision"]["decision"], "applied");
+        assert_eq!(kept[3]["job"]["phase"], "cancelling");
 
-        let human = render_job_state(None, &[], CliOutputFormat::Human);
+        // An unavailable state names what was observed, never a cause.
+        for (unavailable, code, text) in [
+            (
+                JobStateUnavailable::NotOffered,
+                "not_offered",
+                "the host offers no job state for this run",
+            ),
+            (
+                JobStateUnavailable::NotAnswered,
+                "not_answered",
+                "the host did not answer the status request",
+            ),
+            (
+                JobStateUnavailable::NotDescribed,
+                "not_described",
+                "the host's answer did not describe this run",
+            ),
+        ] {
+            let human = render_job_state(Err(unavailable), &[], CliOutputFormat::Human);
+            assert_eq!(human, format!("job state: unavailable; {text}\n"));
+            assert!(!human.contains("ledger"));
+            let json: serde_json::Value = serde_json::from_str(
+                render_job_state(Err(unavailable), &[], CliOutputFormat::Json).trim_end(),
+            )
+            .unwrap();
+            assert_eq!(json["available"], false);
+            assert_eq!(json["reason"], code);
+            assert!(json["job"].is_null());
+            assert!(json["controls"].as_array().unwrap().is_empty());
+        }
+    }
+
+    #[test]
+    fn each_job_control_event_is_shown_as_it_happens_in_both_formats() {
+        // Decision 0122: a suspension, its continuation, each answer and a
+        // request the host did not take are shown on standard error as they
+        // happen.
+        use agentmage_kernel_engine::job_control::{JobObservation, JobPhase};
+        let point = RuntimeSuspensionPoint {
+            checkpoint_id: agentmage_kernel_contracts::SessionCheckpointId::from_raw(
+                "checkpoint-cli",
+            ),
+            checkpoint_sha256: "e".repeat(64),
+            event_cursor: agentmage_kernel_contracts::RuntimeEventCursor {
+                run_id: agentmage_kernel_contracts::RuntimeRunId::from_raw("run-cli"),
+                event_id: agentmage_kernel_contracts::RuntimeEventId::from_raw("event-cli"),
+                sequence: 12,
+                event_sha256: "f".repeat(64),
+            },
+        };
+        let answer = RuntimeJobControl {
+            decision: JobControlDecision::Applied {
+                revision: 2,
+                phase: JobPhase::Suspending,
+            },
+            status: RuntimeJobStatus {
+                schema_version: 1,
+                run_id: agentmage_kernel_contracts::RuntimeRunId::from_raw("run-cli"),
+                request_sha256: "c".repeat(64),
+                job: JobObservation {
+                    job_id: "run-cli".to_owned(),
+                    phase: JobPhase::Suspending,
+                    revision: 2,
+                    cancellation_requested: false,
+                    head_sha256: "d".repeat(64),
+                },
+            },
+        };
+        let answered = JobControlNotice::Answered {
+            action: JobControlAction::Suspend,
+            answer: &answer,
+        };
         assert_eq!(
-            human,
-            "job state: unavailable; the host kept no durable job ledger for this run\n"
+            render_job_control_notice(answered, CliOutputFormat::Human),
+            "job control answer: suspension request applied; job \"run-cli\" revision 2: \
+             suspension requested; still running until a safe boundary\n"
         );
-        let json: serde_json::Value =
-            serde_json::from_str(render_job_state(None, &[], CliOutputFormat::Json).trim_end())
-                .unwrap();
-        assert_eq!(json["available"], false);
-        assert!(json["job"].is_null());
-        assert!(json["controls"].as_array().unwrap().is_empty());
+        let json: serde_json::Value = serde_json::from_str(
+            render_job_control_notice(answered, CliOutputFormat::Json).trim_end(),
+        )
+        .unwrap();
+        assert_eq!(json["type"], "job_control_answer");
+        assert_eq!(json["action"], "suspend");
+        assert_eq!(json["job"]["phase"], "suspending");
+
+        let suspended =
+            render_job_control_notice(JobControlNotice::Suspended(&point), CliOutputFormat::Human);
+        assert_eq!(
+            suspended,
+            "run suspended at a safe boundary: checkpoint \"checkpoint-cli\" after event 12; \
+             send SIGUSR2 to resume it or SIGINT to cancel it\n"
+        );
+        for (notice, kind) in [
+            (JobControlNotice::Suspended(&point), "run_suspended"),
+            (JobControlNotice::Continued(&point), "run_continued"),
+        ] {
+            let json: serde_json::Value = serde_json::from_str(
+                render_job_control_notice(notice, CliOutputFormat::Json).trim_end(),
+            )
+            .unwrap();
+            assert_eq!(json["type"], kind);
+            assert_eq!(json["checkpoint_id"], "checkpoint-cli");
+            assert_eq!(json["checkpoint_sha256"], "e".repeat(64));
+            assert_eq!(json["event_sequence"], 12);
+        }
+        assert_eq!(
+            render_job_control_notice(JobControlNotice::Continued(&point), CliOutputFormat::Human),
+            "run continues from checkpoint \"checkpoint-cli\" after event 12 through a new \
+             composition\n"
+        );
+        let not_taken = JobControlNotice::NotTaken {
+            action: JobControlAction::Resume,
+        };
+        assert_eq!(
+            render_job_control_notice(not_taken, CliOutputFormat::Human),
+            "job control: the host did not take the resumption request; the run continues \
+             unchanged\n"
+        );
+        let json: serde_json::Value = serde_json::from_str(
+            render_job_control_notice(not_taken, CliOutputFormat::Json).trim_end(),
+        )
+        .unwrap();
+        assert_eq!(json["type"], "job_control_not_taken");
+        assert_eq!(json["action"], "resume");
+    }
+
+    #[test]
+    fn the_suspend_resume_probe_suspends_once_and_resumes_only_a_suspended_run() {
+        let mut probe = SuspendResumeProbe::Suspend;
+        assert_eq!(probe.next(false), Some(InteractiveCliJobControl::Suspend));
+        assert_eq!(probe.next(false), None);
+        assert_eq!(probe.next(false), None);
+        assert_eq!(probe.next(true), Some(InteractiveCliJobControl::Resume));
+        assert_eq!(probe.next(true), None);
+        assert_eq!(probe, SuspendResumeProbe::Done);
+        let mut off = SuspendResumeProbe::Off;
+        assert_eq!(off.next(false), None);
+        assert_eq!(off.next(true), None);
     }
 
     fn limits() -> RuntimeRunLimits {

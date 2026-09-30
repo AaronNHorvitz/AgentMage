@@ -8,14 +8,18 @@ use agentmage_kernel_contracts::{
     RuntimeHunkSelection, RuntimeOutcome,
 };
 use agentmage_kernel_engine::{
+    job_control::JobControlAction,
     runtime_artifact::{RuntimeArtifactPage, RuntimeArtifactState},
     runtime_event::RuntimeEventSequence,
     runtime_event::RuntimeEventSubscription,
     runtime_loop::{
         ReusableRuntimeCoordinator, RuntimeArtifactAccessPort, RuntimeClock, RuntimeContextPort,
-        RuntimeCoordinatorStep, RuntimeModelPort, RuntimeToolBoundary, RuntimeVerifierPort,
+        RuntimeCoordinatorStep, RuntimeModelPort, RuntimeSuspendableStep, RuntimeSuspensionPoint,
+        RuntimeSuspensionProbe, RuntimeToolBoundary, RuntimeVerifierPort,
     },
 };
+
+use crate::runtime_transport::RuntimeJobControl;
 
 /// Stable content-free failure from a coding client presentation boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -91,6 +95,27 @@ pub trait LiveCodingCoordinatorPort: CodingCoordinatorPort + Send + 'static {
         &mut self,
         reference: &RuntimeArtifactRef,
     ) -> Result<RuntimeArtifactState, CodingClientError>;
+
+    /// Advances like [`CodingCoordinatorPort::advance`] and also stops at the
+    /// next committed safe boundary once `suspension` answers `true` there
+    /// (Decision 0122). A coordinator that commits no checkpoints never stops
+    /// for it.
+    fn advance_or_suspend(
+        &mut self,
+        response: Option<&RuntimeApprovalResponse>,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+        suspension: &dyn RuntimeSuspensionProbe,
+    ) -> Result<RuntimeSuspendableStep, CodingClientError> {
+        let _ = suspension;
+        self.advance(response, cancellation)
+            .map(RuntimeSuspendableStep::Boundary)
+    }
+
+    /// Whether this coordinator commits checkpoints at safe boundaries, so an
+    /// applied suspension can stop it.
+    fn suspendable(&self) -> bool {
+        false
+    }
 }
 
 impl<M, X, T, V, C> CodingCoordinatorPort for ReusableRuntimeCoordinator<M, X, T, V, C>
@@ -154,6 +179,22 @@ where
         self.release_artifact(reference)
             .map_err(|_| CodingClientError::Runtime)
     }
+
+    fn advance_or_suspend(
+        &mut self,
+        response: Option<&RuntimeApprovalResponse>,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+        suspension: &dyn RuntimeSuspensionProbe,
+    ) -> Result<RuntimeSuspendableStep, CodingClientError> {
+        self.run_until_boundary_or_suspension(response, cancellation, Some(suspension))
+            // RuntimeLoopError is a closed, Copy enum with no payload text.
+            .inspect_err(|error| eprintln!("coding.coordinator.failed:{error:?}"))
+            .map_err(|_| CodingClientError::Runtime)
+    }
+
+    fn suspendable(&self) -> bool {
+        self.commits_checkpoints()
+    }
 }
 
 /// Protected user-decision boundary supplied by an interactive client.
@@ -175,10 +216,42 @@ pub trait CodingApprovalPort {
     }
 }
 
+/// A job control event of the presented run, shown as it happens (Decisions
+/// 0120 and 0122). It describes the run and grants nothing.
+#[derive(Clone, Copy, Debug)]
+pub enum JobControlNotice<'a> {
+    /// The host answered one control request of this client.
+    Answered {
+        /// The requested control.
+        action: JobControlAction,
+        /// The verified answer.
+        answer: &'a RuntimeJobControl,
+    },
+    /// The host did not take a suspension or resumption request, and the run
+    /// continues unchanged.
+    NotTaken {
+        /// The requested control.
+        action: JobControlAction,
+    },
+    /// The run stopped at this committed safe boundary.
+    Suspended(&'a RuntimeSuspensionPoint),
+    /// The run continues from this boundary through a new composition.
+    Continued(&'a RuntimeSuspensionPoint),
+}
+
 /// Bounded presentation boundary for already verified canonical runtime events.
 pub trait CodingEventSink {
     /// Presents one event without changing runtime authority or execution state.
     fn present(&mut self, event: &RuntimeEvent) -> Result<(), CodingClientError>;
+
+    /// Presents one job control event of the run; the default shows nothing.
+    fn present_job_control(
+        &mut self,
+        notice: JobControlNotice<'_>,
+    ) -> Result<(), CodingClientError> {
+        let _ = notice;
+        Ok(())
+    }
 }
 
 /// Approval policy for noninteractive callers: every unexpected prompt is denied.

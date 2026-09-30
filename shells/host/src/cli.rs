@@ -84,6 +84,9 @@ pub struct CodingDevelopmentCliOptions {
     pub artifact_integrity_probe: bool,
     /// Whether to install one undrained bounded event subscriber for executable pressure testing.
     pub slow_subscriber_probe: bool,
+    /// Whether to request one suspension at the first control point and a
+    /// resumption once the run is suspended, for executable job control testing.
+    pub suspend_resume_probe: bool,
     /// Canonical workspace-relative paths proposed for direct session preauthorization.
     pub preauthorized_paths: Vec<String>,
     /// Exact `identity@version@sha256` command/template selectors proposed for the session.
@@ -241,6 +244,7 @@ fn parse_coding_development(
     let mut expired_cursor_probe = false;
     let mut artifact_integrity_probe = false;
     let mut slow_subscriber_probe = false;
+    let mut suspend_resume_probe = false;
     let mut preauthorized_paths = Vec::new();
     let mut preauthorized_commands = Vec::new();
     let mut preauthorize_workspace_reads = false;
@@ -314,6 +318,11 @@ fn parse_coding_development(
             }
             "--slow-subscriber-probe" if !slow_subscriber_probe => {
                 slow_subscriber_probe = true;
+                cursor += 1;
+                continue;
+            }
+            "--suspend-resume-probe" if !suspend_resume_probe => {
+                suspend_resume_probe = true;
                 cursor += 1;
                 continue;
             }
@@ -464,6 +473,7 @@ fn parse_coding_development(
         expired_cursor_probe,
         artifact_integrity_probe,
         slow_subscriber_probe,
+        suspend_resume_probe,
         preauthorized_paths,
         preauthorized_commands,
         preauthorize_workspace_reads,
@@ -1048,7 +1058,7 @@ Commands:\n\
   code\n\
   code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
        --scenario no-op|failed-test-repair|native-command-failure|slow-cancel|restart-repair|protocol-correction|arguments-correction|read-arguments-correction|read-arguments-denied|repeated-protocol-rejection|restart-protocol-correction|new-file|multi-file|rollback|false-completion|overflow|disk-pressure|output-pressure\n\
-       --objective TEXT [--follow-up TEXT]... [--resume|--record-session] [--artifact-release-probe-before-follow-ups] [--approve-this-run] [--stale-approval-probe|--replay-approval-probe|--expired-cursor-probe|--artifact-integrity-probe] [--slow-subscriber-probe]\n\
+       --objective TEXT [--follow-up TEXT]... [--resume|--record-session] [--artifact-release-probe-before-follow-ups] [--approve-this-run] [--stale-approval-probe|--replay-approval-probe|--expired-cursor-probe|--artifact-integrity-probe] [--slow-subscriber-probe] [--suspend-resume-probe]\n\
        [--preauthorize-workspace-reads] [--preauthorize-path RELATIVE_PATH]... [--preauthorize-command ID@VERSION@SHA256]...\n\
        [--preauthorization-budget N --preauthorization-minutes N] [--revoke-preauthorization-before-follow-ups]\n\
        [--approval-delay-ms 1..10000]\n\
@@ -1289,6 +1299,36 @@ mod tests {
                 ..
             })
         ));
+        // Decision 0122: the job control probe is a development option that
+        // may be named once.
+        let probe = [
+            "code",
+            "--development",
+            "--state-root",
+            "/tmp/state",
+            "--disposable-root",
+            "/tmp/disposable",
+            "--workspace-root",
+            "/tmp/disposable/worktree",
+            "--scenario",
+            "failed-test-repair",
+            "--objective",
+            "repair the failing test",
+            "--suspend-resume-probe",
+        ];
+        assert!(matches!(
+            parse_cli_arguments(&strings(&probe)),
+            Ok(CliInvocation::Code {
+                development: Some(CodingDevelopmentCliOptions {
+                    suspend_resume_probe: true,
+                    ..
+                }),
+                ..
+            })
+        ));
+        let mut twice = probe.to_vec();
+        twice.push("--suspend-resume-probe");
+        assert!(parse_cli_arguments(&strings(&twice)).is_err());
         assert!(matches!(
             parse_cli_arguments(&strings(&[
                 "code",

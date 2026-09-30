@@ -8,6 +8,11 @@
 //! run's job (Decision 0120): it records the job's start and terminal outcome, decides each client
 //! control request through the ledger under the client scope the IPC endpoint derived from its
 //! authenticated peer, and stops work only for a cancellation the ledger applied.
+//!
+//! A suspension the ledger applied stops the run at its next committed safe boundary; the service
+//! then records the owner's observation and releases the run's composition. A resumption or
+//! cancellation of the suspended job continues the run inside this host through a new composition
+//! bound to the boundary's cursor (Decision 0122).
 
 use std::collections::BTreeMap;
 use std::sync::{
@@ -41,7 +46,10 @@ use agentmage_kernel_engine::{
         MAX_RUNTIME_CLIENT_QUEUE_BYTES, MAX_RUNTIME_CLIENT_QUEUE_EVENTS,
         MAX_RUNTIME_EVENT_ENVELOPE_BYTES,
     },
-    runtime_loop::RuntimeCoordinatorStep,
+    runtime_loop::{
+        RuntimeCoordinatorStep, RuntimeSuspendableStep, RuntimeSuspensionPoint,
+        RuntimeSuspensionProbe,
+    },
 };
 
 use crate::coding_client::{CodingClientError, LiveCodingCoordinatorPort};
@@ -51,6 +59,7 @@ use crate::native_chat_runtime::NativeChatRuntimeFactory;
 use crate::runtime_transport::{
     RuntimeClientScope, RuntimeJobControl, RuntimeJobStatus, RuntimePrepareInput,
     RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
+    is_suspension_event, resumed_run_request,
 };
 
 /// Owner identity of the coding host in every job ledger it keeps. The store
@@ -136,7 +145,7 @@ enum WorkerCommand {
 }
 
 struct WorkerBoundary {
-    step: RuntimeCoordinatorStep,
+    step: RuntimeSuspendableStep,
     artifacts: Vec<RuntimeArtifactRef>,
 }
 
@@ -256,12 +265,18 @@ impl EventPump {
     }
 }
 
-impl Drop for EventPump {
-    fn drop(&mut self) {
+impl EventPump {
+    fn shutdown(&mut self) {
         self.stop.store(true, Ordering::Release);
         if let Some(worker) = self.worker.take() {
             let _ = worker.join();
         }
+    }
+}
+
+impl Drop for EventPump {
+    fn drop(&mut self) {
+        self.shutdown();
     }
 }
 
@@ -309,6 +324,112 @@ impl ModelCancellationProbe for SharedCancellation {
     }
 }
 
+/// Where a run's suspension stands between the service and its worker
+/// (Decision 0122).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SuspensionState {
+    /// No suspension is requested.
+    Idle,
+    /// The ledger applied a suspension; the worker may stop at its next
+    /// committed safe boundary.
+    Requested,
+    /// The service is deciding a request that could withdraw or cancel the
+    /// suspension, so the worker may not stop for it meanwhile.
+    Withheld,
+    /// The worker stopped for it at a boundary the service has not yet seen.
+    Claimed,
+}
+
+/// The suspension a worker observes. It stops only for a requested
+/// suspension, and never for one the service withheld while deciding a
+/// request that could withdraw or cancel it, so a run never stops for a
+/// suspension the ledger no longer asks for.
+struct SharedSuspension {
+    state: Mutex<SuspensionState>,
+}
+
+impl SharedSuspension {
+    const fn new() -> Self {
+        Self {
+            state: Mutex::new(SuspensionState::Idle),
+        }
+    }
+
+    /// Withholds a requested suspension; answers the state found.
+    fn withhold(&self) -> Result<SuspensionState, RuntimeTransportError> {
+        let mut state = self
+            .state
+            .lock()
+            .map_err(|_| RuntimeTransportError::RuntimeFailed)?;
+        let found = *state;
+        if found == SuspensionState::Requested {
+            *state = SuspensionState::Withheld;
+        }
+        Ok(found)
+    }
+
+    /// Follows the job's phase after a decision: a suspending job's worker may
+    /// stop at its next boundary, and any other phase withdraws that. A
+    /// claimed suspension stays claimed; its boundary is handled on arrival.
+    fn follow(&self, phase: JobPhase) -> Result<(), RuntimeTransportError> {
+        let mut state = self
+            .state
+            .lock()
+            .map_err(|_| RuntimeTransportError::RuntimeFailed)?;
+        *state = match (*state, phase) {
+            (SuspensionState::Claimed, _) => SuspensionState::Claimed,
+            (_, JobPhase::Suspending) => SuspensionState::Requested,
+            _ => SuspensionState::Idle,
+        };
+        Ok(())
+    }
+
+    /// Returns a withheld suspension to the worker when the job's phase could
+    /// not be read after a decision.
+    fn restore(&self) -> Result<(), RuntimeTransportError> {
+        let mut state = self
+            .state
+            .lock()
+            .map_err(|_| RuntimeTransportError::RuntimeFailed)?;
+        if *state == SuspensionState::Withheld {
+            *state = SuspensionState::Requested;
+        }
+        Ok(())
+    }
+
+    /// Whether the worker stopped for the requested suspension.
+    fn claimed(&self) -> Result<bool, RuntimeTransportError> {
+        self.state
+            .lock()
+            .map(|state| *state == SuspensionState::Claimed)
+            .map_err(|_| RuntimeTransportError::RuntimeFailed)
+    }
+
+    /// Clears the state once the run is suspended and its worker has ended.
+    fn clear(&self) -> Result<(), RuntimeTransportError> {
+        *self
+            .state
+            .lock()
+            .map_err(|_| RuntimeTransportError::RuntimeFailed)? = SuspensionState::Idle;
+        Ok(())
+    }
+}
+
+impl RuntimeSuspensionProbe for SharedSuspension {
+    fn suspend_at_safe_boundary(&self) -> bool {
+        // A poisoned state never invents a suspension; the run continues.
+        let Ok(mut state) = self.state.lock() else {
+            return false;
+        };
+        if *state == SuspensionState::Requested {
+            *state = SuspensionState::Claimed;
+            true
+        } else {
+            false
+        }
+    }
+}
+
 /// Bounded development-host registry whose control owner never executes model or tool work.
 pub struct LiveCodingRuntimeService<F>
 where
@@ -338,6 +459,11 @@ where
             prepared: BTreeMap::new(),
             active: BTreeMap::new(),
         }
+    }
+
+    #[cfg(test)]
+    pub(crate) const fn factory_for_tests(&self) -> &F {
+        &self.factory
     }
 }
 
@@ -509,10 +635,26 @@ where
         request_sha256: &str,
         request: &JobControlRequest,
     ) -> Result<RuntimeJobControl, RuntimeTransportError> {
-        self.active
+        let session = self
+            .active
             .get_mut(run_id.as_str())
-            .ok_or(RuntimeTransportError::RunUnavailable)?
-            .control_job(client, request_sha256, request)
+            .ok_or(RuntimeTransportError::RunUnavailable)?;
+        match session.control_job(client, request_sha256, request)? {
+            SessionControl::Answered(answer) => Ok(answer),
+            SessionControl::Continue {
+                decision,
+                cancellation,
+            } => {
+                self.continue_from_checkpoint(run_id.as_str(), cancellation)
+                    .inspect_err(|_| eprintln!("coding.live.resume-denied"))?;
+                let status = self
+                    .active
+                    .get(run_id.as_str())
+                    .ok_or(RuntimeTransportError::RunUnavailable)?
+                    .replayed_job_status()?;
+                Ok(RuntimeJobControl { decision, status })
+            }
+        }
     }
 
     fn revoke_session_preauthorization(
@@ -549,6 +691,71 @@ where
     }
 }
 
+impl<F> LiveCodingRuntimeService<F>
+where
+    F: NativeChatRuntimeFactory,
+    F::Coordinator: LiveCodingCoordinatorPort + LiveRunDeclarationPort,
+{
+    /// Continues a suspended run from its committed checkpoint inside this host
+    /// after its job was resumed or cancelled (Decision 0122). The held run's
+    /// store handle closes first, because the store admits one connection; the
+    /// factory then prepares the same run bound to the boundary's cursor and
+    /// composes it afresh. The restored history must be exactly what this host
+    /// already presented. A cancelled job's run ends at once with its own
+    /// canonical outcome. If any step fails the run is no longer held, and the
+    /// job keeps the phase the ledger decided.
+    fn continue_from_checkpoint(
+        &mut self,
+        key: &str,
+        cancellation: Option<u64>,
+    ) -> Result<(), RuntimeTransportError> {
+        let mut held = self
+            .active
+            .remove(key)
+            .ok_or(RuntimeTransportError::RunUnavailable)?;
+        let point = held
+            .suspended
+            .clone()
+            .ok_or(RuntimeTransportError::RequestDenied)?;
+        let request = held.request.clone();
+        let presented = std::mem::take(&mut held.events);
+        drop(held);
+        let expected = resumed_run_request(&request, &point.event_cursor)?;
+        let resumed = self
+            .factory
+            .prepare_in_host_resume(&request, &point.event_cursor)?;
+        if resumed != expected {
+            return Err(RuntimeTransportError::RequestDenied);
+        }
+        let coordinator = self.factory.compose_runtime(&resumed)?;
+        let ledgers = self
+            .factory
+            .take_job_ledgers(&resumed.run_id)
+            .ok_or(RuntimeTransportError::JobControlUnavailable)?;
+        let mut session = LiveCodingSession::spawn(resumed, coordinator, false)?;
+        session.sync_events()?;
+        if session.events != presented {
+            return Err(RuntimeTransportError::RuntimeEvidenceDenied);
+        }
+        session.latest_presented_cursor = Some(point.event_cursor);
+        session.continue_job(ledgers, cancellation)?;
+        self.active.insert(key.to_owned(), session);
+        Ok(())
+    }
+}
+
+/// What the service does after a session decided a control request.
+enum SessionControl {
+    /// The answer is complete.
+    Answered(RuntimeJobControl),
+    /// The suspended run's job was resumed, or cancelled at the given
+    /// revision: the run continues from its checkpoint before the answer.
+    Continue {
+        decision: JobControlDecision,
+        cancellation: Option<u64>,
+    },
+}
+
 struct LiveCodingSession {
     request: RuntimeRunRequest,
     commands: SyncSender<WorkerCommand>,
@@ -566,6 +773,14 @@ struct LiveCodingSession {
     busy: bool,
     event_stream_terminal: bool,
     job: Option<LiveJob>,
+    suspension: Arc<SharedSuspension>,
+    /// Whether the coordinator commits checkpoints, so it can suspend.
+    suspendable: bool,
+    /// The worker stopped for a suspension at this boundary, whose commit
+    /// event has not yet been seen.
+    pending_suspension: Option<RuntimeSuspensionPoint>,
+    /// The run is suspended here and its composition is released.
+    suspended: Option<RuntimeSuspensionPoint>,
 }
 
 /// The durable job of one live run, owned by this service (Decision 0120).
@@ -576,6 +791,16 @@ struct LiveJob {
     /// An owner observation could not be recorded, so the ledger no longer
     /// follows the run and is neither shown nor controlled.
     failed: bool,
+}
+
+impl LiveJob {
+    const fn new(ledgers: DurableJobLedgers) -> Self {
+        Self {
+            ledgers,
+            ended: false,
+            failed: false,
+        }
+    }
 }
 
 impl LiveCodingSession {
@@ -597,6 +822,7 @@ impl LiveCodingSession {
         .filter(|capacity| *capacity > 0)
         .ok_or(RuntimeTransportError::RequestDenied)?;
         let initial_events = runtime.runtime_events().to_vec();
+        let suspendable = runtime.suspendable();
         let slow_subscriber_probe = slow_subscriber_probe
             .then(|| runtime.subscribe_live_events(1).map_err(map_client_error))
             .transpose()?;
@@ -606,6 +832,8 @@ impl LiveCodingSession {
         let event_pump = EventPump::spawn(subscription, &request, initial_events)?;
         let cancellation = Arc::new(SharedCancellation::new());
         let worker_cancellation = Arc::clone(&cancellation);
+        let suspension = Arc::new(SharedSuspension::new());
+        let worker_suspension = Arc::clone(&suspension);
         let worker_request = request.clone();
         let (command_tx, command_rx) = sync_channel::<WorkerCommand>(1);
         let (result_tx, result_rx) = sync_channel(1);
@@ -615,7 +843,11 @@ impl LiveCodingSession {
                 while let Ok(command) = command_rx.recv() {
                     let result = match command {
                         WorkerCommand::Advance(response) => runtime
-                            .advance(response.as_ref(), Some(worker_cancellation.as_ref()))
+                            .advance_or_suspend(
+                                response.as_ref(),
+                                Some(worker_cancellation.as_ref()),
+                                worker_suspension.as_ref(),
+                            )
                             .map(|step| {
                                 WorkerResponse::Boundary(WorkerBoundary {
                                     step,
@@ -661,37 +893,82 @@ impl LiveCodingSession {
             busy: false,
             event_stream_terminal: false,
             job: None,
+            suspension,
+            suspendable,
+            pending_suspension: None,
+            suspended: None,
         })
     }
 
-    /// Records this run's job as started, before any work is dispatched. A run
-    /// resumed after a host restart continues its running job; a job that is
-    /// suspended, cancelling or ended is not continued here.
+    /// Records this run's job as started, before any work is dispatched
+    /// (Decision 0120). Each rule stands alone (review F2 of `8a3a341e`):
+    /// - a new run creates its job, so a run never takes over an existing job
+    ///   in any phase;
+    /// - a run resumed after a host restart starts its job when it is queued,
+    ///   continues it when it is running, and refuses every other phase.
     fn begin_job(&mut self, ledgers: DurableJobLedgers) -> Result<(), RuntimeTransportError> {
         let job_id = self.request.run_id.as_str();
-        let resumed = self.request.event_cursor.is_some();
-        let observation = match ledgers.create(job_id, CODING_HOST_JOB_OWNER) {
-            Ok(observation) => observation,
-            Err(JobLedgerStoreError::Exists) if resumed => {
-                ledgers.observation(job_id).map_err(map_ledger_error)?
+        let phase = if self.request.event_cursor.is_none() {
+            ledgers
+                .create(job_id, CODING_HOST_JOB_OWNER)
+                .map_err(map_ledger_error)?
+                .phase
+        } else {
+            match ledgers.create(job_id, CODING_HOST_JOB_OWNER) {
+                Ok(observation) => observation.phase,
+                Err(JobLedgerStoreError::Exists) => {
+                    match ledgers.observation(job_id).map_err(map_ledger_error)?.phase {
+                        JobPhase::Running => {
+                            self.job = Some(LiveJob::new(ledgers));
+                            return Ok(());
+                        }
+                        phase => phase,
+                    }
+                }
+                Err(error) => return Err(map_ledger_error(error)),
             }
-            Err(error) => return Err(map_ledger_error(error)),
         };
-        match observation.phase {
-            JobPhase::Queued => {
+        if phase != JobPhase::Queued {
+            return Err(RuntimeTransportError::RequestDenied);
+        }
+        ledgers
+            .observe_owner(job_id, CODING_HOST_JOB_OWNER, JobOwnerEvent::Started)
+            .map_err(map_ledger_error)?;
+        self.job = Some(LiveJob::new(ledgers));
+        Ok(())
+    }
+
+    /// Takes over the job of a run continued from its checkpoint inside this
+    /// host (Decision 0122) and dispatches the continuation. A resumed job is
+    /// queued and is started here. A job cancelled while suspended already has
+    /// its terminal decision, so the run only ends with its own outcome, which
+    /// is not recorded again.
+    fn continue_job(
+        &mut self,
+        ledgers: DurableJobLedgers,
+        cancellation: Option<u64>,
+    ) -> Result<(), RuntimeTransportError> {
+        let job_id = self.request.run_id.as_str();
+        let phase = ledgers.observation(job_id).map_err(map_ledger_error)?.phase;
+        match (cancellation, phase) {
+            (None, JobPhase::Queued) => {
                 ledgers
                     .observe_owner(job_id, CODING_HOST_JOB_OWNER, JobOwnerEvent::Started)
                     .map_err(map_ledger_error)?;
+                self.job = Some(LiveJob::new(ledgers));
+                self.dispatch(None)?;
             }
-            JobPhase::Running if resumed => {}
+            (Some(revision), JobPhase::Cancelled) => {
+                let mut job = LiveJob::new(ledgers);
+                job.ended = true;
+                self.job = Some(job);
+                self.signal_cancellation(CancellationId::from_raw(format!(
+                    "coding-job-cancel-{revision}"
+                )))?;
+            }
             _ => return Err(RuntimeTransportError::RequestDenied),
         }
-        self.job = Some(LiveJob {
-            ledgers,
-            ended: false,
-            failed: false,
-        });
-        Ok(())
+        self.refresh(CONTROL_WAIT)
     }
 
     fn start(&mut self) -> Result<RuntimeTransportStep, RuntimeTransportError> {
@@ -783,44 +1060,141 @@ impl LiveCodingSession {
         self.replayed_job_status()
     }
 
-    /// Decides one client control request through the durable ledger. Only an
-    /// applied cancellation stops work; suspension and resumption are refused
-    /// before the ledger until the host can stop at a safe boundary and resume
-    /// (AMR-04.6.4).
+    /// Decides one client control request through the durable ledger and then
+    /// acts on the job's phase, never on the decision alone, so a retry that
+    /// answers an earlier decision changes nothing that has since moved on:
+    /// - a cancelling job's run gets its cancellation signal, and it stops at
+    ///   its next cancellation check (Decision 0120);
+    /// - a suspending job's run may stop at its next committed safe boundary;
+    ///   any other phase withdraws that (Decision 0122);
+    /// - a suspended run whose job is queued again or cancelled continues from
+    ///   its checkpoint, which the service does before it answers.
+    ///
+    /// A run that commits no checkpoints refuses suspension and resumption
+    /// before the ledger, so they are not recorded.
     fn control_job(
         &mut self,
         client: &RuntimeClientScope,
         request_sha256: &str,
         request: &JobControlRequest,
-    ) -> Result<RuntimeJobControl, RuntimeTransportError> {
+    ) -> Result<SessionControl, RuntimeTransportError> {
         self.verify_binding(request_sha256)?;
-        // An outcome that already arrived is recorded before the request is decided.
+        // An outcome or a suspension that already arrived is recorded before
+        // the request is decided.
         self.refresh(Duration::ZERO)?;
-        let job = self.usable_job()?;
-        if request.action != JobControlAction::Cancel {
+        self.usable_job()?;
+        if request.action != JobControlAction::Cancel && !self.suspendable {
             return Err(RuntimeTransportError::RequestDenied);
         }
-        let decision = job
+        // A request that could withdraw or cancel a suspension is decided
+        // while the worker may not stop for it. If the worker already stopped,
+        // its boundary is recorded first and the request is decided after it.
+        let live = self.suspended.is_none() && self.outcome.is_none();
+        if live
+            && request.action != JobControlAction::Suspend
+            && self.suspension.withhold()? == SuspensionState::Claimed
+        {
+            self.await_suspension()?;
+        }
+        let decided = self
+            .usable_job()?
             .ledgers
             .control(self.request.run_id.as_str(), client.as_str(), request)
-            .map_err(map_ledger_error)?;
-        // A retry answers the original decision, and the one cancellation a
-        // job can apply always yields the same signal.
-        if let JobControlDecision::Applied {
-            revision,
-            phase: JobPhase::Cancelling,
-        } = decision
-            && self.outcome.is_none()
-        {
-            self.signal_cancellation(CancellationId::from_raw(format!(
-                "coding-job-cancel-{revision}"
-            )))?;
-            self.refresh(CONTROL_WAIT)?;
+            .map_err(map_ledger_error);
+        let status = self.replayed_job_status();
+        if live && self.suspended.is_none() {
+            match &status {
+                Ok(status) => self.suspension.follow(status.job.phase)?,
+                // Without the job's phase the suspension stays as it was.
+                Err(_) => self.suspension.restore()?,
+            }
         }
-        Ok(RuntimeJobControl {
+        let decision = decided?;
+        let status = status?;
+        match status.job.phase {
+            // No client decision moves a cancelling job, so its revision names
+            // the one cancellation the ledger applied, and every answer about
+            // it yields the same signal.
+            JobPhase::Cancelling if self.outcome.is_none() && self.suspended.is_none() => {
+                self.signal_cancellation(CancellationId::from_raw(format!(
+                    "coding-job-cancel-{}",
+                    status.job.revision
+                )))?;
+                self.refresh(CONTROL_WAIT)?;
+            }
+            JobPhase::Queued if self.suspended.is_some() => {
+                return Ok(SessionControl::Continue {
+                    decision,
+                    cancellation: None,
+                });
+            }
+            JobPhase::Cancelled if self.suspended.is_some() => {
+                return Ok(SessionControl::Continue {
+                    decision,
+                    cancellation: Some(status.job.revision),
+                });
+            }
+            _ => {}
+        }
+        Ok(SessionControl::Answered(RuntimeJobControl {
             decision,
             status: self.replayed_job_status()?,
-        })
+        }))
+    }
+
+    /// Waits, within the boundary bound, until a suspension the worker
+    /// claimed is recorded (Decision 0122).
+    fn await_suspension(&mut self) -> Result<(), RuntimeTransportError> {
+        let deadline = Instant::now() + START_WAIT;
+        while self.suspended.is_none() {
+            if Instant::now() >= deadline {
+                eprintln!("coding.live.suspension-unobserved");
+                return Err(RuntimeTransportError::RuntimeEvidenceDenied);
+            }
+            self.refresh(CONTROL_WAIT)?;
+        }
+        Ok(())
+    }
+
+    /// Records the owner's observation of a suspension whose commit event is
+    /// now the last presented event, then releases the run's composition: the
+    /// worker ends and the coordinator's store, model and tools close with it.
+    /// The job's ledger handle stays open for the suspended job's control.
+    fn finish_suspension(&mut self) -> Result<(), RuntimeTransportError> {
+        let point = self
+            .pending_suspension
+            .take()
+            .ok_or(RuntimeTransportError::RuntimeEvidenceDenied)?;
+        if !is_suspension_event(self.events.last(), &point) {
+            return Err(RuntimeTransportError::RuntimeEvidenceDenied);
+        }
+        let job_id = self.request.run_id.as_str();
+        let job = self
+            .job
+            .as_mut()
+            .filter(|job| !job.failed)
+            .ok_or(RuntimeTransportError::RuntimeEvidenceDenied)?;
+        if job
+            .ledgers
+            .observe_owner(
+                job_id,
+                CODING_HOST_JOB_OWNER,
+                JobOwnerEvent::SuspensionObserved,
+            )
+            .is_err()
+        {
+            eprintln!("coding.live.job-suspension-unrecorded");
+            job.failed = true;
+            return Err(RuntimeTransportError::RuntimeEvidenceDenied);
+        }
+        let _ = self.commands.try_send(WorkerCommand::Stop);
+        if let Some(worker) = self.worker.take() {
+            let _ = worker.join();
+        }
+        self.event_pump.shutdown();
+        self.suspension.clear()?;
+        self.suspended = Some(point);
+        Ok(())
     }
 
     fn usable_job(&self) -> Result<&LiveJob, RuntimeTransportError> {
@@ -873,7 +1247,11 @@ impl LiveCodingSession {
         &mut self,
         response: Option<RuntimeApprovalResponse>,
     ) -> Result<(), RuntimeTransportError> {
-        if self.busy || self.outcome.is_some() {
+        if self.busy
+            || self.outcome.is_some()
+            || self.pending_suspension.is_some()
+            || self.suspended.is_some()
+        {
             return Err(RuntimeTransportError::RequestDenied);
         }
         self.commands
@@ -884,6 +1262,10 @@ impl LiveCodingSession {
     }
 
     fn refresh(&mut self, wait: Duration) -> Result<(), RuntimeTransportError> {
+        // A suspended run's composition is released; nothing can arrive.
+        if self.suspended.is_some() {
+            return Ok(());
+        }
         let deadline = Instant::now() + wait;
         let boundary_deadline = deadline + START_WAIT;
         loop {
@@ -913,6 +1295,9 @@ impl LiveCodingSession {
                 && (progressed && boundary_visible
                     || Instant::now() >= deadline && (self.busy || boundary_visible))
             {
+                if self.pending_suspension.is_some() {
+                    self.finish_suspension()?;
+                }
                 return Ok(());
             }
             if Instant::now() >= boundary_deadline {
@@ -945,6 +1330,9 @@ impl LiveCodingSession {
         if self.outcome.is_some() {
             return self.event_stream_terminal;
         }
+        if let Some(point) = &self.pending_suspension {
+            return is_suspension_event(self.events.last(), point);
+        }
         let Some(challenge) = &self.pending_approval else {
             return true;
         };
@@ -968,7 +1356,9 @@ impl LiveCodingSession {
         self.busy = false;
         self.artifacts = boundary.artifacts;
         match boundary.step {
-            RuntimeCoordinatorStep::AwaitingApproval { challenge } => {
+            RuntimeSuspendableStep::Boundary(RuntimeCoordinatorStep::AwaitingApproval {
+                challenge,
+            }) => {
                 verify_runtime_approval_challenge(&challenge)
                     .map_err(|_| RuntimeTransportError::RuntimeEvidenceDenied)?;
                 if challenge.run_id != self.request.run_id
@@ -979,12 +1369,24 @@ impl LiveCodingSession {
                 }
                 self.pending_approval = Some(challenge);
             }
-            RuntimeCoordinatorStep::Complete { outcome } => {
+            RuntimeSuspendableStep::Boundary(RuntimeCoordinatorStep::Complete { outcome }) => {
                 verify_runtime_outcome(&outcome, &self.request)
                     .map_err(|_| RuntimeTransportError::RuntimeEvidenceDenied)?;
                 self.pending_approval = None;
                 self.outcome = Some(outcome);
                 self.record_job_outcome();
+            }
+            // The worker stops only for the suspension it claimed. Its commit
+            // event is recorded once the event pump delivers it.
+            RuntimeSuspendableStep::Suspended { point } => {
+                if self.outcome.is_some()
+                    || self.pending_approval.is_some()
+                    || point.event_cursor.run_id != self.request.run_id
+                    || !self.suspension.claimed()?
+                {
+                    return Err(RuntimeTransportError::RuntimeEvidenceDenied);
+                }
+                self.pending_suspension = Some(point);
             }
         }
         Ok(())
@@ -1104,6 +1506,7 @@ impl LiveCodingSession {
             artifacts: self.artifacts.clone(),
             approval: self.pending_approval.clone(),
             outcome: self.outcome.clone(),
+            suspended: self.suspended.clone(),
         })
     }
 
@@ -1309,6 +1712,10 @@ mod tests {
             busy: true,
             event_stream_terminal: false,
             job: None,
+            suspension: Arc::new(SharedSuspension::new()),
+            suspendable: false,
+            pending_suspension: None,
+            suspended: None,
         };
         (session, result_tx, outcome)
     }
@@ -1338,7 +1745,9 @@ mod tests {
         let (mut session, result_tx, outcome) = terminal_pair_fixture(false);
         result_tx
             .send(Ok(WorkerResponse::Boundary(WorkerBoundary {
-                step: RuntimeCoordinatorStep::Complete { outcome },
+                step: RuntimeSuspendableStep::Boundary(RuntimeCoordinatorStep::Complete {
+                    outcome,
+                }),
                 artifacts: Vec::new(),
             })))
             .unwrap();
@@ -1359,9 +1768,9 @@ mod tests {
         let (mut session, result_tx, outcome) = terminal_pair_fixture(true);
         result_tx
             .send(Ok(WorkerResponse::Boundary(WorkerBoundary {
-                step: RuntimeCoordinatorStep::Complete {
+                step: RuntimeSuspendableStep::Boundary(RuntimeCoordinatorStep::Complete {
                     outcome: outcome.clone(),
-                },
+                }),
                 artifacts: Vec::new(),
             })))
             .unwrap();
@@ -1384,7 +1793,8 @@ mod tests {
     fn a_resumed_run_continues_only_its_running_job() {
         // Decision 0120: a run resumed after a host restart continues its job
         // when it is running; a new run never reuses a job, and a job whose
-        // cancellation is pending or that has ended is not continued.
+        // cancellation is pending or that has ended is not continued. Review
+        // F2 of 8a3a341e: each rule is exercised on its own.
         let (_, events, _, _) = crate::runtime_read_tests::completed_native_read_fixture();
         let begin = |resumed: bool, ledgers: DurableJobLedgers| {
             let (mut session, _result_tx, _) = terminal_pair_fixture(false);
@@ -1416,6 +1826,22 @@ mod tests {
             );
         }
 
+        // A queued job, created but never started: a new run never takes it
+        // over, and a run resumed after a restart starts it.
+        let store = crate::runtime_start_tests::JobLedgerStore::new("begin-queued");
+        let ledgers = store.ledgers();
+        ledgers.create(&job, owner).unwrap();
+        let queued = ledgers.observation(&job).unwrap();
+        assert_eq!((queued.phase, queued.revision), (JobPhase::Queued, 0));
+        assert_eq!(
+            begin(false, ledgers.clone()),
+            Err(RuntimeTransportError::RequestDenied)
+        );
+        assert_eq!(ledgers.observation(&job).unwrap(), queued);
+        assert_eq!(begin(true, ledgers.clone()), Ok(job.clone()));
+        let started = ledgers.observation(&job).unwrap();
+        assert_eq!((started.phase, started.revision), (JobPhase::Running, 1));
+
         // A running job continues without a second start, and a new run
         // never takes over an existing job.
         let store = crate::runtime_start_tests::JobLedgerStore::new("begin-running");
@@ -1432,7 +1858,33 @@ mod tests {
             Err(RuntimeTransportError::RequestDenied)
         );
 
-        // A pending cancellation or an ended job is not continued.
+        // A suspended job is continued only through a resumption (Decision
+        // 0122), and a pending cancellation or an ended job is not continued.
+        let store = crate::runtime_start_tests::JobLedgerStore::new("begin-suspended");
+        let suspended = store.ledgers();
+        suspended.create(&job, owner).unwrap();
+        suspended
+            .control(
+                &job,
+                "peer-client-a",
+                &JobControlRequest {
+                    schema_version: 1,
+                    job_id: job.clone(),
+                    request_id: "suspend-1".to_owned(),
+                    action: JobControlAction::Suspend,
+                    observed_revision: 0,
+                },
+            )
+            .unwrap();
+        let held = suspended.observation(&job).unwrap();
+        assert_eq!(held.phase, JobPhase::Suspended);
+        for resumed in [false, true] {
+            assert_eq!(
+                begin(resumed, suspended.clone()),
+                Err(RuntimeTransportError::RequestDenied)
+            );
+        }
+        assert_eq!(suspended.observation(&job).unwrap(), held);
         ledgers
             .control(
                 &job,

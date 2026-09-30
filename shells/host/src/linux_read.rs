@@ -2978,6 +2978,7 @@ mod tests {
                 artifacts: Vec::new(),
                 approval: None,
                 outcome: Some(outcome.clone()),
+                suspended: None,
             },
         }));
         assert!(matches!(

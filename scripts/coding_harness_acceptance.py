@@ -55,6 +55,7 @@ CASE_ROOTS.update({
     "native-command-failure": "c20",
     "read-arguments-correction": "c21",
     "read-arguments-denied": "c22",
+    "suspend-resume": "c23",
 })
 
 
@@ -411,6 +412,80 @@ def run_approval_cancel_race(work_root: Path, log_root: Path) -> dict:
     }
 
 
+def notices(log_dir: Path) -> list[dict]:
+    """JSON job control notices and states the CLI wrote to standard error."""
+    found = []
+    for line in (log_dir / "stderr.log").read_text(encoding="utf-8").splitlines():
+        if line.startswith("{"):
+            try:
+                value = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(value, dict) and "type" in value:
+                found.append(value)
+    return found
+
+
+def suspend_resume_checks(exit_code: int, observed_rows: list[dict], observed: list[dict],
+                          status: list[str]) -> dict:
+    """Decision 0122: one suspension at a committed boundary, one continuation from it
+    under the host's durable job ledger, and the repair completed exactly once."""
+    kinds = [notice.get("type") for notice in observed]
+    events = [row.get("kind", {}).get("event") for row in observed_rows[:-1]]
+    states = [notice for notice in observed if notice.get("type") == "job_state"]
+    answers = [notice for notice in observed if notice.get("type") == "job_control_answer"]
+    suspended = [notice for notice in observed if notice.get("type") == "run_suspended"]
+    continued = [notice for notice in observed if notice.get("type") == "run_continued"]
+    return {
+        "exit": exit_code == 0,
+        "terminal": bool(observed_rows) and observed_rows[-1].get("state") == "SUCCESS",
+        "one-start": events.count("run_started") == 1,
+        "checkpoint": "checkpoint_committed" in events,
+        "suspended-once": len(suspended) == 1,
+        "continued-from-it": len(continued) == 1 and bool(suspended)
+        and continued[0].get("checkpoint_id") == suspended[0].get("checkpoint_id")
+        and kinds.index("run_continued") > kinds.index("run_suspended"),
+        "answers": [(answer.get("action"), answer.get("decision", {}).get("decision"))
+                    for answer in answers] == [("suspend", "applied"), ("resume", "applied")],
+        "job-completed": len(states) == 1 and states[0].get("available") is True
+        and states[0].get("job", {}).get("phase") == "completed"
+        and [control.get("action") for control in states[0].get("controls", [])]
+        == ["suspend", "resume"],
+        "filesystem": status == [" M src/calc.py"],
+    }
+
+
+def run_suspend_resume(work_root: Path, log_root: Path) -> dict:
+    case = "suspend-resume"
+    base = work_root / CASE_ROOTS[case]
+    log_dir = log_root / case
+    coding_harness.setup(base, "repair")
+    exit_code = coding_harness.start(
+        base,
+        "failed-test-repair",
+        "Repair the failing synthetic add test; pause at a safe boundary and resume.",
+        True,
+        False,
+        log_dir,
+        suspend_resume_probe=True,
+    )
+    observed_rows = rows(log_dir)
+    status = git_status(coding_harness.paths(base)[2])
+    checks = suspend_resume_checks(exit_code, observed_rows, notices(log_dir), status)
+    return {
+        "case": case,
+        "scenario": "failed-test-repair",
+        "exit_code": exit_code,
+        "terminal": observed_rows[-1].get("state") if observed_rows else None,
+        "event_count": max(len(observed_rows) - 1, 0),
+        "worktree_status": status,
+        "checks": checks,
+        "passed": all(checks.values()),
+        "stdout_sha256": sha256(log_dir / "stdout.jsonl"),
+        "stderr_sha256": sha256(log_dir / "stderr.log"),
+    }
+
+
 def run_artifact_integrity_probe(work_root: Path, log_root: Path) -> dict:
     case = "artifact-integrity"
     base = work_root / CASE_ROOTS[case]
@@ -549,6 +624,7 @@ def main() -> int:
         run_approval_cancel_race(work_root, log_root),
         run_artifact_integrity_probe(work_root, log_root),
         run_rollback_conflict(work_root, log_root),
+        run_suspend_resume(work_root, log_root),
     ])
     agentmage = coding_harness.binary("agentmage")
     host = coding_harness.binary("agentmage-host")

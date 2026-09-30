@@ -731,6 +731,7 @@ def start(
     record_session: bool = False,
     artifact_release_probe_before_follow_ups: bool = False,
     follow_ups: tuple[str, ...] = (),
+    suspend_resume_probe: bool = False,
 ) -> int:
     base = base.resolve(strict=True)
     state, disposable, workspace = paths(base)
@@ -763,6 +764,8 @@ def start(
         command.append("--slow-subscriber-probe")
     if artifact_integrity_probe:
         command.append("--artifact-integrity-probe")
+    if suspend_resume_probe:
+        command.append("--suspend-resume-probe")
     if record_session:
         command.append("--record-session")
     if artifact_release_probe_before_follow_ups:
@@ -900,6 +903,25 @@ def start(
 
 
 def stop(base: Path) -> None:
+    signal_running_cli(base, signal.SIGINT)
+    print("coding.harness.cancellation-requested")
+
+
+# Decision 0122: the development CLI maps SIGUSR1 to a suspension request and
+# SIGUSR2 to a resumption request; the host decides each through its job ledger.
+JOB_CONTROL_SIGNALS = {
+    "pause": (signal.SIGUSR1, "coding.harness.suspension-requested"),
+    "resume": (signal.SIGUSR2, "coding.harness.resumption-requested"),
+}
+
+
+def control(base: Path, command: str) -> None:
+    number, message = JOB_CONTROL_SIGNALS[command]
+    signal_running_cli(base, number)
+    print(message)
+
+
+def signal_running_cli(base: Path, number: signal.Signals) -> None:
     base = base.resolve(strict=True)
     state, _, _ = paths(base)
     record = read_run_record(state)
@@ -918,10 +940,9 @@ def stop(base: Path) -> None:
     try:
         if not exact_running_process(record, base) or read_run_record(state) != record:
             raise HarnessError("coding.harness.not-running")
-        signal.pidfd_send_signal(descriptor, signal.SIGINT)
+        signal.pidfd_send_signal(descriptor, number)
     finally:
         os.close(descriptor)
-    print("coding.harness.cancellation-requested")
 
 
 def approval_delay(value: str) -> int:
@@ -937,7 +958,7 @@ def approval_delay(value: str) -> int:
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(description=__doc__)
     commands = result.add_subparsers(dest="command", required=True)
-    for name in ("setup", "status", "diagnose", "stop"):
+    for name in ("setup", "status", "diagnose", "stop", "pause", "resume"):
         command = commands.add_parser(name)
         command.add_argument("--root", type=Path, required=True)
         if name == "setup":
@@ -967,6 +988,7 @@ def parser() -> argparse.ArgumentParser:
     start_command.add_argument("--approval-delay-ms", type=approval_delay, default=0)
     start_command.add_argument("--slow-subscriber-probe", action="store_true")
     start_command.add_argument("--artifact-integrity-probe", action="store_true")
+    start_command.add_argument("--suspend-resume-probe", action="store_true")
     start_command.add_argument("--record-session", action="store_true")
     start_command.add_argument("--artifact-release-probe-before-follow-ups", action="store_true")
     start_command.add_argument("--preauthorize-path", action="append", default=[])
@@ -993,6 +1015,9 @@ def main() -> int:
         if arguments.command == "stop":
             stop(arguments.root)
             return 0
+        if arguments.command in JOB_CONTROL_SIGNALS:
+            control(arguments.root, arguments.command)
+            return 0
         return start(
             arguments.root, arguments.scenario, arguments.objective,
             arguments.approve_this_run, arguments.stale_approval_probe, arguments.log_dir,
@@ -1006,6 +1031,7 @@ def main() -> int:
             arguments.record_session,
             arguments.artifact_release_probe_before_follow_ups,
             tuple(arguments.follow_up),
+            arguments.suspend_resume_probe,
         )
     except (HarnessError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as error:
         print(str(error), file=sys.stderr)

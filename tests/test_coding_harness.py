@@ -1,5 +1,6 @@
 import json
 import os
+import signal
 from pathlib import Path
 import stat
 import subprocess
@@ -282,6 +283,66 @@ class CodingHarnessTests(unittest.TestCase):
     def test_pid_reuse_and_substitution_cannot_receive_stop_signal(self):
         record = {"pid": os.getpid(), "base": "/different", "binary": "/bin/true", "started_at_epoch_ms": 1}
         self.assertFalse(coding_harness.exact_running_process(record, Path("/expected")))
+
+    def test_the_suspend_resume_case_requires_one_suspension_and_one_continuation(self):
+        rows = [
+            {"kind": {"event": "run_started"}},
+            {"kind": {"event": "checkpoint_committed"}},
+            {"kind": {"event": "tool_completed"}},
+            {"state": "SUCCESS"},
+        ]
+        point = {"checkpoint_id": "checkpoint-1", "checkpoint_sha256": "a" * 64, "event_sequence": 9}
+        observed = [
+            {"type": "job_control_answer", "action": "suspend", "decision": {"decision": "applied"}},
+            {"type": "run_suspended", **point},
+            {"type": "run_continued", **point},
+            {"type": "job_control_answer", "action": "resume", "decision": {"decision": "applied"}},
+            {"type": "job_state", "available": True, "job": {"phase": "completed"},
+             "controls": [{"action": "suspend"}, {"action": "resume"}]},
+        ]
+        checks = coding_harness_acceptance.suspend_resume_checks(0, rows, observed, [" M src/calc.py"])
+        self.assertTrue(all(checks.values()), checks)
+        # Without a suspension, a continuation, the second answer or the
+        # completed job, the case fails.
+        for missing in ("run_suspended", "run_continued"):
+            reduced = [notice for notice in observed if notice["type"] != missing]
+            checks = coding_harness_acceptance.suspend_resume_checks(
+                0, rows, reduced, [" M src/calc.py"])
+            self.assertFalse(all(checks.values()), missing)
+        refused = [dict(notice) for notice in observed]
+        refused[3] = {"type": "job_control_answer", "action": "resume",
+                      "decision": {"decision": "refused"}}
+        self.assertFalse(coding_harness_acceptance.suspend_resume_checks(
+            0, rows, refused, [" M src/calc.py"])["answers"])
+        restarted = rows[:-1] + [{"kind": {"event": "run_started"}}] + rows[-1:]
+        self.assertFalse(coding_harness_acceptance.suspend_resume_checks(
+            0, restarted, observed, [" M src/calc.py"])["one-start"])
+        self.assertFalse(coding_harness_acceptance.suspend_resume_checks(
+            0, rows, observed, [])["filesystem"])
+
+    def test_each_job_control_sends_its_own_signal_to_the_exact_cli(self):
+        # Decision 0122: pause and resume are requests the host decides; the
+        # wrapper only signals the exact running CLI, as stop does.
+        sent = []
+        with mock.patch.object(
+            coding_harness, "signal_running_cli", side_effect=lambda base, number: sent.append(number)
+        ):
+            coding_harness.stop(Path("/expected"))
+            coding_harness.control(Path("/expected"), "pause")
+            coding_harness.control(Path("/expected"), "resume")
+        self.assertEqual(sent, [signal.SIGINT, signal.SIGUSR1, signal.SIGUSR2])
+        with self.assertRaises(KeyError):
+            coding_harness.control(Path("/expected"), "suspend-everything")
+        parsed = coding_harness.parser().parse_args(["pause", "--root", "/expected"])
+        self.assertEqual(parsed.command, "pause")
+        parsed = coding_harness.parser().parse_args([
+            "start", "--root", "/expected", "--scenario", "failed-test-repair",
+            "--objective", "repair", "--suspend-resume-probe",
+        ])
+        self.assertTrue(parsed.suspend_resume_probe)
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaises(coding_harness.HarnessError):
+                coding_harness.control(Path(temporary), "pause")
 
     def test_setup_builds_exact_new_and_multi_file_fixtures(self):
         with tempfile.TemporaryDirectory() as temporary:

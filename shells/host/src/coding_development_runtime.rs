@@ -429,6 +429,40 @@ impl CodingDevelopmentRuntimeFactory {
         {
             return Err(prepare_denied("resume-state"));
         }
+        let (request, policy, skip_scripted_steps) = self.load_resume_request(&input.prompt)?;
+        self.session_id = Some(request.session_id.clone());
+        self.prior_run_id = Some(request.run_id.clone());
+        self.resume_requested = false;
+        self.prepared.insert(
+            request.run_id.as_str().to_owned(),
+            PreparedDevelopmentRun {
+                request: request.clone(),
+                policy,
+                skip_scripted_steps,
+                preauthorization: None,
+                continuity: None,
+                record_session: false,
+            },
+        );
+        Ok(request)
+    }
+
+    /// Reads the session's current checkpoint, its resume binding and the base
+    /// request they name from the store, checks them against this host's
+    /// frozen composition, and binds the base request to the journal's last
+    /// event. Answers the policy and the number of scripted model steps the
+    /// checkpoint already consumed.
+    fn load_resume_request(
+        &mut self,
+        objective: &str,
+    ) -> Result<
+        (
+            agentmage_kernel_contracts::RuntimeRunRequest,
+            CodingRuntimePolicy,
+            usize,
+        ),
+        NativeChatRuntimeError,
+    > {
         let mut key = CodingDevelopmentKeyProvider::open(&self.activation)
             .map_err(|_| prepare_denied("resume-key"))?;
         let authority = open_linux_development_authority(
@@ -510,7 +544,7 @@ impl CodingDevelopmentRuntimeFactory {
         if base_request.event_cursor.is_some()
             || base_request.session_id != binding.session_id
             || base_request.task.task_id != binding.task_id
-            || base_request.task.objective != input.prompt
+            || base_request.task.objective != objective
             || base_request.model_profile != *self.profile.model_profile()
             || base_request.workspace_id != *self.profile.write_scope().workspace_id()
             || base_request.workspace_snapshot_sha256 != self.profile.worktree().record_sha256
@@ -548,21 +582,9 @@ impl CodingDevelopmentRuntimeFactory {
         });
         request =
             seal_runtime_run_request(request).map_err(|_| prepare_denied("resume-request-seal"))?;
-        self.session_id = Some(request.session_id.clone());
-        self.resume_requested = false;
-        self.prepared.insert(
-            request.run_id.as_str().to_owned(),
-            PreparedDevelopmentRun {
-                request: request.clone(),
-                policy,
-                skip_scripted_steps: usize::try_from(continuation.model_call_count)
-                    .map_err(|_| prepare_denied("resume-model-count"))?,
-                preauthorization: None,
-                continuity: None,
-                record_session: false,
-            },
-        );
-        Ok(request)
+        let skip_scripted_steps = usize::try_from(continuation.model_call_count)
+            .map_err(|_| prepare_denied("resume-model-count"))?;
+        Ok((request, policy, skip_scripted_steps))
     }
 }
 
@@ -1144,6 +1166,47 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             Some((composed, ledgers)) if &composed == run_id => Some(ledgers),
             _ => None,
         }
+    }
+
+    /// Continues this session's last run from the checkpoint it stopped at
+    /// (Decision 0122). The store must name that checkpoint as the session's
+    /// current one and hold the run's base request, and the journal must end
+    /// at `cursor`. The continued run keeps the session's preauthorization and
+    /// recording consent; its context and state come from the checkpoint.
+    fn prepare_in_host_resume(
+        &mut self,
+        request: &agentmage_kernel_contracts::RuntimeRunRequest,
+        cursor: &RuntimeEventCursor,
+    ) -> Result<agentmage_kernel_contracts::RuntimeRunRequest, NativeChatRuntimeError> {
+        self.activation
+            .revalidate()
+            .map_err(|_| prepare_denied("activation"))?;
+        if self.resume_requested
+            || self.session_id.as_ref() != Some(&request.session_id)
+            || self.prior_run_id.as_ref() != Some(&request.run_id)
+            || !self.prepared.is_empty()
+        {
+            return Err(prepare_denied("in-host-resume-state"));
+        }
+        let expected = crate::runtime_transport::resumed_run_request(request, cursor)
+            .map_err(|_| prepare_denied("in-host-resume-request"))?;
+        let (resumed, policy, skip_scripted_steps) =
+            self.load_resume_request(&request.task.objective)?;
+        if resumed != expected {
+            return Err(prepare_denied("in-host-resume-drift"));
+        }
+        self.prepared.insert(
+            resumed.run_id.as_str().to_owned(),
+            PreparedDevelopmentRun {
+                request: resumed.clone(),
+                policy,
+                skip_scripted_steps,
+                preauthorization: self.preauthorization.clone(),
+                continuity: None,
+                record_session: self.record_session.unwrap_or(false),
+            },
+        );
+        Ok(resumed)
     }
 }
 

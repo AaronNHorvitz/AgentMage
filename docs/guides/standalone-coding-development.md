@@ -141,7 +141,12 @@ the exact retained malformed read shape gets at most the existing one correction
 while a denied traversal closes without an effect. Neither case relaxes the
 native read validator or grants authority to rejected arguments.
 
-Run all twenty-two declared actual-process cases with short disposable roots and a fresh create-only log root:
+Decision 0122 adds `suspend-resume`: the failed-test repair with the development
+probe that requests one suspension at the first control point and a resumption once the
+run is suspended. It requires one stop at a committed checkpoint, one continuation from
+that checkpoint, both answers applied, the job completed and the one repaired file.
+
+Run all twenty-three declared actual-process cases with short disposable roots and a fresh create-only log root:
 
 ```bash
 systemd-run --user --scope --quiet \

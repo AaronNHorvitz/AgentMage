@@ -20,8 +20,8 @@ use agentmage_kernel_contracts::{
     RuntimeEventRetentionKind, RuntimeOperationId, RuntimeOutcome, RuntimeOutput,
     RuntimePayloadReference, RuntimePermissionDisposition, RuntimeResumeBinding, RuntimeRunRequest,
     RuntimeSessionMode, RuntimeToolAttemptState, RuntimeToolReference, RuntimeToolRejection,
-    RuntimeToolRejectionReason, RuntimeTurnId, SessionCheckpoint, StateChange, ToolCall,
-    ToolCallId, ToolDefinition, ToolId, ToolResult, VerifierCandidate, VerifierId,
+    RuntimeToolRejectionReason, RuntimeTurnId, SessionCheckpoint, SessionCheckpointId, StateChange,
+    ToolCall, ToolCallId, ToolDefinition, ToolId, ToolResult, VerifierCandidate, VerifierId,
     to_canonical_json,
 };
 use sha2::{Digest, Sha256};
@@ -879,6 +879,43 @@ pub enum RuntimeCoordinatorStep {
     },
 }
 
+/// Committed safe boundary at which a run stopped after an applied suspension
+/// (Decision 0122). The run continues only through a new composition whose
+/// request is bound to `event_cursor`.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeSuspensionPoint {
+    /// Checkpoint committed at the boundary.
+    pub checkpoint_id: SessionCheckpointId,
+    /// Digest of that checkpoint.
+    pub checkpoint_sha256: String,
+    /// Cursor of the event that recorded the commit, the run's last event.
+    pub event_cursor: RuntimeEventCursor,
+}
+
+/// Suspension request observed by a coordinator (Decision 0122).
+pub trait RuntimeSuspensionProbe {
+    /// Consulted only right after a checkpoint commits and before the next
+    /// turn. Answering `true` commits the coordinator to stop at that boundary.
+    fn suspend_at_safe_boundary(&self) -> bool;
+}
+
+/// Boundary reached by an invocation that may also stop for a suspension.
+// One step is returned per boundary and moved at once; boxing the common
+// variant would add an allocation for every boundary to shrink the rare one.
+#[allow(clippy::large_enum_variant)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum RuntimeSuspendableStep {
+    /// An approval or terminal boundary, as from `run_until_boundary`.
+    Boundary(RuntimeCoordinatorStep),
+    /// The run stopped at a committed safe boundary. This coordinator then
+    /// refuses to advance.
+    Suspended {
+        /// Where the run stopped.
+        point: RuntimeSuspensionPoint,
+    },
+}
+
 /// Stable construction or invariant failure from the reusable coordinator itself.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RuntimeLoopError {
@@ -898,6 +935,9 @@ pub enum RuntimeLoopError {
     Dependency(RuntimePortFailure),
     /// A proposal, permission, tool result, or verifier record violated its closed contract.
     InvalidBoundaryResult,
+    /// The run stopped at a safe boundary after an applied suspension; it
+    /// continues only through a new composition from its checkpoint.
+    Suspended,
 }
 
 impl From<RuntimeCoordinatorError> for RuntimeLoopError {
@@ -1059,6 +1099,11 @@ where
     no_progress_turns: u32,
     stop_after_next_checkpoint: bool,
     correctness_reconciliation_required: bool,
+    /// The checkpoint the last completed step committed, until the loop
+    /// passes it; the only point at which a suspension is consulted.
+    committed_boundary: Option<RuntimeSuspensionPoint>,
+    /// The run stopped here after an applied suspension (Decision 0122).
+    suspended: bool,
 }
 
 impl<M, X, T, V, C> ReusableRuntimeCoordinator<M, X, T, V, C>
@@ -1303,6 +1348,8 @@ where
             no_progress_turns: 0,
             stop_after_next_checkpoint: false,
             correctness_reconciliation_required: false,
+            committed_boundary: None,
+            suspended: false,
         };
         if coordinator.request.event_cursor.is_some() {
             coordinator.restore_runtime_checkpoint()?;
@@ -1461,6 +1508,31 @@ where
         response: Option<&RuntimeApprovalResponse>,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<RuntimeCoordinatorStep, RuntimeLoopError> {
+        match self.run_until_boundary_or_suspension(response, cancellation, None)? {
+            RuntimeSuspendableStep::Boundary(step) => Ok(step),
+            // Without a probe the loop never stops for a suspension.
+            RuntimeSuspendableStep::Suspended { .. } => {
+                Err(RuntimeLoopError::InvalidBoundaryResult)
+            }
+        }
+    }
+
+    /// Runs like [`Self::run_until_boundary`] and also stops at the next
+    /// committed safe boundary once `suspension` answers `true` there
+    /// (Decision 0122). A cancellation observed at that boundary wins. After a
+    /// suspension this coordinator refuses to advance: the run continues only
+    /// through a new composition whose request is bound to the returned cursor.
+    /// A coordinator without checkpoint ports commits no boundary, so it never
+    /// stops for a suspension.
+    pub fn run_until_boundary_or_suspension(
+        &mut self,
+        response: Option<&RuntimeApprovalResponse>,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+        suspension: Option<&dyn RuntimeSuspensionProbe>,
+    ) -> Result<RuntimeSuspendableStep, RuntimeLoopError> {
+        if self.suspended {
+            return Err(RuntimeLoopError::Suspended);
+        }
         if self.correctness_reconciliation_required {
             return Err(RuntimeLoopError::InvalidBoundaryResult);
         }
@@ -1491,25 +1563,34 @@ where
             }
             None => None,
         };
-        let result = self.advance_until_boundary(response, cancellation);
+        let result = self.advance_until_boundary(response, cancellation, suspension);
         if result.is_err() {
             self.correctness_reconciliation_required = true;
         }
         result
     }
 
+    /// Whether this coordinator commits checkpoints at safe boundaries, so an
+    /// applied suspension can stop it (Decision 0122).
+    #[must_use]
+    pub const fn commits_checkpoints(&self) -> bool {
+        self.checkpoint.is_some()
+    }
+
     fn advance_until_boundary(
         &mut self,
         response: Option<(&RuntimeApprovalResponse, u64)>,
         cancellation: Option<&dyn ModelCancellationProbe>,
-    ) -> Result<RuntimeCoordinatorStep, RuntimeLoopError> {
+        suspension: Option<&dyn RuntimeSuspensionProbe>,
+    ) -> Result<RuntimeSuspendableStep, RuntimeLoopError> {
+        let boundary = |step| Ok(RuntimeSuspendableStep::Boundary(step));
         if let Some(outcome) = &self.outcome {
             if response.is_some() {
                 return Err(RuntimeLoopError::Contract(
                     RuntimeCoordinatorError::ApprovalDenied,
                 ));
             }
-            return Ok(RuntimeCoordinatorStep::Complete {
+            return boundary(RuntimeCoordinatorStep::Complete {
                 outcome: outcome.clone(),
             });
         }
@@ -1523,12 +1604,12 @@ where
         }
         if self.pending.is_some() {
             if self.stop_before_phase(cancellation, true)? {
-                return Ok(RuntimeCoordinatorStep::Complete {
+                return boundary(RuntimeCoordinatorStep::Complete {
                     outcome: self.outcome.clone().expect("phase stop is terminal"),
                 });
             }
             let Some((response, now_epoch_ms)) = response else {
-                return Ok(RuntimeCoordinatorStep::AwaitingApproval {
+                return boundary(RuntimeCoordinatorStep::AwaitingApproval {
                     challenge: self
                         .pending
                         .as_ref()
@@ -1546,16 +1627,26 @@ where
 
         loop {
             if let Some(outcome) = &self.outcome {
-                return Ok(RuntimeCoordinatorStep::Complete {
+                return boundary(RuntimeCoordinatorStep::Complete {
                     outcome: outcome.clone(),
                 });
             }
             if let Some(challenge) = self.pending.as_ref().map(|value| value.challenge.clone()) {
-                return Ok(RuntimeCoordinatorStep::AwaitingApproval { challenge });
+                return boundary(RuntimeCoordinatorStep::AwaitingApproval { challenge });
             }
             if let Some(signal) = observe_cancellation(cancellation)? {
                 self.cancel(signal)?;
                 continue;
+            }
+            // A suspension is consulted only at the boundary the last step
+            // committed. Committing it is the last thing a step does, and the
+            // loop takes it here before anything else can run.
+            if let Some(point) = self.committed_boundary.take()
+                && let Some(suspension) = suspension
+                && suspension.suspend_at_safe_boundary()
+            {
+                self.suspended = true;
+                return Ok(RuntimeSuspendableStep::Suspended { point });
             }
             if self.turn_count >= self.request.limits.max_turns
                 || self.model_call_count >= self.request.limits.max_model_calls
@@ -3432,6 +3523,8 @@ where
             &artifacts,
             &publication,
         )?;
+        let checkpoint_id = publication.checkpoint.checkpoint_id.clone();
+        let checkpoint_sha256 = publication.checkpoint.checkpoint_sha256.clone();
         if let (Some(event), Some(resources)) = (committed_event, committed_resources) {
             self.accept_committed_events(vec![event], resources)?;
         } else {
@@ -3444,6 +3537,15 @@ where
                 None,
             )?;
         }
+        let committed = self
+            .events
+            .last()
+            .ok_or(RuntimeLoopError::InvalidBoundaryResult)?;
+        self.committed_boundary = Some(RuntimeSuspensionPoint {
+            checkpoint_id,
+            checkpoint_sha256,
+            event_cursor: runtime_event_cursor(committed),
+        });
         if self.stop_after_next_checkpoint {
             self.stop_after_next_checkpoint = false;
             return Err(RuntimeLoopError::Dependency(

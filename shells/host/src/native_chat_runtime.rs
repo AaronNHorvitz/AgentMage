@@ -80,6 +80,18 @@ pub trait NativeChatRuntimeFactory {
     ) -> Option<agentmage_kernel_engine::job_ledger_store::DurableJobLedgers> {
         None
     }
+
+    /// Prepares the request that continues `request`'s run inside this
+    /// running host from the checkpoint whose commit event is at `cursor`
+    /// (Decision 0122): the same run, bound to that cursor. The run's store
+    /// must already be closed. A factory that cannot continue a run refuses.
+    fn prepare_in_host_resume(
+        &mut self,
+        _request: &RuntimeRunRequest,
+        _cursor: &RuntimeEventCursor,
+    ) -> Result<RuntimeRunRequest, NativeChatRuntimeError> {
+        Err(NativeChatRuntimeError::RequestDenied)
+    }
 }
 
 /// Bounded host registry for prepared and active native Chat runs.
@@ -418,6 +430,7 @@ where
             artifacts: self.runtime.runtime_artifacts().to_vec(),
             approval: self.pending_approval.clone(),
             outcome: self.outcome.clone(),
+            suspended: None,
         })
     }
 

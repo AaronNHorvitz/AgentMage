@@ -2,7 +2,9 @@
 //!
 //! Over this channel a run is cancelled only through a job control request,
 //! which the host decides through its durable job ledger under the client
-//! scope it derives from the authenticated peer (Decision 0120).
+//! scope it derives from the authenticated peer (Decision 0120). Suspension and
+//! resumption are job control requests too; a step names where a suspended run
+//! stopped (Decision 0122).
 
 use agentmage_kernel_contracts::{
     CancellationId, RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEventCursor, RuntimeRunId,
@@ -19,7 +21,7 @@ use crate::runtime_transport::{
     RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
 };
 
-const WIRE_VERSION: u16 = 7;
+const WIRE_VERSION: u16 = 8;
 const MAX_WIRE_BYTES: usize = 4 * 1024 * 1024;
 /// Largest encoded run declarations; the rest of a frame is envelope.
 const MAX_DECLARATION_BYTES: usize = MAX_WIRE_BYTES - 64 * 1024;
@@ -629,7 +631,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 7);
+        assert_eq!(decoded.version, 8);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::RunDeclarations {
             declarations: declarations.clone(),
@@ -855,7 +857,7 @@ mod tests {
             .unwrap();
             let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
                 serde_json::from_slice(&bytes).unwrap();
-            assert_eq!(decoded.version, 7);
+            assert_eq!(decoded.version, 8);
             assert_eq!(decoded.payload, request);
         }
         let mut scoped = serde_json::to_value(RuntimeIpcRequest::ControlJob {
@@ -1037,6 +1039,59 @@ mod tests {
                 )
             );
         }
+    }
+
+    #[test]
+    fn a_suspended_step_crosses_the_wire_and_names_only_its_boundary() {
+        // Decision 0122: a step names where a suspended run stopped. Every
+        // other step encodes exactly as before, and the point is closed.
+        let cursor = RuntimeEventCursor {
+            run_id: RuntimeRunId::from_raw("run-suspension"),
+            event_id: agentmage_kernel_contracts::RuntimeEventId::from_raw("event-suspension"),
+            sequence: 9,
+            event_sha256: "3".repeat(64),
+        };
+        let point = agentmage_kernel_engine::runtime_loop::RuntimeSuspensionPoint {
+            checkpoint_id: agentmage_kernel_contracts::SessionCheckpointId::from_raw(
+                "checkpoint-suspension",
+            ),
+            checkpoint_sha256: "4".repeat(64),
+            event_cursor: cursor,
+        };
+        let running = RuntimeTransportStep {
+            run_id: RuntimeRunId::from_raw("run-suspension"),
+            request_sha256: "1".repeat(64),
+            events: Vec::new(),
+            artifacts: Vec::new(),
+            approval: None,
+            outcome: None,
+            suspended: None,
+        };
+        let encoded = serde_json::to_value(&running).unwrap();
+        assert!(encoded.get("suspended").is_none());
+        assert_eq!(
+            serde_json::from_value::<RuntimeTransportStep>(encoded).unwrap(),
+            running
+        );
+        let suspended = RuntimeTransportStep {
+            suspended: Some(point),
+            ..running
+        };
+        let response = RuntimeIpcResponse::Step {
+            step: suspended.clone(),
+        };
+        let bytes = serde_json::to_vec(&RuntimeIpcEnvelope {
+            version: WIRE_VERSION,
+            payload: response.clone(),
+        })
+        .unwrap();
+        let decoded: RuntimeIpcEnvelope<RuntimeIpcResponse> =
+            serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(decoded.version, 8);
+        assert_eq!(decoded.payload, response);
+        let mut extra = serde_json::to_value(&suspended).unwrap();
+        extra["suspended"]["resumable"] = serde_json::Value::Bool(true);
+        assert!(serde_json::from_value::<RuntimeTransportStep>(extra).is_err());
     }
 
     #[test]

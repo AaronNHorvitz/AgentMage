@@ -187,11 +187,22 @@ python3 -m scripts.coding_harness start --root "$demo" --model scripted \
   cancellation to the host as a job control request that names the job revision it
   observed; standard error then shows the host's decision and the job ending as
   cancelled, or as completed if the work finished first.
+- Pause and resume: while a prompt is displayed, run
+  `python3 -m scripts.coding_harness pause --root "$demo"` from a second terminal,
+  then answer the prompt. The run stops at the next safe boundary after that step
+  (Decision 0122); standard error shows the suspension and the checkpoint it stopped
+  at, and nothing runs until you run `python3 -m scripts.coding_harness resume --root
+  "$demo"` (or `stop` to cancel). The host then continues the same run from that
+  checkpoint through a new composition, and the job state after the run lists the
+  suspension and resumption answers. A run that finishes before a safe boundary is
+  never suspended. Closing the CLI while the run is suspended leaves the job
+  suspended; reconnecting to it is still open (AMR-04.6.3).
 - Preservation: add a staged, unstaged or untracked file in `$demo/disposable/worktree`
   before `start`; the wrapper must refuse and leave every byte and the Git index unchanged.
 
 To run the whole declared scripted matrix in one step instead (edits, denial,
-cancellation, stale approvals, rollback and the other cases, each in a fresh root), use
+cancellation, pause and resume, stale approvals, rollback and the other cases, each in
+a fresh root), use
 the [acceptance runner](guides/standalone-coding-development.md) with short, new roots:
 
 ```sh
