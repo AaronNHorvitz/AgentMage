@@ -43,7 +43,7 @@
       ],
       "exit_code": 0,
       "id": "muse-edge-codec",
-      "output_sha256": "c43d3aedc2fddc50db9282f290ee6c902bc3b3de29bc19143f834e950f321c84"
+      "output_sha256": "2cc641f511849ac684f7ad6166f2c7e404fdc5bacb71a2d4e5283f088ac34099"
     },
     {
       "argv": [
@@ -56,7 +56,7 @@
       ],
       "exit_code": 0,
       "id": "native-transport-diagnostics",
-      "output_sha256": "55da46e59ce5e4ef39f8c5ff6a61bd8250a8ed5b5742d0d7506264e567f8ad26"
+      "output_sha256": "e7055a104251ead9774d5c756e8484618f238be6592ab2020b6bda0f40b42c13"
     },
     {
       "argv": [
@@ -69,7 +69,7 @@
       ],
       "exit_code": 0,
       "id": "generic-codec",
-      "output_sha256": "91b702b8c68cd41ae2b46089280681e8813aa6aaa4e1714f0c536efb4a800750"
+      "output_sha256": "4f3f3d71d0d58e1bc0505d1f9e2b2e90243807b53b407b4344bbb0922b339191"
     },
     {
       "argv": [
@@ -82,7 +82,7 @@
       ],
       "exit_code": 0,
       "id": "bounded-response",
-      "output_sha256": "ce92ea10564a31bb320bd1211ab7a6682541084c7de7edcef02fe33f3b6ebc12"
+      "output_sha256": "9e0f7e4accaa0bc71375b50fd31668fb2a7cc65578777118abb8b835bdb0220c"
     },
     {
       "argv": [
@@ -95,7 +95,7 @@
       ],
       "exit_code": 0,
       "id": "fake-family-parity",
-      "output_sha256": "20535f82579bbb7e70827ee68cb1ec03c2121a467124218825f7e6e648e8dd66"
+      "output_sha256": "ec767c54e5bb33eae977f23bc7a589b49adbd155f6034a988e6c36b0024b4e5c"
     }
   ],
   "diagnostics": [
@@ -235,7 +235,7 @@
   "production_kernel_family_references": [],
   "record_type": "d027_s13_muse_codec_evidence",
   "schema_version": 3,
-  "source_revision": "503d7c322a2e609080c0c0e00dd9b483703d1746",
+  "source_revision": "03882461cb69f691868eb286c0d4aececc90c538",
   "source_sha256": {
     "kernel/contracts/src/model.rs": "1a19f680cc1468be94930632e4a67ba50f0c16eaf47802ae7ecd65df2ca1695c",
     "kernel/engine/src/accounting_provider.rs": "f0292afed85e4dc1d617061de010622b913749caed5e4620503634c29ef485f4",
@@ -274,7 +274,7 @@
     "kernel/engine/src/communications_teams.rs": "9acd827270b0c9928b0ee35ff86f41a72ce3e319cc4d9b2791cc96078c694825",
     "kernel/engine/src/configuration.rs": "33b6d5d1ffe78c12be86aaf2025260613cabcb23574b0e40d25fa40acb7dbf2c",
     "kernel/engine/src/connected_identity.rs": "b66dfcb79ff82be5061c198037cd5e4eb3e3436667b2af08583c66f19e37623e",
-    "kernel/engine/src/context_inspection.rs": "5074f7ca797423796890ab17adb60322104dfcc40b0af5ac8873f2146b0541aa",
+    "kernel/engine/src/context_inspection.rs": "3692f7e9e6dc8a02e0fd158c369eb2022e12d654c69a1c543b62ba9c14586fd1",
     "kernel/engine/src/context_management.rs": "bc6a562f4573364bc82a3972aae64d93e24b976303c52ce9227018717516c077",
     "kernel/engine/src/conversation_archive.rs": "89bc61a06c8196c1a60ce9c1f97e8a9ad94903dc81a3b1ee5b85340cdba5c633",
     "kernel/engine/src/conversation_library.rs": "8f1b2446128a73b97efde001e41a879f19d8c6efbb23220a6b3bc27fe4726d33",
@@ -321,7 +321,7 @@
     "kernel/engine/src/incident_lifecycle.rs": "28f1e048d3fa806f194c07e4f0e723522dec25cfd46fbd8a80cb8f861a2a3b94",
     "kernel/engine/src/infrastructure_safety.rs": "ab99b10488d49b777db2241c55475a699f5a7437cb2dcc6d014572ef215e1940",
     "kernel/engine/src/instruction_provenance.rs": "0e88d2dd4d200450f777fc8d8b24b3ba6091ae89cadc6c919af6689205ae9c94",
-    "kernel/engine/src/job_control.rs": "31f168ee1347d75726b65dfc2b324d9c729b8c05a2dddd2e13d0172ec01df414",
+    "kernel/engine/src/job_control.rs": "b75b9532ba4601ac7ae247e42959ca0389b8edd156b809a709bcd68f28cbd047",
     "kernel/engine/src/job_scheduler.rs": "2209df39d416695395e160be013b15bb0874af39ff6fe8997f0127d684a1ed6c",
     "kernel/engine/src/lib.rs": "715ec8ffb533bbdcc2e3a9b820fe12d545e2b36f05e30ceae7be35f66454ba16",
     "kernel/engine/src/linux_mail_interop.rs": "aedca1ccb24b64b15f2622ab8f7e1b7bddc22b04eb10ddce5b64522d926f330d",
@@ -402,10 +402,10 @@
     "kernel/engine/src/runtime_inspector.rs": "8f00a2b76a920baae95eff61f71be4c0ec14bf2959091167e4ddb6af9933bd4d",
     "kernel/engine/src/runtime_journal.rs": "3588470c9ed56647802638f766c16418b9f61a8d7ea82a422371c56063b3d464",
     "kernel/engine/src/runtime_lifecycle.rs": "56823d70a711ba278d8918d3cf288061b5addcfd97c6ed228c2ed184b03eb2d2",
-    "kernel/engine/src/runtime_loop.rs": "3bd9a806003c0e6fe93ca6961e885a38e1f2cbdcf55942a4dd95be7183adab45",
+    "kernel/engine/src/runtime_loop.rs": "a0e307933c90be1368b690b2a4565fae07c16b58512cb7bdcf9faa7dceee8b58",
     "kernel/engine/src/runtime_loop/artifact_preparation.rs": "927799cc0abee91289ad650072941a59d20a456dfb2e289a5a17b754e85e66fc",
     "kernel/engine/src/runtime_loop_artifact_preparation_tests.rs": "76c052a6265dfd0acbf33367b2d297cfe7ced195f1484c54d0ef2b0ef6575712",
-    "kernel/engine/src/runtime_loop_tests.rs": "6c098c787f720fc97cc0e068c966c4561904da42dc0e74a0f6bbdb42be4a6502",
+    "kernel/engine/src/runtime_loop_tests.rs": "7bf54efffc7bd96d62880ea74c6b3fd6927beb76b2bc3823f8c3430e4adb5f8e",
     "kernel/engine/src/runtime_projection.rs": "9b2a2274f3328ac8e33d1e8a493b4e374fb8a4dc7c28582b186002647b6de25d",
     "kernel/engine/src/runtime_recovery.rs": "7997cf0ccae000d132eee6b92b990a0891884887441b06ba69cf28dd8494dcb6",
     "kernel/engine/src/s012_it01.rs": "2cbf6a490063f32408dce925deca54cafdf837d440ae389629ce63f2b7490c8f",
