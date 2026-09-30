@@ -74,14 +74,14 @@
   ],
   "manual_fuzzing_executed": false,
   "release_approved": false,
-  "report_sha256": "b63a236d36e30335f7392c5fa8cb9e35385ee8bbefc0a1f880ee578f443351e2",
+  "report_sha256": "24a8b9ee2ffb7f3ad0666efa37ebe6ddc97654121d3a840bf45ea4b5cca72bc0",
   "schema_version": 1,
-  "source_revision": "22741885022b08dd5f8637b4ad69f8eb84ab656d",
+  "source_revision": "4e491c40112fabe906a390b4e95ff14673527596",
   "sources": [
     {
-      "bytes": 209296,
+      "bytes": 212266,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "3bd9a806003c0e6fe93ca6961e885a38e1f2cbdcf55942a4dd95be7183adab45"
+      "sha256": "a0e307933c90be1368b690b2a4565fae07c16b58512cb7bdcf9faa7dceee8b58"
     },
     {
       "bytes": 12024,
@@ -94,9 +94,9 @@
       "sha256": "76c052a6265dfd0acbf33367b2d297cfe7ced195f1484c54d0ef2b0ef6575712"
     },
     {
-      "bytes": 437510,
+      "bytes": 447929,
       "path": "shells/host/src/linux_coding_runtime.rs",
-      "sha256": "a5031f6054fc1e08d5b95d3e61306b50b10366a28cd2b8cb5c8388c12c932c53"
+      "sha256": "387e3f559468229a37704babc1bcf8b5a4fde52c7219f049b47417fc6167217c"
     },
     {
       "bytes": 11099,
@@ -104,9 +104,9 @@
       "sha256": "e101e21d87bb1b7af8475b1612c11c6bb2ee633cb24ae762593a5f66b892d053"
     },
     {
-      "bytes": 61080,
+      "bytes": 62606,
       "path": "shells/host/src/cli_runtime.rs",
-      "sha256": "3c3e190813c5dd63a9a767ea39cb3bef1b7ed78ca3c2b9661c30764b1bdbbe69"
+      "sha256": "9d8d3f65c8ec75c29981012ada6db5403f378d46bfe0f380e179e9c8f44c3538"
     },
     {
       "bytes": 42800,
@@ -161,12 +161,12 @@
     {
       "bytes": 10743,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "5df00cb52112af5581ed4acc5efd0f5d6137f66ad86b53ceefa8151d84ad1c63"
+      "sha256": "511dc0d9598a317641a8f91ffabce42de344cde8bebf5c029a37d2f12613e42e"
     },
     {
       "bytes": 7935,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "7f02c1e8fede93658c9b5a0f6a6cf6b479a205a63f0c1a9cbd99a98a079610bb"
+      "sha256": "336d077f64b99d4893478cc187147e3ed34c34dae59aaba8b1bae73e81b87835"
     },
     {
       "bytes": 10830,
@@ -189,14 +189,14 @@
       "sha256": "b0b0954012c1d8657f1b40a7f41676295f2ad792d0c908f05bf5be072f8b1829"
     },
     {
-      "bytes": 17935,
+      "bytes": 19002,
       "path": "scripts/runtime_coordinator_boundary_review.py",
-      "sha256": "3b99d2c10397993cd579cc32cbd0b314cc952dcd7442a6835efda33e3babc799"
+      "sha256": "65b52954f3f4d4cc27328be8f737b8d767135fec63fc5140b6a114c07b72ebbb"
     },
     {
-      "bytes": 7043,
+      "bytes": 8619,
       "path": "tests/test_runtime_coordinator_boundary_review.py",
-      "sha256": "0c069d917770cace45f9ee0f2ce1943f6ed3d61aa84edd5b7d8d043ff95d7dc5"
+      "sha256": "b71cf85792bd4ea9f5ad0374d141879da4b6bbd5af28e66bfbe9d483dbae6a00"
     }
   ],
   "status": "pass-independent-automated-source-boundary-review",
