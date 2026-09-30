@@ -27,7 +27,7 @@
       ],
       "exit_code": 0,
       "id": "model-contracts",
-      "output_sha256": "e0e012630e78b4cc9d318518b1deb1b9f338db70726b33e1491abd75e05ce64d",
+      "output_sha256": "9069669036c1d33469dd0b106e9a8cd247aa9b43f71dcf21a878374bb8e96c5b",
       "story_id": "13.1"
     },
     {
@@ -40,7 +40,7 @@
       ],
       "exit_code": 0,
       "id": "model-engine",
-      "output_sha256": "d35898b83a9774f7377f554f74a3db17c069cb5fa593fb4a4d00220c6107a4ac",
+      "output_sha256": "11b7620432f2c20f37eda4b87120a9821ae4c08baddff326a27bd79626e72cf6",
       "story_id": "13.1"
     },
     {
@@ -53,7 +53,7 @@
       ],
       "exit_code": 0,
       "id": "linux-native-adapter",
-      "output_sha256": "0934331f13129e6af6b8667162e422e883af423d445c012eb7d642e10a3a3bbd",
+      "output_sha256": "a0468fb4caa9f18488eeb86bea2c0127825fdc65aa395e1b5fbe69bdb1e3dda6",
       "story_id": "13.1"
     },
     {
@@ -65,7 +65,7 @@
       ],
       "exit_code": 0,
       "id": "model-json-contracts",
-      "output_sha256": "e5a3514720cc15518b781d626ef68e3f0b0e1c49646cf2ec500bcc55e7c8a060",
+      "output_sha256": "fcaf43814b1fcca81ebffbeb090db67e10d1d746f73130327a8bcb1b3adf4c91",
       "story_id": "13.1"
     },
     {
@@ -84,7 +84,7 @@
       ],
       "exit_code": 0,
       "id": "model-policy-evidence",
-      "output_sha256": "039eaf0f90536caa4dd1760fb39a94e3001371f1ca2794ca68dbb08d4f2edf7a",
+      "output_sha256": "772be32b056c1641ccbe6cb40bd618598745bb48c701524326f234b8237c1e55",
       "story_id": "13.2"
     }
   ],
@@ -99,7 +99,7 @@
     "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-report.json": "9f85cb0463a8a1dc6ffcdfaaf6c24be1eae7080dcd3d0921d6ac81b4071e8832",
     "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json": "571913bbf14d520847118a6988edecef0950be0118ea8392dfca33718bf76a75",
     "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json": "1230b416221d7e28b3ff038a3b9bd8eca972220eb1549763b4b0d68b1416ed69",
-    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "63d976d3e726f45b61c4010efb4a917c8c248ce0481bf0a1442934ef6be2a8ad"
+    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "1ec2f14668fe6f0ce9183f6b68ad848aae2331e96557c1df927bd430070a23d8"
   },
   "evidence_state": {
     "adapter_contract": "CONTRACT-PASS-LIVE-BLOCKED",
@@ -175,7 +175,7 @@
       "SR-MGM-004"
     ]
   },
-  "source_revision": "03882461cb69f691868eb286c0d4aececc90c538",
+  "source_revision": "e820d50c914e589307329d648dbf9424a4ee8e44",
   "source_sha256": {
     "kernel/contracts/src/agent.rs": "c8cc0af7aa697ba6fb0ef0be8bafc8c2100c910169ee6f9fa2a2807ba48243c5",
     "kernel/contracts/src/agent_proposal.rs": "cd77cca5b9a6c6fd64c54053e9bdae5233cf50942c111c52fefba0945998519f",
