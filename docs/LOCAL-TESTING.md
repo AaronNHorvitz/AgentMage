@@ -166,6 +166,10 @@ python3 -m scripts.coding_harness start --root "$demo" --model scripted \
   --log-dir "$demo-logs"
 ```
 
+With `--log-dir`, the CLI's standard output and standard error, which carry every
+prompt, go to `stdout.jsonl` and `stderr.log` in that directory. Omit `--log-dir` to read
+and answer the prompts on the terminal.
+
 - Apply: type `yes` and Enter at each prompt; the run should show the failing test,
   the exact patch, the rerun and a verified terminal report. Below each write prompt the
   CLI prints a hunk review of the change the exact arguments make to the current file
@@ -179,9 +183,13 @@ python3 -m scripts.coding_harness start --root "$demo" --model scripted \
   the model received. A part the host cannot declare completely says so. It also
   shows the run's two action histories (Decision 0127): one line for each call whose
   grant was used, and for each call you refused, with its outcome, grant or decision
-  and reason; and one line for each job control request the host decided. Last, it
-  shows the run's job state from the host's durable job ledger, and the host's answer
-  to each cancellation request (Decision 0120).
+  and reason; and one line for each job control request the host decided. It then
+  shows the run's model route (Decision 0128): the host routes every model request of
+  the run in local-only mode, so the line names the one selected `strict_local` route,
+  the data classes sent to it and the router's receipt digest, followed by the route's
+  own one-entry history. No remote route is offered, and hybrid routing is still open
+  (AMR-05.9.7). Last, it shows the run's job state from the host's durable job ledger,
+  and the host's answer to each cancellation request (Decision 0120).
 - Select hunks: when a patch review lists two or more numbered hunks, answer
   `select` followed by hunk numbers, for example `select 2`, instead of `yes`. The
   whole call is refused, and the next prompt asks separately for a write of only the
@@ -206,12 +214,24 @@ python3 -m scripts.coding_harness start --root "$demo" --model scripted \
   suspended; reconnecting to it is still open (AMR-04.6.3).
 - Preservation: add a staged, unstaged or untracked file in `$demo/disposable/worktree`
   before `start`; the wrapper must refuse and leave every byte and the Git index unchanged.
-- Export: add `--action-history-export effects:1:3` (or `job-control:1:1`) to `start`.
-  After each run the stream log gets a redacted export of that range of the run's
-  history, written before the outcome row. The export includes its digest and exact
-  document text, and nothing is written elsewhere. A range the run does not have
-  prints `reason: range` on standard error instead. The histories last only as long
+- Export: add `--action-history-export effects:1:3` (or `job-control:1:1`, or
+  `routes:1:1`) to `start`. After each run the stream log gets a redacted export of
+  that range of the run's history, written before the outcome row. The export includes
+  its digest and exact document text, and nothing is written elsewhere. A range the run
+  does not have prints a notice with the reason `range` on standard error instead
+  (`reason=range` in text, `"reason": "range"` in JSON). The histories last only as long
   as the host process; keeping them across restarts is still open (AMR-05.9.6).
+- Support bundle: create a private directory (`mkdir -m 700 "$demo-bundles"`) and add
+  `--support-bundle "$demo-bundles"` to `start` (Decision 0128). After the invocation
+  ends, whether it succeeded, failed or could not start, standard error shows a preview
+  of a content-free support bundle (its payload digest, byte count, field families,
+  redactions and confirmation digest) and asks you to type `yes`. Only `yes` writes the
+  one file `agentmage-support-bundle-<preview id>.json` into that directory; anything
+  else, or end of input, writes nothing. The bundle holds a doctor report of what this
+  CLI invocation observed, component versions and the digests the host declared; every
+  component the CLI did not observe is reported missing. Nothing is uploaded, and
+  `--approve-this-run` does not answer this question. A cancelled invocation asks
+  nothing. Omit `--log-dir` to see the preview and question on the terminal.
 
 To run the whole declared scripted matrix in one step instead (edits, denial,
 cancellation, pause and resume, stale approvals, rollback and the other cases, each in

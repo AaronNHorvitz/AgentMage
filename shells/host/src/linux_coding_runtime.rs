@@ -1225,50 +1225,46 @@ where
                 .pending
                 .remove(key)
                 .ok_or(RuntimePortFailure::Invalid)?;
+            // The person's decision is final once the pending call is removed:
+            // the original call is refused either way, and each branch records
+            // that refusal (Decision 0127; review N1 of `e5f34910`).
             let evaluation =
                 match narrowed_call(self.workspace.profile().write_scope(), &pending, response) {
-                    Ok(derived) => RuntimePermissionEvaluation::Narrowed {
-                        approval_id: pending.authority.approval_id().clone(),
-                        grant_id: pending.authority.proposed_grant_id().clone(),
-                        preview_sha256: pending.authority.preview_sha256().to_owned(),
-                        expires_at_epoch_ms: pending.expires_at_epoch_ms,
-                        decision_sha256,
-                        derived,
-                    },
-                    Err(error) => RuntimePermissionEvaluation::Deny {
-                        approval_id: pending.authority.approval_id().clone(),
-                        grant_id: pending.authority.proposed_grant_id().clone(),
-                        preview_sha256: pending.authority.preview_sha256().to_owned(),
-                        expires_at_epoch_ms: pending.expires_at_epoch_ms,
-                        decision_sha256,
-                        reason_code: error.reason_code().to_owned(),
-                    },
+                    Ok(derived) => {
+                        self.record_refusal(
+                            request,
+                            &pending,
+                            &decision_sha256,
+                            NARROWED_REASON_CODE,
+                            now_epoch_ms,
+                        );
+                        RuntimePermissionEvaluation::Narrowed {
+                            approval_id: pending.authority.approval_id().clone(),
+                            grant_id: pending.authority.proposed_grant_id().clone(),
+                            preview_sha256: pending.authority.preview_sha256().to_owned(),
+                            expires_at_epoch_ms: pending.expires_at_epoch_ms,
+                            decision_sha256,
+                            derived,
+                        }
+                    }
+                    Err(error) => {
+                        self.record_refusal(
+                            request,
+                            &pending,
+                            &decision_sha256,
+                            error.reason_code(),
+                            now_epoch_ms,
+                        );
+                        RuntimePermissionEvaluation::Deny {
+                            approval_id: pending.authority.approval_id().clone(),
+                            grant_id: pending.authority.proposed_grant_id().clone(),
+                            preview_sha256: pending.authority.preview_sha256().to_owned(),
+                            expires_at_epoch_ms: pending.expires_at_epoch_ms,
+                            decision_sha256,
+                            reason_code: error.reason_code().to_owned(),
+                        }
+                    }
                 };
-            // The person's decision is final once the pending call is removed:
-            // the original call is refused either way (Decision 0127).
-            match &evaluation {
-                RuntimePermissionEvaluation::Narrowed {
-                    decision_sha256, ..
-                } => self.record_refusal(
-                    request,
-                    &pending,
-                    decision_sha256,
-                    NARROWED_REASON_CODE,
-                    now_epoch_ms,
-                ),
-                RuntimePermissionEvaluation::Deny {
-                    decision_sha256,
-                    reason_code,
-                    ..
-                } => self.record_refusal(
-                    request,
-                    &pending,
-                    decision_sha256,
-                    reason_code,
-                    now_epoch_ms,
-                ),
-                _ => self.action_history.mark_incomplete(),
-            }
             let event = if let Some(builder) = build_event.as_mut() {
                 let event = builder(&evaluation)?;
                 self.authority
@@ -8956,6 +8952,31 @@ mod tests {
                 .launches,
             1
         );
+        // Review F2 of e5f34910: the session preauthorization issued the
+        // consumed grant, so the run's one entry says so; the fresh grant
+        // authorized it, and the preauthorization and receipt are evidence.
+        let history = fixture
+            .boundary
+            .declare_run_action_history(&fixture.request)
+            .expect("declared history");
+        let [ActionHistoryRecord::Kept(entry)] = history.records.as_slice() else {
+            panic!("one kept entry");
+        };
+        let RuntimePermissionEvaluation::Allow { grant_id, .. } = &allowed else {
+            unreachable!()
+        };
+        assert_eq!(entry.action_kind, HistoryActionKind::CommandRun);
+        assert_eq!(entry.action_id, fixture.operation_id.as_str());
+        assert!(matches!(
+            &entry.authorization,
+            ActionAuthorization::Grant { grant_id: kept, grant_sha256 }
+                if kept == grant_id.as_str() && grant_sha256.len() == 64
+        ));
+        assert_eq!(entry.outcome, ActionOutcome::Succeeded);
+        assert_eq!(entry.reason_code, "coding.preauthorized.succeeded");
+        assert!(entry.evidence_sha256s.contains(&contract_sha256));
+        assert!(entry.evidence_sha256s.contains(&execution.receipt_sha256));
+        assert_eq!(entry.recorded_at_epoch_ms, 1_000);
     }
 
     #[test]
@@ -10602,8 +10623,12 @@ mod tests {
     fn story_48_2_linux_runtime_writes_only_the_selected_hunks_of_a_narrowed_patch() {
         let mut fixture = fixture();
         configure_two_hunk_patch(&mut fixture, TWO_HUNK_SOURCE);
-        let RuntimePermissionEvaluation::Narrowed { derived, .. } =
-            narrow_to_second_hunk(&mut fixture, 6_000)
+        let original_operation_id = fixture.operation_id.clone();
+        let RuntimePermissionEvaluation::Narrowed {
+            derived,
+            decision_sha256: narrowing_sha256,
+            ..
+        } = narrow_to_second_hunk(&mut fixture, 6_000)
         else {
             panic!("expected a derived selected write");
         };
@@ -10646,6 +10671,44 @@ mod tests {
             fs::read(fixture.root.join("worktree/src/lib.rs")).expect("selected source"),
             TWO_HUNK_SOURCE.replace("    2\n", "    20\n").as_bytes()
         );
+        // Review F2 of e5f34910: the narrowing refused the original patch
+        // under the person's decision, then the derived write has its own
+        // entry under the grant its approval issued.
+        let history = fixture
+            .boundary
+            .declare_run_action_history(&fixture.request)
+            .expect("declared history");
+        let [
+            ActionHistoryRecord::Kept(narrowed),
+            ActionHistoryRecord::Kept(written),
+        ] = history.records.as_slice()
+        else {
+            panic!("two kept entries");
+        };
+        assert_eq!(narrowed.action_kind, HistoryActionKind::FileWrite);
+        assert_eq!(narrowed.action_id, original_operation_id.as_str());
+        assert_eq!(
+            narrowed.authorization,
+            ActionAuthorization::PersonDecision {
+                decision_sha256: narrowing_sha256,
+            }
+        );
+        assert_eq!(narrowed.outcome, ActionOutcome::Denied);
+        assert_eq!(narrowed.reason_code, "runtime.coding.narrowed-to-selection");
+        assert_eq!(narrowed.recorded_at_epoch_ms, 6_001);
+        let RuntimePermissionEvaluation::Allow { grant_id, .. } = &allowed else {
+            unreachable!()
+        };
+        assert_eq!(written.action_kind, HistoryActionKind::FileWrite);
+        assert_eq!(written.action_id, "operation-selected-write");
+        assert!(matches!(
+            &written.authorization,
+            ActionAuthorization::Grant { grant_id: kept, .. } if kept == grant_id.as_str()
+        ));
+        assert_eq!(written.outcome, ActionOutcome::Succeeded);
+        assert_eq!(written.reason_code, "coding.approved.succeeded");
+        assert!(written.evidence_sha256s.contains(&execution.receipt_sha256));
+        assert_eq!(written.recorded_at_epoch_ms, 7_001);
     }
 
     #[test]

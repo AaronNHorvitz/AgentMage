@@ -21,7 +21,9 @@ use crate::runtime_transport::{
     RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
 };
 
-const WIRE_VERSION: u16 = 9;
+const WIRE_VERSION: u16 = 10;
+/// The wire version this build speaks, as named in a support bundle.
+pub const RUNTIME_IPC_WIRE_VERSION: u16 = WIRE_VERSION;
 const MAX_WIRE_BYTES: usize = 4 * 1024 * 1024;
 /// Largest encoded run declarations; the rest of a frame is envelope.
 const MAX_DECLARATION_BYTES: usize = MAX_WIRE_BYTES - 64 * 1024;
@@ -612,6 +614,36 @@ mod tests {
         client_scope(&LinuxPeerIdentity::new(1_000, 4_242, 77, [9; 32]))
     }
 
+    /// A local-only receipt with one eligible strict-local route.
+    fn fixture_route_receipt() -> crate::coding_route::RunRouteReceipt {
+        use crate::coding_route::{
+            DEVELOPMENT_ROUTED_DATA, RunRouteAudit, RunRouteMode, RunRouteReceipt,
+        };
+        let mut receipt = RunRouteReceipt {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            request_id: "run-declarations".to_owned(),
+            route_policy_sha256: "4".repeat(64),
+            considered_routes: vec![RunRouteAudit {
+                route_id: "route-local".to_owned(),
+                candidate_sha256: "5".repeat(64),
+                eligible: true,
+                reason_code: "model-gateway.route.eligible".to_owned(),
+            }],
+            selected_route_id: Some("route-local".to_owned()),
+            fallback_used: false,
+            fallback_policy_sha256: None,
+            disclosure_class: Some(agentmage_kernel_contracts::CanonicalEndpointClass::StrictLocal),
+            mode: RunRouteMode::LocalOnly,
+            transmitted_data: DEVELOPMENT_ROUTED_DATA.to_vec(),
+            hybrid_grant_sha256: None,
+            provider_id: None,
+            reason_code: "model-gateway.route.qualified-selected".to_owned(),
+            receipt_sha256: String::new(),
+        };
+        receipt.receipt_sha256 = receipt.computed_sha256().unwrap();
+        receipt
+    }
+
     /// One kept entry of the given kind, refused by a person without authority.
     fn fixture_history(
         kind: agentmage_kernel_engine::action_history::ActionKind,
@@ -645,6 +677,8 @@ mod tests {
             context_inspections: Some(Vec::new()),
             effect_history: Some(fixture_history(ActionKind::FileWrite)),
             job_control_history: Some(fixture_history(ActionKind::JobControl)),
+            route_receipt: Some(fixture_route_receipt()),
+            route_history: Some(fixture_history(ActionKind::ModelRoute)),
         };
         let request = RuntimeIpcEnvelope {
             version: WIRE_VERSION,
@@ -656,7 +690,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 9);
+        assert_eq!(decoded.version, 10);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::RunDeclarations {
             declarations: declarations.clone(),
@@ -686,6 +720,12 @@ mod tests {
                 "\"job_control_history\":{\"x\":1,",
                 1,
             ),
+            // Decision 0128: the route receipt parses closed, with every
+            // member required, and so does each audit inside it.
+            text.replacen("\"route_receipt\":{", "\"route_receipt\":{\"x\":1,", 1),
+            text.replacen("\"provider_id\":null,", "", 1),
+            text.replacen("\"eligible\":true,", "\"eligible\":true,\"x\":1,", 1),
+            text.replacen("\"route_history\":{", "\"route_history\":{\"x\":1,", 1),
         ] {
             assert_ne!(nested, text);
             assert!(serde_json::from_str::<RuntimeIpcResponse>(&nested).is_err());
@@ -757,6 +797,8 @@ mod tests {
                 context_inspections: None,
                 effect_history: None,
                 job_control_history: None,
+                route_receipt: None,
+                route_history: None,
             })
         }
 
@@ -903,7 +945,7 @@ mod tests {
             .unwrap();
             let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
                 serde_json::from_slice(&bytes).unwrap();
-            assert_eq!(decoded.version, 9);
+            assert_eq!(decoded.version, 10);
             assert_eq!(decoded.payload, request);
         }
         let mut scoped = serde_json::to_value(RuntimeIpcRequest::ControlJob {
@@ -1133,7 +1175,7 @@ mod tests {
         .unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcResponse> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 9);
+        assert_eq!(decoded.version, 10);
         assert_eq!(decoded.payload, response);
         let mut extra = serde_json::to_value(&suspended).unwrap();
         extra["suspended"]["resumable"] = serde_json::Value::Bool(true);

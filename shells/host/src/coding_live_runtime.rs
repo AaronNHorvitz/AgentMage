@@ -13,6 +13,9 @@
 //! then records the owner's observation and releases the run's composition. A resumption or
 //! cancellation of the suspended job continues the run inside this host through a new composition
 //! bound to the boundary's cursor (Decision 0122).
+//!
+//! The factory that composed a run hands over the model route it chose, and the service declares
+//! it with the run (Decision 0128).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{
@@ -59,6 +62,7 @@ use crate::coding_action_history::{
 use crate::coding_client::{CodingClientError, LiveCodingCoordinatorPort};
 use crate::coding_context::RunContextInspectionSource;
 use crate::coding_recoverability::{RecoverabilityReport, RunRecoverabilitySource};
+use crate::coding_route::{RunRouteDeclaration, RunRouteReceipt};
 use crate::native_chat_runtime::NativeChatRuntimeFactory;
 use crate::runtime_transport::{
     RUN_DECLARATIONS_SCHEMA_VERSION, RuntimeClientScope, RuntimeJobControl, RuntimeJobStatus,
@@ -120,7 +124,8 @@ where
 /// composed again after a restart, so its owners hold only what happened
 /// since; every part they keep is unavailable rather than partial (review V1
 /// of `8fbd2bc6`, Decisions 0117 and 0127). The service adds the job control
-/// history it keeps itself.
+/// history it keeps itself and the route the factory handed over (Decision
+/// 0128).
 fn declare_run<R: LiveRunDeclarationPort>(
     runtime: &R,
     request: &RuntimeRunRequest,
@@ -146,6 +151,8 @@ fn declare_run<R: LiveRunDeclarationPort>(
             runtime.run_action_history(request)
         },
         job_control_history: None,
+        route_receipt: None,
+        route_history: None,
     }
 }
 
@@ -589,10 +596,12 @@ where
         self.prepared.remove(&key);
         let coordinator = self.factory.compose_runtime(&request)?;
         let job_ledgers = self.factory.take_job_ledgers(&request.run_id);
+        let route = self.factory.take_route_declaration(&request.run_id);
         let mut session = LiveCodingSession::spawn(request, coordinator, slow_subscriber_probe)
             .inspect_err(|_| {
                 eprintln!("coding.live.spawn-denied");
             })?;
+        session.route = route;
         if let Some(ledgers) = job_ledgers {
             session.begin_job(ledgers).inspect_err(|_| {
                 eprintln!("coding.live.job-start-denied");
@@ -788,7 +797,9 @@ where
             .factory
             .take_job_ledgers(&resumed.run_id)
             .ok_or(RuntimeTransportError::JobControlUnavailable)?;
+        let route = self.factory.take_route_declaration(&resumed.run_id);
         let mut session = LiveCodingSession::spawn(resumed, coordinator, false)?;
+        session.route = route;
         session.job_actions = job_actions;
         session.recorded_controls = recorded_controls;
         session.job_history_from_start = job_history_from_start;
@@ -849,6 +860,8 @@ struct LiveCodingSession {
     /// Whether this service decided every control request of the run: false
     /// for a run resumed after a host restart.
     job_history_from_start: bool,
+    /// The model route the factory chose for this composition (Decision 0128).
+    route: Option<RunRouteDeclaration>,
 }
 
 /// The durable job of one live run, owned by this service (Decision 0120).
@@ -969,6 +982,7 @@ impl LiveCodingSession {
             job_actions: RunActionRecorder::new(),
             recorded_controls: BTreeSet::new(),
             job_history_from_start,
+            route: None,
         })
     }
 
@@ -1259,6 +1273,18 @@ impl LiveCodingSession {
             return None;
         }
         self.job_actions.declare()
+    }
+
+    /// The receipt and route history of this composition's model route. A run
+    /// resumed from an event cursor was composed again, so, like its other
+    /// owners' parts, its route is not declared (Decision 0128).
+    fn declare_route(&self) -> (Option<RunRouteReceipt>, Option<RunActionHistory>) {
+        match &self.route {
+            Some(route) if self.request.event_cursor.is_none() => {
+                (Some(route.receipt.clone()), route.history.clone())
+            }
+            _ => (None, None),
+        }
     }
 
     /// Waits, within the boundary bound, until a suspension the worker
@@ -1683,6 +1709,7 @@ impl LiveCodingSession {
         match self.results.recv_timeout(START_WAIT) {
             Ok(Ok(WorkerResponse::Declarations(mut declarations))) => {
                 declarations.job_control_history = self.declare_job_control_history();
+                (declarations.route_receipt, declarations.route_history) = self.declare_route();
                 Ok(declarations)
             }
             Ok(Ok(_)) => Err(RuntimeTransportError::RuntimeEvidenceDenied),
@@ -1841,6 +1868,7 @@ mod tests {
             job_actions: RunActionRecorder::new(),
             recorded_controls: BTreeSet::new(),
             job_history_from_start: true,
+            route: None,
         };
         (session, result_tx, outcome)
     }
@@ -2036,6 +2064,90 @@ mod tests {
             Err(RuntimeTransportError::RequestDenied)
         );
         assert_eq!(ledgers.observation(&job).unwrap(), completed);
+    }
+
+    #[test]
+    #[cfg(all(
+        target_os = "linux",
+        feature = "source-artifacts",
+        feature = "workflow-supervisor"
+    ))]
+    fn a_job_control_history_is_withheld_after_a_restart_or_an_unread_head() {
+        // Review F1 of e5f34910: each completeness rule of the job control
+        // history is exercised on its own. A decided request is kept and
+        // declared; the same history is not declared by a run resumed after
+        // a restart; and a decision whose resulting head was not read leaves
+        // the history undeclared.
+        let (mut session, _result_tx, _) = terminal_pair_fixture(false);
+        let store = crate::runtime_start_tests::JobLedgerStore::new("history-completeness");
+        session.begin_job(store.ledgers()).unwrap();
+        let job = session.request.run_id.as_str().to_owned();
+        let client = RuntimeClientScope::derived("peer-client-a".to_owned());
+        let control = |request_id: &str, observed_revision: u64| JobControlRequest {
+            schema_version: 1,
+            job_id: job.clone(),
+            request_id: request_id.to_owned(),
+            action: JobControlAction::Cancel,
+            observed_revision,
+        };
+        let decide = |session: &LiveCodingSession, request: &JobControlRequest| {
+            session
+                .usable_job()
+                .unwrap()
+                .ledgers
+                .control(&job, client.as_str(), request)
+                .unwrap()
+        };
+        let first = control("cancel-1", 1);
+        let decision = decide(&session, &first);
+        let status = session.replayed_job_status().unwrap();
+        session.record_job_control(&client, &first, decision, Some(&status));
+        let declared = session
+            .declare_job_control_history()
+            .expect("a decided request is declared");
+        assert_eq!(declared.records.len(), 1);
+
+        // The restart rule alone: the same entries, from a run resumed after
+        // a restart, are not declared.
+        session.job_history_from_start = false;
+        assert_eq!(session.declare_job_control_history(), None);
+        session.job_history_from_start = true;
+        assert_eq!(session.declare_job_control_history(), Some(declared));
+
+        // The unread head alone: a later decision whose status was not read
+        // leaves the history incomplete, so it is never declared.
+        let second = control("cancel-2", 2);
+        let decision = decide(&session, &second);
+        session.record_job_control(&client, &second, decision, None);
+        assert_eq!(session.job_actions.declare(), None);
+        assert_eq!(session.declare_job_control_history(), None);
+    }
+
+    #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    fn a_route_is_declared_only_for_the_composition_that_chose_it() {
+        // Decision 0128: the service declares the route the factory handed
+        // over, and nothing for a run resumed from an event cursor, which was
+        // composed again.
+        let (mut session, _result_tx, _) = terminal_pair_fixture(false);
+        assert_eq!(session.declare_route(), (None, None));
+        let route =
+            crate::coding_route::route_development_run(&session.request, "contract-test", 5_000)
+                .unwrap();
+        session.route = Some(route.clone());
+        assert_eq!(
+            session.declare_route(),
+            (Some(route.receipt.clone()), route.history.clone())
+        );
+        let (_, events, _, _) = crate::runtime_read_tests::completed_native_read_fixture();
+        let first = events.first().unwrap();
+        session.request.event_cursor = Some(RuntimeEventCursor {
+            run_id: first.run_id.clone(),
+            event_id: first.event_id.clone(),
+            sequence: first.sequence,
+            event_sha256: first.event_sha256.clone(),
+        });
+        assert_eq!(session.declare_route(), (None, None));
     }
 
     struct CountingDeclarations(std::cell::Cell<usize>);

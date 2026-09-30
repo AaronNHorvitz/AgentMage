@@ -104,6 +104,10 @@ pub struct CodingDevelopmentCliOptions {
     /// One chain and range of each run's action history to export after the
     /// run, printed before its outcome (Decision 0127).
     pub action_history_export: Option<crate::coding_action_history::ActionHistoryExportSelection>,
+    /// Existing private directory into which a support bundle of this
+    /// invocation is previewed and, only after the person confirms it,
+    /// written once (Decision 0128).
+    pub support_bundle: Option<PathBuf>,
 }
 
 /// Parsed CLI action before any transport or authority boundary.
@@ -256,6 +260,7 @@ fn parse_coding_development(
     let mut revoke_preauthorization_before_follow_ups = false;
     let mut approval_delay_ms = None;
     let mut action_history_export = None;
+    let mut support_bundle = None;
     let mut cursor = 0;
     while let Some(argument) = arguments.get(cursor) {
         let target = match argument.as_str() {
@@ -401,6 +406,17 @@ fn parse_coding_development(
                 cursor += 2;
                 continue;
             }
+            "--support-bundle" if support_bundle.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| {
+                        value.starts_with('/') && !value.contains('\0') && value.len() <= 4_096
+                    })
+                    .ok_or(ThinClientError::InvalidValue)?;
+                support_bundle = Some(PathBuf::from(value));
+                cursor += 2;
+                continue;
+            }
             _ => return Err(ThinClientError::InvalidValue),
         };
         let value = arguments
@@ -497,6 +513,7 @@ fn parse_coding_development(
         revoke_preauthorization_before_follow_ups,
         approval_delay_ms: approval_delay_ms.unwrap_or(0),
         action_history_export,
+        support_bundle,
     })
 }
 
@@ -1077,7 +1094,8 @@ Commands:\n\
        --objective TEXT [--follow-up TEXT]... [--resume|--record-session] [--artifact-release-probe-before-follow-ups] [--approve-this-run] [--stale-approval-probe|--replay-approval-probe|--expired-cursor-probe|--artifact-integrity-probe] [--slow-subscriber-probe] [--suspend-resume-probe]\n\
        [--preauthorize-workspace-reads] [--preauthorize-path RELATIVE_PATH]... [--preauthorize-command ID@VERSION@SHA256]...\n\
        [--preauthorization-budget N --preauthorization-minutes N] [--revoke-preauthorization-before-follow-ups]\n\
-       [--approval-delay-ms 1..10000] [--action-history-export effects|job-control:FROM:TO]\n\
+       [--approval-delay-ms 1..10000] [--action-history-export effects|job-control|routes:FROM:TO]\n\
+       [--support-bundle ABSOLUTE_PRIVATE_DIRECTORY]\n\
   chat MESSAGE\n\
   conversations list [--from YYYY-MM-DD] [--to YYYY-MM-DD]\n\
   conversations search QUERY\n\
@@ -1377,6 +1395,52 @@ mod tests {
         }
         let mut missing = probe.to_vec();
         missing.push("--action-history-export");
+        assert!(parse_cli_arguments(&strings(&missing)).is_err());
+        // Decision 0128: the route chain is exportable, and a support bundle
+        // names one absolute directory, once.
+        let mut routes = probe.to_vec();
+        routes.extend(["--action-history-export", "routes:1:1"]);
+        assert!(matches!(
+            parse_cli_arguments(&strings(&routes)),
+            Ok(CliInvocation::Code {
+                development: Some(CodingDevelopmentCliOptions {
+                    action_history_export: Some(
+                        crate::coding_action_history::ActionHistoryExportSelection {
+                            chain: crate::coding_action_history::RunActionChain::Routes,
+                            ..
+                        }
+                    ),
+                    support_bundle: None,
+                    ..
+                }),
+                ..
+            })
+        ));
+        let mut bundle = probe.to_vec();
+        bundle.extend(["--support-bundle", "/tmp/private-bundles"]);
+        assert!(matches!(
+            parse_cli_arguments(&strings(&bundle)),
+            Ok(CliInvocation::Code {
+                development: Some(CodingDevelopmentCliOptions {
+                    support_bundle: Some(ref directory),
+                    ..
+                }),
+                ..
+            }) if directory == &PathBuf::from("/tmp/private-bundles")
+        ));
+        let mut twice = bundle.clone();
+        twice.extend(["--support-bundle", "/tmp/other"]);
+        assert!(parse_cli_arguments(&strings(&twice)).is_err());
+        for invalid in ["relative/bundles", "--resume", ""] {
+            let mut refused = probe.to_vec();
+            refused.extend(["--support-bundle", invalid]);
+            assert!(
+                parse_cli_arguments(&strings(&refused)).is_err(),
+                "{invalid}"
+            );
+        }
+        let mut missing = probe.to_vec();
+        missing.push("--support-bundle");
         assert!(parse_cli_arguments(&strings(&missing)).is_err());
         assert!(matches!(
             parse_cli_arguments(&strings(&[

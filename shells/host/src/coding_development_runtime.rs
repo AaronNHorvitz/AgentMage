@@ -162,6 +162,15 @@ impl CodingDevelopmentModel {
     const fn is_candidate(self) -> bool {
         !matches!(self, Self::Scripted)
     }
+
+    /// The purpose this source's profile is admitted for: contract tests for
+    /// the scripted fixture, evaluation for a development candidate.
+    const fn admitted_purpose(self) -> &'static str {
+        match self {
+            Self::Scripted => "contract-test",
+            Self::Muse | Self::GptOss => "evaluation",
+        }
+    }
 }
 
 /// Closed executable-fixture scenarios. Every value is visibly non-model-qualified.
@@ -361,6 +370,9 @@ pub struct CodingDevelopmentRuntimeFactory {
     /// Job ledgers of the store the last composed run opened, until the host
     /// service takes them (Decision 0120).
     composed_job_ledgers: Option<(RuntimeRunId, DurableJobLedgers)>,
+    /// The model route of the last composed run, until the host service
+    /// takes it (Decision 0128).
+    composed_route: Option<(RuntimeRunId, crate::coding_route::RunRouteDeclaration)>,
 }
 
 impl CodingDevelopmentRuntimeFactory {
@@ -403,6 +415,7 @@ impl CodingDevelopmentRuntimeFactory {
             resume_requested,
             prepared: BTreeMap::new(),
             composed_job_ledgers: None,
+            composed_route: None,
         })
     }
 
@@ -992,6 +1005,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
     ) -> Result<Self::Coordinator, NativeChatRuntimeError> {
         // An untaken handle would keep the previous run's store open.
         self.composed_job_ledgers = None;
+        self.composed_route = None;
         self.activation
             .revalidate()
             .map_err(|_| NativeChatRuntimeError::RequestDenied)?;
@@ -1008,6 +1022,17 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 | CodingDevelopmentScenario::RestartProtocolCorrection
         ) && prepared.skip_scripted_steps == 0
             && request.event_cursor.is_none();
+        // Decision 0128: every model request of this composition is routed in
+        // local-only mode before any model is built; nothing selected refuses.
+        let route = crate::coding_route::route_development_run(
+            request,
+            self.model.admitted_purpose(),
+            now_epoch_ms().map_err(|_| NativeChatRuntimeError::RuntimeFailed)?,
+        )
+        .map_err(|error| {
+            eprintln!("coding.development.route.{}", error.code());
+            NativeChatRuntimeError::RuntimeFailed
+        })?;
         let model = match self.model {
             CodingDevelopmentModel::Scripted => {
                 let mut steps = scripted_steps(
@@ -1136,6 +1161,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             NativeChatRuntimeError::RuntimeFailed
         })?;
         self.composed_job_ledgers = Some((request.run_id.clone(), job_ledgers));
+        self.composed_route = Some((request.run_id.clone(), route));
         Ok(if stop_after_checkpoint {
             coordinator.with_development_checkpoint_stop_probe()
         } else {
@@ -1164,6 +1190,16 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
     fn take_job_ledgers(&mut self, run_id: &RuntimeRunId) -> Option<DurableJobLedgers> {
         match self.composed_job_ledgers.take() {
             Some((composed, ledgers)) if &composed == run_id => Some(ledgers),
+            _ => None,
+        }
+    }
+
+    fn take_route_declaration(
+        &mut self,
+        run_id: &RuntimeRunId,
+    ) -> Option<crate::coding_route::RunRouteDeclaration> {
+        match self.composed_route.take() {
+            Some((composed, route)) if &composed == run_id => Some(route),
             _ => None,
         }
     }

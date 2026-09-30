@@ -49,9 +49,14 @@ pub mod coding_operation;
 pub mod coding_plan;
 pub mod coding_projection;
 pub mod coding_recoverability;
+/// Local-only model routes of the development coding host and their receipts.
+pub mod coding_route;
 /// Exact interface-neutral runtime request framing for coding sessions.
 pub mod coding_run;
 pub mod coding_session;
+#[cfg(all(target_os = "linux", feature = "interactive-cli"))]
+/// Support bundles of one development CLI invocation, exported only on approval.
+pub mod coding_support_bundle;
 pub mod coding_tools;
 /// Deterministic completion verification for bounded coding sessions.
 pub mod coding_verifier;

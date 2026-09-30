@@ -351,6 +351,21 @@ class CodingHarnessTests(unittest.TestCase):
         for invalid in ("effects:0:1", "effects:2:1", "memory:1:1", "effects:1:513", "effects:01:2"):
             with self.assertRaises(argparse.ArgumentTypeError):
                 coding_harness.export_selection(invalid)
+        # Decision 0128: the route chain is exportable, and a support bundle
+        # directory must be an existing absolute directory before launch.
+        self.assertEqual(coding_harness.export_selection("routes:1:1"), "routes:1:1")
+        parsed = coding_harness.parser().parse_args([
+            "start", "--root", "/expected", "--scenario", "failed-test-repair",
+            "--objective", "repair", "--support-bundle", "/expected-bundles",
+        ])
+        self.assertEqual(parsed.support_bundle, Path("/expected-bundles"))
+        with tempfile.TemporaryDirectory() as temporary:
+            self.assertEqual(
+                coding_harness.support_bundle_directory(Path(temporary)), Path(temporary)
+            )
+            for invalid in (Path("relative"), Path(temporary) / "missing"):
+                with self.assertRaises(coding_harness.HarnessError):
+                    coding_harness.support_bundle_directory(invalid)
         with tempfile.TemporaryDirectory() as temporary:
             with self.assertRaises(coding_harness.HarnessError):
                 coding_harness.control(Path(temporary), "pause")

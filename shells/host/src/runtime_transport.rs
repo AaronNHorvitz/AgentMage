@@ -18,6 +18,7 @@ use agentmage_kernel_engine::runtime_loop::RuntimeSuspensionPoint;
 
 use crate::coding_action_history::RunActionHistory;
 use crate::coding_recoverability::RecoverabilityReport;
+use crate::coding_route::RunRouteReceipt;
 
 const PREAUTHORIZATION_SCHEMA_VERSION: u16 = 1;
 const MAX_PREAUTHORIZED_PATHS: usize = 64;
@@ -267,8 +268,9 @@ pub fn is_suspension_event(event: Option<&RuntimeEvent>, point: &RuntimeSuspensi
 }
 
 /// Current run declarations schema: schema 2 adds each run's action
-/// histories (Decision 0127).
-pub const RUN_DECLARATIONS_SCHEMA_VERSION: u16 = 2;
+/// histories (Decision 0127), and schema 3 its model route receipt and route
+/// history (Decision 0128).
+pub const RUN_DECLARATIONS_SCHEMA_VERSION: u16 = 3;
 
 /// Host declarations about one ended run, read before the run is released
 /// (Decision 0116). They describe the run and grant nothing.
@@ -293,6 +295,12 @@ pub struct RuntimeRunDeclarations {
     /// Action history of the run's job control, kept by the host service;
     /// absent when the service cannot declare every decided request.
     pub job_control_history: Option<RunActionHistory>,
+    /// The router's receipt for the run's model requests, absent when the
+    /// composition was not routed by this host (Decision 0128).
+    pub route_receipt: Option<RunRouteReceipt>,
+    /// Action history of the run's model routes, kept by the routing owner;
+    /// absent with the receipt or when its entry could not be kept.
+    pub route_history: Option<RunActionHistory>,
 }
 
 /// Reconciled control state of one held run's job, replayed from the host's

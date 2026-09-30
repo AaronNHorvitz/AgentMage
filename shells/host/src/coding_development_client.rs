@@ -47,6 +47,11 @@ use crate::coding_client::{
 use crate::coding_development_activation::CodingDevelopmentActivation;
 use crate::coding_development_runtime::CodingDevelopmentModel;
 use crate::coding_recoverability::render_recoverability;
+use crate::coding_route::render_run_route_receipt;
+use crate::coding_support_bundle::{
+    InvocationObservation, ObservedRun, SupportBundleAnswer, SupportBundleOutcome,
+    offer_support_bundle, render_support_bundle_outcome,
+};
 use crate::headless::ClientExitCode;
 use crate::runtime_ipc::LinuxRuntimeIpcClient;
 use crate::runtime_transport::{
@@ -109,9 +114,27 @@ impl From<LinuxDevelopmentBoundaryError> for CodingDevelopmentClientError {
 }
 
 /// Runs one exact development invocation through a separately spawned authenticated host.
+/// When a support bundle directory was named, the invocation's bundle is offered after it
+/// ends, whatever the outcome, unless it was cancelled (Decision 0128).
 pub fn run_coding_development(
     options: &CodingDevelopmentCliOptions,
     output: CliOutputFormat,
+) -> Result<ClientExitCode, CodingDevelopmentClientError> {
+    let mut cancellation = InstalledSignalCancellation::install()?
+        .with_suspend_resume_probe(options.suspend_resume_probe);
+    let mut runs = Vec::new();
+    let result = run_invocation(options, output, &mut cancellation, &mut runs);
+    if let Some(directory) = &options.support_bundle {
+        offer_invocation_support_bundle(options, output, directory, &cancellation, runs, &result);
+    }
+    result
+}
+
+fn run_invocation(
+    options: &CodingDevelopmentCliOptions,
+    output: CliOutputFormat,
+    cancellation: &mut InstalledSignalCancellation,
+    runs: &mut Vec<ObservedRun>,
 ) -> Result<ClientExitCode, CodingDevelopmentClientError> {
     let activation = CodingDevelopmentActivation::validate(
         &options.state_root,
@@ -119,8 +142,6 @@ pub fn run_coding_development(
         &options.workspace_root,
     )
     .map_err(|_| CodingDevelopmentClientError::Activation)?;
-    let mut cancellation = InstalledSignalCancellation::install()?
-        .with_suspend_resume_probe(options.suspend_resume_probe);
     cancellation.check_startup()?;
     let mut child = LinuxDevelopmentHostProcess::launch(
         activation.state_root(),
@@ -131,7 +152,7 @@ pub fn run_coding_development(
         options.resume,
     )
     .map_err(CodingDevelopmentClientError::from)?;
-    let result = run_with_child(&activation, options, output, &mut child, &mut cancellation);
+    let result = run_with_child(&activation, options, output, &mut child, cancellation, runs);
     if result.is_err() {
         child
             .terminate_and_reap()
@@ -147,12 +168,95 @@ pub fn run_coding_development(
     result
 }
 
+/// Offers the support bundle of this invocation on standard error, after it
+/// ended (Decision 0128). A cancelled invocation asks nothing. The bundle
+/// never changes the invocation's result.
+fn offer_invocation_support_bundle(
+    options: &CodingDevelopmentCliOptions,
+    output: CliOutputFormat,
+    directory: &std::path::Path,
+    cancellation: &InstalledSignalCancellation,
+    runs: Vec<ObservedRun>,
+    result: &Result<ClientExitCode, CodingDevelopmentClientError>,
+) {
+    let observed = invocation_observation(&options.model, runs, result);
+    let mut stderr = std::io::stderr().lock();
+    let outcome = if invocation_cancelled(cancellation.requested.load(Ordering::Acquire), result) {
+        SupportBundleOutcome::Skipped
+    } else {
+        let preview_id = format!(
+            "support-bundle-{}-{}",
+            current_epoch_ms().unwrap_or(0),
+            std::process::id()
+        );
+        offer_support_bundle(
+            &observed,
+            directory,
+            &preview_id,
+            output,
+            &mut stderr,
+            &mut current_epoch_ms,
+            &mut || match read_development_line(&cancellation.requested) {
+                Ok(LinuxDevelopmentInputLine::Line(line)) if line == "yes" => {
+                    SupportBundleAnswer::Confirmed
+                }
+                Ok(LinuxDevelopmentInputLine::Cancelled) => SupportBundleAnswer::Cancelled,
+                Ok(_) | Err(_) => SupportBundleAnswer::Declined,
+            },
+        )
+    };
+    let _ = stderr.write_all(render_support_bundle_outcome(&outcome, output).as_bytes());
+    let _ = stderr.flush();
+}
+
+/// What this invocation observed, for its support bundle: the selected
+/// source, every run the host served and the failure that ended it, if any.
+fn invocation_observation(
+    model: &str,
+    runs: Vec<ObservedRun>,
+    result: &Result<ClientExitCode, CodingDevelopmentClientError>,
+) -> InvocationObservation {
+    let model = CodingDevelopmentModel::parse(model);
+    InvocationObservation {
+        profile_id: model
+            .map_or("unknown", CodingDevelopmentModel::profile_id)
+            .to_owned(),
+        scripted: model == Some(CodingDevelopmentModel::Scripted),
+        runs,
+        failure_code: result.as_ref().err().map(|error| error.code()),
+    }
+}
+
+/// Whether the invocation was cancelled, so its support bundle asks nothing:
+/// a pending signal, a cancelled run or a cancelled startup.
+fn invocation_cancelled(
+    signal_pending: bool,
+    result: &Result<ClientExitCode, CodingDevelopmentClientError>,
+) -> bool {
+    signal_pending
+        || matches!(result, Ok(ClientExitCode::Cancelled))
+        || matches!(
+            result,
+            Err(CodingDevelopmentClientError::HostBoundary(
+                LinuxDevelopmentBoundaryErrorKind::StartupCancelled
+            ))
+        )
+}
+
+fn current_epoch_ms() -> Option<u64> {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .ok()
+        .and_then(|elapsed| u64::try_from(elapsed.as_millis()).ok())
+}
+
 fn run_with_child(
     activation: &CodingDevelopmentActivation,
     options: &CodingDevelopmentCliOptions,
     output: CliOutputFormat,
     child: &mut LinuxDevelopmentHostProcess,
     cancellation: &mut InstalledSignalCancellation,
+    runs: &mut Vec<ObservedRun>,
 ) -> Result<ClientExitCode, CodingDevelopmentClientError> {
     let envelope = child
         .read_launch_envelope_cancellable(&cancellation.requested)
@@ -227,59 +331,45 @@ fn run_with_child(
             return Err(CodingDevelopmentClientError::Runtime);
         }
         engineering_session_id = Some(result.request.session_id.clone());
-        for verified in &result.verified_artifacts {
-            match output {
-                CliOutputFormat::Human => println!(
-                    "artifact_verified id={} media_type={} sha256={} bytes={} pages={}",
-                    verified.reference.artifact_id.as_str(),
-                    verified.reference.media_type,
-                    verified.reference.payload_sha256,
-                    verified.reference.byte_size,
-                    verified.page_count,
-                ),
-                CliOutputFormat::Json => println!(
-                    "{}",
-                    serde_json::json!({
-                        "type": "runtime_artifact_verified",
-                        "artifact_id": verified.reference.artifact_id.as_str(),
-                        "media_type": verified.reference.media_type,
-                        "payload_sha256": verified.reference.payload_sha256,
-                        "byte_size": verified.reference.byte_size,
-                        "page_count": verified.page_count,
-                    })
-                ),
-            }
-        }
-        let rendered = match output {
+        runs.push(ObservedRun {
+            request_sha256: result.request.request_sha256.clone(),
+            declarations: result.declarations.clone(),
+            job: result.job.as_ref().ok().map(|status| status.job.clone()),
+        });
+        let outcome = match output {
             CliOutputFormat::Human => {
                 render_runtime_outcome_human(&result.request, &result.outcome)
             }
             CliOutputFormat::Json => render_runtime_outcome_json(&result.request, &result.outcome),
         }
         .map_err(|_| CodingDevelopmentClientError::Presentation)?;
-        // A requested export precedes the outcome, which stays last on stdout.
         let (export, export_notice) = render_requested_export(
             options.action_history_export,
             result.declarations.as_ref(),
             output,
         );
-        print!("{export}");
-        eprint!("{export_notice}");
-        println!("{rendered}");
-        // Stderr keeps the machine stream's contract that the outcome is last on stdout.
-        eprint!("{}", sink.take_progress(&result.request.limits));
-        eprint!(
-            "{}",
-            render_run_declarations(result.declarations.as_ref(), output)
-        );
-        eprint!(
-            "{}",
-            render_job_state(
-                result.job.as_ref().map_err(|unavailable| *unavailable),
-                &result.job_controls,
-                output
-            )
-        );
+        let rendered = RenderedRunResult {
+            artifacts: render_verified_artifacts(&result.verified_artifacts, output),
+            export,
+            export_notice,
+            outcome,
+            after_outcome: format!(
+                "{}{}{}",
+                sink.take_progress(&result.request.limits),
+                render_run_declarations(result.declarations.as_ref(), output),
+                render_job_state(
+                    result.job.as_ref().map_err(|unavailable| *unavailable),
+                    &result.job_controls,
+                    output
+                )
+            ),
+        };
+        write_run_result(
+            &mut std::io::stdout().lock(),
+            &mut std::io::stderr().lock(),
+            &rendered,
+        )
+        .map_err(|_| CodingDevelopmentClientError::Presentation)?;
         final_exit = match result.outcome.state {
             AgentStateKind::Success | AgentStateKind::NoOp => ClientExitCode::Success,
             AgentStateKind::Declined | AgentStateKind::Blocked => ClientExitCode::PolicyDenied,
@@ -662,6 +752,72 @@ impl TerminalEventSink {
 /// recoverability of its effects, the view of each composed context and the
 /// run's action histories (Decision 0127). Each part the host could not
 /// declare completely is shown as unavailable.
+/// One run's rendered result, in the order [`write_run_result`] writes it
+/// (review F3 of `e5f34910`).
+struct RenderedRunResult {
+    /// Verified artifact rows, on standard output.
+    artifacts: String,
+    /// A requested action history export, on standard output.
+    export: String,
+    /// A notice instead of an unavailable export, on standard error.
+    export_notice: String,
+    /// The outcome row, the run's last line on standard output.
+    outcome: String,
+    /// Progress, declarations and job state, on standard error.
+    after_outcome: String,
+}
+
+/// Writes one run's result: verified artifact rows and a requested export
+/// precede the outcome, which stays the run's last line on standard output;
+/// everything after it goes to standard error, so the machine stream keeps
+/// its contract (Decision 0127).
+fn write_run_result(
+    stdout: &mut impl Write,
+    stderr: &mut impl Write,
+    rendered: &RenderedRunResult,
+) -> std::io::Result<()> {
+    stdout.write_all(rendered.artifacts.as_bytes())?;
+    stdout.write_all(rendered.export.as_bytes())?;
+    stdout.flush()?;
+    stderr.write_all(rendered.export_notice.as_bytes())?;
+    stderr.flush()?;
+    writeln!(stdout, "{}", rendered.outcome)?;
+    stdout.flush()?;
+    stderr.write_all(rendered.after_outcome.as_bytes())?;
+    stderr.flush()
+}
+
+fn render_verified_artifacts(
+    verified: &[crate::cli_runtime::VerifiedRuntimeArtifact],
+    output: CliOutputFormat,
+) -> String {
+    let mut rendered = String::new();
+    for verified in verified {
+        let line = match output {
+            CliOutputFormat::Human => format!(
+                "artifact_verified id={} media_type={} sha256={} bytes={} pages={}",
+                verified.reference.artifact_id.as_str(),
+                verified.reference.media_type,
+                verified.reference.payload_sha256,
+                verified.reference.byte_size,
+                verified.page_count,
+            ),
+            CliOutputFormat::Json => serde_json::json!({
+                "type": "runtime_artifact_verified",
+                "artifact_id": verified.reference.artifact_id.as_str(),
+                "media_type": verified.reference.media_type,
+                "payload_sha256": verified.reference.payload_sha256,
+                "byte_size": verified.reference.byte_size,
+                "page_count": verified.page_count,
+            })
+            .to_string(),
+        };
+        rendered.push_str(&line);
+        rendered.push('\n');
+    }
+    rendered
+}
+
 fn render_run_declarations(
     declarations: Option<&RuntimeRunDeclarations>,
     output: CliOutputFormat,
@@ -670,6 +826,8 @@ fn render_run_declarations(
     let contexts = declarations.and_then(|value| value.context_inspections.as_ref());
     let effect_history = declarations.and_then(|value| value.effect_history.as_ref());
     let job_control_history = declarations.and_then(|value| value.job_control_history.as_ref());
+    let route_receipt = declarations.and_then(|value| value.route_receipt.as_ref());
+    let route_history = declarations.and_then(|value| value.route_history.as_ref());
     if output == CliOutputFormat::Json {
         return format!(
             "{}\n",
@@ -683,6 +841,10 @@ fn render_run_declarations(
                 "effect_history": effect_history,
                 "job_control_history_available": job_control_history.is_some(),
                 "job_control_history": job_control_history,
+                "route_receipt_available": route_receipt.is_some(),
+                "route_receipt": route_receipt,
+                "route_history_available": route_history.is_some(),
+                "route_history": route_history,
             })
         );
     }
@@ -709,6 +871,11 @@ fn render_run_declarations(
         RunActionChain::JobControl,
         job_control_history,
     ));
+    rendered.push_str(&render_run_route_receipt(route_receipt));
+    rendered.push_str(&render_run_action_history(
+        RunActionChain::Routes,
+        route_history,
+    ));
     rendered
 }
 
@@ -726,6 +893,7 @@ fn render_requested_export(
     let history = declarations.and_then(|value| match selection.chain {
         RunActionChain::Effects => value.effect_history.as_ref(),
         RunActionChain::JobControl => value.job_control_history.as_ref(),
+        RunActionChain::Routes => value.route_history.as_ref(),
     });
     render_action_history_export(selection, history, output == CliOutputFormat::Json)
 }
@@ -1405,6 +1573,8 @@ mod tests {
             context_inspections: Some(vec![view.clone(), view]),
             effect_history: Some(effects.clone()),
             job_control_history: None,
+            route_receipt: None,
+            route_history: None,
         };
         let human = render_run_declarations(Some(&declarations), CliOutputFormat::Human);
         assert!(human.starts_with("recoverability of this run's effects: "));
@@ -1417,8 +1587,13 @@ mod tests {
         assert!(human.contains(
             "- 1 file_write operation-test succeeded; grant grant-test; coding.approved.succeeded\n"
         ));
-        assert!(human.ends_with(
+        assert!(human.contains(
             "action history of this run's job control: unavailable; the host could not declare it completely\n"
+        ));
+        // Decision 0128: an undeclared route says so, as does its history.
+        assert!(human.ends_with(
+            "model route: unavailable; the host could not declare a verified local-only route\n\
+             action history of this run's model routes: unavailable; the host could not declare it completely\n"
         ));
         let json: serde_json::Value = serde_json::from_str(
             render_run_declarations(Some(&declarations), CliOutputFormat::Json).trim_end(),
@@ -1438,6 +1613,10 @@ mod tests {
         );
         assert_eq!(json["job_control_history_available"], false);
         assert!(json["job_control_history"].is_null());
+        assert_eq!(json["route_receipt_available"], false);
+        assert!(json["route_receipt"].is_null());
+        assert_eq!(json["route_history_available"], false);
+        assert!(json["route_history"].is_null());
 
         // Nothing declared, or only part of it, is said to be unavailable.
         let human = render_run_declarations(None, CliOutputFormat::Human);
@@ -1454,6 +1633,53 @@ mod tests {
         .unwrap();
         assert_eq!(json["recoverability_available"], false);
         assert_eq!(json["context_inspections_available"], false);
+    }
+
+    #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    fn a_declared_route_is_shown_with_its_history_in_both_formats() {
+        // Decision 0128: the verified receipt and route history follow the
+        // other declarations; in JSON they are inside the declarations row.
+        let (request, _, _, _) = crate::runtime_read_tests::completed_native_read_fixture();
+        let route =
+            crate::coding_route::route_development_run(&request, "contract-test", 5_000).unwrap();
+        let declarations = RuntimeRunDeclarations {
+            schema_version: crate::runtime_transport::RUN_DECLARATIONS_SCHEMA_VERSION,
+            run_id: request.run_id.clone(),
+            request_sha256: request.request_sha256.clone(),
+            recoverability: None,
+            context_inspections: None,
+            effect_history: None,
+            job_control_history: None,
+            route_receipt: Some(route.receipt.clone()),
+            route_history: route.history.clone(),
+        };
+        let human = render_run_declarations(Some(&declarations), CliOutputFormat::Human);
+        assert!(human.contains(&format!(
+            "model route: local-only; selected {} (strict_local); data conversation, workspace_excerpts, tool_outputs; 1 considered; model-gateway.route.qualified-selected; receipt {}\n",
+            request.model_profile.profile_id.as_str(),
+            &route.receipt.receipt_sha256[..12]
+        )));
+        assert!(human.contains("action history of this run's model routes: 1 entry, head "));
+        assert!(human.contains(&format!(
+            "- 1 model_route {} succeeded; person decision {}; model-gateway.route.qualified-selected\n",
+            request.run_id.as_str(),
+            &request.request_sha256[..12]
+        )));
+        let json: serde_json::Value = serde_json::from_str(
+            render_run_declarations(Some(&declarations), CliOutputFormat::Json).trim_end(),
+        )
+        .unwrap();
+        assert_eq!(json["route_receipt_available"], true);
+        assert_eq!(
+            json["route_receipt"],
+            serde_json::to_value(&route.receipt).unwrap()
+        );
+        assert_eq!(json["route_history_available"], true);
+        assert_eq!(
+            json["route_history"],
+            serde_json::to_value(route.history.as_ref().unwrap()).unwrap()
+        );
     }
 
     /// One succeeded entry of the given kind, authorized by a grant.
@@ -1482,10 +1708,11 @@ mod tests {
     }
 
     #[test]
-    fn a_requested_export_precedes_the_outcome_in_both_formats() {
-        // Decision 0127: the export of the selected chain is printed on
-        // standard output before the outcome; an unavailable chain or range
-        // prints a content-free notice on standard error instead.
+    fn a_requested_export_is_rendered_or_noticed_in_both_formats() {
+        // Decision 0127: the export of the selected chain is rendered for
+        // standard output; an unavailable chain or range renders a
+        // content-free notice for standard error instead. The order in which
+        // they are written is tested below (review F3 of e5f34910).
         use agentmage_kernel_engine::action_history::ActionKind;
         let declarations = RuntimeRunDeclarations {
             schema_version: crate::runtime_transport::RUN_DECLARATIONS_SCHEMA_VERSION,
@@ -1495,6 +1722,8 @@ mod tests {
             context_inspections: None,
             effect_history: Some(action_history(ActionKind::CommandRun)),
             job_control_history: Some(action_history(ActionKind::JobControl)),
+            route_receipt: None,
+            route_history: Some(action_history(ActionKind::ModelRoute)),
         };
         let selection = |text| ActionHistoryExportSelection::parse(text).unwrap();
         assert_eq!(
@@ -1504,6 +1733,7 @@ mod tests {
         for (text, chain) in [
             ("effects:1:1", "effects"),
             ("job-control:1:1", "job-control"),
+            ("routes:1:1", "routes"),
         ] {
             let (stdout, stderr) = render_requested_export(
                 Some(selection(text)),
@@ -1544,6 +1774,110 @@ mod tests {
                     "unavailable"
                 }));
             }
+        }
+    }
+
+    #[test]
+    fn a_requested_export_is_written_before_the_outcome_which_stays_last_on_stdout() {
+        // Review F3 of e5f34910: run_with_child writes each run's result
+        // through write_run_result, so its order is asserted on the bytes it
+        // writes to each stream.
+        use agentmage_kernel_engine::action_history::ActionKind;
+        let declarations = RuntimeRunDeclarations {
+            schema_version: crate::runtime_transport::RUN_DECLARATIONS_SCHEMA_VERSION,
+            run_id: agentmage_kernel_contracts::RuntimeRunId::from_raw("run-cli"),
+            request_sha256: "c".repeat(64),
+            recoverability: None,
+            context_inspections: None,
+            effect_history: Some(action_history(ActionKind::CommandRun)),
+            job_control_history: None,
+            route_receipt: None,
+            route_history: None,
+        };
+        let selection = |text| ActionHistoryExportSelection::parse(text);
+        for output in [CliOutputFormat::Human, CliOutputFormat::Json] {
+            for (wanted, exported) in [("effects:1:1", true), ("job-control:1:1", false)] {
+                let (export, export_notice) =
+                    render_requested_export(selection(wanted), Some(&declarations), output);
+                let rendered = RenderedRunResult {
+                    artifacts: "artifact-row\n".to_owned(),
+                    export,
+                    export_notice,
+                    outcome: "outcome-row".to_owned(),
+                    after_outcome: render_run_declarations(Some(&declarations), output),
+                };
+                let (mut stdout, mut stderr) = (Vec::new(), Vec::new());
+                write_run_result(&mut stdout, &mut stderr, &rendered).unwrap();
+                let stdout = String::from_utf8(stdout).unwrap();
+                let stderr = String::from_utf8(stderr).unwrap();
+                let lines = stdout.lines().collect::<Vec<_>>();
+                // The outcome is the last line on standard output.
+                assert_eq!(lines.last(), Some(&"outcome-row"));
+                assert_eq!(lines.first(), Some(&"artifact-row"));
+                let export_row = lines
+                    .iter()
+                    .position(|line| line.contains("action_history_export"));
+                if exported {
+                    // The export sits between the artifacts and the outcome,
+                    // and its notice stream stays empty.
+                    let export_row = export_row.expect("export row");
+                    assert!(0 < export_row && export_row < lines.len() - 1);
+                    assert!(!stderr.contains("action_history_export"));
+                } else {
+                    // An unavailable chain prints only a notice, on stderr.
+                    assert_eq!(export_row, None);
+                    assert_eq!(lines, ["artifact-row", "outcome-row"]);
+                    assert!(stderr.starts_with(&rendered.export_notice));
+                    assert!(!rendered.export_notice.is_empty());
+                }
+                // Everything after the outcome goes to standard error.
+                assert!(stderr.ends_with(&rendered.after_outcome));
+                assert!(!stdout.contains(rendered.after_outcome.trim_end()));
+                assert!(!stderr.contains("outcome-row"));
+            }
+        }
+    }
+
+    #[test]
+    fn a_support_bundle_observes_the_invocation_and_is_skipped_only_when_cancelled() {
+        // Decision 0128: the bundle names the selected source and the
+        // failure that ended the invocation; a cancelled invocation, by
+        // signal, run or startup, asks nothing.
+        let failed = Err(CodingDevelopmentClientError::HostBoundary(
+            LinuxDevelopmentBoundaryErrorKind::TransferFailed,
+        ));
+        let observed = invocation_observation("scripted", Vec::new(), &failed);
+        assert_eq!(
+            observed.profile_id,
+            crate::coding_development_runtime::SCRIPTED_PROFILE_ID
+        );
+        assert!(observed.scripted && observed.runs.is_empty());
+        assert_eq!(
+            observed.failure_code,
+            Some("linux.development.launch-envelope.failed")
+        );
+        let served = invocation_observation("muse", Vec::new(), &Ok(ClientExitCode::Success));
+        assert_eq!(
+            served.profile_id,
+            crate::coding_development_runtime::MUSE_DEVELOPMENT_PROFILE_ID
+        );
+        assert!(!served.scripted && served.failure_code.is_none());
+        let startup_cancelled = Err(CodingDevelopmentClientError::HostBoundary(
+            LinuxDevelopmentBoundaryErrorKind::StartupCancelled,
+        ));
+        for (signal_pending, result, cancelled) in [
+            (false, Ok(ClientExitCode::Success), false),
+            (false, failed, false),
+            (false, Ok(ClientExitCode::PolicyDenied), false),
+            (true, Ok(ClientExitCode::Success), true),
+            (false, Ok(ClientExitCode::Cancelled), true),
+            (false, startup_cancelled, true),
+        ] {
+            assert_eq!(
+                invocation_cancelled(signal_pending, &result),
+                cancelled,
+                "{result:?}"
+            );
         }
     }
 

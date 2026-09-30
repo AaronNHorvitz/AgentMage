@@ -746,9 +746,11 @@ fn lower_hex(bytes: &[u8]) -> String {
 }
 
 /// Keeps declarations only for this exact run. A recoverability declaration
-/// whose seal, scope or summary does not verify, and an action history that
-/// does not replay to its head or holds another owner's kinds (Decision
-/// 0127), is dropped as unavailable.
+/// whose seal, scope or summary does not verify, an action history that does
+/// not replay to its head or holds another owner's kinds (Decision 0127), a
+/// route receipt that does not recompute or describe a local-only,
+/// strict-local selection for this run, and a route history without its kept
+/// receipt (Decision 0128), is dropped as unavailable.
 fn verified_run_declarations(
     mut declarations: RuntimeRunDeclarations,
     request: &RuntimeRunRequest,
@@ -785,6 +787,21 @@ fn verified_run_declarations(
         }) {
             *history = None;
         }
+    }
+    if declarations.route_receipt.as_ref().is_some_and(|receipt| {
+        crate::coding_route::verify_run_route_receipt(receipt, request).is_err()
+    }) {
+        declarations.route_receipt = None;
+    }
+    if declarations.route_history.as_ref().is_some_and(|history| {
+        crate::coding_route::verify_run_route_history(
+            history,
+            request,
+            declarations.route_receipt.as_ref(),
+        )
+        .is_err()
+    }) {
+        declarations.route_history = None;
     }
     Some(declarations)
 }
@@ -1606,6 +1623,8 @@ mod tests {
             recorder.declare()
         };
         use agentmage_kernel_engine::action_history::ActionKind;
+        let route =
+            crate::coding_route::route_development_run(&request, "contract-test", 5_000).unwrap();
         let valid = RuntimeRunDeclarations {
             schema_version: crate::runtime_transport::RUN_DECLARATIONS_SCHEMA_VERSION,
             run_id: request.run_id.clone(),
@@ -1614,6 +1633,8 @@ mod tests {
             context_inspections: Some(Vec::new()),
             effect_history: history(ActionKind::CommandRun),
             job_control_history: history(ActionKind::JobControl),
+            route_receipt: Some(route.receipt.clone()),
+            route_history: route.history.clone(),
         };
         let mut foreign_run = valid.clone();
         foreign_run.run_id = agentmage_kernel_contracts::RuntimeRunId::from_raw("another-run");
@@ -1632,6 +1653,11 @@ mod tests {
         // not replay, or that holds another owner's kinds, is dropped alone.
         let older_schema = RuntimeRunDeclarations {
             schema_version: 1,
+            ..valid.clone()
+        };
+        // Decision 0128: schema 2, without route parts, is dropped whole too.
+        let schema_two = RuntimeRunDeclarations {
+            schema_version: 2,
             ..valid.clone()
         };
         let mut tampered_history = valid.clone();
@@ -1655,15 +1681,54 @@ mod tests {
             job_control_history: None,
             ..valid.clone()
         };
+        // Decision 0128: a receipt that no longer recomputes is dropped with
+        // the route history that names it; a route history for another
+        // request, or holding another kind, is dropped alone.
+        let mut tampered_receipt = valid.clone();
+        tampered_receipt.route_receipt.as_mut().unwrap().mode =
+            crate::coding_route::RunRouteMode::Hybrid;
+        let without_route = RuntimeRunDeclarations {
+            route_receipt: None,
+            route_history: None,
+            ..valid.clone()
+        };
+        let mut other_request = request.clone();
+        other_request.request_sha256 = "e".repeat(64);
+        let foreign_route_history = RuntimeRunDeclarations {
+            route_history: crate::coding_route::route_development_run(
+                &other_request,
+                "contract-test",
+                5_000,
+            )
+            .unwrap()
+            .history,
+            ..valid.clone()
+        };
+        let route_history_as_effects = RuntimeRunDeclarations {
+            route_history: history(ActionKind::CommandRun),
+            ..valid.clone()
+        };
+        let without_route_history = RuntimeRunDeclarations {
+            route_history: None,
+            ..valid.clone()
+        };
         for (declarations, expected) in [
             (Some(valid.clone()), Some(valid.clone())),
             (Some(foreign_run), None),
             (Some(foreign_request), None),
             (Some(older_schema), None),
+            (Some(schema_two), None),
             (Some(foreign_report), Some(without_report.clone())),
             (Some(tampered), Some(without_report)),
             (Some(tampered_history), Some(without_effects)),
             (Some(swapped), Some(without_histories)),
+            (Some(tampered_receipt), Some(without_route.clone())),
+            (Some(without_route.clone()), Some(without_route)),
+            (
+                Some(foreign_route_history),
+                Some(without_route_history.clone()),
+            ),
+            (Some(route_history_as_effects), Some(without_route_history)),
             (None, None),
         ] {
             let input = input(&request);

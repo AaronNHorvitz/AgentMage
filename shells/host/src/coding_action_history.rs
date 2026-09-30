@@ -3,6 +3,8 @@
 //! The coding tool boundary keeps one entry for each call whose grant it
 //! consumed and for each call a person refused. The host's live runtime service
 //! keeps one entry for each job control request the durable job ledger decided.
+//! The development host's runtime factory keeps one entry for each model route
+//! it selected (Decision 0128).
 //! Each owner keeps its own hash chain (Decision 0124) in memory for the run
 //! and declares it with the run's other declarations (Decision 0116). A chain
 //! that could not keep every entry is never declared. The client replays each
@@ -52,6 +54,8 @@ pub enum RunActionChain {
     Effects,
     /// The host's job control service.
     JobControl,
+    /// The host's model routing owner (Decision 0128).
+    Routes,
 }
 
 impl RunActionChain {
@@ -62,6 +66,7 @@ impl RunActionChain {
                 ActionKind::ToolCall | ActionKind::FileWrite | ActionKind::CommandRun
             ),
             Self::JobControl => matches!(kind, ActionKind::JobControl),
+            Self::Routes => matches!(kind, ActionKind::ModelRoute),
         }
     }
 
@@ -69,6 +74,7 @@ impl RunActionChain {
         match self {
             Self::Effects => "effects",
             Self::JobControl => "job-control",
+            Self::Routes => "routes",
         }
     }
 
@@ -76,6 +82,7 @@ impl RunActionChain {
         match self {
             Self::Effects => "action history of this run's effects",
             Self::JobControl => "action history of this run's job control",
+            Self::Routes => "action history of this run's model routes",
         }
     }
 }
@@ -437,14 +444,15 @@ pub struct ActionHistoryExportSelection {
 }
 
 impl ActionHistoryExportSelection {
-    /// Parses `CHAIN:FROM:TO`, where the chain is `effects` or `job-control`
-    /// and the positions are one-based, inclusive and in order.
+    /// Parses `CHAIN:FROM:TO`, where the chain is `effects`, `job-control` or
+    /// `routes` and the positions are one-based, inclusive and in order.
     #[must_use]
     pub fn parse(value: &str) -> Option<Self> {
         let mut parts = value.split(':');
         let chain = match parts.next()? {
             "effects" => RunActionChain::Effects,
             "job-control" => RunActionChain::JobControl,
+            "routes" => RunActionChain::Routes,
             _ => return None,
         };
         let position = |part: Option<&str>| {
@@ -1072,6 +1080,26 @@ mod tests {
             verify_run_action_history(&controls, RunActionChain::Effects),
             Err(RunActionHistoryError::Invalid)
         );
+        // The route chain keeps model routes only, and no other chain keeps
+        // them (Decision 0128).
+        for chain in [RunActionChain::Effects, RunActionChain::JobControl] {
+            assert!(!chain.admits(ActionKind::ModelRoute));
+        }
+        for kind in [
+            ActionKind::ToolCall,
+            ActionKind::FileWrite,
+            ActionKind::CommandRun,
+            ActionKind::JobControl,
+        ] {
+            assert!(!RunActionChain::Routes.admits(kind));
+        }
+        assert!(RunActionChain::Routes.admits(ActionKind::ModelRoute));
+        for other in [&history, &controls] {
+            assert_eq!(
+                verify_run_action_history(other, RunActionChain::Routes),
+                Err(RunActionHistoryError::Invalid)
+            );
+        }
         let mut changed = history.clone();
         if let ActionHistoryRecord::Kept(entry) = &mut changed.records[1] {
             entry.outcome = ActionOutcome::Cancelled;
@@ -1110,6 +1138,10 @@ mod tests {
             ActionHistoryExportSelection::parse("job-control:2:2").map(|value| value.chain),
             Some(RunActionChain::JobControl)
         );
+        assert_eq!(
+            ActionHistoryExportSelection::parse("routes:1:1").map(|value| value.chain),
+            Some(RunActionChain::Routes)
+        );
         for invalid in [
             "",
             "effects",
@@ -1121,6 +1153,8 @@ mod tests {
             "effects:1:+2",
             "effects:1: 2",
             "memory:1:1",
+            "route:1:1",
+            "Routes:1:1",
             "Effects:1:1",
             "effects:1:513",
             "effects:1:9999999",

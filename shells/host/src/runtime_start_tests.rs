@@ -470,6 +470,7 @@ struct GatedFactory {
     declarations: Arc<AtomicUsize>,
     report: crate::coding_recoverability::RecoverabilityReport,
     job_ledgers: Option<agentmage_kernel_engine::job_ledger_store::DurableJobLedgers>,
+    route: Option<crate::coding_route::RunRouteDeclaration>,
 }
 
 impl NativeChatRuntimeFactory for GatedFactory {
@@ -505,6 +506,13 @@ impl NativeChatRuntimeFactory for GatedFactory {
     ) -> Option<agentmage_kernel_engine::job_ledger_store::DurableJobLedgers> {
         self.job_ledgers.take()
     }
+
+    fn take_route_declaration(
+        &mut self,
+        run_id: &RuntimeRunId,
+    ) -> Option<crate::coding_route::RunRouteDeclaration> {
+        self.route.take().filter(|_| run_id == &self.request.run_id)
+    }
 }
 
 fn last_cursor(
@@ -535,6 +543,8 @@ fn the_live_service_declares_only_a_held_ended_run_that_is_not_busy() {
         &|_| None,
     )
     .unwrap();
+    let route =
+        crate::coding_route::route_development_run(&request, "contract-test", 5_000).unwrap();
     let (open_gate, gate) = std::sync::mpsc::channel();
     let declarations = Arc::new(AtomicUsize::new(0));
     let mut service = LiveCodingRuntimeService::new(GatedFactory {
@@ -545,6 +555,7 @@ fn the_live_service_declares_only_a_held_ended_run_that_is_not_busy() {
         declarations: Arc::clone(&declarations),
         report: report.clone(),
         job_ledgers: None,
+        route: Some(route.clone()),
     });
     let input = RuntimePrepareInput {
         resume: false,
@@ -615,12 +626,16 @@ fn the_live_service_declares_only_a_held_ended_run_that_is_not_busy() {
     assert_eq!(declared.context_inspections, Some(Vec::new()));
     // Decision 0127: the tool boundary's history is declared; this run has no
     // job, so it declares no job control history.
-    assert_eq!(declared.schema_version, 2);
+    assert_eq!(declared.schema_version, 3);
     assert_eq!(
         declared.effect_history,
         crate::coding_action_history::RunActionRecorder::new().declare()
     );
     assert_eq!(declared.job_control_history, None);
+    // Decision 0128: the route the factory chose for this composition is
+    // declared by the service with its history.
+    assert_eq!(declared.route_receipt, Some(route.receipt));
+    assert_eq!(declared.route_history, route.history);
     service
         .release(&request.run_id, &request.request_sha256)
         .unwrap();
@@ -728,6 +743,7 @@ fn gated_live_service(
         declarations: Arc::new(AtomicUsize::new(0)),
         report,
         job_ledgers: Some(ledgers),
+        route: None,
     });
     let input = RuntimePrepareInput {
         resume: request.event_cursor.is_some(),

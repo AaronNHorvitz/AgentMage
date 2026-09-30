@@ -81,6 +81,16 @@ pub trait NativeChatRuntimeFactory {
         None
     }
 
+    /// Hands over the model route this factory chose when it composed
+    /// `run_id` (Decision 0128), for the host service to declare with the
+    /// run. A factory that routes nothing has none.
+    fn take_route_declaration(
+        &mut self,
+        _run_id: &agentmage_kernel_contracts::RuntimeRunId,
+    ) -> Option<crate::coding_route::RunRouteDeclaration> {
+        None
+    }
+
     /// Prepares the request that continues `request`'s run inside this
     /// running host from the checkpoint whose commit event is at `cursor`
     /// (Decision 0122): the same run, bound to that cursor. The run's store
