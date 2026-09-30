@@ -1,9 +1,9 @@
 {
   "artifacts": [
     {
-      "byte_length": 484053,
+      "byte_length": 486324,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "71d9c28c66f34a58da99ede64a7124532c72699c781f858c30e26e4e49415654"
+      "sha256": "cacb9336af06ed8c765335e36783089c13195e6ed0bcb07a4957f590eaa03b1d"
     },
     {
       "byte_length": 4166,
@@ -21,9 +21,24 @@
       "sha256": "18207f406cbb6c7c08748a9ed87ad6fd1665b70d043da5e24f26926b6cdb37bf"
     },
     {
+      "byte_length": 5006,
+      "path": "kernel/engine/fixtures/operational-store/schema-21.json",
+      "sha256": "12cdd3b435419b52770b8a4f217608025e267c1ed5f43fb44df574e4b16e8289"
+    },
+    {
       "byte_length": 250,
       "path": "kernel/engine/migrations/operational-store/0020-research-draft-readers.sql",
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
+    },
+    {
+      "byte_length": 2415,
+      "path": "kernel/engine/migrations/operational-store/0021-job-control-ledgers.sql",
+      "sha256": "6f27f41680d76642fbaae8efded29934bc2ccb797c75c23d7142986d7414573d"
+    },
+    {
+      "byte_length": 14745,
+      "path": "kernel/engine/src/job_ledger_store.rs",
+      "sha256": "779274e19e74834847fd56f5513d91bf7b30fb82b47f11249030320c2fe83d68"
     },
     {
       "byte_length": 2335,
@@ -41,9 +56,14 @@
       "sha256": "86d30819c17b02544b93aadd53810feb7a89c7e4f79add3c55fab01e1e03c88a"
     },
     {
-      "byte_length": 6950,
+      "byte_length": 7576,
       "path": "kernel/engine/src/research_reader_migration_tests.rs",
-      "sha256": "2405f99bc526c7f4df62ba80880655b09cfedf243b52990ddccc9fb71e8e5e62"
+      "sha256": "f028bcb7903c4eec9c99018119a9ee6b6bc1376cca0bb0f98e440de2ad821c9a"
+    },
+    {
+      "byte_length": 6205,
+      "path": "kernel/engine/src/job_ledger_migration_tests.rs",
+      "sha256": "0f2e8de3c1b0177cbd8f209d9248bcd25600beb69e7e14040f5b32e337025cd0"
     },
     {
       "byte_length": 2711,
@@ -51,31 +71,36 @@
       "sha256": "4fe13fbdc8b6917d4b48c58f8c58481c8fe7dbf4831770abf34112ade8fc9029"
     },
     {
-      "byte_length": 1903,
-      "path": "docs/verification/story-11-2-storage-migration-compatibility-evidence.md",
-      "sha256": "8d5ad574018b072d044ede4d2fe50c1bfc2856b8be7291ca5b63bf81fb970ccd"
+      "byte_length": 5110,
+      "path": "docs/decisions/0118-durable-job-control-ledgers.md",
+      "sha256": "5f886084239979a795f40c180e7f8a24d7f825f426ea447300a9bf82aaa13c64"
     },
     {
-      "byte_length": 13163,
+      "byte_length": 2372,
+      "path": "docs/verification/story-11-2-storage-migration-compatibility-evidence.md",
+      "sha256": "90b8bf855e83a52af31c4cb67a47a0c9da903940315b9ad4407c5fefe626c195"
+    },
+    {
+      "byte_length": 14811,
       "path": "scripts/storage_migration_compatibility_evidence.py",
-      "sha256": "bfe40b5057106f1401a4d337384a6b884498b0bd03eac45b4f0a474208bb94ab"
+      "sha256": "8c4dc5aaa86d9a7862e47507b006023ce68f2b83c300101aabd2f73c4dc9af6a"
     },
     {
       "byte_length": 2930,
       "path": "tests/test_storage_migration_compatibility_evidence.py",
-      "sha256": "782bb274ad3eb3334a40ec29756043580127ccd8f6bd6131934eafe003d50679"
+      "sha256": "f6e1198618d88b4392b67f53b71977bc0fa82f57bf83646e0562c42cae0cc35c"
     },
     {
-      "byte_length": 36458,
+      "byte_length": 36989,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-results.log",
-      "sha256": "0d92c54b96f3562acdd29890ec6d7d35a5b8da121e470e4227ad3295c7e37f2f"
+      "sha256": "63e82ee9cf565b0552269a2993aa2b1084479567ab0cb8ef81278ea564b45835"
     }
   ],
   "canonical_store": "operational-store",
   "commands": [
     "cargo test -p agentmage-kernel-engine operational_store::tests::research_migration_tests --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_twenty_schema_matches_fixture_snapshot_and_is_relational --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_twenty_one_schema_matches_fixture_snapshot_and_is_relational --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_one_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::failed_version_ --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::future_schema_and_page_corruption_are_refused --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::exclusive_writer_and_encrypted_backup_are_verified --locked",
@@ -83,9 +108,9 @@
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
-  "generated_on": "2026-09-27",
-  "migration_count": 20,
-  "operational_schema_version": 20,
+  "generated_on": "2026-09-29",
+  "migration_count": 21,
+  "operational_schema_version": 21,
   "product_truth": {
     "downgrade_record_behavior_complete": false,
     "fixture_snapshot_complete": true,
@@ -103,14 +128,17 @@
   },
   "record_type": "agentmage-storage-migration-compatibility-evidence",
   "required_markers": [
+    "version_twenty_upgrades_to_job_ledgers_preserving_records_and_history ... ok",
+    "failed_version_twenty_one_migration_rolls_back_and_stays_retryable ... ok",
+    "version_twenty_corrupt_history_cannot_add_job_ledgers ... ok",
     "version_nineteen_backup_refusal_preserves_source_without_creating_candidate ... ok",
     "version_nineteen_reader_epoch_preserves_tables_records_and_history ... ok",
     "version_nineteen_corrupt_history_cannot_advance_reader_epoch ... ok",
     "failed_version_twenty_reader_epoch_keeps_version_nineteen_retryable ... ok",
     "version_eighteen_upgrades_without_losing_existing_records ... ok",
     "failed_version_nineteen_migration_rolls_back_tables_history_and_version ... ok",
-    "version_twenty_schema_matches_fixture_snapshot_and_is_relational ... ok",
-    "version_one_upgrades_through_twenty_with_exact_history ... ok",
+    "version_twenty_one_schema_matches_fixture_snapshot_and_is_relational ... ok",
+    "version_one_upgrades_through_twenty_one_with_exact_history ... ok",
     "failed_version_two_migration_rolls_back_without_partial_schema ... ok",
     "failed_version_three_migration_rolls_back_all_alterations ... ok",
     "future_schema_and_page_corruption_are_refused ... ok",

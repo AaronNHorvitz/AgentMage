@@ -47,7 +47,7 @@
   ],
   "private_user_data_used": false,
   "schema_version": 1,
-  "source_revision": "85d437907c1cae7ffbf3cd4831a8ec2882bb3bdf",
+  "source_revision": "f5da300e3dbe2cbe015f8d8bb092887941cc9fe9",
   "sources": [
     {
       "bytes": 5674,
@@ -60,9 +60,9 @@
       "sha256": "ba4319939bc4e57d6357e80d217dd872cd8c790447a1d185265736acdb9a2852"
     },
     {
-      "bytes": 484053,
+      "bytes": 486324,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "71d9c28c66f34a58da99ede64a7124532c72699c781f858c30e26e4e49415654"
+      "sha256": "cacb9336af06ed8c765335e36783089c13195e6ed0bcb07a4957f590eaa03b1d"
     },
     {
       "bytes": 10204,

@@ -6,9 +6,9 @@
       "sha256": "a6404b5ab64ce63297f92eaa608e9182f7c522d20a0a745233ca61f13ecaeda0"
     },
     {
-      "byte_length": 484053,
+      "byte_length": 486324,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "71d9c28c66f34a58da99ede64a7124532c72699c781f858c30e26e4e49415654"
+      "sha256": "cacb9336af06ed8c765335e36783089c13195e6ed0bcb07a4957f590eaa03b1d"
     },
     {
       "byte_length": 1417,
@@ -51,6 +51,21 @@
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
     },
     {
+      "byte_length": 5006,
+      "path": "kernel/engine/fixtures/operational-store/schema-21.json",
+      "sha256": "12cdd3b435419b52770b8a4f217608025e267c1ed5f43fb44df574e4b16e8289"
+    },
+    {
+      "byte_length": 2415,
+      "path": "kernel/engine/migrations/operational-store/0021-job-control-ledgers.sql",
+      "sha256": "6f27f41680d76642fbaae8efded29934bc2ccb797c75c23d7142986d7414573d"
+    },
+    {
+      "byte_length": 14745,
+      "path": "kernel/engine/src/job_ledger_store.rs",
+      "sha256": "779274e19e74834847fd56f5513d91bf7b30fb82b47f11249030320c2fe83d68"
+    },
+    {
       "byte_length": 2335,
       "path": "kernel/engine/migrations/operational-store/0019-research-budgets.sql",
       "sha256": "03800068d00ea422acc3702e48bb3cae4c736f104680bb57767ce0b8b1fb6db3"
@@ -66,9 +81,9 @@
       "sha256": "7415c156e7aefc61c5a2a782f5cd0e9cc8195d05b0b4ffc368ca36c9ce8d69c1"
     },
     {
-      "byte_length": 9773,
+      "byte_length": 9960,
       "path": "scripts/story_11_3_resume_evidence.py",
-      "sha256": "325f71551681318d032b0164293a6233736c3e1c01e151f1a873f647a08bdb22"
+      "sha256": "946a8909c157de22b2c2625ad09982e469d1170a7c6128f4d82fc919d28a377b"
     },
     {
       "byte_length": 1827,
@@ -78,7 +93,7 @@
     {
       "byte_length": 27013,
       "path": "artifacts/sprints/sprint-11/story-11.3/durable-resume-results.log",
-      "sha256": "7dc637e4004472f2a63848360735c87cdfb1fb686c6922e66ddb0f44fe0bb280"
+      "sha256": "a4e48176c46d054a5b8f6e3ea92c138aa97578284bffda9b90112a72b6dccc0d"
     }
   ],
   "commands": [

@@ -1,11 +1,11 @@
 $ cargo test -p agentmage-kernel-engine operational_store::tests::older_client_refuses_current_store_before_writer_claim_and_preserves_records --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 1 test
 test operational_store::tests::older_client_refuses_current_store_before_writer_claim_and_preserves_records ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1300 filtered out; finished in 0.17s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1346 filtered out; finished in 0.26s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -121,7 +121,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::future_schema_
 running 1 test
 test operational_store::tests::future_schema_and_page_corruption_are_refused ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1300 filtered out; finished in 0.40s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1346 filtered out; finished in 0.43s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -268,5 +268,11 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/runtime_approval_selection.rs (target/debug/deps/runtime_approval_selection-036a953c43db7a61)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
 $ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s

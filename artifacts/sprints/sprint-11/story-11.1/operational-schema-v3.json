@@ -75,7 +75,7 @@
     ]
   },
   "schema_version": 1,
-  "source_revision": "85d437907c1cae7ffbf3cd4831a8ec2882bb3bdf",
+  "source_revision": "f5da300e3dbe2cbe015f8d8bb092887941cc9fe9",
   "sources": [
     {
       "bytes": 16604,
@@ -93,9 +93,9 @@
       "sha256": "7bbac20f36ed80a1b07bea98641d98c3f894500a11dc7ef7193a1eb29cbc40b6"
     },
     {
-      "bytes": 484053,
+      "bytes": 486324,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "71d9c28c66f34a58da99ede64a7124532c72699c781f858c30e26e4e49415654"
+      "sha256": "cacb9336af06ed8c765335e36783089c13195e6ed0bcb07a4957f590eaa03b1d"
     },
     {
       "bytes": 4912,
@@ -103,9 +103,9 @@
       "sha256": "86d30819c17b02544b93aadd53810feb7a89c7e4f79add3c55fab01e1e03c88a"
     },
     {
-      "bytes": 6950,
+      "bytes": 7576,
       "path": "kernel/engine/src/research_reader_migration_tests.rs",
-      "sha256": "2405f99bc526c7f4df62ba80880655b09cfedf243b52990ddccc9fb71e8e5e62"
+      "sha256": "f028bcb7903c4eec9c99018119a9ee6b6bc1376cca0bb0f98e440de2ad821c9a"
     },
     {
       "bytes": 4815,
@@ -118,14 +118,29 @@
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
     },
     {
-      "bytes": 12424,
+      "bytes": 6205,
+      "path": "kernel/engine/src/job_ledger_migration_tests.rs",
+      "sha256": "0f2e8de3c1b0177cbd8f209d9248bcd25600beb69e7e14040f5b32e337025cd0"
+    },
+    {
+      "bytes": 5006,
+      "path": "kernel/engine/fixtures/operational-store/schema-21.json",
+      "sha256": "12cdd3b435419b52770b8a4f217608025e267c1ed5f43fb44df574e4b16e8289"
+    },
+    {
+      "bytes": 2415,
+      "path": "kernel/engine/migrations/operational-store/0021-job-control-ledgers.sql",
+      "sha256": "6f27f41680d76642fbaae8efded29934bc2ccb797c75c23d7142986d7414573d"
+    },
+    {
+      "bytes": 12625,
       "path": "scripts/operational_schema_v3_evidence.py",
-      "sha256": "aa485d64a0803897d2e0e03d348c55e08ca03b1ee37fe62d2660acad41a0ea87"
+      "sha256": "642ed0aaae4b40bd26caf21c76a69592724a26b438de86cbbad8f37fae9400ee"
     },
     {
       "bytes": 5428,
       "path": "tests/test_operational_schema_v3_evidence.py",
-      "sha256": "dee01552571ed6c20b85058cade6b7889d15cebd5fcaf25ec3d9a25071d57b14"
+      "sha256": "c719b1af5eca2acffc2e6264972c1b3f17661fad381255cc522994bb22af3a36"
     }
   ],
   "status": "pass-versioned-schema-and-migration-chain",
@@ -136,7 +151,7 @@
     {
       "command_id": "8bc5e8635f51ef1995b5f3e693d844a4d92df5362eaa088ed55c2f91691bab37",
       "exit_code": 0,
-      "expected_marker_sha256": "3ec17dea7033198d9579d036849e884a9d9097771edbdc1715956b7938d2c94f",
+      "expected_marker_sha256": "49ac7bcf137a8dc31043dc976359c23d96ca0072faf6d50eb122a81594622c6f",
       "status": "pass"
     },
     {

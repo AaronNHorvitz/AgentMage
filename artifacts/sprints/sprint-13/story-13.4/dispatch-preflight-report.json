@@ -38,7 +38,7 @@
   ],
   "raw_results": {
     "path": "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-results.log",
-    "sha256": "d2c6603c08b196b00092a225bb735b368ea61e0110f8de65674a0b7627d8c75d"
+    "sha256": "ee4e24879be775dd898c18e6551b736a7fcec28841d7c7c869ca69ae60910610"
   },
   "record_type": "agentmage-story-13-4-dispatch-preflight-evidence",
   "recovery": {
@@ -52,7 +52,7 @@
   },
   "remaining_prerequisite": "Run CTX-FIT and CTX-DISPATCH against the exact separately authorized native model/runtime/venue tuple and retain endpoint token reconciliation plus zero-generation refusal evidence.",
   "schema_version": 1,
-  "source_revision": "46119d0324f659d6eaa684ab56452a11a436a107",
+  "source_revision": "f5da300e3dbe2cbe015f8d8bb092887941cc9fe9",
   "source_sha256": {
     "kernel/contracts/src/lib.rs": "d0dbbb70af4116eec198533c47c0a58944642adad364700cb2534ec40db00a28",
     "kernel/contracts/src/model.rs": "1a19f680cc1468be94930632e4a67ba50f0c16eaf47802ae7ecd65df2ca1695c",

@@ -21,9 +21,9 @@
       "sha256": "b34c1c3b248cd91aef81c955e06cc49b2793bdf8816c6b34ef722eee28955b31"
     },
     {
-      "byte_length": 484053,
+      "byte_length": 486324,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "71d9c28c66f34a58da99ede64a7124532c72699c781f858c30e26e4e49415654"
+      "sha256": "cacb9336af06ed8c765335e36783089c13195e6ed0bcb07a4957f590eaa03b1d"
     },
     {
       "byte_length": 4166,
@@ -41,9 +41,24 @@
       "sha256": "18207f406cbb6c7c08748a9ed87ad6fd1665b70d043da5e24f26926b6cdb37bf"
     },
     {
+      "byte_length": 5006,
+      "path": "kernel/engine/fixtures/operational-store/schema-21.json",
+      "sha256": "12cdd3b435419b52770b8a4f217608025e267c1ed5f43fb44df574e4b16e8289"
+    },
+    {
       "byte_length": 250,
       "path": "kernel/engine/migrations/operational-store/0020-research-draft-readers.sql",
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
+    },
+    {
+      "byte_length": 2415,
+      "path": "kernel/engine/migrations/operational-store/0021-job-control-ledgers.sql",
+      "sha256": "6f27f41680d76642fbaae8efded29934bc2ccb797c75c23d7142986d7414573d"
+    },
+    {
+      "byte_length": 14745,
+      "path": "kernel/engine/src/job_ledger_store.rs",
+      "sha256": "779274e19e74834847fd56f5513d91bf7b30fb82b47f11249030320c2fe83d68"
     },
     {
       "byte_length": 2335,
@@ -61,9 +76,9 @@
       "sha256": "b5e3574c6d4000543796edf8700dbc937b58499043db6ee39cf8b1dfa59db8e0"
     },
     {
-      "byte_length": 10480,
+      "byte_length": 10729,
       "path": "scripts/source_lifecycle_transactions_evidence.py",
-      "sha256": "4823d99eb675c64fd5626c9ffd69a8314127f741f675ea850af5ba565680f6ff"
+      "sha256": "61f4d3069d679094141f0cc6c19d59a638ff2ac7ba20a808b4e4189935e98689"
     },
     {
       "byte_length": 2373,
@@ -71,20 +86,20 @@
       "sha256": "e0d6adcdd0cb446614a5b7c58b1d5f969d8b6e0d94856265edcb4414b0b579d1"
     },
     {
-      "byte_length": 18010,
+      "byte_length": 18018,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-results.log",
-      "sha256": "49c0807ca12472ee76a93c82341c7e9b70ef127903f23df4d1eddd06b25cd2d4"
+      "sha256": "5fa0ccc0e1b4463d806f5494a4a98b2f31faea8e40ae58a5a59b54164a1d808e"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine source_lifecycle::tests --locked",
     "cargo test -p agentmage-kernel-engine runtime_artifact::tests::publication_deduplicates_without_broadening_owner_or_reference_state --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_one_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
   "generated_on": "2026-09-26",
-  "operational_store_schema_version": 20,
+  "operational_store_schema_version": 21,
   "physical_payload_authority": {
     "artifact_table": "runtime_artifacts",
     "migration": "0007-runtime-artifacts.sql",
@@ -111,7 +126,7 @@
     "refresh_hold_expiry_delete_and_collection_are_atomic_and_reference_safe ... ok",
     "stale_revision_and_active_hold_roll_back_without_runtime_reference_drift ... ok",
     "publication_deduplicates_without_broadening_owner_or_reference_state ... ok",
-    "version_one_upgrades_through_twenty_with_exact_history ... ok",
+    "version_one_upgrades_through_twenty_one_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

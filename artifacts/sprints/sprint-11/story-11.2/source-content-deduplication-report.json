@@ -16,9 +16,9 @@
       "sha256": "cc6ee1ad0438fb9ed93663fc0326742bf2435f77eb259f540730a60761f1c8c8"
     },
     {
-      "byte_length": 484053,
+      "byte_length": 486324,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "71d9c28c66f34a58da99ede64a7124532c72699c781f858c30e26e4e49415654"
+      "sha256": "cacb9336af06ed8c765335e36783089c13195e6ed0bcb07a4957f590eaa03b1d"
     },
     {
       "byte_length": 4166,
@@ -36,9 +36,24 @@
       "sha256": "18207f406cbb6c7c08748a9ed87ad6fd1665b70d043da5e24f26926b6cdb37bf"
     },
     {
+      "byte_length": 5006,
+      "path": "kernel/engine/fixtures/operational-store/schema-21.json",
+      "sha256": "12cdd3b435419b52770b8a4f217608025e267c1ed5f43fb44df574e4b16e8289"
+    },
+    {
       "byte_length": 250,
       "path": "kernel/engine/migrations/operational-store/0020-research-draft-readers.sql",
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
+    },
+    {
+      "byte_length": 2415,
+      "path": "kernel/engine/migrations/operational-store/0021-job-control-ledgers.sql",
+      "sha256": "6f27f41680d76642fbaae8efded29934bc2ccb797c75c23d7142986d7414573d"
+    },
+    {
+      "byte_length": 14745,
+      "path": "kernel/engine/src/job_ledger_store.rs",
+      "sha256": "779274e19e74834847fd56f5513d91bf7b30fb82b47f11249030320c2fe83d68"
     },
     {
       "byte_length": 2335,
@@ -56,25 +71,25 @@
       "sha256": "ccdbe1e44487558f2bb0748982d72a2e62e2f763706077b08f5b13267deebe6f"
     },
     {
-      "byte_length": 9232,
+      "byte_length": 9481,
       "path": "scripts/source_content_deduplication_evidence.py",
-      "sha256": "15cc751e43c53ed88ab0abc76d52d4c811ff18d96f3bd2d950e344b9af480b49"
+      "sha256": "39fbc883e3982afa5caa527c556e39a53f248566ef87e25f557378058fee87eb"
     },
     {
-      "byte_length": 4645,
+      "byte_length": 4884,
       "path": "tests/test_source_content_deduplication_evidence.py",
-      "sha256": "6b4618fd2718ef19e87c297db36518a7ad3949ed5df7183b5df3d33bc69797e8"
+      "sha256": "ebae83dd0fafc26bd677bd664a0f8ec67940e9398c75eb8e41b10bdeff2e1b91"
     },
     {
-      "byte_length": 17954,
+      "byte_length": 17962,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-results.log",
-      "sha256": "71f3e342b303987f042f33018733b1495b0afa6eb4ff88e9cba5c412de62637f"
+      "sha256": "5b9e1f90e50ab171d583c2b1f71a5e42a6d56178a4ca544c77f82386e29a0f7e"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine runtime_artifact::tests::publication_deduplicates_without_broadening_owner_or_reference_state --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::source_content_deduplication_preserves_every_logical_identity --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_one_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
@@ -93,7 +108,7 @@
     ]
   },
   "generated_on": "2026-09-26",
-  "operational_store_schema_version": 20,
+  "operational_store_schema_version": 21,
   "physical_payload_authority": {
     "artifact_table": "runtime_artifacts",
     "migration": "0007-runtime-artifacts.sql",
@@ -118,7 +133,7 @@
   "required_markers": [
     "publication_deduplicates_without_broadening_owner_or_reference_state ... ok",
     "source_content_deduplication_preserves_every_logical_identity ... ok",
-    "version_one_upgrades_through_twenty_with_exact_history ... ok",
+    "version_one_upgrades_through_twenty_one_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

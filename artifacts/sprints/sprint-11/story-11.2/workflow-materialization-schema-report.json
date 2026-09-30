@@ -11,9 +11,9 @@
       "sha256": "4caabc1a09d7cdedc69ffb231d03a467d9c5dd1aa0f706d917682c17f8aaf223"
     },
     {
-      "byte_length": 484053,
+      "byte_length": 486324,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "71d9c28c66f34a58da99ede64a7124532c72699c781f858c30e26e4e49415654"
+      "sha256": "cacb9336af06ed8c765335e36783089c13195e6ed0bcb07a4957f590eaa03b1d"
     },
     {
       "byte_length": 4698,
@@ -26,9 +26,24 @@
       "sha256": "18207f406cbb6c7c08748a9ed87ad6fd1665b70d043da5e24f26926b6cdb37bf"
     },
     {
+      "byte_length": 5006,
+      "path": "kernel/engine/fixtures/operational-store/schema-21.json",
+      "sha256": "12cdd3b435419b52770b8a4f217608025e267c1ed5f43fb44df574e4b16e8289"
+    },
+    {
       "byte_length": 250,
       "path": "kernel/engine/migrations/operational-store/0020-research-draft-readers.sql",
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
+    },
+    {
+      "byte_length": 2415,
+      "path": "kernel/engine/migrations/operational-store/0021-job-control-ledgers.sql",
+      "sha256": "6f27f41680d76642fbaae8efded29934bc2ccb797c75c23d7142986d7414573d"
+    },
+    {
+      "byte_length": 14745,
+      "path": "kernel/engine/src/job_ledger_store.rs",
+      "sha256": "779274e19e74834847fd56f5513d91bf7b30fb82b47f11249030320c2fe83d68"
     },
     {
       "byte_length": 2335,
@@ -46,9 +61,9 @@
       "sha256": "bed95f4b316d35e7f9ec48544dc02a34b43fb718ca1bb7c93cfb3f065d36e6fb"
     },
     {
-      "byte_length": 9735,
+      "byte_length": 9984,
       "path": "scripts/workflow_materialization_schema_evidence.py",
-      "sha256": "7f29aaffeb77454f3b2b398d748949a754e5d9197854d035f9334e95f1174125"
+      "sha256": "b61871f829aab0df55b7afee0de5c31a18d363720811f501b664d0cf7d1ae0a5"
     },
     {
       "byte_length": 2494,
@@ -56,18 +71,18 @@
       "sha256": "453042a3bd98c10f1036744c4d08ff698929b6c35f711ad9a4ce644df5230a96"
     },
     {
-      "byte_length": 13538,
+      "byte_length": 13546,
       "path": "artifacts/sprints/sprint-11/story-11.2/workflow-materialization-schema-results.log",
-      "sha256": "f944238ac6d8aa13e1718136ff0a32cf11577dc3156b87d9fcf2e5d269e1441a"
+      "sha256": "ed20bffc054a8b6cfa660556b9d42c63a230042f2feb336972a29907314efb42"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine operational_store::tests::workflow_materializations_bind_existing_run_session_event_and_receipt_authorities --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_one_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
-  "current_operational_store_schema_version": 20,
+  "current_operational_store_schema_version": 21,
   "existing_authorities": {
     "event_table": "runtime_events",
     "metadata_store": "operational-store",
@@ -107,7 +122,7 @@
   "record_type": "agentmage-workflow-materialization-schema-evidence",
   "required_markers": [
     "workflow_materializations_bind_existing_run_session_event_and_receipt_authorities ... ok",
-    "version_one_upgrades_through_twenty_with_exact_history ... ok",
+    "version_one_upgrades_through_twenty_one_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

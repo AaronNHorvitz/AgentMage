@@ -11,9 +11,9 @@
       "sha256": "5821bc16e3f91dd88faadba445f663a00794c402c0472940380062c5a5051f4e"
     },
     {
-      "byte_length": 484053,
+      "byte_length": 486324,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "71d9c28c66f34a58da99ede64a7124532c72699c781f858c30e26e4e49415654"
+      "sha256": "cacb9336af06ed8c765335e36783089c13195e6ed0bcb07a4957f590eaa03b1d"
     },
     {
       "byte_length": 4698,
@@ -26,9 +26,24 @@
       "sha256": "18207f406cbb6c7c08748a9ed87ad6fd1665b70d043da5e24f26926b6cdb37bf"
     },
     {
+      "byte_length": 5006,
+      "path": "kernel/engine/fixtures/operational-store/schema-21.json",
+      "sha256": "12cdd3b435419b52770b8a4f217608025e267c1ed5f43fb44df574e4b16e8289"
+    },
+    {
       "byte_length": 250,
       "path": "kernel/engine/migrations/operational-store/0020-research-draft-readers.sql",
       "sha256": "1f1e3664bcdd5c740be344f971c35794a5269d01330eb1699157b61bca6489ea"
+    },
+    {
+      "byte_length": 2415,
+      "path": "kernel/engine/migrations/operational-store/0021-job-control-ledgers.sql",
+      "sha256": "6f27f41680d76642fbaae8efded29934bc2ccb797c75c23d7142986d7414573d"
+    },
+    {
+      "byte_length": 14745,
+      "path": "kernel/engine/src/job_ledger_store.rs",
+      "sha256": "779274e19e74834847fd56f5513d91bf7b30fb82b47f11249030320c2fe83d68"
     },
     {
       "byte_length": 2335,
@@ -46,9 +61,9 @@
       "sha256": "f04af91a9de2762dca16359bd8a7f78c72e1c5aa5e3599f0f515540031ff2f44"
     },
     {
-      "byte_length": 9107,
+      "byte_length": 9364,
       "path": "scripts/source_materialization_schema_evidence.py",
-      "sha256": "758ceb1b8ca09e09ec760e0bb1adf098610df241723373e99e436b2401538dd6"
+      "sha256": "21da969baa4f4a4ec86ad88d32d65938e462ee4a00b7b6d73cd1d7e93e6a9a62"
     },
     {
       "byte_length": 2258,
@@ -56,19 +71,19 @@
       "sha256": "f1ed002bd3a2d443c886fc71afc506cdbdef47d8863623e7a955b497bcdf4a21"
     },
     {
-      "byte_length": 17990,
+      "byte_length": 18006,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-results.log",
-      "sha256": "d38f1cc3d6d0d35d62ce90d6694cd87cbc3918a229eff8f06c4e6803692d15a4"
+      "sha256": "8701f6f8f135508d5ae8c92b2e80a3d9388d68c7f5091b24a51e2b50cf3d0588"
     }
   ],
   "commands": [
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_twenty_schema_matches_fixture_snapshot_and_is_relational --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_twenty_one_schema_matches_fixture_snapshot_and_is_relational --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_twenty_one_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
-  "current_operational_store_schema_version": 20,
+  "current_operational_store_schema_version": 21,
   "generated_on": "2026-09-26",
   "materialization_migration_version": 12,
   "normalized_tables": [
@@ -104,9 +119,9 @@
   },
   "record_type": "agentmage-source-materialization-schema-evidence",
   "required_markers": [
-    "version_twenty_schema_matches_fixture_snapshot_and_is_relational ... ok",
+    "version_twenty_one_schema_matches_fixture_snapshot_and_is_relational ... ok",
     "source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store ... ok",
-    "version_one_upgrades_through_twenty_with_exact_history ... ok",
+    "version_one_upgrades_through_twenty_one_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,
