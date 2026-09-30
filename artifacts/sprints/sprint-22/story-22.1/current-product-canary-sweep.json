@@ -3,7 +3,7 @@
   "commands": [
     {
       "command_id": "6147400fb3af627c2fe95ac302b598f86454145964d69b8fe78fee7600f8cb28",
-      "elapsed_ms": 74,
+      "elapsed_ms": 63,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "context-admission",
@@ -11,7 +11,7 @@
     },
     {
       "command_id": "5e565890568892ad049a51415396b0640f96f2c1128570e8d1ef659f42a85f12",
-      "elapsed_ms": 47,
+      "elapsed_ms": 54,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "persistence-policy",
@@ -19,7 +19,7 @@
     },
     {
       "command_id": "90774bc47105a422d76a6c89ce3311073fe7c59046a92a6dc4ad2141e110e1ec",
-      "elapsed_ms": 354,
+      "elapsed_ms": 351,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "encrypted-store-export",
@@ -35,7 +35,7 @@
     },
     {
       "command_id": "097bb636caa2450918164a00a0f65b6bf7f7974edd913b4443e94092b3adba4d",
-      "elapsed_ms": 219,
+      "elapsed_ms": 253,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "runtime-artifacts",
@@ -51,7 +51,7 @@
     },
     {
       "command_id": "9d01542265a1ffd3d0a08de8f89f062e93d01990c9f3e61b03e79bc1fb9c9755",
-      "elapsed_ms": 86,
+      "elapsed_ms": 87,
       "exit_code": 0,
       "expected_marker": "1 passed; 0 failed",
       "id": "native-encrypted-payloads",
@@ -59,7 +59,7 @@
     },
     {
       "command_id": "6c1a95258b657afcf0ec844de7801c3201df63aad821576097181e4eb1b8920d",
-      "elapsed_ms": 2934,
+      "elapsed_ms": 2968,
       "exit_code": 0,
       "expected_marker": "zero undeclared network paths",
       "id": "strict-local-telemetry",
@@ -109,10 +109,10 @@
     "redactions": [
       "repository-root"
     ],
-    "sha256": "644f423d3cb5f7862854d3982913f17ee0c2402c7205008cde8e590fbd7dfcc3"
+    "sha256": "1295250c1a0eb7478ae0f1200fbfedef648dad91264da766d1bd467b31bc1504"
   },
   "schema_version": 1,
-  "source_revision": "414158e0645644ace18ce5a8d976e7772dedc627",
+  "source_revision": "3709eabe0ddc4ed04027e982dee9f9e204a53790",
   "sources": [
     {
       "bytes": 43165,
@@ -140,9 +140,9 @@
       "sha256": "cc6ee1ad0438fb9ed93663fc0326742bf2435f77eb259f540730a60761f1c8c8"
     },
     {
-      "bytes": 300017,
+      "bytes": 310866,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "50098f6cbf257b6b5bd14936516d56244a44b7d8675af9eba9296400463c226c"
+      "sha256": "fc6aa5e1e2ea7b24247aca5785b07340b2a90be7b2b435850f45c1b1348a0a99"
     },
     {
       "bytes": 97078,

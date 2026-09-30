@@ -112,11 +112,11 @@
     },
     {
       "path": "shells/host/src/cli.rs",
-      "sha256": "5269dcfb114055bacf015414320cd9ae6caeae1d29d67cdc86d94a6fe09ce208"
+      "sha256": "f91fe3d26ab7525fe07bbbae856a626d88125c8f6abb2d27e32a1f4f8518e3c5"
     },
     {
       "path": "shells/host/src/coding_client.rs",
-      "sha256": "e101e21d87bb1b7af8475b1612c11c6bb2ee633cb24ae762593a5f66b892d053"
+      "sha256": "90f2fe495b773f08f7c7a5523a0e73c698e0cba76071f265ab2c25eed462fa89"
     },
     {
       "path": "shells/host/src/coding_harness.rs",
