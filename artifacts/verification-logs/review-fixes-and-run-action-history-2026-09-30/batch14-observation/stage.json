@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "stage": "batch14-observation",
+  "source_revision": "4e3e46420122dd66d7dc32e48ed12069ec578e29",
+  "scope": "batch 14 actual Linux CLI observation at the clean evidence revision",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "python3",
+      "<state>/batch14-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "f7fad1db3740b5136d76a24c0fb2ff40fc7b7e9f324bc38165c2429d4f143e73",
+      "private_sha256": "d29f5de9070ad7469bd0e9fdd0f6fafa0ccc9ba9e5540fce1aa206d89ac616d4"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 12.572,
+      "log": "01.log",
+      "log_sha256": "bfabf3456bdfd1ba2170545ec4e12099162912952071c204b70099f0f639c04b",
+      "private_log_sha256": "eb40a297eb0e4444dff8a92140521a932b40d8791be3687df42f0adb8ebc0b40"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "<state>/batch14-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 1.755,
+      "log": "02.log",
+      "log_sha256": "eac159a8f7c867e36d4a2fdff04e1d362593decc6a6b15cb9257860ea2dc8104",
+      "private_log_sha256": "eac159a8f7c867e36d4a2fdff04e1d362593decc6a6b15cb9257860ea2dc8104"
+    }
+  ]
+}

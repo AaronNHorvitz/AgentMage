@@ -1,0 +1,182 @@
+{
+  "record_type": "agentmage-review-fixes-and-run-action-history-verification",
+  "date": "2026-09-30",
+  "base_commit": "7c593b3b33f07fcd0e7b509da86420dfcb695a32",
+  "head_commit": "4e3e46420122dd66d7dc32e48ed12069ec578e29",
+  "source_commit": "5bd76952c18484005e1a294fbe69546b5616c0ec",
+  "retained_logs": "artifacts/verification-logs/review-fixes-and-run-action-history-2026-09-30",
+  "stages": [
+    "batch14-source-checks",
+    "batch14-core",
+    "batch14-rebind",
+    "batch14-gate",
+    "batch14-boundary",
+    "batch14-security-index",
+    "batch14-blocked-causes",
+    "batch14-observation"
+  ],
+  "inventory": "artifacts/verification-logs/review-fixes-and-run-action-history-2026-09-30/binding-inventory.json",
+  "check_logs": {
+    "contracts": "batch14-source-checks/02.log",
+    "engine": "batch14-source-checks/03.log",
+    "repository_map": "batch14-source-checks/04.log",
+    "inference": "batch14-source-checks/05.log",
+    "knowledge": "batch14-source-checks/06.log",
+    "linux": "batch14-source-checks/07.log",
+    "host": "batch14-source-checks/08.log"
+  },
+  "fields": {
+    "decisions": [
+      "docs/decisions/0127-review-fixes-and-run-action-history.md"
+    ],
+    "review_resolved": "independent review of 7c593b3b (PASS; F1-F5 low, N1-N7 notes); F1, F2, F3, F5, N2 and N4 are addressed in 5bd76952 under Decision 0127, and F4 by the corrected batch 13 record specification and its regenerated JSON record in the same commit",
+    "components": [
+      {
+        "row": "AMR-05.9.1",
+        "scope": "component, host-unit, wire and CLI: the tool boundary records consumed grants and a person's refusals and narrowings, the live runtime service records decided job control requests, run declarations schema 2 carries both histories over IPC wire 9, the CLI verifies, shows and exports them; the boundary's recording glue is exercised only by native boundary tests, which fail at the native sandbox fixture in this lane like their siblings"
+      }
+    ],
+    "mutation_checks": "run before the source commit with private tooling, each applying one exact replacement and running the package filter: 22 single mutations over the review fixes (5) and the action history recorder, drafts, chain verification, export selection, service, driver and client rules (17). 21 made their expected test fail at once. The survivor let the effects chain admit job control entries; no test put a job control entry in the effects chain. A test now does, and the rerun caught it. These runs are not retained logs",
+    "failure_comparison": "linux 188 passed, 19 failed, 51 ignored and host 383 passed, 52 failed, 10 ignored; both failure name sets are identical to the batch 13 source-check baseline; the host passes ten more tests than batch 13 (nine action history unit tests and the export test); the two native boundary tests extended with history assertions (story_48_2_linux_runtime_user_denial_is_inert_and_non_replayable, story_48_2_linux_runtime_applies_one_exact_structured_patch) were already in the failure set and fail at the same native fixture, so their new assertions are unverified here",
+    "retained_failures": [
+      {
+        "stage": "batch14-source-checks",
+        "indexes": [
+          7,
+          8
+        ],
+        "cause": "the known native-prerequisite failures of the Linux and host suites, identical names to the batch 13 baseline"
+      },
+      {
+        "stage": "batch14-blocked-causes",
+        "indexes": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless browser; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+      }
+    ],
+    "blocked_refreshes": [
+      {
+        "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+        "stale_since": "batch 7",
+        "blocker": "pytest is not installed (batch14-blocked-causes/01.log)"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+        "stale_since": "batch 7",
+        "blocker": "full host suite and product gate: the 52 native-prerequisite host failures (batch14-source-checks/08.log)"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+        "stale_since": "batch 7",
+        "blocker": "host handoff tests fail at native fixtures (batch14-blocked-causes/02.log) and the product gate as above"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+        "stale_since": "batch 7",
+        "blocker": "documentation gate: Mermaid cannot find its headless browser (batch14-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+        "stale_since": "batch 7",
+        "blocker": "host frontier test fails at a native fixture (batch14-blocked-causes/03.log) and the documentation gate as above"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-15/local-evidence-report.json",
+        "stale_since": "before batch 12 (four other inputs)",
+        "blocker": "its producer runs the full host suite (the 52 native-prerequisite failures, batch14-source-checks/08.log); review F3"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-31/local-evidence-report.json",
+        "stale_since": "before batch 12",
+        "blocker": "its producer runs the product gate (the workspace suites with the native-prerequisite failures, batch14-source-checks/07.log and 08.log) and the documentation gate (batch14-blocked-causes/04.log and 05.log); its check mode still validates it at its own revision (batch14-extended-rest/01.log); review F3"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-34/local-evidence-report.json",
+        "stale_since": "before batch 12",
+        "blocker": "its producer runs the full host suite with all features (the native-prerequisite failures, batch14-source-checks/08.log); its check mode still validates it at its own revision (batch14-extended-rest/02.log); review F3"
+      }
+    ],
+    "sbom_writes": 1,
+    "sbom_components_changed": [
+      "agentmage-capability-knowledge",
+      "agentmage-capability-repository-map",
+      "agentmage-host",
+      "agentmage-kernel-engine"
+    ],
+    "cascade": "no operational store source and no library root changed, so no Sprint 11 store wave, configuration root or agent progress renewal was needed beyond the supply-chain bindings; the one SBOM write staled the Story 1.1 artifact index and security map, the Story 1.2 contract evidence index, the Story 3.1 component inventory, configuration startup report and security map (renewed in batch14-core) and the Sprint 79 and Sprint 108 reports, whose producers read the committed supply chain and so were renewed at the core commit (batch14-rebind); TASKS.md staled the Story 1.2 contract boundary register; the CLI option staled the Sprint 27 to 34 knowledge boundary reviews and the v0.4 coding pack manifest and readiness report (batch14-core); the engine changes staled the Muse codec chain, and the renewed component inventory staled the Story 11.1 security map and through it the Story 11.2 storage security, frozen-scope, AC1 and AC3 reports and the Story 12.1 map (batch14-rebind); the CLI driver, live service, transport and IPC changes staled the Story 23.4 runtime campaign, coordinator boundary review, security map and evidence index (batch14-gate, batch14-boundary, batch14-security-index)",
+    "review_pins": [
+      {
+        "gate": "scripts/story_11_2_gate.py",
+        "from": "1caf2f477a313bcf3fb4292e9b299c6ffce843d2",
+        "to": "545f8554cb8185a06a3e0d5d1fd4e2b929827e46",
+        "reviewed_paths_retained": 25,
+        "changed_reviewed_paths": [
+          {
+            "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+            "reason": "regenerated by the batch 14 evidence pass after the renewed Story 11.1 security map; only one bound digest changed"
+          },
+          {
+            "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+            "reason": "regenerated by the batch 14 evidence pass after the renewed storage security report; only one bound digest changed"
+          },
+          {
+            "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+            "reason": "regenerated by the batch 14 evidence pass after the renewed storage security report; only one bound digest changed"
+          }
+        ]
+      }
+    ],
+    "newly_stale_disposition": "only historical records: six retained batch 11, 12 and 13 stage records, which pin inputs as they were at their revisions",
+    "runtime_campaign": "renewed at 545f8554 for the CLI driver, live coding service, transport and IPC changes of Decision 0127 (batch14-gate); the coordinator boundary review passes all 12 checks at dbaa9535 (batch14-boundary)",
+    "cli_observation": {
+      "source_commit": "4e3e46420122dd66d7dc32e48ed12069ec578e29",
+      "binaries_sha256": {
+        "agentmage": "e011c9cb3201eb986d8f81fbc8e6bab539178d4e66935017fbb7180ca57b01ad",
+        "agentmage-host": "a8df73378e071d80560fd49747c768d9332497b33d71d8065732894d076a0b66",
+        "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+      },
+      "clean_scripted_start_exit": 5,
+      "clean_start_requested_export": "effects:1:3",
+      "clean_refusal_code": "linux.repository.git_artifact.invalid",
+      "clean_preserved": true,
+      "invalid_export_selection_exit": 2,
+      "invalid_export_selection_code": "client.protocol.value_invalid",
+      "dirty_start_exit": 1,
+      "dirty_preserved": true,
+      "idle_stop_exit": 1,
+      "idle_pause_exit": 1,
+      "idle_resume_exit": 1,
+      "action_history_observed": false,
+      "qualification": "actual-binary-native-prerequisite-refusal-only",
+      "reason": "native prerequisites refuse the launch before any run starts in this sandbox, so no action history is produced by an actual process here; the actual CLI refuses a malformed export selection before any host launch",
+      "attachment": "batch14-observation/attachments/observation.json"
+    },
+    "not_run": [
+      "an actual-process run that produces, shows or exports an action history (AMR-05.10)",
+      "persistence of action histories across host restarts (AMR-05.9.6)",
+      "the other AMR-05.9 integrations (AMR-05.9.2 to AMR-05.9.5)",
+      "the native-only Linux boundary tests, including the two extended with history assertions",
+      "the actual-process AMR-04 rows (AMR-04.2.3, 04.6.3, 04.7.2, 04.9, 04.10)",
+      "positive native coding workflow",
+      "real model or GPU",
+      "manual user acceptance",
+      "release"
+    ],
+    "claims": {
+      "task_rows_closed": [
+        {
+          "row": "AMR-05.9.1",
+          "closed_by": "the ledger commit that follows this record",
+          "scope": "component, host-unit, wire and CLI row: unit and service tests in this lane; the tool boundary's recording glue is covered only by native tests not run here; no actual process produced a history"
+        }
+      ],
+      "release_claim": "none",
+      "independent_review_of_this_batch": "requested; open"
+    }
+  }
+}

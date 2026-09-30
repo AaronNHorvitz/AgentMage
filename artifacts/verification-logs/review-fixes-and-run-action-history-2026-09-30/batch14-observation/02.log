@@ -1,0 +1,13 @@
+cli-help exit 0
+clean-setup exit 0
+clean-diagnose exit 0
+clean-start exit 5
+cli-export-invalid exit 2
+clean-status exit 0
+clean-stop-idle exit 1
+clean-pause-idle exit 1
+clean-resume-idle exit 1
+dirty-setup exit 0
+dirty-start exit 1
+dirty-status exit 0
+BATCH14_LINUX_OBSERVATION_COMPLETE=1

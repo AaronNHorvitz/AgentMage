@@ -1,0 +1,41 @@
+...................................................................................inventory does not reproduce
+.........................................Initialized empty Git repository in <tmpdir>/tmpzgqn09kh/fixture/disposable/worktree/.git/
+[agentmage/tasks/coding-fixture (root-commit) 363e45d] test: initialize synthetic coding fixture
+ 3 files changed, 29 insertions(+)
+ create mode 100644 .agentmage-development-workspace
+ create mode 100644 src/calc.py
+ create mode 100644 tests/run_validation.py
+............Initialized empty Git repository in <tmpdir>/tmpcqkk9plt/new/disposable/worktree/.git/
+[agentmage/tasks/coding-fixture (root-commit) d3043b5] test: initialize synthetic coding fixture
+ 2 files changed, 27 insertions(+)
+ create mode 100644 .agentmage-development-workspace
+ create mode 100644 tests/run_validation.py
+Initialized empty Git repository in <tmpdir>/tmpcqkk9plt/multi/disposable/worktree/.git/
+[agentmage/tasks/coding-fixture (root-commit) e6e4476] test: initialize synthetic coding fixture
+ 4 files changed, 35 insertions(+)
+ create mode 100644 .agentmage-development-workspace
+ create mode 100644 src/calc.py
+ create mode 100644 src/subtract.py
+ create mode 100644 tests/run_validation.py
+.Initialized empty Git repository in <tmpdir>/tmp01_8fn4z/fixture/disposable/worktree/.git/
+[agentmage/tasks/coding-fixture (root-commit) 51e71c3] test: initialize synthetic coding fixture
+ 3 files changed, 29 insertions(+)
+ create mode 100644 .agentmage-development-workspace
+ create mode 100644 src/calc.py
+ create mode 100644 tests/run_validation.py
+........
+----------------------------------------------------------------------
+Ran 145 tests in 67.348s
+
+OK
+{"counts": {"current": 1, "newly-stale": 1, "previously-stale-or-historical": 1}, "newly_stale_artifacts": ["evidence/bound.json"]}
+{"counts": {"current": 1, "newly-stale": 1, "previously-stale-or-historical": 1}, "newly_stale_artifacts": ["evidence/bound.json"]}
+{"record": "fixture-verification", "stages": 1}
+{"record": "fixture-verification", "stages": 1}
+{"activation": true, "agentmage_binary": "/bin/true", "base": "<tmpdir>/tmpzgqn09kh/fixture", "confinement": false, "confinement_prerequisites": {"native_executables": {"bwrap": "untrusted-path", "git": "untrusted-path", "systemctl": "untrusted-path", "systemd-run": "untrusted-path"}, "ready": false, "scope": "prerequisites-only", "user_manager": "not-probed-untrusted-systemctl"}, "disposable_private": true, "fixture_profile_id": "scripted-executable-fixture-32k-v1", "git_branch": "refs/heads/agentmage/tasks/coding-fixture", "git_clean": true, "host_binary": "/bin/true", "lifecycle": "ready", "model_request": {"observation": "unavailable", "qualification": "not-assessed", "selection": null, "serving": "not-observed"}, "read_worker_binary": "/bin/true", "schema_version": 2, "scope": "development-diagnostics-only", "state_key": "not-created", "state_private": true, "transport_path": true, "workspace_private": true}
+coding.harness.cancellation-requested
+coding.harness.suspension-requested
+coding.harness.resumption-requested
+{"activation": true, "agentmage_binary": "/bin/true", "base": "<tmpdir>/tmpcqkk9plt/new", "confinement": false, "confinement_prerequisites": {"native_executables": {"bwrap": "untrusted-path", "git": "untrusted-path", "systemctl": "untrusted-path", "systemd-run": "untrusted-path"}, "ready": false, "scope": "prerequisites-only", "user_manager": "not-probed-untrusted-systemctl"}, "disposable_private": true, "fixture_profile_id": "scripted-executable-fixture-32k-v1", "git_branch": "refs/heads/agentmage/tasks/coding-fixture", "git_clean": true, "host_binary": "/bin/true", "lifecycle": "ready", "model_request": {"observation": "unavailable", "qualification": "not-assessed", "selection": null, "serving": "not-observed"}, "read_worker_binary": "/bin/true", "schema_version": 2, "scope": "development-diagnostics-only", "state_key": "not-created", "state_private": true, "transport_path": true, "workspace_private": true}
+{"activation": true, "agentmage_binary": "/bin/true", "base": "<tmpdir>/tmpcqkk9plt/multi", "confinement": false, "confinement_prerequisites": {"native_executables": {"bwrap": "untrusted-path", "git": "untrusted-path", "systemctl": "untrusted-path", "systemd-run": "untrusted-path"}, "ready": false, "scope": "prerequisites-only", "user_manager": "not-probed-untrusted-systemctl"}, "disposable_private": true, "fixture_profile_id": "scripted-executable-fixture-32k-v1", "git_branch": "refs/heads/agentmage/tasks/coding-fixture", "git_clean": true, "host_binary": "/bin/true", "lifecycle": "ready", "model_request": {"observation": "unavailable", "qualification": "not-assessed", "selection": null, "serving": "not-observed"}, "read_worker_binary": "/bin/true", "schema_version": 2, "scope": "development-diagnostics-only", "state_key": "not-created", "state_private": true, "transport_path": true, "workspace_private": true}
+{"activation": true, "agentmage_binary": "/bin/true", "base": "<tmpdir>/tmp01_8fn4z/fixture", "confinement": false, "confinement_prerequisites": {"native_executables": {"bwrap": "untrusted-path", "git": "untrusted-path", "systemctl": "untrusted-path", "systemd-run": "untrusted-path"}, "ready": false, "scope": "prerequisites-only", "user_manager": "not-probed-untrusted-systemctl"}, "disposable_private": true, "fixture_profile_id": "scripted-executable-fixture-32k-v1", "git_branch": "refs/heads/agentmage/tasks/coding-fixture", "git_clean": true, "host_binary": "/bin/true", "lifecycle": "ready", "model_request": {"observation": "unavailable", "qualification": "not-assessed", "selection": null, "serving": "not-observed"}, "read_worker_binary": "/bin/true", "schema_version": 2, "scope": "development-diagnostics-only", "state_key": "not-created", "state_private": true, "transport_path": true, "workspace_private": true}
