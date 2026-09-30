@@ -152,38 +152,38 @@
       {
         "byte_length": 6455,
         "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
-        "sha256": "45a10ec44bf2d8fcde7821bb53fcd24e4d14af4ab4c290c58fe412ed06bc9795"
+        "sha256": "9bc90d2bcc529a91aa77442ca25434aff45bdb0914ed5d723db4da027374ad63"
       },
       {
         "byte_length": 3901,
         "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
-        "sha256": "f4c42748baa7d22b4dbc3f1e68a095fe9ec5eb8e51db828ffb29c115fa528a82"
+        "sha256": "4cf77590cb5ff42d255b09284d95b1512bed59cc57dc30c9cec8f484ab760d85"
       },
       {
         "byte_length": 6030,
         "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
-        "sha256": "49786408ec7b40e34b4b4209ef237b034f35d2e6226858e392269593622ff224"
+        "sha256": "27465424be5ed1ee41496e5ff5fb43dddafecfb705e93b6862533dc2d1314978"
       },
       {
         "byte_length": 5225,
         "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
-        "sha256": "6d0a248005f6d224a3078cd7e243d361e821dc395438df27cf063a3b45871a97"
+        "sha256": "37165f8325ab7cb2a33e3b2bcd44a3a040c2384d9bfd473b28640bcde1aae750"
       }
     ],
     "external_human_review_status": "not-performed",
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "45552ff5c695bed64e7de90697fd5333adec73f5",
-    "reviewed_tree": "858c24e19af8c6387f5d5ab249c4108c1e2aef73",
+    "reviewed_commit": "d710d443c4a254fbe9c29aa774c474d8d751f828",
+    "reviewed_tree": "7cb3216e0c1127e9af1d20b8690658236df6a618",
     "reviewer_id": "agentmage-story-11.2-independent-gate-v1"
   },
   "installed_product_claim": "none",
   "platform_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "45552ff5c695bed64e7de90697fd5333adec73f5",
-  "reviewed_tree": "858c24e19af8c6387f5d5ab249c4108c1e2aef73",
+  "reviewed_commit": "d710d443c4a254fbe9c29aa774c474d8d751f828",
+  "reviewed_tree": "7cb3216e0c1127e9af1d20b8690658236df6a618",
   "schema_version": 1,
   "sprint_completion_claim": false,
   "status": "blocked-open-dependencies-and-platform-integration",

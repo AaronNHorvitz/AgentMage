@@ -4,14 +4,14 @@
     {
       "argv_sha256": "b3bf1a712beea095c7e1f3eaa345c7a01cb714dd183ea72e6eb67820381cb92b",
       "command_id": "prepared-artifact-matrix",
-      "elapsed_ms": 255,
+      "elapsed_ms": 242,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 41408,
+      "peak_rss_kib": 41096,
       "test_result": {
         "failed": 0,
-        "filtered_out": 1339,
+        "filtered_out": 1348,
         "ignored": 0,
         "measured": 0,
         "passed": 12
@@ -20,14 +20,14 @@
     {
       "argv_sha256": "b26bfb863a1251b307c473309b2fa69a8ddccbeb10b4b37bb83f2f2a1e19196f",
       "command_id": "engine-session-matrix",
-      "elapsed_ms": 86,
+      "elapsed_ms": 92,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 41636,
+      "peak_rss_kib": 40952,
       "test_result": {
         "failed": 0,
-        "filtered_out": 1333,
+        "filtered_out": 1342,
         "ignored": 0,
         "measured": 0,
         "passed": 18
@@ -36,14 +36,14 @@
     {
       "argv_sha256": "d25c1a35db190c5821af496f6e3cc07b1ba96ddb12ec19c8b6a21d7bc7325ee1",
       "command_id": "native-read-matrix",
-      "elapsed_ms": 107,
+      "elapsed_ms": 106,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 49400,
+      "peak_rss_kib": 50176,
       "test_result": {
         "failed": 0,
-        "filtered_out": 403,
+        "filtered_out": 412,
         "ignored": 0,
         "measured": 0,
         "passed": 6
@@ -52,14 +52,14 @@
     {
       "argv_sha256": "dfe8124eee6fbf3abfde662ff05627ee295973fb06018fc558fa4c1ff65ae353",
       "command_id": "native-chat-transport",
-      "elapsed_ms": 325,
+      "elapsed_ms": 353,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 49984,
+      "peak_rss_kib": 49664,
       "test_result": {
         "failed": 0,
-        "filtered_out": 406,
+        "filtered_out": 415,
         "ignored": 0,
         "measured": 0,
         "passed": 3
@@ -68,14 +68,14 @@
     {
       "argv_sha256": "6bd11bbd4996b6e78ff6e621938b77f2c0a339f3b44af3f4d2c09976540d6891",
       "command_id": "three-client-parity",
-      "elapsed_ms": 353,
+      "elapsed_ms": 350,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 49956,
+      "peak_rss_kib": 49980,
       "test_result": {
         "failed": 0,
-        "filtered_out": 408,
+        "filtered_out": 417,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -84,14 +84,14 @@
     {
       "argv_sha256": "dcbd95278f6e59895a67a6092b1c2ffc167a47b68d41b501a1dcc0acf578656f",
       "command_id": "client-confusion-bypass",
-      "elapsed_ms": 83,
+      "elapsed_ms": 75,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 49704,
+      "peak_rss_kib": 50012,
       "test_result": {
         "failed": 0,
-        "filtered_out": 408,
+        "filtered_out": 417,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -100,14 +100,14 @@
     {
       "argv_sha256": "52f0dcaa22117142bfade3bdb039d530e2264557b36bbc50db671925b010c307",
       "command_id": "workflow-authority-bypass",
-      "elapsed_ms": 324,
+      "elapsed_ms": 330,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 49512,
+      "peak_rss_kib": 49896,
       "test_result": {
         "failed": 0,
-        "filtered_out": 408,
+        "filtered_out": 417,
         "ignored": 0,
         "measured": 0,
         "passed": 1
@@ -116,21 +116,21 @@
     {
       "argv_sha256": "47cdc321aaa5c7c4ed9eed236a4c8f7fcf3cee3ea5f1542a8e3304e1832cac09",
       "command_id": "dependency-direction",
-      "elapsed_ms": 20,
+      "elapsed_ms": 18,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 12068,
+      "peak_rss_kib": 12584,
       "test_result": null
     },
     {
       "argv_sha256": "1ba5e4e0d2b5860ae9e4b0ed786fc45413e659b7c435186b2ad8dc781a2c4045",
       "command_id": "effect-mediation",
-      "elapsed_ms": 2334,
+      "elapsed_ms": 2286,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 1048576,
-      "peak_rss_kib": 42028,
+      "peak_rss_kib": 43076,
       "test_result": null
     }
   ],
@@ -173,7 +173,7 @@
   "manual_fuzzing_executed": false,
   "performance": {
     "cancellation": {
-      "elapsed_us": 599,
+      "elapsed_us": 589,
       "event_count": 4,
       "model_calls": 0,
       "output_bytes": 0,
@@ -182,7 +182,7 @@
       "turns": 0
     },
     "direct": {
-      "elapsed_us": 1338,
+      "elapsed_us": 2301,
       "event_count": 6,
       "model_calls": 1,
       "output_bytes": 23,
@@ -191,7 +191,7 @@
       "turns": 1
     },
     "maximum": {
-      "elapsed_us": 5495,
+      "elapsed_us": 9109,
       "event_count": 33,
       "model_calls": 4,
       "output_bytes": 23,
@@ -201,7 +201,7 @@
     },
     "maximum_scenario_us": 250000,
     "nominal": {
-      "elapsed_us": 3758,
+      "elapsed_us": 4534,
       "event_count": 15,
       "model_calls": 2,
       "output_bytes": 23,
@@ -210,7 +210,7 @@
       "turns": 2
     },
     "over_limit": {
-      "elapsed_us": 5006,
+      "elapsed_us": 4787,
       "event_count": 33,
       "model_calls": 4,
       "output_bytes": 0,
@@ -227,10 +227,10 @@
     "redactions": [
       "repository-root"
     ],
-    "sha256": "76e1e9039f36da6db706292af9a76fb8fc60e2bc0454a8329e3448f82f99c7a5"
+    "sha256": "52749bc787885580cce99593bcd074233068e22ce9ba658c921eeca79d091aa7"
   },
   "schema_version": 1,
-  "source_revision": "45552ff5c695bed64e7de90697fd5333adec73f5",
+  "source_revision": "d710d443c4a254fbe9c29aa774c474d8d751f828",
   "sources": [
     {
       "bytes": 14158,
@@ -268,14 +268,14 @@
       "sha256": "fc6aa5e1e2ea7b24247aca5785b07340b2a90be7b2b435850f45c1b1348a0a99"
     },
     {
-      "bytes": 13832,
+      "bytes": 14220,
       "path": "shells/host/src/coding_client.rs",
-      "sha256": "90f2fe495b773f08f7c7a5523a0e73c698e0cba76071f265ab2c25eed462fa89"
+      "sha256": "857f1ecbd7cec393dc04dac06e454499ff86e49c3c7eef3bccd9c776b4609d37"
     },
     {
-      "bytes": 113366,
+      "bytes": 121992,
       "path": "shells/host/src/cli_runtime.rs",
-      "sha256": "f758626ed4b4ad856653347f7ba5fe989098cecfd28626fc3aefd5753776ea12"
+      "sha256": "17d46db3903e660e90b492688de6b41d6a0a7c440c997fb1a8eae7909f358c69"
     },
     {
       "bytes": 43793,
