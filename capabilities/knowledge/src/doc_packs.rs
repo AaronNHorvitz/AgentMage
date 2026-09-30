@@ -1063,6 +1063,11 @@ mod tests {
             Box::new(|value| value.files[0].media_type = DocPackMediaType::PlainText),
             Box::new(|value| value.files.swap(0, 1)),
             Box::new(|value| value.files[1] = value.files[0].clone()),
+            // Note N2 of `7c593b3b`: a repeated path with a consistent total.
+            Box::new(|value| {
+                value.files[1] = value.files[0].clone();
+                value.total_bytes = value.files.iter().map(|file| file.byte_len).sum();
+            }),
             Box::new(|value| value.files[0].byte_len = 0),
             Box::new(|value| value.files[0].sha256 = "A".repeat(64)),
             Box::new(|value| value.total_bytes += 1),

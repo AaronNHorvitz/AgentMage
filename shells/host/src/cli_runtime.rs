@@ -746,12 +746,14 @@ fn lower_hex(bytes: &[u8]) -> String {
 }
 
 /// Keeps declarations only for this exact run. A recoverability declaration
-/// whose seal, scope or summary does not verify is dropped as unavailable.
+/// whose seal, scope or summary does not verify, and an action history that
+/// does not replay to its head or holds another owner's kinds (Decision
+/// 0127), is dropped as unavailable.
 fn verified_run_declarations(
     mut declarations: RuntimeRunDeclarations,
     request: &RuntimeRunRequest,
 ) -> Option<RuntimeRunDeclarations> {
-    if declarations.schema_version != 1
+    if declarations.schema_version != crate::runtime_transport::RUN_DECLARATIONS_SCHEMA_VERSION
         || declarations.run_id != request.run_id
         || declarations.request_sha256 != request.request_sha256
     {
@@ -767,6 +769,22 @@ fn verified_run_declarations(
         .is_err()
     }) {
         declarations.recoverability = None;
+    }
+    for (history, chain) in [
+        (
+            &mut declarations.effect_history,
+            crate::coding_action_history::RunActionChain::Effects,
+        ),
+        (
+            &mut declarations.job_control_history,
+            crate::coding_action_history::RunActionChain::JobControl,
+        ),
+    ] {
+        if history.as_ref().is_some_and(|value| {
+            crate::coding_action_history::verify_run_action_history(value, chain).is_err()
+        }) {
+            *history = None;
+        }
     }
     Some(declarations)
 }
@@ -1567,12 +1585,35 @@ mod tests {
             )
             .unwrap()
         };
+        let history = |kind| {
+            use agentmage_kernel_engine::action_history::{
+                ActionAuthorization, ActionOutcome, ActionRecordDraft,
+            };
+            let mut recorder = crate::coding_action_history::RunActionRecorder::new();
+            recorder.record(Some(ActionRecordDraft {
+                action_kind: kind,
+                action_id: "command-1".to_owned(),
+                authorization: ActionAuthorization::PersonDecision {
+                    decision_sha256: "4".repeat(64),
+                },
+                effect_sha256: "5".repeat(64),
+                outcome: ActionOutcome::Denied,
+                reason_code: "runtime.coding.user-denied".to_owned(),
+                evidence_sha256s: Vec::new(),
+                recorded_at_epoch_ms: 1,
+                retain_until_epoch_ms: 2,
+            }));
+            recorder.declare()
+        };
+        use agentmage_kernel_engine::action_history::ActionKind;
         let valid = RuntimeRunDeclarations {
-            schema_version: 1,
+            schema_version: crate::runtime_transport::RUN_DECLARATIONS_SCHEMA_VERSION,
             run_id: request.run_id.clone(),
             request_sha256: request.request_sha256.clone(),
             recoverability: Some(report_for(request.run_id.as_str())),
             context_inspections: Some(Vec::new()),
+            effect_history: history(ActionKind::CommandRun),
+            job_control_history: history(ActionKind::JobControl),
         };
         let mut foreign_run = valid.clone();
         foreign_run.run_id = agentmage_kernel_contracts::RuntimeRunId::from_raw("another-run");
@@ -1587,12 +1628,42 @@ mod tests {
             recoverability: None,
             ..valid.clone()
         };
+        // Decision 0127: an older schema is dropped whole; a history that does
+        // not replay, or that holds another owner's kinds, is dropped alone.
+        let older_schema = RuntimeRunDeclarations {
+            schema_version: 1,
+            ..valid.clone()
+        };
+        let mut tampered_history = valid.clone();
+        tampered_history
+            .effect_history
+            .as_mut()
+            .unwrap()
+            .head
+            .head_sha256 = "6".repeat(64);
+        let without_effects = RuntimeRunDeclarations {
+            effect_history: None,
+            ..valid.clone()
+        };
+        let swapped = RuntimeRunDeclarations {
+            effect_history: valid.job_control_history.clone(),
+            job_control_history: valid.effect_history.clone(),
+            ..valid.clone()
+        };
+        let without_histories = RuntimeRunDeclarations {
+            effect_history: None,
+            job_control_history: None,
+            ..valid.clone()
+        };
         for (declarations, expected) in [
             (Some(valid.clone()), Some(valid.clone())),
             (Some(foreign_run), None),
             (Some(foreign_request), None),
+            (Some(older_schema), None),
             (Some(foreign_report), Some(without_report.clone())),
             (Some(tampered), Some(without_report)),
+            (Some(tampered_history), Some(without_effects)),
+            (Some(swapped), Some(without_histories)),
             (None, None),
         ] {
             let input = input(&request);

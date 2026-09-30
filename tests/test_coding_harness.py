@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import signal
@@ -340,6 +341,16 @@ class CodingHarnessTests(unittest.TestCase):
             "--objective", "repair", "--suspend-resume-probe",
         ])
         self.assertTrue(parsed.suspend_resume_probe)
+        # Decision 0127: the export selection is passed through only in the
+        # closed form the CLI accepts.
+        parsed = coding_harness.parser().parse_args([
+            "start", "--root", "/expected", "--scenario", "failed-test-repair",
+            "--objective", "repair", "--action-history-export", "effects:1:4",
+        ])
+        self.assertEqual(parsed.action_history_export, "effects:1:4")
+        for invalid in ("effects:0:1", "effects:2:1", "memory:1:1", "effects:1:513", "effects:01:2"):
+            with self.assertRaises(argparse.ArgumentTypeError):
+                coding_harness.export_selection(invalid)
         with tempfile.TemporaryDirectory() as temporary:
             with self.assertRaises(coding_harness.HarnessError):
                 coding_harness.control(Path(temporary), "pause")

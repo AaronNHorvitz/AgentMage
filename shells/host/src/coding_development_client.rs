@@ -34,6 +34,10 @@ use crate::cli_runtime::{
     InteractiveCliCancellationPort, InteractiveCliJobControl, InteractiveCliRuntimeError,
     JobStateUnavailable, KeptJobControl, drive_interactive_cli_runtime,
 };
+use crate::coding_action_history::{
+    ActionHistoryExportSelection, RunActionChain, render_action_history_export,
+    render_run_action_history,
+};
 use crate::coding_change_review::{
     ChangeReview, ChangeReviewUnavailable, ReviewTarget, render_change_review, review_coding_write,
 };
@@ -253,6 +257,14 @@ fn run_with_child(
             CliOutputFormat::Json => render_runtime_outcome_json(&result.request, &result.outcome),
         }
         .map_err(|_| CodingDevelopmentClientError::Presentation)?;
+        // A requested export precedes the outcome, which stays last on stdout.
+        let (export, export_notice) = render_requested_export(
+            options.action_history_export,
+            result.declarations.as_ref(),
+            output,
+        );
+        print!("{export}");
+        eprint!("{export_notice}");
         println!("{rendered}");
         // Stderr keeps the machine stream's contract that the outcome is last on stdout.
         eprint!("{}", sink.take_progress(&result.request.limits));
@@ -647,14 +659,17 @@ impl TerminalEventSink {
 }
 
 /// Renders the host's declarations about one ended run (Decision 0116): the
-/// recoverability of its effects and the view of each composed context. Each
-/// part the host could not declare completely is shown as unavailable.
+/// recoverability of its effects, the view of each composed context and the
+/// run's action histories (Decision 0127). Each part the host could not
+/// declare completely is shown as unavailable.
 fn render_run_declarations(
     declarations: Option<&RuntimeRunDeclarations>,
     output: CliOutputFormat,
 ) -> String {
     let recoverability = declarations.and_then(|value| value.recoverability.as_ref());
     let contexts = declarations.and_then(|value| value.context_inspections.as_ref());
+    let effect_history = declarations.and_then(|value| value.effect_history.as_ref());
+    let job_control_history = declarations.and_then(|value| value.job_control_history.as_ref());
     if output == CliOutputFormat::Json {
         return format!(
             "{}\n",
@@ -664,6 +679,10 @@ fn render_run_declarations(
                 "recoverability": recoverability,
                 "context_inspections_available": contexts.is_some(),
                 "context_inspections": contexts,
+                "effect_history_available": effect_history.is_some(),
+                "effect_history": effect_history,
+                "job_control_history_available": job_control_history.is_some(),
+                "job_control_history": job_control_history,
             })
         );
     }
@@ -682,7 +701,33 @@ fn render_run_declarations(
             "context views: unavailable; the host could not show every composed context\n",
         ),
     }
+    rendered.push_str(&render_run_action_history(
+        RunActionChain::Effects,
+        effect_history,
+    ));
+    rendered.push_str(&render_run_action_history(
+        RunActionChain::JobControl,
+        job_control_history,
+    ));
     rendered
+}
+
+/// The requested export of one ended run's action history (Decision 0127):
+/// its exact bytes for standard output, printed before the outcome, and a
+/// content-free notice for standard error when no export could be made.
+fn render_requested_export(
+    selection: Option<ActionHistoryExportSelection>,
+    declarations: Option<&RuntimeRunDeclarations>,
+    output: CliOutputFormat,
+) -> (String, String) {
+    let Some(selection) = selection else {
+        return (String::new(), String::new());
+    };
+    let history = declarations.and_then(|value| match selection.chain {
+        RunActionChain::Effects => value.effect_history.as_ref(),
+        RunActionChain::JobControl => value.job_control_history.as_ref(),
+    });
+    render_action_history_export(selection, history, output == CliOutputFormat::Json)
 }
 
 /// The words for a control request.
@@ -1350,12 +1395,16 @@ mod tests {
             omitted: vec![item("left-out", Some(ContextOmissionReason::Budget))],
             kind_totals: Vec::new(),
         };
+        let effects =
+            action_history(agentmage_kernel_engine::action_history::ActionKind::FileWrite);
         let declarations = RuntimeRunDeclarations {
-            schema_version: 1,
+            schema_version: crate::runtime_transport::RUN_DECLARATIONS_SCHEMA_VERSION,
             run_id: agentmage_kernel_contracts::RuntimeRunId::from_raw("run-cli"),
             request_sha256: "c".repeat(64),
             recoverability: Some(report.clone()),
             context_inspections: Some(vec![view.clone(), view]),
+            effect_history: Some(effects.clone()),
+            job_control_history: None,
         };
         let human = render_run_declarations(Some(&declarations), CliOutputFormat::Human);
         assert!(human.starts_with("recoverability of this run's effects: "));
@@ -1363,6 +1412,14 @@ mod tests {
         assert!(human.contains("context view 1 of 2:\n"));
         assert!(human.contains("context view 2 of 2:\n"));
         assert!(!human.contains("undone"));
+        // Decision 0127: each action history follows, or is unavailable.
+        assert!(human.contains("action history of this run's effects: 1 entry, head "));
+        assert!(human.contains(
+            "- 1 file_write operation-test succeeded; grant grant-test; coding.approved.succeeded\n"
+        ));
+        assert!(human.ends_with(
+            "action history of this run's job control: unavailable; the host could not declare it completely\n"
+        ));
         let json: serde_json::Value = serde_json::from_str(
             render_run_declarations(Some(&declarations), CliOutputFormat::Json).trim_end(),
         )
@@ -1374,6 +1431,13 @@ mod tests {
             serde_json::to_value(&report).unwrap()
         );
         assert_eq!(json["context_inspections"].as_array().unwrap().len(), 2);
+        assert_eq!(json["effect_history_available"], true);
+        assert_eq!(
+            json["effect_history"],
+            serde_json::to_value(&effects).unwrap()
+        );
+        assert_eq!(json["job_control_history_available"], false);
+        assert!(json["job_control_history"].is_null());
 
         // Nothing declared, or only part of it, is said to be unavailable.
         let human = render_run_declarations(None, CliOutputFormat::Human);
@@ -1390,6 +1454,97 @@ mod tests {
         .unwrap();
         assert_eq!(json["recoverability_available"], false);
         assert_eq!(json["context_inspections_available"], false);
+    }
+
+    /// One succeeded entry of the given kind, authorized by a grant.
+    fn action_history(
+        kind: agentmage_kernel_engine::action_history::ActionKind,
+    ) -> crate::coding_action_history::RunActionHistory {
+        use agentmage_kernel_engine::action_history::{
+            ActionAuthorization, ActionOutcome, ActionRecordDraft,
+        };
+        let mut recorder = crate::coding_action_history::RunActionRecorder::new();
+        recorder.record(Some(ActionRecordDraft {
+            action_kind: kind,
+            action_id: "operation-test".to_owned(),
+            authorization: ActionAuthorization::Grant {
+                grant_id: "grant-test".to_owned(),
+                grant_sha256: "7".repeat(64),
+            },
+            effect_sha256: "8".repeat(64),
+            outcome: ActionOutcome::Succeeded,
+            reason_code: "coding.approved.succeeded".to_owned(),
+            evidence_sha256s: vec!["9".repeat(64)],
+            recorded_at_epoch_ms: 1,
+            retain_until_epoch_ms: 2,
+        }));
+        recorder.declare().unwrap()
+    }
+
+    #[test]
+    fn a_requested_export_precedes_the_outcome_in_both_formats() {
+        // Decision 0127: the export of the selected chain is printed on
+        // standard output before the outcome; an unavailable chain or range
+        // prints a content-free notice on standard error instead.
+        use agentmage_kernel_engine::action_history::ActionKind;
+        let declarations = RuntimeRunDeclarations {
+            schema_version: crate::runtime_transport::RUN_DECLARATIONS_SCHEMA_VERSION,
+            run_id: agentmage_kernel_contracts::RuntimeRunId::from_raw("run-cli"),
+            request_sha256: "c".repeat(64),
+            recoverability: None,
+            context_inspections: None,
+            effect_history: Some(action_history(ActionKind::CommandRun)),
+            job_control_history: Some(action_history(ActionKind::JobControl)),
+        };
+        let selection = |text| ActionHistoryExportSelection::parse(text).unwrap();
+        assert_eq!(
+            render_requested_export(None, Some(&declarations), CliOutputFormat::Json),
+            (String::new(), String::new())
+        );
+        for (text, chain) in [
+            ("effects:1:1", "effects"),
+            ("job-control:1:1", "job-control"),
+        ] {
+            let (stdout, stderr) = render_requested_export(
+                Some(selection(text)),
+                Some(&declarations),
+                CliOutputFormat::Json,
+            );
+            assert!(stderr.is_empty());
+            let row: serde_json::Value = serde_json::from_str(stdout.trim_end()).unwrap();
+            assert_eq!(
+                (row["type"].as_str(), row["chain"].as_str()),
+                (Some("action_history_export"), Some(chain))
+            );
+            assert_eq!(row["available"], true);
+            let (stdout, stderr) = render_requested_export(
+                Some(selection(text)),
+                Some(&declarations),
+                CliOutputFormat::Human,
+            );
+            assert!(stderr.is_empty());
+            assert!(stdout.starts_with(&format!(
+                "action_history_export chain={chain} from=1 to=1 sha256="
+            )));
+            assert_eq!(stdout.lines().count(), 2);
+        }
+        for declared in [None, Some(&declarations)] {
+            let wanted = if declared.is_some() {
+                "effects:1:2"
+            } else {
+                "effects:1:1"
+            };
+            for output in [CliOutputFormat::Human, CliOutputFormat::Json] {
+                let (stdout, stderr) =
+                    render_requested_export(Some(selection(wanted)), declared, output);
+                assert!(stdout.is_empty());
+                assert!(stderr.contains(if declared.is_some() {
+                    "range"
+                } else {
+                    "unavailable"
+                }));
+            }
+        }
     }
 
     #[test]

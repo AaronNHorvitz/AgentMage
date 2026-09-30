@@ -124,6 +124,13 @@ impl crate::coding_live_runtime::LiveRunDeclarationPort for RefusingCoordinator 
     ) -> Option<Vec<agentmage_kernel_engine::context_inspection::ContextInspection>> {
         panic!("failed startup cannot show context views")
     }
+
+    fn run_action_history(
+        &self,
+        _request: &RuntimeRunRequest,
+    ) -> Option<crate::coding_action_history::RunActionHistory> {
+        panic!("failed startup cannot declare an action history")
+    }
 }
 
 impl LiveCodingCoordinatorPort for RefusingCoordinator {
@@ -419,6 +426,13 @@ impl crate::coding_live_runtime::LiveRunDeclarationPort for GatedCoordinator {
     ) -> Option<Vec<agentmage_kernel_engine::context_inspection::ContextInspection>> {
         Some(Vec::new())
     }
+
+    fn run_action_history(
+        &self,
+        _request: &RuntimeRunRequest,
+    ) -> Option<crate::coding_action_history::RunActionHistory> {
+        crate::coding_action_history::RunActionRecorder::new().declare()
+    }
 }
 
 impl LiveCodingCoordinatorPort for GatedCoordinator {
@@ -599,6 +613,14 @@ fn the_live_service_declares_only_a_held_ended_run_that_is_not_busy() {
     assert_eq!(declared.request_sha256, request.request_sha256);
     assert_eq!(declared.recoverability, Some(report));
     assert_eq!(declared.context_inspections, Some(Vec::new()));
+    // Decision 0127: the tool boundary's history is declared; this run has no
+    // job, so it declares no job control history.
+    assert_eq!(declared.schema_version, 2);
+    assert_eq!(
+        declared.effect_history,
+        crate::coding_action_history::RunActionRecorder::new().declare()
+    );
+    assert_eq!(declared.job_control_history, None);
     service
         .release(&request.run_id, &request.request_sha256)
         .unwrap();
@@ -892,6 +914,58 @@ fn the_live_service_owns_each_run_job_and_decides_cancellation_through_the_ledge
     // The refusal is recorded, so the head moves while the revision stays.
     assert_eq!(terminal.status.job.revision, 3);
     assert_ne!(terminal.status.job.head_sha256, ended.job.head_sha256);
+    // Decision 0127: every request the ledger decided has one entry, in
+    // order, under the scope that sent it; the retry and the conflicting
+    // request add nothing, and the last entry names the ledger's last head.
+    let declared = service.run_declarations(run, sha).unwrap();
+    let history = declared.job_control_history.expect("job control history");
+    let replayed = crate::coding_action_history::verify_run_action_history(
+        &history,
+        crate::coding_action_history::RunActionChain::JobControl,
+    )
+    .unwrap();
+    let kept = replayed
+        .records()
+        .iter()
+        .map(|record| match record {
+            agentmage_kernel_engine::action_history::ActionHistoryRecord::Kept(entry) => (
+                entry.action_id.clone(),
+                entry.outcome,
+                entry.reason_code.clone(),
+                entry.evidence_sha256s.clone(),
+            ),
+            agentmage_kernel_engine::action_history::ActionHistoryRecord::Expired { .. } => {
+                panic!("nothing expires within a run")
+            }
+        })
+        .collect::<Vec<_>>();
+    use agentmage_kernel_engine::action_history::ActionOutcome;
+    assert_eq!(
+        kept.iter()
+            .map(|(id, outcome, reason, _)| (id.as_str(), *outcome, reason.as_str()))
+            .collect::<Vec<_>>(),
+        [
+            (
+                "c1",
+                ActionOutcome::Denied,
+                "job.control.cancel.stale-revision"
+            ),
+            ("c2", ActionOutcome::Succeeded, "job.control.cancel.applied"),
+            (
+                "c2",
+                ActionOutcome::Denied,
+                "job.control.cancel.stale-revision"
+            ),
+            (
+                "c3",
+                ActionOutcome::Denied,
+                "job.control.cancel.already-in-effect"
+            ),
+            ("c4", ActionOutcome::Denied, "job.control.cancel.terminal"),
+        ]
+    );
+    assert_eq!(kept[1].3, vec![applied.status.job.head_sha256.clone()]);
+    assert_eq!(kept[4].3, vec![terminal.status.job.head_sha256.clone()]);
     service.release(run, sha).unwrap();
     assert_eq!(
         service.job_status(run, sha),
@@ -1211,6 +1285,13 @@ impl crate::coding_live_runtime::LiveRunDeclarationPort for CheckpointingCoordin
     fn run_context_inspections(
         &self,
     ) -> Option<Vec<agentmage_kernel_engine::context_inspection::ContextInspection>> {
+        None
+    }
+
+    fn run_action_history(
+        &self,
+        _request: &RuntimeRunRequest,
+    ) -> Option<crate::coding_action_history::RunActionHistory> {
         None
     }
 }
@@ -1648,12 +1729,41 @@ fn an_applied_suspension_stops_at_the_checkpoint_and_a_resumption_continues_it_i
         (ended.job.phase, ended.job.revision),
         (JobPhase::Completed, 6)
     );
-    // A resumed run declares nothing (Decision 0117).
+    // A resumed run declares nothing its composition kept (Decisions 0117 and
+    // 0127); the service decided every control request, so its job control
+    // history continues across the suspension.
     let declared = harness
         .service
         .run_declarations(run, &resumed.request_sha256)
         .unwrap();
     assert!(declared.recoverability.is_none() && declared.context_inspections.is_none());
+    assert!(declared.effect_history.is_none());
+    let history = declared.job_control_history.expect("job control history");
+    crate::coding_action_history::verify_run_action_history(
+        &history,
+        crate::coding_action_history::RunActionChain::JobControl,
+    )
+    .unwrap();
+    let reasons = history
+        .records
+        .iter()
+        .map(|record| match record {
+            agentmage_kernel_engine::action_history::ActionHistoryRecord::Kept(entry) => {
+                (entry.action_id.as_str(), entry.reason_code.as_str())
+            }
+            agentmage_kernel_engine::action_history::ActionHistoryRecord::Expired { .. } => {
+                panic!("nothing expires within a run")
+            }
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        reasons,
+        [
+            ("s1", "job.control.suspend.applied"),
+            ("s2", "job.control.suspend.already-in-effect"),
+            ("r1", "job.control.resume.applied"),
+        ]
+    );
     harness
         .service
         .release(run, &resumed.request_sha256)

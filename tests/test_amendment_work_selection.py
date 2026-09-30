@@ -104,9 +104,9 @@ class AmendmentWorkSelectionTests(unittest.TestCase):
         self.assertTrue(all(not row["amendment_assessment"]["execution_authorized"] for row in report["rows"]))
         self.assertFalse(report["ready_for_unattended_execution"])
 
-    def test_actual_register_covers_all_fifty_one_rows_without_replacing_legacy_counts(self) -> None:
+    def test_actual_register_covers_every_amendment_row_without_replacing_legacy_counts(self) -> None:
         report = json.loads(audit.build())
-        self.assertEqual(report["coverage"]["amendment_table_rows"], 56)
+        self.assertEqual(report["coverage"]["amendment_table_rows"], 57)
         self.assertEqual(report["unchecked_row_count"],
                          report["coverage"]["legacy_open_rows"] + report["coverage"]["amendment_open_rows"])
         self.assertEqual(report["tasks_sha256"], hashlib.sha256(audit.TASKS.read_bytes()).hexdigest())

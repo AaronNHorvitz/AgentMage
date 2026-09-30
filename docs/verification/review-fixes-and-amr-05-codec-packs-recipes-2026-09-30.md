@@ -98,7 +98,8 @@ were run:
   evaluation report. All their commands pass here.
 - Historical: the Sprint 78 report stays the record of its sprint revision. Its
   producer restates a fixed claim of five Rust tests, and the filter now holds
-  sixteen, so a renewal would state something untrue. Its check mode validates it
+  eight (review F4 of `7c593b3b` corrected an earlier count of sixteen), so a
+  renewal would state something untrue. Its check mode validates it
   at its own revision.
 - Blocked: Sprints 15, 31 and 34. Their producers run the full host suite or the
   documentation gate. After the Story 15.2 renewal, the Sprint 15 check reports

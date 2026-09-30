@@ -14,14 +14,14 @@
 //! cancellation of the suspended job continues the run inside this host through a new composition
 //! bound to the boundary's cursor (Decision 0122).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{
     Arc, Mutex,
     atomic::{AtomicBool, Ordering},
     mpsc::{Receiver, SyncSender, TryRecvError, sync_channel},
 };
 use std::thread::{self, JoinHandle};
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use agentmage_kernel_contracts::{
     AgentStateKind, BoundaryKind, CancellationId, CancellationReason, CancellationSignal,
@@ -52,14 +52,18 @@ use agentmage_kernel_engine::{
     },
 };
 
+use crate::coding_action_history::{
+    DecidedJobControl, MAX_RUN_ACTION_ENTRIES, RunActionHistory, RunActionHistorySource,
+    RunActionRecorder, job_control_draft,
+};
 use crate::coding_client::{CodingClientError, LiveCodingCoordinatorPort};
 use crate::coding_context::RunContextInspectionSource;
 use crate::coding_recoverability::{RecoverabilityReport, RunRecoverabilitySource};
 use crate::native_chat_runtime::NativeChatRuntimeFactory;
 use crate::runtime_transport::{
-    RuntimeClientScope, RuntimeJobControl, RuntimeJobStatus, RuntimePrepareInput,
-    RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
-    is_suspension_event, resumed_run_request,
+    RUN_DECLARATIONS_SCHEMA_VERSION, RuntimeClientScope, RuntimeJobControl, RuntimeJobStatus,
+    RuntimePrepareInput, RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort,
+    RuntimeTransportStep, is_suspension_event, resumed_run_request,
 };
 
 /// Owner identity of the coding host in every job ledger it keeps. The store
@@ -76,6 +80,11 @@ pub trait LiveRunDeclarationPort {
     /// The view of every context composed in the ended run, or `None` while
     /// the run can still advance or when not every view was retained.
     fn run_context_inspections(&self) -> Option<Vec<ContextInspection>>;
+
+    /// The action history the tool boundary kept for the ended run, or `None`
+    /// while the run can still advance or when it could not keep every entry
+    /// (Decision 0127).
+    fn run_action_history(&self, request: &RuntimeRunRequest) -> Option<RunActionHistory>;
 }
 
 impl<M, X, T, V, C> LiveRunDeclarationPort
@@ -83,7 +92,9 @@ impl<M, X, T, V, C> LiveRunDeclarationPort
 where
     M: agentmage_kernel_engine::runtime_loop::RuntimeModelPort,
     X: agentmage_kernel_engine::runtime_loop::RuntimeContextPort + RunContextInspectionSource,
-    T: agentmage_kernel_engine::runtime_loop::RuntimeToolBoundary + RunRecoverabilitySource,
+    T: agentmage_kernel_engine::runtime_loop::RuntimeToolBoundary
+        + RunRecoverabilitySource
+        + RunActionHistorySource,
     V: agentmage_kernel_engine::runtime_loop::RuntimeVerifierPort,
     C: agentmage_kernel_engine::runtime_loop::RuntimeClock,
 {
@@ -98,19 +109,25 @@ where
             .run_context_inspections()
             .map(<[ContextInspection]>::to_vec)
     }
+
+    fn run_action_history(&self, request: &RuntimeRunRequest) -> Option<RunActionHistory> {
+        self.ended_tool_boundary()?
+            .declare_run_action_history(request)
+    }
 }
 
 /// The declarations of one ended run. A run resumed from an event cursor was
 /// composed again after a restart, so its owners hold only what happened
-/// since; both parts are unavailable rather than partial (review V1 of
-/// `8fbd2bc6`, Decision 0117).
+/// since; every part they keep is unavailable rather than partial (review V1
+/// of `8fbd2bc6`, Decisions 0117 and 0127). The service adds the job control
+/// history it keeps itself.
 fn declare_run<R: LiveRunDeclarationPort>(
     runtime: &R,
     request: &RuntimeRunRequest,
 ) -> RuntimeRunDeclarations {
     let resumed = request.event_cursor.is_some();
     RuntimeRunDeclarations {
-        schema_version: 1,
+        schema_version: RUN_DECLARATIONS_SCHEMA_VERSION,
         run_id: request.run_id.clone(),
         request_sha256: request.request_sha256.clone(),
         recoverability: if resumed {
@@ -123,10 +140,22 @@ fn declare_run<R: LiveRunDeclarationPort>(
         } else {
             runtime.run_context_inspections()
         },
+        effect_history: if resumed {
+            None
+        } else {
+            runtime.run_action_history(request)
+        },
+        job_control_history: None,
     }
 }
 
 const MAX_LIVE_RUNS: usize = 4;
+
+/// The host clock in Unix epoch milliseconds, for job control history entries.
+fn host_now_epoch_ms() -> Option<u64> {
+    let elapsed = SystemTime::now().duration_since(UNIX_EPOCH).ok()?;
+    u64::try_from(elapsed.as_millis()).ok()
+}
 const MAX_LIVE_CURSOR_AGE_EVENTS: usize = 32;
 const CONTROL_WAIT: Duration = Duration::from_millis(25);
 const START_WAIT: Duration = Duration::from_millis(250);
@@ -741,6 +770,11 @@ where
             .ok_or(RuntimeTransportError::RequestDenied)?;
         let request = held.request.clone();
         let presented = std::mem::take(&mut held.events);
+        // The same service decided every control request of this run, so its
+        // job control history continues in the resumed session (Decision 0127).
+        let job_actions = std::mem::take(&mut held.job_actions);
+        let recorded_controls = std::mem::take(&mut held.recorded_controls);
+        let job_history_from_start = held.job_history_from_start;
         drop(held);
         let expected = resumed_run_request(&request, &point.event_cursor)?;
         let resumed = self
@@ -755,6 +789,9 @@ where
             .take_job_ledgers(&resumed.run_id)
             .ok_or(RuntimeTransportError::JobControlUnavailable)?;
         let mut session = LiveCodingSession::spawn(resumed, coordinator, false)?;
+        session.job_actions = job_actions;
+        session.recorded_controls = recorded_controls;
+        session.job_history_from_start = job_history_from_start;
         session.sync_events()?;
         if session.events != presented {
             return Err(RuntimeTransportError::RuntimeEvidenceDenied);
@@ -803,6 +840,15 @@ struct LiveCodingSession {
     pending_suspension: Option<RuntimeSuspensionPoint>,
     /// The run is suspended here and its composition is released.
     suspended: Option<RuntimeSuspensionPoint>,
+    /// The run's job control history: one entry for each control request the
+    /// ledger decided (Decision 0127).
+    job_actions: RunActionRecorder,
+    /// Client scope and request identity of each recorded decision, so a
+    /// retry that the ledger answers with its first decision adds nothing.
+    recorded_controls: BTreeSet<(String, String)>,
+    /// Whether this service decided every control request of the run: false
+    /// for a run resumed after a host restart.
+    job_history_from_start: bool,
 }
 
 /// The durable job of one live run, owned by this service (Decision 0120).
@@ -845,6 +891,7 @@ impl LiveCodingSession {
         .ok_or(RuntimeTransportError::RequestDenied)?;
         let initial_events = runtime.runtime_events().to_vec();
         let suspendable = runtime.suspendable();
+        let job_history_from_start = request.event_cursor.is_none();
         let slow_subscriber_probe = slow_subscriber_probe
             .then(|| runtime.subscribe_live_events(1).map_err(map_client_error))
             .transpose()?;
@@ -919,6 +966,9 @@ impl LiveCodingSession {
             suspendable,
             pending_suspension: None,
             suspended: None,
+            job_actions: RunActionRecorder::new(),
+            recorded_controls: BTreeSet::new(),
+            job_history_from_start,
         })
     }
 
@@ -1131,6 +1181,7 @@ impl LiveCodingSession {
             )?;
         }
         let decision = decided?;
+        self.record_job_control(client, request, decision, status.as_ref().ok());
         let status = status?;
         match status.job.phase {
             // No client decision moves a cancelling job, so its revision names
@@ -1161,6 +1212,53 @@ impl LiveCodingSession {
             decision,
             status: self.replayed_job_status()?,
         }))
+    }
+
+    /// Keeps one decided control request in the run's job control history
+    /// (Decision 0127). A retry the ledger answered with its first decision
+    /// adds nothing; a decision whose resulting ledger head could not be read,
+    /// or whose time could not be taken, leaves the history undeclared.
+    fn record_job_control(
+        &mut self,
+        client: &RuntimeClientScope,
+        request: &JobControlRequest,
+        decision: JobControlDecision,
+        status: Option<&RuntimeJobStatus>,
+    ) {
+        let key = (client.as_str().to_owned(), request.request_id.clone());
+        if self.recorded_controls.contains(&key) {
+            return;
+        }
+        let Some(status) = status else {
+            self.job_actions.mark_incomplete();
+            return;
+        };
+        if self.recorded_controls.len() >= MAX_RUN_ACTION_ENTRIES {
+            self.job_actions.mark_incomplete();
+            return;
+        }
+        self.recorded_controls.insert(key);
+        let draft = host_now_epoch_ms().and_then(|now| {
+            job_control_draft(&DecidedJobControl {
+                client_scope: client.as_str(),
+                request,
+                decision,
+                ledger_head_sha256: &status.job.head_sha256,
+                decided_at_epoch_ms: now,
+            })
+        });
+        self.job_actions.record(draft);
+    }
+
+    /// The job control history of this run. A run resumed after a host restart
+    /// holds only this host's decisions, and a run without a job has none to
+    /// declare, so neither declares one. A run resumed in this host keeps the
+    /// history its session carried over.
+    fn declare_job_control_history(&self) -> Option<RunActionHistory> {
+        if !self.job_history_from_start || self.job.is_none() {
+            return None;
+        }
+        self.job_actions.declare()
     }
 
     /// Waits, within the boundary bound, until a suspension the worker
@@ -1583,7 +1681,10 @@ impl LiveCodingSession {
             .send(WorkerCommand::Declare)
             .map_err(|_| RuntimeTransportError::RuntimeFailed)?;
         match self.results.recv_timeout(START_WAIT) {
-            Ok(Ok(WorkerResponse::Declarations(declarations))) => Ok(declarations),
+            Ok(Ok(WorkerResponse::Declarations(mut declarations))) => {
+                declarations.job_control_history = self.declare_job_control_history();
+                Ok(declarations)
+            }
             Ok(Ok(_)) => Err(RuntimeTransportError::RuntimeEvidenceDenied),
             Ok(Err(error)) => Err(map_client_error(error)),
             Err(_) => Err(RuntimeTransportError::RuntimeFailed),
@@ -1737,6 +1838,9 @@ mod tests {
             suspendable: false,
             pending_suspension: None,
             suspended: None,
+            job_actions: RunActionRecorder::new(),
+            recorded_controls: BTreeSet::new(),
+            job_history_from_start: true,
         };
         (session, result_tx, outcome)
     }
@@ -1953,6 +2057,11 @@ mod tests {
             self.0.set(self.0.get() + 1);
             Some(Vec::new())
         }
+
+        fn run_action_history(&self, _request: &RuntimeRunRequest) -> Option<RunActionHistory> {
+            self.0.set(self.0.get() + 1);
+            RunActionRecorder::new().declare()
+        }
     }
 
     #[test]
@@ -1964,9 +2073,12 @@ mod tests {
             crate::runtime_read_tests::completed_native_read_fixture();
         let owners = CountingDeclarations(std::cell::Cell::new(0));
         let declared = declare_run(&owners, &request);
-        assert_eq!(owners.0.get(), 2);
+        assert_eq!(owners.0.get(), 3);
         assert!(declared.recoverability.is_some());
         assert_eq!(declared.context_inspections, Some(Vec::new()));
+        assert_eq!(declared.effect_history, RunActionRecorder::new().declare());
+        // The service adds the job control history it keeps itself.
+        assert_eq!(declared.job_control_history, None);
         let last = events.last().unwrap();
         request.event_cursor = Some(RuntimeEventCursor {
             run_id: request.run_id.clone(),
@@ -1975,11 +2087,12 @@ mod tests {
             event_sha256: last.event_sha256.clone(),
         });
         let declared = declare_run(&owners, &request);
-        assert_eq!(owners.0.get(), 2);
+        assert_eq!(owners.0.get(), 3);
         assert_eq!(declared.run_id, request.run_id);
         assert_eq!(declared.request_sha256, request.request_sha256);
         assert_eq!(declared.recoverability, None);
         assert_eq!(declared.context_inspections, None);
+        assert_eq!(declared.effect_history, None);
     }
 
     #[test]

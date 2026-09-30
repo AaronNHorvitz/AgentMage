@@ -16,6 +16,7 @@ use agentmage_kernel_engine::runtime_artifact::{RuntimeArtifactPage, RuntimeArti
 use agentmage_kernel_engine::runtime_coordinator::seal_runtime_run_request;
 use agentmage_kernel_engine::runtime_loop::RuntimeSuspensionPoint;
 
+use crate::coding_action_history::RunActionHistory;
 use crate::coding_recoverability::RecoverabilityReport;
 
 const PREAUTHORIZATION_SCHEMA_VERSION: u16 = 1;
@@ -265,6 +266,10 @@ pub fn is_suspension_event(event: Option<&RuntimeEvent>, point: &RuntimeSuspensi
         )
 }
 
+/// Current run declarations schema: schema 2 adds each run's action
+/// histories (Decision 0127).
+pub const RUN_DECLARATIONS_SCHEMA_VERSION: u16 = 2;
+
 /// Host declarations about one ended run, read before the run is released
 /// (Decision 0116). They describe the run and grant nothing.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -282,6 +287,12 @@ pub struct RuntimeRunDeclarations {
     /// Content-free view of each context composed for a model call, in order,
     /// absent when the host cannot show every one.
     pub context_inspections: Option<Vec<ContextInspection>>,
+    /// Action history of the run's tool calls, file writes and commands, kept
+    /// by the tool boundary; absent when it could not keep every entry.
+    pub effect_history: Option<RunActionHistory>,
+    /// Action history of the run's job control, kept by the host service;
+    /// absent when the service cannot declare every decided request.
+    pub job_control_history: Option<RunActionHistory>,
 }
 
 /// Reconciled control state of one held run's job, replayed from the host's

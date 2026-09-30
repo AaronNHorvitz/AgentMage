@@ -282,14 +282,16 @@ pub fn admit_recipe_manifest(manifest: &RecipeManifest) -> Result<(), RecipeErro
     Ok(())
 }
 
-/// Parses and admits a manifest; unknown fields and variants are refused.
-/// The parsed manifest must serialize back to exactly the parsed value, which
-/// also refuses members that the field attributes alone would ignore, such as
-/// extra members beside a tag without fields.
+/// Parses and admits a manifest; unknown fields and variants and repeated
+/// members are refused. The bytes are parsed into the manifest directly, which
+/// refuses a repeated member (review F3 of `7c593b3b`), and the manifest must
+/// serialize back to exactly the bytes' value, which also refuses members that
+/// the field attributes alone would ignore, such as extra members beside a tag
+/// without fields.
 pub fn parse_recipe_manifest(bytes: &[u8]) -> Result<RecipeManifest, RecipeError> {
     let invalid = RecipeError::ManifestInvalid;
+    let manifest: RecipeManifest = serde_json::from_slice(bytes).map_err(|_| invalid)?;
     let value: serde_json::Value = serde_json::from_slice(bytes).map_err(|_| invalid)?;
-    let manifest: RecipeManifest = serde_json::from_value(value.clone()).map_err(|_| invalid)?;
     if serde_json::to_value(&manifest).map_err(|_| invalid)? != value {
         return Err(invalid);
     }
@@ -784,6 +786,23 @@ mod tests {
             text.replacen(
                 "{\"kind\":\"clean_worktree\"}",
                 "{\"kind\":\"clean_worktree\",\"x\":1}",
+                1,
+            ),
+            // Review F3 of `7c593b3b`: a repeated member, a repeated member
+            // beside a tag without fields and a repeated tag.
+            text.replacen(
+                "\"max_changed_files\":2",
+                "\"max_changed_files\":5,\"max_changed_files\":2",
+                1,
+            ),
+            text.replacen(
+                "{\"kind\":\"clean_worktree\"}",
+                "{\"kind\":\"clean_worktree\",\"x\":1,\"x\":2}",
+                1,
+            ),
+            text.replacen(
+                "{\"kind\":\"clean_worktree\"}",
+                "{\"kind\":\"clean_worktree\",\"kind\":\"clean_worktree\"}",
                 1,
             ),
         ] {

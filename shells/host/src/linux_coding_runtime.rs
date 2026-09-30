@@ -93,6 +93,10 @@ use crate::{
     code_change::{
         BoundStructuredChange, StructuredShadowChangeSetRequest, build_structured_shadow_change_set,
     },
+    coding_action_history::{
+        ExecutedAction, GrantSource, RefusedAction, RunActionHistory, RunActionHistorySource,
+        RunActionRecorder, RunIdentity, executed_action_draft, refused_action_draft,
+    },
     coding_authority::{
         ApprovedCodingGrant, ApprovedCodingGrantRequest, CodingApprovalRequest,
         CodingRuntimePolicy, PreauthorizedCodingGrantRequest, derive_approved_coding_grant,
@@ -118,6 +122,8 @@ use crate::{
 };
 
 const PREVIEW_LIFETIME_MS: u64 = 60_000;
+/// Reason code of a refused call a person narrowed into a derived write.
+const NARROWED_REASON_CODE: &str = "runtime.coding.narrowed-to-selection";
 const MAX_PENDING_OPERATIONS: usize = 8;
 
 #[cfg(test)]
@@ -416,6 +422,9 @@ struct IssuedCodingOperation<'workspace> {
     authority: IssuedCodingAuthority,
     prepared: PreparedLinuxCodingOperation<'workspace>,
     resolved_at_epoch_ms: u64,
+    /// Whether a person approved the call or the session preauthorization
+    /// covered it, for the run's action history (Decision 0127).
+    grant_source: GrantSource,
 }
 
 struct RuntimeEffectEventContext<'builder> {
@@ -445,10 +454,14 @@ impl IssuedCodingOperation<'_> {
     }
 
     fn grant_id(&self) -> &GrantId {
+        &self.grant().grant_id
+    }
+
+    fn grant(&self) -> &CapabilityGrant {
         match &self.authority {
-            IssuedCodingAuthority::Generic { approved, .. } => &approved.grant.grant_id,
-            IssuedCodingAuthority::StructuredWrite { approval, .. } => &approval.grant.grant_id,
-            IssuedCodingAuthority::FilesystemWrite { approval, .. } => &approval.grant.grant_id,
+            IssuedCodingAuthority::Generic { approved, .. } => &approved.grant,
+            IssuedCodingAuthority::StructuredWrite { approval, .. } => &approval.grant,
+            IssuedCodingAuthority::FilesystemWrite { approval, .. } => &approval.grant,
         }
     }
 
@@ -540,6 +553,9 @@ where
     /// How each executed call of this run ended and the change records this
     /// boundary published, for the run's recoverability declaration.
     run_effects: RunEffectRecorder,
+    /// The run's action history: one entry for each call whose grant this
+    /// boundary consumed and each call a person refused (Decision 0127).
+    action_history: RunActionRecorder,
 }
 
 #[derive(Clone)]
@@ -778,6 +794,7 @@ where
             issued: BTreeMap::new(),
             pending_write_completion: None,
             run_effects: RunEffectRecorder::new(),
+            action_history: RunActionRecorder::new(),
         })
     }
 
@@ -1156,6 +1173,7 @@ where
             authority: issued_authority,
             prepared: pending.prepared,
             resolved_at_epoch_ms: now_epoch_ms,
+            grant_source: GrantSource::SessionPreauthorization,
         };
         let evaluation = RuntimePermissionEvaluation::Allow {
             approval_id: issued.approval_id().clone(),
@@ -1226,6 +1244,31 @@ where
                         reason_code: error.reason_code().to_owned(),
                     },
                 };
+            // The person's decision is final once the pending call is removed:
+            // the original call is refused either way (Decision 0127).
+            match &evaluation {
+                RuntimePermissionEvaluation::Narrowed {
+                    decision_sha256, ..
+                } => self.record_refusal(
+                    request,
+                    &pending,
+                    decision_sha256,
+                    NARROWED_REASON_CODE,
+                    now_epoch_ms,
+                ),
+                RuntimePermissionEvaluation::Deny {
+                    decision_sha256,
+                    reason_code,
+                    ..
+                } => self.record_refusal(
+                    request,
+                    &pending,
+                    decision_sha256,
+                    reason_code,
+                    now_epoch_ms,
+                ),
+                _ => self.action_history.mark_incomplete(),
+            }
             let event = if let Some(builder) = build_event.as_mut() {
                 let event = builder(&evaluation)?;
                 self.authority
@@ -1243,6 +1286,13 @@ where
                 .pending
                 .remove(key)
                 .ok_or(RuntimePortFailure::Invalid)?;
+            self.record_refusal(
+                request,
+                &pending,
+                &decision_sha256,
+                "runtime.coding.user-denied",
+                now_epoch_ms,
+            );
             let evaluation = RuntimePermissionEvaluation::Deny {
                 approval_id: pending.authority.approval_id().clone(),
                 grant_id: pending.authority.proposed_grant_id().clone(),
@@ -1459,6 +1509,7 @@ where
             authority: issued_authority,
             prepared: pending.prepared,
             resolved_at_epoch_ms: now_epoch_ms,
+            grant_source: GrantSource::PersonApproval,
         };
         let evaluation = RuntimePermissionEvaluation::Allow {
             approval_id: issued.approval_id().clone(),
@@ -1476,6 +1527,30 @@ where
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Unavailable)?;
         Ok((evaluation, committed_event))
+    }
+
+    /// Keeps a person's refusal of one pending call in the run's action
+    /// history (Decision 0127).
+    fn record_refusal(
+        &mut self,
+        request: &RuntimeRunRequest,
+        pending: &PendingCodingOperation<'_>,
+        decision_sha256: &str,
+        reason_code: &str,
+        now_epoch_ms: u64,
+    ) {
+        let kind = ExecutedEffectKind::of(pending.prepared.operation().prepared());
+        self.action_history
+            .record(refused_action_draft(&RefusedAction {
+                run: run_identity(request),
+                operation_id: pending.operation_id.as_str(),
+                call: &pending.tool_call,
+                kind: &kind,
+                decision_sha256,
+                preview_sha256: pending.authority.preview_sha256(),
+                reason_code,
+                decided_at_epoch_ms: now_epoch_ms,
+            }));
     }
 
     fn execute_call(
@@ -1559,6 +1634,9 @@ where
         let issued = self.issued.remove(key).ok_or(RuntimePortFailure::Invalid)?;
         let effect_kind = ExecutedEffectKind::of(issued.prepared.operation().prepared());
         let effect_operation_id = issued.operation_id.as_str().to_owned();
+        let consumed_grant = issued.grant().clone();
+        let grant_source = issued.grant_source;
+        let authorized_at_epoch_ms = issued.resolved_at_epoch_ms;
         let executed = match issued.prepared.operation().prepared() {
             PreparedNativeCodingCall::ReadOnly { .. } => self.execute_prepared_read(
                 request,
@@ -1634,13 +1712,32 @@ where
                 ),
         };
         // The grant is consumed from here on: record how the call ended for
-        // this run's recoverability declaration (Decision 0116).
+        // this run's recoverability declaration (Decision 0116) and its
+        // action history (Decision 0127).
+        let outcome =
+            ExecutedEffectOutcome::of(executed.as_ref().map(|(execution, _)| &execution.result));
+        self.action_history
+            .record(executed_action_draft(&ExecutedAction {
+                run: run_identity(request),
+                operation_id: &effect_operation_id,
+                call,
+                kind: &effect_kind,
+                source: grant_source,
+                grant: &consumed_grant,
+                decision_sha256,
+                preview_sha256,
+                authority_sha256,
+                receipt_sha256: executed
+                    .as_ref()
+                    .ok()
+                    .map(|(execution, _)| execution.receipt_sha256.as_str()),
+                outcome,
+                authorized_at_epoch_ms,
+            }));
         self.run_effects.record_execution(ExecutedEffect {
             operation_id: effect_operation_id,
             kind: effect_kind,
-            outcome: ExecutedEffectOutcome::of(
-                executed.as_ref().map(|(execution, _)| &execution.result),
-            ),
+            outcome,
         });
         executed
     }
@@ -3975,6 +4072,30 @@ where
     }
 }
 
+impl<I, E, G> RunActionHistorySource for LinuxCodingRuntimeBoundary<'_, '_, '_, I, E, G>
+where
+    I: CodingIdentitySource,
+    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+{
+    /// Declares this run's action history. A run resumed from an event cursor
+    /// holds only what happened since, so it declares none (Decision 0127).
+    fn declare_run_action_history(&self, request: &RuntimeRunRequest) -> Option<RunActionHistory> {
+        if !self.request_matches(request) || request.event_cursor.is_some() {
+            return None;
+        }
+        self.action_history.declare()
+    }
+}
+
+fn run_identity(request: &RuntimeRunRequest) -> RunIdentity<'_> {
+    RunIdentity {
+        session_id: request.session_id.as_str(),
+        task_id: request.task.task_id.as_str(),
+        run_id: request.run_id.as_str(),
+    }
+}
+
 impl<'workspace, 'session, 'platform, I, E, G> RuntimeArtifactAccessPort
     for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
 where
@@ -4752,6 +4873,9 @@ mod tests {
         SessionId, StopCondition, StopConditionKind, Task, TaskId, TaskStatus, ToolCall,
         ToolCallId, ToolId, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceAuthorizationId,
         WorkspacePath,
+    };
+    use agentmage_kernel_engine::action_history::{
+        ActionAuthorization, ActionHistoryRecord, ActionKind as HistoryActionKind, ActionOutcome,
     };
     #[cfg(feature = "workflow-caller")]
     use agentmage_kernel_engine::workflow_authority::{
@@ -8875,6 +8999,40 @@ mod tests {
             ),
             Err(RuntimePortFailure::Invalid)
         );
+        // Decision 0127: the person's refusal is the run's one history entry;
+        // the replayed response added nothing, and a resumed request is
+        // declared nothing.
+        let history = fixture
+            .boundary
+            .declare_run_action_history(&fixture.request)
+            .expect("declared history");
+        let [ActionHistoryRecord::Kept(entry)] = history.records.as_slice() else {
+            panic!("one kept entry");
+        };
+        let RuntimePermissionEvaluation::Deny {
+            decision_sha256, ..
+        } = &denied
+        else {
+            unreachable!()
+        };
+        assert_eq!(entry.action_id, fixture.operation_id.as_str());
+        assert_eq!(
+            entry.authorization,
+            ActionAuthorization::PersonDecision {
+                decision_sha256: decision_sha256.clone(),
+            }
+        );
+        assert_eq!(entry.outcome, ActionOutcome::Denied);
+        assert_eq!(entry.reason_code, "runtime.coding.user-denied");
+        assert_eq!(entry.recorded_at_epoch_ms, 2_001);
+        let mut resumed = fixture.request.clone();
+        resumed.event_cursor = Some(RuntimeEventCursor {
+            run_id: resumed.run_id.clone(),
+            event_id: agentmage_kernel_contracts::RuntimeEventId::from_raw("event-resumed"),
+            sequence: 1,
+            event_sha256: "e".repeat(64),
+        });
+        assert_eq!(fixture.boundary.declare_run_action_history(&resumed), None);
     }
 
     #[test]
@@ -10310,6 +10468,37 @@ mod tests {
                 .and_then(|checkpoint| checkpoint.consumed_grant_id.as_deref()),
             Some(grant_id.as_str())
         );
+        // Decision 0127: the consumed grant authorized the run's one entry,
+        // with the exact grant's digest and the receipt as evidence.
+        let history = fixture
+            .boundary
+            .declare_run_action_history(&fixture.request)
+            .expect("declared history");
+        let [ActionHistoryRecord::Kept(entry)] = history.records.as_slice() else {
+            panic!("one kept entry");
+        };
+        let RuntimePermissionEvaluation::Allow {
+            authority_sha256, ..
+        } = &allowed
+        else {
+            unreachable!()
+        };
+        assert_eq!(entry.action_kind, HistoryActionKind::FileWrite);
+        assert_eq!(entry.action_id, fixture.operation_id.as_str());
+        // The grant as issued is bound, apart from the write binding, which
+        // is evidence.
+        assert!(matches!(
+            &entry.authorization,
+            ActionAuthorization::Grant { grant_id: kept, grant_sha256 }
+                if kept == grant_id.as_str()
+                    && grant_sha256.len() == 64
+                    && grant_sha256 != authority_sha256
+        ));
+        assert!(entry.evidence_sha256s.contains(authority_sha256));
+        assert_eq!(entry.outcome, ActionOutcome::Succeeded);
+        assert_eq!(entry.reason_code, "coding.approved.succeeded");
+        assert!(entry.evidence_sha256s.contains(&execution.receipt_sha256));
+        assert_eq!(entry.recorded_at_epoch_ms, 6_001);
     }
 
     /// Two separate literal edits in one Rust file, each its own hunk.

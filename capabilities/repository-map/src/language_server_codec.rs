@@ -902,7 +902,8 @@ fn optional_label(value: Option<&Value>) -> Result<Option<&str>, LanguageServerC
 
 /// Seals the diagnostics a server published for the request's source file.
 /// Each diagnostic keeps its range and a digest of its severity, code, source
-/// and message; its related information, tags and data are not kept.
+/// and message; its related information, tags and data are not kept. An
+/// empty list is sealed unavailable.
 pub fn observe_language_server_diagnostics(
     context: LanguageServerCodecContext<'_>,
     body: &[u8],
@@ -935,6 +936,15 @@ pub fn observe_language_server_diagnostics(
     };
     if diagnostics.len() > MAX_EDITS {
         return Err(invalid);
+    }
+    // A server may publish an empty list before or instead of analysing, so
+    // an empty list is never a proof of absence (review F5 of `7c593b3b`).
+    if diagnostics.is_empty() {
+        return terminal(
+            &prepared,
+            LanguageServiceObservationStatus::Unavailable,
+            EMPTY_RESULT,
+        );
     }
     let mut found = Vec::with_capacity(diagnostics.len());
     for diagnostic in diagnostics {
@@ -1652,11 +1662,20 @@ mod tests {
         ] {
             assert!(!recorded.contains(hidden), "{hidden}");
         }
-        // An empty list is a complete answer for diagnostics.
+        // An empty list is sealed unavailable, like every other empty answer
+        // (review F5 of `7c593b3b`).
         let empty = diagnostics(&fixture, &json!([])).unwrap();
         assert_eq!(
-            (empty.status, empty.items.len()),
-            (LanguageServiceObservationStatus::Complete, 0)
+            (
+                empty.status,
+                empty.items.len(),
+                empty.terminal_code.as_deref()
+            ),
+            (
+                LanguageServiceObservationStatus::Unavailable,
+                0,
+                Some(EMPTY_RESULT)
+            )
         );
         // More diagnostics than the descriptor allows yield a partial answer.
         let bounded = Fixture::new(LanguageServiceRequestKind::Diagnostics, 1);
@@ -1942,15 +1961,22 @@ mod tests {
                 (LanguageServiceObservationStatus::Rejected, Some(code))
             );
         }
-        // Adjacent edits do not overlap.
+        // Adjacent edits do not overlap: both are kept in a complete
+        // observation (review F2 of `7c593b3b`).
         let adjacent = json!({"changes": {module.clone(): [
             {"range": range((0, 0), (0, 3)), "newText": "a"},
             {"range": range((0, 3), (0, 4)), "newText": "b"},
         ]}});
-        assert!(
-            fixture
-                .run(|context| observe_language_server_rename(context, &ID, &response(&adjacent)))
-                .is_ok()
+        let observation = fixture
+            .run(|context| observe_language_server_rename(context, &ID, &response(&adjacent)))
+            .unwrap();
+        assert_eq!(
+            (
+                observation.status,
+                observation.items.len(),
+                observation.terminal_code.as_deref()
+            ),
+            (LanguageServiceObservationStatus::Complete, 2, None)
         );
         for invalid in [
             json!({"changes": {module.clone(): [{"range": range((0, 0), (0, 1))}]}}),

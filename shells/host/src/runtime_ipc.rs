@@ -21,7 +21,7 @@ use crate::runtime_transport::{
     RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
 };
 
-const WIRE_VERSION: u16 = 8;
+const WIRE_VERSION: u16 = 9;
 const MAX_WIRE_BYTES: usize = 4 * 1024 * 1024;
 /// Largest encoded run declarations; the rest of a frame is envelope.
 const MAX_DECLARATION_BYTES: usize = MAX_WIRE_BYTES - 64 * 1024;
@@ -612,14 +612,39 @@ mod tests {
         client_scope(&LinuxPeerIdentity::new(1_000, 4_242, 77, [9; 32]))
     }
 
+    /// One kept entry of the given kind, refused by a person without authority.
+    fn fixture_history(
+        kind: agentmage_kernel_engine::action_history::ActionKind,
+    ) -> crate::coding_action_history::RunActionHistory {
+        use agentmage_kernel_engine::action_history::{
+            ActionAuthorization, ActionOutcome, ActionRecordDraft,
+        };
+        let mut recorder = crate::coding_action_history::RunActionRecorder::new();
+        recorder.record(Some(ActionRecordDraft {
+            action_kind: kind,
+            action_id: "operation:0123456789abcdef0123456789abcdef".to_owned(),
+            authorization: ActionAuthorization::Unauthorized {},
+            effect_sha256: "2".repeat(64),
+            outcome: ActionOutcome::Denied,
+            reason_code: "runtime.coding.user-denied".to_owned(),
+            evidence_sha256s: vec!["3".repeat(64)],
+            recorded_at_epoch_ms: 1,
+            retain_until_epoch_ms: 2,
+        }));
+        recorder.declare().unwrap()
+    }
+
     #[test]
     fn run_declarations_cross_the_wire_exactly_and_only_at_the_current_version() {
+        use agentmage_kernel_engine::action_history::ActionKind;
         let declarations = RuntimeRunDeclarations {
-            schema_version: 1,
+            schema_version: crate::runtime_transport::RUN_DECLARATIONS_SCHEMA_VERSION,
             run_id: RuntimeRunId::from_raw("run-declarations"),
             request_sha256: "1".repeat(64),
             recoverability: None,
             context_inspections: Some(Vec::new()),
+            effect_history: Some(fixture_history(ActionKind::FileWrite)),
+            job_control_history: Some(fixture_history(ActionKind::JobControl)),
         };
         let request = RuntimeIpcEnvelope {
             version: WIRE_VERSION,
@@ -631,7 +656,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 8);
+        assert_eq!(decoded.version, 9);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::RunDeclarations {
             declarations: declarations.clone(),
@@ -642,10 +667,29 @@ mod tests {
             response
         );
         assert!(declarations_fit(&declarations));
-        // A field the closed contract does not name is refused.
+        // A field the closed contract does not name is refused, at the top
+        // and inside each history (Decision 0127), also through the frame.
         let mut extra = serde_json::to_value(&declarations).unwrap();
         extra["complete"] = serde_json::Value::Bool(true);
         assert!(serde_json::from_value::<RuntimeRunDeclarations>(extra).is_err());
+        let text = String::from_utf8(bytes).unwrap();
+        for nested in [
+            text.replacen(
+                "{\"kind\":\"unauthorized\"}",
+                "{\"kind\":\"unauthorized\",\"grant_id\":\"grant-1\"}",
+                1,
+            ),
+            text.replacen("\"state\":\"kept\"", "\"state\":\"kept\",\"x\":1", 1),
+            text.replacen("\"head\":{", "\"head\":{\"x\":1,", 1),
+            text.replacen(
+                "\"job_control_history\":{",
+                "\"job_control_history\":{\"x\":1,",
+                1,
+            ),
+        ] {
+            assert_ne!(nested, text);
+            assert!(serde_json::from_str::<RuntimeIpcResponse>(&nested).is_err());
+        }
     }
 
     /// Answers declarations of a chosen size and counts releases.
@@ -706,11 +750,13 @@ mod tests {
                 report_sha256: "0".repeat(64),
             };
             Ok(RuntimeRunDeclarations {
-                schema_version: 1,
+                schema_version: crate::runtime_transport::RUN_DECLARATIONS_SCHEMA_VERSION,
                 run_id: run_id.clone(),
                 request_sha256: request_sha256.to_owned(),
                 recoverability: Some(report),
                 context_inspections: None,
+                effect_history: None,
+                job_control_history: None,
             })
         }
 
@@ -857,7 +903,7 @@ mod tests {
             .unwrap();
             let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
                 serde_json::from_slice(&bytes).unwrap();
-            assert_eq!(decoded.version, 8);
+            assert_eq!(decoded.version, 9);
             assert_eq!(decoded.payload, request);
         }
         let mut scoped = serde_json::to_value(RuntimeIpcRequest::ControlJob {
@@ -1087,7 +1133,7 @@ mod tests {
         .unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcResponse> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 8);
+        assert_eq!(decoded.version, 9);
         assert_eq!(decoded.payload, response);
         let mut extra = serde_json::to_value(&suspended).unwrap();
         extra["suspended"]["resumable"] = serde_json::Value::Bool(true);

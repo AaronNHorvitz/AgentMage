@@ -1300,7 +1300,7 @@
     {
       "artifact": "artifacts/sprints/sprint-78/local-evidence-report.json",
       "revision": "4d783e1d8addcb88597405894476dc8c8c6ffbba",
-      "reason": "the record of its sprint revision: its producer restates a fixed claim of five Rust capability package tests, which no longer describes the current filter (sixteen tests after AMR-05.3 and Decision 0125), so a renewal would state something untrue; its check mode validates it at that revision (batch13-extended/09.log); review F3"
+      "reason": "the record of its sprint revision: its producer restates a fixed claim of five Rust capability package tests, which no longer describes the current filter (eight tests after AMR-05.3 and Decision 0125; review F4 of 7c593b3b corrected an earlier count of sixteen), so a renewal would state something untrue; its check mode validates it at that revision (batch13-extended/09.log); review F3"
     }
   ],
   "renewed_for_review_f3": [

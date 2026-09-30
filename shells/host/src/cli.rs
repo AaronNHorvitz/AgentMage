@@ -101,6 +101,9 @@ pub struct CodingDevelopmentCliOptions {
     pub revoke_preauthorization_before_follow_ups: bool,
     /// Bounded delay used only to exercise cancellation while approval is displayed.
     pub approval_delay_ms: u64,
+    /// One chain and range of each run's action history to export after the
+    /// run, printed before its outcome (Decision 0127).
+    pub action_history_export: Option<crate::coding_action_history::ActionHistoryExportSelection>,
 }
 
 /// Parsed CLI action before any transport or authority boundary.
@@ -252,6 +255,7 @@ fn parse_coding_development(
     let mut preauthorization_minutes = None;
     let mut revoke_preauthorization_before_follow_ups = false;
     let mut approval_delay_ms = None;
+    let mut action_history_export = None;
     let mut cursor = 0;
     while let Some(argument) = arguments.get(cursor) {
         let target = match argument.as_str() {
@@ -386,6 +390,17 @@ fn parse_coding_development(
                 cursor += 2;
                 continue;
             }
+            "--action-history-export" if action_history_export.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .and_then(|value| {
+                        crate::coding_action_history::ActionHistoryExportSelection::parse(value)
+                    })
+                    .ok_or(ThinClientError::InvalidValue)?;
+                action_history_export = Some(value);
+                cursor += 2;
+                continue;
+            }
             _ => return Err(ThinClientError::InvalidValue),
         };
         let value = arguments
@@ -481,6 +496,7 @@ fn parse_coding_development(
         preauthorization_minutes: preauthorization_minutes.unwrap_or(0),
         revoke_preauthorization_before_follow_ups,
         approval_delay_ms: approval_delay_ms.unwrap_or(0),
+        action_history_export,
     })
 }
 
@@ -1061,7 +1077,7 @@ Commands:\n\
        --objective TEXT [--follow-up TEXT]... [--resume|--record-session] [--artifact-release-probe-before-follow-ups] [--approve-this-run] [--stale-approval-probe|--replay-approval-probe|--expired-cursor-probe|--artifact-integrity-probe] [--slow-subscriber-probe] [--suspend-resume-probe]\n\
        [--preauthorize-workspace-reads] [--preauthorize-path RELATIVE_PATH]... [--preauthorize-command ID@VERSION@SHA256]...\n\
        [--preauthorization-budget N --preauthorization-minutes N] [--revoke-preauthorization-before-follow-ups]\n\
-       [--approval-delay-ms 1..10000]\n\
+       [--approval-delay-ms 1..10000] [--action-history-export effects|job-control:FROM:TO]\n\
   chat MESSAGE\n\
   conversations list [--from YYYY-MM-DD] [--to YYYY-MM-DD]\n\
   conversations search QUERY\n\
@@ -1329,6 +1345,39 @@ mod tests {
         let mut twice = probe.to_vec();
         twice.push("--suspend-resume-probe");
         assert!(parse_cli_arguments(&strings(&twice)).is_err());
+        // Decision 0127: one closed export selection may be named once.
+        let mut export = probe.to_vec();
+        export.extend(["--action-history-export", "job-control:1:2"]);
+        assert!(matches!(
+            parse_cli_arguments(&strings(&export)),
+            Ok(CliInvocation::Code {
+                development: Some(CodingDevelopmentCliOptions {
+                    action_history_export: Some(
+                        crate::coding_action_history::ActionHistoryExportSelection {
+                            chain: crate::coding_action_history::RunActionChain::JobControl,
+                            from_sequence: 1,
+                            to_sequence: 2,
+                        }
+                    ),
+                    ..
+                }),
+                ..
+            })
+        ));
+        let mut twice = export.clone();
+        twice.extend(["--action-history-export", "effects:1:1"]);
+        assert!(parse_cli_arguments(&strings(&twice)).is_err());
+        for invalid in ["effects:2:1", "memory:1:1", "effects", "--resume"] {
+            let mut refused = probe.to_vec();
+            refused.extend(["--action-history-export", invalid]);
+            assert!(
+                parse_cli_arguments(&strings(&refused)).is_err(),
+                "{invalid}"
+            );
+        }
+        let mut missing = probe.to_vec();
+        missing.push("--action-history-export");
+        assert!(parse_cli_arguments(&strings(&missing)).is_err());
         assert!(matches!(
             parse_cli_arguments(&strings(&[
                 "code",

@@ -175,7 +175,10 @@ python3 -m scripts.coding_harness start --root "$demo" --model scripted \
   established by the runtime. It then shows the host's declarations about that run
   (Decision 0116): which of the run's effects a fresh approved inverse write could
   restore, which need your reconciliation, and a content-free view of each context
-  the model received. A part the host cannot declare completely says so. Last, it
+  the model received. A part the host cannot declare completely says so. It also
+  shows the run's two action histories (Decision 0127): one line for each call whose
+  grant was used, and for each call you refused, with its outcome, grant or decision
+  and reason; and one line for each job control request the host decided. Last, it
   shows the run's job state from the host's durable job ledger, and the host's answer
   to each cancellation request (Decision 0120).
 - Select hunks: when a patch review lists two or more numbered hunks, answer
@@ -202,6 +205,12 @@ python3 -m scripts.coding_harness start --root "$demo" --model scripted \
   suspended; reconnecting to it is still open (AMR-04.6.3).
 - Preservation: add a staged, unstaged or untracked file in `$demo/disposable/worktree`
   before `start`; the wrapper must refuse and leave every byte and the Git index unchanged.
+- Export: add `--action-history-export effects:1:3` (or `job-control:1:1`) to `start`.
+  After each run the stream log gets a redacted export of that range of the run's
+  history, written before the outcome row. The export includes its digest and exact
+  document text, and nothing is written elsewhere. A range the run does not have
+  prints `reason: range` on standard error instead. The histories last only as long
+  as the host process; keeping them across restarts is still open (AMR-05.9.6).
 
 To run the whole declared scripted matrix in one step instead (edits, denial,
 cancellation, pause and resume, stale approvals, rollback and the other cases, each in

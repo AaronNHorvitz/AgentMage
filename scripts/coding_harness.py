@@ -732,6 +732,7 @@ def start(
     artifact_release_probe_before_follow_ups: bool = False,
     follow_ups: tuple[str, ...] = (),
     suspend_resume_probe: bool = False,
+    action_history_export: str | None = None,
 ) -> int:
     base = base.resolve(strict=True)
     state, disposable, workspace = paths(base)
@@ -766,6 +767,8 @@ def start(
         command.append("--artifact-integrity-probe")
     if suspend_resume_probe:
         command.append("--suspend-resume-probe")
+    if action_history_export is not None:
+        command.extend(("--action-history-export", export_selection(action_history_export)))
     if record_session:
         command.append("--record-session")
     if artifact_release_probe_before_follow_ups:
@@ -955,6 +958,18 @@ def approval_delay(value: str) -> int:
     return delay
 
 
+EXPORT_SELECTION = re.compile(r"(effects|job-control):([1-9][0-9]{0,5}):([1-9][0-9]{0,5})")
+
+
+def export_selection(value: str) -> str:
+    """One action history chain and inclusive range, as the CLI accepts it
+    (Decision 0127): `effects` or `job-control`, then FROM:TO in order."""
+    match = EXPORT_SELECTION.fullmatch(value)
+    if match is None or int(match.group(2)) > int(match.group(3)) or int(match.group(3)) > 512:
+        raise argparse.ArgumentTypeError("export selection must be CHAIN:FROM:TO")
+    return value
+
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(description=__doc__)
     commands = result.add_subparsers(dest="command", required=True)
@@ -989,6 +1004,7 @@ def parser() -> argparse.ArgumentParser:
     start_command.add_argument("--slow-subscriber-probe", action="store_true")
     start_command.add_argument("--artifact-integrity-probe", action="store_true")
     start_command.add_argument("--suspend-resume-probe", action="store_true")
+    start_command.add_argument("--action-history-export", type=export_selection)
     start_command.add_argument("--record-session", action="store_true")
     start_command.add_argument("--artifact-release-probe-before-follow-ups", action="store_true")
     start_command.add_argument("--preauthorize-path", action="append", default=[])
@@ -1032,6 +1048,7 @@ def main() -> int:
             arguments.artifact_release_probe_before_follow_ups,
             tuple(arguments.follow_up),
             arguments.suspend_resume_probe,
+            arguments.action_history_export,
         )
     except (HarnessError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as error:
         print(str(error), file=sys.stderr)

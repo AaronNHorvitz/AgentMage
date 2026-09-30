@@ -12,7 +12,7 @@
 //! once the content is gone. A manual export is a redacted, bounded byte image that is
 //! scanned once more before it is returned; it has no path and writes nothing.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::persistence::detect_secret_classes;
@@ -26,7 +26,7 @@ const REDACTED: &str = "[REDACTED]";
 const GENESIS_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 
 /// Closed kind of an audited action.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ActionKind {
     /// A tool call.
@@ -47,9 +47,11 @@ pub enum ActionKind {
     JobControl,
 }
 
-/// What authorized an action.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
-#[serde(tag = "kind", rename_all = "snake_case")]
+/// What authorized an action. Parsing is closed: the variant without
+/// authority has no fields rather than being a unit variant, so a member
+/// beside its tag is refused; its encoding is the same (Decision 0127).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum ActionAuthorization {
     /// A kernel grant.
     Grant {
@@ -64,11 +66,11 @@ pub enum ActionAuthorization {
         decision_sha256: String,
     },
     /// Nothing authorized it; only a denied or cancelled action may say so.
-    Unauthorized,
+    Unauthorized {},
 }
 
 /// Closed outcome of an audited action.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ActionOutcome {
     /// The effect happened as authorized.
@@ -113,7 +115,8 @@ pub struct ActionRecordDraft {
 }
 
 /// One kept entry.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ActionHistoryEntry {
     /// Entry schema version.
     pub schema_version: u16,
@@ -147,8 +150,8 @@ pub struct ActionHistoryEntry {
 
 /// One position of the chain: a kept entry, or the place of an entry whose
 /// retention deadline passed.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
-#[serde(tag = "state", rename_all = "snake_case")]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "state", rename_all = "snake_case", deny_unknown_fields)]
 pub enum ActionHistoryRecord {
     /// The entry is kept.
     Kept(ActionHistoryEntry),
@@ -190,7 +193,8 @@ impl ActionHistoryRecord {
 }
 
 /// The retained end of the chain, kept by the owner with every append.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ActionHistoryHead {
     /// Number of positions.
     pub count: u64,
@@ -286,7 +290,7 @@ impl ActionHistory {
             return Err(ActionHistoryError::InvalidInput);
         }
         if draft.outcome.needs_authorization()
-            && draft.authorization == ActionAuthorization::Unauthorized
+            && matches!(draft.authorization, ActionAuthorization::Unauthorized {})
         {
             return Err(ActionHistoryError::AuthorizationMissing);
         }
@@ -312,7 +316,7 @@ impl ActionHistory {
                 }
                 draft.authorization.clone()
             }
-            ActionAuthorization::Unauthorized => ActionAuthorization::Unauthorized,
+            ActionAuthorization::Unauthorized {} => ActionAuthorization::Unauthorized {},
         };
         let sequence = u64::try_from(self.records.len())
             .map_err(|_| ActionHistoryError::Full)?
@@ -529,7 +533,7 @@ fn kept_entry_is_well_formed(entry: &ActionHistoryEntry) -> bool {
             valid_sha256(grant_sha256)
         }
         ActionAuthorization::PersonDecision { decision_sha256 } => valid_sha256(decision_sha256),
-        ActionAuthorization::Unauthorized => !entry.outcome.needs_authorization(),
+        ActionAuthorization::Unauthorized {} => !entry.outcome.needs_authorization(),
     };
     let markers = identifiers
         .iter()
@@ -641,7 +645,7 @@ mod tests {
         // that may have had an effect may not.
         for outcome in [ActionOutcome::Denied, ActionOutcome::Cancelled] {
             let mut refused = draft("write-3", 11);
-            refused.authorization = ActionAuthorization::Unauthorized;
+            refused.authorization = ActionAuthorization::Unauthorized {};
             refused.outcome = outcome;
             assert!(history.append(&refused).is_ok());
         }
@@ -651,7 +655,7 @@ mod tests {
             ActionOutcome::Uncertain,
         ] {
             let mut unauthorized = draft("write-4", 11);
-            unauthorized.authorization = ActionAuthorization::Unauthorized;
+            unauthorized.authorization = ActionAuthorization::Unauthorized {};
             unauthorized.outcome = outcome;
             assert_eq!(
                 history.append(&unauthorized),
@@ -779,7 +783,7 @@ mod tests {
             }),
             Box::new(|entry| entry.redacted_fields = 1),
             Box::new(|entry| REDACTED.clone_into(&mut entry.action_id)),
-            Box::new(|entry| entry.authorization = ActionAuthorization::Unauthorized),
+            Box::new(|entry| entry.authorization = ActionAuthorization::Unauthorized {}),
             Box::new(|entry| {
                 entry.authorization = ActionAuthorization::Grant {
                     grant_id: "grant-write-1".to_owned(),
@@ -800,6 +804,8 @@ mod tests {
             }),
             Box::new(|entry| entry.evidence_sha256s = vec!["C".repeat(64)]),
             Box::new(|entry| entry.evidence_sha256s = vec![digest('d'), digest('c')]),
+            // Review F1 of `7c593b3b`: a repeated evidence digest alone.
+            Box::new(|entry| entry.evidence_sha256s = vec![digest('c'), digest('c')]),
         ];
         for change in cases {
             assert_eq!(replay_changed(&*change), Err(ActionHistoryError::Integrity));
@@ -816,10 +822,66 @@ mod tests {
         // A denied action may name no authorization.
         assert!(
             replay_changed(&|entry| {
-                entry.authorization = ActionAuthorization::Unauthorized;
+                entry.authorization = ActionAuthorization::Unauthorized {};
                 entry.outcome = ActionOutcome::Denied;
             })
             .is_ok()
+        );
+    }
+
+    #[test]
+    fn retained_positions_cross_json_closed_and_replay_unchanged() {
+        // Decision 0127: a declared history is parsed closed and replays to
+        // the same chain; the variant without authority keeps its encoding.
+        let mut history = ActionHistory::new();
+        history.append(&draft("write-1", 10)).unwrap();
+        let mut refused = draft("write-2", 11);
+        refused.authorization = ActionAuthorization::Unauthorized {};
+        refused.outcome = ActionOutcome::Denied;
+        history.append(&refused).unwrap();
+        let mut expiring = draft("write-3", 12);
+        expiring.retain_until_epoch_ms = 13;
+        history.append(&expiring).unwrap();
+        history.apply_retention(13);
+        let bytes = serde_json::to_vec(history.records()).unwrap();
+        let text = String::from_utf8(bytes.clone()).unwrap();
+        assert!(text.contains("\"authorization\":{\"kind\":\"unauthorized\"}"));
+        let records: Vec<ActionHistoryRecord> = serde_json::from_slice(&bytes).unwrap();
+        let head: ActionHistoryHead =
+            serde_json::from_slice(&serde_json::to_vec(&history.head()).unwrap()).unwrap();
+        // An expired place keeps no time (Decision 0125, N1), so only the
+        // positions and the head are compared.
+        let replayed = ActionHistory::replay(records, &head).unwrap();
+        assert_eq!(
+            (replayed.records(), replayed.head()),
+            (history.records(), history.head())
+        );
+        for extra in [
+            text.replacen(
+                "{\"kind\":\"unauthorized\"}",
+                "{\"kind\":\"unauthorized\",\"grant_id\":\"grant-1\"}",
+                1,
+            ),
+            text.replacen("\"kind\":\"grant\"", "\"kind\":\"grant\",\"x\":1", 1),
+            text.replacen("\"state\":\"kept\"", "\"state\":\"kept\",\"x\":1", 1),
+            text.replacen("\"state\":\"expired\"", "\"state\":\"expired\",\"x\":1", 1),
+            text.replacen("\"outcome\":\"denied\"", "\"outcome\":\"undone\"", 1),
+            text.replacen(
+                "\"action_kind\":\"file_write\"",
+                "\"action_kind\":\"other\"",
+                1,
+            ),
+        ] {
+            assert_ne!(extra, text);
+            assert!(serde_json::from_str::<Vec<ActionHistoryRecord>>(&extra).is_err());
+        }
+        assert!(
+            serde_json::from_value::<ActionHistoryHead>(serde_json::json!({
+                "count": 3,
+                "head_sha256": history.head().head_sha256,
+                "complete": true,
+            }))
+            .is_err()
         );
     }
 

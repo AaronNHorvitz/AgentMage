@@ -13,6 +13,8 @@ pub mod capability_package_runtime;
 
 /// Authority-free composition of structured edits into kernel shadow changes.
 pub mod code_change;
+/// Per-run action histories kept by the coding host's effect owners.
+pub mod coding_action_history;
 /// Exact non-authoritative approval composition for native coding operations.
 pub mod coding_authority;
 /// Hunk review of proposed coding writes for protected approval display.
