@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "stage": "batch10-observation",
+  "source_revision": "c559d59515af5e512df29e8e9070d609266eaec4",
+  "scope": "Batch 10 actual CLI, host and read-worker binaries in fresh disposable roots: clean start and pre-existing-work refusal in this sandbox (the job ledger is not reached)",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "python3",
+      "<state>/batch10-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "1b1cd41434aea85883d8d5503bbad8642dfbb0e93a20bfcbe652c18eccafb00c",
+      "private_sha256": "3e6c8be8eb035a0ad0d7b2a9f43b7b8b0c74beed8ed58eec1f3daa8f768c7280"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 10.459,
+      "log": "01.log",
+      "log_sha256": "1f8bcc10867eeca3c5395b160c5d5a73fe4e22e3e495f4145c00a02ea7e3e4dd",
+      "private_log_sha256": "6a97f104c055e1ec6736dc132d023b314571bb2a7d3ff0d34d92a8e01a47e49c"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "<state>/batch10-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 1.692,
+      "log": "02.log",
+      "log_sha256": "8ed40569e94ae23de7e8c624c26191519eb62bf2c05ed0d5c6b9d6b047175a64",
+      "private_log_sha256": "8ed40569e94ae23de7e8c624c26191519eb62bf2c05ed0d5c6b9d6b047175a64"
+    }
+  ]
+}

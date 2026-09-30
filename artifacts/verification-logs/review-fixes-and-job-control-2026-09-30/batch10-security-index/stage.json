@@ -1,0 +1,156 @@
+{
+  "schema_version": 2,
+  "stage": "batch10-security-index",
+  "source_revision": "291530713f8f6359734701c145b66f0f3120e493",
+  "scope": "Batch 10 Story 23.4 security evidence map and evidence index at 29153071",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/story_23_4_security_evidence.py",
+      "--write",
+      "--source-revision",
+      "291530713f8f6359734701c145b66f0f3120e493"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_23_4_security_evidence"
+    ],
+    [
+      "python3",
+      "scripts/story_23_4_evidence_index.py",
+      "--source-revision",
+      "291530713f8f6359734701c145b66f0f3120e493"
+    ],
+    [
+      "python3",
+      "scripts/story_23_4_evidence_index.py",
+      "--check"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_23_4_evidence_index"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/story_23_4_evidence_index.py": "a0a4f579d7083e2510106c0a2f494d3e64055dfda45961147bff1e75312fc0de",
+    "scripts/story_23_4_security_evidence.py": "4a9e56b6318ee97f55bc55db0a0dd43d6c4b3da9852eb55bf9306087ac5963e1",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_story_23_4_evidence_index.py": "9cb411d1e9cd349364359c0b93b8a7f19e783e7ca892affebe79e282025e06ac",
+    "tests/test_story_23_4_security_evidence.py": "020046eed376d925ee55a002a8811118a68eac805c763848b3606bf0920ae124"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/story_23_4_security_evidence.py",
+        "--write",
+        "--source-revision",
+        "291530713f8f6359734701c145b66f0f3120e493"
+      ],
+      "exit_code": 0,
+      "seconds": 20.886,
+      "log": "01.log",
+      "log_sha256": "526e462db58d01ff614f4ab4a2d3d48872d64cf4ecc8783acfd4e6b2566c7b70",
+      "private_log_sha256": "526e462db58d01ff614f4ab4a2d3d48872d64cf4ecc8783acfd4e6b2566c7b70"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_23_4_security_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.236,
+      "log": "02.log",
+      "log_sha256": "583e2621f8c4ced08d26f83058529458e06740a6f0a6d83ecd40f57d485851e3",
+      "private_log_sha256": "583e2621f8c4ced08d26f83058529458e06740a6f0a6d83ecd40f57d485851e3"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/story_23_4_evidence_index.py",
+        "--source-revision",
+        "291530713f8f6359734701c145b66f0f3120e493"
+      ],
+      "exit_code": 0,
+      "seconds": 0.05,
+      "log": "03.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "scripts/story_23_4_evidence_index.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.045,
+      "log": "04.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_23_4_evidence_index"
+      ],
+      "exit_code": 0,
+      "seconds": 0.154,
+      "log": "05.log",
+      "log_sha256": "97ff69392314471ff67a3d0dcb25633ee4a4c7b67a7ec08aa6f103d8ce004c80",
+      "private_log_sha256": "97ff69392314471ff67a3d0dcb25633ee4a4c7b67a7ec08aa6f103d8ce004c80"
+    },
+    {
+      "index": 6,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.072,
+      "log": "06.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 7,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.003,
+      "log": "07.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

@@ -1,0 +1,204 @@
+{
+  "started_at_utc": "2026-09-30T08:13:03.238451+00:00",
+  "finished_at_utc": "2026-09-30T08:13:04.902352+00:00",
+  "source_commit": "c559d59515af5e512df29e8e9070d609266eaec4",
+  "source_tree": "31cef5e2e511e5a63b11e0f76fb07a0e8bc73afa",
+  "source_worktree_clean": true,
+  "binaries": {
+    "agentmage": {
+      "sha256": "a2f99d123d353efee8fb6d113ace4790b843200787b1ccd69136966b7dd5b689",
+      "bytes": 298015680
+    },
+    "agentmage-host": {
+      "sha256": "3aae3e064f79f1b3d314e894e88a87a1d0a66a0c4eac19dd0d6561f1163cabe5",
+      "bytes": 334747520
+    },
+    "agentmage-read-only-worker": {
+      "sha256": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf",
+      "bytes": 13798696
+    }
+  },
+  "binaries_unchanged": true,
+  "clean": {
+    "root": "<state>/c61",
+    "exit_code": 5,
+    "before": {
+      "head": "9b661a4c7d4747ced2a9489dcfa05ae8b24c4ce2",
+      "status_hex": "",
+      "index_entries_hex": "31303036343420336463336461396262613864316533376531313261656563653965353965666462323431653234352030092e6167656e746d6167652d646576656c6f706d656e742d776f726b73706163650031303036343420626363316464313339663837323165323038666564653035623662656237366239653438666166652030097372632f63616c632e707900313030363434203331366434643034306539633635313563643466636466356564666632346164343261343363663120300974657374732f72756e5f76616c69646174696f6e2e707900",
+      "unstaged_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "staged_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "index_sha256": "f993edf9de0d1c16e076eedfcfe09dac72d843c95295355433bd42f040cd42c7",
+      "files": [
+        {
+          "path": ".agentmage-development-workspace",
+          "sha256": "ec88addcf9e5349bf846a1368d860132c80bea2cd00e84854789c4c385d973d1",
+          "mode": 384
+        },
+        {
+          "path": "src/calc.py",
+          "sha256": "aca809d27a82d641ebd68549b100a91cb40db964cbdd6e1efaeda70b79a73666",
+          "mode": 384
+        },
+        {
+          "path": "tests/run_validation.py",
+          "sha256": "0c13044a796d35487f14de5b6cab0eda0581918efafa07521bf1459a2404746f",
+          "mode": 384
+        }
+      ]
+    },
+    "after": {
+      "head": "9b661a4c7d4747ced2a9489dcfa05ae8b24c4ce2",
+      "status_hex": "",
+      "index_entries_hex": "31303036343420336463336461396262613864316533376531313261656563653965353965666462323431653234352030092e6167656e746d6167652d646576656c6f706d656e742d776f726b73706163650031303036343420626363316464313339663837323165323038666564653035623662656237366239653438666166652030097372632f63616c632e707900313030363434203331366434643034306539633635313563643466636466356564666632346164343261343363663120300974657374732f72756e5f76616c69646174696f6e2e707900",
+      "unstaged_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "staged_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "index_sha256": "f993edf9de0d1c16e076eedfcfe09dac72d843c95295355433bd42f040cd42c7",
+      "files": [
+        {
+          "path": ".agentmage-development-workspace",
+          "sha256": "ec88addcf9e5349bf846a1368d860132c80bea2cd00e84854789c4c385d973d1",
+          "mode": 384
+        },
+        {
+          "path": "src/calc.py",
+          "sha256": "aca809d27a82d641ebd68549b100a91cb40db964cbdd6e1efaeda70b79a73666",
+          "mode": 384
+        },
+        {
+          "path": "tests/run_validation.py",
+          "sha256": "0c13044a796d35487f14de5b6cab0eda0581918efafa07521bf1459a2404746f",
+          "mode": 384
+        }
+      ]
+    },
+    "preserved": true,
+    "state_entries": [
+      "repository-management"
+    ],
+    "state_has_no_files": true,
+    "status": {
+      "activation": true,
+      "agentmage_binary": "<repo>/target/debug/agentmage",
+      "base": "<state>/c61",
+      "confinement": false,
+      "confinement_prerequisites": {
+        "native_executables": {
+          "bwrap": "untrusted-path",
+          "git": "untrusted-path",
+          "systemctl": "untrusted-path",
+          "systemd-run": "untrusted-path"
+        },
+        "ready": false,
+        "scope": "prerequisites-only",
+        "user_manager": "not-probed-untrusted-systemctl"
+      },
+      "disposable_private": true,
+      "fixture_profile_id": "scripted-executable-fixture-32k-v1",
+      "git_branch": "refs/heads/agentmage/tasks/coding-fixture",
+      "git_clean": true,
+      "host_binary": "<repo>/target/debug/agentmage-host",
+      "lifecycle": "ready",
+      "model_request": {
+        "observation": "unavailable",
+        "qualification": "not-assessed",
+        "selection": null,
+        "serving": "not-observed"
+      },
+      "read_worker_binary": "<repo>/target/debug/agentmage-read-only-worker",
+      "schema_version": 2,
+      "scope": "development-diagnostics-only",
+      "state_key": "not-created",
+      "state_private": true,
+      "transport_path": true,
+      "workspace_private": true
+    }
+  },
+  "dirty": {
+    "root": "<state>/c62",
+    "exit_code": 1,
+    "before": {
+      "head": "2c279467de1113701b0b7253bbdca97c74d39e88",
+      "status_hex": "414d206f70657261746f722d6e6f74652e747874003f3f206f70657261746f722d736372617463682e74787400",
+      "index_entries_hex": "31303036343420623561343363343161346534663934663364623939333464303632626132623634323039343762312030092e6167656e746d6167652d646576656c6f706d656e742d776f726b73706163650031303036343420626133316562336135613862306566653332383862343963323631396336373161363431363330342030096f70657261746f722d6e6f74652e7478740031303036343420626363316464313339663837323165323038666564653035623662656237366239653438666166652030097372632f63616c632e707900313030363434203331366434643034306539633635313563643466636466356564666632346164343261343363663120300974657374732f72756e5f76616c69646174696f6e2e707900",
+      "unstaged_diff_sha256": "4f1010daf2e6b759ace22a7936d95fe46932eab3ccdb19feeeb2c7a28a6983c7",
+      "staged_diff_sha256": "2fc3aaa5875f10cc59ded956a9dbd5825ebd50644585feb7c29dc9412e1b720d",
+      "index_sha256": "922278335c2f7255fd4146c0cc3a7e325dcfd9fb36c86e07a6a58b4810973a57",
+      "files": [
+        {
+          "path": ".agentmage-development-workspace",
+          "sha256": "84c852b8eef6fb2bb6c2c63869e2587f932ea53b83fc5aca7f3fec412143f0ff",
+          "mode": 384
+        },
+        {
+          "path": "operator-note.txt",
+          "sha256": "bb25459e3007439cd70a0b311af6af2192896fc365ca6d64863c0821f1c4dd88",
+          "mode": 384
+        },
+        {
+          "path": "operator-scratch.txt",
+          "sha256": "d3b1144ae5938594b57488ac2022040ed28638803d71818b0f277e087bdb17e1",
+          "mode": 384
+        },
+        {
+          "path": "src/calc.py",
+          "sha256": "aca809d27a82d641ebd68549b100a91cb40db964cbdd6e1efaeda70b79a73666",
+          "mode": 384
+        },
+        {
+          "path": "tests/run_validation.py",
+          "sha256": "0c13044a796d35487f14de5b6cab0eda0581918efafa07521bf1459a2404746f",
+          "mode": 384
+        }
+      ]
+    },
+    "after": {
+      "head": "2c279467de1113701b0b7253bbdca97c74d39e88",
+      "status_hex": "414d206f70657261746f722d6e6f74652e747874003f3f206f70657261746f722d736372617463682e74787400",
+      "index_entries_hex": "31303036343420623561343363343161346534663934663364623939333464303632626132623634323039343762312030092e6167656e746d6167652d646576656c6f706d656e742d776f726b73706163650031303036343420626133316562336135613862306566653332383862343963323631396336373161363431363330342030096f70657261746f722d6e6f74652e7478740031303036343420626363316464313339663837323165323038666564653035623662656237366239653438666166652030097372632f63616c632e707900313030363434203331366434643034306539633635313563643466636466356564666632346164343261343363663120300974657374732f72756e5f76616c69646174696f6e2e707900",
+      "unstaged_diff_sha256": "4f1010daf2e6b759ace22a7936d95fe46932eab3ccdb19feeeb2c7a28a6983c7",
+      "staged_diff_sha256": "2fc3aaa5875f10cc59ded956a9dbd5825ebd50644585feb7c29dc9412e1b720d",
+      "index_sha256": "922278335c2f7255fd4146c0cc3a7e325dcfd9fb36c86e07a6a58b4810973a57",
+      "files": [
+        {
+          "path": ".agentmage-development-workspace",
+          "sha256": "84c852b8eef6fb2bb6c2c63869e2587f932ea53b83fc5aca7f3fec412143f0ff",
+          "mode": 384
+        },
+        {
+          "path": "operator-note.txt",
+          "sha256": "bb25459e3007439cd70a0b311af6af2192896fc365ca6d64863c0821f1c4dd88",
+          "mode": 384
+        },
+        {
+          "path": "operator-scratch.txt",
+          "sha256": "d3b1144ae5938594b57488ac2022040ed28638803d71818b0f277e087bdb17e1",
+          "mode": 384
+        },
+        {
+          "path": "src/calc.py",
+          "sha256": "aca809d27a82d641ebd68549b100a91cb40db964cbdd6e1efaeda70b79a73666",
+          "mode": 384
+        },
+        {
+          "path": "tests/run_validation.py",
+          "sha256": "0c13044a796d35487f14de5b6cab0eda0581918efafa07521bf1459a2404746f",
+          "mode": 384
+        }
+      ]
+    },
+    "preserved": true,
+    "state_entries": [],
+    "log_directory_created": false
+  },
+  "diagnosis_schema_version": 2,
+  "idle_stop_exit_code": 1,
+  "active_cancellation_observed": false,
+  "model": "scripted",
+  "real_model_run": false,
+  "complete_coding_workflow_observed": false,
+  "interactive_confirmations_reached": false,
+  "native_tools_executed": false,
+  "job_ledger_exercised": false,
+  "qualification": "actual-binary-native-prerequisite-refusal-only"
+}

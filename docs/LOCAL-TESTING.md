@@ -51,10 +51,12 @@ an uncertain record. See the development guide for lifecycle and cleanup limitat
 
 **Current lane result:** setup and diagnosis ran; the actual scripted CLI/host
 launch returned exit 5 before tools because native prerequisites are unavailable.
-The [review-fix and run declaration verification](verification/review-fixes-and-run-declarations-2026-09-29.md)
+The [review-fix and host job control verification](verification/review-fixes-and-job-control-2026-09-30.md)
 retains the latest source, rebuilt binary identities and startup results, with its logs
 under `artifacts/verification-logs/`; the
-[review-fix and hunk selection verification](verification/review-fixes-and-hunk-selection-2026-09-29.md),
+[review-fix and durable job ledger verification](verification/review-fixes-and-durable-job-ledgers-2026-09-30.md),
+the [review-fix and run declaration verification](verification/review-fixes-and-run-declarations-2026-09-29.md),
+the [review-fix and hunk selection verification](verification/review-fixes-and-hunk-selection-2026-09-29.md),
 the [CLI hunk review and run progress verification](verification/cli-inspection-2026-09-29.md), the
 [review-fix and runtime component verification](verification/review-fixes-and-runtime-components-2026-09-29.md),
 the [coding recoverability verification](verification/coding-recoverability-2026-09-29.md),
