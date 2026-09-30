@@ -60,8 +60,10 @@ automated Story 23.4 boundary check now requires four things in `request_tool`:
 - the class is named only as `requested.origin`;
 - the exact dispatch line appears once.
 
-Its unit test refuses the three rebinding mutants from the review and three more. The
-statement in Decision 0114 that the earlier replacement check was at least as strict as
+Its unit test refuses the three rebinding mutants from the review and three more.
+[Decision 0117](0117-review-fixes-for-run-declarations.md) (review V2 of `8fbd2bc6`)
+narrows this statement: the check accepts exactly the parameter, one destructuring and
+`requested.origin`, and refuses any assignment to an `origin`. The statement in Decision 0114 that the earlier replacement check was at least as strict as
 the literal check was wrong and is corrected there. The engine also has a loop test for
 the property; see V7.
 

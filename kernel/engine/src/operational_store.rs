@@ -3809,6 +3809,7 @@ fn open_connection(path: &Path, key: &[u8]) -> Result<Connection, OperationalSto
         .execute_batch(
             "PRAGMA cipher_memory_security = ON;
              PRAGMA foreign_keys = ON;
+             PRAGMA recursive_triggers = ON;
              PRAGMA trusted_schema = OFF;
              PRAGMA secure_delete = ON;
              PRAGMA temp_store = MEMORY;
@@ -3841,6 +3842,11 @@ fn verify_runtime_configuration(connection: &Connection) -> Result<(), Operation
     let foreign_keys: i64 = connection
         .pragma_query_value(None, "foreign_keys", |row| row.get(0))
         .map_err(|_| OperationalStoreError::OpenFailed)?;
+    // REPLACE conflict resolution fires the append-only delete triggers only
+    // when recursive triggers are on (review F2 of `6355a379`).
+    let recursive_triggers: i64 = connection
+        .pragma_query_value(None, "recursive_triggers", |row| row.get(0))
+        .map_err(|_| OperationalStoreError::OpenFailed)?;
     let trusted_schema: i64 = connection
         .pragma_query_value(None, "trusted_schema", |row| row.get(0))
         .map_err(|_| OperationalStoreError::OpenFailed)?;
@@ -3866,6 +3872,7 @@ fn verify_runtime_configuration(connection: &Connection) -> Result<(), Operation
         .pragma_query_value(None, "journal_mode", |row| row.get(0))
         .map_err(|_| OperationalStoreError::OpenFailed)?;
     if foreign_keys != 1
+        || recursive_triggers != 1
         || trusted_schema != 0
         || secure_delete != 1
         || temp_store != 2
@@ -8903,15 +8910,23 @@ mod tests {
         let store = OperationalStore::open(&path, &observation(), &mut TestKey([17; 32]))
             .expect("configured encrypted store");
         verify_runtime_configuration(&store.connection).expect("exact runtime configuration");
-        store
-            .connection
-            .pragma_update(None, "foreign_keys", false)
-            .expect("configuration mutation");
-        assert_eq!(
-            verify_runtime_configuration(&store.connection)
-                .expect_err("weakened configuration must fail"),
-            OperationalStoreError::OpenFailed
-        );
+        for pragma in ["foreign_keys", "recursive_triggers"] {
+            store
+                .connection
+                .pragma_update(None, pragma, false)
+                .expect("configuration mutation");
+            assert_eq!(
+                verify_runtime_configuration(&store.connection)
+                    .expect_err("weakened configuration must fail"),
+                OperationalStoreError::OpenFailed,
+                "{pragma}"
+            );
+            store
+                .connection
+                .pragma_update(None, pragma, true)
+                .expect("configuration restored");
+            verify_runtime_configuration(&store.connection).expect("restored configuration");
+        }
         drop(store);
         fs::remove_dir_all(directory).expect("cleanup");
     }

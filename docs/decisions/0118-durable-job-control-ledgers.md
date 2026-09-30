@@ -39,6 +39,10 @@ native host, so they are separate rows.
    - `job_ledger_heads`: the entry count and last digest of each job. The head must
      name an existing entry, can only move forward and cannot be deleted.
 
+   A `REPLACE` removes a row without firing delete triggers unless recursive
+   triggers are on, so the store turns them on and verifies it at every open
+   ([Decision 0119](0119-review-fixes-for-durable-job-ledgers.md), review F2).
+
    The migration first verifies the complete prior history, then runs in one
    transaction like every earlier one. A corrupt history or a failure leaves the
    store at version 20, and a failed migration stays retryable.
@@ -51,10 +55,14 @@ native host, so they are separate rows.
    owner and first digest, and end at the retained head. Opening the store replays
    every ledger. A ledger that fails replay makes the store fail its integrity check;
    through an open handle it poisons the store for further use.
-5. Writers. The operational store authenticates writers. It opens only with its
-   key, holds an exclusive writer lock, and refuses pages whose authentication fails,
-   so no other process can append, remove or reorder entries. Within the process,
-   only the job's recorded owner identity can record an owner observation.
+5. Writers. The operational store authenticates writers by its key. It opens only
+   with its key, holds an exclusive writer lock, and refuses pages whose
+   authentication fails, so no process without the store key can append, remove or
+   reorder entries. A key holder is trusted as the owner, and the ledger cannot
+   attribute an entry beyond the key
+   ([Decision 0119](0119-review-fixes-for-durable-job-ledgers.md), review F1).
+   Within the process, only the job's recorded owner identity can record an owner
+   observation.
 6. Client scope. Each client request is recorded under a client scope that the owner
    supplies from the client it authenticated; a client never names its own scope. A
    retry returns the original decision only from the same client. The same request
@@ -89,6 +97,9 @@ Engine tests use real encrypted stores in private temporary directories. They co
 
 A mutation of each of five rules made its test fail: the shared head transaction,
 the canonical encoding check, replay on open, poisoning and client scoping.
+[Decision 0119](0119-review-fixes-for-durable-job-ledgers.md) (review F3) adds tests
+for the two rules that no test covered: an append that names another head, and a
+root whose first digest differs from the chain.
 
 No host service, IPC, CLI or native process uses the store yet; that is AMR-04.6.2 and
 AMR-04.6.3. Independent review of this batch is requested and remains open.

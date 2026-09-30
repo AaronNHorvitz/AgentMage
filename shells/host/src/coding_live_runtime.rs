@@ -3,6 +3,11 @@
 //! Model and tool work runs on one owned worker. The authenticated IPC owner remains available to
 //! drain bounded canonical events, validate cursors, present approvals, and set a cancellation
 //! signal. This module adds no effect, model-selection, approval, or storage authority.
+//!
+//! When the composed runtime's store keeps durable job ledgers, the service is the owner of each
+//! run's job (Decision 0120): it records the job's start and terminal outcome, decides each client
+//! control request through the ledger under the client scope the IPC endpoint derived from its
+//! authenticated peer, and stops work only for a cancellation the ledger applied.
 
 use std::collections::BTreeMap;
 use std::sync::{
@@ -14,13 +19,18 @@ use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
 use agentmage_kernel_contracts::{
-    BoundaryKind, CancellationId, CancellationReason, CancellationSignal, ModelCancellationProbe,
-    ModelRuntimeFailure, RuntimeApprovalChallenge, RuntimeApprovalResponse, RuntimeArtifactRef,
-    RuntimeEvent, RuntimeEventCursor, RuntimeEventKind, RuntimeOutcome, RuntimeRunId,
-    RuntimeRunRequest, RuntimeSessionMode,
+    AgentStateKind, BoundaryKind, CancellationId, CancellationReason, CancellationSignal,
+    ModelCancellationProbe, ModelRuntimeFailure, RuntimeApprovalChallenge, RuntimeApprovalResponse,
+    RuntimeArtifactRef, RuntimeEvent, RuntimeEventCursor, RuntimeEventKind, RuntimeOutcome,
+    RuntimeRunId, RuntimeRunRequest, RuntimeSessionMode,
 };
 use agentmage_kernel_engine::{
     context_inspection::ContextInspection,
+    job_control::{
+        JobControlAction, JobControlDecision, JobControlError, JobControlRequest, JobOwnerEvent,
+        JobPhase,
+    },
+    job_ledger_store::{DurableJobLedgers, JobLedgerStoreError},
     runtime_artifact::{RuntimeArtifactPage, RuntimeArtifactState},
     runtime_coordinator::{
         verify_runtime_approval_challenge, verify_runtime_approval_response,
@@ -39,9 +49,14 @@ use crate::coding_context::RunContextInspectionSource;
 use crate::coding_recoverability::{RecoverabilityReport, RunRecoverabilitySource};
 use crate::native_chat_runtime::NativeChatRuntimeFactory;
 use crate::runtime_transport::{
-    RuntimePrepareInput, RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort,
-    RuntimeTransportStep,
+    RuntimeClientScope, RuntimeJobControl, RuntimeJobStatus, RuntimePrepareInput,
+    RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
 };
+
+/// Owner identity of the coding host in every job ledger it keeps. The store
+/// authenticates writers by its key, so every host over one store is the same
+/// owner (Decisions 0119 and 0120).
+pub const CODING_HOST_JOB_OWNER: &str = "agentmage-coding-host";
 
 /// Declarations a live coordinator can make about its ended run (Decision 0116).
 pub trait LiveRunDeclarationPort {
@@ -396,10 +411,16 @@ where
         // attempt with this request. Invalid requests above leave it untouched.
         self.prepared.remove(&key);
         let coordinator = self.factory.compose_runtime(&request)?;
+        let job_ledgers = self.factory.take_job_ledgers(&request.run_id);
         let mut session = LiveCodingSession::spawn(request, coordinator, slow_subscriber_probe)
             .inspect_err(|_| {
                 eprintln!("coding.live.spawn-denied");
             })?;
+        if let Some(ledgers) = job_ledgers {
+            session.begin_job(ledgers).inspect_err(|_| {
+                eprintln!("coding.live.job-start-denied");
+            })?;
+        }
         let step = session.start().inspect_err(|_| {
             eprintln!("coding.live.start-denied");
         })?;
@@ -470,6 +491,30 @@ where
             .run_declarations(request_sha256)
     }
 
+    fn job_status(
+        &mut self,
+        run_id: &RuntimeRunId,
+        request_sha256: &str,
+    ) -> Result<RuntimeJobStatus, RuntimeTransportError> {
+        self.active
+            .get_mut(run_id.as_str())
+            .ok_or(RuntimeTransportError::RunUnavailable)?
+            .job_status(request_sha256)
+    }
+
+    fn control_job_for_client(
+        &mut self,
+        client: &RuntimeClientScope,
+        run_id: &RuntimeRunId,
+        request_sha256: &str,
+        request: &JobControlRequest,
+    ) -> Result<RuntimeJobControl, RuntimeTransportError> {
+        self.active
+            .get_mut(run_id.as_str())
+            .ok_or(RuntimeTransportError::RunUnavailable)?
+            .control_job(client, request_sha256, request)
+    }
+
     fn revoke_session_preauthorization(
         &mut self,
         session_id: &agentmage_kernel_contracts::SessionId,
@@ -520,6 +565,17 @@ struct LiveCodingSession {
     outcome: Option<RuntimeOutcome>,
     busy: bool,
     event_stream_terminal: bool,
+    job: Option<LiveJob>,
+}
+
+/// The durable job of one live run, owned by this service (Decision 0120).
+struct LiveJob {
+    ledgers: DurableJobLedgers,
+    /// Whether the terminal outcome is recorded.
+    ended: bool,
+    /// An owner observation could not be recorded, so the ledger no longer
+    /// follows the run and is neither shown nor controlled.
+    failed: bool,
 }
 
 impl LiveCodingSession {
@@ -604,7 +660,38 @@ impl LiveCodingSession {
             outcome: None,
             busy: false,
             event_stream_terminal: false,
+            job: None,
         })
+    }
+
+    /// Records this run's job as started, before any work is dispatched. A run
+    /// resumed after a host restart continues its running job; a job that is
+    /// suspended, cancelling or ended is not continued here.
+    fn begin_job(&mut self, ledgers: DurableJobLedgers) -> Result<(), RuntimeTransportError> {
+        let job_id = self.request.run_id.as_str();
+        let resumed = self.request.event_cursor.is_some();
+        let observation = match ledgers.create(job_id, CODING_HOST_JOB_OWNER) {
+            Ok(observation) => observation,
+            Err(JobLedgerStoreError::Exists) if resumed => {
+                ledgers.observation(job_id).map_err(map_ledger_error)?
+            }
+            Err(error) => return Err(map_ledger_error(error)),
+        };
+        match observation.phase {
+            JobPhase::Queued => {
+                ledgers
+                    .observe_owner(job_id, CODING_HOST_JOB_OWNER, JobOwnerEvent::Started)
+                    .map_err(map_ledger_error)?;
+            }
+            JobPhase::Running if resumed => {}
+            _ => return Err(RuntimeTransportError::RequestDenied),
+        }
+        self.job = Some(LiveJob {
+            ledgers,
+            ended: false,
+            failed: false,
+        });
+        Ok(())
     }
 
     fn start(&mut self) -> Result<RuntimeTransportStep, RuntimeTransportError> {
@@ -647,11 +734,25 @@ impl LiveCodingSession {
         after_event_cursor: Option<&RuntimeEventCursor>,
     ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
         self.verify_binding(request_sha256)?;
+        // Every cancellation of a job the ledger keeps is a control request
+        // decided through it (Decision 0120).
+        if self.job.is_some() {
+            return Err(RuntimeTransportError::RequestDenied);
+        }
         self.refresh(Duration::ZERO)?;
         let _ = self.project(after_event_cursor, false)?;
         if self.outcome.is_some() {
             return self.project(after_event_cursor, true);
         }
+        self.signal_cancellation(cancellation_id)?;
+        self.refresh(CONTROL_WAIT)?;
+        self.project(after_event_cursor, true)
+    }
+
+    fn signal_cancellation(
+        &mut self,
+        cancellation_id: CancellationId,
+    ) -> Result<(), RuntimeTransportError> {
         let correlation_id = self
             .events
             .first()
@@ -669,8 +770,103 @@ impl LiveCodingSession {
             self.pending_approval = None;
             self.dispatch(None)?;
         }
-        self.refresh(CONTROL_WAIT)?;
-        self.project(after_event_cursor, true)
+        Ok(())
+    }
+
+    /// The job's replayed state, answered while the run is held.
+    fn job_status(
+        &mut self,
+        request_sha256: &str,
+    ) -> Result<RuntimeJobStatus, RuntimeTransportError> {
+        self.verify_binding(request_sha256)?;
+        self.refresh(Duration::ZERO)?;
+        self.replayed_job_status()
+    }
+
+    /// Decides one client control request through the durable ledger. Only an
+    /// applied cancellation stops work; suspension and resumption are refused
+    /// before the ledger until the host can stop at a safe boundary and resume
+    /// (AMR-04.6.4).
+    fn control_job(
+        &mut self,
+        client: &RuntimeClientScope,
+        request_sha256: &str,
+        request: &JobControlRequest,
+    ) -> Result<RuntimeJobControl, RuntimeTransportError> {
+        self.verify_binding(request_sha256)?;
+        // An outcome that already arrived is recorded before the request is decided.
+        self.refresh(Duration::ZERO)?;
+        let job = self.usable_job()?;
+        if request.action != JobControlAction::Cancel {
+            return Err(RuntimeTransportError::RequestDenied);
+        }
+        let decision = job
+            .ledgers
+            .control(self.request.run_id.as_str(), client.as_str(), request)
+            .map_err(map_ledger_error)?;
+        // A retry answers the original decision, and the one cancellation a
+        // job can apply always yields the same signal.
+        if let JobControlDecision::Applied {
+            revision,
+            phase: JobPhase::Cancelling,
+        } = decision
+            && self.outcome.is_none()
+        {
+            self.signal_cancellation(CancellationId::from_raw(format!(
+                "coding-job-cancel-{revision}"
+            )))?;
+            self.refresh(CONTROL_WAIT)?;
+        }
+        Ok(RuntimeJobControl {
+            decision,
+            status: self.replayed_job_status()?,
+        })
+    }
+
+    fn usable_job(&self) -> Result<&LiveJob, RuntimeTransportError> {
+        self.job
+            .as_ref()
+            .filter(|job| !job.failed)
+            .ok_or(RuntimeTransportError::JobControlUnavailable)
+    }
+
+    fn replayed_job_status(&self) -> Result<RuntimeJobStatus, RuntimeTransportError> {
+        let job = self
+            .usable_job()?
+            .ledgers
+            .observation(self.request.run_id.as_str())
+            .map_err(map_ledger_error)?;
+        Ok(RuntimeJobStatus {
+            schema_version: 1,
+            run_id: self.request.run_id.clone(),
+            request_sha256: self.request.request_sha256.clone(),
+            job,
+        })
+    }
+
+    /// Records the run's verified outcome as the job's terminal owner
+    /// observation (see [`job_outcome_event`]).
+    fn record_job_outcome(&mut self) {
+        let (Some(job), Some(outcome)) = (self.job.as_mut(), self.outcome.as_ref()) else {
+            return;
+        };
+        if job.ended || job.failed {
+            return;
+        }
+        let job_id = self.request.run_id.as_str();
+        let recorded = job.ledgers.observation(job_id).and_then(|observation| {
+            job.ledgers.observe_owner(
+                job_id,
+                CODING_HOST_JOB_OWNER,
+                job_outcome_event(outcome.state, observation.phase),
+            )
+        });
+        if recorded.is_ok() {
+            job.ended = true;
+        } else {
+            eprintln!("coding.live.job-outcome-unrecorded");
+            job.failed = true;
+        }
     }
 
     fn dispatch(
@@ -788,6 +984,7 @@ impl LiveCodingSession {
                     .map_err(|_| RuntimeTransportError::RuntimeEvidenceDenied)?;
                 self.pending_approval = None;
                 self.outcome = Some(outcome);
+                self.record_job_outcome();
             }
         }
         Ok(())
@@ -1002,6 +1199,34 @@ impl Drop for LiveCodingSession {
     }
 }
 
+/// The terminal owner observation for a run's verified outcome: completed for
+/// a success or no-op, whatever request is pending; cancellation observed for
+/// a cancelled run whose cancellation the ledger applied; failed for any other
+/// outcome, including a cancelled run without an applied request.
+const fn job_outcome_event(state: AgentStateKind, phase: JobPhase) -> JobOwnerEvent {
+    match (state, phase) {
+        (AgentStateKind::Success | AgentStateKind::NoOp, _) => JobOwnerEvent::Completed,
+        (AgentStateKind::Cancelled, JobPhase::Cancelling) => JobOwnerEvent::CancellationObserved,
+        _ => JobOwnerEvent::Failed,
+    }
+}
+
+const fn map_ledger_error(error: JobLedgerStoreError) -> RuntimeTransportError {
+    match error {
+        JobLedgerStoreError::Integrity => RuntimeTransportError::RuntimeEvidenceDenied,
+        JobLedgerStoreError::Storage | JobLedgerStoreError::Unavailable => {
+            RuntimeTransportError::JobControlUnavailable
+        }
+        JobLedgerStoreError::Ledger(JobControlError::Full) => {
+            RuntimeTransportError::CapacityExceeded
+        }
+        JobLedgerStoreError::NotFound
+        | JobLedgerStoreError::Exists
+        | JobLedgerStoreError::NotOwner
+        | JobLedgerStoreError::Ledger(_) => RuntimeTransportError::RequestDenied,
+    }
+}
+
 const fn map_client_error(error: CodingClientError) -> RuntimeTransportError {
     match error {
         CodingClientError::Runtime => RuntimeTransportError::RuntimeFailed,
@@ -1083,6 +1308,7 @@ mod tests {
             outcome: None,
             busy: true,
             event_stream_terminal: false,
+            job: None,
         };
         (session, result_tx, outcome)
     }
@@ -1149,6 +1375,92 @@ mod tests {
         ));
     }
 
+    #[test]
+    #[cfg(all(
+        target_os = "linux",
+        feature = "source-artifacts",
+        feature = "workflow-supervisor"
+    ))]
+    fn a_resumed_run_continues_only_its_running_job() {
+        // Decision 0120: a run resumed after a host restart continues its job
+        // when it is running; a new run never reuses a job, and a job whose
+        // cancellation is pending or that has ended is not continued.
+        let (_, events, _, _) = crate::runtime_read_tests::completed_native_read_fixture();
+        let begin = |resumed: bool, ledgers: DurableJobLedgers| {
+            let (mut session, _result_tx, _) = terminal_pair_fixture(false);
+            if resumed {
+                let first = events.first().unwrap();
+                session.request.event_cursor = Some(RuntimeEventCursor {
+                    run_id: first.run_id.clone(),
+                    event_id: first.event_id.clone(),
+                    sequence: first.sequence,
+                    event_sha256: first.event_sha256.clone(),
+                });
+            }
+            let job = session.request.run_id.as_str().to_owned();
+            session.begin_job(ledgers).map(|()| job)
+        };
+        let job = events.first().unwrap().run_id.as_str().to_owned();
+        let owner = CODING_HOST_JOB_OWNER;
+
+        // No job yet: a new or resumed run starts one.
+        for resumed in [false, true] {
+            let store =
+                crate::runtime_start_tests::JobLedgerStore::new(&format!("begin-{resumed}"));
+            let ledgers = store.ledgers();
+            assert_eq!(begin(resumed, ledgers.clone()), Ok(job.clone()));
+            let observation = ledgers.observation(&job).unwrap();
+            assert_eq!(
+                (observation.phase, observation.revision),
+                (JobPhase::Running, 1)
+            );
+        }
+
+        // A running job continues without a second start, and a new run
+        // never takes over an existing job.
+        let store = crate::runtime_start_tests::JobLedgerStore::new("begin-running");
+        let ledgers = store.ledgers();
+        ledgers.create(&job, owner).unwrap();
+        ledgers
+            .observe_owner(&job, owner, JobOwnerEvent::Started)
+            .unwrap();
+        let running = ledgers.observation(&job).unwrap();
+        assert_eq!(begin(true, ledgers.clone()), Ok(job.clone()));
+        assert_eq!(ledgers.observation(&job).unwrap(), running);
+        assert_eq!(
+            begin(false, ledgers.clone()),
+            Err(RuntimeTransportError::RequestDenied)
+        );
+
+        // A pending cancellation or an ended job is not continued.
+        ledgers
+            .control(
+                &job,
+                "peer-client-a",
+                &JobControlRequest {
+                    schema_version: 1,
+                    job_id: job.clone(),
+                    request_id: "cancel-1".to_owned(),
+                    action: JobControlAction::Cancel,
+                    observed_revision: 1,
+                },
+            )
+            .unwrap();
+        assert_eq!(
+            begin(true, ledgers.clone()),
+            Err(RuntimeTransportError::RequestDenied)
+        );
+        ledgers
+            .observe_owner(&job, owner, JobOwnerEvent::Completed)
+            .unwrap();
+        let completed = ledgers.observation(&job).unwrap();
+        assert_eq!(
+            begin(true, ledgers.clone()),
+            Err(RuntimeTransportError::RequestDenied)
+        );
+        assert_eq!(ledgers.observation(&job).unwrap(), completed);
+    }
+
     struct CountingDeclarations(std::cell::Cell<usize>);
 
     impl LiveRunDeclarationPort for CountingDeclarations {
@@ -1195,6 +1507,61 @@ mod tests {
         assert_eq!(declared.request_sha256, request.request_sha256);
         assert_eq!(declared.recoverability, None);
         assert_eq!(declared.context_inspections, None);
+    }
+
+    #[test]
+    fn each_verified_outcome_ends_the_job_truthfully() {
+        use agentmage_kernel_engine::job_control::JobControlLedger;
+        for phase in [JobPhase::Running, JobPhase::Cancelling] {
+            for state in [AgentStateKind::Success, AgentStateKind::NoOp] {
+                assert_eq!(job_outcome_event(state, phase), JobOwnerEvent::Completed);
+            }
+            for state in [
+                AgentStateKind::Declined,
+                AgentStateKind::Blocked,
+                AgentStateKind::Exhausted,
+            ] {
+                assert_eq!(job_outcome_event(state, phase), JobOwnerEvent::Failed);
+            }
+        }
+        assert_eq!(
+            job_outcome_event(AgentStateKind::Cancelled, JobPhase::Cancelling),
+            JobOwnerEvent::CancellationObserved
+        );
+        // A cancelled run without an applied request is not reported as a
+        // cancellation the ledger decided.
+        assert_eq!(
+            job_outcome_event(AgentStateKind::Cancelled, JobPhase::Running),
+            JobOwnerEvent::Failed
+        );
+        // Every event is a transition the ledger accepts from that phase.
+        for (phase, state) in [
+            (JobPhase::Running, AgentStateKind::Success),
+            (JobPhase::Running, AgentStateKind::Cancelled),
+            (JobPhase::Cancelling, AgentStateKind::Cancelled),
+            (JobPhase::Cancelling, AgentStateKind::Declined),
+        ] {
+            let mut ledger = JobControlLedger::create("job-outcome", "owner").unwrap();
+            ledger.observe_owner(JobOwnerEvent::Started).unwrap();
+            if phase == JobPhase::Cancelling {
+                ledger
+                    .control(
+                        "peer-client",
+                        &JobControlRequest {
+                            schema_version: 1,
+                            job_id: "job-outcome".to_owned(),
+                            request_id: "cancel".to_owned(),
+                            action: JobControlAction::Cancel,
+                            observed_revision: 1,
+                        },
+                    )
+                    .unwrap();
+            }
+            ledger
+                .observe_owner(job_outcome_event(state, phase))
+                .unwrap();
+            assert!(ledger.observation().phase.is_terminal());
+        }
     }
 
     fn unavailable(error: ModelRuntimeFailure) {

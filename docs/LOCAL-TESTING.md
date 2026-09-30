@@ -170,7 +170,9 @@ python3 -m scripts.coding_harness start --root "$demo" --model scripted \
   established by the runtime. It then shows the host's declarations about that run
   (Decision 0116): which of the run's effects a fresh approved inverse write could
   restore, which need your reconciliation, and a content-free view of each context
-  the model received. A part the host cannot declare completely says so.
+  the model received. A part the host cannot declare completely says so. Last, it
+  shows the run's job state from the host's durable job ledger, and the host's answer
+  to each cancellation request (Decision 0120).
 - Select hunks: when a patch review lists two or more numbered hunks, answer
   `select` followed by hunk numbers, for example `select 2`, instead of `yes`. The
   whole call is refused, and the next prompt asks separately for a write of only the
@@ -179,7 +181,10 @@ python3 -m scripts.coding_harness start --root "$demo" --model scripted \
   actual-process proof on a native host is still open (AMR-04.2.3).
 - Deny: in a fresh root, answer anything other than `yes`; no file may change.
 - Cancel: in a fresh root, run `python3 -m scripts.coding_harness stop --root "$demo"`
-  from a second terminal while a prompt or command is active.
+  from a second terminal while a prompt or command is active. The CLI sends the
+  cancellation to the host as a job control request that names the job revision it
+  observed; standard error then shows the host's decision and the job ending as
+  cancelled, or as completed if the work finished first.
 - Preservation: add a staged, unstaged or untracked file in `$demo/disposable/worktree`
   before `start`; the wrapper must refuse and leave every byte and the Git index unchanged.
 

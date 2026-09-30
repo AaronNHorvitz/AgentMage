@@ -9,13 +9,15 @@
 //! reproduce exactly, be stored in their canonical encoding and end at the
 //! retained head.
 //!
-//! The entry digests are unkeyed. Writers are authenticated by the store: it
-//! opens only with its key, holds an exclusive writer lock and refuses pages
-//! whose authentication fails, so no other process can append or roll back
-//! entries. Within the process, owner observations are accepted only under the
-//! job's recorded owner identity, and each client request is recorded under
-//! the authenticated client scope the caller supplies, never one the client
-//! names. A ledger grants no authority and performs no effect.
+//! The entry digests are unkeyed. The store authenticates writers by its key:
+//! it opens only with the key, holds an exclusive writer lock and refuses pages
+//! whose authentication fails, so no process without the store key can append,
+//! remove or reorder entries. A key holder is trusted as the owner, and the
+//! ledger cannot attribute an entry beyond the key (review F1 of `6355a379`).
+//! Within the process, owner observations are accepted only under the job's
+//! recorded owner identity, and each client request is recorded under the
+//! authenticated client scope the caller supplies, never one the client names.
+//! A ledger grants no authority and performs no effect.
 
 use std::sync::{Arc, Mutex};
 

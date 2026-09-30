@@ -255,6 +255,37 @@ fn an_entry_and_its_head_commit_together_or_not_at_all() {
 }
 
 #[test]
+fn an_append_that_names_another_head_writes_nothing() {
+    // Review F3 of `6355a379`: the head update names the head the owner read,
+    // so an append prepared against any other head commits no entry.
+    let fixture = Fixture::new(48);
+    populated(&fixture);
+    let entries = fixture.entry_count();
+    let ledgers = fixture.ledgers();
+    let before = ledgers.observation(JOB).unwrap();
+    let result = ledgers.with_store(|store| {
+        let mut ledger = load(store, JOB)?;
+        let read = ledger.head();
+        ledger
+            .control(CLIENT, &request("r1", JobControlAction::Resume, 2))
+            .map_err(JobLedgerStoreError::Ledger)?;
+        let other = JobLedgerHead {
+            entry_count: read.entry_count,
+            head_sha256: "f".repeat(64),
+        };
+        let refused = append(store, JOB, &other, &ledger);
+        // Nothing was committed, so the handle stays usable.
+        assert_eq!(load(store, JOB)?.head(), read);
+        refused
+    });
+    assert_eq!(result, Err(JobLedgerStoreError::Integrity));
+    drop(ledgers);
+    assert_eq!(fixture.entry_count(), entries);
+    let ledgers = fixture.ledgers();
+    assert_eq!(ledgers.observation(JOB), Ok(before));
+}
+
+#[test]
 fn retained_rows_are_append_only_and_heads_only_advance() {
     let fixture = Fixture::new(44);
     populated(&fixture);
@@ -281,6 +312,17 @@ fn retained_rows_are_append_only_and_heads_only_advance() {
         "UPDATE job_ledger_entries SET entry_json = X'7B7D' WHERE sequence = 1",
         "DELETE FROM job_ledger_entries WHERE sequence = 3",
         "DELETE FROM job_ledger_heads",
+        // REPLACE removes the conflicting row, which the delete triggers
+        // refuse because the store turns recursive triggers on (review F2 of
+        // `6355a379`).
+        "INSERT OR REPLACE INTO job_ledger_roots(job_id, owner_id, created_sha256)
+             SELECT job_id, 'another-owner', created_sha256 FROM job_ledger_roots",
+        "INSERT OR REPLACE INTO job_ledger_entries(job_id, sequence, prior_entry_sha256, entry_sha256, entry_json)
+             SELECT job_id, sequence, prior_entry_sha256, entry_sha256, X'7B7D'
+             FROM job_ledger_entries WHERE sequence = 1",
+        "REPLACE INTO job_ledger_heads(job_id, entry_count, last_sequence, head_sha256)
+             SELECT job_id, 2, 1, (SELECT entry_sha256 FROM job_ledger_entries WHERE sequence = 1)
+             FROM job_ledger_heads",
     ] {
         assert!(store.connection.execute_batch(sql).is_err(), "{sql}");
     }
@@ -303,7 +345,7 @@ fn retained_rows_are_append_only_and_heads_only_advance() {
 fn a_tampered_ledger_is_refused_poisons_the_store_and_blocks_reopening() {
     // Each case bypasses the owner's triggers or foreign keys, as only a key
     // holder outside the owner could.
-    let cases: [(&str, &str); 7] = [
+    let cases: [(&str, &str); 8] = [
         (
             "rolled-back head",
             "DROP TRIGGER job_ledger_head_advance_only;
@@ -335,6 +377,12 @@ fn a_tampered_ledger_is_refused_poisons_the_store_and_blocks_reopening() {
             "changed owner",
             "DROP TRIGGER job_ledger_root_update_forbidden;
              UPDATE job_ledger_roots SET owner_id = 'another-owner';",
+        ),
+        (
+            // Review F3 of `6355a379`: the root names the chain's first entry.
+            "changed first digest",
+            "DROP TRIGGER job_ledger_root_update_forbidden;
+             UPDATE job_ledger_roots SET created_sha256 = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';",
         ),
         (
             "missing head",

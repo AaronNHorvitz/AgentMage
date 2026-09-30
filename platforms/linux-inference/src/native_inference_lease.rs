@@ -237,6 +237,23 @@ mod tests {
         }
     }
 
+    /// Acquires after this process released the lease. A sibling test that
+    /// spawns a process holds a duplicate of every open descriptor between its
+    /// fork and exec, and a `flock` stays held until every duplicate closes, so
+    /// a release can briefly look `busy` (review F5 of `6355a379`). Only `busy`
+    /// is retried, for at most two seconds; any other result returns at once.
+    fn acquire_after_release(root: &Path) -> Result<NativeInferenceLease, ModelRuntimeFailure> {
+        for _ in 0..400 {
+            match NativeInferenceLease::acquire_in(root) {
+                Err(error) if error.code == "model.native-lease.busy" => {
+                    std::thread::sleep(std::time::Duration::from_millis(5));
+                }
+                result => return result,
+            }
+        }
+        NativeInferenceLease::acquire_in(root)
+    }
+
     #[test]
     fn contention_refuses_and_drop_releases_without_removing_lock() {
         let root = Directory::new();
@@ -250,7 +267,7 @@ mod tests {
         );
         let before = fs::metadata(root.0.join(LOCK_NAME)).unwrap().ino();
         drop(first);
-        let _second = NativeInferenceLease::acquire_in(&root.0).unwrap();
+        let _second = acquire_after_release(&root.0).unwrap();
         assert_eq!(before, fs::metadata(root.0.join(LOCK_NAME)).unwrap().ino());
     }
 
@@ -337,7 +354,7 @@ mod tests {
             "{}",
             String::from_utf8_lossy(&result.stdout)
         );
-        assert!(NativeInferenceLease::acquire_in(&root.0).is_ok());
+        assert!(acquire_after_release(&root.0).is_ok());
     }
 
     #[test]
@@ -376,7 +393,7 @@ mod tests {
         assert!(owner.arm().is_err());
         owner.finish_owned_cleanup().unwrap();
         drop(owner);
-        let _next = NativeInferenceLease::acquire_in(&root.0).unwrap();
+        let _next = acquire_after_release(&root.0).unwrap();
         assert_eq!(fs::metadata(root.0.join(LOCK_NAME)).unwrap().ino(), inode);
         assert_eq!(fs::metadata(root.0.join(LOCK_NAME)).unwrap().len(), 0);
     }
@@ -397,10 +414,7 @@ mod tests {
         assert_eq!(fs::read(&path).unwrap(), changed);
         drop(owner);
         assert_eq!(
-            NativeInferenceLease::acquire_in(&root.0)
-                .err()
-                .unwrap()
-                .code,
+            acquire_after_release(&root.0).err().unwrap().code,
             "model.native-lease.cleanup-uncertain"
         );
     }
@@ -452,10 +466,7 @@ mod tests {
             MARKER_BYTES as u64
         );
         assert_eq!(
-            NativeInferenceLease::acquire_in(&root.0)
-                .err()
-                .unwrap()
-                .code,
+            acquire_after_release(&root.0).err().unwrap().code,
             "model.native-lease.cleanup-uncertain"
         );
     }
@@ -464,7 +475,8 @@ mod tests {
     #[ignore = "subprocess helper, exercised by armed_owner_death_keeps_future_hosts_closed"]
     fn armed_exit_child() {
         let root = std::env::var_os("AGENTMAGE_LEASE_TEST_ROOT").unwrap();
-        let mut owner = NativeInferenceLease::acquire_in(Path::new(&root)).unwrap();
+        // The parent released its own lease just before spawning this child.
+        let mut owner = acquire_after_release(Path::new(&root)).unwrap();
         owner.arm().unwrap();
         // No model is launched. Skip destructors to exercise process-death marker
         // persistence without pretending this proves any descendant cleanup.
@@ -475,11 +487,12 @@ mod tests {
     #[ignore = "subprocess helper, exercised by separate_process_observes_owner_then_release"]
     fn lease_child() {
         let root = std::env::var_os("AGENTMAGE_LEASE_TEST_ROOT").unwrap();
-        let result = NativeInferenceLease::acquire_in(Path::new(&root));
         if std::env::var("AGENTMAGE_LEASE_TEST_BUSY").unwrap() == "yes" {
+            let result = NativeInferenceLease::acquire_in(Path::new(&root));
             assert_eq!(result.err().unwrap().code, "model.native-lease.busy");
         } else {
-            assert!(result.is_ok());
+            // The parent released its lease just before spawning this child.
+            assert!(acquire_after_release(Path::new(&root)).is_ok());
         }
     }
 }

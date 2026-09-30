@@ -1,19 +1,25 @@
 //! Authenticated bounded Linux IPC projection of the shared runtime transport.
+//!
+//! Over this channel a run is cancelled only through a job control request,
+//! which the host decides through its durable job ledger under the client
+//! scope it derives from the authenticated peer (Decision 0120).
 
 use agentmage_kernel_contracts::{
     CancellationId, RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEventCursor, RuntimeRunId,
     RuntimeRunRequest, SessionId,
 };
+use agentmage_kernel_engine::job_control::JobControlRequest;
 use agentmage_kernel_engine::runtime_artifact::{RuntimeArtifactPage, RuntimeArtifactState};
-use agentmage_platform_linux::LinuxAuthenticatedIpcSession;
+use agentmage_platform_linux::{LinuxAuthenticatedIpcSession, LinuxPeerIdentity};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 use crate::runtime_transport::{
-    RuntimePrepareInput, RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort,
-    RuntimeTransportStep,
+    RuntimeClientScope, RuntimeJobControl, RuntimeJobStatus, RuntimePrepareInput,
+    RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
 };
 
-const WIRE_VERSION: u16 = 6;
+const WIRE_VERSION: u16 = 7;
 const MAX_WIRE_BYTES: usize = 4 * 1024 * 1024;
 /// Largest encoded run declarations; the rest of a frame is envelope.
 const MAX_DECLARATION_BYTES: usize = MAX_WIRE_BYTES - 64 * 1024;
@@ -37,11 +43,14 @@ enum RuntimeIpcRequest {
         after_event_cursor: Option<RuntimeEventCursor>,
         response: Option<RuntimeApprovalResponse>,
     },
-    Cancel {
+    JobStatus {
         run_id: RuntimeRunId,
         request_sha256: String,
-        cancellation_id: CancellationId,
-        after_event_cursor: Option<RuntimeEventCursor>,
+    },
+    ControlJob {
+        run_id: RuntimeRunId,
+        request_sha256: String,
+        request: JobControlRequest,
     },
     ReadArtifactPage {
         run_id: RuntimeRunId,
@@ -90,6 +99,12 @@ enum RuntimeIpcResponse {
     },
     RunDeclarations {
         declarations: RuntimeRunDeclarations,
+    },
+    JobStatus {
+        status: RuntimeJobStatus,
+    },
+    JobControl {
+        control: RuntimeJobControl,
     },
     PreauthorizationRevoked,
     Released,
@@ -293,20 +308,44 @@ impl RuntimeTransportPort for LinuxRuntimeIpcClient {
         }
     }
 
+    /// Refused: over this channel a run is cancelled only through
+    /// [`RuntimeTransportPort::control_job`].
     fn cancel(
+        &mut self,
+        _run_id: &RuntimeRunId,
+        _request_sha256: &str,
+        _cancellation_id: CancellationId,
+        _after_event_cursor: Option<&RuntimeEventCursor>,
+    ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+        Err(RuntimeTransportError::RequestDenied)
+    }
+
+    fn job_status(
         &mut self,
         run_id: &RuntimeRunId,
         request_sha256: &str,
-        cancellation_id: CancellationId,
-        after_event_cursor: Option<&RuntimeEventCursor>,
-    ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
-        match self.exchange(RuntimeIpcRequest::Cancel {
+    ) -> Result<RuntimeJobStatus, RuntimeTransportError> {
+        match self.exchange(RuntimeIpcRequest::JobStatus {
             run_id: run_id.clone(),
             request_sha256: request_sha256.to_owned(),
-            cancellation_id,
-            after_event_cursor: after_event_cursor.cloned(),
         })? {
-            RuntimeIpcResponse::Step { step } => Ok(step),
+            RuntimeIpcResponse::JobStatus { status } => Ok(status),
+            _ => Err(RuntimeTransportError::RuntimeEvidenceDenied),
+        }
+    }
+
+    fn control_job(
+        &mut self,
+        run_id: &RuntimeRunId,
+        request_sha256: &str,
+        request: &JobControlRequest,
+    ) -> Result<RuntimeJobControl, RuntimeTransportError> {
+        match self.exchange(RuntimeIpcRequest::ControlJob {
+            run_id: run_id.clone(),
+            request_sha256: request_sha256.to_owned(),
+            request: request.clone(),
+        })? {
+            RuntimeIpcResponse::JobControl { control } => Ok(control),
             _ => Err(RuntimeTransportError::RuntimeEvidenceDenied),
         }
     }
@@ -405,6 +444,7 @@ pub fn serve_linux_runtime_ipc<P: RuntimeTransportPort>(
     session: &mut LinuxAuthenticatedIpcSession,
     runtime: &mut P,
 ) -> Result<(), RuntimeTransportError> {
+    let client = client_scope(session.peer().identity());
     loop {
         let bytes = session
             .read_frame(MAX_WIRE_BYTES)
@@ -413,7 +453,7 @@ pub fn serve_linux_runtime_ipc<P: RuntimeTransportPort>(
             .ok()
             .filter(|request| request.version == WIRE_VERSION)
             .map(|request| request.payload);
-        let (response, shutdown) = answer(runtime, request);
+        let (response, shutdown) = answer(runtime, &client, request);
         let bytes = serde_json::to_vec(&RuntimeIpcEnvelope {
             version: WIRE_VERSION,
             payload: response,
@@ -428,10 +468,30 @@ pub fn serve_linux_runtime_ipc<P: RuntimeTransportPort>(
     }
 }
 
-/// Answers one decoded request; `true` ends the service after the answer. A
-/// refused or oversized answer is an error response, never a transport failure.
+/// The job control scope of one authenticated peer (Decision 0120): a digest
+/// of the kernel-observed user, process, process start time and executable
+/// digest. A restarted client process is a new client.
+fn client_scope(peer: &LinuxPeerIdentity) -> RuntimeClientScope {
+    let mut digest = Sha256::new();
+    digest.update(b"agentmage.runtime-ipc.client-scope.v1\0");
+    digest.update(peer.uid().to_be_bytes());
+    digest.update(peer.pid().to_be_bytes());
+    digest.update(peer.start_time_ticks().to_be_bytes());
+    digest.update(peer.executable_sha256());
+    let digest = digest.finalize();
+    let mut scope = String::from("peer-");
+    for byte in &digest[..16] {
+        scope.push_str(&format!("{byte:02x}"));
+    }
+    RuntimeClientScope::derived(scope)
+}
+
+/// Answers one decoded request from `client`; `true` ends the service after
+/// the answer. A refused or oversized answer is an error response, never a
+/// transport failure.
 fn answer<P: RuntimeTransportPort>(
     runtime: &mut P,
+    client: &RuntimeClientScope,
     request: Option<RuntimeIpcRequest>,
 ) -> (RuntimeIpcResponse, bool) {
     match request {
@@ -457,18 +517,19 @@ fn answer<P: RuntimeTransportPort>(
             Ok(step) => (RuntimeIpcResponse::Step { step }, false),
             Err(error) => (RuntimeIpcResponse::Error { error }, false),
         },
-        Some(RuntimeIpcRequest::Cancel {
+        Some(RuntimeIpcRequest::JobStatus {
             run_id,
             request_sha256,
-            cancellation_id,
-            after_event_cursor,
-        }) => match runtime.cancel(
-            &run_id,
-            &request_sha256,
-            cancellation_id,
-            after_event_cursor.as_ref(),
-        ) {
-            Ok(step) => (RuntimeIpcResponse::Step { step }, false),
+        }) => match runtime.job_status(&run_id, &request_sha256) {
+            Ok(status) => (RuntimeIpcResponse::JobStatus { status }, false),
+            Err(error) => (RuntimeIpcResponse::Error { error }, false),
+        },
+        Some(RuntimeIpcRequest::ControlJob {
+            run_id,
+            request_sha256,
+            request,
+        }) => match runtime.control_job_for_client(client, &run_id, &request_sha256, &request) {
+            Ok(control) => (RuntimeIpcResponse::JobControl { control }, false),
             Err(error) => (RuntimeIpcResponse::Error { error }, false),
         },
         Some(RuntimeIpcRequest::ReadArtifactPage {
@@ -545,6 +606,10 @@ fn declarations_fit(declarations: &RuntimeRunDeclarations) -> bool {
 mod tests {
     use super::*;
 
+    fn fixture_client() -> RuntimeClientScope {
+        client_scope(&LinuxPeerIdentity::new(1_000, 4_242, 77, [9; 32]))
+    }
+
     #[test]
     fn run_declarations_cross_the_wire_exactly_and_only_at_the_current_version() {
         let declarations = RuntimeRunDeclarations {
@@ -564,7 +629,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 6);
+        assert_eq!(decoded.version, 7);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::RunDeclarations {
             declarations: declarations.clone(),
@@ -673,7 +738,7 @@ mod tests {
             released: 0,
         };
         assert_eq!(
-            answer(&mut port, declare()),
+            answer(&mut port, &fixture_client(), declare()),
             (
                 RuntimeIpcResponse::Error {
                     error: RuntimeTransportError::CapacityExceeded,
@@ -684,6 +749,7 @@ mod tests {
         assert_eq!(
             answer(
                 &mut port,
+                &fixture_client(),
                 Some(RuntimeIpcRequest::Release {
                     run_id: RuntimeRunId::from_raw("run-declarations"),
                     request_sha256: "1".repeat(64),
@@ -695,14 +761,14 @@ mod tests {
         // Just within the bound, the same answer crosses the wire.
         port.session_id_bytes = 0;
         let (RuntimeIpcResponse::RunDeclarations { declarations }, false) =
-            answer(&mut port, declare())
+            answer(&mut port, &fixture_client(), declare())
         else {
             panic!("a small declaration is answered");
         };
         let envelope = serde_json::to_vec(&declarations).unwrap().len();
         port.session_id_bytes = MAX_DECLARATION_BYTES - envelope;
         let (RuntimeIpcResponse::RunDeclarations { declarations }, false) =
-            answer(&mut port, declare())
+            answer(&mut port, &fixture_client(), declare())
         else {
             panic!("a declaration at the bound is answered");
         };
@@ -712,7 +778,7 @@ mod tests {
         );
         port.session_id_bytes += 1;
         assert!(matches!(
-            answer(&mut port, declare()),
+            answer(&mut port, &fixture_client(), declare()),
             (
                 RuntimeIpcResponse::Error {
                     error: RuntimeTransportError::CapacityExceeded
@@ -723,7 +789,7 @@ mod tests {
         // A request the closed contract cannot decode is refused, not fatal;
         // only an explicit shutdown ends the service.
         assert_eq!(
-            answer(&mut port, None),
+            answer(&mut port, &fixture_client(), None),
             (
                 RuntimeIpcResponse::Error {
                     error: RuntimeTransportError::RequestDenied,
@@ -732,8 +798,281 @@ mod tests {
             )
         );
         assert_eq!(
-            answer(&mut port, Some(RuntimeIpcRequest::Shutdown)),
+            answer(
+                &mut port,
+                &fixture_client(),
+                Some(RuntimeIpcRequest::Shutdown)
+            ),
             (RuntimeIpcResponse::Shutdown, true)
+        );
+    }
+
+    fn fixture_status() -> RuntimeJobStatus {
+        RuntimeJobStatus {
+            schema_version: 1,
+            run_id: RuntimeRunId::from_raw("run-job-control"),
+            request_sha256: "1".repeat(64),
+            job: agentmage_kernel_engine::job_control::JobObservation {
+                job_id: "run-job-control".to_owned(),
+                phase: agentmage_kernel_engine::job_control::JobPhase::Running,
+                revision: 1,
+                cancellation_requested: false,
+                head_sha256: "2".repeat(64),
+            },
+        }
+    }
+
+    fn fixture_control_request() -> JobControlRequest {
+        JobControlRequest {
+            schema_version: 1,
+            job_id: "run-job-control".to_owned(),
+            request_id: "cancel-fixture-0".to_owned(),
+            action: agentmage_kernel_engine::job_control::JobControlAction::Cancel,
+            observed_revision: 1,
+        }
+    }
+
+    #[test]
+    fn job_control_crosses_the_wire_without_a_client_scope_or_a_direct_cancel() {
+        // Decision 0120: a client asks for status and names a control request;
+        // it never names its scope, and a direct cancellation is not an
+        // operation of this wire.
+        for request in [
+            RuntimeIpcRequest::JobStatus {
+                run_id: RuntimeRunId::from_raw("run-job-control"),
+                request_sha256: "1".repeat(64),
+            },
+            RuntimeIpcRequest::ControlJob {
+                run_id: RuntimeRunId::from_raw("run-job-control"),
+                request_sha256: "1".repeat(64),
+                request: fixture_control_request(),
+            },
+        ] {
+            let bytes = serde_json::to_vec(&RuntimeIpcEnvelope {
+                version: WIRE_VERSION,
+                payload: request.clone(),
+            })
+            .unwrap();
+            let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
+                serde_json::from_slice(&bytes).unwrap();
+            assert_eq!(decoded.version, 7);
+            assert_eq!(decoded.payload, request);
+        }
+        let mut scoped = serde_json::to_value(RuntimeIpcRequest::ControlJob {
+            run_id: RuntimeRunId::from_raw("run-job-control"),
+            request_sha256: "1".repeat(64),
+            request: fixture_control_request(),
+        })
+        .unwrap();
+        scoped["client_scope"] = serde_json::Value::String("peer-chosen".to_owned());
+        assert!(serde_json::from_value::<RuntimeIpcRequest>(scoped.clone()).is_err());
+        let mut nested = serde_json::to_value(fixture_control_request()).unwrap();
+        nested["client_scope"] = serde_json::Value::String("peer-chosen".to_owned());
+        assert!(serde_json::from_value::<JobControlRequest>(nested).is_err());
+        let cancel = serde_json::json!({
+            "operation": "cancel",
+            "run_id": "run-job-control",
+            "request_sha256": "1".repeat(64),
+            "cancellation_id": "cancel-fixture",
+            "after_event_cursor": null,
+        });
+        assert!(serde_json::from_value::<RuntimeIpcRequest>(cancel).is_err());
+        for response in [
+            RuntimeIpcResponse::JobStatus {
+                status: fixture_status(),
+            },
+            RuntimeIpcResponse::JobControl {
+                control: RuntimeJobControl {
+                    decision: agentmage_kernel_engine::job_control::JobControlDecision::Applied {
+                        revision: 2,
+                        phase: agentmage_kernel_engine::job_control::JobPhase::Cancelling,
+                    },
+                    status: fixture_status(),
+                },
+            },
+        ] {
+            let bytes = serde_json::to_vec(&response).unwrap();
+            assert_eq!(
+                serde_json::from_slice::<RuntimeIpcResponse>(&bytes).unwrap(),
+                response
+            );
+        }
+        let mut extra = serde_json::to_value(fixture_status()).unwrap();
+        extra["job"]["owner_id"] = serde_json::Value::String("owner".to_owned());
+        assert!(serde_json::from_value::<RuntimeJobStatus>(extra).is_err());
+    }
+
+    /// Records the scope of each control request it decides.
+    #[derive(Default)]
+    struct ScopeRecordingPort {
+        scopes: Vec<String>,
+    }
+
+    impl RuntimeTransportPort for ScopeRecordingPort {
+        fn prepare(
+            &mut self,
+            _input: RuntimePrepareInput,
+        ) -> Result<RuntimeRunRequest, RuntimeTransportError> {
+            Err(RuntimeTransportError::RequestDenied)
+        }
+
+        fn start(
+            &mut self,
+            _request: RuntimeRunRequest,
+        ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+            Err(RuntimeTransportError::RequestDenied)
+        }
+
+        fn advance(
+            &mut self,
+            _run_id: &RuntimeRunId,
+            _request_sha256: &str,
+            _after_event_cursor: Option<&RuntimeEventCursor>,
+            _response: Option<&RuntimeApprovalResponse>,
+        ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+            Err(RuntimeTransportError::RequestDenied)
+        }
+
+        fn cancel(
+            &mut self,
+            _run_id: &RuntimeRunId,
+            _request_sha256: &str,
+            _cancellation_id: CancellationId,
+            _after_event_cursor: Option<&RuntimeEventCursor>,
+        ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+            Err(RuntimeTransportError::RequestDenied)
+        }
+
+        fn job_status(
+            &mut self,
+            _run_id: &RuntimeRunId,
+            _request_sha256: &str,
+        ) -> Result<RuntimeJobStatus, RuntimeTransportError> {
+            Ok(fixture_status())
+        }
+
+        fn control_job(
+            &mut self,
+            _run_id: &RuntimeRunId,
+            _request_sha256: &str,
+            _request: &JobControlRequest,
+        ) -> Result<RuntimeJobControl, RuntimeTransportError> {
+            panic!("the serving host decides only for the scope it derived")
+        }
+
+        fn control_job_for_client(
+            &mut self,
+            client: &RuntimeClientScope,
+            _run_id: &RuntimeRunId,
+            _request_sha256: &str,
+            _request: &JobControlRequest,
+        ) -> Result<RuntimeJobControl, RuntimeTransportError> {
+            self.scopes.push(client.as_str().to_owned());
+            Ok(RuntimeJobControl {
+                decision: agentmage_kernel_engine::job_control::JobControlDecision::Applied {
+                    revision: 2,
+                    phase: agentmage_kernel_engine::job_control::JobPhase::Cancelling,
+                },
+                status: fixture_status(),
+            })
+        }
+
+        fn release(
+            &mut self,
+            _run_id: &RuntimeRunId,
+            _request_sha256: &str,
+        ) -> Result<(), RuntimeTransportError> {
+            Err(RuntimeTransportError::RequestDenied)
+        }
+    }
+
+    #[test]
+    fn the_host_decides_job_control_under_the_scope_it_derived() {
+        let control = || {
+            Some(RuntimeIpcRequest::ControlJob {
+                run_id: RuntimeRunId::from_raw("run-job-control"),
+                request_sha256: "1".repeat(64),
+                request: fixture_control_request(),
+            })
+        };
+        let status = || {
+            Some(RuntimeIpcRequest::JobStatus {
+                run_id: RuntimeRunId::from_raw("run-job-control"),
+                request_sha256: "1".repeat(64),
+            })
+        };
+        let mut port = ScopeRecordingPort::default();
+        let other = client_scope(&LinuxPeerIdentity::new(1_000, 4_243, 77, [9; 32]));
+        assert!(matches!(
+            answer(&mut port, &fixture_client(), control()),
+            (RuntimeIpcResponse::JobControl { .. }, false)
+        ));
+        assert!(matches!(
+            answer(&mut port, &other, control()),
+            (RuntimeIpcResponse::JobControl { .. }, false)
+        ));
+        assert_eq!(port.scopes, [fixture_client().as_str(), other.as_str()]);
+        assert_eq!(
+            answer(&mut port, &fixture_client(), status()),
+            (
+                RuntimeIpcResponse::JobStatus {
+                    status: fixture_status()
+                },
+                false
+            )
+        );
+        // A host without job ledgers refuses both and keeps answering.
+        let mut declaring = DeclaringPort {
+            session_id_bytes: 0,
+            released: 0,
+        };
+        for request in [control(), status()] {
+            assert_eq!(
+                answer(&mut declaring, &fixture_client(), request),
+                (
+                    RuntimeIpcResponse::Error {
+                        error: RuntimeTransportError::JobControlUnavailable,
+                    },
+                    false
+                )
+            );
+        }
+    }
+
+    #[test]
+    fn each_authenticated_client_process_has_its_own_ledger_scope() {
+        let base = LinuxPeerIdentity::new(1_000, 4_242, 77, [9; 32]);
+        let scope = client_scope(&base);
+        assert_eq!(scope, client_scope(&base));
+        assert_eq!(scope.as_str().len(), 5 + 32);
+        assert!(scope.as_str().starts_with("peer-"));
+        assert!(
+            scope.as_str()[5..]
+                .bytes()
+                .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+        );
+        for other in [
+            LinuxPeerIdentity::new(1_001, 4_242, 77, [9; 32]),
+            LinuxPeerIdentity::new(1_000, 4_243, 77, [9; 32]),
+            LinuxPeerIdentity::new(1_000, 4_242, 78, [9; 32]),
+            LinuxPeerIdentity::new(1_000, 4_242, 77, [8; 32]),
+        ] {
+            assert_ne!(client_scope(&other), scope);
+        }
+        // The client cannot shape the scope: it is a valid ledger identity
+        // whatever the peer.
+        let mut ledger = agentmage_kernel_engine::job_control::JobControlLedger::create(
+            "run-job-control",
+            "owner-fixture",
+        )
+        .unwrap();
+        ledger
+            .observe_owner(agentmage_kernel_engine::job_control::JobOwnerEvent::Started)
+            .unwrap();
+        assert!(
+            ledger
+                .control(scope.as_str(), &fixture_control_request())
+                .is_ok()
         );
     }
 }

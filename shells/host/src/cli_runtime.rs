@@ -9,6 +9,7 @@ use agentmage_kernel_contracts::{
     RuntimeRunRequest, RuntimeSessionMode,
 };
 use agentmage_kernel_engine::{
+    job_control::{JobControlAction, JobControlDecision, JobControlRefusal, JobControlRequest},
     model_routing::{
         AuthenticatedRoutingEnvelope, MeasuredRoutingService, NativeRoutingAuditView,
         RoutingAuthenticationVerifier,
@@ -27,12 +28,18 @@ use crate::coding_client::{
     runtime_approval_response_with_selection,
 };
 use crate::runtime_transport::{
-    RuntimePrepareInput as NativeChatPrepareInput, RuntimeRunDeclarations,
-    RuntimeTransportError as NativeChatRuntimeError, RuntimeTransportPort as NativeChatRuntimePort,
-    RuntimeTransportStep as NativeChatRuntimeStep,
+    RuntimeJobControl, RuntimeJobStatus, RuntimePrepareInput as NativeChatPrepareInput,
+    RuntimeRunDeclarations, RuntimeTransportError as NativeChatRuntimeError,
+    RuntimeTransportPort as NativeChatRuntimePort, RuntimeTransportStep as NativeChatRuntimeStep,
 };
 
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
+/// Most control requests one cancellation sends: a request built on a job
+/// revision that has since moved is refused as stale, observed again and sent
+/// once more (Decision 0120).
+const MAX_JOB_CANCELLATION_ATTEMPTS: usize = 4;
+/// Most job control answers kept for one run's presentation.
+const MAX_KEPT_JOB_CONTROLS: usize = 16;
 
 /// Routes one spreadsheet artifact call through the shared host dispatcher without CLI semantics.
 pub fn dispatch_cli_spreadsheet_artifact(
@@ -174,6 +181,13 @@ pub struct InteractiveCliRuntimeResult {
     /// Host declarations about this run, read before release; `None` when the
     /// host offers none or they do not name this exact run (Decision 0116).
     pub declarations: Option<RuntimeRunDeclarations>,
+    /// The run's reconciled job state, read before release; `None` when the
+    /// host keeps no job ledger for it or its answer does not describe this
+    /// exact run (Decision 0120).
+    pub job: Option<RuntimeJobStatus>,
+    /// The host's answers to this client's job control requests, in order,
+    /// at most sixteen.
+    pub job_controls: Vec<RuntimeJobControl>,
 }
 
 /// Content-free result of reading and hashing one complete retained runtime artifact.
@@ -210,6 +224,7 @@ where
     }
 
     let mut verifier = InteractiveCliRuntimeVerifier::new(request.clone())?;
+    let mut job_controls = Vec::new();
     let mut step = match runtime.start(request.clone()) {
         Ok(step) => step,
         Err(error) => {
@@ -245,6 +260,10 @@ where
                 .run_declarations(&request.run_id, &request.request_sha256)
                 .ok()
                 .and_then(|declarations| verified_run_declarations(declarations, &request));
+            let job = runtime
+                .job_status(&request.run_id, &request.request_sha256)
+                .ok()
+                .filter(|status| status.describes(&request));
             runtime
                 .release(&request.run_id, &request.request_sha256)
                 .map_err(|_| InteractiveCliRuntimeError::Release)?;
@@ -255,6 +274,8 @@ where
                 verified_artifacts,
                 presented_events: verifier.event_count(),
                 declarations,
+                job,
+                job_controls,
             });
         }
 
@@ -266,16 +287,17 @@ where
             }
         };
         step = if let Some(cancellation_id) = cancellation_id {
-            match runtime.cancel(
-                &request.run_id,
-                &request.request_sha256,
-                cancellation_id,
+            match cancel_run(
+                runtime,
+                &request,
+                &cancellation_id,
                 verifier.cursor().as_ref(),
+                &mut job_controls,
             ) {
                 Ok(step) => step,
                 Err(error) => {
                     best_effort_release(runtime, &request);
-                    return Err(map_runtime_error(error));
+                    return Err(error);
                 }
             }
         } else if let Some(challenge) = step.approval.as_ref() {
@@ -289,16 +311,17 @@ where
             let response =
                 runtime_approval_response_with_selection(challenge, disposition, selection);
             match cancellation.poll(&request) {
-                Ok(Some(cancellation_id)) => match runtime.cancel(
-                    &request.run_id,
-                    &request.request_sha256,
-                    cancellation_id,
+                Ok(Some(cancellation_id)) => match cancel_run(
+                    runtime,
+                    &request,
+                    &cancellation_id,
                     verifier.cursor().as_ref(),
+                    &mut job_controls,
                 ) {
                     Ok(step) => step,
                     Err(error) => {
                         best_effort_release(runtime, &request);
-                        return Err(map_runtime_error(error));
+                        return Err(error);
                     }
                 },
                 Ok(None) => match runtime.advance(
@@ -438,6 +461,76 @@ fn verified_run_declarations(
         declarations.recoverability = None;
     }
     Some(declarations)
+}
+
+/// Requests cancellation of the run through the host's durable job ledger
+/// (Decision 0120) and returns the next boundary. Each request names the job
+/// revision this client just observed; a stale refusal is observed again and
+/// retried with a new request identity, within a fixed bound. Only a transport
+/// that offers no job control at all is cancelled directly.
+fn cancel_run<P>(
+    runtime: &mut P,
+    request: &RuntimeRunRequest,
+    cancellation_id: &CancellationId,
+    after_event_cursor: Option<&RuntimeEventCursor>,
+    job_controls: &mut Vec<RuntimeJobControl>,
+) -> Result<NativeChatRuntimeStep, InteractiveCliRuntimeError>
+where
+    P: NativeChatRuntimePort + ?Sized,
+{
+    let digest: [u8; 32] = Sha256::digest(cancellation_id.as_str().as_bytes()).into();
+    let request_prefix = format!("cancel-{}", &lower_hex(&digest)[..32]);
+    for attempt in 0..MAX_JOB_CANCELLATION_ATTEMPTS {
+        let status = match runtime.job_status(&request.run_id, &request.request_sha256) {
+            Ok(status) if status.describes(request) => status,
+            Ok(_) => return Err(InteractiveCliRuntimeError::Evidence),
+            Err(NativeChatRuntimeError::JobControlUnavailable) if attempt == 0 => {
+                return runtime
+                    .cancel(
+                        &request.run_id,
+                        &request.request_sha256,
+                        cancellation_id.clone(),
+                        after_event_cursor,
+                    )
+                    .map_err(map_runtime_error);
+            }
+            Err(error) => return Err(map_runtime_error(error)),
+        };
+        let control = JobControlRequest {
+            schema_version: 1,
+            job_id: request.run_id.as_str().to_owned(),
+            request_id: format!("{request_prefix}-{attempt}"),
+            action: JobControlAction::Cancel,
+            observed_revision: status.job.revision,
+        };
+        let answer = runtime
+            .control_job(&request.run_id, &request.request_sha256, &control)
+            .map_err(map_runtime_error)?;
+        if !answer.answers(request, &control) {
+            return Err(InteractiveCliRuntimeError::Evidence);
+        }
+        let stale = matches!(
+            answer.decision,
+            JobControlDecision::Refused {
+                refusal: JobControlRefusal::StaleRevision,
+                ..
+            }
+        );
+        if job_controls.len() < MAX_KEPT_JOB_CONTROLS {
+            job_controls.push(answer);
+        }
+        if !stale {
+            break;
+        }
+    }
+    runtime
+        .advance(
+            &request.run_id,
+            &request.request_sha256,
+            after_event_cursor,
+            None,
+        )
+        .map_err(map_runtime_error)
 }
 
 fn best_effort_release<P>(runtime: &mut P, request: &RuntimeRunRequest)
@@ -869,6 +962,51 @@ mod tests {
         advances: usize,
         cancellations: usize,
         declarations: Option<RuntimeRunDeclarations>,
+        job: Option<ScriptedJob>,
+    }
+
+    /// A host job ledger that refuses its first `stale_refusals` requests as
+    /// stale, as if another client had moved the job, and then applies one.
+    struct ScriptedJob {
+        revision: u64,
+        phase: agentmage_kernel_engine::job_control::JobPhase,
+        stale_refusals: usize,
+        requests: Vec<JobControlRequest>,
+        foreign_status: bool,
+        status_error: Option<NativeChatRuntimeError>,
+    }
+
+    impl ScriptedJob {
+        fn new(stale_refusals: usize) -> Self {
+            Self {
+                revision: 1,
+                phase: agentmage_kernel_engine::job_control::JobPhase::Running,
+                stale_refusals,
+                requests: Vec::new(),
+                foreign_status: false,
+                status_error: None,
+            }
+        }
+
+        fn status(&self, request: &RuntimeRunRequest) -> RuntimeJobStatus {
+            RuntimeJobStatus {
+                schema_version: 1,
+                run_id: request.run_id.clone(),
+                request_sha256: if self.foreign_status {
+                    "f".repeat(64)
+                } else {
+                    request.request_sha256.clone()
+                },
+                job: agentmage_kernel_engine::job_control::JobObservation {
+                    job_id: request.run_id.as_str().to_owned(),
+                    phase: self.phase,
+                    revision: self.revision,
+                    cancellation_requested: self.phase
+                        != agentmage_kernel_engine::job_control::JobPhase::Running,
+                    head_sha256: format!("{:064x}", self.revision),
+                },
+            }
+        }
     }
 
     impl NativeChatRuntimePort for ScriptedPort {
@@ -903,6 +1041,18 @@ mod tests {
         ) -> Result<NativeChatRuntimeStep, NativeChatRuntimeError> {
             self.advances += 1;
             verify_call(&self.request, run_id, request_sha256, after_event_cursor)?;
+            // After an applied cancellation the host stops the run.
+            if response.is_none()
+                && let Some(job) = self.job.as_mut()
+                && job.phase == agentmage_kernel_engine::job_control::JobPhase::Cancelling
+            {
+                job.phase = agentmage_kernel_engine::job_control::JobPhase::Cancelled;
+                job.revision += 1;
+                return self
+                    .cancel
+                    .take()
+                    .ok_or(NativeChatRuntimeError::RunUnavailable);
+            }
             let challenge = self.start.as_ref().and_then(|step| step.approval.as_ref());
             if challenge.is_some() || response.is_none() {
                 return Err(NativeChatRuntimeError::ApprovalDenied);
@@ -940,6 +1090,67 @@ mod tests {
             self.declarations
                 .clone()
                 .ok_or(NativeChatRuntimeError::RequestDenied)
+        }
+
+        fn job_status(
+            &mut self,
+            run_id: &agentmage_kernel_contracts::RuntimeRunId,
+            request_sha256: &str,
+        ) -> Result<RuntimeJobStatus, NativeChatRuntimeError> {
+            if run_id != &self.request.run_id
+                || request_sha256 != self.request.request_sha256
+                || self.released > 0
+            {
+                return Err(NativeChatRuntimeError::RequestDenied);
+            }
+            let job = self
+                .job
+                .as_ref()
+                .ok_or(NativeChatRuntimeError::JobControlUnavailable)?;
+            if let Some(error) = job.status_error {
+                return Err(error);
+            }
+            Ok(job.status(&self.request))
+        }
+
+        fn control_job(
+            &mut self,
+            run_id: &agentmage_kernel_contracts::RuntimeRunId,
+            request_sha256: &str,
+            request: &JobControlRequest,
+        ) -> Result<RuntimeJobControl, NativeChatRuntimeError> {
+            use agentmage_kernel_engine::job_control::JobPhase;
+            if run_id != &self.request.run_id || request_sha256 != self.request.request_sha256 {
+                return Err(NativeChatRuntimeError::RequestDenied);
+            }
+            let job = self
+                .job
+                .as_mut()
+                .ok_or(NativeChatRuntimeError::JobControlUnavailable)?;
+            job.requests.push(request.clone());
+            if job.stale_refusals > 0 {
+                job.stale_refusals -= 1;
+                // Another client's accepted request moved the job first.
+                job.revision += 1;
+            }
+            let decision = if request.observed_revision == job.revision {
+                job.revision += 1;
+                job.phase = JobPhase::Cancelling;
+                JobControlDecision::Applied {
+                    revision: job.revision,
+                    phase: job.phase,
+                }
+            } else {
+                JobControlDecision::Refused {
+                    refusal: JobControlRefusal::StaleRevision,
+                    revision: job.revision,
+                    phase: job.phase,
+                }
+            };
+            Ok(RuntimeJobControl {
+                decision,
+                status: job.status(&self.request),
+            })
         }
 
         fn release(
@@ -1035,6 +1246,7 @@ mod tests {
             advances: 0,
             cancellations: 0,
             declarations: None,
+            job: None,
         };
         let mut sink = RecordingSink::default();
         let result = drive_interactive_cli_runtime(
@@ -1112,6 +1324,7 @@ mod tests {
                 advances: 0,
                 cancellations: 0,
                 declarations,
+                job: None,
             };
             let result = drive_interactive_cli_runtime(
                 &mut port,
@@ -1142,6 +1355,7 @@ mod tests {
             advances: 0,
             cancellations: 0,
             declarations: None,
+            job: None,
         };
         let mut denied_sink = RecordingSink::default();
         let denied = drive_interactive_cli_runtime(
@@ -1165,6 +1379,7 @@ mod tests {
             advances: 0,
             cancellations: 0,
             declarations: None,
+            job: None,
         };
         let mut cancelled_sink = RecordingSink::default();
         let cancelled = drive_interactive_cli_runtime(
@@ -1177,6 +1392,164 @@ mod tests {
         .expect("exact cancellation completes");
         assert_eq!(cancelled.outcome.state, AgentStateKind::Cancelled);
         assert_eq!(cancelled_port.released, 1);
+    }
+
+    #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    fn a_cancellation_is_a_job_control_request_observed_again_after_a_stale_refusal() {
+        // Decision 0120: a host that keeps a job ledger is never cancelled
+        // directly; each request names the revision this client observed.
+        use agentmage_kernel_engine::job_control::JobPhase;
+        let (request, _, _, _) = crate::runtime_read_tests::completed_native_read_fixture();
+        let fixture = approval_fixture(&request);
+        let input = input(&request);
+        let mut port = ScriptedPort {
+            input: input.clone(),
+            request: request.clone(),
+            start: Some(fixture.awaiting.clone()),
+            advance: None,
+            cancel: Some(fixture.cancelled.clone()),
+            released: 0,
+            advances: 0,
+            cancellations: 0,
+            declarations: None,
+            job: Some(ScriptedJob::new(1)),
+        };
+        let result = drive_interactive_cli_runtime(
+            &mut port,
+            input.clone(),
+            &mut PanicApproval,
+            &mut RecordingSink::default(),
+            &mut CancelOnce(Some(CancellationId::from_raw("cli-cancellation-0001"))),
+        )
+        .expect("a ledger cancellation completes");
+        assert_eq!(result.outcome.state, AgentStateKind::Cancelled);
+        assert_eq!(port.cancellations, 0);
+        assert_eq!(port.released, 1);
+        let requests = &port.job.as_ref().unwrap().requests;
+        assert_eq!(requests.len(), 2);
+        assert_eq!(
+            requests
+                .iter()
+                .map(|control| control.observed_revision)
+                .collect::<Vec<_>>(),
+            [1, 2]
+        );
+        for (attempt, control) in requests.iter().enumerate() {
+            assert_eq!(control.action, JobControlAction::Cancel);
+            assert_eq!(control.job_id, request.run_id.as_str());
+            assert!(control.request_id.starts_with("cancel-"));
+            assert!(control.request_id.ends_with(&format!("-{attempt}")));
+            assert_eq!(control.request_id.len(), "cancel-".len() + 32 + 2);
+        }
+        assert_eq!(requests[0].request_id[..39], requests[1].request_id[..39]);
+        assert_eq!(result.job_controls.len(), 2);
+        assert!(matches!(
+            result.job_controls[0].decision,
+            JobControlDecision::Refused {
+                refusal: JobControlRefusal::StaleRevision,
+                revision: 2,
+                ..
+            }
+        ));
+        assert!(matches!(
+            result.job_controls[1].decision,
+            JobControlDecision::Applied {
+                revision: 3,
+                phase: JobPhase::Cancelling,
+            }
+        ));
+        let job = result
+            .job
+            .expect("the ended job's state is read before release");
+        assert_eq!((job.job.phase, job.job.revision), (JobPhase::Cancelled, 4));
+
+        // A status that does not describe this run is refused as evidence,
+        // and nothing is requested or cancelled directly.
+        let mut job = ScriptedJob::new(0);
+        job.foreign_status = true;
+        let mut port = ScriptedPort {
+            input: input.clone(),
+            request: request.clone(),
+            start: Some(fixture.awaiting.clone()),
+            advance: None,
+            cancel: Some(fixture.cancelled.clone()),
+            released: 0,
+            advances: 0,
+            cancellations: 0,
+            declarations: None,
+            job: Some(job),
+        };
+        assert_eq!(
+            drive_interactive_cli_runtime(
+                &mut port,
+                input.clone(),
+                &mut PanicApproval,
+                &mut RecordingSink::default(),
+                &mut CancelOnce(Some(CancellationId::from_raw("cli-cancellation-0001"))),
+            )
+            .err(),
+            Some(InteractiveCliRuntimeError::Evidence)
+        );
+        assert!(port.job.as_ref().unwrap().requests.is_empty());
+        assert_eq!((port.cancellations, port.released), (0, 1));
+
+        // A host that keeps a job but cannot answer for it now is never
+        // cancelled directly instead.
+        let mut job = ScriptedJob::new(0);
+        job.status_error = Some(NativeChatRuntimeError::RuntimeEvidenceDenied);
+        let mut port = ScriptedPort {
+            input: input.clone(),
+            request: request.clone(),
+            start: Some(fixture.awaiting.clone()),
+            advance: None,
+            cancel: Some(fixture.cancelled.clone()),
+            released: 0,
+            advances: 0,
+            cancellations: 0,
+            declarations: None,
+            job: Some(job),
+        };
+        assert_eq!(
+            drive_interactive_cli_runtime(
+                &mut port,
+                input.clone(),
+                &mut PanicApproval,
+                &mut RecordingSink::default(),
+                &mut CancelOnce(Some(CancellationId::from_raw("cli-cancellation-0001"))),
+            )
+            .err(),
+            Some(InteractiveCliRuntimeError::Runtime)
+        );
+        assert!(port.job.as_ref().unwrap().requests.is_empty());
+        assert_eq!((port.cancellations, port.released), (0, 1));
+
+        // A transport without job control is cancelled directly, and its
+        // result has no job state.
+        let mut port = ScriptedPort {
+            input: input.clone(),
+            request: request.clone(),
+            start: Some(fixture.awaiting),
+            advance: None,
+            cancel: Some(fixture.cancelled),
+            released: 0,
+            advances: 0,
+            cancellations: 0,
+            declarations: None,
+            job: None,
+        };
+        let result = drive_interactive_cli_runtime(
+            &mut port,
+            input,
+            &mut PanicApproval,
+            &mut RecordingSink::default(),
+            &mut CancelOnce(Some(CancellationId::from_raw("cli-cancellation-0001"))),
+        )
+        .expect("a direct cancellation completes");
+        assert_eq!(result.outcome.state, AgentStateKind::Cancelled);
+        assert_eq!(port.cancellations, 1);
+        assert_eq!(result.job, None);
+        assert!(result.job_controls.is_empty());
     }
 
     #[test]
@@ -1236,6 +1609,7 @@ mod tests {
                 advances: 0,
                 cancellations: 0,
                 declarations: None,
+                job: None,
             };
             let requested = Arc::new(AtomicBool::new(false));
             let mut approvals = StopDuringApproval {
@@ -1299,6 +1673,7 @@ mod tests {
             advances: 0,
             cancellations: 0,
             declarations: None,
+            job: None,
         };
         request_port.input.profile_id = "substituted-profile".to_owned();
         let substituted_input = request_port.input.clone();
@@ -1412,6 +1787,7 @@ mod tests {
             advances: 0,
             cancellations: 0,
             declarations: None,
+            job: None,
         };
 
         assert_eq!(
@@ -1463,6 +1839,7 @@ mod tests {
             advances: 0,
             cancellations: 0,
             declarations: None,
+            job: None,
         };
         let mut sink = RecordingSink::default();
         assert_eq!(

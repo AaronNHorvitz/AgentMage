@@ -41,6 +41,7 @@ use agentmage_kernel_engine::{
         CommandWorkingDirectory,
     },
     instruction_provenance::build_instruction_ledger,
+    job_ledger_store::DurableJobLedgers,
     model_runtime::{
         LocalModelController, ModelAdmissionCatalog, ModelUsePurpose, RejectedModelOutput,
     },
@@ -357,6 +358,9 @@ pub struct CodingDevelopmentRuntimeFactory {
     prior_run_id: Option<RuntimeRunId>,
     resume_requested: bool,
     prepared: BTreeMap<String, PreparedDevelopmentRun>,
+    /// Job ledgers of the store the last composed run opened, until the host
+    /// service takes them (Decision 0120).
+    composed_job_ledgers: Option<(RuntimeRunId, DurableJobLedgers)>,
 }
 
 impl CodingDevelopmentRuntimeFactory {
@@ -398,6 +402,7 @@ impl CodingDevelopmentRuntimeFactory {
             prior_run_id: None,
             resume_requested,
             prepared: BTreeMap::new(),
+            composed_job_ledgers: None,
         })
     }
 
@@ -963,6 +968,8 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
         &mut self,
         request: &agentmage_kernel_contracts::RuntimeRunRequest,
     ) -> Result<Self::Coordinator, NativeChatRuntimeError> {
+        // An untaken handle would keep the previous run's store open.
+        self.composed_job_ledgers = None;
         self.activation
             .revalidate()
             .map_err(|_| NativeChatRuntimeError::RequestDenied)?;
@@ -1046,6 +1053,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             now_epoch_ms().map_err(|_| NativeChatRuntimeError::RuntimeFailed)?,
         )
         .map_err(|_| NativeChatRuntimeError::RuntimeFailed)?;
+        let job_ledgers = authority.authority().job_ledgers();
         let command_manifest = LinuxCommandManifest::verify(
             "/usr/bin/systemd-run",
             "/usr/bin/systemctl",
@@ -1105,6 +1113,7 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
             eprintln!("coding.development.compose.coordinator-{error:?}");
             NativeChatRuntimeError::RuntimeFailed
         })?;
+        self.composed_job_ledgers = Some((request.run_id.clone(), job_ledgers));
         Ok(if stop_after_checkpoint {
             coordinator.with_development_checkpoint_stop_probe()
         } else {
@@ -1128,6 +1137,13 @@ impl NativeChatRuntimeFactory for CodingDevelopmentRuntimeFactory {
                 now_epoch_ms().map_err(|_| NativeChatRuntimeError::RuntimeFailed)?,
             )
             .map_err(|_| NativeChatRuntimeError::RequestDenied)
+    }
+
+    fn take_job_ledgers(&mut self, run_id: &RuntimeRunId) -> Option<DurableJobLedgers> {
+        match self.composed_job_ledgers.take() {
+            Some((composed, ledgers)) if &composed == run_id => Some(ledgers),
+            _ => None,
+        }
     }
 }
 

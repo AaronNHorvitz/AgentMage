@@ -70,6 +70,16 @@ pub trait NativeChatRuntimeFactory {
     ) -> Result<(), NativeChatRuntimeError> {
         Err(NativeChatRuntimeError::RequestDenied)
     }
+
+    /// Hands over the durable job ledgers of the store that the runtime just
+    /// composed for `run_id` opened (Decision 0120). A factory without them
+    /// answers `None`, and its runs have no job control.
+    fn take_job_ledgers(
+        &mut self,
+        _run_id: &agentmage_kernel_contracts::RuntimeRunId,
+    ) -> Option<agentmage_kernel_engine::job_ledger_store::DurableJobLedgers> {
+        None
+    }
 }
 
 /// Bounded host registry for prepared and active native Chat runs.

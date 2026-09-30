@@ -35,7 +35,9 @@ context inspection, but no view showed it. Four facts shaped this decision.
    an error after that point. A change record is kept only if it decodes and
    verifies. If an execution or a record cannot be kept, the whole record is marked
    incomplete. An incomplete record is never declared, so a declaration cannot
-   silently leave out an effect.
+   silently leave out an effect. A run resumed from an event cursor after a host
+   restart is never declared either, because its record begins at the restart
+   ([Decision 0117](0117-review-fixes-for-run-declarations.md), review V1).
 2. Effect list. A pure function maps the record to Decision 0108 effects:
    - A write that succeeded and changed state becomes its change record. If no
      record was published for it, it becomes uncertain.
@@ -49,7 +51,9 @@ context inspection, but no view showed it. Four facts shaped this decision.
    each write against the file's current bytes, read only through the held worktree.
 4. Context views. The context port keeps the content-free inspection of every packet
    it returns, in order, up to 64 per run. A refused composition keeps none. If a view
-   cannot be kept, the list is marked incomplete and is never shown as complete.
+   cannot be kept, the list is marked incomplete and is never shown as complete. The
+   list of a run resumed from an event cursor is always incomplete
+   ([Decision 0117](0117-review-fixes-for-run-declarations.md), review V1).
 5. Access. The coordinator exposes its tool boundary and context port read-only, and
    only once the run has its canonical outcome. Nothing can read them beside the loop
    while the run can still advance.

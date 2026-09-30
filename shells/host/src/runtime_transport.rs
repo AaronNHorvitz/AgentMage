@@ -10,6 +10,7 @@ use agentmage_kernel_contracts::{
     RuntimeEvent, RuntimeEventCursor, RuntimeOutcome, RuntimeRunId, RuntimeRunRequest, SessionId,
 };
 use agentmage_kernel_engine::context_inspection::ContextInspection;
+use agentmage_kernel_engine::job_control::{JobControlDecision, JobControlRequest, JobObservation};
 use agentmage_kernel_engine::runtime_artifact::{RuntimeArtifactPage, RuntimeArtifactState};
 
 use crate::coding_recoverability::RecoverabilityReport;
@@ -242,6 +243,86 @@ pub struct RuntimeRunDeclarations {
     pub context_inspections: Option<Vec<ContextInspection>>,
 }
 
+/// Reconciled control state of one held run's job, replayed from the host's
+/// durable job ledger (Decision 0120). The job identity is the run identity.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeJobStatus {
+    /// Status schema version.
+    pub schema_version: u16,
+    /// Exact held run.
+    pub run_id: RuntimeRunId,
+    /// Digest of the exact admitted runtime request.
+    pub request_sha256: String,
+    /// Replayed job state.
+    pub job: JobObservation,
+}
+
+impl RuntimeJobStatus {
+    /// Whether this status is a well-formed answer about exactly this run.
+    #[must_use]
+    pub fn describes(&self, request: &RuntimeRunRequest) -> bool {
+        self.schema_version == 1
+            && self.run_id == request.run_id
+            && self.request_sha256 == request.request_sha256
+            && self.job.job_id == request.run_id.as_str()
+            && is_lower_sha256(&self.job.head_sha256)
+    }
+}
+
+/// The host's decision on one job control request and the job state after it
+/// (Decision 0120).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeJobControl {
+    /// Decision the durable ledger recorded, or its original decision for a
+    /// retry from the same client.
+    pub decision: JobControlDecision,
+    /// Job state after the decision.
+    pub status: RuntimeJobStatus,
+}
+
+impl RuntimeJobControl {
+    /// Whether this is a well-formed answer to `control` about exactly this run.
+    #[must_use]
+    pub fn answers(&self, request: &RuntimeRunRequest, control: &JobControlRequest) -> bool {
+        let decided = match self.decision {
+            JobControlDecision::Applied { revision, .. } => revision,
+            JobControlDecision::Refused { revision, .. } => revision,
+        };
+        control.job_id == request.run_id.as_str()
+            && self.status.describes(request)
+            && decided <= self.status.job.revision
+    }
+}
+
+/// The authenticated client a job control request came from (Decision 0120).
+///
+/// Only the serving host derives it, from the peer its IPC endpoint
+/// authenticated; a client never names a scope. Code outside this crate cannot
+/// construct one.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeClientScope(String);
+
+impl RuntimeClientScope {
+    pub(crate) const fn derived(scope: String) -> Self {
+        Self(scope)
+    }
+
+    /// The scope under which the job ledger records the client's requests.
+    #[must_use]
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+fn is_lower_sha256(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+}
+
 /// Stable content-free refusal from a shared runtime transport boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -262,6 +343,8 @@ pub enum RuntimeTransportError {
     RuntimeEvidenceDenied,
     /// The bounded active/prepared run ceiling was reached.
     CapacityExceeded,
+    /// The run has no durable job ledger this caller can use (Decision 0120).
+    JobControlUnavailable,
 }
 
 impl RuntimeTransportError {
@@ -277,6 +360,7 @@ impl RuntimeTransportError {
             Self::RuntimeFailed => "host.runtime.failed",
             Self::RuntimeEvidenceDenied => "host.runtime.evidence_denied",
             Self::CapacityExceeded => "host.runtime.capacity_exceeded",
+            Self::JobControlUnavailable => "host.runtime.job_control_unavailable",
         }
     }
 }
@@ -351,6 +435,40 @@ pub trait RuntimeTransportPort {
         _request_sha256: &str,
     ) -> Result<RuntimeRunDeclarations, RuntimeTransportError> {
         Err(RuntimeTransportError::RequestDenied)
+    }
+
+    /// Reads the reconciled control state of one held run's job from the
+    /// durable job ledger (Decision 0120).
+    fn job_status(
+        &mut self,
+        _run_id: &RuntimeRunId,
+        _request_sha256: &str,
+    ) -> Result<RuntimeJobStatus, RuntimeTransportError> {
+        Err(RuntimeTransportError::JobControlUnavailable)
+    }
+
+    /// Asks the serving host to decide one control of a held run's job. The
+    /// host records it under the client it authenticated; the client names no
+    /// scope (Decision 0120).
+    fn control_job(
+        &mut self,
+        _run_id: &RuntimeRunId,
+        _request_sha256: &str,
+        _request: &JobControlRequest,
+    ) -> Result<RuntimeJobControl, RuntimeTransportError> {
+        Err(RuntimeTransportError::JobControlUnavailable)
+    }
+
+    /// Decides one job control request for the client scope the serving owner
+    /// derived from its authenticated peer. Only a job owner implements it.
+    fn control_job_for_client(
+        &mut self,
+        _client: &RuntimeClientScope,
+        _run_id: &RuntimeRunId,
+        _request_sha256: &str,
+        _request: &JobControlRequest,
+    ) -> Result<RuntimeJobControl, RuntimeTransportError> {
+        Err(RuntimeTransportError::JobControlUnavailable)
     }
 
     /// Revokes one exact direct-user session preauthorization before any later operation.

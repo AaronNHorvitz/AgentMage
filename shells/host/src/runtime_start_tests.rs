@@ -16,11 +16,17 @@ use agentmage_kernel_engine::{
     runtime_loop::RuntimeCoordinatorStep,
 };
 
+use agentmage_kernel_engine::job_control::{
+    JobControlAction, JobControlDecision, JobControlRefusal, JobControlRequest, JobPhase,
+};
+
 use crate::{
     coding_client::{CodingClientError, CodingCoordinatorPort, LiveCodingCoordinatorPort},
     coding_live_runtime::LiveCodingRuntimeService,
     native_chat_runtime::{NativeChatRuntimeFactory, NativeChatRuntimeService},
-    runtime_transport::{RuntimePrepareInput, RuntimeTransportError, RuntimeTransportPort},
+    runtime_transport::{
+        RuntimeClientScope, RuntimePrepareInput, RuntimeTransportError, RuntimeTransportPort,
+    },
 };
 
 #[derive(Default)]
@@ -449,6 +455,7 @@ struct GatedFactory {
     gate: Option<std::sync::mpsc::Receiver<()>>,
     declarations: Arc<AtomicUsize>,
     report: crate::coding_recoverability::RecoverabilityReport,
+    job_ledgers: Option<agentmage_kernel_engine::job_ledger_store::DurableJobLedgers>,
 }
 
 impl NativeChatRuntimeFactory for GatedFactory {
@@ -476,6 +483,13 @@ impl NativeChatRuntimeFactory for GatedFactory {
             declarations: Arc::clone(&self.declarations),
             report: self.report.clone(),
         })
+    }
+
+    fn take_job_ledgers(
+        &mut self,
+        _run_id: &RuntimeRunId,
+    ) -> Option<agentmage_kernel_engine::job_ledger_store::DurableJobLedgers> {
+        self.job_ledgers.take()
     }
 }
 
@@ -516,6 +530,7 @@ fn the_live_service_declares_only_a_held_ended_run_that_is_not_busy() {
         gate: Some(gate),
         declarations: Arc::clone(&declarations),
         report: report.clone(),
+        job_ledgers: None,
     });
     let input = RuntimePrepareInput {
         resume: false,
@@ -593,4 +608,289 @@ fn the_live_service_declares_only_a_held_ended_run_that_is_not_busy() {
         Err(RuntimeTransportError::RunUnavailable)
     );
     assert_eq!(declarations.load(Ordering::SeqCst), 1);
+}
+
+pub(crate) use job_store::JobLedgerStore;
+
+// This whole file is test-only; the explicit test module marks the store
+// directory setup as test code for the effect boundary scan.
+#[cfg(test)]
+mod job_store {
+    use std::path::PathBuf;
+
+    /// A real encrypted operational store in a private temporary directory.
+    pub(crate) struct JobLedgerStore {
+        directory: PathBuf,
+        path: PathBuf,
+    }
+
+    struct JobStoreKey;
+
+    impl agentmage_kernel_engine::operational_store::OperationalStoreKeyProvider for JobStoreKey {
+        fn with_key<T>(
+            &mut self,
+            operation: impl FnOnce(&[u8]) -> T,
+        ) -> Result<T, agentmage_kernel_engine::operational_store::OperationalStoreKeyError>
+        {
+            Ok(operation(&[23; 32]))
+        }
+    }
+
+    impl JobLedgerStore {
+        pub(crate) fn new(tag: &str) -> Self {
+            let directory = std::env::temp_dir()
+                .join(format!("agentmage-live-job-{tag}-{}", std::process::id()));
+            let _ = std::fs::remove_dir_all(&directory);
+            std::fs::create_dir(&directory).unwrap();
+            let path = directory.join("authority.db");
+            Self { directory, path }
+        }
+
+        pub(crate) fn ledgers(
+            &self,
+        ) -> agentmage_kernel_engine::job_ledger_store::DurableJobLedgers {
+            agentmage_kernel_engine::operational_store::DurableAuthorityRuntime::open(
+                &self.path,
+                &agentmage_kernel_contracts::StrictLocalStorageObservation {
+                    filesystem: agentmage_kernel_contracts::StorageFilesystemClass::Local,
+                    synchronization_marker: None,
+                    root_identity_sha256: [7; 32],
+                    symlink_free: true,
+                },
+                &mut JobStoreKey,
+                1,
+            )
+            .expect("the store opens")
+            .job_ledgers()
+        }
+    }
+
+    impl Drop for JobLedgerStore {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.directory);
+        }
+    }
+}
+
+fn gated_live_service(
+    request: &RuntimeRunRequest,
+    events: Vec<RuntimeEvent>,
+    outcome: agentmage_kernel_contracts::RuntimeOutcome,
+    ledgers: agentmage_kernel_engine::job_ledger_store::DurableJobLedgers,
+) -> (
+    LiveCodingRuntimeService<GatedFactory>,
+    std::sync::mpsc::Sender<()>,
+    RuntimePrepareInput,
+) {
+    let report = crate::coding_recoverability::assess_run_recoverability(
+        request.session_id.as_str(),
+        request.task.task_id.as_str(),
+        request.run_id.as_str(),
+        &[],
+        &|_| None,
+    )
+    .unwrap();
+    let (open_gate, gate) = std::sync::mpsc::channel();
+    let service = LiveCodingRuntimeService::new(GatedFactory {
+        request: request.clone(),
+        events,
+        outcome,
+        gate: Some(gate),
+        declarations: Arc::new(AtomicUsize::new(0)),
+        report,
+        job_ledgers: Some(ledgers),
+    });
+    let input = RuntimePrepareInput {
+        resume: request.event_cursor.is_some(),
+        record_session: false,
+        slow_subscriber_probe: false,
+        preauthorization: None,
+        engineering_session_id: None,
+        profile_id: request.model_profile.profile_id.as_str().to_owned(),
+        expected_entry_sha256: "a".repeat(64),
+        workspace_id: request.workspace_id.as_str().to_owned(),
+        workspace_root: "/tmp/agentmage-job-fixture".to_owned(),
+        prompt: request.task.objective.clone(),
+    };
+    (service, open_gate, input)
+}
+
+fn cancel_request(id: &str, observed_revision: u64, run_id: &RuntimeRunId) -> JobControlRequest {
+    JobControlRequest {
+        schema_version: 1,
+        job_id: run_id.as_str().to_owned(),
+        request_id: id.to_owned(),
+        action: JobControlAction::Cancel,
+        observed_revision,
+    }
+}
+
+#[test]
+fn the_live_service_owns_each_run_job_and_decides_cancellation_through_the_ledger() {
+    // Decision 0120: the host records the job's start and outcome, decides
+    // each client's request under the scope it derived, refuses suspension,
+    // resumption and direct cancellation, and keeps every decision durable.
+    let (request, events, outcome, observed_result) =
+        crate::runtime_read_tests::completed_native_read_fixture();
+    assert!(observed_result && events.len() > 1);
+    let store = JobLedgerStore::new("owner");
+    let ledgers = store.ledgers();
+    let (mut service, open_gate, input) =
+        gated_live_service(&request, events, outcome.clone(), ledgers.clone());
+    service.prepare(input).unwrap();
+    // A prepared run has no job yet.
+    assert_eq!(
+        service.job_status(&request.run_id, &request.request_sha256),
+        Err(RuntimeTransportError::RunUnavailable)
+    );
+    let mut step = service.start(request.clone()).unwrap();
+    assert!(step.outcome.is_none());
+    let running = service
+        .job_status(&request.run_id, &request.request_sha256)
+        .unwrap();
+    assert!(running.describes(&request));
+    assert_eq!(
+        (running.job.phase, running.job.revision),
+        (JobPhase::Running, 1)
+    );
+    assert_eq!(
+        service.job_status(&request.run_id, &"f".repeat(64)),
+        Err(RuntimeTransportError::RequestDenied)
+    );
+
+    let client = RuntimeClientScope::derived("peer-client-a".to_owned());
+    let other = RuntimeClientScope::derived("peer-client-b".to_owned());
+    let run = &request.run_id;
+    let sha = request.request_sha256.as_str();
+    // No authenticated client in process, no direct cancellation, and no
+    // suspension or resumption until the host can stop at a safe boundary.
+    assert_eq!(
+        service.control_job(run, sha, &cancel_request("c0", 1, run)),
+        Err(RuntimeTransportError::JobControlUnavailable)
+    );
+    assert_eq!(
+        service.cancel(
+            run,
+            sha,
+            agentmage_kernel_contracts::CancellationId::from_raw("direct-cancel"),
+            None
+        ),
+        Err(RuntimeTransportError::RequestDenied)
+    );
+    for action in [JobControlAction::Suspend, JobControlAction::Resume] {
+        let mut suspend = cancel_request("s0", 1, run);
+        suspend.action = action;
+        assert_eq!(
+            service.control_job_for_client(&client, run, sha, &suspend),
+            Err(RuntimeTransportError::RequestDenied)
+        );
+    }
+    assert_eq!(service.job_status(run, sha).unwrap(), running);
+
+    // A stale request is refused and recorded; the current one applies once.
+    let stale = service
+        .control_job_for_client(&client, run, sha, &cancel_request("c1", 0, run))
+        .unwrap();
+    assert!(stale.answers(&request, &cancel_request("c1", 0, run)));
+    assert_eq!(
+        stale.decision,
+        JobControlDecision::Refused {
+            refusal: JobControlRefusal::StaleRevision,
+            revision: 1,
+            phase: JobPhase::Running,
+        }
+    );
+    let applied = service
+        .control_job_for_client(&client, run, sha, &cancel_request("c2", 1, run))
+        .unwrap();
+    assert_eq!(
+        applied.decision,
+        JobControlDecision::Applied {
+            revision: 2,
+            phase: JobPhase::Cancelling,
+        }
+    );
+    assert!(applied.status.job.cancellation_requested);
+    // A retry from the same client gets its original decision; the same
+    // identity from another client is that client's own request.
+    assert_eq!(
+        service
+            .control_job_for_client(&client, run, sha, &cancel_request("c2", 1, run))
+            .unwrap()
+            .decision,
+        applied.decision
+    );
+    assert!(matches!(
+        service
+            .control_job_for_client(&other, run, sha, &cancel_request("c2", 1, run))
+            .unwrap()
+            .decision,
+        JobControlDecision::Refused {
+            refusal: JobControlRefusal::StaleRevision,
+            ..
+        }
+    ));
+    assert!(matches!(
+        service
+            .control_job_for_client(&other, run, sha, &cancel_request("c3", 2, run))
+            .unwrap()
+            .decision,
+        JobControlDecision::Refused {
+            refusal: JobControlRefusal::AlreadyInEffect,
+            ..
+        }
+    ));
+    assert_eq!(
+        service
+            .control_job_for_client(&client, run, sha, &cancel_request("c2", 2, run))
+            .err(),
+        Some(RuntimeTransportError::RequestDenied)
+    );
+
+    // The work finishes before it reaches a safe boundary: the finished state
+    // stands and the accepted request stays in the ledger.
+    open_gate.send(()).unwrap();
+    for _ in 0..400 {
+        if step.outcome.is_some() {
+            break;
+        }
+        let cursor = last_cursor(&step);
+        let next = service.advance(run, sha, Some(&cursor), None).unwrap();
+        if !next.events.is_empty() || next.outcome.is_some() {
+            let mut events = step.events.clone();
+            events.extend(next.events.iter().cloned());
+            step = crate::runtime_transport::RuntimeTransportStep { events, ..next };
+        }
+    }
+    assert_eq!(step.outcome, Some(outcome));
+    let ended = service.job_status(run, sha).unwrap();
+    assert_eq!(
+        (ended.job.phase, ended.job.revision),
+        (JobPhase::Completed, 3)
+    );
+    assert!(ended.job.cancellation_requested);
+    let terminal = service
+        .control_job_for_client(&client, run, sha, &cancel_request("c4", 3, run))
+        .unwrap();
+    assert!(matches!(
+        terminal.decision,
+        JobControlDecision::Refused {
+            refusal: JobControlRefusal::Terminal,
+            revision: 3,
+            ..
+        }
+    ));
+    // The refusal is recorded, so the head moves while the revision stays.
+    assert_eq!(terminal.status.job.revision, 3);
+    assert_ne!(terminal.status.job.head_sha256, ended.job.head_sha256);
+    service.release(run, sha).unwrap();
+    assert_eq!(
+        service.job_status(run, sha),
+        Err(RuntimeTransportError::RunUnavailable)
+    );
+    drop(service);
+    // The durable record replays after the store is reopened.
+    drop(ledgers);
+    let reopened = store.ledgers().observation(run.as_str()).unwrap();
+    assert_eq!(reopened, terminal.status.job);
 }

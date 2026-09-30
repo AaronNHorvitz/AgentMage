@@ -240,7 +240,8 @@ pub struct JobLedgerEntry {
 }
 
 /// Current reconciled state, suitable for any attached client.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct JobObservation {
     /// Job identity.
     pub job_id: String,

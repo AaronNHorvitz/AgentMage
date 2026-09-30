@@ -13,6 +13,9 @@ use agentmage_kernel_contracts::{
     RuntimeHunkSelection, RuntimeRunLimits, WorkspaceId,
 };
 use agentmage_kernel_engine::context_inspection::render_context_inspection;
+use agentmage_kernel_engine::job_control::{
+    JobControlDecision, JobControlRefusal, render_job_observation,
+};
 use agentmage_kernel_engine::run_progress::{
     MAX_PROGRESS_EVENTS, ProgressCeilings, project_run_progress, render_run_progress,
 };
@@ -40,8 +43,8 @@ use crate::coding_recoverability::render_recoverability;
 use crate::headless::ClientExitCode;
 use crate::runtime_ipc::LinuxRuntimeIpcClient;
 use crate::runtime_transport::{
-    RuntimePreauthorizedCommand, RuntimePrepareInput, RuntimeRunDeclarations,
-    RuntimeSessionPreauthorization, RuntimeTransportPort,
+    RuntimeJobControl, RuntimeJobStatus, RuntimePreauthorizedCommand, RuntimePrepareInput,
+    RuntimeRunDeclarations, RuntimeSessionPreauthorization, RuntimeTransportPort,
 };
 
 /// Stable content-free failure from the development-only CLI launcher.
@@ -251,6 +254,10 @@ fn run_with_child(
         eprint!(
             "{}",
             render_run_declarations(result.declarations.as_ref(), output)
+        );
+        eprint!(
+            "{}",
+            render_job_state(result.job.as_ref(), &result.job_controls, output)
         );
         final_exit = match result.outcome.state {
             AgentStateKind::Success | AgentStateKind::NoOp => ClientExitCode::Success,
@@ -599,6 +606,60 @@ fn render_run_declarations(
         None => rendered.push_str(
             "context views: unavailable; the host could not show every composed context\n",
         ),
+    }
+    rendered
+}
+
+/// Renders the host's answers to this client's job control requests and the
+/// run's reconciled job state, read before release (Decision 0120). A run
+/// whose host kept no job ledger for it is shown as unavailable.
+fn render_job_state(
+    job: Option<&RuntimeJobStatus>,
+    controls: &[RuntimeJobControl],
+    output: CliOutputFormat,
+) -> String {
+    if output == CliOutputFormat::Json {
+        return format!(
+            "{}\n",
+            serde_json::json!({
+                "type": "job_state",
+                "available": job.is_some(),
+                "job": job.map(|status| &status.job),
+                "controls": controls
+                    .iter()
+                    .map(|control| serde_json::json!({
+                        "decision": control.decision,
+                        "job": control.status.job,
+                    }))
+                    .collect::<Vec<_>>(),
+            })
+        );
+    }
+    let mut rendered = String::new();
+    for control in controls {
+        let decision = match control.decision {
+            JobControlDecision::Applied { .. } => "applied",
+            JobControlDecision::Refused { refusal, .. } => match refusal {
+                JobControlRefusal::StaleRevision => {
+                    "refused: the job changed since this client observed it"
+                }
+                JobControlRefusal::AlreadyInEffect => "refused: already in effect",
+                JobControlRefusal::Terminal => "refused: the job has ended",
+                JobControlRefusal::NotAllowed => "refused: not allowed in this phase",
+            },
+        };
+        rendered.push_str(&format!(
+            "job control: cancellation request {decision}; {}\n",
+            render_job_observation(&control.status.job)
+        ));
+    }
+    match job {
+        Some(status) => rendered.push_str(&format!(
+            "job state: {}\n",
+            render_job_observation(&status.job)
+        )),
+        None => rendered
+            .push_str("job state: unavailable; the host kept no durable job ledger for this run\n"),
     }
     rendered
 }
@@ -1133,6 +1194,77 @@ mod tests {
         .unwrap();
         assert_eq!(json["recoverability_available"], false);
         assert_eq!(json["context_inspections_available"], false);
+    }
+
+    #[test]
+    fn the_job_state_and_each_control_answer_are_shown_in_both_formats() {
+        // Decision 0120: the reconciled job state is read before release and
+        // shown after each run; a run without a job ledger says so.
+        use agentmage_kernel_engine::job_control::{JobObservation, JobPhase};
+        let status = |phase, revision, cancellation_requested| RuntimeJobStatus {
+            schema_version: 1,
+            run_id: agentmage_kernel_contracts::RuntimeRunId::from_raw("run-cli"),
+            request_sha256: "c".repeat(64),
+            job: JobObservation {
+                job_id: "run-cli".to_owned(),
+                phase,
+                revision,
+                cancellation_requested,
+                head_sha256: "d".repeat(64),
+            },
+        };
+        let controls = [
+            RuntimeJobControl {
+                decision: JobControlDecision::Refused {
+                    refusal: JobControlRefusal::StaleRevision,
+                    revision: 2,
+                    phase: JobPhase::Running,
+                },
+                status: status(JobPhase::Running, 2, false),
+            },
+            RuntimeJobControl {
+                decision: JobControlDecision::Applied {
+                    revision: 3,
+                    phase: JobPhase::Cancelling,
+                },
+                status: status(JobPhase::Cancelling, 3, true),
+            },
+        ];
+        let ended = status(JobPhase::Cancelled, 4, true);
+        let human = render_job_state(Some(&ended), &controls, CliOutputFormat::Human);
+        let lines = human.lines().collect::<Vec<_>>();
+        assert_eq!(lines.len(), 3);
+        assert_eq!(
+            lines[0],
+            "job control: cancellation request refused: the job changed since this client \
+             observed it; job \"run-cli\" revision 2: running"
+        );
+        assert!(lines[1].starts_with("job control: cancellation request applied; "));
+        assert!(lines[1].contains("revision 3: cancellation requested"));
+        assert_eq!(lines[2], "job state: job \"run-cli\" revision 4: cancelled");
+        let json: serde_json::Value = serde_json::from_str(
+            render_job_state(Some(&ended), &controls, CliOutputFormat::Json).trim_end(),
+        )
+        .unwrap();
+        assert_eq!(json["type"], "job_state");
+        assert_eq!(json["available"], true);
+        assert_eq!(json["job"], serde_json::to_value(&ended.job).unwrap());
+        assert_eq!(json["controls"].as_array().unwrap().len(), 2);
+        assert_eq!(json["controls"][0]["decision"]["refusal"], "stale-revision");
+        assert_eq!(json["controls"][1]["decision"]["decision"], "applied");
+        assert_eq!(json["controls"][1]["job"]["phase"], "cancelling");
+
+        let human = render_job_state(None, &[], CliOutputFormat::Human);
+        assert_eq!(
+            human,
+            "job state: unavailable; the host kept no durable job ledger for this run\n"
+        );
+        let json: serde_json::Value =
+            serde_json::from_str(render_job_state(None, &[], CliOutputFormat::Json).trim_end())
+                .unwrap();
+        assert_eq!(json["available"], false);
+        assert!(json["job"].is_null());
+        assert!(json["controls"].as_array().unwrap().is_empty());
     }
 
     fn limits() -> RuntimeRunLimits {
