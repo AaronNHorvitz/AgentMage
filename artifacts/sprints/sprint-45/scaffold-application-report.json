@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "record_type": "agentmage-sprint-45-scaffold-application-evidence",
-  "source_revision": "739c9bc4b5722308bbd171e13f2b00602cb95ea6",
+  "source_revision": "0363e9ee57d72868e6f85688adf3ca4136a4d4e0",
   "source_sha256": {
-    "capabilities/repository-map/src/package_scaffold.rs": "0aac3e9de0b0960d82a3c8dc4be6aaf8379bbaf89d04468fc48e91b898f90e7e",
-    "capabilities/repository-map/src/lib.rs": "ab17d523029981777f0e7c0a409cade6b31da168f15e311eccb00f749702496b",
+    "capabilities/repository-map/src/package_scaffold.rs": "4bfb3b251ce5f6058cba7830747d078d278b5bcac7e6e59c738334c8c917f30c",
+    "capabilities/repository-map/src/lib.rs": "9ace96e579feebcd45a90376d6e332e03a6f966ed694678ec231a664a30b7322",
     "tests/test_sprint_45_scaffold_evidence.py": "bd5a23198af5ee8a4c95523f428f20bc916db1978bd797fb435b4edb80c54f31",
     "scripts/sprint_45_scaffold_evidence.py": "abc1614f84d1a6a2514ca277f74a0568e72afd201322196c7745fbd9250fd1da"
   },
@@ -18,7 +18,7 @@
     "--locked"
   ],
   "command_exit_code": 0,
-  "command_output_sha256": "249b4c6799a9f7ad9e3ad497915560b92aafc87f7ab97fa34efd1172bc35aa3f",
+  "command_output_sha256": "ede1f202b9c2b6231fdddf974c5b3d342d8872ea262faa7393b820d996d1f95e",
   "approved_package_convention_count": 5,
   "application_manifest_count": 5,
   "mutation_case_count": 7,
