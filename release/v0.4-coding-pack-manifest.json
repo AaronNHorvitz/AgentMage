@@ -116,7 +116,7 @@
     },
     {
       "path": "shells/host/src/coding_client.rs",
-      "sha256": "90f2fe495b773f08f7c7a5523a0e73c698e0cba76071f265ab2c25eed462fa89"
+      "sha256": "857f1ecbd7cec393dc04dac06e454499ff86e49c3c7eef3bccd9c776b4609d37"
     },
     {
       "path": "shells/host/src/coding_harness.rs",

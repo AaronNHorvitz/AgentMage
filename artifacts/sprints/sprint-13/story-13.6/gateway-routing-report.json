@@ -6,9 +6,9 @@
       "sha256": "1361215d221414258be8358156806d5fce0acf0ee43c20fa3994a13529a502b4"
     },
     {
-      "byte_length": 26200,
+      "byte_length": 40932,
       "path": "kernel/engine/src/gateway_routing.rs",
-      "sha256": "59eb9648b940fad27a30b7c9a59033a4cda25911e8ce01bca33bb60e67b71e9b"
+      "sha256": "23815425bdad907edaf11bf95c231c4bedd5c5e3b301f524dcb748cec1f1cfdd"
     },
     {
       "byte_length": 25099,
@@ -16,9 +16,9 @@
       "sha256": "0519b1e616b4c46598941a301da04082691c015e5c10d74109ff2840a2b22542"
     },
     {
-      "byte_length": 1653,
+      "byte_length": 2316,
       "path": "docs/architecture/gateway-codec-routing-fallback.md",
-      "sha256": "3b8992c7ba011a6a9b78dd622dae51d9635b78f0903fd6178f6374393c4cc608"
+      "sha256": "87c7bdf6a0fecdcdb7e785ff9bae5f63f3e412747065ee643dcc54fd2d1ba885"
     },
     {
       "byte_length": 5894,
@@ -31,9 +31,9 @@
       "sha256": "980434c7729abdebd85103445f138d72cb7c60a035fe588d505f4a0b78d0ca8a"
     },
     {
-      "byte_length": 9359,
+      "byte_length": 9583,
       "path": "artifacts/sprints/sprint-13/story-13.6/gateway-routing-results.log",
-      "sha256": "cac596919e7e73642dc0ee10c6b02ef307cba93b7535934d8261ae105810066a"
+      "sha256": "29b78139be9289c887f03dcd5091664ea61b26dbcfd4e1b5362fdceb21b8fd70"
     }
   ],
   "codec_semantics": [

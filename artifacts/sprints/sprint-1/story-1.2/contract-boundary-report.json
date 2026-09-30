@@ -46,7 +46,7 @@
   "sources": [
     {
       "path": "TASKS.md",
-      "sha256": "ce85de8ff16b1b8febd71f87cdc2da4359a3785f39f3fbae4950bf515db32337"
+      "sha256": "84a5cd1d0767d91bcf1459c2ccabb9f7b13874979568b22b12f541252746d716"
     },
     {
       "path": "architecture/dependency-rules.json",

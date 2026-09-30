@@ -19,11 +19,11 @@
   "review_class": "gate-owned-automated-knowledge-boundary",
   "reviewer_identity": "scripts/knowledge_sprint_boundary_review.py",
   "schema_version": 1,
-  "source_revision": "09a74a80490c4fb9ec2e37ce38339186cb569d9c",
+  "source_revision": "6cce0535b9999d1ec3d5525297286b500e1f3a20",
   "source_sha256": {
-    "capabilities/knowledge/src/memory.rs": "f880bf3998de8d97cb8e6e0484126985173f186c52da900f82da46f7b8ae8c92",
-    "capabilities/knowledge/src/memory_lifecycle.rs": "c9ad2cbbd3c23eb60e7e87cdfae77aa41ce7ba3a56c126b5005088398be8472c",
-    "capabilities/knowledge/src/memory_portable.rs": "762a814815442a3435e5d3813882264624887b53427cc988f6863fe8cee3c26a",
+    "capabilities/knowledge/src/memory.rs": "df6205fb8b7dd2e4b90829a5671ac4e7c12f2b55d9fa511a8629b36a158fde74",
+    "capabilities/knowledge/src/memory_lifecycle.rs": "a5a6a56f2bd43db28fd650219bb5376aee6dfe213ebb8e9a443bfdb87c2f64b4",
+    "capabilities/knowledge/src/memory_portable.rs": "7d9d0867d588ab7c80f9382b8d343314ed8b3487ae777e5788195ba2aea16a65",
     "shells/host/src/memory_file_runtime.rs": "66d8a9d16ed9474398cf7bae7b9b4d7eb81138eeb9ca1218bd16cb4e14b77779"
   },
   "sprint": 31,
