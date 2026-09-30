@@ -74,14 +74,14 @@
   ],
   "manual_fuzzing_executed": false,
   "release_approved": false,
-  "report_sha256": "2239ce04739ca4b856c9d19382bfbfab313cb24abd4603de93803d3ac50aa584",
+  "report_sha256": "32cbab662aa7de3fe6fdac1cc83052fc54ece45f3d6e82538555b292308c415a",
   "schema_version": 1,
-  "source_revision": "a828106ce006ab23edad2fa76e7ce9fa66e978c0",
+  "source_revision": "aae3b67f61f88822443e48b509fe488615c63a13",
   "sources": [
     {
-      "bytes": 212266,
+      "bytes": 217068,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "a0e307933c90be1368b690b2a4565fae07c16b58512cb7bdcf9faa7dceee8b58"
+      "sha256": "ac2b2f93407d23c5c27f08d111af6b360cb4a3248489b369e15253a3ce9d0de2"
     },
     {
       "bytes": 12024,
@@ -99,19 +99,19 @@
       "sha256": "73e38467caa9562e8b3982608a2f01e1735b57bf535f8de3d75fc16fcc0a32f3"
     },
     {
-      "bytes": 11099,
+      "bytes": 13832,
       "path": "shells/host/src/coding_client.rs",
-      "sha256": "e101e21d87bb1b7af8475b1612c11c6bb2ee633cb24ae762593a5f66b892d053"
+      "sha256": "90f2fe495b773f08f7c7a5523a0e73c698e0cba76071f265ab2c25eed462fa89"
     },
     {
-      "bytes": 81482,
+      "bytes": 113366,
       "path": "shells/host/src/cli_runtime.rs",
-      "sha256": "49502d5ced945b7733b5c7f3e328bac3cde9cbdba554cae1483d91937e0a7c71"
+      "sha256": "f758626ed4b4ad856653347f7ba5fe989098cecfd28626fc3aefd5753776ea12"
     },
     {
-      "bytes": 43217,
+      "bytes": 43793,
       "path": "shells/host/src/native_chat_runtime.rs",
-      "sha256": "4dcd7c0cb16cdf91b7711367d7ddbfef3bedc396be6aa652ff87022046542d2c"
+      "sha256": "58b0ed5aab63c312efe8b831c8ad9bb51de6612c4f53d7d476c8532e747ff835"
     },
     {
       "bytes": 26833,
@@ -159,14 +159,14 @@
       "sha256": "034237dbf30bbc33ea2a1dac5f9d04127e5f1e0e1358c186f025310afb662181"
     },
     {
-      "bytes": 10743,
+      "bytes": 10744,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "f9f830e866757fce06acf00fe052f0a0805b4fc9ec8a1ade54a5a2b8b19f36b7"
+      "sha256": "d6fd18b52d439d45e50afc86ea11c7394a725932bd80e7571b6b416c0f615651"
     },
     {
       "bytes": 7935,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "1497d0fd5591126f4f8c0e5b9a49cdef9e051fceecd2983fec12cfc0fe960f9d"
+      "sha256": "76e1e9039f36da6db706292af9a76fb8fc60e2bc0454a8329e3448f82f99c7a5"
     },
     {
       "bytes": 10830,
