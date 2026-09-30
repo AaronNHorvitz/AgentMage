@@ -35,13 +35,13 @@
     "SR-TST-005",
     "SR-TST-011"
   ],
-  "source_revision": "3eed9a541e6add25f1eb00194d0136daead5c327",
+  "source_revision": "4aa7d5c053406479f83ddb4fb8f228f7abbb6256",
   "source_sha256": {
     "artifacts/sprints/sprint-45/local-evidence-report.json": "b51b375b928ef0c4df105da620ac6f53886acd62d28d1c0939ec91a330e2e049",
-    "artifacts/sprints/sprint-45/scaffold-application-report.json": "756776de60ac1c00dea7c9beec786f02e52f3064837b822b258b8948070faf06",
+    "artifacts/sprints/sprint-45/scaffold-application-report.json": "224068e6e820616b2461c333e2012b1fda611b5c9e5625c5bed8b90434c70124",
     "capabilities/repository-map/src/language_service.rs": "2576a6c13cc205d5c20bce8e3198e81209a44a3f988a7e8b10435471a823e457",
-    "capabilities/repository-map/src/package_scaffold.rs": "0aac3e9de0b0960d82a3c8dc4be6aaf8379bbaf89d04468fc48e91b898f90e7e",
-    "capabilities/repository-map/src/structured_edit.rs": "e7ad9fb4979caddcccf88bc2fc57956d80ae16e5956ba74f4cb41a643954291d",
+    "capabilities/repository-map/src/package_scaffold.rs": "4bfb3b251ce5f6058cba7830747d078d278b5bcac7e6e59c738334c8c917f30c",
+    "capabilities/repository-map/src/structured_edit.rs": "5715696fc94d784a69c3cf8051f95c1e308fea3ff1e8dc2975b26d5c47419067",
     "capabilities/repository-map/src/test_generation.rs": "bd6276ddfb5aae47a664f942f617b10a89e020c7cac46619f304a8ad421592d2",
     "docs/security/sprint-45-ffi-unsafe-inventory.md": "5e3e66a5904e7799ce815b5ff623486cc67c844837d8bf02185fd20774e8ced3",
     "docs/verification/sprint-45-coding-corpus.json": "2854d0c7ab203de3314a79991d2b6c456235cb52a344f2352a2af7d4521342c8",
