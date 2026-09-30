@@ -6,29 +6,29 @@
       "sha256": "18d839f8199de094e136645aeac87773fb6cfb18e44b4f4a70f637e6efebac33"
     },
     {
-      "bytes": 7513,
+      "bytes": 7514,
       "path": "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
-      "sha256": "ee93a4fc283dc0f6d2dd60d035aa986fdd1f5d8851274911f7ae37835ce2537a"
+      "sha256": "1659f39d7b2cf9c4967f746e251ed129bae92cb7ba4374a3ff76f0ce29b3f08d"
     },
     {
-      "bytes": 10743,
+      "bytes": 10744,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "f9f830e866757fce06acf00fe052f0a0805b4fc9ec8a1ade54a5a2b8b19f36b7"
+      "sha256": "d6fd18b52d439d45e50afc86ea11c7394a725932bd80e7571b6b416c0f615651"
     },
     {
       "bytes": 7935,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "1497d0fd5591126f4f8c0e5b9a49cdef9e051fceecd2983fec12cfc0fe960f9d"
+      "sha256": "76e1e9039f36da6db706292af9a76fb8fc60e2bc0454a8329e3448f82f99c7a5"
     },
     {
       "bytes": 22661,
       "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence-map.json",
-      "sha256": "988a4de1920bc3f3e79ee1bd3c3b64da63d86cb60bb7138ff4c596020a7f1ded"
+      "sha256": "c704046999bf8dff65ddcf8d92df3da5b93616fe81d9fe5ea74d3c802a73d149"
     },
     {
       "bytes": 4430,
       "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence.log",
-      "sha256": "509d05534e78dc6db3cafcdb77e8ab00a750c15320893a8ec4914c01886f39a4"
+      "sha256": "b9486df2b81298e3870e1067451644c979dd1320d6de89f9b0775867e64f77fc"
     },
     {
       "bytes": 9999,
@@ -61,9 +61,9 @@
       "sha256": "8570c1764e7293e6c3c5931fcbab612c9df26ee7ab284c8bdfbb12d22b6553a0"
     },
     {
-      "bytes": 212266,
+      "bytes": 217068,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "a0e307933c90be1368b690b2a4565fae07c16b58512cb7bdcf9faa7dceee8b58"
+      "sha256": "ac2b2f93407d23c5c27f08d111af6b360cb4a3248489b369e15253a3ce9d0de2"
     },
     {
       "bytes": 12024,
@@ -76,9 +76,9 @@
       "sha256": "76c052a6265dfd0acbf33367b2d297cfe7ced195f1484c54d0ef2b0ef6575712"
     },
     {
-      "bytes": 300017,
+      "bytes": 310866,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "50098f6cbf257b6b5bd14936516d56244a44b7d8675af9eba9296400463c226c"
+      "sha256": "fc6aa5e1e2ea7b24247aca5785b07340b2a90be7b2b435850f45c1b1348a0a99"
     },
     {
       "bytes": 10830,
@@ -121,9 +121,9 @@
       "sha256": "4a9e56b6318ee97f55bc55db0a0dd43d6c4b3da9852eb55bf9306087ac5963e1"
     },
     {
-      "bytes": 11099,
+      "bytes": 13832,
       "path": "shells/host/src/coding_client.rs",
-      "sha256": "e101e21d87bb1b7af8475b1612c11c6bb2ee633cb24ae762593a5f66b892d053"
+      "sha256": "90f2fe495b773f08f7c7a5523a0e73c698e0cba76071f265ab2c25eed462fa89"
     },
     {
       "bytes": 447811,
@@ -131,14 +131,14 @@
       "sha256": "73e38467caa9562e8b3982608a2f01e1735b57bf535f8de3d75fc16fcc0a32f3"
     },
     {
-      "bytes": 81482,
+      "bytes": 113366,
       "path": "shells/host/src/cli_runtime.rs",
-      "sha256": "49502d5ced945b7733b5c7f3e328bac3cde9cbdba554cae1483d91937e0a7c71"
+      "sha256": "f758626ed4b4ad856653347f7ba5fe989098cecfd28626fc3aefd5753776ea12"
     },
     {
-      "bytes": 43217,
+      "bytes": 43793,
       "path": "shells/host/src/native_chat_runtime.rs",
-      "sha256": "4dcd7c0cb16cdf91b7711367d7ddbfef3bedc396be6aa652ff87022046542d2c"
+      "sha256": "58b0ed5aab63c312efe8b831c8ad9bb51de6612c4f53d7d476c8532e747ff835"
     },
     {
       "bytes": 26833,
@@ -202,7 +202,7 @@
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "979aa3ed05e497b4bb96c09882600db8a480c16c7e0d17f5b5d088af0b557043",
+  "index_sha256": "f8b09ad2f12dfa0e25b6ec6b17295eeba797dfa8980fff7fb7ba06a598e09279",
   "limitations": [
     "The installed host still lacks a production runtime factory and admitted local model.",
     "The source-level boundary-by-boundary failure matrix is complete; physical process faults remain outside this source campaign.",
@@ -506,7 +506,7 @@
   ],
   "record_type": "story_23_4_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "291530713f8f6359734701c145b66f0f3120e493",
+  "source_revision": "174f55217031b271180e5468c18468d26e36458a",
   "story_id": "23.4",
   "summary": {
     "complete_count": 16,
