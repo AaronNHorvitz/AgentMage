@@ -6,29 +6,29 @@
       "sha256": "18d839f8199de094e136645aeac87773fb6cfb18e44b4f4a70f637e6efebac33"
     },
     {
-      "bytes": 7512,
+      "bytes": 7513,
       "path": "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
-      "sha256": "344a5c48362aa64be970d9c93c69ff6a41c5e028c997c774e1a0510853ddf3ca"
+      "sha256": "c99e7d16459b39722954fd7d9314207b59c5501e06bdd7d2cf3dd8b1de6e325a"
     },
     {
       "bytes": 10743,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
-      "sha256": "511dc0d9598a317641a8f91ffabce42de344cde8bebf5c029a37d2f12613e42e"
+      "sha256": "81f703b968d7326fdbb92d617f2622bd81f80c46168715d024b331503987caed"
     },
     {
       "bytes": 7935,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
-      "sha256": "336d077f64b99d4893478cc187147e3ed34c34dae59aaba8b1bae73e81b87835"
+      "sha256": "0c42de492aad3da02f0606ba078da2d49efaea9f1eca36a415ae973134face48"
     },
     {
-      "bytes": 22659,
+      "bytes": 22660,
       "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence-map.json",
-      "sha256": "a88d328223b31b099e7d012e27df6b7431ef240c93d824894bac8c3ade67a595"
+      "sha256": "b8568a60428fc91220cf8e5af685734cd2147609582d119cea30ca357c8f908d"
     },
     {
       "bytes": 4430,
       "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence.log",
-      "sha256": "d972f37d7e6a5ca5dbb821ab97451f805cadd1331fbbf97c745afd93df417fd2"
+      "sha256": "f96f49e479e8fab20df2e22f1fe5d32c88a261015d4e32dee2f23b5a2b9a800c"
     },
     {
       "bytes": 9999,
@@ -76,9 +76,9 @@
       "sha256": "76c052a6265dfd0acbf33367b2d297cfe7ced195f1484c54d0ef2b0ef6575712"
     },
     {
-      "bytes": 298468,
+      "bytes": 300017,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "7bf54efffc7bd96d62880ea74c6b3fd6927beb76b2bc3823f8c3430e4adb5f8e"
+      "sha256": "50098f6cbf257b6b5bd14936516d56244a44b7d8675af9eba9296400463c226c"
     },
     {
       "bytes": 10830,
@@ -101,9 +101,9 @@
       "sha256": "b0b0954012c1d8657f1b40a7f41676295f2ad792d0c908f05bf5be072f8b1829"
     },
     {
-      "bytes": 19002,
+      "bytes": 20098,
       "path": "scripts/runtime_coordinator_boundary_review.py",
-      "sha256": "65b52954f3f4d4cc27328be8f737b8d767135fec63fc5140b6a114c07b72ebbb"
+      "sha256": "35307c651516a810453f58057fe56afeb09e46c4055d5f42483a25448c4e7011"
     },
     {
       "bytes": 17386,
@@ -126,14 +126,14 @@
       "sha256": "e101e21d87bb1b7af8475b1612c11c6bb2ee633cb24ae762593a5f66b892d053"
     },
     {
-      "bytes": 447929,
+      "bytes": 447811,
       "path": "shells/host/src/linux_coding_runtime.rs",
-      "sha256": "387e3f559468229a37704babc1bcf8b5a4fde52c7219f049b47417fc6167217c"
+      "sha256": "73e38467caa9562e8b3982608a2f01e1735b57bf535f8de3d75fc16fcc0a32f3"
     },
     {
-      "bytes": 62606,
+      "bytes": 66644,
       "path": "shells/host/src/cli_runtime.rs",
-      "sha256": "9d8d3f65c8ec75c29981012ada6db5403f378d46bfe0f380e179e9c8f44c3538"
+      "sha256": "6813a1bf10de70b37f646c4cd191916289f2fdeeee114c589d650523ecef72b8"
     },
     {
       "bytes": 42800,
@@ -181,9 +181,9 @@
       "sha256": "4140f8d10b8bccec77aaec8bd0fade299c23534508181bc1f46076c925133f08"
     },
     {
-      "bytes": 8619,
+      "bytes": 10999,
       "path": "tests/test_runtime_coordinator_boundary_review.py",
-      "sha256": "b71cf85792bd4ea9f5ad0374d141879da4b6bbd5af28e66bfbe9d483dbae6a00"
+      "sha256": "c924f773805ef17e90c73d621aa292cfffb8756d5f93556abcdcbb129e97224a"
     },
     {
       "bytes": 4524,
@@ -202,7 +202,7 @@
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "453dcf22bc46f7602090d0a697ea61da442ffdfb80c161ec1ef5dbfcb7d91489",
+  "index_sha256": "609028d90a6379cb41fb20dd5a8048bba90b3165a072220e79052f6c9aeabae4",
   "limitations": [
     "The installed host still lacks a production runtime factory and admitted local model.",
     "The source-level boundary-by-boundary failure matrix is complete; physical process faults remain outside this source campaign.",
@@ -506,7 +506,7 @@
   ],
   "record_type": "story_23_4_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "acbd56359b2284f10918ce7d2bc51cb399852eda",
+  "source_revision": "3f982952605c62bc746280ac69449cc3a3b4f82e",
   "story_id": "23.4",
   "summary": {
     "complete_count": 16,
