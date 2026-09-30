@@ -57,9 +57,9 @@
       "sha256": "ba4319939bc4e57d6357e80d217dd872cd8c790447a1d185265736acdb9a2852"
     },
     {
-      "bytes": 486324,
+      "bytes": 487095,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "cacb9336af06ed8c765335e36783089c13195e6ed0bcb07a4957f590eaa03b1d"
+      "sha256": "d1d06e9bd9490947fb35939cce8d5e0389ca924a841417371fb31faa685ad97f"
     },
     {
       "bytes": 45680,
@@ -99,7 +99,7 @@
     {
       "bytes": 6213,
       "path": "artifacts/sprints/sprint-11/story-11.1/operational-schema-v3.json",
-      "sha256": "6264634731955e43b8ae11fe94f74b0f122a0661c1ac4048f5461cbbd3394e34"
+      "sha256": "5bbbd4f1808fa43461b1ef3e76ea0376826aeb36f12e95f56b79377b48086d76"
     },
     {
       "bytes": 3761,
@@ -114,7 +114,7 @@
     {
       "bytes": 4117,
       "path": "artifacts/sprints/sprint-11/story-11.1/s-011-rt01.json",
-      "sha256": "ceac3ab1ac23cdb16ca77cd3ecb75698facab99ff6e22fe65d30e013d2388b91"
+      "sha256": "bab6d5e452c0a964bd96a95919d1f36d28d8414f02c4db9b5dc3d7f8d3715b35"
     },
     {
       "bytes": 4286,
@@ -124,7 +124,7 @@
     {
       "bytes": 6202,
       "path": "artifacts/sprints/sprint-11/story-11.1/s-011-ut01.json",
-      "sha256": "388c53d3ed29d7be660bb9c07ab42c4906e49d8e6a67ccadc0727f9febb3759c"
+      "sha256": "cbab5890e58b180ae431e620b67920d5cb382b614d5a974f05c409fbda1cbdf9"
     },
     {
       "bytes": 4667,
@@ -149,7 +149,7 @@
     {
       "bytes": 17136,
       "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
-      "sha256": "f4db2b077dcad2c1e49d2a831d834833ed1790a45cee99a30a1cdda8eb6970bc"
+      "sha256": "cd5a42396f733a42bb7b66a74f44a4fd4862981cc61058673e0cb1c1e19f80d5"
     },
     {
       "bytes": 51,
@@ -471,7 +471,7 @@
   "product_requirement_completion_claim": "none",
   "release_claim": "none",
   "schema_version": 1,
-  "source_revision": "f05a0ded9d107a7ce91c308b9ba9ccb470aa4fc0",
+  "source_revision": "cc8d5c2d558787a485bdea1d19725c1495e34639",
   "status": "pass-story-security-mapping-with-open-product-controls",
   "summary": {
     "demonstrated_story_scope_count": 7,
