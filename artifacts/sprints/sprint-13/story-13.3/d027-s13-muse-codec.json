@@ -43,7 +43,7 @@
       ],
       "exit_code": 0,
       "id": "muse-edge-codec",
-      "output_sha256": "602f55f23a6d63ebf28d9853073f63f7def6aefbb452a667da78b0dc3745f879"
+      "output_sha256": "0cadbe77b51ccd52d1ad35543a6af8f8f59d387bb74da80fda06e3bb3d691bbe"
     },
     {
       "argv": [
@@ -56,7 +56,7 @@
       ],
       "exit_code": 0,
       "id": "native-transport-diagnostics",
-      "output_sha256": "e7055a104251ead9774d5c756e8484618f238be6592ab2020b6bda0f40b42c13"
+      "output_sha256": "792f5b43ecf01e22ee11a69637dfdd4abf5aaece74d6116380a9e8ebbe65e5c8"
     },
     {
       "argv": [
@@ -69,7 +69,7 @@
       ],
       "exit_code": 0,
       "id": "generic-codec",
-      "output_sha256": "8985658f5f68134ae568b373469efa46f1e53f7b0e686d06368ce79d21af7b15"
+      "output_sha256": "1abae4a54937db7cfa8975e5c41e883a17385469bc2bbb815376a1eb020802e1"
     },
     {
       "argv": [
@@ -82,7 +82,7 @@
       ],
       "exit_code": 0,
       "id": "bounded-response",
-      "output_sha256": "30ab82c7e86b2994b3929b6098bf9b5f089c94d79b395b7b21fceeb5df582031"
+      "output_sha256": "15a1a1436ba1614522d8f19090eecc2d800a974fc8db22633092ab88f25084d8"
     },
     {
       "argv": [
@@ -95,7 +95,7 @@
       ],
       "exit_code": 0,
       "id": "fake-family-parity",
-      "output_sha256": "702e478b7d47687c2306052c0bd92f45fd799996b435bd9dbd710a38b07963fc"
+      "output_sha256": "00cd779dab416f5214dc2c0e22f47decc924f3293309b0c3fb2c2cfee8ea45e1"
     }
   ],
   "diagnostics": [
@@ -235,11 +235,11 @@
   "production_kernel_family_references": [],
   "record_type": "d027_s13_muse_codec_evidence",
   "schema_version": 3,
-  "source_revision": "4aa7d5c053406479f83ddb4fb8f228f7abbb6256",
+  "source_revision": "54816cae7c10d2bf0013e34c218fc44319ca37bb",
   "source_sha256": {
     "kernel/contracts/src/model.rs": "1a19f680cc1468be94930632e4a67ba50f0c16eaf47802ae7ecd65df2ca1695c",
     "kernel/engine/src/accounting_provider.rs": "f0292afed85e4dc1d617061de010622b913749caed5e4620503634c29ef485f4",
-    "kernel/engine/src/action_history.rs": "ed1874de6488d3f9f90351904c8c03f26e85f5839d86c819ff0187b628051380",
+    "kernel/engine/src/action_history.rs": "f8048f08361fd3956d769ae6ba58af6122ff3923343a886374ce90110ad23c0a",
     "kernel/engine/src/actual_budget_adapter.rs": "b95d072f0109201f91416429406682cad53e48ec7f974ea6a1e5ca11dd567cf5",
     "kernel/engine/src/advisory_policy.rs": "19f14f0a0e3b12237bc2fc22353c6341ceeda001eb1d35d9e913192f76edc7b2",
     "kernel/engine/src/agent_ceiling.rs": "b7ed6f7535ffb3c65c6fc807800429b8c81ac5f335f90da7d810668c5eb9623b",
@@ -293,7 +293,7 @@
     "kernel/engine/src/engineering_mode.rs": "4221d85733295634f602ecf2deb94dd7ff9190e1cbad8d2f09f06de70a1ed260",
     "kernel/engine/src/engineering_persistence.rs": "9a0d4b361cef36fd19ced65950ea4f5c1d24ff9bc90d6aa44daaebbd61303ffa",
     "kernel/engine/src/engineering_plan.rs": "2089ec4cadfa105f225f3d4cf1499778654bd2928fe4ee25a2b47a462ed4c236",
-    "kernel/engine/src/engineering_recipe.rs": "d4f35fb46e2ae92722b51363bf74b99be6ad84333bdc8249ffd449baea92150a",
+    "kernel/engine/src/engineering_recipe.rs": "1d5862926adfedb7ce3f9a4368560b174175737895b46f2788dbc9dad10c9ea2",
     "kernel/engine/src/engineering_records.rs": "0edd44976cdc3fc7f65de9e65f5b5d5ae4f845e4f598bf4411bf8acd75a1f398",
     "kernel/engine/src/evidence_bundle.rs": "95945112e0a009c827825f4be463a15257094579f0ff12012d65364657f34d55",
     "kernel/engine/src/evidence_reconciliation.rs": "25e0f0af506aeb3da4dce2b87369b2c2cad6f6da90b9793360f1edbad4519b3a",

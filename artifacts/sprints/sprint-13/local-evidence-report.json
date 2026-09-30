@@ -27,7 +27,7 @@
       ],
       "exit_code": 0,
       "id": "model-contracts",
-      "output_sha256": "033dfecaaebacda351224e8d7b0565beb1b9b3c3c168bf87f6e4ffeaf8463673",
+      "output_sha256": "0e0e46ba5854b2b2b44577b1c7428962b66e32fe73f468e00be60c7dec1e266c",
       "story_id": "13.1"
     },
     {
@@ -40,7 +40,7 @@
       ],
       "exit_code": 0,
       "id": "model-engine",
-      "output_sha256": "ce2827db460435323e8cb49ecbd7cb98aaf92d185792770c91a788026c4c0588",
+      "output_sha256": "aead0ef7c2b119564def46104ad44cdb9da6de267af8e23e9e9719b32a68b7f0",
       "story_id": "13.1"
     },
     {
@@ -53,7 +53,7 @@
       ],
       "exit_code": 0,
       "id": "linux-native-adapter",
-      "output_sha256": "0ffb95358249594141f27d028ed8c8ea8c109b22120781874047e43a99a0b378",
+      "output_sha256": "510d801120427d04a79820d5d1c75d3c8a7385a4b59a462d544d7f52fc29aa1c",
       "story_id": "13.1"
     },
     {
@@ -65,7 +65,7 @@
       ],
       "exit_code": 0,
       "id": "model-json-contracts",
-      "output_sha256": "706717f2eeffb70458f241a84f72db5ec333ebf6591d3b837420a099a87ad664",
+      "output_sha256": "cdc7e0c4909c9f6f94f324c0c2a08cd92a954ff2b0759fd20d5ed6d04abc7b33",
       "story_id": "13.1"
     },
     {
@@ -84,7 +84,7 @@
       ],
       "exit_code": 0,
       "id": "model-policy-evidence",
-      "output_sha256": "a00c26eb6c01b4fe63de835cef97f61d6678ee5245e138b3a38a0ef6438dfb65",
+      "output_sha256": "bd937dffbb33550628b2a6b17ffe08ea7eefa09a252bf1881f9090eb22295ab0",
       "story_id": "13.2"
     }
   ],
@@ -92,14 +92,14 @@
     "artifacts/sprints/sprint-13/story-13.1/finish-usage-report.json": "f4902131f2ca3322bc424a9af280a795769d44be499345997b2929c56041bfa3",
     "artifacts/sprints/sprint-13/story-13.1/muse-native-adapter-contract-v2.json": "9c4980f2167f052c4da1a063f470bb1d5852b616247d3b6dc507910eddedaf19",
     "artifacts/sprints/sprint-13/story-13.2/linux-cross-adapter-parity.json": "6733691ce2a645dec00fc7dfec22403d82d1daf00bf1970d69b8ff3752ce1503",
-    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "9748586e720aca548f6885aec1a156c7f3d3a34c9958ea466b3e73a142f9b05f",
+    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "202f0129b757a8770cbc16f2f8c8b4cd30163d7134306e2fe9fa5583bf830564",
     "artifacts/sprints/sprint-13/story-13.3/muse-live-install.json": "91826d99f497a212ab32f87176a5b034a8b7e1fe510c9a12a05d95fc38a8dd18",
     "artifacts/sprints/sprint-13/story-13.3/muse-profile-evaluation.json": "88f560db0a1486f39a1004a0cd88e699948d194bf9221ee6e1a6d037c2e5b670",
     "artifacts/sprints/sprint-13/story-13.3/muse-sandbox-inference.json": "07260b4b60bc5d19d986fdea9bea807b3aa9e0cc543e0ce3a145a3c56a0bd547",
     "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-report.json": "b5e3714bac148fb5fc6657f53fab753d57e30a151db2fd8dcce9e6bf43285761",
     "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json": "571913bbf14d520847118a6988edecef0950be0118ea8392dfca33718bf76a75",
     "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json": "1230b416221d7e28b3ff038a3b9bd8eca972220eb1549763b4b0d68b1416ed69",
-    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "a5d4c079b03ccff751f500e3704a509ff8e4360cdad73621191966e79bcee27b"
+    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "ac100f6fbabb2e015fe51d9c177bebb0d3a1564818315cf38e0d13a2bf91ca34"
   },
   "evidence_state": {
     "adapter_contract": "CONTRACT-PASS-LIVE-BLOCKED",
@@ -175,7 +175,7 @@
       "SR-MGM-004"
     ]
   },
-  "source_revision": "4aa7d5c053406479f83ddb4fb8f228f7abbb6256",
+  "source_revision": "54816cae7c10d2bf0013e34c218fc44319ca37bb",
   "source_sha256": {
     "kernel/contracts/src/agent.rs": "c8cc0af7aa697ba6fb0ef0be8bafc8c2100c910169ee6f9fa2a2807ba48243c5",
     "kernel/contracts/src/agent_proposal.rs": "cd77cca5b9a6c6fd64c54053e9bdae5233cf50942c111c52fefba0945998519f",
@@ -223,7 +223,7 @@
     "kernel/contracts/src/transaction.rs": "98870b0926eaa3e5d32562779ce395bc6df5c98f5f3abc3511d037c78b6ff4ef",
     "kernel/contracts/src/workspace_snapshot.rs": "136e67fd70c721d856a8a005a024f1bd13d7160a7f3f69a76b05e8571a140a09",
     "kernel/engine/src/accounting_provider.rs": "f0292afed85e4dc1d617061de010622b913749caed5e4620503634c29ef485f4",
-    "kernel/engine/src/action_history.rs": "ed1874de6488d3f9f90351904c8c03f26e85f5839d86c819ff0187b628051380",
+    "kernel/engine/src/action_history.rs": "f8048f08361fd3956d769ae6ba58af6122ff3923343a886374ce90110ad23c0a",
     "kernel/engine/src/actual_budget_adapter.rs": "b95d072f0109201f91416429406682cad53e48ec7f974ea6a1e5ca11dd567cf5",
     "kernel/engine/src/advisory_policy.rs": "19f14f0a0e3b12237bc2fc22353c6341ceeda001eb1d35d9e913192f76edc7b2",
     "kernel/engine/src/agent_ceiling.rs": "b7ed6f7535ffb3c65c6fc807800429b8c81ac5f335f90da7d810668c5eb9623b",
@@ -277,7 +277,7 @@
     "kernel/engine/src/engineering_mode.rs": "4221d85733295634f602ecf2deb94dd7ff9190e1cbad8d2f09f06de70a1ed260",
     "kernel/engine/src/engineering_persistence.rs": "9a0d4b361cef36fd19ced65950ea4f5c1d24ff9bc90d6aa44daaebbd61303ffa",
     "kernel/engine/src/engineering_plan.rs": "2089ec4cadfa105f225f3d4cf1499778654bd2928fe4ee25a2b47a462ed4c236",
-    "kernel/engine/src/engineering_recipe.rs": "d4f35fb46e2ae92722b51363bf74b99be6ad84333bdc8249ffd449baea92150a",
+    "kernel/engine/src/engineering_recipe.rs": "1d5862926adfedb7ce3f9a4368560b174175737895b46f2788dbc9dad10c9ea2",
     "kernel/engine/src/engineering_records.rs": "0edd44976cdc3fc7f65de9e65f5b5d5ae4f845e4f598bf4411bf8acd75a1f398",
     "kernel/engine/src/evidence_bundle.rs": "95945112e0a009c827825f4be463a15257094579f0ff12012d65364657f34d55",
     "kernel/engine/src/evidence_reconciliation.rs": "25e0f0af506aeb3da4dce2b87369b2c2cad6f6da90b9793360f1edbad4519b3a",
