@@ -1,0 +1,10 @@
+.............................inventory does not reproduce
+............
+----------------------------------------------------------------------
+Ran 41 tests in 2.190s
+
+OK
+{"counts": {"current": 1, "newly-stale": 1, "previously-stale-or-historical": 1}, "newly_stale_artifacts": ["evidence/bound.json"]}
+{"counts": {"current": 1, "newly-stale": 1, "previously-stale-or-historical": 1}, "newly_stale_artifacts": ["evidence/bound.json"]}
+{"record": "fixture-verification", "stages": 1}
+{"record": "fixture-verification", "stages": 1}
