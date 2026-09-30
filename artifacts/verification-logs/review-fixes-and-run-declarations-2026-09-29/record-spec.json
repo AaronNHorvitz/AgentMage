@@ -1,0 +1,191 @@
+{
+ "record_type": "agentmage-review-fixes-and-run-declarations-verification",
+ "date": "2026-09-29",
+ "base_commit": "435f3416a9fbd4525071faba6f8aef75bc79f6f5",
+ "head_commit": "b3f21bf3ce9fc4bf1b3afcd440df1b3f45b30bed",
+ "source_commit": "46119d0324f659d6eaa684ab56452a11a436a107",
+ "retained_logs": "artifacts/verification-logs/review-fixes-and-run-declarations-2026-09-29",
+ "stages": [
+  "batch8-source-checks",
+  "batch8-core",
+  "batch8-codec",
+  "batch8-rebind",
+  "batch8-gate",
+  "batch8-boundary",
+  "batch8-security-index",
+  "batch8-codec-remainder",
+  "batch8-sprint-13",
+  "batch8-blocked-causes",
+  "batch8-observation"
+ ],
+ "inventory": "artifacts/verification-logs/review-fixes-and-run-declarations-2026-09-29/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch8-source-checks/02.log",
+  "engine": "batch8-source-checks/03.log",
+  "repository_map": "batch8-source-checks/04.log",
+  "inference": "batch8-source-checks/05.log",
+  "linux": "batch8-source-checks/06.log",
+  "host": "batch8-source-checks/07.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0115-review-fixes-for-hunk-selection.md",
+   "docs/decisions/0116-run-declarations-for-recoverability-and-context.md"
+  ],
+  "review_resolved": "independent review of 435f3416 (PASS; V1 and V2 medium, V3-V10 low); every finding is addressed in 46119d03 under Decision 0115, and Decision 0114 is corrected where it overstated the replaced boundary check and the selection binding",
+  "components": {
+   "review_fixes": "trusted never-decoded whole-file replacement edit in the structured planner, used by selected and inverse writes, and binding of the derived write before Narrowed (V1); immutable request proposal class at the one dispatch site and a stricter Story 23.4 check (V2); derived calls only to registered shell-only tools and the pending approval's recorded class (V3); injectable file read for the Linux narrowing derivation with pure tests (V4); blocked-cause stage for the still-blocked refreshes (V5); bounded discard of over-long development lines (V6); refusal of unoffered tools before any budget (V7); one job-ledger entry kept for an accepted cancellation (V8); outcome-dependent derived-write notice (V9); reserved derived call identities (V10)",
+   "AMR-04.7.1": "shells/host/src/coding_recoverability.rs (ExecutedEffectKind, ExecutedEffectOutcome, run_effects, RunEffectRecorder, assess_run_recoverability, verify_run_recoverability, run-scoped rendering); shells/host/src/linux_coding_runtime.rs records each executed call and each published change record and declares the run (RunRecoverabilitySource); shells/host/src/linux_coding.rs current_file_sha256 through the held worktree; kernel/engine/src/runtime_loop.rs ended_tool_boundary; transport run_declarations, IPC wire version 6, live service worker command; CLI verification and display",
+   "AMR-04.4.1": "shells/host/src/coding_context.rs keeps the inspection of each returned context (RunContextInspectionSource, at most 64); kernel/engine/src/runtime_loop.rs ended_context_port; serializable ContextInspection; the same run_declarations path; CLI display of each view in both formats"
+  },
+  "mutation_checks": "not separately run in this batch; each new regression test was written against the reviewed failure (for example the unparsable selection, the rebinding mutants and the running-job cancellation bound)",
+  "failure_comparison": "linux 188 passed, 19 failed, 51 ignored and host 338 passed, 52 failed, 10 ignored; both failure name sets are identical to the batch 7 source-check baseline; every new test passes",
+  "retained_failures": [
+   {
+    "stage": "batch8-source-checks",
+    "indexes": [
+     6,
+     7
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, identical names to the batch 7 baseline"
+   },
+   {
+    "stage": "batch8-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless Chrome in the Puppeteer cache; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   }
+  ],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch8-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the 52 native-prerequisite host failures (batch8-source-checks/07.log; product:test runs the same workspace tests)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch8-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch8-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch8-blocked-causes/03.log) and the documentation gate as above"
+   }
+  ],
+  "record_corrections": [
+   {
+    "record": "docs/verification/review-fixes-and-hunk-selection-2026-09-29.md",
+    "said": "The checker change is at least as strict as the literal check",
+    "correction": "it accepted a rebound variable at the dispatch site (review V2); Decision 0115 replaced it and Decision 0114 is corrected"
+   },
+   {
+    "record": "docs/verification/review-fixes-and-hunk-selection-2026-09-29.json",
+    "said": "blocked-refresh causes for Story 23.5, Sprint 23, 24 and 50",
+    "correction": "those four causes were asserted, not shown by their retained logs (review V5); batch8-blocked-causes shows them, and the Mermaid cause is a missing headless browser in the Puppeteer cache rather than a failed launch"
+   },
+   {
+    "stage": "batch8-sprint-13",
+    "note": "the first batch 8 Sprint 13 renewal (batch8-codec) ran before the Muse early disposition it binds; batch8-sprint-13 renewed it and the context profile again in dependency order"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-capability-repository-map",
+   "agentmage-host",
+   "agentmage-kernel-engine",
+   "agentmage-platform-linux"
+  ],
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "e4713bc9f3027b602a50cfb60be32b85e25f46f9",
+    "to": "8f0fab59dcbe56a01040f0d52e62e9256a65eaa8",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "reason": "Decision 0115 (review V2, V3, V7, V10): immutable proposal class at the one dispatch site, derived calls only to shell-only tools, refusal of unoffered tools and reserved call identities before any budget; Decision 0116: read-only post-outcome boundary and context accessors; independent review of this batch is requested separately, not claimed by this pin"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 8 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 8 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+      "reason": "regenerated by the batch 8 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 8 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+     }
+    ]
+   }
+  ],
+  "checker_change": "scripts/runtime_coordinator_boundary_review.py: model-proposal-is-inert now also requires that request_tool takes the request immutably, never rebinds or assigns it or its class, names the class only as requested.origin, and has the exact dispatch line once (Decision 0115); its unit test refuses the three rebinding mutants from the review and three more",
+  "newly_stale_disposition": "artifacts/sprints/sprint-45/source-boundary-review.json, already stale since 68a83c08 (package_scaffold.rs) and bound to the stale Sprint 45 local evidence, is kept historical; the rest are historical verification records and earlier retained stage records that pin inputs as they were",
+  "runtime_campaign": "Story 23.4 runtime campaign peak RSS 12,400 to 50,680 KiB against a 1,048,576 KiB bound over nine commands",
+  "cli_observation": {
+   "source_commit": "b3f21bf3ce9fc4bf1b3afcd440df1b3f45b30bed",
+   "binaries_sha256": {
+    "agentmage": "328e4f6e1a730d30d94a40cbbe75ea06ff047c812cbe9e9892b4b1790404408c",
+    "agentmage-host": "ec87d0647e3f9144b2f74ee1abb3126ea6c6b1aa3dc9ef92bf0603326d17b243",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "dirty_start_exit": 1,
+   "dirty_preserved": true,
+   "qualification": "actual-binary-native-prerequisite-refusal-only",
+   "run_declarations_displayed": false,
+   "reason": "native prerequisites refuse the launch before any run, so no run declaration, selection or derived write is exercised in this lane",
+   "attachment": "batch8-observation/attachments/observation.json"
+  },
+  "not_run": [
+   "actual-process display of run declarations and context views (AMR-04.7.2, AMR-04.10)",
+   "actual-process hunk selection on a native host (AMR-04.2.3)",
+   "the native-only Linux boundary tests, including the recording and declaration glue",
+   "durable job control over IPC (AMR-04.6)",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [
+    {
+     "row": "AMR-04.7.1",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component, host-unit, wire and CLI row; the Linux boundary glue runs only on a native host and the actual-process proof and session scope are AMR-04.7.2"
+    },
+    {
+     "row": "AMR-04.4.1",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component, host-unit, wire and CLI row; actual-process display is AMR-04.10"
+    }
+   ],
+   "release_claim": "none",
+   "independent_review_of_this_batch": "requested; open"
+  }
+ }
+}

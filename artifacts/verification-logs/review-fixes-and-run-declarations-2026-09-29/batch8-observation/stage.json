@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "stage": "batch8-observation",
+  "source_revision": "b3f21bf3ce9fc4bf1b3afcd440df1b3f45b30bed",
+  "scope": "Rebuild the actual CLI, host and read-only worker at the clean batch 8 evidence revision and observe setup, diagnosis, the scripted start, status and idle stop in fresh disposable roots, plus the refusal of a fixture with pre-existing work; native prerequisites are expected to refuse the start.",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "python3",
+      "<state>/batch8-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "7f2b7e1751140d6cebb67b24205cc1cfbcb2aedbdda8f0408b05a70ef71c3593",
+      "private_sha256": "f6e4a6530fc937232b99e326c6d9da6ef287f0f43ec5cdecefa3fbaa76c67765"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 13.77,
+      "log": "01.log",
+      "log_sha256": "3ab0445b08e4b726773ab41b8f116636b100f412a587eff3a0adb6fbac6b77af",
+      "private_log_sha256": "c38bd349c1757c829d5b77ff2377914224d8f877be9c43b15ded201ddc98485c"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "<state>/batch8-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 1.731,
+      "log": "02.log",
+      "log_sha256": "e839d9d23fe35a0f21047865dcec5f3bcd1488565ec69f99aaadd9327707b5fe",
+      "private_log_sha256": "e839d9d23fe35a0f21047865dcec5f3bcd1488565ec69f99aaadd9327707b5fe"
+    }
+  ]
+}

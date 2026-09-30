@@ -1,0 +1,136 @@
+{
+  "schema_version": 2,
+  "stage": "batch8-sprint-13",
+  "source_revision": "e820d50c914e589307329d648dbf9424a4ee8e44",
+  "scope": "Sprint 13 local evidence after the renewed Muse early disposition, then the Story 13.4 context profile report that binds it (dependency order: codec, early disposition, Sprint 13, context profile).",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/sprint_13_evidence.py",
+      "--write",
+      "--source-revision",
+      "e820d50c914e589307329d648dbf9424a4ee8e44"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_sprint_13_evidence"
+    ],
+    [
+      "python3",
+      "scripts/story_13_4_context_profile_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_13_4_context_profile_evidence"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/sprint_13_evidence.py": "f243bc34fbc9ac0ec4da74d8965100bad2fca639ddf74d5184e2730ca41218f1",
+    "scripts/story_13_4_context_profile_evidence.py": "feb7505c12090d9b0961bb00e53a88feaf23065424736bfbcd045b7a30615d6d",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_sprint_13_evidence.py": "88d5725da16cd3e1a794920ebbc1deac93a2fdc03a25ea0a4ba232130158a3e2",
+    "tests/test_story_13_4_context_profile_evidence.py": "122fdbd92ca3c32152e0e21b1af3d8207f43f3f3d96528bab2b48c5a286254e3"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/sprint_13_evidence.py",
+        "--write",
+        "--source-revision",
+        "e820d50c914e589307329d648dbf9424a4ee8e44"
+      ],
+      "exit_code": 0,
+      "seconds": 105.801,
+      "log": "01.log",
+      "log_sha256": "80457ccc5c51f38b35dc2255d88c0fd06740d4b2948155d7313219be9eb80659",
+      "private_log_sha256": "80457ccc5c51f38b35dc2255d88c0fd06740d4b2948155d7313219be9eb80659"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_13_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 2.626,
+      "log": "02.log",
+      "log_sha256": "9d6e66322e1f5fed2b9153cd9e1eb8a7ac05765cb0a773a6d7039d06d3505840",
+      "private_log_sha256": "9d6e66322e1f5fed2b9153cd9e1eb8a7ac05765cb0a773a6d7039d06d3505840"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/story_13_4_context_profile_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.303,
+      "log": "03.log",
+      "log_sha256": "7023a5bb989a18088e85c0187fdf7d7c4cfbabc27bae8ef733086f002259cad0",
+      "private_log_sha256": "7023a5bb989a18088e85c0187fdf7d7c4cfbabc27bae8ef733086f002259cad0"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_13_4_context_profile_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.07,
+      "log": "04.log",
+      "log_sha256": "eb8c88bdf6d7bffd457b38469078be30b7e97db745e82c5f24162939bad78be2",
+      "private_log_sha256": "eb8c88bdf6d7bffd457b38469078be30b7e97db745e82c5f24162939bad78be2"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.079,
+      "log": "05.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 6,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.007,
+      "log": "06.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

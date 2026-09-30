@@ -1,0 +1,383 @@
+{
+  "schema_version": 2,
+  "stage": "batch8-source-checks",
+  "source_revision": "46119d0324f659d6eaa684ab56452a11a436a107",
+  "scope": "Full source checks at the exact batch 8 source commit before any evidence write: fmt, contracts, engine, repository map, inference, Linux and host suites (the known native-prerequisite failures continue and must equal the batch 7 baseline), clippy, Python units, audits, task graph, docs validation, Markdown lint and diff check.",
+  "planned_commands": [
+    [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-kernel-contracts"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-kernel-engine"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-capability-repository-map"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux-inference"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux",
+      "--no-fail-fast"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "--no-fail-fast"
+    ],
+    [
+      "cargo",
+      "clippy",
+      "--workspace",
+      "--all-targets",
+      "--locked",
+      "--offline",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_rust_test_ownership",
+      "tests.test_muse_codec_evidence",
+      "tests.test_evidence_core",
+      "tests.test_sprint_13_evidence",
+      "tests.test_amendment_work_selection",
+      "tests.test_remaining_plan_blocker_audit",
+      "tests.test_strict_local_source_audit",
+      "tests.test_verification_batch"
+    ],
+    [
+      "python3",
+      "scripts/strict_local_source_audit.py"
+    ],
+    [
+      "python3",
+      "scripts/effect_boundary.py"
+    ],
+    [
+      "python3",
+      "scripts/hostile_network_injection_gate.py"
+    ],
+    [
+      "python3",
+      "scripts/task_graph.py"
+    ],
+    [
+      "python3",
+      "scripts/validate_docs.py"
+    ],
+    [
+      "npm",
+      "run",
+      "docs:lint"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [
+    6,
+    7
+  ],
+  "sources": {
+    "scripts/effect_boundary.py": "799d423fa9e9b90799fac26f6936de6d27875566034239210f131cc23be20093",
+    "scripts/hostile_network_injection_gate.py": "2437a87078c9b7ce064de7fd120c3cc3fc0dff4562987d241156a6fca078f4ee",
+    "scripts/strict_local_source_audit.py": "07f3748f12fb5f01f867d356f0c3071b0e8ed0719b0e2b64401fa10e981f495c",
+    "scripts/task_graph.py": "897829d84ada8e965101b38cd1763a23501fa45081c152d803ea74f2a8713f7b",
+    "scripts/validate_docs.py": "73ffa14016dd89a5b7959827e12762422c6881ae0ec6465585e2901f2e2f1dfb",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_amendment_work_selection.py": "6daa6be65b5dc7d596f136dec78cf4b6358685594ad9d0a72b820c1de0781fcd",
+    "tests/test_evidence_core.py": "20bf41f20ce5c19e3a90efcd9caa32e252f17a303cc23a2b4274df210dad150a",
+    "tests/test_muse_codec_evidence.py": "ff315ed909e1d49c48b22cdf426b0234f8e7c7797ccd850ed98c93b839aab62f",
+    "tests/test_remaining_plan_blocker_audit.py": "04497ba56432ac722b7eccde0243b5a35c830d827ab6e179503bb5fbd36d44e8",
+    "tests/test_rust_test_ownership.py": "3d05c65b512cebc0dd37671612073ae6cf21b89281430a846920c10e758a7cd2",
+    "tests/test_sprint_13_evidence.py": "88d5725da16cd3e1a794920ebbc1deac93a2fdc03a25ea0a4ba232130158a3e2",
+    "tests/test_strict_local_source_audit.py": "883671312c87b67b3d83b9b2f28e3e4a394b8c991baef424940f516749f17eca",
+    "tests/test_verification_batch.py": "f578cab015f8548aa30cb46dd39bec7e759282e2b18460f4eef9c249e2801d38"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 2.025,
+      "log": "01.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-kernel-contracts"
+      ],
+      "exit_code": 0,
+      "seconds": 1.408,
+      "log": "02.log",
+      "log_sha256": "f7fe02917ebfc7c92e33aa2e77ae34c5f85bbea7ddd863198eec1eaa790ebd17",
+      "private_log_sha256": "f7fe02917ebfc7c92e33aa2e77ae34c5f85bbea7ddd863198eec1eaa790ebd17"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-kernel-engine"
+      ],
+      "exit_code": 0,
+      "seconds": 89.427,
+      "log": "03.log",
+      "log_sha256": "00594efbbd594e89f6aa235b39e8645f78ff6c8766d72c3a721910cd54458c95",
+      "private_log_sha256": "00594efbbd594e89f6aa235b39e8645f78ff6c8766d72c3a721910cd54458c95"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-capability-repository-map"
+      ],
+      "exit_code": 0,
+      "seconds": 16.859,
+      "log": "04.log",
+      "log_sha256": "6dc9211e9e6b948d15d2dcbd80e1858a6f89f97a6338dc21cb7b72c94edc0576",
+      "private_log_sha256": "6dc9211e9e6b948d15d2dcbd80e1858a6f89f97a6338dc21cb7b72c94edc0576"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux-inference"
+      ],
+      "exit_code": 0,
+      "seconds": 1.236,
+      "log": "05.log",
+      "log_sha256": "2caa7b5e747b204f86ee0d44d6d0e7294c4c9c7f7aacecfddecde24afaa1b7e0",
+      "private_log_sha256": "2caa7b5e747b204f86ee0d44d6d0e7294c4c9c7f7aacecfddecde24afaa1b7e0"
+    },
+    {
+      "index": 6,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux",
+        "--no-fail-fast"
+      ],
+      "exit_code": 101,
+      "seconds": 16.372,
+      "log": "06.log",
+      "log_sha256": "726c7b98eca6117a521d5909cc6ccc8168143dc753991c003d41970a2ec45ba9",
+      "private_log_sha256": "726c7b98eca6117a521d5909cc6ccc8168143dc753991c003d41970a2ec45ba9"
+    },
+    {
+      "index": 7,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "--no-fail-fast"
+      ],
+      "exit_code": 101,
+      "seconds": 21.987,
+      "log": "07.log",
+      "log_sha256": "e21642f24645c288e76376c6265724b033c672d238b1dd885ce2fa67baffea29",
+      "private_log_sha256": "e21642f24645c288e76376c6265724b033c672d238b1dd885ce2fa67baffea29"
+    },
+    {
+      "index": 8,
+      "argv": [
+        "cargo",
+        "clippy",
+        "--workspace",
+        "--all-targets",
+        "--locked",
+        "--offline",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "seconds": 0.137,
+      "log": "08.log",
+      "log_sha256": "59639588a6f1826f129cbcd121edc07279dab94786f5fa5bde6b3439b2e845cc",
+      "private_log_sha256": "59639588a6f1826f129cbcd121edc07279dab94786f5fa5bde6b3439b2e845cc"
+    },
+    {
+      "index": 9,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_rust_test_ownership",
+        "tests.test_muse_codec_evidence",
+        "tests.test_evidence_core",
+        "tests.test_sprint_13_evidence",
+        "tests.test_amendment_work_selection",
+        "tests.test_remaining_plan_blocker_audit",
+        "tests.test_strict_local_source_audit",
+        "tests.test_verification_batch"
+      ],
+      "exit_code": 0,
+      "seconds": 64.979,
+      "log": "09.log",
+      "log_sha256": "f0893c3172c759629e447309f3b6cc3cfb7096ec8a11433dad7196e7fc7daf39",
+      "private_log_sha256": "f0893c3172c759629e447309f3b6cc3cfb7096ec8a11433dad7196e7fc7daf39"
+    },
+    {
+      "index": 10,
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "exit_code": 0,
+      "seconds": 2.927,
+      "log": "10.log",
+      "log_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710",
+      "private_log_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "index": 11,
+      "argv": [
+        "python3",
+        "scripts/effect_boundary.py"
+      ],
+      "exit_code": 0,
+      "seconds": 2.339,
+      "log": "11.log",
+      "log_sha256": "0a618397c689cb97bdec0479f65fef49c91478cb5de8eff4eadb583a7d00281b",
+      "private_log_sha256": "0a618397c689cb97bdec0479f65fef49c91478cb5de8eff4eadb583a7d00281b"
+    },
+    {
+      "index": 12,
+      "argv": [
+        "python3",
+        "scripts/hostile_network_injection_gate.py"
+      ],
+      "exit_code": 0,
+      "seconds": 8.816,
+      "log": "12.log",
+      "log_sha256": "1de6fd57283816a6a0fb967947ec48087406ba2eed70bacbd8f6c2480587bc6b",
+      "private_log_sha256": "1de6fd57283816a6a0fb967947ec48087406ba2eed70bacbd8f6c2480587bc6b"
+    },
+    {
+      "index": 13,
+      "argv": [
+        "python3",
+        "scripts/task_graph.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.091,
+      "log": "13.log",
+      "log_sha256": "15d8e0e14132186c2378805e2280d68427986ed9055a3aabafe08fd3c76d916a",
+      "private_log_sha256": "15d8e0e14132186c2378805e2280d68427986ed9055a3aabafe08fd3c76d916a"
+    },
+    {
+      "index": 14,
+      "argv": [
+        "python3",
+        "scripts/validate_docs.py"
+      ],
+      "exit_code": 0,
+      "seconds": 131.761,
+      "log": "14.log",
+      "log_sha256": "aa1d865ee3e2dd648d1f1b78f336a48e530934122abccfd29aa271b7a0ea0512",
+      "private_log_sha256": "aa1d865ee3e2dd648d1f1b78f336a48e530934122abccfd29aa271b7a0ea0512"
+    },
+    {
+      "index": 15,
+      "argv": [
+        "npm",
+        "run",
+        "docs:lint"
+      ],
+      "exit_code": 0,
+      "seconds": 2.931,
+      "log": "15.log",
+      "log_sha256": "38ad7812ef1951a6b82ea394bed4cfa7fb9412c73576ced5c334a9a2bc2f806a",
+      "private_log_sha256": "38ad7812ef1951a6b82ea394bed4cfa7fb9412c73576ced5c334a9a2bc2f806a"
+    },
+    {
+      "index": 16,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.003,
+      "log": "16.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

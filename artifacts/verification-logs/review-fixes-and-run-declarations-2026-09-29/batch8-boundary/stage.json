@@ -1,0 +1,96 @@
+{
+  "schema_version": 2,
+  "stage": "batch8-boundary",
+  "source_revision": "4e491c40112fabe906a390b4e95ff14673527596",
+  "scope": "Story 23.4 coordinator boundary review at the committed batch 8 revision, with the Decision 0115 inert-proposal check that requires the request's own immutable proposal class at the one dispatch site.",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/runtime_coordinator_boundary_review.py",
+      "--write",
+      "--source-revision",
+      "4e491c40112fabe906a390b4e95ff14673527596"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_runtime_coordinator_boundary_review"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/runtime_coordinator_boundary_review.py": "65b52954f3f4d4cc27328be8f737b8d767135fec63fc5140b6a114c07b72ebbb",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_runtime_coordinator_boundary_review.py": "b71cf85792bd4ea9f5ad0374d141879da4b6bbd5af28e66bfbe9d483dbae6a00"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/runtime_coordinator_boundary_review.py",
+        "--write",
+        "--source-revision",
+        "4e491c40112fabe906a390b4e95ff14673527596"
+      ],
+      "exit_code": 0,
+      "seconds": 0.198,
+      "log": "01.log",
+      "log_sha256": "12e5f18700dcee14ba8872ea560140559231e000e4b25901ace92189f4c0e293",
+      "private_log_sha256": "12e5f18700dcee14ba8872ea560140559231e000e4b25901ace92189f4c0e293"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_runtime_coordinator_boundary_review"
+      ],
+      "exit_code": 0,
+      "seconds": 0.829,
+      "log": "02.log",
+      "log_sha256": "60ec9bf4121ddeb66bd8e5752505aa1274c3ae12c995f25fee3bcbbe3acd6987",
+      "private_log_sha256": "60ec9bf4121ddeb66bd8e5752505aa1274c3ae12c995f25fee3bcbbe3acd6987"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.081,
+      "log": "03.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.003,
+      "log": "04.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

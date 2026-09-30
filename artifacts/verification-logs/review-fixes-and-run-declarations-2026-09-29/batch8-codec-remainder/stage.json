@@ -1,0 +1,136 @@
+{
+  "schema_version": 2,
+  "stage": "batch8-codec-remainder",
+  "source_revision": "f727d094420986c041048e93a2cc7e5c11efab27",
+  "scope": "Muse early-evaluation disposition and Story 13.4 context profile report, which bind the renewed batch 8 Muse codec report.",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/muse_early_disposition.py",
+      "--write",
+      "--source-revision",
+      "f727d094420986c041048e93a2cc7e5c11efab27"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_muse_early_disposition"
+    ],
+    [
+      "python3",
+      "scripts/story_13_4_context_profile_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_13_4_context_profile_evidence"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/muse_early_disposition.py": "b48215f3b70cfee8e4bf24ab5838e20e2f8c0b325c3a29e003bae904b8900c5f",
+    "scripts/story_13_4_context_profile_evidence.py": "feb7505c12090d9b0961bb00e53a88feaf23065424736bfbcd045b7a30615d6d",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_muse_early_disposition.py": "5b215786474dcf8c4337c41e9144fdcf4231e5738f7b52a68f4624328a434a91",
+    "tests/test_story_13_4_context_profile_evidence.py": "122fdbd92ca3c32152e0e21b1af3d8207f43f3f3d96528bab2b48c5a286254e3"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/muse_early_disposition.py",
+        "--write",
+        "--source-revision",
+        "f727d094420986c041048e93a2cc7e5c11efab27"
+      ],
+      "exit_code": 0,
+      "seconds": 0.035,
+      "log": "01.log",
+      "log_sha256": "1bb05364c5bb717c54e36038673e34d01453f399f775aa76e6b2e02a716861f0",
+      "private_log_sha256": "1bb05364c5bb717c54e36038673e34d01453f399f775aa76e6b2e02a716861f0"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_muse_early_disposition"
+      ],
+      "exit_code": 0,
+      "seconds": 0.061,
+      "log": "02.log",
+      "log_sha256": "cbe4b84d897ac017db0552ccb3a31855ff0fb172bc344c967c4c4c92eb19e624",
+      "private_log_sha256": "cbe4b84d897ac017db0552ccb3a31855ff0fb172bc344c967c4c4c92eb19e624"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/story_13_4_context_profile_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.374,
+      "log": "03.log",
+      "log_sha256": "7023a5bb989a18088e85c0187fdf7d7c4cfbabc27bae8ef733086f002259cad0",
+      "private_log_sha256": "7023a5bb989a18088e85c0187fdf7d7c4cfbabc27bae8ef733086f002259cad0"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_13_4_context_profile_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.073,
+      "log": "04.log",
+      "log_sha256": "eb8c88bdf6d7bffd457b38469078be30b7e97db745e82c5f24162939bad78be2",
+      "private_log_sha256": "eb8c88bdf6d7bffd457b38469078be30b7e97db745e82c5f24162939bad78be2"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.074,
+      "log": "05.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 6,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.008,
+      "log": "06.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

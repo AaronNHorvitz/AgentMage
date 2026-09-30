@@ -1,0 +1,10 @@
+cli-help exit 0
+clean-setup exit 0
+clean-diagnose exit 0
+clean-start exit 5
+clean-status exit 0
+clean-stop-idle exit 1
+dirty-setup exit 0
+dirty-start exit 1
+dirty-status exit 0
+BATCH8_LINUX_OBSERVATION_COMPLETE=1
