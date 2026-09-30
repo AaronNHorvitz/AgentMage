@@ -27,7 +27,7 @@
       ],
       "exit_code": 0,
       "id": "model-contracts",
-      "output_sha256": "f324382defb1aba191639bab88a870fd6987718ea5b3b929500c8371b879ee9c",
+      "output_sha256": "9b68962a417b00484cf23e8fd4464fe10d62f4eb4900ef2b8a615932e77aafe7",
       "story_id": "13.1"
     },
     {
@@ -40,7 +40,7 @@
       ],
       "exit_code": 0,
       "id": "model-engine",
-      "output_sha256": "b1a77ebadb8def31a93db81e9d9100cb588d995637cbb9b7daa859dc0302d303",
+      "output_sha256": "51bcb368137fee04f4f8985bfb9e97562bfb6b4a14d6574c0a25110f0b6941e3",
       "story_id": "13.1"
     },
     {
@@ -53,7 +53,7 @@
       ],
       "exit_code": 0,
       "id": "linux-native-adapter",
-      "output_sha256": "362850b8f8c67858bd63ad1e737dbb83c18364301deb4435bf8420ebda28f7ad",
+      "output_sha256": "c238f747f3cffe165d91717b589d8dba09475ae0d40dff8ae60f44696f8921b6",
       "story_id": "13.1"
     },
     {
@@ -65,7 +65,7 @@
       ],
       "exit_code": 0,
       "id": "model-json-contracts",
-      "output_sha256": "726f3aff0e9b3719e13fc1288982c8cf3526d6b89976e3089cfe1ee94dc95961",
+      "output_sha256": "ba6a65b99cd32ec403f104142b185f5e85238290158711d4e00b0f916694ca3c",
       "story_id": "13.1"
     },
     {
@@ -84,7 +84,7 @@
       ],
       "exit_code": 0,
       "id": "model-policy-evidence",
-      "output_sha256": "4d8244677f510684f42a54b3ceaafedd5913dabce8d3858e5756b7b5c2d8fc0b",
+      "output_sha256": "039eaf0f90536caa4dd1760fb39a94e3001371f1ca2794ca68dbb08d4f2edf7a",
       "story_id": "13.2"
     }
   ],
@@ -92,14 +92,14 @@
     "artifacts/sprints/sprint-13/story-13.1/finish-usage-report.json": "f4902131f2ca3322bc424a9af280a795769d44be499345997b2929c56041bfa3",
     "artifacts/sprints/sprint-13/story-13.1/muse-native-adapter-contract-v2.json": "9c4980f2167f052c4da1a063f470bb1d5852b616247d3b6dc507910eddedaf19",
     "artifacts/sprints/sprint-13/story-13.2/linux-cross-adapter-parity.json": "6733691ce2a645dec00fc7dfec22403d82d1daf00bf1970d69b8ff3752ce1503",
-    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "cb9b647e90127c6e471e00817b1ccc21f1414bc3fcbdbe43a22ff85b6f704cf3",
+    "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "b0c5803fe805dd4085313935b8eafae3e403f244bd8d835988f86dc62874189f",
     "artifacts/sprints/sprint-13/story-13.3/muse-live-install.json": "91826d99f497a212ab32f87176a5b034a8b7e1fe510c9a12a05d95fc38a8dd18",
     "artifacts/sprints/sprint-13/story-13.3/muse-profile-evaluation.json": "88f560db0a1486f39a1004a0cd88e699948d194bf9221ee6e1a6d037c2e5b670",
     "artifacts/sprints/sprint-13/story-13.3/muse-sandbox-inference.json": "07260b4b60bc5d19d986fdea9bea807b3aa9e0cc543e0ce3a145a3c56a0bd547",
-    "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-report.json": "b37bdf28eb6c4093a8a7c9fcc25e129b1f50d0f498c8441d65e47825b878332e",
+    "artifacts/sprints/sprint-13/story-13.4/dispatch-preflight-report.json": "b5e3714bac148fb5fc6657f53fab753d57e30a151db2fd8dcce9e6bf43285761",
     "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json": "571913bbf14d520847118a6988edecef0950be0118ea8392dfca33718bf76a75",
     "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json": "1230b416221d7e28b3ff038a3b9bd8eca972220eb1549763b4b0d68b1416ed69",
-    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "089627869ff0ca501d81c4d02240a25bd70ebb90f49943d645272c0d3a19a338"
+    "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json": "98277e19bc336029d65db348cf96d09b84389981f93aae7022a52da637197244"
   },
   "evidence_state": {
     "adapter_contract": "CONTRACT-PASS-LIVE-BLOCKED",
@@ -175,7 +175,7 @@
       "SR-MGM-004"
     ]
   },
-  "source_revision": "abff104afc281ca455c68e680392737e0e1bc1e0",
+  "source_revision": "e6abcb0f7e1f25fc0fc0b90ce234fba99213a625",
   "source_sha256": {
     "kernel/contracts/src/agent.rs": "c8cc0af7aa697ba6fb0ef0be8bafc8c2100c910169ee6f9fa2a2807ba48243c5",
     "kernel/contracts/src/agent_proposal.rs": "cd77cca5b9a6c6fd64c54053e9bdae5233cf50942c111c52fefba0945998519f",
@@ -223,6 +223,7 @@
     "kernel/contracts/src/transaction.rs": "98870b0926eaa3e5d32562779ce395bc6df5c98f5f3abc3511d037c78b6ff4ef",
     "kernel/contracts/src/workspace_snapshot.rs": "136e67fd70c721d856a8a005a024f1bd13d7160a7f3f69a76b05e8571a140a09",
     "kernel/engine/src/accounting_provider.rs": "f0292afed85e4dc1d617061de010622b913749caed5e4620503634c29ef485f4",
+    "kernel/engine/src/action_history.rs": "8230048599def6cb2af62e72f1a185fd23262d126193f34de4e7ff07afff912e",
     "kernel/engine/src/actual_budget_adapter.rs": "b95d072f0109201f91416429406682cad53e48ec7f974ea6a1e5ca11dd567cf5",
     "kernel/engine/src/advisory_policy.rs": "19f14f0a0e3b12237bc2fc22353c6341ceeda001eb1d35d9e913192f76edc7b2",
     "kernel/engine/src/agent_ceiling.rs": "b7ed6f7535ffb3c65c6fc807800429b8c81ac5f335f90da7d810668c5eb9623b",
@@ -298,7 +299,7 @@
     "kernel/engine/src/frontier_release.rs": "5c592dce3617edd4ff748b64a2c7b0f79a24a9ade09084bb991cabd07e70caca",
     "kernel/engine/src/frontier_release_recovery.rs": "092769a04e73e2c382e995d51e8685a873c35e34a0c6268cbd4c90d93857931f",
     "kernel/engine/src/gateway_candidate_identity.rs": "1361215d221414258be8358156806d5fce0acf0ee43c20fa3994a13529a502b4",
-    "kernel/engine/src/gateway_routing.rs": "59eb9648b940fad27a30b7c9a59033a4cda25911e8ce01bca33bb60e67b71e9b",
+    "kernel/engine/src/gateway_routing.rs": "23815425bdad907edaf11bf95c231c4bedd5c5e3b301f524dcb748cec1f1cfdd",
     "kernel/engine/src/gitops_control.rs": "3ef09cef43ff9d13ffb57ce2c3a13901b1ad88e2b42af2a5f25ef6cea271ea12",
     "kernel/engine/src/grants.rs": "dd09da4069425ae0bbd4db527a1b472cf936d71e5247eceee60c41d035286291",
     "kernel/engine/src/handoff.rs": "2aaee0dec1de622b995faff552886240618aaf8f5356220d7dd54d112dddbd0c",
@@ -310,7 +311,7 @@
     "kernel/engine/src/job_ledger_store.rs": "1e84d70b6c93b452893c95194cf9e5b2cbf050d4f1c877cc0c4c8eca9f118c0d",
     "kernel/engine/src/job_ledger_store_tests.rs": "9c240f2a4894de5e8033eb274c4a0686bbed3ef0f2fb36565df50ea308eb5e05",
     "kernel/engine/src/job_scheduler.rs": "2209df39d416695395e160be013b15bb0874af39ff6fe8997f0127d684a1ed6c",
-    "kernel/engine/src/lib.rs": "75dd30c4507fd767f65baa371752be1937cd13e00b2541f15aa37c8524b5a430",
+    "kernel/engine/src/lib.rs": "8e8c51650950facdaf6c713b37af4a11df415a46206a212521c4f64208b15e81",
     "kernel/engine/src/linux_mail_interop.rs": "aedca1ccb24b64b15f2622ab8f7e1b7bddc22b04eb10ddce5b64522d926f330d",
     "kernel/engine/src/local_commit.rs": "7d39cf16b543ead8e7bbd09e1219c01d15efd49fe3b7e34f7e90818bc1d5c1c6",
     "kernel/engine/src/local_continuity.rs": "245f80f8181514674bbc94a1904ee1989b5a46bef4b27ad79ec17eb2828c09a1",

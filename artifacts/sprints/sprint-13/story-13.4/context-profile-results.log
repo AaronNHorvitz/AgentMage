@@ -10,7 +10,7 @@ test model_orchestration_profile::tests::story_13_4_quality_evidence_and_model_a
 test model_orchestration_profile::tests::story_13_4_orchestration_changes_shape_but_not_safety_controls ... ok
 test model_orchestration_profile::tests::story_13_4_every_profile_and_allocation_mutation_changes_identity_or_refuses ... ok
 
-test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 1345 filtered out; finished in 0.00s
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 1354 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
@@ -122,8 +122,8 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; fini
 
 
 $ node --test tests/test_model_orchestration_profile_schema.mjs
-✔ compiled orchestration profile schema accepts the closed record (1.548926ms)
-✔ schema rejects authority widening and stale qualification shapes (0.420906ms)
+✔ compiled orchestration profile schema accepts the closed record (1.608722ms)
+✔ schema rejects authority widening and stale qualification shapes (0.408555ms)
 ℹ tests 2
 ℹ suites 0
 ℹ pass 2
@@ -131,7 +131,7 @@ $ node --test tests/test_model_orchestration_profile_schema.mjs
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 74.158758
+ℹ duration_ms 71.525239
 
 $ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s
