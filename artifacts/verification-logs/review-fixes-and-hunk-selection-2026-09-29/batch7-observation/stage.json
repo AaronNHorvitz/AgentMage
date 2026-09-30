@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "stage": "batch7-observation",
+  "source_revision": "136e3bf655c2f42bf48324a711ea1916a948490a",
+  "scope": "Rebuild the actual CLI, host and read-only worker at the clean final batch 7 evidence revision and observe fresh disposable roots: help, setup, diagnose, a scripted failed-test-repair start, status and idle stop on a clean fixture, and a start on a fixture with staged, unstaged and untracked work. Native-prerequisite refusal is expected in this lane; not a positive workflow or qualification.",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "python3",
+      "<state>/batch7-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "c3fc3eaa682273d39619684b30749da78f63a85c7250e5d96018c461553413c5",
+      "private_sha256": "b0932e461446b180bb229fa5567e46c3489a1670e3aa183933d59c48fd12ce4e"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 6.386,
+      "log": "01.log",
+      "log_sha256": "3360a0e8c060fda28a8bace288c10374bd4dbeb38eb43dc54d4db666b00144a3",
+      "private_log_sha256": "3b5f08fa569360b70b3cfd64b7b5002cbbf51566a58a12e3926892f2413d2c38"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "<state>/batch7-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 1.619,
+      "log": "02.log",
+      "log_sha256": "ad1c45cdec11df9137c3442710590b885878c0b7e86a63c12c480e67cc0fee9c",
+      "private_log_sha256": "ad1c45cdec11df9137c3442710590b885878c0b7e86a63c12c480e67cc0fee9c"
+    }
+  ]
+}

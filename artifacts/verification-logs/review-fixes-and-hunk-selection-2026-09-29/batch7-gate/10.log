@@ -1,0 +1,4 @@
+$ python3 scripts/story_5_2_ac1_evidence.py
+Story acceptance criterion 5.2.AC1 deterministic retry disposition validated
+$ python3 scripts/story_5_2_ac2_evidence.py
+Story 5.2 AC2 evidence failed: Story 5.2 AC2 report is stale, incomplete, reordered, or widened

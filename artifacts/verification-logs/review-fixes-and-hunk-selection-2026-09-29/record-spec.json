@@ -1,0 +1,284 @@
+{
+  "record_type": "agentmage-review-fixes-and-hunk-selection-verification",
+  "date": "2026-09-29",
+  "base_commit": "1458cef48d289ff735ae1f5b8364c6e260f54e49",
+  "head_commit": "136e3bf655c2f42bf48324a711ea1916a948490a",
+  "source_commit": "3dcaabf3fc744daec71f6870c4be31f190841251",
+  "retained_logs": "artifacts/verification-logs/review-fixes-and-hunk-selection-2026-09-29",
+  "stages": [
+    "batch7-source-checks",
+    "batch7-core",
+    "batch7-codec-tooling",
+    "batch7-codec-tooling-remainder",
+    "batch7-rebind",
+    "batch7-gate",
+    "batch7-ac",
+    "batch7-gate-5-2",
+    "batch7-gate-sprint-5",
+    "batch7-boundary",
+    "batch7-boundary-2",
+    "batch7-security-index",
+    "batch7-sprint-evidence",
+    "batch7-sprint-50",
+    "batch7-observation"
+  ],
+  "inventory": "artifacts/verification-logs/review-fixes-and-hunk-selection-2026-09-29/binding-inventory.json",
+  "check_logs": {
+    "contracts": "batch7-source-checks/02.log",
+    "engine": "batch7-source-checks/03.log",
+    "inference": "batch7-source-checks/04.log",
+    "linux": "batch7-source-checks/05.log",
+    "host": "batch7-source-checks/06.log"
+  },
+  "fields": {
+    "decisions": [
+      "docs/decisions/0113-review-fixes-for-inspection-and-job-control.md",
+      "docs/decisions/0114-hunk-selection-derived-write.md"
+    ],
+    "review_resolved": "independent review of 1458cef4 (PASS; V1 and V2 medium, V3-V15 low); every finding is addressed in 3dcaabf3 under Decision 0113",
+    "components": {
+      "AMR-04.2.2": "Narrow approval disposition with an exact RuntimeHunkSelection (kernel/contracts); Narrowed evaluation and a runtime-proposed shell-origin derived request (kernel/engine/src/runtime_loop.rs); shell-only tool registration (kernel/engine/src/tooling.rs); shells/host/src/coding_hunk_selection.rs (agentmage.code.apply-hunk-selection: derive, decode, recompute, bind as a whole-file structured replacement) with dispatch, operation, Linux binding and resolution glue; development CLI `select` answer and derived review",
+      "review_fixes": "job ledger owner reserve, refusal bound and retained head (V1, V4); per-character hunk escaping (V2); first-composition constraint check (V3); malformed digest rendering (V5); cancellation before pending approvals (V6); truncated-run mark (V7); tests for every activity, terminal state and per-run clearing (V8); three-state descriptor-relative review reader (V9, V15); mod.rs production references (V10); stage schema 2 with typed, name-checked and source-verified fields and a failing child's output in the configuration producer (V11, V12); open rows AMR-04.2.3, AMR-04.4.1 and AMR-04.9 (V13); Sprint 50 check in every pass (V14)"
+    },
+    "mutation_checks": "the V2, V3 and V10 regression tests fail against the unfixed source; the source was restored afterwards",
+    "failure_comparison": "linux 19 failure names identical to batch 6; host 52 failures = the 50 batch 6 names plus two new native-only tests (story_48_2_linux_runtime_writes_only_the_selected_hunks_of_a_narrowed_patch, story_48_2_linux_runtime_refuses_a_selection_over_a_changed_file) that fail at the shared fixture step `test sandbox manifest: LinuxSandboxError { kind: InvalidManifest }` like their siblings and are unverified in this lane",
+    "retained_failures": [
+      {
+        "stage": "batch7-codec-tooling",
+        "index": 13,
+        "cause": "the Story 5.2 policy producer validates the effect-class taxonomy report before writing; the remainder stage renewed the taxonomy report first"
+      },
+      {
+        "stage": "batch7-gate",
+        "index": 10,
+        "cause": "the Story 5.2 gate's validators found the AC2 and AC3 reports stale because they bind the regenerated policy report; batch7-ac renewed them and the pin moved again"
+      },
+      {
+        "stage": "batch7-boundary",
+        "index": 1,
+        "cause": "the coordinator boundary review's inert-proposal check matched a literal model dispatch line that the Decision 0114 refactor replaced; the check was changed to require one dispatch site and only the model and shell classes (22741885) and batch7-boundary-2 passed all twelve checks"
+      },
+      {
+        "stage": "batch7-sprint-evidence",
+        "indexes": [
+          1,
+          2,
+          3,
+          5,
+          7,
+          9
+        ],
+        "cause": "Story 23.5: pytest is unavailable (its test module is pytest-style, so unittest ran no tests); Sprint 23 and 24: host suites and the product gate hit the lane's native-prerequisite failures; Sprint 50: its v0.4 check ran before the manifest renewal in the same stage; Sprint 51: native frontier host tests and the documentation gate"
+      },
+      {
+        "stage": "batch7-sprint-50",
+        "index": 1,
+        "cause": "every command passed except the documentation gate, whose Mermaid step cannot launch a headless browser (Puppeteer) in this sandbox; the known requirements:current-check failure is also part of that gate"
+      }
+    ],
+    "blocked_refreshes": [
+      {
+        "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+        "binds": "shells/host/src/protocol.rs",
+        "blocker": "pytest unavailable in this lane"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+        "binds": "shells/host/src/protocol.rs",
+        "blocker": "full host suite and product gate: native-prerequisite failures in this lane"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+        "binds": "shells/host/src/protocol.rs",
+        "blocker": "produced with Sprint 24 local evidence; host handoff tests and product gate: native-prerequisite failures"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+        "binds": "shells/host/src/coding_client.rs",
+        "blocker": "documentation gate: Mermaid rendering cannot launch a headless browser here; requirements:current-check known failure"
+      },
+      {
+        "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+        "binds": "shells/host/src/protocol.rs",
+        "blocker": "native frontier host tests and the documentation gate"
+      }
+    ],
+    "sbom_writes": 1,
+    "sbom_components_changed": [
+      "agentmage-host",
+      "agentmage-kernel-contracts",
+      "agentmage-kernel-engine",
+      "agentmage-platform-linux"
+    ],
+    "review_pins": [
+      {
+        "gate": "scripts/story_11_2_gate.py",
+        "from": "7f7848560497712537474223c4778a341b4ebc3f",
+        "to": "e4713bc9f3027b602a50cfb60be32b85e25f46f9",
+        "reviewed_paths_retained": 25,
+        "changed_reviewed_paths": [
+          {
+            "path": "kernel/engine/src/runtime_loop.rs",
+            "reason": "Decision 0114 (AMR-04.2.2): Narrowed evaluation, derived shell-origin request and the Decision 0113 review fixes; independent review of this batch is requested separately, not claimed by this pin"
+          },
+          {
+            "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+            "reason": "regenerated by the batch 7 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+          },
+          {
+            "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+            "reason": "regenerated by the batch 7 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+          },
+          {
+            "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+            "reason": "regenerated by the batch 7 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+          },
+          {
+            "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+            "reason": "regenerated by the batch 7 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+          }
+        ]
+      },
+      {
+        "gate": "scripts/story_4_1_gate.py",
+        "from": "2d9abe6aa3f13fc8a5ca554e01e740831bb24826",
+        "to": "e4713bc9f3027b602a50cfb60be32b85e25f46f9",
+        "reviewed_paths_retained": 34,
+        "changed_reviewed_paths": [
+          {
+            "path": "kernel/engine/src/tooling.rs",
+            "reason": "Decision 0114 (AMR-04.2.2): shell-only tool registration (register_shell_tool, is_model_proposable, list_model_tools) and refusal of model-origin dispatch of a shell-only tool; independent review of this batch is requested separately"
+          }
+        ]
+      },
+      {
+        "gate": "scripts/sprint_4_gate.py",
+        "from": "2d9abe6aa3f13fc8a5ca554e01e740831bb24826",
+        "to": "e4713bc9f3027b602a50cfb60be32b85e25f46f9",
+        "reviewed_paths_retained": 8,
+        "changed_reviewed_paths": [
+          {
+            "path": "kernel/engine/src/tooling.rs",
+            "reason": "Decision 0114 (AMR-04.2.2): shell-only tool registration (register_shell_tool, is_model_proposable, list_model_tools) and refusal of model-origin dispatch of a shell-only tool; independent review of this batch is requested separately"
+          }
+        ]
+      },
+      {
+        "gate": "scripts/story_5_2_gate.py",
+        "from": "8e8b6e0e7b8db1bb1dc11a21046b0dac605d6967",
+        "to": "e4713bc9f3027b602a50cfb60be32b85e25f46f9",
+        "reviewed_paths_retained": 16,
+        "changed_reviewed_paths": [
+          {
+            "path": "kernel/engine/src/tooling.rs",
+            "reason": "Decision 0114 (AMR-04.2.2): shell-only tool registration (register_shell_tool, is_model_proposable, list_model_tools) and refusal of model-origin dispatch of a shell-only tool; independent review of this batch is requested separately"
+          },
+          {
+            "path": "artifacts/sprints/sprint-5/story-5.2/effect-class-taxonomy-report.json",
+            "reason": "regenerated by the batch 7 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+          },
+          {
+            "path": "artifacts/sprints/sprint-5/story-5.2/policy-verification-report.json",
+            "reason": "regenerated by the batch 7 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+          },
+          {
+            "path": "artifacts/sprints/sprint-5/story-5.2/story-ac1-deterministic-disposition-report.json",
+            "reason": "regenerated by the batch 7 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+          }
+        ]
+      },
+      {
+        "gate": "scripts/story_5_2_gate.py",
+        "from": "e4713bc9f3027b602a50cfb60be32b85e25f46f9",
+        "to": "767a48e5527c852201a2e2c12bf9d48f22ee0d0f",
+        "reviewed_paths_retained": 16,
+        "changed_reviewed_paths": [
+          {
+            "path": "artifacts/sprints/sprint-5/story-5.2/story-ac2-no-replay-recovery-report.json",
+            "reason": "regenerated by the batch 7 evidence pass because it binds the regenerated Story 5.2 policy report; only bound digests changed"
+          },
+          {
+            "path": "artifacts/sprints/sprint-5/story-5.2/story-ac3-bounded-termination-report.json",
+            "reason": "regenerated by the batch 7 evidence pass because it binds the regenerated Story 5.2 policy report; only bound digests changed"
+          }
+        ]
+      },
+      {
+        "gate": "scripts/sprint_5_gate.py",
+        "from": "a8e60637e3105c50eab7c0a8df74c6fec29979c4",
+        "to": "1a02bd9e422566ab2c389fac48f04f0f1930f98b",
+        "reviewed_paths_retained": 11,
+        "changed_reviewed_paths": [
+          {
+            "path": "artifacts/sprints/sprint-5/story-5.2/story-gate-report.json",
+            "reason": "rebuilt by the routine Story 5.2 pin renewals of batch 7 (tooling.rs, then the renewed AC2 and AC3 reports)"
+          },
+          {
+            "path": "scripts/story_5_2_gate.py",
+            "reason": "routine Story 5.2 pin moved to e4713bc9 and then 767a48e5 in batch 7 (AGENTS.md section 7)"
+          },
+          {
+            "path": "artifacts/sprints/sprint-5/story-5.2/story-ac1-deterministic-disposition-report.json",
+            "reason": "regenerated by the batch 7 evidence pass for the tooling.rs change; only bound digests changed"
+          },
+          {
+            "path": "artifacts/sprints/sprint-5/story-5.2/story-ac2-no-replay-recovery-report.json",
+            "reason": "regenerated by the batch 7 evidence pass because it binds the regenerated Story 5.2 policy report; only bound digests changed"
+          }
+        ]
+      }
+    ],
+    "checker_change": "scripts/runtime_coordinator_boundary_review.py: model-proposal-is-inert now requires exactly one dispatch site dispatching with the proposal's class, the model path assigning ProposalOrigin::Model and the derived path ProposalOrigin::Shell as the only two assignments, and no other proposal class (Decision 0114); tests cover wrapping and six refusal mutations",
+    "record_corrections": [
+      {
+        "commit": "136e3bf655c2f42bf48324a711ea1916a948490a",
+        "said": "Only the coding_client.rs source digest changed",
+        "correction": "the v0.4 manifest renewal also absorbed docs/guides/bounded-coding-workflows.md (stale since eef257aa) and shells/host/src/headless.rs (stale since 6b582ced)"
+      },
+      {
+        "stage": "batch7-observation",
+        "note": "the observation script is the batch 6 script with only its output directory changed, so its completion line still reads BATCH6_LINUX_OBSERVATION_COMPLETE"
+      }
+    ],
+    "newly_stale_disposition": "the five blocked refreshes above, historical verification records and earlier retained stage records, which pin scripts as they were when those stages ran",
+    "cli_observation": {
+      "source_commit": "136e3bf655c2f42bf48324a711ea1916a948490a",
+      "binaries_sha256": {
+        "agentmage": "3ac9f35d55b70b2d660123c90e34234eb72eb658368ace13822ebaa77f9de331",
+        "agentmage-host": "ffaa93bf81256068ff9aeda74430ce7e97847f27c6da541c2549d82fc6b97b69",
+        "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+      },
+      "clean_scripted_start_exit": 5,
+      "clean_refusal_code": "linux.repository.git_artifact.invalid",
+      "clean_preserved": true,
+      "dirty_start_exit": 1,
+      "dirty_preserved": true,
+      "qualification": "actual-binary-native-prerequisite-refusal-only",
+      "selection_displayed": false,
+      "reason": "native prerequisites refuse the launch before any approval, so neither a hunk selection nor a derived write is exercised in this lane",
+      "attachment": "batch7-observation/attachments/observation.json"
+    },
+    "tool_change": "scripts/verification_batch.py writes stage schema 2 (typed fields, every written byte name-checked in any letter case, the tool bound in every stage, sources verified against the source revision or a declared later commit); this record's gate stages declare their pin edits that way",
+    "not_run": [
+      "actual-process hunk selection on a native host (AMR-04.2.3)",
+      "the two new native-only Linux boundary selection tests",
+      "actual-process display of the review, progress or inspection (AMR-04.9, AMR-04.4.1)",
+      "durable job control over IPC (AMR-04.6) and the recoverability view (AMR-04.7)",
+      "positive native coding workflow",
+      "real model or GPU",
+      "manual user acceptance",
+      "release"
+    ],
+    "claims": {
+      "task_rows_closed": [
+        {
+          "row": "AMR-04.2.2",
+          "closed_by": "the ledger commit that follows this record",
+          "scope": "contract, engine, host-unit and CLI row; the Linux boundary glue's tests and the actual-process proof are native and open (AMR-04.2.3)"
+        }
+      ],
+      "release_claim": "none",
+      "independent_review_of_this_batch": "requested; open"
+    }
+  }
+}

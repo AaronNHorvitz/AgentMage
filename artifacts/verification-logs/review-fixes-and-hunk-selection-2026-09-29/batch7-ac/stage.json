@@ -1,0 +1,132 @@
+{
+  "schema_version": 2,
+  "stage": "batch7-ac",
+  "source_revision": "e4713bc9f3027b602a50cfb60be32b85e25f46f9",
+  "scope": "Story 5.2 AC2 and AC3 reports, which bind the regenerated policy report; the retained batch7-gate stage stopped at the Story 5.2 gate because its validators found them stale. Runs on the uncommitted Story 11.2, 4.1, Sprint 4 and Story 5.2 pin edits; unchanged producers; no SBOM write.",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/story_5_2_ac2_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_5_2_ac2_evidence"
+    ],
+    [
+      "python3",
+      "scripts/story_5_2_ac3_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_5_2_ac3_evidence"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/story_5_2_ac2_evidence.py": "f32a9774112242f76f806544d8fdd57644e8c185779ca474a571737cf5af9e81",
+    "scripts/story_5_2_ac3_evidence.py": "aa21206160a00d67005d580e013891e7b40b0f5cb3463e25df433c03eb2a73bc",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_story_5_2_ac2_evidence.py": "a44a293ff2a15e165ddcb2811d8d6d5659116fd2d5b7b885b2e9aa7712472166",
+    "tests/test_story_5_2_ac3_evidence.py": "0b293eb781f205bdd8dab972dd4f42ed6b9473e2abd812e87eebdb775ee5dc82"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/story_5_2_ac2_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.316,
+      "log": "01.log",
+      "log_sha256": "c0b1fb5b604c217cffc3e659b18922c6640b9c7185c63e7cea696ad5291b1004",
+      "private_log_sha256": "c0b1fb5b604c217cffc3e659b18922c6640b9c7185c63e7cea696ad5291b1004"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_5_2_ac2_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.059,
+      "log": "02.log",
+      "log_sha256": "9f169aa04896ef0203477ff61d8d57406ec0dab00b71ec15cf38cdae22509147",
+      "private_log_sha256": "9f169aa04896ef0203477ff61d8d57406ec0dab00b71ec15cf38cdae22509147"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/story_5_2_ac3_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.253,
+      "log": "03.log",
+      "log_sha256": "24ac90257848429b3c2c11cd827f9de3a31d95982eae940adb2d020399b4a1d1",
+      "private_log_sha256": "24ac90257848429b3c2c11cd827f9de3a31d95982eae940adb2d020399b4a1d1"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_5_2_ac3_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.07,
+      "log": "04.log",
+      "log_sha256": "2d014bb427120fb1a5014d7499096989061fd0fdf40acb471c2e2667de60e71e",
+      "private_log_sha256": "2d014bb427120fb1a5014d7499096989061fd0fdf40acb471c2e2667de60e71e"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.073,
+      "log": "05.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 6,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.01,
+      "log": "06.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

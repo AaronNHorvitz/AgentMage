@@ -1,0 +1,172 @@
+{
+  "schema_version": 2,
+  "stage": "batch7-codec-tooling-remainder",
+  "source_revision": "503d7c322a2e609080c0c0e00dd9b483703d1746",
+  "scope": "Remainder of the retained batch7-codec-tooling stage from command 13: the Story 5.2 effect-class taxonomy report first (the policy producer validates it before writing), then the Story 5.2 policy and AC1 reports; unchanged producers; no SBOM write.",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/effect_class_taxonomy_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_effect_class_taxonomy_evidence"
+    ],
+    [
+      "python3",
+      "scripts/story_5_2_policy_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_5_2_policy_evidence"
+    ],
+    [
+      "python3",
+      "scripts/story_5_2_ac1_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_5_2_ac1_evidence"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/effect_class_taxonomy_evidence.py": "2e8571e7b18a8e4a0d72ea3f8e459d174bb9d1bd64504fb7feffc61cddb9134d",
+    "scripts/story_5_2_ac1_evidence.py": "c283aaf54b0c9ec3738cd85a1397522748c4d7a12310cb7d4f75442ef0c49948",
+    "scripts/story_5_2_policy_evidence.py": "ff9e341d0056515eb0eb6e5abc1f3cba44e5049d07d43db7bf4ff39556b5ddb3",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_effect_class_taxonomy_evidence.py": "3a861a7b6bfd14f1ad7d71dbd3e73afb36f6f7e850f744ee64535fcee791f4cd",
+    "tests/test_story_5_2_ac1_evidence.py": "1043b1a367d6ae2a6ddd1fc21415f226bd27164b2105dc4b6af5d8ec430dcad7",
+    "tests/test_story_5_2_policy_evidence.py": "7a450b19eb0d7dc470797269549d3ec085a7bd734922cf795f0befb9a72ff008"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/effect_class_taxonomy_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.326,
+      "log": "01.log",
+      "log_sha256": "bc7a4992614de6f9cdd944c86438fe865c0f78a7a85b95c074cc8f0e80e4faa3",
+      "private_log_sha256": "bc7a4992614de6f9cdd944c86438fe865c0f78a7a85b95c074cc8f0e80e4faa3"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_effect_class_taxonomy_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.057,
+      "log": "02.log",
+      "log_sha256": "21c7e48d0b1ec908feef784bbce1fa55f2c9a7acf76382fa7578754a78bd1ed8",
+      "private_log_sha256": "21c7e48d0b1ec908feef784bbce1fa55f2c9a7acf76382fa7578754a78bd1ed8"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/story_5_2_policy_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.128,
+      "log": "03.log",
+      "log_sha256": "75fe46750a85545de46081ca4a617311b13d6e14de0fe714b754d50e7bedb5be",
+      "private_log_sha256": "75fe46750a85545de46081ca4a617311b13d6e14de0fe714b754d50e7bedb5be"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_5_2_policy_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.056,
+      "log": "04.log",
+      "log_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "private_log_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "python3",
+        "scripts/story_5_2_ac1_evidence.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.274,
+      "log": "05.log",
+      "log_sha256": "de0ef424d1441fce5d778b0615d27a6e78db1ba339946f61a105e7132eddee11",
+      "private_log_sha256": "de0ef424d1441fce5d778b0615d27a6e78db1ba339946f61a105e7132eddee11"
+    },
+    {
+      "index": 6,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_5_2_ac1_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.06,
+      "log": "06.log",
+      "log_sha256": "464e0ee629edf74de09ef21e4232fbcedc26588ff7cc23c470f47fe2da88c255",
+      "private_log_sha256": "464e0ee629edf74de09ef21e4232fbcedc26588ff7cc23c470f47fe2da88c255"
+    },
+    {
+      "index": 7,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.074,
+      "log": "07.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 8,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.008,
+      "log": "08.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

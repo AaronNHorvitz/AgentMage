@@ -96,6 +96,14 @@
       ],
       "release_claim": "none",
       "independent_review_of_this_batch": "requested; open"
+    },
+    "record_correction": {
+      "date": "2026-09-29",
+      "decision": "docs/decisions/0113-review-fixes-for-inspection-and-job-control.md",
+      "reason": "independent review finding V12 of 1458cef4",
+      "corrections": [
+        "the batch6-gate stage bound scripts/story_11_2_gate.py at the digest committed next, in 64a49f43: the pin edit ran before its commit and the stage (schema 1) did not declare it"
+      ]
     }
   }
 }

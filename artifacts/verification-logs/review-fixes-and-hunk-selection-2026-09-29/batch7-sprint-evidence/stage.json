@@ -1,0 +1,321 @@
+{
+  "schema_version": 2,
+  "stage": "batch7-sprint-evidence",
+  "source_revision": "a610f6f0357c268c34ca4881ef9b7176819dc9ca",
+  "scope": "Attempt to renew the older reports bound to the changed protocol.rs test literal and coding_client.rs: Story 23.5 participant ingress, Sprint 23, 24, 50 and 51 local evidence, and the blocked, non-releasing v0.4 coding manifest. Every command continues after a failure so each producer is attempted; a producer that needs a native host or a suite with native-prerequisite failures is recorded as blocked and its historical report kept. No release claim; no SBOM write.",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/story_23_5_participant_ingress_evidence.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_23_5_participant_ingress_evidence"
+    ],
+    [
+      "python3",
+      "scripts/sprint_23_evidence.py",
+      "--write",
+      "--source-revision",
+      "a610f6f0357c268c34ca4881ef9b7176819dc9ca"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_sprint_23_evidence"
+    ],
+    [
+      "python3",
+      "scripts/sprint_24_evidence.py",
+      "--write",
+      "--source-revision",
+      "a610f6f0357c268c34ca4881ef9b7176819dc9ca"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_sprint_24_evidence"
+    ],
+    [
+      "python3",
+      "scripts/sprint_50_evidence.py",
+      "--write",
+      "--source-revision",
+      "a610f6f0357c268c34ca4881ef9b7176819dc9ca"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_sprint_50_evidence"
+    ],
+    [
+      "python3",
+      "scripts/sprint_51_evidence.py",
+      "--write",
+      "--source-revision",
+      "a610f6f0357c268c34ca4881ef9b7176819dc9ca"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_sprint_51_evidence"
+    ],
+    [
+      "python3",
+      "scripts/v0_4_coding_release_gate.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_v0_4_coding_release_gate"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "sources": {
+    "scripts/sprint_23_evidence.py": "9092c2a7652fc86d35290e8db460c57994981fa05b7a8b704f5b055f51c410ec",
+    "scripts/sprint_24_evidence.py": "7b28a6ef83469fc1563679759117614e0c0fa55057b7d089d98daffcc1c54192",
+    "scripts/sprint_50_evidence.py": "d2cbe1d967d8320f64cb5e56c2efeabe2f46eff8d402458d243a440936e9adbb",
+    "scripts/sprint_51_evidence.py": "0acd7a0444356a1d6eaca544116ddbf1e412b6bd63450d08cb2ccd2454e8d3c7",
+    "scripts/story_23_5_participant_ingress_evidence.py": "ca2794a4d7145867de7fb53e27ec4f397025bf3c5a6971aae855aa640c8a769c",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/v0_4_coding_release_gate.py": "66b98977b9130a244924a14a15425c8ea17e750ed9f6a79a78fa5e69d7365986",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_sprint_23_evidence.py": "747235acb2e035d526f65c44b735ac284d3a3a24f1d2cc3177d25cc0954ab1aa",
+    "tests/test_sprint_24_evidence.py": "fdbf63957634e3064d7dca6e040e4e7d902d44153b3cff0abdcddcb0c17b76a9",
+    "tests/test_sprint_50_evidence.py": "3f8d436a805be6f7320e4f735c9fe389c8647e5fe8eb56e643e76958d9572cad",
+    "tests/test_sprint_51_evidence.py": "2ced90306443af751d750cc8ec72bbc0470b82ef137cfcc39bf53e4642c18b9e",
+    "tests/test_story_23_5_participant_ingress_evidence.py": "26b45c68dc468700ac2b84774f1cbe0011e2a35ee260a988a056f9b278426102",
+    "tests/test_v0_4_coding_release_gate.py": "a5cc2145d9a88b110fe376d5008b35f8163476e8b4a7858ad99fae33e6205f29"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/story_23_5_participant_ingress_evidence.py",
+        "--write"
+      ],
+      "exit_code": 1,
+      "seconds": 5.41,
+      "log": "01.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_23_5_participant_ingress_evidence"
+      ],
+      "exit_code": 5,
+      "seconds": 0.054,
+      "log": "02.log",
+      "log_sha256": "e70fec2825d9bf206d27463a792768195039599cb39bcca66339f47283f84cce",
+      "private_log_sha256": "e70fec2825d9bf206d27463a792768195039599cb39bcca66339f47283f84cce"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/sprint_23_evidence.py",
+        "--write",
+        "--source-revision",
+        "a610f6f0357c268c34ca4881ef9b7176819dc9ca"
+      ],
+      "exit_code": 1,
+      "seconds": 178.711,
+      "log": "03.log",
+      "log_sha256": "21659d306407875c51d6177de75489e6bb0ad9e4206c20d769e54bf8c6008883",
+      "private_log_sha256": "21659d306407875c51d6177de75489e6bb0ad9e4206c20d769e54bf8c6008883"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_23_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.081,
+      "log": "04.log",
+      "log_sha256": "2c37d50a88147ca2ebd5197d74ee37d462dab650d793512e849814c28d5a38f0",
+      "private_log_sha256": "2c37d50a88147ca2ebd5197d74ee37d462dab650d793512e849814c28d5a38f0"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "python3",
+        "scripts/sprint_24_evidence.py",
+        "--write",
+        "--source-revision",
+        "a610f6f0357c268c34ca4881ef9b7176819dc9ca"
+      ],
+      "exit_code": 1,
+      "seconds": 59.652,
+      "log": "05.log",
+      "log_sha256": "01bdd36a9fa2163e505b56b7250a6fc4455bbce1607f01af841f57ab3aa68f01",
+      "private_log_sha256": "01bdd36a9fa2163e505b56b7250a6fc4455bbce1607f01af841f57ab3aa68f01"
+    },
+    {
+      "index": 6,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_24_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.078,
+      "log": "06.log",
+      "log_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678",
+      "private_log_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
+    },
+    {
+      "index": 7,
+      "argv": [
+        "python3",
+        "scripts/sprint_50_evidence.py",
+        "--write",
+        "--source-revision",
+        "a610f6f0357c268c34ca4881ef9b7176819dc9ca"
+      ],
+      "exit_code": 1,
+      "seconds": 43.95,
+      "log": "07.log",
+      "log_sha256": "4942964eae0d9b422be012aff1967f5e01e15169161f7d3733d8c3284d82c898",
+      "private_log_sha256": "4942964eae0d9b422be012aff1967f5e01e15169161f7d3733d8c3284d82c898"
+    },
+    {
+      "index": 8,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_50_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.093,
+      "log": "08.log",
+      "log_sha256": "35e173770e8b2ae664bb6a561f29ed51afa8d5f7cc9761dbdfa594317be439b2",
+      "private_log_sha256": "35e173770e8b2ae664bb6a561f29ed51afa8d5f7cc9761dbdfa594317be439b2"
+    },
+    {
+      "index": 9,
+      "argv": [
+        "python3",
+        "scripts/sprint_51_evidence.py",
+        "--write",
+        "--source-revision",
+        "a610f6f0357c268c34ca4881ef9b7176819dc9ca"
+      ],
+      "exit_code": 1,
+      "seconds": 28.333,
+      "log": "09.log",
+      "log_sha256": "9e844b6455e2be9b61748ed0de5666275c2f8db6821a2c1ca9297097aed3a9f1",
+      "private_log_sha256": "9e844b6455e2be9b61748ed0de5666275c2f8db6821a2c1ca9297097aed3a9f1"
+    },
+    {
+      "index": 10,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_51_evidence"
+      ],
+      "exit_code": 0,
+      "seconds": 0.082,
+      "log": "10.log",
+      "log_sha256": "464e0ee629edf74de09ef21e4232fbcedc26588ff7cc23c470f47fe2da88c255",
+      "private_log_sha256": "464e0ee629edf74de09ef21e4232fbcedc26588ff7cc23c470f47fe2da88c255"
+    },
+    {
+      "index": 11,
+      "argv": [
+        "python3",
+        "scripts/v0_4_coding_release_gate.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.031,
+      "log": "11.log",
+      "log_sha256": "9e0bec13e71fb8971225fd1525af6e535af11ccc92d20216392abe43f0e6d97f",
+      "private_log_sha256": "9e0bec13e71fb8971225fd1525af6e535af11ccc92d20216392abe43f0e6d97f"
+    },
+    {
+      "index": 12,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_v0_4_coding_release_gate"
+      ],
+      "exit_code": 0,
+      "seconds": 0.099,
+      "log": "12.log",
+      "log_sha256": "0e32cf5bb96fa1036cae2e27776843246962a6c3d05aa93be58a951c1c934bc2",
+      "private_log_sha256": "0e32cf5bb96fa1036cae2e27776843246962a6c3d05aa93be58a951c1c934bc2"
+    },
+    {
+      "index": 13,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.074,
+      "log": "13.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 14,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.004,
+      "log": "14.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

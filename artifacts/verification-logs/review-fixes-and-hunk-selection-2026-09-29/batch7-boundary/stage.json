@@ -1,0 +1,57 @@
+{
+  "schema_version": 2,
+  "stage": "batch7-boundary",
+  "source_revision": "931a7b6bbe40864a979fe1dbd602406d169f4612",
+  "scope": "Story 23.4 coordinator boundary review at the committed runtime-campaign revision for the changed coordinator, loop and client boundaries; unchanged producer; no SBOM write.",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/runtime_coordinator_boundary_review.py",
+      "--write",
+      "--source-revision",
+      "931a7b6bbe40864a979fe1dbd602406d169f4612"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_runtime_coordinator_boundary_review"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/runtime_coordinator_boundary_review.py": "c55ee01c7941c55f15286151ed1cc4c363bcaba69ea2b3427f6970127ea15e18",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_runtime_coordinator_boundary_review.py": "dc7315ba386862ec1198687425243f282758ceb0835536037e4292c3ded57140"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/runtime_coordinator_boundary_review.py",
+        "--write",
+        "--source-revision",
+        "931a7b6bbe40864a979fe1dbd602406d169f4612"
+      ],
+      "exit_code": 1,
+      "seconds": 0.178,
+      "log": "01.log",
+      "log_sha256": "bdcca599c549024f5c3a1c530c86213b770aab95c1e862c5280ec78ef9977304",
+      "private_log_sha256": "7a729a9f58c6e9c36439c1789e02259f49aa0d1890db9a494377dd0bd196da86"
+    }
+  ]
+}

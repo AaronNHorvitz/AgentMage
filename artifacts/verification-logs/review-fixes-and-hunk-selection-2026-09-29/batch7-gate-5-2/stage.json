@@ -1,0 +1,114 @@
+{
+  "schema_version": 2,
+  "stage": "batch7-gate-5-2",
+  "source_revision": "767a48e5527c852201a2e2c12bf9d48f22ee0d0f",
+  "scope": "AGENTS.md section 7 routine Story 5.2 pin moved again, from e4713bc9 to 767a48e5, for the renewed AC2 and AC3 reports; gate rebuilt and checked. Runs on the uncommitted pin edit, which the retained stage declares with the commit that holds it; no external review claimed; no SBOM write.",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/story_5_2_gate.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_5_2_gate"
+    ],
+    [
+      "python3",
+      "scripts/story_5_2_gate.py"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/story_5_2_gate.py": "5b3e8559031363f86afe4e2a22a20864c26b05f1cf4a964d9f8d9635c98a4910",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_story_5_2_gate.py": "9d803c7c8b45bb4e700496dbdab9ca300243a216124d4b32953a2db905802586"
+  },
+  "changed_sources": [
+    {
+      "path": "scripts/story_5_2_gate.py",
+      "sha256": "5b3e8559031363f86afe4e2a22a20864c26b05f1cf4a964d9f8d9635c98a4910",
+      "commit": "1a02bd9e422566ab2c389fac48f04f0f1930f98b"
+    }
+  ],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/story_5_2_gate.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.201,
+      "log": "01.log",
+      "log_sha256": "7a66704c40e9a0fbe1d185a032a5aae5f5f7583bd9101c0126afaa60c7a276eb",
+      "private_log_sha256": "7a66704c40e9a0fbe1d185a032a5aae5f5f7583bd9101c0126afaa60c7a276eb"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_5_2_gate"
+      ],
+      "exit_code": 0,
+      "seconds": 0.275,
+      "log": "02.log",
+      "log_sha256": "850daafee4e9d4516f7bd35f8d99a0810dff525f975e2bc3da54e88073297f11",
+      "private_log_sha256": "850daafee4e9d4516f7bd35f8d99a0810dff525f975e2bc3da54e88073297f11"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/story_5_2_gate.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.066,
+      "log": "03.log",
+      "log_sha256": "7a66704c40e9a0fbe1d185a032a5aae5f5f7583bd9101c0126afaa60c7a276eb",
+      "private_log_sha256": "7a66704c40e9a0fbe1d185a032a5aae5f5f7583bd9101c0126afaa60c7a276eb"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.072,
+      "log": "04.log",
+      "log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "private_log_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.006,
+      "log": "05.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "private_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

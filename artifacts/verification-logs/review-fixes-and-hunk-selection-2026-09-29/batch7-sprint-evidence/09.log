@@ -1,0 +1,5 @@
+error: command failed: frontier-host-coordinator (exit 101)
+error: command failed: documentation-gate (exit 1)
+error: command result invalid
+error: verification claim drift
+error: summary or release claim drift

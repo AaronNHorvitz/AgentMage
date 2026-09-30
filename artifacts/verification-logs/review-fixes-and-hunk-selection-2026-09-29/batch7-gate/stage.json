@@ -1,0 +1,261 @@
+{
+  "schema_version": 2,
+  "stage": "batch7-gate",
+  "source_revision": "e4713bc9f3027b602a50cfb60be32b85e25f46f9",
+  "scope": "AGENTS.md section 7 routine pins for Story 11.2 (runtime_loop.rs), Story 4.1, Sprint 4 and Story 5.2 (tooling.rs) moved to e4713bc9 with every changed reviewed path explained, then each gate rebuilt and checked, then the Story 23.4 runtime campaign; runs on the uncommitted pin edits, which the retained stage declares with the commit that holds them; no external review claimed; no SBOM write.",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/story_11_2_gate.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_11_2_gate"
+    ],
+    [
+      "python3",
+      "scripts/story_11_2_gate.py"
+    ],
+    [
+      "python3",
+      "scripts/story_4_1_gate.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_4_1_gate"
+    ],
+    [
+      "python3",
+      "scripts/story_4_1_gate.py"
+    ],
+    [
+      "python3",
+      "scripts/sprint_4_gate.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_sprint_4_gate"
+    ],
+    [
+      "python3",
+      "scripts/sprint_4_gate.py"
+    ],
+    [
+      "python3",
+      "scripts/story_5_2_gate.py",
+      "--write"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_5_2_gate"
+    ],
+    [
+      "python3",
+      "scripts/story_5_2_gate.py"
+    ],
+    [
+      "python3",
+      "scripts/story_23_4_runtime_evidence.py",
+      "--write",
+      "--source-revision",
+      "e4713bc9f3027b602a50cfb60be32b85e25f46f9"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_story_23_4_runtime_evidence"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/sprint_4_gate.py": "7b2a7fd3e1ad2db55f19987b4c4ad5fdaba8c84cee350208b7ef72031e3ea855",
+    "scripts/story_11_2_gate.py": "729e7ead1c010166a3147681b9314e7f9b66163e36716c3ea0d9b5ae15d35962",
+    "scripts/story_23_4_runtime_evidence.py": "dafef8e5a584a263c09ff02be8da9f8fc886fb53e28641668368d6cfaac0a1a0",
+    "scripts/story_4_1_gate.py": "d20cec54794090056fa79a4a31d204efe01902d4fba6aa4e33df228c4441d71b",
+    "scripts/story_5_2_gate.py": "770b01da8f7ced12b0adcbda462f58bc62fd7cebd377db4b6653dd4b43c12d73",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_sprint_4_gate.py": "ae63304af83c78168669c6574553853a51f563e99e4866c1c1f2152845832f4a",
+    "tests/test_story_11_2_gate.py": "2295e32739e644c00f65f746c88214e7399e3f62208c89bbe2e4bdb9269a13bc",
+    "tests/test_story_23_4_runtime_evidence.py": "e1d8ea2784f9567dcafbb9667e06279566a1700649483f74d839e28779b80296",
+    "tests/test_story_4_1_gate.py": "3fdaf660edf77d007b592894d14c712ed0823954f96535c1e130d8871c419e00",
+    "tests/test_story_5_2_gate.py": "9d803c7c8b45bb4e700496dbdab9ca300243a216124d4b32953a2db905802586"
+  },
+  "changed_sources": [
+    {
+      "path": "scripts/story_11_2_gate.py",
+      "sha256": "729e7ead1c010166a3147681b9314e7f9b66163e36716c3ea0d9b5ae15d35962",
+      "commit": "767a48e5527c852201a2e2c12bf9d48f22ee0d0f"
+    },
+    {
+      "path": "scripts/story_4_1_gate.py",
+      "sha256": "d20cec54794090056fa79a4a31d204efe01902d4fba6aa4e33df228c4441d71b",
+      "commit": "767a48e5527c852201a2e2c12bf9d48f22ee0d0f"
+    },
+    {
+      "path": "scripts/sprint_4_gate.py",
+      "sha256": "7b2a7fd3e1ad2db55f19987b4c4ad5fdaba8c84cee350208b7ef72031e3ea855",
+      "commit": "767a48e5527c852201a2e2c12bf9d48f22ee0d0f"
+    },
+    {
+      "path": "scripts/story_5_2_gate.py",
+      "sha256": "770b01da8f7ced12b0adcbda462f58bc62fd7cebd377db4b6653dd4b43c12d73",
+      "commit": "767a48e5527c852201a2e2c12bf9d48f22ee0d0f"
+    }
+  ],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/story_11_2_gate.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 0.23,
+      "log": "01.log",
+      "log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195",
+      "private_log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_11_2_gate"
+      ],
+      "exit_code": 0,
+      "seconds": 0.322,
+      "log": "02.log",
+      "log_sha256": "36de6483f0105a4a2533cce78f2317ca9455fe62afe8a3407694799438d838b9",
+      "private_log_sha256": "36de6483f0105a4a2533cce78f2317ca9455fe62afe8a3407694799438d838b9"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "scripts/story_11_2_gate.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.079,
+      "log": "03.log",
+      "log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195",
+      "private_log_sha256": "f94f3978b0fbc60345338c1640b187cfdec2bffbe0545a540dee28aadeb3a195"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "scripts/story_4_1_gate.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 187.61,
+      "log": "04.log",
+      "log_sha256": "2a67d5eb7d3a75f127c57daebb8763b58e032da5f163c3b3a66b3d57e565e87a",
+      "private_log_sha256": "2a67d5eb7d3a75f127c57daebb8763b58e032da5f163c3b3a66b3d57e565e87a"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_story_4_1_gate"
+      ],
+      "exit_code": 0,
+      "seconds": 186.993,
+      "log": "05.log",
+      "log_sha256": "b69060b22deff82c44061000f1086959ca10e27a9a322ab8cfc5bc0e043682c0",
+      "private_log_sha256": "b69060b22deff82c44061000f1086959ca10e27a9a322ab8cfc5bc0e043682c0"
+    },
+    {
+      "index": 6,
+      "argv": [
+        "python3",
+        "scripts/story_4_1_gate.py"
+      ],
+      "exit_code": 0,
+      "seconds": 93.638,
+      "log": "06.log",
+      "log_sha256": "2a67d5eb7d3a75f127c57daebb8763b58e032da5f163c3b3a66b3d57e565e87a",
+      "private_log_sha256": "2a67d5eb7d3a75f127c57daebb8763b58e032da5f163c3b3a66b3d57e565e87a"
+    },
+    {
+      "index": 7,
+      "argv": [
+        "python3",
+        "scripts/sprint_4_gate.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "seconds": 229.705,
+      "log": "07.log",
+      "log_sha256": "8bc7b3e994cc25fbdf82744ca5e3be5c21ffbb89801f92091804f9d86fa70737",
+      "private_log_sha256": "8bc7b3e994cc25fbdf82744ca5e3be5c21ffbb89801f92091804f9d86fa70737"
+    },
+    {
+      "index": 8,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_4_gate"
+      ],
+      "exit_code": 0,
+      "seconds": 229.578,
+      "log": "08.log",
+      "log_sha256": "bcf2ef4d30a6528a0393e158b6c410a163cbb3051553c48df8cc7a022bdb8f89",
+      "private_log_sha256": "bcf2ef4d30a6528a0393e158b6c410a163cbb3051553c48df8cc7a022bdb8f89"
+    },
+    {
+      "index": 9,
+      "argv": [
+        "python3",
+        "scripts/sprint_4_gate.py"
+      ],
+      "exit_code": 0,
+      "seconds": 114.625,
+      "log": "09.log",
+      "log_sha256": "8bc7b3e994cc25fbdf82744ca5e3be5c21ffbb89801f92091804f9d86fa70737",
+      "private_log_sha256": "8bc7b3e994cc25fbdf82744ca5e3be5c21ffbb89801f92091804f9d86fa70737"
+    },
+    {
+      "index": 10,
+      "argv": [
+        "python3",
+        "scripts/story_5_2_gate.py",
+        "--write"
+      ],
+      "exit_code": 1,
+      "seconds": 0.108,
+      "log": "10.log",
+      "log_sha256": "bb7cd79821dd7219eabfd11a3a65ebade0923b8570ee1973093e2ee82c41d905",
+      "private_log_sha256": "bb7cd79821dd7219eabfd11a3a65ebade0923b8570ee1973093e2ee82c41d905"
+    }
+  ]
+}

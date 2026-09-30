@@ -1,0 +1,57 @@
+{
+  "schema_version": 2,
+  "stage": "batch7-sprint-50",
+  "source_revision": "136e3bf655c2f42bf48324a711ea1916a948490a",
+  "scope": "Retry of Sprint 50 local evidence at the commit holding the renewed v0.4 manifest; the retained batch7-sprint-evidence attempt checked the v0.4 gate before that renewal. If a command still fails the historical report is kept. No release claim; no SBOM write.",
+  "planned_commands": [
+    [
+      "python3",
+      "scripts/sprint_50_evidence.py",
+      "--write",
+      "--source-revision",
+      "136e3bf655c2f42bf48324a711ea1916a948490a"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "tests.test_sprint_50_evidence"
+    ],
+    [
+      "python3",
+      "scripts/supply_chain.py"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/sprint_50_evidence.py": "d2cbe1d967d8320f64cb5e56c2efeabe2f46eff8d402458d243a440936e9adbb",
+    "scripts/supply_chain.py": "58e332530fedf5942f4e08f2ad653ba91c0b0bfa2f125810b6d36cb86b49dcb6",
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9",
+    "tests/test_sprint_50_evidence.py": "3f8d436a805be6f7320e4f735c9fe389c8647e5fe8eb56e643e76958d9572cad"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "python3",
+        "scripts/sprint_50_evidence.py",
+        "--write",
+        "--source-revision",
+        "136e3bf655c2f42bf48324a711ea1916a948490a"
+      ],
+      "exit_code": 1,
+      "seconds": 17.322,
+      "log": "01.log",
+      "log_sha256": "c63a8a078fb3808f8c2525c7f08d49376183a7fd46de6d325253def9aa4d0c40",
+      "private_log_sha256": "c63a8a078fb3808f8c2525c7f08d49376183a7fd46de6d325253def9aa4d0c40"
+    }
+  ]
+}

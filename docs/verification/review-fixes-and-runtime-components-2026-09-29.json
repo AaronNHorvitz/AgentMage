@@ -1404,5 +1404,15 @@
     "review_findings_resolved": 13,
     "release_claim": "none",
     "independent_review_of_this_batch": "requested; open"
+  },
+  "record_correction": {
+    "date": "2026-09-29",
+    "decision": "docs/decisions/0113-review-fixes-for-inspection-and-job-control.md",
+    "reason": "independent review findings V12 and V14 of 1458cef4",
+    "corrections": [
+      "the batch5-gate stage bound scripts/story_11_2_gate.py at the digest committed next, in 273a1be5: the pin edit ran before its commit and the stage (schema 1) did not declare it",
+      "the Sprint 50 review renewal at b377bf65 also absorbed the kernel/engine/src/runtime_loop.rs change from 64826784; the review was stale from 64826784 through 28dd0e44",
+      "batch5-core/17.log shows only that the npm command failed; the stated catalog-drift cause rests on the catalog renewal that followed, and the producer now keeps a failing child's output"
+    ]
   }
 }

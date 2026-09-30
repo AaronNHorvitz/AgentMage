@@ -1,0 +1,4 @@
+error: command result invalid
+error: focused skipped, suppressed, or unavailable check: v0.4-release-gate
+error: verification claim drift
+error: summary or release claim drift

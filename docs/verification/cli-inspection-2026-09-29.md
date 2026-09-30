@@ -49,3 +49,10 @@ Because the launch is refused before any approval, neither new output appears in
 this lane. Actual-process display on a native host, AMR-04.2.2, real models, manual
 acceptance and release remain open. AMR-04.2.1 and AMR-04.8.1 close as component and
 CLI rows in the ledger commit that follows. Independent review is requested.
+
+## Correction (2026-09-29)
+
+Under [Decision 0113](../decisions/0113-review-fixes-for-inspection-and-job-control.md)
+(finding V12): the `batch6-gate` stage ran on the Story 11.2 pin edit before `64a49f43`
+committed it, and the stage did not declare that. New stages declare such edits and are
+checked against the commit that holds them.

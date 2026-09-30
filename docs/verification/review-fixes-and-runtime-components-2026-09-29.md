@@ -66,3 +66,16 @@ view of the new components, durable job control, actual-process integration proo
 the positive native workflow, real models, manual acceptance and release. Rows
 AMR-04.4, AMR-04.5 and AMR-04.8 close as component rows only in the ledger commit
 that follows this record. Independent review of this batch is requested.
+
+## Correction (2026-09-29)
+
+Under [Decision 0113](../decisions/0113-review-fixes-for-inspection-and-job-control.md)
+(findings V12 and V14), this record carries three corrections:
+
+- The `batch5-gate` stage ran on the Story 11.2 pin edit before `273a1be5` committed
+  it, and the stage did not declare that.
+- The Sprint 50 review renewal at `b377bf65` also absorbed a `runtime_loop.rs` change
+  from `64826784`. That review had been stale since then.
+- The retained `batch5-core/17.log` shows only that the npm command failed. The stated
+  catalog-drift cause rests on the renewal that followed. The producer now keeps a
+  failing child's output.
