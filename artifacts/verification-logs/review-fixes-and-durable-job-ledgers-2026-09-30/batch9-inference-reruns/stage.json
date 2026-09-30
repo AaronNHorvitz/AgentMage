@@ -1,0 +1,143 @@
+{
+  "schema_version": 2,
+  "stage": "batch9-inference-reruns",
+  "source_revision": "9293ea47e4e0a5006668bd8d13b5c0283ae57a70",
+  "scope": "Batch 9 five reruns of the unchanged inference crate after the intermittent lease test failure in batch9-source-checks command 5",
+  "planned_commands": [
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux-inference"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux-inference"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux-inference"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux-inference"
+    ],
+    [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-platform-linux-inference"
+    ]
+  ],
+  "continue_after_failure_indexes": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux-inference"
+      ],
+      "exit_code": 0,
+      "seconds": 1.164,
+      "log": "01.log",
+      "log_sha256": "1545eca49dd2d1076ebb87ec4847ae6a7d7cff60f573c2d09ada14ef7d5a2aad",
+      "private_log_sha256": "1545eca49dd2d1076ebb87ec4847ae6a7d7cff60f573c2d09ada14ef7d5a2aad"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux-inference"
+      ],
+      "exit_code": 0,
+      "seconds": 1.173,
+      "log": "02.log",
+      "log_sha256": "dc1519ed8830a57ebe2a5cca55ffdb409a2da70ececb8f3f0cd11938e0ef6ac7",
+      "private_log_sha256": "dc1519ed8830a57ebe2a5cca55ffdb409a2da70ececb8f3f0cd11938e0ef6ac7"
+    },
+    {
+      "index": 3,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux-inference"
+      ],
+      "exit_code": 0,
+      "seconds": 1.16,
+      "log": "03.log",
+      "log_sha256": "543b6b37110abef20038f6631291bf60325dbbd5dbfa7ef0a32fbd09bd0a46cc",
+      "private_log_sha256": "543b6b37110abef20038f6631291bf60325dbbd5dbfa7ef0a32fbd09bd0a46cc"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux-inference"
+      ],
+      "exit_code": 0,
+      "seconds": 1.169,
+      "log": "04.log",
+      "log_sha256": "16414c80a84e025a9a6b9cfc10b1efbe8d4f7f84e5a238d82e4f10f5cad2d2c8",
+      "private_log_sha256": "16414c80a84e025a9a6b9cfc10b1efbe8d4f7f84e5a238d82e4f10f5cad2d2c8"
+    },
+    {
+      "index": 5,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-platform-linux-inference"
+      ],
+      "exit_code": 0,
+      "seconds": 1.175,
+      "log": "05.log",
+      "log_sha256": "2cff4b7fbde44320c6a2c7b619aa99c5160c45f83a843cb91ae8d0e5ced8533a",
+      "private_log_sha256": "2cff4b7fbde44320c6a2c7b619aa99c5160c45f83a843cb91ae8d0e5ced8533a"
+    }
+  ]
+}

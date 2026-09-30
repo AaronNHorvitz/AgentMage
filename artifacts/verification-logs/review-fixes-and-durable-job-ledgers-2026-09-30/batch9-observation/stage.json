@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "stage": "batch9-observation",
+  "source_revision": "9293ea47e4e0a5006668bd8d13b5c0283ae57a70",
+  "scope": "Batch 9 actual CLI, host and read-worker binaries in fresh disposable roots: clean start and pre-existing-work refusal in this sandbox",
+  "planned_commands": [
+    [
+      "cargo",
+      "build",
+      "--locked",
+      "--offline",
+      "-p",
+      "agentmage-host",
+      "-p",
+      "agentmage-capability-read-only",
+      "--bins"
+    ],
+    [
+      "python3",
+      "<state>/batch9-observation.py"
+    ]
+  ],
+  "continue_after_failure_indexes": [],
+  "sources": {
+    "scripts/verification_batch.py": "d22df0b2e034fac633681ce51517ff88488751c8cd03fa6973c75ff834172dd9"
+  },
+  "changed_sources": [],
+  "allowed_public_name_count": 1,
+  "attachments": [
+    {
+      "name": "observation.json",
+      "sha256": "5461ac2e0b121b621ecea046ec67fb9a5bb7172b132792de4487d7dcc875830b",
+      "private_sha256": "aae5370b5a4be7942c432b73a0ba4b278e60e94d3cac1b4c0782b7d1edbc5556"
+    }
+  ],
+  "results": [
+    {
+      "index": 1,
+      "argv": [
+        "cargo",
+        "build",
+        "--locked",
+        "--offline",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "--bins"
+      ],
+      "exit_code": 0,
+      "seconds": 12.163,
+      "log": "01.log",
+      "log_sha256": "4d4bce87c73ff72452973f7a66e7f96d36abe5583ce16afed6d87674ca0163db",
+      "private_log_sha256": "05a05a2c57fc76316bd953192edf6d97c6df87c2e963069e652dce7657d2594b"
+    },
+    {
+      "index": 2,
+      "argv": [
+        "python3",
+        "<state>/batch9-observation.py"
+      ],
+      "exit_code": 0,
+      "seconds": 1.69,
+      "log": "02.log",
+      "log_sha256": "23ff3311900da2cc0a614a0a44701d2c49c75911e929d6fd9fb2cfaa8ce79491",
+      "private_log_sha256": "23ff3311900da2cc0a614a0a44701d2c49c75911e929d6fd9fb2cfaa8ce79491"
+    }
+  ]
+}

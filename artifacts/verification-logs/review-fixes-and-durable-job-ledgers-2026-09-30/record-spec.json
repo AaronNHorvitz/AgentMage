@@ -1,0 +1,222 @@
+{
+ "record_type": "agentmage-review-fixes-and-durable-job-ledgers-verification",
+ "date": "2026-09-30",
+ "base_commit": "8fbd2bc6ce9c98802e0a5c5354d50b81861c5648",
+ "head_commit": "9293ea47e4e0a5006668bd8d13b5c0283ae57a70",
+ "source_commit": "f5da300e3dbe2cbe015f8d8bb092887941cc9fe9",
+ "retained_logs": "artifacts/verification-logs/review-fixes-and-durable-job-ledgers-2026-09-30",
+ "stages": [
+  "batch9-source-checks",
+  "batch9-source-checks-remainder",
+  "batch9-core",
+  "batch9-codec",
+  "batch9-rebind",
+  "batch9-gate",
+  "batch9-boundary",
+  "batch9-security-index",
+  "batch9-blocked-causes",
+  "batch9-observation",
+  "batch9-inference-reruns"
+ ],
+ "inventory": "artifacts/verification-logs/review-fixes-and-durable-job-ledgers-2026-09-30/binding-inventory.json",
+ "check_logs": {
+  "contracts": "batch9-source-checks/02.log",
+  "engine": "batch9-source-checks/03.log",
+  "repository_map": "batch9-source-checks/04.log",
+  "inference_failed_run": "batch9-source-checks/05.log",
+  "inference": "batch9-source-checks-remainder/01.log",
+  "linux": "batch9-source-checks-remainder/02.log",
+  "host": "batch9-source-checks-remainder/03.log"
+ },
+ "fields": {
+  "decisions": [
+   "docs/decisions/0117-review-fixes-for-run-declarations.md",
+   "docs/decisions/0118-durable-job-control-ledgers.md"
+  ],
+  "review_resolved": "independent review of 8fbd2bc6 (PASS; V1 medium, V2-V4 low); every finding is addressed in f5da300e under Decision 0117, which narrows the Decision 0115 V2 statement and closes the Decision 0116 resumed-run gap",
+  "components": {
+   "review_fixes": "a resumed run declares neither recoverability nor context views: the live host service answers both unavailable, the effect recorder refuses a resumed request (declare_run) and the context port marks its views incomplete for a resumed request or composition (V1); the Story 23.4 check allows `requested` in request_tool only as the parameter, one destructuring and requested.origin and refuses any origin assignment in the runtime loop (V2); tests of the live service's declaration gating, the CLI's verification of received declarations, the IPC capacity refusal through a pure answer function, the 64-view bound and the ended accessors (V3); a public line reader over a descriptor reader and an injectable selection prompt, both tested (V4)",
+   "AMR-04.6.1": "kernel/engine/migrations/operational-store/0021-job-control-ledgers.sql (append-only roots and entries, forward-only head); kernel/engine/src/job_ledger_store.rs (DurableJobLedgers: create, observation, control under an owner-supplied client scope, owner-only observe_owner; each append and its head in one immediate transaction naming the head it read; replay on every read; verify_all on open and export; poison on integrity failure); kernel/engine/src/job_control.rs (client-scoped request identities, entry format 2); kernel/engine/src/operational_store.rs (schema 21 after verifying prior history, three content-free export families, DurableAuthorityRuntime::job_ledgers)"
+  },
+  "mutation_checks": "run before the source commit with private tooling, each reverting one rule and running the new tests: ten review-fix mutations each made a new test fail (the resumed-run rule in the live service, the effect recorder and context composition; the 64-view bound; the IPC declaration bound; the CLI run check; the session's terminal and busy gate; the prompt's re-ask; the public reader's overflow policy and its bound). Five AMR-04.6.1 mutations each made a store or ledger test fail (head update outside the append transaction, no canonical encoding check, no replay on open, no poisoning, no client scope). The engine ended-accessor test and the V2 checker were not mutation-run; the V2 unit test is itself a set of source mutants. These runs are not retained logs",
+  "failure_comparison": "linux 188 passed, 19 failed, 51 ignored and host 345 passed, 52 failed, 10 ignored; both failure name sets are identical to the batch 8 source-check baseline; every new test passes",
+  "retained_failures": [
+   {
+    "stage": "batch9-source-checks",
+    "indexes": [
+     5
+    ],
+    "cause": "one intermittent failure of native_inference_lease::tests::changed_marker_is_preserved_and_refuses_later_admission in the unchanged inference crate: after the owner dropped its lease, a new acquisition reported busy instead of cleanup-uncertain. The stage stopped there; batch9-source-checks-remainder reran it and every later command, and batch9-inference-reruns passed five more full runs. A concurrent test's fork holding the lock descriptor until exec is a plausible mechanism but was not demonstrated"
+   },
+   {
+    "stage": "batch9-source-checks-remainder",
+    "indexes": [
+     2,
+     3
+    ],
+    "cause": "the known native-prerequisite failures of the Linux and host suites, identical names to the batch 8 baseline"
+   },
+   {
+    "stage": "batch9-blocked-causes",
+    "indexes": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "cause": "each command is an underlying failing step of a still-blocked producer, run to show its cause: pytest is not installed; two host handoff tests and one host frontier test fail at native fixtures; the Mermaid step cannot find its headless Chrome in the Puppeteer cache; requirements:current-check fails in build-contract:check because the platforms/linux dependency graph differs from the accepted contract"
+   }
+  ],
+  "blocked_refreshes": [
+   {
+    "artifact": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json",
+    "stale_since": "batch 7",
+    "blocker": "pytest is not installed (batch9-blocked-causes/01.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-23/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "full host suite and product gate: the 52 native-prerequisite host failures (batch9-source-checks-remainder/03.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-24/source-boundary-review.json",
+    "stale_since": "batch 7",
+    "blocker": "host handoff tests fail at native fixtures (batch9-blocked-causes/02.log) and the product gate as above"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-50/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "documentation gate: Mermaid cannot find its headless browser (batch9-blocked-causes/04.log) and requirements:current-check fails (05.log)"
+   },
+   {
+    "artifact": "artifacts/sprints/sprint-51/local-evidence-report.json",
+    "stale_since": "batch 7",
+    "blocker": "host frontier test fails at a native fixture (batch9-blocked-causes/03.log) and the documentation gate as above"
+   }
+  ],
+  "sbom_writes": 1,
+  "sbom_components_changed": [
+   "agentmage-host",
+   "agentmage-kernel-engine",
+   "agentmage-platform-linux"
+  ],
+  "store_wave": "Sprint 11 operational store evidence renewed for schema 21 in batch9-core before the Story 11.2 AC2 report: Story 11.1 operational-schema-v3, S-011-RT01 and S-011-UT01; Story 11.2 source content deduplication, source lifecycle transactions, source materialization schema, storage crash boundary, storage crash exact state, storage downgrade refusal, storage migration compatibility, storage new-family lifecycle, workflow atomic publication, workflow attempt invariants and workflow materialization schema; Story 11.3 durable resume. Their producers now name schema 21, the renamed version-twenty-one tests and the new migration, fixture and owner files",
+  "review_pins": [
+   {
+    "gate": "scripts/story_11_2_gate.py",
+    "from": "8f0fab59dcbe56a01040f0d52e62e9256a65eaa8",
+    "to": "01be204c45d38d7041d3570d706dc3030b31796b",
+    "reviewed_paths_retained": 25,
+    "changed_reviewed_paths": [
+     {
+      "path": "kernel/engine/src/operational_store.rs",
+      "reason": "Decision 0118 (AMR-04.6.1): migration 21 for durable job control ledgers (verifies prior history first), replay of every ledger on open and export, three content-free export families, DurableAuthorityRuntime::job_ledgers sharing the store lock, and the version-twenty-one fixture and upgrade tests; independent review of this batch is requested separately, not claimed by this pin"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-report.json",
+      "reason": "renewed for operational store schema 21 (Decision 0118, AMR-04.6.1): schema version 20 to 21, the renamed version-twenty-one fixture and upgrade tests in its commands and markers, the schema-21 fixture, migration 0021 and job_ledger_store.rs added to its bound artifacts, and bound digests, byte lengths and revisions"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-report.json",
+      "reason": "renewed for operational store schema 21 (Decision 0118, AMR-04.6.1): schema version 20 to 21, the renamed version-twenty-one fixture and upgrade tests in its commands and markers, the schema-21 fixture, migration 0021 and job_ledger_store.rs added to its bound artifacts, and bound digests, byte lengths and revisions"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-report.json",
+      "reason": "renewed for operational store schema 21 (Decision 0118, AMR-04.6.1): schema version 20 to 21, the renamed version-twenty-one fixture and upgrade tests in its commands and markers, the schema-21 fixture, migration 0021 and job_ledger_store.rs added to its bound artifacts, and bound digests, byte lengths and revisions"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-materialization-schema-report.json",
+      "reason": "renewed for operational store schema 21 (Decision 0118, AMR-04.6.1): schema version 20 to 21, the renamed version-twenty-one fixture and upgrade tests in its commands and markers, the schema-21 fixture, migration 0021 and job_ledger_store.rs added to its bound artifacts, and bound digests, byte lengths and revisions"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-report.json",
+      "reason": "renewed for operational store schema 21 (Decision 0118, AMR-04.6.1): schema version 20 to 21, the renamed version-twenty-one fixture and upgrade tests in its commands and markers, the schema-21 fixture, migration 0021 and job_ledger_store.rs added to its bound artifacts, and bound digests, byte lengths and revisions"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-atomic-publication-report.json",
+      "reason": "regenerated by the batch 9 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-report.json",
+      "reason": "renewed for operational store schema 21 (Decision 0118): schema version and migration count 20 to 21, the job ledger migration, corrupt-history and retry tests added to its markers, Decision 0118, migration 0021, the schema-21 fixture, job_ledger_store.rs and job_ledger_migration_tests.rs added to its bound artifacts, generated_on, and bound digests, byte lengths and revisions"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-report.json",
+      "reason": "regenerated by the batch 9 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-report.json",
+      "reason": "regenerated by the batch 9 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-report.json",
+      "reason": "regenerated by the batch 9 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-exact-state-report.json",
+      "reason": "regenerated by the batch 9 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "reason": "regenerated by the batch 9 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json",
+      "reason": "regenerated by the batch 9 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json",
+      "reason": "regenerated by the batch 9 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+     },
+     {
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json",
+      "reason": "regenerated by the batch 9 evidence pass for the changed sources; only bound digests, byte lengths and revisions changed"
+     }
+    ]
+   }
+  ],
+  "checker_change": "scripts/runtime_coordinator_boundary_review.py: model-proposal-is-inert additionally requires that `requested` appears in request_tool only as the parameter, the one `} = requested;` destructuring and `requested.origin`, and that nothing in the runtime loop assigns an `origin` (Decision 0117); its unit test refuses the review's two probe mutants and eight more and accepts class comparisons",
+  "newly_stale_disposition": "only historical records: the retained batch 5 and batch 8 stage records, which pin inputs as they were at their revisions, and the dated research reader compatibility record of 2026-09-27",
+  "runtime_campaign": "Story 23.4 runtime campaign peak RSS 12,120 to 50,604 KiB against a 1,048,576 KiB bound over nine commands",
+  "cli_observation": {
+   "source_commit": "9293ea47e4e0a5006668bd8d13b5c0283ae57a70",
+   "binaries_sha256": {
+    "agentmage": "c7b937212a48da3d2321b3aaa3b6aac8cb1b80e58b07cef97301d43ba942ff0d",
+    "agentmage-host": "9255507acb5b72d9ee8ad38e79ca6e7c994071577317d2b66fc1bcf7cf9961c5",
+    "agentmage-read-only-worker": "a12c4fd1c44eaa8c03f196588d6c8e1d7501f95a984a2df67d55d56d92246aaf"
+   },
+   "clean_scripted_start_exit": 5,
+   "clean_refusal_code": "linux.repository.git_artifact.invalid",
+   "clean_preserved": true,
+   "dirty_start_exit": 1,
+   "dirty_preserved": true,
+   "qualification": "actual-binary-native-prerequisite-refusal-only",
+   "job_ledger_exercised": false,
+   "reason": "native prerequisites refuse the launch before any run, and no host service uses the durable job ledger yet",
+   "attachment": "batch9-observation/attachments/observation.json"
+  },
+  "not_run": [
+   "host job control over authenticated IPC and the CLI job view (AMR-04.6.2)",
+   "actual-process detach, reconnect and cleanup across UI closure (AMR-04.6.3)",
+   "actual-process display of run declarations and context views (AMR-04.7.2, AMR-04.10)",
+   "actual-process hunk selection on a native host (AMR-04.2.3)",
+   "the native-only Linux boundary tests",
+   "positive native coding workflow",
+   "real model or GPU",
+   "manual user acceptance",
+   "release"
+  ],
+  "claims": {
+   "task_rows_closed": [
+    {
+     "row": "AMR-04.6.1",
+     "closed_by": "the ledger commit that follows this record",
+     "scope": "component row: the durable store under the operational store owner; no host service, IPC, CLI or native process uses it yet (AMR-04.6.2, AMR-04.6.3)"
+    }
+   ],
+   "release_claim": "none",
+   "independent_review_of_this_batch": "requested; open"
+  }
+ }
+}
