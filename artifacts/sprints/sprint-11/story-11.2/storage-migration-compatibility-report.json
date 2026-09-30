@@ -1,9 +1,9 @@
 {
   "artifacts": [
     {
-      "byte_length": 486324,
+      "byte_length": 487095,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "cacb9336af06ed8c765335e36783089c13195e6ed0bcb07a4957f590eaa03b1d"
+      "sha256": "d1d06e9bd9490947fb35939cce8d5e0389ca924a841417371fb31faa685ad97f"
     },
     {
       "byte_length": 4166,
@@ -36,9 +36,9 @@
       "sha256": "6f27f41680d76642fbaae8efded29934bc2ccb797c75c23d7142986d7414573d"
     },
     {
-      "byte_length": 14745,
+      "byte_length": 14900,
       "path": "kernel/engine/src/job_ledger_store.rs",
-      "sha256": "779274e19e74834847fd56f5513d91bf7b30fb82b47f11249030320c2fe83d68"
+      "sha256": "1e84d70b6c93b452893c95194cf9e5b2cbf050d4f1c877cc0c4c8eca9f118c0d"
     },
     {
       "byte_length": 2335,
@@ -71,9 +71,9 @@
       "sha256": "4fe13fbdc8b6917d4b48c58f8c58481c8fe7dbf4831770abf34112ade8fc9029"
     },
     {
-      "byte_length": 5110,
+      "byte_length": 5767,
       "path": "docs/decisions/0118-durable-job-control-ledgers.md",
-      "sha256": "5f886084239979a795f40c180e7f8a24d7f825f426ea447300a9bf82aaa13c64"
+      "sha256": "cbc99ec45a2dc9ec51df9216e3039e44553ca36223962fa3cc47d2c98dcedea4"
     },
     {
       "byte_length": 2372,
@@ -93,7 +93,7 @@
     {
       "byte_length": 36989,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-results.log",
-      "sha256": "63e82ee9cf565b0552269a2993aa2b1084479567ab0cb8ef81278ea564b45835"
+      "sha256": "49fd6f4dbaa0ee8f1767d24d2bf0d09473ea80e80e2e12be4ee9c0eda09c8f4a"
     }
   ],
   "canonical_store": "operational-store",

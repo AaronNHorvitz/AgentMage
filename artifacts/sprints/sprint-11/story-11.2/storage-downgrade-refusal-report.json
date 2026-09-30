@@ -1,9 +1,9 @@
 {
   "artifacts": [
     {
-      "byte_length": 486324,
+      "byte_length": 487095,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "cacb9336af06ed8c765335e36783089c13195e6ed0bcb07a4957f590eaa03b1d"
+      "sha256": "d1d06e9bd9490947fb35939cce8d5e0389ca924a841417371fb31faa685ad97f"
     },
     {
       "byte_length": 12823,
@@ -28,7 +28,7 @@
     {
       "byte_length": 10812,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-results.log",
-      "sha256": "74f5dd02ae80ed4e67467799dcdfed2325e649daedc51242fee8e0d619844c72"
+      "sha256": "bdd4d7589f3db0e6ae612f612d62e1d106aef4666177ab4e8061153ee888d244"
     }
   ],
   "canonical_store": "operational-store",
