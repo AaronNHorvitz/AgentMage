@@ -9,6 +9,12 @@ use rustix::io::{Errno, read};
 use super::{LinuxDevelopmentBoundaryError, LinuxDevelopmentBoundaryErrorKind, development_error};
 
 const MAX_CONFIRMATION_BYTES: usize = 256;
+/// Bound of one general development line: enough to name every hunk of the
+/// largest reviewable change by number (Decision 0115).
+const MAX_DEVELOPMENT_LINE_BYTES: usize = 4_096;
+/// Largest remainder of an over-long line that is read and discarded before
+/// the next prompt; beyond it the input fails closed.
+const MAX_DISCARDED_LINE_BYTES: usize = 64 * 1024;
 const INPUT_POLL_TIME: Timespec = Timespec {
     tv_sec: 0,
     tv_nsec: 50_000_000,
@@ -50,6 +56,10 @@ pub enum LinuxDevelopmentInputLine {
     Line(String),
     /// Input ended before a complete line; never an approving answer.
     Ended,
+    /// The line exceeded its bound. Its remainder was read up to and including
+    /// the newline and discarded, so the next prompt starts on a fresh line.
+    /// Never an approving answer.
+    TooLong,
     /// The existing signal owner's flag is set and remains unconsumed.
     Cancelled,
 }
@@ -57,13 +67,28 @@ pub enum LinuxDevelopmentInputLine {
 /// Reads one bounded complete line from the development CLI's standard input,
 /// under the same single-consumer, one-byte and cancellation rules as
 /// [`read_development_confirmation`]. The caller interprets the line; no line
-/// grants anything by itself.
+/// grants anything by itself. A line over its bound is discarded through its
+/// newline and reported as [`LinuxDevelopmentInputLine::TooLong`].
 pub fn read_development_line(
     cancellation: &AtomicBool,
 ) -> Result<LinuxDevelopmentInputLine, LinuxDevelopmentBoundaryError> {
     let stdin = std::io::stdin();
     let _input_owner = stdin.lock();
-    read_line(&stdin, cancellation)
+    read_line(
+        &stdin,
+        cancellation,
+        MAX_DEVELOPMENT_LINE_BYTES,
+        Overflow::Discard,
+    )
+}
+
+/// What an over-long line means for one reader.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Overflow {
+    /// A confirmation fails closed and leaves the remainder unread.
+    Fail,
+    /// A general line is discarded through its newline.
+    Discard,
 }
 
 /// Reads one bounded confirmation from the development CLI's standard input.
@@ -90,20 +115,24 @@ fn read_confirmation(
     kind: LinuxDevelopmentConfirmationKind,
     cancellation: &AtomicBool,
 ) -> Result<LinuxDevelopmentConfirmation, LinuxDevelopmentBoundaryError> {
-    Ok(match read_line(input, cancellation)? {
-        LinuxDevelopmentInputLine::Line(line) if line == kind.word() => {
-            LinuxDevelopmentConfirmation::Confirmed
-        }
-        LinuxDevelopmentInputLine::Line(_) | LinuxDevelopmentInputLine::Ended => {
-            LinuxDevelopmentConfirmation::Declined
-        }
-        LinuxDevelopmentInputLine::Cancelled => LinuxDevelopmentConfirmation::Cancelled,
-    })
+    Ok(
+        match read_line(input, cancellation, MAX_CONFIRMATION_BYTES, Overflow::Fail)? {
+            LinuxDevelopmentInputLine::Line(line) if line == kind.word() => {
+                LinuxDevelopmentConfirmation::Confirmed
+            }
+            LinuxDevelopmentInputLine::Line(_)
+            | LinuxDevelopmentInputLine::Ended
+            | LinuxDevelopmentInputLine::TooLong => LinuxDevelopmentConfirmation::Declined,
+            LinuxDevelopmentInputLine::Cancelled => LinuxDevelopmentConfirmation::Cancelled,
+        },
+    )
 }
 
 fn read_line(
     input: &impl AsFd,
     cancellation: &AtomicBool,
+    bound: usize,
+    overflow: Overflow,
 ) -> Result<LinuxDevelopmentInputLine, LinuxDevelopmentBoundaryError> {
     if cancellation.load(Ordering::Acquire) {
         return Ok(LinuxDevelopmentInputLine::Cancelled);
@@ -116,11 +145,58 @@ fn read_line(
     {
         return Err(input_error());
     }
-    let mut bytes = [0_u8; MAX_CONFIRMATION_BYTES];
-    let mut length = 0;
+    let mut bytes = Vec::with_capacity(bound);
+    loop {
+        let byte = match read_byte(input, cancellation)? {
+            InputByte::Byte(byte) => byte,
+            InputByte::Ended => return Ok(LinuxDevelopmentInputLine::Ended),
+            InputByte::Cancelled => return Ok(LinuxDevelopmentInputLine::Cancelled),
+        };
+        bytes.push(byte);
+        if byte == b'\n' {
+            let line = std::str::from_utf8(&bytes).map_err(|_| input_error())?;
+            return Ok(LinuxDevelopmentInputLine::Line(line.trim().to_owned()));
+        }
+        if bytes.len() == bound {
+            return match overflow {
+                Overflow::Fail => Err(input_error()),
+                Overflow::Discard => discard_line(input, cancellation),
+            };
+        }
+    }
+}
+
+/// Reads and discards the rest of an over-long line through its newline.
+fn discard_line(
+    input: &impl AsFd,
+    cancellation: &AtomicBool,
+) -> Result<LinuxDevelopmentInputLine, LinuxDevelopmentBoundaryError> {
+    for _ in 0..MAX_DISCARDED_LINE_BYTES {
+        match read_byte(input, cancellation)? {
+            InputByte::Byte(b'\n') => return Ok(LinuxDevelopmentInputLine::TooLong),
+            InputByte::Byte(_) => {}
+            InputByte::Ended => return Ok(LinuxDevelopmentInputLine::Ended),
+            InputByte::Cancelled => return Ok(LinuxDevelopmentInputLine::Cancelled),
+        }
+    }
+    Err(input_error())
+}
+
+enum InputByte {
+    Byte(u8),
+    Ended,
+    Cancelled,
+}
+
+/// Reads exactly one byte, observing cancellation around the bounded poll.
+fn read_byte(
+    input: &impl AsFd,
+    cancellation: &AtomicBool,
+) -> Result<InputByte, LinuxDevelopmentBoundaryError> {
+    let mut byte = [0_u8; 1];
     loop {
         if cancellation.load(Ordering::Acquire) {
-            return Ok(LinuxDevelopmentInputLine::Cancelled);
+            return Ok(InputByte::Cancelled);
         }
         let mut descriptors = [PollFd::new(input, PollFlags::IN)];
         match poll(&mut descriptors, Some(&INPUT_POLL_TIME)) {
@@ -129,7 +205,7 @@ fn read_line(
             Err(_) => return Err(input_error()),
         }
         if cancellation.load(Ordering::Acquire) {
-            return Ok(LinuxDevelopmentInputLine::Cancelled);
+            return Ok(InputByte::Cancelled);
         }
         let ready = descriptors[0].revents();
         if ready.intersects(PollFlags::ERR | PollFlags::NVAL)
@@ -139,23 +215,17 @@ fn read_line(
         }
         // One byte prevents read-ahead from consuming any future challenge's
         // answer. Polling does not change a shared open-file description's flags.
-        match read(input, &mut bytes[length..length + 1]) {
-            Ok(0) => return Ok(LinuxDevelopmentInputLine::Ended),
-            Ok(1) => length += 1,
+        match read(input, &mut byte) {
+            Ok(0) => return Ok(InputByte::Ended),
+            Ok(1) => {}
             Ok(_) => return Err(input_error()),
             Err(Errno::INTR | Errno::AGAIN) => continue,
             Err(_) => return Err(input_error()),
         }
         if cancellation.load(Ordering::Acquire) {
-            return Ok(LinuxDevelopmentInputLine::Cancelled);
+            return Ok(InputByte::Cancelled);
         }
-        if bytes[length - 1] == b'\n' {
-            let line = std::str::from_utf8(&bytes[..length]).map_err(|_| input_error())?;
-            return Ok(LinuxDevelopmentInputLine::Line(line.trim().to_owned()));
-        }
-        if length == bytes.len() {
-            return Err(input_error());
-        }
+        return Ok(InputByte::Byte(byte[0]));
     }
 }
 
@@ -216,15 +286,101 @@ mod tests {
             output.write_all(bytes).unwrap();
             drop(output);
             assert_eq!(
-                read_line(&input, &AtomicBool::new(false)).unwrap(),
+                read_line(
+                    &input,
+                    &AtomicBool::new(false),
+                    MAX_DEVELOPMENT_LINE_BYTES,
+                    Overflow::Discard
+                )
+                .unwrap(),
                 expected
             );
         }
         let (input, _output) = std::io::pipe().unwrap();
         assert_eq!(
-            read_line(&input, &AtomicBool::new(true)).unwrap(),
+            read_line(
+                &input,
+                &AtomicBool::new(true),
+                MAX_DEVELOPMENT_LINE_BYTES,
+                Overflow::Discard
+            )
+            .unwrap(),
             LinuxDevelopmentInputLine::Cancelled
         );
+    }
+
+    #[test]
+    fn an_overlong_line_is_discarded_through_its_newline_and_the_next_line_is_read() {
+        // Review V6: a long selection is refused and asked again, never an abort.
+        let (input, mut output) = std::io::pipe().unwrap();
+        let flags = rustix::fs::fcntl_getfl(&input).unwrap();
+        let mut long = b"select".to_vec();
+        while long.len() <= MAX_DEVELOPMENT_LINE_BYTES + 100 {
+            long.extend_from_slice(b" 511");
+        }
+        long.push(b'\n');
+        long.extend_from_slice(b"select 1 2\n");
+        output.write_all(&long).unwrap();
+        let read_next = || {
+            read_line(
+                &input,
+                &AtomicBool::new(false),
+                MAX_DEVELOPMENT_LINE_BYTES,
+                Overflow::Discard,
+            )
+            .unwrap()
+        };
+        assert_eq!(read_next(), LinuxDevelopmentInputLine::TooLong);
+        assert_eq!(
+            read_next(),
+            LinuxDevelopmentInputLine::Line("select 1 2".to_owned())
+        );
+        assert_eq!(rustix::fs::fcntl_getfl(&input).unwrap(), flags);
+        // The longest selection of 511 of 512 hunks fits within one line.
+        let selection = (1..=511).fold(String::from("select"), |mut line, number| {
+            line.push_str(&format!(" {number}"));
+            line
+        });
+        assert!(selection.len() < MAX_DEVELOPMENT_LINE_BYTES);
+        // An over-long fragment that ends without a newline never answers.
+        let (input, mut output) = std::io::pipe().unwrap();
+        output
+            .write_all(&vec![b'x'; MAX_DEVELOPMENT_LINE_BYTES + 10])
+            .unwrap();
+        drop(output);
+        assert_eq!(
+            read_line(
+                &input,
+                &AtomicBool::new(false),
+                MAX_DEVELOPMENT_LINE_BYTES,
+                Overflow::Discard
+            )
+            .unwrap(),
+            LinuxDevelopmentInputLine::Ended
+        );
+        // An unbounded remainder fails closed instead of reading forever.
+        let (input, mut output) = std::io::pipe().unwrap();
+        let writer = std::thread::spawn(move || {
+            let _ = output.write_all(&vec![
+                b'x';
+                MAX_DEVELOPMENT_LINE_BYTES
+                    + MAX_DISCARDED_LINE_BYTES
+                    + 10
+            ]);
+        });
+        assert_eq!(
+            read_line(
+                &input,
+                &AtomicBool::new(false),
+                MAX_DEVELOPMENT_LINE_BYTES,
+                Overflow::Discard
+            )
+            .unwrap_err()
+            .kind(),
+            LinuxDevelopmentBoundaryErrorKind::ConfirmationInputFailed
+        );
+        drop(input);
+        writer.join().unwrap();
     }
 
     #[test]

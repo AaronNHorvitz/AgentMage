@@ -131,6 +131,12 @@ enum ModelScript {
     Tool,
     ToolAt(u32),
     InvalidArguments,
+    /// Proposes the registered shell-only selected-write tool with valid arguments.
+    ShellOnlyTool,
+    /// Proposes a tool no registry offers.
+    UnknownTool,
+    /// Proposes the ordinary read under a call identity reserved for derived calls.
+    ReservedCallId,
     ProtocolRejected(ModelFinishReason),
     Malformed,
     Failure(RuntimePortFailure),
@@ -199,20 +205,48 @@ impl RuntimeModelPort for FakeModel {
                 )),
                 None,
             ),
-            ModelScript::Tool | ModelScript::ToolAt(_) | ModelScript::InvalidArguments => (
+            ModelScript::ShellOnlyTool | ModelScript::UnknownTool => {
+                let selected = selected_write_call();
+                (
+                    ModelProposalKind::ToolCall,
+                    None,
+                    Some(ModelToolCallCandidate {
+                        tool_call_id: agentmage_kernel_contracts::ToolCallId::from_raw(format!(
+                            "tool-call-{}",
+                            self.calls
+                        )),
+                        tool_id: if matches!(script, ModelScript::UnknownTool) {
+                            ToolId::from_raw("fixture.unknown")
+                        } else {
+                            selected.tool_id
+                        },
+                        tool_version: selected.tool_version,
+                        arguments: selected.arguments,
+                    }),
+                )
+            }
+            ModelScript::Tool
+            | ModelScript::ToolAt(_)
+            | ModelScript::InvalidArguments
+            | ModelScript::ReservedCallId => (
                 ModelProposalKind::ToolCall,
                 None,
                 Some(ModelToolCallCandidate {
-                    tool_call_id: agentmage_kernel_contracts::ToolCallId::from_raw(format!(
-                        "tool-call-{}",
-                        self.calls
-                    )),
+                    tool_call_id: agentmage_kernel_contracts::ToolCallId::from_raw(
+                        if matches!(script, ModelScript::ReservedCallId) {
+                            format!("selected-call:{}", "0".repeat(32))
+                        } else {
+                            format!("tool-call-{}", self.calls)
+                        },
+                    ),
                     tool_id: ToolId::from_raw("fixture.read"),
                     tool_version: "1.0.0".to_owned(),
                     arguments: payload(
                         "fixture.input",
                         match script {
-                            ModelScript::Tool => br#"{"path":"fixture.txt"}"#.to_vec(),
+                            ModelScript::Tool | ModelScript::ReservedCallId => {
+                                br#"{"path":"fixture.txt"}"#.to_vec()
+                            }
                             ModelScript::InvalidArguments => br#"{"path":false}"#.to_vec(),
                             ModelScript::ToolAt(index) => {
                                 format!(r#"{{"path":"fixture-{index}.txt"}}"#).into_bytes()
@@ -622,6 +656,8 @@ enum PermissionScript {
     Ask,
     /// Asks, then refuses any selection as one it cannot honor (Decision 0114).
     NarrowRefused,
+    /// Asks, then derives a call to a tool a model may propose (review V3).
+    NarrowToModelTool,
     Expired,
     FailPermissionPublication,
     FailToolStartPublication,
@@ -735,6 +771,7 @@ impl FakeToolBoundary {
                 self.script,
                 PermissionScript::Ask
                     | PermissionScript::NarrowRefused
+                    | PermissionScript::NarrowToModelTool
                     | PermissionScript::SubstituteResolution
                     | PermissionScript::RepeatResolutionBuilder
                     | PermissionScript::OmitResolutionBuilder
@@ -768,13 +805,18 @@ impl FakeToolBoundary {
                     reason_code: "runtime.fixture.selection-refused".to_owned(),
                 }
             } else {
+                let mut derived = selected_write_call();
+                if matches!(self.script, PermissionScript::NarrowToModelTool) {
+                    derived.tool_id = ToolId::from_raw("fixture.read");
+                    derived.arguments = payload("fixture.input", br#"{"path":"fixture.txt"}"#);
+                }
                 RuntimePermissionEvaluation::Narrowed {
                     approval_id,
                     grant_id: proposed_grant_id,
                     preview_sha256,
                     expires_at_epoch_ms,
                     decision_sha256: sha256(b"narrow decision"),
-                    derived: selected_write_call(),
+                    derived,
                 }
             };
         }
@@ -6070,6 +6112,71 @@ fn a_derived_write_counts_against_the_declared_tool_ceiling() {
     );
     assert_eq!(executions.load(Ordering::SeqCst), 0);
     assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn a_model_proposal_of_an_unoffered_tool_or_reserved_identity_never_reaches_evaluation() {
+    // Review V2 and V7: the property is tested at the loop, not only at the
+    // dispatcher; review V10: derived call identities are reserved.
+    for (script, code) in [
+        (
+            ModelScript::ShellOnlyTool,
+            "runtime.proposal.tool-not-offered",
+        ),
+        (
+            ModelScript::UnknownTool,
+            "runtime.proposal.tool-not-offered",
+        ),
+        (
+            ModelScript::ReservedCallId,
+            "runtime.proposal.call-identity-reserved",
+        ),
+    ] {
+        let (mut coordinator, executions) =
+            narrowing_coordinator(PermissionScript::Ask, [script], |_| {});
+        let RuntimeCoordinatorStep::Complete { outcome } =
+            coordinator.run_until_boundary(None, None).unwrap()
+        else {
+            panic!("a refused proposal ends the run");
+        };
+        assert_eq!(outcome.state, AgentStateKind::Failed);
+        assert_eq!(outcome.unresolved_codes, [code.to_owned()]);
+        assert_eq!(outcome.tool_call_count, 0);
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert!(!coordinator.events().iter().any(|event| matches!(
+            event.kind,
+            RuntimeEventKind::ToolRequested { .. } | RuntimeEventKind::PermissionRequested { .. }
+        )));
+        assert_valid_terminal_stream(&coordinator);
+    }
+}
+
+#[test]
+fn a_boundary_cannot_derive_a_call_to_a_tool_a_model_may_propose() {
+    // Review V3: only a registered shell-only tool may receive a derived call,
+    // so a derived call can never be narrowed into another one.
+    let (mut coordinator, executions) = narrowing_coordinator(
+        PermissionScript::NarrowToModelTool,
+        [ModelScript::Tool],
+        |_| {},
+    );
+    let original = awaiting(coordinator.run_until_boundary(None, None).unwrap());
+    assert!(matches!(
+        coordinator.run_until_boundary(
+            Some(&decide(&original, RuntimeApprovalDisposition::Narrow)),
+            None
+        ),
+        Err(RuntimeLoopError::InvalidBoundaryResult)
+    ));
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    assert_eq!(
+        coordinator
+            .events()
+            .iter()
+            .filter(|event| matches!(event.kind, RuntimeEventKind::ToolRequested { .. }))
+            .count(),
+        1
+    );
 }
 
 #[test]

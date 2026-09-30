@@ -9,7 +9,10 @@ use agentmage_kernel_contracts::{
     CancellationId, RuntimeApprovalChallenge, RuntimeApprovalResponse, RuntimeArtifactRef,
     RuntimeEvent, RuntimeEventCursor, RuntimeOutcome, RuntimeRunId, RuntimeRunRequest, SessionId,
 };
+use agentmage_kernel_engine::context_inspection::ContextInspection;
 use agentmage_kernel_engine::runtime_artifact::{RuntimeArtifactPage, RuntimeArtifactState};
+
+use crate::coding_recoverability::RecoverabilityReport;
 
 const PREAUTHORIZATION_SCHEMA_VERSION: u16 = 1;
 const MAX_PREAUTHORIZED_PATHS: usize = 64;
@@ -220,6 +223,25 @@ pub struct RuntimeTransportStep {
     pub outcome: Option<RuntimeOutcome>,
 }
 
+/// Host declarations about one ended run, read before the run is released
+/// (Decision 0116). They describe the run and grant nothing.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeRunDeclarations {
+    /// Declarations schema version.
+    pub schema_version: u16,
+    /// Exact ended run.
+    pub run_id: RuntimeRunId,
+    /// Digest of the exact admitted runtime request.
+    pub request_sha256: String,
+    /// Recoverability of this run's effects, absent when the host cannot
+    /// declare it completely.
+    pub recoverability: Option<RecoverabilityReport>,
+    /// Content-free view of each context composed for a model call, in order,
+    /// absent when the host cannot show every one.
+    pub context_inspections: Option<Vec<ContextInspection>>,
+}
+
 /// Stable content-free refusal from a shared runtime transport boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -318,6 +340,16 @@ pub trait RuntimeTransportPort {
         _request_sha256: &str,
         _reference: &RuntimeArtifactRef,
     ) -> Result<RuntimeArtifactState, RuntimeTransportError> {
+        Err(RuntimeTransportError::RequestDenied)
+    }
+
+    /// Reads the host's declarations about one ended run before it is released
+    /// (Decision 0116).
+    fn run_declarations(
+        &mut self,
+        _run_id: &RuntimeRunId,
+        _request_sha256: &str,
+    ) -> Result<RuntimeRunDeclarations, RuntimeTransportError> {
         Err(RuntimeTransportError::RequestDenied)
     }
 

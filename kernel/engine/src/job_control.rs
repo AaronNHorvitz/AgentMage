@@ -35,6 +35,10 @@ pub const MAX_JOB_LEDGER_ENTRIES: usize = 4_096;
 /// its terminal event, the most owner observations that can follow without a
 /// client request.
 pub const OWNER_RESERVED_JOB_LEDGER_ENTRIES: usize = 2;
+/// Client entries kept for one accepted cancellation: every other client
+/// request stops this many entries earlier, so a person can always cancel a
+/// job that has not ended (Decision 0115).
+pub const CANCEL_RESERVED_JOB_LEDGER_ENTRIES: usize = 1;
 /// Largest number of refused client requests retained for one job. A further
 /// refusal is answered with [`JobControlError::Full`] and neither recorded nor
 /// remembered; a refused request can never be applied later on a retry,
@@ -337,20 +341,28 @@ impl JobControlLedger {
                 Err(JobControlError::RequestConflict)
             };
         }
-        if self.entries.len() >= MAX_JOB_LEDGER_ENTRIES - OWNER_RESERVED_JOB_LEDGER_ENTRIES {
-            return Err(JobControlError::Full);
-        }
-        let refused = |refusal| JobControlDecision::Refused {
-            refusal,
-            revision: self.revision,
-            phase: self.phase,
-        };
         let next = if request.observed_revision != self.revision {
             Err(JobControlRefusal::StaleRevision)
         } else if self.phase.is_terminal() {
             Err(JobControlRefusal::Terminal)
         } else {
             transition(self.phase, request.action)
+        };
+        let accepted_cancel = request.action == JobControlAction::Cancel && next.is_ok();
+        let client_bound = MAX_JOB_LEDGER_ENTRIES
+            - OWNER_RESERVED_JOB_LEDGER_ENTRIES
+            - if accepted_cancel {
+                0
+            } else {
+                CANCEL_RESERVED_JOB_LEDGER_ENTRIES
+            };
+        if self.entries.len() >= client_bound {
+            return Err(JobControlError::Full);
+        }
+        let refused = |refusal| JobControlDecision::Refused {
+            refusal,
+            revision: self.revision,
+            phase: self.phase,
         };
         let decision = match next {
             Ok(phase) => JobControlDecision::Applied {
@@ -902,14 +914,8 @@ mod tests {
         // A queued job needs two owner observations to finish without any
         // further client request; the reserve keeps both recordable.
         let mut ledger = JobControlLedger::create(JOB, "owner-fixture").unwrap();
-        // One refusal makes the toggles below end with the job queued.
-        assert!(matches!(
-            ledger.control(&request("resume-queued", JobControlAction::Resume, 0)),
-            Ok(JobControlDecision::Refused {
-                refusal: JobControlRefusal::AlreadyInEffect,
-                ..
-            })
-        ));
+        // With the creation entry and the cancellation reserve, the toggles
+        // below end with the job queued.
         let mut index = 0;
         let error = loop {
             let observation = ledger.observation();
@@ -931,13 +937,77 @@ mod tests {
         assert_eq!(error, JobControlError::Full);
         assert_eq!(
             ledger.entries().len(),
-            MAX_JOB_LEDGER_ENTRIES - OWNER_RESERVED_JOB_LEDGER_ENTRIES
+            MAX_JOB_LEDGER_ENTRIES
+                - OWNER_RESERVED_JOB_LEDGER_ENTRIES
+                - CANCEL_RESERVED_JOB_LEDGER_ENTRIES
         );
         assert_eq!(ledger.observation().phase, JobPhase::Queued);
         assert!(ledger.observe_owner(JobOwnerEvent::Started).is_ok());
         assert!(ledger.observe_owner(JobOwnerEvent::Failed).is_ok());
-        assert_eq!(ledger.entries().len(), MAX_JOB_LEDGER_ENTRIES);
         assert_eq!(ledger.observation().phase, JobPhase::Failed);
+        let replayed = JobControlLedger::replay(JOB, ledger.entries(), &ledger.head()).unwrap();
+        assert_eq!(replayed.observation(), ledger.observation());
+    }
+
+    #[test]
+    fn a_running_job_toggled_to_the_client_bound_can_still_be_cancelled() {
+        // Review V8: accepted toggles of a running job must not leave a person
+        // unable to record a cancellation, and the owner can still end it.
+        let mut ledger = JobControlLedger::create(JOB, "owner-fixture").unwrap();
+        ledger.observe_owner(JobOwnerEvent::Started).unwrap();
+        let mut index = 0;
+        let error = loop {
+            let observation = ledger.observation();
+            let action = if observation.phase == JobPhase::Running {
+                JobControlAction::Suspend
+            } else {
+                JobControlAction::Resume
+            };
+            match ledger.control(&request(
+                &format!("toggle-{index}"),
+                action,
+                observation.revision,
+            )) {
+                Ok(JobControlDecision::Applied { .. }) => index += 1,
+                Ok(refused) => panic!("toggle refused: {refused:?}"),
+                Err(error) => break error,
+            }
+        };
+        assert_eq!(error, JobControlError::Full);
+        let observation = ledger.observation();
+        assert!(matches!(
+            observation.phase,
+            JobPhase::Running | JobPhase::Suspending
+        ));
+        // A stale cancellation is a refusal and does not take the reserved entry.
+        assert_eq!(
+            ledger.control(&request(
+                "cancel-stale",
+                JobControlAction::Cancel,
+                observation.revision - 1
+            )),
+            Err(JobControlError::Full)
+        );
+        assert!(matches!(
+            ledger.control(&request(
+                "cancel-current",
+                JobControlAction::Cancel,
+                observation.revision
+            )),
+            Ok(JobControlDecision::Applied {
+                phase: JobPhase::Cancelling,
+                ..
+            })
+        ));
+        assert_eq!(
+            ledger.entries().len(),
+            MAX_JOB_LEDGER_ENTRIES - OWNER_RESERVED_JOB_LEDGER_ENTRIES
+        );
+        assert!(ledger.observation().cancellation_requested);
+        ledger
+            .observe_owner(JobOwnerEvent::CancellationObserved)
+            .unwrap();
+        assert_eq!(ledger.observation().phase, JobPhase::Cancelled);
         let replayed = JobControlLedger::replay(JOB, ledger.entries(), &ledger.head()).unwrap();
         assert_eq!(replayed.observation(), ledger.observation());
     }

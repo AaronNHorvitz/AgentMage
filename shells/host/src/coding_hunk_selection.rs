@@ -11,9 +11,7 @@
 
 use std::collections::BTreeSet;
 
-use agentmage_capability_repository_map::{
-    StructuredEdit, StructuredFileChangePlan, StructuredLanguage,
-};
+use agentmage_capability_repository_map::{StructuredEdit, StructuredFileChangePlan};
 use agentmage_kernel_contracts::{
     ContractPayload, RuntimeHunkSelection, ToolCall, ToolDefinition, ToolId, ValidationIssue,
 };
@@ -184,8 +182,12 @@ pub fn decode_hunk_selection_proposal(
 ///
 /// `preimage` and `proposal` are the exact bytes of the pending patch's plan. The
 /// selection must name them, accept a strict subset of their hunks, and still
-/// match `current`, the file's bytes now.
+/// match `current`, the file's bytes now. The derived write is bound over
+/// `current` before it is returned, so a selection whose write could not be
+/// planned, for example one whose result does not parse, is refused here
+/// rather than after the original call was refused (Decision 0115).
 pub fn derive_hunk_selection_call(
+    scope: &CodingWriteScope,
     original: &ToolCall,
     preimage: &[u8],
     proposal: &[u8],
@@ -221,6 +223,9 @@ pub fn derive_hunk_selection_call(
         postimage_sha256: selected.postimage_sha256().to_owned(),
     };
     let bytes = serde_json::to_vec(&arguments).map_err(|_| HunkSelectionError::Invalid)?;
+    // The same closed validation and binding the derived call meets later.
+    let decoded = decode_hunk_selection_proposal(scope, &bytes)?;
+    bind_hunk_selection_proposal(scope, &decoded, current.to_vec())?;
     let definition = hunk_selection_tool_definition();
     Ok(RuntimeDerivedToolCall {
         tool_id: ToolId::from_raw(HUNK_SELECTION_TOOL_ID),
@@ -264,34 +269,18 @@ pub fn recompute_hunk_selection(
 }
 
 /// Binds one selected write to the exact current bytes through the existing
-/// structured planner, as a whole-file replacement of the exact preimage.
+/// structured planner, as one trusted whole-file replacement of the exact
+/// preimage. The planner's file bounds and postimage syntax check still apply;
+/// the per-edit text bounds do not (Decision 0115).
 pub fn bind_hunk_selection_proposal(
     scope: &CodingWriteScope,
     proposal: &HunkSelectionWriteProposal,
     current: Vec<u8>,
 ) -> Result<StructuredFileChangePlan, HunkSelectionError> {
     let (_, selected) = recompute_hunk_selection(scope, proposal, &current)?;
-    let current_text =
-        String::from_utf8(current.clone()).map_err(|_| HunkSelectionError::Mismatch)?;
     let replacement = String::from_utf8(selected.postimage().to_vec())
         .map_err(|_| HunkSelectionError::Mismatch)?;
-    let edit_id = format!("selection:{}", &proposal.selection_sha256[..32]);
     let original = &proposal.original;
-    let edit = if syntax_aware(original.language) {
-        StructuredEdit::ReplaceSyntaxNode {
-            edit_id,
-            start_byte: 0,
-            end_byte: current.len() as u64,
-            expected_node_sha256: proposal.preimage_sha256.clone(),
-            replacement,
-        }
-    } else {
-        StructuredEdit::ReplaceExactText {
-            edit_id,
-            expected: current_text,
-            replacement,
-        }
-    };
     let plan = bind_structured_patch_proposal(
         scope,
         StructuredPatchProposal {
@@ -303,7 +292,10 @@ pub fn bind_hunk_selection_proposal(
             change_plan_sha256: original.change_plan_sha256.clone(),
             language: original.language,
             artifact_class: original.artifact_class,
-            edits: vec![edit],
+            edits: vec![StructuredEdit::ReplaceWholeFile {
+                edit_id: format!("selection:{}", &proposal.selection_sha256[..32]),
+                replacement,
+            }],
             additional_review_hooks: original.additional_review_hooks.clone(),
             generated: original.generated,
             allow_generated: original.allow_generated,
@@ -332,18 +324,6 @@ fn select(
     Ok(selected)
 }
 
-const fn syntax_aware(language: StructuredLanguage) -> bool {
-    matches!(
-        language,
-        StructuredLanguage::Rust
-            | StructuredLanguage::Python
-            | StructuredLanguage::TypeScript
-            | StructuredLanguage::Tsx
-            | StructuredLanguage::JavaScript
-            | StructuredLanguage::Swift
-    )
-}
-
 fn valid_identifier(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= 128
@@ -370,7 +350,7 @@ fn sha256_hex(bytes: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use agentmage_capability_repository_map::{StructuredArtifactClass, StructuredEdit};
+    use agentmage_capability_repository_map::{StructuredArtifactClass, StructuredLanguage};
     use agentmage_kernel_contracts::{
         ActionId, CONTRACT_SCHEMA_VERSION, CorrelationId, ToolCallId, WorkspaceId,
     };
@@ -475,7 +455,10 @@ mod tests {
     }
 
     fn pending(preimage: &str, language: StructuredLanguage) -> Pending {
-        let proposal = patch(preimage, language);
+        pending_from(patch(preimage, language), preimage)
+    }
+
+    fn pending_from(proposal: StructuredPatchProposal, preimage: &str) -> Pending {
         let plan = bind_structured_patch_proposal(
             &scope(),
             proposal.clone(),
@@ -521,6 +504,7 @@ mod tests {
         ] {
             let pending = pending(preimage, language);
             let derived = derive_hunk_selection_call(
+                &scope(),
                 &pending.call,
                 &pending.preimage,
                 &pending.proposal,
@@ -557,10 +541,102 @@ mod tests {
     }
 
     #[test]
+    fn selections_over_large_crlf_and_offset_files_bind_and_unparsable_ones_are_refused() {
+        // Files beyond one edit's text bound, CRLF text and a syntax file whose
+        // root node starts after leading blank lines: each selection derives a
+        // write that binds and writes exactly the accepted hunk (Decision 0115).
+        let filler = (0..3_000)
+            .map(|index| format!("def filler_{index}():\n    return {index}\n\n\n"))
+            .collect::<String>();
+        let large_python = format!("{PYTHON}\n\n{filler}");
+        let large_plain = format!(
+            "{PLAIN}{}",
+            (0..6_000)
+                .map(|index| format!("filler line {index}\n"))
+                .collect::<String>()
+        );
+        let offset_python = format!("\n\n{PYTHON}");
+        let crlf_plain = PLAIN.replace('\n', "\r\n");
+        for (preimage, language, expected) in [
+            (
+                large_plain.clone(),
+                StructuredLanguage::PlainText,
+                large_plain.replace("eight", "EIGHT"),
+            ),
+            (
+                large_python.clone(),
+                StructuredLanguage::Python,
+                large_python.replacen("left + right", "left - right", 1),
+            ),
+            (
+                offset_python.clone(),
+                StructuredLanguage::Python,
+                offset_python.replacen("left + right", "left - right", 1),
+            ),
+            (
+                crlf_plain.clone(),
+                StructuredLanguage::PlainText,
+                crlf_plain.replace("eight", "EIGHT"),
+            ),
+        ] {
+            let pending = pending(&preimage, language);
+            let derived = derive_hunk_selection_call(
+                &scope(),
+                &pending.call,
+                &pending.preimage,
+                &pending.proposal,
+                &pending.preimage,
+                &selection(&pending, &[1]),
+            )
+            .expect("an honorable selection derives");
+            let proposal =
+                decode_hunk_selection_proposal(&scope(), &derived.arguments.bytes).unwrap();
+            let plan = bind_hunk_selection_proposal(&scope(), &proposal, pending.preimage.clone())
+                .expect("the derived write binds");
+            assert_eq!(plan.postimage(), expected.as_bytes());
+        }
+        assert!(large_plain.len() > 64 * 1024 && large_python.len() > 64 * 1024);
+
+        // Two hunks that only parse together: accepting one alone is refused
+        // when the selection is derived, before the original call is refused.
+        let preimage = "value = 1\n0,\n0,\nlast = 2\n";
+        let node = |id: &str, old: &str, new: &str| {
+            let start = preimage.find(old).unwrap() as u64;
+            StructuredEdit::ReplaceSyntaxNode {
+                edit_id: id.to_owned(),
+                start_byte: start,
+                end_byte: start + old.len() as u64,
+                expected_node_sha256: sha256_hex(old.as_bytes()),
+                replacement: new.to_owned(),
+            }
+        };
+        let mut proposal = patch(PYTHON, StructuredLanguage::Python);
+        proposal.expected_preimage_sha256 = sha256_hex(preimage.as_bytes());
+        proposal.edits = vec![node("edit-0", "1", "[1,"), node("edit-1", "last = 2", "2]")];
+        let pending = pending_from(proposal, preimage);
+        assert_eq!(pending.proposal, b"value = [1,\n0,\n0,\n2]\n");
+        for accepted in [0, 1] {
+            assert_eq!(
+                derive_hunk_selection_call(
+                    &scope(),
+                    &pending.call,
+                    &pending.preimage,
+                    &pending.proposal,
+                    &pending.preimage,
+                    &selection(&pending, &[accepted]),
+                )
+                .err(),
+                Some(HunkSelectionError::Invalid)
+            );
+        }
+    }
+
+    #[test]
     fn stale_mismatched_and_non_subset_selections_are_refused() {
         let pending = pending(PLAIN, StructuredLanguage::PlainText);
         let derive = |current: &[u8], selection: &RuntimeHunkSelection| {
             derive_hunk_selection_call(
+                &scope(),
                 &pending.call,
                 &pending.preimage,
                 &pending.proposal,
@@ -597,6 +673,7 @@ mod tests {
         create.tool_id = ToolId::from_raw(crate::coding_changes::CONTROLLED_CREATE_TOOL_ID);
         assert_eq!(
             derive_hunk_selection_call(
+                &scope(),
                 &create,
                 &pending.preimage,
                 &pending.proposal,
@@ -612,6 +689,7 @@ mod tests {
     fn the_selected_write_refuses_drift_and_tampered_arguments() {
         let pending = pending(PLAIN, StructuredLanguage::PlainText);
         let derived = derive_hunk_selection_call(
+            &scope(),
             &pending.call,
             &pending.preimage,
             &pending.proposal,

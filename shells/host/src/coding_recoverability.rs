@@ -9,11 +9,16 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 
-use serde::Serialize;
+use agentmage_kernel_contracts::{
+    OperationOutcome, RuntimeArtifactRef, RuntimeRunRequest, StateChange, ToolResult,
+};
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
+use crate::coding_dispatch::PreparedNativeCodingCall;
 use crate::coding_history::{
-    RetainedCodingChange, valid_identifier, valid_record_path, verify_retained_change,
+    CODING_CHANGE_RECORD_MEDIA_TYPE, CodingChangeRecord, RetainedCodingChange, valid_identifier,
+    valid_record_path, verify_retained_change,
 };
 
 /// Largest number of effects assessed in one report.
@@ -61,7 +66,7 @@ impl SessionEffect {
 }
 
 /// Closed recoverability class for one effect.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Recoverability {
     /// A fresh approved inverse write would restore this change's exact preimage.
@@ -77,18 +82,21 @@ pub enum Recoverability {
 }
 
 /// Content-free assessment of one effect.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct EffectAssessment {
     /// Controlled operation identity.
     pub operation_id: String,
     /// Recoverability class.
     pub recoverability: Recoverability,
     /// Stable reason code.
-    pub reason_code: &'static str,
+    pub reason_code: String,
 }
 
-/// Sealed declaration for one session; not an approval or a rollback result.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+/// Sealed declaration for one session, or for one run of it when `run_id` is
+/// present; not an approval or a rollback result.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct RecoverabilityReport {
     /// Report schema version.
     pub schema_version: u16,
@@ -96,6 +104,10 @@ pub struct RecoverabilityReport {
     pub session_id: String,
     /// Owning coding task.
     pub task_id: String,
+    /// The one run whose effects are declared, when the scope is a run
+    /// (Decision 0116). Absent for a whole-session declaration.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub run_id: Option<String>,
     /// One assessment per supplied effect, in input order.
     pub assessments: Vec<EffectAssessment>,
     /// Recoverable writes, newest first; inverse writes must follow this order.
@@ -127,9 +139,33 @@ pub fn assess_recoverability(
     effects: &[SessionEffect],
     current_sha256: &dyn Fn(&[String]) -> Option<String>,
 ) -> Result<RecoverabilityReport, RecoverabilityError> {
+    assess(session_id, task_id, None, effects, current_sha256)
+}
+
+/// Classifies the effects of one run, declared by the run's effect owner
+/// (Decision 0116). The report names the run, so it never reads as a
+/// declaration about the whole session.
+pub fn assess_run_recoverability(
+    session_id: &str,
+    task_id: &str,
+    run_id: &str,
+    effects: &[SessionEffect],
+    current_sha256: &dyn Fn(&[String]) -> Option<String>,
+) -> Result<RecoverabilityReport, RecoverabilityError> {
+    assess(session_id, task_id, Some(run_id), effects, current_sha256)
+}
+
+fn assess(
+    session_id: &str,
+    task_id: &str,
+    run_id: Option<&str>,
+    effects: &[SessionEffect],
+    current_sha256: &dyn Fn(&[String]) -> Option<String>,
+) -> Result<RecoverabilityReport, RecoverabilityError> {
     if effects.len() > MAX_RECOVERABILITY_EFFECTS
         || !valid_identifier(session_id)
         || !valid_identifier(task_id)
+        || run_id.is_some_and(|run_id| !valid_identifier(run_id))
     {
         return Err(RecoverabilityError::Invalid);
     }
@@ -229,7 +265,7 @@ pub fn assess_recoverability(
         assessments.push(EffectAssessment {
             operation_id: effect.operation_id().to_owned(),
             recoverability,
-            reason_code,
+            reason_code: reason_code.to_owned(),
         });
     }
     let revert_order = assessments
@@ -251,15 +287,326 @@ pub fn assess_recoverability(
         schema_version: 1,
         session_id: session_id.to_owned(),
         task_id: task_id.to_owned(),
+        run_id: run_id.map(str::to_owned),
         assessments,
         revert_order,
         fully_recoverable,
         requires_reconciliation,
         report_sha256: "0".repeat(64),
     };
-    report.report_sha256 =
-        hex_sha256(&serde_json::to_vec(&report).map_err(|_| RecoverabilityError::Invalid)?);
+    report.report_sha256 = report_digest(&report)?;
     Ok(report)
+}
+
+fn report_digest(report: &RecoverabilityReport) -> Result<String, RecoverabilityError> {
+    let mut unsealed = report.clone();
+    unsealed.report_sha256 = "0".repeat(64);
+    serde_json::to_vec(&unsealed)
+        .map(|bytes| hex_sha256(&bytes))
+        .map_err(|_| RecoverabilityError::Invalid)
+}
+
+/// Closed reason codes of an assessment, one set per class.
+const fn reason_codes(class: Recoverability) -> &'static [&'static str] {
+    match class {
+        Recoverability::Recoverable => &["inverse-write-restores-preimage"],
+        Recoverability::AlreadyReverted => &["preimage-already-present"],
+        Recoverability::Conflict => &[
+            "file-unavailable",
+            "current-bytes-differ",
+            "newer-conflict-blocks-older",
+        ],
+        Recoverability::NotRecoverable => &["create-has-no-admitted-inverse"],
+        Recoverability::ExternalOrUncertain => {
+            &["command-effects-not-tracked", "effect-outcome-uncertain"]
+        }
+    }
+}
+
+/// Verifies a declaration received from the host for one exact run: its seal,
+/// scope, bounds, closed reason codes and the consistency of its summary
+/// fields. It cannot show that the host listed every effect; the host owns
+/// that, and the declaration grants nothing.
+pub fn verify_run_recoverability(
+    report: &RecoverabilityReport,
+    session_id: &str,
+    task_id: &str,
+    run_id: &str,
+) -> Result<(), RecoverabilityError> {
+    let mut seen = BTreeSet::new();
+    let valid_items = report.assessments.iter().all(|assessment| {
+        valid_identifier(&assessment.operation_id)
+            && seen.insert(assessment.operation_id.as_str())
+            && reason_codes(assessment.recoverability).contains(&assessment.reason_code.as_str())
+    });
+    let revert_order = report
+        .assessments
+        .iter()
+        .rev()
+        .filter(|assessment| assessment.recoverability == Recoverability::Recoverable)
+        .map(|assessment| assessment.operation_id.as_str())
+        .collect::<Vec<_>>();
+    if report.schema_version != 1
+        || report.session_id != session_id
+        || report.task_id != task_id
+        || report.run_id.as_deref() != Some(run_id)
+        || report.assessments.len() > MAX_RECOVERABILITY_EFFECTS
+        || !valid_items
+        || report.revert_order != revert_order
+        || report.fully_recoverable
+            != report.assessments.iter().all(|assessment| {
+                matches!(
+                    assessment.recoverability,
+                    Recoverability::Recoverable | Recoverability::AlreadyReverted
+                )
+            })
+        || report.requires_reconciliation
+            != report
+                .assessments
+                .iter()
+                .any(|assessment| assessment.recoverability == Recoverability::ExternalOrUncertain)
+        || report.report_sha256 != report_digest(report)?
+    {
+        return Err(RecoverabilityError::Invalid);
+    }
+    Ok(())
+}
+
+/// What one executed native call can do to the workspace, from its prepared form.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ExecutedEffectKind {
+    /// A structured patch, a selected write or an inverse write.
+    Write,
+    /// A controlled creation of the named path.
+    Create {
+        /// Canonical workspace-relative path components.
+        path: Vec<String>,
+    },
+    /// A registered command or validation run.
+    Command,
+    /// A read, a Git inspection or a history read: no workspace effect.
+    NoEffect,
+}
+
+impl ExecutedEffectKind {
+    /// Classifies one prepared native call.
+    #[must_use]
+    pub fn of(prepared: &PreparedNativeCodingCall) -> Self {
+        match prepared {
+            PreparedNativeCodingCall::StructuredPatch { .. }
+            | PreparedNativeCodingCall::Rollback { .. }
+            | PreparedNativeCodingCall::HunkSelection { .. } => Self::Write,
+            PreparedNativeCodingCall::ControlledCreate { proposal } => Self::Create {
+                path: proposal.path.clone(),
+            },
+            PreparedNativeCodingCall::Command { .. }
+            | PreparedNativeCodingCall::Validation { .. } => Self::Command,
+            PreparedNativeCodingCall::ReadOnly { .. }
+            | PreparedNativeCodingCall::GitInspection { .. }
+            | PreparedNativeCodingCall::ChangeHistory { .. } => Self::NoEffect,
+        }
+    }
+}
+
+/// What the effect owner observed when one executed call ended.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ExecutedEffectOutcome {
+    /// The call returned a result with this outcome and whether state changed.
+    Completed {
+        /// Terminal outcome of the result.
+        outcome: OperationOutcome,
+        /// Whether the result reported a state change.
+        changed: bool,
+    },
+    /// The call failed after its authority was consumed; its effect is unknown.
+    Unknown,
+}
+
+/// One executed call as its effect owner recorded it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ExecutedEffect {
+    /// Runtime operation identity of the call.
+    pub operation_id: String,
+    /// What the call can do.
+    pub kind: ExecutedEffectKind,
+    /// How it ended.
+    pub outcome: ExecutedEffectOutcome,
+}
+
+/// Builds one run's effect list from the effect owner's own execution records
+/// and the change records it published, never from client input (Decision
+/// 0116). A changed write whose record is missing, and any effectful call whose
+/// outcome is unknown or uncertain, is surfaced as uncertain. A command counts
+/// as an effect unless it was denied, because a failed, cancelled or timed-out
+/// command may have run.
+pub fn run_effects(
+    executed: &[ExecutedEffect],
+    changes: &[RetainedCodingChange],
+) -> Result<Vec<SessionEffect>, RecoverabilityError> {
+    if executed.len() > MAX_RECOVERABILITY_EFFECTS || changes.len() > MAX_RECOVERABILITY_EFFECTS {
+        return Err(RecoverabilityError::Invalid);
+    }
+    let mut records = BTreeMap::new();
+    for change in changes {
+        verify_retained_change(change).map_err(|_| RecoverabilityError::ForeignOrInvalid)?;
+        if records
+            .insert(change.record.operation_id.as_str(), change)
+            .is_some()
+        {
+            return Err(RecoverabilityError::Duplicate);
+        }
+    }
+    let mut used = BTreeSet::new();
+    let mut effects = Vec::new();
+    for effect in executed {
+        let operation_id = effect.operation_id.clone();
+        let uncertain = || SessionEffect::Uncertain {
+            operation_id: operation_id.clone(),
+        };
+        let declared = match (&effect.kind, effect.outcome) {
+            (ExecutedEffectKind::NoEffect, _) => None,
+            (_, ExecutedEffectOutcome::Unknown)
+            | (
+                _,
+                ExecutedEffectOutcome::Completed {
+                    outcome: OperationOutcome::Uncertain,
+                    ..
+                },
+            ) => Some(uncertain()),
+            (
+                ExecutedEffectKind::Write,
+                ExecutedEffectOutcome::Completed {
+                    outcome: OperationOutcome::Succeeded,
+                    changed: true,
+                },
+            ) => Some(
+                records
+                    .get(effect.operation_id.as_str())
+                    .map_or_else(uncertain, |change| {
+                        used.insert(effect.operation_id.as_str());
+                        SessionEffect::Write(Box::new((*change).clone()))
+                    }),
+            ),
+            (
+                ExecutedEffectKind::Create { path },
+                ExecutedEffectOutcome::Completed {
+                    outcome: OperationOutcome::Succeeded,
+                    ..
+                },
+            ) => Some(SessionEffect::Create {
+                operation_id: operation_id.clone(),
+                path: path.clone(),
+            }),
+            (ExecutedEffectKind::Command, ExecutedEffectOutcome::Completed { outcome, .. })
+                if outcome != OperationOutcome::Denied =>
+            {
+                Some(SessionEffect::Command {
+                    operation_id: operation_id.clone(),
+                })
+            }
+            _ => None,
+        };
+        effects.extend(declared);
+    }
+    // Every published record belongs to one changed write of this run.
+    if used.len() != records.len() {
+        return Err(RecoverabilityError::ForeignOrInvalid);
+    }
+    Ok(effects)
+}
+
+impl ExecutedEffectOutcome {
+    /// How one execution ended: its result, or an error after its authority
+    /// was consumed, which leaves the effect unknown.
+    #[must_use]
+    pub fn of<E>(result: Result<&ToolResult, E>) -> Self {
+        result.map_or(Self::Unknown, |result| Self::Completed {
+            outcome: result.outcome,
+            changed: result.state_change == StateChange::Changed,
+        })
+    }
+}
+
+/// One run's execution and change records, kept by the effect owner that
+/// executed the calls and published the records (Decision 0116).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RunEffectRecorder {
+    executed: Vec<ExecutedEffect>,
+    changes: Vec<RetainedCodingChange>,
+    complete: bool,
+}
+
+impl Default for RunEffectRecorder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl RunEffectRecorder {
+    /// Starts an empty, complete record.
+    #[must_use]
+    pub const fn new() -> Self {
+        Self {
+            executed: Vec::new(),
+            changes: Vec::new(),
+            complete: true,
+        }
+    }
+
+    /// Records how one executed call ended.
+    pub fn record_execution(&mut self, effect: ExecutedEffect) {
+        if self.executed.len() < MAX_RECOVERABILITY_EFFECTS {
+            self.executed.push(effect);
+        } else {
+            self.complete = false;
+        }
+    }
+
+    /// Records one published artifact; only a verified change record is kept.
+    /// A change record that does not verify makes the record incomplete.
+    pub fn record_publication(&mut self, reference: &RuntimeArtifactRef, payload: &[u8]) {
+        if reference.media_type != CODING_CHANGE_RECORD_MEDIA_TYPE {
+            return;
+        }
+        let retained = serde_json::from_slice::<CodingChangeRecord>(payload)
+            .ok()
+            .map(|record| RetainedCodingChange {
+                reference: reference.clone(),
+                record,
+            })
+            .filter(|retained| verify_retained_change(retained).is_ok());
+        match retained {
+            Some(retained) if self.changes.len() < MAX_RECOVERABILITY_EFFECTS => {
+                self.changes.push(retained);
+            }
+            _ => self.complete = false,
+        }
+    }
+
+    /// Declares the recorded run. An incomplete record is never declared, so
+    /// a declaration cannot silently omit an effect.
+    pub fn declare(
+        &self,
+        session_id: &str,
+        task_id: &str,
+        run_id: &str,
+        current_sha256: &dyn Fn(&[String]) -> Option<String>,
+    ) -> Result<RecoverabilityReport, RecoverabilityError> {
+        if !self.complete {
+            return Err(RecoverabilityError::Invalid);
+        }
+        let effects = run_effects(&self.executed, &self.changes)?;
+        assess_run_recoverability(session_id, task_id, run_id, &effects, current_sha256)
+    }
+}
+
+/// A trusted effect owner that can declare the recoverability of one ended run.
+pub trait RunRecoverabilitySource {
+    /// Declares the ended run's effects from the owner's own records.
+    fn declare_run_recoverability(
+        &self,
+        request: &RuntimeRunRequest,
+    ) -> Result<RecoverabilityReport, RecoverabilityError>;
 }
 
 /// Bounded user-facing text. It states how each effect could be reversed, if
@@ -276,7 +623,13 @@ pub fn render_recoverability(report: &RecoverabilityReport) -> String {
     } else {
         "some changes cannot be restored by an inverse write"
     };
-    let _ = writeln!(output, "recoverability: {summary}");
+    if report.run_id.is_some() {
+        // A run declaration covers only that run's effects (Decision 0116).
+        let summary = summary.replacen("session ", "", 1);
+        let _ = writeln!(output, "recoverability of this run's effects: {summary}");
+    } else {
+        let _ = writeln!(output, "recoverability: {summary}");
+    }
     for (index, assessment) in report.assessments.iter().enumerate() {
         let class = match assessment.recoverability {
             Recoverability::Recoverable => "recoverable by fresh inverse write",
@@ -395,6 +748,294 @@ mod tests {
     }
 
     const CALC: &[&str] = &["src", "calc.py"];
+
+    fn retained(effect: SessionEffect) -> RetainedCodingChange {
+        match effect {
+            SessionEffect::Write(change) => *change,
+            _ => unreachable!("fixture builds writes"),
+        }
+    }
+
+    fn executed(
+        operation: &str,
+        kind: ExecutedEffectKind,
+        outcome: ExecutedEffectOutcome,
+    ) -> ExecutedEffect {
+        ExecutedEffect {
+            operation_id: operation.to_owned(),
+            kind,
+            outcome,
+        }
+    }
+
+    const fn completed(outcome: OperationOutcome, changed: bool) -> ExecutedEffectOutcome {
+        ExecutedEffectOutcome::Completed { outcome, changed }
+    }
+
+    #[test]
+    fn a_run_effect_list_comes_from_executed_calls_and_their_published_records() {
+        // Decision 0116: the effect owner's own execution records, paired with
+        // the change records it published, give the run's effects.
+        let new_file = vec!["src".to_owned(), "new.py".to_owned()];
+        let executed = [
+            executed(
+                "read",
+                ExecutedEffectKind::NoEffect,
+                completed(OperationOutcome::Succeeded, false),
+            ),
+            executed(
+                "w1",
+                ExecutedEffectKind::Write,
+                completed(OperationOutcome::Succeeded, true),
+            ),
+            executed(
+                "same",
+                ExecutedEffectKind::Write,
+                completed(OperationOutcome::Succeeded, false),
+            ),
+            executed(
+                "refused",
+                ExecutedEffectKind::Write,
+                completed(OperationOutcome::Denied, false),
+            ),
+            executed(
+                "create",
+                ExecutedEffectKind::Create {
+                    path: new_file.clone(),
+                },
+                completed(OperationOutcome::Succeeded, true),
+            ),
+            executed(
+                "failed-create",
+                ExecutedEffectKind::Create {
+                    path: new_file.clone(),
+                },
+                completed(OperationOutcome::Failed, false),
+            ),
+            executed(
+                "test",
+                ExecutedEffectKind::Command,
+                completed(OperationOutcome::Failed, false),
+            ),
+            executed(
+                "denied-test",
+                ExecutedEffectKind::Command,
+                completed(OperationOutcome::Denied, false),
+            ),
+            executed(
+                "lost",
+                ExecutedEffectKind::Command,
+                ExecutedEffectOutcome::Unknown,
+            ),
+            executed(
+                "unsure",
+                ExecutedEffectKind::Write,
+                completed(OperationOutcome::Uncertain, false),
+            ),
+            executed(
+                "no-record",
+                ExecutedEffectKind::Write,
+                completed(OperationOutcome::Succeeded, true),
+            ),
+            executed(
+                "read-lost",
+                ExecutedEffectKind::NoEffect,
+                ExecutedEffectOutcome::Unknown,
+            ),
+        ];
+        let change = retained(write("w1", CALC, "v0\n", "v1\n"));
+        let effects = run_effects(&executed, std::slice::from_ref(&change)).unwrap();
+        let ids = effects
+            .iter()
+            .map(SessionEffect::operation_id)
+            .collect::<Vec<_>>();
+        assert_eq!(ids, ["w1", "create", "test", "lost", "unsure", "no-record"]);
+        assert!(matches!(&effects[0], SessionEffect::Write(found) if **found == change));
+        assert!(matches!(&effects[1], SessionEffect::Create { path, .. } if *path == new_file));
+        assert!(matches!(effects[2], SessionEffect::Command { .. }));
+        assert!(
+            effects[3..]
+                .iter()
+                .all(|effect| matches!(effect, SessionEffect::Uncertain { .. }))
+        );
+
+        let report = assess_run_recoverability(SESSION, TASK, "run-fixture", &effects, &|path| {
+            (path == CALC).then(|| digest("v1\n"))
+        })
+        .unwrap();
+        assert_eq!(report.run_id.as_deref(), Some("run-fixture"));
+        assert_eq!(report.revert_order, ["w1"]);
+        assert!(report.requires_reconciliation);
+        verify_run_recoverability(&report, SESSION, TASK, "run-fixture").unwrap();
+        let text = render_recoverability(&report);
+        assert!(text.starts_with("recoverability of this run's effects: "));
+        assert!(!text.contains("undone"));
+        // The declaration crosses the host boundary: it round-trips exactly.
+        let decoded: RecoverabilityReport =
+            serde_json::from_slice(&serde_json::to_vec(&report).unwrap()).unwrap();
+        assert_eq!(decoded, report);
+
+        // A record for no changed write of this run, or twice, is refused.
+        assert_eq!(
+            run_effects(&executed[..1], std::slice::from_ref(&change)),
+            Err(RecoverabilityError::ForeignOrInvalid)
+        );
+        assert_eq!(
+            run_effects(&executed, &[change.clone(), change.clone()]),
+            Err(RecoverabilityError::Duplicate)
+        );
+        let mut tampered = change;
+        tampered.record.preimage.push('x');
+        assert_eq!(
+            run_effects(&executed, &[tampered]),
+            Err(RecoverabilityError::ForeignOrInvalid)
+        );
+    }
+
+    #[test]
+    fn the_effect_recorder_declares_only_a_complete_record_of_its_own_run() {
+        let change = retained(write("w1", CALC, "v0\n", "v1\n"));
+        let payload = serde_json::to_vec(&change.record).unwrap();
+        let result = |outcome, state_change| ToolResult {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            tool_call_id: agentmage_kernel_contracts::ToolCallId::from_raw("call"),
+            correlation_id: agentmage_kernel_contracts::CorrelationId::from_raw("correlation"),
+            outcome,
+            output: None,
+            validation_issues: Vec::new(),
+            evidence: Vec::new(),
+            error: None,
+            elapsed_ms: 1,
+            state_change,
+        };
+        assert_eq!(
+            ExecutedEffectOutcome::of::<()>(Ok(&result(
+                OperationOutcome::Succeeded,
+                StateChange::Changed
+            ))),
+            completed(OperationOutcome::Succeeded, true)
+        );
+        assert_eq!(
+            ExecutedEffectOutcome::of(Err::<&ToolResult, _>(())),
+            ExecutedEffectOutcome::Unknown
+        );
+        let mut recorder = RunEffectRecorder::new();
+        recorder.record_execution(executed(
+            "w1",
+            ExecutedEffectKind::Write,
+            ExecutedEffectOutcome::of::<()>(Ok(&result(
+                OperationOutcome::Succeeded,
+                StateChange::Changed,
+            ))),
+        ));
+        recorder.record_execution(executed(
+            "t1",
+            ExecutedEffectKind::Command,
+            ExecutedEffectOutcome::Unknown,
+        ));
+        // Other artifacts are not change records and are ignored.
+        let mut other = change.reference.clone();
+        other.media_type = "text/plain".to_owned();
+        recorder.record_publication(&other, b"not a record");
+        recorder.record_publication(&change.reference, &payload);
+        let current = |path: &[String]| (path == CALC).then(|| digest("v1\n"));
+        let report = recorder
+            .declare(SESSION, TASK, "run-fixture", &current)
+            .unwrap();
+        assert_eq!(
+            classes(&report),
+            [
+                ("w1".to_owned(), Recoverability::Recoverable),
+                ("t1".to_owned(), Recoverability::ExternalOrUncertain)
+            ]
+        );
+
+        // A change record that does not verify, or too many executions, makes
+        // the record incomplete and nothing is declared.
+        let mut corrupt = recorder.clone();
+        corrupt.record_publication(&change.reference, b"{}");
+        assert!(
+            corrupt
+                .declare(SESSION, TASK, "run-fixture", &current)
+                .is_err()
+        );
+        let mut full = RunEffectRecorder::new();
+        for index in 0..=MAX_RECOVERABILITY_EFFECTS {
+            full.record_execution(executed(
+                &format!("read-{index}"),
+                ExecutedEffectKind::NoEffect,
+                completed(OperationOutcome::Succeeded, false),
+            ));
+        }
+        assert!(
+            full.declare(SESSION, TASK, "run-fixture", &current)
+                .is_err()
+        );
+        // A recorded changed write without its published record is uncertain.
+        let mut unrecorded = RunEffectRecorder::default();
+        unrecorded.record_execution(executed(
+            "w9",
+            ExecutedEffectKind::Write,
+            completed(OperationOutcome::Succeeded, true),
+        ));
+        let report = unrecorded
+            .declare(SESSION, TASK, "run-fixture", &current)
+            .unwrap();
+        assert_eq!(
+            classes(&report),
+            [("w9".to_owned(), Recoverability::ExternalOrUncertain)]
+        );
+    }
+
+    #[test]
+    fn a_received_run_declaration_must_match_its_run_seal_and_summary() {
+        let effects = [
+            write("w1", CALC, "v0\n", "v1\n"),
+            SessionEffect::Command {
+                operation_id: "cmd1".to_owned(),
+            },
+        ];
+        let report = assess_run_recoverability(SESSION, TASK, "run-fixture", &effects, &|_| {
+            Some(digest("v1\n"))
+        })
+        .unwrap();
+        verify_run_recoverability(&report, SESSION, TASK, "run-fixture").unwrap();
+        for (session, task, run) in [
+            ("session-other", TASK, "run-fixture"),
+            (SESSION, "task-other", "run-fixture"),
+            (SESSION, TASK, "run-other"),
+        ] {
+            assert!(verify_run_recoverability(&report, session, task, run).is_err());
+        }
+        let session_scope =
+            assess_recoverability(SESSION, TASK, &effects, &|_| Some(digest("v1\n"))).unwrap();
+        assert!(session_scope.run_id.is_none());
+        assert!(verify_run_recoverability(&session_scope, SESSION, TASK, "run-fixture").is_err());
+        // A changed seal is refused; every other change stays refused even
+        // after resealing, because summaries must follow the assessments and
+        // reason codes come from a closed set.
+        let mut resealed = report.clone();
+        resealed.report_sha256 = "f".repeat(64);
+        assert!(verify_run_recoverability(&resealed, SESSION, TASK, "run-fixture").is_err());
+        let mutations: [fn(&mut RecoverabilityReport); 6] = [
+            |report| report.assessments[0].recoverability = Recoverability::AlreadyReverted,
+            |report| report.assessments[1].reason_code = "reset-reverses-it".to_owned(),
+            |report| report.fully_recoverable = true,
+            |report| report.requires_reconciliation = false,
+            |report| report.revert_order.clear(),
+            |report| report.assessments[1].operation_id = "w1".to_owned(),
+        ];
+        for mutate in mutations {
+            let mut mutated = report.clone();
+            mutate(&mut mutated);
+            assert!(verify_run_recoverability(&mutated, SESSION, TASK, "run-fixture").is_err());
+            mutated.report_sha256 = report_digest(&mutated).unwrap();
+            assert!(verify_run_recoverability(&mutated, SESSION, TASK, "run-fixture").is_err());
+        }
+        let mut unknown: serde_json::Value = serde_json::to_value(&report).unwrap();
+        unknown["undone"] = serde_json::Value::Bool(true);
+        assert!(serde_json::from_value::<RecoverabilityReport>(unknown).is_err());
+    }
 
     #[test]
     fn a_write_chain_is_recoverable_newest_first_while_the_file_holds_its_postimage() {

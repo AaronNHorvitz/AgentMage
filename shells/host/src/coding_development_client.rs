@@ -11,6 +11,7 @@ use agentmage_kernel_contracts::{
     AgentStateKind, RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeEvent,
     RuntimeHunkSelection, RuntimeRunLimits, WorkspaceId,
 };
+use agentmage_kernel_engine::context_inspection::render_context_inspection;
 use agentmage_kernel_engine::run_progress::{
     MAX_PROGRESS_EVENTS, ProgressCeilings, project_run_progress, render_run_progress,
 };
@@ -34,11 +35,12 @@ use crate::coding_change_review::{
 use crate::coding_client::{CodingApprovalPort, CodingClientError, CodingEventSink};
 use crate::coding_development_activation::CodingDevelopmentActivation;
 use crate::coding_development_runtime::CodingDevelopmentModel;
+use crate::coding_recoverability::render_recoverability;
 use crate::headless::ClientExitCode;
 use crate::runtime_ipc::LinuxRuntimeIpcClient;
 use crate::runtime_transport::{
-    RuntimePreauthorizedCommand, RuntimePrepareInput, RuntimeSessionPreauthorization,
-    RuntimeTransportPort,
+    RuntimePreauthorizedCommand, RuntimePrepareInput, RuntimeRunDeclarations,
+    RuntimeSessionPreauthorization, RuntimeTransportPort,
 };
 
 /// Stable content-free failure from the development-only CLI launcher.
@@ -245,6 +247,10 @@ fn run_with_child(
         println!("{rendered}");
         // Stderr keeps the machine stream's contract that the outcome is last on stdout.
         eprint!("{}", sink.take_progress(&result.request.limits));
+        eprint!(
+            "{}",
+            render_run_declarations(result.declarations.as_ref(), output)
+        );
         final_exit = match result.outcome.state {
             AgentStateKind::Success | AgentStateKind::NoOp => ClientExitCode::Success,
             AgentStateKind::Declined | AgentStateKind::Blocked => ClientExitCode::PolicyDenied,
@@ -555,6 +561,45 @@ impl TerminalEventSink {
             ),
         }
     }
+}
+
+/// Renders the host's declarations about one ended run (Decision 0116): the
+/// recoverability of its effects and the view of each composed context. Each
+/// part the host could not declare completely is shown as unavailable.
+fn render_run_declarations(
+    declarations: Option<&RuntimeRunDeclarations>,
+    output: CliOutputFormat,
+) -> String {
+    let recoverability = declarations.and_then(|value| value.recoverability.as_ref());
+    let contexts = declarations.and_then(|value| value.context_inspections.as_ref());
+    if output == CliOutputFormat::Json {
+        return format!(
+            "{}\n",
+            serde_json::json!({
+                "type": "run_declarations",
+                "recoverability_available": recoverability.is_some(),
+                "recoverability": recoverability,
+                "context_inspections_available": contexts.is_some(),
+                "context_inspections": contexts,
+            })
+        );
+    }
+    let mut rendered = recoverability.map_or_else(
+        || "recoverability of this run's effects: unavailable; the host could not declare them completely\n".to_owned(),
+        render_recoverability,
+    );
+    match contexts {
+        Some(views) => {
+            for (index, view) in views.iter().enumerate() {
+                rendered.push_str(&format!("context view {} of {}:\n", index + 1, views.len()));
+                rendered.push_str(&render_context_inspection(view));
+            }
+        }
+        None => rendered.push_str(
+            "context views: unavailable; the host could not show every composed context\n",
+        ),
+    }
+    rendered
 }
 
 impl CodingEventSink for TerminalEventSink {
@@ -875,6 +920,11 @@ impl TerminalApprovals {
                 .map_err(|_| CodingClientError::Approval)?
             {
                 LinuxDevelopmentInputLine::Line(line) => line,
+                // The reader discarded the rest of the line; ask again.
+                LinuxDevelopmentInputLine::TooLong => {
+                    eprintln!("selection not accepted: the line is too long");
+                    continue;
+                }
                 // Cancellation stays pending for the driver's next poll.
                 LinuxDevelopmentInputLine::Ended | LinuxDevelopmentInputLine::Cancelled => {
                     return Ok((RuntimeApprovalDisposition::Deny, None));
@@ -904,6 +954,91 @@ impl TerminalApprovals {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn run_declarations_show_recoverability_and_each_context_view_or_say_unavailable() {
+        use agentmage_kernel_contracts::{
+            ContextItemKind, ContextOmissionReason, ContextSensitivity,
+        };
+        use agentmage_kernel_engine::context_inspection::{
+            ContextInspection, InspectedContextItem,
+        };
+        let report = crate::coding_recoverability::assess_run_recoverability(
+            "session-cli",
+            "task-cli",
+            "run-cli",
+            &[crate::coding_recoverability::SessionEffect::Command {
+                operation_id: "operation-test".to_owned(),
+            }],
+            &|_| None,
+        )
+        .unwrap();
+        let item = |id: &str, omission| InspectedContextItem {
+            item_id: id.to_owned(),
+            kind: ContextItemKind::Instruction,
+            sensitivity: ContextSensitivity::Internal,
+            source_id: format!("source-{id}"),
+            source_revision: "revision".to_owned(),
+            content_sha256: "a".repeat(64),
+            token_count: 10,
+            byte_count: 40,
+            omission,
+        };
+        let view = ContextInspection {
+            schema_version: 1,
+            context_packet_id: "packet-cli".to_owned(),
+            packet_sha256: "b".repeat(64),
+            token_counter_id: "counter-cli".to_owned(),
+            max_tokens: 100,
+            used_tokens: 10,
+            max_bytes: 1_000,
+            used_bytes: 40,
+            pinned: vec![item("pinned", None)],
+            selected: Vec::new(),
+            omitted: vec![item("left-out", Some(ContextOmissionReason::Budget))],
+            kind_totals: Vec::new(),
+        };
+        let declarations = RuntimeRunDeclarations {
+            schema_version: 1,
+            run_id: agentmage_kernel_contracts::RuntimeRunId::from_raw("run-cli"),
+            request_sha256: "c".repeat(64),
+            recoverability: Some(report.clone()),
+            context_inspections: Some(vec![view.clone(), view]),
+        };
+        let human = render_run_declarations(Some(&declarations), CliOutputFormat::Human);
+        assert!(human.starts_with("recoverability of this run's effects: "));
+        assert!(human.contains("operation-test external or uncertain: reconcile manually"));
+        assert!(human.contains("context view 1 of 2:\n"));
+        assert!(human.contains("context view 2 of 2:\n"));
+        assert!(!human.contains("undone"));
+        let json: serde_json::Value = serde_json::from_str(
+            render_run_declarations(Some(&declarations), CliOutputFormat::Json).trim_end(),
+        )
+        .unwrap();
+        assert_eq!(json["type"], "run_declarations");
+        assert_eq!(json["recoverability_available"], true);
+        assert_eq!(
+            json["recoverability"],
+            serde_json::to_value(&report).unwrap()
+        );
+        assert_eq!(json["context_inspections"].as_array().unwrap().len(), 2);
+
+        // Nothing declared, or only part of it, is said to be unavailable.
+        let human = render_run_declarations(None, CliOutputFormat::Human);
+        assert!(human.contains("recoverability of this run's effects: unavailable"));
+        assert!(human.contains("context views: unavailable"));
+        let partial = RuntimeRunDeclarations {
+            recoverability: None,
+            context_inspections: None,
+            ..declarations
+        };
+        let json: serde_json::Value = serde_json::from_str(
+            render_run_declarations(Some(&partial), CliOutputFormat::Json).trim_end(),
+        )
+        .unwrap();
+        assert_eq!(json["recoverability_available"], false);
+        assert_eq!(json["context_inspections_available"], false);
+    }
 
     fn limits() -> RuntimeRunLimits {
         RuntimeRunLimits {
@@ -1305,6 +1440,7 @@ mod tests {
         .unwrap();
         let mut call = original.clone();
         let derived = crate::coding_hunk_selection::derive_hunk_selection_call(
+            &scope,
             &agentmage_kernel_contracts::ToolCall {
                 schema_version: call.schema_version,
                 tool_call_id: call.tool_call_id.clone(),

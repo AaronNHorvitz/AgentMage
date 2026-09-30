@@ -15,7 +15,7 @@ use std::fmt::Write as _;
 use agentmage_kernel_contracts::{
     ComposedContextPacket, ContextItemKind, ContextOmissionReason, ContextSensitivity,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::context_management::verify_composed_context;
@@ -49,7 +49,8 @@ pub enum ContextInspectionError {
 }
 
 /// One accounted source, without its excerpt.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct InspectedContextItem {
     /// Stable candidate identity.
     pub item_id: String,
@@ -72,7 +73,8 @@ pub struct InspectedContextItem {
 }
 
 /// Token and byte use of one semantic class among included items.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ContextKindTotal {
     /// Semantic class.
     pub kind: ContextItemKind,
@@ -84,8 +86,10 @@ pub struct ContextKindTotal {
     pub bytes: u64,
 }
 
-/// Inspectable, content-free view of one composed packet.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+/// Inspectable, content-free view of one composed packet. It can be sent to a
+/// client, which shows it without being able to recompute it (Decision 0116).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ContextInspection {
     /// View schema version.
     pub schema_version: u16,

@@ -46,7 +46,9 @@ yields a separately approved derived write. Four facts shaped the implementation
    the runtime refuses to narrow a derived call again, so one proposal yields at most
    one derived write. If the boundary cannot honor a selection, for example because
    the file changed, it answers with a denial and the run ends declined without a
-   write.
+   write. Under Decision 0115 (findings V1 and V3), the host binds the derived write
+   before it answers, and the engine itself refuses a derived call to a tool a model
+   may propose.
 3. Host. The derived call goes to `agentmage.code.apply-hunk-selection`, a shell-only
    tool. Its arguments carry nine things:
    - the original call identity;
@@ -62,7 +64,9 @@ yields a separately approved derived write. Four facts shaped the implementation
    To write, it re-plans the original patch over the exact current bytes and
    recomputes the hunks and the selection. It then writes only the selected postimage
    as a whole-file structured replacement of the exact preimage, through the existing
-   preview, syntax, scope, approval, grant and write path, as rollback does. A session
+   preview, syntax, scope, approval, grant and write path, as rollback does. Decision
+   0115 (finding V1) gave that replacement its own trusted edit kind, bounded by the
+   file limit instead of the single-edit text limit. A session
    preauthorization never admits a derived write, because the write exists only
    because a person decided. The model never sees the derived tool. After the write,
    the model receives a notice that names its refused call, the accepted and rejected
@@ -83,8 +87,10 @@ four things instead:
 - those are the only two assignments;
 - no other proposal class appears.
 
-The check is at least as strict as before. The first boundary stage of this pass failed
-at the old check, and that failure is retained.
+The first boundary stage of this pass failed at the old check, and that failure is
+retained. This replacement check was not as strict as the literal one: it accepted a
+rebound variable at the dispatch site. [Decision 0115](0115-review-fixes-for-hunk-selection.md)
+(finding V2) replaced it.
 
 This amends Decision 0111 in three places. There is no presentation extension. The
 runtime proposes the derived call on the person's behalf instead of the host alone.

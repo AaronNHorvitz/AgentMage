@@ -2,7 +2,9 @@
 
 use std::fmt::Write;
 
-use agentmage_capability_repository_map::{StructuredArtifactClass, StructuredLanguage};
+use agentmage_capability_repository_map::{
+    StructuredArtifactClass, StructuredEdit, StructuredLanguage, StructuredReviewHook,
+};
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, GrantOperation, OperationBinding, RequiredGrantTemplate,
     RuntimeArtifactRef, SchemaId, SchemaReference, ToolDefinition, ToolId, ToolRiskLevel,
@@ -121,6 +123,34 @@ pub struct RollbackRequest {
     pub intent_sha256: String,
     /// Fresh review-ready plan identity.
     pub change_plan_sha256: String,
+}
+
+/// Builds the fresh inverse write of one verified rollback request: one trusted
+/// whole-file replacement of the retained postimage by the exact retained
+/// preimage, carrying no per-edit text bound (Decision 0115). The caller binds
+/// it over the file's exact current bytes, so any later edit refuses it.
+#[must_use]
+pub fn inverse_write_proposal(
+    request: &RollbackRequest,
+) -> crate::coding_changes::StructuredPatchProposal {
+    let record = &request.source.record;
+    crate::coding_changes::StructuredPatchProposal {
+        schema_version: 1,
+        change_id: request.rollback_id.clone(),
+        path: record.path.clone(),
+        expected_preimage_sha256: record.postimage_sha256.clone(),
+        intent_sha256: request.intent_sha256.clone(),
+        change_plan_sha256: request.change_plan_sha256.clone(),
+        language: record.language,
+        artifact_class: record.artifact_class,
+        edits: vec![StructuredEdit::ReplaceWholeFile {
+            edit_id: format!("{}:inverse", request.rollback_id),
+            replacement: record.preimage.clone(),
+        }],
+        additional_review_hooks: vec![StructuredReviewHook::Migration],
+        generated: record.generated,
+        allow_generated: record.generated,
+    }
 }
 
 /// Validates and seals one coding change record.
@@ -435,6 +465,64 @@ mod tests {
             change_plan_sha256: sha256(b"plan-fixture"),
         };
         verify_rollback_request(&request).expect("exact retained source");
+    }
+
+    #[test]
+    fn an_inverse_write_restores_large_and_crlf_files_and_refuses_later_edits() {
+        // Decision 0115: rollback no longer inherits single-edit text bounds.
+        let scope = crate::coding_changes::CodingWriteScope::new(
+            agentmage_kernel_contracts::WorkspaceId::from_raw("workspace-rollback"),
+            vec![vec!["src".to_owned()]],
+        )
+        .unwrap();
+        let large = "retained line of notes\r\n".repeat(4_000);
+        for (path, language, preimage, postimage) in [
+            (
+                "notes.txt",
+                StructuredLanguage::PlainText,
+                large.clone(),
+                large.replacen("notes", "NOTES", 1),
+            ),
+            (
+                "calc.py",
+                StructuredLanguage::Python,
+                "\n\ndef add(left, right):\n    return left + right\n".to_owned(),
+                "\n\ndef add(left, right):\n    return left - right\n".to_owned(),
+            ),
+        ] {
+            let mut record = sealed_record();
+            record.path = vec!["src".to_owned(), path.to_owned()];
+            record.language = language;
+            record.preimage_sha256 = sha256(preimage.as_bytes());
+            record.preimage = preimage.clone();
+            record.postimage_sha256 = sha256(postimage.as_bytes());
+            let request = RollbackRequest {
+                schema_version: 1,
+                rollback_id: "rollback-fixture".to_owned(),
+                source: retained(seal_change_record(record).unwrap()),
+                intent_sha256: sha256(b"intent-fixture"),
+                change_plan_sha256: sha256(b"plan-fixture"),
+            };
+            verify_rollback_request(&request).unwrap();
+            let proposal = inverse_write_proposal(&request);
+            let plan = crate::coding_changes::bind_structured_patch_proposal(
+                &scope,
+                proposal.clone(),
+                postimage.clone().into_bytes(),
+            )
+            .expect("the inverse write binds");
+            assert_eq!(plan.postimage(), preimage.as_bytes());
+            let edited = format!("{postimage}# a person's later edit\n");
+            assert!(
+                crate::coding_changes::bind_structured_patch_proposal(
+                    &scope,
+                    proposal,
+                    edited.into_bytes(),
+                )
+                .is_err()
+            );
+        }
+        assert!(large.len() > 64 * 1024);
     }
 
     #[test]

@@ -6,11 +6,14 @@ use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, CheckedContextSummary, ComposedContextPacket, ContextAdmission,
     ContextItemCandidate, ContextItemKind, ContextOmissionReason, ContextPacketId,
     ContextSensitivity, ContractPayload, EvidenceReference, ModelContextPacket, ModelMessage,
-    ModelMessageId, ModelMessageRole, RuntimeRunRequest, RuntimeSessionMode, SchemaId,
-    SchemaReference, SessionId, ToolResult, WorkspaceId, to_canonical_json,
+    ModelMessageId, ModelMessageRole, OperationOutcome, RuntimeRunRequest, RuntimeSessionMode,
+    SchemaId, SchemaReference, SessionId, ToolResult, WorkspaceId, to_canonical_json,
 };
 use agentmage_kernel_engine::{
-    context_inspection::{RecompositionViolation, is_retained_constraint, verify_recomposition},
+    context_inspection::{
+        ContextInspection, RecompositionViolation, inspect_context, is_retained_constraint,
+        verify_recomposition,
+    },
     context_management::{
         ContextCompositionBudget, SummaryUseDecision, compose_context, evaluate_checked_summary,
     },
@@ -33,6 +36,8 @@ const TOOL_RESULT_SOURCE_PREFIX: &str = "agentmage:tool-result:";
 const TOOL_REJECTION_SOURCE_PREFIX: &str = "agentmage:tool-rejection:";
 const MODEL_REJECTION_SOURCE_PREFIX: &str = "agentmage:model-rejection:";
 const CONTINUITY_SOURCE_PREFIX: &str = "agentmage:coding-continuity:";
+const SELECTED_WRITE_SUCCEEDED_NOTICE: &str = "The person reviewed your proposed patch, refused it as a whole and approved only the accepted hunks. Your original call did not run. The runtime wrote only the accepted hunks as a separate approved call you did not make; rejected hunks kept the file's previous lines. Read the file again before any further edit and do not reapply rejected hunks unless the person asks.";
+const SELECTED_WRITE_UNSUCCESSFUL_NOTICE: &str = "The person reviewed your proposed patch, refused it as a whole and approved only the accepted hunks. Your original call did not run. The runtime's separate write of only the accepted hunks, a call you did not make, did not succeed; the result states its outcome, and the file may not contain the accepted hunks. Read the file again before any further edit and do not reapply rejected hunks unless the person asks.";
 
 /// Source-allocation counter; exact family rendering is bound before model dispatch.
 pub trait CodingTokenCounter {
@@ -207,12 +212,45 @@ where
     rejected_model_results: Vec<agentmage_kernel_contracts::ModelRunResult>,
     continuity: Option<CodingContextContinuityInput>,
     counter: C,
+    /// Content-free view of each context returned in this run, in order.
+    inspections: Vec<ContextInspection>,
+    /// False once any returned context's view could not be retained.
+    inspections_complete: bool,
+}
+
+/// Largest number of context views retained for one run.
+pub const MAX_RUN_CONTEXT_INSPECTIONS: usize = 64;
+
+/// A context owner that can show the content-free view of every context it
+/// returned in one ended run (Decision 0116).
+pub trait RunContextInspectionSource {
+    /// Every returned context's view in order, or `None` when any view could
+    /// not be retained, so a partial list never reads as complete.
+    fn run_context_inspections(&self) -> Option<&[ContextInspection]>;
+}
+
+impl<C> RunContextInspectionSource for CodingContextPort<C>
+where
+    C: CodingTokenCounter,
+{
+    fn run_context_inspections(&self) -> Option<&[ContextInspection]> {
+        self.inspections_complete
+            .then_some(self.inspections.as_slice())
+    }
 }
 
 impl<C> CodingContextPort<C>
 where
     C: CodingTokenCounter,
 {
+    fn record_inspection(&mut self, inspection: ContextInspection) {
+        if self.inspections.len() < MAX_RUN_CONTEXT_INSPECTIONS {
+            self.inspections.push(inspection);
+        } else {
+            self.inspections_complete = false;
+        }
+    }
+
     /// Binds one context builder to an immutable coding profile and exact token counter.
     pub fn for_profile(
         profile: &CodingSessionProfile,
@@ -292,6 +330,8 @@ where
             rejected_model_results: Vec::new(),
             continuity: None,
             counter,
+            inspections: Vec::new(),
+            inspections_complete: true,
         })
     }
 
@@ -545,6 +585,13 @@ where
                 });
             }
             let content = if person_selected {
+                // Only a successful derived write may be described as written;
+                // the authoritative result states any other outcome.
+                let notice = if result.outcome == OperationOutcome::Succeeded {
+                    SELECTED_WRITE_SUCCEEDED_NOTICE
+                } else {
+                    SELECTED_WRITE_UNSUCCESSFUL_NOTICE
+                };
                 serde_json::to_string(&serde_json::json!({
                     "untrusted_tool_observation": true, "result_sha256": result_sha256,
                     "person_selected_change": {
@@ -555,7 +602,7 @@ where
                         "postimage_sha256": arguments["postimage_sha256"],
                         "derived_tool_call_id": call.tool_call_id,
                     },
-                    "notice": "The person reviewed your proposed patch, refused it as a whole and approved only the accepted hunks. Your original call did not run. The runtime wrote only the accepted hunks as a separate approved call you did not make; rejected hunks kept the file's previous lines. Read the file again before any further edit and do not reapply rejected hunks unless the person asks.",
+                    "notice": notice,
                     "result": projection,
                 }))
             } else {
@@ -748,6 +795,9 @@ where
                 .map(|bytes| self.counter.count_tokens(bytes))
                 .transpose()?
                 .unwrap_or(0);
+            // The content-free view of this composition, kept only if its packet
+            // is the one returned (Decision 0116).
+            let inspection = inspect_context(&composed).map_err(|_| RuntimePortFailure::Invalid)?;
             // Source selection stays with the context manager. Render each selected
             // call/result atomically and in execution order after supporting sources.
             let mut items = composed.items;
@@ -808,7 +858,10 @@ where
                 Err(RuntimePortFailure::ResourceExhausted)
             };
             match measured {
-                Ok(()) if packet.input_tokens <= input_capacity => return Ok(packet),
+                Ok(()) if packet.input_tokens <= input_capacity => {
+                    self.record_inspection(inspection);
+                    return Ok(packet);
+                }
                 Ok(()) | Err(RuntimePortFailure::ResourceExhausted) => {
                     planning_capacity =
                         next_capacity.ok_or(RuntimePortFailure::ResourceExhausted)?;
@@ -1675,6 +1728,141 @@ mod tests {
             ),
             Err(RuntimePortFailure::Invalid)
         );
+    }
+
+    #[test]
+    fn each_returned_context_keeps_one_content_free_view_in_order() {
+        // Decision 0116: the view of each context returned to the model is
+        // retained for the run; a refused composition adds none.
+        let profile = CodingSessionProfile::build(input()).unwrap();
+        let mut context =
+            CodingContextPort::for_profile(&profile, vec![], FixtureCounter("fixture-counter-v1"))
+                .unwrap();
+        assert_eq!(context.run_context_inspections(), Some(&[][..]));
+        let request = request(&profile);
+        let mut packets = Vec::new();
+        for (turn, id) in [(1, "view-first"), (2, "view-second")] {
+            let (calls, results) = if turn == 1 {
+                (vec![], vec![])
+            } else {
+                (vec![tool_call(&profile)], vec![tool_result()])
+            };
+            packets.push(
+                context
+                    .build_context(
+                        &request,
+                        ContextPacketId::from_raw(id),
+                        turn,
+                        &calls,
+                        &results,
+                        &[],
+                    )
+                    .unwrap(),
+            );
+        }
+        assert!(
+            context
+                .build_context(
+                    &request,
+                    ContextPacketId::from_raw("view-refused"),
+                    2,
+                    &[],
+                    std::slice::from_ref(&tool_result()),
+                    &[]
+                )
+                .is_err()
+        );
+        let views = context.run_context_inspections().unwrap();
+        assert_eq!(
+            views
+                .iter()
+                .map(|view| view.context_packet_id.as_str())
+                .collect::<Vec<_>>(),
+            ["view-first", "view-second"]
+        );
+        for view in views {
+            assert!(!view.pinned.is_empty());
+            assert!(view.used_tokens <= view.max_tokens);
+            // The view carries identities and counts, never excerpts.
+            let json = serde_json::to_string(view).unwrap();
+            assert!(!json.contains(&request.task.objective));
+        }
+        assert!(packets.iter().all(|packet| packet.input_tokens > 0));
+    }
+
+    #[test]
+    fn a_person_selected_write_is_described_by_its_actual_outcome() {
+        // Review V9: "wrote" only for a successful derived write, and the
+        // observation never presents the call as the model's own.
+        let profile = CodingSessionProfile::build(input()).unwrap();
+        let definition = crate::coding_hunk_selection::hunk_selection_tool_definition();
+        let arguments = serde_json::to_vec(&serde_json::json!({
+            "original_tool_call_id": "call-original",
+            "original": {"path": ["src", "lib.rs"]},
+            "accepted_hunk_ids": ["1".repeat(64)],
+            "rejected_hunk_ids": ["2".repeat(64)],
+            "postimage_sha256": "3".repeat(64),
+        }))
+        .unwrap();
+        let mut call = tool_call(&profile);
+        call.tool_id = definition.tool_id.clone();
+        call.tool_version = definition.tool_version.clone();
+        call.arguments = ContractPayload {
+            schema: definition.input_schema.clone(),
+            media_type: "application/json".to_owned(),
+            sha256: sha256(&arguments),
+            bytes: arguments,
+        };
+        for (outcome, notice) in [
+            (OperationOutcome::Succeeded, SELECTED_WRITE_SUCCEEDED_NOTICE),
+            (OperationOutcome::Failed, SELECTED_WRITE_UNSUCCESSFUL_NOTICE),
+            (OperationOutcome::Denied, SELECTED_WRITE_UNSUCCESSFUL_NOTICE),
+            (
+                OperationOutcome::Uncertain,
+                SELECTED_WRITE_UNSUCCESSFUL_NOTICE,
+            ),
+        ] {
+            let mut context = CodingContextPort::for_profile(
+                &profile,
+                vec![],
+                FixtureCounter("fixture-counter-v1"),
+            )
+            .unwrap();
+            let mut result = tool_result();
+            result.outcome = outcome;
+            let packet = context
+                .build_context(
+                    &request(&profile),
+                    ContextPacketId::from_raw("selected-write"),
+                    2,
+                    std::slice::from_ref(&call),
+                    std::slice::from_ref(&result),
+                    &[],
+                )
+                .unwrap();
+            let observation: serde_json::Value = serde_json::from_slice(
+                &packet
+                    .messages
+                    .iter()
+                    .find(|message| message.role == ModelMessageRole::Tool)
+                    .unwrap()
+                    .content
+                    .bytes,
+            )
+            .unwrap();
+            assert_eq!(observation["notice"], notice);
+            assert!(observation.get("completed_call").is_none());
+            let selected = &observation["person_selected_change"];
+            assert_eq!(selected["narrowed_tool_call_id"], "call-original");
+            assert_eq!(selected["accepted_hunk_ids"][0], "1".repeat(64));
+            assert_eq!(selected["rejected_hunk_ids"][0], "2".repeat(64));
+            assert_eq!(selected["derived_tool_call_id"], call.tool_call_id.as_str());
+            assert_eq!(
+                observation["result"]["outcome"],
+                serde_json::to_value(outcome).unwrap()
+            );
+        }
+        assert!(!SELECTED_WRITE_UNSUCCESSFUL_NOTICE.contains("wrote"));
     }
 
     #[test]

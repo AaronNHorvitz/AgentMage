@@ -20,6 +20,7 @@ use agentmage_kernel_contracts::{
     RuntimeRunRequest, RuntimeSessionMode,
 };
 use agentmage_kernel_engine::{
+    context_inspection::ContextInspection,
     runtime_artifact::{RuntimeArtifactPage, RuntimeArtifactState},
     runtime_coordinator::{
         verify_runtime_approval_challenge, verify_runtime_approval_response,
@@ -34,10 +35,46 @@ use agentmage_kernel_engine::{
 };
 
 use crate::coding_client::{CodingClientError, LiveCodingCoordinatorPort};
+use crate::coding_context::RunContextInspectionSource;
+use crate::coding_recoverability::{RecoverabilityReport, RunRecoverabilitySource};
 use crate::native_chat_runtime::NativeChatRuntimeFactory;
 use crate::runtime_transport::{
-    RuntimePrepareInput, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
+    RuntimePrepareInput, RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort,
+    RuntimeTransportStep,
 };
+
+/// Declarations a live coordinator can make about its ended run (Decision 0116).
+pub trait LiveRunDeclarationPort {
+    /// Recoverability of the ended run's effects, or `None` while the run can
+    /// still advance or when its effects cannot be declared completely.
+    fn run_recoverability(&self, request: &RuntimeRunRequest) -> Option<RecoverabilityReport>;
+
+    /// The view of every context composed in the ended run, or `None` while
+    /// the run can still advance or when not every view was retained.
+    fn run_context_inspections(&self) -> Option<Vec<ContextInspection>>;
+}
+
+impl<M, X, T, V, C> LiveRunDeclarationPort
+    for agentmage_kernel_engine::runtime_loop::ReusableRuntimeCoordinator<M, X, T, V, C>
+where
+    M: agentmage_kernel_engine::runtime_loop::RuntimeModelPort,
+    X: agentmage_kernel_engine::runtime_loop::RuntimeContextPort + RunContextInspectionSource,
+    T: agentmage_kernel_engine::runtime_loop::RuntimeToolBoundary + RunRecoverabilitySource,
+    V: agentmage_kernel_engine::runtime_loop::RuntimeVerifierPort,
+    C: agentmage_kernel_engine::runtime_loop::RuntimeClock,
+{
+    fn run_recoverability(&self, request: &RuntimeRunRequest) -> Option<RecoverabilityReport> {
+        self.ended_tool_boundary()?
+            .declare_run_recoverability(request)
+            .ok()
+    }
+
+    fn run_context_inspections(&self) -> Option<Vec<ContextInspection>> {
+        self.ended_context_port()?
+            .run_context_inspections()
+            .map(<[ContextInspection]>::to_vec)
+    }
+}
 
 const MAX_LIVE_RUNS: usize = 4;
 const MAX_LIVE_CURSOR_AGE_EVENTS: usize = 32;
@@ -53,6 +90,7 @@ enum WorkerCommand {
         maximum_bytes: u32,
     },
     ReleaseArtifact(RuntimeArtifactRef),
+    Declare,
     Stop,
 }
 
@@ -68,6 +106,7 @@ enum WorkerResponse {
     Boundary(WorkerBoundary),
     ArtifactPage(RuntimeArtifactPage),
     ArtifactState(RuntimeArtifactState),
+    Declarations(RuntimeRunDeclarations),
 }
 
 #[derive(Default)]
@@ -233,7 +272,7 @@ impl ModelCancellationProbe for SharedCancellation {
 pub struct LiveCodingRuntimeService<F>
 where
     F: NativeChatRuntimeFactory,
-    F::Coordinator: LiveCodingCoordinatorPort,
+    F::Coordinator: LiveCodingCoordinatorPort + LiveRunDeclarationPort,
 {
     factory: F,
     prepared: BTreeMap<String, PreparedLiveRun>,
@@ -248,7 +287,7 @@ struct PreparedLiveRun {
 impl<F> LiveCodingRuntimeService<F>
 where
     F: NativeChatRuntimeFactory,
-    F::Coordinator: LiveCodingCoordinatorPort,
+    F::Coordinator: LiveCodingCoordinatorPort + LiveRunDeclarationPort,
 {
     /// Creates one empty, single-client host registry.
     #[must_use]
@@ -264,7 +303,7 @@ where
 impl<F> RuntimeTransportPort for LiveCodingRuntimeService<F>
 where
     F: NativeChatRuntimeFactory,
-    F::Coordinator: LiveCodingCoordinatorPort,
+    F::Coordinator: LiveCodingCoordinatorPort + LiveRunDeclarationPort,
 {
     fn prepare(
         &mut self,
@@ -394,6 +433,17 @@ where
             .release_artifact(request_sha256, reference)
     }
 
+    fn run_declarations(
+        &mut self,
+        run_id: &RuntimeRunId,
+        request_sha256: &str,
+    ) -> Result<RuntimeRunDeclarations, RuntimeTransportError> {
+        self.active
+            .get_mut(run_id.as_str())
+            .ok_or(RuntimeTransportError::RunUnavailable)?
+            .run_declarations(request_sha256)
+    }
+
     fn revoke_session_preauthorization(
         &mut self,
         session_id: &agentmage_kernel_contracts::SessionId,
@@ -453,7 +503,7 @@ impl LiveCodingSession {
         slow_subscriber_probe: bool,
     ) -> Result<Self, RuntimeTransportError>
     where
-        R: LiveCodingCoordinatorPort,
+        R: LiveCodingCoordinatorPort + LiveRunDeclarationPort,
     {
         let queue_by_bytes = MAX_RUNTIME_CLIENT_QUEUE_BYTES / MAX_RUNTIME_EVENT_ENVELOPE_BYTES;
         let capacity = usize::try_from(
@@ -474,6 +524,7 @@ impl LiveCodingSession {
         let event_pump = EventPump::spawn(subscription, &request, initial_events)?;
         let cancellation = Arc::new(SharedCancellation::new());
         let worker_cancellation = Arc::clone(&cancellation);
+        let worker_request = request.clone();
         let (command_tx, command_rx) = sync_channel::<WorkerCommand>(1);
         let (result_tx, result_rx) = sync_channel(1);
         let worker = thread::Builder::new()
@@ -499,6 +550,15 @@ impl LiveCodingSession {
                         WorkerCommand::ReleaseArtifact(reference) => runtime
                             .release_artifact(&reference)
                             .map(WorkerResponse::ArtifactState),
+                        WorkerCommand::Declare => {
+                            Ok(WorkerResponse::Declarations(RuntimeRunDeclarations {
+                                schema_version: 1,
+                                run_id: worker_request.run_id.clone(),
+                                request_sha256: worker_request.request_sha256.clone(),
+                                recoverability: runtime.run_recoverability(&worker_request),
+                                context_inspections: runtime.run_context_inspections(),
+                            }))
+                        }
                         WorkerCommand::Stop => return,
                     };
                     if result_tx.send(result).is_err() {
@@ -862,6 +922,26 @@ impl LiveCodingSession {
             .map_err(|_| RuntimeTransportError::RuntimeFailed)?;
         match self.results.recv_timeout(START_WAIT) {
             Ok(Ok(WorkerResponse::ArtifactPage(page))) => Ok(page),
+            Ok(Ok(_)) => Err(RuntimeTransportError::RuntimeEvidenceDenied),
+            Ok(Err(error)) => Err(map_client_error(error)),
+            Err(_) => Err(RuntimeTransportError::RuntimeFailed),
+        }
+    }
+
+    fn run_declarations(
+        &mut self,
+        request_sha256: &str,
+    ) -> Result<RuntimeRunDeclarations, RuntimeTransportError> {
+        self.verify_binding(request_sha256)?;
+        self.refresh(Duration::ZERO)?;
+        if !self.is_terminal() || self.busy {
+            return Err(RuntimeTransportError::RequestDenied);
+        }
+        self.commands
+            .send(WorkerCommand::Declare)
+            .map_err(|_| RuntimeTransportError::RuntimeFailed)?;
+        match self.results.recv_timeout(START_WAIT) {
+            Ok(Ok(WorkerResponse::Declarations(declarations))) => Ok(declarations),
             Ok(Ok(_)) => Err(RuntimeTransportError::RuntimeEvidenceDenied),
             Ok(Err(error)) => Err(map_client_error(error)),
             Err(_) => Err(RuntimeTransportError::RuntimeFailed),

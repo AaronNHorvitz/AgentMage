@@ -105,6 +105,21 @@ impl CodingCoordinatorPort for RefusingCoordinator {
     }
 }
 
+impl crate::coding_live_runtime::LiveRunDeclarationPort for RefusingCoordinator {
+    fn run_recoverability(
+        &self,
+        _request: &RuntimeRunRequest,
+    ) -> Option<crate::coding_recoverability::RecoverabilityReport> {
+        panic!("failed startup cannot declare recoverability")
+    }
+
+    fn run_context_inspections(
+        &self,
+    ) -> Option<Vec<agentmage_kernel_engine::context_inspection::ContextInspection>> {
+        panic!("failed startup cannot show context views")
+    }
+}
+
 impl LiveCodingCoordinatorPort for RefusingCoordinator {
     fn subscribe_live_events(
         &self,

@@ -38,7 +38,8 @@ EXPECTED_AMR_IDS = frozenset({
     "AMR-02.3.1", "AMR-02.3.2", "AMR-02.4", "AMR-03.1", "AMR-03.1.1",
     "AMR-03.1.2", "AMR-03.1.3", "AMR-03.2", "AMR-04.1", "AMR-04.2",
     "AMR-04.2.1", "AMR-04.2.2", "AMR-04.2.3", "AMR-04.3", "AMR-04.4", "AMR-04.4.1",
-    "AMR-04.5", "AMR-04.6", "AMR-04.7", "AMR-04.8", "AMR-04.8.1", "AMR-04.9",
+    "AMR-04.5", "AMR-04.6", "AMR-04.7", "AMR-04.7.1", "AMR-04.7.2", "AMR-04.8",
+    "AMR-04.8.1", "AMR-04.9", "AMR-04.10",
 })
 ROW = re.compile(
     r"^(?P<indent>\s*)(?:(?P<heading>#{2,4})\s+|(?:-\s+))"

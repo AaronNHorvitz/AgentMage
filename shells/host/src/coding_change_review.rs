@@ -559,6 +559,7 @@ pub(crate) mod tests {
             arguments: original.presentation.arguments.clone(),
         };
         let derived = crate::coding_hunk_selection::derive_hunk_selection_call(
+            &scope,
             &call,
             plan.preimage(),
             plan.postimage(),

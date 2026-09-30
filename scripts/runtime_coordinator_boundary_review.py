@@ -156,14 +156,42 @@ def committed_sources(revision: str) -> dict[str, str]:
     }
 
 
-def function_origins(source: str, name: str) -> list[str]:
-    """Proposal classes a named method assigns, from its body up to the next method."""
+def function_body(source: str, name: str) -> str:
+    """A named method's parameters and body, up to the next method."""
     start = re.search(rf"\n    fn {name}\(", source)
     if start is None:
-        return []
+        return ""
     end = re.search(r"\n    (?:pub(?:\([a-z]+\))? )?fn ", source[start.end():])
-    body = source[start.end():start.end() + end.start()] if end else source[start.end():]
-    return re.findall(r"origin:\s*ProposalOrigin::(\w+),", body)
+    return source[start.end():start.end() + end.start()] if end else source[start.end():]
+
+
+def function_origins(source: str, name: str) -> list[str]:
+    """Proposal classes a named method assigns."""
+    return re.findall(r"origin:\s*ProposalOrigin::(\w+),", function_body(source, name))
+
+
+def dispatched_origin_is_unmodified(source: str) -> bool:
+    """The one dispatch site uses the request's own, never rebound, proposal class.
+
+    `request_tool` takes the request immutably, never rebinds or assigns it or
+    its class, and names the class only as `requested.origin` (Decision 0115).
+    """
+    body = function_body(source, "request_tool")
+    return (
+        re.search(r"(?<!mut )\brequested:\s*RequestedToolCall,", body) is not None
+        and re.search(r"\bmut\s+requested\b", body) is None
+        and re.search(r"\blet\s+(?:mut\s+)?requested\b", body) is None
+        and re.search(r"(?<![.\w])requested(?:\.origin)?\s*=(?!=)", body) is None
+        and re.search(r"\borigin\b", body.replace("requested.origin", "")) is None
+        and len(
+            re.findall(
+                r"let\s+receipt\s*=\s*ToolDispatcher::new\(&self\.registry\)"
+                r"\.dispatch\(requested\.origin,\s*&call\);",
+                body,
+            )
+        )
+        == 1
+    )
 
 
 def review_checks(sources: dict[str, str]) -> list[dict[str, Any]]:
@@ -231,6 +259,8 @@ def review_checks(sources: dict[str, str]) -> list[dict[str, Any]]:
     # A model's proposal reaches the one dispatch site under the model's
     # proposal class. The only other class is the shell's, used once for the
     # write the runtime derives from a person's hunk selection (Decision 0114).
+    # The class at the dispatch site is the request's own field, never rebound
+    # (Decision 0115).
     model_proposal_inert = (
         all(
             marker in runtime_loop
@@ -241,12 +271,7 @@ def review_checks(sources: dict[str, str]) -> list[dict[str, Any]]:
             )
         )
         and len(re.findall(r"ToolDispatcher::new\(", runtime_loop)) == 1
-        and re.search(
-            r"let\s+receipt\s*=\s*ToolDispatcher::new\(&self\.registry\)"
-            r"\.dispatch\(origin,\s*&call\);",
-            runtime_loop,
-        )
-        is not None
+        and dispatched_origin_is_unmodified(runtime_loop)
         and set(re.findall(r"ProposalOrigin::(\w+)", runtime_loop)) == {"Model", "Shell"}
         and function_origins(runtime_loop, "propose_tool") == ["Model"]
         and function_origins(runtime_loop, "request_derived_tool") == ["Shell"]

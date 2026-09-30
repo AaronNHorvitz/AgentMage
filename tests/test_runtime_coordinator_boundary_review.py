@@ -47,7 +47,7 @@ def worktree_sources() -> dict[str, str]:
 class RuntimeCoordinatorBoundaryReviewTests(unittest.TestCase):
     def test_model_dispatch_keeps_exact_origin_registry_and_call_across_line_wrapping(self) -> None:
         sources = worktree_sources()
-        dispatch = "ToolDispatcher::new(&self.registry).dispatch(origin, &call);"
+        dispatch = "ToolDispatcher::new(&self.registry).dispatch(requested.origin, &call);"
         assignment = r"let\s+receipt\s*=\s*" + re.escape(dispatch)
         self.assertEqual(len(re.findall(assignment, sources[RUNTIME_LOOP])), 1)
         for spacing in (" ", "\n                "):
@@ -59,11 +59,13 @@ class RuntimeCoordinatorBoundaryReviewTests(unittest.TestCase):
             self.assertTrue(checks["model-proposal-is-inert"])
         model = "origin: ProposalOrigin::Model,"
         shell = "origin: ProposalOrigin::Shell,"
+        destructure = "            closing_sha256,\n            ..\n        } = requested;"
         self.assertEqual(sources[RUNTIME_LOOP].count(model), 1)
         self.assertEqual(sources[RUNTIME_LOOP].count(shell), 1)
+        self.assertEqual(sources[RUNTIME_LOOP].count(destructure), 1)
         for old, new in (
             # A model call dispatched under another class, registry or call.
-            (dispatch, dispatch.replace("origin", "ProposalOrigin::Shell")),
+            (dispatch, dispatch.replace("requested.origin", "ProposalOrigin::Shell")),
             (dispatch, dispatch.replace("&self.registry", "&another_registry")),
             (dispatch, dispatch.replace("&call", "&another_call")),
             # The model path claims the shell's class, or the derived path the model's.
@@ -72,8 +74,39 @@ class RuntimeCoordinatorBoundaryReviewTests(unittest.TestCase):
             # A second dispatch site or another proposal class.
             (dispatch, dispatch + "\n        let other = ToolDispatcher::new(&self.registry);"),
             (shell, "origin: ProposalOrigin::Tool,"),
+            # The class is rebound before the dispatch site (review V2).
+            (
+                "let receipt = " + dispatch,
+                "let origin = ProposalOrigin::Shell;\n            let receipt = "
+                + dispatch.replace("requested.origin", "origin"),
+            ),
+            (
+                destructure,
+                "            closing_sha256,\n            origin: _,\n        } = requested;"
+                "\n        let origin = ProposalOrigin::Shell;",
+            ),
+            (
+                "let receipt = " + dispatch,
+                "let origin = if arguments_valid { ProposalOrigin::Shell } else "
+                "{ requested.origin };\n            let receipt = "
+                + dispatch.replace("requested.origin", "origin"),
+            ),
+            (
+                "let receipt = " + dispatch,
+                "let requested = RequestedToolCall { origin: ProposalOrigin::Shell, "
+                "..requested };\n            let receipt = " + dispatch,
+            ),
+            (
+                "requested: RequestedToolCall,",
+                "mut requested: RequestedToolCall,",
+            ),
+            (
+                "let receipt = " + dispatch,
+                "requested.origin = ProposalOrigin::Shell;\n            let receipt = " + dispatch,
+            ),
         ):
             changed = dict(sources)
+            self.assertIn(old, changed[RUNTIME_LOOP])
             changed[RUNTIME_LOOP] = changed[RUNTIME_LOOP].replace(old, new, 1)
             checks = {item["check_id"]: item["passed"] for item in review_checks(changed)}
             self.assertFalse(checks["model-proposal-is-inert"], new)

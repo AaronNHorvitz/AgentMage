@@ -3,10 +3,7 @@
 use std::fmt::Write;
 use std::path::Path;
 
-use agentmage_capability_repository_map::{
-    RepositoryMap, StructuredEdit, StructuredFileChangePlan, StructuredLanguage,
-    StructuredReviewHook,
-};
+use agentmage_capability_repository_map::{RepositoryMap, StructuredFileChangePlan};
 use agentmage_kernel_contracts::{
     AuthorizedWorkspaceHandle, GrantTarget, HeldWorkspaceObject, PathResolutionIntent,
     WorkspaceAuthorizationId, WorkspaceObjectKind, WorkspacePath,
@@ -26,7 +23,7 @@ use agentmage_kernel_contracts::AdapterInstanceId;
 
 use crate::{
     coding_changes::{
-        CodingWriteScope, StructuredPatchProposal, bind_structured_patch_proposal,
+        CodingWriteScope, bind_structured_patch_proposal,
         controlled_create_parent_observation_sha256, prepare_controlled_file_creation,
     },
     coding_dispatch::PreparedNativeCodingCall,
@@ -357,6 +354,48 @@ impl<'session, 'platform> LinuxCodingWorkspace<'session, 'platform> {
         &self.workspace
     }
 
+    /// Returns the digest of one regular file's exact current bytes, resolved
+    /// read-only through the held worktree, or `None` when the path is outside
+    /// the write scope, absent, not a regular file or unreadable. It grants
+    /// nothing; a recoverability declaration uses it (Decision 0116).
+    #[must_use]
+    pub fn current_file_sha256(&self, components: &[String]) -> Option<String> {
+        let path = self.profile.write_scope().resolve(components).ok()?;
+        let held = self.resolve(&path, PathResolutionIntent::ReadFile).ok()?;
+        let target = GrantTarget::held_object(&held).ok()?;
+        (target.object_kind() == Some(WorkspaceObjectKind::RegularFile))
+            .then(|| {
+                target
+                    .preimage()
+                    .map(|preimage| hex(preimage.content_sha256()))
+            })
+            .flatten()
+    }
+
+    fn resolve(
+        &self,
+        path: &WorkspacePath,
+        intent: PathResolutionIntent,
+    ) -> Result<LinuxHeldObject, agentmage_kernel_contracts::PathAdapterError> {
+        match &self.platform {
+            LinuxCodingPlatform::Verified(platform) => {
+                resolve_linux_workspace_object(platform, &self.workspace, path, intent)
+            }
+            LinuxCodingPlatform::Development(platform) => {
+                resolve_development_linux_workspace_object(platform, &self.workspace, path, intent)
+            }
+            #[cfg(test)]
+            LinuxCodingPlatform::Test(adapter_instance_id) => {
+                agentmage_platform_linux::resolve_test_linux_workspace_object(
+                    &self.workspace,
+                    adapter_instance_id.clone(),
+                    path,
+                    intent,
+                )
+            }
+        }
+    }
+
     /// Plans one model call and resolves every required Linux object without executing it.
     pub fn prepare(
         &self,
@@ -373,32 +412,9 @@ impl<'session, 'platform> LinuxCodingWorkspace<'session, 'platform> {
                 }
                 _ => LinuxCodingBindingError::OperationDenied,
             })?;
-        let binding = bind_target(
-            &self.workspace,
-            operation.target(),
-            |path, intent| match &self.platform {
-                LinuxCodingPlatform::Verified(platform) => {
-                    resolve_linux_workspace_object(platform, &self.workspace, path, intent)
-                }
-                LinuxCodingPlatform::Development(platform) => {
-                    resolve_development_linux_workspace_object(
-                        platform,
-                        &self.workspace,
-                        path,
-                        intent,
-                    )
-                }
-                #[cfg(test)]
-                LinuxCodingPlatform::Test(adapter_instance_id) => {
-                    agentmage_platform_linux::resolve_test_linux_workspace_object(
-                        &self.workspace,
-                        adapter_instance_id.clone(),
-                        path,
-                        intent,
-                    )
-                }
-            },
-        )?;
+        let binding = bind_target(&self.workspace, operation.target(), |path, intent| {
+            self.resolve(path, intent)
+        })?;
         let write_draft = compose_write_draft(
             self.profile.write_scope(),
             operation.prepared(),
@@ -606,47 +622,9 @@ fn compose_write_draft(
             let current = held
                 .read_exact_bytes()
                 .map_err(|_| LinuxCodingBindingError::TargetDenied)?;
-            let current_text = String::from_utf8(current.clone())
-                .map_err(|_| LinuxCodingBindingError::TargetDenied)?;
-            let edit = if matches!(
-                request.source.record.language,
-                StructuredLanguage::Rust
-                    | StructuredLanguage::Python
-                    | StructuredLanguage::TypeScript
-                    | StructuredLanguage::Tsx
-                    | StructuredLanguage::JavaScript
-                    | StructuredLanguage::Swift
-            ) {
-                StructuredEdit::ReplaceSyntaxNode {
-                    edit_id: format!("{}:inverse", request.rollback_id),
-                    start_byte: 0,
-                    end_byte: current.len() as u64,
-                    expected_node_sha256: request.source.record.postimage_sha256.clone(),
-                    replacement: request.source.record.preimage.clone(),
-                }
-            } else {
-                StructuredEdit::ReplaceExactText {
-                    edit_id: format!("{}:inverse", request.rollback_id),
-                    expected: current_text,
-                    replacement: request.source.record.preimage.clone(),
-                }
-            };
             bind_structured_patch_proposal(
                 scope,
-                StructuredPatchProposal {
-                    schema_version: 1,
-                    change_id: request.rollback_id.clone(),
-                    path: request.source.record.path.clone(),
-                    expected_preimage_sha256: request.source.record.postimage_sha256.clone(),
-                    intent_sha256: request.intent_sha256.clone(),
-                    change_plan_sha256: request.change_plan_sha256.clone(),
-                    language: request.source.record.language,
-                    artifact_class: request.source.record.artifact_class,
-                    edits: vec![edit],
-                    additional_review_hooks: vec![StructuredReviewHook::Migration],
-                    generated: request.source.record.generated,
-                    allow_generated: request.source.record.generated,
-                },
+                crate::coding_history::inverse_write_proposal(request),
                 current,
             )
             .map(LinuxCodingWriteDraft::Rollback)

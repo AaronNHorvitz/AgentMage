@@ -86,6 +86,8 @@ pub enum StructuredEditMethod {
     ExactTextFallback,
     /// Deterministic terminal-newline normalization.
     TerminalNewline,
+    /// Trusted replacement of the complete exact preimage.
+    WholeFileReplacement,
 }
 
 /// Closed review hooks selected before a shadow change is built.
@@ -157,6 +159,20 @@ pub enum StructuredEdit {
         /// Stable edit identity.
         edit_id: String,
     },
+    /// Replace the complete exact preimage with one complete postimage.
+    ///
+    /// Only a trusted in-process caller builds this edit, from a postimage it
+    /// derived and verified itself: a person's hunk selection or an inverse
+    /// write (Decision 0115). It cannot be decoded from a proposal, so no model
+    /// can request it, and it must be the only edit. The file-level bounds and
+    /// postimage syntax validation still apply.
+    #[serde(skip_deserializing)]
+    ReplaceWholeFile {
+        /// Stable edit identity.
+        edit_id: String,
+        /// Complete replacement file text.
+        replacement: String,
+    },
 }
 
 impl StructuredEdit {
@@ -166,6 +182,7 @@ impl StructuredEdit {
             | Self::ReplaceSyntaxNode { edit_id, .. }
             | Self::InsertImport { edit_id, .. }
             | Self::ReplaceExactText { edit_id, .. }
+            | Self::ReplaceWholeFile { edit_id, .. }
             | Self::NormalizeTerminalNewline { edit_id } => edit_id,
         }
     }
@@ -553,6 +570,9 @@ pub fn validate_structured_edit_proposal(
                     && !replacement.contains('\r')
             }
             StructuredEdit::NormalizeTerminalNewline { .. } => true,
+            StructuredEdit::ReplaceWholeFile { replacement, .. } => {
+                edits.len() == 1 && replacement.len() <= MAX_SOURCE_BYTES
+            }
         };
         if !valid {
             return Err(StructuredEditError::EditTargetInvalid);
@@ -702,6 +722,21 @@ fn resolve_edit(
                 end: start + expected.len(),
                 after: replacement.as_bytes().to_vec(),
                 method: StructuredEditMethod::ExactTextFallback,
+            }])
+        }
+        StructuredEdit::ReplaceWholeFile {
+            edit_id,
+            replacement,
+        } => {
+            if replacement.len() > MAX_SOURCE_BYTES {
+                return Err(StructuredEditError::EditTargetInvalid);
+            }
+            Ok(vec![Replacement {
+                edit_id: edit_id.clone(),
+                start: 0,
+                end: source.len(),
+                after: replacement.as_bytes().to_vec(),
+                method: StructuredEditMethod::WholeFileReplacement,
             }])
         }
         StructuredEdit::NormalizeTerminalNewline { edit_id } => {
@@ -1232,5 +1267,108 @@ mod tests {
         plan.summary.mutation_authority = true;
         assert!(!verify_structured_file_change(&plan));
         assert!(!format!("{plan:?}").contains("value = 1"));
+    }
+
+    #[test]
+    fn a_trusted_whole_file_replacement_keeps_file_bounds_but_not_edit_bounds() {
+        let whole = |replacement: &str| StructuredEdit::ReplaceWholeFile {
+            edit_id: "edit-whole".to_owned(),
+            replacement: replacement.to_owned(),
+        };
+        // Larger than one edit's text bound, CRLF text, and a syntax file whose
+        // root node does not start at byte zero all bind as one whole replacement.
+        let large = "line of plain text\n".repeat(5_000);
+        let python = "\n\ndef add(left, right):\n    return left - right\n";
+        for (parts, language, preimage, postimage) in [
+            (
+                &["notes.txt"][..],
+                StructuredLanguage::PlainText,
+                large.clone(),
+                large.replacen("plain", "PLAIN", 1),
+            ),
+            (
+                &["notes.txt"][..],
+                StructuredLanguage::PlainText,
+                "one\r\ntwo\r\n".to_owned(),
+                "one\r\nTWO\r\n".to_owned(),
+            ),
+            (
+                &["module.py"][..],
+                StructuredLanguage::Python,
+                python.to_owned(),
+                python.replace("left - right", "left + right"),
+            ),
+        ] {
+            assert!(large.len() > MAX_TEXT_BYTES);
+            let plan = build_structured_file_change(request(
+                parts,
+                language,
+                &preimage,
+                whole(&postimage),
+            ))
+            .expect("whole-file plan");
+            assert!(verify_structured_file_change(&plan));
+            assert_eq!(plan.preimage(), preimage.as_bytes());
+            assert_eq!(plan.postimage(), postimage.as_bytes());
+            assert_eq!(
+                plan.summary().changed_ranges[0].method,
+                StructuredEditMethod::WholeFileReplacement
+            );
+            assert_eq!(
+                plan.summary().changed_ranges[0].end_byte,
+                preimage.len() as u64
+            );
+        }
+        // The postimage must still parse for a syntax language, differ from the
+        // preimage and stay within the file bound; the edit must stand alone.
+        for (source, replacement, expected) in [
+            (
+                python,
+                "def add(left, right:\n",
+                StructuredEditError::SyntaxInvalid,
+            ),
+            (python, python, StructuredEditError::EditTargetInvalid),
+        ] {
+            assert_eq!(
+                build_structured_file_change(request(
+                    &["module.py"],
+                    StructuredLanguage::Python,
+                    source,
+                    whole(replacement),
+                )),
+                Err(expected)
+            );
+        }
+        let oversized = "x".repeat(MAX_SOURCE_BYTES + 1);
+        assert_eq!(
+            build_structured_file_change(request(
+                &["notes.txt"],
+                StructuredLanguage::PlainText,
+                "one\n",
+                whole(&oversized),
+            )),
+            Err(StructuredEditError::EditTargetInvalid)
+        );
+        let mut combined = request(
+            &["notes.txt"],
+            StructuredLanguage::PlainText,
+            "one\n",
+            whole("two\n"),
+        );
+        combined.edits.push(StructuredEdit::ReplaceWholeFile {
+            edit_id: "edit-whole-2".to_owned(),
+            replacement: "three\n".to_owned(),
+        });
+        assert_eq!(
+            build_structured_file_change(combined),
+            Err(StructuredEditError::EditTargetInvalid)
+        );
+        // No proposal can carry it: it is never decoded.
+        assert!(
+            serde_json::from_str::<StructuredEdit>(
+                r#"{"kind":"replace_whole_file","edit_id":"edit-whole","replacement":"x"}"#
+            )
+            .is_err()
+        );
     }
 }

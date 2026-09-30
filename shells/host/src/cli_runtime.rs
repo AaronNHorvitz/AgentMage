@@ -27,8 +27,9 @@ use crate::coding_client::{
     runtime_approval_response_with_selection,
 };
 use crate::runtime_transport::{
-    RuntimePrepareInput as NativeChatPrepareInput, RuntimeTransportError as NativeChatRuntimeError,
-    RuntimeTransportPort as NativeChatRuntimePort, RuntimeTransportStep as NativeChatRuntimeStep,
+    RuntimePrepareInput as NativeChatPrepareInput, RuntimeRunDeclarations,
+    RuntimeTransportError as NativeChatRuntimeError, RuntimeTransportPort as NativeChatRuntimePort,
+    RuntimeTransportStep as NativeChatRuntimeStep,
 };
 
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
@@ -170,6 +171,9 @@ pub struct InteractiveCliRuntimeResult {
     pub verified_artifacts: Vec<VerifiedRuntimeArtifact>,
     /// Number of canonical events independently verified and presented.
     pub presented_events: u64,
+    /// Host declarations about this run, read before release; `None` when the
+    /// host offers none or they do not name this exact run (Decision 0116).
+    pub declarations: Option<RuntimeRunDeclarations>,
 }
 
 /// Content-free result of reading and hashing one complete retained runtime artifact.
@@ -235,6 +239,12 @@ where
                         return Err(error);
                     }
                 };
+            // Declarations are read while the ended run is still held; a
+            // transport without them, or a failed read, shows them unavailable.
+            let declarations = runtime
+                .run_declarations(&request.run_id, &request.request_sha256)
+                .ok()
+                .and_then(|declarations| verified_run_declarations(declarations, &request));
             runtime
                 .release(&request.run_id, &request.request_sha256)
                 .map_err(|_| InteractiveCliRuntimeError::Release)?;
@@ -244,6 +254,7 @@ where
                 artifacts: step.artifacts,
                 verified_artifacts,
                 presented_events: verifier.event_count(),
+                declarations,
             });
         }
 
@@ -401,6 +412,32 @@ fn lower_hex(bytes: &[u8]) -> String {
         encoded.push(char::from(DIGITS[usize::from(byte & 0x0f)]));
     }
     encoded
+}
+
+/// Keeps declarations only for this exact run. A recoverability declaration
+/// whose seal, scope or summary does not verify is dropped as unavailable.
+fn verified_run_declarations(
+    mut declarations: RuntimeRunDeclarations,
+    request: &RuntimeRunRequest,
+) -> Option<RuntimeRunDeclarations> {
+    if declarations.schema_version != 1
+        || declarations.run_id != request.run_id
+        || declarations.request_sha256 != request.request_sha256
+    {
+        return None;
+    }
+    if declarations.recoverability.as_ref().is_some_and(|report| {
+        crate::coding_recoverability::verify_run_recoverability(
+            report,
+            request.session_id.as_str(),
+            request.task.task_id.as_str(),
+            request.run_id.as_str(),
+        )
+        .is_err()
+    }) {
+        declarations.recoverability = None;
+    }
+    Some(declarations)
 }
 
 fn best_effort_release<P>(runtime: &mut P, request: &RuntimeRunRequest)

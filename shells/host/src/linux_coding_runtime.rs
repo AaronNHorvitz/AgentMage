@@ -99,12 +99,17 @@ use crate::{
         derive_approved_coding_grant_with_event, derive_preauthorized_coding_grant,
         derive_preauthorized_coding_grant_with_event, render_coding_approval_request,
     },
+    coding_changes::CodingWriteScope,
     coding_dispatch::PreparedNativeCodingCall,
     coding_history::{
         CODING_CHANGE_RECORD_MEDIA_TYPE, ChangeHistoryOutput, CodingChangeRecord,
         RetainedCodingChange, seal_change_record, seal_history_output, verify_change_record,
     },
     coding_hunk_selection::{HunkSelectionError, derive_hunk_selection_call},
+    coding_recoverability::{
+        ExecutedEffect, ExecutedEffectKind, ExecutedEffectOutcome, RecoverabilityError,
+        RecoverabilityReport, RunEffectRecorder, RunRecoverabilitySource,
+    },
     linux_coding::{
         LinuxCodingTargetBinding, LinuxCodingWorkspace, LinuxCodingWriteDraft,
         PreparedLinuxCodingOperation,
@@ -323,28 +328,50 @@ fn build_pending_coding_authority(
 /// Derives the selected write for one pending structured patch, reading the
 /// held file again so a concurrent edit refuses the selection.
 fn narrowed_call(
+    scope: &CodingWriteScope,
     pending: &PendingCodingOperation<'_>,
     response: &RuntimeApprovalResponse,
+) -> Result<RuntimeDerivedToolCall, HunkSelectionError> {
+    derive_narrowed_write(
+        scope,
+        &pending.tool_call,
+        pending.prepared.write_draft(),
+        response,
+        || {
+            let LinuxCodingTargetBinding::ExistingFile { held, .. } = pending.prepared.binding()
+            else {
+                return Err(HunkSelectionError::NotNarrowable);
+            };
+            pending
+                .prepared
+                .revalidate()
+                .map_err(|_| HunkSelectionError::Mismatch)?;
+            held.read_exact_bytes()
+                .map_err(|_| HunkSelectionError::Mismatch)
+        },
+    )
+}
+
+/// Derives the selected write of one held structured patch over the bytes
+/// `read_current` returns now, never over the plan's retained preimage.
+fn derive_narrowed_write(
+    scope: &CodingWriteScope,
+    call: &ToolCall,
+    draft: Option<&LinuxCodingWriteDraft>,
+    response: &RuntimeApprovalResponse,
+    read_current: impl FnOnce() -> Result<Vec<u8>, HunkSelectionError>,
 ) -> Result<RuntimeDerivedToolCall, HunkSelectionError> {
     let selection = response
         .selection
         .as_ref()
         .ok_or(HunkSelectionError::Invalid)?;
-    let Some(LinuxCodingWriteDraft::StructuredPatch(plan)) = pending.prepared.write_draft() else {
+    let Some(LinuxCodingWriteDraft::StructuredPatch(plan)) = draft else {
         return Err(HunkSelectionError::NotNarrowable);
     };
-    let LinuxCodingTargetBinding::ExistingFile { held, .. } = pending.prepared.binding() else {
-        return Err(HunkSelectionError::NotNarrowable);
-    };
-    pending
-        .prepared
-        .revalidate()
-        .map_err(|_| HunkSelectionError::Mismatch)?;
-    let current = held
-        .read_exact_bytes()
-        .map_err(|_| HunkSelectionError::Mismatch)?;
+    let current = read_current()?;
     derive_hunk_selection_call(
-        &pending.tool_call,
+        scope,
+        call,
         plan.preimage(),
         plan.postimage(),
         &current,
@@ -383,6 +410,7 @@ enum IssuedCodingAuthority {
 }
 
 struct IssuedCodingOperation<'workspace> {
+    operation_id: RuntimeOperationId,
     tool_call: ToolCall,
     expires_at_epoch_ms: u64,
     authority: IssuedCodingAuthority,
@@ -509,6 +537,9 @@ where
     pending: BTreeMap<String, PendingCodingOperation<'workspace>>,
     issued: BTreeMap<String, IssuedCodingOperation<'workspace>>,
     pending_write_completion: Option<PendingWriteCheckpointCompletion>,
+    /// How each executed call of this run ended and the change records this
+    /// boundary published, for the run's recoverability declaration.
+    run_effects: RunEffectRecorder,
 }
 
 #[derive(Clone)]
@@ -746,6 +777,7 @@ where
             pending: BTreeMap::new(),
             issued: BTreeMap::new(),
             pending_write_completion: None,
+            run_effects: RunEffectRecorder::new(),
         })
     }
 
@@ -1118,6 +1150,7 @@ where
             }
         };
         let issued = IssuedCodingOperation {
+            operation_id: pending.operation_id.clone(),
             tool_call: pending.tool_call,
             expires_at_epoch_ms: pending.expires_at_epoch_ms,
             authority: issued_authority,
@@ -1174,24 +1207,25 @@ where
                 .pending
                 .remove(key)
                 .ok_or(RuntimePortFailure::Invalid)?;
-            let evaluation = match narrowed_call(&pending, response) {
-                Ok(derived) => RuntimePermissionEvaluation::Narrowed {
-                    approval_id: pending.authority.approval_id().clone(),
-                    grant_id: pending.authority.proposed_grant_id().clone(),
-                    preview_sha256: pending.authority.preview_sha256().to_owned(),
-                    expires_at_epoch_ms: pending.expires_at_epoch_ms,
-                    decision_sha256,
-                    derived,
-                },
-                Err(error) => RuntimePermissionEvaluation::Deny {
-                    approval_id: pending.authority.approval_id().clone(),
-                    grant_id: pending.authority.proposed_grant_id().clone(),
-                    preview_sha256: pending.authority.preview_sha256().to_owned(),
-                    expires_at_epoch_ms: pending.expires_at_epoch_ms,
-                    decision_sha256,
-                    reason_code: error.reason_code().to_owned(),
-                },
-            };
+            let evaluation =
+                match narrowed_call(self.workspace.profile().write_scope(), &pending, response) {
+                    Ok(derived) => RuntimePermissionEvaluation::Narrowed {
+                        approval_id: pending.authority.approval_id().clone(),
+                        grant_id: pending.authority.proposed_grant_id().clone(),
+                        preview_sha256: pending.authority.preview_sha256().to_owned(),
+                        expires_at_epoch_ms: pending.expires_at_epoch_ms,
+                        decision_sha256,
+                        derived,
+                    },
+                    Err(error) => RuntimePermissionEvaluation::Deny {
+                        approval_id: pending.authority.approval_id().clone(),
+                        grant_id: pending.authority.proposed_grant_id().clone(),
+                        preview_sha256: pending.authority.preview_sha256().to_owned(),
+                        expires_at_epoch_ms: pending.expires_at_epoch_ms,
+                        decision_sha256,
+                        reason_code: error.reason_code().to_owned(),
+                    },
+                };
             let event = if let Some(builder) = build_event.as_mut() {
                 let event = builder(&evaluation)?;
                 self.authority
@@ -1419,6 +1453,7 @@ where
             }
         };
         let issued = IssuedCodingOperation {
+            operation_id: pending.operation_id.clone(),
             tool_call: pending.tool_call,
             expires_at_epoch_ms: pending.expires_at_epoch_ms,
             authority: issued_authority,
@@ -1522,7 +1557,9 @@ where
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Unavailable)?;
         let issued = self.issued.remove(key).ok_or(RuntimePortFailure::Invalid)?;
-        match issued.prepared.operation().prepared() {
+        let effect_kind = ExecutedEffectKind::of(issued.prepared.operation().prepared());
+        let effect_operation_id = issued.operation_id.as_str().to_owned();
+        let executed = match issued.prepared.operation().prepared() {
             PreparedNativeCodingCall::ReadOnly { .. } => self.execute_prepared_read(
                 request,
                 definition,
@@ -1595,7 +1632,17 @@ where
                     issued,
                     event_context,
                 ),
-        }
+        };
+        // The grant is consumed from here on: record how the call ended for
+        // this run's recoverability declaration (Decision 0116).
+        self.run_effects.record_execution(ExecutedEffect {
+            operation_id: effect_operation_id,
+            kind: effect_kind,
+            outcome: ExecutedEffectOutcome::of(
+                executed.as_ref().map(|(execution, _)| &execution.result),
+            ),
+        });
+        executed
     }
 
     fn execute_prepared_read(
@@ -3902,7 +3949,33 @@ where
         if publication.manifest != manifest {
             return Err(RuntimePortFailure::Invalid);
         }
+        self.run_effects
+            .record_publication(&publication.reference, payload);
         Ok(publication.reference)
+    }
+}
+
+impl<I, E, G> RunRecoverabilitySource for LinuxCodingRuntimeBoundary<'_, '_, '_, I, E, G>
+where
+    I: CodingIdentitySource,
+    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+{
+    /// Declares this run's effects from the calls this boundary executed and the
+    /// change records it published, against the held worktree's current bytes.
+    fn declare_run_recoverability(
+        &self,
+        request: &RuntimeRunRequest,
+    ) -> Result<RecoverabilityReport, RecoverabilityError> {
+        if !self.request_matches(request) {
+            return Err(RecoverabilityError::Invalid);
+        }
+        self.run_effects.declare(
+            request.session_id.as_str(),
+            request.task.task_id.as_str(),
+            request.run_id.as_str(),
+            &|path| self.workspace.current_file_sha256(path),
+        )
     }
 }
 
@@ -10652,5 +10725,190 @@ mod tests {
         }
         fs::create_dir(&path).expect("create fixture root");
         path
+    }
+}
+
+#[cfg(test)]
+mod selected_write_tests {
+    use agentmage_capability_repository_map::{
+        StructuredArtifactClass, StructuredEdit, StructuredLanguage,
+    };
+    use agentmage_kernel_contracts::{
+        ActionId, ApprovalId, CONTRACT_SCHEMA_VERSION, ContractPayload, CorrelationId,
+        RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeHunkSelection, RuntimeRunId,
+        ToolCall, ToolCallId, WorkspaceId,
+    };
+    use agentmage_kernel_engine::write_approval::selective::HunkedTextChange;
+    use sha2::{Digest, Sha256};
+
+    use super::*;
+    use crate::coding_changes::{
+        StructuredPatchProposal, bind_structured_patch_proposal, structured_patch_tool_definition,
+    };
+    use crate::coding_hunk_selection::decode_hunk_selection_proposal;
+
+    const PREIMAGE: &str = "one\ntwo\nthree\nfour\nfive\nsix\nseven\neight\nnine\n";
+
+    fn sha256_hex(bytes: &[u8]) -> String {
+        Sha256::digest(bytes)
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect()
+    }
+
+    fn scope() -> CodingWriteScope {
+        CodingWriteScope::new(
+            WorkspaceId::from_raw("workspace-selected-write"),
+            vec![vec!["src".to_owned()]],
+        )
+        .unwrap()
+    }
+
+    fn patch() -> StructuredPatchProposal {
+        StructuredPatchProposal {
+            schema_version: 1,
+            change_id: "change-selected-write".to_owned(),
+            path: vec!["src".to_owned(), "notes.txt".to_owned()],
+            expected_preimage_sha256: sha256_hex(PREIMAGE.as_bytes()),
+            intent_sha256: "a".repeat(64),
+            change_plan_sha256: "b".repeat(64),
+            language: StructuredLanguage::PlainText,
+            artifact_class: StructuredArtifactClass::Documentation,
+            edits: [("edit-1", "two", "TWO"), ("edit-2", "eight", "EIGHT")]
+                .into_iter()
+                .map(
+                    |(edit_id, expected, replacement)| StructuredEdit::ReplaceExactText {
+                        edit_id: edit_id.to_owned(),
+                        expected: expected.to_owned(),
+                        replacement: replacement.to_owned(),
+                    },
+                )
+                .collect(),
+            additional_review_hooks: Vec::new(),
+            generated: false,
+            allow_generated: false,
+        }
+    }
+
+    fn call(proposal: &StructuredPatchProposal) -> ToolCall {
+        let bytes = serde_json::to_vec(proposal).unwrap();
+        let definition = structured_patch_tool_definition();
+        ToolCall {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            tool_call_id: ToolCallId::from_raw("call-selected-write"),
+            correlation_id: CorrelationId::from_raw("correlation-selected-write"),
+            action_id: ActionId::from_raw("action-selected-write"),
+            tool_id: definition.tool_id,
+            tool_version: definition.tool_version,
+            arguments: ContractPayload {
+                schema: definition.input_schema,
+                media_type: "application/json".to_owned(),
+                sha256: sha256_hex(&bytes),
+                bytes,
+            },
+        }
+    }
+
+    fn narrow(change: &HunkedTextChange) -> RuntimeApprovalResponse {
+        RuntimeApprovalResponse {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            run_id: RuntimeRunId::from_raw("run-selected-write"),
+            approval_id: ApprovalId::from_raw("approval-selected-write"),
+            disposition: RuntimeApprovalDisposition::Narrow,
+            challenge_sha256: "c".repeat(64),
+            grant_id: None,
+            selection: Some(RuntimeHunkSelection {
+                preimage_sha256: change.preimage_sha256().to_owned(),
+                proposal_sha256: change.proposal_sha256().to_owned(),
+                accepted_hunk_ids: vec![change.hunks()[1].hunk_id().to_owned()],
+            }),
+        }
+    }
+
+    #[test]
+    fn a_selected_write_is_derived_from_bytes_read_now_and_never_preauthorized() {
+        let proposal = patch();
+        let plan = bind_structured_patch_proposal(
+            &scope(),
+            proposal.clone(),
+            PREIMAGE.as_bytes().to_vec(),
+        )
+        .unwrap();
+        let change = HunkedTextChange::new(plan.preimage(), plan.postimage()).unwrap();
+        let draft = LinuxCodingWriteDraft::StructuredPatch(plan);
+        let response = narrow(&change);
+        let call = call(&proposal);
+
+        // The derivation reads the file now: a person's concurrent edit refuses
+        // it even though the plan still holds the original preimage.
+        let edited = PREIMAGE.replace("five", "five (edited by a person)");
+        assert_eq!(
+            derive_narrowed_write(&scope(), &call, Some(&draft), &response, || Ok(edited
+                .clone()
+                .into_bytes()))
+            .err(),
+            Some(HunkSelectionError::Mismatch)
+        );
+        assert_eq!(
+            derive_narrowed_write(&scope(), &call, Some(&draft), &response, || Err(
+                HunkSelectionError::Mismatch
+            ))
+            .err(),
+            Some(HunkSelectionError::Mismatch)
+        );
+        let mut missing = response.clone();
+        missing.selection = None;
+        assert_eq!(
+            derive_narrowed_write(&scope(), &call, Some(&draft), &missing, || Ok(PREIMAGE
+                .as_bytes()
+                .to_vec()))
+            .err(),
+            Some(HunkSelectionError::Invalid)
+        );
+        assert_eq!(
+            derive_narrowed_write(&scope(), &call, None, &response, || Ok(PREIMAGE
+                .as_bytes()
+                .to_vec()))
+            .err(),
+            Some(HunkSelectionError::NotNarrowable)
+        );
+        let derived = derive_narrowed_write(&scope(), &call, Some(&draft), &response, || {
+            Ok(PREIMAGE.as_bytes().to_vec())
+        })
+        .expect("an unchanged file derives the selected write");
+        let selected = decode_hunk_selection_proposal(&scope(), &derived.arguments.bytes).unwrap();
+
+        // A session preauthorization that admits a patch of this exact path
+        // never admits the selected write of the same path (Decision 0114).
+        let contract = RuntimeSessionPreauthorization {
+            schema_version: 1,
+            preauthorization_id: "preauthorization-selected-write".to_owned(),
+            workspace_id: "workspace-selected-write".to_owned(),
+            writable_paths: vec![proposal.path.clone()],
+            command_templates: Vec::new(),
+            allow_workspace_reads: true,
+            maximum_operations: 8,
+            approved_at_epoch_ms: 1,
+            expires_at_epoch_ms: 60_001,
+            revoked_at_epoch_ms: None,
+            preauthorization_sha256: "0".repeat(64),
+        }
+        .seal()
+        .unwrap();
+        let state = ActiveSessionPreauthorization {
+            contract,
+            consumed_operations: 0,
+            revoked_at_epoch_ms: None,
+        };
+        assert!(state.admits(
+            &PreparedNativeCodingCall::StructuredPatch { proposal },
+            "workspace-selected-write",
+            1_000,
+        ));
+        assert!(!state.admits(
+            &PreparedNativeCodingCall::HunkSelection { proposal: selected },
+            "workspace-selected-write",
+            1_000,
+        ));
     }
 }

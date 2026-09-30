@@ -918,6 +918,8 @@ struct PendingApproval {
     call: ToolCall,
     turn_id: RuntimeTurnId,
     operation_id: RuntimeOperationId,
+    /// Proposal class of the pending call; only a model's call may be narrowed.
+    origin: ProposalOrigin,
 }
 
 /// One call entering the request path, with the proposal class it came from.
@@ -1349,6 +1351,28 @@ where
         &self.artifact_references
     }
 
+    /// Returns the tool boundary, read-only, once the run has its canonical
+    /// outcome, so its owner can declare what the ended run did (Decision
+    /// 0116). While the run can still advance it returns `None`, so nothing
+    /// reads the boundary beside the loop.
+    #[must_use]
+    pub const fn ended_tool_boundary(&self) -> Option<&T> {
+        match self.outcome {
+            Some(_) => Some(&self.tool_boundary),
+            None => None,
+        }
+    }
+
+    /// Returns the context port, read-only, once the run has its canonical
+    /// outcome (Decision 0116); `None` while the run can still advance.
+    #[must_use]
+    pub const fn ended_context_port(&self) -> Option<&X> {
+        match self.outcome {
+            Some(_) => Some(&self.context),
+            None => None,
+        }
+    }
+
     /// Reads one verified bounded page from an artifact already published by this run.
     pub fn read_artifact_page(
         &mut self,
@@ -1457,9 +1481,7 @@ where
                 // A call derived from a selection cannot be narrowed again: one
                 // proposal yields at most one derived write (Decision 0114).
                 if response.disposition == RuntimeApprovalDisposition::Narrow
-                    && !self
-                        .registry
-                        .is_model_proposable(&pending.call.tool_id, &pending.call.tool_version)
+                    && pending.origin != ProposalOrigin::Model
                 {
                     return Err(RuntimeLoopError::Contract(
                         RuntimeCoordinatorError::ApprovalDenied,
@@ -2230,6 +2252,23 @@ where
         let Some(candidate) = proposal.tool_call else {
             return self.finish_invalid_proposal(&turn_id);
         };
+        // A model may propose only a tool offered to models, under a call
+        // identity outside the runtime's derived namespace (Decision 0115).
+        // Neither refusal consumes the tool budget.
+        if !self
+            .registry
+            .is_model_proposable(&candidate.tool_id, &candidate.tool_version)
+        {
+            return self.finish_refused_proposal(&turn_id, "runtime.proposal.tool-not-offered");
+        }
+        if candidate
+            .tool_call_id
+            .as_str()
+            .starts_with(DERIVED_CALL_ID_PREFIX)
+        {
+            return self
+                .finish_refused_proposal(&turn_id, "runtime.proposal.call-identity-reserved");
+        }
         self.request_tool(
             turn_id,
             RequestedToolCall {
@@ -2258,11 +2297,23 @@ where
         if self.stop_before_phase(cancellation, false)? {
             return Ok(());
         }
+        // Only a registered shell-only tool can receive a derived call, so a
+        // derived call can never itself be narrowed (Decision 0115).
+        if self
+            .registry
+            .get_tool(&derived.tool_id, &derived.tool_version)
+            .is_none()
+            || self
+                .registry
+                .is_model_proposable(&derived.tool_id, &derived.tool_version)
+        {
+            return Err(RuntimeLoopError::InvalidBoundaryResult);
+        }
         if self.tool_budget_exhausted(&turn_id, &decision_sha256)? {
             return Ok(());
         }
         let tool_call_id = ToolCallId::from_raw(derived_id(
-            "selected-call",
+            DERIVED_CALL_ID_KIND,
             self.request.run_id.as_str(),
             u64::from(self.tool_call_count) + 1,
         ));
@@ -2313,13 +2364,15 @@ where
         requested: RequestedToolCall,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<(), RuntimeLoopError> {
+        // The proposal class stays the unmodified field of the request; it is
+        // never rebound before the one dispatch site below.
         let RequestedToolCall {
             tool_call_id,
             tool_id,
             tool_version,
             arguments,
-            origin,
             closing_sha256,
+            ..
         } = requested;
         self.resources
             .consume(BudgetResource::ToolCalls, 1)
@@ -2342,7 +2395,7 @@ where
         let arguments_valid = self.registry.validate_arguments(&call).is_ok();
         // The trusted boundary built a derived call's arguments; a model's
         // arguments may be corrected after a rejection.
-        if origin != ProposalOrigin::Model && !arguments_valid {
+        if requested.origin != ProposalOrigin::Model && !arguments_valid {
             return Err(RuntimeLoopError::InvalidBoundaryResult);
         }
         let process_attempts = u64::from(
@@ -2366,7 +2419,7 @@ where
             return self.finish_budget_exhaustion(&turn_id);
         }
         if arguments_valid {
-            let receipt = ToolDispatcher::new(&self.registry).dispatch(origin, &call);
+            let receipt = ToolDispatcher::new(&self.registry).dispatch(requested.origin, &call);
             if receipt.disposition != PreGrantDispatchDisposition::GrantRequired {
                 return Err(RuntimeLoopError::InvalidBoundaryResult);
             }
@@ -2528,6 +2581,7 @@ where
             call,
             turn_id,
             operation_id,
+            requested.origin,
             cancellation,
             permission_request_emitted,
             false,
@@ -2636,6 +2690,7 @@ where
         call: ToolCall,
         turn_id: RuntimeTurnId,
         operation_id: RuntimeOperationId,
+        origin: ProposalOrigin,
         cancellation: Option<&dyn ModelCancellationProbe>,
         permission_request_emitted: bool,
         permission_decision_emitted: bool,
@@ -2683,6 +2738,7 @@ where
                     call,
                     turn_id,
                     operation_id,
+                    origin,
                 });
                 Ok(())
             }
@@ -3029,6 +3085,7 @@ where
             pending.call,
             pending.turn_id,
             pending.operation_id,
+            pending.origin,
             cancellation,
             true,
             permission_decision_emitted,
@@ -3598,6 +3655,17 @@ where
             unresolved_codes.push("runtime.budget.exhausted".to_owned());
         }
         self.finish_terminal(terminal, unresolved_codes, None)
+    }
+
+    /// Ends the run for a well-formed proposal the runtime refuses to request.
+    fn finish_refused_proposal(
+        &mut self,
+        turn_id: &RuntimeTurnId,
+        code: &'static str,
+    ) -> Result<(), RuntimeLoopError> {
+        self.transition_terminal(AgentStateKind::Failed)?;
+        self.close_turn(turn_id, sha256(code.as_bytes()))?;
+        self.finish_terminal(AgentStateKind::Failed, vec![code.to_owned()], None)
     }
 
     fn finish_invalid_proposal(&mut self, turn_id: &RuntimeTurnId) -> Result<(), RuntimeLoopError> {
@@ -5276,6 +5344,11 @@ fn contract_sha256<T: agentmage_kernel_contracts::VersionedContract>(
     let bytes = to_canonical_json(value).map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
     Ok(sha256(&bytes))
 }
+
+/// Identity kind of calls the runtime derives from a person's selection.
+const DERIVED_CALL_ID_KIND: &str = "selected-call";
+/// Call identities under this prefix are reserved for derived calls.
+const DERIVED_CALL_ID_PREFIX: &str = "selected-call:";
 
 fn derived_id(prefix: &str, run_id: &str, sequence: u64) -> String {
     format!(

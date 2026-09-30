@@ -165,7 +165,10 @@ python3 -m scripts.coding_harness start --root "$demo" --model scripted \
   Approving still allows the whole call. After each run, standard error shows the run's
   progress: its terminal state, whether the runtime's verifier accepted it, counts
   against the declared ceilings, and that independent review and delivery are not
-  established by the runtime.
+  established by the runtime. It then shows the host's declarations about that run
+  (Decision 0116): which of the run's effects a fresh approved inverse write could
+  restore, which need your reconciliation, and a content-free view of each context
+  the model received. A part the host cannot declare completely says so.
 - Select hunks: when a patch review lists two or more numbered hunks, answer
   `select` followed by hunk numbers, for example `select 2`, instead of `yes`. The
   whole call is refused, and the next prompt asks separately for a write of only the
@@ -177,6 +180,18 @@ python3 -m scripts.coding_harness start --root "$demo" --model scripted \
   from a second terminal while a prompt or command is active.
 - Preservation: add a staged, unstaged or untracked file in `$demo/disposable/worktree`
   before `start`; the wrapper must refuse and leave every byte and the Git index unchanged.
+
+To run the whole declared scripted matrix in one step instead (edits, denial,
+cancellation, stale approvals, rollback and the other cases, each in a fresh root), use
+the [acceptance runner](guides/standalone-coding-development.md) with short, new roots:
+
+```sh
+python3 scripts/coding_harness_acceptance.py \
+  --work-root "$XDG_RUNTIME_DIR/am-matrix-1" --log-root "$XDG_RUNTIME_DIR/am-matrix-1-logs"
+```
+
+Its report hashes both binaries and every retained stream and stays
+`executable-scripted-only`.
 
 Inspect `git -C "$demo/disposable/worktree" diff`, `status` and the log directory after
 each run. Keep failed and refused runs. A scripted run proves the executable path

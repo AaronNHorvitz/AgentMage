@@ -9,11 +9,14 @@ use agentmage_platform_linux::LinuxAuthenticatedIpcSession;
 use serde::{Deserialize, Serialize};
 
 use crate::runtime_transport::{
-    RuntimePrepareInput, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
+    RuntimePrepareInput, RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort,
+    RuntimeTransportStep,
 };
 
-const WIRE_VERSION: u16 = 5;
+const WIRE_VERSION: u16 = 6;
 const MAX_WIRE_BYTES: usize = 4 * 1024 * 1024;
+/// Largest encoded run declarations; the rest of a frame is envelope.
+const MAX_DECLARATION_BYTES: usize = MAX_WIRE_BYTES - 64 * 1024;
 
 /// One closed operation accepted by the host-owned runtime service.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -52,6 +55,10 @@ enum RuntimeIpcRequest {
         request_sha256: String,
         reference: RuntimeArtifactRef,
     },
+    RunDeclarations {
+        run_id: RuntimeRunId,
+        request_sha256: String,
+    },
     RevokeSessionPreauthorization {
         session_id: SessionId,
         preauthorization_sha256: String,
@@ -69,14 +76,27 @@ enum RuntimeIpcRequest {
 // Responses are bounded by MAX_WIRE_BYTES and exchanged synchronously.
 #[allow(clippy::large_enum_variant)]
 enum RuntimeIpcResponse {
-    Prepared { request: RuntimeRunRequest },
-    Step { step: RuntimeTransportStep },
-    ArtifactPage { page: RuntimeArtifactPage },
-    ArtifactState { state: RuntimeArtifactState },
+    Prepared {
+        request: RuntimeRunRequest,
+    },
+    Step {
+        step: RuntimeTransportStep,
+    },
+    ArtifactPage {
+        page: RuntimeArtifactPage,
+    },
+    ArtifactState {
+        state: RuntimeArtifactState,
+    },
+    RunDeclarations {
+        declarations: RuntimeRunDeclarations,
+    },
     PreauthorizationRevoked,
     Released,
     Shutdown,
-    Error { error: RuntimeTransportError },
+    Error {
+        error: RuntimeTransportError,
+    },
 }
 
 #[derive(Serialize, Deserialize)]
@@ -337,6 +357,20 @@ impl RuntimeTransportPort for LinuxRuntimeIpcClient {
         }
     }
 
+    fn run_declarations(
+        &mut self,
+        run_id: &RuntimeRunId,
+        request_sha256: &str,
+    ) -> Result<RuntimeRunDeclarations, RuntimeTransportError> {
+        match self.exchange(RuntimeIpcRequest::RunDeclarations {
+            run_id: run_id.clone(),
+            request_sha256: request_sha256.to_owned(),
+        })? {
+            RuntimeIpcResponse::RunDeclarations { declarations } => Ok(declarations),
+            _ => Err(RuntimeTransportError::RuntimeEvidenceDenied),
+        }
+    }
+
     fn revoke_session_preauthorization(
         &mut self,
         session_id: &SessionId,
@@ -440,6 +474,22 @@ pub fn serve_linux_runtime_ipc<P: RuntimeTransportPort>(
                 Ok(state) => (RuntimeIpcResponse::ArtifactState { state }, false),
                 Err(error) => (RuntimeIpcResponse::Error { error }, false),
             },
+            Some(RuntimeIpcRequest::RunDeclarations {
+                run_id,
+                request_sha256,
+            }) => match runtime.run_declarations(&run_id, &request_sha256) {
+                // An oversized answer is refused rather than ending the service.
+                Ok(declarations) if declarations_fit(&declarations) => {
+                    (RuntimeIpcResponse::RunDeclarations { declarations }, false)
+                }
+                Ok(_) => (
+                    RuntimeIpcResponse::Error {
+                        error: RuntimeTransportError::CapacityExceeded,
+                    },
+                    false,
+                ),
+                Err(error) => (RuntimeIpcResponse::Error { error }, false),
+            },
             Some(RuntimeIpcRequest::RevokeSessionPreauthorization {
                 session_id,
                 preauthorization_sha256,
@@ -475,5 +525,50 @@ pub fn serve_linux_runtime_ipc<P: RuntimeTransportPort>(
         if shutdown {
             return Ok(());
         }
+    }
+}
+
+fn declarations_fit(declarations: &RuntimeRunDeclarations) -> bool {
+    serde_json::to_vec(declarations).is_ok_and(|bytes| bytes.len() <= MAX_DECLARATION_BYTES)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn run_declarations_cross_the_wire_exactly_and_only_at_the_current_version() {
+        let declarations = RuntimeRunDeclarations {
+            schema_version: 1,
+            run_id: RuntimeRunId::from_raw("run-declarations"),
+            request_sha256: "1".repeat(64),
+            recoverability: None,
+            context_inspections: Some(Vec::new()),
+        };
+        let request = RuntimeIpcEnvelope {
+            version: WIRE_VERSION,
+            payload: RuntimeIpcRequest::RunDeclarations {
+                run_id: declarations.run_id.clone(),
+                request_sha256: declarations.request_sha256.clone(),
+            },
+        };
+        let bytes = serde_json::to_vec(&request).unwrap();
+        let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
+            serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(decoded.version, 6);
+        assert_eq!(decoded.payload, request.payload);
+        let response = RuntimeIpcResponse::RunDeclarations {
+            declarations: declarations.clone(),
+        };
+        let bytes = serde_json::to_vec(&response).unwrap();
+        assert_eq!(
+            serde_json::from_slice::<RuntimeIpcResponse>(&bytes).unwrap(),
+            response
+        );
+        assert!(declarations_fit(&declarations));
+        // A field the closed contract does not name is refused.
+        let mut extra = serde_json::to_value(&declarations).unwrap();
+        extra["complete"] = serde_json::Value::Bool(true);
+        assert!(serde_json::from_value::<RuntimeRunDeclarations>(extra).is_err());
     }
 }
