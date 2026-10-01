@@ -973,6 +973,70 @@ def doc_pack_arguments(arguments: argparse.Namespace) -> list[str]:
     return ["--doc-pack-delete", arguments.delete]
 
 
+MEMORY_LABEL = re.compile(r"[a-z0-9._:-]{1,128}")
+MEMORY_OBJECT = re.compile(r"[a-z0-9._:-]{1,256}")
+MEMORY_ID = re.compile(r"memory-[a-z0-9-]{0,121}")
+MEMORY_TYPES = ("semantic", "preference", "procedural", "episodic")
+
+
+def memory_arguments(arguments: argparse.Namespace) -> list[str]:
+    """The CLI arguments of one memory operation (Decision 0131), in the
+    closed forms the CLI accepts."""
+    workspace = arguments.workspace
+    if workspace is not None and MEMORY_LABEL.fullmatch(workspace) is None:
+        raise HarnessError("coding.harness.memory-workspace-denied")
+    if arguments.remember is not None:
+        text = arguments.remember
+        if (
+            not text.strip()
+            or len(text.encode("utf-8")) > 16 * 1024
+            or text.startswith("--")
+            or any(ord(character) < 32 or 127 <= ord(character) < 160 for character in text)
+        ):
+            raise HarnessError("coding.harness.memory-text-denied")
+        pack_id, _, rest = (arguments.cite or "").partition("@")
+        version, _, path = rest.partition(":")
+        if (
+            PACK_ID.fullmatch(pack_id) is None
+            or PACK_VERSION.fullmatch(version) is None
+            or not path
+            or len(path) > 4_096
+        ):
+            raise HarnessError("coding.harness.memory-citation-denied")
+        if workspace is None or arguments.object is not None:
+            raise HarnessError("coding.harness.memory-arguments-denied")
+        result = [
+            "--memory-remember", text, "--memory-workspace", workspace,
+            "--memory-cite", arguments.cite,
+        ]
+        if arguments.type is not None:
+            result.extend(("--memory-type", arguments.type))
+        return result
+    if arguments.cite is not None or arguments.type is not None:
+        raise HarnessError("coding.harness.memory-arguments-denied")
+    if arguments.revoke_source is not None:
+        if MEMORY_LABEL.fullmatch(arguments.revoke_source) is None:
+            raise HarnessError("coding.harness.memory-source-denied")
+        if workspace is None:
+            raise HarnessError("coding.harness.memory-arguments-denied")
+        result = ["--memory-revoke-source", arguments.revoke_source, "--memory-workspace", workspace]
+        if arguments.object is not None:
+            if MEMORY_OBJECT.fullmatch(arguments.object) is None:
+                raise HarnessError("coding.harness.memory-object-denied")
+            result.extend(("--memory-object", arguments.object))
+        return result
+    if arguments.object is not None:
+        raise HarnessError("coding.harness.memory-arguments-denied")
+    if arguments.list:
+        return ["--memory-list"] + (["--memory-workspace", workspace] if workspace else [])
+    if workspace is not None:
+        raise HarnessError("coding.harness.memory-arguments-denied")
+    memory_id = arguments.revoke if arguments.revoke is not None else arguments.delete
+    if MEMORY_ID.fullmatch(memory_id) is None:
+        raise HarnessError("coding.harness.memory-id-denied")
+    return ["--memory-revoke" if arguments.revoke is not None else "--memory-delete", memory_id]
+
+
 def catalog(base: Path, arguments: list[str]) -> int:
     """Runs one catalog operation through the actual CLI and catalog host
     (Decision 0130). The same run record reservation as `start` keeps a
@@ -1173,6 +1237,18 @@ def parser() -> argparse.ArgumentParser:
     doc_pack_command.add_argument("--refresh-version")
     doc_pack_command.add_argument("--pack")
     doc_pack_command.add_argument("--include-history", action="store_true")
+    memory_command = commands.add_parser("memory")
+    memory_command.add_argument("--root", type=Path, required=True)
+    memory_operation = memory_command.add_mutually_exclusive_group(required=True)
+    memory_operation.add_argument("--remember")
+    memory_operation.add_argument("--list", action="store_true")
+    memory_operation.add_argument("--revoke")
+    memory_operation.add_argument("--revoke-source")
+    memory_operation.add_argument("--delete")
+    memory_command.add_argument("--workspace")
+    memory_command.add_argument("--cite")
+    memory_command.add_argument("--type", choices=MEMORY_TYPES)
+    memory_command.add_argument("--object")
     sample_command = commands.add_parser("doc-pack-sample")
     sample_command.add_argument("--directory", type=Path, required=True)
     sample_command.add_argument("--version", default="1.0.0")
@@ -1236,6 +1312,8 @@ def main() -> int:
             return ended_run(arguments.root, arguments.run, arguments.action_history_export)
         if arguments.command == "doc-pack":
             return catalog(arguments.root, doc_pack_arguments(arguments))
+        if arguments.command == "memory":
+            return catalog(arguments.root, memory_arguments(arguments))
         if arguments.command == "doc-pack-sample":
             manifest = write_sample_pack(
                 arguments.directory, arguments.version, arguments.retrieved_on

@@ -201,6 +201,8 @@ pub mod model_selection;
 pub mod multi_agent;
 /// Encrypted canonical operational state and crash recovery.
 pub mod operational_store;
+/// Durable owner states in the operational store.
+pub mod owner_state_store;
 /// Deterministic pre-persistence classification, minimization, and receipts.
 pub mod persistence;
 /// Persistent Engineering Runtime session supervision and ordered event replay.

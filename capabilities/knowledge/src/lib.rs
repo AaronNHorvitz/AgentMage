@@ -206,7 +206,8 @@ pub use memory_lifecycle::{
 };
 pub use memory_portable::{
     EncryptedMemoryExport, MemoryExportEntropy, MemoryPortableError, MemoryPortableKey,
-    MemoryPortableReceipt, export_memory_catalog, import_memory_catalog,
+    MemoryPortableReceipt, decode_memory_catalog_state, encode_memory_catalog_state,
+    export_memory_catalog, import_memory_catalog,
 };
 pub use memory_working::{
     MemoryLoadHit, MemoryLoadQuery, MemoryLoadReason, MemoryLoadResult, WorkingCompactionPreview,

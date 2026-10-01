@@ -127,12 +127,9 @@ pub enum MemoryPortableError {
     ResourceLimit,
 }
 
-/// Encrypts a complete catalog into one versioned, portable, no-write proposal.
-pub fn export_memory_catalog(
-    catalog: &MemoryCatalog,
-    key: &MemoryPortableKey,
-    entropy: MemoryExportEntropy,
-) -> Result<EncryptedMemoryExport, MemoryPortableError> {
+/// The portable plaintext of a complete catalog: every item under the
+/// portable rules, the revision and the catalog digest.
+fn encode_envelope(catalog: &MemoryCatalog) -> Result<Vec<u8>, MemoryPortableError> {
     let summary = catalog.inspect();
     let items = catalog
         .items()
@@ -142,15 +139,60 @@ pub fn export_memory_catalog(
     let envelope = MemoryExportEnvelope {
         schema_version: SCHEMA_VERSION,
         catalog_revision: summary.revision,
-        catalog_sha256: summary.catalog_sha256.clone(),
+        catalog_sha256: summary.catalog_sha256,
         items,
     };
-    let mut plaintext = Zeroizing::new(
-        serde_json::to_vec(&envelope).map_err(|_| MemoryPortableError::ResourceLimit)?,
-    );
+    let plaintext =
+        serde_json::to_vec(&envelope).map_err(|_| MemoryPortableError::ResourceLimit)?;
     if plaintext.is_empty() || plaintext.len() > MAX_PLAINTEXT_BYTES {
         return Err(MemoryPortableError::ResourceLimit);
     }
+    Ok(plaintext)
+}
+
+/// A catalog from portable plaintext: closed parsing, every item under the
+/// portable rules, and the catalog digest must match its items.
+fn decode_envelope(plaintext: &[u8]) -> Result<MemoryCatalog, MemoryPortableError> {
+    if plaintext.is_empty() || plaintext.len() > MAX_PLAINTEXT_BYTES {
+        return Err(MemoryPortableError::InvalidInput);
+    }
+    let envelope: MemoryExportEnvelope =
+        serde_json::from_slice(plaintext).map_err(|_| MemoryPortableError::InvalidInput)?;
+    if envelope.schema_version != SCHEMA_VERSION || !valid_sha256(&envelope.catalog_sha256) {
+        return Err(MemoryPortableError::InvalidInput);
+    }
+    let items = envelope
+        .items
+        .into_iter()
+        .map(item_from_wire)
+        .collect::<Result<Vec<_>, _>>()?;
+    MemoryCatalog::from_portable_parts(envelope.catalog_revision, items, &envelope.catalog_sha256)
+        .map_err(map_catalog_error)
+}
+
+/// Encodes a complete catalog as the plaintext of its portable form, for a
+/// durable owner whose store is already encrypted (Decision 0131). The same
+/// portable rules apply as for an export.
+pub fn encode_memory_catalog_state(
+    catalog: &MemoryCatalog,
+) -> Result<Vec<u8>, MemoryPortableError> {
+    encode_envelope(catalog)
+}
+
+/// Decodes a catalog kept by a durable owner (Decision 0131), with every
+/// check an import makes after decryption.
+pub fn decode_memory_catalog_state(state: &[u8]) -> Result<MemoryCatalog, MemoryPortableError> {
+    decode_envelope(state)
+}
+
+/// Encrypts a complete catalog into one versioned, portable, no-write proposal.
+pub fn export_memory_catalog(
+    catalog: &MemoryCatalog,
+    key: &MemoryPortableKey,
+    entropy: MemoryExportEntropy,
+) -> Result<EncryptedMemoryExport, MemoryPortableError> {
+    let summary = catalog.inspect();
+    let mut plaintext = Zeroizing::new(encode_envelope(catalog)?);
     let plaintext_sha256 = digest_bytes(plaintext.as_slice());
     let header = build_header(entropy, plaintext.len(), &plaintext_sha256)?;
     let cipher = cipher(key, &entropy.salt)?;
@@ -217,22 +259,7 @@ pub fn import_memory_catalog(
     if plaintext_sha256 != parsed.plaintext_sha256 {
         return Err(MemoryPortableError::Integrity);
     }
-    let envelope: MemoryExportEnvelope = serde_json::from_slice(plaintext.as_slice())
-        .map_err(|_| MemoryPortableError::InvalidInput)?;
-    if envelope.schema_version != SCHEMA_VERSION || !valid_sha256(&envelope.catalog_sha256) {
-        return Err(MemoryPortableError::InvalidInput);
-    }
-    let items = envelope
-        .items
-        .into_iter()
-        .map(item_from_wire)
-        .collect::<Result<Vec<_>, _>>()?;
-    let catalog = MemoryCatalog::from_portable_parts(
-        envelope.catalog_revision,
-        items,
-        &envelope.catalog_sha256,
-    )
-    .map_err(map_catalog_error)?;
+    let catalog = decode_envelope(plaintext.as_slice())?;
     let summary = catalog.inspect();
     let receipt = MemoryPortableReceipt {
         format_version: FORMAT_VERSION,
@@ -679,6 +706,71 @@ mod tests {
         let mut catalog = MemoryCatalog::new();
         catalog.insert(item("memory-portable-one")).expect("insert");
         catalog
+    }
+
+    #[test]
+    fn a_catalog_state_round_trips_for_its_durable_owner() {
+        // Decision 0131: the durable owner keeps the portable plaintext; every
+        // import check applies when it is decoded.
+        let empty = MemoryCatalog::new();
+        let state = encode_memory_catalog_state(&empty).expect("empty state");
+        assert_eq!(
+            decode_memory_catalog_state(&state)
+                .expect("empty catalog")
+                .inspect(),
+            empty.inspect()
+        );
+        let mut source = catalog();
+        source
+            .revoke(
+                &MemoryId::parse("memory-portable-one").expect("identity"),
+                "d".repeat(64),
+                "2026-08-19T10:00:00Z".to_owned(),
+            )
+            .expect("revoke");
+        let state = encode_memory_catalog_state(&source).expect("state");
+        let decoded = decode_memory_catalog_state(&state).expect("decoded");
+        assert_eq!(decoded.inspect(), source.inspect());
+        assert_eq!(decoded.items(), source.items());
+        assert_eq!(
+            decoded.items()[0].status,
+            MemoryItemStatus::Revoked,
+            "a revoked item keeps its state and content"
+        );
+        // A changed item, schema or member, and junk, are refused. (The
+        // catalog digest covers the items, not the revision, which the
+        // durable owner's own store revision supersedes.)
+        let text = String::from_utf8(state.clone()).expect("utf-8");
+        for changed in [
+            text.replacen(
+                "The release owner is Alice.",
+                "The release owner is Bob..",
+                1,
+            ),
+            text.replacen("\"schema_version\":1", "\"schema_version\":2", 1),
+            text.replacen(
+                "\"catalog_revision\"",
+                "\"extra\":1,\"catalog_revision\"",
+                1,
+            ),
+            "{}".to_owned(),
+            String::new(),
+        ] {
+            assert_ne!(changed, text);
+            assert!(
+                decode_memory_catalog_state(changed.as_bytes()).is_err(),
+                "{changed}"
+            );
+        }
+        // The portable rules apply to the state as to an export.
+        let mut restricted = MemoryCatalog::new();
+        let mut item = item("memory-restricted-state");
+        item.sensitivity = DataSensitivity::Restricted;
+        restricted.insert(item).expect("insert");
+        assert!(matches!(
+            encode_memory_catalog_state(&restricted),
+            Err(MemoryPortableError::NonPortableData)
+        ));
     }
 
     #[test]

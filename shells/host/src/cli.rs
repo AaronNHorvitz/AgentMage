@@ -114,6 +114,9 @@ pub struct CodingDevelopmentCliOptions {
     /// A documentation pack operation of the catalog host instead of a run
     /// (Decision 0130).
     pub doc_pack: Option<Box<crate::coding_doc_packs::DocPackCommand>>,
+    /// A memory operation of the catalog host instead of a run
+    /// (Decision 0131).
+    pub memory: Option<Box<crate::coding_memory::MemoryRequest>>,
 }
 
 /// Parsed CLI action before any transport or authority boundary.
@@ -277,6 +280,15 @@ fn parse_coding_development(
     let mut doc_pack_search = None;
     let mut doc_pack_filter = None;
     let mut include_history = false;
+    let mut memory_remember = None;
+    let mut memory_workspace = None;
+    let mut memory_cite = None;
+    let mut memory_type = None;
+    let mut memory_list = false;
+    let mut memory_revoke = None;
+    let mut memory_revoke_source = None;
+    let mut memory_object = None;
+    let mut memory_delete = None;
     let mut cursor = 0;
     while let Some(argument) = arguments.get(cursor) {
         let target = match argument.as_str() {
@@ -522,6 +534,85 @@ fn parse_coding_development(
                 cursor += 1;
                 continue;
             }
+            "--memory-remember" if memory_remember.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| {
+                        !value.starts_with("--") && crate::coding_memory::memory_text(value)
+                    })
+                    .ok_or(ThinClientError::InvalidValue)?;
+                memory_remember = Some(value.clone());
+                cursor += 2;
+                continue;
+            }
+            "--memory-workspace" if memory_workspace.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| crate::coding_memory::portable_memory_label(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                memory_workspace = Some(value.clone());
+                cursor += 2;
+                continue;
+            }
+            "--memory-cite" if memory_cite.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .and_then(|value| crate::coding_memory::parse_memory_citation(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                memory_cite = Some(value);
+                cursor += 2;
+                continue;
+            }
+            "--memory-type" if memory_type.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .and_then(|value| crate::coding_memory::MemoryTypeView::parse(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                memory_type = Some(value);
+                cursor += 2;
+                continue;
+            }
+            "--memory-list" if !memory_list => {
+                memory_list = true;
+                cursor += 1;
+                continue;
+            }
+            "--memory-revoke" if memory_revoke.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| crate::coding_memory::memory_identity(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                memory_revoke = Some(value.clone());
+                cursor += 2;
+                continue;
+            }
+            "--memory-revoke-source" if memory_revoke_source.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| crate::coding_memory::portable_memory_label(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                memory_revoke_source = Some(value.clone());
+                cursor += 2;
+                continue;
+            }
+            "--memory-object" if memory_object.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| crate::coding_memory::portable_memory_object(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                memory_object = Some(value.clone());
+                cursor += 2;
+                continue;
+            }
+            "--memory-delete" if memory_delete.is_none() => {
+                let value = arguments
+                    .get(cursor + 1)
+                    .filter(|value| crate::coding_memory::memory_identity(value))
+                    .ok_or(ThinClientError::InvalidValue)?;
+                memory_delete = Some(value.clone());
+                cursor += 2;
+                continue;
+            }
             "--ended-run" if ended_run.is_none() => {
                 let value = arguments
                     .get(cursor + 1)
@@ -547,24 +638,62 @@ fn parse_coding_development(
         *target = Some(value.clone());
         cursor += 2;
     }
-    // Decision 0130: a catalog operation (an ended run's histories or one
-    // documentation pack operation) launches only the catalog host. It runs
-    // nothing, so it takes no scenario, model, objective or run option, and
-    // its auxiliary options go only with their own operation.
+    // Decisions 0130 and 0131: a catalog operation (an ended run's histories,
+    // one documentation pack operation or one memory operation) launches only
+    // the catalog host. It runs nothing, so it takes no scenario, model,
+    // objective or run option, and its auxiliary options go only with their
+    // own operation.
     let operations = usize::from(doc_pack_import.is_some())
         + usize::from(doc_pack_list)
         + usize::from(doc_pack_inspect.is_some())
         + usize::from(doc_pack_delete.is_some())
         + usize::from(doc_pack_search.is_some())
+        + usize::from(memory_remember.is_some())
+        + usize::from(memory_list)
+        + usize::from(memory_revoke.is_some())
+        + usize::from(memory_revoke_source.is_some())
+        + usize::from(memory_delete.is_some())
         + usize::from(ended_run.is_some());
+    let workspace_required = memory_remember.is_some() || memory_revoke_source.is_some();
     if operations > 1
         || doc_pack_import.is_some() == allowed_licenses.is_empty()
         || refresh_version.is_some() && doc_pack_import.is_none()
         || (doc_pack_filter.is_some() || include_history) && doc_pack_search.is_none()
         || action_history_export.is_some() && operations == 1 && ended_run.is_none()
+        || memory_workspace.is_some() != workspace_required
+            && !(memory_list && memory_workspace.is_some())
+        || memory_cite.is_some() != memory_remember.is_some()
+        || memory_type.is_some() && memory_remember.is_none()
+        || memory_object.is_some() && memory_revoke_source.is_none()
     {
         return Err(ThinClientError::InvalidValue);
     }
+    let memory = if let Some(content) = memory_remember {
+        Some(crate::coding_memory::MemoryRequest::Remember {
+            content,
+            memory_type: memory_type.unwrap_or(crate::coding_memory::MemoryTypeView::Semantic),
+            workspace_id: memory_workspace
+                .clone()
+                .ok_or(ThinClientError::InvalidValue)?,
+            citation: memory_cite.ok_or(ThinClientError::InvalidValue)?,
+        })
+    } else if memory_list {
+        Some(crate::coding_memory::MemoryRequest::List {
+            workspace_id: memory_workspace.clone(),
+        })
+    } else if let Some(memory_id) = memory_revoke {
+        Some(crate::coding_memory::MemoryRequest::Revoke { memory_id })
+    } else if let Some(source_id) = memory_revoke_source {
+        Some(crate::coding_memory::MemoryRequest::RevokeSource {
+            workspace_id: memory_workspace
+                .clone()
+                .ok_or(ThinClientError::InvalidValue)?,
+            source_id,
+            object_id: memory_object,
+        })
+    } else {
+        memory_delete.map(|memory_id| crate::coding_memory::MemoryRequest::Delete { memory_id })
+    };
     let doc_pack = if let Some(directory) = doc_pack_import {
         Some(crate::coding_doc_packs::DocPackCommand::Import {
             directory,
@@ -639,6 +768,7 @@ fn parse_coding_development(
             support_bundle: None,
             ended_run,
             doc_pack: doc_pack.map(Box::new),
+            memory: memory.map(Box::new),
         });
     }
     let scenario = scenario.ok_or(ThinClientError::InvalidValue)?;
@@ -731,6 +861,7 @@ fn parse_coding_development(
         support_bundle,
         ended_run: None,
         doc_pack: None,
+        memory: None,
     })
 }
 
@@ -1319,6 +1450,11 @@ Commands:\n\
        --doc-pack-import ABSOLUTE_DIRECTORY --allow-license ID... [--refresh-version MAJOR.MINOR.PATCH]\n\
        | --doc-pack-list | --doc-pack-inspect PACK_ID | --doc-pack-delete PACK_ID[@MAJOR.MINOR.PATCH]\n\
        | --doc-pack-search TERMS [--doc-pack PACK_ID] [--include-history]\n\
+  code --development --state-root PATH --disposable-root PATH --workspace-root PATH \\
+       --memory-remember TEXT --memory-workspace LABEL --memory-cite PACK_ID@MAJOR.MINOR.PATCH:PATH\n\
+       [--memory-type semantic|preference|procedural|episodic]\n\
+       | --memory-list [--memory-workspace LABEL] | --memory-revoke MEMORY_ID | --memory-delete MEMORY_ID\n\
+       | --memory-revoke-source SOURCE_ID --memory-workspace LABEL [--memory-object OBJECT_ID]\n\
   chat MESSAGE\n\
   conversations list [--from YYYY-MM-DD] [--to YYYY-MM-DD]\n\
   conversations search QUERY\n\
@@ -1688,6 +1824,7 @@ mod tests {
                     ref objective,
                     ref scenario,
                     doc_pack: None,
+                    memory: None,
                     ..
                 }),
                 ..
@@ -2034,6 +2171,231 @@ mod tests {
             "--doc-pack-delete",
             "--doc-pack-search",
             "--include-history",
+        ] {
+            assert!(command_help().contains(operation), "{operation}");
+        }
+    }
+
+    #[test]
+    fn memory_operations_parse_closed_and_alone() {
+        // Decision 0131: each memory operation replaces the objective, goes
+        // to the catalog host alone, and takes only its own auxiliary options.
+        use crate::coding_memory::{MemoryCitation, MemoryRequest, MemoryTypeView};
+        use agentmage_capability_knowledge::DocPackVersion;
+        let roots = [
+            "code",
+            "--development",
+            "--state-root",
+            "/tmp/state",
+            "--disposable-root",
+            "/tmp/disposable",
+            "--workspace-root",
+            "/tmp/disposable/worktree",
+        ];
+        let parse = |extra: &[&str]| {
+            let mut arguments = roots.to_vec();
+            arguments.extend(extra);
+            match parse_cli_arguments(&strings(&arguments)) {
+                Ok(CliInvocation::Code {
+                    development: Some(options),
+                    ..
+                }) => Ok(options),
+                Ok(_) => panic!("development options"),
+                Err(error) => Err(error),
+            }
+        };
+        let citation = MemoryCitation {
+            pack_id: "build-tool-guide".to_owned(),
+            version: DocPackVersion {
+                major: 1,
+                minor: 2,
+                patch: 3,
+            },
+            path: "guide/cache.md".to_owned(),
+        };
+        let remember = [
+            "--memory-remember",
+            "The cache lives in build/cache.",
+            "--memory-workspace",
+            "workspace-a",
+            "--memory-cite",
+            "build-tool-guide@1.2.3:guide/cache.md",
+        ];
+        let mut typed = remember.to_vec();
+        typed.extend(["--memory-type", "procedural"]);
+        for (extra, request) in [
+            (
+                &remember[..],
+                MemoryRequest::Remember {
+                    content: "The cache lives in build/cache.".to_owned(),
+                    memory_type: MemoryTypeView::Semantic,
+                    workspace_id: "workspace-a".to_owned(),
+                    citation: citation.clone(),
+                },
+            ),
+            (
+                &typed[..],
+                MemoryRequest::Remember {
+                    content: "The cache lives in build/cache.".to_owned(),
+                    memory_type: MemoryTypeView::Procedural,
+                    workspace_id: "workspace-a".to_owned(),
+                    citation,
+                },
+            ),
+            (
+                &["--memory-list"],
+                MemoryRequest::List { workspace_id: None },
+            ),
+            (
+                &["--memory-workspace", "workspace-a", "--memory-list"],
+                MemoryRequest::List {
+                    workspace_id: Some("workspace-a".to_owned()),
+                },
+            ),
+            (
+                &["--memory-revoke", "memory-0123456789abcdef"],
+                MemoryRequest::Revoke {
+                    memory_id: "memory-0123456789abcdef".to_owned(),
+                },
+            ),
+            (
+                &["--memory-delete", "memory-0123456789abcdef"],
+                MemoryRequest::Delete {
+                    memory_id: "memory-0123456789abcdef".to_owned(),
+                },
+            ),
+            (
+                &[
+                    "--memory-revoke-source",
+                    "doc-pack:build-tool-guide:1.2.3",
+                    "--memory-workspace",
+                    "workspace-a",
+                ],
+                MemoryRequest::RevokeSource {
+                    workspace_id: "workspace-a".to_owned(),
+                    source_id: "doc-pack:build-tool-guide:1.2.3".to_owned(),
+                    object_id: None,
+                },
+            ),
+            (
+                &[
+                    "--memory-object",
+                    "path:guide:cache.md",
+                    "--memory-revoke-source",
+                    "doc-pack:build-tool-guide:1.2.3",
+                    "--memory-workspace",
+                    "workspace-a",
+                ],
+                MemoryRequest::RevokeSource {
+                    workspace_id: "workspace-a".to_owned(),
+                    source_id: "doc-pack:build-tool-guide:1.2.3".to_owned(),
+                    object_id: Some("path:guide:cache.md".to_owned()),
+                },
+            ),
+        ] {
+            let options = parse(extra).unwrap();
+            assert_eq!(options.memory, Some(Box::new(request)), "{extra:?}");
+            assert!(
+                options.doc_pack.is_none()
+                    && options.ended_run.is_none()
+                    && options.objective.is_empty()
+                    && options.scenario.is_empty()
+                    && options.model.is_empty()
+                    && options.support_bundle.is_none()
+                    && options.action_history_export.is_none()
+            );
+        }
+        let without = |option: &str| {
+            let index = remember.iter().position(|value| *value == option).unwrap();
+            let mut arguments = remember.to_vec();
+            arguments.drain(index..index + 2);
+            arguments
+        };
+        for refused in [
+            // A remembered item needs its workspace and its citation.
+            without("--memory-workspace"),
+            without("--memory-cite"),
+            // Two operations, or one with another operation's options.
+            vec![
+                "--memory-list",
+                "--memory-revoke",
+                "memory-0123456789abcdef",
+            ],
+            vec!["--memory-list", "--doc-pack-list"],
+            vec!["--memory-list", "--ended-run", "coding-development-run-1"],
+            vec!["--memory-list", "--memory-type", "semantic"],
+            vec![
+                "--memory-list",
+                "--memory-cite",
+                "build-tool-guide@1.2.3:guide/cache.md",
+            ],
+            vec!["--memory-list", "--memory-object", "path:guide:cache.md"],
+            vec![
+                "--memory-revoke",
+                "memory-0123456789abcdef",
+                "--memory-workspace",
+                "workspace-a",
+            ],
+            vec![
+                "--memory-delete",
+                "memory-0123456789abcdef",
+                "--memory-object",
+                "path:guide:cache.md",
+            ],
+            vec!["--memory-revoke-source", "doc-pack:build-tool-guide:1.2.3"],
+            vec!["--memory-workspace", "workspace-a"],
+            vec!["--memory-type", "semantic"],
+            vec!["--memory-list", "--action-history-export", "effects:1:2"],
+            // Run options do not go with a catalog operation.
+            vec!["--memory-list", "--scenario", "no-op"],
+            vec!["--memory-list", "--model", "scripted"],
+            vec!["--memory-list", "--objective", "inspect"],
+            vec!["--memory-list", "--approve-this-run"],
+            // Malformed values.
+            vec!["--memory-revoke", "Memory-1"],
+            vec!["--memory-delete", "1234"],
+            vec!["--memory-list", "--memory-workspace", "Workspace A"],
+            vec![
+                "--memory-revoke-source",
+                "doc-pack:Guide",
+                "--memory-workspace",
+                "workspace-a",
+            ],
+            vec!["--memory-list", "--memory-list"],
+        ] {
+            assert!(parse(&refused).is_err(), "{refused:?}");
+        }
+        for (option, value) in [
+            ("--memory-remember", "   "),
+            ("--memory-remember", "line\nbreak"),
+            ("--memory-remember", "--memory-list"),
+            ("--memory-cite", "build-tool-guide@1.2:guide/cache.md"),
+            ("--memory-cite", "build-tool-guide:guide/cache.md"),
+            ("--memory-cite", "build-tool-guide@1.2.3:"),
+            ("--memory-type", "working"),
+        ] {
+            let mut arguments = remember.to_vec();
+            let index = arguments.iter().position(|value| *value == option);
+            match index {
+                Some(index) => arguments[index + 1] = value,
+                None => arguments.extend([option, value]),
+            }
+            assert!(parse(&arguments).is_err(), "{option} {value:?}");
+        }
+        let too_long = "x".repeat(16 * 1024 + 1);
+        let mut arguments = remember.to_vec();
+        arguments[1] = &too_long;
+        assert!(parse(&arguments).is_err());
+        for operation in [
+            "--memory-remember",
+            "--memory-workspace",
+            "--memory-cite",
+            "--memory-type",
+            "--memory-list",
+            "--memory-revoke",
+            "--memory-revoke-source",
+            "--memory-object",
+            "--memory-delete",
         ] {
             assert!(command_help().contains(operation), "{operation}");
         }

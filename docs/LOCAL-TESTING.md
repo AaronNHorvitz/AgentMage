@@ -300,6 +300,49 @@ deterministic knowledge retrieval through the CLI; no coding run's model reads a
 yet. Language server observations and recipe plans remain AMR-05.9.5.2 and
 AMR-05.9.5.3.
 
+### Memory through the catalog host
+
+The catalog host also keeps one memory catalog in the same encrypted store
+(Decision 0131). You state each memory yourself and cite a kept documentation pack
+file as its evidence. Your invocation is the approval, and the existing memory policy
+can still refuse it. With the sample pack imported as above:
+
+```sh
+python3 -m scripts.coding_harness memory --root "$demo" \
+  --remember 'Clear the build cache when the toolchain changes.' \
+  --workspace calculator --cite agentmage-sample-guide@1.0.0:guide/cache.md
+python3 -m scripts.coding_harness memory --root "$demo" --list --workspace calculator
+python3 -m scripts.coding_harness memory --root "$demo" \
+  --revoke-source doc-pack:agentmage-sample-guide:1.0.0 --workspace calculator
+python3 -m scripts.coding_harness memory --root "$demo" --revoke MEMORY_ID
+python3 -m scripts.coding_harness memory --root "$demo" --delete MEMORY_ID
+```
+
+The wrapper passes each operation to the CLI's `--memory-remember TEXT` (with
+`--memory-workspace`, `--memory-cite PACK@VERSION:PATH` and an optional
+`--memory-type semantic|preference|procedural|episodic`), `--memory-list` (with an
+optional `--memory-workspace`), `--memory-revoke-source SOURCE` (with
+`--memory-workspace` and an optional `--memory-object`), `--memory-revoke ID` and
+`--memory-delete ID`.
+
+- An item's evidence names the source `doc-pack:PACK:VERSION`, the object `path:`
+  followed by the file's path components joined by colons, and the file's digest. A
+  citation of a file the catalog does not keep is refused with
+  `memory.citation-not-found` (exit 4). A path with capitals, spaces or `..` is
+  refused with `memory.citation-not-portable` (exit 2).
+- Text that looks like a credential, or that names a home directory, is refused with
+  `memory.candidate.prohibited` (exit 4), and nothing is stored.
+- A source revocation reaches every revocable item of the one workspace you name that
+  cites the source, or only the object you name. Items of other workspaces are never
+  touched. A revoked item keeps its text for inspection and later deletion. A deleted
+  item keeps only a tombstone.
+- A listing shows each item's text escaped for the terminal. A refusal prints one
+  content-free code on standard error and exits with its class (2, 4, 5 or 7 as for
+  documentation packs).
+
+No coding run reads memory yet. Signed extension revocation lists remain
+AMR-05.9.4.2.
+
 To run the whole declared scripted matrix in one step instead (edits, denial,
 cancellation, pause and resume, stale approvals, rollback and the other cases, each in
 a fresh root), use

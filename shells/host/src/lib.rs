@@ -18,7 +18,8 @@ pub mod coding_action_history;
 /// Exact non-authoritative approval composition for native coding operations.
 pub mod coding_authority;
 #[cfg(target_os = "linux")]
-/// The development catalog host: documentation packs and ended-run reads.
+/// The development catalog host: documentation packs, ended-run reads and
+/// memory.
 pub mod coding_catalog_host;
 /// Hunk review of proposed coding writes for protected approval display.
 pub mod coding_change_review;
@@ -48,6 +49,8 @@ pub mod coding_history;
 pub mod coding_hunk_selection;
 #[cfg(target_os = "linux")]
 pub mod coding_live_runtime;
+/// Memory through the development catalog host.
+pub mod coding_memory;
 /// Profile-bound authority planning for native coding calls.
 pub mod coding_operation;
 /// Verified descriptive planning identity for bounded coding sessions.

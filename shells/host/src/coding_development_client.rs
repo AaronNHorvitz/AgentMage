@@ -148,9 +148,9 @@ fn run_invocation(
         &options.workspace_root,
     )
     .map_err(|_| CodingDevelopmentClientError::Activation)?;
-    // Decision 0130: an ended run's histories and documentation packs are
-    // served by the catalog host, which composes no run.
-    if options.ended_run.is_some() || options.doc_pack.is_some() {
+    // Decisions 0130 and 0131: an ended run's histories, documentation packs
+    // and memory are served by the catalog host, which composes no run.
+    if options.ended_run.is_some() || options.doc_pack.is_some() || options.memory.is_some() {
         return run_catalog_invocation(&activation, options, output, cancellation);
     }
     cancellation.check_startup()?;
@@ -888,17 +888,18 @@ fn catalog_with_child(
         .connect_development()
         .map_err(|_| CodingDevelopmentClientError::Transport)?;
     let mut runtime = LinuxRuntimeIpcClient::new(session);
-    let shown = match (&options.ended_run, doc_pack) {
-        (Some(run_id), None) => {
+    let shown = match (&options.ended_run, doc_pack, options.memory.as_deref()) {
+        (Some(run_id), None, None) => {
             show_ended_run(&mut runtime, run_id, options.action_history_export, output)
         }
-        (None, Some((sent, requests))) => run_doc_pack_requests(
+        (None, Some((sent, requests)), None) => run_doc_pack_requests(
             &mut runtime,
             sent.as_ref(),
             requests,
             output,
             &cancellation.requested,
         ),
+        (None, None, Some(request)) => run_memory_request(&mut runtime, request, output),
         _ => Err(CodingDevelopmentClientError::Activation),
     };
     runtime
@@ -988,6 +989,35 @@ fn run_doc_pack_requests(
         }
         print!("{}", render_doc_pack_answer(&answer, json));
     }
+    Ok(ClientExitCode::Success)
+}
+
+/// Sends one memory request and writes its answer (Decision 0131). An answer
+/// that does not acknowledge exactly the sent request is refused; a refusal
+/// ends the operation with its exit class.
+fn run_memory_request(
+    runtime: &mut impl RuntimeTransportPort,
+    request: &crate::coding_memory::MemoryRequest,
+    output: CliOutputFormat,
+) -> Result<ClientExitCode, CodingDevelopmentClientError> {
+    use crate::coding_memory::{
+        MemoryAnswer, memory_answer_acknowledges, memory_refusal_exit, render_memory_answer,
+        render_memory_refusal,
+    };
+    let json = output == CliOutputFormat::Json;
+    let answer = runtime
+        .memory(request.clone())
+        .inspect_err(|error| eprintln!("{}", error.code()))
+        .map_err(|_| CodingDevelopmentClientError::Runtime)?;
+    if !memory_answer_acknowledges(request, &answer) {
+        eprintln!("coding.development.client.memory-answer-denied");
+        return Err(CodingDevelopmentClientError::Presentation);
+    }
+    if let MemoryAnswer::Refused { refusal } = answer {
+        eprint!("{}", render_memory_refusal(refusal, json));
+        return Ok(memory_refusal_exit(refusal));
+    }
+    print!("{}", render_memory_answer(&answer, json));
     Ok(ClientExitCode::Success)
 }
 
@@ -2188,11 +2218,12 @@ mod tests {
 
     use crate::runtime_transport::RuntimeTransportError;
 
-    /// A catalog host that answers documentation pack requests from a
-    /// script and records what it was sent.
+    /// A catalog host that answers documentation pack and memory requests
+    /// from a script and records what it was sent.
     struct ScriptedCatalog {
         answers: std::collections::VecDeque<Result<DocPackAnswer, RuntimeTransportError>>,
         sent: Vec<DocPackRequest>,
+        memory: Option<Result<crate::coding_memory::MemoryAnswer, RuntimeTransportError>>,
     }
 
     impl RuntimeTransportPort for ScriptedCatalog {
@@ -2240,6 +2271,14 @@ mod tests {
             self.sent.push(request);
             self.answers
                 .pop_front()
+                .unwrap_or(Err(RuntimeTransportError::RuntimeFailed))
+        }
+        fn memory(
+            &mut self,
+            _request: crate::coding_memory::MemoryRequest,
+        ) -> Result<crate::coding_memory::MemoryAnswer, RuntimeTransportError> {
+            self.memory
+                .take()
                 .unwrap_or(Err(RuntimeTransportError::RuntimeFailed))
         }
     }
@@ -2322,6 +2361,7 @@ mod tests {
             let mut catalog = ScriptedCatalog {
                 answers: answers.into(),
                 sent: Vec::new(),
+                memory: None,
             };
             let result = run_doc_pack_requests(
                 &mut catalog,
@@ -2409,6 +2449,7 @@ mod tests {
         let mut catalog = ScriptedCatalog {
             answers: vec![Ok(accepted)].into(),
             sent: Vec::new(),
+            memory: None,
         };
         assert_eq!(
             run_doc_pack_requests(
@@ -2419,6 +2460,72 @@ mod tests {
                 &AtomicBool::new(false),
             ),
             Err(CodingDevelopmentClientError::Presentation)
+        );
+    }
+
+    #[test]
+    fn a_memory_answer_is_shown_only_when_it_acknowledges_the_sent_request() {
+        // Decision 0131: the CLI shows an answer only for the request it
+        // sent; a refusal exits with its class and a transport failure is a
+        // runtime failure.
+        use crate::coding_memory::{
+            MemoryAnswer, MemoryRefusal, MemoryRequest, MemoryTransitionView,
+            memory_decision_sha256,
+        };
+        let request = MemoryRequest::Revoke {
+            memory_id: "memory-1".to_owned(),
+        };
+        let receipt = MemoryTransitionView {
+            catalog_revision: 2,
+            catalog_sha256: "a".repeat(64),
+            decision_sha256: memory_decision_sha256(&request).unwrap(),
+            memory_ids: vec!["memory-1".to_owned()],
+        };
+        let run = |answer: Result<MemoryAnswer, RuntimeTransportError>| {
+            let mut catalog = ScriptedCatalog {
+                answers: std::collections::VecDeque::new(),
+                sent: Vec::new(),
+                memory: Some(answer),
+            };
+            run_memory_request(&mut catalog, &request, CliOutputFormat::Json)
+        };
+        assert_eq!(
+            run(Ok(MemoryAnswer::Revoked {
+                receipt: receipt.clone()
+            })),
+            Ok(ClientExitCode::Success)
+        );
+        assert_eq!(
+            run(Ok(MemoryAnswer::Refused {
+                refusal: MemoryRefusal::InvalidTransition
+            })),
+            Ok(ClientExitCode::PolicyDenied)
+        );
+        for answer in [
+            MemoryAnswer::Deleted {
+                receipt: receipt.clone(),
+            },
+            MemoryAnswer::Revoked {
+                receipt: MemoryTransitionView {
+                    memory_ids: vec!["memory-2".to_owned()],
+                    ..receipt.clone()
+                },
+            },
+            MemoryAnswer::Revoked {
+                receipt: MemoryTransitionView {
+                    decision_sha256: "b".repeat(64),
+                    ..receipt
+                },
+            },
+        ] {
+            assert_eq!(
+                run(Ok(answer)),
+                Err(CodingDevelopmentClientError::Presentation)
+            );
+        }
+        assert_eq!(
+            run(Err(RuntimeTransportError::RequestDenied)),
+            Err(CodingDevelopmentClientError::Runtime)
         );
     }
 

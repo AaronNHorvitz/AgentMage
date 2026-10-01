@@ -20,6 +20,7 @@ struct FixtureStore {
     now_epoch_ms: Option<u64>,
     opened: Rc<Cell<usize>>,
     refuse_open: bool,
+    identities: u64,
 }
 
 impl CatalogStore for FixtureStore {
@@ -35,12 +36,18 @@ impl CatalogStore for FixtureStore {
         Ok(CatalogStoreHandles::new(
             runtime.doc_pack_catalog(),
             runtime.run_action_histories(),
+            runtime.owner_states(),
             Box::new(runtime),
         ))
     }
 
     fn now_epoch_ms(&self) -> Option<u64> {
         self.now_epoch_ms
+    }
+
+    fn new_memory_id(&mut self) -> Option<String> {
+        self.identities += 1;
+        Some(format!("memory-{:016x}", self.identities))
     }
 }
 
@@ -60,6 +67,7 @@ fn service(
             now_epoch_ms: Some(1_767_312_000_000),
             opened: Rc::clone(&opened),
             refuse_open: false,
+            identities: 0,
         }),
         store,
         opened,
@@ -285,4 +293,77 @@ fn an_ended_runs_stored_chains_are_read_with_retention_applied() {
             .err(),
         Some(RuntimeTransportError::RuntimeFailed)
     );
+}
+
+#[test]
+fn each_memory_operation_opens_the_store_once_and_closes_it_again() {
+    // Decision 0131: the catalog host answers memory over its own store,
+    // opened for the operation and closed afterwards; only a remembered item
+    // draws an identity.
+    use crate::coding_memory::{MemoryAnswer, MemoryRefusal, MemoryRequest};
+    let (mut catalog, store, opened) = service("catalog-memory");
+    assert_eq!(
+        catalog
+            .memory(MemoryRequest::List { workspace_id: None })
+            .unwrap(),
+        MemoryAnswer::Listed {
+            items: Vec::new(),
+            catalog_revision: 0
+        }
+    );
+    assert_eq!(opened.get(), 1);
+    drop(store.try_runtime().expect("the service closed the store"));
+    assert_eq!(
+        catalog
+            .memory(MemoryRequest::Revoke {
+                memory_id: "memory-0123456789abcdef".to_owned()
+            })
+            .unwrap(),
+        MemoryAnswer::Refused {
+            refusal: MemoryRefusal::NotFound
+        }
+    );
+    assert_eq!((opened.get(), catalog.store.identities), (2, 0));
+    // A citation of a pack the catalog does not keep draws an identity and
+    // stores nothing.
+    let remember = MemoryRequest::Remember {
+        content: "The cache lives in build/cache.".to_owned(),
+        memory_type: crate::coding_memory::MemoryTypeView::Semantic,
+        workspace_id: "workspace-a".to_owned(),
+        citation: crate::coding_memory::MemoryCitation {
+            pack_id: "build-tool-guide".to_owned(),
+            version: agentmage_capability_knowledge::DocPackVersion {
+                major: 1,
+                minor: 0,
+                patch: 0,
+            },
+            path: "guide/cache.md".to_owned(),
+        },
+    };
+    assert_eq!(
+        catalog.memory(remember.clone()).unwrap(),
+        MemoryAnswer::Refused {
+            refusal: MemoryRefusal::CitationNotFound
+        }
+    );
+    assert_eq!((opened.get(), catalog.store.identities), (3, 1));
+    drop(store.try_runtime().expect("still closed"));
+    // No clock refuses before the store opens; a store that does not open is
+    // unavailable.
+    catalog.store.now_epoch_ms = None;
+    assert_eq!(
+        catalog.memory(remember.clone()).unwrap(),
+        MemoryAnswer::Refused {
+            refusal: MemoryRefusal::ClockUnavailable
+        }
+    );
+    catalog.store.now_epoch_ms = Some(1_767_312_000_000);
+    catalog.store.refuse_open = true;
+    assert_eq!(
+        catalog.memory(remember).unwrap(),
+        MemoryAnswer::Refused {
+            refusal: MemoryRefusal::StoreUnavailable
+        }
+    );
+    assert_eq!(opened.get(), 3);
 }

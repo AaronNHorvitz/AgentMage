@@ -48,9 +48,10 @@ fn version_twenty_two_upgrades_to_documentation_packs_preserving_records_and_his
         .connection
         .pragma_query_value(None, "user_version", |row| row.get(0))
         .unwrap();
-    assert_eq!(version, 23);
+    assert_eq!(version, SCHEMA_VERSION);
+    // The later owner state migration adds only its own table (Decision 0131).
     let fixture: Value =
-        serde_json::from_str(include_str!("../fixtures/operational-store/schema-23.json")).unwrap();
+        serde_json::from_str(include_str!("../fixtures/operational-store/schema-24.json")).unwrap();
     assert_eq!(tables(&store.connection), fixture["tables"]);
     assert_eq!(history(&store.connection), fixture["migrations"]);
     let migrated = history(&store.connection);
@@ -104,7 +105,7 @@ fn failed_version_twenty_three_migration_rolls_back_and_stays_retryable() {
         .unwrap();
     drop(connection);
     let current = OperationalStore::open(&path, &observation(), &mut TestKey(key)).unwrap();
-    assert_eq!(history(&current.connection).as_array().unwrap().len(), 23);
+    assert_eq!(history(&current.connection).as_array().unwrap().len(), 24);
     assert_eq!(doc_pack_tables(&current.connection), 4);
     assert_eq!(legacy_record(&current.connection), record);
     drop(current);
@@ -157,4 +158,9 @@ fn version_twenty_two_corrupt_history_cannot_add_documentation_packs() {
         drop(connection);
         fs::remove_dir_all(directory).unwrap();
     }
+}
+
+mod owner_state_migration {
+    use super::*;
+    include!("owner_state_migration_tests.rs");
 }

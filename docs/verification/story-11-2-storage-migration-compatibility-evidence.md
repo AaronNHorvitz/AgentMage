@@ -1,9 +1,16 @@
 # Story 11.2 storage migration compatibility evidence
 
 Sub-task 11.2.3.1 is locally complete for the canonical SQLCipher operational store. The retained
-schema-23 fixture independently pins the ordered hashes for all twenty-three forward migrations and the
+schema-24 fixture independently pins the ordered hashes for all twenty-four forward migrations and the
 closed table inventory. Fresh-store and version-one upgrade tests compare the live database to that
 fixture. Historical fixtures and migration bytes remain unchanged.
+
+Decision 0131 adds migration 24 for durable owner states. It adds one new table whose triggers let a
+first state have only revision one, let each later state raise the revision by exactly one under the
+same owner, and refuse every deletion. An actual encrypted version-23 fixture upgrades to version 24
+with its records and full history preserved and no owner state created. Corrupt history is refused
+before the table is added. A migration that fails part way leaves the store at version 23 with its
+history and records unchanged, and it succeeds once the conflict is removed.
 
 Decision 0130 adds migration 23 for the durable documentation pack catalog. It adds four new tables
 whose triggers allow a kept version only to become superseded, keep files unchanged, remove a version

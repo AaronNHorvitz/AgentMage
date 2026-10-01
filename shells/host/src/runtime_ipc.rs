@@ -5,7 +5,8 @@
 //! scope it derives from the authenticated peer (Decision 0120). Suspension and
 //! resumption are job control requests too; a step names where a suspended run
 //! stopped (Decision 0122). The catalog host answers documentation pack
-//! requests over the same channel (Decision 0130).
+//! requests (Decision 0130) and memory requests (Decision 0131) over the same
+//! channel.
 
 use agentmage_kernel_contracts::{
     CancellationId, RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEventCursor, RuntimeRunId,
@@ -19,12 +20,13 @@ use sha2::{Digest, Sha256};
 
 use crate::coding_action_history::EndedRunActionHistories;
 use crate::coding_doc_packs::{DocPackAnswer, DocPackRequest};
+use crate::coding_memory::{MemoryAnswer, MemoryRequest};
 use crate::runtime_transport::{
     RuntimeClientScope, RuntimeJobControl, RuntimeJobStatus, RuntimePrepareInput,
     RuntimeRunDeclarations, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
 };
 
-const WIRE_VERSION: u16 = 12;
+const WIRE_VERSION: u16 = 13;
 /// The wire version this build speaks, as named in a support bundle.
 pub const RUNTIME_IPC_WIRE_VERSION: u16 = WIRE_VERSION;
 const MAX_WIRE_BYTES: usize = 4 * 1024 * 1024;
@@ -81,6 +83,9 @@ enum RuntimeIpcRequest {
     DocPack {
         request: DocPackRequest,
     },
+    Memory {
+        request: MemoryRequest,
+    },
     RevokeSessionPreauthorization {
         session_id: SessionId,
         preauthorization_sha256: String,
@@ -118,6 +123,9 @@ enum RuntimeIpcResponse {
     },
     DocPack {
         answer: DocPackAnswer,
+    },
+    Memory {
+        answer: MemoryAnswer,
     },
     JobStatus {
         status: RuntimeJobStatus,
@@ -451,6 +459,13 @@ impl RuntimeTransportPort for LinuxRuntimeIpcClient {
         }
     }
 
+    fn memory(&mut self, request: MemoryRequest) -> Result<MemoryAnswer, RuntimeTransportError> {
+        match self.exchange(RuntimeIpcRequest::Memory { request })? {
+            RuntimeIpcResponse::Memory { answer } => Ok(answer),
+            _ => Err(RuntimeTransportError::RuntimeEvidenceDenied),
+        }
+    }
+
     fn revoke_session_preauthorization(
         &mut self,
         session_id: &SessionId,
@@ -642,6 +657,18 @@ fn answer<P: RuntimeTransportPort>(
             ),
             Err(error) => (RuntimeIpcResponse::Error { error }, false),
         },
+        Some(RuntimeIpcRequest::Memory { request }) => match runtime.memory(request) {
+            // A listing larger than the bound is refused rather than ending
+            // the service.
+            Ok(answer) if answer_fits(&answer) => (RuntimeIpcResponse::Memory { answer }, false),
+            Ok(_) => (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::CapacityExceeded,
+                },
+                false,
+            ),
+            Err(error) => (RuntimeIpcResponse::Error { error }, false),
+        },
         Some(RuntimeIpcRequest::RevokeSessionPreauthorization {
             session_id,
             preauthorization_sha256,
@@ -760,7 +787,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 12);
+        assert_eq!(decoded.version, 13);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::RunDeclarations {
             declarations: declarations.clone(),
@@ -832,7 +859,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 12);
+        assert_eq!(decoded.version, 13);
         assert_eq!(decoded.payload, request.payload);
         let response = RuntimeIpcResponse::EndedRunActionHistories {
             histories: histories.clone(),
@@ -881,8 +908,8 @@ mod tests {
 
     #[test]
     fn a_documentation_pack_request_crosses_the_wire_closed() {
-        // Decision 0130: documentation pack requests and answers cross wire
-        // 12 closed; a port that is not a catalog host refuses them, and an
+        // Decision 0130: documentation pack requests and answers cross the
+        // wire closed; a port that is not a catalog host refuses them, and an
         // oversized answer is refused without ending the service.
         use crate::coding_doc_packs::{DocPackHitView, DocPackRefusal};
         use agentmage_capability_knowledge::DocPackVersion;
@@ -899,7 +926,7 @@ mod tests {
         let bytes = serde_json::to_vec(&request).unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 12);
+        assert_eq!(decoded.version, 13);
         assert_eq!(decoded.payload, request.payload);
         let text = String::from_utf8(bytes).unwrap();
         for nested in [
@@ -1060,6 +1087,179 @@ mod tests {
                     request: DocPackRequest::List {},
                 })
             ),
+            (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::CapacityExceeded,
+                },
+                false
+            )
+        );
+    }
+
+    #[test]
+    fn a_memory_request_crosses_the_wire_closed() {
+        // Decision 0131: memory requests and answers cross wire 13 closed; a
+        // port that is not a catalog host refuses them, and an oversized
+        // listing is refused without ending the service.
+        use crate::coding_memory::{
+            MemoryItemView, MemoryRefusal, MemorySourceView, MemoryStatusView, MemoryTypeView,
+        };
+        let request = RuntimeIpcEnvelope {
+            version: WIRE_VERSION,
+            payload: RuntimeIpcRequest::Memory {
+                request: MemoryRequest::RevokeSource {
+                    workspace_id: "workspace-a".to_owned(),
+                    source_id: "doc-pack:guide:1.0.0".to_owned(),
+                    object_id: None,
+                },
+            },
+        };
+        let bytes = serde_json::to_vec(&request).unwrap();
+        let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
+            serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(decoded.version, 13);
+        assert_eq!(decoded.payload, request.payload);
+        let text = String::from_utf8(bytes).unwrap();
+        for nested in [
+            text.replacen("\"object_id\":null", "\"object_id\":null,\"x\":1", 1),
+            text.replacen(",\"object_id\":null", "", 1),
+            text.replacen(
+                "\"operation\":\"revoke-source\"",
+                "\"operation\":\"forget\"",
+                1,
+            ),
+        ] {
+            assert_ne!(nested, text);
+            assert!(
+                serde_json::from_str::<RuntimeIpcEnvelope<RuntimeIpcRequest>>(&nested).is_err()
+            );
+        }
+        let item = MemoryItemView {
+            memory_id: "memory-0123456789abcdef".to_owned(),
+            memory_type: Some(MemoryTypeView::Semantic),
+            workspace_id: "workspace-a".to_owned(),
+            status: MemoryStatusView::Approved,
+            content: Some("The cache lives in build/cache.".to_owned()),
+            sources: vec![MemorySourceView {
+                source_id: "doc-pack:guide:1.0.0".to_owned(),
+                object_id: "path:guide:cache.md".to_owned(),
+                content_sha256: "c".repeat(64),
+            }],
+            created_at: "2026-10-01T00:00:00Z".to_owned(),
+            decided_at: "2026-10-01T00:00:00Z".to_owned(),
+        };
+        let response = RuntimeIpcResponse::Memory {
+            answer: MemoryAnswer::Listed {
+                items: vec![item.clone()],
+                catalog_revision: 1,
+            },
+        };
+        let bytes = serde_json::to_vec(&response).unwrap();
+        assert_eq!(
+            serde_json::from_slice::<RuntimeIpcResponse>(&bytes).unwrap(),
+            response
+        );
+        let text = String::from_utf8(bytes).unwrap();
+        for nested in [
+            text.replacen(
+                "\"status\":\"approved\"",
+                "\"status\":\"approved\",\"x\":1",
+                1,
+            ),
+            text.replacen(
+                "\"catalog_revision\":1",
+                "\"catalog_revision\":1,\"x\":1",
+                1,
+            ),
+            text.replacen("\"status\":\"approved\"", "\"status\":\"forgotten\"", 1),
+            text.replacen("\"answer\":\"listed\"", "\"answer\":\"forgotten\"", 1),
+        ] {
+            assert_ne!(nested, text);
+            assert!(serde_json::from_str::<RuntimeIpcResponse>(&nested).is_err());
+        }
+        let list = || {
+            Some(RuntimeIpcRequest::Memory {
+                request: MemoryRequest::List { workspace_id: None },
+            })
+        };
+        let mut port = DeclaringPort {
+            session_id_bytes: 0,
+            released: 0,
+        };
+        assert_eq!(
+            answer(&mut port, &fixture_client(), list()),
+            (
+                RuntimeIpcResponse::Error {
+                    error: RuntimeTransportError::RequestDenied,
+                },
+                false
+            )
+        );
+        struct MemoryPort(MemoryAnswer);
+        impl RuntimeTransportPort for MemoryPort {
+            fn prepare(
+                &mut self,
+                _input: RuntimePrepareInput,
+            ) -> Result<RuntimeRunRequest, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn start(
+                &mut self,
+                _request: RuntimeRunRequest,
+            ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn advance(
+                &mut self,
+                _run_id: &RuntimeRunId,
+                _request_sha256: &str,
+                _after_event_cursor: Option<&RuntimeEventCursor>,
+                _response: Option<&RuntimeApprovalResponse>,
+            ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn cancel(
+                &mut self,
+                _run_id: &RuntimeRunId,
+                _request_sha256: &str,
+                _cancellation_id: CancellationId,
+                _after_event_cursor: Option<&RuntimeEventCursor>,
+            ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn release(
+                &mut self,
+                _run_id: &RuntimeRunId,
+                _request_sha256: &str,
+            ) -> Result<(), RuntimeTransportError> {
+                Err(RuntimeTransportError::RequestDenied)
+            }
+            fn memory(
+                &mut self,
+                _request: MemoryRequest,
+            ) -> Result<MemoryAnswer, RuntimeTransportError> {
+                Ok(self.0.clone())
+            }
+        }
+        let refused = MemoryAnswer::Refused {
+            refusal: MemoryRefusal::NotFound,
+        };
+        assert_eq!(
+            answer(&mut MemoryPort(refused.clone()), &fixture_client(), list()),
+            (RuntimeIpcResponse::Memory { answer: refused }, false)
+        );
+        let oversized = MemoryAnswer::Listed {
+            items: vec![
+                MemoryItemView {
+                    content: Some("x".repeat(MAX_WIRE_BYTES)),
+                    ..item
+                };
+                1
+            ],
+            catalog_revision: 1,
+        };
+        assert_eq!(
+            answer(&mut MemoryPort(oversized), &fixture_client(), list()),
             (
                 RuntimeIpcResponse::Error {
                     error: RuntimeTransportError::CapacityExceeded,
@@ -1282,7 +1482,7 @@ mod tests {
             .unwrap();
             let decoded: RuntimeIpcEnvelope<RuntimeIpcRequest> =
                 serde_json::from_slice(&bytes).unwrap();
-            assert_eq!(decoded.version, 12);
+            assert_eq!(decoded.version, 13);
             assert_eq!(decoded.payload, request);
         }
         let mut scoped = serde_json::to_value(RuntimeIpcRequest::ControlJob {
@@ -1512,7 +1712,7 @@ mod tests {
         .unwrap();
         let decoded: RuntimeIpcEnvelope<RuntimeIpcResponse> =
             serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(decoded.version, 12);
+        assert_eq!(decoded.version, 13);
         assert_eq!(decoded.payload, response);
         let mut extra = serde_json::to_value(&suspended).unwrap();
         extra["suspended"]["resumable"] = serde_json::Value::Bool(true);

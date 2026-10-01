@@ -4,15 +4,17 @@
 //! It validates the same disposable activation and serves the authenticated
 //! IPC session of its parent like the development host, but it builds no
 //! repository composition, model, tool or runtime. It answers only catalog
-//! operations: documentation packs and the read of an ended run's stored
-//! action histories. Every run operation is refused. It opens the operational
-//! store for each operation and closes it afterwards, so nothing it holds
-//! outlives an answer except a staged documentation pack import.
+//! operations: documentation packs, the read of an ended run's stored action
+//! histories and memory (Decision 0131). Every run operation is refused. It
+//! opens the operational store for each operation and closes it afterwards,
+//! so nothing it holds outlives an answer except a staged documentation pack
+//! import.
 
 use agentmage_kernel_contracts::{
     CancellationId, RuntimeApprovalResponse, RuntimeEventCursor, RuntimeRunId, RuntimeRunRequest,
 };
 use agentmage_kernel_engine::doc_pack_store::DurableDocPackCatalog;
+use agentmage_kernel_engine::owner_state_store::DurableOwnerStates;
 use agentmage_kernel_engine::run_action_history_store::{
     DurableRunActionHistories, RunActionHistoryStoreError,
 };
@@ -20,6 +22,9 @@ use agentmage_kernel_engine::run_action_history_store::{
 use crate::coding_action_history::{EndedRunActionHistories, read_ended_run_action_histories};
 use crate::coding_doc_packs::{
     DocPackAnswer, DocPackOwner, DocPackRefusal, DocPackRequest, iso_date_of_epoch_ms,
+};
+use crate::coding_memory::{
+    MemoryAnswer, MemoryRefusal, MemoryRequest, MemoryStores, answer_memory,
 };
 use crate::runtime_transport::{
     RuntimePrepareInput, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
@@ -30,6 +35,7 @@ use crate::runtime_transport::{
 pub struct CatalogStoreHandles {
     doc_packs: DurableDocPackCatalog,
     histories: DurableRunActionHistories,
+    owner_states: DurableOwnerStates,
     _owner: Box<dyn std::any::Any>,
 }
 
@@ -39,11 +45,13 @@ impl CatalogStoreHandles {
     pub fn new(
         doc_packs: DurableDocPackCatalog,
         histories: DurableRunActionHistories,
+        owner_states: DurableOwnerStates,
         owner: Box<dyn std::any::Any>,
     ) -> Self {
         Self {
             doc_packs,
             histories,
+            owner_states,
             _owner: owner,
         }
     }
@@ -56,6 +64,9 @@ pub trait CatalogStore {
 
     /// The host clock in Unix epoch milliseconds, if it can be read.
     fn now_epoch_ms(&self) -> Option<u64>;
+
+    /// A new random memory identity, if the host can draw one.
+    fn new_memory_id(&mut self) -> Option<String>;
 }
 
 /// The catalog host's service over one authenticated session.
@@ -163,6 +174,31 @@ impl<S: CatalogStore> RuntimeTransportPort for CodingCatalogService<S> {
         drop(held);
         Ok(answer)
     }
+
+    fn memory(&mut self, request: MemoryRequest) -> Result<MemoryAnswer, RuntimeTransportError> {
+        let now = self.store.now_epoch_ms();
+        let memory_id = matches!(request, MemoryRequest::Remember { .. })
+            .then(|| self.store.new_memory_id())
+            .flatten();
+        let store = &mut self.store;
+        let mut held = None;
+        let answer = answer_memory(
+            &request,
+            &mut || {
+                let handles = store.open().map_err(|_| MemoryRefusal::StoreUnavailable)?;
+                let stores = MemoryStores {
+                    states: handles.owner_states.clone(),
+                    doc_packs: handles.doc_packs.clone(),
+                };
+                held = Some(handles);
+                Ok(stores)
+            },
+            now,
+            memory_id,
+        );
+        drop(held);
+        Ok(answer)
+    }
 }
 
 /// The development catalog host's store: the disposable activation's private
@@ -225,9 +261,11 @@ impl CatalogStore for DevelopmentCatalogStore {
         })?;
         let doc_packs = authority.authority().doc_pack_catalog();
         let histories = authority.authority().run_action_histories();
+        let owner_states = authority.authority().owner_states();
         Ok(CatalogStoreHandles::new(
             doc_packs,
             histories,
+            owner_states,
             Box::new(authority),
         ))
     }
@@ -237,6 +275,21 @@ impl CatalogStore for DevelopmentCatalogStore {
             .duration_since(std::time::UNIX_EPOCH)
             .ok()
             .and_then(|elapsed| u64::try_from(elapsed.as_millis()).ok())
+    }
+
+    fn new_memory_id(&mut self) -> Option<String> {
+        use std::fmt::Write as _;
+        let mut random = [0_u8; 16];
+        let count =
+            rustix::rand::getrandom(&mut random, rustix::rand::GetRandomFlags::empty()).ok()?;
+        (count == random.len()).then(|| {
+            random
+                .iter()
+                .fold(String::from("memory-"), |mut output, byte| {
+                    let _ = write!(output, "{byte:02x}");
+                    output
+                })
+        })
     }
 }
 

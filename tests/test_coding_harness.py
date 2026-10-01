@@ -451,6 +451,69 @@ class CodingHarnessTests(unittest.TestCase):
             self.assertEqual(command[-len(tail):], tail)
             self.assertIn(f"{root}/state", command)
 
+    def test_memory_operations_reach_the_catalog_host_in_their_closed_forms(self):
+        def memory(*arguments):
+            parsed = coding_harness.parser().parse_args(["memory", "--root", "/expected", *arguments])
+            return coding_harness.memory_arguments(parsed)
+
+        cite = "agentmage-sample-guide@1.0.0:guide/cache.md"
+        self.assertEqual(
+            memory("--remember", "The cache stays local.", "--workspace", "workspace-a", "--cite", cite),
+            [
+                "--memory-remember", "The cache stays local.", "--memory-workspace", "workspace-a",
+                "--memory-cite", cite,
+            ],
+        )
+        self.assertEqual(
+            memory("--remember", "Tests first.", "--workspace", "w", "--cite", cite, "--type", "procedural")[-2:],
+            ["--memory-type", "procedural"],
+        )
+        self.assertEqual(memory("--list"), ["--memory-list"])
+        self.assertEqual(
+            memory("--list", "--workspace", "workspace-a"),
+            ["--memory-list", "--memory-workspace", "workspace-a"],
+        )
+        self.assertEqual(memory("--revoke", "memory-0a1b"), ["--memory-revoke", "memory-0a1b"])
+        self.assertEqual(memory("--delete", "memory-0a1b"), ["--memory-delete", "memory-0a1b"])
+        self.assertEqual(
+            memory(
+                "--revoke-source", "doc-pack:agentmage-sample-guide:1.0.0", "--workspace", "workspace-a",
+                "--object", "path:guide:cache.md",
+            ),
+            [
+                "--memory-revoke-source", "doc-pack:agentmage-sample-guide:1.0.0",
+                "--memory-workspace", "workspace-a", "--memory-object", "path:guide:cache.md",
+            ],
+        )
+        for invalid in (
+            ("--remember", "Cache.", "--cite", cite),
+            ("--remember", "Cache.", "--workspace", "w"),
+            ("--remember", "   ", "--workspace", "w", "--cite", cite),
+            ("--remember", "line\nbreak", "--workspace", "w", "--cite", cite),
+            ("--remember", "x" * (16 * 1024 + 1), "--workspace", "w", "--cite", cite),
+            ("--remember", "Cache.", "--workspace", "w", "--cite", "pack@1.0:a.md"),
+            ("--remember", "Cache.", "--workspace", "w", "--cite", "pack@1.0.0:"),
+            ("--remember", "Cache.", "--workspace", "w", "--cite", cite, "--object", "path:a"),
+            ("--remember", "Cache.", "--workspace", "Workspace A", "--cite", cite),
+            ("--list", "--cite", cite),
+            ("--list", "--type", "semantic"),
+            ("--list", "--object", "path:a"),
+            ("--revoke", "memory-1", "--workspace", "w"),
+            ("--revoke", "Memory-1"),
+            ("--delete", "item-1"),
+            ("--revoke-source", "doc-pack:x"),
+            ("--revoke-source", "Doc", "--workspace", "w"),
+            ("--revoke-source", "doc-pack:x", "--workspace", "w", "--object", "Path"),
+        ):
+            with self.assertRaises(coding_harness.HarnessError, msg=invalid):
+                memory(*invalid)
+        for invalid in (
+            ("--list", "--revoke", "memory-1"),
+            ("--remember", "x", "--type", "working"),
+        ):
+            with self.assertRaises(SystemExit):
+                coding_harness.parser().parse_args(["memory", "--root", "/expected", *invalid])
+
     def test_the_sample_pack_is_sealed_as_the_knowledge_component_seals_it(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary) / "sample"

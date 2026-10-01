@@ -1,34 +1,32 @@
-// Real encrypted schema 20 fixtures upgraded to the job ledger schema
-// (Decision 0118); no installed-upgrade or old-binary qualification.
-use super::*;
+// Real encrypted schema 23 fixtures upgraded to the owner state schema
+// (Decision 0131); no installed-upgrade or old-binary qualification.
 
-fn version_twenty(path: &Path, key: &[u8; 32]) {
-    version_nineteen(path, key);
+fn version_twenty_three(path: &Path, key: &[u8; 32]) {
+    version_twenty_two(path, key);
     let connection = open_connection(path, key).unwrap();
-    let sql = crate::operational_store::MIGRATION_20_SCHEMA_SQL;
+    let sql = crate::operational_store::MIGRATION_23_SCHEMA_SQL;
     let transaction = connection.unchecked_transaction().unwrap();
     transaction.execute_batch(sql).unwrap();
     transaction
         .execute(
-            "INSERT INTO schema_history(version, migration_sha256) VALUES (20, ?1)",
+            "INSERT INTO schema_history(version, migration_sha256) VALUES (23, ?1)",
             [sha256_hex(sql.as_bytes())],
         )
         .unwrap();
     transaction
-        .pragma_update(None, "user_version", 20_i64)
+        .pragma_update(None, "user_version", 23_i64)
         .unwrap();
     transaction.commit().unwrap();
     let fixture: Value =
-        serde_json::from_str(include_str!("../fixtures/operational-store/schema-20.json")).unwrap();
+        serde_json::from_str(include_str!("../fixtures/operational-store/schema-23.json")).unwrap();
     assert_eq!(tables(&connection), fixture["tables"]);
     assert_eq!(history(&connection), fixture["migrations"]);
 }
 
-fn job_ledger_tables(connection: &rusqlite::Connection) -> i64 {
+fn owner_state_tables(connection: &rusqlite::Connection) -> i64 {
     connection
         .query_row(
-            "SELECT COUNT(*) FROM sqlite_schema
-             WHERE type = 'table' AND name LIKE 'job_ledger_%'",
+            "SELECT COUNT(*) FROM sqlite_schema WHERE type = 'table' AND name = 'owner_states'",
             [],
             |row| row.get(0),
         )
@@ -36,11 +34,11 @@ fn job_ledger_tables(connection: &rusqlite::Connection) -> i64 {
 }
 
 #[test]
-fn version_twenty_upgrades_to_job_ledgers_preserving_records_and_history() {
+fn version_twenty_three_upgrades_to_owner_states_preserving_records_and_history() {
     let directory = temporary_directory();
     let path = directory.join("authority.db");
-    let key = [98; 32];
-    version_twenty(&path, &key);
+    let key = [121; 32];
+    version_twenty_three(&path, &key);
     let connection = open_connection(&path, &key).unwrap();
     let original_history = history(&connection);
     let original_record = legacy_record(&connection);
@@ -51,40 +49,42 @@ fn version_twenty_upgrades_to_job_ledgers_preserving_records_and_history() {
         .pragma_query_value(None, "user_version", |row| row.get(0))
         .unwrap();
     assert_eq!(version, SCHEMA_VERSION);
-    // The later run action history, documentation pack and owner state
-    // migrations add only their own tables (Decisions 0129 to 0131).
     let fixture: Value =
         serde_json::from_str(include_str!("../fixtures/operational-store/schema-24.json")).unwrap();
     assert_eq!(tables(&store.connection), fixture["tables"]);
     assert_eq!(history(&store.connection), fixture["migrations"]);
     let migrated = history(&store.connection);
     assert_eq!(
-        &migrated.as_array().unwrap()[..20],
+        &migrated.as_array().unwrap()[..23],
         original_history.as_array().unwrap()
     );
     assert_eq!(legacy_record(&store.connection), original_record);
-    let ledgers: i64 = store
+    let states: i64 = store
         .connection
-        .query_row("SELECT COUNT(*) FROM job_ledger_roots", [], |row| row.get(0))
+        .query_row("SELECT COUNT(*) FROM owner_states", [], |row| row.get(0))
         .unwrap();
-    assert_eq!(ledgers, 0);
+    assert_eq!(states, 0);
     drop(store);
     drop(OperationalStore::open(&path, &observation(), &mut TestKey(key)).unwrap());
     fs::remove_dir_all(directory).unwrap();
 }
 
 #[test]
-fn failed_version_twenty_one_migration_rolls_back_and_stays_retryable() {
+fn failed_version_twenty_four_migration_rolls_back_and_stays_retryable() {
     let directory = temporary_directory();
     let path = directory.join("authority.db");
-    let key = [99; 32];
-    version_twenty(&path, &key);
+    let key = [122; 32];
+    version_twenty_three(&path, &key);
     let connection = open_connection(&path, &key).unwrap();
     let before = history(&connection);
     let record = legacy_record(&connection);
-    // A conflicting table makes the job ledger migration fail part way.
+    // A conflicting trigger name makes the owner state migration fail after
+    // its table was created.
     connection
-        .execute_batch("CREATE TABLE job_ledger_heads(incompatible INTEGER) STRICT;")
+        .execute_batch(
+            "CREATE TRIGGER owner_state_delete_forbidden AFTER UPDATE ON schema_history
+             BEGIN SELECT 1; END;",
+        )
         .unwrap();
     drop(connection);
     assert_eq!(
@@ -95,48 +95,48 @@ fn failed_version_twenty_one_migration_rolls_back_and_stays_retryable() {
     let version: i64 = connection
         .pragma_query_value(None, "user_version", |row| row.get(0))
         .unwrap();
-    assert_eq!(version, 20);
+    assert_eq!(version, 23);
     assert_eq!(history(&connection), before);
     assert_eq!(legacy_record(&connection), record);
-    // Only the conflicting table exists; no root or entry table was kept.
-    assert_eq!(job_ledger_tables(&connection), 1);
+    // The table created before the failure was rolled back with it.
+    assert_eq!(owner_state_tables(&connection), 0);
     connection
-        .execute_batch("DROP TABLE job_ledger_heads;")
+        .execute_batch("DROP TRIGGER owner_state_delete_forbidden;")
         .unwrap();
     drop(connection);
     let current = OperationalStore::open(&path, &observation(), &mut TestKey(key)).unwrap();
     assert_eq!(history(&current.connection).as_array().unwrap().len(), 24);
-    assert_eq!(job_ledger_tables(&current.connection), 3);
+    assert_eq!(owner_state_tables(&current.connection), 1);
     assert_eq!(legacy_record(&current.connection), record);
     drop(current);
     fs::remove_dir_all(directory).unwrap();
 }
 
 #[test]
-fn version_twenty_corrupt_history_cannot_add_job_ledgers() {
+fn version_twenty_three_corrupt_history_cannot_add_owner_states() {
     for mutation in 0..3 {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
-        let key = [100; 32];
-        version_twenty(&path, &key);
+        let key = [123; 32];
+        version_twenty_three(&path, &key);
         let connection = open_connection(&path, &key).unwrap();
         match mutation {
             0 => {
                 connection
                     .execute(
-                        "UPDATE schema_history SET migration_sha256 = ?1 WHERE version = 20",
+                        "UPDATE schema_history SET migration_sha256 = ?1 WHERE version = 23",
                         ["0".repeat(64)],
                     )
                     .unwrap();
             }
             1 => {
                 connection
-                    .execute("DELETE FROM schema_history WHERE version = 19", [])
+                    .execute("DELETE FROM schema_history WHERE version = 22", [])
                     .unwrap();
             }
             _ => {
                 connection
-                    .execute("INSERT INTO schema_history VALUES (21, ?1)", ["0".repeat(64)])
+                    .execute("INSERT INTO schema_history VALUES (24, ?1)", ["0".repeat(64)])
                     .unwrap();
             }
         }
@@ -151,16 +151,12 @@ fn version_twenty_corrupt_history_cannot_add_job_ledgers() {
         let version: i64 = connection
             .pragma_query_value(None, "user_version", |row| row.get(0))
             .unwrap();
-        assert_eq!(version, 20);
+        assert_eq!(version, 23);
         assert_eq!(history(&connection), before);
         assert_eq!(legacy_record(&connection), record);
-        assert_eq!(job_ledger_tables(&connection), 0);
+        assert_eq!(owner_state_tables(&connection), 0);
         drop(connection);
         fs::remove_dir_all(directory).unwrap();
     }
 }
 
-mod run_action_history_migration {
-    use super::*;
-    include!("run_action_history_migration_tests.rs");
-}

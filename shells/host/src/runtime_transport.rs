@@ -516,6 +516,14 @@ pub trait RuntimeTransportPort {
         Err(RuntimeTransportError::RequestDenied)
     }
 
+    /// Answers one memory request of the catalog host (Decision 0131).
+    fn memory(
+        &mut self,
+        _request: crate::coding_memory::MemoryRequest,
+    ) -> Result<crate::coding_memory::MemoryAnswer, RuntimeTransportError> {
+        Err(RuntimeTransportError::RequestDenied)
+    }
+
     /// Reads the reconciled control state of one held run's job from the
     /// durable job ledger (Decision 0120).
     fn job_status(
