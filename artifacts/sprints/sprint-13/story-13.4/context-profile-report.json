@@ -42,9 +42,9 @@
       "sha256": "eb39b73b83644de6b8a0d31a00eb3b53160bcd92fef01d96a29215d3916d7be4"
     },
     {
-      "byte_length": 39962,
+      "byte_length": 40097,
       "path": "artifacts/sprints/sprint-13/local-evidence-report.json",
-      "sha256": "19c5bf20e8de40692589bb4738be3e2d701766f3d771a354a78848a868d72740"
+      "sha256": "cf952b8a6f64235bb3d83c976f9b1b643e5f9691473faa00fa19c5cb33248090"
     },
     {
       "byte_length": 79539,
@@ -79,7 +79,7 @@
     {
       "byte_length": 5457,
       "path": "artifacts/sprints/sprint-13/story-13.4/context-profile-results.log",
-      "sha256": "a710f812810fb2558acde883fa1d4785629b487d013e2d4ed23136f858f3f67c"
+      "sha256": "f30625b275fa8901bc9b90d0bba0936af920b0714315dec7b552f74235faa7c5"
     }
   ],
   "commands": [
